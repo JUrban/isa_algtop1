@@ -1049,13 +1049,82 @@ definition is_hausdorff_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
      (\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
         (\<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}))"
 
+(** Helper: every singleton is closed in a Hausdorff space. **)
+lemma singleton_closed_in_hausdorff:
+  assumes hH: "is_hausdorff_on X T"
+  assumes hx0X: "x0 \<in> X"
+  shows "closedin_on X T {x0}"
+proof -
+  have hT: "is_topology_on X T"
+    using hH unfolding is_hausdorff_on_def by blast
+  have hausd: "\<forall>a\<in>X. \<forall>b\<in>X. a \<noteq> b \<longrightarrow>
+      (\<exists>U V. neighborhood_of a X T U \<and> neighborhood_of b X T V \<and> U \<inter> V = {})"
+    using hH unfolding is_hausdorff_on_def by blast
+  have hlp_sub: "limit_points_of {x0} X T \<subseteq> {x0}"
+  proof (rule subsetI)
+    fix x assume hxlp: "x \<in> limit_points_of {x0} X T"
+    have hx_def: "is_limit_point_of x {x0} X T"
+      using hxlp unfolding limit_points_of_def by blast
+    have hxX: "x \<in> X" using hx_def unfolding is_limit_point_of_def by blast
+    have hall: "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects (U - {x}) {x0}"
+      using hx_def unfolding is_limit_point_of_def by blast
+    show "x \<in> {x0}"
+    proof (rule ccontr)
+      assume hxne: "x \<notin> {x0}"
+      have hxne': "x \<noteq> x0" using hxne by simp
+      obtain U V where hU: "neighborhood_of x X T U"
+          and hV: "neighborhood_of x0 X T V" and hdisj: "U \<inter> V = {}"
+        using hausd hxX hx0X hxne' by blast
+      have hinters: "intersects (U - {x}) {x0}"
+        by (rule hall[rule_format, OF hU])
+      have hx0inUx: "x0 \<in> U - {x}"
+        using hinters unfolding intersects_def by blast
+      have hx0V: "x0 \<in> V"
+        using hV unfolding neighborhood_of_def by blast
+      have hx0U: "x0 \<in> U" using hx0inUx by simp
+      show False using hx0U hx0V hdisj by blast
+    qed
+  qed
+  have hx0X': "{x0} \<subseteq> X" using hx0X by simp
+  show "closedin_on X T {x0}"
+    by (rule iffD2[OF Corollary_17_7[OF hT hx0X'], OF hlp_sub])
+qed
+
 (** from \S17 Theorem 17.8 [top1.tex:782] **)
 (** LATEX VERSION: "Every finite point set in Hausdorff space is closed." **)
 theorem Theorem_17_8:
-  assumes "is_hausdorff_on X T"
-  assumes "finite A" and "A \<subseteq> X"
+  assumes hH: "is_hausdorff_on X T"
+  assumes hfin: "finite A" and hAX: "A \<subseteq> X"
   shows "closedin_on X T A"
-  sorry
+proof -
+  have hT: "is_topology_on X T"
+    using hH unfolding is_hausdorff_on_def by blast
+  have cl_union: "\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F)"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]])
+  show "closedin_on X T A"
+  using hfin hAX proof (induction rule: finite_induct)
+    case empty
+    show "closedin_on X T {}"
+      by (rule conjunct1[OF Theorem_17_1[OF hT]])
+  next
+    case (insert y F)
+    have hyX: "y \<in> X" using insert.prems by simp
+    have hFX: "F \<subseteq> X" using insert.prems by simp
+    have hF_cl: "closedin_on X T F" by (rule insert.IH[OF hFX])
+    have hy_cl: "closedin_on X T {y}"
+      by (rule singleton_closed_in_hausdorff[OF hH hyX])
+    have G_fin: "finite {{y}, F}" by simp
+    have h_union: "closedin_on X T (\<Union>{{y}, F})"
+    proof (rule cl_union[rule_format, OF G_fin])
+      fix B assume hB: "B \<in> {{y}, F}"
+      show "closedin_on X T B"
+        using hy_cl hF_cl hB by blast
+    qed
+    have union_eq: "\<Union>{{y}, F} = insert y F" by simp
+    show "closedin_on X T (insert y F)"
+      using h_union by (simp only: union_eq)
+  qed
+qed
 
 (** from \S17 (T1 axiom) [top1.tex:~785] **)
 definition satisfies_T1_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
@@ -1064,11 +1133,136 @@ definition satisfies_T1_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
 (** from \S17 Theorem 17.9 [top1.tex:787] **)
 (** LATEX VERSION: "In a T1 space, x is limit point of A iff every neighborhood contains infinitely many points of A." **)
 theorem Theorem_17_9:
-  assumes "satisfies_T1_on X T"
-  assumes "A \<subseteq> X" and "x \<in> X"
+  assumes hT1: "satisfies_T1_on X T"
+  assumes hAX: "A \<subseteq> X" and hxX: "x \<in> X"
   shows "is_limit_point_of x A X T \<longleftrightarrow>
     (\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> A))"
-  sorry
+proof -
+  have hT: "is_topology_on X T"
+    using hT1 unfolding satisfies_T1_on_def by blast
+  have hT1_sc: "\<forall>y\<in>X. closedin_on X T {y}"
+    using hT1 unfolding satisfies_T1_on_def by blast
+  have cl_union: "\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F)"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]])
+  have inter_T: "\<forall>G. finite G \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  show ?thesis
+  proof (rule iffI)
+    (* → : limit point → every nbhd has infinitely many points of A *)
+    assume hlp: "is_limit_point_of x A X T"
+    have hlp_nbds: "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects (U - {x}) A"
+      using hlp unfolding is_limit_point_of_def by blast
+    show "\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> A)"
+    proof (intro allI impI)
+      fix U assume hU: "neighborhood_of x X T U"
+      have hUT: "U \<in> T" using hU unfolding neighborhood_of_def by blast
+      have hxU: "x \<in> U" using hU unfolding neighborhood_of_def by blast
+      show "infinite (U \<inter> A)"
+      proof (rule notI)
+        assume hfin_UA: "finite (U \<inter> A)"
+        (* S = the finitely many points of U ∩ (A - {x}) *)
+        define S where "S = U \<inter> A - {x}"
+        have hS_fin: "finite S"
+          apply (unfold S_def)
+          apply (rule finite_subset[OF _ hfin_UA])
+          apply blast
+          done
+        have hS_sub_X: "S \<subseteq> X"
+          apply (unfold S_def)
+          apply (rule subset_trans[OF Diff_subset])
+          apply (rule subset_trans[OF Int_lower2 hAX])
+          done
+        (* S is closed: finite T1 subset of X *)
+        have hS_cl: "closedin_on X T S"
+          using hS_fin hS_sub_X
+        proof (induction rule: finite_induct)
+          case empty
+          show "closedin_on X T {}"
+            by (rule conjunct1[OF Theorem_17_1[OF hT]])
+        next
+          case (insert z F2)
+          have hzX: "z \<in> X" using insert.prems by simp
+          have hF2X: "F2 \<subseteq> X" using insert.prems by simp
+          have hF2_cl: "closedin_on X T F2" by (rule insert.IH[OF hF2X])
+          have hz_cl: "closedin_on X T {z}"
+            by (rule bspec[OF hT1_sc, OF hzX])
+          have G2_fin: "finite {{z}, F2}" by simp
+          have h_u2: "closedin_on X T (\<Union>{{z}, F2})"
+          proof (rule cl_union[rule_format, OF G2_fin])
+            fix B assume hBG: "B \<in> {{z}, F2}"
+            show "closedin_on X T B" using hz_cl hF2_cl hBG by blast
+          qed
+          show "closedin_on X T (insert z F2)"
+            using h_u2 by simp
+        qed
+        (* X - S is open; U ∩ (X-S) is open *)
+        have hXmS_T: "X - S \<in> T" by (rule closedin_diff_open, rule hS_cl)
+        have hUXmS_T: "U \<inter> (X - S) \<in> T"
+        proof -
+          have h_sub: "{U, X - S} \<subseteq> T" using hUT hXmS_T by blast
+          have h_inter: "\<Inter>{U, X - S} \<in> T"
+            apply (rule inter_T[rule_format])
+            apply (intro conjI)
+             apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+            apply (rule h_sub)
+            done
+          then show "U \<inter> (X - S) \<in> T" by simp
+        qed
+        (* x ∈ U ∩ (X-S), so it is a neighborhood of x *)
+        have hxnS: "x \<notin> S" unfolding S_def by simp
+        have hneigh: "neighborhood_of x X T (U \<inter> (X - S))"
+          unfolding neighborhood_of_def
+          apply (rule conjI, rule hUXmS_T)
+          apply (rule IntI, rule hxU, rule DiffI, rule hxX, rule hxnS)
+          done
+        (* x limit point → (U ∩ (X-S) - {x}) ∩ A ≠ {} *)
+        have hinters: "intersects (U \<inter> (X - S) - {x}) A"
+          by (rule hlp_nbds[rule_format, OF hneigh])
+        (* But (U ∩ (X-S) - {x}) ∩ A ⊆ S ∩ (X-S) = {} *)
+        have h_eq: "(U \<inter> (X - S) - {x}) \<inter> A = {}"
+        proof (rule equalityI)
+          show "(U \<inter> (X - S) - {x}) \<inter> A \<subseteq> {}"
+          proof (rule subsetI)
+            fix z assume hz: "z \<in> (U \<inter> (X - S) - {x}) \<inter> A"
+            have hzS: "z \<notin> S" using hz by blast
+            have hzS2: "z \<in> S"
+              unfolding S_def using hz by blast
+            show "z \<in> {}" using hzS hzS2 by blast
+          qed
+          show "{} \<subseteq> (U \<inter> (X - S) - {x}) \<inter> A" by blast
+        qed
+        show False
+          apply (rule notE[OF hinters[unfolded intersects_def]])
+          apply (rule h_eq)
+          done
+      qed
+    qed
+  next
+    (* ← : every nbhd has infinitely many points of A → limit point *)
+    assume hback: "\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> A)"
+    show "is_limit_point_of x A X T"
+      unfolding is_limit_point_of_def
+    proof (intro conjI)
+      show "x \<in> X" by (rule hxX)
+      show "A \<subseteq> X" by (rule hAX)
+      show "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects (U - {x}) A"
+      proof (intro allI impI)
+        fix U assume hU: "neighborhood_of x X T U"
+        have h_inf: "infinite (U \<inter> A)"
+          by (rule hback[rule_format, OF hU])
+        show "intersects (U - {x}) A"
+          unfolding intersects_def
+        proof (rule notI)
+          assume h_empty: "(U - {x}) \<inter> A = {}"
+          have heq: "U \<inter> A \<subseteq> {x}" using h_empty by blast
+          have h_fin: "finite (U \<inter> A)"
+            by (rule finite_subset[OF heq], simp)
+          from h_inf h_fin show False by simp
+        qed
+      qed
+    qed
+  qed
+qed
 
 (** from \S17 (Definition of sequence convergence) [top1.tex:~770] **)
 definition seq_converges_to_on :: "(nat \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
