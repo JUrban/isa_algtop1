@@ -464,11 +464,110 @@ proof -
 qed
 (** from \S17 Theorem 17.2 [top1.tex:665] **)
 (** LATEX VERSION: "A closed in Y iff A = C\<inter>Y for some closed C in X." **)
+(** Note: requires Y \<subseteq> X for the backward direction. **)
 theorem Theorem_17_2:
-  assumes "is_topology_on X T"
+  assumes hT: "is_topology_on X T"
+  assumes hYX: "Y \<subseteq> X"
   shows "closedin_on Y (subspace_topology X T Y) A \<longleftrightarrow>
      (\<exists>C. closedin_on X T C \<and> A = C \<inter> Y)"
-  sorry
+proof -
+  have X_T: "X \<in> T"
+    by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
+  have inter_T: "\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  show ?thesis
+  proof (rule iffI)
+    (* \<rightarrow> direction: closedin_on Y T_Y A \<rightarrow> \<exists>C. closedin_on X T C \<and> A = C \<inter> Y *)
+    assume hA: "closedin_on Y (subspace_topology X T Y) A"
+    have hAsub: "A \<subseteq> Y" by (rule closedin_sub[OF hA])
+    have hYmA: "Y - A \<in> subspace_topology X T Y" by (rule closedin_diff_open[OF hA])
+    obtain V where hV: "V \<in> T" and hYmA_eq: "Y - A = Y \<inter> V"
+      using hYmA unfolding subspace_topology_def by blast
+    (* C = X - V is closed in X *)
+    have XV_T: "X \<inter> V \<in> T"
+    proof -
+      have h1: "finite {X, V}" by simp
+      have h2: "{X, V} \<subseteq> T" using X_T hV by simp
+      have "\<Inter>{X, V} \<in> T"
+        apply (rule inter_T[rule_format])
+        apply (rule conjI, rule h1, rule h2)
+        done
+      thus ?thesis by simp
+    qed
+    have C_closed: "closedin_on X T (X - V)"
+    proof (rule closedin_intro)
+      show "X - V \<subseteq> X" by (rule Diff_subset)
+      show "X - (X - V) \<in> T"
+      proof -
+        have eq: "X - (X - V) = X \<inter> V"
+          apply (rule equalityI)
+           apply (rule subsetI)
+           apply blast
+          apply (rule subsetI)
+          apply blast
+          done
+        show ?thesis using eq XV_T by simp
+      qed
+    qed
+    (* A = (X - V) \<inter> Y *)
+    have A_eq: "A = (X - V) \<inter> Y"
+      apply (rule equalityI)
+       apply (rule subsetI)
+       apply (rule IntI)
+        (* x \<in> A \<rightarrow> x \<in> X - V: x \<in> Y (hAsub), x \<in> X (hYX), x \<notin> V (from hYmA_eq) *)
+        apply (rule DiffI)
+         apply (rule subsetD[OF hYX], rule subsetD[OF hAsub], assumption)
+        (* x \<in> A \<rightarrow> x \<notin> V: from Y - A = Y \<inter> V, x \<in> A \<inter> Y \<rightarrow> x \<notin> Y - A \<rightarrow> x \<notin> Y \<inter> V *)
+        using hYmA_eq hAsub apply blast
+       apply (rule subsetD[OF hAsub], assumption)
+      (* (X - V) \<inter> Y \<subseteq> A: x \<in> X - V \<and> x \<in> Y \<rightarrow> x \<notin> V \<rightarrow> x \<notin> Y \<inter> V = Y - A \<rightarrow> x \<in> A *)
+      apply (rule subsetI)
+      using hYmA_eq apply blast
+      done
+    show "\<exists>C. closedin_on X T C \<and> A = C \<inter> Y"
+      apply (intro exI conjI)
+       apply (rule C_closed)
+      apply (rule A_eq)
+      done
+  next
+    (* \<leftarrow> direction: \<exists>C. closedin_on X T C \<and> A = C \<inter> Y \<rightarrow> closedin_on Y T_Y A *)
+    assume h: "\<exists>C. closedin_on X T C \<and> A = C \<inter> Y"
+    then obtain C where hC: "closedin_on X T C" and hA_eq: "A = C \<inter> Y" by blast
+    have hXmC_T: "X - C \<in> T" by (rule closedin_diff_open[OF hC])
+    have hA_sub: "A \<subseteq> Y"
+      apply (subst hA_eq)
+      apply (rule Int_lower2)
+      done
+    (* Y - A = Y \<inter> (X - C) \<in> subspace_topology X T Y *)
+    have YmA_eq: "Y - A = Y \<inter> (X - C)"
+      apply (subst hA_eq)
+      apply (rule equalityI)
+       apply (rule subsetI)
+       apply (intro IntI)
+        apply blast
+       apply (intro DiffI)
+        apply (rule subsetD[OF hYX], blast)
+       apply blast
+      apply (rule subsetI)
+      apply (intro DiffI)
+       apply blast
+      apply blast
+      done
+    have hYmA_in: "Y - A \<in> subspace_topology X T Y"
+      apply (subst YmA_eq)
+      apply (unfold subspace_topology_def)
+      apply (rule CollectI)
+      apply (intro exI conjI)
+       apply (rule refl)
+      apply (rule hXmC_T)
+      done
+    show "closedin_on Y (subspace_topology X T Y) A"
+      apply (rule closedin_intro)
+       apply (rule hA_sub)
+      apply (rule hYmA_in)
+      done
+  qed
+qed
 
 (** from \S17 Theorem 17.3 [top1.tex:687] **)
 (** LATEX VERSION: "If A closed in Y and Y closed in X then A closed in X." **)
