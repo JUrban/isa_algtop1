@@ -573,11 +573,165 @@ qed
 (** from \S16 Theorem 16.3 [top1.tex:492] **)
 (** LATEX VERSION: "Product topology on A\<times>B equals subspace topology from X\<times>Y." **)
 theorem Theorem_16_3:
-  assumes "is_topology_on X TX"
-  assumes "is_topology_on Y TY"
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
   shows "product_topology_on (subspace_topology X TX A) (subspace_topology Y TY B)
        = subspace_topology (X \<times> Y) (product_topology_on TX TY) (A \<times> B)"
-  sorry
+proof (rule set_eqI)
+  fix W
+  show "W \<in> product_topology_on (subspace_topology X TX A) (subspace_topology Y TY B)
+      \<longleftrightarrow> W \<in> subspace_topology (X \<times> Y) (product_topology_on TX TY) (A \<times> B)"
+  proof (rule iffI)
+    (* LHS \<Rightarrow> RHS *)
+    assume hW: "W \<in> product_topology_on (subspace_topology X TX A) (subspace_topology Y TY B)"
+    (* Extract covering condition from LHS membership *)
+    have hWmem: "W \<subseteq> UNIV \<and>
+        (\<forall>p\<in>W. \<exists>b \<in> product_basis (subspace_topology X TX A) (subspace_topology Y TY B).
+                p \<in> b \<and> b \<subseteq> W)"
+      using hW unfolding product_topology_on_def topology_generated_by_basis_def
+      by blast
+    have hWcov0: "\<forall>p\<in>W. \<exists>b \<in> product_basis (subspace_topology X TX A) (subspace_topology Y TY B).
+                           p \<in> b \<and> b \<subseteq> W"
+      using hWmem by blast
+    (* Extract U, V from basis membership *)
+    have hWcov: "\<forall>p\<in>W. \<exists>U\<in>TX. \<exists>V\<in>TY. p \<in> (A \<inter> U) \<times> (B \<inter> V) \<and> (A \<inter> U) \<times> (B \<inter> V) \<subseteq> W"
+    proof (rule ballI)
+      fix p assume hpW: "p \<in> W"
+      obtain b where hb: "b \<in> product_basis (subspace_topology X TX A) (subspace_topology Y TY B)"
+          and hpb: "p \<in> b" and hbW: "b \<subseteq> W"
+        using hWcov0[rule_format, OF hpW] by blast
+      obtain P Q where hbeq: "b = P \<times> Q"
+          and hPTA: "P \<in> subspace_topology X TX A" and hQTB: "Q \<in> subspace_topology Y TY B"
+        using hb unfolding product_basis_def by blast
+      obtain U where hUT: "U \<in> TX" and hPeq: "P = A \<inter> U"
+        using hPTA unfolding subspace_topology_def by blast
+      obtain V where hVT: "V \<in> TY" and hQeq: "Q = B \<inter> V"
+        using hQTB unfolding subspace_topology_def by blast
+      have hbeq2: "b = (A \<inter> U) \<times> (B \<inter> V)" using hbeq hPeq hQeq by simp
+      show "\<exists>U\<in>TX. \<exists>V\<in>TY. p \<in> (A \<inter> U) \<times> (B \<inter> V) \<and> (A \<inter> U) \<times> (B \<inter> V) \<subseteq> W"
+        apply (rule bexI[where x=U], rule bexI[where x=V])
+          apply (rule conjI)
+           using hpb hbeq2 apply blast
+          using hbW hbeq2 apply blast
+        apply (rule hVT, rule hUT)
+        done
+    qed
+    (* Define W' = \<Union> of product opens whose A\<times>B-restriction is inside W *)
+    let ?G = "{U \<times> V | U V. U \<in> TX \<and> V \<in> TY \<and> (A \<inter> U) \<times> (B \<inter> V) \<subseteq> W}"
+    let ?W' = "\<Union>?G"
+    have hW'T: "?W' \<in> product_topology_on TX TY"
+      unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+    proof (rule CollectI, rule conjI, rule subset_UNIV)
+      show "\<forall>p\<in>?W'. \<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. p \<in> b \<and> b \<subseteq> ?W'"
+      proof (rule ballI)
+        fix p assume hp: "p \<in> ?W'"
+        obtain UV where hUVG: "UV \<in> ?G" and hpUV: "p \<in> UV" using hp by blast
+        obtain U V where hUT: "U \<in> TX" and hVT: "V \<in> TY"
+            and hUVW: "(A \<inter> U) \<times> (B \<inter> V) \<subseteq> W" and hUVeq: "UV = U \<times> V"
+          using hUVG by blast
+        have hpinUV: "p \<in> U \<times> V" using hpUV hUVeq by simp
+        have hUVsubW': "U \<times> V \<subseteq> ?W'"
+          apply (rule Union_upper)
+          apply (rule CollectI, rule exI[where x=U], rule exI[where x=V])
+          apply (intro conjI hUT hVT hUVW refl)
+          done
+        show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. p \<in> b \<and> b \<subseteq> ?W'"
+          apply (rule bexI[where x="U \<times> V"])
+           apply (rule conjI[OF hpinUV hUVsubW'])
+          apply (rule CollectI, rule exI[where x=U], rule exI[where x=V])
+          apply (intro conjI hUT hVT refl)
+          done
+      qed
+    qed
+    have hWeq: "W = A \<times> B \<inter> ?W'"
+    proof (rule set_eqI)
+      fix p
+      show "p \<in> W \<longleftrightarrow> p \<in> A \<times> B \<inter> ?W'"
+      proof (rule iffI)
+        assume hpW: "p \<in> W"
+        obtain U V where hUT: "U \<in> TX" and hVT: "V \<in> TY"
+            and hpAUBV: "p \<in> (A \<inter> U) \<times> (B \<inter> V)" and hUVW: "(A \<inter> U) \<times> (B \<inter> V) \<subseteq> W"
+          using hWcov[rule_format, OF hpW] by blast
+        have hpAB: "p \<in> A \<times> B" using hpAUBV by blast
+        have hUVinG: "U \<times> V \<in> ?G"
+          apply (rule CollectI, rule exI[where x=U], rule exI[where x=V])
+          apply (intro conjI hUT hVT hUVW refl)
+          done
+        have hpinUV: "p \<in> U \<times> V" using hpAUBV by blast
+        have hpW': "p \<in> ?W'" using hpinUV hUVinG by blast
+        show "p \<in> A \<times> B \<inter> ?W'" using hpAB hpW' by blast
+      next
+        assume hp: "p \<in> A \<times> B \<inter> ?W'"
+        have hpAB: "p \<in> A \<times> B" using hp by blast
+        have hpW': "p \<in> ?W'" using hp by blast
+        obtain UV where hUVG: "UV \<in> ?G" and hpUV2: "p \<in> UV" using hpW' by blast
+        obtain U V where hUT: "U \<in> TX" and hVT: "V \<in> TY"
+            and hUVW: "(A \<inter> U) \<times> (B \<inter> V) \<subseteq> W" and hUVeq: "UV = U \<times> V"
+          using hUVG by blast
+        have hpinUV: "p \<in> U \<times> V" using hpUV2 hUVeq by simp
+        have hpAUBV: "p \<in> (A \<inter> U) \<times> (B \<inter> V)" using hpAB hpinUV by blast
+        show "p \<in> W" using hUVW hpAUBV by blast
+      qed
+    qed
+    show "W \<in> subspace_topology (X \<times> Y) (product_topology_on TX TY) (A \<times> B)"
+      unfolding subspace_topology_def
+      apply (rule CollectI, rule exI[where x="?W'"])
+      apply (rule conjI[OF hWeq hW'T])
+      done
+  next
+    (* RHS \<Rightarrow> LHS *)
+    assume hW: "W \<in> subspace_topology (X \<times> Y) (product_topology_on TX TY) (A \<times> B)"
+    obtain W' where hW'T: "W' \<in> product_topology_on TX TY" and hWeq: "W = A \<times> B \<inter> W'"
+      using hW unfolding subspace_topology_def by blast
+    have hW'mem: "\<forall>p\<in>W'. \<exists>b \<in> product_basis TX TY. p \<in> b \<and> b \<subseteq> W'"
+      using hW'T unfolding product_topology_on_def topology_generated_by_basis_def
+      by blast
+    have hW'cov: "\<forall>p\<in>W'. \<exists>U\<in>TX. \<exists>V\<in>TY. p \<in> U \<times> V \<and> U \<times> V \<subseteq> W'"
+    proof (rule ballI)
+      fix p assume hpW': "p \<in> W'"
+      obtain b where hb: "b \<in> product_basis TX TY" and hpb: "p \<in> b" and hbW': "b \<subseteq> W'"
+        using hW'mem[rule_format, OF hpW'] by blast
+      obtain U V where hUT: "U \<in> TX" and hVT: "V \<in> TY" and hbeq: "b = U \<times> V"
+        using hb unfolding product_basis_def by blast
+      show "\<exists>U\<in>TX. \<exists>V\<in>TY. p \<in> U \<times> V \<and> U \<times> V \<subseteq> W'"
+        apply (rule bexI[where x=U], rule bexI[where x=V])
+          apply (rule conjI)
+           using hpb hbeq apply blast
+          using hbW' hbeq apply blast
+        apply (rule hVT, rule hUT)
+        done
+    qed
+    show "W \<in> product_topology_on (subspace_topology X TX A) (subspace_topology Y TY B)"
+      unfolding product_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule subset_UNIV)
+      show "\<forall>p\<in>W. \<exists>b \<in> product_basis (subspace_topology X TX A) (subspace_topology Y TY B). p \<in> b \<and> b \<subseteq> W"
+      proof (rule ballI)
+        fix p assume hpW: "p \<in> W"
+        have hpAB: "p \<in> A \<times> B" using hpW hWeq by blast
+        have hpW': "p \<in> W'" using hpW hWeq by blast
+        obtain U V where hUT: "U \<in> TX" and hVT: "V \<in> TY"
+            and hpUV: "p \<in> U \<times> V" and hUVW': "U \<times> V \<subseteq> W'"
+          using hW'cov[rule_format, OF hpW'] by blast
+        have hpAUBV: "p \<in> (A \<inter> U) \<times> (B \<inter> V)" using hpAB hpUV by blast
+        have hAUBV_sub: "(A \<inter> U) \<times> (B \<inter> V) \<subseteq> W"
+          using hUVW' hWeq by blast
+        have hbasis_mem: "(A \<inter> U) \<times> (B \<inter> V) \<in>
+            product_basis (subspace_topology X TX A) (subspace_topology Y TY B)"
+          unfolding product_basis_def subspace_topology_def
+          apply (rule CollectI, rule exI[where x="A \<inter> U"], rule exI[where x="B \<inter> V"])
+          apply (intro conjI refl)
+           apply (rule CollectI, rule exI[where x=U], rule conjI[OF refl hUT])
+          apply (rule CollectI, rule exI[where x=V], rule conjI[OF refl hVT])
+          done
+        show "\<exists>b \<in> product_basis (subspace_topology X TX A) (subspace_topology Y TY B). p \<in> b \<and> b \<subseteq> W"
+          apply (rule bexI[where x="(A \<inter> U) \<times> (B \<inter> V)"])
+           apply (rule conjI[OF hpAUBV hAUBV_sub])
+          apply (rule hbasis_mem)
+          done
+      qed
+    qed
+  qed
+qed
 
 (** from \S16 Theorem 16.4 [top1.tex:544] **)
 (** LATEX VERSION: "If Y is convex in ordered X, then order topology on Y = subspace topology." **)
