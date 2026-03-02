@@ -19,7 +19,7 @@ definition is_topology_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool
   "is_topology_on X T \<longleftrightarrow>
      {} \<in> T \<and> X \<in> T \<and>
      (\<forall>U. U \<subseteq> T \<longrightarrow> (\<Union>U) \<in> T) \<and>
-     (\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> (\<Inter>F) \<in> T)"
+     (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> (\<Inter>F) \<in> T)"
 
 (** from \S12 (Open set terminology) [top1.tex:~55] **)
 (** LATEX VERSION: "U is open in X iff U \<in> T." **)
@@ -44,6 +44,7 @@ section \<open>\<S>13 Basis for a Topology\<close>
 (** LATEX VERSION: "B is a basis on X if (1) covers X and (2) intersection condition..." **)
 definition is_basis_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "is_basis_on X B \<longleftrightarrow>
+     (\<forall>b\<in>B. b \<subseteq> X) \<and>
      (\<forall>x\<in>X. \<exists>b\<in>B. x \<in> b) \<and>
      (\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>x\<in>(b1 \<inter> b2).
          \<exists>b3\<in>B. x \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2))"
@@ -241,7 +242,7 @@ theorem Lemma_16_2:
 proof -
   from assms(3) obtain V where hV: "V \<in> T" and hU: "U = Y \<inter> V"
     unfolding subspace_topology_def by blast
-  from assms(1) have inter_T: "\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+  from assms(1) have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
     unfolding is_topology_on_def by blast
   have fin: "finite {Y, V}" by simp
   have sub: "{Y, V} \<subseteq> T" using assms(2) hV by simp
@@ -343,7 +344,7 @@ next
   (* insert.hyps(1) = finite G, insert.hyps(2) = a \<notin> G *)
   (* insert.prems(1) = \<forall>A\<in>insert a G. closedin_on X T A  [specialized hcl] *)
   (* insert.IH = (\<forall>A\<in>G. closedin_on X T A) \<Longrightarrow> closedin_on X T (\<Union>G)  [hopefully] *)
-  have inter_T: "\<forall>Gf. finite Gf \<and> Gf \<subseteq> T \<longrightarrow> \<Inter>Gf \<in> T"
+  have inter_T: "\<forall>Gf. finite Gf \<and> Gf \<noteq> {} \<and> Gf \<subseteq> T \<longrightarrow> \<Inter>Gf \<in> T"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
   note hall = insert.prems(1)
   have ha: "closedin_on X T a"
@@ -368,7 +369,8 @@ next
   have two_inter: "\<Inter>{X - a, X - \<Union>G} \<in> T"
     apply (rule inter_T[rule_format])
     apply (intro conjI)
-     apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+      apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+     apply (rule insert_not_empty)
     apply (rule subsetI)
     apply (erule insertE)
      apply (erule ssubst, rule XmA_T)
@@ -401,7 +403,7 @@ proof -
     by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
   have union_T: "\<forall>U. U \<subseteq> T \<longrightarrow> \<Union>U \<in> T"
     by (rule conjunct1[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
-  have inter_T: "\<forall>G. finite G \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
+  have inter_T: "\<forall>G. finite G \<and> G \<noteq> {} \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
   have cl_empty: "closedin_on X T {}"
     apply (rule closedin_intro)
@@ -473,7 +475,7 @@ theorem Theorem_17_2:
 proof -
   have X_T: "X \<in> T"
     by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
-  have inter_T: "\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+  have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
   show ?thesis
   proof (rule iffI)
@@ -487,10 +489,11 @@ proof -
     have XV_T: "X \<inter> V \<in> T"
     proof -
       have h1: "finite {X, V}" by simp
+      have hne: "{X, V} \<noteq> {}" by (rule insert_not_empty)
       have h2: "{X, V} \<subseteq> T" using X_T hV by simp
       have "\<Inter>{X, V} \<in> T"
         apply (rule inter_T[rule_format])
-        apply (rule conjI, rule h1, rule h2)
+        apply (intro conjI, rule h1, rule hne, rule h2)
         done
       thus ?thesis by simp
     qed
@@ -586,12 +589,12 @@ proof -
   from YmA_sub obtain V where hV: "V \<in> T" and hYmA: "Y - A = Y \<inter> V"
     unfolding subspace_topology_def by blast
   from hT have XT: "X \<in> T" and
-               inter_T: "\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T" and
+               inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T" and
                union_T: "\<forall>U. U \<subseteq> T \<longrightarrow> \<Union>U \<in> T"
     unfolding is_topology_on_def by blast+
   have XV_T: "X \<inter> V \<in> T"
   proof -
-    have "finite {X, V} \<and> {X, V} \<subseteq> T" using XT hV by simp
+    have "finite {X, V} \<and> {X, V} \<noteq> {} \<and> {X, V} \<subseteq> T" using XT hV by simp
     then have "\<Inter>{X, V} \<in> T" using inter_T by blast
     then show ?thesis by simp
   qed
@@ -741,11 +744,11 @@ proof (rule iffI)
       by (rule conjunct2[OF hU[unfolded neighborhood_of_def]])
     have X_T: "X \<in> T"
       by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
-    have inter_T: "\<forall>F. finite F \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+    have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
       by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
     have XU_T: "X \<inter> U \<in> T"
     proof -
-      have "finite {X, U} \<and> {X, U} \<subseteq> T" using X_T hUT by simp
+      have "finite {X, U} \<and> {X, U} \<noteq> {} \<and> {X, U} \<subseteq> T" using X_T hUT by simp
       then have "\<Inter>{X, U} \<in> T" using inter_T by blast
       then show ?thesis by simp
     qed
@@ -805,9 +808,56 @@ theorem Theorem_17_5b:
   shows "x \<in> closure_on X T A \<longleftrightarrow>
     (\<forall>b\<in>B. x \<in> b \<longrightarrow> intersects b A)"
 proof (rule iffI)
-  (* Forward direction needs basis elements \<subseteq> X, which is_basis_on doesn't force *)
-  assume "x \<in> closure_on X T A"
-  show "\<forall>b\<in>B. x \<in> b \<longrightarrow> intersects b A" sorry
+  assume hcl: "x \<in> closure_on X T A"
+  have hBasis: "is_basis_on X B"
+    by (rule conjunct1[OF hB[unfolded basis_for_def]])
+  have hBX: "\<forall>b'\<in>B. b' \<subseteq> X"
+    by (rule conjunct1[OF hBasis[unfolded is_basis_on_def]])
+  have hInter_cond: "\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>y\<in>(b1 \<inter> b2). \<exists>b3\<in>B. y \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2)"
+    by (rule conjunct2[OF conjunct2[OF hBasis[unfolded is_basis_on_def]]])
+  have hT_def': "T = topology_generated_by_basis X B"
+    by (rule conjunct2[OF hB[unfolded basis_for_def]])
+  show "\<forall>b\<in>B. x \<in> b \<longrightarrow> intersects b A"
+  proof (rule ballI, rule impI)
+    fix b assume hbB: "b \<in> B" and hxb: "x \<in> b"
+    have hbsubX: "b \<subseteq> X" by (rule bspec[OF hBX, OF hbB])
+    have hbinT: "b \<in> topology_generated_by_basis X B"
+      unfolding topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule hbsubX)
+      show "\<forall>y\<in>b. \<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+      proof (rule ballI)
+        fix y assume hyb: "y \<in> b"
+        have hyin: "y \<in> b \<inter> b" using hyb by simp
+        obtain b3 where hb3B: "b3 \<in> B" and hyb3: "y \<in> b3" and hb3sub: "b3 \<subseteq> b \<inter> b"
+          using hInter_cond[rule_format, OF hbB, OF hbB, OF hyin] by blast
+        have hb3sub': "b3 \<subseteq> b" using hb3sub by (simp only: Int_absorb)
+        show "\<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+          apply (rule bexI[where x=b3])
+           apply (rule conjI[OF hyb3 hb3sub'])
+          apply (rule hb3B)
+          done
+      qed
+    qed
+    have hbT: "b \<in> T" using hbinT hT_def' by simp
+    show "intersects b A"
+      unfolding intersects_def
+    proof (rule notI)
+      assume hbAeq: "b \<inter> A = {}"
+      have hAsub_Xmb: "A \<subseteq> X - b" using hAX hbAeq by blast
+      have hXmb_eq: "X - (X - b) = b"
+        using hbsubX by blast
+      have hXmb_cl: "closedin_on X T (X - b)"
+        apply (rule closedin_intro, rule Diff_subset)
+        apply (subst hXmb_eq, rule hbT)
+        done
+      have hXmb_in_F: "X - b \<in> {D. closedin_on X T D \<and> A \<subseteq> D}"
+        by (rule CollectI, rule conjI, rule hXmb_cl, rule hAsub_Xmb)
+      have hx_in_Xmb: "x \<in> X - b"
+        by (rule InterD[OF hcl[unfolded closure_on_def], OF hXmb_in_F])
+      show False
+        using hx_in_Xmb hxb by blast
+    qed
+  qed
 next
   assume h: "\<forall>b\<in>B. x \<in> b \<longrightarrow> intersects b A"
   show "x \<in> closure_on X T A"
@@ -1144,7 +1194,7 @@ proof -
     using hT1 unfolding satisfies_T1_on_def by blast
   have cl_union: "\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F)"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]])
-  have inter_T: "\<forall>G. finite G \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
+  have inter_T: "\<forall>G. finite G \<and> G \<noteq> {} \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
   show ?thesis
   proof (rule iffI)
@@ -1203,7 +1253,8 @@ proof -
           have h_inter: "\<Inter>{U, X - S} \<in> T"
             apply (rule inter_T[rule_format])
             apply (intro conjI)
-             apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+              apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+             apply (rule insert_not_empty)
             apply (rule h_sub)
             done
           then show "U \<inter> (X - S) \<in> T" by simp
