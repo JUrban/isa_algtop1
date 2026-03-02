@@ -62,9 +62,68 @@ definition basis_for :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set se
 (** from \S13 Lemma 13.1 [top1.tex:168] **)
 (** LATEX VERSION: "T equals the collection of all unions of elements of B." **)
 theorem Lemma_13_1:
-  assumes "basis_for X B T"
+  assumes hB: "basis_for X B T"
   shows "T = { \<Union>U | U. U \<subseteq> B }"
-  sorry
+proof -
+  have hBasis: "is_basis_on X B"
+    by (rule conjunct1[OF hB[unfolded basis_for_def]])
+  have hBX: "\<forall>b\<in>B. b \<subseteq> X"
+    by (rule conjunct1[OF hBasis[unfolded is_basis_on_def]])
+  have hT_def: "T = topology_generated_by_basis X B"
+    by (rule conjunct2[OF hB[unfolded basis_for_def]])
+  show "T = { \<Union>U | U. U \<subseteq> B }"
+  proof (rule set_eqI)
+    fix W
+    show "W \<in> T \<longleftrightarrow> W \<in> { \<Union>U | U. U \<subseteq> B }"
+    proof (rule iffI)
+      assume hW: "W \<in> T"
+      have hWgen: "W \<in> topology_generated_by_basis X B"
+        using hW hT_def by simp
+      have hWcov: "\<forall>x\<in>W. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> W"
+        using hWgen unfolding topology_generated_by_basis_def by blast
+      have hUnion: "W = \<Union>{b \<in> B. b \<subseteq> W}"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> W \<longleftrightarrow> x \<in> \<Union>{b \<in> B. b \<subseteq> W}"
+        proof (rule iffI)
+          assume hxW: "x \<in> W"
+          obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+            using hWcov[rule_format, OF hxW] by blast
+          show "x \<in> \<Union>{b \<in> B. b \<subseteq> W}"
+            using hbB hbW hxb by blast
+        next
+          assume hx: "x \<in> \<Union>{b \<in> B. b \<subseteq> W}"
+          then show "x \<in> W" by blast
+        qed
+      qed
+      show "W \<in> { \<Union>U | U. U \<subseteq> B }"
+        using hUnion by blast
+    next
+      assume hW: "W \<in> { \<Union>U | U. U \<subseteq> B }"
+      obtain U where hWU: "W = \<Union>U" and hUB: "U \<subseteq> B" using hW by blast
+      have hWgen: "W \<in> topology_generated_by_basis X B"
+        unfolding topology_generated_by_basis_def
+      proof (rule CollectI, rule conjI)
+        show "W \<subseteq> X"
+          using hUB hBX hWU by blast
+        show "\<forall>x\<in>W. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> W"
+        proof (rule ballI)
+          fix x assume hxW: "x \<in> W"
+          obtain b where hbU: "b \<in> U" and hxb: "x \<in> b"
+            using hxW hWU by blast
+          have hbB: "b \<in> B" using hbU hUB by blast
+          have hbW: "b \<subseteq> W" using hbU hWU by blast
+          show "\<exists>b\<in>B. x \<in> b \<and> b \<subseteq> W"
+            apply (rule bexI[where x=b])
+             apply (rule conjI[OF hxb hbW])
+            apply (rule hbB)
+            done
+        qed
+      qed
+      show "W \<in> T" using hWgen hT_def by simp
+    qed
+  qed
+qed
 
 (** from \S13 Lemma 13.2 [top1.tex:176] **)
 (** LATEX VERSION: "If C is a collection of open sets with local refinement property, then C is a basis." **)
@@ -77,11 +136,91 @@ theorem Lemma_13_2:
 (** from \S13 Lemma 13.3 [top1.tex:184] **)
 (** LATEX VERSION: "Criterion for T' finer than T in terms of bases." **)
 theorem Lemma_13_3:
-  assumes "basis_for X B T"
-  assumes "basis_for X B' T'"
+  assumes hB: "basis_for X B T"
+  assumes hB': "basis_for X B' T'"
   shows "finer_than T T' \<longleftrightarrow>
     (\<forall>x\<in>X. \<forall>b\<in>B. x \<in> b \<longrightarrow> (\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b))"
-  sorry
+proof -
+  have hBasis: "is_basis_on X B"
+    by (rule conjunct1[OF hB[unfolded basis_for_def]])
+  have hBX: "\<forall>b\<in>B. b \<subseteq> X"
+    by (rule conjunct1[OF hBasis[unfolded is_basis_on_def]])
+  have hInter: "\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>y\<in>(b1 \<inter> b2). \<exists>b3\<in>B. y \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2)"
+    by (rule conjunct2[OF conjunct2[OF hBasis[unfolded is_basis_on_def]]])
+  have hT_def: "T = topology_generated_by_basis X B"
+    by (rule conjunct2[OF hB[unfolded basis_for_def]])
+  have hT'_def: "T' = topology_generated_by_basis X B'"
+    by (rule conjunct2[OF hB'[unfolded basis_for_def]])
+  (* Every basis element of B is open in T *)
+  have basis_open: "\<forall>b\<in>B. b \<in> T"
+  proof (rule ballI)
+    fix b assume hbB: "b \<in> B"
+    have hbX: "b \<subseteq> X" by (rule bspec[OF hBX, OF hbB])
+    have hbT: "b \<in> topology_generated_by_basis X B"
+      unfolding topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule hbX)
+      show "\<forall>y\<in>b. \<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+      proof (rule ballI)
+        fix y assume hyb: "y \<in> b"
+        obtain b3 where hb3B: "b3 \<in> B" and hyb3: "y \<in> b3" and hb3sub: "b3 \<subseteq> b \<inter> b"
+          using hInter[rule_format, OF hbB, OF hbB] hyb by blast
+        have hb3sub': "b3 \<subseteq> b" using hb3sub by (simp only: Int_absorb)
+        show "\<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+          apply (rule bexI[where x=b3])
+           apply (rule conjI[OF hyb3 hb3sub'])
+          apply (rule hb3B)
+          done
+      qed
+    qed
+    show "b \<in> T" using hbT hT_def by simp
+  qed
+  show "finer_than T T' \<longleftrightarrow>
+    (\<forall>x\<in>X. \<forall>b\<in>B. x \<in> b \<longrightarrow> (\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b))"
+    unfolding finer_than_def
+  proof (rule iffI)
+    (* T \<subseteq> T' \<Longrightarrow> criterion *)
+    assume hTT': "T \<subseteq> T'"
+    show "\<forall>x\<in>X. \<forall>b\<in>B. x \<in> b \<longrightarrow> (\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b)"
+    proof (intro ballI impI)
+      fix x b assume hxX: "x \<in> X" and hbB: "b \<in> B" and hxb: "x \<in> b"
+      have hbT: "b \<in> T" by (rule bspec[OF basis_open, OF hbB])
+      have hbT': "b \<in> T'" by (rule subsetD[OF hTT', OF hbT])
+      have hbcov: "\<forall>y\<in>b. \<exists>b'\<in>B'. y \<in> b' \<and> b' \<subseteq> b"
+        using hbT' hT'_def unfolding topology_generated_by_basis_def by blast
+      show "\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b"
+        by (rule hbcov[rule_format, OF hxb])
+    qed
+  next
+    (* criterion \<Longrightarrow> T \<subseteq> T' *)
+    assume hcrit: "\<forall>x\<in>X. \<forall>b\<in>B. x \<in> b \<longrightarrow> (\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b)"
+    show "T \<subseteq> T'"
+    proof (rule subsetI)
+      fix W assume hW: "W \<in> T"
+      have hWsub: "W \<subseteq> X" and hWcov: "\<forall>x\<in>W. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> W"
+        using hW hT_def unfolding topology_generated_by_basis_def by blast+
+      have hWgen: "W \<in> topology_generated_by_basis X B'"
+        unfolding topology_generated_by_basis_def
+      proof (rule CollectI, rule conjI, rule hWsub)
+        show "\<forall>x\<in>W. \<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> W"
+        proof (rule ballI)
+          fix x assume hxW: "x \<in> W"
+          have hxX: "x \<in> X" by (rule subsetD[OF hWsub, OF hxW])
+          obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+            using hWcov[rule_format, OF hxW] by blast
+          obtain b' where hb'B': "b' \<in> B'" and hxb': "x \<in> b'" and hb'b: "b' \<subseteq> b"
+            using hcrit[rule_format, OF hxX, OF hbB, OF hxb] by blast
+          show "\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> W"
+            apply (rule bexI[where x=b'])
+             apply (rule conjI[OF hxb'])
+             apply (rule subset_trans[OF hb'b, OF hbW])
+            apply (rule hb'B')
+            done
+        qed
+      qed
+      show "W \<in> T'" using hWgen hT'_def by simp
+    qed
+  qed
+qed
 
 
 subsection \<open>Standard, lower limit, and K-topologies on \<real>\<close>
@@ -227,10 +366,190 @@ definition subspace_topology :: "'a set \<Rightarrow> 'a set set \<Rightarrow> '
 (** LATEX VERSION: "If B is a basis for X, then {B\<inter>Y} is a basis for subspace topology on Y." **)
 theorem Lemma_16_1:
   fixes Y :: "'a set"
-  assumes "basis_for X B T"
+  assumes hB: "basis_for X B T"
+  assumes hYX: "Y \<subseteq> X"
   defines "BY \<equiv> {b \<inter> Y | b. b \<in> B}"
   shows "basis_for Y BY (subspace_topology X T Y)"
-  sorry
+proof -
+  have hBasis: "is_basis_on X B"
+    by (rule conjunct1[OF hB[unfolded basis_for_def]])
+  have hBX: "\<forall>b\<in>B. b \<subseteq> X"
+    by (rule conjunct1[OF hBasis[unfolded is_basis_on_def]])
+  have hBcov: "\<forall>x\<in>X. \<exists>b\<in>B. x \<in> b"
+    by (rule conjunct1[OF conjunct2[OF hBasis[unfolded is_basis_on_def]]])
+  have hBinter: "\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>B. x \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2)"
+    by (rule conjunct2[OF conjunct2[OF hBasis[unfolded is_basis_on_def]]])
+  have hT_def: "T = topology_generated_by_basis X B"
+    by (rule conjunct2[OF hB[unfolded basis_for_def]])
+  (* Every basis element of B is open in T *)
+  have basis_open: "\<forall>b\<in>B. b \<in> T"
+  proof (rule ballI)
+    fix b assume hbB: "b \<in> B"
+    have hbX: "b \<subseteq> X" by (rule bspec[OF hBX, OF hbB])
+    have hbT: "b \<in> topology_generated_by_basis X B"
+      unfolding topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule hbX)
+      show "\<forall>y\<in>b. \<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+      proof (rule ballI)
+        fix y assume hyb: "y \<in> b"
+        obtain b3 where hb3B: "b3 \<in> B" and hyb3: "y \<in> b3" and hb3sub: "b3 \<subseteq> b \<inter> b"
+          using hBinter[rule_format, OF hbB, OF hbB] hyb by blast
+        have hb3sub': "b3 \<subseteq> b" using hb3sub by (simp only: Int_absorb)
+        show "\<exists>b'\<in>B. y \<in> b' \<and> b' \<subseteq> b"
+          apply (rule bexI[where x=b3])
+           apply (rule conjI[OF hyb3 hb3sub'])
+          apply (rule hb3B)
+          done
+      qed
+    qed
+    show "b \<in> T" using hbT hT_def by simp
+  qed
+  (* Arbitrary unions are in T *)
+  have union_T: "\<forall>U. U \<subseteq> T \<longrightarrow> \<Union>U \<in> T"
+  proof (rule allI, rule impI)
+    fix U assume hU: "U \<subseteq> T"
+    have hUgen: "U \<subseteq> topology_generated_by_basis X B"
+      using hU hT_def by simp
+    show "\<Union>U \<in> T"
+      unfolding hT_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI)
+      show "\<Union>U \<subseteq> X"
+        using hUgen unfolding topology_generated_by_basis_def by blast
+      show "\<forall>x\<in>\<Union>U. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> \<Union>U"
+      proof (rule ballI)
+        fix x assume hx: "x \<in> \<Union>U"
+        obtain V where hVU: "V \<in> U" and hxV: "x \<in> V" using hx by blast
+        have hVcov: "\<forall>y\<in>V. \<exists>b\<in>B. y \<in> b \<and> b \<subseteq> V"
+          using hVU hUgen unfolding topology_generated_by_basis_def by blast
+        obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbV: "b \<subseteq> V"
+          using hVcov[rule_format, OF hxV] by blast
+        show "\<exists>b\<in>B. x \<in> b \<and> b \<subseteq> \<Union>U"
+          apply (rule bexI[where x=b])
+           apply (rule conjI[OF hxb])
+           apply (rule subset_trans[OF hbV], rule Union_upper[OF hVU])
+          apply (rule hbB)
+          done
+      qed
+    qed
+  qed
+  (* BY has the three is_basis_on conditions *)
+  have hBY1: "\<forall>c\<in>BY. c \<subseteq> Y"
+    unfolding BY_def by blast
+  have hBY2: "\<forall>y\<in>Y. \<exists>c\<in>BY. y \<in> c"
+  proof (rule ballI)
+    fix y assume hyY: "y \<in> Y"
+    have hyX: "y \<in> X" by (rule subsetD[OF hYX, OF hyY])
+    obtain b where hbB: "b \<in> B" and hyb: "y \<in> b"
+      using hBcov[rule_format, OF hyX] by blast
+    show "\<exists>c\<in>BY. y \<in> c"
+      apply (rule bexI[where x="b \<inter> Y"])
+       apply (rule IntI[OF hyb hyY])
+      apply (simp only: BY_def, rule CollectI, rule exI[where x=b], rule conjI[OF refl hbB])
+      done
+  qed
+  have hBY3: "\<forall>c1\<in>BY. \<forall>c2\<in>BY. \<forall>y\<in>(c1 \<inter> c2). \<exists>c3\<in>BY. y \<in> c3 \<and> c3 \<subseteq> (c1 \<inter> c2)"
+  proof (rule ballI, rule ballI, rule ballI)
+    fix c1 c2 y
+    assume hc1: "c1 \<in> BY" and hc2: "c2 \<in> BY" and hyc12: "y \<in> c1 \<inter> c2"
+    obtain b1 where hb1B: "b1 \<in> B" and hc1eq: "c1 = b1 \<inter> Y"
+      using hc1 unfolding BY_def by blast
+    obtain b2 where hb2B: "b2 \<in> B" and hc2eq: "c2 = b2 \<inter> Y"
+      using hc2 unfolding BY_def by blast
+    have hyY: "y \<in> Y" using hyc12 hc1eq by blast
+    have hyb12: "y \<in> b1 \<inter> b2" using hyc12 hc1eq hc2eq by blast
+    obtain b3 where hb3B: "b3 \<in> B" and hyb3: "y \<in> b3" and hb3sub: "b3 \<subseteq> b1 \<inter> b2"
+      using hBinter[rule_format, OF hb1B, OF hb2B, OF hyb12] by blast
+    have hb3Ysub: "b3 \<inter> Y \<subseteq> c1 \<inter> c2"
+      using hb3sub hc1eq hc2eq by blast
+    show "\<exists>c3\<in>BY. y \<in> c3 \<and> c3 \<subseteq> c1 \<inter> c2"
+      apply (rule bexI[where x="b3 \<inter> Y"])
+       apply (rule conjI)
+        apply (rule IntI[OF hyb3 hyY])
+       apply (rule hb3Ysub)
+      apply (simp only: BY_def, rule CollectI, rule exI[where x=b3], rule conjI[OF refl hb3B])
+      done
+  qed
+  have hBYbasis: "is_basis_on Y BY"
+    unfolding is_basis_on_def
+    apply (rule conjI[OF hBY1])
+    apply (rule conjI[OF hBY2 hBY3])
+    done
+  (* Topology equality: subspace_topology X T Y = topology_generated_by_basis Y BY *)
+  have hTeq: "subspace_topology X T Y = topology_generated_by_basis Y BY"
+    unfolding subspace_topology_def
+  proof (rule set_eqI)
+    fix V
+    show "V \<in> {Y \<inter> U | U. U \<in> T} \<longleftrightarrow> V \<in> topology_generated_by_basis Y BY"
+    proof (rule iffI)
+      (* subspace_topology ⊆ tgb Y BY *)
+      assume hV: "V \<in> {Y \<inter> U | U. U \<in> T}"
+      obtain U where hUT: "U \<in> T" and hVYU: "V = Y \<inter> U" using hV by blast
+      have hUgen: "U \<in> topology_generated_by_basis X B" using hUT hT_def by simp
+      have hUcov: "\<forall>x\<in>U. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U"
+        using hUgen unfolding topology_generated_by_basis_def by blast
+      have hVgen: "V \<in> topology_generated_by_basis Y BY"
+        unfolding topology_generated_by_basis_def
+      proof (rule CollectI, rule conjI)
+        show "V \<subseteq> Y" using hVYU by blast
+        show "\<forall>y\<in>V. \<exists>c\<in>BY. y \<in> c \<and> c \<subseteq> V"
+        proof (rule ballI)
+          fix y assume hyV: "y \<in> V"
+          have hyU: "y \<in> U" using hyV hVYU by blast
+          have hyY: "y \<in> Y" using hyV hVYU by blast
+          obtain b where hbB: "b \<in> B" and hyb: "y \<in> b" and hbU: "b \<subseteq> U"
+            using hUcov[rule_format, OF hyU] by blast
+          have hbYsub: "b \<inter> Y \<subseteq> V" using hbU hVYU by blast
+          show "\<exists>c\<in>BY. y \<in> c \<and> c \<subseteq> V"
+            apply (rule bexI[where x="b \<inter> Y"])
+             apply (rule conjI)
+              apply (rule IntI[OF hyb hyY])
+             apply (rule hbYsub)
+            apply (simp only: BY_def, rule CollectI, rule exI[where x=b], rule conjI[OF refl hbB])
+            done
+        qed
+      qed
+      show "V \<in> topology_generated_by_basis Y BY" by (rule hVgen)
+    next
+      (* tgb Y BY ⊆ subspace_topology *)
+      assume hV: "V \<in> topology_generated_by_basis Y BY"
+      have hVsub: "V \<subseteq> Y" and hVcov: "\<forall>y\<in>V. \<exists>c\<in>BY. y \<in> c \<and> c \<subseteq> V"
+        using hV unfolding topology_generated_by_basis_def by blast+
+      have hVcov2: "\<forall>y\<in>V. \<exists>b\<in>B. y \<in> b \<and> b \<inter> Y \<subseteq> V"
+        using hVcov unfolding BY_def by blast
+      have hW_sub: "{b \<in> B. b \<inter> Y \<subseteq> V} \<subseteq> T"
+        using basis_open by blast
+      have hW_T: "\<Union>{b \<in> B. b \<inter> Y \<subseteq> V} \<in> T"
+        by (rule union_T[rule_format, OF hW_sub])
+      have hVeq: "V = Y \<inter> \<Union>{b \<in> B. b \<inter> Y \<subseteq> V}"
+      proof (rule set_eqI)
+        fix y
+        show "y \<in> V \<longleftrightarrow> y \<in> Y \<inter> \<Union>{b \<in> B. b \<inter> Y \<subseteq> V}"
+        proof (rule iffI)
+          assume hyV: "y \<in> V"
+          have hyY: "y \<in> Y" using hyV hVsub by blast
+          obtain b where hbB: "b \<in> B" and hyb: "y \<in> b" and hbYV: "b \<inter> Y \<subseteq> V"
+            using hVcov2[rule_format, OF hyV] by blast
+          show "y \<in> Y \<inter> \<Union>{b \<in> B. b \<inter> Y \<subseteq> V}"
+            using hyY hyb hbB hbYV by blast
+        next
+          assume hy: "y \<in> Y \<inter> \<Union>{b \<in> B. b \<inter> Y \<subseteq> V}"
+          have hyY: "y \<in> Y" using hy by blast
+          obtain b where hb: "b \<in> {b \<in> B. b \<inter> Y \<subseteq> V}" and hyb: "y \<in> b"
+            using hy by blast
+          show "y \<in> V" using hyY hyb hb by blast
+        qed
+      qed
+      show "V \<in> {Y \<inter> U | U. U \<in> T}"
+        apply (rule CollectI, rule exI[where x="\<Union>{b \<in> B. b \<inter> Y \<subseteq> V}"])
+        apply (rule conjI[OF hVeq hW_T])
+        done
+    qed
+  qed
+  show "basis_for Y BY (subspace_topology X T Y)"
+    unfolding basis_for_def
+    apply (rule conjI[OF hBYbasis hTeq])
+    done
+qed
 
 (** from \S16 Lemma 16.2 [top1.tex:486] **)
 (** LATEX VERSION: "If U open in Y and Y open in X, then U open in X." **)
