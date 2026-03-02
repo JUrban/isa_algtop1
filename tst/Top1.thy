@@ -290,16 +290,178 @@ lemma diff_Inter_eq: "(X :: 'a set) - \<Inter>F = \<Union>{X - A | A. A \<in> F}
   apply (rule subsetI)
   apply blast
   done
+
+(** Helper lemmas for closedin_on **)
+lemma closedin_sub: "closedin_on X T A \<Longrightarrow> A \<subseteq> X"
+  apply (unfold closedin_on_def)
+  apply (erule conjE)
+  apply assumption
+  done
+
+lemma closedin_diff_open: "closedin_on X T A \<Longrightarrow> X - A \<in> T"
+  apply (unfold closedin_on_def)
+  apply (erule conjE)
+  apply assumption
+  done
+
+lemma closedin_intro: "A \<subseteq> X \<Longrightarrow> X - A \<in> T \<Longrightarrow> closedin_on X T A"
+  apply (unfold closedin_on_def)
+  apply (rule conjI)
+   apply assumption
+  apply assumption
+  done
+
 (** from \S17 Theorem 17.1 [top1.tex:640] **)
 (** LATEX VERSION: "Empty and X closed; arbitrary intersections closed; finite unions closed." **)
 (** Note: Isabelle's Inter {} = UNIV (not X), so the intersection clause needs F \<noteq> {}. **)
+
+(** Auxiliary lemma for Theorem_17_1: finite union of closed sets is closed.
+    Use assumes for hfin and hcl, then "using hfin hcl" passes hcl as extra prems
+    to finite_induct, giving an IH that includes hcl specialized for the subsets. **)
+lemma closedin_Union_finite:
+  assumes hT: "is_topology_on X T"
+  assumes hfin: "finite F"
+  assumes hcl: "\<forall>A\<in>F. closedin_on X T A"
+  shows "closedin_on X T (\<Union>F)"
+  using hfin hcl
+proof (induction rule: finite_induct)
+  case empty
+  (* ?case = closedin_on X T (\<Union>{}) *)
+  (* empty.prems(1) = \<forall>A\<in>{}. closedin_on X T A  [not needed] *)
+  have X_T: "X \<in> T"
+    by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
+  show ?case
+    apply (subst Union_empty)
+    apply (rule closedin_intro)
+     apply (rule empty_subsetI)
+    apply (subst Diff_empty)
+    apply (rule X_T)
+    done
+next
+  case (insert a G)
+  (* ?case = closedin_on X T (\<Union>(insert a G)) *)
+  (* insert.hyps(1) = finite G, insert.hyps(2) = a \<notin> G *)
+  (* insert.prems(1) = \<forall>A\<in>insert a G. closedin_on X T A  [specialized hcl] *)
+  (* insert.IH = (\<forall>A\<in>G. closedin_on X T A) \<Longrightarrow> closedin_on X T (\<Union>G)  [hopefully] *)
+  have inter_T: "\<forall>Gf. finite Gf \<and> Gf \<subseteq> T \<longrightarrow> \<Inter>Gf \<in> T"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  note hall = insert.prems(1)
+  have ha: "closedin_on X T a"
+    apply (rule bspec[OF hall])
+    apply (rule insertI1)
+    done
+  have hG: "\<forall>A\<in>G. closedin_on X T A"
+  proof (rule ballI)
+    fix A2 assume hA2G: "A2 \<in> G"
+    show "closedin_on X T A2"
+      apply (rule bspec[OF hall])
+      apply (rule insertI2)
+      apply (rule hA2G)
+      done
+  qed
+  have hUG: "closedin_on X T (\<Union>G)"
+    by (rule insert.IH[OF hG])
+  have a_sub: "a \<subseteq> X" by (rule closedin_sub, rule ha)
+  have UG_sub: "\<Union>G \<subseteq> X" by (rule closedin_sub, rule hUG)
+  have XmA_T: "X - a \<in> T" by (rule closedin_diff_open, rule ha)
+  have XmUG_T: "X - \<Union>G \<in> T" by (rule closedin_diff_open, rule hUG)
+  have two_inter: "\<Inter>{X - a, X - \<Union>G} \<in> T"
+    apply (rule inter_T[rule_format])
+    apply (intro conjI)
+     apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
+    apply (rule subsetI)
+    apply (erule insertE)
+     apply (erule ssubst, rule XmA_T)
+    apply (erule singletonE)
+    apply (erule ssubst, rule XmUG_T)
+    done
+  have inter_eq: "\<Inter>{X - a, X - \<Union>G} = (X - a) \<inter> (X - \<Union>G)"
+    by simp
+  show ?case
+    apply (rule closedin_intro)
+     apply (simp only: Union_insert)
+     apply (rule Un_least, rule a_sub, rule UG_sub)
+    apply (simp only: Union_insert)
+    apply (simp only: Diff_Un)
+    apply (fold inter_eq)
+    apply (rule two_inter)
+    done
+qed
+
 theorem Theorem_17_1:
   assumes hT: "is_topology_on X T"
   shows "closedin_on X T {} \<and> closedin_on X T X
      \<and> (\<forall>F. F \<noteq> {} \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Inter>F))
      \<and> (\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F))"
-  sorry
-
+proof -
+  (* Extract the four topology axioms *)
+  have empty_T: "{} \<in> T"
+    by (rule conjunct1[OF hT[unfolded is_topology_on_def]])
+  have X_T: "X \<in> T"
+    by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
+  have union_T: "\<forall>U. U \<subseteq> T \<longrightarrow> \<Union>U \<in> T"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  have inter_T: "\<forall>G. finite G \<and> G \<subseteq> T \<longrightarrow> \<Inter>G \<in> T"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  have cl_empty: "closedin_on X T {}"
+    apply (rule closedin_intro)
+     apply (rule empty_subsetI)
+    apply (simp only: Diff_empty)
+    apply (rule X_T)
+    done
+  have cl_X: "closedin_on X T X"
+    apply (rule closedin_intro)
+     apply (rule subset_refl)
+    apply (simp only: Diff_cancel)
+    apply (rule empty_T)
+    done
+  have cl_inter: "\<forall>F. F \<noteq> {} \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Inter>F)"
+  proof (intro allI impI)
+    fix F :: "'a set set"
+    assume hFne: "F \<noteq> {}"
+    assume hFcl: "\<forall>A\<in>F. closedin_on X T A"
+    obtain A where hAF: "A \<in> F" using hFne by blast
+    have cl_A: "closedin_on X T A"
+      by (rule bspec[OF hFcl hAF])
+    have sub_X: "\<Inter>F \<subseteq> X"
+      apply (rule subset_trans)
+       apply (rule Inter_lower)
+       apply (rule hAF)
+      apply (rule closedin_sub)
+      apply (rule cl_A)
+      done
+    have comps_in_T: "{X - A | A. A \<in> F} \<subseteq> T"
+    proof (rule subsetI)
+      fix B assume hB: "B \<in> {X - A | A. A \<in> F}"
+      then obtain A2 where hAF2: "A2 \<in> F" and hBA: "B = X - A2" by blast
+      show "B \<in> T"
+        apply (subst hBA)
+        apply (rule closedin_diff_open)
+        apply (rule bspec[OF hFcl hAF2])
+        done
+    qed
+    show "closedin_on X T (\<Inter>F)"
+      apply (rule closedin_intro)
+       apply (rule sub_X)
+      apply (subst diff_Inter_eq)
+      apply (rule union_T[rule_format])
+      apply (rule comps_in_T)
+      done
+  qed
+  have cl_union: "\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F)"
+    apply (intro allI impI)
+    apply (rule closedin_Union_finite[OF hT])
+    apply assumption
+    apply assumption
+    done
+  show ?thesis
+    apply (intro conjI)
+       apply (rule cl_empty)
+      apply (rule cl_X)
+     apply (rule cl_inter)
+    apply (rule cl_union)
+    done
+qed
 (** from \S17 Theorem 17.2 [top1.tex:665] **)
 (** LATEX VERSION: "A closed in Y iff A = C\<inter>Y for some closed C in X." **)
 theorem Theorem_17_2:
