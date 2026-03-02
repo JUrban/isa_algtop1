@@ -755,4 +755,5 @@ theorem Theorem_17_11:
             is_hausdorff_on Y (subspace_topology X T Y))"
   sorry
 
+
 end
