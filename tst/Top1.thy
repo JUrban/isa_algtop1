@@ -21,6 +21,23 @@ definition is_topology_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool
      (\<forall>U. U \<subseteq> T \<longrightarrow> (\<Union>U) \<in> T) \<and>
      (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> (\<Inter>F) \<in> T)"
 
+(** Basic derived closure properties for a topology. **)
+lemma topology_inter2:
+  assumes hT: "is_topology_on X T"
+  assumes hU: "U \<in> T"
+  assumes hV: "V \<in> T"
+  shows "U \<inter> V \<in> T"
+proof -
+  have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+    by (rule conjunct2[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  have hfin: "finite {U, V}" by simp
+  have hne: "{U, V} \<noteq> {}" by (rule insert_not_empty)
+  have hsub: "{U, V} \<subseteq> T" using hU hV by blast
+  have hInter: "\<Inter>{U, V} \<in> T"
+    using inter_T hfin hne hsub by blast
+  show ?thesis using hInter by simp
+qed
+
 (** from \S12 (Open set terminology) [top1.tex:~55] **)
 (** LATEX VERSION: "U is open in X iff U \<in> T." **)
 definition openin_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
@@ -4424,7 +4441,7 @@ section \<open>\<S>18 Continuous Functions\<close>
 definition top1_continuous_map_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
   "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
-     (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>V\<in>TY. preimage f V \<in> TX)"
+     (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX)"
 
 definition top1_continuous_at_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> bool" where
@@ -4452,7 +4469,7 @@ theorem Theorem_18_1:
        (\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A))"
     and cont_closed:
     "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
-       (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX (preimage f B))"
+       (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x\<in>X. f x \<in> B})"
     and cont_nbhd:
     "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
        (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
@@ -4484,7 +4501,301 @@ theorem Theorem_18_2:
     and local_form:
     "(\<forall>Uc f. (\<Union>Uc = X) \<and> (\<forall>U\<in>Uc. U \<in> TX \<and> top1_continuous_map_on U (subspace_topology X TX U) Y TY f)
            \<longrightarrow> top1_continuous_map_on X TX Y TY f)"
-  sorry
+proof -
+  have empty_TX: "{} \<in> TX"
+    by (rule conjunct1[OF hTX[unfolded is_topology_on_def]])
+  have X_TX: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTX[unfolded is_topology_on_def]]])
+  have union_TX: "\<forall>U. U \<subseteq> TX \<longrightarrow> \<Union>U \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hTX[unfolded is_topology_on_def]]]])
+
+  show const_fun:
+    "(\<forall>y0\<in>Y. top1_continuous_map_on X TX Y TY (\<lambda>x. y0))"
+  proof (intro ballI)
+    fix y0 assume hy0: "y0 \<in> Y"
+    show "top1_continuous_map_on X TX Y TY (\<lambda>x. y0)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>X. (\<lambda>x. y0) x \<in> Y" using hy0 by simp
+      show "\<forall>V\<in>TY. {x \<in> X. (\<lambda>x. y0) x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TY"
+        have hset: "{x \<in> X. (\<lambda>x. y0) x \<in> V} = (if y0 \<in> V then X else {})"
+        proof (rule set_eqI)
+          fix x
+          show "x \<in> {x \<in> X. (\<lambda>x. y0) x \<in> V} \<longleftrightarrow> x \<in> (if y0 \<in> V then X else {})"
+          proof (cases "y0 \<in> V")
+            case True
+            then show ?thesis by simp
+          next
+            case False
+            then show ?thesis by simp
+          qed
+        qed
+        show "{x \<in> X. (\<lambda>x. y0) x \<in> V} \<in> TX"
+        proof (cases "y0 \<in> V")
+          case True
+          then show ?thesis using hset X_TX by simp
+        next
+          case False
+          then show ?thesis using hset empty_TX by simp
+        qed
+      qed
+    qed
+  qed
+
+  show inclusion:
+    "(\<forall>A. A \<subseteq> X \<longrightarrow> top1_continuous_map_on A (subspace_topology X TX A) X TX id)"
+  proof (intro allI impI)
+    fix A assume hAX: "A \<subseteq> X"
+    show "top1_continuous_map_on A (subspace_topology X TX A) X TX id"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>A. id x \<in> X"
+      proof (intro ballI)
+        fix x assume hxA: "x \<in> A"
+        have hxX: "x \<in> X" by (rule subsetD[OF hAX hxA])
+        show "id x \<in> X" using hxX by simp
+      qed
+      show "\<forall>V\<in>TX. {x \<in> A. id x \<in> V} \<in> subspace_topology X TX A"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TX"
+        have hEq: "{x \<in> A. id x \<in> V} = A \<inter> V"
+        proof (rule set_eqI)
+          fix x
+          show "x \<in> {x \<in> A. id x \<in> V} \<longleftrightarrow> x \<in> A \<inter> V" by simp
+        qed
+        show "{x \<in> A. id x \<in> V} \<in> subspace_topology X TX A"
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+           apply (simp only: hEq Int_commute)
+          apply (rule hV)
+          done
+      qed
+    qed
+  qed
+
+  show composites:
+    "(\<forall>f g. top1_continuous_map_on X TX Y TY f \<and> top1_continuous_map_on Y TY Z TZ g
+           \<longrightarrow> top1_continuous_map_on X TX Z TZ (g \<circ> f))"
+  proof (intro allI impI)
+    fix f g
+    assume hfg: "top1_continuous_map_on X TX Y TY f \<and> top1_continuous_map_on Y TY Z TZ g"
+    have hf: "top1_continuous_map_on X TX Y TY f" and hg: "top1_continuous_map_on Y TY Z TZ g"
+      using hfg by blast+
+    show "top1_continuous_map_on X TX Z TZ (g \<circ> f)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      have hfY: "\<forall>x\<in>X. f x \<in> Y" using hf unfolding top1_continuous_map_on_def by blast
+      have hgZ: "\<forall>y\<in>Y. g y \<in> Z" using hg unfolding top1_continuous_map_on_def by blast
+      show "\<forall>x\<in>X. (g \<circ> f) x \<in> Z" using hfY hgZ by simp
+      show "\<forall>W\<in>TZ. {x \<in> X. (g \<circ> f) x \<in> W} \<in> TX"
+      proof (intro ballI)
+        fix W assume hW: "W \<in> TZ"
+        have hgW: "{y \<in> Y. g y \<in> W} \<in> TY"
+          using hg hW unfolding top1_continuous_map_on_def by blast
+        have hfW: "{x \<in> X. f x \<in> {y \<in> Y. g y \<in> W}} \<in> TX"
+          using hf hgW unfolding top1_continuous_map_on_def by blast
+        have hEq: "{x \<in> X. (g \<circ> f) x \<in> W} = {x \<in> X. f x \<in> {y \<in> Y. g y \<in> W}}"
+        proof (rule set_eqI)
+          fix x
+          show "x \<in> {x \<in> X. (g \<circ> f) x \<in> W} \<longleftrightarrow> x \<in> {x \<in> X. f x \<in> {y \<in> Y. g y \<in> W}}"
+          proof
+            assume hx: "x \<in> {x \<in> X. (g \<circ> f) x \<in> W}"
+            have hxX: "x \<in> X" and hgfx: "g (f x) \<in> W" using hx by simp_all
+            have hfxY: "f x \<in> Y" using hfY hxX by blast
+            have "f x \<in> {y \<in> Y. g y \<in> W}" using hfxY hgfx by blast
+            thus "x \<in> {x \<in> X. f x \<in> {y \<in> Y. g y \<in> W}}" using hxX by blast
+          next
+            assume hx: "x \<in> {x \<in> X. f x \<in> {y \<in> Y. g y \<in> W}}"
+            have hxX: "x \<in> X" and hfx: "f x \<in> {y \<in> Y. g y \<in> W}" using hx by blast+
+            have hgfx: "g (f x) \<in> W" using hfx by blast
+            show "x \<in> {x \<in> X. (g \<circ> f) x \<in> W}" using hxX hgfx by simp
+          qed
+        qed
+        show "{x \<in> X. (g \<circ> f) x \<in> W} \<in> TX"
+          using hfW hEq by simp
+      qed
+    qed
+  qed
+
+  show restrict_domain:
+    "(\<forall>A f. top1_continuous_map_on X TX Y TY f \<and> A \<subseteq> X
+           \<longrightarrow> top1_continuous_map_on A (subspace_topology X TX A) Y TY f)"
+  proof (intro allI impI)
+    fix A f
+    assume hAf: "top1_continuous_map_on X TX Y TY f \<and> A \<subseteq> X"
+    have hf: "top1_continuous_map_on X TX Y TY f" and hAX: "A \<subseteq> X"
+      using hAf by blast+
+    show "top1_continuous_map_on A (subspace_topology X TX A) Y TY f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      have hfY: "\<forall>x\<in>X. f x \<in> Y" using hf unfolding top1_continuous_map_on_def by blast
+      show "\<forall>x\<in>A. f x \<in> Y" using hfY hAX by blast
+      show "\<forall>V\<in>TY. {x \<in> A. f x \<in> V} \<in> subspace_topology X TX A"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TY"
+        have hOpen: "{x \<in> X. f x \<in> V} \<in> TX"
+          using hf hV unfolding top1_continuous_map_on_def by blast
+        have hEq: "{x \<in> A. f x \<in> V} = A \<inter> {x \<in> X. f x \<in> V}"
+          using hAX by blast
+        show "{x \<in> A. f x \<in> V} \<in> subspace_topology X TX A"
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x="{x \<in> X. f x \<in> V}"])
+          apply (intro conjI)
+           apply (simp only: hEq Int_assoc Int_commute Int_left_commute)
+          apply (rule hOpen)
+          done
+      qed
+    qed
+  qed
+
+  show restrict_range:
+    "(\<forall>W f. top1_continuous_map_on X TX Y TY f \<and> W \<subseteq> Y \<and> f ` X \<subseteq> W
+           \<longrightarrow> top1_continuous_map_on X TX W (subspace_topology Y TY W) f)"
+  proof (intro allI impI)
+    fix W f
+    assume hWf: "top1_continuous_map_on X TX Y TY f \<and> W \<subseteq> Y \<and> f ` X \<subseteq> W"
+    have hf: "top1_continuous_map_on X TX Y TY f" and hWY: "W \<subseteq> Y" and hfWimg: "f ` X \<subseteq> W"
+      using hWf by blast+
+    have hfW: "\<forall>x\<in>X. f x \<in> W"
+      using hfWimg by blast
+    show "top1_continuous_map_on X TX W (subspace_topology Y TY W) f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>X. f x \<in> W" using hfW .
+      show "\<forall>V\<in>subspace_topology Y TY W. {x \<in> X. f x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> subspace_topology Y TY W"
+        obtain U where hU: "U \<in> TY" and hVeq: "V = W \<inter> U"
+          using hV unfolding subspace_topology_def by blast
+        have hOpen: "{x \<in> X. f x \<in> U} \<in> TX"
+          using hf hU unfolding top1_continuous_map_on_def by blast
+        have hEq: "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> U}"
+          unfolding hVeq
+          using hfW by blast
+        show "{x \<in> X. f x \<in> V} \<in> TX"
+          using hOpen hEq by simp
+      qed
+    qed
+  qed
+
+  show expand_range:
+    "(\<forall>W f. top1_continuous_map_on X TX Y TY f \<and> Y \<subseteq> W \<and> TY = subspace_topology W TZ Y
+           \<longrightarrow> top1_continuous_map_on X TX W TZ f)"
+  proof (intro allI impI)
+    fix W f
+    assume hWf: "top1_continuous_map_on X TX Y TY f \<and> Y \<subseteq> W \<and> TY = subspace_topology W TZ Y"
+    have hf: "top1_continuous_map_on X TX Y TY f" and hYW: "Y \<subseteq> W" and hTYeq: "TY = subspace_topology W TZ Y"
+      using hWf by blast+
+    have hfY: "\<forall>x\<in>X. f x \<in> Y"
+      using hf unfolding top1_continuous_map_on_def by blast
+    show "top1_continuous_map_on X TX W TZ f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>X. f x \<in> W" using hfY hYW by blast
+      show "\<forall>V\<in>TZ. {x \<in> X. f x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TZ"
+        have hVY: "Y \<inter> V \<in> TY"
+          unfolding hTYeq subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+           apply (rule refl)
+          apply (rule hV)
+          done
+        have hOpen: "{x \<in> X. f x \<in> (Y \<inter> V)} \<in> TX"
+          using hf hVY unfolding top1_continuous_map_on_def by blast
+        have hEq: "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> (Y \<inter> V)}"
+          using hfY by blast
+        show "{x \<in> X. f x \<in> V} \<in> TX" using hOpen hEq by simp
+      qed
+    qed
+  qed
+
+  show local_form:
+    "(\<forall>Uc f. (\<Union>Uc = X) \<and> (\<forall>U\<in>Uc. U \<in> TX \<and> top1_continuous_map_on U (subspace_topology X TX U) Y TY f)
+           \<longrightarrow> top1_continuous_map_on X TX Y TY f)"
+  proof (intro allI impI)
+    fix Uc f
+    assume hUc: "(\<Union>Uc = X) \<and> (\<forall>U\<in>Uc. U \<in> TX \<and> top1_continuous_map_on U (subspace_topology X TX U) Y TY f)"
+    have hUX: "\<Union>Uc = X" and hall: "\<forall>U\<in>Uc. U \<in> TX \<and> top1_continuous_map_on U (subspace_topology X TX U) Y TY f"
+      using hUc by blast+
+
+    have hfY: "\<forall>x\<in>X. f x \<in> Y"
+    proof (rule ballI)
+      fix x assume hxX: "x \<in> X"
+      obtain U where hU: "U \<in> Uc" and hxU: "x \<in> U"
+        using hxX hUX by blast
+      have hcontU: "top1_continuous_map_on U (subspace_topology X TX U) Y TY f"
+        using hall hU by blast
+      have hUrange: "\<forall>u\<in>U. f u \<in> Y"
+        using hcontU unfolding top1_continuous_map_on_def by blast
+      show "f x \<in> Y" using hUrange hxU by blast
+    qed
+
+    show "top1_continuous_map_on X TX Y TY f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>X. f x \<in> Y" using hfY .
+      show "\<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TY"
+        define S where "S = {{x \<in> U. f x \<in> V} | U. U \<in> Uc}"
+
+        have hSsub: "S \<subseteq> TX"
+        proof (rule subsetI)
+          fix W assume hW: "W \<in> S"
+          obtain U where hUUc: "U \<in> Uc" and hWeq: "W = {x \<in> U. f x \<in> V}"
+            using hW unfolding S_def by blast
+          have hUopen: "U \<in> TX" and hcontU: "top1_continuous_map_on U (subspace_topology X TX U) Y TY f"
+            using hall hUUc by blast+
+          have hpre: "{x \<in> U. f x \<in> V} \<in> subspace_topology X TX U"
+            using hcontU hV unfolding top1_continuous_map_on_def by blast
+          obtain oset where hoset: "oset \<in> TX" and hpre_eq: "{x \<in> U. f x \<in> V} = U \<inter> oset"
+            using hpre unfolding subspace_topology_def by blast
+          have hUo: "U \<inter> oset \<in> TX"
+            by (rule topology_inter2[OF hTX hUopen hoset])
+          show "W \<in> TX"
+            using hWeq hpre_eq hUo by simp
+        qed
+
+        have hUnionS: "\<Union>S = {x \<in> X. f x \<in> V}"
+        proof (rule set_eqI)
+          fix x
+          show "x \<in> \<Union>S \<longleftrightarrow> x \<in> {x \<in> X. f x \<in> V}"
+          proof (rule iffI)
+            assume hx: "x \<in> \<Union>S"
+            obtain W where hW: "W \<in> S" and hxW: "x \<in> W" using hx by blast
+            obtain U where hUUc: "U \<in> Uc" and hWeq: "W = {x \<in> U. f x \<in> V}"
+              using hW unfolding S_def by blast
+            have hxU: "x \<in> U" and hfx: "f x \<in> V" using hxW unfolding hWeq by blast+
+            have hxX: "x \<in> X" using hxU hUX hUUc by blast
+            show "x \<in> {x \<in> X. f x \<in> V}" using hxX hfx by blast
+          next
+            assume hx: "x \<in> {x \<in> X. f x \<in> V}"
+            have hxX: "x \<in> X" and hfx: "f x \<in> V" using hx by blast+
+            obtain U where hUUc: "U \<in> Uc" and hxU: "x \<in> U"
+              using hxX hUX by blast
+            have hxW: "x \<in> {x \<in> U. f x \<in> V}" using hxU hfx by blast
+            have "{x \<in> U. f x \<in> V} \<in> S" unfolding S_def using hUUc by blast
+            thus "x \<in> \<Union>S" using hxW by blast
+          qed
+        qed
+
+        have hOpen: "\<Union>S \<in> TX"
+          by (rule union_TX[rule_format, OF hSsub])
+
+        show "{x \<in> X. f x \<in> V} \<in> TX"
+          using hOpen hUnionS by simp
+      qed
+    qed
+  qed
+qed
 
 (** from \S18 Theorem 18.3 [top1.tex:1127] **)
 (** LATEX VERSION: "Pasting lemma." **)
