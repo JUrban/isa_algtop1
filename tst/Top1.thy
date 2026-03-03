@@ -10324,6 +10324,131 @@ proof -
     done
 qed
 
+(** from \S31 Lemma 31.1(b) [top1.tex:~4090] **)
+theorem Lemma_31_1b:
+  "top1_normal_on X T \<longleftrightarrow>
+     (top1_T1_on X T \<and>
+      (\<forall>A U. closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U
+         \<longrightarrow> (\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U)))"
+proof (rule iffI)
+  assume hN: "top1_normal_on X T"
+  have hT1: "top1_T1_on X T"
+    using hN unfolding top1_normal_on_def by blast
+  show "top1_T1_on X T \<and>
+      (\<forall>A U. closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U
+         \<longrightarrow> (\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U))"
+  proof (intro conjI)
+    show "top1_T1_on X T"
+      by (rule hT1)
+    show "\<forall>A U. closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U
+      \<longrightarrow> (\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U)"
+    proof (intro allI impI)
+      fix A U
+      assume hAU: "closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U"
+      have hA: "closedin_on X T A" and hU: "U \<in> T" and hUX: "U \<subseteq> X" and hAsubU: "A \<subseteq> U"
+        using hAU by blast+
+      show "\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U"
+        by (rule normal_refine_closed_into_open[OF hN hA hU hUX hAsubU])
+    qed
+  qed
+next
+  assume h:
+    "top1_T1_on X T \<and>
+      (\<forall>A U. closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U
+         \<longrightarrow> (\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U))"
+  have hT1: "top1_T1_on X T"
+    using h by blast
+  have hTop: "is_topology_on X T"
+    using hT1 unfolding top1_T1_on_def by blast
+  have hShrink:
+    "\<forall>A U. closedin_on X T A \<and> U \<in> T \<and> U \<subseteq> X \<and> A \<subseteq> U
+      \<longrightarrow> (\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U)"
+    using h by blast
+
+  show "top1_normal_on X T"
+    unfolding top1_normal_on_def
+  proof (intro conjI)
+    show "top1_T1_on X T"
+      by (rule hT1)
+    show "\<forall>C D. closedin_on X T C \<and> closedin_on X T D \<and> C \<inter> D = {}
+      \<longrightarrow> (\<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {})"
+    proof (intro allI impI)
+      fix C D
+      assume hCD: "closedin_on X T C \<and> closedin_on X T D \<and> C \<inter> D = {}"
+      have hC: "closedin_on X T C" and hD: "closedin_on X T D" and hdisj: "C \<inter> D = {}"
+        using hCD by blast+
+      have hDX: "D \<subseteq> X"
+        by (rule closedin_sub[OF hD])
+      have hU: "X - D \<in> T"
+        by (rule closedin_diff_open[OF hD])
+      have hUX: "X - D \<subseteq> X"
+        by blast
+      have hCsub: "C \<subseteq> X - D"
+      proof (rule subsetI)
+        fix x assume hxC: "x \<in> C"
+        have hxX: "x \<in> X"
+          using closedin_sub[OF hC] hxC by blast
+        have hxnotD: "x \<notin> D"
+        proof
+          assume hxD: "x \<in> D"
+          have "x \<in> C \<inter> D" using hxC hxD by blast
+          thus False using hdisj by blast
+        qed
+        show "x \<in> X - D"
+          using hxX hxnotD by blast
+      qed
+      obtain V where hV: "V \<in> T" and hVX: "V \<subseteq> X" and hCV: "C \<subseteq> V"
+          and hclV: "closure_on X T V \<subseteq> X - D"
+        using hShrink[rule_format, OF conjI[OF hC conjI[OF hU conjI[OF hUX hCsub]]]] by blast
+
+      have hclV_closed: "closedin_on X T (closure_on X T V)"
+        by (rule closure_on_closed[OF hTop hVX])
+      have hW: "X - closure_on X T V \<in> T"
+        by (rule closedin_diff_open[OF hclV_closed])
+
+      have hDsubW: "D \<subseteq> X - closure_on X T V"
+      proof (rule subsetI)
+        fix d assume hd: "d \<in> D"
+        have hdX: "d \<in> X" using hDX hd by blast
+        show "d \<in> X - closure_on X T V"
+        proof (rule DiffI)
+          show "d \<in> X" by (rule hdX)
+          show "d \<notin> closure_on X T V"
+          proof
+            assume hdcl: "d \<in> closure_on X T V"
+            have "d \<in> X - D"
+              using hclV hdcl by blast
+            thus False
+              using hd by blast
+          qed
+        qed
+      qed
+
+      have hdisjUV: "V \<inter> (X - closure_on X T V) = {}"
+      proof (rule equalityI)
+        show "V \<inter> (X - closure_on X T V) \<subseteq> {}"
+        proof (rule subsetI)
+          fix z assume hz: "z \<in> V \<inter> (X - closure_on X T V)"
+          have hzV: "z \<in> V" and hznot: "z \<notin> closure_on X T V"
+            using hz by blast+
+          have hVsub: "V \<subseteq> closure_on X T V"
+            by (rule subset_closure_on)
+          have "z \<in> closure_on X T V"
+            by (rule subsetD[OF hVsub hzV])
+          thus "z \<in> {}"
+            using hznot by blast
+        qed
+        show "{} \<subseteq> V \<inter> (X - closure_on X T V)"
+          by simp
+      qed
+
+      show "\<exists>U W. U \<in> T \<and> W \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> W \<and> U \<inter> W = {}"
+        by (rule exI[where x=V], rule exI[where x="X - closure_on X T V"],
+            intro conjI, rule hV, rule hW, rule hCV, rule hDsubW, rule hdisjUV)
+    qed
+  qed
+qed
+
 (** Insertion lemma: in a normal space, one can fit an open set between an open set and
     an open superset of its closure (used for the rational-indexed construction in the
     Urysohn lemma). **)
