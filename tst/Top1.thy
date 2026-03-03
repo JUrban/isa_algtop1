@@ -730,6 +730,100 @@ definition basis_order_topology_on :: "'a::linorder set \<Rightarrow> 'a set set
 definition order_topology_on :: "'a::linorder set \<Rightarrow> 'a set set" where
   "order_topology_on X = topology_generated_by_basis X (basis_order_topology_on X)"
 
+lemma basis_order_topology_on_UNIV:
+  "basis_order_topology_on (UNIV::'a::linorder set) = basis_order_topology"
+proof -
+  have hInt:
+      "{ open_interval_on (UNIV::'a set) a b | a b. a \<in> UNIV \<and> b \<in> UNIV \<and> a < b }
+     = { open_interval a b | a b. a < b }"
+  proof (rule set_eqI)
+    fix s
+    show "s \<in> { open_interval_on (UNIV::'a set) a b | a b. a \<in> UNIV \<and> b \<in> UNIV \<and> a < b }
+      \<longleftrightarrow> s \<in> { open_interval a b | a b. a < b }"
+    proof (rule iffI)
+      assume hs: "s \<in> { open_interval_on (UNIV::'a set) a b | a b. a \<in> UNIV \<and> b \<in> UNIV \<and> a < b }"
+      then obtain a b where hab: "a < b" and hseq: "s = open_interval_on UNIV a b"
+        by blast
+      have hseq': "s = open_interval a b"
+        using hseq unfolding open_interval_on_def by simp
+      show "s \<in> { open_interval a b | a b. a < b }"
+        using hab hseq' by blast
+    next
+      assume hs: "s \<in> { open_interval a b | a b. a < b }"
+      then obtain a b where hab: "a < b" and hseq: "s = open_interval a b"
+        by blast
+      have hseq': "s = open_interval_on (UNIV::'a set) a b"
+        using hseq unfolding open_interval_on_def by simp
+      show "s \<in> { open_interval_on (UNIV::'a set) a b | a b. a \<in> UNIV \<and> b \<in> UNIV \<and> a < b }"
+        using hab hseq' by blast
+    qed
+  qed
+
+  have hGt:
+      "{ open_ray_gt_on (UNIV::'a set) a | a. a \<in> UNIV } = { open_ray_gt a | a. True }"
+  proof (rule set_eqI)
+    fix s
+    show "s \<in> { open_ray_gt_on (UNIV::'a set) a | a. a \<in> UNIV }
+      \<longleftrightarrow> s \<in> { open_ray_gt a | a. True }"
+    proof (rule iffI)
+      assume hs: "s \<in> { open_ray_gt_on (UNIV::'a set) a | a. a \<in> UNIV }"
+      then obtain a where hseq: "s = open_ray_gt_on UNIV a"
+        by blast
+      have hseq': "s = open_ray_gt a"
+        using hseq unfolding open_ray_gt_on_def by simp
+      show "s \<in> { open_ray_gt a | a. True }"
+        using hseq' by blast
+    next
+      assume hs: "s \<in> { open_ray_gt a | a. True }"
+      then obtain a where hseq: "s = open_ray_gt a"
+        by blast
+      have hseq': "s = open_ray_gt_on (UNIV::'a set) a"
+        using hseq unfolding open_ray_gt_on_def by simp
+      show "s \<in> { open_ray_gt_on (UNIV::'a set) a | a. a \<in> UNIV }"
+        using hseq' by blast
+    qed
+  qed
+
+  have hLt:
+      "{ open_ray_lt_on (UNIV::'a set) a | a. a \<in> UNIV } = { open_ray_lt a | a. True }"
+  proof (rule set_eqI)
+    fix s
+    show "s \<in> { open_ray_lt_on (UNIV::'a set) a | a. a \<in> UNIV }
+      \<longleftrightarrow> s \<in> { open_ray_lt a | a. True }"
+    proof (rule iffI)
+      assume hs: "s \<in> { open_ray_lt_on (UNIV::'a set) a | a. a \<in> UNIV }"
+      then obtain a where hseq: "s = open_ray_lt_on UNIV a"
+        by blast
+      have hseq': "s = open_ray_lt a"
+        using hseq unfolding open_ray_lt_on_def by simp
+      show "s \<in> { open_ray_lt a | a. True }"
+        using hseq' by blast
+    next
+      assume hs: "s \<in> { open_ray_lt a | a. True }"
+      then obtain a where hseq: "s = open_ray_lt a"
+        by blast
+      have hseq': "s = open_ray_lt_on (UNIV::'a set) a"
+        using hseq unfolding open_ray_lt_on_def by simp
+      show "s \<in> { open_ray_lt_on (UNIV::'a set) a | a. a \<in> UNIV }"
+        using hseq' by blast
+    qed
+  qed
+
+  show ?thesis
+    unfolding basis_order_topology_on_def basis_order_topology_def
+    using hInt hGt hLt by simp
+qed
+
+lemma order_topology_on_UNIV_eq:
+  "order_topology_on_UNIV = order_topology_on (UNIV::'a::linorder set)"
+proof -
+  show ?thesis
+    unfolding order_topology_on_UNIV_def order_topology_on_def
+    apply (subst basis_order_topology_on_UNIV)
+    apply (rule refl)
+    done
+qed
+
 (** from \S14 Definition (Four interval types determined by a and b) [top1.tex:345] **)
 (** LATEX VERSION: "If X ordered and a element, there are four intervals ..." **)
 definition interval_types_four :: "'a::linorder \<Rightarrow> 'a \<Rightarrow> 'a set list" where
