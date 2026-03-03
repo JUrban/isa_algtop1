@@ -6056,6 +6056,119 @@ definition top1_metric_topology_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a
 definition top1_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_metrizable_on X T \<longleftrightarrow> (\<exists>d. top1_metric_on X d \<and> T = top1_metric_topology_on X d)"
 
+(** The standard ball family forms a basis (for the metric topology) on the carrier. **)
+lemma top1_metric_basis_is_basis_on:
+  assumes hd: "top1_metric_on X d"
+  shows "is_basis_on X (top1_metric_basis_on X d)"
+proof (unfold is_basis_on_def, intro conjI)
+  show "\<forall>b\<in>top1_metric_basis_on X d. b \<subseteq> X"
+    unfolding top1_metric_basis_on_def top1_ball_on_def by blast
+
+  show "\<forall>x\<in>X. \<exists>b\<in>top1_metric_basis_on X d. x \<in> b"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have hdx: "d x x = 0"
+      using hd hxX unfolding top1_metric_on_def by blast
+    have hxball: "x \<in> top1_ball_on X d x 1"
+      unfolding top1_ball_on_def using hxX hdx by simp
+    show "\<exists>b\<in>top1_metric_basis_on X d. x \<in> b"
+      unfolding top1_metric_basis_on_def
+      apply (rule bexI[where x="top1_ball_on X d x 1"])
+       apply (rule hxball)
+      apply (rule CollectI)
+      apply (rule exI[where x=x])
+      apply (rule exI[where x="1::real"])
+      using hxX by simp
+  qed
+
+  show "\<forall>b1\<in>top1_metric_basis_on X d. \<forall>b2\<in>top1_metric_basis_on X d. \<forall>x\<in>b1 \<inter> b2.
+         \<exists>b3\<in>top1_metric_basis_on X d. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+  proof (intro ballI)
+    fix b1 b2 x
+    assume hb1: "b1 \<in> top1_metric_basis_on X d"
+    assume hb2: "b2 \<in> top1_metric_basis_on X d"
+    assume hx: "x \<in> b1 \<inter> b2"
+
+    obtain x1 e1 where hx1X: "x1 \<in> X" and he1: "0 < e1" and hb1eq: "b1 = top1_ball_on X d x1 e1"
+      using hb1 unfolding top1_metric_basis_on_def by blast
+    obtain x2 e2 where hx2X: "x2 \<in> X" and he2: "0 < e2" and hb2eq: "b2 = top1_ball_on X d x2 e2"
+      using hb2 unfolding top1_metric_basis_on_def by blast
+
+    have hx1: "x \<in> top1_ball_on X d x1 e1" and hx2: "x \<in> top1_ball_on X d x2 e2"
+      using hx unfolding hb1eq hb2eq by blast+
+    have hxX: "x \<in> X"
+      using hx1 unfolding top1_ball_on_def by blast
+    have hdx1: "d x1 x < e1"
+      using hx1 unfolding top1_ball_on_def by blast
+    have hdx2: "d x2 x < e2"
+      using hx2 unfolding top1_ball_on_def by blast
+
+    define r where "r = min (e1 - d x1 x) (e2 - d x2 x)"
+    have hr_pos: "0 < r"
+      unfolding r_def using hdx1 hdx2 by linarith
+
+    have hdx0: "d x x = 0"
+      using hd hxX unfolding top1_metric_on_def by blast
+    have hx_in_r: "x \<in> top1_ball_on X d x r"
+      unfolding top1_ball_on_def using hxX hdx0 hr_pos by simp
+
+    have htri: "\<forall>a\<in>X. \<forall>b\<in>X. \<forall>c\<in>X. d a c \<le> d a b + d b c"
+      using hd unfolding top1_metric_on_def by blast
+
+    have hsub: "top1_ball_on X d x r \<subseteq> b1 \<inter> b2"
+    proof (rule subsetI)
+      fix z assume hz: "z \<in> top1_ball_on X d x r"
+      have hzX: "z \<in> X" and hdxz: "d x z < r"
+        using hz unfolding top1_ball_on_def by blast+
+      have hr_le1: "r \<le> e1 - d x1 x"
+        unfolding r_def by simp
+      have hr_le2: "r \<le> e2 - d x2 x"
+        unfolding r_def by simp
+
+      have hdx1z_le: "d x1 z \<le> d x1 x + d x z"
+        using htri hx1X hxX hzX by blast
+      have hdx2z_le: "d x2 z \<le> d x2 x + d x z"
+        using htri hx2X hxX hzX by blast
+
+      have hdx1z: "d x1 z < e1"
+        using hdx1z_le hdxz hr_le1 by linarith
+      have hdx2z: "d x2 z < e2"
+        using hdx2z_le hdxz hr_le2 by linarith
+
+      have hz1: "z \<in> top1_ball_on X d x1 e1"
+        unfolding top1_ball_on_def using hzX hdx1z by blast
+      have hz2: "z \<in> top1_ball_on X d x2 e2"
+        unfolding top1_ball_on_def using hzX hdx2z by blast
+
+      show "z \<in> b1 \<inter> b2"
+        unfolding hb1eq hb2eq using hz1 hz2 by blast
+    qed
+
+    show "\<exists>b3\<in>top1_metric_basis_on X d. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+      unfolding top1_metric_basis_on_def
+      apply (rule bexI[where x="top1_ball_on X d x r"])
+       apply (intro conjI)
+        apply (rule hx_in_r)
+       apply (rule hsub)
+      apply (rule CollectI)
+      apply (rule exI[where x=x])
+      apply (rule exI[where x=r])
+      using hxX hr_pos by simp
+  qed
+qed
+
+lemma top1_metric_topology_on_is_topology_on:
+  assumes hd: "top1_metric_on X d"
+  shows "is_topology_on X (top1_metric_topology_on X d)"
+proof -
+  have hB: "is_basis_on X (top1_metric_basis_on X d)"
+    by (rule top1_metric_basis_is_basis_on[OF hd])
+  have hTop: "is_topology_on X (topology_generated_by_basis X (top1_metric_basis_on X d))"
+    by (rule topology_generated_by_basis_is_topology_on[OF hB])
+  show ?thesis
+    unfolding top1_metric_topology_on_def using hTop by simp
+qed
+
 section \<open>\<S>21 The Metric Topology (continued)\<close>
 
 text \<open>
