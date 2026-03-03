@@ -6458,6 +6458,24 @@ proof -
   qed
 qed
 
+section \<open>\<S>24 Connected Subspaces of the Real Line\<close>
+
+text \<open>
+  Section \<S>24 of \<open>top1.tex\<close> specializes the theory of connectedness to subspaces of
+  \<open>\<real>\<close>, culminating in the characterization of connected subsets of \<open>\<real>\<close> as intervals.
+
+  The present development has not yet introduced the order topology on \<open>\<real>\<close> in a way that
+  connects smoothly with the earlier sections, so we leave this section as a placeholder for
+  later work.
+\<close>
+
+section \<open>*\<S>25 Components and Local Connectedness\<close>
+
+text \<open>
+  The starred section *\<S>25 of \<open>top1.tex\<close> develops components and local connectedness.
+  It is currently left as a placeholder.
+\<close>
+
 section \<open>\<S>26 Compact Spaces\<close>
 
 definition top1_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
@@ -7589,6 +7607,292 @@ proof -
     done
 qed
 
+section \<open>\<S>27 Compact Subspaces of the Real Line\<close>
+
+text \<open>
+  Section \<S>27 of \<open>top1.tex\<close> proves compactness results for subspaces of \<open>\<real>\<close>
+  (including Heine--Borel). This is currently left as a placeholder; later work can connect
+  these results to the order topology development of \<open>\<real>\<close>.
+\<close>
+
+section \<open>\<S>28 Limit Point Compactness\<close>
+
+(** from \S28 Definition (Limit point compactness) [top1.tex:3588] **)
+definition top1_limit_point_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_limit_point_compact_on X T \<longleftrightarrow>
+     is_topology_on X T \<and>
+     (\<forall>A. A \<subseteq> X \<and> infinite A \<longrightarrow> (\<exists>x\<in>X. is_limit_point_of x A X T))"
+
+(** from \S28 Theorem 28.1 (Compact \<Longrightarrow> limit point compact) [top1.tex:~3600] **)
+theorem Theorem_28_1:
+  assumes hcomp: "top1_compact_on X T"
+  shows "top1_limit_point_compact_on X T"
+proof -
+  have hTop: "is_topology_on X T"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  have hCompactCover:
+    "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  show ?thesis
+    unfolding top1_limit_point_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on X T"
+      by (rule hTop)
+
+    show "\<forall>A. A \<subseteq> X \<and> infinite A \<longrightarrow> (\<exists>x\<in>X. is_limit_point_of x A X T)"
+    proof (intro allI impI)
+      fix A
+      assume hA: "A \<subseteq> X \<and> infinite A"
+      have hAX: "A \<subseteq> X"
+        using hA by blast
+      have hAinf: "infinite A"
+        using hA by blast
+
+      show "\<exists>x\<in>X. is_limit_point_of x A X T"
+      proof (rule ccontr)
+        assume hno: "\<not> (\<exists>x\<in>X. is_limit_point_of x A X T)"
+        have hno_all: "\<forall>x\<in>X. \<not> is_limit_point_of x A X T"
+          using hno by blast
+
+        have hlp_empty: "limit_points_of A X T = {}"
+        proof (rule equalityI)
+          show "limit_points_of A X T \<subseteq> {}"
+          proof (rule subsetI)
+            fix x assume hx: "x \<in> limit_points_of A X T"
+            have hxX: "x \<in> X"
+              using hx unfolding limit_points_of_def by blast
+            have hxlp: "is_limit_point_of x A X T"
+              using hx unfolding limit_points_of_def by blast
+            have "\<not> is_limit_point_of x A X T"
+              using hno_all hxX by blast
+            thus "x \<in> {}"
+              using hxlp by blast
+          qed
+          show "{} \<subseteq> limit_points_of A X T"
+            by simp
+        qed
+
+        have hAcl: "closedin_on X T A"
+        proof -
+          have "limit_points_of A X T \<subseteq> A"
+            using hlp_empty by simp
+          thus ?thesis
+            by (rule iffD2[OF Corollary_17_7[OF hTop hAX]])
+        qed
+        have hXmA_open: "X - A \<in> T"
+          by (rule closedin_diff_open[OF hAcl])
+
+        have ex_U:
+          "\<forall>a\<in>A. \<exists>U. neighborhood_of a X T U \<and> (U - {a}) \<inter> A = {}"
+        proof (intro ballI)
+          fix a assume haA: "a \<in> A"
+          have haX: "a \<in> X"
+            using hAX haA by blast
+          have hnlim: "\<not> is_limit_point_of a A X T"
+            using hno_all haX by blast
+          have ex: "\<exists>U. neighborhood_of a X T U \<and> \<not> intersects (U - {a}) A"
+          proof -
+            have "\<not> (\<forall>U. neighborhood_of a X T U \<longrightarrow> intersects (U - {a}) A)"
+              using hnlim haX hAX unfolding is_limit_point_of_def by blast
+            thus ?thesis by blast
+          qed
+          obtain U where hnb: "neighborhood_of a X T U" and hnot: "\<not> intersects (U - {a}) A"
+            using ex by blast
+          have hdisj: "(U - {a}) \<inter> A = {}"
+            using hnot unfolding intersects_def by blast
+          show "\<exists>U. neighborhood_of a X T U \<and> (U - {a}) \<inter> A = {}"
+            by (rule exI[where x=U], intro conjI, rule hnb, rule hdisj)
+        qed
+
+        obtain f where hf:
+          "\<forall>a\<in>A. neighborhood_of a X T (f a) \<and> (f a - {a}) \<inter> A = {}"
+          using bchoice[OF ex_U] by blast
+
+        define Uc where "Uc = insert (X - A) (f ` A)"
+
+        have hUc_subT: "Uc \<subseteq> T"
+        proof (rule subsetI)
+          fix U assume hU: "U \<in> Uc"
+          have h_cases: "U = X - A \<or> U \<in> f ` A"
+            using hU unfolding Uc_def by blast
+          show "U \<in> T"
+          proof (rule disjE[OF h_cases])
+            assume "U = X - A"
+            thus "U \<in> T"
+              using hXmA_open by simp
+          next
+            assume hUfA: "U \<in> f ` A"
+            then obtain a where haA: "a \<in> A" and hUeq: "U = f a"
+              by blast
+            have "neighborhood_of a X T (f a)"
+              using hf haA by blast
+            hence "f a \<in> T"
+              unfolding neighborhood_of_def by blast
+            thus "U \<in> T"
+              using hUeq by simp
+          qed
+        qed
+
+        have hX_sub_Uc: "X \<subseteq> \<Union>Uc"
+        proof (rule subsetI)
+          fix x assume hxX: "x \<in> X"
+          show "x \<in> \<Union>Uc"
+          proof (cases "x \<in> A")
+            case True
+            have hxA: "x \<in> A" using True .
+            have "neighborhood_of x X T (f x)"
+              using hf hxA by blast
+            hence hxfx: "x \<in> f x"
+              unfolding neighborhood_of_def by blast
+            have "f x \<in> f ` A"
+              by (rule imageI[OF hxA])
+            hence "f x \<in> Uc"
+              unfolding Uc_def by blast
+            thus ?thesis
+              using hxfx by blast
+          next
+            case False
+            have hxXmA: "x \<in> X - A"
+              using hxX False by blast
+            have "X - A \<in> Uc"
+              unfolding Uc_def by blast
+            thus ?thesis
+              using hxXmA by blast
+          qed
+        qed
+
+        have hUc_cover: "Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc"
+          by (intro conjI hUc_subT hX_sub_Uc)
+        obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "X \<subseteq> \<Union>F"
+          using hCompactCover[rule_format, of Uc] hUc_cover by blast
+
+        define G where "G = F - {X - A}"
+
+        have hGfin: "finite G"
+          unfolding G_def using hFfin by simp
+
+        have hA_sub_UnionG: "A \<subseteq> \<Union>G"
+        proof (rule subsetI)
+          fix a assume haA: "a \<in> A"
+          have haX: "a \<in> X" using hAX haA by blast
+          have haUF: "a \<in> \<Union>F"
+            using hFcov haX by blast
+          then obtain U where hUF: "U \<in> F" and haU: "a \<in> U"
+            by blast
+          have hU_not: "U \<noteq> X - A"
+          proof
+            assume hUeq: "U = X - A"
+            have "a \<in> X - A"
+              using haU hUeq by simp
+            thus False using haA by blast
+          qed
+          have hUG: "U \<in> G"
+            unfolding G_def using hUF hU_not by blast
+          show "a \<in> \<Union>G"
+            using hUG haU by blast
+        qed
+
+        have hG_sub_fA: "G \<subseteq> f ` A"
+        proof (rule subsetI)
+          fix U assume hUG: "U \<in> G"
+          have hUF: "U \<in> F"
+            using hUG unfolding G_def by blast
+          have hU_Uc: "U \<in> Uc"
+            using hFsub hUF by blast
+          have hU_cases: "U = X - A \<or> U \<in> f ` A"
+            using hU_Uc unfolding Uc_def by blast
+          show "U \<in> f ` A"
+          proof (rule disjE[OF hU_cases])
+            assume hUeq: "U = X - A"
+            have "U \<noteq> X - A"
+              using hUG unfolding G_def by blast
+            thus "U \<in> f ` A"
+              using hUeq by blast
+          next
+            assume "U \<in> f ` A"
+            thus "U \<in> f ` A" .
+          qed
+        qed
+
+        have hUA_finite: "\<forall>U\<in>G. finite (U \<inter> A)"
+        proof (intro ballI)
+          fix U assume hUG: "U \<in> G"
+          have hUfA: "U \<in> f ` A"
+            using hG_sub_fA hUG by blast
+          obtain a0 where ha0A: "a0 \<in> A" and hUeq: "U = f a0"
+            using hUfA by blast
+          have hdisj: "(f a0 - {a0}) \<inter> A = {}"
+            using hf ha0A by blast
+          have hsub: "U \<inter> A \<subseteq> {a0}"
+          proof (rule subsetI)
+            fix x assume hx: "x \<in> U \<inter> A"
+            have hxU: "x \<in> U" and hxA: "x \<in> A"
+              using hx by blast+
+            have hxU0: "x \<in> f a0"
+              using hxU hUeq by simp
+            show "x \<in> {a0}"
+            proof (cases "x = a0")
+              case True
+              thus ?thesis by simp
+            next
+              case False
+              have hx_in: "x \<in> (f a0 - {a0}) \<inter> A"
+                using hxU0 hxA False by blast
+              show ?thesis
+                using hdisj hx_in by blast
+            qed
+          qed
+          have hsing: "finite {a0}" by simp
+          show "finite (U \<inter> A)"
+            by (rule finite_subset[OF hsub hsing])
+        qed
+
+        define H where "H = (\<lambda>U. U \<inter> A) ` G"
+
+        have hHfin: "finite H"
+          unfolding H_def using hGfin by simp
+
+        have hHall_fin: "\<And>S. S \<in> H \<Longrightarrow> finite S"
+        proof -
+          fix S assume hS: "S \<in> H"
+          then obtain U where hUG: "U \<in> G" and hSeq: "S = U \<inter> A"
+            unfolding H_def by blast
+          have "finite (U \<inter> A)"
+            using hUA_finite hUG by blast
+          thus "finite S"
+            using hSeq by simp
+        qed
+
+        have hUnionH_fin: "finite (\<Union>H)"
+          by (rule finite_Union[OF hHfin hHall_fin])
+
+        have hA_sub_UnionH: "A \<subseteq> \<Union>H"
+        proof (rule subsetI)
+          fix a assume haA: "a \<in> A"
+          have haG: "a \<in> \<Union>G"
+            using hA_sub_UnionG haA by blast
+          then obtain U where hUG: "U \<in> G" and haU: "a \<in> U"
+            by blast
+          have hS_in: "U \<inter> A \<in> H"
+            unfolding H_def by (rule imageI[OF hUG])
+          have ha_in: "a \<in> U \<inter> A"
+            using haU haA by blast
+          show "a \<in> \<Union>H"
+            using hS_in ha_in by blast
+        qed
+
+        have hAfin: "finite A"
+          by (rule finite_subset[OF hA_sub_UnionH hUnionH_fin])
+
+        show False
+          using hAinf hAfin by blast
+      qed
+    qed
+  qed
+qed
+
 section \<open>\<S>29 Local Compactness\<close>
 
 definition top1_locally_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
@@ -7965,6 +8269,245 @@ definition top1_first_countable_on :: "'a set \<Rightarrow> 'a set set \<Rightar
 (** from \S30 Definition (Second countability axiom) [top1.tex:~3903] **)
 definition top1_second_countable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_second_countable_on X T \<longleftrightarrow> (\<exists>B. top1_countable B \<and> basis_for X B T)"
+
+(** Images of countable sets are countable (in the sense of \<open>top1_countable\<close>). **)
+lemma top1_countable_image:
+  assumes hS: "top1_countable S"
+  shows "top1_countable (f ` S)"
+proof -
+  obtain g :: "'a \<Rightarrow> nat" where hg: "inj_on g S"
+    using hS unfolding top1_countable_def by blast
+
+  define rep where "rep y = (SOME x. x \<in> S \<and> f x = y)" for y
+
+  have rep_spec: "\<forall>y\<in>f ` S. rep y \<in> S \<and> f (rep y) = y"
+  proof (intro ballI)
+    fix y assume hy: "y \<in> f ` S"
+    obtain x where hxS: "x \<in> S" and hyfx: "y = f x"
+      using hy by blast
+    have ex: "\<exists>x. x \<in> S \<and> f x = y"
+      using hxS hyfx by blast
+    have hrep: "rep y \<in> S \<and> f (rep y) = y"
+      unfolding rep_def
+      by (rule someI_ex[OF ex])
+    show "rep y \<in> S \<and> f (rep y) = y"
+      by (rule hrep)
+  qed
+
+  define h where "h y = g (rep y)" for y
+
+  have hinj: "inj_on h (f ` S)"
+    unfolding inj_on_def
+  proof (intro ballI impI)
+    fix y1 y2
+    assume hy1: "y1 \<in> f ` S" and hy2: "y2 \<in> f ` S"
+    assume hh: "h y1 = h y2"
+    have hr1: "rep y1 \<in> S" and hf1: "f (rep y1) = y1"
+      using rep_spec hy1 by blast+
+    have hr2: "rep y2 \<in> S" and hf2: "f (rep y2) = y2"
+      using rep_spec hy2 by blast+
+    have hg_eq: "g (rep y1) = g (rep y2)"
+      using hh unfolding h_def by simp
+    have hrep_eq: "rep y1 = rep y2"
+      using hg hr1 hr2 hg_eq unfolding inj_on_def by blast
+    have "y1 = f (rep y1)" using hf1 by simp
+    also have "... = f (rep y2)" using hrep_eq by simp
+    also have "... = y2" using hf2 by simp
+    finally show "y1 = y2" .
+  qed
+
+  show ?thesis
+    unfolding top1_countable_def
+    by (rule exI[where x=h], rule hinj)
+qed
+
+(** from \S30 Theorem 30.3(a) (Second-countable \<Longrightarrow> Lindelöf) [top1.tex:~4020] **)
+theorem Theorem_30_3a:
+  assumes h2nd: "top1_second_countable_on X T"
+  assumes hUc: "Uc \<subseteq> T"
+  assumes hcov: "X \<subseteq> \<Union>Uc"
+  shows "\<exists>V. top1_countable V \<and> V \<subseteq> Uc \<and> X \<subseteq> \<Union>V"
+proof -
+  obtain B where hBcnt: "top1_countable B" and hBasis: "basis_for X B T"
+    using h2nd unfolding top1_second_countable_on_def by blast
+  have hT_def: "T = topology_generated_by_basis X B"
+    using hBasis unfolding basis_for_def by blast
+  have hB_basis: "is_basis_on X B"
+    using hBasis unfolding basis_for_def by blast
+  have hTop: "is_topology_on X T"
+    unfolding hT_def by (rule topology_generated_by_basis_is_topology_on[OF hB_basis])
+
+  define J where "J = {b\<in>B. \<exists>U\<in>Uc. b \<subseteq> U}"
+
+  have hJcnt: "top1_countable J"
+  proof -
+    have "J \<subseteq> B"
+      unfolding J_def by blast
+    thus ?thesis
+      by (rule top1_countable_subset[OF hBcnt])
+  qed
+
+  have ex_pick: "\<forall>b\<in>J. \<exists>U. U \<in> Uc \<and> b \<subseteq> U"
+    unfolding J_def by blast
+
+  obtain pick where hpick: "\<forall>b\<in>J. pick b \<in> Uc \<and> b \<subseteq> pick b"
+    using bchoice[OF ex_pick] by blast
+
+  define V where "V = pick ` J"
+
+  have hVcnt: "top1_countable V"
+    unfolding V_def by (rule top1_countable_image[OF hJcnt])
+
+  have hVsub: "V \<subseteq> Uc"
+  proof (rule subsetI)
+    fix U assume hU: "U \<in> V"
+    obtain b where hbJ: "b \<in> J" and hUeq: "U = pick b"
+      using hU unfolding V_def by blast
+    have "pick b \<in> Uc"
+      using hpick hbJ by blast
+    thus "U \<in> Uc"
+      using hUeq by simp
+  qed
+
+  have hVcov: "X \<subseteq> \<Union>V"
+  proof (rule subsetI)
+    fix x assume hxX: "x \<in> X"
+    have hxUc: "x \<in> \<Union>Uc"
+      using hcov hxX by blast
+    then obtain U0 where hU0Uc: "U0 \<in> Uc" and hxU0: "x \<in> U0"
+      by blast
+    have hU0T: "U0 \<in> T"
+      using hUc hU0Uc by blast
+    have hU0_open: "U0 \<in> topology_generated_by_basis X B"
+      using hU0T unfolding hT_def by simp
+    have exb: "\<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U0"
+      using hU0_open hxU0 unfolding topology_generated_by_basis_def by blast
+    obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbU0: "b \<subseteq> U0"
+      using exb by blast
+    have hbJ: "b \<in> J"
+      unfolding J_def using hbB hU0Uc hbU0 by blast
+    have hpb: "pick b \<in> Uc \<and> b \<subseteq> pick b"
+      using hpick hbJ by blast
+    have hxpick: "x \<in> pick b"
+      using hxb hpb by blast
+    have "pick b \<in> V"
+      unfolding V_def by (rule imageI[OF hbJ])
+    thus "x \<in> \<Union>V"
+      using hxpick by blast
+  qed
+
+  show ?thesis
+    by (rule exI[where x=V], intro conjI, rule hVcnt, rule hVsub, rule hVcov)
+qed
+
+(** from \S30 Theorem 30.3(b) (Second-countable \<Longrightarrow> separable) [top1.tex:~4030] **)
+theorem Theorem_30_3b:
+  assumes h2nd: "top1_second_countable_on X T"
+  shows "\<exists>D. top1_countable D \<and> D \<subseteq> X \<and> closure_on X T D = X"
+proof -
+  obtain B where hBcnt: "top1_countable B" and hBasis: "basis_for X B T"
+    using h2nd unfolding top1_second_countable_on_def by blast
+  have hT_def: "T = topology_generated_by_basis X B"
+    using hBasis unfolding basis_for_def by blast
+  have hB_basis: "is_basis_on X B"
+    using hBasis unfolding basis_for_def by blast
+  have hTop: "is_topology_on X T"
+    unfolding hT_def by (rule topology_generated_by_basis_is_topology_on[OF hB_basis])
+
+  define B0 where "B0 = {b\<in>B. b \<noteq> {}}"
+  have hB0cnt: "top1_countable B0"
+  proof -
+    have "B0 \<subseteq> B"
+      unfolding B0_def by blast
+    thus ?thesis
+      by (rule top1_countable_subset[OF hBcnt])
+  qed
+
+  define pickpt :: "'a set \<Rightarrow> 'a"
+    where "pickpt b = (SOME x. x \<in> b)" for b
+
+  have pickpt_mem:
+    "\<And>b. b \<in> B0 \<Longrightarrow> pickpt b \<in> b"
+  proof -
+    fix b assume hb: "b \<in> B0"
+    have hbne: "b \<noteq> {}"
+      using hb unfolding B0_def by blast
+    have ex: "\<exists>x. x \<in> b"
+      using hbne by (simp add: ex_in_conv)
+    show "pickpt b \<in> b"
+      unfolding pickpt_def by (rule someI_ex[OF ex])
+  qed
+
+  define D where "D = pickpt ` B0"
+
+  have hDcnt: "top1_countable D"
+    unfolding D_def by (rule top1_countable_image[OF hB0cnt])
+
+  have hDsubX: "D \<subseteq> X"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> D"
+    obtain b where hb0: "b \<in> B0" and hxeq: "x = pickpt b"
+      using hx unfolding D_def by blast
+    have hxb: "x \<in> b"
+    proof -
+      have "pickpt b \<in> b"
+        by (rule pickpt_mem[OF hb0])
+      thus ?thesis
+        using hxeq by simp
+    qed
+    have hbB: "b \<in> B"
+      using hb0 unfolding B0_def by blast
+    have hBsub: "\<forall>b\<in>B. b \<subseteq> X"
+      using hBasis unfolding basis_for_def is_basis_on_def by blast
+    have hbX: "b \<subseteq> X"
+      using hBsub hbB by blast
+    show "x \<in> X"
+      using hxb hbX by blast
+  qed
+
+  have hDdense: "closure_on X T D = X"
+  proof (rule equalityI)
+    show "closure_on X T D \<subseteq> X"
+      by (rule closure_on_subset_carrier[OF hTop hDsubX])
+    show "X \<subseteq> closure_on X T D"
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      have hxcl:
+        "x \<in> closure_on X T D \<longleftrightarrow> (\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects U D)"
+        by (rule Theorem_17_5a[OF hTop hxX hDsubX])
+      have "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects U D"
+      proof (intro allI impI)
+        fix U assume hU: "neighborhood_of x X T U"
+        have hUT: "U \<in> T" and hxU: "x \<in> U"
+          using hU unfolding neighborhood_of_def by blast+
+        have hU_open: "U \<in> topology_generated_by_basis X B"
+          using hUT unfolding hT_def by simp
+        obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+          using hU_open hxU unfolding topology_generated_by_basis_def by blast
+        have hbne: "b \<noteq> {}"
+          using hxb by blast
+        have hb0: "b \<in> B0"
+          unfolding B0_def using hbB hbne by blast
+        have hxpick: "pickpt b \<in> b"
+          by (rule pickpt_mem[OF hb0])
+        have "pickpt b \<in> D"
+          unfolding D_def by (rule imageI[OF hb0])
+        moreover have "pickpt b \<in> U"
+          using hxpick hbU by blast
+        ultimately have "U \<inter> D \<noteq> {}"
+          by blast
+        thus "intersects U D"
+          unfolding intersects_def by simp
+      qed
+      hence "x \<in> closure_on X T D"
+        using hxcl by blast
+      thus "x \<in> closure_on X T D" .
+    qed
+  qed
+
+  show ?thesis
+    by (rule exI[where x=D], intro conjI, rule hDcnt, rule hDsubX, rule hDdense)
+qed
 
 section \<open>\<S>31 The Separation Axioms\<close>
 
