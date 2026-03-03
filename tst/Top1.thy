@@ -446,7 +446,170 @@ theorem Theorem_15_1:
   assumes hBY: "basis_for UNIV BY TY"
   defines "D \<equiv> {B \<times> C | B C. B \<in> BX \<and> C \<in> BY}"
   shows "basis_for UNIV D (product_topology_on TX TY)"
-  sorry
+proof -
+  have hBX_basis: "is_basis_on UNIV BX" and hTX_eq: "TX = topology_generated_by_basis UNIV BX"
+    using hBX unfolding basis_for_def by blast+
+  have hBY_basis: "is_basis_on UNIV BY" and hTY_eq: "TY = topology_generated_by_basis UNIV BY"
+    using hBY unfolding basis_for_def by blast+
+  have hBX_cov: "\<forall>x\<in>UNIV. \<exists>b\<in>BX. x \<in> b"
+    using hBX_basis unfolding is_basis_on_def by blast
+  have hBY_cov: "\<forall>x\<in>UNIV. \<exists>b\<in>BY. x \<in> b"
+    using hBY_basis unfolding is_basis_on_def by blast
+  have hBX_int: "\<forall>b1\<in>BX. \<forall>b2\<in>BX. \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>BX. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+    using hBX_basis unfolding is_basis_on_def by blast
+  have hBY_int: "\<forall>b1\<in>BY. \<forall>b2\<in>BY. \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>BY. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+    using hBY_basis unfolding is_basis_on_def by blast
+  (* Basis elements are open *)
+  have hBX_open: "\<forall>b\<in>BX. b \<in> TX"
+  proof (rule ballI)
+    fix b assume hb: "b \<in> BX"
+    have "b \<in> topology_generated_by_basis UNIV BX"
+      unfolding topology_generated_by_basis_def
+      apply (rule CollectI, rule conjI, rule subset_UNIV, rule ballI)
+      apply (rule bexI[where x=b], rule conjI[OF _ subset_refl], assumption)
+      apply (rule hb)
+      done
+    thus "b \<in> TX" using hTX_eq by simp
+  qed
+  have hBY_open: "\<forall>b\<in>BY. b \<in> TY"
+  proof (rule ballI)
+    fix b assume hb: "b \<in> BY"
+    have "b \<in> topology_generated_by_basis UNIV BY"
+      unfolding topology_generated_by_basis_def
+      apply (rule CollectI, rule conjI, rule subset_UNIV, rule ballI)
+      apply (rule bexI[where x=b], rule conjI[OF _ subset_refl], assumption)
+      apply (rule hb)
+      done
+    thus "b \<in> TY" using hTY_eq by simp
+  qed
+  (* is_basis_on UNIV D — unfold D_def to expose product structure and resolve types *)
+  have hD_basis: "is_basis_on UNIV D"
+    unfolding is_basis_on_def D_def
+  proof (intro conjI)
+    show "\<forall>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. b \<subseteq> UNIV" by blast
+  next
+    show "\<forall>x\<in>UNIV. \<exists>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. x \<in> b"
+    proof -
+      have aux: "\<forall>xa xb. \<exists>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. (xa, xb) \<in> b"
+      proof (intro allI)
+        fix xa xb
+        obtain bx where hbxX: "bx \<in> BX" and hxa: "xa \<in> bx"
+          using hBX_cov[rule_format, of xa] by blast
+        obtain bb where hbbY: "bb \<in> BY" and hxb: "xb \<in> bb"
+          using hBY_cov[rule_format, of xb] by blast
+        show "\<exists>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. (xa, xb) \<in> b"
+          apply (rule bexI[where x="bx \<times> bb"])
+           apply (simp add: hxa hxb)
+          apply (rule CollectI, rule exI[where x=bx], rule exI[where x=bb])
+          apply (intro conjI refl hbxX hbbY)
+          done
+      qed
+      show ?thesis
+      proof (rule ballI)
+        fix x
+        show "\<exists>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. x \<in> b"
+          using aux[rule_format, of "fst x" "snd x"] by (simp add: prod.collapse)
+      qed
+    qed
+  next
+    show "\<forall>b1\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. \<forall>b2\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}.
+            \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+    proof (intro ballI)
+      fix b1 b2 x
+      assume hb1D: "b1 \<in> {B \<times> C | B C. B \<in> BX \<and> C \<in> BY}"
+      assume hb2D: "b2 \<in> {B \<times> C | B C. B \<in> BX \<and> C \<in> BY}"
+      assume hxb12: "x \<in> b1 \<inter> b2"
+      obtain B1 C1 where hB1X: "B1 \<in> BX" and hC1Y: "C1 \<in> BY" and hb1eq: "b1 = B1 \<times> C1"
+        using hb1D by blast
+      obtain B2 C2 where hB2X: "B2 \<in> BX" and hC2Y: "C2 \<in> BY" and hb2eq: "b2 = B2 \<times> C2"
+        using hb2D by blast
+      have hxb1: "x \<in> B1 \<times> C1" using hxb12 hb1eq by blast
+      have hxb2: "x \<in> B2 \<times> C2" using hxb12 hb2eq by blast
+      have ha1: "fst x \<in> B1" using hxb1[unfolded mem_Times_iff] by blast
+      have hb1: "snd x \<in> C1" using hxb1[unfolded mem_Times_iff] by blast
+      have ha2: "fst x \<in> B2" using hxb2[unfolded mem_Times_iff] by blast
+      have hb2: "snd x \<in> C2" using hxb2[unfolded mem_Times_iff] by blast
+      have haB12: "fst x \<in> B1 \<inter> B2" using ha1 ha2 by blast
+      have hbC12: "snd x \<in> C1 \<inter> C2" using hb1 hb2 by blast
+      obtain bx3 where hbx3: "bx3 \<in> BX" and ha3: "fst x \<in> bx3" and hbx3sub: "bx3 \<subseteq> B1 \<inter> B2"
+        using hBX_int[rule_format, OF hB1X, rule_format, OF hB2X, rule_format, OF haB12]
+        by blast
+      obtain bb3 where hbb3: "bb3 \<in> BY" and hb3: "snd x \<in> bb3" and hbb3sub: "bb3 \<subseteq> C1 \<inter> C2"
+        using hBY_int[rule_format, OF hC1Y, rule_format, OF hC2Y, rule_format, OF hbC12]
+        by blast
+      have hx_in3: "x \<in> bx3 \<times> bb3" using ha3 hb3 by (simp add: mem_Times_iff)
+      have hsub3: "bx3 \<times> bb3 \<subseteq> b1 \<inter> b2"
+        using hbx3sub hbb3sub hb1eq hb2eq by blast
+      show "\<exists>b3\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+        apply (rule bexI[where x="bx3 \<times> bb3"])
+         apply (rule conjI[OF hx_in3 hsub3])
+        apply (rule CollectI, rule exI[where x=bx3], rule exI[where x=bb3])
+        apply (intro conjI refl hbx3 hbb3)
+        done
+    qed
+  qed
+  (* topology_generated_by_basis UNIV D = product_topology_on TX TY *)
+  have hDTP: "topology_generated_by_basis UNIV D = product_topology_on TX TY"
+  proof (rule set_eqI)
+    fix W
+    show "W \<in> topology_generated_by_basis UNIV D \<longleftrightarrow> W \<in> product_topology_on TX TY"
+    proof (rule iffI)
+      assume hW: "W \<in> topology_generated_by_basis UNIV D"
+      show "W \<in> product_topology_on TX TY"
+        unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+      proof (rule CollectI, rule conjI, rule subset_UNIV, rule ballI)
+        fix x assume hxW: "x \<in> W"
+        obtain b where hbD: "b \<in> D" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+          using hW hxW unfolding topology_generated_by_basis_def by blast
+        obtain B C where hBBX: "B \<in> BX" and hCBY: "C \<in> BY" and hbeq: "b = B \<times> C"
+          using hbD unfolding D_def by blast
+        have hBTX: "B \<in> TX" using hBX_open hBBX by blast
+        have hCTY: "C \<in> TY" using hBY_open hCBY by blast
+        show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> W"
+          apply (rule bexI[where x="B \<times> C"])
+           apply (rule conjI)
+            using hxb hbeq apply simp
+           using hbW hbeq apply simp
+          apply (rule CollectI, rule exI[where x=B], rule exI[where x=C])
+          apply (intro conjI refl hBTX hCTY)
+          done
+      qed
+    next
+      assume hW: "W \<in> product_topology_on TX TY"
+      show "W \<in> topology_generated_by_basis UNIV D"
+        unfolding topology_generated_by_basis_def D_def
+      proof (rule CollectI, rule conjI, rule subset_UNIV, rule ballI)
+        fix x assume hxW: "x \<in> W"
+        obtain b where hbPB: "b \<in> product_basis TX TY" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+          using hW hxW unfolding product_topology_on_def topology_generated_by_basis_def by blast
+        obtain U V where hUTX: "U \<in> TX" and hVTY: "V \<in> TY" and hbeq: "b = U \<times> V"
+          using hbPB unfolding product_basis_def by blast
+        have hxUV: "x \<in> U \<times> V" using hxb hbeq by simp
+        have hfst: "fst x \<in> U" using hxUV[unfolded mem_Times_iff] by blast
+        have hsnd: "snd x \<in> V" using hxUV[unfolded mem_Times_iff] by blast
+        have hUcov: "\<forall>y\<in>U. \<exists>ba\<in>BX. y \<in> ba \<and> ba \<subseteq> U"
+          using hUTX unfolding hTX_eq topology_generated_by_basis_def by blast
+        have hVcov: "\<forall>y\<in>V. \<exists>bb\<in>BY. y \<in> bb \<and> bb \<subseteq> V"
+          using hVTY unfolding hTY_eq topology_generated_by_basis_def by blast
+        obtain ba where hbaX: "ba \<in> BX" and hxaba: "fst x \<in> ba" and hbaU: "ba \<subseteq> U"
+          using hUcov[rule_format, OF hfst] by blast
+        obtain bb where hbbY: "bb \<in> BY" and hxbbb: "snd x \<in> bb" and hbbV: "bb \<subseteq> V"
+          using hVcov[rule_format, OF hsnd] by blast
+        have hx_in: "x \<in> ba \<times> bb" using hxaba hxbbb by (simp add: mem_Times_iff)
+        have hcovW: "ba \<times> bb \<subseteq> W"
+          using hbaU hbbV hbeq hbW by blast
+        show "\<exists>b\<in>{B \<times> C | B C. B \<in> BX \<and> C \<in> BY}. x \<in> b \<and> b \<subseteq> W"
+          apply (rule bexI[where x="ba \<times> bb"])
+           apply (rule conjI[OF hx_in hcovW])
+          apply (rule CollectI, rule exI[where x=ba], rule exI[where x=bb])
+          apply (intro conjI refl hbaX hbbY)
+          done
+      qed
+    qed
+  qed
+  show "basis_for UNIV D (product_topology_on TX TY)"
+    unfolding basis_for_def using hD_basis hDTP by simp
+qed
 
 (** from \S15 Theorem 15.2 [top1.tex:425] **)
 (** LATEX VERSION: "Subbasis for product topology: preimages of opens under projections." **)
