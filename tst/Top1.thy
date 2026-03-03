@@ -1669,10 +1669,120 @@ definition convex_in :: "'a::linorder set \<Rightarrow> 'a set \<Rightarrow> boo
 
 theorem Theorem_16_4:
   fixes X :: "'a::linorder set" and Y :: "'a set"
-  assumes "convex_in X Y"
-  shows "topology_generated_by_basis Y (basis_order_topology \<inter> Pow Y)
-       = subspace_topology X order_topology_on_UNIV Y"
-  sorry
+  defines "BY \<equiv> {b \<inter> Y | b. b \<in> basis_order_topology}"
+  shows "topology_generated_by_basis Y BY = subspace_topology X order_topology_on_UNIV Y"
+proof -
+  show "topology_generated_by_basis Y BY = subspace_topology X order_topology_on_UNIV Y"
+  proof (rule set_eqI)
+    fix W
+    show "W \<in> topology_generated_by_basis Y BY \<longleftrightarrow> W \<in> subspace_topology X order_topology_on_UNIV Y"
+    proof (rule iffI)
+      assume hW: "W \<in> topology_generated_by_basis Y BY"
+      have hWsub: "W \<subseteq> Y" and hWcov: "\<forall>x\<in>W. \<exists>b\<in>BY. x \<in> b \<and> b \<subseteq> W"
+        using hW unfolding topology_generated_by_basis_def by blast+
+
+      define C where "C = {b \<in> basis_order_topology. b \<inter> Y \<subseteq> W}"
+      define U where "U = \<Union>C"
+
+      have hWeq: "W = Y \<inter> U"
+      proof (rule equalityI)
+        show "W \<subseteq> Y \<inter> U"
+        proof (rule subsetI)
+          fix x assume hxW: "x \<in> W"
+          obtain bY where hbY: "bY \<in> BY" and hxbY: "x \<in> bY" and hbYW: "bY \<subseteq> W"
+            using hWcov[rule_format, OF hxW] by blast
+          obtain b where hb: "b \<in> basis_order_topology" and hbYeq: "bY = b \<inter> Y"
+            using hbY unfolding BY_def by blast
+          have hbC: "b \<in> C"
+            unfolding C_def using hb hbYW hbYeq by blast
+          have hxY: "x \<in> Y" and hxb: "x \<in> b" using hxbY hbYeq by blast+
+          have hxU: "x \<in> U" unfolding U_def using hbC hxb by blast
+          show "x \<in> Y \<inter> U" using hxY hxU by blast
+        qed
+        show "Y \<inter> U \<subseteq> W"
+        proof (rule subsetI)
+          fix x assume hx: "x \<in> Y \<inter> U"
+          have hxY: "x \<in> Y" and hxU: "x \<in> U" using hx by blast+
+          obtain b where hbC: "b \<in> C" and hxb: "x \<in> b"
+            using hxU unfolding U_def by blast
+          have hbW: "b \<inter> Y \<subseteq> W" using hbC unfolding C_def by blast
+          have "x \<in> b \<inter> Y" using hxY hxb by blast
+          show "x \<in> W" using hbW \<open>x \<in> b \<inter> Y\<close> by blast
+        qed
+      qed
+
+      have hUopen: "U \<in> order_topology_on_UNIV"
+        unfolding order_topology_on_UNIV_def topology_generated_by_basis_def
+      proof (rule CollectI, rule conjI)
+        show "U \<subseteq> (UNIV::'a set)" by simp
+        show "\<forall>x\<in>U. \<exists>b\<in>basis_order_topology. x \<in> b \<and> b \<subseteq> U"
+        proof (rule ballI)
+          fix x assume hxU: "x \<in> U"
+          obtain b where hbC: "b \<in> C" and hxb: "x \<in> b"
+            using hxU unfolding U_def by blast
+          have hbB: "b \<in> basis_order_topology" using hbC unfolding C_def by blast
+          have hbU: "b \<subseteq> U"
+          proof (rule subsetI)
+            fix y assume hy: "y \<in> b"
+            show "y \<in> U"
+              unfolding U_def using hbC hy by blast
+          qed
+          show "\<exists>b\<in>basis_order_topology. x \<in> b \<and> b \<subseteq> U"
+            apply (rule bexI[where x=b])
+             apply (intro conjI hxb hbU)
+            apply (rule hbB)
+            done
+        qed
+      qed
+
+      show "W \<in> subspace_topology X order_topology_on_UNIV Y"
+        unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[where x=U])
+        apply (intro conjI)
+         apply (rule hWeq)
+        apply (rule hUopen)
+        done
+    next
+      assume hW: "W \<in> subspace_topology X order_topology_on_UNIV Y"
+      obtain U where hUopen: "U \<in> order_topology_on_UNIV" and hWeq: "W = Y \<inter> U"
+        using hW unfolding subspace_topology_def by blast
+      have hUcov: "\<forall>x\<in>U. \<exists>b\<in>basis_order_topology. x \<in> b \<and> b \<subseteq> U"
+        using hUopen unfolding order_topology_on_UNIV_def topology_generated_by_basis_def by blast
+
+      have hWsub: "W \<subseteq> Y" using hWeq by blast
+      have hWcov: "\<forall>x\<in>W. \<exists>b\<in>BY. x \<in> b \<and> b \<subseteq> W"
+      proof (rule ballI)
+        fix x assume hxW: "x \<in> W"
+        have hxY: "x \<in> Y" and hxU: "x \<in> U" using hxW hWeq by blast+
+        obtain b where hbB: "b \<in> basis_order_topology" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+          using hUcov[rule_format, OF hxU] by blast
+        have hbY: "b \<inter> Y \<in> BY" using hbB unfolding BY_def by blast
+        have hx_in: "x \<in> b \<inter> Y" using hxY hxb by blast
+        have hbW: "b \<inter> Y \<subseteq> W"
+        proof (rule subsetI)
+          fix y assume hy: "y \<in> b \<inter> Y"
+          have hyY: "y \<in> Y" and hyb: "y \<in> b" using hy by blast+
+          have hyU: "y \<in> U" using hbU hyb by blast
+          show "y \<in> W" using hyY hyU hWeq by blast
+        qed
+        show "\<exists>b\<in>BY. x \<in> b \<and> b \<subseteq> W"
+          apply (rule bexI[where x="b \<inter> Y"])
+           apply (intro conjI hx_in hbW)
+          apply (rule hbY)
+          done
+      qed
+
+      show "W \<in> topology_generated_by_basis Y BY"
+        unfolding topology_generated_by_basis_def
+        apply (rule CollectI)
+        apply (intro conjI)
+         apply (rule hWsub)
+        apply (rule hWcov)
+        done
+    qed
+  qed
+qed
 
 
 section \<open>\<S>17 Closed Sets and Limit Points\<close>
