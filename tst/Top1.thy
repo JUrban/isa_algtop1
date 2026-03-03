@@ -11385,6 +11385,276 @@ proof -
     done
 qed
 
+(** Monotonicity facts for the dyadic family of open sets (needed in the Urysohn construction). **)
+
+lemma top1_dyadic_pow2_scale:
+  shows "top1_dyadic (n + m) (k * ((2::nat) ^ m)) = top1_dyadic n k"
+  unfolding top1_dyadic_def
+  by (simp add: power_add field_simps)
+
+lemma top1_dyadic_lt_same_denom_iff:
+  shows "top1_dyadic n k < top1_dyadic n l \<longleftrightarrow> k < l"
+proof -
+  have hpos: "(0::real) < (2::nat) ^ n"
+    by simp
+  show ?thesis
+    unfolding top1_dyadic_def
+    by (simp add: divide_less_cancel hpos)
+qed
+
+lemma exists_pow2_inv_lt:
+  fixes eps :: real
+  assumes heps: "0 < eps"
+  shows "\<exists>n::nat. (1::real) / ((2::real) ^ n) < eps"
+proof -
+  obtain N :: nat where hN: "1 / eps < real N"
+    using heps reals_Archimedean2 by blast
+  have hN2: "real N < (2::real) ^ N"
+    by (simp add: of_nat_less_two_power)
+  have hlt: "1 / eps < (2::real) ^ N"
+    by (rule less_trans[OF hN hN2])
+  have hpos2: "(0::real) < (2::real) ^ N"
+    by simp
+  have "1 < eps * ((2::real) ^ N)"
+    using hlt heps
+    by (simp add: field_simps)
+  hence "1 / ((2::real) ^ N) < eps"
+    using hpos2
+    by (simp add: field_simps)
+  thus ?thesis
+    by (rule exI[where x=N])
+qed
+
+lemma exists_top1_dyadic_between_01:
+  fixes c d :: real
+  assumes hc: "0 \<le> c"
+  assumes hcd: "c < d"
+  assumes hd: "d \<le> 1"
+  shows "\<exists>n k. k \<le> (2::nat) ^ n \<and> c < top1_dyadic n k \<and> top1_dyadic n k < d"
+proof -
+  have heps: "0 < d - c"
+    using hcd by simp
+  obtain n :: nat where hn: "1 / ((2::real) ^ n) < d - c"
+    using exists_pow2_inv_lt[OF heps] by blast
+
+  let ?x = "c * ((2::real) ^ n)"
+  let ?z = "\<lfloor>?x\<rfloor>"
+  let ?m = "?z + 1"
+  let ?k = "nat ?m"
+
+  have hx_nonneg: "0 \<le> ?x"
+    using hc by simp
+  have hz_nonneg: "0 \<le> ?z"
+    using hx_nonneg by (simp add: zero_le_floor)
+  have hm_pos: "0 < ?m"
+    using hz_nonneg by simp
+  have hintk: "int ?k = ?m"
+  proof -
+    have hm_nonneg: "0 \<le> ?m"
+      using hm_pos by simp
+    show ?thesis
+      by (simp add: hm_nonneg)
+  qed
+  have hreal_k: "real ?k = of_int ?m"
+  proof -
+    have "real ?k = of_int (int ?k)"
+      by simp
+    also have "... = of_int ?m"
+      by (simp only: hintk)
+    finally show ?thesis .
+  qed
+
+  have hlt1: "?x < of_int ?m"
+    by (simp add: floor_correct)
+  have hgt_c: "c < (of_int ?m) / ((2::real) ^ n)"
+  proof -
+    have hpos: "(0::real) < (2::real) ^ n"
+      by simp
+    have hdiv: "?x / ((2::real) ^ n) = c"
+      by (simp add: field_simps)
+    have "?x / ((2::real) ^ n) < (of_int ?m) / ((2::real) ^ n)"
+      by (rule divide_strict_right_mono[OF hlt1 hpos])
+    thus ?thesis
+      by (simp add: hdiv)
+  qed
+
+  have hle1: "of_int ?m \<le> ?x + 1"
+    by (simp add: of_int_floor_le)
+  have hlt_d: "(of_int ?m) / ((2::real) ^ n) < d"
+  proof -
+    have hpos: "(0::real) < (2::real) ^ n"
+      by simp
+    have "(of_int ?m) / ((2::real) ^ n) \<le> (?x + 1) / ((2::real) ^ n)"
+      using hle1 hpos by (simp add: divide_right_mono)
+    also have "... = c + 1 / ((2::real) ^ n)"
+      by (simp add: field_simps)
+    also have "... < d"
+    proof -
+      have "1 / ((2::real) ^ n) < d - c"
+        by (rule hn)
+      thus ?thesis
+        by linarith
+    qed
+    finally show ?thesis .
+  qed
+
+  have hk_le: "?k \<le> (2::nat) ^ n"
+  proof -
+    have hlt1': "real ?k / ((2::real) ^ n) < d"
+      using hlt_d hreal_k by simp
+    have hlt1'': "real ?k / ((2::real) ^ n) < 1"
+      using hlt1' hd by (rule less_le_trans)
+    have hpos: "(0::real) < (2::real) ^ n"
+      by simp
+    have "real ?k < (2::real) ^ n"
+      using hlt1'' hpos by (simp add: divide_less_eq)
+    hence "?k < (2::nat) ^ n"
+      by simp
+    thus ?thesis
+      by (rule less_imp_le)
+  qed
+
+  have hdyad_eq: "top1_dyadic n ?k = (of_int ?m) / ((2::real) ^ n)"
+    by (simp add: top1_dyadic_def hreal_k)
+  have hdyad_gt: "c < top1_dyadic n ?k"
+    using hgt_c by (simp add: hdyad_eq)
+  have hdyad_lt: "top1_dyadic n ?k < d"
+    using hlt_d by (simp add: hdyad_eq)
+
+  show ?thesis
+    apply (rule exI[where x=n])
+    apply (rule exI[where x="nat (?z + 1)"])
+    apply (intro conjI)
+      apply (rule hk_le)
+     apply (rule hdyad_gt)
+    apply (rule hdyad_lt)
+    done
+qed
+
+lemma top1_urysohn_U_mono_same_level:
+  assumes hN: "top1_normal_on X TX"
+  assumes hU0: "U0 \<in> TX" "U0 \<subseteq> X"
+  assumes hU1: "U1 \<in> TX" "U1 \<subseteq> X"
+  assumes hcl01: "closure_on X TX U0 \<subseteq> U1"
+  assumes hk: "k \<le> l"
+  assumes hl: "l \<le> (2::nat) ^ n"
+  shows "top1_urysohn_U X TX U0 U1 n k \<subseteq> top1_urysohn_U X TX U0 U1 n l"
+proof -
+  have hstep:
+    "\<forall>j<((2::nat) ^ n).
+      closure_on X TX (top1_urysohn_U X TX U0 U1 n j)
+        \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc j)"
+  proof -
+    have hBoth:
+      "(\<forall>n k. k \<le> ((2::nat) ^ n) \<longrightarrow>
+            (top1_urysohn_U X TX U0 U1 n k \<in> TX \<and> top1_urysohn_U X TX U0 U1 n k \<subseteq> X))
+       \<and> (\<forall>n k. k < ((2::nat) ^ n) \<longrightarrow>
+            closure_on X TX (top1_urysohn_U X TX U0 U1 n k)
+              \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc k))"
+      by (rule top1_urysohn_U_basic_properties[OF hN hU0 hU1 hcl01])
+    show ?thesis
+      using hBoth by blast
+  qed
+
+  have hsucc:
+    "\<And>j. j < (2::nat) ^ n \<Longrightarrow>
+      top1_urysohn_U X TX U0 U1 n j \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc j)"
+  proof -
+    fix j assume hj: "j < (2::nat) ^ n"
+    have "top1_urysohn_U X TX U0 U1 n j \<subseteq>
+            closure_on X TX (top1_urysohn_U X TX U0 U1 n j)"
+      by (rule subset_closure_on)
+    also have "... \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc j)"
+      by (rule hstep[rule_format, OF hj])
+    finally show "top1_urysohn_U X TX U0 U1 n j \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc j)" .
+  qed
+
+  have hmono:
+    "\<And>l0 k0. k0 \<le> l0 \<Longrightarrow> l0 \<le> (2::nat) ^ n \<Longrightarrow>
+      top1_urysohn_U X TX U0 U1 n k0 \<subseteq> top1_urysohn_U X TX U0 U1 n l0"
+  proof -
+    fix l0 k0 :: nat
+    assume hk0: "k0 \<le> l0"
+    assume hl0: "l0 \<le> (2::nat) ^ n"
+    show "top1_urysohn_U X TX U0 U1 n k0 \<subseteq> top1_urysohn_U X TX U0 U1 n l0"
+      using hk0 hl0
+    proof (induction l0 arbitrary: k0)
+      case 0
+      have hk0': "k0 = 0"
+        using 0(1) by simp
+      show ?case
+        unfolding hk0' by simp
+    next
+      case (Suc l0)
+      show ?case
+      proof (cases "k0 = Suc l0")
+        case True
+        show ?thesis
+          unfolding True by simp
+      next
+        case False
+        have hk0': "k0 \<le> l0"
+          using Suc.prems False by simp
+        have hl0': "l0 \<le> (2::nat) ^ n"
+          using Suc.prems by simp
+        have IH: "top1_urysohn_U X TX U0 U1 n k0 \<subseteq> top1_urysohn_U X TX U0 U1 n l0"
+          by (rule Suc.IH[OF hk0' hl0'])
+        have hl0lt: "l0 < (2::nat) ^ n"
+          using Suc.prems by simp
+        have hstep': "top1_urysohn_U X TX U0 U1 n l0 \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc l0)"
+          by (rule hsucc[OF hl0lt])
+        show ?thesis
+          by (rule subset_trans[OF IH hstep'])
+      qed
+    qed
+  qed
+
+  show ?thesis
+    by (rule hmono[OF hk hl])
+qed
+
+lemma top1_urysohn_U_closure_mono_same_level:
+  assumes hN: "top1_normal_on X TX"
+  assumes hU0: "U0 \<in> TX" "U0 \<subseteq> X"
+  assumes hU1: "U1 \<in> TX" "U1 \<subseteq> X"
+  assumes hcl01: "closure_on X TX U0 \<subseteq> U1"
+  assumes hk: "k < l"
+  assumes hl: "l \<le> (2::nat) ^ n"
+  shows "closure_on X TX (top1_urysohn_U X TX U0 U1 n k) \<subseteq> top1_urysohn_U X TX U0 U1 n l"
+proof -
+  have hBoth:
+    "(\<forall>n k. k \<le> ((2::nat) ^ n) \<longrightarrow>
+          (top1_urysohn_U X TX U0 U1 n k \<in> TX \<and> top1_urysohn_U X TX U0 U1 n k \<subseteq> X))
+     \<and> (\<forall>n k. k < ((2::nat) ^ n) \<longrightarrow>
+          closure_on X TX (top1_urysohn_U X TX U0 U1 n k)
+            \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc k))"
+    by (rule top1_urysohn_U_basic_properties[OF hN hU0 hU1 hcl01])
+  have hstep:
+    "\<forall>j<((2::nat) ^ n).
+      closure_on X TX (top1_urysohn_U X TX U0 U1 n j)
+        \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc j)"
+    using hBoth by blast
+
+  have hk': "k < (2::nat) ^ n"
+    using hk hl by (rule less_le_trans)
+  have hcl_succ:
+    "closure_on X TX (top1_urysohn_U X TX U0 U1 n k)
+        \<subseteq> top1_urysohn_U X TX U0 U1 n (Suc k)"
+    by (rule hstep[rule_format, OF hk'])
+
+  have hmono:
+    "top1_urysohn_U X TX U0 U1 n (Suc k) \<subseteq> top1_urysohn_U X TX U0 U1 n l"
+  proof -
+    have hk_suc: "Suc k \<le> l"
+      using hk by simp
+    show ?thesis
+      by (rule top1_urysohn_U_mono_same_level[OF hN hU0 hU1 hcl01 hk_suc hl])
+  qed
+
+  show ?thesis
+    by (rule subset_trans[OF hcl_succ hmono])
+qed
+
 (*
 proof -
   have hTop: "is_topology_on X TX"
