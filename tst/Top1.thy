@@ -7800,6 +7800,168 @@ definition top1_normal_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool
      (\<forall>C D. closedin_on X T C \<and> closedin_on X T D \<and> C \<inter> D = {}
         \<longrightarrow> (\<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}))"
 
+(** Normality gives the standard "shrinking lemma" form used in the Urysohn construction:
+    if a closed set lies inside an open set, we can find an open neighborhood whose closure
+    is still inside the original open set. **)
+lemma normal_refine_closed_into_open:
+  assumes hN: "top1_normal_on X T"
+  assumes hA: "closedin_on X T A"
+  assumes hU: "U \<in> T"
+  assumes hUX: "U \<subseteq> X"
+  assumes hAU: "A \<subseteq> U"
+  shows "\<exists>V. V \<in> T \<and> V \<subseteq> X \<and> A \<subseteq> V \<and> closure_on X T V \<subseteq> U"
+proof -
+  have hT1: "top1_T1_on X T"
+    using hN unfolding top1_normal_on_def by (rule conjunct1)
+  have hTop: "is_topology_on X T"
+    using hT1 unfolding top1_T1_on_def by (rule conjunct1)
+  have hXT: "X \<in> T"
+    by (rule conjunct1[OF conjunct2[OF hTop[unfolded is_topology_on_def]]])
+
+  have hSep:
+    "\<forall>C D. closedin_on X T C \<and> closedin_on X T D \<and> C \<inter> D = {}
+       \<longrightarrow> (\<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {})"
+    using hN unfolding top1_normal_on_def by (rule conjunct2)
+
+  let ?C = "X - U"
+
+  have hU'open: "X \<inter> U \<in> T"
+    by (rule topology_inter2[OF hTop hXT hU])
+  have hCcl: "closedin_on X T ?C"
+    apply (rule closedin_intro)
+     apply (rule Diff_subset)
+    apply (simp only: Diff_Diff_Int)
+    apply (simp only: Int_absorb1[OF hUX])
+    apply (rule hU)
+    done
+
+  have hAdisjC: "A \<inter> ?C = {}"
+  proof (rule equalityI)
+    show "A \<inter> ?C \<subseteq> {}"
+    proof (rule subsetI)
+      fix x assume hx: "x \<in> A \<inter> ?C"
+      have hxA: "x \<in> A" and hxC: "x \<in> ?C" using hx by blast+
+      have hxU: "x \<in> U" using hAU hxA by blast
+      have hxnotU: "x \<notin> U" using hxC by blast
+      show "x \<in> {}" using hxnotU hxU by blast
+    qed
+    show "{} \<subseteq> A \<inter> ?C" by (rule empty_subsetI)
+  qed
+
+  have hSepAC:
+    "closedin_on X T A \<and> closedin_on X T ?C \<and> A \<inter> ?C = {}
+      \<longrightarrow> (\<exists>U0 V0. U0 \<in> T \<and> V0 \<in> T \<and> A \<subseteq> U0 \<and> ?C \<subseteq> V0 \<and> U0 \<inter> V0 = {})"
+    by (rule spec[where x="?C", OF spec[where x=A, OF hSep]])
+
+  have hSepAC2: "\<exists>U0 V0. U0 \<in> T \<and> V0 \<in> T \<and> A \<subseteq> U0 \<and> ?C \<subseteq> V0 \<and> U0 \<inter> V0 = {}"
+    apply (rule mp[OF hSepAC])
+    apply (intro conjI)
+      apply (rule hA)
+     apply (rule hCcl)
+    apply (rule hAdisjC)
+    done
+
+  obtain U0 V0 where hU0: "U0 \<in> T" and hV0: "V0 \<in> T"
+      and hAU0: "A \<subseteq> U0" and hCV0: "?C \<subseteq> V0" and hdisj: "U0 \<inter> V0 = {}"
+    using hSepAC2 by blast
+
+  let ?V = "X \<inter> U0"
+  let ?W = "X \<inter> V0"
+
+  have hVopen: "?V \<in> T"
+    by (rule topology_inter2[OF hTop hXT hU0])
+  have hWopen: "?W \<in> T"
+    by (rule topology_inter2[OF hTop hXT hV0])
+
+  have hVsubX: "?V \<subseteq> X" by blast
+  have hAsubX: "A \<subseteq> X" by (rule closedin_sub[OF hA])
+  have hAsubV: "A \<subseteq> ?V" using hAsubX hAU0 by blast
+
+  have hCV0': "?C \<subseteq> ?W"
+    using hCV0 by blast
+
+  have hVdisjW: "?V \<inter> ?W = {}"
+    using hdisj by blast
+
+  have hVsubXmW: "?V \<subseteq> X - ?W"
+  proof (rule subsetI)
+    fix x assume hxV: "x \<in> ?V"
+    have hxX: "x \<in> X" using hxV by blast
+    have hxnotW: "x \<notin> ?W"
+    proof
+      assume hxW: "x \<in> ?W"
+      have "x \<in> ?V \<inter> ?W" using hxV hxW by blast
+      thus False using hVdisjW by blast
+    qed
+    show "x \<in> X - ?W" using hxX hxnotW by blast
+  qed
+
+  have hXmW_closed: "closedin_on X T (X - ?W)"
+  proof (rule closedin_intro)
+    show "X - ?W \<subseteq> X" by (rule Diff_subset)
+    show "X - (X - ?W) \<in> T"
+    proof -
+      have eq: "X - (X - ?W) = X \<inter> ?W" by blast
+      have "X \<inter> ?W \<in> T"
+        by (rule topology_inter2[OF hTop hXT hWopen])
+      thus ?thesis using eq by simp
+    qed
+  qed
+
+  have hclV_sub_XmW: "closure_on X T ?V \<subseteq> X - ?W"
+    by (rule closure_on_subset_of_closed[OF hXmW_closed hVsubXmW])
+
+  have hXmW_sub_U: "X - ?W \<subseteq> U"
+  proof -
+    have hXmW_sub_XmC: "X - ?W \<subseteq> X - ?C"
+      by (rule Diff_mono, rule subset_refl, rule hCV0')
+    have hXmC_eq: "X - ?C = X \<inter> U"
+      by blast
+    have "X - ?W \<subseteq> X \<inter> U"
+      using hXmW_sub_XmC hXmC_eq by simp
+    also have "... \<subseteq> U" by blast
+    finally show ?thesis .
+  qed
+
+  have hclV_sub_U: "closure_on X T ?V \<subseteq> U"
+    by (rule subset_trans[OF hclV_sub_XmW hXmW_sub_U])
+
+  show ?thesis
+    apply (rule exI[where x="?V"])
+    apply (intro conjI)
+       apply (rule hVopen)
+      apply (rule hVsubX)
+     apply (rule hAsubV)
+    apply (rule hclV_sub_U)
+    done
+qed
+
+(** Insertion lemma: in a normal space, one can fit an open set between an open set and
+    an open superset of its closure (used for the rational-indexed construction in the
+    Urysohn lemma). **)
+lemma normal_insert_open_between:
+  assumes hN: "top1_normal_on X T"
+  assumes hU: "U \<in> T" and hUX: "U \<subseteq> X"
+  assumes hV: "V \<in> T" and hVX: "V \<subseteq> X"
+  assumes hcl: "closure_on X T U \<subseteq> V"
+  shows "\<exists>W. W \<in> T \<and> W \<subseteq> X \<and> closure_on X T U \<subseteq> W \<and> closure_on X T W \<subseteq> V"
+proof -
+  have hT1: "top1_T1_on X T"
+    using hN unfolding top1_normal_on_def by (rule conjunct1)
+  have hTop: "is_topology_on X T"
+    using hT1 unfolding top1_T1_on_def by (rule conjunct1)
+
+  have hUcl: "closedin_on X T (closure_on X T U)"
+    by (rule closure_on_closed[OF hTop hUX])
+
+  have hRef:
+    "\<exists>W. W \<in> T \<and> W \<subseteq> X \<and> closure_on X T U \<subseteq> W \<and> closure_on X T W \<subseteq> V"
+    apply (rule normal_refine_closed_into_open[OF hN hUcl hV hVX hcl])
+    done
+  show ?thesis
+    using hRef .
+qed
+
 (** Normal (as defined in top1.tex) implies regular. **)
 lemma normal_imp_regular_on:
   assumes hN: "top1_normal_on X T"
@@ -7892,6 +8054,192 @@ theorem Theorem_33_1:
   assumes hab: "a \<le> b"
   shows "\<exists>f. top1_continuous_map_on X TX (top1_closed_interval a b) (top1_closed_interval_topology a b) f
             \<and> (\<forall>x\<in>A. f x = a) \<and> (\<forall>x\<in>B. f x = b)"
+  sorry
+
+subsection \<open>Completely regular spaces\<close>
+
+(** A space is completely regular if it is T1 and points can be separated from closed sets
+    by continuous functions into the unit interval. **)
+definition top1_completely_regular_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_completely_regular_on X T \<longleftrightarrow>
+     top1_T1_on X T \<and>
+     (\<forall>x0\<in>X. \<forall>A. closedin_on X T A \<and> x0 \<notin> A \<longrightarrow>
+        (\<exists>f::'a \<Rightarrow> real.
+            top1_continuous_map_on X T (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f
+            \<and> f x0 = 1 \<and> (\<forall>x\<in>A. f x = 0)))"
+
+(** from \S33 Theorem 33.2 (Subspaces of completely regular spaces are completely regular)
+    [top1.tex:4542] **)
+theorem Theorem_33_2_subspace:
+  assumes hCR: "top1_completely_regular_on X TX"
+  assumes hYX: "Y \<subseteq> X"
+  shows "top1_completely_regular_on Y (subspace_topology X TX Y)"
+proof -
+  let ?TY = "subspace_topology X TX Y"
+  let ?I = "top1_closed_interval 0 1"
+  let ?TI = "top1_closed_interval_topology 0 1"
+
+  have hT1X: "top1_T1_on X TX"
+    using hCR unfolding top1_completely_regular_on_def by (rule conjunct1)
+  have hTopX: "is_topology_on X TX"
+    using hT1X unfolding top1_T1_on_def by (rule conjunct1)
+
+  have hTopY: "is_topology_on Y ?TY"
+    by (rule subspace_topology_is_topology_on[OF hTopX hYX])
+
+  have hTopI: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    apply (rule subspace_topology_is_topology_on)
+     apply (rule order_topology_on_UNIV_is_topology_on)
+    apply simp
+    done
+
+  have hSepX:
+    "\<forall>x0\<in>X. \<forall>A. closedin_on X TX A \<and> x0 \<notin> A \<longrightarrow>
+       (\<exists>f::'a \<Rightarrow> real.
+           top1_continuous_map_on X TX ?I ?TI f \<and> f x0 = 1 \<and> (\<forall>x\<in>A. f x = 0))"
+    using hCR unfolding top1_completely_regular_on_def by (rule conjunct2)
+
+  have hT1Y: "top1_T1_on Y ?TY"
+  proof (unfold top1_T1_on_def, intro conjI)
+    show "is_topology_on Y ?TY" by (rule hTopY)
+    show "\<forall>y\<in>Y. closedin_on Y ?TY {y}"
+    proof (intro ballI)
+      fix y assume hyY: "y \<in> Y"
+      have hyX: "y \<in> X" using hyY hYX by blast
+      have hsingX: "closedin_on X TX {y}"
+        using hT1X hyX unfolding top1_T1_on_def by blast
+      have hiff: "closedin_on Y ?TY {y} \<longleftrightarrow> (\<exists>C. closedin_on X TX C \<and> {y} = C \<inter> Y)"
+        by (rule Theorem_17_2[OF hTopX hYX])
+      have hex: "\<exists>C. closedin_on X TX C \<and> {y} = C \<inter> Y"
+        apply (rule exI[where x="{y}"])
+        apply (intro conjI)
+         apply (rule hsingX)
+        using hyY by blast
+      show "closedin_on Y ?TY {y}"
+        using hiff hex by blast
+    qed
+  qed
+
+  show ?thesis
+    unfolding top1_completely_regular_on_def
+  proof (intro conjI)
+    show "top1_T1_on Y ?TY" by (rule hT1Y)
+    show "\<forall>y0\<in>Y. \<forall>A. closedin_on Y ?TY A \<and> y0 \<notin> A \<longrightarrow>
+      (\<exists>f::'a \<Rightarrow> real.
+          top1_continuous_map_on Y ?TY ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>A. f x = 0))"
+    proof (intro ballI allI impI)
+      fix y0 A
+      assume hy0Y: "y0 \<in> Y"
+      assume hA0: "closedin_on Y ?TY A \<and> y0 \<notin> A"
+      have hAclY: "closedin_on Y ?TY A" and hy0A: "y0 \<notin> A"
+        using hA0 by blast+
+
+      have hAsubY: "A \<subseteq> Y" by (rule closedin_sub[OF hAclY])
+      have hAsubX: "A \<subseteq> X" using hAsubY hYX by blast
+      have hy0X: "y0 \<in> X" using hy0Y hYX by blast
+
+      let ?C = "closure_on X TX A"
+
+      have hCcl: "closedin_on X TX ?C"
+        by (rule closure_on_closed[OF hTopX hAsubX])
+
+      have hclY_eq: "closure_on Y ?TY A = A"
+      proof (rule equalityI)
+        show "closure_on Y ?TY A \<subseteq> A"
+          by (rule closure_on_subset_of_closed[OF hAclY subset_refl])
+        show "A \<subseteq> closure_on Y ?TY A"
+          by (rule subset_closure_on)
+      qed
+
+      have hcl_subspace: "closure_on Y ?TY A = closure_on X TX A \<inter> Y"
+        by (rule Theorem_17_4[OF hTopX hAsubY hYX])
+
+      have hy0notC: "y0 \<notin> ?C"
+      proof
+        assume hy0C: "y0 \<in> ?C"
+        have "y0 \<in> ?C \<inter> Y" using hy0C hy0Y by blast
+        hence "y0 \<in> closure_on Y ?TY A"
+          using hcl_subspace by simp
+        hence "y0 \<in> A"
+          using hclY_eq by simp
+        thus False using hy0A by contradiction
+      qed
+
+      have hSepy0:
+        "\<forall>B. closedin_on X TX B \<and> y0 \<notin> B \<longrightarrow>
+           (\<exists>f::'a \<Rightarrow> real.
+               top1_continuous_map_on X TX ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>B. f x = 0))"
+        by (rule bspec[OF hSepX hy0X])
+
+      have hSepC:
+        "closedin_on X TX ?C \<and> y0 \<notin> ?C \<longrightarrow>
+           (\<exists>f::'a \<Rightarrow> real.
+               top1_continuous_map_on X TX ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>?C. f x = 0))"
+        by (rule spec[where x="?C", OF hSepy0])
+
+      have hexF:
+        "\<exists>f::'a \<Rightarrow> real.
+          top1_continuous_map_on X TX ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>?C. f x = 0)"
+        apply (rule mp[OF hSepC])
+        apply (intro conjI)
+         apply (rule hCcl)
+        apply (rule hy0notC)
+        done
+
+      obtain f where hfcontX: "top1_continuous_map_on X TX ?I ?TI f"
+          and hfy0: "f y0 = 1" and hfC: "\<forall>x\<in>?C. f x = 0"
+        using hexF by blast
+
+      have hfcontY: "top1_continuous_map_on Y ?TY ?I ?TI f"
+      proof -
+        have hRules: "\<forall>A f. top1_continuous_map_on X TX ?I ?TI f \<and> A \<subseteq> X
+           \<longrightarrow> top1_continuous_map_on A (subspace_topology X TX A) ?I ?TI f"
+          by (rule Theorem_18_2(4)[OF hTopX hTopI hTopI])
+        have h1: "\<forall>g. top1_continuous_map_on X TX ?I ?TI g \<and> Y \<subseteq> X
+           \<longrightarrow> top1_continuous_map_on Y (subspace_topology X TX Y) ?I ?TI g"
+          by (rule spec[where x=Y, OF hRules])
+        have hImp: "top1_continuous_map_on X TX ?I ?TI f \<and> Y \<subseteq> X
+           \<longrightarrow> top1_continuous_map_on Y (subspace_topology X TX Y) ?I ?TI f"
+          by (rule spec[where x=f, OF h1])
+        have hPrem: "top1_continuous_map_on X TX ?I ?TI f \<and> Y \<subseteq> X"
+          apply (intro conjI)
+           apply (rule hfcontX)
+          apply (rule hYX)
+          done
+        show ?thesis
+          by (rule mp[OF hImp hPrem])
+      qed
+
+      have hA_sub_C: "A \<subseteq> ?C"
+        by (rule subset_closure_on)
+
+      have hfA: "\<forall>x\<in>A. f x = 0"
+      proof (intro ballI)
+        fix x assume hxA: "x \<in> A"
+        have hxC: "x \<in> ?C" using hA_sub_C hxA by blast
+        show "f x = 0" using hfC hxC by blast
+      qed
+
+      show "\<exists>f::'a \<Rightarrow> real.
+          top1_continuous_map_on Y ?TY ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>A. f x = 0)"
+        apply (rule exI[where x=f])
+        apply (intro conjI)
+          apply (rule hfcontY)
+         apply (rule hfy0)
+        apply (rule hfA)
+        done
+    qed
+  qed
+qed
+
+(** Product part of Theorem 33.2 (proved in top1.tex for arbitrary products). The present
+    development only contains a binary product topology and does not yet have the needed
+    real-analytic infrastructure (continuous arithmetic on the unit interval). **)
+theorem Theorem_33_2_product:
+  assumes hCRX: "top1_completely_regular_on X TX"
+  assumes hCRY: "top1_completely_regular_on Y TY"
+  shows "top1_completely_regular_on (X \<times> Y) (product_topology_on TX TY)"
   sorry
 
 section \<open>\<S>34 The Urysohn Metrization Theorem\<close>
