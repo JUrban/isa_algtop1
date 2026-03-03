@@ -703,10 +703,32 @@ definition basis_order_topology :: "'a::linorder set set" where
   "basis_order_topology =
      ({ open_interval a b | a b. a < b } \<union>
       { open_ray_gt a | a. True } \<union>
-      { open_ray_lt a | a. True })"
+      { open_ray_lt a | a. True } \<union>
+      {UNIV})"
 
 definition order_topology_on_UNIV :: "'a::linorder set set" where
   "order_topology_on_UNIV = topology_generated_by_basis UNIV basis_order_topology"
+
+(** Order topology on an arbitrary carrier set X (ordered by the ambient order). **)
+
+definition open_ray_gt_on :: "'a::linorder set \<Rightarrow> 'a \<Rightarrow> 'a set" where
+  "open_ray_gt_on X a = X \<inter> open_ray_gt a"
+
+definition open_ray_lt_on :: "'a::linorder set \<Rightarrow> 'a \<Rightarrow> 'a set" where
+  "open_ray_lt_on X a = X \<inter> open_ray_lt a"
+
+definition open_interval_on :: "'a::linorder set \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a set" where
+  "open_interval_on X a b = X \<inter> open_interval a b"
+
+definition basis_order_topology_on :: "'a::linorder set \<Rightarrow> 'a set set" where
+  "basis_order_topology_on X =
+     ({ open_interval_on X a b | a b. a \<in> X \<and> b \<in> X \<and> a < b } \<union>
+      { open_ray_gt_on X a | a. a \<in> X } \<union>
+      { open_ray_lt_on X a | a. a \<in> X } \<union>
+      {X})"
+
+definition order_topology_on :: "'a::linorder set \<Rightarrow> 'a set set" where
+  "order_topology_on X = topology_generated_by_basis X (basis_order_topology_on X)"
 
 (** from \S14 Definition (Four interval types determined by a and b) [top1.tex:345] **)
 (** LATEX VERSION: "If X ordered and a element, there are four intervals ..." **)
@@ -1665,9 +1687,10 @@ qed
 
 definition convex_in :: "'a::linorder set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "convex_in X Y \<longleftrightarrow>
+     Y \<subseteq> X \<and>
      (\<forall>x\<in>Y. \<forall>y\<in>Y. \<forall>z\<in>X. x < z \<and> z < y \<longrightarrow> z \<in> Y)"
 
-theorem Theorem_16_4:
+lemma Lemma_16_4_aux:
   fixes X :: "'a::linorder set" and Y :: "'a set"
   defines "BY \<equiv> {b \<inter> Y | b. b \<in> basis_order_topology}"
   shows "topology_generated_by_basis Y BY = subspace_topology X order_topology_on_UNIV Y"
@@ -1782,6 +1805,496 @@ proof -
         done
     qed
   qed
+qed
+
+lemma basis_order_topology_on_subset:
+  assumes hb: "b \<in> basis_order_topology_on X"
+  shows "b \<subseteq> X"
+  using hb
+  unfolding basis_order_topology_on_def open_ray_gt_on_def open_ray_lt_on_def open_interval_on_def
+  by blast
+
+lemma basis_order_topology_on_restrict:
+  fixes X :: "'a::linorder set" and Y :: "'a set" and bY :: "'a set"
+  assumes hYX: "Y \<subseteq> X"
+  assumes hbY: "bY \<in> basis_order_topology_on Y"
+  shows "\<exists>bX\<in>basis_order_topology_on X. bY = bX \<inter> Y"
+proof -
+  have hbY_cases:
+      "(\<exists>a b. a \<in> Y \<and> b \<in> Y \<and> a < b \<and> bY = open_interval_on Y a b)
+    \<or> (\<exists>a. a \<in> Y \<and> bY = open_ray_gt_on Y a)
+    \<or> (\<exists>a. a \<in> Y \<and> bY = open_ray_lt_on Y a)
+    \<or> bY = Y"
+    using hbY unfolding basis_order_topology_on_def by blast
+
+  from hbY_cases show ?thesis
+  proof (elim disjE)
+    assume hInt: "\<exists>a b. a \<in> Y \<and> b \<in> Y \<and> a < b \<and> bY = open_interval_on Y a b"
+    obtain a b where haY: "a \<in> Y" and hbY': "b \<in> Y" and hab: "a < b" and hbYeq: "bY = open_interval_on Y a b"
+      using hInt by blast
+    have haX: "a \<in> X" using haY hYX by blast
+    have hbX: "b \<in> X" using hbY' hYX by blast
+    have hbXmem: "open_interval_on X a b \<in> basis_order_topology_on X"
+      using haX hbX hab unfolding basis_order_topology_on_def by blast
+    have hbYeq': "bY = (open_interval_on X a b) \<inter> Y"
+      unfolding hbYeq open_interval_on_def
+      apply (simp only: Int_assoc Int_left_commute Int_commute)
+      using hYX by blast
+    show "\<exists>bX\<in>basis_order_topology_on X. bY = bX \<inter> Y"
+      apply (rule bexI[where x="open_interval_on X a b"])
+       apply (rule hbYeq')
+      apply (rule hbXmem)
+      done
+  next
+    assume hGt: "\<exists>a. a \<in> Y \<and> bY = open_ray_gt_on Y a"
+    obtain a where haY: "a \<in> Y" and hbYeq: "bY = open_ray_gt_on Y a"
+      using hGt by blast
+    have haX: "a \<in> X" using haY hYX by blast
+    have hbXmem: "open_ray_gt_on X a \<in> basis_order_topology_on X"
+      using haX unfolding basis_order_topology_on_def by blast
+    have hbYeq': "bY = (open_ray_gt_on X a) \<inter> Y"
+      unfolding hbYeq open_ray_gt_on_def
+      apply (simp only: Int_assoc Int_left_commute Int_commute)
+      using hYX by blast
+    show "\<exists>bX\<in>basis_order_topology_on X. bY = bX \<inter> Y"
+      apply (rule bexI[where x="open_ray_gt_on X a"])
+       apply (rule hbYeq')
+      apply (rule hbXmem)
+      done
+  next
+    assume hLt: "\<exists>a. a \<in> Y \<and> bY = open_ray_lt_on Y a"
+    obtain a where haY: "a \<in> Y" and hbYeq: "bY = open_ray_lt_on Y a"
+      using hLt by blast
+    have haX: "a \<in> X" using haY hYX by blast
+    have hbXmem: "open_ray_lt_on X a \<in> basis_order_topology_on X"
+      using haX unfolding basis_order_topology_on_def by blast
+    have hbYeq': "bY = (open_ray_lt_on X a) \<inter> Y"
+      unfolding hbYeq open_ray_lt_on_def
+      apply (simp only: Int_assoc Int_left_commute Int_commute)
+      using hYX by blast
+    show "\<exists>bX\<in>basis_order_topology_on X. bY = bX \<inter> Y"
+      apply (rule bexI[where x="open_ray_lt_on X a"])
+       apply (rule hbYeq')
+      apply (rule hbXmem)
+      done
+  next
+    assume hbYeq: "bY = Y"
+    have hbXmem: "X \<in> basis_order_topology_on X"
+      unfolding basis_order_topology_on_def by blast
+    have hbYeq': "bY = X \<inter> Y"
+      using hbYeq hYX by blast
+    show "\<exists>bX\<in>basis_order_topology_on X. bY = bX \<inter> Y"
+      apply (rule bexI[where x=X])
+       apply (rule hbYeq')
+      apply (rule hbXmem)
+      done
+  qed
+qed
+
+lemma convex_in_not_mem_imp_all_gt:
+  fixes X :: "'a::linorder set" and Y :: "'a set" and a y :: 'a
+  assumes hconv: "convex_in X Y"
+  assumes haX: "a \<in> X"
+  assumes haNY: "a \<notin> Y"
+  assumes hyY: "y \<in> Y"
+  assumes hay: "a < y"
+  shows "\<forall>t\<in>Y. a < t"
+proof (rule ballI)
+  fix t assume htY: "t \<in> Y"
+  show "a < t"
+  proof (rule ccontr)
+    assume hnot: "\<not> a < t"
+    have ht_le: "t \<le> a" using hnot by (simp only: not_less)
+    have ht_ne: "t \<noteq> a" using htY haNY by blast
+    have ht_lt: "t < a"
+    proof -
+      have "t < a \<or> t = a" using ht_le by (rule le_imp_less_or_eq)
+      thus "t < a" using ht_ne by blast
+    qed
+    have hprop: "\<forall>x\<in>Y. \<forall>y\<in>Y. \<forall>z\<in>X. x < z \<and> z < y \<longrightarrow> z \<in> Y"
+      using hconv unfolding convex_in_def by blast
+    have "a \<in> Y"
+      using hprop[rule_format, OF htY hyY haX] ht_lt hay by blast
+    thus False using haNY by contradiction
+  qed
+qed
+
+lemma convex_in_not_mem_imp_all_lt:
+  fixes X :: "'a::linorder set" and Y :: "'a set" and a y :: 'a
+  assumes hconv: "convex_in X Y"
+  assumes haX: "a \<in> X"
+  assumes haNY: "a \<notin> Y"
+  assumes hyY: "y \<in> Y"
+  assumes hay: "y < a"
+  shows "\<forall>t\<in>Y. t < a"
+proof (rule ballI)
+  fix t assume htY: "t \<in> Y"
+  show "t < a"
+  proof (rule ccontr)
+    assume hnot: "\<not> t < a"
+    have ht_le: "a \<le> t" using hnot by (simp only: not_less)
+    have ht_ne': "t \<noteq> a" using htY haNY by blast
+    have ht_ne: "a \<noteq> t" using ht_ne' by blast
+    have ha_lt_t: "a < t"
+    proof -
+      have "a < t \<or> a = t" using ht_le by (rule le_imp_less_or_eq)
+      thus "a < t" using ht_ne by blast
+    qed
+    have hprop: "\<forall>x\<in>Y. \<forall>y\<in>Y. \<forall>z\<in>X. x < z \<and> z < y \<longrightarrow> z \<in> Y"
+      using hconv unfolding convex_in_def by blast
+    have "a \<in> Y"
+      using hprop[rule_format, OF hyY htY haX] hay ha_lt_t by blast
+    thus False using haNY by contradiction
+  qed
+qed
+
+lemma convex_in_refine_basis_intersection:
+  fixes X :: "'a::linorder set" and Y :: "'a set" and bX :: "'a set" and y :: 'a
+  assumes hconv: "convex_in X Y"
+  assumes hyY: "y \<in> Y"
+  assumes hbX: "bX \<in> basis_order_topology_on X"
+  assumes hybX: "y \<in> bX"
+  shows "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+proof -
+  have hYX: "Y \<subseteq> X" using hconv unfolding convex_in_def by blast
+
+  have hbX_cases:
+      "(\<exists>a b. a \<in> X \<and> b \<in> X \<and> a < b \<and> bX = open_interval_on X a b)
+    \<or> (\<exists>a. a \<in> X \<and> bX = open_ray_gt_on X a)
+    \<or> (\<exists>a. a \<in> X \<and> bX = open_ray_lt_on X a)
+    \<or> bX = X"
+    using hbX unfolding basis_order_topology_on_def by blast
+
+  from hbX_cases show ?thesis
+  proof (elim disjE)
+    assume hInt: "\<exists>a b. a \<in> X \<and> b \<in> X \<and> a < b \<and> bX = open_interval_on X a b"
+    obtain a b where haX: "a \<in> X" and hbX': "b \<in> X" and hab: "a < b" and hbXeq: "bX = open_interval_on X a b"
+      using hInt by blast
+    have hay: "a < y" and hyb: "y < b"
+      using hybX unfolding hbXeq open_interval_on_def open_interval_def by blast+
+
+    have haY_or: "a \<in> Y \<or> a \<notin> Y" by blast
+    have hbY_or: "b \<in> Y \<or> b \<notin> Y" by blast
+    from haY_or hbY_or show ?thesis
+    proof (elim disjE)
+      assume haY: "a \<in> Y"
+      assume hbY: "b \<in> Y"
+      have hbYmem: "open_interval_on Y a b \<in> basis_order_topology_on Y"
+        using haY hbY hab unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> open_interval_on Y a b"
+        using hay hyb hyY unfolding open_interval_on_def open_interval_def by blast
+      have hsub: "open_interval_on Y a b \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume ht: "t \<in> open_interval_on Y a b"
+        have htY: "t \<in> Y" and htI: "t \<in> open_interval a b"
+          using ht unfolding open_interval_on_def by blast+
+        have htX: "t \<in> X" using hYX htY by blast
+        show "t \<in> bX \<inter> Y"
+          using htX htI htY unfolding hbXeq open_interval_on_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x="open_interval_on Y a b"])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    next
+      assume haNY: "a \<notin> Y"
+      assume hbY: "b \<in> Y"
+      have hall_gt: "\<forall>t\<in>Y. a < t"
+        by (rule convex_in_not_mem_imp_all_gt[OF hconv haX haNY hyY hay])
+      have hbYmem: "open_ray_lt_on Y b \<in> basis_order_topology_on Y"
+        using hbY unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> open_ray_lt_on Y b"
+        using hyY hyb unfolding open_ray_lt_on_def open_ray_lt_def by blast
+      have hsub: "open_ray_lt_on Y b \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume ht: "t \<in> open_ray_lt_on Y b"
+        have htY: "t \<in> Y" and htb: "t < b"
+          using ht unfolding open_ray_lt_on_def open_ray_lt_def by blast+
+        have hta: "a < t" using hall_gt htY by blast
+        have htX: "t \<in> X" using hYX htY by blast
+        have htI: "t \<in> open_interval a b"
+          using hta htb unfolding open_interval_def by blast
+        show "t \<in> bX \<inter> Y"
+          using htX htI htY unfolding hbXeq open_interval_on_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x="open_ray_lt_on Y b"])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    next
+      assume haY: "a \<in> Y"
+      assume hbNY: "b \<notin> Y"
+      have hall_lt: "\<forall>t\<in>Y. t < b"
+        by (rule convex_in_not_mem_imp_all_lt[OF hconv hbX' hbNY hyY hyb])
+      have hbYmem: "open_ray_gt_on Y a \<in> basis_order_topology_on Y"
+        using haY unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> open_ray_gt_on Y a"
+        using hyY hay unfolding open_ray_gt_on_def open_ray_gt_def by blast
+      have hsub: "open_ray_gt_on Y a \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume ht: "t \<in> open_ray_gt_on Y a"
+        have htY: "t \<in> Y" and hat: "a < t"
+          using ht unfolding open_ray_gt_on_def open_ray_gt_def by blast+
+        have htb: "t < b" using hall_lt htY by blast
+        have htX: "t \<in> X" using hYX htY by blast
+        have htI: "t \<in> open_interval a b"
+          using hat htb unfolding open_interval_def by blast
+        show "t \<in> bX \<inter> Y"
+          using htX htI htY unfolding hbXeq open_interval_on_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x="open_ray_gt_on Y a"])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    next
+      assume haNY: "a \<notin> Y"
+      assume hbNY: "b \<notin> Y"
+      have hall_gt: "\<forall>t\<in>Y. a < t"
+        by (rule convex_in_not_mem_imp_all_gt[OF hconv haX haNY hyY hay])
+      have hall_lt: "\<forall>t\<in>Y. t < b"
+        by (rule convex_in_not_mem_imp_all_lt[OF hconv hbX' hbNY hyY hyb])
+      have hbYmem: "Y \<in> basis_order_topology_on Y"
+        unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> Y" using hyY .
+      have hsub: "Y \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume htY: "t \<in> Y"
+        have htX: "t \<in> X" using hYX htY by blast
+        have hta: "a < t" using hall_gt htY by blast
+        have htb: "t < b" using hall_lt htY by blast
+        have htI: "t \<in> open_interval a b"
+          using hta htb unfolding open_interval_def by blast
+        show "t \<in> bX \<inter> Y"
+          using htX htI htY unfolding hbXeq open_interval_on_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x=Y])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    qed
+  next
+    assume hGt: "\<exists>a. a \<in> X \<and> bX = open_ray_gt_on X a"
+    obtain a where haX: "a \<in> X" and hbXeq: "bX = open_ray_gt_on X a"
+      using hGt by blast
+    have hay: "a < y" using hybX unfolding hbXeq open_ray_gt_on_def open_ray_gt_def by blast
+    have haY_or: "a \<in> Y \<or> a \<notin> Y" by blast
+    from haY_or show ?thesis
+    proof (elim disjE)
+      assume haY: "a \<in> Y"
+      have hbYmem: "open_ray_gt_on Y a \<in> basis_order_topology_on Y"
+        using haY unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> open_ray_gt_on Y a"
+        using hyY hay unfolding open_ray_gt_on_def open_ray_gt_def by blast
+      have hsub: "open_ray_gt_on Y a \<subseteq> bX \<inter> Y"
+        unfolding hbXeq open_ray_gt_on_def
+        using hYX by blast
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x="open_ray_gt_on Y a"])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    next
+      assume haNY: "a \<notin> Y"
+      have hall_gt: "\<forall>t\<in>Y. a < t"
+        by (rule convex_in_not_mem_imp_all_gt[OF hconv haX haNY hyY hay])
+      have hbYmem: "Y \<in> basis_order_topology_on Y"
+        unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> Y" using hyY .
+      have hsub: "Y \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume htY: "t \<in> Y"
+        have hta: "a < t" using hall_gt htY by blast
+        have htX: "t \<in> X" using hYX htY by blast
+        show "t \<in> bX \<inter> Y"
+          using htX hta htY unfolding hbXeq open_ray_gt_on_def open_ray_gt_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x=Y])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    qed
+  next
+    assume hLt: "\<exists>a. a \<in> X \<and> bX = open_ray_lt_on X a"
+    obtain a where haX: "a \<in> X" and hbXeq: "bX = open_ray_lt_on X a"
+      using hLt by blast
+    have hay: "y < a" using hybX unfolding hbXeq open_ray_lt_on_def open_ray_lt_def by blast
+    have haY_or: "a \<in> Y \<or> a \<notin> Y" by blast
+    from haY_or show ?thesis
+    proof (elim disjE)
+      assume haY: "a \<in> Y"
+      have hbYmem: "open_ray_lt_on Y a \<in> basis_order_topology_on Y"
+        using haY unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> open_ray_lt_on Y a"
+        using hyY hay unfolding open_ray_lt_on_def open_ray_lt_def by blast
+      have hsub: "open_ray_lt_on Y a \<subseteq> bX \<inter> Y"
+        unfolding hbXeq open_ray_lt_on_def
+        using hYX by blast
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x="open_ray_lt_on Y a"])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    next
+      assume haNY: "a \<notin> Y"
+      have hall_lt: "\<forall>t\<in>Y. t < a"
+        by (rule convex_in_not_mem_imp_all_lt[OF hconv haX haNY hyY hay])
+      have hbYmem: "Y \<in> basis_order_topology_on Y"
+        unfolding basis_order_topology_on_def by blast
+      have hy_in: "y \<in> Y" using hyY .
+      have hsub: "Y \<subseteq> bX \<inter> Y"
+      proof (rule subsetI)
+        fix t assume htY: "t \<in> Y"
+        have hta: "t < a" using hall_lt htY by blast
+        have htX: "t \<in> X" using hYX htY by blast
+        show "t \<in> bX \<inter> Y"
+          using htX hta htY unfolding hbXeq open_ray_lt_on_def open_ray_lt_def by blast
+      qed
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+        apply (rule bexI[where x=Y])
+         apply (intro conjI hy_in hsub)
+        apply (rule hbYmem)
+        done
+    qed
+  next
+    assume hbXeq: "bX = X"
+    have hbYmem: "Y \<in> basis_order_topology_on Y"
+      unfolding basis_order_topology_on_def by blast
+    have hy_in: "y \<in> Y" using hyY .
+    have hsub: "Y \<subseteq> bX \<inter> Y"
+      using hbXeq hYX by blast
+    show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> bX \<inter> Y"
+      apply (rule bexI[where x=Y])
+       apply (intro conjI hy_in hsub)
+      apply (rule hbYmem)
+      done
+  qed
+qed
+
+theorem Theorem_16_4:
+  fixes X :: "'a::linorder set" and Y :: "'a set"
+  assumes hconv: "convex_in X Y"
+  shows "order_topology_on Y = subspace_topology X (order_topology_on X) Y"
+proof -
+  have hYX: "Y \<subseteq> X" using hconv unfolding convex_in_def by blast
+
+  have h1: "order_topology_on Y \<subseteq> subspace_topology X (order_topology_on X) Y"
+  proof (rule subsetI)
+    fix W assume hW: "W \<in> order_topology_on Y"
+    have hWsub: "W \<subseteq> Y" and hWcov: "\<forall>x\<in>W. \<exists>bY\<in>basis_order_topology_on Y. x \<in> bY \<and> bY \<subseteq> W"
+      using hW unfolding order_topology_on_def topology_generated_by_basis_def by blast+
+
+    define C where "C = {b \<in> basis_order_topology_on X. b \<inter> Y \<subseteq> W}"
+    define U where "U = \<Union>C"
+
+    have hWeq: "W = Y \<inter> U"
+    proof (rule equalityI)
+      show "W \<subseteq> Y \<inter> U"
+      proof (rule subsetI)
+        fix x assume hxW: "x \<in> W"
+        have hxY: "x \<in> Y" using hWsub hxW by blast
+        obtain bY where hbY: "bY \<in> basis_order_topology_on Y" and hxbY: "x \<in> bY" and hbYW: "bY \<subseteq> W"
+          using hWcov[rule_format, OF hxW] by blast
+        obtain bX where hbX: "bX \<in> basis_order_topology_on X" and hbYeq: "bY = bX \<inter> Y"
+          using basis_order_topology_on_restrict[OF hYX hbY] by blast
+        have hbC: "bX \<in> C" unfolding C_def using hbX hbYW hbYeq by blast
+        have hxbX: "x \<in> bX" using hxbY hbYeq by blast
+        have hxU: "x \<in> U" unfolding U_def using hbC hxbX by blast
+        show "x \<in> Y \<inter> U" using hxY hxU by blast
+      qed
+      show "Y \<inter> U \<subseteq> W"
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> Y \<inter> U"
+        have hxY: "x \<in> Y" and hxU: "x \<in> U" using hx by blast+
+        obtain bX where hbC: "bX \<in> C" and hxbX: "x \<in> bX"
+          using hxU unfolding U_def by blast
+        have hbW: "bX \<inter> Y \<subseteq> W" using hbC unfolding C_def by blast
+        have "x \<in> bX \<inter> Y" using hxY hxbX by blast
+        show "x \<in> W" using hbW \<open>x \<in> bX \<inter> Y\<close> by blast
+      qed
+    qed
+
+    have hUopen: "U \<in> order_topology_on X"
+      unfolding order_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI)
+      show "U \<subseteq> X"
+      proof (rule subsetI)
+        fix x assume hxU: "x \<in> U"
+        obtain bX where hbC: "bX \<in> C" and hxbX: "x \<in> bX"
+          using hxU unfolding U_def by blast
+        have hbB: "bX \<in> basis_order_topology_on X" using hbC unfolding C_def by blast
+        have hbXsub: "bX \<subseteq> X" by (rule basis_order_topology_on_subset[OF hbB])
+        show "x \<in> X" using hbXsub hxbX by blast
+      qed
+      show "\<forall>x\<in>U. \<exists>b\<in>basis_order_topology_on X. x \<in> b \<and> b \<subseteq> U"
+      proof (rule ballI)
+        fix x assume hxU: "x \<in> U"
+        obtain bX where hbC: "bX \<in> C" and hxbX: "x \<in> bX"
+          using hxU unfolding U_def by blast
+        have hbB: "bX \<in> basis_order_topology_on X" using hbC unfolding C_def by blast
+        have hbU: "bX \<subseteq> U"
+        proof (rule subsetI)
+          fix t assume ht: "t \<in> bX"
+          show "t \<in> U" unfolding U_def using hbC ht by blast
+        qed
+        show "\<exists>b\<in>basis_order_topology_on X. x \<in> b \<and> b \<subseteq> U"
+          apply (rule bexI[where x=bX])
+           apply (intro conjI hxbX hbU)
+          apply (rule hbB)
+          done
+      qed
+    qed
+
+    show "W \<in> subspace_topology X (order_topology_on X) Y"
+      unfolding subspace_topology_def
+      apply (rule CollectI)
+      apply (rule exI[where x=U])
+      apply (intro conjI)
+       apply (rule hWeq)
+      apply (rule hUopen)
+      done
+  qed
+
+  have h2: "subspace_topology X (order_topology_on X) Y \<subseteq> order_topology_on Y"
+  proof (rule subsetI)
+    fix W assume hW: "W \<in> subspace_topology X (order_topology_on X) Y"
+    obtain U where hUopen: "U \<in> order_topology_on X" and hWeq: "W = Y \<inter> U"
+      using hW unfolding subspace_topology_def by blast
+    have hUcov: "\<forall>x\<in>U. \<exists>bX\<in>basis_order_topology_on X. x \<in> bX \<and> bX \<subseteq> U"
+      using hUopen unfolding order_topology_on_def topology_generated_by_basis_def by blast
+
+    have hWsub: "W \<subseteq> Y" using hWeq by blast
+    have hWcov: "\<forall>y\<in>W. \<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> W"
+    proof (rule ballI)
+      fix y assume hyW: "y \<in> W"
+      have hyY: "y \<in> Y" and hyU: "y \<in> U" using hyW hWeq by blast+
+      obtain bX where hbX: "bX \<in> basis_order_topology_on X" and hybX: "y \<in> bX" and hbXU: "bX \<subseteq> U"
+        using hUcov[rule_format, OF hyU] by blast
+      obtain bY where hbY: "bY \<in> basis_order_topology_on Y" and hybY: "y \<in> bY" and hbYsub: "bY \<subseteq> bX \<inter> Y"
+        using convex_in_refine_basis_intersection[OF hconv hyY hbX hybX] by blast
+      have hbYW: "bY \<subseteq> W"
+        using hbYsub hbXU hWeq by blast
+      show "\<exists>bY\<in>basis_order_topology_on Y. y \<in> bY \<and> bY \<subseteq> W"
+        apply (rule bexI[where x=bY])
+         apply (intro conjI hybY hbYW)
+        apply (rule hbY)
+        done
+    qed
+
+    show "W \<in> order_topology_on Y"
+      unfolding order_topology_on_def topology_generated_by_basis_def
+      apply (rule CollectI)
+      apply (intro conjI)
+       apply (rule hWsub)
+      apply (rule hWcov)
+      done
+  qed
+
+  show ?thesis using h1 h2 by blast
 qed
 
 
