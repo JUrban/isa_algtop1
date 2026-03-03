@@ -3474,6 +3474,30 @@ proof (rule subsetI)
   qed
 qed
 
+lemma closure_on_mono:
+  assumes hAB: "A \<subseteq> B"
+  shows "closure_on X T A \<subseteq> closure_on X T B"
+proof -
+  let ?FA = "{C. closedin_on X T C \<and> A \<subseteq> C}"
+  let ?FB = "{C. closedin_on X T C \<and> B \<subseteq> C}"
+  have hsub: "?FB \<subseteq> ?FA"
+    using hAB by blast
+  have hInter: "\<Inter>?FA \<subseteq> \<Inter>?FB"
+  proof (rule subsetI)
+    fix x
+    assume hx: "x \<in> \<Inter>?FA"
+    show "x \<in> \<Inter>?FB"
+    proof (rule InterI)
+      fix C
+      assume hC: "C \<in> ?FB"
+      have hC': "C \<in> ?FA" using hsub hC by blast
+      show "x \<in> C" by (rule InterD[OF hx hC'])
+    qed
+  qed
+  show ?thesis
+    unfolding closure_on_def using hInter by simp
+qed
+
 lemma closure_on_subset_of_closed:
   assumes hC: "closedin_on X T C"
   assumes hAC: "A \<subseteq> C"
@@ -7859,6 +7883,29 @@ section \<open>\<S>30 The Countability Axioms\<close>
 (** Basic predicate for countable sets (to avoid extra session dependencies). **)
 definition top1_countable :: "'a set \<Rightarrow> bool" where
   "top1_countable S \<longleftrightarrow> (\<exists>f::'a \<Rightarrow> nat. inj_on f S)"
+
+lemma top1_countable_subset:
+  assumes hS: "top1_countable S"
+  assumes hAS: "A \<subseteq> S"
+  shows "top1_countable A"
+proof -
+  obtain f :: "'a \<Rightarrow> nat" where hf: "inj_on f S"
+    using hS unfolding top1_countable_def by blast
+  have hA: "inj_on f A"
+    unfolding inj_on_def
+  proof (intro ballI impI)
+    fix x y
+    assume hxA: "x \<in> A" and hyA: "y \<in> A"
+    assume hfx: "f x = f y"
+    have hxS: "x \<in> S" using hAS hxA by blast
+    have hyS: "y \<in> S" using hAS hyA by blast
+    show "x = y"
+      using hf hxS hyS hfx unfolding inj_on_def by blast
+  qed
+  show ?thesis
+    unfolding top1_countable_def
+    by (rule exI[where x=f], rule hA)
+qed
 
 (** from \S30 Definition (Countable neighborhood basis at a point) [top1.tex:~3903] **)
 definition top1_countable_neighborhood_basis_at ::
