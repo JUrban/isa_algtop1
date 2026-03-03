@@ -618,7 +618,368 @@ theorem Theorem_15_2:
   assumes "is_topology_on UNIV TY"
   defines "S \<equiv> { preimage pi1 U | U. U \<in> TX } \<union> { preimage pi2 V | V. V \<in> TY }"
   shows "product_topology_on TX TY = topology_generated_by_subbasis UNIV S"
-  sorry
+proof -
+  let ?B = "product_basis TX TY"
+  let ?P = "product_topology_on TX TY"
+
+  have hUNIV_TX: "UNIV \<in> TX"
+    using assms(1) unfolding is_topology_on_def by blast
+  have hUNIV_TY: "UNIV \<in> TY"
+    using assms(2) unfolding is_topology_on_def by blast
+
+  have hInter_TX: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TX \<longrightarrow> \<Inter>F \<in> TX"
+    using assms(1) unfolding is_topology_on_def by blast
+  have hInter_TY: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY \<longrightarrow> \<Inter>F \<in> TY"
+    using assms(2) unfolding is_topology_on_def by blast
+
+  have hBasis: "is_basis_on UNIV ?B"
+  proof -
+    have hb_sub: "\<forall>b\<in>?B. b \<subseteq> UNIV"
+      unfolding product_basis_def by blast
+    have hb_cov: "\<forall>x\<in>UNIV. \<exists>b\<in>?B. x \<in> b"
+    proof (rule ballI)
+      fix x assume "x \<in> (UNIV::('a \<times> 'b) set)"
+      show "\<exists>b\<in>?B. x \<in> b"
+        unfolding product_basis_def
+        apply (rule bexI[where x="UNIV \<times> UNIV"])
+         apply simp
+        apply (rule CollectI, rule exI[where x=UNIV], rule exI[where x=UNIV])
+        apply (intro conjI refl hUNIV_TX hUNIV_TY)
+        done
+    qed
+    have hb_int:
+      "\<forall>b1\<in>?B. \<forall>b2\<in>?B. \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>?B. x \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2)"
+    proof (intro ballI)
+      fix b1 b2 assume hb1: "b1 \<in> ?B" and hb2: "b2 \<in> ?B"
+      fix x assume hx: "x \<in> b1 \<inter> b2"
+      obtain U1 V1 where hU1: "U1 \<in> TX" and hV1: "V1 \<in> TY" and hb1eq: "b1 = U1 \<times> V1"
+        using hb1 unfolding product_basis_def by blast
+      obtain U2 V2 where hU2: "U2 \<in> TX" and hV2: "V2 \<in> TY" and hb2eq: "b2 = U2 \<times> V2"
+        using hb2 unfolding product_basis_def by blast
+      have hU12: "U1 \<inter> U2 \<in> TX"
+      proof -
+        have "finite {U1,U2} \<and> {U1,U2} \<noteq> {} \<and> {U1,U2} \<subseteq> TX"
+          using hU1 hU2 by auto
+        hence "(\<Inter>{U1,U2}) \<in> TX"
+          using hInter_TX[rule_format] by blast
+        thus ?thesis by simp
+      qed
+      have hV12: "V1 \<inter> V2 \<in> TY"
+      proof -
+        have "finite {V1,V2} \<and> {V1,V2} \<noteq> {} \<and> {V1,V2} \<subseteq> TY"
+          using hV1 hV2 by auto
+        hence "(\<Inter>{V1,V2}) \<in> TY"
+          using hInter_TY[rule_format] by blast
+        thus ?thesis by simp
+      qed
+      have hb3: "(U1 \<inter> U2) \<times> (V1 \<inter> V2) \<in> ?B"
+        unfolding product_basis_def
+        apply (rule CollectI)
+        apply (rule exI[where x="U1 \<inter> U2"])
+        apply (rule exI[where x="V1 \<inter> V2"])
+        apply (intro conjI refl hU12 hV12)
+        done
+      have hx3: "x \<in> (U1 \<inter> U2) \<times> (V1 \<inter> V2)"
+        using hx hb1eq hb2eq by blast
+      have hsub3: "(U1 \<inter> U2) \<times> (V1 \<inter> V2) \<subseteq> b1 \<inter> b2"
+        using hb1eq hb2eq by blast
+      show "\<exists>b3\<in>?B. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+        apply (rule bexI[where x="(U1 \<inter> U2) \<times> (V1 \<inter> V2)"])
+         apply (intro conjI hx3 hsub3)
+        apply (rule hb3)
+        done
+    qed
+    show "is_basis_on UNIV ?B"
+      unfolding is_basis_on_def
+      apply (intro conjI)
+        apply (rule hb_sub)
+       apply (rule hb_cov)
+      apply (rule hb_int)
+      done
+  qed
+
+  have hBasis_for: "basis_for UNIV ?B ?P"
+    unfolding basis_for_def product_topology_on_def using hBasis by simp
+
+  have hP_union: "?P = { \<Union>U | U. U \<subseteq> ?B }"
+    by (rule Lemma_13_1[OF hBasis_for])
+
+  have hRect_in_finite_intersections: "?B \<subseteq> finite_intersections S"
+  proof (rule subsetI)
+    fix b assume hb: "b \<in> ?B"
+    obtain U V where hU: "U \<in> TX" and hV: "V \<in> TY" and hbeq: "b = U \<times> V"
+      using hb unfolding product_basis_def by blast
+    have hUV_in: "{preimage pi1 U, preimage pi2 V} \<subseteq> S"
+      unfolding S_def
+    proof (rule subsetI)
+      fix x assume hx: "x \<in> {preimage pi1 U, preimage pi2 V}"
+      have hx_cases: "x = preimage pi1 U \<or> x = preimage pi2 V"
+        using hx by simp
+      show "x \<in> {preimage pi1 Ua |Ua. Ua \<in> TX} \<union> {preimage pi2 Va |Va. Va \<in> TY}"
+      proof (rule disjE[OF hx_cases])
+        assume "x = preimage pi1 U"
+        show ?thesis
+          apply (rule UnI1)
+          apply (rule CollectI)
+          apply (rule exI[where x=U])
+          apply (intro conjI)
+           apply (rule \<open>x = preimage pi1 U\<close>)
+          apply (rule hU)
+          done
+      next
+        assume "x = preimage pi2 V"
+        show ?thesis
+          apply (rule UnI2)
+          apply (rule CollectI)
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+           apply (rule \<open>x = preimage pi2 V\<close>)
+          apply (rule hV)
+          done
+      qed
+    qed
+    have hfin: "finite {preimage pi1 U, preimage pi2 V}"
+      by simp
+    have hb'': "preimage pi1 U \<inter> preimage pi2 V = U \<times> V"
+      apply (rule set_eqI)
+      apply (simp add: preimage_def pi1_def pi2_def mem_Times_iff)
+      done
+    have "b \<in> finite_intersections S"
+      unfolding finite_intersections_def
+      apply (rule CollectI)
+      apply (rule exI[where x="{preimage pi1 U, preimage pi2 V}"])
+      apply (intro conjI)
+        apply (simp add: hbeq hb'')
+       apply (rule hfin)
+      apply (rule hUV_in)
+      done
+    thus "b \<in> finite_intersections S" .
+  qed
+
+  have hS_sub_P: "S \<subseteq> ?P"
+  proof (rule subsetI)
+    fix s assume hs: "s \<in> S"
+    have "(\<exists>U. U \<in> TX \<and> s = preimage pi1 U) \<or> (\<exists>V. V \<in> TY \<and> s = preimage pi2 V)"
+      using hs unfolding S_def by blast
+    then show "s \<in> ?P"
+    proof
+      assume "\<exists>U. U \<in> TX \<and> s = preimage pi1 U"
+      then obtain U where hU: "U \<in> TX" and hseq: "s = preimage pi1 U" by blast
+      show "s \<in> ?P"
+        unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+      proof (rule CollectI, rule conjI, rule subset_UNIV)
+        show "\<forall>x\<in>s. \<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
+        proof (rule ballI)
+          fix x assume hx: "x \<in> s"
+          have hxU: "fst x \<in> U"
+            using hx unfolding hseq preimage_def pi1_def by simp
+          have hxUV: "x \<in> U \<times> UNIV"
+            using hxU by (simp add: mem_Times_iff)
+          have hsub: "U \<times> UNIV \<subseteq> s"
+            unfolding hseq preimage_def pi1_def by auto
+          show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
+            apply (rule bexI[where x="U \<times> UNIV"])
+             apply (intro conjI hxUV hsub)
+            apply (rule CollectI)
+            apply (rule exI[where x=U], rule exI[where x=UNIV])
+            apply (intro conjI refl hU hUNIV_TY)
+            done
+        qed
+      qed
+    next
+      assume "\<exists>V. V \<in> TY \<and> s = preimage pi2 V"
+      then obtain V where hV: "V \<in> TY" and hseq: "s = preimage pi2 V" by blast
+      show "s \<in> ?P"
+        unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+      proof (rule CollectI, rule conjI, rule subset_UNIV)
+        show "\<forall>x\<in>s. \<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
+        proof (rule ballI)
+          fix x assume hx: "x \<in> s"
+          have hxV: "snd x \<in> V"
+            using hx unfolding hseq preimage_def pi2_def by simp
+          have hxUV: "x \<in> UNIV \<times> V"
+            using hxV by (simp add: mem_Times_iff)
+          have hsub: "UNIV \<times> V \<subseteq> s"
+            unfolding hseq preimage_def pi2_def by auto
+          show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
+            apply (rule bexI[where x="UNIV \<times> V"])
+             apply (intro conjI hxUV hsub)
+            apply (rule CollectI)
+            apply (rule exI[where x=UNIV], rule exI[where x=V])
+            apply (intro conjI refl hUNIV_TX hV)
+            done
+        qed
+      qed
+    qed
+  qed
+
+  have hBinInter: "\<forall>W1 W2. W1 \<in> ?P \<longrightarrow> W2 \<in> ?P \<longrightarrow> W1 \<inter> W2 \<in> ?P"
+  proof (intro allI impI)
+    fix W1 W2 assume hW1: "W1 \<in> ?P" and hW2: "W2 \<in> ?P"
+    have hW1cov: "\<forall>x\<in>W1. \<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> W1"
+      using hW1 unfolding product_topology_on_def topology_generated_by_basis_def by blast
+    have hW2cov: "\<forall>x\<in>W2. \<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> W2"
+      using hW2 unfolding product_topology_on_def topology_generated_by_basis_def by blast
+    have hBint:
+      "\<forall>b1\<in>?B. \<forall>b2\<in>?B. \<forall>x\<in>(b1 \<inter> b2). \<exists>b3\<in>?B. x \<in> b3 \<and> b3 \<subseteq> (b1 \<inter> b2)"
+      using hBasis unfolding is_basis_on_def by blast
+    show "W1 \<inter> W2 \<in> ?P"
+      unfolding product_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule subset_UNIV)
+      show "\<forall>x\<in>W1 \<inter> W2. \<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> W1 \<inter> W2"
+      proof (rule ballI)
+        fix x assume hx: "x \<in> W1 \<inter> W2"
+        have hxW1: "x \<in> W1" and hxW2: "x \<in> W2" using hx by blast+
+        obtain b1 where hb1: "b1 \<in> ?B" and hxb1: "x \<in> b1" and hb1W1: "b1 \<subseteq> W1"
+          using hW1cov[rule_format, OF hxW1] by blast
+        obtain b2 where hb2: "b2 \<in> ?B" and hxb2: "x \<in> b2" and hb2W2: "b2 \<subseteq> W2"
+          using hW2cov[rule_format, OF hxW2] by blast
+        obtain b3 where hb3: "b3 \<in> ?B" and hxb3: "x \<in> b3" and hb3sub: "b3 \<subseteq> b1 \<inter> b2"
+          using hBint[rule_format, OF hb1, OF hb2] hxb1 hxb2 by blast
+        have hb3W: "b3 \<subseteq> W1 \<inter> W2"
+          using hb3sub hb1W1 hb2W2 by blast
+        show "\<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> W1 \<inter> W2"
+          apply (rule bexI[where x=b3])
+           apply (intro conjI hxb3 hb3W)
+          apply (rule hb3)
+          done
+      qed
+    qed
+  qed
+
+  have hUNIV_P: "UNIV \<in> ?P"
+    unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+    apply (rule CollectI, rule conjI, rule subset_UNIV, rule ballI)
+    apply (rule bexI[where x="UNIV \<times> UNIV"])
+     apply simp
+    apply (rule CollectI, rule exI[where x=UNIV], rule exI[where x=UNIV])
+    apply (intro conjI refl hUNIV_TX hUNIV_TY)
+    done
+
+  have hFinInter_P: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?P \<Longrightarrow> \<Inter>F \<in> ?P"
+  proof -
+    fix F assume hfin: "finite F" and hsub: "F \<subseteq> ?P"
+    show "\<Inter>F \<in> ?P"
+      using hfin hsub
+    proof (induction rule: finite_induct)
+      case empty
+      show "\<Inter>{} \<in> ?P"
+        using hUNIV_P by simp
+    next
+      case (insert A F)
+      have hAopen: "A \<in> ?P" using insert.prems by blast
+      have hFsub: "F \<subseteq> ?P" using insert.prems by blast
+      have hFopen: "\<Inter>F \<in> ?P" by (rule insert.IH[OF hFsub])
+      have "A \<inter> \<Inter>F \<in> ?P"
+        apply (rule hBinInter[rule_format])
+         apply (rule hAopen)
+        apply (rule hFopen)
+        done
+      thus "\<Inter>(insert A F) \<in> ?P"
+        by simp
+    qed
+  qed
+
+  have hP_top: "is_topology_on (UNIV::('a \<times> 'b) set) ?P"
+  proof (unfold is_topology_on_def, intro conjI)
+    show "{} \<in> ?P"
+      unfolding product_topology_on_def topology_generated_by_basis_def by blast
+    show "UNIV \<in> ?P" using hUNIV_P .
+    show "\<forall>U. U \<subseteq> ?P \<longrightarrow> \<Union>U \<in> ?P"
+    proof (intro allI impI)
+      fix U assume hU: "U \<subseteq> ?P"
+      show "\<Union>U \<in> ?P"
+        unfolding product_topology_on_def topology_generated_by_basis_def
+      proof (rule CollectI, rule conjI, rule subset_UNIV)
+        show "\<forall>x\<in>\<Union>U. \<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> \<Union>U"
+        proof (rule ballI)
+          fix x assume hx: "x \<in> \<Union>U"
+          obtain W where hWU: "W \<in> U" and hxW: "x \<in> W" using hx by blast
+          have hWT: "W \<in> ?P" using hU hWU by blast
+          have hWcov: "\<forall>y\<in>W. \<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> W"
+            using hWT unfolding product_topology_on_def topology_generated_by_basis_def by blast
+          obtain b where hbB: "b \<in> ?B" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+            using hWcov[rule_format, OF hxW] by blast
+          have hbU: "b \<subseteq> \<Union>U"
+            apply (rule subset_trans[OF hbW])
+            apply (rule Union_upper[OF hWU])
+            done
+          show "\<exists>b\<in>?B. x \<in> b \<and> b \<subseteq> \<Union>U"
+            apply (rule bexI[where x=b])
+             apply (intro conjI hxb hbU)
+            apply (rule hbB)
+            done
+        qed
+      qed
+    qed
+    show "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?P \<longrightarrow> \<Inter>F \<in> ?P"
+    proof (intro allI impI)
+      fix F assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?P"
+      have hfin: "finite F" using hF by blast
+      have hsub: "F \<subseteq> ?P" using hF by blast
+      show "\<Inter>F \<in> ?P"
+        by (rule hFinInter_P[OF hfin hsub])
+    qed
+  qed
+
+  have hFinInter_S_sub_P: "finite_intersections S \<subseteq> ?P"
+  proof (rule subsetI)
+    fix u assume hu: "u \<in> finite_intersections S"
+    obtain F where hfin: "finite F" and hFsub: "F \<subseteq> S" and hueq: "u = \<Inter>F"
+      using hu unfolding finite_intersections_def by blast
+    have hFsubP: "F \<subseteq> ?P"
+      apply (rule subset_trans[OF hFsub])
+      apply (rule hS_sub_P)
+      done
+    have "u \<in> ?P"
+    proof (cases "F = {}")
+      case True
+      show ?thesis
+        using hUNIV_P hueq True by simp
+    next
+      case False
+      have "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?P" using hfin False hFsubP by blast
+      hence "(\<Inter>F) \<in> ?P"
+        using hP_top unfolding is_topology_on_def by blast
+      thus ?thesis using hueq by simp
+    qed
+    thus "u \<in> ?P" .
+  qed
+
+  show "?P = topology_generated_by_subbasis UNIV S"
+  proof (rule set_eqI)
+    fix W
+    show "W \<in> ?P \<longleftrightarrow> W \<in> topology_generated_by_subbasis UNIV S"
+    proof (rule iffI)
+      assume hW: "W \<in> ?P"
+      have "W \<in> { \<Union>U | U. U \<subseteq> ?B }"
+        using hW unfolding hP_union by simp
+      then obtain U where hWU: "W = \<Union>U" and hUB: "U \<subseteq> ?B" by blast
+      have hUsub: "U \<subseteq> finite_intersections S"
+        apply (rule subset_trans[OF hUB])
+        apply (rule hRect_in_finite_intersections)
+        done
+      show "W \<in> topology_generated_by_subbasis UNIV S"
+        unfolding topology_generated_by_subbasis_def
+        apply (rule CollectI)
+        apply (rule exI[where x=U])
+        apply (intro conjI)
+         apply (rule hWU)
+        apply (rule hUsub)
+        done
+    next
+      assume hW: "W \<in> topology_generated_by_subbasis UNIV S"
+      obtain U where hWU: "W = \<Union>U" and hUsub: "U \<subseteq> finite_intersections S"
+        using hW unfolding topology_generated_by_subbasis_def by blast
+      have hUsubP: "U \<subseteq> ?P"
+        apply (rule subset_trans[OF hUsub])
+        apply (rule hFinInter_S_sub_P)
+        done
+      show "W \<in> ?P"
+        using hP_top hUsubP hWU unfolding is_topology_on_def by blast
+    qed
+  qed
+qed
 
 
 section \<open>\<S>16 The Subspace Topology\<close>
