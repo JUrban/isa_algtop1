@@ -11797,9 +11797,6 @@ lemma top1_urysohn_unit_interval:
   assumes hdisj: "A \<inter> B = {}"
   shows "\<exists>f. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f
             \<and> (\<forall>x\<in>A. f x = 0) \<and> (\<forall>x\<in>B. f x = 1)"
-  sorry
-
-(*
 proof -
   have hT1: "top1_T1_on X TX"
     using hN unfolding top1_normal_on_def by (rule conjunct1)
@@ -11907,12 +11904,13 @@ proof -
 
   have f_ge0: "0 \<le> f x" for x
     unfolding f_def
-    apply (rule cInf_greatest)
-     apply (rule S_ne)
-    apply (intro ballI)
-    apply (rule S_ge0)
-    apply assumption
-    done
+  proof (rule cInf_greatest)
+    show "S x \<noteq> {}"
+      by (rule S_ne)
+    fix r assume hr: "r \<in> S x"
+    show "0 \<le> r"
+      by (rule S_ge0[OF hr])
+  qed
 
   have f_in_I: "f x \<in> top1_closed_interval 0 1" if hx: "x \<in> X" for x
     unfolding top1_closed_interval_def
@@ -11942,9 +11940,9 @@ proof -
       by (rule dyadic_le1[OF hk])
     show ?thesis
       unfolding f_def
-      apply (rule cInf_greatest)
-       apply (rule S_ne)
-      apply (intro ballI)
+    proof (rule cInf_greatest)
+      show "S x \<noteq> {}"
+        by (rule S_ne)
       fix r assume hr: "r \<in> S x"
       show "top1_dyadic n k \<le> r"
       proof (cases "r = 1")
@@ -11971,7 +11969,7 @@ proof -
         show ?thesis
           unfolding hr_eq using hnotlt by simp
       qed
-    done
+    qed
   qed
 
   have dyadic_le_f_if_notin_closure:
@@ -11983,9 +11981,9 @@ proof -
       by (rule dyadic_le1[OF hk])
     show ?thesis
       unfolding f_def
-      apply (rule cInf_greatest)
-       apply (rule S_ne)
-      apply (intro ballI)
+    proof (rule cInf_greatest)
+      show "S x \<noteq> {}"
+        by (rule S_ne)
       fix r assume hr: "r \<in> S x"
       show "top1_dyadic n k \<le> r"
       proof (cases "r = 1")
@@ -12014,7 +12012,7 @@ proof -
         show ?thesis
           unfolding hr_eq using hnotlt by simp
       qed
-    done
+    qed
   qed
 
   have f_lt_dyadic_imp_in:
@@ -12069,15 +12067,37 @@ proof -
 
   have f_on_A: "f x = 0" if hxA: "x \<in> A" for x
   proof -
+    have hxU0': "x \<in> U0"
+      using hxA hU0 by blast
     have hxU0: "x \<in> U 0 0"
-      using hxA hU0 unfolding U_def by simp
+      unfolding U_def by (simp add: top1_urysohn_U_endpoints hxU0')
     have hmem0: "0 \<in> S x"
-      unfolding S_def using hxU0 by (intro insertI2, blast)
+    proof -
+      have hmem0': "0 \<in> {top1_dyadic n k |n k. k \<le> (2::nat) ^ n \<and> x \<in> U n k}"
+      proof -
+        have "\<exists>n k. 0 = top1_dyadic n k \<and> k \<le> (2::nat) ^ n \<and> x \<in> U n k"
+        proof (intro exI[where x=0] exI[where x=0] conjI)
+          show "0 = top1_dyadic 0 0"
+            by (simp add: top1_dyadic_def)
+          show "0 \<le> (2::nat) ^ 0"
+            by simp
+          show "x \<in> U 0 0"
+            by (rule hxU0)
+        qed
+        thus ?thesis
+          by blast
+      qed
+      show ?thesis
+        unfolding S_def using hmem0' by (intro insertI2)
+    qed
     have "Inf (S x) = 0"
-      apply (rule cInf_eq_minimum)
-       apply (rule hmem0)
-      apply (rule S_ge0)
-      done
+    proof (rule cInf_eq_minimum)
+      show "0 \<in> S x"
+        by (rule hmem0)
+      fix r assume hr: "r \<in> S x"
+      show "0 \<le> r"
+        by (rule S_ge0[OF hr])
+    qed
     thus ?thesis
       unfolding f_def .
   qed
@@ -12099,28 +12119,46 @@ proof -
       have hU1_eq: "U n ((2::nat) ^ n) = ?U1"
         unfolding U_def by (simp add: top1_urysohn_U_endpoints)
       have hxU1': "x \<in> U n ((2::nat) ^ n)"
-      proof -
-        have hmono: "U n k \<subseteq> U n ((2::nat) ^ n)"
-          unfolding U_def
-          by (rule top1_urysohn_U_mono_same_level[OF hN hU0_open hU0_subX hU1_open hU1_subX hcl01 hk le_rfl])
-        show ?thesis
-          by (rule subsetD[OF hmono hxUk])
-      qed
+	      proof -
+	        have hmono: "U n k \<subseteq> U n ((2::nat) ^ n)"
+	          unfolding U_def
+	          by (rule top1_urysohn_U_mono_same_level[OF hN hU0_open hU0_subX hU1_open hU1_subX hcl01 hk order_refl])
+	        show ?thesis
+	          by (rule subsetD[OF hmono hxUk])
+	      qed
       have "x \<in> ?U1"
         unfolding sym[OF hU1_eq] using hxU1' .
       thus False using hxnotU1 by contradiction
-    qed
-    have hS: "S x = {1}"
-      unfolding S_def
-      apply (rule set_eqI)
-      apply (rule iffI)
-       apply (simp add: hnone)
-      apply simp
-      done
-    show ?thesis
-      unfolding f_def
-      by (simp add: hS)
-  qed
+	    qed
+	    have hS: "S x = {1}"
+	    proof (rule set_eqI)
+	      fix r
+	      show "r \<in> S x \<longleftrightarrow> r \<in> {1}"
+	      proof
+	        assume hr: "r \<in> S x"
+	        have "r = 1 \<or> (\<exists>n k. r = top1_dyadic n k \<and> k \<le> (2::nat) ^ n \<and> x \<in> U n k)"
+	          using hr unfolding S_def by blast
+	        thus "r \<in> {1}"
+	        proof
+	          assume "r = 1"
+	          thus ?thesis by simp
+	        next
+	          assume "\<exists>n k. r = top1_dyadic n k \<and> k \<le> (2::nat) ^ n \<and> x \<in> U n k"
+	          then have "\<exists>n k. k \<le> (2::nat) ^ n \<and> x \<in> U n k"
+	            by blast
+	          thus ?thesis
+	            using hnone by contradiction
+	        qed
+	      next
+	        assume hr: "r \<in> {1}"
+	        show "r \<in> S x"
+	          using hr unfolding S_def by simp
+	      qed
+	    qed
+	    show ?thesis
+	      unfolding f_def
+	      by (simp add: hS)
+	  qed
 
   have pre_ray_gt_open: "\<And>c. {x \<in> X. f x \<in> open_ray_gt c} \<in> TX"
     sorry
@@ -12129,36 +12167,60 @@ proof -
   proof -
     fix c
     show "{x \<in> X. f x \<in> open_ray_lt c} \<in> TX"
-    proof (cases "c \<le> 0")
-      case True
-      have "{x \<in> X. f x \<in> open_ray_lt c} = {}"
-        unfolding open_ray_lt_def
-        apply (rule set_eqI)
-        apply (rule iffI)
-         apply (clarify)
-         using True f_ge0 by simp
-        apply simp
-        done
-      have hEmpty: "{} \<in> TX"
-        by (rule conjunct1[OF hTopX[unfolded is_topology_on_def]])
-      show ?thesis
-        by (simp add: hEmpty \<open>{x \<in> X. f x \<in> open_ray_lt c} = {}\<close>)
+	    proof (cases "c \<le> 0")
+	      case True
+	      have "{x \<in> X. f x \<in> open_ray_lt c} = {}"
+	      proof (rule set_eqI)
+	        fix x
+	        show "x \<in> {x \<in> X. f x \<in> open_ray_lt c} \<longleftrightarrow> x \<in> {}"
+	        proof
+	          assume hx: "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
+	          have hfxlt: "f x < c"
+	            using hx unfolding open_ray_lt_def by simp
+	          have hfxge0: "0 \<le> f x"
+	            by (rule f_ge0)
+	          have False
+	            using True hfxlt hfxge0 by linarith
+	          thus "x \<in> {}"
+	            by simp
+	        next
+	          assume "x \<in> {}"
+	          thus "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
+	            by simp
+	        qed
+	      qed
+	      have hEmpty: "{} \<in> TX"
+	        by (rule conjunct1[OF hTopX[unfolded is_topology_on_def]])
+	      show ?thesis
+	        by (simp add: hEmpty \<open>{x \<in> X. f x \<in> open_ray_lt c} = {}\<close>)
     next
       case False
       show ?thesis
-      proof (cases "1 < c")
-        case True
-        have "{x \<in> X. f x \<in> open_ray_lt c} = X"
-          unfolding open_ray_lt_def
-          apply (rule set_eqI)
-          apply (rule iffI)
-           apply blast
-          apply (intro conjI)
-           apply assumption
-          using f_le1 True by simp
-        thus ?thesis
-          by (rule conjunct1[OF conjunct2[OF hTopX[unfolded is_topology_on_def]]])
-      next
+	      proof (cases "1 < c")
+	        case True
+	        have hEq: "{x \<in> X. f x \<in> open_ray_lt c} = X"
+	        proof (rule set_eqI)
+	          fix x
+	          show "x \<in> {x \<in> X. f x \<in> open_ray_lt c} \<longleftrightarrow> x \<in> X"
+	          proof
+	            assume hx: "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
+	            show "x \<in> X"
+	              using hx by simp
+	          next
+	            assume hxX: "x \<in> X"
+	            have hfxle1: "f x \<le> 1"
+	              by (rule f_le1)
+	            have hfxltc: "f x < c"
+	              using hfxle1 True by (rule le_less_trans)
+	            show "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
+	              unfolding open_ray_lt_def using hxX hfxltc by simp
+	          qed
+	        qed
+	        have hX_open: "X \<in> TX"
+	          using hTopX unfolding is_topology_on_def by blast
+	        show ?thesis
+	          using hEq hX_open by simp
+	      next
         case False
         have hc01: "0 < c" and hc_le1: "c \<le> 1"
           using False \<open>\<not> c \<le> 0\<close> by simp_all
@@ -12188,17 +12250,19 @@ proof -
               using hxUk by blast
           next
             assume hx: "x \<in> \<Union>UC"
-            then obtain V where hV: "V \<in> UC" and hxV: "x \<in> V"
-              by blast
-            obtain n k where hk: "k \<le> (2::nat) ^ n" and hdy: "top1_dyadic n k < c" and hVeq: "V = U n k"
-              using hV unfolding UC_def by blast
-            have hfxle: "f x \<le> top1_dyadic n k"
-              using hxV hVeq by (rule f_le_dyadic_if_in[OF hk])
-            have "f x < c"
-              using hfxle hdy by simp
-            thus "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
-              unfolding open_ray_lt_def using hxV hVeq U_subX[OF hk] by blast
-          qed
+	            then obtain V where hV: "V \<in> UC" and hxV: "x \<in> V"
+	              by blast
+	            obtain n k where hk: "k \<le> (2::nat) ^ n" and hdy: "top1_dyadic n k < c" and hVeq: "V = U n k"
+	              using hV unfolding UC_def by blast
+	            have hxUnk: "x \<in> U n k"
+	              using hxV hVeq by simp
+	            have hfxle: "f x \<le> top1_dyadic n k"
+	              by (rule f_le_dyadic_if_in[OF hk hxUnk])
+	            have "f x < c"
+	              using hfxle hdy by simp
+	            thus "x \<in> {x \<in> X. f x \<in> open_ray_lt c}"
+	              unfolding open_ray_lt_def using hxV hVeq U_subX[OF hk] by blast
+	          qed
         qed
         have hUC_sub: "UC \<subseteq> TX"
           using hUC_open by blast
@@ -12208,11 +12272,135 @@ proof -
         thus ?thesis
           unfolding hpre_eq .
       qed
-    qed
-  qed
-
-sorry
-*)
+	  qed
+	  qed
+	
+	  have pre_basis_open:
+	    "{x \<in> X. f x \<in> b} \<in> TX"
+	    if hb: "b \<in> (basis_order_topology::real set set)"
+	    for b
+	  proof -
+	    have hb_cases:
+	      "(\<exists>a c. a < c \<and> b = open_interval a c)
+	       \<or> (\<exists>a. b = open_ray_gt a)
+	       \<or> (\<exists>a. b = open_ray_lt a)
+	       \<or> b = (UNIV::real set)"
+	      by (rule basis_order_topology_cases[OF hb])
+    show ?thesis
+    proof (rule disjE[OF hb_cases])
+	      assume hInt: "\<exists>a c. a < c \<and> b = open_interval a c"
+	      then obtain a c where hbEq: "b = open_interval a c"
+	        by blast
+	      have hGt: "{x \<in> X. f x \<in> open_ray_gt a} \<in> TX"
+	        by (rule pre_ray_gt_open)
+	      have hLt: "{x \<in> X. f x \<in> open_ray_lt c} \<in> TX"
+	        by (rule pre_ray_lt_open)
+	      have hInter: "{x \<in> X. f x \<in> open_ray_gt a} \<inter> {x \<in> X. f x \<in> open_ray_lt c} \<in> TX"
+	        by (rule topology_inter2[OF hTopX hGt hLt])
+	      have hEq:
+	        "{x \<in> X. f x \<in> b} = {x \<in> X. f x \<in> open_ray_gt a} \<inter> {x \<in> X. f x \<in> open_ray_lt c}"
+	      proof -
+	        have "{x \<in> X. f x \<in> open_interval a c}
+	            = {x \<in> X. f x \<in> open_ray_gt a} \<inter> {x \<in> X. f x \<in> open_ray_lt c}"
+	          unfolding open_interval_def open_ray_gt_def open_ray_lt_def
+	          by (rule set_eqI) (simp add: conj_assoc conj_left_commute conj_commute)
+	        thus ?thesis
+	          unfolding hbEq .
+	      qed
+	      show ?thesis
+	        by (simp add: hEq hInter)
+	    next
+	      assume hGt: "(\<exists>a. b = open_ray_gt a) \<or> (\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+      show ?thesis
+      proof (rule disjE[OF hGt])
+	        assume h1: "\<exists>a. b = open_ray_gt a"
+	        then obtain a where hbEq: "b = open_ray_gt a"
+	          by blast
+	        show ?thesis
+	          unfolding hbEq by (rule pre_ray_gt_open)
+		      next
+		        assume h2: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+		        show ?thesis
+		        proof (rule disjE[OF h2])
+		          assume h21: "\<exists>a. b = open_ray_lt a"
+		          then obtain a where hbEq: "b = open_ray_lt a"
+		            by blast
+		          show ?thesis
+		            unfolding hbEq by (rule pre_ray_lt_open)
+		        next
+		          assume hbEq: "b = (UNIV::real set)"
+		          have hX_open: "X \<in> TX"
+		            using hTopX unfolding is_topology_on_def by blast
+		          show ?thesis
+		            unfolding hbEq using hX_open by simp
+		        qed
+		      qed
+		    qed
+		  qed
+	
+	  have hBasis: "basis_for (UNIV::real set) (basis_order_topology::real set set) order_topology_on_UNIV"
+	    unfolding basis_for_def order_topology_on_UNIV_def
+	    by (intro conjI basis_order_topology_is_basis_on_UNIV refl)
+	
+	  have f_cont_order: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+	  proof (rule top1_continuous_map_on_generated_by_basis)
+	    show "is_topology_on X TX"
+	      by (rule hTopX)
+	    show "basis_for (UNIV::real set) (basis_order_topology::real set set) order_topology_on_UNIV"
+	      by (rule hBasis)
+	    show "\<forall>x\<in>X. f x \<in> (UNIV::real set)"
+	      by simp
+	    show "\<forall>b\<in>(basis_order_topology::real set set). {x \<in> X. f x \<in> b} \<in> TX"
+	    proof (intro ballI)
+	      fix b assume hb: "b \<in> (basis_order_topology::real set set)"
+	      show "{x \<in> X. f x \<in> b} \<in> TX"
+	        by (rule pre_basis_open[OF hb])
+	    qed
+	  qed
+	
+	  have hfimg: "f ` X \<subseteq> top1_closed_interval 0 1"
+	  proof (rule subsetI)
+	    fix y assume hy: "y \<in> f ` X"
+	    then obtain x where hxX: "x \<in> X" and hyEq: "y = f x"
+	      by blast
+	    show "y \<in> top1_closed_interval 0 1"
+	      unfolding hyEq by (rule f_in_I[OF hxX])
+	  qed
+	
+	  have f_cont_I:
+	    "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
+	  proof -
+	    have hTopUNIV: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+	      by (rule order_topology_on_UNIV_is_topology_on)
+	    have hRestr:
+	      "(\<forall>W g. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV g
+	             \<and> W \<subseteq> (UNIV::real set) \<and> g ` X \<subseteq> W
+	             \<longrightarrow> top1_continuous_map_on X TX W (subspace_topology (UNIV::real set) order_topology_on_UNIV W) g)"
+	      by (rule Theorem_18_2(5)[OF hTopX hTopUNIV hTopUNIV])
+	    have "top1_continuous_map_on X TX (top1_closed_interval 0 1)
+	            (subspace_topology (UNIV::real set) order_topology_on_UNIV (top1_closed_interval 0 1)) f"
+	    proof -
+	      have "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f
+	            \<and> top1_closed_interval 0 1 \<subseteq> (UNIV::real set)
+	            \<and> f ` X \<subseteq> top1_closed_interval 0 1"
+	        using f_cont_order hfimg by simp
+	      thus ?thesis
+	        using hRestr by blast
+	    qed
+	    thus ?thesis
+	      unfolding top1_closed_interval_topology_def .
+	  qed
+	
+	  show ?thesis
+	  proof (rule exI[where x=f], intro conjI)
+	    show "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
+	      by (rule f_cont_I)
+	    show "\<forall>x\<in>A. f x = 0"
+	      using f_on_A by blast
+	    show "\<forall>x\<in>B. f x = 1"
+	      using f_on_B by blast
+	  qed
+	qed
 
 text \<open>(Obsolete in-progress proof attempt removed; see backups.)\<close>
 
