@@ -3244,6 +3244,81 @@ definition interior_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set 
 definition closure_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> 'a set" where
   "closure_on X T A = \<Inter>{C. closedin_on X T C \<and> A \<subseteq> C}"
 
+(** Basic closure properties (used repeatedly later). **)
+lemma subset_closure_on:
+  shows "A \<subseteq> closure_on X T A"
+  unfolding closure_on_def
+proof (rule subsetI)
+  fix a assume ha: "a \<in> A"
+  show "a \<in> \<Inter>{C. closedin_on X T C \<and> A \<subseteq> C}"
+  proof (rule InterI)
+    fix C assume hC: "C \<in> {D. closedin_on X T D \<and> A \<subseteq> D}"
+    have hAC: "A \<subseteq> C"
+      by (rule conjunct2[OF CollectD[OF hC]])
+    show "a \<in> C"
+      by (rule subsetD[OF hAC, OF ha])
+  qed
+qed
+
+lemma closure_on_subset_of_closed:
+  assumes hC: "closedin_on X T C"
+  assumes hAC: "A \<subseteq> C"
+  shows "closure_on X T A \<subseteq> C"
+  unfolding closure_on_def
+  apply (rule Inter_lower)
+  apply (rule CollectI)
+  apply (intro conjI)
+   apply (rule hC)
+  apply (rule hAC)
+  done
+
+lemma closure_on_closed:
+  assumes hT: "is_topology_on X T"
+  assumes hAX: "A \<subseteq> X"
+  shows "closedin_on X T (closure_on X T A)"
+proof -
+  have cl_inter: "\<forall>F. F \<noteq> {} \<longrightarrow> (\<forall>C\<in>F. closedin_on X T C) \<longrightarrow> closedin_on X T (\<Inter>F)"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]])
+  have X_closed: "closedin_on X T X"
+    by (rule conjunct1[OF conjunct2[OF Theorem_17_1[OF hT]]])
+
+  let ?F = "{C. closedin_on X T C \<and> A \<subseteq> C}"
+
+  have hX: "X \<in> ?F"
+    by (rule CollectI, intro conjI, rule X_closed, rule hAX)
+
+  have F_ne: "?F \<noteq> {}"
+  proof
+    assume h: "?F = {}"
+    show False using hX by (simp add: h)
+  qed
+
+  have hFcl: "\<forall>C\<in>?F. closedin_on X T C"
+  proof
+    fix C
+    assume hC: "C \<in> ?F"
+    show "closedin_on X T C"
+      by (rule conjunct1[OF CollectD[OF hC]])
+  qed
+
+  have hInter_imp: "?F \<noteq> {} \<longrightarrow> (\<forall>C\<in>?F. closedin_on X T C) \<longrightarrow> closedin_on X T (\<Inter>?F)"
+    by (rule spec[where x="?F", OF cl_inter])
+  have hInter_imp2: "(\<forall>C\<in>?F. closedin_on X T C) \<longrightarrow> closedin_on X T (\<Inter>?F)"
+    by (rule mp[OF hInter_imp F_ne])
+  have hInter: "closedin_on X T (\<Inter>?F)"
+    by (rule mp[OF hInter_imp2 hFcl])
+
+  show ?thesis
+    unfolding closure_on_def
+    using hInter by simp
+qed
+
+lemma closure_on_subset_carrier:
+  assumes hT: "is_topology_on X T"
+  assumes hAX: "A \<subseteq> X"
+  shows "closure_on X T A \<subseteq> X"
+  by (rule closedin_sub[OF closure_on_closed[OF hT hAX]])
+
 (** from \S17 Theorem 17.4 [top1.tex:703] **)
 (** LATEX VERSION: "Closure in Y equals closure in X intersect Y." **)
 theorem Theorem_17_4:
@@ -4466,15 +4541,418 @@ theorem Theorem_18_1:
   assumes hTY: "is_topology_on Y TY"
   shows cont_closure:
     "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
-       (\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A))"
+       ((\<forall>x\<in>X. f x \<in> Y) \<and>
+        (\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A)))"
     and cont_closed:
     "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
-       (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x\<in>X. f x \<in> B})"
+       ((\<forall>x\<in>X. f x \<in> Y) \<and>
+        (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x\<in>X. f x \<in> B}))"
     and cont_nbhd:
     "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
-       (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
-           (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V))"
-  sorry
+       ((\<forall>x\<in>X. f x \<in> Y) \<and>
+        (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+            (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V)))"
+proof -
+  let ?mapXY = "(\<forall>x\<in>X. f x \<in> Y)"
+
+  have union_TX: "\<forall>U. U \<subseteq> TX \<longrightarrow> \<Union>U \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hTX[unfolded is_topology_on_def]]]])
+
+  have empty_TY: "{} \<in> TY"
+    by (rule conjunct1[OF hTY[unfolded is_topology_on_def]])
+  have X_open: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTX[unfolded is_topology_on_def]]])
+  have Y_open: "Y \<in> TY"
+    by (rule conjunct1[OF conjunct2[OF hTY[unfolded is_topology_on_def]]])
+
+  have Y_closed: "closedin_on Y TY Y"
+    by (rule closedin_intro[OF subset_refl], simp only: Diff_cancel, rule empty_TY)
+
+  have preimage_compl_eq:
+    "\<And>B. B \<subseteq> Y \<Longrightarrow> ?mapXY \<Longrightarrow>
+        X - {x \<in> X. f x \<in> B} = {x \<in> X. f x \<in> Y - B}"
+  proof -
+    fix B
+    assume hBY: "B \<subseteq> Y"
+    assume hmap: ?mapXY
+    show "X - {x \<in> X. f x \<in> B} = {x \<in> X. f x \<in> Y - B}"
+    proof (rule set_eqI)
+      fix x
+      show "x \<in> X - {x \<in> X. f x \<in> B} \<longleftrightarrow> x \<in> {x \<in> X. f x \<in> Y - B}"
+      proof
+        assume hx: "x \<in> X - {x \<in> X. f x \<in> B}"
+        have hxX: "x \<in> X" and hnot: "x \<notin> {x \<in> X. f x \<in> B}"
+          using hx by blast+
+        have hfyY: "f x \<in> Y" using hmap hxX by blast
+        have hfyB: "f x \<notin> B" using hxX hnot by simp
+        have "f x \<in> Y - B" using hfyY hfyB by blast
+        thus "x \<in> {x \<in> X. f x \<in> Y - B}" using hxX by simp
+      next
+        assume hx: "x \<in> {x \<in> X. f x \<in> Y - B}"
+        have hxX: "x \<in> X" and hfy: "f x \<in> Y - B" using hx by blast+
+        have hfyB: "f x \<notin> B" using hfy by blast
+        have "x \<notin> {x \<in> X. f x \<in> B}" using hxX hfyB by simp
+        thus "x \<in> X - {x \<in> X. f x \<in> B}" using hxX by blast
+      qed
+    qed
+  qed
+
+  have preimage_interY_eq:
+    "\<And>V. ?mapXY \<Longrightarrow> {x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> Y \<inter> V}"
+  proof -
+    fix V
+    assume hmap: ?mapXY
+    show "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> Y \<inter> V}"
+    proof (rule set_eqI)
+      fix x
+      show "x \<in> {x \<in> X. f x \<in> V} \<longleftrightarrow> x \<in> {x \<in> X. f x \<in> Y \<inter> V}"
+      proof
+        assume hx: "x \<in> {x \<in> X. f x \<in> V}"
+        have hxX: "x \<in> X" and hfxV: "f x \<in> V" using hx by simp_all
+        have hfxY: "f x \<in> Y" using hmap hxX by blast
+        show "x \<in> {x \<in> X. f x \<in> Y \<inter> V}"
+          using hxX hfxY hfxV by simp
+      next
+        assume hx: "x \<in> {x \<in> X. f x \<in> Y \<inter> V}"
+        thus "x \<in> {x \<in> X. f x \<in> V}" by simp
+      qed
+    qed
+  qed
+
+  show cont_closure:
+    "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
+       (?mapXY \<and> (\<forall>A. A \<subseteq> X \<longrightarrow> f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A)))"
+  proof (rule iffI)
+    assume hcont: "top1_continuous_map_on X TX Y TY f"
+    have hmap: ?mapXY
+      using hcont unfolding top1_continuous_map_on_def by blast
+    have hpre: "\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX"
+      using hcont unfolding top1_continuous_map_on_def by blast
+    show "?mapXY \<and> (\<forall>A. A \<subseteq> X \<longrightarrow> f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A))"
+    proof (intro conjI)
+      show ?mapXY using hmap .
+      show "\<forall>A. A \<subseteq> X \<longrightarrow> f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A)"
+      proof (intro allI impI)
+        fix A
+        assume hAX: "A \<subseteq> X"
+        have hclX: "closure_on X TX A \<subseteq> X"
+          by (rule closure_on_subset_carrier[OF hTX hAX])
+        have hfA: "f ` A \<subseteq> Y"
+          using hmap hAX by blast
+        show "f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A)"
+        proof (rule subsetI)
+          fix y
+          assume hy: "y \<in> f ` closure_on X TX A"
+          obtain x where hxcl: "x \<in> closure_on X TX A" and hyfx: "y = f x"
+            using hy by blast
+          have hxX: "x \<in> X"
+            using hclX hxcl by blast
+          have hfyY: "f x \<in> Y"
+            using hmap hxX by blast
+          have hfx_closure:
+            "f x \<in> closure_on Y TY (f ` A)"
+          proof -
+            have hnbhd: "\<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow> intersects V (f ` A)"
+            proof (intro allI impI)
+              fix V
+              assume hV: "neighborhood_of (f x) Y TY V"
+              have hVTY: "V \<in> TY" and hfxV: "f x \<in> V"
+                using hV unfolding neighborhood_of_def by blast+
+              have hpreV: "{z \<in> X. f z \<in> V} \<in> TX"
+                using hpre hVTY by blast
+              have hneigh: "neighborhood_of x X TX {z \<in> X. f z \<in> V}"
+                unfolding neighborhood_of_def using hpreV hxX hfxV by simp
+              have hcl_char:
+                "\<forall>U. neighborhood_of x X TX U \<longrightarrow> intersects U A"
+                using Theorem_17_5a[OF hTX hxX hAX] hxcl by blast
+              have hinter: "intersects {z \<in> X. f z \<in> V} A"
+                using hcl_char hneigh by blast
+              obtain a where haA: "a \<in> A" and haU: "a \<in> {z \<in> X. f z \<in> V}"
+                using hinter unfolding intersects_def by blast
+              have hfaV: "f a \<in> V" using haU by simp
+              have "f a \<in> V \<inter> (f ` A)"
+                using hfaV haA by blast
+              thus "intersects V (f ` A)"
+                unfolding intersects_def by blast
+            qed
+            show ?thesis
+              using Theorem_17_5a[OF hTY hfyY hfA] hnbhd by blast
+          qed
+          show "y \<in> closure_on Y TY (f ` A)"
+            using hfx_closure hyfx by simp
+        qed
+      qed
+    qed
+  next
+    assume hprop: "?mapXY \<and> (\<forall>A. A \<subseteq> X \<longrightarrow> f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A))"
+    have hmap: ?mapXY by (rule conjunct1[OF hprop])
+    have hcl: "\<forall>A. A \<subseteq> X \<longrightarrow> f ` closure_on X TX A \<subseteq> closure_on Y TY (f ` A)"
+      by (rule conjunct2[OF hprop])
+
+    have hclosed_pre: "\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x\<in>X. f x \<in> B}"
+    proof (intro allI impI)
+      fix B
+      assume hB: "closedin_on Y TY B"
+      have hBX: "B \<subseteq> Y"
+        by (rule closedin_sub[OF hB])
+      define A0 where "A0 = {x\<in>X. f x \<in> B}"
+      have hA0X: "A0 \<subseteq> X" unfolding A0_def by blast
+      have hfA0: "f ` A0 \<subseteq> B"
+        unfolding A0_def by blast
+      have hfA0Y: "f ` A0 \<subseteq> Y"
+        using hfA0 hBX by blast
+
+      have hclA0: "closure_on X TX A0 \<subseteq> A0"
+      proof (rule subsetI)
+        fix x
+        assume hxcl: "x \<in> closure_on X TX A0"
+        have hxX: "x \<in> X"
+          using closure_on_subset_carrier[OF hTX hA0X] hxcl by blast
+        have hfxB: "f x \<in> B"
+        proof -
+          have "f x \<in> f ` closure_on X TX A0" using hxcl by blast
+          also have "... \<subseteq> closure_on Y TY (f ` A0)"
+            using hcl hA0X by blast
+          finally have hfx_in_cl: "f x \<in> closure_on Y TY (f ` A0)" .
+          have hcl_in_B: "closure_on Y TY (f ` A0) \<subseteq> B"
+            by (rule closure_on_subset_of_closed[OF hB], rule hfA0)
+          show "f x \<in> B" using hcl_in_B hfx_in_cl by blast
+        qed
+        show "x \<in> A0"
+          unfolding A0_def using hxX hfxB by simp
+      qed
+
+      have hA0cl: "closure_on X TX A0 = A0"
+      proof (rule equalityI)
+        show "closure_on X TX A0 \<subseteq> A0" using hclA0 .
+        show "A0 \<subseteq> closure_on X TX A0" by (rule subset_closure_on)
+      qed
+
+      have hclA0_closed: "closedin_on X TX (closure_on X TX A0)"
+        by (rule closure_on_closed[OF hTX hA0X])
+      have hA0_closed: "closedin_on X TX A0"
+        using hclA0_closed hA0cl by simp
+      show "closedin_on X TX {x \<in> X. f x \<in> B}"
+        using hA0_closed by (simp add: A0_def)
+    qed
+
+    have hcont: "top1_continuous_map_on X TX Y TY f"
+    proof -
+      have hpre: "\<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> TY"
+        define B where "B = Y - V"
+        have hBcl: "closedin_on Y TY B"
+          unfolding B_def
+          apply (rule closedin_intro)
+           apply (rule Diff_subset)
+          apply (simp only: Diff_Diff_Int)
+          apply (rule topology_inter2[OF hTY Y_open hV])
+          done
+        have hpreBcl: "closedin_on X TX {x\<in>X. f x \<in> B}"
+          using hclosed_pre hBcl by blast
+        have hcomp_open: "X - {x\<in>X. f x \<in> B} \<in> TX"
+          using hpreBcl unfolding closedin_on_def by blast
+        have hEq1: "X - {x \<in> X. f x \<in> B} = {x \<in> X. f x \<in> Y \<inter> V}"
+          unfolding B_def using preimage_compl_eq[OF Diff_subset hmap] by (simp add: Diff_Diff_Int)
+        have hEq: "{x \<in> X. f x \<in> V} = X - {x \<in> X. f x \<in> B}"
+        proof -
+          have "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> Y \<inter> V}"
+            by (rule preimage_interY_eq[OF hmap])
+          also have "... = X - {x \<in> X. f x \<in> B}"
+            by (rule sym[OF hEq1])
+          finally show ?thesis .
+        qed
+        show "{x \<in> X. f x \<in> V} \<in> TX"
+          using hcomp_open hEq by simp
+      qed
+      show ?thesis
+        unfolding top1_continuous_map_on_def
+        by (intro conjI hmap, rule hpre)
+    qed
+    show "top1_continuous_map_on X TX Y TY f"
+      using hcont .
+  qed
+
+  show cont_closed:
+    "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
+       (?mapXY \<and> (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x \<in> X. f x \<in> B}))"
+  proof (rule iffI)
+    assume hcont: "top1_continuous_map_on X TX Y TY f"
+    have hmap: ?mapXY
+      using hcont unfolding top1_continuous_map_on_def by blast
+    have hpre: "\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX"
+      using hcont unfolding top1_continuous_map_on_def by blast
+    show "?mapXY \<and> (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x \<in> X. f x \<in> B})"
+    proof (intro conjI)
+      show ?mapXY using hmap .
+      show "\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x \<in> X. f x \<in> B}"
+      proof (intro allI impI)
+        fix B
+        assume hB: "closedin_on Y TY B"
+        have hBY: "B \<subseteq> Y"
+          by (rule closedin_sub[OF hB])
+        have hYmB_open: "Y - B \<in> TY"
+          by (rule closedin_diff_open[OF hB])
+        have hpre_open: "{x \<in> X. f x \<in> Y - B} \<in> TX"
+          using hpre hYmB_open by blast
+        have hEq: "X - {x \<in> X. f x \<in> B} = {x \<in> X. f x \<in> Y - B}"
+          using preimage_compl_eq[OF hBY hmap] by simp
+        show "closedin_on X TX {x \<in> X. f x \<in> B}"
+        proof (rule closedin_intro)
+          show "{x \<in> X. f x \<in> B} \<subseteq> X" by blast
+          show "X - {x \<in> X. f x \<in> B} \<in> TX"
+            using hEq hpre_open by simp
+        qed
+      qed
+    qed
+  next
+    assume hprop: "?mapXY \<and> (\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x \<in> X. f x \<in> B})"
+    have hmap: ?mapXY by (rule conjunct1[OF hprop])
+    have hclosed_pre: "\<forall>B. closedin_on Y TY B \<longrightarrow> closedin_on X TX {x \<in> X. f x \<in> B}"
+      by (rule conjunct2[OF hprop])
+    have hpre: "\<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+    proof (intro ballI)
+      fix V
+      assume hV: "V \<in> TY"
+      define B where "B = Y - V"
+      have hBcl: "closedin_on Y TY B"
+        unfolding B_def
+        apply (rule closedin_intro)
+         apply (rule Diff_subset)
+        apply (simp only: Diff_Diff_Int)
+        apply (rule topology_inter2[OF hTY Y_open hV])
+        done
+      have hpreBcl: "closedin_on X TX {x\<in>X. f x \<in> B}"
+        using hclosed_pre hBcl by blast
+      have hcomp_open: "X - {x\<in>X. f x \<in> B} \<in> TX"
+        using hpreBcl unfolding closedin_on_def by blast
+      have hEq1: "X - {x \<in> X. f x \<in> B} = {x \<in> X. f x \<in> Y \<inter> V}"
+        unfolding B_def using preimage_compl_eq[OF Diff_subset hmap] by (simp add: Diff_Diff_Int)
+      have hEq: "{x \<in> X. f x \<in> V} = X - {x \<in> X. f x \<in> B}"
+      proof -
+        have "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> Y \<inter> V}"
+          by (rule preimage_interY_eq[OF hmap])
+        also have "... = X - {x \<in> X. f x \<in> B}"
+          by (rule sym[OF hEq1])
+        finally show ?thesis .
+      qed
+      show "{x \<in> X. f x \<in> V} \<in> TX"
+        using hcomp_open hEq by simp
+    qed
+    show "top1_continuous_map_on X TX Y TY f"
+      unfolding top1_continuous_map_on_def
+      by (intro conjI hmap, rule hpre)
+  qed
+
+  show cont_nbhd:
+    "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
+       (?mapXY \<and> (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+           (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V)))"
+  proof (rule iffI)
+    assume hcont: "top1_continuous_map_on X TX Y TY f"
+    have hmap: ?mapXY
+      using hcont unfolding top1_continuous_map_on_def by blast
+    have hpre: "\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX"
+      using hcont unfolding top1_continuous_map_on_def by blast
+    show "?mapXY \<and> (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+            (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V))"
+    proof (intro conjI)
+      show ?mapXY using hmap .
+      show "\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+            (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V)"
+      proof (intro ballI allI impI)
+        fix x V
+        assume hxX: "x \<in> X"
+        assume hV: "neighborhood_of (f x) Y TY V"
+        have hVTY: "V \<in> TY" and hfxV: "f x \<in> V"
+          using hV unfolding neighborhood_of_def by blast+
+        have hUopen: "{z \<in> X. f z \<in> V} \<in> TX"
+          using hpre hVTY by blast
+        have hU: "neighborhood_of x X TX {z \<in> X. f z \<in> V}"
+          unfolding neighborhood_of_def using hUopen hxX hfxV by simp
+        have himg: "f ` {z \<in> X. f z \<in> V} \<subseteq> V" by blast
+        show "\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V"
+          apply (rule exI[where x="{z \<in> X. f z \<in> V}"])
+          apply (intro conjI)
+           apply (rule hU)
+          apply (rule himg)
+          done
+      qed
+    qed
+  next
+    assume hprop: "?mapXY \<and> (\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+            (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V))"
+    have hmap: ?mapXY by (rule conjunct1[OF hprop])
+    have hloc: "\<forall>x\<in>X. \<forall>V. neighborhood_of (f x) Y TY V \<longrightarrow>
+            (\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V)"
+      by (rule conjunct2[OF hprop])
+    have hpre: "\<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> TY"
+      define S where "S = {x \<in> X. f x \<in> V}"
+
+      have hSsub: "{U. U \<in> TX \<and> U \<subseteq> S} \<subseteq> TX" by blast
+
+      have hUnion: "\<Union>{U. U \<in> TX \<and> U \<subseteq> S} = S"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> \<Union>{U. U \<in> TX \<and> U \<subseteq> S} \<longleftrightarrow> x \<in> S"
+        proof
+          assume hx: "x \<in> \<Union>{U. U \<in> TX \<and> U \<subseteq> S}"
+          obtain U where hU: "U \<in> TX \<and> U \<subseteq> S" and hxU: "x \<in> U"
+            using hx by blast
+          show "x \<in> S" using hU hxU by blast
+        next
+          assume hxS: "x \<in> S"
+          have hxX: "x \<in> X" and hfxV: "f x \<in> V" using hxS unfolding S_def by blast+
+          have hnbhdV: "neighborhood_of (f x) Y TY V"
+            unfolding neighborhood_of_def using hV hfxV by blast
+          obtain U where hU: "neighborhood_of x X TX U" and hfU: "f ` U \<subseteq> V"
+            using hloc hxX hnbhdV by blast
+          have hU_TX: "U \<in> TX" and hxU: "x \<in> U"
+            using hU unfolding neighborhood_of_def by blast+
+          have hUX_open: "U \<inter> X \<in> TX"
+            by (rule topology_inter2[OF hTX hU_TX X_open])
+          have hUsubS: "U \<inter> X \<subseteq> S"
+          proof (rule subsetI)
+            fix u assume hu: "u \<in> U \<inter> X"
+            have huU: "u \<in> U" and huX: "u \<in> X" using hu by blast+
+            have "f u \<in> V" using hfU huU by blast
+            thus "u \<in> S" using huX unfolding S_def by simp
+          qed
+          have hxUX: "x \<in> U \<inter> X" using hxU hxX by blast
+          have hUX_mem: "U \<inter> X \<in> {W. W \<in> TX \<and> W \<subseteq> S}"
+            apply (rule CollectI)
+            apply (intro conjI)
+             apply (rule hUX_open)
+            apply (rule hUsubS)
+            done
+          show "x \<in> \<Union>{U. U \<in> TX \<and> U \<subseteq> S}"
+            by (rule UnionI[OF hUX_mem hxUX])
+        qed
+      qed
+
+      have hOpen: "\<Union>{U. U \<in> TX \<and> U \<subseteq> S} \<in> TX"
+        by (rule union_TX[rule_format, OF hSsub])
+
+      show "{x \<in> X. f x \<in> V} \<in> TX"
+      proof -
+        have hUnion': "S = \<Union>{U. U \<in> TX \<and> U \<subseteq> S}"
+          by (rule sym[OF hUnion])
+        have hSopen: "S \<in> TX"
+          apply (subst hUnion')
+          apply (rule hOpen)
+          done
+        show "{x \<in> X. f x \<in> V} \<in> TX"
+          using hSopen by (simp add: S_def)
+      qed
+    qed
+    show "top1_continuous_map_on X TX Y TY f"
+      unfolding top1_continuous_map_on_def
+      by (intro conjI hmap, rule hpre)
+  qed
+qed
 
 (** from \S18 Theorem 18.2 [top1.tex:1089] **)
 (** LATEX VERSION: "Rules for constructing continuous functions." **)
@@ -4811,7 +5289,244 @@ theorem Theorem_18_3:
   assumes hagree: "\<forall>x\<in>(A \<inter> B). f x = g x"
   defines "h \<equiv> (\<lambda>x. if x \<in> A then f x else g x)"
   shows "top1_continuous_map_on X TX Y TY h"
-  sorry
+proof -
+  have hAX: "A \<subseteq> X"
+    by (rule closedin_sub[OF hA])
+  have hBX: "B \<subseteq> X"
+    by (rule closedin_sub[OF hB])
+
+  have union_TX: "\<forall>U. U \<subseteq> TX \<longrightarrow> \<Union>U \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hTX[unfolded is_topology_on_def]]]])
+
+  have closed_inter2:
+    "\<And>C D. closedin_on X TX C \<Longrightarrow> closedin_on X TX D \<Longrightarrow> closedin_on X TX (C \<inter> D)"
+  proof -
+    fix C D
+    assume hC: "closedin_on X TX C"
+    assume hD: "closedin_on X TX D"
+    have hCsub: "C \<subseteq> X"
+      by (rule closedin_sub[OF hC])
+    have hDsub: "D \<subseteq> X"
+      by (rule closedin_sub[OF hD])
+    have hXmC: "X - C \<in> TX"
+      by (rule closedin_diff_open[OF hC])
+    have hXmD: "X - D \<in> TX"
+      by (rule closedin_diff_open[OF hD])
+    have hUnion: "(X - C) \<union> (X - D) \<in> TX"
+    proof -
+      have hUD: "{X - C, X - D} \<subseteq> TX"
+        using hXmC hXmD by blast
+      have hUnion_imp: "{X - C, X - D} \<subseteq> TX \<longrightarrow> \<Union>{X - C, X - D} \<in> TX"
+        by (rule spec[where x="{X - C, X - D}", OF union_TX])
+      have "\<Union>{X - C, X - D} \<in> TX"
+        by (rule mp[OF hUnion_imp hUD])
+      thus ?thesis by simp
+    qed
+    have hEq: "X - (C \<inter> D) = (X - C) \<union> (X - D)"
+      by blast
+    have hsub: "C \<inter> D \<subseteq> X"
+      using hCsub hDsub by blast
+    show "closedin_on X TX (C \<inter> D)"
+      by (rule closedin_intro[OF hsub], simp add: hEq hUnion)
+  qed
+
+  have map_f: "\<forall>x\<in>A. f x \<in> Y"
+    using hf unfolding top1_continuous_map_on_def by blast
+  have map_g: "\<forall>x\<in>B. g x \<in> Y"
+    using hg unfolding top1_continuous_map_on_def by blast
+
+  have map_h: "\<forall>x\<in>X. h x \<in> Y"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have hx: "x \<in> A \<or> x \<in> B"
+      using hxX hX by blast
+    show "h x \<in> Y"
+    proof (cases "x \<in> A")
+      case True
+      have "f x \<in> Y" using map_f True by blast
+      thus ?thesis unfolding h_def using True by simp
+    next
+      case False
+      have hxB: "x \<in> B" using hx False by blast
+      have "g x \<in> Y" using map_g hxB by blast
+      thus ?thesis unfolding h_def using False by simp
+    qed
+  qed
+
+  have closed_preimage_h:
+    "\<forall>C. closedin_on Y TY C \<longrightarrow> closedin_on X TX {x \<in> X. h x \<in> C}"
+  proof (intro allI impI)
+    fix C
+    assume hC: "closedin_on Y TY C"
+    have hYmC: "Y - C \<in> TY"
+      by (rule closedin_diff_open[OF hC])
+
+    define PA where "PA = {x \<in> A. f x \<in> C}"
+    define PB where "PB = {x \<in> B. g x \<in> C}"
+
+    have hPA_closed_A: "closedin_on A (subspace_topology X TX A) PA"
+    proof -
+      have hpre_open: "{x \<in> A. f x \<in> Y - C} \<in> subspace_topology X TX A"
+        using hf hYmC unfolding top1_continuous_map_on_def by blast
+      have hcomp: "A - PA = {x \<in> A. f x \<in> Y - C}"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> A - PA \<longleftrightarrow> x \<in> {x \<in> A. f x \<in> Y - C}"
+        proof
+          assume hx: "x \<in> A - PA"
+          have hxA: "x \<in> A" and hxPA: "x \<notin> PA" using hx by blast+
+          have hfxY: "f x \<in> Y" using map_f hxA by blast
+          have hfxC: "f x \<notin> C"
+            using hxA hxPA unfolding PA_def by simp
+          have "f x \<in> Y - C" using hfxY hfxC by blast
+          thus "x \<in> {x \<in> A. f x \<in> Y - C}" using hxA by simp
+        next
+          assume hx: "x \<in> {x \<in> A. f x \<in> Y - C}"
+          have hxA: "x \<in> A" and hfx: "f x \<in> Y - C" using hx by blast+
+          have hfxC: "f x \<notin> C" using hfx by blast
+          have "x \<notin> PA" unfolding PA_def using hxA hfxC by simp
+          thus "x \<in> A - PA" using hxA by blast
+        qed
+      qed
+      have hPA_sub: "PA \<subseteq> A"
+        unfolding PA_def by blast
+      have "A - PA \<in> subspace_topology X TX A"
+        using hpre_open hcomp by simp
+      thus ?thesis
+        by (rule closedin_intro[OF hPA_sub])
+    qed
+
+    have hPB_closed_B: "closedin_on B (subspace_topology X TX B) PB"
+    proof -
+      have hpre_open: "{x \<in> B. g x \<in> Y - C} \<in> subspace_topology X TX B"
+        using hg hYmC unfolding top1_continuous_map_on_def by blast
+      have hcomp: "B - PB = {x \<in> B. g x \<in> Y - C}"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> B - PB \<longleftrightarrow> x \<in> {x \<in> B. g x \<in> Y - C}"
+        proof
+          assume hx: "x \<in> B - PB"
+          have hxB: "x \<in> B" and hxPB: "x \<notin> PB" using hx by blast+
+          have hgxY: "g x \<in> Y" using map_g hxB by blast
+          have hgxC: "g x \<notin> C"
+            using hxB hxPB unfolding PB_def by simp
+          have "g x \<in> Y - C" using hgxY hgxC by blast
+          thus "x \<in> {x \<in> B. g x \<in> Y - C}" using hxB by simp
+        next
+          assume hx: "x \<in> {x \<in> B. g x \<in> Y - C}"
+          have hxB: "x \<in> B" and hgx: "g x \<in> Y - C" using hx by blast+
+          have hgxC: "g x \<notin> C" using hgx by blast
+          have "x \<notin> PB" unfolding PB_def using hxB hgxC by simp
+          thus "x \<in> B - PB" using hxB by blast
+        qed
+      qed
+      have hPB_sub: "PB \<subseteq> B"
+        unfolding PB_def by blast
+      have "B - PB \<in> subspace_topology X TX B"
+        using hpre_open hcomp by simp
+      thus ?thesis
+        by (rule closedin_intro[OF hPB_sub])
+    qed
+
+    have hPA_closed_X: "closedin_on X TX PA"
+    proof -
+      have hPA_ex: "\<exists>D. closedin_on X TX D \<and> PA = D \<inter> A"
+        by (rule iffD1[OF Theorem_17_2[OF hTX hAX] hPA_closed_A])
+      then obtain D where hD: "closedin_on X TX D" and hPA: "PA = D \<inter> A"
+        by blast
+      have "closedin_on X TX (D \<inter> A)"
+        by (rule closed_inter2[OF hD hA])
+      thus ?thesis using hPA by simp
+    qed
+
+    have hPB_closed_X: "closedin_on X TX PB"
+    proof -
+      have hPB_ex: "\<exists>D. closedin_on X TX D \<and> PB = D \<inter> B"
+        by (rule iffD1[OF Theorem_17_2[OF hTX hBX] hPB_closed_B])
+      then obtain D where hD: "closedin_on X TX D" and hPB: "PB = D \<inter> B"
+        by blast
+      have "closedin_on X TX (D \<inter> B)"
+        by (rule closed_inter2[OF hD hB])
+      thus ?thesis using hPB by simp
+    qed
+
+    have hPh_eq: "{x \<in> X. h x \<in> C} = PA \<union> PB"
+    proof (rule set_eqI)
+      fix x
+      show "x \<in> {x \<in> X. h x \<in> C} \<longleftrightarrow> x \<in> PA \<union> PB"
+      proof
+        assume hx: "x \<in> {x \<in> X. h x \<in> C}"
+        have hxX: "x \<in> X" and hhx: "h x \<in> C" using hx by blast+
+        have hxAB: "x \<in> A \<or> x \<in> B" using hxX hX by blast
+        show "x \<in> PA \<union> PB"
+        proof (cases "x \<in> A")
+          case True
+          have "f x \<in> C" using hhx unfolding h_def using True by simp
+          hence "x \<in> PA" unfolding PA_def using True by simp
+          thus ?thesis by blast
+        next
+          case False
+          have hxB: "x \<in> B" using hxAB False by blast
+          have "g x \<in> C" using hhx unfolding h_def using False by simp
+          hence "x \<in> PB" unfolding PB_def using hxB by simp
+          thus ?thesis by blast
+        qed
+      next
+        assume hx: "x \<in> PA \<union> PB"
+        show "x \<in> {x \<in> X. h x \<in> C}"
+        proof (cases "x \<in> PA")
+          case True
+          have hxA: "x \<in> A" and hfxC: "f x \<in> C"
+            using True unfolding PA_def by blast+
+          have hxX: "x \<in> X" using hAX hxA by blast
+          have "h x = f x" unfolding h_def using hxA by simp
+          thus ?thesis using hxX hfxC by simp
+        next
+          case False
+          have hxPB: "x \<in> PB" using hx False by blast
+          have hxB: "x \<in> B" and hgxC: "g x \<in> C"
+            using hxPB unfolding PB_def by blast+
+          have hxX: "x \<in> X" using hBX hxB by blast
+          show ?thesis
+          proof (cases "x \<in> A")
+            case True
+            have hxAB: "x \<in> A \<inter> B" using True hxB by blast
+            have "f x = g x" using hagree hxAB by blast
+            hence "f x \<in> C" using hgxC by simp
+            moreover have "h x = f x" unfolding h_def using True by simp
+            ultimately show ?thesis using hxX by simp
+          next
+            case FalseA: False
+            have "h x = g x" unfolding h_def using FalseA by simp
+            thus ?thesis using hxX hgxC by simp
+          qed
+        qed
+      qed
+    qed
+
+    have hUnion_closed: "closedin_on X TX (PA \<union> PB)"
+    proof -
+      have hfin: "finite {PA, PB}" by simp
+      have hall: "\<forall>S\<in>{PA, PB}. closedin_on X TX S"
+        using hPA_closed_X hPB_closed_X by simp
+      have "closedin_on X TX (\<Union>{PA, PB})"
+        by (rule closedin_Union_finite[OF hTX hfin hall])
+      thus ?thesis by simp
+    qed
+
+    show "closedin_on X TX {x \<in> X. h x \<in> C}"
+      using hUnion_closed hPh_eq by simp
+  qed
+
+  have cont_closed_h:
+    "top1_continuous_map_on X TX Y TY h \<longleftrightarrow>
+       ((\<forall>x\<in>X. h x \<in> Y) \<and>
+        (\<forall>C. closedin_on Y TY C \<longrightarrow> closedin_on X TX {x \<in> X. h x \<in> C}))"
+    by (rule Theorem_18_1(2)[OF hTX hTY])
+
+  show ?thesis
+    by (rule iffD2[OF cont_closed_h], intro conjI, rule map_h, rule closed_preimage_h)
+qed
 
 (** from \S18 Theorem 18.4 [top1.tex:1167] **)
 (** LATEX VERSION: "Map into a product is continuous iff both components are continuous." **)
