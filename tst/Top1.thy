@@ -17354,6 +17354,88 @@ proof -
     using hadd by simp
 qed
 
+(** Finite sums of continuous real-valued maps are continuous (order topology on \<open>\<real>\<close>). **)
+lemma top1_continuous_sum_lessThan_real:
+  fixes f :: "nat \<Rightarrow> 'a \<Rightarrow> real"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hf: "\<forall>i<n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+  shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<n. f i x))"
+proof -
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hConst: "\<forall>y0\<in>(UNIV::real set). top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. y0)"
+    by (rule Theorem_18_2(1)[OF hTopX hTopR hTopR])
+  have h0: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (0::real))"
+    using hConst by simp
+
+  have hInd:
+    "\<forall>m. (\<forall>i<m. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i))
+          \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<m. f i x))"
+  proof (intro allI)
+    fix m :: nat
+    show "(\<forall>i<m. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i))
+          \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<m. f i x))"
+    proof (induction m)
+      case 0
+      show ?case
+      proof (intro impI)
+        assume "\<forall>i<0. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+        have hEq: "(\<lambda>x. (\<Sum>i<0. f i x)) = (\<lambda>x. (0::real))"
+          by (rule ext, simp)
+        show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<0. f i x))"
+          unfolding hEq by (rule h0)
+      qed
+    next
+      case (Suc m)
+      show ?case
+      proof (intro impI)
+        assume hfsuc: "\<forall>i<Suc m. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+
+        have hpre: "\<forall>i<m. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+        proof (intro allI impI)
+          fix i assume hi: "i < m"
+          have hi': "i < Suc m"
+            using hi by simp
+          have himp:
+            "i < Suc m \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+            using hfsuc by (rule spec)
+          show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i)"
+            by (rule mp[OF himp hi'])
+        qed
+
+        have hsn:
+          "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<m. f i x))"
+          by (rule mp[OF Suc.IH hpre])
+
+        have hfn: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f m)"
+        proof -
+          have himp: "m < Suc m \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f m)"
+            using hfsuc by (rule spec)
+          have hm': "m < Suc m"
+            by simp
+          show ?thesis
+            by (rule mp[OF himp hm'])
+        qed
+
+        have hadd: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<m. f i x) + f m x)"
+          by (rule top1_continuous_add_real[OF hTopX hsn hfn])
+        have hEq: "(\<lambda>x. (\<Sum>i<Suc m. f i x)) = (\<lambda>x. (\<Sum>i<m. f i x) + f m x)"
+          by (rule ext, simp)
+        show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<Suc m. f i x))"
+          unfolding hEq by (rule hadd)
+      qed
+    qed
+  qed
+
+  have hImp:
+    "(\<forall>i<n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (f i))
+      \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (\<Sum>i<n. f i x))"
+    using hInd by (rule spec)
+  show ?thesis
+    by (rule mp[OF hImp hf])
+qed
+
 (*
 proof -
   have hneg: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. - g x)"
