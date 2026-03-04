@@ -15464,11 +15464,6 @@ lemma top1_tietze_step1:
             \<and> (\<forall>x\<in>C. g x = r/3)
             \<and> (\<forall>x\<in>X. abs (g x) \<le> r/3)
             \<and> (\<forall>a\<in>A. abs (g a - f a) \<le> 2*r/3)"
-  sorry
-
-(*
-  Proof attempt (currently too slow for the 60s session timeout):
-  see `tst/Top1.thy.tietze_step1_wip2`.
 proof -
   have hT1: "top1_T1_on X TX"
     using hX unfolding top1_normal_on_def by (rule conjunct1)
@@ -15661,12 +15656,22 @@ qed
         have hle: "-r/3 - f a \<le> 2*r/3"
           using hfa1 by linarith
         have habseq: "abs (-r/3 - f a) = -r/3 - f a"
-          by (simp add: hnonneg)
+        proof -
+          have "abs (-r/3 - f a) = (-r/3 - f a)"
+            apply (rule abs_of_nonneg)
+            apply (rule hnonneg)
+            done
+          thus ?thesis by simp
+        qed
         show ?thesis
-          by (simp add: habseq hle)
+          apply (simp only: habseq)
+          apply (rule hle)
+          done
       qed
       show ?thesis
-        by (simp add: hga habs)
+        apply (simp only: hga)
+        apply (rule habs)
+        done
     next
       case FalseB: False
       show ?thesis
@@ -15685,12 +15690,24 @@ qed
           have hle: "f a - r/3 \<le> 2*r/3"
             using hfa2 by linarith
           have habseq: "abs (r/3 - f a) = f a - r/3"
-            by (simp add: abs_minus_commute hnonneg)
+          proof -
+            have "abs (r/3 - f a) = abs (f a - r/3)"
+              by (simp add: abs_minus_commute)
+            also have "... = f a - r/3"
+              apply (rule abs_of_nonneg)
+              apply (rule hnonneg)
+              done
+            finally show ?thesis .
+          qed
           show ?thesis
-            by (simp add: habseq hle)
+            apply (simp only: habseq)
+            apply (rule hle)
+            done
         qed
         show ?thesis
-          by (simp add: hga habs)
+          apply (simp only: hga)
+          apply (rule habs)
+          done
       next
         case FalseC: False
         have hnotI1: "f a \<notin> I1"
@@ -15704,9 +15721,21 @@ qed
           have hfU: "f a \<le> r"
             using hfb by blast
           have hnle: "\<not> f a \<le> -r/3"
-            using hnotI1 unfolding I1_def top1_closed_interval_def by blast
+          proof
+            assume hle: "f a \<le> -r/3"
+            have "f a \<in> I1"
+              unfolding I1_def top1_closed_interval_def using hfL hle by simp
+            thus False
+              using hnotI1 by contradiction
+          qed
           have hnge: "\<not> r/3 \<le> f a"
-            using hnotI3 unfolding I3_def top1_closed_interval_def by blast
+          proof
+            assume hge: "r/3 \<le> f a"
+            have "f a \<in> I3"
+              unfolding I3_def top1_closed_interval_def using hfU hge by simp
+            thus False
+              using hnotI3 by contradiction
+          qed
           have "-r/3 < f a"
             using hfL hnle by linarith
           moreover have "f a < r/3"
@@ -15728,23 +15757,13 @@ qed
   show ?thesis
     apply (rule exI[where x=g])
     apply (intro conjI)
-     apply (rule hgcont)
-    apply (intro conjI)
-     apply (rule hgonB)
-    apply (intro conjI)
-     apply (rule hgonC)
-    apply (intro conjI)
-     apply (rule hg_abs)
+    apply (rule hgcont)
+    apply (rule hgonB)
+    apply (rule hgonC)
+    apply (rule hg_abs)
     apply (rule hf_approx)
     done
 qed
-*)
-
-text \<open>
-  Proof development for \<open>top1_tietze_step1\<close> is tracked in the auxiliary file
-  \<open>tst/Top1.thy.tietze_step1_wip2\<close>. The full proof currently makes the session exceed the
-  60s build timeout, so we keep the statement here and continue later.
-\<close>
 
 (** from *\S35 Theorem 35.1 (Tietze extension theorem) [top1.tex:~4771] **)
 theorem Theorem_35_1:
