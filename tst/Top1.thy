@@ -15870,13 +15870,399 @@ qed
 qed
 
 (** Continuity of addition on \<open>\<real>\<close> in the order topology (needed for the partial sums in Tietze). **)
+lemma basis_order_topology_contains_open_interval:
+  fixes b :: "real set" and x :: real
+  assumes hb: "b \<in> (basis_order_topology::real set set)"
+  assumes hx: "x \<in> b"
+  shows "\<exists>e>0. open_interval (x - e) (x + e) \<subseteq> b"
+proof -
+  have hcases:
+    "(\<exists>a c. a < c \<and> b = open_interval a c)
+     \<or> (\<exists>a. b = open_ray_gt a)
+     \<or> (\<exists>a. b = open_ray_lt a)
+     \<or> b = (UNIV::real set)"
+    by (rule basis_order_topology_cases[OF hb])
+
+  show ?thesis
+  proof (rule disjE[OF hcases])
+    assume hbint: "\<exists>a c. a < c \<and> b = open_interval a c"
+    then obtain a c where hac: "a < c" and hbeq: "b = open_interval a c"
+      by blast
+    have ha: "a < x" and hx': "x < c"
+      using hx unfolding hbeq open_interval_def by simp_all
+    define e where "e = min (x - a) (c - x) / 2"
+    have he: "0 < e"
+    proof -
+      have "0 < x - a"
+        using ha by linarith
+      moreover have "0 < c - x"
+        using hx' by linarith
+      ultimately have "0 < min (x - a) (c - x)"
+        by simp
+      thus ?thesis
+        unfolding e_def by (simp add: divide_pos_pos)
+    qed
+    have he_lt1: "e < x - a"
+    proof -
+      have "e \<le> (x - a) / 2"
+        unfolding e_def by simp
+      also have "... < x - a"
+      proof -
+        have hxapos: "0 < x - a"
+          using ha by linarith
+        have hhalf: "(x - a) * (1 / 2 :: real) < (x - a) * 1"
+          apply (rule mult_strict_left_mono)
+           apply simp
+          apply (rule hxapos)
+          done
+        show ?thesis
+          using hhalf by simp
+      qed
+      finally show ?thesis
+        by linarith
+    qed
+    have he_lt2: "e < c - x"
+    proof -
+      have "e \<le> (c - x) / 2"
+        unfolding e_def by simp
+      also have "... < c - x"
+      proof -
+        have hxpos: "0 < c - x"
+          using hx' by linarith
+        have hhalf: "(c - x) * (1 / 2 :: real) < (c - x) * 1"
+          apply (rule mult_strict_left_mono)
+           apply simp
+          apply (rule hxpos)
+          done
+        show ?thesis
+          using hhalf by simp
+      qed
+      finally show ?thesis
+        by linarith
+    qed
+
+    have hsub: "open_interval (x - e) (x + e) \<subseteq> open_interval a c"
+    proof (rule subsetI)
+      fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
+      have hy1: "x - e < y" and hy2: "y < x + e"
+        using hy unfolding open_interval_def by simp_all
+      have "a < x - e"
+        using he_lt1 by linarith
+      hence "a < y"
+        using hy1 by linarith
+      moreover have "x + e < c"
+        using he_lt2 by linarith
+      hence "y < c"
+        using hy2 by linarith
+      ultimately show "y \<in> open_interval a c"
+        unfolding open_interval_def by simp
+    qed
+    show ?thesis
+      unfolding hbeq
+      by (rule exI[where x=e], intro conjI, rule he, rule hsub)
+  next
+    assume hrest: "(\<exists>a. b = open_ray_gt a) \<or> (\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+    show ?thesis
+    proof (rule disjE[OF hrest])
+      assume hbr: "\<exists>a. b = open_ray_gt a"
+      then obtain a where hbeq: "b = open_ray_gt a"
+        by blast
+      have ha: "a < x"
+        using hx unfolding hbeq open_ray_gt_def by simp
+      define e where "e = (x - a) / 2"
+      have he: "0 < e"
+      proof -
+        have "0 < x - a"
+          using ha by linarith
+        thus ?thesis
+          unfolding e_def by (simp add: divide_pos_pos)
+      qed
+      have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
+        have hy1: "x - e < y"
+          using hy unfolding open_interval_def by simp
+        have "a < x - e"
+        proof -
+          have hEq: "x - e = (x + a) / 2"
+            unfolding e_def by (simp add: field_simps)
+          have "a < (x + a) / 2"
+          proof -
+            have "a < (x + a) / 2 \<longleftrightarrow> a * (2::real) < x + a"
+              by (simp add: divide_less_eq)
+            moreover have "a * (2::real) < x + a"
+              using ha by linarith
+            ultimately show ?thesis
+              by simp
+          qed
+          thus ?thesis
+            unfolding hEq by simp
+        qed
+        hence "a < y"
+          using hy1 by linarith
+        thus "y \<in> open_ray_gt a"
+          unfolding open_ray_gt_def by simp
+      qed
+      show ?thesis
+        unfolding hbeq
+        by (rule exI[where x=e], intro conjI, rule he, rule hsub)
+    next
+      assume hrest2: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+      show ?thesis
+      proof (rule disjE[OF hrest2])
+        assume hbl: "\<exists>a. b = open_ray_lt a"
+        then obtain a where hbeq: "b = open_ray_lt a"
+          by blast
+        have ha: "x < a"
+          using hx unfolding hbeq open_ray_lt_def by simp
+        define e where "e = (a - x) / 2"
+        have he: "0 < e"
+        proof -
+          have "0 < a - x"
+            using ha by linarith
+          thus ?thesis
+            unfolding e_def by (simp add: divide_pos_pos)
+        qed
+        have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
+        proof (rule subsetI)
+          fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
+          have hy2: "y < x + e"
+            using hy unfolding open_interval_def by simp
+          have "x + e < a"
+          proof -
+            have hEq: "x + e = (x + a) / 2"
+              unfolding e_def by (simp add: field_simps)
+            have hlt: "(x + a) / 2 < a"
+            proof -
+              have "((x + a) / 2 < a) \<longleftrightarrow> (x + a < a * (2::real))"
+                by (simp add: divide_less_eq)
+              also have "... "
+                using ha by linarith
+              finally show ?thesis .
+            qed
+            show ?thesis
+              using hlt unfolding hEq .
+          qed
+          hence "y < a"
+            using hy2 by linarith
+          thus "y \<in> open_ray_lt a"
+            unfolding open_ray_lt_def by simp
+        qed
+        show ?thesis
+          unfolding hbeq
+          by (rule exI[where x=e], intro conjI, rule he, rule hsub)
+      next
+        assume hU: "b = (UNIV::real set)"
+        show ?thesis
+          unfolding hU
+          by (rule exI[where x="1::real"], simp)
+      qed
+    qed
+  qed
+qed
+
+lemma top1_open_set_from_local_opens:
+  assumes hTop: "is_topology_on X TX"
+  assumes hPX: "P \<subseteq> X"
+  assumes hlocal: "\<forall>x\<in>P. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> P"
+  shows "P \<in> TX"
+proof -
+  have union_TX: "\<forall>U. U \<subseteq> TX \<longrightarrow> (\<Union>U) \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hTop[unfolded is_topology_on_def]]]])
+
+  define UP where "UP = {U. U \<in> TX \<and> U \<subseteq> P}"
+  have hUP_sub: "UP \<subseteq> TX"
+  proof (rule subsetI)
+    fix U assume hU: "U \<in> UP"
+    thus "U \<in> TX"
+      unfolding UP_def by simp
+  qed
+  have hUnion_UP: "\<Union>UP \<in> TX"
+    using union_TX hUP_sub by blast
+
+  have hEq: "P = \<Union>UP"
+  proof (rule set_eqI)
+    fix x
+    show "x \<in> P \<longleftrightarrow> x \<in> \<Union>UP"
+    proof (rule iffI)
+      assume hxP: "x \<in> P"
+      obtain U where hU_TX: "U \<in> TX" and hxU: "x \<in> U" and hUsub: "U \<subseteq> P"
+        using hlocal hxP by blast
+      have hU_UP: "U \<in> UP"
+        unfolding UP_def using hU_TX hUsub by blast
+      show "x \<in> \<Union>UP"
+        by (rule UnionI[OF hU_UP hxU])
+    next
+      assume hx: "x \<in> \<Union>UP"
+      then obtain U where hU_UP: "U \<in> UP" and hxU: "x \<in> U"
+        by blast
+      have hUsub: "U \<subseteq> P"
+        using hU_UP unfolding UP_def by blast
+      show "x \<in> P"
+        using hUsub hxU by blast
+    qed
+  qed
+
+  show ?thesis
+    unfolding hEq using hUnion_UP .
+qed
+
 lemma top1_continuous_add_order_topology:
   shows "top1_continuous_map_on
       ((UNIV::real set) \<times> (UNIV::real set))
       (product_topology_on order_topology_on_UNIV order_topology_on_UNIV)
       (UNIV::real set) order_topology_on_UNIV
       (\<lambda>p::real \<times> real. pi1 p + pi2 p)"
-  sorry
+proof -
+  let ?R = "(UNIV::real set)"
+  let ?TR = "order_topology_on_UNIV"
+  let ?TP = "product_topology_on ?TR ?TR"
+  let ?X = "?R \<times> ?R"
+  let ?plus = "(\<lambda>p::real \<times> real. pi1 p + pi2 p)"
+
+  have hTopR: "is_topology_on ?R ?TR"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hTopX: "is_topology_on ?X ?TP"
+    by (rule product_topology_on_is_topology_on[OF hTopR hTopR])
+
+  have hBasisR: "basis_for ?R (basis_order_topology::real set set) ?TR"
+    by (rule basis_for_order_topology_on_UNIV)
+
+  show ?thesis
+  proof (rule top1_continuous_map_on_generated_by_basis)
+    show "is_topology_on ?X ?TP"
+      by (rule hTopX)
+    show "basis_for ?R (basis_order_topology::real set set) ?TR"
+      by (rule hBasisR)
+    show "\<forall>p\<in>?X. ?plus p \<in> ?R"
+      by simp
+    show "\<forall>b\<in>(basis_order_topology::real set set). {p \<in> ?X. ?plus p \<in> b} \<in> ?TP"
+    proof (intro ballI)
+      fix b :: "real set"
+      assume hb: "b \<in> (basis_order_topology::real set set)"
+      define P where "P = {p \<in> ?X. ?plus p \<in> b}"
+      have hPsub: "P \<subseteq> ?X"
+        unfolding P_def by simp
+
+      have hlocal: "\<forall>p\<in>P. \<exists>W\<in>?TP. p \<in> W \<and> W \<subseteq> P"
+      proof (intro ballI)
+        fix p assume hpP: "p \<in> P"
+        have hpX: "p \<in> ?X" and hpb: "?plus p \<in> b"
+          using hpP unfolding P_def by simp_all
+
+        obtain e where he: "0 < e"
+          and hI_sub: "open_interval (?plus p - e) (?plus p + e) \<subseteq> b"
+          using basis_order_topology_contains_open_interval[OF hb hpb] by blast
+        have he2: "0 < e/2"
+          using he by linarith
+
+        define U where "U = open_interval (pi1 p - e/2) (pi1 p + e/2)"
+        define V where "V = open_interval (pi2 p - e/2) (pi2 p + e/2)"
+        define W where "W = U \<times> V"
+
+        have hU_TR: "U \<in> ?TR"
+        proof -
+          have "pi1 p - e/2 < pi1 p + e/2"
+            using he2 by linarith
+          thus ?thesis
+            unfolding U_def by (rule open_interval_in_order_topology)
+        qed
+        have hV_TR: "V \<in> ?TR"
+        proof -
+          have "pi2 p - e/2 < pi2 p + e/2"
+            using he2 by linarith
+          thus ?thesis
+            unfolding V_def by (rule open_interval_in_order_topology)
+        qed
+        have hW_TP: "W \<in> ?TP"
+          unfolding W_def by (rule product_rect_open[OF hU_TR hV_TR])
+
+        have hpW: "p \<in> W"
+        proof -
+          have h1: "pi1 p - e/2 < pi1 p"
+            using he2 by linarith
+          have h2: "pi1 p < pi1 p + e/2"
+            using he2 by linarith
+          have h3: "pi2 p - e/2 < pi2 p"
+            using he2 by linarith
+          have h4: "pi2 p < pi2 p + e/2"
+            using he2 by linarith
+          have hpU: "pi1 p \<in> U"
+            unfolding U_def open_interval_def using h1 h2 by simp
+          have hpV: "pi2 p \<in> V"
+            unfolding V_def open_interval_def using h3 h4 by simp
+          have "(pi1 p, pi2 p) \<in> W"
+            unfolding W_def using hpU hpV by simp
+          thus ?thesis
+            by (simp add: W_def pi1_def pi2_def)
+        qed
+
+        have hWsub: "W \<subseteq> P"
+        proof (rule subsetI)
+          fix q assume hqW: "q \<in> W"
+          have hqU: "pi1 q \<in> U"
+          proof (cases q)
+            case (Pair u v)
+            have "(u, v) \<in> U \<times> V"
+              using hqW unfolding W_def Pair by simp
+            hence "u \<in> U"
+              by simp
+            thus ?thesis
+              unfolding pi1_def Pair by simp
+          qed
+          have hqV: "pi2 q \<in> V"
+          proof (cases q)
+            case (Pair u v)
+            have "(u, v) \<in> U \<times> V"
+              using hqW unfolding W_def Pair by simp
+            hence "v \<in> V"
+              by simp
+            thus ?thesis
+              unfolding pi2_def Pair by simp
+          qed
+          have hq1: "pi1 p - e/2 < pi1 q" and hq2: "pi1 q < pi1 p + e/2"
+            using hqU unfolding U_def open_interval_def by simp_all
+          have hq3: "pi2 p - e/2 < pi2 q" and hq4: "pi2 q < pi2 p + e/2"
+            using hqV unfolding V_def open_interval_def by simp_all
+
+          have hsum1: "?plus p - e < ?plus q"
+          proof -
+            have htmp: "pi1 p + pi2 p - e < pi1 q + pi2 q"
+              using hq1 hq3 by linarith
+            show ?thesis
+              using htmp by simp
+          qed
+          have hsum2: "?plus q < ?plus p + e"
+          proof -
+            have htmp: "pi1 q + pi2 q < pi1 p + pi2 p + e"
+              using hq2 hq4 by linarith
+            show ?thesis
+              using htmp by simp
+          qed
+          have hqI: "?plus q \<in> open_interval (?plus p - e) (?plus p + e)"
+            unfolding open_interval_def using hsum1 hsum2 by simp
+          have hqB: "?plus q \<in> b"
+            using hI_sub hqI by blast
+          show "q \<in> P"
+            unfolding P_def using hqB by simp
+        qed
+
+        show "\<exists>W\<in>?TP. p \<in> W \<and> W \<subseteq> P"
+        proof (rule bexI[where x=W])
+          show "W \<in> ?TP"
+            by (rule hW_TP)
+          show "p \<in> W \<and> W \<subseteq> P"
+            by (intro conjI, rule hpW, rule hWsub)
+        qed
+      qed
+
+      have "P \<in> ?TP"
+        by (rule top1_open_set_from_local_opens[OF hTopX hPsub hlocal])
+      thus "{p \<in> ?X. ?plus p \<in> b} \<in> ?TP"
+        unfolding P_def .
+    qed
+  qed
+qed
 
 (*
 proof -
@@ -16984,197 +17370,6 @@ definition top1_uniformly_convergent_on ::
   "'a set \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> bool" where
   "top1_uniformly_convergent_on X s g \<longleftrightarrow>
      (\<forall>e>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>X. abs (s n x - g x) < e)"
-
-lemma basis_order_topology_contains_open_interval:
-  fixes b :: "real set" and x :: real
-  assumes hb: "b \<in> (basis_order_topology::real set set)"
-  assumes hx: "x \<in> b"
-  shows "\<exists>e>0. open_interval (x - e) (x + e) \<subseteq> b"
-proof -
-  have hcases:
-    "(\<exists>a c. a < c \<and> b = open_interval a c)
-     \<or> (\<exists>a. b = open_ray_gt a)
-     \<or> (\<exists>a. b = open_ray_lt a)
-     \<or> b = (UNIV::real set)"
-    by (rule basis_order_topology_cases[OF hb])
-
-  show ?thesis
-  proof (rule disjE[OF hcases])
-    assume hbint: "\<exists>a c. a < c \<and> b = open_interval a c"
-    then obtain a c where hac: "a < c" and hbeq: "b = open_interval a c"
-      by blast
-    have ha: "a < x" and hx': "x < c"
-      using hx unfolding hbeq open_interval_def by simp_all
-    define e where "e = min (x - a) (c - x) / 2"
-    have he: "0 < e"
-    proof -
-      have "0 < x - a"
-        using ha by linarith
-      moreover have "0 < c - x"
-        using hx' by linarith
-      ultimately have "0 < min (x - a) (c - x)"
-        by simp
-      thus ?thesis
-        unfolding e_def by (simp add: divide_pos_pos)
-    qed
-    have he_lt1: "e < x - a"
-    proof -
-      have "e \<le> (x - a) / 2"
-        unfolding e_def by simp
-      also have "... < x - a"
-      proof -
-        have hxapos: "0 < x - a"
-          using ha by linarith
-        have hhalf: "(x - a) * (1 / 2 :: real) < (x - a) * 1"
-          apply (rule mult_strict_left_mono)
-           apply simp
-          apply (rule hxapos)
-          done
-        show ?thesis
-          using hhalf by simp
-      qed
-      finally show ?thesis
-        by linarith
-    qed
-    have he_lt2: "e < c - x"
-    proof -
-      have "e \<le> (c - x) / 2"
-        unfolding e_def by simp
-      also have "... < c - x"
-      proof -
-        have hxpos: "0 < c - x"
-          using hx' by linarith
-        have hhalf: "(c - x) * (1 / 2 :: real) < (c - x) * 1"
-          apply (rule mult_strict_left_mono)
-           apply simp
-          apply (rule hxpos)
-          done
-        show ?thesis
-          using hhalf by simp
-      qed
-      finally show ?thesis
-        by linarith
-    qed
-
-    have hsub: "open_interval (x - e) (x + e) \<subseteq> open_interval a c"
-    proof (rule subsetI)
-      fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
-      have hy1: "x - e < y" and hy2: "y < x + e"
-        using hy unfolding open_interval_def by simp_all
-      have "a < x - e"
-        using he_lt1 by linarith
-      hence "a < y"
-        using hy1 by linarith
-      moreover have "x + e < c"
-        using he_lt2 by linarith
-      hence "y < c"
-        using hy2 by linarith
-      ultimately show "y \<in> open_interval a c"
-        unfolding open_interval_def by simp
-    qed
-    show ?thesis
-      unfolding hbeq
-      by (rule exI[where x=e], intro conjI, rule he, rule hsub)
-  next
-    assume hrest: "(\<exists>a. b = open_ray_gt a) \<or> (\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
-    show ?thesis
-    proof (rule disjE[OF hrest])
-      assume hbr: "\<exists>a. b = open_ray_gt a"
-      then obtain a where hbeq: "b = open_ray_gt a"
-        by blast
-      have ha: "a < x"
-        using hx unfolding hbeq open_ray_gt_def by simp
-      define e where "e = (x - a) / 2"
-      have he: "0 < e"
-      proof -
-        have "0 < x - a"
-          using ha by linarith
-        thus ?thesis
-          unfolding e_def by (simp add: divide_pos_pos)
-      qed
-      have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
-      proof (rule subsetI)
-        fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
-        have hy1: "x - e < y"
-          using hy unfolding open_interval_def by simp
-        have "a < x - e"
-        proof -
-          have hEq: "x - e = (x + a) / 2"
-            unfolding e_def by (simp add: field_simps)
-          have "a < (x + a) / 2"
-          proof -
-            have "a < (x + a) / 2 \<longleftrightarrow> a * (2::real) < x + a"
-              by (simp add: divide_less_eq)
-            moreover have "a * (2::real) < x + a"
-              using ha by linarith
-            ultimately show ?thesis
-              by simp
-          qed
-          thus ?thesis
-            unfolding hEq by simp
-        qed
-        hence "a < y"
-          using hy1 by linarith
-        thus "y \<in> open_ray_gt a"
-          unfolding open_ray_gt_def by simp
-      qed
-      show ?thesis
-        unfolding hbeq
-        by (rule exI[where x=e], intro conjI, rule he, rule hsub)
-    next
-      assume hrest2: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
-      show ?thesis
-      proof (rule disjE[OF hrest2])
-        assume hbl: "\<exists>a. b = open_ray_lt a"
-        then obtain a where hbeq: "b = open_ray_lt a"
-          by blast
-        have ha: "x < a"
-          using hx unfolding hbeq open_ray_lt_def by simp
-        define e where "e = (a - x) / 2"
-        have he: "0 < e"
-        proof -
-          have "0 < a - x"
-            using ha by linarith
-          thus ?thesis
-            unfolding e_def by (simp add: divide_pos_pos)
-        qed
-        have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
-        proof (rule subsetI)
-          fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
-          have hy2: "y < x + e"
-            using hy unfolding open_interval_def by simp
-          have "x + e < a"
-          proof -
-            have hEq: "x + e = (x + a) / 2"
-              unfolding e_def by (simp add: field_simps)
-            have hlt: "(x + a) / 2 < a"
-            proof -
-              have "((x + a) / 2 < a) \<longleftrightarrow> (x + a < a * (2::real))"
-                by (simp add: divide_less_eq)
-              also have "... "
-                using ha by linarith
-              finally show ?thesis .
-            qed
-            show ?thesis
-              using hlt unfolding hEq .
-          qed
-          hence "y < a"
-            using hy2 by linarith
-          thus "y \<in> open_ray_lt a"
-            unfolding open_ray_lt_def by simp
-        qed
-        show ?thesis
-          unfolding hbeq
-          by (rule exI[where x=e], intro conjI, rule he, rule hsub)
-      next
-        assume hU: "b = (UNIV::real set)"
-        show ?thesis
-          unfolding hU
-          by (rule exI[where x="1::real"], simp)
-      qed
-    qed
-  qed
-qed
 
 lemma top1_uniform_limit_continuous_real:
   fixes s :: "nat \<Rightarrow> 'a \<Rightarrow> real" and g :: "'a \<Rightarrow> real"
