@@ -18976,6 +18976,24 @@ theorem Theorem_36_1:
   assumes hUsub: "\<forall>i<n. U i \<subseteq> X"
   assumes hcov: "X \<subseteq> (\<Union>i<n. U i)"
   shows "\<exists>\<phi>. top1_partition_of_unity_dominated_on X TX n U \<phi>"
-  sorry
+proof -
+  obtain \<psi> where hpsi_dom:
+      "\<forall>i<n. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> i)
+            \<and> top1_support_on X TX (\<psi> i) \<subseteq> U i"
+    and hpsi_one: "\<forall>x\<in>X. \<exists>i<n. \<psi> i x = 1"
+    using normal_finite_cover_bump_family[OF hN hUopen hUsub hcov] by blast
+
+  text \<open>
+    It remains to normalize the bump family \<open>\<psi>\<close> by setting \<open>\<Psi>(x) = \<Sum>i<n. \<psi> i x\<close> (which is positive
+    everywhere by \<open>hpsi_one\<close>) and defining \<open>\<phi> j x = \<psi> j x / \<Psi> x\<close>.
+
+    Completing this proof requires additional real-analytic infrastructure in the
+    \<open>top1_continuous_map_on\<close> framework (continuity of multiplication and inversion in the order topology),
+    plus a continuity lemma for finite sums.
+  \<close>
+
+  show ?thesis
+    sorry
+qed
 
 end
