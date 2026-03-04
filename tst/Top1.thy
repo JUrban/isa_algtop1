@@ -18363,6 +18363,23 @@ proof -
       define Rest where "Rest = (\<Union>i\<in>{Suc k..<n}. U i)"
       define A where "A = X - Prev - Rest"
 
+      have in_succ: "i \<in> {k..<n} \<Longrightarrow> i \<noteq> k \<Longrightarrow> i \<in> {Suc k..<n}" for i :: nat
+      proof -
+        fix i :: nat
+        assume hi: "i \<in> {k..<n}"
+        assume hne: "i \<noteq> k"
+        have hk_le: "k \<le> i" and hi_lt: "i < n"
+          using hi by simp_all
+        have hne': "k \<noteq> i"
+          using hne by simp
+        have hk_lt: "k < i"
+          by (rule le_neq_trans[OF hk_le hne'])
+        have hsuc_le: "Suc k \<le> i"
+          by (rule Suc_leI[OF hk_lt])
+        show "i \<in> {Suc k..<n}"
+          using hsuc_le hi_lt by simp
+      qed
+
       have hPrev_subX: "Prev \<subseteq> X"
       proof (rule subsetI)
         fix x assume hx: "x \<in> Prev"
@@ -18474,14 +18491,14 @@ proof -
               case True
               show ?thesis
                 using hyUi unfolding True by blast
-            next
-              case False
-              have hi2: "i \<in> {Suc k..<n}"
-                using hi False by auto
-              have "y \<in> (\<Union>j\<in>{Suc k..<n}. U j)"
-                using hi2 hyUi by blast
-              thus ?thesis
-                by blast
+	            next
+	              case False
+	              have hi2: "i \<in> {Suc k..<n}"
+	                by (rule in_succ[OF hi False])
+	              have "y \<in> (\<Union>j\<in>{Suc k..<n}. U j)"
+	                using hi2 hyUi by blast
+	              thus ?thesis
+	                by blast
             qed
           next
             assume hy: "y \<in> U k \<union> (\<Union>i\<in>{Suc k..<n}. U i)"
@@ -18498,12 +18515,12 @@ proof -
                 using hk' hyk by blast
             next
               assume hyL: "y \<in> (\<Union>i\<in>{Suc k..<n}. U i)"
-              then obtain i where hi: "i \<in> {Suc k..<n}" and hyUi: "y \<in> U i"
-                by blast
-              have hi': "i \<in> {k..<n}"
-                using hi by auto
-              show ?thesis
-                using hi' hyUi by blast
+	              then obtain i where hi: "i \<in> {Suc k..<n}" and hyUi: "y \<in> U i"
+	                by blast
+	              have hi': "i \<in> {k..<n}"
+	                using hi by simp
+	              show ?thesis
+	                using hi' hyUi by blast
               qed
             qed
           qed
@@ -18576,14 +18593,14 @@ proof -
                 case True
                 show ?thesis
                   using hyUi unfolding True by blast
-              next
-                case False
-                have hi2: "i \<in> {Suc k..<n}"
-                  using hi False by auto
-                have "y \<in> (\<Union>j\<in>{Suc k..<n}. U j)"
-                  using hi2 hyUi by blast
-                thus ?thesis
-                  by blast
+	              next
+	                case False
+	                have hi2: "i \<in> {Suc k..<n}"
+	                  by (rule in_succ[OF hi False])
+	                have "y \<in> (\<Union>j\<in>{Suc k..<n}. U j)"
+	                  using hi2 hyUi by blast
+	                thus ?thesis
+	                  by blast
               qed
             next
               assume hy: "y \<in> U k \<union> (\<Union>i\<in>{Suc k..<n}. U i)"
@@ -18600,12 +18617,12 @@ proof -
                   using hk' hyk by blast
               next
                 assume hyL: "y \<in> (\<Union>i\<in>{Suc k..<n}. U i)"
-                then obtain i where hi: "i \<in> {Suc k..<n}" and hyUi: "y \<in> U i"
-                  by blast
-                have hi': "i \<in> {k..<n}"
-                  using hi by auto
-                show ?thesis
-                  using hi' hyUi by blast
+	                then obtain i where hi: "i \<in> {Suc k..<n}" and hyUi: "y \<in> U i"
+	                  by blast
+	                have hi': "i \<in> {k..<n}"
+	                  using hi by simp
+	                show ?thesis
+	                  using hi' hyUi by blast
                 qed
               qed
             qed
