@@ -7101,6 +7101,64 @@ text \<open>
 \<close>
 sorry
 
+(** from \S19 Theorem 19.2 (Bases for box/product topologies) [top1.tex] **)
+theorem Theorem_19_2_box:
+  assumes hB: "\<forall>i\<in>I. basis_for (X i) (B i) (T i)"
+  shows "basis_for (top1_PiE I X)
+           {top1_PiE I U | U. \<forall>i\<in>I. U i \<in> B i}
+           (top1_box_topology_on I X T)"
+  sorry
+
+theorem Theorem_19_2_product:
+  assumes hB: "\<forall>i\<in>I. basis_for (X i) (B i) (T i)"
+  shows "basis_for (top1_PiE I X)
+           {top1_PiE I U | U. (\<forall>i\<in>I. U i \<in> B i) \<and> finite {i \<in> I. U i \<noteq> X i}}
+           (top1_product_topology_on I X T)"
+  sorry
+
+(** from \S19 Theorem 19.3 (Product of subspaces is a subspace) [top1.tex] **)
+theorem Theorem_19_3_box:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  assumes hsub: "\<forall>i\<in>I. A i \<subseteq> X i"
+  defines "TA \<equiv> (\<lambda>i. subspace_topology (X i) (T i) (A i))"
+  shows "top1_box_topology_on I A TA =
+         subspace_topology (top1_PiE I X) (top1_box_topology_on I X T) (top1_PiE I A)"
+  sorry
+
+theorem Theorem_19_3_product:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  assumes hsub: "\<forall>i\<in>I. A i \<subseteq> X i"
+  defines "TA \<equiv> (\<lambda>i. subspace_topology (X i) (T i) (A i))"
+  shows "top1_product_topology_on I A TA =
+         subspace_topology (top1_PiE I X) (top1_product_topology_on I X T) (top1_PiE I A)"
+  sorry
+
+(** from \S19 Theorem 19.4 (Products of Hausdorff spaces are Hausdorff) [top1.tex] **)
+theorem Theorem_19_4_box:
+  assumes hH: "\<forall>i\<in>I. is_hausdorff_on (X i) (T i)"
+  shows "is_hausdorff_on (top1_PiE I X) (top1_box_topology_on I X T)"
+  sorry
+
+theorem Theorem_19_4_product:
+  assumes hH: "\<forall>i\<in>I. is_hausdorff_on (X i) (T i)"
+  shows "is_hausdorff_on (top1_PiE I X) (top1_product_topology_on I X T)"
+  sorry
+
+(** from \S19 Theorem 19.5 (Closure in products) [top1.tex] **)
+theorem Theorem_19_5_box:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  assumes hA: "\<forall>i\<in>I. A i \<subseteq> X i"
+  shows "closure_on (top1_PiE I X) (top1_box_topology_on I X T) (top1_PiE I A)
+        = top1_PiE I (\<lambda>i. closure_on (X i) (T i) (A i))"
+  sorry
+
+theorem Theorem_19_5_product:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  assumes hA: "\<forall>i\<in>I. A i \<subseteq> X i"
+  shows "closure_on (top1_PiE I X) (top1_product_topology_on I X T) (top1_PiE I A)
+        = top1_PiE I (\<lambda>i. closure_on (X i) (T i) (A i))"
+  sorry
+
 section \<open>\<S>20 The Metric Topology\<close>
 
 (** from \S20 Definition (Metric) [top1.tex:~1512] **)
