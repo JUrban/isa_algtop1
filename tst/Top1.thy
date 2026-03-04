@@ -18286,7 +18286,31 @@ section \<open>*\<S>36 Imbeddings of Manifolds\<close>
 
 text \<open>
   The starred sections (*\<S>35–*\<S>36) of \<open>top1.tex\<close> develop stronger results based on the Urysohn lemma.
-  The main formalization work here will require additional infrastructure (e.g. explicit manifold definitions).
+  We begin by formalizing the notion of a (finite) partition of unity dominated by a finite open cover,
+  and we state the existence theorem (Theorem 36.1).
+
+  The full proof will require additional analytic infrastructure about pointwise products (and possibly
+  normalization) of real-valued continuous maps in the \<open>top1_continuous_map_on\<close> framework.
 \<close>
+
+definition top1_support_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> 'a set" where
+  "top1_support_on X TX f = closure_on X TX {x \<in> X. f x \<noteq> 0}"
+
+definition top1_partition_of_unity_dominated_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> 'a set) \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> bool" where
+  "top1_partition_of_unity_dominated_on X TX n U \<phi> \<longleftrightarrow>
+     (\<forall>i<n.
+        top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)
+        \<and> top1_support_on X TX (\<phi> i) \<subseteq> U i)
+     \<and> (\<forall>x\<in>X. (\<Sum>i<n. \<phi> i x) = 1)"
+
+(** from *\S36 Theorem 36.1 (Existence of finite partitions of unity) [top1.tex:~5009] **)
+theorem Theorem_36_1:
+  assumes hN: "top1_normal_on X TX"
+  assumes hUopen: "\<forall>i<n. U i \<in> TX"
+  assumes hUsub: "\<forall>i<n. U i \<subseteq> X"
+  assumes hcov: "X \<subseteq> (\<Union>i<n. U i)"
+  shows "\<exists>\<phi>. top1_partition_of_unity_dominated_on X TX n U \<phi>"
+  sorry
 
 end
