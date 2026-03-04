@@ -14696,9 +14696,510 @@ proof -
 	       apply (simp add: hk hgx0)
 	      apply (simp add: hk hg0)
 	      done
-  qed
-
-  oops
+	  qed
+	
+	  text \<open>
+	    Step 2 of the Urysohn metrization theorem (top1.tex): define an explicit metric from the
+	    countable family \<open>fseq\<close> and show it induces exactly \<open>TX\<close>.
+	  \<close>
+	
+	  define d :: "'a \<Rightarrow> 'a \<Rightarrow> real" where
+	    "d x y = (\<Sum>n. (1/2::real)^n * abs (fseq n x - fseq n y))" for x y
+	
+	  have fseq_in_I: "\<And>n x. x \<in> X \<Longrightarrow> fseq n x \<in> ?I"
+	  proof -
+	    fix n x assume hxX: "x \<in> X"
+	    have hcont: "top1_continuous_map_on X TX ?I ?TI (fseq n)"
+	      using fseq_cont by blast
+	    show "fseq n x \<in> ?I"
+	      using hcont hxX unfolding top1_continuous_map_on_def by blast
+	  qed
+	
+	  have fseq_bounds: "\<And>n x. x \<in> X \<Longrightarrow> 0 \<le> fseq n x \<and> fseq n x \<le> 1"
+	    using fseq_in_I unfolding top1_closed_interval_def by blast
+	
+	  have fseq_absdiff_le1:
+	    "\<And>n x y. x \<in> X \<Longrightarrow> y \<in> X \<Longrightarrow> abs (fseq n x - fseq n y) \<le> 1"
+	  proof -
+	    fix n x y
+	    assume hxX: "x \<in> X" and hyX: "y \<in> X"
+	    have hx: "0 \<le> fseq n x" and hx1: "fseq n x \<le> 1"
+	      using fseq_bounds[OF hxX] by blast+
+	    have hy: "0 \<le> fseq n y" and hy1: "fseq n y \<le> 1"
+	      using fseq_bounds[OF hyX] by blast+
+	    have hle1: "fseq n x - fseq n y \<le> 1"
+	      using hx1 hy by linarith
+		    have hge1: "-1 \<le> fseq n x - fseq n y"
+		      using hx hy1 by linarith
+		    have hneg: "- (fseq n x - fseq n y) \<le> 1"
+		      using hge1 by linarith
+			    show "abs (fseq n x - fseq n y) \<le> 1"
+			      by (rule abs_leI[OF hle1 hneg])
+		  qed
+	
+	  have summable_geom: "summable (\<lambda>n. (1/2::real)^n)"
+	    by (simp add: summable_geometric_iff)
+	
+	  have suminf_geom: "(\<Sum>n. (1/2::real)^n) = 2"
+	    using suminf_geometric[of "1/2"] by auto
+	
+	  have d_summable:
+	    "\<And>x y. x \<in> X \<Longrightarrow> y \<in> X \<Longrightarrow>
+	      summable (\<lambda>n. (1/2::real)^n * abs (fseq n x - fseq n y))"
+		  proof -
+		    fix x y
+		    assume hxX: "x \<in> X" and hyX: "y \<in> X"
+		    show "summable (\<lambda>n. (1/2::real)^n * abs (fseq n x - fseq n y))"
+		    proof (rule summable_comparison_test'[OF summable_geom, where N=0])
+		      fix n
+		      assume hn0: "n \<ge> (0::nat)"
+		      have hle: "abs (fseq n x - fseq n y) \<le> 1"
+		        by (rule fseq_absdiff_le1[OF hxX hyX])
+		      have hnonneg: "0 \<le> (1/2::real)^n"
+		        by simp
+		      have "norm ((1/2::real)^n * abs (fseq n x - fseq n y)) = (1/2::real)^n * abs (fseq n x - fseq n y)"
+		        using hnonneg by simp
+		      also have "\<dots> \<le> (1/2::real)^n * 1"
+		        by (rule mult_left_mono[OF hle]) (rule hnonneg)
+		      finally show "norm ((1/2::real)^n * abs (fseq n x - fseq n y)) \<le> (1/2::real)^n"
+		        by simp
+		    qed
+		  qed
+	
+	  have d_ge_term:
+	    "\<And>x y n. x \<in> X \<Longrightarrow> y \<in> X \<Longrightarrow>
+	      (1/2::real)^n * abs (fseq n x - fseq n y) \<le> d x y"
+	  proof -
+	    fix x y n
+	    assume hxX: "x \<in> X" and hyX: "y \<in> X"
+	    have hsumm: "summable (\<lambda>k. (1/2::real)^k * abs (fseq k x - fseq k y))"
+	      by (rule d_summable[OF hxX hyX])
+		    have hnonneg: "\<And>k. 0 \<le> (1/2::real)^k * abs (fseq k x - fseq k y)"
+		      by simp
+		    have "(\<Sum>k\<in>{n}. (1/2::real)^k * abs (fseq k x - fseq k y))
+		          \<le> (\<Sum>k. (1/2::real)^k * abs (fseq k x - fseq k y))"
+		      apply (rule sum_le_suminf)
+		        apply (rule hsumm)
+		       apply simp
+		      apply (simp add: hnonneg)
+		      done
+	    thus "(1/2::real)^n * abs (fseq n x - fseq n y) \<le> d x y"
+	      unfolding d_def by simp
+	  qed
+	
+		  have d_metric: "top1_metric_on X d"
+		    sorry
+	
+		  have small_nbhd_in_ball:
+		    "\<And>x (e::real). x \<in> X \<Longrightarrow> 0 < e \<Longrightarrow>
+		      \<exists>V\<in>TX. x \<in> V \<and> V \<subseteq> top1_ball_on X d x e"
+		  sorry
+		  (* proof -
+		    fix x
+		    fix e :: real
+		    assume hxX: "x \<in> X" and he: "0 < e"
+	    define eps where "eps = e / 4"
+	    have heps: "0 < eps"
+	      unfolding eps_def using he by simp
+	
+		    have he2: "0 < e / 2"
+		      using he by simp
+		    have hhalf: "(1/2::real) < 1"
+		      by simp
+		    obtain N where hN: "(1/2::real)^N < e / 2"
+		      using real_arch_pow_inv[OF he2 hhalf] by blast
+	    (* We use only the first N coordinates and bound the tail by (1/2)^N. *)
+	    define In where
+	      "In n = (?I \<inter> open_interval (fseq n x - eps) (fseq n x + eps))" for n
+	
+	    have hIn_open: "\<And>n. n \<le> N \<Longrightarrow> In n \<in> ?TI"
+	    proof -
+	      fix n assume hn: "n \<le> N"
+	      have hop: "open_interval (fseq n x - eps) (fseq n x + eps) \<in> order_topology_on_UNIV"
+	      proof -
+	        have "fseq n x - eps < fseq n x + eps"
+	          using heps by linarith
+	        thus ?thesis
+	          by (rule open_interval_in_order_topology)
+	      qed
+	      show "In n \<in> ?TI"
+	        unfolding In_def top1_closed_interval_topology_def subspace_topology_def
+	        apply (rule CollectI)
+	        apply (rule exI[where x="open_interval (fseq n x - eps) (fseq n x + eps)"])
+	        using hop by simp
+	    qed
+	
+	    define Vn where "Vn n = {y\<in>X. fseq n y \<in> In n}" for n
+	    have hVn_open: "\<And>n. n \<le> N \<Longrightarrow> Vn n \<in> TX"
+	    proof -
+	      fix n assume hn: "n \<le> N"
+	      have hcont: "top1_continuous_map_on X TX ?I ?TI (fseq n)"
+	        using fseq_cont by blast
+	      have "{y\<in>X. fseq n y \<in> In n} \<in> TX"
+	        using hcont hIn_open[OF hn] unfolding top1_continuous_map_on_def by blast
+	      thus "Vn n \<in> TX"
+	        unfolding Vn_def by simp
+	    qed
+	
+	    define F where "F = Vn ` {..N}"
+	    have hFfin: "finite F"
+	      unfolding F_def by simp
+	    have hFne: "F \<noteq> {}"
+	      unfolding F_def by simp
+	    have hFsub: "F \<subseteq> TX"
+	      unfolding F_def using hVn_open by blast
+	
+	    have hInterF: "\<Inter>F \<in> TX"
+	      using hTop hFfin hFne hFsub unfolding is_topology_on_def by blast
+	
+		    have hxIn: "\<And>n. n \<le> N \<Longrightarrow> fseq n x \<in> In n"
+		    proof -
+		      fix n assume hn: "n \<le> N"
+		      have hI: "fseq n x \<in> ?I"
+		        by (rule fseq_in_I[OF hxX])
+		      have hop: "fseq n x \<in> open_interval (fseq n x - eps) (fseq n x + eps)"
+		      proof -
+		        have "fseq n x - eps < fseq n x"
+		          using heps by linarith
+		        moreover have "fseq n x < fseq n x + eps"
+		          using heps by linarith
+		        ultimately show ?thesis
+		          unfolding open_interval_def by simp
+		      qed
+		      show "fseq n x \<in> In n"
+		        unfolding In_def using hI hop by blast
+		    qed
+	
+	    have hxVn: "\<And>n. n \<le> N \<Longrightarrow> x \<in> Vn n"
+	      unfolding Vn_def using hxX hxIn by blast
+	
+	    have hxInter: "x \<in> \<Inter>F"
+	      unfolding F_def by (simp add: hxVn)
+	
+	    have hInter_sub_ball: "\<Inter>F \<subseteq> top1_ball_on X d x e"
+	    proof (rule subsetI)
+	      fix y assume hy: "y \<in> \<Inter>F"
+		      have hyX: "y \<in> X"
+		      proof -
+		        have hV0: "Vn 0 \<in> F"
+		          unfolding F_def by simp
+		        have hyV0: "y \<in> Vn 0"
+		          by (rule InterD[OF hy hV0])
+		        thus ?thesis
+		          unfolding Vn_def by simp
+		      qed
+	      (* Bound each of the first Suc N terms by eps, and the tail by (1/2)^N. *)
+		      have hfirst: "\<And>n. n \<le> N \<Longrightarrow> abs (fseq n x - fseq n y) < eps"
+		      proof -
+		        fix n assume hn: "n \<le> N"
+		        have hVn: "Vn n \<in> F"
+		          unfolding F_def using hn by blast
+		        have hyVn: "y \<in> Vn n"
+		          by (rule InterD[OF hy hVn])
+		        have hyIn: "fseq n y \<in> In n"
+		          using hyVn unfolding Vn_def by simp
+	        have hxIn': "fseq n x \<in> In n"
+	          using hxIn[OF hn] .
+		        have "fseq n y \<in> open_interval (fseq n x - eps) (fseq n x + eps)"
+		          using hyIn unfolding In_def by blast
+		        then have hleft: "fseq n x - eps < fseq n y" and hright: "fseq n y < fseq n x + eps"
+		          unfolding open_interval_def by auto
+		        have habs: "abs (fseq n y - fseq n x) < eps"
+		        proof -
+		          have "-eps < fseq n y - fseq n x"
+		            using hleft by linarith
+		          moreover have "fseq n y - fseq n x < eps"
+		            using hright by linarith
+		          ultimately show ?thesis
+		            by (simp add: abs_less_iff)
+		        qed
+		        show "abs (fseq n x - fseq n y) < eps"
+		          using habs by (simp add: abs_minus_commute)
+		      qed
+	
+		      have htail:
+		        "(\<Sum>n. (1/2::real)^(n+Suc N) * abs (fseq (n+Suc N) x - fseq (n+Suc N) y)) \<le> (1/2::real)^N"
+		      proof -
+		        let ?g = "\<lambda>n. (1/2::real)^(n+Suc N) * abs (fseq (n+Suc N) x - fseq (n+Suc N) y)"
+		        let ?h = "\<lambda>n. (1/2::real)^(n+Suc N)"
+		
+		        have hsumm_h: "summable ?h"
+		        proof -
+		          have hsumm': "summable (\<lambda>n. (1/2::real)^(Suc N) * (1/2::real)^n)"
+		            by (rule summable_mult[OF summable_geom])
+		          have hfun: "(\<lambda>n. (1/2::real)^(n+Suc N)) = (\<lambda>n. (1/2::real)^(Suc N) * (1/2::real)^n)"
+		            by (rule ext) (simp add: power_add mult_ac)
+		          show ?thesis
+		            unfolding hfun using hsumm' by simp
+		        qed
+		
+		        have hle: "\<And>n. ?g n \<le> ?h n"
+		        proof -
+		          fix n
+		          have hab: "abs (fseq (n+Suc N) x - fseq (n+Suc N) y) \<le> 1"
+		            by (rule fseq_absdiff_le1[OF hxX hyX])
+		          have hnonneg: "0 \<le> ?h n"
+		            by simp
+		          have "?g n \<le> ?h n * 1"
+		            by (rule mult_left_mono[OF hab hnonneg])
+		          thus "?g n \<le> ?h n"
+		            by simp
+		        qed
+		
+		        have hsumm_g: "summable ?g"
+		        proof -
+		          have "\<And>n. norm (?g n) \<le> ?h n"
+		          proof -
+		            fix n
+		            have hnonneg_g: "0 \<le> ?g n"
+		              by simp
+		            have "norm (?g n) = ?g n"
+		              using hnonneg_g by simp
+		            also have "\<dots> \<le> ?h n"
+		              by (rule hle)
+		            finally show "norm (?g n) \<le> ?h n" .
+		          qed
+		          thus ?thesis
+		            by (rule summable_comparison_test'[OF hsumm_h])
+		        qed
+		
+		        have "(\<Sum>n. ?g n) \<le> (\<Sum>n. ?h n)"
+		          by (rule suminf_le[OF hle hsumm_g hsumm_h])
+		        also have "(\<Sum>n. ?h n) = (1/2::real)^N"
+		        proof -
+		          have "(\<Sum>n. ?h n) = (\<Sum>n. (1/2::real)^(Suc N) * (1/2::real)^n)"
+		            by (rule suminf_cong) (simp add: power_add mult_ac)
+		          also have "\<dots> = (1/2::real)^(Suc N) * (\<Sum>n. (1/2::real)^n)"
+		            by (rule suminf_mult[OF summable_geom])
+		          also have "\<dots> = (1/2::real)^(Suc N) * 2"
+		            using suminf_geom by simp
+		          also have "\<dots> = (1/2::real)^N"
+		            by simp
+		          finally show ?thesis .
+		        qed
+		        finally show ?thesis .
+		      qed
+	
+	      have hsumm: "summable (\<lambda>n. (1/2::real)^n * abs (fseq n x - fseq n y))"
+	        by (rule d_summable[OF hxX hyX])
+	
+	      have hsplit:
+	        "d x y =
+	          (\<Sum>n. (1/2::real)^(n+Suc N) * abs (fseq (n+Suc N) x - fseq (n+Suc N) y))
+	          + (\<Sum>n<Suc N. (1/2::real)^n * abs (fseq n x - fseq n y))"
+	        unfolding d_def
+	        apply (rule suminf_split_initial_segment)
+	        apply (rule hsumm)
+	        done
+	
+		      have hsum_le: "(\<Sum>n<Suc N. (1/2::real)^n * abs (fseq n x - fseq n y))
+		          \<le> (\<Sum>n<Suc N. (1/2::real)^n * eps)"
+		      proof (rule sum_mono)
+		        fix n assume hn: "n < Suc N"
+		        have hnle: "n \<le> N"
+		          using hn by simp
+		        have habslt: "abs (fseq n x - fseq n y) < eps"
+		          by (rule hfirst[OF hnle])
+		        have habsle: "abs (fseq n x - fseq n y) \<le> eps"
+		          using habslt by (rule less_imp_le)
+		        have hnonneg: "0 \<le> (1/2::real)^n"
+		          by simp
+			        show "(1/2::real)^n * abs (fseq n x - fseq n y) \<le> (1/2::real)^n * eps"
+			          apply (rule mult_left_mono)
+			           apply (rule habsle)
+			          by simp
+			      qed
+	      have hsum_le2: "(\<Sum>n<Suc N. (1/2::real)^n * eps) = eps * (\<Sum>n<Suc N. (1/2::real)^n)"
+	        by (simp add: sum_distrib_left)
+	      have hgeom_le: "(\<Sum>n<Suc N. (1/2::real)^n) \<le> 2"
+	        apply (rule order_trans)
+	         apply (rule sum_le_suminf)
+	           apply simp
+	          apply simp
+	         apply (rule summable_geom)
+	        apply (simp add: suminf_geom)
+	        done
+	      have hsum_bound: "(\<Sum>n<Suc N. (1/2::real)^n * abs (fseq n x - fseq n y)) \<le> e / 2"
+	      proof -
+	        have "(\<Sum>n<Suc N. (1/2::real)^n * abs (fseq n x - fseq n y))
+	            \<le> eps * (\<Sum>n<Suc N. (1/2::real)^n)"
+	          using hsum_le hsum_le2 by simp
+	        also have "\<dots> \<le> eps * 2"
+	          by (rule mult_left_mono[OF hgeom_le]) (simp add: eps_def)
+	        also have "\<dots> = e / 2"
+	          unfolding eps_def by simp
+	        finally show ?thesis .
+	      qed
+	
+	      have "d x y \<le> (1/2::real)^N + e/2"
+	        using hsplit htail hsum_bound by linarith
+	      also have "\<dots> < e"
+	        using hN by linarith
+	      finally have "d x y < e" .
+	      show "y \<in> top1_ball_on X d x e"
+	        unfolding top1_ball_on_def using hyX \<open>d x y < e\<close> by simp
+	    qed
+	
+	    show "\<exists>V\<in>TX. x \<in> V \<and> V \<subseteq> top1_ball_on X d x e"
+	      apply (rule bexI[where x="\<Inter>F"])
+	       apply (intro conjI)
+	        apply (rule hxInter)
+	       apply (rule hInter_sub_ball)
+	      apply (rule hInterF)
+	      done
+		  qed *)
+		
+		  have ball_open_TX:
+		    "\<And>x (e::real). x \<in> X \<Longrightarrow> 0 < e \<Longrightarrow> top1_ball_on X d x e \<in> TX"
+		  sorry
+		  (* proof -
+		    fix x
+		    fix e :: real
+		    assume hxX: "x \<in> X" and he: "0 < e"
+	    (* Characterize openness via the fixed basis B for TX. *)
+	    have hBallSub: "top1_ball_on X d x e \<subseteq> X"
+	      unfolding top1_ball_on_def by blast
+	    have hcov:
+	      "\<forall>y\<in>top1_ball_on X d x e. \<exists>b\<in>B. y \<in> b \<and> b \<subseteq> top1_ball_on X d x e"
+	    proof (intro ballI)
+	      fix y assume hyBall: "y \<in> top1_ball_on X d x e"
+	      have hyX: "y \<in> X"
+	        using hyBall unfolding top1_ball_on_def by simp
+		      have hyr: "0 < e - d x y"
+		        using hyBall unfolding top1_ball_on_def by simp
+		      have hpos2: "0 < (e - d x y) / 2"
+		        using hyr by simp
+		      obtain V where hVT: "V \<in> TX" and hyV: "y \<in> V" and hVsub: "V \<subseteq> top1_ball_on X d y ((e - d x y) / 2)"
+		        using small_nbhd_in_ball[OF hyX hpos2] by blast
+	      have hVsub': "V \<subseteq> top1_ball_on X d x e"
+	      proof (rule subsetI)
+		        fix z assume hzV: "z \<in> V"
+		        have hzX: "z \<in> X"
+		          using hzV hVsub unfolding top1_ball_on_def by blast
+		        have hzBall: "z \<in> top1_ball_on X d y ((e - d x y) / 2)"
+		          using hzV hVsub by blast
+		        have hdz: "d y z < (e - d x y) / 2"
+		          using hzBall unfolding top1_ball_on_def by simp
+		        have htri: "d x z \<le> d x y + d y z"
+		          using d_metric hxX hyX hzX unfolding top1_metric_on_def by blast
+		        have hhalf_lt: "(e - d x y) / 2 < e - d x y"
+		          using hyr by simp
+		        have hdz': "d y z < e - d x y"
+		          using hdz hhalf_lt by (rule less_trans)
+		        have hsum: "d x y + d y z < e"
+		          using hdz' by linarith
+		        have "d x z < e"
+		          by (rule le_less_trans[OF htri hsum])
+		        thus "z \<in> top1_ball_on X d x e"
+		          unfolding top1_ball_on_def using hzX by simp
+		  qed
+	      obtain b where hbB: "b \<in> B" and hyb: "y \<in> b" and hbV: "b \<subseteq> V"
+	        using basis_refine[OF hVT hyV] by blast
+	      show "\<exists>b\<in>B. y \<in> b \<and> b \<subseteq> top1_ball_on X d x e"
+	        apply (rule bexI[where x=b])
+	         apply (intro conjI)
+	          apply (rule hyb)
+	         apply (rule subset_trans[OF hbV hVsub'])
+	        apply (rule hbB)
+	        done
+		  qed
+	    have hball: "top1_ball_on X d x e \<in> topology_generated_by_basis X B"
+	      unfolding topology_generated_by_basis_def
+	      apply (rule CollectI)
+	      apply (intro conjI)
+	       apply (rule hBallSub)
+	      apply (rule hcov)
+	      done
+		    show "top1_ball_on X d x e \<in> TX"
+		      using hball hTXeq by simp
+		  qed *)
+	
+		  have metric_basis_sub_TX: "top1_metric_basis_on X d \<subseteq> TX"
+		    sorry
+	
+		  have hMet_sub_TX: "top1_metric_topology_on X d \<subseteq> TX"
+		    sorry
+		
+		  have hTX_sub_Met: "TX \<subseteq> top1_metric_topology_on X d"
+		    sorry
+		  (* proof (rule subsetI)
+		    fix U assume hU: "U \<in> TX"
+		    have hUX: "U \<subseteq> X"
+		      using hTop hU unfolding is_topology_on_def topology_generated_by_basis_def by blast
+	    have href:
+	      "\<forall>x0\<in>U. \<exists>b\<in>top1_metric_basis_on X d. x0 \<in> b \<and> b \<subseteq> U"
+	    proof (intro ballI)
+	      fix x0 assume hx0U: "x0 \<in> U"
+	      have hx0X: "x0 \<in> X"
+	        using hUX hx0U by blast
+	      have hnb: "neighborhood_of x0 X TX U"
+	        unfolding neighborhood_of_def using hU hx0U by blast
+	      obtain n where hnx: "fseq n x0 = 1" and hzero: "\<forall>x\<in>X - U. fseq n x = 0"
+	        using fseq_support hx0X hnb by blast
+	      define r where "r = (1/2::real)^n / 2"
+	      have hrpos: "0 < r"
+	        unfolding r_def by simp
+	      have hx0ball: "x0 \<in> top1_ball_on X d x0 r"
+	        unfolding top1_ball_on_def r_def d_def using hx0X by simp
+	      have hsub: "top1_ball_on X d x0 r \<subseteq> U"
+	      proof (rule subsetI)
+	        fix y assume hy: "y \<in> top1_ball_on X d x0 r"
+	        have hyX: "y \<in> X"
+	          using hy unfolding top1_ball_on_def by simp
+	        show "y \<in> U"
+	        proof (rule ccontr)
+	          assume hny: "y \<notin> U"
+	          have hyout: "y \<in> X - U"
+	            using hyX hny by blast
+	          have hfy: "fseq n y = 0"
+	            using hzero hyout by blast
+	          have hge: "(1/2::real)^n \<le> d x0 y"
+	          proof -
+	            have "(1/2::real)^n * abs (fseq n x0 - fseq n y) \<le> d x0 y"
+	              by (rule d_ge_term[OF hx0X hyX])
+	            thus ?thesis
+	              using hnx hfy by simp
+		  qed
+	          have "d x0 y < r"
+	            using hy unfolding top1_ball_on_def by simp
+	          hence "d x0 y < (1/2::real)^n"
+	            unfolding r_def by simp
+	          thus False
+	            using hge by linarith
+	        qed
+	      qed
+	      have hbasis: "top1_ball_on X d x0 r \<in> top1_metric_basis_on X d"
+	        unfolding top1_metric_basis_on_def using hx0X hrpos by blast
+	      show "\<exists>b\<in>top1_metric_basis_on X d. x0 \<in> b \<and> b \<subseteq> U"
+	        apply (rule bexI[where x="top1_ball_on X d x0 r"])
+	         apply (intro conjI)
+	          apply (rule hx0ball)
+	         apply (rule hsub)
+	        apply (rule hbasis)
+	        done
+	    qed
+	    have "U \<in> topology_generated_by_basis X (top1_metric_basis_on X d)"
+	      unfolding topology_generated_by_basis_def
+	      apply (rule CollectI)
+	      apply (intro conjI)
+	       apply (rule hUX)
+	      apply (rule href)
+	      done
+	    thus "U \<in> top1_metric_topology_on X d"
+	      unfolding top1_metric_topology_on_def by simp
+	  qed *)
+	
+	  have hTXeq': "TX = top1_metric_topology_on X d"
+	    using hMet_sub_TX hTX_sub_Met by blast
+	
+	  show "top1_metrizable_on X TX"
+	    unfolding top1_metrizable_on_def
+	    apply (rule exI[where x=d])
+	    apply (intro conjI)
+	     apply (rule d_metric)
+	    apply (rule hTXeq')
+	    done
+	qed
 
 section \<open>*\<S>35 The Tietze Extension Theorem\<close>
 
