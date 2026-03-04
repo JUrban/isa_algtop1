@@ -16191,9 +16191,6 @@ lemma top1_continuous_uminus_order_topology:
       (UNIV::real set) order_topology_on_UNIV
       (UNIV::real set) order_topology_on_UNIV
       (\<lambda>x::real. -x)"
-  sorry
-
-(*
 proof -
   let ?R = "(UNIV::real set)"
   let ?TR = "order_topology_on_UNIV"
@@ -16227,50 +16224,61 @@ proof -
         assume hbint: "\<exists>a c. a < c \<and> b = open_interval a c"
         then obtain a c where hac: "a < c" and hbeq: "b = open_interval a c"
           by blast
-        have hpre: "{x \<in> ?R. -x \<in> open_interval a c} = open_interval (-c) (-a)"
-          unfolding open_interval_def by auto
-        have hOpen: "open_interval (-c) (-a) \<in> ?TR"
-          apply (rule open_interval_in_order_topology)
-          using hac by linarith
         have hEq: "{x \<in> ?R. -x \<in> b} = open_interval (-c) (-a)"
-          unfolding hbeq by (rule hpre)
-        show "{x \<in> ?R. -x \<in> b} \<in> ?TR"
-          using hOpen by (simp add: hEq)
+          unfolding hbeq open_interval_def by auto
+        have hEq': "{x. -x \<in> b} = open_interval (-c) (-a)"
+          using hEq by simp
+        have hOpen: "open_interval (-c) (-a) \<in> ?TR"
+        proof -
+          have "-c < -a"
+            using hac by linarith
+          thus ?thesis
+            by (rule open_interval_in_order_topology)
+        qed
+        show ?thesis
+          using hOpen by (simp add: hEq')
       next
-        assume hbr: "\<exists>a. b = open_ray_gt a"
-        then obtain a where hbeq: "b = open_ray_gt a"
-          by blast
-        have hpre: "{x \<in> ?R. -x \<in> open_ray_gt a} = open_ray_lt (-a)"
-          unfolding open_ray_gt_def open_ray_lt_def by auto
-        have hOpen: "open_ray_lt (-a) \<in> ?TR"
-          by (rule open_ray_lt_in_order_topology)
-        have hEq: "{x \<in> ?R. -x \<in> b} = open_ray_lt (-a)"
-          unfolding hbeq by (rule hpre)
-        show "{x \<in> ?R. -x \<in> b} \<in> ?TR"
-          using hOpen by (simp add: hEq)
-      next
-        assume hbl: "\<exists>a. b = open_ray_lt a"
-        then obtain a where hbeq: "b = open_ray_lt a"
-          by blast
-        have hpre: "{x \<in> ?R. -x \<in> open_ray_lt a} = open_ray_gt (-a)"
-          unfolding open_ray_gt_def open_ray_lt_def by auto
-        have hOpen: "open_ray_gt (-a) \<in> ?TR"
-          by (rule open_ray_gt_in_order_topology)
-        have hEq: "{x \<in> ?R. -x \<in> b} = open_ray_gt (-a)"
-          unfolding hbeq by (rule hpre)
-        show "{x \<in> ?R. -x \<in> b} \<in> ?TR"
-          using hOpen by (simp add: hEq)
-      next
-        assume hU: "b = (UNIV::real set)"
-        have hR_open: "?R \<in> ?TR"
-          using hTopR unfolding is_topology_on_def by blast
-        show "{x \<in> ?R. -x \<in> b} \<in> ?TR"
-          unfolding hU using hR_open by simp
+        assume hrest: "(\<exists>a. b = open_ray_gt a) \<or> (\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+        show ?thesis
+        proof (rule disjE[OF hrest])
+          assume hbr: "\<exists>a. b = open_ray_gt a"
+          then obtain a where hbeq: "b = open_ray_gt a"
+            by blast
+          have hEq: "{x \<in> ?R. -x \<in> b} = open_ray_lt (-a)"
+            unfolding hbeq open_ray_gt_def open_ray_lt_def by auto
+          have hEq': "{x. -x \<in> b} = open_ray_lt (-a)"
+            using hEq by simp
+          have hOpen: "open_ray_lt (-a) \<in> ?TR"
+            by (rule open_ray_lt_in_order_topology)
+          show ?thesis
+            using hOpen by (simp add: hEq')
+        next
+          assume hrest2: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+          show ?thesis
+          proof (rule disjE[OF hrest2])
+            assume hbl: "\<exists>a. b = open_ray_lt a"
+            then obtain a where hbeq: "b = open_ray_lt a"
+              by blast
+            have hEq: "{x \<in> ?R. -x \<in> b} = open_ray_gt (-a)"
+              unfolding hbeq open_ray_gt_def open_ray_lt_def by auto
+            have hEq': "{x. -x \<in> b} = open_ray_gt (-a)"
+              using hEq by simp
+            have hOpen: "open_ray_gt (-a) \<in> ?TR"
+              by (rule open_ray_gt_in_order_topology)
+            show ?thesis
+              using hOpen by (simp add: hEq')
+          next
+            assume hU: "b = (UNIV::real set)"
+            have hR_open: "?R \<in> ?TR"
+              using hTopR unfolding is_topology_on_def by blast
+            show ?thesis
+              unfolding hU using hR_open by simp
+          qed
+        qed
       qed
     qed
   qed
 qed
-*)
 
 (** Convenience: sums and differences of continuous real-valued maps in the order topology. **)
 lemma top1_continuous_add_real:
@@ -16340,9 +16348,6 @@ lemma top1_continuous_uminus_real:
   fixes f :: "'a \<Rightarrow> real"
   assumes hf: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
   shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. - f x)"
-  sorry
-
-(*
 proof -
   let ?R = "(UNIV::real set)"
   let ?TR = "order_topology_on_UNIV"
@@ -16354,7 +16359,6 @@ proof -
     unfolding hEq
     by (rule top1_continuous_map_on_comp[OF hf hneg])
 qed
-*)
 
 lemma top1_continuous_diff_real:
   fixes f g :: "'a \<Rightarrow> real"
@@ -16386,9 +16390,6 @@ lemma basis_order_topology_contains_open_interval:
   assumes hb: "b \<in> (basis_order_topology::real set set)"
   assumes hx: "x \<in> b"
   shows "\<exists>e>0. open_interval (x - e) (x + e) \<subseteq> b"
-  sorry
-
-(*
 proof -
   have hcases:
     "(\<exists>a c. a < c \<and> b = open_interval a c)
@@ -16473,110 +16474,107 @@ proof -
     qed
     show ?thesis
       unfolding hbeq
-      apply (rule exI[where x=e])
-      apply (intro conjI)
-       apply (rule he)
-      apply (rule hsub)
-      done
+      by (rule exI[where x=e], intro conjI, rule he, rule hsub)
   next
-    assume hbr: "\<exists>a. b = open_ray_gt a"
-    then obtain a where hbeq: "b = open_ray_gt a"
-      by blast
-    have ha: "a < x"
-      using hx unfolding hbeq open_ray_gt_def by simp
-    define e where "e = (x - a) / 2"
-    have he: "0 < e"
-    proof -
-      have "0 < x - a"
-        using ha by linarith
-      thus ?thesis
-        unfolding e_def by (simp add: divide_pos_pos)
-    qed
-    have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
-    proof (rule subsetI)
-      fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
-      have hy1: "x - e < y"
-        using hy unfolding open_interval_def by simp
-      have "a < x - e"
+    assume hrest: "(\<exists>a. b = open_ray_gt a) \<or> (\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+    show ?thesis
+    proof (rule disjE[OF hrest])
+      assume hbr: "\<exists>a. b = open_ray_gt a"
+      then obtain a where hbeq: "b = open_ray_gt a"
+        by blast
+      have ha: "a < x"
+        using hx unfolding hbeq open_ray_gt_def by simp
+      define e where "e = (x - a) / 2"
+      have he: "0 < e"
       proof -
-        have hEq: "x - e = (x + a) / 2"
-          unfolding e_def by (simp add: field_simps)
-        have "a < (x + a) / 2"
-        proof -
-          have "a < (x + a) / 2 \<longleftrightarrow> a * (2::real) < x + a"
-            by (simp add: divide_less_eq)
-          moreover have "a * (2::real) < x + a"
-            using ha by linarith
-          ultimately show ?thesis
-            by simp
-        qed
+        have "0 < x - a"
+          using ha by linarith
         thus ?thesis
-          unfolding hEq by simp
+          unfolding e_def by (simp add: divide_pos_pos)
       qed
-      hence "a < y"
-        using hy1 by linarith
-      thus "y \<in> open_ray_gt a"
-        unfolding open_ray_gt_def by simp
-    qed
-    show ?thesis
-      unfolding hbeq
-    proof (rule exI[where x=e])
-      show "0 < e \<and> open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
-      proof (intro conjI)
-        show "0 < e"
-          by (rule he)
-        show "open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
-          by (rule hsub)
+      have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_gt a"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
+        have hy1: "x - e < y"
+          using hy unfolding open_interval_def by simp
+        have "a < x - e"
+        proof -
+          have hEq: "x - e = (x + a) / 2"
+            unfolding e_def by (simp add: field_simps)
+          have "a < (x + a) / 2"
+          proof -
+            have "a < (x + a) / 2 \<longleftrightarrow> a * (2::real) < x + a"
+              by (simp add: divide_less_eq)
+            moreover have "a * (2::real) < x + a"
+              using ha by linarith
+            ultimately show ?thesis
+              by simp
+          qed
+          thus ?thesis
+            unfolding hEq by simp
+        qed
+        hence "a < y"
+          using hy1 by linarith
+        thus "y \<in> open_ray_gt a"
+          unfolding open_ray_gt_def by simp
       qed
-    qed
-  next
-    assume hbl: "\<exists>a. b = open_ray_lt a"
-    then obtain a where hbeq: "b = open_ray_lt a"
-      by blast
-    have ha: "x < a"
-      using hx unfolding hbeq open_ray_lt_def by simp
-    define e where "e = (a - x) / 2"
-    have he: "0 < e"
-    proof -
-      have "0 < a - x"
-        using ha by linarith
-      thus ?thesis
-        unfolding e_def by (simp add: divide_pos_pos)
-    qed
-    have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
-    proof (rule subsetI)
-      fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
-      have hy2: "y < x + e"
-        using hy unfolding open_interval_def by simp
-      have "x + e < a"
-        unfolding e_def using ha by linarith
-      hence "y < a"
-        using hy2 by linarith
-      thus "y \<in> open_ray_lt a"
-        unfolding open_ray_lt_def by simp
-    qed
-    show ?thesis
-      unfolding hbeq
-    proof (rule exI[where x=e])
-      show "0 < e \<and> open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
-      proof (intro conjI)
-        show "0 < e"
-          by (rule he)
-        show "open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
-          by (rule hsub)
+      show ?thesis
+        unfolding hbeq
+        by (rule exI[where x=e], intro conjI, rule he, rule hsub)
+    next
+      assume hrest2: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+      show ?thesis
+      proof (rule disjE[OF hrest2])
+        assume hbl: "\<exists>a. b = open_ray_lt a"
+        then obtain a where hbeq: "b = open_ray_lt a"
+          by blast
+        have ha: "x < a"
+          using hx unfolding hbeq open_ray_lt_def by simp
+        define e where "e = (a - x) / 2"
+        have he: "0 < e"
+        proof -
+          have "0 < a - x"
+            using ha by linarith
+          thus ?thesis
+            unfolding e_def by (simp add: divide_pos_pos)
+        qed
+        have hsub: "open_interval (x - e) (x + e) \<subseteq> open_ray_lt a"
+        proof (rule subsetI)
+          fix y assume hy: "y \<in> open_interval (x - e) (x + e)"
+          have hy2: "y < x + e"
+            using hy unfolding open_interval_def by simp
+          have "x + e < a"
+          proof -
+            have hEq: "x + e = (x + a) / 2"
+              unfolding e_def by (simp add: field_simps)
+            have hlt: "(x + a) / 2 < a"
+            proof -
+              have "((x + a) / 2 < a) \<longleftrightarrow> (x + a < a * (2::real))"
+                by (simp add: divide_less_eq)
+              also have "... "
+                using ha by linarith
+              finally show ?thesis .
+            qed
+            show ?thesis
+              using hlt unfolding hEq .
+          qed
+          hence "y < a"
+            using hy2 by linarith
+          thus "y \<in> open_ray_lt a"
+            unfolding open_ray_lt_def by simp
+        qed
+        show ?thesis
+          unfolding hbeq
+          by (rule exI[where x=e], intro conjI, rule he, rule hsub)
+      next
+        assume hU: "b = (UNIV::real set)"
+        show ?thesis
+          unfolding hU
+          by (rule exI[where x="1::real"], simp)
       qed
-    qed
-  next
-    assume hU: "b = (UNIV::real set)"
-    show ?thesis
-      unfolding hU
-    proof (rule exI[where x="1::real"])
-      show "0 < (1::real) \<and> open_interval (x - (1::real)) (x + (1::real)) \<subseteq> (UNIV::real set)"
-        by simp
     qed
   qed
 qed
-*)
 
 lemma top1_uniform_limit_continuous_real:
   fixes s :: "nat \<Rightarrow> 'a \<Rightarrow> real" and g :: "'a \<Rightarrow> real"
@@ -16743,6 +16741,24 @@ proof -
     done
 qed
 *)
+
+(** Step 2 of the Tietze construction (top1.tex): existence of a uniformly Cauchy sequence of
+    continuous approximants on \<open>X\<close> whose restriction to \<open>A\<close> converges to \<open>f\<close>.  This is the
+    core iterative content; the remaining analytic part is turning the uniform Cauchy property into a
+    continuous limit map. **)
+lemma top1_tietze_step2_approximants:
+  fixes f :: "'a \<Rightarrow> real"
+  defines "I \<equiv> top1_closed_interval (-1) 1"
+  defines "TI \<equiv> top1_closed_interval_topology (-1) 1"
+  assumes hX: "top1_normal_on X TX"
+  assumes hA: "closedin_on X TX A"
+  assumes hf: "top1_continuous_map_on A (subspace_topology X TX A) I TI f"
+  shows "\<exists>s::nat \<Rightarrow> 'a \<Rightarrow> real.
+      s 0 = (\<lambda>_. 0)
+      \<and> (\<forall>n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (s n))
+      \<and> (\<forall>n. \<forall>x\<in>X. abs (s (Suc n) x - s n x) \<le> (1/3) * (2/3) ^ n)
+      \<and> (\<forall>n. \<forall>a\<in>A. abs (f a - s n a) \<le> (2/3) ^ n)"
+  sorry
 
 (** from *\S35 Theorem 35.1 (Tietze extension theorem) [top1.tex:~4771] **)
 theorem Theorem_35_1:
