@@ -17768,7 +17768,7 @@ proof -
     for n :: nat and sn :: "'a \<Rightarrow> real"
 
   have step_ex_one: "Inv n sn \<Longrightarrow> (\<exists>g. Step n sn g)" for n sn
-  proof -
+  proof
     assume hInv: "Inv n sn"
     have sn_cont: "top1_continuous_map_on X TX ?R ?TR sn"
       using hInv unfolding Inv_def by blast
@@ -17832,7 +17832,8 @@ proof -
         by blast
       show ?thesis
         unfolding hTJ_eq[symmetric]
-        using hcont_sub .
+        using hcont_sub
+        by (rule hcont_sub)
     qed
 
     have exg:
@@ -17842,7 +17843,7 @@ proof -
          \<and> (\<forall>a\<in>A. abs (g a - (f a - sn a)) \<le> 2 * (r n) / 3)"
       using top1_tietze_step1[of A (\<lambda>a. f a - sn a) (r n)] hX hA fn_contJ hrn_pos
       by blast
-    show "\<exists>g. Step n sn g"
+    have hStep_ex: "\<exists>g. Step n sn g"
     proof (rule exE[OF exg])
       fix g
       assume hg:
@@ -17906,6 +17907,8 @@ proof -
         apply (rule g_err)
         done
     qed
+    show "\<exists>g. Step n sn g"
+      by (rule hStep_ex)
   qed
 
   have step_ex: "\<forall>n sn. Inv n sn \<longrightarrow> (\<exists>g. Step n sn g)"
