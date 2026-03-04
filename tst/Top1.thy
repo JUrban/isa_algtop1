@@ -18739,6 +18739,236 @@ proof -
     done
 qed
 
+(** Bump function from the Urysohn lemma: if a closed set \<open>A\<close> sits inside an open set \<open>V\<close>,
+    then we can find a continuous map \<open>\<psi> : X \<rightarrow> [0,1]\<close> that is 1 on \<open>A\<close>, vanishes on \<open>X - V\<close>,
+    and whose support is contained in the closure of \<open>V\<close>. **)
+lemma normal_urysohn_bump_support:
+  assumes hN: "top1_normal_on X TX"
+  assumes hV: "V \<in> TX"
+  assumes hVX: "V \<subseteq> X"
+  assumes hA: "closedin_on X TX A"
+  assumes hAV: "A \<subseteq> V"
+  shows "\<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
+            \<and> (\<forall>x\<in>A. \<psi> x = 1)
+            \<and> (\<forall>x\<in>X - V. \<psi> x = 0)
+            \<and> top1_support_on X TX \<psi> \<subseteq> closure_on X TX V"
+proof -
+  have hT1: "top1_T1_on X TX"
+    using hN unfolding top1_normal_on_def by (rule conjunct1)
+  have hTopX: "is_topology_on X TX"
+    using hT1 unfolding top1_T1_on_def by (rule conjunct1)
+
+  have hXV_closed: "closedin_on X TX (X - V)"
+    apply (rule closedin_intro)
+     apply (rule Diff_subset)
+    apply (simp only: Diff_Diff_Int)
+    apply (simp only: Int_absorb1[OF hVX])
+    apply (rule hV)
+    done
+
+  have hdisj: "(X - V) \<inter> A = {}"
+  proof (rule equalityI)
+    show "(X - V) \<inter> A \<subseteq> {}"
+    proof (rule subsetI)
+      fix x assume hx: "x \<in> (X - V) \<inter> A"
+      have hxA: "x \<in> A" and hxnotV: "x \<notin> V"
+        using hx by blast+
+      have hxV: "x \<in> V"
+        using hAV hxA by blast
+      show "x \<in> {}"
+        using hxV hxnotV by blast
+    qed
+    show "{} \<subseteq> (X - V) \<inter> A"
+      by (rule empty_subsetI)
+  qed
+
+  obtain \<psi> where hpsi:
+    "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
+     \<and> (\<forall>x\<in>X - V. \<psi> x = 0)
+     \<and> (\<forall>x\<in>A. \<psi> x = 1)"
+    using Theorem_33_1[OF hN hXV_closed hA hdisj, of 0 1] by simp blast
+
+  have hnz_sub: "{x \<in> X. \<psi> x \<noteq> 0} \<subseteq> V"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> {x \<in> X. \<psi> x \<noteq> 0}"
+    have hxX: "x \<in> X" and hx0: "\<psi> x \<noteq> 0"
+      using hx by simp_all
+    show "x \<in> V"
+    proof (rule ccontr)
+      assume hxnotV: "x \<notin> V"
+      have hxXmV: "x \<in> X - V"
+        using hxX hxnotV by blast
+      have "\<psi> x = 0"
+        using hpsi hxXmV by blast
+      thus False
+        using hx0 by contradiction
+    qed
+  qed
+
+  have hsupp: "top1_support_on X TX \<psi> \<subseteq> closure_on X TX V"
+    unfolding top1_support_on_def
+    by (rule closure_on_mono[OF hnz_sub])
+
+  show ?thesis
+    apply (rule exI[where x=\<psi>])
+    apply (intro conjI)
+       apply (rule conjunct1[OF hpsi])
+      apply (rule conjunct2[OF conjunct2[OF hpsi]])
+     apply (rule conjunct1[OF conjunct2[OF hpsi]])
+    apply (rule hsupp)
+    done
+qed
+
+(** Step 2 of the construction in Theorem 36.1: from a finite open cover of a normal space,
+    produce a family of Urysohn bump functions whose supports are contained in the original cover,
+    and such that at every point at least one bump function is 1. **)
+lemma normal_finite_cover_bump_family:
+  fixes U :: "nat \<Rightarrow> 'a set"
+  assumes hN: "top1_normal_on X TX"
+  assumes hUopen: "\<forall>i<n. U i \<in> TX"
+  assumes hUsub: "\<forall>i<n. U i \<subseteq> X"
+  assumes hcov: "X \<subseteq> (\<Union>i<n. U i)"
+  shows "\<exists>\<psi>. (\<forall>i<n. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> i)
+                \<and> top1_support_on X TX (\<psi> i) \<subseteq> U i)
+            \<and> (\<forall>x\<in>X. \<exists>i<n. \<psi> i x = 1)"
+proof -
+  have hT1: "top1_T1_on X TX"
+    using hN unfolding top1_normal_on_def by (rule conjunct1)
+  have hTopX: "is_topology_on X TX"
+    using hT1 unfolding top1_T1_on_def by (rule conjunct1)
+
+  obtain V where hV:
+    "(\<forall>i<n. V i \<in> TX \<and> V i \<subseteq> X \<and> closure_on X TX (V i) \<subseteq> U i)
+     \<and> X \<subseteq> (\<Union>i<n. V i)"
+    using normal_shrink_finite_open_cover[OF hN hUopen hUsub hcov] by blast
+  have hVopen: "\<forall>i<n. V i \<in> TX"
+    using hV by blast
+  have hVsub: "\<forall>i<n. V i \<subseteq> X"
+    using hV by blast
+  have hVclsubU: "\<forall>i<n. closure_on X TX (V i) \<subseteq> U i"
+    using hV by blast
+  have hVcov: "X \<subseteq> (\<Union>i<n. V i)"
+    using hV by blast
+
+  obtain W where hW:
+    "(\<forall>i<n. W i \<in> TX \<and> W i \<subseteq> X \<and> closure_on X TX (W i) \<subseteq> V i)
+     \<and> X \<subseteq> (\<Union>i<n. W i)"
+    using normal_shrink_finite_open_cover[OF hN hVopen hVsub hVcov] by blast
+  have hWopen: "\<forall>i<n. W i \<in> TX"
+    using hW by blast
+  have hWsub: "\<forall>i<n. W i \<subseteq> X"
+    using hW by blast
+  have hWclsubV: "\<forall>i<n. closure_on X TX (W i) \<subseteq> V i"
+    using hW by blast
+  have hWcov: "X \<subseteq> (\<Union>i<n. W i)"
+    using hW by blast
+
+  define P where
+    "P i psi \<longleftrightarrow>
+        top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) psi
+        \<and> top1_support_on X TX psi \<subseteq> U i
+        \<and> (\<forall>x\<in>closure_on X TX (W i). psi x = 1)"
+    for i :: nat and psi :: "'a \<Rightarrow> real"
+
+  have hex: "\<forall>i<n. \<exists>\<psi>. P i \<psi>"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have hWiX: "W i \<subseteq> X"
+      using hWsub hi by blast
+    have hAi_closed: "closedin_on X TX (closure_on X TX (W i))"
+      by (rule closure_on_closed[OF hTopX hWiX])
+    have hAi_sub_Vi: "closure_on X TX (W i) \<subseteq> V i"
+      using hWclsubV hi by blast
+
+    obtain psi0 where hpsi:
+      "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) psi0
+       \<and> (\<forall>x\<in>closure_on X TX (W i). psi0 x = 1)
+       \<and> (\<forall>x\<in>X - V i. psi0 x = 0)
+       \<and> top1_support_on X TX psi0 \<subseteq> closure_on X TX (V i)"
+      using normal_urysohn_bump_support[OF hN, of "V i" "closure_on X TX (W i)"]
+      using hVopen[rule_format, OF hi] hVsub[rule_format, OF hi] hAi_closed hAi_sub_Vi
+      by blast
+
+    have hsuppUi: "top1_support_on X TX psi0 \<subseteq> U i"
+    proof -
+      have hsuppcl: "top1_support_on X TX psi0 \<subseteq> closure_on X TX (V i)"
+        using hpsi by blast
+      have hclsub: "closure_on X TX (V i) \<subseteq> U i"
+        using hVclsubU hi by blast
+      show ?thesis
+        using subset_trans[OF hsuppcl hclsub] .
+    qed
+
+    show "\<exists>\<psi>. P i \<psi>"
+      unfolding P_def
+      apply (rule exI[where x=psi0])
+      apply (intro conjI)
+        apply (rule conjunct1[OF hpsi])
+       apply (rule hsuppUi)
+      apply (rule conjunct1[OF conjunct2[OF hpsi]])
+      done
+  qed
+
+  let ?psi = "(\<lambda>i. if i < n then (SOME \<psi>. P i \<psi>) else (\<lambda>x. (0::real)))"
+
+  have hpsi_all: "\<forall>i<n. P i (?psi i)"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have exPi: "\<exists>\<psi>. P i \<psi>"
+      using hex hi by blast
+    have "P i (SOME \<psi>. P i \<psi>)"
+      by (rule someI_ex[OF exPi])
+    thus "P i (?psi i)"
+      using hi by simp
+  qed
+
+  have hP1: "\<forall>i<n. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (?psi i)
+                \<and> top1_support_on X TX (?psi i) \<subseteq> U i"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have hPi: "P i (?psi i)"
+      using hpsi_all hi by blast
+    have hPi': "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (?psi i)
+        \<and> top1_support_on X TX (?psi i) \<subseteq> U i
+        \<and> (\<forall>x\<in>closure_on X TX (W i). ?psi i x = 1)"
+      using hPi unfolding P_def by simp
+    show "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (?psi i)
+        \<and> top1_support_on X TX (?psi i) \<subseteq> U i"
+      using hPi' by simp
+  qed
+
+  have hP2: "\<forall>x\<in>X. \<exists>i<n. ?psi i x = 1"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have hx: "x \<in> (\<Union>i<n. W i)"
+      using hWcov hxX by blast
+    then obtain i where hi: "i < n" and hxWi: "x \<in> W i"
+      by blast
+    have hxcl: "x \<in> closure_on X TX (W i)"
+      by (rule subsetD[OF subset_closure_on hxWi])
+    have hPi: "P i (?psi i)"
+      using hpsi_all hi by blast
+    have hones: "\<forall>y\<in>closure_on X TX (W i). ?psi i y = 1"
+      using hPi unfolding P_def by simp
+    have "?psi i x = 1"
+      using hones hxcl by blast
+    show "\<exists>i<n. ?psi i x = 1"
+    proof (rule exI[where x=i], intro conjI)
+      show "i < n"
+        by (rule hi)
+      show "?psi i x = 1"
+        by (rule \<open>?psi i x = 1\<close>)
+    qed
+  qed
+
+  show ?thesis
+    apply (rule exI[where x = ?psi])
+    apply (intro conjI)
+     apply (rule hP1)
+    apply (rule hP2)
+    done
+qed
+
 (** from *\S36 Theorem 36.1 (Existence of finite partitions of unity) [top1.tex:~5009] **)
 theorem Theorem_36_1:
   assumes hN: "top1_normal_on X TX"
