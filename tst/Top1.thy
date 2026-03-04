@@ -5180,6 +5180,14 @@ definition top1_homeomorphism_on ::
      \<and> top1_continuous_map_on X TX Y TY f
      \<and> top1_continuous_map_on Y TY X TX (inv_into X f)"
 
+(** An imbedding (topological embedding) of \<open>X\<close> into \<open>Y\<close> is a homeomorphism of \<open>X\<close> onto its image
+    (with the subspace topology). **)
+definition top1_embedding_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_embedding_on X TX Y TY f \<longleftrightarrow>
+     (f ` X \<subseteq> Y)
+     \<and> top1_homeomorphism_on X TX (f ` X) (subspace_topology Y TY (f ` X)) f"
+
 (** from \S18 Theorem 18.1 [top1.tex:966] **)
 (** LATEX VERSION: "Equivalent formulations of continuity (closure/closed/neighborhood)." **)
 theorem Theorem_18_1:
@@ -8060,6 +8068,75 @@ proof -
      apply (rule hf)
     apply (rule inv_cont)
     done
+qed
+
+lemma top1_embedding_on_compact_inj:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hH: "is_hausdorff_on Y TY"
+  assumes hf: "top1_continuous_map_on X TX Y TY f"
+  assumes hinj: "inj_on f X"
+  shows "top1_embedding_on X TX Y TY f"
+proof -
+  let ?W = "f ` X"
+  let ?TW = "subspace_topology Y TY ?W"
+
+  have hWsub: "?W \<subseteq> Y"
+  proof (rule subsetI)
+    fix y assume hy: "y \<in> ?W"
+    then obtain x where hxX: "x \<in> X" and hyfx: "y = f x"
+      by blast
+    have hmap: "\<forall>x\<in>X. f x \<in> Y"
+      using hf unfolding top1_continuous_map_on_def by blast
+    have "f x \<in> Y"
+      using hmap hxX by blast
+    thus "y \<in> Y"
+      using hyfx by simp
+  qed
+
+  have hTW_top: "is_topology_on ?W ?TW"
+    by (rule subspace_topology_is_topology_on[OF hTY hWsub])
+
+  have hTW_haus: "is_hausdorff_on ?W ?TW"
+  proof -
+    have hsub_haus:
+      "\<forall>X0 T0 Z. is_hausdorff_on X0 T0 \<and> Z \<subseteq> X0 \<longrightarrow> is_hausdorff_on Z (subspace_topology X0 T0 Z)"
+      using Theorem_17_11 by blast
+	    have hpre: "is_hausdorff_on Y TY \<and> ?W \<subseteq> Y"
+	      by (intro conjI, rule hH, rule hWsub)
+	    show ?thesis
+	      using mp[OF spec[OF spec[OF spec[OF hsub_haus, where x = Y], where x = TY], where x = ?W] hpre] .
+	  qed
+
+  have hcontW: "top1_continuous_map_on X TX ?W ?TW f"
+  proof -
+    have hrestrict_all:
+      "\<forall>W g.
+        top1_continuous_map_on X TX Y TY g
+        \<and> W \<subseteq> Y
+        \<and> g ` X \<subseteq> W
+        \<longrightarrow> top1_continuous_map_on X TX W (subspace_topology Y TY W) g"
+      using Theorem_18_2(5)[OF hTX hTY hTY] .
+	    have hpre: "top1_continuous_map_on X TX Y TY f \<and> ?W \<subseteq> Y \<and> f ` X \<subseteq> ?W"
+	      by (intro conjI, rule hf, rule hWsub, simp)
+	    show ?thesis
+	      using mp[OF spec[OF spec[OF hrestrict_all, where x = ?W], where x = f] hpre] .
+	  qed
+
+  have hbij: "bij_betw f X ?W"
+    unfolding bij_betw_def
+    apply (intro conjI)
+     apply (rule hinj)
+    apply simp
+    done
+
+  have hhomeo: "top1_homeomorphism_on X TX ?W ?TW f"
+    by (rule Theorem_26_6[OF hTX hTW_top hcomp hTW_haus hcontW hbij])
+
+  show ?thesis
+    unfolding top1_embedding_on_def
+    by (intro conjI, rule hWsub, rule hhomeo)
 qed
 
 section \<open>\<S>27 Compact Subspaces of the Real Line\<close>
@@ -18983,6 +19060,29 @@ text \<open>
 
 definition top1_support_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> 'a set" where
   "top1_support_on X TX f = closure_on X TX {x \<in> X. f x \<noteq> 0}"
+
+lemma top1_support_on_subset_imp_zero_on_complement:
+  assumes hsupp: "top1_support_on X TX f \<subseteq> U"
+  assumes hx: "x \<in> X - U"
+  shows "f x = 0"
+proof -
+  have hsub: "{x \<in> X. f x \<noteq> 0} \<subseteq> top1_support_on X TX f"
+    unfolding top1_support_on_def by (rule subset_closure_on)
+  have hsubU: "{x \<in> X. f x \<noteq> 0} \<subseteq> U"
+    using subset_trans[OF hsub hsupp] .
+  have hxX: "x \<in> X" and hxU: "x \<notin> U"
+    using hx by blast+
+  have "x \<notin> {x \<in> X. f x \<noteq> 0}"
+  proof
+    assume hxNZ: "x \<in> {x \<in> X. f x \<noteq> 0}"
+    have "x \<in> U"
+      using hsubU hxNZ by blast
+    thus False
+      using hxU by contradiction
+  qed
+  thus ?thesis
+    using hxX by simp
+qed
 
 definition top1_partition_of_unity_dominated_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> 'a set) \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> bool" where
