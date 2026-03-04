@@ -38,6 +38,23 @@ proof -
   show ?thesis using hInter by simp
 qed
 
+(** Union of two open sets is open. **)
+lemma topology_union2:
+  assumes hT: "is_topology_on X T"
+  assumes hU: "U \<in> T"
+  assumes hV: "V \<in> T"
+  shows "U \<union> V \<in> T"
+proof -
+  have union_T: "\<forall>K. K \<subseteq> T \<longrightarrow> (\<Union>K) \<in> T"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hT[unfolded is_topology_on_def]]]])
+  have hSub: "{U, V} \<subseteq> T"
+    using hU hV by simp
+  have "(\<Union>{U, V}) \<in> T"
+    by (rule union_T[rule_format, OF hSub])
+  thus ?thesis
+    by simp
+qed
+
 (** from \S12 (Open set terminology) [top1.tex:~55] **)
 (** LATEX VERSION: "U is open in X iff U \<in> T." **)
 definition openin_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
@@ -15388,7 +15405,32 @@ text \<open>
 lemma top1_closed_interval_closedin_order_topology:
   fixes a b :: real
   shows "closedin_on (UNIV::real set) order_topology_on_UNIV (top1_closed_interval a b)"
-  sorry
+proof -
+  have hTop: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hray1: "open_ray_lt a \<in> order_topology_on_UNIV"
+    by (rule open_ray_lt_in_order_topology)
+  have hray2: "open_ray_gt b \<in> order_topology_on_UNIV"
+    by (rule open_ray_gt_in_order_topology)
+
+  have hcomp: "(UNIV::real set) - top1_closed_interval a b = open_ray_lt a \<union> open_ray_gt b"
+  proof (rule set_eqI)
+    fix x :: real
+    show "x \<in> (UNIV::real set) - top1_closed_interval a b \<longleftrightarrow> x \<in> open_ray_lt a \<union> open_ray_gt b"
+      by (simp add: top1_closed_interval_def open_ray_lt_def open_ray_gt_def not_le)
+  qed
+
+  have hopen: "open_ray_lt a \<union> open_ray_gt b \<in> order_topology_on_UNIV"
+    by (rule topology_union2[OF hTop hray1 hray2])
+
+  show ?thesis
+    unfolding closedin_on_def
+    apply (intro conjI)
+     apply simp
+    apply (simp add: hcomp hopen)
+    done
+qed
 
 lemma abs_diff_le_of_bounds:
   fixes L U u v :: real
