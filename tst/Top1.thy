@@ -1352,6 +1352,14 @@ proof -
     done
 qed
 
+lemma basis_for_order_topology_on_UNIV:
+  "basis_for (UNIV::'a::linorder set) basis_order_topology order_topology_on_UNIV"
+  unfolding basis_for_def order_topology_on_UNIV_def
+  apply (intro conjI)
+   apply (rule basis_order_topology_is_basis_on_UNIV)
+  apply (rule refl)
+  done
+
 lemma order_topology_on_UNIV_is_topology_on:
   "is_topology_on (UNIV::'a::linorder set) order_topology_on_UNIV"
   unfolding order_topology_on_UNIV_def
@@ -1381,6 +1389,173 @@ definition product_basis :: "'a set set \<Rightarrow> 'b set set \<Rightarrow> (
 definition product_topology_on :: "'a set set \<Rightarrow> 'b set set \<Rightarrow> ('a \<times> 'b) set set" where
   "product_topology_on TX TY =
      topology_generated_by_basis UNIV (product_basis TX TY)"
+
+(** Basic fact: rectangles of open sets are open in the product topology. **)
+lemma product_rect_open:
+  assumes hU: "U \<in> TX"
+  assumes hV: "V \<in> TY"
+  shows "U \<times> V \<in> product_topology_on TX TY"
+proof -
+  show ?thesis
+    unfolding product_topology_on_def topology_generated_by_basis_def product_basis_def
+  proof (rule CollectI, rule conjI)
+    show "U \<times> V \<subseteq> (UNIV::('a \<times> 'b) set)"
+      by simp
+    show "\<forall>p\<in>U \<times> V. \<exists>b\<in>{Ua \<times> Va |Ua Va. Ua \<in> TX \<and> Va \<in> TY}. p \<in> b \<and> b \<subseteq> U \<times> V"
+    proof (intro ballI)
+      fix p assume hp: "p \<in> U \<times> V"
+      show "\<exists>b\<in>{Ua \<times> Va |Ua Va. Ua \<in> TX \<and> Va \<in> TY}. p \<in> b \<and> b \<subseteq> U \<times> V"
+      proof (rule bexI[where x="U \<times> V"])
+        show "p \<in> U \<times> V \<and> U \<times> V \<subseteq> U \<times> V"
+          apply (rule conjI)
+           apply (rule hp)
+          apply simp
+          done
+        show "U \<times> V \<in> {Ua \<times> Va |Ua Va. Ua \<in> TX \<and> Va \<in> TY}"
+          apply (rule CollectI)
+          apply (rule exI[where x=U])
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+            apply (rule refl)
+           apply (rule hU)
+          apply (rule hV)
+          done
+      qed
+    qed
+  qed
+qed
+
+lemma product_topology_on_is_topology_on:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  shows "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
+proof -
+  let ?TP = "product_topology_on TX TY"
+
+  have hX: "X \<in> TX"
+    using hTX unfolding is_topology_on_def by blast
+  have hY: "Y \<in> TY"
+    using hTY unfolding is_topology_on_def by blast
+
+  have hinter2:
+    "\<forall>W1\<in>?TP. \<forall>W2\<in>?TP. (W1 \<inter> W2) \<in> ?TP"
+  proof (intro ballI)
+    fix W1 W2 assume hW1: "W1 \<in> ?TP" and hW2: "W2 \<in> ?TP"
+
+    have hW1cov: "\<forall>p\<in>W1. \<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> W1"
+      using hW1 unfolding product_topology_on_def topology_generated_by_basis_def by blast
+    have hW2cov: "\<forall>p\<in>W2. \<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> W2"
+      using hW2 unfolding product_topology_on_def topology_generated_by_basis_def by blast
+
+    show "W1 \<inter> W2 \<in> ?TP"
+      unfolding product_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI, rule subset_UNIV)
+      show "\<forall>p\<in>W1 \<inter> W2. \<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> W1 \<inter> W2"
+      proof (intro ballI)
+        fix p assume hp: "p \<in> W1 \<inter> W2"
+        have hp1: "p \<in> W1" and hp2: "p \<in> W2"
+          using hp by blast+
+        obtain b1 where hb1: "b1 \<in> product_basis TX TY" and hp_b1: "p \<in> b1" and hb1sub: "b1 \<subseteq> W1"
+          using hW1cov[rule_format, OF hp1] by blast
+        obtain b2 where hb2: "b2 \<in> product_basis TX TY" and hp_b2: "p \<in> b2" and hb2sub: "b2 \<subseteq> W2"
+          using hW2cov[rule_format, OF hp2] by blast
+
+        obtain U1 V1 where hU1: "U1 \<in> TX" and hV1: "V1 \<in> TY" and hb1eq: "b1 = U1 \<times> V1"
+          using hb1 unfolding product_basis_def by blast
+        obtain U2 V2 where hU2: "U2 \<in> TX" and hV2: "V2 \<in> TY" and hb2eq: "b2 = U2 \<times> V2"
+          using hb2 unfolding product_basis_def by blast
+
+        have hU12: "U1 \<inter> U2 \<in> TX"
+          by (rule topology_inter2[OF hTX hU1 hU2])
+        have hV12: "V1 \<inter> V2 \<in> TY"
+          by (rule topology_inter2[OF hTY hV1 hV2])
+
+        have hb3: "(U1 \<inter> U2) \<times> (V1 \<inter> V2) \<in> product_basis TX TY"
+          unfolding product_basis_def
+          apply (rule CollectI)
+          apply (rule exI[where x="U1 \<inter> U2"])
+          apply (rule exI[where x="V1 \<inter> V2"])
+          apply (intro conjI)
+            apply (rule refl)
+           apply (rule hU12)
+          apply (rule hV12)
+          done
+        have hp3: "p \<in> (U1 \<inter> U2) \<times> (V1 \<inter> V2)"
+          using hp_b1 hp_b2 hb1eq hb2eq by blast
+        have hsub3: "(U1 \<inter> U2) \<times> (V1 \<inter> V2) \<subseteq> W1 \<inter> W2"
+          using hb1eq hb2eq hb1sub hb2sub by blast
+
+        show "\<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> W1 \<inter> W2"
+          apply (rule bexI[where x="(U1 \<inter> U2) \<times> (V1 \<inter> V2)"])
+           apply (rule conjI[OF hp3 hsub3])
+          apply (rule hb3)
+          done
+      qed
+    qed
+  qed
+
+  have hinter:
+    "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TP \<longrightarrow> \<Inter>F \<in> ?TP"
+  proof (intro allI impI)
+    fix F assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TP"
+    have hFin: "finite F" and hNe: "F \<noteq> {}" and hSub: "F \<subseteq> ?TP"
+      using hF by blast+
+    show "\<Inter>F \<in> ?TP"
+      using hFin hNe hSub
+    proof (induct F rule: finite_ne_induct)
+      case (singleton U)
+      then show ?case by simp
+    next
+      case (insert U F)
+      have hU: "U \<in> ?TP" using insert by blast
+      have hIF: "\<Inter>F \<in> ?TP" using insert by blast
+      have "U \<inter> \<Inter>F \<in> ?TP"
+        using hinter2[rule_format, OF hU hIF] by blast
+      then show ?case by simp
+    qed
+  qed
+
+  have hunion:
+    "\<forall>U. U \<subseteq> ?TP \<longrightarrow> (\<Union>U) \<in> ?TP"
+  proof (intro allI impI)
+    fix U assume hU: "U \<subseteq> ?TP"
+    show "\<Union>U \<in> ?TP"
+      unfolding product_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, rule conjI)
+      show "\<Union>U \<subseteq> (UNIV::('a \<times> 'b) set)" by simp
+      show "\<forall>p\<in>\<Union>U. \<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> \<Union>U"
+      proof (intro ballI)
+        fix p assume hp: "p \<in> \<Union>U"
+        obtain W where hW: "W \<in> U" and hpW: "p \<in> W" using hp by blast
+        have hWT: "W \<in> ?TP" using hU hW by blast
+        have hWcov: "\<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> W"
+          using hWT hpW unfolding product_topology_on_def topology_generated_by_basis_def by blast
+        then obtain b where hb: "b \<in> product_basis TX TY" and hpb: "p \<in> b" and hbW: "b \<subseteq> W"
+          by blast
+        have hbU: "b \<subseteq> \<Union>U"
+          using hbW hW by blast
+        show "\<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> \<Union>U"
+          apply (rule bexI[where x=b])
+           apply (intro conjI hpb hbU)
+          apply (rule hb)
+          done
+      qed
+    qed
+  qed
+
+  show ?thesis
+    unfolding is_topology_on_def
+  proof (intro conjI)
+    show "{} \<in> ?TP"
+      unfolding product_topology_on_def topology_generated_by_basis_def by simp
+    show "X \<times> Y \<in> ?TP"
+      by (rule product_rect_open[OF hX hY])
+    show "\<forall>U. U \<subseteq> ?TP \<longrightarrow> \<Union>U \<in> ?TP"
+      by (rule hunion)
+    show "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TP \<longrightarrow> \<Inter>F \<in> ?TP"
+      by (rule hinter)
+  qed
+qed
 
 (** from \S15 Definition (Projections) [top1.tex:401] **)
 (** LATEX VERSION: "\<pi>1(x,y)=x, \<pi>2(x,y)=y." **)
@@ -4337,6 +4512,18 @@ proof -
     using hb by blast
 qed
 
+lemma open_interval_in_order_topology:
+  fixes a b :: "'c::linorder"
+  assumes hab: "a < b"
+  shows "open_interval a b \<in> order_topology_on_UNIV"
+proof -
+  have hb: "open_interval a b \<in> basis_order_topology"
+    unfolding basis_order_topology_def using hab by blast
+  show ?thesis
+    unfolding order_topology_on_UNIV_def topology_generated_by_basis_def
+    using hb by blast
+qed
+
 (** from \S17 Theorem 17.11 [top1.tex:809] **)
 (** LATEX VERSION: "Order topology on simply ordered set is Hausdorff; products/subspaces preserve Hausdorff." **)
 theorem Theorem_17_11:
@@ -4860,6 +5047,65 @@ proof -
 
       show "{x \<in> X. f x \<in> V} \<in> TX"
         unfolding hpre_eq using hUnionPU .
+    qed
+  qed
+qed
+
+lemma top1_continuous_map_on_comp:
+  fixes f :: "'a \<Rightarrow> 'b" and g :: "'b \<Rightarrow> 'c"
+  assumes hf: "top1_continuous_map_on X TX Y TY f"
+  assumes hg: "top1_continuous_map_on Y TY Z TZ g"
+  shows "top1_continuous_map_on X TX Z TZ (g \<circ> f)"
+proof -
+  have hfmap: "\<forall>x\<in>X. f x \<in> Y"
+    using hf unfolding top1_continuous_map_on_def by blast
+  have hfpre: "\<forall>U\<in>TY. {x\<in>X. f x \<in> U} \<in> TX"
+    using hf unfolding top1_continuous_map_on_def by blast
+  have hgmap: "\<forall>y\<in>Y. g y \<in> Z"
+    using hg unfolding top1_continuous_map_on_def by blast
+  have hgpre: "\<forall>V\<in>TZ. {y\<in>Y. g y \<in> V} \<in> TY"
+    using hg unfolding top1_continuous_map_on_def by blast
+
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>X. (g \<circ> f) x \<in> Z"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> X"
+      have hfx: "f x \<in> Y" using hfmap hx by blast
+      have "g (f x) \<in> Z" using hgmap hfx by blast
+      thus "(g \<circ> f) x \<in> Z" by simp
+    qed
+    show "\<forall>V\<in>TZ. {x \<in> X. (g \<circ> f) x \<in> V} \<in> TX"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> TZ"
+      have hpreV: "{y\<in>Y. g y \<in> V} \<in> TY"
+        using hgpre hV by blast
+      have hEq: "{x \<in> X. (g \<circ> f) x \<in> V} = {x \<in> X. f x \<in> {y\<in>Y. g y \<in> V}}"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> {x \<in> X. (g \<circ> f) x \<in> V} \<longleftrightarrow> x \<in> {x \<in> X. f x \<in> {y\<in>Y. g y \<in> V}}"
+        proof
+          assume hx: "x \<in> {x \<in> X. (g \<circ> f) x \<in> V}"
+          have hxX: "x \<in> X" and hgf: "g (f x) \<in> V"
+            using hx by simp_all
+          have hfxY: "f x \<in> Y" using hfmap hxX by blast
+          have "f x \<in> {y\<in>Y. g y \<in> V}"
+            using hfxY hgf by simp
+          thus "x \<in> {x \<in> X. f x \<in> {y\<in>Y. g y \<in> V}}"
+            using hxX by simp
+        next
+          assume hx: "x \<in> {x \<in> X. f x \<in> {y\<in>Y. g y \<in> V}}"
+          have hxX: "x \<in> X" and hgf: "g (f x) \<in> V"
+            using hx by simp_all
+          show "x \<in> {x \<in> X. (g \<circ> f) x \<in> V}"
+            using hxX hgf by simp
+        qed
+      qed
+      have "{x\<in>X. f x \<in> {y\<in>Y. g y \<in> V}} \<in> TX"
+        using hfpre hpreV by blast
+      thus "{x \<in> X. (g \<circ> f) x \<in> V} \<in> TX"
+        using hEq by simp
     qed
   qed
 qed
@@ -6153,6 +6399,80 @@ next
 
       have hOpen: "\<Union>S \<in> TA" using union_TA hSsub by blast
       show "{a \<in> A. f a \<in> W} \<in> TA" using hOpen hUnion by simp
+    qed
+  qed
+qed
+
+lemma top1_continuous_pi1:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  shows "top1_continuous_map_on (X \<times> Y) (product_topology_on TX TY) X TX pi1"
+proof -
+  let ?TP = "product_topology_on TX TY"
+
+  have hX: "X \<in> TX"
+    using hTX unfolding is_topology_on_def by blast
+  have hY: "Y \<in> TY"
+    using hTY unfolding is_topology_on_def by blast
+
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>p\<in>X \<times> Y. pi1 p \<in> X"
+      unfolding pi1_def by auto
+    show "\<forall>U\<in>TX. {p \<in> X \<times> Y. pi1 p \<in> U} \<in> ?TP"
+    proof (intro ballI)
+      fix U assume hU: "U \<in> TX"
+      have hUX: "U \<inter> X \<in> TX"
+        by (rule topology_inter2[OF hTX hU hX])
+      have hrect: "(U \<inter> X) \<times> Y \<in> ?TP"
+        by (rule product_rect_open[OF hUX hY])
+
+      have hEq: "{p \<in> X \<times> Y. pi1 p \<in> U} = (U \<inter> X) \<times> Y"
+      proof (rule set_eqI)
+        fix p
+        show "p \<in> {p \<in> X \<times> Y. pi1 p \<in> U} \<longleftrightarrow> p \<in> (U \<inter> X) \<times> Y"
+          unfolding pi1_def by auto
+      qed
+      show "{p \<in> X \<times> Y. pi1 p \<in> U} \<in> ?TP"
+        using hrect hEq by simp
+    qed
+  qed
+qed
+
+lemma top1_continuous_pi2:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  shows "top1_continuous_map_on (X \<times> Y) (product_topology_on TX TY) Y TY pi2"
+proof -
+  let ?TP = "product_topology_on TX TY"
+
+  have hX: "X \<in> TX"
+    using hTX unfolding is_topology_on_def by blast
+  have hY: "Y \<in> TY"
+    using hTY unfolding is_topology_on_def by blast
+
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>p\<in>X \<times> Y. pi2 p \<in> Y"
+      unfolding pi2_def by auto
+    show "\<forall>V\<in>TY. {p \<in> X \<times> Y. pi2 p \<in> V} \<in> ?TP"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> TY"
+      have hVY: "V \<inter> Y \<in> TY"
+        by (rule topology_inter2[OF hTY hV hY])
+      have hrect: "X \<times> (V \<inter> Y) \<in> ?TP"
+        by (rule product_rect_open[OF hX hVY])
+
+      have hEq: "{p \<in> X \<times> Y. pi2 p \<in> V} = X \<times> (V \<inter> Y)"
+      proof (rule set_eqI)
+        fix p
+        show "p \<in> {p \<in> X \<times> Y. pi2 p \<in> V} \<longleftrightarrow> p \<in> X \<times> (V \<inter> Y)"
+          unfolding pi2_def by auto
+      qed
+      show "{p \<in> X \<times> Y. pi2 p \<in> V} \<in> ?TP"
+        using hrect hEq by simp
     qed
   qed
 qed
@@ -13129,6 +13449,382 @@ proof -
   qed
 qed
 
+(** Continuity of the binary operation \<open>min\<close> on the unit interval, with respect to the
+    subspace order topology. This is a small piece of "real-analytic" infrastructure needed
+    for product constructions in \S33. **)
+lemma top1_continuous_min_unit_interval:
+  shows "top1_continuous_map_on
+      (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+      (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1))
+      (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+      (\<lambda>p::real \<times> real. min (pi1 p) (pi2 p))"
+proof -
+  let ?I = "top1_closed_interval 0 1"
+  let ?TI = "top1_closed_interval_topology 0 1"
+  let ?m = "(\<lambda>p::real \<times> real. min (pi1 p) (pi2 p))"
+
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hI_UNIV: "?I \<subseteq> (UNIV::real set)"
+    by simp
+
+  have hTopI: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF hTopR], rule hI_UNIV)
+
+  have hTopII: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
+    by (rule product_topology_on_is_topology_on[OF hTopI hTopI])
+
+  have hI_in_TI: "?I \<in> ?TI"
+    using hTopI unfolding is_topology_on_def by blast
+
+  have union_TII: "\<forall>U. U \<subseteq> (product_topology_on ?TI ?TI) \<longrightarrow> (\<Union>U) \<in> (product_topology_on ?TI ?TI)"
+    using hTopII unfolding is_topology_on_def by blast
+
+  have hray_gt_TI: "\<forall>a. ?I \<inter> open_ray_gt a \<in> ?TI"
+  proof (intro allI)
+    fix a
+    show "?I \<inter> open_ray_gt a \<in> ?TI"
+      unfolding top1_closed_interval_topology_def subspace_topology_def
+      apply (rule CollectI)
+      apply (rule exI[where x="open_ray_gt a"])
+      apply (intro conjI)
+       apply simp
+      apply (rule open_ray_gt_in_order_topology)
+      done
+  qed
+
+  have hray_lt_TI: "\<forall>a. ?I \<inter> open_ray_lt a \<in> ?TI"
+  proof (intro allI)
+    fix a
+    show "?I \<inter> open_ray_lt a \<in> ?TI"
+      unfolding top1_closed_interval_topology_def subspace_topology_def
+      apply (rule CollectI)
+      apply (rule exI[where x="open_ray_lt a"])
+      apply (intro conjI)
+       apply simp
+      apply (rule open_ray_lt_in_order_topology)
+      done
+  qed
+
+  have hinterval_TI: "\<forall>a b. a < b \<longrightarrow> ?I \<inter> open_interval a b \<in> ?TI"
+  proof (intro allI impI)
+    fix a b :: real
+    assume hab: "a < b"
+    show "?I \<inter> open_interval a b \<in> ?TI"
+      unfolding top1_closed_interval_topology_def subspace_topology_def
+      apply (rule CollectI)
+      apply (rule exI[where x="open_interval a b"])
+      apply (intro conjI)
+       apply simp
+      apply (rule open_interval_in_order_topology[OF hab])
+      done
+  qed
+
+  have hm_cont_R: "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI)
+      (UNIV::real set) order_topology_on_UNIV ?m"
+  proof -
+    have hBasisR: "basis_for (UNIV::real set) basis_order_topology order_topology_on_UNIV"
+      by (rule basis_for_order_topology_on_UNIV)
+
+    have hpre: "\<forall>b\<in>(basis_order_topology::real set set).
+        {p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+    proof (intro ballI)
+      fix b :: "real set"
+      assume hb: "b \<in> basis_order_topology"
+      have hcases:
+        "(\<exists>a c. a < c \<and> b = open_interval a c)
+         \<or> (\<exists>a. b = open_ray_gt a)
+         \<or> (\<exists>a. b = open_ray_lt a)
+         \<or> b = (UNIV::real set)"
+        by (rule basis_order_topology_cases[OF hb])
+      show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+      proof (rule disjE[OF hcases])
+        assume hbint: "\<exists>a c. a < c \<and> b = open_interval a c"
+        then obtain a c where hac: "a < c" and hbeq: "b = open_interval a c"
+          by blast
+        let ?U = "?I \<inter> open_interval a c"
+        let ?G = "?I \<inter> open_ray_gt a"
+
+        have hU_TI: "?U \<in> ?TI"
+          using hinterval_TI hac by blast
+        have hG_TI: "?G \<in> ?TI"
+          using hray_gt_TI by blast
+
+        have hUrect: "?U \<times> ?G \<in> product_topology_on ?TI ?TI"
+          by (rule product_rect_open[OF hU_TI hG_TI])
+        have hGrect: "?G \<times> ?U \<in> product_topology_on ?TI ?TI"
+          by (rule product_rect_open[OF hG_TI hU_TI])
+
+        have hUn: "(\<Union>{?U \<times> ?G, ?G \<times> ?U}) \<in> product_topology_on ?TI ?TI"
+        proof -
+          have "{?U \<times> ?G, ?G \<times> ?U} \<subseteq> product_topology_on ?TI ?TI"
+            using hUrect hGrect by auto
+          show ?thesis
+            using union_TII \<open>{?U \<times> ?G, ?G \<times> ?U} \<subseteq> product_topology_on ?TI ?TI\<close> by blast
+        qed
+
+        have hEq:
+          "{p \<in> ?I \<times> ?I. ?m p \<in> b} = (?U \<times> ?G) \<union> (?G \<times> ?U)"
+        proof (rule set_eqI)
+          fix p
+          show "p \<in> {p \<in> ?I \<times> ?I. ?m p \<in> b} \<longleftrightarrow> p \<in> (?U \<times> ?G) \<union> (?G \<times> ?U)"
+          proof
+            assume hp: "p \<in> {p \<in> ?I \<times> ?I. ?m p \<in> b}"
+            have hpmem:
+              "p \<in> ?I \<times> ?I \<and> a < fst p \<and> a < snd p \<and> (fst p < c \<or> snd p < c)"
+              using hp unfolding hbeq top1_closed_interval_def open_interval_def open_ray_gt_def pi1_def pi2_def
+              by (simp add: min_less_iff_conj min_less_iff_disj)
+            have hpI: "p \<in> ?I \<times> ?I"
+              using hpmem by blast
+            have ha: "a < fst p"
+              using hpmem by blast
+            have hb': "a < snd p"
+              using hpmem by blast
+            have hdisc: "fst p < c \<or> snd p < c"
+              using hpmem by blast
+            have hfstI: "fst p \<in> ?I"
+              using hpI by (cases p, simp add: mem_Times_iff)
+            have hsndI: "snd p \<in> ?I"
+              using hpI by (cases p, simp add: mem_Times_iff)
+            show "p \<in> (?U \<times> ?G) \<union> (?G \<times> ?U)"
+            proof (cases "fst p < c")
+              case True
+              have hfstU: "fst p \<in> ?U"
+                using hfstI ha True by (simp add: open_interval_def)
+              have hsndG: "snd p \<in> ?G"
+                using hsndI hb' by (simp add: open_ray_gt_def)
+              have "p \<in> ?U \<times> ?G"
+                using hfstU hsndG by (cases p, simp add: mem_Times_iff)
+              thus ?thesis by blast
+            next
+              case False
+              have hsndc: "snd p < c"
+                using hdisc False by blast
+              have hsndU: "snd p \<in> ?U"
+                using hsndI hb' hsndc by (simp add: open_interval_def)
+              have hfstG: "fst p \<in> ?G"
+                using hfstI ha by (simp add: open_ray_gt_def)
+              have "p \<in> ?G \<times> ?U"
+                using hfstG hsndU by (cases p, simp add: mem_Times_iff)
+              thus ?thesis by blast
+            qed
+          next
+            assume hp: "p \<in> (?U \<times> ?G) \<union> (?G \<times> ?U)"
+            have hp1: "p \<in> ?U \<times> ?G \<or> p \<in> ?G \<times> ?U"
+              using hp by blast
+            show "p \<in> {p \<in> ?I \<times> ?I. ?m p \<in> b}"
+            proof (rule disjE[OF hp1])
+              assume hUG: "p \<in> ?U \<times> ?G"
+              have hfstU: "fst p \<in> ?U"
+                using hUG by (cases p, simp add: mem_Times_iff)
+              have hsndG: "snd p \<in> ?G"
+                using hUG by (cases p, simp add: mem_Times_iff)
+              have hfstmem: "fst p \<in> ?I \<and> a < fst p \<and> fst p < c"
+                using hfstU by (simp add: open_interval_def)
+              have hfstI: "fst p \<in> ?I"
+                using hfstmem by blast
+              have ha: "a < fst p"
+                using hfstmem by blast
+              have hfstc: "fst p < c"
+                using hfstmem by blast
+
+              have hsndmem: "snd p \<in> ?I \<and> a < snd p"
+                using hsndG by (simp add: open_ray_gt_def)
+              have hsndI: "snd p \<in> ?I"
+                using hsndmem by blast
+              have hb': "a < snd p"
+                using hsndmem by blast
+              have hpI: "p \<in> ?I \<times> ?I"
+                using hfstI hsndI by (cases p, simp add: mem_Times_iff)
+              have "?m p \<in> b"
+                using ha hb' hfstc unfolding hbeq open_interval_def open_ray_gt_def pi1_def pi2_def
+                by (simp add: min_less_iff_conj min_less_iff_disj)
+              thus ?thesis
+                using hpI by simp
+            next
+              assume hGU: "p \<in> ?G \<times> ?U"
+              have hfstG: "fst p \<in> ?G"
+                using hGU by (cases p, simp add: mem_Times_iff)
+              have hsndU: "snd p \<in> ?U"
+                using hGU by (cases p, simp add: mem_Times_iff)
+              have hfstmem: "fst p \<in> ?I \<and> a < fst p"
+                using hfstG by (simp add: open_ray_gt_def)
+              have hfstI: "fst p \<in> ?I"
+                using hfstmem by blast
+              have ha: "a < fst p"
+                using hfstmem by blast
+
+              have hsndmem: "snd p \<in> ?I \<and> a < snd p \<and> snd p < c"
+                using hsndU by (simp add: open_interval_def)
+              have hsndI: "snd p \<in> ?I"
+                using hsndmem by blast
+              have hb': "a < snd p"
+                using hsndmem by blast
+              have hsndc: "snd p < c"
+                using hsndmem by blast
+              have hpI: "p \<in> ?I \<times> ?I"
+                using hfstI hsndI by (cases p, simp add: mem_Times_iff)
+              have "?m p \<in> b"
+                using ha hb' hsndc unfolding hbeq open_interval_def open_ray_gt_def pi1_def pi2_def
+                by (simp add: min_less_iff_conj min_less_iff_disj)
+              thus ?thesis
+                using hpI by simp
+            qed
+          qed
+        qed
+
+        show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+          using hUn hEq by simp
+      next
+        assume hbgt: "(\<exists>a. b = open_ray_gt a)
+          \<or> (\<exists>a. b = open_ray_lt a)
+          \<or> b = (UNIV::real set)"
+          show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+          proof (rule disjE[OF hbgt])
+            assume hbgt': "\<exists>a. b = open_ray_gt a"
+            then obtain a where hbeq: "b = open_ray_gt a" by blast
+          let ?G = "?I \<inter> open_ray_gt a"
+          have hG_TI: "?G \<in> ?TI"
+            using hray_gt_TI by blast
+          have hrect: "?G \<times> ?G \<in> product_topology_on ?TI ?TI"
+            by (rule product_rect_open[OF hG_TI hG_TI])
+          have hEq:
+            "{p \<in> ?I \<times> ?I. ?m p \<in> b} = ?G \<times> ?G"
+          proof (rule set_eqI)
+	            fix p
+	            show "p \<in> {p \<in> ?I \<times> ?I. ?m p \<in> b} \<longleftrightarrow> p \<in> ?G \<times> ?G"
+	              unfolding hbeq top1_closed_interval_def open_ray_gt_def pi1_def pi2_def
+	              by (cases p, simp add: hbeq top1_closed_interval_def open_ray_gt_def pi1_def pi2_def
+	                mem_Times_iff min_less_iff_conj conj_assoc conj_commute conj_left_commute)
+          qed
+	          show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+	            using hrect hEq by simp
+	        next
+          assume hblt: "(\<exists>a. b = open_ray_lt a) \<or> b = (UNIV::real set)"
+            show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+          proof (rule disjE[OF hblt])
+            assume hblt': "\<exists>a. b = open_ray_lt a"
+            then obtain a where hbeq: "b = open_ray_lt a" by blast
+            let ?L = "?I \<inter> open_ray_lt a"
+
+            have hL_TI: "?L \<in> ?TI"
+              using hray_lt_TI by blast
+            have hLrect: "?L \<times> ?I \<in> product_topology_on ?TI ?TI"
+              by (rule product_rect_open[OF hL_TI hI_in_TI])
+            have hRrect: "?I \<times> ?L \<in> product_topology_on ?TI ?TI"
+              by (rule product_rect_open[OF hI_in_TI hL_TI])
+
+            have hUn: "(\<Union>{?L \<times> ?I, ?I \<times> ?L}) \<in> product_topology_on ?TI ?TI"
+            proof -
+              have "{?L \<times> ?I, ?I \<times> ?L} \<subseteq> product_topology_on ?TI ?TI"
+                using hLrect hRrect by auto
+              show ?thesis
+                using union_TII \<open>{?L \<times> ?I, ?I \<times> ?L} \<subseteq> product_topology_on ?TI ?TI\<close> by blast
+            qed
+
+            have hEq:
+              "{p \<in> ?I \<times> ?I. ?m p \<in> b} = (?L \<times> ?I) \<union> (?I \<times> ?L)"
+            proof (rule set_eqI)
+              fix p
+	              show "p \<in> {p \<in> ?I \<times> ?I. ?m p \<in> b} \<longleftrightarrow> p \<in> (?L \<times> ?I) \<union> (?I \<times> ?L)"
+	                unfolding hbeq top1_closed_interval_def open_ray_lt_def pi1_def pi2_def
+	                by (cases p, simp add: mem_Times_iff min_less_iff_disj conj_disj_distribL
+	                  conj_assoc conj_commute conj_left_commute)
+	            qed
+
+            show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+              using hUn hEq by simp
+          next
+            assume hbeq: "b = (UNIV::real set)"
+            have hrect: "?I \<times> ?I \<in> product_topology_on ?TI ?TI"
+              by (rule product_rect_open[OF hI_in_TI hI_in_TI])
+            have hEq: "{p \<in> ?I \<times> ?I. ?m p \<in> b} = ?I \<times> ?I"
+              unfolding hbeq by simp
+            show "{p \<in> ?I \<times> ?I. ?m p \<in> b} \<in> product_topology_on ?TI ?TI"
+              using hrect hEq by simp
+          qed
+        qed
+      qed
+    qed
+
+    have hmap: "\<forall>p\<in>?I \<times> ?I. ?m p \<in> (UNIV::real set)"
+      by simp
+
+    show ?thesis
+      by (rule top1_continuous_map_on_generated_by_basis[OF hTopII hBasisR hmap hpre])
+  qed
+
+  have hm_image: "?m ` (?I \<times> ?I) \<subseteq> ?I"
+  proof (rule subsetI)
+    fix t assume ht: "t \<in> ?m ` (?I \<times> ?I)"
+    then obtain p where hp: "p \<in> ?I \<times> ?I" and htdef: "t = ?m p"
+      by blast
+    have hpi1: "pi1 p \<in> ?I" and hpi2: "pi2 p \<in> ?I"
+      using hp unfolding pi1_def pi2_def by auto
+    have hpi1': "0 \<le> pi1 p \<and> pi1 p \<le> 1"
+      using hpi1 unfolding top1_closed_interval_def by blast
+    have hpi2': "0 \<le> pi2 p \<and> pi2 p \<le> 1"
+      using hpi2 unfolding top1_closed_interval_def by blast
+
+    have h0: "0 \<le> min (pi1 p) (pi2 p)"
+    proof (cases "pi1 p \<le> pi2 p")
+      case True
+      then show ?thesis using hpi1' unfolding min_def by simp
+    next
+      case False
+      then show ?thesis using hpi2' unfolding min_def by simp
+    qed
+
+    have h1: "min (pi1 p) (pi2 p) \<le> 1"
+    proof (cases "pi1 p \<le> pi2 p")
+      case True
+      then show ?thesis using hpi1' unfolding min_def by simp
+    next
+      case False
+      then show ?thesis using hpi2' unfolding min_def by simp
+    qed
+
+    show "t \<in> ?I"
+      unfolding htdef top1_closed_interval_def
+      using h0 h1 by blast
+  qed
+
+  have hm_cont_I: "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) ?I ?TI ?m"
+  proof -
+    have hTopProd: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
+      by (rule hTopII)
+    have hTopR': "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+      by (rule hTopR)
+    have hRR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+      by (rule hTopR)
+    have hRule:
+      "\<forall>W f. top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) (UNIV::real set) order_topology_on_UNIV f
+           \<and> W \<subseteq> (UNIV::real set) \<and> f ` (?I \<times> ?I) \<subseteq> W
+           \<longrightarrow> top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) W
+                (subspace_topology (UNIV::real set) order_topology_on_UNIV W) f"
+      by (rule Theorem_18_2(5)[OF hTopProd hTopR' hRR])
+
+    have hSubspace: "subspace_topology (UNIV::real set) order_topology_on_UNIV ?I = ?TI"
+      unfolding top1_closed_interval_topology_def by simp
+
+    have "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) ?I
+            (subspace_topology (UNIV::real set) order_topology_on_UNIV ?I) ?m"
+      apply (rule hRule[rule_format, of ?m ?I])
+      apply (intro conjI)
+       apply (rule hm_cont_R)
+       apply simp
+       apply (rule hm_image)
+      done
+    thus ?thesis
+      using hSubspace by simp
+  qed
+
+  show ?thesis
+    by (rule hm_cont_I)
+qed
+
 (** Product part of Theorem 33.2 (proved in top1.tex for arbitrary products). The present
     development only contains a binary product topology and does not yet have the needed
     real-analytic infrastructure (continuous arithmetic on the unit interval). **)
@@ -13136,7 +13832,325 @@ theorem Theorem_33_2_product:
   assumes hCRX: "top1_completely_regular_on X TX"
   assumes hCRY: "top1_completely_regular_on Y TY"
   shows "top1_completely_regular_on (X \<times> Y) (product_topology_on TX TY)"
-  sorry
+proof -
+  let ?I = "top1_closed_interval 0 1"
+  let ?TI = "top1_closed_interval_topology 0 1"
+  let ?TP = "product_topology_on TX TY"
+  let ?m = "(\<lambda>q::real \<times> real. min (pi1 q) (pi2 q))"
+
+  have hT1X: "top1_T1_on X TX"
+    using hCRX unfolding top1_completely_regular_on_def by blast
+  have hT1Y: "top1_T1_on Y TY"
+    using hCRY unfolding top1_completely_regular_on_def by blast
+
+  have hTopX: "is_topology_on X TX"
+    using hT1X unfolding top1_T1_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hT1Y unfolding top1_T1_on_def by blast
+  have hTopXY: "is_topology_on (X \<times> Y) ?TP"
+    by (rule product_topology_on_is_topology_on[OF hTopX hTopY])
+
+  have hTopI: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    apply (rule subspace_topology_is_topology_on)
+     apply (rule order_topology_on_UNIV_is_topology_on)
+    apply simp
+    done
+  have hTopII: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
+    by (rule product_topology_on_is_topology_on[OF hTopI hTopI])
+
+  have hRegX: "top1_regular_on X TX"
+    by (rule completely_regular_imp_regular_on[OF hCRX])
+  have hRegY: "top1_regular_on Y TY"
+    by (rule completely_regular_imp_regular_on[OF hCRY])
+  have hHausdX: "is_hausdorff_on X TX"
+    by (rule regular_imp_hausdorff_on[OF hRegX])
+  have hHausdY: "is_hausdorff_on Y TY"
+    by (rule regular_imp_hausdorff_on[OF hRegY])
+
+  have hHausdProd: "is_hausdorff_on (X \<times> Y) ?TP"
+  proof -
+    have hprod: "\<forall>X1 T1 X2 T2.
+        is_hausdorff_on X1 T1 \<and> is_hausdorff_on X2 T2 \<longrightarrow>
+        is_hausdorff_on (X1 \<times> X2) (product_topology_on T1 T2)"
+      using Theorem_17_11 by blast
+    have hImp: "is_hausdorff_on X TX \<and> is_hausdorff_on Y TY \<longrightarrow> is_hausdorff_on (X \<times> Y) ?TP"
+      using hprod by blast
+    have hPrem: "is_hausdorff_on X TX \<and> is_hausdorff_on Y TY"
+      using hHausdX hHausdY by blast
+    show ?thesis
+      by (rule mp[OF hImp hPrem])
+  qed
+
+  have hT1Prod: "top1_T1_on (X \<times> Y) ?TP"
+    by (rule hausdorff_imp_T1_on[OF hHausdProd])
+
+  have hSepX:
+    "\<forall>x0\<in>X. \<forall>A. closedin_on X TX A \<and> x0 \<notin> A \<longrightarrow>
+       (\<exists>f::'a \<Rightarrow> real.
+           top1_continuous_map_on X TX ?I ?TI f \<and> f x0 = 1 \<and> (\<forall>x\<in>A. f x = 0))"
+    using hCRX unfolding top1_completely_regular_on_def by blast
+  have hSepY:
+    "\<forall>y0\<in>Y. \<forall>B. closedin_on Y TY B \<and> y0 \<notin> B \<longrightarrow>
+       (\<exists>g::'b \<Rightarrow> real.
+           top1_continuous_map_on Y TY ?I ?TI g \<and> g y0 = 1 \<and> (\<forall>y\<in>B. g y = 0))"
+    using hCRY unfolding top1_completely_regular_on_def by blast
+
+  show ?thesis
+    unfolding top1_completely_regular_on_def
+  proof (intro conjI)
+    show "top1_T1_on (X \<times> Y) ?TP"
+      by (rule hT1Prod)
+    show "\<forall>p0\<in>X \<times> Y. \<forall>A. closedin_on (X \<times> Y) ?TP A \<and> p0 \<notin> A \<longrightarrow>
+       (\<exists>F::('a \<times> 'b) \<Rightarrow> real.
+           top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI F \<and> F p0 = 1 \<and> (\<forall>p\<in>A. F p = 0))"
+    proof (intro ballI allI impI)
+      fix p0 A
+      assume hp0: "p0 \<in> X \<times> Y"
+      assume hA0: "closedin_on (X \<times> Y) ?TP A \<and> p0 \<notin> A"
+      have hAcl: "closedin_on (X \<times> Y) ?TP A" and hp0A: "p0 \<notin> A"
+        using hA0 by blast+
+
+      have hAsub: "A \<subseteq> X \<times> Y"
+        by (rule closedin_sub[OF hAcl])
+      have hWopen: "(X \<times> Y) - A \<in> ?TP"
+        using hAcl unfolding closedin_on_def by blast
+      have hp0W: "p0 \<in> (X \<times> Y) - A"
+        using hp0 hp0A by blast
+
+      have hWcov: "\<forall>p\<in>(X \<times> Y) - A. \<exists>b\<in>product_basis TX TY. p \<in> b \<and> b \<subseteq> (X \<times> Y) - A"
+        using hWopen unfolding product_topology_on_def topology_generated_by_basis_def by blast
+
+      obtain b where hb: "b \<in> product_basis TX TY" and hp0b: "p0 \<in> b" and hbsub: "b \<subseteq> (X \<times> Y) - A"
+        using hWcov[rule_format, OF hp0W] by blast
+      obtain U V where hU: "U \<in> TX" and hV: "V \<in> TY" and hbeq: "b = U \<times> V"
+        using hb unfolding product_basis_def by blast
+
+      have hp0UV: "p0 \<in> U \<times> V"
+        using hp0b unfolding hbeq .
+
+      let ?x0 = "pi1 p0"
+      let ?y0 = "pi2 p0"
+      have hx0: "?x0 \<in> X"
+        using hp0 unfolding pi1_def by (simp add: mem_Times_iff)
+      have hy0: "?y0 \<in> Y"
+        using hp0 unfolding pi2_def by (simp add: mem_Times_iff)
+      have hx0U: "?x0 \<in> U"
+        using hp0UV unfolding pi1_def by (simp add: mem_Times_iff)
+      have hy0V: "?y0 \<in> V"
+        using hp0UV unfolding pi2_def by (simp add: mem_Times_iff)
+
+      let ?CX = "X - U"
+      let ?CY = "Y - V"
+
+      have hXopen: "X \<in> TX"
+        using hTopX unfolding is_topology_on_def by blast
+      have hYopen: "Y \<in> TY"
+        using hTopY unfolding is_topology_on_def by blast
+
+      have hCXcl: "closedin_on X TX ?CX"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "X - U \<subseteq> X" by simp
+        have "X \<inter> U \<in> TX"
+          by (rule topology_inter2[OF hTopX hXopen hU])
+        moreover have "X - (X - U) = X \<inter> U" by blast
+        ultimately show "X - (X - U) \<in> TX" by simp
+      qed
+
+      have hCYcl: "closedin_on Y TY ?CY"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "Y - V \<subseteq> Y" by simp
+        have "Y \<inter> V \<in> TY"
+          by (rule topology_inter2[OF hTopY hYopen hV])
+        moreover have "Y - (Y - V) = Y \<inter> V" by blast
+        ultimately show "Y - (Y - V) \<in> TY" by simp
+      qed
+
+      have hx0notCX: "?x0 \<notin> ?CX"
+        using hx0U by blast
+      have hy0notCY: "?y0 \<notin> ?CY"
+        using hy0V by blast
+
+      have hSepx0:
+        "\<forall>A. closedin_on X TX A \<and> ?x0 \<notin> A \<longrightarrow>
+           (\<exists>f::'a \<Rightarrow> real.
+               top1_continuous_map_on X TX ?I ?TI f \<and> f ?x0 = 1 \<and> (\<forall>x\<in>A. f x = 0))"
+        by (rule bspec[OF hSepX hx0])
+      have hSepy0:
+        "\<forall>B. closedin_on Y TY B \<and> ?y0 \<notin> B \<longrightarrow>
+           (\<exists>g::'b \<Rightarrow> real.
+               top1_continuous_map_on Y TY ?I ?TI g \<and> g ?y0 = 1 \<and> (\<forall>y\<in>B. g y = 0))"
+        by (rule bspec[OF hSepY hy0])
+
+      have hexF:
+        "\<exists>f::'a \<Rightarrow> real.
+          top1_continuous_map_on X TX ?I ?TI f \<and> f ?x0 = 1 \<and> (\<forall>x\<in>?CX. f x = 0)"
+        apply (rule mp[OF spec[where x="?CX", OF hSepx0]])
+        apply (intro conjI)
+         apply (rule hCXcl)
+        apply (rule hx0notCX)
+        done
+      have hexG:
+        "\<exists>g::'b \<Rightarrow> real.
+          top1_continuous_map_on Y TY ?I ?TI g \<and> g ?y0 = 1 \<and> (\<forall>y\<in>?CY. g y = 0)"
+        apply (rule mp[OF spec[where x="?CY", OF hSepy0]])
+        apply (intro conjI)
+         apply (rule hCYcl)
+        apply (rule hy0notCY)
+        done
+
+      obtain f where hfcont: "top1_continuous_map_on X TX ?I ?TI f"
+          and hfx0: "f ?x0 = 1" and hfCX: "\<forall>x\<in>?CX. f x = 0"
+        using hexF by blast
+      obtain g where hgcont: "top1_continuous_map_on Y TY ?I ?TI g"
+          and hgy0: "g ?y0 = 1" and hgCY: "\<forall>y\<in>?CY. g y = 0"
+        using hexG by blast
+
+      define h where "h = (\<lambda>p::('a \<times> 'b). (f (pi1 p), g (pi2 p)))"
+      define F where "F = (?m \<circ> h)"
+
+      have hpi1: "top1_continuous_map_on (X \<times> Y) ?TP X TX pi1"
+        by (rule top1_continuous_pi1[OF hTopX hTopY])
+      have hpi2: "top1_continuous_map_on (X \<times> Y) ?TP Y TY pi2"
+        by (rule top1_continuous_pi2[OF hTopX hTopY])
+
+      have hfpi1: "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (f \<circ> pi1)"
+        by (rule top1_continuous_map_on_comp[OF hpi1 hfcont])
+      have hgpi2: "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (g \<circ> pi2)"
+        by (rule top1_continuous_map_on_comp[OF hpi2 hgcont])
+
+      have hcont: "top1_continuous_map_on (X \<times> Y) ?TP (?I \<times> ?I) (product_topology_on ?TI ?TI) h"
+      proof -
+        have hEq1: "pi1 \<circ> h = f \<circ> pi1"
+          unfolding h_def by (rule ext, simp add: pi1_def pi2_def)
+        have hEq2: "pi2 \<circ> h = g \<circ> pi2"
+          unfolding h_def by (rule ext, simp add: pi1_def pi2_def)
+        have h1: "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi1 \<circ> h)"
+          using hfpi1 hEq1 by simp
+        have h2: "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi2 \<circ> h)"
+          using hgpi2 hEq2 by simp
+        have hiff:
+          "top1_continuous_map_on (X \<times> Y) ?TP (?I \<times> ?I) (product_topology_on ?TI ?TI) h
+           \<longleftrightarrow>
+           (top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi1 \<circ> h)
+            \<and> top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi2 \<circ> h))"
+          by (rule Theorem_18_4[OF hTopXY hTopI hTopI])
+        have "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi1 \<circ> h)
+              \<and> top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI (pi2 \<circ> h)"
+          using h1 h2 by blast
+        thus ?thesis
+          by (rule iffD2[OF hiff])
+      qed
+
+      have hm_cont: "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) ?I ?TI ?m"
+        by (rule top1_continuous_min_unit_interval)
+
+      have hFcont: "top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI F"
+        unfolding F_def
+        by (rule top1_continuous_map_on_comp[OF hcont hm_cont])
+
+      have hFp0: "F p0 = 1"
+      proof -
+        have hfx: "f (pi1 p0) = 1"
+          using hfx0 by simp
+        have hgy: "g (pi2 p0) = 1"
+          using hgy0 by simp
+        show ?thesis
+          unfolding F_def h_def using hfx hgy by (simp add: pi1_def pi2_def)
+      qed
+
+      have hFA0: "\<forall>p\<in>A. F p = 0"
+      proof (intro ballI)
+        fix p assume hpA: "p \<in> A"
+        have hpXY: "p \<in> X \<times> Y"
+          using hAsub hpA by blast
+        have hpnotUV: "p \<notin> U \<times> V"
+        proof
+          assume hpUV: "p \<in> U \<times> V"
+          have "p \<in> (X \<times> Y) - A"
+            using hbsub hbeq hpUV by blast
+          thus False using hpA by blast
+        qed
+        have hpdisj: "pi1 p \<notin> U \<or> pi2 p \<notin> V"
+          using hpnotUV unfolding pi1_def pi2_def by (simp add: mem_Times_iff)
+
+        have h0: "f (pi1 p) = 0 \<or> g (pi2 p) = 0"
+        proof (rule disjE[OF hpdisj])
+          assume hnu: "pi1 p \<notin> U"
+          have hpx: "pi1 p \<in> X"
+            using hpXY unfolding pi1_def by (simp add: mem_Times_iff)
+          have "pi1 p \<in> X - U"
+            using hpx hnu by blast
+          hence "f (pi1 p) = 0"
+            using hfCX by blast
+          thus ?thesis by blast
+        next
+          assume hnv: "pi2 p \<notin> V"
+          have hpy: "pi2 p \<in> Y"
+            using hpXY unfolding pi2_def by (simp add: mem_Times_iff)
+          have "pi2 p \<in> Y - V"
+            using hpy hnv by blast
+          hence "g (pi2 p) = 0"
+            using hgCY by blast
+          thus ?thesis by blast
+        qed
+
+        show "F p = 0"
+        proof -
+          have hFform: "F p = min (f (pi1 p)) (g (pi2 p))"
+            unfolding F_def h_def pi1_def pi2_def by simp
+
+          have hpx: "pi1 p \<in> X"
+            using hpXY unfolding pi1_def by (simp add: mem_Times_iff)
+          have hpy: "pi2 p \<in> Y"
+            using hpXY unfolding pi2_def by (simp add: mem_Times_iff)
+
+          have hfxI: "f (pi1 p) \<in> ?I"
+            using hfcont hpx unfolding top1_continuous_map_on_def by blast
+          have hgyI: "g (pi2 p) \<in> ?I"
+            using hgcont hpy unfolding top1_continuous_map_on_def by blast
+
+          have hfx0le: "0 \<le> f (pi1 p)"
+            using hfxI unfolding top1_closed_interval_def by blast
+          have hgy0le: "0 \<le> g (pi2 p)"
+            using hgyI unfolding top1_closed_interval_def by blast
+
+          show "F p = 0"
+          proof (cases "f (pi1 p) = 0")
+            case True
+            have "f (pi1 p) \<le> g (pi2 p)"
+              using hgy0le True by simp
+            hence "min (f (pi1 p)) (g (pi2 p)) = f (pi1 p)"
+              unfolding min_def by simp
+            thus ?thesis
+              using True hFform by simp
+          next
+            case False
+            have hg0: "g (pi2 p) = 0"
+              using h0 False by blast
+            have "g (pi2 p) \<le> f (pi1 p)"
+              using hfx0le hg0 by simp
+            hence "min (f (pi1 p)) (g (pi2 p)) = g (pi2 p)"
+              unfolding min_def by simp
+            thus ?thesis
+              using hg0 hFform by simp
+          qed
+        qed
+      qed
+
+      show "\<exists>F::('a \<times> 'b) \<Rightarrow> real.
+          top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI F \<and> F p0 = 1 \<and> (\<forall>p\<in>A. F p = 0)"
+        apply (rule exI[where x=F])
+        apply (intro conjI)
+          apply (rule hFcont)
+         apply (rule hFp0)
+        apply (rule hFA0)
+        done
+    qed
+  qed
+qed
 
 section \<open>\<S>34 The Urysohn Metrization Theorem\<close>
 
