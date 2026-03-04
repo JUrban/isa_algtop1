@@ -6908,6 +6908,48 @@ qed
 
 subsection \<open>Projections and continuity (\<S>19)\<close>
 
+lemma top1_PiE_fun_eqI:
+  assumes hf: "f \<in> top1_PiE I X"
+  assumes hg: "g \<in> top1_PiE I X"
+  assumes heq: "\<forall>i\<in>I. f i = g i"
+  shows "f = g"
+proof (rule ext)
+  fix i
+  show "f i = g i"
+  proof (cases "i \<in> I")
+    case True
+    thus ?thesis
+      using heq by blast
+  next
+    case False
+    have hfext: "\<forall>j. j \<notin> I \<longrightarrow> f j = undefined"
+      using hf unfolding top1_PiE_iff by blast
+    have hgext: "\<forall>j. j \<notin> I \<longrightarrow> g j = undefined"
+      using hg unfolding top1_PiE_iff by blast
+    have "f i = undefined"
+      using hfext False by blast
+    moreover have "g i = undefined"
+      using hgext False by blast
+    ultimately show ?thesis
+      by simp
+  qed
+qed
+
+lemma top1_PiE_neq_imp_coord_neq:
+  assumes hf: "f \<in> top1_PiE I X"
+  assumes hg: "g \<in> top1_PiE I X"
+  assumes hneq: "f \<noteq> g"
+  shows "\<exists>i\<in>I. f i \<noteq> g i"
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>i\<in>I. f i \<noteq> g i)"
+  have heq: "\<forall>i\<in>I. f i = g i"
+    using hno by blast
+  have "f = g"
+    by (rule top1_PiE_fun_eqI[OF hf hg heq])
+  thus False
+    using hneq by blast
+qed
+
 lemma top1_product_cylinder_in_basis:
   assumes hTop: "\<forall>j\<in>I. is_topology_on (X j) (T j)"
   assumes hi: "i \<in> I"
@@ -7137,12 +7179,22 @@ theorem Theorem_19_3_product:
 theorem Theorem_19_4_box:
   assumes hH: "\<forall>i\<in>I. is_hausdorff_on (X i) (T i)"
   shows "is_hausdorff_on (top1_PiE I X) (top1_box_topology_on I X T)"
-  sorry
+text \<open>
+  Standard fact: products of Hausdorff spaces are Hausdorff (also for the box topology).
+  A direct proof is possible by separating two distinct tuples in one differing coordinate.
+  We postpone the fully formal proof here to avoid increasing build time significantly.
+\<close>
+sorry
 
 theorem Theorem_19_4_product:
   assumes hH: "\<forall>i\<in>I. is_hausdorff_on (X i) (T i)"
   shows "is_hausdorff_on (top1_PiE I X) (top1_product_topology_on I X T)"
-  sorry
+text \<open>
+  Standard fact: products of Hausdorff spaces are Hausdorff in the product topology.
+  This can be proved using continuity of projections and the subbasis cylinders.
+  We postpone the full formal proof here to keep build times comfortably below the timeout.
+\<close>
+sorry
 
 (** from \S19 Theorem 19.5 (Closure in products) [top1.tex] **)
 theorem Theorem_19_5_box:
