@@ -13521,10 +13521,244 @@ text \<open>
   Section \<S>24 of \<open>top1.tex\<close> specializes the theory of connectedness to subspaces of
   \<open>\<real>\<close>, culminating in the characterization of connected subsets of \<open>\<real>\<close> as intervals.
 
-  The present development has not yet introduced the order topology on \<open>\<real>\<close> in a way that
-  connects smoothly with the earlier sections, so we leave this section as a placeholder for
-  later work.
+  Isabelle already provides the order topology (and the corresponding connectedness facts) for
+  types in the class \<open>linear_continuum_topology\<close>.  To connect this with the set-based
+  framework of \<open>Top1\<close>, we interpret the library notion of openness \<open>open\<close> as a set of open
+  sets, and relate library connectedness (\<open>connected\<close>) to our predicate
+  \<open>top1_connected_on\<close> for the induced subspace topology.
 \<close>
+
+definition top1_open_sets :: "'a::topological_space set set" where
+  "top1_open_sets = {U. open U}"
+
+lemma top1_open_sets_is_topology_on_UNIV:
+  "is_topology_on (UNIV::'a::topological_space set) top1_open_sets"
+  unfolding is_topology_on_def top1_open_sets_def
+proof (intro conjI)
+  show "{} \<in> {U. open U}"
+    by simp
+  show "UNIV \<in> {U. open U}"
+    by simp
+  show "\<forall>U. U \<subseteq> {U. open U} \<longrightarrow> \<Union>U \<in> {U. open U}"
+  proof (intro allI impI)
+    fix K assume hK: "K \<subseteq> {U. open U}"
+    have hall: "\<forall>U\<in>K. open U"
+      using hK by blast
+    have "open (\<Union>K)"
+      by (rule open_Union[OF hall])
+    thus "\<Union>K \<in> {U. open U}"
+      by simp
+  qed
+  show "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> {U. open U} \<longrightarrow> \<Inter>F \<in> {U. open U}"
+  proof (intro allI impI)
+    fix F assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> {U. open U}"
+    have hfin: "finite F"
+      using hF by blast
+    have hall: "\<forall>U\<in>F. open U"
+      using hF by blast
+    have "open (\<Inter>F)"
+      by (rule open_Inter[OF hfin hall])
+    thus "\<Inter>F \<in> {U. open U}"
+      by simp
+  qed
+qed
+
+lemma top1_connected_on_subspace_open_iff_connected:
+  fixes S :: "'a::topological_space set"
+  shows "top1_connected_on S (subspace_topology UNIV top1_open_sets S) \<longleftrightarrow> connected S"
+proof (rule iffI)
+  assume hS: "top1_connected_on S (subspace_topology UNIV top1_open_sets S)"
+  have hNoSep:
+    "\<nexists>U V.
+        U \<in> subspace_topology UNIV top1_open_sets S \<and>
+        V \<in> subspace_topology UNIV top1_open_sets S \<and>
+        U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = S"
+    using hS unfolding top1_connected_on_def by blast
+
+  show "connected S"
+    unfolding connected_def
+  proof (rule notI)
+    assume hsep:
+      "\<exists>A B. open A \<and> open B \<and> S \<subseteq> A \<union> B \<and> A \<inter> B \<inter> S = {} \<and> A \<inter> S \<noteq> {} \<and> B \<inter> S \<noteq> {}"
+    then obtain A B where hA: "open A" and hB: "open B" and hcov: "S \<subseteq> A \<union> B"
+      and hdisj: "A \<inter> B \<inter> S = {}" and hAne: "A \<inter> S \<noteq> {}" and hBne: "B \<inter> S \<noteq> {}"
+      by blast
+
+    define U where "U = S \<inter> A"
+    define V where "V = S \<inter> B"
+
+    have hU_mem: "U \<in> subspace_topology UNIV top1_open_sets S"
+      unfolding subspace_topology_def top1_open_sets_def U_def
+      using hA by blast
+    have hV_mem: "V \<in> subspace_topology UNIV top1_open_sets S"
+      unfolding subspace_topology_def top1_open_sets_def V_def
+      using hB by blast
+    have hU_ne: "U \<noteq> {}"
+      unfolding U_def using hAne by blast
+    have hV_ne: "V \<noteq> {}"
+      unfolding V_def using hBne by blast
+    have hUV_disj: "U \<inter> V = {}"
+      unfolding U_def V_def using hdisj by blast
+    have hUV_cov: "U \<union> V = S"
+    proof (rule equalityI)
+      show "U \<union> V \<subseteq> S"
+        unfolding U_def V_def by blast
+      show "S \<subseteq> U \<union> V"
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> S"
+        have "x \<in> A \<union> B"
+          using hcov hx by blast
+        thus "x \<in> U \<union> V"
+          unfolding U_def V_def using hx by blast
+      qed
+    qed
+
+    have "\<exists>U V.
+        U \<in> subspace_topology UNIV top1_open_sets S \<and>
+        V \<in> subspace_topology UNIV top1_open_sets S \<and>
+        U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = S"
+      apply (rule exI[where x=U])
+      apply (rule exI[where x=V])
+      using hU_mem hV_mem hU_ne hV_ne hUV_disj hUV_cov by blast
+    thus False
+      using hNoSep by blast
+  qed
+next
+  assume hconn: "connected S"
+
+  have hTopS: "is_topology_on S (subspace_topology UNIV top1_open_sets S)"
+  proof -
+    have hTopU: "is_topology_on (UNIV::'a set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    show ?thesis
+      by (rule subspace_topology_is_topology_on[OF hTopU]) simp
+  qed
+
+  show "top1_connected_on S (subspace_topology UNIV top1_open_sets S)"
+    unfolding top1_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on S (subspace_topology UNIV top1_open_sets S)"
+      by (rule hTopS)
+    show "\<nexists>U V.
+        U \<in> subspace_topology UNIV top1_open_sets S \<and>
+        V \<in> subspace_topology UNIV top1_open_sets S \<and>
+        U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = S"
+    proof (rule notI)
+      assume hsep:
+        "\<exists>U V.
+          U \<in> subspace_topology UNIV top1_open_sets S \<and>
+          V \<in> subspace_topology UNIV top1_open_sets S \<and>
+          U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = S"
+      then obtain U V where hU: "U \<in> subspace_topology UNIV top1_open_sets S"
+        and hV: "V \<in> subspace_topology UNIV top1_open_sets S"
+        and hUne: "U \<noteq> {}" and hVne: "V \<noteq> {}" and hdisj: "U \<inter> V = {}" and hcov: "U \<union> V = S"
+        by blast
+
+      obtain A where hAopen: "open A" and hUeq: "U = S \<inter> A"
+        using hU unfolding subspace_topology_def top1_open_sets_def by blast
+      obtain B where hBopen: "open B" and hVeq: "V = S \<inter> B"
+        using hV unfolding subspace_topology_def top1_open_sets_def by blast
+
+      have hSsub: "S \<subseteq> A \<union> B"
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> S"
+        have "x \<in> U \<union> V"
+          using hcov hx by blast
+        thus "x \<in> A \<union> B"
+          using hx unfolding hUeq hVeq by blast
+      qed
+      have hABdisj: "A \<inter> B \<inter> S = {}"
+        using hdisj unfolding hUeq hVeq by blast
+      have hAne: "A \<inter> S \<noteq> {}"
+        using hUne unfolding hUeq by blast
+      have hBne: "B \<inter> S \<noteq> {}"
+        using hVne unfolding hVeq by blast
+
+      have "\<exists>A B. open A \<and> open B \<and> S \<subseteq> A \<union> B \<and> A \<inter> B \<inter> S = {} \<and> A \<inter> S \<noteq> {} \<and> B \<inter> S \<noteq> {}"
+        apply (rule exI[where x=A])
+        apply (rule exI[where x=B])
+        using hAopen hBopen hSsub hABdisj hAne hBne by blast
+      thus False
+        using hconn unfolding connected_def by blast
+    qed
+  qed
+qed
+
+(** A convenient introduction rule derived from
+    \<open>top1_connected_on_subspace_open_iff_connected\<close>. **)
+lemma top1_connected_on_subspace_openI:
+  fixes S :: "'a::topological_space set"
+  assumes "connected S"
+  shows "top1_connected_on S (subspace_topology UNIV top1_open_sets S)"
+  using top1_connected_on_subspace_open_iff_connected assms
+  by (rule iffD2)
+
+(** from \S24 Theorem 24.1 (Convex subspaces of linear continua are connected) [top1.tex:2751] **)
+theorem Theorem_24_1:
+  fixes U :: "'a::linear_continuum_topology set"
+  assumes hconv: "\<And>x y z. x \<in> U \<Longrightarrow> y \<in> U \<Longrightarrow> x \<le> z \<Longrightarrow> z \<le> y \<Longrightarrow> z \<in> U"
+  shows "top1_connected_on U (subspace_topology UNIV top1_open_sets U)"
+proof -
+  have "connected U"
+    using hconv by (rule connectedI_interval)
+  thus ?thesis
+    by (rule top1_connected_on_subspace_openI)
+qed
+
+(** from \S24 Corollary 24.2 (Intervals and rays in \<real> are connected) [top1.tex:2792] **)
+corollary Corollary_24_2:
+  fixes a b :: real
+  shows
+    "top1_connected_on (UNIV::real set) top1_open_sets"
+    and "top1_connected_on {a..b} (subspace_topology UNIV top1_open_sets {a..b})"
+    and "top1_connected_on {a<..<b} (subspace_topology UNIV top1_open_sets {a<..<b})"
+    and "top1_connected_on {a..} (subspace_topology UNIV top1_open_sets {a..})"
+    and "top1_connected_on {a<..} (subspace_topology UNIV top1_open_sets {a<..})"
+    and "top1_connected_on {..b} (subspace_topology UNIV top1_open_sets {..b})"
+    and "top1_connected_on {..<b} (subspace_topology UNIV top1_open_sets {..<b})"
+proof -
+  have hUNIV_conn: "connected (UNIV::real set)"
+  proof (rule connectedI_interval)
+    fix x y z :: real
+    assume "x \<in> (UNIV::real set)" and "y \<in> (UNIV::real set)" and "x \<le> z" and "z \<le> y"
+    show "z \<in> (UNIV::real set)"
+      by simp
+  qed
+
+  have hUNIV: "top1_connected_on (UNIV::real set) (subspace_topology UNIV top1_open_sets (UNIV::real set))"
+    using hUNIV_conn by (rule top1_connected_on_subspace_openI)
+  have hEq: "subspace_topology UNIV top1_open_sets (UNIV::real set) = top1_open_sets"
+    unfolding subspace_topology_def top1_open_sets_def by simp
+
+  show "top1_connected_on (UNIV::real set) top1_open_sets"
+    by (subst hEq[symmetric]) (rule hUNIV)
+
+  have h1: "connected {a..b}"
+    by (rule connected_Icc)
+  have h2: "connected {a<..<b}"
+    by (rule connected_Ioo)
+  have h3: "connected {a..}"
+    by (rule connected_Ici)
+  have h4: "connected {a<..}"
+    by (rule connected_Ioi)
+  have h5: "connected {..b}"
+    by (rule connected_Iic)
+  have h6: "connected {..<b}"
+    by (rule connected_Iio)
+
+  show "top1_connected_on {a..b} (subspace_topology UNIV top1_open_sets {a..b})"
+    using h1 by (rule top1_connected_on_subspace_openI)
+  show "top1_connected_on {a<..<b} (subspace_topology UNIV top1_open_sets {a<..<b})"
+    using h2 by (rule top1_connected_on_subspace_openI)
+  show "top1_connected_on {a..} (subspace_topology UNIV top1_open_sets {a..})"
+    using h3 by (rule top1_connected_on_subspace_openI)
+  show "top1_connected_on {a<..} (subspace_topology UNIV top1_open_sets {a<..})"
+    using h4 by (rule top1_connected_on_subspace_openI)
+  show "top1_connected_on {..b} (subspace_topology UNIV top1_open_sets {..b})"
+    using h5 by (rule top1_connected_on_subspace_openI)
+  show "top1_connected_on {..<b} (subspace_topology UNIV top1_open_sets {..<b})"
+    using h6 by (rule top1_connected_on_subspace_openI)
+qed
 
 section \<open>*\<S>25 Components and Local Connectedness\<close>
 
