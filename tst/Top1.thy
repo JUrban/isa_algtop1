@@ -30165,6 +30165,72 @@ proof -
     by (rule subsetD[OF hsub hxNZ])
 qed
 
+(** Every manifold point has a chart on an open subset of the carrier, with continuous and injective chart map. **)
+lemma top1_m_manifold_on_local_chart_inj_cont:
+  fixes m :: nat
+  assumes hM: "top1_m_manifold_on m X TX"
+  assumes hxX: "x \<in> X"
+  shows "\<exists>U g.
+    U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+    \<and> top1_continuous_map_on U (subspace_topology X TX U) (top1_Rpow_set m) (top1_Rpow_topology m) g
+    \<and> inj_on g U"
+proof -
+  have hLocal:
+    "\<forall>x\<in>X. \<exists>U g. neighborhood_of x X TX U
+      \<and> top1_embedding_on U (subspace_topology X TX U) (top1_Rpow_set m) (top1_Rpow_topology m) g"
+    using hM unfolding top1_m_manifold_on_def by blast
+
+  obtain U0 g0 where hnbhd: "neighborhood_of x X TX U0"
+    and hEmb: "top1_embedding_on U0 (subspace_topology X TX U0) (top1_Rpow_set m) (top1_Rpow_topology m) g0"
+    using hLocal hxX by blast
+
+  define U where "U = X \<inter> U0"
+
+  have hTopX: "is_topology_on X TX"
+    using hM unfolding top1_m_manifold_on_def is_hausdorff_on_def by blast
+
+  have hXopen: "X \<in> TX"
+    using hTopX unfolding is_topology_on_def by blast
+  have hU0open: "U0 \<in> TX"
+    using hnbhd unfolding neighborhood_of_def by blast
+  have hUopen: "U \<in> TX"
+    unfolding U_def by (rule topology_inter2[OF hTopX hXopen hU0open])
+  have hUsubX: "U \<subseteq> X"
+    unfolding U_def by blast
+  have hxU: "x \<in> U"
+    unfolding U_def using hxX hnbhd unfolding neighborhood_of_def by blast
+
+  have hCont0: "top1_continuous_map_on U0 (subspace_topology X TX U0) (top1_Rpow_set m) (top1_Rpow_topology m) g0"
+    by (rule top1_embedding_on_imp_continuous[OF hEmb])
+  have hInj0: "inj_on g0 U0"
+    by (rule top1_embedding_on_imp_inj_on[OF hEmb])
+
+  have hUsubU0: "U \<subseteq> U0"
+    unfolding U_def by blast
+
+  have hContU':
+    "top1_continuous_map_on U
+      (subspace_topology U0 (subspace_topology X TX U0) U)
+      (top1_Rpow_set m) (top1_Rpow_topology m) g0"
+    by (rule top1_continuous_map_on_restrict_domain_simple[OF hCont0 hUsubU0])
+
+  have hTopEq:
+    "subspace_topology U0 (subspace_topology X TX U0) U = subspace_topology X TX U"
+    by (rule subspace_topology_trans[OF hUsubU0])
+
+  have hContU:
+    "top1_continuous_map_on U (subspace_topology X TX U) (top1_Rpow_set m) (top1_Rpow_topology m) g0"
+    using hContU' unfolding hTopEq .
+
+  have hInjU: "inj_on g0 U"
+    by (rule inj_on_subset[OF hInj0 hUsubU0])
+
+  show ?thesis
+    apply (rule exI[where x=U])
+    apply (rule exI[where x=g0])
+    using hUopen hUsubX hxU hContU hInjU by blast
+qed
+
 (** Compactness helper: extract a finite subcover from a cover presented as an image \<open>V ` X\<close>. **)
 lemma top1_compact_on_finite_subcover_image:
   assumes hcomp: "top1_compact_on X TX"
