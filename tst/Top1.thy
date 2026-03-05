@@ -12521,6 +12521,99 @@ proof -
     by (rule that[OF hU hV hpUV hsub])
 qed
 
+(** Constant maps are continuous (restricted to carriers). **)
+lemma top1_continuous_map_on_const:
+  assumes hTA: "is_topology_on A TA"
+  assumes hTX: "is_topology_on X TX"
+  assumes hx0: "x0 \<in> X"
+  shows "top1_continuous_map_on A TA X TX (\<lambda>a. x0)"
+proof -
+  have empty_TA: "{} \<in> TA"
+    using hTA unfolding is_topology_on_def by blast
+  have A_TA: "A \<in> TA"
+    using hTA unfolding is_topology_on_def by blast
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>a\<in>A. (\<lambda>a. x0) a \<in> X"
+      using hx0 by simp
+    show "\<forall>U\<in>TX. {a \<in> A. (\<lambda>a. x0) a \<in> U} \<in> TA"
+    proof (intro ballI)
+      fix U assume hU: "U \<in> TX"
+      have hEq: "{a \<in> A. (\<lambda>a. x0) a \<in> U} = (if x0 \<in> U then A else {})"
+      proof (rule set_eqI)
+        fix a
+        show "a \<in> {a \<in> A. (\<lambda>a. x0) a \<in> U} \<longleftrightarrow> a \<in> (if x0 \<in> U then A else {})"
+          by simp
+      qed
+      show "{a \<in> A. (\<lambda>a. x0) a \<in> U} \<in> TA"
+      proof (cases "x0 \<in> U")
+        case True
+        show ?thesis
+          using A_TA hEq True by simp
+      next
+        case False
+        show ?thesis
+          using empty_TA hEq False by simp
+      qed
+    qed
+  qed
+qed
+
+(** Sections of the product are continuous: y \<mapsto> (x0,y). **)
+lemma top1_continuous_map_on_section2:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  assumes hx0: "x0 \<in> X"
+  shows "top1_continuous_map_on Y TY (X \<times> Y) (product_topology_on TX TY) (\<lambda>y. (x0, y))"
+proof -
+  have hpi1: "top1_continuous_map_on Y TY X TX (pi1 \<circ> (\<lambda>y. (x0, y)))"
+  proof -
+    have hEq: "(pi1 \<circ> (\<lambda>y. (x0, y))) = (\<lambda>y. x0)"
+    proof (rule ext)
+      fix y
+      show "(pi1 \<circ> (\<lambda>y. (x0, y))) y = (\<lambda>y. x0) y"
+        unfolding o_def pi1_def by simp
+    qed
+    have hconst: "top1_continuous_map_on Y TY X TX (\<lambda>y. x0)"
+      by (rule top1_continuous_map_on_const[OF hTY hTX hx0])
+    show ?thesis
+      using hconst by (simp add: hEq)
+  qed
+  have hpi2: "top1_continuous_map_on Y TY Y TY (pi2 \<circ> (\<lambda>y. (x0, y)))"
+  proof -
+    have hEq: "(pi2 \<circ> (\<lambda>y. (x0, y))) = id"
+    proof (rule ext)
+      fix y
+      show "(pi2 \<circ> (\<lambda>y. (x0, y))) y = id y"
+        unfolding o_def pi2_def by simp
+    qed
+    have hid: "top1_continuous_map_on Y TY Y TY id"
+      by (rule top1_continuous_map_on_id[OF hTY])
+    show ?thesis
+      using hid by (simp add: hEq)
+  qed
+  show ?thesis
+    using Theorem_18_4[OF hTY hTX hTY] hpi1 hpi2 by blast
+qed
+
+lemma top1_section_preimage_open:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  assumes hW: "W \<in> product_topology_on TX TY"
+  assumes hx0: "x0 \<in> X"
+  shows "{y \<in> Y. (x0, y) \<in> W} \<in> TY"
+proof -
+  have hcont: "top1_continuous_map_on Y TY (X \<times> Y) (product_topology_on TX TY) (\<lambda>y. (x0, y))"
+    by (rule top1_continuous_map_on_section2[OF hTX hTY hx0])
+  have hpre: "\<forall>V\<in>product_topology_on TX TY. {y\<in>Y. (\<lambda>y. (x0, y)) y \<in> V} \<in> TY"
+    using hcont unfolding top1_continuous_map_on_def by blast
+  have "{y\<in>Y. (\<lambda>y. (x0, y)) y \<in> W} \<in> TY"
+    using hpre hW by blast
+  thus ?thesis
+    by simp
+qed
+
 (** from \S23 Theorem 23.6 [top1.tex:~2664] **)
 theorem Theorem_23_6:
   assumes hTX: "is_topology_on X TX"
@@ -12528,7 +12621,428 @@ theorem Theorem_23_6:
   assumes hconnX: "top1_connected_on X TX"
   assumes hconnY: "top1_connected_on Y TY"
   shows "top1_connected_on (X \<times> Y) (product_topology_on TX TY)"
-  sorry
+proof -
+  have hTopXY: "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
+    by (rule product_topology_on_is_topology_on[OF hTX hTY])
+
+  have hNoSepX:
+    "\<nexists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+    using hconnX unfolding top1_connected_on_def by blast
+  have hNoSepY:
+    "\<nexists>U V. U \<in> TY \<and> V \<in> TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = Y"
+    using hconnY unfolding top1_connected_on_def by blast
+
+  show ?thesis
+    unfolding top1_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
+      by (rule hTopXY)
+
+    show "\<nexists>U V.
+        U \<in> product_topology_on TX TY \<and>
+        V \<in> product_topology_on TX TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X \<times> Y"
+    proof (rule notI)
+      assume hsep:
+        "\<exists>U V.
+          U \<in> product_topology_on TX TY \<and>
+          V \<in> product_topology_on TX TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X \<times> Y"
+      then obtain U V where
+        hUopen: "U \<in> product_topology_on TX TY" and
+        hVopen: "V \<in> product_topology_on TX TY" and
+        hUne: "U \<noteq> {}" and
+        hVne: "V \<noteq> {}" and
+        hdisj: "U \<inter> V = {}" and
+        hUV: "U \<union> V = X \<times> Y"
+        by blast
+
+      show False
+      proof (cases "X = {} \<or> Y = {}")
+        case True
+        have "X \<times> Y = {}"
+          using True by blast
+        hence "U \<union> V = {}"
+          using hUV by simp
+        hence "U = {}"
+          by blast
+        thus False
+          using hUne by blast
+      next
+        case False
+        have hXne: "X \<noteq> {}" and hYne: "Y \<noteq> {}"
+          using False by blast+
+        obtain y0 where hy0: "y0 \<in> Y"
+          using hYne by blast
+
+        have hUsubXY: "U \<subseteq> X \<times> Y"
+          using hUV by blast
+        have hVsubXY: "V \<subseteq> X \<times> Y"
+          using hUV by blast
+
+        define UX where "UX = (\<lambda>x. {y \<in> Y. (x, y) \<in> U})"
+        define VX where "VX = (\<lambda>x. {y \<in> Y. (x, y) \<in> V})"
+
+        have hUX_open: "\<forall>x0\<in>X. UX x0 \<in> TY"
+        proof (intro ballI)
+          fix x0 assume hx0: "x0 \<in> X"
+          have "{y \<in> Y. (x0, y) \<in> U} \<in> TY"
+            by (rule top1_section_preimage_open[OF hTX hTY hUopen hx0])
+          thus "UX x0 \<in> TY"
+          proof -
+            have hEq: "UX x0 = {y \<in> Y. (x0, y) \<in> U}"
+              unfolding UX_def by simp
+            show ?thesis
+              by (subst hEq) (rule \<open>{y \<in> Y. (x0, y) \<in> U} \<in> TY\<close>)
+          qed
+        qed
+        have hVX_open: "\<forall>x0\<in>X. VX x0 \<in> TY"
+        proof (intro ballI)
+          fix x0 assume hx0: "x0 \<in> X"
+          have "{y \<in> Y. (x0, y) \<in> V} \<in> TY"
+            by (rule top1_section_preimage_open[OF hTX hTY hVopen hx0])
+          thus "VX x0 \<in> TY"
+          proof -
+            have hEq: "VX x0 = {y \<in> Y. (x0, y) \<in> V}"
+              unfolding VX_def by simp
+            show ?thesis
+              by (subst hEq) (rule \<open>{y \<in> Y. (x0, y) \<in> V} \<in> TY\<close>)
+          qed
+        qed
+
+        have hUV_sections:
+          "\<forall>x0\<in>X. (UX x0 \<inter> VX x0 = {}) \<and> (UX x0 \<union> VX x0 = Y)"
+        proof (intro ballI conjI)
+          fix x0 assume hx0: "x0 \<in> X"
+          show "UX x0 \<inter> VX x0 = {}"
+          proof (rule equalityI)
+            show "UX x0 \<inter> VX x0 \<subseteq> {}"
+            proof (rule subsetI)
+              fix y assume hy: "y \<in> UX x0 \<inter> VX x0"
+              have hyU: "y \<in> UX x0" and hyV: "y \<in> VX x0"
+                using hy by blast+
+              have hxyU: "(x0, y) \<in> U"
+                using hyU unfolding UX_def by blast
+              have hxyV: "(x0, y) \<in> V"
+                using hyV unfolding VX_def by blast
+              have "(x0, y) \<in> U \<inter> V"
+                using hxyU hxyV by blast
+              hence False
+                using hdisj by blast
+              thus "y \<in> {}"
+                by blast
+            qed
+            show "{} \<subseteq> UX x0 \<inter> VX x0"
+              by simp
+          qed
+          show "UX x0 \<union> VX x0 = Y"
+          proof (rule equalityI)
+            show "UX x0 \<union> VX x0 \<subseteq> Y"
+              unfolding UX_def VX_def by blast
+            show "Y \<subseteq> UX x0 \<union> VX x0"
+            proof (rule subsetI)
+              fix y assume hyY: "y \<in> Y"
+              have "(x0, y) \<in> X \<times> Y"
+                using hx0 hyY by blast
+              hence "(x0, y) \<in> U \<union> V"
+                using hUV by simp
+              hence "(x0, y) \<in> U \<or> (x0, y) \<in> V"
+                by blast
+              thus "y \<in> UX x0 \<union> VX x0"
+                unfolding UX_def VX_def using hyY by blast
+            qed
+          qed
+        qed
+
+        have hUX_or_VX_empty: "\<forall>x0\<in>X. UX x0 = {} \<or> VX x0 = {}"
+        proof (intro ballI)
+          fix x0 assume hx0: "x0 \<in> X"
+          have hUX: "UX x0 \<in> TY"
+            using hUX_open hx0 by blast
+          have hVX: "VX x0 \<in> TY"
+            using hVX_open hx0 by blast
+          have hdisj0: "UX x0 \<inter> VX x0 = {}"
+            using hUV_sections hx0 by blast
+          have hcov0: "UX x0 \<union> VX x0 = Y"
+            using hUV_sections hx0 by blast
+          show "UX x0 = {} \<or> VX x0 = {}"
+          proof (rule classical)
+            assume hnot: "\<not> (UX x0 = {} \<or> VX x0 = {})"
+            have hUXne: "UX x0 \<noteq> {}" and hVXne: "VX x0 \<noteq> {}"
+              using hnot by blast+
+            have "\<exists>U V. U \<in> TY \<and> V \<in> TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = Y"
+              apply (rule exI[where x="UX x0"])
+              apply (rule exI[where x="VX x0"])
+              using hUX hVX hUXne hVXne hdisj0 hcov0 by blast
+            thus "UX x0 = {} \<or> VX x0 = {}"
+              using hNoSepY by blast
+          qed
+        qed
+
+        define A where "A = {x \<in> X. UX x \<noteq> {}}"
+        define B where "B = {x \<in> X. VX x \<noteq> {}}"
+
+        have hA_nonempty: "A \<noteq> {}"
+        proof -
+          obtain p where hpU: "p \<in> U"
+            using hUne by blast
+	          obtain x y where hp: "p = (x, y)"
+	            by (cases p) simp
+	          have "(x, y) \<in> X \<times> Y"
+	          proof -
+	            have "(x, y) \<in> U"
+	              using hpU hp by simp
+	            hence "(x, y) \<in> X \<times> Y"
+	              using hUsubXY by blast
+	            thus ?thesis .
+	          qed
+	          hence hxX: "x \<in> X" and hyY: "y \<in> Y"
+	            by blast+
+	          have "y \<in> UX x"
+	            unfolding UX_def using hyY hpU hp by simp
+          hence "UX x \<noteq> {}"
+            by blast
+          hence "x \<in> A"
+            unfolding A_def using hxX by blast
+          thus ?thesis
+            by blast
+        qed
+        have hB_nonempty: "B \<noteq> {}"
+        proof -
+          obtain p where hpV: "p \<in> V"
+            using hVne by blast
+	          obtain x y where hp: "p = (x, y)"
+	            by (cases p) simp
+	          have "(x, y) \<in> X \<times> Y"
+	          proof -
+	            have "(x, y) \<in> V"
+	              using hpV hp by simp
+	            hence "(x, y) \<in> X \<times> Y"
+	              using hVsubXY by blast
+	            thus ?thesis .
+	          qed
+	          hence hxX: "x \<in> X" and hyY: "y \<in> Y"
+	            by blast+
+          have "y \<in> VX x"
+            unfolding VX_def using hyY hpV hp by simp
+          hence "VX x \<noteq> {}"
+            by blast
+          hence "x \<in> B"
+            unfolding B_def using hxX by blast
+          thus ?thesis
+            by blast
+        qed
+
+        have hA_open: "A \<in> TX"
+        proof -
+          have union_T: "\<forall>S. S \<subseteq> TX \<longrightarrow> \<Union>S \<in> TX"
+            using hTX unfolding is_topology_on_def by blast
+          define SA where "SA = {U0 \<in> TX. U0 \<subseteq> A}"
+          have hSA_sub: "SA \<subseteq> TX"
+            unfolding SA_def by blast
+          have hUnion_SA: "\<Union>SA \<in> TX"
+            using union_T hSA_sub by blast
+          have hEq: "A = \<Union>SA"
+          proof (rule subset_antisym)
+            show "A \<subseteq> \<Union>SA"
+            proof (rule subsetI)
+              fix x assume hxA: "x \<in> A"
+              have hxX: "x \<in> X" and hUXne: "UX x \<noteq> {}"
+                using hxA unfolding A_def by blast+
+              obtain y where hy: "y \<in> UX x"
+                using hUXne by blast
+              have hyY: "y \<in> Y" and hxyU: "(x, y) \<in> U"
+                using hy unfolding UX_def by blast+
+              obtain U0 V0 where hU0: "U0 \<in> TX" and hV0: "V0 \<in> TY"
+                and hpUV: "(x, y) \<in> U0 \<times> V0" and hsub: "U0 \<times> V0 \<subseteq> U"
+                by (rule top1_product_open_contains_rect[OF hUopen], rule hxyU)
+              have hxU0: "x \<in> U0"
+                using hpUV by blast
+              have hyV0: "y \<in> V0"
+                using hpUV by blast
+              have hU0subA: "U0 \<subseteq> A"
+              proof (rule subsetI)
+                fix x' assume hx': "x' \<in> U0"
+                have "(x', y) \<in> U0 \<times> V0"
+                  using hx' hyV0 by blast
+                hence "(x', y) \<in> U"
+                  using hsub by blast
+                hence "y \<in> UX x'"
+                  unfolding UX_def using hyY by blast
+                hence "UX x' \<noteq> {}"
+                  by blast
+                show "x' \<in> A"
+                proof -
+                  have "(x', y) \<in> U0 \<times> V0"
+                    using hx' hyV0 by blast
+                  hence "(x', y) \<in> U"
+                    using hsub by blast
+                  hence "(x', y) \<in> X \<times> Y"
+                    using hUsubXY by blast
+                  hence "x' \<in> X"
+                    by blast
+                  thus ?thesis
+                    unfolding A_def using \<open>UX x' \<noteq> {}\<close> by blast
+                qed
+              qed
+              have hU0memSA: "U0 \<in> SA"
+                unfolding SA_def using hU0 hU0subA by blast
+              show "x \<in> \<Union>SA"
+                using hU0memSA hxU0 by blast
+            qed
+            show "\<Union>SA \<subseteq> A"
+            proof (rule subsetI)
+              fix x assume hx: "x \<in> \<Union>SA"
+              then obtain U0 where hU0: "U0 \<in> SA" and hxU0: "x \<in> U0"
+                by blast
+              have "U0 \<subseteq> A"
+                using hU0 unfolding SA_def by blast
+              thus "x \<in> A"
+                using hxU0 by blast
+            qed
+          qed
+          show "A \<in> TX"
+            by (subst hEq) (rule hUnion_SA)
+        qed
+
+        have hB_open: "B \<in> TX"
+        proof -
+          have union_T: "\<forall>S. S \<subseteq> TX \<longrightarrow> \<Union>S \<in> TX"
+            using hTX unfolding is_topology_on_def by blast
+          define SB where "SB = {U0 \<in> TX. U0 \<subseteq> B}"
+          have hSB_sub: "SB \<subseteq> TX"
+            unfolding SB_def by blast
+          have hUnion_SB: "\<Union>SB \<in> TX"
+            using union_T hSB_sub by blast
+          have hEq: "B = \<Union>SB"
+          proof (rule subset_antisym)
+            show "B \<subseteq> \<Union>SB"
+            proof (rule subsetI)
+              fix x assume hxB: "x \<in> B"
+              have hxX: "x \<in> X" and hVXne: "VX x \<noteq> {}"
+                using hxB unfolding B_def by blast+
+              obtain y where hy: "y \<in> VX x"
+                using hVXne by blast
+              have hyY: "y \<in> Y" and hxyV: "(x, y) \<in> V"
+                using hy unfolding VX_def by blast+
+              obtain U0 V0 where hU0: "U0 \<in> TX" and hV0: "V0 \<in> TY"
+                and hpUV: "(x, y) \<in> U0 \<times> V0" and hsub: "U0 \<times> V0 \<subseteq> V"
+                by (rule top1_product_open_contains_rect[OF hVopen], rule hxyV)
+              have hxU0: "x \<in> U0"
+                using hpUV by blast
+              have hyV0: "y \<in> V0"
+                using hpUV by blast
+              have hU0subB: "U0 \<subseteq> B"
+              proof (rule subsetI)
+                fix x' assume hx': "x' \<in> U0"
+                have "(x', y) \<in> U0 \<times> V0"
+                  using hx' hyV0 by blast
+                hence "(x', y) \<in> V"
+                  using hsub by blast
+                hence "y \<in> VX x'"
+                  unfolding VX_def using hyY by blast
+                hence "VX x' \<noteq> {}"
+                  by blast
+                have "(x', y) \<in> X \<times> Y"
+                  using hVsubXY \<open>(x', y) \<in> V\<close> by blast
+                hence "x' \<in> X"
+                  by blast
+                show "x' \<in> B"
+                  unfolding B_def using \<open>x' \<in> X\<close> \<open>VX x' \<noteq> {}\<close> by blast
+              qed
+              have hU0memSB: "U0 \<in> SB"
+                unfolding SB_def using hU0 hU0subB by blast
+              show "x \<in> \<Union>SB"
+                using hU0memSB hxU0 by blast
+            qed
+            show "\<Union>SB \<subseteq> B"
+            proof (rule subsetI)
+              fix x assume hx: "x \<in> \<Union>SB"
+              then obtain U0 where hU0: "U0 \<in> SB" and hxU0: "x \<in> U0"
+                by blast
+              have "U0 \<subseteq> B"
+                using hU0 unfolding SB_def by blast
+              thus "x \<in> B"
+                using hxU0 by blast
+            qed
+          qed
+          show "B \<in> TX"
+            by (subst hEq) (rule hUnion_SB)
+        qed
+
+        have hA_subX: "A \<subseteq> X"
+          unfolding A_def by blast
+        have hB_subX: "B \<subseteq> X"
+          unfolding B_def by blast
+
+        have hAunionB: "A \<union> B = X"
+        proof (rule equalityI)
+          show "A \<union> B \<subseteq> X"
+            using hA_subX hB_subX by blast
+          show "X \<subseteq> A \<union> B"
+          proof (rule subsetI)
+            fix x assume hxX: "x \<in> X"
+            have "(x, y0) \<in> X \<times> Y"
+              using hxX hy0 by blast
+            hence "(x, y0) \<in> U \<union> V"
+              using hUV by simp
+            hence "(x, y0) \<in> U \<or> (x, y0) \<in> V"
+              by blast
+            thus "x \<in> A \<union> B"
+            proof
+              assume hxyU: "(x, y0) \<in> U"
+              have "y0 \<in> UX x"
+                unfolding UX_def using hy0 hxyU by blast
+              hence "UX x \<noteq> {}"
+                by blast
+              hence "x \<in> A"
+                unfolding A_def using hxX by blast
+              thus ?thesis
+                by blast
+            next
+              assume hxyV: "(x, y0) \<in> V"
+              have "y0 \<in> VX x"
+                unfolding VX_def using hy0 hxyV by blast
+              hence "VX x \<noteq> {}"
+                by blast
+              hence "x \<in> B"
+                unfolding B_def using hxX by blast
+              thus ?thesis
+                by blast
+            qed
+          qed
+        qed
+
+        have hAdisjB: "A \<inter> B = {}"
+        proof (rule equalityI)
+          show "A \<inter> B \<subseteq> {}"
+          proof (rule subsetI)
+            fix x assume hx: "x \<in> A \<inter> B"
+            have hxA: "x \<in> A" and hxB: "x \<in> B"
+              using hx by blast+
+            have hxX: "x \<in> X"
+              using hxA unfolding A_def by blast
+            have hUXne: "UX x \<noteq> {}"
+              using hxA unfolding A_def by blast
+            have hVXne: "VX x \<noteq> {}"
+              using hxB unfolding B_def by blast
+            have "UX x = {} \<or> VX x = {}"
+              using hUX_or_VX_empty hxX by blast
+            thus "x \<in> {}"
+              using hUXne hVXne by blast
+          qed
+          show "{} \<subseteq> A \<inter> B"
+            by simp
+        qed
+
+        have "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+          apply (rule exI[where x=A])
+          apply (rule exI[where x=B])
+          using hA_open hB_open hA_nonempty hB_nonempty hAdisjB hAunionB by blast
+        thus False
+          using hNoSepX by blast
+      qed
+    qed
+  qed
+qed
 
 (* proof -
   have hTopXY: "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
