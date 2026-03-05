@@ -28879,6 +28879,183 @@ proof -
     using hxX by simp
 qed
 
+(** Outside the support, the function value must be zero. **)
+lemma top1_support_on_complement_imp_zero:
+  assumes hxX: "x \<in> X"
+  assumes hx: "x \<notin> top1_support_on X TX f"
+  shows "f x = 0"
+proof (rule ccontr)
+  assume hne: "f x \<noteq> 0"
+  have hxNZ: "x \<in> {y \<in> X. f y \<noteq> 0}"
+    using hxX hne by simp
+  have hsub: "{y \<in> X. f y \<noteq> 0} \<subseteq> top1_support_on X TX f"
+    unfolding top1_support_on_def by (rule subset_closure_on)
+  have "x \<in> top1_support_on X TX f"
+    by (rule subsetD[OF hsub hxNZ])
+  thus False
+    using hx by contradiction
+qed
+
+(** If \<open>\<phi>\<close> is supported in an open set \<open>U\<close>, then the "zero extension" of \<open>\<phi> * h\<close> is continuous. **)
+lemma top1_continuous_mul_supported_extend_zero:
+  fixes \<phi> h :: "'a \<Rightarrow> real"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hUopen: "U \<in> TX"
+  assumes hUsub: "U \<subseteq> X"
+  assumes hphi: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV \<phi>"
+  assumes hsupp: "top1_support_on X TX \<phi> \<subseteq> U"
+  assumes hh: "top1_continuous_map_on U (subspace_topology X TX U) (UNIV::real set) order_topology_on_UNIV h"
+  shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. if x \<in> U then \<phi> x * h x else 0)"
+proof -
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hTopU: "is_topology_on U (subspace_topology X TX U)"
+    by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+
+  have hphiU: "top1_continuous_map_on U (subspace_topology X TX U) (UNIV::real set) order_topology_on_UNIV \<phi>"
+  proof -
+    have hRestrDom:
+      "\<forall>A' f. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f \<and> A' \<subseteq> X
+             \<longrightarrow> top1_continuous_map_on A' (subspace_topology X TX A') (UNIV::real set) order_topology_on_UNIV f"
+      by (rule Theorem_18_2(4)[OF hTopX hTopR hTopR])
+    show ?thesis
+      using hRestrDom hphi hUsub by blast
+  qed
+
+  have hmulU:
+    "top1_continuous_map_on U (subspace_topology X TX U) (UNIV::real set) order_topology_on_UNIV (\<lambda>x. \<phi> x * h x)"
+    by (rule top1_continuous_mul_real[OF hTopU hphiU hh])
+
+  have hSuppClosed: "closedin_on X TX (top1_support_on X TX \<phi>)"
+  proof -
+    have hAX: "{x \<in> X. \<phi> x \<noteq> (0::real)} \<subseteq> X"
+      by blast
+    have "closedin_on X TX (closure_on X TX {x \<in> X. \<phi> x \<noteq> (0::real)})"
+      by (rule closure_on_closed[OF hTopX hAX])
+    thus ?thesis
+      unfolding top1_support_on_def by simp
+  qed
+
+  define A where "A = X - top1_support_on X TX \<phi>"
+  have hAopen: "A \<in> TX"
+    unfolding A_def by (rule closedin_diff_open[OF hSuppClosed])
+
+  have hUA: "U \<union> A = X"
+  proof (rule equalityI)
+    show "U \<union> A \<subseteq> X"
+      unfolding A_def using hUsub by blast
+  next
+    show "X \<subseteq> U \<union> A"
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      show "x \<in> U \<union> A"
+      proof (cases "x \<in> top1_support_on X TX \<phi>")
+        case True
+        have "x \<in> U"
+          using hsupp True by blast
+        thus ?thesis
+          by simp
+      next
+        case False
+        thus ?thesis
+          unfolding A_def using hxX by simp
+      qed
+    qed
+  qed
+
+  define f where "f x = (if x \<in> U then \<phi> x * h x else 0)" for x
+
+  have hcont_U: "top1_continuous_map_on U (subspace_topology X TX U) (UNIV::real set) order_topology_on_UNIV f"
+  proof -
+    have heq: "\<forall>x\<in>U. f x = \<phi> x * h x"
+      unfolding f_def by simp
+    show ?thesis
+      using top1_continuous_map_on_cong[OF heq] hmulU by blast
+  qed
+
+  have hzeroA: "\<forall>x\<in>A. f x = 0"
+  proof (intro ballI)
+    fix x assume hxA: "x \<in> A"
+    have hxX: "x \<in> X"
+      using hxA unfolding A_def by blast
+    have hxns: "x \<notin> top1_support_on X TX \<phi>"
+      using hxA unfolding A_def by blast
+    have hphi0: "\<phi> x = 0"
+      by (rule top1_support_on_complement_imp_zero[OF hxX hxns])
+    show "f x = 0"
+      unfolding f_def using hphi0 by (cases "x \<in> U", simp_all)
+  qed
+
+  have hconstA: "top1_continuous_map_on A (subspace_topology X TX A) (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (0::real))"
+  proof -
+    have hTopA: "is_topology_on A (subspace_topology X TX A)"
+      by (rule subspace_topology_is_topology_on[OF hTopX], simp add: A_def)
+    have hConst:
+      "\<forall>y0\<in>(UNIV::real set). top1_continuous_map_on A (subspace_topology X TX A) (UNIV::real set) order_topology_on_UNIV (\<lambda>x. y0)"
+      by (rule Theorem_18_2(1)[OF hTopA hTopR hTopR])
+    show ?thesis
+      using hConst by simp
+  qed
+
+  have hcont_A: "top1_continuous_map_on A (subspace_topology X TX A) (UNIV::real set) order_topology_on_UNIV f"
+    using top1_continuous_map_on_cong[OF hzeroA] hconstA by blast
+
+  have hUc: "(\<Union>{U, A}) = X"
+    using hUA by simp
+  have hcond: "\<forall>W\<in>{U, A}. W \<in> TX \<and>
+        top1_continuous_map_on W (subspace_topology X TX W) (UNIV::real set) order_topology_on_UNIV f"
+  proof (intro ballI)
+    fix W assume hW: "W \<in> {U, A}"
+    show "W \<in> TX \<and>
+        top1_continuous_map_on W (subspace_topology X TX W) (UNIV::real set) order_topology_on_UNIV f"
+    proof (cases "W = U")
+      case True
+      show ?thesis
+        unfolding True
+        by (intro conjI, rule hUopen, rule hcont_U)
+    next
+      case False
+      have "W = A"
+        using hW False by simp
+      show ?thesis
+        unfolding \<open>W = A\<close>
+        by (intro conjI, rule hAopen, rule hcont_A)
+    qed
+  qed
+
+  have hlocal_form:
+    "(\<Union>{U, A} = X) \<and>
+     (\<forall>W\<in>{U, A}. W \<in> TX \<and>
+        top1_continuous_map_on W (subspace_topology X TX W) (UNIV::real set) order_topology_on_UNIV f)
+     \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+  proof -
+    have hRules:
+      "\<forall>Uc g.
+        (\<Union>Uc = X) \<and>
+        (\<forall>W\<in>Uc. W \<in> TX \<and> top1_continuous_map_on W (subspace_topology X TX W)
+            (UNIV::real set) order_topology_on_UNIV g)
+        \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV g"
+      by (rule Theorem_18_2(7)[OF hTopX hTopR hTopR])
+
+    have hspec:
+      "(\<Union>{U, A} = X) \<and>
+       (\<forall>W\<in>{U, A}. W \<in> TX \<and> top1_continuous_map_on W (subspace_topology X TX W)
+          (UNIV::real set) order_topology_on_UNIV f)
+       \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+      using hRules by blast
+
+    show ?thesis
+      by (rule hspec)
+  qed
+
+  have "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+    by (rule mp[OF hlocal_form], intro conjI, rule hUc, rule hcond)
+
+  thus ?thesis
+    unfolding f_def by simp
+qed
+
 definition top1_partition_of_unity_dominated_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> 'a set) \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> bool" where
   "top1_partition_of_unity_dominated_on X TX n U \<phi> \<longleftrightarrow>
@@ -30433,6 +30610,47 @@ proof (rule ext)
   qed
 qed
 
+(** Coordinate projections of a continuous map into \<open>\<real>^n\<close> are continuous. **)
+lemma top1_continuous_map_on_Rpow_coord:
+  fixes f :: "'a \<Rightarrow> nat \<Rightarrow> real"
+  assumes hTopA: "is_topology_on A TA"
+  assumes hf: "top1_continuous_map_on A TA (top1_Rpow_set n) (top1_Rpow_topology n) f"
+  assumes hk: "k < n"
+  shows "top1_continuous_map_on A TA (UNIV::real set) order_topology_on_UNIV (\<lambda>a. (f a) k)"
+proof -
+  let ?I = "{0..<n}"
+  let ?X = "\<lambda>_. (UNIV::real set)"
+  let ?T = "\<lambda>_. order_topology_on_UNIV"
+
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hTop: "\<forall>i\<in>?I. is_topology_on (?X i) (?T i)"
+    using hTopR by blast
+
+  have hfmap: "\<forall>a\<in>A. f a \<in> top1_PiE ?I ?X"
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    have "f a \<in> top1_Rpow_set n"
+      using hf ha unfolding top1_continuous_map_on_def by blast
+    thus "f a \<in> top1_PiE ?I ?X"
+      unfolding top1_Rpow_set_def by simp
+  qed
+
+  have hf_prod:
+    "top1_continuous_map_on A TA (top1_PiE ?I ?X) (top1_product_topology_on ?I ?X ?T) f"
+    using hf unfolding top1_Rpow_set_def top1_Rpow_topology_def by simp
+
+  have hcoords:
+    "\<forall>i\<in>?I. top1_continuous_map_on A TA (?X i) (?T i) (\<lambda>a. (f a) i)"
+    by (rule iffD1[OF Theorem_19_6[OF hTopA hTop hfmap] hf_prod])
+
+  have hkI: "k \<in> ?I"
+    using hk by simp
+
+  show ?thesis
+    by (rule bspec[OF hcoords hkI])
+qed
+
 (** Compact manifolds admit a finite atlas by continuous injective charts into \<open>\<real>^m\<close>. **)
 lemma top1_compact_m_manifold_finite_chart_cover:
   fixes m :: nat
@@ -30638,9 +30856,511 @@ text \<open>
 \<close>
 text \<open>
   The full Isabelle proof (continuity of the assembled map and injectivity via the partition of unity)
-  is substantial and has been postponed for now to keep the session within the timeout budget.
-  The key preparatory ingredient needed downstream is the finite chart cover lemma above.
+  follows the standard argument: from a finite chart cover we obtain a finite partition of unity (Theorem 36.1),
+  and then assemble a global continuous injective map by multiplying each chart with the corresponding partition
+  function and adding the partition coordinate itself.
 \<close>
-sorry
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  have hHausX: "is_hausdorff_on X TX"
+    using hM unfolding top1_m_manifold_on_def by blast
+
+  have hNormal: "top1_normal_on X TX"
+    by (rule Theorem_32_3[OF hcomp hHausX])
+
+  have hexCharts:
+    "\<exists>(n::nat) (U::nat \<Rightarrow> 'a set) (g::nat \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> real).
+      (\<forall>i<n.
+          U i \<in> TX \<and> U i \<subseteq> X
+          \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+                (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+          \<and> inj_on (g i) (U i))
+      \<and> X \<subseteq> (\<Union>i<n. U i)"
+    by (rule top1_compact_m_manifold_finite_chart_cover[OF hcomp hM])
+
+  obtain n where hn:
+    "\<exists>(U::nat \<Rightarrow> 'a set) (g::nat \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> real).
+      (\<forall>i<n.
+          U i \<in> TX \<and> U i \<subseteq> X
+          \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+                (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+          \<and> inj_on (g i) (U i))
+      \<and> X \<subseteq> (\<Union>i<n. U i)"
+    using hexCharts by blast
+
+  obtain U where hU:
+    "\<exists>(g::nat \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> real).
+      (\<forall>i<n.
+          U i \<in> TX \<and> U i \<subseteq> X
+          \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+                (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+          \<and> inj_on (g i) (U i))
+      \<and> X \<subseteq> (\<Union>i<n. U i)"
+    using hn by blast
+
+  obtain g where hCharts:
+    "(\<forall>i<n.
+        U i \<in> TX \<and> U i \<subseteq> X
+        \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+              (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+        \<and> inj_on (g i) (U i))
+     \<and> X \<subseteq> (\<Union>i<n. U i)"
+    using hU by blast
+
+  have hUcontinj:
+    "\<forall>i<n.
+      U i \<in> TX \<and> U i \<subseteq> X
+      \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+      \<and> inj_on (g i) (U i)"
+    by (rule conjunct1[OF hCharts])
+
+  have hcov: "X \<subseteq> (\<Union>i<n. U i)"
+    by (rule conjunct2[OF hCharts])
+
+  have hUopen: "\<forall>i<n. U i \<in> TX"
+    using hUcontinj by blast
+  have hUsub: "\<forall>i<n. U i \<subseteq> X"
+    using hUcontinj by blast
+  obtain \<phi> where hPU: "top1_partition_of_unity_dominated_on X TX n U \<phi>"
+    using Theorem_36_1[OF hNormal hUopen hUsub hcov] by blast
+
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hphi_contR: "\<forall>i<n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have hcontI:
+      "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)"
+      using hPU unfolding top1_partition_of_unity_dominated_on_def using hi by blast
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)"
+      by (rule top1_continuous_map_on_closed_interval_to_real[OF hTopX hcontI])
+  qed
+
+  have hphi_supp: "\<forall>i<n. top1_support_on X TX (\<phi> i) \<subseteq> U i"
+    using hPU unfolding top1_partition_of_unity_dominated_on_def by blast
+
+  define q where "q = Suc m"
+  define N where "N = n * q"
+
+  define F where
+    "F x =
+      (\<lambda>j.
+        if j < N then
+          (let i = j div q; r = j mod q in
+            if r < m then (if x \<in> U i then \<phi> i x * (g i x r) else 0) else \<phi> i x)
+        else undefined)"
+    for x
+
+  have hFmap: "\<forall>x\<in>X. F x \<in> top1_Rpow_set N"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have "\<forall>j\<in>{0..<N}. F x j \<in> (UNIV::real set)"
+      by simp
+    moreover have "\<forall>j. j \<notin> {0..<N} \<longrightarrow> F x j = undefined"
+      unfolding F_def by auto
+    ultimately show "F x \<in> top1_Rpow_set N"
+      unfolding top1_Rpow_set_def top1_PiE_iff by blast
+  qed
+
+  have hFcoords:
+    "\<forall>j\<in>{0..<N}. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (F x) j)"
+  proof (intro ballI)
+    fix j assume hj: "j \<in> {0..<N}"
+    have hjN: "j < N"
+      using hj by simp
+    have hqpos: "q > 0"
+      unfolding q_def by simp
+    define i where "i = j div q"
+    define r where "r = j mod q"
+    have hi: "i < n"
+    proof -
+      have hj': "j < n * q"
+        using hjN unfolding N_def by simp
+      have "j div q < n"
+        using hj' hqpos by (simp add: div_less_iff_less_mult)
+      thus ?thesis
+        unfolding i_def by simp
+    qed
+    have hr_ltq: "r < q"
+      unfolding r_def using hqpos by (rule mod_less_divisor)
+    have hr_le_m: "r \<le> m"
+      unfolding q_def r_def using hr_ltq by simp
+    have hcases: "r < m \<or> r = m"
+      using hr_le_m by arith
+
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (F x) j)"
+    proof (cases "r < m")
+      case True
+      have hcont:
+        "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV
+           (\<lambda>x. if x \<in> U i then \<phi> i x * (g i x r) else 0)"
+      proof -
+        have hUi_open: "U i \<in> TX"
+          using hUopen hi by blast
+        have hUi_sub: "U i \<subseteq> X"
+          using hUsub hi by blast
+        have hphi_i: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)"
+          using hphi_contR hi by blast
+        have hsupp_i: "top1_support_on X TX (\<phi> i) \<subseteq> U i"
+          using hphi_supp hi by blast
+        have hg_i_r:
+          "top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+             (UNIV::real set) order_topology_on_UNIV (\<lambda>x. (g i x) r)"
+        proof -
+          have hgi: "top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+              (top1_Rpow_set m) (top1_Rpow_topology m) (g i)"
+            using hUcontinj hi by blast
+          have hTopUi: "is_topology_on (U i) (subspace_topology X TX (U i))"
+            by (rule subspace_topology_is_topology_on[OF hTopX], rule hUsub[rule_format, OF hi])
+          show ?thesis
+            by (rule top1_continuous_map_on_Rpow_coord[OF hTopUi hgi True])
+        qed
+        show ?thesis
+          by (rule top1_continuous_mul_supported_extend_zero[OF hTopX hUi_open hUi_sub hphi_i hsupp_i hg_i_r])
+      qed
+
+      have hEq: "\<forall>x\<in>X. (F x) j = (if x \<in> U i then \<phi> i x * (g i x r) else 0)"
+      proof (intro ballI)
+        fix x assume hxX: "x \<in> X"
+        have hIf: "j < N"
+          using hjN by simp
+        show "(F x) j = (if x \<in> U i then \<phi> i x * (g i x r) else 0)"
+          unfolding F_def using hIf True
+          by (simp add: q_def Let_def i_def r_def)
+      qed
+
+      show ?thesis
+        using top1_continuous_map_on_cong[OF hEq] hcont by blast
+    next
+      case False
+      have hEq: "\<forall>x\<in>X. (F x) j = \<phi> i x"
+      proof (intro ballI)
+        fix x assume hxX: "x \<in> X"
+        have hIf: "j < N"
+          using hjN by simp
+        show "(F x) j = \<phi> i x"
+          unfolding F_def using hIf False
+          by (simp add: q_def Let_def i_def r_def)
+      qed
+      have hcont: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)"
+        using hphi_contR hi by blast
+      show ?thesis
+        using top1_continuous_map_on_cong[OF hEq] hcont by blast
+    qed
+  qed
+
+  have hFcont: "top1_continuous_map_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+  proof -
+    let ?I = "{0..<N}"
+    let ?X = "\<lambda>_. (UNIV::real set)"
+    let ?T = "\<lambda>_. order_topology_on_UNIV"
+
+    have hTop: "\<forall>i\<in>?I. is_topology_on (?X i) (?T i)"
+      using hTopR by blast
+    have hfmap: "\<forall>x\<in>X. F x \<in> top1_PiE ?I ?X"
+      using hFmap unfolding top1_Rpow_set_def by simp
+    have hcoords:
+      "\<forall>i\<in>?I. top1_continuous_map_on X TX (?X i) (?T i) (\<lambda>x. (F x) i)"
+      by (rule hFcoords)
+    have hcont_prod:
+      "top1_continuous_map_on X TX (top1_PiE ?I ?X) (top1_product_topology_on ?I ?X ?T) F"
+      by (rule iffD2[OF Theorem_19_6[OF hTopX hTop hfmap] hcoords])
+    show ?thesis
+      unfolding top1_Rpow_set_def top1_Rpow_topology_def by (rule hcont_prod)
+  qed
+
+  have hFinj: "inj_on F X"
+  proof (rule inj_onI)
+    fix x y assume hxX: "x \<in> X" and hyX: "y \<in> X" and hEq: "F x = F y"
+
+    obtain i where hi: "i < n" and hphix: "\<phi> i x \<noteq> 0"
+      using top1_partition_of_unity_dominated_on_exists_ne0[OF hPU hxX] by blast
+
+    have hsupp_i: "top1_support_on X TX (\<phi> i) \<subseteq> U i"
+      using hphi_supp hi by blast
+
+    have hxUi: "x \<in> U i"
+    proof (rule ccontr)
+      assume hxnot: "x \<notin> U i"
+      have hx: "x \<in> X - U i"
+        using hxX hxnot by blast
+      have "\<phi> i x = 0"
+        by (rule top1_support_on_subset_imp_zero_on_complement[OF hsupp_i hx])
+      thus False
+        using hphix by contradiction
+    qed
+
+    have hphiEq: "\<phi> i x = \<phi> i y"
+    proof -
+      have hidx: "i * q + m < N"
+      proof -
+        have hmq: "m < q"
+          unfolding q_def by simp
+        have hsuc: "Suc i \<le> n"
+          using hi by simp
+        have h1: "i * q + m < i * q + q"
+          using hmq by simp
+        have h2: "i * q + q = Suc i * q"
+          by simp
+        have h3: "i * q + m < Suc i * q"
+          using h1 by (simp add: h2)
+        have h4: "Suc i * q \<le> n * q"
+          by (rule mult_le_mono1[OF hsuc])
+        have "i * q + m < n * q"
+          by (rule less_le_trans[OF h3 h4])
+        thus ?thesis
+          unfolding N_def by simp
+      qed
+      have hFx: "(F x) (i * q + m) = \<phi> i x"
+      proof -
+        have hIf: "i * q + m < N"
+          by (rule hidx)
+        have hm_lt: "m < q"
+          unfolding q_def by simp
+        have hm0: "m div q = 0"
+          using hm_lt by (simp add: div_eq_0_iff)
+        have hq0: "q \<noteq> 0"
+          unfolding q_def by simp
+        have hdiv: "(i * q + m) div q = i"
+        proof -
+          have "(i * q + m) div q = (m + q * i) div q"
+            by (simp add: add.assoc add.commute add.left_commute mult.commute)
+          also have "... = i + m div q"
+            by (simp add: div_mult_self2[OF hq0])
+          also have "... = i"
+            using hm0 by simp
+          finally show ?thesis .
+        qed
+        have hmod: "(i * q + m) mod q = m"
+        proof -
+          have "(i * q + m) mod q = (m + q * i) mod q"
+            by (simp add: add.assoc add.commute add.left_commute mult.commute)
+          also have "... = m mod q"
+            by simp
+          also have "... = m"
+            using hm_lt by simp
+          finally show ?thesis .
+        qed
+        have hnotlt: "\<not> ((i * q + m) mod q < m)"
+          using hmod by simp
+        show ?thesis
+          unfolding F_def Let_def
+          using hIf hdiv hmod hnotlt by simp
+      qed
+      have hFy: "(F y) (i * q + m) = \<phi> i y"
+      proof -
+        have hIf: "i * q + m < N"
+          by (rule hidx)
+        have hm_lt: "m < q"
+          unfolding q_def by simp
+        have hm0: "m div q = 0"
+          using hm_lt by (simp add: div_eq_0_iff)
+        have hq0: "q \<noteq> 0"
+          unfolding q_def by simp
+        have hdiv: "(i * q + m) div q = i"
+        proof -
+          have "(i * q + m) div q = (m + q * i) div q"
+            by (simp add: add.assoc add.commute add.left_commute mult.commute)
+          also have "... = i + m div q"
+            by (simp add: div_mult_self2[OF hq0])
+          also have "... = i"
+            using hm0 by simp
+          finally show ?thesis .
+        qed
+        have hmod: "(i * q + m) mod q = m"
+        proof -
+          have "(i * q + m) mod q = (m + q * i) mod q"
+            by (simp add: add.assoc add.commute add.left_commute mult.commute)
+          also have "... = m mod q"
+            by simp
+          also have "... = m"
+            using hm_lt by simp
+          finally show ?thesis .
+        qed
+        have hnotlt: "\<not> ((i * q + m) mod q < m)"
+          using hmod by simp
+        show ?thesis
+          unfolding F_def Let_def
+          using hIf hdiv hmod hnotlt by simp
+      qed
+      have "(F x) (i * q + m) = (F y) (i * q + m)"
+        using hEq by simp
+      thus ?thesis
+        using hFx hFy by simp
+    qed
+
+    have hphiy: "\<phi> i y \<noteq> 0"
+      using hphiEq hphix by simp
+
+    have hyUi: "y \<in> U i"
+    proof (rule ccontr)
+      assume hynot: "y \<notin> U i"
+      have hy: "y \<in> X - U i"
+        using hyX hynot by blast
+      have "\<phi> i y = 0"
+        by (rule top1_support_on_subset_imp_zero_on_complement[OF hsupp_i hy])
+      thus False
+        using hphiy by contradiction
+    qed
+
+    have hgi_mem: "\<forall>z\<in>U i. g i z \<in> top1_Rpow_set m"
+    proof (intro ballI)
+      fix z assume hz: "z \<in> U i"
+      have hgi: "top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+          (top1_Rpow_set m) (top1_Rpow_topology m) (g i)"
+        using hUcontinj hi by blast
+      show "g i z \<in> top1_Rpow_set m"
+        using hgi hz unfolding top1_continuous_map_on_def by blast
+    qed
+
+    have hgi_inj: "inj_on (g i) (U i)"
+      using hUcontinj hi by blast
+
+    have hcoords_eq: "\<forall>k<m. (g i x) k = (g i y) k"
+    proof (intro allI impI)
+      fix k assume hk: "k < m"
+      have hidx: "i * q + k < N"
+      proof -
+        have hkq: "k < q"
+          using hk by (simp add: q_def)
+        have hSuc_le: "Suc i \<le> n"
+          using hi by simp
+        have hlt: "i * q + k < Suc i * q"
+        proof -
+          have "i * q + k < i * q + q"
+            using hkq by simp
+          thus ?thesis
+            by simp
+        qed
+        have hle: "Suc i * q \<le> n * q"
+          using hSuc_le by (rule mult_le_mono1)
+        have "i * q + k < n * q"
+          by (rule less_le_trans[OF hlt hle])
+        thus ?thesis
+          by (simp add: N_def)
+      qed
+      have hFx: "(F x) (i * q + k) = \<phi> i x * (g i x k)"
+      proof -
+        have hIf: "i * q + k < N"
+          by (rule hidx)
+        have hq0: "q > 0"
+          by (simp add: q_def)
+        have hkq: "k < q"
+          using hk by (simp add: q_def)
+        have hdiv0: "k div q = 0"
+          using hkq hq0 by (simp add: div_eq_0_iff)
+        have hdiv: "(i * q + k) div q = i"
+        proof -
+          have "(i * q + k) div q = (k + i * q) div q"
+            by (simp add: add.commute)
+          also have "... = i + k div q"
+            using hq0 by simp
+          also have "... = i"
+            using hdiv0 by simp
+          finally show ?thesis .
+        qed
+        have hmod: "(i * q + k) mod q = k"
+        proof -
+          have "(i * q + k) mod q = (k + i * q) mod q"
+            by (simp add: add.commute)
+          also have "... = k mod q"
+            by simp
+          also have "... = k"
+            using hkq by simp
+          finally show ?thesis .
+        qed
+        have hlt: "(i * q + k) mod q < m"
+          using hk hmod by simp
+        have hxUi': "x \<in> U ((i * q + k) div q)"
+          using hxUi hdiv by simp
+        show ?thesis
+          unfolding F_def Let_def
+          using hIf hdiv hmod hlt hxUi' by simp
+      qed
+      have hFy: "(F y) (i * q + k) = \<phi> i y * (g i y k)"
+      proof -
+        have hIf: "i * q + k < N"
+          by (rule hidx)
+        have hq0: "q > 0"
+          by (simp add: q_def)
+        have hkq: "k < q"
+          using hk by (simp add: q_def)
+        have hdiv0: "k div q = 0"
+          using hkq hq0 by (simp add: div_eq_0_iff)
+        have hdiv: "(i * q + k) div q = i"
+        proof -
+          have "(i * q + k) div q = (k + i * q) div q"
+            by (simp add: add.commute)
+          also have "... = i + k div q"
+            using hq0 by simp
+          also have "... = i"
+            using hdiv0 by simp
+          finally show ?thesis .
+        qed
+        have hmod: "(i * q + k) mod q = k"
+        proof -
+          have "(i * q + k) mod q = (k + i * q) mod q"
+            by (simp add: add.commute)
+          also have "... = k mod q"
+            by simp
+          also have "... = k"
+            using hkq by simp
+          finally show ?thesis .
+        qed
+        have hlt: "(i * q + k) mod q < m"
+          using hk hmod by simp
+        have hyUi': "y \<in> U ((i * q + k) div q)"
+          using hyUi hdiv by simp
+        show ?thesis
+          unfolding F_def Let_def
+          using hIf hdiv hmod hlt hyUi' by simp
+      qed
+      have hEqk: "(F x) (i * q + k) = (F y) (i * q + k)"
+        using hEq by simp
+      have hmult: "\<phi> i x * (g i x k) = \<phi> i y * (g i y k)"
+        using hEqk hFx hFy by simp
+      have hmult': "\<phi> i x * (g i x k) = \<phi> i x * (g i y k)"
+        using hmult hphiEq by simp
+      have hne: "\<phi> i x \<noteq> 0"
+        by (rule hphix)
+      have "inverse (\<phi> i x) * (\<phi> i x * (g i x k)) =
+            inverse (\<phi> i x) * (\<phi> i x * (g i y k))"
+        using hmult' by simp
+      thus "(g i x) k = (g i y) k"
+        using hne by (simp add: field_simps)
+    qed
+
+    have hgEq: "g i x = g i y"
+    proof -
+      have hxmem: "g i x \<in> top1_Rpow_set m"
+        using hgi_mem hxUi by blast
+      have hymem: "g i y \<in> top1_Rpow_set m"
+        using hgi_mem hyUi by blast
+      show ?thesis
+        by (rule top1_Rpow_set_ext[OF hxmem hymem hcoords_eq])
+    qed
+
+    show "x = y"
+      by (rule hgi_inj[unfolded inj_on_def, rule_format, OF hxUi hyUi], rule hgEq)
+  qed
+
+  have hTopN: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
+    by (rule top1_Rpow_is_topology_on)
+  have hHausN: "is_hausdorff_on (top1_Rpow_set N) (top1_Rpow_topology N)"
+    by (rule top1_Rpow_is_hausdorff_on)
+
+  have hEmbed: "top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+    by (rule top1_embedding_on_compact_inj[OF hTopX hTopN hcomp hHausN hFcont hFinj])
+
+  show ?thesis
+    apply (rule exI[where x=N])
+    apply (rule exI[where x=F])
+    apply (rule hEmbed)
+    done
+qed
 
 end
