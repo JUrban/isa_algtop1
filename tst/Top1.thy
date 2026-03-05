@@ -15672,6 +15672,193 @@ text \<open>
   deferred.
 \<close>
 
+text \<open>
+  Our notion of compactness is formulated for explicit set-based topologies.  For the standard
+  topology on a type in the Isabelle class \<open>topological_space\<close>, compactness is already
+  available as \<open>compact\<close>.  The following lemma bridges the two formulations for subspaces of
+  \<open>UNIV\<close>.
+\<close>
+
+lemma top1_compact_on_subspace_UNIV_iff_compact:
+  fixes A :: "'a::topological_space set"
+  shows
+    "top1_compact_on A (subspace_topology (UNIV::'a set) top1_open_sets A) \<longleftrightarrow> compact A"
+proof
+  assume hcomp: "top1_compact_on A (subspace_topology (UNIV::'a set) top1_open_sets A)"
+  have hCover:
+    "\<forall>Uc. Uc \<subseteq> subspace_topology (UNIV::'a set) top1_open_sets A \<and> A \<subseteq> \<Union>Uc
+        \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  show "compact A"
+  proof (rule compactI)
+    fix C :: "'a set set"
+    assume hCopen: "\<forall>t\<in>C. open t"
+    assume hAcov: "A \<subseteq> \<Union>C"
+
+    define Uc where "Uc = (\<lambda>U. A \<inter> U) ` C"
+
+    have hUc_sub:
+      "Uc \<subseteq> subspace_topology (UNIV::'a set) top1_open_sets A"
+    proof (rule subsetI)
+      fix W
+      assume hW: "W \<in> Uc"
+      then obtain U where hU: "U \<in> C" and hWeq: "W = A \<inter> U"
+        unfolding Uc_def by blast
+      have hopenU: "open U"
+        using hCopen hU by blast
+      have hU_top1: "U \<in> top1_open_sets"
+        unfolding top1_open_sets_def using hopenU by blast
+      show "W \<in> subspace_topology (UNIV::'a set) top1_open_sets A"
+        unfolding subspace_topology_def hWeq
+        apply (rule CollectI)
+        apply (rule exI[where x=U])
+        using hU_top1 by simp
+    qed
+
+    have hAcov_Uc: "A \<subseteq> \<Union>Uc"
+    proof (rule subsetI)
+      fix x
+      assume hxA: "x \<in> A"
+      have hx: "x \<in> \<Union>C"
+        by (rule subsetD[OF hAcov hxA])
+      then obtain U where hU: "U \<in> C" and hxU: "x \<in> U"
+        by blast
+      have hWU: "A \<inter> U \<in> Uc"
+        unfolding Uc_def using hU by blast
+      have hxWU: "x \<in> A \<inter> U"
+        using hxA hxU by blast
+      show "x \<in> \<Union>Uc"
+        by (rule UnionI[OF hWU hxWU])
+    qed
+
+    obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "A \<subseteq> \<Union>F"
+      using hCover[rule_format, OF conjI[OF hUc_sub hAcov_Uc]] by blast
+
+    have hrep: "\<forall>W\<in>F. \<exists>U. U \<in> C \<and> W = A \<inter> U"
+    proof (intro ballI)
+      fix W
+      assume hW: "W \<in> F"
+      have "W \<in> Uc"
+        using hFsub hW by blast
+      thus "\<exists>U. U \<in> C \<and> W = A \<inter> U"
+        unfolding Uc_def by blast
+    qed
+
+    obtain f where hf: "\<forall>W\<in>F. f W \<in> C \<and> W = A \<inter> f W"
+      using bchoice[OF hrep] by blast
+
+    define C' where "C' = f ` F"
+    have hC'sub: "C' \<subseteq> C"
+      unfolding C'_def using hf by blast
+    have hC'fin: "finite C'"
+      unfolding C'_def using hFfin by simp
+
+    have hAcovC': "A \<subseteq> \<Union>C'"
+    proof (rule subsetI)
+      fix x
+      assume hxA: "x \<in> A"
+      have hxUF: "x \<in> \<Union>F"
+        by (rule subsetD[OF hFcov hxA])
+      then obtain W where hW: "W \<in> F" and hxW: "x \<in> W"
+        by blast
+      have hWeq: "W = A \<inter> f W"
+        using hf hW by blast
+      have hx_fW: "x \<in> f W"
+        using hxW hWeq by blast
+      have hfwC': "f W \<in> C'"
+        unfolding C'_def using hW by blast
+      show "x \<in> \<Union>C'"
+        by (rule UnionI[OF hfwC' hx_fW])
+    qed
+
+    show "\<exists>C'. C' \<subseteq> C \<and> finite C' \<and> A \<subseteq> \<Union>C'"
+      by (intro exI[where x=C'] conjI hC'sub hC'fin hAcovC')
+  qed
+next
+  assume hcompact: "compact A"
+  show "top1_compact_on A (subspace_topology (UNIV::'a set) top1_open_sets A)"
+    unfolding top1_compact_on_def
+  proof (intro conjI allI impI)
+    show "is_topology_on A (subspace_topology (UNIV::'a set) top1_open_sets A)"
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV], simp)
+
+    fix Uc
+    assume hUc: "Uc \<subseteq> subspace_topology (UNIV::'a set) top1_open_sets A \<and> A \<subseteq> \<Union>Uc"
+    have hUc_sub: "Uc \<subseteq> subspace_topology (UNIV::'a set) top1_open_sets A"
+      using hUc by blast
+    have hAcov: "A \<subseteq> \<Union>Uc"
+      using hUc by blast
+
+    define C where "C = {U. U \<in> top1_open_sets \<and> (A \<inter> U) \<in> Uc}"
+    have hCopen: "\<And>U. U \<in> C \<Longrightarrow> open U"
+      unfolding C_def top1_open_sets_def by blast
+
+    have hAcovC: "A \<subseteq> \<Union>C"
+    proof (rule subsetI)
+      fix x
+      assume hxA: "x \<in> A"
+      have hxUc: "x \<in> \<Union>Uc"
+        by (rule subsetD[OF hAcov hxA])
+      then obtain W where hW: "W \<in> Uc" and hxW: "x \<in> W"
+        by blast
+      have hWsub: "W \<in> subspace_topology (UNIV::'a set) top1_open_sets A"
+        using hUc_sub hW by blast
+      obtain U where hU: "U \<in> top1_open_sets" and hWeq: "W = A \<inter> U"
+        using hWsub unfolding subspace_topology_def by blast
+      have hUC: "U \<in> C"
+        unfolding C_def using hU hW hWeq by blast
+      have hxU: "x \<in> U"
+        using hxW hWeq by blast
+      show "x \<in> \<Union>C"
+        by (rule UnionI[OF hUC hxU])
+    qed
+
+    obtain C' where hC'sub: "C' \<subseteq> C" and hC'fin: "finite C'" and hAcovC': "A \<subseteq> \<Union>C'"
+      by (rule compactE[OF hcompact hAcovC], use hCopen in blast)
+
+    define F where "F = (\<lambda>U. A \<inter> U) ` C'"
+    have hFfin: "finite F"
+      unfolding F_def using hC'fin by simp
+
+    have hFsub: "F \<subseteq> Uc"
+    proof (rule subsetI)
+      fix W
+      assume hW: "W \<in> F"
+      then obtain U where hU: "U \<in> C'" and hWeq: "W = A \<inter> U"
+        unfolding F_def by blast
+      have hUC: "U \<in> C"
+        using hC'sub hU by blast
+      show "W \<in> Uc"
+      proof -
+        have hAU: "A \<inter> U \<in> Uc"
+          using hUC unfolding C_def by simp
+        show ?thesis
+          unfolding hWeq using hAU by simp
+      qed
+    qed
+
+    have hAcovF: "A \<subseteq> \<Union>F"
+    proof (rule subsetI)
+      fix x
+      assume hxA: "x \<in> A"
+      have hx: "x \<in> \<Union>C'"
+        by (rule subsetD[OF hAcovC' hxA])
+      then obtain U where hU: "U \<in> C'" and hxU: "x \<in> U"
+        by blast
+      have hWU: "A \<inter> U \<in> F"
+        unfolding F_def using hU by blast
+      have hxWU: "x \<in> A \<inter> U"
+        using hxA hxU by blast
+      show "x \<in> \<Union>F"
+        by (rule UnionI[OF hWU hxWU])
+    qed
+
+    show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F"
+      by (intro exI[where x=F] conjI hFfin hFsub hAcovF)
+  qed
+qed
+
 (** from \S27 Theorem 27.1 (Closed intervals in linear continua are compact) [top1.tex:3357] **)
 theorem Theorem_27_1:
   fixes a b :: "'a::linear_continuum_topology"
