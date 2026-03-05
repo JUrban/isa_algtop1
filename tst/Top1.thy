@@ -9015,14 +9015,613 @@ theorem Theorem_19_5_box:
   assumes hA: "\<forall>i\<in>I. A i \<subseteq> X i"
   shows "closure_on (top1_PiE I X) (top1_box_topology_on I X T) (top1_PiE I A)
         = top1_PiE I (\<lambda>i. closure_on (X i) (T i) (A i))"
-  sorry
+proof (rule equalityI)
+  let ?PX = "top1_PiE I X"
+  let ?PA = "top1_PiE I A"
+  let ?TB = "top1_box_topology_on I X T"
+  let ?C = "(\<lambda>i. closure_on (X i) (T i) (A i))"
+
+  have hTopBox: "is_topology_on ?PX ?TB"
+    by (rule top1_box_topology_on_is_topology_on[OF hTop])
+
+  have hPA_PX: "?PA \<subseteq> ?PX"
+    by (rule top1_PiE_mono[OF hA])
+
+  show "closure_on ?PX ?TB ?PA \<subseteq> top1_PiE I ?C"
+  proof (rule subsetI)
+    fix x assume hxcl: "x \<in> closure_on ?PX ?TB ?PA"
+
+    have hxPX: "x \<in> ?PX"
+    proof -
+      have "closure_on ?PX ?TB ?PA \<subseteq> ?PX"
+        by (rule closure_on_subset_carrier[OF hTopBox hPA_PX])
+      thus ?thesis
+        using hxcl by blast
+    qed
+
+    have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+      using hxPX unfolding top1_PiE_iff by blast
+
+    have hxcl_prop: "\<forall>U. neighborhood_of x ?PX ?TB U \<longrightarrow> intersects U ?PA"
+      by (rule iffD1[OF Theorem_17_5a[OF hTopBox hxPX hPA_PX], OF hxcl])
+
+    have hxC: "\<forall>i\<in>I. x i \<in> ?C i"
+    proof (intro ballI)
+      fix i assume hi: "i \<in> I"
+
+      have hTopi: "is_topology_on (X i) (T i)"
+        using hTop hi by blast
+      have hAiX: "A i \<subseteq> X i"
+        using hA hi by blast
+
+      have hxiX: "x i \<in> X i"
+        using hxPX hi unfolding top1_PiE_iff by blast
+
+      have hxcoord: "\<forall>U. neighborhood_of (x i) (X i) (T i) U \<longrightarrow> intersects U (A i)"
+      proof (intro allI impI)
+        fix U assume hnbd: "neighborhood_of (x i) (X i) (T i) U"
+
+        have hUT: "U \<in> T i" and hxiU: "x i \<in> U"
+          using hnbd unfolding neighborhood_of_def by blast+
+
+        have hXi: "X i \<in> T i"
+          using hTopi unfolding is_topology_on_def by blast
+
+        have hUiX_open: "U \<inter> X i \<in> T i"
+          by (rule topology_inter2[OF hTopi hUT hXi])
+
+        define V where "V = U \<inter> X i"
+        define W where "W = (\<lambda>j. if j = i then V else X j)"
+
+        have hWbasis: "top1_PiE I W \<in> top1_box_basis_on I X T"
+        proof -
+          have hW: "\<forall>j\<in>I. W j \<in> T j \<and> W j \<subseteq> X j"
+          proof (intro ballI)
+            fix j assume hj: "j \<in> I"
+            have hTopj: "is_topology_on (X j) (T j)"
+              using hTop hj by blast
+            have hXj: "X j \<in> T j"
+              using hTopj unfolding is_topology_on_def by blast
+            show "W j \<in> T j \<and> W j \<subseteq> X j"
+            proof (cases "j = i")
+              case True
+              have "W j = V"
+                unfolding W_def using True by simp
+              moreover have "V \<in> T i"
+                unfolding V_def using hUiX_open by simp
+              moreover have "V \<subseteq> X i"
+                unfolding V_def by blast
+              ultimately show ?thesis
+                using True by simp
+            next
+              case False
+              have "W j = X j"
+                unfolding W_def using False by simp
+              thus ?thesis
+                using hXj by simp
+            qed
+          qed
+          show ?thesis
+            unfolding top1_box_basis_on_def
+            apply (rule CollectI)
+            apply (rule exI[where x=W])
+            using hW by blast
+        qed
+
+        have hBasisBox: "is_basis_on ?PX (top1_box_basis_on I X T)"
+          by (rule top1_box_basis_is_basis_on[OF hTop])
+
+        have hWopen: "top1_PiE I W \<in> ?TB"
+          unfolding top1_box_topology_on_def
+          by (rule basis_elem_open_in_generated_topology[OF hBasisBox hWbasis])
+
+        have hxW: "x \<in> top1_PiE I W"
+        proof -
+          have hxmem: "\<forall>j\<in>I. x j \<in> W j"
+          proof (intro ballI)
+            fix j assume hj: "j \<in> I"
+            show "x j \<in> W j"
+            proof (cases "j = i")
+              case True
+              have "W j = V"
+                unfolding W_def using True by simp
+              moreover have "x i \<in> V"
+                unfolding V_def using hxiU hxiX by blast
+              ultimately show ?thesis
+                using True by simp
+            next
+              case False
+              have "W j = X j"
+                unfolding W_def using False by simp
+              moreover have "x j \<in> X j"
+                using hxPX hj unfolding top1_PiE_iff by blast
+              ultimately show ?thesis
+                by simp
+            qed
+          qed
+          show ?thesis
+            unfolding top1_PiE_iff using hxmem hxext by blast
+        qed
+
+        have hnbdW: "neighborhood_of x ?PX ?TB (top1_PiE I W)"
+          unfolding neighborhood_of_def using hWopen hxW by blast
+
+        have hinter: "intersects (top1_PiE I W) ?PA"
+          using hxcl_prop hnbdW by blast
+
+	        obtain y where hy: "y \<in> top1_PiE I W \<inter> ?PA"
+	          using hinter unfolding intersects_def by blast
+	
+	        have hyV: "y i \<in> V"
+	        proof -
+	          have hyW: "y \<in> top1_PiE I W"
+	            using hy by simp
+	          have "\<forall>j\<in>I. y j \<in> W j"
+	            using hyW unfolding top1_PiE_iff by blast
+	          hence "y i \<in> W i"
+	            using hi by blast
+	          thus ?thesis
+	            unfolding W_def by simp
+	        qed
+	        have hyAi: "y i \<in> A i"
+	        proof -
+	          have hyA: "y \<in> top1_PiE I A"
+	            using hy by simp
+	          have "\<forall>j\<in>I. y j \<in> A j"
+	            using hyA unfolding top1_PiE_iff by blast
+	          thus ?thesis
+	            using hi by blast
+	        qed
+
+        have hyU': "y i \<in> U"
+          using hyV unfolding V_def by blast
+        have "y i \<in> U \<inter> A i"
+          using hyU' hyAi by blast
+        thus "intersects U (A i)"
+          unfolding intersects_def by blast
+      qed
+
+      show "x i \<in> closure_on (X i) (T i) (A i)"
+        by (rule iffD2[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord])
+    qed
+
+    show "x \<in> top1_PiE I ?C"
+      unfolding top1_PiE_iff using hxC hxext by blast
+  qed
+
+  show "top1_PiE I ?C \<subseteq> closure_on ?PX ?TB ?PA"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> top1_PiE I ?C"
+
+    have hCsub: "\<forall>i\<in>I. ?C i \<subseteq> X i"
+    proof (intro ballI)
+      fix i assume hi: "i \<in> I"
+      have hTopi: "is_topology_on (X i) (T i)"
+        using hTop hi by blast
+      have hAiX: "A i \<subseteq> X i"
+        using hA hi by blast
+      show "?C i \<subseteq> X i"
+        by (rule closure_on_subset_carrier[OF hTopi hAiX])
+    qed
+
+    have hxPX: "x \<in> ?PX"
+      by (rule subsetD[OF top1_PiE_mono[OF hCsub], OF hx])
+
+    have hxcoord: "\<forall>i\<in>I. x i \<in> ?C i"
+      using hx unfolding top1_PiE_iff by blast
+
+    have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+      using hx unfolding top1_PiE_iff by blast
+
+    have hx_intersects: "\<forall>U. neighborhood_of x ?PX ?TB U \<longrightarrow> intersects U ?PA"
+    proof (intro allI impI)
+      fix U assume hnbd: "neighborhood_of x ?PX ?TB U"
+      have hUopen: "U \<in> ?TB" and hxU: "x \<in> U"
+        using hnbd unfolding neighborhood_of_def by blast+
+
+      have hUgen: "U \<in> topology_generated_by_basis ?PX (top1_box_basis_on I X T)"
+        using hUopen unfolding top1_box_topology_on_def by simp
+
+      have hcov: "\<forall>z\<in>U. \<exists>b\<in>top1_box_basis_on I X T. z \<in> b \<and> b \<subseteq> U"
+        using hUgen unfolding topology_generated_by_basis_def by blast
+
+      obtain b where hb: "b \<in> top1_box_basis_on I X T" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+        using hcov hxU by blast
+
+      obtain U0 where hbdef: "b = top1_PiE I U0"
+        and hU0: "\<forall>i\<in>I. U0 i \<in> T i \<and> U0 i \<subseteq> X i"
+        using hb unfolding top1_box_basis_on_def by blast
+
+      have hxU0: "\<forall>i\<in>I. x i \<in> U0 i"
+        using hxb unfolding hbdef top1_PiE_iff by blast
+
+      have hchoose: "\<forall>i\<in>I. \<exists>y. y \<in> U0 i \<inter> A i"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> I"
+        have hTopi: "is_topology_on (X i) (T i)"
+          using hTop hi by blast
+        have hAiX: "A i \<subseteq> X i"
+          using hA hi by blast
+
+        have hxiX: "x i \<in> X i"
+          using hxPX hi unfolding top1_PiE_iff by blast
+        have hxiU0: "x i \<in> U0 i"
+          using hxU0 hi by blast
+        have hU0i: "U0 i \<in> T i"
+          using hU0 hi by blast
+
+        have hxcl_i_prop: "\<forall>V. neighborhood_of (x i) (X i) (T i) V \<longrightarrow> intersects V (A i)"
+          by (rule iffD1[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord[rule_format, OF hi]])
+
+        have "intersects (U0 i) (A i)"
+          using hxcl_i_prop hU0i hxiU0 unfolding neighborhood_of_def by blast
+        thus "\<exists>y. y \<in> U0 i \<inter> A i"
+          unfolding intersects_def by blast
+      qed
+
+      obtain y0 where hy0: "\<forall>i\<in>I. y0 i \<in> U0 i \<inter> A i"
+        using bchoice[OF hchoose] by blast
+
+      define y where "y = (\<lambda>i. if i \<in> I then y0 i else undefined)"
+
+      have hyext: "\<forall>i. i \<notin> I \<longrightarrow> y i = undefined"
+        unfolding y_def by simp
+
+	      have hyA: "\<forall>i\<in>I. y i \<in> A i"
+		      proof (intro ballI)
+		        fix i assume hi: "i \<in> I"
+		        have "y i = y0 i"
+		          unfolding y_def using hi by simp
+		        moreover have "y0 i \<in> U0 i \<inter> A i"
+		          using hy0 hi by blast
+		        ultimately show "y i \<in> A i"
+		        proof -
+		          have "y0 i \<in> A i"
+		            using \<open>y0 i \<in> U0 i \<inter> A i\<close> by blast
+		          thus ?thesis
+		            using \<open>y i = y0 i\<close> by simp
+		        qed
+		      qed
+	      have hyU0: "\<forall>i\<in>I. y i \<in> U0 i"
+		      proof (intro ballI)
+		        fix i assume hi: "i \<in> I"
+		        have "y i = y0 i"
+		          unfolding y_def using hi by simp
+		        moreover have "y0 i \<in> U0 i \<inter> A i"
+		          using hy0 hi by blast
+		        ultimately show "y i \<in> U0 i"
+		        proof -
+		          have "y0 i \<in> U0 i"
+		            using \<open>y0 i \<in> U0 i \<inter> A i\<close> by blast
+		          thus ?thesis
+		            using \<open>y i = y0 i\<close> by simp
+		        qed
+		      qed
+
+      have hyPA: "y \<in> ?PA"
+        unfolding top1_PiE_iff using hyA hyext by blast
+      have hyb: "y \<in> b"
+        unfolding hbdef top1_PiE_iff using hyU0 hyext by blast
+
+      have "y \<in> U \<inter> ?PA"
+        using hyPA hyb hbU by blast
+      thus "intersects U ?PA"
+        unfolding intersects_def by blast
+    qed
+
+    show "x \<in> closure_on ?PX ?TB ?PA"
+      by (rule iffD2[OF Theorem_17_5a[OF hTopBox hxPX hPA_PX], OF hx_intersects])
+  qed
+qed
 
 theorem Theorem_19_5_product:
   assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
   assumes hA: "\<forall>i\<in>I. A i \<subseteq> X i"
   shows "closure_on (top1_PiE I X) (top1_product_topology_on I X T) (top1_PiE I A)
         = top1_PiE I (\<lambda>i. closure_on (X i) (T i) (A i))"
-  sorry
+proof (rule equalityI)
+  let ?PX = "top1_PiE I X"
+  let ?PA = "top1_PiE I A"
+  let ?TP = "top1_product_topology_on I X T"
+  let ?C = "(\<lambda>i. closure_on (X i) (T i) (A i))"
+
+  have hTopProd: "is_topology_on ?PX ?TP"
+    by (rule top1_product_topology_on_is_topology_on[OF hTop])
+
+  have hPA_PX: "?PA \<subseteq> ?PX"
+    by (rule top1_PiE_mono[OF hA])
+
+  show "closure_on ?PX ?TP ?PA \<subseteq> top1_PiE I ?C"
+  proof (rule subsetI)
+    fix x assume hxcl: "x \<in> closure_on ?PX ?TP ?PA"
+
+    have hxPX: "x \<in> ?PX"
+    proof -
+      have "closure_on ?PX ?TP ?PA \<subseteq> ?PX"
+        by (rule closure_on_subset_carrier[OF hTopProd hPA_PX])
+      thus ?thesis
+        using hxcl by blast
+    qed
+
+    have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+      using hxPX unfolding top1_PiE_iff by blast
+
+    have hxcl_prop: "\<forall>U. neighborhood_of x ?PX ?TP U \<longrightarrow> intersects U ?PA"
+      by (rule iffD1[OF Theorem_17_5a[OF hTopProd hxPX hPA_PX], OF hxcl])
+
+    have hxC: "\<forall>i\<in>I. x i \<in> ?C i"
+    proof (intro ballI)
+      fix i assume hi: "i \<in> I"
+
+      have hTopi: "is_topology_on (X i) (T i)"
+        using hTop hi by blast
+      have hAiX: "A i \<subseteq> X i"
+        using hA hi by blast
+
+      have hxiX: "x i \<in> X i"
+        using hxPX hi unfolding top1_PiE_iff by blast
+
+      have hxcoord: "\<forall>U. neighborhood_of (x i) (X i) (T i) U \<longrightarrow> intersects U (A i)"
+      proof (intro allI impI)
+        fix U assume hnbd: "neighborhood_of (x i) (X i) (T i) U"
+
+        have hUT: "U \<in> T i" and hxiU: "x i \<in> U"
+          using hnbd unfolding neighborhood_of_def by blast+
+
+        have hXi: "X i \<in> T i"
+          using hTopi unfolding is_topology_on_def by blast
+
+        have hUiX_open: "U \<inter> X i \<in> T i"
+          by (rule topology_inter2[OF hTopi hUT hXi])
+
+        define V where "V = U \<inter> X i"
+        define W where "W = (\<lambda>j. if j = i then V else X j)"
+
+        have hWbasis: "top1_PiE I W \<in> top1_product_basis_on I X T"
+        proof -
+          have hW: "\<forall>j\<in>I. W j \<in> T j \<and> W j \<subseteq> X j"
+          proof (intro ballI)
+            fix j assume hj: "j \<in> I"
+            have hTopj: "is_topology_on (X j) (T j)"
+              using hTop hj by blast
+            have hXj: "X j \<in> T j"
+              using hTopj unfolding is_topology_on_def by blast
+            show "W j \<in> T j \<and> W j \<subseteq> X j"
+            proof (cases "j = i")
+              case True
+              have "W j = V"
+                unfolding W_def using True by simp
+              moreover have "V \<in> T i"
+                unfolding V_def using hUiX_open by simp
+              moreover have "V \<subseteq> X i"
+                unfolding V_def by blast
+              ultimately show ?thesis
+                using True by simp
+            next
+              case False
+              have "W j = X j"
+                unfolding W_def using False by simp
+              thus ?thesis
+                using hXj by simp
+            qed
+          qed
+
+          have hfin: "finite {j \<in> I. W j \<noteq> X j}"
+            unfolding W_def by simp
+
+          show ?thesis
+            unfolding top1_product_basis_on_def
+            apply (rule CollectI)
+            apply (rule exI[where x=W])
+            using hW hfin by blast
+        qed
+
+        have hBasisProd: "is_basis_on ?PX (top1_product_basis_on I X T)"
+          by (rule top1_product_basis_is_basis_on[OF hTop])
+
+        have hWopen: "top1_PiE I W \<in> ?TP"
+          unfolding top1_product_topology_on_def
+          by (rule basis_elem_open_in_generated_topology[OF hBasisProd hWbasis])
+
+        have hxW: "x \<in> top1_PiE I W"
+        proof -
+          have hxmem: "\<forall>j\<in>I. x j \<in> W j"
+          proof (intro ballI)
+            fix j assume hj: "j \<in> I"
+            show "x j \<in> W j"
+            proof (cases "j = i")
+              case True
+              have "W j = V"
+                unfolding W_def using True by simp
+              moreover have "x i \<in> V"
+                unfolding V_def using hxiU hxiX by blast
+              ultimately show ?thesis
+                using True by simp
+            next
+              case False
+              have "W j = X j"
+                unfolding W_def using False by simp
+              moreover have "x j \<in> X j"
+                using hxPX hj unfolding top1_PiE_iff by blast
+              ultimately show ?thesis
+                by simp
+            qed
+          qed
+          show ?thesis
+            unfolding top1_PiE_iff using hxmem hxext by blast
+        qed
+
+        have hnbdW: "neighborhood_of x ?PX ?TP (top1_PiE I W)"
+          unfolding neighborhood_of_def using hWopen hxW by blast
+
+        have hinter: "intersects (top1_PiE I W) ?PA"
+          using hxcl_prop hnbdW by blast
+
+	        obtain y where hy: "y \<in> top1_PiE I W \<inter> ?PA"
+	          using hinter unfolding intersects_def by blast
+	
+	        have hyV: "y i \<in> V"
+	        proof -
+	          have hyW: "y \<in> top1_PiE I W"
+	            using hy by simp
+	          have "\<forall>j\<in>I. y j \<in> W j"
+	            using hyW unfolding top1_PiE_iff by blast
+	          hence "y i \<in> W i"
+	            using hi by blast
+	          thus ?thesis
+	            unfolding W_def by simp
+	        qed
+	        have hyAi: "y i \<in> A i"
+	        proof -
+	          have hyA: "y \<in> top1_PiE I A"
+	            using hy by simp
+	          have "\<forall>j\<in>I. y j \<in> A j"
+	            using hyA unfolding top1_PiE_iff by blast
+	          thus ?thesis
+	            using hi by blast
+	        qed
+
+        have hyU': "y i \<in> U"
+          using hyV unfolding V_def by blast
+        have "y i \<in> U \<inter> A i"
+          using hyU' hyAi by blast
+        thus "intersects U (A i)"
+          unfolding intersects_def by blast
+      qed
+
+      show "x i \<in> closure_on (X i) (T i) (A i)"
+        by (rule iffD2[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord])
+    qed
+
+    show "x \<in> top1_PiE I ?C"
+      unfolding top1_PiE_iff using hxC hxext by blast
+  qed
+
+  show "top1_PiE I ?C \<subseteq> closure_on ?PX ?TP ?PA"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> top1_PiE I ?C"
+
+    have hCsub: "\<forall>i\<in>I. ?C i \<subseteq> X i"
+    proof (intro ballI)
+      fix i assume hi: "i \<in> I"
+      have hTopi: "is_topology_on (X i) (T i)"
+        using hTop hi by blast
+      have hAiX: "A i \<subseteq> X i"
+        using hA hi by blast
+      show "?C i \<subseteq> X i"
+        by (rule closure_on_subset_carrier[OF hTopi hAiX])
+    qed
+
+    have hxPX: "x \<in> ?PX"
+      by (rule subsetD[OF top1_PiE_mono[OF hCsub], OF hx])
+
+    have hxcoord: "\<forall>i\<in>I. x i \<in> ?C i"
+      using hx unfolding top1_PiE_iff by blast
+
+    have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+      using hx unfolding top1_PiE_iff by blast
+
+    have hx_intersects: "\<forall>U. neighborhood_of x ?PX ?TP U \<longrightarrow> intersects U ?PA"
+    proof (intro allI impI)
+      fix U assume hnbd: "neighborhood_of x ?PX ?TP U"
+      have hUopen: "U \<in> ?TP" and hxU: "x \<in> U"
+        using hnbd unfolding neighborhood_of_def by blast+
+
+      have hUgen: "U \<in> topology_generated_by_basis ?PX (top1_product_basis_on I X T)"
+        using hUopen unfolding top1_product_topology_on_def by simp
+
+      have hcov: "\<forall>z\<in>U. \<exists>b\<in>top1_product_basis_on I X T. z \<in> b \<and> b \<subseteq> U"
+        using hUgen unfolding topology_generated_by_basis_def by blast
+
+      obtain b where hb: "b \<in> top1_product_basis_on I X T" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+        using hcov hxU by blast
+
+      obtain U0 where hbdef: "b = top1_PiE I U0"
+        and hU0: "(\<forall>i\<in>I. U0 i \<in> T i \<and> U0 i \<subseteq> X i)"
+        and hfin0: "finite {i \<in> I. U0 i \<noteq> X i}"
+        using hb unfolding top1_product_basis_on_def by blast
+
+      have hxU0: "\<forall>i\<in>I. x i \<in> U0 i"
+        using hxb unfolding hbdef top1_PiE_iff by blast
+
+      have hchoose: "\<forall>i\<in>I. \<exists>y. y \<in> U0 i \<inter> A i"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> I"
+        have hTopi: "is_topology_on (X i) (T i)"
+          using hTop hi by blast
+        have hAiX: "A i \<subseteq> X i"
+          using hA hi by blast
+
+        have hxiX: "x i \<in> X i"
+          using hxPX hi unfolding top1_PiE_iff by blast
+        have hxiU0: "x i \<in> U0 i"
+          using hxU0 hi by blast
+        have hU0i: "U0 i \<in> T i"
+          using hU0 hi by blast
+
+        have hxcl_i_prop: "\<forall>V. neighborhood_of (x i) (X i) (T i) V \<longrightarrow> intersects V (A i)"
+          by (rule iffD1[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord[rule_format, OF hi]])
+
+        have "intersects (U0 i) (A i)"
+          using hxcl_i_prop hU0i hxiU0 unfolding neighborhood_of_def by blast
+        thus "\<exists>y. y \<in> U0 i \<inter> A i"
+          unfolding intersects_def by blast
+      qed
+
+      obtain y0 where hy0: "\<forall>i\<in>I. y0 i \<in> U0 i \<inter> A i"
+        using bchoice[OF hchoose] by blast
+
+      define y where "y = (\<lambda>i. if i \<in> I then y0 i else undefined)"
+
+      have hyext: "\<forall>i. i \<notin> I \<longrightarrow> y i = undefined"
+        unfolding y_def by simp
+
+      have hyA: "\<forall>i\<in>I. y i \<in> A i"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> I"
+        have "y i = y0 i"
+          unfolding y_def using hi by simp
+        moreover have "y0 i \<in> U0 i \<inter> A i"
+          using hy0 hi by blast
+        ultimately show "y i \<in> A i"
+        proof -
+          have "y0 i \<in> A i"
+            using \<open>y0 i \<in> U0 i \<inter> A i\<close> by blast
+          thus ?thesis
+            using \<open>y i = y0 i\<close> by simp
+        qed
+      qed
+      have hyU0: "\<forall>i\<in>I. y i \<in> U0 i"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> I"
+        have "y i = y0 i"
+          unfolding y_def using hi by simp
+        moreover have "y0 i \<in> U0 i \<inter> A i"
+          using hy0 hi by blast
+        ultimately show "y i \<in> U0 i"
+        proof -
+          have "y0 i \<in> U0 i"
+            using \<open>y0 i \<in> U0 i \<inter> A i\<close> by blast
+          thus ?thesis
+            using \<open>y i = y0 i\<close> by simp
+        qed
+      qed
+
+      have hyPA: "y \<in> ?PA"
+        unfolding top1_PiE_iff using hyA hyext by blast
+      have hyb: "y \<in> b"
+        unfolding hbdef top1_PiE_iff using hyU0 hyext by blast
+
+      have "y \<in> U \<inter> ?PA"
+        using hyPA hyb hbU by blast
+      thus "intersects U ?PA"
+        unfolding intersects_def by blast
+    qed
+
+    show "x \<in> closure_on ?PX ?TP ?PA"
+      by (rule iffD2[OF Theorem_17_5a[OF hTopProd hxPX hPA_PX], OF hx_intersects])
+  qed
+qed
 
 section \<open>\<S>20 The Metric Topology\<close>
 
