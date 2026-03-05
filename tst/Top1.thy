@@ -30165,6 +30165,126 @@ proof -
     by (rule subsetD[OF hsub hxNZ])
 qed
 
+(** Compactness helper: extract a finite subcover from a cover presented as an image \<open>V ` X\<close>. **)
+lemma top1_compact_on_finite_subcover_image:
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hVopen: "\<forall>x\<in>X. V x \<in> TX"
+  assumes hVcov: "X \<subseteq> \<Union>(V ` X)"
+  shows "\<exists>I. finite I \<and> I \<subseteq> X \<and> X \<subseteq> \<Union>(V ` I)"
+proof -
+  have hCover:
+    "\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  have hUc_sub: "V ` X \<subseteq> TX"
+  proof (rule subsetI)
+    fix U assume hU: "U \<in> V ` X"
+    then obtain x where hxX: "x \<in> X" and hUeq: "U = V x"
+      by blast
+    show "U \<in> TX"
+      using hVopen hxX hUeq by simp
+  qed
+
+  have hex: "\<exists>F. finite F \<and> F \<subseteq> V ` X \<and> X \<subseteq> \<Union>F"
+  proof -
+    have hspec:
+      "V ` X \<subseteq> TX \<and> X \<subseteq> \<Union>(V ` X) \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> V ` X \<and> X \<subseteq> \<Union>F)"
+      by (rule spec[OF hCover, where x="V ` X"])
+    have hpre: "V ` X \<subseteq> TX \<and> X \<subseteq> \<Union>(V ` X)"
+      by (intro conjI, rule hUc_sub, rule hVcov)
+    show ?thesis
+      by (rule mp[OF hspec hpre])
+  qed
+
+  obtain F where hF: "finite F \<and> F \<subseteq> V ` X \<and> X \<subseteq> \<Union>F"
+    using hex by blast
+
+  have hpre: "\<forall>U\<in>F. \<exists>x\<in>X. V x = U"
+  proof (intro ballI)
+    fix U assume hUF: "U \<in> F"
+    have hUimg: "U \<in> V ` X"
+      using hF hUF by blast
+    then obtain x where hxX: "x \<in> X" and hUeq: "U = V x"
+      by blast
+    show "\<exists>x\<in>X. V x = U"
+      apply (rule bexI[where x=x])
+       apply (simp only: hUeq)
+      apply (rule hxX)
+      done
+  qed
+
+  have hpre': "\<forall>U\<in>F. \<exists>x. x \<in> X \<and> V x = U"
+  proof (intro ballI)
+    fix U assume hUF: "U \<in> F"
+    obtain x where hxX: "x \<in> X" and hVU: "V x = U"
+      using hpre hUF by blast
+    show "\<exists>x. x \<in> X \<and> V x = U"
+      by (rule exI[where x=x], intro conjI, rule hxX, rule hVU)
+  qed
+
+  obtain s where hs: "\<forall>U\<in>F. s U \<in> X \<and> V (s U) = U"
+    using bchoice[OF hpre'] by blast
+
+  define I where "I = s ` F"
+  have hIfin: "finite I"
+    unfolding I_def using hF by simp
+  have hIsub: "I \<subseteq> X"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> I"
+    then obtain U where hUF: "U \<in> F" and hxeq: "x = s U"
+      unfolding I_def by blast
+    show "x \<in> X"
+      using hs hUF hxeq by blast
+  qed
+
+  have hFsub: "F \<subseteq> V ` I"
+  proof (rule subsetI)
+    fix U assume hUF: "U \<in> F"
+    have hsUI: "s U \<in> I"
+      unfolding I_def using hUF by blast
+    have hVU: "V (s U) = U"
+      using hs hUF by blast
+    show "U \<in> V ` I"
+    proof -
+      have "V (s U) \<in> V ` I"
+        by (rule imageI[OF hsUI])
+      thus ?thesis
+        using hVU by simp
+    qed
+  qed
+
+  have hcovI: "X \<subseteq> \<Union>(V ` I)"
+  proof -
+    have "X \<subseteq> \<Union>F"
+      using hF by blast
+    moreover have "\<Union>F \<subseteq> \<Union>(V ` I)"
+      using hFsub by blast
+    ultimately show ?thesis
+      by blast
+  qed
+
+  show ?thesis
+    apply (rule exI[where x=I])
+    using hIfin hIsub hcovI by blast
+qed
+
+(** A partition of unity has a nonzero coordinate at every point (since the sum is 1). **)
+lemma top1_partition_of_unity_dominated_on_exists_ne0:
+  assumes hPU: "top1_partition_of_unity_dominated_on X TX n U \<phi>"
+  assumes hxX: "x \<in> X"
+  shows "\<exists>i<n. \<phi> i x \<noteq> 0"
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>i<n. \<phi> i x \<noteq> 0)"
+  have hall0: "\<forall>i<n. \<phi> i x = 0"
+    using hno by blast
+  have hsum0: "(\<Sum>i<n. \<phi> i x) = 0"
+    using hall0 by simp
+  have hsum1: "(\<Sum>i<n. \<phi> i x) = 1"
+    using hPU hxX unfolding top1_partition_of_unity_dominated_on_def by blast
+  show False
+    using hsum0 hsum1 by simp
+qed
+
 (** from *\S36 Theorem 36.2 (Compact manifolds embed in some \<open>\<real>^N\<close>) [top1.tex:5055] **)
 theorem Theorem_36_2:
   fixes m :: nat
