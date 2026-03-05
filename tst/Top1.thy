@@ -13762,10 +13762,526 @@ qed
 
 section \<open>*\<S>25 Components and Local Connectedness\<close>
 
+subsection \<open>Components\<close>
+
+(** Connected singletons are the basic building block ensuring components are nonempty. **)
+lemma top1_connected_on_singleton:
+  assumes hTX: "is_topology_on X TX"
+  assumes hxX: "x \<in> X"
+  shows "top1_connected_on {x} (subspace_topology X TX {x})"
+proof -
+  have hx_sub: "{x} \<subseteq> X"
+    using hxX by blast
+  have hTop: "is_topology_on {x} (subspace_topology X TX {x})"
+    by (rule subspace_topology_is_topology_on[OF hTX hx_sub])
+
+  show ?thesis
+    unfolding top1_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on {x} (subspace_topology X TX {x})"
+      by (rule hTop)
+    show "\<nexists>U V.
+        U \<in> subspace_topology X TX {x} \<and>
+        V \<in> subspace_topology X TX {x} \<and>
+        U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = {x}"
+    proof
+      assume hSep:
+        "\<exists>U V.
+          U \<in> subspace_topology X TX {x} \<and>
+          V \<in> subspace_topology X TX {x} \<and>
+          U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = {x}"
+      then obtain U V where hU: "U \<in> subspace_topology X TX {x}"
+        and hV: "V \<in> subspace_topology X TX {x}"
+        and hUne: "U \<noteq> {}" and hVne: "V \<noteq> {}"
+        and hdisj: "U \<inter> V = {}" and hcov: "U \<union> V = {x}"
+        by blast
+
+      obtain U0 where hU0: "U0 \<in> TX" and hUeq: "U = {x} \<inter> U0"
+        using hU unfolding subspace_topology_def by blast
+      obtain V0 where hV0: "V0 \<in> TX" and hVeq: "V = {x} \<inter> V0"
+        using hV unfolding subspace_topology_def by blast
+      have hxU0: "x \<in> U0"
+      proof (rule ccontr)
+        assume hxnot: "x \<notin> U0"
+        have "U = {}"
+          unfolding hUeq using hxnot by simp
+        thus False
+          using hUne by simp
+      qed
+      have hxV0: "x \<in> V0"
+      proof (rule ccontr)
+        assume hxnot: "x \<notin> V0"
+        have "V = {}"
+          unfolding hVeq using hxnot by simp
+        thus False
+          using hVne by simp
+      qed
+
+      have hU_singleton: "U = {x}"
+        unfolding hUeq using hxU0 by simp
+      have hV_singleton: "V = {x}"
+        unfolding hVeq using hxV0 by simp
+
+      have "U \<inter> V = {x}"
+        unfolding hU_singleton hV_singleton by simp
+      thus False
+        using hdisj by blast
+    qed
+  qed
+qed
+
+(** Equivalence relation used in *\<S>25 of \<open>top1.tex\<close>: points are related if they lie together
+    in some connected subspace. **)
+definition top1_in_same_component_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" where
+  "top1_in_same_component_on X TX x y \<longleftrightarrow>
+     (\<exists>C. C \<subseteq> X \<and> x \<in> C \<and> y \<in> C \<and> top1_connected_on C (subspace_topology X TX C))"
+
+(** The connected component of \<open>x\<close> in \<open>(X,TX)\<close> is the union of all connected subspaces containing \<open>x\<close>. **)
+definition top1_component_of_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a set" where
+  "top1_component_of_on X TX x =
+     \<Union>{C. C \<subseteq> X \<and> x \<in> C \<and> top1_connected_on C (subspace_topology X TX C)}"
+
+definition top1_components_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set" where
+  "top1_components_on X TX = {top1_component_of_on X TX x | x. x \<in> X}"
+
+lemma top1_component_of_on_mem_iff:
+  "y \<in> top1_component_of_on X TX x \<longleftrightarrow>
+     (\<exists>C. C \<subseteq> X \<and> x \<in> C \<and> top1_connected_on C (subspace_topology X TX C) \<and> y \<in> C)"
+  unfolding top1_component_of_on_def
+  by simp
+
+lemma top1_in_same_component_on_iff_component_mem:
+  "top1_in_same_component_on X TX x y \<longleftrightarrow> y \<in> top1_component_of_on X TX x"
+proof (rule iffI)
+  assume hxy: "top1_in_same_component_on X TX x y"
+  obtain C where hCsub: "C \<subseteq> X" and hxC: "x \<in> C" and hyC: "y \<in> C"
+    and hconnC: "top1_connected_on C (subspace_topology X TX C)"
+    using hxy unfolding top1_in_same_component_on_def by blast
+  show "y \<in> top1_component_of_on X TX x"
+    unfolding top1_component_of_on_mem_iff
+    apply (rule exI[where x=C])
+    using hCsub hxC hconnC hyC by blast
+next
+  assume hy: "y \<in> top1_component_of_on X TX x"
+  obtain C where hCsub: "C \<subseteq> X" and hxC: "x \<in> C"
+    and hconnC: "top1_connected_on C (subspace_topology X TX C)" and hyC: "y \<in> C"
+    using hy unfolding top1_component_of_on_mem_iff by blast
+  show "top1_in_same_component_on X TX x y"
+    unfolding top1_in_same_component_on_def
+    apply (rule exI[where x=C])
+    using hCsub hxC hyC hconnC by blast
+qed
+
+lemma top1_component_of_on_subset:
+  shows "top1_component_of_on X TX x \<subseteq> X"
+proof (rule subsetI)
+  fix y assume hy: "y \<in> top1_component_of_on X TX x"
+  obtain C where hCsub: "C \<subseteq> X" and hyC: "y \<in> C"
+    using hy unfolding top1_component_of_on_mem_iff by blast
+  show "y \<in> X"
+    using hCsub hyC by blast
+qed
+
+lemma top1_component_of_on_self_mem:
+  assumes hTX: "is_topology_on X TX"
+  assumes hxX: "x \<in> X"
+  shows "x \<in> top1_component_of_on X TX x"
+proof -
+  have hxconn: "top1_connected_on {x} (subspace_topology X TX {x})"
+    by (rule top1_connected_on_singleton[OF hTX hxX])
+  have hx_mem: "x \<in> {x}"
+    by simp
+  have hx_sub: "{x} \<subseteq> X"
+    using hxX by blast
+  show ?thesis
+    unfolding top1_component_of_on_mem_iff
+    apply (rule exI[where x="{x}"])
+    using hx_sub hx_mem hxconn by blast
+qed
+
+lemma top1_connected_subspace_subset_component_of:
+  assumes hAX: "A \<subseteq> X"
+  assumes hxA: "x \<in> A"
+  assumes hconn: "top1_connected_on A (subspace_topology X TX A)"
+  shows "A \<subseteq> top1_component_of_on X TX x"
+proof (rule subsetI)
+  fix y assume hyA: "y \<in> A"
+  show "y \<in> top1_component_of_on X TX x"
+    unfolding top1_component_of_on_mem_iff
+    apply (rule exI[where x=A])
+    using hAX hxA hyA hconn by blast
+qed
+
+lemma top1_in_same_component_on_refl:
+  assumes hTX: "is_topology_on X TX"
+  assumes hxX: "x \<in> X"
+  shows "top1_in_same_component_on X TX x x"
+proof -
+  have hxconn: "top1_connected_on {x} (subspace_topology X TX {x})"
+    by (rule top1_connected_on_singleton[OF hTX hxX])
+  have hx_sub: "{x} \<subseteq> X"
+    using hxX by blast
+  show ?thesis
+    unfolding top1_in_same_component_on_def
+    apply (rule exI[where x="{x}"])
+    using hx_sub hxconn by simp
+qed
+
+lemma top1_in_same_component_on_sym:
+  assumes "top1_in_same_component_on X TX x y"
+  shows "top1_in_same_component_on X TX y x"
+  using assms unfolding top1_in_same_component_on_def by blast
+
+lemma top1_in_same_component_on_trans:
+  assumes hTX: "is_topology_on X TX"
+  assumes hxy: "top1_in_same_component_on X TX x y"
+  assumes hyz: "top1_in_same_component_on X TX y z"
+  shows "top1_in_same_component_on X TX x z"
+proof -
+  obtain A where hAX: "A \<subseteq> X" and hxA: "x \<in> A" and hyA: "y \<in> A"
+    and hconnA: "top1_connected_on A (subspace_topology X TX A)"
+    using hxy unfolding top1_in_same_component_on_def by blast
+  obtain B where hBX: "B \<subseteq> X" and hyB: "y \<in> B" and hzB: "z \<in> B"
+    and hconnB: "top1_connected_on B (subspace_topology X TX B)"
+    using hyz unfolding top1_in_same_component_on_def by blast
+
+  define I where "I = {A, B}"
+  have hI_ne: "I \<noteq> {}"
+    unfolding I_def by simp
+  have hA_fun: "\<forall>C\<in>I. C \<subseteq> X"
+    unfolding I_def using hAX hBX by simp
+  have hconn_fun: "\<forall>C\<in>I. top1_connected_on C (subspace_topology X TX C)"
+    unfolding I_def using hconnA hconnB by simp
+  have hyInter: "y \<in> \<Inter>(id ` I)"
+    unfolding I_def by (simp add: hyA hyB)
+
+  have hUnion_conn:
+    "top1_connected_on (\<Union>C\<in>I. id C) (subspace_topology X TX (\<Union>C\<in>I. id C))"
+  proof -
+    have hA_id: "\<forall>C\<in>I. id C \<subseteq> X"
+      using hA_fun by simp
+    have hconn_id: "\<forall>C\<in>I. top1_connected_on (id C) (subspace_topology X TX (id C))"
+      using hconn_fun by simp
+    show ?thesis
+      apply (rule Theorem_23_3[where A=id and I=I and p=y])
+           apply (rule hTX)
+          apply (rule hI_ne)
+         apply (rule hA_id)
+        apply (rule hconn_id)
+       apply (rule hyInter)
+      done
+  qed
+  have hUnion_sub: "(\<Union>C\<in>I. id C) \<subseteq> X"
+  proof (rule subsetI)
+    fix t
+    assume ht: "t \<in> (\<Union>C\<in>I. id C)"
+    then obtain C where hCI: "C \<in> I" and htC: "t \<in> id C"
+      by blast
+    have hCsub: "C \<subseteq> X"
+      using hA_fun hCI by blast
+    show "t \<in> X"
+    proof -
+      have htC': "t \<in> C"
+        using htC by simp
+      show "t \<in> X"
+        by (rule subsetD[OF hCsub htC'])
+    qed
+  qed
+
+  have hxU: "x \<in> (\<Union>C\<in>I. id C)"
+    unfolding I_def by (simp add: hxA)
+  have hzU: "z \<in> (\<Union>C\<in>I. id C)"
+    unfolding I_def by (simp add: hzB)
+
+  show ?thesis
+    unfolding top1_in_same_component_on_def
+    apply (rule exI[where x="(\<Union>C\<in>I. id C)"])
+    using hUnion_sub hxU hzU hUnion_conn by blast
+qed
+
+lemma top1_component_of_on_eq_of_mem:
+  assumes hTX: "is_topology_on X TX"
+  assumes hy: "y \<in> top1_component_of_on X TX x"
+  shows "top1_component_of_on X TX y = top1_component_of_on X TX x"
+proof (rule equalityI)
+  show "top1_component_of_on X TX y \<subseteq> top1_component_of_on X TX x"
+  proof (rule subsetI)
+    fix z assume hz: "z \<in> top1_component_of_on X TX y"
+    have hxy: "top1_in_same_component_on X TX x y"
+      using hy by (simp add: top1_in_same_component_on_iff_component_mem)
+    have hyz: "top1_in_same_component_on X TX y z"
+      using hz by (simp add: top1_in_same_component_on_iff_component_mem)
+    have hxz: "top1_in_same_component_on X TX x z"
+      by (rule top1_in_same_component_on_trans[OF hTX hxy hyz])
+    show "z \<in> top1_component_of_on X TX x"
+      using hxz by (simp add: top1_in_same_component_on_iff_component_mem)
+  qed
+  show "top1_component_of_on X TX x \<subseteq> top1_component_of_on X TX y"
+  proof (rule subsetI)
+    fix z assume hz: "z \<in> top1_component_of_on X TX x"
+    have hxy: "top1_in_same_component_on X TX x y"
+      using hy by (simp add: top1_in_same_component_on_iff_component_mem)
+    have hyx: "top1_in_same_component_on X TX y x"
+      by (rule top1_in_same_component_on_sym[OF hxy])
+    have hxz: "top1_in_same_component_on X TX x z"
+      using hz by (simp add: top1_in_same_component_on_iff_component_mem)
+    have hyz: "top1_in_same_component_on X TX y z"
+      by (rule top1_in_same_component_on_trans[OF hTX hyx hxz])
+    show "z \<in> top1_component_of_on X TX y"
+      using hyz by (simp add: top1_in_same_component_on_iff_component_mem)
+  qed
+qed
+
+lemma top1_component_of_on_connected:
+  assumes hTX: "is_topology_on X TX"
+  assumes hxX: "x \<in> X"
+  shows "top1_connected_on (top1_component_of_on X TX x) (subspace_topology X TX (top1_component_of_on X TX x))"
+proof -
+  define I where "I = {C. C \<subseteq> X \<and> x \<in> C \<and> top1_connected_on C (subspace_topology X TX C)}"
+  have hxI: "{x} \<in> I"
+  proof -
+    have hxconn: "top1_connected_on {x} (subspace_topology X TX {x})"
+      by (rule top1_connected_on_singleton[OF hTX hxX])
+    have hx_sub: "{x} \<subseteq> X"
+      using hxX by blast
+    show ?thesis
+      unfolding I_def
+      using hx_sub hxconn by simp
+  qed
+  have hI_ne: "I \<noteq> {}"
+    using hxI by blast
+  have hI_subX: "\<forall>C\<in>I. C \<subseteq> X"
+    unfolding I_def by blast
+  have hI_conn: "\<forall>C\<in>I. top1_connected_on C (subspace_topology X TX C)"
+    unfolding I_def by blast
+  have hxInter: "x \<in> \<Inter>(id ` I)"
+  proof -
+    have hall: "\<forall>C\<in>I. x \<in> C"
+      unfolding I_def by blast
+    show ?thesis
+      using hall by simp
+  qed
+
+  have hUnion_conn:
+    "top1_connected_on (\<Union>C\<in>I. id C) (subspace_topology X TX (\<Union>C\<in>I. id C))"
+  proof -
+    have hI_subX_id: "\<forall>C\<in>I. id C \<subseteq> X"
+      using hI_subX by simp
+    have hI_conn_id: "\<forall>C\<in>I. top1_connected_on (id C) (subspace_topology X TX (id C))"
+      using hI_conn by simp
+    show ?thesis
+      apply (rule Theorem_23_3[where A=id and I=I and p=x])
+           apply (rule hTX)
+          apply (rule hI_ne)
+         apply (rule hI_subX_id)
+        apply (rule hI_conn_id)
+       apply (rule hxInter)
+      done
+  qed
+
+  have hUnion_eq: "(\<Union>C\<in>I. id C) = top1_component_of_on X TX x"
+    unfolding top1_component_of_on_def I_def by simp
+
+  show ?thesis
+    unfolding hUnion_eq[symmetric] by (rule hUnion_conn)
+qed
+
+lemma top1_component_of_on_in_components:
+  assumes hxX: "x \<in> X"
+  shows "top1_component_of_on X TX x \<in> top1_components_on X TX"
+  unfolding top1_components_on_def using hxX by blast
+
+lemma top1_component_of_on_as_component:
+  assumes hTX: "is_topology_on X TX"
+  assumes hC: "C \<in> top1_components_on X TX"
+  assumes hxC: "x \<in> C"
+  shows "C = top1_component_of_on X TX x"
+proof -
+  obtain x0 where hx0: "x0 \<in> X" and hCeq: "C = top1_component_of_on X TX x0"
+    using hC unfolding top1_components_on_def by blast
+  have hx0x: "x \<in> top1_component_of_on X TX x0"
+    using hxC hCeq by simp
+  have hEq: "top1_component_of_on X TX x = top1_component_of_on X TX x0"
+    using hx0x by (rule top1_component_of_on_eq_of_mem[OF hTX])
+  show ?thesis
+    unfolding hCeq using hEq by simp
+qed
+
+(** from *\S25 Theorem 25.1 (Components) [top1.tex:2948] **)
+theorem Theorem_25_1:
+  assumes hTX: "is_topology_on X TX"
+  shows
+    "(\<Union>(top1_components_on X TX)) = X"
+    and "\<And>C1 C2. C1 \<in> top1_components_on X TX \<Longrightarrow> C2 \<in> top1_components_on X TX \<Longrightarrow> C1 \<inter> C2 \<noteq> {} \<Longrightarrow> C1 = C2"
+    and "\<And>C. C \<in> top1_components_on X TX \<Longrightarrow> top1_connected_on C (subspace_topology X TX C)"
+    and "\<And>A. A \<subseteq> X \<Longrightarrow> top1_connected_on A (subspace_topology X TX A) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
+              (\<exists>C\<in>top1_components_on X TX. A \<subseteq> C)"
+proof -
+  show "(\<Union>(top1_components_on X TX)) = X"
+  proof (rule equalityI)
+    show "(\<Union>(top1_components_on X TX)) \<subseteq> X"
+    proof (rule subsetI)
+      fix y assume hy: "y \<in> (\<Union>(top1_components_on X TX))"
+      obtain C where hC: "C \<in> top1_components_on X TX" and hyC: "y \<in> C"
+        using hy by blast
+      obtain x where hxX: "x \<in> X" and hCeq: "C = top1_component_of_on X TX x"
+        using hC unfolding top1_components_on_def by blast
+      have hyComp: "y \<in> top1_component_of_on X TX x"
+        using hyC hCeq by simp
+      have hsub: "top1_component_of_on X TX x \<subseteq> X"
+        by (rule top1_component_of_on_subset)
+      show "y \<in> X"
+        using hyComp by (rule subsetD[OF hsub])
+    qed
+    show "X \<subseteq> (\<Union>(top1_components_on X TX))"
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      have hxC: "x \<in> top1_component_of_on X TX x"
+        by (rule top1_component_of_on_self_mem[OF hTX hxX])
+      have hComp: "top1_component_of_on X TX x \<in> top1_components_on X TX"
+        by (rule top1_component_of_on_in_components[OF hxX])
+      show "x \<in> (\<Union>(top1_components_on X TX))"
+        using hComp hxC by blast
+    qed
+  qed
+
+  show "\<And>C1 C2. C1 \<in> top1_components_on X TX \<Longrightarrow> C2 \<in> top1_components_on X TX \<Longrightarrow> C1 \<inter> C2 \<noteq> {} \<Longrightarrow> C1 = C2"
+  proof -
+    fix C1 C2
+    assume hC1: "C1 \<in> top1_components_on X TX"
+    assume hC2: "C2 \<in> top1_components_on X TX"
+    assume hinter: "C1 \<inter> C2 \<noteq> {}"
+    obtain z where hz1: "z \<in> C1" and hz2: "z \<in> C2"
+      using hinter by blast
+    have hC1z: "C1 = top1_component_of_on X TX z"
+      by (rule top1_component_of_on_as_component[OF hTX hC1 hz1])
+    have hC2z: "C2 = top1_component_of_on X TX z"
+      by (rule top1_component_of_on_as_component[OF hTX hC2 hz2])
+    show "C1 = C2"
+      using hC1z hC2z by simp
+  qed
+
+  show "\<And>C. C \<in> top1_components_on X TX \<Longrightarrow> top1_connected_on C (subspace_topology X TX C)"
+  proof -
+    fix C assume hC: "C \<in> top1_components_on X TX"
+    obtain x where hxX: "x \<in> X" and hCeq: "C = top1_component_of_on X TX x"
+      using hC unfolding top1_components_on_def by blast
+    have "top1_connected_on (top1_component_of_on X TX x) (subspace_topology X TX (top1_component_of_on X TX x))"
+      by (rule top1_component_of_on_connected[OF hTX hxX])
+    thus "top1_connected_on C (subspace_topology X TX C)"
+      unfolding hCeq by simp
+  qed
+
+  show "\<And>A. A \<subseteq> X \<Longrightarrow> top1_connected_on A (subspace_topology X TX A) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
+            (\<exists>C\<in>top1_components_on X TX. A \<subseteq> C)"
+  proof -
+    fix A
+    assume hAX: "A \<subseteq> X"
+    assume hconnA: "top1_connected_on A (subspace_topology X TX A)"
+    assume hAne: "A \<noteq> {}"
+    obtain x where hxA: "x \<in> A"
+      using hAne by blast
+    have hAsub: "A \<subseteq> top1_component_of_on X TX x"
+      by (rule top1_connected_subspace_subset_component_of[OF hAX hxA hconnA])
+    have hxX: "x \<in> X"
+      using hAX hxA by blast
+    have hComp: "top1_component_of_on X TX x \<in> top1_components_on X TX"
+      by (rule top1_component_of_on_in_components[OF hxX])
+    show "\<exists>C\<in>top1_components_on X TX. A \<subseteq> C"
+      apply (rule bexI[where x="top1_component_of_on X TX x"])
+       apply (rule hAsub)
+      apply (rule hComp)
+      done
+  qed
+qed
+
+subsection \<open>Local connectedness\<close>
+
+(** Local connectedness at a point: every open neighborhood contains a smaller connected open neighborhood. **)
+definition top1_locally_connected_at :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> bool" where
+  "top1_locally_connected_at X TX x \<longleftrightarrow>
+     (\<forall>U. neighborhood_of x X TX U \<longrightarrow>
+        (\<exists>V. neighborhood_of x X TX V \<and> V \<subseteq> U \<and> top1_connected_on V (subspace_topology X TX V)))"
+
+definition top1_locally_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_locally_connected_on X TX \<longleftrightarrow> is_topology_on X TX \<and> (\<forall>x\<in>X. top1_locally_connected_at X TX x)"
+
+(** from *\S25 Theorem 25.3 (Local connectedness via open components) [top1.tex:2987] **)
+theorem Theorem_25_3:
+  assumes hTX: "is_topology_on X TX"
+  shows
+    "top1_locally_connected_on X TX \<longleftrightarrow>
+       (\<forall>U\<in>TX. \<forall>C\<in>top1_components_on U (subspace_topology X TX U). C \<in> TX)"
+  sorry
+
+subsection \<open>Path components\<close>
+
 text \<open>
-  The starred section *\<S>25 of \<open>top1.tex\<close> develops components and local connectedness.
-  It is currently left as a placeholder.
+  The remaining results of *\<S>25 concerning paths are recorded here with the intended definitions.
+  Their proofs are currently omitted.
 \<close>
+
+definition top1_unit_interval :: "real set" where
+  "top1_unit_interval = {0..1}"
+
+definition top1_unit_interval_topology :: "real set set" where
+  "top1_unit_interval_topology =
+     subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+
+definition top1_is_path_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> bool" where
+  "top1_is_path_on X TX x y f \<longleftrightarrow>
+     top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f
+     \<and> f 0 = x \<and> f 1 = y"
+
+definition top1_in_same_path_component_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" where
+  "top1_in_same_path_component_on X TX x y \<longleftrightarrow> (\<exists>f. top1_is_path_on X TX x y f)"
+
+definition top1_path_component_of_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a set" where
+  "top1_path_component_of_on X TX x = {y. top1_in_same_path_component_on X TX x y}"
+
+definition top1_path_components_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set" where
+  "top1_path_components_on X TX = {top1_path_component_of_on X TX x | x. x \<in> X}"
+
+definition top1_path_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_path_connected_on X TX \<longleftrightarrow>
+     is_topology_on X TX \<and> (\<forall>x\<in>X. \<forall>y\<in>X. \<exists>f. top1_is_path_on X TX x y f)"
+
+definition top1_locally_path_connected_at :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> bool" where
+  "top1_locally_path_connected_at X TX x \<longleftrightarrow>
+     (\<forall>U. neighborhood_of x X TX U \<longrightarrow>
+        (\<exists>V. neighborhood_of x X TX V \<and> V \<subseteq> U
+             \<and> top1_path_connected_on V (subspace_topology X TX V)))"
+
+definition top1_locally_path_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_locally_path_connected_on X TX \<longleftrightarrow>
+     is_topology_on X TX \<and> (\<forall>x\<in>X. top1_locally_path_connected_at X TX x)"
+
+(** from *\S25 Theorem 25.2 (Path components) [top1.tex:2967] **)
+theorem Theorem_25_2:
+  assumes hTX: "is_topology_on X TX"
+  shows
+    "(\<Union>(top1_path_components_on X TX)) = X"
+    and "\<And>P Q. P \<in> top1_path_components_on X TX \<Longrightarrow> Q \<in> top1_path_components_on X TX \<Longrightarrow> P \<inter> Q \<noteq> {} \<Longrightarrow> P = Q"
+    and "\<And>P. P \<in> top1_path_components_on X TX \<Longrightarrow> top1_path_connected_on P (subspace_topology X TX P)"
+    and "\<And>A. A \<subseteq> X \<Longrightarrow> top1_path_connected_on A (subspace_topology X TX A) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
+              (\<exists>P\<in>top1_path_components_on X TX. A \<subseteq> P)"
+  sorry
+
+(** from *\S25 Theorem 25.4 (Local path connectedness via open path components) [top1.tex:2995] **)
+theorem Theorem_25_4:
+  assumes hTX: "is_topology_on X TX"
+  shows
+    "top1_locally_path_connected_on X TX \<longleftrightarrow>
+       (\<forall>U\<in>TX. \<forall>P\<in>top1_path_components_on U (subspace_topology X TX U). P \<in> TX)"
+  sorry
+
+(** from *\S25 Theorem 25.5 (Path components vs components) [top1.tex:2999] **)
+theorem Theorem_25_5:
+  assumes hTX: "is_topology_on X TX"
+  shows
+    "(\<forall>x\<in>X. top1_path_component_of_on X TX x \<subseteq> top1_component_of_on X TX x)
+     \<and> (top1_locally_path_connected_on X TX \<longrightarrow> (\<forall>x\<in>X. top1_path_component_of_on X TX x = top1_component_of_on X TX x))"
+  sorry
 
 section \<open>\<S>26 Compact Spaces\<close>
 
