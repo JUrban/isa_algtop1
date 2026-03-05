@@ -15487,9 +15487,23 @@ section \<open>\<S>27 Compact Subspaces of the Real Line\<close>
 
 text \<open>
   Section \<S>27 of \<open>top1.tex\<close> proves compactness results for subspaces of \<open>\<real>\<close>
-  (including Heine--Borel). This is currently left as a placeholder; later work can connect
-  these results to the order topology development of \<open>\<real>\<close>.
+  (including Heine--Borel). We record the core statements in the Top1 framework; proofs are
+  deferred.
 \<close>
+
+(** from \S27 Theorem 27.1 (Closed intervals in linear continua are compact) [top1.tex:3357] **)
+theorem Theorem_27_1:
+  fixes a b :: "'a::linear_continuum_topology"
+  assumes hab: "a \<le> b"
+  shows "top1_compact_on {a..b} (subspace_topology (UNIV::'a set) top1_open_sets {a..b})"
+  sorry
+
+(** from \S27 Theorem 27.3 (Heine--Borel in \<open>\<real>^n\<close>) [top1.tex:3393] **)
+theorem Theorem_27_3:
+  fixes A :: "real set"
+  shows
+    "top1_compact_on A (subspace_topology (UNIV::real set) top1_open_sets A) \<longleftrightarrow> (closed A \<and> bounded A)"
+  sorry
 
 section \<open>\<S>28 Limit Point Compactness\<close>
 
