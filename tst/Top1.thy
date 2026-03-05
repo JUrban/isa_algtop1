@@ -30351,6 +30351,274 @@ proof (rule ccontr)
     using hsum0 hsum1 by simp
 qed
 
+(** A continuous map into the closed interval is continuous as a real-valued map. **)
+lemma top1_continuous_map_on_closed_interval_to_real:
+  fixes f :: "'a \<Rightarrow> real"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hf: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
+  shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+proof -
+  let ?I = "top1_closed_interval 0 1"
+  let ?TI = "top1_closed_interval_topology 0 1"
+
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hTopI: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF hTopR], simp add: top1_closed_interval_def)
+
+  have hTI_eq: "?TI = subspace_topology (UNIV::real set) order_topology_on_UNIV ?I"
+    unfolding top1_closed_interval_topology_def by simp
+
+  have hexpand:
+    "\<forall>W g.
+      top1_continuous_map_on X TX ?I ?TI g
+      \<and> ?I \<subseteq> W
+      \<and> ?TI = subspace_topology W order_topology_on_UNIV ?I
+      \<longrightarrow> top1_continuous_map_on X TX W order_topology_on_UNIV g"
+    using Theorem_18_2(6)[OF hTopX hTopI hTopR] .
+
+  have hpre:
+    "top1_continuous_map_on X TX ?I ?TI f
+     \<and> ?I \<subseteq> (UNIV::real set)
+     \<and> ?TI = subspace_topology (UNIV::real set) order_topology_on_UNIV ?I"
+    by (intro conjI, rule hf, simp, rule hTI_eq)
+
+  show ?thesis
+    using mp[OF spec[OF spec[OF hexpand, where x="(UNIV::real set)"], where x=f] hpre] .
+qed
+
+(** The standard product topology is a topology on our model of \<open>\<real>^n\<close>. **)
+lemma top1_Rpow_is_topology_on:
+  shows "is_topology_on (top1_Rpow_set n) (top1_Rpow_topology n)"
+proof -
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hAll: "\<forall>i\<in>{0..<n}. is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    using hTopR by blast
+  show ?thesis
+    unfolding top1_Rpow_set_def top1_Rpow_topology_def
+    by (rule top1_product_topology_on_is_topology_on[OF hAll])
+qed
+
+(** Extensionality of elements of \<open>top1_Rpow_set m\<close>. **)
+lemma top1_Rpow_set_ext:
+  fixes f g :: "nat \<Rightarrow> real"
+  assumes hf: "f \<in> top1_Rpow_set m"
+  assumes hg: "g \<in> top1_Rpow_set m"
+  assumes hEq: "\<forall>k<m. f k = g k"
+  shows "f = g"
+proof (rule ext)
+  fix k :: nat
+  show "f k = g k"
+  proof (cases "k < m")
+    case True
+    show ?thesis
+      using hEq True by blast
+  next
+    case False
+    have hk: "k \<notin> {0..<m}"
+      using False by simp
+    have hfext: "\<forall>i. i \<notin> {0..<m} \<longrightarrow> f i = undefined"
+      using hf unfolding top1_Rpow_set_def top1_PiE_iff by blast
+    have hgext: "\<forall>i. i \<notin> {0..<m} \<longrightarrow> g i = undefined"
+      using hg unfolding top1_Rpow_set_def top1_PiE_iff by blast
+    have "f k = undefined"
+      using hfext hk by blast
+    moreover have "g k = undefined"
+      using hgext hk by blast
+    ultimately show ?thesis
+      by simp
+  qed
+qed
+
+(** Compact manifolds admit a finite atlas by continuous injective charts into \<open>\<real>^m\<close>. **)
+lemma top1_compact_m_manifold_finite_chart_cover:
+  fixes m :: nat
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hM: "top1_m_manifold_on m X TX"
+  shows "\<exists>(n::nat) (U::nat \<Rightarrow> 'a set) (g::nat \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> real).
+    (\<forall>i<n.
+        U i \<in> TX \<and> U i \<subseteq> X
+        \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+              (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+        \<and> inj_on (g i) (U i))
+    \<and> X \<subseteq> (\<Union>i<n. U i)"
+proof -
+  have hLocal:
+    "\<forall>x\<in>X. \<exists>U g.
+      U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+      \<and> top1_continuous_map_on U (subspace_topology X TX U)
+            (top1_Rpow_set m) (top1_Rpow_topology m) g
+      \<and> inj_on g U"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    obtain U g where hU:
+      "U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+       \<and> top1_continuous_map_on U (subspace_topology X TX U)
+             (top1_Rpow_set m) (top1_Rpow_topology m) g
+       \<and> inj_on g U"
+      using top1_m_manifold_on_local_chart_inj_cont[OF hM hxX] by blast
+    show "\<exists>U g.
+      U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+      \<and> top1_continuous_map_on U (subspace_topology X TX U)
+            (top1_Rpow_set m) (top1_Rpow_topology m) g
+      \<and> inj_on g U"
+      using hU by blast
+  qed
+
+  have hLocalPair:
+    "\<forall>x\<in>X. \<exists>p.
+      fst p \<in> TX \<and> fst p \<subseteq> X \<and> x \<in> fst p
+      \<and> top1_continuous_map_on (fst p) (subspace_topology X TX (fst p))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (snd p)
+      \<and> inj_on (snd p) (fst p)"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    obtain U g where hU:
+      "U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+       \<and> top1_continuous_map_on U (subspace_topology X TX U)
+             (top1_Rpow_set m) (top1_Rpow_topology m) g
+       \<and> inj_on g U"
+      using hLocal hxX by blast
+    show "\<exists>p.
+      fst p \<in> TX \<and> fst p \<subseteq> X \<and> x \<in> fst p
+      \<and> top1_continuous_map_on (fst p) (subspace_topology X TX (fst p))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (snd p)
+      \<and> inj_on (snd p) (fst p)"
+      apply (rule exI[where x="(U,g)"])
+      using hU by simp
+  qed
+
+  obtain p where hp:
+    "\<forall>x\<in>X.
+      fst (p x) \<in> TX \<and> fst (p x) \<subseteq> X \<and> x \<in> fst (p x)
+      \<and> top1_continuous_map_on (fst (p x)) (subspace_topology X TX (fst (p x)))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (snd (p x))
+      \<and> inj_on (snd (p x)) (fst (p x))"
+    using bchoice[OF hLocalPair] by blast
+
+  define U0 where "U0 = (\<lambda>x. fst (p x))"
+  define g0 where "g0 = (\<lambda>x. snd (p x))"
+
+  have hU0:
+    "\<forall>x\<in>X.
+      U0 x \<in> TX \<and> U0 x \<subseteq> X \<and> x \<in> U0 x
+      \<and> top1_continuous_map_on (U0 x) (subspace_topology X TX (U0 x))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (g0 x)
+      \<and> inj_on (g0 x) (U0 x)"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have hpx:
+      "fst (p x) \<in> TX \<and> fst (p x) \<subseteq> X \<and> x \<in> fst (p x)
+       \<and> top1_continuous_map_on (fst (p x)) (subspace_topology X TX (fst (p x)))
+             (top1_Rpow_set m) (top1_Rpow_topology m) (snd (p x))
+       \<and> inj_on (snd (p x)) (fst (p x))"
+      using hp hxX by blast
+    show "U0 x \<in> TX \<and> U0 x \<subseteq> X \<and> x \<in> U0 x
+      \<and> top1_continuous_map_on (U0 x) (subspace_topology X TX (U0 x))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (g0 x)
+      \<and> inj_on (g0 x) (U0 x)"
+      unfolding U0_def g0_def using hpx by simp
+  qed
+
+  have hVopen: "\<forall>x\<in>X. U0 x \<in> TX"
+    using hU0 by blast
+  have hVcov: "X \<subseteq> \<Union>(U0 ` X)"
+  proof (rule subsetI)
+    fix x assume hxX: "x \<in> X"
+    have hxUx: "x \<in> U0 x"
+      using hU0 hxX by blast
+    show "x \<in> \<Union>(U0 ` X)"
+    proof -
+      have hUxImg: "U0 x \<in> U0 ` X"
+        by (rule imageI[OF hxX])
+      show ?thesis
+        by (rule UnionI[OF hUxImg hxUx])
+    qed
+  qed
+
+  obtain I where hI:
+    "finite I \<and> I \<subseteq> X \<and> X \<subseteq> \<Union>(U0 ` I)"
+    using top1_compact_on_finite_subcover_image[OF hcomp hVopen hVcov] by blast
+
+  have hIfin: "finite I"
+    using hI by blast
+  have hIsub: "I \<subseteq> X"
+    using hI by blast
+  have hIcov: "X \<subseteq> \<Union>(U0 ` I)"
+    using hI by blast
+
+  obtain xs where hxs: "set xs = I \<and> distinct xs"
+    using finite_distinct_list_of_set[OF hIfin] by blast
+
+  define n where "n = length xs"
+  define U where "U = (\<lambda>i. U0 (xs ! i))"
+  define g where "g = (\<lambda>i. g0 (xs ! i))"
+
+  have hprops:
+    "\<forall>i<n.
+      U i \<in> TX \<and> U i \<subseteq> X
+      \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+      \<and> inj_on (g i) (U i)"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have hi': "i < length xs"
+      using hi unfolding n_def by simp
+    have hmem: "xs ! i \<in> set xs"
+      using nth_mem hi' by blast
+    have hxI: "xs ! i \<in> I"
+      using hxs hmem by simp
+    have hxX: "xs ! i \<in> X"
+      using hIsub hxI by blast
+    have hchart:
+      "U0 (xs ! i) \<in> TX \<and> U0 (xs ! i) \<subseteq> X \<and> xs ! i \<in> U0 (xs ! i)
+       \<and> top1_continuous_map_on (U0 (xs ! i)) (subspace_topology X TX (U0 (xs ! i)))
+             (top1_Rpow_set m) (top1_Rpow_topology m) (g0 (xs ! i))
+       \<and> inj_on (g0 (xs ! i)) (U0 (xs ! i))"
+      using hU0 hxX by blast
+    show "U i \<in> TX \<and> U i \<subseteq> X
+      \<and> top1_continuous_map_on (U i) (subspace_topology X TX (U i))
+            (top1_Rpow_set m) (top1_Rpow_topology m) (g i)
+      \<and> inj_on (g i) (U i)"
+      unfolding U_def g_def using hchart by simp
+  qed
+
+  have hcov_n: "X \<subseteq> (\<Union>i<n. U i)"
+  proof (rule subsetI)
+    fix x assume hxX: "x \<in> X"
+    have hxU: "x \<in> \<Union>(U0 ` I)"
+      using hIcov hxX by blast
+    obtain y where hyI: "y \<in> I" and hxy: "x \<in> U0 y"
+      using hxU by blast
+    have hyset: "y \<in> set xs"
+      using hxs hyI by simp
+    obtain j where hj: "j < length xs" and hnth: "xs ! j = y"
+      using hyset by (metis in_set_conv_nth)
+    have hjn: "j < n"
+      unfolding n_def using hj by simp
+    have hxUj: "x \<in> U j"
+      unfolding U_def using hnth hxy by simp
+    show "x \<in> (\<Union>i<n. U i)"
+    proof -
+      have hjmem: "j \<in> {..<n}"
+        using hjn by simp
+      have hUjmem: "U j \<in> U ` {..<n}"
+        by (rule imageI[OF hjmem])
+      show ?thesis
+        by (rule UnionI[OF hUjmem hxUj])
+    qed
+  qed
+
+  show ?thesis
+    apply (rule exI[where x=n])
+    apply (rule exI[where x=U])
+    apply (rule exI[where x=g])
+    using hprops hcov_n by blast
+qed
+
 (** from *\S36 Theorem 36.2 (Compact manifolds embed in some \<open>\<real>^N\<close>) [top1.tex:5055] **)
 theorem Theorem_36_2:
   fixes m :: nat
@@ -30367,6 +30635,11 @@ text \<open>
   In this formalization we model \<open>\<real>^n\<close> as an extensional function space
   \<open>{0..<n} \<rightarrow> UNIV\<close>. The final embedding lives in a suitable finite-dimensional instance of
   this product.
+\<close>
+text \<open>
+  The full Isabelle proof (continuity of the assembled map and injectivity via the partition of unity)
+  is substantial and has been postponed for now to keep the session within the timeout budget.
+  The key preparatory ingredient needed downstream is the finite chart cover lemma above.
 \<close>
 sorry
 
