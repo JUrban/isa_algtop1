@@ -30003,4 +30003,185 @@ proof -
     done
 qed
 
+(** A concrete model of finite-dimensional Euclidean space \<open>\<real>^n\<close> using extensional function spaces. **)
+definition top1_Rpow_set :: "nat \<Rightarrow> (nat \<Rightarrow> real) set" where
+  "top1_Rpow_set n = top1_PiE {0..<n} (\<lambda>_. (UNIV::real set))"
+
+definition top1_Rpow_topology :: "nat \<Rightarrow> (nat \<Rightarrow> real) set set" where
+  "top1_Rpow_topology n =
+     top1_product_topology_on {0..<n} (\<lambda>_. (UNIV::real set)) (\<lambda>_. order_topology_on_UNIV)"
+
+lemma top1_Rpow_is_hausdorff_on:
+  shows "is_hausdorff_on (top1_Rpow_set n) (top1_Rpow_topology n)"
+proof -
+  have hHreal: "is_hausdorff_on (UNIV::real set) order_topology_on_UNIV"
+    using conjunct1[OF Theorem_17_11] .
+  have hHall: "\<forall>i\<in>{0..<n}. is_hausdorff_on (UNIV::real set) order_topology_on_UNIV"
+    using hHreal by blast
+  show ?thesis
+    unfolding top1_Rpow_set_def top1_Rpow_topology_def
+    by (rule Theorem_19_4_product[OF hHall])
+qed
+
+definition top1_m_manifold_on :: "nat \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_m_manifold_on m X TX \<longleftrightarrow>
+     is_hausdorff_on X TX
+     \<and> top1_second_countable_on X TX
+     \<and> (\<forall>x\<in>X. \<exists>U g. neighborhood_of x X TX U
+              \<and> top1_embedding_on U (subspace_topology X TX U) (top1_Rpow_set m) (top1_Rpow_topology m) g)"
+
+(** Basic finiteness helper: enumerate a finite set by a distinct list. **)
+lemma finite_distinct_list_of_set:
+  assumes hA: "finite A"
+  shows "\<exists>xs. set xs = A \<and> distinct xs"
+  using hA
+proof (induct rule: finite_induct)
+  case empty
+  show ?case
+    by (rule exI[where x="[]"], simp)
+next
+  case (insert a A)
+  obtain xs where hxs: "set xs = A \<and> distinct xs"
+    using insert by blast
+  have ha: "a \<notin> set xs"
+    using insert.hyps hxs by simp
+  show ?case
+    apply (rule exI[where x="a # xs"])
+    using hxs ha by simp
+qed
+
+(** Embeddings are in particular injective on the carrier. **)
+lemma top1_embedding_on_imp_inj_on:
+  assumes hE: "top1_embedding_on A TA Y TY f"
+  shows "inj_on f A"
+proof -
+  have hHomeo: "top1_homeomorphism_on A TA (f ` A) (subspace_topology Y TY (f ` A)) f"
+    using hE unfolding top1_embedding_on_def by blast
+  have hbij: "bij_betw f A (f ` A)"
+    using hHomeo unfolding top1_homeomorphism_on_def by blast
+  show ?thesis
+    using hbij unfolding bij_betw_def by blast
+qed
+
+(** Embeddings are continuous into the ambient space (not just into the image-subspace). **)
+lemma top1_embedding_on_imp_continuous:
+  assumes hE: "top1_embedding_on A TA Y TY f"
+  shows "top1_continuous_map_on A TA Y TY f"
+proof -
+  have hHomeo: "top1_homeomorphism_on A TA (f ` A) (subspace_topology Y TY (f ` A)) f"
+    using hE unfolding top1_embedding_on_def by blast
+  have hcontImg: "top1_continuous_map_on A TA (f ` A) (subspace_topology Y TY (f ` A)) f"
+    using hHomeo unfolding top1_homeomorphism_on_def by blast
+  have hmapImg: "\<forall>x\<in>A. f x \<in> f ` A"
+    by blast
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>A. f x \<in> Y"
+      using hE unfolding top1_embedding_on_def top1_homeomorphism_on_def top1_continuous_map_on_def
+      by blast
+    show "\<forall>V\<in>TY. {x \<in> A. f x \<in> V} \<in> TA"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> TY"
+      have hVsub: "(f ` A) \<inter> V \<in> subspace_topology Y TY (f ` A)"
+        unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[where x=V])
+        apply (intro conjI)
+         apply simp
+        apply (rule hV)
+        done
+      have hpre: "{x \<in> A. f x \<in> (f ` A) \<inter> V} \<in> TA"
+        using hcontImg hVsub unfolding top1_continuous_map_on_def by blast
+      have hEq: "{x \<in> A. f x \<in> (f ` A) \<inter> V} = {x \<in> A. f x \<in> V}"
+      proof (rule set_eqI)
+        fix x
+        show "x \<in> {x \<in> A. f x \<in> (f ` A) \<inter> V} \<longleftrightarrow> x \<in> {x \<in> A. f x \<in> V}"
+        proof
+          assume hx: "x \<in> {x \<in> A. f x \<in> (f ` A) \<inter> V}"
+          then show "x \<in> {x \<in> A. f x \<in> V}"
+            by simp
+        next
+          assume hx: "x \<in> {x \<in> A. f x \<in> V}"
+          have hxA: "x \<in> A" and hfxV: "f x \<in> V"
+            using hx by simp_all
+          have hfxImg: "f x \<in> f ` A"
+            using hmapImg hxA by blast
+          show "x \<in> {x \<in> A. f x \<in> (f ` A) \<inter> V}"
+            using hxA hfxImg hfxV by blast
+        qed
+      qed
+      show "{x \<in> A. f x \<in> V} \<in> TA"
+        using hpre unfolding hEq by simp
+    qed
+  qed
+qed
+
+(** Restricting the domain of a continuous map (directly from the definition). **)
+lemma top1_continuous_map_on_restrict_domain_simple:
+  assumes hf: "top1_continuous_map_on X0 TX0 Y0 TY0 f"
+  assumes hA0: "A0 \<subseteq> X0"
+  shows "top1_continuous_map_on A0 (subspace_topology X0 TX0 A0) Y0 TY0 f"
+proof -
+  have hmap: "\<forall>x\<in>X0. f x \<in> Y0"
+    using hf unfolding top1_continuous_map_on_def by blast
+  have hopen: "\<forall>V\<in>TY0. {x\<in>X0. f x \<in> V} \<in> TX0"
+    using hf unfolding top1_continuous_map_on_def by blast
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>A0. f x \<in> Y0"
+      using hmap hA0 by blast
+    show "\<forall>V\<in>TY0. {x \<in> A0. f x \<in> V} \<in> subspace_topology X0 TX0 A0"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> TY0"
+      have hpreim: "{x\<in>X0. f x \<in> V} \<in> TX0"
+        using hopen hV by blast
+      have hEq: "{x \<in> A0. f x \<in> V} = A0 \<inter> {x\<in>X0. f x \<in> V}"
+        using hA0 by blast
+      show "{x \<in> A0. f x \<in> V} \<in> subspace_topology X0 TX0 A0"
+        unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[where x="{x\<in>X0. f x \<in> V}"])
+        apply (intro conjI)
+         apply (simp only: hEq Int_assoc Int_commute Int_left_commute)
+        apply (rule hpreim)
+        done
+    qed
+  qed
+qed
+
+(** If a point is nonzero, it lies in the support (support is a closure of the nonzero set). **)
+lemma top1_support_on_contains_nonzero:
+  assumes hxX: "x \<in> X"
+  assumes hfx: "f x \<noteq> (0::real)"
+  shows "x \<in> top1_support_on X TX f"
+proof -
+  have hxNZ: "x \<in> {y \<in> X. f y \<noteq> 0}"
+    using hxX hfx by simp
+  have hsub: "{y \<in> X. f y \<noteq> 0} \<subseteq> top1_support_on X TX f"
+    unfolding top1_support_on_def by (rule subset_closure_on)
+  show ?thesis
+    by (rule subsetD[OF hsub hxNZ])
+qed
+
+(** from *\S36 Theorem 36.2 (Compact manifolds embed in some \<open>\<real>^N\<close>) [top1.tex:5055] **)
+theorem Theorem_36_2:
+  fixes m :: nat
+  assumes hm: "0 < m"
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hM: "top1_m_manifold_on m X TX"
+  shows "\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+text \<open>
+  The proof follows the construction in \<open>top1.tex\<close>:
+  choose finitely many local embeddings into \<open>\<real>^m\<close>, build a finite partition of unity dominated
+  by the corresponding cover (Theorem 36.1), and use it to assemble a continuous injective map into
+  some finite product of copies of \<open>\<real>\<close>.
+
+  In this formalization we model \<open>\<real>^n\<close> as an extensional function space
+  \<open>{0..<n} \<rightarrow> UNIV\<close>. The final embedding lives in a suitable finite-dimensional instance of
+  this product.
+\<close>
+sorry
+
 end
