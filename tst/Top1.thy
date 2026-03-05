@@ -10531,6 +10531,190 @@ definition top1_saturated_with_respect_to_on :: "'a set \<Rightarrow> ('a \<Righ
   "top1_saturated_with_respect_to_on X p A \<longleftrightarrow>
      A \<subseteq> X \<and> (\<forall>x\<in>A. \<forall>y\<in>X. p y = p x \<longrightarrow> y \<in> A)"
 
+(** Open / closed maps (restricted to the carrier). **)
+definition top1_open_map_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_open_map_on X TX Y TY f \<longleftrightarrow>
+     (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>U. U \<in> TX \<and> U \<subseteq> X \<longrightarrow> f ` U \<in> TY)"
+
+definition top1_closed_map_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_closed_map_on X TX Y TY f \<longleftrightarrow>
+     (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>A. closedin_on X TX A \<longrightarrow> closedin_on Y TY (f ` A))"
+
+lemma top1_saturated_preimage_subset:
+  assumes hsat: "top1_saturated_with_respect_to_on X p A"
+  assumes hV: "V \<subseteq> p ` A"
+  shows "{x\<in>X. p x \<in> V} \<subseteq> A"
+proof (rule subsetI)
+  fix x assume hx: "x \<in> {x \<in> X. p x \<in> V}"
+  have hxX: "x \<in> X" and hpxV: "p x \<in> V"
+    using hx by simp_all
+  have hAX: "A \<subseteq> X"
+    using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+  have hprop: "\<forall>a\<in>A. \<forall>y\<in>X. p y = p a \<longrightarrow> y \<in> A"
+    using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+  have "p x \<in> p ` A"
+    using hV hpxV by blast
+  then obtain a where haA: "a \<in> A" and hpa: "p x = p a"
+    by blast
+  show "x \<in> A"
+    using hprop haA hxX hpa by blast
+qed
+
+lemma top1_saturated_restrict_preimage_eq:
+  assumes hsat: "top1_saturated_with_respect_to_on X p A"
+  assumes hV: "V \<subseteq> p ` A"
+  shows "{x\<in>A. p x \<in> V} = {x\<in>X. p x \<in> V}"
+proof (rule equalityI)
+  show "{x \<in> A. p x \<in> V} \<subseteq> {x \<in> X. p x \<in> V}"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> {x \<in> A. p x \<in> V}"
+    have hxA: "x \<in> A" and hpxV: "p x \<in> V"
+      using hx by simp_all
+    have hAX: "A \<subseteq> X"
+      using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+    have hxX: "x \<in> X"
+      using hAX hxA by blast
+    show "x \<in> {x \<in> X. p x \<in> V}"
+      using hxX hpxV by simp
+  qed
+  show "{x \<in> X. p x \<in> V} \<subseteq> {x \<in> A. p x \<in> V}"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> {x \<in> X. p x \<in> V}"
+    have hxX: "x \<in> X" and hpxV: "p x \<in> V"
+      using hx by simp_all
+    have hxA: "x \<in> A"
+      using top1_saturated_preimage_subset[OF hsat hV] hx by blast
+    show "x \<in> {x \<in> A. p x \<in> V}"
+      using hxA hpxV by simp
+  qed
+qed
+
+lemma top1_saturated_image_inter_eq:
+  assumes hsat: "top1_saturated_with_respect_to_on X p A"
+  assumes hU: "U \<subseteq> X"
+  shows "p ` (U \<inter> A) = (p ` U) \<inter> (p ` A)"
+proof (rule equalityI)
+  show "p ` (U \<inter> A) \<subseteq> p ` U \<inter> p ` A"
+    by blast
+  show "p ` U \<inter> p ` A \<subseteq> p ` (U \<inter> A)"
+  proof (rule subsetI)
+    fix y assume hy: "y \<in> p ` U \<inter> p ` A"
+    obtain u where huU: "u \<in> U" and hyu: "y = p u"
+      using hy by blast
+    obtain a where haA: "a \<in> A" and hya: "y = p a"
+      using hy by blast
+    have huX: "u \<in> X"
+      using hU huU by blast
+    have hAX: "A \<subseteq> X"
+      using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+    have hprop: "\<forall>x\<in>A. \<forall>z\<in>X. p z = p x \<longrightarrow> z \<in> A"
+      using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+    have "p u = p a"
+      using hyu hya by simp
+    have huA: "u \<in> A"
+      using hprop haA huX \<open>p u = p a\<close> by blast
+    have "u \<in> U \<inter> A"
+      using huU huA by blast
+    thus "y \<in> p ` (U \<inter> A)"
+      using hyu by blast
+  qed
+qed
+
+lemma top1_quotient_map_closed_iff_preimage_closed:
+  assumes hp: "top1_quotient_map_on X TX Y TY p"
+  assumes hC: "C \<subseteq> Y"
+  shows "closedin_on Y TY C \<longleftrightarrow> closedin_on X TX {x\<in>X. p x \<in> C}"
+proof (rule iffI)
+  assume hclY: "closedin_on Y TY C"
+  have hTopX: "is_topology_on X TX"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hcont: "top1_continuous_map_on X TX Y TY p"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hmap: "\<forall>x\<in>X. p x \<in> Y"
+    using hcont unfolding top1_continuous_map_on_def by blast
+  have hopenY: "Y - C \<in> TY"
+    using hclY unfolding closedin_on_def by blast
+  have hopenX: "{x \<in> X. p x \<in> Y - C} \<in> TX"
+    using hcont hopenY unfolding top1_continuous_map_on_def by blast
+  have hEq: "X - {x \<in> X. p x \<in> C} = {x \<in> X. p x \<in> Y - C}"
+  proof (rule set_eqI)
+    fix x
+    show "x \<in> X - {x \<in> X. p x \<in> C} \<longleftrightarrow> x \<in> {x \<in> X. p x \<in> Y - C}"
+    proof
+      assume hx: "x \<in> X - {x \<in> X. p x \<in> C}"
+      have hxX: "x \<in> X" and hpxnC: "p x \<notin> C"
+        using hx by blast+
+      have hpxY: "p x \<in> Y"
+        using hmap hxX by blast
+      show "x \<in> {x \<in> X. p x \<in> Y - C}"
+        using hxX hpxY hpxnC by blast
+    next
+      assume hx: "x \<in> {x \<in> X. p x \<in> Y - C}"
+      have hxX: "x \<in> X" and hpxY: "p x \<in> Y" and hpxnC: "p x \<notin> C"
+        using hx by blast+
+      show "x \<in> X - {x \<in> X. p x \<in> C}"
+        using hxX hpxnC by blast
+    qed
+  qed
+  show "closedin_on X TX {x \<in> X. p x \<in> C}"
+    unfolding closedin_on_def
+    apply (intro conjI)
+     apply blast
+    apply (subst hEq)
+    apply (rule hopenX)
+    done
+next
+  assume hclX: "closedin_on X TX {x \<in> X. p x \<in> C}"
+  have hTopX: "is_topology_on X TX"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hcont: "top1_continuous_map_on X TX Y TY p"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hmap: "\<forall>x\<in>X. p x \<in> Y"
+    using hcont unfolding top1_continuous_map_on_def by blast
+
+  have hpre_open: "{x \<in> X. p x \<in> Y - C} \<in> TX"
+  proof -
+    have hcomp: "X - {x \<in> X. p x \<in> C} \<in> TX"
+      using hclX unfolding closedin_on_def by blast
+    have hEq: "{x \<in> X. p x \<in> Y - C} = X - {x \<in> X. p x \<in> C}"
+    proof (rule set_eqI)
+      fix x
+      show "x \<in> {x \<in> X. p x \<in> Y - C} \<longleftrightarrow> x \<in> X - {x \<in> X. p x \<in> C}"
+      proof
+        assume hx: "x \<in> {x \<in> X. p x \<in> Y - C}"
+        have hxX: "x \<in> X" and hpxY: "p x \<in> Y" and hpxnC: "p x \<notin> C"
+          using hx by blast+
+        show "x \<in> X - {x \<in> X. p x \<in> C}"
+          using hxX hpxnC by blast
+      next
+        assume hx: "x \<in> X - {x \<in> X. p x \<in> C}"
+        have hxX: "x \<in> X" and hpxnC: "p x \<notin> C"
+          using hx by blast+
+        have hpxY: "p x \<in> Y"
+          using hmap hxX by blast
+        show "x \<in> {x \<in> X. p x \<in> Y - C}"
+          using hxX hpxY hpxnC by blast
+      qed
+    qed
+    show ?thesis
+      by (subst hEq) (rule hcomp)
+  qed
+
+  have hQ: "\<forall>V. V \<subseteq> Y \<longrightarrow> ({x\<in>X. p x \<in> V} \<in> TX \<longrightarrow> V \<in> TY)"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hopenY: "Y - C \<in> TY"
+    using hQ hC hpre_open by blast
+  show "closedin_on Y TY C"
+    unfolding closedin_on_def
+    using hC hopenY by blast
+qed
+
 lemma top1_quotient_map_open_iff_preimage_open:
   assumes hp: "top1_quotient_map_on X TX Y TY p"
   assumes hV: "V \<subseteq> Y"
@@ -10583,8 +10767,426 @@ qed
 theorem Theorem_22_1:
   assumes hp: "top1_quotient_map_on X TX Y TY p"
   assumes hsat: "top1_saturated_with_respect_to_on X p A"
-  shows "top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
-  sorry
+  shows
+    "(openin_on X TX A \<or> closedin_on X TX A)
+        \<longrightarrow> top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+    and
+    "((top1_open_map_on X TX Y TY p \<or> top1_closed_map_on X TX Y TY p)
+        \<longrightarrow> top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p)"
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hcont: "top1_continuous_map_on X TX Y TY p"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hsurj: "p ` X = Y"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hQ: "\<forall>V. V \<subseteq> Y \<longrightarrow> ({x\<in>X. p x \<in> V} \<in> TX \<longrightarrow> V \<in> TY)"
+    using hp unfolding top1_quotient_map_on_def by blast
+  have hmap: "\<forall>x\<in>X. p x \<in> Y"
+    using hcont unfolding top1_continuous_map_on_def by blast
+  have hAX: "A \<subseteq> X"
+    using hsat unfolding top1_saturated_with_respect_to_on_def by blast
+  have hpA_sub: "p ` A \<subseteq> Y"
+    using hmap hAX by blast
+
+  have hTopA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF hTopX hAX])
+  have hToppA: "is_topology_on (p ` A) (subspace_topology Y TY (p ` A))"
+    by (rule subspace_topology_is_topology_on[OF hTopY hpA_sub])
+
+  have hcont_restrict:
+    "top1_continuous_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+  proof -
+    have hRestrDom:
+      "\<forall>A' f. top1_continuous_map_on X TX Y TY f \<and> A' \<subseteq> X
+             \<longrightarrow> top1_continuous_map_on A' (subspace_topology X TX A') Y TY f"
+      by (rule Theorem_18_2(4)[OF hTopX hTopY hTopY])
+    have hRestrRan:
+      "\<forall>W f. top1_continuous_map_on A (subspace_topology X TX A) Y TY f \<and> W \<subseteq> Y \<and> f ` A \<subseteq> W
+             \<longrightarrow> top1_continuous_map_on A (subspace_topology X TX A) W (subspace_topology Y TY W) f"
+      by (rule Theorem_18_2(5)[OF hTopA hTopY hTopY])
+
+    have hcontA_Y: "top1_continuous_map_on A (subspace_topology X TX A) Y TY p"
+      using hRestrDom hcont hAX by blast
+    have "top1_continuous_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+      using hRestrRan hcontA_Y hpA_sub by blast
+    thus ?thesis .
+  qed
+
+  have hquotient_core:
+    "(\<And>V. V \<subseteq> p ` A \<Longrightarrow> {x\<in>A. p x \<in> V} \<in> subspace_topology X TX A \<Longrightarrow> V \<in> subspace_topology Y TY (p ` A))
+      \<Longrightarrow> top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+  proof -
+    assume hQuot: "\<And>V. V \<subseteq> p ` A \<Longrightarrow> {x\<in>A. p x \<in> V} \<in> subspace_topology X TX A \<Longrightarrow> V \<in> subspace_topology Y TY (p ` A)"
+    show "top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+      unfolding top1_quotient_map_on_def
+    proof (intro conjI)
+      show "is_topology_on A (subspace_topology X TX A)"
+        by (rule hTopA)
+      show "is_topology_on (p ` A) (subspace_topology Y TY (p ` A))"
+        by (rule hToppA)
+      show "top1_continuous_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+        by (rule hcont_restrict)
+      show "p ` A = p ` A"
+        by simp
+      show "\<forall>V. V \<subseteq> p ` A \<longrightarrow> ({x \<in> A. p x \<in> V} \<in> subspace_topology X TX A \<longrightarrow> V \<in> subspace_topology Y TY (p ` A))"
+        using hQuot by blast
+    qed
+  qed
+
+  show "(openin_on X TX A \<or> closedin_on X TX A)
+        \<longrightarrow> top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+  proof (intro impI)
+    assume hA: "openin_on X TX A \<or> closedin_on X TX A"
+    show "top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+    proof (rule hquotient_core)
+      fix V assume hV: "V \<subseteq> p ` A"
+      assume hpreA: "{x \<in> A. p x \<in> V} \<in> subspace_topology X TX A"
+
+      show "V \<in> subspace_topology Y TY (p ` A)"
+      proof (cases "openin_on X TX A")
+        case True
+        have hAopen: "A \<in> TX"
+          using True unfolding openin_on_def by simp
+        obtain U where hU: "U \<in> TX" and hEq: "{x \<in> A. p x \<in> V} = A \<inter> U"
+          using hpreA unfolding subspace_topology_def by blast
+        have hpreX_eq': "{x \<in> A. p x \<in> V} = {x \<in> X. p x \<in> V}"
+          by (rule top1_saturated_restrict_preimage_eq[OF hsat hV])
+        have hpreX_eq: "{x \<in> X. p x \<in> V} = {x \<in> A. p x \<in> V}"
+          using hpreX_eq' by simp
+        have hpreX_open: "{x \<in> X. p x \<in> V} \<in> TX"
+        proof -
+          have "A \<inter> U \<in> TX"
+            by (rule topology_inter2[OF hTopX hAopen hU])
+          thus ?thesis
+            using hpreX_eq hEq by simp
+        qed
+        have hVY: "V \<subseteq> Y"
+          using hV hpA_sub by blast
+        have hV_open_Y: "V \<in> TY"
+          using hQ hVY hpreX_open by blast
+        show ?thesis
+          unfolding subspace_topology_def
+        proof -
+          have hInt: "V = (p ` A) \<inter> V"
+          proof (rule subset_antisym)
+            show "V \<subseteq> (p ` A) \<inter> V"
+              using hV by blast
+            show "(p ` A) \<inter> V \<subseteq> V"
+              by blast
+          qed
+	          show "V \<in> {p ` A \<inter> U |U. U \<in> TY}"
+	            apply (rule CollectI)
+	            apply (rule exI[where x=V])
+	            apply (intro conjI)
+	             apply (rule hInt)
+	            apply (rule hV_open_Y)
+	            done
+	        qed
+	      next
+	        case False
+        have hAcl: "closedin_on X TX A"
+          using hA False by blast
+        have hXAmem: "X - A \<in> TX"
+          using hAcl unfolding closedin_on_def by blast
+
+        obtain U where hU: "U \<in> TX" and hEq: "{x \<in> A. p x \<in> V} = A \<inter> U"
+          using hpreA unfolding subspace_topology_def by blast
+        define W where "W = (p ` A) - V"
+
+        have hWsub: "W \<subseteq> p ` A"
+          unfolding W_def by blast
+        have hpreA_W: "{x \<in> A. p x \<in> W} = A - {x \<in> A. p x \<in> V}"
+        proof (rule set_eqI)
+          fix x
+          show "x \<in> {x \<in> A. p x \<in> W} \<longleftrightarrow> x \<in> A - {x \<in> A. p x \<in> V}"
+            unfolding W_def by blast
+        qed
+        have hpreX_W_eq': "{x \<in> A. p x \<in> W} = {x \<in> X. p x \<in> W}"
+          by (rule top1_saturated_restrict_preimage_eq[OF hsat hWsub])
+        have hpreX_W_eq: "{x \<in> X. p x \<in> W} = {x \<in> A. p x \<in> W}"
+          using hpreX_W_eq' by simp
+
+        have hpreX_W_closed: "closedin_on X TX {x \<in> X. p x \<in> W}"
+        proof -
+          have hCeq: "{x \<in> X. p x \<in> W} = A - {x \<in> A. p x \<in> V}"
+            using hpreX_W_eq hpreA_W by simp
+          have hCeq2: "{x \<in> A. p x \<in> V} = A \<inter> U"
+            using hEq by simp
+	          have hCeq3: "{x \<in> X. p x \<in> W} = A \<inter> (X - U)"
+	          proof -
+	            have hId: "A - (A \<inter> U) = A \<inter> (X - U)"
+	            proof (rule set_eqI)
+	              fix x
+	              show "x \<in> A - (A \<inter> U) \<longleftrightarrow> x \<in> A \<inter> (X - U)"
+	              proof
+	                assume hx: "x \<in> A - (A \<inter> U)"
+	                have hxA: "x \<in> A" and hxnot: "x \<notin> A \<inter> U"
+	                  using hx by blast+
+	                have hxX: "x \<in> X"
+	                  using hAX hxA by blast
+	                have hxnotU: "x \<notin> U"
+	                  using hxA hxnot by blast
+	                show "x \<in> A \<inter> (X - U)"
+	                  using hxA hxX hxnotU by blast
+	              next
+	                assume hx: "x \<in> A \<inter> (X - U)"
+	                have hxA: "x \<in> A" and hxX: "x \<in> X" and hxnotU: "x \<notin> U"
+	                  using hx by blast+
+	                have hxnot: "x \<notin> A \<inter> U"
+	                  using hxA hxnotU by blast
+	                show "x \<in> A - (A \<inter> U)"
+	                  using hxA hxnot by blast
+	              qed
+	            qed
+	            thus ?thesis
+	              using hCeq hCeq2 by simp
+	          qed
+	          show ?thesis
+	            unfolding closedin_on_def
+		          proof (intro conjI)
+		            show "{x \<in> X. p x \<in> W} \<subseteq> X"
+		              by blast
+		            have hXminus: "X - (A \<inter> (X - U)) = (X - A) \<union> (X \<inter> U)"
+		            proof (rule set_eqI)
+		              fix x
+		              show "x \<in> X - (A \<inter> (X - U)) \<longleftrightarrow> x \<in> (X - A) \<union> (X \<inter> U)"
+		                by blast
+		            qed
+		            have hXmem: "X \<in> TX"
+		              using hTopX unfolding is_topology_on_def by blast
+		            have hXintU: "X \<inter> U \<in> TX"
+		              by (rule topology_inter2[OF hTopX hXmem hU])
+		            have hUn_open: "(X - A) \<union> (X \<inter> U) \<in> TX"
+		              by (rule topology_union2[OF hTopX hXAmem hXintU])
+		            have hDiff1: "X - {x \<in> X. p x \<in> W} = X - (A \<inter> (X - U))"
+		              by (subst hCeq3) simp
+		            have hDiffEq: "X - {x \<in> X. p x \<in> W} = (X - A) \<union> (X \<inter> U)"
+		              using hDiff1 hXminus by simp
+		            show "X - {x \<in> X. p x \<in> W} \<in> TX"
+		              by (subst hDiffEq) (rule hUn_open)
+		          qed
+	        qed
+
+        have hWsubY: "W \<subseteq> Y"
+          unfolding W_def using hpA_sub by blast
+        have hW_closed_Y: "closedin_on Y TY W"
+          using top1_quotient_map_closed_iff_preimage_closed[OF hp hWsubY] hpreX_W_closed by blast
+        have hYminusW_open: "Y - W \<in> TY"
+          using hW_closed_Y unfolding closedin_on_def by blast
+
+        have hV_eq: "V = (p ` A) \<inter> (Y - W)"
+        proof (rule equalityI)
+          show "V \<subseteq> p ` A \<inter> (Y - W)"
+            unfolding W_def using hV hpA_sub by blast
+          show "p ` A \<inter> (Y - W) \<subseteq> V"
+            unfolding W_def by blast
+        qed
+
+        show ?thesis
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x="Y - W"])
+          apply (intro conjI)
+           apply (simp add: hV_eq)
+          apply (rule hYminusW_open)
+          done
+      qed
+    qed
+  qed
+
+  show "(top1_open_map_on X TX Y TY p \<or> top1_closed_map_on X TX Y TY p)
+        \<longrightarrow> top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+  proof (intro impI)
+    assume hpoc: "top1_open_map_on X TX Y TY p \<or> top1_closed_map_on X TX Y TY p"
+    show "top1_quotient_map_on A (subspace_topology X TX A) (p ` A) (subspace_topology Y TY (p ` A)) p"
+    proof (rule hquotient_core)
+      fix V assume hV: "V \<subseteq> p ` A"
+      assume hpreA: "{x \<in> A. p x \<in> V} \<in> subspace_topology X TX A"
+	      obtain U0 where hU0: "U0 \<in> TX" and hEq0: "{x \<in> A. p x \<in> V} = A \<inter> U0"
+	        using hpreA unfolding subspace_topology_def by blast
+	      define U where "U = U0 \<inter> X"
+	      have hU: "U \<in> TX"
+	      proof -
+	        have hXmem: "X \<in> TX"
+	          using hTopX unfolding is_topology_on_def by blast
+	        show ?thesis
+	          unfolding U_def by (rule topology_inter2[OF hTopX hU0 hXmem])
+	      qed
+      have hUsub: "U \<subseteq> X"
+        unfolding U_def by blast
+      have hEq: "{x \<in> A. p x \<in> V} = A \<inter> U"
+      proof -
+        have "A \<inter> U0 = A \<inter> (U0 \<inter> X)"
+          using hAX by blast
+        thus ?thesis
+          using hEq0 unfolding U_def by simp
+      qed
+
+      have hpreX_eq: "{x \<in> X. p x \<in> V} = A \<inter> U"
+        using top1_saturated_restrict_preimage_eq[OF hsat hV] hEq by simp
+      have hV_eq_img: "V = (p ` U) \<inter> (p ` A)"
+      proof -
+        have hpreX: "{x \<in> X. p x \<in> V} = U \<inter> A"
+          using hpreX_eq by (simp add: Int_commute Int_left_commute Int_assoc)
+        have "p ` {x \<in> X. p x \<in> V} = V"
+        proof (rule equalityI)
+          show "p ` {x \<in> X. p x \<in> V} \<subseteq> V"
+            by blast
+          show "V \<subseteq> p ` {x \<in> X. p x \<in> V}"
+          proof (rule subsetI)
+            fix y assume hyV: "y \<in> V"
+            have hyY: "y \<in> Y"
+              using hV hpA_sub hyV by blast
+            have "y \<in> Y"
+              by (rule hyY)
+            have "y \<in> p ` X"
+              using hsurj hyY by simp
+            then obtain x where hxX: "x \<in> X" and hy: "y = p x"
+              by blast
+            have "p x \<in> V"
+              using hyV hy by simp
+            have "x \<in> {x \<in> X. p x \<in> V}"
+              using hxX \<open>p x \<in> V\<close> by simp
+            thus "y \<in> p ` {x \<in> X. p x \<in> V}"
+              using hy by blast
+          qed
+        qed
+        have "V = p ` (U \<inter> A)"
+          using hpreX hsurj \<open>p ` {x \<in> X. p x \<in> V} = V\<close> by simp
+        also have "... = (p ` U) \<inter> (p ` A)"
+          by (rule top1_saturated_image_inter_eq[OF hsat hUsub])
+        finally show ?thesis .
+      qed
+
+      show "V \<in> subspace_topology Y TY (p ` A)"
+	      proof (cases "top1_open_map_on X TX Y TY p")
+	        case True
+	        have hopen: "\<forall>U. U \<in> TX \<and> U \<subseteq> X \<longrightarrow> p ` U \<in> TY"
+	          using True unfolding top1_open_map_on_def by blast
+	        have hPU: "p ` U \<in> TY"
+	          using hopen hU hUsub by blast
+	        have hVeq: "V = (p ` A) \<inter> (p ` U)"
+	        proof -
+	          have "V = (p ` U) \<inter> (p ` A)"
+	            by (rule hV_eq_img)
+	          also have "... = (p ` A) \<inter> (p ` U)"
+	            by (rule Int_commute)
+	          finally show ?thesis .
+	        qed
+	        show ?thesis
+	          unfolding subspace_topology_def
+	          apply (rule CollectI)
+	          apply (rule exI[where x="p ` U"])
+	          apply (intro conjI)
+	           apply (rule hVeq)
+	          apply (rule hPU)
+	          done
+	      next
+	        case False
+	        have hclosed: "top1_closed_map_on X TX Y TY p"
+	          using hpoc False by blast
+	        have hCprop: "\<forall>A. closedin_on X TX A \<longrightarrow> closedin_on Y TY (p ` A)"
+	          using hclosed unfolding top1_closed_map_on_def by blast
+	        have hC: "closedin_on X TX (X - U)"
+	        proof -
+	          have hXmem: "X \<in> TX"
+	            using hTopX unfolding is_topology_on_def by blast
+	          have hXintU: "X \<inter> U \<in> TX"
+	            by (rule topology_inter2[OF hTopX hXmem hU])
+	          have hEq: "X - (X - U) = X \<inter> U"
+	            by blast
+	          show ?thesis
+	            unfolding closedin_on_def
+	          proof (intro conjI)
+	            show "X - U \<subseteq> X"
+	              by blast
+	            show "X - (X - U) \<in> TX"
+	              by (subst hEq) (rule hXintU)
+	          qed
+	        qed
+	        have hCpU: "closedin_on Y TY (p ` (X - U))"
+	          using hCprop hC by blast
+	        have hOpU: "Y - p ` (X - U) \<in> TY"
+	          using hCpU unfolding closedin_on_def by blast
+
+        have hV_eq2: "V = (p ` A) \<inter> (Y - p ` (X - U))"
+        proof (rule equalityI)
+          show "V \<subseteq> p ` A \<inter> (Y - p ` (X - U))"
+          proof (rule subsetI)
+            fix y assume hyV: "y \<in> V"
+            have hyPA: "y \<in> p ` A"
+              using hV hyV by blast
+            have "y \<notin> p ` (X - U)"
+            proof
+              assume hy: "y \<in> p ` (X - U)"
+              obtain x where hxXU: "x \<in> X - U" and hyx: "y = p x"
+                using hy by blast
+              have hxX: "x \<in> X" and hxnotU: "x \<notin> U"
+                using hxXU by blast+
+              have "p x \<in> V"
+                using hyV hyx by simp
+              have hxpre: "x \<in> {x \<in> X. p x \<in> V}"
+                using hxX \<open>p x \<in> V\<close> by simp
+              have hxAU: "x \<in> A \<inter> U"
+                using hpreX_eq hxpre by simp
+              hence "x \<in> U"
+                by blast
+              thus False
+                using hxnotU by blast
+            qed
+            have hyY: "y \<in> Y"
+              using hpA_sub hyPA by blast
+            show "y \<in> p ` A \<inter> (Y - p ` (X - U))"
+              using hyPA hyY \<open>y \<notin> p ` (X - U)\<close> by blast
+          qed
+          show "p ` A \<inter> (Y - p ` (X - U)) \<subseteq> V"
+          proof (rule subsetI)
+            fix y assume hy: "y \<in> p ` A \<inter> (Y - p ` (X - U))"
+            have hyPA: "y \<in> p ` A" and hynot: "y \<notin> p ` (X - U)"
+              using hy by blast+
+            obtain a where haA: "a \<in> A" and hyA: "y = p a"
+              using hyPA by blast
+            have haX: "a \<in> X"
+              using hAX haA by blast
+            have "a \<in> U"
+            proof (rule classical)
+              assume "a \<notin> U"
+              have "a \<in> X - U"
+                using haX \<open>a \<notin> U\<close> by blast
+              have "y \<in> p ` (X - U)"
+                using hyA \<open>a \<in> X - U\<close> by blast
+              thus "a \<in> U"
+                using hynot by blast
+            qed
+            have "a \<in> A \<inter> U"
+              using haA \<open>a \<in> U\<close> by blast
+	            have "y \<in> p ` (A \<inter> U)"
+	              using hyA \<open>a \<in> A \<inter> U\<close> by blast
+	            thus "y \<in> V"
+	            proof -
+	              have "y \<in> (p ` U) \<inter> (p ` A)"
+	                using \<open>y \<in> p ` (A \<inter> U)\<close> by blast
+	              thus ?thesis
+	                using hV_eq_img by simp
+	            qed
+	          qed
+	        qed
+
+        show ?thesis
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x="Y - p ` (X - U)"])
+          apply (intro conjI)
+           apply (simp add: hV_eq2)
+          apply (rule hOpU)
+          done
+      qed
+    qed
+  qed
+qed
 
 (** from \S22 Theorem 22.2 (Universal property of quotient maps) [top1.tex:2441] **)
 theorem Theorem_22_2:
