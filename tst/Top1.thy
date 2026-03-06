@@ -16877,32 +16877,17 @@ theorem Lemma_26_8:
   assumes hx0: "x0 \<in> X"
   assumes hslice: "{x0} \<times> Y \<subseteq> N"
   shows "\<exists>W. neighborhood_of x0 X TX W \<and> W \<times> Y \<subseteq> N"
-  sorry
-
-text \<open>
-  Tube lemma (\<S>26, Lemma 26.8) is deferred for now to keep the build under the session timeout.
-  The proof above is fully formal but increases overall session build time past 120 seconds.
-\<close>
-
-(*  proof (cases "Y = {}")
-  ... (full formal proof omitted; see previous attempt) ...
-qed  *)
-
-text \<open>
-  Tube lemma (\<S>26, Lemma 26.8) is deferred for now to keep the build under the session timeout.
-  The intended proof follows the standard argument: refine the open neighbourhood of each point
-  \<open>(x0,y)\<close> in \<open>N\<close> to a basic rectangle \<open>U_y \<times> V_y \<subseteq> N\<close>, use compactness of \<open>Y\<close> to extract
-  a finite subcover of the \<open>V_y\<close>, and let \<open>W = \<Inter> U_y\<close>.
-\<close>
-
-(* proof (cases "Y = {}")
+proof (cases "Y = {}")
   case True
+
   have hX_TX: "X \<in> TX"
     by (rule conjunct1[OF conjunct2[OF hTopX[unfolded is_topology_on_def]]])
   have hnbhd: "neighborhood_of x0 X TX X"
     unfolding neighborhood_of_def using hX_TX hx0 by blast
+
   have hprod: "X \<times> Y \<subseteq> N"
     unfolding True by simp
+
   show ?thesis
     apply (rule exI[where x=X])
     apply (intro conjI)
@@ -16916,42 +16901,58 @@ next
     "\<forall>Uc. Uc \<subseteq> TY \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
     using hY unfolding top1_compact_on_def by blast
 
-  have hNgen: "N \<in> topology_generated_by_basis UNIV (product_basis TX TY)"
-    using hN unfolding product_topology_on_def by simp
-
-  have hex: "\<forall>y\<in>Y. \<exists>p. fst p \<in> TX \<and> snd p \<in> TY
-                      \<and> x0 \<in> fst p \<and> y \<in> snd p
-                      \<and> fst p \<times> snd p \<subseteq> N"
+  have hex:
+    "\<forall>y\<in>Y. \<exists>U\<in>TX. \<exists>V\<in>TY. x0 \<in> U \<and> y \<in> V \<and> U \<times> V \<subseteq> N"
   proof (intro ballI)
     fix y assume hyY: "y \<in> Y"
     have hpN: "(x0, y) \<in> N"
       using hslice hyY by blast
-
-    have hprop: "\<exists>b\<in>product_basis TX TY. (x0, y) \<in> b \<and> b \<subseteq> N"
-      using hNgen hpN unfolding topology_generated_by_basis_def by blast
-    obtain b where hbB: "b \<in> product_basis TX TY" and hpB: "(x0, y) \<in> b" and hbN: "b \<subseteq> N"
-      using hprop by blast
-    obtain U V where hb: "b = U \<times> V" and hU: "U \<in> TX" and hV: "V \<in> TY"
-      using hbB unfolding product_basis_def by blast
-
+    obtain U V where hU: "U \<in> TX" and hV: "V \<in> TY"
+      and hpUV: "(x0, y) \<in> U \<times> V" and hsub: "U \<times> V \<subseteq> N"
+      by (rule top1_product_open_contains_rect[OF hN hpN])
     have hx0U: "x0 \<in> U" and hyV: "y \<in> V"
-      using hpB unfolding hb by blast+
-
-    have hsub: "U \<times> V \<subseteq> N"
-      using hbN unfolding hb by simp
-
-    show "\<exists>p. fst p \<in> TX \<and> snd p \<in> TY
-              \<and> x0 \<in> fst p \<and> y \<in> snd p
-              \<and> fst p \<times> snd p \<subseteq> N"
-      apply (rule exI[where x="(U,V)"])
-      using hU hV hx0U hyV hsub by simp
+      using hpUV by blast+
+    show "\<exists>U\<in>TX. \<exists>V\<in>TY. x0 \<in> U \<and> y \<in> V \<and> U \<times> V \<subseteq> N"
+      apply (rule bexI[where x=U])
+       apply (rule bexI[where x=V])
+        apply (rule conjI)
+         apply (rule hx0U)
+        apply (rule conjI)
+         apply (rule hyV)
+        apply (rule hsub)
+       apply (rule hV)
+      apply (rule hU)
+      done
   qed
 
   obtain f where hf:
     "\<forall>y\<in>Y. fst (f y) \<in> TX \<and> snd (f y) \<in> TY
            \<and> x0 \<in> fst (f y) \<and> y \<in> snd (f y)
            \<and> fst (f y) \<times> snd (f y) \<subseteq> N"
-    using bchoice[OF hex] by blast
+  proof -
+    have hex':
+      "\<forall>y\<in>Y. \<exists>p. fst p \<in> TX \<and> snd p \<in> TY
+               \<and> x0 \<in> fst p \<and> y \<in> snd p
+               \<and> fst p \<times> snd p \<subseteq> N"
+    proof (intro ballI)
+      fix y assume hyY: "y \<in> Y"
+      obtain U V where hU: "U \<in> TX" and hV: "V \<in> TY"
+        and hx0U: "x0 \<in> U" and hyV: "y \<in> V" and hsub: "U \<times> V \<subseteq> N"
+        using hex hyY by blast
+      show "\<exists>p. fst p \<in> TX \<and> snd p \<in> TY
+               \<and> x0 \<in> fst p \<and> y \<in> snd p
+               \<and> fst p \<times> snd p \<subseteq> N"
+        apply (rule exI[where x="(U,V)"])
+        using hU hV hx0U hyV hsub by simp
+    qed
+    obtain g where hg:
+      "\<forall>y\<in>Y. fst (g y) \<in> TX \<and> snd (g y) \<in> TY
+             \<and> x0 \<in> fst (g y) \<and> y \<in> snd (g y)
+             \<and> fst (g y) \<times> snd (g y) \<subseteq> N"
+      using bchoice[OF hex'] by blast
+    show ?thesis
+      by (rule that[OF hg])
+  qed
 
   define U where "U = (\<lambda>y. fst (f y))"
   define V where "V = (\<lambda>y. snd (f y))"
@@ -16968,14 +16969,7 @@ next
     using hf unfolding U_def V_def by blast
 
   have hVimg_sub: "V ` Y \<subseteq> TY"
-  proof (rule subsetI)
-    fix W assume hW: "W \<in> V ` Y"
-    then obtain y where hyY: "y \<in> Y" and hWeq: "W = V y"
-      by blast
-    show "W \<in> TY"
-      using hVopen hyY unfolding hWeq by blast
-  qed
-
+    using hVopen by blast
   have hVcov: "Y \<subseteq> \<Union>(V ` Y)"
   proof (rule subsetI)
     fix y assume hyY: "y \<in> Y"
@@ -17001,7 +16995,7 @@ next
       using False by blast
   qed
 
-  have hrep: "\<forall>W\<in>F. \<exists>y. y \<in> Y \<and> V y = W"
+  have hrepr: "\<forall>W\<in>F. \<exists>y. y \<in> Y \<and> V y = W"
   proof (intro ballI)
     fix W assume hWF: "W \<in> F"
     have "W \<in> V ` Y"
@@ -17013,67 +17007,40 @@ next
   qed
 
   obtain pick where hpick: "\<forall>W\<in>F. pick W \<in> Y \<and> V (pick W) = W"
-    using bchoice[OF hrep] by blast
+    using bchoice[OF hrepr] by blast
 
   define I where "I = pick ` F"
   have hIfin: "finite I"
     unfolding I_def by (rule finite_imageI[OF hFfin])
+  have hIne: "I \<noteq> {}"
+    unfolding I_def using hFne by simp
   have hIsub: "I \<subseteq> Y"
     unfolding I_def using hpick by blast
 
-  have hVIF_eq: "\<Union>F = \<Union>(V ` I)"
-  proof
-    show "\<Union>F \<subseteq> \<Union>(V ` I)"
-    proof (rule subsetI)
-      fix y assume hy: "y \<in> \<Union>F"
-      obtain W where hWF: "W \<in> F" and hyW: "y \<in> W"
-        using hy by blast
-      have hpickY: "pick W \<in> Y" and hVpick: "V (pick W) = W"
-        using hpick hWF by blast+
-      have hVI: "V (pick W) \<in> V ` I"
-        unfolding I_def using hWF by blast
-      show "y \<in> \<Union>(V ` I)"
-      proof -
-        have hyVpick: "y \<in> V (pick W)"
-          using hyW by (simp add: hVpick)
-        show ?thesis
-          by (rule UnionI[OF hVI hyVpick])
-      qed
-    qed
-    show "\<Union>(V ` I) \<subseteq> \<Union>F"
-    proof (rule subsetI)
-      fix y assume hy: "y \<in> \<Union>(V ` I)"
-      obtain W where hW: "W \<in> V ` I" and hyW: "y \<in> W"
-        using hy by blast
-      obtain i where hiI: "i \<in> I" and hWeq: "W = V i"
-        using hW by blast
-      obtain W0 where hW0F: "W0 \<in> F" and hiEq: "i = pick W0"
-        using hiI unfolding I_def by blast
-      have hVpick: "V i = W0"
-        using hpick hW0F unfolding hiEq by blast
-      have "W0 \<in> F" by (rule hW0F)
-      show "y \<in> \<Union>F"
-      proof -
-        have hyW0: "y \<in> W0"
-          using hyW unfolding hWeq hVpick by simp
-        show ?thesis
-          by (rule UnionI[OF hW0F hyW0])
-      qed
-    qed
-  qed
-
   have hIcov: "Y \<subseteq> \<Union>(V ` I)"
-    using hFcov unfolding hVIF_eq .
+  proof (rule subsetI)
+    fix y assume hyY: "y \<in> Y"
+    have "y \<in> \<Union>F"
+      using hFcov hyY by blast
+    then obtain W where hWF: "W \<in> F" and hyW: "y \<in> W"
+      by blast
+    have hVI: "V (pick W) \<in> V ` I"
+      unfolding I_def using hWF by blast
+    have hyVpick: "y \<in> V (pick W)"
+      using hyW hpick hWF by simp
+    show "y \<in> \<Union>(V ` I)"
+      by (rule UnionI[OF hVI hyVpick])
+  qed
 
   define W where "W = \<Inter>(U ` I)"
 
   have hInterTX: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TX \<longrightarrow> \<Inter>F \<in> TX"
     by (rule conjunct2[OF conjunct2[OF conjunct2[OF hTopX[unfolded is_topology_on_def]]]])
-
   have hUimg_sub: "U ` I \<subseteq> TX"
     using hUopen hIsub by blast
   have hUimg_ne: "U ` I \<noteq> {}"
-    using hFne unfolding I_def by blast
+    using hIne by blast
+
   have hW_TX: "W \<in> TX"
   proof -
     have "finite (U ` I) \<and> U ` I \<noteq> {} \<and> U ` I \<subseteq> TX"
@@ -17110,8 +17077,8 @@ next
       using hp by blast
     have hyU: "y \<in> \<Union>(V ` I)"
       using hIcov hyY by blast
-    obtain S where hS: "S \<in> V ` I" and hyS: "y \<in> S"
-      using hyU by blast
+    then obtain S where hS: "S \<in> V ` I" and hyS: "y \<in> S"
+      by blast
     obtain i where hiI: "i \<in> I" and hSeq: "S = V i"
       using hS by blast
     have hiY: "i \<in> Y"
@@ -17120,10 +17087,13 @@ next
       using hyS unfolding hSeq .
     have hxUi: "x \<in> U i"
     proof -
-      have "U i \<in> U ` I"
+      have hiUI: "U i \<in> U ` I"
         using hiI by blast
-      thus ?thesis
-        unfolding W_def using hxW by blast
+      have hxAll: "\<forall>S\<in>U ` I. x \<in> S"
+        using hxW unfolding W_def by simp
+      have "x \<in> U i"
+        using hxAll hiUI by (rule bspec)
+      thus ?thesis .
     qed
     have hsub: "U i \<times> V i \<subseteq> N"
       using hUVsub hiY by blast
@@ -17137,7 +17107,13 @@ next
 
   show ?thesis
     by (rule exI[where x=W]) (use hnbhd hWprod_sub in blast)
-qed *)
+qed
+
+text \<open>
+  Tube lemma (\<S>26, Lemma 26.8): given an open set \<open>N\<close> in the product and a full slice
+  \<open>{x0} \<times> Y\<close> contained in \<open>N\<close>, compactness of \<open>Y\<close> yields a neighborhood \<open>W\<close> of \<open>x0\<close>
+  such that \<open>W \<times> Y \<subseteq> N\<close>.
+\<close>
 
 (** from \S26 Theorem 26.9 (Finite intersection property characterization) [top1.tex:3268] **)
 theorem Theorem_26_9:
