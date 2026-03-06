@@ -10195,6 +10195,16 @@ proof -
     by (intro conjI, rule hdb, rule hEq)
 qed
 
+(** from \S20 Lemma 20.2 (Comparison of metric topologies) [top1.tex:1674] **)
+theorem Lemma_20_2:
+  assumes hd: "top1_metric_on X d"
+  assumes hd': "top1_metric_on X d'"
+  defines "T \<equiv> top1_metric_topology_on X d"
+  defines "T' \<equiv> top1_metric_topology_on X d'"
+  shows "T \<subseteq> T' \<longleftrightarrow>
+    (\<forall>x\<in>X. \<forall>\<epsilon>>0. \<exists>\<delta>>0. top1_ball_on X d' x \<delta> \<subseteq> top1_ball_on X d x \<epsilon>)"
+  sorry
+
 section \<open>\<S>21 The Metric Topology (continued)\<close>
 
 text \<open>
@@ -10694,6 +10704,47 @@ proof -
       unfolding hTXeq using hcont by simp
   qed
 qed
+
+(** from \S21 Lemma 21.4 (Continuity of the arithmetic operations on \<open>\<real>\<close>) [top1.tex:2026] **)
+theorem Lemma_21_4:
+  defines "TR \<equiv> (order_topology_on_UNIV::real set set)"
+  shows "top1_continuous_map_on (UNIV \<times> UNIV) (product_topology_on TR TR) UNIV TR (\<lambda>p. pi1 p + pi2 p)"
+    and "top1_continuous_map_on (UNIV \<times> UNIV) (product_topology_on TR TR) UNIV TR (\<lambda>p. pi1 p - pi2 p)"
+    and "top1_continuous_map_on (UNIV \<times> UNIV) (product_topology_on TR TR) UNIV TR (\<lambda>p. pi1 p * pi2 p)"
+    and "top1_continuous_map_on (UNIV \<times> (UNIV - {0::real}))
+           (subspace_topology (UNIV \<times> UNIV) (product_topology_on TR TR) (UNIV \<times> (UNIV - {0::real})))
+           UNIV TR (\<lambda>p. pi1 p / pi2 p)"
+  sorry
+
+(** from \S21 Theorem 21.5 (Algebra of continuous real-valued functions) [top1.tex:2030] **)
+theorem Theorem_21_5:
+  fixes f g :: "'a \<Rightarrow> real"
+  defines "TR \<equiv> (order_topology_on_UNIV::real set set)"
+  assumes hTX: "is_topology_on X TX"
+  assumes hf: "top1_continuous_map_on X TX UNIV TR f"
+  assumes hg: "top1_continuous_map_on X TX UNIV TR g"
+  shows "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x + g x)"
+    and "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x - g x)"
+    and "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x * g x)"
+    and "(\<forall>x\<in>X. g x \<noteq> 0) \<longrightarrow> top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x / g x)"
+  sorry
+
+(** Uniform convergence on a set (metric-valued targets). **)
+definition top1_uniformly_convergent_on ::
+  "'a set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool"
+  where
+  "top1_uniformly_convergent_on X Y d fn f \<longleftrightarrow>
+     (\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>X. d (fn n x) (f x) < \<epsilon>)"
+
+(** from \S21 Theorem 21.6 (Uniform limit theorem) [top1.tex:2054] **)
+theorem Theorem_21_6:
+  assumes hTX: "is_topology_on X TX"
+  assumes hdY: "top1_metric_on Y dY"
+  assumes hfn: "\<forall>n. top1_continuous_map_on X TX Y (top1_metric_topology_on Y dY) (fn n)"
+  assumes hunif: "top1_uniformly_convergent_on X Y dY fn f"
+  assumes hmap: "\<forall>x\<in>X. f x \<in> Y"
+  shows "top1_continuous_map_on X TX Y (top1_metric_topology_on Y dY) f"
+  sorry
 
 section \<open>\<S>22 The Quotient Topology\<close>
 
@@ -12045,6 +12096,11 @@ definition top1_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> b
 definition top1_is_separation_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_is_separation_on X T U V \<longleftrightarrow>
      U \<in> T \<and> V \<in> T \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+
+(** from \S23 Lemma 23.1 (Separation and connectedness) [top1.tex:2607] **)
+lemma Lemma_23_1:
+  "top1_connected_on X T \<longleftrightarrow> is_topology_on X T \<and> (\<nexists>U V. top1_is_separation_on X T U V)"
+  unfolding top1_connected_on_def top1_is_separation_on_def by blast
 
 (** from \S23 Lemma 23.2 [top1.tex:~2635] **)
 lemma Lemma_23_2:
@@ -16159,6 +16215,232 @@ definition top1_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
      (\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow>
           (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F))"
 
+(** from \S26 Lemma 26.1 (Compactness of subspaces, open covers from the ambient space) [top1.tex:3096] **)
+theorem Lemma_26_1:
+  assumes hTX: "is_topology_on X TX"
+  assumes hYX: "Y \<subseteq> X"
+  shows "top1_compact_on Y (subspace_topology X TX Y)
+    \<longleftrightarrow> (\<forall>Uc. Uc \<subseteq> TX \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F))"
+proof -
+  let ?TY = "subspace_topology X TX Y"
+
+  have hTopY: "is_topology_on Y ?TY"
+    by (rule subspace_topology_is_topology_on[OF hTX hYX])
+
+  show ?thesis
+  proof (rule iffI)
+    assume hcomp: "top1_compact_on Y ?TY"
+    have hcoverY:
+      "\<forall>Uc. Uc \<subseteq> ?TY \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+      using hcomp unfolding top1_compact_on_def by blast
+
+    show "\<forall>Uc. Uc \<subseteq> TX \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+    proof (intro allI impI)
+      fix Uc
+      assume hUc: "Uc \<subseteq> TX \<and> Y \<subseteq> \<Union>Uc"
+      have hUcTX: "Uc \<subseteq> TX"
+        using hUc by blast
+      have hcov: "Y \<subseteq> \<Union>Uc"
+        using hUc by blast
+
+      define UcY where "UcY = {Y \<inter> U | U. U \<in> Uc}"
+
+      have hUcY_sub: "UcY \<subseteq> ?TY"
+        unfolding UcY_def subspace_topology_def using hUcTX by blast
+
+      have hcovY: "Y \<subseteq> \<Union>UcY"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> Y"
+        have "y \<in> \<Union>Uc"
+          using hcov hy by blast
+        then obtain U where hU: "U \<in> Uc" and hyU: "y \<in> U"
+          by blast
+        have hyYU: "y \<in> Y \<inter> U"
+          using hy hyU by blast
+        have "Y \<inter> U \<in> UcY"
+          unfolding UcY_def using hU by blast
+        thus "y \<in> \<Union>UcY"
+          using hyYU by blast
+      qed
+
+      obtain F' where hF'fin: "finite F'" and hF'sub: "F' \<subseteq> UcY" and hF'cov: "Y \<subseteq> \<Union>F'"
+        using hcoverY[rule_format, OF conjI[OF hUcY_sub hcovY]] by blast
+
+      have ex_pick: "\<forall>W\<in>F'. \<exists>U. U \<in> Uc \<and> W = Y \<inter> U"
+      proof (intro ballI)
+        fix W assume hW: "W \<in> F'"
+        have "W \<in> UcY"
+          using hF'sub hW by blast
+        thus "\<exists>U. U \<in> Uc \<and> W = Y \<inter> U"
+          unfolding UcY_def by blast
+      qed
+
+      obtain pick where hpick: "\<forall>W\<in>F'. pick W \<in> Uc \<and> W = Y \<inter> pick W"
+        using bchoice[OF ex_pick] by blast
+
+      define F where "F = pick ` F'"
+      have hFfin: "finite F"
+        unfolding F_def using hF'fin by simp
+      have hFsub: "F \<subseteq> Uc"
+        unfolding F_def using hpick by blast
+
+      have hFcov: "Y \<subseteq> \<Union>F"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> Y"
+        have "y \<in> \<Union>F'"
+          using hF'cov hy by blast
+        then obtain W where hW: "W \<in> F'" and hyW: "y \<in> W"
+          by blast
+        have hWp: "pick W \<in> Uc" and hWeq: "W = Y \<inter> pick W"
+          using hpick hW by blast+
+        have hyU: "y \<in> pick W"
+        proof -
+          have hyYpick: "y \<in> Y \<inter> pick W"
+            apply (subst hWeq[symmetric])
+            apply (rule hyW)
+            done
+          show ?thesis
+            using hyYpick by simp
+        qed
+        have "pick W \<in> F"
+          unfolding F_def using hW by blast
+        thus "y \<in> \<Union>F"
+          using hyU by blast
+      qed
+
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F"
+        by (rule exI[where x=F], intro conjI, rule hFfin, rule hFsub, rule hFcov)
+    qed
+  next
+    assume hcovX:
+      "\<forall>Uc. Uc \<subseteq> TX \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+
+    have hcoverY:
+      "\<forall>UcY. UcY \<subseteq> ?TY \<and> Y \<subseteq> \<Union>UcY \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> UcY \<and> Y \<subseteq> \<Union>F)"
+    proof (intro allI impI)
+      fix UcY
+      assume hUcY: "UcY \<subseteq> ?TY \<and> Y \<subseteq> \<Union>UcY"
+      have hUcY_sub: "UcY \<subseteq> ?TY"
+        using hUcY by blast
+      have hcovY: "Y \<subseteq> \<Union>UcY"
+        using hUcY by blast
+
+      have ex_pick: "\<forall>W\<in>UcY. \<exists>U. U \<in> TX \<and> W = Y \<inter> U"
+      proof (intro ballI)
+        fix W assume hW: "W \<in> UcY"
+        have "W \<in> ?TY"
+          using hUcY_sub hW by blast
+        thus "\<exists>U. U \<in> TX \<and> W = Y \<inter> U"
+          unfolding subspace_topology_def by blast
+      qed
+
+      obtain pick where hpick: "\<forall>W\<in>UcY. pick W \<in> TX \<and> W = Y \<inter> pick W"
+        using bchoice[OF ex_pick] by blast
+
+      define Uc where "Uc = pick ` UcY"
+      have hUc_sub: "Uc \<subseteq> TX"
+        unfolding Uc_def using hpick by blast
+
+      have hcov: "Y \<subseteq> \<Union>Uc"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> Y"
+        have "y \<in> \<Union>UcY"
+          using hcovY hy by blast
+        then obtain W where hW: "W \<in> UcY" and hyW: "y \<in> W"
+          by blast
+        have hWeq: "W = Y \<inter> pick W"
+          using hpick hW by blast
+        have hyU: "y \<in> pick W"
+        proof -
+          have hyYpick: "y \<in> Y \<inter> pick W"
+            apply (subst hWeq[symmetric])
+            apply (rule hyW)
+            done
+          show ?thesis
+            using hyYpick by simp
+        qed
+        have "pick W \<in> Uc"
+          unfolding Uc_def using hW by blast
+        thus "y \<in> \<Union>Uc"
+          using hyU by blast
+      qed
+
+      obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "Y \<subseteq> \<Union>F"
+        using hcovX[rule_format, OF conjI[OF hUc_sub hcov]] by blast
+
+      define F' where "F' = {Y \<inter> U | U. U \<in> F}"
+      have hF'fin: "finite F'"
+        unfolding F'_def using hFfin by simp
+
+      have hF'sub: "F' \<subseteq> UcY"
+      proof (rule subsetI)
+        fix W assume hW: "W \<in> F'"
+        then obtain U where hU: "U \<in> F" and hWeq: "W = Y \<inter> U"
+          unfolding F'_def by blast
+        have hUUc: "U \<in> Uc"
+          using hFsub hU by blast
+        obtain W0 where hW0: "W0 \<in> UcY" and hUeq: "U = pick W0"
+          using hUUc unfolding Uc_def by blast
+        have hW0eq: "W0 = Y \<inter> pick W0"
+          using hpick hW0 by blast
+        have "Y \<inter> U = W0"
+          unfolding hUeq using hW0eq by simp
+        show "W \<in> UcY"
+          unfolding hWeq \<open>Y \<inter> U = W0\<close> using hW0 by simp
+      qed
+
+      have hF'cov: "Y \<subseteq> \<Union>F'"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> Y"
+        have "y \<in> \<Union>F"
+          using hFcov hy by blast
+        then obtain U where hU: "U \<in> F" and hyU: "y \<in> U"
+          by blast
+        have hyWU: "y \<in> Y \<inter> U"
+          using hy hyU by blast
+        have "Y \<inter> U \<in> F'"
+          unfolding F'_def using hU by blast
+        thus "y \<in> \<Union>F'"
+          using hyWU by blast
+      qed
+
+      show "\<exists>F. finite F \<and> F \<subseteq> UcY \<and> Y \<subseteq> \<Union>F"
+        by (rule exI[where x=F'], intro conjI, rule hF'fin, rule hF'sub, rule hF'cov)
+    qed
+
+    show "top1_compact_on Y ?TY"
+      unfolding top1_compact_on_def
+      by (intro conjI, rule hTopY, rule hcoverY)
+  qed
+qed
+
+(** from \S26 Theorem 26.7 (Finite products of compact spaces are compact) [top1.tex:3184] **)
+theorem Theorem_26_7:
+  assumes hX: "top1_compact_on X TX"
+  assumes hY: "top1_compact_on Y TY"
+  shows "top1_compact_on (X \<times> Y) (product_topology_on TX TY)"
+  sorry
+
+(** from \S26 Lemma 26.8 (Tube lemma) [top1.tex:3236] **)
+theorem Lemma_26_8:
+  assumes hY: "top1_compact_on Y TY"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hTopY: "is_topology_on Y TY"
+  assumes hN: "N \<in> product_topology_on TX TY"
+  assumes hx0: "x0 \<in> X"
+  assumes hslice: "{x0} \<times> Y \<subseteq> N"
+  shows "\<exists>W. neighborhood_of x0 X TX W \<and> W \<times> Y \<subseteq> N"
+  sorry
+
+(** from \S26 Theorem 26.9 (Finite intersection property characterization) [top1.tex:3268] **)
+theorem Theorem_26_9:
+  assumes hTop: "is_topology_on X TX"
+  shows "top1_compact_on X TX \<longleftrightarrow>
+    (\<forall>\<C>. (\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+         (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})
+         \<longrightarrow> \<Inter>\<C> \<noteq> {})"
+  sorry
+
 (** from \S26 Theorem 26.2 [top1.tex:3119] **)
 theorem Theorem_26_2:
   assumes hcomp: "top1_compact_on X TX"
@@ -18786,6 +19068,51 @@ definition top1_first_countable_on :: "'a set \<Rightarrow> 'a set set \<Rightar
 definition top1_second_countable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_second_countable_on X T \<longleftrightarrow> (\<exists>B. top1_countable B \<and> basis_for X B T)"
 
+(** from \S30 Theorem 30.1 (First countability and sequences) [top1.tex:3911] **)
+theorem Theorem_30_1:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  shows
+    "(\<forall>A x. A \<subseteq> X \<longrightarrow>
+        ((\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX) \<longrightarrow> x \<in> closure_on X TX A)
+      \<and> (top1_first_countable_on X TX \<longrightarrow> x \<in> closure_on X TX A
+            \<longrightarrow> (\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)))"
+    and
+    "(\<forall>f. (\<forall>x\<in>X. f x \<in> Y) \<longrightarrow>
+        ((top1_continuous_map_on X TX Y TY f
+            \<longrightarrow> (\<forall>s x. seq_converges_to_on s x X TX
+                    \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY))
+        \<and> (top1_first_countable_on X TX
+            \<longrightarrow> (\<forall>s x. seq_converges_to_on s x X TX
+                    \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY)
+            \<longrightarrow> top1_continuous_map_on X TX Y TY f)))"
+  sorry
+
+(** from \S30 Theorem 30.2 (Subspaces and countable products) [top1.tex:3934] **)
+theorem Theorem_30_2:
+  shows "(\<forall>X TX Y. top1_first_countable_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_first_countable_on Y (subspace_topology X TX Y))"
+    and "(\<forall>I X T. top1_countable I \<and> (\<forall>i\<in>I. top1_first_countable_on (X i) (T i))
+            \<longrightarrow> top1_first_countable_on (top1_PiE I X) (top1_product_topology_on I X T))"
+    and "(\<forall>X TX Y. top1_second_countable_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_second_countable_on Y (subspace_topology X TX Y))"
+    and "(\<forall>I X T. top1_countable I \<and> (\<forall>i\<in>I. top1_second_countable_on (X i) (T i))
+            \<longrightarrow> top1_second_countable_on (top1_PiE I X) (top1_product_topology_on I X T))"
+proof -
+  show "(\<forall>X TX Y. top1_first_countable_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_first_countable_on Y (subspace_topology X TX Y))"
+    sorry
+  show "(\<forall>I X T. top1_countable I \<and> (\<forall>i\<in>I. top1_first_countable_on (X i) (T i))
+            \<longrightarrow> top1_first_countable_on (top1_PiE I X) (top1_product_topology_on I X T))"
+    sorry
+  show "(\<forall>X TX Y. top1_second_countable_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_second_countable_on Y (subspace_topology X TX Y))"
+    sorry
+  show "(\<forall>I X T. top1_countable I \<and> (\<forall>i\<in>I. top1_second_countable_on (X i) (T i))
+            \<longrightarrow> top1_second_countable_on (top1_PiE I X) (top1_product_topology_on I X T))"
+    sorry
+qed
+
 (** Images of countable sets are countable (in the sense of \<open>top1_countable\<close>). **)
 lemma top1_countable_image:
   assumes hS: "top1_countable S"
@@ -19373,6 +19700,49 @@ proof -
         by (rule exI[where x=U'], rule exI[where x=V'], intro conjI, rule hnbxY, rule hV'TY, rule hCsubV', rule hdisj')
     qed
   qed
+qed
+
+(** from \S31 Theorem 31.2 (Hausdorff/regular: subspaces and products) [top1.tex:4075] **)
+theorem Theorem_31_2:
+  shows "(\<forall>X TX Y. is_hausdorff_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> is_hausdorff_on Y (subspace_topology X TX Y))"
+    and "(\<forall>X TX Y TY. is_hausdorff_on X TX \<and> is_hausdorff_on Y TY
+            \<longrightarrow> is_hausdorff_on (X \<times> Y) (product_topology_on TX TY))"
+    and "(\<forall>X TX Y. top1_regular_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_regular_on Y (subspace_topology X TX Y))"
+    and "(\<forall>X TX Y TY. top1_regular_on X TX \<and> top1_regular_on Y TY
+            \<longrightarrow> top1_regular_on (X \<times> Y) (product_topology_on TX TY))"
+proof -
+  have hHausdProd:
+    "\<forall>X1 T1 X2 T2.
+      is_hausdorff_on X1 T1 \<and> is_hausdorff_on X2 T2 \<longrightarrow>
+      is_hausdorff_on (X1 \<times> X2) (product_topology_on T1 T2)"
+    using Theorem_17_11 by blast
+  have hHausdSub:
+    "\<forall>X T Y. is_hausdorff_on X T \<and> Y \<subseteq> X \<longrightarrow> is_hausdorff_on Y (subspace_topology X T Y)"
+    using Theorem_17_11 by blast
+
+  show "(\<forall>X TX Y. is_hausdorff_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> is_hausdorff_on Y (subspace_topology X TX Y))"
+    by (rule hHausdSub)
+  show "(\<forall>X TX Y TY. is_hausdorff_on X TX \<and> is_hausdorff_on Y TY
+            \<longrightarrow> is_hausdorff_on (X \<times> Y) (product_topology_on TX TY))"
+    by (rule hHausdProd)
+  show "(\<forall>X TX Y. top1_regular_on X TX \<and> Y \<subseteq> X
+            \<longrightarrow> top1_regular_on Y (subspace_topology X TX Y))"
+  proof (intro allI impI)
+    fix X TX Y
+    assume h: "top1_regular_on X TX \<and> Y \<subseteq> X"
+    have hR: "top1_regular_on X TX"
+      using h by blast
+    have hYX: "Y \<subseteq> X"
+      using h by blast
+    show "top1_regular_on Y (subspace_topology X TX Y)"
+      by (rule Theorem_31_2_regular_subspace[OF hR hYX])
+  qed
+  show "(\<forall>X TX Y TY. top1_regular_on X TX \<and> top1_regular_on Y TY
+            \<longrightarrow> top1_regular_on (X \<times> Y) (product_topology_on TX TY))"
+    sorry
 qed
 
 (** Regularity yields the standard "point shrinking" lemma:
@@ -31514,16 +31884,16 @@ qed
 *)
 
 (** Uniform convergence on a set, specialized to real-valued maps. **)
-definition top1_uniformly_convergent_on ::
+definition top1_uniformly_convergent_on_real ::
   "'a set \<Rightarrow> (nat \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> bool" where
-  "top1_uniformly_convergent_on X s g \<longleftrightarrow>
+  "top1_uniformly_convergent_on_real X s g \<longleftrightarrow>
      (\<forall>e>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>X. abs (s n x - g x) < e)"
 
 lemma top1_uniform_limit_continuous_real:
   fixes s :: "nat \<Rightarrow> 'a \<Rightarrow> real" and g :: "'a \<Rightarrow> real"
   assumes hTopX: "is_topology_on X TX"
   assumes hscont: "\<forall>n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (s n)"
-  assumes hunif: "top1_uniformly_convergent_on X s g"
+  assumes hunif: "top1_uniformly_convergent_on_real X s g"
   shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV g"
 proof -
   let ?R = "(UNIV::real set)"
@@ -31561,7 +31931,7 @@ proof -
           using he by linarith
 
         obtain N where hN: "\<forall>n\<ge>N. \<forall>y\<in>X. abs (s n y - g y) < e/2"
-          using hunif unfolding top1_uniformly_convergent_on_def using he2 by blast
+          using hunif unfolding top1_uniformly_convergent_on_real_def using he2 by blast
         have hNx: "abs (s N x - g x) < e/2"
           using hN hxX by simp
 
@@ -31721,7 +32091,7 @@ proof -
 
     obtain N where hN:
       "\<forall>n\<ge>N. \<forall>y\<in>X. abs (s n y - g y) < e/2"
-      using hunif unfolding top1_uniformly_convergent_on_def using he2 by blast
+      using hunif unfolding top1_uniformly_convergent_on_real_def using he2 by blast
 
     have hNx: "abs (s N x - g x) < e/2"
       using hN hxX by simp
@@ -32266,8 +32636,8 @@ proof -
       using LIMSEQ_le_const2[OF habs_lim hbound] by simp
   qed
 
-  have hunif: "top1_uniformly_convergent_on X s F"
-  proof (unfold top1_uniformly_convergent_on_def, intro allI impI)
+  have hunif: "top1_uniformly_convergent_on_real X s F"
+  proof (unfold top1_uniformly_convergent_on_real_def, intro allI impI)
     fix e :: real
     assume he: "0 < e"
     have h23: "(2/3::real) < 1"
