@@ -12815,7 +12815,146 @@ theorem Theorem_21_5:
     and "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x - g x)"
     and "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x * g x)"
     and "(\<forall>x\<in>X. g x \<noteq> 0) \<longrightarrow> top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x / g x)"
-  sorry
+proof -
+  let ?R = "(UNIV::real set)"
+  let ?TR = "TR"
+  let ?TP = "product_topology_on ?TR ?TR"
+  let ?X2 = "?R \<times> ?R"
+  let ?W = "?R \<times> (?R - {0::real})"
+
+  have hTopR: "is_topology_on ?R ?TR"
+    unfolding TR_def by (rule order_topology_on_UNIV_is_topology_on)
+  have hTopX2: "is_topology_on ?X2 ?TP"
+    by (rule product_topology_on_is_topology_on[OF hTopR hTopR])
+
+  define pairfg where "pairfg = (\<lambda>x. (f x, g x))"
+
+  have cont_pairfg: "top1_continuous_map_on X TX ?X2 ?TP pairfg"
+  proof -
+    have hiff:
+      "top1_continuous_map_on X TX ?X2 ?TP pairfg
+       \<longleftrightarrow>
+         (top1_continuous_map_on X TX ?R ?TR (pi1 \<circ> pairfg)
+          \<and> top1_continuous_map_on X TX ?R ?TR (pi2 \<circ> pairfg))"
+      by (rule Theorem_18_4[OF hTX hTopR hTopR])
+
+    have hpi1: "top1_continuous_map_on X TX ?R ?TR (pi1 \<circ> pairfg)"
+    proof -
+      have hEq: "(pi1 \<circ> pairfg) = f"
+        unfolding pairfg_def
+        by (rule ext, simp add: o_def pi1_def)
+      show ?thesis
+        unfolding hEq by (rule hf)
+    qed
+
+    have hpi2: "top1_continuous_map_on X TX ?R ?TR (pi2 \<circ> pairfg)"
+    proof -
+      have hEq: "(pi2 \<circ> pairfg) = g"
+        unfolding pairfg_def
+        by (rule ext, simp add: o_def pi2_def)
+      show ?thesis
+        unfolding hEq by (rule hg)
+    qed
+
+    show ?thesis
+      apply (rule iffD2[OF hiff])
+      apply (intro conjI)
+       apply (rule hpi1)
+      apply (rule hpi2)
+      done
+  qed
+
+  have cont_add_op:
+    "top1_continuous_map_on ?X2 ?TP ?R ?TR (\<lambda>p. pi1 p + pi2 p)"
+    unfolding TR_def
+    using Lemma_21_4(1)[unfolded TR_def]
+    by assumption
+  have cont_sub_op:
+    "top1_continuous_map_on ?X2 ?TP ?R ?TR (\<lambda>p. pi1 p - pi2 p)"
+    unfolding TR_def
+    using Lemma_21_4(2)[unfolded TR_def]
+    by assumption
+  have cont_mul_op:
+    "top1_continuous_map_on ?X2 ?TP ?R ?TR (\<lambda>p. pi1 p * pi2 p)"
+    unfolding TR_def
+    using Lemma_21_4(3)[unfolded TR_def]
+    by assumption
+
+  have cont_add: "top1_continuous_map_on X TX ?R ?TR (\<lambda>x. f x + g x)"
+  proof -
+    have hEq: "(\<lambda>x. f x + g x) = (\<lambda>p. pi1 p + pi2 p) \<circ> pairfg"
+      unfolding pairfg_def by (rule ext, simp add: o_def pi1_def pi2_def)
+    show ?thesis
+      unfolding hEq by (rule top1_continuous_map_on_comp[OF cont_pairfg cont_add_op])
+  qed
+
+  have cont_sub: "top1_continuous_map_on X TX ?R ?TR (\<lambda>x. f x - g x)"
+  proof -
+    have hEq: "(\<lambda>x. f x - g x) = (\<lambda>p. pi1 p - pi2 p) \<circ> pairfg"
+      unfolding pairfg_def by (rule ext, simp add: o_def pi1_def pi2_def)
+    show ?thesis
+      unfolding hEq by (rule top1_continuous_map_on_comp[OF cont_pairfg cont_sub_op])
+  qed
+
+  have cont_mul: "top1_continuous_map_on X TX ?R ?TR (\<lambda>x. f x * g x)"
+  proof -
+    have hEq: "(\<lambda>x. f x * g x) = (\<lambda>p. pi1 p * pi2 p) \<circ> pairfg"
+      unfolding pairfg_def by (rule ext, simp add: o_def pi1_def pi2_def)
+    show ?thesis
+      unfolding hEq by (rule top1_continuous_map_on_comp[OF cont_pairfg cont_mul_op])
+  qed
+
+  have cont_div_imp:
+    "(\<forall>x\<in>X. g x \<noteq> 0) \<longrightarrow> top1_continuous_map_on X TX ?R ?TR (\<lambda>x. f x / g x)"
+  proof (intro impI)
+    assume hne: "\<forall>x\<in>X. g x \<noteq> 0"
+
+    have hWsub: "?W \<subseteq> ?X2"
+      by simp
+
+    have himg: "pairfg ` X \<subseteq> ?W"
+    proof (rule subsetI)
+      fix y assume hy: "y \<in> pairfg ` X"
+      then obtain x where hx: "x \<in> X" and hyEq: "y = pairfg x"
+        by blast
+      have hgx0: "g x \<noteq> 0"
+        using hne hx by blast
+      show "y \<in> ?W"
+        unfolding hyEq pairfg_def using hgx0 by simp
+    qed
+
+    have cont_pairfg_toW:
+      "top1_continuous_map_on X TX ?W (subspace_topology ?X2 ?TP ?W) pairfg"
+    proof -
+      have hRuleR:
+        "\<forall>W f. top1_continuous_map_on X TX ?X2 ?TP f \<and> W \<subseteq> ?X2 \<and> f ` X \<subseteq> W
+               \<longrightarrow> top1_continuous_map_on X TX W (subspace_topology ?X2 ?TP W) f"
+        by (rule Theorem_18_2(5)[OF hTX hTopX2 hTopX2])
+      show ?thesis
+        using hRuleR cont_pairfg hWsub himg by simp
+    qed
+
+    have cont_div_op:
+      "top1_continuous_map_on ?W (subspace_topology ?X2 ?TP ?W) ?R ?TR (\<lambda>p. pi1 p / pi2 p)"
+      unfolding TR_def
+      using Lemma_21_4(4)[unfolded TR_def]
+      by assumption
+
+    have hEq: "(\<lambda>x. f x / g x) = (\<lambda>p. pi1 p / pi2 p) \<circ> pairfg"
+      unfolding pairfg_def by (rule ext, simp add: o_def pi1_def pi2_def)
+    show "top1_continuous_map_on X TX ?R ?TR (\<lambda>x. f x / g x)"
+      unfolding hEq by (rule top1_continuous_map_on_comp[OF cont_pairfg_toW cont_div_op])
+  qed
+
+  show "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x + g x)"
+    using cont_add .
+  show "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x - g x)"
+    using cont_sub .
+  show "top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x * g x)"
+    using cont_mul .
+  show "(\<forall>x\<in>X. g x \<noteq> 0) \<longrightarrow> top1_continuous_map_on X TX UNIV TR (\<lambda>x. f x / g x)"
+    using cont_div_imp .
+qed
 
 (** Uniform convergence on a set (metric-valued targets). **)
 definition top1_uniformly_convergent_on ::
