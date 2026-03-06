@@ -19600,7 +19600,171 @@ lemma top1_compact_on_order_topology_has_least:
   assumes hAne: "A \<noteq> {}"
   assumes hcomp: "top1_compact_on A (subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A)"
   shows "\<exists>m\<in>A. \<forall>x\<in>A. m \<le> x"
-  sorry
+proof -
+  let ?TA = "subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A"
+
+  have hCover:
+    "\<forall>Uc. Uc \<subseteq> ?TA \<and> A \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  show ?thesis
+  proof (rule ccontr)
+    assume hno: "\<not> (\<exists>m\<in>A. \<forall>x\<in>A. m \<le> x)"
+
+    have hdown: "\<forall>x\<in>A. \<exists>a\<in>A. a < x"
+    proof (intro ballI)
+      fix x assume hxA: "x \<in> A"
+      show "\<exists>a\<in>A. a < x"
+      proof (rule ccontr)
+        assume hcontra: "\<not> (\<exists>a\<in>A. a < x)"
+        have hxleast: "\<forall>y\<in>A. x \<le> y"
+        proof (intro ballI)
+          fix y assume hyA: "y \<in> A"
+          have "\<not> (y < x)"
+            using hcontra hyA by blast
+          thus "x \<le> y"
+            by simp
+        qed
+        have "\<exists>m\<in>A. \<forall>z\<in>A. m \<le> z"
+        proof -
+          have "\<forall>z\<in>A. x \<le> z"
+            by (rule hxleast)
+          thus ?thesis
+            by (rule bexI[where x=x]) (rule hxA)
+        qed
+        thus False
+          using hno by blast
+      qed
+    qed
+
+    define Uc where "Uc = {A \<inter> open_ray_gt a | a. a \<in> A}"
+
+    have hUc_sub: "Uc \<subseteq> ?TA"
+    proof (rule subsetI)
+      fix U assume hU: "U \<in> Uc"
+      obtain a where haA: "a \<in> A" and hUeq: "U = A \<inter> open_ray_gt a"
+        using hU unfolding Uc_def by blast
+      have hopen: "open_ray_gt a \<in> (order_topology_on_UNIV::'b set set)"
+        by (rule open_ray_gt_in_order_topology)
+      show "U \<in> ?TA"
+        unfolding subspace_topology_def
+        using hopen hUeq by blast
+    qed
+
+    have hUc_cov: "A \<subseteq> \<Union>Uc"
+    proof (rule subsetI)
+      fix x assume hxA: "x \<in> A"
+      obtain a where haA: "a \<in> A" and hlt: "a < x"
+        using hdown hxA by blast
+      have hxray: "x \<in> open_ray_gt a"
+        unfolding open_ray_gt_def using hlt by simp
+      have hxU: "x \<in> A \<inter> open_ray_gt a"
+        using hxA hxray by blast
+      have hUin: "A \<inter> open_ray_gt a \<in> Uc"
+        unfolding Uc_def using haA by blast
+      show "x \<in> \<Union>Uc"
+        by (rule UnionI[OF hUin hxU])
+    qed
+
+    obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "A \<subseteq> \<Union>F"
+      using hCover[rule_format, of Uc] hUc_sub hUc_cov by blast
+
+    obtain x0 where hx0A: "x0 \<in> A"
+      using hAne by blast
+    have hFne: "F \<noteq> {}"
+    proof
+      assume hFemp: "F = {}"
+      have "A \<subseteq> \<Union>F"
+        by (rule hFcov)
+      thus False
+        using hx0A hFemp by simp
+    qed
+
+    have hrepr: "\<forall>U\<in>F. \<exists>a. a \<in> A \<and> U = A \<inter> open_ray_gt a"
+    proof (intro ballI)
+      fix U assume hUF: "U \<in> F"
+      have hU: "U \<in> Uc"
+        using hFsub hUF by blast
+      show "\<exists>a. a \<in> A \<and> U = A \<inter> open_ray_gt a"
+        using hU unfolding Uc_def by blast
+    qed
+
+    obtain pick where hpick: "\<forall>U\<in>F. pick U \<in> A \<and> U = A \<inter> open_ray_gt (pick U)"
+      using bchoice[OF hrepr] by blast
+
+    define P where "P = pick ` F"
+    have hPfin: "finite P"
+      unfolding P_def by (rule finite_imageI[OF hFfin])
+    have hPne: "P \<noteq> {}"
+      unfolding P_def using hFne by simp
+
+    let ?m = "Min P"
+    have hmP: "?m \<in> P"
+      by (rule Min_in[OF hPfin hPne])
+    have hmle: "\<forall>a\<in>P. ?m \<le> a"
+    proof (intro ballI)
+      fix a
+      assume haP: "a \<in> P"
+      show "?m \<le> a"
+        by (rule Min_le[OF hPfin haP])
+    qed
+
+    have hmA: "?m \<in> A"
+    proof -
+      obtain U where hUF: "U \<in> F" and hmEq: "?m = pick U"
+        using hmP unfolding P_def by blast
+      have "pick U \<in> A"
+        using hpick hUF by blast
+      thus ?thesis
+        unfolding hmEq .
+    qed
+
+    have hm_notcov: "?m \<notin> \<Union>F"
+    proof
+      assume hmU: "?m \<in> \<Union>F"
+      then obtain U where hUF: "U \<in> F" and hmUin: "?m \<in> U"
+        by blast
+      have hUeq: "U = A \<inter> open_ray_gt (pick U)"
+        using hpick hUF by blast
+      have hpU: "pick U \<in> P"
+        unfolding P_def using hUF by blast
+      have hmin_le: "?m \<le> pick U"
+        using hmle hpU by blast
+      have "\<not> (pick U < ?m)"
+        using hmin_le by simp
+      hence "?m \<notin> open_ray_gt (pick U)"
+        unfolding open_ray_gt_def by simp
+      hence "?m \<notin> U"
+      proof -
+        have hNotInt: "?m \<notin> A \<inter> open_ray_gt (pick U)"
+        proof
+          assume hmInt: "?m \<in> A \<inter> open_ray_gt (pick U)"
+          have hmRay: "?m \<in> open_ray_gt (pick U)"
+            by (rule IntD2[OF hmInt])
+          show False
+            using \<open>?m \<notin> open_ray_gt (pick U)\<close> hmRay by contradiction
+        qed
+        have hsubU: "U \<subseteq> A \<inter> open_ray_gt (pick U)"
+          using hUeq by (rule equalityD1)
+        show ?thesis
+        proof
+          assume hmU: "?m \<in> U"
+          have "?m \<in> A \<inter> open_ray_gt (pick U)"
+            by (rule subsetD[OF hsubU hmU])
+          thus False
+            using hNotInt by contradiction
+        qed
+      qed
+      thus False
+        using hmUin by blast
+    qed
+
+    have "?m \<in> \<Union>F"
+      by (rule subsetD[OF hFcov hmA])
+    thus False
+      using hm_notcov by blast
+  qed
+qed
 
 (** A nonempty compact subset of a linearly ordered set has a greatest element. **)
 lemma top1_compact_on_order_topology_has_greatest:
@@ -19608,7 +19772,171 @@ lemma top1_compact_on_order_topology_has_greatest:
   assumes hAne: "A \<noteq> {}"
   assumes hcomp: "top1_compact_on A (subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A)"
   shows "\<exists>M\<in>A. \<forall>x\<in>A. x \<le> M"
-  sorry
+proof -
+  let ?TA = "subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A"
+
+  have hCover:
+    "\<forall>Uc. Uc \<subseteq> ?TA \<and> A \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  show ?thesis
+  proof (rule ccontr)
+    assume hno: "\<not> (\<exists>M\<in>A. \<forall>x\<in>A. x \<le> M)"
+
+    have hup: "\<forall>x\<in>A. \<exists>a\<in>A. x < a"
+    proof (intro ballI)
+      fix x assume hxA: "x \<in> A"
+      show "\<exists>a\<in>A. x < a"
+      proof (rule ccontr)
+        assume hcontra: "\<not> (\<exists>a\<in>A. x < a)"
+        have hxgreat: "\<forall>y\<in>A. y \<le> x"
+        proof (intro ballI)
+          fix y assume hyA: "y \<in> A"
+          have "\<not> (x < y)"
+            using hcontra hyA by blast
+          thus "y \<le> x"
+            by simp
+        qed
+        have "\<exists>M\<in>A. \<forall>z\<in>A. z \<le> M"
+        proof -
+          have "\<forall>z\<in>A. z \<le> x"
+            by (rule hxgreat)
+          thus ?thesis
+            by (rule bexI[where x=x]) (rule hxA)
+        qed
+        thus False
+          using hno by blast
+      qed
+    qed
+
+    define Uc where "Uc = {A \<inter> open_ray_lt a | a. a \<in> A}"
+
+    have hUc_sub: "Uc \<subseteq> ?TA"
+    proof (rule subsetI)
+      fix U assume hU: "U \<in> Uc"
+      obtain a where haA: "a \<in> A" and hUeq: "U = A \<inter> open_ray_lt a"
+        using hU unfolding Uc_def by blast
+      have hopen: "open_ray_lt a \<in> (order_topology_on_UNIV::'b set set)"
+        by (rule open_ray_lt_in_order_topology)
+      show "U \<in> ?TA"
+        unfolding subspace_topology_def
+        using hopen hUeq by blast
+    qed
+
+    have hUc_cov: "A \<subseteq> \<Union>Uc"
+    proof (rule subsetI)
+      fix x assume hxA: "x \<in> A"
+      obtain a where haA: "a \<in> A" and hlt: "x < a"
+        using hup hxA by blast
+      have hxray: "x \<in> open_ray_lt a"
+        unfolding open_ray_lt_def using hlt by simp
+      have hxU: "x \<in> A \<inter> open_ray_lt a"
+        using hxA hxray by blast
+      have hUin: "A \<inter> open_ray_lt a \<in> Uc"
+        unfolding Uc_def using haA by blast
+      show "x \<in> \<Union>Uc"
+        by (rule UnionI[OF hUin hxU])
+    qed
+
+    obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "A \<subseteq> \<Union>F"
+      using hCover[rule_format, of Uc] hUc_sub hUc_cov by blast
+
+    obtain x0 where hx0A: "x0 \<in> A"
+      using hAne by blast
+    have hFne: "F \<noteq> {}"
+    proof
+      assume hFemp: "F = {}"
+      have "A \<subseteq> \<Union>F"
+        by (rule hFcov)
+      thus False
+        using hx0A hFemp by simp
+    qed
+
+    have hrepr: "\<forall>U\<in>F. \<exists>a. a \<in> A \<and> U = A \<inter> open_ray_lt a"
+    proof (intro ballI)
+      fix U assume hUF: "U \<in> F"
+      have hU: "U \<in> Uc"
+        using hFsub hUF by blast
+      show "\<exists>a. a \<in> A \<and> U = A \<inter> open_ray_lt a"
+        using hU unfolding Uc_def by blast
+    qed
+
+    obtain pick where hpick: "\<forall>U\<in>F. pick U \<in> A \<and> U = A \<inter> open_ray_lt (pick U)"
+      using bchoice[OF hrepr] by blast
+
+    define P where "P = pick ` F"
+    have hPfin: "finite P"
+      unfolding P_def by (rule finite_imageI[OF hFfin])
+    have hPne: "P \<noteq> {}"
+      unfolding P_def using hFne by simp
+
+    let ?M = "Max P"
+    have hMP: "?M \<in> P"
+      by (rule Max_in[OF hPfin hPne])
+    have hleM: "\<forall>a\<in>P. a \<le> ?M"
+    proof (intro ballI)
+      fix a
+      assume haP: "a \<in> P"
+      show "a \<le> ?M"
+        by (rule Max_ge[OF hPfin haP])
+    qed
+
+    have hMA: "?M \<in> A"
+    proof -
+      obtain U where hUF: "U \<in> F" and hMEq: "?M = pick U"
+        using hMP unfolding P_def by blast
+      have "pick U \<in> A"
+        using hpick hUF by blast
+      thus ?thesis
+        unfolding hMEq .
+    qed
+
+    have hM_notcov: "?M \<notin> \<Union>F"
+    proof
+      assume hMU: "?M \<in> \<Union>F"
+      then obtain U where hUF: "U \<in> F" and hMUin: "?M \<in> U"
+        by blast
+      have hUeq: "U = A \<inter> open_ray_lt (pick U)"
+        using hpick hUF by blast
+      have hpU: "pick U \<in> P"
+        unfolding P_def using hUF by blast
+      have hle: "pick U \<le> ?M"
+        using hleM hpU by blast
+      have "\<not> (?M < pick U)"
+        using hle by simp
+      hence "?M \<notin> open_ray_lt (pick U)"
+        unfolding open_ray_lt_def by simp
+      hence "?M \<notin> U"
+      proof -
+        have hNotInt: "?M \<notin> A \<inter> open_ray_lt (pick U)"
+        proof
+          assume hMInt: "?M \<in> A \<inter> open_ray_lt (pick U)"
+          have hMRay: "?M \<in> open_ray_lt (pick U)"
+            by (rule IntD2[OF hMInt])
+          show False
+            using \<open>?M \<notin> open_ray_lt (pick U)\<close> hMRay by contradiction
+        qed
+        have hsubU: "U \<subseteq> A \<inter> open_ray_lt (pick U)"
+          using hUeq by (rule equalityD1)
+        show ?thesis
+        proof
+          assume hMU: "?M \<in> U"
+          have "?M \<in> A \<inter> open_ray_lt (pick U)"
+            by (rule subsetD[OF hsubU hMU])
+          thus False
+            using hNotInt by contradiction
+        qed
+      qed
+      thus False
+        using hMUin by blast
+    qed
+
+    have "?M \<in> \<Union>F"
+      by (rule subsetD[OF hFcov hMA])
+    thus False
+      using hM_notcov by blast
+  qed
+qed
 
 theorem Theorem_27_4:
   fixes f :: "'a \<Rightarrow> 'b::linorder"
@@ -19616,7 +19944,55 @@ theorem Theorem_27_4:
   assumes hcomp: "top1_compact_on X TX"
   assumes hcont: "top1_continuous_map_on X TX (UNIV::'b set) (order_topology_on_UNIV::'b set set) f"
   shows "\<exists>c\<in>X. \<exists>d\<in>X. \<forall>x\<in>X. f c \<le> f x \<and> f x \<le> f d"
-  sorry
+proof -
+  have himage_comp:
+    "top1_compact_on (f ` X)
+       (subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) (f ` X))"
+    by (rule top1_compact_on_continuous_image[OF hcomp order_topology_on_UNIV_is_topology_on hcont])
+
+  have hfx_ne: "f ` X \<noteq> {}"
+  proof -
+    obtain x0 where hx0X: "x0 \<in> X"
+      using hXne by blast
+    have "f x0 \<in> f ` X"
+      by (rule imageI[OF hx0X])
+    thus ?thesis
+      by blast
+  qed
+
+  obtain m where hmFX: "m \<in> f ` X" and hmin: "\<forall>y\<in>f ` X. m \<le> y"
+    using top1_compact_on_order_topology_has_least[OF hfx_ne himage_comp] by blast
+  obtain M where hMFX: "M \<in> f ` X" and hmax: "\<forall>y\<in>f ` X. y \<le> M"
+    using top1_compact_on_order_topology_has_greatest[OF hfx_ne himage_comp] by blast
+
+  obtain c where hcX: "c \<in> X" and hfc: "f c = m"
+    using hmFX by blast
+  obtain d where hdX: "d \<in> X" and hfd: "f d = M"
+    using hMFX by blast
+
+  show ?thesis
+  proof (rule bexI[where x=c])
+    show "c \<in> X"
+      by (rule hcX)
+    show "\<exists>d\<in>X. \<forall>x\<in>X. f c \<le> f x \<and> f x \<le> f d"
+    proof (rule bexI[where x=d])
+      show "d \<in> X"
+        by (rule hdX)
+      show "\<forall>x\<in>X. f c \<le> f x \<and> f x \<le> f d"
+      proof (intro ballI)
+        fix x assume hxX: "x \<in> X"
+        have hfxFX: "f x \<in> f ` X"
+          by (rule imageI[OF hxX])
+        have hm_le: "m \<le> f x"
+          using hmin hfxFX by blast
+        have hle_M: "f x \<le> M"
+          using hmax hfxFX by blast
+        show "f c \<le> f x \<and> f x \<le> f d"
+          unfolding hfc hfd using hm_le hle_M by simp
+      qed
+    qed
+  qed
+qed
 
 (** Diameter of a set in a given "distance" function (used in Lemma 27.5). **)
 definition top1_diameter_on :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> real" where
