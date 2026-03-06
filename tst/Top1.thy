@@ -16861,13 +16861,6 @@ proof -
   qed
 qed
 
-(** from \S26 Theorem 26.7 (Finite products of compact spaces are compact) [top1.tex:3184] **)
-theorem Theorem_26_7:
-  assumes hX: "top1_compact_on X TX"
-  assumes hY: "top1_compact_on Y TY"
-  shows "top1_compact_on (X \<times> Y) (product_topology_on TX TY)"
-  sorry
-
 (** from \S26 Lemma 26.8 (Tube lemma) [top1.tex:3236] **)
 theorem Lemma_26_8:
   assumes hY: "top1_compact_on Y TY"
@@ -17114,6 +17107,294 @@ text \<open>
   \<open>{x0} \<times> Y\<close> contained in \<open>N\<close>, compactness of \<open>Y\<close> yields a neighborhood \<open>W\<close> of \<open>x0\<close>
   such that \<open>W \<times> Y \<subseteq> N\<close>.
 \<close>
+
+(** from \S26 Theorem 26.7 (Finite products of compact spaces are compact) [top1.tex:3184] **)
+theorem Theorem_26_7:
+  assumes hX: "top1_compact_on X TX"
+  assumes hY: "top1_compact_on Y TY"
+  shows "top1_compact_on (X \<times> Y) (product_topology_on TX TY)"
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hX unfolding top1_compact_on_def by blast
+  have hCoverX:
+    "\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+    using hX unfolding top1_compact_on_def by blast
+
+  have hTopY: "is_topology_on Y TY"
+    using hY unfolding top1_compact_on_def by blast
+  have hCoverY:
+    "\<forall>Uc. Uc \<subseteq> TY \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+    using hY unfolding top1_compact_on_def by blast
+
+  have hTopXY: "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
+    by (rule product_topology_on_is_topology_on[OF hTopX hTopY])
+
+  have hUnionTP: "\<forall>K. K \<subseteq> product_topology_on TX TY \<longrightarrow> \<Union>K \<in> product_topology_on TX TY"
+    using hTopXY unfolding is_topology_on_def by blast
+
+  show ?thesis
+    unfolding top1_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on (X \<times> Y) (product_topology_on TX TY)"
+      by (rule hTopXY)
+
+    show "\<forall>Uc. Uc \<subseteq> product_topology_on TX TY \<and> X \<times> Y \<subseteq> \<Union>Uc
+           \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<times> Y \<subseteq> \<Union>F)"
+    proof (intro allI impI)
+      fix Uc :: "('a \<times> 'b) set set"
+      assume hUc: "Uc \<subseteq> product_topology_on TX TY \<and> X \<times> Y \<subseteq> \<Union>Uc"
+      have hUc_sub: "Uc \<subseteq> product_topology_on TX TY"
+        using hUc by blast
+      have hUc_cov: "X \<times> Y \<subseteq> \<Union>Uc"
+        using hUc by blast
+
+      have exWFX:
+        "\<forall>x\<in>X. \<exists>p. neighborhood_of x X TX (fst p)
+                 \<and> finite (snd p)
+                 \<and> snd p \<subseteq> Uc
+                 \<and> (fst p) \<times> Y \<subseteq> \<Union>(snd p)"
+      proof (intro ballI)
+        fix x assume hxX: "x \<in> X"
+
+        define Vc where "Vc = (\<lambda>W. {y \<in> Y. (x, y) \<in> W}) ` Uc"
+
+        have hVc_sub: "Vc \<subseteq> TY"
+        proof (rule subsetI)
+          fix V assume hV: "V \<in> Vc"
+          obtain W where hWUc: "W \<in> Uc" and hVeq: "V = {y\<in>Y. (x, y) \<in> W}"
+            using hV unfolding Vc_def by blast
+          have hWopen: "W \<in> product_topology_on TX TY"
+            using hUc_sub hWUc by blast
+          have "V \<in> TY"
+            unfolding hVeq
+            by (rule top1_section_preimage_open[OF hTopX hTopY hWopen hxX])
+          thus "V \<in> TY" .
+        qed
+
+        have hVc_cov: "Y \<subseteq> \<Union>Vc"
+        proof (rule subsetI)
+          fix y assume hyY: "y \<in> Y"
+          have hxy: "(x, y) \<in> X \<times> Y"
+            using hxX hyY by blast
+          have "(x, y) \<in> \<Union>Uc"
+            by (rule subsetD[OF hUc_cov hxy])
+          then obtain W where hWUc: "W \<in> Uc" and hxyW: "(x, y) \<in> W"
+            by blast
+          have hyV: "y \<in> {y\<in>Y. (x, y) \<in> W}"
+            using hyY hxyW by simp
+          have hVin: "{y\<in>Y. (x, y) \<in> W} \<in> Vc"
+            unfolding Vc_def using hWUc by blast
+          show "y \<in> \<Union>Vc"
+            by (rule UnionI[OF hVin hyV])
+        qed
+
+        obtain Fc where hFcfin: "finite Fc" and hFcsub: "Fc \<subseteq> Vc" and hFccov: "Y \<subseteq> \<Union>Fc"
+          using hCoverY[rule_format, OF conjI[OF hVc_sub hVc_cov]] by blast
+
+        have hrepr: "\<forall>V\<in>Fc. \<exists>W. W \<in> Uc \<and> V = {y\<in>Y. (x, y) \<in> W}"
+        proof (intro ballI)
+          fix V assume hVFc: "V \<in> Fc"
+          have hV: "V \<in> Vc"
+            using hFcsub hVFc by blast
+          show "\<exists>W. W \<in> Uc \<and> V = {y\<in>Y. (x, y) \<in> W}"
+            using hV unfolding Vc_def by blast
+        qed
+
+        obtain pick where hpick:
+          "\<forall>V\<in>Fc. pick V \<in> Uc \<and> V = {y\<in>Y. (x, y) \<in> pick V}"
+          using bchoice[OF hrepr] by blast
+
+        define Fx where "Fx = pick ` Fc"
+        have hFxfin: "finite Fx"
+          unfolding Fx_def by (rule finite_imageI[OF hFcfin])
+        have hFxsub: "Fx \<subseteq> Uc"
+          unfolding Fx_def using hpick by blast
+
+        have hslice: "{x} \<times> Y \<subseteq> \<Union>Fx"
+        proof (rule subsetI)
+          fix p assume hp: "p \<in> {x} \<times> Y"
+          obtain y where hyY: "y \<in> Y" and hpEq: "p = (x,y)"
+            using hp by blast
+          have "y \<in> \<Union>Fc"
+            by (rule subsetD[OF hFccov hyY])
+          then obtain V where hVFc: "V \<in> Fc" and hyV: "y \<in> V"
+            by blast
+          have hWUc: "pick V \<in> Uc" and hVeq: "V = {y\<in>Y. (x, y) \<in> pick V}"
+            using hpick hVFc by blast+
+          have hxyW: "(x, y) \<in> pick V"
+          proof -
+            have hsubV: "V \<subseteq> {y\<in>Y. (x, y) \<in> pick V}"
+              using hVeq by (rule equalityD1)
+            have "y \<in> {y\<in>Y. (x, y) \<in> pick V}"
+              by (rule subsetD[OF hsubV hyV])
+            thus ?thesis
+              by blast
+          qed
+          have hWFx: "pick V \<in> Fx"
+            unfolding Fx_def using hVFc by blast
+          have hpW: "p \<in> pick V"
+            unfolding hpEq using hxyW by simp
+          show "p \<in> \<Union>Fx"
+            by (rule UnionI[OF hWFx hpW])
+        qed
+
+        have hFx_subTP: "Fx \<subseteq> product_topology_on TX TY"
+          using hUc_sub hFxsub by blast
+        have hNopen: "\<Union>Fx \<in> product_topology_on TX TY"
+          using hUnionTP hFx_subTP by blast
+
+        obtain W where hWnb: "neighborhood_of x X TX W" and hWsub: "W \<times> Y \<subseteq> \<Union>Fx"
+          using Lemma_26_8[OF hY hTopX hTopY hNopen hxX hslice] by blast
+
+        show "\<exists>p. neighborhood_of x X TX (fst p)
+                 \<and> finite (snd p)
+                 \<and> snd p \<subseteq> Uc
+                 \<and> (fst p) \<times> Y \<subseteq> \<Union>(snd p)"
+          apply (rule exI[where x="(W,Fx)"])
+          apply (simp add: hWnb hFxfin hFxsub hWsub)
+          done
+      qed
+
+      obtain sel where hsel:
+        "\<forall>x\<in>X. neighborhood_of x X TX (fst (sel x))
+             \<and> finite (snd (sel x))
+             \<and> snd (sel x) \<subseteq> Uc
+             \<and> (fst (sel x)) \<times> Y \<subseteq> \<Union>(snd (sel x))"
+        using bchoice[OF exWFX] by blast
+
+      define W where "W x = fst (sel x)" for x
+      define Fx where "Fx x = snd (sel x)" for x
+
+      have hWsubTX: "W ` X \<subseteq> TX"
+      proof (rule subsetI)
+        fix U assume hU: "U \<in> W ` X"
+        then obtain x where hxX: "x \<in> X" and hUeq: "U = W x"
+          by blast
+        have "neighborhood_of x X TX (W x)"
+          using hsel hxX unfolding W_def Fx_def by simp
+        hence "W x \<in> TX"
+          unfolding neighborhood_of_def by blast
+        thus "U \<in> TX"
+          unfolding hUeq .
+      qed
+
+      have hWcov: "X \<subseteq> \<Union>(W ` X)"
+      proof (rule subsetI)
+        fix x assume hxX: "x \<in> X"
+        have hnb: "neighborhood_of x X TX (W x)"
+          using hsel hxX unfolding W_def Fx_def by simp
+        hence hxW: "x \<in> W x"
+          unfolding neighborhood_of_def by blast
+        have hWin: "W x \<in> W ` X"
+          using hxX unfolding W_def by blast
+        show "x \<in> \<Union>(W ` X)"
+          by (rule UnionI[OF hWin hxW])
+      qed
+
+      obtain G where hGfin: "finite G" and hGsub: "G \<subseteq> W ` X" and hGcov: "X \<subseteq> \<Union>G"
+        using hCoverX[rule_format, OF conjI[OF hWsubTX hWcov]] by blast
+
+      have hreprG: "\<forall>U\<in>G. \<exists>x\<in>X. U = W x"
+      proof (intro ballI)
+        fix U assume hUG: "U \<in> G"
+        have "U \<in> W ` X"
+          using hGsub hUG by blast
+        thus "\<exists>x\<in>X. U = W x"
+          unfolding W_def by blast
+      qed
+
+      obtain pick where hpick:
+        "\<forall>U\<in>G. pick U \<in> X \<and> U = W (pick U)"
+      proof -
+        have hreprG': "\<forall>U\<in>G. \<exists>x. x \<in> X \<and> U = W x"
+          using hreprG by blast
+        obtain f where hf: "\<forall>U\<in>G. f U \<in> X \<and> U = W (f U)"
+          using bchoice[OF hreprG'] by blast
+        show ?thesis
+          by (rule that[OF hf])
+      qed
+
+      define I where "I = pick ` G"
+      have hIfin: "finite I"
+        unfolding I_def by (rule finite_imageI[OF hGfin])
+      have hIsub: "I \<subseteq> X"
+        unfolding I_def using hpick by blast
+
+      define F where "F = (\<Union>x\<in>I. Fx x)"
+
+      have hFfin: "finite F"
+      proof -
+        have hfinFx: "\<And>x. x \<in> I \<Longrightarrow> finite (Fx x)"
+        proof -
+          fix x assume hxI: "x \<in> I"
+          have hxX: "x \<in> X"
+            using hIsub hxI by blast
+          show "finite (Fx x)"
+            using hsel hxX unfolding W_def Fx_def by simp
+        qed
+        show ?thesis
+          unfolding F_def
+          apply (rule finite_UN_I)
+           apply (rule hIfin)
+          apply (rule hfinFx)
+          apply assumption
+          done
+      qed
+
+      have hFsubUc: "F \<subseteq> Uc"
+      proof (rule subsetI)
+        fix U assume hU: "U \<in> F"
+        then obtain x where hxI: "x \<in> I" and hUin: "U \<in> Fx x"
+          unfolding F_def by blast
+        have hxX: "x \<in> X"
+          using hIsub hxI by blast
+        have "Fx x \<subseteq> Uc"
+          using hsel hxX unfolding W_def Fx_def by simp
+        show "U \<in> Uc"
+          using \<open>Fx x \<subseteq> Uc\<close> hUin by blast
+      qed
+
+      have hFcov: "X \<times> Y \<subseteq> \<Union>F"
+      proof (rule subsetI)
+        fix p assume hp: "p \<in> X \<times> Y"
+        obtain x y where hpEq: "p = (x,y)" and hxX: "x \<in> X" and hyY: "y \<in> Y"
+          using hp by blast
+        have "x \<in> \<Union>G"
+          using hGcov hxX by blast
+        then obtain U0 where hU0G: "U0 \<in> G" and hxU0: "x \<in> U0"
+          by blast
+        have hiX: "pick U0 \<in> X" and hU0eq: "U0 = W (pick U0)"
+          using hpick hU0G by blast+
+        have hsubU0: "U0 \<subseteq> W (pick U0)"
+          using hU0eq by (rule equalityD1)
+        have hiI: "pick U0 \<in> I"
+          unfolding I_def using hU0G by blast
+        have hsub: "W (pick U0) \<times> Y \<subseteq> \<Union>(Fx (pick U0))"
+          using hsel hiX unfolding W_def Fx_def by simp
+        have hxWi: "x \<in> W (pick U0)"
+          by (rule subsetD[OF hsubU0 hxU0])
+        have hpWi: "(x,y) \<in> W (pick U0) \<times> Y"
+          using hxWi hyY by blast
+        have "(x,y) \<in> \<Union>(Fx (pick U0))"
+          using hsub hpWi by blast
+        moreover have "\<Union>(Fx (pick U0)) \<subseteq> \<Union>F"
+        proof -
+          have "Fx (pick U0) \<subseteq> F"
+            unfolding F_def using hiI by blast
+          thus ?thesis
+            by blast
+        qed
+        ultimately have "(x,y) \<in> \<Union>F"
+          by blast
+        thus "p \<in> \<Union>F"
+          unfolding hpEq by simp
+      qed
+
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<times> Y \<subseteq> \<Union>F"
+        by (rule exI[where x=F]) (use hFfin hFsubUc hFcov in blast)
+    qed
+  qed
+qed
 
 (** from \S26 Theorem 26.9 (Finite intersection property characterization) [top1.tex:3268] **)
 theorem Theorem_26_9:
