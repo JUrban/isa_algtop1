@@ -19451,6 +19451,31 @@ proof -
 qed
 
 (** from \S27 Theorem 27.4 (Extreme value theorem) [top1.tex:3429] **)
+
+(** Continuous images of compact spaces are compact (in the subspace topology). **)
+lemma top1_compact_on_continuous_image:
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hTopY: "is_topology_on Y TY"
+  assumes hcont: "top1_continuous_map_on X TX Y TY f"
+  shows "top1_compact_on (f ` X) (subspace_topology Y TY (f ` X))"
+  sorry
+
+(** A nonempty compact subset of a linearly ordered set has a least element. **)
+lemma top1_compact_on_order_topology_has_least:
+  fixes A :: "'b::linorder set"
+  assumes hAne: "A \<noteq> {}"
+  assumes hcomp: "top1_compact_on A (subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A)"
+  shows "\<exists>m\<in>A. \<forall>x\<in>A. m \<le> x"
+  sorry
+
+(** A nonempty compact subset of a linearly ordered set has a greatest element. **)
+lemma top1_compact_on_order_topology_has_greatest:
+  fixes A :: "'b::linorder set"
+  assumes hAne: "A \<noteq> {}"
+  assumes hcomp: "top1_compact_on A (subspace_topology (UNIV::'b set) (order_topology_on_UNIV::'b set set) A)"
+  shows "\<exists>M\<in>A. \<forall>x\<in>A. x \<le> M"
+  sorry
+
 theorem Theorem_27_4:
   fixes f :: "'a \<Rightarrow> 'b::linorder"
   assumes hXne: "X \<noteq> {}"
