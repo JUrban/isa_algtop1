@@ -11782,6 +11782,449 @@ next
     using hEq by simp
 qed
 
+(** For radii \<open>e \<le> 1\<close>, the bounded metric ball condition is equivalent to the usual absolute-value bound. **)
+lemma top1_real_bounded_metric_lt_iff_abs_lt:
+  fixes a b e :: real
+  assumes he: "0 < e"
+  assumes he1: "e \<le> 1"
+  shows "top1_real_bounded_metric a b < e \<longleftrightarrow> abs (a - b) < e"
+proof (rule iffI)
+  assume hlt: "top1_real_bounded_metric a b < e"
+  have hmin: "min (abs (a - b)) 1 < e"
+    using hlt unfolding top1_real_bounded_metric_def .
+  show "abs (a - b) < e"
+  proof (cases "abs (a - b) \<le> 1")
+    case True
+    have "min (abs (a - b)) 1 = abs (a - b)"
+      using True by simp
+    thus ?thesis
+      using hmin by simp
+  next
+    case False
+    have "min (abs (a - b)) 1 = 1"
+      using False by simp
+    then have "1 < e"
+      using hmin by simp
+    thus ?thesis
+      using he1 by simp
+  qed
+next
+  assume habs: "abs (a - b) < e"
+  have habs1: "abs (a - b) < 1"
+    by (rule less_le_trans[OF habs he1])
+  have "min (abs (a - b)) 1 = abs (a - b)"
+    using habs1 by simp
+  thus "top1_real_bounded_metric a b < e"
+    unfolding top1_real_bounded_metric_def using habs by simp
+qed
+
+lemma open_interval_in_bounded_metric_topology:
+  fixes a b :: real
+  assumes hab: "a < b"
+  shows "open_interval a b \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+proof -
+  let ?T = "top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+  let ?B = "top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric"
+
+  show ?thesis
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+  proof (rule CollectI, intro conjI)
+    show "open_interval a b \<subseteq> (UNIV::real set)"
+      by simp
+    show "\<forall>x\<in>open_interval a b. \<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_interval a b"
+    proof (intro ballI)
+      fix x :: real
+      assume hx: "x \<in> open_interval a b"
+      have hax: "a < x" and hxb: "x < b"
+        using hx unfolding open_interval_def by simp_all
+
+      define e0 where "e0 = min ((x - a) / 2) ((b - x) / 2)"
+      define e where "e = min e0 (1/2)"
+
+      have he0: "0 < e0"
+        unfolding e0_def using hax hxb by simp
+      have he: "0 < e"
+        unfolding e_def using he0 by simp
+      have he1: "e \<le> 1"
+        unfolding e_def by simp
+
+      have hball_basis: "top1_ball_on UNIV top1_real_bounded_metric x e \<in> ?B"
+        unfolding top1_metric_basis_on_def
+        apply (rule CollectI)
+        apply (rule exI[where x=x])
+        apply (rule exI[where x=e])
+        using he by simp
+
+      have hxball: "x \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        unfolding top1_ball_on_def top1_real_bounded_metric_def using he by simp
+
+      have hsub: "top1_ball_on UNIV top1_real_bounded_metric x e \<subseteq> open_interval a b"
+      proof (rule subsetI)
+        fix y :: real
+        assume hy: "y \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        have hxy: "top1_real_bounded_metric x y < e"
+          using hy unfolding top1_ball_on_def by simp
+        have habs: "abs (x - y) < e"
+          by (rule iffD1[OF top1_real_bounded_metric_lt_iff_abs_lt[OF he _] hxy]) (rule he1)
+
+        have habs': "abs (y - x) < e"
+          using habs by (simp add: abs_minus_commute)
+        have hboth: "x - e < y \<and> y < x + e"
+          using habs' by (simp add: abs_diff_less_iff)
+        have hy_lt: "x - e < y"
+          using hboth by blast
+        have hy_gt: "y < x + e"
+          using hboth by blast
+
+        have he_le0: "e \<le> e0"
+          unfolding e_def by simp
+        have he_le_left: "e0 \<le> (x - a) / 2"
+          unfolding e0_def by (rule min.cobounded1)
+        have he_le_right: "e0 \<le> (b - x) / 2"
+          unfolding e0_def by (rule min.cobounded2)
+        have he_le_left': "e \<le> (x - a) / 2"
+          by (rule order_trans[OF he_le0 he_le_left])
+        have he_le_right': "e \<le> (b - x) / 2"
+          by (rule order_trans[OF he_le0 he_le_right])
+
+        have hxap: "0 < x - a"
+          using hax by simp
+        have hxap_half: "(x - a) / 2 < x - a"
+        proof -
+          have "(1 / 2 :: real) < 1"
+            by simp
+          have "(x - a) * (1 / 2) < (x - a) * 1"
+            by (rule mult_strict_left_mono[OF \<open>(1 / 2 :: real) < 1\<close> hxap])
+          thus ?thesis
+            by simp
+        qed
+        have helt: "e < x - a"
+        proof -
+          have he_le: "e \<le> (x - a) / 2"
+            using he_le_left' .
+          show ?thesis
+            by (rule order_le_less_trans[OF he_le hxap_half])
+        qed
+        have ha_lt: "a < x - e"
+          using helt by linarith
+
+        have hbpx: "0 < b - x"
+          using hxb by simp
+        have hbpx_half: "(b - x) / 2 < b - x"
+        proof -
+          have "(1 / 2 :: real) < 1"
+            by simp
+          have "(b - x) * (1 / 2) < (b - x) * 1"
+            by (rule mult_strict_left_mono[OF \<open>(1 / 2 :: real) < 1\<close> hbpx])
+          thus ?thesis
+            by simp
+        qed
+        have herlt: "e < b - x"
+        proof -
+          have he_le: "e \<le> (b - x) / 2"
+            using he_le_right' .
+          show ?thesis
+            by (rule order_le_less_trans[OF he_le hbpx_half])
+        qed
+        have hb_gt: "x + e < b"
+          using herlt by linarith
+
+        have "a < y"
+          using ha_lt hy_lt by linarith
+        moreover have "y < b"
+          using hy_gt hb_gt by linarith
+        ultimately show "y \<in> open_interval a b"
+          unfolding open_interval_def by simp
+      qed
+
+      show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_interval a b"
+        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
+         apply (intro conjI)
+          apply (rule hxball)
+         apply (rule hsub)
+        apply (rule hball_basis)
+        done
+    qed
+  qed
+qed
+
+lemma open_ray_gt_in_bounded_metric_topology:
+  fixes a :: real
+  shows "open_ray_gt a \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+proof -
+  let ?T = "top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+  let ?B = "top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric"
+  show ?thesis
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+  proof (rule CollectI, intro conjI)
+    show "open_ray_gt a \<subseteq> (UNIV::real set)"
+      by simp
+    show "\<forall>x\<in>open_ray_gt a. \<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_gt a"
+    proof (intro ballI)
+      fix x :: real
+      assume hx: "x \<in> open_ray_gt a"
+      have hax: "a < x"
+        using hx unfolding open_ray_gt_def by simp
+
+      define e0 where "e0 = (x - a) / 2"
+      define e where "e = min e0 (1/2)"
+
+      have he0: "0 < e0"
+        unfolding e0_def using hax by simp
+      have he: "0 < e"
+        unfolding e_def using he0 by simp
+      have he1: "e \<le> 1"
+        unfolding e_def by simp
+
+      have hball_basis: "top1_ball_on UNIV top1_real_bounded_metric x e \<in> ?B"
+        unfolding top1_metric_basis_on_def
+        apply (rule CollectI)
+        apply (rule exI[where x=x])
+        apply (rule exI[where x=e])
+        using he by simp
+
+      have hxball: "x \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        unfolding top1_ball_on_def top1_real_bounded_metric_def using he by simp
+
+      have hsub: "top1_ball_on UNIV top1_real_bounded_metric x e \<subseteq> open_ray_gt a"
+      proof (rule subsetI)
+        fix y :: real
+        assume hy: "y \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        have hxy: "top1_real_bounded_metric x y < e"
+          using hy unfolding top1_ball_on_def by simp
+        have habs: "abs (x - y) < e"
+          by (rule iffD1[OF top1_real_bounded_metric_lt_iff_abs_lt[OF he _] hxy]) (rule he1)
+        have habs': "abs (y - x) < e"
+          using habs by (simp add: abs_minus_commute)
+        have hboth: "x - e < y \<and> y < x + e"
+          using habs' by (simp add: abs_diff_less_iff)
+        have hy_lb: "x - e < y"
+          using hboth by blast
+
+        have he_le0: "e \<le> e0"
+          unfolding e_def by simp
+        have hxap: "0 < x - a"
+          using hax by simp
+        have hxap_half: "(x - a) / 2 < x - a"
+        proof -
+          have "(1 / 2 :: real) < 1"
+            by simp
+          have "(x - a) * (1 / 2) < (x - a) * 1"
+            by (rule mult_strict_left_mono[OF \<open>(1 / 2 :: real) < 1\<close> hxap])
+          thus ?thesis
+            by simp
+        qed
+        have helt: "e < x - a"
+        proof -
+          have he_le: "e \<le> (x - a) / 2"
+            unfolding e_def e0_def
+            by (rule min.cobounded1)
+          show ?thesis
+            by (rule order_le_less_trans[OF he_le hxap_half])
+        qed
+        have "a < x - e"
+          using helt by linarith
+        hence "a < y"
+          using hy_lb by linarith
+        thus "y \<in> open_ray_gt a"
+          unfolding open_ray_gt_def by simp
+      qed
+
+      show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_gt a"
+        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
+         apply (intro conjI)
+          apply (rule hxball)
+         apply (rule hsub)
+        apply (rule hball_basis)
+        done
+    qed
+  qed
+qed
+
+lemma open_ray_lt_in_bounded_metric_topology:
+  fixes a :: real
+  shows "open_ray_lt a \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+proof -
+  let ?T = "top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+  let ?B = "top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric"
+  show ?thesis
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+  proof (rule CollectI, intro conjI)
+    show "open_ray_lt a \<subseteq> (UNIV::real set)"
+      by simp
+    show "\<forall>x\<in>open_ray_lt a. \<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_lt a"
+    proof (intro ballI)
+      fix x :: real
+      assume hx: "x \<in> open_ray_lt a"
+      have hxa: "x < a"
+        using hx unfolding open_ray_lt_def by simp
+
+      define e0 where "e0 = (a - x) / 2"
+      define e where "e = min e0 (1/2)"
+
+      have he0: "0 < e0"
+        unfolding e0_def using hxa by simp
+      have he: "0 < e"
+        unfolding e_def using he0 by simp
+      have he1: "e \<le> 1"
+        unfolding e_def by simp
+
+      have hball_basis: "top1_ball_on UNIV top1_real_bounded_metric x e \<in> ?B"
+        unfolding top1_metric_basis_on_def
+        apply (rule CollectI)
+        apply (rule exI[where x=x])
+        apply (rule exI[where x=e])
+        using he by simp
+
+      have hxball: "x \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        unfolding top1_ball_on_def top1_real_bounded_metric_def using he by simp
+
+      have hsub: "top1_ball_on UNIV top1_real_bounded_metric x e \<subseteq> open_ray_lt a"
+      proof (rule subsetI)
+        fix y :: real
+        assume hy: "y \<in> top1_ball_on UNIV top1_real_bounded_metric x e"
+        have hxy: "top1_real_bounded_metric x y < e"
+          using hy unfolding top1_ball_on_def by simp
+        have habs: "abs (x - y) < e"
+          by (rule iffD1[OF top1_real_bounded_metric_lt_iff_abs_lt[OF he _] hxy]) (rule he1)
+        have habs': "abs (y - x) < e"
+          using habs by (simp add: abs_minus_commute)
+        have hboth: "x - e < y \<and> y < x + e"
+          using habs' by (simp add: abs_diff_less_iff)
+        have hy_ub: "y < x + e"
+          using hboth by blast
+
+        have he_le0: "e \<le> e0"
+          unfolding e_def by simp
+        have haxp: "0 < a - x"
+          using hxa by simp
+        have haxp_half: "(a - x) / 2 < a - x"
+        proof -
+          have "(1 / 2 :: real) < 1"
+            by simp
+          have "(a - x) * (1 / 2) < (a - x) * 1"
+            by (rule mult_strict_left_mono[OF \<open>(1 / 2 :: real) < 1\<close> haxp])
+          thus ?thesis
+            by simp
+        qed
+        have hlt: "e < a - x"
+        proof -
+          have he_le: "e \<le> (a - x) / 2"
+            unfolding e_def e0_def
+            by (rule min.cobounded1)
+          show ?thesis
+            by (rule order_le_less_trans[OF he_le haxp_half])
+        qed
+        have "x + e < a"
+          using hlt by linarith
+        hence "y < a"
+          using hy_ub by linarith
+        thus "y \<in> open_ray_lt a"
+          unfolding open_ray_lt_def by simp
+      qed
+
+      show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_lt a"
+        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
+         apply (intro conjI)
+          apply (rule hxball)
+         apply (rule hsub)
+        apply (rule hball_basis)
+        done
+    qed
+  qed
+qed
+
+lemma order_topology_on_UNIV_eq_bounded_metric_topology_real:
+  shows "(order_topology_on_UNIV::real set set) =
+    top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+proof (rule subset_antisym)
+  have hTopOrd: "is_topology_on (UNIV::real set) (order_topology_on_UNIV::real set set)"
+    by (rule order_topology_on_UNIV_is_topology_on)
+
+  have hTopMet: "is_topology_on (UNIV::real set) (top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric)"
+  proof -
+    have hBasis: "is_basis_on (UNIV::real set) (top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric)"
+      by (rule top1_metric_basis_is_basis_on[OF top1_real_bounded_metric_metric_on])
+    show ?thesis
+      unfolding top1_metric_topology_on_def
+      by (rule topology_generated_by_basis_is_topology_on[OF hBasis])
+  qed
+
+  show "(order_topology_on_UNIV::real set set) \<subseteq> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+  proof -
+    have hBsub:
+      "basis_order_topology \<subseteq> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+    proof (rule subsetI)
+      fix U :: "real set"
+      assume hU: "U \<in> basis_order_topology"
+      have hcases:
+        "(\<exists>a b. a < b \<and> U = open_interval a b)
+         \<or> (\<exists>a. U = open_ray_gt a)
+         \<or> (\<exists>a. U = open_ray_lt a)
+         \<or> (U = UNIV)"
+        using hU unfolding basis_order_topology_def by blast
+      show "U \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+        using hcases
+      proof (elim disjE)
+        assume "\<exists>a b. a < b \<and> U = open_interval a b"
+        then obtain a b where hab: "a < b" and hUeq: "U = open_interval a b"
+          by blast
+        show ?thesis
+          unfolding hUeq by (rule open_interval_in_bounded_metric_topology[OF hab])
+      next
+        assume "\<exists>a. U = open_ray_gt a"
+        then obtain a where hUeq: "U = open_ray_gt a"
+          by blast
+        show ?thesis
+          unfolding hUeq by (rule open_ray_gt_in_bounded_metric_topology)
+      next
+        assume "\<exists>a. U = open_ray_lt a"
+        then obtain a where hUeq: "U = open_ray_lt a"
+          by blast
+        show ?thesis
+          unfolding hUeq by (rule open_ray_lt_in_bounded_metric_topology)
+      next
+        assume hUeq: "U = UNIV"
+        have "UNIV \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+          using hTopMet unfolding is_topology_on_def by blast
+        thus ?thesis
+          using hUeq by simp
+      qed
+    qed
+    have hInc:
+      "topology_generated_by_basis (UNIV::real set) basis_order_topology
+        \<subseteq> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
+      by (rule topology_generated_by_basis_subset[OF hTopMet hBsub])
+    show ?thesis
+      unfolding order_topology_on_UNIV_def
+      using hInc by simp
+  qed
+
+  show "top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric \<subseteq> (order_topology_on_UNIV::real set set)"
+  proof -
+    have hBsub:
+      "top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric \<subseteq> (order_topology_on_UNIV::real set set)"
+    proof (rule subsetI)
+      fix U :: "real set"
+      assume hU: "U \<in> top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric"
+      then obtain x e where he: "0 < e" and hUeq: "U = top1_ball_on UNIV top1_real_bounded_metric x e"
+        unfolding top1_metric_basis_on_def by blast
+      show "U \<in> (order_topology_on_UNIV::real set set)"
+        unfolding hUeq
+        by (rule top1_real_bounded_metric_ball_in_order_topology[OF he])
+    qed
+
+    have hInc:
+      "topology_generated_by_basis (UNIV::real set) (top1_metric_basis_on (UNIV::real set) top1_real_bounded_metric)
+        \<subseteq> (order_topology_on_UNIV::real set set)"
+      by (rule topology_generated_by_basis_subset[OF hTopOrd hBsub])
+
+    show ?thesis
+      unfolding top1_metric_topology_on_def
+      using hInc by simp
+  qed
+qed
+
 (** Euclidean metric on finite products of reals, written on function-spaces \<open>top1_PiE I (\<lambda>_. UNIV)\<close>. **)
 definition top1_euclidean_metric_real_on :: "'i set \<Rightarrow> ('i \<Rightarrow> real) \<Rightarrow> ('i \<Rightarrow> real) \<Rightarrow> real" where
   "top1_euclidean_metric_real_on I x y = sqrt (\<Sum>i\<in>I. (x i - y i)\<^sup>2)"
