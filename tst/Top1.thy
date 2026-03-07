@@ -6049,7 +6049,95 @@ lemma hausdorff_on_of_inj_continuous_map:
   assumes hcont: "top1_continuous_map_on X TX Z TZ f"
   assumes hinj: "inj_on f X"
   shows "is_hausdorff_on X TX"
-  sorry
+proof (unfold is_hausdorff_on_def, intro conjI)
+  show "is_topology_on X TX"
+    by (rule hTopX)
+
+  have hmap: "\<forall>x\<in>X. f x \<in> Z"
+    using hcont unfolding top1_continuous_map_on_def by blast
+
+  have hopen: "\<forall>V\<in>TZ. {x\<in>X. f x \<in> V} \<in> TX"
+    using hcont unfolding top1_continuous_map_on_def by blast
+
+  have hausZ:
+      "\<forall>a\<in>Z. \<forall>b\<in>Z. a \<noteq> b \<longrightarrow>
+         (\<exists>U V. neighborhood_of a Z TZ U \<and> neighborhood_of b Z TZ V \<and> U \<inter> V = {})"
+    using hHausZ unfolding is_hausdorff_on_def by blast
+
+  show "\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
+        (\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {})"
+  proof (intro ballI impI)
+    fix x y
+    assume hxX: "x \<in> X" and hyX: "y \<in> X" and hxy: "x \<noteq> y"
+
+    have hfxZ: "f x \<in> Z"
+      using hmap hxX by blast
+    have hfyZ: "f y \<in> Z"
+      using hmap hyX by blast
+
+    have hfxy: "f x \<noteq> f y"
+    proof
+      assume hfeq: "f x = f y"
+      have "x = y"
+        using hinj hxX hyX hfeq unfolding inj_on_def by blast
+      thus False
+        using hxy by contradiction
+    qed
+
+    obtain U V where hU: "neighborhood_of (f x) Z TZ U"
+        and hV: "neighborhood_of (f y) Z TZ V"
+        and hdisj: "U \<inter> V = {}"
+      using hausZ hfxZ hfyZ hfxy by blast
+
+    have hUTZ: "U \<in> TZ" and hfxU: "f x \<in> U"
+      using hU unfolding neighborhood_of_def by blast+
+    have hVTZ: "V \<in> TZ" and hfyV: "f y \<in> V"
+      using hV unfolding neighborhood_of_def by blast+
+
+    let ?Ux = "{a\<in>X. f a \<in> U}"
+    let ?Vy = "{a\<in>X. f a \<in> V}"
+
+    have hUxT: "?Ux \<in> TX"
+      using hopen hUTZ by blast
+    have hVyT: "?Vy \<in> TX"
+      using hopen hVTZ by blast
+
+    have hxUx: "x \<in> ?Ux"
+      using hxX hfxU by simp
+    have hyVy: "y \<in> ?Vy"
+      using hyX hfyV by simp
+
+    have hneigh_x: "neighborhood_of x X TX ?Ux"
+      unfolding neighborhood_of_def using hUxT hxUx by blast
+    have hneigh_y: "neighborhood_of y X TX ?Vy"
+      unfolding neighborhood_of_def using hVyT hyVy by blast
+
+    have hpre_disj: "?Ux \<inter> ?Vy = {}"
+    proof (rule ccontr)
+      assume hnon: "?Ux \<inter> ?Vy \<noteq> {}"
+      then obtain a where ha: "a \<in> ?Ux \<inter> ?Vy"
+        by blast
+      have hfaU: "f a \<in> U"
+        using ha by simp
+      have hfaV: "f a \<in> V"
+        using ha by simp
+      have "f a \<in> U \<inter> V"
+        using hfaU hfaV by simp
+      thus False
+        using hdisj by simp
+    qed
+
+    show "\<exists>U' V'. neighborhood_of x X TX U' \<and> neighborhood_of y X TX V' \<and> U' \<inter> V' = {}"
+    proof (rule exI[where x = ?Ux], rule exI[where x = ?Vy], intro conjI)
+      show "neighborhood_of x X TX ?Ux"
+        by (rule hneigh_x)
+      show "neighborhood_of y X TX ?Vy"
+        by (rule hneigh_y)
+      show "?Ux \<inter> ?Vy = {}"
+        by (rule hpre_disj)
+    qed
+  qed
+qed
 
 lemma top1_continuous_map_on_generated_by_basis:
   fixes f :: "'a \<Rightarrow> 'b"
