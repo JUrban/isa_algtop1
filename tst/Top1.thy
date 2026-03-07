@@ -12493,6 +12493,65 @@ proof -
   qed
 qed
 
+(** Uniform-coordinate metrics are uniformly bounded above (by 1), hence their images are bounded above. **)
+lemma top1_uniform_metric_real_on_bdd_above:
+  shows "bdd_above ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+proof -
+  show ?thesis
+    unfolding bdd_above_def
+  proof (rule exI[where x="1::real"], intro ballI)
+    fix r
+    assume hr: "r \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+    then obtain i where hi: "i \<in> I" and hr_eq: "r = top1_real_bounded_metric (x i) (y i)"
+      by blast
+    show "r \<le> (1::real)"
+      unfolding hr_eq top1_real_bounded_metric_def by simp
+  qed
+qed
+
+(** Each coordinate distance is bounded by the uniform metric. **)
+lemma top1_uniform_metric_real_on_coord_le:
+  assumes hi: "i \<in> I"
+  shows "top1_real_bounded_metric (x i) (y i) \<le> top1_uniform_metric_real_on I x y"
+proof -
+  have hmem:
+    "top1_real_bounded_metric (x i) (y i) \<in> ((\<lambda>j. top1_real_bounded_metric (x j) (y j)) ` I)"
+    using hi by blast
+  have hbdd:
+    "bdd_above ((\<lambda>j. top1_real_bounded_metric (x j) (y j)) ` I)"
+    by (rule top1_uniform_metric_real_on_bdd_above)
+  show ?thesis
+    unfolding top1_uniform_metric_real_on_def
+    by (rule cSup_upper[OF hmem hbdd])
+qed
+
+(** Specialized form of @{thm top1_uniform_metric_real_on_metric_on} without the auxiliary abbreviations. **)
+lemma top1_uniform_metric_real_on_metric_on_PiE_UNIV:
+  fixes I :: "'i set"
+  assumes "I \<noteq> {}"
+  shows "top1_metric_on (top1_PiE I (\<lambda>_. (UNIV::real set))) (top1_uniform_metric_real_on I)"
+  using top1_uniform_metric_real_on_metric_on[OF assms] by simp
+
+(** Reflexivity of the uniform metric on the carrier. **)
+lemma top1_uniform_metric_real_on_refl:
+  fixes I :: "'i set"
+  assumes hne: "I \<noteq> {}"
+  assumes hx: "x \<in> top1_PiE I (\<lambda>_. (UNIV::real set))"
+  shows "top1_uniform_metric_real_on I x x = 0"
+proof -
+  have hmet:
+    "top1_metric_on (top1_PiE I (\<lambda>_. (UNIV::real set))) (top1_uniform_metric_real_on I)"
+    by (rule top1_uniform_metric_real_on_metric_on_PiE_UNIV[OF hne])
+  have h0iff:
+    "\<forall>u\<in>top1_PiE I (\<lambda>_. (UNIV::real set)). \<forall>v\<in>top1_PiE I (\<lambda>_. (UNIV::real set)).
+        top1_uniform_metric_real_on I u v = 0 \<longleftrightarrow> u = v"
+    using hmet unfolding top1_metric_on_def by blast
+  have "top1_uniform_metric_real_on I x x = 0 \<longleftrightarrow> x = x"
+    using h0iff hx by blast
+  thus ?thesis
+    by simp
+qed
+
 (** Munkres' metric inducing the product topology on \<open>\<real>^\<omega>\<close>.  We use \<open>Suc n\<close> in the denominator
     to match the intended indexing by the positive integers. **)
 definition top1_D_metric_real_omega :: "(nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
