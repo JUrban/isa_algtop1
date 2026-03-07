@@ -12237,6 +12237,262 @@ definition top1_square_metric_real_on :: "'i set \<Rightarrow> ('i \<Rightarrow>
 definition top1_uniform_metric_real_on :: "'i set \<Rightarrow> ('i \<Rightarrow> real) \<Rightarrow> ('i \<Rightarrow> real) \<Rightarrow> real" where
   "top1_uniform_metric_real_on I x y = Sup ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
 
+(** The uniform metric on \<open>\<real>^I\<close> is a metric as soon as the index set is nonempty. **)
+lemma top1_uniform_metric_real_on_metric_on:
+  fixes I :: "'i set"
+  assumes hne: "I \<noteq> {}"
+  defines "XR \<equiv> (\<lambda>_. (UNIV::real set))"
+  defines "X\<^sub>R \<equiv> top1_PiE I XR"
+  shows "top1_metric_on X\<^sub>R (top1_uniform_metric_real_on I)"
+proof -
+  obtain i0 where hi0: "i0 \<in> I"
+    using hne by blast
+
+  have h0iff: "\<And>u v. top1_real_bounded_metric u v = 0 \<longleftrightarrow> u = v"
+  proof -
+    fix u v :: real
+    have "\<forall>x\<in>UNIV. \<forall>y\<in>UNIV. top1_real_bounded_metric x y = 0 \<longleftrightarrow> x = y"
+      using top1_real_bounded_metric_metric_on unfolding top1_metric_on_def by blast
+    thus "top1_real_bounded_metric u v = 0 \<longleftrightarrow> u = v"
+      by simp
+  qed
+
+  have hSbdd:
+    "\<And>x y. bdd_above ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+  proof -
+    fix x y :: "'i \<Rightarrow> real"
+    show "bdd_above ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+      unfolding bdd_above_def
+    proof (rule exI[where x="1::real"], intro ballI)
+      fix r
+      assume hr: "r \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+      then obtain i where hi: "i \<in> I" and hr_eq: "r = top1_real_bounded_metric (x i) (y i)"
+        by blast
+      show "r \<le> (1::real)"
+        unfolding hr_eq top1_real_bounded_metric_def by simp
+    qed
+  qed
+
+  show ?thesis
+    unfolding top1_metric_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>X\<^sub>R. 0 \<le> top1_uniform_metric_real_on I x x"
+    proof (intro ballI)
+      fix x :: "'i \<Rightarrow> real"
+      assume hx: "x \<in> X\<^sub>R"
+      have hmem0:
+        "top1_real_bounded_metric (x i0) (x i0) \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I)"
+        using hi0 by blast
+      have "top1_real_bounded_metric (x i0) (x i0) \<le> top1_uniform_metric_real_on I x x"
+        unfolding top1_uniform_metric_real_on_def
+        by (rule cSup_upper[OF hmem0 hSbdd])
+      thus "0 \<le> top1_uniform_metric_real_on I x x"
+        unfolding top1_real_bounded_metric_def by simp
+    qed
+
+    show "\<forall>x\<in>X\<^sub>R. \<forall>y\<in>X\<^sub>R. 0 \<le> top1_uniform_metric_real_on I x y"
+    proof (intro ballI)
+      fix x :: "'i \<Rightarrow> real"
+      fix y :: "'i \<Rightarrow> real"
+      assume hx: "x \<in> X\<^sub>R"
+      assume hy: "y \<in> X\<^sub>R"
+      have hmem:
+        "top1_real_bounded_metric (x i0) (y i0) \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+        using hi0 by blast
+      have hle:
+        "top1_real_bounded_metric (x i0) (y i0) \<le> top1_uniform_metric_real_on I x y"
+        unfolding top1_uniform_metric_real_on_def
+        by (rule cSup_upper[OF hmem hSbdd])
+      have "0 \<le> top1_real_bounded_metric (x i0) (y i0)"
+        unfolding top1_real_bounded_metric_def by simp
+      thus "0 \<le> top1_uniform_metric_real_on I x y"
+        using hle by linarith
+    qed
+
+    show "\<forall>x\<in>X\<^sub>R. \<forall>y\<in>X\<^sub>R. top1_uniform_metric_real_on I x y = 0 \<longleftrightarrow> x = y"
+    proof (intro ballI)
+      fix x :: "'i \<Rightarrow> real"
+      fix y :: "'i \<Rightarrow> real"
+      assume hx: "x \<in> X\<^sub>R"
+      assume hy: "y \<in> X\<^sub>R"
+      show "top1_uniform_metric_real_on I x y = 0 \<longleftrightarrow> x = y"
+      proof (rule iffI)
+        assume h0: "top1_uniform_metric_real_on I x y = 0"
+        have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+          using hx unfolding X\<^sub>R_def XR_def top1_PiE_iff by blast
+        have hyext: "\<forall>i. i \<notin> I \<longrightarrow> y i = undefined"
+          using hy unfolding X\<^sub>R_def XR_def top1_PiE_iff by blast
+
+        have hI: "\<forall>i\<in>I. x i = y i"
+        proof (intro ballI)
+          fix i assume hi: "i \<in> I"
+          have hmem:
+            "top1_real_bounded_metric (x i) (y i) \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+            using hi by blast
+          have hle:
+            "top1_real_bounded_metric (x i) (y i) \<le> top1_uniform_metric_real_on I x y"
+            unfolding top1_uniform_metric_real_on_def
+            by (rule cSup_upper[OF hmem hSbdd])
+          have "0 \<le> top1_real_bounded_metric (x i) (y i)"
+            unfolding top1_real_bounded_metric_def by simp
+          have "top1_real_bounded_metric (x i) (y i) = 0"
+            using h0 hle \<open>0 \<le> top1_real_bounded_metric (x i) (y i)\<close> by linarith
+          thus "x i = y i"
+            using h0iff by simp
+        qed
+
+        show "x = y"
+        proof (rule ext)
+          fix j
+          show "x j = y j"
+          proof (cases "j \<in> I")
+            case True
+            show ?thesis
+              using hI True by blast
+          next
+            case False
+            have "x j = undefined"
+              using hxext False by blast
+            moreover have "y j = undefined"
+              using hyext False by blast
+            ultimately show ?thesis
+              by simp
+          qed
+        qed
+      next
+        assume hxy: "x = y"
+        have hSne:
+          "((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I) \<noteq> {}"
+          using hi0 by blast
+        have hall0: "\<forall>r\<in>((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I). r \<le> 0"
+        proof (intro ballI)
+          fix r
+          assume hr: "r \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I)"
+          then obtain i where hi: "i \<in> I" and hr_eq: "r = top1_real_bounded_metric (x i) (x i)"
+            by blast
+          show "r \<le> 0"
+            unfolding hr_eq top1_real_bounded_metric_def by simp
+        qed
+        have "top1_uniform_metric_real_on I x x \<le> 0"
+          unfolding top1_uniform_metric_real_on_def
+          by (rule cSup_least[OF hSne]) (use hall0 in blast)
+        moreover have "0 \<le> top1_uniform_metric_real_on I x x"
+        proof -
+          have hmem0:
+            "top1_real_bounded_metric (x i0) (x i0) \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I)"
+            using hi0 by blast
+          have "top1_real_bounded_metric (x i0) (x i0) \<le> top1_uniform_metric_real_on I x x"
+            unfolding top1_uniform_metric_real_on_def
+            by (rule cSup_upper[OF hmem0 hSbdd])
+          thus ?thesis
+            unfolding top1_real_bounded_metric_def by simp
+        qed
+        ultimately have "top1_uniform_metric_real_on I x x = 0"
+          by linarith
+        thus "top1_uniform_metric_real_on I x y = 0"
+          using hxy by simp
+      qed
+    qed
+
+    show "\<forall>x\<in>X\<^sub>R. \<forall>y\<in>X\<^sub>R. top1_uniform_metric_real_on I x y = top1_uniform_metric_real_on I y x"
+    proof (intro ballI)
+      fix x :: "'i \<Rightarrow> real"
+      fix y :: "'i \<Rightarrow> real"
+      assume hx: "x \<in> X\<^sub>R"
+      assume hy: "y \<in> X\<^sub>R"
+      have himg:
+        "((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)
+           = ((\<lambda>i. top1_real_bounded_metric (y i) (x i)) ` I)"
+      proof (rule image_cong)
+        show "I = I"
+          by simp
+        fix i assume "i \<in> I"
+        show "top1_real_bounded_metric (x i) (y i) = top1_real_bounded_metric (y i) (x i)"
+          unfolding top1_real_bounded_metric_def by (simp add: abs_minus_commute)
+      qed
+      show "top1_uniform_metric_real_on I x y = top1_uniform_metric_real_on I y x"
+        unfolding top1_uniform_metric_real_on_def
+        using himg by simp
+    qed
+
+    show "\<forall>x\<in>X\<^sub>R. \<forall>y\<in>X\<^sub>R. \<forall>z\<in>X\<^sub>R.
+          top1_uniform_metric_real_on I x z \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+    proof (intro ballI)
+      fix x :: "'i \<Rightarrow> real"
+      fix y :: "'i \<Rightarrow> real"
+      fix z :: "'i \<Rightarrow> real"
+      assume hx: "x \<in> X\<^sub>R"
+      assume hy: "y \<in> X\<^sub>R"
+      assume hz: "z \<in> X\<^sub>R"
+
+      define Sxz where "Sxz = ((\<lambda>i. top1_real_bounded_metric (x i) (z i)) ` I)"
+      define Sxy where "Sxy = ((\<lambda>i. top1_real_bounded_metric (x i) (y i)) ` I)"
+      define Syz where "Syz = ((\<lambda>i. top1_real_bounded_metric (y i) (z i)) ` I)"
+
+      have hSxz_ne: "Sxz \<noteq> {}"
+        unfolding Sxz_def using hi0 by blast
+      have hSxz_bdd: "bdd_above Sxz"
+        unfolding Sxz_def by (rule hSbdd)
+
+      have hall:
+        "\<forall>r\<in>Sxz. r \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+      proof (intro ballI)
+        fix r
+        assume hr: "r \<in> Sxz"
+        then obtain i where hi: "i \<in> I" and hr_eq: "r = top1_real_bounded_metric (x i) (z i)"
+          unfolding Sxz_def by blast
+
+        have htri:
+          "top1_real_bounded_metric (x i) (z i)
+            \<le> top1_real_bounded_metric (x i) (y i) + top1_real_bounded_metric (y i) (z i)"
+          by (rule top1_real_bounded_metric_triangle)
+
+        have hmem_xy:
+          "top1_real_bounded_metric (x i) (y i) \<in> Sxy"
+          unfolding Sxy_def using hi by blast
+        have hmem_yz:
+          "top1_real_bounded_metric (y i) (z i) \<in> Syz"
+          unfolding Syz_def using hi by blast
+        have hle_xy:
+          "top1_real_bounded_metric (x i) (y i) \<le> top1_uniform_metric_real_on I x y"
+        proof -
+          have hbdd:
+            "bdd_above ((\<lambda>j. top1_real_bounded_metric (x j) (y j)) ` I)"
+            by (rule hSbdd)
+          have "top1_real_bounded_metric (x i) (y i)
+              \<le> (SUP j\<in>I. top1_real_bounded_metric (x j) (y j))"
+            by (rule cSUP_upper[OF hi hbdd])
+          thus ?thesis
+            unfolding top1_uniform_metric_real_on_def by simp
+        qed
+        have hle_yz:
+          "top1_real_bounded_metric (y i) (z i) \<le> top1_uniform_metric_real_on I y z"
+        proof -
+          have hbdd:
+            "bdd_above ((\<lambda>j. top1_real_bounded_metric (y j) (z j)) ` I)"
+            by (rule hSbdd)
+          have "top1_real_bounded_metric (y i) (z i)
+              \<le> (SUP j\<in>I. top1_real_bounded_metric (y j) (z j))"
+            by (rule cSUP_upper[OF hi hbdd])
+          thus ?thesis
+            unfolding top1_uniform_metric_real_on_def by simp
+        qed
+
+        have "top1_real_bounded_metric (x i) (z i)
+            \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+          using htri hle_xy hle_yz by linarith
+        thus "r \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+          unfolding hr_eq by simp
+      qed
+
+      have "Sup Sxz \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+        by (rule cSup_least[OF hSxz_ne]) (use hall in blast)
+      thus "top1_uniform_metric_real_on I x z \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+        unfolding top1_uniform_metric_real_on_def Sxz_def by simp
+    qed
+  qed
+qed
+
 (** Munkres' metric inducing the product topology on \<open>\<real>^\<omega>\<close>.  We use \<open>Suc n\<close> in the denominator
     to match the intended indexing by the positive integers. **)
 definition top1_D_metric_real_omega :: "(nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
