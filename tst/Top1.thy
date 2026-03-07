@@ -23357,6 +23357,10 @@ theorem Theorem_27_6:
 definition top1_isolated_point_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> bool" where
   "top1_isolated_point_on X TX x \<longleftrightarrow> x \<in> X \<and> {x} \<in> TX"
 
+(** Countability predicate, kept local to avoid extra library session dependencies. **)
+definition countable :: "'a set \<Rightarrow> bool" where
+  "countable S \<longleftrightarrow> (\<exists>f::'a \<Rightarrow> nat. inj_on f S)"
+
 (** from \S27 Theorem 27.7 [top1.tex:3519] **)
 theorem Theorem_27_7:
   assumes hXne: "X \<noteq> {}"
@@ -24305,7 +24309,7 @@ definition top1_countable :: "'a set \<Rightarrow> bool" where
 
 lemma top1_countable_iff_countable:
   "top1_countable S \<longleftrightarrow> countable S"
-  sorry
+  by (simp only: top1_countable_def countable_def)
 
 lemma top1_countable_subset:
   assumes hS: "top1_countable S"
