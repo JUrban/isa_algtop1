@@ -207,8 +207,8 @@ proof -
               using hUopen hUsub hxU by blast+
           qed
 
-          have hIH: "\<forall>i\<in>I. mkF ps i \<in> T i \<and> mkF ps i \<subseteq> X i \<and> x i \<in> mkF ps i"
-            using Cons.IH hps by blast
+	          have hIH: "\<forall>i\<in>I. mkF ps i \<in> T i \<and> mkF ps i \<subseteq> X i \<and> x i \<in> mkF ps i"
+	            by fact
 
           show ?case
             unfolding mkF_def
@@ -274,16 +274,16 @@ proof -
           "(\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i) \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
           using hmkF_props hl by blast
 
-        have hBasis: "mkU l \<in> ?B"
-          unfolding top1_product_basis_on_def
-          apply (rule CollectI)
-          apply (rule exI[where x="mkF l"])
-          apply (intro conjI)
-           apply simp
-          apply (rule conjI)
-           apply (use hProps in blast)
-          apply (use hProps in blast)
-          done
+		        have hBasis: "mkU l \<in> ?B"
+		          unfolding top1_product_basis_on_def
+		          apply (rule CollectI)
+		          apply (rule exI[where x="mkF l"])
+		          apply (rule conjI)
+		           apply (simp add: mkU_def)
+		          apply (rule conjI)
+		           apply (use hProps in blast)
+		          apply (use hProps in blast)
+		          done
 
         have hSubY: "mkU l \<subseteq> ?Y"
         proof -
@@ -311,7 +311,25 @@ proof -
           done
 
         have hxU': "x \<in> mkU l"
-          unfolding mkU_def top1_PiE_iff using hProps hxY by blast
+        proof -
+          have hx_mkF: "\<forall>i\<in>I. x i \<in> mkF l i"
+          proof (intro ballI)
+            fix i
+            assume hiI: "i \<in> I"
+            have "mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+              using hProps hiI by blast
+            thus "x i \<in> mkF l i"
+              by blast
+          qed
+          have hxundef: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+            using hxY unfolding top1_PiE_iff by blast
+          show ?thesis
+            unfolding mkU_def top1_PiE_iff
+            apply (intro conjI)
+             apply (rule hx_mkF)
+            apply (rule hxundef)
+            done
+        qed
 
         show "U \<in> ?TP \<and> x \<in> U"
           unfolding hUeq using hOpen hxU' by blast
@@ -480,7 +498,14 @@ proof -
   qed
 
   have hTopI: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
-    using hB0 by (metis basis_for_is_topology_on)
+  proof (intro ballI)
+    fix i
+    assume hiI: "i \<in> I"
+    have "basis_for (X i) (B0 i) (T i)"
+      using hB0 hiI by blast
+    thus "is_topology_on (X i) (T i)"
+      by (rule basis_for_is_topology_on)
+  qed
   have hXiTi: "\<forall>i\<in>I. X i \<in> T i"
     using hTopI unfolding is_topology_on_def by blast
 
@@ -546,24 +571,74 @@ proof -
     qed
 
     have hSubY: "mkU l \<subseteq> ?Y"
-    proof -
-      have hsub: "\<forall>i\<in>I. mkF l i \<subseteq> X i"
-        using hProps by blast
-      show ?thesis
-        unfolding mkU_def
-        by (rule top1_PiE_mono[OF hsub])
-    qed
+	    proof -
+	      have hsub: "\<forall>i\<in>I. mkF l i \<subseteq> X i"
+	        using hProps by blast
+	      show ?thesis
+	        unfolding mkU_def
+	        by (rule top1_PiE_mono[OF hsub])
+	    qed
 
-    have hBasisU: "mkU l \<in> top1_product_basis_on I X T"
-      unfolding top1_product_basis_on_def
-      apply (rule CollectI)
-      apply (rule exI[where x="mkF l"])
-      apply (intro conjI)
-       apply simp
-      apply (rule conjI)
-       apply (use hProps in blast)
-      apply simp
-      done
+	    have hFin_mkF: "finite {i \<in> I. mkF l i \<noteq> X i}"
+	    proof -
+	      have hEq: "\<And>i. i \<notin> set (map fst l) \<Longrightarrow> mkF l i = X i"
+	      proof (induct l)
+	        case Nil
+	        show ?case
+	          by (simp add: mkF_def)
+		      next
+		        case (Cons p ps)
+		        fix i
+		        assume hnot: "i \<notin> set (map fst (p # ps))"
+	        obtain j V where hp: "p = (j, V)"
+	          by (cases p) simp
+	        have hij: "i \<noteq> j" and hnotps: "i \<notin> set (map fst ps)"
+	          using hnot unfolding hp by simp_all
+
+	        have hrec: "mkF (p # ps) = (mkF ps)(j := V)"
+	          unfolding mkF_def hp by (simp add: mkF_def[symmetric])
+
+	        have "mkF (p # ps) i = (mkF ps)(j := V) i"
+	          using hrec by simp
+	        also have "\<dots> = mkF ps i"
+	          using hij by simp
+	        also have "\<dots> = X i"
+	          using Cons.IH[OF hnotps] .
+	        finally show "mkF (p # ps) i = X i" .
+	      qed
+
+	      have hSub: "{i \<in> I. mkF l i \<noteq> X i} \<subseteq> set (map fst l)"
+	      proof (rule subsetI)
+	        fix i
+	        assume hi: "i \<in> {i \<in> I. mkF l i \<noteq> X i}"
+	        have hneq: "mkF l i \<noteq> X i"
+	          using hi by blast
+	        show "i \<in> set (map fst l)"
+	        proof (rule ccontr)
+	          assume hnot: "i \<notin> set (map fst l)"
+	          have "mkF l i = X i"
+	            using hEq[OF hnot] .
+	          with hneq show False
+	            by contradiction
+	        qed
+	      qed
+
+	      have hFin: "finite (set (map fst l))"
+	        by simp
+	      show ?thesis
+	        by (rule finite_subset[OF hSub hFin])
+	    qed
+	
+	    have hBasisU: "mkU l \<in> top1_product_basis_on I X T"
+	      unfolding top1_product_basis_on_def
+	      apply (rule CollectI)
+	      apply (rule exI[where x="mkF l"])
+	      apply (intro conjI)
+	       apply (simp add: mkU_def)
+	      apply (rule conjI)
+	       apply (rule hProps)
+	      apply (rule hFin_mkF)
+	      done
 
     have hOpen: "mkU l \<in> ?TP"
       unfolding top1_product_topology_on_def topology_generated_by_basis_def
@@ -645,31 +720,48 @@ proof -
         case True
         have hpair: "(i, sel i) \<in> set l"
           using True hl unfolding S_def by blast
+
+        have hsame: "\<forall>p\<in>set l. fst p = i \<longrightarrow> snd p = sel i"
+        proof (intro ballI impI)
+          fix p
+          assume hp: "p \<in> set l"
+          assume hfst: "fst p = i"
+          have hpS: "p \<in> S"
+            using hp hl by simp
+          obtain j where hjJ: "j \<in> J" and hp': "p = (j, sel j)"
+            using hpS unfolding S_def by blast
+          have "j = i"
+            using hfst unfolding hp' by simp
+          thus "snd p = sel i"
+            unfolding hp' by simp
+        qed
+
         have "mkF l i = sel i"
+          using hpair hsame
         proof (induct l)
           case Nil
-          then show ?case using hpair by simp
+          then show ?case by simp
         next
           case (Cons p ps)
           obtain j V where hp: "p = (j, V)"
             by (cases p) simp
+          have hmem: "(i, sel i) = p \<or> (i, sel i) \<in> set ps"
+            using Cons.prems(1) by simp
+          have hsame_ps: "\<forall>p\<in>set ps. fst p = i \<longrightarrow> snd p = sel i"
+            using Cons.prems(2) by simp
           show ?case
           proof (cases "j = i")
             case True
             have "V = sel i"
-            proof -
-              have "(i, sel i) = (j, V)"
-                using True hp hpair by simp
-              thus ?thesis by simp
-            qed
-            show ?thesis
-              unfolding mkF_def hp True \<open>V = sel i\<close> by simp
+              using Cons.prems(2) True hp by simp
+            thus ?thesis
+              unfolding mkF_def hp True by simp
           next
             case False
-            have hpair_ps: "(i, sel i) \<in> set ps"
-              using hpair False hp by auto
+            have htail: "(i, sel i) \<in> set ps"
+              using hmem False hp by auto
             have "mkF ps i = sel i"
-              using Cons.IH hpair_ps by blast
+              by (rule Cons.IH[OF htail hsame_ps])
             thus ?thesis
               unfolding mkF_def hp False by simp
           qed
@@ -680,10 +772,47 @@ proof -
           by simp
       next
         case False
-        have "W i = X i"
+        have hnot: "i \<notin> set (map fst l)"
+        proof
+          assume hi: "i \<in> set (map fst l)"
+          then obtain p where hp: "p \<in> set l" and hfst: "fst p = i"
+            by auto
+          have hpS: "p \<in> S"
+            using hp hl by simp
+          obtain j where hjJ: "j \<in> J" and hp': "p = (j, sel j)"
+            using hpS unfolding S_def by blast
+          have "i = j"
+            using hfst unfolding hp' by simp
+          hence "i \<in> J"
+            using hjJ by simp
+          thus False
+            using False by contradiction
+        qed
+
+        have hmkF: "mkF l i = X i"
+          using hnot
+        proof (induct l)
+          case Nil
+          then show ?case
+            by (simp add: mkF_def)
+	        next
+	          case (Cons p ps)
+	          obtain j V where hp: "p = (j, V)"
+	            by (cases p) simp
+	          have hij: "i \<noteq> j" and hnotps: "i \<notin> set (map fst ps)"
+	            using Cons.prems unfolding hp by simp_all
+
+          have "mkF (p # ps) i = mkF ps i"
+            unfolding mkF_def hp using hij by simp
+          also have "\<dots> = X i"
+            using Cons.hyps[OF hnotps] .
+          finally show ?case .
+        qed
+
+        have hWi: "W i = X i"
           using False hiI unfolding J_def by blast
         show ?thesis
-          unfolding \<open>W i = X i\<close> mkF_def by simp
+          unfolding hWi using hmkF by simp
       qed
     qed
 
@@ -700,14 +829,17 @@ proof -
           case True
           have hpair: "(i, sel i) \<in> set l"
             using True hl unfolding S_def by blast
-          have "mkF l i = sel i"
-          proof (induct l)
-            case Nil
-            then show ?case using hpair by simp
-          next
-            case (Cons p ps)
-            obtain j V where hp: "p = (j, V)"
-              by (cases p) simp
+	        have "mkF l i = sel i"
+	        proof (induct l)
+	          case Nil
+	          have False
+	            using hpair by simp
+	          thus ?case
+	            by (rule FalseE)
+	        next
+	          case (Cons p ps)
+	          obtain j V where hp: "p = (j, V)"
+	            by (cases p) simp
             show ?case
             proof (cases "j = i")
               case True
@@ -739,21 +871,25 @@ proof -
             using hxb unfolding hbdef top1_PiE_iff hiI by simp
         qed
       qed
-      show ?thesis
-        unfolding mkU_def top1_PiE_iff using hxC' hxU by blast
-    qed
+	      show ?thesis
+	        unfolding mkU_def top1_PiE_iff using hxC' by blast
+	    qed
 
-    show "\<exists>C\<in>Cc. C \<in> ?TP \<and> x \<in> C \<and> C \<subseteq> U"
-      apply (rule bexI[where x="mkU l"])
-       apply (intro conjI)
-         apply (rule subsetD[OF hCc_sub_TP hC])
-        apply (rule hxC)
-       apply (rule subset_trans[OF hmk_sub])
-       apply (rule subset_trans[OF hbU])
-       apply (rule subset_refl)
-      apply (rule hC)
-      done
-  qed
+	    show "\<exists>C\<in>Cc. C \<in> ?TP \<and> x \<in> C \<and> C \<subseteq> U"
+	    proof (rule bexI[where x="mkU l"])
+	      show "mkU l \<in> Cc"
+	        by (rule hC)
+	      show "mkU l \<in> ?TP \<and> x \<in> mkU l \<and> mkU l \<subseteq> U"
+	      proof (intro conjI)
+	        show "mkU l \<in> ?TP"
+	          by (rule subsetD[OF hCc_sub_TP hC])
+	        show "x \<in> mkU l"
+	          by (rule hxC)
+	        show "mkU l \<subseteq> U"
+	          by (rule subset_trans[OF subset_trans[OF hmk_sub hbU] subset_refl])
+	      qed
+	    qed
+	  qed
 
   have hCc_basis_for: "basis_for ?Y Cc ?TP"
   proof -
@@ -24385,6 +24521,316 @@ proof -
     by (rule exI[where x=h], rule hinj)
 qed
 
+(** A concrete injective encoding of pairs of naturals, used to build countability arguments. **)
+definition top1_pair_code :: "nat \<times> nat \<Rightarrow> nat" where
+  "top1_pair_code p = (2 ^ fst p) * (2 * snd p + 1)"
+
+lemma top1_pair_code_inj: "inj_on top1_pair_code (UNIV::(nat \<times> nat) set)"
+  unfolding inj_on_def
+proof (intro ballI impI)
+  fix p q :: "nat \<times> nat"
+  assume hp: "p \<in> (UNIV::(nat \<times> nat) set)" and hq: "q \<in> (UNIV::(nat \<times> nat) set)"
+  assume hEq: "top1_pair_code p = top1_pair_code q"
+  obtain a b where hpab: "p = (a,b)"
+    by (cases p) auto
+  obtain c d where hqcd: "q = (c,d)"
+    by (cases q) auto
+
+  have hodd_b: "\<not> (2::nat) dvd (2 * b + 1)"
+    by simp
+  have hodd_d: "\<not> (2::nat) dvd (2 * d + 1)"
+    by simp
+
+  have hnot_dvd_a: "\<not> (2 ^ (Suc a)) dvd top1_pair_code (a,b)"
+  proof
+    assume hdvd: "(2 ^ (Suc a)) dvd top1_pair_code (a,b)"
+    have hcomm: "(2::nat) * 2 ^ a = 2 ^ a * 2"
+      by (simp add: mult.commute)
+    have hdvd': "(2 ^ a * (2::nat)) dvd top1_pair_code (a,b)"
+    proof -
+      have "(2::nat) * 2 ^ a dvd top1_pair_code (a,b)"
+        using hdvd by (simp only: power_Suc)
+      thus ?thesis
+        by (simp add: hcomm)
+    qed
+    have hEq': "top1_pair_code (a,b) = (2 ^ a) * (2 * b + 1)"
+      unfolding top1_pair_code_def by simp
+    have hdvd0: "(2 ^ a * (2::nat)) dvd ((2 ^ a) * (2 * b + 1))"
+      apply (subst hEq'[symmetric])
+      apply (rule hdvd')
+      done
+    have "(2::nat) dvd (2 * b + 1)"
+      using hdvd0 by (simp add: dvd_mult_cancel_left del: mult_Suc_right)
+    thus False
+      using hodd_b by blast
+  qed
+
+  have hnot_dvd_c: "\<not> (2 ^ (Suc c)) dvd top1_pair_code (c,d)"
+  proof
+    assume hdvd: "(2 ^ (Suc c)) dvd top1_pair_code (c,d)"
+    have hcomm: "(2::nat) * 2 ^ c = 2 ^ c * 2"
+      by (simp add: mult.commute)
+    have hdvd': "(2 ^ c * (2::nat)) dvd top1_pair_code (c,d)"
+    proof -
+      have "(2::nat) * 2 ^ c dvd top1_pair_code (c,d)"
+        using hdvd by (simp only: power_Suc)
+      thus ?thesis
+        by (simp add: hcomm)
+    qed
+    have hEq': "top1_pair_code (c,d) = (2 ^ c) * (2 * d + 1)"
+      unfolding top1_pair_code_def by simp
+    have hdvd0: "(2 ^ c * (2::nat)) dvd ((2 ^ c) * (2 * d + 1))"
+      apply (subst hEq'[symmetric])
+      apply (rule hdvd')
+      done
+    have "(2::nat) dvd (2 * d + 1)"
+      using hdvd0 by (simp add: dvd_mult_cancel_left del: mult_Suc_right)
+    thus False
+      using hodd_d by blast
+  qed
+
+  have hac: "a = c"
+  proof (cases a c rule: linorder_cases)
+    case less
+    have hle: "Suc a \<le> c"
+      using less by simp
+    have hdvd: "((2::nat) ^ (Suc a)) dvd ((2::nat) ^ c)"
+    proof -
+      have hdecomp: "Suc a + (c - Suc a) = c"
+        using hle by simp
+      have "(2::nat) ^ c = (2::nat) ^ (Suc a + (c - Suc a))"
+        using hdecomp by simp
+      also have "\<dots> = (2::nat) ^ (Suc a) * (2::nat) ^ (c - Suc a)"
+        by (simp add: power_add)
+      finally have "(2::nat) ^ c = (2::nat) ^ (Suc a) * (2::nat) ^ (c - Suc a)" .
+      thus ?thesis
+        by (rule dvdI)
+    qed
+    have hEq_cd: "top1_pair_code (c,d) = (2 ^ c) * (2 * d + 1)"
+      unfolding top1_pair_code_def by simp
+    have hEq_abcd: "top1_pair_code (a,b) = top1_pair_code (c,d)"
+      using hEq unfolding hpab hqcd by simp
+    have hdiv_cd: "(2 ^ (Suc a)) dvd top1_pair_code (c,d)"
+      apply (subst hEq_cd)
+      apply (rule dvd_mult2[OF hdvd])
+      done
+    have hdiv_ab: "(2 ^ (Suc a)) dvd top1_pair_code (a,b)"
+      apply (subst hEq_abcd)
+      apply (rule hdiv_cd)
+      done
+    show ?thesis
+      using hdiv_ab hnot_dvd_a by blast
+  next
+    case equal
+    show ?thesis
+      using equal by simp
+  next
+    case greater
+    have hle: "Suc c \<le> a"
+      using greater by simp
+    have hdvd: "((2::nat) ^ (Suc c)) dvd ((2::nat) ^ a)"
+    proof -
+      have hdecomp: "Suc c + (a - Suc c) = a"
+        using hle by simp
+      have "(2::nat) ^ a = (2::nat) ^ (Suc c + (a - Suc c))"
+        using hdecomp by simp
+      also have "\<dots> = (2::nat) ^ (Suc c) * (2::nat) ^ (a - Suc c)"
+        by (simp add: power_add)
+      finally have "(2::nat) ^ a = (2::nat) ^ (Suc c) * (2::nat) ^ (a - Suc c)" .
+      thus ?thesis
+        by (rule dvdI)
+    qed
+    have hEq_ab: "top1_pair_code (a,b) = (2 ^ a) * (2 * b + 1)"
+      unfolding top1_pair_code_def by simp
+    have hEq_abcd: "top1_pair_code (a,b) = top1_pair_code (c,d)"
+      using hEq unfolding hpab hqcd by simp
+    have hdiv_ab: "(2 ^ (Suc c)) dvd top1_pair_code (a,b)"
+      apply (subst hEq_ab)
+      apply (rule dvd_mult2[OF hdvd])
+      done
+    have hdiv_cd: "(2 ^ (Suc c)) dvd top1_pair_code (c,d)"
+      apply (subst hEq_abcd[symmetric])
+      apply (rule hdiv_ab)
+      done
+    show ?thesis
+      using hdiv_cd hnot_dvd_c by blast
+  qed
+
+  have hbd: "b = d"
+  proof -
+    have hEq_abcd: "top1_pair_code (a,b) = top1_pair_code (c,d)"
+      using hEq unfolding hpab hqcd by simp
+    have hEq_abd: "top1_pair_code (a,b) = top1_pair_code (a,d)"
+      using hEq_abcd hac by simp
+    have "2 * b + 1 = 2 * d + 1"
+      using hEq_abd unfolding top1_pair_code_def by (simp add: mult_left_cancel)
+    hence "2 * b = 2 * d"
+      by simp
+    thus "b = d"
+      by simp
+  qed
+
+  show "p = q"
+    unfolding hpab hqcd using hac hbd by simp
+qed
+
+lemma top1_countable_nat_prod: "top1_countable (UNIV::(nat \<times> nat) set)"
+  unfolding top1_countable_def
+  by (rule exI[where x=top1_pair_code], rule top1_pair_code_inj)
+
+(** Countability of dependent sums (Sigma types) for the local notion \<open>top1_countable\<close>. **)
+lemma top1_countable_SIGMA:
+  fixes C :: "'i \<Rightarrow> 'a set"
+  assumes hI: "top1_countable I"
+  assumes hC: "\<forall>i\<in>I. top1_countable (C i)"
+  shows "top1_countable (SIGMA i:I. C i)"
+proof -
+  obtain eI :: "'i \<Rightarrow> nat" where heI: "inj_on eI I"
+    using hI unfolding top1_countable_def by blast
+
+  have hexE: "\<forall>i\<in>I. \<exists>e::'a \<Rightarrow> nat. inj_on e (C i)"
+  proof (intro ballI)
+    fix i
+    assume hi: "i \<in> I"
+    have hCi: "top1_countable (C i)"
+      using hC hi by blast
+    obtain e :: "'a \<Rightarrow> nat" where he: "inj_on e (C i)"
+      using hCi unfolding top1_countable_def by blast
+    show "\<exists>e::'a \<Rightarrow> nat. inj_on e (C i)"
+      by (rule exI[where x=e], rule he)
+  qed
+  obtain eC :: "'i \<Rightarrow> 'a \<Rightarrow> nat" where heC: "\<forall>i\<in>I. inj_on (eC i) (C i)"
+    using bchoice[OF hexE] by blast
+
+  define h where "h p = top1_pair_code (eI (fst p), eC (fst p) (snd p))" for p
+
+  have hinj: "inj_on h (SIGMA i:I. C i)"
+    unfolding inj_on_def
+  proof (intro ballI impI)
+    fix p q :: "'i \<times> 'a"
+    assume hp: "p \<in> (SIGMA i:I. C i)" and hq: "q \<in> (SIGMA i:I. C i)"
+    assume hEq: "h p = h q"
+
+    obtain i x where hpix: "p = (i,x)"
+      by (cases p) auto
+    obtain j y where hqjy: "q = (j,y)"
+      by (cases q) auto
+
+    have hiI: "i \<in> I" and hx: "x \<in> C i"
+      using hp unfolding hpix by blast+
+    have hjI: "j \<in> I" and hy: "y \<in> C j"
+      using hq unfolding hqjy by blast+
+
+    have hpair: "(eI i, eC i x) = (eI j, eC j y)"
+    proof -
+      have "top1_pair_code (eI i, eC i x) = top1_pair_code (eI j, eC j y)"
+        using hEq unfolding h_def hpix hqjy by simp
+      thus ?thesis
+        using top1_pair_code_inj unfolding inj_on_def by blast
+    qed
+    have heIeq: "eI i = eI j"
+      using hpair by simp
+    have heCeq: "eC i x = eC j y"
+      using hpair by simp
+
+    have hij: "i = j"
+      using heI hiI hjI heIeq unfolding inj_on_def by blast
+    have hxy: "x = y"
+      using heC hiI hx hy hij heCeq unfolding inj_on_def by blast
+
+    show "p = q"
+      unfolding hpix hqjy using hij hxy by simp
+  qed
+
+  show ?thesis
+    unfolding top1_countable_def
+    by (rule exI[where x=h], rule hinj)
+qed
+
+(** Injective encoding of lists of naturals, derived from \<open>top1_pair_code\<close>. **)
+fun top1_list_code :: "nat list \<Rightarrow> nat" where
+  "top1_list_code [] = 0"
+| "top1_list_code (x # xs) = Suc (top1_pair_code (x, top1_list_code xs))"
+
+lemma top1_list_code_inj: "inj_on top1_list_code (UNIV::nat list set)"
+  unfolding inj_on_def
+  proof (intro ballI impI)
+    fix xs ys :: "nat list"
+  assume hxs: "xs \<in> (UNIV::nat list set)" and hys: "ys \<in> (UNIV::nat list set)"
+  assume hEq: "top1_list_code xs = top1_list_code ys"
+  show "xs = ys"
+    using hEq
+  proof (induction xs arbitrary: ys)
+    case Nil
+    show ?case
+    proof (cases ys)
+      case Nil
+      show ?thesis
+        using Nil by simp
+    next
+      case (Cons y ys')
+      show ?thesis
+        using Nil Cons by simp
+    qed
+  next
+    case (Cons x xs)
+    show ?case
+    proof (cases ys)
+      case Nil
+      show ?thesis
+        using Cons.prems Nil by simp
+    next
+      case (Cons y ys')
+      have hSuc: "top1_pair_code (x, top1_list_code xs) = top1_pair_code (y, top1_list_code ys')"
+        using Cons.prems unfolding Cons by simp
+      have hp: "(x, top1_list_code xs) = (y, top1_list_code ys')"
+        using top1_pair_code_inj hSuc unfolding inj_on_def by blast
+      have hxy: "x = y"
+        using hp by simp
+      have ht: "top1_list_code xs = top1_list_code ys'"
+        using hp by simp
+      have htail: "xs = ys'"
+        by (rule Cons.IH[OF ht])
+      show ?thesis
+        unfolding Cons using hxy htail by simp
+    qed
+  qed
+qed
+
+lemma top1_countable_lists:
+  assumes hS: "top1_countable S"
+  shows "top1_countable (lists S)"
+proof -
+  obtain f :: "'a \<Rightarrow> nat" where hf: "inj_on f S"
+    using hS unfolding top1_countable_def by blast
+
+  define enc where "enc xs = top1_list_code (map f xs)" for xs :: "'a list"
+
+  have hmap: "inj_on (map f) (lists S)"
+    by (rule inj_on_map_lists[OF hf])
+  have henc_nat: "inj_on top1_list_code (UNIV::nat list set)"
+    by (rule top1_list_code_inj)
+
+  have henc: "inj_on enc (lists S)"
+    unfolding inj_on_def
+  proof (intro ballI impI)
+    fix xs ys :: "'a list"
+    assume hxs: "xs \<in> lists S" and hys: "ys \<in> lists S"
+    assume hEq: "enc xs = enc ys"
+    have "top1_list_code (map f xs) = top1_list_code (map f ys)"
+      using hEq unfolding enc_def by simp
+    hence "map f xs = map f ys"
+      using henc_nat unfolding inj_on_def by blast
+    hence "xs = ys"
+      using hmap hxs hys unfolding inj_on_def by blast
+    thus "xs = ys" .
+  qed
+
+  show ?thesis
+    unfolding top1_countable_def
+    by (rule exI[where x=enc], rule henc)
+qed
+
 (** from \S30 Definition (Countable neighborhood basis at a point) [top1.tex:~3903] **)
 definition top1_countable_neighborhood_basis_at ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> bool" where
@@ -24532,14 +24978,943 @@ theorem Theorem_30_2_first_countable_product:
   assumes hIcnt: "top1_countable I"
   assumes hfac: "\<forall>i\<in>I. top1_first_countable_on (X i) (T i)"
   shows "top1_first_countable_on (top1_PiE I X) (top1_product_topology_on I X T)"
-  sorry
+proof -
+  let ?Y = "top1_PiE I X"
+  let ?B = "top1_product_basis_on I X T"
+  let ?TP = "top1_product_topology_on I X T"
+
+  show ?thesis
+    unfolding top1_first_countable_on_def top1_countable_neighborhood_basis_at_def neighborhood_of_def
+  proof (intro ballI)
+    fix x
+    assume hxY: "x \<in> ?Y"
+    have hxX: "\<forall>i\<in>I. x i \<in> X i"
+      using hxY unfolding top1_PiE_iff by blast
+
+    show "\<exists>B0. top1_countable B0
+         \<and> (\<forall>U\<in>B0. U \<in> ?TP \<and> x \<in> U)
+         \<and> (\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>B0. U \<subseteq> V))"
+    proof (cases "\<exists>b\<in>?B. x \<in> b")
+      case False
+
+      have hnone: "\<forall>V. \<not> (V \<in> ?TP \<and> x \<in> V)"
+      proof (intro allI notI)
+        fix V
+        assume hV: "V \<in> ?TP \<and> x \<in> V"
+        have hVgen: "V \<in> topology_generated_by_basis ?Y ?B"
+          using hV unfolding top1_product_topology_on_def by simp
+        obtain b where hb: "b \<in> ?B" and hxb: "x \<in> b" and hbV: "b \<subseteq> V"
+          using hVgen hV unfolding topology_generated_by_basis_def by blast
+        show False
+          using False hb hxb by blast
+      qed
+
+      show ?thesis
+        apply (rule exI[where x="{}"])
+        apply (intro conjI)
+         apply (simp add: top1_countable_def)
+        apply simp
+        apply (intro allI impI)
+        using hnone
+        apply blast
+        done
+    next
+      case True
+      obtain b0 where hb0: "b0 \<in> ?B" and hxb0: "x \<in> b0"
+        using True by blast
+      obtain A0 where hb0def: "b0 = top1_PiE I A0"
+        and hA0: "(\<forall>i\<in>I. A0 i \<in> T i \<and> A0 i \<subseteq> X i) \<and> finite {i \<in> I. A0 i \<noteq> X i}"
+        using hb0 unfolding top1_product_basis_on_def by blast
+      have hA0_fin: "finite {i \<in> I. A0 i \<noteq> X i}"
+        using hA0 by blast
+      have hxA0: "\<forall>i\<in>I. x i \<in> A0 i"
+        using hxb0 unfolding hb0def top1_PiE_iff by blast
+
+      have hexB:
+        "\<forall>i\<in>I. \<exists>Bi. top1_countable Bi
+              \<and> (\<forall>U\<in>Bi. neighborhood_of (x i) (X i) (T i) U)
+              \<and> (\<forall>V. neighborhood_of (x i) (X i) (T i) V \<longrightarrow> (\<exists>U\<in>Bi. U \<subseteq> V))"
+      proof (intro ballI)
+        fix i
+        assume hiI: "i \<in> I"
+        have h1st: "top1_first_countable_on (X i) (T i)"
+          using hfac hiI by blast
+        have hB: "top1_countable_neighborhood_basis_at (X i) (T i) (x i)"
+          using h1st hxX hiI unfolding top1_first_countable_on_def by blast
+        show "\<exists>Bi. top1_countable Bi
+              \<and> (\<forall>U\<in>Bi. neighborhood_of (x i) (X i) (T i) U)
+              \<and> (\<forall>V. neighborhood_of (x i) (X i) (T i) V \<longrightarrow> (\<exists>U\<in>Bi. U \<subseteq> V))"
+          using hB unfolding top1_countable_neighborhood_basis_at_def by blast
+      qed
+      obtain B0 where hB0:
+        "\<forall>i\<in>I. top1_countable (B0 i)
+            \<and> (\<forall>U\<in>B0 i. neighborhood_of (x i) (X i) (T i) U)
+            \<and> (\<forall>V. neighborhood_of (x i) (X i) (T i) V \<longrightarrow> (\<exists>U\<in>B0 i. U \<subseteq> V))"
+        using bchoice[OF hexB] by blast
+
+      define C where "C i = {U \<in> B0 i. U \<subseteq> X i}" for i
+
+      have hCcnt: "\<forall>i\<in>I. top1_countable (C i)"
+      proof (intro ballI)
+        fix i
+        assume hiI: "i \<in> I"
+        have hB0cnt: "top1_countable (B0 i)"
+          using hB0 hiI by blast
+        have hCsub: "C i \<subseteq> B0 i"
+          unfolding C_def by blast
+        show "top1_countable (C i)"
+          by (rule top1_countable_subset[OF hB0cnt hCsub])
+      qed
+
+      have hSigma_cnt: "top1_countable (SIGMA i:I. C i)"
+        by (rule top1_countable_SIGMA[OF hIcnt]) (use hCcnt in blast)
+      have hLists_cnt: "top1_countable (lists (SIGMA i:I. C i))"
+        by (rule top1_countable_lists[OF hSigma_cnt])
+
+	      define mkF where "mkF l = foldr (\<lambda>p f. f (fst p := snd p)) l A0" for l
+      define mkU where "mkU l = top1_PiE I (mkF l)" for l
+      define BB where "BB = mkU ` lists (SIGMA i:I. C i)"
+
+      have hBBcnt: "top1_countable BB"
+        unfolding BB_def
+        by (rule top1_countable_image[OF hLists_cnt])
+
+      have hmkF_props:
+        "\<forall>l\<in>lists (SIGMA i:I. C i).
+            (\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i)
+            \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
+      proof (intro ballI)
+        fix l
+        assume hl: "l \<in> lists (SIGMA i:I. C i)"
+
+        have hP0: "\<forall>i\<in>I. A0 i \<in> T i \<and> A0 i \<subseteq> X i \<and> x i \<in> A0 i"
+        proof (intro ballI)
+          fix i
+          assume hiI: "i \<in> I"
+          have "A0 i \<in> T i" and "A0 i \<subseteq> X i"
+            using hA0 hiI by blast+
+          moreover have "x i \<in> A0 i"
+            using hxA0 hiI by blast
+          ultimately show "A0 i \<in> T i \<and> A0 i \<subseteq> X i \<and> x i \<in> A0 i"
+            by blast
+        qed
+
+        have hP: "\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+          using hl
+        proof (induct l)
+          case Nil
+          show ?case
+            unfolding mkF_def using hP0 by simp
+	        next
+						          case (Cons p ps)
+						          have hpSigma: "p \<in> (SIGMA i:I. C i)"
+						            by fact
+						          have hps: "ps \<in> lists (SIGMA i:I. C i)"
+						            by fact
+						          obtain j U where hp: "p = (j, U)"
+						            by (cases p) simp
+						          have hjI: "j \<in> I" and hU: "U \<in> C j"
+						            using hpSigma unfolding hp by blast+
+
+          have hU_T: "U \<in> T j" and hU_subX: "U \<subseteq> X j" and hxjU: "x j \<in> U"
+          proof -
+            have hUC: "U \<in> B0 j" and hUsub: "U \<subseteq> X j"
+              using hU unfolding C_def by blast+
+            have hnb: "neighborhood_of (x j) (X j) (T j) U"
+              using hB0 hjI hUC by blast
+            have hUopen: "U \<in> T j"
+              using hnb unfolding neighborhood_of_def by blast
+            have hxU: "x j \<in> U"
+              using hnb unfolding neighborhood_of_def by blast
+            show "U \<in> T j" and "U \<subseteq> X j" and "x j \<in> U"
+              using hUopen hUsub hxU by blast+
+          qed
+
+	          have hIH: "\<forall>i\<in>I. mkF ps i \<in> T i \<and> mkF ps i \<subseteq> X i \<and> x i \<in> mkF ps i"
+	            by fact
+
+	          show ?case
+	          proof (intro ballI)
+	            fix i
+	            assume hiI: "i \<in> I"
+	            show "mkF (p # ps) i \<in> T i \<and> mkF (p # ps) i \<subseteq> X i \<and> x i \<in> mkF (p # ps) i"
+	            proof (cases "i = j")
+	              case True
+	              show ?thesis
+	                using hU_T hU_subX hxjU
+	                by (simp add: mkF_def hp True)
+	            next
+	              case False
+	              have "mkF ps i \<in> T i \<and> mkF ps i \<subseteq> X i \<and> x i \<in> mkF ps i"
+	                using hIH hiI by blast
+	              thus ?thesis
+	                by (simp add: mkF_def hp False)
+	            qed
+	          qed
+	        qed
+
+        have hSub:
+          "{i \<in> I. mkF l i \<noteq> X i} \<subseteq> {i \<in> I. A0 i \<noteq> X i} \<union> set (map fst l)"
+        proof (rule subsetI)
+          fix i
+          assume hi: "i \<in> {i \<in> I. mkF l i \<noteq> X i}"
+          have hiI: "i \<in> I" and hneq: "mkF l i \<noteq> X i"
+            using hi by blast+
+          show "i \<in> {i \<in> I. A0 i \<noteq> X i} \<union> set (map fst l)"
+          proof (cases "i \<in> set (map fst l)")
+            case True
+            show ?thesis
+              using True by blast
+          next
+            case False
+            have hEq: "mkF l i = A0 i"
+              using False
+              by (induct l) (simp_all add: mkF_def)
+            have "A0 i \<noteq> X i"
+              using hneq unfolding hEq by blast
+            thus ?thesis
+              using hiI by blast
+          qed
+        qed
+
+        have hFin1: "finite (set (map fst l))"
+          by simp
+        have hFin2: "finite ({i \<in> I. A0 i \<noteq> X i} \<union> set (map fst l))"
+          by (rule finite_UnI[OF hA0_fin hFin1])
+        have hFin3: "finite {i \<in> I. mkF l i \<noteq> X i}"
+          by (rule finite_subset[OF hSub hFin2])
+
+        show "(\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i) \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
+          using hP hFin3 by blast
+      qed
+
+      have hBBnb: "\<forall>U\<in>BB. U \<in> ?TP \<and> x \<in> U"
+      proof (intro ballI)
+        fix U
+        assume hU: "U \<in> BB"
+	        obtain l where hl: "l \<in> lists (SIGMA i:I. C i)" and hUeq: "U = mkU l"
+	          using hU unfolding BB_def by blast
+	        have hProps:
+	          "(\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i) \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
+	          using hmkF_props hl by blast
+	
+	        have hAll: "\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+	          using hProps by (rule conjunct1)
+	        have hFin: "finite {i \<in> I. mkF l i \<noteq> X i}"
+	          using hProps by (rule conjunct2)
+
+	        have hAll2: "\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i"
+	        proof (intro ballI)
+	          fix i
+	          assume hiI: "i \<in> I"
+	          have hix: "mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+	            by (rule bspec[OF hAll hiI])
+	          have hTi: "mkF l i \<in> T i"
+	            by (rule conjunct1[OF hix])
+	          have hSubXi: "mkF l i \<subseteq> X i"
+	            by (rule conjunct1[OF conjunct2[OF hix]])
+	          show "mkF l i \<in> T i \<and> mkF l i \<subseteq> X i"
+	            by (intro conjI) (rule hTi, rule hSubXi)
+	        qed
+
+		        have hBasis: "mkU l \<in> ?B"
+		          unfolding top1_product_basis_on_def
+		        proof (rule CollectI)
+		          show "\<exists>U. mkU l = top1_PiE I U \<and> (\<forall>i\<in>I. U i \<in> T i \<and> U i \<subseteq> X i) \<and> finite {i \<in> I. U i \<noteq> X i}"
+		          proof (rule exI[where x="mkF l"])
+		            show "mkU l = top1_PiE I (mkF l) \<and> (\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i) \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
+		              using hAll2 hFin by (simp add: mkU_def)
+		          qed
+		        qed
+	
+	        have hSubY: "mkU l \<subseteq> ?Y"
+	        proof -
+	          have hsub: "\<forall>i\<in>I. mkF l i \<subseteq> X i"
+	          proof (intro ballI)
+	            fix i
+	            assume hiI: "i \<in> I"
+	            have hix: "mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+	              by (rule bspec[OF hAll hiI])
+	            show "mkF l i \<subseteq> X i"
+	              by (rule conjunct1[OF conjunct2[OF hix]])
+	          qed
+	          show ?thesis
+	            unfolding mkU_def
+	            by (rule top1_PiE_mono[OF hsub])
+	        qed
+	
+	        have hOpen: "mkU l \<in> ?TP"
+	          unfolding top1_product_topology_on_def topology_generated_by_basis_def
+	        proof (rule CollectI)
+	          show "mkU l \<subseteq> ?Y \<and> (\<forall>y\<in>mkU l. \<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> mkU l)"
+	          proof (intro conjI)
+	            show "mkU l \<subseteq> ?Y"
+	              by (rule hSubY)
+	            show "\<forall>y\<in>mkU l. \<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> mkU l"
+	            proof (intro ballI)
+	              fix y
+	              assume hy: "y \<in> mkU l"
+	              show "\<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> mkU l"
+	              proof (rule bexI[where x="mkU l"])
+	                show "y \<in> mkU l \<and> mkU l \<subseteq> mkU l"
+	                  using hy by blast
+	                show "mkU l \<in> ?B"
+	                  by (rule hBasis)
+	              qed
+	            qed
+	          qed
+	        qed
+
+        have hxU': "x \<in> mkU l"
+        proof -
+          have hx_mkF: "\<forall>i\<in>I. x i \<in> mkF l i"
+          proof (intro ballI)
+            fix i
+            assume hiI: "i \<in> I"
+            have "mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i"
+              using hProps hiI by blast
+            thus "x i \<in> mkF l i"
+              by blast
+          qed
+          have hxundef: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+            using hxY unfolding top1_PiE_iff by blast
+          show ?thesis
+            unfolding mkU_def top1_PiE_iff
+            apply (intro conjI)
+             apply (rule hx_mkF)
+            apply (rule hxundef)
+            done
+        qed
+
+        show "U \<in> ?TP \<and> x \<in> U"
+          unfolding hUeq using hOpen hxU' by blast
+      qed
+
+      have hBBref: "\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>BB. U \<subseteq> V)"
+      proof (intro allI impI)
+        fix V
+        assume hV: "V \<in> ?TP \<and> x \<in> V"
+        have hVgen: "V \<in> topology_generated_by_basis ?Y ?B"
+          using hV unfolding top1_product_topology_on_def by simp
+        obtain b1 where hb1: "b1 \<in> ?B" and hxb1: "x \<in> b1" and hb1V: "b1 \<subseteq> V"
+          using hVgen hV unfolding topology_generated_by_basis_def by blast
+        obtain U1 where hb1def: "b1 = top1_PiE I U1"
+          and hU1: "(\<forall>i\<in>I. U1 i \<in> T i \<and> U1 i \<subseteq> X i) \<and> finite {i \<in> I. U1 i \<noteq> X i}"
+          using hb1 unfolding top1_product_basis_on_def by blast
+        define J where "J = {i \<in> I. U1 i \<noteq> X i}"
+        have hJfin: "finite J"
+          unfolding J_def using hU1 by blast
+
+        have hexSel: "\<forall>i\<in>J. \<exists>U. U \<in> C i \<and> U \<subseteq> U1 i"
+        proof (intro ballI)
+          fix i
+          assume hiJ: "i \<in> J"
+          have hiI: "i \<in> I"
+            using hiJ unfolding J_def by blast
+          have hU1nb: "neighborhood_of (x i) (X i) (T i) (U1 i)"
+          proof -
+            have hU1open: "U1 i \<in> T i" and hU1sub: "U1 i \<subseteq> X i"
+              using hU1 hiI by blast+
+            have hxiU1: "x i \<in> U1 i"
+              using hxb1 unfolding hb1def top1_PiE_iff using hiI by blast
+            show ?thesis
+              unfolding neighborhood_of_def using hU1open hxiU1 by blast
+          qed
+          have hBref: "\<forall>V'. neighborhood_of (x i) (X i) (T i) V' \<longrightarrow> (\<exists>U\<in>B0 i. U \<subseteq> V')"
+            using hB0 hiI by blast
+          obtain U where hUB0: "U \<in> B0 i" and hUsub: "U \<subseteq> U1 i"
+            using hBref hU1nb by blast
+          have hUsubX: "U \<subseteq> X i"
+            using hU1 hiJ hUsub unfolding J_def by blast
+          have hUC: "U \<in> C i"
+            unfolding C_def using hUB0 hUsubX by blast
+          show "\<exists>U. U \<in> C i \<and> U \<subseteq> U1 i"
+            by (rule exI[where x=U]) (use hUC hUsub in blast)
+        qed
+        obtain sel where hsel: "\<forall>i\<in>J. sel i \<in> C i \<and> sel i \<subseteq> U1 i"
+          using bchoice[OF hexSel] by blast
+
+        define S where "S = (\<lambda>i. (i, sel i)) ` J"
+        have hSfin: "finite S"
+          unfolding S_def by (rule finite_imageI[OF hJfin])
+        have hSsub: "S \<subseteq> (SIGMA i:I. C i)"
+        proof (rule subsetI)
+          fix p
+          assume hp: "p \<in> S"
+          obtain i where hiJ: "i \<in> J" and hpdef: "p = (i, sel i)"
+            using hp unfolding S_def by blast
+          have hiI: "i \<in> I"
+            using hiJ unfolding J_def by blast
+          have "sel i \<in> C i"
+            using hsel hiJ by blast
+          show "p \<in> (SIGMA i:I. C i)"
+            unfolding hpdef using hiI \<open>sel i \<in> C i\<close> by blast
+        qed
+        obtain l where hl: "set l = S" and hdist: "distinct l"
+          using finite_distinct_list[OF hSfin] by blast
+        have hlists: "l \<in> lists (SIGMA i:I. C i)"
+          using hl hSsub by (simp add: lists_eq_set)
+
+	      have hsubU1: "\<forall>i\<in>I. mkF l i \<subseteq> U1 i"
+	        proof (intro ballI)
+	          fix i
+	          assume hiI: "i \<in> I"
+	          show "mkF l i \<subseteq> U1 i"
+	          proof (cases "i \<in> J")
+	            case True
+	            have hpair: "(i, sel i) \<in> set l"
+	              using True hl unfolding S_def by blast
+	            have hsnd_sel_if_fst: "\<forall>p\<in>set l. fst p = i \<longrightarrow> snd p = sel i"
+	            proof (intro ballI impI)
+	              fix p
+	              assume hp: "p \<in> set l"
+	              assume hfst: "fst p = i"
+	              have hpS: "p \<in> S"
+	                using hp hl by simp
+	              obtain k where hkJ: "k \<in> J" and hpdef: "p = (k, sel k)"
+	                using hpS unfolding S_def by blast
+	              have "k = i"
+	                using hfst unfolding hpdef by simp
+	              hence "sel k = sel i"
+	                by simp
+	              show "snd p = sel i"
+	                unfolding hpdef using \<open>sel k = sel i\<close> by simp
+	            qed
+
+	            have hmkF: "mkF l i = sel i"
+	              using hpair hsnd_sel_if_fst
+	            proof (induct l)
+	              case Nil
+	              have False
+	                using Nil.prems(1) by simp
+	              thus ?case
+	                by (rule FalseE)
+	            next
+	              case (Cons p ps)
+	              obtain j U where hp: "p = (j, U)"
+	                by (cases p) simp
+	              show ?case
+	              proof (cases "j = i")
+	                case True
+	                have "U = sel i"
+	                proof -
+	                  have "fst p = i"
+	                    unfolding hp using True by simp
+	                  hence "snd p = sel i"
+	                    using Cons.prems(2) by simp
+	                  thus ?thesis
+	                    unfolding hp by simp
+	                qed
+	                show ?thesis
+	                  unfolding mkF_def hp True \<open>U = sel i\<close> by simp
+		              next
+		                case False
+		                have htail: "(i, sel i) \<in> set ps"
+		                  using Cons.prems(1) False hp by auto
+		                have hsnd_tail: "\<forall>p\<in>set ps. fst p = i \<longrightarrow> snd p = sel i"
+		                  using Cons.prems(2) by simp
+		                have "mkF ps i = sel i"
+		                  by (rule Cons.hyps[OF htail hsnd_tail])
+		                have hij: "i \<noteq> j"
+		                  using False by auto
+		                have "mkF (p # ps) i = mkF ps i"
+		                  unfolding mkF_def hp using hij by simp
+		                also have "\<dots> = sel i"
+		                  using \<open>mkF ps i = sel i\<close> .
+		                finally show ?thesis .
+		              qed
+		            qed
+	            moreover have "sel i \<subseteq> U1 i"
+	              using hsel True by blast
+	            ultimately show ?thesis
+	              by simp
+          next
+            case False
+            have "U1 i = X i"
+              using False hiI unfolding J_def by blast
+            moreover have hProps:
+              "(\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i \<and> x i \<in> mkF l i) \<and> finite {i \<in> I. mkF l i \<noteq> X i}"
+              using hmkF_props hlists by blast
+            ultimately show ?thesis
+              using hProps hiI by blast
+          qed
+        qed
+
+        have hMk_sub_b1: "mkU l \<subseteq> b1"
+          unfolding hb1def mkU_def by (rule top1_PiE_mono[OF hsubU1])
+        have hMk_in_BB: "mkU l \<in> BB"
+          unfolding BB_def using hlists by blast
+
+        show "\<exists>U\<in>BB. U \<subseteq> V"
+          apply (rule bexI[where x="mkU l"])
+           apply (rule subset_trans[OF hMk_sub_b1])
+           apply (rule subset_trans[OF hb1V])
+           apply (rule subset_refl)
+          apply (rule hMk_in_BB)
+          done
+      qed
+
+      show ?thesis
+        by (rule exI[where x=BB]) (use hBBcnt hBBnb hBBref in blast)
+    qed
+  qed
+qed
 
 (** from \S30 Theorem 30.2 (Countable products of second-countable spaces) [top1.tex:~3990] **)
 theorem Theorem_30_2_second_countable_product:
   assumes hIcnt: "top1_countable I"
   assumes hfac: "\<forall>i\<in>I. top1_second_countable_on (X i) (T i)"
   shows "top1_second_countable_on (top1_PiE I X) (top1_product_topology_on I X T)"
-  sorry
+proof -
+  let ?Y = "top1_PiE I X"
+  let ?TP = "top1_product_topology_on I X T"
+
+  have hexB: "\<forall>i\<in>I. \<exists>Bi. top1_countable Bi \<and> basis_for (X i) Bi (T i)"
+    using hfac unfolding top1_second_countable_on_def by blast
+  obtain B0 where hB0: "\<forall>i\<in>I. top1_countable (B0 i) \<and> basis_for (X i) (B0 i) (T i)"
+    using bchoice[OF hexB] by blast
+
+  define Sigma where "Sigma = (SIGMA i:I. B0 i)"
+
+  have hSigma_cnt: "top1_countable Sigma"
+  proof -
+    have hB0cnt: "\<forall>i\<in>I. top1_countable (B0 i)"
+      using hB0 by blast
+    show ?thesis
+      unfolding Sigma_def
+      by (rule top1_countable_SIGMA[OF hIcnt]) (use hB0cnt in blast)
+  qed
+
+  have hTopI: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+    using hB0 by (metis basis_for_is_topology_on)
+  have hXiTi: "\<forall>i\<in>I. X i \<in> T i"
+    using hTopI unfolding is_topology_on_def by blast
+
+  define mkF where "mkF l = foldr (\<lambda>p f. f (fst p := snd p)) l X" for l
+  define mkU where "mkU l = top1_PiE I (mkF l)" for l
+  define Cc where "Cc = mkU ` lists Sigma"
+
+  have hCc_cnt: "top1_countable Cc"
+  proof -
+    have hLists_cnt: "top1_countable (lists Sigma)"
+      by (rule top1_countable_lists[OF hSigma_cnt])
+    show ?thesis
+      unfolding Cc_def
+      by (rule top1_countable_image[OF hLists_cnt])
+  qed
+
+  have hCc_sub_TP: "Cc \<subseteq> ?TP"
+  proof (rule subsetI)
+    fix U
+    assume hU: "U \<in> Cc"
+    obtain l where hl: "l \<in> lists Sigma" and hUeq: "U = mkU l"
+      using hU unfolding Cc_def by blast
+
+    have hProps: "\<forall>i\<in>I. mkF l i \<in> T i \<and> mkF l i \<subseteq> X i"
+      using hl
+    proof (induct l)
+      case Nil
+      show ?case
+        unfolding mkF_def using hXiTi by simp
+	    next
+			      case (Cons p ps)
+			      have hpSigma: "p \<in> Sigma"
+			        by fact
+			      have hps: "ps \<in> lists Sigma"
+			        by fact
+			      obtain j V where hp: "p = (j, V)"
+			        by (cases p) simp
+		      have hjI: "j \<in> I" and hV: "V \<in> B0 j"
+		        using hpSigma unfolding Sigma_def hp by blast+
+      have hBasis: "basis_for (X j) (B0 j) (T j)"
+        using hB0 hjI by blast
+      have hVsub: "V \<subseteq> X j"
+        using hBasis hV unfolding basis_for_def is_basis_on_def by blast
+      have hVopen: "V \<in> T j"
+        by (rule basis_elem_open_if_basis_for[OF hBasis hV])
+		      have hIH: "\<forall>i\<in>I. mkF ps i \<in> T i \<and> mkF ps i \<subseteq> X i"
+		        by fact
+		      show ?case
+		      proof (intro ballI)
+		        fix i
+		        assume hiI: "i \<in> I"
+		        show "mkF (p # ps) i \<in> T i \<and> mkF (p # ps) i \<subseteq> X i"
+		        proof (cases "i = j")
+		          case True
+		          show ?thesis
+		            using hVopen hVsub
+		            by (simp add: mkF_def hp True)
+		        next
+		          case False
+		          show ?thesis
+		            using hIH hiI
+		            by (simp add: mkF_def hp False)
+		        qed
+		      qed
+	    qed
+
+	    have hSubY: "mkU l \<subseteq> ?Y"
+	    proof -
+	      have hsub: "\<forall>i\<in>I. mkF l i \<subseteq> X i"
+	        using hProps by blast
+	      show ?thesis
+	        unfolding mkU_def
+	        by (rule top1_PiE_mono[OF hsub])
+	    qed
+
+	    have hFin_mkF: "finite {i \<in> I. mkF l i \<noteq> X i}"
+	    proof -
+	      have hEq: "\<And>i. i \<notin> set (map fst l) \<Longrightarrow> mkF l i = X i"
+	      proof (induct l)
+	        case Nil
+	        show ?case
+	          by (simp add: mkF_def)
+	      next
+	        case (Cons p ps)
+	        fix i
+	        assume hnot: "i \<notin> set (map fst (p # ps))"
+	        obtain j V where hp: "p = (j, V)"
+	          by (cases p) simp
+	        have hij: "i \<noteq> j" and hnotps: "i \<notin> set (map fst ps)"
+	          using hnot unfolding hp by simp_all
+
+		        have "mkF (p # ps) i = mkF ps i"
+		          unfolding mkF_def hp using hij by simp
+		        also have "\<dots> = X i"
+		          using Cons.hyps[OF hnotps] .
+		        finally show "mkF (p # ps) i = X i" .
+		      qed
+
+	      have hSub: "{i \<in> I. mkF l i \<noteq> X i} \<subseteq> set (map fst l)"
+	      proof (rule subsetI)
+	        fix i
+	        assume hi: "i \<in> {i \<in> I. mkF l i \<noteq> X i}"
+	        have hneq: "mkF l i \<noteq> X i"
+	          using hi by blast
+	        show "i \<in> set (map fst l)"
+	        proof (rule ccontr)
+	          assume hnot: "i \<notin> set (map fst l)"
+	          have "mkF l i = X i"
+	            using hEq[OF hnot] .
+	          with hneq show False
+	            by contradiction
+	        qed
+	      qed
+
+	      have hFin: "finite (set (map fst l))"
+	        by simp
+	      show ?thesis
+	        by (rule finite_subset[OF hSub hFin])
+	    qed
+	
+		    have hBasisU: "mkU l \<in> top1_product_basis_on I X T"
+		      unfolding top1_product_basis_on_def
+		      apply (rule CollectI)
+		      apply (rule exI[where x="mkF l"])
+		      apply (rule conjI)
+		       apply (simp add: mkU_def)
+		      apply (rule conjI)
+		       apply (rule hProps)
+		      apply (rule hFin_mkF)
+		      done
+
+	    have hOpen: "mkU l \<in> ?TP"
+	      unfolding top1_product_topology_on_def topology_generated_by_basis_def
+	    proof (rule CollectI)
+	      show "mkU l \<subseteq> ?Y \<and> (\<forall>y\<in>mkU l. \<exists>b\<in>top1_product_basis_on I X T. y \<in> b \<and> b \<subseteq> mkU l)"
+	      proof (intro conjI)
+	        show "mkU l \<subseteq> ?Y"
+	          by (rule hSubY)
+	        show "\<forall>y\<in>mkU l. \<exists>b\<in>top1_product_basis_on I X T. y \<in> b \<and> b \<subseteq> mkU l"
+	        proof (intro ballI)
+	          fix y
+	          assume hy: "y \<in> mkU l"
+	          show "\<exists>b\<in>top1_product_basis_on I X T. y \<in> b \<and> b \<subseteq> mkU l"
+	          proof (rule bexI[where x="mkU l"])
+	            show "y \<in> mkU l \<and> mkU l \<subseteq> mkU l"
+	              using hy by blast
+	            show "mkU l \<in> top1_product_basis_on I X T"
+	              by (rule hBasisU)
+	          qed
+	        qed
+	      qed
+	    qed
+
+    show "U \<in> ?TP"
+      unfolding hUeq using hOpen .
+  qed
+
+  have hTXsub: "\<forall>U\<in>?TP. U \<subseteq> ?Y"
+    unfolding top1_product_topology_on_def topology_generated_by_basis_def by blast
+
+  have hrefine:
+    "\<And>U x. U \<in> ?TP \<Longrightarrow> x \<in> U \<Longrightarrow> \<exists>C\<in>Cc. C \<in> ?TP \<and> x \<in> C \<and> C \<subseteq> U"
+  proof -
+    fix U x
+    assume hU: "U \<in> ?TP"
+    assume hxU: "x \<in> U"
+    have hUgen: "U \<in> topology_generated_by_basis ?Y (top1_product_basis_on I X T)"
+      using hU unfolding top1_product_topology_on_def by simp
+    obtain b where hb: "b \<in> top1_product_basis_on I X T" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+      using hUgen hxU unfolding topology_generated_by_basis_def by blast
+    obtain W where hbdef: "b = top1_PiE I W"
+      and hW: "(\<forall>i\<in>I. W i \<in> T i \<and> W i \<subseteq> X i) \<and> finite {i \<in> I. W i \<noteq> X i}"
+      using hb unfolding top1_product_basis_on_def by blast
+    define J where "J = {i \<in> I. W i \<noteq> X i}"
+    have hJfin: "finite J"
+      unfolding J_def using hW by blast
+    have hxW: "\<forall>i\<in>J. x i \<in> W i"
+      using hxb unfolding hbdef J_def top1_PiE_iff by blast
+
+	    have hexSel: "\<forall>i\<in>J. \<exists>V\<in>B0 i. x i \<in> V \<and> V \<subseteq> W i"
+	    proof (intro ballI)
+      fix i
+      assume hiJ: "i \<in> J"
+      have hiI: "i \<in> I"
+        using hiJ unfolding J_def by blast
+      have hBasis: "basis_for (X i) (B0 i) (T i)"
+        using hB0 hiI by blast
+      have hWi: "W i \<in> T i"
+        using hW hiI by blast
+      have hxiWi: "x i \<in> W i"
+        using hxW hiJ by blast
+      show "\<exists>V\<in>B0 i. x i \<in> V \<and> V \<subseteq> W i"
+        by (rule basis_for_refine[OF hBasis hWi hxiWi])
+	    qed
+	    have hexSel': "\<forall>i\<in>J. \<exists>V. V \<in> B0 i \<and> x i \<in> V \<and> V \<subseteq> W i"
+	      using hexSel by blast
+	    obtain sel where hsel: "\<forall>i\<in>J. sel i \<in> B0 i \<and> x i \<in> sel i \<and> sel i \<subseteq> W i"
+	      using bchoice[OF hexSel'] by blast
+
+    define S where "S = (\<lambda>i. (i, sel i)) ` J"
+    have hSfin: "finite S"
+      unfolding S_def by (rule finite_imageI[OF hJfin])
+    have hSsub: "S \<subseteq> Sigma"
+    proof
+      fix p
+      assume hp: "p \<in> S"
+      have hp': "p \<in> (\<lambda>i. (i, sel i)) ` J"
+        using hp unfolding S_def by simp
+      obtain i where hiJ: "i \<in> J" and hp'': "p = (\<lambda>i. (i, sel i)) i"
+        using hp' by (rule imageE)
+      have hp_pair: "p = (i, sel i)"
+        using hp'' by simp
+      have hiI: "i \<in> I"
+        using hiJ unfolding J_def by simp
+      have hseli_all: "sel i \<in> B0 i \<and> x i \<in> sel i \<and> sel i \<subseteq> W i"
+        by (rule bspec[OF hsel hiJ])
+      have hseli: "sel i \<in> B0 i"
+        by (rule conjunct1[OF hseli_all])
+      show "p \<in> Sigma"
+        unfolding hp_pair Sigma_def using hiI hseli by simp
+    qed
+    obtain l where hl: "set l = S"
+      using finite_list[OF hSfin] by blast
+    have hlists: "l \<in> lists Sigma"
+      using hl hSsub by (simp add: lists_eq_set)
+
+    have hC: "mkU l \<in> Cc"
+      unfolding Cc_def using hlists by blast
+
+    have hfst_in_J: "\<forall>p\<in>set l. fst p \<in> J"
+      using hl unfolding S_def by auto
+
+    have hpair_in_l: "\<forall>i\<in>J. (i, sel i) \<in> set l"
+      using hl unfolding S_def by auto
+
+		    have hsnd_sel_if_fst: "\<forall>i\<in>J. \<forall>p\<in>set l. fst p = i \<longrightarrow> snd p = sel i"
+		    proof (intro ballI ballI impI)
+		      fix i p
+		      assume hiJ: "i \<in> J"
+		      assume hp: "p \<in> set l"
+		      assume hfst: "fst p = i"
+		      have hpS: "p \<in> S"
+		        using hp hl by simp
+		      have hpImg: "p \<in> (\<lambda>i. (i, sel i)) ` J"
+		        using hpS unfolding S_def by simp
+		      from hpImg obtain j where hjJ: "j \<in> J" and hp': "p = (j, sel j)"
+		        by (elim imageE) simp
+		      have "j = i"
+		        using hfst unfolding hp' by simp
+		      thus "snd p = sel i"
+		        unfolding hp' by simp
+		    qed
+
+	    have mkF_eq_sel:
+	      "\<And>i. i \<in> J \<Longrightarrow> mkF l i = sel i"
+	    proof -
+	      fix i
+	      assume hiJ: "i \<in> J"
+	      have hpair: "(i, sel i) \<in> set l"
+	        by (rule bspec[OF hpair_in_l hiJ])
+	      have hsame: "\<forall>p\<in>set l. fst p = i \<longrightarrow> snd p = sel i"
+	        by (rule bspec[OF hsnd_sel_if_fst hiJ])
+	      show "mkF l i = sel i"
+	        using hpair hsame
+	      proof (induct l)
+	        case Nil
+	        have False
+	          using Nil.prems(1) by simp
+	        thus ?case
+	          by (rule FalseE)
+	      next
+	        case (Cons p ps)
+	        obtain j V where hp: "p = (j, V)"
+	          by (cases p) simp
+	        show ?case
+	        proof (cases "j = i")
+	          case True
+	          have hImp: "fst p = i \<longrightarrow> snd p = sel i"
+	            using Cons.prems(2) by simp
+	          have "fst p = i"
+	            unfolding hp using True by simp
+	          hence "snd p = sel i"
+	            using hImp by simp
+	          hence hV: "V = sel i"
+	            unfolding hp by simp
+	          show ?thesis
+	            unfolding mkF_def hp True hV by simp
+	        next
+	          case False
+	          have htail: "(i, sel i) \<in> set ps"
+	            using Cons.prems(1) False hp by auto
+	          have hsame_ps: "\<forall>p\<in>set ps. fst p = i \<longrightarrow> snd p = sel i"
+	            using Cons.prems(2) by simp
+	          have "mkF ps i = sel i"
+	            by (rule Cons.hyps(1)[OF htail hsame_ps])
+	          have hij: "i \<noteq> j"
+	            using False by auto
+	          from \<open>mkF ps i = sel i\<close> show ?thesis
+	            unfolding mkF_def hp using hij by simp
+	        qed
+	      qed
+	    qed
+
+    have mkF_eq_X:
+      "\<And>i. i \<in> I \<Longrightarrow> i \<notin> J \<Longrightarrow> mkF l i = X i"
+    proof -
+      fix i
+      assume hiI: "i \<in> I"
+      assume hnotJ: "i \<notin> J"
+      have hfst_ne: "\<forall>p\<in>set l. fst p \<noteq> i"
+        using hfst_in_J hnotJ by blast
+      show "mkF l i = X i"
+        using hfst_ne
+      proof (induct l)
+        case Nil
+        show ?case
+          by (simp add: mkF_def)
+      next
+	        case (Cons p ps)
+	        obtain j V where hp: "p = (j, V)"
+	          by (cases p) simp
+	        have hij: "i \<noteq> j"
+	          using Cons.prems hp by auto
+	        have hfst_ne_ps: "\<forall>p\<in>set ps. fst p \<noteq> i"
+	          using Cons.prems by simp
+	        have "mkF (p # ps) i = mkF ps i"
+	          unfolding mkF_def hp using hij by simp
+	        also have "\<dots> = X i"
+	          using Cons.hyps[OF hfst_ne_ps] .
+	        finally show ?case .
+	      qed
+	    qed
+
+    have hsubW': "\<forall>i\<in>I. mkF l i \<subseteq> W i"
+    proof (intro ballI)
+      fix i
+      assume hiI: "i \<in> I"
+      show "mkF l i \<subseteq> W i"
+      proof (cases "i \<in> J")
+        case True
+        have hpair: "(i, sel i) \<in> set l"
+          using True hl unfolding S_def by blast
+        have hmkF: "mkF l i = sel i"
+          by (rule mkF_eq_sel[OF True])
+        moreover have "sel i \<subseteq> W i"
+          using hsel True by blast
+        ultimately show ?thesis
+          by simp
+      next
+        case False
+        have hmkF: "mkF l i = X i"
+          by (rule mkF_eq_X[OF hiI False])
+        have hWi: "W i = X i"
+          using False hiI unfolding J_def by blast
+        show ?thesis
+          unfolding hWi using hmkF by simp
+      qed
+    qed
+
+    have hmk_sub: "mkU l \<subseteq> b"
+      unfolding hbdef mkU_def by (rule top1_PiE_mono[OF hsubW'])
+
+	    have hxC: "x \<in> mkU l"
+	    proof -
+	      have hxC': "\<forall>i\<in>I. x i \<in> mkF l i"
+      proof (intro ballI)
+        fix i
+        assume hiI: "i \<in> I"
+        show "x i \<in> mkF l i"
+        proof (cases "i \<in> J")
+          case True
+          have hpair: "(i, sel i) \<in> set l"
+            using True hl unfolding S_def by blast
+          have hmkF: "mkF l i = sel i"
+            by (rule mkF_eq_sel[OF True])
+          show ?thesis
+            using hsel True unfolding hmkF by blast
+        next
+	          case False
+	          have hmkF: "mkF l i = X i"
+	            by (rule mkF_eq_X[OF hiI False])
+	          have hWi: "W i = X i"
+	            using False hiI unfolding J_def by blast
+	          have hxiWi: "x i \<in> W i"
+	            using hxb unfolding hbdef top1_PiE_iff using hiI by simp
+	          have "x i \<in> X i"
+	            using hxiWi unfolding hWi by simp
+	          thus ?thesis
+	            unfolding hmkF by simp
+	        qed
+	      qed
+	      have hxY: "x \<in> ?Y"
+	        using hTXsub hU hxU by blast
+	      have hxundef: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
+	        using hxY unfolding top1_PiE_iff by blast
+	      show ?thesis
+	        unfolding mkU_def top1_PiE_iff using hxC' hxundef by blast
+	    qed
+
+	    show "\<exists>C\<in>Cc. C \<in> ?TP \<and> x \<in> C \<and> C \<subseteq> U"
+	    proof (rule bexI[where x="mkU l"])
+	      show "mkU l \<in> Cc"
+	        by (rule hC)
+	      show "mkU l \<in> ?TP \<and> x \<in> mkU l \<and> mkU l \<subseteq> U"
+	      proof (intro conjI)
+	        show "mkU l \<in> ?TP"
+	          by (rule subsetD[OF hCc_sub_TP hC])
+	        show "x \<in> mkU l"
+	          by (rule hxC)
+	        show "mkU l \<subseteq> U"
+	          by (rule subset_trans[OF hmk_sub hbU])
+	      qed
+	    qed
+	  qed
+
+  have hCc_basis_for: "basis_for ?Y Cc ?TP"
+  proof -
+    have hTP_top: "is_topology_on ?Y ?TP"
+      unfolding top1_product_topology_on_def
+      by (rule topology_generated_by_basis_is_topology_on[OF top1_product_basis_is_basis_on[OF hTopI]])
+    show ?thesis
+      by (rule Lemma_13_2[OF hTP_top hCc_sub_TP hTXsub hrefine])
+  qed
+
+  show ?thesis
+    unfolding top1_second_countable_on_def
+    by (rule exI[where x=Cc]) (use hCc_cnt hCc_basis_for in blast)
+qed
 
 (** from \S30 Theorem 30.1 (First countability and sequences) [top1.tex:3911] **)
 lemma seq_converges_to_on_in_set_imp_closure:
