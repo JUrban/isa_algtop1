@@ -6041,6 +6041,16 @@ definition top1_continuous_map_on ::
   "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
      (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX)"
 
+(** Helper: an injective continuous map into a Hausdorff space has Hausdorff domain. **)
+lemma hausdorff_on_of_inj_continuous_map:
+  fixes f :: "'a \<Rightarrow> 'b"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hHausZ: "is_hausdorff_on Z TZ"
+  assumes hcont: "top1_continuous_map_on X TX Z TZ f"
+  assumes hinj: "inj_on f X"
+  shows "is_hausdorff_on X TX"
+  sorry
+
 lemma top1_continuous_map_on_generated_by_basis:
   fixes f :: "'a \<Rightarrow> 'b"
   assumes hTopX: "is_topology_on X TX"
@@ -14790,14 +14800,247 @@ qed
 lemma top1_homeomorphism_on_imp_quotient_map_on:
   assumes hhomeo: "top1_homeomorphism_on X TX Y TY f"
   shows "top1_quotient_map_on X TX Y TY f"
-  sorry
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hbij: "bij_betw f X Y"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hfcont: "top1_continuous_map_on X TX Y TY f"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hinvcont: "top1_continuous_map_on Y TY X TX (inv_into X f)"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+
+  have hsurj: "f ` X = Y"
+    using hbij unfolding bij_betw_def by simp
+
+  have hQ: "\<forall>V. V \<subseteq> Y \<longrightarrow> ({x\<in>X. f x \<in> V} \<in> TX \<longrightarrow> V \<in> TY)"
+  proof (intro allI impI)
+    fix V assume hVsub: "V \<subseteq> Y"
+    assume hpre: "{x\<in>X. f x \<in> V} \<in> TX"
+
+    have hinv_pre: "\<forall>U\<in>TX. {y\<in>Y. inv_into X f y \<in> U} \<in> TY"
+      using hinvcont unfolding top1_continuous_map_on_def by blast
+    have hpreY: "{y\<in>Y. inv_into X f y \<in> {x\<in>X. f x \<in> V}} \<in> TY"
+      using hinv_pre hpre by blast
+
+    have hEq: "{y\<in>Y. inv_into X f y \<in> {x\<in>X. f x \<in> V}} = V"
+    proof (rule set_eqI)
+      fix y
+      show "y \<in> {y \<in> Y. inv_into X f y \<in> {x \<in> X. f x \<in> V}} \<longleftrightarrow> y \<in> V"
+      proof (rule iffI)
+        assume hy: "y \<in> {y \<in> Y. inv_into X f y \<in> {x \<in> X. f x \<in> V}}"
+        have hyY: "y \<in> Y" and hinv: "inv_into X f y \<in> {x \<in> X. f x \<in> V}"
+          using hy by simp_all
+        have hyIm: "y \<in> f ` X"
+          using hsurj hyY by simp
+        have hfy: "f (inv_into X f y) = y"
+          using f_inv_into_f[OF hyIm] by simp
+        have "f (inv_into X f y) \<in> V"
+          using hinv by simp
+        thus "y \<in> V"
+          using hfy by simp
+      next
+        assume hyV: "y \<in> V"
+        have hyY: "y \<in> Y"
+          using hVsub hyV by blast
+        have hyIm: "y \<in> f ` X"
+          using hsurj hyY by simp
+        have hinvX: "inv_into X f y \<in> X"
+          by (rule inv_into_into[OF hyIm])
+        have hfy: "f (inv_into X f y) = y"
+          using f_inv_into_f[OF hyIm] by simp
+        have "f (inv_into X f y) \<in> V"
+          using hyV hfy by simp
+        have "inv_into X f y \<in> {x\<in>X. f x \<in> V}"
+          using hinvX \<open>f (inv_into X f y) \<in> V\<close> by simp
+        thus "y \<in> {y\<in>Y. inv_into X f y \<in> {x\<in>X. f x \<in> V}}"
+          using hyY by simp
+      qed
+    qed
+
+    show "V \<in> TY"
+      using hpreY unfolding hEq by simp
+  qed
+
+  show ?thesis
+    unfolding top1_quotient_map_on_def
+    apply (intro conjI)
+        apply (rule hTopX)
+       apply (rule hTopY)
+      apply (rule hfcont)
+     apply (rule hsurj)
+    apply (rule hQ)
+    done
+qed
 
 (** A bijective quotient map is a homeomorphism. **)
 lemma top1_bij_quotient_map_on_imp_homeomorphism_on:
   assumes hquot: "top1_quotient_map_on X TX Y TY f"
   assumes hbij: "bij_betw f X Y"
   shows "top1_homeomorphism_on X TX Y TY f"
-  sorry
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hquot unfolding top1_quotient_map_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hquot unfolding top1_quotient_map_on_def by blast
+  have hfcont: "top1_continuous_map_on X TX Y TY f"
+    using hquot unfolding top1_quotient_map_on_def by blast
+  have hsurj: "f ` X = Y"
+    using hbij unfolding bij_betw_def by simp
+  have hinj: "inj_on f X"
+    using hbij unfolding bij_betw_def by simp
+  have X_TX: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTopX[unfolded is_topology_on_def]]])
+  have hQ: "\<forall>V. V \<subseteq> Y \<longrightarrow> ({x\<in>X. f x \<in> V} \<in> TX \<longrightarrow> V \<in> TY)"
+    using hquot unfolding top1_quotient_map_on_def by blast
+
+  have hinvcont: "top1_continuous_map_on Y TY X TX (inv_into X f)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>y\<in>Y. inv_into X f y \<in> X"
+    proof (intro ballI)
+      fix y assume hyY: "y \<in> Y"
+      have hyIm: "y \<in> f ` X"
+        using hsurj hyY by simp
+      show "inv_into X f y \<in> X"
+        by (rule inv_into_into[OF hyIm])
+    qed
+    show "\<forall>U\<in>TX. {y\<in>Y. inv_into X f y \<in> U} \<in> TY"
+    proof (intro ballI)
+      fix U assume hU: "U \<in> TX"
+      define W where "W = U \<inter> X"
+
+      have hW: "W \<in> TX"
+        unfolding W_def by (rule topology_inter2[OF hTopX hU X_TX])
+      have hWsubX: "W \<subseteq> X"
+        unfolding W_def by simp
+
+      have hWsubY: "f ` W \<subseteq> Y"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> f ` W"
+        then obtain x where hxW: "x \<in> W" and hyx: "y = f x"
+          by blast
+        have hxX: "x \<in> X"
+          using hxW unfolding W_def by simp
+        have "f x \<in> Y"
+          using hfcont hxX unfolding top1_continuous_map_on_def by blast
+        thus "y \<in> Y"
+          using hyx by simp
+      qed
+
+      have hpreEq: "{x\<in>X. f x \<in> f ` W} = W"
+      proof (rule equalityI)
+        show "{x\<in>X. f x \<in> f ` W} \<subseteq> W"
+        proof (rule subsetI)
+          fix x assume hx: "x \<in> {x\<in>X. f x \<in> f ` W}"
+          have hxX: "x \<in> X" and hfx: "f x \<in> f ` W"
+            using hx by simp_all
+          obtain w where hwW: "w \<in> W" and hfw: "f x = f w"
+            using hfx by blast
+          have hwX: "w \<in> X"
+            using hwW hWsubX by blast
+          have "x = w"
+          proof -
+            have hinjD: "\<And>a b. a \<in> X \<Longrightarrow> b \<in> X \<Longrightarrow> f a = f b \<Longrightarrow> a = b"
+            proof -
+              fix a b assume haX: "a \<in> X" and hbX: "b \<in> X" and hab: "f a = f b"
+              have "\<forall>a\<in>X. \<forall>b\<in>X. f a = f b \<longrightarrow> a = b"
+                using hinj unfolding inj_on_def by blast
+              thus "a = b"
+                using haX hbX hab by blast
+            qed
+            show "x = w"
+              by (rule hinjD[OF hxX hwX hfw])
+          qed
+          thus "x \<in> W"
+            using hwW by simp
+        qed
+        show "W \<subseteq> {x\<in>X. f x \<in> f ` W}"
+        proof (rule subsetI)
+          fix x assume hxW: "x \<in> W"
+          have hxX: "x \<in> X"
+            using hWsubX hxW by blast
+          have "f x \<in> f ` W"
+            using hxW by blast
+          thus "x \<in> {x\<in>X. f x \<in> f ` W}"
+            using hxX by simp
+        qed
+      qed
+
+      have hImgOpen: "f ` W \<in> TY"
+      proof -
+        have hStep: "{x\<in>X. f x \<in> f ` W} \<in> TX \<longrightarrow> f ` W \<in> TY"
+          using hQ hWsubY by blast
+        have hpre: "{x\<in>X. f x \<in> f ` W} \<in> TX"
+          by (subst hpreEq) (rule hW)
+        show ?thesis
+          using hStep hpre by blast
+      qed
+
+      have hEqInv: "{y\<in>Y. inv_into X f y \<in> U} = f ` W"
+      proof (rule set_eqI)
+        fix y
+        show "y \<in> {y\<in>Y. inv_into X f y \<in> U} \<longleftrightarrow> y \<in> f ` W"
+        proof (rule iffI)
+          assume hy: "y \<in> {y\<in>Y. inv_into X f y \<in> U}"
+          have hyY: "y \<in> Y" and hinvU: "inv_into X f y \<in> U"
+            using hy by simp_all
+          have hyIm: "y \<in> f ` X"
+            using hsurj hyY by simp
+          have hinvX: "inv_into X f y \<in> X"
+            by (rule inv_into_into[OF hyIm])
+          have hfy: "f (inv_into X f y) = y"
+            using f_inv_into_f[OF hyIm] by simp
+          have "inv_into X f y \<in> W"
+            unfolding W_def using hinvU hinvX by simp
+          thus "y \<in> f ` W"
+          proof -
+            have "f (inv_into X f y) \<in> f ` W"
+              using \<open>inv_into X f y \<in> W\<close> by blast
+            thus "y \<in> f ` W"
+              using hfy by simp
+          qed
+        next
+          assume hy: "y \<in> f ` W"
+          then obtain x where hxW: "x \<in> W" and hyx: "y = f x"
+            by blast
+          have hxX: "x \<in> X"
+            using hxW hWsubX by blast
+          have hyIm: "y \<in> f ` X"
+            using hxX hyx by blast
+          have hinv: "inv_into X f y = x"
+            using inv_into_f_eq[OF hinj hxX] hyx by simp
+          have hyY: "y \<in> Y"
+            using hWsubY hy by blast
+          have "x \<in> U"
+          proof -
+            have "x \<in> U \<and> x \<in> X"
+              using hxW unfolding W_def by simp
+            thus "x \<in> U"
+              by simp
+          qed
+          thus "y \<in> {y\<in>Y. inv_into X f y \<in> U}"
+            using hyY hinv by simp
+        qed
+      qed
+
+      show "{y\<in>Y. inv_into X f y \<in> U} \<in> TY"
+        using hImgOpen unfolding hEqInv by simp
+    qed
+  qed
+
+  show ?thesis
+    unfolding top1_homeomorphism_on_def
+    apply (intro conjI)
+        apply (rule hTopX)
+       apply (rule hTopY)
+      apply (rule hbij)
+     apply (rule hfcont)
+    apply (rule hinvcont)
+    done
+qed
 
 (** Fiber partition determined by a map \<open>g\<close>: the collection \<open>{g^{-1}({z}) | z\<in>Z}\<close> (restricted to \<open>X\<close>). **)
 definition top1_fiber_partition_on :: "'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a set set" where
@@ -14838,7 +15081,198 @@ corollary Corollary_22_3:
       \<and> top1_continuous_map_on Xstar Tstar Z TZ f
       \<and> (top1_homeomorphism_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g)"
     and "is_hausdorff_on Z TZ \<longrightarrow> is_hausdorff_on Xstar Tstar"
-  sorry
+proof -
+  have hgmap: "\<forall>x\<in>X. g x \<in> Z"
+    using hcont unfolding top1_continuous_map_on_def by (rule conjunct1)
+
+  have hpmap: "\<forall>x\<in>X. p x \<in> Xstar"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    have hgxZ: "g x \<in> Z"
+      by (rule hgmap[rule_format, OF hxX])
+    show "p x \<in> Xstar"
+      unfolding Xstar_def p_def top1_fiber_partition_on_def top1_fiber_projection_on_def
+      by (rule imageI[OF hgxZ])
+  qed
+
+  have hsurjp: "p ` X = Xstar"
+  proof (rule subset_antisym)
+    show "p ` X \<subseteq> Xstar"
+    proof (rule subsetI)
+      fix y assume hy: "y \<in> p ` X"
+      obtain x where hxX: "x \<in> X" and hyx: "y = p x"
+        using hy by (elim imageE)
+      show "y \<in> Xstar"
+        using hpmap hxX hyx by simp
+    qed
+    show "Xstar \<subseteq> p ` X"
+    proof (rule subsetI)
+      fix A assume hA: "A \<in> Xstar"
+      obtain z where hzZ: "z \<in> Z" and hAeq: "A = {u\<in>X. g u = z}"
+        using hA unfolding Xstar_def top1_fiber_partition_on_def by (elim imageE)
+      have hzIm: "z \<in> g ` X"
+        using hsurj hzZ by simp
+      obtain x where hxX: "x \<in> X" and hz: "z = g x"
+        using hzIm by (elim imageE)
+      have hgx: "g x = z"
+        using hz by simp
+      have hpx: "p x = {u\<in>X. g u = z}"
+        unfolding p_def top1_fiber_projection_on_def using hgx by simp
+      have "A = p x"
+        using hAeq hpx by simp
+      thus "A \<in> p ` X"
+        using hxX by blast
+    qed
+  qed
+
+  have hpquot: "top1_quotient_map_on X TX Xstar Tstar p"
+    unfolding Tstar_def
+    by (rule top1_quotient_map_on_from_quotient_topology_by_map_on[OF hTX hpmap hsurjp])
+
+  have hconst: "\<forall>x\<in>X. \<forall>y\<in>X. p x = p y \<longrightarrow> g x = g y"
+  proof (rule ballI)
+    fix x assume hxX: "x \<in> X"
+    show "\<forall>y\<in>X. p x = p y \<longrightarrow> g x = g y"
+    proof (rule ballI)
+      fix y assume hyX: "y \<in> X"
+      show "p x = p y \<longrightarrow> g x = g y"
+      proof (rule impI)
+        assume hpxy: "p x = p y"
+        have hy_py: "y \<in> p y"
+          unfolding p_def top1_fiber_projection_on_def using hyX by simp
+        have hy_px: "y \<in> p x"
+          using hy_py hpxy by simp
+        have "g y = g x"
+          using hy_px unfolding p_def top1_fiber_projection_on_def by simp
+        thus "g x = g y"
+          by simp
+      qed
+    qed
+  qed
+
+  have hex_f:
+    "\<exists>f.
+      (\<forall>y\<in>Xstar. f y \<in> Z)
+      \<and> (\<forall>x\<in>X. f (p x) = g x)
+      \<and> (top1_continuous_map_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_continuous_map_on X TX Z TZ g)
+      \<and> (top1_quotient_map_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g)"
+    by (rule Theorem_22_2[OF hpquot hgmap hconst])
+
+  obtain f where
+      hf_map: "\<forall>y\<in>Xstar. f y \<in> Z"
+    and hf_factor: "\<forall>x\<in>X. f (p x) = g x"
+    and hcont_equiv: "top1_continuous_map_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_continuous_map_on X TX Z TZ g"
+    and hquot_equiv: "top1_quotient_map_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g"
+    using hex_f by (elim exE conjE)
+
+  have hfcont: "top1_continuous_map_on Xstar Tstar Z TZ f"
+    by (rule iffD2[OF hcont_equiv hcont])
+
+  have hf_image: "f ` Xstar = Z"
+  proof (rule subset_antisym)
+    show "f ` Xstar \<subseteq> Z"
+    proof (rule subsetI)
+      fix z assume hz: "z \<in> f ` Xstar"
+      then obtain A where hA: "A \<in> Xstar" and hzA: "z = f A"
+        by blast
+      have "f A \<in> Z"
+        using hf_map hA by blast
+      thus "z \<in> Z"
+        using hzA by simp
+    qed
+    show "Z \<subseteq> f ` Xstar"
+    proof (rule subsetI)
+      fix z assume hzZ: "z \<in> Z"
+      have hzIm: "z \<in> g ` X"
+        using hsurj hzZ by simp
+      obtain x where hxX: "x \<in> X" and hz: "z = g x"
+        using hzIm by (elim imageE)
+      have hgx: "g x = z"
+        using hz by simp
+      have hpx: "p x \<in> Xstar"
+        using hpmap hxX by blast
+      have "f (p x) = z"
+        using hf_factor hxX hgx by simp
+      thus "z \<in> f ` Xstar"
+        using hpx by blast
+    qed
+  qed
+
+  have hf_inj: "inj_on f Xstar"
+  proof (rule inj_onI)
+    fix A B assume hA: "A \<in> Xstar" and hB: "B \<in> Xstar"
+    assume hEq: "f A = f B"
+    have hAIm: "A \<in> p ` X"
+      using hsurjp hA by simp
+    obtain xA where hxAX: "xA \<in> X" and hAeq: "A = p xA"
+      using hAIm by (elim imageE)
+    have hBIm: "B \<in> p ` X"
+      using hsurjp hB by simp
+    obtain xB where hxBX: "xB \<in> X" and hBeq: "B = p xB"
+      using hBIm by (elim imageE)
+
+    have "g xA = g xB"
+    proof -
+      have hfxA: "f (p xA) = g xA"
+        by (rule bspec[OF hf_factor hxAX])
+      have hfxB: "f (p xB) = g xB"
+        by (rule bspec[OF hf_factor hxBX])
+      have "f (p xA) = f (p xB)"
+        using hEq hAeq hBeq by simp
+      thus "g xA = g xB"
+        using hfxA hfxB by simp
+    qed
+    hence "p xA = p xB"
+      unfolding p_def top1_fiber_projection_on_def by simp
+    thus "A = B"
+      using hAeq hBeq by simp
+  qed
+
+  have hbij: "bij_betw f Xstar Z"
+    unfolding bij_betw_def
+    apply (intro conjI)
+     apply (rule hf_inj)
+    apply (rule hf_image)
+    done
+
+  have hhomeo_iff_gquot:
+    "top1_homeomorphism_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g"
+  proof (rule iffI)
+    assume hhomeo: "top1_homeomorphism_on Xstar Tstar Z TZ f"
+    have hquotf: "top1_quotient_map_on Xstar Tstar Z TZ f"
+      by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hhomeo])
+    show "top1_quotient_map_on X TX Z TZ g"
+      using hquot_equiv hquotf by simp
+  next
+    assume hquotg: "top1_quotient_map_on X TX Z TZ g"
+    have hquotf: "top1_quotient_map_on Xstar Tstar Z TZ f"
+      using hquot_equiv hquotg by simp
+    show "top1_homeomorphism_on Xstar Tstar Z TZ f"
+      by (rule top1_bij_quotient_map_on_imp_homeomorphism_on[OF hquotf hbij])
+  qed
+
+  show "\<exists>f.
+      bij_betw f Xstar Z
+      \<and> top1_continuous_map_on Xstar Tstar Z TZ f
+      \<and> (top1_homeomorphism_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g)"
+    apply (rule exI[where x=f])
+    apply (intro conjI)
+      apply (rule hbij)
+     apply (rule hfcont)
+    apply (rule hhomeo_iff_gquot)
+    done
+
+  show "is_hausdorff_on Z TZ \<longrightarrow> is_hausdorff_on Xstar Tstar"
+  proof (intro impI)
+    assume hHausZ: "is_hausdorff_on Z TZ"
+
+    have hTopXstar: "is_topology_on Xstar Tstar"
+      unfolding Tstar_def
+      by (rule top1_quotient_topology_by_map_on_is_topology_on[OF hTX hpmap])
+    show "is_hausdorff_on Xstar Tstar"
+      by (rule hausdorff_on_of_inj_continuous_map[OF hTopXstar hHausZ hfcont hf_inj])
+  qed
+qed
 
 section \<open>\<S>23 Connected Spaces\<close>
 
