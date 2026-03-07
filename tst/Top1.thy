@@ -24291,6 +24291,10 @@ text \<open>
 
   Intended proof plan: specialize Theorem_27_7 to \<open>X = {a..b}\<close> with the standard order topology on reals, using
   known facts: closed intervals are compact and Hausdorff, and have no isolated points when \<open>a < b\<close>.
+
+  Alternative (library) route: importing \<open>HOL-Analysis.Continuum_Not_Denumerable\<close> yields the lemma
+  \<open>uncountable_closed_interval\<close>, which implies this statement immediately.  We keep this file on
+  \<open>Complex_Main\<close> only, to avoid adding extra session dependencies.
 \<close>
   sorry
 
