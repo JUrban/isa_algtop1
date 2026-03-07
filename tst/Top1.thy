@@ -23546,6 +23546,16 @@ lemma Lemma_27_5:
   assumes hUc: "Uc \<subseteq> top1_metric_topology_on X d"
   assumes hcov: "X \<subseteq> \<Union>Uc"
   shows "\<exists>\<delta>>0. \<forall>A. A \<subseteq> X \<and> A \<noteq> {} \<and> top1_diameter_on d A < \<delta> \<longrightarrow> (\<exists>U\<in>Uc. A \<subseteq> U)"
+text \<open>
+  Proof status: admitted for now to keep the session build within the default 120s timeout.
+
+  Intended proof plan (from top1.tex): use compactness to extract a finite subcover from a suitable open cover by
+  metric balls, obtain a uniform radius bound, then derive a Lebesgue number \<delta> that works for all subsets of
+  diameter \<delta>.
+
+  The commented proof below is a first draft; it should be refactored into smaller helper lemmas (with local simp
+  sets) to avoid tactic blow-ups.
+\<close>
 sorry
 
 (*
