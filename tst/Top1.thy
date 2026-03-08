@@ -13330,13 +13330,7 @@ proof (rule notI)
   assume hEq: "?Tunif = ?Tbox"
 
   have hIne: "I \<noteq> {}"
-  proof
-    assume hI0: "I = {}"
-    hence "finite I"
-      by simp
-    with hInf show False
-      by simp
-  qed
+    using hInf by auto
 
   have hTopAll: "\<forall>i\<in>I. is_topology_on (?XR i) ?TR"
   proof (intro ballI)
@@ -13359,7 +13353,7 @@ proof (rule notI)
 
   define U where
     "U = (\<lambda>i. if i \<in> range f
-          then top1_ball_on UNIV top1_real_bounded_metric 0 (inverse (real (Suc (g i))))
+          then open_interval (- inverse (real (Suc (g i)))) (inverse (real (Suc (g i))))
           else (UNIV::real set))"
   define W where "W = top1_PiE I U"
 
@@ -13369,31 +13363,32 @@ proof (rule notI)
     proof (intro ballI)
       fix i assume hiI: "i \<in> I"
       show "U i \<in> ?TR \<and> U i \<subseteq> ?XR i"
-		      proof (cases "i \<in> range f")
-		        case False
-		        have hUi: "U i = (UNIV::real set)"
-		          unfolding U_def using False by simp
-		        have hUNIV: "(UNIV::real set) \<in> ?TR"
-		          using order_topology_on_UNIV_is_topology_on unfolding is_topology_on_def by blast
-		        show ?thesis
-		          using hUi hUNIV by simp
-		      next
-		        case True
-            have hx0: "(0::real) \<in> (UNIV::real set)"
-              by simp
-            have heps: "0 < inverse (real (Suc (g i)))"
-              by simp
-	        have hball_open:
-	          "top1_ball_on UNIV top1_real_bounded_metric 0 (inverse (real (Suc (g i))))
-	            \<in> top1_metric_topology_on (UNIV::real set) top1_real_bounded_metric"
-	          by (rule top1_ball_open_in_metric_topology[OF top1_real_bounded_metric_metric_on hx0 heps])
-            have hUi: "U i = top1_ball_on UNIV top1_real_bounded_metric 0 (inverse (real (Suc (g i))))"
-              unfolding U_def using True by simp
-            have "U i \<in> ?TR"
-              unfolding hUi order_topology_on_UNIV_eq_bounded_metric_topology_real using hball_open by simp
-            thus ?thesis
-              unfolding hUi using True by simp
-		      qed
+      proof (cases "i \<in> range f")
+        case False
+        have hUi: "U i = (UNIV::real set)"
+          unfolding U_def using False by simp
+        have hUNIV: "(UNIV::real set) \<in> ?TR"
+          using order_topology_on_UNIV_is_topology_on unfolding is_topology_on_def by blast
+        show ?thesis
+          using hUi hUNIV by simp
+      next
+        case True
+        define r where "r = inverse (real (Suc (g i)))"
+        have hr: "0 < r"
+          unfolding r_def by simp
+        have hab: "(-r) < r"
+          using hr by linarith
+        have hopen: "open_interval (-r) r \<in> ?TR"
+          by (rule open_interval_in_order_topology[OF hab])
+        have hUi: "U i = open_interval (-r) r"
+          unfolding U_def r_def using True by simp
+        have hsub: "U i \<subseteq> ?XR i"
+          unfolding hUi by simp
+        have "U i \<in> ?TR"
+          unfolding hUi using hopen by simp
+        thus ?thesis
+          using hsub by simp
+      qed
     qed
     show ?thesis
       unfolding W_def top1_box_basis_on_def
@@ -13428,14 +13423,17 @@ proof (rule notI)
           unfolding U_def x0_def using False hiI by simp
       next
         case True
-        have hr: "0 < inverse (real (Suc (g i)))"
-          by simp
-        have h00: "top1_real_bounded_metric (0::real) 0 = 0"
-          unfolding top1_real_bounded_metric_def by simp
-        have h00_lt: "top1_real_bounded_metric (0::real) 0 < inverse (real (Suc (g i)))"
-          unfolding h00 by (rule hr)
+        define r where "r = inverse (real (Suc (g i)))"
+        have hr: "0 < r"
+          unfolding r_def by simp
+        have hab: "(-r) < (0::real)"
+          using hr by simp
+        have hbc: "(0::real) < r"
+          using hr by simp
+        have "x0 i = 0"
+          unfolding x0_def using hiI by simp
         thus ?thesis
-          unfolding U_def top1_ball_on_def x0_def using True hiI by simp
+          unfolding U_def r_def open_interval_def using True hab hbc by simp
       qed
     qed
     show ?thesis
@@ -13498,13 +13496,17 @@ proof (rule notI)
             unfolding hs_eq y_def x0_def using hiI hjI True hmt0 by simp
         next
           case False
-          show ?thesis
-            unfolding hs_eq y_def x0_def using hiI False ht_nonneg by simp
+          have "y i = x0 i"
+            unfolding y_def using hiI False by simp
+          hence "top1_real_bounded_metric (x0 i) (y i) = 0"
+            unfolding top1_real_bounded_metric_def by simp
+          thus ?thesis
+            unfolding hs_eq using ht_nonneg by simp
         qed
       qed
       show ?thesis
         unfolding top1_uniform_metric_real_on_def
-        by (rule cSup_least[OF hSne]) (use hall_le in blast)
+        by (rule cSup_least[OF hSne]) (rule hall_le)
     qed
 
     have hdist_lt_del: "top1_uniform_metric_real_on I x0 y < \<delta>"
@@ -13519,14 +13521,15 @@ proof (rule notI)
     proof -
       have hyj: "y (f n) = t"
         unfolding y_def using hjI by simp
-      have hUj: "U (f n) = top1_ball_on UNIV top1_real_bounded_metric 0 (inverse (real (Suc n)))"
+      have hUj: "U (f n) =
+        open_interval (- inverse (real (Suc n))) (inverse (real (Suc n)))"
         unfolding U_def using hginv by simp
       have "y (f n) \<notin> U (f n)"
       proof -
-        have "\<not> (top1_real_bounded_metric (0::real) t < inverse (real (Suc n)))"
-          using hn_lt hmt0 by linarith
+        have "\<not> (t < inverse (real (Suc n)))"
+          using hn_lt by linarith
         thus ?thesis
-          unfolding hUj top1_ball_on_def using hyj by simp
+          unfolding hUj open_interval_def using hyj by simp
       qed
       hence "\<not> (\<forall>i\<in>I. y i \<in> U i)"
         using hjI by blast
