@@ -30157,6 +30157,86 @@ definition top1_locally_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightar
      (\<forall>x\<in>X. \<exists>U. neighborhood_of x X T U \<and> U \<subseteq> X
         \<and> top1_compact_on (closure_on X T U) (subspace_topology X T (closure_on X T U)))"
 
+(** Closure of the carrier is the carrier. **)
+lemma closure_on_carrier:
+  assumes hT: "is_topology_on X T"
+  shows "closure_on X T X = X"
+proof (rule equalityI)
+  have empty_T: "{} \<in> T"
+    by (rule conjunct1[OF hT[unfolded is_topology_on_def]])
+  have X_closed: "closedin_on X T X"
+    apply (rule closedin_intro)
+     apply (rule subset_refl)
+    apply (simp only: Diff_cancel)
+    apply (rule empty_T)
+    done
+  show "closure_on X T X \<subseteq> X"
+    by (rule closure_on_subset_of_closed[OF X_closed subset_refl])
+  show "X \<subseteq> closure_on X T X"
+    by (rule subset_closure_on)
+qed
+
+(** Compact spaces are locally compact (choose \<open>X\<close> as neighborhood). **)
+lemma top1_compact_on_imp_locally_compact_on:
+  assumes hcomp: "top1_compact_on X T"
+  shows "top1_locally_compact_on X T"
+proof -
+  have hT: "is_topology_on X T"
+    using hcomp unfolding top1_compact_on_def by blast
+  have hCover:
+    "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  have hcomp_sub: "top1_compact_on X (subspace_topology X T X)"
+  proof -
+    have hIff:
+      "top1_compact_on X (subspace_topology X T X)
+        \<longleftrightarrow> (\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F))"
+      by (rule Lemma_26_1[OF hT subset_refl])
+    show ?thesis
+      by (rule iffD2[OF hIff hCover])
+  qed
+
+  show ?thesis
+    unfolding top1_locally_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on X T"
+      by (rule hT)
+    show "\<forall>x\<in>X. \<exists>U. neighborhood_of x X T U \<and> U \<subseteq> X
+      \<and> top1_compact_on (closure_on X T U) (subspace_topology X T (closure_on X T U))"
+    proof (intro ballI)
+      fix x assume hxX: "x \<in> X"
+      have X_T: "X \<in> T"
+        by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
+      have hnbhd: "neighborhood_of x X T X"
+        unfolding neighborhood_of_def using X_T hxX by blast
+      show "\<exists>U. neighborhood_of x X T U \<and> U \<subseteq> X
+        \<and> top1_compact_on (closure_on X T U) (subspace_topology X T (closure_on X T U))"
+        apply (rule exI[where x=X])
+        apply (intro conjI)
+          apply (rule hnbhd)
+         apply (rule subset_refl)
+        apply (simp only: closure_on_carrier[OF hT])
+        apply (rule hcomp_sub)
+        done
+    qed
+  qed
+qed
+
+(** Local compactness is preserved under homeomorphism. **)
+lemma top1_locally_compact_on_of_homeomorphism_on:
+  fixes f :: "'a \<Rightarrow> 'b"
+  assumes hhomeo: "top1_homeomorphism_on X TX Z TZ f"
+  assumes hLCZ: "top1_locally_compact_on Z TZ"
+  shows "top1_locally_compact_on X TX"
+text \<open>
+  Proof status: admitted for now.
+
+  Intended proof plan: use the characterization of continuity via closure (Theorem 18.1) for both the homeomorphism
+  and its inverse to relate closures, then transfer compactness of closures via continuous images.
+\<close>
+  sorry
+
 (** One-point compactification (encoded on the carrier \<open>insert None (Some ` X)\<close>). **)
 definition top1_one_point_compactification_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a option) set set \<Rightarrow> bool" where
   "top1_one_point_compactification_on X TX TY \<longleftrightarrow>
@@ -30798,6 +30878,7 @@ corollary Corollary_29_4:
     "(\<exists>Y TY f.
         top1_compact_on Y TY
         \<and> is_hausdorff_on Y TY
+        \<and> f ` X \<subseteq> Y
         \<and> (f ` X) \<in> TY
         \<and> top1_homeomorphism_on X TX (f ` X) (subspace_topology Y TY (f ` X)) f)
       \<longleftrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
