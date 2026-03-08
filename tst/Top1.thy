@@ -30223,20 +30223,6 @@ proof -
   qed
 qed
 
-(** Local compactness is preserved under homeomorphism. **)
-lemma top1_locally_compact_on_of_homeomorphism_on:
-  fixes f :: "'a \<Rightarrow> 'b"
-  assumes hhomeo: "top1_homeomorphism_on X TX Z TZ f"
-  assumes hLCZ: "top1_locally_compact_on Z TZ"
-  shows "top1_locally_compact_on X TX"
-text \<open>
-  Proof status: admitted for now.
-
-  Intended proof plan: use the characterization of continuity via closure (Theorem 18.1) for both the homeomorphism
-  and its inverse to relate closures, then transfer compactness of closures via continuous images.
-\<close>
-  sorry
-
 (** One-point compactification (encoded on the carrier \<open>insert None (Some ` X)\<close>). **)
 definition top1_one_point_compactification_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a option) set set \<Rightarrow> bool" where
   "top1_one_point_compactification_on X TX TY \<longleftrightarrow>
