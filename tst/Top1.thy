@@ -13319,7 +13319,8 @@ lemma top1_uniform_metric_topology_ne_box_topology_real:
   shows "top1_metric_topology_on (top1_PiE I (\<lambda>_. (UNIV::real set))) (top1_uniform_metric_real_on I)
     \<noteq> top1_box_topology_on I (\<lambda>_. (UNIV::real set)) (\<lambda>_. (order_topology_on_UNIV::real set set))"
 sorry
-(*
+
+(* Proof attempt (disabled: session timeout=120 caused `*** Timeout` during build):
 proof (rule notI)
   let ?XR = "(\<lambda>_. (UNIV::real set))"
   let ?TR = "(order_topology_on_UNIV::real set set)"
@@ -13368,7 +13369,12 @@ proof (rule notI)
         have hUi: "U i = (UNIV::real set)"
           unfolding U_def using False by simp
         have hUNIV: "(UNIV::real set) \<in> ?TR"
-          using order_topology_on_UNIV_is_topology_on unfolding is_topology_on_def by blast
+        proof -
+          have hTop: "is_topology_on (UNIV::real set) ?TR"
+            by (rule order_topology_on_UNIV_is_topology_on)
+          show ?thesis
+            by (rule conjunct1[OF conjunct2[OF hTop[unfolded is_topology_on_def]]])
+        qed
         show ?thesis
           using hUi hUNIV by simp
       next
@@ -13463,16 +13469,28 @@ proof (rule notI)
     have hmt0: "top1_real_bounded_metric (0::real) t = t"
       unfolding top1_real_bounded_metric_def using ht_nonneg ht_le_half by simp
 
+    have hex_n0: "\<exists>n0. n0 \<noteq> 0 \<and> 0 < inverse (real n0) \<and> inverse (of_nat n0) < t"
+      using ht_pos by (simp add: real_arch_inverse)
     obtain n0 where hn0: "n0 \<noteq> 0"
-        and hn0_lt: "inverse (of_nat n0) < t"
-      using ht_pos unfolding real_arch_inverse by blast
+        and hn0_lt: "inverse (real n0) < t"
+    proof -
+      from hex_n0 obtain n0 where "n0 \<noteq> 0" and "inverse (of_nat n0) < t"
+        by blast
+      then show ?thesis
+        by (intro that[of n0]) simp_all
+    qed
     obtain n where hnSuc: "n0 = Suc n"
       using hn0 by (cases n0) simp_all
     have hn_lt: "inverse (real (Suc n)) < t"
       using hn0_lt unfolding hnSuc by simp
 
     have hjI: "f n \<in> I"
-      using hf_range by blast
+    proof -
+      have "f n \<in> range f"
+        by simp
+      thus ?thesis
+        by (rule subsetD[OF hf_range])
+    qed
 
     define y where "y = (\<lambda>i. if i \<in> I then (if i = f n then t else x0 i) else undefined)"
     have hyX: "y \<in> ?X"
@@ -13515,7 +13533,7 @@ proof (rule notI)
       unfolding top1_ball_on_def using hyX hdist_lt_del by blast
 
     have hyW: "y \<in> W"
-      using hball_sub hy_ball by blast
+      by (rule set_mp[OF hball_sub hy_ball])
 
     have hy_not_W: "y \<notin> W"
     proof -
