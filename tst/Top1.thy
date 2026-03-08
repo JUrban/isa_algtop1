@@ -30223,6 +30223,248 @@ proof -
   qed
 qed
 
+(** Local compactness is preserved by homeomorphisms (one direction). **)
+lemma top1_locally_compact_on_of_homeomorphism_on:
+  assumes hhomeo: "top1_homeomorphism_on X TX Y TY f"
+  assumes hLCY: "top1_locally_compact_on Y TY"
+  shows "top1_locally_compact_on X TX"
+proof -
+  define g where "g = inv_into X f"
+
+  have hTopX: "is_topology_on X TX"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hTopY: "is_topology_on Y TY"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hbij: "bij_betw f X Y"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hinj: "inj_on f X"
+    using hbij unfolding bij_betw_def by blast
+
+  have hcontf: "top1_continuous_map_on X TX Y TY f"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hcontg: "top1_continuous_map_on Y TY X TX g"
+    using hhomeo unfolding top1_homeomorphism_on_def g_def by blast
+
+  have hmapf: "\<forall>x\<in>X. f x \<in> Y"
+    using hcontf unfolding top1_continuous_map_on_def by blast
+  have hcl_f:
+    "\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A)"
+  proof -
+    have hiff:
+      "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
+         ((\<forall>x\<in>X. f x \<in> Y)
+           \<and> (\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A)))"
+      by (rule Theorem_18_1(1)[OF hTopX hTopY])
+    have hprops:
+      "(\<forall>x\<in>X. f x \<in> Y)
+        \<and> (\<forall>A. A \<subseteq> X \<longrightarrow> f ` (closure_on X TX A) \<subseteq> closure_on Y TY (f ` A))"
+      by (rule iffD1[OF hiff hcontf])
+    show ?thesis
+      by (rule conjunct2[OF hprops])
+  qed
+
+  have hcl_g:
+    "\<forall>A. A \<subseteq> Y \<longrightarrow> g ` (closure_on Y TY A) \<subseteq> closure_on X TX (g ` A)"
+  proof -
+    have hiff:
+      "top1_continuous_map_on Y TY X TX g \<longleftrightarrow>
+         ((\<forall>y\<in>Y. g y \<in> X)
+           \<and> (\<forall>A. A \<subseteq> Y \<longrightarrow> g ` (closure_on Y TY A) \<subseteq> closure_on X TX (g ` A)))"
+      by (rule Theorem_18_1(1)[OF hTopY hTopX])
+    have hprops:
+      "(\<forall>y\<in>Y. g y \<in> X)
+        \<and> (\<forall>A. A \<subseteq> Y \<longrightarrow> g ` (closure_on Y TY A) \<subseteq> closure_on X TX (g ` A))"
+      by (rule iffD1[OF hiff hcontg])
+    show ?thesis
+      by (rule conjunct2[OF hprops])
+  qed
+
+  show ?thesis
+    unfolding top1_locally_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on X TX"
+      by (rule hTopX)
+    show "\<forall>x\<in>X. \<exists>U. neighborhood_of x X TX U \<and> U \<subseteq> X
+      \<and> top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
+    proof (intro ballI)
+      fix x assume hxX: "x \<in> X"
+      have hyY: "f x \<in> Y"
+        using hmapf hxX by blast
+
+      have hLCY_ex:
+        "\<forall>y\<in>Y. \<exists>U. neighborhood_of y Y TY U \<and> U \<subseteq> Y
+          \<and> top1_compact_on (closure_on Y TY U) (subspace_topology Y TY (closure_on Y TY U))"
+        using hLCY unfolding top1_locally_compact_on_def by blast
+
+      obtain V where
+        hVnbhd: "neighborhood_of (f x) Y TY V"
+        and hVY: "V \<subseteq> Y"
+        and hVcomp: "top1_compact_on (closure_on Y TY V) (subspace_topology Y TY (closure_on Y TY V))"
+        using hLCY_ex hyY by blast
+
+      have hVTY: "V \<in> TY"
+        using hVnbhd unfolding neighborhood_of_def by blast
+      have hfxV: "f x \<in> V"
+        using hVnbhd unfolding neighborhood_of_def by blast
+
+      define U where "U = {x\<in>X. f x \<in> V}"
+      have hUTX: "U \<in> TX"
+        unfolding U_def using hcontf hVTY unfolding top1_continuous_map_on_def by blast
+      have hxU: "x \<in> U"
+        unfolding U_def using hxX hfxV by blast
+      have hUX: "U \<subseteq> X"
+        unfolding U_def by blast
+
+      have hUnbhd: "neighborhood_of x X TX U"
+        unfolding neighborhood_of_def using hUTX hxU by blast
+
+      have hfU_eq_V: "f ` U = V"
+      proof (rule equalityI)
+        show "f ` U \<subseteq> V"
+          unfolding U_def by blast
+        show "V \<subseteq> f ` U"
+        proof (rule subsetI)
+          fix y assume hyV: "y \<in> V"
+          have hyY': "y \<in> Y"
+            using hVY hyV by blast
+          have hyImg: "y \<in> f ` X"
+            using hbij hyY' unfolding bij_betw_def by blast
+          obtain x0 where hx0X: "x0 \<in> X" and hf0: "f x0 = y"
+            using hyImg by blast
+          have hx0U: "x0 \<in> U"
+            unfolding U_def using hx0X hf0 hyV by blast
+          show "y \<in> f ` U"
+            using hx0U hf0 by blast
+        qed
+      qed
+
+      have hclYX: "closure_on Y TY V \<subseteq> Y"
+        by (rule closure_on_subset_carrier[OF hTopY hVY])
+
+      have hclX_sub: "closure_on X TX U \<subseteq> X"
+        by (rule closure_on_subset_carrier[OF hTopX hUX])
+
+      have hclosure_eq: "closure_on X TX U = g ` (closure_on Y TY V)"
+      proof (rule equalityI)
+        show "closure_on X TX U \<subseteq> g ` (closure_on Y TY V)"
+        proof (rule subsetI)
+          fix x' assume hx': "x' \<in> closure_on X TX U"
+          have hx'X: "x' \<in> X"
+            using hclX_sub hx' by blast
+          have hfx'cl: "f x' \<in> closure_on Y TY V"
+          proof -
+            have himg: "f x' \<in> f ` (closure_on X TX U)"
+              using hx' by blast
+            have "f ` (closure_on X TX U) \<subseteq> closure_on Y TY (f ` U)"
+              by (rule hcl_f[rule_format, OF hUX])
+            have "f x' \<in> closure_on Y TY (f ` U)"
+              using himg \<open>f ` (closure_on X TX U) \<subseteq> closure_on Y TY (f ` U)\<close> by blast
+            thus ?thesis
+              using hfU_eq_V by simp
+          qed
+          have hx'eq: "g (f x') = x'"
+            unfolding g_def by (rule inv_into_f_f[OF hinj hx'X])
+          show "x' \<in> g ` (closure_on Y TY V)"
+          proof -
+            have "g (f x') \<in> g ` (closure_on Y TY V)"
+              using hfx'cl by blast
+            thus ?thesis
+              using hx'eq by simp
+          qed
+        qed
+        show "g ` (closure_on Y TY V) \<subseteq> closure_on X TX U"
+        proof -
+          have "g ` (closure_on Y TY V) \<subseteq> closure_on X TX (g ` V)"
+            by (rule hcl_g[rule_format, OF hVY])
+          moreover have "g ` V = U"
+          proof (rule equalityI)
+            show "g ` V \<subseteq> U"
+            proof (rule subsetI)
+              fix x' assume hx': "x' \<in> g ` V"
+              obtain y where hyV: "y \<in> V" and hx'eq: "x' = g y"
+                using hx' by blast
+              have hyY': "y \<in> Y"
+                using hVY hyV by blast
+              have hx'X: "x' \<in> X"
+                using hcontg hyY' hx'eq unfolding top1_continuous_map_on_def by blast
+              have hfgy: "f (g y) = y"
+              proof -
+                have hyImg: "y \<in> f ` X"
+                  using hbij hyY' unfolding bij_betw_def by simp
+                show ?thesis
+                  unfolding g_def by (rule f_inv_into_f[OF hyImg])
+              qed
+              have hfx'V: "f x' \<in> V"
+                using hyV hx'eq hfgy by simp
+              show "x' \<in> U"
+                unfolding U_def using hx'X hfx'V by blast
+            qed
+            show "U \<subseteq> g ` V"
+            proof (rule subsetI)
+              fix x' assume hx'U: "x' \<in> U"
+              have hx'X: "x' \<in> X" and hfx'V: "f x' \<in> V"
+                using hx'U unfolding U_def by blast+
+              have hx'eq: "g (f x') = x'"
+                unfolding g_def by (rule inv_into_f_f[OF hinj hx'X])
+              show "x' \<in> g ` V"
+              proof -
+                have "g (f x') \<in> g ` V"
+                  using hfx'V by blast
+                thus ?thesis
+                  using hx'eq by simp
+              qed
+            qed
+          qed
+          ultimately show "g ` (closure_on Y TY V) \<subseteq> closure_on X TX U"
+            by simp
+        qed
+      qed
+
+      have hcontg_res:
+        "top1_continuous_map_on (closure_on Y TY V) (subspace_topology Y TY (closure_on Y TY V)) X TX g"
+      proof -
+        have hA: "closure_on Y TY V \<subseteq> Y"
+          by (rule hclYX)
+        have hThm:
+          "(\<forall>A f. top1_continuous_map_on Y TY X TX f \<and> A \<subseteq> Y
+                \<longrightarrow> top1_continuous_map_on A (subspace_topology Y TY A) X TX f)"
+          by (rule Theorem_18_2(4)[OF hTopY hTopX hTopX])
+        have "top1_continuous_map_on Y TY X TX g \<and> closure_on Y TY V \<subseteq> Y"
+          using hcontg hA by blast
+        have "top1_continuous_map_on (closure_on Y TY V) (subspace_topology Y TY (closure_on Y TY V)) X TX g"
+          using hThm \<open>top1_continuous_map_on Y TY X TX g \<and> closure_on Y TY V \<subseteq> Y\<close> by blast
+        thus ?thesis .
+      qed
+
+      have hcomp_closureU:
+        "top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
+      proof -
+        have hCompImg:
+          "top1_compact_on (g ` (closure_on Y TY V)) (subspace_topology X TX (g ` (closure_on Y TY V)))"
+        proof -
+          have hcompDom:
+            "top1_compact_on (closure_on Y TY V) (subspace_topology Y TY (closure_on Y TY V))"
+            using hVcomp .
+          have "top1_compact_on (g ` (closure_on Y TY V)) (subspace_topology X TX (g ` (closure_on Y TY V)))"
+            by (rule top1_compact_on_continuous_image[OF hcompDom hTopX hcontg_res])
+          thus ?thesis .
+        qed
+        show ?thesis
+          using hCompImg hclosure_eq by simp
+      qed
+
+      show "\<exists>U. neighborhood_of x X TX U \<and> U \<subseteq> X
+        \<and> top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
+        apply (rule exI[where x=U])
+        apply (intro conjI)
+          apply (rule hUnbhd)
+         apply (rule hUX)
+        apply (rule hcomp_closureU)
+        done
+    qed
+  qed
+qed
+
 (** One-point compactification (encoded on the carrier \<open>insert None (Some ` X)\<close>). **)
 definition top1_one_point_compactification_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a option) set set \<Rightarrow> bool" where
   "top1_one_point_compactification_on X TX TY \<longleftrightarrow>
@@ -30861,21 +31103,58 @@ proof -
 corollary Corollary_29_4:
   assumes hTX: "is_topology_on X TX"
   shows
-    "(\<exists>Y TY f.
-        top1_compact_on Y TY
-        \<and> is_hausdorff_on Y TY
-        \<and> f ` X \<subseteq> Y
-        \<and> (f ` X) \<in> TY
-        \<and> top1_homeomorphism_on X TX (f ` X) (subspace_topology Y TY (f ` X)) f)
+    "(\<exists>TY. top1_one_point_compactification_on X TX TY \<and> (Some ` X) \<in> TY)
       \<longleftrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
 text \<open>
-  Proof status: admitted for now.
-
-  Intended proof plan: use Theorem 29.1 (one-point compactification) in the forward direction by embedding \<open>X\<close>
-  as an open subspace of a compact Hausdorff space; conversely, from local compactness + Hausdorff, obtain a
-  one-point compactification and embed \<open>X\<close> as the open subspace \<open>Some ` X\<close>.
+  Note: In this development, the one-point compactification is encoded on the fixed carrier
+  \<open>insert None (Some ` X)\<close>.  Thus the existence of a compact Hausdorff space containing \<open>X\<close> as an open subspace
+  is expressed via the existence of a topology \<open>TY\<close> on that carrier such that \<open>Some ` X\<close> is open and
+  homeomorphic to \<open>X\<close>.
 \<close>
-  sorry
+proof (rule iffI)
+  assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY \<and> (Some ` X) \<in> TY"
+  have hEx0: "\<exists>TY. top1_one_point_compactification_on X TX TY"
+  proof -
+    obtain TY where hTY: "top1_one_point_compactification_on X TX TY \<and> (Some ` X) \<in> TY"
+      using hEx by (elim exE)
+    have "top1_one_point_compactification_on X TX TY"
+      using hTY by (rule conjunct1)
+    show ?thesis
+      by (rule exI[where x=TY], rule \<open>top1_one_point_compactification_on X TX TY\<close>)
+  qed
+  show "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+    by (rule iffD2[OF Theorem_29_1(1)[OF hTX] hEx0])
+next
+  assume hLC_H: "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+  have hExTY: "\<exists>TY. top1_one_point_compactification_on X TX TY"
+    by (rule iffD1[OF Theorem_29_1(1)[OF hTX] hLC_H])
+  obtain TY where hOPC: "top1_one_point_compactification_on X TX TY"
+    using hExTY by (elim exE)
+  define Y where "Y = insert None (Some ` X)"
+  have hOPC_def:
+    "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some
+      \<and> top1_compact_on Y TY
+      \<and> is_hausdorff_on Y TY"
+    using hOPC unfolding top1_one_point_compactification_on_def Y_def
+    by (simp only: Let_def)
+  have hHausY: "is_hausdorff_on Y TY"
+    using hOPC_def by (rule conjunct2[OF conjunct2])
+  have hNoneY: "None \<in> Y"
+    unfolding Y_def by simp
+  have hNoneClosed: "closedin_on Y TY {None}"
+    by (rule singleton_closed_in_hausdorff[OF hHausY hNoneY])
+  have hSomeOpen: "(Some ` X) \<in> TY"
+  proof -
+    have hOpen: "Y - {None} \<in> TY"
+      by (rule closedin_diff_open[OF hNoneClosed])
+    have hEq: "Y - {None} = Some ` X"
+      by (rule set_eqI, simp add: Y_def)
+    show ?thesis
+      using hOpen hEq by simp
+  qed
+  show "\<exists>TY. top1_one_point_compactification_on X TX TY \<and> (Some ` X) \<in> TY"
+    by (rule exI[where x=TY], intro conjI, rule hOPC, rule hSomeOpen)
+qed
 
 section \<open>\<S>30 The Countability Axioms\<close>
 
