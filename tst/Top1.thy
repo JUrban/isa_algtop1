@@ -29170,6 +29170,181 @@ proof (unfold inj_on_def, intro ballI impI)
     using top1_ternary_sum_inj unfolding inj_on_def by blast
 qed
 
+(** Helper for Theorem 27.7: shrink a nonempty open set to avoid a given point in its closure. **)
+lemma top1_27_7_shrink_open_avoid_closure:
+  assumes hH: "is_hausdorff_on X TX"
+  assumes hnoi: "\<forall>x\<in>X. \<not> top1_isolated_point_on X TX x"
+  assumes hU: "U \<in> TX"
+  assumes hUX: "U \<subseteq> X"
+  assumes hUne: "U \<noteq> {}"
+  assumes hxX: "x \<in> X"
+  shows "\<exists>V. V \<in> TX \<and> V \<subseteq> X \<and> V \<subseteq> U \<and> V \<noteq> {} \<and> x \<notin> closure_on X TX V"
+proof -
+  have hTop: "is_topology_on X TX"
+    using hH unfolding is_hausdorff_on_def by blast
+  have X_TX: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTop[unfolded is_topology_on_def]]])
+
+  have hx_not_iso: "\<not> top1_isolated_point_on X TX x"
+    using hnoi hxX by blast
+
+  have hex_y: "\<exists>y. y \<in> U \<and> y \<noteq> x"
+  proof (cases "x \<in> U")
+    case True
+    have hUdiff_ne: "U - {x} \<noteq> {}"
+    proof
+      assume h0: "U - {x} = {}"
+      have hsub: "U \<subseteq> {x}"
+      proof (rule subsetI)
+        fix z assume hzU: "z \<in> U"
+        show "z \<in> {x}"
+        proof (rule ccontr)
+          assume hzx: "z \<notin> {x}"
+          have "z \<in> U - {x}"
+            by (rule DiffI[OF hzU hzx])
+          thus False
+            using h0 by simp
+        qed
+      qed
+      have hEq: "U = {x}"
+      proof (rule equalityI)
+        show "U \<subseteq> {x}" by (rule hsub)
+        show "{x} \<subseteq> U" using True by simp
+      qed
+      have "top1_isolated_point_on X TX x"
+        unfolding top1_isolated_point_on_def
+        by (intro conjI[OF hxX], subst hEq[symmetric], rule hU)
+      thus False
+        using hx_not_iso by blast
+    qed
+    obtain y0 where hy0: "y0 \<in> U - {x}"
+      using hUdiff_ne by blast
+    have hy0U: "y0 \<in> U" and hy0ne: "y0 \<noteq> x"
+      using hy0 by blast+
+    show ?thesis
+      by (rule exI[where x=y0], rule conjI, rule hy0U, rule hy0ne)
+  next
+    case False
+    obtain y0 where hy0U: "y0 \<in> U"
+      using hUne by blast
+    have hy0ne: "y0 \<noteq> x"
+      using False hy0U by blast
+    show ?thesis
+      by (rule exI[where x=y0], rule conjI, rule hy0U, rule hy0ne)
+  qed
+
+  obtain y where hyU: "y \<in> U" and hyne: "y \<noteq> x"
+    using hex_y by blast
+
+  have hyX: "y \<in> X"
+    using hUX hyU by blast
+
+  obtain Ux0 Uy0 where hUx0: "neighborhood_of x X TX Ux0"
+      and hUy0: "neighborhood_of y X TX Uy0"
+      and hdisj0: "Ux0 \<inter> Uy0 = {}"
+    using hH hxX hyX hyne unfolding is_hausdorff_on_def by blast
+
+  define Ux where "Ux = X \<inter> Ux0"
+  define Uy where "Uy = X \<inter> Uy0"
+
+  have hUx: "neighborhood_of x X TX Ux"
+  proof -
+    have hUx0T: "Ux0 \<in> TX" and hxUx0: "x \<in> Ux0"
+      using hUx0 unfolding neighborhood_of_def by blast+
+    have hUxT: "Ux \<in> TX"
+      unfolding Ux_def by (rule topology_inter2[OF hTop X_TX hUx0T])
+    have hxUx: "x \<in> Ux"
+      unfolding Ux_def using hxX hxUx0 by blast
+    show ?thesis
+      unfolding neighborhood_of_def using hUxT hxUx by blast
+  qed
+
+  have hUy: "neighborhood_of y X TX Uy"
+  proof -
+    have hUy0T: "Uy0 \<in> TX" and hyUy0: "y \<in> Uy0"
+      using hUy0 unfolding neighborhood_of_def by blast+
+    have hUyT: "Uy \<in> TX"
+      unfolding Uy_def by (rule topology_inter2[OF hTop X_TX hUy0T])
+    have hyUy: "y \<in> Uy"
+      unfolding Uy_def using hyX hyUy0 by blast
+    show ?thesis
+      unfolding neighborhood_of_def using hUyT hyUy by blast
+  qed
+
+  have hUxX: "Ux \<subseteq> X"
+    unfolding Ux_def by blast
+  have hUyX: "Uy \<subseteq> X"
+    unfolding Uy_def by blast
+
+  have hdisj: "Ux \<inter> Uy = {}"
+  proof -
+    have hsub: "Ux \<inter> Uy \<subseteq> Ux0 \<inter> Uy0"
+      unfolding Ux_def Uy_def by blast
+    show ?thesis
+    proof (rule subset_antisym)
+      show "Ux \<inter> Uy \<subseteq> {}"
+        by (rule subset_trans[OF hsub], simp only: hdisj0)
+      show "{} \<subseteq> Ux \<inter> Uy"
+        by simp
+    qed
+  qed
+
+  define V where "V = Uy \<inter> U"
+  have hVT: "V \<in> TX"
+  proof -
+    have hUyT: "Uy \<in> TX"
+      using hUy unfolding neighborhood_of_def by blast
+    show ?thesis
+      unfolding V_def by (rule topology_inter2[OF hTop hUyT hU])
+  qed
+  have hVsubU: "V \<subseteq> U"
+    unfolding V_def by blast
+  have hVsubX: "V \<subseteq> X"
+    unfolding V_def using hUyX hUX by blast
+  have hyV: "y \<in> V"
+  proof -
+    have hyUy: "y \<in> Uy"
+      using hUy unfolding neighborhood_of_def by blast
+    show ?thesis
+      unfolding V_def using hyUy hyU by blast
+  qed
+  have hVne: "V \<noteq> {}"
+    using hyV by blast
+
+  have hnot_intersects: "\<not> intersects Ux V"
+  proof
+    assume hint: "intersects Ux V"
+    have hne: "Ux \<inter> V \<noteq> {}"
+      using hint unfolding intersects_def by simp
+    have hsub': "Ux \<inter> V \<subseteq> Ux \<inter> Uy"
+      unfolding V_def by blast
+    have "Ux \<inter> V \<subseteq> {}"
+      by (rule subset_trans[OF hsub'], simp only: hdisj)
+    thus False
+      using hne by blast
+  qed
+
+  have hx_not_cl: "x \<notin> closure_on X TX V"
+  proof -
+    have hchar:
+      "x \<in> closure_on X TX V \<longleftrightarrow> (\<forall>W. neighborhood_of x X TX W \<longrightarrow> intersects W V)"
+      by (rule Theorem_17_5a[OF hTop hxX hVsubX])
+    have hall_false: "\<not> (\<forall>W. neighborhood_of x X TX W \<longrightarrow> intersects W V)"
+    proof
+      assume hall: "\<forall>W. neighborhood_of x X TX W \<longrightarrow> intersects W V"
+      have "intersects Ux V"
+        by (rule hall[rule_format, OF hUx])
+      thus False
+        using hnot_intersects by blast
+    qed
+    show ?thesis
+      using hchar hall_false by blast
+  qed
+
+  show ?thesis
+    by (rule exI[where x=V]) (use hVT hVsubX hVsubU hVne hx_not_cl in blast)
+qed
+
 (** from \S27 Theorem 27.7 [top1.tex:3519] **)
 theorem Theorem_27_7:
   assumes hXne: "X \<noteq> {}"
@@ -29186,6 +29361,346 @@ text \<open>
   standard argument used to show a perfect compact Hausdorff space is uncountable.
 \<close>
   sorry
+(*
+proof
+  assume hcnt: "countable X"
+  obtain g :: "'a \<Rightarrow> nat" where hg: "inj_on g X"
+    using hcnt unfolding countable_def by blast
+
+  have hTop: "is_topology_on X TX"
+    using hhaus unfolding is_hausdorff_on_def by blast
+  have X_TX: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTop[unfolded is_topology_on_def]]])
+
+  obtain x0 where hx0X: "x0 \<in> X"
+    using hXne by blast
+
+  define f where "f n = (if n \<in> g ` X then inv_into X g n else x0)" for n
+
+  have hfX: "\<forall>n. f n \<in> X"
+  proof (intro allI)
+    fix n
+    show "f n \<in> X"
+    proof (cases "n \<in> g ` X")
+      case True
+      have "inv_into X g n \<in> X"
+        by (rule inv_into_into[OF True])
+      thus ?thesis
+        unfolding f_def using True by simp
+    next
+      case False
+      thus ?thesis
+        unfolding f_def using hx0X by simp
+    qed
+  qed
+
+  have hXsub: "X \<subseteq> f ` (UNIV :: nat set)"
+  proof (rule subsetI)
+    fix x
+    assume hxX: "x \<in> X"
+    have hgx: "g x \<in> g ` X"
+      using hxX by blast
+    have "f (g x) = inv_into X g (g x)"
+      unfolding f_def using hgx by simp
+    also have "... = x"
+      by (rule inv_into_f_f[OF hg hxX])
+    finally have hxfx: "f (g x) = x"
+      by simp
+    show "x \<in> f ` (UNIV :: nat set)"
+    proof -
+      have "f (g x) \<in> f ` (UNIV :: nat set)"
+        by (rule imageI) simp
+      thus ?thesis
+        using hxfx by simp
+    qed
+  qed
+
+  have hfsubX: "f ` (UNIV :: nat set) \<subseteq> X"
+  proof
+    fix y
+    assume hy: "y \<in> f ` (UNIV :: nat set)"
+    then obtain n where hyf: "y = f n"
+      by blast
+    show "y \<in> X"
+      unfolding hyf using hfX by blast
+  qed
+
+  have hImage: "f ` (UNIV :: nat set) = X"
+    by (rule equalityI[OF hfsubX hXsub])
+
+  obtain V0 where hV0T: "V0 \<in> TX"
+      and hV0X: "V0 \<subseteq> X"
+      and hV0ne: "V0 \<noteq> {}"
+      and hf0_not_cl: "f 0 \<notin> closure_on X TX V0"
+  proof -
+    have hf0X: "f 0 \<in> X"
+      using hfX by simp
+    have hex:
+      "\<exists>V. V \<in> TX \<and> V \<subseteq> X \<and> V \<subseteq> X \<and> V \<noteq> {} \<and> f 0 \<notin> closure_on X TX V"
+      by (rule top1_27_7_shrink_open_avoid_closure[OF hhaus hnoi X_TX subset_refl hXne hf0X])
+    then obtain V where hV: "V \<in> TX \<and> V \<subseteq> X \<and> V \<subseteq> X \<and> V \<noteq> {} \<and> f 0 \<notin> closure_on X TX V"
+      by blast
+    show ?thesis
+      by (rule that[OF conjunct1[OF hV]
+        conjunct1[OF conjunct2[OF hV]]
+        conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hV]]]]
+        conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hV]]]]])
+  qed
+
+  define Vstep where
+    "Vstep n W =
+      (SOME V. V \<in> TX \<and> V \<subseteq> X \<and> V \<subseteq> W \<and> V \<noteq> {} \<and> f (Suc n) \<notin> closure_on X TX V)" for n W
+
+  define V where "V n = rec_nat V0 Vstep n" for n
+
+  have V0_eq: "V 0 = V0"
+    unfolding V_def by simp
+  have VSuc_eq: "\<And>n. V (Suc n) = Vstep n (V n)"
+    unfolding V_def by simp
+
+  have Vstep_spec:
+    "\<And>n W. W \<in> TX \<Longrightarrow> W \<subseteq> X \<Longrightarrow> W \<noteq> {} \<Longrightarrow>
+      Vstep n W \<in> TX \<and> Vstep n W \<subseteq> X \<and> Vstep n W \<subseteq> W \<and> Vstep n W \<noteq> {}
+        \<and> f (Suc n) \<notin> closure_on X TX (Vstep n W)"
+  proof -
+    fix n W
+    assume hWT: "W \<in> TX"
+    assume hWX: "W \<subseteq> X"
+    assume hWne: "W \<noteq> {}"
+    have hfSucX: "f (Suc n) \<in> X"
+      using hfX by simp
+    have hex:
+      "\<exists>V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<subseteq> W \<and> V' \<noteq> {} \<and> f (Suc n) \<notin> closure_on X TX V'"
+      by (rule top1_27_7_shrink_open_avoid_closure[OF hhaus hnoi hWT hWX hWne hfSucX])
+    show "Vstep n W \<in> TX \<and> Vstep n W \<subseteq> X \<and> Vstep n W \<subseteq> W \<and> Vstep n W \<noteq> {}
+        \<and> f (Suc n) \<notin> closure_on X TX (Vstep n W)"
+      unfolding Vstep_def
+      by (rule someI_ex[OF hex])
+  qed
+
+  have V_basic:
+    "\<forall>n. V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {} \<and> f n \<notin> closure_on X TX (V n)"
+  proof (rule nat_induct)
+    show "V 0 \<in> TX \<and> V 0 \<subseteq> X \<and> V 0 \<noteq> {} \<and> f 0 \<notin> closure_on X TX (V 0)"
+      unfolding V0_eq using hV0T hV0X hV0ne hf0_not_cl by blast
+  next
+    fix n
+    assume IH: "V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {} \<and> f n \<notin> closure_on X TX (V n)"
+    have hVnT: "V n \<in> TX" and hVnX: "V n \<subseteq> X" and hVnne: "V n \<noteq> {}"
+      using IH by blast+
+    have hspec:
+      "Vstep n (V n) \<in> TX \<and> Vstep n (V n) \<subseteq> X \<and> Vstep n (V n) \<subseteq> V n \<and> Vstep n (V n) \<noteq> {}
+        \<and> f (Suc n) \<notin> closure_on X TX (Vstep n (V n))"
+      by (rule Vstep_spec[OF hVnT hVnX hVnne])
+    show "V (Suc n) \<in> TX \<and> V (Suc n) \<subseteq> X \<and> V (Suc n) \<noteq> {} \<and> f (Suc n) \<notin> closure_on X TX (V (Suc n))"
+      unfolding VSuc_eq
+      using hspec by blast
+  qed
+
+  have V_shrink: "\<forall>n. V (Suc n) \<subseteq> V n"
+  proof (intro allI)
+    fix n
+    have hVnT: "V n \<in> TX" and hVnX: "V n \<subseteq> X" and hVnne: "V n \<noteq> {}"
+      using V_basic by blast+
+    have hspec:
+      "Vstep n (V n) \<in> TX \<and> Vstep n (V n) \<subseteq> X \<and> Vstep n (V n) \<subseteq> V n \<and> Vstep n (V n) \<noteq> {}
+        \<and> f (Suc n) \<notin> closure_on X TX (Vstep n (V n))"
+      by (rule Vstep_spec[OF hVnT hVnX hVnne])
+    show "V (Suc n) \<subseteq> V n"
+      unfolding VSuc_eq using hspec by blast
+  qed
+
+  have V_mono: "\<forall>m n. m \<le> n \<longrightarrow> V n \<subseteq> V m"
+  proof (intro allI allI impI)
+    fix m n
+    assume hmn: "m \<le> n"
+    show "V n \<subseteq> V m"
+      using hmn
+    proof (induction rule: le_induct)
+      show "V m \<subseteq> V m"
+        by simp
+    next
+      fix k
+      assume hmk: "m \<le> k"
+      assume IH: "V k \<subseteq> V m"
+      have hstep: "V (Suc k) \<subseteq> V k"
+        using V_shrink by blast
+      show "V (Suc k) \<subseteq> V m"
+        by (rule subset_trans[OF hstep IH])
+    qed
+  qed
+
+  have hV_all:
+    "\<forall>n. V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {} \<and> f n \<notin> closure_on X TX (V n)"
+    by (rule V_basic)
+
+  define Cl where "Cl n = closure_on X TX (V n)" for n
+
+  have hCl_closed: "\<forall>n. closedin_on X TX (Cl n)"
+  proof (intro allI)
+    fix n
+    have hVnX: "V n \<subseteq> X"
+      using hV_all by blast
+    show "closedin_on X TX (Cl n)"
+      unfolding Cl_def by (rule closure_on_closed[OF hTop hVnX])
+  qed
+
+  have hCl_ne: "\<forall>n. Cl n \<noteq> {}"
+  proof (intro allI)
+    fix n
+    have hVn_ne: "V n \<noteq> {}"
+      using hV_all by blast
+    obtain z where hz: "z \<in> V n"
+      using hVn_ne by blast
+    have "z \<in> Cl n"
+      unfolding Cl_def by (rule subsetD[OF subset_closure_on hz])
+    thus "Cl n \<noteq> {}"
+      by blast
+  qed
+
+  have hCl_mono: "\<forall>m n. m \<le> n \<longrightarrow> Cl n \<subseteq> Cl m"
+  proof (intro allI allI impI)
+    fix m n
+    assume hmn: "m \<le> n"
+    have hVn: "V n \<subseteq> V m"
+      using V_mono hmn by blast
+    have "Cl n = closure_on X TX (V n)"
+      unfolding Cl_def by simp
+    also have "... \<subseteq> closure_on X TX (V m)"
+      by (rule closure_on_mono[OF hVn])
+    also have "... = Cl m"
+      unfolding Cl_def by simp
+    finally show "Cl n \<subseteq> Cl m" .
+  qed
+
+  have hFIP:
+    "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> range Cl \<longrightarrow> \<Inter>F \<noteq> {}"
+  proof (intro allI impI)
+    fix F :: "'a set set"
+    assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> range Cl"
+    have hFfin: "finite F" and hFne: "F \<noteq> {}" and hFsub: "F \<subseteq> range Cl"
+      using hF by blast+
+
+    have ex_idx: "\<forall>C\<in>F. \<exists>n. C = Cl n"
+      using hFsub by blast
+    obtain idx where hidx: "\<forall>C\<in>F. C = Cl (idx C)"
+      using bchoice[OF ex_idx] by blast
+
+    define K where "K = idx ` F"
+    have hKfin: "finite K"
+      unfolding K_def by (rule finite_imageI[OF hFfin])
+    have hKne: "K \<noteq> {}"
+    proof
+      assume h0: "K = {}"
+      have "F = {}"
+      proof (rule ccontr)
+        assume hF0: "F \<noteq> {}"
+        obtain C where hCF: "C \<in> F"
+          using hF0 by blast
+        have "idx C \<in> K"
+          unfolding K_def using hCF by blast
+        thus False
+          using h0 by simp
+      qed
+      thus False
+        using hFne by blast
+    qed
+
+    define N where "N = Max K"
+    have hNin: "N \<in> K"
+      unfolding N_def using hKfin hKne by (rule Max_in)
+    have hNge: "\<forall>n\<in>K. n \<le> N"
+      unfolding N_def using hKfin by (rule Max_ge)
+
+    have hInter_eq: "\<Inter>F = Cl N"
+    proof (rule subset_antisym)
+      have hClN_in_F: "Cl N \<in> F"
+      proof -
+        obtain C0 where hC0: "C0 \<in> F" and hidxN: "idx C0 = N"
+          using hNin unfolding K_def by blast
+        have "C0 = Cl (idx C0)"
+          using hidx hC0 by blast
+        thus ?thesis
+          using hidxN by simp
+      qed
+      show "\<Inter>F \<subseteq> Cl N"
+        by (rule Inter_lower, rule hClN_in_F)
+      show "Cl N \<subseteq> \<Inter>F"
+      proof (rule subsetI)
+        fix x assume hxN: "x \<in> Cl N"
+        show "x \<in> \<Inter>F"
+        proof (rule InterI)
+          fix C assume hC: "C \<in> F"
+          have hCeq: "C = Cl (idx C)"
+            using hidx hC by blast
+          have "idx C \<in> K"
+            unfolding K_def using hC by blast
+          have hidx_le: "idx C \<le> N"
+            using hNge \<open>idx C \<in> K\<close> by blast
+          have hsub: "Cl N \<subseteq> Cl (idx C)"
+            using hCl_mono hidx_le by blast
+          show "x \<in> C"
+            unfolding hCeq using hxN by (rule subsetD[OF hsub])
+        qed
+      qed
+    qed
+
+    have "Cl N \<noteq> {}"
+      using hCl_ne by blast
+    thus "\<Inter>F \<noteq> {}"
+      unfolding hInter_eq by simp
+  qed
+
+  have hCompact_FIP:
+    "\<forall>\<C>. (\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+         (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})
+         \<longrightarrow> \<Inter>\<C> \<noteq> {}"
+    by (rule iffD1[OF Theorem_26_9[OF hTop] hcomp])
+
+  have hInter_ne: "\<Inter>(range Cl) \<noteq> {}"
+  proof (rule hCompact_FIP[rule_format])
+    show "(\<forall>C\<in>range Cl. closedin_on X TX C) \<and>
+        (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> range Cl \<longrightarrow> \<Inter>F \<noteq> {})"
+      using hCl_closed hFIP by blast
+  qed
+
+  obtain x where hx: "x \<in> \<Inter>(range Cl)"
+    using hInter_ne by blast
+
+  have hxCl: "\<forall>n. x \<in> Cl n"
+    using hx by blast
+
+  have hxX: "x \<in> X"
+  proof -
+    have "x \<in> Cl 0"
+      using hxCl by simp
+    have hV0X': "V 0 \<subseteq> X"
+      using hV_all by simp
+    have "Cl 0 \<subseteq> X"
+      unfolding Cl_def by (rule closure_on_subset_carrier[OF hTop hV0X'])
+    thus ?thesis
+      using \<open>x \<in> Cl 0\<close> by blast
+  qed
+
+  have hx_not_in_image: "x \<notin> f ` (UNIV :: nat set)"
+  proof
+    assume hximg: "x \<in> f ` (UNIV :: nat set)"
+    then obtain n where hxfn: "x = f n"
+      by blast
+    have "x \<in> Cl n"
+      using hxCl by blast
+    have "f n \<notin> Cl n"
+      unfolding Cl_def using hV_all by blast
+    thus False
+      using hxfn \<open>x \<in> Cl n\<close> by simp
+  qed
+
+  have "x \<in> f ` (UNIV :: nat set)"
+    using hxX hImage by blast
+  thus False
+    using hx_not_in_image by blast
+qed
+*)
 
 (** from \S27 Corollary 27.8 [top1.tex:3543] **)
 corollary Corollary_27_8:
