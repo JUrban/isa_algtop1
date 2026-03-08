@@ -12729,6 +12729,54 @@ proof -
     by simp
 qed
 
+(** Munkres' \<open>D\<close>-metric vanishes iff the arguments are equal (pointwise). **)
+lemma top1_D_metric_real_omega_0_iff:
+  shows "top1_D_metric_real_omega x y = 0 \<longleftrightarrow> x = y"
+proof (rule iffI)
+  assume h0: "top1_D_metric_real_omega x y = 0"
+  show "x = y"
+  proof (rule ext)
+    fix n :: nat
+    let ?S = "((\<lambda>k. top1_real_bounded_metric (x k) (y k) / real (Suc k)) ` (UNIV::nat set))"
+    have hbdd: "bdd_above ?S"
+      by (rule top1_D_metric_real_omega_bdd_above)
+    have hmem: "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<in> ?S"
+      by simp
+    have hle: "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<le> Sup ?S"
+      by (rule cSup_upper[OF hmem hbdd])
+    have hSup0: "Sup ?S = 0"
+      using h0 unfolding top1_D_metric_real_omega_def by simp
+    have hle0: "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<le> 0"
+      using hle unfolding hSup0 by simp
+
+    have hge0: "0 \<le> top1_real_bounded_metric (x n) (y n) / real (Suc n)"
+    proof -
+      have hnonneg: "0 \<le> top1_real_bounded_metric (x n) (y n)"
+        unfolding top1_real_bounded_metric_def by simp
+      have hpos: "0 < (real (Suc n) :: real)"
+        by simp
+      show ?thesis
+        using hnonneg hpos by simp
+    qed
+
+    have hterm0: "top1_real_bounded_metric (x n) (y n) / real (Suc n) = 0"
+      using hge0 hle0 by linarith
+    have hden_ne: "(real (Suc n) :: real) \<noteq> 0"
+      by simp
+    have hbm0: "top1_real_bounded_metric (x n) (y n) = 0"
+      using hterm0 hden_ne by simp
+
+    have h0iff: "\<forall>u\<in>UNIV. \<forall>v\<in>UNIV. top1_real_bounded_metric u v = 0 \<longleftrightarrow> u = v"
+      using top1_real_bounded_metric_metric_on unfolding top1_metric_on_def by blast
+    show "x n = y n"
+      using h0iff hbm0 by blast
+  qed
+next
+  assume hxy: "x = y"
+  show "top1_D_metric_real_omega x y = 0"
+    using hxy by (simp add: top1_D_metric_real_omega_refl)
+qed
+
 (** Triangle inequality for Munkres' \<open>D\<close>-metric (proof deferred). **)
 lemma top1_D_metric_real_omega_triangle:
   shows "top1_D_metric_real_omega x z \<le> top1_D_metric_real_omega x y + top1_D_metric_real_omega y z"
@@ -13811,7 +13859,29 @@ text \<open>
   constraints, hence is product-open; conversely, a basic product neighborhood around a point contains a suitable
   D-metric ball by choosing a small enough radius governed by finitely many coordinates.
 \<close>
-  sorry
+proof -
+  have hmetric: "top1_metric_on X\<omega> top1_D_metric_real_omega"
+  proof (unfold top1_metric_on_def, intro conjI)
+    show "\<forall>x\<in>X\<omega>. 0 \<le> top1_D_metric_real_omega x x"
+      by (intro ballI) (rule top1_D_metric_real_omega_nonneg)
+    show "\<forall>x\<in>X\<omega>. \<forall>y\<in>X\<omega>. 0 \<le> top1_D_metric_real_omega x y"
+      by (intro ballI) (rule top1_D_metric_real_omega_nonneg)
+    show "\<forall>x\<in>X\<omega>. \<forall>y\<in>X\<omega>. top1_D_metric_real_omega x y = 0 \<longleftrightarrow> x = y"
+      by (intro ballI) (rule top1_D_metric_real_omega_0_iff)
+    show "\<forall>x\<in>X\<omega>. \<forall>y\<in>X\<omega>. top1_D_metric_real_omega x y = top1_D_metric_real_omega y x"
+      by (intro ballI) (simp add: top1_D_metric_real_omega_sym)
+    show "\<forall>x\<in>X\<omega>. \<forall>y\<in>X\<omega>. \<forall>z\<in>X\<omega>.
+        top1_D_metric_real_omega x z \<le> top1_D_metric_real_omega x y + top1_D_metric_real_omega y z"
+      by (intro ballI) (rule top1_D_metric_real_omega_triangle)
+  qed
+  show ?thesis
+  proof (intro conjI)
+    show "top1_metric_on X\<omega> top1_D_metric_real_omega"
+      by (rule hmetric)
+    show "top1_metric_topology_on X\<omega> top1_D_metric_real_omega = Tprod"
+      sorry
+  qed
+qed
 
 section \<open>\<S>21 The Metric Topology (continued)\<close>
 
