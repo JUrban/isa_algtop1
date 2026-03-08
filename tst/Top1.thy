@@ -12558,6 +12558,91 @@ definition top1_D_metric_real_omega :: "(nat \<Rightarrow> real) \<Rightarrow> (
   "top1_D_metric_real_omega x y =
      Sup ((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
 
+(** Each coordinate term of Munkres' \<open>D\<close>-metric is bounded above by 1. **)
+lemma top1_D_metric_real_omega_term_le_1:
+  shows "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<le> (1::real)"
+proof -
+  have hpos: "0 < (real (Suc n) :: real)"
+    by simp
+  have hle1: "top1_real_bounded_metric (x n) (y n) \<le> (1::real)"
+    unfolding top1_real_bounded_metric_def by simp
+  have hle_den: "top1_real_bounded_metric (x n) (y n) \<le> real (Suc n)"
+  proof -
+    have h1le: "(1::real) \<le> real (Suc n)"
+      by simp
+    show ?thesis
+      using hle1 h1le by linarith
+  qed
+  show ?thesis
+    using hpos hle_den by (simp add: divide_le_eq)
+qed
+
+(** The defining set in \<open>top1_D_metric_real_omega\<close> is bounded above. **)
+lemma top1_D_metric_real_omega_bdd_above:
+  shows "bdd_above ((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
+  unfolding bdd_above_def
+proof (rule exI[where x="1::real"], intro ballI)
+  fix r
+  assume hr: "r \<in> ((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
+  then obtain n where hn: "r = top1_real_bounded_metric (x n) (y n) / real (Suc n)"
+    by blast
+  show "r \<le> (1::real)"
+    unfolding hn by (rule top1_D_metric_real_omega_term_le_1)
+qed
+
+(** Munkres' \<open>D\<close>-metric is always nonnegative. **)
+lemma top1_D_metric_real_omega_nonneg:
+  shows "0 \<le> top1_D_metric_real_omega x y"
+proof -
+  let ?S = "((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
+  have hmem: "(\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) 0 \<in> ?S"
+  proof -
+    have "(0::nat) \<in> (UNIV::nat set)"
+      by simp
+    then show ?thesis
+      by (rule imageI)
+  qed
+  have hbdd: "bdd_above ?S"
+    by (rule top1_D_metric_real_omega_bdd_above)
+  have hle: "top1_real_bounded_metric (x 0) (y 0) / real (Suc 0) \<le> Sup ?S"
+    by (rule cSup_upper[OF hmem hbdd])
+  have h0le: "0 \<le> top1_real_bounded_metric (x 0) (y 0) / real (Suc 0)"
+  proof -
+    have h0: "0 \<le> top1_real_bounded_metric (x 0) (y 0)"
+      unfolding top1_real_bounded_metric_def by simp
+    have hpos: "0 < (real (Suc 0) :: real)"
+      by simp
+    show ?thesis
+      using h0 hpos by simp
+  qed
+  have "0 \<le> Sup ?S"
+    using h0le hle by linarith
+  thus ?thesis
+    unfolding top1_D_metric_real_omega_def by simp
+qed
+
+(** Munkres' \<open>D\<close>-metric is always bounded above by 1. **)
+lemma top1_D_metric_real_omega_le_1:
+  shows "top1_D_metric_real_omega x y \<le> (1::real)"
+proof -
+  let ?S = "((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
+  have hSne: "?S \<noteq> {}"
+    by simp
+  have hbdd: "bdd_above ?S"
+    by (rule top1_D_metric_real_omega_bdd_above)
+  have "Sup ?S \<le> (1::real)"
+  proof (rule cSup_least[OF hSne])
+    fix xa
+    assume hxa: "xa \<in> ?S"
+    then obtain n where hn: "xa = top1_real_bounded_metric (x n) (y n) / real (Suc n)"
+      by blast
+    show "xa \<le> (1::real)"
+      unfolding hn by (rule top1_D_metric_real_omega_term_le_1)
+  qed
+  thus ?thesis
+    unfolding top1_D_metric_real_omega_def by simp
+qed
+
 (** from \S20 Theorem 20.3 [top1.tex:1684] **)
 theorem Theorem_20_3:
   fixes I :: "'i set"
