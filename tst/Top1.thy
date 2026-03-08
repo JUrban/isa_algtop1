@@ -12732,7 +12732,107 @@ qed
 (** Triangle inequality for Munkres' \<open>D\<close>-metric (proof deferred). **)
 lemma top1_D_metric_real_omega_triangle:
   shows "top1_D_metric_real_omega x z \<le> top1_D_metric_real_omega x y + top1_D_metric_real_omega y z"
-  sorry
+proof -
+  let ?Sxz = "((\<lambda>n. top1_real_bounded_metric (x n) (z n) / real (Suc n)) ` (UNIV::nat set))"
+  let ?Sxy = "((\<lambda>n. top1_real_bounded_metric (x n) (y n) / real (Suc n)) ` (UNIV::nat set))"
+  let ?Syz = "((\<lambda>n. top1_real_bounded_metric (y n) (z n) / real (Suc n)) ` (UNIV::nat set))"
+
+  have hSne_xz: "?Sxz \<noteq> {}"
+    by simp
+  have hbdd_xz: "bdd_above ?Sxz"
+    by (rule top1_D_metric_real_omega_bdd_above)
+  have hbdd_xy: "bdd_above ?Sxy"
+    by (rule top1_D_metric_real_omega_bdd_above)
+  have hbdd_yz: "bdd_above ?Syz"
+    by (rule top1_D_metric_real_omega_bdd_above)
+
+  have hall: "\<forall>xa\<in>?Sxz. xa \<le> Sup ?Sxy + Sup ?Syz"
+  proof (intro ballI)
+    fix xa
+    assume hxa: "xa \<in> ?Sxz"
+    then obtain n where hn:
+      "xa = top1_real_bounded_metric (x n) (z n) / real (Suc n)"
+      by blast
+
+    have hpos: "0 < (real (Suc n) :: real)"
+      by simp
+    have htri:
+      "top1_real_bounded_metric (x n) (z n)
+        \<le> top1_real_bounded_metric (x n) (y n) + top1_real_bounded_metric (y n) (z n)"
+      by (rule top1_real_bounded_metric_triangle)
+    have hdiv:
+      "top1_real_bounded_metric (x n) (z n) / real (Suc n)
+        \<le> (top1_real_bounded_metric (x n) (y n) + top1_real_bounded_metric (y n) (z n)) / real (Suc n)"
+    proof -
+      have hnonneg: "0 \<le> (real (Suc n) :: real)"
+        by simp
+      show ?thesis
+        by (rule divide_right_mono[OF htri hnonneg])
+    qed
+    have hsplit:
+      "(top1_real_bounded_metric (x n) (y n) + top1_real_bounded_metric (y n) (z n)) / real (Suc n)
+        = top1_real_bounded_metric (x n) (y n) / real (Suc n)
+          + top1_real_bounded_metric (y n) (z n) / real (Suc n)"
+      by (simp add: add_divide_distrib)
+
+    have hmem_xy:
+      "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<in> ?Sxy"
+      by simp
+    have hmem_yz:
+      "top1_real_bounded_metric (y n) (z n) / real (Suc n) \<in> ?Syz"
+      by simp
+
+    have hle_xy: "top1_real_bounded_metric (x n) (y n) / real (Suc n) \<le> Sup ?Sxy"
+      by (rule cSup_upper[OF hmem_xy hbdd_xy])
+    have hle_yz: "top1_real_bounded_metric (y n) (z n) / real (Suc n) \<le> Sup ?Syz"
+      by (rule cSup_upper[OF hmem_yz hbdd_yz])
+
+    have hsum_le: "top1_real_bounded_metric (x n) (y n) / real (Suc n)
+        + top1_real_bounded_metric (y n) (z n) / real (Suc n) \<le> Sup ?Sxy + Sup ?Syz"
+      using hle_xy hle_yz by linarith
+
+    show "xa \<le> Sup ?Sxy + Sup ?Syz"
+    proof -
+      have hxa0: "xa = top1_real_bounded_metric (x n) (z n) / real (Suc n)"
+        by (rule hn)
+      have hxa1: "xa \<le> (top1_real_bounded_metric (x n) (y n) + top1_real_bounded_metric (y n) (z n)) / real (Suc n)"
+        using hdiv unfolding hxa0 by simp
+      have hxa2: "xa \<le> top1_real_bounded_metric (x n) (y n) / real (Suc n)
+          + top1_real_bounded_metric (y n) (z n) / real (Suc n)"
+      proof -
+        have hEq:
+          "(top1_real_bounded_metric (x n) (y n) + top1_real_bounded_metric (y n) (z n)) / real (Suc n)
+            = top1_real_bounded_metric (x n) (y n) / real (Suc n)
+              + top1_real_bounded_metric (y n) (z n) / real (Suc n)"
+          by (simp add: add_divide_distrib)
+        show ?thesis
+          using hxa1 unfolding hEq by simp
+      qed
+      show ?thesis
+      proof -
+        have "xa \<le> Sup ?Sxy + Sup ?Syz"
+          using hxa2 hsum_le by linarith
+        then show ?thesis
+          by simp
+      qed
+    qed
+  qed
+
+  have hSup_le: "Sup ?Sxz \<le> Sup ?Sxy + Sup ?Syz"
+  proof (rule cSup_least[OF hSne_xz])
+    fix xa
+    assume hxa: "xa \<in> ?Sxz"
+    show "xa \<le> Sup ?Sxy + Sup ?Syz"
+      by (rule bspec[OF hall hxa])
+  qed
+
+  have hfinal1: "top1_D_metric_real_omega x z \<le> Sup ?Sxy + Sup ?Syz"
+    unfolding top1_D_metric_real_omega_def using hSup_le by simp
+  have hfinal2: "Sup ?Sxy + Sup ?Syz = top1_D_metric_real_omega x y + top1_D_metric_real_omega y z"
+    unfolding top1_D_metric_real_omega_def by simp
+  show ?thesis
+    using hfinal1 unfolding hfinal2 by simp
+qed
 
 (** from \S20 Theorem 20.3 [top1.tex:1684] **)
 theorem Theorem_20_3:
