@@ -28791,6 +28791,385 @@ proof
     using Cantors_theorem by blast
 qed
 
+(** A Cantor-style ternary series encoding of \<open>nat set\<close> into an interval of reals. **)
+definition top1_ternary_sum :: "nat set \<Rightarrow> real" where
+  "top1_ternary_sum S = (\<Sum>n. if n \<in> S then (1/3::real)^(Suc n) else 0)"
+
+lemma top1_summable_ternary_sum:
+  "summable (\<lambda>n. if n \<in> S then (1/3::real)^(Suc n) else 0)"
+proof (rule summable_comparison_test)
+  show "\<exists>N. \<forall>n\<ge>N. norm (if n \<in> S then (1/3::real)^(Suc n) else 0) \<le> (1/3::real)^(Suc n)"
+    by (rule exI[where x=0], intro allI impI) simp
+  show "summable (\<lambda>n. (1/3::real)^(Suc n))"
+  proof -
+    have hgeom: "summable (\<lambda>n. (1/3::real)^n)"
+      by (rule summable_geometric) simp
+    have "summable (\<lambda>n. (1/3::real)^n * (1/3::real))"
+      by (rule summable_mult2[OF hgeom])
+    thus ?thesis
+      by (simp add: power_Suc)
+  qed
+qed
+
+lemma top1_suminf_geometric_1_3_Suc:
+  "(\<Sum>n. (1/3::real)^(Suc n)) = (1/2::real)"
+proof -
+  have hgeom: "summable (\<lambda>n. (1/3::real)^n)"
+    by (rule summable_geometric) simp
+  have hsplit:
+    "(\<Sum>n. (1/3::real)^(Suc n)) = suminf (\<lambda>n. (1/3::real)^n) - (1/3::real)^0"
+    using suminf_split_head[OF hgeom] by simp
+  have "(\<Sum>n. (1/3::real)^(Suc n)) = 1 / (1 - (1/3::real)) - 1"
+    using hsplit by (simp add: suminf_geometric)
+  also have "... = (1/2::real)"
+    by simp
+  finally show ?thesis .
+qed
+
+lemma top1_ternary_sum_ge_0:
+  "0 \<le> top1_ternary_sum S"
+proof -
+  have hs: "summable (\<lambda>n. if n \<in> S then (1/3::real)^(Suc n) else 0)"
+    by (rule top1_summable_ternary_sum)
+  show ?thesis
+    unfolding top1_ternary_sum_def
+    by (rule suminf_nonneg[OF hs]) simp
+qed
+
+lemma top1_ternary_sum_le_half:
+  "top1_ternary_sum S \<le> (1/2::real)"
+proof -
+  have hs: "summable (\<lambda>n. if n \<in> S then (1/3::real)^(Suc n) else 0)"
+    by (rule top1_summable_ternary_sum)
+  have hg: "summable (\<lambda>n. (1/3::real)^(Suc n))"
+  proof -
+    have "summable (\<lambda>n. if n \<in> (UNIV :: nat set) then (1/3::real)^(Suc n) else 0)"
+      by (rule top1_summable_ternary_sum)
+    thus ?thesis
+      by simp
+  qed
+  have hle: "\<And>n. (if n \<in> S then (1/3::real)^(Suc n) else 0) \<le> (1/3::real)^(Suc n)"
+    by simp
+  have "top1_ternary_sum S \<le> (\<Sum>n. (1/3::real)^(Suc n))"
+    unfolding top1_ternary_sum_def
+    by (rule suminf_le[OF hle hs hg])
+  thus ?thesis
+    using top1_suminf_geometric_1_3_Suc by simp
+qed
+
+lemma top1_suminf_geometric_1_3_tail:
+  "(\<Sum>n. (1/3::real)^(n + (k + 2))) = (1/2::real) * (1/3::real)^(k + 1)"
+proof -
+  have hgeom: "summable (\<lambda>n. (1/3::real)^n)"
+    by (rule summable_geometric) simp
+  have hs: "summable (\<lambda>n. (1/3::real)^(n + (k + 2)))"
+  proof -
+    have "summable (\<lambda>n. (1/3::real)^n * (1/3::real)^(k + 2))"
+      by (rule summable_mult2[OF hgeom])
+    thus ?thesis
+      by (simp add: power_add algebra_simps)
+  qed
+  have "(\<Sum>n. (1/3::real)^(n + (k + 2))) = (\<Sum>n. (1/3::real)^n * (1/3::real)^(k + 2))"
+    by (simp add: power_add algebra_simps)
+  also have "... = suminf (\<lambda>n. (1/3::real)^n) * (1/3::real)^(k + 2)"
+    using suminf_mult2[OF hgeom, where c="(1/3::real)^(k + 2)"] by simp
+  also have "... = (1 / (1 - (1/3::real))) * (1/3::real)^(k + 2)"
+    by (simp add: suminf_geometric)
+  also have "... = (1/2::real) * (1/3::real)^(k + 1)"
+    by (simp add: power_add algebra_simps)
+  finally show ?thesis .
+qed
+
+lemma top1_ternary_sum_inj:
+  "inj_on top1_ternary_sum (UNIV :: nat set set)"
+proof (unfold inj_on_def, intro ballI impI)
+  fix S T :: "nat set"
+  assume hEq: "top1_ternary_sum S = top1_ternary_sum T"
+  show "S = T"
+  proof (rule ccontr)
+    assume hNe: "S \<noteq> T"
+    define P where "P n \<longleftrightarrow> (n \<in> S) \<noteq> (n \<in> T)" for n
+    have hex: "\<exists>n. P n"
+      using hNe unfolding P_def by blast
+    define k where "k = (LEAST n. P n)"
+    have hk: "P k"
+      unfolding k_def by (rule LeastI_ex[OF hex])
+    have hlt: "\<And>m. m < k \<Longrightarrow> \<not> P m"
+      unfolding k_def by (rule not_less_Least)
+
+    define fS where "fS n = (if n \<in> S then (1/3::real)^(Suc n) else 0)" for n
+    define fT where "fT n = (if n \<in> T then (1/3::real)^(Suc n) else 0)" for n
+
+    have hsS: "summable fS"
+      unfolding fS_def by (rule top1_summable_ternary_sum)
+    have hsT: "summable fT"
+      unfolding fT_def by (rule top1_summable_ternary_sum)
+
+    have hsplitS:
+      "top1_ternary_sum S = (\<Sum>n. fS (n + Suc k)) + (\<Sum>i<Suc k. fS i)"
+      unfolding top1_ternary_sum_def fS_def
+      by (rule suminf_split_initial_segment[OF top1_summable_ternary_sum, of S "Suc k"])
+    have hsplitT:
+      "top1_ternary_sum T = (\<Sum>n. fT (n + Suc k)) + (\<Sum>i<Suc k. fT i)"
+      unfolding top1_ternary_sum_def fT_def
+      by (rule suminf_split_initial_segment[OF top1_summable_ternary_sum, of T "Suc k"])
+
+    have hprefix: "\<And>m. m < k \<Longrightarrow> (m \<in> S) = (m \<in> T)"
+    proof -
+      fix m
+      assume hm: "m < k"
+      have "\<not> P m" by (rule hlt[OF hm])
+      thus "(m \<in> S) = (m \<in> T)"
+        unfolding P_def by blast
+    qed
+
+    have hsum_lt_k: "(\<Sum>i<k. fS i) = (\<Sum>i<k. fT i)"
+    proof (rule sum.cong[OF refl])
+      fix i
+      assume hi: "i \<in> {..<k}"
+      have hik: "i < k" using hi by simp
+      have "(i \<in> S) = (i \<in> T)"
+        by (rule hprefix[OF hik])
+      thus "fS i = fT i"
+        unfolding fS_def fT_def by simp
+    qed
+
+    have hinitS: "(\<Sum>i<Suc k. fS i) = (\<Sum>i<k. fS i) + fS k"
+      by (simp add: sum.lessThan_Suc)
+    have hinitT: "(\<Sum>i<Suc k. fT i) = (\<Sum>i<k. fT i) + fT k"
+      by (simp add: sum.lessThan_Suc)
+
+    have htailS_ge0: "0 \<le> (\<Sum>n. fS (n + Suc k))"
+    proof -
+      have hs: "summable (\<lambda>n. fS (n + Suc k))"
+        using summable_ignore_initial_segment[OF hsS] .
+      show ?thesis
+        by (rule suminf_nonneg[OF hs]) (simp add: fS_def)
+    qed
+
+    have htailT_le:
+      "(\<Sum>n. fT (n + Suc k)) \<le> (\<Sum>n. (1/3::real)^(Suc (n + Suc k)))"
+    proof -
+      have hs: "summable (\<lambda>n. fT (n + Suc k))"
+        using summable_ignore_initial_segment[OF hsT] .
+      have hg: "summable (\<lambda>n. (1/3::real)^(Suc (n + Suc k)))"
+      proof -
+        have hgeom: "summable (\<lambda>n. (1/3::real)^n)"
+          by (rule summable_geometric) simp
+        have "summable (\<lambda>n. (1/3::real)^n * (1/3::real)^(Suc k + 1))"
+          by (rule summable_mult2[OF hgeom])
+        thus ?thesis
+          by (simp add: power_add algebra_simps)
+      qed
+      have hle: "\<And>n. fT (n + Suc k) \<le> (1/3::real)^(Suc (n + Suc k))"
+        unfolding fT_def by simp
+      show ?thesis
+        by (rule suminf_le[OF hle hs hg])
+    qed
+
+    have htail_full:
+      "(\<Sum>n. (1/3::real)^(Suc (n + Suc k))) = (1/2::real) * (1/3::real)^(Suc k)"
+    proof -
+      have "(\<Sum>n. (1/3::real)^(Suc (n + Suc k))) = (\<Sum>n. (1/3::real)^(n + (k + 2)))"
+        by simp
+      also have "... = (1/2::real) * (1/3::real)^(k + 1)"
+        by (rule top1_suminf_geometric_1_3_tail)
+      finally show ?thesis
+        by simp
+    qed
+
+    have hk_cases: "(k \<in> S \<and> k \<notin> T) \<or> (k \<notin> S \<and> k \<in> T)"
+      using hk unfolding P_def by auto
+
+    from hk_cases show False
+    proof
+      assume hST: "k \<in> S \<and> k \<notin> T"
+      have hfSk: "fS k = (1/3::real)^(Suc k)"
+        using hST unfolding fS_def by simp
+      have hfTk: "fT k = 0"
+        using hST unfolding fT_def by simp
+
+      have hinit_diff: "(\<Sum>i<Suc k. fS i) = (\<Sum>i<Suc k. fT i) + (1/3::real)^(Suc k)"
+      proof -
+        have "(\<Sum>i<Suc k. fS i) = (\<Sum>i<k. fS i) + (1/3::real)^(Suc k)"
+          using hinitS hfSk by simp
+        also have "... = (\<Sum>i<k. fT i) + (1/3::real)^(Suc k)"
+          using hsum_lt_k by simp
+        also have "... = (\<Sum>i<Suc k. fT i) + (1/3::real)^(Suc k)"
+          using hinitT hfTk by simp
+        finally show ?thesis .
+      qed
+
+      have hS_ge: "(\<Sum>i<Suc k. fS i) \<le> top1_ternary_sum S"
+        using hsplitS htailS_ge0 by simp
+      have hT_le: "top1_ternary_sum T \<le> (\<Sum>i<Suc k. fT i) + (1/2::real) * (1/3::real)^(Suc k)"
+        using hsplitT htailT_le htail_full by simp
+
+      have hS0: "(\<Sum>i<Suc k. fT i) + (1/3::real)^(Suc k) \<le> top1_ternary_sum S"
+        using hS_ge hinit_diff by simp
+      have hT0: "top1_ternary_sum T \<le> (\<Sum>i<Suc k. fT i) + (1/2::real) * (1/3::real)^(Suc k)"
+        by (rule hT_le)
+      have "top1_ternary_sum T < top1_ternary_sum S"
+      proof -
+        define A where "A = (\<Sum>i<Suc k. fT i)"
+        define B where "B = (1/3::real)^(Suc k)"
+        have hS: "A + B \<le> top1_ternary_sum S"
+          using hS0 unfolding A_def B_def by simp
+        have hT: "top1_ternary_sum T \<le> A + (1/2::real) * B"
+          using hT0 unfolding A_def B_def by simp
+        have hBpos: "0 < B"
+          unfolding B_def by simp
+        have hhalfB: "(1/2::real) * B < B"
+          using hBpos by simp
+        have hAhalf: "A + (1/2::real) * B < A + B"
+          using hhalfB by simp
+        have hTlt: "top1_ternary_sum T < A + B"
+          by (rule le_less_trans[OF hT hAhalf])
+        show ?thesis
+          by (rule less_le_trans[OF hTlt hS])
+      qed
+      thus False
+        using hEq by simp
+    next
+      assume hTS: "k \<notin> S \<and> k \<in> T"
+      have hfSk: "fS k = 0"
+        using hTS unfolding fS_def by simp
+      have hfTk: "fT k = (1/3::real)^(Suc k)"
+        using hTS unfolding fT_def by simp
+
+      have hinit_diff: "(\<Sum>i<Suc k. fT i) = (\<Sum>i<Suc k. fS i) + (1/3::real)^(Suc k)"
+      proof -
+        have "(\<Sum>i<Suc k. fT i) = (\<Sum>i<k. fT i) + (1/3::real)^(Suc k)"
+          using hinitT hfTk by simp
+        also have "... = (\<Sum>i<k. fS i) + (1/3::real)^(Suc k)"
+          using hsum_lt_k by simp
+        also have "... = (\<Sum>i<Suc k. fS i) + (1/3::real)^(Suc k)"
+          using hinitS hfSk by simp
+        finally show ?thesis .
+      qed
+
+      have hS_le: "top1_ternary_sum S \<le> (\<Sum>i<Suc k. fS i) + (1/2::real) * (1/3::real)^(Suc k)"
+        using hsplitS
+      proof -
+        have htailS_le:
+          "(\<Sum>n. fS (n + Suc k)) \<le> (\<Sum>n. (1/3::real)^(Suc (n + Suc k)))"
+        proof -
+          have hs: "summable (\<lambda>n. fS (n + Suc k))"
+            using summable_ignore_initial_segment[OF hsS] .
+          have hg: "summable (\<lambda>n. (1/3::real)^(Suc (n + Suc k)))"
+          proof -
+            have hgeom: "summable (\<lambda>n. (1/3::real)^n)"
+              by (rule summable_geometric) simp
+            have "summable (\<lambda>n. (1/3::real)^n * (1/3::real)^(Suc k + 1))"
+              by (rule summable_mult2[OF hgeom])
+            thus ?thesis
+              by (simp add: power_add algebra_simps)
+          qed
+          have hle: "\<And>n. fS (n + Suc k) \<le> (1/3::real)^(Suc (n + Suc k))"
+            unfolding fS_def by simp
+          show ?thesis
+            by (rule suminf_le[OF hle hs hg])
+        qed
+        show "top1_ternary_sum S \<le> (\<Sum>i<Suc k. fS i) + (1/2::real) * (1/3::real)^(Suc k)"
+          using htailS_le htail_full unfolding hsplitS by simp
+      qed
+
+      have hT_ge: "(\<Sum>i<Suc k. fT i) \<le> top1_ternary_sum T"
+      proof -
+        have hs: "summable (\<lambda>n. fT (n + Suc k))"
+          using summable_ignore_initial_segment[OF hsT] .
+        have htail_ge0: "0 \<le> (\<Sum>n. fT (n + Suc k))"
+          by (rule suminf_nonneg[OF hs]) (simp add: fT_def)
+        show ?thesis
+          using hsplitT htail_ge0 by simp
+      qed
+
+      have hS0: "top1_ternary_sum S \<le> (\<Sum>i<Suc k. fS i) + (1/2::real) * (1/3::real)^(Suc k)"
+        by (rule hS_le)
+      have hT0: "(\<Sum>i<Suc k. fS i) + (1/3::real)^(Suc k) \<le> top1_ternary_sum T"
+        using hT_ge hinit_diff by simp
+      have "top1_ternary_sum S < top1_ternary_sum T"
+      proof -
+        define A where "A = (\<Sum>i<Suc k. fS i)"
+        define B where "B = (1/3::real)^(Suc k)"
+        have hS: "top1_ternary_sum S \<le> A + (1/2::real) * B"
+          using hS0 unfolding A_def B_def by simp
+        have hT: "A + B \<le> top1_ternary_sum T"
+          using hT0 unfolding A_def B_def by simp
+        have hBpos: "0 < B"
+          unfolding B_def by simp
+        have hhalfB: "(1/2::real) * B < B"
+          using hBpos by simp
+        have hAhalf: "A + (1/2::real) * B < A + B"
+          using hhalfB by simp
+        have hSlt: "top1_ternary_sum S < A + B"
+          by (rule le_less_trans[OF hS hAhalf])
+        show ?thesis
+          by (rule less_le_trans[OF hSlt hT])
+      qed
+      thus False
+        using hEq by simp
+    qed
+  qed
+qed
+
+definition top1_interval_encode :: "real \<Rightarrow> real \<Rightarrow> nat set \<Rightarrow> real" where
+  "top1_interval_encode a b S = a + (b - a) * (2 * top1_ternary_sum S)"
+
+lemma top1_interval_encode_mem_Icc:
+  assumes hab: "a < b"
+  shows "top1_interval_encode a b S \<in> {a..b}"
+proof -
+  have hsum0: "0 \<le> top1_ternary_sum S"
+    by (rule top1_ternary_sum_ge_0)
+  have hsumle: "top1_ternary_sum S \<le> (1/2::real)"
+    by (rule top1_ternary_sum_le_half)
+  have h2sum0: "0 \<le> 2 * top1_ternary_sum S"
+    using hsum0 by simp
+  have h2sumle: "2 * top1_ternary_sum S \<le> (1::real)"
+    using hsumle by simp
+  have hba0: "0 < b - a"
+    using hab by simp
+  have hba: "0 \<le> b - a"
+    using hba0 by simp
+
+  have ha: "a \<le> top1_interval_encode a b S"
+    unfolding top1_interval_encode_def
+    using hba h2sum0 by (simp add: mult_nonneg_nonneg)
+  have hb: "top1_interval_encode a b S \<le> b"
+  proof -
+    have "(b - a) * (2 * top1_ternary_sum S) \<le> (b - a) * (1::real)"
+    proof (rule mult_left_mono)
+      show "2 * top1_ternary_sum S \<le> (1::real)"
+        by (rule h2sumle)
+      show "0 \<le> b - a"
+        by (rule hba)
+    qed
+    hence "a + (b - a) * (2 * top1_ternary_sum S) \<le> a + (b - a)"
+      by simp
+    thus ?thesis
+      unfolding top1_interval_encode_def by simp
+  qed
+  show ?thesis
+    using ha hb by simp
+qed
+
+lemma top1_interval_encode_inj:
+  assumes hab: "a < b"
+  shows "inj_on (top1_interval_encode a b) (UNIV :: nat set set)"
+proof (unfold inj_on_def, intro ballI impI)
+  fix S T :: "nat set"
+  assume hEq: "top1_interval_encode a b S = top1_interval_encode a b T"
+  have hba0: "b - a \<noteq> 0"
+    using hab by simp
+  have "2 * top1_ternary_sum S = 2 * top1_ternary_sum T"
+    using hEq hba0 unfolding top1_interval_encode_def by (simp add: mult_left_cancel)
+  hence "top1_ternary_sum S = top1_ternary_sum T"
+    by simp
+  thus "S = T"
+    using top1_ternary_sum_inj unfolding inj_on_def by blast
+qed
+
 (** from \S27 Theorem 27.7 [top1.tex:3519] **)
 theorem Theorem_27_7:
   assumes hXne: "X \<noteq> {}"
@@ -28823,7 +29202,45 @@ text \<open>
   \<open>uncountable_closed_interval\<close>, which implies this statement immediately.  We keep this file on
   \<open>Complex_Main\<close> only, to avoid adding extra session dependencies.
 \<close>
-  sorry
+proof
+  assume hcnt: "countable {a..b}"
+  obtain h :: "real \<Rightarrow> nat" where hh: "inj_on h {a..b}"
+    using hcnt unfolding countable_def by blast
+
+  define enc where "enc = top1_interval_encode a b"
+  have henc_inj: "inj_on enc (UNIV :: nat set set)"
+    unfolding enc_def by (rule top1_interval_encode_inj[OF hab])
+  have henc_sub: "enc ` (UNIV :: nat set set) \<subseteq> {a..b}"
+  proof
+    fix x
+    assume hx: "x \<in> enc ` (UNIV :: nat set set)"
+    then obtain S :: "nat set" where hS: "x = enc S"
+      by blast
+    show "x \<in> {a..b}"
+      unfolding hS enc_def by (rule top1_interval_encode_mem_Icc[OF hab])
+  qed
+
+  have hcomp_inj: "inj_on (\<lambda>S. h (enc S)) (UNIV :: nat set set)"
+    unfolding inj_on_def
+  proof (intro ballI impI)
+    fix S T :: "nat set"
+    assume hST: "h (enc S) = h (enc T)"
+    have hS: "enc S \<in> {a..b}"
+      using henc_sub by blast
+    have hT: "enc T \<in> {a..b}"
+      using henc_sub by blast
+    have "enc S = enc T"
+      using hh hS hT hST unfolding inj_on_def by blast
+    thus "S = T"
+      using henc_inj unfolding inj_on_def by blast
+  qed
+
+  have "countable (UNIV :: nat set set)"
+    unfolding countable_def
+    by (rule exI[where x="\<lambda>S. h (enc S)"], rule hcomp_inj)
+  thus False
+    using top1_not_countable_UNIV_nat_set by blast
+qed
 
 section \<open>\<S>28 Limit Point Compactness\<close>
 
