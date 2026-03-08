@@ -13445,6 +13445,9 @@ proof (rule notI)
 
   have hW_not_Tunif: "W \<notin> ?Tunif"
     sorry
+  (* Proof idea: pick a box-basic neighborhood around the zero function with radii shrinking along an injected copy
+     of \<open>\<nat>\<close>; any uniform ball includes a point violating one of those coordinate constraints.  A full draft of
+     this argument previously caused `*** Timeout` under session option `timeout=120`. *)
 
   have "W \<in> ?Tunif"
     using hEq hW_Tbox by simp
