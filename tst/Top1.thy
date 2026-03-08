@@ -13377,7 +13377,7 @@ proof (rule notI)
         have hr: "0 < r"
           unfolding r_def by simp
         have hab: "(-r) < r"
-          using hr by linarith
+          using hr by simp
         have hopen: "open_interval (-r) r \<in> ?TR"
           by (rule open_interval_in_order_topology[OF hab])
         have hUi: "U i = open_interval (-r) r"
@@ -13459,7 +13459,7 @@ proof (rule notI)
     have ht_le_half: "t \<le> (1/2::real)"
       unfolding t_def by simp
     have ht_nonneg: "0 \<le> t"
-      using ht_pos by linarith
+      using ht_pos by simp
     have hmt0: "top1_real_bounded_metric (0::real) t = t"
       unfolding top1_real_bounded_metric_def using ht_nonneg ht_le_half by simp
 
@@ -13527,7 +13527,7 @@ proof (rule notI)
       have "y (f n) \<notin> U (f n)"
       proof -
         have "\<not> (t < inverse (real (Suc n)))"
-          using hn_lt by linarith
+          using hn_lt by (simp add: less_asym)
         thus ?thesis
           unfolding hUj open_interval_def using hyj by simp
       qed
