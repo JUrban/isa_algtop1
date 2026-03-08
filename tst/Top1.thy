@@ -13318,9 +13318,6 @@ lemma top1_uniform_metric_topology_ne_box_topology_real:
   assumes hInf: "infinite I"
   shows "top1_metric_topology_on (top1_PiE I (\<lambda>_. (UNIV::real set))) (top1_uniform_metric_real_on I)
     \<noteq> top1_box_topology_on I (\<lambda>_. (UNIV::real set)) (\<lambda>_. (order_topology_on_UNIV::real set set))"
-sorry
-
-(* Proof attempt (disabled: session timeout=120 caused `*** Timeout` during build):
 proof (rule notI)
   let ?XR = "(\<lambda>_. (UNIV::real set))"
   let ?TR = "(order_topology_on_UNIV::real set set)"
@@ -13447,124 +13444,13 @@ proof (rule notI)
   qed
 
   have hW_not_Tunif: "W \<notin> ?Tunif"
-  proof
-    assume hW_Tunif: "W \<in> ?Tunif"
-    obtain \<delta> where hdel_pos: "\<delta> > 0"
-        and hball_sub: "top1_ball_on ?X (top1_uniform_metric_real_on I) x0 \<delta> \<subseteq> W"
-      using top1_metric_open_contains_ball[OF hMetric hW_Tunif hx0W] by blast
-
-    define t where "t = min (\<delta> / 2) (1/2)"
-    have ht_pos: "0 < t"
-      unfolding t_def using hdel_pos by simp
-    have ht_le: "t \<le> \<delta> / 2"
-      unfolding t_def by simp
-    have hhalf_lt: "\<delta> / 2 < \<delta>"
-      using hdel_pos by linarith
-    have ht_lt_del: "t < \<delta>"
-      by (rule le_less_trans[OF ht_le hhalf_lt])
-    have ht_le_half: "t \<le> (1/2::real)"
-      unfolding t_def by simp
-    have ht_nonneg: "0 \<le> t"
-      using ht_pos by simp
-    have hmt0: "top1_real_bounded_metric (0::real) t = t"
-      unfolding top1_real_bounded_metric_def using ht_nonneg ht_le_half by simp
-
-    have hex_n0: "\<exists>n0. n0 \<noteq> 0 \<and> 0 < inverse (real n0) \<and> inverse (of_nat n0) < t"
-      using ht_pos by (simp add: real_arch_inverse)
-    obtain n0 where hn0: "n0 \<noteq> 0"
-        and hn0_lt: "inverse (real n0) < t"
-    proof -
-      from hex_n0 obtain n0 where "n0 \<noteq> 0" and "inverse (of_nat n0) < t"
-        by blast
-      then show ?thesis
-        by (intro that[of n0]) simp_all
-    qed
-    obtain n where hnSuc: "n0 = Suc n"
-      using hn0 by (cases n0) simp_all
-    have hn_lt: "inverse (real (Suc n)) < t"
-      using hn0_lt unfolding hnSuc by simp
-
-    have hjI: "f n \<in> I"
-    proof -
-      have "f n \<in> range f"
-        by simp
-      thus ?thesis
-        by (rule subsetD[OF hf_range])
-    qed
-
-    define y where "y = (\<lambda>i. if i \<in> I then (if i = f n then t else x0 i) else undefined)"
-    have hyX: "y \<in> ?X"
-      unfolding y_def x0_def top1_PiE_iff by simp
-
-    have hdist_le: "top1_uniform_metric_real_on I x0 y \<le> t"
-    proof -
-      have hSne:
-        "((\<lambda>i. top1_real_bounded_metric (x0 i) (y i)) ` I) \<noteq> {}"
-        using hjI by blast
-      have hall_le: "\<forall>s\<in>((\<lambda>i. top1_real_bounded_metric (x0 i) (y i)) ` I). s \<le> t"
-      proof (intro ballI)
-        fix s
-        assume hs: "s \<in> ((\<lambda>i. top1_real_bounded_metric (x0 i) (y i)) ` I)"
-        then obtain i where hiI: "i \<in> I" and hs_eq: "s = top1_real_bounded_metric (x0 i) (y i)"
-          by blast
-        show "s \<le> t"
-        proof (cases "i = f n")
-          case True
-          show ?thesis
-            unfolding hs_eq y_def x0_def using hiI hjI True hmt0 by simp
-        next
-          case False
-          have "y i = x0 i"
-            unfolding y_def using hiI False by simp
-          hence "top1_real_bounded_metric (x0 i) (y i) = 0"
-            unfolding top1_real_bounded_metric_def by simp
-          thus ?thesis
-            unfolding hs_eq using ht_nonneg by simp
-        qed
-      qed
-      show ?thesis
-        unfolding top1_uniform_metric_real_on_def
-        by (rule cSup_least[OF hSne]) (rule hall_le)
-    qed
-
-    have hdist_lt_del: "top1_uniform_metric_real_on I x0 y < \<delta>"
-      by (rule le_less_trans[OF hdist_le ht_lt_del])
-    have hy_ball: "y \<in> top1_ball_on ?X (top1_uniform_metric_real_on I) x0 \<delta>"
-      unfolding top1_ball_on_def using hyX hdist_lt_del by blast
-
-    have hyW: "y \<in> W"
-      by (rule set_mp[OF hball_sub hy_ball])
-
-    have hy_not_W: "y \<notin> W"
-    proof -
-      have hyj: "y (f n) = t"
-        unfolding y_def using hjI by simp
-      have hUj: "U (f n) =
-        open_interval (- inverse (real (Suc n))) (inverse (real (Suc n)))"
-        unfolding U_def using hginv by simp
-      have "y (f n) \<notin> U (f n)"
-      proof -
-        have "\<not> (t < inverse (real (Suc n)))"
-          using hn_lt by (simp add: less_asym)
-        thus ?thesis
-          unfolding hUj open_interval_def using hyj by simp
-      qed
-      hence "\<not> (\<forall>i\<in>I. y i \<in> U i)"
-        using hjI by blast
-      thus ?thesis
-        unfolding W_def top1_PiE_iff using y_def by simp
-    qed
-
-    show False
-      using hyW hy_not_W by contradiction
-  qed
+    sorry
 
   have "W \<in> ?Tunif"
     using hEq hW_Tbox by simp
   with hW_not_Tunif show False
     by contradiction
 qed
-*)
 
 (** from \S20 Theorem 20.4 [top1.tex:1761] **)
 theorem Theorem_20_4:
