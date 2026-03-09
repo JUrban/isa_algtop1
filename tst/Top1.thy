@@ -13476,14 +13476,15 @@ proof -
       assume hi: "i \<in> I"
 	      have habs_le: "abs (x i - y i) \<le> ?M"
 	        by (rule top1_square_metric_real_on_coord_le[OF hfin hne hi])
-	      have habs_nonneg: "0 \<le> abs (x i - y i)"
-	        by simp
-	      have hsq: "(abs (x i - y i))\<^sup>2 \<le> ?M\<^sup>2"
-	        using habs_le habs_nonneg hM_nonneg
-	        by (intro power_mono) simp_all
-	      show "(x i - y i)\<^sup>2 \<le> ?M\<^sup>2"
-	        using hsq by simp
-	    qed
+		      have habs_nonneg: "0 \<le> abs (x i - y i)"
+		        by simp
+		      have hsq: "(abs (x i - y i))\<^sup>2 \<le> ?M\<^sup>2"
+		        using habs_le habs_nonneg hM_nonneg
+		        apply (intro power_mono; simp)
+		        done
+		      show "(x i - y i)\<^sup>2 \<le> ?M\<^sup>2"
+		        using hsq by simp
+		    qed
 	    have "(\<Sum>i\<in>I. (x i - y i)\<^sup>2) \<le> (\<Sum>i\<in>I. ?M\<^sup>2)"
 	    proof (rule sum_mono)
 	      fix i
@@ -16279,14 +16280,21 @@ next
 
     have hPX: "?P \<subseteq> X" by blast
     have hprop: "\<forall>x\<in>?P. \<exists>c\<in>top1_metric_basis_on X dX. x \<in> c \<and> c \<subseteq> ?P"
-    proof (intro ballI)
-      fix x assume hxP: "x \<in> ?P"
-      have hxX: "x \<in> X" and hfxb: "f x \<in> b"
-        using hxP by simp_all
-      have hfxY: "f x \<in> Y"
-        using hmap hxX by blast
-      have hdist0: "dY y0 (f x) < \<epsilon>"
-        using hfxb unfolding hbdef top1_ball_on_def using hfxY by blast
+	    proof (intro ballI)
+	      fix x assume hxP: "x \<in> ?P"
+	      have hxX: "x \<in> X" and hfxb: "f x \<in> b"
+	      proof -
+	        have hx_conj: "x \<in> X \<and> f x \<in> b"
+	          using hxP by simp
+	        show "x \<in> X"
+	          using hx_conj by (rule conjunct1)
+	        show "f x \<in> b"
+	          using hx_conj by (rule conjunct2)
+	      qed
+	      have hfxY: "f x \<in> Y"
+	        using hmap hxX by blast
+	      have hdist0: "dY y0 (f x) < \<epsilon>"
+	        using hfxb unfolding hbdef top1_ball_on_def using hfxY by blast
 
       define \<epsilon>' where "\<epsilon>' = \<epsilon> - dY y0 (f x)"
       have heps': "\<epsilon>' > 0"
@@ -18058,8 +18066,12 @@ lemma top1_saturated_preimage_subset:
   shows "{x\<in>X. p x \<in> V} \<subseteq> A"
 proof (rule subsetI)
   fix x assume hx: "x \<in> {x \<in> X. p x \<in> V}"
-  have hxX: "x \<in> X" and hpxV: "p x \<in> V"
-    using hx by simp_all
+  have hx_conj: "x \<in> X \<and> p x \<in> V"
+    using hx by simp
+  have hxX: "x \<in> X"
+    using hx_conj by (rule conjunct1)
+  have hpxV: "p x \<in> V"
+    using hx_conj by (rule conjunct2)
   have hAX: "A \<subseteq> X"
     using hsat unfolding top1_saturated_with_respect_to_on_def by blast
   have hprop: "\<forall>a\<in>A. \<forall>y\<in>X. p y = p a \<longrightarrow> y \<in> A"
@@ -18080,8 +18092,12 @@ proof (rule equalityI)
   show "{x \<in> A. p x \<in> V} \<subseteq> {x \<in> X. p x \<in> V}"
   proof (rule subsetI)
     fix x assume hx: "x \<in> {x \<in> A. p x \<in> V}"
-    have hxA: "x \<in> A" and hpxV: "p x \<in> V"
-      using hx by simp_all
+    have hx_conj: "x \<in> A \<and> p x \<in> V"
+      using hx by simp
+    have hxA: "x \<in> A"
+      using hx_conj by (rule conjunct1)
+    have hpxV: "p x \<in> V"
+      using hx_conj by (rule conjunct2)
     have hAX: "A \<subseteq> X"
       using hsat unfolding top1_saturated_with_respect_to_on_def by blast
     have hxX: "x \<in> X"
@@ -18092,8 +18108,12 @@ proof (rule equalityI)
   show "{x \<in> X. p x \<in> V} \<subseteq> {x \<in> A. p x \<in> V}"
   proof (rule subsetI)
     fix x assume hx: "x \<in> {x \<in> X. p x \<in> V}"
-    have hxX: "x \<in> X" and hpxV: "p x \<in> V"
-      using hx by simp_all
+    have hx_conj: "x \<in> X \<and> p x \<in> V"
+      using hx by simp
+    have hxX: "x \<in> X"
+      using hx_conj by (rule conjunct1)
+    have hpxV: "p x \<in> V"
+      using hx_conj by (rule conjunct2)
     have hxA: "x \<in> A"
       using top1_saturated_preimage_subset[OF hsat hV] hx by blast
     show "x \<in> {x \<in> A. p x \<in> V}"
