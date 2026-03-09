@@ -13079,12 +13079,16 @@ proof -
     case univ
     have hUuniv: "(UNIV::real set) \<subseteq> U"
       using hbsub univ by simp
-    have "open_interval (y - 1) (y + 1) \<subseteq> (UNIV::real set)"
+    have hsub_univ: "open_interval (y - 1) (y + 1) \<subseteq> (UNIV::real set)"
       by simp
-    hence "open_interval (y - 1) (y + 1) \<subseteq> U"
-      by (rule subset_trans[OF _ hUuniv])
-    thus ?thesis
-      by (intro exI[where x=1] conjI; simp)
+    have hsub1: "open_interval (y - 1) (y + 1) \<subseteq> U"
+      by (rule subset_trans[OF hsub_univ hUuniv])
+    show ?thesis
+      apply (rule exI[where x=1])
+      apply (intro conjI)
+       apply simp
+      apply (rule hsub1)
+      done
   next
     case (int a c)
     have hac: "a < c"
@@ -13712,7 +13716,16 @@ proof -
         unfolding r_def using hxy by linarith
 
       have hbasis: "top1_ball_on ?X (top1_euclidean_metric_real_on I) y r \<in> ?B"
-        unfolding top1_metric_basis_on_def by (intro CollectI exI[where x=y] exI[where x=r] conjI hyX hr; simp)
+        unfolding top1_metric_basis_on_def
+        apply (intro CollectI)
+        apply (rule exI[where x=y])
+        apply (rule exI[where x=r])
+        apply (rule conjI)
+         apply simp
+        apply (rule conjI)
+         apply (rule hyX)
+        apply (rule hr)
+        done
       have hy_in: "y \<in> top1_ball_on ?X (top1_euclidean_metric_real_on I) y r"
       proof -
         have "top1_euclidean_metric_real_on I y y = 0"
@@ -13801,7 +13814,16 @@ proof -
         unfolding r_def using hd_pos hsqrt_card_pos by simp
 
       have hbasis: "top1_ball_on ?X (top1_square_metric_real_on I) y r \<in> ?B"
-        unfolding top1_metric_basis_on_def by (intro CollectI exI[where x=y] exI[where x=r] conjI hyX hr_pos; simp)
+        unfolding top1_metric_basis_on_def
+        apply (intro CollectI)
+        apply (rule exI[where x=y])
+        apply (rule exI[where x=r])
+        apply (rule conjI)
+         apply simp
+        apply (rule conjI)
+         apply (rule hyX)
+        apply (rule hr_pos)
+        done
       have hy_in: "y \<in> top1_ball_on ?X (top1_square_metric_real_on I) y r"
       proof -
         have "top1_square_metric_real_on I y y = 0"
@@ -13940,11 +13962,14 @@ proof -
     obtain U where hU: "\<forall>i\<in>I. U i \<in> TR \<and> U i \<subseteq> XR i" and hb_eq: "b = top1_PiE I U"
       using hb unfolding top1_box_basis_on_def by blast
 
-    show "b \<in> topology_generated_by_basis X\<^sub>R (top1_metric_basis_on X\<^sub>R (top1_square_metric_real_on I))"
+      show "b \<in> topology_generated_by_basis X\<^sub>R (top1_metric_basis_on X\<^sub>R (top1_square_metric_real_on I))"
       unfolding topology_generated_by_basis_def
     proof (rule CollectI, intro conjI)
       have "top1_PiE I U \<subseteq> top1_PiE I XR"
-        using hU unfolding XR_def by (intro top1_PiE_mono; simp)
+        using hU unfolding XR_def
+        apply (intro top1_PiE_mono)
+        apply simp
+        done
       thus "b \<subseteq> X\<^sub>R"
         unfolding hb_eq X\<^sub>R_def by simp
 
@@ -14051,7 +14076,16 @@ proof -
         qed
 
         have hbasis: "top1_ball_on X\<^sub>R (top1_square_metric_real_on I) y r \<in> top1_metric_basis_on X\<^sub>R (top1_square_metric_real_on I)"
-          unfolding top1_metric_basis_on_def by (intro CollectI exI[where x=y] exI[where x=r] conjI hyX hr_pos; simp)
+          unfolding top1_metric_basis_on_def
+          apply (intro CollectI)
+          apply (rule exI[where x=y])
+          apply (rule exI[where x=r])
+          apply (rule conjI)
+           apply simp
+          apply (rule conjI)
+           apply (rule hyX)
+          apply (rule hr_pos)
+          done
         have hy_in: "y \<in> top1_ball_on X\<^sub>R (top1_square_metric_real_on I) y r"
         proof -
           have "top1_square_metric_real_on I y y = 0"
