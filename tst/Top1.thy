@@ -137,12 +137,17 @@ proof -
         have "top1_countable (B0 i)"
           using hB0 hiI by blast
         hence "top1_countable (C i)"
-          unfolding C_def by (rule top1_countable_subset) blast
+          unfolding C_def
+          apply (rule top1_countable_subset)
+          apply blast
+          done
         thus "countable (C i)"
           by (simp add: top1_countable_iff_countable)
       qed
       have hSigma_cnt: "countable (SIGMA i:I. C i)"
-        by (rule countable_SIGMA[OF hIcount]) (use hCcnt in blast)
+        apply (rule countable_SIGMA[OF hIcount])
+        apply (rule hCcnt)
+        done
       have hLists_cnt: "countable (lists (SIGMA i:I. C i))"
         by (simp add: hSigma_cnt)
 
@@ -376,7 +381,11 @@ proof -
           have hUC: "U \<in> C i"
             unfolding C_def using hUB0 hUsubX by blast
           show "\<exists>U. U \<in> C i \<and> U \<subseteq> U1 i"
-            by (rule exI[where x=U]) (use hUC hUsub in blast)
+            apply (rule exI[where x=U])
+            apply (intro conjI)
+             apply (rule hUC)
+            apply (rule hUsub)
+            done
         qed
         obtain sel where hsel: "\<forall>i\<in>J. sel i \<in> C i \<and> sel i \<subseteq> U1 i"
           using bchoice[OF hexSel] by blast
@@ -469,7 +478,12 @@ proof -
       qed
 
       show ?thesis
-        by (rule exI[where x=BB]) (use hBBcnt hBBnb hBBref in blast)
+        apply (rule exI[where x=BB])
+        apply (intro conjI)
+          apply (rule hBBcnt)
+         apply (rule hBBnb)
+        apply (rule hBBref)
+        done
     qed
   qed
 qed
@@ -498,7 +512,9 @@ proof -
       using hB0 by (simp add: top1_countable_iff_countable)
     show ?thesis
       unfolding Sigma_def
-      by (rule countable_SIGMA[OF hIcount]) (use hB0cnt in blast)
+      apply (rule countable_SIGMA[OF hIcount])
+      apply (rule hB0cnt)
+      done
   qed
 
   have hTopI: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
@@ -910,7 +926,11 @@ proof -
 
   show ?thesis
     unfolding top1_second_countable_on_def
-    by (rule exI[where x=Cc]) (use hCc_cnt hCc_basis_for in blast)
+    apply (rule exI[where x=Cc])
+    apply (intro conjI)
+     apply (rule hCc_cnt)
+    apply (rule hCc_basis_for)
+    done
 qed
 
 *)
