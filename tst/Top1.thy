@@ -12473,7 +12473,12 @@ proof -
         qed
         have "top1_uniform_metric_real_on I x x \<le> 0"
           unfolding top1_uniform_metric_real_on_def
-          by (rule cSup_least[OF hSne]) (use hall0 in blast)
+        proof (rule cSup_least[OF hSne])
+          fix r
+          assume hr: "r \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (x i)) ` I)"
+          show "r \<le> 0"
+            using hall0 hr by (rule bspec)
+        qed
         moreover have "0 \<le> top1_uniform_metric_real_on I x x"
         proof -
           have hmem0:
@@ -12584,7 +12589,12 @@ proof -
       qed
 
       have "Sup Sxz \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
-        by (rule cSup_least[OF hSxz_ne]) (use hall in blast)
+      proof (rule cSup_least[OF hSxz_ne])
+        fix r
+        assume hr: "r \<in> Sxz"
+        show "r \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
+          using hall hr by (rule bspec)
+      qed
       thus "top1_uniform_metric_real_on I x z \<le> top1_uniform_metric_real_on I x y + top1_uniform_metric_real_on I y z"
         unfolding top1_uniform_metric_real_on_def Sxz_def by simp
     qed
@@ -14364,7 +14374,12 @@ next
             using hi0 by blast
           have hSup_le: "top1_uniform_metric_real_on I x z \<le> r"
             unfolding top1_uniform_metric_real_on_def
-            by (rule cSup_least[OF hSne]) (use hall_le in blast)
+          proof (rule cSup_least[OF hSne])
+            fix s
+            assume hs: "s \<in> ((\<lambda>i. top1_real_bounded_metric (x i) (z i)) ` I)"
+            show "s \<le> r"
+              using hall_le hs by (rule bspec)
+          qed
           have "top1_uniform_metric_real_on I x z < e"
             using hSup_le hr_lt by linarith
           thus "z \<in> top1_ball_on ?X (top1_uniform_metric_real_on I) x e"
@@ -25065,7 +25080,11 @@ next
   qed
 
   show ?thesis
-    by (rule exI[where x=W]) (use hnbhd hWprod_sub in blast)
+    apply (rule exI[where x=W])
+    apply (rule conjI)
+     apply (rule hnbhd)
+    apply (rule hWprod_sub)
+    done
 qed
 
 text \<open>
@@ -25357,7 +25376,13 @@ proof -
       qed
 
       show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<times> Y \<subseteq> \<Union>F"
-        by (rule exI[where x=F]) (use hFfin hFsubUc hFcov in blast)
+        apply (rule exI[where x=F])
+        apply (rule conjI)
+         apply (rule hFfin)
+        apply (rule conjI)
+         apply (rule hFsubUc)
+        apply (rule hFcov)
+        done
     qed
   qed
 qed
@@ -25564,7 +25589,19 @@ next
           proof
             assume hcov: "X \<subseteq> \<Union>F"
             have "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
-              by (rule exI[where x=F]) (use hF hcov in blast)
+            proof (rule exI[where x=F])
+              have hFfin: "finite F"
+                using hF by (rule conjunct1)
+              have hFsub: "F \<subseteq> Uc"
+                using hF by (rule conjunct2)
+              show "finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
+                apply (rule conjI)
+                 apply (rule hFfin)
+                apply (rule conjI)
+                 apply (rule hFsub)
+                apply (rule hcov)
+                done
+            qed
             thus False
               using hNoFin by blast
           qed
@@ -25663,7 +25700,17 @@ next
         qed
 
         have hInt: "\<Inter>\<C> \<noteq> {}"
-          by (rule hFIPall[rule_format, of \<C>]) (use hClosed hFIP in blast)
+        proof -
+          have hPrem:
+            "(\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+             (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})"
+            apply (rule conjI)
+             apply (rule hClosed)
+            apply (rule hFIP)
+            done
+          show ?thesis
+            by (rule hFIPall[rule_format, of \<C>]) (rule hPrem)
+        qed
         obtain x where hx: "x \<in> \<Inter>\<C>"
           using hInt by blast
 
@@ -27809,7 +27856,13 @@ proof -
       qed
 
       show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> FX \<subseteq> \<Union>F"
-        by (rule exI[where x=F]) (use hFfin hFsub hFcov in blast)
+        apply (rule exI[where x=F])
+        apply (rule conjI)
+         apply (rule hFfin)
+        apply (rule conjI)
+         apply (rule hFsub)
+        apply (rule hFcov)
+        done
     qed
   qed
 
@@ -28788,7 +28841,9 @@ next
           have "d a y \<in> S"
             unfolding S_def by (intro CollectI exI[where x=a] exI[where x=y]) (use haA hyA in blast)
           thus ?thesis
-            by (rule cSup_upper) (use hSbdd in blast)
+            apply (rule cSup_upper)
+            apply (rule hSbdd)
+            done
         qed
 
         have hdiam: "top1_diameter_on d A = Sup S"
@@ -29642,7 +29697,17 @@ proof -
   qed
 
   show ?thesis
-    by (rule exI[where x=V]) (use hVT hVsubX hVsubU hVne hx_not_cl in blast)
+    apply (rule exI[where x=V])
+    apply (rule conjI)
+     apply (rule hVT)
+    apply (rule conjI)
+     apply (rule hVsubX)
+    apply (rule conjI)
+     apply (rule hVsubU)
+    apply (rule conjI)
+     apply (rule hVne)
+    apply (rule hx_not_cl)
+    done
 qed
 
 (** A small countability helper: a nonempty countable set is the image of a map \<open>nat \<Rightarrow> X\<close>. **)
@@ -34238,7 +34303,7 @@ proof -
       qed
 
       have hSigma_cnt: "top1_countable (SIGMA i:I. C i)"
-        by (rule top1_countable_SIGMA[OF hIcnt]) (use hCcnt in blast)
+        by (rule top1_countable_SIGMA[OF hIcnt hCcnt])
       have hLists_cnt: "top1_countable (lists (SIGMA i:I. C i))"
         by (rule top1_countable_lists[OF hSigma_cnt])
 
@@ -34504,7 +34569,11 @@ proof -
           have hUC: "U \<in> C i"
             unfolding C_def using hUB0 hUsubX by blast
           show "\<exists>U. U \<in> C i \<and> U \<subseteq> U1 i"
-            by (rule exI[where x=U]) (use hUC hUsub in blast)
+            apply (rule exI[where x=U])
+            apply (intro conjI)
+             apply (rule hUC)
+            apply (rule hUsub)
+            done
         qed
         obtain sel where hsel: "\<forall>i\<in>J. sel i \<in> C i \<and> sel i \<subseteq> U1 i"
           using bchoice[OF hexSel] by blast
@@ -34630,7 +34699,12 @@ proof -
       qed
 
       show ?thesis
-        by (rule exI[where x=BB]) (use hBBcnt hBBnb hBBref in blast)
+        apply (rule exI[where x=BB])
+        apply (intro conjI)
+          apply (rule hBBcnt)
+         apply (rule hBBnb)
+        apply (rule hBBref)
+        done
     qed
   qed
 qed
@@ -34657,7 +34731,7 @@ proof -
       using hB0 by blast
     show ?thesis
       unfolding Sigma_def
-      by (rule top1_countable_SIGMA[OF hIcnt]) (use hB0cnt in blast)
+      by (rule top1_countable_SIGMA[OF hIcnt hB0cnt])
   qed
 
   have hTopI: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
@@ -35092,7 +35166,11 @@ proof -
 
   show ?thesis
     unfolding top1_second_countable_on_def
-    by (rule exI[where x=Cc]) (use hCc_cnt hCc_basis_for in blast)
+    apply (rule exI[where x=Cc])
+    apply (intro conjI)
+     apply (rule hCc_cnt)
+    apply (rule hCc_basis_for)
+    done
 qed
 
 (** from \S30 Theorem 30.1 (First countability and sequences) [top1.tex:3911] **)
