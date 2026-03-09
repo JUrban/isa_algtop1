@@ -11654,7 +11654,14 @@ proof -
   have h1: "min (abs (a - c)) 1 \<le> min (abs (a - b) + abs (b - c)) 1"
     by (rule top1_min_mono_1[OF habc])
   have h2: "min (abs (a - b) + abs (b - c)) 1 \<le> min (abs (a - b)) 1 + min (abs (b - c)) 1"
-    by (rule top1_min_add_le) simp_all
+  proof -
+    have hu: "0 \<le> abs (a - b)"
+      by simp
+    have hv: "0 \<le> abs (b - c)"
+      by simp
+    show ?thesis
+      by (rule top1_min_add_le[OF hu hv])
+  qed
 
   show ?thesis
     unfolding top1_real_bounded_metric_def
@@ -16359,7 +16366,15 @@ proof -
       obtain n where hnpos: "n > 0" and hinv: "inverse (of_nat n :: real) < \<epsilon>"
         using ex_inverse_of_nat_less[OF heps] by blast
       have hn': "\<exists>N. n = Suc N"
-        using hnpos by (cases n, simp_all)
+      proof (cases n)
+        case 0
+        show ?thesis
+          using hnpos by (simp add: 0)
+      next
+        case (Suc N)
+        show ?thesis
+          by (intro exI[where x=N]) (simp add: Suc)
+      qed
       obtain N where hn: "n = Suc N"
         using hn' by blast
       have hNpos: "inverse (of_nat (Suc N) :: real) < \<epsilon>"
@@ -39749,7 +39764,25 @@ proof -
     proof (intro allI impI)
       fix k assume hk: "k \<le> (2::nat) ^ 0"
       have hk': "k = 0 \<or> k = Suc 0"
-        using hk by (cases k) simp_all
+      proof (cases k)
+        case 0
+        show ?thesis
+          using 0 by simp
+      next
+        case (Suc m)
+        have hm0: "m = 0"
+        proof -
+          have "Suc m \<le> (2::nat) ^ 0"
+            using hk by (simp add: Suc)
+          hence "Suc m \<le> (1::nat)"
+            by simp
+          hence "m = 0"
+            by simp
+          thus ?thesis .
+        qed
+        show ?thesis
+          using Suc hm0 by simp
+      qed
       then show "top1_urysohn_U X TX U0 U1 0 k \<in> TX \<and> top1_urysohn_U X TX U0 U1 0 k \<subseteq> X"
       proof
         assume h0: "k = 0"
