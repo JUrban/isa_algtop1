@@ -46776,10 +46776,17 @@ proof -
         unfolding P_def by simp
 
       have hlocal: "\<forall>p\<in>P. \<exists>W\<in>?TP. p \<in> W \<and> W \<subseteq> P"
-      proof (intro ballI)
-        fix p assume hpP: "p \<in> P"
-        have hpX: "p \<in> ?X" and hpb: "?mul p \<in> b"
-          using hpP unfolding P_def by simp_all
+	      proof (intro ballI)
+	        fix p assume hpP: "p \<in> P"
+	        have hpX: "p \<in> ?X" and hpb: "?mul p \<in> b"
+	        proof -
+	          have hp_conj: "p \<in> ?X \<and> ?mul p \<in> b"
+	            using hpP unfolding P_def by simp
+	          show "p \<in> ?X"
+	            using hp_conj by (rule conjunct1)
+	          show "?mul p \<in> b"
+	            using hp_conj by (rule conjunct2)
+	        qed
 
         obtain e where he: "0 < e"
           and hI_sub: "open_interval (?mul p - e) (?mul p + e) \<subseteq> b"
@@ -46864,12 +46871,26 @@ proof -
               by simp
             thus ?thesis
               unfolding pi2_def Pair by simp
-          qed
-
-          have hq1: "pi1 p - d < pi1 q" and hq2: "pi1 q < pi1 p + d"
-            using hqU unfolding U_def open_interval_def by simp_all
-          have hq3: "pi2 p - d < pi2 q" and hq4: "pi2 q < pi2 p + d"
-            using hqV unfolding V_def open_interval_def by simp_all
+	          qed
+	
+	          have hq1: "pi1 p - d < pi1 q" and hq2: "pi1 q < pi1 p + d"
+	          proof -
+	            have hq_conj: "pi1 p - d < pi1 q \<and> pi1 q < pi1 p + d"
+	              using hqU unfolding U_def open_interval_def by simp
+	            show "pi1 p - d < pi1 q"
+	              using hq_conj by (rule conjunct1)
+	            show "pi1 q < pi1 p + d"
+	              using hq_conj by (rule conjunct2)
+	          qed
+	          have hq3: "pi2 p - d < pi2 q" and hq4: "pi2 q < pi2 p + d"
+	          proof -
+	            have hq_conj: "pi2 p - d < pi2 q \<and> pi2 q < pi2 p + d"
+	              using hqV unfolding V_def open_interval_def by simp
+	            show "pi2 p - d < pi2 q"
+	              using hq_conj by (rule conjunct1)
+	            show "pi2 q < pi2 p + d"
+	              using hq_conj by (rule conjunct2)
+	          qed
 
           have habs1: "abs (pi1 q - pi1 p) \<le> d"
           proof -
@@ -47055,15 +47076,29 @@ proof -
             \<exists>bb\<in>product_basis ?TR ?TR.
               p \<in> bb \<and> bb \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
         proof (intro ballI)
-          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
-          have hs_in: "?plus p \<in> open_interval a c"
-            using hp by simp
-          have hs1: "a < ?plus p" and hs2: "?plus p < c"
-            using hs_in unfolding open_interval_def by simp_all
+	          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
+	          have hs_in: "?plus p \<in> open_interval a c"
+	            using hp by simp
+	          have hs1: "a < ?plus p" and hs2: "?plus p < c"
+	          proof -
+	            have hs_conj: "a < ?plus p \<and> ?plus p < c"
+	              using hs_in unfolding open_interval_def by simp
+	            show "a < ?plus p"
+	              using hs_conj by (rule conjunct1)
+	            show "?plus p < c"
+	              using hs_conj by (rule conjunct2)
+	          qed
 
-          define s where "s = ?plus p"
-          have hs: "a < s" and hs': "s < c"
-            unfolding s_def using hs1 hs2 by simp_all
+	          define s where "s = ?plus p"
+	          have hs: "a < s" and hs': "s < c"
+	          proof -
+	            have hs_conj: "a < s \<and> s < c"
+	              unfolding s_def using hs1 hs2 by simp
+	            show "a < s"
+	              using hs_conj by (rule conjunct1)
+	            show "s < c"
+	              using hs_conj by (rule conjunct2)
+	          qed
           define e where "e = min (s - a) (c - s) / 4"
           have he_pos: "0 < e"
           proof -
@@ -47110,10 +47145,24 @@ proof -
               by (rule conjunct1[OF hqUV])
             have hqV: "pi2 q \<in> ?V"
               by (rule conjunct2[OF hqUV])
-            have hqU1: "pi1 p - e < pi1 q" and hqU2: "pi1 q < pi1 p + e"
-              using hqU unfolding open_interval_def by simp_all
-            have hqV1: "pi2 p - e < pi2 q" and hqV2: "pi2 q < pi2 p + e"
-              using hqV unfolding open_interval_def by simp_all
+	            have hqU1: "pi1 p - e < pi1 q" and hqU2: "pi1 q < pi1 p + e"
+	            proof -
+	              have hq_conj: "pi1 p - e < pi1 q \<and> pi1 q < pi1 p + e"
+	                using hqU unfolding open_interval_def by simp
+	              show "pi1 p - e < pi1 q"
+	                using hq_conj by (rule conjunct1)
+	              show "pi1 q < pi1 p + e"
+	                using hq_conj by (rule conjunct2)
+	            qed
+	            have hqV1: "pi2 p - e < pi2 q" and hqV2: "pi2 q < pi2 p + e"
+	            proof -
+	              have hq_conj: "pi2 p - e < pi2 q \<and> pi2 q < pi2 p + e"
+	                using hqV unfolding open_interval_def by simp
+	              show "pi2 p - e < pi2 q"
+	                using hq_conj by (rule conjunct1)
+	              show "pi2 q < pi2 p + e"
+	                using hq_conj by (rule conjunct2)
+	            qed
 
             have hsum_gt: "s - 2*e < ?plus q"
             proof -
@@ -47130,8 +47179,13 @@ proof -
                 unfolding s_def by simp
             qed
 
-            have he_le1: "e \<le> (s - a) / 4" and he_le2: "e \<le> (c - s) / 4"
-              unfolding e_def by simp_all
+	            have he_le1: "e \<le> (s - a) / 4" and he_le2: "e \<le> (c - s) / 4"
+	            have he_conj: "e \<le> (s - a) / 4 \<and> e \<le> (c - s) / 4"
+	              unfolding e_def by simp
+	            have he_le1: "e \<le> (s - a) / 4"
+	              using he_conj by (rule conjunct1)
+	            have he_le2: "e \<le> (c - s) / 4"
+	              using he_conj by (rule conjunct2)
             have h2e_lt1: "2*e < s - a"
             proof -
               have "2*e \<le> 2*((s - a) / 4)"
@@ -47499,12 +47553,26 @@ proof -
         proof (intro CollectI conjI ballI)
           show "{p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c} \<subseteq> (UNIV::(real \<times> real) set)"
             by simp
-          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
-          have hps: "a < ?plus p" and hsp: "?plus p < c"
-            using hp unfolding open_interval_def by simp_all
-          define s where "s = ?plus p"
-          have hs: "a < s" and hs': "s < c"
-            unfolding s_def using hps hsp by simp_all
+	          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
+	          have hps: "a < ?plus p" and hsp: "?plus p < c"
+	          proof -
+	            have hs_conj: "a < ?plus p \<and> ?plus p < c"
+	              using hp unfolding open_interval_def by simp
+	            show "a < ?plus p"
+	              using hs_conj by (rule conjunct1)
+	            show "?plus p < c"
+	              using hs_conj by (rule conjunct2)
+	          qed
+	          define s where "s = ?plus p"
+	          have hs: "a < s" and hs': "s < c"
+	          proof -
+	            have hs_conj: "a < s \<and> s < c"
+	              unfolding s_def using hps hsp by simp
+	            show "a < s"
+	              using hs_conj by (rule conjunct1)
+	            show "s < c"
+	              using hs_conj by (rule conjunct2)
+	          qed
 
           define e where "e = min (s - a) (c - s) / 4"
           have he_pos: "0 < e"
@@ -47545,10 +47613,24 @@ proof -
               using hq by (cases q, simp add: pi1_def)
             have hqV: "pi2 q \<in> V"
               using hq by (cases q, simp add: pi2_def)
-            have hqU': "pi1 p - e < pi1 q" and hqU'': "pi1 q < pi1 p + e"
-              using hqU unfolding U_def open_interval_def by simp_all
-            have hqV': "pi2 p - e < pi2 q" and hqV'': "pi2 q < pi2 p + e"
-              using hqV unfolding V_def open_interval_def by simp_all
+	            have hqU': "pi1 p - e < pi1 q" and hqU'': "pi1 q < pi1 p + e"
+	            proof -
+	              have hq_conj: "pi1 p - e < pi1 q \<and> pi1 q < pi1 p + e"
+	                using hqU unfolding U_def open_interval_def by simp
+	              show "pi1 p - e < pi1 q"
+	                using hq_conj by (rule conjunct1)
+	              show "pi1 q < pi1 p + e"
+	                using hq_conj by (rule conjunct2)
+	            qed
+	            have hqV': "pi2 p - e < pi2 q" and hqV'': "pi2 q < pi2 p + e"
+	            proof -
+	              have hq_conj: "pi2 p - e < pi2 q \<and> pi2 q < pi2 p + e"
+	                using hqV unfolding V_def open_interval_def by simp
+	              show "pi2 p - e < pi2 q"
+	                using hq_conj by (rule conjunct1)
+	              show "pi2 q < pi2 p + e"
+	                using hq_conj by (rule conjunct2)
+	            qed
 
             have hsum_gt: "s - 2*e < ?plus q"
             proof -
@@ -47653,9 +47735,9 @@ proof -
         proof (intro CollectI conjI ballI)
           show "{p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_gt a} \<subseteq> (UNIV::(real \<times> real) set)"
             by simp
-          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_gt a}"
-          have hs: "a < ?plus p"
-            using hp unfolding open_ray_gt_def by simp_all
+	          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_gt a}"
+	          have hs: "a < ?plus p"
+	          using hp unfolding open_ray_gt_def by simp
           define s where "s = ?plus p"
           have hs': "a < s"
             unfolding s_def using hs by simp
@@ -47758,9 +47840,9 @@ proof -
         proof (intro CollectI conjI ballI)
           show "{p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_lt a} \<subseteq> (UNIV::(real \<times> real) set)"
             by simp
-          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_lt a}"
-          have hs: "?plus p < a"
-            using hp unfolding open_ray_lt_def by simp_all
+	          fix p assume hp: "p \<in> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_lt a}"
+	          have hs: "?plus p < a"
+	          using hp unfolding open_ray_lt_def by simp
           define s where "s = ?plus p"
           have hs': "s < a"
             unfolding s_def using hs by simp
