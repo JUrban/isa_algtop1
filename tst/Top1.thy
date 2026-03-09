@@ -31452,7 +31452,7 @@ proof -
   text \<open>
     TODO (performance-sensitive): a full formal proof of \<open>forward_imp\<close> exists in outline below (currently
     commented).  Earlier attempts to turn it on directly tended to risk exceeding the session timeout, so we
-    keep a single \<open>sorry\<close> here for now and plan to discharge it incrementally by extracting small helper lemmas
+    keep a single proof-hole here for now and plan to discharge it incrementally by extracting small helper lemmas
     (basis facts, compactness, Hausdorff separation) and rebuilding frequently.
   \<close>
   sorry
