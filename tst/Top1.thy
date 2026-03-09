@@ -32087,17 +32087,17 @@ proof -
 			      unfolding Let_def
 			      using hHomeo' hCompY' hHausY' by simp
 	
-			    show ?thesis
-			      apply (rule exI[where x=TY0])
-			      apply (rule hOPC)
-			      done
-			  qed
-
+				    show ?thesis
+				    proof (rule exI[where x=TY0])
+				      show "top1_one_point_compactification_on X TX TY0"
+				        by (rule hOPC)
+				    qed
+				  qed
   *)
 
-	  have backward_imp:
-	    "(\<exists>TY. top1_one_point_compactification_on X TX TY) \<Longrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
-	    sorry
+		  have backward_imp:
+		    "(\<exists>TY. top1_one_point_compactification_on X TX TY) \<Longrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
+		    sorry
 
 (*	  proof
 	    assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY"
