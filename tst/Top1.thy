@@ -31449,6 +31449,12 @@ proof -
 
   have forward_imp:
     "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX \<Longrightarrow> (\<exists>TY. top1_one_point_compactification_on X TX TY)"
+  text \<open>
+    TODO (performance-sensitive): a full formal proof of \<open>forward_imp\<close> exists in outline below (currently
+    commented).  Earlier attempts to turn it on directly tended to risk exceeding the session timeout, so we
+    keep a single \<open>sorry\<close> here for now and plan to discharge it incrementally by extracting small helper lemmas
+    (basis facts, compactness, Hausdorff separation) and rebuilding frequently.
+  \<close>
   sorry
 
   (*
@@ -32352,8 +32358,16 @@ proof -
       qed
     qed
 
-							    have hOpenSubsetEq: "\<And>W. W \<subseteq> Y \<Longrightarrow> (W \<in> TY \<longleftrightarrow> W \<in> TY')"
-							      sorry
+								    have hOpenSubsetEq: "\<And>W. W \<subseteq> Y \<Longrightarrow> (W \<in> TY \<longleftrightarrow> W \<in> TY')"
+								    text \<open>
+								      TODO (timeout discipline): attempts at a full structured proof of this equivalence were
+								      saved as \<open>wip_hOpenSubsetEq_0196\<close> / \<open>wip_hOpenSubsetEq_0197\<close>, but they pushed the
+								      full session over the 120s timeout.  The intended argument is:
+								      (i) if \<open>None \<notin> W\<close>, reduce to openness in the common subspace topology on \<open>Some ` X\<close>;
+								      (ii) if \<open>None \<in> W\<close>, let \<open>C = Y - W\<close>, show \<open>C \<subseteq> Some ` X\<close>, transfer compactness of \<open>C\<close>
+								      between the two subspace topologies, then use compactness+Hausdorff to conclude closedness.
+								    \<close>
+								      sorry
 					
 						    define h :: "'a option \<Rightarrow> 'a option" where "h = (\<lambda>z. z)"
 	
