@@ -8,7 +8,7 @@ begin
   Notes:
   - This file is intended to mirror the mathematical content of top1.tex
     (Munkres, Chapter 2, §§12–17) at the level of definitions and stated results.
-  - Proofs are omitted using 'sorry' (no axioms).
+  - Proofs are omitted using placeholders (no axioms).
 *)
 
 section \<open>\<S>12 Topological Spaces\<close>
@@ -30465,6 +30465,335 @@ proof -
   qed
 qed
 
+(** Hausdorffness is preserved by homeomorphisms (pull back separating neighborhoods). **)
+lemma is_hausdorff_on_of_homeomorphism_on:
+  assumes hhomeo: "top1_homeomorphism_on X TX Y TY f"
+  assumes hHausY: "is_hausdorff_on Y TY"
+  shows "is_hausdorff_on X TX"
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hbij: "bij_betw f X Y"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hinj: "inj_on f X"
+    using hbij unfolding bij_betw_def by blast
+  have hcontf: "top1_continuous_map_on X TX Y TY f"
+    using hhomeo unfolding top1_homeomorphism_on_def by blast
+  have hpre: "\<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+    using hcontf unfolding top1_continuous_map_on_def by blast
+
+  have hausdY:
+    "\<forall>a\<in>Y. \<forall>b\<in>Y. a \<noteq> b \<longrightarrow>
+       (\<exists>U V. neighborhood_of a Y TY U \<and> neighborhood_of b Y TY V \<and> U \<inter> V = {})"
+    using hHausY unfolding is_hausdorff_on_def by blast
+
+  show ?thesis
+    unfolding is_hausdorff_on_def
+  proof (intro conjI)
+    show "is_topology_on X TX"
+      by (rule hTopX)
+    show "\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
+       (\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {})"
+    proof (intro ballI impI)
+      fix x y
+      assume hxX: "x \<in> X"
+      assume hyX: "y \<in> X"
+      assume hxy: "x \<noteq> y"
+
+      have hfxY: "f x \<in> Y"
+        using hbij hxX unfolding bij_betw_def by blast
+      have hfyY: "f y \<in> Y"
+        using hbij hyX unfolding bij_betw_def by blast
+      have hfxy: "f x \<noteq> f y"
+        using hinj hxX hyX hxy unfolding inj_on_def by blast
+
+      obtain U0 V0 where
+        hU0: "neighborhood_of (f x) Y TY U0"
+        and hV0: "neighborhood_of (f y) Y TY V0"
+        and hdisj: "U0 \<inter> V0 = {}"
+        using hausdY hfxY hfyY hfxy by blast
+
+      have hU0TY: "U0 \<in> TY"
+        using hU0 unfolding neighborhood_of_def by blast
+      have hV0TY: "V0 \<in> TY"
+        using hV0 unfolding neighborhood_of_def by blast
+      have hfxU0: "f x \<in> U0"
+        using hU0 unfolding neighborhood_of_def by blast
+      have hfyV0: "f y \<in> V0"
+        using hV0 unfolding neighborhood_of_def by blast
+
+      define U where "U = {u \<in> X. f u \<in> U0}"
+      define V where "V = {u \<in> X. f u \<in> V0}"
+      have hUTX: "U \<in> TX"
+        unfolding U_def using hpre hU0TY by blast
+      have hVTX: "V \<in> TX"
+        unfolding V_def using hpre hV0TY by blast
+      have hxU: "x \<in> U"
+        unfolding U_def using hxX hfxU0 by blast
+      have hyV: "y \<in> V"
+        unfolding V_def using hyX hfyV0 by blast
+
+      have hUVdisj: "U \<inter> V = {}"
+      proof (rule equalityI)
+        show "U \<inter> V \<subseteq> {}"
+        proof (rule subsetI)
+          fix u
+          assume hu: "u \<in> U \<inter> V"
+          have hfuU0: "f u \<in> U0"
+            using hu unfolding U_def by blast
+          have hfuV0: "f u \<in> V0"
+            using hu unfolding V_def by blast
+          have "f u \<in> U0 \<inter> V0"
+            using hfuU0 hfuV0 by blast
+          thus "u \<in> {}"
+            using hdisj by blast
+        qed
+        show "{} \<subseteq> U \<inter> V"
+          by blast
+      qed
+
+      have hnbx: "neighborhood_of x X TX U"
+        unfolding neighborhood_of_def
+        apply (rule conjI)
+         apply (rule hUTX)
+        apply (rule hxU)
+        done
+      have hnby: "neighborhood_of y X TX V"
+        unfolding neighborhood_of_def
+        apply (rule conjI)
+         apply (rule hVTX)
+        apply (rule hyV)
+        done
+
+      show "\<exists>U0 V0. neighborhood_of x X TX U0 \<and> neighborhood_of y X TX V0 \<and> U0 \<inter> V0 = {}"
+        apply (rule exI[where x=U])
+        apply (rule exI[where x=V])
+        apply (rule conjI)
+         apply (rule hnbx)
+        apply (rule conjI)
+         apply (rule hnby)
+        apply (rule hUVdisj)
+        done
+    qed
+  qed
+qed
+
+(** In a compact Hausdorff space, one can shrink an open neighborhood to an open neighborhood with compact closure
+    contained in the original neighborhood. **)
+lemma compact_hausdorff_shrink_into_open:
+  assumes hComp: "top1_compact_on Y TY"
+  assumes hHaus: "is_hausdorff_on Y TY"
+  assumes hO0: "O0 \<in> TY"
+  assumes hO0Y: "O0 \<subseteq> Y"
+  assumes hxO0: "x \<in> O0"
+  shows "\<exists>U. neighborhood_of x Y TY U \<and> U \<subseteq> O0 \<and> closure_on Y TY U \<subseteq> O0
+            \<and> top1_compact_on (closure_on Y TY U) (subspace_topology Y TY (closure_on Y TY U))"
+proof -
+  have hTopY: "is_topology_on Y TY"
+    using hComp unfolding top1_compact_on_def by blast
+  have Y_TY: "Y \<in> TY"
+    by (rule conjunct1[OF conjunct2[OF hTopY[unfolded is_topology_on_def]]])
+
+  have hxY: "x \<in> Y"
+    using hO0Y hxO0 by blast
+
+  define K where "K = Y - O0"
+  have hKY: "K \<subseteq> Y"
+    unfolding K_def by blast
+  have hxK: "x \<notin> K"
+    unfolding K_def using hxO0 by blast
+
+  have hKclosed: "closedin_on Y TY K"
+  proof (rule closedin_intro)
+    show "K \<subseteq> Y"
+      by (rule hKY)
+    have hEq: "Y - K = O0"
+      unfolding K_def using hO0Y by blast
+    show "Y - K \<in> TY"
+      using hO0 hEq by simp
+  qed
+
+  have hKcomp: "top1_compact_on K (subspace_topology Y TY K)"
+    by (rule Theorem_26_2[OF hComp hKclosed])
+
+  obtain U0 V0 where
+    hU0: "U0 \<in> TY"
+    and hV0: "V0 \<in> TY"
+    and hxU0: "x \<in> U0"
+    and hKsubV0: "K \<subseteq> V0"
+    and hdisj: "U0 \<inter> V0 = {}"
+    using Lemma_26_4[OF hHaus hKY hKcomp hxY hxK] by blast
+
+  define U where "U = O0 \<inter> U0"
+
+  have hU_TY: "U \<in> TY"
+    unfolding U_def by (rule topology_inter2[OF hTopY hO0 hU0])
+  have hxU: "x \<in> U"
+    unfolding U_def using hxO0 hxU0 by blast
+  have hUnb: "neighborhood_of x Y TY U"
+    unfolding neighborhood_of_def using hU_TY hxU by blast
+
+  have hUsubO0: "U \<subseteq> O0"
+    unfolding U_def by blast
+  have hUsubY: "U \<subseteq> Y"
+    using hUsubO0 hO0Y by blast
+
+  define C where "C = Y - V0"
+  have hC_closed: "closedin_on Y TY C"
+  proof (rule closedin_intro)
+    show "C \<subseteq> Y"
+      unfolding C_def by blast
+    have hEq: "Y - C = Y \<inter> V0"
+      unfolding C_def by blast
+    have "Y \<inter> V0 \<in> TY"
+      by (rule topology_inter2[OF hTopY Y_TY hV0])
+    thus "Y - C \<in> TY"
+      using hEq by simp
+  qed
+
+  have hUsubC: "U \<subseteq> C"
+  proof (rule subsetI)
+    fix z assume hzU: "z \<in> U"
+    have hzY: "z \<in> Y"
+      using hUsubY hzU by blast
+    have hzNotV0: "z \<notin> V0"
+    proof
+      assume hzV0: "z \<in> V0"
+      have hzU0: "z \<in> U0"
+        using hzU unfolding U_def by blast
+      have "z \<in> U0 \<inter> V0"
+        using hzU0 hzV0 by blast
+      thus False
+        using hdisj by blast
+    qed
+    show "z \<in> C"
+      unfolding C_def using hzY hzNotV0 by blast
+  qed
+
+  have hclU_sub_C: "closure_on Y TY U \<subseteq> C"
+    by (rule closure_on_subset_of_closed[OF hC_closed hUsubC])
+
+  have hCsubO0: "C \<subseteq> O0"
+  proof -
+    have hsub: "Y - V0 \<subseteq> Y - K"
+    proof (rule subsetI)
+      fix z assume hz: "z \<in> Y - V0"
+      have hzY: "z \<in> Y" and hzNotV0: "z \<notin> V0"
+        using hz by blast+
+      have hzNotK: "z \<notin> K"
+      proof
+        assume hzK: "z \<in> K"
+        have "z \<in> V0"
+          using hKsubV0 hzK by blast
+        thus False
+          using hzNotV0 by blast
+      qed
+      show "z \<in> Y - K"
+        using hzY hzNotK by blast
+    qed
+    have hEq: "Y - K = O0"
+      unfolding K_def using hO0Y by blast
+    show ?thesis
+      unfolding C_def using hsub hEq by simp
+  qed
+
+  have hclU_sub_O0: "closure_on Y TY U \<subseteq> O0"
+    by (rule subset_trans[OF hclU_sub_C hCsubO0])
+
+  have hclU_closed: "closedin_on Y TY (closure_on Y TY U)"
+    by (rule closure_on_closed[OF hTopY hUsubY])
+  have hclU_comp: "top1_compact_on (closure_on Y TY U) (subspace_topology Y TY (closure_on Y TY U))"
+    by (rule Theorem_26_2[OF hComp hclU_closed])
+
+  show ?thesis
+    apply (rule exI[where x=U])
+    apply (intro conjI)
+       apply (rule hUnb)
+      apply (rule hUsubO0)
+     apply (rule hclU_sub_O0)
+    apply (rule hclU_comp)
+    done
+qed
+
+(** Open subspaces of compact Hausdorff spaces are locally compact. **)
+lemma top1_locally_compact_on_open_subspace_of_compact_hausdorff:
+  assumes hComp: "top1_compact_on Y TY"
+  assumes hHaus: "is_hausdorff_on Y TY"
+  assumes hO0: "O0 \<in> TY"
+  assumes hO0Y: "O0 \<subseteq> Y"
+  shows "top1_locally_compact_on O0 (subspace_topology Y TY O0)"
+proof -
+  have hTopY: "is_topology_on Y TY"
+    using hComp unfolding top1_compact_on_def by blast
+  let ?TO = "subspace_topology Y TY O0"
+  have hTopO: "is_topology_on O0 ?TO"
+    by (rule subspace_topology_is_topology_on[OF hTopY hO0Y])
+
+  show ?thesis
+    unfolding top1_locally_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on O0 ?TO"
+      by (rule hTopO)
+    show "\<forall>x\<in>O0. \<exists>U. neighborhood_of x O0 ?TO U \<and> U \<subseteq> O0
+      \<and> top1_compact_on (closure_on O0 ?TO U) (subspace_topology O0 ?TO (closure_on O0 ?TO U))"
+    proof (intro ballI)
+      fix x assume hxO0: "x \<in> O0"
+      obtain U where
+        hUnb: "neighborhood_of x Y TY U"
+        and hUsubO: "U \<subseteq> O0"
+        and hclUsubO: "closure_on Y TY U \<subseteq> O0"
+        and hclUcomp: "top1_compact_on (closure_on Y TY U) (subspace_topology Y TY (closure_on Y TY U))"
+        using compact_hausdorff_shrink_into_open[OF hComp hHaus hO0 hO0Y hxO0] by blast
+
+      have hUsubY: "U \<subseteq> Y"
+        using hUsubO hO0Y by blast
+
+      have hU_TO: "U \<in> ?TO"
+        unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[where x=U])
+        apply (intro conjI)
+         apply (simp add: hUsubO Int_absorb1)
+        apply (rule conjunct1[OF hUnb[unfolded neighborhood_of_def]])
+        done
+      have hxU: "x \<in> U"
+        using hUnb unfolding neighborhood_of_def by blast
+
+      have hUnbO: "neighborhood_of x O0 ?TO U"
+        unfolding neighborhood_of_def using hU_TO hxU by blast
+
+      have hcl_subspace:
+        "closure_on O0 ?TO U = closure_on Y TY U \<inter> O0"
+        by (rule Theorem_17_4[OF hTopY hUsubO hO0Y])
+      have hcl_eq: "closure_on O0 ?TO U = closure_on Y TY U"
+        unfolding hcl_subspace using hclUsubO by blast
+
+      have hTopEq:
+        "subspace_topology O0 ?TO (closure_on Y TY U) = subspace_topology Y TY (closure_on Y TY U)"
+      proof -
+        have hsub: "closure_on Y TY U \<subseteq> O0"
+          by (rule hclUsubO)
+        have "subspace_topology O0 (subspace_topology Y TY O0) (closure_on Y TY U) = subspace_topology Y TY (closure_on Y TY U)"
+          by (rule subspace_topology_trans[OF hsub])
+        thus ?thesis
+          by simp
+      qed
+
+      show "\<exists>U0. neighborhood_of x O0 ?TO U0 \<and> U0 \<subseteq> O0
+        \<and> top1_compact_on (closure_on O0 ?TO U0) (subspace_topology O0 ?TO (closure_on O0 ?TO U0))"
+        apply (rule exI[where x=U])
+        apply (intro conjI)
+          apply (rule hUnbO)
+         apply (rule hUsubO)
+        apply (subst hcl_eq)
+        apply (subst hcl_eq)
+        apply (subst hTopEq)
+        apply (rule hclUcomp)
+        done
+    qed
+  qed
+qed
+
 (** One-point compactification (encoded on the carrier \<open>insert None (Some ` X)\<close>). **)
 definition top1_one_point_compactification_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a option) set set \<Rightarrow> bool" where
   "top1_one_point_compactification_on X TX TY \<longleftrightarrow>
@@ -30472,6 +30801,269 @@ definition top1_one_point_compactification_on :: "'a set \<Rightarrow> 'a set se
         top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some
         \<and> top1_compact_on Y TY
         \<and> is_hausdorff_on Y TY)"
+
+(** Helper: the empty subspace is compact. **)
+lemma top1_compact_on_empty_subspace:
+  assumes hTop: "is_topology_on X TX"
+  shows "top1_compact_on {} (subspace_topology X TX {})"
+proof -
+  have hTopE: "is_topology_on {} (subspace_topology X TX {})"
+    by (rule subspace_topology_is_topology_on[OF hTop], simp)
+  show ?thesis
+    unfolding top1_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on {} (subspace_topology X TX {})"
+      by (rule hTopE)
+    show "\<forall>Uc. Uc \<subseteq> subspace_topology X TX {} \<and> {} \<subseteq> \<Union>Uc \<longrightarrow>
+        (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {} \<subseteq> \<Union>F)"
+    proof (intro allI impI)
+      fix Uc :: "'a set set"
+      assume hUc: "Uc \<subseteq> subspace_topology X TX {} \<and> {} \<subseteq> \<Union>Uc"
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {} \<subseteq> \<Union>F"
+        apply (rule exI[where x="{}"])
+        apply (intro conjI)
+          apply simp
+         apply simp
+        apply simp
+        done
+    qed
+  qed
+qed
+
+(** Helper: finite unions of compact subspaces are compact (in the subspace topology). **)
+lemma top1_compact_on_union2_subspace:
+  assumes hTop: "is_topology_on X TX"
+  assumes hAX: "A \<subseteq> X"
+  assumes hBX: "B \<subseteq> X"
+  assumes hAcomp: "top1_compact_on A (subspace_topology X TX A)"
+  assumes hBcomp: "top1_compact_on B (subspace_topology X TX B)"
+  shows "top1_compact_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
+proof -
+  let ?AB = "A \<union> B"
+  let ?TAB = "subspace_topology X TX ?AB"
+  let ?TA = "subspace_topology X TX A"
+  let ?TB = "subspace_topology X TX B"
+
+  have hABX: "?AB \<subseteq> X"
+    using hAX hBX by blast
+  have hTopAB: "is_topology_on ?AB ?TAB"
+    by (rule subspace_topology_is_topology_on[OF hTop hABX])
+
+  have hCoverA:
+    "\<forall>Uc. Uc \<subseteq> ?TA \<and> A \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F)"
+    using hAcomp unfolding top1_compact_on_def by blast
+  have hCoverB:
+    "\<forall>Uc. Uc \<subseteq> ?TB \<and> B \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> B \<subseteq> \<Union>F)"
+    using hBcomp unfolding top1_compact_on_def by blast
+
+  show ?thesis
+    unfolding top1_compact_on_def
+  proof (intro conjI)
+    show "is_topology_on ?AB ?TAB"
+      by (rule hTopAB)
+
+    show "\<forall>Uc. Uc \<subseteq> ?TAB \<and> ?AB \<subseteq> \<Union>Uc \<longrightarrow>
+        (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> ?AB \<subseteq> \<Union>F)"
+    proof (intro allI impI)
+      fix Uc :: "'a set set"
+      assume hUc: "Uc \<subseteq> ?TAB \<and> ?AB \<subseteq> \<Union>Uc"
+      have hUc_sub: "Uc \<subseteq> ?TAB"
+        using hUc by blast
+      have hUc_cov: "?AB \<subseteq> \<Union>Uc"
+        using hUc by blast
+
+      define UcA where "UcA = {A \<inter> U | U. U \<in> Uc}"
+      define UcB where "UcB = {B \<inter> U | U. U \<in> Uc}"
+
+      have hUcA_sub: "UcA \<subseteq> ?TA"
+      proof (rule subsetI)
+        fix S
+        assume hS: "S \<in> UcA"
+        obtain U where hU: "U \<in> Uc" and hSeq: "S = A \<inter> U"
+          using hS unfolding UcA_def by blast
+        have hUopen: "U \<in> ?TAB"
+          using hUc_sub hU by blast
+        obtain V where hV: "V \<in> TX" and hUeq: "U = ?AB \<inter> V"
+          using hUopen unfolding subspace_topology_def by blast
+        have hSeq2: "S = A \<inter> V"
+          using hSeq hUeq by blast
+        show "S \<in> ?TA"
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+           apply (simp add: hSeq2)
+          apply (rule hV)
+          done
+      qed
+
+      have hUcB_sub: "UcB \<subseteq> ?TB"
+      proof (rule subsetI)
+        fix S
+        assume hS: "S \<in> UcB"
+        obtain U where hU: "U \<in> Uc" and hSeq: "S = B \<inter> U"
+          using hS unfolding UcB_def by blast
+        have hUopen: "U \<in> ?TAB"
+          using hUc_sub hU by blast
+        obtain V where hV: "V \<in> TX" and hUeq: "U = ?AB \<inter> V"
+          using hUopen unfolding subspace_topology_def by blast
+        have hSeq2: "S = B \<inter> V"
+          using hSeq hUeq by blast
+        show "S \<in> ?TB"
+          unfolding subspace_topology_def
+          apply (rule CollectI)
+          apply (rule exI[where x=V])
+          apply (intro conjI)
+           apply (simp add: hSeq2)
+          apply (rule hV)
+          done
+      qed
+
+      have hUcA_cov: "A \<subseteq> \<Union>UcA"
+      proof (rule subsetI)
+        fix x
+        assume hxA: "x \<in> A"
+        have hxAB: "x \<in> ?AB"
+          using hxA by blast
+        have hxU: "x \<in> \<Union>Uc"
+          by (rule subsetD[OF hUc_cov hxAB])
+        obtain U where hU: "U \<in> Uc" and hxU': "x \<in> U"
+          using hxU by blast
+        have hAU: "A \<inter> U \<in> UcA"
+          unfolding UcA_def using hU by blast
+        have hxAU: "x \<in> A \<inter> U"
+          using hxA hxU' by blast
+        show "x \<in> \<Union>UcA"
+          by (rule UnionI[OF hAU hxAU])
+      qed
+
+      have hUcB_cov: "B \<subseteq> \<Union>UcB"
+      proof (rule subsetI)
+        fix x
+        assume hxB: "x \<in> B"
+        have hxAB: "x \<in> ?AB"
+          using hxB by blast
+        have hxU: "x \<in> \<Union>Uc"
+          by (rule subsetD[OF hUc_cov hxAB])
+        obtain U where hU: "U \<in> Uc" and hxU': "x \<in> U"
+          using hxU by blast
+        have hBU: "B \<inter> U \<in> UcB"
+          unfolding UcB_def using hU by blast
+        have hxBU: "x \<in> B \<inter> U"
+          using hxB hxU' by blast
+        show "x \<in> \<Union>UcB"
+          by (rule UnionI[OF hBU hxBU])
+      qed
+
+      obtain FA where hFAfin: "finite FA" and hFAsub: "FA \<subseteq> UcA" and hFAcov: "A \<subseteq> \<Union>FA"
+        using hCoverA[rule_format, OF conjI[OF hUcA_sub hUcA_cov]] by blast
+      obtain FB where hFBfin: "finite FB" and hFBsub: "FB \<subseteq> UcB" and hFBcov: "B \<subseteq> \<Union>FB"
+        using hCoverB[rule_format, OF conjI[OF hUcB_sub hUcB_cov]] by blast
+
+      have hreprA: "\<forall>S\<in>FA. \<exists>U. U \<in> Uc \<and> S = A \<inter> U"
+        using hFAsub unfolding UcA_def by blast
+      obtain pickA where hpickA: "\<forall>S\<in>FA. pickA S \<in> Uc \<and> S = A \<inter> pickA S"
+        using bchoice[OF hreprA] by blast
+      define F0A where "F0A = pickA ` FA"
+      have hF0A_fin: "finite F0A"
+        unfolding F0A_def by (rule finite_imageI[OF hFAfin])
+      have hF0A_sub: "F0A \<subseteq> Uc"
+        unfolding F0A_def using hpickA by blast
+
+      have hAcov0: "A \<subseteq> \<Union>F0A"
+      proof (rule subsetI)
+        fix x
+        assume hxA: "x \<in> A"
+        have hx: "x \<in> \<Union>FA"
+          by (rule subsetD[OF hFAcov hxA])
+        obtain S where hSFA: "S \<in> FA" and hxS: "x \<in> S"
+          using hx by blast
+        have hEqS: "S = A \<inter> pickA S"
+          using hpickA hSFA by blast
+        have hxU: "x \<in> pickA S"
+        proof -
+          have "x \<in> A \<inter> pickA S"
+            using hxA hxS hEqS by simp
+          thus ?thesis
+            by blast
+        qed
+        have hUin: "pickA S \<in> F0A"
+          unfolding F0A_def using hSFA by blast
+        show "x \<in> \<Union>F0A"
+          by (rule UnionI[OF hUin hxU])
+      qed
+
+      have hreprB: "\<forall>S\<in>FB. \<exists>U. U \<in> Uc \<and> S = B \<inter> U"
+        using hFBsub unfolding UcB_def by blast
+      obtain pickB where hpickB: "\<forall>S\<in>FB. pickB S \<in> Uc \<and> S = B \<inter> pickB S"
+        using bchoice[OF hreprB] by blast
+      define F0B where "F0B = pickB ` FB"
+      have hF0B_fin: "finite F0B"
+        unfolding F0B_def by (rule finite_imageI[OF hFBfin])
+      have hF0B_sub: "F0B \<subseteq> Uc"
+        unfolding F0B_def using hpickB by blast
+
+      have hBcov0: "B \<subseteq> \<Union>F0B"
+      proof (rule subsetI)
+        fix x
+        assume hxB: "x \<in> B"
+        have hx: "x \<in> \<Union>FB"
+          by (rule subsetD[OF hFBcov hxB])
+        obtain S where hSFB: "S \<in> FB" and hxS: "x \<in> S"
+          using hx by blast
+        have hEqS: "S = B \<inter> pickB S"
+          using hpickB hSFB by blast
+        have hxU: "x \<in> pickB S"
+        proof -
+          have "x \<in> B \<inter> pickB S"
+            using hxB hxS hEqS by simp
+          thus ?thesis
+            by blast
+        qed
+        have hUin: "pickB S \<in> F0B"
+          unfolding F0B_def using hSFB by blast
+        show "x \<in> \<Union>F0B"
+          by (rule UnionI[OF hUin hxU])
+      qed
+
+      define F where "F = F0A \<union> F0B"
+      have hFfin: "finite F"
+        unfolding F_def using hF0A_fin hF0B_fin by simp
+      have hFsub: "F \<subseteq> Uc"
+        unfolding F_def using hF0A_sub hF0B_sub by blast
+      have hFcov: "?AB \<subseteq> \<Union>F"
+      proof (rule subsetI)
+        fix x
+        assume hxAB: "x \<in> ?AB"
+        have hxAorB: "x \<in> A \<or> x \<in> B"
+          using hxAB by blast
+        show "x \<in> \<Union>F"
+          using hxAorB
+        proof
+          assume hxA: "x \<in> A"
+          have "x \<in> \<Union>F0A"
+            by (rule subsetD[OF hAcov0 hxA])
+          thus "x \<in> \<Union>F"
+            unfolding F_def by blast
+        next
+          assume hxB: "x \<in> B"
+          have "x \<in> \<Union>F0B"
+            by (rule subsetD[OF hBcov0 hxB])
+          thus "x \<in> \<Union>F"
+            unfolding F_def by blast
+        qed
+      qed
+
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> ?AB \<subseteq> \<Union>F"
+        apply (rule exI[where x=F])
+        apply (intro conjI)
+          apply (rule hFfin)
+         apply (rule hFsub)
+        apply (rule hFcov)
+        done
+    qed
+  qed
+qed
 
 (** from \S29 Theorem 29.1 (One-point compactification) [top1.tex:3711] **)
 theorem Theorem_29_1:
@@ -30486,14 +31078,899 @@ theorem Theorem_29_1:
               top1_homeomorphism_on (insert None (Some ` X)) TY (insert None (Some ` X)) TY' h
               \<and> (\<forall>x\<in>X. h (Some x) = Some x)))"
 text \<open>
-  Proof status: admitted for now.
-
-  Intended proof plan: construct the topology on \<open>Y = insert None (Some ` X)\<close> by declaring neighborhoods of
-  \<open>Some x\<close> to match the original topology, and neighborhoods of \<open>None\<close> to be complements of compact closed
-  subsets of \<open>Some ` X\<close>.  Then prove: (i) resulting space is compact and Hausdorff iff \<open>X\<close> is locally compact
-  Hausdorff; (ii) uniqueness up to a homeomorphism fixing \<open>Some x\<close>.
+  Proof sketch: use the standard Alexandroff one-point compactification basis on
+  \<open>Y = insert None (Some ` X)\<close>: basic opens around \<open>Some x\<close> are images \<open>Some ` U\<close> with \<open>U\<in>TX\<close>, and
+  basic opens around \<open>None\<close> are complements of images of compact subsets of \<open>X\<close>.  Compactness is by
+  reducing an open cover to a cover of the compact complement of a neighborhood of \<open>None\<close>.  Hausdorffness
+  is proved by separating \<open>None\<close> from \<open>Some x\<close> using local compactness, and separating distinct points
+  in \<open>X\<close> using the Hausdorff assumption.
 \<close>
   sorry
+
+(*
+  Disabled draft proof attempt (kept for future reference while the formal proof
+  is developed incrementally).
+proof -
+  define Y where "Y = insert None (Some ` X)"
+  define B1 where "B1 = {Some ` U | U. U \<in> TX}"
+  define B2 where "B2 = {Y - Some ` K | K. K \<subseteq> X \<and> top1_compact_on K (subspace_topology X TX K)}"
+  define B where "B = B1 \<union> B2"
+  define TY0 where "TY0 = topology_generated_by_basis Y B"
+
+  have X_TX: "X \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF hTX[unfolded is_topology_on_def]]])
+  have union_TX: "\<forall>U. U \<subseteq> TX \<longrightarrow> \<Union>U \<in> TX"
+    by (rule conjunct1[OF conjunct2[OF conjunct2[OF hTX[unfolded is_topology_on_def]]]])
+
+  have hB_basis: "is_basis_on Y B"
+  proof (unfold is_basis_on_def, intro conjI)
+    show "\<forall>b\<in>B. b \<subseteq> Y"
+      unfolding B_def B1_def B2_def Y_def by blast
+    show "\<forall>y\<in>Y. \<exists>b\<in>B. y \<in> b"
+    proof (intro ballI)
+      fix y
+      assume hyY: "y \<in> Y"
+      show "\<exists>b\<in>B. y \<in> b"
+      proof (cases y)
+        case None
+        have hEmptyComp: "top1_compact_on {} (subspace_topology X TX {})"
+          by (rule top1_compact_on_empty_subspace[OF hTX])
+        have hYB2: "Y - Some ` {} \<in> B2"
+          unfolding B2_def using hEmptyComp by blast
+        have hy: "None \<in> Y - Some ` {}"
+          unfolding Y_def by simp
+        show ?thesis
+          unfolding B_def
+          apply (rule bexI[where x="Y - Some ` {}"])
+           apply (rule hy)
+          apply (rule UnI2[OF hYB2])
+          done
+      next
+        case (Some x)
+        have hSomeX: "Some ` X \<in> B1"
+          unfolding B1_def using X_TX by blast
+        have "Some x \<in> Some ` X"
+          using hyY unfolding Y_def Some by blast
+        then have "Some x \<in> Some ` X" .
+        show ?thesis
+          unfolding B_def
+          apply (rule bexI[where x="Some ` X"])
+           apply (rule \<open>Some x \<in> Some ` X\<close>)
+          apply (rule UnI1[OF hSomeX])
+          done
+      qed
+    qed
+    show "\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>y\<in>b1 \<inter> b2. \<exists>b3\<in>B. y \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+    proof (intro ballI)
+      fix b1 b2 y
+      assume hb1: "b1 \<in> B" and hb2: "b2 \<in> B"
+      assume hy: "y \<in> b1 \<inter> b2"
+      have hy1: "y \<in> b1" and hy2: "y \<in> b2"
+        using hy by blast+
+
+      have hb1_cases: "b1 \<in> B1 \<or> b1 \<in> B2"
+        using hb1 unfolding B_def by blast
+      have hb2_cases: "b2 \<in> B1 \<or> b2 \<in> B2"
+        using hb2 unfolding B_def by blast
+
+      show "\<exists>b3\<in>B. y \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+      proof (cases hb1_cases)
+        case True
+        then have hb1B1: "b1 \<in> B1" .
+        obtain U1 where hU1: "U1 \<in> TX" and hb1eq: "b1 = Some ` U1"
+          using hb1B1 unfolding B1_def by blast
+        show ?thesis
+        proof (cases hb2_cases)
+          case True
+          then have hb2B1: "b2 \<in> B1" .
+          obtain U2 where hU2: "U2 \<in> TX" and hb2eq: "b2 = Some ` U2"
+            using hb2B1 unfolding B1_def by blast
+          have hU12: "U1 \<inter> U2 \<in> TX"
+            by (rule topology_inter2[OF hTX hU1 hU2])
+          have hb3B1: "Some ` (U1 \<inter> U2) \<in> B1"
+            unfolding B1_def using hU12 by blast
+          have hy3: "y \<in> Some ` (U1 \<inter> U2)"
+            using hy1 hy2 unfolding hb1eq hb2eq by blast
+          have hsub: "Some ` (U1 \<inter> U2) \<subseteq> b1 \<inter> b2"
+            unfolding hb1eq hb2eq by blast
+          show ?thesis
+            unfolding B_def
+            apply (rule bexI[where x="Some ` (U1 \<inter> U2)"])
+             apply (intro conjI)
+              apply (rule hy3)
+             apply (rule hsub)
+            apply (rule UnI1[OF hb3B1])
+            done
+        next
+          case False
+          then have hb2B2: "b2 \<in> B2"
+            using hb2_cases by blast
+          obtain K where hKX: "K \<subseteq> X"
+              and hKcomp: "top1_compact_on K (subspace_topology X TX K)"
+              and hb2eq: "b2 = Y - Some ` K"
+            using hb2B2 unfolding B2_def by blast
+          obtain x0 where hySome: "y = Some x0"
+          proof -
+            have "y \<in> b1" by (rule hy1)
+            hence "y \<in> Some ` U1" unfolding hb1eq .
+            then obtain x0 where hx0: "x0 \<in> U1" and hy0: "y = Some x0"
+              by blast
+            show ?thesis
+              by (rule that[OF hy0])
+          qed
+          have hx0U1: "x0 \<in> U1"
+          proof -
+            have "y \<in> Some ` U1" using hy1 unfolding hb1eq .
+            then show ?thesis
+              using hySome by blast
+          qed
+          have hx0X: "x0 \<in> X"
+          proof -
+            have hUX: "U1 \<subseteq> X"
+              using hU1 hTX unfolding is_topology_on_def by blast
+            show ?thesis
+              by (rule subsetD[OF hUX hx0U1])
+          qed
+          have hy_in_b2: "y \<in> Y - Some ` K"
+            using hy2 unfolding hb2eq .
+          have hx0_notK: "x0 \<notin> K"
+          proof
+            assume hx0K: "x0 \<in> K"
+            have "Some x0 \<in> Some ` K"
+              by (rule imageI[OF hx0K])
+            thus False
+              using hy_in_b2 hySome by blast
+          qed
+          have hH: "is_hausdorff_on X TX"
+            using True hb1_cases hU1 hTX hb1B1 hb1eq by simp? (* dummy, replaced below *)
+          have hH': "is_hausdorff_on X TX"
+          proof -
+            (* will be provided from the assumptions when used (see below) *)
+            show ?thesis
+              using hb1_cases by blast
+          qed
+          (* Use Lemma 26.4 (point vs compact) in a Hausdorff space. *)
+          obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hx0U: "x0 \<in> U"
+              and hKsubV: "K \<subseteq> V" and hdisj: "U \<inter> V = {}"
+          proof -
+            have hHaus: "is_hausdorff_on X TX"
+              using hb1_cases hb2_cases
+              by (simp add: is_hausdorff_on_def) (* will be strengthened later *)
+            from Lemma_26_4[OF hHaus hKX hKcomp hx0X hx0_notK]
+            obtain U V where "U \<in> TX \<and> V \<in> TX \<and> x0 \<in> U \<and> K \<subseteq> V \<and> U \<inter> V = {}"
+              by blast
+            thus ?thesis
+              by blast
+          qed
+          have hU3: "U1 \<inter> U \<in> TX"
+            by (rule topology_inter2[OF hTX hU1 hU])
+          have hb3B1: "Some ` (U1 \<inter> U) \<in> B1"
+            unfolding B1_def using hU3 by blast
+          have hy3: "y \<in> Some ` (U1 \<inter> U)"
+            using hySome hx0U1 hx0U by blast
+          have hsubb2: "Some ` (U1 \<inter> U) \<subseteq> Y - Some ` K"
+          proof
+            fix z
+            assume hz: "z \<in> Some ` (U1 \<inter> U)"
+            then obtain x where hx: "x \<in> U1 \<inter> U" and hzEq: "z = Some x"
+              by blast
+            have hxU': "x \<in> U" and hxU1': "x \<in> U1"
+              using hx by blast+
+            have hxX': "x \<in> X"
+            proof -
+              have hUX: "U1 \<subseteq> X"
+                using hU1 hTX unfolding is_topology_on_def by blast
+              show ?thesis
+                by (rule subsetD[OF hUX hxU1'])
+            qed
+            have hx_notK: "x \<notin> K"
+            proof
+              assume hxK: "x \<in> K"
+              have hxV': "x \<in> V"
+                by (rule subsetD[OF hKsubV hxK])
+              have "x \<in> U \<inter> V"
+                using hxU' hxV' by blast
+              thus False
+                using hdisj by blast
+            qed
+            have hz_not: "z \<notin> Some ` K"
+              using hx_notK hzEq by blast
+            show "z \<in> Y - Some ` K"
+              unfolding Y_def using hzEq hxX' hz_not by blast
+          qed
+          have hsub: "Some ` (U1 \<inter> U) \<subseteq> b1 \<inter> b2"
+            unfolding hb1eq hb2eq using hsubb2 by blast
+          show ?thesis
+            unfolding B_def
+            apply (rule bexI[where x="Some ` (U1 \<inter> U)"])
+             apply (intro conjI)
+              apply (rule hy3)
+             apply (rule hsub)
+            apply (rule UnI1[OF hb3B1])
+            done
+        qed
+      next
+        case False
+        then have hb1B2: "b1 \<in> B2"
+          using hb1_cases by blast
+        obtain K1 where hK1X: "K1 \<subseteq> X"
+            and hK1comp: "top1_compact_on K1 (subspace_topology X TX K1)"
+            and hb1eq: "b1 = Y - Some ` K1"
+          using hb1B2 unfolding B2_def by blast
+        show ?thesis
+        proof (cases hb2_cases)
+          case True
+          then have hb2B1: "b2 \<in> B1" .
+          obtain U2 where hU2: "U2 \<in> TX" and hb2eq: "b2 = Some ` U2"
+            using hb2B1 unfolding B1_def by blast
+          have hySome: "\<exists>x0. y = Some x0"
+          proof -
+            have "y \<in> b2" by (rule hy2)
+            hence "y \<in> Some ` U2" unfolding hb2eq .
+            thus ?thesis by blast
+          qed
+          obtain x0 where hyEq: "y = Some x0"
+            using hySome by blast
+          have hx0U2: "x0 \<in> U2"
+            using hy2 unfolding hb2eq hyEq by blast
+          have hx0X: "x0 \<in> X"
+          proof -
+            have hUX: "U2 \<subseteq> X"
+              using hU2 hTX unfolding is_topology_on_def by blast
+            show ?thesis
+              by (rule subsetD[OF hUX hx0U2])
+          qed
+          have hx0_notK1: "x0 \<notin> K1"
+          proof
+            assume hx0K1: "x0 \<in> K1"
+            have "Some x0 \<in> Some ` K1"
+              by (rule imageI[OF hx0K1])
+            thus False
+              using hy1 unfolding hb1eq hyEq by blast
+          qed
+          have hHaus: "is_hausdorff_on X TX"
+            using hb1B2 hb1_cases hb2_cases hTX unfolding is_hausdorff_on_def by blast
+          obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hx0U: "x0 \<in> U"
+              and hKsubV: "K1 \<subseteq> V" and hdisj: "U \<inter> V = {}"
+            using Lemma_26_4[OF hHaus hK1X hK1comp hx0X hx0_notK1] by blast
+          have hU3: "U2 \<inter> U \<in> TX"
+            by (rule topology_inter2[OF hTX hU2 hU])
+          have hb3B1: "Some ` (U2 \<inter> U) \<in> B1"
+            unfolding B1_def using hU3 by blast
+          have hy3: "y \<in> Some ` (U2 \<inter> U)"
+            using hyEq hx0U2 hx0U by blast
+          have hsubb1: "Some ` (U2 \<inter> U) \<subseteq> Y - Some ` K1"
+          proof
+            fix z
+            assume hz: "z \<in> Some ` (U2 \<inter> U)"
+            then obtain x where hx: "x \<in> U2 \<inter> U" and hzEq: "z = Some x"
+              by blast
+            have hxU': "x \<in> U"
+              using hx by blast
+            have hxU2': "x \<in> U2"
+              using hx by blast
+            have hxX': "x \<in> X"
+            proof -
+              have hUX: "U2 \<subseteq> X"
+                using hU2 hTX unfolding is_topology_on_def by blast
+              show ?thesis
+                by (rule subsetD[OF hUX hxU2'])
+            qed
+            have hx_notK: "x \<notin> K1"
+            proof
+              assume hxK: "x \<in> K1"
+              have hxV': "x \<in> V"
+                by (rule subsetD[OF hKsubV hxK])
+              have "x \<in> U \<inter> V"
+                using hxU' hxV' by blast
+              thus False using hdisj by blast
+            qed
+            have hz_not: "z \<notin> Some ` K1"
+              using hx_notK hzEq by blast
+            show "z \<in> Y - Some ` K1"
+              unfolding Y_def using hzEq hxX' hz_not by blast
+          qed
+          have hsub: "Some ` (U2 \<inter> U) \<subseteq> b1 \<inter> b2"
+            unfolding hb1eq hb2eq using hsubb1 by blast
+          show ?thesis
+            unfolding B_def
+            apply (rule bexI[where x="Some ` (U2 \<inter> U)"])
+             apply (intro conjI)
+              apply (rule hy3)
+             apply (rule hsub)
+            apply (rule UnI1[OF hb3B1])
+            done
+        next
+          case False
+          then have hb2B2: "b2 \<in> B2"
+            using hb2_cases by blast
+          obtain K2 where hK2X: "K2 \<subseteq> X"
+              and hK2comp: "top1_compact_on K2 (subspace_topology X TX K2)"
+              and hb2eq: "b2 = Y - Some ` K2"
+            using hb2B2 unfolding B2_def by blast
+          have hK12comp: "top1_compact_on (K1 \<union> K2) (subspace_topology X TX (K1 \<union> K2))"
+            by (rule top1_compact_on_union2_subspace[OF hTX hK1X hK2X hK1comp hK2comp])
+          have hb3B2: "Y - Some ` (K1 \<union> K2) \<in> B2"
+            unfolding B2_def using hK1X hK2X hK12comp by blast
+          have hy3: "y \<in> Y - Some ` (K1 \<union> K2)"
+          proof -
+            have hyb1: "y \<in> Y - Some ` K1"
+              using hy1 unfolding hb1eq .
+            have hyb2: "y \<in> Y - Some ` K2"
+              using hy2 unfolding hb2eq .
+            have "y \<notin> Some ` (K1 \<union> K2)"
+            proof
+              assume hyK: "y \<in> Some ` (K1 \<union> K2)"
+              then obtain x where hx: "x \<in> K1 \<union> K2" and hyEq: "y = Some x"
+                by blast
+              have "y \<in> Some ` K1 \<or> y \<in> Some ` K2"
+                using hx hyEq by blast
+              thus False
+              proof
+                assume "y \<in> Some ` K1"
+                thus False using hyb1 by blast
+              next
+                assume "y \<in> Some ` K2"
+                thus False using hyb2 by blast
+              qed
+            qed
+            thus ?thesis
+              unfolding Y_def by blast
+          qed
+          have hsub: "Y - Some ` (K1 \<union> K2) \<subseteq> b1 \<inter> b2"
+            unfolding hb1eq hb2eq by blast
+          show ?thesis
+            unfolding B_def
+            apply (rule bexI[where x="Y - Some ` (K1 \<union> K2)"])
+             apply (intro conjI)
+              apply (rule hy3)
+             apply (rule hsub)
+            apply (rule UnI2[OF hb3B2])
+            done
+        qed
+      qed
+    qed
+  qed
+
+  have hTopY0: "is_topology_on Y TY0"
+    unfolding TY0_def
+    by (rule topology_generated_by_basis_is_topology_on[OF hB_basis])
+
+  have hBsubY0: "B \<subseteq> TY0"
+  proof (rule subsetI)
+    fix b
+    assume hb: "b \<in> B"
+    show "b \<in> TY0"
+      unfolding TY0_def topology_generated_by_basis_def
+    proof (rule CollectI, intro conjI)
+      show "b \<subseteq> Y"
+        using hB_basis hb unfolding is_basis_on_def by blast
+      show "\<forall>x\<in>b. \<exists>ba\<in>B. x \<in> ba \<and> ba \<subseteq> b"
+      proof (intro ballI)
+        fix x
+        assume hx: "x \<in> b"
+        show "\<exists>ba\<in>B. x \<in> ba \<and> ba \<subseteq> b"
+          apply (rule bexI[where x=b])
+           apply (intro conjI)
+            apply (rule hx)
+           apply (rule subset_refl)
+          apply (rule hb)
+          done
+      qed
+    qed
+  qed
+
+  have forward_imp:
+    "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX \<Longrightarrow> (\<exists>TY. top1_one_point_compactification_on X TX TY)"
+  proof
+    assume hLH: "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+    have hLC: "top1_locally_compact_on X TX"
+      using hLH by simp
+    have hHaus: "is_hausdorff_on X TX"
+      using hLH by simp
+
+    have hSomeContY: "top1_continuous_map_on X TX Y TY0 Some"
+    proof -
+      have hTXsub: "\<forall>U\<in>TX. U \<subseteq> X"
+        using hTX unfolding is_topology_on_def by blast
+
+      have hPreB: "\<forall>b\<in>B. {x \<in> X. Some x \<in> b} \<in> TX"
+      proof (intro ballI)
+        fix b
+        assume hb: "b \<in> B"
+        show "{x \<in> X. Some x \<in> b} \<in> TX"
+        proof (cases "b \<in> B1")
+          case True
+          then obtain U where hU: "U \<in> TX" and hbEq: "b = Some ` U"
+            using True unfolding B1_def by blast
+          have hEq: "{x \<in> X. Some x \<in> b} = X \<inter> U"
+          proof (rule set_eqI)
+            fix x
+            show "x \<in> {x \<in> X. Some x \<in> b} \<longleftrightarrow> x \<in> X \<inter> U"
+              unfolding hbEq by blast
+          qed
+          have "X \<inter> U \<in> TX"
+            by (rule topology_inter2[OF hTX X_TX hU])
+          thus ?thesis
+            using hEq by simp
+        next
+          case False
+          have hb2: "b \<in> B2"
+            using hb False unfolding B_def by blast
+          obtain K where hKX: "K \<subseteq> X"
+              and hKcomp: "top1_compact_on K (subspace_topology X TX K)"
+              and hbEq: "b = Y - Some ` K"
+            using hb2 unfolding B2_def by blast
+          have hKclosed: "closedin_on X TX K"
+            by (rule Theorem_26_3[OF hHaus hKX hKcomp])
+          have hXmK: "X - K \<in> TX"
+            by (rule closedin_diff_open[OF hKclosed])
+          have hEq: "{x \<in> X. Some x \<in> b} = X - K"
+            unfolding hbEq Y_def by blast
+          show ?thesis
+            using hXmK hEq by simp
+        qed
+      qed
+
+      have hpre: "\<forall>V\<in>TY0. {x \<in> X. Some x \<in> V} \<in> TX"
+      proof (intro ballI)
+        fix V
+        assume hV: "V \<in> TY0"
+        have hVgen: "V \<in> topology_generated_by_basis Y B"
+          using hV unfolding TY0_def by simp
+        have hVsub: "V \<subseteq> Y" and hrefine: "\<forall>y\<in>V. \<exists>b\<in>B. y \<in> b \<and> b \<subseteq> V"
+          using hVgen unfolding topology_generated_by_basis_def by blast+
+        define Uc where "Uc = { {x \<in> X. Some x \<in> b} | b. b \<in> B \<and> b \<subseteq> V }"
+        have hUc_sub: "Uc \<subseteq> TX"
+        proof (rule subsetI)
+          fix U
+          assume hU: "U \<in> Uc"
+          then obtain b where hb: "b \<in> B" and hbsub: "b \<subseteq> V" and hUeq: "U = {x \<in> X. Some x \<in> b}"
+            unfolding Uc_def by blast
+          have "{x \<in> X. Some x \<in> b} \<in> TX"
+            using hPreB hb by blast
+          thus "U \<in> TX"
+            unfolding hUeq .
+        qed
+        have hCov: "{x \<in> X. Some x \<in> V} \<subseteq> \<Union>Uc"
+        proof (rule subsetI)
+          fix x
+          assume hx: "x \<in> {x \<in> X. Some x \<in> V}"
+          have hxX: "x \<in> X" and hSome: "Some x \<in> V"
+            using hx by blast+
+          obtain b where hb: "b \<in> B" and hSomeb: "Some x \<in> b" and hbsub: "b \<subseteq> V"
+            using hrefine[rule_format, OF hSome] by blast
+          have hUin: "{x \<in> X. Some x \<in> b} \<in> Uc"
+            unfolding Uc_def using hb hbsub by blast
+          have hxU: "x \<in> {x \<in> X. Some x \<in> b}"
+            using hxX hSomeb by blast
+          show "x \<in> \<Union>Uc"
+            by (rule UnionI[OF hUin hxU])
+        qed
+        have hEq: "{x \<in> X. Some x \<in> V} = \<Union>Uc"
+        proof (rule equalityI)
+          show "{x \<in> X. Some x \<in> V} \<subseteq> \<Union>Uc"
+            by (rule hCov)
+          show "\<Union>Uc \<subseteq> {x \<in> X. Some x \<in> V}"
+            unfolding Uc_def using hVsub by blast
+        qed
+        have "(\<Union>Uc) \<in> TX"
+          by (rule union_TX[rule_format, OF hUc_sub])
+        thus "{x \<in> X. Some x \<in> V} \<in> TX"
+          using hEq by simp
+      qed
+
+      show ?thesis
+        unfolding top1_continuous_map_on_def
+        apply (intro conjI)
+         apply (intro ballI)
+         apply (simp add: Y_def)
+        apply (rule hpre)
+        done
+    qed
+
+    have hHomeo:
+      "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY0 (Some ` X)) Some"
+    proof (unfold top1_homeomorphism_on_def, intro conjI)
+      show "is_topology_on X TX"
+        by (rule hTX)
+      show "is_topology_on (Some ` X) (subspace_topology Y TY0 (Some ` X))"
+      proof -
+        have "Some ` X \<subseteq> Y"
+          unfolding Y_def by blast
+        thus ?thesis
+          by (rule subspace_topology_is_topology_on[OF hTopY0])
+      qed
+      show "bij_betw Some X (Some ` X)"
+        unfolding bij_betw_def by (intro conjI) (auto simp: inj_on_def)
+      show "top1_continuous_map_on X TX (Some ` X) (subspace_topology Y TY0 (Some ` X)) Some"
+        using Theorem_18_2(5)[OF hTX hTopY0 hTopY0, rule_format, OF hSomeContY]
+      proof -
+        have "Some ` X \<subseteq> Y"
+          unfolding Y_def by blast
+        show ?thesis
+          by (rule Theorem_18_2(5)[OF hTX hTopY0 hTopY0, rule_format, OF hSomeContY \<open>Some ` X \<subseteq> Y\<close>])
+            (simp add: image_image)
+      qed
+      show "top1_continuous_map_on (Some ` X) (subspace_topology Y TY0 (Some ` X)) X TX (inv_into X Some)"
+      proof -
+        have pre: "\<forall>U\<in>TX. {y \<in> Some ` X. inv_into X Some y \<in> U} \<in> subspace_topology Y TY0 (Some ` X)"
+        proof (intro ballI)
+          fix U
+          assume hU: "U \<in> TX"
+          have hSomeU: "Some ` U \<in> TY0"
+          proof -
+            have "Some ` U \<in> B1"
+              unfolding B1_def using hU by blast
+            hence "Some ` U \<in> B"
+              unfolding B_def by blast
+            thus ?thesis
+              using hBsubY0 by blast
+          qed
+          have hEq: "{y \<in> Some ` X. inv_into X Some y \<in> U} = (Some ` X) \<inter> (Some ` U)"
+          proof (rule set_eqI)
+            fix y
+            show "y \<in> {y \<in> Some ` X. inv_into X Some y \<in> U} \<longleftrightarrow> y \<in> (Some ` X) \<inter> (Some ` U)"
+              by (cases y) (simp add: inv_into_def)
+          qed
+          show "{y \<in> Some ` X. inv_into X Some y \<in> U} \<in> subspace_topology Y TY0 (Some ` X)"
+            unfolding subspace_topology_def
+            apply (rule CollectI)
+            apply (rule exI[where x="Some ` U"])
+            apply (intro conjI)
+             apply (simp add: hEq Int_assoc)
+            apply (rule hSomeU)
+            done
+        qed
+        show ?thesis
+          unfolding top1_continuous_map_on_def
+          apply (intro conjI)
+           apply (intro ballI)
+           apply (cases x, simp add: Y_def)
+          apply (rule pre)
+          done
+      qed
+    qed
+
+    have hCompY: "top1_compact_on Y TY0"
+    proof (unfold top1_compact_on_def, intro conjI)
+      show "is_topology_on Y TY0"
+        by (rule hTopY0)
+      show "\<forall>Uc. Uc \<subseteq> TY0 \<and> Y \<subseteq> \<Union>Uc \<longrightarrow>
+            (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+      proof (intro allI impI)
+        fix Uc :: "('a option) set set"
+        assume hUc: "Uc \<subseteq> TY0 \<and> Y \<subseteq> \<Union>Uc"
+        have hUc_sub: "Uc \<subseteq> TY0" and hCov: "Y \<subseteq> \<Union>Uc"
+          using hUc by blast+
+        have hNone: "None \<in> \<Union>Uc"
+          by (rule subsetD[OF hCov], simp add: Y_def)
+        obtain U0 where hU0: "U0 \<in> Uc" and hNoneU0: "None \<in> U0"
+          using hNone by blast
+        have hU0open: "U0 \<in> TY0"
+          using hUc_sub hU0 by blast
+        have hU0gen: "U0 \<subseteq> Y \<and> (\<forall>y\<in>U0. \<exists>b\<in>B. y \<in> b \<and> b \<subseteq> U0)"
+          using hU0open unfolding TY0_def topology_generated_by_basis_def by blast
+        obtain b0 where hb0: "b0 \<in> B" and hNoneb0: "None \<in> b0" and hb0sub: "b0 \<subseteq> U0"
+          using hU0gen hNoneU0 by blast
+        have hb0B2: "b0 \<in> B2"
+        proof -
+          have "b0 \<in> B1 \<or> b0 \<in> B2"
+            using hb0 unfolding B_def by blast
+          thus ?thesis
+          proof
+            assume hb0B1: "b0 \<in> B1"
+            then obtain U where hbEq: "b0 = Some ` U"
+              unfolding B1_def by blast
+            have "None \<notin> Some ` U"
+              by simp
+            thus ?thesis
+              using hNoneb0 unfolding hbEq by blast
+          next
+            assume "b0 \<in> B2"
+            thus ?thesis .
+          qed
+        qed
+        obtain K0 where hK0X: "K0 \<subseteq> X"
+            and hK0comp: "top1_compact_on K0 (subspace_topology X TX K0)"
+            and hb0eq: "b0 = Y - Some ` K0"
+          using hb0B2 unfolding B2_def by blast
+        have hCoverK0:
+          "\<forall>Vc. Vc \<subseteq> TX \<and> K0 \<subseteq> \<Union>Vc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Vc \<and> K0 \<subseteq> \<Union>F)"
+          using Lemma_26_1[OF hTX hK0X] hK0comp by blast
+        define Vc where "Vc = {{x \<in> X. Some x \<in> U} | U. U \<in> Uc}"
+        have hVc_sub: "Vc \<subseteq> TX"
+        proof (rule subsetI)
+          fix V
+          assume hV: "V \<in> Vc"
+          then obtain U where hU: "U \<in> Uc" and hVeq: "V = {x \<in> X. Some x \<in> U}"
+            unfolding Vc_def by blast
+          have hUopen: "U \<in> TY0"
+            using hUc_sub hU by blast
+          have "{x \<in> X. Some x \<in> U} \<in> TX"
+            using hSomeContY hUopen unfolding top1_continuous_map_on_def by blast
+          thus "V \<in> TX"
+            unfolding hVeq .
+        qed
+        have hVc_cov: "K0 \<subseteq> \<Union>Vc"
+        proof (rule subsetI)
+          fix x
+          assume hxK0: "x \<in> K0"
+          have hxY: "Some x \<in> Y"
+            unfolding Y_def using hK0X hxK0 by blast
+          have hxU: "Some x \<in> \<Union>Uc"
+            by (rule subsetD[OF hCov hxY])
+          then obtain U where hU: "U \<in> Uc" and hxU': "Some x \<in> U"
+            by blast
+          have hVin: "{x \<in> X. Some x \<in> U} \<in> Vc"
+            unfolding Vc_def using hU by blast
+          have hxV: "x \<in> {x \<in> X. Some x \<in> U}"
+            using hK0X hxK0 hxU' by blast
+          show "x \<in> \<Union>Vc"
+            by (rule UnionI[OF hVin hxV])
+        qed
+        obtain FVc where hFVcfin: "finite FVc" and hFVcsub: "FVc \<subseteq> Vc" and hK0cov: "K0 \<subseteq> \<Union>FVc"
+          using hCoverK0[rule_format, OF conjI[OF hVc_sub hVc_cov]] by blast
+        have hrepr: "\<forall>V\<in>FVc. \<exists>U\<in>Uc. V = {x \<in> X. Some x \<in> U}"
+          using hFVcsub unfolding Vc_def by blast
+        obtain pick where hpick: "\<forall>V\<in>FVc. pick V \<in> Uc \<and> V = {x \<in> X. Some x \<in> pick V}"
+          using bchoice[OF hrepr] by blast
+        define F where "F = insert U0 (pick ` FVc)"
+        have hFfin: "finite F"
+          unfolding F_def using hFVcfin by simp
+        have hFsub: "F \<subseteq> Uc"
+          unfolding F_def using hU0 hpick by blast
+        have hFcov: "Y \<subseteq> \<Union>F"
+        proof (rule subsetI)
+          fix y
+          assume hyY: "y \<in> Y"
+          show "y \<in> \<Union>F"
+          proof (cases "y \<in> Some ` K0")
+            case True
+            then obtain x where hxK0: "x \<in> K0" and hyEq: "y = Some x"
+              by blast
+            have hx: "x \<in> \<Union>FVc"
+              by (rule subsetD[OF hK0cov hxK0])
+            then obtain V where hV: "V \<in> FVc" and hxV: "x \<in> V"
+              by blast
+            have hU: "pick V \<in> Uc" and hVeq: "V = {x \<in> X. Some x \<in> pick V}"
+              using hpick hV by blast
+            have "Some x \<in> pick V"
+              using hxV hVeq hK0X hxK0 by blast
+            hence "y \<in> pick V"
+              using hyEq by simp
+            have "pick V \<in> F"
+              unfolding F_def using hV by blast
+            thus ?thesis
+              by (rule UnionI[OF \<open>pick V \<in> F\<close> \<open>y \<in> pick V\<close>])
+          next
+            case False
+            have hyb0: "y \<in> b0"
+              unfolding hb0eq using False hyY by blast
+            have "y \<in> U0"
+              by (rule subsetD[OF subset_trans[OF _ hb0sub] hyb0]) simp
+            have "U0 \<in> F"
+              unfolding F_def by simp
+            thus ?thesis
+              by (rule UnionI[OF \<open>U0 \<in> F\<close> \<open>y \<in> U0\<close>])
+          qed
+        qed
+        show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F"
+          apply (rule exI[where x=F])
+          apply (intro conjI)
+            apply (rule hFfin)
+           apply (rule hFsub)
+          apply (rule hFcov)
+          done
+      qed
+    qed
+
+    have hHausY: "is_hausdorff_on Y TY0"
+    proof (unfold is_hausdorff_on_def, intro conjI)
+      show "is_topology_on Y TY0"
+        by (rule hTopY0)
+      show "\<forall>x\<in>Y. \<forall>y\<in>Y. x \<noteq> y \<longrightarrow>
+        (\<exists>U V. neighborhood_of x Y TY0 U \<and> neighborhood_of y Y TY0 V \<and> U \<inter> V = {})"
+      proof (intro ballI impI)
+        fix x y
+        assume hxY: "x \<in> Y" and hyY: "y \<in> Y" and hne: "x \<noteq> y"
+        show "\<exists>U V. neighborhood_of x Y TY0 U \<and> neighborhood_of y Y TY0 V \<and> U \<inter> V = {}"
+        proof (cases x; cases y)
+          case (Some x0) (Some y0)
+          have hx0X: "x0 \<in> X" using hxY unfolding Y_def Some by blast
+          have hy0X: "y0 \<in> X" using hyY unfolding Y_def Some by blast
+          have hne0: "x0 \<noteq> y0"
+            using hne unfolding Some by simp
+          obtain U V where hnbx: "neighborhood_of x0 X TX U" and hnby: "neighborhood_of y0 X TX V"
+              and hdisj: "U \<inter> V = {}"
+            using hHaus unfolding is_hausdorff_on_def by (blast dest: spec[where x=x0] spec[where x=y0])
+          have hU: "U \<in> TX" and hx0U: "x0 \<in> U"
+            using hnbx unfolding neighborhood_of_def by blast+
+          have hV: "V \<in> TX" and hy0V: "y0 \<in> V"
+            using hnby unfolding neighborhood_of_def by blast+
+          have hSomeU: "Some ` U \<in> TY0"
+            using hBsubY0 unfolding B_def B1_def using hU by blast
+          have hSomeV: "Some ` V \<in> TY0"
+            using hBsubY0 unfolding B_def B1_def using hV by blast
+          have hxnb: "neighborhood_of (Some x0) Y TY0 (Some ` U)"
+            unfolding neighborhood_of_def using hSomeU hx0U unfolding Some Y_def by blast
+          have hynb: "neighborhood_of (Some y0) Y TY0 (Some ` V)"
+            unfolding neighborhood_of_def using hSomeV hy0V unfolding Some Y_def by blast
+          have hdisjSV: "(Some ` U) \<inter> (Some ` V) = {}"
+            using hdisj by blast
+          show ?thesis
+            apply (rule exI[where x="Some ` U"])
+            apply (rule exI[where x="Some ` V"])
+            apply (intro conjI hxnb hynb)
+            apply (rule hdisjSV)
+            done
+        next
+          case None (Some x0)
+          have hx0X: "x0 \<in> X" using hyY unfolding Y_def Some by blast
+          have hLC_ex:
+            "\<exists>U. neighborhood_of x0 X TX U \<and> U \<subseteq> X
+              \<and> top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
+            using hLC hx0X unfolding top1_locally_compact_on_def by blast
+          obtain U where hnb: "neighborhood_of x0 X TX U" and hUX: "U \<subseteq> X"
+              and hKcomp: "top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
+            using hLC_ex by blast
+          define K where "K = closure_on X TX U"
+          have hKX: "K \<subseteq> X"
+            unfolding K_def by (rule closure_on_subset_carrier[OF hTX hUX])
+          have hbInf: "Y - Some ` K \<in> B2"
+            unfolding B2_def using hKX hKcomp K_def by blast
+          have hInf_open: "Y - Some ` K \<in> TY0"
+            using hBsubY0 hbInf unfolding B_def by blast
+          have hSomeU: "Some ` U \<in> TY0"
+            using hBsubY0 unfolding B_def B1_def using hnb unfolding neighborhood_of_def by blast
+          have hxK: "x0 \<in> K"
+          proof -
+            have hxU: "x0 \<in> U"
+              using hnb unfolding neighborhood_of_def by blast
+            show ?thesis
+              unfolding K_def by (rule subsetD[OF subset_closure_on hxU])
+          qed
+          have hUsubK: "U \<subseteq> K"
+            unfolding K_def by (rule subset_closure_on)
+          have hdisj: "(Y - Some ` K) \<inter> (Some ` U) = {}"
+          proof -
+            have "(Some ` U) \<subseteq> Some ` K"
+              using hUsubK by blast
+            thus ?thesis
+              by blast
+          qed
+          have hnbNone: "neighborhood_of None Y TY0 (Y - Some ` K)"
+            unfolding neighborhood_of_def using hInf_open unfolding Y_def by blast
+          have hnbSome: "neighborhood_of (Some x0) Y TY0 (Some ` U)"
+            unfolding neighborhood_of_def using hSomeU hnb unfolding neighborhood_of_def by blast
+          show ?thesis
+            apply (rule exI[where x="Y - Some ` K"])
+            apply (rule exI[where x="Some ` U"])
+            apply (intro conjI hnbNone hnbSome)
+            apply (rule hdisj)
+            done
+        next
+          case (Some x0) None
+          from None Some show ?thesis
+            by (simp add: Int_comm) (metis)
+        next
+          case None None
+          thus ?thesis using hne by simp
+        qed
+      qed
+    qed
+
+    have hOPC: "top1_one_point_compactification_on X TX TY0"
+      unfolding top1_one_point_compactification_on_def
+      unfolding Let_def Y_def
+      using hHomeo hCompY hHausY by simp
+
+    show "\<exists>TY. top1_one_point_compactification_on X TX TY"
+      by (rule exI[where x=TY0]) (rule hOPC)
+  qed
+
+  have backward_imp:
+    "(\<exists>TY. top1_one_point_compactification_on X TX TY) \<Longrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
+  proof
+    assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY"
+    then obtain TY where hOPC: "top1_one_point_compactification_on X TX TY"
+      by blast
+    have hYdef: "Y = insert None (Some ` X)"
+      unfolding Y_def .
+    have hOPC': "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some
+        \<and> top1_compact_on Y TY \<and> is_hausdorff_on Y TY"
+      using hOPC unfolding top1_one_point_compactification_on_def Y_def Let_def by simp
+    have hHomeo: "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some"
+      using hOPC' by blast
+    have hCompY: "top1_compact_on Y TY"
+      using hOPC' by blast
+    have hHausY: "is_hausdorff_on Y TY"
+      using hOPC' by blast
+    have hTopY: "is_topology_on Y TY"
+      using hHausY unfolding is_hausdorff_on_def by blast
+    have hSomeXsubY: "Some ` X \<subseteq> Y"
+      unfolding Y_def by blast
+    have hNoneY: "None \<in> Y"
+      unfolding Y_def by simp
+    have hNoneClosed: "closedin_on Y TY {None}"
+      by (rule singleton_closed_in_hausdorff[OF hHausY hNoneY])
+    have hSomeX_open: "Some ` X \<in> TY"
+    proof -
+      have hEq: "Y - {None} = Some ` X"
+        unfolding Y_def by blast
+      have "Y - {None} \<in> TY"
+        by (rule closedin_diff_open[OF hNoneClosed])
+      thus ?thesis
+        using hEq by simp
+    qed
+    have hLC_SomeX: "top1_locally_compact_on (Some ` X) (subspace_topology Y TY (Some ` X))"
+      by (rule top1_locally_compact_on_open_subspace_of_compact_hausdorff[OF hCompY hHausY hSomeXsubY hSomeX_open])
+    have hLC: "top1_locally_compact_on X TX"
+      by (rule top1_locally_compact_on_of_homeomorphism_on[OF hHomeo hLC_SomeX])
+    have hHaus_SomeX: "is_hausdorff_on (Some ` X) (subspace_topology Y TY (Some ` X))"
+      using conjunct2[OF conjunct2[OF Theorem_17_11, rule_format, OF conjI[OF hHausY hSomeXsubY]]] by blast
+    have hHausX: "is_hausdorff_on X TX"
+      by (rule is_hausdorff_on_of_homeomorphism_on[OF hHomeo hHaus_SomeX])
+    show "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+      using hLC hHausX by simp
+  qed
+
+  show "(top1_locally_compact_on X TX \<and> is_hausdorff_on X TX) \<longleftrightarrow> (\<exists>TY. top1_one_point_compactification_on X TX TY)"
+  proof (rule iffI)
+    assume hLH: "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+    show "\<exists>TY. top1_one_point_compactification_on X TX TY"
+      using forward_imp[OF hLH] .
+  next
+    assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY"
+    show "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+      using backward_imp[OF hEx] .
+  qed
+
+  show "\<forall>TY TY'. top1_one_point_compactification_on X TX TY \<and> top1_one_point_compactification_on X TX TY'
+        \<longrightarrow> (\<exists>h. top1_homeomorphism_on (insert None (Some ` X)) TY (insert None (Some ` X)) TY' h
+              \<and> (\<forall>x\<in>X. h (Some x) = Some x))"
+  proof (intro allI impI)
+    fix TY TY'
+    assume hBoth: "top1_one_point_compactification_on X TX TY \<and> top1_one_point_compactification_on X TX TY'"
+    have hTopY: "is_topology_on Y TY"
+      using hBoth unfolding top1_one_point_compactification_on_def Y_def Let_def top1_homeomorphism_on_def top1_compact_on_def is_hausdorff_on_def by blast
+    have hTopY': "is_topology_on Y TY'"
+      using hBoth unfolding top1_one_point_compactification_on_def Y_def Let_def top1_homeomorphism_on_def top1_compact_on_def is_hausdorff_on_def by blast
+    have hEq: "TY = TY'"
+    proof (rule subset_antisym)
+      show "TY \<subseteq> TY'"
+        (* admitted in draft *)
+      show "TY' \<subseteq> TY"
+        (* admitted in draft *)
+    qed
+    define h where "h = (\<lambda>z. z)"
+    have hHomeo: "top1_homeomorphism_on Y TY Y TY' h"
+      unfolding h_def
+      unfolding hEq
+      unfolding top1_homeomorphism_on_def
+      apply (intro conjI)
+          apply (rule hTopY)
+         apply (rule hTopY)
+        apply (simp add: bij_betw_def inj_on_def)
+       apply (unfold top1_continuous_map_on_def)
+       apply (intro conjI ballI)
+        apply simp
+       apply simp
+      apply (unfold top1_continuous_map_on_def)
+      apply (intro conjI ballI)
+       apply simp
+      apply simp
+      done
+    show "\<exists>h. top1_homeomorphism_on (insert None (Some ` X)) TY (insert None (Some ` X)) TY' h
+              \<and> (\<forall>x\<in>X. h (Some x) = Some x)"
+      unfolding Y_def
+      apply (rule exI[where x=h])
+      apply (intro conjI)
+       apply (rule hHomeo)
+      unfolding h_def by simp
+  qed
+qed
+*)
 
 (** from \S29 Theorem 29.2 [top1.tex:3767] **)
 theorem Theorem_29_2:
