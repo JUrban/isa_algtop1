@@ -33802,9 +33802,9 @@ proof (intro ballI impI)
   assume hp: "p \<in> (UNIV::(nat \<times> nat) set)" and hq: "q \<in> (UNIV::(nat \<times> nat) set)"
   assume hEq: "top1_pair_code p = top1_pair_code q"
   obtain a b where hpab: "p = (a,b)"
-    by (cases p) auto
+    by (cases p) simp
   obtain c d where hqcd: "q = (c,d)"
-    by (cases q) auto
+    by (cases q) simp
 
   have hodd_b: "\<not> (2::nat) dvd (2 * b + 1)"
     by simp
@@ -33982,9 +33982,9 @@ proof -
     assume hEq: "h p = h q"
 
     obtain i x where hpix: "p = (i,x)"
-      by (cases p) auto
+      by (cases p) simp
     obtain j y where hqjy: "q = (j,y)"
-      by (cases q) auto
+      by (cases q) simp
 
     have hiI: "i \<in> I" and hx: "x \<in> C i"
       using hp unfolding hpix by blast+
@@ -43055,9 +43055,9 @@ proof -
 	  have gpair_cont:
 	    "\<And>nm. top1_continuous_map_on X TX ?I ?TI (gpair nm)"
 	  proof -
-	    fix nm :: "nat \<times> nat"
+    fix nm :: "nat \<times> nat"
     obtain n m where hnm: "nm = (n,m)"
-      by (cases nm) auto
+      by (cases nm) simp
     show "top1_continuous_map_on X TX ?I ?TI (gpair nm)"
     proof (cases "Bseq n \<in> B \<and> Bseq m \<in> B \<and> closure_on X TX (Bseq n) \<subseteq> Bseq m")
       case True
@@ -43086,13 +43086,13 @@ proof -
 	  have pair_code_inj: "inj_on ?pair_code (UNIV::(nat \<times> nat) set)"
 	    unfolding inj_on_def
 	  proof (intro ballI impI)
-	    fix p q :: "nat \<times> nat"
-	    assume hp: "p \<in> (UNIV::(nat \<times> nat) set)" and hq: "q \<in> (UNIV::(nat \<times> nat) set)"
-	    assume hEq: "?pair_code p = ?pair_code q"
-	    obtain a b where hpab: "p = (a,b)"
-	      by (cases p) auto
-	    obtain c d where hqcd: "q = (c,d)"
-	      by (cases q) auto
+		    fix p q :: "nat \<times> nat"
+		    assume hp: "p \<in> (UNIV::(nat \<times> nat) set)" and hq: "q \<in> (UNIV::(nat \<times> nat) set)"
+		    assume hEq: "?pair_code p = ?pair_code q"
+		    obtain a b where hpab: "p = (a,b)"
+		      by (cases p) simp
+		    obtain c d where hqcd: "q = (c,d)"
+		      by (cases q) simp
 
     have hodd_b: "\<not> (2::nat) dvd (2 * b + 1)"
       by simp
