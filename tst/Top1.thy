@@ -41207,13 +41207,15 @@ proof -
 	        show ?thesis
 	          using hEq hX_open by simp
 	      next
-        case False
-        have hc01: "0 < c" and hc_le1: "c \<le> 1"
-          using False \<open>\<not> c \<le> 0\<close> by simp_all
-        define UC where
-          "UC = {U n k | n k. k \<le> (2::nat) ^ n \<and> top1_dyadic n k < c}"
-        have hUC_open: "\<forall>V\<in>UC. V \<in> TX"
-          unfolding UC_def using U_open by blast
+	        case False
+	        have hc01: "0 < c"
+	          using \<open>\<not> c \<le> 0\<close> by simp
+	        have hc_le1: "c \<le> 1"
+	          using False by (simp add: not_less)
+	        define UC where
+	          "UC = {U n k | n k. k \<le> (2::nat) ^ n \<and> top1_dyadic n k < c}"
+	        have hUC_open: "\<forall>V\<in>UC. V \<in> TX"
+	          unfolding UC_def using U_open by blast
         have hpre_eq: "{x \<in> X. f x \<in> open_ray_lt c} = \<Union>UC"
         proof (rule set_eqI)
           fix x
@@ -41781,14 +41783,20 @@ proof -
       have hUV_disj: "?U \<inter> ?V = {}"
       proof (rule equalityI)
         show "?U \<inter> ?V \<subseteq> {}"
-        proof (rule subsetI)
-          fix z assume hz: "z \<in> ?U \<inter> ?V"
-          have hzG: "f z \<in> ?G" and hzL: "f z \<in> ?L"
-            using hz by simp_all
-          have "f z \<in> ?G \<inter> ?L" using hzG hzL by blast
-          hence "f z \<in> {}" using hdisj_cod by simp
-          thus "z \<in> {}" by blast
-        qed
+	        proof (rule subsetI)
+	          fix z assume hz: "z \<in> ?U \<inter> ?V"
+	          have hzU: "z \<in> ?U"
+	            using hz by simp
+	          have hzV: "z \<in> ?V"
+	            using hz by simp
+	          have hzG: "f z \<in> ?G"
+	            using hzU by simp
+	          have hzL: "f z \<in> ?L"
+	            using hzV by simp
+	          have "f z \<in> ?G \<inter> ?L" using hzG hzL by blast
+	          hence "f z \<in> {}" using hdisj_cod by simp
+	          thus "z \<in> {}" by blast
+	        qed
         show "{} \<subseteq> ?U \<inter> ?V" by (rule empty_subsetI)
       qed
 
@@ -46108,7 +46116,12 @@ proof -
   have "(\<Sum>i<n. (1/3::real) * (2/3) ^ (m + i)) = (2/3) ^ m * (1 - (2/3) ^ n)"
     unfolding hrewrite hsum by simp
   also have "... \<le> (2/3::real) ^ m * 1"
-    using hn by (intro mult_left_mono) simp_all
+  proof (rule mult_left_mono)
+    show "1 - (2/3::real) ^ n \<le> 1"
+      using hn by simp
+    show "0 \<le> (2/3::real) ^ m"
+      by simp
+  qed
   finally show ?thesis
     by simp
 qed
