@@ -46598,10 +46598,17 @@ proof -
         unfolding P_def by simp
 
       have hlocal: "\<forall>p\<in>P. \<exists>W\<in>?TP. p \<in> W \<and> W \<subseteq> P"
-      proof (intro ballI)
-        fix p assume hpP: "p \<in> P"
-        have hpX: "p \<in> ?X" and hpb: "?plus p \<in> b"
-          using hpP unfolding P_def by simp_all
+	      proof (intro ballI)
+	        fix p assume hpP: "p \<in> P"
+	        have hpX: "p \<in> ?X" and hpb: "?plus p \<in> b"
+	        proof -
+	          have hp_conj: "p \<in> ?X \<and> ?plus p \<in> b"
+	            using hpP unfolding P_def by simp
+	          show "p \<in> ?X"
+	            using hp_conj by (rule conjunct1)
+	          show "?plus p \<in> b"
+	            using hp_conj by (rule conjunct2)
+	        qed
 
         obtain e where he: "0 < e"
           and hI_sub: "open_interval (?plus p - e) (?plus p + e) \<subseteq> b"
@@ -46672,11 +46679,25 @@ proof -
               by simp
             thus ?thesis
               unfolding pi2_def Pair by simp
-          qed
-          have hq1: "pi1 p - e/2 < pi1 q" and hq2: "pi1 q < pi1 p + e/2"
-            using hqU unfolding U_def open_interval_def by simp_all
-          have hq3: "pi2 p - e/2 < pi2 q" and hq4: "pi2 q < pi2 p + e/2"
-            using hqV unfolding V_def open_interval_def by simp_all
+	          qed
+	          have hq1: "pi1 p - e/2 < pi1 q" and hq2: "pi1 q < pi1 p + e/2"
+	          proof -
+	            have hq_conj: "pi1 p - e/2 < pi1 q \<and> pi1 q < pi1 p + e/2"
+	              using hqU unfolding U_def open_interval_def by simp
+	            show "pi1 p - e/2 < pi1 q"
+	              using hq_conj by (rule conjunct1)
+	            show "pi1 q < pi1 p + e/2"
+	              using hq_conj by (rule conjunct2)
+	          qed
+	          have hq3: "pi2 p - e/2 < pi2 q" and hq4: "pi2 q < pi2 p + e/2"
+	          proof -
+	            have hq_conj: "pi2 p - e/2 < pi2 q \<and> pi2 q < pi2 p + e/2"
+	              using hqV unfolding V_def open_interval_def by simp
+	            show "pi2 p - e/2 < pi2 q"
+	              using hq_conj by (rule conjunct1)
+	            show "pi2 q < pi2 p + e/2"
+	              using hq_conj by (rule conjunct2)
+	          qed
 
           have hsum1: "?plus p - e < ?plus q"
           proof -
