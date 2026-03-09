@@ -32096,74 +32096,69 @@ proof -
   *)
 
 		  have backward_imp:
-		    "(\<exists>TY. top1_one_point_compactification_on X TX TY) \<Longrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
-		    sorry
+		    "(\<exists>TY. top1_one_point_compactification_on X TX TY)
+		      \<Longrightarrow> (top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)"
+		  sorry
 
-(*	  proof
-	    assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY"
-	    then obtain TY where hOPC: "top1_one_point_compactification_on X TX TY"
-	      by blast
-		    have hYdef: "Y = insert None (Some ` X)"
-		      unfolding Y_def by simp
-		    have hOPC': "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some
+(*
+		  proof
+		    assume hEx: "\<exists>TY. top1_one_point_compactification_on X TX TY"
+		    then obtain TY where hOPC: "top1_one_point_compactification_on X TX TY"
+		      by blast
+
+		    have hProps:
+		      "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some
 		        \<and> top1_compact_on Y TY \<and> is_hausdorff_on Y TY"
 		      using hOPC unfolding top1_one_point_compactification_on_def Y_def Let_def by simp
-	    have hHomeo: "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some"
-	      using hOPC' by blast
-	    have hCompY: "top1_compact_on Y TY"
-	      using hOPC' by blast
-	    have hHausY: "is_hausdorff_on Y TY"
-	      using hOPC' by blast
-	    have hTopY: "is_topology_on Y TY"
-	      using hHausY unfolding is_hausdorff_on_def by blast
-	    have hSomeXsubY: "Some ` X \<subseteq> Y"
-	      unfolding Y_def by blast
-	    have hNoneY: "None \<in> Y"
-	      unfolding Y_def by simp
-	    have hNoneClosed: "closedin_on Y TY {None}"
-	      by (rule singleton_closed_in_hausdorff[OF hHausY hNoneY])
-	    have hSomeX_open: "Some ` X \<in> TY"
-	    proof -
-	      have hEq: "Y - {None} = Some ` X"
-	        unfolding Y_def by blast
-	      have "Y - {None} \<in> TY"
-	        by (rule closedin_diff_open[OF hNoneClosed])
-	      thus ?thesis
-	        using hEq by simp
-	    qed
+		    have hHomeo: "top1_homeomorphism_on X TX (Some ` X) (subspace_topology Y TY (Some ` X)) Some"
+		      using hProps by blast
+		    have hCompY: "top1_compact_on Y TY"
+		      using hProps by blast
+		    have hHausY: "is_hausdorff_on Y TY"
+		      using hProps by blast
+
+		    have hSomeXsubY: "Some ` X \<subseteq> Y"
+		      unfolding Y_def by blast
+		    have hNoneY: "None \<in> Y"
+		      unfolding Y_def by simp
+		    have hNoneClosed: "closedin_on Y TY {None}"
+		      by (rule singleton_closed_in_hausdorff[OF hHausY hNoneY])
+		    have hSomeX_open: "Some ` X \<in> TY"
+		    proof -
+		      have hEq: "Y - {None} = Some ` X"
+		        unfolding Y_def by blast
+		      have hYminus: "Y - {None} \<in> TY"
+		        by (rule closedin_diff_open[OF hNoneClosed])
+		      show ?thesis
+		        using hYminus hEq by simp
+		    qed
+
 		    have hLC_SomeX: "top1_locally_compact_on (Some ` X) (subspace_topology Y TY (Some ` X))"
 		      by (rule top1_locally_compact_on_open_subspace_of_compact_hausdorff[OF hCompY hHausY hSomeX_open hSomeXsubY])
 		    have hLC: "top1_locally_compact_on X TX"
 		      by (rule top1_locally_compact_on_of_homeomorphism_on[OF hHomeo hLC_SomeX])
+
 		    have hHaus_SomeX: "is_hausdorff_on (Some ` X) (subspace_topology Y TY (Some ` X))"
-			    proof -
-			      have hSubAll:
-			        "\<forall>X T Y. is_hausdorff_on X T \<and> Y \<subseteq> X \<longrightarrow> is_hausdorff_on Y (subspace_topology X T Y)"
-			        by (rule conjunct2[OF conjunct2[OF Theorem_17_11]])
-			      have hSubAll1:
-			        "\<forall>T Z. is_hausdorff_on Y T \<and> Z \<subseteq> Y \<longrightarrow> is_hausdorff_on Z (subspace_topology Y T Z)"
-			        using hSubAll by (rule spec[where x=Y])
-			      have hSubAll2:
-			        "\<forall>Z. is_hausdorff_on Y TY \<and> Z \<subseteq> Y \<longrightarrow> is_hausdorff_on Z (subspace_topology Y TY Z)"
-			        using hSubAll1 by (rule spec[where x=TY])
-			      have hImp:
-			        "is_hausdorff_on Y TY \<and> Some ` X \<subseteq> Y \<longrightarrow> is_hausdorff_on (Some ` X) (subspace_topology Y TY (Some ` X))"
-			        using hSubAll2 by (rule spec[where x="Some ` X"])
-			      have hConj: "is_hausdorff_on Y TY \<and> Some ` X \<subseteq> Y"
-			        using hHausY hSomeXsubY by simp
-			      show ?thesis
-			        by (rule mp[OF hImp hConj])
-			    qed
-							    have hHausX: "is_hausdorff_on X TX"
-							      by (rule is_hausdorff_on_of_homeomorphism_on[OF hHomeo hHaus_SomeX])
-							    show "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
-							      by (rule conjI[OF hLC hHausX])
-						  qed
+		    proof -
+		      have hSubAll:
+		        "\<forall>X T Z. is_hausdorff_on X T \<and> Z \<subseteq> X \<longrightarrow> is_hausdorff_on Z (subspace_topology X T Z)"
+		        by (rule conjunct2[OF conjunct2[OF Theorem_17_11]])
+		      have hConj: "is_hausdorff_on Y TY \<and> Some ` X \<subseteq> Y"
+		        by (rule conjI[OF hHausY hSomeXsubY])
+		      show ?thesis
+		        by (rule hSubAll[rule_format, of Y TY "Some ` X", OF hConj])
+		    qed
+		    have hHausX: "is_hausdorff_on X TX"
+		      by (rule is_hausdorff_on_of_homeomorphism_on[OF hHomeo hHaus_SomeX])
+
+		    show "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+		      by (rule conjI[OF hLC hHausX])
+		  qed
 *)
-	
-		  show "(top1_locally_compact_on X TX \<and> is_hausdorff_on X TX) \<longleftrightarrow> (\<exists>TY. top1_one_point_compactification_on X TX TY)"
-		  proof (rule iffI)
-		    assume hLH: "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
+			
+				  show "(top1_locally_compact_on X TX \<and> is_hausdorff_on X TX) \<longleftrightarrow> (\<exists>TY. top1_one_point_compactification_on X TX TY)"
+				  proof (rule iffI)
+			    assume hLH: "top1_locally_compact_on X TX \<and> is_hausdorff_on X TX"
     show "\<exists>TY. top1_one_point_compactification_on X TX TY"
       using forward_imp[OF hLH] .
   next
