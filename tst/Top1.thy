@@ -57098,7 +57098,340 @@ lemma top1_compact_hausdorff_imp_baire:
   assumes hcomp: "top1_compact_on X TX"
   assumes hHaus: "is_hausdorff_on X TX"
   shows "top1_baire_on X TX"
-  sorry
+proof -
+  have hTop: "is_topology_on X TX"
+    using hcomp unfolding top1_compact_on_def by blast
+  have hNormal: "top1_normal_on X TX"
+    by (rule Theorem_32_3[OF hcomp hHaus])
+  have hReg: "top1_regular_on X TX"
+    by (rule normal_imp_regular_on[OF hNormal])
+
+  show ?thesis
+    unfolding top1_baire_on_def
+  proof (intro allI impI)
+    fix U :: "nat \<Rightarrow> 'a set"
+    assume hU: "\<forall>n. U n \<in> TX \<and> top1_densein_on X TX (U n)"
+
+    have hUnT: "\<forall>n. U n \<in> TX"
+      using hU by blast
+    have hUnDense: "\<forall>n. top1_densein_on X TX (U n)"
+      using hU by blast
+
+    have hUnSubX: "\<forall>n. U n \<subseteq> X"
+    proof (intro allI)
+      fix n
+      show "U n \<subseteq> X"
+        by (rule top1_densein_on_subset_carrier[OF hUnDense[rule_format, of n]])
+    qed
+
+    let ?A = "(\<Inter>n. U n)"
+    have hASubX: "?A \<subseteq> X"
+      by (rule subset_trans[of ?A "U 0" X]) (use hUnSubX in blast)+
+
+    have hDenseChar:
+      "top1_densein_on X TX ?A \<longleftrightarrow>
+        (\<forall>W. W \<in> TX \<and> W \<subseteq> X \<and> W \<noteq> {} \<longrightarrow> intersects W ?A)"
+      by (rule top1_densein_on_iff_intersects_nonempty_open[OF hTop hASubX])
+
+    have hGoal: "\<forall>W. W \<in> TX \<and> W \<subseteq> X \<and> W \<noteq> {} \<longrightarrow> intersects W ?A"
+    proof (intro allI impI)
+      fix W
+      assume hW: "W \<in> TX \<and> W \<subseteq> X \<and> W \<noteq> {}"
+      have hWT: "W \<in> TX" and hWSubX: "W \<subseteq> X" and hWne: "W \<noteq> {}"
+        using hW by blast+
+
+      have hInt0: "intersects W (U 0)"
+        by (rule top1_densein_on_intersects_nonempty_open[OF hTop hUnDense[rule_format, of 0] hWT hWSubX hWne])
+
+      obtain x0 where hx0W: "x0 \<in> W" and hx0U0: "x0 \<in> U 0"
+        using hInt0 unfolding intersects_def by blast
+      have hx0X: "x0 \<in> X"
+        using hWSubX hx0W by blast
+
+      let ?O0 = "W \<inter> U 0"
+      have hO0T: "?O0 \<in> TX"
+        by (rule topology_inter2[OF hTop hWT hUnT[rule_format, of 0]])
+      have hO0SubX: "?O0 \<subseteq> X"
+        using hWSubX hUnSubX[rule_format, of 0] by blast
+      have hx0O0: "x0 \<in> ?O0"
+        using hx0W hx0U0 by blast
+
+      obtain V0 where hV0T: "V0 \<in> TX"
+        and hV0SubX: "V0 \<subseteq> X"
+        and hx0V0: "x0 \<in> V0"
+        and hclV0: "closure_on X TX V0 \<subseteq> ?O0"
+        using regular_refine_point_into_open[OF hReg hx0X hO0T hO0SubX hx0O0]
+        by blast
+      have hV0ne: "V0 \<noteq> {}"
+        using hx0V0 by blast
+
+      have hStepEx:
+        "\<forall>n Vn. Vn \<in> TX \<and> Vn \<subseteq> X \<and> Vn \<noteq> {}
+          \<longrightarrow> (\<exists>V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                \<and> closure_on X TX V' \<subseteq> Vn
+                \<and> closure_on X TX V' \<subseteq> U (Suc n))"
+      proof (intro allI impI)
+        fix n Vn
+        assume hVn: "Vn \<in> TX \<and> Vn \<subseteq> X \<and> Vn \<noteq> {}"
+        have hVnT: "Vn \<in> TX" and hVnSubX: "Vn \<subseteq> X" and hVnne: "Vn \<noteq> {}"
+          using hVn by blast+
+
+        have hInt: "intersects Vn (U (Suc n))"
+          by (rule top1_densein_on_intersects_nonempty_open[OF hTop hUnDense[rule_format, of "Suc n"] hVnT hVnSubX hVnne])
+
+        obtain x where hxVn: "x \<in> Vn" and hxUn: "x \<in> U (Suc n)"
+          using hInt unfolding intersects_def by blast
+        have hxX: "x \<in> X"
+          using hVnSubX hxVn by blast
+
+        let ?O = "Vn \<inter> U (Suc n)"
+        have hOT: "?O \<in> TX"
+          by (rule topology_inter2[OF hTop hVnT hUnT[rule_format, of "Suc n"]])
+        have hOSubX: "?O \<subseteq> X"
+          using hVnSubX hUnSubX[rule_format, of "Suc n"] by blast
+        have hxO: "x \<in> ?O"
+          using hxVn hxUn by blast
+
+        obtain V' where hV'T: "V' \<in> TX"
+          and hV'SubX: "V' \<subseteq> X"
+          and hxV': "x \<in> V'"
+          and hclV': "closure_on X TX V' \<subseteq> ?O"
+          using regular_refine_point_into_open[OF hReg hxX hOT hOSubX hxO]
+          by blast
+        have hV'ne: "V' \<noteq> {}"
+          using hxV' by blast
+
+        have hclVn: "closure_on X TX V' \<subseteq> Vn"
+          by (rule subset_trans[OF hclV' Int_lower1])
+        have hclUn: "closure_on X TX V' \<subseteq> U (Suc n)"
+          by (rule subset_trans[OF hclV' Int_lower2])
+
+        show "\<exists>V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+            \<and> closure_on X TX V' \<subseteq> Vn
+            \<and> closure_on X TX V' \<subseteq> U (Suc n)"
+          by (rule exI[where x=V'], intro conjI, rule hV'T, rule hV'SubX, rule hV'ne, rule hclVn, rule hclUn)
+      qed
+
+      define step where
+        "step = (\<lambda>n Vn. (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                \<and> closure_on X TX V' \<subseteq> Vn
+                \<and> closure_on X TX V' \<subseteq> U (Suc n)))"
+
+      have hStepP:
+        "\<forall>n Vn. Vn \<in> TX \<and> Vn \<subseteq> X \<and> Vn \<noteq> {}
+          \<longrightarrow> (step n Vn \<in> TX \<and> step n Vn \<subseteq> X \<and> step n Vn \<noteq> {}
+                \<and> closure_on X TX (step n Vn) \<subseteq> Vn
+                \<and> closure_on X TX (step n Vn) \<subseteq> U (Suc n))"
+      proof (intro allI impI)
+        fix n Vn
+        assume hVn: "Vn \<in> TX \<and> Vn \<subseteq> X \<and> Vn \<noteq> {}"
+        have hex': "\<exists>V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+              \<and> closure_on X TX V' \<subseteq> Vn
+              \<and> closure_on X TX V' \<subseteq> U (Suc n)"
+          using hStepEx hVn by blast
+
+        show "step n Vn \<in> TX \<and> step n Vn \<subseteq> X \<and> step n Vn \<noteq> {}
+              \<and> closure_on X TX (step n Vn) \<subseteq> Vn
+              \<and> closure_on X TX (step n Vn) \<subseteq> U (Suc n)"
+        proof -
+          have hSome:
+            "(SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                \<and> closure_on X TX V' \<subseteq> Vn
+                \<and> closure_on X TX V' \<subseteq> U (Suc n))
+              \<in> TX
+            \<and> (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                \<and> closure_on X TX V' \<subseteq> Vn
+                \<and> closure_on X TX V' \<subseteq> U (Suc n))
+              \<subseteq> X
+            \<and> (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                \<and> closure_on X TX V' \<subseteq> Vn
+                \<and> closure_on X TX V' \<subseteq> U (Suc n))
+              \<noteq> {}
+            \<and> closure_on X TX
+                (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                    \<and> closure_on X TX V' \<subseteq> Vn
+                    \<and> closure_on X TX V' \<subseteq> U (Suc n))
+              \<subseteq> Vn
+            \<and> closure_on X TX
+                (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                    \<and> closure_on X TX V' \<subseteq> Vn
+                    \<and> closure_on X TX V' \<subseteq> U (Suc n))
+              \<subseteq> U (Suc n)"
+            by (rule someI_ex[OF hex'])
+
+          show ?thesis
+          proof -
+            define S where
+              "S = (SOME V'. V' \<in> TX \<and> V' \<subseteq> X \<and> V' \<noteq> {}
+                    \<and> closure_on X TX V' \<subseteq> Vn
+                    \<and> closure_on X TX V' \<subseteq> U (Suc n))"
+
+            have hS_in: "S \<in> TX"
+              using hSome unfolding S_def by blast
+            have hS_subX: "S \<subseteq> X"
+              using hSome unfolding S_def by blast
+            have hS_ne: "S \<noteq> {}"
+              using hSome unfolding S_def by blast
+            have hclS_subVn: "closure_on X TX S \<subseteq> Vn"
+              using hSome unfolding S_def by blast
+            have hclS_subUn: "closure_on X TX S \<subseteq> U (Suc n)"
+              using hSome unfolding S_def by blast
+
+            have hStep_eq: "step n Vn = S"
+              unfolding S_def by (simp add: step_def)
+
+            show ?thesis
+            proof (intro conjI)
+              show "step n Vn \<in> TX"
+                by (simp add: hStep_eq hS_in)
+              show "step n Vn \<subseteq> X"
+                by (simp add: hStep_eq hS_subX)
+              show "step n Vn \<noteq> {}"
+                by (simp add: hStep_eq hS_ne)
+              show "closure_on X TX (step n Vn) \<subseteq> Vn"
+                by (simp add: hStep_eq hclS_subVn)
+              show "closure_on X TX (step n Vn) \<subseteq> U (Suc n)"
+                by (simp add: hStep_eq hclS_subUn)
+            qed
+          qed
+        qed
+      qed
+
+      define V where "V = rec_nat V0 step"
+
+      have V0_eq: "V 0 = V0"
+        unfolding V_def by simp
+      have VSuc_eq: "\<And>n. V (Suc n) = step n (V n)"
+        unfolding V_def by simp
+
+      have hVProps: "\<forall>n. V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {}"
+      proof (intro allI)
+        fix n
+        show "V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {}"
+        proof (induction n)
+          case 0
+          show ?case
+            unfolding V0_eq using hV0T hV0SubX hV0ne by blast
+        next
+          case (Suc n)
+          have hPrev: "V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {}"
+            using Suc.IH by simp
+          have hStep: "step n (V n) \<in> TX \<and> step n (V n) \<subseteq> X \<and> step n (V n) \<noteq> {}"
+            using hStepP hPrev by blast
+          show ?case
+            unfolding VSuc_eq using hStep by blast
+        qed
+      qed
+
+      have hClV0_sub: "closure_on X TX (V 0) \<subseteq> W \<inter> U 0"
+        unfolding V0_eq using hclV0 by simp
+      have hClVSuc_sub:
+        "\<forall>n. closure_on X TX (V (Suc n)) \<subseteq> (V n \<inter> U (Suc n))"
+      proof (intro allI)
+        fix n
+        have hPrev: "V n \<in> TX \<and> V n \<subseteq> X \<and> V n \<noteq> {}"
+          using hVProps by blast
+        have hCl1: "closure_on X TX (step n (V n)) \<subseteq> V n"
+          using hStepP hPrev by blast
+        have hCl2: "closure_on X TX (step n (V n)) \<subseteq> U (Suc n)"
+          using hStepP hPrev by blast
+        have hCl: "closure_on X TX (step n (V n)) \<subseteq> V n \<inter> U (Suc n)"
+          using hCl1 hCl2 by blast
+        show "closure_on X TX (V (Suc n)) \<subseteq> V n \<inter> U (Suc n)"
+          unfolding VSuc_eq using hCl by simp
+      qed
+
+      let ?C = "\<lambda>n. closure_on X TX (V n)"
+
+      have hCclosed: "\<forall>n. closedin_on X TX (?C n)"
+      proof (intro allI)
+        fix n
+        have hVnSubX: "V n \<subseteq> X"
+          using hVProps by blast
+        show "closedin_on X TX (?C n)"
+          by (rule closure_on_closed[OF hTop hVnSubX])
+      qed
+
+      have hCne: "\<forall>n. ?C n \<noteq> {}"
+      proof (intro allI)
+        fix n
+        have hVn: "V n \<noteq> {}"
+          using hVProps by blast
+        have "V n \<subseteq> ?C n"
+          by (rule subset_closure_on)
+        then show "?C n \<noteq> {}"
+          using hVn by blast
+      qed
+
+      have hnest: "\<forall>n. ?C (Suc n) \<subseteq> ?C n"
+      proof (intro allI)
+        fix n
+        have hClSubVn: "?C (Suc n) \<subseteq> V n"
+          using hClVSuc_sub[rule_format, of n] by blast
+        have hVnSubCl: "V n \<subseteq> ?C n"
+          by (rule subset_closure_on)
+        show "?C (Suc n) \<subseteq> ?C n"
+          by (rule subset_trans[OF hClSubVn hVnSubCl])
+      qed
+
+      have hInterC_ne: "(\<Inter>n. ?C n) \<noteq> {}"
+        by (rule top1_compact_on_Inter_nested_closed_nonempty[OF hcomp hCclosed hCne hnest])
+
+      obtain x where hx: "x \<in> (\<Inter>n. ?C n)"
+        using hInterC_ne by blast
+
+      have hxC0: "x \<in> ?C 0"
+        using hx by simp
+
+      have hC0SubW: "?C 0 \<subseteq> W"
+        using hClV0_sub by blast
+      have hxW: "x \<in> W"
+        by (rule subsetD[OF hC0SubW hxC0])
+
+      have hxUn: "\<forall>n. x \<in> U n"
+      proof (intro allI)
+        fix n
+        show "x \<in> U n"
+        proof (cases n)
+          case 0
+          have hC0SubU0: "?C 0 \<subseteq> U 0"
+            using hClV0_sub by blast
+          show ?thesis
+            unfolding 0 by (rule subsetD[OF hC0SubU0 hxC0])
+        next
+          case (Suc m)
+          have hxCm: "x \<in> ?C (Suc m)"
+            using hx unfolding Suc by simp
+          have hCSubUm: "?C (Suc m) \<subseteq> U (Suc m)"
+            using hClVSuc_sub[rule_format, of m] by blast
+          show ?thesis
+            unfolding Suc by (rule subsetD[OF hCSubUm hxCm])
+        qed
+      qed
+
+      have hxA: "x \<in> ?A"
+        using hxUn by simp
+
+      show "intersects W ?A"
+        unfolding intersects_def
+      proof -
+        have hxWA: "x \<in> W \<inter> ?A"
+          using hxW hxA by blast
+        show "W \<inter> ?A \<noteq> {}"
+        proof
+          assume hEmpty: "W \<inter> ?A = {}"
+          have "x \<in> {}"
+            using hxWA unfolding hEmpty by simp
+          thus False
+            by simp
+        qed
+      qed
+    qed
+
+    show "top1_densein_on X TX ?A"
+      by (rule iffD2[OF hDenseChar hGoal])
+  qed
+qed
 
 theorem Theorem_48_2:
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX \<longrightarrow> top1_baire_on X TX"
