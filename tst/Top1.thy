@@ -53572,7 +53572,20 @@ qed
 lemma top1_closure_on_empty:
   assumes hTopX: "is_topology_on X TX"
   shows "closure_on X TX {} = {}"
-  sorry
+proof -
+  have hXopen: "X \<in> TX"
+    using hTopX unfolding is_topology_on_def by simp
+  have hEmptyClosed: "closedin_on X TX {}"
+    unfolding closedin_on_def using hXopen by simp
+
+  have hSub: "closure_on X TX {} \<subseteq> {}"
+    by (rule closure_on_subset_of_closed[OF hEmptyClosed], simp)
+  have hSup: "{} \<subseteq> closure_on X TX {}"
+    using subset_closure_on by blast
+
+  show ?thesis
+    by (rule subset_antisym[OF hSub hSup])
+qed
 
 lemma top1_closure_on_union2:
   assumes hTopX: "is_topology_on X TX"
