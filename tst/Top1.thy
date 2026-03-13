@@ -52541,4 +52541,588 @@ proof -
     done
 qed
 
+section \<open>\<S>37 The Tychonoff Theorem\<close>
+
+text \<open>
+  Chapter 5 of \<open>top1.tex\<close> begins with the Tychonoff theorem. We start by isolating
+  the finite-intersection-property (FIP) combinatorics used in the standard closed-set proof.
+\<close>
+
+definition top1_FIP_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_FIP_on X \<A> \<longleftrightarrow>
+     (\<forall>A\<in>\<A>. A \<subseteq> X) \<and> (\<forall>F. finite F \<and> F \<subseteq> \<A> \<longrightarrow> \<Inter>F \<noteq> {})"
+
+definition top1_FIP_maximal_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_FIP_maximal_on X \<D> \<longleftrightarrow>
+     top1_FIP_on X \<D> \<and> (\<forall>\<E>. \<D> \<subset> \<E> \<and> (\<forall>A\<in>\<E>. A \<subseteq> X) \<longrightarrow> \<not> top1_FIP_on X \<E>)"
+
+(** from \S37 Lemma 37.1 (Maximal families with the finite intersection property) [top1.tex:5210] **)
+lemma Lemma_37_1:
+  assumes hFIP: "top1_FIP_on X \<A>"
+  shows "\<exists>\<D>. \<A> \<subseteq> \<D> \<and> top1_FIP_maximal_on X \<D>"
+  sorry
+
+(** from \S37 Lemma 37.2 (Properties of maximal FIP families) [top1.tex:5232] **)
+lemma Lemma_37_2:
+  assumes hmax: "top1_FIP_maximal_on X \<D>"
+  shows "(\<forall>F. finite F \<and> F \<subseteq> \<D> \<longrightarrow> \<Inter>F \<in> \<D>)"
+    and "(\<forall>A. A \<subseteq> X \<and> (\<forall>D0\<in>\<D>. intersects A D0) \<longrightarrow> A \<in> \<D>)"
+  sorry
+
+(** from \S37 Theorem 37.3 (Tychonoff theorem) [top1.tex:5253] **)
+theorem Theorem_37_3:
+  assumes hIne: "I \<noteq> {}"
+  assumes hComp: "\<forall>i\<in>I. top1_compact_on (X i) (TX i)"
+  shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X TX)"
+  sorry
+
+section \<open>\<S>38 The Stone-\<C>ech Compactification\<close>
+
+text \<open>
+  We follow \<open>top1.tex\<close> and represent a compactification via an embedding of \<open>X\<close> into a
+  compact Hausdorff space whose image is dense.
+\<close>
+
+definition top1_dense_image_via_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_dense_image_via_on X TX Y TY e \<longleftrightarrow>
+     top1_embedding_on X TX Y TY e \<and> closure_on Y TY (e ` X) = Y"
+
+definition top1_compactification_via_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_compactification_via_on X TX Y TY e \<longleftrightarrow>
+     top1_compact_on Y TY \<and> is_hausdorff_on Y TY \<and> top1_dense_image_via_on X TX Y TY e"
+
+definition top1_equiv_compactification_via_on ::
+  "'a set \<Rightarrow> 'a set set
+    \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b)
+    \<Rightarrow> 'c set \<Rightarrow> 'c set set \<Rightarrow> ('a \<Rightarrow> 'c) \<Rightarrow> bool" where
+  "top1_equiv_compactification_via_on X TX Y1 TY1 e1 Y2 TY2 e2 \<longleftrightarrow>
+     (\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h \<and> (\<forall>x\<in>X. h (e1 x) = e2 x))"
+
+(** from \S38 Lemma 38.1 (Compactifications induced by embeddings) [top1.tex:5348] **)
+lemma Lemma_38_1:
+  assumes hEmb: "top1_embedding_on X TX Z TZ h"
+  assumes hCompZ: "top1_compact_on Z TZ"
+  assumes hHausZ: "is_hausdorff_on Z TZ"
+  shows "\<exists>Y TY e H.
+    top1_compactification_via_on X TX Y TY e
+    \<and> top1_embedding_on Y TY Z TZ H
+    \<and> (\<forall>x\<in>X. H (e x) = h x)"
+  sorry
+
+definition top1_bounded_on :: "'a set \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> bool" where
+  "top1_bounded_on X f \<longleftrightarrow> (\<exists>M. \<forall>x\<in>X. \<bar>f x\<bar> \<le> M)"
+
+(** from \S38 Theorem 38.2 (Existence of Stone-\<C>ech compactification) [top1.tex:5418] **)
+theorem Theorem_38_2:
+  assumes hCR: "top1_completely_regular_on X TX"
+  shows "\<exists>Y TY e.
+    top1_compactification_via_on X TX Y TY e
+    \<and> (\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+            \<and> top1_bounded_on X f
+            \<longrightarrow> (\<exists>!g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
+                    \<and> (\<forall>x\<in>X. g (e x) = f x)))"
+  sorry
+
+(** from \S38 Lemma 38.3 (Uniqueness of continuous extensions to the closure) [top1.tex:5442] **)
+lemma Lemma_38_3:
+  assumes hHausZ: "is_hausdorff_on Z TZ"
+  assumes hcontf: "top1_continuous_map_on A (subspace_topology X TX A) Z TZ f"
+  assumes hA_sub: "A \<subseteq> X"
+  shows "\<forall>g1 g2.
+    top1_continuous_map_on (closure_on X TX A) (subspace_topology X TX (closure_on X TX A)) Z TZ g1
+    \<and> top1_continuous_map_on (closure_on X TX A) (subspace_topology X TX (closure_on X TX A)) Z TZ g2
+    \<and> (\<forall>x\<in>A. g1 x = f x) \<and> (\<forall>x\<in>A. g2 x = f x)
+    \<longrightarrow> g1 = g2"
+  sorry
+
+(** from \S38 Theorem 38.4 (Extension to compact Hausdorff codomains) [top1.tex:5446] **)
+theorem Theorem_38_4:
+  assumes hCR: "top1_completely_regular_on X TX"
+  assumes hComp: "top1_compactification_via_on X TX Y TY e"
+  assumes hExtR:
+    "\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+          \<and> top1_bounded_on X f
+          \<longrightarrow> (\<exists>!g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
+                  \<and> (\<forall>x\<in>X. g (e x) = f x))"
+  assumes hCompC: "top1_compact_on C TC"
+  assumes hHausC: "is_hausdorff_on C TC"
+  shows "\<forall>f. top1_continuous_map_on X TX C TC f \<longrightarrow>
+     (\<exists>!g. top1_continuous_map_on Y TY C TC g \<and> (\<forall>x\<in>X. g (e x) = f x))"
+  sorry
+
+(** from \S38 Theorem 38.5 (Uniqueness up to equivalence) [top1.tex:5456] **)
+theorem Theorem_38_5:
+  assumes hCR: "top1_completely_regular_on X TX"
+  assumes hC1: "top1_compactification_via_on X TX Y1 TY1 e1"
+  assumes hC2: "top1_compactification_via_on X TX Y2 TY2 e2"
+  assumes hExt1:
+    "\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+          \<and> top1_bounded_on X f
+          \<longrightarrow> (\<exists>!g. top1_continuous_map_on Y1 TY1 UNIV order_topology_on_UNIV g
+                  \<and> (\<forall>x\<in>X. g (e1 x) = f x))"
+  assumes hExt2:
+    "\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+          \<and> top1_bounded_on X f
+          \<longrightarrow> (\<exists>!g. top1_continuous_map_on Y2 TY2 UNIV order_topology_on_UNIV g
+                  \<and> (\<forall>x\<in>X. g (e2 x) = f x))"
+  shows "top1_equiv_compactification_via_on X TX Y1 TY1 e1 Y2 TY2 e2"
+  sorry
+
+section \<open>\<S>39 Local Finiteness\<close>
+
+definition top1_locally_finite_family_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_locally_finite_family_on X TX \<A> \<longleftrightarrow>
+     (\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> finite {A\<in>\<A>. intersects A U})"
+
+definition top1_sigma_locally_finite_family_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_sigma_locally_finite_family_on X TX \<A> \<longleftrightarrow>
+     (\<exists>\<B>::nat \<Rightarrow> 'a set set.
+        (\<forall>n. top1_locally_finite_family_on X TX (\<B> n)) \<and> \<A> = (\<Union>n. \<B> n))"
+
+definition top1_refines :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_refines \<B> \<A> \<longleftrightarrow> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. B \<subseteq> A)"
+
+definition top1_open_covering_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_open_covering_on X TX \<A> \<longleftrightarrow> \<A> \<subseteq> TX \<and> X \<subseteq> \<Union>\<A>"
+
+(** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
+lemma Lemma_39_1:
+  assumes hLF: "top1_locally_finite_family_on X TX \<A>"
+  shows "(\<forall>\<A>'. \<A>' \<subseteq> \<A> \<longrightarrow> top1_locally_finite_family_on X TX \<A>')"
+    and "top1_locally_finite_family_on X TX (closure_on X TX ` \<A>)"
+    and "closure_on X TX (\<Union>\<A>) = (\<Union>(closure_on X TX ` \<A>))"
+  sorry
+
+(** from \S39 Lemma 39.2 (Metrizable spaces admit countably locally finite refinements) [top1.tex:5567] **)
+lemma Lemma_39_2:
+  assumes hMet: "top1_metrizable_on X TX"
+  assumes hCov: "top1_open_covering_on X TX \<A>"
+  shows "\<exists>\<E>. top1_open_covering_on X TX \<E> \<and> top1_refines \<E> \<A> \<and> top1_sigma_locally_finite_family_on X TX \<E>"
+  sorry
+
+section \<open>\<S>40 The Nagata-Smirnov Metrization Theorem\<close>
+
+definition top1_G_delta_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_G_delta_on X TX A \<longleftrightarrow> A \<subseteq> X \<and> (\<exists>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX) \<and> A = (\<Inter>n. U n))"
+
+(** from \S40 Lemma 40.1 [top1.tex:5675] **)
+lemma Lemma_40_1:
+  assumes hReg: "top1_regular_on X TX"
+  assumes hBasis: "basis_for X \<B> TX"
+  assumes hCLF: "top1_sigma_locally_finite_family_on X TX \<B>"
+  shows "top1_normal_on X TX \<and> (\<forall>A. closedin_on X TX A \<longrightarrow> top1_G_delta_on X TX A)"
+  sorry
+
+(** from \S40 Lemma 40.2 [top1.tex:5724] **)
+lemma Lemma_40_2:
+  assumes hN: "top1_normal_on X TX"
+  assumes hA: "closedin_on X TX A"
+  assumes hG: "top1_G_delta_on X TX A"
+  shows "\<exists>f::'a \<Rightarrow> real.
+    top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f
+    \<and> (\<forall>x\<in>A. f x = 0) \<and> (\<forall>x\<in>X - A. 0 < f x)"
+  sorry
+
+(** from \S40 Theorem 40.3 (Nagata-Smirnov metrization theorem) [top1.tex:5727] **)
+theorem Theorem_40_3:
+  shows "top1_metrizable_on X TX \<longleftrightarrow>
+    (top1_regular_on X TX \<and> (\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>))"
+  sorry
+
+section \<open>\<S>41 Paracompactness\<close>
+
+definition top1_paracompact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_paracompact_on X TX \<longleftrightarrow>
+     (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+        (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>))"
+
+definition top1_lindelof_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_lindelof_on X TX \<longleftrightarrow>
+     is_topology_on X TX \<and>
+     (\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>V. top1_countable V \<and> V \<subseteq> Uc \<and> X \<subseteq> \<Union>V))"
+
+(** from \S41 Theorem 41.1 [top1.tex:5832] **)
+theorem Theorem_41_1:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hHaus: "is_hausdorff_on X TX"
+  shows "top1_normal_on X TX"
+  sorry
+
+(** from \S41 Theorem 41.2 [top1.tex:5851] **)
+theorem Theorem_41_2:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hClosed: "closedin_on X TX A"
+  shows "top1_paracompact_on A (subspace_topology X TX A)"
+  sorry
+
+(** from \S41 Lemma 41.3 [top1.tex:5864] **)
+lemma Lemma_41_3:
+  assumes hReg: "top1_regular_on X TX"
+  shows "(\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)) \<longleftrightarrow>
+        (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))))"
+  sorry
+
+(** from \S41 Theorem 41.4 [top1.tex:5953] **)
+theorem Theorem_41_4:
+  assumes hMet: "top1_metrizable_on X TX"
+  shows "top1_paracompact_on X TX"
+  sorry
+
+(** from \S41 Theorem 41.5 [top1.tex:5956] **)
+theorem Theorem_41_5:
+  assumes hReg: "top1_regular_on X TX"
+  assumes hLind: "top1_lindelof_on X TX"
+  shows "top1_paracompact_on X TX"
+  sorry
+
+(** from \S41 Lemma 41.6 (Shrinking lemma) [top1.tex:5981] **)
+lemma Lemma_41_6:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hHaus: "is_hausdorff_on X TX"
+  assumes hCov: "top1_open_covering_on X TX \<A>"
+  shows "\<exists>V. (\<forall>A\<in>\<A>. (\<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A))
+        \<and> top1_open_covering_on X TX V \<and> top1_locally_finite_family_on X TX V \<and> top1_refines V \<A>"
+  sorry
+
+text \<open>
+  For the starred results of \<S>41 we will need partitions of unity indexed by an arbitrary set.
+  We record the top-level statements first and defer the technical development.
+\<close>
+
+definition top1_partition_of_unity_dominated_family_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'i set \<Rightarrow> ('i \<Rightarrow> 'a set) \<Rightarrow> ('i \<Rightarrow> ('a \<Rightarrow> real)) \<Rightarrow> bool"
+  where
+  "top1_partition_of_unity_dominated_family_on X TX I U \<phi> \<longleftrightarrow> True"
+
+(** from \S41 Theorem 41.7 (Partition of unity) [top1.tex:5999] **)
+theorem Theorem_41_7:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hHaus: "is_hausdorff_on X TX"
+  assumes hCov: "top1_open_covering_on X TX (U ` I)"
+  shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>"
+  sorry
+
+(** from \S41 Theorem 41.8 (Continuous control on locally finite families) [top1.tex:6024] **)
+theorem Theorem_41_8:
+  assumes hLF: "top1_locally_finite_family_on X TX \<C>"
+  assumes hPos: "\<forall>C\<in>\<C>. 0 < \<epsilon> C"
+  shows "\<exists>f::'a \<Rightarrow> real.
+    top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+    \<and> (\<forall>x\<in>X. 0 < f x)
+    \<and> (\<forall>C\<in>\<C>. \<forall>x\<in>C. f x \<le> \<epsilon> C)"
+  sorry
+
+section \<open>\<S>42 The Smirnov Metrization Theorem\<close>
+
+definition top1_locally_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_locally_metrizable_on X TX \<longleftrightarrow>
+     (\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> (\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d))"
+
+(** from \S42 Theorem 42.1 (Smirnov metrization theorem) [top1.tex:6072] **)
+theorem Theorem_42_1:
+  shows "top1_metrizable_on X TX \<longleftrightarrow>
+    (top1_paracompact_on X TX \<and> is_hausdorff_on X TX \<and> top1_locally_metrizable_on X TX)"
+  sorry
+
+section \<open>\<S>43 Complete Metric Spaces\<close>
+
+definition top1_cauchy_seq_on ::
+  "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> 'a) \<Rightarrow> bool" where
+  "top1_cauchy_seq_on X d s \<longleftrightarrow>
+     (\<forall>e>0. \<exists>N. \<forall>m\<ge>N. \<forall>n\<ge>N. s m \<in> X \<and> s n \<in> X \<and> d (s m) (s n) < e)"
+
+definition top1_complete_metric_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> bool" where
+  "top1_complete_metric_on X d \<longleftrightarrow>
+     top1_metric_on X d \<and>
+     (\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow> (\<exists>x\<in>X. seq_converges_to_on s x X (top1_metric_topology_on X d)))"
+
+(** from \S43 Lemma 43.1 [top1.tex:6150] **)
+lemma Lemma_43_1:
+  assumes hd: "top1_metric_on X d"
+  shows "top1_complete_metric_on X d \<longleftrightarrow>
+    (\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow> (\<exists>x\<in>X. \<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)))"
+  sorry
+
+(** from \S43 Theorem 43.2 [top1.tex:6172] **)
+theorem Theorem_43_2:
+  shows "top1_complete_metric_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>)"
+  sorry
+
+(** from \S43 Lemma 43.3 [top1.tex:6191] **)
+lemma Lemma_43_3:
+  assumes hIne: "I \<noteq> {}"
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (TX i)"
+  shows "seq_converges_to_on s x (top1_PiE I X) (top1_product_topology_on I X TX)
+    \<longleftrightarrow> (\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i))"
+  sorry
+
+(** from \S43 Theorem 43.4 [top1.tex:6194] **)
+theorem Theorem_43_4:
+  shows "\<exists>d. top1_complete_metric_on (top1_PiE (UNIV::nat set) (\<lambda>_. (UNIV::real set))) d"
+  sorry
+
+definition top1_uniform_metric_on ::
+  "'i set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('i \<Rightarrow> 'a) \<Rightarrow> ('i \<Rightarrow> 'a) \<Rightarrow> real" where
+  "top1_uniform_metric_on I d x y = Sup ((\<lambda>i. top1_bounded_metric d (x i) (y i)) ` I)"
+
+(** from \S43 Theorem 43.5 [top1.tex:6242] **)
+theorem Theorem_43_5:
+  assumes hIne: "I \<noteq> {}"
+  assumes hd: "top1_complete_metric_on Y d"
+  shows "top1_complete_metric_on (top1_PiE I (\<lambda>_. Y)) (top1_uniform_metric_on I d)"
+  sorry
+
+(** from \S43 Theorem 43.6 [top1.tex:6272] **)
+theorem Theorem_43_6:
+  assumes hd: "top1_complete_metric_on Y d"
+  shows "closedin_on (top1_PiE X (\<lambda>_. Y))
+    (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+    {f. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f}"
+  sorry
+
+(** from \S43 Theorem 43.7 (Completion) [top1.tex:6312] **)
+theorem Theorem_43_7:
+  assumes hd: "top1_metric_on X d"
+  shows "\<exists>Y TY e dY. top1_complete_metric_on Y dY
+    \<and> top1_embedding_on X (top1_metric_topology_on X d) Y TY e"
+  sorry
+
+section \<open>*\<S>44 A Space-Filling Curve\<close>
+
+(** from \S44 Theorem 44.1 (Peano curve) [top1.tex:6444] **)
+theorem Theorem_44_1:
+  shows "\<exists>f::real \<Rightarrow> (real \<times> real).
+    top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+      ((top1_closed_interval 0 1) \<times> (top1_closed_interval 0 1))
+      (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1)) f
+    \<and> f ` (top1_closed_interval 0 1) = (top1_closed_interval 0 1) \<times> (top1_closed_interval 0 1)"
+  sorry
+
+section \<open>\<S>45 Compactness in Metric Spaces\<close>
+
+definition top1_totally_bounded_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> bool" where
+  "top1_totally_bounded_on X d \<longleftrightarrow>
+     (\<forall>e>0. \<exists>F. finite F \<and> F \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x e))"
+
+(** from \S45 Theorem 45.1 [top1.tex:6560] **)
+theorem Theorem_45_1:
+  assumes hd: "top1_metric_on X d"
+  shows "top1_compact_on X (top1_metric_topology_on X d)
+    \<longleftrightarrow> (top1_complete_metric_on X d \<and> top1_totally_bounded_on X d)"
+  sorry
+
+definition top1_equicontinuous_family_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
+  "top1_equicontinuous_family_on X TX Y d \<F> \<longleftrightarrow> True"
+
+(** from \S45 Lemma 45.2 [top1.tex:6586] **)
+lemma Lemma_45_2:
+  assumes hTotB: "top1_totally_bounded_on \<F> (top1_uniform_metric_on X d)"
+  shows "top1_equicontinuous_family_on X TX Y d \<F>"
+  sorry
+
+(** from \S45 Lemma 45.3 [top1.tex:6618] **)
+lemma Lemma_45_3:
+  assumes hCompX: "top1_compact_on X TX"
+  assumes hCompY: "top1_compact_on Y TY"
+  assumes hEqui: "top1_equicontinuous_family_on X TX Y d \<F>"
+  shows "top1_totally_bounded_on \<F> (top1_uniform_metric_on X d)"
+  sorry
+
+(** from \S45 Theorem 45.4 (Ascoli's theorem, classical version) [top1.tex:6655] **)
+theorem Theorem_45_4:
+  assumes hCompX: "top1_compact_on X TX"
+  shows "True"
+  sorry
+
+section \<open>\<S>46 Pointwise and Compact Convergence\<close>
+
+definition top1_pointwise_topology_on ::
+  "'a set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_pointwise_topology_on X Y TY =
+     top1_product_topology_on X (\<lambda>_. Y) (\<lambda>_. TY)"
+
+(** from \S46 Theorem 46.1 [top1.tex:6754] **)
+theorem Theorem_46_1:
+  assumes hTopY: "is_topology_on Y TY"
+  shows "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y TY)
+    \<longleftrightarrow> (\<forall>x\<in>X. seq_converges_to_on (\<lambda>n. fseq n x) (f x) Y TY)"
+  sorry
+
+definition top1_compactly_generated_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_compactly_generated_on X TX \<longleftrightarrow> True"
+
+definition top1_compact_convergence_topology_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_compact_convergence_topology_on X TX Y d = {}"
+
+(** from \S46 Theorem 46.2 [top1.tex:6787] **)
+theorem Theorem_46_2:
+  shows "True"
+  sorry
+
+(** from \S46 Lemma 46.3 [top1.tex:6793] **)
+lemma Lemma_46_3:
+  assumes hLC: "top1_locally_compact_on X TX"
+  shows "top1_compactly_generated_on X TX"
+  sorry
+
+(** from \S46 Lemma 46.4 [top1.tex:6807] **)
+lemma Lemma_46_4:
+  assumes hCG: "top1_compactly_generated_on X TX"
+  shows "\<forall>f. (\<forall>C. top1_compact_on C (subspace_topology X TX C)
+              \<longrightarrow> top1_continuous_map_on C (subspace_topology X TX C) Y TY f)
+          \<longrightarrow> top1_continuous_map_on X TX Y TY f"
+  sorry
+
+(** from \S46 Theorem 46.5 [top1.tex:6816] **)
+theorem Theorem_46_5:
+  assumes hCG: "top1_compactly_generated_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "closedin_on (top1_PiE X (\<lambda>_. Y))
+    (top1_compact_convergence_topology_on X TX Y d)
+    {f. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f}"
+  sorry
+
+(** from \S46 Theorem 46.7 [top1.tex:6824] **)
+theorem Theorem_46_7:
+  shows "True"
+  sorry
+
+(** from \S46 Theorem 46.8 [top1.tex:6839] **)
+theorem Theorem_46_8:
+  shows "True"
+  sorry
+
+(** from \S46 Theorem 46.10 [top1.tex:6863] **)
+theorem Theorem_46_10:
+  shows "True"
+  sorry
+
+(** from \S46 Theorem 46.11 (Exponential law) [top1.tex:6888] **)
+theorem Theorem_46_11:
+  shows "True"
+  sorry
+
+section \<open>\<S>47 Ascoli's Theorem\<close>
+
+(** from \S47 Theorem 47.1 (Ascoli's theorem) [top1.tex:6995] **)
+theorem Theorem_47_1:
+  shows "True"
+  sorry
+
+section \<open>\<S>48 Baire Spaces\<close>
+
+definition top1_densein_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_densein_on X TX A \<longleftrightarrow> closure_on X TX A = X"
+
+definition top1_baire_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_baire_on X TX \<longleftrightarrow>
+     (\<forall>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX \<and> top1_densein_on X TX (U n)) \<longrightarrow>
+        top1_densein_on X TX (\<Inter>n. U n))"
+
+(** from \S48 Lemma 48.1 [top1.tex:7170] **)
+lemma Lemma_48_1:
+  shows "top1_baire_on X TX \<longleftrightarrow>
+    (\<forall>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX \<and> top1_densein_on X TX (U n)) \<longrightarrow> top1_densein_on X TX (\<Inter>n. U n))"
+  by (simp add: top1_baire_on_def)
+
+(** from \S48 Theorem 48.2 (Baire category theorem) [top1.tex:7178] **)
+theorem Theorem_48_2:
+  shows "True"
+  sorry
+
+(** from \S48 Lemma 48.3 [top1.tex:7208] **)
+lemma Lemma_48_3:
+  shows "True"
+  sorry
+
+(** from \S48 Lemma 48.4 [top1.tex:7216] **)
+lemma Lemma_48_4:
+  assumes hB: "top1_baire_on X TX"
+  assumes hU: "U \<in> TX"
+  shows "top1_baire_on U (subspace_topology X TX U)"
+  sorry
+
+(** from \S48 Theorem 48.5 [top1.tex:7222] **)
+theorem Theorem_48_5:
+  shows "True"
+  sorry
+
+section \<open>*\<S>49 A Nowhere-Differentiable Function\<close>
+
+(** from \S49 Theorem 49.1 [top1.tex:7345] **)
+theorem Theorem_49_1:
+  fixes h :: "real \<Rightarrow> real"
+  assumes hcont: "continuous_on (top1_closed_interval 0 1) h"
+  assumes heps: "0 < \<epsilon>"
+  shows "\<exists>g. continuous_on (top1_closed_interval 0 1) g
+        \<and> (\<forall>x\<in>top1_closed_interval 0 1. \<bar>h x - g x\<bar> < \<epsilon>)
+        \<and> (\<forall>x\<in>{0<..<1}. \<not> (g differentiable (at x)))"
+  sorry
+
+section \<open>\<S>50 Introduction to Dimension Theory\<close>
+
+definition top1_cover_order_le_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_cover_order_le_on X \<A> m \<longleftrightarrow>
+     (\<forall>x\<in>X. finite {U\<in>\<A>. x \<in> U} \<and> card {U\<in>\<A>. x \<in> U} \<le> Suc m)"
+
+definition top1_dim_le_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_dim_le_on X TX m \<longleftrightarrow>
+     (\<forall>\<A>. top1_open_covering_on X TX \<A>
+        \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> m))"
+
+definition top1_finite_dimensional_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_finite_dimensional_on X TX \<longleftrightarrow> (\<exists>m. top1_dim_le_on X TX m)"
+
+definition top1_dim_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat" where
+  "top1_dim_on X TX = (LEAST m. top1_dim_le_on X TX m)"
+
+(** from \S50 Theorem 50.1 [top1.tex:7556] **)
+theorem Theorem_50_1:
+  assumes hdim: "top1_finite_dimensional_on X TX"
+  assumes hClosed: "closedin_on X TX Y"
+  shows "top1_finite_dimensional_on Y (subspace_topology X TX Y)
+    \<and> top1_dim_on Y (subspace_topology X TX Y) \<le> top1_dim_on X TX"
+  sorry
+
+(** from \S50 Theorem 50.2 [top1.tex:7566] **)
+theorem Theorem_50_2:
+  assumes hYX: "X = Y \<union> Z"
+  assumes hYcl: "closedin_on X TX Y"
+  assumes hZcl: "closedin_on X TX Z"
+  assumes hdimY: "top1_finite_dimensional_on Y (subspace_topology X TX Y)"
+  assumes hdimZ: "top1_finite_dimensional_on Z (subspace_topology X TX Z)"
+  shows "top1_dim_on X TX = max (top1_dim_on Y (subspace_topology X TX Y)) (top1_dim_on Z (subspace_topology X TX Z))"
+  sorry
+
+(** from \S50 Corollary 50.3 [top1.tex:7598] **)
+corollary Corollary_50_3:
+  assumes hcov: "X = (\<Union>i\<in>{0..<k}. Y i)"
+  assumes hClosed: "\<forall>i<k. closedin_on X TX (Y i)"
+  assumes hdim: "\<forall>i<k. top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
+  shows "top1_dim_on X TX = (Max ((\<lambda>i. top1_dim_on (Y i) (subspace_topology X TX (Y i))) ` {0..<k}))"
+  sorry
+
+(** from \S50 Lemma 50.4 (General position approximation) [top1.tex:7700] **)
+lemma Lemma_50_4:
+  shows "True"
+  sorry
+
+(** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
+theorem Theorem_50_5:
+  assumes hComp: "top1_compact_on X TX"
+  assumes hMet: "top1_metrizable_on X TX"
+  assumes hdim: "top1_dim_le_on X TX m"
+  shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+  sorry
+
+(** from \S50 Theorem 50.6 [top1.tex:7808] **)
+theorem Theorem_50_6:
+  assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
+  shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
+  sorry
+
 end
