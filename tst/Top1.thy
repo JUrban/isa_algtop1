@@ -58273,6 +58273,23 @@ proof (unfold top1_cover_order_le_on_def, intro ballI)
     using hfin by blast
 qed
 
+lemma top1_cover_order_le_on_mono_X:
+  assumes h: "top1_cover_order_le_on X \<A> m"
+  assumes hX: "X' \<subseteq> X"
+  shows "top1_cover_order_le_on X' \<A> m"
+proof (unfold top1_cover_order_le_on_def, intro ballI)
+  fix x
+  assume hxX': "x \<in> X'"
+  have hxX: "x \<in> X"
+    using hX hxX' by blast
+  have hfin: "finite {U\<in>\<A>. x \<in> U}"
+    using h hxX unfolding top1_cover_order_le_on_def by blast
+  have hcard: "card {U\<in>\<A>. x \<in> U} \<le> Suc m"
+    using h hxX unfolding top1_cover_order_le_on_def by blast
+  show "finite {U\<in>\<A>. x \<in> U} \<and> card {U\<in>\<A>. x \<in> U} \<le> Suc m"
+    using hfin hcard by blast
+qed
+
 lemma top1_dim_le_on_mono_m:
   assumes hdim: "top1_dim_le_on X TX m"
   assumes hmn: "m \<le> n"
