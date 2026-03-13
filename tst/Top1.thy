@@ -53459,6 +53459,101 @@ proof -
   qed
 qed
 
+lemma top1_intersects_closure_on_open_imp_intersects:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hAX: "A \<subseteq> X"
+  assumes hU: "U \<in> TX"
+  assumes hInt: "intersects (closure_on X TX A) U"
+  shows "intersects A U"
+proof -
+  have hclX: "closure_on X TX A \<subseteq> X"
+    by (rule closure_on_subset_carrier[OF hTopX hAX])
+
+  obtain y where hycl: "y \<in> closure_on X TX A" and hyU: "y \<in> U"
+    using hInt unfolding intersects_def by blast
+  have hyX: "y \<in> X"
+    using hclX hycl by blast
+
+  have hChar:
+    "y \<in> closure_on X TX A \<longleftrightarrow> (\<forall>V. neighborhood_of y X TX V \<longrightarrow> intersects V A)"
+    by (rule Theorem_17_5a[OF hTopX hyX hAX])
+  have hAll: "\<forall>V. neighborhood_of y X TX V \<longrightarrow> intersects V A"
+    using hChar hycl by blast
+
+  have hNbhU: "neighborhood_of y X TX U"
+    unfolding neighborhood_of_def using hU hyU by simp
+  have hUA: "intersects U A"
+    using hAll hNbhU by blast
+
+  obtain z where hzU: "z \<in> U" and hzA: "z \<in> A"
+    using hUA unfolding intersects_def by blast
+
+  show ?thesis
+    unfolding intersects_def using hzA hzU by blast
+qed
+
+lemma top1_locally_finite_family_on_closure_image:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hSubX: "\<forall>A\<in>\<A>. A \<subseteq> X"
+  assumes hLF: "top1_locally_finite_family_on X TX \<A>"
+  shows "top1_locally_finite_family_on X TX (closure_on X TX ` \<A>)"
+proof -
+  have hLF_def:
+    "\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> finite {A\<in>\<A>. intersects A U}"
+    using hLF
+    unfolding top1_locally_finite_family_on_def
+    by simp
+
+  show ?thesis
+    unfolding top1_locally_finite_family_on_def
+  proof (intro ballI)
+    fix x assume hx: "x \<in> X"
+    obtain U where hU: "U \<in> TX"
+      and hxU: "x \<in> U"
+      and hFin: "finite {A\<in>\<A>. intersects A U}"
+      using hLF_def hx
+      by blast
+
+    let ?S = "{A\<in>\<A>. intersects A U}"
+    have hSfin: "finite ?S"
+      using hFin by simp
+    have hImgFin: "finite (closure_on X TX ` ?S)"
+      using hSfin by (rule finite_imageI)
+
+    let ?T = "{C\<in>(closure_on X TX ` \<A>). intersects C U}"
+    have hTsub: "?T \<subseteq> (closure_on X TX ` ?S)"
+    proof
+      fix C
+      assume hC: "C \<in> ?T"
+      have hCimg: "C \<in> closure_on X TX ` \<A>"
+        using hC by simp
+      have hIntC: "intersects C U"
+        using hC by simp
+
+      obtain A where hA: "A \<in> \<A>" and hCeq: "C = closure_on X TX A"
+        using hCimg by blast
+      have hAX: "A \<subseteq> X"
+        using hSubX hA by blast
+      have hIntA: "intersects A U"
+        using top1_intersects_closure_on_open_imp_intersects[OF hTopX hAX hU]
+          hIntC
+        unfolding hCeq
+        by simp
+
+      have hAS: "A \<in> ?S"
+        using hA hIntA by simp
+      show "C \<in> closure_on X TX ` ?S"
+        unfolding hCeq using hAS by blast
+    qed
+
+    have hFinT: "finite ?T"
+      by (rule finite_subset[OF hTsub hImgFin])
+
+    show "\<exists>V\<in>TX. x \<in> V \<and> finite {C\<in>(closure_on X TX ` \<A>). intersects C V}"
+      using hU hxU hFinT by blast
+  qed
+qed
+
 (** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
 lemma Lemma_39_1:
   assumes hTopX: "is_topology_on X TX"
