@@ -57029,6 +57029,58 @@ theorem Theorem_49_1:
         \<and> (\<forall>x\<in>{0<..<1}. \<not> (g differentiable (at x)))"
   sorry
 
+text \<open>
+  Proof skeleton for \S49 (Baire category argument in \<open>\<C>([0,1],\<real>)\<close> with the sup metric).
+  We introduce the difference-quotient functional \<open>\<Delta> f(x,h)\<close>, the infimum \<open>\<Delta>\<^sub>h f\<close>,
+  and the open dense sets \<open>U n\<close> used in the standard construction.  The detailed analysis
+  proofs are left for later; the declarations below are meant to clarify the remaining scope.
+\<close>
+
+abbreviation top1_I01 :: "real set" where
+  "top1_I01 \<equiv> top1_closed_interval 0 1"
+
+definition top1_Delta49 :: "(real \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "top1_Delta49 f x h =
+     (if 0 < h \<and> h \<le> 1/2 then
+        max (if x + h \<in> top1_I01 then \<bar>(f (x + h) - f x) / h\<bar> else 0)
+            (if x - h \<in> top1_I01 then \<bar>(f (x - h) - f x) / h\<bar> else 0)
+      else 0)"
+
+definition top1_Delta_h49 :: "(real \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real" where
+  "top1_Delta_h49 f h = Inf ((\<lambda>x. top1_Delta49 f x h) ` top1_I01)"
+
+definition top1_C01 :: "(real \<Rightarrow> real) set" where
+  "top1_C01 = {f. continuous_on top1_I01 f}"
+
+definition top1_rho49 :: "(real \<Rightarrow> real) \<Rightarrow> (real \<Rightarrow> real) \<Rightarrow> real" where
+  "top1_rho49 f g = Sup ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+
+definition top1_U49 :: "nat \<Rightarrow> (real \<Rightarrow> real) set" where
+  "top1_U49 n =
+     {f \<in> top1_C01.
+        \<exists>h. 0 < h \<and> h \<le> 1 / real (Suc (Suc n)) \<and> top1_Delta_h49 f h > real (Suc (Suc n))}"
+
+lemma top1_U49_open:
+  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
+  shows "top1_U49 n \<in> top1_metric_topology_on top1_C01 top1_rho49"
+  sorry
+
+lemma top1_U49_dense:
+  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
+  shows "top1_densein_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) (top1_U49 n)"
+  sorry
+
+lemma top1_Inter_U49_dense:
+  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
+  assumes hB: "top1_baire_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49)"
+  shows "top1_densein_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) (\<Inter>n. top1_U49 n)"
+  sorry
+
+lemma top1_Inter_U49_nowhere_differentiable:
+  assumes hf: "f \<in> (\<Inter>n. top1_U49 n)"
+  shows "\<forall>x\<in>{0<..<1}. \<not> (f differentiable (at x))"
+  sorry
+
 section \<open>\<S>50 Introduction to Dimension Theory\<close>
 
 definition top1_cover_order_le_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
