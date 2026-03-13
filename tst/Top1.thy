@@ -53555,6 +53555,61 @@ theorem Theorem_46_5:
     {f. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f}"
   sorry
 
+(** from \S46 Corollary 46.6 [top1.tex:6820] **)
+corollary Corollary_46_6:
+  assumes hCG: "top1_compactly_generated_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hcont: "\<forall>n. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (fseq n)"
+  assumes hconv:
+    "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)"
+  shows "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+proof -
+  let ?X' = "top1_PiE X (\<lambda>_. Y)"
+  let ?T' = "top1_compact_convergence_topology_on X TX Y d"
+  let ?S = "{g. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) g}"
+
+  have hS_closed: "closedin_on ?X' ?T' ?S"
+    by (rule Theorem_46_5[OF hCG hd])
+
+  have hfX': "f \<in> ?X'"
+    using hconv unfolding seq_converges_to_on_def by (rule conjunct1)
+
+  have hseqS: "\<forall>n. fseq n \<in> ?S"
+    using hcont by blast
+
+  show ?thesis
+  proof (rule ccontr)
+    assume hNot: "\<not> top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+    have hfNotS: "f \<notin> ?S"
+      using hNot by simp
+
+    have hSsubX': "?S \<subseteq> ?X'"
+      using hS_closed unfolding closedin_on_def by (rule conjunct1)
+
+    have hCompOpen: "?X' - ?S \<in> ?T'"
+      using hS_closed unfolding closedin_on_def by (rule conjunct2)
+
+    have hfComp: "f \<in> ?X' - ?S"
+      using hfX' hfNotS by simp
+
+    have hNbh: "neighborhood_of f ?X' ?T' (?X' - ?S)"
+      unfolding neighborhood_of_def using hCompOpen hfComp by simp
+
+    have hConv: "\<forall>U. neighborhood_of f ?X' ?T' U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. fseq n \<in> U)"
+      using hconv unfolding seq_converges_to_on_def by (rule conjunct2)
+
+    obtain N where hN: "\<forall>n\<ge>N. fseq n \<in> (?X' - ?S)"
+      using hConv hNbh by blast
+
+    have "fseq N \<in> ?X' - ?S"
+      using hN by simp
+    then have "fseq N \<notin> ?S"
+      by simp
+    then show False
+      using hseqS by blast
+  qed
+qed
+
 (** from \S46 Theorem 46.7 [top1.tex:6824] **)
 theorem Theorem_46_7:
   assumes hTopX: "is_topology_on X TX"
@@ -53572,6 +53627,29 @@ theorem Theorem_46_8:
            (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
        =
        top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
+  sorry
+
+(** from \S46 Corollary 46.9 [top1.tex:6859] **)
+corollary Corollary_46_9:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd1: "top1_metric_on Y d1"
+  assumes hd2: "top1_metric_on Y d2"
+  assumes hTopEq: "top1_metric_topology_on Y d1 = top1_metric_topology_on Y d2"
+  shows
+    "subspace_topology (top1_PiE X (\<lambda>_. Y))
+       (top1_compact_convergence_topology_on X TX Y d1)
+       (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d1))
+     =
+     subspace_topology (top1_PiE X (\<lambda>_. Y))
+       (top1_compact_convergence_topology_on X TX Y d2)
+       (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d2))"
+    and
+    "top1_compact_on X TX \<longrightarrow>
+       (subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d1)
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d1))
+        =
+        subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d2)
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d2)))"
   sorry
 
 (** from \S46 Theorem 46.10 [top1.tex:6863] **)
@@ -53774,6 +53852,28 @@ theorem Theorem_50_5:
 theorem Theorem_50_6:
   assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
   shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
+  sorry
+
+(** from \S50 Corollary 50.7 [top1.tex:7839] **)
+corollary Corollary_50_7:
+  assumes hComp: "top1_compact_on X TX"
+  assumes hMan: "top1_m_manifold_on m X TX"
+  shows "top1_dim_le_on X TX m"
+  sorry
+
+(** from \S50 Corollary 50.8 [top1.tex:7841] **)
+corollary Corollary_50_8:
+  assumes hComp: "top1_compact_on X TX"
+  assumes hMan: "top1_m_manifold_on m X TX"
+  shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+  sorry
+
+(** from \S50 Corollary 50.9 [top1.tex:7843] **)
+corollary Corollary_50_9:
+  assumes hComp: "top1_compact_on X TX"
+  assumes hMet: "top1_metrizable_on X TX"
+  shows "(\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F)
+    \<longleftrightarrow> top1_finite_dimensional_on X TX"
   sorry
 
 end
