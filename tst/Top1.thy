@@ -53794,11 +53794,260 @@ theorem Theorem_43_2:
 
 (** from \S43 Lemma 43.3 [top1.tex:6191] **)
 lemma Lemma_43_3:
-  assumes hIne: "I \<noteq> {}"
   assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (TX i)"
+  assumes hs: "\<forall>n. s n \<in> top1_PiE I X"
   shows "seq_converges_to_on s x (top1_PiE I X) (top1_product_topology_on I X TX)
-    \<longleftrightarrow> (\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i))"
-  sorry
+    \<longleftrightarrow> (x \<in> top1_PiE I X \<and> (\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i)))"
+proof (rule iffI)
+  assume hconv: "seq_converges_to_on s x (top1_PiE I X) (top1_product_topology_on I X TX)"
+  have hxPiE: "x \<in> top1_PiE I X"
+    using hconv unfolding seq_converges_to_on_def by blast
+
+  have hconv_def:
+    "\<forall>U. neighborhood_of x (top1_PiE I X) (top1_product_topology_on I X TX) U
+      \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> U)"
+    using hconv unfolding seq_converges_to_on_def by blast
+
+  have hCoords: "\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i)"
+  proof (intro ballI)
+    fix i assume hi: "i \<in> I"
+    have hxi: "x i \<in> X i"
+      using hxPiE hi unfolding top1_PiE_iff by blast
+
+    show "seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i)"
+      unfolding seq_converges_to_on_def
+    proof (intro conjI allI impI)
+      show "x i \<in> X i"
+        by (rule hxi)
+
+      fix U
+      assume hNbhU: "neighborhood_of (x i) (X i) (TX i) U"
+      have hU: "U \<in> TX i"
+        using hNbhU unfolding neighborhood_of_def by (rule conjunct1)
+      have hxiU: "x i \<in> U"
+        using hNbhU unfolding neighborhood_of_def by (rule conjunct2)
+
+      define C where "C = top1_PiE I (\<lambda>j. if j = i then U \<inter> X i else X j)"
+
+      have hC_basis: "C \<in> top1_product_basis_on I X TX"
+        unfolding C_def
+        by (rule top1_product_cylinder_in_basis[OF hTop hi hU])
+
+      have hBasis: "is_basis_on (top1_PiE I X) (top1_product_basis_on I X TX)"
+        by (rule top1_product_basis_is_basis_on[OF hTop])
+
+      have hC_open:
+        "C \<in> top1_product_topology_on I X TX"
+        unfolding top1_product_topology_on_def
+        by (rule basis_elem_open_in_generated_topology[OF hBasis hC_basis])
+
+      have hxC: "x \<in> C"
+      proof -
+        have hxiUX: "x i \<in> U \<inter> X i"
+          using hxiU hxi by simp
+        have hxcoords: "\<forall>j\<in>I. x j \<in> (if j = i then U \<inter> X i else X j)"
+        proof (intro ballI)
+          fix j assume hj: "j \<in> I"
+          show "x j \<in> (if j = i then U \<inter> X i else X j)"
+          proof (cases "j = i")
+            case True
+            show ?thesis
+              using hxiUX True by simp
+          next
+            case False
+            have "x j \<in> X j"
+              using hxPiE hj unfolding top1_PiE_iff by blast
+            thus ?thesis
+              using False by simp
+          qed
+        qed
+        have hxext: "\<forall>j. j \<notin> I \<longrightarrow> x j = undefined"
+          using hxPiE unfolding top1_PiE_iff by blast
+        show ?thesis
+          unfolding C_def top1_PiE_iff
+          using hxcoords hxext by blast
+      qed
+
+      have hNbhC: "neighborhood_of x (top1_PiE I X) (top1_product_topology_on I X TX) C"
+        unfolding neighborhood_of_def using hC_open hxC by simp
+
+      obtain N where hN: "\<forall>n\<ge>N. s n \<in> C"
+        using hconv_def hNbhC by blast
+
+      show "\<exists>N. \<forall>n\<ge>N. (s n) i \<in> U"
+      proof (rule exI[where x=N], intro allI impI)
+        fix n assume hn: "n \<ge> N"
+        have hsnC: "s n \<in> C"
+          using hN hn by blast
+        have hsn: "\<forall>j\<in>I. (s n) j \<in> (if j = i then U \<inter> X i else X j)"
+          using hsnC unfolding C_def top1_PiE_iff by blast
+        have "(s n) i \<in> U \<inter> X i"
+          using bspec[OF hsn hi] by simp
+        thus "(s n) i \<in> U"
+          by simp
+      qed
+    qed
+  qed
+
+  show "x \<in> top1_PiE I X \<and> (\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i))"
+    using hxPiE hCoords by blast
+next
+  assume hR: "x \<in> top1_PiE I X \<and> (\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i))"
+  have hxPiE: "x \<in> top1_PiE I X"
+    using hR by blast
+  have hCoords: "\<forall>i\<in>I. seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i)"
+    using hR by blast
+
+  show "seq_converges_to_on s x (top1_PiE I X) (top1_product_topology_on I X TX)"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "x \<in> top1_PiE I X"
+      by (rule hxPiE)
+
+    fix U
+    assume hNbhU: "neighborhood_of x (top1_PiE I X) (top1_product_topology_on I X TX) U"
+    have hUopen: "U \<in> top1_product_topology_on I X TX"
+      using hNbhU unfolding neighborhood_of_def by (rule conjunct1)
+    have hxU: "x \<in> U"
+      using hNbhU unfolding neighborhood_of_def by (rule conjunct2)
+
+    have hUgen:
+      "U \<in> topology_generated_by_basis (top1_PiE I X) (top1_product_basis_on I X TX)"
+      using hUopen unfolding top1_product_topology_on_def by simp
+    have hcov:
+      "\<forall>y\<in>U. \<exists>b\<in>top1_product_basis_on I X TX. y \<in> b \<and> b \<subseteq> U"
+      using hUgen unfolding topology_generated_by_basis_def by blast
+    obtain b where hb: "b \<in> top1_product_basis_on I X TX" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+      using hcov hxU by blast
+
+    obtain U0 where hbdef: "b = top1_PiE I U0"
+      and hU0: "(\<forall>i\<in>I. U0 i \<in> TX i \<and> U0 i \<subseteq> X i)"
+      and hfin: "finite {i \<in> I. U0 i \<noteq> X i}"
+      using hb unfolding top1_product_basis_on_def by blast
+
+    define S where "S = {i \<in> I. U0 i \<noteq> X i}"
+    have hSfin: "finite S"
+      using hfin unfolding S_def by simp
+
+    have hxU0: "\<forall>i\<in>I. x i \<in> U0 i"
+      using hxb unfolding hbdef top1_PiE_iff by blast
+
+    have hEventuallyS: "\<forall>i\<in>S. \<exists>N. \<forall>n\<ge>N. (s n) i \<in> U0 i"
+    proof (intro ballI)
+      fix i assume hiS: "i \<in> S"
+      have hi: "i \<in> I"
+        using hiS unfolding S_def by blast
+      have hconv_i: "seq_converges_to_on (\<lambda>n. (s n) i) (x i) (X i) (TX i)"
+        using hCoords hi by blast
+      have hU0i: "U0 i \<in> TX i"
+        using hU0 hi by blast
+      have hxiU0: "x i \<in> U0 i"
+        using hxU0 hi by blast
+      have hNbhU0: "neighborhood_of (x i) (X i) (TX i) (U0 i)"
+        unfolding neighborhood_of_def using hU0i hxiU0 by simp
+      have hconv_def:
+        "\<forall>V. neighborhood_of (x i) (X i) (TX i) V \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. (s n) i \<in> V)"
+        using hconv_i unfolding seq_converges_to_on_def by blast
+      obtain N where hN: "\<forall>n\<ge>N. (s n) i \<in> U0 i"
+        using hconv_def hNbhU0 by blast
+      show "\<exists>N. \<forall>n\<ge>N. (s n) i \<in> U0 i"
+        using hN by blast
+    qed
+
+    have hCommonN: "\<exists>N. \<forall>i\<in>S. \<forall>n\<ge>N. (s n) i \<in> U0 i"
+      using hSfin hEventuallyS
+    proof (induction rule: finite_induct)
+      case empty
+      show ?case
+        by (rule exI[where x=0], simp)
+    next
+      case (insert i S)
+      have exNi: "\<exists>Ni. \<forall>n\<ge>Ni. (s n) i \<in> U0 i"
+        using insert.prems(1) by (rule bspec[where x=i], simp)
+      obtain Ni where hNi: "\<forall>n\<ge>Ni. (s n) i \<in> U0 i"
+        using exNi by (erule exE)
+      obtain N0 where hN0: "\<forall>j\<in>S. \<forall>n\<ge>N0. (s n) j \<in> U0 j"
+        using insert.IH insert.prems(1) by blast
+      show ?case
+      proof (rule exI[where x="max Ni N0"], intro ballI allI impI)
+        fix j assume hj: "j \<in> insert i S"
+        fix n assume hn: "n \<ge> max Ni N0"
+        show "(s n) j \<in> U0 j"
+        proof (cases "j = i")
+          case True
+          have hNi_le: "Ni \<le> max Ni N0"
+            by simp
+          have hn': "n \<ge> Ni"
+            using order_trans[OF hNi_le hn] by simp
+          show ?thesis
+            using hNi hn' True by simp
+        next
+          case False
+          have hjS: "j \<in> S"
+            using hj False by simp
+          have hN0_le: "N0 \<le> max Ni N0"
+            by simp
+          have hn': "n \<ge> N0"
+            using order_trans[OF hN0_le hn] by simp
+          show ?thesis
+            using hN0 hjS hn' by blast
+        qed
+      qed
+    qed
+
+    obtain N where hN: "\<forall>i\<in>S. \<forall>n\<ge>N. (s n) i \<in> U0 i"
+      using hCommonN by blast
+
+    have hEventuallyB: "\<forall>n\<ge>N. s n \<in> b"
+    proof (intro allI impI)
+      fix n assume hn: "n \<ge> N"
+      have hsnPiE: "s n \<in> top1_PiE I X"
+        using hs by blast
+      have hCoordsIn: "\<forall>i\<in>I. (s n) i \<in> U0 i"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> I"
+        show "(s n) i \<in> U0 i"
+        proof (cases "i \<in> S")
+          case True
+          have hIn: "\<forall>n\<ge>N. (s n) i \<in> U0 i"
+            using hN True by blast
+          show ?thesis
+            using hIn hn by blast
+        next
+          case False
+          have hEqXi: "U0 i = X i"
+          proof (rule ccontr)
+            assume hneq: "U0 i \<noteq> X i"
+            have "i \<in> S"
+              unfolding S_def using hi hneq by simp
+            with False show False
+              by contradiction
+          qed
+          have hsnXi: "(s n) i \<in> X i"
+            using hsnPiE hi unfolding top1_PiE_iff by blast
+          show ?thesis
+            unfolding hEqXi using hsnXi .
+        qed
+      qed
+      have hExt: "\<forall>i. i \<notin> I \<longrightarrow> (s n) i = undefined"
+        using hsnPiE unfolding top1_PiE_iff by blast
+      have hsnU0: "s n \<in> top1_PiE I U0"
+        unfolding top1_PiE_iff using hCoordsIn hExt by blast
+      show "s n \<in> b"
+        unfolding hbdef using hsnU0 by simp
+    qed
+
+    show "\<exists>N. \<forall>n\<ge>N. s n \<in> U"
+    proof (rule exI[where x=N], intro allI impI)
+      fix n assume hn: "n \<ge> N"
+      have hsb: "s n \<in> b"
+        using hn by (rule hEventuallyB[rule_format])
+      show "s n \<in> U"
+        by (rule subsetD[OF hbU hsb])
+    qed
+
+  qed
+qed
 
 (** from \S43 Theorem 43.4 [top1.tex:6194] **)
 theorem Theorem_43_4:
