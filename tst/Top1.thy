@@ -52560,7 +52560,227 @@ definition top1_FIP_maximal_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow>
 lemma Lemma_37_1:
   assumes hFIP: "top1_FIP_on X \<A>"
   shows "\<exists>\<D>. \<A> \<subseteq> \<D> \<and> top1_FIP_maximal_on X \<D>"
-  sorry
+proof -
+  let ?Z = "{\<B>. \<A> \<subseteq> \<B> \<and> top1_FIP_on X \<B>}"
+
+  have hAinZ: "\<A> \<in> ?Z"
+    using hFIP by simp
+
+  have hChainUB: "\<forall>\<C>\<in>chains ?Z. \<exists>U\<in>?Z. \<forall>\<B>\<in>\<C>. \<B> \<subseteq> U"
+  proof (intro ballI)
+    fix \<C>
+    assume hC: "\<C> \<in> chains ?Z"
+
+    show "\<exists>U\<in>?Z. \<forall>\<B>\<in>\<C>. \<B> \<subseteq> U"
+    proof (cases "\<C> = {}")
+      case True
+      show ?thesis
+        using hAinZ True by blast
+    next
+      case False
+      let ?U = "\<Union>\<C>"
+
+      have hU_ub: "\<forall>\<B>\<in>\<C>. \<B> \<subseteq> ?U"
+        by blast
+
+      have hCsubZ: "\<C> \<subseteq> ?Z"
+        using hC by (rule chainsD2)
+
+      obtain \<B>0 where hB0: "\<B>0 \<in> \<C>"
+        using False by blast
+
+      have hAsubU: "\<A> \<subseteq> ?U"
+      proof -
+        have hB0inZ: "\<B>0 \<in> ?Z"
+          using hCsubZ hB0 by blast
+        have hAsubB0: "\<A> \<subseteq> \<B>0"
+          using hB0inZ by simp
+        have hB0subU: "\<B>0 \<subseteq> ?U"
+          using hU_ub hB0 by blast
+        show ?thesis
+          using hAsubB0 hB0subU by blast
+      qed
+
+      have hFIPU: "top1_FIP_on X ?U"
+      proof -
+        have hSubX: "\<forall>A\<in>?U. A \<subseteq> X"
+        proof (intro ballI)
+          fix A
+          assume hA: "A \<in> ?U"
+          then obtain \<B> where hB: "\<B> \<in> \<C>" and hAB: "A \<in> \<B>"
+            by blast
+          have hBinZ: "\<B> \<in> ?Z"
+            using hCsubZ hB by blast
+          have hFIPB: "top1_FIP_on X \<B>"
+            using hBinZ by simp
+          have "\<forall>A0\<in>\<B>. A0 \<subseteq> X"
+            using hFIPB unfolding top1_FIP_on_def by (rule conjunct1)
+          then show "A \<subseteq> X"
+            using hAB by blast
+        qed
+
+        have hFinInter: "\<forall>F. finite F \<and> F \<subseteq> ?U \<longrightarrow> \<Inter>F \<noteq> {}"
+        proof (intro allI impI)
+          fix F
+          assume hF: "finite F \<and> F \<subseteq> ?U"
+          have hFfin: "finite F"
+            using hF by simp
+          have hFsubU: "F \<subseteq> ?U"
+            using hF by simp
+
+          have hFindInC: "\<exists>\<B>\<in>\<C>. F \<subseteq> \<B>"
+            using hFfin hFsubU
+          proof (induction rule: finite_induct)
+            case empty
+            show ?case
+              apply (rule bexI[where x=\<B>0])
+               apply simp
+              apply (rule hB0)
+              done
+          next
+            case (insert a F)
+            have hFsubU': "F \<subseteq> ?U"
+              using insert.prems by simp
+            obtain \<B>1 where hB1: "\<B>1 \<in> \<C>" and hFsubB1: "F \<subseteq> \<B>1"
+              using insert.IH hFsubU' by blast
+            have haU: "a \<in> ?U"
+              using insert.prems by simp
+            then obtain \<B>2 where hB2: "\<B>2 \<in> \<C>" and haB2: "a \<in> \<B>2"
+              by blast
+            have hChain: "\<B>1 \<subseteq> \<B>2 \<or> \<B>2 \<subseteq> \<B>1"
+              using hC hB1 hB2 by (rule chainsD)
+            show ?case
+            proof (cases "\<B>1 \<subseteq> \<B>2")
+              case True
+              have hIns: "insert a F \<subseteq> \<B>2"
+              proof
+                fix y
+                assume hy: "y \<in> insert a F"
+                show "y \<in> \<B>2"
+                proof (cases "y = a")
+                  case True
+                  then show ?thesis
+                    using haB2 by simp
+                next
+                  case False
+                  have "y \<in> F"
+                    using hy False by simp
+                  then have "y \<in> \<B>1"
+                    using hFsubB1 by blast
+                  then show ?thesis
+                    using True by blast
+                qed
+              qed
+              show ?thesis
+                using hB2 hIns by blast
+            next
+              case False
+              have hB2subB1: "\<B>2 \<subseteq> \<B>1"
+                using hChain False by blast
+              have hIns: "insert a F \<subseteq> \<B>1"
+              proof
+                fix y
+                assume hy: "y \<in> insert a F"
+                show "y \<in> \<B>1"
+                proof (cases "y = a")
+                  case True
+                  have "a \<in> \<B>1"
+                    using haB2 hB2subB1 by blast
+                  then show ?thesis
+                    using True by simp
+                next
+                  case False
+                  have "y \<in> F"
+                    using hy False by simp
+                  then show ?thesis
+                    using hFsubB1 by blast
+                qed
+              qed
+              show ?thesis
+                using hB1 hIns by blast
+            qed
+          qed
+
+          then obtain \<B> where hB: "\<B> \<in> \<C>" and hFsubB: "F \<subseteq> \<B>"
+            by blast
+          have hBinZ: "\<B> \<in> ?Z"
+            using hCsubZ hB by blast
+          have hFIPB: "top1_FIP_on X \<B>"
+            using hBinZ by simp
+          have hFIPB': "\<forall>G. finite G \<and> G \<subseteq> \<B> \<longrightarrow> \<Inter>G \<noteq> {}"
+            using hFIPB unfolding top1_FIP_on_def by (rule conjunct2)
+          show "\<Inter>F \<noteq> {}"
+            using hFIPB' hFfin hFsubB by blast
+        qed
+
+        show ?thesis
+          unfolding top1_FIP_on_def
+          apply (intro conjI)
+           apply (rule hSubX)
+          apply (rule hFinInter)
+          done
+      qed
+
+      have hUinZ: "?U \<in> ?Z"
+        using hAsubU hFIPU by simp
+
+      show ?thesis
+        using hUinZ hU_ub by blast
+    qed
+  qed
+
+  obtain \<D> where hDinZ: "\<D> \<in> ?Z"
+    and hDmax: "\<forall>\<B>\<in>?Z. \<D> \<subseteq> \<B> \<longrightarrow> \<B> = \<D>"
+    using Zorn_Lemma2[OF hChainUB] by blast
+
+  have hAsubD: "\<A> \<subseteq> \<D>"
+    using hDinZ by simp
+  have hFIPD: "top1_FIP_on X \<D>"
+    using hDinZ by simp
+
+  have hMaxFIP: "\<forall>\<E>. \<D> \<subset> \<E> \<and> (\<forall>A\<in>\<E>. A \<subseteq> X) \<longrightarrow> \<not> top1_FIP_on X \<E>"
+  proof (intro allI impI)
+    fix \<E>
+    assume hE: "\<D> \<subset> \<E> \<and> (\<forall>A\<in>\<E>. A \<subseteq> X)"
+    have hpsub: "\<D> \<subset> \<E>"
+      using hE by (rule conjunct1)
+    have hDsubE: "\<D> \<subseteq> \<E>"
+      using hpsub by (rule psubset_imp_subset)
+
+    show "\<not> top1_FIP_on X \<E>"
+    proof (rule ccontr)
+      assume hFIP_E: "\<not> (\<not> top1_FIP_on X \<E>)"
+      have hFIP_E': "top1_FIP_on X \<E>"
+        using hFIP_E by simp
+
+      have hA_subE: "\<A> \<subseteq> \<E>"
+        using hAsubD hDsubE by blast
+
+      have hEinZ: "\<E> \<in> ?Z"
+        using hA_subE hFIP_E' by simp
+
+      have hEq: "\<E> = \<D>"
+        using hDmax hEinZ hDsubE by blast
+
+      have "\<D> \<subset> \<D>"
+        using hE hEq by simp
+      then show False
+        by simp
+    qed
+  qed
+
+  show "\<exists>\<D>. \<A> \<subseteq> \<D> \<and> top1_FIP_maximal_on X \<D>"
+  proof (rule exI[where x=\<D>], intro conjI)
+    show "\<A> \<subseteq> \<D>"
+      by (rule hAsubD)
+    show "top1_FIP_maximal_on X \<D>"
+      unfolding top1_FIP_maximal_on_def
+      apply (intro conjI)
+       apply (rule hFIPD)
+      apply (rule hMaxFIP)
+      done
+  qed
+qed
 
 (** from \S37 Lemma 37.2 (Properties of maximal FIP families) [top1.tex:5232] **)
 lemma Lemma_37_2:
