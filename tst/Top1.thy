@@ -53592,14 +53592,136 @@ lemma top1_closure_on_union2:
   assumes hAX: "A \<subseteq> X"
   assumes hBX: "B \<subseteq> X"
   shows "closure_on X TX (A \<union> B) = closure_on X TX A \<union> closure_on X TX B"
-  sorry
+proof (rule subset_antisym)
+  show "closure_on X TX (A \<union> B) \<subseteq> closure_on X TX A \<union> closure_on X TX B"
+  proof -
+    have hclA: "closedin_on X TX (closure_on X TX A)"
+      by (rule closure_on_closed[OF hTopX hAX])
+    have hclB: "closedin_on X TX (closure_on X TX B)"
+      by (rule closure_on_closed[OF hTopX hBX])
+
+    have hClosed: "closedin_on X TX (closure_on X TX A \<union> closure_on X TX B)"
+    proof -
+      have hfin: "finite {closure_on X TX A, closure_on X TX B}" by simp
+      have hall: "\<forall>S\<in>{closure_on X TX A, closure_on X TX B}. closedin_on X TX S"
+      proof (intro ballI)
+        fix S
+        assume hS: "S \<in> {closure_on X TX A, closure_on X TX B}"
+        have hS': "S = closure_on X TX A \<or> S = closure_on X TX B"
+          using hS by simp
+        have h1: "S = closure_on X TX A \<Longrightarrow> closedin_on X TX S"
+        proof -
+          assume hEq: "S = closure_on X TX A"
+          show "closedin_on X TX S"
+            unfolding hEq by (rule hclA)
+        qed
+        have h2: "S = closure_on X TX B \<Longrightarrow> closedin_on X TX S"
+        proof -
+          assume hEq: "S = closure_on X TX B"
+          show "closedin_on X TX S"
+            unfolding hEq by (rule hclB)
+        qed
+        show "closedin_on X TX S"
+          by (rule disjE[OF hS'], erule h1, erule h2)
+      qed
+      have "closedin_on X TX (\<Union>{closure_on X TX A, closure_on X TX B})"
+        by (rule closedin_Union_finite[OF hTopX hfin hall])
+      thus ?thesis
+        by (simp only: Union_insert Union_empty Un_empty_right)
+    qed
+
+    have hSub: "A \<union> B \<subseteq> closure_on X TX A \<union> closure_on X TX B"
+    proof (rule subsetI)
+      fix x
+      assume hx: "x \<in> A \<union> B"
+      show "x \<in> closure_on X TX A \<union> closure_on X TX B"
+      proof -
+        have hx': "x \<in> A \<or> x \<in> B"
+          using hx by simp
+        show ?thesis
+        proof (rule disjE[OF hx'])
+          assume hxA: "x \<in> A"
+          have hxclA: "x \<in> closure_on X TX A"
+            using subset_closure_on hxA by (rule subsetD)
+          show "x \<in> closure_on X TX A \<union> closure_on X TX B"
+            by (rule UnI1, rule hxclA)
+        next
+          assume hxB': "x \<in> B"
+          have hxclB: "x \<in> closure_on X TX B"
+            using subset_closure_on hxB' by (rule subsetD)
+          show "x \<in> closure_on X TX A \<union> closure_on X TX B"
+            by (rule UnI2, rule hxclB)
+        qed
+      qed
+    qed
+
+    show ?thesis
+      by (rule closure_on_subset_of_closed[OF hClosed hSub])
+  qed
+
+  show "closure_on X TX A \<union> closure_on X TX B \<subseteq> closure_on X TX (A \<union> B)"
+  proof -
+    have hAub: "A \<subseteq> A \<union> B"
+      by (intro subsetI) simp
+    have hBub: "B \<subseteq> A \<union> B"
+      by (intro subsetI) simp
+    have hclA_sub: "closure_on X TX A \<subseteq> closure_on X TX (A \<union> B)"
+      by (rule closure_on_mono[OF hAub])
+    have hclB_sub: "closure_on X TX B \<subseteq> closure_on X TX (A \<union> B)"
+      by (rule closure_on_mono[OF hBub])
+    show ?thesis
+      by (rule Un_least[OF hclA_sub hclB_sub])
+  qed
+qed
 
 lemma top1_closure_on_Union_finite:
   assumes hTopX: "is_topology_on X TX"
   assumes hFin: "finite S"
   assumes hSX: "\<forall>A\<in>S. A \<subseteq> X"
   shows "closure_on X TX (\<Union>S) = (\<Union>(closure_on X TX ` S))"
-  sorry
+  using hFin hSX
+proof (induction rule: finite_induct)
+  case empty
+  show ?case
+  proof -
+    have "closure_on X TX (\<Union>{}) = closure_on X TX {}"
+      by (simp only: Union_empty)
+    also have "... = {}"
+      by (rule top1_closure_on_empty[OF hTopX])
+    also have "... = (\<Union>(closure_on X TX ` {}))"
+      by (simp only: image_empty Union_empty)
+    finally show ?thesis .
+  qed
+next
+  case (insert a F)
+  have haX: "a \<subseteq> X"
+    using insert.prems by simp
+  have hFX: "\<forall>A\<in>F. A \<subseteq> X"
+    using insert.prems by simp
+  have hUFsubX: "\<Union>F \<subseteq> X"
+    using hFX by blast
+
+  show ?case
+  proof -
+    have hUnion: "\<Union>(insert a F) = a \<union> (\<Union>F)"
+      by (simp only: Union_insert)
+    have hStep: "closure_on X TX (\<Union>(insert a F)) = closure_on X TX a \<union> closure_on X TX (\<Union>F)"
+      unfolding hUnion by (rule top1_closure_on_union2[OF hTopX haX hUFsubX])
+    have hRHS: "(\<Union>(closure_on X TX ` insert a F)) = closure_on X TX a \<union> (\<Union>(closure_on X TX ` F))"
+      by (simp only: image_insert Union_insert)
+
+    have hIH: "closure_on X TX (\<Union>F) = (\<Union>(closure_on X TX ` F))"
+      by (rule insert.IH[OF hFX])
+
+    have "closure_on X TX (\<Union>(insert a F)) = closure_on X TX a \<union> closure_on X TX (\<Union>F)"
+      by (rule hStep)
+    also have "... = closure_on X TX a \<union> (\<Union>(closure_on X TX ` F))"
+      by (simp only: hIH)
+    also have "... = (\<Union>(closure_on X TX ` insert a F))"
+      by (simp only: hRHS[symmetric])
+    finally show ?thesis .
+  qed
+qed
 
 lemma top1_closure_on_Union_locally_finite:
   assumes hTopX: "is_topology_on X TX"
