@@ -56741,6 +56741,206 @@ definition top1_baire_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool"
      (\<forall>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX \<and> top1_densein_on X TX (U n)) \<longrightarrow>
         top1_densein_on X TX (\<Inter>n. U n))"
 
+lemma top1_compact_on_Inter_nested_closed_nonempty:
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hCcl: "\<forall>n. closedin_on X TX (C n)"
+  assumes hCne: "\<forall>n. C n \<noteq> {}"
+  assumes hnest: "\<forall>n. C (Suc n) \<subseteq> C n"
+  shows "(\<Inter>n. C n) \<noteq> {}"
+proof (rule ccontr)
+  assume hempty: "\<not> ((\<Inter>n. C n) \<noteq> {})"
+  have hTop: "is_topology_on X TX"
+    using hcomp unfolding top1_compact_on_def by blast
+
+  have hXne: "X \<noteq> {}"
+  proof -
+    have "C 0 \<subseteq> X"
+      using hCcl unfolding closedin_on_def by blast
+    moreover have "C 0 \<noteq> {}"
+      using hCne by simp
+    ultimately show ?thesis
+      by blast
+  qed
+
+  let ?Uc = "(\<lambda>n. X - C n)"
+  let ?F = "range ?Uc"
+
+  have hFsubTX: "?F \<subseteq> TX"
+  proof
+    fix U
+    assume hU: "U \<in> ?F"
+    then obtain n where hUn: "U = ?Uc n"
+      by blast
+    have hCncl: "closedin_on X TX (C n)"
+      using hCcl by simp
+    have "X - C n \<in> TX"
+      using hCncl unfolding closedin_on_def by blast
+    thus "U \<in> TX"
+      unfolding hUn .
+  qed
+
+  have hCover: "X \<subseteq> \<Union>?F"
+  proof (rule subsetI)
+    fix x
+    assume hxX: "x \<in> X"
+    have hxnot: "x \<notin> (\<Inter>n. C n)"
+      using hempty hxX by blast
+    then obtain n where hxCn: "x \<notin> C n"
+      by auto
+    have hxU: "x \<in> ?Uc n"
+      using hxX hxCn by simp
+    have "?Uc n \<in> ?F"
+      by (rule rangeI)
+    thus "x \<in> \<Union>?F"
+      using hxU by blast
+  qed
+
+  obtain G where hGfin: "finite G" and hGsub: "G \<subseteq> ?F" and hGcover: "X \<subseteq> \<Union>G"
+    using hcomp hFsubTX hCover unfolding top1_compact_on_def by blast
+
+  have hGne: "G \<noteq> {}"
+  proof
+    assume hG0: "G = {}"
+    have "\<Union>G = {}"
+      unfolding hG0 by simp
+    thus False
+      using hGcover hXne by blast
+  qed
+
+  have hIdx_ex: "\<forall>U\<in>G. \<exists>n. U = ?Uc n"
+  proof (intro ballI)
+    fix U
+    assume hU: "U \<in> G"
+    have hUinF: "U \<in> ?F"
+      using hGsub hU by blast
+    then obtain n where hUn: "U = ?Uc n"
+      by blast
+    show "\<exists>n. U = ?Uc n"
+      by (rule exI[where x=n], rule hUn)
+  qed
+
+  have hex_idx: "\<exists>idx. \<forall>U\<in>G. U = ?Uc (idx U)"
+    by (rule bchoice[OF hIdx_ex])
+
+  obtain idx where hidx: "\<forall>U\<in>G. U = ?Uc (idx U)"
+    using hex_idx by (erule exE)
+
+  let ?J = "idx ` G"
+  have hJfin: "finite ?J"
+    using hGfin by simp
+  have hJne: "?J \<noteq> {}"
+    using hGne by simp
+
+  define N where "N = Max ?J"
+  have hNmem: "N \<in> ?J"
+    unfolding N_def by (rule Max_in[OF hJfin hJne])
+  have hNmax: "\<forall>n\<in>?J. n \<le> N"
+  proof (intro ballI)
+    fix n
+    assume hn: "n \<in> ?J"
+    show "n \<le> N"
+      unfolding N_def by (rule Max_ge[OF hJfin hn])
+  qed
+
+  have hnest_add: "\<forall>m k. C (m + k) \<subseteq> C m"
+  proof (intro allI)
+    fix m k
+    show "C (m + k) \<subseteq> C m"
+    proof (induction k)
+      case 0
+      show ?case by simp
+    next
+      case (Suc k)
+      have "C (m + Suc k) = C (Suc (m + k))"
+        by simp
+      also have "... \<subseteq> C (m + k)"
+        using hnest by simp
+      also have "... \<subseteq> C m"
+        using Suc.IH by simp
+      finally show ?case .
+    qed
+  qed
+
+  have hCNsub: "\<forall>n\<in>?J. C N \<subseteq> C n"
+  proof (intro ballI)
+    fix n
+	    assume hnJ: "n \<in> ?J"
+	    have hnle: "n \<le> N"
+	      using hNmax hnJ by blast
+	    have hexk: "\<exists>k. N = n + k"
+	      using hnle by (simp add: nat_le_iff_add)
+	    obtain k where hNk: "N = n + k"
+	      using hexk by (erule exE)
+	    have "C N \<subseteq> C n"
+	      unfolding hNk by (rule hnest_add[rule_format, of n k])
+	    thus "C N \<subseteq> C n" .
+	  qed
+
+  have hUnionG_sub: "\<Union>G \<subseteq> X - C N"
+  proof
+    fix x
+    assume hx: "x \<in> \<Union>G"
+    then obtain U where hU: "U \<in> G" and hxU: "x \<in> U"
+      by blast
+    have hUeq: "U = ?Uc (idx U)"
+      using hidx hU by blast
+    have hidxU: "idx U \<in> ?J"
+      using hU by blast
+    have hCNsubCn: "C N \<subseteq> C (idx U)"
+      using hCNsub hidxU by blast
+    have hxU0: "x \<in> ?Uc (idx U)"
+      by (subst hUeq[symmetric], rule hxU)
+    have hxU': "x \<in> X - C (idx U)"
+      using hxU0 by simp
+    have hxX: "x \<in> X"
+      by (rule DiffD1[OF hxU'])
+    have hxnot: "x \<notin> C (idx U)"
+    proof
+      assume hxC: "x \<in> C (idx U)"
+      show False
+        by (rule DiffD2[OF hxU' hxC])
+    qed
+    have "x \<notin> C N"
+    proof
+      assume hxCN: "x \<in> C N"
+      hence "x \<in> C (idx U)"
+        using hCNsubCn by blast
+      thus False
+        using hxnot by contradiction
+    qed
+    thus "x \<in> X - C N"
+      using hxX by simp
+  qed
+
+  have hXsub: "X \<subseteq> X - C N"
+  proof -
+    have "X \<subseteq> \<Union>G"
+      by (rule hGcover)
+    also have "\<Union>G \<subseteq> X - C N"
+      by (rule hUnionG_sub)
+    finally show ?thesis .
+  qed
+
+  have hCNsubX: "C N \<subseteq> X"
+    using hCcl unfolding closedin_on_def by blast
+
+  have hCNsubXm: "C N \<subseteq> X - C N"
+    by (rule subset_trans[OF hCNsubX hXsub])
+
+  have "C N = {}"
+  proof (rule ccontr)
+    assume hne: "C N \<noteq> {}"
+    obtain y where hy: "y \<in> C N"
+      using hne by blast
+    have hyXm: "y \<in> X - C N"
+      using hCNsubXm hy by blast
+    show False
+      by (rule DiffD2[OF hyXm hy])
+  qed
+  thus False
+    using hCne by simp
+qed
+
 lemma top1_densein_on_open_subspace:
   assumes hTop: "is_topology_on X TX"
   assumes hD: "top1_densein_on X TX D"
@@ -56816,10 +57016,36 @@ lemma Lemma_48_1:
   by (simp add: top1_baire_on_def)
 
 (** from \S48 Theorem 48.2 (Baire category theorem) [top1.tex:7178] **)
+text \<open>
+  Proof plan (compact Hausdorff case): use @{thm Theorem_32_3} (compact Hausdorff \<open>\<Longrightarrow>\<close> normal),
+  hence regularity, then iterate @{thm regular_refine_point_into_open} to build a nested sequence of open
+  sets whose closures stay inside the successive dense open sets. Apply
+  @{thm top1_compact_on_Inter_nested_closed_nonempty} to the nested closed closures to obtain a point
+  in the intersection.
+\<close>
+
+lemma top1_compact_hausdorff_imp_baire:
+  assumes hcomp: "top1_compact_on X TX"
+  assumes hHaus: "is_hausdorff_on X TX"
+  shows "top1_baire_on X TX"
+  sorry
+
 theorem Theorem_48_2:
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX \<longrightarrow> top1_baire_on X TX"
     and "top1_complete_metric_on X d \<longrightarrow> top1_baire_on X (top1_metric_topology_on X d)"
-  sorry
+proof -
+  show "top1_compact_on X TX \<and> is_hausdorff_on X TX \<longrightarrow> top1_baire_on X TX"
+  proof
+    assume h: "top1_compact_on X TX \<and> is_hausdorff_on X TX"
+    have hcomp: "top1_compact_on X TX" and hHaus: "is_hausdorff_on X TX"
+      using h by blast+
+    show "top1_baire_on X TX"
+      by (rule top1_compact_hausdorff_imp_baire[OF hcomp hHaus])
+  qed
+
+  show "top1_complete_metric_on X d \<longrightarrow> top1_baire_on X (top1_metric_topology_on X d)"
+    sorry
+qed
 
 (** from \S48 Lemma 48.3 [top1.tex:7208] **)
 lemma Lemma_48_3:
