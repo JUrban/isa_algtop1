@@ -24876,6 +24876,84 @@ proof -
   qed
 qed
 
+(** Finite subspaces are compact (in the subspace topology). **)
+lemma top1_compact_on_finite_subspace:
+  assumes hTX: "is_topology_on X TX"
+  assumes hYX: "Y \<subseteq> X"
+  assumes hfin: "finite Y"
+  shows "top1_compact_on Y (subspace_topology X TX Y)"
+proof -
+  let ?TY = "subspace_topology X TX Y"
+
+  have hTopY: "is_topology_on Y ?TY"
+    by (rule subspace_topology_is_topology_on[OF hTX hYX])
+
+  have hSubcover:
+    "\<forall>Uc. Uc \<subseteq> ?TY \<and> Y \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F)"
+  proof (intro allI impI)
+    fix Uc
+    assume hUc: "Uc \<subseteq> ?TY \<and> Y \<subseteq> \<Union>Uc"
+    have hcov: "Y \<subseteq> \<Union>Uc"
+      using hUc by simp
+
+    have hfinite_cover:
+      "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F"
+      using hfin hcov
+    proof (induction rule: finite_induct)
+      case empty
+      show ?case
+        by (rule exI[where x="{}"], simp)
+    next
+      case (insert y0 Y')
+      have hy0: "y0 \<in> \<Union>Uc"
+        using insert.prems by simp
+      obtain U0 where hU0: "U0 \<in> Uc" and hy0U0: "y0 \<in> U0"
+        using hy0 by blast
+
+      have hcovY': "Y' \<subseteq> \<Union>Uc"
+        using insert.prems by simp
+      obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> Uc" and hFcov: "Y' \<subseteq> \<Union>F"
+        using insert.IH hcovY' by blast
+
+      have hInsFin: "finite (insert U0 F)"
+        using hFfin by simp
+      have hInsSub: "insert U0 F \<subseteq> Uc"
+        using hFsub hU0 by simp
+      have hInsCov: "insert y0 Y' \<subseteq> \<Union>(insert U0 F)"
+      proof
+        fix y
+        assume hy: "y \<in> insert y0 Y'"
+        show "y \<in> \<Union>(insert U0 F)"
+        proof (cases "y = y0")
+          case True
+          show ?thesis
+            unfolding True using hU0 hy0U0 by blast
+        next
+          case False
+          have "y \<in> Y'"
+            using hy False by simp
+          then show ?thesis
+            using hFcov by blast
+        qed
+      qed
+
+      show ?case
+        apply (rule exI[where x="insert U0 F"])
+        using hInsFin hInsSub hInsCov by blast
+    qed
+
+    show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F"
+      by (rule hfinite_cover)
+  qed
+
+  show ?thesis
+    unfolding top1_compact_on_def
+    apply (intro conjI)
+     apply (rule hTopY)
+    apply (rule hSubcover)
+    done
+qed
+
 (** from \S26 Lemma 26.8 (Tube lemma) [top1.tex:3236] **)
 theorem Lemma_26_8:
   assumes hY: "top1_compact_on Y TY"
@@ -53767,14 +53845,480 @@ lemma top1_closedin_Union_locally_finite:
   assumes hClosed: "\<forall>C\<in>F. closedin_on X TX C"
   assumes hLF: "top1_locally_finite_family_on X TX F"
   shows "closedin_on X TX (\<Union>F)"
-  sorry
+proof -
+  have hUnion_subX: "\<Union>F \<subseteq> X"
+    using hSubX by blast
+
+  have hXopen: "X \<in> TX"
+    using hTopX unfolding is_topology_on_def by simp
+
+  have hInter_TX:
+    "\<forall>G. finite G \<and> G \<noteq> {} \<and> G \<subseteq> TX \<longrightarrow> (\<Inter>G) \<in> TX"
+    using hTopX unfolding is_topology_on_def by blast
+
+  have hCompOpen: "X - (\<Union>F) \<in> TX"
+  proof (rule top1_open_of_local_subsets[OF hTopX])
+    show "X - (\<Union>F) \<subseteq> X"
+      by blast
+    show "\<forall>x\<in>X - (\<Union>F). \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X - (\<Union>F)"
+    proof (intro ballI)
+      fix x
+      assume hx: "x \<in> X - (\<Union>F)"
+      have hxX: "x \<in> X"
+        using hx by simp
+
+      obtain U where hU: "U \<in> TX" and hxU: "x \<in> U"
+        and hFinU: "finite {C\<in>F. intersects C U}"
+        using hLF hxX unfolding top1_locally_finite_family_on_def by blast
+
+      let ?U0 = "U \<inter> X"
+      have hU0: "?U0 \<in> TX"
+        by (rule topology_inter2[OF hTopX hU hXopen])
+      have hxU0: "x \<in> ?U0"
+        using hxU hxX by blast
+      have hU0subX: "?U0 \<subseteq> X"
+        by blast
+
+      let ?S = "{C\<in>F. intersects C ?U0}"
+      have hSsub: "?S \<subseteq> {C\<in>F. intersects C U}"
+      proof
+        fix C
+        assume hC: "C \<in> ?S"
+        have hCF: "C \<in> F"
+          using hC by simp
+        have hIntU0: "intersects C ?U0"
+          using hC by simp
+        have hIntU: "intersects C U"
+        proof -
+          have "C \<inter> ?U0 \<noteq> {}"
+            using hIntU0 unfolding intersects_def by simp
+          then obtain y where hy: "y \<in> C \<inter> ?U0"
+            by blast
+          have hyU: "y \<in> U"
+            using hy by blast
+          have "y \<in> C \<inter> U"
+            using hy hyU by blast
+          hence "C \<inter> U \<noteq> {}"
+            by blast
+          thus ?thesis
+            unfolding intersects_def by simp
+        qed
+        show "C \<in> {C\<in>F. intersects C U}"
+          using hCF hIntU by simp
+      qed
+      have hSfin: "finite ?S"
+        by (rule finite_subset[OF hSsub hFinU])
+
+      define V where "V = (\<Inter>(insert ?U0 ((\<lambda>C. X - C) ` ?S)))"
+
+      have hVsubX: "V \<subseteq> X"
+        unfolding V_def using hU0subX by blast
+
+      have hVopen: "V \<in> TX"
+      proof -
+        have hImg_sub: "((\<lambda>C. X - C) ` ?S) \<subseteq> TX"
+        proof
+          fix W
+          assume hW: "W \<in> ((\<lambda>C. X - C) ` ?S)"
+          then obtain C where hC: "C \<in> ?S" and hWdef: "W = X - C"
+            by blast
+          have hCF: "C \<in> F"
+            using hC by simp
+          have hCclosed: "closedin_on X TX C"
+            using hClosed hCF by blast
+          have "X - C \<in> TX"
+            by (rule closedin_diff_open[OF hCclosed])
+          thus "W \<in> TX"
+            unfolding hWdef by simp
+        qed
+        have hGfin: "finite (insert ?U0 ((\<lambda>C. X - C) ` ?S))"
+          using hSfin by simp
+        have hGne: "insert ?U0 ((\<lambda>C. X - C) ` ?S) \<noteq> {}"
+          by simp
+        have hGsub: "insert ?U0 ((\<lambda>C. X - C) ` ?S) \<subseteq> TX"
+          using hU0 hImg_sub by blast
+        have hGcond:
+          "finite (insert ?U0 ((\<lambda>C. X - C) ` ?S))
+            \<and> insert ?U0 ((\<lambda>C. X - C) ` ?S) \<noteq> {}
+            \<and> insert ?U0 ((\<lambda>C. X - C) ` ?S) \<subseteq> TX"
+          using hGfin hGne hGsub by simp
+        have hImp:
+          "finite (insert ?U0 ((\<lambda>C. X - C) ` ?S))
+            \<and> insert ?U0 ((\<lambda>C. X - C) ` ?S) \<noteq> {}
+            \<and> insert ?U0 ((\<lambda>C. X - C) ` ?S) \<subseteq> TX
+            \<longrightarrow> (\<Inter>(insert ?U0 ((\<lambda>C. X - C) ` ?S))) \<in> TX"
+          using hInter_TX by (rule spec[where x="insert ?U0 ((\<lambda>C. X - C) ` ?S)"])
+        have hInterG': "(\<Inter>(insert ?U0 ((\<lambda>C. X - C) ` ?S))) \<in> TX"
+          by (rule mp[OF hImp hGcond])
+        show ?thesis
+          by (subst V_def, rule hInterG')
+      qed
+
+      have hxV: "x \<in> V"
+      proof -
+        have hAll: "\<forall>W\<in>insert ?U0 ((\<lambda>C. X - C) ` ?S). x \<in> W"
+        proof
+          fix W
+          assume hW: "W \<in> insert ?U0 ((\<lambda>C. X - C) ` ?S)"
+          show "x \<in> W"
+          proof (cases "W = ?U0")
+            case True
+            show ?thesis
+              using hxU0 True by simp
+          next
+            case False
+            then have hWimg: "W \<in> ((\<lambda>C. X - C) ` ?S)"
+              using hW by simp
+            then obtain C where hC: "C \<in> ?S" and hWdef: "W = X - C"
+              by blast
+            have hCF: "C \<in> F"
+              using hC by simp
+            have hxnot: "x \<notin> C"
+            proof
+              assume hxC: "x \<in> C"
+              have "x \<in> (\<Union>F)"
+                using hCF hxC by blast
+              thus False
+                using hx by simp
+            qed
+            show ?thesis
+              unfolding hWdef using hxX hxnot by simp
+          qed
+        qed
+        have "x \<in> (\<Inter>(insert ?U0 ((\<lambda>C. X - C) ` ?S)))"
+          using hAll by (simp add: Inter_iff)
+        thus ?thesis
+          unfolding V_def by simp
+      qed
+
+      have hVsub: "V \<subseteq> X - (\<Union>F)"
+      proof (rule subsetI)
+        fix y
+        assume hy: "y \<in> V"
+        have hyX: "y \<in> X"
+          using hVsubX hy by blast
+        have hyU0: "y \<in> ?U0"
+          using hy unfolding V_def V_def V_def V_def V_def V_def V_def by (simp add: V_def Inter_iff)
+        have hyU: "y \<in> U"
+          using hyU0 by blast
+        have hynotUnion: "y \<notin> (\<Union>F)"
+        proof
+          assume hyUnion: "y \<in> (\<Union>F)"
+          then obtain C where hCF: "C \<in> F" and hyC: "y \<in> C"
+            by blast
+          have hIntCU0: "intersects C ?U0"
+            unfolding intersects_def
+          proof -
+            have "y \<in> C \<inter> ?U0"
+              using hyC hyU0 by blast
+            thus "C \<inter> ?U0 \<noteq> {}"
+              by blast
+          qed
+          have hCS: "C \<in> ?S"
+            using hCF hIntCU0 by simp
+          have hMem: "X - C \<in> insert ?U0 ((\<lambda>C. X - C) ` ?S)"
+            using hCS by blast
+          have hyAll: "\<forall>W\<in>insert ?U0 ((\<lambda>C. X - C) ` ?S). y \<in> W"
+            using hy unfolding V_def by (simp only: Inter_iff)
+          have "y \<in> X - C"
+            using hyAll hMem by blast
+          thus False
+            using hyC by simp
+        qed
+        show "y \<in> X - (\<Union>F)"
+          using hyX hynotUnion by simp
+      qed
+
+      show "\<exists>W\<in>TX. x \<in> W \<and> W \<subseteq> X - (\<Union>F)"
+        using hVopen hxV hVsub by blast
+    qed
+  qed
+
+  show ?thesis
+    by (rule closedin_intro[OF hUnion_subX], simp add: hCompOpen)
+qed
 
 lemma top1_closure_on_Union_locally_finite:
   assumes hTopX: "is_topology_on X TX"
   assumes hSubX: "\<forall>A\<in>\<A>. A \<subseteq> X"
   assumes hLF: "top1_locally_finite_family_on X TX \<A>"
   shows "closure_on X TX (\<Union>\<A>) = (\<Union>(closure_on X TX ` \<A>))"
-  sorry
+proof (rule subset_antisym)
+  have hUnion_subX: "\<Union>\<A> \<subseteq> X"
+    using hSubX by blast
+
+  have hXopen: "X \<in> TX"
+    using hTopX unfolding is_topology_on_def by simp
+
+  have hInter_TX:
+    "\<forall>G. finite G \<and> G \<noteq> {} \<and> G \<subseteq> TX \<longrightarrow> (\<Inter>G) \<in> TX"
+    using hTopX unfolding is_topology_on_def by blast
+
+  show "closure_on X TX (\<Union>\<A>) \<subseteq> (\<Union>(closure_on X TX ` \<A>))"
+  proof (rule subsetI)
+    fix x
+    assume hxcl: "x \<in> closure_on X TX (\<Union>\<A>)"
+
+    have hxX: "x \<in> X"
+    proof -
+      have "closure_on X TX (\<Union>\<A>) \<subseteq> X"
+        by (rule closure_on_subset_carrier[OF hTopX hUnion_subX])
+      thus ?thesis
+        using hxcl by blast
+    qed
+
+    show "x \<in> (\<Union>(closure_on X TX ` \<A>))"
+    proof (rule ccontr)
+      assume hxnot: "x \<notin> (\<Union>(closure_on X TX ` \<A>))"
+
+      obtain U where hU: "U \<in> TX" and hxU: "x \<in> U"
+        and hFinU: "finite {A\<in>\<A>. intersects A U}"
+        using hLF hxX unfolding top1_locally_finite_family_on_def by blast
+
+      let ?U0 = "U \<inter> X"
+      have hU0: "?U0 \<in> TX"
+        by (rule topology_inter2[OF hTopX hU hXopen])
+      have hxU0: "x \<in> ?U0"
+        using hxU hxX by blast
+      have hU0subX: "?U0 \<subseteq> X"
+        by blast
+
+      let ?S = "{A\<in>\<A>. intersects A ?U0}"
+      have hSsub: "?S \<subseteq> {A\<in>\<A>. intersects A U}"
+      proof
+        fix A
+        assume hA: "A \<in> ?S"
+        have hAA: "A \<in> \<A>"
+          using hA by simp
+        have hIntU0: "intersects A ?U0"
+          using hA by simp
+        have hIntU: "intersects A U"
+        proof -
+          have "A \<inter> ?U0 \<noteq> {}"
+            using hIntU0 unfolding intersects_def by simp
+          then obtain y where hy: "y \<in> A \<inter> ?U0"
+            by blast
+          have hyU: "y \<in> U"
+            using hy by blast
+          have "y \<in> A \<inter> U"
+            using hy hyU by blast
+          hence "A \<inter> U \<noteq> {}"
+            by blast
+          thus ?thesis
+            unfolding intersects_def by simp
+        qed
+        show "A \<in> {A\<in>\<A>. intersects A U}"
+          using hAA hIntU by simp
+      qed
+      have hSfin: "finite ?S"
+        by (rule finite_subset[OF hSsub hFinU])
+
+      have hx_not_closure: "\<forall>A\<in>?S. x \<notin> closure_on X TX A"
+      proof (intro ballI)
+        fix A
+        assume hA: "A \<in> ?S"
+        have hAA: "A \<in> \<A>"
+          using hA by simp
+        show "x \<notin> closure_on X TX A"
+        proof
+          assume hxA: "x \<in> closure_on X TX A"
+          have "x \<in> (\<Union>(closure_on X TX ` \<A>))"
+            using hAA hxA by blast
+          thus False
+            using hxnot by contradiction
+        qed
+      qed
+
+      have hSep: "\<forall>A\<in>?S. \<exists>V. neighborhood_of x X TX V \<and> \<not> intersects V A"
+      proof (intro ballI)
+        fix A
+        assume hA: "A \<in> ?S"
+        have hAA: "A \<in> \<A>"
+          using hA by simp
+        have hAX: "A \<subseteq> X"
+          using hSubX hAA by blast
+        have hChar:
+          "x \<in> closure_on X TX A \<longleftrightarrow>
+            (\<forall>V. neighborhood_of x X TX V \<longrightarrow> intersects V A)"
+          by (rule Theorem_17_5a[OF hTopX hxX hAX])
+        have hxA_notcl: "x \<notin> closure_on X TX A"
+          using hx_not_closure hA by blast
+        have "\<not> (\<forall>V. neighborhood_of x X TX V \<longrightarrow> intersects V A)"
+          using hxA_notcl hChar by blast
+        then show "\<exists>V. neighborhood_of x X TX V \<and> \<not> intersects V A"
+          by blast
+      qed
+
+      define V where
+        "V = (\<lambda>A. (SOME W. neighborhood_of x X TX W \<and> \<not> intersects W A))"
+
+      have hVprop: "\<forall>A\<in>?S. neighborhood_of x X TX (V A) \<and> \<not> intersects (V A) A"
+      proof (intro ballI)
+        fix A
+        assume hA: "A \<in> ?S"
+        have hex: "\<exists>W. neighborhood_of x X TX W \<and> \<not> intersects W A"
+          using hSep hA by blast
+        have "neighborhood_of x X TX (V A) \<and> \<not> intersects (V A) A"
+          unfolding V_def by (rule someI_ex[OF hex])
+        thus "neighborhood_of x X TX (V A) \<and> \<not> intersects (V A) A" .
+      qed
+
+      define W where "W = (\<Inter>(insert ?U0 (V ` ?S)))"
+
+      have hWsubU0: "W \<subseteq> ?U0"
+        unfolding W_def by blast
+
+      have hWopen: "W \<in> TX"
+      proof -
+        have hVimg_sub: "V ` ?S \<subseteq> TX"
+        proof
+          fix Z
+          assume hZ: "Z \<in> V ` ?S"
+          then obtain A where hA: "A \<in> ?S" and hZdef: "Z = V A"
+            by blast
+          have "neighborhood_of x X TX (V A)"
+            using hVprop hA by blast
+          hence "V A \<in> TX"
+            unfolding neighborhood_of_def by simp
+          thus "Z \<in> TX"
+            unfolding hZdef by simp
+        qed
+        have hGfin: "finite (insert ?U0 (V ` ?S))"
+          using hSfin by simp
+        have hGne: "insert ?U0 (V ` ?S) \<noteq> {}"
+          by simp
+        have hGsub: "insert ?U0 (V ` ?S) \<subseteq> TX"
+          using hU0 hVimg_sub by blast
+        have hGcond: "finite (insert ?U0 (V ` ?S))
+            \<and> insert ?U0 (V ` ?S) \<noteq> {}
+            \<and> insert ?U0 (V ` ?S) \<subseteq> TX"
+          using hGfin hGne hGsub by simp
+        have hImp: "finite (insert ?U0 (V ` ?S))
+            \<and> insert ?U0 (V ` ?S) \<noteq> {}
+            \<and> insert ?U0 (V ` ?S) \<subseteq> TX
+            \<longrightarrow> (\<Inter>(insert ?U0 (V ` ?S))) \<in> TX"
+          using hInter_TX by (rule spec[where x="insert ?U0 (V ` ?S)"])
+        have hInterG': "(\<Inter>(insert ?U0 (V ` ?S))) \<in> TX"
+          by (rule mp[OF hImp hGcond])
+        show ?thesis
+          by (subst W_def, rule hInterG')
+      qed
+
+      have hxW: "x \<in> W"
+      proof -
+        have hxVall: "\<forall>Z\<in>V ` ?S. x \<in> Z"
+        proof
+          fix Z
+          assume hZ: "Z \<in> V ` ?S"
+          then obtain A where hA: "A \<in> ?S" and hZdef: "Z = V A"
+            by blast
+          have "neighborhood_of x X TX (V A)"
+            using hVprop hA by blast
+          hence "x \<in> V A"
+            unfolding neighborhood_of_def by simp
+          thus "x \<in> Z"
+            unfolding hZdef by simp
+        qed
+        have hxAll: "\<forall>Z\<in>insert ?U0 (V ` ?S). x \<in> Z"
+          using hxU0 hxVall by blast
+        have "x \<in> (\<Inter>(insert ?U0 (V ` ?S)))"
+          using hxAll by (simp add: Inter_iff)
+        thus ?thesis
+          unfolding W_def by simp
+      qed
+
+      have hWnbh: "neighborhood_of x X TX W"
+        unfolding neighborhood_of_def using hWopen hxW by simp
+
+      have hWdisj: "\<not> intersects W (\<Union>\<A>)"
+      proof -
+        have hWsubX: "W \<subseteq> X"
+          using hWsubU0 hU0subX by blast
+        have hWsubComp: "W \<subseteq> X - (\<Union>\<A>)"
+        proof (rule subsetI)
+          fix y
+          assume hy: "y \<in> W"
+          have hyX: "y \<in> X"
+            using hWsubX hy by blast
+          have hyU0: "y \<in> ?U0"
+            using hWsubU0 hy by blast
+          show "y \<in> X - (\<Union>\<A>)"
+          proof
+            show "y \<in> X"
+              using hyX .
+            show "y \<notin> (\<Union>\<A>)"
+            proof
+              assume hyUnion: "y \<in> (\<Union>\<A>)"
+              then obtain A where hAA: "A \<in> \<A>" and hyA: "y \<in> A"
+                by blast
+              have hIntAU0: "intersects A ?U0"
+              proof -
+                have "y \<in> A \<inter> ?U0"
+                  using hyA hyU0 by blast
+                hence "A \<inter> ?U0 \<noteq> {}"
+                  by blast
+                thus ?thesis
+                  unfolding intersects_def by simp
+              qed
+              have hAS: "A \<in> ?S"
+                using hAA hIntAU0 by simp
+              have hyAll: "\<forall>Z\<in>insert ?U0 (V ` ?S). y \<in> Z"
+                using hy unfolding W_def by (simp only: Inter_iff)
+              have hVmem: "V A \<in> V ` ?S"
+                using hAS by blast
+              have "y \<in> V A"
+              proof -
+                have hVAin: "V A \<in> insert ?U0 (V ` ?S)"
+                  using hVmem by simp
+                show ?thesis
+                  using hyAll hVAin by blast
+              qed
+              have "\<not> intersects (V A) A"
+                using hVprop hAS by blast
+              hence "V A \<inter> A = {}"
+                unfolding intersects_def by blast
+              thus False
+                using \<open>y \<in> V A\<close> hyA by blast
+            qed
+          qed
+        qed
+        have "W \<inter> (\<Union>\<A>) = {}"
+        proof (rule equalityI)
+          show "W \<inter> (\<Union>\<A>) \<subseteq> {}"
+            using hWsubComp by blast
+          show "{} \<subseteq> W \<inter> (\<Union>\<A>)"
+            by simp
+        qed
+        thus ?thesis
+          unfolding intersects_def by simp
+      qed
+
+      have hCharUnion:
+        "x \<in> closure_on X TX (\<Union>\<A>) \<longleftrightarrow>
+          (\<forall>U. neighborhood_of x X TX U \<longrightarrow> intersects U (\<Union>\<A>))"
+        by (rule Theorem_17_5a[OF hTopX hxX hUnion_subX])
+      have hAllN: "\<forall>U. neighborhood_of x X TX U \<longrightarrow> intersects U (\<Union>\<A>)"
+        using hCharUnion hxcl by blast
+      have hInt: "intersects W (\<Union>\<A>)"
+        using hAllN hWnbh by blast
+      have hEmpty: "W \<inter> (\<Union>\<A>) = {}"
+        using hWdisj unfolding intersects_def by simp
+      have hNonempty: "W \<inter> (\<Union>\<A>) \<noteq> {}"
+        using hInt unfolding intersects_def by simp
+      have hNot: "\<not> (W \<inter> (\<Union>\<A>) \<noteq> {})"
+        using hEmpty by simp
+      have hEq: "W \<inter> (\<Union>\<A>) = {}"
+        using hNot by simp
+      have hContr: False
+        using hNonempty by (simp add: hEq)
+      show False
+        by (rule hContr)
+    qed
+  qed
+
+  show "(\<Union>(closure_on X TX ` \<A>)) \<subseteq> closure_on X TX (\<Union>\<A>)"
+    by (rule top1_Union_closure_on_subset_closure_on_Union)
+qed
 
 (** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
 lemma Lemma_39_1:
@@ -54224,7 +54768,8 @@ theorem Theorem_43_4:
 
 definition top1_uniform_metric_on ::
   "'i set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('i \<Rightarrow> 'a) \<Rightarrow> ('i \<Rightarrow> 'a) \<Rightarrow> real" where
-  "top1_uniform_metric_on I d x y = Sup ((\<lambda>i. top1_bounded_metric d (x i) (y i)) ` I)"
+  "top1_uniform_metric_on I d x y =
+     (if I = {} then 0 else Sup ((\<lambda>i. top1_bounded_metric d (x i) (y i)) ` I))"
 
 definition top1_continuous_maps_metric_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set" where
@@ -54434,8 +54979,10 @@ definition top1_compactly_generated_on :: "'a set \<Rightarrow> 'a set set \<Rig
 definition top1_compact_convergence_basis_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
   "top1_compact_convergence_basis_on X TX Y d =
-     { {g \<in> top1_PiE X (\<lambda>_. Y). Sup ((\<lambda>x. d (f x) (g x)) ` C) < \<epsilon>}
-       | f C \<epsilon>. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> 0 < \<epsilon> }"
+     { {g \<in> top1_PiE X (\<lambda>_. Y).
+          (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<epsilon>}
+       | f C \<epsilon>. f \<in> top1_PiE X (\<lambda>_. Y)
+          \<and> top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> 0 < \<epsilon> }"
 
 definition top1_compact_convergence_topology_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
@@ -54558,6 +55105,567 @@ theorem Theorem_46_7:
   shows "top1_uniform_topology_on X Y d \<supseteq> top1_compact_convergence_topology_on X TX Y d
     \<and> top1_compact_convergence_topology_on X TX Y d \<supseteq> top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)"
   sorry
+
+(*
+proof -
+  let ?Xfun = "top1_PiE X (\<lambda>_. Y)"
+  let ?Buni = "top1_metric_basis_on ?Xfun (top1_uniform_metric_on X d)"
+  let ?Bcc = "top1_compact_convergence_basis_on X TX Y d"
+  let ?Bpw = "top1_product_basis_on X (\<lambda>_. Y) (\<lambda>_. top1_metric_topology_on Y d)"
+
+  have hcc_sub_uni:
+    "topology_generated_by_basis ?Xfun ?Bcc \<subseteq> topology_generated_by_basis ?Xfun ?Buni"
+  proof (rule topology_generated_by_basis_mono_via_basis_elems)
+    fix b
+    assume hb: "b \<in> ?Bcc"
+    obtain f C \<epsilon> where
+      hbdef: "b = {g \<in> ?Xfun.
+        (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<epsilon>}"
+      and hf: "f \<in> ?Xfun"
+      and hcomp: "top1_compact_on C (subspace_topology X TX C)"
+      and hCX: "C \<subseteq> X"
+      and heps: "0 < \<epsilon>"
+      using hb unfolding top1_compact_convergence_basis_on_def by blast
+
+    show "b \<in> topology_generated_by_basis ?Xfun ?Buni"
+      unfolding topology_generated_by_basis_def
+    proof (rule CollectI, intro conjI)
+      show "b \<subseteq> ?Xfun"
+        unfolding hbdef by blast
+
+      show "\<forall>g\<in>b. \<exists>bu\<in>?Buni. g \<in> bu \<and> bu \<subseteq> b"
+      proof (intro ballI)
+        fix g
+        assume hg: "g \<in> b"
+        have hgX: "g \<in> ?Xfun"
+          using hg unfolding hbdef by blast
+        have hdist_fg:
+          "(if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<epsilon>"
+          using hg unfolding hbdef by blast
+
+        define \<alpha> where
+          "\<alpha> = (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C))"
+        have halpha_lt: "\<alpha> < \<epsilon>"
+          unfolding \<alpha>_def using hdist_fg by simp
+
+        define \<delta> where "\<delta> = (\<epsilon> - \<alpha>) / 2"
+        have hdelta_pos: "\<delta> > 0"
+          unfolding \<delta>_def using halpha_lt by simp
+
+        let ?bu = "top1_ball_on ?Xfun (top1_uniform_metric_on X d) g \<delta>"
+
+        have hbu_mem: "?bu \<in> ?Buni"
+          unfolding top1_metric_basis_on_def
+          apply (rule CollectI)
+          apply (rule exI[where x=g])
+          apply (rule exI[where x=\<delta>])
+          using hgX hdelta_pos by simp
+
+        have hgg_in: "g \<in> ?bu"
+        proof -
+          have hvals0: "\<forall>x\<in>X. top1_bounded_metric d (g x) (g x) = 0"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> X"
+            have hgx: "g x \<in> Y"
+              using hgX hx unfolding top1_PiE_iff by blast
+            have hdx: "d (g x) (g x) = 0"
+              using hd hgx unfolding top1_metric_on_def by blast
+            show "top1_bounded_metric d (g x) (g x) = 0"
+              unfolding top1_bounded_metric_def using hdx by simp
+          qed
+
+          let ?S = "((\<lambda>x. top1_bounded_metric d (g x) (g x)) ` X)"
+          have hSsub: "?S \<subseteq> {0}"
+          proof
+            fix t assume ht: "t \<in> ?S"
+            then obtain x where hxX: "x \<in> X" and htdef: "t = top1_bounded_metric d (g x) (g x)"
+              by blast
+            have "top1_bounded_metric d (g x) (g x) = 0"
+              using hvals0 hxX by blast
+            then show "t \<in> {0}"
+              unfolding htdef by simp
+          qed
+
+          have "top1_uniform_metric_on X d g g < \<delta>"
+          proof (cases "X = {}")
+            case True
+            show ?thesis
+              unfolding top1_uniform_metric_on_def True using hdelta_pos by simp
+          next
+            case False
+            have hSne: "?S \<noteq> {}"
+              using False by simp
+            have hSup_le0: "Sup ?S \<le> 0"
+            proof (rule cSup_least[OF hSne])
+              fix t
+              assume ht: "t \<in> ?S"
+              have "t \<in> {0}"
+                using hSsub ht by blast
+              thus "t \<le> 0"
+                by simp
+            qed
+            have "top1_uniform_metric_on X d g g = Sup ?S"
+              unfolding top1_uniform_metric_on_def using False by simp
+            then show ?thesis
+              using hSup_le0 hdelta_pos by linarith
+          qed
+          thus ?thesis
+            unfolding top1_ball_on_def using hgX by blast
+        qed
+
+        have hbu_sub: "?bu \<subseteq> b"
+        proof
+          fix h
+          assume hh: "h \<in> ?bu"
+          have hhX: "h \<in> ?Xfun"
+            using hh unfolding top1_ball_on_def by blast
+          have hgh: "top1_uniform_metric_on X d g h < \<delta>"
+            using hh unfolding top1_ball_on_def by blast
+
+          have hdist_fh:
+            "(if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (h x)) ` C)) < \<epsilon>"
+          proof (cases "C = {}")
+            case True
+            show ?thesis
+              using heps unfolding True by simp
+          next
+            case False
+            let ?Sfg = "((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)"
+            let ?SghX = "((\<lambda>x. top1_bounded_metric d (g x) (h x)) ` X)"
+            let ?Sfh = "((\<lambda>x. top1_bounded_metric d (f x) (h x)) ` C)"
+
+            have hSfg_bdd: "bdd_above ?Sfg"
+            proof -
+              show ?thesis
+                unfolding bdd_above_def
+              proof (rule exI[where x=1], intro ballI)
+                fix t
+                assume ht: "t \<in> ?Sfg"
+                then obtain x where hxC: "x \<in> C" and htdef: "t = top1_bounded_metric d (f x) (g x)"
+                  by blast
+                show "t \<le> 1"
+                  unfolding htdef top1_bounded_metric_def by simp
+              qed
+            qed
+
+            have hSghX_bdd: "bdd_above ?SghX"
+            proof -
+              show ?thesis
+                unfolding bdd_above_def
+              proof (rule exI[where x=1], intro ballI)
+                fix t
+                assume ht: "t \<in> ?SghX"
+                then obtain x where hxX: "x \<in> X" and htdef: "t = top1_bounded_metric d (g x) (h x)"
+                  by blast
+                show "t \<le> 1"
+                  unfolding htdef top1_bounded_metric_def by simp
+              qed
+            qed
+
+            have hSfh_ne: "?Sfh \<noteq> {}"
+            proof -
+              obtain x0 where hx0: "x0 \<in> C"
+                using False by blast
+              have "top1_bounded_metric d (f x0) (h x0) \<in> ?Sfh"
+                by (rule imageI[OF hx0])
+              thus ?thesis
+                by blast
+            qed
+
+            have htri_bdd: "top1_metric_on Y (top1_bounded_metric d)"
+              by (rule top1_bounded_metric_on[OF hd])
+
+            have halpha_eq: "\<alpha> = Sup ?Sfg"
+              unfolding \<alpha>_def using False by simp
+
+            have hSup_fh_le: "Sup ?Sfh \<le> \<alpha> + Sup ?SghX"
+            proof (rule cSup_least[OF hSfh_ne])
+              fix t
+              assume ht: "t \<in> ?Sfh"
+              obtain x where hxC: "x \<in> C" and htdef: "t = top1_bounded_metric d (f x) (h x)"
+                using ht by blast
+              have hxX: "x \<in> X"
+                using hCX hxC by blast
+
+              have hfx: "f x \<in> Y"
+                using hf hxX unfolding top1_PiE_iff by blast
+              have hgx: "g x \<in> Y"
+                using hgX hxX unfolding top1_PiE_iff by blast
+              have hhx: "h x \<in> Y"
+                using hhX hxX unfolding top1_PiE_iff by blast
+
+              have htri:
+                "top1_bounded_metric d (f x) (h x)
+                  \<le> top1_bounded_metric d (f x) (g x) + top1_bounded_metric d (g x) (h x)"
+                using htri_bdd hfx hgx hhx unfolding top1_metric_on_def by blast
+
+              have hfg_le: "top1_bounded_metric d (f x) (g x) \<le> \<alpha>"
+              proof -
+                have hmem: "top1_bounded_metric d (f x) (g x) \<in> ?Sfg"
+                  by (rule imageI[OF hxC])
+                show ?thesis
+                  unfolding halpha_eq
+                  by (rule cSup_upper[OF hmem hSfg_bdd])
+              qed
+
+              have hgh_le: "top1_bounded_metric d (g x) (h x) \<le> Sup ?SghX"
+              proof -
+                have hmem: "top1_bounded_metric d (g x) (h x) \<in> ?SghX"
+                  by (rule imageI[OF hxX])
+                show ?thesis
+                  by (rule cSup_upper[OF hmem hSghX_bdd])
+              qed
+
+              have "top1_bounded_metric d (f x) (h x) \<le> \<alpha> + Sup ?SghX"
+                using htri hfg_le hgh_le by linarith
+              thus "t \<le> \<alpha> + Sup ?SghX"
+                unfolding htdef by simp
+            qed
+
+            have hXne: "X \<noteq> {}"
+            proof
+              assume hX: "X = {}"
+              have "C = {}"
+                using hCX hX by blast
+              with False show False
+                by contradiction
+            qed
+            have hSup_gh_lt: "Sup ?SghX < \<delta>"
+              using hgh unfolding top1_uniform_metric_on_def using hXne by simp
+
+            have hSup_fh_lt_mid: "Sup ?Sfh < (\<alpha> + \<epsilon>) / 2"
+            proof -
+              have "Sup ?Sfh \<le> \<alpha> + Sup ?SghX"
+                by (rule hSup_fh_le)
+              also have "... < \<alpha> + \<delta>"
+                using hSup_gh_lt by linarith
+              also have "... = (\<alpha> + \<epsilon>) / 2"
+                unfolding \<delta>_def by (simp add: field_simps algebra_simps)
+              finally show ?thesis .
+            qed
+
+            have hmid_lt: "(\<alpha> + \<epsilon>) / 2 < \<epsilon>"
+              using halpha_lt by simp
+
+            show ?thesis
+            proof -
+              have hif: "(if C = {} then 0 else Sup ?Sfh) = Sup ?Sfh"
+                using False by simp
+              show ?thesis
+                unfolding hif using hSup_fh_lt_mid hmid_lt by linarith
+            qed
+          qed
+
+          show "h \<in> b"
+            unfolding hbdef using hhX hdist_fh by blast
+        qed
+
+        show "\<exists>bu\<in>?Buni. g \<in> bu \<and> bu \<subseteq> b"
+          using hbu_mem hgg_in hbu_sub by blast
+      qed
+    qed
+  qed
+
+  have hpw_sub_cc:
+    "topology_generated_by_basis ?Xfun ?Bpw \<subseteq> topology_generated_by_basis ?Xfun ?Bcc"
+  proof (rule topology_generated_by_basis_mono_via_basis_elems)
+    fix b
+    assume hb: "b \<in> ?Bpw"
+    obtain U where
+      hbdef: "b = top1_PiE X U"
+      and hU: "\<forall>x\<in>X. U x \<in> top1_metric_topology_on Y d \<and> U x \<subseteq> Y"
+      and hfin: "finite {x \<in> X. U x \<noteq> Y}"
+      using hb unfolding top1_product_basis_on_def by blast
+
+    let ?S = "{x \<in> X. U x \<noteq> Y}"
+
+    have hb_sub: "b \<subseteq> ?Xfun"
+    proof -
+      have hmono: "\<forall>x\<in>X. U x \<subseteq> Y"
+        using hU by simp
+      have "top1_PiE X U \<subseteq> top1_PiE X (\<lambda>_. Y)"
+        by (rule top1_PiE_mono[OF hmono])
+      thus ?thesis
+        unfolding hbdef by simp
+    qed
+
+    show "b \<in> topology_generated_by_basis ?Xfun ?Bcc"
+      unfolding topology_generated_by_basis_def
+    proof (rule CollectI, intro conjI)
+      show "b \<subseteq> ?Xfun"
+        by (rule hb_sub)
+
+      show "\<forall>g\<in>b. \<exists>bc\<in>?Bcc. g \<in> bc \<and> bc \<subseteq> b"
+      proof (intro ballI)
+        fix g
+        assume hg: "g \<in> b"
+        have hgU: "g \<in> top1_PiE X U"
+          using hg unfolding hbdef by simp
+        have hgXfun: "g \<in> ?Xfun"
+          using hb_sub hg by blast
+
+        have hSfin: "finite ?S"
+          using hfin by simp
+        have hSsubX: "?S \<subseteq> X"
+          by blast
+
+        have hScomp: "top1_compact_on ?S (subspace_topology X TX ?S)"
+          by (rule top1_compact_on_finite_subspace[OF hTopX hSsubX hSfin])
+
+        have hBall_each: "\<forall>x\<in>?S. \<exists>e>0. top1_ball_on Y d (g x) e \<subseteq> U x"
+        proof (intro ballI)
+          fix x
+          assume hxS: "x \<in> ?S"
+          have hxX: "x \<in> X"
+            using hxS by simp
+          have hUx: "U x \<in> top1_metric_topology_on Y d"
+            using hU hxX by simp
+          have hgxUx: "g x \<in> U x"
+            using hgU hxX unfolding top1_PiE_iff by blast
+          show "\<exists>e>0. top1_ball_on Y d (g x) e \<subseteq> U x"
+            by (rule top1_metric_open_contains_ball[OF hd hUx hgxUx])
+        qed
+
+        have hBall_all: "\<exists>e>0. e \<le> (1::real) \<and> (\<forall>x\<in>?S. top1_ball_on Y d (g x) e \<subseteq> U x)"
+        proof -
+          have hBall_all_aux:
+            "\<And>S. finite S
+              \<Longrightarrow> (\<forall>x\<in>S. \<exists>e>0. top1_ball_on Y d (g x) e \<subseteq> U x)
+              \<Longrightarrow> (\<exists>e>0. e \<le> (1::real) \<and> (\<forall>x\<in>S. top1_ball_on Y d (g x) e \<subseteq> U x))"
+          proof -
+            fix S :: "'a set"
+            assume hSfin0: "finite S"
+            assume hBallS: "\<forall>x\<in>S. \<exists>e>0. top1_ball_on Y d (g x) e \<subseteq> U x"
+            show "\<exists>e>0. e \<le> (1::real) \<and> (\<forall>x\<in>S. top1_ball_on Y d (g x) e \<subseteq> U x)"
+              using hSfin0 hBallS
+            proof (induction S rule: finite_induct)
+              case empty
+              show ?case
+                apply (rule exI[where x="1/2"])
+                by simp
+            next
+            case (insert x S')
+            obtain e1 where he1: "e1 > 0" and he1sub: "top1_ball_on Y d (g x) e1 \<subseteq> U x"
+              using insert.prems by blast
+            have hBallS': "\<forall>y\<in>S'. \<exists>e>0. top1_ball_on Y d (g y) e \<subseteq> U y"
+              using insert.prems by blast
+            obtain e2 where he2: "e2 > 0" and he2le: "e2 \<le> (1::real)"
+              and he2sub: "\<forall>y\<in>S'. top1_ball_on Y d (g y) e2 \<subseteq> U y"
+              using insert.IH[OF hBallS'] by blast
+
+            define e where "e = min (min e1 e2) (1/2)"
+            have hepos: "e > 0"
+              unfolding e_def using he1 he2 by simp
+            have hele1: "e \<le> (1::real)"
+              unfolding e_def by simp
+
+            have hsub1: "top1_ball_on Y d (g x) e \<subseteq> U x"
+            proof -
+              have hele: "e \<le> e1"
+                unfolding e_def by simp
+              have "top1_ball_on Y d (g x) e \<subseteq> top1_ball_on Y d (g x) e1"
+              proof
+                fix z
+                assume hz: "z \<in> top1_ball_on Y d (g x) e"
+                have hzY: "z \<in> Y" and hdist: "d (g x) z < e"
+                  using hz unfolding top1_ball_on_def by blast+
+                have "d (g x) z < e1"
+                  using hdist hele by linarith
+                show "z \<in> top1_ball_on Y d (g x) e1"
+                  unfolding top1_ball_on_def using hzY \<open>d (g x) z < e1\<close> by blast
+              qed
+              thus ?thesis
+                using he1sub by blast
+            qed
+
+            have hsub2: "\<forall>y\<in>S'. top1_ball_on Y d (g y) e \<subseteq> U y"
+            proof (intro ballI)
+              fix y
+              assume hy: "y \<in> S'"
+              have hele: "e \<le> e2"
+                unfolding e_def by simp
+              have "top1_ball_on Y d (g y) e \<subseteq> top1_ball_on Y d (g y) e2"
+              proof
+                fix z
+                assume hz: "z \<in> top1_ball_on Y d (g y) e"
+                have hzY: "z \<in> Y" and hdist: "d (g y) z < e"
+                  using hz unfolding top1_ball_on_def by blast+
+                have "d (g y) z < e2"
+                  using hdist hele by linarith
+                show "z \<in> top1_ball_on Y d (g y) e2"
+                  unfolding top1_ball_on_def using hzY \<open>d (g y) z < e2\<close> by blast
+              qed
+              have hsubU2: "top1_ball_on Y d (g y) e2 \<subseteq> U y"
+                using he2sub hy by blast
+              show "top1_ball_on Y d (g y) e \<subseteq> U y"
+                by (rule subset_trans[OF \<open>top1_ball_on Y d (g y) e \<subseteq> top1_ball_on Y d (g y) e2\<close> hsubU2])
+            qed
+
+            show ?case
+              apply (rule exI[where x=e])
+              using hepos hele1 hsub1 hsub2 by simp
+            qed
+          qed
+
+          show ?thesis
+            by (rule hBall_all_aux[OF hSfin hBall_each])
+        qed
+
+        obtain e where hepos: "e > 0" and hele1: "e \<le> (1::real)"
+          and hballU: "\<forall>x\<in>?S. top1_ball_on Y d (g x) e \<subseteq> U x"
+          using hBall_all by blast
+
+        let ?bc =
+          "{h \<in> ?Xfun.
+             (if ?S = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (h x)) ` ?S)) < e}"
+
+        have hbc_mem: "?bc \<in> ?Bcc"
+          unfolding top1_compact_convergence_basis_on_def
+          apply (rule CollectI)
+          apply (rule exI[where x=g])
+          apply (rule exI[where x="?S"])
+          apply (rule exI[where x=e])
+          apply (intro conjI)
+           apply simp
+          apply (rule hgXfun)
+          apply (rule hScomp)
+          apply (rule hSsubX)
+          apply (rule hepos)
+          done
+
+        have hgbc: "g \<in> ?bc"
+        proof -
+          have hvals0: "\<forall>x\<in>?S. top1_bounded_metric d (g x) (g x) = 0"
+          proof (intro ballI)
+            fix x assume hxS: "x \<in> ?S"
+            have hxX: "x \<in> X"
+              using hxS by simp
+            have hgx: "g x \<in> Y"
+              using hgXfun hxX unfolding top1_PiE_iff by blast
+            have hdx: "d (g x) (g x) = 0"
+              using hd hgx unfolding top1_metric_on_def by blast
+            show "top1_bounded_metric d (g x) (g x) = 0"
+              unfolding top1_bounded_metric_def using hdx by simp
+          qed
+          have hSup0:
+            "(if ?S = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (g x)) ` ?S)) < e"
+          proof (cases "?S = {}")
+            case True
+            show ?thesis
+              using hepos unfolding True by simp
+          next
+            case False
+            let ?S0 = "((\<lambda>x. top1_bounded_metric d (g x) (g x)) ` ?S)"
+            have hS0ne: "?S0 \<noteq> {}"
+              using False by simp
+            have hS0sub: "?S0 \<subseteq> {0}"
+            proof
+              fix t assume ht: "t \<in> ?S0"
+              then obtain x where hxS: "x \<in> ?S" and htdef: "t = top1_bounded_metric d (g x) (g x)"
+                by blast
+              have "top1_bounded_metric d (g x) (g x) = 0"
+                using hvals0 hxS by blast
+              thus "t \<in> {0}"
+                unfolding htdef by simp
+            qed
+            have hSup_le0: "Sup ?S0 \<le> 0"
+              by (rule cSup_least[OF hS0ne], blast intro: hS0sub)
+            show ?thesis
+              unfolding False using hSup_le0 hepos by linarith
+          qed
+
+          show ?thesis
+            using hgXfun hSup0 by simp
+        qed
+
+        have hbc_sub_b: "?bc \<subseteq> b"
+        proof
+          fix h
+          assume hh: "h \<in> ?bc"
+          have hhXfun: "h \<in> ?Xfun"
+            using hh by blast
+          have hSup:
+            "(if ?S = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (h x)) ` ?S)) < e"
+            using hh by blast
+
+          have hh_in_b: "h \<in> top1_PiE X U"
+          proof -
+            have hall:
+              "(\<forall>x\<in>X. h x \<in> U x) \<and> (\<forall>x. x \<notin> X \<longrightarrow> h x = undefined)"
+            proof (intro conjI)
+              show "\<forall>x\<in>X. h x \<in> U x"
+              proof (intro ballI)
+                fix x assume hxX: "x \<in> X"
+                show "h x \<in> U x"
+                proof (cases "x \<in> ?S")
+                  case True
+                  have hSup': "Sup ((\<lambda>y. top1_bounded_metric d (g y) (h y)) ` ?S) < e"
+                    using hSup unfolding True by simp
+                  have hbdd_img: "bdd_above ((\<lambda>y. top1_bounded_metric d (g y) (h y)) ` ?S)"
+                    unfolding bdd_above_def
+                    apply (rule exI[where x=1])
+                    apply (intro ballI)
+                    unfolding top1_bounded_metric_def
+                    by simp
+                  have hx_le: "top1_bounded_metric d (g x) (h x) \<le> Sup ((\<lambda>y. top1_bounded_metric d (g y) (h y)) ` ?S)"
+                    by (rule cSup_upper[OF imageI[OF True] hbdd_img])
+                  have hx_lt: "top1_bounded_metric d (g x) (h x) < e"
+                    using hx_le hSup' by linarith
+                  have hhx: "h x \<in> Y"
+                    using hhXfun hxX unfolding top1_PiE_iff by blast
+                  have hgx: "g x \<in> Y"
+                    using hgXfun hxX unfolding top1_PiE_iff by blast
+                  have hx_ball: "h x \<in> top1_ball_on Y (top1_bounded_metric d) (g x) e"
+                    unfolding top1_ball_on_def using hhx hx_lt by blast
+                  have hball_eq: "top1_ball_on Y (top1_bounded_metric d) (g x) e = top1_ball_on Y d (g x) e"
+                    by (rule top1_ball_on_bounded_metric_eq[OF hele1])
+                  have hx_ball': "h x \<in> top1_ball_on Y d (g x) e"
+                    using hx_ball unfolding hball_eq by simp
+                  have hsubU: "top1_ball_on Y d (g x) e \<subseteq> U x"
+                    using hballU True by blast
+                  show ?thesis
+                    using hsubU hx_ball' by blast
+                next
+                  case False
+                  have hUx: "U x = Y"
+                    using hxX False by simp
+                  have hhx: "h x \<in> Y"
+                    using hhXfun hxX unfolding top1_PiE_iff by blast
+                  show ?thesis
+                    unfolding hUx using hhx .
+                qed
+              qed
+
+              show "\<forall>x. x \<notin> X \<longrightarrow> h x = undefined"
+                using hhXfun unfolding top1_PiE_iff by blast
+            qed
+            show ?thesis
+              unfolding top1_PiE_iff using hall by blast
+          qed
+          show "h \<in> b"
+            unfolding hbdef using hh_in_b by simp
+        qed
+
+        show "\<exists>bc\<in>?Bcc. g \<in> bc \<and> bc \<subseteq> b"
+          using hbc_mem hgbc hbc_sub_b by blast
+      qed
+    qed
+  qed
+
+  have hTcc_sub_Tuni:
+    "top1_compact_convergence_topology_on X TX Y d \<subseteq> top1_uniform_topology_on X Y d"
+    unfolding top1_compact_convergence_topology_on_def top1_uniform_topology_on_def top1_metric_topology_on_def
+    using hcc_sub_uni by simp
+
+  have hTpw_sub_Tcc:
+    "top1_pointwise_topology_on X Y (top1_metric_topology_on Y d) \<subseteq> top1_compact_convergence_topology_on X TX Y d"
+    unfolding top1_pointwise_topology_on_def top1_product_topology_on_def top1_compact_convergence_topology_on_def
+    using hpw_sub_cc by simp
+
+  show ?thesis
+    using hTcc_sub_Tuni hTpw_sub_Tcc by blast
+qed
+*)
 
 (** from \S46 Theorem 46.8 [top1.tex:6839] **)
 theorem Theorem_46_8:
