@@ -53134,12 +53134,18 @@ lemma Lemma_48_1:
 
 (** from \S48 Theorem 48.2 (Baire category theorem) [top1.tex:7178] **)
 theorem Theorem_48_2:
-  shows "True"
+  shows "top1_compact_on X TX \<and> is_hausdorff_on X TX \<longrightarrow> top1_baire_on X TX"
+    and "top1_complete_metric_on X d \<longrightarrow> top1_baire_on X (top1_metric_topology_on X d)"
   sorry
 
 (** from \S48 Lemma 48.3 [top1.tex:7208] **)
 lemma Lemma_48_3:
-  shows "True"
+  assumes hd: "top1_complete_metric_on X d"
+  assumes hCne: "\<forall>n. C n \<noteq> {}"
+  assumes hCcl: "\<forall>n. closedin_on X (top1_metric_topology_on X d) (C n)"
+  assumes hnest: "\<forall>n. C (Suc n) \<subseteq> C n"
+  assumes hdiam: "\<forall>e>0. \<exists>N. \<forall>n\<ge>N. top1_diameter_on d (C n) < e"
+  shows "(\<Inter>n. C n) \<noteq> {}"
   sorry
 
 (** from \S48 Lemma 48.4 [top1.tex:7216] **)
@@ -53151,7 +53157,11 @@ lemma Lemma_48_4:
 
 (** from \S48 Theorem 48.5 [top1.tex:7222] **)
 theorem Theorem_48_5:
-  shows "True"
+  assumes hB: "top1_baire_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hfn: "\<forall>n. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (f n)"
+  assumes hptw: "\<forall>x\<in>X. seq_converges_to_on (\<lambda>n. f n x) (g x) Y (top1_metric_topology_on Y d)"
+  shows "top1_densein_on X TX {x \<in> X. top1_continuous_at_on X TX Y (top1_metric_topology_on Y d) g x}"
   sorry
 
 section \<open>*\<S>49 A Nowhere-Differentiable Function\<close>
