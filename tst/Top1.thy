@@ -54235,9 +54235,25 @@ definition top1_pointwise_topology_on ::
 (** from \S46 Theorem 46.1 [top1.tex:6754] **)
 theorem Theorem_46_1:
   assumes hTopY: "is_topology_on Y TY"
+  assumes hf: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hs: "\<forall>n. fseq n \<in> top1_PiE X (\<lambda>_. Y)"
   shows "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y TY)
     \<longleftrightarrow> (\<forall>x\<in>X. seq_converges_to_on (\<lambda>n. fseq n x) (f x) Y TY)"
-  sorry
+proof -
+  have hTop: "\<forall>x\<in>X. is_topology_on Y TY"
+    using hTopY by simp
+
+  have hEquiv:
+    "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y TY)
+      \<longleftrightarrow>
+      (f \<in> top1_PiE X (\<lambda>_. Y)
+        \<and> (\<forall>x\<in>X. seq_converges_to_on (\<lambda>n. fseq n x) (f x) Y TY))"
+    unfolding top1_pointwise_topology_on_def
+    using Lemma_43_3[of X "\<lambda>_. Y" "\<lambda>_. TY" fseq f] hTop hs by simp
+
+  show ?thesis
+    using hEquiv hf by simp
+qed
 
 definition top1_compactly_generated_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_compactly_generated_on X TX \<longleftrightarrow>
