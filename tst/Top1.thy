@@ -53345,6 +53345,7 @@ theorem Theorem_38_2:
 
 (** from \S38 Lemma 38.3 (Uniqueness of continuous extensions to the closure) [top1.tex:5442] **)
 lemma Lemma_38_3:
+  assumes hTopX: "is_topology_on X TX"
   assumes hHausZ: "is_hausdorff_on Z TZ"
   assumes hcontf: "top1_continuous_map_on A (subspace_topology X TX A) Z TZ f"
   assumes hA_sub: "A \<subseteq> X"
@@ -53417,6 +53418,8 @@ definition top1_open_covering_on :: "'a set \<Rightarrow> 'a set set \<Rightarro
 
 (** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
 lemma Lemma_39_1:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hSubX: "\<forall>A\<in>\<A>. A \<subseteq> X"
   assumes hLF: "top1_locally_finite_family_on X TX \<A>"
   shows "(\<forall>\<A>'. \<A>' \<subseteq> \<A> \<longrightarrow> top1_locally_finite_family_on X TX \<A>')"
     and "top1_locally_finite_family_on X TX (closure_on X TX ` \<A>)"
