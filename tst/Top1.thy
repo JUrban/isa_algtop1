@@ -56620,7 +56620,70 @@ theorem Theorem_47_1:
                      top1_compact_on
                        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))
                        (subspace_topology Y (top1_metric_topology_on Y d)
-                          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))))))"
+	                          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))))))"
+  sorry
+
+text \<open>
+  Proof structure for Ascoli's theorem (top1.tex): it is convenient to work in the
+  product / pointwise topology on \<open>Y^X\<close>, take the closure \<open>G\<close> of \<open>\<F>\<close>, prove:
+  (1) \<open>G\<close> is compact, (2) \<open>G\<close> consists of continuous maps and is equicontinuous, and
+  (3) the pointwise and compact-convergence topologies coincide on \<open>G\<close>.
+  The following lemmas record these steps as named goals (to be proved later).
+\<close>
+
+lemma top1_ascoli_step1_compact_closure_pointwise:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  shows
+    "top1_compact_on
+      (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>)
+      (subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))
+        (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>))"
+  sorry
+
+lemma top1_ascoli_step2_closure_continuous_and_equicontinuous:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  defines "G \<equiv>
+    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
+  shows "G \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)
+      \<and> top1_equicontinuous_family_on X TX Y d G"
+  sorry
+
+lemma top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  defines "G \<equiv>
+    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
+  shows
+    "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) G
+      = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) G"
   sorry
 
 section \<open>\<S>48 Baire Spaces\<close>
