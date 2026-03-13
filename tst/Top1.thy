@@ -1883,6 +1883,33 @@ definition topology_generated_by_subbasis :: "'a set \<Rightarrow> 'a set set \<
   "topology_generated_by_subbasis X S =
      { \<Union>U | U. U \<subseteq> finite_intersections S }"
 
+lemma topology_generated_by_subbasis_contains:
+  assumes hA: "A \<in> S"
+  shows "A \<in> topology_generated_by_subbasis X S"
+proof -
+  have hAint: "A \<in> finite_intersections S"
+  proof -
+    have hsub: "{A} \<subseteq> S"
+      using hA by simp
+    show ?thesis
+      unfolding finite_intersections_def
+      apply (rule CollectI)
+      apply (rule exI[where x="{A}"])
+      apply (simp add: hA)
+      done
+  qed
+
+  show ?thesis
+    unfolding topology_generated_by_subbasis_def
+    apply (rule CollectI)
+    apply (rule exI[where x="{A}"])
+    apply (intro conjI)
+     apply simp
+    apply (rule subsetI)
+    apply (simp add: hAint)
+    done
+qed
+
 
 section \<open>\<S>14 The Order Topology\<close>
 
@@ -57030,7 +57057,200 @@ theorem Theorem_46_10:
            (product_topology_on TX (top1_compact_open_topology_on X TX Y TY))
            Y TY
            (\<lambda>p. (snd p) (fst p))"
-  sorry
+proof -
+  let ?C = "top1_continuous_funcs_on X TX Y TY"
+  let ?Tco = "top1_compact_open_topology_on X TX Y TY"
+  let ?eval = "(\<lambda>p. (snd p) (fst p))"
+
+  have hTopX: "is_topology_on X TX"
+    using hHausX unfolding is_hausdorff_on_def by blast
+
+  have hShrink:
+    "\<forall>x\<in>X. \<forall>U. neighborhood_of x X TX U \<longrightarrow>
+        (\<exists>V. neighborhood_of x X TX V \<and>
+             top1_compact_on (closure_on X TX V) (subspace_topology X TX (closure_on X TX V))
+             \<and> closure_on X TX V \<subseteq> U)"
+  proof -
+    have hIff:
+      "top1_locally_compact_on X TX \<longleftrightarrow>
+        (\<forall>x\<in>X. \<forall>U. neighborhood_of x X TX U \<longrightarrow>
+            (\<exists>V. neighborhood_of x X TX V \<and>
+                 top1_compact_on (closure_on X TX V) (subspace_topology X TX (closure_on X TX V))
+                 \<and> closure_on X TX V \<subseteq> U))"
+      by (rule Theorem_29_2[OF hHausX])
+    show ?thesis
+      by (rule iffD1[OF hIff hLC])
+  qed
+
+  show ?thesis
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>p\<in>X \<times> ?C. ?eval p \<in> Y"
+    proof (intro ballI)
+      fix p
+      assume hp: "p \<in> X \<times> ?C"
+      obtain x f where hp': "p = (x, f)"
+        by (cases p) simp
+      have hxX: "x \<in> X"
+        using hp unfolding hp' by simp
+      have hfC: "f \<in> ?C"
+        using hp unfolding hp' by simp
+      have hfPi: "f \<in> top1_PiE X (\<lambda>_. Y)"
+        using hfC unfolding top1_continuous_funcs_on_def by simp
+      have hfxY: "f x \<in> Y"
+        using hfPi hxX unfolding top1_PiE_iff by blast
+      show "?eval p \<in> Y"
+        using hfxY unfolding hp' by simp
+    qed
+
+    show "\<forall>V\<in>TY. {p \<in> X \<times> ?C. ?eval p \<in> V} \<in> product_topology_on TX ?Tco"
+    proof (intro ballI)
+      fix V
+      assume hV: "V \<in> TY"
+      let ?P = "{p \<in> X \<times> ?C. ?eval p \<in> V}"
+      show "?P \<in> product_topology_on TX ?Tco"
+        unfolding product_topology_on_def topology_generated_by_basis_def
+      proof (rule CollectI, intro conjI)
+        show "?P \<subseteq> (UNIV :: ('a \<times> ('a \<Rightarrow> 'b)) set)"
+          by simp
+
+        show "\<forall>p\<in>?P. \<exists>b\<in>product_basis TX ?Tco. p \<in> b \<and> b \<subseteq> ?P"
+        proof (intro ballI)
+          fix p
+          assume hpP: "p \<in> ?P"
+          obtain x f where hp': "p = (x, f)"
+            by (cases p) simp
+          have hxX: "x \<in> X"
+            using hpP unfolding hp' by simp
+          have hfC: "f \<in> ?C"
+            using hpP unfolding hp' by simp
+          have hfxV: "f x \<in> V"
+            using hpP unfolding hp' by simp
+
+          have hfcont: "top1_continuous_map_on X TX Y TY f"
+            using hfC unfolding top1_continuous_funcs_on_def by simp
+
+          define N where "N = {x\<in>X. f x \<in> V}"
+          have hNT: "N \<in> TX"
+            using hfcont hV unfolding top1_continuous_map_on_def N_def by blast
+          have hxN: "x \<in> N"
+            unfolding N_def using hxX hfxV by simp
+          have hNbhN: "neighborhood_of x X TX N"
+            unfolding neighborhood_of_def using hNT hxN by blast
+
+          obtain W where hWnbh: "neighborhood_of x X TX W"
+            and hKcomp: "top1_compact_on (closure_on X TX W) (subspace_topology X TX (closure_on X TX W))"
+            and hclWsub: "closure_on X TX W \<subseteq> N"
+            using hShrink hxX hNbhN by blast
+
+          define K where "K = closure_on X TX W"
+          have hWsubK: "W \<subseteq> K"
+            unfolding K_def by (rule subset_closure_on)
+          have hKsubN: "K \<subseteq> N"
+            unfolding K_def using hclWsub by simp
+          have hKsubX: "K \<subseteq> X"
+            using hKsubN unfolding N_def by blast
+
+          have hxW: "x \<in> W"
+            using hWnbh unfolding neighborhood_of_def by blast
+
+          have hKimg: "f ` K \<subseteq> V"
+          proof
+            fix y
+            assume hy: "y \<in> f ` K"
+            then obtain x0 where hx0K: "x0 \<in> K" and hy': "y = f x0"
+              by blast
+            have hx0N: "x0 \<in> N"
+              using hKsubN hx0K by blast
+            have "f x0 \<in> V"
+              using hx0N unfolding N_def by simp
+            show "y \<in> V"
+              using hy' \<open>f x0 \<in> V\<close> by simp
+          qed
+
+          define WV where "WV = {g \<in> ?C. g ` K \<subseteq> V}"
+
+          have hWVsubbasis: "WV \<in> top1_compact_open_subbasis_on X TX Y TY"
+            unfolding top1_compact_open_subbasis_on_def WV_def
+            apply (rule CollectI)
+            apply (rule exI[where x=K])
+            apply (rule exI[where x=V])
+            apply (intro conjI)
+             apply simp
+            apply (simp add: K_def)
+            apply (rule hKcomp)
+            apply (rule hKsubX)
+            apply (rule hV)
+            done
+
+          have hWVopen: "WV \<in> ?Tco"
+            unfolding top1_compact_open_topology_on_def
+            by (rule topology_generated_by_subbasis_contains[OF hWVsubbasis])
+
+          have hWopen: "W \<in> TX"
+            using hWnbh unfolding neighborhood_of_def by blast
+
+          have hbasis: "W \<times> WV \<in> product_basis TX ?Tco"
+            unfolding product_basis_def
+            apply (rule CollectI)
+            apply (rule exI[where x=W])
+            apply (rule exI[where x=WV])
+            apply (intro conjI)
+              apply simp
+             apply (rule hWopen)
+            apply (rule hWVopen)
+            done
+
+          have hp_in: "p \<in> W \<times> WV"
+          proof -
+            have hfWV: "f \<in> WV"
+              unfolding WV_def using hfC hKimg by blast
+            show ?thesis
+              using hxW hfWV unfolding hp' by simp
+          qed
+
+          have hsub: "W \<times> WV \<subseteq> ?P"
+          proof
+            fix q
+            assume hq: "q \<in> W \<times> WV"
+            obtain x1 g where hq': "q = (x1, g)"
+              by (cases q) simp
+            have hx1W: "x1 \<in> W"
+              using hq unfolding hq' by simp
+            have hgWV: "g \<in> WV"
+              using hq unfolding hq' by simp
+            have hx1K: "x1 \<in> K"
+              using hWsubK hx1W by blast
+            have hx1X: "x1 \<in> X"
+              using hKsubX hx1K by blast
+            have hgC: "g \<in> ?C"
+              using hgWV unfolding WV_def by simp
+            have hgK: "g ` K \<subseteq> V"
+              using hgWV unfolding WV_def by simp
+            have "g x1 \<in> V"
+            proof -
+              have "g x1 \<in> g ` K"
+                using hx1K by blast
+              thus ?thesis
+                using hgK by blast
+            qed
+            show "q \<in> ?P"
+              unfolding hq'
+              by (simp add: hx1X hgC \<open>g x1 \<in> V\<close>)
+          qed
+
+          show "\<exists>b\<in>product_basis TX ?Tco. p \<in> b \<and> b \<subseteq> ?P"
+            apply (rule bexI[where x="W \<times> WV"])
+             apply (intro conjI)
+              apply (rule hp_in)
+             apply (rule hsub)
+            apply (rule hbasis)
+            done
+        qed
+      qed
+    qed
+  qed
+qed
 
 (** from \S46 Theorem 46.11 (Exponential law) [top1.tex:6888] **)
 theorem Theorem_46_11:
