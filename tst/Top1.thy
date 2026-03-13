@@ -60228,13 +60228,297 @@ next
     by (rule top1_dim_le_on_mono_m[OF hdim0 hle])
 qed
 
+(** Dimension is monotone for closed subspaces (top1.tex: \S50, used in Theorem 50.1). **)
+lemma top1_dim_le_on_closedin_subspace:
+  assumes hdim: "top1_dim_le_on X TX m"
+  assumes hClosed: "closedin_on X TX Y"
+  shows "top1_dim_le_on Y (subspace_topology X TX Y) m"
+proof -
+  let ?TY = "subspace_topology X TX Y"
+
+  have hYsubX: "Y \<subseteq> X"
+    by (rule closedin_sub[OF hClosed])
+
+  have hXminusY_open: "X - Y \<in> TX"
+    by (rule closedin_diff_open[OF hClosed])
+
+  have hdim_def:
+    "\<forall>\<A>. top1_open_covering_on X TX \<A>
+      \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> m)"
+    using hdim unfolding top1_dim_le_on_def by blast
+
+  show ?thesis
+    unfolding top1_dim_le_on_def
+  proof (intro allI impI)
+    fix \<A>
+    assume hCovY: "top1_open_covering_on Y ?TY \<A>"
+
+    have hAsubTY: "\<A> \<subseteq> ?TY"
+      using hCovY unfolding top1_open_covering_on_def by blast
+    have hYcov: "Y \<subseteq> \<Union>\<A>"
+      using hCovY unfolding top1_open_covering_on_def by blast
+
+    define Lift where "Lift = {U \<in> TX. Y \<inter> U \<in> \<A>}"
+    define \<A>X where "\<A>X = insert (X - Y) Lift"
+
+    have hLift_subTX: "Lift \<subseteq> TX"
+      unfolding Lift_def by blast
+
+    have hAX_subTX: "\<A>X \<subseteq> TX"
+      unfolding \<A>X_def using hXminusY_open hLift_subTX by blast
+
+    have hXcov: "X \<subseteq> \<Union>\<A>X"
+    proof (rule subsetI)
+      fix x
+      assume hxX: "x \<in> X"
+      show "x \<in> \<Union>\<A>X"
+      proof (cases "x \<in> Y")
+        case True
+        have hxU: "x \<in> \<Union>\<A>"
+          using hYcov True by blast
+        then obtain W where hW: "W \<in> \<A>" and hxW: "x \<in> W"
+          by blast
+        have hWsubY: "W \<subseteq> Y"
+        proof -
+          have "W \<subseteq> Y"
+          proof
+            fix z assume hz: "z \<in> W"
+            have "W \<in> ?TY"
+              using hAsubTY hW by blast
+            then obtain U where hU: "U \<in> TX" and hWeq: "W = Y \<inter> U"
+              unfolding subspace_topology_def by blast
+            have "z \<in> Y"
+              using hz unfolding hWeq by blast
+            thus "z \<in> Y" .
+          qed
+          thus ?thesis .
+        qed
+        have hxY: "x \<in> Y"
+          by (rule True)
+
+        obtain U where hU: "U \<in> TX" and hWeq: "W = Y \<inter> U"
+          using hAsubTY hW unfolding subspace_topology_def by blast
+
+        have hxU': "x \<in> U"
+        proof -
+          have hxYU: "x \<in> Y \<inter> U"
+            using hxW unfolding hWeq by simp
+          thus ?thesis
+            by simp
+        qed
+
+        have hUinLift: "U \<in> Lift"
+          unfolding Lift_def
+          apply (intro CollectI conjI)
+           apply (rule hU)
+          apply (subst hWeq[symmetric])
+          apply (rule hW)
+          done
+
+        have "U \<in> \<A>X"
+          unfolding \<A>X_def using hUinLift by blast
+        thus ?thesis
+          using hxU' by blast
+      next
+        case False
+        have hx: "x \<in> X - Y"
+          using hxX False by blast
+        have "X - Y \<in> \<A>X"
+          unfolding \<A>X_def by blast
+        thus ?thesis
+          using hx by blast
+      qed
+    qed
+
+    have hCovX: "top1_open_covering_on X TX \<A>X"
+      unfolding top1_open_covering_on_def
+      using hAX_subTX hXcov by blast
+
+    obtain \<B>X where hBXcov: "top1_open_covering_on X TX \<B>X"
+      and hBXref: "top1_refines \<B>X \<A>X"
+      and hBXord: "top1_cover_order_le_on X \<B>X m"
+      using hdim_def hCovX by blast
+
+    have hBXsubTX: "\<B>X \<subseteq> TX"
+      using hBXcov unfolding top1_open_covering_on_def by blast
+    have hBXcovX: "X \<subseteq> \<Union>\<B>X"
+      using hBXcov unfolding top1_open_covering_on_def by blast
+
+    define \<B> where "\<B> = {Y \<inter> B | B. B \<in> \<B>X \<and> Y \<inter> B \<noteq> {}}"
+
+    have hBsubTY: "\<B> \<subseteq> ?TY"
+    proof (rule subsetI)
+      fix V
+      assume hV: "V \<in> \<B>"
+      obtain B where hB: "B \<in> \<B>X" and hVeq: "V = Y \<inter> B" and hVne: "Y \<inter> B \<noteq> {}"
+        using hV unfolding \<B>_def by blast
+      have hBTX: "B \<in> TX"
+        using hBXsubTX hB by blast
+      show "V \<in> ?TY"
+        unfolding hVeq subspace_topology_def using hBTX by blast
+    qed
+
+    have hYcovB: "Y \<subseteq> \<Union>\<B>"
+    proof (rule subsetI)
+      fix y
+      assume hyY: "y \<in> Y"
+      have hyX: "y \<in> X"
+        using hYsubX hyY by blast
+      have hyU: "y \<in> \<Union>\<B>X"
+        using hBXcovX hyX by blast
+      then obtain B where hB: "B \<in> \<B>X" and hyB: "y \<in> B"
+        by blast
+      have hyYB: "y \<in> Y \<inter> B"
+        using hyY hyB by blast
+      have hYBne: "Y \<inter> B \<noteq> {}"
+        using hyYB by blast
+      have "Y \<inter> B \<in> \<B>"
+        unfolding \<B>_def using hB hYBne by blast
+      thus "y \<in> \<Union>\<B>"
+        using hyYB by blast
+    qed
+
+    have hCovB: "top1_open_covering_on Y ?TY \<B>"
+      unfolding top1_open_covering_on_def
+      using hBsubTY hYcovB by blast
+
+    have hBref: "top1_refines \<B> \<A>"
+    proof (unfold top1_refines_def, intro ballI)
+      fix V
+      assume hV: "V \<in> \<B>"
+      obtain B where hBin: "B \<in> \<B>X" and hVeq: "V = Y \<inter> B" and hVne: "Y \<inter> B \<noteq> {}"
+        using hV unfolding \<B>_def by blast
+
+      obtain U where hUAX: "U \<in> \<A>X" and hBsubU: "B \<subseteq> U"
+        using hBXref hBin unfolding top1_refines_def by blast
+
+      have hUnot: "U \<noteq> X - Y"
+      proof
+        assume hUeq: "U = X - Y"
+        have "V \<subseteq> Y \<inter> (X - Y)"
+          unfolding hVeq using hBsubU unfolding hUeq by blast
+        hence "V \<subseteq> {}"
+          by blast
+        hence "V = {}"
+          by blast
+        thus False
+          using hVne unfolding hVeq by simp
+      qed
+
+      have hUinLift: "U \<in> Lift"
+        using hUAX hUnot unfolding \<A>X_def by blast
+
+      have hYUinA: "Y \<inter> U \<in> \<A>"
+        using hUinLift unfolding Lift_def by blast
+
+      have hVsub: "V \<subseteq> Y \<inter> U"
+        unfolding hVeq using hBsubU by blast
+
+      show "\<exists>A0\<in>\<A>. V \<subseteq> A0"
+        by (rule bexI[where x="Y \<inter> U"]) (rule hVsub, rule hYUinA)
+    qed
+
+    have hBord: "top1_cover_order_le_on Y \<B> m"
+    proof (unfold top1_cover_order_le_on_def, intro ballI)
+      fix y
+      assume hyY: "y \<in> Y"
+      have hyX: "y \<in> X"
+        using hYsubX hyY by blast
+
+      have hfinX: "finite {U \<in> \<B>X. y \<in> U}"
+        using hBXord hyX unfolding top1_cover_order_le_on_def by blast
+      have hcardX: "card {U \<in> \<B>X. y \<in> U} \<le> Suc m"
+        using hBXord hyX unfolding top1_cover_order_le_on_def by blast
+
+      have hEq:
+        "{V \<in> \<B>. y \<in> V} = (\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U}"
+      proof (rule subset_antisym)
+        show "{V \<in> \<B>. y \<in> V} \<subseteq> (\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U}"
+        proof
+          fix V
+          assume hV: "V \<in> {V \<in> \<B>. y \<in> V}"
+          have hVin: "V \<in> \<B>" and hyV: "y \<in> V"
+            using hV by blast+
+          obtain U where hU: "U \<in> \<B>X" and hVeq: "V = Y \<inter> U" and hVne: "Y \<inter> U \<noteq> {}"
+            using hVin unfolding \<B>_def by blast
+          have hyU: "y \<in> U"
+            using hyV unfolding hVeq by simp
+          have hUset: "U \<in> {U \<in> \<B>X. y \<in> U}"
+            using hU hyU by blast
+          show "V \<in> (\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U}"
+            unfolding hVeq using hUset by blast
+        qed
+      next
+        show "(\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U} \<subseteq> {V \<in> \<B>. y \<in> V}"
+        proof
+          fix V
+          assume hV: "V \<in> (\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U}"
+          then obtain U where hUset: "U \<in> {U \<in> \<B>X. y \<in> U}" and hVeq: "V = Y \<inter> U"
+            by blast
+          have hU: "U \<in> \<B>X" and hyU: "y \<in> U"
+            using hUset by blast+
+          have hyV: "y \<in> V"
+            unfolding hVeq using hyY hyU by blast
+          have hVne: "Y \<inter> U \<noteq> {}"
+            using hyV unfolding hVeq by blast
+          have hVin: "V \<in> \<B>"
+            unfolding \<B>_def hVeq using hU hVne by blast
+          show "V \<in> {V \<in> \<B>. y \<in> V}"
+            using hVin hyV by blast
+        qed
+      qed
+
+      have hfin: "finite {V \<in> \<B>. y \<in> V}"
+        unfolding hEq by (rule finite_imageI[OF hfinX])
+      have hcard_img: "card ((\<lambda>U. Y \<inter> U) ` {U \<in> \<B>X. y \<in> U}) \<le> card {U \<in> \<B>X. y \<in> U}"
+        by (rule card_image_le[OF hfinX])
+      have hcard: "card {V \<in> \<B>. y \<in> V} \<le> Suc m"
+        unfolding hEq
+        apply (rule order_trans)
+         apply (rule hcard_img)
+        apply (rule hcardX)
+        done
+
+      show "finite {V \<in> \<B>. y \<in> V} \<and> card {V \<in> \<B>. y \<in> V} \<le> Suc m"
+        using hfin hcard by blast
+    qed
+
+    show "\<exists>\<B>. top1_open_covering_on Y ?TY \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on Y \<B> m"
+      by (rule exI[where x=\<B>], intro conjI, rule hCovB, rule hBref, rule hBord)
+  qed
+qed
+
 (** from \S50 Theorem 50.1 [top1.tex:7556] **)
 theorem Theorem_50_1:
   assumes hdim: "top1_finite_dimensional_on X TX"
   assumes hClosed: "closedin_on X TX Y"
   shows "top1_finite_dimensional_on Y (subspace_topology X TX Y)
     \<and> top1_dim_on Y (subspace_topology X TX Y) \<le> top1_dim_on X TX"
-  sorry
+proof -
+  let ?TY = "subspace_topology X TX Y"
+  define mX where "mX = top1_dim_on X TX"
+
+  have hdimX: "top1_dim_le_on X TX mX"
+    unfolding mX_def
+    by (rule top1_dim_le_on_dim_on_finite[OF hdim])
+
+  have hdimY: "top1_dim_le_on Y ?TY mX"
+    by (rule top1_dim_le_on_closedin_subspace[OF hdimX hClosed])
+
+  have hfdY: "top1_finite_dimensional_on Y ?TY"
+    by (rule top1_dim_le_on_imp_finite_dimensional[OF hdimY])
+
+  have hdim_on: "top1_dim_on Y ?TY \<le> mX"
+    by (rule top1_dim_on_le_of_dim_le'[OF hdimY])
+
+  show ?thesis
+  proof -
+    have hdim_on': "top1_dim_on Y ?TY \<le> top1_dim_on X TX"
+      using hdim_on unfolding mX_def by simp
+    show ?thesis
+      using hfdY hdim_on' by blast
+  qed
+qed
 
 (** from \S50 Theorem 50.2 [top1.tex:7566] **)
 theorem Theorem_50_2:
