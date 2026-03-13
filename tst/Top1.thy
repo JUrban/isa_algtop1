@@ -53036,6 +53036,13 @@ qed
 section \<open>\<S>37 The Tychonoff Theorem\<close>
 
 text \<open>
+  Status note: the top-level definitions/lemmas/theorems for \<open>\<S>37\<close>--\<open>\<S>50\<close> are now present in
+  this theory (using \<open>sorry\<close> where appropriate).  Remaining admits are concentrated in the main results:
+  \<open>\<S>37\<close>: 1, \<open>\<S>38\<close>: 3, \<open>\<S>39\<close>: 1, \<open>\<S>40\<close>: 3, \<open>\<S>41\<close>: 8, \<open>\<S>42\<close>: 1, \<open>\<S>43\<close>: 4, \<open>\<S>44\<close>: 1,
+  \<open>\<S>45\<close>: 5, \<open>\<S>46\<close>: 4, \<open>\<S>47\<close>: 4, \<open>\<S>48\<close>: 3, \<open>\<S>49\<close>: 4, \<open>\<S>50\<close>: 9.
+\<close>
+
+text \<open>
   Chapter 5 of \<open>top1.tex\<close> begins with the Tychonoff theorem. We start by isolating
   the finite-intersection-property (FIP) combinatorics used in the standard closed-set proof.
 \<close>
@@ -55300,12 +55307,271 @@ lemma Lemma_43_1:
   assumes hd: "top1_metric_on X d"
   shows "top1_complete_metric_on X d \<longleftrightarrow>
     (\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow> (\<exists>x\<in>X. \<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)))"
-  sorry
+proof
+  assume hComplete: "top1_complete_metric_on X d"
+  show "\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow> (\<exists>x\<in>X. \<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d))"
+  proof (intro allI impI)
+    fix s
+    assume hs: "top1_cauchy_seq_on X d s"
+    obtain x where hxX: "x \<in> X" and hxconv: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
+      using hComplete hs unfolding top1_complete_metric_on_def by blast
+    show "\<exists>x\<in>X. \<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)"
+    proof (rule bexI[where x=x])
+      show "x \<in> X"
+        by (rule hxX)
+      show "\<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)"
+      proof (rule exI[where x="(\<lambda>n::nat. n)"])
+        have hmono: "strict_mono (\<lambda>n::nat. n)"
+          unfolding strict_mono_def by simp
+        have hEq: "s \<circ> (\<lambda>n::nat. n) = s"
+          by (rule ext) (simp add: o_def)
+        show "strict_mono (\<lambda>n::nat. n) \<and> seq_converges_to_on (s \<circ> (\<lambda>n::nat. n)) x X (top1_metric_topology_on X d)"
+          unfolding hEq using hmono hxconv by blast
+      qed
+    qed
+  qed
+next
+  assume hSubseq:
+    "\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow>
+      (\<exists>x\<in>X. \<exists>t. strict_mono t \<and> seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d))"
+
+  have hsym: "\<forall>x\<in>X. \<forall>y\<in>X. d x y = d y x"
+    using hd unfolding top1_metric_on_def by blast
+  have htri: "\<forall>x\<in>X. \<forall>y\<in>X. \<forall>z\<in>X. d x z \<le> d x y + d y z"
+    using hd unfolding top1_metric_on_def by blast
+  have hzero: "\<forall>x\<in>X. d x x = 0"
+    using hd unfolding top1_metric_on_def by blast
+
+  show "top1_complete_metric_on X d"
+    unfolding top1_complete_metric_on_def
+  proof (intro conjI allI impI)
+    show "top1_metric_on X d"
+      by (rule hd)
+  next
+    fix s
+    assume hs: "top1_cauchy_seq_on X d s"
+    obtain x t where hxX: "x \<in> X" and ht: "strict_mono t"
+      and hsub: "seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)"
+      using hSubseq hs by blast
+
+    have ht_ge_self: "\<forall>n. n \<le> t n"
+    proof
+      fix n :: nat
+      show "n \<le> t n"
+      proof (induction n)
+        case 0
+        show ?case by simp
+      next
+        case (Suc n)
+        have hn: "n \<le> t n"
+          by (rule Suc.IH)
+        have hlt: "t n < t (Suc n)"
+          using ht unfolding strict_mono_def by simp
+        have h1: "Suc n \<le> Suc (t n)"
+          using hn by simp
+        have h2: "Suc (t n) \<le> t (Suc n)"
+          by (rule Suc_leI[OF hlt])
+        show ?case
+          by (rule le_trans[OF h1 h2])
+      qed
+    qed
+
+    have hxconv: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
+    proof (unfold seq_converges_to_on_def, intro conjI)
+      show "x \<in> X"
+        by (rule hxX)
+      show "\<forall>U. neighborhood_of x X (top1_metric_topology_on X d) U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> U)"
+      proof (intro allI impI)
+        fix U
+        assume hU: "neighborhood_of x X (top1_metric_topology_on X d) U"
+        have hUopen: "U \<in> top1_metric_topology_on X d"
+          using hU unfolding neighborhood_of_def by blast
+        have hxU: "x \<in> U"
+          using hU unfolding neighborhood_of_def by blast
+        obtain e where he: "0 < e" and hballU: "top1_ball_on X d x e \<subseteq> U"
+          using top1_metric_open_contains_ball[OF hd hUopen hxU] by blast
+        define e2 where "e2 = e / 2"
+        have he2: "0 < e2"
+          unfolding e2_def using he by simp
+
+        obtain N1 where hN1:
+          "\<forall>m\<ge>N1. \<forall>n\<ge>N1. s m \<in> X \<and> s n \<in> X \<and> d (s m) (s n) < e2"
+          using hs he2 unfolding top1_cauchy_seq_on_def by blast
+
+        have hopen_ball2: "top1_ball_on X d x e2 \<in> top1_metric_topology_on X d"
+          by (rule top1_ball_open_in_metric_topology[OF hd hxX he2])
+        have hx_ball2: "x \<in> top1_ball_on X d x e2"
+          unfolding top1_ball_on_def using hxX hzero[rule_format, OF hxX] he2 by simp
+        have hnbhd_ball2: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x e2)"
+          unfolding neighborhood_of_def using hopen_ball2 hx_ball2 by blast
+
+        obtain N2 where hN2: "\<forall>n\<ge>N2. (s \<circ> t) n \<in> top1_ball_on X d x e2"
+          using hsub hnbhd_ball2 unfolding seq_converges_to_on_def by blast
+
+        define n0 where "n0 = max N1 N2"
+        have hn0N1: "N1 \<le> n0" and hn0N2: "N2 \<le> n0"
+          unfolding n0_def by simp_all
+
+        have ht_n0: "N1 \<le> t n0"
+        proof -
+          have hn0t: "n0 \<le> t n0"
+            using ht_ge_self by blast
+          show ?thesis
+            by (rule le_trans[OF hn0N1 hn0t])
+        qed
+
+        have hs_tn0_ball2': "(s \<circ> t) n0 \<in> top1_ball_on X d x e2"
+          using hN2 hn0N2 by blast
+        have hs_tn0_ball2: "s (t n0) \<in> top1_ball_on X d x e2"
+          using hs_tn0_ball2' by (simp add: o_def)
+
+        have hs_tn0_X: "s (t n0) \<in> X"
+          using hs_tn0_ball2 unfolding top1_ball_on_def by blast
+        have hdx_tn0: "d x (s (t n0)) < e2"
+          using hs_tn0_ball2 unfolding top1_ball_on_def by blast
+
+        show "\<exists>N. \<forall>n\<ge>N. s n \<in> U"
+        proof (rule exI[where x=N1], intro allI impI)
+          fix n
+          assume hn: "N1 \<le> n"
+
+          have hs_nX: "s n \<in> X"
+            using hN1 hn ht_n0 by blast
+
+          have hdn_tn0: "d (s n) (s (t n0)) < e2"
+            using hN1 hn ht_n0 by blast
+          have hdt0_n: "d (s (t n0)) (s n) < e2"
+            using hdn_tn0 hsym hs_nX hs_tn0_X by simp
+
+          have hle: "d x (s n) \<le> d x (s (t n0)) + d (s (t n0)) (s n)"
+            using htri hxX hs_tn0_X hs_nX by blast
+          have hlt': "d x (s (t n0)) + d (s (t n0)) (s n) < e2 + e2"
+            by (rule add_strict_mono[OF hdx_tn0 hdt0_n])
+          have hlt: "d x (s n) < e"
+          proof -
+            have "d x (s n) < e2 + e2"
+              by (rule le_less_trans[OF hle hlt'])
+            thus ?thesis
+              unfolding e2_def by simp
+          qed
+
+          have hs_n_ball: "s n \<in> top1_ball_on X d x e"
+            unfolding top1_ball_on_def using hs_nX hlt by blast
+          have hs_n_U: "s n \<in> U"
+            by (rule subsetD[OF hballU hs_n_ball])
+          show "s n \<in> U"
+            by (rule hs_n_U)
+        qed
+      qed
+    qed
+
+    show "\<exists>x\<in>X. seq_converges_to_on s x X (top1_metric_topology_on X d)"
+      using hxX hxconv by blast
+  qed
+qed
 
 (** from \S43 Theorem 43.2 [top1.tex:6172] **)
 theorem Theorem_43_2:
   shows "top1_complete_metric_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>)"
-  sorry
+proof -
+  let ?X = "(UNIV::real set)"
+  let ?d = "(\<lambda>x y. \<bar>x - y\<bar>)"
+
+  have hd: "top1_metric_on ?X ?d"
+  unfolding top1_metric_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>?X. 0 \<le> ?d x x"
+      by (intro ballI) simp
+    show "\<forall>x\<in>?X. \<forall>y\<in>?X. 0 \<le> ?d x y"
+      by (intro ballI) simp
+    show "\<forall>x\<in>?X. \<forall>y\<in>?X. ?d x y = 0 \<longleftrightarrow> x = y"
+      by (intro ballI) (simp add: abs_eq_0)
+    show "\<forall>x\<in>?X. \<forall>y\<in>?X. ?d x y = ?d y x"
+      by (intro ballI) (simp add: abs_minus_commute)
+    show "\<forall>x\<in>?X. \<forall>y\<in>?X. \<forall>z\<in>?X. ?d x z \<le> ?d x y + ?d y z"
+    proof (intro ballI)
+      fix x y z :: real
+      assume hx: "x \<in> ?X" and hy: "y \<in> ?X" and hz: "z \<in> ?X"
+      have "\<bar>x - z\<bar> = \<bar>(x - y) + (y - z)\<bar>"
+        by simp
+      also have "... \<le> \<bar>x - y\<bar> + \<bar>y - z\<bar>"
+        by (rule abs_triangle_ineq)
+      finally show "?d x z \<le> ?d x y + ?d y z"
+        by simp
+    qed
+  qed
+
+  show ?thesis
+    unfolding top1_complete_metric_on_def
+  proof (intro conjI)
+    show "top1_metric_on ?X ?d"
+      by (rule hd)
+  next
+    show "\<forall>s. top1_cauchy_seq_on ?X ?d s \<longrightarrow> (\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X ?d))"
+    proof (intro allI impI)
+      fix s :: "nat \<Rightarrow> real"
+      assume hs: "top1_cauchy_seq_on ?X ?d s"
+
+      have hCauchy: "Cauchy s"
+      proof (rule metric_CauchyI)
+        fix e :: real
+        assume he: "0 < e"
+        obtain N where hN:
+          "\<forall>m\<ge>N. \<forall>n\<ge>N. s m \<in> ?X \<and> s n \<in> ?X \<and> ?d (s m) (s n) < e"
+          using hs he unfolding top1_cauchy_seq_on_def by blast
+        have hN': "\<forall>m\<ge>N. \<forall>n\<ge>N. ?d (s m) (s n) < e"
+          using hN by blast
+        show "\<exists>M. \<forall>m\<ge>M. \<forall>n\<ge>M. dist (s m) (s n) < e"
+          apply (rule exI[where x=N])
+          apply (intro allI impI)
+          using hN' by (simp add: dist_real_def)
+      qed
+
+      have hconv: "convergent s"
+        by (rule real_Cauchy_convergent[OF hCauchy])
+      have hlim: "s \<longlonglongrightarrow> lim s"
+        by (rule iffD1[OF convergent_LIMSEQ_iff, OF hconv])
+
+      have hseq: "seq_converges_to_on s (lim s) ?X (top1_metric_topology_on ?X ?d)"
+      proof (unfold seq_converges_to_on_def, intro conjI)
+        show "lim s \<in> ?X"
+          by simp
+        show "\<forall>U. neighborhood_of (lim s) ?X (top1_metric_topology_on ?X ?d) U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> U)"
+        proof (intro allI impI)
+          fix U
+          assume hU: "neighborhood_of (lim s) ?X (top1_metric_topology_on ?X ?d) U"
+          have hUopen: "U \<in> top1_metric_topology_on ?X ?d"
+            using hU unfolding neighborhood_of_def by blast
+          have hlimU: "lim s \<in> U"
+            using hU unfolding neighborhood_of_def by blast
+          obtain e where he: "0 < e" and hball: "top1_ball_on ?X ?d (lim s) e \<subseteq> U"
+            using top1_metric_open_contains_ball[OF hd hUopen hlimU] by blast
+
+          obtain N where hN: "\<forall>n\<ge>N. dist (s n) (lim s) < e"
+            using metric_LIMSEQ_D[OF hlim he] by blast
+
+          show "\<exists>N. \<forall>n\<ge>N. s n \<in> U"
+          proof (rule exI[where x=N], intro allI impI)
+            fix n
+            assume hn: "N \<le> n"
+            have hdist: "dist (s n) (lim s) < e"
+              using hN hn by simp
+            have hballmem: "s n \<in> top1_ball_on ?X ?d (lim s) e"
+              unfolding top1_ball_on_def
+              using hdist by (simp add: dist_real_def abs_minus_commute)
+            show "s n \<in> U"
+              by (rule subsetD[OF hball hballmem])
+          qed
+        qed
+      qed
+
+      show "\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X ?d)"
+        apply (rule bexI[where x="lim s"])
+         apply (rule hseq)
+        by simp
+    qed
+  qed
+qed
 
 (** from \S43 Lemma 43.3 [top1.tex:6191] **)
 lemma Lemma_43_3:
