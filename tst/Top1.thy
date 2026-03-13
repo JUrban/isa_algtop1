@@ -52794,7 +52794,13 @@ text \<open>
 definition top1_partition_of_unity_dominated_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'i set \<Rightarrow> ('i \<Rightarrow> 'a set) \<Rightarrow> ('i \<Rightarrow> ('a \<Rightarrow> real)) \<Rightarrow> bool"
   where
-  "top1_partition_of_unity_dominated_family_on X TX I U \<phi> \<longleftrightarrow> True"
+  "top1_partition_of_unity_dominated_family_on X TX I U \<phi> \<longleftrightarrow>
+     (\<forall>i\<in>I. U i \<in> TX)
+     \<and> (\<forall>i\<in>I.
+          top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)
+          \<and> top1_support_on X TX (\<phi> i) \<subseteq> U i)
+     \<and> top1_locally_finite_family_on X TX ((\<lambda>i. top1_support_on X TX (\<phi> i)) ` I)
+     \<and> (\<forall>x\<in>X. finite {i\<in>I. \<phi> i x \<noteq> 0} \<and> (\<Sum>i\<in>{i\<in>I. \<phi> i x \<noteq> 0}. \<phi> i x) = 1)"
 
 (** from \S41 Theorem 41.7 (Partition of unity) [top1.tex:5999] **)
 theorem Theorem_41_7:
@@ -52915,7 +52921,9 @@ theorem Theorem_45_1:
 
 definition top1_equicontinuous_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
-  "top1_equicontinuous_family_on X TX Y d \<F> \<longleftrightarrow> True"
+  "top1_equicontinuous_family_on X TX Y d \<F> \<longleftrightarrow>
+     (\<forall>f\<in>\<F>. \<forall>x\<in>X. f x \<in> Y)
+     \<and> (\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>))"
 
 (** from \S45 Lemma 45.2 [top1.tex:6586] **)
 lemma Lemma_45_2:
@@ -52952,15 +52960,53 @@ theorem Theorem_46_1:
   sorry
 
 definition top1_compactly_generated_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_compactly_generated_on X TX \<longleftrightarrow> True"
+  "top1_compactly_generated_on X TX \<longleftrightarrow>
+     is_topology_on X TX
+     \<and> (\<forall>A. A \<subseteq> X \<longrightarrow>
+          (A \<in> TX \<longleftrightarrow>
+            (\<forall>C. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X
+                 \<longrightarrow> A \<inter> C \<in> subspace_topology X TX C)))"
+
+definition top1_compact_convergence_basis_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_compact_convergence_basis_on X TX Y d =
+     { {g \<in> top1_PiE X (\<lambda>_. Y). Sup ((\<lambda>x. d (f x) (g x)) ` C) < \<epsilon>}
+       | f C \<epsilon>. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> 0 < \<epsilon> }"
 
 definition top1_compact_convergence_topology_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
-  "top1_compact_convergence_topology_on X TX Y d = {}"
+  "top1_compact_convergence_topology_on X TX Y d =
+     topology_generated_by_basis (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_basis_on X TX Y d)"
+
+definition top1_uniform_topology_on ::
+  "'a set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_uniform_topology_on X Y d =
+     top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d)"
+
+definition top1_continuous_funcs_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) set" where
+  "top1_continuous_funcs_on X TX Y TY =
+     {f \<in> top1_PiE X (\<lambda>_. Y). top1_continuous_map_on X TX Y TY f}"
+
+definition top1_compact_open_subbasis_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_compact_open_subbasis_on X TX Y TY =
+     { {f \<in> top1_continuous_funcs_on X TX Y TY. f ` C \<subseteq> U}
+       | C U. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> U \<in> TY }"
+
+definition top1_compact_open_topology_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
+  "top1_compact_open_topology_on X TX Y TY =
+     topology_generated_by_subbasis (top1_continuous_funcs_on X TX Y TY) (top1_compact_open_subbasis_on X TX Y TY)"
 
 (** from \S46 Theorem 46.2 [top1.tex:6787] **)
 theorem Theorem_46_2:
-  shows "True"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)
+    \<longleftrightarrow>
+      (\<forall>C. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<longrightarrow>
+        (\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<epsilon>))"
   sorry
 
 (** from \S46 Lemma 46.3 [top1.tex:6793] **)
@@ -52988,29 +53034,86 @@ theorem Theorem_46_5:
 
 (** from \S46 Theorem 46.7 [top1.tex:6824] **)
 theorem Theorem_46_7:
-  shows "True"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "top1_uniform_topology_on X Y d \<supseteq> top1_compact_convergence_topology_on X TX Y d
+    \<and> top1_compact_convergence_topology_on X TX Y d \<supseteq> top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)"
   sorry
 
 (** from \S46 Theorem 46.8 [top1.tex:6839] **)
 theorem Theorem_46_8:
-  shows "True"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "subspace_topology (top1_PiE X (\<lambda>_. Y))
+           (top1_compact_convergence_topology_on X TX Y d)
+           (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+       =
+       top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
   sorry
 
 (** from \S46 Theorem 46.10 [top1.tex:6863] **)
 theorem Theorem_46_10:
-  shows "True"
+  assumes hLC: "top1_locally_compact_on X TX"
+  assumes hHausX: "is_hausdorff_on X TX"
+  assumes hTopY: "is_topology_on Y TY"
+  shows "top1_continuous_map_on
+           (X \<times> top1_continuous_funcs_on X TX Y TY)
+           (product_topology_on TX (top1_compact_open_topology_on X TX Y TY))
+           Y TY
+           (\<lambda>p. (snd p) (fst p))"
   sorry
 
 (** from \S46 Theorem 46.11 (Exponential law) [top1.tex:6888] **)
 theorem Theorem_46_11:
-  shows "True"
+  assumes hLC: "top1_locally_compact_on X TX"
+  assumes hHausX: "is_hausdorff_on X TX"
+  assumes hTopZ: "is_topology_on Z TZ"
+  assumes hTopY: "is_topology_on Y TY"
+  shows "(\<forall>f. top1_continuous_map_on (X \<times> Z) (product_topology_on TX TZ) Y TY f
+        \<longrightarrow> top1_continuous_map_on Z TZ (top1_continuous_funcs_on X TX Y TY)
+              (top1_compact_open_topology_on X TX Y TY) (\<lambda>z x. f (x, z)))"
+    and "(\<forall>F. top1_continuous_map_on Z TZ (top1_continuous_funcs_on X TX Y TY)
+              (top1_compact_open_topology_on X TX Y TY) F
+          \<longrightarrow> top1_continuous_map_on (X \<times> Z) (product_topology_on TX TZ) Y TY (\<lambda>p. (F (snd p)) (fst p)))"
   sorry
 
 section \<open>\<S>47 Ascoli's Theorem\<close>
 
 (** from \S47 Theorem 47.1 (Ascoli's theorem) [top1.tex:6995] **)
 theorem Theorem_47_1:
-  shows "True"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  shows "((top1_equicontinuous_family_on X TX Y d \<F>
+        \<and> (\<forall>a\<in>X.
+             top1_compact_on
+               (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+               (subspace_topology Y (top1_metric_topology_on Y d)
+                  (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))))
+      \<longrightarrow> (\<exists>K. \<F> \<subseteq> K
+              \<and> top1_compact_on K
+                   (subspace_topology
+                      (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+                      (subspace_topology (top1_PiE X (\<lambda>_. Y))
+                         (top1_compact_convergence_topology_on X TX Y d)
+                         (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+                      K)))"
+    and "((top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)
+      \<longrightarrow>
+      (\<forall>K. top1_compact_on K
+               (subspace_topology
+                  (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+                  (subspace_topology (top1_PiE X (\<lambda>_. Y))
+                     (top1_compact_convergence_topology_on X TX Y d)
+                     (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+                  K)
+            \<longrightarrow> top1_equicontinuous_family_on X TX Y d K
+                \<and> (\<forall>a\<in>X.
+                     top1_compact_on
+                       (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))
+                       (subspace_topology Y (top1_metric_topology_on Y d)
+                          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))))))"
   sorry
 
 section \<open>\<S>48 Baire Spaces\<close>
