@@ -53569,6 +53569,32 @@ proof
     using hclsub hxcl by blast
 qed
 
+lemma top1_closure_on_empty:
+  assumes hTopX: "is_topology_on X TX"
+  shows "closure_on X TX {} = {}"
+  sorry
+
+lemma top1_closure_on_union2:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hAX: "A \<subseteq> X"
+  assumes hBX: "B \<subseteq> X"
+  shows "closure_on X TX (A \<union> B) = closure_on X TX A \<union> closure_on X TX B"
+  sorry
+
+lemma top1_closure_on_Union_finite:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hFin: "finite S"
+  assumes hSX: "\<forall>A\<in>S. A \<subseteq> X"
+  shows "closure_on X TX (\<Union>S) = (\<Union>(closure_on X TX ` S))"
+  sorry
+
+lemma top1_closure_on_Union_locally_finite:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hSubX: "\<forall>A\<in>\<A>. A \<subseteq> X"
+  assumes hLF: "top1_locally_finite_family_on X TX \<A>"
+  shows "closure_on X TX (\<Union>\<A>) = (\<Union>(closure_on X TX ` \<A>))"
+  sorry
+
 (** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
 lemma Lemma_39_1:
   assumes hTopX: "is_topology_on X TX"
@@ -53589,7 +53615,7 @@ proof -
     by (rule top1_locally_finite_family_on_closure_image[OF hTopX hSubX hLF])
 
   show "closure_on X TX (\<Union>\<A>) = (\<Union>(closure_on X TX ` \<A>))"
-    sorry
+    by (rule top1_closure_on_Union_locally_finite[OF hTopX hSubX hLF])
 qed
 
 (** from \S39 Lemma 39.2 (Metrizable spaces admit countably locally finite refinements) [top1.tex:5567] **)
@@ -53871,6 +53897,32 @@ theorem Theorem_45_4:
                 (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
              \<F>))
     \<longleftrightarrow> (top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
+  sorry
+
+(** from \S45 Corollary 45.5 [top1.tex:6679] **)
+corollary Corollary_45_5:
+  assumes hCompX: "top1_compact_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  shows
+    "top1_compact_on \<F>
+       (subspace_topology
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+          (subspace_topology
+             (top1_PiE X (\<lambda>_. Y))
+             (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+          \<F>)
+    \<longleftrightarrow>
+    (closedin_on
+       (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+       (subspace_topology
+          (top1_PiE X (\<lambda>_. Y))
+          (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+       \<F>
+     \<and> top1_equicontinuous_family_on X TX Y d \<F>
+     \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
