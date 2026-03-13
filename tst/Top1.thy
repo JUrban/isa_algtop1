@@ -53039,7 +53039,7 @@ text \<open>
   Status note: the top-level definitions/lemmas/theorems for \<open>\<S>37\<close>--\<open>\<S>50\<close> are now present in
   this theory (using \<open>sorry\<close> where appropriate).  Remaining admits are concentrated in the main results:
   \<open>\<S>37\<close>: 1, \<open>\<S>38\<close>: 3, \<open>\<S>39\<close>: 1, \<open>\<S>40\<close>: 3, \<open>\<S>41\<close>: 8, \<open>\<S>42\<close>: 1, \<open>\<S>43\<close>: 4, \<open>\<S>44\<close>: 1,
-  \<open>\<S>45\<close>: 5, \<open>\<S>46\<close>: 4, \<open>\<S>47\<close>: 4, \<open>\<S>48\<close>: 3, \<open>\<S>49\<close>: 4, \<open>\<S>50\<close>: 9.
+  \<open>\<S>45\<close>: 5, \<open>\<S>46\<close>: 4, \<open>\<S>47\<close>: 4, \<open>\<S>48\<close>: 3, \<open>\<S>49\<close>: 4, \<open>\<S>50\<close>: 8.
 \<close>
 
 text \<open>
