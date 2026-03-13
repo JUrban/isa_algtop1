@@ -52565,9 +52565,501 @@ lemma Lemma_37_1:
 (** from \S37 Lemma 37.2 (Properties of maximal FIP families) [top1.tex:5232] **)
 lemma Lemma_37_2:
   assumes hmax: "top1_FIP_maximal_on X \<D>"
-  shows "(\<forall>F. finite F \<and> F \<subseteq> \<D> \<longrightarrow> \<Inter>F \<in> \<D>)"
+  assumes hXne: "X \<noteq> {}"
+  shows "(\<forall>F. finite F \<and> F \<subseteq> \<D> \<and> F \<noteq> {} \<longrightarrow> \<Inter>F \<in> \<D>)"
     and "(\<forall>A. A \<subseteq> X \<and> (\<forall>D0\<in>\<D>. intersects A D0) \<longrightarrow> A \<in> \<D>)"
-  sorry
+proof -
+  have hFIP: "top1_FIP_on X \<D>"
+    using hmax unfolding top1_FIP_maximal_on_def by simp
+
+  have hDsubX: "\<forall>D0\<in>\<D>. D0 \<subseteq> X"
+    using hFIP unfolding top1_FIP_on_def by simp
+
+  have hMax:
+    "\<forall>\<E>. \<D> \<subset> \<E> \<and> (\<forall>A\<in>\<E>. A \<subseteq> X) \<longrightarrow> \<not> top1_FIP_on X \<E>"
+    using hmax unfolding top1_FIP_maximal_on_def by simp
+
+  have hFIP_D:
+    "\<forall>F. finite F \<and> F \<subseteq> \<D> \<longrightarrow> \<Inter>F \<noteq> {}"
+    using hFIP unfolding top1_FIP_on_def by simp
+
+  have hInter_inD: "(\<forall>F. finite F \<and> F \<subseteq> \<D> \<and> F \<noteq> {} \<longrightarrow> \<Inter>F \<in> \<D>)"
+  proof (intro allI impI)
+    fix F
+    assume hF: "finite F \<and> F \<subseteq> \<D> \<and> F \<noteq> {}"
+    have hFfin: "finite F"
+      using hF by simp
+    have hFsub: "F \<subseteq> \<D>"
+      using hF by simp
+    have hFne: "F \<noteq> {}"
+      using hF by simp
+
+    have hInter_subX: "\<Inter>F \<subseteq> X"
+    proof (rule subsetI)
+      fix x
+      assume hx: "x \<in> \<Inter>F"
+      have hxF: "\<forall>A\<in>F. x \<in> A"
+        using hx by simp
+      obtain A0 where hA0: "A0 \<in> F"
+        using hFne by blast
+      have hA0subX: "A0 \<subseteq> X"
+        using hDsubX hFsub hA0 by blast
+      have hxA0: "x \<in> A0"
+        using hxF hA0 by blast
+      show "x \<in> X"
+        using hA0subX hxA0 by blast
+    qed
+
+    show "\<Inter>F \<in> \<D>"
+    proof (rule ccontr)
+      assume hNot: "\<Inter>F \<notin> \<D>"
+      let ?\<E> = "insert (\<Inter>F) \<D>"
+
+      have hDsubE: "\<D> \<subset> ?\<E>"
+        using hNot by auto
+
+      have hEsubX: "\<forall>A\<in>?\<E>. A \<subseteq> X"
+      proof
+        fix A
+        assume hA: "A \<in> ?\<E>"
+        show "A \<subseteq> X"
+        proof (cases "A = \<Inter>F")
+          case True
+          show ?thesis
+            using True hInter_subX by simp
+        next
+          case False
+          have "A \<in> \<D>"
+            using hA False by simp
+          then show ?thesis
+            using hDsubX by blast
+        qed
+      qed
+
+      have hFIP_E: "top1_FIP_on X ?\<E>"
+      proof -
+        have hAllSub: "(\<forall>A\<in>?\<E>. A \<subseteq> X)"
+          using hEsubX .
+
+        have hInterNE: "\<forall>G. finite G \<and> G \<subseteq> ?\<E> \<longrightarrow> \<Inter>G \<noteq> {}"
+        proof (intro allI impI)
+          fix G
+          assume hG: "finite G \<and> G \<subseteq> ?\<E>"
+          have hGfin: "finite G"
+            using hG by simp
+          have hGsub: "G \<subseteq> ?\<E>"
+            using hG by simp
+
+          show "\<Inter>G \<noteq> {}"
+          proof (cases "\<Inter>F \<in> G")
+            case False
+            have hGsubD: "G \<subseteq> \<D>"
+              using hGsub False by auto
+            show ?thesis
+              using hFIP_D hGfin hGsubD by blast
+          next
+            case True
+            define H where "H = G - {\<Inter>F}"
+            have hHfin: "finite H"
+              using hGfin unfolding H_def by simp
+            have hHsubD: "H \<subseteq> \<D>"
+              using hGsub unfolding H_def by auto
+
+            have hFUfin: "finite (F \<union> H)"
+              using hFfin hHfin by simp
+            have hFUsubD: "F \<union> H \<subseteq> \<D>"
+              using hFsub hHsubD by auto
+
+            have hInterFU: "\<Inter>(F \<union> H) \<noteq> {}"
+              using hFIP_D hFUfin hFUsubD by blast
+
+            have hInterG: "\<Inter>G = (\<Inter>F) \<inter> \<Inter>H"
+            proof -
+              have hGeq: "G = insert (\<Inter>F) H"
+              proof (rule subset_antisym)
+                show "G \<subseteq> insert (\<Inter>F) H"
+                proof
+                  fix y
+                  assume hy: "y \<in> G"
+                  show "y \<in> insert (\<Inter>F) H"
+                  proof (cases "y = \<Inter>F")
+                    case True
+                    then show ?thesis by simp
+                  next
+                    case False
+                    have "y \<in> H"
+                      using hy False unfolding H_def by simp
+                    then show ?thesis by simp
+                  qed
+                qed
+              next
+                show "insert (\<Inter>F) H \<subseteq> G"
+                proof
+                  fix y
+                  assume hy: "y \<in> insert (\<Inter>F) H"
+                  show "y \<in> G"
+                  proof (cases "y = \<Inter>F")
+                    case True
+                    then show ?thesis
+                      using \<open>\<Inter>F \<in> G\<close> by simp
+                  next
+                    case False
+                    have "y \<in> H"
+                      using hy False by simp
+                    then show ?thesis
+                      unfolding H_def by simp
+                  qed
+                qed
+              qed
+              show ?thesis
+                unfolding hGeq by simp
+            qed
+
+            have hInterFU_eq: "\<Inter>(F \<union> H) = (\<Inter>F) \<inter> \<Inter>H"
+            proof (rule subset_antisym)
+              show "\<Inter>(F \<union> H) \<subseteq> (\<Inter>F) \<inter> \<Inter>H"
+              proof
+                fix x
+                assume hx: "x \<in> \<Inter>(F \<union> H)"
+                have hxAll: "\<forall>A\<in>F \<union> H. x \<in> A"
+                  using hx by simp
+                have hxF: "\<forall>A\<in>F. x \<in> A"
+                  using hxAll by blast
+                have hxH: "\<forall>A\<in>H. x \<in> A"
+                  using hxAll by blast
+                show "x \<in> (\<Inter>F) \<inter> \<Inter>H"
+                  using hxF hxH by simp
+              qed
+              show "(\<Inter>F) \<inter> \<Inter>H \<subseteq> \<Inter>(F \<union> H)"
+              proof
+                fix x
+                assume hx: "x \<in> (\<Inter>F) \<inter> \<Inter>H"
+                have hxF: "\<forall>A\<in>F. x \<in> A"
+                  using hx by simp
+                have hxH: "\<forall>A\<in>H. x \<in> A"
+                  using hx by simp
+                have hxAll: "\<forall>A\<in>F \<union> H. x \<in> A"
+                  using hxF hxH by blast
+                show "x \<in> \<Inter>(F \<union> H)"
+                  using hxAll by simp
+              qed
+            qed
+
+            show ?thesis
+              using hInterFU hInterG hInterFU_eq by simp
+          qed
+        qed
+
+        show ?thesis
+          unfolding top1_FIP_on_def
+          apply (intro conjI)
+           apply (rule hAllSub)
+          apply (rule hInterNE)
+          done
+      qed
+
+      have hNoFIP: "\<not> top1_FIP_on X ?\<E>"
+      proof -
+        have hImp: "(\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)) \<longrightarrow> \<not> top1_FIP_on X ?\<E>"
+          using hMax by (rule allE[where x="?\<E>"])
+        have hPrem: "\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)"
+          using hDsubE hEsubX by simp
+        show ?thesis
+          using hImp hPrem by simp
+      qed
+
+      show False
+        using hNoFIP hFIP_E by contradiction
+    qed
+  qed
+
+  show "(\<forall>F. finite F \<and> F \<subseteq> \<D> \<and> F \<noteq> {} \<longrightarrow> \<Inter>F \<in> \<D>)"
+    using hInter_inD .
+
+  have hX_inD: "X \<in> \<D>"
+  proof (rule ccontr)
+    assume hNot: "X \<notin> \<D>"
+    let ?\<E> = "insert X \<D>"
+
+    have hDsubE: "\<D> \<subset> ?\<E>"
+      using hNot by auto
+
+    have hEsubX: "\<forall>A\<in>?\<E>. A \<subseteq> X"
+      using hDsubX by auto
+
+    have hFIP_E: "top1_FIP_on X ?\<E>"
+    proof -
+      have hInterNE: "\<forall>G. finite G \<and> G \<subseteq> ?\<E> \<longrightarrow> \<Inter>G \<noteq> {}"
+      proof (intro allI impI)
+        fix G
+        assume hG: "finite G \<and> G \<subseteq> ?\<E>"
+        have hGfin: "finite G"
+          using hG by simp
+        have hGsub: "G \<subseteq> ?\<E>"
+          using hG by simp
+
+        show "\<Inter>G \<noteq> {}"
+        proof (cases "X \<in> G")
+          case False
+          have hGsubD: "G \<subseteq> \<D>"
+            using hGsub False by auto
+          show ?thesis
+            using hFIP_D hGfin hGsubD by blast
+        next
+          case True
+          define H where "H = G - {X}"
+          have hHfin: "finite H"
+            using hGfin unfolding H_def by simp
+          have hHsubD: "H \<subseteq> \<D>"
+            using hGsub unfolding H_def by auto
+
+          have hInterH: "\<Inter>H \<noteq> {}"
+            using hFIP_D hHfin hHsubD by blast
+
+          have hInterG: "\<Inter>G = X \<inter> \<Inter>H"
+          proof -
+            have hGeq: "G = insert X H"
+            proof (rule subset_antisym)
+              show "G \<subseteq> insert X H"
+              proof
+                fix y
+                assume hy: "y \<in> G"
+                show "y \<in> insert X H"
+                proof (cases "y = X")
+                  case True
+                  then show ?thesis by simp
+                next
+                  case False
+                  have "y \<in> H"
+                    using hy False unfolding H_def by simp
+                  then show ?thesis by simp
+                qed
+              qed
+            next
+              show "insert X H \<subseteq> G"
+              proof
+                fix y
+                assume hy: "y \<in> insert X H"
+                show "y \<in> G"
+                proof (cases "y = X")
+                  case True
+                  then show ?thesis
+                    using \<open>X \<in> G\<close> by simp
+                next
+                  case False
+                  have "y \<in> H"
+                    using hy False by simp
+                  then show ?thesis
+                    unfolding H_def by simp
+                qed
+              qed
+            qed
+            show ?thesis
+              unfolding hGeq by simp
+          qed
+
+          show ?thesis
+          proof (cases "H = {}")
+            case True
+            have "\<Inter>G = X"
+              using hInterG unfolding True by simp
+            then show ?thesis
+              using hXne by simp
+          next
+            case False
+            have hInterH_subX: "\<Inter>H \<subseteq> X"
+            proof (rule subsetI)
+              fix x
+              assume hx: "x \<in> \<Inter>H"
+              have hxH: "\<forall>A\<in>H. x \<in> A"
+                using hx by simp
+              obtain A0 where hA0: "A0 \<in> H"
+                using False by blast
+              have hA0subX: "A0 \<subseteq> X"
+                using hDsubX hHsubD hA0 by blast
+              have hxA0: "x \<in> A0"
+                using hxH hA0 by blast
+              show "x \<in> X"
+                using hA0subX hxA0 by blast
+            qed
+
+            have "\<Inter>G = \<Inter>H"
+              using hInterG hInterH_subX by auto
+            then show ?thesis
+              using hInterH by simp
+          qed
+        qed
+      qed
+
+      show ?thesis
+        unfolding top1_FIP_on_def
+        apply (intro conjI)
+         apply (rule hEsubX)
+        apply (rule hInterNE)
+        done
+    qed
+
+    have hNoFIP: "\<not> top1_FIP_on X ?\<E>"
+    proof -
+      have hImp: "(\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)) \<longrightarrow> \<not> top1_FIP_on X ?\<E>"
+        using hMax by (rule allE[where x="?\<E>"])
+      have hPrem: "\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)"
+        using hDsubE hEsubX by simp
+      show ?thesis
+        using hImp hPrem by simp
+    qed
+
+    show False
+      using hNoFIP hFIP_E by contradiction
+  qed
+
+  show "(\<forall>A. A \<subseteq> X \<and> (\<forall>D0\<in>\<D>. intersects A D0) \<longrightarrow> A \<in> \<D>)"
+  proof (intro allI impI)
+    fix A
+    assume hA: "A \<subseteq> X \<and> (\<forall>D0\<in>\<D>. intersects A D0)"
+    have hAsubX: "A \<subseteq> X"
+      using hA by simp
+    have hIntAll: "\<forall>D0\<in>\<D>. intersects A D0"
+      using hA by simp
+
+    have hAne: "A \<noteq> {}"
+    proof -
+      have "intersects A X"
+        using hIntAll hX_inD by blast
+      then have "A \<inter> X \<noteq> {}"
+        unfolding intersects_def .
+      then show ?thesis
+        using hAsubX by auto
+    qed
+
+    show "A \<in> \<D>"
+    proof (rule ccontr)
+      assume hNot: "A \<notin> \<D>"
+      let ?\<E> = "insert A \<D>"
+
+      have hDsubE: "\<D> \<subset> ?\<E>"
+        using hNot by auto
+
+      have hEsubX: "\<forall>U\<in>?\<E>. U \<subseteq> X"
+        using hDsubX hAsubX by auto
+
+      have hFIP_E: "top1_FIP_on X ?\<E>"
+      proof -
+        have hInterNE: "\<forall>G. finite G \<and> G \<subseteq> ?\<E> \<longrightarrow> \<Inter>G \<noteq> {}"
+        proof (intro allI impI)
+          fix G
+          assume hG: "finite G \<and> G \<subseteq> ?\<E>"
+          have hGfin: "finite G"
+            using hG by simp
+          have hGsub: "G \<subseteq> ?\<E>"
+            using hG by simp
+
+          show "\<Inter>G \<noteq> {}"
+          proof (cases "A \<in> G")
+            case False
+            have hGsubD: "G \<subseteq> \<D>"
+              using hGsub False by auto
+            show ?thesis
+              using hFIP_D hGfin hGsubD by blast
+          next
+            case True
+            define H where "H = G - {A}"
+            have hHfin: "finite H"
+              using hGfin unfolding H_def by simp
+            have hHsubD: "H \<subseteq> \<D>"
+              using hGsub unfolding H_def by auto
+
+            have hInterG: "\<Inter>G = A \<inter> \<Inter>H"
+            proof -
+              have hGeq: "G = insert A H"
+              proof (rule subset_antisym)
+                show "G \<subseteq> insert A H"
+                proof
+                  fix y
+                  assume hy: "y \<in> G"
+                  show "y \<in> insert A H"
+                  proof (cases "y = A")
+                    case True
+                    then show ?thesis by simp
+                  next
+                    case False
+                    have "y \<in> H"
+                      using hy False unfolding H_def by simp
+                    then show ?thesis by simp
+                  qed
+                qed
+              next
+                show "insert A H \<subseteq> G"
+                proof
+                  fix y
+                  assume hy: "y \<in> insert A H"
+                  show "y \<in> G"
+                  proof (cases "y = A")
+                    case True
+                    then show ?thesis
+                      using \<open>A \<in> G\<close> by simp
+                  next
+                    case False
+                    have "y \<in> H"
+                      using hy False by simp
+                    then show ?thesis
+                      unfolding H_def by simp
+                  qed
+                qed
+              qed
+              show ?thesis
+                unfolding hGeq by simp
+            qed
+
+            show ?thesis
+            proof (cases "H = {}")
+              case True
+              show ?thesis
+                using hAne hInterG unfolding True by simp
+            next
+              case False
+              have hInterH_inD: "\<Inter>H \<in> \<D>"
+              proof -
+                have hH: "finite H \<and> H \<subseteq> \<D> \<and> H \<noteq> {}"
+                  using hHfin hHsubD False by simp
+                show ?thesis
+                  using hInter_inD hH by blast
+              qed
+
+              have hIntAH: "intersects A (\<Inter>H)"
+                using hIntAll hInterH_inD by blast
+              have hInterAH: "A \<inter> \<Inter>H \<noteq> {}"
+                using hIntAH unfolding intersects_def .
+
+              show ?thesis
+                using hInterAH hInterG by simp
+            qed
+          qed
+        qed
+
+        show ?thesis
+          unfolding top1_FIP_on_def
+          apply (intro conjI)
+           apply (rule hEsubX)
+          apply (rule hInterNE)
+          done
+      qed
+
+      have hNoFIP: "\<not> top1_FIP_on X ?\<E>"
+      proof -
+        have hImp: "(\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)) \<longrightarrow> \<not> top1_FIP_on X ?\<E>"
+          using hMax by (rule allE[where x="?\<E>"])
+        have hPrem: "\<D> \<subset> ?\<E> \<and> (\<forall>A\<in>?\<E>. A \<subseteq> X)"
+          using hDsubE hEsubX by simp
+        show ?thesis
+          using hImp hPrem by simp
+      qed
+
+      show False
+        using hNoFIP hFIP_E by contradiction
+    qed
+  qed
+qed
 
 (** from \S37 Theorem 37.3 (Tychonoff theorem) [top1.tex:5253] **)
 theorem Theorem_37_3:
