@@ -52925,6 +52925,13 @@ definition top1_equicontinuous_family_on ::
      (\<forall>f\<in>\<F>. \<forall>x\<in>X. f x \<in> Y)
      \<and> (\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>))"
 
+definition top1_metric_bounded_subset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_metric_bounded_subset_on Y d A \<longleftrightarrow> (\<exists>y0\<in>Y. \<exists>M. \<forall>y\<in>A. d y0 y \<le> M)"
+
+definition top1_pointwise_bounded_family_on ::
+  "'a set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
+  "top1_pointwise_bounded_family_on X Y d \<F> \<longleftrightarrow> (\<forall>x\<in>X. top1_metric_bounded_subset_on Y d ((\<lambda>f. f x) ` \<F>))"
+
 (** from \S45 Lemma 45.2 [top1.tex:6586] **)
 lemma Lemma_45_2:
   assumes hTotB: "top1_totally_bounded_on \<F> (top1_uniform_metric_on X d)"
@@ -52942,7 +52949,31 @@ lemma Lemma_45_3:
 (** from \S45 Theorem 45.4 (Ascoli's theorem, classical version) [top1.tex:6655] **)
 theorem Theorem_45_4:
   assumes hCompX: "top1_compact_on X TX"
-  shows "True"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  shows
+    "top1_compact_on
+       (closure_on
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+          (subspace_topology
+             (top1_PiE X (\<lambda>_. Y))
+             (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+          \<F>)
+       (subspace_topology
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+          (subspace_topology
+             (top1_PiE X (\<lambda>_. Y))
+             (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+          (closure_on
+             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+             (subspace_topology
+                (top1_PiE X (\<lambda>_. Y))
+                (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d))
+                (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+             \<F>))
+    \<longleftrightarrow> (top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
@@ -53219,9 +53250,24 @@ corollary Corollary_50_3:
   shows "top1_dim_on X TX = (Max ((\<lambda>i. top1_dim_on (Y i) (subspace_topology X TX (Y i))) ` {0..<k}))"
   sorry
 
+(** A convenient sup metric on the concrete model \<open>\<real>^N\<close> (as extensional functions). **)
+definition top1_Rpow_sup_dist :: "nat \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
+  "top1_Rpow_sup_dist N x y = Sup ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})"
+
+(** Placeholder predicate for “general position” in \<open>\<real>^N\<close>.
+    The intended meaning is that every subfamily of size \<open>N+1\<close> is affinely independent. **)
+definition top1_general_position_in_Rpow :: "nat \<Rightarrow> (nat \<Rightarrow> real) set \<Rightarrow> bool" where
+  "top1_general_position_in_Rpow N S \<longleftrightarrow>
+     finite S \<and> S \<subseteq> top1_Rpow_set N"
+
 (** from \S50 Lemma 50.4 (General position approximation) [top1.tex:7700] **)
 lemma Lemma_50_4:
-  shows "True"
+  assumes hFin: "finite A"
+  assumes hA: "A \<subseteq> top1_Rpow_set N"
+  assumes hdelta: "0 < \<delta>"
+  shows "\<exists>f. inj_on f A
+        \<and> (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
+        \<and> top1_general_position_in_Rpow N (f ` A)"
   sorry
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
