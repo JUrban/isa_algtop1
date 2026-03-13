@@ -53554,6 +53554,21 @@ proof -
   qed
 qed
 
+lemma top1_Union_closure_on_subset_closure_on_Union:
+  shows "(\<Union>(closure_on X TX ` \<A>)) \<subseteq> closure_on X TX (\<Union>\<A>)"
+proof
+  fix x
+  assume hx: "x \<in> (\<Union>(closure_on X TX ` \<A>))"
+  obtain A where hA: "A \<in> \<A>" and hxcl: "x \<in> closure_on X TX A"
+    using hx by blast
+  have hAsub: "A \<subseteq> (\<Union>\<A>)"
+    using hA by blast
+  have hclsub: "closure_on X TX A \<subseteq> closure_on X TX (\<Union>\<A>)"
+    by (rule closure_on_mono[OF hAsub])
+  show "x \<in> closure_on X TX (\<Union>\<A>)"
+    using hclsub hxcl by blast
+qed
+
 (** from \S39 Lemma 39.1 (Basic properties of locally finite families) [top1.tex:5542] **)
 lemma Lemma_39_1:
   assumes hTopX: "is_topology_on X TX"
