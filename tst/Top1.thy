@@ -54500,6 +54500,74 @@ definition top1_baire_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool"
      (\<forall>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX \<and> top1_densein_on X TX (U n)) \<longrightarrow>
         top1_densein_on X TX (\<Inter>n. U n))"
 
+lemma top1_densein_on_open_subspace:
+  assumes hTop: "is_topology_on X TX"
+  assumes hD: "top1_densein_on X TX D"
+  assumes hDX: "D \<subseteq> X"
+  assumes hUX: "U \<subseteq> X"
+  assumes hU: "U \<in> TX"
+  shows "top1_densein_on U (subspace_topology X TX U) (D \<inter> U)"
+proof -
+  let ?TU = "subspace_topology X TX U"
+  have hTopU: "is_topology_on U ?TU"
+    by (rule subspace_topology_is_topology_on[OF hTop hUX])
+
+  have hA_subU: "D \<inter> U \<subseteq> U"
+    by blast
+
+  have hA_subX: "D \<inter> U \<subseteq> X"
+    using hUX by blast
+
+  have hUsub_clA: "U \<subseteq> closure_on X TX (D \<inter> U)"
+  proof (rule subsetI)
+    fix x assume hxU: "x \<in> U"
+    have hxX: "x \<in> X"
+      using hUX hxU by blast
+
+    have hclD: "closure_on X TX D = X"
+      using hD unfolding top1_densein_on_def .
+    have hxclD: "x \<in> closure_on X TX D"
+      using hxX hclD by simp
+
+    have hClCharD: "\<forall>W. neighborhood_of x X TX W \<longrightarrow> intersects W D"
+      by (rule iffD1[OF Theorem_17_5a[OF hTop hxX hDX], OF hxclD])
+
+    have hClCharA: "\<forall>W. neighborhood_of x X TX W \<longrightarrow> intersects W (D \<inter> U)"
+    proof (intro allI impI)
+      fix W
+      assume hWnbh: "neighborhood_of x X TX W"
+      have hWT: "W \<in> TX"
+        using hWnbh unfolding neighborhood_of_def by (rule conjunct1)
+      have hxW: "x \<in> W"
+        using hWnbh unfolding neighborhood_of_def by (rule conjunct2)
+
+      have hxWU: "x \<in> W \<inter> U"
+        using hxW hxU by blast
+      have hWUintTX: "W \<inter> U \<in> TX"
+        by (rule topology_inter2[OF hTop hWT hU])
+      have hNbhWU: "neighborhood_of x X TX (W \<inter> U)"
+        unfolding neighborhood_of_def using hWUintTX hxWU by simp
+
+      have hIntersectsWU_D: "intersects (W \<inter> U) D"
+        by (rule hClCharD[rule_format, OF hNbhWU])
+
+      show "intersects W (D \<inter> U)"
+        using hIntersectsWU_D unfolding intersects_def by blast
+    qed
+
+    show "x \<in> closure_on X TX (D \<inter> U)"
+      by (rule iffD2[OF Theorem_17_5a[OF hTop hxX hA_subX]], rule hClCharA)
+  qed
+
+  have hcl_subspace:
+    "closure_on U ?TU (D \<inter> U) = closure_on X TX (D \<inter> U) \<inter> U"
+    by (rule Theorem_17_4[OF hTop hA_subU hUX])
+
+  show ?thesis
+    unfolding top1_densein_on_def
+    using hcl_subspace hUsub_clA hTopU closure_on_subset_carrier[OF hTop hA_subX] by blast
+qed
+
 (** from \S48 Lemma 48.1 [top1.tex:7170] **)
 lemma Lemma_48_1:
   shows "top1_baire_on X TX \<longleftrightarrow>
@@ -54524,7 +54592,9 @@ lemma Lemma_48_3:
 
 (** from \S48 Lemma 48.4 [top1.tex:7216] **)
 lemma Lemma_48_4:
+  assumes hTop: "is_topology_on X TX"
   assumes hB: "top1_baire_on X TX"
+  assumes hUX: "U \<subseteq> X"
   assumes hU: "U \<in> TX"
   shows "top1_baire_on U (subspace_topology X TX U)"
   sorry
