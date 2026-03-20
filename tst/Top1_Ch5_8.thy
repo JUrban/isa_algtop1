@@ -749,6 +749,31 @@ proof -
   qed
 qed
 
+text \<open>Extract the forward direction of the FIP characterization of compactness
+  as a standalone lemma, to avoid tactic explosions when using Theorem 26.9 inline.\<close>
+lemma compact_closed_FIP_inter_ne:
+  assumes hTop: "is_topology_on X TX"
+  assumes hComp: "top1_compact_on X TX"
+  assumes hClosed: "\<forall>C\<in>\<C>. closedin_on X TX C"
+  assumes hFIP: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {}"
+  shows "\<Inter>\<C> \<noteq> {}"
+proof -
+  have hiff: "top1_compact_on X TX \<longleftrightarrow>
+    (\<forall>\<C>. (\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+         (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})
+         \<longrightarrow> \<Inter>\<C> \<noteq> {})"
+    by (rule Theorem_26_9[OF hTop])
+  have hall: "\<forall>\<C>. (\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+       (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})
+       \<longrightarrow> \<Inter>\<C> \<noteq> {}"
+    by (rule iffD1[OF hiff hComp])
+  have hprem: "(\<forall>C\<in>\<C>. closedin_on X TX C) \<and>
+       (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> \<C> \<longrightarrow> \<Inter>F \<noteq> {})"
+    using hClosed hFIP by blast
+  show ?thesis
+    using spec[OF hall, of \<C>] hprem by (rule mp)
+qed
+
 (** from \S37 Theorem 37.3 (Tychonoff theorem) [top1.tex:5253] **)
 theorem Theorem_37_3:
   assumes hIne: "I \<noteq> {}"
