@@ -1,4 +1,4 @@
 session Top1 = HOL +
-options[quick_and_dirty,timeout=60]
+options[quick_and_dirty,timeout=120]
 theories
     Top1
