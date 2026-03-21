@@ -7349,8 +7349,97 @@ proof -
   text \<open>Step 5-6: The limit is in each ball, hence in V and each U k.\<close>
   text \<open>Key: d(xseq(Suc n), x) \<le> rseq(Suc n) (limit of tail in ball).
     Then d(xseq n, x) \<le> d(xseq n, xseq(Suc n)) + d(xseq(Suc n), x) < rseq n.\<close>
+  text \<open>First show d(xseq n, x) \<le> rseq n for all n (non-strict).\<close>
+  have hdist_le_rseq: "\<forall>n. d (xseq n) x \<le> rseq n"
+  proof (intro allI)
+    fix n
+    text \<open>For any \<delta> > 0, d(xseq n, x) < rseq n + \<delta> (triangle inequality with a tail term).\<close>
+    have hle: "\<forall>\<delta>>0. d (xseq n) x < rseq n + \<delta>"
+    proof (intro allI impI)
+      fix \<delta> :: real assume "0 < \<delta>"
+      text \<open>By convergence, choose m with d(x, xseq m) < \<delta> and m \<ge> n.\<close>
+      have "\<exists>M. \<forall>m\<ge>M. d x (xseq m) < \<delta>"
+      proof -
+        have hball_x: "top1_ball_on X d x \<delta> \<in> ?TX"
+          by (rule top1_ball_open_in_metric_topology[OF hmetric hxX \<open>0 < \<delta>\<close>])
+        have hx_in_ball_x: "x \<in> top1_ball_on X d x \<delta>"
+        proof -
+          have "d x x = 0" using hmetric hxX unfolding top1_metric_on_def by blast
+          then show ?thesis unfolding top1_ball_on_def using hxX \<open>0 < \<delta>\<close> by simp
+        qed
+        have hnbhd: "neighborhood_of x X ?TX (top1_ball_on X d x \<delta>)"
+          unfolding neighborhood_of_def using hball_x hx_in_ball_x by blast
+        obtain M where "\<forall>m\<ge>M. xseq m \<in> top1_ball_on X d x \<delta>"
+          using hconv hnbhd unfolding seq_converges_to_on_def by blast
+        then show ?thesis
+          unfolding top1_ball_on_def by blast
+      qed
+      then obtain M where hM: "\<forall>m\<ge>M. d x (xseq m) < \<delta>" by blast
+      define m where "m = max M n"
+      have "m \<ge> M" unfolding m_def by simp
+      have "m \<ge> n" unfolding m_def by simp
+      have hdxm: "d x (xseq m) < \<delta>" using hM \<open>m \<ge> M\<close> by blast
+      have hm_ball: "xseq m \<in> top1_ball_on X d (xseq n) (rseq n)"
+        by (rule hxseq_in_ball[OF \<open>n \<le> m\<close>])
+      have "d (xseq n) (xseq m) < rseq n"
+        using hm_ball unfolding top1_ball_on_def by blast
+      have hmX: "xseq m \<in> X" using hxseqX by blast
+      have hnX: "xseq n \<in> X" using hxseqX by blast
+      have hsym: "d (xseq m) x = d x (xseq m)"
+        using hmetric hmX hxX unfolding top1_metric_on_def by blast
+      have htri: "d (xseq n) x \<le> d (xseq n) (xseq m) + d (xseq m) x"
+        using hmetric hnX hmX hxX unfolding top1_metric_on_def by blast
+      show "d (xseq n) x < rseq n + \<delta>"
+        using htri \<open>d (xseq n) (xseq m) < rseq n\<close> hsym hdxm by linarith
+    qed
+    text \<open>Since d(xseq n, x) < rseq n + \<delta> for all \<delta> > 0, d(xseq n, x) \<le> rseq n.\<close>
+    show "d (xseq n) x \<le> rseq n"
+    proof (rule ccontr)
+      assume "\<not> d (xseq n) x \<le> rseq n"
+      then have hgt: "d (xseq n) x > rseq n" by linarith
+      define \<delta> where "\<delta> = (d (xseq n) x - rseq n) / 2"
+      have h\<delta>pos: "\<delta> > 0"
+      proof -
+        have "d (xseq n) x - rseq n > 0" using hgt by linarith
+        then show ?thesis unfolding \<delta>_def by simp
+      qed
+      have "d (xseq n) x < rseq n + \<delta>"
+        using hle h\<delta>pos by blast
+      then have hlt: "d (xseq n) x < rseq n + \<delta>"
+        by simp
+      have h2: "2 * \<delta> = d (xseq n) x - rseq n"
+        unfolding \<delta>_def by simp
+      have "2 * d (xseq n) x < 2 * rseq n + 2 * \<delta>"
+        using hlt by linarith
+      then have "2 * d (xseq n) x < 2 * rseq n + (d (xseq n) x - rseq n)"
+        using h2 by linarith
+      then have "d (xseq n) x < rseq n"
+        by linarith
+      then show False using hgt by linarith
+    qed
+  qed
+
+  text \<open>Then use strict containment to get d(xseq n, x) < rseq n.\<close>
   have hx_in_ball: "\<forall>n. x \<in> top1_ball_on X d (xseq n) (rseq n)"
-    sorry (* needs: d(xseq n, x) < rseq n via the strengthened nesting property *)
+  proof (intro allI)
+    fix n
+    have hn1X: "xseq (Suc n) \<in> X" using hxseqX by blast
+    have hnX: "xseq n \<in> X" using hxseqX by blast
+    have "d (xseq (Suc n)) x \<le> rseq (Suc n)"
+      using hdist_le_rseq by blast
+    have "d (xseq (Suc n)) (xseq n) + rseq (Suc n) < rseq n"
+      using hdist_rseq[rule_format, of "Suc n"] by simp
+    have hsym_n1n: "d (xseq n) (xseq (Suc n)) = d (xseq (Suc n)) (xseq n)"
+      using hmetric hnX hn1X unfolding top1_metric_on_def by blast
+    have htri: "d (xseq n) x \<le> d (xseq n) (xseq (Suc n)) + d (xseq (Suc n)) x"
+      using hmetric hnX hn1X hxX unfolding top1_metric_on_def by blast
+    have "d (xseq n) x < rseq n"
+      using htri hsym_n1n \<open>d (xseq (Suc n)) x \<le> rseq (Suc n)\<close>
+            \<open>d (xseq (Suc n)) (xseq n) + rseq (Suc n) < rseq n\<close>
+      by linarith
+    then show "x \<in> top1_ball_on X d (xseq n) (rseq n)"
+      unfolding top1_ball_on_def using hxX by simp
+  qed
 
   have hxV: "x \<in> V"
     using hx_in_ball hball_V by blast
