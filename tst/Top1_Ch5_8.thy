@@ -3798,19 +3798,48 @@ proof -
 
     text \<open>U'_n are open (Ufn n open minus finite union of closed = open).\<close>
     have hU'open: "\<forall>n. U' n \<in> TX"
-      sorry (* Ufn n - ∪{cl(Vn i) | i ≤ n}. Finite union of closed = closed.
-               Ufn n ∩ complement = open. Needs closedin_on_finite_Union + topology_inter2. *)
+    proof (intro allI)
+      fix n
+      have hclVn_closed: "\<forall>i. closedin_on X TX (closure_on X TX (Vn i))"
+        sorry (* Each closure_on is closed. Needs closure_on_closed + Vn_i ⊆ X. *)
+      have hfinite_union_closed: "closedin_on X TX (\<Union> (closure_on X TX ` Vn ` {0..n}))"
+        sorry (* Finite union of closed sets is closed *)
+      have hcomplement_open: "X - (\<Union> (closure_on X TX ` Vn ` {0..n})) \<in> TX"
+        using hfinite_union_closed unfolding closedin_on_def
+        
+        by presburger
+      have hU'eq: "U' n = Ufn n \<inter> (X - (\<Union> (closure_on X TX ` Vn ` {0..n})))"
+        unfolding U'_def
+        sorry
+      show "U' n \<in> TX"
+        unfolding hU'eq using hUopen hcomplement_open hTop
+        sorry
+    qed
     have hV'open: "\<forall>n. V' n \<in> TX"
-      sorry
+    proof (intro allI)
+      fix n
+      have hclUfn_closed: "\<forall>i. closedin_on X TX (closure_on X TX (Ufn i))"
+        sorry
+      have hfinite_union_closed: "closedin_on X TX (\<Union> (closure_on X TX ` Ufn ` {0..n}))"
+        sorry
+      have hcomplement_open: "X - (\<Union> (closure_on X TX ` Ufn ` {0..n})) \<in> TX"
+        using hfinite_union_closed unfolding closedin_on_def
+        
+        by presburger
+      have hV'eq: "V' n = Vn n \<inter> (X - (\<Union> (closure_on X TX ` Ufn ` {0..n})))"
+        unfolding V'_def
+        sorry
+      show "V' n \<in> TX"
+        unfolding hV'eq using hVopen hcomplement_open hTop
+        sorry
+    qed
 
     text \<open>UU and VV are open (unions of opens).\<close>
     have hUU_open: "UU \<in> TX"
       unfolding UU_def using hU'open hTop unfolding is_topology_on_def
-      sledgehammer [timeout = 10]
       sorry
     have hVV_open: "VV \<in> TX"
       unfolding VV_def using hV'open hTop unfolding is_topology_on_def
-      sledgehammer [timeout = 10]
       sorry
 
     text \<open>C ⊆ UU: for c ∈ C, c ∈ Ufn_n for some n; cl(Vn_i) ⊆ X-C for all i, so c ∉ cl(Vn_i).\<close>
@@ -3898,31 +3927,24 @@ proof -
           by blast
         have hzclU: "z \<in> closure_on X TX (Ufn m)"
           using hzUfn subset_closure_on
-          sledgehammer [timeout = 10]
           sorry
         text \<open>But z ∈ V'_n = Vn_n - ∪{cl(Ufn_i)|i≤n}, and m ≤ n.\<close>
         have "z \<notin> closure_on X TX (Ufn m)"
           using hzV'n hmn unfolding V'_def
-          sledgehammer [timeout = 10]
           sorry
         then show False using hzclU
-          sledgehammer [timeout = 10]
           sorry
       next
         assume hnm: "n \<le> m"
         have hzVnn: "z \<in> Vn n" using hzV'n unfolding V'_def
-          sledgehammer [timeout = 10]
           sorry
         have hzclV: "z \<in> closure_on X TX (Vn n)"
           using hzVnn subset_closure_on
-          sledgehammer [timeout = 10]
           sorry
         have "z \<notin> closure_on X TX (Vn n)"
           using hzU'm hnm unfolding U'_def
-          sledgehammer [timeout = 10]
           sorry
         then show False using hzclV
-          sledgehammer [timeout = 10]
           sorry
       qed
     qed
