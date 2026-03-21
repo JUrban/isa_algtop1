@@ -7202,6 +7202,7 @@ lemma Lemma_48_3:
   assumes hCcl: "\<forall>n. closedin_on X (top1_metric_topology_on X d) (C n)"
   assumes hnest: "\<forall>n. C (Suc n) \<subseteq> C n"
   assumes hdiam: "\<forall>e>0. \<exists>N. \<forall>n\<ge>N. top1_diameter_on d (C n) < e"
+  assumes hbdd: "\<forall>n. bdd_above {d a b | a b. a \<in> C n \<and> b \<in> C n}"
   shows "(\<Inter>n. C n) \<noteq> {}"
 proof -
   have hmetric: "top1_metric_on X d"
@@ -7319,7 +7320,7 @@ proof -
       have hdiamN: "top1_diameter_on d (C N) < e"
         using hN by simp
       have hbdd_CN: "bdd_above {d a b | a b. a \<in> C N \<and> b \<in> C N}"
-        sorry (* bdd_above from metric + finite diameter; see note at top1_diameter_on_lt_imp_dist_lt *)
+        using hbdd by simp
       have hdist: "d (s m) (s n) < e"
         by (rule top1_diameter_on_lt_imp_dist_lt[OF hmetric hCsubX[rule_format, of N] hsmCN hsnCN hdiamN hbdd_CN])
 
