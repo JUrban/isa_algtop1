@@ -4354,6 +4354,101 @@ lemma Lemma_41_3:
         (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))))"
   sorry
 
+text \<open>Metric topologies are Hausdorff: distinct points separated by d/2-balls.\<close>
+lemma metric_topology_hausdorff:
+  assumes hd: "top1_metric_on X d"
+  shows "is_hausdorff_on X (top1_metric_topology_on X d)"
+proof -
+  let ?TX = "top1_metric_topology_on X d"
+  have hTop: "is_topology_on X ?TX"
+    using hd top1_metric_topology_on_is_topology_on
+    
+    by blast
+  have hSep: "\<forall>x y. x \<in> X \<and> y \<in> X \<and> x \<noteq> y \<longrightarrow>
+    (\<exists>U V. neighborhood_of x X ?TX U \<and> neighborhood_of y X ?TX V \<and> U \<inter> V = {})"
+  proof (intro allI impI)
+    fix x y assume hxy: "x \<in> X \<and> y \<in> X \<and> x \<noteq> y"
+    have hxX: "x \<in> X" and hyX: "y \<in> X" and hne: "x \<noteq> y"
+      using hxy
+      
+      by presburger+
+      have hdnonneg: "0 \<le> d x y" using hd hxX hyX unfolding top1_metric_on_def
+        
+        by blast
+      have hdzero: "d x y = 0 \<longleftrightarrow> x = y" using hd hxX hyX unfolding top1_metric_on_def
+        
+        by blast
+      have hdpos: "d x y > 0" using hdnonneg hdzero hne
+        
+        by simp
+      define r where "r = d x y / 2"
+      have hrpos: "r > 0" unfolding r_def using hdpos
+        
+        by simp
+      let ?U = "top1_ball_on X d x r"
+      let ?V = "top1_ball_on X d y r"
+      have hUopen: "?U \<in> ?TX"
+        using hd hxX hrpos top1_ball_open_in_metric_topology
+        
+        by fast
+      have hxU: "x \<in> ?U"
+        unfolding top1_ball_on_def
+        using hxX hd hrpos unfolding top1_metric_on_def
+        
+        by fastforce
+      have hVopen: "?V \<in> ?TX"
+        using hd hyX hrpos top1_ball_open_in_metric_topology
+        
+        by fast
+      have hyV: "y \<in> ?V"
+        unfolding top1_ball_on_def
+        using hyX hd hrpos unfolding top1_metric_on_def
+        
+        by fastforce
+      have hUV_disj: "?U \<inter> ?V = {}"
+      proof (rule ccontr)
+        assume "\<not> ?U \<inter> ?V = {}"
+        then obtain z where hzU: "z \<in> ?U" and hzV: "z \<in> ?V"
+          
+          by blast
+        have hzX: "z \<in> X" and hdxz: "d x z < r" and hdyz: "d y z < r"
+          using hzU hzV unfolding top1_ball_on_def
+          
+          by blast+
+        have htri: "d x y \<le> d x z + d z y"
+          using hd hxX hzX hyX unfolding top1_metric_on_def
+          
+          by blast
+        have hdsym: "d z y = d y z"
+          using hd hzX hyX unfolding top1_metric_on_def
+          
+          by blast
+        have "d x y < r + r" using htri hdsym hdxz hdyz
+          
+          by simp
+        then show False unfolding r_def using hdpos
+          
+          by auto
+      qed
+      have hUnbhd: "neighborhood_of x X ?TX ?U"
+        unfolding neighborhood_of_def using hUopen hxU
+        
+        by argo
+      have hVnbhd: "neighborhood_of y X ?TX ?V"
+        unfolding neighborhood_of_def using hVopen hyV
+        
+        by argo
+      show "\<exists>U V. neighborhood_of x X ?TX U \<and> neighborhood_of y X ?TX V \<and> U \<inter> V = {}"
+        using hUnbhd hVnbhd hUV_disj
+        
+        by blast
+  qed
+  show ?thesis
+    unfolding is_hausdorff_on_def using hTop hSep
+    
+    by blast
+qed
+
 text \<open>Metrizable spaces are regular: for x and closed C with x \<notin> C,
   use d(x,C)/2 balls to separate.\<close>
 lemma metrizable_imp_regular:
@@ -4370,8 +4465,7 @@ proof -
     by blast
   text \<open>Metric spaces are Hausdorff.\<close>
   have hHaus: "is_hausdorff_on X TX"
-    sorry (* Metric Hausdorff: for x≠y, d(x,y)>0, use balls of radius d(x,y)/2.
-             Will be factored into a separate lemma. *)
+    unfolding hTX by (rule metric_topology_hausdorff[OF hd])
   have hT1: "top1_T1_on X TX"
     using hausdorff_imp_T1_on[OF hHaus]
     
