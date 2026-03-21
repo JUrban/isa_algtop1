@@ -5,11 +5,13 @@ begin
 section \<open>\<S>37 The Tychonoff Theorem\<close>
 
 text \<open>
-  Status note (2026-03-23):
-  Fully proved: \<open>\<S>37\<close> Tychonoff, \<open>\<S>48\<close> Baire (Thm 48.2), \<open>\<S>41\<close> paracompact Hausdorff \<open>\<Rightarrow>\<close> regular.
-  \<open>\<S>41\<close> Thm 41.1 proved from regularity + normality helpers (normality still has 2 admits).
-  Remaining admits (48 total) in \<open>\<S>38\<close>--\<open>\<S>50\<close>:
-  \<open>\<S>38\<close>: 3, \<open>\<S>39\<close>: 1, \<open>\<S>40\<close>: 3, \<open>\<S>41\<close>: 9, \<open>\<S>42\<close>: 1, \<open>\<S>43\<close>: 4, \<open>\<S>44\<close>: 1,
+  Status note (2026-03-24):
+  Fully proved major results:
+    \<open>\<S>37\<close> Tychonoff (Thm 37.3)
+    \<open>\<S>41\<close> Paracompact Hausdorff \<open>\<Rightarrow>\<close> Normal (Thm 41.1)
+    \<open>\<S>48\<close> Baire category (Thm 48.2, both parts)
+  Remaining admits (46 total) in \<open>\<S>38\<close>--\<open>\<S>50\<close>:
+  \<open>\<S>38\<close>: 3, \<open>\<S>39\<close>: 1, \<open>\<S>40\<close>: 3, \<open>\<S>41\<close>: 7, \<open>\<S>42\<close>: 1, \<open>\<S>43\<close>: 4, \<open>\<S>44\<close>: 1,
   \<open>\<S>45\<close>: 5, \<open>\<S>46\<close>: 4, \<open>\<S>47\<close>: 4, \<open>\<S>48\<close>: 1, \<open>\<S>49\<close>: 4, \<open>\<S>50\<close>: 8.
 \<close>
 
