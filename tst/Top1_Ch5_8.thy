@@ -3214,10 +3214,145 @@ proof -
 
   text \<open>\<Union>_n \<E>_n covers X.\<close>
   have hE_covers: "X \<subseteq> \<Union>\<E>"
-    sorry (* For x \<in> X, let U0 = r-least of {U \<in> \<A>. x \<in> U}.
-             U0 is open so ball(x,1/(Suc n)) \<subseteq> U0 for some n.
-             Then x \<in> S_n(U0). By minimality of U0, x \<notin> V for V < U0.
-             So x \<in> T_n(U0) \<subseteq> E_n(U0) \<in> \<E>_n \<subseteq> \<E>. *)
+  proof (rule subsetI)
+    fix x assume hxX: "x \<in> X"
+    text \<open>The set of covering elements containing x is nonempty.\<close>
+    define AX where "AX = {U \<in> \<A>. x \<in> U}"
+    have hAXne: "AX \<noteq> {}"
+      using hAcovers hxX unfolding AX_def
+      
+      by blast
+    text \<open>Pick the r-least element of AX (well-ordering gives a minimum).\<close>
+    have hAX_sub_Field: "AX \<subseteq> Field r" using hField
+      
+      by simp
+    obtain U0 where hU0AX: "U0 \<in> AX" and hU0min: "\<forall>V\<in>AX. (U0, V) \<in> r"
+    proof -
+      have hwf: "wf (r - Id)"
+        using hWO unfolding well_order_on_def
+        
+        by presburger
+      obtain z where hzAX: "z \<in> AX" and hzmin: "\<forall>y. (y, z) \<in> r - Id \<longrightarrow> y \<notin> AX"
+        using wf_iff_ex_minimal[THEN iffD1, OF hwf, rule_format, OF hAXne]
+        
+        by blast
+      have hzleast: "\<forall>V\<in>AX. (z, V) \<in> r"
+      proof (intro ballI)
+        fix V assume hVAX: "V \<in> AX"
+        show "(z, V) \<in> r"
+        proof (cases "V = z")
+          case True
+          then show ?thesis using hWO hField unfolding well_order_on_def linear_order_on_def partial_order_on_def preorder_on_def refl_on_def
+            
+            by fast
+        next
+          case False
+          have hnotstrict: "(V, z) \<notin> r - Id" using hzmin hVAX
+            
+            by blast
+          then have "(V, z) \<notin> r" using False
+            
+            by fast
+          then show "(z, V) \<in> r"
+            using hWO hField unfolding well_order_on_def linear_order_on_def total_on_def
+            
+            using False by blast
+        qed
+      qed
+      show ?thesis using that hzAX hzleast
+        
+        by presburger
+    qed
+    have hU0A: "U0 \<in> \<A>" using hU0AX unfolding AX_def
+      
+      by blast
+    have hxU0: "x \<in> U0" using hU0AX unfolding AX_def
+      
+      by blast
+    text \<open>U0 is open (metric), so ball(x, 1/(Suc n)) \<subseteq> U0 for some n.\<close>
+    have hU0open: "U0 \<in> TX" using hU0A hAsub
+      
+      by fast
+    obtain e0 where he0pos: "0 < e0" and hball0: "top1_ball_on X d x e0 \<subseteq> U0"
+      using top1_metric_open_contains_ball[OF hd] hU0open hxU0 hTX
+      
+      by blast
+    obtain n where hn: "1 / real (Suc n) < e0"
+    proof -
+      obtain k :: nat where hk: "1 / e0 < real k"
+        using reals_Archimedean2 he0pos
+        
+        by fast
+      have "1 / e0 < real (Suc k)" using hk
+        
+        by simp
+      then have "1 / real (Suc k) < e0"
+        using he0pos by (simp add: field_simps)
+      then show ?thesis using that
+        
+        by blast
+    qed
+    text \<open>ball(x, 1/(Suc n)) \<subseteq> ball(x, e0) \<subseteq> U0.\<close>
+    have hball_sub: "top1_ball_on X d x (1 / real (Suc n)) \<subseteq> U0"
+    proof (rule subset_trans)
+      show "top1_ball_on X d x (1 / real (Suc n)) \<subseteq> top1_ball_on X d x e0"
+        unfolding top1_ball_on_def using hn
+        
+        using hn by fastforce
+      show "top1_ball_on X d x e0 \<subseteq> U0" by (rule hball0)
+    qed
+    text \<open>x \<in> S_n(U0).\<close>
+    have hxSn: "x \<in> Sn n U0"
+      unfolding Sn_def using hxX hball_sub
+      
+      by blast
+    text \<open>x \<notin> V for any V < U0 in \<A> (by minimality of U0).\<close>
+    have hxnotpred: "x \<notin> \<Union>{V \<in> \<A>. (V, U0) \<in> r \<and> V \<noteq> U0}"
+    proof (rule ccontr)
+      assume "\<not> x \<notin> \<Union>{V \<in> \<A>. (V, U0) \<in> r \<and> V \<noteq> U0}"
+      then obtain V where hVA: "V \<in> \<A>" and hVr: "(V, U0) \<in> r" and hVne: "V \<noteq> U0" and hxV: "x \<in> V"
+        
+        by blast
+      have hVAX: "V \<in> AX" unfolding AX_def using hVA hxV
+        
+        by blast
+      have hU0V: "(U0, V) \<in> r" using hU0min hVAX
+        
+        by simp
+      text \<open>Both (V,U0) \<in> r and (U0,V) \<in> r with V \<noteq> U0 contradicts antisymmetry.\<close>
+      have "V = U0"
+        using hWO hVr hU0V unfolding well_order_on_def linear_order_on_def partial_order_on_def antisym_def
+        
+        by presburger
+      then show False using hVne
+        
+        by order
+    qed
+    text \<open>x \<in> T_n(U0).\<close>
+    have hxTn: "x \<in> Tn n U0"
+      unfolding Tn_def using hxSn hxnotpred
+      
+      by blast
+    text \<open>x \<in> E_n(U0) \<in> \<E>_n \<subseteq> \<E>.\<close>
+    have h3npos: "0 < 1 / (3 * real (Suc n))"
+      
+      by auto
+    have hxEn: "x \<in> En n U0"
+      unfolding En_def
+      by (rule top1_nbhd_of_set_contains[OF hd hxTn hTn_sub_X h3npos])
+    have "En n U0 \<in> \<E>n n"
+      unfolding \<E>n_def using hU0A
+      
+      by blast
+    then have "En n U0 \<in> \<E>"
+      unfolding \<E>_def
+      
+      by fast
+    then show "x \<in> \<Union>\<E>"
+      using hxEn
+      
+      by blast
+  qed
 
   text \<open>Assemble the final result.\<close>
   have hE_cov: "top1_open_covering_on X TX \<E>"
