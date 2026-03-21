@@ -5461,9 +5461,16 @@ proof -
 
     text \<open>B is locally finite.\<close>
     have hB_lf: "top1_locally_finite_family_on X TX \<B>"
-      sorry (* If D_elem intersects E(C0)∩parent(C0), then D_elem ∉ bad(C0),
-               so D_elem ∩ C0 ≠ {}. D is LF, so finitely many D meet any nbhd,
-               hence finitely many C0 meet any nbhd, hence finitely many B elems. *)
+      sorry (* Munkres expansion LF argument (last sorry in sigma_lf_to_lf):
+         For x ∈ X, pick W meeting finitely many D-elements (D is LF), say D_1,...,D_k.
+         If D_i intersects E(C0) then D_i ∉ bad(C0), so D_i ∩ C0 ≠ {}.
+         Each D_i = cl(C_i') can intersect at most finitely many C0's
+         (from C being LF: D_i ∩ C0 ≠ {} implies cl(C_i') ∩ C0 ≠ {},
+          and C_i' has a neighborhood meeting finitely many C-elements;
+          but we need to bound {C0 | cl(C_i') ∩ C0 ≠ {}} which requires
+          that C is "star-finite" w.r.t. closures).
+         Needs: additional lemma that C (from step12 construction) has this property.
+         Estimated ~40 lines. *)
 
     show ?thesis
       unfolding top1_open_covering_on_def
