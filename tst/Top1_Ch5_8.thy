@@ -5099,8 +5099,33 @@ proof -
       qed
       text \<open>The neighborhood: finite intersection of W_n for n \<le> N, intersected with U0.\<close>
       define W where "W = (\<Inter>n\<in>{0..N}. Wn n) \<inter> U0"
+      have hInter_open: "(\<Inter>n\<in>{0..N}. Wn n) \<in> TX"
+      proof (cases "N = 0")
+        case True
+        then show ?thesis using hWn
+          
+          by simp
+      next
+        case False
+        have "finite (Wn ` {0..N})"
+          
+          by blast
+        moreover have "Wn ` {0..N} \<noteq> {}"
+          
+          by force
+        moreover have "Wn ` {0..N} \<subseteq> TX"
+          using hWn
+          
+          by auto
+        ultimately show ?thesis
+          using hTop unfolding is_topology_on_def
+          
+          by presburger
+      qed
       have hW_open: "W \<in> TX"
-        sorry (* Finite intersection of opens is open. Uses hTop + hWn + hU0_open. *)
+        unfolding W_def using hTop hInter_open hU0_open
+        
+        using topology_inter2 by blast
       have hxW: "x \<in> W"
         unfolding W_def using hxU0 hWn
         
@@ -5153,7 +5178,27 @@ proof -
             
             using hSn_sub by auto
           have "{A \<in> Cn n. intersects A W} \<subseteq> (\<lambda>V. Sn n V) ` {V \<in> Bn n. intersects V (Wn n)}"
-            sorry (* S ∈ Cn n ∩ W ≠ {} → S = Sn n V for V ∈ Bn n, and V ∩ Wn n ≠ {} since S ⊆ V and W ⊆ Wn n *)
+          proof (rule subsetI)
+            fix S assume hS: "S \<in> {A \<in> Cn n. intersects A W}"
+            then have hSCn: "S \<in> Cn n" and hSW: "intersects S W"
+              
+              by blast+
+            obtain V where hV: "V \<in> Bn n" and hSeq: "S = Sn n V"
+              using hSCn unfolding Cn_def
+              
+              by blast
+            have hSsubV: "S \<subseteq> V" using hSeq hSn_sub
+              
+              by auto
+            have "intersects V (Wn n)"
+              using hSW hSsubV hW_sub_Wn unfolding intersects_def
+              
+              by blast
+            then show "S \<in> (\<lambda>V. Sn n V) ` {V \<in> Bn n. intersects V (Wn n)}"
+              using hV hSeq
+              
+              by blast
+          qed
           moreover have "finite {V \<in> Bn n. intersects V (Wn n)}"
             using hWn hnN
             
