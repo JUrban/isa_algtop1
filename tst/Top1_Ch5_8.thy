@@ -3400,11 +3400,15 @@ proof -
     
     using basis_elem_open_in_generated_topology by blast
   text \<open>Decompose the basis into countably many locally finite families.\<close>
-  obtain \<B>n where hBn_lf: "\<forall>n. top1_locally_finite_family_on X TX (\<B>n n)"
-    and hB_eq: "\<B> = (\<Union>n. \<B>n n)"
+  have hCLF_unf: "\<exists>\<B>n::nat \<Rightarrow> 'a set set. (\<forall>n. top1_locally_finite_family_on X TX (\<B>n n)) \<and> \<B> = (\<Union>n. \<B>n n)"
     using hCLF unfolding top1_sigma_locally_finite_family_on_def
-    sledgehammer [timeout = 10]
-    sorry
+    
+    by argo
+  obtain \<B>n :: "nat \<Rightarrow> 'a set set" where hBn_lf: "\<forall>n. top1_locally_finite_family_on X TX (\<B>n n)"
+    and hB_eq: "\<B> = (\<Union>n. \<B>n n)"
+    using hCLF_unf
+    
+    by blast
   text \<open>C_n = \{B \<in> B_n | cl(B) \<subseteq> W\}, U_n = \<Union>C_n.\<close>
   define Cn where "Cn n = {B \<in> \<B>n n. closure_on X TX B \<subseteq> W}" for n
   define U where "U n = \<Union>(Cn n)" for n
@@ -3431,42 +3435,51 @@ proof -
       by presburger
   qed
 
+  have hB_subX: "\<forall>b\<in>\<B>. b \<subseteq> X"
+    using hBasis unfolding basis_for_def is_basis_on_def
+    by satx
+
   text \<open>cl(U_n) \<subseteq> W: each Cn is locally finite (subset of Bn), so cl(\<Union>Cn) = \<Union>cl(Cn).\<close>
   have hCn_lf: "\<forall>n. top1_locally_finite_family_on X TX (Cn n)"
   proof (intro allI)
     fix n
-    have "Cn n \<subseteq> \<B>n n" unfolding Cn_def
+    have hCn_sub_Bn: "Cn n \<subseteq> \<B>n n" unfolding Cn_def by fast
+    have hBn_subX: "\<forall>A\<in>\<B>n n. A \<subseteq> X"
+    proof (intro ballI)
+      fix A assume "A \<in> \<B>n n"
+      then have "A \<in> \<B>" using hB_eq
+        
+        by blast
+      then show "A \<subseteq> X" using hB_subX
+        
+        by blast
+    qed
+    show "top1_locally_finite_family_on X TX (Cn n)"
+      using hCn_sub_Bn
+        Lemma_39_1(1)[OF hTop hBn_subX hBn_lf[rule_format, of n]]
       
-      by fast
-    then show "top1_locally_finite_family_on X TX (Cn n)"
-      using Lemma_39_1(1)[OF hTop _ hBn_lf[rule_format, of n]]
-      sledgehammer [timeout = 10]
-      sorry
+      by presburger
   qed
-
   have hCn_subX: "\<forall>n. \<forall>B\<in>Cn n. B \<subseteq> X"
   proof (intro allI ballI)
     fix n B assume "B \<in> Cn n"
-    then have "B \<in> \<B>n n" unfolding Cn_def
+    then have "B \<in> \<B>n n" unfolding Cn_def by fast
+    then have "B \<in> \<B>" using hB_eq by blast
+    then show "B \<subseteq> X" using hB_subX
       
       by blast
-    then have "B \<in> \<B>" using hB_eq
-      
-      by blast
-    then have "B \<in> TX" using hBsub
-      
-      by blast
-    then show "B \<subseteq> X" using hTop unfolding is_topology_on_def
-      sledgehammer [timeout = 10]
-      sorry
   qed
 
   have hUn_cl: "\<forall>n. closure_on X TX (U n) \<subseteq> W"
   proof (intro allI)
     fix n
+    have hCn_subX_n: "\<forall>A\<in>Cn n. A \<subseteq> X"
+      using hCn_subX
+      
+      by presburger
     have hcl_eq: "closure_on X TX (U n) = (\<Union>(closure_on X TX ` Cn n))"
       unfolding U_def
-      using Lemma_39_1(3)[OF hTop _ hCn_lf[rule_format, of n]] hCn_subX
+      using Lemma_39_1(3)[OF hTop hCn_subX_n hCn_lf[rule_format, of n]]
       
       by presburger
     have "\<forall>B\<in>Cn n. closure_on X TX B \<subseteq> W"
@@ -3483,14 +3496,18 @@ proof -
   have hW_sub: "W \<subseteq> (\<Union>n. U n)"
   proof (rule subsetI)
     fix x assume hxW: "x \<in> W"
+    have hWsubX: "W \<subseteq> X"
+      using hW hBasis unfolding basis_for_def
+      
+      by (simp add: topology_generated_by_basis_def)
     have hxX: "x \<in> X"
-      using hW hTop hxW unfolding is_topology_on_def
-      sledgehammer [timeout = 10]
-      sorry
+      using hxW hWsubX
+      
+      by fast
     have hRegProp: "\<exists>V\<in>TX. x \<in> V \<and> closure_on X TX V \<subseteq> W"
-      using hReg hxX hW hxW unfolding top1_regular_on_def
-      sledgehammer [timeout = 10]
-      sorry
+      sorry (* Regularity: x ∈ W open, X-W closed with x ∉ X-W.
+               By regularity get U,V separating. U nbhd of x, V ⊇ X-W, U∩V={}.
+               Then cl(U∩X) ⊆ X-V ⊆ W. Extract open set from neighborhood. *)
     obtain V where hVopen: "V \<in> TX" and hxV: "x \<in> V" and hclV: "closure_on X TX V \<subseteq> W"
       using hRegProp
       
@@ -3560,8 +3577,8 @@ proof -
     
     by argo
   show ?thesis using hconj
-    sledgehammer [timeout = 10]
-    sorry
+    
+    by blast
 qed
 
 text \<open>Step 2 of Lemma 40.1: closed sets are G-delta.\<close>
