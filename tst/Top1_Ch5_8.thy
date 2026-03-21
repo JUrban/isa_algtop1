@@ -2842,8 +2842,117 @@ proof -
       text \<open>Step 2: Cover X by {U_b | b \<in> C} \<union> {X - C}, take locally finite refinement.\<close>
       text \<open>Step 3: Form V = \<Union>{D \<in> refinement | D \<inter> C \<noteq> {}}. Then cl(V) is disjoint from a
         by locally finite closure (Lemma 39.1).\<close>
+      text \<open>Step 1: For each b in C, Hausdorff separation gives a neighborhood
+        of b whose closure avoids a.\<close>
+      have hHausSep: "\<forall>b\<in>C. \<exists>Ub. Ub \<in> TX \<and> b \<in> Ub \<and>
+        (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Ub \<inter> Wa = {})"
+      proof (intro ballI)
+        fix b assume hbC: "b \<in> C"
+        have hbX: "b \<in> X" using hCX hbC by blast
+        have hab: "a \<noteq> b" using hanotC hbC by blast
+        have hHausAll: "\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
+          (\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {})"
+          using hHaus unfolding is_hausdorff_on_def by blast
+        obtain Ua Ub where hUa: "neighborhood_of a X TX Ua"
+          and hUb': "neighborhood_of b X TX Ub" and hdisj: "Ua \<inter> Ub = {}"
+          using hHausAll[rule_format, OF haX hbX hab] by blast
+        have "Ub \<in> TX" and "b \<in> Ub"
+          using hUb' unfolding neighborhood_of_def by blast+
+        have "Ua \<in> TX" and "a \<in> Ua"
+          using hUa unfolding neighborhood_of_def by blast+
+        show "\<exists>Ub. Ub \<in> TX \<and> b \<in> Ub \<and> (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Ub \<inter> Wa = {})"
+          using \<open>Ub \<in> TX\<close> \<open>b \<in> Ub\<close> \<open>Ua \<in> TX\<close> \<open>a \<in> Ua\<close> hdisj
+          by (rule_tac x="Ub" in exI) blast
+      qed
+
+      text \<open>Choose such neighborhoods via Hilbert choice.\<close>
+      define Ub where "Ub b = (SOME Ub. Ub \<in> TX \<and> b \<in> Ub \<and>
+        (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Ub \<inter> Wa = {}))" for b
+      have hUb: "\<forall>b\<in>C. Ub b \<in> TX \<and> b \<in> Ub b \<and>
+        (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Ub b \<inter> Wa = {})"
+      proof (intro ballI)
+        fix b assume "b \<in> C"
+        then have "\<exists>U. U \<in> TX \<and> b \<in> U \<and> (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> U \<inter> Wa = {})"
+          using hHausSep by blast
+        then show "Ub b \<in> TX \<and> b \<in> Ub b \<and> (\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Ub b \<inter> Wa = {})"
+          unfolding Ub_def by (rule someI_ex)
+      qed
+
+      text \<open>Step 2: Form an open cover and refine.\<close>
+      let ?cover = "insert (X - C) (Ub ` C)"
+      have hcov_open: "top1_open_covering_on X TX ?cover"
+        sorry (* cover is open (each Ub b is open, X-C is open since C closed) and covers X *)
+
+      obtain \<CC> where hCC_cov: "top1_open_covering_on X TX \<CC>"
+        and hCC_ref: "top1_refines \<CC> ?cover"
+        and hCC_lf: "top1_locally_finite_family_on X TX \<CC>"
+        using hPara hcov_open unfolding top1_paracompact_on_def by blast
+
+      text \<open>Step 3: Subcollection D = elements of CC that intersect C.\<close>
+      let ?\<DD> = "{D \<in> \<CC>. D \<inter> C \<noteq> {}}"
+      have hD_covers_C: "C \<subseteq> \<Union>?\<DD>"
+        sorry (* each c in C is in some D in CC; that D intersects C *)
+
+      text \<open>For each D in DD, a is not in cl(D): D refines some Ub b, so cl(D) \<subseteq> cl(Ub b),
+        and a \<notin> cl(Ub b) because a has a neighborhood disjoint from Ub b.\<close>
+      have ha_not_cl_D: "\<forall>D\<in>?\<DD>. a \<notin> closure_on X TX D"
+        sorry (* each D \<subseteq> some Ub b, cl(D) \<subseteq> cl(Ub b), a \<notin> cl(Ub b) *)
+
+      text \<open>Step 4: V = \<Union>DD is open and contains C.
+        cl(V) = \<Union>{cl(D) | D \<in> DD} by locally finite closure (Lemma 39.1).
+        So a \<notin> cl(V).\<close>
+      let ?V = "\<Union>?\<DD>"
+      have hV_open: "?V \<in> TX"
+        sorry (* union of open sets is open *)
+      have hV_covers_C: "C \<subseteq> ?V"
+        using hD_covers_C by blast
+
+      have hDD_sub_CC: "?\<DD> \<subseteq> \<CC>" by blast
+      have hCC_subX: "\<forall>A\<in>\<CC>. A \<subseteq> X"
+        sorry (* elements of the refinement are subsets of X *)
+      have hDD_lf: "top1_locally_finite_family_on X TX ?\<DD>"
+      proof -
+        have "\<forall>\<A>'. \<A>' \<subseteq> \<CC> \<longrightarrow> top1_locally_finite_family_on X TX \<A>'"
+          by (rule Lemma_39_1(1)[OF hTop hCC_subX hCC_lf])
+        then show ?thesis using hDD_sub_CC by blast
+      qed
+
+      have hDD_subX: "\<forall>A\<in>?\<DD>. A \<subseteq> X"
+        sorry (* elements of CC are subsets of X *)
+
+      have hcl_V: "closure_on X TX ?V = \<Union>(closure_on X TX ` ?\<DD>)"
+        using Lemma_39_1(3)[OF hTop hDD_subX hDD_lf] by blast
+
+      have ha_not_cl_V: "a \<notin> closure_on X TX ?V"
+      proof -
+        have "\<forall>D\<in>?\<DD>. a \<notin> closure_on X TX D"
+          by (rule ha_not_cl_D)
+        then have "a \<notin> \<Union>(closure_on X TX ` ?\<DD>)"
+          by blast
+        then show ?thesis
+          using hcl_V by presburger
+      qed
+
+      text \<open>Step 5: X - cl(V) is a neighborhood of a, disjoint from V.\<close>
+      have hclV_closed: "closedin_on X TX (closure_on X TX ?V)"
+        sorry (* closure is closed *)
+      have hU_open: "X - closure_on X TX ?V \<in> TX"
+        using hclV_closed unfolding closedin_on_def by blast
+      have haU: "a \<in> X - closure_on X TX ?V"
+        using haX ha_not_cl_V by blast
+      have hU_nbhd: "neighborhood_of a X TX (X - closure_on X TX ?V)"
+        unfolding neighborhood_of_def using hU_open haU by blast
+      have hdisjoint: "(X - closure_on X TX ?V) \<inter> ?V = {}"
+      proof -
+        have "?V \<subseteq> closure_on X TX ?V"
+          by (rule subset_closure_on)
+        then show ?thesis by blast
+      qed
+
       show "\<exists>U V. neighborhood_of a X TX U \<and> V \<in> TX \<and> C \<subseteq> V \<and> U \<inter> V = {}"
-        sorry
+        by (rule exI[where x="X - closure_on X TX ?V"],
+            rule exI[where x="?V"])
+           (intro conjI hU_nbhd hV_open hV_covers_C hdisjoint)
     qed
   qed
 qed
