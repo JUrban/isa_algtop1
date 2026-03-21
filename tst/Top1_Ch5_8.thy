@@ -3915,7 +3915,47 @@ proof (rule exI[where x="top1_D_metric_real_omega"])
 
   text \<open>Completeness: every Cauchy sequence in the D-metric converges coordinatewise.\<close>
   have hcomplete: "top1_complete_metric_on ?X top1_D_metric_real_omega"
-    sorry (* coordinatewise convergence using completeness of R *)
+    unfolding top1_complete_metric_on_def
+  proof (intro conjI)
+    show "top1_metric_on ?X top1_D_metric_real_omega" by (rule hmetric)
+    show "\<forall>s. top1_cauchy_seq_on ?X top1_D_metric_real_omega s \<longrightarrow>
+      (\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega))"
+    proof (intro allI impI)
+      fix s assume hCauchy: "top1_cauchy_seq_on ?X top1_D_metric_real_omega s"
+      text \<open>Step 1: Each coordinate sequence is Cauchy in R (with bounded metric).\<close>
+      text \<open>Step 2: Each coordinate converges (R is complete).\<close>
+      text \<open>Step 3: Build limit in product space.\<close>
+      text \<open>Step 4: Show D-metric convergence.\<close>
+      text \<open>From D-Cauchy: each coordinate is Cauchy in R, hence convergent.\<close>
+      have hsCauchy_def: "\<forall>e>0. \<exists>N. \<forall>m\<ge>N. \<forall>k\<ge>N.
+        s m \<in> ?X \<and> s k \<in> ?X \<and> top1_D_metric_real_omega (s m) (s k) < e"
+        using hCauchy unfolding top1_cauchy_seq_on_def by blast
+
+      have hsX: "\<forall>m. s m \<in> ?X"
+      proof (intro allI)
+        fix m
+        show "s m \<in> ?X" unfolding top1_PiE_iff by simp
+      qed
+
+      text \<open>Build coordinatewise limit.\<close>
+      have hcoord_conv: "\<forall>n. \<exists>L. (\<lambda>m. s m n) \<longlonglongrightarrow> L"
+        sorry (* each coord is Cauchy in R, R is complete *)
+
+      obtain L where hL: "\<forall>n. (\<lambda>m. s m n) \<longlonglongrightarrow> L n"
+        using choice[OF hcoord_conv] by blast
+
+      define x where "x = (\<lambda>n. if n \<in> (UNIV::nat set) then L n else undefined)"
+      have hxeq: "\<forall>n. x n = L n" unfolding x_def by simp
+      have hxX: "x \<in> ?X" unfolding top1_PiE_iff x_def by simp
+
+      text \<open>Show D-convergence: D(s m, x) \<rightarrow> 0.\<close>
+      have hDconv: "seq_converges_to_on s x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega)"
+        sorry (* D(s m, x) → 0 from coordinatewise convergence + D-metric control *)
+
+      show "\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega)"
+        using hxX hDconv by blast
+    qed
+  qed
 
   show "top1_complete_metric_on ?X top1_D_metric_real_omega
     \<and> top1_metric_topology_on ?X top1_D_metric_real_omega

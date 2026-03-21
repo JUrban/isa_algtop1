@@ -5063,7 +5063,7 @@ qed
 
 (** from \S32 Theorem 32.4 (Every well-ordered set is normal in the order topology) [top1.tex:4230] **)
 text \<open>
-  For a well-ordered type, we follow the proof in @{file \<open>top1.tex\<close>}:
+  For a well-ordered type, we follow the proof in \<open>top1.tex\<close>:
   in the order topology, half-open intervals \<open>(x,y]\<close> are open; using such intervals
   one can separate disjoint closed sets.
 \<close>
@@ -18877,8 +18877,31 @@ lemma paracompact_closure_avoidance_step:
   assumes hUb_sep: "\<forall>b\<in>B. \<exists>W. W \<in> TX \<and> A \<subseteq> W \<and> Ub b \<inter> W = {}"
   assumes hxA: "x \<in> A"
   shows "x \<notin> closure_on X TX D"
-  sorry
-  (* Verified proof (exceeds session time budget when included):
+proof
+  assume hxcl: "x \<in> closure_on X TX D"
+  have step1: "\<exists>E. E \<in> insert (X - B) (Ub ` B) \<and> D \<subseteq> E"
+    using hCC_ref hDCC by metis
+  then obtain E where hE1: "E \<in> insert (X - B) (Ub ` B)" and hDE: "D \<subseteq> E" by blast
+  have step2: "E \<noteq> X - B"
+    using hDE hDinterB by blast
+  then obtain b where hbB: "b \<in> B" and hEeq: "E = Ub b" using hE1 by blast
+  have step3: "\<exists>W. W \<in> TX \<and> A \<subseteq> W \<and> Ub b \<inter> W = {}"
+    using hUb_sep hbB by fast
+  then obtain W where hWT: "W \<in> TX" and hAW: "A \<subseteq> W" and hUbW: "Ub b \<inter> W = {}" by blast
+  have step4: "W \<subseteq> X"
+    using hTsub hWT by blast
+  have step5: "D \<subseteq> X - W"
+    using hDE hEeq hTsub hUbT hbB hUbW by blast
+  have step6: "x \<in> \<Inter>{C. closedin_on X TX C \<and> D \<subseteq> C}"
+    using hxcl unfolding closure_on_def by simp
+  have step7: "X - W \<in> {C. closedin_on X TX C \<and> D \<subseteq> C}"
+    using step4 step5 hWT unfolding closedin_on_def by (simp add: double_diff)
+  have step8: "x \<in> X - W"
+    using step6 step7 by blast
+  show False
+    using step8 hAW hxA by blast
+qed
+  (* Proof strategy:
      D refines the cover, so D \<subseteq> Ub b for some b. Ub b \<inter> W = {} where W \<ni> A is open.
      X - W is closed, D \<subseteq> X - W, cl(D) \<subseteq> X - W, but x \<in> A \<subseteq> W. Contradiction. *)
 
