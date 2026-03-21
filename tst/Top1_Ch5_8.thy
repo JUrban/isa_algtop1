@@ -3505,9 +3505,61 @@ proof -
       
       by fast
     have hRegProp: "\<exists>V\<in>TX. x \<in> V \<and> closure_on X TX V \<subseteq> W"
-      sorry (* Regularity: x ∈ W open, X-W closed with x ∉ X-W.
-               By regularity get U,V separating. U nbhd of x, V ⊇ X-W, U∩V={}.
-               Then cl(U∩X) ⊆ X-V ⊆ W. Extract open set from neighborhood. *)
+    proof -
+      define C where "C = X - W"
+      have hCclosed: "closedin_on X TX C"
+        unfolding C_def closedin_on_def using hWsubX hW
+        
+        by (simp add: Diff_Diff_Int Int_absorb1)
+      have hxnotC: "x \<notin> C"
+        unfolding C_def using hxW
+        
+        by blast
+      obtain U0 V0 where hU0: "neighborhood_of x X TX U0" and hV0: "V0 \<in> TX"
+        and hCV0: "C \<subseteq> V0" and hdisjoint: "U0 \<inter> V0 = {}"
+        using hReg hxX hCclosed hxnotC unfolding top1_regular_on_def
+        
+        by blast
+      obtain U0' where hU0'open: "U0' \<in> TX" and hxU0': "x \<in> U0'" and hU0'sub: "U0' \<subseteq> U0"
+        using hU0 unfolding neighborhood_of_def
+        
+        by blast
+      have hU0'_disj_V0: "U0' \<inter> V0 = {}"
+        using hU0'sub hdisjoint
+        
+        by blast
+      have hV0subX: "V0 \<subseteq> X"
+        using hV0 hBasis unfolding basis_for_def topology_generated_by_basis_def
+        
+        by force
+      have hXminusV0_closed: "closedin_on X TX (X - V0)"
+        unfolding closedin_on_def using hV0 hV0subX
+        by (simp add: double_diff)
+      have hU0'_sub_XmV0: "U0' \<subseteq> X - V0"
+      proof -
+        have "U0' \<subseteq> X" using hU0'open hBasis unfolding basis_for_def topology_generated_by_basis_def
+          
+          by blast
+        then show ?thesis using hU0'_disj_V0
+          
+          by blast
+      qed
+      have hcl_sub: "closure_on X TX U0' \<subseteq> X - V0"
+        using hXminusV0_closed hU0'_sub_XmV0
+        
+        by (simp add: closure_on_subset_of_closed)
+      have hXmV0_sub_W: "X - V0 \<subseteq> W"
+        using hCV0 unfolding C_def
+        
+        by blast
+      have hcl_sub_W: "closure_on X TX U0' \<subseteq> W"
+        using hcl_sub hXmV0_sub_W
+        
+        by order
+      show ?thesis using hU0'open hxU0' hcl_sub_W
+        
+        by blast
+    qed
     obtain V where hVopen: "V \<in> TX" and hxV: "x \<in> V" and hclV: "closure_on X TX V \<subseteq> W"
       using hRegProp
       
