@@ -7367,22 +7367,87 @@ proof -
          (\<forall>k\<le>n. top1_ball_on X d (xseq n) (rseq n) \<subseteq> U k) \<and>
          (n > 0 \<longrightarrow> d (xseq n) (xseq (n-(1::nat))) + rseq n < rseq (n-1)))"
   proof -
-    obtain x0 r0 where hx0X: "x0 \<in> X" and hr0pos: "r0 > 0" and hr0lt: "r0 < 1"
-      and hball0V: "top1_ball_on X d x0 r0 \<subseteq> V"
-      and hball0U: "top1_ball_on X d x0 r0 \<subseteq> U 0"
-      using hbase by blast
-    text \<open>Define paired sequence by recursion.\<close>
-    define pair where "pair = rec_nat (x0, r0)
-      (\<lambda>n (xc, rc). SOME (xn, rn). xn \<in> X \<and> rn > 0 \<and> rn < 1 / real (Suc (Suc n))
-        \<and> top1_ball_on X d xn rn \<subseteq> V
-        \<and> (\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k)
-        \<and> d xn xc + rn < rc)"
-    define xseq where "xseq n = fst (pair n)" for n
-    define rseq where "rseq n = snd (pair n)" for n
-    text \<open>Proving the inductive property requires showing SOME picks a valid pair.
-      This follows from hstep (which guarantees existence) via someI_ex.\<close>
+    text \<open>Use dependent\_nat\_choice from Hilbert\_Choice.\<close>
+    define PP where "PP (n::nat) (p :: 'a \<times> real) \<longleftrightarrow> fst p \<in> X \<and> snd p > 0 \<and> snd p < 1 / real (Suc n)
+      \<and> top1_ball_on X d (fst p) (snd p) \<subseteq> V
+      \<and> (\<forall>k\<le>n. top1_ball_on X d (fst p) (snd p) \<subseteq> U k)" for n and p
+    define QQ where "QQ (n::nat) (p :: 'a \<times> real) (q :: 'a \<times> real) \<longleftrightarrow> d (fst q) (fst p) + snd q < snd p"
+      for n and p and q
+
+    have hPP0: "\<exists>p. PP 0 p"
+    proof -
+      obtain x0' r0' where "x0' \<in> X" "r0' > 0" "r0' < 1"
+        "top1_ball_on X d x0' r0' \<subseteq> V" "top1_ball_on X d x0' r0' \<subseteq> U 0"
+        using hbase by blast
+      then show ?thesis
+        unfolding PP_def by (rule_tac x="(x0', r0')" in exI) simp
+    qed
+
+    have hPPstep: "\<And>(p::'a \<times> real) (n::nat). PP n p \<Longrightarrow> \<exists>q. PP (Suc n) q \<and> QQ n p q"
+    proof -
+      fix p :: "'a \<times> real" and n :: nat
+      assume hPn: "PP n p"
+      have hxc: "fst p \<in> X" and hrc: "snd p > 0"
+        and hballV: "top1_ball_on X d (fst p) (snd p) \<subseteq> V"
+        and hballUk: "\<forall>k\<le>n. top1_ball_on X d (fst p) (snd p) \<subseteq> U k"
+        using hPn unfolding PP_def by blast+
+      obtain xn rn where hxn: "xn \<in> X" "rn > 0" "rn < 1 / real (Suc (Suc n))"
+        "top1_ball_on X d xn rn \<subseteq> V"
+        "(\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k)"
+        "d xn (fst p) + rn < snd p"
+        using hstep[rule_format, of "fst p" "snd p" n] hxc hrc hballV hballUk
+        by blast
+      have "PP (Suc n) (xn, rn)"
+        unfolding PP_def
+        using hxn by simp
+      moreover have "QQ n p (xn, rn)"
+        unfolding QQ_def
+        using hxn by simp
+      ultimately show "\<exists>q. PP (Suc n) q \<and> QQ n p q"
+        by blast
+    qed
+
+    have "\<exists>f::nat \<Rightarrow> 'a \<times> real. \<forall>n. PP n (f n) \<and> QQ n (f n) (f (Suc n))"
+      by (rule dependent_nat_choice[OF hPP0 hPPstep])
+    then obtain f :: "nat \<Rightarrow> 'a \<times> real" where hf: "\<forall>n. PP n (f n) \<and> QQ n (f n) (f (Suc n))"
+      by blast
+
+    define xseq' where "xseq' n = fst (f n)" for n
+    define rseq' where "rseq' n = snd (f n)" for n
+
     show ?thesis
-      sorry
+    proof (rule exI[where x=xseq'], rule exI[where x=rseq'])
+      show "\<forall>n. xseq' n \<in> X \<and> rseq' n > 0 \<and> rseq' n < 1 / real (Suc n) \<and>
+         top1_ball_on X d (xseq' n) (rseq' n) \<subseteq> V \<and>
+         (\<forall>k\<le>n. top1_ball_on X d (xseq' n) (rseq' n) \<subseteq> U k) \<and>
+         (n > 0 \<longrightarrow> d (xseq' n) (xseq' (n-(1::nat))) + rseq' n < rseq' (n-1))"
+      proof (intro allI)
+        fix n
+        have hPPn: "PP n (f n)" using hf by blast
+        have hxn: "fst (f n) \<in> X" using hPPn unfolding PP_def by blast
+        have hrn_pos: "snd (f n) > 0" using hPPn unfolding PP_def by blast
+        have hrn_lt: "snd (f n) < 1 / real (Suc n)" using hPPn unfolding PP_def by blast
+        have hball_V: "top1_ball_on X d (fst (f n)) (snd (f n)) \<subseteq> V"
+          using hPPn unfolding PP_def by blast
+        have hball_Uk: "\<forall>k\<le>n. top1_ball_on X d (fst (f n)) (snd (f n)) \<subseteq> U k"
+          using hPPn unfolding PP_def by blast
+        have hdist_step: "n > 0 \<longrightarrow> d (fst (f n)) (fst (f (n-1))) + snd (f n) < snd (f (n-1))"
+        proof (intro impI)
+          assume "n > 0"
+          then obtain m where hm: "n = Suc m" using gr0_implies_Suc by blast
+          have "QQ m (f m) (f (Suc m))" using hf by blast
+          then show "d (fst (f n)) (fst (f (n-1))) + snd (f n) < snd (f (n-1))"
+            unfolding QQ_def hm by simp
+        qed
+        show "xseq' n \<in> X \<and> rseq' n > 0 \<and> rseq' n < 1 / real (Suc n) \<and>
+           top1_ball_on X d (xseq' n) (rseq' n) \<subseteq> V \<and>
+           (\<forall>k\<le>n. top1_ball_on X d (xseq' n) (rseq' n) \<subseteq> U k) \<and>
+           (n > 0 \<longrightarrow> d (xseq' n) (xseq' (n-(1::nat))) + rseq' n < rseq' (n-1))"
+          unfolding xseq'_def rseq'_def
+          using hxn hrn_pos hrn_lt hball_V hball_Uk hdist_step
+          by blast
+      qed
+    qed
   qed
 
   then obtain xseq rseq where
