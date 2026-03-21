@@ -7201,9 +7201,124 @@ proof -
          (n > 0 \<longrightarrow> top1_ball_on X d (xseq n) (rseq n) \<subseteq> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1)))"
     by blast
 
+  text \<open>Auxiliary facts from sequence properties.\<close>
+  have hxseqX: "\<forall>n. xseq n \<in> X" using hseq_prop by blast
+  have hrseqpos: "\<forall>n. rseq n > 0" using hseq_prop by blast
+  have hrseq_bound: "\<forall>n. rseq n < 1 / real (Suc n)" using hseq_prop by blast
+  have hball_nest: "\<forall>n. n > 0 \<longrightarrow>
+    top1_ball_on X d (xseq n) (rseq n) \<subseteq> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1))"
+    using hseq_prop by blast
+
+  text \<open>Transitive nesting of balls.\<close>
+  have hball_nest_le: "\<And>m n. n \<le> m \<Longrightarrow>
+    top1_ball_on X d (xseq m) (rseq m) \<subseteq> top1_ball_on X d (xseq n) (rseq n)"
+  proof -
+    fix m n :: nat assume "n \<le> m"
+    then show "top1_ball_on X d (xseq m) (rseq m) \<subseteq> top1_ball_on X d (xseq n) (rseq n)"
+    proof (induction m)
+      case 0 then show ?case by simp
+    next
+      case (Suc k)
+      show ?case
+      proof (cases "n = Suc k")
+        case True then show ?thesis by simp
+      next
+        case False
+        then have "n \<le> k" using Suc.prems by linarith
+        have step: "top1_ball_on X d (xseq (Suc k)) (rseq (Suc k))
+                  \<subseteq> top1_ball_on X d (xseq k) (rseq k)"
+          using hball_nest[rule_format, of "Suc k"] by simp
+        have IH: "top1_ball_on X d (xseq k) (rseq k)
+                  \<subseteq> top1_ball_on X d (xseq n) (rseq n)"
+          by (rule Suc.IH[OF \<open>n \<le> k\<close>])
+        show ?thesis
+          using step IH by blast
+      qed
+    qed
+  qed
+
+  text \<open>Each xseq m is in ball(xseq N, rseq N) for m \<ge> N.\<close>
+  have hxseq_in_ball: "\<And>N m. N \<le> m \<Longrightarrow> xseq m \<in> top1_ball_on X d (xseq N) (rseq N)"
+  proof -
+    fix N m :: nat assume "N \<le> m"
+    have hself: "xseq m \<in> top1_ball_on X d (xseq m) (rseq m)"
+    proof -
+      have "d (xseq m) (xseq m) = 0"
+        using hmetric hxseqX[rule_format, of m] unfolding top1_metric_on_def by blast
+      then show ?thesis
+        unfolding top1_ball_on_def using hxseqX[rule_format, of m] hrseqpos[rule_format, of m] by simp
+    qed
+    show "xseq m \<in> top1_ball_on X d (xseq N) (rseq N)"
+      using subsetD[OF hball_nest_le[OF \<open>N \<le> m\<close>] hself] .
+  qed
+
   text \<open>Step 3: The sequence is Cauchy.\<close>
   have hCauchy: "top1_cauchy_seq_on X d xseq"
-    sorry
+    unfolding top1_cauchy_seq_on_def
+  proof (intro allI impI)
+    fix e :: real assume hepos: "0 < e"
+    text \<open>Choose N large enough that 2 * rseq N < e.\<close>
+    have "\<exists>N. 2 * rseq N < e"
+    proof -
+      obtain n :: nat where hn: "real n > 2 / e"
+        using reals_Archimedean2 by blast
+      have "2 * rseq n < 2 * (1 / real (Suc n))"
+        using hrseq_bound[rule_format, of n] by linarith
+      also have "2 * (1 / real (Suc n)) = 2 / real (Suc n)"
+        by simp
+      also have "2 / real (Suc n) \<le> 2 / real n"
+      proof (cases "n = 0")
+        case True
+        then have "2 / e > 0" using hepos by simp
+        then show ?thesis using hn True by simp
+      next
+        case False
+        then have "real n > 0" by simp
+        then show ?thesis
+          by (intro divide_left_mono) simp_all
+      qed
+      also have "2 / real n \<le> e"
+      proof (cases "n = 0")
+        case True
+        then show ?thesis using hn hepos by simp
+      next
+        case False
+        then have "real n > 0" by simp
+        then have "2 / real n \<le> 2 / (2 / e)"
+        proof -
+          have "2 / e \<le> real n" using hn by linarith
+          then show ?thesis using \<open>real n > 0\<close> hepos
+            by (intro divide_left_mono) simp_all
+        qed
+        also have "2 / (2 / e) = e" using hepos by simp
+        finally show ?thesis .
+      qed
+      finally show ?thesis by blast
+    qed
+    then obtain N where hN: "2 * rseq N < e" by blast
+    show "\<exists>N. \<forall>m\<ge>N. \<forall>n\<ge>N. xseq m \<in> X \<and> xseq n \<in> X \<and> d (xseq m) (xseq n) < e"
+    proof (rule exI[where x=N], intro allI impI)
+      fix m assume hmN: "N \<le> m"
+      fix n assume hnN: "N \<le> n"
+      have hmX: "xseq m \<in> X" using hxseqX by blast
+      have hnX: "xseq n \<in> X" using hxseqX by blast
+      have hNX: "xseq N \<in> X" using hxseqX by blast
+      have hm_ball: "d (xseq N) (xseq m) < rseq N"
+        using hxseq_in_ball[OF hmN] unfolding top1_ball_on_def by blast
+      have hn_ball: "d (xseq N) (xseq n) < rseq N"
+        using hxseq_in_ball[OF hnN] unfolding top1_ball_on_def by blast
+      have htri: "d (xseq m) (xseq n) \<le> d (xseq m) (xseq N) + d (xseq N) (xseq n)"
+        using hmetric hmX hNX hnX unfolding top1_metric_on_def by blast
+      have hsym: "d (xseq m) (xseq N) = d (xseq N) (xseq m)"
+        using hmetric hmX hNX unfolding top1_metric_on_def by blast
+      have "d (xseq m) (xseq n) < 2 * rseq N"
+        using htri hsym hm_ball hn_ball by linarith
+      then have "d (xseq m) (xseq n) < e"
+        using hN by linarith
+      then show "xseq m \<in> X \<and> xseq n \<in> X \<and> d (xseq m) (xseq n) < e"
+        using hmX hnX by blast
+    qed
+  qed
 
   text \<open>Step 4: By completeness, the sequence converges.\<close>
   obtain x where hxX: "x \<in> X"
