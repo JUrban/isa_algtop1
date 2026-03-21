@@ -3381,12 +3381,115 @@ definition top1_G_delta_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a 
   "top1_G_delta_on X TX A \<longleftrightarrow> A \<subseteq> X \<and> (\<exists>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX) \<and> A = (\<Inter>n. U n))"
 
 (** from \S40 Lemma 40.1 [top1.tex:5675] **)
+text \<open>Step 1 of Lemma 40.1: open set decomposition.
+  Given regular X with sigma-locally-finite basis B, any open W equals
+  \<Union>U_n = \<Union>cl(U_n) where U_n are open and cl(U_n) \<subseteq> W.\<close>
+lemma Lemma_40_1_step1:
+  assumes hReg: "top1_regular_on X TX"
+  assumes hBasis: "basis_for X \<B> TX"
+  assumes hCLF: "top1_sigma_locally_finite_family_on X TX \<B>"
+  assumes hW: "W \<in> TX"
+  shows "\<exists>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX) \<and> (\<forall>n. closure_on X TX (U n) \<subseteq> W) \<and> W = (\<Union>n. U n)"
+  sorry
+
+text \<open>Step 2 of Lemma 40.1: closed sets are G-delta.\<close>
+lemma Lemma_40_1_step2:
+  assumes hReg: "top1_regular_on X TX"
+  assumes hBasis: "basis_for X \<B> TX"
+  assumes hCLF: "top1_sigma_locally_finite_family_on X TX \<B>"
+  assumes hClosed: "closedin_on X TX A"
+  shows "top1_G_delta_on X TX A"
+proof -
+  have hTop: "is_topology_on X TX"
+    using hReg unfolding top1_regular_on_def top1_T1_on_def
+    
+    by satx
+  have hAX: "A \<subseteq> X"
+    using hClosed unfolding closedin_on_def
+    
+    by presburger
+  define W where "W = X - A"
+  have hWopen: "W \<in> TX"
+    using hClosed unfolding closedin_on_def W_def
+    
+    by presburger
+  obtain U :: "nat \<Rightarrow> 'a set" where hUopen: "\<forall>n. U n \<in> TX"
+    and hUcl: "\<forall>n. closure_on X TX (U n) \<subseteq> W"
+    and hWeq: "W = (\<Union>n. U n)"
+    using Lemma_40_1_step1[OF hReg hBasis hCLF hWopen]
+    by metis
+  text \<open>A = \<Inter>n. (X - cl(U n))\<close>
+  define V where "V n = X - closure_on X TX (U n)" for n
+  have hVopen: "\<forall>n. V n \<in> TX"
+  proof (intro allI)
+    fix n
+    have hUnX: "U n \<subseteq> X"
+      using hUcl hUopen W_def
+      
+      using subset_closure_on by fastforce
+    have hcl: "closedin_on X TX (closure_on X TX (U n))"
+      using hTop hUnX closure_on_closed
+      
+      by blast
+    show "V n \<in> TX"
+      using hcl unfolding V_def closedin_on_def
+      
+      by presburger
+  qed
+  have hAeq: "A = (\<Inter>n. V n)"
+  proof -
+    have "W = (\<Union>n. closure_on X TX (U n))"
+    proof (rule equalityI)
+      show "W \<subseteq> (\<Union>n. closure_on X TX (U n))"
+        unfolding hWeq using subset_closure_on
+        
+        by fast
+      show "(\<Union>n. closure_on X TX (U n)) \<subseteq> W"
+        using hUcl
+        
+        by blast
+    qed
+    then have "X - W = (\<Inter>n. X - closure_on X TX (U n))"
+      
+      by blast
+    then show ?thesis
+      unfolding V_def W_def using hAX
+      
+      by blast
+  qed
+  show ?thesis
+    unfolding top1_G_delta_on_def
+  proof (intro conjI)
+    show "A \<subseteq> X" by (rule hAX)
+    have hex: "(\<forall>n. V n \<in> TX) \<and> A = (\<Inter>n. V n)"
+      using hVopen hAeq
+      
+      by presburger
+    show "\<exists>U::nat \<Rightarrow> 'a set. (\<forall>n. U n \<in> TX) \<and> A = (\<Inter>n. U n)"
+      apply (rule exI[where x=V])
+      using hex
+      
+      by satx
+  qed
+qed
+
+text \<open>Step 3 of Lemma 40.1: normality via the Theorem 32.1 technique.\<close>
+lemma Lemma_40_1_step3:
+  assumes hReg: "top1_regular_on X TX"
+  assumes hBasis: "basis_for X \<B> TX"
+  assumes hCLF: "top1_sigma_locally_finite_family_on X TX \<B>"
+  shows "top1_normal_on X TX"
+  sorry
+
 lemma Lemma_40_1:
   assumes hReg: "top1_regular_on X TX"
   assumes hBasis: "basis_for X \<B> TX"
   assumes hCLF: "top1_sigma_locally_finite_family_on X TX \<B>"
   shows "top1_normal_on X TX \<and> (\<forall>A. closedin_on X TX A \<longrightarrow> top1_G_delta_on X TX A)"
-  sorry
+  using Lemma_40_1_step3[OF hReg hBasis hCLF]
+        Lemma_40_1_step2[OF hReg hBasis hCLF]
+  
+  by argo
 
 (** from \S40 Lemma 40.2 [top1.tex:5724] **)
 lemma Lemma_40_2:
