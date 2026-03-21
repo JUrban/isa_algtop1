@@ -7193,6 +7193,74 @@ proof -
 
     For now, this construction is admitted --- it is the last remaining admit in
     the Baire category proof and is a standard dependent choice argument.\<close>
+  text \<open>Step function: given current point and radius, pick a new point in the
+    intersection of the current ball with U n, and a new radius.\<close>
+  have hstep: "\<forall>xc rc n. xc \<in> X \<and> rc > 0 \<and> top1_ball_on X d xc rc \<subseteq> V
+    \<and> (\<forall>k\<le>n. top1_ball_on X d xc rc \<subseteq> U k) \<longrightarrow>
+    (\<exists>xn rn. xn \<in> X \<and> rn > 0 \<and> rn < 1 / real (Suc (Suc n))
+      \<and> top1_ball_on X d xn rn \<subseteq> V
+      \<and> (\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k)
+      \<and> d xn xc + rn < rc)"
+    sorry
+
+  text \<open>Base case: pick a point in V \<inter> U 0 with a small ball.\<close>
+  have hbase: "\<exists>x0 r0. x0 \<in> X \<and> r0 > 0 \<and> r0 < 1
+    \<and> top1_ball_on X d x0 r0 \<subseteq> V
+    \<and> top1_ball_on X d x0 r0 \<subseteq> U 0"
+  proof -
+    obtain x0' where hx0'V: "x0' \<in> V" using hVne by blast
+    obtain r0' where hr0'pos: "r0' > 0" and hball0': "top1_ball_on X d x0' r0' \<subseteq> V"
+      using hOpenBall hVopen hx0'V by blast
+    have hx0'X: "x0' \<in> X" using hVX hx0'V by blast
+    have hball0'_open: "top1_ball_on X d x0' r0' \<in> ?TX"
+      by (rule top1_ball_open_in_metric_topology[OF hmetric hx0'X hr0'pos])
+    have hball0'_ne: "top1_ball_on X d x0' r0' \<noteq> {}"
+    proof -
+      have "d x0' x0' = 0" using hmetric hx0'X unfolding top1_metric_on_def by blast
+      then have "x0' \<in> top1_ball_on X d x0' r0'"
+        unfolding top1_ball_on_def using hx0'X hr0'pos by simp
+      then show ?thesis by blast
+    qed
+    have hball0'X: "top1_ball_on X d x0' r0' \<subseteq> X"
+      unfolding top1_ball_on_def by blast
+    have "top1_ball_on X d x0' r0' \<inter> U 0 \<noteq> {}"
+    proof -
+      have "top1_densein_on X ?TX (U 0)" using hUdense by blast
+      then have "intersects (top1_ball_on X d x0' r0') (U 0)"
+        using iffD1[OF top1_densein_on_iff_intersects_nonempty_open[OF hTopM hUsubX[rule_format, of 0]]]
+              hball0'_open hball0'X hball0'_ne
+        by blast
+      then show ?thesis unfolding intersects_def by blast
+    qed
+    then obtain x0 where hx0_ball: "x0 \<in> top1_ball_on X d x0' r0'" and hx0_U0: "x0 \<in> U 0" by blast
+    have hx0X: "x0 \<in> X" using hx0_ball unfolding top1_ball_on_def by blast
+    have hx0V: "x0 \<in> V" using hball0' hx0_ball by blast
+    text \<open>Find a ball around x0 inside ball(x0', r0') \<inter> U 0.\<close>
+    have hx0_open: "top1_ball_on X d x0' r0' \<inter> U 0 \<in> ?TX"
+      by (rule topology_inter2[OF hTopM hball0'_open hUopen[rule_format, of 0]])
+    obtain r1 where hr1pos: "r1 > 0" and hball1: "top1_ball_on X d x0 r1 \<subseteq> top1_ball_on X d x0' r0' \<inter> U 0"
+    proof -
+      have "x0 \<in> top1_ball_on X d x0' r0' \<inter> U 0"
+        using hx0_ball hx0_U0 by blast
+      then obtain r where "r > 0" "top1_ball_on X d x0 r \<subseteq> top1_ball_on X d x0' r0' \<inter> U 0"
+        using hOpenBall hx0_open by blast
+      then show ?thesis using that by blast
+    qed
+    define r0 where "r0 = min (r1 / 2) (1 / 2)"
+    have hr0pos: "r0 > 0" unfolding r0_def using hr1pos by simp
+    have hr0lt1: "r0 < 1" unfolding r0_def by simp
+    have hr0ler1: "r0 \<le> r1" unfolding r0_def using hr1pos by simp
+    have hball0_sub: "top1_ball_on X d x0 r0 \<subseteq> top1_ball_on X d x0 r1"
+      by (rule top1_ball_on_mono_radius[OF hr0ler1])
+    have "top1_ball_on X d x0 r0 \<subseteq> V"
+      using hball0_sub hball1 hball0' by blast
+    moreover have "top1_ball_on X d x0 r0 \<subseteq> U 0"
+      using hball0_sub hball1 by blast
+    ultimately show ?thesis
+      using hx0X hr0pos hr0lt1 by blast
+  qed
+
+  text \<open>Construct the sequences by recursion using the step function.\<close>
   have "\<exists>xseq rseq.
     (\<forall>n. xseq n \<in> X \<and> rseq n > 0 \<and> rseq n < 1 / real (Suc n) \<and>
          top1_ball_on X d (xseq n) (rseq n) \<subseteq> V \<and>
