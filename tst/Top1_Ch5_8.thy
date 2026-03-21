@@ -2906,7 +2906,46 @@ proof -
       text \<open>For each D in DD, a is not in cl(D): D refines some Ub b, so cl(D) \<subseteq> cl(Ub b),
         and a \<notin> cl(Ub b) because a has a neighborhood disjoint from Ub b.\<close>
       have ha_not_cl_D: "\<forall>D\<in>?\<DD>. a \<notin> closure_on X TX D"
-        sorry (* each D \<subseteq> some Ub b, cl(D) \<subseteq> cl(Ub b), a \<notin> cl(Ub b) *)
+      proof (intro ballI)
+        fix D assume hDDD: "D \<in> ?\<DD>"
+        have hDCC: "D \<in> \<CC>" using hDDD by blast
+        have hDinterC: "D \<inter> C \<noteq> {}" using hDDD by blast
+        text \<open>D refines the cover, so D \<subseteq> some element of the cover.\<close>
+        have "\<exists>A\<in>?cover. D \<subseteq> A"
+          using hCC_ref hDCC unfolding top1_refines_def by blast
+        then obtain A where hAcover: "A \<in> ?cover" and hDA: "D \<subseteq> A" by blast
+        text \<open>A is either X - C or some Ub b. Since D \<inter> C \<noteq> {}, A cannot be X - C.\<close>
+        have "A \<noteq> X - C"
+        proof
+          assume "A = X - C"
+          then have "D \<subseteq> X - C" using hDA by simp
+          then have "D \<inter> C = {}" by blast
+          then show False using hDinterC by contradiction
+        qed
+        then obtain b where hbC: "b \<in> C" and hAeq: "A = Ub b"
+          using hAcover by blast
+        text \<open>So D \<subseteq> Ub b. cl(D) \<subseteq> cl(Ub b). And a has a neighborhood Wa disjoint from Ub b.\<close>
+        have hDUb: "D \<subseteq> Ub b" using hDA hAeq by simp
+        have hDX: "D \<subseteq> X" using hTsub hCC_cov hDCC unfolding top1_open_covering_on_def by blast
+        have hUbX: "Ub b \<subseteq> X" using hUb hbC hTsub by blast
+        have hcl_D_sub: "closure_on X TX D \<subseteq> closure_on X TX (Ub b)"
+          by (rule closure_on_mono[OF hDUb])
+        obtain Wa where hWaT: "Wa \<in> TX" and haWa: "a \<in> Wa" and hdisj: "Ub b \<inter> Wa = {}"
+          using hUb hbC by blast
+        have ha_not_cl_Ub: "a \<notin> closure_on X TX (Ub b)"
+        proof -
+          have "neighborhood_of a X TX Wa"
+            unfolding neighborhood_of_def using hWaT haWa by blast
+          have "\<not> intersects Wa (Ub b)"
+            unfolding intersects_def using hdisj by blast
+          then show ?thesis
+            using iffD1[OF Theorem_17_5a[OF hTop haX hUbX]]
+                  \<open>neighborhood_of a X TX Wa\<close>
+            by blast
+        qed
+        show "a \<notin> closure_on X TX D"
+          using hcl_D_sub ha_not_cl_Ub by blast
+      qed
 
       text \<open>Step 4: V = \<Union>DD is open and contains C.
         cl(V) = \<Union>{cl(D) | D \<in> DD} by locally finite closure (Lemma 39.1).
