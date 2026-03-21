@@ -3879,9 +3879,9 @@ proof -
         by fast
       show "U' n \<in> TX"
         unfolding hU'eq
-        using hUopen hcomplement_open hTop
-        sledgehammer [timeout = 10]
-        sorry
+        using topology_inter2[OF hTop hUopen[rule_format, of n] hcomplement_open]
+        
+        by presburger
     qed
     have hV'open: "\<forall>n. V' n \<in> TX"
     proof (intro allI)
@@ -4036,25 +4036,32 @@ proof -
           by blast
         have hzclU: "z \<in> closure_on X TX (Ufn m)"
           using hzUfn subset_closure_on
-          sorry
+          
+          by fast
         text \<open>But z ∈ V'_n = Vn_n - ∪{cl(Ufn_i)|i≤n}, and m ≤ n.\<close>
         have "z \<notin> closure_on X TX (Ufn m)"
           using hzV'n hmn unfolding V'_def
-          sorry
+          
+          by simp
         then show False using hzclU
-          sorry
+          
+          by presburger
       next
         assume hnm: "n \<le> m"
         have hzVnn: "z \<in> Vn n" using hzV'n unfolding V'_def
-          sorry
+          
+          by blast
         have hzclV: "z \<in> closure_on X TX (Vn n)"
           using hzVnn subset_closure_on
-          sorry
+          
+          by fast
         have "z \<notin> closure_on X TX (Vn n)"
           using hzU'm hnm unfolding U'_def
-          sorry
+          
+          by auto
         then show False using hzclV
-          sorry
+          
+          by presburger
       qed
     qed
 
