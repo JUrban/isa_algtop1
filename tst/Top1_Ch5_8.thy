@@ -11333,23 +11333,37 @@ theorem Theorem_48_5:
   assumes hfn: "\<forall>n. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (f n)"
   assumes hptw: "\<forall>x\<in>X. seq_converges_to_on (\<lambda>n. f n x) (g x) Y (top1_metric_topology_on Y d)"
   shows "top1_densein_on X TX {x \<in> X. top1_continuous_at_on X TX Y (top1_metric_topology_on Y d) g x}"
-  sorry
-  (* Proof sketch (Munkres Theorem 48.5):
-     Define A_N(ε) = {x ∈ X | ∀n,m ≥ N. d(f_n(x), f_m(x)) ≤ ε}.
-     Step 1: A_N(ε) is closed (preimage of closed set under continuous f_n - f_m).
-     Step 2: ∪_N A_N(ε) = X (pointwise Cauchy property).
-     Step 3: U(ε) = ∪_N Int(A_N(ε)) is open and dense in X.
-       Density: for open V ≠ {}, V is Baire (Lemma 48.4). V ∩ A_N(ε) is closed in V.
-       ∪_N (V ∩ A_N(ε)) = V. By Baire, some V ∩ A_M(ε) has nonempty interior in V.
-       This interior is open in V, hence in X, so contained in Int(A_M(ε)).
-     Step 4: f is continuous at each x₀ ∈ C = ∩_k U(1/k).
-       Given ε > 0, pick k with 1/k < ε/3. x₀ ∈ U(1/k) → x₀ ∈ Int(A_N(1/k)).
-       f_N continuous → W nbhd of x₀ inside A_N(1/k) with d(f_N(x), f_N(x₀)) < ε/3.
-       For x ∈ W: d(f_n(x), f_N(x)) ≤ 1/k (n ≥ N, x ∈ A_N).
-       Letting n → ∞: d(g(x), f_N(x)) ≤ 1/k < ε/3.
-       Triangle: d(g(x), g(x₀)) ≤ d(g(x), f_N(x)) + d(f_N(x), f_N(x₀)) + d(f_N(x₀), g(x₀)) < ε.
-     Step 5: C = ∩_k U(1/k) is dense by Baire (countable intersection of open dense).
-     ~100 lines estimated. *)
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  have hTop: "is_topology_on X TX"
+    using hB unfolding top1_baire_on_def
+    sledgehammer [timeout = 10]
+    sorry
+
+  text \<open>Define A_N(ε) and U(ε).\<close>
+  define AN where "AN N e = top1_AN_48 f d N e X" for N :: nat and e :: real
+  define U where "U e = (\<Union>N. interior_on X TX (AN N e))" for e :: real
+
+  text \<open>U(ε) is open and dense in X for each ε > 0.\<close>
+  have hU_open_dense: "\<forall>e > 0. U e \<in> TX \<and> top1_densein_on X TX (U e)"
+    sorry (* Step 3 of proof: uses Baire property.
+             Each AN N ε is closed. ∪AN N ε = X. By Baire, some has nonempty interior.
+             So ∪Int(AN N ε) is dense. ~40 lines. *)
+
+  text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
+  define C where "C = (\<Inter>k::nat. U (1 / real (Suc k)))"
+  have hC_dense: "top1_densein_on X TX C"
+    sorry (* C is countable intersection of open dense sets.
+             By Baire property, C is dense. ~10 lines. *)
+
+  have hC_sub_cont: "C \<subseteq> {x \<in> X. top1_continuous_at_on X TX Y ?TY g x}"
+    sorry (* Step 4: for x₀ ∈ C, given ε > 0, pick k with 1/(k+1) < ε/3.
+             x₀ ∈ U(1/(k+1)), so x₀ ∈ Int(A_N(1/(k+1))).
+             f_N continuous + triangle inequality → g continuous at x₀. ~40 lines. *)
+
+  show ?thesis
+    sorry (* C is dense and C ⊆ {continuity points}, so {continuity points} is dense. *)
+qed
 
 section \<open>*\<S>49 A Nowhere-Differentiable Function\<close>
 
