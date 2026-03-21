@@ -937,7 +937,57 @@ lemma tychonoff_point_in_all_closures:
   assumes hxProd: "x \<in> top1_PiE I X"
   assumes hxcl: "\<forall>i\<in>I. \<forall>D\<in>\<D>. x i \<in> closure_on (X i) (TX i) ((\<lambda>f. f i) ` D)"
   shows "\<forall>D\<in>\<D>. x \<in> closure_on (top1_PiE I X) (top1_product_topology_on I X TX) D"
-  sorry
+proof -
+  have hTopProd: "is_topology_on (top1_PiE I X) (top1_product_topology_on I X TX)"
+    by (rule top1_product_topology_on_is_topology_on[OF hTop])
+
+  have hFIP_D: "top1_FIP_on (top1_PiE I X) \<D>"
+    using hmax unfolding top1_FIP_maximal_on_def by simp
+  have hDsub: "\<forall>D0\<in>\<D>. D0 \<subseteq> top1_PiE I X"
+    using hFIP_D unfolding top1_FIP_on_def by simp
+
+  have hBasis: "basis_for (top1_PiE I X) (top1_product_basis_on I X TX) (top1_product_topology_on I X TX)"
+    unfolding basis_for_def top1_product_topology_on_def
+    by (intro conjI top1_product_basis_is_basis_on[OF hTop] refl)
+
+  text \<open>Every subbasis element (cylinder) containing x is in D.\<close>
+  have hcyl_in_D:
+    "\<forall>i\<in>I. \<forall>U\<in>TX i. x i \<in> U \<longrightarrow>
+      top1_PiE I (\<lambda>j. if j = i then U \<inter> X i else X j) \<in> \<D>"
+  proof (intro ballI impI)
+    fix i U assume hi: "i \<in> I" and hU: "U \<in> TX i" and hxU: "x i \<in> U"
+    have hxcli: "\<forall>D\<in>\<D>. x i \<in> closure_on (X i) (TX i) ((\<lambda>f. f i) ` D)"
+      using hxcl hi by blast
+    show "top1_PiE I (\<lambda>j. if j = i then U \<inter> X i else X j) \<in> \<D>"
+      by (rule tychonoff_subbasis_in_maxFIP[OF hTop hmax hProdNe hi hU hxU hxProd hxcli])
+  qed
+
+  text \<open>Every basis element containing x belongs to D (finite intersection of cylinders).\<close>
+  have hbasis_in_D: "\<forall>b\<in>top1_product_basis_on I X TX. x \<in> b \<longrightarrow> b \<in> \<D>"
+    sorry
+
+  text \<open>Therefore x is in the closure of every D.\<close>
+  show "\<forall>D\<in>\<D>. x \<in> closure_on (top1_PiE I X) (top1_product_topology_on I X TX) D"
+  proof (intro ballI)
+    fix D0 assume hD0: "D0 \<in> \<D>"
+    have hD0sub: "D0 \<subseteq> top1_PiE I X" using hDsub hD0 by blast
+
+    show "x \<in> closure_on (top1_PiE I X) (top1_product_topology_on I X TX) D0"
+    proof (rule iffD2[OF Theorem_17_5b[OF hBasis hxProd hD0sub]])
+      show "\<forall>b\<in>top1_product_basis_on I X TX. x \<in> b \<longrightarrow> intersects b D0"
+      proof (intro ballI impI)
+        fix b assume hb: "b \<in> top1_product_basis_on I X TX" and hxb: "x \<in> b"
+        have hbD: "b \<in> \<D>" using hbasis_in_D hb hxb by blast
+        have hFIPpair: "finite {b, D0} \<and> {b, D0} \<subseteq> \<D>"
+          using hbD hD0 by simp
+        then have "\<Inter>{b, D0} \<noteq> {}"
+          using hFIP_D unfolding top1_FIP_on_def by blast
+        then show "intersects b D0"
+          unfolding intersects_def by simp
+      qed
+    qed
+  qed
+qed
 
 (** from \S37 Theorem 37.3 (Tychonoff theorem) [top1.tex:5253] **)
 theorem Theorem_37_3:
