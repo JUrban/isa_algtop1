@@ -7176,8 +7176,12 @@ proof -
         sorry
     qed
   qed
-
 qed
+
+text \<open>Helper for Baire: complete metric spaces are Baire.
+  The proof constructs nested balls using density and metric open sets,
+  then uses completeness to find a limit point in the intersection.
+  This is a placeholder for the detailed nested-ball construction.\<close>
 
 (** Helper: distance set of a metric subset is bdd_above when diameter is finite. **)
 lemma top1_metric_dist_set_bdd_above:
