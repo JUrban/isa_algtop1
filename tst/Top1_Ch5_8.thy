@@ -5038,9 +5038,10 @@ proof -
 
     text \<open>C is locally finite.\<close>
     have hC_lf: "top1_locally_finite_family_on X TX \<C>"
-      sorry (* For x, find N as above. For n ≤ N pick W_n meeting finitely many B_n.
-               For n > N, U ∈ B_N so any S_n(V) is disjoint from U.
-               W_1 ∩ ... ∩ W_N ∩ U meets finitely many C elements. *)
+      sorry (* Core local finiteness argument for step (1)→(2).
+               ~60 lines: uses LEAST for N, finite intersection of W_n's for n ≤ N,
+               and U ∈ Bn N to exclude n > N contributions.
+               Deferred to keep progress flowing. *)
 
     text \<open>Each C ∈ C is a subset of X.\<close>
     have hC_subX: "\<forall>C\<in>\<C>. C \<subseteq> X"
