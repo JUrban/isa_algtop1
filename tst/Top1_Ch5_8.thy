@@ -3796,32 +3796,136 @@ proof -
     define UU where "UU = (\<Union>n. U' n)"
     define VV where "VV = (\<Union>n. V' n)"
 
-    text \<open>U'_n are open (U_n open, each cl(V_i) closed).\<close>
+    text \<open>U'_n are open (Ufn n open minus finite union of closed = open).\<close>
     have hU'open: "\<forall>n. U' n \<in> TX"
-      sorry (* U' n = U n - finite union of closed sets = U n ∩ (X - ∪cl(V_i)).
-               Finite union of closed = closed, complement open, intersection open. *)
+      sorry (* Ufn n - ∪{cl(Vn i) | i ≤ n}. Finite union of closed = closed.
+               Ufn n ∩ complement = open. Needs closedin_on_finite_Union + topology_inter2. *)
     have hV'open: "\<forall>n. V' n \<in> TX"
       sorry
 
     text \<open>UU and VV are open (unions of opens).\<close>
     have hUU_open: "UU \<in> TX"
-      sorry (* Union of open sets is open *)
+      unfolding UU_def using hU'open hTop unfolding is_topology_on_def
+      sledgehammer [timeout = 10]
+      sorry
     have hVV_open: "VV \<in> TX"
+      unfolding VV_def using hV'open hTop unfolding is_topology_on_def
+      sledgehammer [timeout = 10]
       sorry
 
-    text \<open>C ⊆ UU: for c ∈ C, c ∈ U_n for some n, and c ∉ cl(V_i) for all i
-      (since cl(V_i) ⊆ X-C and c ∈ C).\<close>
+    text \<open>C ⊆ UU: for c ∈ C, c ∈ Ufn_n for some n; cl(Vn_i) ⊆ X-C for all i, so c ∉ cl(Vn_i).\<close>
     have hC_sub_UU: "C \<subseteq> UU"
-      sorry (* c ∈ C ⊆ ∪U_n. Pick smallest n with c ∈ U_n.
-               cl(V_i) ⊆ X-C for all i, so c ∉ cl(V_i). Hence c ∈ U'_n. *)
+    proof (rule subsetI)
+      fix c assume hcC: "c \<in> C"
+      have hcUn: "c \<in> (\<Union>n. Ufn n)" using hC_sub_Un hcC
+        
+        by fast
+      then obtain n where hcUfn: "c \<in> Ufn n"
+        
+        by blast
+      have hc_not_clV: "\<forall>i. c \<notin> closure_on X TX (Vn i)"
+      proof (intro allI)
+        fix i
+        have "closure_on X TX (Vn i) \<subseteq> X - C" using hVcl
+          
+          by presburger
+        then show "c \<notin> closure_on X TX (Vn i)" using hcC
+          
+          by blast
+      qed
+      have "c \<in> U' n"
+        unfolding U'_def using hcUfn hc_not_clV
+        
+        by blast
+      then show "c \<in> UU" unfolding UU_def
+        
+        by blast
+    qed
     have hD_sub_VV: "D \<subseteq> VV"
-      sorry
+    proof (rule subsetI)
+      fix d assume hdD: "d \<in> D"
+      have hdVn: "d \<in> (\<Union>n. Vn n)" using hD_sub_Vn hdD
+        
+        by fast
+      then obtain n where hdVnn: "d \<in> Vn n"
+        
+        by blast
+      have hd_not_clU: "\<forall>i. d \<notin> closure_on X TX (Ufn i)"
+      proof (intro allI)
+        fix i
+        have "closure_on X TX (Ufn i) \<subseteq> X - D" using hUcl
+          
+          by auto
+        then show "d \<notin> closure_on X TX (Ufn i)" using hdD
+          
+          by blast
+      qed
+      have "d \<in> V' n"
+        unfolding V'_def using hdVnn hd_not_clU
+        
+        by fast
+      then show "d \<in> VV" unfolding VV_def
+        
+        by fast
+    qed
 
-    text \<open>UU ∩ VV = {}: if z ∈ U'_m ∩ V'_n, WLOG m ≤ n.
-      z ∈ U'_m ⊆ U_m, so z ∈ cl(U_m) ⊆ cl(U_m). But z ∈ V'_n = V_n - ∪{cl(U_i)|i≤n},
-      so z ∉ cl(U_m) since m ≤ n. Contradiction.\<close>
+    text \<open>UU ∩ VV = {}: if z ∈ U'_m ∩ V'_n, then WLOG m ≤ n.
+      z ∈ U'_m ⊆ Ufn_m, so z ∈ closure_on Ufn_m. But z ∈ V'_n excludes ∪{cl(Ufn_i)|i≤n}.\<close>
     have hUV_disj: "UU \<inter> VV = {}"
-      sorry
+    proof (rule ccontr)
+      assume "\<not> UU \<inter> VV = {}"
+      then obtain z where hzUU: "z \<in> UU" and hzVV: "z \<in> VV"
+        
+        by auto
+      obtain m where hzU'm: "z \<in> U' m"
+        using hzUU unfolding UU_def
+        
+        by blast
+      obtain n where hzV'n: "z \<in> V' n"
+        using hzVV unfolding VV_def
+        
+        by blast
+      text \<open>WLOG m ≤ n (symmetric argument for n ≤ m).\<close>
+      have "m \<le> n \<or> n \<le> m"
+        
+        by presburger
+      then show False
+      proof
+        assume hmn: "m \<le> n"
+        text \<open>z ∈ U'_m ⊆ Ufn_m, so z ∈ closure(Ufn_m) (since Ufn_m ⊆ closure(Ufn_m)).\<close>
+        have hzUfn: "z \<in> Ufn m" using hzU'm unfolding U'_def
+          
+          by blast
+        have hzclU: "z \<in> closure_on X TX (Ufn m)"
+          using hzUfn subset_closure_on
+          sledgehammer [timeout = 10]
+          sorry
+        text \<open>But z ∈ V'_n = Vn_n - ∪{cl(Ufn_i)|i≤n}, and m ≤ n.\<close>
+        have "z \<notin> closure_on X TX (Ufn m)"
+          using hzV'n hmn unfolding V'_def
+          sledgehammer [timeout = 10]
+          sorry
+        then show False using hzclU
+          sledgehammer [timeout = 10]
+          sorry
+      next
+        assume hnm: "n \<le> m"
+        have hzVnn: "z \<in> Vn n" using hzV'n unfolding V'_def
+          sledgehammer [timeout = 10]
+          sorry
+        have hzclV: "z \<in> closure_on X TX (Vn n)"
+          using hzVnn subset_closure_on
+          sledgehammer [timeout = 10]
+          sorry
+        have "z \<notin> closure_on X TX (Vn n)"
+          using hzU'm hnm unfolding U'_def
+          sledgehammer [timeout = 10]
+          sorry
+        then show False using hzclV
+          sledgehammer [timeout = 10]
+          sorry
+      qed
+    qed
 
     show "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}"
       using hUU_open hVV_open hC_sub_UU hD_sub_VV hUV_disj
