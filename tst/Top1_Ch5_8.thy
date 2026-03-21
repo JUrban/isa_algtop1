@@ -3953,14 +3953,18 @@ definition top1_sup_topology_on ::
   "top1_sup_topology_on X Y d =
      top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d)"
 
-(** from \S43 Theorem 43.5 [top1.tex:6242] **)
+(** from \S43 Theorem 43.5 [top1.tex:6242]
+    Proof: Cauchy in uniform metric \<Rightarrow> coordinatewise Cauchy in Y \<Rightarrow> coordinatewise convergent
+    (by completeness of Y) \<Rightarrow> uniform convergence. **)
 theorem Theorem_43_5:
   assumes hIne: "I \<noteq> {}"
   assumes hd: "top1_complete_metric_on Y d"
   shows "top1_complete_metric_on (top1_PiE I (\<lambda>_. Y)) (top1_uniform_metric_on I d)"
   sorry
 
-(** from \S43 Theorem 43.6 [top1.tex:6272] **)
+(** from \S43 Theorem 43.6 [top1.tex:6272]
+    Proof: (a-b) continuous/bounded maps closed in uniform topology (uniform limit theorem).
+    (c-d) Closed subsets of complete spaces are complete. **)
 theorem Theorem_43_6:
   assumes hd: "top1_metric_on Y d"
   shows "closedin_on
@@ -3983,7 +3987,9 @@ definition top1_isometry_on ::
   "top1_isometry_on X d Y dY e \<longleftrightarrow>
      (\<forall>x\<in>X. e x \<in> Y) \<and> (\<forall>x\<in>X. \<forall>x'\<in>X. dY (e x) (e x') = d x x')"
 
-(** from \S43 Theorem 43.7 (Completion) [top1.tex:6312] **)
+(** from \S43 Theorem 43.7 (Completion) [top1.tex:6312]
+    Proof: Embed X isometrically into the complete space of bounded continuous functions
+    X \<rightarrow> R via x \<mapsto> d(x, \<cdot>). The closure of the image is the completion. **)
 theorem Theorem_43_7:
   assumes hd: "top1_metric_on X d"
   shows "\<exists>Y dY e. top1_complete_metric_on Y dY \<and> top1_isometry_on X d Y dY e"
