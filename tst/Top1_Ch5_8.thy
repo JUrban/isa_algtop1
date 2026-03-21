@@ -7186,6 +7186,13 @@ proof -
     (c) \<open>d(xseq(Suc n), xseq n) + rseq(Suc n) < rseq n\<close> (closed ball fits strictly)
     Property (c) ensures that the closed ball at step n+1 fits inside the open ball at step n,
     which is needed to conclude the limit is in V and each U k.\<close>
+  text \<open>Inductive construction of nested ball sequences.
+    We build xseq and rseq by nat recursion.  At each step, density of U_{n+1}
+    provides a point in ball(xseq n, rseq n) \<inter> U (Suc n), and the metric open
+    set condition provides a smaller ball inside.
+
+    For now, this construction is admitted --- it is the last remaining admit in
+    the Baire category proof and is a standard dependent choice argument.\<close>
   have "\<exists>xseq rseq.
     (\<forall>n. xseq n \<in> X \<and> rseq n > 0 \<and> rseq n < 1 / real (Suc n) \<and>
          top1_ball_on X d (xseq n) (rseq n) \<subseteq> V \<and>
