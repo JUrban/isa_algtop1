@@ -5247,19 +5247,17 @@ proof -
       by blast
   qed
 
-  text \<open>Step (2)\<Rightarrow>(3): close the LF covering using regularity → LF closed covering.\<close>
-  have step23: "\<exists>\<D>. (\<forall>D\<in>\<D>. closedin_on X TX D) \<and> X \<subseteq> \<Union>\<D> \<and> top1_refines \<D> \<A> \<and> top1_locally_finite_family_on X TX \<D>"
-    sorry (* Munkres (2)→(3): use regularity to get B' with cl(B') ⊆ A.
-             Take LF ref of B', close it via Lemma 39.1 *)
+  text \<open>Steps (2)\<Rightarrow>(3)\<Rightarrow>(4) combined: from LF covering to LF open covering.
+    Uses regularity + Lemma 39.1 for closure + expansion via auxiliary LF closed covering.
+    This is the remaining core of Munkres' Lemma 41.3.\<close>
+  have step234: "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
+    sorry (* Steps (2)→(3)→(4) of Munkres Lemma 41.3.
+             Requires: regularity shrinking, Lemma 39.1 closure, expansion trick.
+             ~100 lines. *)
 
-  text \<open>Step (3)\<Rightarrow>(4): expand closed LF covering to open LF covering.\<close>
-  have step34: "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
-    sorry (* Munkres (3)→(4): expand using auxiliary closed LF covering.
-             E(B) = X - ∪{C ∈ aux | C ⊆ X-B}. Intersect with F(B) ∈ A. *)
-
-  show ?thesis using step34
+  show ?thesis using step234
     
-    by metis
+    by argo
 qed
 
 (** from \S41 Theorem 41.4 [top1.tex:5953] **)
