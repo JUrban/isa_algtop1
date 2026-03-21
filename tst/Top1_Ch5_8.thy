@@ -1020,8 +1020,10 @@ proof -
       have "b = top1_PiE I X"
       proof -
         have hUeq: "\<forall>i\<in>I. U i = X i" using True unfolding J_def by blast
+        have hpie_eq: "top1_PiE I U = top1_PiE I X"
+          by (rule top1_PiE_cong_on[OF hUeq])
         show "b = top1_PiE I X"
-          sorry (* b = top1_PiE I U = top1_PiE I X; trivial chain *)
+          using hbdef hpie_eq by (rule trans)
       qed
       then show ?thesis using hProd_in_D by simp
     next
