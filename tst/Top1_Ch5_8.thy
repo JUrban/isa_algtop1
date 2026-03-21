@@ -3235,15 +3235,165 @@ theorem Theorem_41_2:
   assumes hPara: "top1_paracompact_on X TX"
   assumes hClosed: "closedin_on X TX A"
   shows "top1_paracompact_on A (subspace_topology X TX A)"
-  sorry (* Proof strategy:
-     Given open cover C of A (in subspace), for each U ∈ C write U = A ∩ U' (U' open in X).
-     Cover X by {U' | U ∈ C} ∪ {X - A}. Take locally finite refinement B.
-     Then {B ∩ A | B ∈ B, B ∩ A ≠ {}} is a locally finite open refinement of C covering A.
-     No closure_on involved. Estimated ~80 lines. *)
-  (* Proof strategy (Munkres Thm 41.2): Given open cover \<A> of A in the subspace,
-     for each element U \<in> \<A>, write U = A \<inter> U' for some U' open in X.
-     Cover X by {U' | U \<in> \<A>} \<union> {X - A}. Take locally finite open refinement \<B> of X.
-     Then {B \<inter> A | B \<in> \<B>} is a locally finite open refinement of \<A> covering A. *)
+  unfolding top1_paracompact_on_def
+proof (intro allI impI)
+  fix \<A>
+  assume hcov: "top1_open_covering_on A (subspace_topology X TX A) \<A>"
+  have hAX: "A \<subseteq> X" using hClosed unfolding closedin_on_def by blast
+  have hXmA_open: "X - A \<in> TX" using hClosed unfolding closedin_on_def by blast
+
+  text \<open>Each element of \<A> is A \<inter> U for some open U in TX.\<close>
+  have hA_sub: "\<A> \<subseteq> subspace_topology X TX A"
+    using hcov unfolding top1_open_covering_on_def by blast
+  have hA_covers: "A \<subseteq> \<Union>\<A>"
+    using hcov unfolding top1_open_covering_on_def by blast
+
+  text \<open>For each V \<in> \<A>, pick a parent open set.\<close>
+  have hparent: "\<forall>V\<in>\<A>. \<exists>U. U \<in> TX \<and> V = A \<inter> U"
+  proof (intro ballI)
+    fix V assume hV: "V \<in> \<A>"
+    then have "V \<in> subspace_topology X TX A" using hA_sub by blast
+    then show "\<exists>U. U \<in> TX \<and> V = A \<inter> U"
+      unfolding subspace_topology_def by blast
+  qed
+  obtain parent where hpar: "\<forall>V\<in>\<A>. parent V \<in> TX \<and> V = A \<inter> parent V"
+    using bchoice[OF hparent] by blast
+
+  text \<open>Build open cover of X: parent sets plus X - A.\<close>
+  define \<C> where "\<C> = parent ` \<A> \<union> {X - A}"
+  have hC_open: "\<C> \<subseteq> TX"
+  proof (rule subsetI)
+    fix U assume "U \<in> \<C>"
+    then show "U \<in> TX"
+      unfolding \<C>_def using hpar hXmA_open by blast
+  qed
+  have hC_covers: "X \<subseteq> \<Union>\<C>"
+  proof (rule subsetI)
+    fix x assume hxX: "x \<in> X"
+    show "x \<in> \<Union>\<C>"
+    proof (cases "x \<in> A")
+      case True
+      then obtain V where hV: "V \<in> \<A>" and hxV: "x \<in> V"
+        using hA_covers by blast
+      have "x \<in> parent V" using hpar hV hxV by blast
+      then show ?thesis unfolding \<C>_def using hV by blast
+    next
+      case False
+      then have "x \<in> X - A" using hxX by blast
+      then show ?thesis unfolding \<C>_def by blast
+    qed
+  qed
+  have hC_cov: "top1_open_covering_on X TX \<C>"
+    unfolding top1_open_covering_on_def using hC_open hC_covers by blast
+
+  text \<open>Get locally finite refinement from paracompactness.\<close>
+  obtain \<B> where hB_cov: "top1_open_covering_on X TX \<B>"
+    and hB_ref: "top1_refines \<B> \<C>"
+    and hB_lf: "top1_locally_finite_family_on X TX \<B>"
+    using hPara hC_cov unfolding top1_paracompact_on_def by blast
+
+  text \<open>Restrict to A: define \<B>_A = {B \<inter> A | B \<in> \<B>} - {{}}.\<close>
+  define \<B>A where "\<B>A = {B \<inter> A | B. B \<in> \<B>} - {{}}"
+
+  show "\<exists>\<B>'. top1_open_covering_on A (subspace_topology X TX A) \<B>' \<and>
+    top1_refines \<B>' \<A> \<and> top1_locally_finite_family_on A (subspace_topology X TX A) \<B>'"
+  proof (rule exI[where x="\<B>A"], intro conjI)
+
+    text \<open>\<B>A is an open covering of A.\<close>
+    show "top1_open_covering_on A (subspace_topology X TX A) \<B>A"
+      unfolding top1_open_covering_on_def
+    proof (intro conjI)
+      show "\<B>A \<subseteq> subspace_topology X TX A"
+      proof (rule subsetI)
+        fix V assume "V \<in> \<B>A"
+        then obtain B where hB: "B \<in> \<B>" and hVeq: "V = B \<inter> A" and hVne: "V \<noteq> {}"
+          unfolding \<B>A_def by blast
+        have "B \<in> TX" using hB hB_cov unfolding top1_open_covering_on_def by blast
+        then show "V \<in> subspace_topology X TX A"
+          unfolding subspace_topology_def hVeq by (blast intro: exI)
+      qed
+    next
+      show "A \<subseteq> \<Union>\<B>A"
+      proof (rule subsetI)
+        fix a assume haA: "a \<in> A"
+        then have "a \<in> X" using hAX by blast
+        then have "a \<in> \<Union>\<B>" using hB_cov unfolding top1_open_covering_on_def by blast
+        then obtain B where hB: "B \<in> \<B>" and haB: "a \<in> B" by blast
+        have hne: "B \<inter> A \<noteq> {}" using haA haB by blast
+        have "a \<in> B \<inter> A" using haA haB by blast
+        then show "a \<in> \<Union>\<B>A" unfolding \<B>A_def using hB hne by blast
+      qed
+    qed
+
+    text \<open>\<B>A refines \<A>.\<close>
+    show "top1_refines \<B>A \<A>"
+      unfolding top1_refines_def
+    proof (intro ballI)
+      fix V assume hVBA: "V \<in> \<B>A"
+      then obtain B where hB: "B \<in> \<B>" and hVeq: "V = B \<inter> A" and hVne: "V \<noteq> {}"
+        unfolding \<B>A_def by blast
+      have "\<exists>C\<in>\<C>. B \<subseteq> C" using hB_ref hB unfolding top1_refines_def by blast
+      then obtain C where hCC: "C \<in> \<C>" and hBC: "B \<subseteq> C" by blast
+      show "\<exists>W\<in>\<A>. V \<subseteq> W"
+      proof (cases "C = X - A")
+        case True
+        then have "B \<subseteq> X - A" using hBC by blast
+        then have "B \<inter> A = {}" by blast
+        then have "V = {}" using hVeq by blast
+        then show ?thesis using hVne by blast
+      next
+        case False
+        then have "C \<in> parent ` \<A>" using hCC unfolding \<C>_def by blast
+        then obtain W where hW: "W \<in> \<A>" and hCeq: "C = parent W" by blast
+        have "V = B \<inter> A" by (rule hVeq)
+        also have "... \<subseteq> C \<inter> A" using hBC by blast
+        also have "... = parent W \<inter> A" using hCeq by blast
+        also have "... = A \<inter> parent W" by (rule Int_commute)
+        also have "... = W" using hpar hW by blast
+        finally show ?thesis using hW by blast
+      qed
+    qed
+
+    text \<open>\<B>A is locally finite in the subspace.\<close>
+    show "top1_locally_finite_family_on A (subspace_topology X TX A) \<B>A"
+      unfolding top1_locally_finite_family_on_def
+    proof (intro ballI)
+      fix a assume haA: "a \<in> A"
+      then have haX: "a \<in> X" using hAX by blast
+      obtain U where hU: "U \<in> TX" and haU: "a \<in> U"
+        and hfin: "finite {B \<in> \<B>. intersects B U}"
+        using hB_lf haX unfolding top1_locally_finite_family_on_def by blast
+      define UA where "UA = A \<inter> U"
+      have hUA_sub: "UA \<in> subspace_topology X TX A"
+        unfolding UA_def subspace_topology_def using hU by blast
+      have haUA: "a \<in> UA" unfolding UA_def using haA haU by blast
+      have hfin_BA: "finite {V \<in> \<B>A. intersects V UA}"
+      proof (rule finite_subset[where B="{B \<inter> A | B. B \<in> \<B> \<and> intersects B U}"])
+        show "{V \<in> \<B>A. intersects V UA} \<subseteq> {B \<inter> A | B. B \<in> \<B> \<and> intersects B U}"
+        proof (rule subsetI)
+          fix V assume hV: "V \<in> {V \<in> \<B>A. intersects V UA}"
+          then have hVBA: "V \<in> \<B>A" and hVUA: "intersects V UA" by blast+
+          obtain B where hB: "B \<in> \<B>" and hVeq: "V = B \<inter> A"
+            using hVBA unfolding \<B>A_def by blast
+          have "intersects B U"
+            using hVUA unfolding intersects_def hVeq UA_def by blast
+          then show "V \<in> {B \<inter> A | B. B \<in> \<B> \<and> intersects B U}"
+            using hB hVeq by blast
+        qed
+      next
+        have "finite {B \<in> \<B>. intersects B U}" by (rule hfin)
+        then have "finite ((\<lambda>B. B \<inter> A) ` {B \<in> \<B>. intersects B U})"
+          by (rule finite_imageI)
+        moreover have "{B \<inter> A | B. B \<in> \<B> \<and> intersects B U} = (\<lambda>B. B \<inter> A) ` {B \<in> \<B>. intersects B U}"
+          by blast
+        ultimately show "finite {B \<inter> A | B. B \<in> \<B> \<and> intersects B U}"
+          by simp
+      qed
+      show "\<exists>U\<in>subspace_topology X TX A. a \<in> U \<and> finite {V \<in> \<B>A. intersects V U}"
+        using hUA_sub haUA hfin_BA by blast
+    qed
+  qed
+qed
 
 (** from \S41 Lemma 41.3 [top1.tex:5864] **)
 lemma Lemma_41_3:
@@ -3937,9 +4087,52 @@ proof (rule exI[where x="top1_D_metric_real_omega"])
         show "s m \<in> ?X" unfolding top1_PiE_iff by simp
       qed
 
-      text \<open>Build coordinatewise limit.\<close>
+      text \<open>Build coordinatewise limit: each coordinate is Cauchy in R, hence convergent.\<close>
       have hcoord_conv: "\<forall>n. \<exists>L. (\<lambda>m. s m n) \<longlonglongrightarrow> L"
-        sorry (* each coord is Cauchy in R, R is complete *)
+      proof (intro allI)
+        fix n
+        have "Cauchy (\<lambda>m. s m n)"
+          unfolding Cauchy_def
+        proof (intro allI impI)
+          fix e :: real assume hepos: "0 < e"
+          define e' where "e' = min e 1 / (2 * real (Suc n))"
+          have he'pos: "0 < e'"
+            unfolding e'_def using hepos by simp
+          obtain N where hN: "\<forall>m\<ge>N. \<forall>k\<ge>N. top1_D_metric_real_omega (s m) (s k) < e'"
+            using hsCauchy_def he'pos by blast
+          show "\<exists>M. \<forall>m\<ge>M. \<forall>k\<ge>M. dist (s m n) (s k n) < e"
+          proof (rule exI[where x=N], intro allI impI)
+            fix m k assume hmN: "m \<ge> N" and hkN: "k \<ge> N"
+            have hDlt: "top1_D_metric_real_omega (s m) (s k) < e'"
+              using hN hmN hkN by blast
+            have hterm: "top1_real_bounded_metric (s m n) (s k n) / real (Suc n) \<le> top1_D_metric_real_omega (s m) (s k)"
+              by (metis top1_D_metric_real_omega_term_le)
+            have hpos_Suc: "0 < real (Suc n)" by simp
+            have hle_chain: "top1_real_bounded_metric (s m n) (s k n) / real (Suc n) < e'"
+              using hterm hDlt by linarith
+            have hbdd_lt: "top1_real_bounded_metric (s m n) (s k n) < e' * real (Suc n)"
+              using hle_chain hpos_Suc
+              by (simp add: pos_divide_less_eq mult.commute)
+            have he'_eq: "e' * real (Suc n) = min e 1 / 2"
+              unfolding e'_def using hpos_Suc
+              by (simp add: field_simps)
+            have he'n_le: "e' * real (Suc n) \<le> 1 / 2"
+              using he'_eq by (simp add: min_def)
+            have hbdd_lt1: "top1_real_bounded_metric (s m n) (s k n) < 1"
+              using hbdd_lt he'n_le by linarith
+            have hdist_eq: "\<bar>s m n - s k n\<bar> = top1_real_bounded_metric (s m n) (s k n)"
+              using hbdd_lt1 unfolding top1_real_bounded_metric_def by auto
+            have hdist_lt: "dist (s m n) (s k n) < e' * real (Suc n)"
+              using hdist_eq hbdd_lt unfolding dist_real_def by linarith
+            have he'n_le_e: "e' * real (Suc n) \<le> e / 2"
+              using he'_eq by (simp add: min_def)
+            show "dist (s m n) (s k n) < e"
+              using hdist_lt he'n_le_e hepos by linarith
+          qed
+        qed
+        then show "\<exists>L. (\<lambda>m. s m n) \<longlonglongrightarrow> L"
+          using Cauchy_convergent_iff unfolding convergent_def by fast
+      qed
 
       obtain L where hL: "\<forall>n. (\<lambda>m. s m n) \<longlonglongrightarrow> L n"
         using choice[OF hcoord_conv] by blast
@@ -3948,9 +4141,159 @@ proof (rule exI[where x="top1_D_metric_real_omega"])
       have hxeq: "\<forall>n. x n = L n" unfolding x_def by simp
       have hxX: "x \<in> ?X" unfolding top1_PiE_iff x_def by simp
 
-      text \<open>Show D-convergence: D(s m, x) \<rightarrow> 0.\<close>
+      text \<open>Show D-convergence: D(s m, x) \<rightarrow> 0.
+        Strategy: given e > 0, pick N0 with 1/Suc(N0) < e/2, then for each n \<le> N0
+        use coordinatewise convergence to make term n small. The tail terms are < e/2
+        automatically since bounded metric / Suc n \<le> 1/Suc n.\<close>
+
+      text \<open>Helper: bounding D-metric by a uniform bound on all terms.\<close>
+      have hD_le_bound: "\<And>a b c. 0 \<le> c \<Longrightarrow>
+        (\<And>n. top1_real_bounded_metric (a n) (b n) / real (Suc n) \<le> c)
+        \<Longrightarrow> top1_D_metric_real_omega a b \<le> c"
+      proof -
+        fix a b :: "nat \<Rightarrow> real" and c :: real
+        assume hc: "0 \<le> c"
+        assume hterms: "\<And>n. top1_real_bounded_metric (a n) (b n) / real (Suc n) \<le> c"
+        let ?S = "(\<lambda>n. top1_real_bounded_metric (a n) (b n) / real (Suc n)) ` (UNIV::nat set)"
+        have hSne: "?S \<noteq> {}" by simp
+        have "Sup ?S \<le> c"
+        proof (rule cSup_least[OF hSne])
+          fix r assume "r \<in> ?S"
+          then obtain n where "r = top1_real_bounded_metric (a n) (b n) / real (Suc n)" by blast
+          then show "r \<le> c" using hterms[of n] by simp
+        qed
+        then show "top1_D_metric_real_omega a b \<le> c"
+          unfolding top1_D_metric_real_omega_def by simp
+      qed
+
+      text \<open>Helper: bounded metric equals absolute value when abs < 1.\<close>
+      have hbdd_eq_abs: "\<And>u v :: real. \<bar>u - v\<bar> < 1 \<Longrightarrow>
+        top1_real_bounded_metric u v = \<bar>u - v\<bar>"
+        unfolding top1_real_bounded_metric_def by auto
+
       have hDconv: "seq_converges_to_on s x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega)"
-        sorry (* D(s m, x) → 0 from coordinatewise convergence + D-metric control *)
+      proof (unfold seq_converges_to_on_def, intro conjI)
+        show "x \<in> ?X" by (rule hxX)
+        show "\<forall>U. neighborhood_of x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega) U \<longrightarrow>
+          (\<exists>N. \<forall>n\<ge>N. s n \<in> U)"
+        proof (intro allI impI)
+          fix U
+          assume hU: "neighborhood_of x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega) U"
+          have hUopen: "U \<in> top1_metric_topology_on ?X top1_D_metric_real_omega"
+            using hU unfolding neighborhood_of_def by blast
+          have hxU: "x \<in> U"
+            using hU unfolding neighborhood_of_def by blast
+          obtain e where hepos: "0 < e" and hball: "top1_ball_on ?X top1_D_metric_real_omega x e \<subseteq> U"
+            using top1_metric_open_contains_ball[OF hmetric hUopen hxU] by blast
+
+          text \<open>Pick N0 so that 1/Suc(N0) < e/2 (Archimedean).\<close>
+          have he2pos: "0 < e / 2" using hepos by linarith
+          have "\<exists>N0::nat. 1 / real (Suc N0) < e / 2"
+          proof -
+            obtain k :: nat where hk: "real k > 2 / e"
+              using reals_Archimedean2 he2pos by (metis less_divide_eq_numeral1(1))
+            have hkpos: "0 < real (Suc k)" by simp
+            have "2 / e < real (Suc k)" using hk by linarith
+            then have "1 / real (Suc k) < e / 2"
+              using hepos hkpos by (simp add: field_simps)
+            then show ?thesis by blast
+          qed
+          then obtain N0 :: nat where hN0: "1 / real (Suc N0) < e / 2" by blast
+
+          text \<open>For each coordinate n \<le> N0, pick M_n so coord n is close enough.\<close>
+          define delta where "delta n = min 1 (e / 2 * real (Suc n))" for n :: nat
+          have hdelta_pos: "\<And>n. 0 < delta n"
+            unfolding delta_def using hepos by simp
+
+          have hcoord_close: "\<forall>n \<le> N0. \<exists>M. \<forall>m\<ge>M. \<bar>s m n - x n\<bar> < delta n"
+          proof (intro allI impI)
+            fix n :: nat assume "n \<le> N0"
+            have hconv_n: "(\<lambda>m. s m n) \<longlonglongrightarrow> L n"
+              using hL by blast
+            have hconv_x: "(\<lambda>m. s m n) \<longlonglongrightarrow> x n"
+              using hconv_n hxeq by simp
+            have "\<exists>M. \<forall>m\<ge>M. dist (s m n) (x n) < delta n"
+              using metric_LIMSEQ_D[OF hconv_x hdelta_pos[of n]] by blast
+            then show "\<exists>M. \<forall>m\<ge>M. \<bar>s m n - x n\<bar> < delta n"
+              unfolding dist_real_def by blast
+          qed
+
+          text \<open>Take M = max of all M_n for n \<le> N0.\<close>
+          obtain Mfun where hMfun: "\<forall>n \<le> N0. \<forall>m\<ge>Mfun n. \<bar>s m n - x n\<bar> < delta n"
+          proof -
+            have "\<forall>n \<le> N0. \<exists>M. \<forall>m\<ge>M. \<bar>s m n - x n\<bar> < delta n"
+              using hcoord_close by blast
+            then have "\<exists>f. \<forall>n \<le> N0. \<forall>m\<ge>f n. \<bar>s m n - x n\<bar> < delta n"
+              by metis
+            then show ?thesis using that by blast
+          qed
+          define M where "M = Max (Mfun ` {0..N0})"
+          have hM_ge: "\<And>n. n \<le> N0 \<Longrightarrow> M \<ge> Mfun n"
+            unfolding M_def by (intro Max_ge) auto
+
+          show "\<exists>N. \<forall>n\<ge>N. s n \<in> U"
+          proof (rule exI[where x=M], intro allI impI)
+            fix m assume hmM: "M \<le> m"
+
+            text \<open>Show D(s m, x) \<le> e/2 < e, hence s m in ball, hence in U.\<close>
+            have hterm_bound: "\<And>n. top1_real_bounded_metric (s m n) (x n) / real (Suc n) \<le> e / 2"
+            proof -
+              fix n :: nat
+              show "top1_real_bounded_metric (s m n) (x n) / real (Suc n) \<le> e / 2"
+              proof (cases "n \<le> N0")
+                case True
+                then have hm_ge_Mn: "m \<ge> Mfun n"
+                  using hM_ge[of n] hmM by linarith
+                have habs: "\<bar>s m n - x n\<bar> < delta n"
+                  using hMfun[rule_format, OF True hm_ge_Mn] by blast
+                have habs_lt1: "\<bar>s m n - x n\<bar> < 1"
+                  using habs unfolding delta_def by (simp add: min_def split: if_splits)
+                have hbdd_eq: "top1_real_bounded_metric (s m n) (x n) = \<bar>s m n - x n\<bar>"
+                  using hbdd_eq_abs[OF habs_lt1] by blast
+                have habs_lt_e2n: "\<bar>s m n - x n\<bar> < e / 2 * real (Suc n)"
+                  using habs unfolding delta_def by (simp add: min_def split: if_splits)
+                have "top1_real_bounded_metric (s m n) (x n) < e / 2 * real (Suc n)"
+                  using hbdd_eq habs_lt_e2n by linarith
+                then show ?thesis
+                  using pos_divide_le_eq by (simp add: pos_divide_less_eq mult.commute less_imp_le)
+              next
+                case False
+                then have "N0 < n" by linarith
+                then have "Suc N0 \<le> Suc n" by linarith
+                then have "real (Suc N0) \<le> real (Suc n)" by simp
+                then have h_inv: "1 / real (Suc n) \<le> 1 / real (Suc N0)"
+                  by (simp add: frac_le)
+                have "top1_real_bounded_metric (s m n) (x n) / real (Suc n) \<le> 1 / real (Suc n)"
+                proof -
+                  have "top1_real_bounded_metric (s m n) (x n) \<le> 1"
+                    unfolding top1_real_bounded_metric_def by simp
+                  then show ?thesis by (simp add: divide_right_mono)
+                qed
+                also have "... \<le> 1 / real (Suc N0)" by (rule h_inv)
+                also have "... < e / 2" by (rule hN0)
+                finally show ?thesis by linarith
+              qed
+            qed
+            have hDle: "top1_D_metric_real_omega (s m) x \<le> e / 2"
+            proof (rule hD_le_bound)
+              show "0 \<le> e / 2" using he2pos by linarith
+            next
+              fix n show "top1_real_bounded_metric (s m n) (x n) / real (Suc n) \<le> e / 2"
+                by (rule hterm_bound)
+            qed
+            have hDlt: "top1_D_metric_real_omega (s m) x < e"
+              using hDle hepos by linarith
+            have hDlt_sym: "top1_D_metric_real_omega x (s m) < e"
+              using hDlt top1_D_metric_real_omega_sym[of x "s m"] by linarith
+            have hsmX: "s m \<in> ?X"
+              using hsX by blast
+            have hball_mem: "s m \<in> top1_ball_on ?X top1_D_metric_real_omega x e"
+              unfolding top1_ball_on_def using hsmX hDlt_sym by simp
+            show "s m \<in> U"
+              using subsetD[OF hball hball_mem] by blast
+          qed
+        qed
+      qed
 
       show "\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X top1_D_metric_real_omega)"
         using hxX hDconv by blast
