@@ -2881,8 +2881,39 @@ proof -
 
       text \<open>Step 2: Form an open cover and refine.\<close>
       let ?cover = "insert (X - C) (Ub ` C)"
+      have hXminusC_open: "X - C \<in> TX"
+        using hCclosed unfolding closedin_on_def by blast
+      have hUb_open: "\<forall>b\<in>C. Ub b \<in> TX"
+        using hUb by blast
+      have hcover_sub_TX: "?cover \<subseteq> TX"
+      proof (rule insert_subsetI)
+        show "X - C \<in> TX" by (rule hXminusC_open)
+      next
+        show "Ub ` C \<subseteq> TX"
+        proof (rule image_subsetI)
+          fix b assume "b \<in> C"
+          then show "Ub b \<in> TX" using hUb_open by blast
+        qed
+      qed
+      have hcover_covers: "X \<subseteq> \<Union>?cover"
+      proof (rule subsetI)
+        fix x assume "x \<in> X"
+        show "x \<in> \<Union>?cover"
+        proof (cases "x \<in> C")
+          case True
+          have "x \<in> Ub x" using hUb True by blast
+          moreover have "Ub x \<in> ?cover" using True by blast
+          ultimately show ?thesis by blast
+        next
+          case False
+          then have "x \<in> X - C" using \<open>x \<in> X\<close> by blast
+          moreover have "X - C \<in> ?cover" by blast
+          ultimately show ?thesis by blast
+        qed
+      qed
       have hcov_open: "top1_open_covering_on X TX ?cover"
-        sorry (* cover is open (each Ub b is open, X-C is open since C closed) and covers X *)
+        unfolding top1_open_covering_on_def
+        using hcover_sub_TX hcover_covers by blast
 
       obtain \<CC> where hCC_cov: "top1_open_covering_on X TX \<CC>"
         and hCC_ref: "top1_refines \<CC> ?cover"
