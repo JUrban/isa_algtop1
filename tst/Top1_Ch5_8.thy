@@ -4373,8 +4373,25 @@ lemma sigma_lf_to_lf_open_covering:
   assumes hCov: "top1_open_covering_on X TX \<A>"
   assumes hSLF: "top1_sigma_locally_finite_family_on X TX \<A>"
   shows "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
-  sorry (* Munkres Lemma 41.3 (1)\<Rightarrow>(2)\<Rightarrow>(3)\<Rightarrow>(4), each step ~50-80 lines.
-     Will be decomposed into 3 named helper lemmas. *)
+proof -
+  text \<open>Step (1)\<Rightarrow>(2): shrink sigma-LF to LF covering (not necessarily open).\<close>
+  have step12: "\<exists>\<C>. (\<forall>C\<in>\<C>. C \<subseteq> X) \<and> X \<subseteq> \<Union>\<C> \<and> top1_refines \<C> \<A> \<and> top1_locally_finite_family_on X TX \<C>"
+    sorry (* Munkres (1)→(2): subtract earlier unions V_i from each B_n element *)
+
+  text \<open>Step (2)\<Rightarrow>(3): close the LF covering using regularity → LF closed covering.\<close>
+  have step23: "\<exists>\<D>. (\<forall>D\<in>\<D>. closedin_on X TX D) \<and> X \<subseteq> \<Union>\<D> \<and> top1_refines \<D> \<A> \<and> top1_locally_finite_family_on X TX \<D>"
+    sorry (* Munkres (2)→(3): use regularity to get B' with cl(B') ⊆ A.
+             Take LF ref of B', close it via Lemma 39.1 *)
+
+  text \<open>Step (3)\<Rightarrow>(4): expand closed LF covering to open LF covering.\<close>
+  have step34: "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
+    sorry (* Munkres (3)→(4): expand using auxiliary closed LF covering.
+             E(B) = X - ∪{C ∈ aux | C ⊆ X-B}. Intersect with F(B) ∈ A. *)
+
+  show ?thesis using step34
+    
+    by metis
+qed
 
 (** from \S41 Theorem 41.4 [top1.tex:5953] **)
 theorem Theorem_41_4:
