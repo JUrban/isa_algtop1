@@ -7201,7 +7201,107 @@ proof -
       \<and> top1_ball_on X d xn rn \<subseteq> V
       \<and> (\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k)
       \<and> d xn xc + rn < rc)"
-    sorry
+  proof (intro allI impI)
+    fix xc rc and n :: nat
+    assume hprem: "xc \<in> X \<and> rc > 0 \<and> top1_ball_on X d xc rc \<subseteq> V
+      \<and> (\<forall>k\<le>n. top1_ball_on X d xc rc \<subseteq> U k)"
+    have hxcX: "xc \<in> X" and hrcpos: "rc > 0"
+      and hballV: "top1_ball_on X d xc rc \<subseteq> V"
+      and hballUk: "\<forall>k\<le>n. top1_ball_on X d xc rc \<subseteq> U k"
+      using hprem by blast+
+    text \<open>The current ball is open and nonempty.\<close>
+    have hball_open: "top1_ball_on X d xc rc \<in> ?TX"
+      by (rule top1_ball_open_in_metric_topology[OF hmetric hxcX hrcpos])
+    have hball_ne: "top1_ball_on X d xc rc \<noteq> {}"
+    proof -
+      have "d xc xc = 0" using hmetric hxcX unfolding top1_metric_on_def by blast
+      then show ?thesis unfolding top1_ball_on_def using hxcX hrcpos by force
+    qed
+    have hballX: "top1_ball_on X d xc rc \<subseteq> X" unfolding top1_ball_on_def by blast
+    text \<open>Intersect with U(Suc n) — nonempty by density.\<close>
+    have hW_ne: "top1_ball_on X d xc rc \<inter> U (Suc n) \<noteq> {}"
+    proof -
+      have "top1_densein_on X ?TX (U (Suc n))" using hUdense by blast
+      then have "intersects (top1_ball_on X d xc rc) (U (Suc n))"
+        using iffD1[OF top1_densein_on_iff_intersects_nonempty_open[OF hTopM hUsubX[rule_format, of "Suc n"]]]
+              hball_open hballX hball_ne
+        by blast
+      then show ?thesis unfolding intersects_def by blast
+    qed
+    have hW_open: "top1_ball_on X d xc rc \<inter> U (Suc n) \<in> ?TX"
+      by (rule topology_inter2[OF hTopM hball_open hUopen[rule_format, of "Suc n"]])
+    text \<open>Pick xn in the intersection.\<close>
+    obtain xn where hxn_ball: "xn \<in> top1_ball_on X d xc rc" and hxn_U: "xn \<in> U (Suc n)"
+      using hW_ne by blast
+    have hxnX: "xn \<in> X" using hxn_ball unfolding top1_ball_on_def by blast
+    have hdist: "d xc xn < rc" using hxn_ball unfolding top1_ball_on_def by blast
+    text \<open>Find a ball around xn inside the intersection.\<close>
+    obtain r' where hr'pos: "r' > 0"
+      and hball': "top1_ball_on X d xn r' \<subseteq> top1_ball_on X d xc rc \<inter> U (Suc n)"
+    proof -
+      have "xn \<in> top1_ball_on X d xc rc \<inter> U (Suc n)"
+        using hxn_ball hxn_U by blast
+      then show ?thesis using hOpenBall hW_open that by blast
+    qed
+    text \<open>Choose rn small enough.\<close>
+    define rn where "rn = min (r' / 3) (min (1 / (2 * real (Suc (Suc n)))) ((rc - d xc xn) / 3))"
+    have hrnpos: "rn > 0" unfolding rn_def using hr'pos hdist by simp
+    have hrnlt: "rn < 1 / real (Suc (Suc n))"
+    proof -
+      have "rn \<le> 1 / (2 * real (Suc (Suc n)))" unfolding rn_def by simp
+      also have "1 / (2 * real (Suc (Suc n))) < 1 / real (Suc (Suc n))"
+      proof -
+        have "0 < real (Suc (Suc n))" by simp
+        then show ?thesis by (simp add: field_simps)
+      qed
+      finally show ?thesis .
+    qed
+    have hrnler': "rn \<le> r'" unfolding rn_def using hr'pos hdist by linarith
+    have hrn_strict: "d xn xc + rn < rc"
+    proof -
+      have hsym: "d xn xc = d xc xn" using hmetric hxnX hxcX unfolding top1_metric_on_def by blast
+      have "rn \<le> (rc - d xc xn) / 3" unfolding rn_def
+        using hr'pos hdist by linarith
+      then have "d xc xn + rn \<le> d xc xn + (rc - d xc xn) / 3" by linarith
+      also have "... < rc"
+      proof -
+        have "d xc xn + (rc - d xc xn) / 3 = (2 * d xc xn + rc) / 3"
+          by (simp add: field_simps)
+        also have "(2 * d xc xn + rc) / 3 < (3 * rc) / 3"
+        proof (rule divide_strict_right_mono)
+          show "2 * d xc xn + rc < 3 * rc" using hdist by linarith
+          show "(0::real) < 3" by simp
+        qed
+        also have "(3 * rc) / 3 = rc" by simp
+        finally show ?thesis .
+      qed
+      finally show ?thesis using hsym by linarith
+    qed
+    have hball_rn_sub: "top1_ball_on X d xn rn \<subseteq> top1_ball_on X d xn r'"
+      by (rule top1_ball_on_mono_radius[OF hrnler'])
+    have hball_rn_sub_inter: "top1_ball_on X d xn rn \<subseteq> top1_ball_on X d xc rc \<inter> U (Suc n)"
+      using hball_rn_sub hball' by blast
+    have hball_rn_V: "top1_ball_on X d xn rn \<subseteq> V"
+      using hball_rn_sub_inter hballV by blast
+    have hball_rn_Uk: "\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k"
+    proof (intro allI impI)
+      fix k assume "k \<le> Suc n"
+      show "top1_ball_on X d xn rn \<subseteq> U k"
+      proof (cases "k \<le> n")
+        case True
+        then show ?thesis using hball_rn_sub_inter hballUk by blast
+      next
+        case False
+        then have "k = Suc n" using \<open>k \<le> Suc n\<close> by linarith
+        then show ?thesis using hball_rn_sub_inter by blast
+      qed
+    qed
+    show "\<exists>xn rn. xn \<in> X \<and> rn > 0 \<and> rn < 1 / real (Suc (Suc n))
+      \<and> top1_ball_on X d xn rn \<subseteq> V
+      \<and> (\<forall>k\<le>Suc n. top1_ball_on X d xn rn \<subseteq> U k)
+      \<and> d xn xc + rn < rc"
+      using hxnX hrnpos hrnlt hball_rn_V hball_rn_Uk hrn_strict by blast
+  qed
 
   text \<open>Base case: pick a point in V \<inter> U 0 with a small ball.\<close>
   have hbase: "\<exists>x0 r0. x0 \<in> X \<and> r0 > 0 \<and> r0 < 1
