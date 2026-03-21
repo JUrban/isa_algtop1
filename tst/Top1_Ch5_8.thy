@@ -4373,11 +4373,8 @@ lemma sigma_lf_to_lf_open_covering:
   assumes hCov: "top1_open_covering_on X TX \<A>"
   assumes hSLF: "top1_sigma_locally_finite_family_on X TX \<A>"
   shows "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
-  sorry (* Munkres Lemma 41.3 (1)\<Rightarrow>(2)\<Rightarrow>(3)\<Rightarrow>(4).
-     Step (1)\<Rightarrow>(2): shrink sigma-LF to LF by subtracting earlier unions.
-     Step (2)\<Rightarrow>(3): close the LF covering using regularity.
-     Step (3)\<Rightarrow>(4): expand closed LF covering to open LF using auxiliary closed LF.
-     Estimated ~200 lines total. *)
+  sorry (* Munkres Lemma 41.3 (1)\<Rightarrow>(2)\<Rightarrow>(3)\<Rightarrow>(4), each step ~50-80 lines.
+     Will be decomposed into 3 named helper lemmas. *)
 
 (** from \S41 Theorem 41.4 [top1.tex:5953] **)
 theorem Theorem_41_4:
