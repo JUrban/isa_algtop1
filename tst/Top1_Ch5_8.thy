@@ -2983,9 +2983,81 @@ proof -
   text \<open>Consequence: E_n(V) and E_n(W) at distance \<ge> 1/(3*(Suc n)) for V \<noteq> W.\<close>
   have hEn_sep: "\<And>n V W. V \<in> \<A> \<Longrightarrow> W \<in> \<A> \<Longrightarrow> V \<noteq> W \<Longrightarrow>
     \<forall>y1\<in>En n V. \<forall>y2\<in>En n W. d y1 y2 \<ge> 1 / (3 * real (Suc n))"
-    sorry (* Triangle inequality: y1 near some x1 in T_n(V), y2 near x2 in T_n(W).
-             d(x1,x2) >= 1/n. d(y1,x1) < 1/3n, d(y2,x2) < 1/3n.
-             By triangle: d(y1,y2) >= d(x1,x2) - d(y1,x1) - d(y2,x2) >= 1/n - 2/3n = 1/3n. *)
+  proof (intro ballI)
+    fix n V W y1 y2
+    assume hV: "V \<in> \<A>" and hW: "W \<in> \<A>" and hVW: "V \<noteq> W"
+    assume hy1: "y1 \<in> En n V" and hy2: "y2 \<in> En n W"
+    text \<open>y1 is in 1/3n-ball around some x1 \<in> T_n(V).\<close>
+    obtain x1 where hx1T: "x1 \<in> Tn n V" and hy1ball: "y1 \<in> top1_ball_on X d x1 (1 / (3 * real (Suc n)))"
+      using hy1 unfolding En_def top1_nbhd_of_set_def
+      
+      by blast
+    obtain x2 where hx2T: "x2 \<in> Tn n W" and hy2ball: "y2 \<in> top1_ball_on X d x2 (1 / (3 * real (Suc n)))"
+      using hy2 unfolding En_def top1_nbhd_of_set_def
+      
+      by blast
+    have hx1X: "x1 \<in> X" using hx1T hTn_sub_X
+      
+      by blast
+    have hx2X: "x2 \<in> X" using hx2T hTn_sub_X
+      
+      by blast
+    have hy1X: "y1 \<in> X" using hy1ball unfolding top1_ball_on_def
+      
+      by fast
+    have hy2X: "y2 \<in> X" using hy2ball unfolding top1_ball_on_def
+      
+      by blast
+    have hdx1y1: "d x1 y1 < 1 / (3 * real (Suc n))"
+      using hy1ball unfolding top1_ball_on_def
+      
+      by blast
+    have hdx2y2: "d x2 y2 < 1 / (3 * real (Suc n))"
+      using hy2ball unfolding top1_ball_on_def
+      
+      by blast
+    have hdx1x2: "d x1 x2 \<ge> 1 / real (Suc n)"
+      using hTn_sep[OF hV hW hVW] hx1T hx2T
+      
+      by blast
+    text \<open>Triangle inequality: d(x1,x2) \<le> d(x1,y1) + d(y1,y2) + d(y2,x2).\<close>
+    have htri1: "d x1 x2 \<le> d x1 y1 + d y1 x2"
+      using hd hx1X hy1X hx2X unfolding top1_metric_on_def
+      
+      by blast
+    have htri2: "d y1 x2 \<le> d y1 y2 + d y2 x2"
+      using hd hy1X hy2X hx2X unfolding top1_metric_on_def
+      
+      by blast
+    have hdsym1: "d x1 y1 = d y1 x1"
+      using hd hx1X hy1X unfolding top1_metric_on_def
+      
+      by blast
+    have hdsym2: "d x2 y2 = d y2 x2"
+      using hd hx2X hy2X unfolding top1_metric_on_def
+      
+      by blast
+    text \<open>Combine: d(y1,y2) \<ge> d(x1,x2) - d(x1,y1) - d(x2,y2) \<ge> 1/n - 1/3n - 1/3n = 1/3n.\<close>
+    have hchain: "d x1 x2 \<le> d x1 y1 + d y1 y2 + d y2 x2"
+      using htri1 htri2
+      
+      by auto
+    have "d y1 y2 \<ge> d x1 x2 - d x1 y1 - d y2 x2"
+      using hchain
+      
+      by argo
+    then have "d y1 y2 \<ge> 1 / real (Suc n) - 1 / (3 * real (Suc n)) - 1 / (3 * real (Suc n))"
+      using hdx1x2 hdx1y1 hdx2y2 hdsym2
+      
+      by auto
+    then have hge: "d y1 y2 \<ge> 1 / real (Suc n) - 2 * (1 / (3 * real (Suc n)))"
+      by fastforce
+    have hSnpos: "0 < real (Suc n)" by simp
+    have harith: "1 / real (Suc n) - 2 * (1 / (3 * real (Suc n))) = 1 / (3 * real (Suc n))"
+      using hSnpos by (simp add: field_simps)
+    show "d y1 y2 \<ge> 1 / (3 * real (Suc n))"
+      using hge harith by force
+  qed
 
   text \<open>\<E>_n is locally finite: ball(x, 1/(6*(Suc n))) meets at most one E_n(U).\<close>
   have hEn_lf: "\<And>n. top1_locally_finite_family_on X TX (\<E>n n)"
