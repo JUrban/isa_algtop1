@@ -7180,34 +7180,55 @@ proof -
     using hOpenBall hVopen hx0V by blast
 
   text \<open>Step 2: Inductively construct sequences \<open>xseq\<close> and \<open>rseq\<close>.
-    At each step n, we need:
-    (a) \<open>xseq n \<in> X\<close>
-    (b) \<open>rseq n > 0\<close> and \<open>rseq n < 1 / (Suc n)\<close>
-    (c) \<open>B(xseq n, rseq n) \<subseteq> B(xseq (n-1), rseq (n-1)) \<inter> U n\<close>
-    We sorry the existence of such sequences and proceed with the convergence argument.\<close>
-  have "\<exists>xseq rseq. xseq 0 = x0 \<and> rseq 0 = r0 \<and>
+    At each step n:
+    (a) \<open>xseq n \<in> X\<close>, \<open>rseq n > 0\<close>, \<open>rseq n < 1/(Suc n)\<close>
+    (b) \<open>ball(xseq n, rseq n) \<subseteq> V\<close>, \<open>xseq n \<in> U k\<close> for \<open>k \<le> n\<close>
+    (c) \<open>d(xseq(Suc n), xseq n) + rseq(Suc n) < rseq n\<close> (closed ball fits strictly)
+    Property (c) ensures that the closed ball at step n+1 fits inside the open ball at step n,
+    which is needed to conclude the limit is in V and each U k.\<close>
+  have "\<exists>xseq rseq.
     (\<forall>n. xseq n \<in> X \<and> rseq n > 0 \<and> rseq n < 1 / real (Suc n) \<and>
          top1_ball_on X d (xseq n) (rseq n) \<subseteq> V \<and>
-         (\<forall>k\<le>n. xseq n \<in> U k) \<and>
-         (n > 0 \<longrightarrow> top1_ball_on X d (xseq n) (rseq n) \<subseteq> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1))))"
+         (\<forall>k\<le>n. top1_ball_on X d (xseq n) (rseq n) \<subseteq> U k) \<and>
+         (n > 0 \<longrightarrow> d (xseq n) (xseq (n-(1::nat))) + rseq n < rseq (n-1)))"
     sorry
 
   then obtain xseq rseq where
-    hseq_init0: "xseq 0 = x0" and
-    hseq_initr: "rseq 0 = r0" and
     hseq_prop: "\<forall>n. xseq n \<in> X \<and> rseq n > 0 \<and> rseq n < 1 / real (Suc n) \<and>
          top1_ball_on X d (xseq n) (rseq n) \<subseteq> V \<and>
-         (\<forall>k\<le>n. xseq n \<in> U k) \<and>
-         (n > 0 \<longrightarrow> top1_ball_on X d (xseq n) (rseq n) \<subseteq> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1)))"
+         (\<forall>k\<le>n. top1_ball_on X d (xseq n) (rseq n) \<subseteq> U k) \<and>
+         (n > 0 \<longrightarrow> d (xseq n) (xseq (n-(1::nat))) + rseq n < rseq (n-1))"
     by blast
 
   text \<open>Auxiliary facts from sequence properties.\<close>
   have hxseqX: "\<forall>n. xseq n \<in> X" using hseq_prop by blast
   have hrseqpos: "\<forall>n. rseq n > 0" using hseq_prop by blast
   have hrseq_bound: "\<forall>n. rseq n < 1 / real (Suc n)" using hseq_prop by blast
+  have hball_V: "\<forall>n. top1_ball_on X d (xseq n) (rseq n) \<subseteq> V"
+    using hseq_prop by blast
+  have hball_Uk: "\<forall>n k. k \<le> n \<longrightarrow> top1_ball_on X d (xseq n) (rseq n) \<subseteq> U k"
+    using hseq_prop by blast
+  have hdist_rseq: "\<forall>n. n > 0 \<longrightarrow> d (xseq n) (xseq (n-(1::nat))) + rseq n < rseq (n-1)"
+    using hseq_prop by blast
   have hball_nest: "\<forall>n. n > 0 \<longrightarrow>
     top1_ball_on X d (xseq n) (rseq n) \<subseteq> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1))"
-    using hseq_prop by blast
+  proof (intro allI impI subsetI)
+    fix n y assume hn: "n > 0" and hy: "y \<in> top1_ball_on X d (xseq n) (rseq n)"
+    have hyX: "y \<in> X" using hy unfolding top1_ball_on_def by blast
+    have hdy: "d (xseq n) y < rseq n" using hy unfolding top1_ball_on_def by blast
+    have hdn: "d (xseq n) (xseq (n-1)) + rseq n < rseq (n-1)"
+      using hdist_rseq[rule_format, OF hn] by simp
+    have hnX: "xseq n \<in> X" using hxseqX by blast
+    have hn1X: "xseq (n-1) \<in> X" using hxseqX by blast
+    have htri: "d (xseq (n-1)) y \<le> d (xseq (n-1)) (xseq n) + d (xseq n) y"
+      using hmetric hn1X hnX hyX unfolding top1_metric_on_def by blast
+    have hsym: "d (xseq (n-1)) (xseq n) = d (xseq n) (xseq (n-1))"
+      using hmetric hn1X hnX unfolding top1_metric_on_def by blast
+    have "d (xseq (n-1)) y < rseq (n-1)"
+      using htri hsym hdy hdn by linarith
+    then show "y \<in> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1))"
+      unfolding top1_ball_on_def using hyX by simp
+  qed
 
   text \<open>Transitive nesting of balls.\<close>
   have hball_nest_le: "\<And>m n. n \<le> m \<Longrightarrow>
@@ -7325,13 +7346,21 @@ proof -
     and hconv: "seq_converges_to_on xseq x X ?TX"
     using hd hCauchy unfolding top1_complete_metric_on_def by blast
 
-  text \<open>Step 5: The limit is in V.\<close>
-  have hxV: "x \<in> V"
-    sorry
+  text \<open>Step 5-6: The limit is in each ball, hence in V and each U k.\<close>
+  text \<open>Key: d(xseq(Suc n), x) \<le> rseq(Suc n) (limit of tail in ball).
+    Then d(xseq n, x) \<le> d(xseq n, xseq(Suc n)) + d(xseq(Suc n), x) < rseq n.\<close>
+  have hx_in_ball: "\<forall>n. x \<in> top1_ball_on X d (xseq n) (rseq n)"
+    sorry (* needs: d(xseq n, x) < rseq n via the strengthened nesting property *)
 
-  text \<open>Step 6: The limit is in each U n.\<close>
+  have hxV: "x \<in> V"
+    using hx_in_ball hball_V by blast
+
   have hxU: "\<forall>n. x \<in> U n"
-    sorry
+  proof (intro allI)
+    fix k
+    have "x \<in> top1_ball_on X d (xseq k) (rseq k)" using hx_in_ball by blast
+    then show "x \<in> U k" using hball_Uk[rule_format, of k k] by blast
+  qed
 
   have "x \<in> V \<inter> (\<Inter>n. U n)"
     using hxV hxU by blast
