@@ -5258,9 +5258,128 @@ proof -
     Uses regularity + Lemma 39.1 for closure + expansion via auxiliary LF closed covering.
     This is the remaining core of Munkres' Lemma 41.3.\<close>
   have step234: "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
-    sorry (* Steps (2)→(3)→(4) of Munkres Lemma 41.3.
-             Requires: regularity shrinking, Lemma 39.1 closure, expansion trick.
-             ~100 lines. *)
+  proof -
+    have hTop: "is_topology_on X TX"
+      using hReg unfolding top1_regular_on_def top1_T1_on_def
+      
+      by argo
+    obtain \<C> where hC_subX: "\<forall>C\<in>\<C>. C \<subseteq> X" and hC_covers: "X \<subseteq> \<Union>\<C>"
+      and hC_ref: "top1_refines \<C> \<A>" and hC_lf: "top1_locally_finite_family_on X TX \<C>"
+      using step12
+      
+      by auto
+
+    text \<open>Close C to get LF closed covering D (via Lemma 39.1).\<close>
+    define \<D> where "\<D> = closure_on X TX ` \<C>"
+    have hD_lf: "top1_locally_finite_family_on X TX \<D>"
+      unfolding \<D>_def using Lemma_39_1(2)[OF hTop hC_subX hC_lf]
+      
+      by presburger
+    have hD_covers: "X \<subseteq> \<Union>\<D>"
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      obtain C0 where hC0: "C0 \<in> \<C>" and hxC0: "x \<in> C0"
+        using hC_covers hxX
+        
+        by auto
+      have "x \<in> closure_on X TX C0" using hxC0 subset_closure_on
+        
+        by fast
+      then show "x \<in> \<Union>\<D>" unfolding \<D>_def using hC0
+        
+        by blast
+    qed
+
+    text \<open>For each C_elem, pick parent in A.\<close>
+    have hparent_ex: "\<forall>C0\<in>\<C>. \<exists>A0. A0 \<in> \<A> \<and> C0 \<subseteq> A0"
+      using hC_ref unfolding top1_refines_def
+      
+      by fast
+    obtain parent where hparent: "\<forall>C0\<in>\<C>. parent C0 \<in> \<A> \<and> C0 \<subseteq> parent C0"
+      using bchoice[OF hparent_ex]
+      
+      by presburger
+
+    text \<open>Expansion: E(C0) = X - ∪{D ∈ D | D ⊆ X - C0}, B(C0) = E(C0) ∩ parent(C0).\<close>
+    define bad where "bad C0 = {D \<in> \<D>. D \<subseteq> X - C0}" for C0
+    define E where "E C0 = X - \<Union>(bad C0)" for C0
+    define \<B> where "\<B> = {E C0 \<inter> parent C0 | C0. C0 \<in> \<C>}"
+
+    text \<open>E(C0) is open: bad(C0) is a subfamily of LF closed D, so ∪bad is closed.\<close>
+    have hE_open: "\<forall>C0\<in>\<C>. E C0 \<in> TX"
+      sorry (* ∪(bad C0) is closed (LF union of closed = closed by Lemma 39.1).
+               E C0 = X - ∪(bad C0) is open. *)
+
+    text \<open>B is open (intersection of two opens).\<close>
+    have hB_open: "\<B> \<subseteq> TX"
+      sorry (* E(C0) ∈ TX and parent(C0) ∈ A ⊆ TX. Intersection of opens = open. *)
+
+    text \<open>B covers X: C0 ⊆ E(C0) ∩ parent(C0).\<close>
+    have hB_covers: "X \<subseteq> \<Union>\<B>"
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      obtain C0 where hC0: "C0 \<in> \<C>" and hxC0: "x \<in> C0"
+        using hC_covers hxX
+        
+        by blast
+      have hx_not_bad: "x \<notin> \<Union>(bad C0)"
+      proof
+        assume "x \<in> \<Union>(bad C0)"
+        then obtain D0 where hD0: "D0 \<in> bad C0" and hxD0: "x \<in> D0"
+          
+          by blast
+        have "D0 \<subseteq> X - C0" using hD0 unfolding bad_def
+          
+          by blast
+        then show False using hxC0 hxD0
+          
+          by blast
+      qed
+      have "x \<in> E C0" unfolding E_def using hxX hx_not_bad
+        
+        by blast
+      moreover have "x \<in> parent C0" using hparent hC0 hxC0
+        
+        by fast
+      ultimately have "x \<in> E C0 \<inter> parent C0"
+        
+        by fast
+      then show "x \<in> \<Union>\<B>" unfolding \<B>_def using hC0
+        
+        by blast
+    qed
+
+    text \<open>B refines A.\<close>
+    have hB_ref: "top1_refines \<B> \<A>"
+      unfolding top1_refines_def \<B>_def
+    proof (intro ballI)
+      fix B assume "B \<in> {E C0 \<inter> parent C0 | C0. C0 \<in> \<C>}"
+      then obtain C0 where hC0: "C0 \<in> \<C>" and hBeq: "B = E C0 \<inter> parent C0"
+        
+        by blast
+      have "parent C0 \<in> \<A>" using hparent hC0
+        
+        by fast
+      moreover have "B \<subseteq> parent C0" unfolding hBeq
+        
+        by simp
+      ultimately show "\<exists>A\<in>\<A>. B \<subseteq> A"
+        
+        by blast
+    qed
+
+    text \<open>B is locally finite.\<close>
+    have hB_lf: "top1_locally_finite_family_on X TX \<B>"
+      sorry (* If D_elem intersects E(C0)∩parent(C0), then D_elem ∉ bad(C0),
+               so D_elem ∩ C0 ≠ {}. D is LF, so finitely many D meet any nbhd,
+               hence finitely many C0 meet any nbhd, hence finitely many B elems. *)
+
+    show ?thesis
+      unfolding top1_open_covering_on_def
+      using hB_open hB_covers hB_ref hB_lf
+      
+      by blast
+  qed
 
   show ?thesis using step234
     
@@ -5479,8 +5598,8 @@ proof (intro iffI)
       
       by fast
     have hXopen: "X \<in> TX" using hd hTX
-      sledgehammer [timeout = 10]
-      sorry
+      
+      by (meson is_topology_on_def top1_metric_topology_on_is_topology_on)
     show "\<exists>U\<in>TX. x \<in> U \<and> (\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d)"
       sorry (* X itself is a neighborhood, metrizable. Subspace of metric = metric on subspace.
                Needs: metric subspace lemma. *)
