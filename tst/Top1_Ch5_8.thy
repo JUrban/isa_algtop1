@@ -4354,6 +4354,18 @@ lemma Lemma_41_3:
         (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))))"
   sorry
 
+text \<open>Metrizable spaces are regular: for x and closed C with x \<notin> C,
+  use d(x,C)/2 balls to separate.\<close>
+lemma metrizable_imp_regular:
+  assumes hMet: "top1_metrizable_on X TX"
+  shows "top1_regular_on X TX"
+  sorry (* Proof: obtain metric d. TX = metric topology.
+     Hausdorff (from metric): for distinct x,y use balls of radius d(x,y)/2.
+     T1: from Hausdorff via hausdorff_imp_T1_on.
+     Regular: for x ∉ C closed, let r = inf{d(x,c) | c ∈ C} > 0 (since C closed, x ∉ C).
+     Then ball(x, r/2) and ∪{ball(c, r/2) | c ∈ C} separate x from C.
+     Estimated ~50 lines. *)
+
 text \<open>Key lemma for Theorem 41.4: sigma-locally-finite open covering → locally finite open covering.
   This is the (1)\<Rightarrow>(4) direction of Munkres' Lemma 41.3.\<close>
 lemma sigma_lf_to_lf_open_covering:
@@ -4376,7 +4388,7 @@ proof (intro allI impI)
   fix \<A>
   assume hCov: "top1_open_covering_on X TX \<A>"
   have hReg: "top1_regular_on X TX"
-    sorry (* metrizable → regular: standard metric space argument *)
+    by (rule metrizable_imp_regular[OF hMet])
   obtain \<E> where hE_cov: "top1_open_covering_on X TX \<E>"
     and hE_ref: "top1_refines \<E> \<A>"
     and hE_slf: "top1_sigma_locally_finite_family_on X TX \<E>"
