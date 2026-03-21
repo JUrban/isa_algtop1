@@ -4987,8 +4987,54 @@ proof -
 
     text \<open>C covers X.\<close>
     have hC_covers: "X \<subseteq> \<Union>\<C>"
-      sorry (* For x ∈ X, let N = least n with x ∈ some U ∈ B_N.
-               Then x ∉ V_i for i < N. So x ∈ S_N(U) ∈ C_N ⊆ C. *)
+    proof (rule subsetI)
+      fix x assume hxX: "x \<in> X"
+      have hxA: "x \<in> \<Union>\<A>" using hA_covers hxX
+        
+        by fast
+      then obtain U0 n0 where hU0: "U0 \<in> Bn n0" and hxU0: "x \<in> U0"
+        unfolding hA_eq
+        
+        by blast
+      text \<open>Let N = LEAST n with x ∈ ∪(Bn n).\<close>
+      define N where "N = (LEAST n. x \<in> \<Union>(Bn n))"
+      have hex: "\<exists>n. x \<in> \<Union>(Bn n)" using hU0 hxU0
+        
+        by blast
+      have hxBnN: "x \<in> \<Union>(Bn N)"
+        unfolding N_def using LeastI_ex[OF hex]
+        
+        by satx
+      have hN_least: "\<forall>m < N. x \<notin> \<Union>(Bn m)"
+        unfolding N_def
+        
+        using not_less_Least by blast
+      text \<open>x ∉ V_i for i < N (since V_i = ∪(Bn i) and x ∉ ∪(Bn i)).\<close>
+      have hx_not_Vi: "\<forall>i < N. x \<notin> Vi i"
+        using hN_least unfolding Vi_def
+        
+        by argo
+      text \<open>So x ∉ ∪{V_i | i < N}.\<close>
+      have "x \<notin> (\<Union>i\<in>{..<N}. Vi i)"
+        using hx_not_Vi
+        
+        by blast
+      text \<open>Pick U ∈ Bn N with x ∈ U. Then x ∈ S_N(U).\<close>
+      obtain U where hU: "U \<in> Bn N" and hxU: "x \<in> U"
+        using hxBnN
+        
+        by blast
+      have "x \<in> Sn N U"
+        unfolding Sn_def using hxU \<open>x \<notin> (\<Union>i\<in>{..<N}. Vi i)\<close>
+        
+        by blast
+      then have "x \<in> \<Union>(Cn N)" unfolding Cn_def using hU
+        
+        by auto
+      then show "x \<in> \<Union>\<C>" unfolding \<C>_def
+        
+        by blast
+    qed
 
     text \<open>C is locally finite.\<close>
     have hC_lf: "top1_locally_finite_family_on X TX \<C>"
@@ -5019,8 +5065,8 @@ proof -
 
     show ?thesis
       using hC_subX hC_covers hC_ref hC_lf
-      sledgehammer [timeout = 10]
-      sorry
+      
+      by blast
   qed
 
   text \<open>Step (2)\<Rightarrow>(3): close the LF covering using regularity → LF closed covering.\<close>
