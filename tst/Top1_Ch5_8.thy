@@ -3715,6 +3715,55 @@ proof -
 qed
 
 text \<open>Step 3 of Lemma 40.1: normality via the Theorem 32.1 technique.\<close>
+text \<open>Finite union of closed sets is closed.\<close>
+lemma closedin_on_finite_Union:
+  assumes hTop: "is_topology_on X TX"
+  assumes hCl: "\<forall>A\<in>F. closedin_on X TX A"
+  assumes hFin: "finite F"
+  shows "closedin_on X TX (\<Union>F)"
+  using hFin hCl
+proof (induct F rule: finite_induct)
+  case empty
+  show ?case unfolding closedin_on_def using hTop unfolding is_topology_on_def
+    
+    by auto
+next
+  case (insert A F)
+  have hAcl: "closedin_on X TX A"
+    using insert.prems
+    
+    by blast
+  have hFcl: "closedin_on X TX (\<Union>F)"
+    using insert.hyps insert.prems
+    
+    by blast
+  have hAX: "A \<subseteq> X" using hAcl unfolding closedin_on_def
+    
+    by presburger
+  have hFX: "\<Union>F \<subseteq> X" using hFcl unfolding closedin_on_def
+    
+    by presburger
+  have hAopen: "X - A \<in> TX" using hAcl unfolding closedin_on_def
+    
+    by presburger
+  have hFopen: "X - \<Union>F \<in> TX" using hFcl unfolding closedin_on_def
+    
+    by presburger
+  have hinter: "(X - A) \<inter> (X - \<Union>F) \<in> TX"
+    using hTop hAopen hFopen
+    
+    by (simp add: topology_inter2)
+  have heq: "X - (A \<union> \<Union>F) = (X - A) \<inter> (X - \<Union>F)"
+    
+    by auto
+  have hXsub: "A \<union> \<Union>F \<subseteq> X" using hAX hFX
+    
+    by simp
+  show ?case unfolding closedin_on_def using hXsub hinter heq
+    
+    by auto
+qed
+
 lemma Lemma_40_1_step3:
   assumes hReg: "top1_regular_on X TX"
   assumes hBasis: "basis_for X \<B> TX"
@@ -3813,8 +3862,9 @@ proof -
           by (metis hTop closure_on_closed)
       qed
       have hfinite_union_closed: "closedin_on X TX (\<Union> (closure_on X TX ` Vn ` {0..n}))"
-        using hclVn_closed
-        sorry (* Finite union of closed: needs a helper lemma *)
+        using closedin_on_finite_Union[OF hTop] hclVn_closed
+        
+        by simp
       have hcomplement_open: "X - (\<Union> (closure_on X TX ` Vn ` {0..n})) \<in> TX"
         using hfinite_union_closed unfolding closedin_on_def
         
@@ -3849,8 +3899,9 @@ proof -
           by (metis hTop closure_on_closed)
       qed
       have hfinite_union_closed: "closedin_on X TX (\<Union> (closure_on X TX ` Ufn ` {0..n}))"
-        using hclUfn_closed
-        sorry (* Finite union of closed: needs a helper lemma *)
+        using closedin_on_finite_Union[OF hTop] hclUfn_closed
+        
+        by auto
       have hcomplement_open: "X - (\<Union> (closure_on X TX ` Ufn ` {0..n})) \<in> TX"
         using hfinite_union_closed unfolding closedin_on_def
         
