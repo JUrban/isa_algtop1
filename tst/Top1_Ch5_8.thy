@@ -11416,13 +11416,30 @@ proof -
     fix e :: real assume hepos: "0 < e"
     text \<open>AN N e is closed (intersection of preimages of {≤e} under continuous maps).\<close>
     have hAN_closed: "\<forall>N. closedin_on X TX (AN N e)"
-      sorry (* AN N e = {x ∈ X | ∀n,m ≥ N. d(f_n(x), f_m(x)) ≤ e}
-             = ∩_{n,m ≥ N} {x ∈ X | d(f_n(x), f_m(x)) ≤ e}.
-             Each {x | d(f_n(x), f_m(x)) ≤ e} closed:
-               complement = {x | d > e} open by continuity of f_n, f_m + metric triangle.
-             Intersection of closed = closed.
-             Needs: continuity at a point → preimage of closed ball under d∘(fn,fm) is closed.
-             Estimated ~30 lines using epsilon-delta argument. *)
+    proof (intro allI)
+      fix N
+      text \<open>AN N e = ∩_{n,m ≥ N} {x ∈ X | d(f_n(x), f_m(x)) ≤ e}.
+            Show each {x ∈ X | d(f_n(x), f_m(x)) ≤ e} is closed.\<close>
+      define Snm where "Snm n m = {x \<in> X. d (f n x) (f m x) \<le> e}" for n m :: nat
+      have hSnm_closed: "\<forall>n m. closedin_on X TX (Snm n m)"
+        sorry (* Each Snm is closed: complement is open.
+                 For x₀ not in Snm: d(f_n(x₀), f_m(x₀)) > e.
+                 Let δ = (d(...) - e)/2. By continuity of f_n, f_m at x₀,
+                 get W nbhd with d(f_n(x), f_n(x₀)) < δ and d(f_m(x), f_m(x₀)) < δ.
+                 Triangle: d(f_n(x), f_m(x)) ≥ d(f_n(x₀), f_m(x₀)) - 2δ > e.
+                 ~25 lines. *)
+      have hAN_eq: "AN N e = (\<Inter>n\<in>{N..}. \<Inter>m\<in>{N..}. Snm n m)"
+        unfolding AN_def top1_AN_48_def Snm_def
+        
+        by blast
+      have "\<forall>n\<in>{N..}. \<forall>m\<in>{N..}. closedin_on X TX (Snm n m)"
+        using hSnm_closed
+        
+        by blast
+      show "closedin_on X TX (AN N e)"
+        unfolding hAN_eq
+        sorry (* Intersection of closed sets is closed. Uses is_topology_on. *)
+    qed
     text \<open>∪_N AN N e = X.\<close>
     have hAN_covers: "X = (\<Union>N. AN N e)"
     proof (rule equalityI)
