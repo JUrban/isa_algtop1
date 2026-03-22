@@ -4921,7 +4921,23 @@ proof -
     unfolding top1_metric_on_def
     by auto
   have habs_eq_order: "top1_metric_topology_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>) = order_topology_on_UNIV"
-    sorry (* Standard: abs-metric topology on ℝ = order topology. *)
+  proof -
+    have hbdd_eq: "top1_bounded_metric (\<lambda>x y :: real. \<bar>x - y\<bar>) = top1_real_bounded_metric"
+      unfolding top1_bounded_metric_def top1_real_bounded_metric_def
+      by argo
+    have "top1_metric_topology_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>)
+        = top1_metric_topology_on UNIV (top1_bounded_metric (\<lambda>x y. \<bar>x - y\<bar>))"
+      using Theorem_20_1[OF habs_metric]
+      by argo
+    also have "... = top1_metric_topology_on UNIV top1_real_bounded_metric"
+      using hbdd_eq
+      by argo
+    also have "... = order_topology_on_UNIV"
+      using order_topology_on_UNIV_eq_bounded_metric_topology_real
+      by argo
+    finally show ?thesis
+      by argo
+  qed
   have hpartial_cont_abs: "\<forall>n::nat. top1_continuous_map_on X TX (UNIV::real set)
     (top1_metric_topology_on UNIV (\<lambda>x y. \<bar>x - y\<bar>)) (\<lambda>x. \<Sum>i<n. fn i x / 2^(Suc i))"
     using hpartial_cont_R habs_eq_order
