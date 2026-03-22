@@ -15825,7 +15825,21 @@ corollary Corollary_50_9:
   assumes hMet: "top1_metrizable_on X TX"
   shows "(\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F)
     \<longleftrightarrow> top1_finite_dimensional_on X TX"
-  sorry
+proof (intro iffI)
+  assume hFD: "top1_finite_dimensional_on X TX"
+  then obtain m where "top1_dim_le_on X TX m"
+    unfolding top1_finite_dimensional_on_def by auto
+  then have "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+    using Theorem_50_5[OF hComp hMet] by auto
+  then show "\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+    by auto
+next
+  assume "\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+  text \<open>← direction: embedding into R^N → compact in R^N → dim ≤ N → finite dim.
+    Needs homeomorphism-preserves-dimension (not yet formalized).\<close>
+  then show "top1_finite_dimensional_on X TX"
+    sorry
+qed
 
 
 end
