@@ -6630,7 +6630,8 @@ lemma sigma_lf_to_lf_covering:
   assumes hCov: "top1_open_covering_on X TX \<A>"
   assumes hSLF: "top1_sigma_locally_finite_family_on X TX \<A>"
   shows "\<exists>\<C>. (\<forall>C\<in>\<C>. C \<subseteq> X) \<and> X \<subseteq> \<Union>\<C> \<and> top1_refines \<C> \<A> \<and> top1_locally_finite_family_on X TX \<C>"
-  sorry
+  sorry  (* Proof: same as the step12 block inside sigma_lf_to_lf_open_covering below.
+            TODO: move step12 body here and have step12 reference this lemma. *)
 
 lemma sigma_lf_to_lf_open_covering:
   assumes hReg: "top1_regular_on X TX"
