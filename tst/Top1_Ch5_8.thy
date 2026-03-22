@@ -11350,8 +11350,28 @@ proof -
   text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
   define C where "C = (\<Inter>k::nat. U (1 / real (Suc k)))"
   have hC_dense: "top1_densein_on X TX C"
-    sorry (* C is countable intersection of open dense sets.
-             By Baire property, C is dense. ~10 lines. *)
+  proof -
+    define Uk where "Uk (k::nat) = U (1 / real (Suc k))" for k
+    have hUk: "\<forall>k. Uk k \<in> TX \<and> top1_densein_on X TX (Uk k)"
+    proof (intro allI conjI)
+      fix k
+      have hpos: "0 < 1 / real (Suc k)"
+        
+        by auto
+      show "Uk k \<in> TX" unfolding Uk_def using hU_open_dense hpos
+        
+        by blast
+      show "top1_densein_on X TX (Uk k)" unfolding Uk_def using hU_open_dense hpos
+        
+        by blast
+    qed
+    have "C = (\<Inter>k. Uk k)" unfolding C_def Uk_def
+      
+      by argo
+    then show ?thesis using hB hUk unfolding top1_baire_on_def
+      
+      by blast
+  qed
 
   have hC_sub_cont: "C \<subseteq> {x \<in> X. top1_continuous_at_on X TX Y ?TY g x}"
     sorry (* Step 4: for x₀ ∈ C, given ε > 0, pick k with 1/(k+1) < ε/3.
