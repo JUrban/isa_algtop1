@@ -9801,6 +9801,44 @@ definition top1_totally_bounded_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a
      (\<forall>e>0. \<exists>F. finite F \<and> F \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x e))"
 
 (** from \S45 Theorem 45.1 [top1.tex:6560] **)
+lemma compact_imp_totally_bounded:
+  assumes hd: "top1_metric_on X d"
+  assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  shows "top1_totally_bounded_on X d"
+  unfolding top1_totally_bounded_on_def
+proof (intro allI impI)
+  fix e :: real assume "0 < e"
+  let ?T = "top1_metric_topology_on X d"
+  have hball_open: "\<forall>x\<in>X. top1_ball_on X d x e \<in> ?T"
+    using top1_ball_open_in_metric_topology[OF hd _ \<open>0 < e\<close>] by blast
+  have hball_self: "\<forall>x\<in>X. x \<in> top1_ball_on X d x e"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    have "d x x = 0" using hd \<open>x \<in> X\<close> unfolding top1_metric_on_def by force
+    then show "x \<in> top1_ball_on X d x e" unfolding top1_ball_on_def using \<open>x \<in> X\<close> \<open>0 < e\<close> by simp
+  qed
+  define \<U> where "\<U> = (\<lambda>x. top1_ball_on X d x e) ` X"
+  have hU_sub_T: "\<U> \<subseteq> ?T" unfolding \<U>_def using hball_open by blast
+  have hX_sub_U: "X \<subseteq> \<Union>\<U>" unfolding \<U>_def using hball_self by blast
+  obtain \<V> where "finite \<V>" "\<V> \<subseteq> \<U>" "X \<subseteq> \<Union>\<V>"
+    using hComp hU_sub_T hX_sub_U unfolding top1_compact_on_def by blast
+  have "\<forall>V\<in>\<V>. \<exists>x\<in>X. V = top1_ball_on X d x e"
+    using \<open>\<V> \<subseteq> \<U>\<close> unfolding \<U>_def by blast
+  then obtain c where hc: "\<forall>V\<in>\<V>. c V \<in> X \<and> V = top1_ball_on X d (c V) e"
+    using bchoice by metis
+  show "\<exists>F. finite F \<and> F \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x e)"
+  proof (intro exI conjI)
+    show "finite (c ` \<V>)" using \<open>finite \<V>\<close> by blast
+    show "c ` \<V> \<subseteq> X" using hc by blast
+    show "X \<subseteq> (\<Union>x\<in>c ` \<V>. top1_ball_on X d x e)"
+    proof (rule subsetI)
+      fix y assume "y \<in> X"
+      then obtain V where "V \<in> \<V>" "y \<in> V" using \<open>X \<subseteq> \<Union>\<V>\<close> by auto
+      then show "y \<in> (\<Union>x\<in>c ` \<V>. top1_ball_on X d x e)" using hc by blast
+    qed
+  qed
+qed
+
 theorem Theorem_45_1:
   assumes hd: "top1_metric_on X d"
   shows "top1_compact_on X (top1_metric_topology_on X d)
