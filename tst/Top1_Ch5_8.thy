@@ -5413,9 +5413,108 @@ next
     define fJ where "fJ p x = (case p of (n, B) \<Rightarrow> gB B x / real (Suc n))" for p :: "nat \<times> 'a set" and x
     define d where "d x y = (if J = {} then 0 else Sup ((\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J))" for x y
     text \<open>d is a metric on X: proved from gB properties + Sup.\<close>
+    text \<open>Bound and non-emptiness for Sup.\<close>
+    have hgB_range: "\<forall>B\<in>\<B>. \<forall>x\<in>X. 0 \<le> gB B x \<and> gB B x \<le> 1"
+      using hgB_prop unfolding top1_continuous_map_on_def top1_closed_interval_def
+      by fast
+    have hfJ_le1: "\<forall>p\<in>J. \<forall>x\<in>X. \<forall>y\<in>X. \<bar>fJ p x - fJ p y\<bar> \<le> 1"
+      unfolding J_def fJ_def using hgB_range
+      sledgehammer [timeout = 10]
+      sorry
+    have hfJ_bdd: "\<forall>x\<in>X. \<forall>y\<in>X. bdd_above ((\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J)"
+      using hfJ_le1
+      by fast
+    have hfJ_nn: "\<forall>p\<in>J. \<forall>x\<in>X. \<forall>y\<in>X. 0 \<le> \<bar>fJ p x - fJ p y\<bar>"
+      by simp
     have hd_metric: "top1_metric_on X d"
-      sorry (* Non-negative: |·| ≥ 0. Zero iff equal: from separation (gB separates).
-               Symmetric: |a-b| = |b-a|. Triangle: |a-c| ≤ |a-b| + |b-c| termwise → Sup. *)
+      unfolding top1_metric_on_def
+    proof (intro conjI ballI)
+      text \<open>d x x ≥ 0.\<close>
+      fix x assume "x \<in> X"
+      show "0 \<le> d x x"
+        unfolding d_def using hfJ_nn \<open>x \<in> X\<close>
+        by simp
+    next
+      text \<open>d x y ≥ 0.\<close>
+      fix x y assume "x \<in> X" "y \<in> X"
+      show "0 \<le> d x y"
+      proof (cases "J = {}")
+        case True then show ?thesis unfolding d_def by simp
+      next
+        case False
+        then obtain p where hp: "p \<in> J" by blast
+        have hmem: "\<bar>fJ p x - fJ p y\<bar> \<in> (\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J"
+          using hp by blast
+        have "0 \<le> \<bar>fJ p x - fJ p y\<bar>" by simp
+        also have "\<bar>fJ p x - fJ p y\<bar> \<le> Sup ((\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J)"
+          using cSup_upper hmem hfJ_bdd \<open>x \<in> X\<close> \<open>y \<in> X\<close>
+          by meson
+        finally show ?thesis unfolding d_def using False
+          by presburger
+      qed
+    next
+      text \<open>d x y = 0 ↔ x = y.\<close>
+      fix x y assume hxX: "x \<in> X" and hyX: "y \<in> X"
+      show "(d x y = 0) = (x = y)"
+      proof
+        assume "x = y"
+        then show "d x y = 0" unfolding d_def fJ_def
+          by simp
+      next
+        assume hd0: "d x y = 0"
+        show "x = y"
+        proof (rule ccontr)
+          assume hne: "x \<noteq> y"
+          text \<open>x ≠ y, {y} closed, X-{y} is neighborhood of x.\<close>
+          have "closedin_on X TX {y}" using hT1 hyX
+            by blast
+          have "neighborhood_of x X TX (X - {y})"
+            sorry (* X-{y} open since {y} closed. x ∈ X-{y} since x≠y. *)
+          then obtain B where hB: "B \<in> \<B>" and hgBx: "0 < gB B x" and hgBy0: "\<forall>z\<in>X - (X - {y}). gB B z = 0"
+            using hSep hxX
+            by blast
+          have "gB B y = 0"
+            using hgBy0 hyX
+            by blast
+          text \<open>B ∈ Bn n for some n.\<close>
+          obtain n where hn: "B \<in> Bn n"
+            using hB hB_eq
+            by blast
+          have hpJ: "(n, B) \<in> J" unfolding J_def using hn
+            by blast
+          have "fJ (n, B) x > 0" unfolding fJ_def using hgBx
+            by auto
+          moreover have "fJ (n, B) y = 0" unfolding fJ_def using \<open>gB B y = 0\<close>
+            by fastforce
+          ultimately have "\<bar>fJ (n, B) x - fJ (n, B) y\<bar> > 0"
+            by simp
+          moreover have "\<bar>fJ (n, B) x - fJ (n, B) y\<bar> \<le> d x y"
+          proof -
+            have "d x y = Sup ((\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J)" unfolding d_def using hpJ
+              by force
+            moreover have "\<bar>fJ (n, B) x - fJ (n, B) y\<bar> \<in> (\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J" using hpJ
+              by blast
+            ultimately show ?thesis
+              using cSup_upper[of "\<bar>fJ (n, B) x - fJ (n, B) y\<bar>" "(\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J"]
+                hfJ_bdd hxX hyX
+              by force
+          qed
+          ultimately show False using hd0
+            by argo
+        qed
+      qed
+    next
+      text \<open>Symmetry: d x y = d y x.\<close>
+      fix x y assume "x \<in> X" "y \<in> X"
+      show "d x y = d y x" unfolding d_def
+        by (smt (verit) Sup.SUP_cong)
+    next
+      text \<open>Triangle: d x z ≤ d x y + d y z.\<close>
+      fix x y z assume hxX: "x \<in> X" and hyX: "y \<in> X" and hzX: "z \<in> X"
+      show "d x z \<le> d x y + d y z"
+        sorry (* Each |fJ p x - fJ p z| ≤ |fJ p x - fJ p y| + |fJ p y - fJ p z|
+                 ≤ d x y + d y z. So Sup ≤ d x y + d y z by cSup_least. *)
+    qed
     text \<open>d-topology = TX: d-open → TX-open (from gB continuity), TX-open → d-open (from separation + LF).\<close>
     have hd_topology: "TX = top1_metric_topology_on X d"
       sorry (* (⊆) For U ∈ TX and x₀ ∈ U: find basis B with x₀∈B⊆U.
