@@ -9843,7 +9843,21 @@ lemma compact_imp_complete:
   assumes hd: "top1_metric_on X d"
   assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
   shows "top1_complete_metric_on X d"
-  sorry
+  unfolding top1_complete_metric_on_def
+proof (intro conjI)
+  show "top1_metric_on X d" by (rule hd)
+  let ?T = "top1_metric_topology_on X d"
+  show "\<forall>s. top1_cauchy_seq_on X d s \<longrightarrow> (\<exists>x\<in>X. seq_converges_to_on s x X ?T)"
+  proof (intro allI impI)
+    fix s assume hCauchy: "top1_cauchy_seq_on X d s"
+    text \<open>Proof by contradiction: if s doesn't converge to any x,
+      then for each x ∈ X, ∃ε_x > 0 s.t. s is eventually outside ball(x, ε_x).
+      These balls cover X. By compactness, finite subcover.
+      But Cauchy sequence is eventually in a small ball, contradiction.\<close>
+    show "\<exists>x\<in>X. seq_converges_to_on s x X ?T"
+      sorry
+  qed
+qed
 
 theorem Theorem_45_1:
   assumes hd: "top1_metric_on X d"
