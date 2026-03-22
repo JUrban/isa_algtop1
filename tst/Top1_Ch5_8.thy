@@ -5764,9 +5764,14 @@ next
                       by fast
                     text \<open>Preimage of open interval (fJ(x) - ε/2, fJ(x) + ε/2) is TX-open.\<close>
                     define V where "V = {y \<in> X. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2}"
+                    have hV_eq: "V = {y \<in> X. fJ (n, B) y \<in> {z. \<bar>z - fJ (n, B) x\<bar> < \<epsilon>/2}}"
+                      unfolding V_def
+                      by fastforce
+                    have hball_open: "{z :: real. \<bar>z - fJ (n, B) x\<bar> < \<epsilon>/2} \<in> order_topology_on_UNIV"
+                      sorry (* Open ball in ℝ is open in order topology *)
                     have "V \<in> TX"
-                      sorry (* V = preimage of open ball in ℝ under fJ(n,B).
-                               Ball is open in order topology. Continuity → preimage is TX-open. *)
+                      unfolding hV_eq using hcont_nB hball_open unfolding top1_continuous_map_on_def
+                      by fast
                     moreover have "x \<in> V" unfolding V_def using hxX he2pos
                       by fastforce
                     ultimately show "\<exists>VB\<in>TX. x \<in> VB \<and> (\<forall>y\<in>VB. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
