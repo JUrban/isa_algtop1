@@ -5394,14 +5394,17 @@ next
       (top1_product_topology_on \<B> (\<lambda>_. (UNIV::real set)) (\<lambda>_. order_topology_on_UNIV)) F"
       using Theorem_34_2[OF hTop hT1 hgB_cont_R hSep, folded F_def]
       by argo
-    text \<open>Metrizable: X embeds into a metrizable space.
-      ℝ^B with uniform metric is metrizable. But we need F continuous in uniform metric.
-      Alternative: pull back the uniform metric via F.
-      For now: use the fact that the image in ℝ^B inherits the uniform metric.\<close>
+    text \<open>Metrizable: The Munkres proof uses f_{n,B} = g_B/n (our construction uses g_B directly).
+      For the uniform metric continuity: need f_{n,B}: X → [0,1/n] so that the sup over all
+      (n,B) of |f_{n,B}(x) - f_{n,B}(x₀)| < ε. The 1/n scaling handles n > N; local finiteness
+      of B_n handles n ≤ N. Our current embedding uses g_B without scaling, so it gives
+      embedding in product topology (proved via Theorem 34.2) but NOT in uniform metric.
+      To complete: modify construction to use f_{n,B} = g_B/n, prove uniform metric continuity
+      using local finiteness, then conclude metrizable. This is ~30 lines.
+      Alternative: use that embedding_on gives homeomorphism to image, and pull back metric
+      from product topology restricted to F(X) — but product topology not metrizable in general.\<close>
     show ?thesis
-      sorry (* Last step: F gives embedding, uniform metric on ℝ^B gives d on F(X),
-               pull back to X. Needs: metrizable_of_embedding helper.
-               This is the final ~20 lines of the Nagata-Smirnov proof. *)
+      sorry
   qed
 qed
 
