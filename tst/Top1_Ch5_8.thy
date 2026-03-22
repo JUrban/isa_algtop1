@@ -7272,6 +7272,95 @@ proof -
     by fastforce
 qed
 
+text \<open>Metric convergence iff epsilon-delta convergence.\<close>
+lemma metric_seq_conv_iff:
+  assumes hd: "top1_metric_on X d"
+  assumes hxX: "x \<in> X"
+  shows "seq_converges_to_on s x X (top1_metric_topology_on X d) \<longleftrightarrow>
+    (\<forall>\<epsilon>::real. 0 < \<epsilon> \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < \<epsilon>))"
+proof
+  let ?TX = "top1_metric_topology_on X d"
+  have hTop: "is_topology_on X ?TX"
+    using hd top1_metric_topology_on_is_topology_on
+    by auto
+  have hTX_sub: "\<forall>U\<in>?TX. U \<subseteq> X"
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+    by blast
+  assume hconv: "seq_converges_to_on s x X ?TX"
+  show "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < \<epsilon>"
+  proof (intro allI impI)
+    fix \<epsilon> :: real assume hepos: "0 < \<epsilon>"
+    have hball_open: "top1_ball_on X d x \<epsilon> \<in> ?TX"
+      using top1_ball_open_in_metric_topology[OF hd hxX hepos]
+      by presburger
+    have hdxx: "d x x = 0" using hd hxX unfolding top1_metric_on_def
+      by blast
+    have hx_in_ball: "x \<in> top1_ball_on X d x \<epsilon>"
+      unfolding top1_ball_on_def using hxX hdxx hepos
+      by auto
+    have hball_nbhd: "neighborhood_of x X ?TX (top1_ball_on X d x \<epsilon>)"
+      unfolding neighborhood_of_def using hball_open hx_in_ball
+      by satx
+    obtain N where hN: "\<forall>n\<ge>N. s n \<in> top1_ball_on X d x \<epsilon>"
+      using hconv hball_nbhd unfolding seq_converges_to_on_def
+      by blast
+    show "\<exists>N. \<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < \<epsilon>"
+    proof (intro exI allI impI)
+      fix n assume "N \<le> n"
+      then have hsn_ball: "s n \<in> top1_ball_on X d x \<epsilon>" using hN
+        by presburger
+      then have hsnX: "s n \<in> X" unfolding top1_ball_on_def
+        by fast
+      have "d x (s n) < \<epsilon>" using hsn_ball unfolding top1_ball_on_def
+        by blast
+      have "d (s n) x = d x (s n)" using hd hsnX hxX unfolding top1_metric_on_def
+        by blast
+      then show "s n \<in> X \<and> d (s n) x < \<epsilon>" using \<open>s n \<in> X\<close> \<open>d x (s n) < \<epsilon>\<close>
+        by presburger
+    qed
+  qed
+next
+  let ?TX = "top1_metric_topology_on X d"
+  have hTop: "is_topology_on X ?TX"
+    using hd top1_metric_topology_on_is_topology_on
+    by fast
+  assume heps: "\<forall>\<epsilon>::real. 0 < \<epsilon> \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < \<epsilon>)"
+  show "seq_converges_to_on s x X ?TX"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "x \<in> X" by (rule hxX)
+  next
+    fix U assume hU: "neighborhood_of x X ?TX U"
+    have hUopen: "\<exists>V\<in>?TX. x \<in> V \<and> V \<subseteq> U"
+      using hU unfolding neighborhood_of_def
+      by auto
+    then obtain V where hV: "V \<in> ?TX" and hxV: "x \<in> V" and hVU: "V \<subseteq> U"
+      by blast
+    obtain r where hrpos: "0 < r" and hball_sub: "top1_ball_on X d x r \<subseteq> V"
+      using top1_metric_open_contains_ball[OF hd hV hxV]
+      by auto
+    obtain N where hN: "\<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < r" using heps hrpos
+      by blast
+    show "\<exists>N. \<forall>n\<ge>N. s n \<in> U"
+    proof (intro exI allI impI)
+      fix n assume "N \<le> n"
+      have hsnX: "s n \<in> X" using hN \<open>N \<le> n\<close>
+        by presburger
+      have hd_sn: "d (s n) x < r" using hN \<open>N \<le> n\<close>
+        by presburger
+      have "d x (s n) = d (s n) x" using hd hsnX hxX unfolding top1_metric_on_def
+        by blast
+      then have "d x (s n) < r" using hd_sn
+        by presburger
+      then have "s n \<in> top1_ball_on X d x r"
+        unfolding top1_ball_on_def using hsnX
+        by blast
+      then show "s n \<in> U" using hball_sub hVU
+        by blast
+    qed
+  qed
+qed
+
 (** from \S43 Theorem 43.5 [top1.tex:6242]
     Proof: Cauchy in uniform metric \<Rightarrow> coordinatewise Cauchy in Y \<Rightarrow> coordinatewise convergent
     (by completeness of Y) \<Rightarrow> uniform convergence. **)
