@@ -4557,19 +4557,176 @@ proof (intro iffI)
       
       by fast
     text \<open>B is a basis for TX.\<close>
+    text \<open>Helper: metric topology elements are subsets of X.\<close>
+    have hTX_sub: "\<forall>U\<in>TX. U \<subseteq> X"
+    proof (intro ballI)
+      fix U assume "U \<in> TX"
+      then have "U \<in> topology_generated_by_basis X (top1_metric_basis_on X d)"
+        unfolding hTXeq top1_metric_topology_on_def
+        by presburger
+      then show "U \<subseteq> X" unfolding topology_generated_by_basis_def
+        by fast
+    qed
+    text \<open>Helper: for U open and x \<in> U, find b \<in> B with x \<in> b \<subseteq> U.\<close>
+    have hB_refine: "\<forall>U\<in>TX. \<forall>x\<in>U. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U"
+    proof (intro ballI)
+      fix U x assume hUTX: "U \<in> TX" and hxU: "x \<in> U"
+      have hxX: "x \<in> X" using hxU hTX_sub hUTX
+        by blast
+      obtain e where hepos: "0 < e" and hball_sub: "top1_ball_on X d x e \<subseteq> U"
+        using top1_metric_open_contains_ball[OF hd _ hxU] hUTX hTXeq
+        by blast
+      text \<open>Pick m such that 2/(Suc m) < e.\<close>
+      obtain m :: nat where hm: "2 / real (Suc m) < e"
+      proof -
+        obtain k :: nat where hk: "2 / e < real k"
+          using reals_Archimedean2
+          by blast
+        have hk_pos: "0 < k" using hk hepos of_nat_0_less_iff
+          by fastforce
+        have "2 / real (Suc (k - 1)) < e"
+        proof -
+          have "real (Suc (k - 1)) = real k" using hk_pos
+            by simp
+          then have "2 / real (Suc (k - 1)) = 2 / real k"
+            by presburger
+          also have "... < e"
+          proof -
+            have "2 / e < real k" using hk
+              by presburger
+            then have "2 < real k * e" using hepos
+              by (simp add: divide_less_eq)
+            then show "2 / real k < e" using hk_pos
+              by (simp add: divide_less_eq mult.commute)
+          qed
+          finally show ?thesis
+            by presburger
+        qed
+        then show ?thesis using that
+          by blast
+      qed
+      text \<open>Bm m covers X, so x is in some element of Bm m.\<close>
+      have hBm_cov_m: "X \<subseteq> \<Union>(Bm m)" using hBm
+        unfolding top1_open_covering_on_def
+        by presburger
+      obtain b where hb_Bm: "b \<in> Bm m" and hxb: "x \<in> b"
+        using hBm_cov_m hxX
+        by auto
+      text \<open>b refines Bm_cover m, so b \<subseteq> ball(y, 1/(Suc m)) for some y.\<close>
+      have hBm_ref_m: "top1_refines (Bm m) (Bm_cover m)" using hBm
+        by presburger
+      obtain a where ha_cov: "a \<in> Bm_cover m" and hb_sub_a: "b \<subseteq> a"
+        using hBm_ref_m hb_Bm unfolding top1_refines_def
+        by blast
+      obtain y where hyX: "y \<in> X" and ha_eq: "a = top1_ball_on X d y (1 / real (Suc m))"
+        using ha_cov unfolding Bm_cover_def
+        by blast
+      text \<open>For z \<in> b: d(z,x) \<le> d(z,y) + d(y,x) < 1/(Suc m) + 1/(Suc m) = 2/(Suc m) < e.\<close>
+      have hb_sub_ball: "b \<subseteq> top1_ball_on X d x e"
+      proof (rule subsetI)
+        fix z assume hzb: "z \<in> b"
+        have hzX: "z \<in> X" using hzb hb_sub_a ha_eq unfolding top1_ball_on_def
+          by auto
+        have hza: "z \<in> a" using hzb hb_sub_a
+          by fast
+        have hdyz: "d y z < 1 / real (Suc m)"
+          using hza ha_eq unfolding top1_ball_on_def
+          by blast
+        have hdsym_yz: "d z y = d y z"
+          using hd hzX hyX unfolding top1_metric_on_def
+          by blast
+        have hdzy: "d z y < 1 / real (Suc m)" using hdyz hdsym_yz
+          by presburger
+        have hxa: "x \<in> a" using hxb hb_sub_a
+          by fastforce
+        have hdyx: "d y x < 1 / real (Suc m)"
+          using hxa ha_eq unfolding top1_ball_on_def
+          by blast
+        have hdsym_yx: "d x y = d y x"
+          using hd hxX hyX unfolding top1_metric_on_def
+          by blast
+        have hdxy: "d x y < 1 / real (Suc m)" using hdyx hdsym_yx
+          by presburger
+        have htri: "d z x \<le> d z y + d y x"
+          using hd hzX hyX hxX unfolding top1_metric_on_def
+          by blast
+        have hdsym: "d y x = d x y"
+          using hd hyX hxX unfolding top1_metric_on_def
+          by blast
+        have "d z x < 2 / real (Suc m)" using htri hdsym hdzy hdxy
+          by argo
+        then have "d z x < e" using hm
+          by auto
+        have "z \<in> X \<and> d x z < e" using hzX \<open>d z x < e\<close> hd hzX hxX unfolding top1_metric_on_def
+          by simp
+        then show "z \<in> top1_ball_on X d x e" unfolding top1_ball_on_def
+          by blast
+      qed
+      have "b \<subseteq> U" using hb_sub_ball hball_sub
+        by blast
+      have "b \<in> B" using hb_Bm unfolding B_def
+        by blast
+      then show "\<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U" using hxb \<open>b \<subseteq> U\<close>
+        by blast
+    qed
+    text \<open>Now prove basis_for.\<close>
     have hB_basis: "basis_for X B TX"
-      sorry (* ~40 lines. basis_for = is_basis_on X B ∧ TX = topology_generated_by_basis X B.
-         is_basis_on needs:
-         (a) ∀b∈B. b ⊆ X: from B ⊆ TX and TX elements ⊆ X (metric topology).
-         (b) ∀x∈X. ∃b∈B. x ∈ b: from Bm m covering X.
-         (c) ∀b1 b2 ∈ B. ∀x ∈ b1∩b2. ∃b3 ∈ B. x ∈ b3 ∧ b3 ⊆ b1∩b2:
-             b1∩b2 ∈ TX (intersection of opens). For x ∈ b1∩b2, find ball(x,r) ⊆ b1∩b2.
-             Pick m with 1/(Suc m) < r. B ∈ Bm m with x ∈ B ⊆ ball ⊆ b1∩b2.
-         TX = generated:
-           (⊆) B ⊆ TX → generated ⊆ TX (by topology_generated_by_basis_subset).
-           (⊇) For U ∈ TX, x ∈ U: find B ∈ B with x ∈ B ⊆ U. This means TX ⊆ generated.
-         Both directions use: metric open → ball containment → Bm refinement.
-         Needs: top1_metric_open_contains_ball, Archimedean, top1_refines. *)
+      unfolding basis_for_def
+    proof (intro conjI)
+      show "is_basis_on X B"
+        unfolding is_basis_on_def
+      proof (intro conjI)
+        show "\<forall>b\<in>B. b \<subseteq> X"
+        proof (intro ballI)
+          fix b assume "b \<in> B"
+          then show "b \<subseteq> X" using hB_open hTX_sub
+            by fast
+        qed
+      next
+        show "\<forall>x\<in>X. \<exists>b\<in>B. x \<in> b"
+        proof (intro ballI)
+          fix x assume "x \<in> X"
+          then show "\<exists>b\<in>B. x \<in> b"
+            using hB_refine hTop_ctx unfolding is_topology_on_def
+            by metis
+        qed
+      next
+        show "\<forall>b1\<in>B. \<forall>b2\<in>B. \<forall>x\<in>b1 \<inter> b2. \<exists>b3\<in>B. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+        proof (intro ballI)
+          fix b1 b2 x assume hb1: "b1 \<in> B" and hb2: "b2 \<in> B" and hx: "x \<in> b1 \<inter> b2"
+          have hb1TX: "b1 \<in> TX" using hb1 hB_open
+            by blast
+          have hb2TX: "b2 \<in> TX" using hb2 hB_open
+            by fast
+          have hintTX: "b1 \<inter> b2 \<in> TX"
+            using topology_inter2[OF hTop_ctx hb1TX hb2TX]
+            by presburger
+          show "\<exists>b3\<in>B. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+            using hB_refine hintTX hx
+            by blast
+        qed
+      qed
+    next
+      show "TX = topology_generated_by_basis X B"
+      proof
+        show "topology_generated_by_basis X B \<subseteq> TX"
+          using topology_generated_by_basis_subset[OF hTop_ctx hB_open]
+          by order
+      next
+        show "TX \<subseteq> topology_generated_by_basis X B"
+          unfolding topology_generated_by_basis_def
+        proof (rule subsetI)
+          fix U assume hUTX: "U \<in> TX"
+          have "U \<subseteq> X" using hTX_sub hUTX
+            by simp
+          moreover have "\<forall>x\<in>U. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U"
+            using hB_refine hUTX
+            by fastforce
+          ultimately show "U \<in> {U. U \<subseteq> X \<and> (\<forall>x\<in>U. \<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U)}"
+            by blast
+        qed
+      qed
+    qed
     show ?thesis using hB_basis hB_slf
       
       by blast
