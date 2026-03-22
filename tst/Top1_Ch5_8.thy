@@ -7403,7 +7403,27 @@ proof -
     then show "\<exists>U\<in>TX. x \<in> U \<and> finite {A \<in> V. intersects A U}"
       using hW hxW by blast
   qed
-  have hV_cl: "\<forall>A\<in>\<A>. \<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A" sorry
+  have hV_cl: "\<forall>A\<in>\<A>. \<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    have hVA_in: "V_A A \<in> V" unfolding V_def using \<open>A \<in> \<A>\<close> by blast
+    have hVA_open: "V_A A \<in> TX" using hV_open hVA_in by blast
+    have hBA_subX: "\<forall>B\<in>{B \<in> \<B>. parent B = A}. B \<subseteq> X"
+      using hTsub hB_sub_TX by blast
+    have hBA_lf: "top1_locally_finite_family_on X TX {B \<in> \<B>. parent B = A}"
+      using top1_locally_finite_family_on_subset[OF hB_lf] by simp
+    have hcl_eq: "closure_on X TX (\<Union>{B \<in> \<B>. parent B = A})
+      = \<Union>(closure_on X TX ` {B \<in> \<B>. parent B = A})"
+      using Lemma_39_1(3)[OF hTop hBA_subX hBA_lf] by order
+    have "\<forall>B\<in>{B \<in> \<B>. parent B = A}. closure_on X TX B \<subseteq> A"
+      using hparent by blast
+    then have "\<Union>(closure_on X TX ` {B \<in> \<B>. parent B = A}) \<subseteq> A"
+      by blast
+    then have "closure_on X TX (V_A A) \<subseteq> A" unfolding V_A_def using hcl_eq
+      by argo
+    show "\<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A"
+      using hVA_in hVA_open \<open>closure_on X TX (V_A A) \<subseteq> A\<close> by blast
+  qed
   show ?thesis using hV_cl hV_cov hV_lf hV_ref by blast
 qed
 
