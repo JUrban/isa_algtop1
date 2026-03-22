@@ -4475,6 +4475,33 @@ proof -
   qed
 qed
 
+text \<open>Scaling a continuous real-valued map by a constant preserves continuity.\<close>
+lemma top1_continuous_scale_real:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hf: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+  shows "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. c * f x)"
+proof (cases "c = 0")
+  case True
+  then show ?thesis using Theorem_18_2(1)[OF hTopX order_topology_on_UNIV_is_topology_on order_topology_on_UNIV_is_topology_on]
+    by auto
+next
+  case False
+  text \<open>For c ≠ 0, the map λy. c*y is a homeomorphism on ℝ, hence continuous.
+    Compose with f to get continuity of λx. c * f(x).\<close>
+  have hscale_cont: "top1_continuous_map_on (UNIV::real set) order_topology_on_UNIV (UNIV::real set) order_topology_on_UNIV (\<lambda>y. c * y)"
+    sorry (* Key infrastructure: multiplication by nonzero constant continuous on ℝ.
+             Proof via order topology: preimage of (a,∞) is (a/c,∞) for c>0 or (-∞,a/c) for c<0.
+             Both are open in order topology. Similarly for (-∞,b).
+             Subbasis elements map to subbasis elements. *)
+  have hcomp: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV ((\<lambda>y. c * y) \<circ> f)"
+    using Theorem_18_2(3)[OF hTopX order_topology_on_UNIV_is_topology_on order_topology_on_UNIV_is_topology_on] hf hscale_cont
+    by blast
+  have "(\<lambda>x. c * f x) = (\<lambda>y. c * y) \<circ> f"
+    by auto
+  then show ?thesis using hcomp
+    by argo
+qed
+
 (** from \S40 Lemma 40.2 [top1.tex:5724] **)
 lemma Lemma_40_2:
   assumes hN: "top1_normal_on X TX"
@@ -4717,8 +4744,14 @@ proof -
   qed
   text \<open>Each scaled function fn i x / 2^(Suc i) is continuous into ℝ.\<close>
   have hfn_scaled_cont_R: "\<forall>i. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. fn i x / 2^(Suc i))"
-    sorry (* Scaling by constant 1/2^(Suc i) preserves continuity.
-             Needs: constant multiplication continuous on ℝ + composition. *)
+  proof (intro allI)
+    fix i
+    have "(\<lambda>x. fn i x / 2 ^ Suc i) = (\<lambda>x. (1 / 2^Suc i) * fn i x)"
+      by auto
+    then show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. fn i x / 2 ^ Suc i)"
+      using top1_continuous_scale_real[OF hTop hfn_cont_R[THEN spec, of i]]
+      by presburger
+  qed
   text \<open>Partial sum continuous into ℝ.\<close>
   have hpartial_cont_R: "\<forall>n::nat. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. \<Sum>i<n. fn i x / 2^(Suc i))"
     using top1_continuous_sum_lessThan_real[OF hTop] hfn_scaled_cont_R
