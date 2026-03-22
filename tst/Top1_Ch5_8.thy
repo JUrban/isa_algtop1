@@ -4703,7 +4703,32 @@ lemma Lemma_41_3:
   assumes hReg: "top1_regular_on X TX"
   shows "(\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)) \<longleftrightarrow>
         (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))))"
-  sorry
+proof (intro iffI allI impI)
+  text \<open>(\<Rightarrow>) Paracompact → strong paracompact using regularity.\<close>
+  fix \<A>
+  assume hLHS: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)"
+  assume hCov: "top1_open_covering_on X TX \<A>"
+  show "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
+    \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))"
+    sorry (* → direction: uses regularity to shrink cover so closures stay inside.
+             Needs full (1)→(2)→(3)→(4) argument. *)
+next
+  text \<open>(\<Leftarrow>) Strong paracompact → paracompact (trivial: drop extra condition).\<close>
+  fix \<A>
+  assume hRHS: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
+      \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A)))"
+  assume hCov: "top1_open_covering_on X TX \<A>"
+  obtain \<B> where h: "top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
+    using hRHS hCov
+    
+    by blast
+  show "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
+    using h
+    
+    by blast
+qed
 
 text \<open>Metric topologies are Hausdorff: distinct points separated by d/2-balls.\<close>
 lemma metric_topology_hausdorff:
