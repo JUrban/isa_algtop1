@@ -11390,8 +11390,25 @@ proof -
                continuous d ∘ (f_n, f_m)). Intersection of closed = closed. *)
     text \<open>∪_N AN N e = X.\<close>
     have hAN_covers: "X = (\<Union>N. AN N e)"
-      sorry (* For x ∈ X, f_n(x) → g(x), so f_n(x) is Cauchy in Y.
-               Pick N with d(f_n(x), f_m(x)) ≤ e for n,m ≥ N. Then x ∈ AN N e. *)
+    proof (rule equalityI)
+      show "(\<Union>N. AN N e) \<subseteq> X" unfolding AN_def top1_AN_48_def
+        
+        by fast
+      show "X \<subseteq> (\<Union>N. AN N e)"
+      proof (rule subsetI)
+        fix x assume hxX: "x \<in> X"
+        have hconv: "seq_converges_to_on (\<lambda>n. f n x) (g x) Y ?TY"
+          using hptw hxX
+          
+          by blast
+        have "\<exists>N. \<forall>n\<ge>N. \<forall>m\<ge>N. d (f n x) (f m x) \<le> e"
+          sorry (* Convergent → Cauchy + ε argument *)
+        then show "x \<in> (\<Union>N. AN N e)"
+          unfolding AN_def top1_AN_48_def using hxX
+          
+          by blast
+      qed
+    qed
     text \<open>U(e) = ∪_N Int(AN N e) is open.\<close>
     have hInt_open: "\<forall>N. interior_on X TX (AN N e) \<in> TX"
     proof (intro allI)
