@@ -4699,13 +4699,25 @@ proof -
     qed
   qed
   text \<open>Each partial sum is continuous.\<close>
+  text \<open>Each fn i maps into ℝ continuously.\<close>
+  have hfn_cont_R: "\<forall>i. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (fn i)"
+    sorry (* fn i continuous into [0,1]; [0,1] ⊆ ℝ; interval_topology = subspace of order_topology.
+             Uses Theorem_18_2(6) expand_range. *)
+  text \<open>Each scaled function fn i x / 2^(Suc i) is continuous into ℝ.\<close>
+  have hfn_scaled_cont_R: "\<forall>i. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. fn i x / 2^(Suc i))"
+    sorry (* Scaling by constant 1/2^(Suc i) preserves continuity.
+             Needs: constant multiplication continuous on ℝ + composition. *)
+  text \<open>Partial sum continuous into ℝ.\<close>
+  have hpartial_cont_R: "\<forall>n::nat. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. \<Sum>i<n. fn i x / 2^(Suc i))"
+    using top1_continuous_sum_lessThan_real[OF hTop] hfn_scaled_cont_R
+    by presburger
+  text \<open>Partial sum range in [0,1], so continuous into [0,1].\<close>
   have hpartial_cont: "\<forall>n::nat. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<lambda>x. \<Sum>i<n. fn i x / 2^(Suc i))"
-    sorry (* Finite sum of continuous functions. Each fn i is continuous into [0,1].
-             fn i x / 2^(Suc i) is continuous (composition with scaling).
-             Sum of continuous is continuous. *)
+    sorry (* Range ⊆ [0,1] from hf_range + partial sum ≤ f. Then restrict_range. *)
   have hf_cont: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
-    sorry (* Combines: uniform convergence + partial sums continuous + f range in [0,1].
-             Needs connecting to uniform_limit_continuous via the right metric. *)
+    sorry (* Uniform convergence (hunif_partial) + partial sums continuous (hpartial_cont)
+             + f range in [0,1] (hf_range). Apply uniform_limit_continuous for ℝ metric,
+             then restrict range to [0,1]. *)
   show ?thesis using hf_cont hf_A hf_pos
     by blast
 qed
