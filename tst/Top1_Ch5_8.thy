@@ -11422,19 +11422,135 @@ proof -
             Show each {x ∈ X | d(f_n(x), f_m(x)) ≤ e} is closed.\<close>
       define Snm where "Snm n m = {x \<in> X. d (f n x) (f m x) \<le> e}" for n m :: nat
       have hSnm_closed: "\<forall>n m. closedin_on X TX (Snm n m)"
-        sorry (* Each Snm n m = {x ∈ X | d(f_n(x), f_m(x)) ≤ e} is closed.
-           Proof: show complement X - Snm = {x ∈ X | d(f_n(x), f_m(x)) > e} is open.
-           For x₀ in complement: d(f_n(x₀), f_m(x₀)) > e.
-           Let δ = (d(f_n(x₀), f_m(x₀)) - e) / 3 > 0.
-           f_n continuous: get U₁ nbhd of x₀ with f_n(U₁) ⊆ ball(f_n(x₀), δ).
-           f_m continuous: get U₂ nbhd of x₀ with f_m(U₂) ⊆ ball(f_m(x₀), δ).
-           For x ∈ U₁ ∩ U₂:
-             d(f_n(x), f_m(x)) ≥ d(f_n(x₀), f_m(x₀)) - d(f_n(x), f_n(x₀)) - d(f_m(x), f_m(x₀))
-                               ≥ (e + 3δ) - δ - δ = e + δ > e.
-           So U₁ ∩ U₂ ⊆ complement. U₁ ∩ U₂ open. Complement is open.
-           Needs: top1_continuous_map_on → preimage of open ball is open,
-           metric triangle, metric symmetry. ~30 lines.
-           Can be factored as helper: preimage of open under continuous = open. *)
+      proof (intro allI)
+        fix n m
+        let ?TY = "top1_metric_topology_on Y d"
+        have hfn_cont: "top1_continuous_map_on X TX Y ?TY (f n)"
+          using hfn
+          
+          by presburger
+        have hfm_cont: "top1_continuous_map_on X TX Y ?TY (f m)"
+          using hfn
+          
+          by auto
+        have hfn_map: "\<forall>x\<in>X. f n x \<in> Y"
+          using hfn_cont unfolding top1_continuous_map_on_def
+          
+          by satx
+        have hfm_map: "\<forall>x\<in>X. f m x \<in> Y"
+          using hfm_cont unfolding top1_continuous_map_on_def
+          
+          by presburger
+        have hfn_pre: "\<forall>V\<in>?TY. {x\<in>X. f n x \<in> V} \<in> TX"
+          using hfn_cont unfolding top1_continuous_map_on_def
+          
+          by presburger
+        have hfm_pre: "\<forall>V\<in>?TY. {x\<in>X. f m x \<in> V} \<in> TX"
+          using hfm_cont unfolding top1_continuous_map_on_def
+          
+          by presburger
+        text \<open>Show complement is open: for x₀ with d(f_n(x₀), f_m(x₀)) > e, find open neighborhood.\<close>
+        have hcompl_open: "X - Snm n m \<in> TX"
+        proof (rule top1_open_of_local_subsets[OF hTop])
+          show "X - Snm n m \<subseteq> X"
+            
+            by simp
+          show "\<forall>x\<in>X - Snm n m. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X - Snm n m"
+          proof (intro ballI)
+            fix x0 assume hx0: "x0 \<in> X - Snm n m"
+            have hx0X: "x0 \<in> X" using hx0
+              
+              by blast
+            have hdgt: "d (f n x0) (f m x0) > e" using hx0 unfolding Snm_def
+              
+              by force
+            define \<delta> where "\<delta> = (d (f n x0) (f m x0) - e) / 3"
+            have h\<delta>pos: "0 < \<delta>" unfolding \<delta>_def using hdgt
+              
+              by auto
+            text \<open>Preimage of ball around f_n(x₀) is open and contains x₀.\<close>
+            have hball_n_open: "top1_ball_on Y d (f n x0) \<delta> \<in> ?TY"
+              using hd hfn_map hx0X h\<delta>pos top1_ball_open_in_metric_topology
+              
+              by fast
+            define U1 where "U1 = {x\<in>X. f n x \<in> top1_ball_on Y d (f n x0) \<delta>}"
+            have hU1_open: "U1 \<in> TX" unfolding U1_def
+              using hfn_pre hball_n_open
+              
+              by blast
+            have hx0U1: "x0 \<in> U1" unfolding U1_def top1_ball_on_def
+              using hx0X hfn_map hd h\<delta>pos unfolding top1_metric_on_def
+              
+              by fastforce
+            text \<open>Similarly for f_m.\<close>
+            have hball_m_open: "top1_ball_on Y d (f m x0) \<delta> \<in> ?TY"
+              using hd hfm_map hx0X h\<delta>pos top1_ball_open_in_metric_topology
+              
+              by fast
+            define U2 where "U2 = {x\<in>X. f m x \<in> top1_ball_on Y d (f m x0) \<delta>}"
+            have hU2_open: "U2 \<in> TX" unfolding U2_def
+              using hfm_pre hball_m_open
+              
+              by blast
+            have hx0U2: "x0 \<in> U2" unfolding U2_def top1_ball_on_def
+              using hx0X hfm_map hd h\<delta>pos unfolding top1_metric_on_def
+              
+              by fastforce
+            text \<open>U1 ∩ U2 is open and ⊆ complement.\<close>
+            have hU12_open: "U1 \<inter> U2 \<in> TX"
+              using topology_inter2[OF hTop hU1_open hU2_open]
+              
+              by presburger
+            have hU12_sub: "U1 \<inter> U2 \<subseteq> X - Snm n m"
+            proof (rule subsetI)
+              fix x assume hx: "x \<in> U1 \<inter> U2"
+              have hxX: "x \<in> X" using hx unfolding U1_def
+                
+                by blast
+              have hdn: "d (f n x0) (f n x) < \<delta>"
+                using hx unfolding U1_def top1_ball_on_def
+                
+                by blast
+              have hdm: "d (f m x0) (f m x) < \<delta>"
+                using hx unfolding U2_def top1_ball_on_def
+                
+                by blast
+              text \<open>Reverse triangle: d(f_n(x), f_m(x)) ≥ d(f_n(x₀), f_m(x₀)) - d(f_n(x),f_n(x₀)) - d(f_m(x),f_m(x₀)).\<close>
+              have htri1: "d (f n x0) (f m x0) \<le> d (f n x0) (f n x) + d (f n x) (f m x0)"
+                using hd hfn_map hfm_map hx0X hxX unfolding top1_metric_on_def
+                
+                by metis
+              have htri2: "d (f n x) (f m x0) \<le> d (f n x) (f m x) + d (f m x) (f m x0)"
+                using hd hfn_map hfm_map hx0X hxX unfolding top1_metric_on_def
+                
+                by meson
+              have hdsym_m: "d (f m x) (f m x0) = d (f m x0) (f m x)"
+                using hd hfm_map hx0X hxX unfolding top1_metric_on_def
+                
+                by metis
+              have "d (f n x) (f m x) \<ge> d (f n x0) (f m x0) - d (f n x0) (f n x) - d (f m x0) (f m x)"
+                using htri1 htri2 hdsym_m
+                
+                by argo
+              then have "d (f n x) (f m x) > e"
+                using hdgt hdn hdm unfolding \<delta>_def
+                
+                by fastforce
+              then show "x \<in> X - Snm n m" unfolding Snm_def using hxX
+                
+                by simp
+            qed
+            show "\<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> X - Snm n m"
+              using hU12_open hx0U1 hx0U2 hU12_sub
+              
+              by (metis hx0U1 hU12_sub hU12_open hx0U2 IntI)
+          qed
+        qed
+        show "closedin_on X TX (Snm n m)"
+          unfolding closedin_on_def using hcompl_open unfolding Snm_def
+          
+          by force
+      qed
       have hAN_eq: "AN N e = (\<Inter>n\<in>{N..}. \<Inter>m\<in>{N..}. Snm n m)"
         unfolding AN_def top1_AN_48_def Snm_def
         
