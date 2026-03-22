@@ -7936,7 +7936,6 @@ text \<open>Convergence in uniform metric implies pointwise uniform convergence 
 lemma uniform_metric_conv_imp_pointwise_unif:
   assumes hXne: "X \<noteq> {}"
   assumes hd: "top1_metric_on Y d"
-  assumes hTopX: "is_topology_on X TX"
   assumes hf_PiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
   assumes hfn_PiE: "\<forall>n::nat. fseq n \<in> top1_PiE X (\<lambda>_. Y)"
   assumes hconv: "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y))
@@ -8039,7 +8038,7 @@ proof (rule metric_seq_closed_imp_closed)
       by blast
     text \<open>s converges to x uniformly in d.\<close>
     have hunif: "\<forall>\<epsilon>>0. \<exists>N::nat. \<forall>n\<ge>N. \<forall>xa\<in>X. d (s n xa) (x xa) < \<epsilon>"
-      using uniform_metric_conv_imp_pointwise_unif[OF hXne hd hTopX hxPiE hsPiE hconv]
+      using uniform_metric_conv_imp_pointwise_unif[OF hXne hd hxPiE hsPiE hconv]
       by argo
     text \<open>x maps into Y.\<close>
     have hxY: "\<forall>xa\<in>X. x xa \<in> Y"
