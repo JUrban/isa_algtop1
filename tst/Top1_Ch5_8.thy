@@ -4650,25 +4650,36 @@ proof -
         using hfx_split
         by argo
       text \<open>Tail ≥ 0 (all terms non-negative).\<close>
+      have hshift_summ: "summable (\<lambda>i. fn (i + n) x / 2 ^ Suc (i + n))"
+        using summable_iff_shift[THEN iffD2, of "\<lambda>i. fn i x / 2 ^ Suc i" n]
+          hsummable hxX
+        by blast
+      have hshift_nn: "\<And>i. 0 \<le> fn (i + n) x / 2 ^ Suc (i + n)"
+        using hfn_range hxX
+        by auto
       have htail_nn: "0 \<le> (\<Sum>i. fn (i + n) x / 2 ^ Suc (i + n))"
-        using suminf_nonneg hsummable hxX hfn_range
-        sledgehammer [timeout = 10]
-        sorry
+        using suminf_nonneg[OF hshift_summ hshift_nn]
+        by presburger
       text \<open>|S_n(x) - f(x)| = f(x) - S_n(x) = tail.\<close>
       have habs: "\<bar>(\<Sum>i<n. fn i x / 2 ^ Suc i) - f x\<bar> = f x - (\<Sum>i<n. fn i x / 2 ^ Suc i)"
         using hdiff htail_nn
         by simp
       text \<open>Tail ≤ ∑_{i≥n} 1/2^(i+1) = (1/2)^n ≤ (1/2)^N < ε.\<close>
       have htail_le: "(\<Sum>i. fn (i + n) x / 2 ^ Suc (i + n)) \<le> (\<Sum>i. (1/2::real) ^ Suc (i + n))"
-        using suminf_le[of "\<lambda>i. fn (i + n) x / 2 ^ Suc (i + n)" "\<lambda>i. (1/2::real)^Suc (i + n)"]
-          hsummable hxX hfn_range
-        sledgehammer [timeout = 10]
-        sorry
+      proof (rule suminf_le)
+        fix i show "fn (i + n) x / 2 ^ Suc (i + n) \<le> (1/2::real) ^ Suc (i + n)"
+          using hfn_range hxX by (simp add: power_divide divide_right_mono)
+      next
+        show "summable (\<lambda>i. fn (i + n) x / 2 ^ Suc (i + n))" by (rule hshift_summ)
+      next
+        show "summable (\<lambda>i. (1 / 2 :: real) ^ Suc (i + n))"
+          using summable_geometric[of "1/2::real"]
+          by force
+      qed
       have hgeom_tail: "(\<Sum>i. (1/2::real) ^ Suc (i + n)) = (1/2::real)^n"
       proof -
         have "(\<lambda>i. (1/2::real) ^ Suc (i + n)) = (\<lambda>i. (1/2)^(Suc n) * (1/2)^i)"
-          sledgehammer [timeout = 10]
-          sorry
+          by (simp add: power_add algebra_simps)
         then have "(\<Sum>i. (1/2::real) ^ Suc (i + n)) = (1/2)^(Suc n) * (\<Sum>i. (1/2::real)^i)"
           using suminf_mult[of "\<lambda>i. (1/2::real)^i" "(1/2)^(Suc n)"]
           by simp
