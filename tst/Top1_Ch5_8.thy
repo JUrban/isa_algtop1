@@ -5282,11 +5282,53 @@ next
       using Lemma_40_1[OF hReg hBasis hSLF] by blast
     have hGdelta: "\<forall>A. closedin_on X TX A \<longrightarrow> top1_G_delta_on X TX A"
       using Lemma_40_1[OF hReg hBasis hSLF] by blast
-    text \<open>Step 2+3: Embed X into [0,1]^J via Lemma 40.2 + Theorem 34.2.
-      Uses f_{n,B}: X → [0,1] with f>0 on B and f=0 on X-B (Lemma 40.2).
-      Needs: continuity of F in uniform metric (local finiteness argument).
-      Estimated ~80 lines.\<close>
-    show ?thesis sorry
+    have hTop: "is_topology_on X TX"
+      using hReg unfolding top1_regular_on_def top1_T1_on_def
+      by argo
+    text \<open>Step 2: Decompose basis B = ∪_n B_n (LF). For each B ∈ B_n,
+      X-B is closed + G-delta, so Lemma 40.2 gives g_B: X→[0,1] with
+      g_B=0 on X-B, g_B>0 on B. Define f_{n,B} = g_B/n ∈ [0,1/n].\<close>
+    obtain Bn :: "nat \<Rightarrow> 'a set set" where
+      hBn_lf: "\<forall>n. top1_locally_finite_family_on X TX (Bn n)" and
+      hB_eq: "\<B> = (\<Union>n. Bn n)"
+      using hSLF unfolding top1_sigma_locally_finite_family_on_def
+      by blast
+    text \<open>For each B in the basis, X-B is closed.\<close>
+    have hB_open: "\<B> \<subseteq> TX" using hBasis unfolding basis_for_def is_basis_on_def
+      sorry (* B is a basis for TX, so B ⊆ TX by topology_generated_by_basis properties. *)
+    have hXmB_closed: "\<forall>B\<in>\<B>. closedin_on X TX (X - B)"
+      sorry (* X-B is closed since B is open. Needs: B ⊆ TX + open/closed complement.
+               Also needs: B ⊆ X for set arithmetic. *)
+    text \<open>For each B, Lemma 40.2 gives g_B.\<close>
+    have hgB_exists: "\<forall>B\<in>\<B>. \<exists>gB. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) gB
+      \<and> (\<forall>x\<in>X - B. gB x = 0) \<and> (\<forall>x\<in>B. 0 < gB x)"
+    proof (intro ballI)
+      fix B assume hB: "B \<in> \<B>"
+      have hXmB_cl: "closedin_on X TX (X - B)" using hXmB_closed hB
+        by blast
+      have hXmB_gd: "top1_G_delta_on X TX (X - B)" using hGdelta hXmB_cl
+        by blast
+      obtain gB where hgB: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) gB
+        \<and> (\<forall>x\<in>X - B. gB x = 0) \<and> (\<forall>x\<in>X - (X - B). 0 < gB x)"
+        using Lemma_40_2[OF hNorm hXmB_cl hXmB_gd]
+        by blast
+      text \<open>X - (X - B) = B ∩ X. Since B ⊆ X (from basis), this is B.\<close>
+      have "X - (X - B) = B" using hB hB_open
+        sorry (* Needs B ⊆ X from basis/topology. *)
+      then show "\<exists>gB. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) gB
+        \<and> (\<forall>x\<in>X - B. gB x = 0) \<and> (\<forall>x\<in>B. 0 < gB x)"
+        using hgB
+        by auto
+    qed
+    text \<open>Step 3: The family {g_B | B ∈ B} separates points from closed sets.
+      So by Theorem 34.2, the product map is an embedding.
+      Then X homeomorphic to subspace of ℝ^J, which is metrizable.\<close>
+    show ?thesis
+      sorry (* Remaining: use Theorem 34.2 for embedding into product,
+               then show metrizable (subspace of metric space).
+               The key subtlety: uniform metric vs product topology.
+               For metrizable: subspace of ℝ^J with uniform metric is metrizable.
+               Estimated ~40 lines more. *)
   qed
 qed
 
