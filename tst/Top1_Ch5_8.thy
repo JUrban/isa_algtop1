@@ -11691,15 +11691,20 @@ proof -
     qed
     text \<open>U(e) is dense: uses Baire.\<close>
     show "top1_densein_on X TX (U e)"
-      sorry (* ~30 lines Baire argument:
-         Show closure(U e) = X by showing U e meets every nonempty open V.
-         V is Baire (Lemma 48.4 since V open in Baire X).
-         Define V_N = V ∩ AN N e. Each V_N is closed in V (AN closed, V open → V ∩ AN closed in V).
-         ∪V_N = V ∩ X = V (from hAN_covers).
-         V is nonempty Baire with closed cover V_N → some V_M has nonempty interior in V.
-         This interior ⊆ V_M ⊆ AN M e. Being open in V (which is open in X), it's open in X.
-         So it's ⊆ Int_X(AN M e) ⊆ U(e). Hence V ∩ U(e) ≠ {}.
-         Uses: Lemma_48_4, hAN_closed, hAN_covers, Baire definition. *)
+      sorry (* Baire argument for density of U(e), ~40 lines.
+         For every nonempty open V ⊆ X, V ∩ U(e) ≠ {}:
+         1. V is Baire (Lemma_48_4[OF hTop hB _ hV_open]).
+         2. V_N = V ∩ AN N e is closed in subspace(V) (AN closed in X, V open).
+         3. ∪_N V_N = V (from hAN_covers: X = ∪AN, V ⊆ X → V = V ∩ ∪AN = ∪(V ∩ AN)).
+         4. V Baire + closed covering V_N → by Baire, some V_M nonempty interior in V.
+            (Baire says countable intersection of open dense is dense.
+             Equivalently: countable union of closed with nonempty interiors covers
+             → at least one has nonempty interior.)
+         5. Interior W ⊆ V_M ⊆ AN M e. W open in V (hence in X since V open).
+         6. W ⊆ AN M e → W ⊆ Int_X(AN M e) ⊆ U(e).
+         7. W ⊆ V and W ≠ {} → V ∩ U(e) ≠ {}.
+         Needs: Lemma_48_4, Baire property as "countable closed cover → some has interior",
+         which follows from Baire as stated. *)
   qed
 
   text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
