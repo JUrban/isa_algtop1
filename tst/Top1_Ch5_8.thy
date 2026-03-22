@@ -7342,14 +7342,18 @@ proof -
   have hB_sub_TX: "\<B> \<subseteq> TX"
     using hB_cov unfolding top1_open_covering_on_def
     by argo
-  have hV_ref: "top1_refines V \<A>" sorry
-  have hV_covers: "X \<subseteq> \<Union>V" sorry
-  have hV_open: "V \<subseteq> TX" sorry
+  have hV_ref: "top1_refines V \<A>"
+    sorry
+  have hV_covers: "X \<subseteq> \<Union>V"
+    sorry
+  have hV_open: "V \<subseteq> TX"
+    sorry
   have hV_cov: "top1_open_covering_on X TX V"
-    unfolding top1_open_covering_on_def using hV_open hV_covers sorry
+    unfolding top1_open_covering_on_def
+    using hV_open hV_covers by presburger
   have hV_lf: "top1_locally_finite_family_on X TX V" sorry
   have hV_cl: "\<forall>A\<in>\<A>. \<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A" sorry
-  show ?thesis using hV_cl hV_cov hV_lf hV_ref sorry
+  show ?thesis using hV_cl hV_cov hV_lf hV_ref by blast
 qed
 
 text \<open>
