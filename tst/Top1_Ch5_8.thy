@@ -11472,9 +11472,15 @@ proof -
     qed
     text \<open>U(e) is dense: uses Baire.\<close>
     show "top1_densein_on X TX (U e)"
-      sorry (* For open V ≠ {}: V is Baire (Lemma 48.4). V ∩ AN N e closed in V.
-               ∪(V ∩ AN) = V. By Baire, some V ∩ AM has nonempty interior W in V.
-               W open in V hence in X. W ⊆ AM ⊆ Int(AM) ⊆ U(e). So V ∩ U(e) ≠ {}. *)
+      sorry (* ~30 lines Baire argument:
+         Show closure(U e) = X by showing U e meets every nonempty open V.
+         V is Baire (Lemma 48.4 since V open in Baire X).
+         Define V_N = V ∩ AN N e. Each V_N is closed in V (AN closed, V open → V ∩ AN closed in V).
+         ∪V_N = V ∩ X = V (from hAN_covers).
+         V is nonempty Baire with closed cover V_N → some V_M has nonempty interior in V.
+         This interior ⊆ V_M ⊆ AN M e. Being open in V (which is open in X), it's open in X.
+         So it's ⊆ Int_X(AN M e) ⊆ U(e). Hence V ∩ U(e) ≠ {}.
+         Uses: Lemma_48_4, hAN_closed, hAN_covers, Baire definition. *)
   qed
 
   text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
