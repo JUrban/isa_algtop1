@@ -5701,8 +5701,20 @@ next
                     by blast
                 qed
                 have hfJ_cont: "\<forall>n. \<forall>B\<in>Bn n. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>y. fJ (n, B) y)"
-                  sorry (* Each fJ(n,B) = gB B / (Suc n) is continuous X→ℝ.
-                           Uses: hgB_cont_R (gB continuous into ℝ) + top1_continuous_scale_real. *)
+                proof (intro allI ballI)
+                  fix n B assume "B \<in> Bn n"
+                  then have "B \<in> \<B>" using hB_eq
+                    by fast
+                  then have hgB_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (gB B)"
+                    using hgB_cont_R
+                    by blast
+                  have "(\<lambda>y. fJ (n, B) y) = (\<lambda>y. (1 / real (Suc n)) * gB B y)"
+                    unfolding fJ_def
+                    by simp
+                  then show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>y. fJ (n, B) y)"
+                    using top1_continuous_scale_real[OF hTop hgB_R]
+                    by presburger
+                qed
                 have hWn_ex: "\<forall>n\<le>N. \<exists>Wn\<in>TX. x \<in> Wn \<and>
                   (\<forall>y\<in>Wn. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
                   sorry (* For each n ≤ N: Bn n is LF → x has Un ∈ TX meeting finitely many B.
