@@ -5702,7 +5702,16 @@ next
                 qed
                 have hWn_ex: "\<forall>n\<le>N. \<exists>Wn\<in>TX. x \<in> Wn \<and>
                   (\<forall>y\<in>Wn. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
-                  sorry (* LF + continuity argument for each n ≤ N *)
+                  sorry (* For each n ≤ N:
+                    (1) Bn n is LF → ∃Un∈TX. x ∈ Un ∧ finite {B∈Bn n. intersects B Un}
+                    (2) For B ∈ Bn n with B ∩ Un = {}: x ∉ B (since x ∈ Un ⊆ X, B disjoint from Un)
+                        → gB B x = 0. y ∈ Un → y ∉ B → gB B y = 0. fJ diff = 0 ≤ ε/2.
+                    (3) For B ∈ Bn n with B ∩ Un ≠ {} (finitely many):
+                        gB B continuous → fJ(n,B) = gB B / (n+1) continuous → find VB∈TX with
+                        x ∈ VB ∧ ∀y∈VB. |fJ(n,B)(y) - fJ(n,B)(x)| ≤ ε/2.
+                    (4) Wn = Un ∩ ∩{VB | B meets Un, B∈Bn n} (finite intersection, TX-open).
+                    Needs: hBn_lf, hgB_cont_R, top1_continuous_scale_real, top1_continuous_map_on_def.
+                    Assembly is ~25 lines. *)
                 then obtain Wn where hWn: "\<forall>n\<le>N. Wn n \<in> TX \<and> x \<in> Wn n
                   \<and> (\<forall>y\<in>Wn n. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
                   by metis
