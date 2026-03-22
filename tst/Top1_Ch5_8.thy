@@ -7311,10 +7311,46 @@ qed
 lemma Lemma_41_6:
   assumes hPara: "top1_paracompact_on X TX"
   assumes hHaus: "is_hausdorff_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
   assumes hCov: "top1_open_covering_on X TX \<A>"
   shows "\<exists>V. (\<forall>A\<in>\<A>. (\<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A))
         \<and> top1_open_covering_on X TX V \<and> top1_locally_finite_family_on X TX V \<and> top1_refines V \<A>"
-  sorry
+proof -
+  have hTop: "is_topology_on X TX"
+    using hHaus unfolding is_hausdorff_on_def by presburger
+  have hReg: "top1_regular_on X TX"
+    by (rule paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub])
+  define \<A>' where "\<A>' = {U \<in> TX. \<exists>A\<in>\<A>. closure_on X TX U \<subseteq> A}"
+  have hA'_covers: "X \<subseteq> \<Union>\<A>'"
+    sorry
+  have hA'_cov: "top1_open_covering_on X TX \<A>'"
+    unfolding top1_open_covering_on_def
+  proof (intro conjI)
+    show "\<A>' \<subseteq> TX" unfolding \<A>'_def by blast
+    show "X \<subseteq> \<Union>\<A>'" by (rule hA'_covers)
+  qed
+  obtain \<B> where hB_cov: "top1_open_covering_on X TX \<B>"
+    and hB_ref: "top1_refines \<B> \<A>'" and hB_lf: "top1_locally_finite_family_on X TX \<B>"
+    using hPara hA'_cov unfolding top1_paracompact_on_def
+    by blast
+  have hparent_ex: "\<forall>B\<in>\<B>. \<exists>A. A \<in> \<A> \<and> closure_on X TX B \<subseteq> A"
+    sorry
+  obtain parent where hparent: "\<forall>B\<in>\<B>. parent B \<in> \<A> \<and> closure_on X TX B \<subseteq> parent B"
+    using bchoice[OF hparent_ex] by metis
+  define V_A where "V_A A = \<Union>{B \<in> \<B>. parent B = A}" for A
+  define V where "V = V_A ` \<A>"
+  have hB_sub_TX: "\<B> \<subseteq> TX"
+    using hB_cov unfolding top1_open_covering_on_def
+    by argo
+  have hV_ref: "top1_refines V \<A>" sorry
+  have hV_covers: "X \<subseteq> \<Union>V" sorry
+  have hV_open: "V \<subseteq> TX" sorry
+  have hV_cov: "top1_open_covering_on X TX V"
+    unfolding top1_open_covering_on_def using hV_open hV_covers sorry
+  have hV_lf: "top1_locally_finite_family_on X TX V" sorry
+  have hV_cl: "\<forall>A\<in>\<A>. \<exists>VA\<in>V. VA \<in> TX \<and> closure_on X TX VA \<subseteq> A" sorry
+  show ?thesis using hV_cl hV_cov hV_lf hV_ref sorry
+qed
 
 text \<open>
   For the starred results of \<S>41 we will need partitions of unity indexed by an arbitrary set.
