@@ -5582,8 +5582,8 @@ next
       proof (rule subsetI)
         fix U assume hU: "U \<in> TX"
         have hU_subX: "U \<subseteq> X"
-          sorry (* U ∈ TX, topology elements may not be subsets of X in general.
-                   But our basis_for means TX = generated, so U ⊆ X by definition. *)
+          using hU hBasis unfolding basis_for_def topology_generated_by_basis_def
+          by blast
         show "U \<in> {U. U \<subseteq> X \<and> (\<forall>x\<in>U. \<exists>b\<in>top1_metric_basis_on X d. x \<in> b \<and> b \<subseteq> U)}"
         proof (intro CollectI conjI ballI)
           show "U \<subseteq> X" by (rule hU_subX)
@@ -5612,14 +5612,34 @@ next
               by blast
             text \<open>|fJ(n,B)(x) - fJ(n,B)(x₀)| ≤ d(x₀,x) < ε = fJ(n,B)(x₀).\<close>
             have hfJ_le_d: "\<bar>fJ (n, B) x - fJ (n, B) x0\<bar> \<le> d x0 x"
-              sorry (* Individual term ≤ Sup. Uses cSup_upper + hpJ. *)
+            proof -
+              have hmem: "\<bar>fJ (n, B) x0 - fJ (n, B) x\<bar> \<in> (\<lambda>p. \<bar>fJ p x0 - fJ p x\<bar>) ` J"
+                using hpJ by blast
+              have hd_eq: "d x0 x = Sup ((\<lambda>p. \<bar>fJ p x0 - fJ p x\<bar>) ` J)"
+                unfolding d_def using hpJ
+                by fastforce
+              have "\<bar>fJ (n, B) x0 - fJ (n, B) x\<bar> \<le> d x0 x"
+                unfolding hd_eq using cSup_upper[OF hmem] hfJ_bdd hx0X hxX
+                by fast
+              then show ?thesis
+                by simp
+            qed
             have "fJ (n, B) x > 0"
               using hfJ_le_d hdx unfolding \<epsilon>_def
               by auto
             then have "gB B x > 0" unfolding fJ_def
               by (simp add: zero_less_divide_iff)
-            then have "x \<in> B" using hgB_prop hBB hxX hB_subX
-              sorry (* gB B x > 0 implies x ∈ B (contrapositively: x ∉ B → gB B x = 0). *)
+            have hgBx_pos: "gB B x > 0" by (rule \<open>gB B x > 0\<close>)
+            have "x \<in> B"
+            proof (rule ccontr)
+              assume "x \<notin> B"
+              then have "x \<in> X - B" using hxX
+                by blast
+              then have "gB B x = 0" using hgB_prop hBB
+                by blast
+              then show False using hgBx_pos
+                by fastforce
+            qed
             then show "x \<in> U" using hBU
               by fast
           qed
