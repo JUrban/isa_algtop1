@@ -9839,11 +9839,25 @@ proof (intro allI impI)
   qed
 qed
 
+lemma compact_imp_complete:
+  assumes hd: "top1_metric_on X d"
+  assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  shows "top1_complete_metric_on X d"
+  sorry
+
 theorem Theorem_45_1:
   assumes hd: "top1_metric_on X d"
   shows "top1_compact_on X (top1_metric_topology_on X d)
     \<longleftrightarrow> (top1_complete_metric_on X d \<and> top1_totally_bounded_on X d)"
-  sorry
+proof (intro iffI)
+  assume hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  show "top1_complete_metric_on X d \<and> top1_totally_bounded_on X d"
+    using compact_imp_complete[OF hd hComp] compact_imp_totally_bounded[OF hd hComp] by blast
+next
+  assume "top1_complete_metric_on X d \<and> top1_totally_bounded_on X d"
+  then show "top1_compact_on X (top1_metric_topology_on X d)"
+    sorry
+qed
 
 definition top1_equicontinuous_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
