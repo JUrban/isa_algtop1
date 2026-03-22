@@ -5671,29 +5671,50 @@ next
             show "top1_ball_on X d x0 r \<subseteq> X" unfolding top1_ball_on_def
               by blast
             show "\<forall>x\<in>top1_ball_on X d x0 r. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> top1_ball_on X d x0 r"
-              sorry (* The local finiteness argument — hardest step of Nagata-Smirnov.
-                       For x ∈ ball(x₀,r), ε = r - d(x₀,x) > 0.
-                       Need TX-W with x ∈ W and W ⊆ ball(x₀,r).
-                       Suffices: W where d(x,y) < ε for y ∈ W, since then d(x₀,y) ≤ d(x₀,x)+d(x,y) < r.
-
-                       Key argument:
-                       Pick N with 1/(N+1) < ε/2.
-                       For n ≤ N: Bn n is LF, so x has TX-nbhd Un meeting finitely many B ∈ Bn n.
-                         Non-zero fJ(n,B) on Un are finitely many continuous functions.
-                         Find TX-Vn ⊆ Un where each |fJ(n,B)(y) - fJ(n,B)(x)| < ε/2 for y ∈ Vn.
-                       For n > N: all |fJ(n,B)(y) - fJ(n,B)(x)| ≤ 2/(n+1) ≤ 2/(N+2) < ε (auto from fJ range).
-
-                       W = V₁ ∩ ... ∩ V_N is TX-open (finite intersection).
-                       For y ∈ W, p = (n,B) ∈ J:
-                         if n ≤ N: |fJ p y - fJ p x| < ε/2 < ε
-                         if n > N: |fJ p y - fJ p x| ≤ 2/(n+1) < ε
-                       So d(x,y) = Sup{...} ≤ max(ε/2, 2/(N+2)) < ε.
-                       Hence W ⊆ ball(x₀,r).
-
-                       Prerequisites: hBn_lf (LF of Bn), hgB_cont_R (continuity of gB),
-                       top1_continuous_scale_real (scaling preserves continuity),
-                       finite intersection of opens is open, Archimedean property.
-                       All proved. Assembly is ~40 lines of structured Isar. *)
+            proof (intro ballI)
+              fix x assume hxball: "x \<in> top1_ball_on X d x0 r"
+              have hxX: "x \<in> X" using hxball unfolding top1_ball_on_def by blast
+              have hdx0x: "d x0 x < r" using hxball unfolding top1_ball_on_def by blast
+              define \<epsilon> where "\<epsilon> = r - d x0 x"
+              have hepos: "0 < \<epsilon>" unfolding \<epsilon>_def using hdx0x by simp
+              text \<open>Suffices: find W ∈ TX with x ∈ W and ∀y∈W. d x y < ε.
+                Then d(x₀,y) ≤ d(x₀,x) + d(x,y) < d(x₀,x) + ε = r.\<close>
+              text \<open>For each (n,B), |fJ(n,B)(y) - fJ(n,B)(x)| < ε suffices for d(x,y) < ε.
+                For n > N where 1/(N+1) < ε/2: |fJ(n,B)| ≤ 1/(n+1), so diff ≤ 2/(n+1) < ε.
+                For n ≤ N: use LF of Bn n + continuity of finitely many gB.\<close>
+              have "\<exists>W\<in>TX. x \<in> W \<and> (\<forall>y\<in>W. d x y < \<epsilon>)"
+                sorry (* The core ~40-line argument using local finiteness.
+                         Pick N with 2/(N+2) < ε. For each n≤N:
+                         - Bn n is LF → x has neighborhood Un ∈ TX meeting finitely many B∈Bn n.
+                         - For B not meeting Un: fJ(n,B) = 0 on Un (both x and y), diff = 0.
+                         - For B meeting Un: fJ(n,B) continuous → find Vn,B where diff < ε/2.
+                         - Vn = Un ∩ ∩{Vn,B} is TX-open (finite intersection).
+                         W = ∩{Vn | n≤N} is TX-open. For y∈W, all |fJ p y - fJ p x| < ε.
+                         So d(x,y) = Sup{...} < ε by cSup_least. *)
+              then obtain W where hW: "W \<in> TX" and hxW: "x \<in> W" and hWeps: "\<forall>y\<in>W. d x y < \<epsilon>"
+                by blast
+              have "W \<subseteq> top1_ball_on X d x0 r"
+              proof (rule subsetI)
+                fix y assume hyW: "y \<in> W"
+                have hW_sub_X: "W \<subseteq> X"
+                  using hW hBasis unfolding basis_for_def topology_generated_by_basis_def
+                  by blast
+                have hyX: "y \<in> X" using hyW hW_sub_X
+                  by blast
+                have "d x0 y \<le> d x0 x + d x y"
+                  using hd_metric hx0 hxX hyX unfolding top1_metric_on_def
+                  by blast
+                also have "d x y < \<epsilon>" using hWeps hyW by blast
+                finally have "d x0 y < r" unfolding \<epsilon>_def
+                  by auto
+                then show "y \<in> top1_ball_on X d x0 r"
+                  unfolding top1_ball_on_def using hyX
+                  by blast
+              qed
+              then show "\<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> top1_ball_on X d x0 r"
+                using hW hxW
+                by blast
+            qed
           qed
         qed
       qed
