@@ -4132,7 +4132,25 @@ proof (intro iffI)
     text \<open>Actually need radius 1/(Suc m) balls. Redefine.\<close>
     define Bm_cover where "Bm_cover m = {top1_ball_on X d x (1 / real (Suc m)) | x. x \<in> X}" for m :: nat
     have hBm_cov: "\<forall>m. top1_open_covering_on X TX (Bm_cover m)"
-      sorry (* Each ball is open in TX, and balls cover X (x ∈ ball(x, 1/(Suc m))). *)
+      unfolding top1_open_covering_on_def
+    proof (intro allI conjI)
+      fix m
+      show "Bm_cover m \<subseteq> TX"
+        unfolding Bm_cover_def hTXeq using hd top1_ball_open_in_metric_topology
+        
+        by fastforce
+      show "X \<subseteq> \<Union>(Bm_cover m)"
+      proof (rule subsetI)
+        fix x assume hxX: "x \<in> X"
+        have "x \<in> top1_ball_on X d x (1 / real (Suc m))"
+          unfolding top1_ball_on_def using hxX hd unfolding top1_metric_on_def
+          
+          by fastforce
+        then show "x \<in> \<Union>(Bm_cover m)" unfolding Bm_cover_def using hxX
+          
+          by blast
+      qed
+    qed
     text \<open>Apply Lemma 39.2 to each cover.\<close>
     have hBm_ref: "\<forall>m. \<exists>\<E>m. top1_open_covering_on X TX \<E>m \<and> top1_refines \<E>m (Bm_cover m)
             \<and> top1_sigma_locally_finite_family_on X TX \<E>m"
