@@ -7412,7 +7412,45 @@ proof (intro allI impI)
     using hTsub_assume by presburger
   have hSLF_all: "\<forall>\<G>. top1_open_covering_on X TX \<G> \<longrightarrow>
     (\<exists>\<H>. top1_open_covering_on X TX \<H> \<and> top1_refines \<H> \<G> \<and> top1_sigma_locally_finite_family_on X TX \<H>)"
-    sorry
+  proof (intro allI impI)
+    fix \<G> assume "top1_open_covering_on X TX \<G>"
+    then have "\<G> \<subseteq> TX" "X \<subseteq> \<Union>\<G>" unfolding top1_open_covering_on_def by blast+
+    obtain \<H> where "top1_countable \<H>" "\<H> \<subseteq> \<G>" "X \<subseteq> \<Union>\<H>"
+      using hLind \<open>\<G> \<subseteq> TX\<close> \<open>X \<subseteq> \<Union>\<G>\<close> unfolding top1_lindelof_on_def by blast
+    have "\<H> \<subseteq> TX" using \<open>\<H> \<subseteq> \<G>\<close> \<open>\<G> \<subseteq> TX\<close> by blast
+    have hH_cov: "top1_open_covering_on X TX \<H>"
+      unfolding top1_open_covering_on_def using \<open>\<H> \<subseteq> TX\<close> \<open>X \<subseteq> \<Union>\<H>\<close> by blast
+    have hH_ref: "top1_refines \<H> \<G>"
+      unfolding top1_refines_def using \<open>\<H> \<subseteq> \<G>\<close> by blast
+    text \<open>Countable is σ-LF (same argument as for C above).\<close>
+    obtain idx :: "'a set \<Rightarrow> nat" where "inj_on idx \<H>"
+      using \<open>top1_countable \<H>\<close> unfolding top1_countable_def by blast
+    define Hn where "Hn n = {U \<in> \<H>. idx U = n}" for n
+    have "\<forall>n. top1_locally_finite_family_on X TX (Hn n)"
+    proof (intro allI)
+      fix n
+      have "finite (Hn n)"
+      proof -
+        have "\<forall>a\<in>Hn n. \<forall>b\<in>Hn n. a = b"
+          using \<open>inj_on idx \<H>\<close> unfolding Hn_def inj_on_def by blast
+        then have "Hn n = {} \<or> (\<exists>x. Hn n = {x})" by blast
+        then show ?thesis by auto
+      qed
+      show "top1_locally_finite_family_on X TX (Hn n)"
+        unfolding top1_locally_finite_family_on_def
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        have "X \<in> TX" using hTop unfolding is_topology_on_def by satx
+        then show "\<exists>U\<in>TX. x \<in> U \<and> finite {A \<in> Hn n. intersects A U}"
+          using \<open>x \<in> X\<close> \<open>finite (Hn n)\<close> by (intro bexI[of _ X]) auto
+      qed
+    qed
+    moreover have "\<H> = (\<Union>n. Hn n)" unfolding Hn_def by blast
+    ultimately have "top1_sigma_locally_finite_family_on X TX \<H>"
+      unfolding top1_sigma_locally_finite_family_on_def by blast
+    then show "\<exists>\<H>. top1_open_covering_on X TX \<H> \<and> top1_refines \<H> \<G> \<and> top1_sigma_locally_finite_family_on X TX \<H>"
+      using hH_cov hH_ref by blast
+  qed
   obtain \<B> where hB_cov: "top1_open_covering_on X TX \<B>"
     and hB_ref_C: "top1_refines \<B> \<C>"
     and hB_lf: "top1_locally_finite_family_on X TX \<B>"
