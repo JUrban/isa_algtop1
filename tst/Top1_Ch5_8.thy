@@ -4502,6 +4502,126 @@ next
     by argo
 qed
 
+text \<open>Theorem 21.6 (Uniform limit theorem): uniform limit of continuous functions is continuous.
+  Proof: ε/3 argument — given V open containing f(x₀), find ε-ball in V, pick N for ε/3 uniform
+  convergence, use continuity of f_N for another ε/3, then triangle inequality.\<close>
+lemma uniform_limit_continuous:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hcont: "\<forall>n::nat. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (fseq n)"
+  assumes hunif: "\<forall>\<epsilon>>0. \<exists>N::nat. \<forall>n\<ge>N. \<forall>x\<in>X. d (fseq n x) (f x) < \<epsilon>"
+  assumes hfX: "\<forall>x\<in>X. f x \<in> Y"
+  shows "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  have hpre: "\<forall>V\<in>?TY. {x \<in> X. f x \<in> V} \<in> TX"
+  proof (intro ballI)
+    fix V assume hV: "V \<in> ?TY"
+    let ?A = "{x \<in> X. f x \<in> V}"
+    have hAX: "?A \<subseteq> X"
+      by blast
+    have "\<forall>x0\<in>?A. \<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> ?A"
+    proof (intro ballI)
+      fix x0 assume hx0: "x0 \<in> ?A"
+      have hx0X: "x0 \<in> X" using hx0
+        by simp
+      have hfx0V: "f x0 \<in> V" using hx0
+        by blast
+      have hfx0Y: "f x0 \<in> Y" using hfX hx0X
+        by blast
+      obtain \<epsilon> where hepos: "0 < \<epsilon>" and hball_V: "top1_ball_on Y d (f x0) \<epsilon> \<subseteq> V"
+        using top1_metric_open_contains_ball[OF hd hV hfx0V]
+        by blast
+      define e3 where "e3 = \<epsilon> / 3"
+      have he3pos: "0 < e3" unfolding e3_def using hepos
+        by simp
+      obtain N :: nat where hN: "\<forall>n\<ge>N. \<forall>x\<in>X. d (fseq n x) (f x) < e3"
+        using hunif he3pos
+        by blast
+      have hcontN: "top1_continuous_map_on X TX Y ?TY (fseq N)" using hcont
+        by auto
+      have hfNmap: "\<forall>x\<in>X. fseq N x \<in> Y"
+        using hcontN unfolding top1_continuous_map_on_def
+        by satx
+      have hfNx0Y: "fseq N x0 \<in> Y" using hfNmap hx0X
+        by blast
+      have hballN: "top1_ball_on Y d (fseq N x0) e3 \<in> ?TY"
+        using top1_ball_open_in_metric_topology[OF hd hfNx0Y he3pos]
+        by satx
+      have hpreN: "{x \<in> X. fseq N x \<in> top1_ball_on Y d (fseq N x0) e3} \<in> TX"
+        using hcontN hballN unfolding top1_continuous_map_on_def
+        by blast
+      let ?U = "{x \<in> X. fseq N x \<in> top1_ball_on Y d (fseq N x0) e3}"
+      have hx0U: "x0 \<in> ?U"
+      proof -
+        have "d (fseq N x0) (fseq N x0) = 0"
+          using hd hfNx0Y unfolding top1_metric_on_def
+          by blast
+        then show ?thesis unfolding top1_ball_on_def using hfNx0Y he3pos hx0X
+          by force
+      qed
+      have hNleN: "\<forall>x\<in>X. d (fseq N x) (f x) < e3" using hN
+        by auto
+      have hU_sub: "?U \<subseteq> ?A"
+      proof (rule subsetI)
+        fix y assume hyU: "y \<in> ?U"
+        have hyX: "y \<in> X" using hyU
+          by blast
+        have hfNy_ball: "fseq N y \<in> top1_ball_on Y d (fseq N x0) e3" using hyU
+          by blast
+        have hfyY: "f y \<in> Y" using hfX hyX
+          by blast
+        have hfNyY: "fseq N y \<in> Y" using hfNmap hyX
+          by auto
+        have hd1: "d (fseq N x0) (fseq N y) < e3"
+          using hfNy_ball unfolding top1_ball_on_def
+          by blast
+        have hd2: "d (fseq N y) (f y) < e3" using hNleN hyX
+          by auto
+        have hd3: "d (fseq N x0) (f x0) < e3" using hNleN hx0X
+          by simp
+        have htri1: "d (f y) (f x0) \<le> d (f y) (fseq N y) + d (fseq N y) (f x0)"
+          using hd hfyY hfNyY hfx0Y unfolding top1_metric_on_def
+          by blast
+        have htri2: "d (fseq N y) (f x0) \<le> d (fseq N y) (fseq N x0) + d (fseq N x0) (f x0)"
+          using hd hfNyY hfNx0Y hfx0Y unfolding top1_metric_on_def
+          by blast
+        have hsym1: "d (f y) (fseq N y) = d (fseq N y) (f y)"
+          using hd hfyY hfNyY unfolding top1_metric_on_def
+          by blast
+        have hsym2: "d (fseq N y) (fseq N x0) = d (fseq N x0) (fseq N y)"
+          using hd hfNyY hfNx0Y unfolding top1_metric_on_def
+          by blast
+        have "d (f y) (f x0) < e3 + e3 + e3"
+          using htri1 htri2 hsym1 hsym2 hd1 hd2 hd3
+          by argo
+        then have hd_fy_fx0: "d (f y) (f x0) < \<epsilon>" unfolding e3_def
+          by argo
+        have "d (f x0) (f y) = d (f y) (f x0)"
+          using hd hfx0Y hfyY unfolding top1_metric_on_def
+          by blast
+        then have "d (f x0) (f y) < \<epsilon>" using hd_fy_fx0
+          by presburger
+        then have "f y \<in> top1_ball_on Y d (f x0) \<epsilon>"
+          unfolding top1_ball_on_def using hfyY
+          by blast
+        then have "f y \<in> V" using hball_V
+          by blast
+        then show "y \<in> ?A" using hyX
+          by blast
+      qed
+      show "\<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> ?A"
+        using hpreN hx0U hU_sub
+        by meson
+    qed
+    then show "?A \<in> TX"
+      using top1_open_of_local_subsets[OF hTopX hAX]
+      by argo
+  qed
+  show ?thesis unfolding top1_continuous_map_on_def using hfX hpre
+    by satx
+qed
+
 (** from \S40 Lemma 40.2 [top1.tex:5724] **)
 lemma Lemma_40_2:
   assumes hN: "top1_normal_on X TX"
@@ -4797,10 +4917,32 @@ proof -
         hcont_R hI_sub hrange_sub
       by blast
   qed
+  have habs_metric: "top1_metric_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>)"
+    sorry (* Absolute value is a metric on ℝ. *)
+  have habs_eq_order: "top1_metric_topology_on (UNIV::real set) (\<lambda>x y. \<bar>x - y\<bar>) = order_topology_on_UNIV"
+    sorry (* Standard: abs-metric topology on ℝ = order topology. *)
+  have hpartial_cont_abs: "\<forall>n::nat. top1_continuous_map_on X TX (UNIV::real set)
+    (top1_metric_topology_on UNIV (\<lambda>x y. \<bar>x - y\<bar>)) (\<lambda>x. \<Sum>i<n. fn i x / 2^(Suc i))"
+    using hpartial_cont_R habs_eq_order
+    by presburger
+  have hunif_abs: "\<forall>\<epsilon>>0. \<exists>N::nat. \<forall>n\<ge>N. \<forall>x\<in>X. (\<lambda>x y. \<bar>x - y\<bar>) ((\<lambda>x. \<Sum>i<n. fn i x / 2 ^ Suc i) x) (f x) < \<epsilon>"
+    using hunif_partial
+    by argo
+  have hf_cont_abs: "top1_continuous_map_on X TX (UNIV::real set)
+    (top1_metric_topology_on UNIV (\<lambda>x y. \<bar>x - y\<bar>)) f"
+    using uniform_limit_continuous[OF hTop habs_metric hpartial_cont_abs hunif_abs]
+    by fast
+  have hf_cont_order: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+    using hf_cont_abs habs_eq_order
+    by argo
+  have hf_range_img: "f ` X \<subseteq> top1_closed_interval 0 1"
+    using hf_range unfolding top1_closed_interval_def
+    by blast
   have hf_cont: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
-    sorry (* Uniform convergence (hunif_partial) + partial sums continuous (hpartial_cont)
-             + f range in [0,1] (hf_range). Apply uniform_limit_continuous for ℝ metric,
-             then restrict range to [0,1]. *)
+    unfolding top1_closed_interval_topology_def
+    using Theorem_18_2(5)[OF hTop order_topology_on_UNIV_is_topology_on order_topology_on_UNIV_is_topology_on]
+      hf_cont_order hf_range_img
+    by blast
   show ?thesis using hf_cont hf_A hf_pos
     by blast
 qed
@@ -7741,125 +7883,6 @@ next
   qed
 qed
 
-text \<open>Theorem 21.6 (Uniform limit theorem): uniform limit of continuous functions is continuous.
-  Proof: ε/3 argument — given V open containing f(x₀), find ε-ball in V, pick N for ε/3 uniform
-  convergence, use continuity of f_N for another ε/3, then triangle inequality.\<close>
-lemma uniform_limit_continuous:
-  assumes hTopX: "is_topology_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hcont: "\<forall>n::nat. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (fseq n)"
-  assumes hunif: "\<forall>\<epsilon>>0. \<exists>N::nat. \<forall>n\<ge>N. \<forall>x\<in>X. d (fseq n x) (f x) < \<epsilon>"
-  assumes hfX: "\<forall>x\<in>X. f x \<in> Y"
-  shows "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
-proof -
-  let ?TY = "top1_metric_topology_on Y d"
-  have hpre: "\<forall>V\<in>?TY. {x \<in> X. f x \<in> V} \<in> TX"
-  proof (intro ballI)
-    fix V assume hV: "V \<in> ?TY"
-    let ?A = "{x \<in> X. f x \<in> V}"
-    have hAX: "?A \<subseteq> X"
-      by blast
-    have "\<forall>x0\<in>?A. \<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> ?A"
-    proof (intro ballI)
-      fix x0 assume hx0: "x0 \<in> ?A"
-      have hx0X: "x0 \<in> X" using hx0
-        by simp
-      have hfx0V: "f x0 \<in> V" using hx0
-        by blast
-      have hfx0Y: "f x0 \<in> Y" using hfX hx0X
-        by blast
-      obtain \<epsilon> where hepos: "0 < \<epsilon>" and hball_V: "top1_ball_on Y d (f x0) \<epsilon> \<subseteq> V"
-        using top1_metric_open_contains_ball[OF hd hV hfx0V]
-        by blast
-      define e3 where "e3 = \<epsilon> / 3"
-      have he3pos: "0 < e3" unfolding e3_def using hepos
-        by simp
-      obtain N :: nat where hN: "\<forall>n\<ge>N. \<forall>x\<in>X. d (fseq n x) (f x) < e3"
-        using hunif he3pos
-        by blast
-      have hcontN: "top1_continuous_map_on X TX Y ?TY (fseq N)" using hcont
-        by auto
-      have hfNmap: "\<forall>x\<in>X. fseq N x \<in> Y"
-        using hcontN unfolding top1_continuous_map_on_def
-        by satx
-      have hfNx0Y: "fseq N x0 \<in> Y" using hfNmap hx0X
-        by blast
-      have hballN: "top1_ball_on Y d (fseq N x0) e3 \<in> ?TY"
-        using top1_ball_open_in_metric_topology[OF hd hfNx0Y he3pos]
-        by satx
-      have hpreN: "{x \<in> X. fseq N x \<in> top1_ball_on Y d (fseq N x0) e3} \<in> TX"
-        using hcontN hballN unfolding top1_continuous_map_on_def
-        by blast
-      let ?U = "{x \<in> X. fseq N x \<in> top1_ball_on Y d (fseq N x0) e3}"
-      have hx0U: "x0 \<in> ?U"
-      proof -
-        have "d (fseq N x0) (fseq N x0) = 0"
-          using hd hfNx0Y unfolding top1_metric_on_def
-          by blast
-        then show ?thesis unfolding top1_ball_on_def using hfNx0Y he3pos hx0X
-          by force
-      qed
-      have hNleN: "\<forall>x\<in>X. d (fseq N x) (f x) < e3" using hN
-        by auto
-      have hU_sub: "?U \<subseteq> ?A"
-      proof (rule subsetI)
-        fix y assume hyU: "y \<in> ?U"
-        have hyX: "y \<in> X" using hyU
-          by blast
-        have hfNy_ball: "fseq N y \<in> top1_ball_on Y d (fseq N x0) e3" using hyU
-          by blast
-        have hfyY: "f y \<in> Y" using hfX hyX
-          by blast
-        have hfNyY: "fseq N y \<in> Y" using hfNmap hyX
-          by auto
-        have hd1: "d (fseq N x0) (fseq N y) < e3"
-          using hfNy_ball unfolding top1_ball_on_def
-          by blast
-        have hd2: "d (fseq N y) (f y) < e3" using hNleN hyX
-          by auto
-        have hd3: "d (fseq N x0) (f x0) < e3" using hNleN hx0X
-          by simp
-        have htri1: "d (f y) (f x0) \<le> d (f y) (fseq N y) + d (fseq N y) (f x0)"
-          using hd hfyY hfNyY hfx0Y unfolding top1_metric_on_def
-          by blast
-        have htri2: "d (fseq N y) (f x0) \<le> d (fseq N y) (fseq N x0) + d (fseq N x0) (f x0)"
-          using hd hfNyY hfNx0Y hfx0Y unfolding top1_metric_on_def
-          by blast
-        have hsym1: "d (f y) (fseq N y) = d (fseq N y) (f y)"
-          using hd hfyY hfNyY unfolding top1_metric_on_def
-          by blast
-        have hsym2: "d (fseq N y) (fseq N x0) = d (fseq N x0) (fseq N y)"
-          using hd hfNyY hfNx0Y unfolding top1_metric_on_def
-          by blast
-        have "d (f y) (f x0) < e3 + e3 + e3"
-          using htri1 htri2 hsym1 hsym2 hd1 hd2 hd3
-          by argo
-        then have hd_fy_fx0: "d (f y) (f x0) < \<epsilon>" unfolding e3_def
-          by argo
-        have "d (f x0) (f y) = d (f y) (f x0)"
-          using hd hfx0Y hfyY unfolding top1_metric_on_def
-          by blast
-        then have "d (f x0) (f y) < \<epsilon>" using hd_fy_fx0
-          by presburger
-        then have "f y \<in> top1_ball_on Y d (f x0) \<epsilon>"
-          unfolding top1_ball_on_def using hfyY
-          by blast
-        then have "f y \<in> V" using hball_V
-          by blast
-        then show "y \<in> ?A" using hyX
-          by blast
-      qed
-      show "\<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> ?A"
-        using hpreN hx0U hU_sub
-        by meson
-    qed
-    then show "?A \<in> TX"
-      using top1_open_of_local_subsets[OF hTopX hAX]
-      by argo
-  qed
-  show ?thesis unfolding top1_continuous_map_on_def using hfX hpre
-    by satx
-qed
 
 text \<open>In a metric space, if every convergent sequence from A has limit in A, then A is closed.\<close>
 lemma metric_seq_closed_imp_closed:
