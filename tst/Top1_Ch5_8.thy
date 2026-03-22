@@ -15653,7 +15653,22 @@ corollary Corollary_50_8:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
-  sorry
+proof -
+  have hHaus: "is_hausdorff_on X TX"
+    using hMan unfolding top1_m_manifold_on_def by blast
+  have h2nd: "top1_second_countable_on X TX"
+    using hMan unfolding top1_m_manifold_on_def by blast
+  have hNormal: "top1_normal_on X TX"
+    by (rule Theorem_32_3[OF hComp hHaus])
+  have hReg: "top1_regular_on X TX"
+    by (rule normal_imp_regular_on[OF hNormal])
+  have hMet: "top1_metrizable_on X TX"
+    by (rule Theorem_34_1[OF hReg h2nd])
+  have hdim: "top1_dim_le_on X TX m"
+    by (rule Corollary_50_7[OF hComp hMan])
+  show ?thesis
+    by (rule Theorem_50_5[OF hComp hMet hdim])
+qed
 
 (** from \S50 Corollary 50.9 [top1.tex:7843] **)
 corollary Corollary_50_9:
