@@ -11381,9 +11381,27 @@ proof -
 
   text \<open>U(ε) is open and dense in X for each ε > 0.\<close>
   have hU_open_dense: "\<forall>e > 0. U e \<in> TX \<and> top1_densein_on X TX (U e)"
-    sorry (* Core Baire argument for 48.5: ~60 lines.
-       1. AN N ε closed (continuity of f_n, f_m), 2. ∪AN = X (Cauchy),
-       3. U(ε) open (union of interiors), 4. U(ε) dense (Baire on open V). *)
+  proof (intro allI impI conjI)
+    fix e :: real assume hepos: "0 < e"
+    text \<open>AN N e is closed (intersection of preimages of {≤e} under continuous maps).\<close>
+    have hAN_closed: "\<forall>N. closedin_on X TX (AN N e)"
+      sorry (* Each AN N e = ∩{x | d(f_n(x), f_m(x)) ≤ e | n,m ≥ N}.
+               Each {x | d(f_n(x), f_m(x)) ≤ e} is closed (preimage of closed [0,e] under
+               continuous d ∘ (f_n, f_m)). Intersection of closed = closed. *)
+    text \<open>∪_N AN N e = X.\<close>
+    have hAN_covers: "X = (\<Union>N. AN N e)"
+      sorry (* For x ∈ X, f_n(x) → g(x), so f_n(x) is Cauchy in Y.
+               Pick N with d(f_n(x), f_m(x)) ≤ e for n,m ≥ N. Then x ∈ AN N e. *)
+    text \<open>U(e) = ∪_N Int(AN N e) is open.\<close>
+    show "U e \<in> TX"
+      unfolding U_def
+      sorry (* Union of interiors (each open) is open. *)
+    text \<open>U(e) is dense: uses Baire.\<close>
+    show "top1_densein_on X TX (U e)"
+      sorry (* For open V ≠ {}: V is Baire (Lemma 48.4). V ∩ AN N e closed in V.
+               ∪(V ∩ AN) = V. By Baire, some V ∩ AM has nonempty interior W in V.
+               W open in V hence in X. W ⊆ AM ⊆ Int(AM) ⊆ U(e). So V ∩ U(e) ≠ {}. *)
+  qed
 
   text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
   define C where "C = (\<Inter>k::nat. U (1 / real (Suc k)))"
