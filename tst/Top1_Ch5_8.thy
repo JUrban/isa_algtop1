@@ -9864,7 +9864,7 @@ proof (intro conjI)
         using top1_ball_open_in_metric_topology[OF hd] by fastforce
       have hSelf: "\<forall>x\<in>X. x \<in> top1_ball_on X d x (ex x / 2)"
         unfolding top1_ball_on_def using hd hex unfolding top1_metric_on_def by fastforce
-      then have "X \<subseteq> \<Union>((\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X)" sorry
+      then have "X \<subseteq> \<Union>((\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X)" by blast
       then obtain F where "finite F" "F \<subseteq> X" "F \<noteq> {}"
         "\<forall>y\<in>X. \<exists>xf\<in>F. d y xf < ex xf / 2" sorry
       then show False using hCauchy hex hd sorry
