@@ -11993,24 +11993,34 @@ proof -
   qed
 
   have hC_sub_cont: "C \<subseteq> {x \<in> X. top1_continuous_at_on X TX Y ?TY g x}"
-    sorry (* FINAL sorry in Theorem 48.5. Step 4 of Munkres (~50 lines).
-       For x₀ ∈ C, show continuous_at_on: for every metric ε-ball around g(x₀),
-       find open neighborhood mapped inside.
-       1. Pick k: 1/(Suc k) < ε/3 (Archimedean).
-       2. x₀ ∈ C ⊆ U(1/(Suc k)) → x₀ ∈ Int(AN N₀ (1/(Suc k))) for some N₀.
-       3. Int(AN N₀) open in TX, x₀ ∈ it → x₀ has neighborhood ⊆ AN N₀.
-       4. f_{N₀} continuous → preimage of ball(f_{N₀}(x₀), ε/3) ∈ TX, contains x₀.
-       5. W = preimage ∩ Int(AN N₀) is open neighborhood of x₀.
-       6. For x ∈ W ⊆ AN N₀: d(f_n(x), f_{N₀}(x)) ≤ 1/(Suc k) for n ≥ N₀.
-       7. Metric limit: d(g(x), f_{N₀}(x)) ≤ 1/(Suc k) < ε/3 (from 6 + convergence).
-          Key fact: if d(a_n, b) ≤ c for all n ≥ N and a_n → a, then d(a, b) ≤ c.
-          This follows from d being continuous (metric) or directly from limit definition.
-       8. Similarly d(g(x₀), f_{N₀}(x₀)) ≤ 1/(Suc k) < ε/3.
-       9. d(f_{N₀}(x), f_{N₀}(x₀)) < ε/3 (from step 4, x ∈ preimage).
-       10. Triangle: d(g(x), g(x₀)) ≤ d(g(x), f_{N₀}(x)) + d(f_{N₀}(x), f_{N₀}(x₀))
-                                         + d(f_{N₀}(x₀), g(x₀)) < ε/3 + ε/3 + ε/3 = ε.
-       Main infrastructure needed: metric limit bound preservation (step 7),
-       interior_on ⊆ set, AN membership unfolding. *)
+  proof (rule subsetI)
+    fix x0 assume hx0C: "x0 \<in> C"
+    have hx0X: "x0 \<in> X"
+      using hx0C unfolding C_def U_def AN_def top1_AN_48_def interior_on_def
+      
+      by blast
+    show "x0 \<in> {x \<in> X. top1_continuous_at_on X TX Y ?TY g x}"
+    proof (intro CollectI conjI)
+      show "x0 \<in> X" by (rule hx0X)
+      show "top1_continuous_at_on X TX Y ?TY g x0"
+        unfolding top1_continuous_at_on_def
+      proof (intro conjI)
+        show "x0 \<in> X" by (rule hx0X)
+        show "\<forall>V. neighborhood_of (g x0) Y ?TY V \<longrightarrow> (\<exists>U. neighborhood_of x0 X TX U \<and> g ` U \<subseteq> V)"
+          sorry (* Core epsilon-delta argument.
+             Given nbhd V of g(x0) in metric Y, find ball(g(x0), ε) ⊆ V.
+             Pick k: 1/(Suc k) < ε/3.
+             x0 ∈ C → x0 ∈ U(1/(Suc k)) → x0 ∈ Int(AN N0 (1/(Suc k))).
+             f_{N0} continuous: preimage of ball(f_{N0}(x0), ε/3) open, contains x0.
+             W = preimage ∩ Int(AN N0) is neighborhood of x0.
+             For x ∈ W: d(f_n(x), f_{N0}(x)) ≤ 1/(Suc k) < ε/3 for n ≥ N0.
+             Limit: d(g(x), f_{N0}(x)) ≤ 1/(Suc k) < ε/3.
+             Similarly d(g(x0), f_{N0}(x0)) < ε/3.
+             Triangle: d(g(x), g(x0)) < ε. So g(x) ∈ ball ⊆ V.
+             ~40 lines. Needs metric limit bound + triangle + Archimedean. *)
+      qed
+    qed
+  qed
 
   show ?thesis
     unfolding top1_densein_on_def
