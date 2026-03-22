@@ -6941,6 +6941,71 @@ lemma sigma_lf_to_lf_covering:
       by blast
   qed
 
+text \<open>Key lemma for the LF argument in the expansion trick:
+  if B is defined via expansion using F (LF closed covering with star-finite property),
+  then B is LF.\<close>
+lemma expansion_lf_from_auxiliary:
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hF_lf: "top1_locally_finite_family_on X TX \<F>"
+  assumes hF_covers: "X \<subseteq> \<Union>\<F>"
+  assumes hF_subX: "\<forall>F\<in>\<F>. F \<subseteq> X"
+  assumes hF_star: "\<forall>F\<in>\<F>. finite {C0 \<in> \<C>. intersects C0 F}"
+  assumes hB_def: "\<B> = {E C0 \<inter> p C0 | C0. C0 \<in> \<C>}"
+  assumes hE_def: "\<And>C0. E C0 = X - \<Union>{F \<in> \<F>. F \<subseteq> X - C0}"
+  assumes hp_TX: "\<forall>C0\<in>\<C>. p C0 \<in> TX"
+  shows "top1_locally_finite_family_on X TX \<B>"
+  unfolding top1_locally_finite_family_on_def
+proof (intro ballI)
+  fix x assume "x \<in> X"
+  obtain W where "W \<in> TX" "x \<in> W" "finite {F \<in> \<F>. intersects F W}"
+    using hF_lf \<open>x \<in> X\<close> unfolding top1_locally_finite_family_on_def
+    by auto
+  have hsub: "{B0 \<in> \<B>. intersects B0 W} \<subseteq>
+    (\<lambda>C0. E C0 \<inter> p C0) ` (\<Union>Fc\<in>{Fc \<in> \<F>. intersects Fc W}. {C0 \<in> \<C>. intersects C0 Fc})"
+  proof (rule subsetI)
+    fix B0 assume "B0 \<in> {B0 \<in> \<B>. intersects B0 W}"
+    then have "B0 \<in> \<B>" "intersects B0 W" by blast+
+    obtain C0 where "C0 \<in> \<C>" "B0 = E C0 \<inter> p C0"
+      using \<open>B0 \<in> \<B>\<close> unfolding hB_def
+      by auto
+    obtain y where "y \<in> B0" "y \<in> W"
+      using \<open>intersects B0 W\<close> unfolding intersects_def
+      by auto
+    then have "y \<in> X" using hTsub \<open>W \<in> TX\<close>
+      by auto
+    have "y \<in> E C0" using \<open>y \<in> B0\<close> \<open>B0 = E C0 \<inter> p C0\<close>
+      by auto
+    obtain Fc where "Fc \<in> \<F>" "y \<in> Fc" using hF_covers \<open>y \<in> X\<close>
+      by auto
+    have "Fc \<notin> {F \<in> \<F>. F \<subseteq> X - C0}"
+    proof
+      assume "Fc \<in> {F \<in> \<F>. F \<subseteq> X - C0}"
+      then have "y \<in> \<Union>{F \<in> \<F>. F \<subseteq> X - C0}" using \<open>y \<in> Fc\<close>
+        by auto
+      then show False using \<open>y \<in> E C0\<close> unfolding hE_def
+        by auto
+    qed
+    then have "\<not>(Fc \<subseteq> X - C0)" using \<open>Fc \<in> \<F>\<close>
+      by auto
+    then have "intersects C0 Fc" unfolding intersects_def
+      using \<open>Fc \<in> \<F>\<close> hF_subX by auto
+    have "intersects Fc W" unfolding intersects_def using \<open>y \<in> Fc\<close> \<open>y \<in> W\<close>
+      by auto
+    then show "B0 \<in> (\<lambda>C0. E C0 \<inter> p C0) ` (\<Union>Fc\<in>{Fc \<in> \<F>. intersects Fc W}. {C0 \<in> \<C>. intersects C0 Fc})"
+      using \<open>C0 \<in> \<C>\<close> \<open>B0 = E C0 \<inter> p C0\<close> \<open>Fc \<in> \<F>\<close> \<open>intersects C0 Fc\<close>
+      by auto
+  qed
+  have "finite (\<Union>Fc\<in>{Fc \<in> \<F>. intersects Fc W}. {C0 \<in> \<C>. intersects C0 Fc})"
+    using hF_star \<open>finite {F \<in> \<F>. intersects F W}\<close>
+    by auto
+  then have "finite {B0 \<in> \<B>. intersects B0 W}"
+    using finite_subset[OF hsub finite_imageI]
+    by linarith
+  then show "\<exists>U\<in>TX. x \<in> U \<and> finite {A \<in> \<B>. intersects A U}"
+    using \<open>W \<in> TX\<close> \<open>x \<in> W\<close>
+    by auto
+qed
+
 lemma sigma_lf_to_lf_open_covering:
   assumes hReg: "top1_regular_on X TX"
   assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
