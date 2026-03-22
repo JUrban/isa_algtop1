@@ -11393,9 +11393,27 @@ proof -
       sorry (* For x ∈ X, f_n(x) → g(x), so f_n(x) is Cauchy in Y.
                Pick N with d(f_n(x), f_m(x)) ≤ e for n,m ≥ N. Then x ∈ AN N e. *)
     text \<open>U(e) = ∪_N Int(AN N e) is open.\<close>
+    have hInt_open: "\<forall>N. interior_on X TX (AN N e) \<in> TX"
+    proof (intro allI)
+      fix N
+      have "{U \<in> TX. U \<subseteq> AN N e} \<subseteq> TX"
+        
+        by fast
+      then show "interior_on X TX (AN N e) \<in> TX"
+        unfolding interior_on_def using hTop unfolding is_topology_on_def
+        
+        by blast
+    qed
     show "U e \<in> TX"
-      unfolding U_def
-      sorry (* Union of interiors (each open) is open. *)
+    proof -
+      have "range (\<lambda>N. interior_on X TX (AN N e)) \<subseteq> TX"
+        using hInt_open
+        
+        by blast
+      then show ?thesis unfolding U_def using hTop unfolding is_topology_on_def
+        
+        by blast
+    qed
     text \<open>U(e) is dense: uses Baire.\<close>
     show "top1_densein_on X TX (U e)"
       sorry (* For open V ≠ {}: V is Baire (Lemma 48.4). V ∩ AN N e closed in V.
