@@ -9858,7 +9858,29 @@ proof (intro conjI)
     proof (rule ccontr)
       assume "\<not> (\<exists>x\<in>X. seq_converges_to_on s x X ?T)"
       then have "\<forall>x\<in>X. \<not> seq_converges_to_on s x X ?T" by blast
-      then have hEsc: "\<forall>x\<in>X. \<exists>ex>0. \<forall>N. \<exists>n\<ge>N. d (s n) x \<ge> ex" sorry
+      then have hEsc: "\<forall>x\<in>X. \<exists>ex>0. \<forall>N. \<exists>n\<ge>N. d (s n) x \<ge> ex"
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        have "\<not> (\<forall>\<epsilon>::real. 0 < \<epsilon> \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> X \<and> d (s n) x < \<epsilon>))"
+          using \<open>\<forall>x\<in>X. \<not> seq_converges_to_on s x X ?T\<close> \<open>x \<in> X\<close>
+            metric_seq_conv_iff[OF hd \<open>x \<in> X\<close>] by blast
+        then obtain ex where "ex > 0" "\<forall>N. \<exists>n\<ge>N. \<not>(s n \<in> X \<and> d (s n) x < ex)"
+          by auto
+        have "\<forall>N. \<exists>n\<ge>N. d (s n) x \<ge> ex"
+        proof (intro allI)
+          fix N
+          obtain N0 where "\<forall>m\<ge>N0. \<forall>k\<ge>N0. s m \<in> X"
+            using hCauchy unfolding top1_cauchy_seq_on_def using zero_less_one by blast
+          obtain n where "n \<ge> max N N0" "\<not>(s n \<in> X \<and> d (s n) x < ex)"
+            using \<open>\<forall>N. \<exists>n\<ge>N. \<not>(s n \<in> X \<and> d (s n) x < ex)\<close> by blast
+          have "n \<ge> N0" using \<open>n \<ge> max N N0\<close> by simp
+          have "s n \<in> X" using \<open>\<forall>m\<ge>N0. \<forall>k\<ge>N0. s m \<in> X\<close> \<open>n \<ge> N0\<close> by blast
+          then have "d (s n) x \<ge> ex"
+            using \<open>\<not>(s n \<in> X \<and> d (s n) x < ex)\<close> by linarith
+          then show "\<exists>n\<ge>N. d (s n) x \<ge> ex" using \<open>n \<ge> max N N0\<close> by auto
+        qed
+        then show "\<exists>ex>0. \<forall>N. \<exists>n\<ge>N. d (s n) x \<ge> ex" using \<open>ex > 0\<close> by blast
+      qed
       then obtain ex where hex: "\<forall>x\<in>X. ex x > 0 \<and> (\<forall>N. \<exists>n\<ge>N. d (s n) x \<ge> ex x)" by meson
       then have hBalls: "(\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X \<subseteq> ?T"
         using top1_ball_open_in_metric_topology[OF hd] by fastforce
