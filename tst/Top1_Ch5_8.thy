@@ -5751,10 +5751,28 @@ next
                       by simp
                   qed
                   text \<open>For B meeting Unbhd: fJ continuous → preimage of (fJ(x)-ε/2, fJ(x)+ε/2).\<close>
+                  have he2pos: "0 < \<epsilon>/2" using hepos
+                    by auto
                   have hVB_ex: "\<forall>B\<in>{B \<in> Bn n. intersects B Unbhd}.
                     \<exists>VB\<in>TX. x \<in> VB \<and> (\<forall>y\<in>VB. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
-                    sorry (* fJ(n,B) continuous (hfJ_cont), so preimage of open ball in ℝ
-                             centered at fJ(n,B)(x) with radius ε/2 is TX-open containing x. *)
+                  proof (intro ballI)
+                    fix B assume "B \<in> {B \<in> Bn n. intersects B Unbhd}"
+                    then have hBn': "B \<in> Bn n"
+                      by blast
+                    have hcont_nB: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>y. fJ (n, B) y)"
+                      using hfJ_cont hBn'
+                      by fast
+                    text \<open>Preimage of open interval (fJ(x) - ε/2, fJ(x) + ε/2) is TX-open.\<close>
+                    define V where "V = {y \<in> X. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2}"
+                    have "V \<in> TX"
+                      sorry (* V = preimage of open ball in ℝ under fJ(n,B).
+                               Ball is open in order topology. Continuity → preimage is TX-open. *)
+                    moreover have "x \<in> V" unfolding V_def using hxX he2pos
+                      by fastforce
+                    ultimately show "\<exists>VB\<in>TX. x \<in> VB \<and> (\<forall>y\<in>VB. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
+                      unfolding V_def
+                      by (metis (no_types, lifting) mem_Collect_eq)
+                  qed
                   text \<open>Combine: Wn = Unbhd ∩ ∩{VB | B meets Unbhd}.\<close>
                   show "\<exists>Wn\<in>TX. x \<in> Wn \<and> (\<forall>y\<in>Wn. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
                     sorry (* Choose VBs via hVB_ex. Wn = Unbhd ∩ ∩{VB} is finite intersection
