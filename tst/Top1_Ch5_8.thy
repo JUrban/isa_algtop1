@@ -11720,8 +11720,20 @@ proof -
           by blast
         text \<open>V ∩ AN N e is closed in V.\<close>
         have hVAN_closed: "\<forall>N. closedin_on V ?TV (V \<inter> AN N e)"
-          sorry (* AN N e closed in X, V open → V ∩ AN closed in V.
-                   V - (V ∩ AN) = V ∩ (X - AN) = V ∩ open = open in subspace. *)
+        proof (intro allI)
+          fix N
+          have "closedin_on V ?TV (V \<inter> AN N e) \<longleftrightarrow> (\<exists>C. closedin_on X TX C \<and> V \<inter> AN N e = C \<inter> V)"
+            using Theorem_17_2[OF hTop hVX]
+            
+            by presburger
+          moreover have "closedin_on X TX (AN N e) \<and> V \<inter> AN N e = AN N e \<inter> V"
+            using hAN_closed
+            
+            by blast
+          ultimately show "closedin_on V ?TV (V \<inter> AN N e)"
+            
+            by blast
+        qed
         text \<open>Baire dual: some V ∩ AN M has nonempty interior in V.\<close>
         have "\<exists>M. interior_on V ?TV (V \<inter> AN M e) \<noteq> {}"
         proof (rule ccontr)
