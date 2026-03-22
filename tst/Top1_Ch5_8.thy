@@ -11343,9 +11343,9 @@ proof -
 
   text \<open>U(ε) is open and dense in X for each ε > 0.\<close>
   have hU_open_dense: "\<forall>e > 0. U e \<in> TX \<and> top1_densein_on X TX (U e)"
-    sorry (* Step 3 of proof: uses Baire property.
-             Each AN N ε is closed. ∪AN N ε = X. By Baire, some has nonempty interior.
-             So ∪Int(AN N ε) is dense. ~40 lines. *)
+    sorry (* Core Baire argument for 48.5: ~60 lines.
+       1. AN N ε closed (continuity of f_n, f_m), 2. ∪AN = X (Cauchy),
+       3. U(ε) open (union of interiors), 4. U(ε) dense (Baire on open V). *)
 
   text \<open>f is continuous at each point of C = ∩_k U(1/(k+1)).\<close>
   define C where "C = (\<Inter>k::nat. U (1 / real (Suc k)))"
