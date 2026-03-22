@@ -11402,9 +11402,13 @@ proof -
     fix e :: real assume hepos: "0 < e"
     text \<open>AN N e is closed (intersection of preimages of {≤e} under continuous maps).\<close>
     have hAN_closed: "\<forall>N. closedin_on X TX (AN N e)"
-      sorry (* Each AN N e = ∩{x | d(f_n(x), f_m(x)) ≤ e | n,m ≥ N}.
-               Each {x | d(f_n(x), f_m(x)) ≤ e} is closed (preimage of closed [0,e] under
-               continuous d ∘ (f_n, f_m)). Intersection of closed = closed. *)
+      sorry (* AN N e = {x ∈ X | ∀n,m ≥ N. d(f_n(x), f_m(x)) ≤ e}
+             = ∩_{n,m ≥ N} {x ∈ X | d(f_n(x), f_m(x)) ≤ e}.
+             Each {x | d(f_n(x), f_m(x)) ≤ e} closed:
+               complement = {x | d > e} open by continuity of f_n, f_m + metric triangle.
+             Intersection of closed = closed.
+             Needs: continuity at a point → preimage of closed ball under d∘(fn,fm) is closed.
+             Estimated ~30 lines using epsilon-delta argument. *)
     text \<open>∪_N AN N e = X.\<close>
     have hAN_covers: "X = (\<Union>N. AN N e)"
     proof (rule equalityI)
