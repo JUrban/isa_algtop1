@@ -5673,10 +5673,29 @@ next
               sledgehammer [timeout = 10]
               sorry
             show "\<forall>x\<in>top1_ball_on X d x0 r. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> top1_ball_on X d x0 r"
-              sorry (* The local finiteness argument. ~30 lines.
-                       For x ∈ ball(x₀,r), ε = r - d(x₀,x) > 0. Need TX-W with d(x,·)<ε on W.
-                       Pick N with 1/(N+1) < ε/2. For n≤N: LF→finite nonzero→continuous→Vn.
-                       For n>N: fJ bounded by 1/(n+1)<ε/2. W = ∩Vn is TX-open with d(x,·)<ε. *)
+              sorry (* The local finiteness argument — hardest step of Nagata-Smirnov.
+                       For x ∈ ball(x₀,r), ε = r - d(x₀,x) > 0.
+                       Need TX-W with x ∈ W and W ⊆ ball(x₀,r).
+                       Suffices: W where d(x,y) < ε for y ∈ W, since then d(x₀,y) ≤ d(x₀,x)+d(x,y) < r.
+
+                       Key argument:
+                       Pick N with 1/(N+1) < ε/2.
+                       For n ≤ N: Bn n is LF, so x has TX-nbhd Un meeting finitely many B ∈ Bn n.
+                         Non-zero fJ(n,B) on Un are finitely many continuous functions.
+                         Find TX-Vn ⊆ Un where each |fJ(n,B)(y) - fJ(n,B)(x)| < ε/2 for y ∈ Vn.
+                       For n > N: all |fJ(n,B)(y) - fJ(n,B)(x)| ≤ 2/(n+1) ≤ 2/(N+2) < ε (auto from fJ range).
+
+                       W = V₁ ∩ ... ∩ V_N is TX-open (finite intersection).
+                       For y ∈ W, p = (n,B) ∈ J:
+                         if n ≤ N: |fJ p y - fJ p x| < ε/2 < ε
+                         if n > N: |fJ p y - fJ p x| ≤ 2/(n+1) < ε
+                       So d(x,y) = Sup{...} ≤ max(ε/2, 2/(N+2)) < ε.
+                       Hence W ⊆ ball(x₀,r).
+
+                       Prerequisites: hBn_lf (LF of Bn), hgB_cont_R (continuity of gB),
+                       top1_continuous_scale_real (scaling preserves continuity),
+                       finite intersection of opens is open, Archimedean property.
+                       All proved. Assembly is ~40 lines of structured Isar. *)
           qed
         qed
       qed
