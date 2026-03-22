@@ -7409,10 +7409,32 @@ proof -
       using hdb_complete hcoord_cauchy unfolding top1_complete_metric_on_def
       by blast
     text \<open>Define limit function.\<close>
-    obtain flim where hflim: "\<forall>\<alpha>\<in>I. flim \<alpha> \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) (flim \<alpha>) Y (top1_metric_topology_on Y ?db)"
-      and hflim_ext: "\<forall>\<alpha>. \<alpha> \<notin> I \<longrightarrow> flim \<alpha> = undefined"
-      sorry (* Construct flim via choice on I, undefined outside I.
-               This gives flim ∈ PiE I Y and the convergence property. *)
+    define flim where "flim \<alpha> = (if \<alpha> \<in> I then (SOME y. y \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) y Y (top1_metric_topology_on Y ?db)) else undefined)" for \<alpha>
+    have hflim: "\<forall>\<alpha>\<in>I. flim \<alpha> \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) (flim \<alpha>) Y (top1_metric_topology_on Y ?db)"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> I"
+      have hex: "\<exists>y\<in>Y. seq_converges_to_on (\<lambda>n. s n \<alpha>) y Y (top1_metric_topology_on Y ?db)"
+        using hcoord_conv h\<alpha>
+        by blast
+      then obtain y0 where hy0Y: "y0 \<in> Y" and hy0conv: "seq_converges_to_on (\<lambda>n. s n \<alpha>) y0 Y (top1_metric_topology_on Y ?db)"
+        by blast
+      have hP: "y0 \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) y0 Y (top1_metric_topology_on Y ?db)"
+        using hy0Y hy0conv
+        by argo
+      let ?P = "\<lambda>y. y \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) y Y (top1_metric_topology_on Y ?db)"
+      have hsome: "?P (SOME y. ?P y)"
+        using someI[where P="?P" and x=y0] hP
+        by linarith
+      have "flim \<alpha> = (SOME y. y \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) y Y (top1_metric_topology_on Y ?db))"
+        unfolding flim_def using h\<alpha>
+        by argo
+      then show "flim \<alpha> \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) (flim \<alpha>) Y (top1_metric_topology_on Y ?db)"
+        using hsome
+        by argo
+    qed
+    have hflim_ext: "\<forall>\<alpha>. \<alpha> \<notin> I \<longrightarrow> flim \<alpha> = undefined"
+      unfolding flim_def
+      by force
     have hflim_PiE: "flim \<in> ?X"
       unfolding top1_PiE_def top1_Pi_def top1_extensional_def
       using hflim hflim_ext
