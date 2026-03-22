@@ -7279,7 +7279,95 @@ theorem Theorem_43_5:
   assumes hIne: "I \<noteq> {}"
   assumes hd: "top1_complete_metric_on Y d"
   shows "top1_complete_metric_on (top1_PiE I (\<lambda>_. Y)) (top1_uniform_metric_on I d)"
-  sorry
+proof -
+  let ?X = "top1_PiE I (\<lambda>_. Y)"
+  let ?rho = "top1_uniform_metric_on I d"
+  let ?db = "top1_bounded_metric d"
+  have hdm: "top1_metric_on Y d"
+    using hd unfolding top1_complete_metric_on_def
+    by satx
+  have hdbm: "top1_metric_on Y ?db"
+    using top1_bounded_metric_on[OF hdm]
+    by satx
+  have hrho_m: "top1_metric_on ?X ?rho"
+    using top1_uniform_metric_is_metric[OF hIne hdm]
+    by satx
+  text \<open>Completeness in d implies completeness in bounded d.\<close>
+  have hdb_complete: "top1_complete_metric_on Y ?db"
+    sorry (* Bounded metric preserves completeness.
+             Cauchy in db iff Cauchy in d (for small ε). Convergence same topology. *)
+  text \<open>Every Cauchy seq in (PiE, rho) converges.\<close>
+  show ?thesis unfolding top1_complete_metric_on_def
+  proof (intro conjI allI impI)
+    show "top1_metric_on ?X ?rho" by (rule hrho_m)
+  next
+    fix s assume hCauchy: "top1_cauchy_seq_on ?X ?rho s"
+    text \<open>Each coordinate sequence is Cauchy.\<close>
+    have hcoord_cauchy: "\<forall>\<alpha>\<in>I. top1_cauchy_seq_on Y ?db (\<lambda>n. s n \<alpha>)"
+      unfolding top1_cauchy_seq_on_def
+    proof (intro ballI allI impI)
+      fix \<alpha> and e :: real assume h\<alpha>: "\<alpha> \<in> I" and hepos: "0 < e"
+      obtain N where hN: "\<forall>m\<ge>N. \<forall>n\<ge>N. s m \<in> ?X \<and> s n \<in> ?X \<and> ?rho (s m) (s n) < e"
+        using hCauchy hepos unfolding top1_cauchy_seq_on_def
+        by presburger
+      show "\<exists>N. \<forall>m\<ge>N. \<forall>n\<ge>N. (\<lambda>n. s n \<alpha>) m \<in> Y \<and> (\<lambda>n. s n \<alpha>) n \<in> Y \<and> ?db ((\<lambda>n. s n \<alpha>) m) ((\<lambda>n. s n \<alpha>) n) < e"
+      proof (intro exI allI impI)
+        fix m n :: nat assume hmN: "N \<le> m" and hnN: "N \<le> n"
+        have hsm: "s m \<in> ?X" using hN hmN hnN by presburger
+        have hsn: "s n \<in> ?X" using hN hmN hnN by presburger
+        have hrho_mn: "?rho (s m) (s n) < e" using hN hmN hnN by presburger
+        have "s m \<alpha> \<in> Y" using hsm h\<alpha> unfolding top1_PiE_def top1_Pi_def
+          by blast
+        moreover have "s n \<alpha> \<in> Y" using hsn h\<alpha> unfolding top1_PiE_def top1_Pi_def
+          by blast
+        moreover have "?db (s m \<alpha>) (s n \<alpha>) < e"
+        proof -
+          have hle: "?db (s m \<alpha>) (s n \<alpha>) \<le> ?rho (s m) (s n)"
+          proof -
+            have hrho_eq: "?rho (s m) (s n) = Sup ((\<lambda>i. ?db (s m i) (s n i)) ` I)"
+              using hIne unfolding top1_uniform_metric_on_def
+              by simp
+            have hmem: "?db (s m \<alpha>) (s n \<alpha>) \<in> (\<lambda>i. ?db (s m i) (s n i)) ` I" using h\<alpha>
+              by blast
+            have hbdd: "bdd_above ((\<lambda>i. ?db (s m i) (s n i)) ` I)"
+            proof (intro bdd_aboveI)
+              fix x assume "x \<in> (\<lambda>i. ?db (s m i) (s n i)) ` I"
+              then obtain j where hj: "j \<in> I" and hxeq: "x = ?db (s m j) (s n j)"
+                by blast
+              show "x \<le> 1" unfolding hxeq top1_bounded_metric_def
+                by simp
+            qed
+            show ?thesis using cSup_upper[OF hmem hbdd] hrho_eq
+              by presburger
+          qed
+          show ?thesis using hle hrho_mn
+            by simp
+        qed
+        ultimately show "(\<lambda>n. s n \<alpha>) m \<in> Y \<and> (\<lambda>n. s n \<alpha>) n \<in> Y \<and> ?db ((\<lambda>n. s n \<alpha>) m) ((\<lambda>n. s n \<alpha>) n) < e"
+          by presburger
+      qed
+    qed
+    text \<open>Each coordinate converges by completeness of Y.\<close>
+    have hcoord_conv: "\<forall>\<alpha>\<in>I. \<exists>y\<in>Y. seq_converges_to_on (\<lambda>n. s n \<alpha>) y Y (top1_metric_topology_on Y ?db)"
+      using hdb_complete hcoord_cauchy unfolding top1_complete_metric_on_def
+      by blast
+    text \<open>Define limit function.\<close>
+    obtain flim where hflim: "\<forall>\<alpha>\<in>I. flim \<alpha> \<in> Y \<and> seq_converges_to_on (\<lambda>n. s n \<alpha>) (flim \<alpha>) Y (top1_metric_topology_on Y ?db)"
+      and hflim_ext: "\<forall>\<alpha>. \<alpha> \<notin> I \<longrightarrow> flim \<alpha> = undefined"
+      sorry (* Construct flim via choice on I, undefined outside I.
+               This gives flim ∈ PiE I Y and the convergence property. *)
+    have hflim_PiE: "flim \<in> ?X"
+      unfolding top1_PiE_def top1_Pi_def top1_extensional_def
+      using hflim hflim_ext
+      by blast
+    text \<open>Show s → flim in uniform metric.\<close>
+    show "\<exists>x\<in>?X. seq_converges_to_on s x ?X (top1_metric_topology_on ?X ?rho)"
+      using hflim_PiE
+      sorry (* ~30 lines. For ε>0, pick N s.t. rho(s_n,s_m)<ε/2 for n,m≥N.
+               For each α, d̄(s_n(α), flim(α)) ≤ ε/2 (limit preserves bound).
+               So rho(s_n, flim) ≤ ε/2 < ε for n≥N. *)
+  qed
+qed
 
 (** from \S43 Theorem 43.6 [top1.tex:6272]
     Proof: (a-b) continuous/bounded maps closed in uniform topology (uniform limit theorem).
