@@ -6941,6 +6941,34 @@ lemma sigma_lf_to_lf_covering:
       by blast
   qed
 
+text \<open>E(C0) is open when bad uses LF closed auxiliary.\<close>
+lemma expansion_E_open:
+  assumes hTop: "is_topology_on X TX"
+  assumes hF_lf: "top1_locally_finite_family_on X TX \<F>"
+  assumes hF_closed: "\<forall>F\<in>\<F>. closedin_on X TX F"
+  assumes hF_subX: "\<forall>F\<in>\<F>. F \<subseteq> X"
+  shows "X - \<Union>{F \<in> \<F>. F \<subseteq> X - C0} \<in> TX"
+proof -
+  have hbad_lf: "top1_locally_finite_family_on X TX {F \<in> \<F>. F \<subseteq> X - C0}"
+    using Lemma_39_1(1)[OF hTop hF_subX hF_lf] by auto
+  have hbad_subX: "\<forall>F\<in>{F \<in> \<F>. F \<subseteq> X - C0}. F \<subseteq> X"
+    using hF_subX by auto
+  have hbad_closed: "\<forall>F\<in>{F \<in> \<F>. F \<subseteq> X - C0}. closedin_on X TX F"
+    using hF_closed by auto
+  have hcl_eq: "closure_on X TX (\<Union>{F \<in> \<F>. F \<subseteq> X - C0}) = \<Union>(closure_on X TX ` {F \<in> \<F>. F \<subseteq> X - C0})"
+    using Lemma_39_1(3)[OF hTop hbad_subX hbad_lf] by metis
+  have hcl_id: "\<forall>F\<in>{F \<in> \<F>. F \<subseteq> X - C0}. closure_on X TX F = F"
+    using hbad_closed closure_on_subset_of_closed subset_closure_on by fastforce
+  have "closure_on X TX (\<Union>{F \<in> \<F>. F \<subseteq> X - C0}) = \<Union>{F \<in> \<F>. F \<subseteq> X - C0}"
+    using hcl_eq hcl_id by auto
+  have hUnion_subX: "\<Union>{F \<in> \<F>. F \<subseteq> X - C0} \<subseteq> X"
+    using hbad_subX by auto
+  have "closedin_on X TX (\<Union>{F \<in> \<F>. F \<subseteq> X - C0})"
+    using closure_on_closed[OF hTop hUnion_subX] \<open>closure_on X TX (\<Union>{F \<in> \<F>. F \<subseteq> X - C0}) = \<Union>{F \<in> \<F>. F \<subseteq> X - C0}\<close>
+    by argo
+  then show ?thesis unfolding closedin_on_def by argo
+qed
+
 text \<open>Key lemma for the LF argument in the expansion trick:
   if B is defined via expansion using F (LF closed covering with star-finite property),
   then B is LF.\<close>
@@ -7103,8 +7131,19 @@ proof -
     have hA_sub_TX: "\<A> \<subseteq> TX" using hCov unfolding top1_open_covering_on_def by presburger
     define E where "E C0 = X - \<Union>{Fc \<in> \<F>_closed. Fc \<subseteq> X - C0}" for C0
     define \<B> where "\<B> = {E C0 \<inter> parent C0 | C0. C0 \<in> \<C>}"
-    have hE_open: "\<forall>C0\<in>\<C>. E C0 \<in> TX" sorry
-    have hB_open: "\<B> \<subseteq> TX" sorry
+    have hE_open: "\<forall>C0\<in>\<C>. E C0 \<in> TX"
+    proof (intro ballI)
+      fix C0 assume "C0 \<in> \<C>"
+      show "E C0 \<in> TX" unfolding E_def
+        by (rule expansion_E_open[OF hTop hFcl_lf hFcl_closed hFcl_subX])
+    qed
+    have hB_open: "\<B> \<subseteq> TX"
+    proof (rule subsetI)
+      fix B assume "B \<in> \<B>"
+      then obtain C0 where "C0 \<in> \<C>" "B = E C0 \<inter> parent C0" unfolding \<B>_def by auto
+      show "B \<in> TX" using \<open>B = E C0 \<inter> parent C0\<close> hE_open[rule_format, OF \<open>C0 \<in> \<C>\<close>]
+        hparent[rule_format, OF \<open>C0 \<in> \<C>\<close>] hA_sub_TX topology_inter2[OF hTop] by blast
+    qed
     have hB_covers: "X \<subseteq> \<Union>\<B>"
     proof (rule subsetI)
       fix x assume "x \<in> X"
