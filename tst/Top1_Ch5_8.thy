@@ -11604,11 +11604,63 @@ proof -
           
           by blast
         have "\<exists>N. \<forall>n\<ge>N. \<forall>m\<ge>N. d (f n x) (f m x) \<le> e"
-          sorry (* Convergent in metric → Cauchy:
-                   From hconv, for e/2 get N with d(f_n(x), g(x)) < e/2 for n ≥ N.
-                   Then d(f_n(x), f_m(x)) ≤ d(f_n(x), g(x)) + d(g(x), f_m(x)) < e.
-                   Needs: metric convergence → eventually in ball, metric triangle,
-                   metric symmetry. ~20 lines. *)
+        proof -
+          have hgxY: "g x \<in> Y"
+            using hconv unfolding seq_converges_to_on_def
+            
+            by satx
+          have he2pos: "0 < e / 2" using hepos
+            
+            by simp
+          have hball_open: "top1_ball_on Y d (g x) (e / 2) \<in> ?TY"
+            using hd hgxY he2pos top1_ball_open_in_metric_topology
+            
+            by metis
+          have hgx_in_ball: "g x \<in> top1_ball_on Y d (g x) (e / 2)"
+            unfolding top1_ball_on_def using hgxY hd he2pos unfolding top1_metric_on_def
+            
+            by fastforce
+          have hnbhd: "neighborhood_of (g x) Y ?TY (top1_ball_on Y d (g x) (e / 2))"
+            unfolding neighborhood_of_def using hball_open hgx_in_ball
+            
+            by presburger
+          obtain N where hN: "\<forall>n\<ge>N. f n x \<in> top1_ball_on Y d (g x) (e / 2)"
+            using hconv hnbhd unfolding seq_converges_to_on_def
+            
+            by blast
+          show ?thesis
+          proof (rule exI[where x=N], intro allI impI)
+            fix n m assume hn: "N \<le> n" and hm: "N \<le> m"
+            have hfnball: "d (g x) (f n x) < e / 2"
+              using hN hn unfolding top1_ball_on_def
+              
+              by blast
+            have hfmball: "d (g x) (f m x) < e / 2"
+              using hN hm unfolding top1_ball_on_def
+              
+              by blast
+            have hfnY: "f n x \<in> Y"
+              using hfn hxX unfolding top1_continuous_map_on_def
+              
+              by blast
+            have hfmY: "f m x \<in> Y"
+              using hfn hxX unfolding top1_continuous_map_on_def
+              
+              by blast
+            have htri: "d (f n x) (f m x) \<le> d (f n x) (g x) + d (g x) (f m x)"
+              using hd hfnY hgxY hfmY unfolding top1_metric_on_def
+              
+              by blast
+            have hdsym: "d (f n x) (g x) = d (g x) (f n x)"
+              using hd hfnY hgxY unfolding top1_metric_on_def
+              
+              by blast
+            show "d (f n x) (f m x) \<le> e"
+              using htri hdsym hfnball hfmball
+              
+              by force
+          qed
+        qed
         then show "x \<in> (\<Union>N. AN N e)"
           unfolding AN_def top1_AN_48_def using hxX
           
