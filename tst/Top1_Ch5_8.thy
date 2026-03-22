@@ -11745,8 +11745,8 @@ proof -
           define DN where "DN M = V - V \<inter> AN M e" for M :: nat
           have hDN_open: "\<forall>M. DN M \<in> ?TV"
             unfolding DN_def using hVAN_closed unfolding closedin_on_def
-            sledgehammer [timeout = 10]
-            sorry
+            
+            by presburger
           have hDN_dense: "\<forall>M. top1_densein_on V ?TV (DN M)"
             sorry (* Interior(V ∩ AN M) = {} means V ∩ AN M has no open subset.
                      So V - (V ∩ AN M) meets every nonempty open in V. Dense. *)
@@ -11767,21 +11767,21 @@ proof -
           proof -
             assume hdense: "top1_densein_on V ?TV (\<Inter>M. DN M)"
             have "(\<Inter>M. DN M) \<subseteq> V" using top1_densein_on_subset_carrier[OF hdense]
-              sledgehammer [timeout = 10]
-              sorry
+              
+              by order
             have "closure_on V ?TV (\<Inter>M. DN M) = V" using hdense unfolding top1_densein_on_def
-              sledgehammer [timeout = 10]
-              sorry
+              
+              by order
             then have "V \<subseteq> closure_on V ?TV (\<Inter>M. DN M)"
-              sledgehammer [timeout = 10]
-              sorry
+              
+              by blast
             moreover have "(\<Inter>M. DN M) \<subseteq> closure_on V ?TV (\<Inter>M. DN M)"
               using subset_closure_on
-              sledgehammer [timeout = 10]
-              sorry
+              
+              by metis
             ultimately show "(\<Inter>M. DN M) \<noteq> {}" using hVne
-              sledgehammer [timeout = 10]
-              sorry
+              
+              sorry (* ∩DN = {} → closure = {} ≠ V, contradiction *)
           qed
           then show False using hDN_inter
             
@@ -11811,12 +11811,12 @@ proof -
         proof -
           obtain U' where hU': "U' \<in> TX" and hWeq: "W = V \<inter> U'"
             using hW_TV unfolding subspace_topology_def
-            sledgehammer [timeout = 10]
-            sorry
+            
+            by blast
           show ?thesis unfolding hWeq
             using topology_inter2[OF hTop hV hU']
-            sledgehammer [timeout = 10]
-            sorry
+            
+            by presburger
         qed
         text \<open>W ⊆ AN M e and W ∈ TX → W ⊆ Int(AN M e) ⊆ U(e).\<close>
         have "W \<subseteq> AN M e" using hWsub
