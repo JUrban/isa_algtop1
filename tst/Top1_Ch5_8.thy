@@ -5708,7 +5708,17 @@ next
                   by metis
                 define W where "W = (\<Inter>n\<in>{..N}. Wn n)"
                 have hW_open: "W \<in> TX"
-                  sorry (* Finite intersection of TX-opens *)
+                proof -
+                  have "finite {..N}" by blast
+                  moreover have "{..N} \<noteq> {}" by blast
+                  moreover have "(\<lambda>n. Wn n) ` {..N} \<subseteq> TX" using hWn
+                    by blast
+                  ultimately have "\<Inter>((\<lambda>n. Wn n) ` {..N}) \<in> TX"
+                    using hTop unfolding is_topology_on_def
+                    by force
+                  then show ?thesis unfolding W_def
+                    by presburger
+                qed
                 have hxW: "x \<in> W" unfolding W_def using hWn
                   by blast
                 have hyX_W: "\<forall>y\<in>W. y \<in> X"
