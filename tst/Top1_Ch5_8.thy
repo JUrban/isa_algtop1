@@ -4711,12 +4711,9 @@ proof -
     have hI_eq: "top1_closed_interval_topology 0 1 = subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
       unfolding top1_closed_interval_topology_def
       by presburger
-    have "top1_closed_interval (0::real) 1 \<subseteq> UNIV" by simp
-    moreover have "top1_closed_interval_topology 0 1 = subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
-      unfolding top1_closed_interval_topology_def by simp
-    ultimately show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (fn i)"
-      using Theorem_18_2[OF hTop order_topology_on_UNIV_is_topology_on order_topology_on_UNIV_is_topology_on] hfn_i
-      sorry
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (fn i)"
+      by (metis Theorem_18_2(6) hI_eq hI_sub hfn_i hTop
+        order_topology_on_UNIV_is_topology_on subspace_topology_is_topology_on)
   qed
   text \<open>Each scaled function fn i x / 2^(Suc i) is continuous into ℝ.\<close>
   have hfn_scaled_cont_R: "\<forall>i. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<lambda>x. fn i x / 2^(Suc i))"
