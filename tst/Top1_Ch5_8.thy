@@ -7667,6 +7667,7 @@ definition top1_locally_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Righ
 
 (** from \S42 Theorem 42.1 (Smirnov metrization theorem) [top1.tex:6072] **)
 theorem Theorem_42_1:
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
   shows "top1_metrizable_on X TX \<longleftrightarrow>
     (top1_paracompact_on X TX \<and> is_hausdorff_on X TX \<and> top1_locally_metrizable_on X TX)"
 proof (intro iffI)
@@ -7727,8 +7728,21 @@ next
       (2) Locally metrizable + paracompact → σ-LF basis (40.3 forward + cover decomposition).
       (3) Regular + σ-LF basis → metrizable (40.3 backward).
       All ingredients available: 40.3, paracompact_hausdorff_imp_regular, LF refinement.\<close>
-    show ?thesis
+    have hReg: "top1_regular_on X TX"
+      by (rule paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub])
+    text \<open>Locally metrizable + paracompact → σ-LF basis.
+      Cover X by metrizable open neighborhoods. Paracompactness gives LF open refinement C.
+      Each C ∈ C is metrizable (open subspace of metrizable).
+      For each m, Am = {ball_C(x,1/m) | x ∈ C, C ∈ C} covers X.
+      Paracompactness gives LF open refinement Dm of Am.
+      D = ∪m Dm is σ-LF basis for X.\<close>
+    have "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
       sorry
+    then obtain \<B> where "basis_for X \<B> TX" "top1_sigma_locally_finite_family_on X TX \<B>"
+      by blast
+    show ?thesis
+      using Theorem_40_3 hReg \<open>basis_for X \<B> TX\<close> \<open>top1_sigma_locally_finite_family_on X TX \<B>\<close>
+      by blast
   qed
 qed
 
