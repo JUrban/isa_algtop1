@@ -4103,7 +4103,24 @@ lemma Lemma_40_2:
 theorem Theorem_40_3:
   shows "top1_metrizable_on X TX \<longleftrightarrow>
     (top1_regular_on X TX \<and> (\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>))"
-  sorry
+proof (intro iffI)
+  assume hMet: "top1_metrizable_on X TX"
+  have hReg: "top1_regular_on X TX"
+    sorry (* metrizable → regular: proved later as metrizable_imp_regular *)
+  have "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
+    sorry (* Forward: construct sigma-LF basis from metric.
+             For each m, cover X by 1/m-balls. By Lemma 39.2, get sigma-LF refinement B_m.
+             ∪_m B_m is a sigma-LF basis. ~40 lines. *)
+  show "top1_regular_on X TX \<and> (\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>)"
+    using hReg \<open>\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>\<close>
+    
+    by argo
+next
+  assume h: "top1_regular_on X TX \<and> (\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>)"
+  show "top1_metrizable_on X TX"
+    sorry (* Backward: use 40.1 (normal + G-delta) + 40.2 (Urysohn for G-delta)
+             + embedding into R^J. Very substantial proof. *)
+qed
 
 section \<open>\<S>41 Paracompactness\<close>
 
