@@ -15513,7 +15513,25 @@ proof (intro ballI notI)
   text \<open>Since h ≤ 1/(n+2) < δ and h > 0: the difference quotient at x should be < |L|+1.
     But Δ_h(f) ≤ Δ(f,x,h) < |L|+1, contradicting Δ_h(f) > n+2 > |L|+1.\<close>
   have "h < \<delta>" using \<open>h \<le> 1 / real (Suc (Suc n))\<close> \<open>1 / real (Suc (Suc n)) < \<delta>\<close> by linarith
-  have "top1_Delta49 f x h < \<bar>L\<bar> + 1" sorry
+  have "top1_Delta49 f x h < \<bar>L\<bar> + 1"
+  proof -
+    have hh_pos: "0 < h" by (rule \<open>0 < h\<close>)
+    have "real (Suc (Suc n)) \<ge> 2" by simp
+    then have "1 / real (Suc (Suc n)) \<le> 1/2"
+      by (simp add: field_simps)
+    then have hh_half: "h \<le> 1/2" using \<open>h \<le> 1 / real (Suc (Suc n))\<close> by linarith
+    have hfwd: "\<bar>(f(x+h) - f x) / h\<bar> < \<bar>L\<bar> + 1"
+      using hM hh_pos \<open>h < \<delta>\<close> by (metis abs_of_pos)
+    have hbwd: "\<bar>(f(x - h) - f x) / (-h)\<bar> < \<bar>L\<bar> + 1"
+    proof -
+      have "0 < \<bar>-h\<bar> \<and> \<bar>-h\<bar> < \<delta>" using hh_pos \<open>h < \<delta>\<close> by simp
+      then have "\<bar>(f(x + (-h)) - f x) / (-h)\<bar> < \<bar>L\<bar> + 1" using hM by blast
+      then show ?thesis by simp
+    qed
+    have hbwd': "\<bar>(f(x - h) - f x) / h\<bar> < \<bar>L\<bar> + 1"
+      using hbwd hh_pos by argo
+    show ?thesis unfolding top1_Delta49_def using hh_pos hh_half hfwd hbwd' by auto
+  qed
   have "top1_Delta_h49 f h \<le> top1_Delta49 f x h"
     unfolding top1_Delta_h49_def
   proof (rule cInf_lower)
