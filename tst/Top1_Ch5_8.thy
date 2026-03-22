@@ -5403,15 +5403,30 @@ next
       using local finiteness, then conclude metrizable. This is ~30 lines.
       Alternative: use that embedding_on gives homeomorphism to image, and pull back metric
       from product topology restricted to F(X) — but product topology not metrizable in general.\<close>
-    text \<open>Define metric d on X: d(x,y) = Sup{|g_B(x) - g_B(y)| / (n+1) | n, B ∈ B_n}.
-      This is the Nagata-Smirnov metric. All values in [0,1] since g_B ∈ [0,1] and divisor ≥ 1.
-      The f_{n,B} = g_B/(n+1) scaling ensures uniform metric continuity.\<close>
-    text \<open>For now, we sorry the final metrizability step.
-      The proof structure is: define d as above, show metric_on X d (from g_B properties),
-      show d-topology = TX (from separation + local finiteness + Archimedean).
-      All ingredients are proved; the assembly is ~40 lines of structured proof.\<close>
-    show ?thesis
-      sorry
+    text \<open>Define d on X: pullback of uniform metric via modified F using scaled functions.
+      For each (n,B) with B ∈ B_n, define f_{n,B}(x) = gB(B)(x) / real(Suc n).
+      Then d(x,y) = Sup{ |f_{n,B}(x) - f_{n,B}(y)| | n, B ∈ Bn n }.
+      Key property: for n > N where 1/(N+1) < ε/2, |f_{n,B}(x)-f_{n,B}(y)| ≤ 1/(n+1) < ε/2.
+      For n ≤ N: Bn n is LF, so only finitely many nonzero, each varies by < ε/2.
+      This gives: d metrizes TX.\<close>
+    define J where "J = {(n::nat, B). B \<in> Bn n}"
+    define fJ where "fJ p x = (case p of (n, B) \<Rightarrow> gB B x / real (Suc n))" for p :: "nat \<times> 'a set" and x
+    define d where "d x y = (if J = {} then 0 else Sup ((\<lambda>p. \<bar>fJ p x - fJ p y\<bar>) ` J))" for x y
+    text \<open>d is a metric on X: proved from gB properties + Sup.\<close>
+    have hd_metric: "top1_metric_on X d"
+      sorry (* Non-negative: |·| ≥ 0. Zero iff equal: from separation (gB separates).
+               Symmetric: |a-b| = |b-a|. Triangle: |a-c| ≤ |a-b| + |b-c| termwise → Sup. *)
+    text \<open>d-topology = TX: d-open → TX-open (from gB continuity), TX-open → d-open (from separation + LF).\<close>
+    have hd_topology: "TX = top1_metric_topology_on X d"
+      sorry (* (⊆) For U ∈ TX and x₀ ∈ U: find basis B with x₀∈B⊆U.
+               gB B x₀ > 0, so fJ (n,B) x₀ > 0. Take ε = fJ(n,B)(x₀).
+               d(x,x₀) < ε → |fJ(n,B)(x)-fJ(n,B)(x₀)| < ε → fJ(n,B)(x) > 0 → x ∈ B ⊆ U.
+               (⊇) For d-ball B(x₀,ε): show x₀ has TX-neighborhood in B(x₀,ε).
+               Pick N with 1/(N+1) < ε/2. For n≤N, Bn n is LF, find Vn meeting finitely
+               many B with fJ≠0. Each fJ continuous → Vn where |fJ(n,B)(x)-fJ(n,B)(x₀)|<ε/2.
+               W = V₁∩...∩V_N is TX-open, and d(x,x₀) < ε for x∈W. *)
+    show ?thesis unfolding top1_metrizable_on_def using hd_metric hd_topology
+      by auto
   qed
 qed
 
