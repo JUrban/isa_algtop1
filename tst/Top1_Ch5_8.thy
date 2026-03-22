@@ -7428,6 +7428,24 @@ next
   qed
 qed
 
+text \<open>Theorem 21.6 (Uniform limit theorem): uniform limit of continuous functions is continuous.
+  Proof: ε/3 argument — given V open containing f(x₀), find ε-ball in V, pick N for ε/3 uniform
+  convergence, use continuity of f_N for another ε/3, then triangle inequality.\<close>
+lemma uniform_limit_continuous:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hcont: "\<forall>n. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) (fseq n)"
+  assumes hunif: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>X. d (fseq n x) (f x) < \<epsilon>"
+  assumes hfX: "\<forall>x\<in>X. f x \<in> Y"
+  shows "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+  sorry
+  (* Proof outline: Show f\<inverse>(V) ∩ X ∈ TX for each open V.
+     For x₀ ∈ f\<inverse>(V) ∩ X: find ε with B(f(x₀),ε) ⊆ V.
+     Pick N with d(f_n(x), f(x)) < ε/3 for all n≥N, x∈X.
+     By continuity of f_N, find U ∋ x₀ with f_N(U) ⊆ B(f_N(x₀), ε/3).
+     For x ∈ U: d(f(x), f(x₀)) ≤ d(f(x),f_N(x)) + d(f_N(x),f_N(x₀)) + d(f_N(x₀),f(x₀)) < ε.
+     So f(U) ⊆ B(f(x₀),ε) ⊆ V. Apply top1_open_of_local_subsets. *)
+
 (** from \S43 Theorem 43.5 [top1.tex:6242]
     Proof: Cauchy in uniform metric \<Rightarrow> coordinatewise Cauchy in Y \<Rightarrow> coordinatewise convergent
     (by completeness of Y) \<Rightarrow> uniform convergence. **)
