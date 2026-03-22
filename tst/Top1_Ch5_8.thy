@@ -15477,7 +15477,24 @@ proof (intro ballI notI)
     Then from f ∈ U_n: ∃h ≤ 1/(n+2) < δ with Δ_h(f) > n+2 > |L|+1.
     But Δ_h(f) = Inf_x Δ(f,x,h) ≤ Δ(f,x,h) < |L|+1. Contradiction.\<close>
   obtain n where "real (Suc (Suc n)) > \<bar>L\<bar> + 1" and "1 / real (Suc (Suc n)) < \<delta>"
-    sorry
+  proof -
+    have "\<exists>N::nat. real N > max (\<bar>L\<bar> + 1) (1 / \<delta>)"
+      using reals_Archimedean2 by blast
+    then obtain N :: nat where hN: "real N > max (\<bar>L\<bar> + 1) (1 / \<delta>)" by blast
+    then have hN1: "real N > \<bar>L\<bar> + 1" and hN2: "real N > 1 / \<delta>" by linarith+
+    have "real (Suc (Suc N)) > \<bar>L\<bar> + 1" using hN1 by linarith
+    moreover have "1 / real (Suc (Suc N)) < \<delta>"
+    proof -
+      have "real (Suc (Suc N)) > 0" by simp
+      have "real (Suc (Suc N)) > 1 / \<delta>" using hN2 by linarith
+      then have "real (Suc (Suc N)) * \<delta> > 1"
+        using \<open>0 < \<delta>\<close> by (simp add: field_simps)
+      then have "\<delta> > 1 / real (Suc (Suc N))"
+        using \<open>real (Suc (Suc N)) > 0\<close> by (simp add: field_simps)
+      then show ?thesis by linarith
+    qed
+    ultimately show ?thesis using that by blast
+  qed
   have "f \<in> top1_U49 n" using hf by blast
   then obtain h where "0 < h" "h \<le> 1 / real (Suc (Suc n))" "top1_Delta_h49 f h > real (Suc (Suc n))"
     unfolding top1_U49_def by blast
