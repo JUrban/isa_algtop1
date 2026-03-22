@@ -5788,11 +5788,79 @@ next
                   qed
                   text \<open>Combine: Wn = Unbhd ∩ ∩{VB | B meets Unbhd}.\<close>
                   show "\<exists>Wn\<in>TX. x \<in> Wn \<and> (\<forall>y\<in>Wn. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
-                    sorry (* Choose VBs via hVB_ex. Wn = Unbhd ∩ ∩{VB} is finite intersection
-                             of TX-opens (hFin gives finitely many B meeting Unbhd).
-                             For y ∈ Wn and B ∈ Bn n:
-                               if B meets Unbhd: y ∈ VB → |diff| < ε/2 ≤ ε/2
-                               if B doesn't meet Unbhd: |diff| = 0 ≤ ε/2 (hzero_outside) *)
+                  proof -
+                    text \<open>Choose VB for each B meeting Unbhd.\<close>
+                    have "\<forall>B\<in>{B \<in> Bn n. intersects B Unbhd}. \<exists>VB.
+                      VB \<in> TX \<and> x \<in> VB \<and> (\<forall>y\<in>VB. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
+                      using hVB_ex
+                      by blast
+                    then obtain VB where hVB: "\<forall>B\<in>{B \<in> Bn n. intersects B Unbhd}.
+                      VB B \<in> TX \<and> x \<in> VB B \<and> (\<forall>y\<in>VB B. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
+                      using bchoice
+                      by metis
+                    define Wn where "Wn = Unbhd \<inter> (\<Inter>B\<in>{B \<in> Bn n. intersects B Unbhd}. VB B)"
+                    have "Wn \<in> TX"
+                    proof -
+                      have hFinS: "finite ({B \<in> Bn n. intersects B Unbhd})" using hFin
+                        by presburger
+                      show ?thesis
+                      proof (cases "{B \<in> Bn n. intersects B Unbhd} = {}")
+                        case True
+                        then have "VB ` {B \<in> Bn n. intersects B Unbhd} = {}"
+                          by force
+                        then have "Wn = Unbhd" unfolding Wn_def
+                          by force
+                        then show ?thesis using hUn
+                          by simp
+                      next
+                        case False
+                        have hne: "VB ` {B \<in> Bn n. intersects B Unbhd} \<noteq> {}"
+                          using False by blast
+                        have hfin: "finite (VB ` {B \<in> Bn n. intersects B Unbhd})"
+                          using hFinS by blast
+                        have hsub: "VB ` {B \<in> Bn n. intersects B Unbhd} \<subseteq> TX"
+                          using hVB by blast
+                        have "(\<Inter>(VB ` {B \<in> Bn n. intersects B Unbhd})) \<in> TX"
+                          using hTop hne hfin hsub unfolding is_topology_on_def
+                          by blast
+                        then have hint_open: "(\<Inter>B\<in>{B \<in> Bn n. intersects B Unbhd}. VB B) \<in> TX"
+                          by simp
+                        show ?thesis unfolding Wn_def
+                          using topology_inter2[OF hTop hUn hint_open]
+                          by blast
+                      qed
+                    qed
+                    moreover have "x \<in> Wn" unfolding Wn_def using hxUn hVB
+                      by blast
+                    moreover have "\<forall>y\<in>Wn. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2"
+                    proof (intro ballI)
+                      fix y B assume hyWn: "y \<in> Wn" and hBn': "B \<in> Bn n"
+                      show "\<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2"
+                      proof (cases "intersects B Unbhd")
+                        case True
+                        then have "B \<in> {B \<in> Bn n. intersects B Unbhd}" using hBn'
+                          by blast
+                        then have "y \<in> VB B" using hyWn unfolding Wn_def
+                          by fast
+                        then have "\<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2"
+                          using hVB \<open>B \<in> {B \<in> Bn n. intersects B Unbhd}\<close>
+                          by blast
+                        then show ?thesis
+                          by simp
+                      next
+                        case False
+                        have "y \<in> Unbhd" using hyWn unfolding Wn_def
+                          by force
+                        then have "fJ (n, B) y = 0 \<and> fJ (n, B) x = 0"
+                          using hzero_outside hBn' False
+                          by blast
+                        then show ?thesis
+                          using he2pos by force
+                      qed
+                    qed
+                    ultimately show ?thesis
+                      by blast
+                  qed
                 qed
                 then obtain Wn where hWn: "\<forall>n\<le>N. Wn n \<in> TX \<and> x \<in> Wn n
                   \<and> (\<forall>y\<in>Wn n. \<forall>B\<in>Bn n. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> \<le> \<epsilon>/2)"
