@@ -15468,7 +15468,11 @@ proof (intro ballI notI)
     by blast
   text \<open>So |f(x+h)-f(x)|/|h| < |L|+1 for 0 < |h| < δ.\<close>
   have hM: "\<forall>h. 0 < \<bar>h\<bar> \<and> \<bar>h\<bar> < \<delta> \<longrightarrow> \<bar>(f(x+h) - f x) / h\<bar> < \<bar>L\<bar> + 1"
-    sorry
+  proof (intro allI impI)
+    fix h assume "0 < \<bar>h\<bar> \<and> \<bar>h\<bar> < \<delta>"
+    then have "\<bar>(f(x+h) - f x) / h - L\<bar> < 1" using hbound by blast
+    then show "\<bar>(f(x+h) - f x) / h\<bar> < \<bar>L\<bar> + 1" by linarith
+  qed
   text \<open>Choose n > |L|+1 and with 1/(n+2) < min(δ, 1/2).
     Then from f ∈ U_n: ∃h ≤ 1/(n+2) < δ with Δ_h(f) > n+2 > |L|+1.
     But Δ_h(f) = Inf_x Δ(f,x,h) ≤ Δ(f,x,h) < |L|+1. Contradiction.\<close>
