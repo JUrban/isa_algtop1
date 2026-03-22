@@ -12073,17 +12073,204 @@ proof -
       proof (intro conjI)
         show "x0 \<in> X" by (rule hx0X)
         show "\<forall>V. neighborhood_of (g x0) Y ?TY V \<longrightarrow> (\<exists>U. neighborhood_of x0 X TX U \<and> g ` U \<subseteq> V)"
-          sorry (* Core epsilon-delta argument.
-             Given nbhd V of g(x0) in metric Y, find ball(g(x0), ε) ⊆ V.
-             Pick k: 1/(Suc k) < ε/3.
-             x0 ∈ C → x0 ∈ U(1/(Suc k)) → x0 ∈ Int(AN N0 (1/(Suc k))).
-             f_{N0} continuous: preimage of ball(f_{N0}(x0), ε/3) open, contains x0.
-             W = preimage ∩ Int(AN N0) is neighborhood of x0.
-             For x ∈ W: d(f_n(x), f_{N0}(x)) ≤ 1/(Suc k) < ε/3 for n ≥ N0.
-             Limit: d(g(x), f_{N0}(x)) ≤ 1/(Suc k) < ε/3.
-             Similarly d(g(x0), f_{N0}(x0)) < ε/3.
-             Triangle: d(g(x), g(x0)) < ε. So g(x) ∈ ball ⊆ V.
-             ~40 lines. Needs metric limit bound + triangle + Archimedean. *)
+        proof (intro allI impI)
+          fix V assume hVnbhd: "neighborhood_of (g x0) Y ?TY V"
+          have hgx0Y: "g x0 \<in> Y"
+            using hptw hx0X unfolding seq_converges_to_on_def
+            
+            by blast
+          text \<open>Get ε-ball inside V.\<close>
+          obtain U0 where hU0: "U0 \<in> ?TY" and hgx0U0: "g x0 \<in> U0" and hU0V: "U0 \<subseteq> V"
+            using hVnbhd unfolding neighborhood_of_def
+            
+            by blast
+          obtain \<epsilon> where heps: "0 < \<epsilon>" and hball_sub: "top1_ball_on Y d (g x0) \<epsilon> \<subseteq> U0"
+            using top1_metric_open_contains_ball[OF hd hU0 hgx0U0]
+            
+            by blast
+          have hball_sub_V: "top1_ball_on Y d (g x0) \<epsilon> \<subseteq> V"
+            using hball_sub hU0V
+            
+            by order
+          text \<open>Pick k with 1/(Suc k) < ε/3.\<close>
+          have heps3: "0 < \<epsilon> / 3" using heps
+            
+            by simp
+          obtain k where hk: "1 / real (Suc k) < \<epsilon> / 3"
+          proof -
+            obtain n :: nat where "3 / \<epsilon> < real n"
+              using reals_Archimedean2 heps3
+              
+              by blast
+            then have "1 / real (Suc n) < \<epsilon> / 3"
+              using heps by (simp add: field_simps)
+            then show ?thesis using that
+              
+              by blast
+          qed
+          text \<open>x0 ∈ C → x0 ∈ U(1/(Suc k)) → x0 ∈ Int(AN N0 (1/(Suc k))) for some N0.\<close>
+          have "x0 \<in> U (1 / real (Suc k))" using hx0C unfolding C_def
+            
+            by fast
+          then obtain N0 where hx0_int: "x0 \<in> interior_on X TX (AN N0 (1 / real (Suc k)))"
+            unfolding U_def
+            
+            by blast
+          have hx0_AN: "x0 \<in> AN N0 (1 / real (Suc k))"
+            using hx0_int unfolding interior_on_def
+            
+            by blast
+          have hint_open: "interior_on X TX (AN N0 (1 / real (Suc k))) \<in> TX"
+          proof -
+            have "{U \<in> TX. U \<subseteq> AN N0 (1 / real (Suc k))} \<subseteq> TX"
+              
+              by blast
+            then show ?thesis unfolding interior_on_def using hTop unfolding is_topology_on_def
+              
+              by presburger
+          qed
+          text \<open>f_{N0} continuous → preimage of ball(f_{N0}(x0), ε/3) is open.\<close>
+          have hfN0_cont: "top1_continuous_map_on X TX Y ?TY (f N0)"
+            using hfn
+            
+            by simp
+          have hfN0x0Y: "f N0 x0 \<in> Y"
+            using hfN0_cont hx0X unfolding top1_continuous_map_on_def
+            
+            by blast
+          define W1 where "W1 = {x \<in> X. f N0 x \<in> top1_ball_on Y d (f N0 x0) (\<epsilon> / 3)}"
+          have hW1_open: "W1 \<in> TX"
+            unfolding W1_def using hfN0_cont top1_ball_open_in_metric_topology[OF hd hfN0x0Y heps3]
+            unfolding top1_continuous_map_on_def
+            
+            by blast
+          have hx0W1: "x0 \<in> W1"
+            unfolding W1_def top1_ball_on_def using hx0X hfN0x0Y hd heps3 unfolding top1_metric_on_def
+            
+            by fastforce
+          text \<open>W = W1 ∩ Int(AN N0) is a neighborhood of x0.\<close>
+          define W where "W = W1 \<inter> interior_on X TX (AN N0 (1 / real (Suc k)))"
+          have hW_open: "W \<in> TX"
+            unfolding W_def using topology_inter2[OF hTop hW1_open hint_open]
+            
+            by presburger
+          have hx0W: "x0 \<in> W"
+            unfolding W_def using hx0W1 hx0_int
+            
+            by blast
+          have hW_nbhd: "neighborhood_of x0 X TX W"
+            unfolding neighborhood_of_def using hW_open hx0W
+            
+            by presburger
+          text \<open>g maps W into ball(g(x0), ε).\<close>
+          have hg_image: "g ` W \<subseteq> top1_ball_on Y d (g x0) \<epsilon>"
+          proof (rule subsetI)
+            fix y assume "y \<in> g ` W"
+            then obtain x where hxW: "x \<in> W" and hyeq: "y = g x"
+              
+              by blast
+            have hxX: "x \<in> X" using hxW unfolding W_def W1_def
+              
+              by blast
+            have hxAN: "x \<in> AN N0 (1 / real (Suc k))"
+            proof -
+              have "x \<in> interior_on X TX (AN N0 (1 / real (Suc k)))"
+                using hxW unfolding W_def
+                
+                by blast
+              then show ?thesis unfolding interior_on_def
+                
+                by fast
+            qed
+            have hxW1: "x \<in> W1" using hxW unfolding W_def
+              
+              by blast
+            text \<open>d(f_{N0}(x), f_{N0}(x0)) < ε/3.\<close>
+            have "d (f N0 x0) (f N0 x) < \<epsilon> / 3"
+              using hxW1 unfolding W1_def top1_ball_on_def
+              
+              by blast
+            have hfN0xY: "f N0 x \<in> Y"
+              using hfN0_cont hxX unfolding top1_continuous_map_on_def
+              
+              by blast
+            have hd_fN0: "d (f N0 x) (f N0 x0) < \<epsilon> / 3"
+              using \<open>d (f N0 x0) (f N0 x) < \<epsilon> / 3\<close> hd hfN0xY hfN0x0Y unfolding top1_metric_on_def
+              
+              by force
+            text \<open>d(g(x), f_{N0}(x)) ≤ 1/(Suc k) from limit.\<close>
+            have hAN_bound: "\<forall>n\<ge>N0. d (f n x) (f N0 x) \<le> 1 / real (Suc k)"
+              using hxAN unfolding AN_def top1_AN_48_def
+              
+              by blast
+            have hgxY: "g x \<in> Y"
+              using hptw hxX unfolding seq_converges_to_on_def
+              
+              by blast
+            have hfN0xY: "f N0 x \<in> Y"
+              using hfN0_cont hxX unfolding top1_continuous_map_on_def
+              
+              by blast
+            have hconv_x: "seq_converges_to_on (\<lambda>n. f n x) (g x) Y ?TY"
+              using hptw hxX
+              
+              by blast
+            have hAN_bound': "\<forall>n\<ge>N0. d ((\<lambda>n. f n x) n) (f N0 x) \<le> 1 / real (Suc k)"
+              using hAN_bound
+              
+              by argo
+            have hd_gx_fN0: "d (g x) (f N0 x) \<le> 1 / real (Suc k)"
+              using metric_limit_preserves_bound[OF hd hconv_x hAN_bound' hfN0xY]
+              
+              by simp
+            text \<open>Similarly d(g(x0), f_{N0}(x0)) ≤ 1/(Suc k).\<close>
+            have hAN_bound_x0: "\<forall>n\<ge>N0. d (f n x0) (f N0 x0) \<le> 1 / real (Suc k)"
+              using hx0_AN unfolding AN_def top1_AN_48_def
+              
+              by blast
+            have hconv_x0: "seq_converges_to_on (\<lambda>n. f n x0) (g x0) Y ?TY"
+              using hptw hx0X
+              
+              by blast
+            have hAN_bound_x0': "\<forall>n\<ge>N0. d ((\<lambda>n. f n x0) n) (f N0 x0) \<le> 1 / real (Suc k)"
+              using hAN_bound_x0
+              
+              by argo
+            have hd_gx0_fN0: "d (g x0) (f N0 x0) \<le> 1 / real (Suc k)"
+              using metric_limit_preserves_bound[OF hd hconv_x0 hAN_bound_x0' hfN0x0Y]
+              
+              by auto
+            text \<open>Triangle: d(g(x), g(x0)) < ε.\<close>
+            have htri1: "d (g x) (g x0) \<le> d (g x) (f N0 x) + d (f N0 x) (g x0)"
+              using hd hgxY hfN0xY hgx0Y unfolding top1_metric_on_def
+              
+              by fast
+            have htri2: "d (f N0 x) (g x0) \<le> d (f N0 x) (f N0 x0) + d (f N0 x0) (g x0)"
+              using hd hfN0xY hfN0x0Y hgx0Y unfolding top1_metric_on_def
+              
+              by blast
+            have hdsym: "d (f N0 x0) (g x0) = d (g x0) (f N0 x0)"
+              using hd hfN0x0Y hgx0Y unfolding top1_metric_on_def
+              
+              by blast
+            have "d (g x) (g x0) < \<epsilon>"
+              using htri1 htri2 hdsym hd_gx_fN0 hd_fN0 hd_gx0_fN0 hk
+              
+              by linarith
+            have "d (g x0) (g x) < \<epsilon>"
+              using \<open>d (g x) (g x0) < \<epsilon>\<close> hd hgxY hgx0Y unfolding top1_metric_on_def
+              
+              by simp
+            then show "y \<in> top1_ball_on Y d (g x0) \<epsilon>"
+              unfolding hyeq top1_ball_on_def using hgxY
+              
+              by blast
+          qed
+          show "\<exists>U. neighborhood_of x0 X TX U \<and> g ` U \<subseteq> V"
+            using hW_nbhd hg_image hball_sub_V
+            
+            by fast
+        qed
       qed
     qed
   qed
