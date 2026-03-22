@@ -15508,8 +15508,13 @@ proof (intro ballI notI)
   proof (rule cInf_lower)
     show "top1_Delta49 f x h \<in> (\<lambda>x. top1_Delta49 f x h) ` top1_I01"
       using \<open>x \<in> {0<..<1}\<close> unfolding top1_closed_interval_def by force
-    show "bdd_below ((\<lambda>x. top1_Delta49 f x h) ` top1_I01)"
-      unfolding top1_Delta49_def sorry
+    have "\<forall>y \<in> (\<lambda>x. top1_Delta49 f x h) ` top1_I01. 0 \<le> y"
+    proof (intro ballI)
+      fix y assume "y \<in> (\<lambda>x. top1_Delta49 f x h) ` top1_I01"
+      then obtain z where "z \<in> top1_I01" "y = top1_Delta49 f z h" by blast
+      then show "0 \<le> y" unfolding top1_Delta49_def by argo
+    qed
+    then show "bdd_below ((\<lambda>x. top1_Delta49 f x h) ` top1_I01)" by fast
   qed
   then have "top1_Delta_h49 f h < \<bar>L\<bar> + 1" using \<open>top1_Delta49 f x h < \<bar>L\<bar> + 1\<close> by linarith
   then show False using \<open>top1_Delta_h49 f h > real (Suc (Suc n))\<close> \<open>real (Suc (Suc n)) > \<bar>L\<bar> + 1\<close>
