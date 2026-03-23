@@ -7657,6 +7657,7 @@ lemma munkres_basis_property:
   assumes hC_cov: "top1_open_covering_on X TX \<C>"
   assumes hdC: "\<forall>C\<in>\<C>. top1_metric_on C (dC C)"
   assumes hBall_TX: "\<forall>C\<in>\<C>. \<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> TX"
+  assumes hSubEq: "\<forall>C\<in>\<C>. subspace_topology X TX C = top1_metric_topology_on C (dC C)"
   assumes hDm: "\<forall>m. top1_open_covering_on X TX (Dm m)
     \<and> top1_refines (Dm m) (\<Union>C\<in>\<C>. (\<lambda>x. top1_ball_on C (dC C) x (1/real(Suc m))) ` C)"
   assumes hU: "U \<in> TX" and hxU: "x \<in> U"
@@ -7681,7 +7682,7 @@ proof -
     text \<open>Need: subspace X TX C = metric_topology C (dC C). Then U ∩ C open in metric →
       ∃ε with ball ⊆ U ∩ C.\<close>
     have hsubC_eq: "subspace_topology X TX C = top1_metric_topology_on C (dC C)"
-      sorry
+      using hSubEq \<open>C \<in> \<C>\<close> by blast
     then have "U \<inter> C \<in> top1_metric_topology_on C (dC C)"
       using \<open>U \<inter> C \<in> subspace_topology X TX C\<close> by simp
     have hdCm: "top1_metric_on C (dC C)" using hdC \<open>C \<in> \<C>\<close> by blast
@@ -7743,7 +7744,8 @@ proof -
     and hC_lf: "top1_locally_finite_family_on X TX \<C>"
     and hC_ref: "top1_refines \<C> {U \<in> TX. \<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d}"
     using hPara hU_cov unfolding top1_paracompact_on_def by blast
-  have hC_met: "\<forall>C\<in>\<C>. \<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
+  have hC_met: "\<forall>C\<in>\<C>. \<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)
+    \<and> subspace_topology X TX C = top1_metric_topology_on C d"
   proof (intro ballI)
     fix C assume "C \<in> \<C>"
     obtain U where "U \<in> TX" "\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d"
@@ -7768,11 +7770,15 @@ proof -
       then show "top1_ball_on C dU x r \<in> subspace_topology X TX C"
         unfolding subspace_topology_def using \<open>V \<in> TX\<close> by blast
     qed
-    then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
-      using hdC by blast
+    have hsubC: "subspace_topology X TX C = top1_metric_topology_on C dU"
+      sorry
+    then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)
+      \<and> subspace_topology X TX C = top1_metric_topology_on C d"
+      using hdC \<open>\<forall>x\<in>C. \<forall>r>0. top1_ball_on C dU x r \<in> subspace_topology X TX C\<close> by blast
   qed
   text \<open>Choose metrics for C-elements.\<close>
-  obtain dC where hdC: "\<forall>C\<in>\<C>. top1_metric_on C (dC C) \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> subspace_topology X TX C)"
+  obtain dC where hdC: "\<forall>C\<in>\<C>. top1_metric_on C (dC C) \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> subspace_topology X TX C)
+    \<and> subspace_topology X TX C = top1_metric_topology_on C (dC C)"
     using hC_met by metis
   have hC_sub_TX: "\<C> \<subseteq> TX" using hC_cov unfolding top1_open_covering_on_def by blast
   text \<open>For each m: A_m = ball cover of radius 1/(m+1). Each ball is open in TX.\<close>
@@ -7832,8 +7838,16 @@ proof -
     then obtain D where "D \<in> Dm 0" "x \<in> D" using hDm unfolding top1_open_covering_on_def by blast
     then show "x \<in> \<Union>\<D>" unfolding \<D>_def by blast
   qed
+  have hSubEq: "\<forall>C\<in>\<C>. subspace_topology X TX C = top1_metric_topology_on C (dC C)"
+    using hdC by blast
+  have hdC_met: "\<forall>C\<in>\<C>. top1_metric_on C (dC C)" using hdC by blast
   have hD_BP: "\<forall>U\<in>TX. \<forall>x\<in>U. \<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> U"
-    sorry
+  proof (intro ballI)
+    fix V x assume "V \<in> TX" "x \<in> V"
+    obtain D where "D \<in> (\<Union>m. Dm m)" "x \<in> D" "D \<subseteq> V"
+      sorry
+    then show "\<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> V" unfolding \<D>_def by blast
+  qed
   have hD_basis: "basis_for X \<D> TX"
     by (rule open_family_basis_criterion[OF hTop hTsub hD_sub_TX2 hD_covers hD_BP])
   show ?thesis using hD_slf hD_basis by blast
