@@ -12353,6 +12353,71 @@ theorem Theorem_46_8:
        top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
   sorry
 
+lemma compact_on_subspace_self:
+  assumes hComp: "top1_compact_on X TX"
+  shows "top1_compact_on X (subspace_topology X TX X)"
+proof -
+  have hTopX: "is_topology_on X TX" using hComp unfolding top1_compact_on_def by argo
+  have hRHS: "\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+    using hComp unfolding top1_compact_on_def by argo
+  show ?thesis using Lemma_26_1[OF hTopX subset_refl] hRHS by blast
+qed
+
+lemma uniform_ball_in_cc_basis:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hCompX: "top1_compact_on X TX"
+  assumes hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes heps: "(0::real) < \<epsilon>"
+  shows "top1_ball_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d) f \<epsilon>
+    \<in> top1_compact_convergence_basis_on X TX Y d"
+proof -
+  have hball_eq: "top1_ball_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d) f \<epsilon> =
+    {g \<in> top1_PiE X (\<lambda>_. Y).
+      (if X = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X)) < \<epsilon>}"
+    unfolding top1_ball_on_def top1_uniform_metric_on_def by argo
+  show ?thesis
+    unfolding hball_eq top1_compact_convergence_basis_on_def
+    using hfPiE compact_on_subspace_self[OF hCompX] heps by blast
+qed
+
+lemma cc_supset_uniform_compact:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hCompX: "top1_compact_on X TX"
+  assumes hXne: "X \<noteq> {}"
+  shows "top1_compact_convergence_topology_on X TX Y d \<supseteq> top1_uniform_topology_on X Y d"
+proof (rule subsetI)
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  let ?rho = "top1_uniform_metric_on X d"
+  fix U assume hU: "U \<in> top1_uniform_topology_on X Y d"
+  have hU2: "U \<in> top1_metric_topology_on ?P ?rho"
+    using hU unfolding top1_uniform_topology_on_def by presburger
+  have hUsub: "U \<subseteq> ?P"
+    using hU2 unfolding top1_metric_topology_on_def topology_generated_by_basis_def by blast
+  have hrhom: "top1_metric_on ?P ?rho"
+    using top1_uniform_metric_is_metric[OF hXne hd] by presburger
+  have hUball: "\<forall>g\<in>U. \<exists>r>0. top1_ball_on ?P ?rho g r \<subseteq> U"
+    using top1_metric_open_contains_ball[OF hrhom hU2] by blast
+  show "U \<in> top1_compact_convergence_topology_on X TX Y d"
+    unfolding top1_compact_convergence_topology_on_def topology_generated_by_basis_def
+  proof (intro CollectI conjI)
+    show "U \<subseteq> ?P" using hUsub by order
+    show "\<forall>g\<in>U. \<exists>b\<in>top1_compact_convergence_basis_on X TX Y d. g \<in> b \<and> b \<subseteq> U"
+    proof (intro ballI)
+      fix g assume "g \<in> U"
+      then obtain r where "r > 0" "top1_ball_on ?P ?rho g r \<subseteq> U" using hUball by blast
+      have "g \<in> ?P" using \<open>g \<in> U\<close> hUsub by blast
+      have "top1_ball_on ?P ?rho g r \<in> top1_compact_convergence_basis_on X TX Y d"
+        using uniform_ball_in_cc_basis[OF hTopX hCompX \<open>g \<in> ?P\<close> \<open>r > 0\<close>] by simp
+      moreover have "g \<in> top1_ball_on ?P ?rho g r"
+        unfolding top1_ball_on_def using \<open>g \<in> ?P\<close> \<open>r > 0\<close> hrhom
+        unfolding top1_metric_on_def by fastforce
+      ultimately show "\<exists>b\<in>top1_compact_convergence_basis_on X TX Y d. g \<in> b \<and> b \<subseteq> U"
+        using \<open>top1_ball_on ?P ?rho g r \<subseteq> U\<close> by blast
+    qed
+  qed
+qed
+
 (** from \S46 Corollary 46.9 [top1.tex:6859] **)
 corollary Corollary_46_9:
   assumes hTopX: "is_topology_on X TX"
@@ -12411,14 +12476,14 @@ proof -
       show "top1_uniform_topology_on X Y d1 \<supseteq> top1_compact_convergence_topology_on X TX Y d1"
         using top1_uniform_topology_on_superset_compact_convergence[OF hTopX hd1] by blast
       show "top1_compact_convergence_topology_on X TX Y d1 \<supseteq> top1_uniform_topology_on X Y d1"
-        sorry
+        sorry (* cc_supset_uniform_compact needs X ≠ {}; trivially true when X = {} *)
     qed
     have huni_eq_cc2: "top1_uniform_topology_on X Y d2 = top1_compact_convergence_topology_on X TX Y d2"
     proof (rule equalityI)
       show "top1_uniform_topology_on X Y d2 \<supseteq> top1_compact_convergence_topology_on X TX Y d2"
         using top1_uniform_topology_on_superset_compact_convergence[OF hTopX hd2] by blast
       show "top1_compact_convergence_topology_on X TX Y d2 \<supseteq> top1_uniform_topology_on X Y d2"
-        sorry
+        sorry (* cc_supset_uniform_compact needs X ≠ {}; trivially true when X = {} *)
     qed
     show "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d1)
        (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d1))
