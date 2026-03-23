@@ -5794,10 +5794,12 @@ next
                       VB \<in> TX \<and> x \<in> VB \<and> (\<forall>y\<in>VB. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
                       using hVB_ex
                       by blast
+                    then have "\<exists>f. \<forall>B\<in>{B \<in> Bn n. intersects B Unbhd}.
+                      f B \<in> TX \<and> x \<in> f B \<and> (\<forall>y\<in>f B. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
+                      by (rule bchoice)
                     then obtain VB where hVB: "\<forall>B\<in>{B \<in> Bn n. intersects B Unbhd}.
                       VB B \<in> TX \<and> x \<in> VB B \<and> (\<forall>y\<in>VB B. \<bar>fJ (n, B) y - fJ (n, B) x\<bar> < \<epsilon>/2)"
-                      using bchoice
-                      by metis
+                      by blast
                     define Wn where "Wn = Unbhd \<inter> (\<Inter>B\<in>{B \<in> Bn n. intersects B Unbhd}. VB B)"
                     have "Wn \<in> TX"
                     proof -
@@ -6765,8 +6767,7 @@ lemma sigma_lf_to_lf_covering:
         by simp
       have "\<exists>Wn. \<forall>n \<le> N. Wn n \<in> TX \<and> x \<in> Wn n \<and> finite {A \<in> Bn n. intersects A (Wn n)}"
         using hWn_ex
-        
-        by metis
+        by meson
       then obtain Wn where hWn: "\<forall>n \<le> N. Wn n \<in> TX \<and> x \<in> Wn n \<and> finite {A \<in> Bn n. intersects A (Wn n)}"
         
         by blast
@@ -10104,7 +10105,7 @@ proof (intro conjI)
       then obtain \<V> where "finite \<V>" "\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X" "X \<subseteq> \<Union>\<V>"
         using hComp hBalls unfolding top1_compact_on_def by blast
       have "\<forall>V\<in>\<V>. \<exists>x. x \<in> X \<and> V = top1_ball_on X d x (ex x / 2)"
-        using \<open>\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X\<close> by blast
+        using \<open>\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X\<close> by fast
       then obtain c where hc: "\<forall>V\<in>\<V>. c V \<in> X \<and> V = top1_ball_on X d (c V) (ex (c V) / 2)"
         using bchoice by metis
       define F where "F = c ` \<V>"
@@ -10342,12 +10343,13 @@ lemma lebesgue_number_lemma:
 proof (rule ccontr)
   assume hNeg: "\<not> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
   text \<open>Step 1: No Lebesgue number means for each n, a witnessing point.\<close>
+  have hAll: "\<forall>\<delta>>0. \<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x \<delta> \<subseteq> U)"
+    using hNeg by force
   have hNoLN: "\<forall>n::nat. \<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1/real(Suc n)) \<subseteq> U)"
   proof (rule allI)
     fix n :: nat
-    have "1 / real (Suc n) > 0" by simp
-    with hNeg show "\<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1 / real (Suc n)) \<subseteq> U)"
-      by blast
+    show "\<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1 / real (Suc n)) \<subseteq> U)"
+      using hAll by simp
   qed
   text \<open>Step 2: Extract witnessing sequence via choice.\<close>
   from hNoLN
@@ -10901,7 +10903,7 @@ proof -
         qed
 
         show "\<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> A"
-          using hUin hxU hUsubA by blast
+          using hUin hxU hUsubA by meson
       qed
 
       show "A \<in> TX"
@@ -13477,7 +13479,7 @@ proof (rule ccontr)
   qed
 
   obtain G where hGfin: "finite G" and hGsub: "G \<subseteq> ?F" and hGcover: "X \<subseteq> \<Union>G"
-    using hcomp hFsubTX hCover unfolding top1_compact_on_def by blast
+    using hcomp hFsubTX hCover unfolding top1_compact_on_def by meson
 
   have hGne: "G \<noteq> {}"
   proof
