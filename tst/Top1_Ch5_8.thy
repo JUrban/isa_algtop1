@@ -7654,14 +7654,36 @@ proof -
     then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
       using hdC by blast
   qed
-  have hDm_ex: "\<forall>m::nat. \<exists>Dm. top1_open_covering_on X TX Dm \<and> top1_locally_finite_family_on X TX Dm"
-    using hPara unfolding top1_paracompact_on_def using hC_cov by blast
-  then obtain Dm :: "nat \<Rightarrow> 'a set set" where
-    hDm: "\<forall>m. top1_open_covering_on X TX (Dm m) \<and> top1_locally_finite_family_on X TX (Dm m)"
-    by fast
+  text \<open>Choose metrics for C-elements.\<close>
+  obtain dC where hdC: "\<forall>C\<in>\<C>. top1_metric_on C (dC C) \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> subspace_topology X TX C)"
+    using hC_met by metis
+  have hC_sub_TX: "\<C> \<subseteq> TX" using hC_cov unfolding top1_open_covering_on_def by blast
+  text \<open>For each m: A_m = ball cover of radius 1/(m+1). Each ball is open in TX.\<close>
+  text \<open>Ball in subspace_topology X TX C means ball = C ∩ V for V ∈ TX, so ball ∈ TX
+    (intersection of C ∈ TX and V ∈ TX is in TX by topology axioms).\<close>
+  have hTop: "is_topology_on X TX"
+    sorry
+  have hBall_in_TX: "\<forall>C\<in>\<C>. \<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> TX"
+  proof (intro ballI allI impI)
+    fix C x and r :: real assume "C \<in> \<C>" "x \<in> C" "0 < r"
+    have "top1_ball_on C (dC C) x r \<in> subspace_topology X TX C"
+      using hdC \<open>C \<in> \<C>\<close> \<open>x \<in> C\<close> \<open>0 < r\<close> by blast
+    then obtain V where "V \<in> TX" "top1_ball_on C (dC C) x r = C \<inter> V"
+      unfolding subspace_topology_def by blast
+    have "C \<in> TX" using hC_sub_TX \<open>C \<in> \<C>\<close> by blast
+    then show "top1_ball_on C (dC C) x r \<in> TX"
+      using \<open>top1_ball_on C (dC C) x r = C \<inter> V\<close> \<open>V \<in> TX\<close> hTop
+      by (simp add: topology_inter2)
+  qed
+  text \<open>For each m: A_m covers X. Apply paracompactness to get D_m refining A_m.\<close>
+  define Am where "Am m = (\<Union>C\<in>\<C>. (\<lambda>x. top1_ball_on C (dC C) x (1/real(Suc m))) ` C)" for m :: nat
+  have hAm_cov: "\<forall>m. top1_open_covering_on X TX (Am m)"
+    sorry
+  have hDm_ex: "\<forall>m. \<exists>Dm. top1_open_covering_on X TX Dm \<and> top1_locally_finite_family_on X TX Dm \<and> top1_refines Dm (Am m)"
+    using hPara hAm_cov unfolding top1_paracompact_on_def by blast
+  then obtain Dm where hDm: "\<forall>m. top1_open_covering_on X TX (Dm m) \<and> top1_locally_finite_family_on X TX (Dm m) \<and> top1_refines (Dm m) (Am m)"
+    by metis
   define \<D> where "\<D> = (\<Union>m. Dm m)"
-  have hD_sub_TX: "\<D> \<subseteq> TX"
-    unfolding \<D>_def using hDm unfolding top1_open_covering_on_def by blast
   have hD_slf: "top1_sigma_locally_finite_family_on X TX \<D>"
     unfolding top1_sigma_locally_finite_family_on_def
     by (metis \<D>_def hDm)
