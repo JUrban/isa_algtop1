@@ -43,6 +43,36 @@ Using `sorry` is acceptable (and expected), but the theory must still parse and 
 
 ---
 
+###  Using process_theories + sledgehammer for proof development and speed optimization
+
+Key principle: Use process_theories (not build) during proof development. It runs to completion without the session
+timeout, so you can iterate freely.
+
+Workflow for developing new proofs:
+1. Write the proof structure with sledgehammer [timeout = 10] followed by sorry on each step.
+2. Run: /project/bin/isabelle process_theories -d . -O -o quick_and_dirty -M "Try this|No proof" -f Top1_Ch2.thy -f
+Top1_Ch3.thy -f Top1_Ch4.thy -f Top1_Ch5_8.thy
+3. Collect all Try this: suggestions. Pick the fastest (lowest ms) for each step.
+4. Replace all sledgehammer ... sorry blocks with the found proofs.
+5. Run process_theories again (without -M) to verify and measure total time.
+6. Only run isabelle build -D . for final verification against the session timeout.
+
+Workflow for speeding up slow proofs:
+1. Put sledgehammer [timeout = 10] + sorry on EVERY step of the slow proof (bulk, not one-by-one).
+2. Run process_theories with -M "Try this|No proof" once.
+3. Replace each step with the fastest suggested tactic.
+4. Verify total time with process_theories. If still too slow, restructure the proof (merge/split steps) and repeat.
+
+Critical lesson: A tactic that sledgehammer reports as "1 ms" can still cause a 100s slowdown in the kernel if it
+triggers expensive unfolding. Always verify the actual wall-clock time with process_theories after substituting. If a
+ step is slow, ask sledgehammer for alternatives — often a different lemma or approach (e.g., simp add: double_diff
+vs metis ... closedin_on_def) makes a 100x difference.
+
+Never: Run sledgehammer one step at a time in a loop — that wastes hours. Always bulk-annotate all steps, run once,
+collect all results.
+
+---
+
 ## 2. File and theory structure
 
 ### Main theory: `Top1.thy`
@@ -259,6 +289,67 @@ If a build times out:
 Goal: **No opaque proof steps. Every automation must be locally attributable.**
 
 ---
+
+
+### 6b. Diagnostic tools (`try0`, `sledgehammer`) — disciplined use
+
+Use these **only to diagnose missing steps**, never as final proof code.
+
+Typical local pattern:
+
+```isabelle
+have hU_open: "X - closure_on X TX ?V \<in> TX"
+  sledgehammer [timeout = 10]
+  sorry
+
+have hA_disj_cl_D: "\<forall>D\<in>?\<DD>. \<forall>x\<in>A. x \<notin> closure_on X TX D"
+  try0
+  sorry
+```
+
+Run with live output:
+
+```bash
+/project/bin/isabelle process_theories -d . -O -o quick_and_dirty \
+  -M "Trying|Found proof|Try this|No proof found|Sledgehammering|Timed out|Gave up" \
+  -f Top1_Ch2.thy -f Top1_Ch3.thy -f Top1_Ch4.thy -f Top1_Ch5_8.thy
+```
+
+Interpretation:
+
+- `try0`: cheap portfolio (`simp`, `auto`, `blast`, …). If it reports *No proof found*, **do not increase effort** — restructure.
+- `sledgehammer`: stronger search. On success prints `Try this: ...` → **replace the whole block with that proof**.
+
+Example:
+
+```
+Sledgehammering...
+cvc5: Try this: using closedin_on_def hclV_closed by blast
+```
+
+→ replace with:
+
+```isabelle
+using closedin_on_def hclV_closed by blast
+```
+
+Rules:
+
+- Always follow with `sorry` (requires `-o quick_and_dirty`).
+#### Performance note
+
+These tools can help **speed up slow proofs indirectly**:
+
+- Use `sledgehammer` to replace slow `auto`/`metis`/`blast` calls with simpler ones.
+- Prefer the suggested minimal `using ... by blast` (smaller context = faster).
+- If `try0`/`sledgehammer` fail, **do not increase timeouts** — restructure the proof.
+
+They do **not** speed up existing proofs; they only help you find better ones.
+
+- Remove `try0` / `sledgehammer` immediately after extracting the proof.
+- Do not crank up timeouts; prefer **smaller subgoals** (`fix`/`assume`) and **reduced context** (`using ...`).
+- Keep consistency with the timeout discipline: no opaque, all-in-one automation.
+
 
 ### 6. Golden rule
 
