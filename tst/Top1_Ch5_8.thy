@@ -10103,7 +10103,7 @@ proof (intro conjI)
         unfolding top1_ball_on_def using hd hex unfolding top1_metric_on_def by fastforce
       then have "X \<subseteq> \<Union>((\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X)" by blast
       then obtain \<V> where "finite \<V>" "\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X" "X \<subseteq> \<Union>\<V>"
-        using hComp hBalls unfolding top1_compact_on_def by blast
+        using hComp hBalls unfolding top1_compact_on_def by meson
       have "\<forall>V\<in>\<V>. \<exists>x. x \<in> X \<and> V = top1_ball_on X d x (ex x / 2)"
         using \<open>\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X\<close> by fast
       then obtain c where hc: "\<forall>V\<in>\<V>. c V \<in> X \<and> V = top1_ball_on X d (c V) (ex (c V) / 2)"
