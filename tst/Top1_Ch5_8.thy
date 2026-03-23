@@ -10191,7 +10191,7 @@ proof -
       and hcInf: "infinite {i \<in> {i :: nat. s i \<in> U}. s i \<in> top1_ball_on X d c (\<epsilon> n)}" by blast
     have hcX: "c \<in> X" using hcFc hFcsub by blast
     have hset_eq: "{i \<in> {i :: nat. s i \<in> U}. s i \<in> top1_ball_on X d c (\<epsilon> n)}
-          = {i :: nat. s i \<in> top1_ball_on X d c (\<epsilon> n) \<inter> U}" by fastforce
+          = {i :: nat. s i \<in> top1_ball_on X d c (\<epsilon> n) \<inter> U}" by blast
     have hbInf: "infinite {i :: nat. s i \<in> top1_ball_on X d c (\<epsilon> n) \<inter> U}"
       using hcInf hset_eq by argo
     have hex: "\<exists>b. infinite {i :: nat. s i \<in> b} \<and> (\<exists>c\<in>X. b = top1_ball_on X d c (\<epsilon> n) \<inter> U)"
@@ -10215,7 +10215,7 @@ proof -
       show ?case unfolding hFn0 unfolding top1_ball_on_def by blast
     next
       case (Suc n)
-      from Suc have hI: "infinite {i :: nat. s i \<in> Fn n}" and hS: "Fn n \<subseteq> X" by auto
+      from Suc have hI: "infinite {i :: nat. s i \<in> Fn n}" and hS: "Fn n \<subseteq> X" by blast+
       have hFnS: "Fn (Suc n) = B (Suc n) (Fn n)" unfolding Fn_def by simp
       from B_prop[OF hI hS]
       show ?case unfolding hFnS unfolding top1_ball_on_def by blast
@@ -10471,6 +10471,36 @@ definition top1_metric_bounded_subset_on :: "'a set \<Rightarrow> ('a \<Rightarr
 definition top1_pointwise_bounded_family_on ::
   "'a set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
   "top1_pointwise_bounded_family_on X Y d \<F> \<longleftrightarrow> (\<forall>x\<in>X. top1_metric_bounded_subset_on Y d ((\<lambda>f. f x) ` \<F>))"
+
+lemma bounded_metric_lt_imp_d_lt:
+  assumes "top1_bounded_metric d x y < \<delta>" "\<delta> < 1"
+  shows "d x y < \<delta>"
+  using assms unfolding top1_bounded_metric_def by linarith
+
+lemma uniform_metric_pointwise_lt:
+  assumes "X \<noteq> {}" "x \<in> X"
+  assumes "top1_uniform_metric_on X d f g < \<delta>"
+  shows "top1_bounded_metric d (f x) (g x) < \<delta>"
+proof -
+  have hSup: "Sup ((\<lambda>i. top1_bounded_metric d (f i) (g i)) ` X) < \<delta>"
+    using assms unfolding top1_uniform_metric_on_def by presburger
+  have hbdd: "bdd_above ((\<lambda>i. top1_bounded_metric d (f i) (g i)) ` X)"
+  proof (rule bdd_aboveI[where M = 1])
+    fix y assume "y \<in> (\<lambda>i. top1_bounded_metric d (f i) (g i)) ` X"
+    then show "y \<le> 1" unfolding top1_bounded_metric_def by fastforce
+  qed
+  have "top1_bounded_metric d (f x) (g x) \<in> (\<lambda>i. top1_bounded_metric d (f i) (g i)) ` X"
+    using assms(2) by blast
+  from cSup_upper[OF this hbdd]
+  show ?thesis using hSup by linarith
+qed
+
+lemma uniform_metric_lt_imp_d_lt:
+  assumes "X \<noteq> {}" "x \<in> X"
+  assumes "top1_uniform_metric_on X d f g < \<delta>" "\<delta> < 1"
+  shows "d (f x) (g x) < \<delta>"
+  using bounded_metric_lt_imp_d_lt[OF uniform_metric_pointwise_lt[OF assms(1,2,3)] assms(4)]
+  by argo
 
 (** from \S45 Lemma 45.2 [top1.tex:6586] **)
 lemma Lemma_45_2:
