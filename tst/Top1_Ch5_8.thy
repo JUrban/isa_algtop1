@@ -7613,6 +7613,14 @@ definition top1_locally_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Righ
   "top1_locally_metrizable_on X TX \<longleftrightarrow>
      (\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> (\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d))"
 
+text \<open>Locally metrizable + paracompact → σ-locally-finite basis (Munkres Theorem 42.1 proof).\<close>
+lemma locally_metrizable_paracompact_imp_sigma_lf_basis:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hLM: "top1_locally_metrizable_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  shows "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
+  sorry
+
 (** from \S42 Theorem 42.1 (Smirnov metrization theorem) [top1.tex:6072] **)
 theorem Theorem_42_1:
   assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
@@ -7685,7 +7693,7 @@ next
       Paracompactness gives LF open refinement Dm of Am.
       D = ∪m Dm is σ-LF basis for X.\<close>
     have "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
-      sorry
+      by (rule locally_metrizable_paracompact_imp_sigma_lf_basis[OF hPara hLM hTsub])
     then obtain \<B> where "basis_for X \<B> TX" "top1_sigma_locally_finite_family_on X TX \<B>"
       by blast
     show ?thesis
