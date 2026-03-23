@@ -7613,6 +7613,43 @@ definition top1_locally_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Righ
   "top1_locally_metrizable_on X TX \<longleftrightarrow>
      (\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> (\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d))"
 
+lemma open_family_basis_criterion:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hD_sub_TX: "\<D> \<subseteq> TX"
+  assumes hD_covers: "X \<subseteq> \<Union>\<D>"
+  assumes hBP: "\<forall>U\<in>TX. \<forall>x\<in>U. \<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> U"
+  shows "basis_for X \<D> TX"
+  unfolding basis_for_def
+proof (intro conjI)
+  have hDX: "\<forall>D\<in>\<D>. D \<subseteq> X" using hD_sub_TX hTsub by blast
+  show "is_basis_on X \<D>"
+    unfolding is_basis_on_def
+  proof (intro conjI ballI)
+    fix b assume "b \<in> \<D>" then show "b \<subseteq> X" using hDX by auto
+  next
+    fix x assume "x \<in> X" then show "\<exists>b\<in>\<D>. x \<in> b" using hD_covers by auto
+  next
+    fix b1 b2 x assume "b1 \<in> \<D>" "b2 \<in> \<D>" "x \<in> b1 \<inter> b2"
+    have "b1 \<inter> b2 \<in> TX"
+      using \<open>b1 \<in> \<D>\<close> \<open>b2 \<in> \<D>\<close> hD_sub_TX topology_inter2[OF hTop] by auto
+    then show "\<exists>b3\<in>\<D>. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+      using hBP \<open>x \<in> b1 \<inter> b2\<close> by blast
+  qed
+  show "TX = topology_generated_by_basis X \<D>"
+  proof (rule equalityI)
+    show "topology_generated_by_basis X \<D> \<subseteq> TX"
+      unfolding topology_generated_by_basis_def
+    proof (rule subsetI)
+      fix U assume "U \<in> {U. U \<subseteq> X \<and> (\<forall>x\<in>U. \<exists>b\<in>\<D>. x \<in> b \<and> b \<subseteq> U)}"
+      then have "U \<subseteq> X" "\<forall>x\<in>U. \<exists>V\<in>TX. x \<in> V \<and> V \<subseteq> U" using hD_sub_TX by blast+
+      then show "U \<in> TX" using top1_open_set_from_local_opens[OF hTop] by auto
+    qed
+    show "TX \<subseteq> topology_generated_by_basis X \<D>"
+      unfolding topology_generated_by_basis_def using hBP hTsub by auto
+  qed
+qed
+
 text \<open>Locally metrizable + paracompact → σ-locally-finite basis (Munkres Theorem 42.1 proof).\<close>
 lemma locally_metrizable_paracompact_imp_sigma_lf_basis:
   assumes hPara: "top1_paracompact_on X TX"
@@ -7704,33 +7741,22 @@ proof -
     by (metis \<D>_def hDm)
   have hD_sub_TX: "\<D> \<subseteq> TX"
     unfolding \<D>_def using hDm unfolding top1_open_covering_on_def by blast
-  have hD_basis: "basis_for X \<D> TX"
-    unfolding basis_for_def
-  proof (intro conjI)
-    show "is_basis_on X \<D>" sorry
-    show "TX = topology_generated_by_basis X \<D>"
-    proof (rule equalityI)
-      show "topology_generated_by_basis X \<D> \<subseteq> TX"
-        unfolding topology_generated_by_basis_def
-      proof (rule subsetI)
-        fix U assume "U \<in> {U. U \<subseteq> X \<and> (\<forall>x\<in>U. \<exists>b\<in>\<D>. x \<in> b \<and> b \<subseteq> U)}"
-        then have "U \<subseteq> X" "\<forall>x\<in>U. \<exists>V\<in>TX. x \<in> V \<and> V \<subseteq> U"
-          using hD_sub_TX by blast+
-        then show "U \<in> TX"
-          using top1_open_set_from_local_opens[OF hTop] by blast
-      qed
-      show "TX \<subseteq> topology_generated_by_basis X \<D>"
-        unfolding topology_generated_by_basis_def
-      proof (rule subsetI)
-        fix U assume "U \<in> TX"
-        have "U \<subseteq> X" using \<open>U \<in> TX\<close> hTsub by blast
-        have "\<forall>x\<in>U. \<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> U"
-          sorry
-        then show "U \<in> {U. U \<subseteq> X \<and> (\<forall>x\<in>U. \<exists>b\<in>\<D>. x \<in> b \<and> b \<subseteq> U)}"
-          using \<open>U \<subseteq> X\<close> by blast
-      qed
-    qed
+  have hD_sub_TX2: "\<D> \<subseteq> TX"
+  proof (rule subsetI)
+    fix D assume "D \<in> \<D>"
+    then obtain m where "D \<in> Dm m" unfolding \<D>_def by blast
+    then show "D \<in> TX" using hDm unfolding top1_open_covering_on_def by blast
   qed
+  have hD_covers: "X \<subseteq> \<Union>\<D>"
+  proof (rule subsetI)
+    fix x assume "x \<in> X"
+    then obtain D where "D \<in> Dm 0" "x \<in> D" using hDm unfolding top1_open_covering_on_def by blast
+    then show "x \<in> \<Union>\<D>" unfolding \<D>_def by blast
+  qed
+  have hD_BP: "\<forall>U\<in>TX. \<forall>x\<in>U. \<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> U"
+    sorry
+  have hD_basis: "basis_for X \<D> TX"
+    by (rule open_family_basis_criterion[OF hTop hTsub hD_sub_TX2 hD_covers hD_BP])
   show ?thesis using hD_slf hD_basis by blast
 qed
 
