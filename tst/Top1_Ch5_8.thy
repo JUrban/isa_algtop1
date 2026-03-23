@@ -7627,7 +7627,21 @@ proof -
     and hC_ref: "top1_refines \<C> {U \<in> TX. \<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d}"
     using hPara hU_cov unfolding top1_paracompact_on_def by blast
   have hC_met: "\<forall>C\<in>\<C>. \<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
-    sorry
+  proof (intro ballI)
+    fix C assume "C \<in> \<C>"
+    obtain U where "U \<in> TX" "\<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d"
+      "C \<subseteq> U"
+      using hC_ref \<open>C \<in> \<C>\<close> unfolding top1_refines_def by fast
+    then obtain dU where hdU: "top1_metric_on U dU" and hsubU: "subspace_topology X TX U = top1_metric_topology_on U dU"
+      by blast
+    have hdC: "top1_metric_on C dU" using hdU \<open>C \<subseteq> U\<close> unfolding top1_metric_on_def
+      by blast
+    have hCopen: "C \<in> TX" using hC_cov \<open>C \<in> \<C>\<close> unfolding top1_open_covering_on_def by blast
+    have "\<forall>x\<in>C. \<forall>r>0. top1_ball_on C dU x r \<in> subspace_topology X TX C"
+      sorry
+    then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
+      using hdC by blast
+  qed
   have hDm_ex: "\<forall>m::nat. \<exists>Dm. top1_open_covering_on X TX Dm \<and> top1_locally_finite_family_on X TX Dm"
     using hPara unfolding top1_paracompact_on_def using hC_cov by blast
   then obtain Dm :: "nat \<Rightarrow> 'a set set" where
