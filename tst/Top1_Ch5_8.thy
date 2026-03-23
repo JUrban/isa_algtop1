@@ -7638,7 +7638,19 @@ proof -
       by blast
     have hCopen: "C \<in> TX" using hC_cov \<open>C \<in> \<C>\<close> unfolding top1_open_covering_on_def by blast
     have "\<forall>x\<in>C. \<forall>r>0. top1_ball_on C dU x r \<in> subspace_topology X TX C"
-      sorry
+    proof (intro ballI allI impI)
+      fix x and r :: real assume "x \<in> C" "0 < r"
+      have "top1_ball_on U dU x r \<in> top1_metric_topology_on U dU"
+        using top1_ball_open_in_metric_topology[OF hdU _ \<open>0 < r\<close>] \<open>x \<in> C\<close> \<open>C \<subseteq> U\<close> by blast
+      then have "top1_ball_on U dU x r \<in> subspace_topology X TX U" using hsubU by argo
+      then obtain V where "V \<in> TX" "top1_ball_on U dU x r = U \<inter> V"
+        unfolding subspace_topology_def by blast
+      have "top1_ball_on C dU x r = C \<inter> V"
+        unfolding top1_ball_on_def using \<open>C \<subseteq> U\<close> \<open>top1_ball_on U dU x r = U \<inter> V\<close>
+        unfolding top1_ball_on_def by blast
+      then show "top1_ball_on C dU x r \<in> subspace_topology X TX C"
+        unfolding subspace_topology_def using \<open>V \<in> TX\<close> by blast
+    qed
     then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)"
       using hdC by blast
   qed
