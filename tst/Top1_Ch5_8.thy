@@ -10153,6 +10153,46 @@ proof (intro conjI)
   qed
 qed
 
+lemma lebesgue_number_lemma:
+  assumes hd: "top1_metric_on X d"
+  assumes hComplete: "top1_complete_metric_on X d"
+  assumes hTB: "top1_totally_bounded_on X d"
+  assumes hUc_sub: "Uc \<subseteq> top1_metric_topology_on X d"
+  assumes hUc_cov: "X \<subseteq> \<Union>Uc"
+  shows "\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+  sorry
+
+lemma complete_totally_bounded_imp_compact:
+  assumes hd: "top1_metric_on X d"
+  assumes hComplete: "top1_complete_metric_on X d"
+  assumes hTB: "top1_totally_bounded_on X d"
+  shows "top1_compact_on X (top1_metric_topology_on X d)"
+  unfolding top1_compact_on_def
+proof (intro conjI allI impI)
+  show "is_topology_on X (top1_metric_topology_on X d)"
+    using top1_metric_topology_on_is_topology_on[OF hd] by linarith
+  fix Uc assume hUc: "Uc \<subseteq> top1_metric_topology_on X d \<and> X \<subseteq> \<Union>Uc"
+  obtain \<delta> where "\<delta> > 0" "\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+    using lebesgue_number_lemma[OF hd hComplete hTB] hUc by meson
+  obtain F where "finite F" "F \<subseteq> X" "X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x \<delta>)"
+    using hTB \<open>\<delta> > 0\<close> unfolding top1_totally_bounded_on_def by force
+  have "\<forall>x\<in>F. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+    using \<open>\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U\<close> \<open>F \<subseteq> X\<close> by auto
+  then obtain cover where hcov: "\<forall>x\<in>F. cover x \<in> Uc \<and> top1_ball_on X d x \<delta> \<subseteq> cover x"
+    by meson
+  have hfin: "finite (cover ` F)" using \<open>finite F\<close> by blast
+  have hsub: "cover ` F \<subseteq> Uc" using hcov by blast
+  have "X \<subseteq> \<Union>(cover ` F)"
+  proof (rule subsetI)
+    fix y assume "y \<in> X"
+    then obtain x where "x \<in> F" "y \<in> top1_ball_on X d x \<delta>"
+      using \<open>X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x \<delta>)\<close> by blast
+    then show "y \<in> \<Union>(cover ` F)" using hcov by blast
+  qed
+  then show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
+    using hfin hsub by auto
+qed
+
 theorem Theorem_45_1:
   assumes hd: "top1_metric_on X d"
   shows "top1_compact_on X (top1_metric_topology_on X d)
@@ -10164,7 +10204,7 @@ proof (intro iffI)
 next
   assume "top1_complete_metric_on X d \<and> top1_totally_bounded_on X d"
   then show "top1_compact_on X (top1_metric_topology_on X d)"
-    sorry
+    using complete_totally_bounded_imp_compact[OF hd] by blast
 qed
 
 definition top1_equicontinuous_family_on ::
