@@ -7771,7 +7771,15 @@ proof -
         unfolding subspace_topology_def using \<open>V \<in> TX\<close> by blast
     qed
     have hsubC: "subspace_topology X TX C = top1_metric_topology_on C dU"
-      sorry
+    proof -
+      have "subspace_topology X TX C = subspace_topology U (subspace_topology X TX U) C"
+        using subspace_topology_trans[OF \<open>C \<subseteq> U\<close>] by simp
+      also have "... = subspace_topology U (top1_metric_topology_on U dU) C"
+        using hsubU by simp
+      also have "... = top1_metric_topology_on C dU"
+        by (simp add: \<open>C \<subseteq> U\<close> hdU subspace_metric_topology_eq_metric_topology)
+      finally show ?thesis .
+    qed
     then show "\<exists>d. top1_metric_on C d \<and> (\<forall>x\<in>C. \<forall>r>0. top1_ball_on C d x r \<in> subspace_topology X TX C)
       \<and> subspace_topology X TX C = top1_metric_topology_on C d"
       using hdC \<open>\<forall>x\<in>C. \<forall>r>0. top1_ball_on C dU x r \<in> subspace_topology X TX C\<close> by blast
