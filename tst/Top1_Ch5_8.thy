@@ -7849,11 +7849,20 @@ proof -
   have hSubEq: "\<forall>C\<in>\<C>. subspace_topology X TX C = top1_metric_topology_on C (dC C)"
     using hdC by blast
   have hdC_met: "\<forall>C\<in>\<C>. top1_metric_on C (dC C)" using hdC by blast
+  have hDm_ref: "\<forall>m. top1_open_covering_on X TX (Dm m)
+    \<and> top1_refines (Dm m) (\<Union>C\<in>\<C>. (\<lambda>x. top1_ball_on C (dC C) x (1/real(Suc m))) ` C)"
+  proof (intro allI conjI)
+    fix m
+    show "top1_open_covering_on X TX (Dm m)" using hDm by blast
+    show "top1_refines (Dm m) (\<Union>C\<in>\<C>. (\<lambda>x. top1_ball_on C (dC C) x (1 / real (Suc m))) ` C)"
+      using hDm unfolding Am_def by blast
+  qed
   have hD_BP: "\<forall>U\<in>TX. \<forall>x\<in>U. \<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> U"
   proof (intro ballI)
     fix V x assume "V \<in> TX" "x \<in> V"
     obtain D where "D \<in> (\<Union>m. Dm m)" "x \<in> D" "D \<subseteq> V"
-      sorry
+      using munkres_basis_property[OF hTsub hC_lf hC_cov hdC_met hBall_in_TX hSubEq hDm_ref \<open>V \<in> TX\<close> \<open>x \<in> V\<close>]
+      by blast
     then show "\<exists>D\<in>\<D>. x \<in> D \<and> D \<subseteq> V" unfolding \<D>_def by blast
   qed
   have hD_basis: "basis_for X \<D> TX"
