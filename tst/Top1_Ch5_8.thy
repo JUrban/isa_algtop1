@@ -7618,6 +7618,7 @@ lemma locally_metrizable_paracompact_imp_sigma_lf_basis:
   assumes hPara: "top1_paracompact_on X TX"
   assumes hLM: "top1_locally_metrizable_on X TX"
   assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hTop: "is_topology_on X TX"
   shows "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
 proof -
   have hU_cov: "top1_open_covering_on X TX {U \<in> TX. \<exists>d. top1_metric_on U d \<and> subspace_topology X TX U = top1_metric_topology_on U d}"
@@ -7661,8 +7662,7 @@ proof -
   text \<open>For each m: A_m = ball cover of radius 1/(m+1). Each ball is open in TX.\<close>
   text \<open>Ball in subspace_topology X TX C means ball = C ∩ V for V ∈ TX, so ball ∈ TX
     (intersection of C ∈ TX and V ∈ TX is in TX by topology axioms).\<close>
-  have hTop: "is_topology_on X TX"
-    sorry
+  text \<open>hTop from assumptions.\<close>
   have hBall_in_TX: "\<forall>C\<in>\<C>. \<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> TX"
   proof (intro ballI allI impI)
     fix C x and r :: real assume "C \<in> \<C>" "x \<in> C" "0 < r"
@@ -7764,7 +7764,10 @@ next
       Paracompactness gives LF open refinement Dm of Am.
       D = ∪m Dm is σ-LF basis for X.\<close>
     have "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
-      by (rule locally_metrizable_paracompact_imp_sigma_lf_basis[OF hPara hLM hTsub])
+    proof -
+      have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by blast
+      show ?thesis by (rule locally_metrizable_paracompact_imp_sigma_lf_basis[OF hPara hLM hTsub hTopX])
+    qed
     then obtain \<B> where "basis_for X \<B> TX" "top1_sigma_locally_finite_family_on X TX \<B>"
       by blast
     show ?thesis
