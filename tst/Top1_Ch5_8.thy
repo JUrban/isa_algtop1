@@ -10510,7 +10510,18 @@ lemma Lemma_45_2:
   assumes hFpiE: "\<F> \<subseteq> top1_PiE X (\<lambda>_. Y)"
   assumes hTotB: "top1_totally_bounded_on \<F> (top1_uniform_metric_on X d)"
   shows "top1_equicontinuous_family_on X TX Y d \<F>"
-  sorry
+  unfolding top1_equicontinuous_family_on_def
+proof (intro conjI)
+  show "\<forall>f\<in>\<F>. \<forall>x\<in>X. f x \<in> Y"
+  proof (intro ballI)
+    fix f x assume "f \<in> \<F>" "x \<in> X"
+    then have "f \<in> top1_PiE X (\<lambda>_. Y)" using hFpiE by blast
+    then have "\<forall>i\<in>X. f i \<in> Y" using top1_PiE_iff[of f X "\<lambda>_. Y"] by simp
+    then show "f x \<in> Y" using \<open>x \<in> X\<close> by blast
+  qed
+  show "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>)"
+    sorry
+qed
 
 (** from \S45 Lemma 45.3 [top1.tex:6618] **)
 lemma Lemma_45_3:
