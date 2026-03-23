@@ -7646,7 +7646,7 @@ proof (intro conjI)
       then show "U \<in> TX" using top1_open_set_from_local_opens[OF hTop] by auto
     qed
     show "TX \<subseteq> topology_generated_by_basis X \<D>"
-      unfolding topology_generated_by_basis_def using hBP hTsub by auto
+      unfolding topology_generated_by_basis_def using hBP hTsub by fast
   qed
 qed
 
