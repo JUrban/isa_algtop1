@@ -41,6 +41,11 @@ Build early and often:
 A successful build means Isabelle reports no errors for the session(s) in the directory.
 Using `sorry` is acceptable (and expected), but the theory must still parse and build.
 
+### Keep the run time low
+Please run /project/bin/isabelle eval_at -t Top1_Ch5_8.thy [second-to-last-line] > timing_info_XXX 
+and then grep the slowest tactics from the output and refactor; use
+this often to decrease the run time - best below 30s or even less
+
 ---
 
 ###  Using process_theories + sledgehammer for proof development and speed optimization
