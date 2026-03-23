@@ -10153,6 +10153,179 @@ proof (intro conjI)
   qed
 qed
 
+text \<open>Helper: complete + totally bounded implies every sequence has a convergent subsequence
+  (the diagonal argument from Munkres Theorem 45.1).\<close>
+
+lemma complete_tb_convergent_subseq:
+  assumes hd: "top1_metric_on X d"
+  assumes hComplete: "top1_complete_metric_on X d"
+  assumes hTB: "top1_totally_bounded_on X d"
+  assumes hf: "\<forall>n. (s :: nat \<Rightarrow> 'a) n \<in> X"
+  shows "\<exists>r x. strict_mono r \<and> x \<in> X
+    \<and> seq_converges_to_on (s \<circ> r) x X (top1_metric_topology_on X d)"
+proof -
+  define \<epsilon> where "\<epsilon> n = (1::real) / real (Suc n)" for n
+  have \<epsilon>_pos: "\<And>n. 0 < \<epsilon> n" unfolding \<epsilon>_def by simp
+  have hd_tri: "\<forall>x\<in>X. \<forall>y\<in>X. \<forall>z\<in>X. d x z \<le> d x y + d y z"
+    using hd[unfolded top1_metric_on_def] by satx
+  have hd_sym: "\<forall>x\<in>X. \<forall>y\<in>X. d x y = d y x"
+    using hd[unfolded top1_metric_on_def] by argo
+  define B where "B n U =
+    (SOME b. infinite {i :: nat. s i \<in> b} \<and> (\<exists>c\<in>X. b = top1_ball_on X d c (\<epsilon> n) \<inter> U))" for n U
+  have B_prop: "\<And>n U. infinite {i :: nat. s i \<in> U} \<Longrightarrow> U \<subseteq> X \<Longrightarrow>
+    infinite {i :: nat. s i \<in> B n U} \<and> (\<exists>c\<in>X. B n U = top1_ball_on X d c (\<epsilon> n) \<inter> U)"
+  proof -
+    fix n U
+    assume hInf: "infinite {i :: nat. s i \<in> U}" and hUsub: "U \<subseteq> X"
+    obtain Fc where hFcfin: "finite Fc" and hFcsub: "Fc \<subseteq> X"
+      and hFccov: "X \<subseteq> (\<Union>c\<in>Fc. top1_ball_on X d c (\<epsilon> n))"
+      using hTB \<epsilon>_pos[of n] unfolding top1_totally_bounded_on_def by metis
+    have hrel: "\<forall>i\<in>{i :: nat. s i \<in> U}. \<exists>c\<in>Fc. s i \<in> top1_ball_on X d c (\<epsilon> n)"
+    proof
+      fix i assume "i \<in> {i :: nat. s i \<in> U}"
+      then have "s i \<in> X" using hUsub by blast
+      then show "\<exists>c\<in>Fc. s i \<in> top1_ball_on X d c (\<epsilon> n)" using hFccov by blast
+    qed
+    from pigeonhole_infinite_rel[OF hInf hFcfin hrel]
+    obtain c where hcFc: "c \<in> Fc"
+      and hcInf: "infinite {i \<in> {i :: nat. s i \<in> U}. s i \<in> top1_ball_on X d c (\<epsilon> n)}" by blast
+    have hcX: "c \<in> X" using hcFc hFcsub by blast
+    have hset_eq: "{i \<in> {i :: nat. s i \<in> U}. s i \<in> top1_ball_on X d c (\<epsilon> n)}
+          = {i :: nat. s i \<in> top1_ball_on X d c (\<epsilon> n) \<inter> U}" by fastforce
+    have hbInf: "infinite {i :: nat. s i \<in> top1_ball_on X d c (\<epsilon> n) \<inter> U}"
+      using hcInf hset_eq by argo
+    have hex: "\<exists>b. infinite {i :: nat. s i \<in> b} \<and> (\<exists>c\<in>X. b = top1_ball_on X d c (\<epsilon> n) \<inter> U)"
+      using hbInf hcX by blast
+    show "infinite {i :: nat. s i \<in> B n U} \<and> (\<exists>c\<in>X. B n U = top1_ball_on X d c (\<epsilon> n) \<inter> U)"
+      using someI_ex[OF hex] unfolding B_def by satx
+  qed
+  define Fn where "Fn = rec_nat (B 0 X) (\<lambda>n r. B (Suc n) r)"
+  have hXinf: "infinite {i :: nat. s i \<in> X}"
+  proof -
+    have "{i :: nat. s i \<in> X} = (UNIV :: nat set)" using hf by blast
+    then show ?thesis by simp
+  qed
+  have Fn_inf_sub: "\<And>n. infinite {i :: nat. s i \<in> Fn n} \<and> Fn n \<subseteq> X"
+  proof -
+    fix n show "infinite {i :: nat. s i \<in> Fn n} \<and> Fn n \<subseteq> X"
+    proof (induct n)
+      case 0
+      have hFn0: "Fn 0 = B 0 X" unfolding Fn_def by simp
+      from B_prop[OF hXinf subset_refl]
+      show ?case unfolding hFn0 unfolding top1_ball_on_def by blast
+    next
+      case (Suc n)
+      from Suc have hI: "infinite {i :: nat. s i \<in> Fn n}" and hS: "Fn n \<subseteq> X" by auto
+      have hFnS: "Fn (Suc n) = B (Suc n) (Fn n)" unfolding Fn_def by simp
+      from B_prop[OF hI hS]
+      show ?case unfolding hFnS unfolding top1_ball_on_def by blast
+    qed
+  qed
+  have Fn_inf: "\<And>n. infinite {i :: nat. s i \<in> Fn n}" using Fn_inf_sub by blast
+  have Fn_sub: "\<And>n. Fn n \<subseteq> X" using Fn_inf_sub by blast
+  have Fn_ball: "\<And>n. \<exists>c\<in>X. Fn (Suc n) \<subseteq> top1_ball_on X d c (\<epsilon> (Suc n)) \<inter> Fn n"
+  proof -
+    fix n
+    have hFnS: "Fn (Suc n) = B (Suc n) (Fn n)" unfolding Fn_def by simp
+    from B_prop[OF Fn_inf[of n] Fn_sub[of n]]
+    show "\<exists>c\<in>X. Fn (Suc n) \<subseteq> top1_ball_on X d c (\<epsilon> (Suc n)) \<inter> Fn n"
+      unfolding hFnS by blast
+  qed
+  have Fn_dec_step: "\<And>n. Fn (Suc n) \<subseteq> Fn n"
+  proof -
+    fix n
+    from Fn_ball[of n] obtain c where "Fn (Suc n) \<subseteq> top1_ball_on X d c (\<epsilon> (Suc n)) \<inter> Fn n" by blast
+    then show "Fn (Suc n) \<subseteq> Fn n" by blast
+  qed
+  have Fn_dec: "\<And>m n. m \<le> n \<Longrightarrow> Fn n \<subseteq> Fn m"
+  proof -
+    fix m n :: nat assume "m \<le> n"
+    then show "Fn n \<subseteq> Fn m"
+    proof (induct n)
+      case 0 then show ?case by simp
+    next
+      case (Suc k)
+      show ?case
+      proof (cases "m \<le> k")
+        case True then show ?thesis using Suc.hyps Fn_dec_step[of k] by blast
+      next
+        case False
+        then have "m = Suc k" using Suc.prems by linarith
+        then show ?thesis by simp
+      qed
+    qed
+  qed
+  have sel_exists: "\<And>k i. \<exists>j > (i::nat). s j \<in> Fn k"
+  proof -
+    fix k and i :: nat
+    from Fn_inf[of k] have "infinite {j :: nat. s j \<in> Fn k}" .
+    then have "infinite ({j :: nat. s j \<in> Fn k} - {..i})"
+      using Diff_infinite_finite[OF finite_atMost] by blast
+    then have "\<exists>j. j \<in> {j :: nat. s j \<in> Fn k} - {..i}"
+      using infinite_imp_nonempty by blast
+    then obtain j where "j \<in> {j :: nat. s j \<in> Fn k}" "j \<notin> {..i}" by blast
+    then have hji: "j > i" by simp
+    have hsj: "s j \<in> Fn k" using \<open>j \<in> {j :: nat. s j \<in> Fn k}\<close> by simp
+    show "\<exists>j>i. s j \<in> Fn k" using hji hsj by blast
+  qed
+  define sel where "sel k i = (SOME j :: nat. j > i \<and> s j \<in> Fn k)" for k i
+  have hsel_prop: "\<And>k i. (i::nat) < sel k i \<and> s (sel k i) \<in> Fn k"
+  proof -
+    fix k and i :: nat
+    have "\<exists>j>i. s j \<in> Fn k" using sel_exists by blast
+    then have "\<exists>j. j > i \<and> s j \<in> Fn k" by blast
+    from someI_ex[OF this] show "i < sel k i \<and> s (sel k i) \<in> Fn k"
+      unfolding sel_def by blast
+  qed
+  have hsel_gt: "\<And>k i. (i::nat) < sel k i" using hsel_prop by blast
+  have hsel_in: "\<And>k (i::nat). s (sel k i) \<in> Fn k" using hsel_prop by blast
+  define t where "t = rec_nat (sel 0 0) (\<lambda>n i. sel (Suc n) i)"
+  have t_strict: "strict_mono t"
+    unfolding strict_mono_Suc_iff by (simp add: t_def hsel_gt)
+  have t_in: "\<And>n. s (t n) \<in> Fn n"
+    by (case_tac n) (simp_all add: t_def hsel_in)
+  have hCauchy: "top1_cauchy_seq_on X d (s \<circ> t)"
+    unfolding top1_cauchy_seq_on_def
+  proof (intro allI impI)
+    fix e :: real assume he: "0 < e"
+    obtain N0 :: nat where hN0: "2 / e < real N0"
+      using reals_Archimedean2[of "2/e"] by blast
+    define N where "N = Suc N0"
+    show "\<exists>N. \<forall>m\<ge>N. \<forall>n\<ge>N. (s \<circ> t) m \<in> X \<and> (s \<circ> t) n \<in> X \<and> d ((s \<circ> t) m) ((s \<circ> t) n) < e"
+    proof (intro exI allI impI)
+      fix m n :: nat assume hm: "N \<le> m" and hn: "N \<le> n"
+      have stmX: "s (t m) \<in> X" using hf by simp
+      have stnX: "s (t n) \<in> X" using hf by simp
+      have hstm_Fn: "s (t m) \<in> Fn N" using t_in[of m] Fn_dec[OF hm] by blast
+      have hstn_Fn: "s (t n) \<in> Fn N" using t_in[of n] Fn_dec[OF hn] by blast
+      from Fn_ball[of N0] obtain c where hcX: "c \<in> X"
+        and hFN: "Fn N \<subseteq> top1_ball_on X d c (\<epsilon> N) \<inter> Fn N0"
+        unfolding N_def by blast
+      have hdm: "d c (s (t m)) < \<epsilon> N"
+        using hstm_Fn hFN unfolding top1_ball_on_def by blast
+      have hdn: "d c (s (t n)) < \<epsilon> N"
+        using hstn_Fn hFN unfolding top1_ball_on_def by blast
+      have htri: "d (s (t m)) (s (t n)) \<le> d (s (t m)) c + d c (s (t n))"
+        using hd_tri stmX hcX stnX by blast
+      have hdsym: "d (s (t m)) c = d c (s (t m))"
+        using hd_sym stmX hcX by blast
+      have hdlt: "d (s (t m)) (s (t n)) < 2 * \<epsilon> N"
+        using htri hdsym hdm hdn by linarith
+      have heps2: "2 * \<epsilon> N = 2 / real (Suc (Suc N0))"
+        unfolding \<epsilon>_def N_def by simp
+      have hSucgt: "real (Suc (Suc N0)) > 2 / e" using hN0 by linarith
+      have heps_lt: "2 / real (Suc (Suc N0)) < e"
+        using hSucgt he by (simp add: field_simps)
+      show "(s \<circ> t) m \<in> X \<and> (s \<circ> t) n \<in> X \<and> d ((s \<circ> t) m) ((s \<circ> t) n) < e"
+        using stmX stnX hdlt heps2 heps_lt by (simp add: comp_def)
+    qed
+  qed
+  obtain x where hxX: "x \<in> X"
+    and hconv: "seq_converges_to_on (s \<circ> t) x X (top1_metric_topology_on X d)"
+    using hComplete hCauchy unfolding top1_complete_metric_on_def by blast
+  show ?thesis using t_strict hxX hconv by blast
+qed
+
 lemma lebesgue_number_lemma:
   assumes hd: "top1_metric_on X d"
   assumes hComplete: "top1_complete_metric_on X d"
@@ -10160,7 +10333,86 @@ lemma lebesgue_number_lemma:
   assumes hUc_sub: "Uc \<subseteq> top1_metric_topology_on X d"
   assumes hUc_cov: "X \<subseteq> \<Union>Uc"
   shows "\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
-  sorry
+proof (rule ccontr)
+  assume hNeg: "\<not> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
+  text \<open>Step 1: No Lebesgue number means for each n, a witnessing point.\<close>
+  have hNoLN: "\<forall>n::nat. \<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1/real(Suc n)) \<subseteq> U)"
+  proof (rule allI)
+    fix n :: nat
+    have "1 / real (Suc n) > 0" by simp
+    with hNeg show "\<exists>x\<in>X. \<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1 / real (Suc n)) \<subseteq> U)"
+      by blast
+  qed
+  text \<open>Step 2: Extract witnessing sequence via choice.\<close>
+  from hNoLN
+  have "\<forall>n. \<exists>x. x \<in> X \<and> (\<forall>U\<in>Uc. \<not> (top1_ball_on X d x (1/real(Suc n)) \<subseteq> U))"
+    by blast
+  from choice[OF this]
+  obtain s where hs: "\<forall>n. s n \<in> X \<and> (\<forall>U\<in>Uc. \<not> (top1_ball_on X d (s n) (1/real(Suc n)) \<subseteq> U))"
+    by blast
+  have hsX: "\<forall>n. s n \<in> X" using hs by blast
+  have hsBad: "\<forall>n. \<forall>U\<in>Uc. \<not> (top1_ball_on X d (s n) (1/real(Suc n)) \<subseteq> U)"
+    using hs by blast
+  text \<open>Step 3: Extract convergent subsequence using complete + TB.\<close>
+  obtain r x where hr: "strict_mono r" and hxX: "x \<in> X"
+    and hconv: "seq_converges_to_on (s \<circ> r) x X (top1_metric_topology_on X d)"
+    using complete_tb_convergent_subseq[OF hd hComplete hTB hsX] by blast
+  text \<open>Step 4: x lies in some U in Uc, and ball(x, eps) subset U.\<close>
+  obtain U where hU_Uc: "U \<in> Uc" and hxU: "x \<in> U"
+    using hUc_cov hxX by blast
+  have hUopen: "U \<in> top1_metric_topology_on X d"
+    using hUc_sub hU_Uc by blast
+  obtain \<epsilon> where heps: "\<epsilon> > 0" and hball_sub: "top1_ball_on X d x \<epsilon> \<subseteq> U"
+    using top1_metric_open_contains_ball[OF hd hUopen hxU] by blast
+  text \<open>Step 5: Eventually d(s(r n), x) < eps/2.\<close>
+  have heps2: "\<epsilon>/2 > 0" using heps by simp
+  have hdxx: "d x x = 0"
+    using hd hxX unfolding top1_metric_on_def by blast
+  have hx_in_ball: "x \<in> top1_ball_on X d x (\<epsilon>/2)"
+    unfolding top1_ball_on_def using hxX hdxx heps2 by simp
+  have hball_open: "top1_ball_on X d x (\<epsilon>/2) \<in> top1_metric_topology_on X d"
+    by (rule top1_ball_open_in_metric_topology[OF hd hxX heps2])
+  have hball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x (\<epsilon>/2))"
+    unfolding neighborhood_of_def using hball_open hx_in_ball by blast
+  obtain N where hN: "\<forall>n\<ge>N. (s \<circ> r) n \<in> top1_ball_on X d x (\<epsilon>/2)"
+    using hconv hball_nbhd unfolding seq_converges_to_on_def by blast
+  text \<open>Step 6: Find K with K ge N and 1/(r K + 1) < eps/2.\<close>
+  have hr_ge: "\<And>n. n \<le> r n"
+    using seq_suble[OF hr] by blast
+  obtain n0 :: nat where hn0: "2 / \<epsilon> < real n0"
+    using reals_Archimedean2[of "2/\<epsilon>"] by blast
+  define K where "K = max N n0"
+  have hKN: "K \<ge> N" unfolding K_def by simp
+  have hrKn0: "r K \<ge> n0"
+    using hr_ge[of K] unfolding K_def by simp
+  have hSuc_gt: "real (Suc (r K)) > 2 / \<epsilon>"
+    using hn0 hrKn0 by linarith
+  have heps_rK: "1 / real (Suc (r K)) < \<epsilon> / 2"
+    using hSuc_gt heps by (simp add: field_simps)
+  text \<open>Step 7: ball(s(r K), 1/(r K + 1)) subset U, contradiction.\<close>
+  have "top1_ball_on X d (s (r K)) (1/real(Suc (r K))) \<subseteq> U"
+  proof (rule subsetI)
+    fix y assume hy: "y \<in> top1_ball_on X d (s (r K)) (1/real(Suc (r K)))"
+    have hyX: "y \<in> X"
+      using hy unfolding top1_ball_on_def by blast
+    have hdy: "d (s (r K)) y < 1/real(Suc (r K))"
+      using hy unfolding top1_ball_on_def by simp
+    have hsrK_ball: "(s \<circ> r) K \<in> top1_ball_on X d x (\<epsilon>/2)"
+      using hN hKN by blast
+    have hdxs: "d x (s (r K)) < \<epsilon>/2"
+      using hsrK_ball unfolding top1_ball_on_def comp_def by simp
+    have hsrKX: "s (r K) \<in> X" using hsX by blast
+    have htri: "d x y \<le> d x (s (r K)) + d (s (r K)) y"
+      using hd hxX hsrKX hyX unfolding top1_metric_on_def by blast
+    have "d x y < \<epsilon>"
+      using htri hdxs hdy heps_rK by linarith
+    then show "y \<in> U"
+      using hball_sub hyX unfolding top1_ball_on_def by blast
+  qed
+  moreover have "\<not> (top1_ball_on X d (s (r K)) (1/real(Suc (r K))) \<subseteq> U)"
+    using hsBad hU_Uc by blast
+  ultimately show False by blast
+qed
 
 lemma complete_totally_bounded_imp_compact:
   assumes hd: "top1_metric_on X d"
