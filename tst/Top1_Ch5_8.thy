@@ -7650,6 +7650,47 @@ proof (intro conjI)
   qed
 qed
 
+text \<open>Munkres basis property: D_m refines ball coverings → ∃D with x ∈ D ⊆ U.\<close>
+lemma munkres_basis_property:
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hC_lf: "top1_locally_finite_family_on X TX \<C>"
+  assumes hC_cov: "top1_open_covering_on X TX \<C>"
+  assumes hdC: "\<forall>C\<in>\<C>. top1_metric_on C (dC C)"
+  assumes hBall_TX: "\<forall>C\<in>\<C>. \<forall>x\<in>C. \<forall>r>0. top1_ball_on C (dC C) x r \<in> TX"
+  assumes hDm: "\<forall>m. top1_open_covering_on X TX (Dm m)
+    \<and> top1_refines (Dm m) (\<Union>C\<in>\<C>. (\<lambda>x. top1_ball_on C (dC C) x (1/real(Suc m))) ` C)"
+  assumes hU: "U \<in> TX" and hxU: "x \<in> U"
+  shows "\<exists>D\<in>(\<Union>m. Dm m). x \<in> D \<and> D \<subseteq> U"
+proof -
+  have hxX: "x \<in> X" using hxU hTsub hU by blast
+  obtain Cx where "Cx \<in> \<C>" "x \<in> Cx"
+    using hC_cov hxX unfolding top1_open_covering_on_def by auto
+  have "Cx \<in> TX" using hC_cov \<open>Cx \<in> \<C>\<close> unfolding top1_open_covering_on_def by auto
+  have "U \<inter> Cx \<in> subspace_topology X TX Cx"
+    unfolding subspace_topology_def using hU by auto
+  then have "\<exists>\<epsilon>>0. top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U \<inter> Cx"
+    sorry
+  then obtain \<epsilon> where "0 < \<epsilon>" "top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U \<inter> Cx" by auto
+  then have hball_sub_U: "top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U" by auto
+  obtain m :: nat where hm: "2 / real (Suc m) < \<epsilon>"
+  proof -
+    obtain N :: nat where "real N > 2 / \<epsilon>" using reals_Archimedean2 by blast
+    then have "2 / real (Suc N) < \<epsilon>" using \<open>0 < \<epsilon>\<close>
+      by (simp add: field_simps)
+    then show ?thesis using that by blast
+  qed
+  obtain D where "D \<in> Dm m" "x \<in> D"
+    using hDm hxX unfolding top1_open_covering_on_def by blast
+  obtain C y where "C \<in> \<C>" "y \<in> C" "D \<subseteq> top1_ball_on C (dC C) y (1/real(Suc m))"
+    using hDm \<open>D \<in> Dm m\<close> unfolding top1_refines_def by blast
+  have "x \<in> top1_ball_on C (dC C) y (1/real(Suc m))"
+    using \<open>x \<in> D\<close> \<open>D \<subseteq> top1_ball_on C (dC C) y (1/real(Suc m))\<close> by auto
+  then have "x \<in> C" unfolding top1_ball_on_def by auto
+  have "D \<subseteq> U"
+    sorry
+  show ?thesis using \<open>D \<in> Dm m\<close> \<open>x \<in> D\<close> \<open>D \<subseteq> U\<close> by auto
+qed
+
 text \<open>Locally metrizable + paracompact → σ-locally-finite basis (Munkres Theorem 42.1 proof).\<close>
 lemma locally_metrizable_paracompact_imp_sigma_lf_basis:
   assumes hPara: "top1_paracompact_on X TX"
