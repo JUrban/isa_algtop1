@@ -7663,31 +7663,45 @@ lemma munkres_basis_property:
   shows "\<exists>D\<in>(\<Union>m. Dm m). x \<in> D \<and> D \<subseteq> U"
 proof -
   have hxX: "x \<in> X" using hxU hTsub hU by blast
-  obtain Cx where "Cx \<in> \<C>" "x \<in> Cx"
-    using hC_cov hxX unfolding top1_open_covering_on_def by auto
-  have "Cx \<in> TX" using hC_cov \<open>Cx \<in> \<C>\<close> unfolding top1_open_covering_on_def by auto
-  have "U \<inter> Cx \<in> subspace_topology X TX Cx"
-    unfolding subspace_topology_def using hU by auto
-  then have "\<exists>\<epsilon>>0. top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U \<inter> Cx"
-    sorry
-  then obtain \<epsilon> where "0 < \<epsilon>" "top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U \<inter> Cx" by auto
-  then have hball_sub_U: "top1_ball_on Cx (dC Cx) x \<epsilon> \<subseteq> U" by auto
-  obtain m :: nat where hm: "2 / real (Suc m) < \<epsilon>"
+  define Cx where "Cx = {C \<in> \<C>. x \<in> C}"
+  have hCx_ne: "Cx \<noteq> {}" using hC_cov hxX unfolding top1_open_covering_on_def Cx_def by auto
+  have hCx_fin: "finite Cx" sorry
+  have heps: "\<forall>C\<in>Cx. \<exists>\<epsilon>>0. top1_ball_on C (dC C) x \<epsilon> \<subseteq> U" sorry
+  then obtain eps where heps_pos: "\<forall>C\<in>Cx. eps C > 0"
+    and heps_sub: "\<forall>C\<in>Cx. top1_ball_on C (dC C) x (eps C) \<subseteq> U" by metis
+  define mineps where "mineps = Min (eps ` Cx)"
+  have hmineps_pos: "mineps > 0" using heps_pos hCx_ne hCx_fin unfolding mineps_def by auto
+  obtain m :: nat where hm: "2 / real (Suc m) < mineps"
   proof -
-    obtain N :: nat where "real N > 2 / \<epsilon>" using reals_Archimedean2 by blast
-    then have "2 / real (Suc N) < \<epsilon>" using \<open>0 < \<epsilon>\<close>
-      by (simp add: field_simps)
+    obtain N :: nat where "real N > 2 / mineps" using reals_Archimedean2 by blast
+    then have "2 / real (Suc N) < mineps" using hmineps_pos by (simp add: field_simps)
     then show ?thesis using that by blast
   qed
   obtain D where "D \<in> Dm m" "x \<in> D"
     using hDm hxX unfolding top1_open_covering_on_def by blast
-  obtain C y where "C \<in> \<C>" "y \<in> C" "D \<subseteq> top1_ball_on C (dC C) y (1/real(Suc m))"
+  obtain C y where hCm: "C \<in> \<C>" "y \<in> C" "D \<subseteq> top1_ball_on C (dC C) y (1/real(Suc m))"
     using hDm \<open>D \<in> Dm m\<close> unfolding top1_refines_def by blast
-  have "x \<in> top1_ball_on C (dC C) y (1/real(Suc m))"
-    using \<open>x \<in> D\<close> \<open>D \<subseteq> top1_ball_on C (dC C) y (1/real(Suc m))\<close> by auto
+  have hxball: "x \<in> top1_ball_on C (dC C) y (1/real(Suc m))"
+    using \<open>x \<in> D\<close> hCm(3) by auto
   then have "x \<in> C" unfolding top1_ball_on_def by auto
-  have "D \<subseteq> U"
-    sorry
+  then have "C \<in> Cx" unfolding Cx_def using hCm(1) by blast
+  have hminle: "mineps \<le> eps C" using \<open>C \<in> Cx\<close> hCx_fin unfolding mineps_def by (simp add: Min_le)
+  have "D \<subseteq> top1_ball_on C (dC C) x (eps C)"
+  proof (rule subsetI)
+    fix z assume "z \<in> D"
+    then have hz: "z \<in> top1_ball_on C (dC C) y (1/real(Suc m))" using hCm(3) by blast
+    then have "z \<in> C" "dC C y z < 1/real(Suc m)" unfolding top1_ball_on_def by auto
+    have "dC C y x < 1/real(Suc m)" using hxball unfolding top1_ball_on_def by auto
+    have "dC C x z \<le> dC C x y + dC C y z"
+      using hdC hCm(1) \<open>x \<in> C\<close> \<open>z \<in> C\<close> hCm(2) unfolding top1_metric_on_def by fast
+    have "dC C x y = dC C y x"
+      using hdC hCm(1) \<open>x \<in> C\<close> hCm(2) unfolding top1_metric_on_def by blast
+    then have "dC C x z < 2/real(Suc m)" using \<open>dC C x z \<le> dC C x y + dC C y z\<close>
+      \<open>dC C y x < 1/real(Suc m)\<close> \<open>dC C y z < 1/real(Suc m)\<close> by linarith
+    then have "dC C x z < eps C" using hm hminle by linarith
+    then show "z \<in> top1_ball_on C (dC C) x (eps C)" unfolding top1_ball_on_def using \<open>z \<in> C\<close> by auto
+  qed
+  then have "D \<subseteq> U" using heps_sub \<open>C \<in> Cx\<close> by blast
   show ?thesis using \<open>D \<in> Dm m\<close> \<open>x \<in> D\<close> \<open>D \<subseteq> U\<close> by auto
 qed
 
