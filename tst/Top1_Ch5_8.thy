@@ -6600,8 +6600,9 @@ proof (intro iffI allI impI)
   assume hCov: "top1_open_covering_on X TX \<A>"
   show "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
     \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))"
-    sorry (* → direction: uses regularity to shrink cover so closures stay inside.
-             Needs full (1)→(2)→(3)→(4) argument. *)
+    sorry (* → direction: the SOME formulation may need fixing—
+             cl(B) ⊆ (SOME A. A∈A ∧ B⊆A) requires SOME to pick an A with cl(B)⊆A,
+             but SOME only guarantees B⊆A. Needs cl(B)⊆A for the specific SOME-chosen A. *)
 next
   text \<open>(\<Leftarrow>) Strong paracompact → paracompact (trivial: drop extra condition).\<close>
   fix \<A>
