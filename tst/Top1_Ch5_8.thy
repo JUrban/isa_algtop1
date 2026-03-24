@@ -11337,13 +11337,51 @@ proof -
   then show ?thesis using \<open>closure_on X T A = A\<close> by simp
 qed
 
+text \<open>Helper: closure point of C(X,Y) in cc is continuous on each compact C.\<close>
+lemma closure_cc_cont_on_compact:
+  assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d"
+  assumes hgPiE: "g \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hC: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
+  assumes hcl: "g \<in> closure_on (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)
+    {f. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f}"
+  shows "top1_continuous_map_on C (subspace_topology X TX C) Y (top1_metric_topology_on Y d) g"
+  sorry
+
 theorem Theorem_46_5:
   assumes hCG: "top1_compactly_generated_on X TX"
   assumes hd: "top1_metric_on Y d"
   shows "closedin_on (top1_PiE X (\<lambda>_. Y))
     (top1_compact_convergence_topology_on X TX Y d)
     {f. top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f}"
-  sorry
+proof -
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?A = "{f. top1_continuous_map_on X TX Y ?TY f}"
+  have hTopX: "is_topology_on X TX" using hCG unfolding top1_compactly_generated_on_def by simp
+  have hAsub: "?A \<subseteq> ?P" sorry
+  have hTcc_top: "is_topology_on ?P ?Tcc" sorry
+  have hcl_sub: "closure_on ?P ?Tcc ?A \<subseteq> ?A"
+  proof (rule subsetI)
+    fix g assume hg_cl: "g \<in> closure_on ?P ?Tcc ?A"
+    text \<open>g is in closure of C(X,Y) in cc. Show g is continuous on X.\<close>
+    have hgPiE: "g \<in> ?P" using hg_cl
+      apply (rule subsetD[OF closure_on_subset_carrier[OF hTcc_top hAsub]])
+      done
+    have "\<forall>C. top1_compact_on C (subspace_topology X TX C)
+      \<longrightarrow> top1_continuous_map_on C (subspace_topology X TX C) Y ?TY g"
+    proof (intro allI impI)
+      fix C assume hC: "top1_compact_on C (subspace_topology X TX C)"
+      have "C \<subseteq> X" sorry
+      show "top1_continuous_map_on C (subspace_topology X TX C) Y ?TY g"
+        by (rule closure_cc_cont_on_compact[OF hTopX hd hgPiE hC \<open>C \<subseteq> X\<close> hg_cl])
+    qed
+    then have "top1_continuous_map_on X TX Y ?TY g"
+      using Lemma_46_4[OF hCG, rule_format] by meson
+    then show "g \<in> ?A" by simp
+  qed
+  show ?thesis by (rule closedin_if_closure_subset[OF hTcc_top hAsub hcl_sub])
+qed
 
 (** from \S46 Corollary 46.6 [top1.tex:6820] **)
 corollary Corollary_46_6:
