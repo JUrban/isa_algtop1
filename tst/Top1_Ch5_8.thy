@@ -10473,6 +10473,13 @@ definition top1_equicontinuous_family_on ::
      (\<forall>f\<in>\<F>. \<forall>x\<in>X. f x \<in> Y)
      \<and> (\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>))"
 
+lemma metric_sym:
+  assumes hd: "top1_metric_on Y d" and "a \<in> Y" "b \<in> Y"
+  shows "d a b = d b a"
+  using assms unfolding top1_metric_on_def
+  apply (elim conjE) apply (erule_tac x=a in ballE) apply (erule_tac x=b in ballE)
+  apply simp apply fast apply fast done
+
 definition top1_metric_bounded_subset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_metric_bounded_subset_on Y d A \<longleftrightarrow> (\<exists>y0\<in>Y. \<exists>M. \<forall>y\<in>A. d y0 y \<le> M)"
 
@@ -11408,10 +11415,11 @@ proof -
         apply (rule cc_basis_member_pointwise[OF hd hCX \<open>C \<noteq> {}\<close> _ hgPiE _ \<open>x \<in> C\<close>])
         using h1n h\<delta>lt1 apply linarith
         using hhseq by simp
+      have hgxY: "g x \<in> Y" using hgPiE \<open>x \<in> C\<close> hCX by (simp add: top1_PiE_iff subset_iff)
+      have hnxY: "hseq n x \<in> Y" using hhseq \<open>x \<in> C\<close> hCX
+        unfolding top1_continuous_funcs_on_def by (simp add: top1_PiE_iff subset_iff)
       have "d (hseq n x) (g x) = d (g x) (hseq n x)"
-        using hd hgPiE hhseq \<open>x \<in> C\<close> hCX
-        unfolding top1_metric_on_def top1_PiE_iff top1_continuous_funcs_on_def
-        sorry
+        by (rule metric_sym[OF hd hgxY hnxY, symmetric])
       then show "d (hseq n x) (g x) < \<epsilon>" using \<open>d (g x) (hseq n x) < 1 / real (Suc n)\<close> h1n h\<delta>le by linarith
     qed
   qed
