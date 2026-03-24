@@ -10905,10 +10905,22 @@ proof -
   then show ?thesis by blast
 qed
 
+text \<open>← direction of Theorem 46.2: uniform on compacts → cc convergence.\<close>
+lemma unif_compact_imp_cc_conv:
+  assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d"
+  assumes hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hfseqPiE: "\<forall>n. fseq n \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hUnif: "\<forall>C. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<longrightarrow>
+    (\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<epsilon>)"
+  shows "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)"
+  sorry
+
 (** from \S46 Theorem 46.2 [top1.tex:6787] **)
 theorem Theorem_46_2:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
+  assumes hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hfseqPiE: "\<forall>n. fseq n \<in> top1_PiE X (\<lambda>_. Y)"
   shows "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)
     \<longleftrightarrow>
       (\<forall>C. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<longrightarrow>
@@ -10922,9 +10934,7 @@ next
   assume "\<forall>C. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<longrightarrow>
     (\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<epsilon>)"
   then show "seq_converges_to_on fseq f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)"
-    sorry (* ← direction: uniform on compacts → cc convergence. Needs:
-       for each cc neighborhood U of f, U contains cc basis element B(f,C,δ),
-       then use uniform convergence on C to get fseq n ∈ B ⊆ U. *)
+    by (rule unif_compact_imp_cc_conv[OF hTopX hd hfPiE hfseqPiE])
 qed
 
 (** from \S46 Lemma 46.3 [top1.tex:6793] **)
