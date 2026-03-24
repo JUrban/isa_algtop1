@@ -13146,18 +13146,38 @@ lemma compact_in_open_eps_gap:
   assumes hKne: "K \<noteq> {}"
   shows "\<exists>\<epsilon>>0. \<forall>y\<in>Y. (\<exists>k\<in>K. d k y < \<epsilon>) \<longrightarrow> y \<in> U"
 proof -
-  have hKY: "K \<subseteq> Y" sorry
-  have hUY: "U \<subseteq> Y" sorry
+  have hKY: "K \<subseteq> Y" using hK unfolding top1_compact_on_def top1_metric_topology_on_def
+    topology_generated_by_basis_def by (simp add: is_topology_on_def)
+  have hUY: "U \<subseteq> Y" using hU unfolding top1_metric_topology_on_def
+    topology_generated_by_basis_def by blast
   text \<open>For each k in K, get r_k > 0 with B(k, r_k) ⊆ U.\<close>
-  have hball: "\<forall>k\<in>K. \<exists>r>0. top1_ball_on Y d k r \<subseteq> U" sorry
-  obtain rk where hrk: "\<forall>k\<in>K. rk k > 0 \<and> top1_ball_on Y d k (rk k) \<subseteq> U" sorry
+  have hball: "\<forall>k\<in>K. \<exists>r>0. top1_ball_on Y d k r \<subseteq> U"
+    using top1_metric_open_contains_ball[OF hd hU] hKU by blast
+  obtain rk where hrk: "\<forall>k\<in>K. rk k > 0 \<and> top1_ball_on Y d k (rk k) \<subseteq> U"
+    using hball by meson
   text \<open>Cover K by B(k, rk/2). Extract finite subcover.\<close>
   define halfcover where "halfcover k = top1_ball_on Y d k (rk k / 2)" for k
-  have hcov: "K \<subseteq> \<Union>(halfcover ` K)" sorry
-  obtain F where hF: "finite F" "F \<subseteq> K" "K \<subseteq> \<Union>(halfcover ` F)" sorry
-  have hFne: "F \<noteq> {}" sorry
-  define \<epsilon> where "\<epsilon> = Min ((\<lambda>k. rk k / 2) ` F)"
+  have hcov: "K \<subseteq> \<Union>(halfcover ` K)"
+  proof (rule subsetI)
+    fix k assume "k \<in> K"
+    then have "k \<in> Y" using hKY by fast
+    have "d k k = 0" using hd \<open>k \<in> Y\<close> unfolding top1_metric_on_def by fast
+    then have "k \<in> halfcover k" unfolding halfcover_def top1_ball_on_def
+      using \<open>k \<in> Y\<close> hrk \<open>k \<in> K\<close> by fastforce
+    then show "k \<in> \<Union>(halfcover ` K)" using \<open>k \<in> K\<close> by blast
+  qed
+  have hopen_half: "\<forall>k\<in>K. halfcover k \<in> top1_metric_topology_on Y d"
+    unfolding halfcover_def using top1_ball_open_in_metric_topology[OF hd] hKY hrk by auto
+  have hopen_sub: "halfcover ` K \<subseteq> top1_metric_topology_on Y d"
+    using hopen_half by force
+  obtain F where hF: "finite F" "F \<subseteq> halfcover ` K" "K \<subseteq> \<Union>F"
+    using hK hopen_sub hcov unfolding top1_compact_on_def by meson
+  have hFne: "F \<noteq> {}" using hKne hF(3) by blast
+  text \<open>Extract representative centers from the finite subcover.\<close>
+  obtain c where hc: "\<forall>V\<in>F. c V \<in> K \<and> V = halfcover (c V)" sorry
+  define \<epsilon> where "\<epsilon> = Min ((\<lambda>V. rk (c V) / 2) ` F)"
   have h\<epsilon>: "0 < \<epsilon>" sorry
+  have h\<epsilon>_le: "\<forall>V\<in>F. \<epsilon> \<le> rk (c V) / 2" sorry
   show ?thesis sorry
 qed
 
