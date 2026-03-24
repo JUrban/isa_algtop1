@@ -11380,8 +11380,17 @@ proof -
     by meson
   then obtain hseq where hhseq: "\<forall>n. hseq n \<in> ?A \<and> hseq n \<in> {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < 1 / real (Suc n)}"
     by (rule choice[THEN exE]) fast
-  text \<open>hseq n → g uniformly on C. Use uniform_limit_continuous.\<close>
-  show ?thesis sorry
+  text \<open>hseq n → g uniformly on C. Apply uniform_limit_continuous on subspace C.\<close>
+  have hTopC: "is_topology_on C (subspace_topology X TX C)"
+    using hC unfolding top1_compact_on_def by (elim conjE) assumption
+  have hseq_cont_C: "\<forall>n. top1_continuous_map_on C (subspace_topology X TX C) Y ?TY (hseq n)"
+    sorry
+  have hseq_unif: "\<forall>\<epsilon>>0. \<exists>N::nat. \<forall>n\<ge>N. \<forall>x\<in>C. d (hseq n x) (g x) < \<epsilon>"
+    sorry
+  have hgCY: "\<forall>x\<in>C. g x \<in> Y"
+    using hgPiE hCX by (simp add: top1_PiE_iff subset_iff)
+  show ?thesis
+    by (rule uniform_limit_continuous[OF hTopC hd hseq_cont_C hseq_unif hgCY])
 qed
 
 theorem Theorem_46_5:
