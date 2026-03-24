@@ -4,12 +4,27 @@ These rules describe how to work in **this Isabelle project**, whose main theory
 
 - **Theory:** `Top1`
 - **Imports:** `Complex_Main` (full import; do **not** add a separate “background” section inside `Top1.thy`)
+
+The project is split into two sessions for faster incremental builds:
+1. **Top0** (in `tst/i/`): Contains Chapters 2, 3, and 4. Built once and cached.
+2. **Top1** (in `tst/`): Contains the main `Top1` theory and Chapters 5-8.
+
 - **Build command (authoritative):**
   ```bash
 cd /project/tst &&  /project/bin/isabelle build -D .
   ```
 
+This will only build `Top0` once and cache it in an image; subsequent changes to `Top1` (Chapters 5-8) will not rebuild the first 3 chapters.
+
+### Faster Incremental Workflows with Sessions
+The project is split into `Top0` (Chapters 2-4 in `tst/i/`) and `Top1` (Main + Chapters 5-8 in `tst/`).
+Build `Top0` once to cache it, then work on `Top1` to avoid rebuilding everything.
+
+*   **Build/Cache Top0:** `/project/bin/isabelle build  -D . Top0`
+*   **Build Top1 (incremental):** `/project/bin/isabelle build  -D . Top1`
+
 The intended workflow is **gradual formalization** of /project/top1.tex : state results early, use `sorry` frequently, and keep the project building while steadily replacing `sorry` with real proofs.
+
 
 Important: until further notice focus exclusively on sections 12-50 in
 top1.tex and do not do exercises and examples unless really needed for
@@ -55,8 +70,7 @@ timeout, so you can iterate freely.
 
 Workflow for developing new proofs:
 1. Write the proof structure with sledgehammer [timeout = 10] followed by sorry on each step.
-2. Run: /project/bin/isabelle process_theories -d . -O -o quick_and_dirty -M "Try this|No proof" -f Top1_Ch2.thy -f
-Top1_Ch3.thy -f Top1_Ch4.thy -f Top1_Ch5_8.thy
+2. Run: `/project/bin/isabelle process_theories -d . -l Top1 -O -o quick_and_dirty -M "Try this|No proof" -f Top1_Ch5_8.thy`
 3. Collect all Try this: suggestions. Pick the fastest (lowest ms) for each step.
 4. Replace all sledgehammer ... sorry blocks with the found proofs.
 5. Run process_theories again (without -M) to verify and measure total time.
@@ -82,6 +96,12 @@ Also: The apply (rule ...), apply (erule ...), apply (drule ...) style
   blowup that blast/auto cause in large contexts. Use this approach
   instead of by blast on complex goals -- use explicit apply chains.
                                   
+### Using CLI tools with sessions
+Specify the logic session with `-l` and the directory with `-d .` to leverage the cached heap images:
+
+*   **process_theories**: `/project/bin/isabelle process_theories -d . -l Top1 -o quick_and_dirty -f Top1_Ch5_8.thy`
+*   **eval_at**: `/project/bin/isabelle eval_at -d . -l Top1 Top1_Ch5_8.thy 100 'thm conjI'`
+*   **desorry**: `/project/bin/isabelle desorry -d . -l Top1 Top1_Ch5_8.thy`
 
 ---
 
@@ -125,13 +145,12 @@ If `Top1.thy` becomes too large, you may split into helper theories (e.g. `Top1_
 ## Figuring out proof state at various points
 - Here is the general method how you can detect the proof state
   at several lines (e.g. XXX, YYY, ZZZ) of interest:
-  `/project/bin/isabelle process_theories -O -o show_states  -f 'Top1.thy' | grep -A10 '\b\(XXX\|YYY\|ZZZ\)'`
+  `/project/bin/isabelle process_theories -O -o show_states -l Top1 -f 'Top1_Ch5_8.thy' | grep -A10 '\b\(XXX\|YYY\|ZZZ\)'`
 - Please use this abundantly to figure out things.
 
 ## Figuring out errors:
 - Try this:
-`/project/bin/isabelle process_theories -f Top1.thy -o quick_and_dirty`
-
+`/project/bin/isabelle process_theories -l Top1 -f Top1_Ch5_8.thy -o quick_and_dirty`
 
 ## 4. Documentation and change logging
 
@@ -322,9 +341,9 @@ have hA_disj_cl_D: "\<forall>D\<in>?\<DD>. \<forall>x\<in>A. x \<notin> closure_
 Run with live output:
 
 ```bash
-/project/bin/isabelle process_theories -d . -O -o quick_and_dirty \
+/project/bin/isabelle process_theories -d . -l Top1 -O -o quick_and_dirty \
   -M "Trying|Found proof|Try this|No proof found|Sledgehammering|Timed out|Gave up" \
-  -f Top1_Ch2.thy -f Top1_Ch3.thy -f Top1_Ch4.thy -f Top1_Ch5_8.thy
+  -f Top1_Ch5_8.thy
 ```
 
 Interpretation:
