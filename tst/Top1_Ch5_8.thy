@@ -10800,6 +10800,77 @@ definition top1_compact_open_topology_on ::
   "top1_compact_open_topology_on X TX Y TY =
      topology_generated_by_subbasis (top1_continuous_funcs_on X TX Y TY) (top1_compact_open_subbasis_on X TX Y TY)"
 
+lemma bm_triangle:
+  assumes hd: "top1_metric_on Y d"
+  assumes "a \<in> Y" "b \<in> Y" "c \<in> Y"
+  shows "top1_bounded_metric d a c \<le> top1_bounded_metric d a b + top1_bounded_metric d b c"
+  using top1_bounded_metric_on[OF hd] assms(2-4)
+  unfolding top1_metric_on_def
+  apply (elim conjE)
+  apply (erule_tac x=a in ballE, erule_tac x=b in ballE, erule_tac x=c in ballE)
+  apply simp apply fast apply fast apply fast
+  done
+
+text \<open>Refinement: x in cc basis element B(f0,C,eps) implies smaller B(x,C,delta) inside it.\<close>
+lemma cc_basis_refine_single:
+  assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d"
+  assumes hf0: "f0 \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hC: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
+  assumes heps: "(0::real) < \<epsilon>"
+  assumes hx: "x \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hxB: "(if C = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (x y)) ` C)) < \<epsilon>"
+  shows "\<exists>\<delta>>0. {g \<in> top1_PiE X (\<lambda>_. Y).
+    (if C = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C)) < \<delta>}
+    \<subseteq> {g \<in> top1_PiE X (\<lambda>_. Y).
+    (if C = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (g y)) ` C)) < \<epsilon>}"
+proof (cases "C = {}")
+  case True then show ?thesis using heps by (rule_tac x=1 in exI) simp
+next
+  case False
+  define S0 where "S0 = Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (x y)) ` C)"
+  have hS0_lt: "S0 < \<epsilon>" using hxB False unfolding S0_def by simp
+  define \<delta> where "\<delta> = (\<epsilon> - S0) / 2"
+  have h\<delta>pos: "0 < \<delta>" unfolding \<delta>_def using hS0_lt by simp
+  have h\<delta>_le: "\<delta> \<le> (\<epsilon> - S0) / 2" unfolding \<delta>_def by simp
+  have hS0_\<delta>: "S0 + \<delta> < \<epsilon>" using h\<delta>_le hS0_lt by argo
+  show ?thesis
+  proof (rule exI[where x=\<delta>], intro conjI h\<delta>pos subsetI)
+    fix g assume hg: "g \<in> {g \<in> top1_PiE X (\<lambda>_. Y).
+      (if C = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C)) < \<delta>}"
+    have hgPiE: "g \<in> top1_PiE X (\<lambda>_. Y)" using hg by simp
+    have hSup_xg: "Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C) < \<delta>"
+      using hg False by simp
+    have "\<forall>y\<in>C. top1_bounded_metric d (f0 y) (g y) \<le> S0 + \<delta>"
+    proof (intro ballI)
+      fix y assume "y \<in> C"
+      have hyX: "y \<in> X" using \<open>y \<in> C\<close> hCX by fast
+      have hf0yY: "f0 y \<in> Y" using hf0 hyX by (simp add: top1_PiE_iff)
+      have hxyY: "x y \<in> Y" using hx hyX by (simp add: top1_PiE_iff)
+      have hgyY: "g y \<in> Y" using hgPiE hyX by (simp add: top1_PiE_iff)
+      have htri: "top1_bounded_metric d (f0 y) (g y) \<le>
+        top1_bounded_metric d (f0 y) (x y) + top1_bounded_metric d (x y) (g y)"
+        by (rule bm_triangle[OF hd hf0yY hxyY hgyY])
+      have "top1_bounded_metric d (f0 y) (x y) \<le> S0" unfolding S0_def
+        apply (rule cSup_upper) using \<open>y \<in> C\<close> apply (rule imageI)
+        apply (intro bdd_aboveI[where M=1]) apply (clarsimp simp: top1_bounded_metric_def) done
+      have "top1_bounded_metric d (x y) (g y) \<le> Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C)"
+        apply (rule cSup_upper) using \<open>y \<in> C\<close> apply (rule imageI)
+        apply (intro bdd_aboveI[where M=1]) apply (clarsimp simp: top1_bounded_metric_def) done
+      then have "top1_bounded_metric d (x y) (g y) < \<delta>" using hSup_xg by simp
+      show "top1_bounded_metric d (f0 y) (g y) \<le> S0 + \<delta>"
+        using htri \<open>top1_bounded_metric d (f0 y) (x y) \<le> S0\<close>
+          \<open>top1_bounded_metric d (x y) (g y) < \<delta>\<close> by linarith
+    qed
+    then have "Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (g y)) ` C) \<le> S0 + \<delta>"
+      apply (intro cSUP_least) using False apply simp apply (erule bspec) apply assumption done
+    then have "Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (g y)) ` C) < \<epsilon>"
+      using hS0_\<delta> by simp
+    then show "g \<in> {g \<in> top1_PiE X (\<lambda>_. Y).
+      (if C = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f0 y) (g y)) ` C)) < \<epsilon>}"
+      using hgPiE False by simp
+  qed
+qed
+
 lemma cc_basis_is_basis:
   assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d"
   shows "is_basis_on (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_basis_on X TX Y d)"
@@ -10950,17 +11021,6 @@ proof -
     using hbU hbeq apply simp
     done
 qed
-
-lemma bm_triangle:
-  assumes hd: "top1_metric_on Y d"
-  assumes "a \<in> Y" "b \<in> Y" "c \<in> Y"
-  shows "top1_bounded_metric d a c \<le> top1_bounded_metric d a b + top1_bounded_metric d b c"
-  using top1_bounded_metric_on[OF hd] assms(2-4)
-  unfolding top1_metric_on_def
-  apply (elim conjE)
-  apply (erule_tac x=a in ballE, erule_tac x=b in ballE, erule_tac x=c in ballE)
-  apply simp apply fast apply fast apply fast
-  done
 
 lemma pointwise_d_imp_bm_le:
   assumes hd: "top1_metric_on Y d" and hCX: "C \<subseteq> X"
