@@ -17250,7 +17250,11 @@ proof -
     using hcont_diff continuous_on_rabs by blast
   then have hcomp: "compact ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
     using compact_continuous_image top1_I01_compact by blast
-  then show ?thesis sorry
+  have hne: "(\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01 \<noteq> {}" using top1_I01_nonempty by force
+  obtain s where "s \<in> (\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01"
+    "\<forall>t \<in> (\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01. t \<le> s"
+    using compact_attains_sup[OF hcomp hne] by blast
+  then show ?thesis unfolding bdd_above_def by blast
 qed
 
 lemma top1_rho49_nonneg:
@@ -17287,7 +17291,22 @@ qed
 lemma top1_rho49_triangle:
   assumes "f \<in> top1_C01" "g \<in> top1_C01" "h \<in> top1_C01"
   shows "top1_rho49 f h \<le> top1_rho49 f g + top1_rho49 g h"
-  sorry
+  unfolding top1_rho49_def
+proof (rule cSup_least)
+  show "(\<lambda>x. \<bar>f x - h x\<bar>) ` top1_I01 \<noteq> {}" using top1_I01_nonempty by blast
+next
+  fix y assume "y \<in> (\<lambda>x. \<bar>f x - h x\<bar>) ` top1_I01"
+  then obtain x where hx: "x \<in> top1_I01" "y = \<bar>f x - h x\<bar>" by blast
+  have hpw: "\<bar>f x - h x\<bar> \<le> \<bar>f x - g x\<bar> + \<bar>g x - h x\<bar>" by argo
+  have hfg: "\<bar>f x - g x\<bar> \<le> Sup ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+    using cSup_upper[of "\<bar>f x - g x\<bar>"] hx(1) top1_rho49_bdd_above[OF assms(1) assms(2)]
+    by simp
+  have hgh: "\<bar>g x - h x\<bar> \<le> Sup ((\<lambda>x. \<bar>g x - h x\<bar>) ` top1_I01)"
+    using cSup_upper[of "\<bar>g x - h x\<bar>"] hx(1) top1_rho49_bdd_above[OF assms(2) assms(3)]
+    by simp
+  show "y \<le> Sup ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01) + Sup ((\<lambda>x. \<bar>g x - h x\<bar>) ` top1_I01)"
+    using hx(2) hpw hfg hgh by argo
+qed
 
 lemma top1_rho49_is_metric: "top1_metric_on top1_C01 top1_rho49"
   unfolding top1_metric_on_def
