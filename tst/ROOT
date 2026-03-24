@@ -1,4 +1,12 @@
-session Top1 = HOL +
-options[quick_and_dirty,timeout=120]
-theories
+session Top0 in i = HOL +
+  options [quick_and_dirty]
+  theories
+    Top1_Ch2
+    Top1_Ch3
+    Top1_Ch4
+
+session Top1 = Top0 +
+  options [quick_and_dirty, timeout = 120]
+  theories
+    Top1_Ch5_8
     Top1

@@ -10666,6 +10666,42 @@ proof (intro conjI)
   qed
 qed
 
+lemma metric_triangle4:
+  assumes hd: "top1_metric_on Y dd"
+  assumes "p1 \<in> Y" "p2 \<in> Y" "p3 \<in> Y" "p4 \<in> Y" "p5 \<in> Y"
+  assumes "dd p1 p5 \<le> dd p1 p2 + dd p2 p5"
+  assumes "dd p2 p5 \<le> dd p2 p3 + dd p3 p5"
+  assumes "dd p3 p5 \<le> dd p3 p4 + dd p4 p5"
+  assumes "dd p1 p2 < \<delta>" "dd p2 p3 < \<delta>" "dd p3 p4 < \<delta>" "dd p4 p5 < \<delta>"
+  shows "dd p1 p5 < 4 * \<delta>"
+  using assms(10,11,12,13,7,8,9) by argo
+
+lemma finite_Func:
+  assumes "finite A" "finite B"
+  shows "finite (Func A B)"
+  using assms
+proof (induction A arbitrary: rule: finite_induct)
+  case empty
+  then show ?case by (simp add: Func_empty)
+next
+  case (insert x F)
+  have hIH: "finite (Func F B)" using insert by presburger
+  have hfin_img: "finite ((\<lambda>(b, g). g(x := b)) ` (B \<times> Func F B))"
+    using \<open>finite B\<close> hIH by blast
+  have hsub: "Func (insert x F) B \<subseteq> (\<lambda>(b, g). g(x := b)) ` (B \<times> Func F B)"
+  proof (rule subsetI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> Func (insert x F) B"
+    define g where "g = (\<lambda>a. if a = x then undefined else \<alpha> a)"
+    have hgFunc: "g \<in> Func F B" using h\<alpha> insert(2) unfolding Func_def g_def by simp
+    have h\<alpha>x: "\<alpha> x \<in> B" using h\<alpha> unfolding Func_def by blast
+    have h\<alpha>_eq: "\<alpha> = g(x := \<alpha> x)" unfolding g_def using h\<alpha> unfolding Func_def by auto
+    have "(\<alpha> x, g) \<in> B \<times> Func F B" using h\<alpha>x hgFunc by blast
+    moreover have "\<alpha> = (case (\<alpha> x, g) of (b, g) \<Rightarrow> g(x := b))" using h\<alpha>_eq by auto
+    ultimately show "\<alpha> \<in> (\<lambda>(b, g). g(x := b)) ` (B \<times> Func F B)" by blast
+  qed
+  show ?case using finite_subset[OF hsub hfin_img] by presburger
+qed
+
 (** from \S45 Lemma 45.3 [top1.tex:6618] **)
 lemma Lemma_45_3:
   assumes hTopX: "is_topology_on X TX"
@@ -10675,7 +10711,164 @@ lemma Lemma_45_3:
   assumes hFsub: "\<F> \<subseteq> top1_PiE X (\<lambda>_. Y)"
   assumes hEqui: "top1_equicontinuous_family_on X TX Y d \<F>"
   shows "top1_totally_bounded_on \<F> (top1_uniform_metric_on X d)"
-  sorry
+proof (cases "X = {}")
+  case True
+  show ?thesis unfolding top1_totally_bounded_on_def
+  proof (intro allI impI)
+    fix e :: real assume "0 < e"
+    show "\<exists>F. finite F \<and> F \<subseteq> \<F> \<and> \<F> \<subseteq> (\<Union>x\<in>F. top1_ball_on \<F> (top1_uniform_metric_on X d) x e)"
+    proof (cases "\<F> = {}")
+      case True then show ?thesis by simp
+    next
+      case False
+      then obtain f0 where "f0 \<in> \<F>" by blast
+      have hball_eq: "top1_ball_on \<F> (top1_uniform_metric_on X d) f0 e = \<F>"
+        unfolding top1_ball_on_def top1_uniform_metric_on_def using True \<open>0 < e\<close> by simp
+      then show ?thesis using \<open>f0 \<in> \<F>\<close> by auto
+    qed
+  qed
+next
+  case False
+  let ?\<rho> = "top1_uniform_metric_on X d"
+  show ?thesis unfolding top1_totally_bounded_on_def
+  proof (intro allI impI)
+    fix e :: real assume he: "0 < e"
+    define \<delta> where "\<delta> = e / 5"
+    have h\<delta>: "0 < \<delta>" unfolding \<delta>_def by (simp add: he)
+    text \<open>Step 1: By equicontinuity, for each a in X get nbhd U_a.\<close>
+    have hEqui_unf: "\<forall>x0\<in>X. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<delta>)"
+      using hEqui h\<delta> unfolding top1_equicontinuous_family_on_def by blast
+    text \<open>Step 2: Cover X by finitely many such neighborhoods (compactness of X).\<close>
+    obtain Ua where hUa: "\<forall>a\<in>X. Ua a \<in> TX \<and> a \<in> Ua a \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>Ua a. d (f x) (f a) < \<delta>)"
+      using hEqui_unf by metis
+    have hUa_cov: "Ua ` X \<subseteq> TX" using hUa by blast
+    have hX_sub_Ua: "X \<subseteq> \<Union>(Ua ` X)"
+    proof (rule subsetI)
+      fix x assume "x \<in> X"
+      then have "x \<in> Ua x" by (metis \<open>x \<in> X\<close> hUa)
+      then show "x \<in> \<Union>(Ua ` X)" using \<open>x \<in> X\<close> by blast
+    qed
+    obtain \<V> where hVfin: "finite \<V>" and hVsub: "\<V> \<subseteq> Ua ` X" and hVcov: "X \<subseteq> \<Union>\<V>"
+      using hCompX hUa_cov hX_sub_Ua unfolding top1_compact_on_def by meson
+    obtain A where hAfin: "finite A" and hAsub: "A \<subseteq> X" and hAcov: "X \<subseteq> \<Union>(Ua ` A)"
+      using hVfin hVsub hVcov by (metis finite_subset_image)
+    text \<open>Step 3: Y is compact hence totally bounded. Cover Y by finitely many \<delta>-balls.\<close>
+    have hTB_Y: "top1_totally_bounded_on Y d"
+      using compact_imp_totally_bounded[OF hd hCompY] by presburger
+    obtain B where hBfin: "finite B" and hBsub: "B \<subseteq> Y"
+      and hBcov: "Y \<subseteq> (\<Union>y\<in>B. top1_ball_on Y d y \<delta>)"
+      using hTB_Y h\<delta> unfolding top1_totally_bounded_on_def by meson
+    text \<open>Step 4: For each \<alpha> : A \<rightarrow> B, pick a representative f_\<alpha> \<in> F (if exists).\<close>
+    define RepFun where "RepFun \<alpha> = (SOME f. f \<in> \<F> \<and> (\<forall>a\<in>A. d (f a) (\<alpha> a) < \<delta>))" for \<alpha>
+    define J where "J = {\<alpha>. (\<forall>a\<in>A. \<alpha> a \<in> B) \<and> (\<forall>a. a \<notin> A \<longrightarrow> \<alpha> a = undefined) \<and> (\<exists>f\<in>\<F>. \<forall>a\<in>A. d (f a) (\<alpha> a) < \<delta>)}"
+    have hJ_sub: "J \<subseteq> Func A B" unfolding J_def Func_def by fast
+    have hJ_fin: "finite J" using finite_subset[OF hJ_sub finite_Func[OF hAfin hBfin]] by simp
+    have hRep: "\<forall>\<alpha>\<in>J. RepFun \<alpha> \<in> \<F> \<and> (\<forall>a\<in>A. d (RepFun \<alpha> a) (\<alpha> a) < \<delta>)"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+      have "\<exists>f. f \<in> \<F> \<and> (\<forall>a\<in>A. d (f a) (\<alpha> a) < \<delta>)" using h\<alpha> unfolding J_def by blast
+      then show "RepFun \<alpha> \<in> \<F> \<and> (\<forall>a\<in>A. d (RepFun \<alpha> a) (\<alpha> a) < \<delta>)"
+        unfolding RepFun_def using someI_ex[of "\<lambda>f. f \<in> \<F> \<and> (\<forall>a\<in>A. d (f a) (\<alpha> a) < \<delta>)"]
+        by argo
+    qed
+    define Rset where "Rset = RepFun ` J"
+    have hRset_fin: "finite Rset" unfolding Rset_def using hJ_fin by blast
+    have hRset_sub: "Rset \<subseteq> \<F>" unfolding Rset_def using hRep by blast
+    text \<open>Step 5: Show F is covered by e-balls around the representatives.\<close>
+    have hcover: "\<F> \<subseteq> (\<Union>r\<in>Rset. top1_ball_on \<F> ?\<rho> r e)"
+    proof (rule subsetI)
+      fix f assume hf: "f \<in> \<F>"
+      have hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)" using hf hFsub by fast
+      have hfY: "\<forall>a\<in>A. f a \<in> Y"
+      proof (intro ballI)
+        fix a assume "a \<in> A"
+        then have "a \<in> X" using hAsub by blast
+        then show "f a \<in> Y" using hfPiE unfolding top1_PiE_iff by blast
+      qed
+      define af where "af a = (SOME b. b \<in> B \<and> d (f a) b < \<delta>)" for a
+      have haf_prop: "\<forall>a\<in>A. af a \<in> B \<and> d (f a) (af a) < \<delta>"
+      proof (intro ballI)
+        fix a assume "a \<in> A"
+        have "f a \<in> Y" using hfY \<open>a \<in> A\<close> by blast
+        then have "f a \<in> (\<Union>y\<in>B. top1_ball_on Y d y \<delta>)" using hBcov by fast
+        then obtain b where hbB: "b \<in> B" and hfb: "f a \<in> top1_ball_on Y d b \<delta>"
+          by blast
+        have "d b (f a) < \<delta>" using hfb unfolding top1_ball_on_def by fast
+        then have "d (f a) b < \<delta>" using hBsub hbB \<open>f a \<in> Y\<close> hd metric_sym
+          by (metis subsetD)
+        then have "b \<in> B \<and> d (f a) b < \<delta>" using hbB by presburger
+        then show "af a \<in> B \<and> d (f a) (af a) < \<delta>"
+          unfolding af_def using someI_ex[of "\<lambda>b. b \<in> B \<and> d (f a) b < \<delta>"] by blast
+      qed
+      have haf_inF: "\<exists>g\<in>\<F>. \<forall>a\<in>A. d (g a) (af a) < \<delta>"
+        using hf haf_prop by blast
+      define r where "r = RepFun (\<lambda>a. if a \<in> A then af a else undefined)"
+      have haf_ext_J: "(\<lambda>a. if a \<in> A then af a else undefined) \<in> J"
+        unfolding J_def using haf_inF haf_prop by simp
+      have hr_Rset: "r \<in> Rset" unfolding r_def Rset_def using haf_ext_J by blast
+      have hrF: "r \<in> \<F>" using hr_Rset hRset_sub by blast
+      have hrPiE: "r \<in> top1_PiE X (\<lambda>_. Y)" using hrF hFsub by blast
+      have hr_close: "\<forall>a\<in>A. d (r a) (af a) < \<delta>"
+        using hRep haf_ext_J unfolding r_def by fastforce
+      text \<open>For any x \<in> X, pick a_i with x \<in> Ua(a_i), then triangle inequality.\<close>
+      have hpointwise: "\<forall>x\<in>X. d (f x) (r x) < 4 * \<delta>"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> X"
+        obtain ai where hai: "ai \<in> A" "x \<in> Ua ai" using hx hAcov by fast
+        have hai_X: "ai \<in> X" using hai(1) hAsub by fast
+        have hd1: "d (f x) (f ai) < \<delta>" using hUa hai hf hAsub by blast
+        have hd2: "d (f ai) (af ai) < \<delta>" using haf_prop hai(1) by blast
+        have hd3_sym: "d (r ai) (af ai) < \<delta>" using hr_close hai(1) by fast
+        have hafai_Y: "af ai \<in> Y" using haf_prop hai(1) hBsub by fast
+        have hrai_Y: "r ai \<in> Y" using hrPiE hai_X by (metis hai_X hrPiE top1_PiE_iff)
+        have hd3: "d (af ai) (r ai) < \<delta>" using hd3_sym hafai_Y hrai_Y hd metric_sym by fastforce
+        have hd4_sym: "d (r x) (r ai) < \<delta>" using hUa hai hrF hAsub by blast
+        have hrx_Y: "r x \<in> Y" using hrPiE hx unfolding top1_PiE_iff by blast
+        have hd4: "d (r ai) (r x) < \<delta>" using hd4_sym hrai_Y hrx_Y hd metric_sym by fastforce
+        have hfx_Y: "f x \<in> Y" using hfPiE hx unfolding top1_PiE_iff by blast
+        have hfai_Y: "f ai \<in> Y" using hfPiE hai_X unfolding top1_PiE_iff by fast
+        have htri_ab: "d (f x) (r x) \<le> d (f x) (f ai) + d (f ai) (r x)"
+          using hd hfx_Y hfai_Y hrx_Y unfolding top1_metric_on_def by blast
+        have htri_cd: "d (f ai) (r x) \<le> d (f ai) (af ai) + d (af ai) (r x)"
+          using hd hfai_Y hafai_Y hrx_Y unfolding top1_metric_on_def by blast
+        have htri_ef: "d (af ai) (r x) \<le> d (af ai) (r ai) + d (r ai) (r x)"
+          using hd hafai_Y hrai_Y hrx_Y unfolding top1_metric_on_def by blast
+        show "d (f x) (r x) < 4 * \<delta>"
+          using htri_ab htri_cd htri_ef hd1 hd2 hd3 hd4 by argo
+      qed
+      have hrho_lt: "?\<rho> f r < e"
+      proof -
+        have hrho_eq: "?\<rho> f r = (if X = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (r x)) ` X))"
+          unfolding top1_uniform_metric_on_def by argo
+        have hXne: "X \<noteq> {}" using False by simp
+        have hbm_le_4d: "\<forall>x\<in>X. top1_bounded_metric d (f x) (r x) \<le> 4 * \<delta>"
+          using hpointwise unfolding top1_bounded_metric_def by fastforce
+        have hSup_le: "Sup ((\<lambda>x. top1_bounded_metric d (f x) (r x)) ` X) \<le> 4 * \<delta>"
+        proof (rule cSup_least)
+          show "(\<lambda>x. top1_bounded_metric d (f x) (r x)) ` X \<noteq> {}" using hXne
+            by (metis hXne empty_is_image)
+          show "\<And>y. y \<in> (\<lambda>x. top1_bounded_metric d (f x) (r x)) ` X \<Longrightarrow> y \<le> 4 * \<delta>"
+            using hbm_le_4d by force
+        qed
+        have "4 * \<delta> < e" unfolding \<delta>_def using he by simp
+        have hSup_lt: "Sup ((\<lambda>x. top1_bounded_metric d (f x) (r x)) ` X) < e"
+          using hSup_le \<open>4 * \<delta> < e\<close> by auto
+        show ?thesis using hrho_eq hXne hSup_lt by presburger
+      qed
+      have hrhom: "top1_metric_on (top1_PiE X (\<lambda>_. Y)) ?\<rho>"
+        using top1_uniform_metric_is_metric[OF False hd] by simp
+      have hrho_sym: "?\<rho> r f = ?\<rho> f r"
+        using metric_sym[OF hrhom hrPiE hfPiE] by satx
+      have "?\<rho> r f < e" using hrho_sym hrho_lt by presburger
+      have "f \<in> top1_ball_on \<F> ?\<rho> r e"
+        unfolding top1_ball_on_def using hf \<open>?\<rho> r f < e\<close> by fastforce
+      then show "f \<in> (\<Union>r\<in>Rset. top1_ball_on \<F> ?\<rho> r e)"
+        using hr_Rset by force
+    qed
+    show "\<exists>F. finite F \<and> F \<subseteq> \<F> \<and> \<F> \<subseteq> (\<Union>x\<in>F. top1_ball_on \<F> ?\<rho> x e)"
+      using hRset_fin hRset_sub hcover by blast
+  qed
+qed
 
 (** from \S45 Theorem 45.4 (Ascoli's theorem, classical version) [top1.tex:6655] **)
 theorem Theorem_45_4:
@@ -10871,6 +11064,28 @@ next
   qed
 qed
 
+lemma cc_basis_self_member:
+  assumes hd: "top1_metric_on Y d" and hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hCX: "C \<subseteq> X" and h\<delta>pos: "(0::real) < \<delta>"
+  shows "f \<in> {g \<in> top1_PiE X (\<lambda>_. Y).
+    (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>}"
+  apply (rule CollectI)
+  apply (intro conjI assms(2))
+  apply (cases "C = {}")
+  apply (simp add: h\<delta>pos)
+  apply (subgoal_tac "\<forall>x\<in>C. d (f x) (f x) = 0")
+  apply (subgoal_tac "\<forall>x\<in>C. top1_bounded_metric d (f x) (f x) = 0")
+  apply (subgoal_tac "Sup ((\<lambda>x. top1_bounded_metric d (f x) (f x)) ` C) \<le> 0")
+  apply (simp add: h\<delta>pos)
+  apply (rule cSup_least, simp, simp)
+  apply fastforce
+  apply (simp add: top1_bounded_metric_def)
+  apply (intro ballI)
+  apply (insert hd hCX hfPiE)
+  apply (simp add: top1_metric_on_def top1_PiE_iff)
+  apply (metis subsetD)
+  done
+
 lemma cc_basis_is_basis:
   assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d"
   shows "is_basis_on (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_basis_on X TX Y d)"
@@ -10905,7 +11120,90 @@ proof -
     ultimately show "\<exists>b\<in>?Bcc. f \<in> b" by blast
   qed
   have h3: "\<forall>b1\<in>?Bcc. \<forall>b2\<in>?Bcc. \<forall>x\<in>b1 \<inter> b2. \<exists>b3\<in>?Bcc. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
-    sorry
+  proof (intro ballI)
+    fix b1 b2 x assume hb1: "b1 \<in> ?Bcc" and hb2: "b2 \<in> ?Bcc" and hx: "x \<in> b1 \<inter> b2"
+    obtain f1 C1 \<epsilon>1 where hb1_eq: "b1 = {g \<in> ?P. (if C1 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f1 y) (g y)) ` C1)) < \<epsilon>1}"
+      and hf1: "f1 \<in> ?P" and hC1: "top1_compact_on C1 (subspace_topology X TX C1)" and hC1X: "C1 \<subseteq> X" and h\<epsilon>1: "0 < \<epsilon>1"
+      using hb1 unfolding top1_compact_convergence_basis_on_def by auto
+    obtain f2 C2 \<epsilon>2 where hb2_eq: "b2 = {g \<in> ?P. (if C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f2 y) (g y)) ` C2)) < \<epsilon>2}"
+      and hf2: "f2 \<in> ?P" and hC2: "top1_compact_on C2 (subspace_topology X TX C2)" and hC2X: "C2 \<subseteq> X" and h\<epsilon>2: "0 < \<epsilon>2"
+      using hb2 unfolding top1_compact_convergence_basis_on_def by auto
+    have hxP: "x \<in> ?P" using hx h1 hb1 by fast
+    have hxb1: "(if C1 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f1 y) (x y)) ` C1)) < \<epsilon>1"
+      using hx unfolding hb1_eq by simp
+    have hxb2: "(if C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (f2 y) (x y)) ` C2)) < \<epsilon>2"
+      using hx unfolding hb2_eq by simp
+    obtain \<delta>1 where h\<delta>1: "0 < \<delta>1" and hd1sub: "{g \<in> ?P. (if C1 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C1)) < \<delta>1} \<subseteq> b1"
+      using cc_basis_refine_single[OF hTopX hd hf1 hC1 hC1X h\<epsilon>1 hxP hxb1] unfolding hb1_eq by blast
+    obtain \<delta>2 where h\<delta>2: "0 < \<delta>2" and hd2sub: "{g \<in> ?P. (if C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C2)) < \<delta>2} \<subseteq> b2"
+      using cc_basis_refine_single[OF hTopX hd hf2 hC2 hC2X h\<epsilon>2 hxP hxb2] unfolding hb2_eq by blast
+    define \<delta> where "\<delta> = min \<delta>1 \<delta>2"
+    have h\<delta>: "0 < \<delta>" unfolding \<delta>_def using h\<delta>1 h\<delta>2 by simp
+    have hC12: "top1_compact_on (C1 \<union> C2) (subspace_topology X TX (C1 \<union> C2))"
+      by (rule top1_compact_on_union2_subspace[OF hTopX hC1X hC2X hC1 hC2])
+    have hC12X: "C1 \<union> C2 \<subseteq> X" using hC1X hC2X by fast
+    define b3 where "b3 = {g \<in> ?P. (if C1 \<union> C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))) < \<delta>}"
+    have hb3_basis: "b3 \<in> ?Bcc" unfolding b3_def top1_compact_convergence_basis_on_def
+      apply (rule CollectI)
+      apply (rule exI[where x=x], rule exI[where x="C1 \<union> C2"], rule exI[where x=\<delta>])
+      apply (intro conjI refl hxP hC12 hC12X h\<delta>)
+      done
+    have hxb3: "x \<in> b3" unfolding b3_def
+      using cc_basis_self_member[OF hd hxP hC12X h\<delta>] by simp
+    have hb3_sub: "b3 \<subseteq> b1 \<inter> b2"
+    proof (rule subsetI)
+      fix g assume hg: "g \<in> b3"
+      have hgP: "g \<in> ?P" using hg unfolding b3_def by fast
+      have hg_sup: "(if C1 \<union> C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))) < \<delta>"
+        using hg unfolding b3_def by simp
+      text \<open>sup over C1∪C2 ≥ sup over C1, C2 separately.\<close>
+      have hg_C1: "(if C1 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C1)) < \<delta>1"
+      proof (cases "C1 = {}")
+        case True then show ?thesis using True h\<delta>1 by fastforce
+      next
+        case False
+        then have hC12ne: "C1 \<union> C2 \<noteq> {}" by blast
+        have hSup_union: "Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2)) < \<delta>"
+          using hg_sup False by simp
+        have hsub: "(\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C1 \<subseteq> (\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2)"
+          by blast
+        have hne: "(\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C1 \<noteq> {}"
+          using False by fastforce
+        have hbdd: "bdd_above ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))"
+          apply (intro bdd_aboveI[where M=1])
+          apply (clarsimp simp: top1_bounded_metric_def)
+          done
+        have hle: "Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C1) \<le> Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))"
+          by (rule cSup_subset_mono[OF hne hbdd hsub])
+        show ?thesis using hSup_union hle False \<delta>_def by argo
+      qed
+      have hg_C2: "(if C2 = {} then 0 else Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C2)) < \<delta>2"
+      proof (cases "C2 = {}")
+        case True then show ?thesis using True h\<delta> \<delta>_def by simp
+      next
+        case False
+        then have hC12ne: "C1 \<union> C2 \<noteq> {}" by blast
+        have hSup_union: "Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2)) < \<delta>"
+          using hg_sup False by simp
+        have hsub: "(\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C2 \<subseteq> (\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2)"
+          by blast
+        have hne: "(\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C2 \<noteq> {}"
+          using False by fastforce
+        have hbdd: "bdd_above ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))"
+          apply (intro bdd_aboveI[where M=1])
+          apply (clarsimp simp: top1_bounded_metric_def)
+          done
+        have hle: "Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` C2) \<le> Sup ((\<lambda>y. top1_bounded_metric d (x y) (g y)) ` (C1 \<union> C2))"
+          by (rule cSup_subset_mono[OF hne hbdd hsub])
+        show ?thesis using hSup_union hle False \<delta>_def by argo
+      qed
+      have "g \<in> b1" using hd1sub hgP hg_C1 by fast
+      moreover have "g \<in> b2" using hd2sub hgP hg_C2 by fast
+      ultimately show "g \<in> b1 \<inter> b2" by fast
+    qed
+    show "\<exists>b3\<in>?Bcc. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
+      using hb3_basis hxb3 hb3_sub by blast
+  qed
   show ?thesis unfolding is_basis_on_def
     apply (intro conjI)
     apply (rule h1) apply (rule h2) apply (rule h3) done
@@ -10916,31 +11214,6 @@ lemma cc_topology_is_topology:
   shows "is_topology_on (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)"
   unfolding top1_compact_convergence_topology_on_def
   by (rule topology_generated_by_basis_is_topology_on[OF cc_basis_is_basis[OF hTopX hd]])
-
-lemma cc_basis_self_member:
-  assumes hd: "top1_metric_on Y d" and hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
-  assumes hCX: "C \<subseteq> X" and h\<delta>pos: "(0::real) < \<delta>"
-  shows "f \<in> {g \<in> top1_PiE X (\<lambda>_. Y).
-    (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>}"
-  apply (rule CollectI)
-  apply (intro conjI assms(2))
-  apply (cases "C = {}")
-  apply (simp add: h\<delta>pos)
-  apply (subgoal_tac "\<forall>x\<in>C. d (f x) (f x) = 0")
-  apply (subgoal_tac "\<forall>x\<in>C. top1_bounded_metric d (f x) (f x) = 0")
-  apply (subgoal_tac "Sup ((\<lambda>x. top1_bounded_metric d (f x) (f x)) ` C) \<le> 0")
-  apply (simp add: h\<delta>pos)
-  apply (rule cSup_least, simp, simp)
-  (* goal 1: x in image of const 0 ⟹ x ≤ 0 *)
-  apply fastforce
-  (* goal 2: bounded_metric = 0 from d = 0 *)
-  apply (simp add: top1_bounded_metric_def)
-  (* goal 3: d(f x, f x) = 0 from metric *)
-  apply (intro ballI)
-  apply (insert hd hCX hfPiE)
-  apply (simp add: top1_metric_on_def top1_PiE_iff)
-  apply (metis subsetD)
-  done
 
 lemma cc_basis_member_pointwise:
   assumes hd: "top1_metric_on Y d" and hCX: "C \<subseteq> X" and hCne: "C \<noteq> {}"
@@ -12942,7 +13215,61 @@ lemma cc_supset_uniform_compact_full:
   assumes hCompX: "top1_compact_on X TX"
   shows "top1_compact_convergence_topology_on X TX Y d \<supseteq> top1_uniform_topology_on X Y d"
 proof (cases "X = {}")
-  case True then show ?thesis sorry
+  case True
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  show ?thesis
+  proof (rule subsetI)
+    fix U assume hU: "U \<in> top1_uniform_topology_on X Y d"
+    have hUsub: "U \<subseteq> ?P"
+      using hU unfolding top1_uniform_topology_on_def top1_metric_topology_on_def
+        topology_generated_by_basis_def by blast
+    have hUopen: "\<forall>g\<in>U. \<exists>b\<in>top1_metric_basis_on ?P (top1_uniform_metric_on X d). g \<in> b \<and> b \<subseteq> U"
+      using hU unfolding top1_uniform_topology_on_def top1_metric_topology_on_def
+        topology_generated_by_basis_def by blast
+    have hball_eq_P: "\<And>f e. f \<in> ?P \<Longrightarrow> 0 < e \<Longrightarrow>
+      top1_ball_on ?P (top1_uniform_metric_on X d) f e = ?P"
+      unfolding top1_ball_on_def top1_uniform_metric_on_def using True by auto
+    have hP_sub_U: "U \<noteq> {} \<Longrightarrow> ?P \<subseteq> U"
+    proof -
+      assume hne: "U \<noteq> {}"
+      then obtain g where hg: "g \<in> U" by blast
+      then obtain b where hbB: "b \<in> top1_metric_basis_on ?P (top1_uniform_metric_on X d)"
+        and "g \<in> b" and "b \<subseteq> U" using hUopen by blast
+      obtain f e where "f \<in> ?P" "0 < e" "b = top1_ball_on ?P (top1_uniform_metric_on X d) f e"
+        using hbB unfolding top1_metric_basis_on_def by blast
+      then have "b = ?P" using hball_eq_P by presburger
+      then show "?P \<subseteq> U" using \<open>b \<subseteq> U\<close> by blast
+    qed
+    show "U \<in> top1_compact_convergence_topology_on X TX Y d"
+      unfolding top1_compact_convergence_topology_on_def topology_generated_by_basis_def
+    proof (intro CollectI conjI ballI)
+      show "U \<subseteq> ?P" using hUsub by order
+    next
+      fix g assume hg: "g \<in> U"
+      have hgP: "g \<in> ?P" using hg hUsub by blast
+      have hempty_compact: "top1_compact_on {} (subspace_topology X TX {})"
+        unfolding top1_compact_on_def
+        apply (intro conjI)
+        apply (rule subspace_topology_is_topology_on[OF hTopX]) apply simp
+        apply (intro allI impI)
+        apply (rule_tac x="{}" in exI)
+        apply simp
+        done
+      define Bf where "Bf = {h \<in> ?P. (if ({} :: 'a set) = {} then (0::real) else Sup ((\<lambda>x. top1_bounded_metric d (g x) (h x)) ` {})) < 1}"
+      have hBf: "Bf \<in> top1_compact_convergence_basis_on X TX Y d"
+        unfolding Bf_def top1_compact_convergence_basis_on_def
+        apply (rule CollectI)
+        apply (rule exI[where x=g], rule exI[where x="{}::'a set"], rule exI[where x="1::real"])
+        apply (intro conjI refl hgP hempty_compact empty_subsetI)
+        apply linarith
+        done
+      have hBf_eq_P: "Bf = ?P" unfolding Bf_def by simp
+      have "g \<in> Bf" using hgP hBf_eq_P by blast
+      moreover have "Bf \<subseteq> U" using hBf_eq_P hP_sub_U hg by blast
+      ultimately show "\<exists>b\<in>top1_compact_convergence_basis_on X TX Y d. g \<in> b \<and> b \<subseteq> U"
+        using hBf by blast
+    qed
+  qed
 next
   case False then show ?thesis
     by (rule cc_supset_uniform_compact[OF hTopX hd hCompX])
