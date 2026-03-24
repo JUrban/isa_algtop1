@@ -10818,6 +10818,15 @@ lemma cc_basis_self_member:
   apply (metis subsetD)
   done
 
+lemma cc_basis_member_pointwise:
+  assumes hd: "top1_metric_on Y d" and hCX: "C \<subseteq> X" and hCne: "C \<noteq> {}"
+  assumes h\<delta>lt1: "\<delta> < (1::real)" and hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+  assumes hgB: "g \<in> {h \<in> top1_PiE X (\<lambda>_. Y).
+    (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (h x)) ` C)) < \<delta>}"
+  assumes hxC: "x \<in> C"
+  shows "d (f x) (g x) < \<delta>"
+  sorry
+
 lemma basis_elem_in_generated_topology:
   assumes "B \<in> Basis" "B \<subseteq> X"
   shows "B \<in> topology_generated_by_basis X Basis"
@@ -10860,7 +10869,26 @@ proof -
     using hconv hBnbhd unfolding seq_converges_to_on_def
     apply (elim conjE allE impE) apply assumption
     apply (elim exE) apply (rule that) apply assumption done
-  show ?thesis sorry
+  have "\<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<epsilon>"
+  proof (intro allI impI ballI)
+    fix n x assume "N \<le> n" "x \<in> C"
+    have "fseq n \<in> B" using hN \<open>N \<le> n\<close> by simp
+    have "C \<noteq> {}" using \<open>x \<in> C\<close> by fast
+    have "d (f x) (fseq n x) < \<delta>"
+      apply (rule cc_basis_member_pointwise[OF hd hCX \<open>C \<noteq> {}\<close> h\<delta>lt1 hfPiE _ \<open>x \<in> C\<close>])
+      apply (unfold B_def[symmetric])
+      apply (rule \<open>fseq n \<in> B\<close>)
+      done
+    have "x \<in> X" using \<open>x \<in> C\<close> hCX by fast
+    have "d (fseq n x) (f x) = d (f x) (fseq n x)"
+      using hd \<open>x \<in> X\<close> hfPiE \<open>fseq n \<in> B\<close>
+      unfolding top1_metric_on_def B_def top1_PiE_iff
+      apply (elim conjE) apply (erule ballE[where x="f x"])
+      apply (erule ballE[where x="fseq n x"]) apply simp
+      apply fastforce apply fastforce done
+    then show "d (fseq n x) (f x) < \<epsilon>" using \<open>d (f x) (fseq n x) < \<delta>\<close> h\<delta>le by simp
+  qed
+  then show ?thesis by blast
 qed
 
 (** from \S46 Theorem 46.2 [top1.tex:6787] **)
