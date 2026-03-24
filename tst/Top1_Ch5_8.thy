@@ -13145,7 +13145,21 @@ lemma compact_in_open_eps_gap:
   assumes hKU: "K \<subseteq> U"
   assumes hKne: "K \<noteq> {}"
   shows "\<exists>\<epsilon>>0. \<forall>y\<in>Y. (\<exists>k\<in>K. d k y < \<epsilon>) \<longrightarrow> y \<in> U"
-  sorry
+proof -
+  have hKY: "K \<subseteq> Y" sorry
+  have hUY: "U \<subseteq> Y" sorry
+  text \<open>For each k in K, get r_k > 0 with B(k, r_k) ⊆ U.\<close>
+  have hball: "\<forall>k\<in>K. \<exists>r>0. top1_ball_on Y d k r \<subseteq> U" sorry
+  obtain rk where hrk: "\<forall>k\<in>K. rk k > 0 \<and> top1_ball_on Y d k (rk k) \<subseteq> U" sorry
+  text \<open>Cover K by B(k, rk/2). Extract finite subcover.\<close>
+  define halfcover where "halfcover k = top1_ball_on Y d k (rk k / 2)" for k
+  have hcov: "K \<subseteq> \<Union>(halfcover ` K)" sorry
+  obtain F where hF: "finite F" "F \<subseteq> K" "K \<subseteq> \<Union>(halfcover ` F)" sorry
+  have hFne: "F \<noteq> {}" sorry
+  define \<epsilon> where "\<epsilon> = Min ((\<lambda>k. rk k / 2) ` F)"
+  have h\<epsilon>: "0 < \<epsilon>" sorry
+  show ?thesis sorry
+qed
 
 lemma co_subbasis_in_cc_subspace:
   assumes hTopX: "is_topology_on X TX"
