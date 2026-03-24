@@ -76,6 +76,13 @@ vs metis ... closedin_on_def) makes a 100x difference.
 Never: Run sledgehammer one step at a time in a loop — that wastes hours. Always bulk-annotate all steps, run once,
 collect all results.
 
+
+Also: The apply (rule ...), apply (erule ...), apply (drule ...) style
+  restricts the search to specific rules, avoiding the exponential
+  blowup that blast/auto cause in large contexts. Use this approach
+  instead of by blast on complex goals -- use explicit apply chains.
+                                  
+
 ---
 
 ## 2. File and theory structure
