@@ -13134,6 +13134,27 @@ qed
 *)
 
 (** from \S46 Theorem 46.8 [top1.tex:6839] **)
+text \<open>Theorem 46.8: On C(X,Y), the compact-convergence and compact-open topologies coincide.
+  Proof splits into two inclusions, each proved as a separate helper.\<close>
+
+lemma Theorem_46_8_cc_finer_co:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)
+       \<subseteq> subspace_topology (top1_PiE X (\<lambda>_. Y))
+           (top1_compact_convergence_topology_on X TX Y d)
+           (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))"
+  sorry
+
+lemma Theorem_46_8_co_finer_cc:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "subspace_topology (top1_PiE X (\<lambda>_. Y))
+           (top1_compact_convergence_topology_on X TX Y d)
+           (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+       \<subseteq> top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
+  sorry
+
 theorem Theorem_46_8:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
@@ -13142,7 +13163,8 @@ theorem Theorem_46_8:
            (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
        =
        top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
-  sorry
+  using Theorem_46_8_cc_finer_co[OF hTopX hd] Theorem_46_8_co_finer_cc[OF hTopX hd]
+  by fastforce
 
 lemma compact_on_subspace_self:
   assumes hComp: "top1_compact_on X TX"
@@ -17207,18 +17229,81 @@ proof
   qed
 qed
 
+lemma top1_I01_nonempty: "top1_I01 \<noteq> {}"
+  unfolding top1_closed_interval_def by force
+
+lemma top1_I01_eq_Icc: "top1_I01 = {0..1::real}"
+  unfolding top1_closed_interval_def by fastforce
+
+lemma top1_I01_compact: "compact top1_I01"
+  using top1_I01_eq_Icc compact_Icc by presburger
+
+lemma top1_rho49_bdd_above:
+  assumes "f \<in> top1_C01" "g \<in> top1_C01"
+  shows "bdd_above ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+proof -
+  have hfc: "continuous_on top1_I01 f" using assms(1) unfolding top1_C01_def by force
+  have hgc: "continuous_on top1_I01 g" using assms(2) unfolding top1_C01_def by blast
+  have hcont_diff: "continuous_on top1_I01 (\<lambda>x. f x - g x)"
+    using continuous_on_diff[OF hfc hgc] by argo
+  have "continuous_on top1_I01 (\<lambda>x. \<bar>f x - g x\<bar>)"
+    using hcont_diff continuous_on_rabs by blast
+  then have hcomp: "compact ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+    using compact_continuous_image top1_I01_compact by blast
+  then show ?thesis sorry
+qed
+
+lemma top1_rho49_nonneg:
+  assumes "f \<in> top1_C01" "g \<in> top1_C01"
+  shows "0 \<le> top1_rho49 f g"
+proof -
+  have "0 \<in> top1_I01" using top1_I01_nonempty unfolding top1_closed_interval_def by auto
+  then have h0img: "\<bar>f 0 - g 0\<bar> \<in> (\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01" by blast
+  have "0 \<le> \<bar>f 0 - g 0\<bar>" by simp
+  also have "\<bar>f 0 - g 0\<bar> \<le> Sup ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+    using cSup_upper[OF h0img top1_rho49_bdd_above[OF assms]] by presburger
+  finally show ?thesis unfolding top1_rho49_def by presburger
+qed
+
+lemma top1_rho49_self:
+  assumes "f \<in> top1_C01"
+  shows "top1_rho49 f f = 0"
+  unfolding top1_rho49_def using top1_I01_nonempty by simp
+
+lemma top1_rho49_zero_iff:
+  assumes "f \<in> top1_C01" "g \<in> top1_C01"
+  shows "(top1_rho49 f g = 0) = (f = g)"
+  sorry
+
+lemma top1_rho49_sym:
+  assumes "f \<in> top1_C01" "g \<in> top1_C01"
+  shows "top1_rho49 f g = top1_rho49 g f"
+proof -
+  have "\<forall>x. \<bar>f x - g x\<bar> = \<bar>g x - f x\<bar>" using abs_minus_commute by blast
+  then have "(\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01 = (\<lambda>x. \<bar>g x - f x\<bar>) ` top1_I01" by presburger
+  then show ?thesis unfolding top1_rho49_def by presburger
+qed
+
+lemma top1_rho49_triangle:
+  assumes "f \<in> top1_C01" "g \<in> top1_C01" "h \<in> top1_C01"
+  shows "top1_rho49 f h \<le> top1_rho49 f g + top1_rho49 g h"
+  sorry
+
+lemma top1_rho49_is_metric: "top1_metric_on top1_C01 top1_rho49"
+  unfolding top1_metric_on_def
+  using top1_rho49_nonneg top1_rho49_self top1_rho49_zero_iff
+    top1_rho49_sym top1_rho49_triangle
+  by fastforce
+
 lemma top1_U49_open:
-  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
   shows "top1_U49 n \<in> top1_metric_topology_on top1_C01 top1_rho49"
   sorry
 
 lemma top1_U49_dense:
-  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
   shows "top1_densein_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) (top1_U49 n)"
   sorry
 
 lemma top1_Inter_U49_dense:
-  assumes hrho: "top1_metric_on top1_C01 top1_rho49"
   assumes hB: "top1_baire_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49)"
   shows "top1_densein_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) (\<Inter>n. top1_U49 n)"
 proof -
@@ -17228,9 +17313,9 @@ proof -
   proof (intro allI conjI)
     fix n
     show "top1_U49 n \<in> ?T"
-      by (rule top1_U49_open[OF hrho])
+      by (rule top1_U49_open)
     show "top1_densein_on top1_C01 ?T (top1_U49 n)"
-      by (rule top1_U49_dense[OF hrho])
+      by (rule top1_U49_dense)
   qed
 
   have hBdef:
