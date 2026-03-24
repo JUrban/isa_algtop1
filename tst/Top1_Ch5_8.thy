@@ -10793,6 +10793,11 @@ definition top1_compact_open_topology_on ::
   "top1_compact_open_topology_on X TX Y TY =
      topology_generated_by_subbasis (top1_continuous_funcs_on X TX Y TY) (top1_compact_open_subbasis_on X TX Y TY)"
 
+lemma basis_elem_in_generated_topology:
+  assumes "B \<in> Basis" "B \<subseteq> X"
+  shows "B \<in> topology_generated_by_basis X Basis"
+  unfolding topology_generated_by_basis_def using assms by blast
+
 (** from \S46 Theorem 46.2 [top1.tex:6787] **)
 theorem Theorem_46_2:
   assumes hTopX: "is_topology_on X TX"
