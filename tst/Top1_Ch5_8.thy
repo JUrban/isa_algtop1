@@ -10806,7 +10806,36 @@ lemma cc_conv_imp_unif_compact:
   assumes hC: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
   assumes heps: "(0::real) < \<epsilon>"
   shows "\<exists>N. \<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<epsilon>"
-  sorry
+proof -
+  define \<delta> where "\<delta> = min \<epsilon> (1/2 :: real)"
+  have h\<delta>pos: "0 < \<delta>" unfolding \<delta>_def using heps by simp
+  have h\<delta>le: "\<delta> \<le> \<epsilon>" unfolding \<delta>_def by simp
+  have h\<delta>lt1: "\<delta> < 1" unfolding \<delta>_def by simp
+  have hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
+    using hconv unfolding seq_converges_to_on_def
+    apply (elim conjE) apply assumption done
+  define B where "B = {g \<in> top1_PiE X (\<lambda>_. Y).
+    (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>}"
+  have hB_basis: "B \<in> top1_compact_convergence_basis_on X TX Y d"
+    unfolding B_def top1_compact_convergence_basis_on_def
+    apply (rule CollectI)
+    apply (rule exI[where x=f], rule exI[where x=C], rule exI[where x=\<delta>])
+    apply (intro conjI refl hfPiE hC hCX h\<delta>pos)
+    done
+  have hB_sub: "B \<subseteq> top1_PiE X (\<lambda>_. Y)" unfolding B_def by (rule Collect_restrict)
+  have hB_open: "B \<in> top1_compact_convergence_topology_on X TX Y d"
+    unfolding top1_compact_convergence_topology_on_def
+    apply (rule basis_elem_in_generated_topology[OF hB_basis hB_sub]) done
+  have hfB: "f \<in> B" sorry
+  have hBnbhd: "neighborhood_of f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) B"
+    unfolding neighborhood_of_def
+    apply (intro conjI hB_open hfB) done
+  obtain N where hN: "\<forall>n\<ge>N. fseq n \<in> B"
+    using hconv hBnbhd unfolding seq_converges_to_on_def
+    apply (elim conjE allE impE) apply assumption
+    apply (elim exE) apply (rule that) apply assumption done
+  show ?thesis sorry
+qed
 
 (** from \S46 Theorem 46.2 [top1.tex:6787] **)
 theorem Theorem_46_2:
