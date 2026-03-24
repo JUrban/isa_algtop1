@@ -11326,6 +11326,17 @@ proof (intro allI impI)
 qed
 
 (** from \S46 Theorem 46.5 [top1.tex:6816] **)
+lemma closedin_if_closure_subset:
+  assumes hT: "is_topology_on X T" and hAX: "A \<subseteq> X"
+  assumes hcl: "closure_on X T A \<subseteq> A"
+  shows "closedin_on X T A"
+proof -
+  have "closure_on X T A = A"
+    using hcl subset_closure_on by (rule equalityI)
+  have "closedin_on X T (closure_on X T A)" by (rule closure_on_closed[OF hT hAX])
+  then show ?thesis using \<open>closure_on X T A = A\<close> by simp
+qed
+
 theorem Theorem_46_5:
   assumes hCG: "top1_compactly_generated_on X TX"
   assumes hd: "top1_metric_on Y d"
