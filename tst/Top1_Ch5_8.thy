@@ -10825,7 +10825,21 @@ lemma cc_basis_member_pointwise:
     (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (h x)) ` C)) < \<delta>}"
   assumes hxC: "x \<in> C"
   shows "d (f x) (g x) < \<delta>"
-  sorry
+proof -
+  have hSup: "Sup ((\<lambda>y. top1_bounded_metric d (f y) (g y)) ` C) < \<delta>"
+    using hgB hCne by simp
+  have hbdd: "bdd_above ((\<lambda>y. top1_bounded_metric d (f y) (g y)) ` C)"
+    apply (intro bdd_aboveI[where M=1])
+    apply (clarsimp simp: top1_bounded_metric_def)
+    done
+  have "top1_bounded_metric d (f x) (g x) \<in> (\<lambda>y. top1_bounded_metric d (f y) (g y)) ` C"
+    using hxC by (rule imageI)
+  then have "top1_bounded_metric d (f x) (g x) \<le> Sup ((\<lambda>y. top1_bounded_metric d (f y) (g y)) ` C)"
+    using hbdd by (rule cSup_upper)
+  then have "top1_bounded_metric d (f x) (g x) < \<delta>" using hSup by simp
+  then show "d (f x) (g x) < \<delta>"
+    using h\<delta>lt1 by (rule bounded_metric_lt_imp_d_lt)
+qed
 
 lemma basis_elem_in_generated_topology:
   assumes "B \<in> Basis" "B \<subseteq> X"
