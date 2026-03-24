@@ -11345,7 +11345,44 @@ lemma closure_cc_cont_on_compact:
   assumes hcl: "g \<in> closure_on (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d)
     (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))"
   shows "top1_continuous_map_on C (subspace_topology X TX C) Y (top1_metric_topology_on Y d) g"
-  sorry
+proof -
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?A = "top1_continuous_funcs_on X TX Y ?TY"
+  have hAsub: "?A \<subseteq> ?P" unfolding top1_continuous_funcs_on_def by fast
+  text \<open>For each n, pick continuous h_n with sup_C d̄(g, h_n) < 1/(n+1).\<close>
+  have "\<forall>n::nat. \<exists>h \<in> ?A. h \<in> {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < 1 / real (Suc n)}"
+  proof (intro allI)
+    fix n :: nat
+    define \<epsilon>n where "\<epsilon>n = 1 / real (Suc n)"
+    have h\<epsilon>n: "0 < \<epsilon>n" unfolding \<epsilon>n_def by simp
+    define Bn where "Bn = {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < \<epsilon>n}"
+    have hBn_basis: "Bn \<in> top1_compact_convergence_basis_on X TX Y d"
+      unfolding Bn_def top1_compact_convergence_basis_on_def
+      apply (rule CollectI)
+      apply (rule exI[where x=g], rule exI[where x=C], rule exI[where x=\<epsilon>n])
+      apply (intro conjI refl hgPiE hC hCX h\<epsilon>n)
+      done
+    have hBn_sub: "Bn \<subseteq> ?P" unfolding Bn_def by fast
+    have hBn_open: "Bn \<in> ?Tcc"
+      unfolding top1_compact_convergence_topology_on_def
+      apply (rule basis_elem_in_generated_topology[OF hBn_basis hBn_sub]) done
+    have hgBn: "g \<in> Bn"
+      unfolding Bn_def using cc_basis_self_member[OF hd hgPiE hCX h\<epsilon>n] by simp
+    have hTcc_top: "is_topology_on ?P ?Tcc" sorry
+    have "Bn \<inter> ?A \<noteq> {}"
+      by (rule closure_meets_open[OF hTcc_top hAsub hcl hBn_open hgBn])
+    then show "\<exists>h\<in>?A. h \<in> {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < 1 / real (Suc n)}"
+      unfolding Bn_def \<epsilon>n_def by blast
+  qed
+  then have "\<forall>n. \<exists>h. h \<in> ?A \<and> h \<in> {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < 1 / real (Suc n)}"
+    by meson
+  then obtain hseq where hhseq: "\<forall>n. hseq n \<in> ?A \<and> hseq n \<in> {f \<in> ?P. (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (g x) (f x)) ` C)) < 1 / real (Suc n)}"
+    by (rule choice[THEN exE]) fast
+  text \<open>hseq n → g uniformly on C. Use uniform_limit_continuous.\<close>
+  show ?thesis sorry
+qed
 
 theorem Theorem_46_5:
   assumes hCG: "top1_compactly_generated_on X TX"
