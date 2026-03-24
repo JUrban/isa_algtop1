@@ -10907,10 +10907,31 @@ qed
 
 lemma cc_open_basis_at_point:
   assumes "U \<in> top1_compact_convergence_topology_on X TX Y d" "f \<in> U"
-  shows "\<exists>C \<delta>. top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> 0 < \<delta> \<and>
-    f \<in> top1_PiE X (\<lambda>_. Y) \<and>
-    {g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>} \<subseteq> U"
-  sorry
+  shows "\<exists>f0 C \<delta>. f0 \<in> top1_PiE X (\<lambda>_. Y) \<and>
+    top1_compact_on C (subspace_topology X TX C) \<and> C \<subseteq> X \<and> 0 < \<delta> \<and>
+    f \<in> {g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C)) < \<delta>} \<and>
+    {g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C)) < \<delta>} \<subseteq> U"
+proof -
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  let ?Bcc = "top1_compact_convergence_basis_on X TX Y d"
+  have hU_gen: "U \<in> topology_generated_by_basis ?P ?Bcc"
+    using assms(1) unfolding top1_compact_convergence_topology_on_def by simp
+  then have hUsub: "U \<subseteq> ?P" and hUbasis: "\<forall>x\<in>U. \<exists>b\<in>?Bcc. x \<in> b \<and> b \<subseteq> U"
+    unfolding topology_generated_by_basis_def by auto
+  obtain b where hbB: "b \<in> ?Bcc" and hfb: "f \<in> b" and hbU: "b \<subseteq> U"
+    using hUbasis assms(2) by meson
+  obtain f0 C0 \<epsilon>0 where
+    hbeq: "b = {g \<in> ?P. (if C0 = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C0)) < \<epsilon>0}"
+    and hf0: "f0 \<in> ?P" and hC0: "top1_compact_on C0 (subspace_topology X TX C0)"
+    and hC0X: "C0 \<subseteq> X" and heps0: "0 < \<epsilon>0"
+    using hbB unfolding top1_compact_convergence_basis_on_def by auto
+  show ?thesis
+    apply (rule exI[where x=f0], rule exI[where x=C0], rule exI[where x=\<epsilon>0])
+    apply (intro conjI hf0 hC0 hC0X heps0)
+    using hfb hbeq apply simp
+    using hbU hbeq apply simp
+    done
+qed
 
 lemma pointwise_d_imp_bm_le:
   assumes hd: "top1_metric_on Y d" and hCX: "C \<subseteq> X"
@@ -10953,9 +10974,11 @@ proof (intro conjI hfPiE allI impI)
   fix U assume hUnbhd: "neighborhood_of f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) U"
   then have hUcc: "U \<in> top1_compact_convergence_topology_on X TX Y d" and hfU: "f \<in> U"
     unfolding neighborhood_of_def by auto
-  obtain C \<delta> where hCcomp: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
-    and h\<delta>pos: "0 < \<delta>" and hfPiE2: "f \<in> top1_PiE X (\<lambda>_. Y)"
-    and hBsub: "{g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>} \<subseteq> U"
+  obtain f0 C \<delta> where hf0PiE: "f0 \<in> top1_PiE X (\<lambda>_. Y)"
+    and hCcomp: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
+    and h\<delta>pos: "0 < \<delta>"
+    and hfB0: "f \<in> {g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C)) < \<delta>}"
+    and hB0sub: "{g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C)) < \<delta>} \<subseteq> U"
     using cc_open_basis_at_point[OF hUcc hfU] by blast
   define \<delta>' where "\<delta>' = min (\<delta>/2) (1/2 :: real)"
   have h\<delta>'pos: "0 < \<delta>'" unfolding \<delta>'_def using h\<delta>pos by simp
@@ -10967,7 +10990,7 @@ proof (intro conjI hfPiE allI impI)
     then show ?thesis
       apply (rule_tac x=0 in exI)
       apply (intro allI impI)
-      apply (rule subsetD[OF hBsub])
+      apply (rule subsetD[OF hB0sub])
       apply (rule CollectI)
       apply (intro conjI)
       apply (rule hfseqPiE[rule_format])
@@ -10975,27 +10998,9 @@ proof (intro conjI hfPiE allI impI)
       done
   next
     case False
-    obtain N where hN: "\<forall>n\<ge>N. \<forall>x\<in>C. d (fseq n x) (f x) < \<delta>'"
-      using hUnif[rule_format, OF conjI[OF hCcomp hCX], rule_format, OF h\<delta>'pos] by blast
-    show ?thesis
-    proof (rule exI[where x=N], intro allI impI)
-      fix n assume "N \<le> n"
-      have hfn_bound: "\<forall>x\<in>C. top1_bounded_metric d (f x) (fseq n x) \<le> \<delta>'"
-        using hN[rule_format, OF \<open>N \<le> n\<close>] pointwise_d_imp_bm_le[OF hd hCX hfPiE hfseqPiE[rule_format] h\<delta>'lt1]
-        by (meson less_imp_le)
-      have "\<forall>x\<in>C. top1_bounded_metric d (f x) (fseq n x) \<le> \<delta>/2"
-        using hfn_bound h\<delta>'le by (meson le_trans order.trans)
-      then have "Sup ((\<lambda>x. top1_bounded_metric d (f x) (fseq n x)) ` C) < \<delta>"
-        by (rule pointwise_d_imp_sup_bm_strict[OF False h\<delta>pos])
-      have "fseq n \<in> {g \<in> top1_PiE X (\<lambda>_. Y). (if C = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C)) < \<delta>}"
-        apply (rule CollectI)
-        apply (intro conjI hfseqPiE[rule_format])
-        using False \<open>Sup ((\<lambda>x. top1_bounded_metric d (f x) (fseq n x)) ` C) < \<delta>\<close>
-        apply simp
-        done
-      then show "fseq n \<in> U"
-        using hBsub by fast
-    qed
+    text \<open>f ∈ B(f0, C, δ) gives Sup_C d̄(f0, f) < δ.
+      Use uniform convergence with (δ - Sup_C d̄(f0,f))/2 to get N.\<close>
+    show ?thesis sorry
   qed
 qed
 
