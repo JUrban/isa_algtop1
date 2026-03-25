@@ -13361,24 +13361,27 @@ proof -
     using subspace_topology_is_topology_on[OF cc_topology_is_topology[OF hTopX hd] hC_sub] by satx
   have hSub_in: "\<forall>S\<in>top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d). S \<in> ?Tsub"
     using co_subbasis_in_cc_subspace[OF hTopX hd] by blast
-  have hFI_in: "\<forall>A \<in> finite_intersections (top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d)).
-    A \<in> ?Tsub"
+  text \<open>For any finite intersection A of subbasis elements, A ∩ C ∈ Tsub.\<close>
+  have hFI_inter: "\<forall>A \<in> finite_intersections (top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d)).
+    A \<inter> ?C \<in> ?Tsub"
   proof (intro ballI)
     fix A assume "A \<in> finite_intersections (top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d))"
     then obtain F where hF: "finite F"
       "F \<subseteq> top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d)"
       "A = \<Inter>F" unfolding finite_intersections_def by blast
-    have hFT: "\<forall>s\<in>F. s \<in> ?Tsub" using hF(2) hSub_in by blast
-    show "A \<in> ?Tsub"
+    show "A \<inter> ?C \<in> ?Tsub"
     proof (cases "F = {}")
       case True
-      text \<open>F={} gives A = UNIV. This requires UNIV ⊆ C, i.e., C = UNIV.
-        Edge case: assume subbasis covers C.\<close>
-      then show ?thesis using hF(3) hTsub_top sorry
+      then have "A \<inter> ?C = ?C" using hF(3) by simp
+      then show ?thesis using hTsub_top unfolding is_topology_on_def by argo
     next
       case False
-      have "F \<subseteq> ?Tsub" using hFT by blast
-      then show ?thesis using hF(1) hF(3) False hTsub_top unfolding is_topology_on_def by simp
+      have "\<forall>s\<in>F. s \<in> ?Tsub" using hF(2) hSub_in by blast
+      then have hA: "A \<in> ?Tsub" using hF(1) hF(3) False hTsub_top unfolding is_topology_on_def
+        by blast
+      have "A \<subseteq> ?C" using hA hTsub_top unfolding subspace_topology_def by blast
+      then have "A \<inter> ?C = A" by fast
+      then show ?thesis using hA by simp
     qed
   qed
   show ?thesis sorry
