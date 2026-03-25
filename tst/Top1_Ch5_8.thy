@@ -17910,9 +17910,24 @@ proof -
     have "\<bar>frac t - 1/2\<bar> \<le> 1/2" using h1 h2 by linarith
     then show "\<bar>tri t\<bar> \<le> 1" unfolding tri_def by simp
   qed
-  define g where "g x = (if x \<in> top1_I01 then f x + (\<epsilon>/2) * tri (real M * x) else 0)" for x
-  have hgC: "g \<in> top1_C01"
+  text \<open>tri(Mx) is continuous on [0,1]: partition into M closed subintervals.\<close>
+  define II where "II k = {real k / real M .. real (Suc k) / real M}" for k :: nat
+  have hunion: "top1_I01 = (\<Union>k \<in> {0..<M}. II k)"
     sorry
+  have hcont_each: "\<forall>k \<in> {0..<M}. continuous_on (II k) (\<lambda>x. tri (real M * x))"
+    sorry
+  have htri_cont: "continuous_on top1_I01 (\<lambda>x. tri (real M * x))"
+    unfolding hunion using continuous_on_closed_Union[of "{0..<M}" II "\<lambda>x. tri (real M * x)"]
+      hcont_each by (simp add: II_def)
+  define g where "g x = (if x \<in> top1_I01 then f x + (\<epsilon>/2) * tri (real M * x) else 0)" for x
+  have hg_cont_I01: "continuous_on top1_I01 g"
+  proof -
+    have "continuous_on top1_I01 (\<lambda>x. f x + (\<epsilon>/2) * tri (real M * x))"
+      using continuous_on_add[OF hf_cont continuous_on_mult_left[OF htri_cont]] by presburger
+    then show ?thesis unfolding g_def by simp
+  qed
+  have hg_ext: "\<forall>x. x \<notin> top1_I01 \<longrightarrow> g x = 0" unfolding g_def by presburger
+  have hgC: "g \<in> top1_C01" unfolding top1_C01_def using hg_cont_I01 hg_ext by fast
   have hg_close: "top1_rho49 f g < \<epsilon>"
   proof -
     have hpw: "\<forall>x\<in>top1_I01. \<bar>f x - g x\<bar> \<le> \<epsilon>/2"
