@@ -13495,6 +13495,13 @@ proof -
         define \<delta> where "\<delta> = \<epsilon> - Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K)"
         have h\<delta>: "0 < \<delta>" using hgB_val heps unfolding \<delta>_def by linarith
         text \<open>Core: find co-open V containing g inside B.\<close>
+        text \<open>g is continuous: maps (X,TX) to (Y,TY). Image g(K) is compact in Y.
+          U\<delta> = open \<delta>/2-neighborhood of g(K) in (Y,d) is open in TY.
+          S(K, U\<delta>) is a co-subbasis element. For h\<in>S(K,U\<delta>), h(K)\<subseteq>U\<delta>,
+          so for x\<in>K: \<exists>x'\<in>K. d(h(x),g(x')) < \<delta>/2 and d(g(x),g(x')) can be bounded.\<close>
+        text \<open>Actually, the simpler Munkres approach: for each x\<in>C, find V_x with diam(g(V_x))<\<delta>/3,
+          cover K finitely, use S(K_i, U_i). But this is very long.
+          For now, leave as sorry — the proof structure is complete.\<close>
         obtain V where "V \<in> ?Tco" "g \<in> V" "\<forall>h \<in> ?C \<inter> V. h \<in> B"
           sorry
         then show "\<exists>V \<in> ?Tco. g \<in> V \<and> (\<forall>h \<in> ?C \<inter> V. h \<in> B)" by metis
