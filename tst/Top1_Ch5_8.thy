@@ -17903,12 +17903,38 @@ proof -
   text \<open>g = f + (\<epsilon>/2) \<cdot> tri(Mx) on I01, 0 outside.\<close>
   define tri where "tri x = 1 - 2 * \<bar>frac x - 1/2\<bar>" for x :: real
   have htri_bound: "\<forall>t::real. \<bar>tri t\<bar> \<le> 1"
-    sorry
+  proof
+    fix t :: real
+    have h1: "0 \<le> frac t" by (rule frac_ge_0)
+    have h2: "frac t < 1" by (rule frac_lt_1)
+    have "\<bar>frac t - 1/2\<bar> \<le> 1/2" using h1 h2 by linarith
+    then show "\<bar>tri t\<bar> \<le> 1" unfolding tri_def by simp
+  qed
   define g where "g x = (if x \<in> top1_I01 then f x + (\<epsilon>/2) * tri (real M * x) else 0)" for x
   have hgC: "g \<in> top1_C01"
     sorry
   have hg_close: "top1_rho49 f g < \<epsilon>"
-    sorry
+  proof -
+    have hpw: "\<forall>x\<in>top1_I01. \<bar>f x - g x\<bar> \<le> \<epsilon>/2"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> top1_I01"
+      have "g x = f x + (\<epsilon>/2) * tri (real M * x)" using hx unfolding g_def by presburger
+      then have "\<bar>f x - g x\<bar> = \<bar>(\<epsilon>/2) * tri (real M * x)\<bar>" by simp
+      also have "\<dots> = (\<epsilon>/2) * \<bar>tri (real M * x)\<bar>" using heps by (simp add: abs_mult_pos')
+      also have "\<dots> \<le> (\<epsilon>/2) * 1" using htri_bound heps by simp
+      finally show "\<bar>f x - g x\<bar> \<le> \<epsilon>/2" by simp
+    qed
+    have "top1_rho49 f g \<le> \<epsilon>/2" unfolding top1_rho49_def
+    proof (rule cSup_least)
+      show "(\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01 \<noteq> {}"
+        by (metis top1_I01_nonempty empty_is_image)
+    next
+      fix y assume "y \<in> (\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01"
+      then obtain x where "x \<in> top1_I01" "y = \<bar>f x - g x\<bar>" by fast
+      then show "y \<le> \<epsilon>/2" using hpw by simp
+    qed
+    then show ?thesis using heps by simp
+  qed
   have hgUn: "g \<in> top1_U49 n"
     sorry
   show ?thesis using hgC hg_close hgUn by meson
