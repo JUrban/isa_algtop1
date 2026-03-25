@@ -17885,7 +17885,14 @@ proof (intro ballI notI)
 qed
 
 lemma top1_C01_complete: "top1_complete_metric_on top1_C01 top1_rho49"
-  sorry
+  unfolding top1_complete_metric_on_def
+proof (intro conjI)
+  show "top1_metric_on top1_C01 top1_rho49" using top1_rho49_is_metric by presburger
+next
+  show "\<forall>s. top1_cauchy_seq_on top1_C01 top1_rho49 s \<longrightarrow>
+    (\<exists>x\<in>top1_C01. seq_converges_to_on s x top1_C01 (top1_metric_topology_on top1_C01 top1_rho49))"
+    sorry
+qed
 
 lemma top1_C01_baire: "top1_baire_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49)"
   using Theorem_48_2(2)[of top1_C01 top1_rho49] top1_C01_complete by blast
