@@ -13174,16 +13174,38 @@ proof -
     using hK hopen_sub hcov unfolding top1_compact_on_def by meson
   have hFne: "F \<noteq> {}" using hKne hF(3) by blast
   text \<open>Extract representative centers from the finite subcover.\<close>
-  obtain c where hc: "\<forall>V\<in>F. c V \<in> K \<and> V = halfcover (c V)" sorry
+  have hFK: "\<forall>V\<in>F. \<exists>k\<in>K. V = halfcover k" using hF(2) by blast
+  then obtain c where hc: "\<forall>V\<in>F. c V \<in> K \<and> V = halfcover (c V)" by metis
   define \<epsilon> where "\<epsilon> = Min ((\<lambda>V. rk (c V) / 2) ` F)"
   have hpos: "\<forall>V\<in>F. 0 < rk (c V) / 2" using hrk hc hF(2) by auto
   have h\<epsilon>_le: "\<forall>V\<in>F. \<epsilon> \<le> rk (c V) / 2" unfolding \<epsilon>_def
     by (meson Min_le finite_imageI hF(1) image_eqI)
-  have h\<epsilon>: "0 < \<epsilon>"
-  proof -
-    show "0 < \<epsilon>" sorry
+  have himg_fin: "finite ((\<lambda>V. rk (c V) / 2) ` F)" using hF(1) by fast
+  have himg_ne: "((\<lambda>V. rk (c V) / 2) ` F) \<noteq> {}" using hFne by fast
+  have himg_pos: "\<forall>x\<in>((\<lambda>V. rk (c V) / 2) ` F). 0 < x" using hpos by blast
+  have hMin_mem: "Min ((\<lambda>V. rk (c V) / 2) ` F) \<in> ((\<lambda>V. rk (c V) / 2) ` F)"
+    using Min_in[OF himg_fin himg_ne] by presburger
+  have h\<epsilon>: "0 < \<epsilon>" unfolding \<epsilon>_def
+    using bspec[OF himg_pos hMin_mem] by argo
+  have hbody: "\<forall>y\<in>Y. (\<exists>k\<in>K. d k y < \<epsilon>) \<longrightarrow> y \<in> U"
+  proof (intro ballI impI)
+    fix y assume hy: "y \<in> Y" and "\<exists>k\<in>K. d k y < \<epsilon>"
+    then obtain k0 where hk0: "k0 \<in> K" "d k0 y < \<epsilon>" by blast
+    obtain V where hV: "V \<in> F" "k0 \<in> V" using hk0(1) hF(3) by blast
+    have hk0_half: "k0 \<in> halfcover (c V)" using hV hc by blast
+    have hk0Y: "k0 \<in> Y" using hk0(1) hKY by fast
+    have hcVK: "c V \<in> K" using hc hV(1) by blast
+    have hcVY: "c V \<in> Y" using hcVK hKY by blast
+    have hd_ck: "d (c V) k0 < rk (c V) / 2"
+      using hk0_half unfolding halfcover_def top1_ball_on_def by blast
+    have htri: "d (c V) y \<le> d (c V) k0 + d k0 y"
+      using hd hcVY hk0Y hy unfolding top1_metric_on_def by blast
+    have hsum: "d (c V) k0 + d k0 y < rk (c V) / 2 + \<epsilon>" using hd_ck hk0(2) by argo
+    have hle_rk: "rk (c V) / 2 + \<epsilon> \<le> rk (c V)" using h\<epsilon>_le hV(1) by auto
+    have "d (c V) y < rk (c V)" using htri hsum hle_rk by argo
+    then have "y \<in> top1_ball_on Y d (c V) (rk (c V))" unfolding top1_ball_on_def using hy by blast
+    then show "y \<in> U" using hrk hcVK by blast
   qed
-  have hbody: "\<forall>y\<in>Y. (\<exists>k\<in>K. d k y < \<epsilon>) \<longrightarrow> y \<in> U" sorry
   show ?thesis using h\<epsilon> hbody by fast
 qed
 
