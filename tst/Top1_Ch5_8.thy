@@ -13260,8 +13260,11 @@ proof -
         using compact_in_open_eps_gap[OF hd hfC0_compact hCU(4) hfC0U0 hfC0ne] by blast
       text \<open>B_{C0}(f, ε) is a cc-basis element.\<close>
       define B where "B = {g \<in> ?P. (if C0 = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C0)) < \<epsilon>}"
-      have hB_basis: "B \<in> top1_compact_convergence_basis_on X TX Y d" sorry
-      have hfB: "f \<in> B" sorry
+      have hB_basis: "B \<in> top1_compact_convergence_basis_on X TX Y d"
+        unfolding B_def top1_compact_convergence_basis_on_def
+        using hfPiE hCU(2) hCU(3) h\<epsilon> by blast
+      have hfB: "f \<in> B"
+        unfolding B_def using cc_basis_self_member[OF hd hfPiE hCU(3) h\<epsilon>] by argo
       have hB_in_S: "B \<inter> ?C \<subseteq> S" sorry
       have "B \<in> {Bx \<in> top1_compact_convergence_basis_on X TX Y d. \<exists>fx\<in>S. fx \<in> Bx \<and> Bx \<inter> ?C \<subseteq> S}"
         using hB_basis hf hfB hB_in_S by blast
