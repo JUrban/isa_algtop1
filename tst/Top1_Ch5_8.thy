@@ -13292,7 +13292,25 @@ proof -
         using hfPiE hCU(2) hCU(3) h\<epsilon> by blast
       have hfB: "f \<in> B"
         unfolding B_def using cc_basis_self_member[OF hd hfPiE hCU(3) h\<epsilon>] by argo
-      have hB_in_S: "B \<inter> ?C \<subseteq> S" sorry
+      have hB_in_S: "B \<inter> ?C \<subseteq> S"
+      proof (rule subsetI)
+        fix g assume hg: "g \<in> B \<inter> ?C"
+        have hgC: "g \<in> ?C" using hg by blast
+        have hgB: "g \<in> B" using hg by blast
+        have hgPiE: "g \<in> ?P" using hgB unfolding B_def by blast
+        have hg_close: "(if C0 = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` C0)) < \<epsilon>"
+          using hgB unfolding B_def by fast
+        have "g ` C0 \<subseteq> U0"
+        proof (rule subsetI)
+          fix y assume "y \<in> g ` C0"
+          then obtain c where hc: "c \<in> C0" "y = g c" by blast
+          have "f c \<in> f ` C0" using hc(1) by blast
+          have hgcY: "g c \<in> Y" using hgPiE hc(1) hCU(3) unfolding top1_PiE_iff by blast
+          have "d (f c) (g c) < \<epsilon>" sorry
+          then show "y \<in> U0" using heps_nbhd \<open>f c \<in> f ` C0\<close> hc(2) hgcY by force
+        qed
+        then show "g \<in> S" unfolding hCU(1) using hgC by force
+      qed
       have "B \<in> {Bx \<in> top1_compact_convergence_basis_on X TX Y d. \<exists>fx\<in>S. fx \<in> Bx \<and> Bx \<inter> ?C \<subseteq> S}"
         using hB_basis hf hfB hB_in_S by blast
       then have "f \<in> V" unfolding V_def using hfB by blast
