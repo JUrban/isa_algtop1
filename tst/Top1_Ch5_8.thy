@@ -13246,6 +13246,10 @@ proof -
     have hfPiE: "f \<in> ?P"
       using hfC unfolding top1_continuous_funcs_on_def by blast
     have hfC0U0: "f ` C0 \<subseteq> U0" using hf unfolding hCU(1) by blast
+    have hTY_top: "is_topology_on Y ?TY"
+      using top1_metric_topology_on_is_topology_on[OF hd] by presburger
+    have hfC0_sub: "f ` C0 \<subseteq> Y" using hfCont hCU(3) unfolding top1_continuous_map_on_def
+      by blast
     have hfC0_compact: "top1_compact_on (f ` C0) ?TY" sorry
     text \<open>Use ε-gap: compact f(C0) ⊆ open U0.\<close>
     show "f \<in> V \<inter> ?C"
@@ -13254,8 +13258,22 @@ proof -
       text \<open>C0 = {}: S = C. Use B({}, f, 1) = PiE as cc-basis element.\<close>
       have hS_eq_C: "S = ?C" unfolding hCU(1) using True by blast
       define B0 where "B0 = {g \<in> ?P. (if ({} :: 'a set) = {} then (0::real) else 0) < 1}"
+      have hempty_compact: "top1_compact_on {} (subspace_topology X TX {})"
+        unfolding top1_compact_on_def
+        using subspace_topology_is_topology_on[OF hTopX] by force
       have hB0_basis: "B0 \<in> top1_compact_convergence_basis_on X TX Y d"
-        unfolding B0_def top1_compact_convergence_basis_on_def using hfPiE hCU(2) True sorry
+      proof -
+        have "B0 = {g \<in> ?P. (if ({} :: 'a set) = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` {})) < 1}"
+          unfolding B0_def by presburger
+        moreover have "... \<in> top1_compact_convergence_basis_on X TX Y d"
+          unfolding top1_compact_convergence_basis_on_def
+          apply (rule CollectI)
+          apply (rule exI[where x=f])
+          apply (rule exI[where x="{}::'a set"])
+          apply (rule exI[where x="1::real"])
+          using hempty_compact hfPiE by fastforce
+        ultimately show ?thesis by argo
+      qed
       have hB0_eq_P: "B0 = ?P" unfolding B0_def by simp
       have hB0C: "B0 \<inter> ?C \<subseteq> S" using hB0_eq_P hS_eq_C by blast
       have "B0 \<in> {Bx \<in> top1_compact_convergence_basis_on X TX Y d. \<exists>fx\<in>S. fx \<in> Bx \<and> Bx \<inter> ?C \<subseteq> S}"
