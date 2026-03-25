@@ -17642,7 +17642,27 @@ proof -
       then have hgC: "g \<in> top1_C01" unfolding top1_ball_on_def by blast
       have hrho: "top1_rho49 f g < \<epsilon>" using \<open>g \<in> top1_ball_on _ _ _ _\<close> unfolding top1_ball_on_def by blast
       text \<open>|f(x) - g(x)| < ε for all x ∈ [0,1], so difference quotients change by ≤ 2ε/h0.\<close>
-      have hDelta_close: "top1_Delta_h49 g h0 > real (Suc (Suc n))" sorry
+      text \<open>Step 1: pointwise bound |f(x)-g(x)| < ε.\<close>
+      have hpw: "\<forall>x\<in>top1_I01. \<bar>f x - g x\<bar> < \<epsilon>"
+      proof (intro ballI)
+        fix x assume "x \<in> top1_I01"
+        have hfC: "f \<in> top1_C01" using hf hU_sub by blast
+        have himg: "\<bar>f x - g x\<bar> \<in> (\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01" using \<open>x \<in> top1_I01\<close> by blast
+        have hbdd: "bdd_above ((\<lambda>x. \<bar>f x - g x\<bar>) ` top1_I01)"
+          using top1_rho49_bdd_above[OF hfC hgC] by argo
+        have "\<bar>f x - g x\<bar> \<le> top1_rho49 f g" unfolding top1_rho49_def
+          using cSup_upper[OF himg hbdd] by presburger
+        then show "\<bar>f x - g x\<bar> < \<epsilon>" using hrho by argo
+      qed
+      text \<open>Step 2: difference quotient change ≤ 2ε/h0.\<close>
+      have hDq_diff: "\<forall>x\<in>top1_I01. top1_Delta49 g x h0 \<ge> top1_Delta49 f x h0 - 2 * \<epsilon> / h0"
+        sorry
+      text \<open>Step 3: Inf bound: Δ_h(g) ≥ Δ_h(f) - 2ε/h0.\<close>
+      have hInf: "top1_Delta_h49 g h0 \<ge> top1_Delta_h49 f h0 - 2 * \<epsilon> / h0" sorry
+      text \<open>Step 4: 2ε/h0 = gap/2, so Δ_h(g) > n+2.\<close>
+      have h2eps: "2 * \<epsilon> / h0 = gap / 2" unfolding \<epsilon>_def using hh0(1) by force
+      have hDelta_close: "top1_Delta_h49 g h0 > real (Suc (Suc n))"
+        using hInf h2eps hh0(3) unfolding gap_def by argo
       show "g \<in> top1_U49 n" unfolding top1_U49_def using hgC hh0(1) hh0(2) hDelta_close by blast
     qed
     show "\<exists>r>0. top1_ball_on top1_C01 top1_rho49 f r \<subseteq> top1_U49 n"
