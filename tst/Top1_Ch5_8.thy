@@ -17962,7 +17962,17 @@ proof -
     qed
   qed
   have hcont_each: "\<forall>k \<in> {0..<M}. continuous_on (II k) (\<lambda>x. tri (real M * x))"
-    sorry
+  proof (intro ballI)
+    fix k assume hk: "k \<in> {0..<M}"
+    text \<open>On [k/M, (k+1)/M], Mx \<in> [k, k+1), so frac(Mx) = Mx - k.\<close>
+    have hfrac_eq: "\<forall>x \<in> II k. frac (real M * x) = real M * x - real k"
+      sorry
+    have htri_eq: "\<forall>x \<in> II k. tri (real M * x) = 1 - 2 * \<bar>real M * x - real k - 1/2\<bar>"
+      by (metis hfrac_eq tri_def)
+    have "continuous_on (II k) (\<lambda>x. 1 - 2 * \<bar>real M * x - real k - 1/2\<bar>)"
+      by (intro continuous_intros)
+    then show "continuous_on (II k) (\<lambda>x. tri (real M * x))" using htri_eq by simp
+  qed
   have htri_cont: "continuous_on top1_I01 (\<lambda>x. tri (real M * x))"
     unfolding hunion using continuous_on_closed_Union[of "{0..<M}" II "\<lambda>x. tri (real M * x)"]
       hcont_each by (simp add: II_def)
