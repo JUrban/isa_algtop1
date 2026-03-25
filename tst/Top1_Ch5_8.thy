@@ -18065,8 +18065,30 @@ proof -
     have "(\<epsilon>/8) / h49 = \<epsilon> * real M / 2" unfolding h49_def using hMpos by (simp add: field_simps)
     then have hg_quot2: "\<bar>g (x + s) - g x\<bar> / h49 \<ge> \<epsilon> * real M / 2" using hge_div by argo
     show "top1_Delta49 g x h49 \<ge> \<epsilon> * real M / 2" unfolding top1_Delta49_def
-      using hg_quot2 hs_set hs_in habs_s hh49_pos hh49_half
-      sorry
+    proof -
+      have hcond: "0 < h49 \<and> h49 \<le> 1/2" using hh49_pos hh49_half by presburger
+      have hgoal: "\<epsilon> * real M / 2 \<le> max (if x + h49 \<in> top1_I01 then \<bar>(g (x + h49) - g x) / h49\<bar> else 0)
+          (if x - h49 \<in> top1_I01 then \<bar>(g (x - h49) - g x) / h49\<bar> else 0)"
+      proof (cases "s = h49")
+        case True
+        then have "x + h49 \<in> top1_I01" using hs_in by presburger
+        moreover have "\<bar>(g (x + h49) - g x) / h49\<bar> \<ge> \<epsilon> * real M / 2" using hg_quot2 True hh49_pos
+          by simp
+        ultimately show ?thesis by argo
+      next
+        case False
+        then have hsn: "s = -h49" using hs_set by fast
+        then have "x - h49 \<in> top1_I01" using hs_in by simp
+        moreover have "\<bar>(g (x - h49) - g x) / h49\<bar> \<ge> \<epsilon> * real M / 2" using hg_quot2 hsn hh49_pos
+          by simp
+        ultimately show ?thesis by argo
+      qed
+      show "(if 0 < h49 \<and> h49 \<le> 1 / 2
+            then max (if x + h49 \<in> top1_I01 then \<bar>(g (x + h49) - g x) / h49\<bar> else 0)
+                  (if x - h49 \<in> top1_I01 then \<bar>(g (x - h49) - g x) / h49\<bar> else 0)
+            else 0) \<ge> \<epsilon> * real M / 2"
+        using hcond hgoal by presburger
+    qed
   qed
   have hMslope2: "\<epsilon> * real M / 2 > real (Suc (Suc n))" using hM_slope unfolding A_def
     by (simp add: field_simps)
