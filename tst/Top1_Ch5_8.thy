@@ -13443,7 +13443,28 @@ proof -
     sorry
   text \<open>sub_co is a topology on C.\<close>
   have hTco_top: "is_topology_on ?C ?Tco"
-    sorry
+    unfolding top1_compact_open_topology_on_def
+  proof (rule topology_generated_by_subbasis_is_topology_on)
+    show "is_subbasis_on ?C ?Sco" unfolding is_subbasis_on_def
+    proof (rule antisym)
+      show "\<Union>?Sco \<subseteq> ?C" unfolding top1_compact_open_subbasis_on_def by blast
+      show "?C \<subseteq> \<Union>?Sco"
+      proof
+        fix f assume hf: "f \<in> ?C"
+        have hY_open: "Y \<in> ?TY"
+          by (metis hd top1_metric_topology_on_is_topology_on is_topology_on_def)
+        have hempty_compact: "top1_compact_on {} (subspace_topology X TX {})"
+          by (metis hTopX top1_compact_on_empty_subspace)
+        have hS: "{g \<in> ?C. g ` {} \<subseteq> Y} \<in> ?Sco"
+          unfolding top1_compact_open_subbasis_on_def using hY_open hempty_compact
+          by blast
+        have "f \<in> {g \<in> ?C. g ` {} \<subseteq> Y}" using hf
+          by blast
+        then show "f \<in> \<Union>?Sco" using hS
+          by blast
+      qed
+    qed
+  qed
   have hTsub_co: "is_topology_on ?C ?sub_co"
     using subspace_topology_is_topology_on[OF hTco_top] by simp
   text \<open>Lift from basis to full cc-topology via union closure.\<close>
