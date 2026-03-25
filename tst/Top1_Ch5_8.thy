@@ -13426,7 +13426,52 @@ lemma Theorem_46_8_co_finer_cc:
        \<subseteq> subspace_topology (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
            (top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d))
            (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))"
-  sorry
+proof -
+  let ?C = "top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?Tco = "top1_compact_open_topology_on X TX Y ?TY"
+  let ?Bcc = "top1_compact_convergence_basis_on X TX Y d"
+  let ?Sco = "top1_compact_open_subbasis_on X TX Y ?TY"
+  let ?sub_cc = "subspace_topology (top1_PiE X (\<lambda>_. Y)) ?Tcc ?C"
+  let ?sub_co = "subspace_topology ?C ?Tco ?C"
+  have hC_sub: "?C \<subseteq> top1_PiE X (\<lambda>_. Y)" unfolding top1_continuous_funcs_on_def by simp
+  have hTcc_top: "is_topology_on (top1_PiE X (\<lambda>_. Y)) ?Tcc"
+    using cc_topology_is_topology[OF hTopX hd] by simp
+  text \<open>Key: every cc-basis element intersected with C is in the co subspace topology.\<close>
+  have hbasis_step: "\<forall>B \<in> ?Bcc. ?C \<inter> B \<in> ?sub_co"
+    sorry
+  text \<open>sub_co is a topology on C.\<close>
+  have hTco_top: "is_topology_on ?C ?Tco"
+    sorry
+  have hTsub_co: "is_topology_on ?C ?sub_co"
+    using subspace_topology_is_topology_on[OF hTco_top] by simp
+  text \<open>Lift from basis to full cc-topology via union closure.\<close>
+  have "\<forall>U \<in> ?Tcc. ?C \<inter> U \<in> ?sub_co"
+  proof (intro ballI)
+    fix U assume hU: "U \<in> ?Tcc"
+    then have "U \<in> topology_generated_by_basis (top1_PiE X (\<lambda>_. Y)) ?Bcc"
+      by (metis hU top1_compact_convergence_topology_on_def)
+    then have hU_basis: "U \<subseteq> top1_PiE X (\<lambda>_. Y) \<and> (\<forall>x\<in>U. \<exists>b\<in>?Bcc. x \<in> b \<and> b \<subseteq> U)"
+      unfolding topology_generated_by_basis_def by simp
+    define W where "W = {b \<in> ?Bcc. b \<subseteq> U}"
+    have "W \<subseteq> ?Bcc" unfolding W_def by simp
+    moreover have "U = \<Union>W" unfolding W_def using hU_basis by auto
+    ultimately have "\<exists>W \<subseteq> ?Bcc. U = \<Union>W" by metis
+    then obtain W where hW: "W \<subseteq> ?Bcc" "U = \<Union>W" by metis
+    have "?C \<inter> U = (\<Union>w\<in>W. ?C \<inter> w)" using hW(2) by auto
+    moreover have "\<forall>w\<in>W. ?C \<inter> w \<in> ?sub_co" using hbasis_step hW(1) by auto
+    moreover have "(\<Union>w\<in>W. ?C \<inter> w) \<in> ?sub_co"
+    proof -
+      have himgW: "(\<lambda>w. ?C \<inter> w) ` W \<subseteq> ?sub_co" using calculation(2) by auto
+      have "\<Union>((\<lambda>w. ?C \<inter> w) ` W) \<in> ?sub_co" using himgW hTsub_co
+        unfolding is_topology_on_def by metis
+      then show ?thesis by presburger
+    qed
+    ultimately show "?C \<inter> U \<in> ?sub_co" by metis
+  qed
+  then show ?thesis unfolding subspace_topology_def by fastforce
+qed
 
 theorem Theorem_46_8:
   assumes hTopX: "is_topology_on X TX"
