@@ -13404,6 +13404,10 @@ proof -
   qed
 qed
 
+text \<open>Direction 2: compact-open is finer than compact-convergence on C(X,Y).
+  Proof: for each f and cc-basis B_C(f,\<epsilon>), find co-open set containing f inside B_C(f,\<epsilon>).
+  Use continuity of f to cover C by neighborhoods with small diameter images,
+  take finite subcover, intersect compact-open subbasis elements.\<close>
 lemma Theorem_46_8_co_finer_cc:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
