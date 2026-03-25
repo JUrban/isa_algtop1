@@ -17625,7 +17625,45 @@ lemma top1_U49_open:
   shows "top1_U49 n \<in> top1_metric_topology_on top1_C01 top1_rho49"
 proof -
   let ?T = "top1_metric_topology_on top1_C01 top1_rho49"
-  show ?thesis sorry
+  have hU_sub: "top1_U49 n \<subseteq> top1_C01" using top1_U49_subset_C01 by simp
+  have hball: "\<forall>f\<in>top1_U49 n. \<exists>r>0. top1_ball_on top1_C01 top1_rho49 f r \<subseteq> top1_U49 n"
+  proof (intro ballI)
+    fix f assume hf: "f \<in> top1_U49 n"
+    then obtain h0 where hh0: "0 < h0" "h0 \<le> 1 / real (Suc (Suc n))"
+      "top1_Delta_h49 f h0 > real (Suc (Suc n))"
+      unfolding top1_U49_def by blast
+    define gap where "gap = top1_Delta_h49 f h0 - real (Suc (Suc n))"
+    have hgap: "gap > 0" unfolding gap_def using hh0(3) by argo
+    define \<epsilon> where "\<epsilon> = h0 * gap / 4"
+    have h\<epsilon>: "\<epsilon> > 0" unfolding \<epsilon>_def using hh0(1) hgap by auto
+    have hball_sub: "top1_ball_on top1_C01 top1_rho49 f \<epsilon> \<subseteq> top1_U49 n"
+    proof (rule subsetI)
+      fix g assume "g \<in> top1_ball_on top1_C01 top1_rho49 f \<epsilon>"
+      then have hgC: "g \<in> top1_C01" unfolding top1_ball_on_def by blast
+      have hrho: "top1_rho49 f g < \<epsilon>" using \<open>g \<in> top1_ball_on _ _ _ _\<close> unfolding top1_ball_on_def by blast
+      text \<open>|f(x) - g(x)| < ε for all x ∈ [0,1], so difference quotients change by ≤ 2ε/h0.\<close>
+      have hDelta_close: "top1_Delta_h49 g h0 > real (Suc (Suc n))" sorry
+      show "g \<in> top1_U49 n" unfolding top1_U49_def using hgC hh0(1) hh0(2) hDelta_close by blast
+    qed
+    show "\<exists>r>0. top1_ball_on top1_C01 top1_rho49 f r \<subseteq> top1_U49 n"
+      using h\<epsilon> hball_sub by blast
+  qed
+  have hTY: "is_topology_on top1_C01 ?T"
+    using top1_metric_topology_on_is_topology_on[OF top1_rho49_is_metric] by argo
+  have hLoc: "\<forall>f\<in>top1_U49 n. \<exists>U\<in>?T. f \<in> U \<and> U \<subseteq> top1_U49 n"
+  proof (intro ballI)
+    fix f assume "f \<in> top1_U49 n"
+    obtain r where hr: "r > 0" "top1_ball_on top1_C01 top1_rho49 f r \<subseteq> top1_U49 n"
+      using hball \<open>f \<in> top1_U49 n\<close> by blast
+    have hball_T: "top1_ball_on top1_C01 top1_rho49 f r \<in> ?T"
+      using top1_ball_open_in_metric_topology[OF top1_rho49_is_metric _ hr(1)]
+        hU_sub \<open>f \<in> top1_U49 n\<close> by blast
+    have hf_ball: "f \<in> top1_ball_on top1_C01 top1_rho49 f r"
+      using top1_metric_ball_self_mem[OF top1_rho49_is_metric _ hr(1)]
+        hU_sub \<open>f \<in> top1_U49 n\<close> by blast
+    show "\<exists>U\<in>?T. f \<in> U \<and> U \<subseteq> top1_U49 n" using hball_T hf_ball hr(2) by blast
+  qed
+  show ?thesis using top1_open_of_local_subsets[OF hTY hU_sub hLoc] by argo
 qed
 
 lemma top1_U49_dense:
