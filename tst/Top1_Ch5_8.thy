@@ -17911,8 +17911,19 @@ proof -
   have hh'_ext: "\<forall>x. x \<notin> top1_I01 \<longrightarrow> h' x = 0" unfolding h'_def by auto
   have hh'C: "h' \<in> top1_C01" unfolding top1_C01_def using hh'_cont hh'_ext by blast
   text \<open>⋂U_n is dense and B(h', ε) is open → their intersection is nonempty.\<close>
-  have "\<exists>g\<in>(\<Inter>n. top1_U49 n). top1_rho49 h' g < \<epsilon>"
-    using hDense hh'C heps top1_rho49_is_metric sorry
+  have hTY: "is_topology_on top1_C01 ?T"
+    using top1_metric_topology_on_is_topology_on[OF top1_rho49_is_metric] by simp
+  have hball_open: "top1_ball_on top1_C01 top1_rho49 h' \<epsilon> \<in> ?T"
+    using top1_ball_open_in_metric_topology[OF top1_rho49_is_metric _ heps] hh'C by blast
+  have hball_ne: "top1_ball_on top1_C01 top1_rho49 h' \<epsilon> \<noteq> {}"
+    using top1_metric_ball_self_mem[OF top1_rho49_is_metric _ heps] hh'C by blast
+  have hball_sub: "top1_ball_on top1_C01 top1_rho49 h' \<epsilon> \<subseteq> top1_C01"
+    unfolding top1_ball_on_def by blast
+  have "intersects (top1_ball_on top1_C01 top1_rho49 h' \<epsilon>) (\<Inter>n. top1_U49 n)"
+    using top1_densein_on_intersects_nonempty_open[OF hTY hDense hball_open hball_sub hball_ne]
+    by argo
+  then have "\<exists>g\<in>(\<Inter>n. top1_U49 n). top1_rho49 h' g < \<epsilon>"
+    unfolding intersects_def top1_ball_on_def by blast
   then obtain g where hgU: "g \<in> (\<Inter>n. top1_U49 n)" and hgclose: "top1_rho49 h' g < \<epsilon>" by blast
   have hgC: "g \<in> top1_C01" using hgU top1_Inter_U49_subset_C01 by blast
   have hg_cont: "continuous_on top1_I01 g" using hgC unfolding top1_C01_def by blast
