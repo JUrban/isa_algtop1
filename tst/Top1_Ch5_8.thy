@@ -13467,7 +13467,31 @@ proof -
   text \<open>Key: every cc-basis element intersected with C is in the co subspace topology.
     Core Munkres covering argument (TODO).\<close>
   have hbasis_step: "\<forall>B \<in> ?Bcc. ?C \<inter> B \<in> ?sub_co"
-    sorry
+  proof (intro ballI)
+    fix B assume hB: "B \<in> ?Bcc"
+    then obtain f0 K \<epsilon> where hf0: "f0 \<in> top1_PiE X (\<lambda>_. Y)"
+      and hK: "top1_compact_on K (subspace_topology X TX K)" and hKX: "K \<subseteq> X" and heps: "0 < \<epsilon>"
+      and hBdef: "B = {g \<in> top1_PiE X (\<lambda>_. Y).
+        (if K = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K)) < \<epsilon>}"
+      unfolding top1_compact_convergence_basis_on_def by blast
+    text \<open>For each g \<in> C \<inter> B, find co-open V_g with g \<in> V_g and C \<inter> V_g \<subseteq> C \<inter> B.\<close>
+    have hlocal: "\<forall>g \<in> ?C \<inter> B. \<exists>V \<in> ?Tco. g \<in> V \<and> (\<forall>h \<in> ?C \<inter> V. h \<in> B)"
+      sorry
+    text \<open>Union of co-open V_g's gives C \<inter> B.\<close>
+    have "?C \<inter> B \<in> ?sub_co"
+    proof -
+      define VV where "VV = \<Union>{V \<in> ?Tco. \<exists>g \<in> ?C \<inter> B. g \<in> V \<and> (\<forall>h \<in> ?C \<inter> V. h \<in> B)}"
+      have "{V \<in> ?Tco. \<exists>g \<in> ?C \<inter> B. g \<in> V \<and> (\<forall>h \<in> ?C \<inter> V. h \<in> B)} \<subseteq> ?Tco"
+        by blast
+      then have "VV \<in> ?Tco" unfolding VV_def using hTco_top
+        by (simp add: is_topology_on_def)
+      have "?C \<inter> B = ?C \<inter> VV" using hlocal unfolding VV_def
+        by blast
+      then show ?thesis using \<open>VV \<in> ?Tco\<close> unfolding subspace_topology_def
+        by blast
+    qed
+    then show "?C \<inter> B \<in> ?sub_co" .
+  qed
   text \<open>Lift from basis to full cc-topology via union closure.\<close>
   have "\<forall>U \<in> ?Tcc. ?C \<inter> U \<in> ?sub_co"
   proof (intro ballI)
