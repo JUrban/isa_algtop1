@@ -13216,7 +13216,43 @@ lemma co_subbasis_in_cc_subspace:
   shows "S \<in> subspace_topology (top1_PiE X (\<lambda>_. Y))
            (top1_compact_convergence_topology_on X TX Y d)
            (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))"
-  sorry
+proof -
+  let ?C = "top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?P = "top1_PiE X (\<lambda>_. Y)"
+  obtain C0 U0 where hCU: "S = {f \<in> ?C. f ` C0 \<subseteq> U0}"
+    "top1_compact_on C0 (subspace_topology X TX C0)" "C0 \<subseteq> X" "U0 \<in> ?TY"
+    using hS unfolding top1_compact_open_subbasis_on_def by blast
+  have hS_sub_C: "S \<subseteq> ?C" unfolding hCU(1) by blast
+  text \<open>Build cc-open V with V ∩ C = S.\<close>
+  define V where "V = \<Union>{B \<in> top1_compact_convergence_basis_on X TX Y d. \<exists>f\<in>S. f \<in> B \<and> B \<inter> ?C \<subseteq> S}"
+  have hV_cc: "V \<in> ?Tcc"
+  proof -
+    have hV_sub: "V \<subseteq> ?P" unfolding V_def
+      using cc_basis_is_basis[OF hTopX hd] unfolding is_basis_on_def by fast
+    have hV_open: "\<forall>g\<in>V. \<exists>B\<in>top1_compact_convergence_basis_on X TX Y d. g \<in> B \<and> B \<subseteq> V"
+      unfolding V_def by blast
+    show ?thesis unfolding top1_compact_convergence_topology_on_def
+      topology_generated_by_basis_def using hV_sub hV_open by blast
+  qed
+  have hVS_sub: "V \<inter> ?C \<subseteq> S" unfolding V_def by fast
+  have hVS_sup: "S \<subseteq> V \<inter> ?C"
+  proof (rule subsetI)
+    fix f assume hf: "f \<in> S"
+    have hfC: "f \<in> ?C" using hf hS_sub_C sorry
+    have hfCont: "top1_continuous_map_on X TX Y ?TY f" sorry
+    have hfPiE: "f \<in> ?P" sorry
+    have hfC0U0: "f ` C0 \<subseteq> U0" using hf unfolding hCU(1) sorry
+    text \<open>f(C0) is compact (continuous image of compact).\<close>
+    have hfC0_compact: "top1_compact_on (f ` C0) ?TY" sorry
+    text \<open>Use ε-gap: compact f(C0) ⊆ open U0.\<close>
+    have hC0ne_or_empty: "C0 = {} \<or> C0 \<noteq> {}" sorry
+    show "f \<in> V \<inter> ?C" sorry
+  qed
+  have hVS: "V \<inter> ?C = S" using hVS_sub hVS_sup by fastforce
+  show ?thesis unfolding subspace_topology_def using hVS hV_cc by blast
+qed
 
 lemma Theorem_46_8_cc_finer_co:
   assumes hTopX: "is_topology_on X TX"
