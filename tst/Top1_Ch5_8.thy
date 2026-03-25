@@ -17888,9 +17888,7 @@ lemma top1_C01_complete: "top1_complete_metric_on top1_C01 top1_rho49"
   sorry
 
 lemma top1_C01_baire: "top1_baire_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49)"
-  sorry
-text \<open>Note: top1_C01_baire follows from top1_C01_complete via the complete→Baire theorem
-  at line ~16100. Currently left as sorry until top1_C01_complete is proved.\<close>
+  using Theorem_48_2(2)[of top1_C01 top1_rho49] top1_C01_complete by blast
 
 (** from \S49 Theorem 49.1 [top1.tex:7345] **)
 theorem Theorem_49_1:
