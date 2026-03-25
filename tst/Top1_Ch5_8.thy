@@ -13384,7 +13384,24 @@ proof -
       then show ?thesis using hA by simp
     qed
   qed
-  show ?thesis sorry
+  show ?thesis
+  proof -
+    have "\<forall>U \<in> top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d). ?C \<inter> U \<in> ?Tsub"
+    proof (intro ballI)
+      fix U assume "U \<in> top1_compact_open_topology_on X TX Y (top1_metric_topology_on Y d)"
+      then obtain W where hW: "U = \<Union>W"
+        "W \<subseteq> finite_intersections (top1_compact_open_subbasis_on X TX Y (top1_metric_topology_on Y d))"
+        unfolding top1_compact_open_topology_on_def topology_generated_by_subbasis_def by blast
+      have hCU: "?C \<inter> U = (\<Union>w\<in>W. w \<inter> ?C)" using hW(1) by blast
+      have "\<forall>w\<in>W. w \<inter> ?C \<in> ?Tsub" using hFI_inter hW(2) by blast
+      have hset_sub: "(\<lambda>w. w \<inter> ?C) ` W \<subseteq> ?Tsub" using \<open>\<forall>w\<in>W. w \<inter> ?C \<in> ?Tsub\<close> by blast
+      have hunion: "\<Union>((\<lambda>w. w \<inter> ?C) ` W) \<in> ?Tsub" using hset_sub hTsub_top unfolding is_topology_on_def
+        by blast
+      have "(\<Union>w\<in>W. w \<inter> ?C) \<in> ?Tsub" using hunion by argo
+      then show "?C \<inter> U \<in> ?Tsub" using hCU by argo
+    qed
+    then show ?thesis unfolding subspace_topology_def by fast
+  qed
 qed
 
 lemma Theorem_46_8_co_finer_cc:
