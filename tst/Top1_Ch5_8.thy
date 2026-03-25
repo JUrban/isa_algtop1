@@ -17597,7 +17597,10 @@ lemma top1_rho49_is_metric: "top1_metric_on top1_C01 top1_rho49"
 
 lemma top1_U49_open:
   shows "top1_U49 n \<in> top1_metric_topology_on top1_C01 top1_rho49"
-  sorry
+proof -
+  let ?T = "top1_metric_topology_on top1_C01 top1_rho49"
+  show ?thesis sorry
+qed
 
 lemma top1_U49_dense:
   shows "top1_densein_on top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) (top1_U49 n)"
