@@ -1820,6 +1820,12 @@ text \<open>Proof strategy: use Theorem 34.3 (completely regular \<open>\<Righta
   to embed X into \<open>[0,1]^J\<close>. The closure of the image in \<open>[0,1]^J\<close> is compact
   by Tychonoff (Theorem 37.3, proved). Extensions via Tietze (Theorem 35.1, proved).
   Uniqueness from Hausdorff + density.\<close>
+text \<open>Theorem 38.2 proof strategy:
+  1. Embed X into [0,1]^J (Theorem_34_3_forward).
+  2. [0,1]^J is compact (Tychonoff + top1_closed_interval_compact).
+  3. Y = closure(F(X)) is compact (closed in compact, Theorem_26_2).
+  4. (Y, TY, F) is a compactification of X.
+  5. Extension property via coordinate projections.\<close>
 theorem Theorem_38_2:
   assumes hCR: "top1_completely_regular_on X TX"
   shows "\<exists>Y TY e.
