@@ -7742,7 +7742,8 @@ lemma indexed_shrinking:
   assumes hCov: "top1_open_covering_on X TX (U ` I)"
   shows "\<exists>V. (\<forall>i\<in>I. V i \<in> TX \<and> V i \<subseteq> U i \<and> closure_on X TX (V i) \<subseteq> U i)
     \<and> top1_open_covering_on X TX (V ` I)
-    \<and> (\<forall>x\<in>X. finite {i\<in>I. x \<in> V i})"
+    \<and> (\<forall>x\<in>X. finite {i\<in>I. x \<in> V i})
+    \<and> (\<forall>x\<in>X. \<exists>Ux\<in>TX. x \<in> Ux \<and> finite {i\<in>I. intersects (V i) Ux})"
 proof -
   text \<open>Apply Lemma_41_3: get unindexed B with cl(B) \<subseteq> some U_i.\<close>
   have hParaLF: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
@@ -7828,6 +7829,24 @@ proof -
       then show "finite {B\<in>\<B>. x \<in> B}" using \<open>finite {B\<in>\<B>. intersects B Ux}\<close> finite_subset by blast
     qed
     ultimately show "finite {i\<in>I. x \<in> V i}" using finite_surj by blast
+  next
+    fix x assume hxX: "x \<in> X"
+    obtain Ux where "Ux \<in> TX" "x \<in> Ux" "finite {B\<in>\<B>. intersects B Ux}"
+      using hBlf hxX unfolding top1_locally_finite_family_on_def by blast
+    have "{i\<in>I. intersects (V i) Ux} \<subseteq> bsel ` {B\<in>\<B>. intersects B Ux}"
+    proof (rule subsetI)
+      fix i assume "i \<in> {i\<in>I. intersects (V i) Ux}"
+      then have "i \<in> I" "intersects (V i) Ux" by blast+
+      then obtain z where "z \<in> V i" "z \<in> Ux" unfolding intersects_def by blast
+      then obtain B where "B \<in> \<B>" "bsel B = i" "z \<in> B"
+        unfolding V_def by blast
+      then have "B \<in> {B\<in>\<B>. intersects B Ux}" using \<open>z \<in> Ux\<close> unfolding intersects_def by blast
+      then show "i \<in> bsel ` {B\<in>\<B>. intersects B Ux}" using \<open>bsel B = i\<close> by blast
+    qed
+    then have "finite {i\<in>I. intersects (V i) Ux}"
+      using \<open>finite {B\<in>\<B>. intersects B Ux}\<close> finite_surj by blast
+    then show "\<exists>Ux\<in>TX. x \<in> Ux \<and> finite {i\<in>I. intersects (V i) Ux}"
+      using \<open>Ux \<in> TX\<close> \<open>x \<in> Ux\<close> by blast
   qed
 qed
 
@@ -7837,7 +7856,8 @@ theorem Theorem_41_7:
   assumes hHaus: "is_hausdorff_on X TX"
   assumes hTsub: "\<forall>Ua\<in>TX. Ua \<subseteq> X"
   assumes hCov: "top1_open_covering_on X TX (U ` I)"
-  shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>"
+  shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>
+    \<and> (\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<phi> i y \<noteq> 0})"
 proof -
   have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by linarith
   have hReg: "top1_regular_on X TX"
@@ -7848,10 +7868,12 @@ proof -
   obtain V where hV: "\<forall>i\<in>I. V i \<in> TX \<and> V i \<subseteq> U i \<and> closure_on X TX (V i) \<subseteq> U i"
     and hVcov: "top1_open_covering_on X TX (V ` I)"
     and hVfin: "\<forall>x\<in>X. finite {i\<in>I. x \<in> V i}"
+    and hVilf: "\<forall>x\<in>X. \<exists>Ux\<in>TX. x \<in> Ux \<and> finite {i\<in>I. intersects (V i) Ux}"
     using indexed_shrinking[OF hTopX hTsub hReg hPara hCov] by blast
   obtain W where hW: "\<forall>i\<in>I. W i \<in> TX \<and> W i \<subseteq> V i \<and> closure_on X TX (W i) \<subseteq> V i"
     and hWcov: "top1_open_covering_on X TX (W ` I)"
     and hWfin: "\<forall>x\<in>X. finite {i\<in>I. x \<in> W i}"
+    and hWilf: "\<forall>x\<in>X. \<exists>Ux\<in>TX. x \<in> Ux \<and> finite {i\<in>I. intersects (W i) Ux}"
     using indexed_shrinking[OF hTopX hTsub hReg hPara hVcov] by blast
   text \<open>Step 2: Urysohn for each i: \<psi>_i = 1 on cl(W_i), = 0 on X - V_i.\<close>
   have "\<forall>i\<in>I. \<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
@@ -7952,19 +7974,226 @@ proof -
     finally show "top1_support_on X TX (\<phi> i) \<subseteq> U i" unfolding top1_support_on_def by order
   qed
   text \<open>Property 3: locally finite supports.
-    support(\<phi>_i) \<subseteq> cl(V_i), and the family {cl(V_i)} is locally finite.\<close>
+    support(\<phi>_i) \<subseteq> cl(V_i), and the indexed family {V_i} is locally finite.\<close>
+  have hsupp_sub_clV: "\<forall>i\<in>I. top1_support_on X TX (\<phi> i) \<subseteq> closure_on X TX (V i)"
+  proof (intro ballI)
+    fix i assume "i \<in> I"
+    have "\<forall>x\<in>X - V i. \<phi> i x = 0" unfolding \<phi>_def using h\<psi>_zero_outside \<open>i \<in> I\<close> by simp
+    then have "{x \<in> X. \<phi> i x \<noteq> 0} \<subseteq> V i" by blast
+    then show "top1_support_on X TX (\<phi> i) \<subseteq> closure_on X TX (V i)"
+      unfolding top1_support_on_def using closure_on_mono by fast
+  qed
   have hprop3: "top1_locally_finite_family_on X TX ((\<lambda>i. top1_support_on X TX (\<phi> i)) ` I)"
-    sorry
-  text \<open>Property 2a: \<phi>_i continuous [0,1]. Left as sorry.\<close>
+    unfolding top1_locally_finite_family_on_def
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    obtain Ux where hUx: "Ux \<in> TX" and hxUx: "x \<in> Ux"
+      and hfin: "finite {i\<in>I. intersects (V i) Ux}"
+      using hVilf hxX by blast
+    have hsub: "{S \<in> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` I. intersects S Ux}
+      \<subseteq> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` {i\<in>I. intersects (V i) Ux}"
+    proof (rule subsetI)
+      fix S assume "S \<in> {S \<in> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` I. intersects S Ux}"
+      then obtain i where "i \<in> I" "S = top1_support_on X TX (\<phi> i)" "intersects S Ux" by blast
+      have "top1_support_on X TX (\<phi> i) \<subseteq> closure_on X TX (V i)"
+        using hsupp_sub_clV \<open>i \<in> I\<close> by blast
+      have "intersects (closure_on X TX (V i)) Ux"
+        using \<open>intersects S Ux\<close> \<open>S = top1_support_on X TX (\<phi> i)\<close>
+          \<open>top1_support_on X TX (\<phi> i) \<subseteq> closure_on X TX (V i)\<close>
+        unfolding intersects_def by blast
+      have hVi_sub_X: "V i \<subseteq> X" using hV \<open>i \<in> I\<close> hTsub by blast
+      have "intersects (V i) Ux"
+        using top1_intersects_closure_on_open_imp_intersects[OF hTopX hVi_sub_X hUx
+          \<open>intersects (closure_on X TX (V i)) Ux\<close>]
+        by blast
+      then show "S \<in> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` {i\<in>I. intersects (V i) Ux}"
+        using \<open>i \<in> I\<close> \<open>S = top1_support_on X TX (\<phi> i)\<close> by blast
+    qed
+    have "finite {S \<in> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` I. intersects S Ux}"
+      using finite_subset[OF hsub finite_imageI[OF hfin]] by blast
+    then show "\<exists>U\<in>TX. x \<in> U \<and> finite {A \<in> (\<lambda>i. top1_support_on X TX (\<phi> i)) ` I. intersects A U}"
+      using hUx hxUx by blast
+  qed
+  text \<open>Property 2a: \<phi>_i continuous [0,1].
+    Strategy: \<psi>_i continuous X \<rightarrow> \<real>, \<Psi> = \<Sum>\<psi>_j continuous X \<rightarrow> \<real> (locally finite sum),
+    \<Psi> > 0, so 1/\<Psi> continuous, \<phi>_i = \<psi>_i * (1/\<Psi>) continuous X \<rightarrow> \<real>, restrict to [0,1].\<close>
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  text \<open>Step A: Each \<psi>_i is continuous X \<rightarrow> \<real>.\<close>
+  have h\<psi>_cont_R: "\<forall>i\<in>I. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<psi> i)"
+  proof (intro ballI)
+    fix i assume "i \<in> I"
+    have h\<psi>i: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> i)"
+      using h\<psi> \<open>i \<in> I\<close> by blast
+    have hI_sub: "top1_closed_interval (0::real) 1 \<subseteq> UNIV" by simp
+    have hI_eq: "top1_closed_interval_topology 0 1 = subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
+      unfolding top1_closed_interval_topology_def by presburger
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<psi> i)"
+      by (metis Theorem_18_2(6) hI_eq hI_sub h\<psi>i hTopX
+        order_topology_on_UNIV_is_topology_on subspace_topology_is_topology_on)
+  qed
+  text \<open>Step B: \<Psi> is continuous X \<rightarrow> \<real> via locally_finite_sum_continuous.\<close>
+  define \<Psi> where "\<Psi> x = (\<Sum>j\<in>{j\<in>I. \<psi> j x \<noteq> 0}. \<psi> j x)" for x
+  have h\<Psi>_cont_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV \<Psi>"
+  proof -
+    have hILF: "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<psi> i y \<noteq> 0}"
+    proof (intro ballI)
+      fix x assume "x \<in> X"
+      obtain Ux where "Ux \<in> TX" "x \<in> Ux" "finite {i\<in>I. intersects (V i) Ux}"
+        using hVilf \<open>x \<in> X\<close> by blast
+      have "{i\<in>I. \<exists>y\<in>Ux. \<psi> i y \<noteq> 0} \<subseteq> {i\<in>I. intersects (V i) Ux}"
+      proof (rule subsetI)
+        fix i assume "i \<in> {i\<in>I. \<exists>y\<in>Ux. \<psi> i y \<noteq> 0}"
+        then obtain y where "i \<in> I" "y \<in> Ux" "\<psi> i y \<noteq> 0" by blast
+        have "y \<in> X" using \<open>y \<in> Ux\<close> \<open>Ux \<in> TX\<close> hTsub by blast
+        then have "y \<in> V i" using h\<psi>_nonzero_in_V \<open>i \<in> I\<close> \<open>\<psi> i y \<noteq> 0\<close> by blast
+        then show "i \<in> {i\<in>I. intersects (V i) Ux}"
+          using \<open>i \<in> I\<close> \<open>y \<in> Ux\<close> unfolding intersects_def by blast
+      qed
+      then have "finite {i\<in>I. \<exists>y\<in>Ux. \<psi> i y \<noteq> 0}"
+        using \<open>finite {i\<in>I. intersects (V i) Ux}\<close> finite_subset by blast
+      then show "\<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<psi> i y \<noteq> 0}"
+        using \<open>Ux \<in> TX\<close> \<open>x \<in> Ux\<close> by blast
+    qed
+    show ?thesis
+      unfolding \<Psi>_def
+      by (rule locally_finite_sum_continuous[OF hTopX hTsub h\<psi>_cont_R hILF h\<psi>fin])
+  qed
+  text \<open>Step C: \<Psi>(x) > 0 for all x \<in> X.\<close>
+  have h\<Psi>_pos: "\<forall>x\<in>X. 0 < \<Psi> x"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    obtain i0 where "i0 \<in> I" "x \<in> W i0" using hWcov \<open>x \<in> X\<close> unfolding top1_open_covering_on_def by blast
+    then have "x \<in> closure_on X TX (W i0)" using subset_closure_on by fast
+    then have "\<psi> i0 x = 1" using h\<psi> \<open>i0 \<in> I\<close> by blast
+    then have "i0 \<in> {j\<in>I. \<psi> j x \<noteq> 0}" using \<open>i0 \<in> I\<close> by simp
+    have h_nn: "\<forall>j\<in>{j\<in>I. \<psi> j x \<noteq> 0}. 0 \<le> \<psi> j x"
+    proof (intro ballI)
+      fix j assume "j \<in> {j\<in>I. \<psi> j x \<noteq> 0}"
+      then have "j \<in> I" by blast
+      have "\<psi> j x \<in> top1_closed_interval 0 1"
+        using h\<psi> \<open>j \<in> I\<close> \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by blast
+      then show "0 \<le> \<psi> j x" unfolding top1_closed_interval_def by simp
+    qed
+    have hfin_x: "finite {j\<in>I. \<psi> j x \<noteq> 0}" using h\<psi>fin \<open>x \<in> X\<close> by blast
+    have "1 \<le> \<psi> i0 x" using \<open>\<psi> i0 x = 1\<close> by simp
+    also have "\<psi> i0 x \<le> \<Psi> x" unfolding \<Psi>_def
+      by (rule member_le_sum[OF \<open>i0 \<in> {j\<in>I. \<psi> j x \<noteq> 0}\<close> _ hfin_x])
+         (use h_nn in blast)
+    finally show "0 < \<Psi> x" by linarith
+  qed
+  text \<open>Step D: 1/\<Psi> continuous X \<rightarrow> \<real>.\<close>
+  have h\<Psi>_img_pos: "\<Psi> ` X \<subseteq> open_ray_gt (0::real)"
+  proof (rule subsetI)
+    fix y assume "y \<in> \<Psi> ` X"
+    then obtain x where "x \<in> X" "y = \<Psi> x" by blast
+    then show "y \<in> open_ray_gt (0::real)"
+      using h\<Psi>_pos unfolding open_ray_gt_def by simp
+  qed
+  have h\<Psi>_contPos:
+    "top1_continuous_map_on X TX (open_ray_gt (0::real))
+      (subspace_topology (UNIV::real set) order_topology_on_UNIV (open_ray_gt (0::real))) \<Psi>"
+  proof -
+    have hpre: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV \<Psi>
+      \<and> open_ray_gt (0::real) \<subseteq> (UNIV::real set) \<and> \<Psi> ` X \<subseteq> open_ray_gt (0::real)"
+      using h\<Psi>_cont_R h\<Psi>_img_pos by auto
+    show ?thesis
+      using Theorem_18_2(5)[OF hTopX hTopR hTopR, rule_format, OF hpre] by blast
+  qed
+  have hInv\<Psi>_cont_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV ((\<lambda>t::real. inverse t) \<circ> \<Psi>)"
+    by (rule top1_continuous_map_on_comp[OF h\<Psi>_contPos top1_continuous_inv_order_topology_pos])
+  text \<open>Step E: \<phi>_i = \<psi>_i * (1/\<Psi>) continuous X \<rightarrow> \<real>, then restrict to [0,1].\<close>
   have hprop2_cont: "\<forall>i\<in>I. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)"
-    sorry
+  proof (intro ballI)
+    fix i assume "i \<in> I"
+    have h\<phi>_eq: "\<phi> i = (\<lambda>x. \<psi> i x * ((\<lambda>t::real. inverse t) \<circ> \<Psi>) x)"
+      unfolding \<phi>_def \<Psi>_def by (rule ext, simp add: o_def divide_inverse)
+    have h\<phi>_cont_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)"
+      unfolding h\<phi>_eq
+      by (rule top1_continuous_mul_real[OF hTopX _ hInv\<Psi>_cont_R])
+        (rule h\<psi>_cont_R[rule_format, OF \<open>i \<in> I\<close>])
+    text \<open>\<phi>_i takes values in [0,1].\<close>
+    have h\<phi>_range: "\<forall>x\<in>X. \<phi> i x \<in> top1_closed_interval 0 1"
+    proof (intro ballI)
+      fix x assume "x \<in> X"
+      have h\<Psi>x_pos: "0 < \<Psi> x" using h\<Psi>_pos \<open>x \<in> X\<close> by blast
+      have h\<psi>ix_range: "\<psi> i x \<in> top1_closed_interval 0 1"
+        using h\<psi> \<open>i \<in> I\<close> \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by blast
+      then have h\<psi>ix_ge0: "0 \<le> \<psi> i x" and h\<psi>ix_le1: "\<psi> i x \<le> 1"
+        unfolding top1_closed_interval_def by auto
+      have h\<phi>ix_ge0: "0 \<le> \<phi> i x" unfolding \<phi>_def \<Psi>_def[symmetric]
+        using h\<psi>ix_ge0 h\<Psi>x_pos by simp
+      have h\<psi>ix_le_\<Psi>: "\<psi> i x \<le> \<Psi> x"
+      proof (cases "\<psi> i x = 0")
+        case True then show ?thesis using h\<Psi>x_pos by linarith
+      next
+        case False
+        then have hi_in: "i \<in> {j\<in>I. \<psi> j x \<noteq> 0}" using \<open>i \<in> I\<close> by blast
+        have h_nn: "\<forall>j\<in>{j\<in>I. \<psi> j x \<noteq> 0}. 0 \<le> \<psi> j x"
+        proof (intro ballI)
+          fix j assume "j \<in> {j\<in>I. \<psi> j x \<noteq> 0}"
+          then have "j \<in> I" by blast
+          have "\<psi> j x \<in> top1_closed_interval 0 1"
+            using h\<psi> \<open>j \<in> I\<close> \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by blast
+          then show "0 \<le> \<psi> j x" unfolding top1_closed_interval_def by simp
+        qed
+        have hfin_x: "finite {j\<in>I. \<psi> j x \<noteq> 0}" using h\<psi>fin \<open>x \<in> X\<close> by blast
+        have "\<psi> i x \<le> (\<Sum>j\<in>{j\<in>I. \<psi> j x \<noteq> 0}. \<psi> j x)"
+          by (rule member_le_sum[OF hi_in _ hfin_x]) (use h_nn in blast)
+        then show ?thesis unfolding \<Psi>_def by blast
+      qed
+      have h\<phi>ix_le1: "\<phi> i x \<le> 1" unfolding \<phi>_def \<Psi>_def[symmetric]
+        using h\<psi>ix_le_\<Psi> h\<Psi>x_pos by (simp add: divide_le_eq_1)
+      show "\<phi> i x \<in> top1_closed_interval 0 1"
+        unfolding top1_closed_interval_def using h\<phi>ix_ge0 h\<phi>ix_le1 by simp
+    qed
+    have hI_eq: "top1_closed_interval_topology 0 1 = subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
+      unfolding top1_closed_interval_topology_def by presburger
+    have h\<phi>_img: "\<phi> i ` X \<subseteq> top1_closed_interval 0 1"
+      using h\<phi>_range by blast
+    have hpre: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> i)
+      \<and> top1_closed_interval (0::real) 1 \<subseteq> (UNIV::real set) \<and> (\<phi> i) ` X \<subseteq> top1_closed_interval 0 1"
+      using h\<phi>_cont_R h\<phi>_img by auto
+    show "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)"
+      unfolding hI_eq
+      using Theorem_18_2(5)[OF hTopX hTopR hTopR, rule_format, OF hpre] by blast
+  qed
   have hprop2: "\<forall>i\<in>I. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i) \<and> top1_support_on X TX (\<phi> i) \<subseteq> U i"
     using hprop2_cont hprop2_support by blast
+  have h\<phi>_ilf: "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<phi> i y \<noteq> 0}"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    obtain Ux where hUx: "Ux \<in> TX" and hxUx: "x \<in> Ux"
+      and hfin: "finite {i\<in>I. intersects (V i) Ux}"
+      using hVilf \<open>x \<in> X\<close> by blast
+    have "{i\<in>I. \<exists>y\<in>Ux. \<phi> i y \<noteq> 0} \<subseteq> {i\<in>I. intersects (V i) Ux}"
+    proof (rule subsetI)
+      fix i assume "i \<in> {i\<in>I. \<exists>y\<in>Ux. \<phi> i y \<noteq> 0}"
+      then obtain y where "i \<in> I" "y \<in> Ux" "\<phi> i y \<noteq> 0" by blast
+      have "\<psi> i y \<noteq> 0"
+      proof (rule ccontr)
+        assume "\<not> \<psi> i y \<noteq> 0"
+        then have "\<psi> i y = 0" by simp
+        then have "\<phi> i y = 0" unfolding \<phi>_def by simp
+        then show False using \<open>\<phi> i y \<noteq> 0\<close> by simp
+      qed
+      have "y \<in> X" using \<open>y \<in> Ux\<close> hUx hTsub by blast
+      then have "y \<in> V i" using h\<psi>_nonzero_in_V \<open>i \<in> I\<close> \<open>\<psi> i y \<noteq> 0\<close> by blast
+      then show "i \<in> {i\<in>I. intersects (V i) Ux}"
+        using \<open>i \<in> I\<close> \<open>y \<in> Ux\<close> unfolding intersects_def by blast
+    qed
+    then have "finite {i\<in>I. \<exists>y\<in>Ux. \<phi> i y \<noteq> 0}"
+      using hfin finite_subset by blast
+    then show "\<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<phi> i y \<noteq> 0}"
+      using hUx hxUx by blast
+  qed
   show ?thesis
-  proof (rule exI[of _ \<phi>])
+  proof (rule exI[of _ \<phi>], intro conjI)
     show "top1_partition_of_unity_dominated_family_on X TX I U \<phi>"
       unfolding top1_partition_of_unity_dominated_family_on_def
       using hU_open hprop2 hprop3 hprop4 by blast
+    show "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<phi> i y \<noteq> 0}"
+      using h\<phi>_ilf by blast
   qed
 qed
 
@@ -7972,14 +8201,228 @@ qed
 theorem Theorem_41_8:
   assumes hPara: "top1_paracompact_on X TX"
   assumes hHaus: "is_hausdorff_on X TX"
+  assumes hTsub: "\<forall>Ua\<in>TX. Ua \<subseteq> X"
   assumes hLF: "top1_locally_finite_family_on X TX \<C>"
+  assumes hCsub: "\<forall>C\<in>\<C>. C \<subseteq> X"
   assumes hPos: "\<forall>C\<in>\<C>. 0 < \<epsilon> C"
   shows "\<exists>f::'a \<Rightarrow> real.
     top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
     \<and> (\<forall>x\<in>X. 0 < f x)
     \<and> (\<forall>C\<in>\<C>. \<forall>x\<in>C. f x \<le> \<epsilon> C)"
-  text \<open>Proof uses Theorem_41_7. See Munkres p.258.\<close>
-  sorry
+  text \<open>Proof: cover X by neighborhoods each meeting finitely many C's.
+    Apply Theorem_41_7 for partition of unity. Define \<delta>_\<alpha> = min \<epsilon>_C over
+    C meeting supp(\<phi>_\<alpha>). Then f = \<Sum> \<delta>_\<alpha> \<phi>_\<alpha>.\<close>
+proof -
+  have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by linarith
+  text \<open>Step 1: Open covering from local finiteness witnesses.\<close>
+  have hCov_fam: "\<forall>x\<in>X. \<exists>Ux\<in>TX. x \<in> Ux \<and> finite {C\<in>\<C>. intersects C Ux}"
+    using hLF unfolding top1_locally_finite_family_on_def by blast
+  then obtain Ux where hUx: "\<forall>x\<in>X. Ux x \<in> TX \<and> x \<in> Ux x \<and> finite {C\<in>\<C>. intersects C (Ux x)}"
+    by metis
+  have hUxcov: "top1_open_covering_on X TX (Ux ` X)"
+    unfolding top1_open_covering_on_def
+  proof (intro conjI subsetI)
+    fix U assume "U \<in> Ux ` X"
+    then obtain x where "x \<in> X" "U = Ux x" by blast
+    then show "U \<in> TX" using hUx by blast
+  next
+    fix x assume "x \<in> X"
+    then have "x \<in> Ux x" using hUx by blast
+    then show "x \<in> \<Union>(Ux ` X)" using \<open>x \<in> X\<close> by blast
+  qed
+  text \<open>Step 2: Partition of unity.\<close>
+  obtain \<phi> where h\<phi>: "top1_partition_of_unity_dominated_family_on X TX X Ux \<phi>"
+    and h\<phi>_indexed_lf: "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {\<alpha>\<in>X. \<exists>y\<in>W. \<phi> \<alpha> y \<noteq> 0}"
+    using Theorem_41_7[OF hPara hHaus hTsub hUxcov] by blast
+  text \<open>Extract partition of unity properties.\<close>
+  have h\<phi>_cont: "\<forall>\<alpha>\<in>X. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> \<alpha>)"
+    using h\<phi> unfolding top1_partition_of_unity_dominated_family_on_def by blast
+  have h\<phi>_supp: "\<forall>\<alpha>\<in>X. top1_support_on X TX (\<phi> \<alpha>) \<subseteq> Ux \<alpha>"
+    using h\<phi> unfolding top1_partition_of_unity_dominated_family_on_def by blast
+  have h\<phi>_lf: "top1_locally_finite_family_on X TX ((\<lambda>\<alpha>. top1_support_on X TX (\<phi> \<alpha>)) ` X)"
+    using h\<phi> unfolding top1_partition_of_unity_dominated_family_on_def by blast
+  have h\<phi>_sum1: "\<forall>x\<in>X. finite {\<alpha>\<in>X. \<phi> \<alpha> x \<noteq> 0} \<and> (\<Sum>\<alpha>\<in>{\<alpha>\<in>X. \<phi> \<alpha> x \<noteq> 0}. \<phi> \<alpha> x) = 1"
+    using h\<phi> unfolding top1_partition_of_unity_dominated_family_on_def by blast
+  text \<open>Step 3: For each \<alpha>, define \<delta>_\<alpha>.\<close>
+  define \<delta> where "\<delta> \<alpha> = (if {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))} = {} then 1
+    else Min (\<epsilon> ` {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}))" for \<alpha>
+  have hC_meets_supp_fin: "\<forall>\<alpha>\<in>X. finite {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}"
+  proof (intro ballI)
+    fix \<alpha> assume "\<alpha> \<in> X"
+    have "top1_support_on X TX (\<phi> \<alpha>) \<subseteq> Ux \<alpha>" using h\<phi>_supp \<open>\<alpha> \<in> X\<close> by blast
+    have "{C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))} \<subseteq> {C\<in>\<C>. intersects C (Ux \<alpha>)}"
+      unfolding intersects_def using \<open>top1_support_on X TX (\<phi> \<alpha>) \<subseteq> Ux \<alpha>\<close> by blast
+    then show "finite {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}"
+      using hUx \<open>\<alpha> \<in> X\<close> finite_subset by blast
+  qed
+  have h\<delta>_pos: "\<forall>\<alpha>\<in>X. 0 < \<delta> \<alpha>"
+  proof (intro ballI)
+    fix \<alpha> assume "\<alpha> \<in> X"
+    show "0 < \<delta> \<alpha>"
+    proof (cases "{C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))} = {}")
+      case True then show ?thesis unfolding \<delta>_def by simp
+    next
+      case False
+      define S where "S = {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}"
+      have "finite S" using hC_meets_supp_fin \<open>\<alpha> \<in> X\<close> unfolding S_def by blast
+      have "S \<noteq> {}" using False unfolding S_def by blast
+      have "\<forall>C\<in>S. 0 < \<epsilon> C" using hPos unfolding S_def by blast
+      have "finite (\<epsilon> ` S)" using \<open>finite S\<close> by blast
+      have "\<epsilon> ` S \<noteq> {}" using \<open>S \<noteq> {}\<close> by blast
+      have "\<delta> \<alpha> = Min (\<epsilon> ` S)" unfolding \<delta>_def S_def using False by auto
+      also have "Min (\<epsilon> ` S) \<in> \<epsilon> ` S"
+        using Min_in[OF \<open>finite (\<epsilon> ` S)\<close> \<open>\<epsilon> ` S \<noteq> {}\<close>] by blast
+      finally have "\<delta> \<alpha> \<in> \<epsilon> ` S" .
+      then obtain C0 where "C0 \<in> S" "\<delta> \<alpha> = \<epsilon> C0" by blast
+      then have "0 < \<epsilon> C0" using \<open>\<forall>C\<in>S. 0 < \<epsilon> C\<close> by blast
+      then show ?thesis using \<open>\<delta> \<alpha> = \<epsilon> C0\<close> by linarith
+    qed
+  qed
+  text \<open>Step 4: Define f.\<close>
+  define f where "f y = (\<Sum>\<alpha>\<in>{\<alpha>\<in>X. \<phi> \<alpha> y \<noteq> 0}. \<delta> \<alpha> * \<phi> \<alpha> y)" for y
+  text \<open>Step 5: f is continuous. Use locally_finite_sum_continuous.\<close>
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have h\<phi>_cont_R: "\<forall>\<alpha>\<in>X. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume "\<alpha> \<in> X"
+    have h\<phi>i: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> \<alpha>)"
+      using h\<phi>_cont \<open>\<alpha> \<in> X\<close> by blast
+    have hI_eq: "top1_closed_interval_topology 0 1 = subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
+      unfolding top1_closed_interval_topology_def by presburger
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (\<phi> \<alpha>)"
+      by (simp add: hTopX h\<phi>i top1_continuous_map_on_closed_interval_to_real)
+  qed
+  define g where "g \<alpha> y = \<delta> \<alpha> * \<phi> \<alpha> y" for \<alpha> y
+  have hg_cont: "\<forall>\<alpha>\<in>X. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (g \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume "\<alpha> \<in> X"
+    show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV (g \<alpha>)"
+      unfolding g_def
+      by (rule top1_continuous_scale_real[OF hTopX h\<phi>_cont_R[rule_format, OF \<open>\<alpha> \<in> X\<close>]])
+  qed
+  have hg_eq_nonzero: "\<forall>y. {\<alpha>\<in>X. g \<alpha> y \<noteq> 0} = {\<alpha>\<in>X. \<phi> \<alpha> y \<noteq> 0}"
+  proof (intro allI, rule set_eqI)
+    fix y \<alpha>
+    show "\<alpha> \<in> {\<alpha>\<in>X. g \<alpha> y \<noteq> 0} \<longleftrightarrow> \<alpha> \<in> {\<alpha>\<in>X. \<phi> \<alpha> y \<noteq> 0}"
+      unfolding g_def using h\<delta>_pos by auto
+  qed
+  have hg_fin: "\<forall>y\<in>X. finite {\<alpha>\<in>X. g \<alpha> y \<noteq> 0}"
+    using hg_eq_nonzero h\<phi>_sum1 by simp
+  have hg_ILF: "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {\<alpha>\<in>X. \<exists>y\<in>W. g \<alpha> y \<noteq> 0}"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    obtain W where "W \<in> TX" "x \<in> W" "finite {\<alpha>\<in>X. \<exists>y\<in>W. \<phi> \<alpha> y \<noteq> 0}"
+      using h\<phi>_indexed_lf \<open>x \<in> X\<close> by blast
+    have "{\<alpha>\<in>X. \<exists>y\<in>W. g \<alpha> y \<noteq> 0} = {\<alpha>\<in>X. \<exists>y\<in>W. \<phi> \<alpha> y \<noteq> 0}"
+    proof (rule set_eqI)
+      fix \<alpha> show "\<alpha> \<in> {\<alpha>\<in>X. \<exists>y\<in>W. g \<alpha> y \<noteq> 0} \<longleftrightarrow> \<alpha> \<in> {\<alpha>\<in>X. \<exists>y\<in>W. \<phi> \<alpha> y \<noteq> 0}"
+        using hg_eq_nonzero by auto
+    qed
+    then have "finite {\<alpha>\<in>X. \<exists>y\<in>W. g \<alpha> y \<noteq> 0}"
+      using \<open>finite {\<alpha>\<in>X. \<exists>y\<in>W. \<phi> \<alpha> y \<noteq> 0}\<close> by simp
+    then show "\<exists>W\<in>TX. x \<in> W \<and> finite {\<alpha>\<in>X. \<exists>y\<in>W. g \<alpha> y \<noteq> 0}"
+      using \<open>W \<in> TX\<close> \<open>x \<in> W\<close> by blast
+  qed
+  have hf_eq_gsum: "\<forall>y. f y = (\<Sum>\<alpha>\<in>{\<alpha>\<in>X. g \<alpha> y \<noteq> 0}. g \<alpha> y)"
+  proof (intro allI)
+    fix y
+    have "{{\<alpha>\<in>X. \<phi> \<alpha> y \<noteq> 0}} = {{\<alpha>\<in>X. g \<alpha> y \<noteq> 0}}" using hg_eq_nonzero by simp
+    then show "f y = (\<Sum>\<alpha>\<in>{\<alpha>\<in>X. g \<alpha> y \<noteq> 0}. g \<alpha> y)"
+      unfolding f_def g_def using hg_eq_nonzero by auto
+  qed
+  have hf_cont: "top1_continuous_map_on X TX UNIV order_topology_on_UNIV f"
+  proof -
+    define gsum where "gsum y = (\<Sum>\<alpha>\<in>{\<alpha>\<in>X. g \<alpha> y \<noteq> 0}. g \<alpha> y)" for y
+    have "top1_continuous_map_on X TX UNIV order_topology_on_UNIV gsum"
+      unfolding gsum_def
+      by (rule locally_finite_sum_continuous[OF hTopX hTsub hg_cont hg_ILF hg_fin])
+    moreover have "\<forall>y\<in>X. f y = gsum y"
+      unfolding gsum_def using hf_eq_gsum by simp
+    ultimately show ?thesis
+      using top1_continuous_map_on_cong by blast
+  qed
+  text \<open>Step 6: f > 0.\<close>
+  have h\<phi>_ge0: "\<forall>\<alpha>\<in>X. \<forall>x\<in>X. 0 \<le> \<phi> \<alpha> x"
+  proof (intro ballI)
+    fix \<alpha> x assume "\<alpha> \<in> X" "x \<in> X"
+    have "\<phi> \<alpha> x \<in> top1_closed_interval 0 1"
+      using h\<phi>_cont \<open>\<alpha> \<in> X\<close> \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by blast
+    then show "0 \<le> \<phi> \<alpha> x" unfolding top1_closed_interval_def by simp
+  qed
+  have hf_pos: "\<forall>x\<in>X. 0 < f x"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    define F where "F = {\<alpha>\<in>X. \<phi> \<alpha> x \<noteq> 0}"
+    have hFfin: "finite F" using h\<phi>_sum1 \<open>x \<in> X\<close> unfolding F_def by blast
+    have hsum1: "(\<Sum>\<alpha>\<in>F. \<phi> \<alpha> x) = 1" using h\<phi>_sum1 \<open>x \<in> X\<close> unfolding F_def by blast
+    then have "F \<noteq> {}" by (metis sum.empty zero_neq_one)
+    have hterms_pos: "\<forall>\<alpha>\<in>F. 0 < \<delta> \<alpha> * \<phi> \<alpha> x"
+    proof (intro ballI)
+      fix \<alpha> assume "\<alpha> \<in> F"
+      then have "\<alpha> \<in> X" "\<phi> \<alpha> x \<noteq> 0" unfolding F_def by blast+
+      have "0 < \<delta> \<alpha>" using h\<delta>_pos \<open>\<alpha> \<in> X\<close> by blast
+      have "0 \<le> \<phi> \<alpha> x" using h\<phi>_ge0 \<open>\<alpha> \<in> X\<close> \<open>x \<in> X\<close> by blast
+      then have "0 < \<phi> \<alpha> x" using \<open>\<phi> \<alpha> x \<noteq> 0\<close> by linarith
+      then show "0 < \<delta> \<alpha> * \<phi> \<alpha> x" using \<open>0 < \<delta> \<alpha>\<close> by simp
+    qed
+    have "f x = (\<Sum>\<alpha>\<in>F. \<delta> \<alpha> * \<phi> \<alpha> x)" unfolding f_def F_def by presburger
+    also have "0 < ..."
+      using hFfin hsum1 hterms_pos sum_pos by fastforce
+    finally show "0 < f x" .
+  qed
+  text \<open>Step 7: f(x) \<le> \<epsilon>_C for x \<in> C.
+    Key: \<delta>_\<alpha> \<phi>_\<alpha>(x) \<le> \<epsilon>_C \<phi>_\<alpha>(x), then sum.\<close>
+  have h\<delta>_le_\<epsilon>: "\<forall>C\<in>\<C>. \<forall>\<alpha>\<in>X. \<forall>x\<in>C. x \<in> top1_support_on X TX (\<phi> \<alpha>) \<longrightarrow> \<delta> \<alpha> \<le> \<epsilon> C"
+  proof (intro ballI impI)
+    fix C \<alpha> x assume "C \<in> \<C>" "\<alpha> \<in> X" "x \<in> C" "x \<in> top1_support_on X TX (\<phi> \<alpha>)"
+    then have "intersects C (top1_support_on X TX (\<phi> \<alpha>))"
+      unfolding intersects_def by blast
+    then have "C \<in> {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}" using \<open>C \<in> \<C>\<close> by blast
+    then have hne: "{C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))} \<noteq> {}" by blast
+    define S where "S = {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}"
+    have "finite S" using hC_meets_supp_fin \<open>\<alpha> \<in> X\<close> unfolding S_def by blast
+    have "S \<noteq> {}" using hne unfolding S_def by blast
+    have "C \<in> S" using \<open>C \<in> {C\<in>\<C>. intersects C (top1_support_on X TX (\<phi> \<alpha>))}\<close> unfolding S_def by blast
+    have "\<epsilon> C \<in> \<epsilon> ` S" using \<open>C \<in> S\<close> by blast
+    have "\<delta> \<alpha> = Min (\<epsilon> ` S)" unfolding \<delta>_def S_def using hne by auto
+    also have "Min (\<epsilon> ` S) \<le> \<epsilon> C"
+      using \<open>C \<in> S\<close> \<open>finite S\<close> by simp
+    finally show "\<delta> \<alpha> \<le> \<epsilon> C" .
+  qed
+  have hf_le: "\<forall>C\<in>\<C>. \<forall>x\<in>C. f x \<le> \<epsilon> C"
+  proof (intro ballI)
+    fix C x assume "C \<in> \<C>" "x \<in> C"
+    then have "x \<in> X" using hCsub by blast
+    define F where "F = {\<alpha>\<in>X. \<phi> \<alpha> x \<noteq> 0}"
+    have hFfin: "finite F" using h\<phi>_sum1 \<open>x \<in> X\<close> unfolding F_def by blast
+    have hsum1: "(\<Sum>\<alpha>\<in>F. \<phi> \<alpha> x) = 1" using h\<phi>_sum1 \<open>x \<in> X\<close> unfolding F_def by blast
+    have "f x = (\<Sum>\<alpha>\<in>F. \<delta> \<alpha> * \<phi> \<alpha> x)" unfolding f_def F_def by presburger
+    also have "... \<le> (\<Sum>\<alpha>\<in>F. \<epsilon> C * \<phi> \<alpha> x)"
+    proof (rule sum_mono)
+      fix \<alpha> assume "\<alpha> \<in> F"
+      then have "\<alpha> \<in> X" "\<phi> \<alpha> x \<noteq> 0" unfolding F_def by blast+
+      have "0 \<le> \<phi> \<alpha> x" using h\<phi>_ge0 \<open>\<alpha> \<in> X\<close> \<open>x \<in> X\<close> by blast
+      show "\<delta> \<alpha> * \<phi> \<alpha> x \<le> \<epsilon> C * \<phi> \<alpha> x"
+      proof (cases "x \<in> top1_support_on X TX (\<phi> \<alpha>)")
+        case True
+        then have "\<delta> \<alpha> \<le> \<epsilon> C" using h\<delta>_le_\<epsilon> \<open>C \<in> \<C>\<close> \<open>\<alpha> \<in> X\<close> \<open>x \<in> C\<close> by blast
+        then show ?thesis using \<open>0 \<le> \<phi> \<alpha> x\<close> by (simp add: mult_right_mono)
+      next
+        case False
+        text \<open>If x \<notin> supp(\<phi>_\<alpha>), then \<phi>_\<alpha>(x) = 0.\<close>
+        have "x \<in> {y \<in> X. \<phi> \<alpha> y \<noteq> 0}" using \<open>x \<in> X\<close> \<open>\<phi> \<alpha> x \<noteq> 0\<close> by blast
+        then have "x \<in> closure_on X TX {y \<in> X. \<phi> \<alpha> y \<noteq> 0}" using subset_closure_on by fast
+        then have "x \<in> top1_support_on X TX (\<phi> \<alpha>)" unfolding top1_support_on_def by blast
+        then show ?thesis using False by contradiction
+      qed
+    qed
+    also have "... = \<epsilon> C * (\<Sum>\<alpha>\<in>F. \<phi> \<alpha> x)" by (simp add: sum_distrib_left)
+    also have "... = \<epsilon> C" using hsum1 by simp
+    finally show "f x \<le> \<epsilon> C" .
+  qed
+  show ?thesis using hf_cont hf_pos hf_le by blast
+qed
 
 section \<open>\<S>42 The Smirnov Metrization Theorem\<close>
 
