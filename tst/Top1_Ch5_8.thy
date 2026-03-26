@@ -7731,6 +7731,106 @@ definition top1_partition_of_unity_dominated_family_on ::
      \<and> top1_locally_finite_family_on X TX ((\<lambda>i. top1_support_on X TX (\<phi> i)) ` I)
      \<and> (\<forall>x\<in>X. finite {i\<in>I. \<phi> i x \<noteq> 0} \<and> (\<Sum>i\<in>{i\<in>I. \<phi> i x \<noteq> 0}. \<phi> i x) = 1)"
 
+text \<open>Indexed shrinking lemma: given a locally finite indexed open covering {U i},
+  produce {V i} with cl(V i) \<subseteq> U i and {V i} still covers X.
+  Derived from Lemma_41_3 by grouping the unindexed refinement by index.\<close>
+lemma indexed_shrinking:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hTsub: "\<forall>Ua\<in>TX. Ua \<subseteq> X"
+  assumes hReg: "top1_regular_on X TX"
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hCov: "top1_open_covering_on X TX (U ` I)"
+  shows "\<exists>V. (\<forall>i\<in>I. V i \<in> TX \<and> V i \<subseteq> U i \<and> closure_on X TX (V i) \<subseteq> U i)
+    \<and> top1_open_covering_on X TX (V ` I)
+    \<and> (\<forall>x\<in>X. finite {i\<in>I. x \<in> V i})"
+proof -
+  text \<open>Apply Lemma_41_3: get unindexed B with cl(B) \<subseteq> some U_i.\<close>
+  have hParaLF: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)"
+    using hPara unfolding top1_paracompact_on_def by argo
+  have hStrong: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
+      \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A))"
+    using iffD1[OF Lemma_41_3[OF hReg]] hParaLF by argo
+  obtain \<B> where hBcov: "top1_open_covering_on X TX \<B>"
+    and hBlf: "top1_locally_finite_family_on X TX \<B>"
+    and hBcl: "\<forall>B\<in>\<B>. \<exists>Ui\<in>U ` I. closure_on X TX B \<subseteq> Ui"
+    using hStrong[rule_format, OF hCov] by blast
+  text \<open>For each B, choose sel(B) \<in> I with cl(B) \<subseteq> U_{sel(B)}.\<close>
+  have "\<forall>B\<in>\<B>. \<exists>i\<in>I. closure_on X TX B \<subseteq> U i"
+  proof (intro ballI)
+    fix B assume "B \<in> \<B>"
+    obtain Ui where "Ui \<in> U ` I" "closure_on X TX B \<subseteq> Ui" using hBcl \<open>B \<in> \<B>\<close> by blast
+    then obtain i where "i \<in> I" "Ui = U i" by blast
+    then show "\<exists>i\<in>I. closure_on X TX B \<subseteq> U i" using \<open>closure_on X TX B \<subseteq> Ui\<close> by blast
+  qed
+  then obtain bsel where hbsel: "\<forall>B\<in>\<B>. bsel B \<in> I \<and> closure_on X TX B \<subseteq> U (bsel B)" by metis
+  text \<open>Group: V i = \<Union>{B | bsel(B) = i}.\<close>
+  define V where "V i = \<Union>{B\<in>\<B>. bsel B = i}" for i
+  show ?thesis
+  proof (rule exI[of _ V], intro conjI ballI)
+    fix i assume "i \<in> I"
+    have hBTX: "\<B> \<subseteq> TX" using hBcov unfolding top1_open_covering_on_def by linarith
+    have "\<Union>{B\<in>\<B>. bsel B = i} \<in> TX"
+    proof -
+      have "{B\<in>\<B>. bsel B = i} \<subseteq> TX" using hBTX by blast
+      then show ?thesis using hTopX unfolding is_topology_on_def by blast
+    qed
+    then show "V i \<in> TX" unfolding V_def by blast
+    show "V i \<subseteq> U i" unfolding V_def using hbsel subset_closure_on by fast
+    show "closure_on X TX (V i) \<subseteq> U i"
+    proof -
+      define Bi where "Bi = {B\<in>\<B>. bsel B = i}"
+      have hBi_sub: "Bi \<subseteq> \<B>" unfolding Bi_def by blast
+      have hBi_lf: "top1_locally_finite_family_on X TX Bi"
+        using top1_locally_finite_family_on_subset[OF hBlf hBi_sub] by blast
+      have hBi_sub_X: "\<forall>B\<in>Bi. B \<subseteq> X" using hBi_sub hBcov hTsub unfolding top1_open_covering_on_def by fast
+      have "closure_on X TX (V i) = closure_on X TX (\<Union>Bi)" unfolding V_def Bi_def by blast
+      also have "... = \<Union>(closure_on X TX ` Bi)"
+        by (rule top1_closure_on_Union_locally_finite[OF hTopX hBi_sub_X hBi_lf])
+      also have "... \<subseteq> U i"
+      proof (rule Union_least)
+        fix C assume "C \<in> closure_on X TX ` Bi"
+        then obtain B where "B \<in> Bi" "C = closure_on X TX B" by blast
+        then have "bsel B = i" unfolding Bi_def by blast
+        then have "closure_on X TX B \<subseteq> U i" using hbsel \<open>B \<in> Bi\<close> hBi_sub by blast
+        then show "C \<subseteq> U i" using \<open>C = closure_on X TX B\<close> by blast
+      qed
+      finally show ?thesis .
+    qed
+  next
+    show "top1_open_covering_on X TX (V ` I)"
+      unfolding top1_open_covering_on_def
+    proof (intro conjI subsetI)
+      fix Vi assume "Vi \<in> V ` I"
+      then obtain i where "i \<in> I" "Vi = V i" by blast
+      have hBTX': "\<B> \<subseteq> TX" using hBcov unfolding top1_open_covering_on_def by blast
+      have "{B\<in>\<B>. bsel B = i} \<subseteq> TX" using hBTX' by blast
+      then have "\<Union>{B\<in>\<B>. bsel B = i} \<in> TX" using hTopX unfolding is_topology_on_def by blast
+      then show "Vi \<in> TX" unfolding \<open>Vi = V i\<close> V_def by blast
+    next
+      fix x assume "x \<in> X"
+      obtain B where "B \<in> \<B>" "x \<in> B" using hBcov \<open>x \<in> X\<close> unfolding top1_open_covering_on_def by blast
+      then have "x \<in> V (bsel B)" unfolding V_def using \<open>B \<in> \<B>\<close> \<open>x \<in> B\<close> by blast
+      moreover have "bsel B \<in> I" using hbsel \<open>B \<in> \<B>\<close> by blast
+      ultimately show "x \<in> \<Union>(V ` I)" by blast
+    qed
+  next
+    fix x assume hxX: "x \<in> X"
+    obtain Ux where "Ux \<in> TX" "x \<in> Ux" "finite {B\<in>\<B>. intersects B Ux}"
+      using hBlf hxX unfolding top1_locally_finite_family_on_def by blast
+    have "{i\<in>I. x \<in> V i} \<subseteq> bsel ` {B\<in>\<B>. x \<in> B}"
+      unfolding V_def using hbsel by blast
+    moreover have "finite {B\<in>\<B>. x \<in> B}"
+    proof -
+      have "{B\<in>\<B>. x \<in> B} \<subseteq> {B\<in>\<B>. intersects B Ux}"
+        unfolding intersects_def using \<open>x \<in> Ux\<close> by blast
+      then show "finite {B\<in>\<B>. x \<in> B}" using \<open>finite {B\<in>\<B>. intersects B Ux}\<close> finite_subset by blast
+    qed
+    ultimately show "finite {i\<in>I. x \<in> V i}" using finite_surj by blast
+  qed
+qed
+
 (** from \S41 Theorem 41.7 (Partition of unity) [top1.tex:5999] **)
 theorem Theorem_41_7:
   assumes hPara: "top1_paracompact_on X TX"
