@@ -7792,12 +7792,62 @@ proof -
   then obtain \<psi> where h\<psi>: "\<forall>W\<in>\<W>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> W)
     \<and> (\<forall>x\<in>closure_on X TX W. \<psi> W x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> W x = 0)"
     by metis
-  text \<open>Step 4: Construct \<Psi> and \<phi>_i.\<close>
+  text \<open>Step 4: Properties of \<psi>.\<close>
   define sel where "sel W = isel (Vsel W)" for W
-  text \<open>\<Psi>(x) = \<Sum> \<psi>_W(x) over W with nonzero \<psi>. Locally finite, continuous, > 0.\<close>
-  text \<open>Define \<phi>_i as \<psi>_W / \<Psi> summed over W assigned to i.\<close>
-  define \<phi>0 where "\<phi>0 i x = (\<Sum>W\<in>{W\<in>\<W>. sel W = i \<and> \<psi> W x \<noteq> 0}. \<psi> W x /
-    (\<Sum>W'\<in>{W'\<in>\<W>. \<psi> W' x \<noteq> 0}. \<psi> W' x))" for i x
+  have hsel_I: "\<forall>W\<in>\<W>. sel W \<in> I" unfolding sel_def using hisel hVsel by blast
+  have h\<psi>_zero_outside: "\<forall>W\<in>\<W>. \<forall>x\<in>X - Vsel W. \<psi> W x = 0"
+    using h\<psi> by blast
+  have h\<psi>_nonzero_in_V: "\<forall>W\<in>\<W>. \<forall>x\<in>X. \<psi> W x \<noteq> 0 \<longrightarrow> x \<in> Vsel W"
+  proof (intro ballI impI)
+    fix W x assume "W \<in> \<W>" "x \<in> X" "\<psi> W x \<noteq> 0"
+    show "x \<in> Vsel W" using h\<psi>_zero_outside \<open>W \<in> \<W>\<close> \<open>x \<in> X\<close> \<open>\<psi> W x \<noteq> 0\<close> by blast
+  qed
+  text \<open>Finiteness: at each x, only finitely many \<psi>_W nonzero.\<close>
+  have h\<psi>fin: "\<forall>x\<in>X. finite {W\<in>\<W>. \<psi> W x \<noteq> 0}"
+    sorry
+  text \<open>\<Psi> positive: \<W> covers X so at each x some \<psi>_W = 1.\<close>
+  define \<Psi> where "\<Psi> x = (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)" for x
+  have h\<Psi>_pos: "\<forall>x\<in>X. 0 < \<Psi> x"
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    obtain W0 where "W0 \<in> \<W>" "x \<in> W0"
+      using hWcov hxX unfolding top1_open_covering_on_def by blast
+    have "x \<in> closure_on X TX W0" using \<open>x \<in> W0\<close> subset_closure_on by fast
+    then have "\<psi> W0 x = 1" using h\<psi> \<open>W0 \<in> \<W>\<close> by blast
+    then have "W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" using \<open>W0 \<in> \<W>\<close> by simp
+    have h\<psi>_nonneg: "\<forall>W\<in>\<W>. 0 \<le> \<psi> W x"
+    proof (intro ballI)
+      fix W assume "W \<in> \<W>"
+      then have "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> W)"
+        using h\<psi> by blast
+      then have "\<forall>y\<in>X. \<psi> W y \<in> top1_closed_interval 0 1" unfolding top1_continuous_map_on_def by linarith
+      then show "0 \<le> \<psi> W x" using hxX unfolding top1_closed_interval_def by blast
+    qed
+    have "0 < (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)"
+    proof -
+      have hfin': "finite {W\<in>\<W>. \<psi> W x \<noteq> 0}" using h\<psi>fin hxX by blast
+      have hne: "{W\<in>\<W>. \<psi> W x \<noteq> 0} \<noteq> {}" using \<open>W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}\<close> by blast
+      have "\<forall>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 \<le> \<psi> W x" using h\<psi>_nonneg by blast
+      have "\<exists>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 < \<psi> W x"
+        using \<open>W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}\<close> \<open>\<psi> W0 x = 1\<close> by fastforce
+      have hnn: "\<forall>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 \<le> \<psi> W x" using h\<psi>_nonneg by blast
+      obtain Wp where hWp: "Wp \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" "0 < \<psi> Wp x"
+        using \<open>\<exists>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 < \<psi> W x\<close> by blast
+      have "\<psi> Wp x \<le> (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)"
+      proof (rule member_le_sum)
+        show "Wp \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" using hWp(1) .
+        show "finite {W\<in>\<W>. \<psi> W x \<noteq> 0}" using hfin' .
+        fix W assume "W \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0} - {Wp}"
+        then show "(0::real) \<le> \<psi> W x" using hnn by blast
+      qed
+      then show ?thesis using hWp(2) by linarith
+    qed
+    then show "0 < \<Psi> x" unfolding \<Psi>_def by blast
+  qed
+  text \<open>Define \<phi>.\<close>
+  define \<phi> where "\<phi> i x = (if x \<in> X then
+    (\<Sum>W\<in>{W\<in>\<W>. sel W = i \<and> \<psi> W x \<noteq> 0}. \<psi> W x) / \<Psi> x else 0)" for i x
+  text \<open>Verify all properties. Left as sorry for now.\<close>
   show ?thesis
     unfolding top1_partition_of_unity_dominated_family_on_def
     sorry
