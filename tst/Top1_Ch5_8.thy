@@ -1666,6 +1666,16 @@ qed
 definition top1_bounded_on :: "'a set \<Rightarrow> ('a \<Rightarrow> real) \<Rightarrow> bool" where
   "top1_bounded_on X f \<longleftrightarrow> (\<exists>M. \<forall>x\<in>X. \<bar>f x\<bar> \<le> M)"
 
+text \<open>Compactness of [a,b] in the order/subspace topology (Theorem 27.1 of Munkres).
+  This is a prerequisite for Stone-\<C>ech and other results.\<close>
+text \<open>Compactness of [a,b]. This deep result (Munkres Theorem 27.1) uses the least upper bound
+  property. The full formal proof requires substantial work with the subspace topology.
+  We leave it as sorry pending a bridge to HOL's compact_Icc or a direct lub proof.\<close>
+lemma top1_closed_interval_compact:
+  assumes hab: "(a::real) \<le> b"
+  shows "top1_compact_on (top1_closed_interval a b) (top1_closed_interval_topology a b)"
+  sorry
+
 (** from \S38 Theorem 38.2 (Existence of Stone-\<C>ech compactification) [top1.tex:5418] **)
 text \<open>Proof strategy: use Theorem 34.3 (completely regular \<open>\<Rightarrow>\<close> embeds in \<open>[0,1]^J\<close>)
   to embed X into \<open>[0,1]^J\<close>. The closure of the image in \<open>[0,1]^J\<close> is compact
