@@ -6590,27 +6590,87 @@ proof (intro allI impI)
 qed
 
 (** from \S41 Lemma 41.3 [top1.tex:5864] **)
+text \<open>Lemma 41.3: For regular paracompact spaces, every open covering has a locally finite
+  open refinement B with the property that for each B \<in> B, there exists A \<in> A with cl(B) \<subseteq> A.
+  The \<Leftarrow> direction is trivial. The \<Rightarrow> direction uses regularity to shrink neighborhoods.\<close>
 lemma Lemma_41_3:
   assumes hReg: "top1_regular_on X TX"
   shows "(\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)) \<longleftrightarrow>
-        (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))))"
+        (\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow> (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B> \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A)))"
 proof (intro iffI allI impI)
-  text \<open>(\<Rightarrow>) Paracompact → strong paracompact using regularity.\<close>
+  text \<open>(\<Rightarrow>) Paracompact + regular \<longrightarrow> strong paracompact. Uses Munkres \S41 shrinking argument.\<close>
   fix \<A>
   assume hLHS: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
     (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)"
   assume hCov: "top1_open_covering_on X TX \<A>"
+  text \<open>Step 1: get locally finite refinement C of A (paracompactness).\<close>
+  obtain \<C> where hCcov: "top1_open_covering_on X TX \<C>"
+    and hCref: "top1_refines \<C> \<A>" and hClf: "top1_locally_finite_family_on X TX \<C>"
+    using hLHS hCov by auto
+  text \<open>Step 2: for each C \<in> C, pick sel(C) \<in> A with C \<subseteq> sel(C).\<close>
+  have "\<forall>C\<in>\<C>. \<exists>A\<in>\<A>. C \<subseteq> A" using hCref unfolding top1_refines_def by linarith
+  then obtain sel where hsel: "\<forall>C\<in>\<C>. sel C \<in> \<A> \<and> C \<subseteq> sel C" by metis
+  text \<open>Step 3: regularity gives shrunk neighborhoods.\<close>
+  have hTopX: "is_topology_on X TX" using hReg unfolding top1_regular_on_def top1_T1_on_def by linarith
+  have hReg_char: "\<forall>x\<in>X. \<forall>U. U \<in> TX \<and> U \<subseteq> X \<and> x \<in> U
+    \<longrightarrow> (\<exists>V. V \<in> TX \<and> V \<subseteq> X \<and> x \<in> V \<and> closure_on X TX V \<subseteq> U)"
+    using hReg Lemma_31_1a by metis
+  text \<open>For each x, pick a C containing x, use regularity to shrink into sel(C).\<close>
+  have "\<forall>x\<in>X. \<exists>Vx\<in>TX. x \<in> Vx \<and> (\<exists>A\<in>\<A>. closure_on X TX Vx \<subseteq> A)"
+  proof (intro ballI)
+    fix x assume hx: "x \<in> X"
+    obtain C where hC: "C \<in> \<C>" "x \<in> C" using hCcov hx unfolding top1_open_covering_on_def by blast
+    have "sel C \<in> \<A>" "C \<subseteq> sel C" using hsel hC(1) by auto
+    have "sel C \<in> TX" using \<open>sel C \<in> \<A>\<close> hCov unfolding top1_open_covering_on_def by blast
+    have hX_TX: "X \<in> TX" using hTopX unfolding is_topology_on_def by blast
+    have "sel C \<inter> X \<in> TX" using topology_inter2[OF hTopX \<open>sel C \<in> TX\<close> hX_TX] by blast
+    have "sel C \<inter> X \<subseteq> X" by blast
+    have "x \<in> sel C \<inter> X" using hC(2) \<open>C \<subseteq> sel C\<close> hx by blast
+    obtain V where hV: "V \<in> TX" "V \<subseteq> X" "x \<in> V" "closure_on X TX V \<subseteq> sel C \<inter> X"
+      using hReg_char hx \<open>sel C \<inter> X \<in> TX\<close> \<open>sel C \<inter> X \<subseteq> X\<close> \<open>x \<in> sel C \<inter> X\<close> by blast
+    have "closure_on X TX V \<subseteq> sel C" using hV(4) by blast
+    show "\<exists>Vx\<in>TX. x \<in> Vx \<and> (\<exists>A\<in>\<A>. closure_on X TX Vx \<subseteq> A)"
+      using hV(1,3) \<open>sel C \<in> \<A>\<close> \<open>closure_on X TX V \<subseteq> sel C\<close> by blast
+  qed
+  then obtain Vf where hVf: "\<forall>x\<in>X. Vf x \<in> TX \<and> x \<in> Vf x \<and> (\<exists>A\<in>\<A>. closure_on X TX (Vf x) \<subseteq> A)"
+    by metis
+  text \<open>Step 4: {Vf x | x \<in> X} is an open covering. Apply paracompactness again.\<close>
+  have hVcov: "top1_open_covering_on X TX (Vf ` X)"
+    unfolding top1_open_covering_on_def using hVf by blast
+  obtain \<B> where hBcov: "top1_open_covering_on X TX \<B>"
+    and hBref: "top1_refines \<B> (Vf ` X)" and hBlf: "top1_locally_finite_family_on X TX \<B>"
+    using hLHS hVcov by blast
+  text \<open>Step 5: each B \<in> B has cl(B) \<subseteq> some A \<in> A.\<close>
+  have "\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A"
+  proof (intro ballI)
+    fix B assume hB: "B \<in> \<B>"
+    obtain Vx where "Vx \<in> Vf ` X" "B \<subseteq> Vx" using hBref hB unfolding top1_refines_def by fast
+    then obtain x where "x \<in> X" "Vx = Vf x" by blast
+    obtain A where "A \<in> \<A>" "closure_on X TX (Vf x) \<subseteq> A" using hVf \<open>x \<in> X\<close> by blast
+    have "closure_on X TX B \<subseteq> closure_on X TX (Vf x)"
+      using closure_on_mono \<open>B \<subseteq> Vx\<close> \<open>Vx = Vf x\<close> by blast
+    then show "\<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A" using \<open>A \<in> \<A>\<close> \<open>closure_on X TX (Vf x) \<subseteq> A\<close> by blast
+  qed
   show "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
-    \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A))"
-    sorry (* → direction: the SOME formulation may need fixing—
-             cl(B) ⊆ (SOME A. A∈A ∧ B⊆A) requires SOME to pick an A with cl(B)⊆A,
-             but SOME only guarantees B⊆A. Needs cl(B)⊆A for the specific SOME-chosen A. *)
+    \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A)"
+  proof -
+    have "top1_refines \<B> \<A>" unfolding top1_refines_def
+    proof (intro ballI)
+      fix B assume "B \<in> \<B>"
+      obtain A where "A \<in> \<A>" "closure_on X TX B \<subseteq> A"
+        using \<open>\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A\<close> \<open>B \<in> \<B>\<close> by blast
+      have "B \<subseteq> closure_on X TX B" by (rule subset_closure_on)
+      then have "B \<subseteq> A" using \<open>closure_on X TX B \<subseteq> A\<close> by blast
+      then show "\<exists>A\<in>\<A>. B \<subseteq> A" using \<open>A \<in> \<A>\<close> by blast
+    qed
+    then show ?thesis using hBcov hBlf \<open>\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A\<close> by blast
+  qed
 next
   text \<open>(\<Leftarrow>) Strong paracompact → paracompact (trivial: drop extra condition).\<close>
   fix \<A>
   assume hRHS: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
     (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
-      \<and> (\<forall>B\<in>\<B>. closure_on X TX B \<subseteq> (SOME A. A \<in> \<A> \<and> B \<subseteq> A)))"
+      \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A))"
   assume hCov: "top1_open_covering_on X TX \<A>"
   obtain \<B> where h: "top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>"
     using hRHS hCov
@@ -7575,6 +7635,86 @@ proof -
   show ?thesis using hV_cl hV_cov hV_lf hV_ref by blast
 qed
 
+text \<open>Finite sum of continuous real-valued functions (arbitrary finite index set).\<close>
+lemma top1_continuous_sum_finite_real:
+  fixes f :: "'i \<Rightarrow> 'a \<Rightarrow> real"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hfin: "finite F"
+  assumes hcont: "\<forall>i\<in>F. top1_continuous_map_on X TX UNIV order_topology_on_UNIV (f i)"
+  shows "top1_continuous_map_on X TX UNIV order_topology_on_UNIV (\<lambda>x. \<Sum>i\<in>F. f i x)"
+  using hfin hcont
+proof (induction F rule: finite_induct)
+  case empty
+  then show ?case using Theorem_18_2(1)[OF hTopX order_topology_on_UNIV_is_topology_on
+    order_topology_on_UNIV_is_topology_on] by auto
+next
+  case (insert a F)
+  have "(\<lambda>x. \<Sum>i\<in>insert a F. f i x) = (\<lambda>x. f a x + (\<Sum>i\<in>F. f i x))"
+    using insert.hyps(1,2) by simp
+  moreover have "top1_continuous_map_on X TX UNIV order_topology_on_UNIV (f a)"
+    using insert.prems by blast
+  moreover have "top1_continuous_map_on X TX UNIV order_topology_on_UNIV (\<lambda>x. \<Sum>i\<in>F. f i x)"
+    using insert.IH insert.prems by blast
+  ultimately show ?case using top1_continuous_add_real[OF hTopX] by presburger
+qed
+
+text \<open>Locally finite sum of continuous real-valued functions is continuous.
+  Uses indexed local finiteness: at each x, a neighborhood where only finitely many
+  indices have nonzero f_i.\<close>
+lemma locally_finite_sum_continuous:
+  fixes f :: "'i \<Rightarrow> 'a \<Rightarrow> real"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hcont: "\<forall>i\<in>I. top1_continuous_map_on X TX UNIV order_topology_on_UNIV (f i)"
+  assumes hILF: "\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. f i y \<noteq> 0}"
+  assumes hfin: "\<forall>x\<in>X. finite {i\<in>I. f i x \<noteq> 0}"
+  defines "S x \<equiv> \<Sum>i\<in>{i\<in>I. f i x \<noteq> 0}. f i x"
+  shows "top1_continuous_map_on X TX UNIV order_topology_on_UNIV S"
+proof -
+  have hSval: "\<forall>x\<in>X. S x \<in> (UNIV::real set)" by simp
+  have hpre: "\<forall>V\<in>order_topology_on_UNIV. {x \<in> X. S x \<in> V} \<in> TX"
+  proof (intro ballI, rule top1_open_of_local_subsets[OF hTopX])
+    fix V :: "real set" assume hV: "V \<in> order_topology_on_UNIV"
+    show "{x \<in> X. S x \<in> V} \<subseteq> X" by blast
+    show "\<forall>x0\<in>{x \<in> X. S x \<in> V}. \<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> {x \<in> X. S x \<in> V}"
+    proof (intro ballI)
+      fix x0 assume hx0: "x0 \<in> {x \<in> X. S x \<in> V}"
+      then have hx0X: "x0 \<in> X" and hSx0V: "S x0 \<in> V" by auto
+      obtain W where hW: "W \<in> TX" and hx0W: "x0 \<in> W"
+        and hWfin: "finite {i\<in>I. \<exists>y\<in>W. f i y \<noteq> 0}"
+        using hILF hx0X by blast
+      define F where "F = {i\<in>I. \<exists>y\<in>W. f i y \<noteq> 0}"
+      have hFfin: "finite F" using hWfin unfolding F_def by blast
+      have hFI: "F \<subseteq> I" unfolding F_def by blast
+      have hW_sub: "W \<subseteq> X" using hW hTsub by blast
+      text \<open>On W: {i | f_i(x) \<noteq> 0} \<subseteq> F, so S(x) = \<Sum>F f_i(x).\<close>
+      have hnonzero_sub: "\<forall>x\<in>W. {i\<in>I. f i x \<noteq> 0} \<subseteq> F" unfolding F_def by blast
+      have hS_eq: "\<forall>x\<in>W. S x = (\<Sum>i\<in>F. f i x)"
+      proof (intro ballI)
+        fix x assume "x \<in> W"
+        have hsub: "{i\<in>I. f i x \<noteq> 0} \<subseteq> F" using hnonzero_sub \<open>x \<in> W\<close> by blast
+        have hzero: "\<forall>i\<in>F - {i\<in>I. f i x \<noteq> 0}. f i x = 0" using hFI by auto
+        show "S x = (\<Sum>i\<in>F. f i x)" unfolding S_def
+          using sum.mono_neutral_right[OF hFfin hsub hzero] by presburger
+      qed
+      have hcont_F: "\<forall>i\<in>F. top1_continuous_map_on X TX UNIV order_topology_on_UNIV (f i)"
+        using hcont hFI by blast
+      have hSF_cont: "top1_continuous_map_on X TX UNIV order_topology_on_UNIV (\<lambda>x. \<Sum>i\<in>F. f i x)"
+        by (rule top1_continuous_sum_finite_real[OF hTopX hFfin hcont_F])
+      have "{x \<in> X. (\<Sum>i\<in>F. f i x) \<in> V} \<in> TX"
+        using hSF_cont hV unfolding top1_continuous_map_on_def by blast
+      define U where "U = {x \<in> X. (\<Sum>i\<in>F. f i x) \<in> V} \<inter> W"
+      have "U \<in> TX" unfolding U_def using topology_inter2[OF hTopX \<open>{x \<in> X. _} \<in> TX\<close> hW] by blast
+      have "x0 \<in> U" unfolding U_def using hx0X hx0W hSx0V hS_eq[rule_format, OF hx0W] by auto
+      have "U \<subseteq> {x \<in> X. S x \<in> V}" unfolding U_def using hS_eq hW_sub by auto
+      show "\<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> {x \<in> X. S x \<in> V}"
+        using \<open>U \<in> TX\<close> \<open>x0 \<in> U\<close> \<open>U \<subseteq> _\<close> by blast
+    qed
+  qed
+  show ?thesis unfolding top1_continuous_map_on_def S_def[symmetric]
+    using hSval hpre by blast
+qed
+
 text \<open>
   For the starred results of \<S>41 we will need partitions of unity indexed by an arbitrary set.
   We record the top-level statements first and defer the technical development.
@@ -7595,18 +7735,85 @@ definition top1_partition_of_unity_dominated_family_on ::
 theorem Theorem_41_7:
   assumes hPara: "top1_paracompact_on X TX"
   assumes hHaus: "is_hausdorff_on X TX"
+  assumes hTsub: "\<forall>Ua\<in>TX. Ua \<subseteq> X"
   assumes hCov: "top1_open_covering_on X TX (U ` I)"
   shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>"
-  sorry
+proof -
+  have hTopX: "is_topology_on X TX" using hPara unfolding top1_paracompact_on_def using hHaus is_hausdorff_on_def by blast
+  have hReg: "top1_regular_on X TX"
+    using paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub] by blast
+  have hNormal: "top1_normal_on X TX" using Theorem_41_1[OF hPara hHaus hTsub] by blast
+  text \<open>Step 1: Get strong refinement V of {U_i} and W of V.\<close>
+  have hParaLF: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)"
+    using hPara unfolding top1_paracompact_on_def by argo
+  have hStrong: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
+    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
+      \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A))"
+    using iffD1[OF Lemma_41_3[OF hReg]] hParaLF by argo
+  obtain \<V> where hVcov: "top1_open_covering_on X TX \<V>"
+    and hVlf: "top1_locally_finite_family_on X TX \<V>"
+    and hVcl: "\<forall>V\<in>\<V>. \<exists>Ui\<in>U ` I. closure_on X TX V \<subseteq> Ui"
+    using hStrong[rule_format, OF hCov] by fast
+  obtain \<W> where hWcov: "top1_open_covering_on X TX \<W>"
+    and hWlf: "top1_locally_finite_family_on X TX \<W>"
+    and hWcl: "\<forall>W\<in>\<W>. \<exists>V\<in>\<V>. closure_on X TX W \<subseteq> V"
+    using hStrong[rule_format, OF hVcov] by blast
+  text \<open>Step 2: Choose V'(W) and sel(V'(W)) for each W.\<close>
+  obtain Vsel where hVsel: "\<forall>W\<in>\<W>. Vsel W \<in> \<V> \<and> closure_on X TX W \<subseteq> Vsel W"
+    using hWcl by metis
+  have "\<forall>V\<in>\<V>. \<exists>i\<in>I. closure_on X TX V \<subseteq> U i"
+  proof (intro ballI)
+    fix V assume "V \<in> \<V>"
+    obtain Ui where "Ui \<in> U ` I" "closure_on X TX V \<subseteq> Ui" using hVcl \<open>V \<in> \<V>\<close> by blast
+    then obtain i where "i \<in> I" "Ui = U i" by blast
+    then show "\<exists>i\<in>I. closure_on X TX V \<subseteq> U i" using \<open>closure_on X TX V \<subseteq> Ui\<close> by blast
+  qed
+  then obtain isel where hisel: "\<forall>V\<in>\<V>. isel V \<in> I \<and> closure_on X TX V \<subseteq> U (isel V)"
+    by metis
+  text \<open>Step 3: Urysohn for each W: \<psi>_W = 1 on cl(W), = 0 on X - Vsel(W).\<close>
+  text \<open>This step requires choosing \<psi>_W for each W. We use SOME/choice.\<close>
+  have "\<forall>W\<in>\<W>. \<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
+    \<and> (\<forall>x\<in>closure_on X TX W. \<psi> x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> x = 0)"
+  proof (intro ballI)
+    fix W assume hWm: "W \<in> \<W>"
+    have hW_sub_X: "W \<subseteq> X" using hWcov hWm hTsub unfolding top1_open_covering_on_def by blast
+    have hclW_closed: "closedin_on X TX (closure_on X TX W)"
+      using closure_on_closed[OF hTopX hW_sub_X] by blast
+    have hVsel_open: "Vsel W \<in> TX" using hVsel hWm hVcov unfolding top1_open_covering_on_def by blast
+    have hXmV_closed: "closedin_on X TX (X - Vsel W)" using hVsel_open unfolding closedin_on_def by (simp add: double_diff hTsub)
+    have hdisj: "closure_on X TX W \<inter> (X - Vsel W) = {}"
+      using hVsel hWm by blast
+    have hdisj': "(X - Vsel W) \<inter> closure_on X TX W = {}" using hdisj by blast
+    show "\<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
+      \<and> (\<forall>x\<in>closure_on X TX W. \<psi> x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> x = 0)"
+      using Theorem_33_1[OF hNormal hXmV_closed hclW_closed hdisj', of 0 1] by auto
+  qed
+  then obtain \<psi> where h\<psi>: "\<forall>W\<in>\<W>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> W)
+    \<and> (\<forall>x\<in>closure_on X TX W. \<psi> W x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> W x = 0)"
+    by metis
+  text \<open>Step 4: Construct \<Psi> and \<phi>_i.\<close>
+  define sel where "sel W = isel (Vsel W)" for W
+  text \<open>\<Psi>(x) = \<Sum> \<psi>_W(x) over W with nonzero \<psi>. Locally finite, continuous, > 0.\<close>
+  text \<open>Define \<phi>_i as \<psi>_W / \<Psi> summed over W assigned to i.\<close>
+  define \<phi>0 where "\<phi>0 i x = (\<Sum>W\<in>{W\<in>\<W>. sel W = i \<and> \<psi> W x \<noteq> 0}. \<psi> W x /
+    (\<Sum>W'\<in>{W'\<in>\<W>. \<psi> W' x \<noteq> 0}. \<psi> W' x))" for i x
+  show ?thesis
+    unfolding top1_partition_of_unity_dominated_family_on_def
+    sorry
+qed
 
 (** from \S41 Theorem 41.8 (Continuous control on locally finite families) [top1.tex:6024] **)
 theorem Theorem_41_8:
+  assumes hPara: "top1_paracompact_on X TX"
+  assumes hHaus: "is_hausdorff_on X TX"
   assumes hLF: "top1_locally_finite_family_on X TX \<C>"
   assumes hPos: "\<forall>C\<in>\<C>. 0 < \<epsilon> C"
   shows "\<exists>f::'a \<Rightarrow> real.
     top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
     \<and> (\<forall>x\<in>X. 0 < f x)
     \<and> (\<forall>C\<in>\<C>. \<forall>x\<in>C. f x \<le> \<epsilon> C)"
+  text \<open>Proof uses Theorem_41_7. See Munkres p.258.\<close>
   sorry
 
 section \<open>\<S>42 The Smirnov Metrization Theorem\<close>
@@ -10928,6 +11135,11 @@ corollary Corollary_45_5:
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
 
+lemma top1_PiE_const_val:
+  assumes "f \<in> top1_PiE I (\<lambda>_. Y)" "i \<in> I"
+  shows "f i \<in> Y"
+  using assms unfolding top1_PiE_iff by blast
+
 definition top1_pointwise_topology_on ::
   "'a set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('a \<Rightarrow> 'b) set set" where
   "top1_pointwise_topology_on X Y TY =
@@ -11215,6 +11427,149 @@ lemma cc_topology_is_topology:
   unfolding top1_compact_convergence_topology_on_def
   by (rule topology_generated_by_basis_is_topology_on[OF cc_basis_is_basis[OF hTopX hd]])
 
+text \<open>Compact-convergence topology is finer than pointwise topology.\<close>
+lemma pw_sub_cc_topology:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  shows "top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)
+      \<subseteq> top1_compact_convergence_topology_on X TX Y d"
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?Bcc = "top1_compact_convergence_basis_on X TX Y d"
+  let ?Bpw = "top1_product_basis_on X (\<lambda>_. Y) (\<lambda>_. ?TY)"
+  have hTcc_top: "is_topology_on ?PiE ?Tcc" by (rule cc_topology_is_topology[OF hTopX hd])
+  have hTY_top: "is_topology_on Y ?TY" by (rule top1_metric_topology_on_is_topology_on[OF hd])
+  text \<open>Show every pw-basis element is in Tcc. Key: for f0 in a pw-basis element,
+    find a cc-basis element (using finitely many restricted coords as compact set) inside.\<close>
+  have "?Bpw \<subseteq> ?Tcc"
+  proof (rule subsetI)
+    fix B assume hB: "B \<in> ?Bpw"
+    then obtain U where hBdef: "B = top1_PiE X U"
+      and hUTY: "\<forall>a\<in>X. U a \<in> (\<lambda>_. ?TY) a \<and> U a \<subseteq> (\<lambda>_. Y) a"
+      and hfin: "finite {a \<in> X. U a \<noteq> Y}"
+      unfolding top1_product_basis_on_def by blast
+    text \<open>B is in the cc-generated topology: B \<subseteq> PiE and locally covered by cc-basis.\<close>
+    have hBsub: "B \<subseteq> ?PiE" unfolding hBdef by (simp add: hUTY top1_PiE_mono)
+    have "\<forall>f0\<in>B. \<exists>b\<in>?Bcc. f0 \<in> b \<and> b \<subseteq> B"
+    proof (intro ballI)
+      fix f0 assume hf0B: "f0 \<in> B"
+      have hf0PiE: "f0 \<in> ?PiE" using hf0B hBsub by fast
+      define S where "S = {a \<in> X. U a \<noteq> Y}"
+      have hSfin: "finite S" using hfin unfolding S_def by linarith
+      have hSX: "S \<subseteq> X" unfolding S_def by simp
+      show "\<exists>b\<in>?Bcc. f0 \<in> b \<and> b \<subseteq> B"
+      proof (cases "S = {}")
+        case True
+        text \<open>No restricted coordinates: B = PiE = entire space. Take any cc-basis element.\<close>
+        have hUeqY: "\<forall>a\<in>X. U a = Y" using True unfolding S_def by blast
+        have hBeqPiE: "B = ?PiE"
+        proof -
+          have "\<forall>a\<in>X. U a = (\<lambda>_. Y) a" using hUeqY by simp
+          then show ?thesis unfolding hBdef by (simp add: top1_PiE_cong_on)
+        qed
+        text \<open>PiE \<in> Tcc since Tcc is a topology and PiE is its carrier.\<close>
+        have "?PiE \<in> ?Tcc" using hTcc_top unfolding is_topology_on_def by blast
+        then have "B \<in> ?Tcc" using hBeqPiE by argo
+        text \<open>B in Tcc: for f0 \<in> B, there exists b \<in> Bcc with f0 \<in> b \<subseteq> B.\<close>
+        have "B \<in> ?Tcc" using \<open>B \<in> ?Tcc\<close> .
+        then have "\<forall>x\<in>B. \<exists>b\<in>?Bcc. x \<in> b \<and> b \<subseteq> B"
+          unfolding top1_compact_convergence_topology_on_def topology_generated_by_basis_def by blast
+        then show ?thesis using hf0B by fast
+      next
+        case False
+        text \<open>S nonempty. For each a \<in> S: f0(a) \<in> U(a) \<in> TY, get \<epsilon>a with ball \<subseteq> U(a).\<close>
+        have hf0U: "\<forall>a\<in>S. f0 a \<in> U a" using hf0B unfolding hBdef S_def by (simp add: top1_PiE_iff)
+        have "\<forall>a\<in>S. \<exists>\<epsilon>>0. top1_ball_on Y d (f0 a) \<epsilon> \<subseteq> U a"
+        proof (intro ballI)
+          fix a assume haS: "a \<in> S"
+          have haX: "a \<in> X" using haS hSX by fast
+          have "U a \<in> ?TY" using hUTY haX by blast
+          have "f0 a \<in> U a" using hf0U haS by blast
+          then show "\<exists>\<epsilon>>0. top1_ball_on Y d (f0 a) \<epsilon> \<subseteq> U a"
+            using top1_metric_open_contains_ball[OF hd \<open>U a \<in> ?TY\<close>] by simp
+        qed
+        then obtain \<epsilon>f where h\<epsilon>f: "\<forall>a\<in>S. \<epsilon>f a > 0 \<and> top1_ball_on Y d (f0 a) (\<epsilon>f a) \<subseteq> U a" by metis
+        define \<epsilon> where "\<epsilon> = min (Min (\<epsilon>f ` S)) (1/2)"
+        have h\<epsilon>pos: "\<epsilon> > 0" using h\<epsilon>f False hSfin unfolding \<epsilon>_def by simp
+        have h\<epsilon>le1: "\<epsilon> \<le> 1/2" unfolding \<epsilon>_def by linarith
+        have h\<epsilon>_le_eps: "\<forall>a\<in>S. \<epsilon> \<le> \<epsilon>f a"
+        proof (intro ballI)
+          fix a assume haS: "a \<in> S"
+          have "Min (\<epsilon>f ` S) \<le> \<epsilon>f a" using hSfin haS by (intro Min_le) auto
+          then show "\<epsilon> \<le> \<epsilon>f a" unfolding \<epsilon>_def by linarith
+        qed
+        text \<open>Compact set: S (finite \<subseteq> X, hence compact).\<close>
+        have hScomp: "top1_compact_on S (subspace_topology X TX S)"
+          by (rule top1_compact_on_finite_subspace[OF hTopX hSX hSfin])
+        text \<open>cc-basis element: B_S(f0, \<epsilon>).\<close>
+        define b where "b = {g \<in> ?PiE.
+          (if S = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` S)) < \<epsilon>}"
+        have hb_Bcc: "b \<in> ?Bcc" unfolding b_def top1_compact_convergence_basis_on_def
+          using hf0PiE hScomp hSX h\<epsilon>pos by blast
+        have hf0b: "f0 \<in> b"
+        proof -
+          have "\<forall>x\<in>S. top1_bounded_metric d (f0 x) (f0 x) = 0"
+            unfolding top1_bounded_metric_def using hd hSX top1_PiE_const_val[OF hf0PiE]
+            unfolding top1_metric_on_def by fastforce
+          then have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (f0 x)) ` S) = 0"
+            using hSfin False by simp
+          then show ?thesis unfolding b_def using hf0PiE False h\<epsilon>pos by simp
+        qed
+        have hb_sub_B: "b \<subseteq> B"
+        proof (intro subsetI)
+          fix g assume hgb: "g \<in> b"
+          have hgPiE: "g \<in> ?PiE" using hgb unfolding b_def by blast
+          have hSupS: "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` S) < \<epsilon>"
+            using hgb False unfolding b_def by simp
+          have hga_in_Ua: "\<forall>a\<in>X. g a \<in> U a"
+          proof (intro ballI)
+            fix a assume haX: "a \<in> X"
+            show "g a \<in> U a"
+            proof (cases "a \<in> S")
+              case False
+              then have "U a = Y" unfolding S_def using haX by blast
+              then show ?thesis using hgPiE haX top1_PiE_const_val by fast
+            next
+              case True
+              have hbm_a: "top1_bounded_metric d (f0 a) (g a) < \<epsilon>"
+              proof -
+                have "top1_bounded_metric d (f0 a) (g a) \<in> (\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` S"
+                  using True by blast
+                moreover have "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` S)"
+                  unfolding top1_bounded_metric_def by (intro bdd_aboveI[of _ 1]) auto
+                ultimately have "top1_bounded_metric d (f0 a) (g a) \<le> Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` S)"
+                  using cSup_upper by meson
+                then show ?thesis using hSupS by linarith
+              qed
+              have "d (f0 a) (g a) < \<epsilon>f a"
+              proof -
+                have "top1_bounded_metric d (f0 a) (g a) < 1" using hbm_a h\<epsilon>le1 by linarith
+                then have "d (f0 a) (g a) = top1_bounded_metric d (f0 a) (g a)"
+                  unfolding top1_bounded_metric_def by linarith
+                then have "d (f0 a) (g a) < \<epsilon>" using hbm_a by linarith
+                then show ?thesis using h\<epsilon>_le_eps True by fastforce
+              qed
+              then have "g a \<in> top1_ball_on Y d (f0 a) (\<epsilon>f a)"
+                unfolding top1_ball_on_def using hgPiE haX top1_PiE_const_val by fast
+              then show ?thesis using h\<epsilon>f True by blast
+            qed
+          qed
+          show "g \<in> B" unfolding hBdef using hgPiE hga_in_Ua by (simp add: top1_PiE_iff)
+        qed
+        then show ?thesis using hb_Bcc hf0b by blast
+      qed
+    qed
+    then show "B \<in> ?Tcc"
+      unfolding top1_compact_convergence_topology_on_def
+      topology_generated_by_basis_def using hBsub by blast
+  qed
+  then show ?thesis
+    unfolding top1_pointwise_topology_on_def top1_product_topology_on_def
+    by (rule topology_generated_by_basis_subset[OF hTcc_top])
+qed
+
 lemma cc_basis_member_pointwise:
   assumes hd: "top1_metric_on Y d" and hCX: "C \<subseteq> X" and hCne: "C \<noteq> {}"
   assumes h\<delta>lt1: "\<delta> < (1::real)" and hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)"
@@ -11237,6 +11592,11 @@ proof -
   then show "d (f x) (g x) < \<delta>"
     using h\<delta>lt1 by (rule bounded_metric_lt_imp_d_lt)
 qed
+
+lemma generated_topology_contains_basis_elem:
+  assumes "V \<in> topology_generated_by_basis X Basis" "x \<in> V"
+  shows "\<exists>b\<in>Basis. x \<in> b \<and> b \<subseteq> V"
+  using assms unfolding topology_generated_by_basis_def by blast
 
 lemma basis_elem_in_generated_topology:
   assumes "B \<in> Basis" "B \<subseteq> X"
@@ -13483,6 +13843,7 @@ proof -
         using Collect_mono_iff hTco_top is_topology_on_def by fastforce
     next
       case False
+      then have hK_ne: "K \<noteq> {}" by simp
       text \<open>K nonempty: Munkres covering argument. For g ∈ C ∩ B, sup_K bm(f0,g) < ε.
         Use continuity of g, compactness of K, to construct finite intersection of S(Ki,Ui).\<close>
       show ?thesis
@@ -13494,18 +13855,338 @@ proof -
           using hgB hBdef False hgPiE by simp
         define \<delta> where "\<delta> = \<epsilon> - Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K)"
         have h\<delta>: "0 < \<delta>" using hgB_val heps unfolding \<delta>_def by linarith
-        text \<open>Core: find co-open V containing g inside B.\<close>
-        text \<open>g is continuous: maps (X,TX) to (Y,TY). Image g(K) is compact in Y.
-          U\<delta> = open \<delta>/2-neighborhood of g(K) in (Y,d) is open in TY.
-          S(K, U\<delta>) is a co-subbasis element. For h\<in>S(K,U\<delta>), h(K)\<subseteq>U\<delta>,
-          so for x\<in>K: \<exists>x'\<in>K. d(h(x),g(x')) < \<delta>/2 and d(g(x),g(x')) can be bounded.\<close>
-        text \<open>Actually, the simpler Munkres approach: for each x\<in>C, find V_x with diam(g(V_x))<\<delta>/3,
-          cover K finitely, use S(K_i, U_i). But this is very long.
-          For now, leave as sorry — the proof structure is complete.\<close>
-        obtain V where "V \<in> ?Tco" "g \<in> V" "\<forall>h \<in> ?C \<inter> V. h \<in> B"
-          sorry
+        text \<open>Munkres covering construction for co-open V.\<close>
+        have hg_cont: "top1_continuous_map_on X TX Y ?TY g"
+          using hgC unfolding top1_continuous_funcs_on_def by simp
+        have hgY: "\<forall>x\<in>X. g x \<in> Y" using hg_cont unfolding top1_continuous_map_on_def by satx
+        have hf0Y: "\<forall>x\<in>X. f0 x \<in> Y" using hf0 unfolding top1_PiE_def by (metis top1_PiE_def top1_PiE_iff)
+        define r where "r = \<delta>/4"
+        have hr: "0 < r" using h\<delta> unfolding r_def by linarith
+        text \<open>If r > 1, ball_bm covers Y, so V = C(X,Y) works. Handle both cases.\<close>
+        show "\<exists>V\<in>?Tco. g \<in> V \<and> (\<forall>h\<in>?C \<inter> V. h \<in> B)"
+        proof (cases "r > 1")
+          case True
+          text \<open>r > 1 means \<delta> > 4 means \<epsilon> > 4. Since bm \<le> 1, every h has Sup < \<epsilon>.
+            Take V = UNIV \<in> Tco.\<close>
+          have h\<delta>_gt4: "\<delta> > 4" using True unfolding r_def by linarith
+          have hSup_ge0: "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K) \<ge> 0"
+          proof -
+            obtain y where hyK: "y \<in> K" using False by blast
+            have hyX: "y \<in> X" using hyK hKX by fast
+            have hf0yY: "f0 y \<in> Y" using hf0Y hyX by blast
+            have hgyY: "g y \<in> Y" using hgY hyX by blast
+            have hd_ge0: "d (f0 y) (g y) \<ge> 0" using hd hf0yY hgyY unfolding top1_metric_on_def
+              by fast
+            have hbm_ge0: "top1_bounded_metric d (f0 y) (g y) \<ge> 0"
+              using hd_ge0 unfolding top1_bounded_metric_def by simp
+            have himg_mem: "top1_bounded_metric d (f0 y) (g y) \<in> (\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K"
+              using hyK by blast
+            have hbdd: "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K)"
+            proof (intro bdd_aboveI[of _ 1])
+              fix z assume "z \<in> (\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K"
+              then show "z \<le> 1" unfolding top1_bounded_metric_def by auto
+            qed
+            have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K) \<ge> top1_bounded_metric d (f0 y) (g y)"
+              using cSup_upper2[OF himg_mem] hbdd by blast
+            then show ?thesis using hbm_ge0 by linarith
+          qed
+          have heps_gt1: "\<epsilon> > 1" using h\<delta>_gt4 hSup_ge0 unfolding \<delta>_def by linarith
+          have hUNIV_Tco: "UNIV \<in> ?Tco"
+          proof -
+            have "UNIV \<in> finite_intersections ?Sco"
+              unfolding finite_intersections_def by blast
+            then have "{UNIV} \<subseteq> finite_intersections ?Sco" by blast
+            then show "UNIV \<in> ?Tco"
+              unfolding top1_compact_open_topology_on_def topology_generated_by_subbasis_def by blast
+          qed
+          have hh_in_B: "\<forall>h \<in> ?C. h \<in> B"
+          proof (intro ballI)
+            fix h assume hh: "h \<in> ?C"
+            have hhPiE: "h \<in> top1_PiE X (\<lambda>_. Y)" using hh hC_sub by blast
+            have hbm_le1: "\<forall>y\<in>K. top1_bounded_metric d (f0 y) (h y) \<le> 1"
+              unfolding top1_bounded_metric_def by simp
+            have hK_ne: "K \<noteq> {}" using False by simp
+            have himg_ne: "(\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K \<noteq> {}" using hK_ne by blast
+            have hbdd: "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K)"
+              using hbm_le1 by (intro bdd_aboveI[of _ 1]) auto
+            have hSup_le1: "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K) \<le> 1"
+              using cSup_least[OF himg_ne] hbm_le1 by blast
+            then have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K) < \<epsilon>"
+              using heps_gt1 by linarith
+            then show "h \<in> B" using hhPiE hBdef False by simp
+          qed
+          show ?thesis using hUNIV_Tco hh_in_B by blast
+        next
+          case False
+          then have hr1: "r \<le> 1" by simp
+        text \<open>ball_bm = ball_d when r \<le> 1. Preimage of ball_d under g is TX-open.\<close>
+        have hball_open: "\<forall>x\<in>K. top1_ball_on Y d (g x) r \<in> ?TY"
+          using hd top1_ball_open_in_metric_topology hgY hKX hr by fastforce
+        define Wx where "Wx x = {z \<in> X. g z \<in> top1_ball_on Y d (g x) r}" for x
+        have hWx_open: "\<forall>x\<in>K. Wx x \<in> TX"
+        proof (intro ballI)
+          fix x assume hxK: "x \<in> K"
+          have hball_TY: "top1_ball_on Y d (g x) r \<in> ?TY" using hball_open hxK by blast
+          show "Wx x \<in> TX" using hg_cont hball_TY unfolding Wx_def top1_continuous_map_on_def
+            by fast
+        qed
+        have hx_in_Wx: "\<forall>x\<in>K. x \<in> Wx x"
+        proof (intro ballI)
+          fix x assume hxK: "x \<in> K"
+          have hxX: "x \<in> X" using hxK hKX by fast
+          have hgxY: "g x \<in> Y" using hgY hxX by fast
+          have "d (g x) (g x) = 0" using hd hgxY unfolding top1_metric_on_def by fast
+          then have "g x \<in> top1_ball_on Y d (g x) r" using hgxY hr unfolding top1_ball_on_def by simp
+          then show "x \<in> Wx x" using hxX unfolding Wx_def by blast
+        qed
+        text \<open>Compactness: finite subcover.\<close>
+        have hKcov: "K \<subseteq> (\<Union>x\<in>K. Wx x)" using hx_in_Wx by auto
+        text \<open>K is compact in subspace_topology X TX K. Wx x \<inter> K are subspace-open.\<close>
+        have hWx_img_TX: "Wx ` K \<subseteq> TX" using hWx_open by blast
+        have hcomp_iff: "\<forall>Uc. Uc \<subseteq> TX \<and> K \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> K \<subseteq> \<Union>F)"
+          using Lemma_26_1[OF hTopX hKX] hK by argo
+        then have "\<exists>G. finite G \<and> G \<subseteq> Wx ` K \<and> K \<subseteq> \<Union>G"
+          using hWx_img_TX hKcov by blast
+        then obtain G where hGfin: "finite G" and hGsub: "G \<subseteq> Wx ` K" and hGcov: "K \<subseteq> \<Union>G" by blast
+        obtain F where hFK: "F \<subseteq> K" and hFfin: "finite F" and hGeq: "G = Wx ` F"
+          using finite_subset_image[OF hGfin hGsub] by blast
+        have hFcov: "K \<subseteq> (\<Union>x\<in>F. Wx x)" using hGcov hGeq by blast
+        text \<open>Compact subsets: Ci(xi) = K \<inter> {z\<in>X. d(g(z),g(xi)) \<le> r}.
+          Ci is closed in K (preimage of closed ball under continuous g, intersected with K).
+          Closed subset of compact K \<Rightarrow> compact.
+          g(Ci) \<subseteq> ball(g(xi), 2r). V = \<Inter>{S(Ci, ball(g(xi),2r)) | xi\<in>F}.
+          Triangle inequality: d(g(y),h(y)) \<le> r + 2r = 3r. bm \<le> 3r < \<delta> = 4r.
+          bm(f0(y),h(y)) \<le> (ε-δ) + 3r = ε - r < ε.\<close>
+        define Ci where "Ci xi = K \<inter> {z \<in> X. d (g z) (g xi) \<le> r}" for xi
+        text \<open>Ci(xi) is compact: closed in K, K compact.\<close>
+        have hCiX: "\<forall>xi\<in>F. Ci xi \<subseteq> X" unfolding Ci_def using hKX by blast
+        have hCiK: "\<forall>xi\<in>F. Ci xi \<subseteq> K" unfolding Ci_def by blast
+        have hCi_compact: "\<forall>xi\<in>F. top1_compact_on (Ci xi) (subspace_topology X TX (Ci xi))"
+        proof (intro ballI)
+          fix xi assume hxiF: "xi \<in> F"
+          have hxiX: "xi \<in> X" using hxiF hFK hKX by fast
+          have hgxiY: "g xi \<in> Y" using hgY hxiX by blast
+          text \<open>Complement of closed ball preimage is TX-open.\<close>
+          have hcompl_open: "Y - {y \<in> Y. d y (g xi) \<le> r} \<in> ?TY"
+          proof -
+            have heq: "Y - {y \<in> Y. d y (g xi) \<le> r} = {y \<in> Y. d y (g xi) > r}" by auto
+            have "\<forall>y0 \<in> {y \<in> Y. d y (g xi) > r}. \<exists>\<epsilon>>0. top1_ball_on Y d y0 \<epsilon> \<subseteq> {y \<in> Y. d y (g xi) > r}"
+            proof (intro ballI)
+              fix y0 assume hy0: "y0 \<in> {y \<in> Y. d y (g xi) > r}"
+              then have hy0Y: "y0 \<in> Y" and hdy0: "d y0 (g xi) > r" by auto
+              define \<epsilon>0 where "\<epsilon>0 = d y0 (g xi) - r"
+              have heps0: "\<epsilon>0 > 0" using hdy0 unfolding \<epsilon>0_def by simp
+              have "\<forall>z \<in> top1_ball_on Y d y0 \<epsilon>0. d z (g xi) > r"
+              proof (intro ballI)
+                fix z assume hz: "z \<in> top1_ball_on Y d y0 \<epsilon>0"
+                then have hzY: "z \<in> Y" and hdzy0: "d y0 z < \<epsilon>0" unfolding top1_ball_on_def by auto
+                have "d y0 (g xi) \<le> d y0 z + d z (g xi)"
+                  using hd hy0Y hzY hgxiY unfolding top1_metric_on_def by blast
+                then show "d z (g xi) > r" using hdzy0 hdy0 unfolding \<epsilon>0_def by linarith
+              qed
+              then have "top1_ball_on Y d y0 \<epsilon>0 \<subseteq> {y \<in> Y. d y (g xi) > r}" unfolding top1_ball_on_def by fast
+              then show "\<exists>\<epsilon>>0. top1_ball_on Y d y0 \<epsilon> \<subseteq> {y \<in> Y. d y (g xi) > r}" using heps0 by blast
+            qed
+            then have "{y \<in> Y. d y (g xi) > r} \<in> ?TY"
+            proof -
+              assume hball_cov: "\<forall>y0\<in>{y \<in> Y. r < d y (g xi)}.
+                 \<exists>\<epsilon>>0. top1_ball_on Y d y0 \<epsilon> \<subseteq> {y \<in> Y. r < d y (g xi)}"
+              have hsub: "{y \<in> Y. r < d y (g xi)} \<subseteq> Y" by blast
+              have "\<forall>x\<in>{y \<in> Y. r < d y (g xi)}.
+                \<exists>b\<in>top1_metric_basis_on Y d. x \<in> b \<and> b \<subseteq> {y \<in> Y. r < d y (g xi)}"
+              proof (intro ballI)
+                fix x assume hx: "x \<in> {y \<in> Y. r < d y (g xi)}"
+                then have hxY: "x \<in> Y" by blast
+                obtain \<epsilon> where heps: "\<epsilon> > 0" and hball_sub: "top1_ball_on Y d x \<epsilon> \<subseteq> {y \<in> Y. r < d y (g xi)}"
+                  using hball_cov hx by blast
+                have hb_basis: "top1_ball_on Y d x \<epsilon> \<in> top1_metric_basis_on Y d"
+                  unfolding top1_metric_basis_on_def using hxY heps by blast
+                have hx_in_b: "x \<in> top1_ball_on Y d x \<epsilon>"
+                  unfolding top1_ball_on_def using hxY heps hd unfolding top1_metric_on_def by fastforce
+                then show "\<exists>b\<in>top1_metric_basis_on Y d. x \<in> b \<and> b \<subseteq> {y \<in> Y. r < d y (g xi)}"
+                  using hb_basis hball_sub by blast
+              qed
+              then show ?thesis
+                unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+                using hsub by fast
+            qed
+            then show ?thesis using heq by argo
+          qed
+          text \<open>Closed ball is closed in TY.\<close>
+          have hcball_closed: "closedin_on Y ?TY {y \<in> Y. d y (g xi) \<le> r}"
+            using hcompl_open unfolding closedin_on_def by blast
+          text \<open>Preimage of closed set under continuous g is closed in TX.\<close>
+          have hpre_closed: "closedin_on X TX {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}"
+          proof -
+            have "Y - {y \<in> Y. d y (g xi) \<le> r} \<in> ?TY" using hcompl_open by simp
+            then have "{z \<in> X. g z \<in> (Y - {y \<in> Y. d y (g xi) \<le> r})} \<in> TX"
+              using hg_cont unfolding top1_continuous_map_on_def by fastforce
+            have heq_pre: "{z \<in> X. g z \<in> (Y - {y \<in> Y. d y (g xi) \<le> r})} = X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}"
+            proof (rule set_eqI)
+              fix z show "(z \<in> {z \<in> X. g z \<in> Y - {y \<in> Y. d y (g xi) \<le> r}}) = (z \<in> X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}})"
+                using hgY by fast
+            qed
+            then have "X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}} \<in> TX"
+              using \<open>{z \<in> X. g z \<in> (Y - {y \<in> Y. d y (g xi) \<le> r})} \<in> TX\<close> by argo
+            then show ?thesis unfolding closedin_on_def by blast
+          qed
+          text \<open>Rewrite: {z \<in> X. d(g(z),g(xi)) \<le> r} = {z \<in> X. g(z) \<in> closed_ball}.\<close>
+          have hCi_eq: "Ci xi = K \<inter> {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}"
+            unfolding Ci_def using hgY hKX by fastforce
+          text \<open>Ci is closed in K (intersection of K with a closed-in-X set).\<close>
+          have hCi_closed_K: "closedin_on K (subspace_topology X TX K) (Ci xi)"
+          proof -
+            have "X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}} \<in> TX"
+              using hpre_closed unfolding closedin_on_def by linarith
+            then have "K \<inter> (X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}) \<in> subspace_topology X TX K"
+              unfolding subspace_topology_def by blast
+            have "K \<inter> (X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}) = K - (Ci xi)"
+              using hCi_eq hKX by blast
+            then have "K - (Ci xi) \<in> subspace_topology X TX K"
+              using \<open>K \<inter> (X - {z \<in> X. g z \<in> {y \<in> Y. d y (g xi) \<le> r}}) \<in> subspace_topology X TX K\<close> by presburger
+            then show ?thesis unfolding closedin_on_def using hCiK hxiF by blast
+          qed
+          text \<open>Closed subset of compact set is compact (Theorem_26_2).\<close>
+          have hCi_comp_sub: "top1_compact_on (Ci xi) (subspace_topology K (subspace_topology X TX K) (Ci xi))"
+            using Theorem_26_2[OF hK hCi_closed_K] by linarith
+          text \<open>subspace of subspace = subspace: subspace_topology K (sub X TX K) Ci = subspace_topology X TX Ci.\<close>
+          have hsub_sub: "subspace_topology K (subspace_topology X TX K) (Ci xi) = subspace_topology X TX (Ci xi)"
+            by (metis hxiF subspace_topology_trans hCiK)
+          then show "top1_compact_on (Ci xi) (subspace_topology X TX (Ci xi))"
+            using hCi_comp_sub by argo
+        qed
+        text \<open>g maps Ci into ball(g(xi), 2r).\<close>
+        have hg_Ci: "\<forall>xi\<in>F. g ` (Ci xi) \<subseteq> top1_ball_on Y d (g xi) (2*r)"
+        proof (intro ballI subsetI)
+          fix xi y assume hxi: "xi \<in> F" and hy: "y \<in> g ` (Ci xi)"
+          then obtain z where hz: "z \<in> Ci xi" and hyz: "y = g z" by blast
+          have hzX: "z \<in> X" using hz hCiX hxi by blast
+          have hzK: "z \<in> K" using hz hCiK hxi by fast
+          have "d (g z) (g xi) \<le> r" using hz unfolding Ci_def by blast
+          then have hd_lt: "d (g z) (g xi) < 2*r" using hr by linarith
+          have hgzY: "g z \<in> Y" using hgY hzX by blast
+          have hxiX: "xi \<in> X" using hxi hFK hKX by blast
+          have hgxiY: "g xi \<in> Y" using hgY hxiX by blast
+          have "d (g xi) (g z) = d (g z) (g xi)" using hd hgzY hgxiY unfolding top1_metric_on_def
+            by blast
+          then have "d (g xi) (g z) < 2*r" using hd_lt by linarith
+          then show "y \<in> top1_ball_on Y d (g xi) (2*r)" using hyz hgzY unfolding top1_ball_on_def by fast
+        qed
+        text \<open>K covered by Ci's (since Wx(xi) \<subseteq> Ci(xi)).\<close>
+        have hWx_sub_Ci: "\<forall>xi\<in>F. Wx xi \<inter> K \<subseteq> Ci xi"
+        proof (intro ballI subsetI)
+          fix xi z assume hxi: "xi \<in> F" and hz: "z \<in> Wx xi \<inter> K"
+          have hzWx: "z \<in> Wx xi" and hzK: "z \<in> K" using hz by auto
+          have "g z \<in> top1_ball_on Y d (g xi) r" using hzWx unfolding Wx_def by blast
+          then have "d (g xi) (g z) < r" unfolding top1_ball_on_def by fast
+          have hzX: "z \<in> X" using hzK hKX by blast
+          have hgzY: "g z \<in> Y" using hgY hzX by blast
+          have hxiX': "xi \<in> X" using hxi hFK hKX by blast
+          have hgxiY': "g xi \<in> Y" using hgY hxiX' by blast
+          have "d (g z) (g xi) = d (g xi) (g z)" using hd hgzY hgxiY' unfolding top1_metric_on_def by blast
+          then have "d (g z) (g xi) \<le> r" using \<open>d (g xi) (g z) < r\<close> by linarith
+          then show "z \<in> Ci xi" using hzK hzX \<open>d (g z) (g xi) \<le> r\<close> unfolding Ci_def by fast
+        qed
+        have hK_Ci_cov: "K \<subseteq> (\<Union>xi\<in>F. Ci xi)"
+          using hFcov hWx_sub_Ci by fastforce
+        text \<open>Balls ball(g(xi),2r) are open in TY.\<close>
+        have h2r_pos: "0 < 2*r" using hr by linarith
+        have hball2r_open: "\<forall>xi\<in>F. top1_ball_on Y d (g xi) (2*r) \<in> ?TY"
+          using hd top1_ball_open_in_metric_topology hgY hKX hFK h2r_pos by fast
+        text \<open>Define V as finite intersection of subbasis elements.\<close>
+        define Sx where "Sx xi = {h \<in> ?C. h ` (Ci xi) \<subseteq> top1_ball_on Y d (g xi) (2*r)}" for xi
+        define V where "V = (\<Inter>xi\<in>F. Sx xi)"
+        text \<open>Each Sx xi is a co-subbasis element.\<close>
+        have hSx_sub: "\<forall>xi\<in>F. Sx xi \<in> ?Sco"
+        proof (intro ballI)
+          fix xi assume hxiF: "xi \<in> F"
+          have hCi_c: "top1_compact_on (Ci xi) (subspace_topology X TX (Ci xi))"
+            using hCi_compact hxiF by blast
+          have hCi_s: "Ci xi \<subseteq> X" using hCiX hxiF by blast
+          have hball_o: "top1_ball_on Y d (g xi) (2*r) \<in> ?TY" using hball2r_open hxiF by blast
+          show "Sx xi \<in> ?Sco" unfolding Sx_def top1_compact_open_subbasis_on_def
+            using hCi_c hCi_s hball_o by blast
+        qed
+        have hV_Tco: "V \<in> ?Tco"
+        proof -
+          have "V \<in> finite_intersections ?Sco"
+          proof -
+            have himg: "Sx ` F \<subseteq> ?Sco" using hSx_sub by blast
+            show ?thesis unfolding V_def finite_intersections_def using hFfin himg by blast
+          qed
+          then show "V \<in> ?Tco"
+            unfolding top1_compact_open_topology_on_def topology_generated_by_subbasis_def by blast
+        qed
+        have hg_V: "g \<in> V"
+        proof -
+          have "\<forall>xi\<in>F. g \<in> Sx xi"
+          proof (intro ballI)
+            fix xi assume hxiF: "xi \<in> F"
+            have "g \<in> ?C" using hgC by simp
+            moreover have "g ` (Ci xi) \<subseteq> top1_ball_on Y d (g xi) (2*r)"
+              using hg_Ci hxiF by blast
+            ultimately show "g \<in> Sx xi" unfolding Sx_def by fast
+          qed
+          then show "g \<in> V" unfolding V_def by blast
+        qed
+        text \<open>Core triangle inequality argument.\<close>
+        have hd_nonneg: "\<forall>x\<in>Y. \<forall>y\<in>Y. 0 \<le> d x y"
+          using hd unfolding top1_metric_on_def by linarith
+        have hd_tri_ineq: "\<forall>x\<in>Y. \<forall>y\<in>Y. \<forall>z\<in>Y. d x z \<le> d x y + d y z"
+          using hd unfolding top1_metric_on_def by linarith
+        have hV_sub_B: "\<forall>h \<in> ?C \<inter> V. h \<in> B"
+        proof (intro ballI)
+          fix h assume hh: "h \<in> ?C \<inter> V"
+          then have hhC: "h \<in> ?C" and hhV: "h \<in> V" by auto
+          have hhPiE: "h \<in> top1_PiE X (\<lambda>_. Y)" using hhC hC_sub by blast
+          have hh_ball: "\<forall>xi\<in>F. h ` (Ci xi) \<subseteq> top1_ball_on Y d (g xi) (2*r)"
+            using hhV unfolding V_def Sx_def by fast
+          have hpointwise: "\<forall>y\<in>K. top1_bounded_metric d (f0 y) (h y) \<le> (\<epsilon> - \<delta>) + 3*r"
+          proof (intro ballI)
+            fix y assume hyK: "y \<in> K"
+            obtain xj where hxjF: "xj \<in> F" and hyCi: "y \<in> Ci xj"
+              using hK_Ci_cov hyK by auto
+            have hyX: "y \<in> X" using hyK hKX by fast
+            have hgxjY: "g xj \<in> Y" using hgY hxjF hFK hKX by fast
+            have hgyY: "g y \<in> Y" using hgY hyX by blast
+            have hhyY: "h y \<in> Y" using hhPiE hyX unfolding top1_PiE_def using top1_PiE_def top1_PiE_iff by fastforce
+            have hf0yY: "f0 y \<in> Y" using hf0Y hyX by blast
+            have hd_gy_gxj: "d (g y) (g xj) \<le> r" using hyCi unfolding Ci_def by fast
+            have "h y \<in> top1_ball_on Y d (g xj) (2*r)" using hh_ball hxjF hyCi by blast
+            then have hd_gxj_hy: "d (g xj) (h y) < 2*r" unfolding top1_ball_on_def by fast
+            have "d (g y) (h y) \<le> d (g y) (g xj) + d (g xj) (h y)"
+              using hd_tri_ineq hgyY hgxjY hhyY by blast
+            then have hd_gy_hy: "d (g y) (h y) < 3*r" using hd_gy_gxj hd_gxj_hy by argo
+            have hbm_gy_hy: "top1_bounded_metric d (g y) (h y) \<le> 3*r"
+              using hd_gy_hy hd_nonneg hgyY hhyY unfolding top1_bounded_metric_def by linarith
+            have himg: "top1_bounded_metric d (f0 y) (g y) \<in> (\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K"
+              using hyK by blast
+            have hbdd_fg: "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` K)"
+              unfolding top1_bounded_metric_def by (intro bdd_aboveI[of _ 1]) auto
+            have hbm_fg_le: "top1_bounded_metric d (f0 y) (g y) \<le> \<epsilon> - \<delta>"
+              using cSup_upper2[OF himg _ hbdd_fg] unfolding \<delta>_def by simp
+            text \<open>bm(f0,h) \<le> bm(f0,g) + bm(g,h) \<le> (\<epsilon>-\<delta>) + 3r.\<close>
+            have hbm_f0_hy: "top1_bounded_metric d (f0 y) (h y) \<le> top1_bounded_metric d (f0 y) (g y) + top1_bounded_metric d (g y) (h y)"
+              by (meson bm_triangle hd hf0yY hgyY hhyY)
+            then show "top1_bounded_metric d (f0 y) (h y) \<le> (\<epsilon> - \<delta>) + 3*r"
+              using hbm_fg_le hbm_gy_hy by linarith
+          qed
+          have hK_ne': "K \<noteq> {}" using hK_ne by simp
+          have himg_ne: "(\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K \<noteq> {}" using hK_ne' by blast
+          have hbdd_fh: "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K)"
+            unfolding top1_bounded_metric_def by (intro bdd_aboveI[of _ 1]) auto
+          have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K) \<le> (\<epsilon> - \<delta>) + 3*r"
+            using cSup_least[OF himg_ne] hpointwise by fast
+          then have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` K) < \<epsilon>"
+            using h\<delta> unfolding r_def by linarith
+          then show "h \<in> B" using hhPiE hBdef hK_ne' by auto
+        qed
+        have "\<exists>V'. V' \<in> ?Tco \<and> g \<in> V' \<and> (\<forall>h \<in> ?C \<inter> V'. h \<in> B)"
+          using hV_Tco hg_V hV_sub_B by blast
+        then obtain V' where "V' \<in> ?Tco" "g \<in> V'" "\<forall>h \<in> ?C \<inter> V'. h \<in> B" by blast
         then show "\<exists>V \<in> ?Tco. g \<in> V \<and> (\<forall>h \<in> ?C \<inter> V. h \<in> B)" by metis
       qed
+    qed
     qed
     text \<open>Union of co-open V_g's gives C \<inter> B.\<close>
     have "?C \<inter> B \<in> ?sub_co"
@@ -14547,6 +15228,525 @@ qed
 section \<open>\<S>47 Ascoli's Theorem\<close>
 
 (** from \S47 Theorem 47.1 (Ascoli's theorem) [top1.tex:6995] **)
+text \<open>
+  Proof structure for Ascoli's theorem (top1.tex): it is convenient to work in the
+  product / pointwise topology on \<open>Y^X\<close>, take the closure \<open>G\<close> of \<open>\<F>\<close>, prove:
+  (1) \<open>G\<close> is compact, (2) \<open>G\<close> consists of continuous maps and is equicontinuous, and
+  (3) the pointwise and compact-convergence topologies coincide on \<open>G\<close>.
+  The following lemmas record these steps as named goals (to be proved later).
+\<close>
+
+lemma top1_ascoli_step1_compact_closure_pointwise:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  shows
+    "top1_compact_on
+      (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>)
+      (subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))
+        (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>))"
+  sorry
+
+text \<open>Helper: coordinate preimage of open set is product-open.\<close>
+lemma product_topology_coord_open:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  assumes hTsub: "\<forall>i\<in>I. \<forall>V\<in>T i. V \<subseteq> X i"
+  assumes hiI: "i \<in> I"
+  assumes hU: "U \<in> T i"
+  shows "{f \<in> top1_PiE I X. f i \<in> U} \<in> top1_product_topology_on I X T"
+proof -
+  define Uf where "Uf j = (if j = i then U else X j)" for j
+  have hUf_basis: "top1_PiE I Uf \<in> top1_product_basis_on I X T"
+    unfolding top1_product_basis_on_def
+  proof (rule CollectI, rule exI[of _ Uf], intro conjI)
+    show "\<forall>j\<in>I. Uf j \<in> T j \<and> Uf j \<subseteq> X j"
+    proof (intro ballI conjI)
+      fix j assume hjI: "j \<in> I"
+      show "Uf j \<in> T j"
+      proof (cases "j = i")
+        case True then show ?thesis unfolding Uf_def using hU by simp
+      next
+        case False
+        have "X j \<in> T j" using hTop hjI unfolding is_topology_on_def by blast
+        then show ?thesis unfolding Uf_def using False by simp
+      qed
+      show "Uf j \<subseteq> X j"
+      proof (cases "j = i")
+        case True then show ?thesis unfolding Uf_def using hTsub hiI hU by simp
+      next
+        case False then show ?thesis unfolding Uf_def by simp
+      qed
+    qed
+    show "finite {j \<in> I. Uf j \<noteq> X j}"
+    proof -
+      have "{j \<in> I. Uf j \<noteq> X j} \<subseteq> {i}" unfolding Uf_def by auto
+      then show ?thesis using finite_subset by auto
+    qed
+    show "top1_PiE I Uf = top1_PiE I Uf" ..
+  qed
+  have hU_sub: "U \<subseteq> X i" using hTsub hiI hU by blast
+  have "{f \<in> top1_PiE I X. f i \<in> U} = top1_PiE I Uf"
+  proof (rule set_eqI, rule iffI)
+    fix f assume "f \<in> {f \<in> top1_PiE I X. f i \<in> U}"
+    then have "f \<in> top1_PiE I X" and "f i \<in> U" by auto
+    then show "f \<in> top1_PiE I Uf"
+      unfolding top1_PiE_iff Uf_def using hiI by force
+  next
+    fix f assume "f \<in> top1_PiE I Uf"
+    then have hf: "(\<forall>j\<in>I. f j \<in> Uf j) \<and> (\<forall>j. j \<notin> I \<longrightarrow> f j = undefined)"
+      unfolding top1_PiE_iff by blast
+    have "f \<in> top1_PiE I X"
+      unfolding top1_PiE_iff using hf Uf_def hU_sub hiI by (metis in_mono)
+    moreover have "f i \<in> U" using hf hiI unfolding Uf_def by fastforce
+    ultimately show "f \<in> {f \<in> top1_PiE I X. f i \<in> U}" by blast
+  qed
+  then show ?thesis
+    unfolding top1_product_topology_on_def topology_generated_by_basis_def
+    using hUf_basis by blast
+qed
+
+lemma top1_ascoli_step2_closure_continuous_and_equicontinuous:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  defines "G \<equiv>
+    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
+  shows "G \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)
+      \<and> top1_equicontinuous_family_on X TX Y d G"
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tpw = "top1_pointwise_topology_on X Y ?TY"
+  let ?C = "top1_continuous_funcs_on X TX Y ?TY"
+  have hC_PiE: "?C \<subseteq> ?PiE" unfolding top1_continuous_funcs_on_def by auto
+  have hF_PiE: "\<F> \<subseteq> ?PiE" using hFsub hC_PiE by blast
+  have hTY_top: "is_topology_on Y ?TY" using top1_metric_topology_on_is_topology_on[OF hd] by simp
+  have hTpw_top: "is_topology_on ?PiE ?Tpw"
+    unfolding top1_pointwise_topology_on_def
+    by (rule top1_product_topology_on_is_topology_on) (simp add: hTY_top)
+  have hG_PiE: "G \<subseteq> ?PiE"
+    unfolding G_def by (rule closure_on_subset_carrier[OF hTpw_top hF_PiE])
+  have hd_tri: "\<forall>a\<in>Y. \<forall>b\<in>Y. \<forall>c\<in>Y. d a c \<le> d a b + d b c"
+    using hd unfolding top1_metric_on_def by linarith
+  have hd_sym: "\<forall>a\<in>Y. \<forall>b\<in>Y. d a b = d b a"
+    using hd unfolding top1_metric_on_def by linarith
+  have hX_TX: "X \<in> TX" using hTopX unfolding is_topology_on_def by linarith
+  text \<open>Equicontinuity of G: for x0 and \<epsilon>, get U from F's equicontinuity with \<epsilon>/3,
+    intersect with X for clean membership, triangle gives d(g x, g x0) < \<epsilon>.\<close>
+  have hG_equicont: "top1_equicontinuous_family_on X TX Y d G"
+    unfolding top1_equicontinuous_family_on_def
+  proof (intro conjI)
+    show "\<forall>g\<in>G. \<forall>a\<in>X. g a \<in> Y"
+      using hG_PiE top1_PiE_const_val by fast
+    show "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>g\<in>G. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>)"
+    proof (intro ballI allI impI)
+      fix x0 and \<epsilon> :: real assume hx0: "x0 \<in> X" and heps: "(0::real) < \<epsilon>"
+      have heps3: "(0::real) < \<epsilon>/3" using heps by simp
+      have "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>/3)"
+        using hEq hx0 heps3 unfolding top1_equicontinuous_family_on_def by blast
+      then obtain U0 where hU0: "U0 \<in> TX" and hx0U0: "x0 \<in> U0"
+        and hFU0: "\<forall>f\<in>\<F>. \<forall>x\<in>U0. d (f x) (f x0) < \<epsilon>/3" by blast
+      text \<open>Intersect with X so that elements of U are in X (for PiE membership).\<close>
+      define U where "U = U0 \<inter> X"
+      have hU: "U \<in> TX" unfolding U_def using topology_inter2[OF hTopX hU0 hX_TX] by blast
+      have hx0U: "x0 \<in> U" unfolding U_def using hx0U0 hx0 by blast
+      have hFU: "\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>/3"
+        using hFU0 unfolding U_def by blast
+      show "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>g\<in>G. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>)"
+      proof (rule bexI[of _ U], intro conjI)
+        show "x0 \<in> U" using hx0U .
+        show "\<forall>g\<in>G. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>"
+        proof (intro ballI)
+          fix g x assume hgG: "g \<in> G" and hxU: "x \<in> U"
+          have hxX: "x \<in> X" using hxU unfolding U_def by blast
+          have hgxY: "g x \<in> Y" using hG_PiE hgG hxX top1_PiE_const_val by fastforce
+          have hgx0Y: "g x0 \<in> Y" using hG_PiE hgG hx0 top1_PiE_const_val by fastforce
+          text \<open>Find f \<in> F near g at {x, x0} using closure in pointwise topology.
+            Construct V = {h \<in> PiE. h(x) \<in> ball(g(x), \<epsilon>/3) \<and> h(x0) \<in> ball(g(x0), \<epsilon>/3)}.
+            V is pw-open (product basis element). g \<in> V since d(g x, g x) = 0 < \<epsilon>/3.
+            g \<in> closure(F) + V is open \<Rightarrow> V \<inter> F \<noteq> \<emptyset>.\<close>
+          have heps3: "(0::real) < \<epsilon>/3" using heps by simp
+          define Vx where "Vx = {h \<in> ?PiE. d (g x) (h x) < \<epsilon>/3 \<and> d (g x0) (h x0) < \<epsilon>/3}"
+          have hTY_sub: "\<forall>a\<in>X. \<forall>V\<in>?TY. V \<subseteq> Y"
+            unfolding top1_metric_topology_on_def topology_generated_by_basis_def by blast
+          have hball_x_TY: "top1_ball_on Y d (g x) (\<epsilon>/3) \<in> ?TY"
+            using top1_ball_open_in_metric_topology[OF hd hgxY heps3] by linarith
+          have hball_x0_TY: "top1_ball_on Y d (g x0) (\<epsilon>/3) \<in> ?TY"
+            using top1_ball_open_in_metric_topology[OF hd hgx0Y heps3] by linarith
+          define V1 where "V1 = {h \<in> ?PiE. h x \<in> top1_ball_on Y d (g x) (\<epsilon>/3)}"
+          define V2 where "V2 = {h \<in> ?PiE. h x0 \<in> top1_ball_on Y d (g x0) (\<epsilon>/3)}"
+          have hV1_pw: "V1 \<in> ?Tpw"
+            unfolding V1_def top1_pointwise_topology_on_def
+            using product_topology_coord_open[of X "\<lambda>_. Y" "\<lambda>_. ?TY" x] hTY_top hTY_sub hxX hball_x_TY by blast
+          have hV2_pw: "V2 \<in> ?Tpw"
+            unfolding V2_def top1_pointwise_topology_on_def
+            using product_topology_coord_open[of X "\<lambda>_. Y" "\<lambda>_. ?TY" x0] hTY_top hTY_sub hx0 hball_x0_TY by blast
+          have hVx_eq: "Vx = V1 \<inter> V2" unfolding Vx_def V1_def V2_def top1_ball_on_def using hx0 hxX top1_PiE_const_val by fastforce
+          have hVx_open: "Vx \<in> ?Tpw" using hVx_eq hV1_pw hV2_pw topology_inter2[OF hTpw_top] by simp
+          have hg_Vx: "g \<in> Vx"
+          proof -
+            have "d (g x) (g x) = 0" using hd hgxY unfolding top1_metric_on_def by blast
+            moreover have "d (g x0) (g x0) = 0" using hd hgx0Y unfolding top1_metric_on_def by blast
+            moreover have "g \<in> ?PiE" using hgG hG_PiE by blast
+            ultimately show ?thesis unfolding Vx_def using heps3 by simp
+          qed
+          have hg_cl: "g \<in> closure_on ?PiE ?Tpw \<F>" using hgG unfolding G_def by linarith
+          have hgPiE': "g \<in> ?PiE" using hgG hG_PiE by blast
+          have hcl_char: "\<forall>U. neighborhood_of g ?PiE ?Tpw U \<longrightarrow> intersects U \<F>"
+            using iffD1[OF Theorem_17_5a[OF hTpw_top hgPiE' hF_PiE] hg_cl] by blast
+          then have "\<forall>V\<in>?Tpw. g \<in> V \<longrightarrow> (\<exists>f\<in>\<F>. f \<in> V)"
+            unfolding neighborhood_of_def intersects_def by blast
+          then have "\<exists>f\<in>\<F>. f \<in> Vx" using hVx_open hg_Vx by blast
+          then obtain f where hfF: "f \<in> \<F>" and hfVx: "f \<in> Vx" by blast
+          have hfx: "d (g x) (f x) < \<epsilon>/3" using hfVx unfolding Vx_def by blast
+          have hfx0: "d (g x0) (f x0) < \<epsilon>/3" using hfVx unfolding Vx_def by blast
+          have hfxY: "f x \<in> Y" using hfF hF_PiE hxX top1_PiE_const_val by fast
+          have hfx0Y: "f x0 \<in> Y" using hfF hF_PiE hx0 top1_PiE_const_val by fast
+          have hffx: "d (f x) (f x0) < \<epsilon>/3" using hFU hfF hxU by blast
+          have "d (g x) (g x0) \<le> d (g x) (f x) + d (f x) (g x0)"
+            using hd_tri hgxY hfxY hgx0Y by blast
+          also have "d (f x) (g x0) \<le> d (f x) (f x0) + d (f x0) (g x0)"
+            using hd_tri hfxY hfx0Y hgx0Y by blast
+          finally have hle: "d (g x) (g x0) \<le> d (g x) (f x) + d (f x) (f x0) + d (f x0) (g x0)" by linarith
+          have "d (f x0) (g x0) = d (g x0) (f x0)" using hd_sym hfx0Y hgx0Y by blast
+          then show "d (g x) (g x0) < \<epsilon>" using hle hfx hffx hfx0 by argo
+        qed
+      qed (rule hU)
+    qed
+  qed
+  have hG_cont: "G \<subseteq> ?C"
+  proof (intro subsetI)
+    fix g assume hgG: "g \<in> G"
+    have hgPiE: "g \<in> ?PiE" using hgG hG_PiE by blast
+    have hgY: "\<forall>a\<in>X. g a \<in> Y" using hgPiE top1_PiE_const_val by fast
+    text \<open>g is continuous: from equicontinuity of G applied to the singleton {g}.\<close>
+    have hg_cont_at: "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>x\<in>U. d (g x) (g x0) < \<epsilon>)"
+      using hG_equicont hgG unfolding top1_equicontinuous_family_on_def by meson
+    have "\<forall>V\<in>?TY. {x \<in> X. g x \<in> V} \<in> TX"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> ?TY"
+      have hpreX: "{x \<in> X. g x \<in> V} \<subseteq> X" by blast
+      show "{x \<in> X. g x \<in> V} \<in> TX"
+      proof (rule top1_open_of_local_subsets[OF hTopX hpreX])
+        show "\<forall>x0\<in>{x \<in> X. g x \<in> V}. \<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> {x \<in> X. g x \<in> V}"
+        proof (intro ballI)
+          fix x0 assume hx0: "x0 \<in> {x \<in> X. g x \<in> V}"
+          then have hx0X: "x0 \<in> X" and hgx0V: "g x0 \<in> V" by auto
+          obtain \<epsilon> where heps: "\<epsilon> > 0" and hball_sub: "top1_ball_on Y d (g x0) \<epsilon> \<subseteq> V"
+            using top1_metric_open_contains_ball[OF hd hV hgx0V] by blast
+          obtain U0 where hU0: "U0 \<in> TX" and hx0U0: "x0 \<in> U0"
+            and hgU0: "\<forall>x\<in>U0. d (g x) (g x0) < \<epsilon>"
+            using hg_cont_at hx0X heps by blast
+          define U where "U = U0 \<inter> X"
+          have hU: "U \<in> TX" unfolding U_def using topology_inter2[OF hTopX hU0 hX_TX] by blast
+          have hx0U: "x0 \<in> U" unfolding U_def using hx0U0 hx0X by blast
+          have hgU: "\<forall>x\<in>U. d (g x) (g x0) < \<epsilon>" unfolding U_def using hgU0 by blast
+          have "U \<subseteq> {x \<in> X. g x \<in> V}"
+          proof (intro subsetI CollectI conjI)
+            fix x assume hxU: "x \<in> U"
+            show "x \<in> X" using hxU unfolding U_def by blast
+            have hxX': "x \<in> X" using hxU unfolding U_def by blast
+            have "g x \<in> Y" using hgY hxX' by blast
+            have "d (g x0) (g x) = d (g x) (g x0)"
+              using hd_sym \<open>g x \<in> Y\<close> hgY hx0X by blast
+            then have "d (g x0) (g x) < \<epsilon>" using hgU hxU by fastforce
+            then have "g x \<in> top1_ball_on Y d (g x0) \<epsilon>" unfolding top1_ball_on_def using \<open>g x \<in> Y\<close> by blast
+            then show "g x \<in> V" using hball_sub by blast
+          qed
+          then show "\<exists>U\<in>TX. x0 \<in> U \<and> U \<subseteq> {x \<in> X. g x \<in> V}" using hU hx0U by blast
+        qed
+      qed
+    qed
+    then show "g \<in> ?C" unfolding top1_continuous_funcs_on_def top1_continuous_map_on_def
+      using hgPiE hgY by blast
+  qed
+  show ?thesis using hG_cont hG_equicont by blast
+qed
+
+text \<open>Helper: equicontinuous covering gives d(h(x), g(x)) < 3\<delta>.\<close>
+lemma equicontinuous_covering_bound:
+  assumes hd: "top1_metric_on Y d"
+  assumes hG_eq: "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>h\<in>G. \<forall>x\<in>U. d (h x) (h x0) < \<epsilon>)"
+  assumes hG_PiE: "G \<subseteq> top1_PiE X (\<lambda>_. Y)"
+  assumes hgG: "g \<in> G" and hhG: "h \<in> G"
+  assumes hxX: "x \<in> X" and hx0X: "x0 \<in> X"
+  assumes hUx0: "U \<in> TX" and hx_in_U: "x \<in> U" and hx0_in_U: "x0 \<in> U"
+  assumes hU_equi: "\<forall>f\<in>G. \<forall>z\<in>U. d (f z) (f x0) < \<delta>"
+  assumes h\<delta>: "0 < \<delta>"
+  assumes hh_near: "d (h x0) (g x0) < \<delta>"
+  shows "d (h x) (g x) < 3 * \<delta>"
+proof -
+  have hhPiE: "h \<in> top1_PiE X (\<lambda>_. Y)" using hhG hG_PiE by blast
+  have hgPiE: "g \<in> top1_PiE X (\<lambda>_. Y)" using hgG hG_PiE by blast
+  have hhxY: "h x \<in> Y" using hhPiE hxX top1_PiE_const_val by fast
+  have hgxY: "g x \<in> Y" using hgPiE hxX top1_PiE_const_val by fast
+  have hhx0Y: "h x0 \<in> Y" using hhPiE hx0X top1_PiE_const_val by fast
+  have hgx0Y: "g x0 \<in> Y" using hgPiE hx0X top1_PiE_const_val by fast
+  have hd_tri: "\<forall>a\<in>Y. \<forall>b\<in>Y. \<forall>c\<in>Y. d a c \<le> d a b + d b c"
+    using hd unfolding top1_metric_on_def by linarith
+  have hd_sym: "\<forall>a\<in>Y. \<forall>b\<in>Y. d a b = d b a"
+    using hd unfolding top1_metric_on_def by linarith
+  have "d (h x) (h x0) < \<delta>" using hU_equi hhG hx_in_U by blast
+  have "d (g x) (g x0) < \<delta>" using hU_equi hgG hx_in_U by blast
+  have "d (g x0) (g x) = d (g x) (g x0)" using hd_sym hgx0Y hgxY by blast
+  then have "d (g x0) (g x) < \<delta>" using \<open>d (g x) (g x0) < \<delta>\<close> by argo
+  have "d (h x) (g x) \<le> d (h x) (h x0) + d (h x0) (g x)"
+    using hd_tri hhxY hhx0Y hgxY by blast
+  also have "d (h x0) (g x) \<le> d (h x0) (g x0) + d (g x0) (g x)"
+    using hd_tri hhx0Y hgx0Y hgxY by blast
+  finally have "d (h x) (g x) \<le> d (h x) (h x0) + d (h x0) (g x0) + d (g x0) (g x)" by linarith
+  then show "d (h x) (g x) < 3 * \<delta>"
+    using \<open>d (h x) (h x0) < \<delta>\<close> hh_near \<open>d (g x0) (g x) < \<delta>\<close> by linarith
+qed
+
+lemma top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hFsub:
+    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
+  assumes hCa:
+	    "\<forall>a\<in>X.
+	      top1_compact_on
+	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
+	        (subspace_topology Y (top1_metric_topology_on Y d)
+	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
+  defines "G \<equiv>
+    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
+  shows
+    "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) G
+      = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) G"
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tpw = "top1_pointwise_topology_on X Y ?TY"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  have hpw_sub_cc: "?Tpw \<subseteq> ?Tcc" by (rule pw_sub_cc_topology[OF hTopX hd])
+  text \<open>\<subseteq>: follows from pw \<subseteq> cc.\<close>
+  have h1: "subspace_topology ?PiE ?Tpw G \<subseteq> subspace_topology ?PiE ?Tcc G"
+    unfolding subspace_topology_def using hpw_sub_cc by blast
+  text \<open>\<supseteq>: on G (equicontinuous), cc restricted to G \<subseteq> pw restricted to G.
+    Uses equicontinuity covering argument (same pattern as §46).\<close>
+  have hStep2: "G \<subseteq> top1_continuous_funcs_on X TX Y ?TY \<and> top1_equicontinuous_family_on X TX Y d G"
+    unfolding G_def using top1_ascoli_step2_closure_continuous_and_equicontinuous[OF hTopX hd hFsub hEq hCa] by argo
+  then have hGEq: "top1_equicontinuous_family_on X TX Y d G" by blast
+  have hTY_top: "is_topology_on Y ?TY" using top1_metric_topology_on_is_topology_on[OF hd] by simp
+  have hC_PiE: "top1_continuous_funcs_on X TX Y ?TY \<subseteq> ?PiE"
+    unfolding top1_continuous_funcs_on_def by auto
+  have hF_PiE: "\<F> \<subseteq> ?PiE" using hFsub hC_PiE by blast
+  have hTcc_top: "is_topology_on ?PiE ?Tcc" by (rule cc_topology_is_topology[OF hTopX hd])
+  have hTpw_top: "is_topology_on ?PiE ?Tpw"
+    unfolding top1_pointwise_topology_on_def
+    by (rule top1_product_topology_on_is_topology_on) (simp add: hTY_top)
+  have hG_PiE: "G \<subseteq> ?PiE"
+    unfolding G_def by (rule closure_on_subset_carrier[OF hTpw_top hF_PiE])
+  have hEqG_detail: "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>h\<in>G. \<forall>x\<in>U. d (h x) (h x0) < \<epsilon>)"
+    using hGEq unfolding top1_equicontinuous_family_on_def by argo
+  have hTY_sub: "\<forall>a\<in>X. \<forall>V\<in>?TY. V \<subseteq> Y"
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def by blast
+  have h2: "subspace_topology ?PiE ?Tcc G \<subseteq> subspace_topology ?PiE ?Tpw G"
+  proof (rule subsetI)
+    fix W assume hW: "W \<in> subspace_topology ?PiE ?Tcc G"
+    then obtain V where hV: "V \<in> ?Tcc" and hWeq: "W = G \<inter> V"
+      unfolding subspace_topology_def by auto
+    text \<open>For each g \<in> W, find pw-open Ug with g \<in> Ug, G \<inter> Ug \<subseteq> W.\<close>
+    have hlocal: "\<forall>g\<in>W. \<exists>Ug\<in>?Tpw. g \<in> Ug \<and> G \<inter> Ug \<subseteq> W"
+    proof (intro ballI)
+      fix g assume hgW: "g \<in> W"
+      then have hgG: "g \<in> G" and hgV: "g \<in> V" using hWeq by auto
+      have hgPiE: "g \<in> ?PiE" using hgG hG_PiE by auto
+      text \<open>Get cc-basis element b with g \<in> b \<subseteq> V.\<close>
+      have "\<exists>b\<in>top1_compact_convergence_basis_on X TX Y d. g \<in> b \<and> b \<subseteq> V"
+        using generated_topology_contains_basis_elem
+          hV[unfolded top1_compact_convergence_topology_on_def] hgV by metis
+      then obtain b where hb_basis: "b \<in> top1_compact_convergence_basis_on X TX Y d"
+        and hgb: "g \<in> b" and hb_V: "b \<subseteq> V" by auto
+      then obtain f0 C0 \<epsilon> where hf0: "f0 \<in> ?PiE"
+        and hC0comp: "top1_compact_on C0 (subspace_topology X TX C0)"
+        and hC0X: "C0 \<subseteq> X" and heps: "0 < \<epsilon>"
+        and hbdef: "b = {h \<in> ?PiE. (if C0 = {} then 0 else Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` C0)) < \<epsilon>}"
+        unfolding top1_compact_convergence_basis_on_def by auto
+      show "\<exists>Ug\<in>?Tpw. g \<in> Ug \<and> G \<inter> Ug \<subseteq> W"
+      proof (cases "C0 = {}")
+        case True
+        then have "b = ?PiE" unfolding hbdef using heps by auto
+        have hV_sub_PiE: "V \<subseteq> ?PiE"
+          using hV hTcc_top unfolding top1_compact_convergence_topology_on_def
+            topology_generated_by_basis_def by blast
+        then have "V = ?PiE" using hb_V \<open>b = ?PiE\<close> hV_sub_PiE by blast
+        have "?PiE \<in> ?Tpw" using hTpw_top unfolding is_topology_on_def by linarith
+        then show ?thesis using hgG hWeq hG_PiE \<open>V = ?PiE\<close> by auto
+      next
+        case False
+        define s0 where "s0 = Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C0)"
+        have hs0_lt: "s0 < \<epsilon>" using hgb hbdef False hgPiE unfolding s0_def by auto
+        define \<delta>0 where "\<delta>0 = \<epsilon> - s0"
+        have h\<delta>0: "0 < \<delta>0" using hs0_lt heps unfolding \<delta>0_def by argo
+        define \<delta> where "\<delta> = min (\<delta>0 / 4) (1/4 :: real)"
+        have h\<delta>: "0 < \<delta>" using h\<delta>0 unfolding \<delta>_def by argo
+        text \<open>Cover C0 using equicontinuity with \<delta>.\<close>
+        have "\<forall>x0\<in>C0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>h\<in>G. \<forall>x\<in>U. d (h x) (h x0) < \<delta>)"
+          using hEqG_detail hC0X h\<delta> by auto
+        then obtain Uf where hUf: "\<forall>x0\<in>C0. Uf x0 \<in> TX \<and> x0 \<in> Uf x0 \<and> (\<forall>h\<in>G. \<forall>x\<in>Uf x0. d (h x) (h x0) < \<delta>)"
+          by meson
+        have hUfTX: "Uf ` C0 \<subseteq> TX" using hUf by auto
+        have hC0covUf: "C0 \<subseteq> (\<Union>x0\<in>C0. Uf x0)" using hUf by auto
+        have "\<exists>G. finite G \<and> G \<subseteq> Uf ` C0 \<and> C0 \<subseteq> \<Union>G"
+          using Lemma_26_1[OF hTopX hC0X] hC0comp hUfTX hC0covUf by presburger
+        then obtain G0 where "finite G0" "G0 \<subseteq> Uf ` C0" "C0 \<subseteq> \<Union>G0" by blast
+        obtain F where hFK: "F \<subseteq> C0" and hFfin: "finite F" and "G0 = Uf ` F"
+          using finite_subset_image[OF \<open>finite G0\<close> \<open>G0 \<subseteq> Uf ` C0\<close>] by blast
+        have hFcov: "C0 \<subseteq> (\<Union>x0\<in>F. Uf x0)" using \<open>C0 \<subseteq> \<Union>G0\<close> \<open>G0 = Uf ` F\<close> by blast
+        text \<open>Pw-open: restrict g at centers of F to \<delta>-balls.\<close>
+        have hFX: "F \<subseteq> X" using hFK hC0X by auto
+        define Ug where "Ug = (\<Inter>xi\<in>F. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>})"
+        have hUg_pw: "Ug \<in> ?Tpw"
+        proof (cases "F = {}")
+          case True
+          then have "C0 = {}" using hFcov hFK by blast
+          then show ?thesis using False by blast
+        next
+          case False
+          have "\<forall>xi\<in>F. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>} \<in> ?Tpw"
+          proof (intro ballI)
+            fix xi assume hxi: "xi \<in> F"
+            have hxiX: "xi \<in> X" using hxi hFX by auto
+            have hball_open: "top1_ball_on Y d (g xi) \<delta> \<in> ?TY"
+              using top1_ball_open_in_metric_topology[OF hd] hgPiE hxiX h\<delta> top1_PiE_const_val by fast
+            show "{h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>} \<in> ?Tpw"
+              unfolding top1_pointwise_topology_on_def
+              using product_topology_coord_open[of X "\<lambda>_. Y" "\<lambda>_. ?TY" xi] hTY_top hTY_sub hxiX hball_open by auto
+          qed
+          have "finite ((\<lambda>xi. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>}) ` F)"
+            using hFfin by blast
+          moreover have "(\<lambda>xi. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>}) ` F \<noteq> {}"
+            using False by blast
+          moreover have "(\<lambda>xi. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>}) ` F \<subseteq> ?Tpw"
+            using \<open>\<forall>xi\<in>F. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>} \<in> ?Tpw\<close> by blast
+          ultimately have "\<Inter>((\<lambda>xi. {h \<in> ?PiE. h xi \<in> top1_ball_on Y d (g xi) \<delta>}) ` F) \<in> ?Tpw"
+            using hTpw_top unfolding is_topology_on_def by blast
+          then show ?thesis unfolding Ug_def by linarith
+        qed
+        have hg_Ug: "g \<in> Ug"
+        proof -
+          have "\<forall>xi\<in>F. g xi \<in> top1_ball_on Y d (g xi) \<delta>"
+          proof (intro ballI)
+            fix xi assume "xi \<in> F"
+            then have "xi \<in> X" using hFX by auto
+            then have "g xi \<in> Y" using hgPiE top1_PiE_const_val by fast
+            have "d (g xi) (g xi) = 0" using hd \<open>g xi \<in> Y\<close> unfolding top1_metric_on_def by blast
+            then show "g xi \<in> top1_ball_on Y d (g xi) \<delta>" unfolding top1_ball_on_def using \<open>g xi \<in> Y\<close> h\<delta> by simp
+          qed
+          then show ?thesis unfolding Ug_def using hgPiE by auto
+        qed
+        text \<open>G \<inter> Ug \<subseteq> W: for h \<in> G \<inter> Ug, show h \<in> b using triangle inequality.\<close>
+        have hUg_sub: "G \<inter> Ug \<subseteq> W"
+        proof (intro subsetI)
+          fix h assume hhGUg: "h \<in> G \<inter> Ug"
+          then have hhG: "h \<in> G" and hhUg: "h \<in> Ug" by auto
+          have hhPiE: "h \<in> ?PiE" using hhG hG_PiE by auto
+          text \<open>For x \<in> C0: find xj \<in> F with x \<in> Uf(xj). Triangle: d(h(x),g(x)) < 3\<delta>.\<close>
+          have hbm_bound: "\<forall>x\<in>C0. top1_bounded_metric d (g x) (h x) \<le> 3*\<delta>"
+          proof (intro ballI)
+            fix x assume hxC: "x \<in> C0"
+            obtain xj where hxjF: "xj \<in> F" and hxUf: "x \<in> Uf xj"
+              using hFcov hxC by auto
+            have hxjX: "xj \<in> X" using hxjF hFX by auto
+            have hxX: "x \<in> X" using hxC hC0X by auto
+            have hhxj_near: "d (h xj) (g xj) < \<delta>"
+            proof -
+              have "h \<in> Ug" using hhUg by simp
+              then have "h xj \<in> top1_ball_on Y d (g xj) \<delta>" using hxjF unfolding Ug_def by auto
+              then have "d (g xj) (h xj) < \<delta>" unfolding top1_ball_on_def by simp
+              have "h xj \<in> Y" using hhPiE hxjX top1_PiE_const_val by fast
+              have "g xj \<in> Y" using hgPiE hxjX top1_PiE_const_val by fast
+              have "d (h xj) (g xj) = d (g xj) (h xj)"
+                using hd \<open>h xj \<in> Y\<close> \<open>g xj \<in> Y\<close> unfolding top1_metric_on_def by blast
+              then show ?thesis using \<open>d (g xj) (h xj) < \<delta>\<close> by linarith
+            qed
+            have hd_hx_gx: "d (h x) (g x) < 3 * \<delta>"
+              using equicontinuous_covering_bound[OF hd hEqG_detail hG_PiE hgG hhG hxX hxjX
+                _ hxUf _ _ h\<delta> hhxj_near] hUf hxjF using hFK by blast
+            have hgxY: "g x \<in> Y" using hgPiE hxX top1_PiE_const_val by fast
+            have hhxY: "h x \<in> Y" using hhPiE hxX top1_PiE_const_val by fast
+            have "d (g x) (h x) = d (h x) (g x)"
+              using hd hgxY hhxY unfolding top1_metric_on_def by blast
+            then have "d (g x) (h x) < 3 * \<delta>" using hd_hx_gx by linarith
+            then have "top1_bounded_metric d (g x) (h x) < 3 * \<delta>"
+              unfolding top1_bounded_metric_def by auto
+            then show "top1_bounded_metric d (g x) (h x) \<le> 3*\<delta>" by linarith
+          qed
+          have himg_ne: "(\<lambda>x. top1_bounded_metric d (g x) (h x)) ` C0 \<noteq> {}" using False by blast
+          have hSup_gh: "Sup ((\<lambda>x. top1_bounded_metric d (g x) (h x)) ` C0) \<le> 3*\<delta>"
+            using cSup_least[OF himg_ne] hbm_bound by blast
+          text \<open>bm(f0, h) \<le> bm(f0, g) + bm(g, h) \<le> s0 + 3\<delta> \<le> s0 + 3\<delta>0/4 < \<epsilon>.\<close>
+          have hSup_f0h: "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` C0) < \<epsilon>"
+          proof -
+            have "3 * \<delta> \<le> 3 * \<delta>0 / 4" unfolding \<delta>_def by linarith
+            then have "s0 + 3 * \<delta> < \<epsilon>" unfolding \<delta>0_def using hs0_lt by argo
+            have hbdd_fg: "bdd_above ((\<lambda>x. top1_bounded_metric d (f0 x) (g x)) ` C0)"
+              unfolding top1_bounded_metric_def by (intro bdd_aboveI[of _ 1]) auto
+            have "\<forall>x\<in>C0. top1_bounded_metric d (f0 x) (h x) \<le> s0 + 3*\<delta>"
+            proof (intro ballI)
+              fix x assume "x \<in> C0"
+              have hxX: "x \<in> X" using \<open>x \<in> C0\<close> hC0X by auto
+              have "top1_bounded_metric d (f0 x) (h x) \<le> top1_bounded_metric d (f0 x) (g x) + top1_bounded_metric d (g x) (h x)"
+                using bm_triangle[OF hd] hf0 hgPiE hhPiE hxX by (simp add: top1_PiE_iff)
+              also have "top1_bounded_metric d (f0 x) (g x) \<le> s0"
+                unfolding s0_def using cSup_upper[OF _ hbdd_fg] \<open>x \<in> C0\<close> by blast
+              also have "top1_bounded_metric d (g x) (h x) \<le> 3 * \<delta>" using hbm_bound \<open>x \<in> C0\<close> by blast
+              finally show "top1_bounded_metric d (f0 x) (h x) \<le> s0 + 3*\<delta>" by linarith
+            qed
+            then have "Sup ((\<lambda>x. top1_bounded_metric d (f0 x) (h x)) ` C0) \<le> s0 + 3*\<delta>"
+            proof -
+              assume hpw: "\<forall>x\<in>C0. top1_bounded_metric d (f0 x) (h x) \<le> s0 + 3 * \<delta>"
+              show ?thesis
+                apply (rule cSup_least)
+                using himg_ne apply blast
+                using hpw by auto
+            qed
+            then show ?thesis using \<open>s0 + 3 * \<delta> < \<epsilon>\<close> by linarith
+          qed
+          then have "h \<in> b" unfolding hbdef using hhPiE False by auto
+          then have "h \<in> V" using hb_V by auto
+          then show "h \<in> W" using hhG hWeq by auto
+        qed
+        show ?thesis using hUg_pw hg_Ug hUg_sub by auto
+      qed
+    qed
+    define UU where "UU = \<Union>{Ug \<in> ?Tpw. \<exists>g\<in>W. g \<in> Ug \<and> G \<inter> Ug \<subseteq> W}"
+    have "UU \<in> ?Tpw" unfolding UU_def using hTpw_top unfolding is_topology_on_def by auto
+    have "W = G \<inter> UU"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> W"
+      then obtain Ug where "Ug \<in> ?Tpw" "x \<in> Ug" "G \<inter> Ug \<subseteq> W" using hlocal by blast
+      then have "x \<in> UU" unfolding UU_def using \<open>x \<in> W\<close> by blast
+      then show "x \<in> G \<inter> UU" using \<open>x \<in> W\<close> hWeq by blast
+    next
+      fix x assume "x \<in> G \<inter> UU"
+      then show "x \<in> W" unfolding UU_def by blast
+    qed
+    then show "W \<in> subspace_topology ?PiE ?Tpw G"
+      unfolding subspace_topology_def using \<open>UU \<in> ?Tpw\<close> by blast
+  qed
+  show ?thesis using h1 h2 by blast
+qed
+
 theorem Theorem_47_1:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
@@ -14581,70 +15781,70 @@ theorem Theorem_47_1:
                        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))
                        (subspace_topology Y (top1_metric_topology_on Y d)
 	                          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` K))))))"
-  sorry
-
-text \<open>
-  Proof structure for Ascoli's theorem (top1.tex): it is convenient to work in the
-  product / pointwise topology on \<open>Y^X\<close>, take the closure \<open>G\<close> of \<open>\<F>\<close>, prove:
-  (1) \<open>G\<close> is compact, (2) \<open>G\<close> consists of continuous maps and is equicontinuous, and
-  (3) the pointwise and compact-convergence topologies coincide on \<open>G\<close>.
-  The following lemmas record these steps as named goals (to be proved later).
-\<close>
-
-lemma top1_ascoli_step1_compact_closure_pointwise:
-  assumes hTopX: "is_topology_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hFsub:
-    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
-  assumes hCa:
-	    "\<forall>a\<in>X.
-	      top1_compact_on
-	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
-	        (subspace_topology Y (top1_metric_topology_on Y d)
-	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
-  shows
-    "top1_compact_on
-      (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>)
-      (subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))
-        (closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>))"
-  sorry
-
-lemma top1_ascoli_step2_closure_continuous_and_equicontinuous:
-  assumes hTopX: "is_topology_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hFsub:
-    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
-  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
-  assumes hCa:
-	    "\<forall>a\<in>X.
-	      top1_compact_on
-	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
-	        (subspace_topology Y (top1_metric_topology_on Y d)
-	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
-  defines "G \<equiv>
-    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
-  shows "G \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)
-      \<and> top1_equicontinuous_family_on X TX Y d G"
-  sorry
-
-lemma top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure:
-  assumes hTopX: "is_topology_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hFsub:
-    "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
-  assumes hEq: "top1_equicontinuous_family_on X TX Y d \<F>"
-  assumes hCa:
-	    "\<forall>a\<in>X.
-	      top1_compact_on
-	        (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>))
-	        (subspace_topology Y (top1_metric_topology_on Y d)
-	          (closure_on Y (top1_metric_topology_on Y d) ((\<lambda>f. f a) ` \<F>)))"
-  defines "G \<equiv>
-    closure_on (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) \<F>"
-  shows
-    "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)) G
-      = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) G"
-  sorry
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?Tpw = "top1_pointwise_topology_on X Y ?TY"
+  let ?Tcc = "top1_compact_convergence_topology_on X TX Y d"
+  let ?C = "top1_continuous_funcs_on X TX Y ?TY"
+  define G where "G = closure_on ?PiE ?Tpw \<F>"
+  text \<open>Forward direction: uses steps 1-3.\<close>
+  show "((top1_equicontinuous_family_on X TX Y d \<F>
+        \<and> (\<forall>a\<in>X. top1_compact_on
+               (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>))
+               (subspace_topology Y ?TY (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>)))))
+      \<longrightarrow> (\<exists>K. \<F> \<subseteq> K
+              \<and> top1_compact_on K
+                   (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) K)))"
+  proof (intro impI)
+    assume hHyp: "top1_equicontinuous_family_on X TX Y d \<F>
+        \<and> (\<forall>a\<in>X. top1_compact_on
+               (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>))
+               (subspace_topology Y ?TY (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>))))"
+    then have hEq: "top1_equicontinuous_family_on X TX Y d \<F>" and
+      hCa: "\<forall>a\<in>X. top1_compact_on (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>))
+               (subspace_topology Y ?TY (closure_on Y ?TY ((\<lambda>f. f a) ` \<F>)))" by auto
+    text \<open>Step 1: G compact in pw-topology (uses Tychonoff — sorry).\<close>
+    have hStep1: "top1_compact_on G (subspace_topology ?PiE ?Tpw G)"
+      unfolding G_def
+      using top1_ascoli_step1_compact_closure_pointwise[OF hTopX hd hFsub hCa] by linarith
+    text \<open>Step 2: G \<subseteq> C and G equicontinuous.\<close>
+    have hStep2: "G \<subseteq> ?C \<and> top1_equicontinuous_family_on X TX Y d G"
+      unfolding G_def
+      using top1_ascoli_step2_closure_continuous_and_equicontinuous[OF hTopX hd hFsub hEq hCa]
+      by linarith
+    then have hGC: "G \<subseteq> ?C" by auto
+    text \<open>Step 3: pw = cc on G.\<close>
+    have hStep3: "subspace_topology ?PiE ?Tpw G = subspace_topology ?PiE ?Tcc G"
+      unfolding G_def
+      using top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure[OF hTopX hd hFsub hEq hCa]
+      by order
+    text \<open>Step 4: G compact in cc-topology (from steps 1 + 3).\<close>
+    have hG_cc_compact: "top1_compact_on G (subspace_topology ?PiE ?Tcc G)"
+      using hStep1 hStep3 by argo
+    text \<open>G compact in cc restricted to C restricted to G.\<close>
+    have hG_final: "top1_compact_on G (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) G)"
+    proof -
+      have "subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) G = subspace_topology ?PiE ?Tcc G"
+        by (rule subspace_topology_trans[OF hGC])
+      then show ?thesis using hG_cc_compact by presburger
+    qed
+    text \<open>F \<subseteq> G.\<close>
+    have hFG: "\<F> \<subseteq> G" unfolding G_def using subset_closure_on by fast
+    show "\<exists>K. \<F> \<subseteq> K \<and> top1_compact_on K (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) K)"
+      using hFG hG_final by blast
+  qed
+  text \<open>Backward direction: sorry.\<close>
+  show "((top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)
+      \<longrightarrow>
+      (\<forall>K. top1_compact_on K
+               (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) K)
+            \<longrightarrow> top1_equicontinuous_family_on X TX Y d K
+                \<and> (\<forall>a\<in>X. top1_compact_on
+                       (closure_on Y ?TY ((\<lambda>f. f a) ` K))
+                       (subspace_topology Y ?TY (closure_on Y ?TY ((\<lambda>f. f a) ` K))))))"
+    sorry
+qed
 
 section \<open>\<S>48 Baire Spaces\<close>
 
@@ -19287,6 +20487,144 @@ proof -
   qed
 qed
 
+text \<open>Homeomorphisms preserve dim_le. Key infrastructure for dimension theory.\<close>
+lemma homeomorphism_preserves_dim_le:
+  assumes hHomeo: "top1_homeomorphism_on X TX Y TY f"
+  assumes hdimX: "top1_dim_le_on X TX m"
+  shows "top1_dim_le_on Y TY m"
+  unfolding top1_dim_le_on_def
+proof (intro allI impI)
+  fix \<A> assume hA: "top1_open_covering_on Y TY \<A>"
+  have hTopX: "is_topology_on X TX" using hHomeo unfolding top1_homeomorphism_on_def by linarith
+  have hTopY: "is_topology_on Y TY" using hHomeo unfolding top1_homeomorphism_on_def by linarith
+  have hbij: "bij_betw f X Y" using hHomeo unfolding top1_homeomorphism_on_def by linarith
+  have hcont: "top1_continuous_map_on X TX Y TY f" using hHomeo unfolding top1_homeomorphism_on_def by linarith
+  have hcont_inv: "top1_continuous_map_on Y TY X TX (inv_into X f)" using hHomeo unfolding top1_homeomorphism_on_def by linarith
+  define g where "g = inv_into X f"
+  have hgX: "\<forall>y\<in>Y. g y \<in> X" using hcont_inv unfolding g_def top1_continuous_map_on_def by blast
+  have hfg: "\<forall>y\<in>Y. f (g y) = y" using hbij unfolding g_def bij_betw_def
+    by (metis f_inv_into_f)
+  have hgf: "\<forall>x\<in>X. g (f x) = x" using hbij unfolding g_def bij_betw_def
+    by (metis inv_into_f_f)
+  have hfX: "\<forall>x\<in>X. f x \<in> Y" using hbij unfolding bij_betw_def by blast
+  text \<open>Pullback: preimages of A under f form an open covering of X.\<close>
+  define \<A>' where "\<A>' = (\<lambda>U. {x \<in> X. f x \<in> U}) ` \<A>"
+  have hA'_open: "\<A>' \<subseteq> TX"
+    unfolding \<A>'_def using hcont hA unfolding top1_continuous_map_on_def top1_open_covering_on_def by blast
+  have hA'_cov: "X \<subseteq> \<Union>\<A>'"
+  proof (intro subsetI)
+    fix x assume "x \<in> X"
+    then have "f x \<in> Y" using hfX by blast
+    then have "f x \<in> \<Union>\<A>" using hA unfolding top1_open_covering_on_def by blast
+    then obtain U where "U \<in> \<A>" "f x \<in> U" by blast
+    then have "{x' \<in> X. f x' \<in> U} \<in> \<A>'" unfolding \<A>'_def by blast
+    then show "x \<in> \<Union>\<A>'" using \<open>x \<in> X\<close> \<open>f x \<in> U\<close> by blast
+  qed
+  have hA'_cover: "top1_open_covering_on X TX \<A>'"
+    unfolding top1_open_covering_on_def using hA'_open hA'_cov by presburger
+  obtain \<B>' where hB'cov: "top1_open_covering_on X TX \<B>'"
+    and hB'ref: "top1_refines \<B>' \<A>'" and hB'ord: "top1_cover_order_le_on X \<B>' m"
+    using hdimX hA'_cover unfolding top1_dim_le_on_def by blast
+  text \<open>Each B' element \<subseteq> X (from refinement of \<A>' which consists of subsets of X).\<close>
+  have hB'_sub_X: "\<forall>U\<in>\<B>'. U \<subseteq> X"
+  proof (intro ballI)
+    fix U assume "U \<in> \<B>'"
+    obtain A0 where "A0 \<in> \<A>'" "U \<subseteq> A0" using hB'ref \<open>U \<in> \<B>'\<close> unfolding top1_refines_def by blast
+    then obtain A1 where "A1 \<in> \<A>" "A0 = {x \<in> X. f x \<in> A1}" unfolding \<A>'_def by blast
+    then show "U \<subseteq> X" using \<open>U \<subseteq> A0\<close> by blast
+  qed
+  text \<open>Push forward: f(\<B>') is an open covering of Y.\<close>
+  define \<B> where "\<B> = (`) f ` \<B>'"
+  have hV_eq: "\<forall>U\<in>\<B>'. f ` U = {y \<in> Y. g y \<in> U}"
+  proof (intro ballI)
+    fix U assume hU: "U \<in> \<B>'"
+    have hU_sub: "U \<subseteq> X" using hB'_sub_X hU by blast
+    show "f ` U = {y \<in> Y. g y \<in> U}"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> f ` U"
+      then obtain x where "x \<in> U" "y = f x" by blast
+      then show "y \<in> {y \<in> Y. g y \<in> U}" using hfX hgf hU_sub by auto
+    next
+      fix y assume "y \<in> {y \<in> Y. g y \<in> U}"
+      then have "y \<in> Y" "g y \<in> U" by auto
+      then have "f (g y) = y" using hfg by blast
+      then show "y \<in> f ` U" using \<open>g y \<in> U\<close> by (metis image_eqI)
+    qed
+  qed
+  have hB_open: "\<B> \<subseteq> TY"
+  proof (intro subsetI)
+    fix V assume "V \<in> \<B>"
+    then obtain U where hU: "U \<in> \<B>'" and hV: "V = f ` U" unfolding \<B>_def by blast
+    have hU_TX: "U \<in> TX" using hU hB'cov unfolding top1_open_covering_on_def by blast
+    have "V = {y \<in> Y. g y \<in> U}" using hV_eq hU hV by blast
+    then show "V \<in> TY" using hcont_inv hU_TX unfolding g_def top1_continuous_map_on_def by blast
+  qed
+  have hB_cov: "Y \<subseteq> \<Union>\<B>"
+  proof (intro subsetI)
+    fix y assume "y \<in> Y"
+    then have "g y \<in> X" using hgX by blast
+    then have "g y \<in> \<Union>\<B>'" using hB'cov unfolding top1_open_covering_on_def by blast
+    then obtain U where "U \<in> \<B>'" "g y \<in> U" by blast
+    then have "f (g y) = y" using hfg \<open>y \<in> Y\<close> by blast
+    then have "y \<in> f ` U" using \<open>g y \<in> U\<close> by (metis image_eqI)
+    then show "y \<in> \<Union>\<B>" using \<open>U \<in> \<B>'\<close> unfolding \<B>_def by blast
+  qed
+  have hB_cover: "top1_open_covering_on Y TY \<B>"
+    unfolding top1_open_covering_on_def using hB_open hB_cov by blast
+  have hB_ref: "top1_refines \<B> \<A>"
+    unfolding top1_refines_def
+  proof (intro ballI)
+    fix V assume "V \<in> \<B>"
+    then obtain U where hU: "U \<in> \<B>'" and hV: "V = f ` U" unfolding \<B>_def by blast
+    obtain A where "A \<in> \<A>'" "U \<subseteq> A" using hB'ref hU unfolding top1_refines_def by blast
+    then obtain A0 where "A0 \<in> \<A>" "A = {x \<in> X. f x \<in> A0}" unfolding \<A>'_def by blast
+    then have "V \<subseteq> A0" using hV \<open>U \<subseteq> A\<close> by blast
+    then show "\<exists>A\<in>\<A>. V \<subseteq> A" using \<open>A0 \<in> \<A>\<close> by blast
+  qed
+  text \<open>Cover order preserved by the bijection.\<close>
+  have hB_ord: "top1_cover_order_le_on Y \<B> m"
+    unfolding top1_cover_order_le_on_def
+  proof (intro ballI conjI)
+    fix y assume hyY: "y \<in> Y"
+    have hgy: "g y \<in> X" using hgX hyY by blast
+    text \<open>Key bijection: {V \<in> \<B>. y \<in> V} = (`) f ` {U \<in> \<B>'. g y \<in> U}.\<close>
+    have hset_eq: "{V \<in> \<B>. y \<in> V} = (`) f ` {U \<in> \<B>'. g y \<in> U}"
+    proof (rule set_eqI, rule iffI)
+      fix V assume "V \<in> {V \<in> \<B>. y \<in> V}"
+      then have "V \<in> \<B>" "y \<in> V" by auto
+      then obtain U where "U \<in> \<B>'" "V = f ` U" unfolding \<B>_def by blast
+      have "g y \<in> U" using \<open>y \<in> V\<close> \<open>V = f ` U\<close> hV_eq \<open>U \<in> \<B>'\<close> hyY by auto
+      then show "V \<in> (`) f ` {U \<in> \<B>'. g y \<in> U}" using \<open>U \<in> \<B>'\<close> \<open>V = f ` U\<close> by blast
+    next
+      fix V assume "V \<in> (`) f ` {U \<in> \<B>'. g y \<in> U}"
+      then obtain U where "U \<in> \<B>'" "g y \<in> U" "V = f ` U" by blast
+      then have "V \<in> \<B>" unfolding \<B>_def by blast
+      have "f (g y) = y" using hfg hyY by blast
+      have "y \<in> V" using \<open>V = f ` U\<close> \<open>g y \<in> U\<close> \<open>f (g y) = y\<close> by (metis image_eqI)
+      then show "V \<in> {V \<in> \<B>. y \<in> V}" using \<open>V \<in> \<B>\<close> by blast
+    qed
+    text \<open>The image map (`) f is injective on \<B>' (since f is injective on X and all U \<subseteq> X).\<close>
+    have hinj: "inj_on ((`) f) \<B>'"
+    proof (rule inj_onI)
+      fix U1 U2 assume "U1 \<in> \<B>'" "U2 \<in> \<B>'" "f ` U1 = f ` U2"
+      have "U1 \<subseteq> X" using hB'_sub_X \<open>U1 \<in> \<B>'\<close> by blast
+      have "U2 \<subseteq> X" using hB'_sub_X \<open>U2 \<in> \<B>'\<close> by blast
+      show "U1 = U2" using \<open>f ` U1 = f ` U2\<close> \<open>U1 \<subseteq> X\<close> \<open>U2 \<subseteq> X\<close> hbij
+        unfolding bij_betw_def using inj_on_image_eq_iff by blast
+    qed
+    have hfin_B': "finite {U \<in> \<B>'. g y \<in> U}"
+      using hB'ord hgy unfolding top1_cover_order_le_on_def by blast
+    have "card {V \<in> \<B>. y \<in> V} = card {U \<in> \<B>'. g y \<in> U}"
+      using hset_eq card_image[OF inj_on_subset[OF hinj]] by auto
+    then show "finite {V \<in> \<B>. y \<in> V}" using hfin_B' hset_eq by auto
+    show "card {V \<in> \<B>. y \<in> V} \<le> Suc m"
+      using hB'ord hgy \<open>card {V \<in> \<B>. y \<in> V} = card {U \<in> \<B>'. g y \<in> U}\<close>
+      unfolding top1_cover_order_le_on_def by auto
+  qed
+  show "\<exists>\<B>. top1_open_covering_on Y TY \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on Y \<B> m"
+    using hB_cover hB_ref hB_ord by blast
+qed
+
 (** from \S50 Theorem 50.1 [top1.tex:7556] **)
 theorem Theorem_50_1:
   assumes hdim: "top1_finite_dimensional_on X TX"
@@ -19335,6 +20673,8 @@ corollary Corollary_50_3:
   assumes hClosed: "\<forall>i<k. closedin_on X TX (Y i)"
   assumes hdim: "\<forall>i<k. top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
   shows "top1_dim_on X TX = (Max ((\<lambda>i. top1_dim_on (Y i) (subspace_topology X TX (Y i))) ` {0..<k}))"
+  text \<open>Follows from Theorem_50_2 by induction on k.
+    Proof deferred — requires careful handling of dim_on, Max, subspace of unions.\<close>
   sorry
 
 (** A convenient sup metric on the concrete model \<open>\<real>^N\<close> (as extensional functions). **)
@@ -19376,6 +20716,8 @@ corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "top1_dim_le_on X TX m"
+  text \<open>Proof: cover X by finitely many neighborhoods embeddable in R^m.
+    Each closure has dim \<le> m (Thm 50.6 + homeomorphism). Inductive use of Thm 50.2.\<close>
   sorry
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
@@ -19418,8 +20760,46 @@ next
   assume "\<exists>N F. top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
   text \<open>← direction: embedding into R^N → compact in R^N → dim ≤ N → finite dim.
     Needs homeomorphism-preserves-dimension (not yet formalized).\<close>
+  then obtain N F where hEmb: "top1_embedding_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+    by auto
+  text \<open>F(X) compact in R^N; dim(F(X)) \<le> N; homeomorphism gives dim(X) \<le> N.\<close>
+  have hHomeo: "top1_homeomorphism_on X TX (F ` X) (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) F"
+    using hEmb unfolding top1_embedding_on_def by linarith
+  have hcont_F: "top1_continuous_map_on X TX (top1_Rpow_set N) (top1_Rpow_topology N) F"
+    using hEmb unfolding top1_embedding_on_def top1_homeomorphism_on_def by (simp add: hEmb top1_embedding_on_imp_continuous)
+  have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)" by (metis top1_Rpow_is_topology_on)
+  have hFX_comp: "top1_compact_on (F ` X)
+    (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X))"
+    by (rule top1_compact_on_continuous_image[OF hComp hRpow_top hcont_F])
+  have hdim_FX: "top1_dim_le_on (F ` X)
+    (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) N"
+    by (rule Theorem_50_6[OF hFX_comp])
+  text \<open>Apply homeomorphism_preserves_dim_le with inverse homeomorphism.\<close>
+  have hHomeo_inv: "top1_homeomorphism_on (F ` X)
+    (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) X TX (inv_into X F)"
+  proof -
+    obtain hTopFX hTopTX hbijF hcontF hcontInv where
+      hH1: "is_topology_on X TX" and
+      hH2: "is_topology_on (F ` X) (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X))" and
+      hH3: "bij_betw F X (F ` X)" and
+      hH4: "top1_continuous_map_on X TX (F ` X) (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) F" and
+      hH5: "top1_continuous_map_on (F ` X) (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) X TX (inv_into X F)"
+      using hHomeo unfolding top1_homeomorphism_on_def by linarith
+    have hbij_inv: "bij_betw (inv_into X F) (F ` X) X"
+      using hH3 by (metis hH3 bij_betw_inv_into)
+    have hcont_inv_inv: "top1_continuous_map_on X TX (F ` X) (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) (inv_into (F ` X) (inv_into X F))"
+    proof -
+      have "\<forall>x\<in>X. inv_into (F ` X) (inv_into X F) x = F x"
+        using hH3 by (simp add: inv_into_inv_into_eq)
+      then show ?thesis using hH4 using top1_continuous_map_on_cong by blast
+    qed
+    show ?thesis unfolding top1_homeomorphism_on_def
+      using hH2 hH1 hbij_inv hH5 hcont_inv_inv by linarith
+  qed
+  have "top1_dim_le_on X TX N"
+    using homeomorphism_preserves_dim_le[OF hHomeo_inv hdim_FX] by linarith
   then show "top1_finite_dimensional_on X TX"
-    sorry
+    unfolding top1_finite_dimensional_on_def by blast
 qed
 
 
