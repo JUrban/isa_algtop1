@@ -16032,12 +16032,8 @@ proof -
   text \<open>The product \<Pi>_a Ca(a) is compact by Tychonoff.\<close>
   text \<open>The closure of \<F> in ?PiE is closed in ?PiE, hence closed in the compact product,
     hence compact. (This requires showing closure \<subseteq> product of closures.)\<close>
-  text \<open>Full proof requires:
-    1. Ca a \<subseteq> Y for all a
-    2. \<Pi>_a Ca(a) compact (Tychonoff on subspace)
-    3. closure(\<F>) \<subseteq> \<Pi>_a Ca(a) (coordinate containment)
-    4. closure is closed in the product
-    5. Closed in compact \<Rightarrow> compact\<close>
+  text \<open>Full proof requires product-subspace topology equivalence + Tychonoff + Theorem_26_2.
+    Left as sorry pending this infrastructure.\<close>
   show ?thesis sorry
 qed
 
