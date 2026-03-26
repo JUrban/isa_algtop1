@@ -7839,125 +7839,55 @@ theorem Theorem_41_7:
   assumes hCov: "top1_open_covering_on X TX (U ` I)"
   shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>"
 proof -
-  have hTopX: "is_topology_on X TX" using hPara unfolding top1_paracompact_on_def using hHaus is_hausdorff_on_def by blast
+  have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by linarith
   have hReg: "top1_regular_on X TX"
     using paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub] by blast
   have hNormal: "top1_normal_on X TX" using Theorem_41_1[OF hPara hHaus hTsub] by blast
-  text \<open>Step 1: Get strong refinement V of {U_i} and W of V.\<close>
-  have hParaLF: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
-    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>)"
-    using hPara unfolding top1_paracompact_on_def by argo
-  have hStrong: "\<forall>\<A>. top1_open_covering_on X TX \<A> \<longrightarrow>
-    (\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_locally_finite_family_on X TX \<B>
-      \<and> (\<forall>B\<in>\<B>. \<exists>A\<in>\<A>. closure_on X TX B \<subseteq> A))"
-    using iffD1[OF Lemma_41_3[OF hReg]] hParaLF by argo
-  obtain \<V> where hVcov: "top1_open_covering_on X TX \<V>"
-    and hVlf: "top1_locally_finite_family_on X TX \<V>"
-    and hVcl: "\<forall>V\<in>\<V>. \<exists>Ui\<in>U ` I. closure_on X TX V \<subseteq> Ui"
-    using hStrong[rule_format, OF hCov] by fast
-  obtain \<W> where hWcov: "top1_open_covering_on X TX \<W>"
-    and hWlf: "top1_locally_finite_family_on X TX \<W>"
-    and hWcl: "\<forall>W\<in>\<W>. \<exists>V\<in>\<V>. closure_on X TX W \<subseteq> V"
-    using hStrong[rule_format, OF hVcov] by blast
-  text \<open>Step 2: Choose V'(W) and sel(V'(W)) for each W.\<close>
-  obtain Vsel where hVsel: "\<forall>W\<in>\<W>. Vsel W \<in> \<V> \<and> closure_on X TX W \<subseteq> Vsel W"
-    using hWcl by metis
-  have "\<forall>V\<in>\<V>. \<exists>i\<in>I. closure_on X TX V \<subseteq> U i"
+  text \<open>Step 1: Apply indexed_shrinking twice to get V_i, W_i with
+    cl(W_i) \<subseteq> V_i, cl(V_i) \<subseteq> U_i, both covering X.\<close>
+  obtain V where hV: "\<forall>i\<in>I. V i \<in> TX \<and> V i \<subseteq> U i \<and> closure_on X TX (V i) \<subseteq> U i"
+    and hVcov: "top1_open_covering_on X TX (V ` I)"
+    and hVfin: "\<forall>x\<in>X. finite {i\<in>I. x \<in> V i}"
+    using indexed_shrinking[OF hTopX hTsub hReg hPara hCov] by blast
+  obtain W where hW: "\<forall>i\<in>I. W i \<in> TX \<and> W i \<subseteq> V i \<and> closure_on X TX (W i) \<subseteq> V i"
+    and hWcov: "top1_open_covering_on X TX (W ` I)"
+    and hWfin: "\<forall>x\<in>X. finite {i\<in>I. x \<in> W i}"
+    using indexed_shrinking[OF hTopX hTsub hReg hPara hVcov] by blast
+  text \<open>Step 2: Urysohn for each i: \<psi>_i = 1 on cl(W_i), = 0 on X - V_i.\<close>
+  have "\<forall>i\<in>I. \<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
+    \<and> (\<forall>x\<in>closure_on X TX (W i). \<psi> x = 1) \<and> (\<forall>x\<in>X - V i. \<psi> x = 0)"
   proof (intro ballI)
-    fix V assume "V \<in> \<V>"
-    obtain Ui where "Ui \<in> U ` I" "closure_on X TX V \<subseteq> Ui" using hVcl \<open>V \<in> \<V>\<close> by blast
-    then obtain i where "i \<in> I" "Ui = U i" by blast
-    then show "\<exists>i\<in>I. closure_on X TX V \<subseteq> U i" using \<open>closure_on X TX V \<subseteq> Ui\<close> by blast
-  qed
-  then obtain isel where hisel: "\<forall>V\<in>\<V>. isel V \<in> I \<and> closure_on X TX V \<subseteq> U (isel V)"
-    by metis
-  text \<open>Step 3: Urysohn for each W: \<psi>_W = 1 on cl(W), = 0 on X - Vsel(W).\<close>
-  text \<open>This step requires choosing \<psi>_W for each W. We use SOME/choice.\<close>
-  have "\<forall>W\<in>\<W>. \<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
-    \<and> (\<forall>x\<in>closure_on X TX W. \<psi> x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> x = 0)"
-  proof (intro ballI)
-    fix W assume hWm: "W \<in> \<W>"
-    have hW_sub_X: "W \<subseteq> X" using hWcov hWm hTsub unfolding top1_open_covering_on_def by blast
-    have hclW_closed: "closedin_on X TX (closure_on X TX W)"
-      using closure_on_closed[OF hTopX hW_sub_X] by blast
-    have hVsel_open: "Vsel W \<in> TX" using hVsel hWm hVcov unfolding top1_open_covering_on_def by blast
-    have hXmV_closed: "closedin_on X TX (X - Vsel W)" using hVsel_open unfolding closedin_on_def by (simp add: double_diff hTsub)
-    have hdisj: "closure_on X TX W \<inter> (X - Vsel W) = {}"
-      using hVsel hWm by blast
-    have hdisj': "(X - Vsel W) \<inter> closure_on X TX W = {}" using hdisj by blast
+    fix i assume "i \<in> I"
+    have hWi_TX: "W i \<in> TX" using hW \<open>i \<in> I\<close> by blast
+    have hWi_sub_X: "W i \<subseteq> X" using hWi_TX hTsub by blast
+    have hclW_closed: "closedin_on X TX (closure_on X TX (W i))"
+      using closure_on_closed[OF hTopX hWi_sub_X] by blast
+    have hVi_open: "V i \<in> TX" using hV \<open>i \<in> I\<close> by blast
+    have hXmV_closed: "closedin_on X TX (X - V i)"
+      using hVi_open hTsub unfolding closedin_on_def by (simp add: double_diff)
+    have hdisj: "(X - V i) \<inter> closure_on X TX (W i) = {}"
+      using hW \<open>i \<in> I\<close> by blast
     show "\<exists>\<psi>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<psi>
-      \<and> (\<forall>x\<in>closure_on X TX W. \<psi> x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> x = 0)"
-      using Theorem_33_1[OF hNormal hXmV_closed hclW_closed hdisj', of 0 1] by auto
+      \<and> (\<forall>x\<in>closure_on X TX (W i). \<psi> x = 1) \<and> (\<forall>x\<in>X - V i. \<psi> x = 0)"
+      using Theorem_33_1[OF hNormal hXmV_closed hclW_closed hdisj, of 0 1] by auto
   qed
-  then obtain \<psi> where h\<psi>: "\<forall>W\<in>\<W>. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> W)
-    \<and> (\<forall>x\<in>closure_on X TX W. \<psi> W x = 1) \<and> (\<forall>x\<in>X - Vsel W. \<psi> W x = 0)"
+  then obtain \<psi> where h\<psi>: "\<forall>i\<in>I.
+    top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> i)
+    \<and> (\<forall>x\<in>closure_on X TX (W i). \<psi> i x = 1) \<and> (\<forall>x\<in>X - V i. \<psi> i x = 0)"
     by metis
-  text \<open>Step 4: Properties of \<psi>.\<close>
-  define sel where "sel W = isel (Vsel W)" for W
-  have hsel_I: "\<forall>W\<in>\<W>. sel W \<in> I" unfolding sel_def using hisel hVsel by blast
-  have h\<psi>_zero_outside: "\<forall>W\<in>\<W>. \<forall>x\<in>X - Vsel W. \<psi> W x = 0"
-    using h\<psi> by blast
-  have h\<psi>_nonzero_in_V: "\<forall>W\<in>\<W>. \<forall>x\<in>X. \<psi> W x \<noteq> 0 \<longrightarrow> x \<in> Vsel W"
-  proof (intro ballI impI)
-    fix W x assume "W \<in> \<W>" "x \<in> X" "\<psi> W x \<noteq> 0"
-    show "x \<in> Vsel W" using h\<psi>_zero_outside \<open>W \<in> \<W>\<close> \<open>x \<in> X\<close> \<open>\<psi> W x \<noteq> 0\<close> by blast
-  qed
-  text \<open>Finiteness: at each x, only finitely many \<psi>_W nonzero.
-    \<psi>_W(x) \<noteq> 0 \<Rightarrow> x \<in> Vsel(W). From V locally finite: finitely many V \<ni> x.
-    For each such V: {W | Vsel(W) = V} finite because W locally finite and each such W \<subseteq> V,
-    so {W | Vsel(W) = V, W \<inter> V \<noteq> {}} = {W | Vsel(W) = V} is a subset of {W | W \<inter> V \<noteq> {}}.
-    Local finiteness of W + V open: {W | W \<inter> V \<noteq> {}} is locally finite near each point of V.
-    But V might be large, so this doesn't directly give finiteness.
-    However, all such W satisfy W \<subseteq> cl(W) \<subseteq> V, i.e., W \<subseteq> V.
-    Left as sorry — needs either indexed shrinking or additional argument.\<close>
-  have h\<psi>fin: "\<forall>x\<in>X. finite {W\<in>\<W>. \<psi> W x \<noteq> 0}"
-    sorry
-  text \<open>\<Psi> positive: \<W> covers X so at each x some \<psi>_W = 1.\<close>
-  define \<Psi> where "\<Psi> x = (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)" for x
-  have h\<Psi>_pos: "\<forall>x\<in>X. 0 < \<Psi> x"
+  text \<open>Step 3: Key properties.\<close>
+  have h\<psi>_zero_outside: "\<forall>i\<in>I. \<forall>x\<in>X - V i. \<psi> i x = 0" using h\<psi> by blast
+  have h\<psi>_nonzero_in_V: "\<forall>i\<in>I. \<forall>x\<in>X. \<psi> i x \<noteq> 0 \<longrightarrow> x \<in> V i"
+    using h\<psi>_zero_outside by blast
+  text \<open>Finiteness: {i | \<psi>_i(x) \<noteq> 0} \<subseteq> {i | x \<in> V_i} which is finite.\<close>
+  have h\<psi>fin: "\<forall>x\<in>X. finite {i\<in>I. \<psi> i x \<noteq> 0}"
   proof (intro ballI)
-    fix x assume hxX: "x \<in> X"
-    obtain W0 where "W0 \<in> \<W>" "x \<in> W0"
-      using hWcov hxX unfolding top1_open_covering_on_def by blast
-    have "x \<in> closure_on X TX W0" using \<open>x \<in> W0\<close> subset_closure_on by fast
-    then have "\<psi> W0 x = 1" using h\<psi> \<open>W0 \<in> \<W>\<close> by blast
-    then have "W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" using \<open>W0 \<in> \<W>\<close> by simp
-    have h\<psi>_nonneg: "\<forall>W\<in>\<W>. 0 \<le> \<psi> W x"
-    proof (intro ballI)
-      fix W assume "W \<in> \<W>"
-      then have "top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<psi> W)"
-        using h\<psi> by blast
-      then have "\<forall>y\<in>X. \<psi> W y \<in> top1_closed_interval 0 1" unfolding top1_continuous_map_on_def by linarith
-      then show "0 \<le> \<psi> W x" using hxX unfolding top1_closed_interval_def by blast
-    qed
-    have "0 < (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)"
-    proof -
-      have hfin': "finite {W\<in>\<W>. \<psi> W x \<noteq> 0}" using h\<psi>fin hxX by blast
-      have hne: "{W\<in>\<W>. \<psi> W x \<noteq> 0} \<noteq> {}" using \<open>W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}\<close> by blast
-      have "\<forall>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 \<le> \<psi> W x" using h\<psi>_nonneg by blast
-      have "\<exists>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 < \<psi> W x"
-        using \<open>W0 \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}\<close> \<open>\<psi> W0 x = 1\<close> by fastforce
-      have hnn: "\<forall>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 \<le> \<psi> W x" using h\<psi>_nonneg by blast
-      obtain Wp where hWp: "Wp \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" "0 < \<psi> Wp x"
-        using \<open>\<exists>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. 0 < \<psi> W x\<close> by blast
-      have "\<psi> Wp x \<le> (\<Sum>W\<in>{W\<in>\<W>. \<psi> W x \<noteq> 0}. \<psi> W x)"
-      proof (rule member_le_sum)
-        show "Wp \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0}" using hWp(1) .
-        show "finite {W\<in>\<W>. \<psi> W x \<noteq> 0}" using hfin' .
-        fix W assume "W \<in> {W\<in>\<W>. \<psi> W x \<noteq> 0} - {Wp}"
-        then show "(0::real) \<le> \<psi> W x" using hnn by blast
-      qed
-      then show ?thesis using hWp(2) by linarith
-    qed
-    then show "0 < \<Psi> x" unfolding \<Psi>_def by blast
+    fix x assume "x \<in> X"
+    have "{i\<in>I. \<psi> i x \<noteq> 0} \<subseteq> {i\<in>I. x \<in> V i}" using h\<psi>_nonzero_in_V \<open>x \<in> X\<close> by blast
+    then show "finite {i\<in>I. \<psi> i x \<noteq> 0}" using hVfin \<open>x \<in> X\<close> finite_subset by blast
   qed
-  text \<open>Define \<phi>.\<close>
-  define \<phi> where "\<phi> i x = (if x \<in> X then
-    (\<Sum>W\<in>{W\<in>\<W>. sel W = i \<and> \<psi> W x \<noteq> 0}. \<psi> W x) / \<Psi> x else 0)" for i x
-  text \<open>Verify all properties. Left as sorry for now.\<close>
-  show ?thesis
-    unfolding top1_partition_of_unity_dominated_family_on_def
-    sorry
+  text \<open>Step 4: \<Psi> and \<phi>. Left as sorry — finiteness now proved, construction is mechanical.\<close>
+  show ?thesis sorry
 qed
 
 (** from \S41 Theorem 41.8 (Continuous control on locally finite families) [top1.tex:6024] **)
