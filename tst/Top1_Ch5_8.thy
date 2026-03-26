@@ -7802,7 +7802,14 @@ proof -
     fix W x assume "W \<in> \<W>" "x \<in> X" "\<psi> W x \<noteq> 0"
     show "x \<in> Vsel W" using h\<psi>_zero_outside \<open>W \<in> \<W>\<close> \<open>x \<in> X\<close> \<open>\<psi> W x \<noteq> 0\<close> by blast
   qed
-  text \<open>Finiteness: at each x, only finitely many \<psi>_W nonzero.\<close>
+  text \<open>Finiteness: at each x, only finitely many \<psi>_W nonzero.
+    \<psi>_W(x) \<noteq> 0 \<Rightarrow> x \<in> Vsel(W). From V locally finite: finitely many V \<ni> x.
+    For each such V: {W | Vsel(W) = V} finite because W locally finite and each such W \<subseteq> V,
+    so {W | Vsel(W) = V, W \<inter> V \<noteq> {}} = {W | Vsel(W) = V} is a subset of {W | W \<inter> V \<noteq> {}}.
+    Local finiteness of W + V open: {W | W \<inter> V \<noteq> {}} is locally finite near each point of V.
+    But V might be large, so this doesn't directly give finiteness.
+    However, all such W satisfy W \<subseteq> cl(W) \<subseteq> V, i.e., W \<subseteq> V.
+    Left as sorry — needs either indexed shrinking or additional argument.\<close>
   have h\<psi>fin: "\<forall>x\<in>X. finite {W\<in>\<W>. \<psi> W x \<noteq> 0}"
     sorry
   text \<open>\<Psi> positive: \<W> covers X so at each x some \<psi>_W = 1.\<close>
