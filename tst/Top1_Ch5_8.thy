@@ -16032,11 +16032,10 @@ proof -
   text \<open>The product \<Pi>_a Ca(a) is compact by Tychonoff.\<close>
   text \<open>The closure of \<F> in ?PiE is closed in ?PiE, hence closed in the compact product,
     hence compact. (This requires showing closure \<subseteq> product of closures.)\<close>
-  text \<open>Full proof: \<Pi> Ca compact (Tychonoff + product_subspace_topology_eq),
-    closure(\<F>) \<subseteq> \<Pi> Ca (product_of_closedin + closure monotonicity),
-    closed in compact \<Rightarrow> compact (Theorem_26_2).
-    The proof assembles existing infrastructure but requires careful type handling
-    to avoid kernel blowup. Left as sorry.\<close>
+  text \<open>Full proof: uses Tychonoff + product_subspace_topology_eq + product_of_closedin
+    + Theorem_26_2. The proof assembles these but requires careful type instantiation
+    (product_subspace_topology_eq with I=X, X=\<lambda>_.Y, T=\<lambda>_.TY, A=Ca).
+    Left as sorry pending type-level debugging.\<close>
   show ?thesis sorry
 qed
 
