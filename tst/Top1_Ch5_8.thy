@@ -16683,6 +16683,7 @@ proof -
     ultimately show "top1_homeomorphism_on X TX (F ` X) (subspace_topology Y (subspace_topology ?Z ?TZ Y) (F ` X)) F"
       by presburger
   qed
+  have hTopY: "is_topology_on Y TY" using hY_haus unfolding is_hausdorff_on_def by blast
   have hDense: "closure_on Y TY (F ` X) = Y"
     sorry
   have hCompactification: "top1_compactification_via_on X TX Y TY F"
