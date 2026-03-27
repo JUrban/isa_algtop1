@@ -10962,8 +10962,12 @@ text \<open>Theorem 43.7 (Metric completion). We prove the bounded-metric versio
   metric infrastructure.\<close>
 theorem Theorem_43_7:
   assumes hd: "top1_metric_on X d"
-  shows "\<exists>Y dY e. top1_complete_metric_on Y dY
-    \<and> top1_isometry_on X (top1_bounded_metric d) Y dY e"
+  shows "\<exists>e. top1_complete_metric_on
+    (top1_PiE X (\<lambda>_. (UNIV :: real set)))
+    (top1_uniform_metric_on X (\<lambda>x y :: real. \<bar>x - y\<bar>))
+    \<and> top1_isometry_on X (top1_bounded_metric d)
+    (top1_PiE X (\<lambda>_. (UNIV :: real set)))
+    (top1_uniform_metric_on X (\<lambda>x y :: real. \<bar>x - y\<bar>)) e"
 proof -
   let ?db = "top1_bounded_metric d"
   have hdb: "top1_metric_on X ?db" by (rule top1_bounded_metric_on[OF hd])
@@ -10984,7 +10988,7 @@ proof -
     case True
     have hiso: "top1_isometry_on X ?db ?Y ?dY (\<lambda>a x. undefined)"
       unfolding top1_isometry_on_def using True by blast
-    show ?thesis using hY_complete hiso sorry
+    show ?thesis using hY_complete hiso by blast
   next
     case False
     then obtain x0 where "x0 \<in> X" by blast
@@ -11061,10 +11065,7 @@ proof -
       using hY_complete hiso by blast
     then have "\<exists>e. top1_complete_metric_on ?Y ?dY \<and> top1_isometry_on X ?db ?Y ?dY e"
       by blast
-    then have "\<exists>dY e. top1_complete_metric_on ?Y dY \<and> top1_isometry_on X ?db ?Y dY e"
-      by blast
-    then show "\<exists>Y dY e. top1_complete_metric_on Y dY \<and> top1_isometry_on X ?db Y dY e"
-      sorry \<comment> \<open>∃Y introduction for function type - all math done\<close>
+    show ?thesis using hY_complete hiso by blast
   qed
 qed
 
