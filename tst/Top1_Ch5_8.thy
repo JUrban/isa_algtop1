@@ -16684,7 +16684,7 @@ proof -
       by presburger
   qed
   have hDense: "closure_on Y TY (F ` X) = Y"
-    sorry \<comment> \<open>closure in subspace = Y \<inter> closure in Z = Y \<inter> Y = Y\<close>
+    sorry
   have hCompactification: "top1_compactification_via_on X TX Y TY F"
     unfolding top1_compactification_via_on_def top1_dense_image_via_on_def
     using hY_compact hY_haus hEmb_Y hDense by blast
