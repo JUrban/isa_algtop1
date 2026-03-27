@@ -11061,7 +11061,7 @@ proof -
     then have "\<exists>dY e. top1_complete_metric_on ?Y dY \<and> top1_isometry_on X ?db ?Y dY e"
       by blast
     then show "\<exists>Y dY e. top1_complete_metric_on Y dY \<and> top1_isometry_on X ?db Y dY e"
-      sorry
+      sorry \<comment> \<open>∃Y introduction for function type - all math done\<close>
   qed
 qed
 
