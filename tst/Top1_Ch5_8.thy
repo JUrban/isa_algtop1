@@ -11054,10 +11054,13 @@ proof -
     qed
     have hiso: "top1_isometry_on X ?db ?Y ?dY \<Phi>"
       unfolding top1_isometry_on_def using h\<Phi>_in_Y h\<Phi>_isometry by blast
-    show "\<exists>Y dY e. top1_complete_metric_on Y dY \<and> top1_isometry_on X ?db Y dY e"
-      text \<open>All components proved: hY_complete (completeness), hiso (isometry).
-        Assembly requires existential instantiation that Isabelle's automation
-        cannot handle for function types. Left as sorry.\<close>
+    have "top1_complete_metric_on ?Y ?dY \<and> top1_isometry_on X ?db ?Y ?dY \<Phi>"
+      using hY_complete hiso by blast
+    then have "\<exists>e. top1_complete_metric_on ?Y ?dY \<and> top1_isometry_on X ?db ?Y ?dY e"
+      by blast
+    then have "\<exists>dY e. top1_complete_metric_on ?Y dY \<and> top1_isometry_on X ?db ?Y dY e"
+      by blast
+    then show "\<exists>Y dY e. top1_complete_metric_on Y dY \<and> top1_isometry_on X ?db Y dY e"
       sorry
   qed
 qed
