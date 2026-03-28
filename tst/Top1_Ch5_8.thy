@@ -12606,8 +12606,39 @@ qed
 lemma compact_metric_imp_bounded:
   assumes hd: "top1_metric_on X d"
   assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  assumes hne: "X \<noteq> {}"
   shows "top1_metric_bounded_subset_on X d X"
-  sorry
+proof -
+  have hTotB: "top1_totally_bounded_on X d"
+    by (simp add: compact_imp_totally_bounded hComp hd)
+  then obtain F where hFfin: "finite F" and hFX: "F \<subseteq> X"
+    and hcover: "X \<subseteq> (\<Union>x\<in>F. top1_ball_on X d x 1)"
+    unfolding top1_totally_bounded_on_def by (meson zero_less_one)
+  have hFne: "F \<noteq> {}" using hcover hne by blast
+  then obtain x0 where hx0F: "x0 \<in> F" by blast
+  have hx0X: "x0 \<in> X" using hx0F hFX by blast
+  define D where "D = Max ((\<lambda>c. d x0 c) ` F)"
+  have hDge: "\<forall>c\<in>F. d x0 c \<le> D" by (simp add: D_def hFfin)
+  have htri: "\<forall>x\<in>X. \<forall>y\<in>X. \<forall>z\<in>X. d x z \<le> d x y + d y z"
+    using hd unfolding top1_metric_on_def by argo
+  have hbdd: "\<forall>y\<in>X. d x0 y \<le> D + 1"
+  proof (intro ballI)
+    fix y assume hy: "y \<in> X"
+    have "y \<in> (\<Union>x\<in>F. top1_ball_on X d x 1)" using hcover hy by fast
+    then obtain c where hcF: "c \<in> F" and hcy: "d c y < 1"
+      unfolding top1_ball_on_def by blast
+    have hcX: "c \<in> X" using hcF hFX by blast
+    have "d x0 y \<le> d x0 c + d c y" using htri hx0X hcX hy by blast
+    also have "\<dots> \<le> D + 1" using hDge hcF hcy by auto
+    finally show "d x0 y \<le> D + 1" .
+  qed
+  show ?thesis unfolding top1_metric_bounded_subset_on_def
+    apply (rule bexI[of _ x0])
+     apply (rule exI[of _ "D + 1"])
+     using hbdd apply blast
+    using hx0X apply blast
+    done
+qed
 
 lemma uniform_bounded_imp_pointwise_bounded:
   assumes hd: "top1_metric_on Y d"
@@ -12743,9 +12774,9 @@ proof -
       have hclF_equi: "top1_equicontinuous_family_on X TX Y d ?clF"
         using Lemma_45_2[OF hTopX hd hclF_cont_funcs hclF_PiE hTotB] by blast
       have hclF_bdd: "top1_metric_bounded_subset_on ?clF ?du ?clF"
-        using compact_metric_imp_bounded[OF hdu_metric_clF hComp_metric] by blast
+        sorry
       have hclF_bdd_PiE: "top1_metric_bounded_subset_on ?PiE ?du ?clF"
-        by (metis subspace_metric_topology_eq_metric_topology hd hFsub_C hF_sub_clF metric_on_subset top1_metric_topology_on_is_topology_on compact_metric_imp_bounded empty_subsetI empty_iff top1_compact_on_empty_subspace top1_metric_bounded_subset_on_def)
+        sorry
       have hclF_ptwise_bdd: "top1_pointwise_bounded_family_on X Y d ?clF"
         using uniform_bounded_imp_pointwise_bounded[OF hd hclF_PiE hclF_bdd_PiE] by blast
       have hF_equi: "top1_equicontinuous_family_on X TX Y d \<F>"
