@@ -17724,8 +17724,13 @@ proof -
   have hTopTY: "is_topology_on Y ?TY"
     by (rule top1_metric_topology_on_is_topology_on[OF hd])
   define A where "A a = closure_on Y ?TY ((\<lambda>f. f a) ` \<F>)" for a
-  text \<open>Each A(a) compact by hCa. Product compact by Tychonoff.
-    clF subset PiE X A (closed). Closed in compact is compact.\<close>
+  have hA_comp: "\<forall>a\<in>X. top1_compact_on (A a) (subspace_topology Y ?TY (A a))"
+    using hCa A_def by simp
+  have heval_sub: "\<forall>a\<in>X. (\<lambda>f. f a) ` \<F> \<subseteq> Y"
+    by (metis continuous_funcs_eval_sub hFsub)
+  have hA_sub: "\<forall>a\<in>X. A a \<subseteq> Y"
+    unfolding A_def using closure_on_subset_carrier hTopTY heval_sub by metis
+  text \<open>Remaining: product compact, F sub PiE X A, PiE X A closed, clF sub, clF compact.\<close>
   show ?thesis sorry
 qed
 
