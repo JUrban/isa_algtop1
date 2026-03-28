@@ -18360,7 +18360,7 @@ proof -
     show "\<exists>K. \<F> \<subseteq> K \<and> top1_compact_on K (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) K)"
       using hFG hG_final by blast
   qed
-  text \<open>Backward direction: sorry.\<close>
+  text \<open>Backward direction: compact K implies equicontinuous + pointwise compact closures.\<close>
   show "((top1_locally_compact_on X TX \<and> is_hausdorff_on X TX)
       \<longrightarrow>
       (\<forall>K. top1_compact_on K
