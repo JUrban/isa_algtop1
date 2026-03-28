@@ -2332,10 +2332,23 @@ proof -
     using hExt2_C he1cont by (smt (verit, del_insts) top1_eq_on_def)
   have hf1f2_ext: "\<forall>x\<in>X. (f1 \<circ> f2) (e1 x) = e1 x"
     by (metis hf2ext hf1ext comp_apply)
-  text \<open>f2 is a homeomorphism Y1 to Y2 with f2(e1 x) = e2 x.
-    Proof: f1 o f2 = id on Y1 and f2 o f1 = id on Y2 (by uniqueness of extensions),
-    so f2 is bijective with continuous inverse f1.\<close>
+  have hf2f1_ext: "\<forall>x\<in>X. (f2 \<circ> f1) (e2 x) = e2 x"
+    by (metis hf1ext hf2ext comp_apply)
+  have hExt1_Y1: "\<forall>f. top1_continuous_map_on X TX Y1 TY1 f \<longrightarrow>
+     (\<exists>g. top1_continuous_map_on Y1 TY1 Y1 TY1 g \<and> (\<forall>x\<in>X. g (e1 x) = f x)
+          \<and> (\<forall>g'. top1_continuous_map_on Y1 TY1 Y1 TY1 g' \<and> (\<forall>x\<in>X. g' (e1 x) = f x)
+                \<longrightarrow> top1_eq_on Y1 g g'))"
+    by (rule Theorem_38_4[OF hCR hC1 hExt1 hCompY1 hHausY1])
+  have hExt2_Y2: "\<forall>f. top1_continuous_map_on X TX Y2 TY2 f \<longrightarrow>
+     (\<exists>g. top1_continuous_map_on Y2 TY2 Y2 TY2 g \<and> (\<forall>x\<in>X. g (e2 x) = f x)
+          \<and> (\<forall>g'. top1_continuous_map_on Y2 TY2 Y2 TY2 g' \<and> (\<forall>x\<in>X. g' (e2 x) = f x)
+                \<longrightarrow> top1_eq_on Y2 g g'))"
+    by (rule Theorem_38_4[OF hCR hC2 hExt2 hCompY2 hHausY2])
+  text \<open>Both f1 o f2 and id extend e1. By uniqueness: f1 o f2 = id on Y1.
+    Similarly f2 o f1 = id on Y2.
+    Then f2 is a homeomorphism with f2(e1 x) = e2 x.\<close>
   show ?thesis unfolding top1_equiv_compactification_via_on_def
+    using hExt1_Y1 hExt2_Y2 he1cont he2cont hf1f2_ext hf2f1_ext hf2cont hf1cont hf2ext
     sorry
 qed
 
