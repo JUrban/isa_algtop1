@@ -12806,8 +12806,10 @@ proof -
         using Lemma_45_2[OF hTopX hd hclF_cont_funcs hclF_PiE hTotB] by blast
       have hclF_bdd_sup: "top1_metric_bounded_subset_on ?PiE (top1_sup_metric_on X d) ?clF"
         sorry
+      have hclF_bdd_all: "\<forall>f\<in>?clF. \<forall>g\<in>?PiE. bdd_above ((\<lambda>x. d (g x) (f x)) ` X)"
+        sorry
       have hclF_ptwise_bdd: "top1_pointwise_bounded_family_on X Y d ?clF"
-        using uniform_bounded_imp_pointwise_bounded[OF hd hclF_PiE hclF_bdd_sup] sorry
+        using uniform_bounded_imp_pointwise_bounded[OF hd hclF_PiE hclF_bdd_sup hclF_bdd_all] by argo
       have hF_equi: "top1_equicontinuous_family_on X TX Y d \<F>"
         using hF_equi_from_clF hclF_equi by blast
       have hF_ptwise_bdd: "top1_pointwise_bounded_family_on X Y d \<F>"
