@@ -2274,8 +2274,35 @@ proof (intro allI impI)
       text \<open>h_alpha(x) = iota(f(x))(alpha) is continuous X to [0,1] to R, bounded.\<close>
       define h\<alpha> where "h\<alpha> x = \<iota> (f x) \<alpha>" for x
       have h\<alpha>_cont_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV h\<alpha>"
-        unfolding h\<alpha>_def
-        sorry
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> X"
+        show "h\<alpha> x \<in> (UNIV::real set)" by simp
+      next
+        fix V :: "real set" assume "V \<in> order_topology_on_UNIV"
+        text \<open>h_alpha^{-1}(V) = f^{-1}(iota^{-1}(pi_alpha^{-1}(V intersect I))).\<close>
+        text \<open>Chain: preimage of V through pi_alpha, iota, f.\<close>
+        have hVI: "V \<inter> ?I \<in> ?TI"
+          unfolding top1_closed_interval_topology_def subspace_topology_def
+          using \<open>V \<in> order_topology_on_UNIV\<close> by blast
+        have hTopI_all: "\<forall>j\<in>J2. is_topology_on ?I ?TI" using hTopI by blast
+        have hproj_pre: "{z \<in> top1_PiE J2 (\<lambda>_. ?I). z \<alpha> \<in> V \<inter> ?I}
+            \<in> top1_product_topology_on J2 (\<lambda>_. ?I) (\<lambda>_. ?TI)"
+          using top1_continuous_map_on_product_projection[OF hTopI_all h\<alpha>] hVI
+          unfolding top1_continuous_map_on_def by blast
+        have h\<iota>_pre: "{c\<in>C. \<iota> c \<in> {z \<in> top1_PiE J2 (\<lambda>_. ?I). z \<alpha> \<in> V \<inter> ?I}} \<in> TC"
+          using h\<iota>_cont hproj_pre unfolding top1_continuous_map_on_def by blast
+        have hf_pre: "{x\<in>X. f x \<in> {c\<in>C. \<iota> c \<in> {z \<in> top1_PiE J2 (\<lambda>_. ?I). z \<alpha> \<in> V \<inter> ?I}}} \<in> TX"
+          using hf h\<iota>_pre unfolding top1_continuous_map_on_def by blast
+        have hfimg: "\<forall>x\<in>X. f x \<in> C" using hf unfolding top1_continuous_map_on_def by blast
+        have h\<iota>img: "\<forall>c\<in>C. \<iota> c \<in> top1_PiE J2 (\<lambda>_. ?I)"
+          using h\<iota>C_sub by blast
+        have h\<iota>alpha: "\<forall>c\<in>C. \<iota> c \<alpha> \<in> ?I"
+          using h\<iota>img h\<alpha> unfolding top1_PiE_iff by blast
+        have heq: "{x\<in>X. h\<alpha> x \<in> V} = {x\<in>X. f x \<in> {c\<in>C. \<iota> c \<in> {z \<in> top1_PiE J2 (\<lambda>_. ?I). z \<alpha> \<in> V \<inter> ?I}}}"
+          unfolding h\<alpha>_def using hfimg h\<iota>img h\<iota>alpha by blast
+        show "{x\<in>X. h\<alpha> x \<in> V} \<in> TX" using heq hf_pre by presburger
+      qed
       have h\<alpha>_bdd: "top1_bounded_on X h\<alpha>"
         unfolding top1_bounded_on_def h\<alpha>_def
       proof (intro exI[where x=1] ballI)
