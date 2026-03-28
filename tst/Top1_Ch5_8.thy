@@ -17786,9 +17786,9 @@ proof -
   have hPiA_comp: "top1_compact_on (top1_PiE X A) (subspace_topology ?PiE ?Tpw (top1_PiE X A))"
     sorry
   have hclF_closed: "closedin_on (top1_PiE X A) (subspace_topology ?PiE ?Tpw (top1_PiE X A)) ?clF"
-    sorry
-  show ?thesis
-    sorry
+    by (simp add: closedin_subspace_from_ambient closure_on_closed hFsub_PiE hPiA_sub hTopPw hclF_sub)
+  show ?thesis using Theorem_26_2[OF hPiA_comp hclF_closed]
+    by (simp add: hclF_sub subspace_topology_trans)
 qed
 
 lemma top1_ascoli_step2_closure_continuous_and_equicontinuous:
