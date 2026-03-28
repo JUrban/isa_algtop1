@@ -17687,6 +17687,19 @@ lemma product_subspace_eq_pointwise:
   unfolding top1_pointwise_topology_on_def
   using Theorem_19_3_product[of X "\<lambda>_. Y" "\<lambda>_. TY" A] hA hTop by blast
 
+lemma continuous_funcs_eval_sub:
+  assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y TY"
+  assumes ha: "a \<in> X"
+  shows "(\<lambda>f. f a) ` \<F> \<subseteq> Y"
+proof (rule subsetI)
+  fix y assume "y \<in> (\<lambda>f. f a) ` \<F>"
+  then obtain f where "f \<in> \<F>" "y = f a" by force
+  then have "f \<in> top1_continuous_funcs_on X TX Y TY" using hFsub by blast
+  then have "f \<in> top1_PiE X (\<lambda>_. Y)"
+    unfolding top1_continuous_funcs_on_def by blast
+  then show "y \<in> Y" using \<open>y = f a\<close> ha unfolding top1_PiE_iff by blast
+qed
+
 lemma top1_ascoli_step1_compact_closure_pointwise:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
