@@ -17730,7 +17730,10 @@ proof -
     by (metis continuous_funcs_eval_sub hFsub)
   have hA_sub: "\<forall>a\<in>X. A a \<subseteq> Y"
     unfolding A_def using closure_on_subset_carrier hTopTY heval_sub by metis
-  text \<open>Remaining: product compact, F sub PiE X A, PiE X A closed, clF sub, clF compact.\<close>
+  have hPiA_top_eq: "top1_product_topology_on X A (\<lambda>a. subspace_topology Y ?TY (A a)) =
+      subspace_topology ?PiE ?Tpw (top1_PiE X A)"
+    using product_subspace_eq_pointwise[OF hTopTY hA_sub] by metis
+  text \<open>Remaining: PiE X A subset PiE, topology, F sub A, closed, compact.\<close>
   show ?thesis sorry
 qed
 
