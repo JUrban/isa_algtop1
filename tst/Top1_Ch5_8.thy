@@ -12817,9 +12817,18 @@ proof -
       show "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
         using hF_equi hF_ptwise_bdd by blast
     next
-      assume "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
-      show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
+      assume hEqPB: "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
+      text \<open>Backward: eq + ptwise bdd -> complete + totally bounded -> compact.
+        Uses: clF complete (closed in complete C, Thm 43.6c).
+        clF totally bounded (Lemma 45.3 with compact Y containing all values).\<close>
+      have hclF_complete2: "top1_complete_metric_on ?clF ?du"
         sorry
+      have hclF_totB2: "top1_totally_bounded_on ?clF ?du"
+        sorry
+      have hclF_comp_metric2: "top1_compact_on ?clF (top1_metric_topology_on ?clF ?du)"
+        using Theorem_45_1[OF hdu_metric_clF] hclF_complete2 hclF_totB2 sorry
+      show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
+        using hclF_comp_metric2 hSub_clF_metric sorry
     qed
   qed
 qed
