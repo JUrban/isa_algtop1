@@ -12643,6 +12643,12 @@ proof -
     using hCompX top1_compact_on_def by blast
   have hFpiE: "\<F> \<subseteq> ?PiE"
     using hFsub unfolding top1_continuous_funcs_on_def by blast
+  text \<open>Forward: compact closure implies equicontinuous + pointwise bounded.
+    Uses: compact -> totally bounded (Thm 45.1) -> equicontinuous (Lem 45.2).
+    And compact -> bounded -> pointwise bounded.\<close>
+  text \<open>Backward: equicontinuous + pointwise bounded implies compact closure.
+    Uses: G equicontinuous + ptwise bounded (Step 2).
+    G contained in compact Y (Step 3). G complete + totally bounded (Thm 45.1, Lem 45.3).\<close>
   show ?thesis sorry
 qed
 
