@@ -12631,7 +12631,20 @@ theorem Theorem_45_4:
                 (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
              \<F>))
     \<longleftrightarrow> (top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
-  sorry
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?C = "top1_continuous_funcs_on X TX Y ?TY"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?du = "top1_uniform_metric_on X d"
+  let ?Tu = "top1_metric_topology_on ?PiE ?du"
+  let ?Tc = "subspace_topology ?PiE ?Tu ?C"
+  let ?clF = "closure_on ?C ?Tc \<F>"
+  have hTopX: "is_topology_on X TX"
+    using hCompX top1_compact_on_def by blast
+  have hFpiE: "\<F> \<subseteq> ?PiE"
+    using hFsub unfolding top1_continuous_funcs_on_def by blast
+  show ?thesis sorry
+qed
 
 (** from \S45 Corollary 45.5 [top1.tex:6679] **)
 corollary Corollary_45_5:
