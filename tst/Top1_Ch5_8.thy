@@ -17739,9 +17739,22 @@ proof -
     unfolding top1_pointwise_topology_on_def
     using top1_product_topology_on_is_topology_on hTopTY by fast
   have hFsub_PiE: "\<F> \<subseteq> ?PiE"
-    sorry
+    using hFsub unfolding top1_continuous_funcs_on_def by blast
   have hFsubA: "\<F> \<subseteq> top1_PiE X A"
-    sorry
+  proof (rule subsetI)
+    fix f assume hf: "f \<in> \<F>"
+    then have hf_pie: "f \<in> ?PiE" using hFsub_PiE by blast
+    show "f \<in> top1_PiE X A" unfolding top1_PiE_iff A_def
+    proof (intro conjI ballI allI impI)
+      fix a assume "a \<in> X"
+      have "f a \<in> (\<lambda>f. f a) ` \<F>" using hf by simp
+      then show "f a \<in> closure_on Y ?TY ((\<lambda>f. f a) ` \<F>)"
+        using subset_closure_on by fast
+    next
+      fix a assume "a \<notin> X"
+      then show "f a = undefined" using hf_pie unfolding top1_PiE_iff by blast
+    qed
+  qed
   show ?thesis sorry
 qed
 
