@@ -2347,8 +2347,76 @@ proof -
   text \<open>Both f1 o f2 and id extend e1. By uniqueness: f1 o f2 = id on Y1.
     Similarly f2 o f1 = id on Y2.
     Then f2 is a homeomorphism with f2(e1 x) = e2 x.\<close>
+  have hid1: "top1_continuous_map_on Y1 TY1 Y1 TY1 id"
+    by (metis top1_continuous_map_on_id hTopY1)
+  have hid2: "top1_continuous_map_on Y2 TY2 Y2 TY2 id"
+    by (metis top1_continuous_map_on_id hTopY2)
+  text \<open>f1 o f2 = id on Y1.\<close>
+  have hf1f2_eq_id: "top1_eq_on Y1 (f1 \<circ> f2) id"
+  proof -
+    from hExt1_Y1 he1cont obtain g0 where hg0cont: "top1_continuous_map_on Y1 TY1 Y1 TY1 g0"
+      and hg0ext: "\<forall>x\<in>X. g0 (e1 x) = e1 x"
+      and hg0uniq: "\<forall>g'. top1_continuous_map_on Y1 TY1 Y1 TY1 g' \<and> (\<forall>x\<in>X. g' (e1 x) = e1 x)
+                        \<longrightarrow> top1_eq_on Y1 g0 g'"
+      by (smt (verit, del_insts) top1_eq_on_def)
+    have hf1f2_cont: "top1_continuous_map_on Y1 TY1 Y1 TY1 (f1 \<circ> f2)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> Y1"
+      then have "f2 x \<in> Y2" using hf2cont unfolding top1_continuous_map_on_def by blast
+      then show "(f1 \<circ> f2) x \<in> Y1" using hf1cont unfolding top1_continuous_map_on_def comp_def by blast
+    next
+      fix V assume "V \<in> TY1"
+      then have "{y\<in>Y2. f1 y \<in> V} \<in> TY2" using hf1cont unfolding top1_continuous_map_on_def by blast
+      then show "{x\<in>Y1. (f1 \<circ> f2) x \<in> V} \<in> TY1"
+      proof -
+        have hpre1: "{y\<in>Y2. f1 y \<in> V} \<in> TY2"
+          using hf1cont \<open>V \<in> TY1\<close> unfolding top1_continuous_map_on_def by blast
+        have hpre2: "{x\<in>Y1. f2 x \<in> {y\<in>Y2. f1 y \<in> V}} \<in> TY1"
+          using hf2cont hpre1 unfolding top1_continuous_map_on_def by blast
+        have hf2img: "\<forall>x\<in>Y1. f2 x \<in> Y2"
+          using hf2cont unfolding top1_continuous_map_on_def by blast
+        have heq: "{x\<in>Y1. f1 (f2 x) \<in> V} = {x\<in>Y1. f2 x \<in> {y\<in>Y2. f1 y \<in> V}}"
+          using hf2img by blast
+        show ?thesis unfolding comp_def using hpre2 heq by presburger
+      qed
+    qed
+    have "top1_eq_on Y1 g0 (f1 \<circ> f2)" using hg0uniq hf1f2_cont hf1f2_ext by blast
+    moreover have "top1_eq_on Y1 g0 id" using hg0uniq hid1 by simp
+    ultimately show ?thesis unfolding top1_eq_on_def by simp
+  qed
+  text \<open>f2 o f1 = id on Y2.\<close>
+  have hf2f1_eq_id: "top1_eq_on Y2 (f2 \<circ> f1) id"
+  proof -
+    from hExt2_Y2 he2cont obtain g0 where
+      hg0uniq: "\<forall>g'. top1_continuous_map_on Y2 TY2 Y2 TY2 g' \<and> (\<forall>x\<in>X. g' (e2 x) = e2 x)
+                        \<longrightarrow> top1_eq_on Y2 g0 g'"
+      by (smt (verit, del_insts) top1_eq_on_def)
+    have hf2f1_cont: "top1_continuous_map_on Y2 TY2 Y2 TY2 (f2 \<circ> f1)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> Y2"
+      then show "(f2 \<circ> f1) x \<in> Y2"
+        using hf1cont hf2cont unfolding top1_continuous_map_on_def comp_def by blast
+    next
+      fix V assume "V \<in> TY2"
+      have hf1img: "\<forall>x\<in>Y2. f1 x \<in> Y1" using hf1cont unfolding top1_continuous_map_on_def by blast
+      have hpre1: "{y\<in>Y1. f2 y \<in> V} \<in> TY1"
+        using hf2cont \<open>V \<in> TY2\<close> unfolding top1_continuous_map_on_def by blast
+      have hpre2: "{x\<in>Y2. f1 x \<in> {y\<in>Y1. f2 y \<in> V}} \<in> TY2"
+        using hf1cont hpre1 unfolding top1_continuous_map_on_def by blast
+      have heq: "{x\<in>Y2. f2 (f1 x) \<in> V} = {x\<in>Y2. f1 x \<in> {y\<in>Y1. f2 y \<in> V}}"
+        using hf1img by blast
+      show "{x\<in>Y2. (f2 \<circ> f1) x \<in> V} \<in> TY2"
+        unfolding comp_def using hpre2 heq by presburger
+    qed
+    have "top1_eq_on Y2 g0 (f2 \<circ> f1)" using hg0uniq hf2f1_cont hf2f1_ext by blast
+    moreover have "top1_eq_on Y2 g0 id" using hg0uniq hid2 by simp
+    ultimately show ?thesis unfolding top1_eq_on_def by simp
+  qed
+  text \<open>f2 is a homeomorphism.\<close>
   show ?thesis unfolding top1_equiv_compactification_via_on_def
-    using hExt1_Y1 hExt2_Y2 he1cont he2cont hf1f2_ext hf2f1_ext hf2cont hf1cont hf2ext
+    using hf1f2_eq_id hf2f1_eq_id hf2cont hf1cont hf2ext
     sorry
 qed
 
