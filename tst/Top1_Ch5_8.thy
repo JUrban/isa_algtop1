@@ -12622,6 +12622,25 @@ next
     using hFG by blast
 qed
 
+lemma metric_bounded_subset_mono:
+  assumes "top1_metric_bounded_subset_on Y d A" "B \<subseteq> A"
+  shows "top1_metric_bounded_subset_on Y d B"
+  using assms unfolding top1_metric_bounded_subset_on_def by blast
+
+lemma pointwise_bounded_subset:
+  assumes hPB: "top1_pointwise_bounded_family_on X Y d G"
+  assumes hFG: "\<F> \<subseteq> G"
+  shows "top1_pointwise_bounded_family_on X Y d \<F>"
+  unfolding top1_pointwise_bounded_family_on_def
+proof (intro ballI)
+  fix x assume "x \<in> X"
+  then have "top1_metric_bounded_subset_on Y d ((\<lambda>f. f x) ` G)"
+    by (metis hPB top1_pointwise_bounded_family_on_def)
+  moreover have "(\<lambda>f. f x) ` \<F> \<subseteq> (\<lambda>f. f x) ` G" using hFG by blast
+  ultimately show "top1_metric_bounded_subset_on Y d ((\<lambda>f. f x) ` \<F>)"
+    using metric_bounded_subset_mono by meson
+qed
+
 lemma continuous_funcs_eq_maps_metric:
   "top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d) = top1_continuous_maps_metric_on X TX Y d"
   by (simp add: top1_continuous_funcs_on_def top1_continuous_maps_metric_on_def)
