@@ -2324,13 +2324,17 @@ proof -
     and hf2ext: "\<forall>x\<in>X. f2 (e1 x) = e2 x"
     and hf2uniq: "\<forall>g'. top1_continuous_map_on Y1 TY1 Y2 TY2 g'
           \<and> (\<forall>x\<in>X. g' (e1 x) = e2 x) \<longrightarrow> top1_eq_on Y1 g' f2"
-    using hExt1_C he2cont sorry
+    using hExt1_C he2cont by (smt (verit, del_insts) top1_eq_on_def)
   obtain f1 where hf1cont: "top1_continuous_map_on Y2 TY2 Y1 TY1 f1"
     and hf1ext: "\<forall>x\<in>X. f1 (e2 x) = e1 x"
     and hf1uniq: "\<forall>g'. top1_continuous_map_on Y2 TY2 Y1 TY1 g'
           \<and> (\<forall>x\<in>X. g' (e2 x) = e1 x) \<longrightarrow> top1_eq_on Y2 g' f1"
-    using hExt2_C[rule_format, OF he1cont] sorry
-  text \<open>f2 is a homeomorphism and commutes with embeddings.\<close>
+    using hExt2_C he1cont by (smt (verit, del_insts) top1_eq_on_def)
+  have hf1f2_ext: "\<forall>x\<in>X. (f1 \<circ> f2) (e1 x) = e1 x"
+    by (metis hf2ext hf1ext comp_apply)
+  text \<open>f2 is a homeomorphism Y1 to Y2 with f2(e1 x) = e2 x.
+    Proof: f1 o f2 = id on Y1 and f2 o f1 = id on Y2 (by uniqueness of extensions),
+    so f2 is bijective with continuous inverse f1.\<close>
   show ?thesis unfolding top1_equiv_compactification_via_on_def
     sorry
 qed
