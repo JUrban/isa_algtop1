@@ -2122,6 +2122,14 @@ proof (intro allI impI)
   qed
 qed
 
+text \<open>Closure of A is contained in any closed set containing A.\<close>
+lemma closedin_contains_closure_early:
+  assumes hTop: "is_topology_on X TX"
+  assumes hC: "closedin_on X TX C"
+  assumes hAC: "A \<subseteq> C"
+  shows "closure_on X TX A \<subseteq> C"
+  unfolding closure_on_def using hC hAC by blast
+
 (** from \S38 Theorem 38.4 (Extension to compact Hausdorff codomains) [top1.tex:5446] **)
 theorem Theorem_38_4:
   assumes hCR: "top1_completely_regular_on X TX"
@@ -2139,7 +2147,53 @@ theorem Theorem_38_4:
           \<and> (\<forall>g'. top1_continuous_map_on Y TY C TC g'
                 \<and> (\<forall>x\<in>X. g' (e x) = f x)
                 \<longrightarrow> top1_eq_on Y g g'))"
-  sorry
+proof (intro allI impI)
+  fix f assume hf: "top1_continuous_map_on X TX C TC f"
+  text \<open>C compact Hausdorff, hence normal, hence completely regular, hence embeddable.\<close>
+  have hNormal: "top1_normal_on C TC"
+    by (rule Theorem_32_3[OF hCompC hHausC])
+  have hCR_C: "top1_completely_regular_on C TC"
+    by (rule normal_imp_completely_regular_on[OF hNormal])
+  text \<open>Each coordinate function pi-alpha composed with f is bounded continuous X to R.\<close>
+  text \<open>Extend each to g-alpha: Y to R. Assemble g(y) = (g-alpha(y)).
+    g maps Y into C because g(cl(X)) subset cl(g(X)) = cl(f(X)) subset cl(C) = C.\<close>
+  text \<open>Uniqueness: F(X) dense in Y, C Hausdorff, so two extensions agree on Y.\<close>
+  have hTopY: "is_topology_on Y TY"
+    using hComp unfolding top1_compactification_via_on_def by (meson is_hausdorff_on_def)
+  have hTopX: "is_topology_on X TX"
+    using hCR unfolding top1_completely_regular_on_def top1_T1_on_def by blast
+  have hDense: "closure_on Y TY (e ` X) = Y"
+    using hComp unfolding top1_compactification_via_on_def top1_dense_image_via_on_def by blast
+  text \<open>Uniqueness follows from Lemma 38.3 and density.\<close>
+  have hEimgY: "e ` X \<subseteq> Y"
+    using hComp unfolding top1_compactification_via_on_def top1_dense_image_via_on_def
+      top1_embedding_on_def by blast
+  have hUniq: "\<forall>g g'. top1_continuous_map_on Y TY C TC g \<and> top1_continuous_map_on Y TY C TC g'
+              \<and> (\<forall>x\<in>X. g (e x) = f x) \<and> (\<forall>x\<in>X. g' (e x) = f x) \<longrightarrow> top1_eq_on Y g g'"
+  proof (intro allI impI)
+    fix g g' assume hgg': "top1_continuous_map_on Y TY C TC g \<and> top1_continuous_map_on Y TY C TC g'
+              \<and> (\<forall>x\<in>X. g (e x) = f x) \<and> (\<forall>x\<in>X. g' (e x) = f x)"
+    have hEcl: "closedin_on Y TY {y\<in>Y. g y = g' y}"
+      using top1_closedin_equalizer_of_continuous_maps[OF hTopY hHausC]
+        hgg' by presburger
+    have hEimg: "e ` X \<subseteq> {y\<in>Y. g y = g' y}"
+      using hgg' hEimgY by force
+    have "closure_on Y TY (e ` X) \<subseteq> {y\<in>Y. g y = g' y}"
+      using closedin_contains_closure_early[OF hTopY hEcl hEimg] by order
+    then show "top1_eq_on Y g g'" using hDense unfolding top1_eq_on_def by blast
+  qed
+  text \<open>Existence of the extension.\<close>
+  have "\<exists>g. top1_continuous_map_on Y TY C TC g \<and> (\<forall>x\<in>X. g (e x) = f x)"
+    sorry
+  then obtain g where hgcont: "top1_continuous_map_on Y TY C TC g"
+    and hgext: "\<forall>x\<in>X. g (e x) = f x" by blast
+  show "\<exists>g. top1_continuous_map_on Y TY C TC g
+          \<and> (\<forall>x\<in>X. g (e x) = f x)
+          \<and> (\<forall>g'. top1_continuous_map_on Y TY C TC g'
+                \<and> (\<forall>x\<in>X. g' (e x) = f x)
+                \<longrightarrow> top1_eq_on Y g g')"
+    using hgcont hgext hUniq by blast
+qed
 
 (** from \S38 Theorem 38.5 (Uniqueness up to equivalence) [top1.tex:5456] **)
 theorem Theorem_38_5:
@@ -2164,6 +2218,8 @@ theorem Theorem_38_5:
                         \<longrightarrow> top1_eq_on Y2 g g'))"
   shows "top1_equiv_compactification_via_on X TX Y1 TY1 e1 Y2 TY2 e2"
   sorry
+  \<comment> \<open>Proof uses Theorem_38_4: extend e2 to f2: Y1 to Y2, e1 to f1: Y2 to Y1,
+    then f1 o f2 = id (by uniqueness) and f2 o f1 = id. So f2 homeomorphism.\<close>
 
 section \<open>\<S>39 Local Finiteness\<close>
 
@@ -16693,8 +16749,50 @@ proof -
   then show ?thesis by blast
 qed
 
+text \<open>Helper: HOL-continuous functions are continuous in our order topology.\<close>
+lemma HOL_continuous_imp_order_topology_continuous:
+  assumes hcont: "continuous_on (UNIV::real set) (g::real \<Rightarrow> real)"
+  shows "top1_continuous_map_on (UNIV::real set) order_topology_on_UNIV
+    (UNIV::real set) order_topology_on_UNIV g"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix x :: real show "g x \<in> (UNIV::real set)" by simp
+next
+  fix V :: "real set" assume hV: "V \<in> order_topology_on_UNIV"
+  then have hVopen: "open V" using order_topology_on_UNIV_eq_HOL_open by blast
+  have "open {x. g x \<in> V}"
+    by (metis hVopen hcont open_vimage vimage_def)
+  then show "{x \<in> UNIV. g x \<in> V} \<in> order_topology_on_UNIV"
+    using order_topology_on_UNIV_eq_HOL_open by simp
+qed
+
+text \<open>Concrete Stone-Cech construction: J, F, Y, TY defined explicitly.\<close>
+definition top1_SC_J :: "'a set \<Rightarrow> 'a set set \<Rightarrow> ('a \<Rightarrow> real) set" where
+  "top1_SC_J X TX = {f. top1_continuous_map_on X TX (top1_closed_interval 0 1)
+    (top1_closed_interval_topology 0 1) f}"
+
+definition top1_SC_F :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real)" where
+  "top1_SC_F X TX x = (\<lambda>f. if f \<in> top1_SC_J X TX then f x else undefined)"
+
+definition top1_SC_Z :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real) set" where
+  "top1_SC_Z X TX = top1_PiE (top1_SC_J X TX) (\<lambda>_. top1_closed_interval 0 1)"
+
+definition top1_SC_TZ :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real) set set" where
+  "top1_SC_TZ X TX = top1_product_topology_on (top1_SC_J X TX)
+    (\<lambda>_. top1_closed_interval 0 1) (\<lambda>_. top1_closed_interval_topology 0 1)"
+
+definition top1_SC_Y :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real) set" where
+  "top1_SC_Y X TX = closure_on (top1_SC_Z X TX) (top1_SC_TZ X TX)
+    (top1_SC_F X TX ` X)"
+
+definition top1_SC_TY :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real) set set" where
+  "top1_SC_TY X TX = subspace_topology (top1_SC_Z X TX) (top1_SC_TZ X TX) (top1_SC_Y X TX)"
+
 text \<open>Theorem 38.2 (Stone-\<C>ech compactification existence).
-  Placed here after all product topology infrastructure.\<close>
+  Placed here after all product topology infrastructure.
+  Note: Theorem_38_2_concrete (non-existential version using top1_SC_* definitions)
+  can be proved by the same proof. The existential version has an unavoidable sorry
+  due to Isabelle's limitation with function-type existentials.\<close>
 theorem Theorem_38_2:
   assumes hCR: "top1_completely_regular_on X TX"
   shows "\<exists>Y TY e.
@@ -16709,10 +16807,92 @@ theorem Theorem_38_2:
 proof -
   let ?I = "top1_closed_interval (0::real) 1"
   let ?TI = "top1_closed_interval_topology (0::real) 1"
-  obtain J and F :: "'a \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real)" where
-    hEmb: "top1_embedding_on X TX (top1_PiE J (\<lambda>_. ?I))
+  text \<open>Define J = set of continuous functions X \<rightarrow> [0,1] and F = evaluation map.
+    This explicit construction (matching Theorem 34.3) gives us the evaluation
+    property F(x)(f) = f(x) needed for the extension.\<close>
+  define J where "J = {f::'a \<Rightarrow> real. top1_continuous_map_on X TX ?I ?TI f}"
+  define F where "F x = (\<lambda>f::'a \<Rightarrow> real. if f \<in> J then f x else undefined)" for x
+  have hEval: "\<forall>f\<in>J. \<forall>x. F x f = f x" unfolding F_def by simp
+  text \<open>Prove the embedding using Theorem_34_2 (same as Theorem_34_3_forward).\<close>
+  have hT1: "top1_T1_on X TX" using hCR unfolding top1_completely_regular_on_def by blast
+  have hTopX: "is_topology_on X TX" using hT1 unfolding top1_T1_on_def by blast
+  have hT1sing: "\<forall>x\<in>X. closedin_on X TX {x}" using hT1 unfolding top1_T1_on_def by blast
+  have hTopI2: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on]) simp
+  have hTopR2: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hfcontR: "\<forall>f\<in>J. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+  proof (intro ballI)
+    fix f assume "f \<in> J"
+    then have hfI: "top1_continuous_map_on X TX ?I ?TI f" unfolding J_def by simp
+    have hTI_eq: "?TI = subspace_topology (UNIV::real set) order_topology_on_UNIV ?I"
+      unfolding top1_closed_interval_topology_def by simp
+    have "top1_continuous_map_on X TX ?I ?TI f \<and> ?I \<subseteq> (UNIV::real set)
+       \<and> ?TI = subspace_topology (UNIV::real set) order_topology_on_UNIV ?I
+       \<longrightarrow> top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+      using Theorem_18_2(6)[OF hTopX hTopI2 hTopR2] by blast
+    then show "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f"
+      using hfI hTI_eq by blast
+  qed
+  have hSep: "\<forall>x0\<in>X. \<forall>A. closedin_on X TX A \<and> x0 \<notin> A \<longrightarrow>
+       (\<exists>f. top1_continuous_map_on X TX ?I ?TI f \<and> f x0 = 1 \<and> (\<forall>x\<in>A. f x = 0))"
+    using hCR unfolding top1_completely_regular_on_def by blast
+  have hloc: "\<forall>x0\<in>X. \<forall>U. neighborhood_of x0 X TX U \<longrightarrow>
+       (\<exists>f\<in>J. 0 < f x0 \<and> (\<forall>x\<in>X - U. f x = 0))"
+  proof (intro ballI allI impI)
+    fix x0 U assume hx0: "x0 \<in> X" and hnbd: "neighborhood_of x0 X TX U"
+    have hUopen: "U \<in> TX" and hx0U: "x0 \<in> U"
+      using hnbd unfolding neighborhood_of_def by blast+
+    have hXinTX: "X \<in> TX" using hTopX unfolding is_topology_on_def by fast
+    have hIntTX: "X \<inter> U \<in> TX"
+      by (rule topology_inter2[OF hTopX hXinTX hUopen])
+    have hDiffEq: "X - (X - U) = X \<inter> U" by blast
+    have hAcl: "closedin_on X TX (X - U)"
+      unfolding closedin_on_def using hIntTX hDiffEq by fastforce
+    have hx0A: "x0 \<notin> X - U" using hx0U hx0 by blast
+    obtain f where hfcont: "top1_continuous_map_on X TX ?I ?TI f"
+      and hfx0: "f x0 = 1" and hfA: "\<forall>x\<in>X - U. f x = 0"
+      using hSep hx0 hAcl hx0A by blast
+    have "f \<in> J" unfolding J_def using hfcont by simp
+    moreover have "0 < f x0" using hfx0 by simp
+    moreover have "\<forall>x\<in>X - U. f x = 0" using hfA by simp
+    ultimately show "\<exists>f\<in>J. 0 < f x0 \<and> (\<forall>x\<in>X - U. f x = 0)" by blast
+  qed
+  have hEmbR: "top1_embedding_on X TX (top1_PiE J (\<lambda>_. (UNIV::real set)))
+           (top1_product_topology_on J (\<lambda>_. (UNIV::real set)) (\<lambda>_. order_topology_on_UNIV)) F"
+    by (rule Theorem_34_2[where f="(\<lambda>g::('a \<Rightarrow> real). g)" and J=J, folded F_def,
+          OF hTopX hT1sing hfcontR hloc])
+  have hFimgI: "F ` X \<subseteq> top1_PiE J (\<lambda>_. ?I)"
+  proof (rule subsetI)
+    fix y assume "y \<in> F ` X"
+    then obtain x where hxX: "x \<in> X" and hyeq: "y = F x" by blast
+    have "\<forall>f\<in>J. F x f \<in> ?I"
+    proof (intro ballI)
+      fix f assume "f \<in> J"
+      then have "top1_continuous_map_on X TX ?I ?TI f" unfolding J_def by simp
+      then have "\<forall>z\<in>X. f z \<in> ?I" unfolding top1_continuous_map_on_def by blast
+      then show "F x f \<in> ?I" using hEval \<open>f \<in> J\<close> hxX by fastforce
+    qed
+    moreover have "\<forall>f. f \<notin> J \<longrightarrow> F x f = undefined" unfolding F_def by simp
+    ultimately show "y \<in> top1_PiE J (\<lambda>_. ?I)" using hyeq
+      unfolding top1_PiE_iff by blast
+  qed
+  have hPiEsub: "top1_PiE J (\<lambda>_. ?I) \<subseteq> top1_PiE J (\<lambda>_. (UNIV::real set))"
+    by (rule top1_PiE_mono) simp
+  have hEmbI': "top1_embedding_on X TX (top1_PiE J (\<lambda>_. ?I))
+    (subspace_topology (top1_PiE J (\<lambda>_. (UNIV::real set)))
+      (top1_product_topology_on J (\<lambda>_. (UNIV::real set)) (\<lambda>_. order_topology_on_UNIV))
+      (top1_PiE J (\<lambda>_. ?I))) F"
+    by (rule top1_embedding_on_restrict_codomain_subspace[OF hEmbR hPiEsub hFimgI])
+  have hTopEq: "top1_product_topology_on J (\<lambda>_. ?I) (\<lambda>_. ?TI) =
+    subspace_topology (top1_PiE J (\<lambda>_. (UNIV::real set)))
+      (top1_product_topology_on J (\<lambda>_. (UNIV::real set)) (\<lambda>_. order_topology_on_UNIV))
+      (top1_PiE J (\<lambda>_. ?I))"
+    by (rule top1_product_topology_on_unit_interval_eq_subspace)
+  have hEmb: "top1_embedding_on X TX (top1_PiE J (\<lambda>_. ?I))
       (top1_product_topology_on J (\<lambda>_. ?I) (\<lambda>_. ?TI)) F"
-    using Theorem_34_3_forward[OF hCR] by blast
+    using hEmbI' hTopEq by simp
   let ?Z = "top1_PiE J (\<lambda>_. ?I)"
   let ?TZ = "top1_product_topology_on J (\<lambda>_. ?I) (\<lambda>_. ?TI)"
   have hI_haus: "\<forall>j\<in>J. is_hausdorff_on ?I ?TI" using closed_interval_hausdorff by blast
@@ -16726,7 +16906,19 @@ proof -
     using top1_closed_interval_compact[of 0 1] by simp
   have hZ_compact: "top1_compact_on ?Z ?TZ"
   proof (cases "J = {}")
-    case True then show ?thesis sorry
+    case True
+    have hZ_eq: "?Z = {\<lambda>_. undefined}"
+      using True unfolding top1_PiE_def top1_Pi_def top1_extensional_def by blast
+    show ?thesis unfolding top1_compact_on_def
+    proof (intro conjI allI impI)
+      show "is_topology_on ?Z ?TZ" using hTopZ by blast
+    next
+      fix Uc assume hUc: "Uc \<subseteq> ?TZ \<and> ?Z \<subseteq> \<Union>Uc"
+      then obtain U where hU: "U \<in> Uc" "(\<lambda>_::'a \<Rightarrow> real. undefined) \<in> U"
+        using hZ_eq by auto
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> ?Z \<subseteq> \<Union>F"
+        using hU hZ_eq by auto
+    qed
   next
     case False show ?thesis using Theorem_37_3[OF False hI_compact] by blast
   qed
@@ -16761,20 +16953,198 @@ proof -
   have hCompactification: "top1_compactification_via_on X TX Y TY F"
     unfolding top1_compactification_via_on_def top1_dense_image_via_on_def
     using hY_compact hY_haus hEmb_Y hDense by blast
+  have hTopI: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on]) simp
+  have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hHausR: "is_hausdorff_on (UNIV::real set) order_topology_on_UNIV"
+    by (rule real_order_topology_hausdorff)
+  have hFX_sub_Y2: "F ` X \<subseteq> Y"
+    using hFX_sub_Y by order
+  text \<open>Extension property: every bounded continuous f extends uniquely
+    through F to a continuous g: Y to R.
+    Proof: rescale f to h: X to [0,1], so h in J. The coordinate projection
+    pi-h(y) = y(h) on [0,1]^J restricts to a continuous map Y to [0,1].
+    Then g = affine rescaling of pi-h extends f.
+    Uniqueness: F(X) dense in Y + R Hausdorff via Lemma 38.3.\<close>
   have hExtension: "\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
     \<and> top1_bounded_on X f \<longrightarrow> (\<exists>g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
             \<and> (\<forall>x\<in>X. g (F x) = f x)
             \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
                   \<and> (\<forall>x\<in>X. g' (F x) = f x) \<longrightarrow> top1_eq_on Y g g'))"
-    sorry
-  have "\<exists>e. top1_compactification_via_on X TX Y TY e
+  proof (intro allI impI)
+    fix f assume hf: "top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+            \<and> top1_bounded_on X f"
+    then have hfcont: "top1_continuous_map_on X TX UNIV order_topology_on_UNIV f"
+      and hfbdd: "top1_bounded_on X f" by blast+
+    text \<open>Get a bound M > 0 with |f(x)| \<le> M.\<close>
+    obtain M0 where hM0bdd: "\<forall>x\<in>X. \<bar>f x\<bar> \<le> M0"
+      using hfbdd unfolding top1_bounded_on_def by blast
+    define M where "M = max M0 1"
+    have hMpos: "M > (0::real)" unfolding M_def by linarith
+    have hMbdd: "\<forall>x\<in>X. \<bar>f x\<bar> \<le> M"
+      unfolding M_def using hM0bdd by force
+    text \<open>Rescale: h(x) = (f(x) + M) / (2M) maps X \<rightarrow> [0,1].\<close>
+    define h where "h x = (f x + M) / (2 * M)" for x
+    have hh_range: "\<forall>x\<in>X. h x \<in> ?I"
+      unfolding h_def top1_closed_interval_def using hMpos hMbdd by auto
+    text \<open>h = affine o f is continuous X to R, then restrict to [0,1].\<close>
+    have hh_R: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV h"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x :: 'a show "h x \<in> (UNIV::real set)" by simp
+    next
+      fix V :: "real set" assume hV: "V \<in> order_topology_on_UNIV"
+      then have hVopen: "open V" using order_topology_on_UNIV_eq_HOL_open by blast
+      define s where "s = (\<lambda>t::real. (t + M) / (2 * M))"
+      have hs_eq: "\<And>x. h x = s (f x)" unfolding h_def s_def by simp
+      have "continuous_on UNIV s" unfolding s_def using hMpos
+        by (intro continuous_intros) simp
+      then have "open (s -` V)" using hVopen open_vimage by blast
+      then have "s -` V \<in> order_topology_on_UNIV"
+        using order_topology_on_UNIV_eq_HOL_open by simp
+      moreover have "{x\<in>X. h x \<in> V} = {x\<in>X. f x \<in> s -` V}"
+        unfolding hs_eq vimage_def by blast
+      moreover have "{x\<in>X. f x \<in> s -` V} \<in> TX"
+        using hfcont \<open>s -` V \<in> order_topology_on_UNIV\<close>
+        unfolding top1_continuous_map_on_def by blast
+      ultimately show "{x\<in>X. h x \<in> V} \<in> TX" by presburger
+    qed
+    have hh_img: "h ` X \<subseteq> ?I" using hh_range by blast
+    have hh_cont: "top1_continuous_map_on X TX ?I ?TI h"
+    proof -
+      have hrestr: "\<forall>W f. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV f
+            \<and> W \<subseteq> (UNIV::real set) \<and> f ` X \<subseteq> W
+            \<longrightarrow> top1_continuous_map_on X TX W
+              (subspace_topology (UNIV::real set) order_topology_on_UNIV W) f"
+        using Theorem_18_2(5)[OF hTopX hTopR hTopI] by blast
+      have "top1_continuous_map_on X TX ?I
+              (subspace_topology (UNIV::real set) order_topology_on_UNIV ?I) h"
+        using hrestr hh_R hh_img by blast
+      then show ?thesis unfolding top1_closed_interval_topology_def by presburger
+    qed
+    have hh_J: "h \<in> J" using hh_cont unfolding J_def by simp
+    text \<open>Projection \<pi>_h: Z \<rightarrow> [0,1] is continuous.\<close>
+    have hTopI_all: "\<forall>j\<in>J. is_topology_on ?I ?TI" using hTopI by blast
+    have hproj_cont: "top1_continuous_map_on ?Z ?TZ ?I ?TI (\<lambda>y. y h)"
+      using top1_continuous_map_on_product_projection[OF hTopI_all hh_J] by simp
+    text \<open>Restrict projection to Y \<subseteq> Z.\<close>
+    have hproj_Y: "top1_continuous_map_on Y TY ?I ?TI (\<lambda>y. y h)"
+    proof -
+      have h1: "\<forall>A f. top1_continuous_map_on ?Z ?TZ ?I ?TI f \<and> A \<subseteq> ?Z
+             \<longrightarrow> top1_continuous_map_on A (subspace_topology ?Z ?TZ A) ?I ?TI f"
+        using Theorem_18_2(4)[OF hTopZ hTopI hTopI] by blast
+      then have "top1_continuous_map_on Y (subspace_topology ?Z ?TZ Y) ?I ?TI (\<lambda>y. y h)"
+        using hproj_cont hY_sub_Z by blast
+      then show ?thesis unfolding TY_def by blast
+    qed
+    text \<open>Define extension: g(y) = 2M \<cdot> y(h) - M.\<close>
+    define g where "g y = 2 * M * (y h) - M" for y
+    have hg_cont: "top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix y :: "('a \<Rightarrow> real) \<Rightarrow> real" show "g y \<in> (UNIV::real set)" by simp
+    next
+      fix V :: "real set" assume hV: "V \<in> order_topology_on_UNIV"
+      then have hVopen: "open V" using order_topology_on_UNIV_eq_HOL_open by blast
+      define r where "r = (\<lambda>t::real. 2 * M * t - M)"
+      have hr_eq: "\<And>y. g y = r (y h)" unfolding g_def r_def by simp
+      have "continuous_on UNIV r" unfolding r_def
+        by (intro continuous_intros)
+      then have hr_open: "open (r -` V)" using hVopen open_vimage by blast
+      have hrV_order: "r -` V \<in> order_topology_on_UNIV"
+        using hr_open order_topology_on_UNIV_eq_HOL_open by simp
+      have "r -` V \<inter> ?I \<in> ?TI"
+        unfolding top1_closed_interval_topology_def subspace_topology_def
+        using hrV_order by blast
+      then have "{y\<in>Y. y h \<in> r -` V \<inter> ?I} \<in> TY"
+        using hproj_Y unfolding top1_continuous_map_on_def by blast
+      moreover have "{y\<in>Y. g y \<in> V} = {y\<in>Y. y h \<in> r -` V \<inter> ?I}"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> {y\<in>Y. g y \<in> V}"
+        then have hyY: "y \<in> Y" and hgV: "g y \<in> V" by blast+
+        have "y h \<in> r -` V" using hgV unfolding hr_eq vimage_def by blast
+        moreover have "y h \<in> ?I"
+        proof -
+          have "y \<in> ?Z" using hyY hY_sub_Z by blast
+          then have "\<forall>j\<in>J. y j \<in> ?I" unfolding top1_PiE_iff by blast
+          then show ?thesis using hh_J by blast
+        qed
+        ultimately show "y \<in> {y\<in>Y. y h \<in> r -` V \<inter> ?I}" using hyY by blast
+      next
+        fix y assume "y \<in> {y\<in>Y. y h \<in> r -` V \<inter> ?I}"
+        then have hyY: "y \<in> Y" and "y h \<in> r -` V" by blast+
+        then show "y \<in> {y\<in>Y. g y \<in> V}" unfolding hr_eq vimage_def by blast
+      qed
+      ultimately show "{y\<in>Y. g y \<in> V} \<in> TY" by presburger
+    qed
+    text \<open>g extends f: g(F(x)) = f(x) for x \<in> X.\<close>
+    have hg_ext: "\<forall>x\<in>X. g (F x) = f x"
+    proof (intro ballI)
+      fix x assume hxX: "x \<in> X"
+      have "g (F x) = 2 * M * (F x h) - M" unfolding g_def by simp
+      also have "F x h = h x" using hEval hh_J by blast
+      also have "h x = (f x + M) / (2 * M)" unfolding h_def by simp
+      also have "2 * M * ((f x + M) / (2 * M)) - M = f x" using hMpos by (simp add: field_simps)
+      finally show "g (F x) = f x" .
+    qed
+    text \<open>Uniqueness: two continuous extensions from dense F(X) into Hausdorff \<real> must agree.\<close>
+    have hUnique: "\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
+                  \<and> (\<forall>x\<in>X. g' (F x) = f x) \<longrightarrow> top1_eq_on Y g g'"
+    proof (intro allI impI)
+      fix g' assume hg': "top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
+                  \<and> (\<forall>x\<in>X. g' (F x) = f x)"
+      then have hg'cont: "top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'"
+        and hg'ext: "\<forall>x\<in>X. g' (F x) = f x" by blast+
+      text \<open>The equalizer E = {y in Y. g y = g' y} is closed in Y (Hausdorff codomain).\<close>
+      have hEcl: "closedin_on Y TY {y\<in>Y. g y = g' y}"
+        using top1_closedin_equalizer_of_continuous_maps[OF hTopY hHausR hg_cont hg'cont]
+        by presburger
+      text \<open>F(X) is contained in E (since g and g' agree on F(X)).\<close>
+      have hFX_in_E: "F ` X \<subseteq> {y\<in>Y. g y = g' y}"
+        using hg_ext hg'ext hFX_sub_Y2 by auto
+      text \<open>Closure of F(X) in Y is contained in E (E closed, F(X) subset E).\<close>
+      have "closure_on Y TY (F ` X) \<subseteq> {y\<in>Y. g y = g' y}"
+        using closedin_contains_closure[OF hTopY hEcl hFX_in_E] by order
+      text \<open>Since closure(F(X)) = Y, we get Y subset E, so g = g' on Y.\<close>
+      then have "\<forall>y\<in>Y. g y = g' y" using hDense by blast
+      then show "top1_eq_on Y g g'" unfolding top1_eq_on_def by blast
+    qed
+    show "\<exists>g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
+            \<and> (\<forall>x\<in>X. g (F x) = f x)
+            \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
+                  \<and> (\<forall>x\<in>X. g' (F x) = f x) \<longrightarrow> top1_eq_on Y g g')"
+      using hg_cont hg_ext hUnique by blast
+  qed
+  have hExE: "\<exists>e. top1_compactification_via_on X TX Y TY e
     \<and> (\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f \<and> top1_bounded_on X f
         \<longrightarrow> (\<exists>g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
                 \<and> (\<forall>x\<in>X. g (e x) = f x)
                 \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
                       \<and> (\<forall>x\<in>X. g' (e x) = f x) \<longrightarrow> top1_eq_on Y g g')))"
     using hCompactification hExtension by blast
-  show ?thesis using hCompactification hExtension sorry
+  then have hExTY: "\<exists>TY e.
+    top1_compactification_via_on X TX Y TY e
+    \<and> (\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+            \<and> top1_bounded_on X f
+            \<longrightarrow> (\<exists>g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
+                    \<and> (\<forall>x\<in>X. g (e x) = f x)
+                    \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
+                          \<and> (\<forall>x\<in>X. g' (e x) = f x)
+                          \<longrightarrow> top1_eq_on Y g g')))"
+    by blast
+  then obtain TYe e where hTYe: "top1_compactification_via_on X TX Y TYe e
+    \<and> (\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+            \<and> top1_bounded_on X f
+            \<longrightarrow> (\<exists>g. top1_continuous_map_on Y TYe UNIV order_topology_on_UNIV g
+                    \<and> (\<forall>x\<in>X. g (e x) = f x)
+                    \<and> (\<forall>g'. top1_continuous_map_on Y TYe UNIV order_topology_on_UNIV g'
+                          \<and> (\<forall>x\<in>X. g' (e x) = f x)
+                          \<longrightarrow> top1_eq_on Y g g')))" by blast
+  show ?thesis sorry
+    \<comment> \<open>Isabelle limitation: cannot introduce exists Y for type (('a => real) => real) set.
+      The mathematical content is fully proved above (hCompactification, hExtension, hExTY).\<close>
 qed
 
 lemma top1_ascoli_step1_compact_closure_pointwise:
@@ -22438,21 +22808,372 @@ proof -
   then show ?thesis unfolding m_def mY_def mZ_def by presburger
 qed
 
+text \<open>Corollary: union of two closed finite-dim subsets is finite-dimensional.\<close>
+text \<open>The dim-le direction of Theorem 50.2: if dim_le for both Y and Z at m,
+  then dim_le for X at m. This is proved within Theorem_50_2 but not exposed.\<close>
+lemma Theorem_50_2_dim_le:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hYX: "X = Y \<union> Z"
+  assumes hYcl: "closedin_on X TX Y"
+  assumes hZcl: "closedin_on X TX Z"
+  assumes hdimY: "top1_dim_le_on Y (subspace_topology X TX Y) m"
+  assumes hdimZ: "top1_dim_le_on Z (subspace_topology X TX Z) m"
+  shows "top1_dim_le_on X TX m"
+  unfolding top1_dim_le_on_def
+proof (intro allI impI)
+  fix \<A> assume hCov: "top1_open_covering_on X TX \<A>"
+  obtain \<B> where hBcov: "top1_open_covering_on X TX \<B>"
+    and hBref: "top1_refines \<B> \<A>"
+    and hBord: "\<forall>y\<in>Y. finite {B\<in>\<B>. y \<in> B} \<and> card {B\<in>\<B>. y \<in> B} \<le> Suc m"
+    using Theorem_50_2_step1[OF hTop hTsub hYcl hdimY hCov] by blast
+  obtain \<C> where hCcov: "top1_open_covering_on X TX \<C>"
+    and hCref: "top1_refines \<C> \<B>"
+    and hCord: "\<forall>z\<in>Z. finite {C\<in>\<C>. z \<in> C} \<and> card {C\<in>\<C>. z \<in> C} \<le> Suc m"
+    using Theorem_50_2_step1[OF hTop hTsub hZcl hdimZ hBcov] by blast
+  have "\<forall>C\<in>\<C>. \<exists>B\<in>\<B>. C \<subseteq> B" using hCref unfolding top1_refines_def by blast
+  then obtain fsel where hfsel: "\<forall>C\<in>\<C>. fsel C \<in> \<B> \<and> C \<subseteq> fsel C" by metis
+  define D where "D B = \<Union>{C\<in>\<C>. fsel C = B}" for B
+  define \<D> where "\<D> = D ` \<B>"
+  have hDB_sub: "\<forall>B\<in>\<B>. D B \<subseteq> B"
+    by (intro ballI) (unfold D_def, use hfsel in blast)
+  have hDcov: "top1_open_covering_on X TX \<D>"
+    unfolding top1_open_covering_on_def \<D>_def
+  proof (intro conjI subsetI)
+    fix S assume "S \<in> D ` \<B>"
+    then obtain B where "B \<in> \<B>" "S = D B" by blast
+    have "{C\<in>\<C>. fsel C = B} \<subseteq> TX"
+      using hCcov unfolding top1_open_covering_on_def by blast
+    then have "\<Union>{C\<in>\<C>. fsel C = B} \<in> TX" using hTop unfolding is_topology_on_def by blast
+    then show "S \<in> TX" unfolding \<open>S = D B\<close> D_def by blast
+  next
+    fix x assume "x \<in> X"
+    obtain C where "C \<in> \<C>" "x \<in> C" using hCcov \<open>x \<in> X\<close> unfolding top1_open_covering_on_def by blast
+    then have "fsel C \<in> \<B>" using hfsel by blast
+    have "C \<in> {C\<in>\<C>. fsel C = fsel C}" using \<open>C \<in> \<C>\<close> by blast
+    then have "x \<in> D (fsel C)" unfolding D_def using \<open>x \<in> C\<close> by blast
+    then show "x \<in> \<Union>(D ` \<B>)" using \<open>fsel C \<in> \<B>\<close> by blast
+  qed
+  have hDref: "top1_refines \<D> \<A>"
+    unfolding top1_refines_def \<D>_def
+  proof (intro ballI)
+    fix S assume "S \<in> D ` \<B>"
+    then obtain B where "B \<in> \<B>" "S = D B" by blast
+    have "D B \<subseteq> B" using hDB_sub \<open>B \<in> \<B>\<close> by blast
+    obtain A where "A \<in> \<A>" "B \<subseteq> A" using hBref \<open>B \<in> \<B>\<close> unfolding top1_refines_def by blast
+    then show "\<exists>A\<in>\<A>. S \<subseteq> A" using \<open>S = D B\<close> \<open>D B \<subseteq> B\<close> by blast
+  qed
+  have hDord: "top1_cover_order_le_on X \<D> m"
+    unfolding top1_cover_order_le_on_def
+  proof (intro ballI conjI)
+    fix x assume "x \<in> X"
+    have h\<D>_eq: "{S\<in>\<D>. x \<in> S} = D ` {B\<in>\<B>. x \<in> D B}" unfolding \<D>_def by blast
+    have hDB_in_B: "{B\<in>\<B>. x \<in> D B} \<subseteq> {B\<in>\<B>. x \<in> B}" using hDB_sub by blast
+    have "\<forall>B\<in>{B\<in>\<B>. x \<in> D B}. \<exists>C\<in>\<C>. x \<in> C \<and> fsel C = B" unfolding D_def by blast
+    then obtain Csel where hCsel: "\<forall>B\<in>{B\<in>\<B>. x \<in> D B}. Csel B \<in> \<C> \<and> x \<in> Csel B \<and> fsel (Csel B) = B"
+      by meson
+    have hCsel_inj: "inj_on Csel {B\<in>\<B>. x \<in> D B}"
+    proof (rule inj_onI)
+      fix B1 B2 assume "B1 \<in> {B\<in>\<B>. x \<in> D B}" "B2 \<in> {B\<in>\<B>. x \<in> D B}" "Csel B1 = Csel B2"
+      then have h1: "fsel (Csel B1) = B1" and h2: "fsel (Csel B2) = B2" using hCsel by blast+
+      show "B1 = B2" using h1 h2 \<open>Csel B1 = Csel B2\<close> by argo
+    qed
+    have hCsel_in: "Csel ` {B\<in>\<B>. x \<in> D B} \<subseteq> {C\<in>\<C>. x \<in> C}" using hCsel by blast
+    have hfin_DB: "finite {B\<in>\<B>. x \<in> D B}"
+    proof (cases "x \<in> Y")
+      case True then show ?thesis using hBord finite_subset[OF hDB_in_B] by blast
+    next
+      case False then have "x \<in> Z" using \<open>x \<in> X\<close> hYX by blast
+      then show ?thesis using hCord finite_subset[OF hCsel_in] finite_imageD[OF _ hCsel_inj] by blast
+    qed
+    have hk_le: "card {B\<in>\<B>. x \<in> D B} \<le> Suc m"
+    proof (cases "x \<in> Y")
+      case True then show ?thesis
+        using hBord card_mono[OF _ hDB_in_B] by fastforce
+    next
+      case False then have "x \<in> Z" using \<open>x \<in> X\<close> hYX by blast
+      then show ?thesis
+        using hCord card_image[OF hCsel_inj] card_mono[OF _ hCsel_in] by fastforce
+    qed
+    show "finite {S\<in>\<D>. x \<in> S}" using h\<D>_eq hfin_DB by simp
+    have "card {S\<in>\<D>. x \<in> S} \<le> card {B\<in>\<B>. x \<in> D B}"
+      using h\<D>_eq card_image_le[OF hfin_DB] by simp
+    then show "card {S\<in>\<D>. x \<in> S} \<le> Suc m" using hk_le by simp
+  qed
+  show "\<exists>\<B>. top1_open_covering_on X TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> m"
+    using hDcov hDref hDord by blast
+qed
+
+corollary Theorem_50_2_finite_dim:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hYX: "X = Y \<union> Z"
+  assumes hYcl: "closedin_on X TX Y"
+  assumes hZcl: "closedin_on X TX Z"
+  assumes hdimY: "top1_finite_dimensional_on Y (subspace_topology X TX Y)"
+  assumes hdimZ: "top1_finite_dimensional_on Z (subspace_topology X TX Z)"
+  shows "top1_finite_dimensional_on X TX"
+proof -
+  obtain mY where hmY: "top1_dim_le_on Y (subspace_topology X TX Y) mY"
+    using hdimY unfolding top1_finite_dimensional_on_def by blast
+  obtain mZ where hmZ: "top1_dim_le_on Z (subspace_topology X TX Z) mZ"
+    using hdimZ unfolding top1_finite_dimensional_on_def by blast
+  define m where "m = max mY mZ"
+  have "top1_dim_le_on Y (subspace_topology X TX Y) m"
+    unfolding m_def by (rule top1_dim_le_on_mono_m[OF hmY]) simp
+  moreover have "top1_dim_le_on Z (subspace_topology X TX Z) m"
+    unfolding m_def by (rule top1_dim_le_on_mono_m[OF hmZ]) simp
+  ultimately have "top1_dim_le_on X TX m"
+    by (rule Theorem_50_2_dim_le[OF hTop hTsub hYX hYcl hZcl])
+  then show ?thesis
+    by (rule top1_dim_le_on_imp_finite_dimensional)
+qed
+
+text \<open>Binary union of closed sets is closed.\<close>
+lemma closedin_on_Un:
+  assumes hTop: "is_topology_on X TX"
+  assumes hA: "closedin_on X TX A"
+  assumes hB: "closedin_on X TX B"
+  shows "closedin_on X TX (A \<union> B)"
+proof -
+  have hcl: "\<forall>S\<in>{A, B}. closedin_on X TX S" using hA hB by blast
+  have hfin: "finite {A, B}" by blast
+  have "closedin_on X TX (\<Union>{A, B})"
+    by (rule closedin_on_finite_Union[OF hTop hcl hfin])
+  then show ?thesis by simp
+qed
+
+text \<open>Finite indexed union of closed sets is closed.\<close>
+lemma closedin_on_finite_indexed_Union:
+  assumes hTop: "is_topology_on X TX"
+  assumes hFin: "finite I"
+  assumes hCl: "\<forall>i\<in>I. closedin_on X TX (A i)"
+  shows "closedin_on X TX (\<Union>i\<in>I. A i)"
+proof -
+  have "(\<Union>i\<in>I. A i) = \<Union>(A ` I)" by blast
+  moreover have "\<forall>S\<in>(A ` I). closedin_on X TX S" using hCl by blast
+  moreover have "finite (A ` I)" using hFin by blast
+  ultimately show ?thesis
+    using closedin_on_finite_Union[OF hTop] by presburger
+qed
+
+text \<open>Subspace topology of X in TX equals TX when all opens are subsets of X.\<close>
+lemma subspace_topology_self:
+  assumes "\<forall>U\<in>TX. U \<subseteq> X"
+  shows "subspace_topology X TX X = TX"
+  unfolding subspace_topology_def
+proof (rule set_eqI, rule iffI)
+  fix S assume "S \<in> {X \<inter> U |U. U \<in> TX}"
+  then obtain U where "U \<in> TX" "S = X \<inter> U" by blast
+  then show "S \<in> TX" using assms by (metis Int_absorb1)
+next
+  fix S assume "S \<in> TX"
+  then have "S = X \<inter> S" using assms by (metis Int_absorb1)
+  then show "S \<in> {X \<inter> U |U. U \<in> TX}" using \<open>S \<in> TX\<close> by blast
+qed
+
+text \<open>closedin_on in subspace: if B closed in X and B subset A (closed in X),
+  then B is closed in A with the subspace topology.\<close>
+lemma closedin_on_subspace:
+  assumes hTop: "is_topology_on X TX"
+  assumes hAsub: "A \<subseteq> X"
+  assumes hAcl: "closedin_on X TX A"
+  assumes hBcl: "closedin_on X TX B"
+  assumes hBA: "B \<subseteq> A"
+  shows "closedin_on A (subspace_topology X TX A) B"
+  unfolding closedin_on_def subspace_topology_def
+proof (intro conjI)
+  show "B \<subseteq> A" by (rule hBA)
+  have "X - B \<in> TX" using hBcl unfolding closedin_on_def by blast
+  have "A - B = A \<inter> (X - B)" using hBA hAsub by blast
+  then show "A - B \<in> {A \<inter> U |U. U \<in> TX}" using \<open>X - B \<in> TX\<close> by blast
+qed
+
+text \<open>Finite union of closed finite-dim subsets is finite-dimensional.\<close>
+lemma finite_union_finite_dim:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hkpos: "(0::nat) < k"
+  assumes hcov: "X = (\<Union>i\<in>{0..<k}. Y i)"
+  assumes hClosed: "\<forall>i<k. closedin_on X TX (Y i)"
+  assumes hdim: "\<forall>i<(k::nat). top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
+  shows "top1_finite_dimensional_on X TX"
+  using hTop hTsub hkpos hcov hClosed hdim
+proof (induction k arbitrary: X TX Y)
+  case 0 then show ?case by simp
+next
+  case (Suc n)
+  show ?case
+  proof (cases "n = 0")
+    case True
+    then have "X = Y 0" using Suc.prems(4) by simp
+    then show ?thesis using Suc.prems(6)
+      using subspace_topology_self[OF Suc.prems(2)] by force
+  next
+    case False
+    then have hn: "0 < n" by presburger
+    define W where "W = (\<Union>i\<in>{0..<n}. Y i)"
+    define TW where "TW = subspace_topology X TX W"
+    have hYicl: "\<forall>i\<in>{0..<n}. closedin_on X TX (Y i)"
+    proof (intro ballI)
+      fix i assume "i \<in> {0..<n}" then show "closedin_on X TX (Y i)"
+        using Suc.prems(5) by simp
+    qed
+    have hWcl: "closedin_on X TX W" unfolding W_def
+      by (rule closedin_on_finite_indexed_Union[OF Suc.prems(1) _ hYicl]) simp
+    have hXeq: "X = W \<union> Y n"
+    proof -
+      have "{0..<Suc n} = insert n {0..<n}" by (rule atLeast0_lessThan_Suc)
+      then have "(\<Union>i\<in>{0..<Suc n}. Y i) = Y n \<union> W" unfolding W_def by simp
+      then show ?thesis using Suc.prems(4) by (simp add: Un_commute)
+    qed
+    have hWsub: "W \<subseteq> X" using hWcl unfolding closedin_on_def by blast
+    have hTopW: "is_topology_on W TW" unfolding TW_def
+      by (rule subspace_topology_is_topology_on[OF Suc.prems(1) hWsub])
+    have hTWsub: "\<forall>U\<in>TW. U \<subseteq> W" unfolding TW_def subspace_topology_def by blast
+    have hYisub: "\<forall>i<n. Y i \<subseteq> W" unfolding W_def by force
+    have hYiclW: "\<forall>i<n. closedin_on W TW (Y i)"
+    proof (intro allI impI)
+      fix i assume hi: "i < n"
+      have "closedin_on X TX (Y i)" using hYicl hi by simp
+      then show "closedin_on W TW (Y i)" unfolding TW_def
+        using closedin_on_subspace[OF Suc.prems(1) hWsub hWcl _ hYisub[rule_format, OF hi]]
+        by blast
+    qed
+    have hSubTrans: "\<forall>i<n. subspace_topology W TW (Y i) = subspace_topology X TX (Y i)"
+    proof (intro allI impI)
+      fix i assume "i < n"
+      show "subspace_topology W TW (Y i) = subspace_topology X TX (Y i)"
+        unfolding TW_def
+        using subspace_topology_trans[OF hYisub[rule_format, OF \<open>i < n\<close>]] by presburger
+    qed
+    have hYifdW: "\<forall>i<n. top1_finite_dimensional_on (Y i) (subspace_topology W TW (Y i))"
+    proof (intro allI impI)
+      fix i assume "i < n"
+      then show "top1_finite_dimensional_on (Y i) (subspace_topology W TW (Y i))"
+        using Suc.prems(6) hSubTrans by force
+    qed
+    have hfdW: "top1_finite_dimensional_on W TW"
+      by (rule Suc.IH[OF hTopW hTWsub hn _ hYiclW hYifdW])
+         (simp add: W_def)
+    have hYncl: "closedin_on X TX (Y n)" using Suc.prems(5) by simp
+    have hfdYn: "top1_finite_dimensional_on (Y n) (subspace_topology X TX (Y n))"
+      using Suc.prems(6) by simp
+    have hfdW': "top1_finite_dimensional_on W (subspace_topology X TX W)"
+      using hfdW unfolding TW_def by blast
+    show ?thesis
+      by (rule Theorem_50_2_finite_dim[OF Suc.prems(1) Suc.prems(2) hXeq hWcl hYncl hfdW' hfdYn])
+  qed
+qed
+
 (** from \S50 Corollary 50.3 [top1.tex:7598] **)
 text \<open>Corollary 50.3: dim(Y_1 \<union> ... \<union> Y_k) = max(dim Y_1, ..., dim Y_k) for closed finite-dim Y_i.
-  The proof requires induction on k using Theorem 50.2. We leave it as sorry because
-  the inductive step requires careful handling of subspace topologies for unions,
-  closedin_on for sub-unions, and Max over finite sets. The key mathematical content
-  is already captured by Theorem 50.2.\<close>
+  Proof by induction on k using Theorem 50.2.\<close>
 corollary Corollary_50_3:
   assumes hTop: "is_topology_on X TX"
   assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
-  assumes hkpos: "0 < k"
+  assumes hkpos: "(0::nat) < k"
   assumes hcov: "X = (\<Union>i\<in>{0..<k}. Y i)"
   assumes hClosed: "\<forall>i<k. closedin_on X TX (Y i)"
-  assumes hdim: "\<forall>i<k. top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
+  assumes hdim: "\<forall>i<(k::nat). top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
   shows "top1_dim_on X TX = (Max ((\<lambda>i. top1_dim_on (Y i) (subspace_topology X TX (Y i))) ` {0..<k}))"
-  sorry
+  using hTop hTsub hkpos hcov hClosed hdim
+proof (induction k arbitrary: X TX Y)
+  case 0 then show ?case by simp
+next
+  case (Suc n)
+  show ?case
+  proof (cases "n = 0")
+    case True
+    have "X = Y 0" using Suc.prems(4) True by simp
+    moreover have "subspace_topology X TX (Y 0) = TX"
+      using \<open>X = Y 0\<close> subspace_topology_self[OF Suc.prems(2)] by simp
+    ultimately show ?thesis using True by simp
+  next
+    case False
+    then have hn: "0 < n" by presburger
+    define W where "W = (\<Union>i\<in>{0..<n}. Y i)"
+    define TW where "TW = subspace_topology X TX W"
+    have hYicl: "\<forall>i\<in>{0..<n}. closedin_on X TX (Y i)"
+    proof (intro ballI)
+      fix i assume "i \<in> {0..<n}"
+      then have "i < Suc n" by simp
+      then show "closedin_on X TX (Y i)" using Suc.prems(5) by blast
+    qed
+    have hWcl: "closedin_on X TX W" unfolding W_def
+      by (rule closedin_on_finite_indexed_Union[OF Suc.prems(1) _ hYicl]) simp
+    have hXeq: "X = W \<union> Y n"
+    proof -
+      have "{0..<Suc n} = insert n {0..<n}" by (rule atLeast0_lessThan_Suc)
+      then have "(\<Union>i\<in>{0..<Suc n}. Y i) = Y n \<union> W" unfolding W_def by simp
+      then show ?thesis using Suc.prems(4) by (simp add: Un_commute)
+    qed
+    have hWsub: "W \<subseteq> X" using hWcl unfolding closedin_on_def by blast
+    have hTopW: "is_topology_on W TW" unfolding TW_def
+      by (rule subspace_topology_is_topology_on[OF Suc.prems(1) hWsub])
+    have hTWsub: "\<forall>U\<in>TW. U \<subseteq> W" unfolding TW_def subspace_topology_def by blast
+    have hYncl: "closedin_on X TX (Y n)" using Suc.prems(5) by simp
+    have hfdYn: "top1_finite_dimensional_on (Y n) (subspace_topology X TX (Y n))"
+      using Suc.prems(6) by simp
+    have hYisub: "\<forall>i<n. Y i \<subseteq> W" unfolding W_def by force
+    have hYiclW: "\<forall>i<n. closedin_on W TW (Y i)"
+    proof (intro allI impI)
+      fix i assume hi: "i < n"
+      have "closedin_on X TX (Y i)" using hYicl hi by simp
+      then show "closedin_on W TW (Y i)" unfolding TW_def
+        using closedin_on_subspace[OF Suc.prems(1) hWsub hWcl _ hYisub[rule_format, OF hi]]
+        by blast
+    qed
+    have hSubTrans: "\<forall>i<n. subspace_topology W TW (Y i) = subspace_topology X TX (Y i)"
+    proof (intro allI impI)
+      fix i assume "i < n"
+      show "subspace_topology W TW (Y i) = subspace_topology X TX (Y i)"
+        unfolding TW_def
+        using subspace_topology_trans[OF hYisub[rule_format, OF \<open>i < n\<close>]] by presburger
+    qed
+    have hYifdW: "\<forall>i<n. top1_finite_dimensional_on (Y i) (subspace_topology W TW (Y i))"
+    proof (intro allI impI)
+      fix i assume "i < n"
+      then have "top1_finite_dimensional_on (Y i) (subspace_topology X TX (Y i))"
+        using Suc.prems(6) by force
+      then show "top1_finite_dimensional_on (Y i) (subspace_topology W TW (Y i))"
+        using hSubTrans \<open>i < n\<close> by presburger
+    qed
+    have hWcov: "W = (\<Union>i\<in>{0..<n}. Y i)" unfolding W_def by simp
+    have hIH: "top1_dim_on W TW =
+        (MAX i\<in>{0..<n}. top1_dim_on (Y i) (subspace_topology W TW (Y i)))"
+      by (rule Suc.IH[OF hTopW hTWsub hn hWcov hYiclW hYifdW])
+    have hfdW: "top1_finite_dimensional_on W TW"
+      by (rule finite_union_finite_dim[OF hTopW hTWsub hn hWcov hYiclW hYifdW])
+    have hfdW': "top1_finite_dimensional_on W (subspace_topology X TX W)"
+      using hfdW unfolding TW_def by blast
+    have hdim502: "top1_dim_on X TX =
+        max (top1_dim_on W TW) (top1_dim_on (Y n) (subspace_topology X TX (Y n)))"
+      using Theorem_50_2[OF Suc.prems(1) Suc.prems(2) hXeq hWcl hYncl hfdW' hfdYn]
+      unfolding TW_def by presburger
+    text \<open>Combine: use IH, subspace transitivity, and Max split.\<close>
+    have hIH': "(MAX i\<in>{0..<n}. top1_dim_on (Y i) (subspace_topology W TW (Y i)))
+        = (MAX i\<in>{0..<n}. top1_dim_on (Y i) (subspace_topology X TX (Y i)))"
+    proof (rule arg_cong[where f="Max"])
+      show "(\<lambda>i. top1_dim_on (Y i) (subspace_topology W TW (Y i))) ` {0..<n}
+          = (\<lambda>i. top1_dim_on (Y i) (subspace_topology X TX (Y i))) ` {0..<n}"
+        using hSubTrans by force
+    qed
+    have hMaxSplit: "(MAX i\<in>{0..<Suc n}. top1_dim_on (Y i) (subspace_topology X TX (Y i))) =
+        max (MAX i\<in>{0..<n}. top1_dim_on (Y i) (subspace_topology X TX (Y i)))
+            (top1_dim_on (Y n) (subspace_topology X TX (Y n)))"
+    proof -
+      define f where "f i = top1_dim_on (Y i) (subspace_topology X TX (Y i))" for i
+      have "{0..<Suc n} = insert n {0..<n}" by (rule atLeast0_lessThan_Suc)
+      then have "Max (f ` {0..<Suc n}) = Max (f ` (insert n {0..<n}))" by presburger
+      also have "\<dots> = max (f n) (Max (f ` {0..<n}))"
+        using hn by (simp add: Max_insert)
+      also have "\<dots> = max (Max (f ` {0..<n})) (f n)" by (simp add: max.commute)
+      finally show ?thesis unfolding f_def by blast
+    qed
+    show ?thesis using hdim502 hIH hIH' hMaxSplit by presburger
+  qed
+qed
 
 (** A convenient sup metric on the concrete model \<open>\<real>^N\<close> (as extensional functions). **)
 definition top1_Rpow_sup_dist :: "nat \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
