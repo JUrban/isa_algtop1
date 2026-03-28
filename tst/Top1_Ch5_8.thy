@@ -2407,7 +2407,56 @@ proof (intro allI impI)
         using closedin_contains_closure_early[OF hTopY hS_closed hS_dense] by order
       then show "ghat \<alpha> y \<in> ?I" using hDense hy by blast
     qed
-    text \<open>Step 9: g continuous Y to C.\<close>
+    text \<open>Step 9b: G maps Y into PiE.\<close>
+    have hG_PiE: "\<forall>y\<in>Y. G y \<in> top1_PiE J2 (\<lambda>_. ?I)"
+      unfolding G_def top1_PiE_iff using hghat_range by simp
+    text \<open>Step 9c: G continuous Y to product (unfolding to component continuity).\<close>
+    have hGcont: "top1_continuous_map_on Y TY (top1_PiE J2 (\<lambda>_. ?I))
+        (top1_product_topology_on J2 (\<lambda>_. ?I) (\<lambda>_. ?TI)) G"
+    proof -
+      have hTopI_all: "\<forall>j\<in>J2. is_topology_on ?I ?TI" using hTopI by blast
+      have hGmap: "\<forall>y\<in>Y. G y \<in> top1_PiE J2 (\<lambda>_. ?I)" using hG_PiE by blast
+      text \<open>By Theorem 19.6: G continuous iff each component continuous.\<close>
+      have hiff: "top1_continuous_map_on Y TY (top1_PiE J2 (\<lambda>_. ?I))
+          (top1_product_topology_on J2 (\<lambda>_. ?I) (\<lambda>_. ?TI)) G
+          \<longleftrightarrow> (\<forall>\<alpha>\<in>J2. top1_continuous_map_on Y TY ?I ?TI (\<lambda>y. G y \<alpha>))"
+        by (rule Theorem_19_6[OF hTopY hTopI_all hGmap])
+      text \<open>Each component (lambda y. G y alpha) = ghat alpha (on Y) with range in I.\<close>
+      have hcomp: "\<forall>\<alpha>\<in>J2. top1_continuous_map_on Y TY ?I ?TI (\<lambda>y. G y \<alpha>)"
+      proof (intro ballI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J2"
+        have hGa_eq: "\<forall>y\<in>Y. G y \<alpha> = ghat \<alpha> y" unfolding G_def using h\<alpha> by simp
+        have hga_cont: "top1_continuous_map_on Y TY UNIV order_topology_on_UNIV (ghat \<alpha>)"
+          using hghat h\<alpha> by blast
+        have hga_range: "\<forall>y\<in>Y. ghat \<alpha> y \<in> ?I" using hghat_range h\<alpha> by blast
+        text \<open>Restrict range from R to I.\<close>
+        have hTopR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+          by (rule order_topology_on_UNIV_is_topology_on)
+        have "\<forall>W fa. top1_continuous_map_on Y TY (UNIV::real set) order_topology_on_UNIV fa
+          \<and> W \<subseteq> (UNIV::real set) \<and> fa ` Y \<subseteq> W
+          \<longrightarrow> top1_continuous_map_on Y TY W (subspace_topology (UNIV::real set) order_topology_on_UNIV W) fa"
+          using Theorem_18_2(5)[OF hTopY hTopR hTopI] by blast
+        then have "top1_continuous_map_on Y TY ?I (subspace_topology (UNIV::real set) order_topology_on_UNIV ?I) (ghat \<alpha>)"
+          using hga_cont hga_range by blast
+        then have hga_I: "top1_continuous_map_on Y TY ?I ?TI (ghat \<alpha>)"
+          unfolding top1_closed_interval_topology_def by presburger
+        show "top1_continuous_map_on Y TY ?I ?TI (\<lambda>y. G y \<alpha>)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix y assume "y \<in> Y" then show "G y \<alpha> \<in> ?I" using hGa_eq hga_range by simp
+        next
+          fix V assume "V \<in> ?TI"
+          have "{y\<in>Y. G y \<alpha> \<in> V} = {y\<in>Y. ghat \<alpha> y \<in> V}" using hGa_eq by force
+          also have "\<dots> \<in> TY" using hga_I \<open>V \<in> ?TI\<close> unfolding top1_continuous_map_on_def by blast
+          finally show "{y\<in>Y. G y \<alpha> \<in> V} \<in> TY" .
+        qed
+      qed
+      show ?thesis using hiff hcomp by blast
+    qed
+    text \<open>Step 9d: G(Y) subset iota(C) via closure argument.\<close>
+    have hGimg: "G ` Y \<subseteq> \<iota> ` C"
+      sorry
+    text \<open>Step 9e: Compose with iota_inv.\<close>
     have hgcont_pf: "top1_continuous_map_on Y TY C TC g"
       sorry
     show ?thesis using hgcont_pf hgext_pf by blast
