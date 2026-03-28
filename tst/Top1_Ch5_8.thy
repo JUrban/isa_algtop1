@@ -2327,8 +2327,41 @@ proof (intro allI impI)
       by (metis h_alpha_ext)
     text \<open>Step 4: G(y)(alpha) = ghat alpha y. G(e x) = iota(f x).\<close>
     define G where "G y = (\<lambda>\<alpha>. if \<alpha> \<in> J2 then ghat \<alpha> y else undefined)" for y
-    text \<open>Step 5: G maps Y into iota(C). Then g = inv_into o G.\<close>
-    show ?thesis sorry
+    text \<open>Step 5: G(e x) = iota(f x) for x in X.\<close>
+    have hGext: "\<forall>x\<in>X. G (e x) = \<iota> (f x)"
+    proof (intro ballI ext)
+      fix x \<alpha> assume "x \<in> X"
+      show "G (e x) \<alpha> = \<iota> (f x) \<alpha>"
+      proof (cases "\<alpha> \<in> J2")
+        case True then show ?thesis unfolding G_def using hghat \<open>x \<in> X\<close> by simp
+      next
+        case False
+        have "\<iota> (f x) \<in> top1_PiE J2 (\<lambda>_. ?I)"
+          using h\<iota>C_sub hf \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by blast
+        then show ?thesis unfolding G_def top1_PiE_iff using False by simp
+      qed
+    qed
+    text \<open>Step 6: iota injective on C (from embedding).\<close>
+    have h\<iota>_inj: "inj_on \<iota> C"
+      using h\<iota>emb unfolding top1_embedding_on_def top1_homeomorphism_on_def bij_betw_def by blast
+    text \<open>Step 7: define g = inv_into C iota o G.\<close>
+    define g where "g y = inv_into C \<iota> (G y)" for y
+    text \<open>Step 8: g(e x) = f x.\<close>
+    have hgext_pf: "\<forall>x\<in>X. g (e x) = f x"
+    proof (intro ballI)
+      fix x assume "x \<in> X"
+      have "G (e x) = \<iota> (f x)" using hGext \<open>x \<in> X\<close> by blast
+      then have "g (e x) = inv_into C \<iota> (\<iota> (f x))"
+        unfolding g_def by presburger
+      also have "\<dots> = f x"
+        using inv_into_f_f[OF h\<iota>_inj] hf \<open>x \<in> X\<close>
+        unfolding top1_continuous_map_on_def by blast
+      finally show "g (e x) = f x" .
+    qed
+    text \<open>Step 9: g continuous Y to C (needs G continuous + image in iota(C) + iota_inv continuous).\<close>
+    have hgcont_pf: "top1_continuous_map_on Y TY C TC g"
+      sorry
+    show ?thesis using hgcont_pf hgext_pf by blast
   qed
   then obtain g where hgcont: "top1_continuous_map_on Y TY C TC g"
     and hgext: "\<forall>x\<in>X. g (e x) = f x" by blast
