@@ -12650,6 +12650,7 @@ lemma uniform_bounded_imp_pointwise_bounded:
   assumes hd: "top1_metric_on Y d"
   assumes hFpiE: "\<F> \<subseteq> top1_PiE X (\<lambda>_. Y)"
   assumes hFbdd: "top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>"
+  assumes hbdd_all: "\<forall>f\<in>\<F>. \<forall>g\<in>top1_PiE X (\<lambda>_. Y). bdd_above ((\<lambda>x. d (g x) (f x)) ` X)"
   shows "top1_pointwise_bounded_family_on X Y d \<F>"
   unfolding top1_pointwise_bounded_family_on_def
 proof (intro ballI)
@@ -12662,7 +12663,7 @@ proof (intro ballI)
   proof (intro ballI)
     fix f assume hf: "f \<in> \<F>"
     have hbdd_above: "bdd_above ((\<lambda>x. d (y0 x) (f x)) ` X)"
-      sorry
+      using hbdd_all hf hy0 by fast
     have "d (y0 a) (f a) \<le> top1_sup_metric_on X d y0 f"
       by (simp add: ha hbdd_above sup_metric_ge_pointwise)
     also have "\<dots> \<le> M" using hM hf by blast
