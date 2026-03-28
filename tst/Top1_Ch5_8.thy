@@ -2414,10 +2414,64 @@ proof -
     moreover have "top1_eq_on Y2 g0 id" using hg0uniq hid2 by simp
     ultimately show ?thesis unfolding top1_eq_on_def by simp
   qed
-  text \<open>f2 is a homeomorphism.\<close>
+  text \<open>f2 bijective: injective from f1 o f2 = id, surjective from f2 o f1 = id.\<close>
+  have hf2_inj: "inj_on f2 Y1"
+  proof (rule inj_onI)
+    fix x1 x2 assume "x1 \<in> Y1" "x2 \<in> Y1" "f2 x1 = f2 x2"
+    then have "(f1 \<circ> f2) x1 = (f1 \<circ> f2) x2" unfolding comp_def by simp
+    then show "x1 = x2" using hf1f2_eq_id \<open>x1 \<in> Y1\<close> \<open>x2 \<in> Y1\<close>
+      unfolding top1_eq_on_def by simp
+  qed
+  have hf2_img: "f2 ` Y1 \<subseteq> Y2"
+    using hf2cont unfolding top1_continuous_map_on_def by blast
+  have hf2_surj: "f2 ` Y1 = Y2"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> f2 ` Y1" then show "y \<in> Y2" using hf2_img by blast
+  next
+    fix y assume "y \<in> Y2"
+    have hf1y: "f1 y \<in> Y1" using hf1cont \<open>y \<in> Y2\<close> unfolding top1_continuous_map_on_def by blast
+    have "f2 (f1 y) = y"
+      using hf2f1_eq_id \<open>y \<in> Y2\<close> unfolding top1_eq_on_def comp_def by simp
+    then have "y = f2 (f1 y)" by simp
+    then show "y \<in> f2 ` Y1" using hf1y by blast
+  qed
+  have hf2_bij: "bij_betw f2 Y1 Y2"
+    using hf2_inj hf2_surj unfolding bij_betw_def by blast
+  text \<open>inv_into Y1 f2 agrees with f1 on Y2, so it's continuous.\<close>
+  have hinv_eq: "\<forall>y\<in>Y2. inv_into Y1 f2 y = f1 y"
+  proof (intro ballI)
+    fix y assume "y \<in> Y2"
+    have hf1y: "f1 y \<in> Y1" using hf1cont \<open>y \<in> Y2\<close> unfolding top1_continuous_map_on_def by blast
+    have "f2 (f1 y) = y"
+      using hf2f1_eq_id \<open>y \<in> Y2\<close> unfolding top1_eq_on_def comp_def by simp
+    then show "inv_into Y1 f2 y = f1 y"
+      using inv_into_f_eq[OF hf2_inj hf1y] by presburger
+  qed
+  have hinv_cont: "top1_continuous_map_on Y2 TY2 Y1 TY1 (inv_into Y1 f2)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix y assume "y \<in> Y2"
+    then show "inv_into Y1 f2 y \<in> Y1"
+      using hinv_eq hf1cont \<open>y \<in> Y2\<close> unfolding top1_continuous_map_on_def by simp
+  next
+    fix V assume "V \<in> TY1"
+    have heq: "{y\<in>Y2. inv_into Y1 f2 y \<in> V} = {y\<in>Y2. f1 y \<in> V}"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> {y\<in>Y2. inv_into Y1 f2 y \<in> V}"
+      then show "y \<in> {y\<in>Y2. f1 y \<in> V}" using hinv_eq by fastforce
+    next
+      fix y assume "y \<in> {y\<in>Y2. f1 y \<in> V}"
+      then show "y \<in> {y\<in>Y2. inv_into Y1 f2 y \<in> V}" using hinv_eq by fastforce
+    qed
+    have "{y\<in>Y2. f1 y \<in> V} \<in> TY2"
+      using hf1cont \<open>V \<in> TY1\<close> unfolding top1_continuous_map_on_def by blast
+    then show "{y\<in>Y2. inv_into Y1 f2 y \<in> V} \<in> TY2" using heq by presburger
+  qed
+  have hf2_homeo: "top1_homeomorphism_on Y1 TY1 Y2 TY2 f2"
+    unfolding top1_homeomorphism_on_def
+    using hTopY1 hTopY2 hf2_bij hf2cont hinv_cont by blast
   show ?thesis unfolding top1_equiv_compactification_via_on_def
-    using hf1f2_eq_id hf2f1_eq_id hf2cont hf1cont hf2ext
-    sorry
+    using hf2_homeo hf2ext by blast
 qed
 
 section \<open>\<S>39 Local Finiteness\<close>
