@@ -12603,6 +12603,19 @@ next
   qed
 qed
 
+lemma compact_metric_imp_bounded:
+  assumes hd: "top1_metric_on X d"
+  assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  shows "top1_metric_bounded_subset_on X d X"
+  sorry
+
+lemma uniform_bounded_imp_pointwise_bounded:
+  assumes hd: "top1_metric_on Y d"
+  assumes "\<F> \<subseteq> top1_PiE X (\<lambda>_. Y)"
+  assumes "top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d) \<F>"
+  shows "top1_pointwise_bounded_family_on X Y d \<F>"
+  sorry
+
 lemma equicontinuous_subset:
   assumes hEq: "top1_equicontinuous_family_on X TX Y d G"
   assumes hFG: "\<F> \<subseteq> G"
