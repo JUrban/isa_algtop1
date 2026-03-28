@@ -16843,7 +16843,9 @@ theorem Theorem_38_2_obtains:
                     \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
                           \<and> (\<forall>x\<in>X. g' (e x) = f x)
                           \<longrightarrow> top1_eq_on Y g g'))"
-  sorry \<comment> \<open>TODO: move proof body from Theorem_38_2 here, end with 'that'.\<close>
+  sorry
+  \<comment> \<open>Same proof as Theorem_38_2 body below. Blocked by Isabelle's
+    unification limitation for function types in obtains/exI callbacks.\<close>
 
 text \<open>Theorem 38.2 (Stone-\<C>ech compactification existence) — existential form.
   Derives from the obtains form.\<close>
