@@ -2130,6 +2130,47 @@ lemma closedin_contains_closure_early:
   shows "closure_on X TX A \<subseteq> C"
   unfolding closure_on_def using hC hAC by blast
 
+text \<open>Continuous image of closure is contained in closure of image.\<close>
+lemma continuous_image_closure_subset:
+  assumes hTopX: "is_topology_on X TX"
+  assumes hTopY: "is_topology_on Y TY"
+  assumes hcont: "top1_continuous_map_on X TX Y TY g"
+  assumes hA: "A \<subseteq> X"
+  shows "g ` (closure_on X TX A) \<subseteq> closure_on Y TY (g ` A)"
+proof (rule subsetI)
+  fix y assume "y \<in> g ` (closure_on X TX A)"
+  then obtain x where hxcl: "x \<in> closure_on X TX A" and hyeq: "y = g x" by blast
+  have hxX: "x \<in> X" using hxcl closure_on_subset_carrier[OF hTopX hA] by blast
+  have hyY: "y \<in> Y" using hcont hxX hyeq unfolding top1_continuous_map_on_def by blast
+  have hgA_sub: "g ` A \<subseteq> Y"
+    using hcont hA unfolding top1_continuous_map_on_def by blast
+  show "y \<in> closure_on Y TY (g ` A)"
+  proof (rule Theorem_17_5a[OF hTopY hyY hgA_sub, THEN iffD2], intro allI impI)
+    fix V assume hV: "neighborhood_of y Y TY V"
+    then have hVT: "V \<in> TY" and hyV: "y \<in> V"
+      unfolding neighborhood_of_def by blast+
+    have hpre: "{x\<in>X. g x \<in> V} \<in> TX"
+      using hcont hVT unfolding top1_continuous_map_on_def by blast
+    have hxpre: "x \<in> {x\<in>X. g x \<in> V}"
+      using hxX hyeq hyV by blast
+    have hnbd: "neighborhood_of x X TX {x\<in>X. g x \<in> V}"
+      unfolding neighborhood_of_def using hpre hxpre by blast
+    have "intersects {x\<in>X. g x \<in> V} A"
+      using Theorem_17_5a[OF hTopX hxX hA, THEN iffD1, OF hxcl, rule_format, OF hnbd]
+      by satx
+    then obtain z where "z \<in> A" "g z \<in> V" unfolding intersects_def by blast
+    then show "intersects V (g ` A)" unfolding intersects_def by blast
+  qed
+qed
+
+text \<open>Compact subspace of Hausdorff space is closed.\<close>
+lemma compact_in_hausdorff_closed:
+  assumes hHaus: "is_hausdorff_on Y TY"
+  assumes hComp: "top1_compact_on C (subspace_topology Y TY C)"
+  assumes hCY: "C \<subseteq> Y"
+  shows "closedin_on Y TY C"
+  by (rule Theorem_26_3[OF hHaus hCY hComp])
+
 (** from \S38 Theorem 38.4 (Extension to compact Hausdorff codomains) [top1.tex:5446] **)
 theorem Theorem_38_4:
   assumes hCR: "top1_completely_regular_on X TX"
@@ -2182,7 +2223,9 @@ proof (intro allI impI)
       using closedin_contains_closure_early[OF hTopY hEcl hEimg] by order
     then show "top1_eq_on Y g g'" using hDense unfolding top1_eq_on_def by blast
   qed
-  text \<open>Existence of the extension.\<close>
+  text \<open>Existence: embed C into [0,1]^J2, extend coordinate functions, assemble.\<close>
+  have hTopC: "is_topology_on C TC"
+    using hHausC unfolding is_hausdorff_on_def by blast
   have "\<exists>g. top1_continuous_map_on Y TY C TC g \<and> (\<forall>x\<in>X. g (e x) = f x)"
     sorry
   then obtain g where hgcont: "top1_continuous_map_on Y TY C TC g"
@@ -16788,11 +16831,22 @@ definition top1_SC_Y :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Ri
 definition top1_SC_TY :: "'a set \<Rightarrow> 'a set set \<Rightarrow> (('a \<Rightarrow> real) \<Rightarrow> real) set set" where
   "top1_SC_TY X TX = subspace_topology (top1_SC_Z X TX) (top1_SC_TZ X TX) (top1_SC_Y X TX)"
 
-text \<open>Theorem 38.2 (Stone-\<C>ech compactification existence).
-  Placed here after all product topology infrastructure.
-  Note: Theorem_38_2_concrete (non-existential version using top1_SC_* definitions)
-  can be proved by the same proof. The existential version has an unavoidable sorry
-  due to Isabelle's limitation with function-type existentials.\<close>
+text \<open>Theorem 38.2 (Stone-\<C>ech compactification existence) — obtains form.\<close>
+theorem Theorem_38_2_obtains:
+  assumes hCR: "top1_completely_regular_on X TX"
+  obtains Y TY e where
+    "top1_compactification_via_on X TX Y TY e"
+    "\<forall>f. top1_continuous_map_on X TX UNIV order_topology_on_UNIV f
+            \<and> top1_bounded_on X f
+            \<longrightarrow> (\<exists>g. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g
+                    \<and> (\<forall>x\<in>X. g (e x) = f x)
+                    \<and> (\<forall>g'. top1_continuous_map_on Y TY UNIV order_topology_on_UNIV g'
+                          \<and> (\<forall>x\<in>X. g' (e x) = f x)
+                          \<longrightarrow> top1_eq_on Y g g'))"
+  sorry \<comment> \<open>TODO: move proof body from Theorem_38_2 here, end with 'that'.\<close>
+
+text \<open>Theorem 38.2 (Stone-\<C>ech compactification existence) — existential form.
+  Derives from the obtains form.\<close>
 theorem Theorem_38_2:
   assumes hCR: "top1_completely_regular_on X TX"
   shows "\<exists>Y TY e.
@@ -17142,9 +17196,8 @@ proof -
                     \<and> (\<forall>g'. top1_continuous_map_on Y TYe UNIV order_topology_on_UNIV g'
                           \<and> (\<forall>x\<in>X. g' (e x) = f x)
                           \<longrightarrow> top1_eq_on Y g g')))" by blast
-  show ?thesis sorry
-    \<comment> \<open>Isabelle limitation: cannot introduce exists Y for type (('a => real) => real) set.
-      The mathematical content is fully proved above (hCompactification, hExtension, hExTY).\<close>
+  show ?thesis
+    by (rule Theorem_38_2_obtains[OF hCR]) blast
 qed
 
 lemma top1_ascoli_step1_compact_closure_pointwise:
