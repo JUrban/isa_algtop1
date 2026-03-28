@@ -2506,14 +2506,30 @@ proof (intro allI impI)
         (subspace_topology (top1_PiE J2 (\<lambda>_. ?I))
           (top1_product_topology_on J2 (\<lambda>_. ?I) (\<lambda>_. ?TI)) (\<iota> ` C))
         C TC (inv_into C \<iota>)"
-      using h\<iota>emb unfolding top1_embedding_on_def top1_homeomorphism_on_def
-      sorry
+      using h\<iota>emb unfolding top1_embedding_on_def top1_homeomorphism_on_def by blast
     text \<open>Step 9g: g = inv_into o G continuous (composition).\<close>
     text \<open>g = inv_into o G. Since G: Y to iota(C) continuous and inv_into: iota(C) to C continuous,
       composition gives g continuous.\<close>
     text \<open>g = inv_into o G continuous (composition of continuous maps).\<close>
     have hgcont_pf: "top1_continuous_map_on Y TY C TC g"
-      sorry
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix y assume "y \<in> Y"
+      then have "G y \<in> \<iota> ` C" using hGimg by blast
+      then show "g y \<in> C" unfolding g_def
+        by (metis \<open>G y \<in> \<iota> ` C\<close> inv_into_into)
+    next
+      fix V assume hV: "V \<in> TC"
+      let ?W = "{z \<in> \<iota> ` C. inv_into C \<iota> z \<in> V}"
+      have hW_open: "?W \<in> subspace_topology (top1_PiE J2 (\<lambda>_. ?I))
+          (top1_product_topology_on J2 (\<lambda>_. ?I) (\<lambda>_. ?TI)) (\<iota> ` C)"
+        using h\<iota>inv_cont hV unfolding top1_continuous_map_on_def by fast
+      have hpre: "{y\<in>Y. G y \<in> ?W} \<in> TY"
+        using hGcont_restr hW_open unfolding top1_continuous_map_on_def by fast
+      have heq: "{y\<in>Y. g y \<in> V} = {y\<in>Y. G y \<in> ?W}"
+        unfolding g_def using hGimg by fast
+      show "{y\<in>Y. g y \<in> V} \<in> TY" using heq hpre by presburger
+    qed
     show ?thesis using hgcont_pf hgext_pf by blast
   qed
   then obtain g where hgcont: "top1_continuous_map_on Y TY C TC g"
