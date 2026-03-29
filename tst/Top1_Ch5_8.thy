@@ -15957,6 +15957,7 @@ proof -
         proof (cases "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)")
           case True
           text \<open>Standard case: Sup triangle works.\<close>
+          text \<open>bdd_above: f, h ∈ C → bounded. Same as ball_eq proof.\<close>
           have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)"
             sorry
           have hvals: "\<forall>x\<in>X. g x \<in> Y \<and> f x \<in> Y \<and> h x \<in> Y"
