@@ -12765,8 +12765,10 @@ proof -
         and hU_eq: "\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>/3"
         using assms(5) hx0 heps3 unfolding top1_equicontinuous_family_on_def by blast
       have hU_sub_X: "U \<subseteq> X" sorry
-      show "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>g\<in>closure_on C Tc \<F>. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>)"
+      have "\<forall>g\<in>closure_on C Tc \<F>. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>"
         sorry
+      then show "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>g\<in>closure_on C Tc \<F>. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>)"
+        using hU_TX hx0U by blast
       qed
     qed
   qed
