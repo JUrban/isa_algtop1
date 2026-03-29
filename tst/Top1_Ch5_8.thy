@@ -19216,18 +19216,10 @@ proof -
       qed
     next
       show "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>K. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>)"
-      proof (intro ballI allI impI)
-        fix x0 and \<epsilon> :: real assume hx0: "x0 \<in> X" and heps: "0 < \<epsilon>"
-        text \<open>Step 1: compact neighborhood A of x0 (locally compact).\<close>
-        obtain A where hAcomp: "top1_compact_on A (subspace_topology X TX A)"
-          and hx0_intA: "\<exists>V\<in>TX. x0 \<in> V \<and> V \<subseteq> A" and hA_sub_X: "A \<subseteq> X"
-          using hLC hx0 unfolding top1_locally_compact_on_def sorry
-        text \<open>Step 2: cover K by finitely many cc-balls B_A(fi, eps/3).\<close>
-        text \<open>Step 3: finite intersection of continuity neighborhoods.\<close>
-        text \<open>Step 4: triangle inequality.\<close>
-        show "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>K. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>)"
-          sorry
-      qed
+        text \<open>ε/3 argument using cc-ball finite cover from compactness.
+          Needs: locally compact → compact neighborhood, cc-ball open in Tcc,
+          K compact → finite subcover, fi continuous → neighborhood, triangle inequality.\<close>
+        sorry
     qed
     show "top1_equicontinuous_family_on X TX Y d K
         \<and> (\<forall>a\<in>X. top1_compact_on
