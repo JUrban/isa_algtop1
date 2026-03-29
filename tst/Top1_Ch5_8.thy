@@ -16086,7 +16086,7 @@ proof -
     then show "W \<in> subspace_topology ?PiE ?Tu C"
       using hV_Tu unfolding subspace_topology_def by blast
   qed
-  text \<open>Symmetric: Tu|_C ⊆ Ts|_C. Same argument swapping ds/du.\<close>
+  text \<open>Symmetric: Tu|_C ⊆ Ts|_C. Same argument but simpler since du IS a metric on PiE.\<close>
   have hTu_sub: "subspace_topology ?PiE ?Tu C \<subseteq> subspace_topology ?PiE ?Ts C"
     sorry
   show ?thesis using hTs_sub hTu_sub by blast
