@@ -19244,6 +19244,7 @@ proof -
           sorry
         text \<open>Each f ∈ K is in ccball f (since d_bar(f x, f x) = 0 < δ).\<close>
         have hself_mem: "\<forall>f\<in>K. f \<in> ccball f"
+          unfolding ccball_def using hK_sub_PiE h\<delta> hd unfolding top1_metric_on_def top1_bounded_metric_def
           sorry
         text \<open>K compact in Tcc subspace → extract finite subcover.\<close>
         have hKcover: "K \<subseteq> (\<Union>f\<in>K. ccball f \<inter> K)"
@@ -19262,11 +19263,16 @@ proof -
         text \<open>Step 4: U = ∩{Ufi fi | fi ∈ Kcov} ∩ Unbhd.\<close>
         define U where "U = (\<Inter>fi\<in>Kcov. Ufi fi) \<inter> Unbhd"
         have hU_TX: "U \<in> TX"
+          unfolding U_def using hUfi hKcov_fin hUnbhd_TX hTopX
           sorry
         have hx0_U: "x0 \<in> U"
           unfolding U_def using hUfi hx0_Unbhd hKcov_fin by blast
         have hU_sub_A: "U \<subseteq> A"
-          unfolding U_def A_def using hUnbhd_sub_X sorry
+        proof -
+          have "U \<subseteq> Unbhd" unfolding U_def by blast
+          also have "Unbhd \<subseteq> A" unfolding A_def using subset_closure_on by fast
+          finally show ?thesis by satx
+        qed
         text \<open>Triangle inequality: for g ∈ K, x ∈ U, get fi with g ∈ ccball fi.
           d(g x, g x0) ≤ d(g x, fi x) + d(fi x, fi x0) + d(fi x0, g x0) < δ + ε/3 + δ ≤ ε.\<close>
         have hEqui_at_x0: "\<forall>g\<in>K. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>"
