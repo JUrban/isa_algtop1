@@ -13067,7 +13067,25 @@ proof -
         using hRHS by blast
     next
       assume "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
-      text \<open>Need: compact clF. With X = {}, PiE is singleton, C is singleton, clF is singleton.\<close>
+      text \<open>Need: compact clF. PiE {} = singleton by function extensionality.\<close>
+      have hPiE_eq: "?PiE = {(\<lambda>_. undefined)}"
+      proof
+        show "?PiE \<subseteq> {(\<lambda>_. undefined)}"
+        proof (rule subsetI)
+          fix f assume "f \<in> ?PiE"
+          then have "\<forall>i. f i = undefined" using True unfolding top1_PiE_iff by blast
+          then have "f = (\<lambda>_. undefined)" by presburger
+          then show "f \<in> {(\<lambda>_. undefined)}" by blast
+        qed
+        show "{(\<lambda>_. undefined)} \<subseteq> ?PiE"
+          unfolding top1_PiE_iff using True using top1_PiE_iff by fastforce
+      qed
+      have hPiE_fin: "finite ?PiE" using hPiE_eq by simp
+      have hC_fin: "finite ?C" using hPiE_fin hC_sub_PiE using rev_finite_subset by blast
+      have hF_eq: "\<F> = {(\<lambda>_. undefined)}"
+        using hPiE_eq hFpiE hFne by auto
+      have hclF_eq: "?clF = {(\<lambda>_. undefined)}"
+        using hF_eq hFsub_C hC_sub_PiE hPiE_eq sorry
       show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
         sorry
     qed
