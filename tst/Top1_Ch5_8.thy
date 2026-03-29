@@ -13087,13 +13087,11 @@ proof -
       have hC_eq2: "?C = {(\<lambda>_. undefined)}"
         using hC_sub_PiE hPiE_eq hF_eq hFsub_C by order
       have hF_eq_C: "\<F> = ?C" using hF_eq hC_eq2 by argo
-      text \<open>Subspace topology on singleton = discrete topology = valid topology.\<close>
-      have hTopTc: "is_topology_on ?C ?Tc"
-        sorry
-      have hclF_eq: "?clF = ?C"
-        using hF_eq_C closure_on_carrier[OF hTopTc] by argo
+      text \<open>Remaining: is_topology_on C Tc when X = {} (degenerate uniform metric).
+        The uniform metric requires X ≠ {} for metric_on, blocking topology_on.
+        Since C is a singleton, compactness holds trivially in any reasonable topology.\<close>
       show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
-        using hclF_eq sorry
+        sorry
     qed
   next
     case False
