@@ -15917,21 +15917,89 @@ proof -
     proof (intro ballI)
       fix f assume "f \<in> W"
       then have hfC: "f \<in> C" and hfU: "f \<in> U" using hW by auto
-      text \<open>f ∈ U ∈ Ts → ∃ ball_s(f,ε) ⊆ U.\<close>
-      then obtain \<epsilon>0 where heps0: "0 < \<epsilon>0" and hball0: "top1_ball_on ?PiE ?ds f \<epsilon>0 \<subseteq> U"
-        using hU_open unfolding topology_generated_by_basis_def top1_metric_basis_on_def sorry
+      text \<open>f ∈ U ∈ Ts → ∃ basis element b with f ∈ b ⊆ U.\<close>
+      obtain g r where hgPiE: "g \<in> ?PiE" and hr: "0 < r"
+        and hfball: "f \<in> top1_ball_on ?PiE ?ds g r"
+        and hball_sub: "top1_ball_on ?PiE ?ds g r \<subseteq> U"
+        using hU_open hfU unfolding topology_generated_by_basis_def top1_metric_basis_on_def
+          top1_ball_on_def by fast
+      have hds_gf: "?ds g f < r" using hfball unfolding top1_ball_on_def by force
+      define \<epsilon>0 where "\<epsilon>0 = (r - ?ds g f) / 2"
+      have heps0: "0 < \<epsilon>0" unfolding \<epsilon>0_def using hds_gf by simp
       define \<epsilon> where "\<epsilon> = min \<epsilon>0 (1/2)"
       have heps: "0 < \<epsilon>" unfolding \<epsilon>_def using heps0 by linarith
       have heps_lt1: "\<epsilon> < 1" unfolding \<epsilon>_def by linarith
-      have hball_sub: "top1_ball_on ?PiE ?ds f \<epsilon> \<subseteq> top1_ball_on ?PiE ?ds f \<epsilon>0"
-        unfolding top1_ball_on_def \<epsilon>_def by auto
+      text \<open>ball_s(f, ε) ⊆ ball_s(g, r): for h in ball_s(f,ε), ds(g,h) < r.
+        Since ε < 1, ball_s(f,ε) ∩ C = ball_u(f,ε) ∩ C (ball_eq).
+        For h ∈ ball_s(f,ε): ds(f,h) < ε. Need ds(g,h) < r.
+        For each x: d(g x, h x) ≤ d(g x, f x) + d(f x, h x) (Y-metric triangle).
+        Sup{d(g x, h x)} ≤ Sup{d(g x, f x)} + Sup{d(f x, h x)} = ds(g,f) + ds(f,h)
+        < ds(g,f) + ε ≤ ds(g,f) + ε0 = ds(g,f) + (r - ds(g,f))/2 < r.\<close>
+      have hfeps_sub_gr: "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> top1_ball_on ?PiE ?ds g r \<inter> C"
+      proof (rule subsetI)
+        fix h assume hh: "h \<in> top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C"
+        then have hhPiE: "h \<in> ?PiE" and hds_fh: "?ds f h < \<epsilon>" and hhC: "h \<in> C"
+          unfolding top1_ball_on_def by auto
+        text \<open>ds(g, h) = Sup{d(g x, h x)} ≤ Sup{d(g x, f x) + d(f x, h x)}
+          ≤ Sup{d(g x, f x)} + Sup{d(f x, h x)} = ds(g,f) + ds(f,h) < ds(g,f) + ε < r.\<close>
+        have heps_le: "\<epsilon> \<le> \<epsilon>0" unfolding \<epsilon>_def by auto
+        have hds_fh_lt: "?ds f h < \<epsilon>0" using hds_fh heps_le by linarith
+        text \<open>Sup triangle for ds. Each d(g x, h x) ≤ d(g x, f x) + d(f x, h x) by Y-metric.
+          So Sup{d(g·,h·)} ≤ Sup{d(g·,f·) + d(f·,h·)}. Two cases:
+          Case 1: bdd_above{d(g·,f·)}. Then Sup{a+b} ≤ Sup{a}+Sup{b}, giving ds(g,h) ≤ ds(g,f)+ds(f,h).
+          Case 2: ¬bdd_above{d(g·,f·)}. Then Sup = 0 (Isabelle convention), ds(g,f) = 0.
+            And ds(g,h) = Sup{d(g·,h·)}. If ¬bdd_above{d(g·,h·)}: ds(g,h) = 0 < r.
+            If bdd_above{d(g·,h·)}: each d(g x,h x) ≤ d(g x,f x)+d(f x,h x).
+            But d(g x,f x) is unbounded, so this doesn't help. However ds(g,f) = 0 < r
+            means ball_s(g,r) contains everything with finite ds to g, and ds(g,h) is either
+            ≤ ds(g,f)+ds(f,h) or 0 (convention), both < r.\<close>
+        have "?ds g h < r"
+        proof (cases "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)")
+          case True
+          text \<open>Standard case: Sup triangle works.\<close>
+          have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)"
+            sorry
+          have hvals: "\<forall>x\<in>X. g x \<in> Y \<and> f x \<in> Y \<and> h x \<in> Y"
+            using hgPiE hfC hC_sub_PiE hhPiE unfolding top1_PiE_iff by (simp add: subset_iff top1_PiE_iff)
+          have "\<forall>x\<in>X. d (g x) (h x) \<le> d (g x) (f x) + d (f x) (h x)"
+            using hd hvals unfolding top1_metric_on_def by fast
+          have hbdd_gf: "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)" using True by presburger
+          have "\<forall>x\<in>X. d (g x) (h x) \<le> ?ds g f + ?ds f h"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> X"
+            have "d (g x) (f x) \<le> ?ds g f"
+              using cSup_upper hbdd_gf hx unfolding top1_sup_metric_on_def by (metis (lifting) cSup_upper imageI)
+            moreover have "d (f x) (h x) \<le> ?ds f h"
+              using cSup_upper hbdd_fh hx unfolding top1_sup_metric_on_def by (metis (mono_tags, lifting) imageI)
+            moreover have "d (g x) (h x) \<le> d (g x) (f x) + d (f x) (h x)"
+              using hvals hx hd unfolding top1_metric_on_def by fast
+            ultimately show "d (g x) (h x) \<le> ?ds g f + ?ds f h" by linarith
+          qed
+          then have "\<forall>v \<in> (\<lambda>x. d (g x) (h x)) ` X. v \<le> ?ds g f + ?ds f h" by blast
+          then have "Sup ((\<lambda>x. d (g x) (h x)) ` X) \<le> ?ds g f + ?ds f h"
+            using cSup_least hXne by (metis (mono_tags, lifting) emptyE equals0I imageI)
+          then have "?ds g h \<le> ?ds g f + ?ds f h"
+            unfolding top1_sup_metric_on_def using hXne by presburger
+          then show ?thesis using hds_gf hds_fh_lt unfolding \<epsilon>0_def by auto
+        next
+          case False
+          text \<open>Degenerate: Sup {} convention gives ds(g,f) = 0 < r.
+            And ds(g,h) also gets convention value 0 (or bounded).\<close>
+          then have "Sup ((\<lambda>x. d (g x) (f x)) ` X) = 0"
+            sorry
+          then show ?thesis
+            unfolding top1_sup_metric_on_def sorry
+        qed
+        then show "h \<in> top1_ball_on ?PiE ?ds g r \<inter> C"
+          unfolding top1_ball_on_def using hhPiE hhC by blast
+      qed
       have hfC2: "f \<in> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
         using hfC unfolding C_def by presburger
       have hball_eq: "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C = top1_ball_on ?PiE ?du f \<epsilon> \<inter> C"
         using sup_uniform_ball_eq[OF hXne hd hTopX hCompX heps heps_lt1 hfC2] unfolding C_def by order
       have "top1_ball_on ?PiE ?du f \<epsilon> \<inter> C = top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C"
         using hball_eq by argo
-      also have "... \<subseteq> U \<inter> C" using hball_sub hball0 by fast
+      also have "... \<subseteq> U \<inter> C" using hfeps_sub_gr hball_sub by blast
       also have "... = W" using hW by fastforce
       finally show "\<exists>\<epsilon>>0. top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> W" using heps by blast
     qed
