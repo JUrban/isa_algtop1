@@ -24921,8 +24921,9 @@ corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "top1_dim_le_on X TX m"
-  text \<open>Proof: cover X by finitely many neighborhoods embeddable in R^m.
-    Each closure has dim \<le> m (Thm 50.6 + homeomorphism). Inductive use of Thm 50.2.\<close>
+  text \<open>Proof: cover X by finitely many open U_i, each homeomorphic to open in R^m.
+    cl(U_i) compact, homeomorphic to compact subset of R^m, dim \<le> m by Thm 50.6.
+    X = cl(U_1) ∪ ... ∪ cl(U_k), inductive Thm 50.2.\<close>
   sorry
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
