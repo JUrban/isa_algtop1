@@ -19244,8 +19244,23 @@ proof -
           sorry
         text \<open>Each f ∈ K is in ccball f (since d_bar(f x, f x) = 0 < δ).\<close>
         have hself_mem: "\<forall>f\<in>K. f \<in> ccball f"
-          unfolding ccball_def using hK_sub_PiE h\<delta> hd unfolding top1_metric_on_def top1_bounded_metric_def
-          sorry
+        proof (intro ballI)
+          fix f assume "f \<in> K"
+          then have hfPiE: "f \<in> ?PiE" using hK_sub_PiE by blast
+          have "\<forall>x\<in>A. top1_bounded_metric d (f x) (f x) = 0"
+          proof (intro ballI)
+            fix x assume "x \<in> A"
+            then have "x \<in> X" using hA_sub_X by blast
+            then have "f x \<in> Y" using hfPiE unfolding top1_PiE_iff by blast
+            then have "d (f x) (f x) = 0" using hd unfolding top1_metric_on_def by blast
+            then show "top1_bounded_metric d (f x) (f x) = 0" unfolding top1_bounded_metric_def by auto
+          qed
+          then have "(\<lambda>x. top1_bounded_metric d (f x) (f x)) ` A \<subseteq> {0}" by blast
+          then have "(if A = {} then (0::real) else Sup ((\<lambda>x. top1_bounded_metric d (f x) (f x)) ` A)) = 0"
+            using subset_singletonD by fastforce
+          then show "f \<in> ccball f"
+            unfolding ccball_def using hfPiE h\<delta> by auto
+        qed
         text \<open>K compact in Tcc subspace → extract finite subcover.\<close>
         have hKcover: "K \<subseteq> (\<Union>f\<in>K. ccball f \<inter> K)"
           using hself_mem by blast
