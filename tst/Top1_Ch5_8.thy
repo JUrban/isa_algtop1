@@ -16086,9 +16086,82 @@ proof -
     then show "W \<in> subspace_topology ?PiE ?Tu C"
       using hV_Tu unfolding subspace_topology_def by blast
   qed
-  text \<open>Symmetric: Tu|_C ⊆ Ts|_C. Same argument but simpler since du IS a metric on PiE.\<close>
+  text \<open>Symmetric: Tu|_C ⊆ Ts|_C. Simpler since du IS a metric on PiE.\<close>
   have hTu_sub: "subspace_topology ?PiE ?Tu C \<subseteq> subspace_topology ?PiE ?Ts C"
-    sorry
+  proof (rule subsetI)
+    fix W assume "W \<in> subspace_topology ?PiE ?Tu C"
+    then obtain V where hV: "V \<in> ?Tu" and hW: "W = C \<inter> V"
+      unfolding subspace_topology_def by blast
+    have hV_open: "V \<in> topology_generated_by_basis ?PiE (top1_metric_basis_on ?PiE ?du)"
+      using hV hTu using hV hTu top1_metric_topology_on_def by auto
+    text \<open>For f ∈ W: get ball_u(f, ε) ⊆ V from du-metric (proper metric, has ball nbhds).
+      Take ε' < 1. ball_u(f,ε')∩C = ball_s(f,ε')∩C. Union of ball_s = V' ∈ Ts. V'∩C = W.\<close>
+    have "\<forall>f\<in>W. \<exists>\<epsilon>>0. top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> W"
+    proof (intro ballI)
+      fix f assume "f \<in> W"
+      then have hfC: "f \<in> C" and hfV: "f \<in> V" using hW by auto
+      text \<open>du is metric on PiE → f ∈ V open → ∃ε. ball_u(f,ε) ⊆ V.\<close>
+      have hfPiE: "f \<in> ?PiE" using hfC hC_sub_PiE by blast
+      text \<open>du IS a metric on PiE → open sets have ball nbhds centered at any point.\<close>
+      obtain g' r' where "g' \<in> ?PiE" "0 < r'" "f \<in> top1_ball_on ?PiE ?du g' r'"
+        "top1_ball_on ?PiE ?du g' r' \<subseteq> V"
+        using hV_open hfV unfolding topology_generated_by_basis_def top1_metric_basis_on_def by fast
+      have hdu_gf: "?du g' f < r'" using \<open>f \<in> top1_ball_on ?PiE ?du g' r'\<close> unfolding top1_ball_on_def by blast
+      define \<epsilon>0 where "\<epsilon>0 = r' - ?du g' f"
+      have heps0: "0 < \<epsilon>0" unfolding \<epsilon>0_def using hdu_gf by auto
+      have hball0: "top1_ball_on ?PiE ?du f \<epsilon>0 \<subseteq> V"
+      proof (rule subsetI)
+        fix h assume "h \<in> top1_ball_on ?PiE ?du f \<epsilon>0"
+        then have "?du f h < \<epsilon>0" and "h \<in> ?PiE" unfolding top1_ball_on_def by auto
+        have "?du g' h \<le> ?du g' f + ?du f h"
+          using hdu_metric \<open>g' \<in> ?PiE\<close> hfPiE \<open>h \<in> ?PiE\<close> unfolding top1_metric_on_def by blast
+        then have "?du g' h < r'" using \<open>?du f h < \<epsilon>0\<close> unfolding \<epsilon>0_def by linarith
+        then have "h \<in> top1_ball_on ?PiE ?du g' r'"
+          unfolding top1_ball_on_def using \<open>h \<in> ?PiE\<close> by blast
+        then show "h \<in> V" using \<open>top1_ball_on ?PiE ?du g' r' \<subseteq> V\<close> by fast
+      qed
+      define \<epsilon> where "\<epsilon> = min \<epsilon>0 (1/2)"
+      have heps: "0 < \<epsilon>" unfolding \<epsilon>_def using heps0 by auto
+      have heps_lt1: "\<epsilon> < 1" unfolding \<epsilon>_def by linarith
+      have hball_u_sub: "top1_ball_on ?PiE ?du f \<epsilon> \<subseteq> top1_ball_on ?PiE ?du f \<epsilon>0"
+        unfolding top1_ball_on_def \<epsilon>_def by force
+      have hfC2: "f \<in> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+        using hfC unfolding C_def by satx
+      have hball_eq: "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C = top1_ball_on ?PiE ?du f \<epsilon> \<inter> C"
+        using sup_uniform_ball_eq[OF hXne hd hTopX hCompX heps heps_lt1 hfC2] unfolding C_def by order
+      have "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C = top1_ball_on ?PiE ?du f \<epsilon> \<inter> C"
+        using hball_eq by order
+      also have "... \<subseteq> V \<inter> C" using hball_u_sub hball0 by blast
+      also have "... = W" using hW by fastforce
+      finally show "\<exists>\<epsilon>>0. top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> W" using heps by blast
+    qed
+    then obtain ef where hef: "\<forall>f\<in>W. 0 < ef f \<and> top1_ball_on ?PiE ?ds f (ef f) \<inter> C \<subseteq> W" by metis
+    define V' where "V' = (\<Union>f\<in>W. top1_ball_on ?PiE ?ds f (ef f))"
+    have "C \<inter> V' = W"
+    proof
+      show "C \<inter> V' \<subseteq> W" unfolding V'_def using hef by blast
+      show "W \<subseteq> C \<inter> V'"
+      proof (rule subsetI)
+        fix f assume "f \<in> W"
+        then have "f \<in> C" using hW by fast
+        have hfPiE2: "f \<in> ?PiE" using \<open>f \<in> C\<close> hC_sub_PiE by blast
+        have hdu_self2: "?du f f = 0" using hdu_metric hfPiE2 unfolding top1_metric_on_def by blast
+        have "f \<in> top1_ball_on ?PiE ?ds f (ef f)"
+        proof -
+          have "0 < ef f" using hef \<open>f \<in> W\<close> by blast
+          then have "top1_ball_on ?PiE ?ds f (ef f) \<inter> C = top1_ball_on ?PiE ?du f (ef f) \<inter> C"
+            sorry
+          moreover have "f \<in> top1_ball_on ?PiE ?du f (ef f)"
+            unfolding top1_ball_on_def using hfPiE2 hdu_self2 \<open>0 < ef f\<close> by simp
+          ultimately show ?thesis using \<open>f \<in> C\<close> by blast
+        qed
+        then show "f \<in> C \<inter> V'" unfolding V'_def using \<open>f \<in> W\<close> \<open>f \<in> C\<close> by blast
+      qed
+    qed
+    moreover have "V' \<in> ?Ts" sorry
+    ultimately show "W \<in> subspace_topology ?PiE ?Ts C"
+      unfolding subspace_topology_def by blast
+  qed
   show ?thesis using hTs_sub hTu_sub by blast
 qed
 
