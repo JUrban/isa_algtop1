@@ -13022,7 +13022,17 @@ proof -
     using pointwise_bounded_subset hF_sub_clF by blast
   show ?thesis
   proof (cases "X = {}")
-    case True then show ?thesis sorry
+    case True
+    text \<open>X = {}: equicontinuity and pointwise bounded are vacuously true.\<close>
+    have hEqui: "top1_equicontinuous_family_on X TX Y d \<F>"
+      unfolding top1_equicontinuous_family_on_def using True by fast
+    have hPtBdd: "top1_pointwise_bounded_family_on X Y d \<F>"
+      unfolding top1_pointwise_bounded_family_on_def using True by blast
+    have hRHS: "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
+      using hEqui hPtBdd by argo
+    text \<open>Also need compact clF. When X = {}, PiE = {λ_. undefined} (singleton),
+      so C and clF are subsets of a singleton, hence compact.\<close>
+    show ?thesis using hRHS sorry
   next
     case False
     have hdu_metric_PiE: "top1_metric_on ?PiE ?du"
