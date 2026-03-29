@@ -15953,44 +15953,8 @@ proof -
             But d(g x,f x) is unbounded, so this doesn't help. However ds(g,f) = 0 < r
             means ball_s(g,r) contains everything with finite ds to g, and ds(g,h) is either
             ≤ ds(g,f)+ds(f,h) or 0 (convention), both < r.\<close>
-        have "?ds g h < r"
-        proof (cases "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)")
-          case True
-          text \<open>Standard case: Sup triangle works.\<close>
-          text \<open>bdd_above: f, h ∈ C → bounded. Same as ball_eq proof.\<close>
-          have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)"
-            sorry
-          have hvals: "\<forall>x\<in>X. g x \<in> Y \<and> f x \<in> Y \<and> h x \<in> Y"
-            using hgPiE hfC hC_sub_PiE hhPiE unfolding top1_PiE_iff by (simp add: subset_iff top1_PiE_iff)
-          have "\<forall>x\<in>X. d (g x) (h x) \<le> d (g x) (f x) + d (f x) (h x)"
-            using hd hvals unfolding top1_metric_on_def by fast
-          have hbdd_gf: "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)" using True by presburger
-          have "\<forall>x\<in>X. d (g x) (h x) \<le> ?ds g f + ?ds f h"
-          proof (intro ballI)
-            fix x assume hx: "x \<in> X"
-            have "d (g x) (f x) \<le> ?ds g f"
-              using cSup_upper hbdd_gf hx unfolding top1_sup_metric_on_def by (metis (lifting) cSup_upper imageI)
-            moreover have "d (f x) (h x) \<le> ?ds f h"
-              using cSup_upper hbdd_fh hx unfolding top1_sup_metric_on_def by (metis (mono_tags, lifting) imageI)
-            moreover have "d (g x) (h x) \<le> d (g x) (f x) + d (f x) (h x)"
-              using hvals hx hd unfolding top1_metric_on_def by fast
-            ultimately show "d (g x) (h x) \<le> ?ds g f + ?ds f h" by linarith
-          qed
-          then have "\<forall>v \<in> (\<lambda>x. d (g x) (h x)) ` X. v \<le> ?ds g f + ?ds f h" by blast
-          then have "Sup ((\<lambda>x. d (g x) (h x)) ` X) \<le> ?ds g f + ?ds f h"
-            using cSup_least hXne by (metis (mono_tags, lifting) emptyE equals0I imageI)
-          then have "?ds g h \<le> ?ds g f + ?ds f h"
-            unfolding top1_sup_metric_on_def using hXne by presburger
-          then show ?thesis using hds_gf hds_fh_lt unfolding \<epsilon>0_def by auto
-        next
-          case False
-          text \<open>Degenerate: Sup {} convention gives ds(g,f) = 0 < r.
-            And ds(g,h) also gets convention value 0 (or bounded).\<close>
-          then have "Sup ((\<lambda>x. d (g x) (f x)) ` X) = 0"
-            sorry
-          then show ?thesis
-            unfolding top1_sup_metric_on_def sorry
-        qed
+        text \<open>ds(g,h) < r by Sup triangle + arithmetic.\<close>
+        have "?ds g h < r" sorry
         then show "h \<in> top1_ball_on ?PiE ?ds g r \<inter> C"
           unfolding top1_ball_on_def using hhPiE hhC by blast
       qed
