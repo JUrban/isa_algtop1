@@ -12781,11 +12781,11 @@ proof -
         have "\<exists>f\<in>\<F>. du g f < \<delta>" sorry
         then obtain f where hfF: "f \<in> \<F>" and hclose: "du g f < \<delta>" by blast
         have hfPiE: "f \<in> top1_PiE X (\<lambda>_. Y)" using hfF hFsub_C2 hC_sub_PiE by blast
-        have hfx_Y: "f x \<in> Y" using hfPiE hxX unfolding top1_PiE_iff sorry
-        have hfx0_Y: "f x0 \<in> Y" using hfPiE hx0 unfolding top1_PiE_iff sorry
+        have hfx_Y: "f x \<in> Y" using hfPiE hxX unfolding top1_PiE_iff by blast
+        have hfx0_Y: "f x0 \<in> Y" using hfPiE hx0 unfolding top1_PiE_iff by blast
         text \<open>du symmetric, then pointwise bound: d(f x)(g x) < delta <= eps/3.\<close>
         have hdu_sym: "du g f = du f g" sorry
-        have hclose_fg: "du f g < \<delta>" using hclose hdu_sym sorry
+        have hclose_fg: "du f g < \<delta>" using hclose hdu_sym by simp
         have hfx_gx_d: "d (f x) (g x) < \<delta>"
           sorry
         have hfx_gx: "d (f x) (g x) < \<epsilon>/3" using hfx_gx_d hdelta_le_eps3 by linarith
