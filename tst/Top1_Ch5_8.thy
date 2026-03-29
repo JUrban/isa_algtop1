@@ -12724,6 +12724,7 @@ lemma continuous_funcs_eq_maps_metric:
 theorem Theorem_45_4:
   assumes hCompX: "top1_compact_on X TX"
   assumes hd: "top1_metric_on Y d"
+  assumes hYcomp: "top1_complete_metric_on Y d"
   assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows
     "top1_compact_on
@@ -12821,8 +12822,12 @@ proof -
       text \<open>Backward: eq + ptwise bdd -> complete + totally bounded -> compact.
         Uses: clF complete (closed in complete C, Thm 43.6c).
         clF totally bounded (Lemma 45.3 with compact Y containing all values).\<close>
+      have hC_complete: "top1_complete_metric_on ?C ?du"
+        by (simp add: False Theorem_43_6c hC_eq hTopX hYcomp hd)
+      have hclF_closed_metric: "closedin_on ?C (top1_metric_topology_on ?C ?du) ?clF"
+        by (metis hTc_is_metric hFsub_C hTopTc closure_on_closed)
       have hclF_complete2: "top1_complete_metric_on ?clF ?du"
-        sorry
+        using closed_subset_complete[OF hdu_metric_C hC_complete hclF_closed_metric] by blast
       have hclF_totB2: "top1_totally_bounded_on ?clF ?du"
         sorry
       have hclF_comp_metric2: "top1_compact_on ?clF (top1_metric_topology_on ?clF ?du)"
