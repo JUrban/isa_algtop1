@@ -13452,7 +13452,15 @@ proof -
     For W = U ∩ C with U ∈ Ts: for each f ∈ W, ∃ ball_s(f,ε) ⊆ U.
     Take ε' = min(ε, 1/2). Then ball_s(f,ε') ∩ C = ball_u(f,ε') ∩ C ⊆ U ∩ C = W.
     So ball_u(f,ε') ∩ C ⊆ W, meaning W is open in subspace(Tu, C).\<close>
-  show ?thesis sorry
+  show ?thesis
+  proof (rule equalityI)
+    text \<open>Ts|_C ⊆ Tu|_C: for W ∈ Ts|_C, write W = U ∩ C. For each f ∈ W, shrink ball to ε < 1.
+      B_s(f,ε) ∩ C = B_u(f,ε) ∩ C ⊆ U ∩ C = W. Union of B_u balls gives V ∈ Tu with V ∩ C = W.\<close>
+    show "subspace_topology ?PiE ?Ts C \<subseteq> subspace_topology ?PiE ?Tu C"
+      sorry
+    show "subspace_topology ?PiE ?Tu C \<subseteq> subspace_topology ?PiE ?Ts C"
+      sorry
+  qed
 qed
 
 (** from \S45 Corollary 45.5 [top1.tex:6679] **)
