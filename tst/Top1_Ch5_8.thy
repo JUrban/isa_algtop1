@@ -24887,9 +24887,20 @@ proof (rule exI[of _ id], intro conjI)
     fix x assume "x \<in> A"
     then show "id x \<in> top1_Rpow_set N" using hA by auto
     have "\<forall>i\<in>{0..<N}. \<bar>x i - x i\<bar> = 0" by force
-    then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} \<subseteq> {0}" by fast
-    then show "top1_Rpow_sup_dist N x (id x) < \<delta>"
-      unfolding top1_Rpow_sup_dist_def using hdelta sorry
+    then have himg0: "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} \<subseteq> {0}" by fast
+    show "top1_Rpow_sup_dist N x (id x) < \<delta>"
+    proof (cases "N = 0")
+      case True
+      then have "{0..<N} = {}" by simp
+      then have "(SUP i\<in>{0..<N}. \<bar>x i - id x i\<bar>) = (0::real)" sorry
+      then show ?thesis unfolding top1_Rpow_sup_dist_def using hdelta by presburger
+    next
+      case False
+      then have hne: "{0..<N} \<noteq> {}" by simp
+      then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} = {0}" using himg0 by force
+      then have "(SUP i\<in>{0..<N}. \<bar>x i - x i\<bar>) = (0::real)" by fastforce
+      then show ?thesis unfolding top1_Rpow_sup_dist_def using hdelta by auto
+    qed
   qed
   show "top1_general_position_in_Rpow N (id ` A)"
     unfolding top1_general_position_in_Rpow_def using hFin hA by simp
