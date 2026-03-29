@@ -13456,9 +13456,10 @@ corollary Corollary_45_5:
        \<F>
      \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
      \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
-  text \<open>Proof: Use sup_uniform_topology_eq_on_continuous to rewrite the topology,
-    then connect to Theorem_45_4. Forward: compact → closed + bounded(sup) + equicont.
-    Backward: closed + bounded(sup) + equicont → F = closure(F), ptwise bdd → compact.\<close>
+  text \<open>Proof uses sup_uniform_topology_eq to rewrite between sup and uniform topologies,
+    then Theorem_45_4 for the equicontinuity/pointwise-bounded characterization.
+    Forward: compact → closed (Hausdorff) + bounded (compact→bounded in metric) + equicont.
+    Backward: closed → F = closure(F), bounded(sup) → ptwise bdd, then Thm 45.4 → compact.\<close>
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
