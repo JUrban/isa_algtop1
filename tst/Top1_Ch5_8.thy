@@ -12740,10 +12740,12 @@ proof -
       continuous_funcs_eq_maps_metric hclF_sub_C by blast
   have hclF_vals: "\<forall>g\<in>closure_on C Tc \<F>. \<forall>x\<in>X. g x \<in> Y"
     by (metis hclF_sub_PiE subset_iff top1_PiE_iff)
-  text \<open>Core: eps/3 argument. Needs: closure in metric topology means every ball
-    intersects F. Triangle inequality gives equicontinuity.\<close>
+  have hdu_metric_PiE: "top1_metric_on ?PiE du"
+    by (simp add: assms(2,3) du_def top1_uniform_metric_is_metric)
+  have hTc_is_metric: "Tc = top1_metric_topology_on C du"
+    sorry
   show ?thesis unfolding top1_equicontinuous_family_on_def
-    using hclF_vals sorry
+    using hclF_vals assms(5) sorry
 qed
 
 lemma closure_pointwise_bounded:
