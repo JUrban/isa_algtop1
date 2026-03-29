@@ -12747,8 +12747,16 @@ proof -
   have hTc_is_metric: "Tc = top1_metric_topology_on C du"
     unfolding Tc_def
     by (rule subspace_metric_topology_eq_metric_topology[OF hdu_metric_PiE hC_sub_PiE])
+  have hFsub_C2: "\<F> \<subseteq> C" using assms(4) C_def by fast
+  have hdu_metric_C: "top1_metric_on C du" using metric_on_subset[OF hdu_metric_PiE hC_sub_PiE] by blast
+  have hTopTc: "is_topology_on C Tc" using hTc_is_metric hdu_metric_C top1_metric_topology_on_is_topology_on by blast
   show ?thesis unfolding top1_equicontinuous_family_on_def
-    using hclF_vals assms(5) sorry
+  proof (intro conjI)
+    show "\<forall>f\<in>closure_on C Tc \<F>. \<forall>x\<in>X. f x \<in> Y" using hclF_vals by blast
+  next
+    show "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>closure_on C Tc \<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>)"
+      sorry
+  qed
 qed
 
 lemma closure_pointwise_bounded:
