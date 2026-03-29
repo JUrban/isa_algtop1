@@ -12786,11 +12786,13 @@ proof -
         text \<open>du symmetric, then pointwise bound: d(f x)(g x) < delta <= eps/3.\<close>
         have hdu_sym: "du g f = du f g" sorry
         have hclose_fg: "du f g < \<delta>" using hclose hdu_sym by simp
+        have hclose_fg_unf: "top1_uniform_metric_on X d f g < \<delta>"
+          using hclose_fg unfolding du_def by argo
         have hfx_gx_d: "d (f x) (g x) < \<delta>"
-          sorry
+          by (rule uniform_metric_lt_imp_d_lt[OF assms(3) hxX hclose_fg_unf hdelta_lt1])
         have hfx_gx: "d (f x) (g x) < \<epsilon>/3" using hfx_gx_d hdelta_le_eps3 by linarith
         have hfx0_gx0_d: "d (f x0) (g x0) < \<delta>"
-          sorry
+          by (rule uniform_metric_lt_imp_d_lt[OF assms(3) hx0 hclose_fg_unf hdelta_lt1])
         have hfx0_gx0: "d (f x0) (g x0) < \<epsilon>/3" using hfx0_gx0_d hdelta_le_eps3 by linarith
         have hfx_fx0: "d (f x) (f x0) < \<epsilon>/3" using hU_eq hfF hx by blast
         text \<open>Symmetry + triangle.\<close>
