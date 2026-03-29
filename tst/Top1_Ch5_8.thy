@@ -13001,6 +13001,7 @@ theorem Theorem_45_4:
   assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   assumes hYne: "Y \<noteq> {}"
   assumes hFne: "\<F> \<noteq> {}"
+  assumes hXne: "X \<noteq> {}"
   shows
     "top1_compact_on
        (closure_on
@@ -13050,53 +13051,9 @@ proof -
     \<longrightarrow> top1_pointwise_bounded_family_on X Y d \<F>"
     using pointwise_bounded_subset hF_sub_clF by blast
   show ?thesis
-  proof (cases "X = {}")
-    case True
-    text \<open>X = {}: equicontinuity and pointwise bounded are vacuously true.\<close>
-    have hEqui: "top1_equicontinuous_family_on X TX Y d \<F>"
-      unfolding top1_equicontinuous_family_on_def using True by fast
-    have hPtBdd: "top1_pointwise_bounded_family_on X Y d \<F>"
-      unfolding top1_pointwise_bounded_family_on_def using True by blast
-    have hRHS: "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
-      using hEqui hPtBdd by argo
-    text \<open>The iff: → trivial (compact → True), ← needs compact clF.\<close>
-    show ?thesis
-    proof (rule iffI)
-      assume "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
-      then show "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
-        using hRHS by blast
-    next
-      assume "top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>"
-      text \<open>Need: compact clF. PiE {} = singleton by function extensionality.\<close>
-      have hPiE_eq: "?PiE = {(\<lambda>_. undefined)}"
-      proof
-        show "?PiE \<subseteq> {(\<lambda>_. undefined)}"
-        proof (rule subsetI)
-          fix f assume "f \<in> ?PiE"
-          then have "\<forall>i. f i = undefined" using True unfolding top1_PiE_iff by blast
-          then have "f = (\<lambda>_. undefined)" by presburger
-          then show "f \<in> {(\<lambda>_. undefined)}" by blast
-        qed
-        show "{(\<lambda>_. undefined)} \<subseteq> ?PiE"
-          unfolding top1_PiE_iff using True using top1_PiE_iff by fastforce
-      qed
-      have hPiE_fin: "finite ?PiE" using hPiE_eq by simp
-      have hC_fin: "finite ?C" using hPiE_fin hC_sub_PiE using rev_finite_subset by blast
-      have hF_eq: "\<F> = {(\<lambda>_. undefined)}"
-        using hPiE_eq hFpiE hFne by auto
-      have hC_eq2: "?C = {(\<lambda>_. undefined)}"
-        using hC_sub_PiE hPiE_eq hF_eq hFsub_C by order
-      have hF_eq_C: "\<F> = ?C" using hF_eq hC_eq2 by argo
-      text \<open>Remaining: is_topology_on C Tc when X = {} (degenerate uniform metric).
-        The uniform metric requires X ≠ {} for metric_on, blocking topology_on.
-        Since C is a singleton, compactness holds trivially in any reasonable topology.\<close>
-      show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
-        sorry
-    qed
-  next
-    case False
+  proof -
     have hdu_metric_PiE: "top1_metric_on ?PiE ?du"
-      by (rule top1_uniform_metric_is_metric[OF False hd])
+      by (rule top1_uniform_metric_is_metric[OF hXne hd])
     have hTc_is_metric: "?Tc = top1_metric_topology_on ?C ?du"
       by (rule subspace_metric_topology_eq_metric_topology[OF hdu_metric_PiE hC_sub_PiE])
     have hdu_metric_C: "top1_metric_on ?C ?du"
@@ -13158,7 +13115,7 @@ proof -
             have hdu_fig_unf: "top1_uniform_metric_on X d fi g < 1/2" using hdu_fig by presburger
             have hhalf_lt1: "(1/2::real) < 1" by simp
             have hd_fia_ga: "d (fi a) (g a) < 1/2"
-              using uniform_metric_lt_imp_d_lt[OF False ha hdu_fig_unf hhalf_lt1] by presburger
+              using uniform_metric_lt_imp_d_lt[OF hXne ha hdu_fig_unf hhalf_lt1] by presburger
             have "g \<in> ?PiE" using hg hclF_PiE by blast
             then have hga_Y: "g a \<in> Y" using ha unfolding top1_PiE_iff by blast
             have "fi \<in> ?PiE" using hfi hFcov_sub hclF_PiE by blast
@@ -13219,16 +13176,16 @@ proof -
         Uses: clF complete (closed in complete C, Thm 43.6c).
         clF totally bounded (Lemma 45.3 with compact Y containing all values).\<close>
       have hC_complete: "top1_complete_metric_on ?C ?du"
-        by (simp add: False Theorem_43_6c hC_eq hTopX hYcomp hd)
+        by (simp add: hXne Theorem_43_6c hC_eq hTopX hYcomp hd)
       have hclF_closed_metric: "closedin_on ?C (top1_metric_topology_on ?C ?du) ?clF"
         by (metis hTc_is_metric hFsub_C hTopTc closure_on_closed)
       have hclF_complete2: "top1_complete_metric_on ?clF ?du"
         using closed_subset_complete[OF hdu_metric_C hC_complete hclF_closed_metric] by blast
       text \<open>Step 2: clF equicontinuous + pointwise bounded.\<close>
       have hclF_equi2: "top1_equicontinuous_family_on X TX Y d ?clF"
-        using closure_equicontinuous[OF hTopX hd False hFsub_C _ hTX_sub] hEqPB hC_eq by blast
+        using closure_equicontinuous[OF hTopX hd hXne hFsub_C _ hTX_sub] hEqPB hC_eq by blast
       have hclF_ptbdd2: "top1_pointwise_bounded_family_on X Y d ?clF"
-        using closure_pointwise_bounded[OF hTopX hd False hFsub_C] hEqPB hC_eq by blast
+        using closure_pointwise_bounded[OF hTopX hd hXne hFsub_C] hEqPB hC_eq by blast
       text \<open>Step 3: Find compact Y' containing all values of functions in clF.
         Strategy: equicont at each a with eps=1 -> neighborhood U_a. Cover X by
         finitely many. Pointwise bounded at those finite centers -> union bounded.
