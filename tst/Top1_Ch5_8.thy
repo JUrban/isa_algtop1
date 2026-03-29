@@ -15953,8 +15953,42 @@ proof -
             But d(g x,f x) is unbounded, so this doesn't help. However ds(g,f) = 0 < r
             means ball_s(g,r) contains everything with finite ds to g, and ds(g,h) is either
             ≤ ds(g,f)+ds(f,h) or 0 (convention), both < r.\<close>
-        text \<open>ds(g,h) < r by Sup triangle + arithmetic.\<close>
-        have "?ds g h < r" sorry
+        have hvals: "\<forall>x\<in>X. g x \<in> Y \<and> f x \<in> Y \<and> h x \<in> Y"
+          using hgPiE hfC hC_sub_PiE hhPiE unfolding top1_PiE_iff by (simp add: subset_iff top1_PiE_iff)
+        have hptwise_tri: "\<forall>x\<in>X. d (g x) (h x) \<le> d (g x) (f x) + d (f x) (h x)"
+          using hd hvals unfolding top1_metric_on_def by fast
+        have "?ds g h < r"
+        proof (cases "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)")
+          case True
+          text \<open>bdd_above case: Sup triangle works.\<close>
+          have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)" sorry
+          have "\<forall>x\<in>X. d (g x) (h x) \<le> ?ds g f + ?ds f h"
+          proof (intro ballI)
+            fix x assume "x \<in> X"
+            have "d (g x) (f x) \<le> ?ds g f"
+              using sup_metric_ge_pointwise \<open>x \<in> X\<close> True by fast
+            moreover have "d (f x) (h x) \<le> ?ds f h"
+              using sup_metric_ge_pointwise \<open>x \<in> X\<close> hbdd_fh by fast
+            moreover note hptwise_tri
+            ultimately show "d (g x) (h x) \<le> ?ds g f + ?ds f h"
+              unfolding top1_sup_metric_on_def using \<open>x \<in> X\<close> by fastforce
+          qed
+          then have "\<forall>v \<in> (\<lambda>x. d (g x) (h x)) ` X. v \<le> ?ds g f + ?ds f h" by fast
+          have "(\<lambda>x. d (g x) (h x)) ` X \<noteq> {}" using hXne by blast
+          then have "Sup ((\<lambda>x. d (g x) (h x)) ` X) \<le> ?ds g f + ?ds f h"
+            using cSup_least \<open>\<forall>v \<in> (\<lambda>x. d (g x) (h x)) ` X. v \<le> ?ds g f + ?ds f h\<close> by meson
+          then have "?ds g h \<le> ?ds g f + ?ds f h"
+            unfolding top1_sup_metric_on_def using hXne by presburger
+          then show ?thesis using hds_gf hds_fh_lt unfolding \<epsilon>0_def by simp
+        next
+          case False
+          text \<open>¬bdd_above: Isabelle Sup convention gives ds(g,f) = 0.
+            If also ¬bdd_above{d(g·,h·)}: ds(g,h) = 0 < r.
+            If bdd_above{d(g·,h·)}: impossible since d(g·,h·) ≤ d(g·,f·) + bounded,
+            and d(g·,f·) unbounded → d(g·,h·) unbounded. Contradiction.\<close>
+          show ?thesis
+            unfolding top1_sup_metric_on_def using hr sorry
+        qed
         then show "h \<in> top1_ball_on ?PiE ?ds g r \<inter> C"
           unfolding top1_ball_on_def using hhPiE hhC by blast
       qed
