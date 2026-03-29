@@ -15900,7 +15900,31 @@ proof (intro conjI ballI allI impI)
   text \<open>3. Separation.\<close>
   { fix f g assume hf: "f \<in> C" and hg: "g \<in> C"
     show "top1_sup_metric_on X d f g = 0 \<longleftrightarrow> f = g"
-      sorry }
+    proof
+      assume heq: "f = g"
+      have "\<forall>x\<in>X. d (f x) (f x) = 0" using hd hvals hf unfolding top1_metric_on_def by fastforce
+      then have "(\<lambda>x. d (f x) (f x)) ` X \<subseteq> {0}" by blast
+      then have "Sup ((\<lambda>x. d (f x) (f x)) ` X) \<le> 0" sorry
+      moreover have "0 \<le> Sup ((\<lambda>x. d (f x) (f x)) ` X)"
+        using \<open>(\<lambda>x. d (f x) (f x)) ` X \<subseteq> {0}\<close> antisym hXne by fastforce
+      ultimately show "top1_sup_metric_on X d f g = 0"
+        unfolding top1_sup_metric_on_def using heq by simp
+    next
+      assume hds0: "top1_sup_metric_on X d f g = 0"
+      have hbdd_fg: "bdd_above ((\<lambda>x. d (f x) (g x)) ` X)" using hbdd hf hg by fast
+      have "\<forall>x\<in>X. d (f x) (g x) = 0"
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        have "d (f x) (g x) \<le> Sup ((\<lambda>x. d (f x) (g x)) ` X)"
+          using cSup_upper hbdd_fg \<open>x \<in> X\<close> by (metis (lifting) cSup_upper imageI)
+        also have "... = 0" using hds0 unfolding top1_sup_metric_on_def by presburger
+        finally have "d (f x) (g x) \<le> 0" by presburger
+        moreover have "0 \<le> d (f x) (g x)" using hd hvals hf hg \<open>x \<in> X\<close> unfolding top1_metric_on_def by metis
+        ultimately show "d (f x) (g x) = 0" by argo
+      qed
+      then have "\<forall>x\<in>X. f x = g x" using hd hvals hf hg unfolding top1_metric_on_def by auto
+      then show "f = g" using hf hg hC_sub_PiE unfolding top1_PiE_iff by (meson in_mono top1_PiE_fun_eqI)
+    qed }
   text \<open>4. Symmetry.\<close>
   { fix f g assume "f \<in> C" "g \<in> C"
     have "\<forall>x\<in>X. d (f x) (g x) = d (g x) (f x)"
