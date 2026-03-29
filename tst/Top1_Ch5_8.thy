@@ -15961,7 +15961,49 @@ proof -
         proof (cases "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)")
           case True
           text \<open>bdd_above case: Sup triangle works.\<close>
-          have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)" sorry
+          text \<open>bdd_above: f,h ∈ C, compact X → d(f·,h·) bounded. Same chain as in ball_eq.\<close>
+          have hbdd_fh: "bdd_above ((\<lambda>x. d (f x) (h x)) ` X)"
+          proof -
+            have hfcont: "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+              using hfC unfolding C_def top1_continuous_funcs_on_def by blast
+            have hhcont: "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) h"
+              using hhC unfolding C_def top1_continuous_funcs_on_def by blast
+            have hfX_sub: "f ` X \<subseteq> Y" using hfcont unfolding top1_continuous_map_on_def by blast
+            have hhX_sub: "h ` X \<subseteq> Y" using hhcont unfolding top1_continuous_map_on_def by blast
+            have hd_fX: "top1_metric_on (f ` X) d" using metric_on_subset[OF hd hfX_sub] by argo
+            have hfX_ne: "f ` X \<noteq> {}" using hXne by fast
+            have hfX_comp: "top1_compact_on (f ` X) (subspace_topology Y (top1_metric_topology_on Y d) (f ` X))"
+              using top1_compact_on_continuous_image[OF hCompX _ hfcont] hd top1_metric_topology_on_is_topology_on by blast
+            obtain y0f Mf where hy0f: "y0f \<in> Y" and hMf: "\<forall>y\<in>f ` X. d y0f y \<le> Mf"
+              using compact_metric_imp_bounded[OF hd_fX _ hfX_ne] hfX_comp hfX_sub
+              unfolding top1_metric_bounded_subset_on_def by (metis hd in_mono subspace_metric_topology_eq_metric_topology)
+            have hd_hX: "top1_metric_on (h ` X) d" using metric_on_subset[OF hd hhX_sub] by presburger
+            have hhX_ne: "h ` X \<noteq> {}" using hXne by fast
+            have hhX_comp: "top1_compact_on (h ` X) (subspace_topology Y (top1_metric_topology_on Y d) (h ` X))"
+              using top1_compact_on_continuous_image[OF hCompX _ hhcont] hd top1_metric_topology_on_is_topology_on by blast
+            obtain y0h Mh where hy0h: "y0h \<in> Y" and hMh: "\<forall>y\<in>h ` X. d y0h y \<le> Mh"
+              using compact_metric_imp_bounded[OF hd_hX _ hhX_ne] hhX_comp hhX_sub
+              unfolding top1_metric_bounded_subset_on_def
+              by (metis hd in_mono subspace_metric_topology_eq_metric_topology)
+            define M where "M = Mf + d y0f y0h + Mh"
+            have "\<forall>x\<in>X. d (f x) (h x) \<le> M"
+            proof (intro ballI)
+              fix x assume "x \<in> X"
+              have hfx: "f x \<in> Y" using hvals \<open>x \<in> X\<close> by blast
+              have hhx: "h x \<in> Y" using hvals \<open>x \<in> X\<close> by blast
+              have htri_Y: "\<forall>a\<in>Y. \<forall>b\<in>Y. \<forall>c\<in>Y. d a c \<le> d a b + d b c"
+                using hd unfolding top1_metric_on_def by satx
+              have "d (f x) (h x) \<le> d (f x) y0f + d y0f (h x)"
+                using htri_Y hfx hy0f hhx by blast
+              also have "d y0f (h x) \<le> d y0f y0h + d y0h (h x)"
+                using htri_Y hy0f hy0h hhx by blast
+              finally have hchain: "d (f x) (h x) \<le> d (f x) y0f + d y0f y0h + d y0h (h x)" by auto
+              have "d (f x) y0f \<le> Mf" using hMf \<open>x \<in> X\<close> hd hfx hy0f unfolding top1_metric_on_def by simp
+              moreover have "d y0h (h x) \<le> Mh" using hMh \<open>x \<in> X\<close> by fast
+              ultimately show "d (f x) (h x) \<le> M" using hchain unfolding M_def by linarith
+            qed
+            then show ?thesis unfolding bdd_above_def by fast
+          qed
           have "\<forall>x\<in>X. d (g x) (h x) \<le> ?ds g f + ?ds f h"
           proof (intro ballI)
             fix x assume "x \<in> X"
