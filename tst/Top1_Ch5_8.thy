@@ -19129,9 +19129,25 @@ proof -
       show "top1_compact_on (closure_on Y ?TY ((\<lambda>f. f a) ` K)) (subspace_topology Y ?TY (closure_on Y ?TY ((\<lambda>f. f a) ` K)))"
         using hcl_eq hKa_compact by argo
     qed
-    text \<open>Part 2: K equicontinuous. Uses restriction to compact nbhd + Lemma 45.2.\<close>
+    text \<open>Part 2: K equicontinuous.
+      Strategy: at each a, take compact A containing nbhd of a (locally compact).
+      Restrict K to C(A,Y). R = {f|A : f in K} compact in cc on C(A,Y).
+      By cc_eq_uniform_compact, R compact in uniform metric on C(A,Y).
+      By Theorem_45_1, R totally bounded. By Lemma_45_2, R equicontinuous at a.
+      Since f|A at a = f at a, K equicontinuous at a.\<close>
     have hKequi: "top1_equicontinuous_family_on X TX Y d K"
-      sorry
+      unfolding top1_equicontinuous_family_on_def
+    proof (intro conjI)
+      show "\<forall>f\<in>K. \<forall>x\<in>X. f x \<in> Y"
+      proof (intro ballI)
+        fix f x assume "f \<in> K" "x \<in> X"
+        then have "f \<in> ?PiE" using hK_sub_PiE by blast
+        then show "f x \<in> Y" using \<open>x \<in> X\<close> unfolding top1_PiE_iff by blast
+      qed
+    next
+      show "\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>K. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>)"
+        sorry
+    qed
     show "top1_equicontinuous_family_on X TX Y d K
         \<and> (\<forall>a\<in>X. top1_compact_on
                (closure_on Y ?TY ((\<lambda>f. f a) ` K))
