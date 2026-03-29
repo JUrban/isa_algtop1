@@ -12725,6 +12725,9 @@ theorem Theorem_45_4:
   assumes hCompX: "top1_compact_on X TX"
   assumes hd: "top1_metric_on Y d"
   assumes hYcomp: "top1_complete_metric_on Y d"
+  assumes hYproper: "\<forall>A\<subseteq>Y. closedin_on Y (top1_metric_topology_on Y d) A
+      \<and> top1_metric_bounded_subset_on Y d A \<longrightarrow>
+      top1_compact_on A (subspace_topology Y (top1_metric_topology_on Y d) A)"
   assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows
     "top1_compact_on
@@ -12828,6 +12831,17 @@ proof -
         by (metis hTc_is_metric hFsub_C hTopTc closure_on_closed)
       have hclF_complete2: "top1_complete_metric_on ?clF ?du"
         using closed_subset_complete[OF hdu_metric_C hC_complete hclF_closed_metric] by blast
+      text \<open>Step 2: clF equicontinuous + pointwise bounded.\<close>
+      have hclF_equi2: "top1_equicontinuous_family_on X TX Y d ?clF"
+        sorry
+      have hclF_ptbdd2: "top1_pointwise_bounded_family_on X Y d ?clF"
+        sorry
+      text \<open>Step 3: Find compact Y' containing all values of functions in clF.\<close>
+      obtain Y' where hY'sub: "Y' \<subseteq> Y"
+        and hY'comp: "top1_compact_on Y' (subspace_topology Y ?TY Y')"
+        and hclF_Y': "?clF \<subseteq> top1_PiE X (\<lambda>_. Y')"
+        sorry
+      text \<open>Step 4: clF totally bounded by Lemma 45.3 applied to Y'.\<close>
       have hclF_totB2: "top1_totally_bounded_on ?clF ?du"
         sorry
       have hclF_comp_metric2: "top1_compact_on ?clF (top1_metric_topology_on ?clF ?du)"
