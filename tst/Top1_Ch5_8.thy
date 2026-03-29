@@ -13313,6 +13313,68 @@ text \<open>On C(X,Y) with X compact, the sup and uniform metric topologies agre
   Proof sketch: d_bar = min(d,1) ≤ d, so uniform_metric ≤ sup_metric. For ε < 1,
   d < ε ⟺ d_bar < ε, so the metrics agree on small balls. Since metric topologies
   are determined by small balls, the generated topologies coincide.\<close>
+text \<open>Key helper: for ε < 1 and f,g ∈ C(X,Y), ds(f,g) < ε ⟺ du(f,g) < ε.\<close>
+lemma sup_uniform_ball_eq:
+  assumes hXne: "X \<noteq> {}"
+  assumes hd: "top1_metric_on Y d"
+  assumes hTopX: "is_topology_on X TX"
+  assumes hCompX: "top1_compact_on X TX"
+  assumes heps: "0 < \<epsilon>" and heps1: "\<epsilon> < 1"
+  assumes hfC: "f \<in> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  defines "CC \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  shows "top1_ball_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) f \<epsilon> \<inter> CC
+       = top1_ball_on (top1_PiE X (\<lambda>_. Y)) (top1_uniform_metric_on X d) f \<epsilon> \<inter> CC"
+proof -
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?ds = "top1_sup_metric_on X d"
+  let ?du = "top1_uniform_metric_on X d"
+  text \<open>← direction (uni ball ∩ C ⊆ sup ball ∩ C): du < ε < 1 → d_bar < 1 → d = d_bar → ds = du.\<close>
+  have hback: "top1_ball_on ?PiE ?du f \<epsilon> \<inter> CC \<subseteq> top1_ball_on ?PiE ?ds f \<epsilon> \<inter> CC"
+  proof (rule subsetI)
+    fix g assume hg: "g \<in> top1_ball_on ?PiE ?du f \<epsilon> \<inter> CC"
+    then have hgPiE: "g \<in> ?PiE" and hdu: "?du f g < \<epsilon>" and hgC: "g \<in> CC"
+      unfolding top1_ball_on_def by auto
+    have hdu_unf: "Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X) < \<epsilon>"
+      using hdu hXne unfolding top1_uniform_metric_on_def by presburger
+    have hbdd_bm: "bdd_above ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X)"
+      unfolding top1_bounded_metric_def by (meson bdd_above.I2 min.cobounded2)
+    have "\<forall>x\<in>X. d (f x) (g x) = top1_bounded_metric d (f x) (g x)"
+    proof (intro ballI)
+      fix x assume "x \<in> X"
+      have "top1_bounded_metric d (f x) (g x) \<in> (\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X"
+        using \<open>x \<in> X\<close> by blast
+      then have "top1_bounded_metric d (f x) (g x) \<le> Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X)"
+        using cSup_upper hbdd_bm by meson
+      then have "top1_bounded_metric d (f x) (g x) < 1" using hdu_unf heps1 by argo
+      then show "d (f x) (g x) = top1_bounded_metric d (f x) (g x)"
+        unfolding top1_bounded_metric_def by auto
+    qed
+    then have "(\<lambda>x. d (f x) (g x)) ` X = (\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X" by auto
+    then have "?ds f g < \<epsilon>" using hdu_unf unfolding top1_sup_metric_on_def by auto
+    then show "g \<in> top1_ball_on ?PiE ?ds f \<epsilon> \<inter> CC"
+      unfolding top1_ball_on_def using hgPiE hgC by blast
+  qed
+  text \<open>→ direction (sup ball ∩ C ⊆ uni ball ∩ C): ds < ε, d_bar ≤ d → Sup{d_bar} ≤ Sup{d}.\<close>
+  have hfwd: "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> CC \<subseteq> top1_ball_on ?PiE ?du f \<epsilon> \<inter> CC"
+  proof (rule subsetI)
+    fix g assume hg: "g \<in> top1_ball_on ?PiE ?ds f \<epsilon> \<inter> CC"
+    then have hgPiE: "g \<in> ?PiE" and hds: "?ds f g < \<epsilon>" and hgC: "g \<in> CC"
+      unfolding top1_ball_on_def by auto
+    text \<open>On C(X,Y) with X compact, d(f x, g x) is bounded (continuous on compact).\<close>
+    have hbdd: "bdd_above ((\<lambda>x. d (f x) (g x)) ` X)" sorry
+    have "\<forall>x\<in>X. top1_bounded_metric d (f x) (g x) \<le> d (f x) (g x)"
+      unfolding top1_bounded_metric_def by auto
+    then have "Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X) \<le> Sup ((\<lambda>x. d (f x) (g x)) ` X)"
+      using cSup_mono[OF _ hbdd] hXne sorry
+    then have "?du f g < \<epsilon>"
+      using hds hXne unfolding top1_uniform_metric_on_def top1_sup_metric_on_def by argo
+    then show "g \<in> top1_ball_on ?PiE ?du f \<epsilon> \<inter> CC"
+      unfolding top1_ball_on_def using hgPiE hgC by blast
+  qed
+  show ?thesis using hback hfwd by blast
+qed
+
+text \<open>Consequence: the sup and uniform metric topologies agree on C(X,Y) when X compact.\<close>
 lemma sup_uniform_topology_eq_on_continuous:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
@@ -13320,10 +13382,10 @@ lemma sup_uniform_topology_eq_on_continuous:
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_sup_topology_on X Y d) C
        = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d) C"
-  text \<open>Proof: d_bar = min(d,1), so for ε < 1: d < ε ⟺ d_bar < ε. On C(X,Y) with X compact,
-    continuous x ↦ d(f x, g x) attains its max, so Sup = max. Hence for ε < 1:
-    ball_sup(f,ε) ∩ C = ball_uni(f,ε) ∩ C. Since every ball contains one of radius < 1,
-    the metric topologies restricted to C coincide.\<close>
+  text \<open>Proof: By sup_uniform_ball_eq, balls of radius < 1 are the same on PiE.
+    Every point in an open set has a ball of radius < 1 around it (just shrink).
+    So the metric topologies on PiE agree for small balls → agree entirely.
+    Subspace topologies on C then also agree.\<close>
   sorry
 
 (** from \S45 Corollary 45.5 [top1.tex:6679] **)
