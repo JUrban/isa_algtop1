@@ -13365,7 +13365,13 @@ proof -
     have "\<forall>x\<in>X. top1_bounded_metric d (f x) (g x) \<le> d (f x) (g x)"
       unfolding top1_bounded_metric_def by auto
     then have "Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X) \<le> Sup ((\<lambda>x. d (f x) (g x)) ` X)"
-      using cSup_mono[OF _ hbdd] hXne sorry
+    proof -
+      have "(\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X \<noteq> {}" using hXne by blast
+      moreover have "\<forall>b \<in> (\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X.
+        \<exists>a \<in> (\<lambda>x. d (f x) (g x)) ` X. b \<le> a"
+        using \<open>\<forall>x\<in>X. top1_bounded_metric d (f x) (g x) \<le> d (f x) (g x)\<close> by blast
+      ultimately show ?thesis using cSup_mono[OF _ hbdd] by meson
+    qed
     then have "?du f g < \<epsilon>"
       using hds hXne unfolding top1_uniform_metric_on_def top1_sup_metric_on_def by argo
     then show "g \<in> top1_ball_on ?PiE ?du f \<epsilon> \<inter> CC"
