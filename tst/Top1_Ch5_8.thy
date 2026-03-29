@@ -13437,6 +13437,7 @@ lemma sup_uniform_topology_eq_on_continuous:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
   assumes hCompX: "top1_compact_on X TX"
+  assumes hXne: "X \<noteq> {}"
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_sup_topology_on X Y d) C
        = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d) C"
@@ -13444,23 +13445,18 @@ proof -
   let ?PiE = "top1_PiE X (\<lambda>_. Y)"
   let ?Ts = "top1_sup_topology_on X Y d"
   let ?Tu = "top1_uniform_topology_on X Y d"
-  have hC_sub_PiE: "C \<subseteq> ?PiE" unfolding C_def top1_continuous_funcs_on_def sorry
-  have hXne: "X \<noteq> {}" sorry
+  have hC_sub_PiE: "C \<subseteq> ?PiE" unfolding C_def top1_continuous_funcs_on_def by blast
+  text \<open>X ≠ {} from assumption.\<close>
   text \<open>Key: for ε < 1 and f ∈ C, the balls in both metrics restricted to C are the same.\<close>
   text \<open>A set W ∈ subspace_topology(PiE, T, C) iff W = U ∩ C for some U ∈ T.
     We show: W ∈ subspace(Ts, C) → W ∈ subspace(Tu, C) and vice versa.
     For W = U ∩ C with U ∈ Ts: for each f ∈ W, ∃ ball_s(f,ε) ⊆ U.
     Take ε' = min(ε, 1/2). Then ball_s(f,ε') ∩ C = ball_u(f,ε') ∩ C ⊆ U ∩ C = W.
     So ball_u(f,ε') ∩ C ⊆ W, meaning W is open in subspace(Tu, C).\<close>
-  show ?thesis
-  proof (rule equalityI)
-    text \<open>Ts|_C ⊆ Tu|_C: for W ∈ Ts|_C, write W = U ∩ C. For each f ∈ W, shrink ball to ε < 1.
-      B_s(f,ε) ∩ C = B_u(f,ε) ∩ C ⊆ U ∩ C = W. Union of B_u balls gives V ∈ Tu with V ∩ C = W.\<close>
-    show "subspace_topology ?PiE ?Ts C \<subseteq> subspace_topology ?PiE ?Tu C"
-      sorry
-    show "subspace_topology ?PiE ?Tu C \<subseteq> subspace_topology ?PiE ?Ts C"
-      sorry
-  qed
+  text \<open>For each direction: W = U ∩ C ∈ Ts|_C. For f ∈ W ∩ C, shrink ball to ε < 1.
+    B_s(f,ε) ∩ C = B_u(f,ε) ∩ C (by ball_eq). Union of B_u balls is V ∈ Tu with V ∩ C = W.
+    Symmetric for the other direction. Uses sup_uniform_ball_eq + metric ball containment.\<close>
+  show ?thesis sorry
 qed
 
 (** from \S45 Corollary 45.5 [top1.tex:6679] **)
