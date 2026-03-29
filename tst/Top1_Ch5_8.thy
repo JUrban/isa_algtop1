@@ -12742,8 +12742,11 @@ proof -
     by (metis hclF_sub_PiE subset_iff top1_PiE_iff)
   have hdu_metric_PiE: "top1_metric_on ?PiE du"
     by (simp add: assms(2,3) du_def top1_uniform_metric_is_metric)
+  have hC_sub_PiE: "C \<subseteq> ?PiE"
+    unfolding C_def top1_continuous_funcs_on_def by fast
   have hTc_is_metric: "Tc = top1_metric_topology_on C du"
-    sorry
+    unfolding Tc_def
+    by (rule subspace_metric_topology_eq_metric_topology[OF hdu_metric_PiE hC_sub_PiE])
   show ?thesis unfolding top1_equicontinuous_family_on_def
     using hclF_vals assms(5) sorry
 qed
