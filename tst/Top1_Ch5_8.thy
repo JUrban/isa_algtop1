@@ -12831,9 +12831,9 @@ proof -
       have hclF_totB2: "top1_totally_bounded_on ?clF ?du"
         sorry
       have hclF_comp_metric2: "top1_compact_on ?clF (top1_metric_topology_on ?clF ?du)"
-        using Theorem_45_1[OF hdu_metric_clF] hclF_complete2 hclF_totB2 sorry
+        using Theorem_45_1[OF hdu_metric_clF] hclF_complete2 hclF_totB2 by blast
       show "top1_compact_on ?clF (subspace_topology ?C ?Tc ?clF)"
-        using hclF_comp_metric2 hSub_clF_metric sorry
+        using hclF_comp_metric2 hSub_clF_metric by argo
     qed
   qed
 qed
