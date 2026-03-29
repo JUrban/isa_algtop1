@@ -13361,7 +13361,59 @@ proof -
     then have hgPiE: "g \<in> ?PiE" and hds: "?ds f g < \<epsilon>" and hgC: "g \<in> CC"
       unfolding top1_ball_on_def by auto
     text \<open>On C(X,Y) with X compact, d(f x, g x) is bounded (continuous on compact).\<close>
-    have hbdd: "bdd_above ((\<lambda>x. d (f x) (g x)) ` X)" sorry
+    have hbdd: "bdd_above ((\<lambda>x. d (f x) (g x)) ` X)"
+    proof -
+      text \<open>f,g continuous on compact X → images compact → bounded.\<close>
+      have hfC: "f \<in> CC" using hgC hfC using hfC hgC CC_def by fastforce
+      have hfcont: "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) f"
+        using hfC unfolding CC_def top1_continuous_funcs_on_def by auto
+      have hfX_comp: "top1_compact_on (f ` X) (subspace_topology Y (top1_metric_topology_on Y d) (f ` X))"
+        using top1_compact_on_continuous_image[OF hCompX _ hfcont] hd top1_metric_topology_on_is_topology_on by fast
+      have hfX_ne: "f ` X \<noteq> {}" using hXne by blast
+      have hfX_sub: "f ` X \<subseteq> Y" using hfcont unfolding top1_continuous_map_on_def by fastforce
+      have hd_fX: "top1_metric_on (f ` X) d" using metric_on_subset[OF hd hfX_sub] by presburger
+      have "top1_metric_bounded_subset_on (f ` X) d (f ` X)"
+        by (metis hfX_comp hd hfX_sub compact_metric_imp_bounded hd_fX hfX_ne subspace_metric_topology_eq_metric_topology)
+      then have "top1_metric_bounded_subset_on Y d (f ` X)"
+        unfolding top1_metric_bounded_subset_on_def using hfX_sub by blast
+      then obtain y0f Mf where hy0f: "y0f \<in> Y" and hMf: "\<forall>y\<in>f ` X. d y0f y \<le> Mf"
+        unfolding top1_metric_bounded_subset_on_def by fast
+      have hgcont: "top1_continuous_map_on X TX Y (top1_metric_topology_on Y d) g"
+        using hgC unfolding CC_def top1_continuous_funcs_on_def by simp
+      have hgX_sub: "g ` X \<subseteq> Y" using hgcont unfolding top1_continuous_map_on_def by blast
+      have hd_gX: "top1_metric_on (g ` X) d" using metric_on_subset[OF hd hgX_sub] by presburger
+      have hgX_ne: "g ` X \<noteq> {}" using hXne by blast
+      have hgX_comp: "top1_compact_on (g ` X) (subspace_topology Y (top1_metric_topology_on Y d) (g ` X))"
+        using top1_compact_on_continuous_image[OF hCompX _ hgcont] hd top1_metric_topology_on_is_topology_on by blast
+      have "top1_metric_bounded_subset_on (g ` X) d (g ` X)"
+        by (metis hgX_comp hd hgX_sub compact_metric_imp_bounded hd_gX hgX_ne subspace_metric_topology_eq_metric_topology)
+      then have "top1_metric_bounded_subset_on Y d (g ` X)"
+        unfolding top1_metric_bounded_subset_on_def using hgX_sub by blast
+      then obtain y0g Mg where hy0g: "y0g \<in> Y" and hMg: "\<forall>y\<in>g ` X. d y0g y \<le> Mg"
+        unfolding top1_metric_bounded_subset_on_def by fast
+      text \<open>d(f x, g x) ≤ d(f x, y0f) + d(y0f, y0g) + d(y0g, g x) ≤ Mf + d(y0f,y0g) + Mg.\<close>
+      define M where "M = Mf + d y0f y0g + Mg"
+      have "\<forall>x\<in>X. d (f x) (g x) \<le> M"
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        have hfx_Y: "f x \<in> Y" using hfX_sub \<open>x \<in> X\<close> by blast
+        have hgx_Y: "g x \<in> Y" using hgX_sub \<open>x \<in> X\<close> by blast
+        have htri: "\<forall>a\<in>Y. \<forall>b\<in>Y. \<forall>c\<in>Y. d a c \<le> d a b + d b c"
+          using hd unfolding top1_metric_on_def by presburger
+        have "d (f x) (g x) \<le> d (f x) y0f + d y0f (g x)"
+          using htri hfx_Y hy0f hgx_Y by blast
+        also have "d y0f (g x) \<le> d y0f y0g + d y0g (g x)"
+          using htri hy0f hy0g hgx_Y by blast
+        finally have htri_chain: "d (f x) (g x) \<le> d (f x) y0f + d y0f y0g + d y0g (g x)"
+          by simp
+        have hdfx: "d (f x) y0f \<le> Mf"
+          using hMf \<open>x \<in> X\<close> metric_sym[OF hd hfx_Y hy0f] by force
+        have hdgx: "d y0g (g x) \<le> Mg"
+          using hMg \<open>x \<in> X\<close> by fast
+        show "d (f x) (g x) \<le> M" unfolding M_def using htri_chain hdfx hdgx by argo
+      qed
+      then show ?thesis unfolding bdd_above_def by blast
+    qed
     have "\<forall>x\<in>X. top1_bounded_metric d (f x) (g x) \<le> d (f x) (g x)"
       unfolding top1_bounded_metric_def by auto
     then have "Sup ((\<lambda>x. top1_bounded_metric d (f x) (g x)) ` X) \<le> Sup ((\<lambda>x. d (f x) (g x)) ` X)"
