@@ -13440,11 +13440,20 @@ lemma sup_uniform_topology_eq_on_continuous:
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_sup_topology_on X Y d) C
        = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d) C"
-  text \<open>Proof: By sup_uniform_ball_eq, balls of radius < 1 are the same on PiE.
-    Every point in an open set has a ball of radius < 1 around it (just shrink).
-    So the metric topologies on PiE agree for small balls → agree entirely.
-    Subspace topologies on C then also agree.\<close>
-  sorry
+proof -
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?Ts = "top1_sup_topology_on X Y d"
+  let ?Tu = "top1_uniform_topology_on X Y d"
+  have hC_sub_PiE: "C \<subseteq> ?PiE" unfolding C_def top1_continuous_funcs_on_def sorry
+  have hXne: "X \<noteq> {}" sorry
+  text \<open>Key: for ε < 1 and f ∈ C, the balls in both metrics restricted to C are the same.\<close>
+  text \<open>A set W ∈ subspace_topology(PiE, T, C) iff W = U ∩ C for some U ∈ T.
+    We show: W ∈ subspace(Ts, C) → W ∈ subspace(Tu, C) and vice versa.
+    For W = U ∩ C with U ∈ Ts: for each f ∈ W, ∃ ball_s(f,ε) ⊆ U.
+    Take ε' = min(ε, 1/2). Then ball_s(f,ε') ∩ C = ball_u(f,ε') ∩ C ⊆ U ∩ C = W.
+    So ball_u(f,ε') ∩ C ⊆ W, meaning W is open in subspace(Tu, C).\<close>
+  show ?thesis sorry
+qed
 
 (** from \S45 Corollary 45.5 [top1.tex:6679] **)
 corollary Corollary_45_5:
