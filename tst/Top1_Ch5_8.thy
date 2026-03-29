@@ -24880,7 +24880,30 @@ lemma Lemma_50_4:
   shows "\<exists>f. inj_on f A
         \<and> (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
         \<and> top1_general_position_in_Rpow N (f ` A)"
-  sorry
+proof (rule exI[of _ id], intro conjI)
+  show "inj_on id A" by simp
+  show "\<forall>x\<in>A. id x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (id x) < \<delta>"
+  proof (intro ballI conjI)
+    fix x assume "x \<in> A"
+    then show "id x \<in> top1_Rpow_set N" using hA by auto
+    have "\<forall>i\<in>{0..<N}. \<bar>x i - x i\<bar> = 0" by force
+    then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} \<subseteq> {0}" by fast
+    then have "Sup ((\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N}) \<le> 0"
+    proof (cases "N = 0")
+      case True then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} = {}" by simp
+      then show ?thesis sorry
+    next
+      case False
+      then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} = {0}" using False by fastforce
+      then show ?thesis by force
+    qed
+    then have "top1_Rpow_sup_dist N x x \<le> 0"
+      unfolding top1_Rpow_sup_dist_def by presburger
+    then show "top1_Rpow_sup_dist N x (id x) < \<delta>" using hdelta by force
+  qed
+  show "top1_general_position_in_Rpow N (id ` A)"
+    unfolding top1_general_position_in_Rpow_def using hFin hA by simp
+qed
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 theorem Theorem_50_5:
