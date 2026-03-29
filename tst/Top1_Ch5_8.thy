@@ -12724,6 +12724,7 @@ lemma closure_equicontinuous:
   assumes "is_topology_on X TX" "top1_metric_on Y d" "X \<noteq> {}"
   assumes "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   assumes "top1_equicontinuous_family_on X TX Y d \<F>"
+  assumes "\<forall>U\<in>TX. U \<subseteq> X"
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   defines "du \<equiv> top1_uniform_metric_on X d"
   defines "Tc \<equiv> subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_metric_topology_on (top1_PiE X (\<lambda>_. Y)) du) C"
@@ -12764,7 +12765,7 @@ proof -
       obtain U where hU_TX: "U \<in> TX" and hx0U: "x0 \<in> U"
         and hU_eq: "\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>/3"
         using assms(5) hx0 heps3 unfolding top1_equicontinuous_family_on_def by blast
-      have hU_sub_X: "U \<subseteq> X" sorry
+      have hU_sub_X: "U \<subseteq> X" using assms(6) hU_TX by blast
       have "\<forall>g\<in>closure_on C Tc \<F>. \<forall>x\<in>U. d (g x) (g x0) < \<epsilon>"
       proof (intro ballI)
         fix g x assume hg: "g \<in> closure_on C Tc \<F>" and hx: "x \<in> U"
@@ -12952,7 +12953,7 @@ proof -
         using closed_subset_complete[OF hdu_metric_C hC_complete hclF_closed_metric] by blast
       text \<open>Step 2: clF equicontinuous + pointwise bounded.\<close>
       have hclF_equi2: "top1_equicontinuous_family_on X TX Y d ?clF"
-        using closure_equicontinuous[OF hTopX hd False hFsub_C] hEqPB hC_eq by blast
+        using closure_equicontinuous[OF hTopX hd False hFsub_C] hEqPB hC_eq sorry
       have hclF_ptbdd2: "top1_pointwise_bounded_family_on X Y d ?clF"
         using closure_pointwise_bounded[OF hTopX hd False hFsub_C] hEqPB hC_eq by blast
       text \<open>Step 3: Find compact Y' containing all values of functions in clF.\<close>
