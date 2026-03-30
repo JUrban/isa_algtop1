@@ -25756,8 +25756,20 @@ lemma top1_Rpow_sq_metric_is_metric:
 
 lemma Rpow_sq_metric_eq_square_metric:
   shows "top1_Rpow_sq_metric N x y = top1_square_metric_real_on {0..<N} x y"
-  unfolding top1_Rpow_sq_metric_def top1_square_metric_real_on_def
-  sorry
+proof (cases "N = 0")
+  case True
+  then show ?thesis unfolding top1_Rpow_sq_metric_def top1_square_metric_real_on_def sorry
+next
+  case False
+  have hfin: "finite ((\<lambda>i. abs (x i - y i)) ` {0..<N})" by blast
+  have hne: "((\<lambda>i. abs (x i - y i)) ` {0..<N}) \<noteq> {}" using False by force
+  have hset_eq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. abs (x i - y i)) ` {0..<N}"
+    by force
+  have "Max {abs (x i - y i) | i. i < N} = Sup ((\<lambda>i. abs (x i - y i)) ` {0..<N})"
+    using cSup_eq_Max[OF hfin hne] hset_eq by presburger
+  then show ?thesis unfolding top1_Rpow_sq_metric_def top1_square_metric_real_on_def
+    using False by presburger
+qed
 
 lemma top1_Rpow_topology_eq_sq_metric:
   shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
