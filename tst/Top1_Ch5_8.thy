@@ -25385,8 +25385,17 @@ next
         then show "y \<in> top1_ball_on X d x0 \<delta>"
           unfolding top1_ball_on_def using hyX by blast
       qed
-      text \<open>δ ≤ f(x0) ≤ d(x0, C_m) for some A_m ∈ F. Then ball(x0,δ) ⊆ A_m.\<close>
-      obtain Am where hAm: "Am \<in> F" and hball_sub: "top1_ball_on X d x0 \<delta> \<subseteq> Am"
+      text \<open>δ ≤ f(x0) ≤ max d(x0, C_i) = d(x0, C_m). Then ball(x0,δ) ⊆ A_m.\<close>
+      have hf_x0: "\<delta> \<le> leb_f x0" using hd_min hx0X sorry
+      text \<open>leb_f(x0) = average ≤ max. Get Am ∈ F maximizing d(x0, C(Am)).\<close>
+      obtain Am where hAm: "Am \<in> F" and hmax: "dist_set (C Am) x0 = Max ((\<lambda>A. dist_set (C A) x0) ` F)"
+        sorry
+      have "leb_f x0 \<le> dist_set (C Am) x0"
+        sorry
+      then have hdelta_le_dist: "\<delta> \<le> dist_set (C Am) x0"
+        using hf_x0 sorry
+      text \<open>d(x0, C(Am)) ≤ δ means ball(x0, δ) ∩ C(Am) = ∅, so ball ⊆ Am.\<close>
+      have hball_sub: "top1_ball_on X d x0 \<delta> \<subseteq> Am"
         sorry
       have "Am \<in> \<A>" using hAm hFA by blast
       then show "\<exists>U\<in>\<A>. B \<subseteq> U" using hB_in_ball hball_sub by blast
