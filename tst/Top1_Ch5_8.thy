@@ -25511,13 +25511,20 @@ next
       show "dist_set (C A) x \<le> d x y + dist_set (C A) y"
         using dist_to_set_lipschitz[OF hd _ _ hxX2 hyX2]
         hCA_sub_global hCA_ne_global \<open>A \<in> F\<close>
-        unfolding dist_set_def sorry
+        unfolding dist_set_def by simp
     qed
     then have "(\<Sum>A\<in>F. dist_set (C A) x) \<le> (\<Sum>A\<in>F. d x y + dist_set (C A) y)"
       by (simp add: sum_mono)
-    also have "... = card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)" sorry
-    finally have "(\<Sum>A\<in>F. dist_set (C A) x) \<le> card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)" .
-    then show "leb_f x \<le> d x y + leb_f y" unfolding leb_f_def sorry
+    also have "... = card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)"
+      by (simp add: sum.distrib)
+    finally have hsum_ineq: "(\<Sum>A\<in>F. dist_set (C A) x) \<le> card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)" .
+    have hcR: "(0::real) < real (card F)" using hFfin hFne by fastforce
+    have "(\<Sum>A\<in>F. dist_set (C A) x) / real (card F) \<le>
+          (real (card F) * d x y + (\<Sum>A\<in>F. dist_set (C A) y)) / real (card F)"
+      using divide_right_mono[OF hsum_ineq] hcR by simp
+    also have "... = d x y + (\<Sum>A\<in>F. dist_set (C A) y) / real (card F)"
+      using hcR by (simp add: add_divide_distrib)
+    finally show "leb_f x \<le> d x y + leb_f y" unfolding leb_f_def by blast
   qed
   have hleb_lip: "\<forall>x\<in>X. \<forall>y\<in>X. \<bar>leb_f x - leb_f y\<bar> \<le> d x y"
   proof (intro ballI)
