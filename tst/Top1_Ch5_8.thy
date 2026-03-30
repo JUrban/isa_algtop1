@@ -25827,7 +25827,21 @@ proof (rule subsetI)
     sorry
   define n :: "nat \<Rightarrow> int" where "n = (\<lambda>i. \<lfloor>x i - real k / real (Suc N)\<rfloor>)"
   have "x \<in> RN_shifted_cube N k n"
-    unfolding RN_shifted_cube_def n_def sorry
+    unfolding RN_shifted_cube_def n_def
+  proof (intro CollectI conjI allI impI)
+    show "x \<in> top1_Rpow_set N" using hx .
+    fix i assume "i < N"
+    define s where "s = real k / real (Suc N)"
+    have hni: "x i - s \<noteq> of_int \<lfloor>x i - s\<rfloor>"
+      by (metis \<open>i < N\<close> hgood s_def diff_add_cancel)
+    have "of_int \<lfloor>x i - s\<rfloor> \<le> x i - s" by linarith
+    then have "of_int \<lfloor>x i - s\<rfloor> < x i - s" using hni by linarith
+    then show "real_of_int \<lfloor>x i - real k / real (Suc N)\<rfloor> + real k / real (Suc N) < x i"
+      unfolding s_def by linarith
+    have "x i - s < of_int \<lfloor>x i - s\<rfloor> + 1" by simp
+    then show "x i < real_of_int \<lfloor>x i - real k / real (Suc N)\<rfloor> + real k / real (Suc N) + 1"
+      unfolding s_def by linarith
+  qed
   then have "x \<in> \<Union>(RN_grid_family N k)" unfolding RN_grid_family_def by blast
   then show "x \<in> \<Union>(RN_grid_covering N)" unfolding RN_grid_covering_def using hk by blast
 qed
