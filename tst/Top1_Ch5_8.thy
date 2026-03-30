@@ -25369,7 +25369,18 @@ next
       then have "y \<notin> top1_ball_on X d x \<epsilon>" using hball by blast
       then show "d x y \<ge> \<epsilon>" unfolding top1_ball_on_def using \<open>y \<in> X\<close> by simp
     qed
-    have hCAi_ne: "C Ai \<noteq> {}" unfolding C_def using hXnotA hAi hFA sorry
+    have hAi_sub_X: "Ai \<subseteq> X"
+      using hAi_open unfolding top1_metric_topology_on_def topology_generated_by_basis_def by blast
+    have hCAi_ne: "C Ai \<noteq> {}"
+    proof -
+      have "Ai \<noteq> X"
+      proof
+        assume "Ai = X"
+        then have "X \<in> \<A>" using hFA hAi by auto
+        then show False using hXnotA by auto
+      qed
+      then show ?thesis unfolding C_def using hAi_sub_X by blast
+    qed
     have hdist_ge: "dist_set (C Ai) x \<ge> \<epsilon>"
     proof -
       have "{d x y | y. y \<in> C Ai} \<noteq> {}" using hCAi_ne by blast
@@ -25381,8 +25392,12 @@ next
     then have hdist_pos: "dist_set (C Ai) x > 0" using hep by argo
     have hnn: "\<forall>A\<in>F. dist_set (C A) x \<ge> 0"
       sorry
-    show "leb_f x > 0"
-      sorry
+    have "dist_set (C Ai) x \<le> (\<Sum>A\<in>F. dist_set (C A) x)"
+      by (meson hAi hFfin hnn sum_nonneg_leq_bound)
+    then have hsum_pos: "(\<Sum>A\<in>F. dist_set (C A) x) > 0"
+      using hdist_pos by linarith
+    show "leb_f x > 0" unfolding leb_f_def
+      using hsum_pos hFfin hFne card_0_eq by fastforce
   qed
   text \<open>Step 4: leb_f continuous → attains minimum δ > 0 on compact X.\<close>
   have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
