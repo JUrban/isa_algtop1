@@ -25323,6 +25323,15 @@ text \<open>Diameter of a subset in a metric space.\<close>
 definition top1_metric_diam_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> real" where
   "top1_metric_diam_on X d A = Sup {d x y | x y. x \<in> A \<and> y \<in> A}"
 
+text \<open>Distance to a set is continuous (1-Lipschitz).
+  For metric d, dist_set(S,x) = Inf{d(x,y)|y∈S} is continuous in x.\<close>
+lemma dist_to_set_continuous:
+  assumes hd: "top1_metric_on X d"
+  assumes hSne: "S \<subseteq> X" "S \<noteq> {}"
+  defines "f \<equiv> (\<lambda>x. Inf {d x y | y. y \<in> S})"
+  shows "top1_continuous_map_on X (top1_metric_topology_on X d) UNIV (order_topology_on_UNIV::real set set) f"
+  sorry
+
 text \<open>Lebesgue number lemma (27.5): For a compact metric space and open covering,
   there exists δ > 0 such that every subset of diameter < δ is in some cover element.\<close>
 lemma top1_lebesgue_number:
