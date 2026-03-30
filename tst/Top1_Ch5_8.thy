@@ -25373,7 +25373,24 @@ next
       have hx0X: "x0 \<in> X" by (metis hx0 hBX subsetD)
       text \<open>B ⊆ δ-ball(x0) since diam(B) < δ.\<close>
       have hbdd_B: "bdd_above {d a b | a b. a \<in> B \<and> b \<in> B}"
-        sorry
+      proof -
+        have "top1_metric_bounded_subset_on X d X"
+          using compact_metric_imp_bounded[OF hd hComp hXne] by blast
+        then obtain cb Mb where hcbX: "cb \<in> X" and hMb: "\<forall>y\<in>X. d cb y \<le> Mb"
+          by (metis top1_metric_bounded_subset_on_def)
+        have "\<forall>a\<in>B. \<forall>b\<in>B. d a b \<le> 2 * Mb"
+        proof (intro ballI)
+          fix a b assume "a \<in> B" "b \<in> B"
+          have haX: "a \<in> X" using \<open>a \<in> B\<close> hBX by blast
+          have hbX: "b \<in> X" using \<open>b \<in> B\<close> hBX by blast
+          have "d a b \<le> d a cb + d cb b"
+            using hd haX hbX hcbX unfolding top1_metric_on_def by blast
+          also have "d a cb = d cb a" by (meson haX hcbX hd metric_sym)
+          also have "d cb a + d cb b \<le> Mb + Mb" by (meson add_mono hMb haX hbX)
+          finally show "d a b \<le> 2 * Mb" by argo
+        qed
+        then show ?thesis by fast
+      qed
       have hB_in_ball: "B \<subseteq> top1_ball_on X d x0 \<delta>"
       proof (rule subsetI)
         fix y assume "y \<in> B"
