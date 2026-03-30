@@ -25335,14 +25335,19 @@ lemma top1_lebesgue_number:
 proof (cases "X \<in> \<A>")
   case True
   text \<open>If X itself is in A, any positive δ works.\<close>
-  then show ?thesis sorry
+  then have "\<forall>B. B \<subseteq> X \<longrightarrow> (\<exists>U\<in>\<A>. B \<subseteq> U)" by blast
+  then show ?thesis by (simp add: gt_ex)
 next
   case hXnotA: False
   let ?T = "top1_metric_topology_on X d"
-  text \<open>Step 1: Finite subcover.\<close>
+  text \<open>Step 1: Finite subcover from compactness.\<close>
+  have hTop: "is_topology_on X ?T"
+    by (metis hd top1_metric_topology_on_is_topology_on)
+  have hA_open: "\<A> \<subseteq> ?T" and hA_covers: "X \<subseteq> \<Union>\<A>"
+    using hCov unfolding top1_open_covering_on_def by blast+
   obtain F where hFfin: "finite F" and hFA: "F \<subseteq> \<A>" and hFcov: "X \<subseteq> \<Union>F"
-    sorry
-  have hFne: "F \<noteq> {}" sorry
+    using hComp hA_open hA_covers unfolding top1_compact_on_def by meson
+  have hFne: "F \<noteq> {}" using hFcov hXne by blast
   text \<open>Step 2: Distance-to-set function and Lebesgue function.\<close>
   define dist_set where "dist_set = (\<lambda>S x. Inf {d x y | y. y \<in> S})"
   define C where "C = (\<lambda>A. X - A)"
