@@ -25754,9 +25754,27 @@ lemma top1_Rpow_sq_metric_is_metric:
   using Rpow_sq_metric_nonneg Rpow_sq_metric_sep Rpow_sq_metric_sym Rpow_sq_metric_triangle
   by simp
 
+lemma Rpow_sq_metric_eq_square_metric:
+  shows "top1_Rpow_sq_metric N x y = top1_square_metric_real_on {0..<N} x y"
+  unfolding top1_Rpow_sq_metric_def top1_square_metric_real_on_def
+  sorry
+
 lemma top1_Rpow_topology_eq_sq_metric:
   shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
-  sorry
+proof (cases "N = 0")
+  case True then show ?thesis sorry
+next
+  case False
+  have hfin: "finite {0..<N}" by blast
+  have hne: "{0..<N} \<noteq> {}" using False by simp
+  have "top1_metric_topology_on (top1_Rpow_set N) (top1_square_metric_real_on {0..<N})
+    = top1_Rpow_topology N"
+    using Theorem_20_3(2)[OF hfin hne] unfolding top1_Rpow_set_def top1_Rpow_topology_def by order
+  moreover have "top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)
+    = top1_metric_topology_on (top1_Rpow_set N) (top1_square_metric_real_on {0..<N})"
+    using Rpow_sq_metric_eq_square_metric by presburger
+  ultimately show ?thesis by presburger
+qed
 
 text \<open>R^N has open coverings of order N+1 at any scale.
   This follows from the cube decomposition of R^N.\<close>
