@@ -25428,6 +25428,16 @@ next
   define dist_set where "dist_set = (\<lambda>S x. Inf {d x y | y. y \<in> S})"
   define C where "C = (\<lambda>A. X - A)"
   define leb_f where "leb_f = (\<lambda>x. (\<Sum>A\<in>F. dist_set (C A) x) / card F)"
+  have hCA_ne_global: "\<forall>A\<in>F. C A \<noteq> {}"
+  proof (intro ballI)
+    fix A assume "A \<in> F"
+    then have "A \<in> \<A>" using hFA by blast
+    then have "A \<in> ?T" using hA_open by blast
+    then have "A \<subseteq> X" unfolding top1_metric_topology_on_def topology_generated_by_basis_def by blast
+    moreover have "A \<noteq> X" using \<open>A \<in> \<A>\<close> hXnotA by blast
+    ultimately show "C A \<noteq> {}" unfolding C_def by simp
+  qed
+  have hCA_sub_global: "\<forall>A\<in>F. C A \<subseteq> X" unfolding C_def by blast
   text \<open>Step 3: f(x) > 0 for all x ∈ X.\<close>
   have hf_pos: "\<forall>x\<in>X. leb_f x > 0"
   proof (intro ballI)
@@ -25492,8 +25502,31 @@ next
       using hsum_pos hFfin hFne card_0_eq by fastforce
   qed
   text \<open>Step 4: leb_f continuous → attains minimum δ > 0 on compact X.\<close>
+  have hleb_one_dir: "\<forall>x\<in>X. \<forall>y\<in>X. leb_f x \<le> d x y + leb_f y"
+  proof (intro ballI)
+    fix x y assume hxX2: "x \<in> X" and hyX2: "y \<in> X"
+    have "\<forall>A\<in>F. dist_set (C A) x \<le> d x y + dist_set (C A) y"
+    proof (intro ballI)
+      fix A assume "A \<in> F"
+      show "dist_set (C A) x \<le> d x y + dist_set (C A) y"
+        using dist_to_set_lipschitz[OF hd _ _ hxX2 hyX2]
+        hCA_sub_global hCA_ne_global \<open>A \<in> F\<close>
+        unfolding dist_set_def sorry
+    qed
+    then have "(\<Sum>A\<in>F. dist_set (C A) x) \<le> (\<Sum>A\<in>F. d x y + dist_set (C A) y)"
+      by (simp add: sum_mono)
+    also have "... = card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)" sorry
+    finally have "(\<Sum>A\<in>F. dist_set (C A) x) \<le> card F * d x y + (\<Sum>A\<in>F. dist_set (C A) y)" .
+    then show "leb_f x \<le> d x y + leb_f y" unfolding leb_f_def sorry
+  qed
   have hleb_lip: "\<forall>x\<in>X. \<forall>y\<in>X. \<bar>leb_f x - leb_f y\<bar> \<le> d x y"
-    sorry
+  proof (intro ballI)
+    fix x y assume hxX2: "x \<in> X" and hyX2: "y \<in> X"
+    have h1: "leb_f x \<le> d x y + leb_f y" using hleb_one_dir hxX2 hyX2 by blast
+    have h2: "leb_f y \<le> d y x + leb_f x" using hleb_one_dir hyX2 hxX2 by blast
+    have hsym: "d x y = d y x" using metric_sym[OF hd hxX2 hyX2] by presburger
+    show "\<bar>leb_f x - leb_f y\<bar> \<le> d x y" using h1 h2 hsym by linarith
+  qed
   have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
   proof -
     let ?dR = "top1_real_bounded_metric"
