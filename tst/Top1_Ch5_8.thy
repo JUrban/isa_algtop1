@@ -25658,6 +25658,18 @@ next
   then show ?thesis using hd_pos by blast
 qed
 
+text \<open>Square metric on R^N: ρ(x,y) = max{|x_i - y_i| | i < N}.\<close>
+definition top1_Rpow_sq_metric :: "nat \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
+  "top1_Rpow_sq_metric N x y = (if N = 0 then 0 else Max {abs (x i - y i) | i. i < N})"
+
+lemma top1_Rpow_sq_metric_is_metric:
+  shows "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+  sorry
+
+lemma top1_Rpow_topology_eq_sq_metric:
+  shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+  sorry
+
 text \<open>R^N has open coverings of order N+1 at any scale.
   This follows from the cube decomposition of R^N.\<close>
 lemma RN_covering_order_N_plus_1:
