@@ -25397,7 +25397,20 @@ next
       text \<open>dist_set(C(Am), x0) ≤ δ means: ∀y∈C(Am). d(x0,y) ≥ δ.
         So ball(x0,δ) ∩ C(Am) = ∅, i.e., ball(x0,δ) ⊆ X - C(Am) = Am.\<close>
       have hball_sub: "top1_ball_on X d x0 \<delta> \<subseteq> Am"
-        sorry
+      proof (rule subsetI)
+        fix y assume "y \<in> top1_ball_on X d x0 \<delta>"
+        then have hyX: "y \<in> X" and hdy: "d x0 y < \<delta>" unfolding top1_ball_on_def by auto
+        show "y \<in> Am"
+        proof (rule ccontr)
+          assume "y \<notin> Am"
+          then have "y \<in> C Am" unfolding C_def using hyX by blast
+          then have "d x0 y \<in> {d x0 z | z. z \<in> C Am}" by blast
+          then have "dist_set (C Am) x0 \<le> d x0 y"
+            unfolding dist_set_def sorry
+          then have "\<delta> \<le> d x0 y" using hdelta_le_dist by linarith
+          then show False using hdy by linarith
+        qed
+      qed
       have "Am \<in> \<A>" using hAm hFA by blast
       then show "\<exists>U\<in>\<A>. B \<subseteq> U" using hB_in_ball hball_sub by blast
     qed
