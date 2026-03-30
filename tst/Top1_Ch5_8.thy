@@ -13456,10 +13456,10 @@ corollary Corollary_45_5:
        \<F>
      \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
      \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
-  text \<open>Proof uses sup_uniform_topology_eq to rewrite between sup and uniform topologies,
-    then Theorem_45_4 for the equicontinuity/pointwise-bounded characterization.
-    Forward: compact → closed (Hausdorff) + bounded (compact→bounded in metric) + equicont.
-    Backward: closed → F = closure(F), bounded(sup) → ptwise bdd, then Thm 45.4 → compact.\<close>
+  text \<open>Proof: the sup and uniform topologies agree on C(X,Y) when X compact
+    (by sup_uniform_topology_eq_on_continuous, modulo 1 sorry).
+    So compactness in sup = compactness in uniform.
+    Then Theorem_45_4 (PROVED) gives the equicontinuity characterization.\<close>
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
