@@ -25320,10 +25320,37 @@ theorem Theorem_50_5:
   sorry
 
 (** from \S50 Theorem 50.6 [top1.tex:7808] **)
+text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimension at most N.
+  Proof uses cube decomposition of R^N into M-cubes for M = 0,...,N.
+  The M-cubes at level M are disjoint, and their slight enlargements
+  give a covering of order N+1. Scaling gives coverings of arbitrarily
+  small diameter. Using the Lebesgue number of any given open covering,
+  we can refine to such a scaled cube covering.\<close>
 theorem Theorem_50_6:
   assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
   shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
-  sorry
+  unfolding top1_dim_le_on_def
+proof (intro allI impI)
+  fix \<A> assume hCov: "top1_open_covering_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<A>"
+  text \<open>Step 1: X compact in R^N. Get Lebesgue number δ > 0 for A.\<close>
+  have hXsub: "X \<subseteq> top1_Rpow_set N" sorry
+  obtain \<delta> where hd_pos: "\<delta> > 0" and hLebesgue: "\<forall>S. S \<subseteq> X \<and> top1_Rpow_diam N S < \<delta>
+    \<longrightarrow> (\<exists>A \<in> \<A>. S \<subseteq> A)"
+    sorry
+  text \<open>Step 2: Scale the cube decomposition so cubes have diameter < δ.
+    For each M = 0,...,N, the family A_M of enlarged M-cube neighborhoods
+    is a collection of disjoint open sets, each of diameter < δ.
+    The union A_0 ∪ ... ∪ A_N covers R^N, hence X.\<close>
+  obtain \<B> where hBcov: "top1_open_covering_on X
+      (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<B>"
+    and hBref: "top1_refines \<B> \<A>"
+    and hBorder: "top1_cover_order_le_on X \<B> N"
+    sorry
+  show "\<exists>\<B>. top1_open_covering_on X
+      (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<B>
+    \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
+    using hBcov hBref hBorder sorry
+qed
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
 corollary Corollary_50_7:
