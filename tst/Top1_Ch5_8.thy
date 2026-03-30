@@ -25827,15 +25827,18 @@ proof (rule subsetI)
   define bad_k :: "nat \<Rightarrow> nat set" where
     "bad_k = (\<lambda>i. {k. k \<le> N \<and> (\<exists>m::int. x i = of_int m + real k / real (Suc N))})"
   have hbad_sub: "\<forall>i. bad_k i \<subseteq> {0..N}" unfolding bad_k_def by fastforce
-  have hbad_fin: "\<forall>i. finite (bad_k i)" using hbad_sub sorry
+  have hbad_fin: "\<forall>i. finite (bad_k i)" using hbad_sub finite_subset by fast
   have hbad_card: "\<forall>i<N. card (bad_k i) \<le> 1" sorry
   define all_bad where "all_bad = (\<Union>i \<in> {0..<N}. bad_k i)"
   have hcard_sum: "card all_bad \<le> (\<Sum>i \<in> {0..<N}. card (bad_k i))"
     unfolding all_bad_def using card_UN_le hbad_fin by blast
-  also have "... \<le> N" using hbad_card sorry
+  also have "... \<le> (\<Sum>i \<in> {0..<N}. (1::nat))"
+    using hbad_card sorry
+  also have "... = N" by simp
   finally have hcard: "card all_bad \<le> N" .
-  have "all_bad \<subseteq> {0..N}" unfolding all_bad_def using hbad_sub by auto
-  then have "\<exists>k \<in> {0..N}. k \<notin> all_bad" using hcard sorry
+  have hall_sub: "all_bad \<subseteq> {0..N}" unfolding all_bad_def using hbad_sub by auto
+  then have "\<exists>k \<in> {0..N}. k \<notin> all_bad"
+    sorry
   then obtain k where hk: "k \<le> N" and hgood:
     "\<forall>i<N. \<not>(\<exists>m::int. x i = real_of_int m + real k / real (Suc N))"
     unfolding all_bad_def bad_k_def by auto
