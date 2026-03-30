@@ -25332,7 +25332,52 @@ lemma top1_lebesgue_number:
   assumes hCov: "top1_open_covering_on X (top1_metric_topology_on X d) \<A>"
   shows "\<exists>\<delta>>0. \<forall>A. A \<subseteq> X \<and> top1_metric_diam_on X d A < \<delta>
     \<longrightarrow> (\<exists>U \<in> \<A>. A \<subseteq> U)"
-  sorry
+proof (cases "X \<in> \<A>")
+  case True
+  text \<open>If X itself is in A, any positive δ works.\<close>
+  then show ?thesis sorry
+next
+  case hXnotA: False
+  let ?T = "top1_metric_topology_on X d"
+  text \<open>Step 1: Finite subcover.\<close>
+  obtain F where hFfin: "finite F" and hFA: "F \<subseteq> \<A>" and hFcov: "X \<subseteq> \<Union>F"
+    sorry
+  have hFne: "F \<noteq> {}" sorry
+  text \<open>Step 2: Distance-to-set function and Lebesgue function.\<close>
+  define dist_set where "dist_set = (\<lambda>S x. Inf {d x y | y. y \<in> S})"
+  define C where "C = (\<lambda>A. X - A)"
+  define leb_f where "leb_f = (\<lambda>x. (\<Sum>A\<in>F. dist_set (C A) x) / card F)"
+  text \<open>Step 3: f(x) > 0 for all x ∈ X.\<close>
+  have hf_pos: "\<forall>x\<in>X. leb_f x > 0"
+    sorry
+  text \<open>Step 4: f continuous, X compact → f attains minimum δ > 0.\<close>
+  obtain \<delta> where hd_pos: "\<delta> > 0" and hd_min: "\<forall>x\<in>X. \<delta> \<le> leb_f x"
+    sorry
+  text \<open>Step 5: δ is the Lebesgue number.\<close>
+  have "\<forall>B. B \<subseteq> X \<and> top1_metric_diam_on X d B < \<delta> \<longrightarrow> (\<exists>U\<in>\<A>. B \<subseteq> U)"
+  proof (intro allI impI)
+    fix B assume hB: "B \<subseteq> X \<and> top1_metric_diam_on X d B < \<delta>"
+    then have hBX: "B \<subseteq> X" and hBdiam: "top1_metric_diam_on X d B < \<delta>" by presburger+
+    show "\<exists>U\<in>\<A>. B \<subseteq> U"
+    proof (cases "B = {}")
+      case True
+      then show ?thesis using hFA hFne by fastforce
+    next
+      case False
+      then obtain x0 where hx0: "x0 \<in> B" by blast
+      have hx0X: "x0 \<in> X" by (metis hx0 hBX subsetD)
+      text \<open>B ⊆ δ-ball(x0) since diam(B) < δ.\<close>
+      have hB_in_ball: "B \<subseteq> top1_ball_on X d x0 \<delta>"
+        sorry
+      text \<open>δ ≤ f(x0) ≤ d(x0, C_m) for some A_m ∈ F. Then ball(x0,δ) ⊆ A_m.\<close>
+      obtain Am where hAm: "Am \<in> F" and hball_sub: "top1_ball_on X d x0 \<delta> \<subseteq> Am"
+        sorry
+      have "Am \<in> \<A>" using hAm hFA by blast
+      then show "\<exists>U\<in>\<A>. B \<subseteq> U" using hB_in_ball hball_sub by blast
+    qed
+  qed
+  then show ?thesis using hd_pos by blast
+qed
 
 text \<open>R^N has open coverings of order N+1 at any scale.
   This follows from the cube decomposition of R^N.\<close>
