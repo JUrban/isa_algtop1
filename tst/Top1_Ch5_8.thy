@@ -25809,7 +25809,9 @@ lemma RN_covering_order_N_plus_1:
   shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
     \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
     \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)"
-  text \<open>Scale the unit covering by ε/3 to get diameter < ε.\<close>
+  text \<open>Scale the unit covering by c = ε/3: images have diam = c·(≤2) = 2ε/3 < ε.
+    Scaling preserves open sets, coverings, and order.
+    Proof uses RN_unit_covering_order (sorry) for the base construction.\<close>
   sorry
 
 (** from \S50 Theorem 50.6 [top1.tex:7808] **)
