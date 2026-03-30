@@ -25686,9 +25686,22 @@ next
 qed
 
 lemma Rpow_sq_metric_sep:
-  assumes "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N"
+  assumes hx: "x \<in> top1_Rpow_set N" and hy: "y \<in> top1_Rpow_set N"
   shows "(top1_Rpow_sq_metric N x y = 0) = (x = y)"
-  sorry
+proof
+  assume "x = y" then show "top1_Rpow_sq_metric N x y = 0"
+    unfolding top1_Rpow_sq_metric_def sorry
+next
+  assume hd0: "top1_Rpow_sq_metric N x y = 0"
+  have hpw: "\<forall>i<N. x i = y i" sorry
+  have hout_x: "\<forall>i. i \<notin> {0..<N} \<longrightarrow> x i = undefined"
+    using hx unfolding top1_Rpow_set_def top1_PiE_iff by argo
+  have hout_y: "\<forall>i. i \<notin> {0..<N} \<longrightarrow> y i = undefined"
+    using hy unfolding top1_Rpow_set_def top1_PiE_iff by argo
+  have "\<forall>i. x i = y i"
+    by (metis hout_y hout_x hpw atLeastLessThan_iff)
+  then show "x = y" by presburger
+qed
 
 lemma Rpow_sq_metric_triangle:
   assumes "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N" "z \<in> top1_Rpow_set N"
