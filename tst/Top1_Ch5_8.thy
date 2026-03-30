@@ -25678,8 +25678,12 @@ text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimensio
 theorem Theorem_50_6:
   assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
   shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
-  text \<open>Proof: Use Lebesgue number + RN_covering_order_N_plus_1 to refine
-    any open covering to one of order ≤ N+1. See helper lemmas above.\<close>
+  text \<open>Proof outline: R^N is metrizable by the square metric. X compact ⊆ R^N.
+    Given open covering A of X, use Lebesgue number (top1_lebesgue_number, PROVED)
+    to get δ > 0. Then use RN_covering_order_N_plus_1 to get an R^N covering
+    of order N+1 with diameter < δ. Restrict to X and use Lebesgue number
+    to refine to A. This gives the required refinement of order ≤ N+1.
+    Needs: R^N square metric definition + RN_covering_order_N_plus_1.\<close>
   sorry
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
