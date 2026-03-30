@@ -25828,7 +25828,31 @@ proof (rule subsetI)
     "bad_k = (\<lambda>i. {k. k \<le> N \<and> (\<exists>m::int. x i = of_int m + real k / real (Suc N))})"
   have hbad_sub: "\<forall>i. bad_k i \<subseteq> {0..N}" unfolding bad_k_def by fastforce
   have hbad_fin: "\<forall>i. finite (bad_k i)" using hbad_sub finite_subset by fast
-  have hbad_card: "\<forall>i<N. card (bad_k i) \<le> 1" sorry
+  have hbad_card: "\<forall>i<N. card (bad_k i) \<le> 1"
+  proof (intro allI impI)
+    fix i assume "i < N"
+    have hfin_i: "finite (bad_k i)" using hbad_fin by blast
+    have huniq: "\<forall>k1 \<in> bad_k i. \<forall>k2 \<in> bad_k i. k1 = k2"
+    proof (intro ballI)
+      fix k1 k2 assume hk1: "k1 \<in> bad_k i" and hk2: "k2 \<in> bad_k i"
+      obtain m1 :: int where hm1: "k1 \<le> N" "x i = of_int m1 + real k1 / real (Suc N)"
+        using hk1 unfolding bad_k_def by blast
+      obtain m2 :: int where hm2: "k2 \<le> N" "x i = of_int m2 + real k2 / real (Suc N)"
+        using hk2 unfolding bad_k_def by blast
+      have heq: "of_int m1 + real k1 / real (Suc N) = of_int m2 + real k2 / real (Suc N)"
+        using hm1 hm2 by presburger
+      then have hdiff: "real k1 / real (Suc N) - real k2 / real (Suc N) = of_int (m2 - m1)"
+        by linarith
+      have hsN: "real (Suc N) \<noteq> 0" by simp
+      have hmul: "(real k1 - real k2) = of_int (m2 - m1) * real (Suc N)"
+        using hdiff hsN sorry
+      moreover have habs: "\<bar>real k1 - real k2\<bar> \<le> real N" using hm1 hm2 by linarith
+      ultimately have hm0: "of_int (m2 - m1) = (0::real)" sorry
+      then have "real k1 = real k2" using hmul by simp
+      then show "k1 = k2" by simp
+    qed
+    then show "card (bad_k i) \<le> 1" using hfin_i sorry
+  qed
   define all_bad where "all_bad = (\<Union>i \<in> {0..<N}. bad_k i)"
   have hcard_sum: "card all_bad \<le> (\<Sum>i \<in> {0..<N}. card (bad_k i))"
     unfolding all_bad_def using card_UN_le hbad_fin by blast
