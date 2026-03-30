@@ -25369,8 +25369,15 @@ next
       then have "y \<notin> top1_ball_on X d x \<epsilon>" using hball by blast
       then show "d x y \<ge> \<epsilon>" unfolding top1_ball_on_def using \<open>y \<in> X\<close> by simp
     qed
+    have hCAi_ne: "C Ai \<noteq> {}" unfolding C_def using hXnotA hAi hFA sorry
     have hdist_ge: "dist_set (C Ai) x \<ge> \<epsilon>"
-      unfolding dist_set_def using hge sorry
+    proof -
+      have "{d x y | y. y \<in> C Ai} \<noteq> {}" using hCAi_ne by blast
+      have "\<And>z. z \<in> {d x y | y. y \<in> C Ai} \<Longrightarrow> \<epsilon> \<le> z" using hge by blast
+      then have "\<epsilon> \<le> Inf {d x y | y. y \<in> C Ai}"
+        using cInf_greatest[OF \<open>{d x y | y. y \<in> C Ai} \<noteq> {}\<close>] by presburger
+      then show ?thesis unfolding dist_set_def by blast
+    qed
     then have hdist_pos: "dist_set (C Ai) x > 0" using hep by argo
     have hnn: "\<forall>A\<in>F. dist_set (C A) x \<ge> 0"
       sorry
