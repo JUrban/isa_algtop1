@@ -25325,11 +25325,22 @@ definition top1_metric_diam_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<R
 
 text \<open>Distance to a set is continuous (1-Lipschitz).
   For metric d, dist_set(S,x) = Inf{d(x,y)|y∈S} is continuous in x.\<close>
+text \<open>1-Lipschitz property of dist_set: |f(x) - f(y)| ≤ d(x,y).\<close>
+lemma dist_to_set_lipschitz:
+  assumes hd: "top1_metric_on X d"
+  assumes hSX: "S \<subseteq> X" and hSne: "S \<noteq> {}"
+  assumes hxX: "x \<in> X" and hyX: "y \<in> X"
+  defines "f \<equiv> (\<lambda>x. Inf {d x z | z. z \<in> S})"
+  shows "f x \<le> d x y + f y"
+  sorry
+
 lemma dist_to_set_continuous:
   assumes hd: "top1_metric_on X d"
-  assumes hSne: "S \<subseteq> X" "S \<noteq> {}"
+  assumes hSX: "S \<subseteq> X" and hSne: "S \<noteq> {}"
   defines "f \<equiv> (\<lambda>x. Inf {d x y | y. y \<in> S})"
   shows "top1_continuous_map_on X (top1_metric_topology_on X d) UNIV (order_topology_on_UNIV::real set set) f"
+  text \<open>Uses dist_to_set_lipschitz: for ε > 0, δ = ε works.
+    For x₀ in preimage of open set, use Lipschitz to find ball in preimage.\<close>
   sorry
 
 text \<open>Lebesgue number lemma (27.5): For a compact metric space and open covering,
