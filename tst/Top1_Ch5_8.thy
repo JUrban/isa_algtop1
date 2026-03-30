@@ -25388,10 +25388,23 @@ next
       text \<open>δ ≤ f(x0) ≤ max d(x0, C_i) = d(x0, C_m). Then ball(x0,δ) ⊆ A_m.\<close>
       have hf_x0: "\<delta> \<le> leb_f x0" using hd_min hx0X by blast
       text \<open>leb_f(x0) = average ≤ max. Get Am ∈ F maximizing d(x0, C(Am)).\<close>
-      obtain Am where hAm: "Am \<in> F" and hmax: "dist_set (C Am) x0 = Max ((\<lambda>A. dist_set (C A) x0) ` F)"
-        sorry
+      obtain Am where hAm: "Am \<in> F"
+        and hmax: "dist_set (C Am) x0 = Max ((\<lambda>A. dist_set (C A) x0) ` F)"
+        by (metis hFfin hFne obtains_MAX)
+      have hcard_pos: "card F > 0" using hFfin hFne by fastforce
+      have heach_le: "\<forall>A\<in>F. dist_set (C A) x0 \<le> dist_set (C Am) x0"
+        using hFfin hmax by simp
+      have hsum_le: "(\<Sum>A\<in>F. dist_set (C A) x0) \<le> real (card F) * dist_set (C Am) x0"
+        by (metis heach_le sum_constant sum_bounded_above)
+      have hcR: "(0::real) < real (card F)" using hcard_pos by simp
       have "leb_f x0 \<le> dist_set (C Am) x0"
-        sorry
+      proof -
+        have "(\<Sum>A\<in>F. dist_set (C A) x0) / real (card F)
+              \<le> real (card F) * dist_set (C Am) x0 / real (card F)"
+          using divide_right_mono[OF hsum_le, of "real (card F)"] hcR by linarith
+        also have "... = dist_set (C Am) x0" using hcR by auto
+        finally show ?thesis unfolding leb_f_def using hcR by fastforce
+      qed
       then have hdelta_le_dist: "\<delta> \<le> dist_set (C Am) x0"
         using hf_x0 by auto
       text \<open>dist_set(C(Am), x0) ≤ δ means: ∀y∈C(Am). d(x0,y) ≥ δ.
@@ -25404,9 +25417,12 @@ next
         proof (rule ccontr)
           assume "y \<notin> Am"
           then have "y \<in> C Am" unfolding C_def using hyX by blast
-          then have "d x0 y \<in> {d x0 z | z. z \<in> C Am}" by blast
+          then have hdy_mem: "d x0 y \<in> {d x0 z | z. z \<in> C Am}" by blast
+          have hbbl: "bdd_below {d x0 z | z. z \<in> C Am}"
+            using hd unfolding top1_metric_on_def bdd_below_def
+            using \<open>C \<equiv> (-) X\<close> hx0X by blast
           then have "dist_set (C Am) x0 \<le> d x0 y"
-            unfolding dist_set_def sorry
+            unfolding dist_set_def using hdy_mem cInf_lower by meson
           then have "\<delta> \<le> d x0 y" using hdelta_le_dist by linarith
           then show False using hdy by linarith
         qed
