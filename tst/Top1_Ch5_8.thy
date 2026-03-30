@@ -25363,7 +25363,12 @@ next
       using metric_topology_ball_neighborhood[OF hd hAi_open hxAi] by fast
     text \<open>d(x,y) ≥ ε for all y ∈ C(Ai), since y ∉ Ai ⊇ ball(x,ε).\<close>
     have hge: "\<forall>y \<in> C Ai. d x y \<ge> \<epsilon>"
-      sorry
+    proof (intro ballI)
+      fix y assume "y \<in> C Ai"
+      then have "y \<in> X" and "y \<notin> Ai" unfolding C_def by auto
+      then have "y \<notin> top1_ball_on X d x \<epsilon>" using hball by blast
+      then show "d x y \<ge> \<epsilon>" unfolding top1_ball_on_def using \<open>y \<in> X\<close> by simp
+    qed
     have hdist_ge: "dist_set (C Ai) x \<ge> \<epsilon>"
       unfolding dist_set_def using hge sorry
     then have hdist_pos: "dist_set (C Ai) x > 0" using hep by argo
