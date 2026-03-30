@@ -25796,11 +25796,62 @@ text \<open>Unit-scale covering of R^N with order N+1.
   are singletons {n}. Within each A_M, neighborhoods are disjoint.
   Each element has diameter ≤ 3/2 in the square metric.
   A = A_0 ∪ ... ∪ A_N covers R^N with order N+1.\<close>
+text \<open>M-cube: product where coordinates in S are open intervals (n_i, n_i+1)
+  and coordinates outside S are integers n_i.\<close>
+definition RN_M_cube :: "nat set \<Rightarrow> (nat \<Rightarrow> int) \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> real) set" where
+  "RN_M_cube S n N = {x \<in> top1_Rpow_set N.
+    (\<forall>i\<in>S \<inter> {0..<N}. real_of_int (n i) < x i \<and> x i < real_of_int (n i) + 1) \<and>
+    (\<forall>i\<in>{0..<N} - S. x i = real_of_int (n i))}"
+
+text \<open>Neighborhood of an M-cube: thicken slightly.\<close>
+definition RN_M_cube_nbhd :: "nat set \<Rightarrow> (nat \<Rightarrow> int) \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> real) set" where
+  "RN_M_cube_nbhd S n N = {x \<in> top1_Rpow_set N.
+    (\<forall>i\<in>S \<inter> {0..<N}. real_of_int (n i) - 1/4 < x i \<and> x i < real_of_int (n i) + 5/4) \<and>
+    (\<forall>i\<in>{0..<N} - S. \<bar>x i - real_of_int (n i)\<bar> < 1/4)}"
+
+text \<open>Family A_M: all neighborhoods of M-cubes (those with |S| = M).\<close>
+definition RN_family_M :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> real) set set" where
+  "RN_family_M M N = {RN_M_cube_nbhd S n N | S n. S \<subseteq> {0..<N} \<and> card S = M}"
+
+text \<open>Full covering: union of all families.\<close>
+definition RN_cube_covering :: "nat \<Rightarrow> (nat \<Rightarrow> real) set set" where
+  "RN_cube_covering N = (\<Union>M \<le> N. RN_family_M M N)"
+
+text \<open>Within each family A_M, the neighborhoods are disjoint.\<close>
+lemma RN_family_M_disjoint:
+  assumes "A \<in> RN_family_M M N" "B \<in> RN_family_M M N" "A \<noteq> B"
+  shows "A \<inter> B = {}"
+  sorry
+
+text \<open>The cube covering covers R^N.\<close>
+lemma RN_cube_covering_covers:
+  shows "top1_Rpow_set N \<subseteq> \<Union>(RN_cube_covering N)"
+  sorry
+
+text \<open>Each element of the covering is open in the product topology.\<close>
+lemma RN_cube_nbhd_open:
+  assumes "A \<in> RN_cube_covering N"
+  shows "A \<in> top1_Rpow_topology N"
+  sorry
+
+text \<open>Each element has diameter ≤ 2 in the square metric.\<close>
+lemma RN_cube_nbhd_diam:
+  assumes "A \<in> RN_cube_covering N"
+  shows "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 2"
+  sorry
+
+text \<open>The covering has order N+1: each point in at most N+1 sets.\<close>
+lemma RN_cube_covering_order:
+  shows "top1_cover_order_le_on (top1_Rpow_set N) (RN_cube_covering N) N"
+  sorry
+
 lemma RN_unit_covering_order:
   fixes N :: nat
   shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
     \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
     \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 2)"
+  using RN_cube_covering_covers RN_cube_nbhd_open RN_cube_covering_order RN_cube_nbhd_diam
+  unfolding top1_open_covering_on_def RN_cube_covering_def
   sorry
 
 lemma RN_covering_order_N_plus_1:
