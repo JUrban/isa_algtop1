@@ -25823,8 +25823,22 @@ lemma RN_grid_covering_covers:
   shows "top1_Rpow_set N \<subseteq> \<Union>(RN_grid_covering N)"
 proof (rule subsetI)
   fix x assume hx: "x \<in> top1_Rpow_set N"
-  obtain k where hk: "k \<le> N" and hgood: "\<forall>i<N. \<not>(\<exists>m::int. x i = real_of_int m + real k / real (Suc N))"
-    sorry
+  text \<open>Pigeonhole: for each i<N, at most one k ∈ {0..N} makes x_i - k/(N+1) integer.\<close>
+  define bad_k :: "nat \<Rightarrow> nat set" where
+    "bad_k = (\<lambda>i. {k. k \<le> N \<and> (\<exists>m::int. x i = of_int m + real k / real (Suc N))})"
+  have hbad_sub: "\<forall>i. bad_k i \<subseteq> {0..N}" unfolding bad_k_def by fastforce
+  have hbad_fin: "\<forall>i. finite (bad_k i)" using hbad_sub sorry
+  have hbad_card: "\<forall>i<N. card (bad_k i) \<le> 1" sorry
+  define all_bad where "all_bad = (\<Union>i \<in> {0..<N}. bad_k i)"
+  have hcard_sum: "card all_bad \<le> (\<Sum>i \<in> {0..<N}. card (bad_k i))"
+    unfolding all_bad_def using card_UN_le hbad_fin by blast
+  also have "... \<le> N" using hbad_card sorry
+  finally have hcard: "card all_bad \<le> N" .
+  have "all_bad \<subseteq> {0..N}" unfolding all_bad_def using hbad_sub by auto
+  then have "\<exists>k \<in> {0..N}. k \<notin> all_bad" using hcard sorry
+  then obtain k where hk: "k \<le> N" and hgood:
+    "\<forall>i<N. \<not>(\<exists>m::int. x i = real_of_int m + real k / real (Suc N))"
+    unfolding all_bad_def bad_k_def by auto
   define n :: "nat \<Rightarrow> int" where "n = (\<lambda>i. \<lfloor>x i - real k / real (Suc N)\<rfloor>)"
   have "x \<in> RN_shifted_cube N k n"
     unfolding RN_shifted_cube_def n_def
