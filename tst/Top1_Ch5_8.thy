@@ -25365,9 +25365,39 @@ lemma dist_to_set_continuous:
   assumes hSX: "S \<subseteq> X" and hSne: "S \<noteq> {}"
   defines "f \<equiv> (\<lambda>x. Inf {d x y | y. y \<in> S})"
   shows "top1_continuous_map_on X (top1_metric_topology_on X d) UNIV (order_topology_on_UNIV::real set set) f"
-  text \<open>Uses dist_to_set_lipschitz: for ε > 0, δ = ε works.
-    For x₀ in preimage of open set, use Lipschitz to find ball in preimage.\<close>
-  sorry
+proof -
+  let ?dR = "top1_real_bounded_metric"
+  have hTR: "(order_topology_on_UNIV::real set set) = top1_metric_topology_on (UNIV::real set) ?dR"
+    using order_topology_on_UNIV_eq_bounded_metric_topology_real by order
+  have hdR: "top1_metric_on (UNIV::real set) ?dR"
+    by (simp add: top1_real_bounded_metric_metric_on)
+  have hfX: "\<forall>x\<in>X. f x \<in> (UNIV::real set)" by blast
+  have heps_delta: "\<forall>x\<in>X. \<forall>\<epsilon>::real. \<epsilon> > 0 \<longrightarrow>
+      (\<exists>\<delta>::real. \<delta> > 0 \<and> (\<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dR (f x) (f y) < \<epsilon>))"
+  proof (intro ballI allI impI)
+    fix x assume hxX2: "x \<in> X"
+    fix \<epsilon> :: real assume hep2: "\<epsilon> > 0"
+    define \<delta> where "\<delta> = min \<epsilon> (1/2)"
+    have hd_pos: "\<delta> > 0" using hep2 unfolding \<delta>_def by auto
+    have "\<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dR (f x) (f y) < \<epsilon>"
+    proof (intro ballI impI)
+      fix y assume hyX2: "y \<in> X" and hdy: "d x y < \<delta>"
+      have hlip1: "f x \<le> d x y + f y"
+        using dist_to_set_lipschitz[OF hd hSX hSne hxX2 hyX2] unfolding f_def by presburger
+      have hlip2: "f y \<le> d y x + f x"
+        using dist_to_set_lipschitz[OF hd hSX hSne hyX2 hxX2] unfolding f_def by presburger
+      have hsym: "d x y = d y x" using metric_sym[OF hd hxX2 hyX2] by simp
+      have habs: "\<bar>f x - f y\<bar> \<le> d x y" using hlip1 hlip2 hsym by linarith
+      then have "\<bar>f x - f y\<bar> < \<epsilon>" using hdy \<delta>_def by argo
+      then show "?dR (f x) (f y) < \<epsilon>"
+        unfolding top1_real_bounded_metric_def by linarith
+    qed
+    then show "\<exists>\<delta>>0. \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dR (f x) (f y) < \<epsilon>"
+      using hd_pos by blast
+  qed
+  show ?thesis
+    unfolding hTR using Theorem_21_1[OF hd hdR] hfX heps_delta by presburger
+qed
 
 text \<open>Lebesgue number lemma (27.5): For a compact metric space and open covering,
   there exists δ > 0 such that every subset of diameter < δ is in some cover element.\<close>
