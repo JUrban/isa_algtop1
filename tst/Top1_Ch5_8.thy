@@ -25332,7 +25332,33 @@ lemma dist_to_set_lipschitz:
   assumes hxX: "x \<in> X" and hyX: "y \<in> X"
   defines "f \<equiv> (\<lambda>x. Inf {d x z | z. z \<in> S})"
   shows "f x \<le> d x y + f y"
-  sorry
+proof -
+  have hd_nn: "\<forall>a\<in>X. \<forall>b\<in>X. 0 \<le> d a b"
+    using hd unfolding top1_metric_on_def by presburger
+  have hbbl_x: "bdd_below {d x z | z. z \<in> S}"
+  proof (rule bdd_belowI[of _ 0])
+    fix w assume "w \<in> {d x z | z. z \<in> S}"
+    then obtain z where "z \<in> S" and "w = d x z" by blast
+    then show "0 \<le> w" using hd_nn hxX hSX by fast
+  qed
+  have hne_y: "{d y z | z. z \<in> S} \<noteq> {}" using hSne by blast
+  have "\<forall>z0\<in>S. f x \<le> d x y + d y z0"
+  proof (intro ballI)
+    fix z0 assume "z0 \<in> S"
+    then have hz0X: "z0 \<in> X" using hSX by blast
+    have "d x z0 \<in> {d x z | z. z \<in> S}" using \<open>z0 \<in> S\<close> by blast
+    then have "f x \<le> d x z0"
+      unfolding f_def using cInf_lower hbbl_x by meson
+    also have "d x z0 \<le> d x y + d y z0"
+      using hd hxX hyX hz0X unfolding top1_metric_on_def by blast
+    finally show "f x \<le> d x y + d y z0" .
+  qed
+  then have "\<forall>z0\<in>S. f x - d x y \<le> d y z0" by fastforce
+  then have "\<And>z. z \<in> {d y z0 | z0. z0 \<in> S} \<Longrightarrow> f x - d x y \<le> z" by blast
+  then have "f x - d x y \<le> Inf {d y z | z. z \<in> S}"
+    using cInf_greatest[OF hne_y] by presburger
+  then show "f x \<le> d x y + f y" unfolding f_def by linarith
+qed
 
 lemma dist_to_set_continuous:
   assumes hd: "top1_metric_on X d"
