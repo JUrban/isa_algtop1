@@ -15869,79 +15869,85 @@ proof -
   show ?thesis using huni_ge_cc hcc_ge_uni by order
 qed
 
-text \<open>The sup metric is a metric on C(X,Y) when X compact and nonempty.\<close>
-lemma sup_metric_is_metric_on_continuous:
-  assumes hTopX: "is_topology_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hCompX: "top1_compact_on X TX"
-  assumes hXne: "X \<noteq> {}"
-  defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
-  shows "top1_metric_on C (top1_sup_metric_on X d)"
-  unfolding top1_metric_on_def
-proof (intro conjI ballI allI impI)
-  let ?ds = "top1_sup_metric_on X d"
-  have hC_sub_PiE: "C \<subseteq> top1_PiE X (\<lambda>_. Y)"
-    unfolding C_def top1_continuous_funcs_on_def by blast
-  text \<open>Helper: for f,g ∈ C, d-image is bdd_above (from ball_eq proof).\<close>
-  have hbdd: "\<forall>f\<in>C. \<forall>g\<in>C. bdd_above ((\<lambda>x. d (f x) (g x)) ` X)"
-    sorry
-  have hvals: "\<forall>f\<in>C. \<forall>x\<in>X. f x \<in> Y"
-    using hC_sub_PiE unfolding top1_PiE_iff by (simp add: subset_iff top1_PiE_iff)
-  text \<open>1. Nonnegativity.\<close>
-  { fix f assume "f \<in> C"
-    have "d (f (SOME x. x \<in> X)) (f (SOME x. x \<in> X)) = 0"
-      using hd hvals \<open>f \<in> C\<close> hXne unfolding top1_metric_on_def by (metis some_in_eq)
-    then show "0 \<le> ?ds f f"
-      unfolding top1_sup_metric_on_def sorry }
-  { fix f g assume "f \<in> C" "g \<in> C"
-    have "\<forall>x\<in>X. 0 \<le> d (f x) (g x)" using hd hvals \<open>f \<in> C\<close> \<open>g \<in> C\<close> unfolding top1_metric_on_def by auto
-    then show "0 \<le> top1_sup_metric_on X d f g"
-      unfolding top1_sup_metric_on_def using hXne sorry }
-  text \<open>3. Separation.\<close>
-  { fix f g assume hf: "f \<in> C" and hg: "g \<in> C"
-    show "top1_sup_metric_on X d f g = 0 \<longleftrightarrow> f = g"
-    proof
-      assume heq: "f = g"
-      have "\<forall>x\<in>X. d (f x) (f x) = 0" using hd hvals hf unfolding top1_metric_on_def by fastforce
-      then have "(\<lambda>x. d (f x) (f x)) ` X \<subseteq> {0}" by blast
-      then have "Sup ((\<lambda>x. d (f x) (f x)) ` X) \<le> 0" sorry
-      moreover have "0 \<le> Sup ((\<lambda>x. d (f x) (f x)) ` X)"
-        using \<open>(\<lambda>x. d (f x) (f x)) ` X \<subseteq> {0}\<close> antisym hXne by fastforce
-      ultimately show "top1_sup_metric_on X d f g = 0"
-        unfolding top1_sup_metric_on_def using heq by simp
-    next
-      assume hds0: "top1_sup_metric_on X d f g = 0"
-      have hbdd_fg: "bdd_above ((\<lambda>x. d (f x) (g x)) ` X)" using hbdd hf hg by fast
-      have "\<forall>x\<in>X. d (f x) (g x) = 0"
-      proof (intro ballI)
-        fix x assume "x \<in> X"
-        have "d (f x) (g x) \<le> Sup ((\<lambda>x. d (f x) (g x)) ` X)"
-          using cSup_upper hbdd_fg \<open>x \<in> X\<close> by (metis (lifting) cSup_upper imageI)
-        also have "... = 0" using hds0 unfolding top1_sup_metric_on_def by presburger
-        finally have "d (f x) (g x) \<le> 0" by presburger
-        moreover have "0 \<le> d (f x) (g x)" using hd hvals hf hg \<open>x \<in> X\<close> unfolding top1_metric_on_def by metis
-        ultimately show "d (f x) (g x) = 0" by argo
-      qed
-      then have "\<forall>x\<in>X. f x = g x" using hd hvals hf hg unfolding top1_metric_on_def by auto
-      then show "f = g" using hf hg hC_sub_PiE unfolding top1_PiE_iff by (meson in_mono top1_PiE_fun_eqI)
-    qed }
-  text \<open>4. Symmetry.\<close>
-  { fix f g assume "f \<in> C" "g \<in> C"
-    have "\<forall>x\<in>X. d (f x) (g x) = d (g x) (f x)"
-      using hd hvals \<open>f \<in> C\<close> \<open>g \<in> C\<close> unfolding top1_metric_on_def by auto
-    then have "(\<lambda>x. d (f x) (g x)) ` X = (\<lambda>x. d (g x) (f x)) ` X" by simp
-    then show "top1_sup_metric_on X d f g = top1_sup_metric_on X d g f"
-      unfolding top1_sup_metric_on_def by presburger }
-  text \<open>5. Triangle.\<close>
-  { fix f g h assume "f \<in> C" "g \<in> C" "h \<in> C"
-    show "top1_sup_metric_on X d f h \<le> top1_sup_metric_on X d f g + top1_sup_metric_on X d g h"
-      sorry }
+text \<open>Helper: in topology_generated_by_basis, if x ∈ U open, there exists
+  a basis element b with x ∈ b ⊆ U.\<close>
+lemma open_in_generated_basis_neighborhood:
+  assumes hB: "is_basis_on X B"
+  assumes hU: "U \<in> topology_generated_by_basis X B"
+  assumes hx: "x \<in> U"
+  shows "\<exists>b \<in> B. x \<in> b \<and> b \<subseteq> U"
+  using hU hx unfolding topology_generated_by_basis_def by fast
+
+text \<open>Helper: in metric_topology, if x ∈ U open, there exists ε > 0
+  with ball(x,ε) ⊆ U.\<close>
+lemma metric_topology_ball_neighborhood:
+  assumes hd: "top1_metric_on X d"
+  assumes hU: "U \<in> top1_metric_topology_on X d"
+  assumes hx: "x \<in> U"
+  shows "\<exists>\<epsilon>>0. top1_ball_on X d x \<epsilon> \<subseteq> U"
+proof -
+  have hB: "is_basis_on X (top1_metric_basis_on X d)"
+    using hd top1_metric_basis_is_basis_on by blast
+  obtain b where hbB: "b \<in> top1_metric_basis_on X d" and hxb: "x \<in> b" and hbU: "b \<subseteq> U"
+    using open_in_generated_basis_neighborhood[OF hB _ hx]
+    hU unfolding top1_metric_topology_on_def by blast
+  then obtain c r where hc: "c \<in> X" and hr: "0 < r" and hbeq: "b = top1_ball_on X d c r"
+    unfolding top1_metric_basis_on_def by blast
+  have hxX: "x \<in> X"
+    using hxb hbeq unfolding top1_ball_on_def by blast
+  have hdcx: "d c x < r"
+    using hxb hbeq unfolding top1_ball_on_def by blast
+  define \<delta> where "\<delta> = r - d c x"
+  have hdelta_pos: "0 < \<delta>"
+    using hdcx unfolding \<delta>_def by simp
+  have hball_sub: "top1_ball_on X d x \<delta> \<subseteq> b"
+  proof (rule subsetI)
+    fix y assume "y \<in> top1_ball_on X d x \<delta>"
+    then have hyX: "y \<in> X" and hdxy: "d x y < \<delta>"
+      unfolding top1_ball_on_def by auto
+    have "d c y \<le> d c x + d x y"
+      using hd hc hxX hyX unfolding top1_metric_on_def by blast
+    also have "... < d c x + \<delta>" using hdxy by simp
+    also have "... = r" using \<delta>_def by argo
+    finally show "y \<in> b" unfolding hbeq top1_ball_on_def using hyX by simp
+  qed
+  have "top1_ball_on X d x \<delta> \<subseteq> U"
+    using hball_sub hbU by order
+  then show ?thesis using hdelta_pos by blast
+qed
+
+text \<open>Helper: if for every x ∈ V ⊆ X there exists ε > 0 with
+  ball(x,ε) ⊆ V, then V is open in the metric topology.\<close>
+lemma metric_topology_open_from_balls:
+  assumes hd: "top1_metric_on X d"
+  assumes hVX: "V \<subseteq> X"
+  assumes hball: "\<forall>x\<in>V. \<exists>\<epsilon>>0. top1_ball_on X d x \<epsilon> \<subseteq> V"
+  shows "V \<in> top1_metric_topology_on X d"
+proof -
+  have "\<forall>x\<in>V. \<exists>b \<in> top1_metric_basis_on X d. x \<in> b \<and> b \<subseteq> V"
+  proof (intro ballI)
+    fix x assume "x \<in> V"
+    then obtain \<epsilon> where heps: "\<epsilon> > 0" and hball_sub: "top1_ball_on X d x \<epsilon> \<subseteq> V"
+      using hball by blast
+    have "x \<in> X" using \<open>x \<in> V\<close> hVX by fast
+    have "top1_ball_on X d x \<epsilon> \<in> top1_metric_basis_on X d"
+      unfolding top1_metric_basis_on_def using \<open>x \<in> X\<close> heps by blast
+    moreover have "x \<in> top1_ball_on X d x \<epsilon>"
+      unfolding top1_ball_on_def using \<open>x \<in> X\<close> heps hd
+      unfolding top1_metric_on_def by fastforce
+    ultimately show "\<exists>b \<in> top1_metric_basis_on X d. x \<in> b \<and> b \<subseteq> V"
+      using hball_sub by blast
+  qed
+  then show ?thesis
+    unfolding top1_metric_topology_on_def topology_generated_by_basis_def
+    using hVX by blast
 qed
 
 text \<open>The sup and uniform metric topologies agree on C(X,Y) when X compact.
   Proof: sup_uniform_ball_eq gives ball equality for ε < 1.
-  Metric topologies are generated by balls; shrinking to ε < 1 gives same balls.
-  Hence subspace topologies on C agree.\<close>
+  For any open set U in one topology and f in U ∩ C, shrink the ball to ε < 1
+  and use ball equality to show f is interior in the other topology's subspace.
+  Key lemma: sup_uniform_ball_eq (FULLY PROVED).\<close>
 lemma sup_uniform_topology_eq_on_continuous:
   assumes hTopX: "is_topology_on X TX"
   assumes hd: "top1_metric_on Y d"
@@ -15950,13 +15956,191 @@ lemma sup_uniform_topology_eq_on_continuous:
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_sup_topology_on X Y d) C
        = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d) C"
-  text \<open>Proof approach: ds and du are both metrics on C (ds because continuous functions on
-    compact have bounded d-values; du always metric on PiE hence C). The subspace topologies
-    equal the respective metric topologies on C (by subspace_metric_topology_eq_metric_topology).
-    By sup_uniform_ball_eq, the balls agree for ε < 1 on C. Two metric topologies with same
-    small balls are equal (every open set characterized by ball neighborhoods, shrinkable to < 1).
-    Key lemma: sup_uniform_ball_eq (FULLY PROVED).\<close>
-  sorry
+proof -
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?ds = "top1_sup_metric_on X d"
+  let ?du = "top1_uniform_metric_on X d"
+  let ?Ts = "top1_sup_topology_on X Y d"
+  let ?Tu = "top1_uniform_topology_on X Y d"
+  have hC_sub_PiE: "C \<subseteq> ?PiE"
+    unfolding C_def top1_continuous_funcs_on_def by simp
+  have hball_eq: "\<And>f \<epsilon>. f \<in> C \<Longrightarrow> 0 < \<epsilon> \<Longrightarrow> \<epsilon> < 1 \<Longrightarrow>
+    top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C = top1_ball_on ?PiE ?du f \<epsilon> \<inter> C"
+    using sup_uniform_ball_eq[OF hXne hd hTopX hCompX] unfolding C_def by presburger
+  have hdu_metric: "top1_metric_on ?PiE ?du"
+    by (metis hXne hd top1_uniform_metric_is_metric)
+  have hTu_top: "is_topology_on ?PiE ?Tu"
+    using top1_metric_topology_on_is_topology_on[OF hdu_metric]
+    unfolding top1_uniform_topology_on_def by presburger
+  text \<open>Direction 1: sup-subspace ⊆ uni-subspace.\<close>
+  have hTs_sub: "subspace_topology ?PiE ?Ts C \<subseteq> subspace_topology ?PiE ?Tu C"
+  proof (rule subsetI)
+    fix V assume "V \<in> subspace_topology ?PiE ?Ts C"
+    then obtain U where hU: "U \<in> ?Ts" and hV: "V = C \<inter> U"
+      unfolding subspace_topology_def by blast
+    have hV_sub_C: "V \<subseteq> C" using hV by simp
+    have hneighbor: "\<forall>f \<in> V. \<exists>\<epsilon>>0. top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> V"
+    proof (intro ballI)
+      fix f assume "f \<in> V"
+      then have hfC: "f \<in> C" and hfU: "f \<in> U" using hV by auto
+      have hfPiE: "f \<in> ?PiE" using hfC hC_sub_PiE by blast
+      obtain b where hbB: "b \<in> top1_metric_basis_on ?PiE ?ds" and hfb: "f \<in> b" and hbU: "b \<subseteq> U"
+        using open_in_generated_basis_neighborhood hU hfU
+        unfolding top1_sup_topology_on_def top1_metric_topology_on_def
+        by (meson generated_topology_contains_basis_elem)
+      then obtain c r where hr: "0 < r" and hbeq: "b = top1_ball_on ?PiE ?ds c r"
+        unfolding top1_metric_basis_on_def by blast
+      have hf_in_ball: "?ds c f < r"
+        using hfb hbeq unfolding top1_ball_on_def by blast
+      define \<epsilon> where "\<epsilon> = min ((r - ?ds c f) / 2) (1/2)"
+      have heps_pos: "0 < \<epsilon>" using hf_in_ball unfolding \<epsilon>_def by auto
+      have heps_lt1: "\<epsilon> < 1" unfolding \<epsilon>_def by linarith
+      have hball_sub: "top1_ball_on ?PiE ?ds f \<epsilon> \<subseteq> b"
+      proof (rule subsetI)
+        fix g assume hg: "g \<in> top1_ball_on ?PiE ?ds f \<epsilon>"
+        then have hgPiE: "g \<in> ?PiE" and hds_fg: "?ds f g < \<epsilon>"
+          unfolding top1_ball_on_def by auto
+        show "g \<in> b"
+        proof (cases "bdd_above ((\<lambda>x. d (c x) (g x)) ` X)")
+          case False
+          then have "?ds c g = 0" unfolding top1_sup_metric_on_def sorry
+          then show ?thesis unfolding hbeq top1_ball_on_def using hgPiE hr by simp
+        next
+          case hbdd_cg: True
+          have hpw: "\<forall>x\<in>X. d (c x) (g x) \<le> ?ds c f + ?ds f g"
+            sorry
+          then have "?ds c g \<le> ?ds c f + ?ds f g"
+            unfolding top1_sup_metric_on_def sorry
+          also have "... < r" using hf_in_ball hds_fg unfolding \<epsilon>_def by argo
+          finally show ?thesis unfolding hbeq top1_ball_on_def using hgPiE by blast
+        qed
+      qed
+      then have "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> V" using hV hbU by blast
+      then have "top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> V"
+        using hball_eq[OF hfC heps_pos heps_lt1] by argo
+      then show "\<exists>\<epsilon>>0. top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> V"
+        using heps_pos by blast
+    qed
+    then obtain \<epsilon>_f where hef: "\<forall>f\<in>V. 0 < \<epsilon>_f f \<and> top1_ball_on ?PiE ?du f (\<epsilon>_f f) \<inter> C \<subseteq> V"
+      by metis
+    define W where "W = (\<Union>f\<in>V. top1_ball_on ?PiE ?du f (\<epsilon>_f f))"
+    have hW_open: "W \<in> ?Tu"
+    proof -
+      have hballs_in_Tu: "\<forall>f\<in>V. top1_ball_on ?PiE ?du f (\<epsilon>_f f) \<in> ?Tu"
+      proof (intro ballI)
+        fix f assume "f \<in> V"
+        then have "f \<in> C" using hV_sub_C by blast
+        then have "f \<in> ?PiE" using hC_sub_PiE by blast
+        moreover have "0 < \<epsilon>_f f" using hef \<open>f \<in> V\<close> by blast
+        ultimately show "top1_ball_on ?PiE ?du f (\<epsilon>_f f) \<in> ?Tu"
+          using top1_ball_open_in_metric_topology[OF hdu_metric]
+          unfolding top1_uniform_topology_on_def by presburger
+      qed
+      have "(\<lambda>f. top1_ball_on ?PiE ?du f (\<epsilon>_f f)) ` V \<subseteq> ?Tu"
+        using hballs_in_Tu by blast
+      then show ?thesis unfolding W_def
+        using hTu_top unfolding is_topology_on_def by blast
+    qed
+    have "V \<subseteq> C \<inter> W"
+    proof (rule subsetI)
+      fix f assume "f \<in> V"
+      then have "f \<in> C" using hV_sub_C by blast
+      then have hfPiE': "f \<in> ?PiE" using hC_sub_PiE by blast
+      have heps: "0 < \<epsilon>_f f" using hef \<open>f \<in> V\<close> by blast
+      have "?du f f = 0"
+        using hdu_metric hfPiE' unfolding top1_metric_on_def by blast
+      then have "f \<in> top1_ball_on ?PiE ?du f (\<epsilon>_f f)"
+        unfolding top1_ball_on_def using hfPiE' heps by simp
+      then have "f \<in> W" unfolding W_def using \<open>f \<in> V\<close> by blast
+      then show "f \<in> C \<inter> W" using \<open>f \<in> C\<close> by blast
+    qed
+    moreover have "C \<inter> W \<subseteq> V"
+      unfolding W_def using hef by blast
+    ultimately have "V = C \<inter> W" by blast
+    then show "V \<in> subspace_topology ?PiE ?Tu C"
+      unfolding subspace_topology_def using hW_open by blast
+  qed
+  text \<open>Direction 2: uni-subspace ⊆ sup-subspace.\<close>
+  have hTu_sub: "subspace_topology ?PiE ?Tu C \<subseteq> subspace_topology ?PiE ?Ts C"
+  proof (rule subsetI)
+    fix V assume "V \<in> subspace_topology ?PiE ?Tu C"
+    then obtain U where hU: "U \<in> ?Tu" and hV: "V = C \<inter> U"
+      unfolding subspace_topology_def by auto
+    have hV_sub_C: "V \<subseteq> C" using hV by simp
+    have hneighbor: "\<forall>f \<in> V. \<exists>\<epsilon>>0. top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> V"
+    proof (intro ballI)
+      fix f assume "f \<in> V"
+      then have hfC: "f \<in> C" and hfU: "f \<in> U" using hV by auto
+      have hfPiE: "f \<in> ?PiE" using hfC hC_sub_PiE by blast
+      obtain \<delta> where hd_pos: "0 < \<delta>" and hball_sub: "top1_ball_on ?PiE ?du f \<delta> \<subseteq> U"
+        using metric_topology_ball_neighborhood[OF hdu_metric _ hfU]
+        hU unfolding top1_uniform_topology_on_def by blast
+      define \<epsilon> where "\<epsilon> = min \<delta> (1/2)"
+      have heps_pos: "0 < \<epsilon>" using hd_pos unfolding \<epsilon>_def by linarith
+      have heps_lt1: "\<epsilon> < 1" unfolding \<epsilon>_def by linarith
+      have "top1_ball_on ?PiE ?du f \<epsilon> \<subseteq> top1_ball_on ?PiE ?du f \<delta>"
+        unfolding top1_ball_on_def using \<epsilon>_def by auto
+      then have "top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> V"
+        using hball_sub hV by blast
+      then have "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> V"
+        using hball_eq[OF hfC heps_pos heps_lt1] by argo
+      then show "\<exists>\<epsilon>>0. top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> V"
+        using heps_pos by blast
+    qed
+    then obtain \<epsilon>_f where hef: "\<forall>f\<in>V. 0 < \<epsilon>_f f \<and> top1_ball_on ?PiE ?ds f (\<epsilon>_f f) \<inter> C \<subseteq> V"
+      by metis
+    define W where "W = (\<Union>f\<in>V. top1_ball_on ?PiE ?ds f (\<epsilon>_f f))"
+    have hW_open: "W \<in> ?Ts"
+    proof -
+      have hW_sub_PiE: "W \<subseteq> ?PiE"
+        unfolding W_def top1_ball_on_def by blast
+      have "\<forall>y\<in>W. \<exists>b\<in>top1_metric_basis_on ?PiE ?ds. y \<in> b \<and> b \<subseteq> W"
+      proof (intro ballI)
+        fix y assume "y \<in> W"
+        then obtain f where hfV: "f \<in> V" and hy_ball: "y \<in> top1_ball_on ?PiE ?ds f (\<epsilon>_f f)"
+          unfolding W_def by blast
+        have "f \<in> C" using hfV hV_sub_C by blast
+        then have hfPiE': "f \<in> ?PiE" using hC_sub_PiE by blast
+        have heps: "0 < \<epsilon>_f f" using hef hfV by blast
+        have "top1_ball_on ?PiE ?ds f (\<epsilon>_f f) \<in> top1_metric_basis_on ?PiE ?ds"
+          unfolding top1_metric_basis_on_def using hfPiE' heps by blast
+        moreover have "top1_ball_on ?PiE ?ds f (\<epsilon>_f f) \<subseteq> W"
+          unfolding W_def using hfV by blast
+        ultimately show "\<exists>b\<in>top1_metric_basis_on ?PiE ?ds. y \<in> b \<and> b \<subseteq> W"
+          using hy_ball by blast
+      qed
+      then show ?thesis
+        unfolding W_def top1_sup_topology_on_def top1_metric_topology_on_def
+          topology_generated_by_basis_def
+        using hW_sub_PiE unfolding W_def by blast
+    qed
+    have "V \<subseteq> C \<inter> W"
+    proof (rule subsetI)
+      fix f assume "f \<in> V"
+      then have "f \<in> C" using hV_sub_C by blast
+      then have hfPiE': "f \<in> ?PiE" using hC_sub_PiE by blast
+      have heps: "0 < \<epsilon>_f f" using hef \<open>f \<in> V\<close> by blast
+      have hvals: "\<forall>x\<in>X. f x \<in> Y"
+        using hfPiE' unfolding top1_PiE_iff by blast
+      have "\<forall>x\<in>X. d (f x) (f x) = 0"
+        using hd hvals unfolding top1_metric_on_def by blast
+      then have "(\<lambda>x. d (f x) (f x)) ` X = {0}" (is "?img = _")
+        using hXne by force
+      then have "?ds f f = 0"
+        unfolding top1_sup_metric_on_def by simp
+      then have "f \<in> top1_ball_on ?PiE ?ds f (\<epsilon>_f f)"
+        unfolding top1_ball_on_def using hfPiE' heps by simp
+      then have "f \<in> W" unfolding W_def using \<open>f \<in> V\<close> by blast
+      then show "f \<in> C \<inter> W" using \<open>f \<in> C\<close> by blast
+    qed
+    moreover have "C \<inter> W \<subseteq> V"
+      unfolding W_def using hef by blast
+    ultimately have "V = C \<inter> W" by order
+    then show "V \<in> subspace_topology ?PiE ?Ts C"
+      unfolding subspace_topology_def using hW_open by blast
+  qed
+  show ?thesis using hTs_sub hTu_sub by order
+qed
 
 (** from \S46 Theorem 46.8 [top1.tex:6839] **)
 text \<open>Theorem 46.8: On C(X,Y), the compact-convergence and compact-open topologies coincide.
