@@ -25843,7 +25843,19 @@ lemma RN_cube_nbhd_diam:
 text \<open>The covering has order N+1: each point in at most N+1 sets.\<close>
 lemma RN_cube_covering_order:
   shows "top1_cover_order_le_on (top1_Rpow_set N) (RN_cube_covering N) N"
-  sorry
+  unfolding top1_cover_order_le_on_def
+proof (intro ballI conjI)
+  fix x assume hx: "x \<in> top1_Rpow_set N"
+  text \<open>For each M, x is in at most one set from A_M (disjoint family).
+    There are N+1 families (M = 0,...,N), so x is in at most N+1 sets.\<close>
+  have "\<forall>M \<le> N. card {U \<in> RN_family_M M N. x \<in> U} \<le> 1"
+    sorry
+  then have "card {U \<in> RN_cube_covering N. x \<in> U} \<le> Suc N"
+    sorry
+  then show "finite {U \<in> RN_cube_covering N. x \<in> U}" sorry
+  show "card {U \<in> RN_cube_covering N. x \<in> U} \<le> Suc N"
+    sorry
+qed
 
 lemma RN_unit_covering_order:
   fixes N :: nat
