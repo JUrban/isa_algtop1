@@ -25319,6 +25319,31 @@ theorem Theorem_50_5:
     ∩U_{1/n} is nonempty → injective f → embedding (compact + injective = embedding).\<close>
   sorry
 
+text \<open>Diameter of a subset in a metric space.\<close>
+definition top1_metric_diam_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> real" where
+  "top1_metric_diam_on X d A = Sup {d x y | x y. x \<in> A \<and> y \<in> A}"
+
+text \<open>Lebesgue number lemma (27.5): For a compact metric space and open covering,
+  there exists δ > 0 such that every subset of diameter < δ is in some cover element.\<close>
+lemma top1_lebesgue_number:
+  assumes hd: "top1_metric_on X d"
+  assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  assumes hXne: "X \<noteq> {}"
+  assumes hCov: "top1_open_covering_on X (top1_metric_topology_on X d) \<A>"
+  shows "\<exists>\<delta>>0. \<forall>A. A \<subseteq> X \<and> top1_metric_diam_on X d A < \<delta>
+    \<longrightarrow> (\<exists>U \<in> \<A>. A \<subseteq> U)"
+  sorry
+
+text \<open>R^N has open coverings of order N+1 at any scale.
+  This follows from the cube decomposition of R^N.\<close>
+lemma RN_covering_order_N_plus_1:
+  fixes N :: nat and \<epsilon> :: real
+  assumes heps: "\<epsilon> > 0"
+  shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
+    \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
+    \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)"
+  sorry
+
 (** from \S50 Theorem 50.6 [top1.tex:7808] **)
 text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimension at most N.
   Proof uses cube decomposition of R^N into M-cubes for M = 0,...,N.
@@ -25329,28 +25354,9 @@ text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimensio
 theorem Theorem_50_6:
   assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
   shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
-  unfolding top1_dim_le_on_def
-proof (intro allI impI)
-  fix \<A> assume hCov: "top1_open_covering_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<A>"
-  text \<open>Step 1: X compact in R^N. Get Lebesgue number δ > 0 for A.\<close>
-  have hXsub: "X \<subseteq> top1_Rpow_set N" sorry
-  obtain \<delta> where hd_pos: "\<delta> > 0" and hLebesgue: "\<forall>S. S \<subseteq> X \<and> top1_Rpow_diam N S < \<delta>
-    \<longrightarrow> (\<exists>A \<in> \<A>. S \<subseteq> A)"
-    sorry
-  text \<open>Step 2: Scale the cube decomposition so cubes have diameter < δ.
-    For each M = 0,...,N, the family A_M of enlarged M-cube neighborhoods
-    is a collection of disjoint open sets, each of diameter < δ.
-    The union A_0 ∪ ... ∪ A_N covers R^N, hence X.\<close>
-  obtain \<B> where hBcov: "top1_open_covering_on X
-      (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<B>"
-    and hBref: "top1_refines \<B> \<A>"
-    and hBorder: "top1_cover_order_le_on X \<B> N"
-    sorry
-  show "\<exists>\<B>. top1_open_covering_on X
-      (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<B>
-    \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
-    using hBcov hBref hBorder sorry
-qed
+  text \<open>Proof: Use Lebesgue number + RN_covering_order_N_plus_1 to refine
+    any open covering to one of order ≤ N+1. See helper lemmas above.\<close>
+  sorry
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
 corollary Corollary_50_7:
