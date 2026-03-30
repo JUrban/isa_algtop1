@@ -25492,8 +25492,34 @@ next
       using hsum_pos hFfin hFne card_0_eq by fastforce
   qed
   text \<open>Step 4: leb_f continuous → attains minimum δ > 0 on compact X.\<close>
-  have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
+  have hleb_lip: "\<forall>x\<in>X. \<forall>y\<in>X. \<bar>leb_f x - leb_f y\<bar> \<le> d x y"
     sorry
+  have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
+  proof -
+    let ?dR = "top1_real_bounded_metric"
+    have hTR: "(order_topology_on_UNIV::real set set) = top1_metric_topology_on (UNIV::real set) ?dR"
+      using order_topology_on_UNIV_eq_bounded_metric_topology_real by order
+    have hdR: "top1_metric_on (UNIV::real set) ?dR"
+      by (simp add: top1_real_bounded_metric_metric_on)
+    have "\<forall>x\<in>X. \<forall>\<epsilon>::real. \<epsilon> > 0 \<longrightarrow>
+        (\<exists>\<delta>::real. \<delta> > 0 \<and> (\<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dR (leb_f x) (leb_f y) < \<epsilon>))"
+    proof (intro ballI allI impI)
+      fix x assume hxX2: "x \<in> X"
+      fix \<epsilon> :: real assume hep2: "\<epsilon> > 0"
+      have "\<forall>y\<in>X. d x y < \<epsilon> \<longrightarrow> ?dR (leb_f x) (leb_f y) < \<epsilon>"
+      proof (intro ballI impI)
+        fix y assume hyX2: "y \<in> X" and hdy: "d x y < \<epsilon>"
+        have "\<bar>leb_f x - leb_f y\<bar> \<le> d x y" using hleb_lip hxX2 hyX2 by blast
+        then have "\<bar>leb_f x - leb_f y\<bar> < \<epsilon>" using hdy by linarith
+        then show "?dR (leb_f x) (leb_f y) < \<epsilon>"
+          unfolding top1_real_bounded_metric_def by linarith
+      qed
+      then show "\<exists>\<delta>>0. \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dR (leb_f x) (leb_f y) < \<epsilon>"
+        using hep2 by blast
+    qed
+    then show ?thesis
+      unfolding hTR using Theorem_21_1[OF hd hdR] by blast
+  qed
   obtain c where hcX: "c \<in> X" and hc_min: "\<forall>x\<in>X. leb_f c \<le> leb_f x"
     using Theorem_27_4[OF hXne hComp hleb_cont] by force
   define \<delta> where "\<delta> = leb_f c"
