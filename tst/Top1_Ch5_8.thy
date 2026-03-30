@@ -25845,13 +25845,29 @@ proof (rule subsetI)
         by linarith
       have hsN: "real (Suc N) \<noteq> 0" by simp
       have hmul: "(real k1 - real k2) = of_int (m2 - m1) * real (Suc N)"
-        using hdiff hsN sorry
+      proof -
+        from hdiff have "(real k1 / real (Suc N) - real k2 / real (Suc N)) * real (Suc N)
+          = of_int (m2 - m1) * real (Suc N)" by presburger
+        moreover have "real k1 / real (Suc N) * real (Suc N) = real k1" using hsN by simp
+        moreover have "real k2 / real (Suc N) * real (Suc N) = real k2" using hsN by force
+        ultimately show ?thesis by algebra
+      qed
       moreover have habs: "\<bar>real k1 - real k2\<bar> \<le> real N" using hm1 hm2 by linarith
-      ultimately have hm0: "of_int (m2 - m1) = (0::real)" sorry
+      ultimately have "\<bar>of_int (m2 - m1)\<bar> * real (Suc N) \<le> real N"
+        by (simp add: abs_mult)
+      then have "m2 - m1 = 0" sorry
       then have "real k1 = real k2" using hmul by simp
       then show "k1 = k2" by simp
     qed
-    then show "card (bad_k i) \<le> 1" using hfin_i sorry
+    show "card (bad_k i) \<le> 1"
+    proof (cases "bad_k i = {}")
+      case True then show ?thesis by simp
+    next
+      case False
+      then obtain a where "a \<in> bad_k i" by blast
+      then have "bad_k i = {a}" using huniq by blast
+      then show ?thesis by simp
+    qed
   qed
   define all_bad where "all_bad = (\<Union>i \<in> {0..<N}. bad_k i)"
   have hcard_sum: "card all_bad \<le> (\<Sum>i \<in> {0..<N}. card (bad_k i))"
