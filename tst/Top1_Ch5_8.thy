@@ -15988,7 +15988,8 @@ proof -
         using open_in_generated_basis_neighborhood hU hfU
         unfolding top1_sup_topology_on_def top1_metric_topology_on_def
         by (meson generated_topology_contains_basis_elem)
-      then obtain c r where hr: "0 < r" and hbeq: "b = top1_ball_on ?PiE ?ds c r"
+      then obtain c r where hcPiE: "c \<in> ?PiE" and hr: "0 < r"
+        and hbeq: "b = top1_ball_on ?PiE ?ds c r"
         unfolding top1_metric_basis_on_def by blast
       have hf_in_ball: "?ds c f < r"
         using hfb hbeq unfolding top1_ball_on_def by blast
@@ -16000,20 +16001,22 @@ proof -
         fix g assume hg: "g \<in> top1_ball_on ?PiE ?ds f \<epsilon>"
         then have hgPiE: "g \<in> ?PiE" and hds_fg: "?ds f g < \<epsilon>"
           unfolding top1_ball_on_def by auto
-        show "g \<in> b"
-        proof (cases "bdd_above ((\<lambda>x. d (c x) (g x)) ` X)")
-          case False
-          then have "?ds c g = 0" unfolding top1_sup_metric_on_def sorry
-          then show ?thesis unfolding hbeq top1_ball_on_def using hgPiE hr by simp
-        next
-          case hbdd_cg: True
-          have hpw: "\<forall>x\<in>X. d (c x) (g x) \<le> ?ds c f + ?ds f g"
-            sorry
-          then have "?ds c g \<le> ?ds c f + ?ds f g"
-            unfolding top1_sup_metric_on_def sorry
-          also have "... < r" using hf_in_ball hds_fg unfolding \<epsilon>_def by argo
-          finally show ?thesis unfolding hbeq top1_ball_on_def using hgPiE by blast
+        have hpw: "\<forall>x\<in>X. d (c x) (g x) \<le> ?ds c f + ?ds f g"
+        proof (intro ballI)
+          fix x assume hx: "x \<in> X"
+          have hcxY: "c x \<in> Y" using hcPiE hx unfolding top1_PiE_iff by blast
+          have hfxY: "f x \<in> Y" using hfPiE hx unfolding top1_PiE_iff by fast
+          have hgxY: "g x \<in> Y" using hgPiE hx unfolding top1_PiE_iff by blast
+          have "d (c x) (g x) \<le> d (c x) (f x) + d (f x) (g x)"
+            using hd hcxY hfxY hgxY unfolding top1_metric_on_def by blast
+          also have "... \<le> ?ds c f + ?ds f g" sorry
+          finally show "d (c x) (g x) \<le> ?ds c f + ?ds f g" .
         qed
+        then have "?ds c g \<le> ?ds c f + ?ds f g"
+          unfolding top1_sup_metric_on_def
+          using cSup_least[of "(\<lambda>x. d (c x) (g x)) ` X"] hXne by blast
+        also have "... < r" using hf_in_ball hds_fg unfolding \<epsilon>_def by argo
+        finally show "g \<in> b" unfolding hbeq top1_ball_on_def using hgPiE by blast
       qed
       then have "top1_ball_on ?PiE ?ds f \<epsilon> \<inter> C \<subseteq> V" using hV hbU by blast
       then have "top1_ball_on ?PiE ?du f \<epsilon> \<inter> C \<subseteq> V"
