@@ -25790,12 +25790,26 @@ qed
 
 text \<open>R^N has open coverings of order N+1 at any scale.
   This follows from the cube decomposition of R^N.\<close>
+text \<open>Unit-scale covering of R^N with order N+1.
+  Construction: For M = 0,...,N, the M-cube family A_M consists of neighborhoods
+  of products where exactly M coordinates are open intervals (n,n+1) and the rest
+  are singletons {n}. Within each A_M, neighborhoods are disjoint.
+  Each element has diameter ≤ 3/2 in the square metric.
+  A = A_0 ∪ ... ∪ A_N covers R^N with order N+1.\<close>
+lemma RN_unit_covering_order:
+  fixes N :: nat
+  shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
+    \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
+    \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 2)"
+  sorry
+
 lemma RN_covering_order_N_plus_1:
   fixes N :: nat and \<epsilon> :: real
   assumes heps: "\<epsilon> > 0"
   shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
     \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
     \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)"
+  text \<open>Scale the unit covering by ε/3 to get diameter < ε.\<close>
   sorry
 
 (** from \S50 Theorem 50.6 [top1.tex:7808] **)
