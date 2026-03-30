@@ -25391,7 +25391,21 @@ next
     qed
     then have hdist_pos: "dist_set (C Ai) x > 0" using hep by argo
     have hnn: "\<forall>A\<in>F. dist_set (C A) x \<ge> 0"
-      sorry
+    proof (intro ballI)
+      fix A assume "A \<in> F"
+      show "dist_set (C A) x \<ge> 0"
+      proof (cases "C A = {}")
+        case True
+        then show ?thesis unfolding dist_set_def sorry
+      next
+        case False
+        then have hne: "{d x y | y. y \<in> C A} \<noteq> {}" by simp
+        have "\<And>z. z \<in> {d x y | y. y \<in> C A} \<Longrightarrow> 0 \<le> z"
+          using hd hxX unfolding top1_metric_on_def C_def by fast
+        then show ?thesis unfolding dist_set_def
+          using cInf_greatest[OF hne] by auto
+      qed
+    qed
     have "dist_set (C Ai) x \<le> (\<Sum>A\<in>F. dist_set (C A) x)"
       by (meson hAi hFfin hnn sum_nonneg_leq_bound)
     then have hsum_pos: "(\<Sum>A\<in>F. dist_set (C A) x) > 0"
