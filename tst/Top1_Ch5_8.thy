@@ -25354,7 +25354,24 @@ next
   define leb_f where "leb_f = (\<lambda>x. (\<Sum>A\<in>F. dist_set (C A) x) / card F)"
   text \<open>Step 3: f(x) > 0 for all x ∈ X.\<close>
   have hf_pos: "\<forall>x\<in>X. leb_f x > 0"
-    sorry
+  proof (intro ballI)
+    fix x assume hxX: "x \<in> X"
+    obtain Ai where hAi: "Ai \<in> F" and hxAi: "x \<in> Ai"
+      using hFcov hxX by fast
+    have hAi_open: "Ai \<in> ?T" using hA_open hAi hFA by blast
+    obtain \<epsilon> where hep: "\<epsilon> > 0" and hball: "top1_ball_on X d x \<epsilon> \<subseteq> Ai"
+      using metric_topology_ball_neighborhood[OF hd hAi_open hxAi] by fast
+    text \<open>d(x,y) ≥ ε for all y ∈ C(Ai), since y ∉ Ai ⊇ ball(x,ε).\<close>
+    have hge: "\<forall>y \<in> C Ai. d x y \<ge> \<epsilon>"
+      sorry
+    have hdist_ge: "dist_set (C Ai) x \<ge> \<epsilon>"
+      unfolding dist_set_def using hge sorry
+    then have hdist_pos: "dist_set (C Ai) x > 0" using hep by argo
+    have hnn: "\<forall>A\<in>F. dist_set (C A) x \<ge> 0"
+      sorry
+    show "leb_f x > 0"
+      sorry
+  qed
   text \<open>Step 4: leb_f continuous → attains minimum δ > 0 on compact X.\<close>
   have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
     sorry
