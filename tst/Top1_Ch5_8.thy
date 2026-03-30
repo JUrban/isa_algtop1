@@ -25855,7 +25855,15 @@ proof (rule subsetI)
       moreover have habs: "\<bar>real k1 - real k2\<bar> \<le> real N" using hm1 hm2 by linarith
       ultimately have "\<bar>of_int (m2 - m1)\<bar> * real (Suc N) \<le> real N"
         by (simp add: abs_mult)
-      then have "m2 - m1 = 0" sorry
+      then have hbound: "\<bar>of_int (m2 - m1)\<bar> * real (Suc N) \<le> real N" .
+      have "m2 - m1 = 0"
+      proof (rule ccontr)
+        assume "m2 - m1 \<noteq> 0"
+        then have "\<bar>m2 - m1\<bar> \<ge> 1" by presburger
+        then have "\<bar>of_int (m2 - m1)\<bar> \<ge> (1::real)" by linarith
+        then have "\<bar>of_int (m2 - m1)\<bar> * real (Suc N) \<ge> real (Suc N)" by auto
+        then show False using hbound by linarith
+      qed
       then have "real k1 = real k2" using hmul by simp
       then show "k1 = k2" by simp
     qed
