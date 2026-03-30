@@ -25355,9 +25355,14 @@ next
   text \<open>Step 3: f(x) > 0 for all x ∈ X.\<close>
   have hf_pos: "\<forall>x\<in>X. leb_f x > 0"
     sorry
-  text \<open>Step 4: f continuous, X compact → f attains minimum δ > 0.\<close>
-  obtain \<delta> where hd_pos: "\<delta> > 0" and hd_min: "\<forall>x\<in>X. \<delta> \<le> leb_f x"
+  text \<open>Step 4: leb_f continuous → attains minimum δ > 0 on compact X.\<close>
+  have hleb_cont: "top1_continuous_map_on X ?T UNIV (order_topology_on_UNIV::real set set) leb_f"
     sorry
+  obtain c where hcX: "c \<in> X" and hc_min: "\<forall>x\<in>X. leb_f c \<le> leb_f x"
+    using Theorem_27_4[OF hXne hComp hleb_cont] by force
+  define \<delta> where "\<delta> = leb_f c"
+  have hd_pos: "\<delta> > 0" unfolding \<delta>_def using hf_pos hcX by blast
+  have hd_min: "\<forall>x\<in>X. \<delta> \<le> leb_f x" unfolding \<delta>_def using hc_min by blast
   text \<open>Step 5: δ is the Lebesgue number.\<close>
   have "\<forall>B. B \<subseteq> X \<and> top1_metric_diam_on X d B < \<delta> \<longrightarrow> (\<exists>U\<in>\<A>. B \<subseteq> U)"
   proof (intro allI impI)
