@@ -25662,9 +25662,44 @@ text \<open>Square metric on R^N: ρ(x,y) = max{|x_i - y_i| | i < N}.\<close>
 definition top1_Rpow_sq_metric :: "nat \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> (nat \<Rightarrow> real) \<Rightarrow> real" where
   "top1_Rpow_sq_metric N x y = (if N = 0 then 0 else Max {abs (x i - y i) | i. i < N})"
 
+lemma Rpow_sq_metric_sym:
+  shows "top1_Rpow_sq_metric N x y = top1_Rpow_sq_metric N y x"
+proof -
+  have "\<forall>i. abs (x i - y i) = abs (y i - x i)" by auto
+  then have "{abs (x i - y i) | i. i < N} = {abs (y i - x i) | i. i < N}" by presburger
+  then show ?thesis unfolding top1_Rpow_sq_metric_def by presburger
+qed
+
+lemma Rpow_sq_metric_nonneg:
+  shows "top1_Rpow_sq_metric N x y \<ge> 0"
+proof (cases "N = 0")
+  case True then show ?thesis unfolding top1_Rpow_sq_metric_def by simp
+next
+  case False
+  have hfin: "finite ((\<lambda>i. abs (x i - y i)) ` {0..<N})" by blast
+  have hne: "((\<lambda>i. abs (x i - y i)) ` {0..<N}) \<noteq> {}" using False by simp
+  have hnn: "\<forall>v \<in> (\<lambda>i. abs (x i - y i)) ` {0..<N}. v \<ge> 0" by fastforce
+  have heq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. abs (x i - y i)) ` {0..<N}" by auto
+  then have "Max {abs (x i - y i) | i. i < N} \<ge> 0"
+    using Max_ge_iff[OF hfin hne] hnn hne by auto
+  then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
+qed
+
+lemma Rpow_sq_metric_sep:
+  assumes "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N"
+  shows "(top1_Rpow_sq_metric N x y = 0) = (x = y)"
+  sorry
+
+lemma Rpow_sq_metric_triangle:
+  assumes "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N" "z \<in> top1_Rpow_set N"
+  shows "top1_Rpow_sq_metric N x z \<le> top1_Rpow_sq_metric N x y + top1_Rpow_sq_metric N y z"
+  sorry
+
 lemma top1_Rpow_sq_metric_is_metric:
   shows "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
-  sorry
+  unfolding top1_metric_on_def
+  using Rpow_sq_metric_nonneg Rpow_sq_metric_sep Rpow_sq_metric_sym Rpow_sq_metric_triangle
+  by simp
 
 lemma top1_Rpow_topology_eq_sq_metric:
   shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
