@@ -25689,11 +25689,25 @@ lemma Rpow_sq_metric_sep:
   assumes hx: "x \<in> top1_Rpow_set N" and hy: "y \<in> top1_Rpow_set N"
   shows "(top1_Rpow_sq_metric N x y = 0) = (x = y)"
 proof
-  assume "x = y" then show "top1_Rpow_sq_metric N x y = 0"
-    unfolding top1_Rpow_sq_metric_def sorry
+  assume heq: "x = y"
+  have "{abs (x i - y i) | i. i < N} = (if N = 0 then {} else {0})"
+    using heq by auto
+  then show "top1_Rpow_sq_metric N x y = 0"
+    unfolding top1_Rpow_sq_metric_def using heq by auto
 next
   assume hd0: "top1_Rpow_sq_metric N x y = 0"
-  have hpw: "\<forall>i<N. x i = y i" sorry
+  have hpw: "\<forall>i<N. x i = y i"
+  proof (intro allI impI)
+    fix i assume hiN: "i < N"
+    have hfin: "finite {abs (x j - y j) | j. j < N}" by simp
+    have hmem: "abs (x i - y i) \<in> {abs (x j - y j) | j. j < N}" using hiN by blast
+    have "abs (x i - y i) \<le> Max {abs (x j - y j) | j. j < N}"
+      using Max_ge hfin hmem by blast
+    also have "... = top1_Rpow_sq_metric N x y"
+      unfolding top1_Rpow_sq_metric_def using hiN by presburger
+    also have "... = 0" using hd0 by presburger
+    finally show "x i = y i" by simp
+  qed
   have hout_x: "\<forall>i. i \<notin> {0..<N} \<longrightarrow> x i = undefined"
     using hx unfolding top1_Rpow_set_def top1_PiE_iff by argo
   have hout_y: "\<forall>i. i \<notin> {0..<N} \<longrightarrow> y i = undefined"
