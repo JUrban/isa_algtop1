@@ -25821,7 +25821,16 @@ lemma RN_grid_family_disjoint:
 text \<open>The grid covering covers R^N (pigeonhole on fractional parts).\<close>
 lemma RN_grid_covering_covers:
   shows "top1_Rpow_set N \<subseteq> \<Union>(RN_grid_covering N)"
-  sorry
+proof (rule subsetI)
+  fix x assume hx: "x \<in> top1_Rpow_set N"
+  obtain k where hk: "k \<le> N" and hgood: "\<forall>i<N. \<not>(\<exists>m::int. x i = real_of_int m + real k / real (Suc N))"
+    sorry
+  define n :: "nat \<Rightarrow> int" where "n = (\<lambda>i. \<lfloor>x i - real k / real (Suc N)\<rfloor>)"
+  have "x \<in> RN_shifted_cube N k n"
+    unfolding RN_shifted_cube_def n_def sorry
+  then have "x \<in> \<Union>(RN_grid_family N k)" unfolding RN_grid_family_def by blast
+  then show "x \<in> \<Union>(RN_grid_covering N)" unfolding RN_grid_covering_def using hk by blast
+qed
 
 text \<open>Each cube is open in the product topology.\<close>
 lemma RN_grid_cube_open:
