@@ -25720,7 +25720,33 @@ qed
 lemma Rpow_sq_metric_triangle:
   assumes "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N" "z \<in> top1_Rpow_set N"
   shows "top1_Rpow_sq_metric N x z \<le> top1_Rpow_sq_metric N x y + top1_Rpow_sq_metric N y z"
-  sorry
+proof (cases "N = 0")
+  case True then show ?thesis unfolding top1_Rpow_sq_metric_def by simp
+next
+  case False
+  let ?dxy = "top1_Rpow_sq_metric N x y"
+  let ?dyz = "top1_Rpow_sq_metric N y z"
+  have hfin: "finite {abs (x i - z i) | i. i < N}" by simp
+  have hne: "{abs (x i - z i) | i. i < N} \<noteq> {}" using False by fastforce
+  have hfin_xy: "finite {abs (x i - y i) | i. i < N}" by simp
+  have hfin_yz: "finite {abs (y i - z i) | i. i < N}" by simp
+  have "\<forall>v \<in> {abs (x i - z i) | i. i < N}. v \<le> ?dxy + ?dyz"
+  proof (rule ballI)
+    fix v assume "v \<in> {abs (x i - z i) | i. i < N}"
+    then obtain i where hiN: "i < N" and hv: "v = abs (x i - z i)" by blast
+    have htri_i: "abs (x i - z i) \<le> abs (x i - y i) + abs (y i - z i)" by linarith
+    have "abs (x i - y i) \<in> {abs (x j - y j) | j. j < N}" using hiN by blast
+    then have hxy_le: "abs (x i - y i) \<le> ?dxy"
+      unfolding top1_Rpow_sq_metric_def using False Max_ge[OF hfin_xy] by presburger
+    have "abs (y i - z i) \<in> {abs (y j - z j) | j. j < N}" using hiN by blast
+    then have hyz_le: "abs (y i - z i) \<le> ?dyz"
+      unfolding top1_Rpow_sq_metric_def using False Max_ge[OF hfin_yz] by presburger
+    show "v \<le> ?dxy + ?dyz" using hv htri_i hxy_le hyz_le by argo
+  qed
+  then have "Max {abs (x i - z i) | i. i < N} \<le> ?dxy + ?dyz"
+    using Max_le_iff[OF hfin hne] by presburger
+  then show ?thesis unfolding top1_Rpow_sq_metric_def using False by argo
+qed
 
 lemma top1_Rpow_sq_metric_is_metric:
   shows "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
