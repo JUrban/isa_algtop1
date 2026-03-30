@@ -25372,8 +25372,19 @@ next
       then obtain x0 where hx0: "x0 \<in> B" by blast
       have hx0X: "x0 \<in> X" by (metis hx0 hBX subsetD)
       text \<open>B ⊆ δ-ball(x0) since diam(B) < δ.\<close>
-      have hB_in_ball: "B \<subseteq> top1_ball_on X d x0 \<delta>"
+      have hbdd_B: "bdd_above {d a b | a b. a \<in> B \<and> b \<in> B}"
         sorry
+      have hB_in_ball: "B \<subseteq> top1_ball_on X d x0 \<delta>"
+      proof (rule subsetI)
+        fix y assume "y \<in> B"
+        have hyX: "y \<in> X" using \<open>y \<in> B\<close> hBX by blast
+        have "d x0 y \<in> {d a b | a b. a \<in> B \<and> b \<in> B}" using hx0 \<open>y \<in> B\<close> by blast
+        then have "d x0 y \<le> top1_metric_diam_on X d B"
+          unfolding top1_metric_diam_on_def using cSup_upper hbdd_B by meson
+        then have "d x0 y < \<delta>" using hBdiam by linarith
+        then show "y \<in> top1_ball_on X d x0 \<delta>"
+          unfolding top1_ball_on_def using hyX by blast
+      qed
       text \<open>δ ≤ f(x0) ≤ d(x0, C_m) for some A_m ∈ F. Then ball(x0,δ) ⊆ A_m.\<close>
       obtain Am where hAm: "Am \<in> F" and hball_sub: "top1_ball_on X d x0 \<delta> \<subseteq> Am"
         sorry
