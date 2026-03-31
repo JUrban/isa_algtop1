@@ -27018,7 +27018,8 @@ proof -
       then obtain i where "i < n" "x \<in> Vi i" by (meson UN_E lessThan_iff)
       then have "x \<in> closure_on X TX (Vi i)"
         using subset_closure_on by (meson subsetD)
-      then show "x \<in> (\<Union>i<n. Ci i)" unfolding Ci_def using \<open>i < n\<close> sorry
+      then show "x \<in> (\<Union>i<n. Ci i)" unfolding Ci_def
+        using \<open>i < n\<close> by blast
     qed
   next
     show "(\<Union>i<n. Ci i) \<subseteq> X"
@@ -27042,7 +27043,7 @@ proof -
   proof (intro allI impI)
     fix i assume hi: "i < n"
     have hCi_comp: "top1_compact_on (Ci i) (subspace_topology X TX (Ci i))"
-      sorry
+      by (rule Theorem_26_2[OF hComp hCicl[rule_format, OF hi]])
     have hCi_emb: "\<exists>g. top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
       (top1_Rpow_set m) (top1_Rpow_topology m) g"
       sorry
