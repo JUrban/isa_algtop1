@@ -25826,8 +25826,15 @@ proof (rule ccontr)
   from hx2 assms have h2: "of_int (n2 i) + real k / real (Suc N) < x i
     \<and> x i < of_int (n2 i) + real k / real (Suc N) + 1"
     unfolding RN_shifted_cube_def by blast
-  from h1 h2 have "\<bar>of_int (n1 i) - of_int (n2 i)\<bar> < 1" sorry
-  then have "n1 i = n2 i" sorry
+  define a :: real where "a = of_int (n1 i)"
+  define b :: real where "b = of_int (n2 i)"
+  define s :: real where "s = real k / real (Suc N)"
+  from h1 have ha: "a + s < x i \<and> x i < a + s + 1" unfolding a_def s_def by presburger
+  from h2 have hb: "b + s < x i \<and> x i < b + s + 1" unfolding b_def s_def by presburger
+  from ha hb have "a - b < 1 \<and> b - a < 1" by linarith
+  then have "\<bar>a - b\<bar> < 1" by linarith
+  then have "a = b" unfolding a_def b_def by simp
+  then have "n1 i = n2 i" unfolding a_def b_def by presburger
   then show False using assms by presburger
 qed
 
