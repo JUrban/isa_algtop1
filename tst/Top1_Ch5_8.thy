@@ -25840,7 +25840,18 @@ qed
 
 lemma RN_shifted_cube_nonempty:
   shows "RN_shifted_cube N k n \<noteq> {}"
-  sorry
+proof -
+  define s where "s = real k / real (Suc N)"
+  define w :: "nat \<Rightarrow> real" where
+    "w = (\<lambda>i. if i < N then of_int (n i) + s + 1/2 else undefined)"
+  have "w \<in> top1_Rpow_set N"
+    unfolding top1_Rpow_set_def top1_PiE_iff w_def by simp
+  moreover have "\<forall>i<N. of_int (n i) + s < w i \<and> w i < of_int (n i) + s + 1"
+    unfolding w_def by auto
+  ultimately have "w \<in> RN_shifted_cube N k n"
+    unfolding RN_shifted_cube_def s_def by fastforce
+  then show ?thesis by fast
+qed
 
 lemma RN_shifted_cube_eq_if_agree:
   assumes "\<forall>i<N. n1 i = n2 i"
@@ -25970,17 +25981,117 @@ proof (rule subsetI)
   then show "x \<in> \<Union>(RN_grid_covering N)" unfolding RN_grid_covering_def using hk by blast
 qed
 
+text \<open>A shifted cube equals a PiE of open intervals.\<close>
+lemma RN_shifted_cube_eq_PiE:
+  "RN_shifted_cube N k n = top1_PiE {0..<N}
+    (\<lambda>i. open_interval (of_int (n i) + real k / real (Suc N))
+                        (of_int (n i) + real k / real (Suc N) + 1))"
+proof (rule set_eqI)
+  fix x
+  define s where "s = (\<lambda>i. of_int (n i) + real k / real (Suc N))"
+  show "x \<in> RN_shifted_cube N k n \<longleftrightarrow>
+    x \<in> top1_PiE {0..<N} (\<lambda>i. open_interval (of_int (n i) + real k / real (Suc N))
+                                             (of_int (n i) + real k / real (Suc N) + 1))"
+    unfolding RN_shifted_cube_def top1_Rpow_set_def top1_PiE_iff open_interval_def
+    by force
+qed
+
+text \<open>A shifted cube is a product basis element.\<close>
+lemma RN_shifted_cube_in_product_basis:
+  "RN_shifted_cube N k n \<in>
+    top1_product_basis_on {0..<N} (\<lambda>_. UNIV) (\<lambda>_. order_topology_on_UNIV)"
+proof -
+  define U where "U = (\<lambda>i. open_interval (of_int (n i) + real k / real (Suc N))
+                                          (of_int (n i) + real k / real (Suc N) + 1))"
+  have hcube_eq: "RN_shifted_cube N k n = top1_PiE {0..<N} U"
+    unfolding U_def by (rule RN_shifted_cube_eq_PiE)
+  have hU_open: "\<forall>i\<in>{0..<N}. U i \<in> order_topology_on_UNIV"
+  proof (intro ballI)
+    fix i assume "i \<in> {0..<N}"
+    have "of_int (n i) + real k / real (Suc N) < of_int (n i) + real k / real (Suc N) + 1"
+      by linarith
+    then show "U i \<in> order_topology_on_UNIV"
+      unfolding U_def by (rule open_interval_in_order_topology)
+  qed
+  have hU_sub: "\<forall>i\<in>{0..<N}. U i \<subseteq> (UNIV::real set)"
+    by blast
+  have hfin: "finite {i \<in> {0..<N}. U i \<noteq> (UNIV::real set)}"
+    by simp
+  show ?thesis
+    unfolding hcube_eq top1_product_basis_on_def
+    using hU_open hU_sub hfin
+    by blast
+qed
+
 text \<open>Each cube is open in the product topology.\<close>
 lemma RN_grid_cube_open:
   assumes "A \<in> RN_grid_covering N"
   shows "A \<in> top1_Rpow_topology N"
-  sorry
+proof -
+  obtain k n where hk: "k \<le> N" and hA: "A = RN_shifted_cube N k n"
+    using assms unfolding RN_grid_covering_def RN_grid_family_def
+    by blast
+  have hAbasis: "A \<in> top1_product_basis_on {0..<N} (\<lambda>_. UNIV) (\<lambda>_. order_topology_on_UNIV)"
+    unfolding hA by (rule RN_shifted_cube_in_product_basis)
+  have hAsub: "A \<subseteq> top1_Rpow_set N"
+    unfolding hA RN_shifted_cube_def by blast
+  then show "A \<in> top1_Rpow_topology N"
+    unfolding top1_Rpow_topology_def top1_product_topology_on_def
+      top1_Rpow_set_def topology_generated_by_basis_def
+    using hAbasis by blast
+qed
+
+text \<open>Key helper: two points in same shifted cube have distance < 1.\<close>
+lemma RN_shifted_cube_dist_lt_1:
+  assumes hx: "x \<in> RN_shifted_cube N k n" and hy: "y \<in> RN_shifted_cube N k n"
+  shows "top1_Rpow_sq_metric N x y \<le> 1"
+proof (cases "N = 0")
+  case True
+  then show ?thesis unfolding top1_Rpow_sq_metric_def by simp
+next
+  case False
+  have hxN: "x \<in> top1_Rpow_set N" and hyN: "y \<in> top1_Rpow_set N"
+    using hx hy unfolding RN_shifted_cube_def by auto
+  have hcoord: "\<forall>i<N. \<bar>x i - y i\<bar> < 1"
+  proof (intro allI impI)
+    fix i assume hi: "i < N"
+    define s where "s = of_int (n i) + real k / real (Suc N)"
+    have "s < x i \<and> x i < s + 1" using hx hi unfolding RN_shifted_cube_def s_def by blast
+    moreover have "s < y i \<and> y i < s + 1" using hy hi unfolding RN_shifted_cube_def s_def by blast
+    ultimately show "\<bar>x i - y i\<bar> < 1" by linarith
+  qed
+  have hcoord_le: "\<forall>i<N. \<bar>x i - y i\<bar> \<le> 1"
+    using hcoord by fastforce
+  have hset_eq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}"
+    by fastforce
+  have hfin: "finite ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})" by blast
+  have hne: "((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}) \<noteq> {}" using False by fastforce
+  have "Max {abs (x i - y i) | i. i < N} \<le> 1"
+    unfolding hset_eq using hcoord_le hfin hne by simp
+  then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
+qed
 
 text \<open>Each cube has diameter ≤ 1 in the square metric.\<close>
 lemma RN_grid_cube_diam:
   assumes "A \<in> RN_grid_covering N"
   shows "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 1"
-  sorry
+proof -
+  obtain k n where hk: "k \<le> N" and hA: "A = RN_shifted_cube N k n"
+    using assms unfolding RN_grid_covering_def RN_grid_family_def by blast
+  have hne: "A \<noteq> {}" unfolding hA using RN_shifted_cube_nonempty by simp
+  have hdist: "\<forall>x \<in> A. \<forall>y \<in> A. top1_Rpow_sq_metric N x y \<le> 1"
+    unfolding hA using RN_shifted_cube_dist_lt_1 by blast
+  show ?thesis
+    unfolding top1_metric_diam_on_def
+  proof (rule cSup_least)
+    show "{top1_Rpow_sq_metric N x y |x y. x \<in> A \<and> y \<in> A} \<noteq> {}"
+      using hne by blast
+    fix d assume "d \<in> {top1_Rpow_sq_metric N x y |x y. x \<in> A \<and> y \<in> A}"
+    then obtain x y where "x \<in> A" "y \<in> A" "d = top1_Rpow_sq_metric N x y"
+      by blast
+    then show "d \<le> 1" using hdist by simp
+  qed
+qed
 
 text \<open>The covering has order N+1: each point in at most N+1 cubes.
   Proof: for each k, x is in at most one cube (disjoint grid).
@@ -25991,16 +26102,81 @@ lemma RN_grid_covering_order:
 proof (intro ballI conjI)
   fix x assume hx: "x \<in> top1_Rpow_set N"
   text \<open>For each k ≤ N, x is in at most 1 element of grid family k (disjoint).\<close>
-  have hone: "\<forall>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U} \<le> 1" sorry
+  have hone: "\<forall>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U} \<le> 1"
+  proof (intro allI impI)
+    fix k assume hk: "k \<le> N"
+    show "card {U \<in> RN_grid_family N k. x \<in> U} \<le> 1"
+    proof (cases "{U \<in> RN_grid_family N k. x \<in> U} = {}")
+      case True
+        then have hS: "{U \<in> RN_grid_family N k. x \<in> U} = {}" .
+        then show ?thesis by (simp add: hS)
+    next
+      case False
+      then obtain A where hA: "A \<in> RN_grid_family N k" "x \<in> A" by blast
+      have "{U \<in> RN_grid_family N k. x \<in> U} = {A}"
+      proof (rule set_eqI)
+        fix B
+        show "(B \<in> {U \<in> RN_grid_family N k. x \<in> U}) = (B \<in> {A})"
+        proof
+          assume hB: "B \<in> {U \<in> RN_grid_family N k. x \<in> U}"
+          then have "B \<in> RN_grid_family N k" "x \<in> B" by blast+
+          show "B \<in> {A}"
+          proof (rule ccontr)
+            assume "B \<notin> {A}"
+            then have hAneB: "A \<noteq> B" by blast
+            have "A \<inter> B = {}"
+              by (rule RN_grid_family_disjoint[OF hA(1) \<open>B \<in> RN_grid_family N k\<close> hAneB])
+            then show False using hA(2) \<open>x \<in> B\<close> by blast
+          qed
+        next
+          assume "B \<in> {A}" then show "B \<in> {U \<in> RN_grid_family N k. x \<in> U}" using hA by simp
+        qed
+      qed
+      then show ?thesis by simp
+    qed
+  qed
+  text \<open>For each k, the set of cubes in family k containing x is finite.\<close>
+  have hfin_k: "\<forall>k\<le>N. finite {U \<in> RN_grid_family N k. x \<in> U}"
+  proof (intro allI impI)
+    fix k assume hk: "k \<le> N"
+    show "finite {U \<in> RN_grid_family N k. x \<in> U}"
+    proof (cases "{U \<in> RN_grid_family N k. x \<in> U} = {}")
+      case True
+        then have hS: "{U \<in> RN_grid_family N k. x \<in> U} = {}" .
+        then show ?thesis by (simp add: hS)
+    next
+      case False
+      then obtain A where "A \<in> RN_grid_family N k" "x \<in> A" by blast
+      have "{U \<in> RN_grid_family N k. x \<in> U} \<subseteq> {A}"
+      proof
+        fix B assume "B \<in> {U \<in> RN_grid_family N k. x \<in> U}"
+        then have "B \<in> RN_grid_family N k" "x \<in> B" by simp_all
+        show "B \<in> {A}"
+        proof (rule ccontr)
+          assume "B \<notin> {A}" then have "A \<noteq> B" by blast
+          then have "A \<inter> B = {}"
+            by (rule RN_grid_family_disjoint[OF \<open>A \<in> RN_grid_family N k\<close> \<open>B \<in> RN_grid_family N k\<close>])
+          then show False using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by blast
+        qed
+      qed
+      then show ?thesis using finite_subset by blast
+    qed
+  qed
   text \<open>The covering sets containing x are ⊆ union over k of the sets from each family.\<close>
-  have "{U \<in> RN_grid_covering N. x \<in> U} \<subseteq> (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
+  have hsub: "{U \<in> RN_grid_covering N. x \<in> U} \<subseteq> (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
     unfolding RN_grid_covering_def by blast
-  then have "card {U \<in> RN_grid_covering N. x \<in> U} \<le> (\<Sum>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U})"
-    sorry
-  also have "... \<le> (\<Sum>k\<le>N. (1::nat))" using hone sorry
+  have hfin_union: "finite (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
+    using hfin_k by simp
+  show "finite {U \<in> RN_grid_covering N. x \<in> U}"
+    using finite_subset[OF hsub hfin_union] .
+  have "card {U \<in> RN_grid_covering N. x \<in> U} \<le> card (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
+    using card_mono[OF hfin_union hsub] .
+  also have "... \<le> (\<Sum>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U})"
+    using card_UN_le hfin_k by blast
+  also have "... \<le> (\<Sum>k\<le>N. (1::nat))"
+    by (rule sum_mono) (use hone in blast)
   also have "... = Suc N" by simp
   finally show "card {U \<in> RN_grid_covering N. x \<in> U} \<le> Suc N" .
-  show "finite {U \<in> RN_grid_covering N. x \<in> U}" sorry
 qed
 
 lemma RN_unit_covering_order:
@@ -26012,12 +26188,419 @@ proof -
   let ?\<A> = "RN_grid_covering N"
   have "top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) ?\<A>"
     using RN_grid_covering_covers RN_grid_cube_open
-    unfolding top1_open_covering_on_def sorry
+    unfolding top1_open_covering_on_def
+    by (meson subsetI)
   moreover have "top1_cover_order_le_on (top1_Rpow_set N) ?\<A> N"
     by (rule RN_grid_covering_order)
   moreover have "\<forall>A\<in>?\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 2"
-    using RN_grid_cube_diam sorry
-  ultimately show ?thesis sorry
+  proof (intro ballI)
+    fix A assume "A \<in> ?\<A>"
+    then have "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 1"
+      by (rule RN_grid_cube_diam)
+    then show "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> 2"
+      by linarith
+  qed
+  ultimately show ?thesis by blast
+qed
+
+text \<open>Parametric shifted cube with side length c.\<close>
+definition RN_shifted_cube_sc :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<Rightarrow> int) \<Rightarrow> real \<Rightarrow> (nat \<Rightarrow> real) set" where
+  "RN_shifted_cube_sc N k n c = {x \<in> top1_Rpow_set N.
+    \<forall>i<N. (real_of_int (n i) + real k / real (Suc N)) * c < x i
+         \<and> x i < (real_of_int (n i) + real k / real (Suc N) + 1) * c}"
+
+definition RN_grid_family_sc :: "nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> (nat \<Rightarrow> real) set set" where
+  "RN_grid_family_sc N k c = {RN_shifted_cube_sc N k n c | n. True}"
+
+definition RN_grid_covering_sc :: "nat \<Rightarrow> real \<Rightarrow> (nat \<Rightarrow> real) set set" where
+  "RN_grid_covering_sc N c = (\<Union>k \<le> N. RN_grid_family_sc N k c)"
+
+text \<open>Covering with scale c covers R^N. Proof: reduce to unscaled via y = x/c.\<close>
+lemma RN_grid_covering_sc_covers:
+  assumes hc: "c > 0"
+  shows "top1_Rpow_set N \<subseteq> \<Union>(RN_grid_covering_sc N c)"
+proof (rule subsetI)
+  fix x assume hx: "x \<in> top1_Rpow_set N"
+  text \<open>Define y(i) = x(i)/c for i<N, undefined otherwise.\<close>
+  define y :: "nat \<Rightarrow> real" where "y = (\<lambda>i. if i < N then x i / c else undefined)"
+  have hy: "y \<in> top1_Rpow_set N"
+    unfolding top1_Rpow_set_def top1_PiE_iff y_def by simp
+  then have "y \<in> \<Union>(RN_grid_covering N)" using RN_grid_covering_covers by blast
+  then obtain k n where hk: "k \<le> N" and hyn: "y \<in> RN_shifted_cube N k n"
+    unfolding RN_grid_covering_def RN_grid_family_def by blast
+  have "x \<in> RN_shifted_cube_sc N k n c"
+    unfolding RN_shifted_cube_sc_def
+  proof (intro CollectI conjI allI impI)
+    show "x \<in> top1_Rpow_set N" using hx .
+    fix i assume hi: "i < N"
+    define s where "s = of_int (n i) + real k / real (Suc N)"
+    have hyi: "s < y i \<and> y i < s + 1"
+      using hyn hi unfolding RN_shifted_cube_def s_def by blast
+    then have hxi: "s < x i / c \<and> x i / c < s + 1"
+      using hi unfolding y_def by presburger
+    then show "s * c < x i" using hc
+      unfolding s_def by (simp add: pos_less_divide_eq)
+    show "x i < (s + 1) * c" using hxi hc
+      unfolding s_def using pos_divide_less_eq by blast
+  qed
+  then have "x \<in> \<Union>(RN_grid_family_sc N k c)" unfolding RN_grid_family_sc_def by blast
+  then show "x \<in> \<Union>(RN_grid_covering_sc N c)" unfolding RN_grid_covering_sc_def using hk by blast
+qed
+
+text \<open>Scaled cube equals PiE of open intervals.\<close>
+lemma RN_shifted_cube_sc_eq_PiE:
+  "RN_shifted_cube_sc N k n c = top1_PiE {0..<N}
+    (\<lambda>i. open_interval ((of_int (n i) + real k / real (Suc N)) * c)
+                        ((of_int (n i) + real k / real (Suc N) + 1) * c))"
+proof (rule set_eqI)
+  fix x
+  show "x \<in> RN_shifted_cube_sc N k n c \<longleftrightarrow>
+    x \<in> top1_PiE {0..<N} (\<lambda>i. open_interval ((of_int (n i) + real k / real (Suc N)) * c)
+                                             ((of_int (n i) + real k / real (Suc N) + 1) * c))"
+    unfolding RN_shifted_cube_sc_def top1_Rpow_set_def top1_PiE_iff open_interval_def
+    by force
+qed
+
+text \<open>Scaled cubes are open.\<close>
+lemma RN_grid_cube_sc_open:
+  assumes hA: "A \<in> RN_grid_covering_sc N c" and hc: "c > 0"
+  shows "A \<in> top1_Rpow_topology N"
+proof -
+  obtain k n where hk: "k \<le> N" and hAeq: "A = RN_shifted_cube_sc N k n c"
+    using hA unfolding RN_grid_covering_sc_def RN_grid_family_sc_def by blast
+  define U where "U = (\<lambda>i. open_interval ((of_int (n i) + real k / real (Suc N)) * c)
+                                          ((of_int (n i) + real k / real (Suc N) + 1) * c))"
+  have hcube_eq: "A = top1_PiE {0..<N} U"
+    unfolding hAeq U_def by (rule RN_shifted_cube_sc_eq_PiE)
+  have hU_open: "\<forall>i\<in>{0..<N}. U i \<in> order_topology_on_UNIV"
+  proof (intro ballI)
+    fix i assume "i \<in> {0..<N}"
+    have "(of_int (n i) + real k / real (Suc N)) * c < (of_int (n i) + real k / real (Suc N) + 1) * c"
+      using hc by simp
+    then show "U i \<in> order_topology_on_UNIV"
+      unfolding U_def by (rule open_interval_in_order_topology)
+  qed
+  have "A \<in> top1_product_basis_on {0..<N} (\<lambda>_. UNIV) (\<lambda>_. order_topology_on_UNIV)"
+    unfolding hcube_eq top1_product_basis_on_def using hU_open by auto
+  moreover have "A \<subseteq> top1_Rpow_set N"
+    unfolding hAeq RN_shifted_cube_sc_def by blast
+  ultimately show "A \<in> top1_Rpow_topology N"
+    unfolding top1_Rpow_topology_def top1_product_topology_on_def
+      top1_Rpow_set_def topology_generated_by_basis_def by blast
+qed
+
+text \<open>Two points in same scaled cube have distance ≤ c.\<close>
+lemma RN_shifted_cube_sc_dist_le:
+  assumes hx: "x \<in> RN_shifted_cube_sc N k n c" and hy: "y \<in> RN_shifted_cube_sc N k n c"
+    and hc: "c > 0"
+  shows "top1_Rpow_sq_metric N x y \<le> c"
+proof (cases "N = 0")
+  case True then show ?thesis unfolding top1_Rpow_sq_metric_def using hc by fastforce
+next
+  case False
+  have hcoord: "\<forall>i<N. \<bar>x i - y i\<bar> < c"
+  proof (intro allI impI)
+    fix i assume hi: "i < N"
+    define a where "a = (of_int (n i) + real k / real (Suc N)) * c"
+    have hxa: "a < x i \<and> x i < a + c"
+    proof -
+      have "(of_int (n i) + real k / real (Suc N)) * c < x i"
+        using hx hi unfolding RN_shifted_cube_sc_def by blast
+      moreover have "x i < (of_int (n i) + real k / real (Suc N) + 1) * c"
+        using hx hi unfolding RN_shifted_cube_sc_def by blast
+      ultimately show ?thesis unfolding a_def by (simp add: distrib_right)
+    qed
+    have hya: "a < y i \<and> y i < a + c"
+    proof -
+      have "(of_int (n i) + real k / real (Suc N)) * c < y i"
+        using hy hi unfolding RN_shifted_cube_sc_def by blast
+      moreover have "y i < (of_int (n i) + real k / real (Suc N) + 1) * c"
+        using hy hi unfolding RN_shifted_cube_sc_def by blast
+      ultimately show ?thesis unfolding a_def by (simp add: distrib_right)
+    qed
+    show "\<bar>x i - y i\<bar> < c" using hxa hya by linarith
+  qed
+  have hset_eq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}"
+    by fastforce
+  have hfin: "finite ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})" by blast
+  have hne: "((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}) \<noteq> {}" using False by fastforce
+  have "Max {abs (x i - y i) | i. i < N} \<le> c"
+  proof -
+    have "\<forall>d \<in> (\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}. d \<le> c"
+      using hcoord by fastforce
+    then show ?thesis unfolding hset_eq using hfin hne by simp
+  qed
+  then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
+qed
+
+text \<open>Diameter of a scaled cube is ≤ c.\<close>
+lemma RN_shifted_cube_sc_diam:
+  assumes "A \<in> RN_grid_covering_sc N c" and "c > 0"
+  shows "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> c"
+proof -
+  obtain k n where hk: "k \<le> N" and hA: "A = RN_shifted_cube_sc N k n c"
+    using assms unfolding RN_grid_covering_sc_def RN_grid_family_sc_def by blast
+  show ?thesis unfolding top1_metric_diam_on_def
+  proof (rule cSup_least)
+    have "A \<noteq> {}"
+    proof -
+      define w :: "nat \<Rightarrow> real" where
+        "w = (\<lambda>i. if i < N then (of_int (n i) + real k / real (Suc N) + 1/2) * c else undefined)"
+      have "w \<in> RN_shifted_cube_sc N k n c"
+        unfolding RN_shifted_cube_sc_def top1_Rpow_set_def top1_PiE_iff w_def
+        using assms(2) by simp
+      then show ?thesis unfolding hA by blast
+    qed
+    then show "{top1_Rpow_sq_metric N x y |x y. x \<in> A \<and> y \<in> A} \<noteq> {}"
+      by blast
+    fix d assume "d \<in> {top1_Rpow_sq_metric N x y |x y. x \<in> A \<and> y \<in> A}"
+    then obtain x y where "x \<in> A" "y \<in> A" "d = top1_Rpow_sq_metric N x y" by blast
+    then show "d \<le> c"
+      using RN_shifted_cube_sc_dist_le[OF _ _ assms(2)] unfolding hA by simp
+  qed
+qed
+
+text \<open>Scaled cubes are equal iff integer vectors agree on {0..<N}.\<close>
+lemma RN_shifted_cube_sc_eq_iff:
+  assumes "c > 0"
+  shows "RN_shifted_cube_sc N k n1 c = RN_shifted_cube_sc N k n2 c \<longleftrightarrow> (\<forall>i<N. n1 i = n2 i)"
+proof
+  assume heq: "RN_shifted_cube_sc N k n1 c = RN_shifted_cube_sc N k n2 c"
+  show "\<forall>i<N. n1 i = n2 i"
+  proof (intro allI impI, rule ccontr)
+    fix i assume hi: "i < N" and hne: "n1 i \<noteq> n2 i"
+    text \<open>Cube n1 is nonempty; pick a witness w.\<close>
+    define w :: "nat \<Rightarrow> real" where
+      "w = (\<lambda>j. if j < N then (of_int (n1 j) + real k / real (Suc N) + 1/2) * c else undefined)"
+    have hw: "w \<in> RN_shifted_cube_sc N k n1 c"
+      unfolding RN_shifted_cube_sc_def top1_Rpow_set_def top1_PiE_iff w_def
+      using assms by simp
+    then have hw2: "w \<in> RN_shifted_cube_sc N k n2 c" using heq by argo
+    text \<open>w i is in interval for n1 i, but n1 i ≠ n2 i implies intervals are disjoint.\<close>
+    have hw_n1: "(of_int (n1 i) + real k / real (Suc N)) * c < w i
+              \<and> w i < (of_int (n1 i) + real k / real (Suc N) + 1) * c"
+      using hw hi unfolding RN_shifted_cube_sc_def by blast
+    have hw_n2: "(of_int (n2 i) + real k / real (Suc N)) * c < w i
+              \<and> w i < (of_int (n2 i) + real k / real (Suc N) + 1) * c"
+      using hw2 hi unfolding RN_shifted_cube_sc_def by blast
+    have "n1 i < n2 i \<or> n2 i < n1 i" using hne by linarith
+    then show False
+    proof
+      assume "n1 i < n2 i"
+      then have "n1 i + 1 \<le> n2 i" by presburger
+      then have "(of_int (n1 i) + 1) \<le> (of_int (n2 i) :: real)" by linarith
+      then have "(of_int (n1 i) + real k / real (Suc N) + 1) * c \<le>
+                 (of_int (n2 i) + real k / real (Suc N)) * c"
+        using assms by (simp add: mult_right_mono)
+      then show False using hw_n1 hw_n2 by linarith
+    next
+      assume "n2 i < n1 i"
+      then have "n2 i + 1 \<le> n1 i" by presburger
+      then have "(of_int (n2 i) + 1) \<le> (of_int (n1 i) :: real)" by linarith
+      then have "(of_int (n2 i) + real k / real (Suc N) + 1) * c \<le>
+                 (of_int (n1 i) + real k / real (Suc N)) * c"
+        using assms by (simp add: mult_right_mono)
+      then show False using hw_n1 hw_n2 by linarith
+    qed
+  qed
+next
+  assume hall: "\<forall>i<N. n1 i = n2 i"
+  then show "RN_shifted_cube_sc N k n1 c = RN_shifted_cube_sc N k n2 c"
+    unfolding RN_shifted_cube_sc_def by presburger
+qed
+
+text \<open>Scaled covering has order N+1 (same disjointness + pigeonhole).\<close>
+lemma RN_grid_covering_sc_order:
+  assumes hc: "c > 0"
+  shows "top1_cover_order_le_on (top1_Rpow_set N) (RN_grid_covering_sc N c) N"
+  unfolding top1_cover_order_le_on_def
+proof (intro ballI conjI)
+  fix x assume hx: "x \<in> top1_Rpow_set N"
+  text \<open>Each family has disjoint cubes, so x is in at most 1 per family.\<close>
+  have hone: "\<forall>k\<le>N. card {U \<in> RN_grid_family_sc N k c. x \<in> U} \<le> 1"
+  proof (intro allI impI)
+    fix k assume hk: "k \<le> N"
+    show "card {U \<in> RN_grid_family_sc N k c. x \<in> U} \<le> 1"
+    proof (cases "{U \<in> RN_grid_family_sc N k c. x \<in> U} = {}")
+      case True
+        then have hS: "{U \<in> RN_grid_family_sc N k c. x \<in> U} = {}" .
+        then show ?thesis by (simp add: hS)
+    next
+      case False
+      then obtain A where hA: "A \<in> RN_grid_family_sc N k c" "x \<in> A" by blast
+      have "{U \<in> RN_grid_family_sc N k c. x \<in> U} = {A}"
+      proof (rule set_eqI)
+        fix B
+        show "(B \<in> {U \<in> RN_grid_family_sc N k c. x \<in> U}) = (B \<in> {A})"
+        proof
+          assume hB: "B \<in> {U \<in> RN_grid_family_sc N k c. x \<in> U}"
+          then have hBmem: "B \<in> RN_grid_family_sc N k c" "x \<in> B" by blast+
+          show "B \<in> {A}"
+          proof (rule ccontr)
+            assume "B \<notin> {A}" then have "A \<noteq> B" by blast
+            obtain n1 where hn1: "A = RN_shifted_cube_sc N k n1 c"
+              using hA(1) unfolding RN_grid_family_sc_def by blast
+            obtain n2 where hn2: "B = RN_shifted_cube_sc N k n2 c"
+              using hBmem(1) unfolding RN_grid_family_sc_def by blast
+            have "\<exists>i<N. n1 i \<noteq> n2 i"
+            proof (rule ccontr)
+              assume "\<not>(\<exists>i<N. n1 i \<noteq> n2 i)"
+              then have "\<forall>i<N. n1 i = n2 i" by blast
+              then have "A = B" unfolding hn1 hn2
+                using RN_shifted_cube_sc_eq_iff[OF hc] by blast
+              then show False using \<open>A \<noteq> B\<close> by blast
+            qed
+            then obtain j where "j < N" "n1 j \<noteq> n2 j" by blast
+            then have "A \<inter> B = {}"
+            proof -
+              have "\<forall>z. z \<in> A \<longrightarrow> z \<notin> B"
+              proof (intro allI impI)
+                fix z assume hz: "z \<in> A"
+                define s1 where "s1 = (of_int (n1 j) + real k / real (Suc N)) * c"
+                define s2 where "s2 = (of_int (n2 j) + real k / real (Suc N)) * c"
+                have hzA: "s1 < z j \<and> z j < s1 + c"
+                proof -
+                  have "(of_int (n1 j) + real k / real (Suc N)) * c < z j"
+                    using hz \<open>j < N\<close> unfolding hn1 RN_shifted_cube_sc_def by blast
+                  moreover have "z j < (of_int (n1 j) + real k / real (Suc N) + 1) * c"
+                    using hz \<open>j < N\<close> unfolding hn1 RN_shifted_cube_sc_def by blast
+                  ultimately show ?thesis unfolding s1_def by (simp add: distrib_right)
+                qed
+                have hdisj: "s1 + c \<le> s2 \<or> s2 + c \<le> s1"
+                proof -
+                  have "n1 j < n2 j \<or> n2 j < n1 j" using \<open>n1 j \<noteq> n2 j\<close> by linarith
+                  then show ?thesis
+                  proof
+                    assume "n1 j < n2 j"
+                    then have "n1 j + 1 \<le> n2 j" by presburger
+                    then have "of_int (n1 j) + 1 \<le> (of_int (n2 j) :: real)" by linarith
+                    then have "(of_int (n1 j) + real k / real (Suc N) + 1) * c \<le>
+                      (of_int (n2 j) + real k / real (Suc N)) * c"
+                      using hc by (simp add: mult_right_mono)
+                    then show ?thesis unfolding s1_def s2_def by (simp add: distrib_right)
+                  next
+                    assume "n2 j < n1 j"
+                    then have "n2 j + 1 \<le> n1 j" by presburger
+                    then have "of_int (n2 j) + 1 \<le> (of_int (n1 j) :: real)" by linarith
+                    then have "(of_int (n2 j) + real k / real (Suc N) + 1) * c \<le>
+                      (of_int (n1 j) + real k / real (Suc N)) * c"
+                      using hc by (simp add: mult_right_mono)
+                    then show ?thesis unfolding s1_def s2_def by (simp add: distrib_right)
+                  qed
+                qed
+                show "z \<notin> B"
+                proof
+                  assume "z \<in> B"
+                  then have "s2 < z j \<and> z j < s2 + c"
+                  proof -
+                    have "(of_int (n2 j) + real k / real (Suc N)) * c < z j"
+                      using \<open>z \<in> B\<close> \<open>j < N\<close> unfolding hn2 RN_shifted_cube_sc_def by blast
+                    moreover have "z j < (of_int (n2 j) + real k / real (Suc N) + 1) * c"
+                      using \<open>z \<in> B\<close> \<open>j < N\<close> unfolding hn2 RN_shifted_cube_sc_def by blast
+                    ultimately show ?thesis unfolding s2_def by (simp add: distrib_right)
+                  qed
+                  then show False using hzA hdisj by linarith
+                qed
+              qed
+              then show ?thesis by blast
+            qed
+            then show False using hA(2) hBmem(2) by blast
+          qed
+        next
+          assume "B \<in> {A}" then show "B \<in> {U \<in> RN_grid_family_sc N k c. x \<in> U}" using hA by simp
+        qed
+      qed
+      then show ?thesis by simp
+    qed
+  qed
+  have hfin_k: "\<forall>k\<le>N. finite {U \<in> RN_grid_family_sc N k c. x \<in> U}"
+  proof (intro allI impI)
+    fix k assume "k \<le> N"
+    show "finite {U \<in> RN_grid_family_sc N k c. x \<in> U}"
+    proof (cases "{U \<in> RN_grid_family_sc N k c. x \<in> U} = {}")
+      case True
+        then have hS: "{U \<in> RN_grid_family_sc N k c. x \<in> U} = {}" .
+        then show ?thesis by (simp add: hS)
+    next
+      case False
+      then obtain A where hAmem: "A \<in> RN_grid_family_sc N k c" "x \<in> A" by blast
+      text \<open>The set is ⊆ {A} because any B with x ∈ B must equal A (disjointness).\<close>
+      have "{U \<in> RN_grid_family_sc N k c. x \<in> U} \<subseteq> {A}"
+      proof
+        fix B assume "B \<in> {U \<in> RN_grid_family_sc N k c. x \<in> U}"
+        then have "B \<in> RN_grid_family_sc N k c" "x \<in> B" by simp_all
+        show "B \<in> {A}"
+        proof (rule ccontr)
+          assume "B \<notin> {A}" then have "A \<noteq> B" by blast
+          obtain na where "A = RN_shifted_cube_sc N k na c"
+            using hAmem(1) unfolding RN_grid_family_sc_def by blast
+          obtain nb where "B = RN_shifted_cube_sc N k nb c"
+            using \<open>B \<in> RN_grid_family_sc N k c\<close> unfolding RN_grid_family_sc_def by blast
+          then have "\<not>(\<forall>i<N. na i = nb i)"
+            using \<open>A \<noteq> B\<close> \<open>A = RN_shifted_cube_sc N k na c\<close>
+              RN_shifted_cube_sc_eq_iff[OF hc] by blast
+          then obtain j where "j < N" "na j \<noteq> nb j" by blast
+          then have "na j < nb j \<or> nb j < na j" by linarith
+          then have "A \<inter> B = {}"
+          proof
+            assume "na j < nb j"
+            then have "na j + 1 \<le> nb j" by presburger
+            then have "(of_int (na j) + 1) * c \<le> of_int (nb j) * c" using hc
+              by (simp add: mult_right_mono)
+            then have hkey: "of_int (na j) * c + c \<le> of_int (nb j) * c"
+              by (simp add: distrib_right)
+            show "A \<inter> B = {}"
+            proof (rule equals0I)
+              fix z assume "z \<in> A \<inter> B"
+              then have zA: "z \<in> A" and zB: "z \<in> B" by blast+
+              have "z j < of_int (na j) * c + real k * c / real (Suc N) + c"
+                using zA \<open>j < N\<close> unfolding \<open>A = RN_shifted_cube_sc N k na c\<close> RN_shifted_cube_sc_def
+                by (simp add: distrib_right)
+              moreover have "of_int (nb j) * c + real k * c / real (Suc N) < z j"
+                using zB \<open>j < N\<close> unfolding \<open>B = RN_shifted_cube_sc N k nb c\<close> RN_shifted_cube_sc_def
+                by (simp add: distrib_right)
+              ultimately show False using hkey by linarith
+            qed
+          next
+            assume "nb j < na j"
+            then have "nb j + 1 \<le> na j" by presburger
+            then have "(of_int (nb j) + 1) * c \<le> of_int (na j) * c" using hc
+              by (simp add: mult_right_mono)
+            then have hkey: "of_int (nb j) * c + c \<le> of_int (na j) * c"
+              by (simp add: distrib_right)
+            show "A \<inter> B = {}"
+            proof (rule equals0I)
+              fix z assume "z \<in> A \<inter> B"
+              then have zA: "z \<in> A" and zB: "z \<in> B" by blast+
+              have "of_int (na j) * c + real k * c / real (Suc N) < z j"
+                using zA \<open>j < N\<close> unfolding \<open>A = RN_shifted_cube_sc N k na c\<close> RN_shifted_cube_sc_def
+                by (simp add: distrib_right)
+              moreover have "z j < of_int (nb j) * c + real k * c / real (Suc N) + c"
+                using zB \<open>j < N\<close> unfolding \<open>B = RN_shifted_cube_sc N k nb c\<close> RN_shifted_cube_sc_def
+                by (simp add: distrib_right)
+              ultimately show False using hkey by linarith
+            qed
+          qed
+          then show False using hAmem(2) \<open>x \<in> B\<close> by blast
+        qed
+      qed
+      then show ?thesis using finite_subset by blast
+    qed
+  qed
+  have hsub: "{U \<in> RN_grid_covering_sc N c. x \<in> U} \<subseteq> (\<Union>k\<le>N. {U \<in> RN_grid_family_sc N k c. x \<in> U})"
+    unfolding RN_grid_covering_sc_def by blast
+  have hfin_union: "finite (\<Union>k\<le>N. {U \<in> RN_grid_family_sc N k c. x \<in> U})"
+    using hfin_k by simp
+  show "finite {U \<in> RN_grid_covering_sc N c. x \<in> U}"
+    using finite_subset[OF hsub hfin_union] .
+  have "card {U \<in> RN_grid_covering_sc N c. x \<in> U} \<le> card (\<Union>k\<le>N. {U \<in> RN_grid_family_sc N k c. x \<in> U})"
+    using card_mono[OF hfin_union hsub] .
+  also have "... \<le> (\<Sum>k\<le>N. card {U \<in> RN_grid_family_sc N k c. x \<in> U})"
+    using card_UN_le hfin_k by blast
+  also have "... \<le> (\<Sum>k\<le>N. (1::nat))"
+    by (rule sum_mono) (use hone in blast)
+  also have "... = Suc N" by simp
+  finally show "card {U \<in> RN_grid_covering_sc N c. x \<in> U} \<le> Suc N" .
 qed
 
 lemma RN_covering_order_N_plus_1:
@@ -26026,10 +26609,25 @@ lemma RN_covering_order_N_plus_1:
   shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
     \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
     \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)"
-  text \<open>Scale the unit covering by c = ε/3: images have diam = c·(≤2) = 2ε/3 < ε.
-    Scaling preserves open sets, coverings, and order.
-    Proof uses RN_unit_covering_order (sorry) for the base construction.\<close>
-  sorry
+proof -
+  define c where "c = \<epsilon> / 2"
+  have hc: "c > 0" using heps unfolding c_def by linarith
+  let ?\<A> = "RN_grid_covering_sc N c"
+  have hcov: "top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) ?\<A>"
+    using RN_grid_covering_sc_covers[OF hc] RN_grid_cube_sc_open[OF _ hc]
+    unfolding top1_open_covering_on_def by (meson subsetI)
+  moreover have hord: "top1_cover_order_le_on (top1_Rpow_set N) ?\<A> N"
+    by (rule RN_grid_covering_sc_order[OF hc])
+  moreover have "\<forall>A\<in>?\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>"
+  proof (intro ballI)
+    fix A assume "A \<in> ?\<A>"
+    have "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A \<le> c"
+      using RN_shifted_cube_sc_diam[OF \<open>A \<in> ?\<A>\<close> hc] .
+    also have "c < \<epsilon>" unfolding c_def using heps by linarith
+    finally show "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>" .
+  qed
+  ultimately show ?thesis by blast
+qed
 
 (** from \S50 Theorem 50.6 [top1.tex:7808] **)
 text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimension at most N.
