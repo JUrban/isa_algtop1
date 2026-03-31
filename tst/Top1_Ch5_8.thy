@@ -13436,6 +13436,7 @@ qed
 corollary Corollary_45_5:
   assumes hCompX: "top1_compact_on X TX"
   assumes hd: "top1_metric_on Y d"
+  assumes hd_bdd: "\<forall>x\<in>Y. \<forall>y\<in>Y. d x y \<le> M"
   assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows
     "top1_compact_on \<F>
