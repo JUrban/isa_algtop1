@@ -25838,10 +25838,20 @@ proof (rule ccontr)
   then show False using assms by presburger
 qed
 
+lemma RN_shifted_cube_eq_iff:
+  "RN_shifted_cube N k n1 = RN_shifted_cube N k n2 \<longleftrightarrow> (\<forall>i<N. n1 i = n2 i)"
+  sorry
+
 lemma RN_grid_family_disjoint:
   assumes "A \<in> RN_grid_family N k" "B \<in> RN_grid_family N k" "A \<noteq> B"
   shows "A \<inter> B = {}"
-  sorry
+proof -
+  obtain n1 where hA: "A = RN_shifted_cube N k n1" using assms unfolding RN_grid_family_def by blast
+  obtain n2 where hB: "B = RN_shifted_cube N k n2" using assms unfolding RN_grid_family_def by blast
+  from assms hA hB have "\<exists>i<N. n1 i \<noteq> n2 i" using RN_shifted_cube_eq_iff by simp
+  then obtain i where "i < N" "n1 i \<noteq> n2 i" by blast
+  then show ?thesis unfolding hA hB using RN_shifted_cube_disjoint_coord by presburger
+qed
 
 text \<open>The grid covering covers R^N (pigeonhole on fractional parts).\<close>
 lemma RN_grid_covering_covers:
