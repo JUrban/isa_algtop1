@@ -25838,9 +25838,32 @@ proof (rule ccontr)
   then show False using assms by presburger
 qed
 
+lemma RN_shifted_cube_nonempty:
+  shows "RN_shifted_cube N k n \<noteq> {}"
+  sorry
+
+lemma RN_shifted_cube_eq_if_agree:
+  assumes "\<forall>i<N. n1 i = n2 i"
+  shows "RN_shifted_cube N k n1 = RN_shifted_cube N k n2"
+  unfolding RN_shifted_cube_def using assms by presburger
+
 lemma RN_shifted_cube_eq_iff:
   "RN_shifted_cube N k n1 = RN_shifted_cube N k n2 \<longleftrightarrow> (\<forall>i<N. n1 i = n2 i)"
-  sorry
+proof
+  assume heq: "RN_shifted_cube N k n1 = RN_shifted_cube N k n2"
+  show "\<forall>i<N. n1 i = n2 i"
+  proof (intro allI impI, rule ccontr)
+    fix i assume "i < N" "n1 i \<noteq> n2 i"
+    then have "RN_shifted_cube N k n1 \<inter> RN_shifted_cube N k n2 = {}"
+      using RN_shifted_cube_disjoint_coord by simp
+    then have "RN_shifted_cube N k n1 = {}" using heq by blast
+    then show False using RN_shifted_cube_nonempty by blast
+  qed
+next
+  assume "\<forall>i<N. n1 i = n2 i"
+  then show "RN_shifted_cube N k n1 = RN_shifted_cube N k n2"
+    by (rule RN_shifted_cube_eq_if_agree)
+qed
 
 lemma RN_grid_family_disjoint:
   assumes "A \<in> RN_grid_family N k" "B \<in> RN_grid_family N k" "A \<noteq> B"
