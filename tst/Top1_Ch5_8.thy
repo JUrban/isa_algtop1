@@ -25396,13 +25396,11 @@ lemma Lemma_50_4:
   assumes hdelta: "0 < \<delta>"
   shows "\<exists>f. (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
         \<and> top1_general_position_in_Rpow N (f ` A)"
-  text \<open>Proof by induction on card A. At each step, perturb the new point
-    to avoid all affine hulls of subsets of the existing points.
-    Key ingredient: Rpow_hyperplane_empty_interior (PROVED) shows that
-    each proper affine hyperplane has empty interior in R^N.
-    R^N is a Baire space (complete metric, Theorem_48_2 PROVED), so
-    a finite union of proper affine subspaces has empty interior.
-    Hence the open ball B(x, δ) contains points avoiding all hyperplanes.\<close>
+  text \<open>Proof by induction on card A. Key ingredient: Rpow_hyperplane_empty_interior (PROVED).
+    For finite unions of hyperplanes: each has empty interior, and finite union of sets
+    with empty interior has empty interior (finite intersection of open dense = dense).
+    Hence any ball contains a point avoiding all hyperplanes.
+    Full induction proof requires ~100 lines of careful Isabelle engineering.\<close>
   sorry
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
