@@ -25482,7 +25482,41 @@ lemma general_position_extend:
   assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
   shows "\<exists>q \<in> top1_Rpow_set N.
     top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S)"
-  sorry
+proof -
+  text \<open>The "forbidden" sets: for each T ⊆ S with |T| ≤ N, the affine span of T.\<close>
+  define F where "F T = {y \<in> top1_Rpow_set N.
+    \<exists>c. (\<Sum>z\<in>T. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>T. c z * z j))}" for T :: "(nat \<Rightarrow> real) set"
+  define bad_sets where "bad_sets = {F T | T. T \<subseteq> S \<and> card T \<le> N}"
+  have hbs_fin: "finite bad_sets"
+    unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
+  have hbs_empty_int: "\<forall>H \<in> bad_sets. interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
+    sorry
+  have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
+    sorry
+  text \<open>The ball B(p, ε) is open and nonempty in R^N.\<close>
+  have hball_open: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<in> top1_Rpow_topology N"
+    sorry
+  have hball_ne: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<noteq> {}"
+    sorry
+  text \<open>By finite_union_empty_interior, the ball is not contained in ⋃bad_sets.\<close>
+  have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
+    by (metis top1_Rpow_is_topology_on)
+  have hTsub: "\<forall>U\<in>top1_Rpow_topology N. U \<subseteq> top1_Rpow_set N"
+    sorry
+  have "\<not> (top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<subseteq> \<Union>bad_sets)"
+    by (rule finite_union_empty_interior[OF hRpow_top hTsub hbs_fin hbs_empty_int hbs_closed
+      hball_open hball_ne])
+  then obtain q where hq_ball: "q \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon>"
+    and hq_avoid: "q \<notin> \<Union>bad_sets"
+    by blast
+  have hq_Rpow: "q \<in> top1_Rpow_set N"
+    using hq_ball unfolding top1_ball_on_def by simp
+  have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>"
+    sorry
+  have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
+    sorry
+  show ?thesis using hq_Rpow hq_near hq_gp by blast
+qed
 
 text \<open>The general position approximation lemma: given finitely many points in R^N,
   they can be perturbed by < δ to be in general position.
