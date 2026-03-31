@@ -26638,10 +26638,59 @@ text \<open>Theorem 50.6: Every compact subspace of R^N has topological dimensio
   we can refine to such a scaled cube covering.\<close>
 theorem Theorem_50_6:
   assumes hComp: "top1_compact_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X)"
+  assumes hXsub: "X \<subseteq> top1_Rpow_set N"
   shows "top1_dim_le_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) N"
-  text \<open>Proof uses Lebesgue number (PROVED) + RN_covering_order_N_plus_1 (sorry) +
-    square metric infrastructure. See helper lemmas above.\<close>
-  sorry
+  text \<open>Proof: given open covering of X, use Lebesgue number + RN_covering_order_N_plus_1.\<close>
+  unfolding top1_dim_le_on_def
+proof (intro allI impI)
+  fix \<A> assume hA: "top1_open_covering_on X (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X) \<A>"
+  let ?TX = "subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) X"
+  let ?d = "top1_Rpow_sq_metric N"
+  let ?dR = "top1_Rpow_set N"
+  let ?TR = "top1_Rpow_topology N"
+  text \<open>Step 1: subspace topology equals metric topology.\<close>
+  have hd: "top1_metric_on ?dR ?d" by (rule top1_Rpow_sq_metric_is_metric)
+  have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
+    by (rule top1_Rpow_topology_eq_sq_metric)
+  have hTX_eq: "?TX = top1_metric_topology_on X (\<lambda>x y. ?d x y)"
+    sorry
+  text \<open>Step 2: Use Lebesgue number.\<close>
+  have hComp': "top1_compact_on X (top1_metric_topology_on X ?d)"
+    using hComp hTX_eq by simp
+  have hXne: "X \<noteq> {}" sorry
+  have hCov': "top1_open_covering_on X (top1_metric_topology_on X ?d) \<A>"
+    using hA hTX_eq by simp
+  have hd_on_X: "top1_metric_on X ?d"
+    using hd hXsub unfolding top1_metric_on_def by blast
+  obtain \<delta> where hd_pos: "\<delta> > 0" and hLebesgue:
+    "\<forall>A. A \<subseteq> X \<and> top1_metric_diam_on X ?d A < \<delta> \<longrightarrow> (\<exists>U \<in> \<A>. A \<subseteq> U)"
+    using top1_lebesgue_number[OF hd_on_X hComp' hXne hCov'] by blast
+  text \<open>Step 3: RN covering with diam < δ.\<close>
+  obtain \<V> where hVcov: "top1_open_covering_on ?dR ?TR \<V>"
+    and hVord: "top1_cover_order_le_on ?dR \<V> N"
+    and hVdiam: "\<forall>V\<in>\<V>. top1_metric_diam_on ?dR ?d V < \<delta>"
+    using RN_covering_order_N_plus_1[OF hd_pos] by blast
+  text \<open>Step 4: Restrict to X.\<close>
+  define \<B> where "\<B> = {X \<inter> V | V. V \<in> \<V>}"
+  have hB_cov: "top1_open_covering_on X ?TX \<B>"
+    sorry
+  have hB_refines: "top1_refines \<B> \<A>"
+    unfolding top1_refines_def \<B>_def
+  proof (intro ballI)
+    fix B assume "B \<in> {X \<inter> V |V. V \<in> \<V>}"
+    then obtain V where hV: "V \<in> \<V>" and hBeq: "B = X \<inter> V" by blast
+    have hBsub: "B \<subseteq> X" unfolding hBeq by blast
+    have hB_diam: "top1_metric_diam_on X ?d B \<le> top1_metric_diam_on ?dR ?d V"
+      sorry
+    have "top1_metric_diam_on ?dR ?d V < \<delta>" using hVdiam hV by blast
+    then have "top1_metric_diam_on X ?d B < \<delta>" using hB_diam by linarith
+    then show "\<exists>A\<in>\<A>. B \<subseteq> A" using hLebesgue hBsub by blast
+  qed
+  have hB_order: "top1_cover_order_le_on X \<B> N"
+    sorry
+  show "\<exists>\<B>. top1_open_covering_on X ?TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
+    using hB_cov hB_refines hB_order by blast
+qed
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
 corollary Corollary_50_7:
@@ -26705,9 +26754,11 @@ next
   have hFX_comp: "top1_compact_on (F ` X)
     (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X))"
     by (rule top1_compact_on_continuous_image[OF hComp hRpow_top hcont_F])
+  have hFX_sub: "F ` X \<subseteq> top1_Rpow_set N"
+    using hcont_F unfolding top1_continuous_map_on_def sorry
   have hdim_FX: "top1_dim_le_on (F ` X)
     (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) N"
-    by (rule Theorem_50_6[OF hFX_comp])
+    by (rule Theorem_50_6[OF hFX_comp hFX_sub])
   text \<open>Apply homeomorphism_preserves_dim_le with inverse homeomorphism.\<close>
   have hHomeo_inv: "top1_homeomorphism_on (F ` X)
     (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) X TX (inv_into X F)"
