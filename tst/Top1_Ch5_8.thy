@@ -25963,9 +25963,49 @@ next
     text \<open>Convergence: for any ε>0, eventually sq_metric(s n, x) < ε.
       Since sq_metric = Max{|s n i - x i|}, need each |s n i - x i| < ε.
       Each coordinate converges (hcoord_conv), so this holds eventually.\<close>
+    text \<open>Each coordinate converges to the limit coordinate.\<close>
+    have hcoord_lim: "\<And>i. i < N \<Longrightarrow> (\<lambda>n. s n i) \<longlonglongrightarrow> x i"
+      unfolding x_def using hcoord_conv convergent_LIMSEQ_iff by auto
+    have hmetric_conv: "\<forall>\<epsilon>>0. \<exists>N0. \<forall>n\<ge>N0. s n \<in> top1_Rpow_set N \<and>
+      top1_Rpow_sq_metric N (s n) x < \<epsilon>"
+    proof (intro allI impI)
+      fix \<epsilon> :: real assume he: "0 < \<epsilon>"
+      text \<open>Each coordinate converges: get N_i for each i < N.\<close>
+      have hcoord_close: "\<And>i. i < N \<Longrightarrow> \<exists>M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>"
+        using hcoord_lim he unfolding lim_sequentially dist_real_def by presburger
+      text \<open>Finite max: combine N_i for each coordinate i < N.\<close>
+      have "\<exists>M. \<forall>i<N. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>"
+      proof (cases "N = 0")
+        case True then show ?thesis by fast
+      next
+        case False
+        define g where "g = (\<lambda>i. SOME M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>)"
+        have hg: "\<And>i. i < N \<Longrightarrow> \<forall>n\<ge>g i. \<bar>s n i - x i\<bar> < \<epsilon>"
+        proof -
+          fix i assume hi: "i < N"
+          have hex: "\<exists>M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>" using hcoord_close hi by blast
+          then show "\<forall>n\<ge>g i. \<bar>s n i - x i\<bar> < \<epsilon>" unfolding g_def
+            using someI_ex[OF hex] sorry
+        qed
+        define M where "M = Max (g ` {0..<N})"
+        have hM: "\<And>i. i < N \<Longrightarrow> g i \<le> M" unfolding M_def by simp
+        show ?thesis using hg hM by (metis hg hM order_trans)
+      qed
+      then obtain M1 where hM1: "\<forall>i<N. \<forall>n\<ge>M1. \<bar>s n i - x i\<bar> < \<epsilon>" by blast
+      obtain M2 where hM2: "\<forall>n\<ge>M2. s n \<in> top1_Rpow_set N" using hseq_in by presburger
+      define M where "M = max M1 M2"
+      show "\<exists>N0. \<forall>n\<ge>N0. s n \<in> top1_Rpow_set N \<and> top1_Rpow_sq_metric N (s n) x < \<epsilon>"
+      proof (intro exI allI impI conjI)
+        fix n assume hn: "M \<le> n"
+        show "s n \<in> top1_Rpow_set N" using hM2 hn unfolding M_def by simp
+        show "top1_Rpow_sq_metric N (s n) x < \<epsilon>"
+          sorry
+      qed
+    qed
     have hconv: "seq_converges_to_on s x (top1_Rpow_set N)
       (top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N))"
-      sorry
+      by (simp add: hmetric_conv hx_Rpow metric_seq_conv_iff
+        top1_Rpow_sq_metric_is_metric)
     show "\<exists>x\<in>top1_Rpow_set N. seq_converges_to_on s x (top1_Rpow_set N)
       (top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N))"
       by (metis hconv hx_Rpow)
