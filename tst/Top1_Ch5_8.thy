@@ -26992,7 +26992,15 @@ proof (intro conjI)
     show "top1_continuous_map_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g"
       using hcont_gB_gB_sub unfolding hTB hgB_eq by simp
     show "top1_continuous_map_on (g ` B) (subspace_topology Y TY (g ` B)) B TB (inv_into B g)"
-      sorry
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix y assume "y \<in> g ` B"
+      then show "inv_into B g y \<in> B" by (simp add: inv_into_into)
+    next
+      fix V assume "V \<in> TB"
+      show "{y \<in> g ` B. inv_into B g y \<in> V} \<in> subspace_topology Y TY (g ` B)"
+        sorry
+    qed
   qed
 qed
 
