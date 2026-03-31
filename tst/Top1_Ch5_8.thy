@@ -15953,6 +15953,7 @@ lemma sup_uniform_topology_eq_on_continuous:
   assumes hd: "top1_metric_on Y d"
   assumes hCompX: "top1_compact_on X TX"
   assumes hXne: "X \<noteq> {}"
+  assumes hd_bdd: "\<forall>x\<in>Y. \<forall>y\<in>Y. d x y \<le> M"
   defines "C \<equiv> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows "subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_sup_topology_on X Y d) C
        = subspace_topology (top1_PiE X (\<lambda>_. Y)) (top1_uniform_topology_on X Y d) C"
@@ -16007,8 +16008,22 @@ proof -
           have hcxY: "c x \<in> Y" using hcPiE hx unfolding top1_PiE_iff by blast
           have hfxY: "f x \<in> Y" using hfPiE hx unfolding top1_PiE_iff by fast
           have hgxY: "g x \<in> Y" using hgPiE hx unfolding top1_PiE_iff by blast
-          have hbdd_cf: "bdd_above ((\<lambda>y. d (c y) (f y)) ` X)" sorry
-          have hbdd_fg: "bdd_above ((\<lambda>y. d (f y) (g y)) ` X)" sorry
+          have hbdd_cf: "bdd_above ((\<lambda>y. d (c y) (f y)) ` X)"
+          proof (rule bdd_aboveI[of _ M])
+            fix z assume "z \<in> (\<lambda>y. d (c y) (f y)) ` X"
+            then obtain y where "y \<in> X" "z = d (c y) (f y)" by blast
+            have "c y \<in> Y" using hcPiE \<open>y \<in> X\<close> unfolding top1_PiE_iff by blast
+            have "f y \<in> Y" using hfPiE \<open>y \<in> X\<close> unfolding top1_PiE_iff by blast
+            then show "z \<le> M" using \<open>z = d (c y) (f y)\<close> \<open>c y \<in> Y\<close> hd_bdd by simp
+          qed
+          have hbdd_fg: "bdd_above ((\<lambda>y. d (f y) (g y)) ` X)"
+          proof (rule bdd_aboveI[of _ M])
+            fix z assume "z \<in> (\<lambda>y. d (f y) (g y)) ` X"
+            then obtain y where "y \<in> X" "z = d (f y) (g y)" by blast
+            have "f y \<in> Y" using hfPiE \<open>y \<in> X\<close> unfolding top1_PiE_iff by blast
+            have "g y \<in> Y" using hgPiE \<open>y \<in> X\<close> unfolding top1_PiE_iff by blast
+            then show "z \<le> M" using \<open>z = d (f y) (g y)\<close> \<open>f y \<in> Y\<close> hd_bdd by simp
+          qed
           have "d (c x) (f x) \<in> (\<lambda>y. d (c y) (f y)) ` X"
             using hx by simp
           then have hcf_le: "d (c x) (f x) \<le> ?ds c f"
