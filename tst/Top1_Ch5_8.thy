@@ -25881,12 +25881,13 @@ proof (rule subsetI)
   have hcard_sum: "card all_bad \<le> (\<Sum>i \<in> {0..<N}. card (bad_k i))"
     unfolding all_bad_def using card_UN_le hbad_fin by blast
   also have "... \<le> (\<Sum>i \<in> {0..<N}. (1::nat))"
-    using hbad_card sorry
+    apply (rule sum_mono) using hbad_card by auto
   also have "... = N" by simp
   finally have hcard: "card all_bad \<le> N" .
   have hall_sub: "all_bad \<subseteq> {0..N}" unfolding all_bad_def using hbad_sub by auto
+  have "card all_bad < card {0..N}" using hcard by auto
   then have "\<exists>k \<in> {0..N}. k \<notin> all_bad"
-    sorry
+    using hall_sub using subset_antisym by fastforce
   then obtain k where hk: "k \<le> N" and hgood:
     "\<forall>i<N. \<not>(\<exists>m::int. x i = real_of_int m + real k / real (Suc N))"
     unfolding all_bad_def bad_k_def by auto
