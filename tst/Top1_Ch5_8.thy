@@ -25555,19 +25555,81 @@ proof -
       show "a z = 0"
       proof (cases "a q = 0")
         case True
-        text \<open>Case (b): a_q = 0. The sum reduces to T'. Use S in GP.\<close>
-        show ?thesis sorry
+        text \<open>Case (b): a_q = 0. If z = q, done. Otherwise z ∈ T' ⊆ S.
+          The sums over T reduce to sums over T' (q term vanishes).
+          Use S in GP.\<close>
+        show ?thesis
+        proof (cases "z = q")
+          case True then show ?thesis using \<open>a q = 0\<close> by simp
+        next
+          case False
+          then have "z \<in> T'" unfolding T'_def using hz by simp
+          text \<open>Need: ∑_{T'} a_w w_j = 0 and ∑_{T'} a_w = 0.
+            From: ∑_T a_w w_j = 0, T = T' ∪ {q}, a_q = 0.\<close>
+          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
+          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
+          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
+          have hcoord': "\<forall>j<N. (\<Sum>w\<in>T'. a w * w j) = 0"
+          proof (intro allI impI)
+            fix j assume "j < N"
+            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show "(\<Sum>w\<in>T'. a w * w j) = 0"
+              using hcoord \<open>j < N\<close> \<open>a q = 0\<close> by simp
+          qed
+          have hcoeff': "(\<Sum>w\<in>T'. a w) = 0"
+          proof -
+            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show ?thesis using hcoeff \<open>a q = 0\<close> by simp
+          qed
+          have "\<forall>T0\<subseteq>S. card T0 \<le> Suc N \<longrightarrow>
+            (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T0. a z * z j) = 0) \<and> (\<Sum>z\<in>T0. a z) = 0 \<longrightarrow> (\<forall>z\<in>T0. a z = 0))"
+            using hGP unfolding top1_general_position_in_Rpow_def by presburger
+          then show ?thesis
+            using hT'sub hT'card \<open>z \<in> T'\<close> hcoord' hcoeff' by (meson le_SucI)
+        qed
       next
         case aq_ne: False
         text \<open>Case (c): a_q ≠ 0. Then q = -(1/a_q) ∑_{w∈T'} a_w w, placing q in
           the affine span of T'. But q ∉ ⋃bad_sets, contradiction.\<close>
         have "q \<in> F T'"
         proof -
+          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
+          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
+          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
           define c where "c = (\<lambda>w. -(a w / a q))"
+          have hT'_sum: "(\<Sum>w\<in>T'. a w) = - a q"
+          proof -
+            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show ?thesis using hcoeff by linarith
+          qed
           have hc_sum: "(\<Sum>w\<in>T'. c w) = 1"
-            sorry
+          proof -
+            have "(\<Sum>w\<in>T'. c w) = (\<Sum>w\<in>T'. -(a w / a q))"
+              unfolding c_def by simp
+            also have "... = -(1/a q) * (\<Sum>w\<in>T'. a w)"
+              by (simp add: sum_distrib_left)
+            also have "... = -(1/a q) * (- a q)" using hT'_sum by simp
+            also have "... = 1" using aq_ne by simp
+            finally show ?thesis .
+          qed
           have hc_coord: "\<forall>j<N. q j = (\<Sum>w\<in>T'. c w * w j)"
-            sorry
+          proof (intro allI impI)
+            fix j assume "j < N"
+            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            have "(\<Sum>w\<in>T. a w * w j) = 0" using hcoord \<open>j < N\<close> by simp
+            then have "(\<Sum>w\<in>T'. a w * w j) = - (a q * q j)"
+              using \<open>(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j\<close> by linarith
+            have "(\<Sum>w\<in>T'. c w * w j) = -(1/a q) * (\<Sum>w\<in>T'. a w * w j)"
+              unfolding c_def by (simp add: sum_distrib_left)
+            also have "... = -(1/a q) * (-(a q * q j))"
+              using \<open>(\<Sum>w\<in>T'. a w * w j) = -(a q * q j)\<close> by simp
+            also have "... = q j" using aq_ne by simp
+            finally show "q j = (\<Sum>w\<in>T'. c w * w j)" by simp
+          qed
           then show ?thesis unfolding F_def using hq_Rpow hc_sum by blast
         qed
         moreover have "F T' \<in> bad_sets" unfolding bad_sets_def using hT'sub hT'card by blast
