@@ -26657,7 +26657,18 @@ proof (intro allI impI)
   text \<open>Step 2: Use Lebesgue number.\<close>
   have hComp': "top1_compact_on X (top1_metric_topology_on X ?d)"
     using hComp hTX_eq by simp
-  have hXne: "X \<noteq> {}" sorry
+  show "\<exists>\<B>. top1_open_covering_on X ?TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
+  proof (cases "X = {}")
+    case True
+    then have "top1_open_covering_on X ?TX {}"
+      unfolding top1_open_covering_on_def by simp
+    moreover have "top1_refines {} \<A>" unfolding top1_refines_def by simp
+    moreover have "top1_cover_order_le_on X {} N"
+      unfolding top1_cover_order_le_on_def using True by simp
+    ultimately show ?thesis by blast
+  next
+    case False
+    then have hXne: "X \<noteq> {}" .
   have hCov': "top1_open_covering_on X (top1_metric_topology_on X ?d) \<A>"
     using hA hTX_eq by simp
   have hd_on_X: "top1_metric_on X ?d"
@@ -26719,8 +26730,9 @@ proof (intro allI impI)
     also have "... \<le> Suc N" using hcardV .
     finally show "card {B \<in> \<B>. x \<in> B} \<le> Suc N" .
   qed
-  show "\<exists>\<B>. top1_open_covering_on X ?TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
-    using hB_cov hB_refines hB_order by blast
+    show ?thesis
+      using hB_cov hB_refines hB_order by blast
+  qed
 qed
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
