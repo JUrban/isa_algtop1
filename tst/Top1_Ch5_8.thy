@@ -25702,8 +25702,12 @@ next
     and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
   proof (cases "N = 0")
     case True
-    text \<open>N=0: R^0 is a single point, general position is trivial.\<close>
-    then show ?thesis sorry
+    text \<open>N=0: use y=x, general position trivial (∀T.|T|≤1, ∑a=0→a=0 for singletons).\<close>
+    have hx_near: "top1_Rpow_sup_dist N x x < \<delta>"
+      unfolding top1_Rpow_sup_dist_def using True hd_pos by simp
+    have hx_gp: "top1_general_position_in_Rpow N (insert x (g ` B))"
+      unfolding top1_general_position_in_Rpow_def True sorry
+    then show ?thesis using that \<open>x \<in> top1_Rpow_set N\<close> hx_near by blast
   next
     case False
     then have hN: "N > 0" by simp
