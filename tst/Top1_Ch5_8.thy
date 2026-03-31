@@ -16007,9 +16007,21 @@ proof -
           have hcxY: "c x \<in> Y" using hcPiE hx unfolding top1_PiE_iff by blast
           have hfxY: "f x \<in> Y" using hfPiE hx unfolding top1_PiE_iff by fast
           have hgxY: "g x \<in> Y" using hgPiE hx unfolding top1_PiE_iff by blast
+          have hbdd_cf: "bdd_above ((\<lambda>y. d (c y) (f y)) ` X)" sorry
+          have hbdd_fg: "bdd_above ((\<lambda>y. d (f y) (g y)) ` X)" sorry
+          have "d (c x) (f x) \<in> (\<lambda>y. d (c y) (f y)) ` X"
+            using hx by simp
+          then have hcf_le: "d (c x) (f x) \<le> ?ds c f"
+            unfolding top1_sup_metric_on_def
+            using cSup_upper hbdd_cf by (meson cSup_upper)
+          have "d (f x) (g x) \<in> (\<lambda>y. d (f y) (g y)) ` X"
+            using hx by simp
+          then have hfg_le: "d (f x) (g x) \<le> ?ds f g"
+            unfolding top1_sup_metric_on_def
+            using cSup_upper hbdd_fg by (meson cSup_upper)
           have "d (c x) (g x) \<le> d (c x) (f x) + d (f x) (g x)"
             using hd hcxY hfxY hgxY unfolding top1_metric_on_def by blast
-          also have "... \<le> ?ds c f + ?ds f g" sorry
+          also have "... \<le> ?ds c f + ?ds f g" using hcf_le hfg_le by linarith
           finally show "d (c x) (g x) \<le> ?ds c f + ?ds f g" .
         qed
         then have "?ds c g \<le> ?ds c f + ?ds f g"
