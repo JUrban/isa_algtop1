@@ -25318,11 +25318,12 @@ lemma Rpow_hyperplane_empty_interior:
   assumes ha: "j < N" "a j \<noteq> 0"
   assumes hp: "p \<in> top1_Rpow_set N" and heps: "(0::real) < \<epsilon>"
   shows "\<exists>q \<in> top1_Rpow_set N.
-    top1_Rpow_sq_metric N p q < \<epsilon> \<and> (\<Sum>i<N. a i * q i) \<noteq> b"
+    top1_Rpow_sup_dist N p q < \<epsilon> \<and> (\<Sum>i<N. a i * q i) \<noteq> b"
 proof (cases "(\<Sum>i<N. a i * p i) = b")
   case False
-  have "top1_Rpow_sq_metric N p p = 0" sorry
-  then have "top1_Rpow_sq_metric N p p < \<epsilon>" using heps by linarith
+  have "top1_Rpow_sup_dist N p p = 0"
+    unfolding top1_Rpow_sup_dist_def using hN by simp
+  then have "top1_Rpow_sup_dist N p p < \<epsilon>" using heps by linarith
   then show ?thesis using hp False by blast
 next
   case True
@@ -25333,9 +25334,34 @@ next
   have ht_pos: "t > 0" unfolding t_def using heps by simp
   have ht_bound: "t < \<epsilon>" unfolding t_def using heps by simp
   have hq_Rpow: "q \<in> top1_Rpow_set N"
-    unfolding top1_Rpow_set_def top1_PiE_iff q_def using ha(1) sorry
-  have hq_dist: "top1_Rpow_sq_metric N p q < \<epsilon>"
-    sorry
+    unfolding top1_Rpow_set_def top1_PiE_iff q_def
+  proof (intro conjI ballI allI impI)
+    fix i assume "i \<in> {0..<N}" then show "(if i = j then p j + t else if i < N then p i else undefined) \<in> UNIV" by simp
+  next
+    fix i assume "i \<notin> {0..<N}"
+    then have "i \<ge> N" by simp
+    then have "i \<noteq> j" using ha(1) by linarith
+    then show "(if i = j then p j + t else if i < N then p i else undefined) = undefined"
+      using \<open>i \<ge> N\<close> by simp
+  qed
+  have "\<forall>i<N. \<bar>p i - q i\<bar> \<le> t"
+    unfolding q_def using ht_pos by auto
+  then have "{abs (p i - q i) | i. i < N} \<subseteq> {0..t}"
+    using ht_pos by fastforce
+  have hq_dist: "top1_Rpow_sup_dist N p q < \<epsilon>"
+  proof -
+    have hpq_bound: "\<forall>i<N. \<bar>p i - q i\<bar> \<le> t"
+      unfolding q_def using ht_pos by auto
+    have "Sup ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}) \<le> t"
+    proof (rule cSup_least)
+      show "(\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N} \<noteq> {}" using hN by simp
+      fix x assume "x \<in> (\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}"
+      then obtain i where "i < N" "x = \<bar>p i - q i\<bar>" by auto
+      then show "x \<le> t" using hpq_bound by simp
+    qed
+    then have "Sup ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}) < \<epsilon>" using ht_bound by linarith
+    then show ?thesis unfolding top1_Rpow_sup_dist_def using hN by simp
+  qed
   have hq_off: "(\<Sum>i<N. a i * q i) \<noteq> b"
   proof -
     have "(\<Sum>i<N. a i * q i) = (\<Sum>i<N. a i * p i) + a j * t"
