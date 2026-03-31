@@ -25496,7 +25496,10 @@ proof -
   text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
   define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
   have hB_open: "B \<in> top1_Rpow_topology N"
-    unfolding B_def sorry
+    unfolding B_def
+    text \<open>The sup-dist ball is a product of open intervals (p_i - ε, p_i + ε),
+      which is a product basis element, hence open in the product topology.\<close>
+    sorry
   have hB_ne: "B \<noteq> {}"
   proof -
     have "top1_Rpow_sup_dist N p p = 0" unfolding top1_Rpow_sup_dist_def using hN by simp
@@ -25517,11 +25520,65 @@ proof -
   have hq_Rpow: "q \<in> top1_Rpow_set N" using hq_B unfolding B_def by simp
   have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>" using hq_B unfolding B_def by simp
   have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
-    text \<open>Key argument: for T ⊆ insert q S with |T| ≤ N+1 and dependency:
-      (a) q ∉ T: T ⊆ S, use S in GP.
-      (b) q ∈ T, a_q = 0: T-{q} ⊆ S, use S in GP.
-      (c) q ∈ T, a_q ≠ 0: q is in affine span of T-{q}, contradicting q ∉ ⋃bad_sets.\<close>
-    sorry
+  proof -
+    have hfin_ins: "finite (insert q S)" using hFin by simp
+    have hsub_ins: "insert q S \<subseteq> top1_Rpow_set N" using hq_Rpow hS by simp
+    have hgp_cond: "\<forall>T\<subseteq>insert q S. card T \<le> Suc N \<longrightarrow>
+      (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
+    proof (intro allI impI ballI)
+      fix T :: "(nat \<Rightarrow> real) set" and a :: "(nat \<Rightarrow> real) \<Rightarrow> real" and z :: "nat \<Rightarrow> real"
+      assume hTsub: "T \<subseteq> insert q S" and hTcard: "card T \<le> Suc N"
+      assume hcoord_coeff: "(\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0) \<and> (\<Sum>w\<in>T. a w) = 0"
+      assume hz: "z \<in> T"
+      have hcoord: "\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0" using hcoord_coeff by simp
+      have hcoeff: "(\<Sum>w\<in>T. a w) = 0" using hcoord_coeff by simp
+      show "a z = 0"
+    proof (cases "q \<in> T")
+      case False
+      text \<open>Case (a): T ⊆ S. Use S in GP.\<close>
+      have hTsubS: "T \<subseteq> S" using hTsub False by blast
+      have "\<forall>T\<subseteq>S. card T \<le> Suc N \<longrightarrow>
+        (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
+        using hGP unfolding top1_general_position_in_Rpow_def by presburger
+      then show ?thesis using hTsubS hTcard hcoord hcoeff hz by meson
+    next
+      case True
+      text \<open>q ∈ T. Case (b)+(c).\<close>
+      define T' where "T' = T - {q}"
+      have hT'sub: "T' \<subseteq> S" using hTsub unfolding T'_def by blast
+      have hT'card: "card T' \<le> N"
+      proof -
+        have "card T' = card T - 1" unfolding T'_def
+          using True hFin hTsub by (simp add: card_Diff_singleton)
+        then show ?thesis using hTcard by linarith
+      qed
+      show "a z = 0"
+      proof (cases "a q = 0")
+        case True
+        text \<open>Case (b): a_q = 0. The sum reduces to T'. Use S in GP.\<close>
+        show ?thesis sorry
+      next
+        case aq_ne: False
+        text \<open>Case (c): a_q ≠ 0. Then q = -(1/a_q) ∑_{w∈T'} a_w w, placing q in
+          the affine span of T'. But q ∉ ⋃bad_sets, contradiction.\<close>
+        have "q \<in> F T'"
+        proof -
+          define c where "c = (\<lambda>w. -(a w / a q))"
+          have hc_sum: "(\<Sum>w\<in>T'. c w) = 1"
+            sorry
+          have hc_coord: "\<forall>j<N. q j = (\<Sum>w\<in>T'. c w * w j)"
+            sorry
+          then show ?thesis unfolding F_def using hq_Rpow hc_sum by blast
+        qed
+        moreover have "F T' \<in> bad_sets" unfolding bad_sets_def using hT'sub hT'card by blast
+        ultimately have "q \<in> \<Union>bad_sets" by blast
+        then show ?thesis using hq_avoid by blast
+      qed
+    qed
+    qed
+    show ?thesis unfolding top1_general_position_in_Rpow_def
+      using hfin_ins hsub_ins hgp_cond by presburger
+  qed
   show ?thesis using hq_Rpow hq_near hq_gp by blast
 qed
 
