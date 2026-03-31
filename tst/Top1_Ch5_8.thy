@@ -25502,7 +25502,8 @@ proof -
   have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
     by (metis top1_Rpow_is_topology_on)
   have hTsub: "\<forall>U\<in>top1_Rpow_topology N. U \<subseteq> top1_Rpow_set N"
-    sorry
+    unfolding top1_Rpow_topology_def top1_product_topology_on_def
+      top1_Rpow_set_def topology_generated_by_basis_def by simp
   have "\<not> (top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<subseteq> \<Union>bad_sets)"
     by (rule finite_union_empty_interior[OF hRpow_top hTsub hbs_fin hbs_empty_int hbs_closed
       hball_open hball_ne])
@@ -25514,6 +25515,10 @@ proof -
   have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>"
     sorry
   have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
+    text \<open>Key argument: for T ⊆ insert q S with |T| ≤ N+1 and dependency:
+      (a) q ∉ T: T ⊆ S, use S in GP.
+      (b) q ∈ T, a_q = 0: T-{q} ⊆ S, use S in GP.
+      (c) q ∈ T, a_q ≠ 0: q is in affine span of T-{q}, contradicting q ∉ ⋃bad_sets.\<close>
     sorry
   show ?thesis using hq_Rpow hq_near hq_gp by blast
 qed
