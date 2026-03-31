@@ -26821,6 +26821,16 @@ qed
 text \<open>dim_le is inherited by closed subsets, then Theorem_50_2_dim_le allows induction.\<close>
 text \<open>Inductive dim_le for finite closed covers: if X = ∪_{i<n} C_i with each C_i closed
   and dim_le(C_i) ≤ m, then dim_le(X) ≤ m.\<close>
+lemma dim_le_two_closed_cover:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hXeq: "X = Y \<union> Z"
+  assumes hYcl: "closedin_on X TX Y" and hZcl: "closedin_on X TX Z"
+  assumes hdimY: "top1_dim_le_on Y (subspace_topology X TX Y) m"
+  assumes hdimZ: "top1_dim_le_on Z (subspace_topology X TX Z) m"
+  shows "top1_dim_le_on X TX m"
+  by (rule Theorem_50_2_dim_le[OF hTop hTsub hXeq hYcl hZcl hdimY hdimZ])
+
 lemma dim_le_finite_closed_cover:
   fixes n :: nat
   assumes hTop: "is_topology_on X TX"
