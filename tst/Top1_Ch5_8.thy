@@ -25387,6 +25387,20 @@ next
   show ?thesis using hq_Rpow hq_dist hq_off by blast
 qed
 
+text \<open>Finite union of closed sets with empty interior has empty interior.
+  Equivalently: finite intersection of open dense sets is dense.
+  This is a standard topological fact (doesn't need Baire).\<close>
+lemma finite_inter_open_dense_is_dense:
+  assumes hTop: "is_topology_on X TX"
+  assumes hFin: "finite S"
+  assumes hOpen: "\<forall>U \<in> S. U \<in> TX"
+  assumes hDense: "\<forall>U \<in> S. top1_densein_on X TX U"
+  shows "top1_densein_on X TX (\<Inter>S)"
+  text \<open>Proof by induction: base (⋂{} = UNIV, dense); step: U ∩ ⋂S' dense
+    since for any nonempty open V, V∩U is nonempty open (U dense+open),
+    then (V∩U) ∩ ⋂S' is nonempty (IH).\<close>
+  sorry
+
 text \<open>The general position approximation lemma: given finitely many points in R^N,
   they can be perturbed by < δ to be in general position.
   Uses Baire category on R^N + the fact that proper affine subspaces are nowhere dense.\<close>
