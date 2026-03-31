@@ -25310,6 +25310,9 @@ definition top1_general_position_in_Rpow :: "nat \<Rightarrow> (nat \<Rightarrow
           \<longrightarrow> (\<forall>z\<in>T. a z = 0)))"
 
 (** from \S50 Lemma 50.4 (General position approximation) [top1.tex:7700] **)
+text \<open>Helper: a proper affine subspace of R^N (dimension < N) has empty interior
+  in the R^N topology. This is used in the inductive step of Lemma 50.4.\<close>
+
 lemma Lemma_50_4:
   assumes hFin: "finite A"
   assumes hA: "A \<subseteq> top1_Rpow_set N"
@@ -25318,8 +25321,8 @@ lemma Lemma_50_4:
         \<and> top1_general_position_in_Rpow N (f ` A)"
   text \<open>Proof by induction on card A. At each step, perturb the new point
     to avoid all affine hulls of subsets of the existing points.
-    Uses Baire category on R^N: finite union of hyperplanes has empty interior,
-    so there's a point within δ avoiding all of them.\<close>
+    R^N is a Baire space, and a finite union of proper affine subspaces
+    has empty interior, so there's a point within δ avoiding all of them.\<close>
   sorry
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
