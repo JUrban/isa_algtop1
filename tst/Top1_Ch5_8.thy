@@ -25936,11 +25936,11 @@ proof (intro ballI conjI)
   have hone: "\<forall>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U} \<le> 1" sorry
   text \<open>The covering sets containing x are ⊆ union over k of the sets from each family.\<close>
   have "{U \<in> RN_grid_covering N. x \<in> U} \<subseteq> (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
-    unfolding RN_grid_covering_def sorry
+    unfolding RN_grid_covering_def by blast
   then have "card {U \<in> RN_grid_covering N. x \<in> U} \<le> (\<Sum>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U})"
     sorry
   also have "... \<le> (\<Sum>k\<le>N. (1::nat))" using hone sorry
-  also have "... = Suc N" sorry
+  also have "... = Suc N" by simp
   finally show "card {U \<in> RN_grid_covering N. x \<in> U} \<le> Suc N" .
   show "finite {U \<in> RN_grid_covering N. x \<in> U}" sorry
 qed
