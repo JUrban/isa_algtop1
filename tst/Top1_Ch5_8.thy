@@ -27001,6 +27001,8 @@ proof (intro conjI)
       fix V assume "V \<in> TB"
       obtain U where hU: "U \<in> TA" and hVeq: "V = B \<inter> U"
         using \<open>V \<in> TB\<close> unfolding hTB subspace_topology_def by blast
+      have hV_sub_B: "V \<subseteq> B" unfolding hVeq by simp
+      have hinj_B: "inj_on g B" using hinj_A hBsub by (meson inj_on_subset)
       have hpreimg: "{y \<in> g ` B. inv_into B g y \<in> V} = g ` V"
         sorry
       have hg_open_map: "\<forall>U0 \<in> TA. g ` U0 \<in> subspace_topology Y TY (g ` A)"
