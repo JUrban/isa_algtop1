@@ -25502,7 +25502,7 @@ next
       fix A assume "A \<in> F"
       then have hne: "{d x y | y. y \<in> C A} \<noteq> {}" using hCA_ne by simp
       have "\<And>z. z \<in> {d x y | y. y \<in> C A} \<Longrightarrow> 0 \<le> z"
-        using hd hxX unfolding top1_metric_on_def C_def by fast
+        using hd hxX unfolding top1_metric_on_def C_def by blast
       then show "dist_set (C A) x \<ge> 0" unfolding dist_set_def
         using cInf_greatest[OF hne] by auto
     qed
