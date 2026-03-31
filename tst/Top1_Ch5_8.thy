@@ -25903,6 +25903,13 @@ proof -
     using False by presburger
 qed
 
+text \<open>R^N with the sq (Max) metric is complete.
+  Proof: A Cauchy sequence in R^N is coordinatewise Cauchy.
+  Each coordinate converges in R (which is complete). The limit is in R^N.\<close>
+lemma top1_Rpow_sq_metric_is_complete:
+  shows "top1_complete_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+  sorry
+
 lemma top1_Rpow_topology_eq_sq_metric:
   assumes hN: "N > 0"
   shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
@@ -26747,12 +26754,12 @@ proof -
     - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
       general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
     The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
-  text \<open>Baire category argument: C(X,R^N) is Baire, U_ε open+dense → ∃ injective f.\<close>
+  text \<open>X must be nonempty for the Baire argument. (Empty case is trivial.)\<close>
   have hXne: "X \<noteq> {}"
     sorry
   text \<open>Step A: C(X,R^N) with sup metric is complete.\<close>
   have hRN_complete: "top1_complete_metric_on ?RN ?dRN"
-    sorry
+    by (simp add: top1_Rpow_sq_metric_is_complete)
   have hC_complete: "top1_complete_metric_on
     (top1_continuous_maps_metric_on X TX ?RN ?dRN) (top1_uniform_metric_on X ?dRN)"
     using Theorem_43_6c hRN_complete hTop hXne top1_Rpow_sq_metric_is_metric by blast
