@@ -26936,7 +26936,15 @@ lemma top1_embedding_on_restrict_domain:
   assumes hTA: "is_topology_on A TA"
   assumes hTB: "TB = subspace_topology A TA B"
   shows "top1_embedding_on B TB Y TY g"
-  sorry
+  unfolding top1_embedding_on_def
+proof (intro conjI)
+  have hgA: "g ` A \<subseteq> Y" using hEmb unfolding top1_embedding_on_def by presburger
+  show "g ` B \<subseteq> Y" using hgA hBsub by (meson image_mono subset_trans)
+  have hHomeo: "top1_homeomorphism_on A TA (g ` A) (subspace_topology Y TY (g ` A)) g"
+    using hEmb unfolding top1_embedding_on_def by presburger
+  show "top1_homeomorphism_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g"
+    sorry
+qed
 
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
