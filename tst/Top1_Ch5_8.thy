@@ -26839,7 +26839,43 @@ lemma dim_le_finite_closed_cover:
   assumes hCl: "\<forall>i<n. closedin_on X TX (C i)"
   assumes hDim: "\<forall>i<n. top1_dim_le_on (C i) (subspace_topology X TX (C i)) m"
   shows "top1_dim_le_on X TX m"
-  sorry
+  using hTop hTsub hCov hCl hDim
+proof (induct n arbitrary: X TX C)
+  case 0
+  then have "X = {}" by blast
+  then show ?case unfolding top1_dim_le_on_def
+    top1_open_covering_on_def top1_refines_def top1_cover_order_le_on_def by blast
+next
+  case (Suc n)
+  show ?case
+  proof (cases "n = 0")
+    case True
+    then have "X = C 0" using Suc.prems(3) sorry
+    then show ?thesis using Suc.prems(5) Suc.prems(2) sorry
+  next
+    case hFalse: False
+    define Y where "Y = (\<Union>i<n. C i)"
+    define Z where "Z = C n"
+    have hYX: "X = Y \<union> Z" sorry
+    have hZcl: "closedin_on X TX Z"
+      by (simp add: Suc.prems(4) Z_def)
+    have hYcl: "closedin_on X TX Y" sorry
+    have hYsubX: "Y \<subseteq> X"
+      by (meson closedin_on_def hYcl)
+    have hTopY: "is_topology_on Y (subspace_topology X TX Y)" sorry
+    have hTsubY: "\<forall>U\<in>subspace_topology X TX Y. U \<subseteq> Y" sorry
+    have hCovY: "Y = (\<Union>i<n. C i)" using Y_def by blast
+    have hClY: "\<forall>i<n. closedin_on Y (subspace_topology X TX Y) (C i)" sorry
+    have hDimY: "\<forall>i<n. top1_dim_le_on (C i) (subspace_topology Y (subspace_topology X TX Y) (C i)) m"
+      sorry
+    have hdimY: "top1_dim_le_on Y (subspace_topology X TX Y) m"
+      by (rule Suc.hyps[OF hTopY hTsubY hCovY hClY hDimY])
+    have hdimZ: "top1_dim_le_on Z (subspace_topology X TX Z) m"
+      by (simp add: Suc.prems(5) Z_def)
+    show ?thesis
+      by (rule dim_le_two_closed_cover[OF Suc.prems(1) Suc.prems(2) hYX hYcl hZcl hdimY hdimZ])
+  qed
+qed
 
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
