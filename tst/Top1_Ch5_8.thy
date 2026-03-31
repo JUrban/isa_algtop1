@@ -26929,6 +26929,15 @@ next
   qed
 qed
 
+text \<open>Restricting an embedding to a subset of the domain.\<close>
+lemma top1_embedding_on_restrict_domain:
+  assumes hEmb: "top1_embedding_on A TA Y TY g"
+  assumes hBsub: "B \<subseteq> A"
+  assumes hTA: "is_topology_on A TA"
+  assumes hTB: "TB = subspace_topology A TA B"
+  shows "top1_embedding_on B TB Y TY g"
+  sorry
+
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
@@ -27044,9 +27053,23 @@ proof -
     fix i assume hi: "i < n"
     have hCi_comp: "top1_compact_on (Ci i) (subspace_topology X TX (Ci i))"
       by (rule Theorem_26_2[OF hComp hCicl[rule_format, OF hi]])
+    have hCi_sub_Ui: "Ci i \<subseteq> Ui i" unfolding Ci_def using hVicl hi by presburger
+    obtain gi where hgi: "top1_embedding_on (Ui i) (subspace_topology X TX (Ui i))
+      (top1_Rpow_set m) (top1_Rpow_topology m) gi"
+      using hUiemb hi by presburger
+    have hUi_sub_X: "Ui i \<subseteq> X" using hUisubX hi by simp
+    have hTopUi: "is_topology_on (Ui i) (subspace_topology X TX (Ui i))"
+      by (rule subspace_topology_is_topology_on[OF hTop hUi_sub_X])
+    have hCi_sub_eq: "subspace_topology X TX (Ci i) = subspace_topology (Ui i) (subspace_topology X TX (Ui i)) (Ci i)"
+      by (rule subspace_topology_trans[OF hCi_sub_Ui, symmetric])
     have hCi_emb: "\<exists>g. top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
       (top1_Rpow_set m) (top1_Rpow_topology m) g"
-      sorry
+    proof (rule exI)
+      show "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
+        (top1_Rpow_set m) (top1_Rpow_topology m) gi"
+        unfolding hCi_sub_eq
+        by (rule top1_embedding_on_restrict_domain[OF hgi hCi_sub_Ui hTopUi refl])
+    qed
     then obtain g where hg: "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
       (top1_Rpow_set m) (top1_Rpow_topology m) g" by blast
     show "top1_dim_le_on (Ci i) (subspace_topology X TX (Ci i)) m"
