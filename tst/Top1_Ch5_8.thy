@@ -25929,7 +25929,21 @@ text \<open>The covering has order N+1: each point in at most N+1 cubes.
   N+1 grids → at most N+1 cubes.\<close>
 lemma RN_grid_covering_order:
   shows "top1_cover_order_le_on (top1_Rpow_set N) (RN_grid_covering N) N"
-  sorry
+  unfolding top1_cover_order_le_on_def
+proof (intro ballI conjI)
+  fix x assume hx: "x \<in> top1_Rpow_set N"
+  text \<open>For each k ≤ N, x is in at most 1 element of grid family k (disjoint).\<close>
+  have hone: "\<forall>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U} \<le> 1" sorry
+  text \<open>The covering sets containing x are ⊆ union over k of the sets from each family.\<close>
+  have "{U \<in> RN_grid_covering N. x \<in> U} \<subseteq> (\<Union>k\<le>N. {U \<in> RN_grid_family N k. x \<in> U})"
+    unfolding RN_grid_covering_def sorry
+  then have "card {U \<in> RN_grid_covering N. x \<in> U} \<le> (\<Sum>k\<le>N. card {U \<in> RN_grid_family N k. x \<in> U})"
+    sorry
+  also have "... \<le> (\<Sum>k\<le>N. (1::nat))" using hone sorry
+  also have "... = Suc N" sorry
+  finally show "card {U \<in> RN_grid_covering N. x \<in> U} \<le> Suc N" .
+  show "finite {U \<in> RN_grid_covering N. x \<in> U}" sorry
+qed
 
 lemma RN_unit_covering_order:
   fixes N :: nat
