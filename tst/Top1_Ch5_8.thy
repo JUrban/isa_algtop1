@@ -26996,7 +26996,8 @@ proof -
     show "top1_dim_le_on (Ci i) (subspace_topology X TX (Ci i)) m"
       by (rule compact_embedding_dim_le[OF hCi_comp hg])
   qed
-  show ?thesis sorry
+  show ?thesis
+    using dim_le_finite_closed_cover hTop hTsub hXeq hCicl hCidim sorry
 qed
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
