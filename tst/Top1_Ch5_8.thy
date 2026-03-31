@@ -13458,9 +13458,8 @@ corollary Corollary_45_5:
      \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
      \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
   text \<open>Proof: the sup and uniform topologies agree on C(X,Y) when X compact
-    (by sup_uniform_topology_eq_on_continuous, modulo 1 sorry).
-    So compactness in sup = compactness in uniform.
-    Then Theorem_45_4 (PROVED) gives the equicontinuity characterization.\<close>
+    (by sup_uniform_topology_eq_on_continuous). So compactness in
+    sup = compactness in uniform. Theorem_45_4 gives the equicontinuity characterization.\<close>
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
@@ -25783,12 +25782,10 @@ lemma top1_Rpow_sq_metric_is_metric:
   by simp
 
 lemma Rpow_sq_metric_eq_square_metric:
+  assumes hN: "N > 0"
   shows "top1_Rpow_sq_metric N x y = top1_square_metric_real_on {0..<N} x y"
-proof (cases "N = 0")
-  case True
-  then show ?thesis unfolding top1_Rpow_sq_metric_def top1_square_metric_real_on_def sorry
-next
-  case False
+proof -
+  have False: "N \<noteq> 0" using hN by simp
   have hfin: "finite ((\<lambda>i. abs (x i - y i)) ` {0..<N})" by blast
   have hne: "((\<lambda>i. abs (x i - y i)) ` {0..<N}) \<noteq> {}" using False by force
   have hset_eq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. abs (x i - y i)) ` {0..<N}"
@@ -25800,19 +25797,17 @@ next
 qed
 
 lemma top1_Rpow_topology_eq_sq_metric:
+  assumes hN: "N > 0"
   shows "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
-proof (cases "N = 0")
-  case True then show ?thesis sorry
-next
-  case False
+proof -
+  have hne: "{0..<N} \<noteq> {}" using hN by simp
   have hfin: "finite {0..<N}" by blast
-  have hne: "{0..<N} \<noteq> {}" using False by simp
   have "top1_metric_topology_on (top1_Rpow_set N) (top1_square_metric_real_on {0..<N})
     = top1_Rpow_topology N"
     using Theorem_20_3(2)[OF hfin hne] unfolding top1_Rpow_set_def top1_Rpow_topology_def by order
   moreover have "top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)
     = top1_metric_topology_on (top1_Rpow_set N) (top1_square_metric_real_on {0..<N})"
-    using Rpow_sq_metric_eq_square_metric by presburger
+    using Rpow_sq_metric_eq_square_metric[OF hN] by presburger
   ultimately show ?thesis by presburger
 qed
 
@@ -26691,7 +26686,13 @@ proof (intro allI impI)
   text \<open>Step 1: subspace topology equals metric topology.\<close>
   have hd: "top1_metric_on ?dR ?d" by (rule top1_Rpow_sq_metric_is_metric)
   have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
-    by (rule top1_Rpow_topology_eq_sq_metric)
+  proof (cases "N = 0")
+    case True
+    then show ?thesis sorry
+  next
+    case False
+    then show ?thesis using top1_Rpow_topology_eq_sq_metric by simp
+  qed
   have hTX_eq: "?TX = top1_metric_topology_on X (\<lambda>x y. ?d x y)"
     using subspace_metric_topology_eq_metric_topology[OF hd hXsub] hTR_eq by simp
   text \<open>Step 2: Use Lebesgue number.\<close>
