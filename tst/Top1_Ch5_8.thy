@@ -25361,10 +25361,17 @@ proof -
     Baire (Theorem_48_2), partition of unity (Theorem_41_7),
     general position (Lemma_50_4, sorry), dim_le (PROVED).
     The full proof is ~300 lines and requires careful Isabelle engineering.\<close>
-  text \<open>Obtain an injective continuous f: X → R^N.\<close>
-  obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
-    and hf_inj: "inj_on f X"
+  text \<open>Obtain an injective continuous f: X → R^N via Baire category argument.\<close>
+  define \<Delta> :: "('a \<Rightarrow> nat \<Rightarrow> real) \<Rightarrow> real" where
+    "\<Delta> g = (SUP z \<in> g ` X. top1_metric_diam_on X d {x \<in> X. g x = z})" for g
+  text \<open>The Baire argument: U_ε = {g ∈ C | Δ(g) < ε} is open and dense.
+    By Baire, ∩U_{1/n} is dense, hence nonempty.
+    Any f in the intersection has Δ(f) ≤ 1/n for all n, hence Δ(f) = 0, hence f injective.\<close>
+  have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     sorry
+  then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
+    and hf_inj: "inj_on f X"
+    by blast
   text \<open>Step: Continuous injective map from compact to Hausdorff is an embedding.\<close>
   have hf_cont: "top1_continuous_map_on X TX ?RN ?TRN f"
     using hfCC unfolding top1_continuous_funcs_on_def by simp
