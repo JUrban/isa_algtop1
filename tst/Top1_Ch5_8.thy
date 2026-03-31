@@ -25396,12 +25396,43 @@ lemma Lemma_50_4:
   assumes hdelta: "0 < \<delta>"
   shows "\<exists>f. (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
         \<and> top1_general_position_in_Rpow N (f ` A)"
-  text \<open>Proof by induction on card A. Key ingredient: Rpow_hyperplane_empty_interior (PROVED).
-    For finite unions of hyperplanes: each has empty interior, and finite union of sets
-    with empty interior has empty interior (finite intersection of open dense = dense).
-    Hence any ball contains a point avoiding all hyperplanes.
-    Full induction proof requires ~100 lines of careful Isabelle engineering.\<close>
-  sorry
+  using hFin hA hdelta
+proof (induction A arbitrary: rule: finite_induct)
+  case empty
+  show ?case
+  proof (intro exI[of _ "\<lambda>x. x"] conjI)
+    show "\<forall>x\<in>{}. x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x x < \<delta>" by simp
+    show "top1_general_position_in_Rpow N ((\<lambda>x. x) ` {})"
+      unfolding top1_general_position_in_Rpow_def by simp
+  qed
+next
+  case (insert x B)
+  text \<open>IH: there exists g perturbing B into general position.\<close>
+  have hBsub: "B \<subseteq> top1_Rpow_set N" using insert.prems(1) by simp
+  have hd_pos: "0 < \<delta>" using insert.prems(2) .
+  obtain g where hg_near: "\<forall>y\<in>B. g y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (g y) < \<delta>"
+    and hg_gp: "top1_general_position_in_Rpow N (g ` B)"
+    sorry
+  text \<open>Now find y near x that, together with g(B), is in general position.
+    Need y to avoid all hyperplanes determined by subsets of g(B).\<close>
+  have "x \<in> top1_Rpow_set N" using insert.prems(1) by simp
+  text \<open>The set g(B) is finite. The hyperplanes determined by its subsets are finitely many.
+    Each has empty interior (Rpow_hyperplane_empty_interior). By finite intersection of
+    dense open sets, we can find y in B(x, δ) avoiding all of them.\<close>
+  obtain y where hy_Rpow: "y \<in> top1_Rpow_set N"
+    and hy_near: "top1_Rpow_sup_dist N x y < \<delta>"
+    and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
+    sorry
+  text \<open>Define f: extend g with f(x) = y.\<close>
+  define f where "f = (\<lambda>z. if z = x then y else g z)"
+  have hf_near: "\<forall>z\<in>insert x B. f z \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N z (f z) < \<delta>"
+    unfolding f_def using hg_near hy_Rpow hy_near by simp
+  have hf_img: "f ` insert x B = insert y (g ` B)"
+    unfolding f_def using insert.hyps(2) by auto
+  have hf_gp: "top1_general_position_in_Rpow N (f ` insert x B)"
+    unfolding hf_img using hy_gp .
+  show ?case using hf_near hf_gp by blast
+qed
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
