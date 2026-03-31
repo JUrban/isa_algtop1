@@ -27655,6 +27655,9 @@ proof (intro allI impI)
   have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
   proof (cases "N = 0")
     case True
+    text \<open>When N=0, R^0 is a singleton and both topologies are indiscrete.\<close>
+    text \<open>N=0: Both product and metric topologies on R^0 (singleton) are {∅, {pt}}.
+      Proof requires unfolding product topology / metric topology on empty index set.\<close>
     then show ?thesis sorry
   next
     case False
