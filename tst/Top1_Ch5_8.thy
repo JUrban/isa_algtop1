@@ -25706,7 +25706,31 @@ next
     have hx_near: "top1_Rpow_sup_dist N x x < \<delta>"
       unfolding top1_Rpow_sup_dist_def using True hd_pos by simp
     have hx_gp: "top1_general_position_in_Rpow N (insert x (g ` B))"
-      unfolding top1_general_position_in_Rpow_def True sorry
+      unfolding top1_general_position_in_Rpow_def True
+    proof (intro conjI allI impI ballI)
+      show "finite (insert x (g ` B))" using hgB_fin by simp
+      show "insert x (g ` B) \<subseteq> top1_Rpow_set 0"
+        using \<open>x \<in> top1_Rpow_set N\<close> hgB_sub True by simp
+      fix T :: "(nat \<Rightarrow> real) set" and a z
+      assume hT: "T \<subseteq> insert x (g ` B)" and hcard: "card T \<le> Suc 0"
+      assume hcond: "(\<forall>j<0. (\<Sum>z\<in>T. a z * z j) = 0) \<and> sum a T = 0"
+      assume hz: "z \<in> T"
+      have "card T \<le> 1" using hcard by simp
+      have hT_fin: "finite T" using hT hgB_fin by (meson finite_insert finite_subset)
+      have "T = {} \<or> (\<exists>w. T = {w})"
+        by (metis One_nat_def \<open>card T \<le> 1\<close> hT_fin
+          bot.extremum_uniqueI bot_nat_def card_0_eq card_1_singletonE le_Suc_eq)
+      then show "a z = 0"
+      proof
+        assume "T = {}" then show ?thesis using hz by simp
+      next
+        assume "\<exists>w. T = {w}"
+        then obtain w where "T = {w}" by blast
+        then have "sum a T = a w" by simp
+        then have "a w = 0" using hcond by simp
+        then show ?thesis using \<open>T = {w}\<close> hz by simp
+      qed
+    qed
     then show ?thesis using that \<open>x \<in> top1_Rpow_set N\<close> hx_near by blast
   next
     case False
