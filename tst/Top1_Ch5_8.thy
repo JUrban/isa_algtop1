@@ -25298,39 +25298,29 @@ definition top1_Rpow_sup_dist :: "nat \<Rightarrow> (nat \<Rightarrow> real) \<R
 
 (** Placeholder predicate for “general position” in \<open>\<real>^N\<close>.
     The intended meaning is that every subfamily of size \<open>N+1\<close> is affinely independent. **)
+text \<open>A finite set of points in R^N is in general position if every subset of at most
+  N+1 points is geometrically (affinely) independent. Equivalently: for any indexed
+  subset z_1,...,z_k with k ≤ N+1, if ∑ a_i z_i = 0 and ∑ a_i = 0, then all a_i = 0.\<close>
 definition top1_general_position_in_Rpow :: "nat \<Rightarrow> (nat \<Rightarrow> real) set \<Rightarrow> bool" where
   "top1_general_position_in_Rpow N S \<longleftrightarrow>
-     finite S \<and> S \<subseteq> top1_Rpow_set N"
+     finite S \<and> S \<subseteq> top1_Rpow_set N \<and>
+     (\<forall>T \<subseteq> S. card T \<le> Suc N \<longrightarrow>
+       (\<forall>a :: (nat \<Rightarrow> real) \<Rightarrow> real.
+          (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0
+          \<longrightarrow> (\<forall>z\<in>T. a z = 0)))"
 
 (** from \S50 Lemma 50.4 (General position approximation) [top1.tex:7700] **)
 lemma Lemma_50_4:
   assumes hFin: "finite A"
   assumes hA: "A \<subseteq> top1_Rpow_set N"
   assumes hdelta: "0 < \<delta>"
-  shows "\<exists>f. inj_on f A
-        \<and> (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
+  shows "\<exists>f. (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
         \<and> top1_general_position_in_Rpow N (f ` A)"
-proof (rule exI[of _ id], intro conjI)
-  show "inj_on id A" by simp
-  show "\<forall>x\<in>A. id x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (id x) < \<delta>"
-  proof (intro ballI conjI)
-    fix x assume "x \<in> A"
-    then show "id x \<in> top1_Rpow_set N" using hA by auto
-    have "\<forall>i\<in>{0..<N}. \<bar>x i - x i\<bar> = 0" by force
-    then have himg0: "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} \<subseteq> {0}" by fast
-    show "top1_Rpow_sup_dist N x (id x) < \<delta>"
-    proof (cases "N = 0")
-      case True
-      then show ?thesis unfolding top1_Rpow_sup_dist_def using hdelta by simp
-    next
-      case False
-      then have "(\<lambda>i. \<bar>x i - x i\<bar>) ` {0..<N} = {0}" using himg0 by force
-      then show ?thesis unfolding top1_Rpow_sup_dist_def using hdelta False by auto
-    qed
-  qed
-  show "top1_general_position_in_Rpow N (id ` A)"
-    unfolding top1_general_position_in_Rpow_def using hFin hA by simp
-qed
+  text \<open>Proof by induction on card A. At each step, perturb the new point
+    to avoid all affine hulls of subsets of the existing points.
+    Uses Baire category on R^N: finite union of hyperplanes has empty interior,
+    so there's a point within δ avoiding all of them.\<close>
+  sorry
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
@@ -25339,12 +25329,31 @@ theorem Theorem_50_5:
   assumes hMet: "top1_metrizable_on X TX"
   assumes hdim: "top1_dim_le_on X TX m"
   shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
-  text \<open>Proof: Let N = 2m+1. Define Δ(f) = sup{diam f⁻¹(z) | z ∈ f(X)} and
-    U_ε = {f ∈ C(X,ℝ^N) | Δ(f) < ε}. Show: (1) U_ε open in C(X,ℝ^N) using compactness
-    of X. (2) U_ε dense using dim_le (covers of order ≤ m+1), partition of unity (Thm 41.7),
-    and general position (Lemma 50.4) with N+1 = 2m+2. By Baire category (Thm 48.2),
-    ∩U_{1/n} is nonempty → injective f → embedding (compact + injective = embedding).\<close>
-  sorry
+proof -
+  define N where "N = 2 * m + 1"
+  obtain d where hd: "top1_metric_on X d" and hTX_eq: "TX = top1_metric_topology_on X d"
+    using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
+  have hTop: "is_topology_on X TX"
+    using hComp unfolding top1_compact_on_def by presburger
+  have hHaus: "is_hausdorff_on X TX"
+    sorry
+  text \<open>C(X, R^N) is complete in the sup metric (R^N complete in square metric).\<close>
+  text \<open>Step 1: U_ε is open in C(X, R^N). Step 2: U_ε is dense.\<close>
+  text \<open>Step 3: By Baire category, ∩ U_{1/n} is dense, hence nonempty.\<close>
+  text \<open>Step 4: f in the intersection has Δ(f) = 0, so f is injective.\<close>
+  text \<open>Step 5: Compact + injective + continuous = embedding.\<close>
+  text \<open>Full proof is very long; key ingredients:
+    - Baire category (Theorem_48_2, PROVED)
+    - Partition of unity (Theorem_41_7, PROVED)
+    - General position (Lemma_50_4, sorry)
+    - dim_le gives coverings of order ≤ m+1 (PROVED)
+    - The construction g(x) = ∑ φ_i(x) z_i
+    - The key identity: g(x)=g(y) implies φ_i(x)=φ_i(y) by general position
+    - Hence x,y in same U_i, so d(x,y) < ε
+  \<close>
+  show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+    sorry
+qed
 
 text \<open>Diameter of a subset in a metric space.\<close>
 definition top1_metric_diam_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> real" where
