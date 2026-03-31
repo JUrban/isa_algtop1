@@ -26872,23 +26872,54 @@ next
         then show "W \<in> {C 0 \<inter> U |U. U \<in> TX}" using \<open>W \<in> TX\<close> by blast
       qed
     qed
-    then show ?thesis using Suc.prems(5) \<open>X = C 0\<close> sorry
+    have "top1_dim_le_on (C 0) (subspace_topology X TX (C 0)) m"
+      using Suc.prems(5) by simp
+    then show ?thesis using hsub_eq \<open>X = C 0\<close> by simp
   next
     case hFalse: False
     define Y where "Y = (\<Union>i<n. C i)"
     define Z where "Z = C n"
-    have hYX: "X = Y \<union> Z" sorry
+    have hYX: "X = Y \<union> Z"
+    proof -
+      have "(\<Union>i \<in> {..<Suc n}. C i) = (\<Union>i \<in> {..<n}. C i) \<union> C n"
+        by (simp add: lessThan_Suc Un_commute)
+      then show ?thesis unfolding Y_def Z_def using Suc.prems(3) by presburger
+    qed
     have hZcl: "closedin_on X TX Z"
       by (simp add: Suc.prems(4) Z_def)
-    have hYcl: "closedin_on X TX Y" sorry
+    have hYcl: "closedin_on X TX Y"
+    proof -
+      have "finite (C ` {..<n})" by simp
+      moreover have "\<forall>A \<in> C ` {..<n}. closedin_on X TX A"
+        using Suc.prems(4) by auto
+      ultimately show ?thesis unfolding Y_def
+        using closedin_Union_finite[OF Suc.prems(1)] by presburger
+    qed
     have hYsubX: "Y \<subseteq> X"
       by (meson closedin_on_def hYcl)
-    have hTopY: "is_topology_on Y (subspace_topology X TX Y)" sorry
-    have hTsubY: "\<forall>U\<in>subspace_topology X TX Y. U \<subseteq> Y" sorry
+    have hTopY: "is_topology_on Y (subspace_topology X TX Y)"
+      by (rule subspace_topology_is_topology_on[OF Suc.prems(1) hYsubX])
+    have hTsubY: "\<forall>U\<in>subspace_topology X TX Y. U \<subseteq> Y"
+      unfolding subspace_topology_def by blast
     have hCovY: "Y = (\<Union>i<n. C i)" using Y_def by blast
-    have hClY: "\<forall>i<n. closedin_on Y (subspace_topology X TX Y) (C i)" sorry
+    have hClY: "\<forall>i<n. closedin_on Y (subspace_topology X TX Y) (C i)"
+    proof (intro allI impI)
+      fix i assume hi: "i < n"
+      have hCi_cl: "closedin_on X TX (C i)" using Suc.prems(4) hi by simp
+      have hCi_sub_Y: "C i \<subseteq> Y" unfolding Y_def using hi by blast
+      have "C i = C i \<inter> Y" using hCi_sub_Y by blast
+      then show "closedin_on Y (subspace_topology X TX Y) (C i)"
+        using Theorem_17_2[OF Suc.prems(1) hYsubX] hCi_cl by blast
+    qed
     have hDimY: "\<forall>i<n. top1_dim_le_on (C i) (subspace_topology Y (subspace_topology X TX Y) (C i)) m"
-      sorry
+    proof (intro allI impI)
+      fix i assume hi: "i < n"
+      have hCi_sub_Y: "C i \<subseteq> Y" unfolding Y_def using hi by blast
+      have "subspace_topology Y (subspace_topology X TX Y) (C i) = subspace_topology X TX (C i)"
+        by (rule subspace_topology_trans[OF hCi_sub_Y])
+      then show "top1_dim_le_on (C i) (subspace_topology Y (subspace_topology X TX Y) (C i)) m"
+        using Suc.prems(5) hi by simp
+    qed
     have hdimY: "top1_dim_le_on Y (subspace_topology X TX Y) m"
       by (rule Suc.hyps[OF hTopY hTsubY hCovY hClY hDimY])
     have hdimZ: "top1_dim_le_on Z (subspace_topology X TX Z) m"
