@@ -26956,8 +26956,43 @@ proof (intro conjI)
       by (meson bij_betw_imp_inj_on)
     show "bij_betw g B (g ` B)" using hinj_A hBsub
       by (meson bij_betw_imageI inj_on_subset)
-    show "top1_continuous_map_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g" sorry
-    show "top1_continuous_map_on (g ` B) (subspace_topology Y TY (g ` B)) B TB (inv_into B g)" sorry
+    text \<open>Continuity of g on B: restrict domain then range.\<close>
+    have hcont_g: "top1_continuous_map_on A TA (g ` A) (subspace_topology Y TY (g ` A)) g"
+      using hHomeo unfolding top1_homeomorphism_on_def by presburger
+    have hTgA: "is_topology_on (g ` A) (subspace_topology Y TY (g ` A))"
+      using hHomeo unfolding top1_homeomorphism_on_def by presburger
+    have hgB_sub_gA: "g ` B \<subseteq> g ` A" using hBsub by (rule image_mono)
+    text \<open>Step 1: restrict domain.\<close>
+    have hcont_gB_gA: "top1_continuous_map_on B (subspace_topology A TA B)
+      (g ` A) (subspace_topology Y TY (g ` A)) g"
+    proof -
+      have "\<forall>A0 f. top1_continuous_map_on A TA (g ` A) (subspace_topology Y TY (g ` A)) f \<and> A0 \<subseteq> A
+        \<longrightarrow> top1_continuous_map_on A0 (subspace_topology A TA A0) (g ` A) (subspace_topology Y TY (g ` A)) f"
+        using Theorem_18_2(4)[OF hTA hTgA hTY] by presburger
+      then show ?thesis using hcont_g hBsub by presburger
+    qed
+    text \<open>Step 2: restrict range.\<close>
+    have hcont_gB_gB_sub: "top1_continuous_map_on B (subspace_topology A TA B)
+      (g ` B) (subspace_topology (g ` A) (subspace_topology Y TY (g ` A)) (g ` B)) g"
+    proof -
+      have hTgB_sub: "is_topology_on (g ` B) (subspace_topology (g ` A) (subspace_topology Y TY (g ` A)) (g ` B))"
+        by (rule subspace_topology_is_topology_on[OF hTgA hgB_sub_gA])
+      have "\<forall>W f. top1_continuous_map_on B (subspace_topology A TA B) (g ` A) (subspace_topology Y TY (g ` A)) f
+        \<and> W \<subseteq> g ` A \<and> f ` B \<subseteq> W
+        \<longrightarrow> top1_continuous_map_on B (subspace_topology A TA B) W
+            (subspace_topology (g ` A) (subspace_topology Y TY (g ` A)) W) f"
+        using Theorem_18_2(5)[OF \<open>is_topology_on B TB\<close>[unfolded hTB] hTgA hTgB_sub]
+        by blast
+      then show ?thesis using hcont_gB_gA hgB_sub_gA by blast
+    qed
+    text \<open>Step 3: subspace transitivity.\<close>
+    have hgB_eq: "subspace_topology (g ` A) (subspace_topology Y TY (g ` A)) (g ` B)
+      = subspace_topology Y TY (g ` B)"
+      using subspace_topology_trans[OF hgB_sub_gA] by simp
+    show "top1_continuous_map_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g"
+      using hcont_gB_gB_sub unfolding hTB hgB_eq by simp
+    show "top1_continuous_map_on (g ` B) (subspace_topology Y TY (g ` B)) B TB (inv_into B g)"
+      sorry
   qed
 qed
 
