@@ -25462,6 +25462,11 @@ lemma affine_span_empty_interior:
   assumes hS: "S \<subseteq> top1_Rpow_set N"
   shows "interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
     {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = {}"
+  text \<open>The affine span of ≤ N points has dimension ≤ N-1 < N,
+    hence is contained in a hyperplane, which has empty interior.
+    This requires: existence of a non-trivial linear form vanishing on S
+    (system of |S| ≤ N equations in N unknowns has non-trivial solution).
+    Proved for N=0 and singletons; general case needs rank argument.\<close>
   sorry
 
 text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
