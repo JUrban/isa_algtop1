@@ -26934,6 +26934,7 @@ lemma top1_embedding_on_restrict_domain:
   assumes hEmb: "top1_embedding_on A TA Y TY g"
   assumes hBsub: "B \<subseteq> A"
   assumes hTA: "is_topology_on A TA"
+  assumes hTAsub: "\<forall>U\<in>TA. U \<subseteq> A"
   assumes hTY: "is_topology_on Y TY"
   assumes hTB: "TB = subspace_topology A TA B"
   shows "top1_embedding_on B TB Y TY g"
@@ -27007,11 +27008,11 @@ proof (intro conjI)
       then have "g ` U \<in> subspace_topology Y TY (g ` A)" using hU by simp
       then obtain W where hW: "W \<in> TY" and hgU: "g ` U = g ` A \<inter> W"
         unfolding subspace_topology_def by auto
-      have hU_sub_A: "U \<subseteq> A"
-        sorry
+      have hU_sub_A: "U \<subseteq> A" using hU hTAsub by simp
       have "g ` V = g ` B \<inter> g ` U"
-        unfolding hVeq using hinj_A hBsub hU_sub_A sorry
-      also have "... = g ` B \<inter> W" using hgU hgB_sub_gA sorry
+        unfolding hVeq using hinj_A hBsub hU_sub_A
+        by (simp add: inj_on_image_Int)
+      also have "... = g ` B \<inter> W" using hgU hgB_sub_gA by auto
       finally have "g ` V = g ` B \<inter> W" .
       then show "{y \<in> g ` B. inv_into B g y \<in> V} \<in> subspace_topology Y TY (g ` B)"
         unfolding hpreimg subspace_topology_def using hW by auto
@@ -27149,7 +27150,9 @@ proof -
       show "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
         (top1_Rpow_set m) (top1_Rpow_topology m) gi"
         unfolding hCi_sub_eq
-      proof (rule top1_embedding_on_restrict_domain[OF hgi hCi_sub_Ui hTopUi _ refl])
+      proof (rule top1_embedding_on_restrict_domain[OF hgi hCi_sub_Ui hTopUi _ _ refl])
+        show "\<forall>U\<in>subspace_topology X TX (Ui i). U \<subseteq> Ui i"
+          unfolding subspace_topology_def by blast
         show "is_topology_on (top1_Rpow_set m) (top1_Rpow_topology m)"
           using top1_Rpow_is_topology_on by presburger
       qed
