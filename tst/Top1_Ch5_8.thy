@@ -25310,9 +25310,60 @@ definition top1_general_position_in_Rpow :: "nat \<Rightarrow> (nat \<Rightarrow
           \<longrightarrow> (\<forall>z\<in>T. a z = 0)))"
 
 (** from \S50 Lemma 50.4 (General position approximation) [top1.tex:7700] **)
-text \<open>Helper: a proper affine subspace of R^N (dimension < N) has empty interior
-  in the R^N topology. This is used in the inductive step of Lemma 50.4.\<close>
+text \<open>Key helper: a non-trivial affine hyperplane {x ∈ R^N | ∑ a_i x_i = b}
+  has empty interior when some a_j ≠ 0. Used in the Baire argument for Lemma 50.4.\<close>
+lemma Rpow_hyperplane_empty_interior:
+  fixes a :: "nat \<Rightarrow> real" and b :: real and N :: nat and j :: nat
+  assumes hN: "N > 0"
+  assumes ha: "j < N" "a j \<noteq> 0"
+  assumes hp: "p \<in> top1_Rpow_set N" and heps: "(0::real) < \<epsilon>"
+  shows "\<exists>q \<in> top1_Rpow_set N.
+    top1_Rpow_sq_metric N p q < \<epsilon> \<and> (\<Sum>i<N. a i * q i) \<noteq> b"
+proof (cases "(\<Sum>i<N. a i * p i) = b")
+  case False
+  have "top1_Rpow_sq_metric N p p = 0" sorry
+  then have "top1_Rpow_sq_metric N p p < \<epsilon>" using heps by linarith
+  then show ?thesis using hp False by blast
+next
+  case True
+  text \<open>p is on the hyperplane. Perturb coordinate j by t = ε/2.\<close>
+  define t :: real where "t = \<epsilon> / 2"
+  define q :: "nat \<Rightarrow> real" where
+    "q = (\<lambda>i. if i = j then p j + t else if i < N then p i else undefined)"
+  have ht_pos: "t > 0" unfolding t_def using heps by simp
+  have ht_bound: "t < \<epsilon>" unfolding t_def using heps by simp
+  have hq_Rpow: "q \<in> top1_Rpow_set N"
+    unfolding top1_Rpow_set_def top1_PiE_iff q_def using ha(1) sorry
+  have hq_dist: "top1_Rpow_sq_metric N p q < \<epsilon>"
+    sorry
+  have hq_off: "(\<Sum>i<N. a i * q i) \<noteq> b"
+  proof -
+    have "(\<Sum>i<N. a i * q i) = (\<Sum>i<N. a i * p i) + a j * t"
+    proof -
+      have "(\<Sum>i<N. a i * q i) = (\<Sum>i<N. a i * (if i = j then p j + t else p i))"
+        unfolding q_def using ha(1) by (intro sum.cong) auto
+      also have "... = (\<Sum>i<N. a i * p i) + a j * t"
+      proof -
+        have "(\<Sum>i<N. a i * (if i = j then p j + t else p i))
+          = (\<Sum>i<N. a i * p i + (if i = j then a i * t else 0))"
+          by (intro sum.cong) (auto simp: algebra_simps)
+        also have "... = (\<Sum>i<N. a i * p i) + (\<Sum>i<N. if i = j then a i * t else 0)"
+          by (simp add: sum.distrib)
+        also have "(\<Sum>i<N. if i = j then a i * t else 0) = a j * t"
+          using ha(1) by simp
+        finally show ?thesis .
+      qed
+      finally show ?thesis .
+    qed
+    then have "(\<Sum>i<N. a i * q i) = b + a j * t" using True by simp
+    then show ?thesis using ha(2) ht_pos by simp
+  qed
+  show ?thesis using hq_Rpow hq_dist hq_off by blast
+qed
 
+text \<open>The general position approximation lemma: given finitely many points in R^N,
+  they can be perturbed by < δ to be in general position.
+  Uses Baire category on R^N + the fact that proper affine subspaces are nowhere dense.\<close>
 lemma Lemma_50_4:
   assumes hFin: "finite A"
   assumes hA: "A \<subseteq> top1_Rpow_set N"
