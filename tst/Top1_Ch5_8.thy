@@ -25813,46 +25813,22 @@ definition RN_grid_covering :: "nat \<Rightarrow> (nat \<Rightarrow> real) set s
   "RN_grid_covering N = (\<Union>k \<le> N. RN_grid_family N k)"
 
 text \<open>Within each grid family, cubes are disjoint (integer-spaced).\<close>
-lemma RN_shifted_cube_disjoint:
-  assumes hne: "n1 \<noteq> n2" and hN: "N > 0"
+text \<open>Two cubes with n1 i ≠ n2 i for some i < N are disjoint.\<close>
+lemma RN_shifted_cube_disjoint_coord:
+  assumes "n1 i \<noteq> n2 i" "i < N"
   shows "RN_shifted_cube N k n1 \<inter> RN_shifted_cube N k n2 = {}"
 proof (rule ccontr)
   assume "RN_shifted_cube N k n1 \<inter> RN_shifted_cube N k n2 \<noteq> {}"
   then obtain x where hx1: "x \<in> RN_shifted_cube N k n1" and hx2: "x \<in> RN_shifted_cube N k n2" by blast
-  define s where "s = real k / real (Suc N)"
-  from hx1 have h1: "\<forall>i<N. of_int (n1 i) + s < x i \<and> x i < of_int (n1 i) + s + 1"
-    unfolding RN_shifted_cube_def s_def by blast
-  from hx2 have h2: "\<forall>i<N. of_int (n2 i) + s < x i \<and> x i < of_int (n2 i) + s + 1"
-    unfolding RN_shifted_cube_def s_def by blast
-  text \<open>n1 and n2 differ on all coordinates < N (due to cube constraints).\<close>
-  have "\<forall>i<N. n1 i = n2 i"
-  proof (intro allI impI)
-    fix i assume "i < N"
-    from h1 \<open>i < N\<close> have "of_int (n1 i) + s < x i \<and> x i < of_int (n1 i) + s + 1" by presburger
-    moreover from h2 \<open>i < N\<close> have "of_int (n2 i) + s < x i \<and> x i < of_int (n2 i) + s + 1" by presburger
-    ultimately have "\<bar>of_int (n1 i) - of_int (n2 i)\<bar> < 1" sorry
-    then show "n1 i = n2 i" sorry
-  qed
-  text \<open>But n1 ≠ n2, so they differ somewhere. For coordinates outside {0..<N},
-    the cubes impose no constraint (they're in PiE which fixes outside to undefined).\<close>
-  have "n1 = n2"
-  proof (rule ext)
-    fix i
-    show "n1 i = n2 i"
-    proof (cases "i < N")
-      case True then show ?thesis using \<open>\<forall>i<N. n1 i = n2 i\<close> sorry
-    next
-      case False
-      text \<open>Both cubes require x ∈ PiE, which sets x i = undefined for i ≥ N.
-        The n1 i and n2 i values don't matter for membership in the cube
-        when i ≥ N, but two cubes with different n can still have A ≠ B
-        even if they overlap. Actually, with i ≥ N, both cubes place
-        no constraint on x i, so ANY n value works. Hence the cubes
-        ARE the same set when n1 i = n2 i for all i < N.\<close>
-      show ?thesis sorry
-    qed
-  qed
-  then show False using hne sorry
+  from hx1 assms have h1: "of_int (n1 i) + real k / real (Suc N) < x i
+    \<and> x i < of_int (n1 i) + real k / real (Suc N) + 1"
+    unfolding RN_shifted_cube_def by blast
+  from hx2 assms have h2: "of_int (n2 i) + real k / real (Suc N) < x i
+    \<and> x i < of_int (n2 i) + real k / real (Suc N) + 1"
+    unfolding RN_shifted_cube_def by blast
+  from h1 h2 have "\<bar>of_int (n1 i) - of_int (n2 i)\<bar> < 1" sorry
+  then have "n1 i = n2 i" sorry
+  then show False using assms by presburger
 qed
 
 lemma RN_grid_family_disjoint:
