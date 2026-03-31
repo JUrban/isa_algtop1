@@ -26998,8 +26998,20 @@ proof (intro conjI)
       then show "inv_into B g y \<in> B" by (simp add: inv_into_into)
     next
       fix V assume "V \<in> TB"
-      show "{y \<in> g ` B. inv_into B g y \<in> V} \<in> subspace_topology Y TY (g ` B)"
+      obtain U where hU: "U \<in> TA" and hVeq: "V = B \<inter> U"
+        using \<open>V \<in> TB\<close> unfolding hTB subspace_topology_def by blast
+      have hpreimg: "{y \<in> g ` B. inv_into B g y \<in> V} = g ` V"
         sorry
+      have hg_open_map: "\<forall>U0 \<in> TA. g ` U0 \<in> subspace_topology Y TY (g ` A)"
+        sorry
+      then have "g ` U \<in> subspace_topology Y TY (g ` A)" using hU by simp
+      then obtain W where hW: "W \<in> TY" and hgU: "g ` U = g ` A \<inter> W"
+        unfolding subspace_topology_def by auto
+      have "g ` V = g ` B \<inter> g ` U" unfolding hVeq sorry
+      also have "... = g ` B \<inter> W" using hgU hgB_sub_gA sorry
+      finally have "g ` V = g ` B \<inter> W" .
+      then show "{y \<in> g ` B. inv_into B g y \<in> V} \<in> subspace_topology Y TY (g ` B)"
+        unfolding hpreimg subspace_topology_def using hW by auto
     qed
   qed
 qed
