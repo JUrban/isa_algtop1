@@ -26934,6 +26934,7 @@ lemma top1_embedding_on_restrict_domain:
   assumes hEmb: "top1_embedding_on A TA Y TY g"
   assumes hBsub: "B \<subseteq> A"
   assumes hTA: "is_topology_on A TA"
+  assumes hTY: "is_topology_on Y TY"
   assumes hTB: "TB = subspace_topology A TA B"
   shows "top1_embedding_on B TB Y TY g"
   unfolding top1_embedding_on_def
@@ -26943,7 +26944,21 @@ proof (intro conjI)
   have hHomeo: "top1_homeomorphism_on A TA (g ` A) (subspace_topology Y TY (g ` A)) g"
     using hEmb unfolding top1_embedding_on_def by presburger
   show "top1_homeomorphism_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g"
-    sorry
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on B TB"
+      unfolding hTB by (rule subspace_topology_is_topology_on[OF hTA hBsub])
+    have hgB_sub: "g ` B \<subseteq> Y" using hgA hBsub by (meson image_mono subset_trans)
+    have hTY': "is_topology_on Y TY" using hTY .
+    show "is_topology_on (g ` B) (subspace_topology Y TY (g ` B))"
+      by (rule subspace_topology_is_topology_on[OF hTY hgB_sub])
+    have hinj_A: "inj_on g A" using hHomeo unfolding top1_homeomorphism_on_def
+      by (meson bij_betw_imp_inj_on)
+    show "bij_betw g B (g ` B)" using hinj_A hBsub
+      by (meson bij_betw_imageI inj_on_subset)
+    show "top1_continuous_map_on B TB (g ` B) (subspace_topology Y TY (g ` B)) g" sorry
+    show "top1_continuous_map_on (g ` B) (subspace_topology Y TY (g ` B)) B TB (inv_into B g)" sorry
+  qed
 qed
 
 corollary Corollary_50_7:
@@ -27076,7 +27091,10 @@ proof -
       show "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
         (top1_Rpow_set m) (top1_Rpow_topology m) gi"
         unfolding hCi_sub_eq
-        by (rule top1_embedding_on_restrict_domain[OF hgi hCi_sub_Ui hTopUi refl])
+      proof (rule top1_embedding_on_restrict_domain[OF hgi hCi_sub_Ui hTopUi _ refl])
+        show "is_topology_on (top1_Rpow_set m) (top1_Rpow_topology m)"
+          using top1_Rpow_is_topology_on by presburger
+      qed
     qed
     then obtain g where hg: "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
       (top1_Rpow_set m) (top1_Rpow_topology m) g" by blast
