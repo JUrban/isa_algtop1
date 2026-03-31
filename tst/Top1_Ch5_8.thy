@@ -26822,6 +26822,7 @@ text \<open>dim_le is inherited by closed subsets, then Theorem_50_2_dim_le allo
 text \<open>Inductive dim_le for finite closed covers: if X = ∪_{i<n} C_i with each C_i closed
   and dim_le(C_i) ≤ m, then dim_le(X) ≤ m.\<close>
 lemma dim_le_finite_closed_cover:
+  fixes n :: nat
   assumes hTop: "is_topology_on X TX"
   assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
   assumes hCov: "X = (\<Union>i<n. C i)"
