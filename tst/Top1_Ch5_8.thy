@@ -26931,9 +26931,35 @@ qed
 
 text \<open>Restricting an embedding to a subset of the domain.\<close>
 lemma inv_into_preimage_eq:
-  assumes "inj_on g S" and "V \<subseteq> S"
+  assumes hinj: "inj_on g S" and hVS: "V \<subseteq> S"
   shows "{y \<in> g ` S. inv_into S g y \<in> V} = g ` V"
-  sorry
+proof -
+  have "\<forall>y. (y \<in> g ` S \<and> inv_into S g y \<in> V) = (y \<in> g ` V)"
+  proof
+    fix y show "(y \<in> g ` S \<and> inv_into S g y \<in> V) = (y \<in> g ` V)"
+    proof (cases "y \<in> g ` S")
+      case False then show ?thesis using hVS by (meson image_mono subsetD)
+    next
+      case True
+      then have hgy: "g (inv_into S g y) = y" by (simp add: f_inv_into_f)
+      have hinv: "inv_into S g y \<in> S" using True by (simp add: inv_into_into)
+      show ?thesis
+      proof
+        assume "y \<in> g ` S \<and> inv_into S g y \<in> V"
+        then have "inv_into S g y \<in> V" by simp
+        then show "y \<in> g ` V" using hgy by (metis rev_image_eqI)
+      next
+        assume "y \<in> g ` V"
+        then obtain x where "x \<in> V" "y = g x" by (elim imageE)
+        then have "x \<in> S" using hVS by (meson subsetD)
+        then have "inv_into S g y = x" using \<open>y = g x\<close> hinj by (simp add: inv_into_f_eq)
+        then show "y \<in> g ` S \<and> inv_into S g y \<in> V"
+          using True \<open>x \<in> V\<close> by simp
+      qed
+    qed
+  qed
+  then show ?thesis by (simp add: set_eq_iff)
+qed
 
 lemma top1_embedding_on_restrict_domain:
   assumes hEmb: "top1_embedding_on A TA Y TY g"
