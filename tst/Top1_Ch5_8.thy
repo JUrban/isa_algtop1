@@ -27253,7 +27253,15 @@ proof -
     by (rule Theorem_34_1[OF hReg h2nd])
   have hdim: "top1_dim_le_on X TX m"
   proof (rule Corollary_50_7[OF hComp hMan])
-    show "\<forall>U\<in>TX. U \<subseteq> X" sorry
+    show "\<forall>U\<in>TX. U \<subseteq> X"
+    proof (intro ballI)
+      fix U assume "U \<in> TX"
+      obtain dm where hdm: "top1_metric_on X dm" and hTXeq: "TX = top1_metric_topology_on X dm"
+        using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
+      have "U \<in> topology_generated_by_basis X (top1_metric_basis_on X dm)"
+        using \<open>U \<in> TX\<close> unfolding hTXeq top1_metric_topology_on_def by simp
+      then show "U \<subseteq> X" unfolding topology_generated_by_basis_def by simp
+    qed
   qed
   show ?thesis
     by (rule Theorem_50_5[OF hComp hMet hdim])
