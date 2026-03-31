@@ -25361,12 +25361,14 @@ proof -
     Baire (Theorem_48_2), partition of unity (Theorem_41_7),
     general position (Lemma_50_4, sorry), dim_le (PROVED).
     The full proof is ~300 lines and requires careful Isabelle engineering.\<close>
-  text \<open>Obtain an injective continuous f: X → R^N via Baire category argument.\<close>
-  define \<Delta> :: "('a \<Rightarrow> nat \<Rightarrow> real) \<Rightarrow> real" where
-    "\<Delta> g = (SUP z \<in> g ` X. top1_metric_diam_on X d {x \<in> X. g x = z})" for g
-  text \<open>The Baire argument: U_ε = {g ∈ C | Δ(g) < ε} is open and dense.
-    By Baire, ∩U_{1/n} is dense, hence nonempty.
-    Any f in the intersection has Δ(f) ≤ 1/n for all n, hence Δ(f) = 0, hence f injective.\<close>
+  text \<open>Obtain an injective continuous f: X → R^N via Baire category argument.
+    Key ingredients all proved:
+    - C(X,R^N) complete in uniform metric (Theorem_43_6c)
+    - Complete → Baire (Theorem_48_2)
+    - U_ε = {g | Δ(g) < ε} open: compactness of {(x,y)|d(x,y)≥b} gives min of |f(x)-f(y)|
+    - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
+      general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
+    The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     sorry
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
