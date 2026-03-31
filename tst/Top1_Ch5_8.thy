@@ -25921,6 +25921,157 @@ qed
 text \<open>Key linear algebra fact: affine span of ≤ N points in R^N has empty interior.
   Proof: the affine span is contained in a hyperplane (dim ≤ N-1),
   and hyperplanes have empty interior (Rpow_hyperplane_empty_interior).\<close>
+text \<open>Key linear algebra: underdetermined homogeneous system has non-trivial solution.
+  m < N equations ∑_{j<N} a_j * v_{i,j} = 0 in N unknowns has a non-zero solution a.
+  Proof by Gaussian elimination (induction on m).\<close>
+lemma underdetermined_homogeneous_system:
+  fixes v :: "nat \<Rightarrow> nat \<Rightarrow> real" and m N :: nat
+  assumes "m < N"
+  shows "\<exists>a :: nat \<Rightarrow> real. (\<exists>j<N. a j \<noteq> 0) \<and> (\<forall>i<m. (\<Sum>j<N. a j * v i j) = 0)"
+  using assms
+proof (induction m arbitrary: N v)
+  case 0
+  define a :: "nat \<Rightarrow> real" where "a = (\<lambda>j. if j = 0 then 1 else 0)"
+  have "a 0 \<noteq> 0" unfolding a_def by simp
+  then have "(\<exists>j<N. a j \<noteq> 0)" using 0 by (intro exI[of _ 0]) simp
+  moreover have "\<forall>i<0. (\<Sum>j<N. a j * v i j) = 0" by simp
+  ultimately show ?case by blast
+next
+  case (Suc m)
+  show ?case
+  proof (cases "\<forall>j<N. v m j = 0")
+    case True
+    have "m < N" using Suc.prems by linarith
+    obtain a where ha: "(\<exists>j<N. a j \<noteq> 0)" and heq: "\<forall>i<m. (\<Sum>j<N. a j * v i j) = 0"
+      using Suc.IH[OF \<open>m < N\<close>] by blast
+    have "\<forall>i < Suc m. (\<Sum>j<N. a j * v i j) = 0"
+    proof (intro allI impI)
+      fix i assume "i < Suc m"
+      then show "(\<Sum>j<N. a j * v i j) = 0"
+      proof (cases "i < m")
+        case True then show ?thesis using heq by simp
+      next
+        case False
+        then have "i = m" using \<open>i < Suc m\<close> by linarith
+        then show ?thesis using \<open>\<forall>j<N. v m j = 0\<close> by simp
+      qed
+    qed
+    then show ?thesis using ha by blast
+  next
+    case False
+    then obtain j0 where hj0: "j0 < N" and hvj0: "v m j0 \<noteq> 0" by blast
+    have hm_lt: "m < N - 1" using Suc.prems by linarith
+    text \<open>Define skip-j0 renumbering: \<phi> maps {0..<N-1} to {0..<N} \ {j0}.\<close>
+    define \<phi> where "\<phi> = (\<lambda>k::nat. if k < j0 then k else k + 1)"
+    have hphi_ne: "\<And>k. k < N - 1 \<Longrightarrow> \<phi> k \<noteq> j0"
+      unfolding \<phi>_def by auto
+    have hphi_lt: "\<And>k. k < N - 1 \<Longrightarrow> \<phi> k < N"
+      unfolding \<phi>_def using hj0 by auto
+    have hphi_inj: "inj_on \<phi> {0..<N - 1}"
+      unfolding \<phi>_def inj_on_def by auto
+    have hphi_range: "\<phi> ` {0..<N - 1} = {0..<N} - {j0}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> \<phi> ` {0..<N - 1}"
+      then obtain k where hk: "k \<in> {0..<N-1}" and hxk: "x = \<phi> k" by blast
+      have "x < N" using hk unfolding hxk \<phi>_def by auto
+      moreover have "x \<noteq> j0" using hk unfolding hxk \<phi>_def by auto
+      ultimately show "x \<in> {0..<N} - {j0}" by simp
+    next
+      fix x assume hx: "x \<in> {0..<N} - {j0}"
+      then have hxN: "x < N" and hxj: "x \<noteq> j0" by auto
+      define k where "k = (if x < j0 then x else x - 1)"
+      have "k < N - 1" unfolding k_def using hxN hxj hj0 by auto
+      moreover have "\<phi> k = x" unfolding k_def \<phi>_def using hxj hxN hj0 by auto
+      ultimately show "x \<in> \<phi> ` {0..<N - 1}" by force
+    qed
+    text \<open>Define reduced matrix (eliminate variable j0 using equation m).\<close>
+    define v' where "v' = (\<lambda>i k. v i (\<phi> k) - (v i j0 / v m j0) * v m (\<phi> k))"
+    text \<open>Apply IH: m equations in N-1 unknowns, m < N-1.\<close>
+    obtain a' where ha'_nt: "\<exists>k<N-1. a' k \<noteq> 0"
+      and ha'_eq: "\<forall>i<m. (\<Sum>k<N-1. a' k * v' i k) = 0"
+      using Suc.IH[of "N - 1" v'] hm_lt by blast
+    text \<open>Reconstruct full solution.\<close>
+    define a where "a = (\<lambda>j. if j = j0 then -(\<Sum>k<N-1. a' k * v m (\<phi> k)) / v m j0
+                              else a' (if j < j0 then j else j - 1))"
+    have ha_phi: "\<And>k. k < N - 1 \<Longrightarrow> a (\<phi> k) = a' k"
+      unfolding a_def \<phi>_def using hphi_ne by auto
+    text \<open>Sum manipulation helper: split {0..<N} into j0 and the rest, reindex.\<close>
+    have hj0_mem: "j0 \<in> {0..<N}" using hj0 by simp
+    have hins: "insert j0 ({0..<N} - {j0}) = {0..<N}" using hj0_mem by blast
+    have hfin_diff: "finite ({0..<N} - {j0})" by simp
+    have hnmem_diff: "j0 \<notin> {0..<N} - {j0}" by simp
+    have hphi_bij: "bij_betw \<phi> {0..<N - 1} ({0..<N} - {j0})"
+      using hphi_inj hphi_range unfolding bij_betw_def by blast
+    text \<open>a is non-trivial.\<close>
+    have ha_nt: "\<exists>j<N. a j \<noteq> 0"
+    proof -
+      obtain k where hk: "k < N - 1" and hk_ne: "a' k \<noteq> 0" using ha'_nt by blast
+      have "a (\<phi> k) \<noteq> 0" by (metis hk_ne ha_phi hk)
+      moreover have "\<phi> k < N" using hk hphi_lt by simp
+      ultimately show ?thesis by blast
+    qed
+    text \<open>a satisfies all Suc m equations.\<close>
+    have ha_eq_m: "(\<Sum>j<N. a j * v m j) = 0"
+    proof -
+      define f where "f = (\<lambda>j. a j * v m j)"
+      have hf_split: "sum f {0..<N} = f j0 + sum f ({0..<N}-{j0})"
+        using sum.insert[OF hfin_diff hnmem_diff, of f] hins by simp
+      have h1: "(\<Sum>j<N. a j * v m j) = (\<Sum>j\<in>{0..<N}-{j0}. a j * v m j) + a j0 * v m j0"
+        using hf_split unfolding f_def by (simp add: atLeast0LessThan add.commute)
+      have h2: "(\<Sum>j\<in>{0..<N}-{j0}. a j * v m j) = (\<Sum>k<N-1. a (\<phi> k) * v m (\<phi> k))"
+        using sum.reindex_bij_betw[OF hphi_bij, of "\<lambda>j. a j * v m j"]
+        by (simp add: atLeast0LessThan)
+      have h3: "(\<Sum>k<N-1. a (\<phi> k) * v m (\<phi> k)) = (\<Sum>k<N-1. a' k * v m (\<phi> k))"
+        by (rule sum.cong, simp, simp add: ha_phi)
+      have h4: "a j0 = -(\<Sum>k<N-1. a' k * v m (\<phi> k)) / v m j0"
+        unfolding a_def by simp
+      have h5: "a j0 * v m j0 = -(\<Sum>k<N-1. a' k * v m (\<phi> k))"
+        using h4 hvj0 by simp
+      show ?thesis using h1 h2 h3 h5 by linarith
+    qed
+    have ha_eq_lt: "\<forall>i<m. (\<Sum>j<N. a j * v i j) = 0"
+    proof (intro allI impI)
+      fix i assume hi: "i < m"
+      define g where "g = (\<lambda>j. a j * v i j)"
+      have hg_split: "sum g {0..<N} = g j0 + sum g ({0..<N}-{j0})"
+        using sum.insert[OF hfin_diff hnmem_diff, of g] hins by simp
+      have h1: "(\<Sum>j<N. a j * v i j) = (\<Sum>j\<in>{0..<N}-{j0}. a j * v i j) + a j0 * v i j0"
+        using hg_split unfolding g_def by (simp add: atLeast0LessThan add.commute)
+      have h2: "(\<Sum>j\<in>{0..<N}-{j0}. a j * v i j) = (\<Sum>k<N-1. a (\<phi> k) * v i (\<phi> k))"
+        using sum.reindex_bij_betw[OF hphi_bij, of "\<lambda>j. a j * v i j"]
+        by (simp add: atLeast0LessThan)
+      have h3: "(\<Sum>k<N-1. a (\<phi> k) * v i (\<phi> k)) = (\<Sum>k<N-1. a' k * v i (\<phi> k))"
+        by (rule sum.cong, simp, simp add: ha_phi)
+      have h4: "a j0 = -(\<Sum>k<N-1. a' k * v m (\<phi> k)) / v m j0"
+        unfolding a_def by simp
+      text \<open>Key rearrangement: Σ a'_k v_i(φ_k) + a_{j0} v_i_{j0}
+        = Σ a'_k v_i(φ_k) - (v_i_{j0}/v_m_{j0}) Σ a'_k v_m(φ_k)
+        = Σ a'_k (v_i(φ_k) - (v_i_{j0}/v_m_{j0}) v_m(φ_k))
+        = Σ a'_k v'_i_k = 0\<close>
+      have h5: "(\<Sum>k<N-1. a' k * v i (\<phi> k)) + a j0 * v i j0
+        = (\<Sum>k<N-1. a' k * v i (\<phi> k)) - (v i j0 / v m j0) * (\<Sum>k<N-1. a' k * v m (\<phi> k))"
+        using h4 by (simp add: field_simps)
+      have h6: "(v i j0 / v m j0) * (\<Sum>k<N-1. a' k * v m (\<phi> k))
+        = (\<Sum>k<N-1. (v i j0 / v m j0) * (a' k * v m (\<phi> k)))"
+        by (simp add: sum_distrib_left)
+      have h7: "(\<Sum>k<N-1. a' k * v i (\<phi> k)) - (\<Sum>k<N-1. (v i j0 / v m j0) * (a' k * v m (\<phi> k)))
+        = (\<Sum>k<N-1. a' k * v i (\<phi> k) - (v i j0 / v m j0) * (a' k * v m (\<phi> k)))"
+        by (simp add: sum_subtractf)
+      have h8: "\<And>k. a' k * v i (\<phi> k) - (v i j0 / v m j0) * (a' k * v m (\<phi> k))
+        = a' k * (v i (\<phi> k) - (v i j0 / v m j0) * v m (\<phi> k))"
+        by (simp add: algebra_simps)
+      have h9: "(\<Sum>k<N-1. a' k * (v i (\<phi> k) - (v i j0 / v m j0) * v m (\<phi> k)))
+        = (\<Sum>k<N-1. a' k * v' i k)"
+        unfolding v'_def by simp
+      have h10: "(\<Sum>k<N-1. a' k * v' i k) = 0" using ha'_eq hi by simp
+      show "(\<Sum>j<N. a j * v i j) = 0" using h1 h2 h3 h5 h6 h7 h8 h9 h10 by simp
+    qed
+    have "\<forall>i<Suc m. (\<Sum>j<N. a j * v i j) = 0"
+      by (metis ha_eq_lt ha_eq_m less_Suc_eq)
+    then show ?thesis using ha_nt by blast
+  qed
+qed
+
 lemma affine_span_empty_interior:
   fixes S :: "(nat \<Rightarrow> real) set"
   assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
@@ -25936,11 +26087,91 @@ proof -
     This is a standard linear algebra fact (underdetermined homogeneous system).\<close>
   have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
     (\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b)"
-    text \<open>For S={}: A is empty, any non-trivial a works.
-      For |S|≥1: the system ∑ a_j (z_i_j - z₁_j) = 0 for z_i∈S has |S|-1 < N
-      equations in N unknowns, so has a non-trivial solution.
-      This is the key linear algebra fact (underdetermined system).\<close>
-    sorry
+  proof (cases "S = {}")
+    case True
+    text \<open>S empty: A is empty (no c with ∑{}. c z = 1), so any a works.\<close>
+    have "A = {}" unfolding A_def using True by simp
+    then show ?thesis
+      using \<open>A = {}\<close> hN underdetermined_homogeneous_system by fastforce
+  next
+    case False
+    text \<open>S nonempty: pick z₁ ∈ S, use underdetermined system on S-{z₁}.\<close>
+    then obtain z1 where hz1: "z1 \<in> S" by blast
+    define T where "T = S - {z1}"
+    have hTfin: "finite T" using hFin unfolding T_def by simp
+    have hTcard: "card T \<le> N - 1"
+      using hcard T_def hz1 by fastforce
+    obtain ts where hts: "set ts = T" and hdist: "distinct ts"
+      using finite_distinct_list[OF hTfin] by blast
+    define m where "m = length ts"
+    have hm_card: "m = card T" using hts hdist
+      by (metis m_def distinct_card)
+    have hm_lt: "m < N" using hm_card hTcard hN by linarith
+    define w where "w = (\<lambda>i j. if i < m then (ts ! i) j - z1 j else 0)"
+    obtain a where ha_nt: "\<exists>j0<N. a j0 \<noteq> 0"
+      and ha_eq: "\<forall>i<m. (\<Sum>j<N. a j * w i j) = 0"
+      using underdetermined_homogeneous_system[of m N w] hm_lt by blast
+    then obtain j0 where hj0: "j0 < N" and haj0: "a j0 \<noteq> 0" by blast
+    text \<open>Key: a kills all differences z - z₁ for z ∈ S.\<close>
+    have ha_diff: "\<forall>z\<in>S. (\<Sum>j<N. a j * (z j - z1 j)) = 0"
+    proof (intro ballI)
+      fix z assume hz: "z \<in> S"
+      show "(\<Sum>j<N. a j * (z j - z1 j)) = 0"
+      proof (cases "z = z1")
+        case True then show ?thesis by simp
+      next
+        case False
+        then have "z \<in> T" unfolding T_def using hz by simp
+        then have "z \<in> set ts" using hts by simp
+        then obtain i where hi: "i < m" and hzi: "ts ! i = z"
+          using in_set_conv_nth by (metis hts m_def)
+        have "(\<Sum>j<N. a j * w i j) = 0" using ha_eq hi by simp
+        moreover have "w i j = z j - z1 j" for j
+          using hi hzi unfolding w_def by simp
+        ultimately show ?thesis
+          by (smt (verit) sum.cong)
+      qed
+    qed
+    define b where "b = (\<Sum>j<N. a j * z1 j)"
+    have ha_Sb: "\<forall>z\<in>S. (\<Sum>j<N. a j * z j) = b"
+    proof (intro ballI)
+      fix z assume hz: "z \<in> S"
+      have "(\<Sum>j<N. a j * (z j - z1 j)) = 0" using ha_diff hz by simp
+      then have "(\<Sum>j<N. a j * z j - a j * z1 j) = 0"
+        by (simp only: right_diff_distrib)
+      then have "(\<Sum>j<N. a j * z j) - (\<Sum>j<N. a j * z1 j) = 0"
+        by (simp only: sum_subtractf)
+      then show "(\<Sum>j<N. a j * z j) = b" unfolding b_def by linarith
+    qed
+    have ha_hyp: "\<forall>y\<in>A. (\<Sum>j<N. a j * y j) = b"
+    proof (intro ballI)
+      fix y assume hy: "y \<in> A"
+      then obtain c where hc_sum: "(\<Sum>z\<in>S. c z) = 1"
+        and hc_coord: "\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j)"
+        unfolding A_def by blast
+      have step1: "(\<Sum>j<N. a j * y j) = (\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j))"
+        by (intro sum.cong refl) (simp add: hc_coord)
+      have step2: "\<And>j. a j * (\<Sum>z\<in>S. c z * z j) = (\<Sum>z\<in>S. a j * (c z * z j))"
+        by (simp only: sum_distrib_left)
+      have step3: "(\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j))) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
+        by (rule sum.swap)
+      have step4: "\<And>z. (\<Sum>j<N. a j * (c z * z j)) = c z * (\<Sum>j<N. a j * z j)"
+        by (simp only: mult.left_commute sum_distrib_left)
+      have step5: "(\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j)) = (\<Sum>z\<in>S. c z * b)"
+        using ha_Sb by (intro sum.cong) simp_all
+      have step6: "(\<Sum>z\<in>S. c z * b) = b * (\<Sum>z\<in>S. c z)"
+        by (simp only: mult.commute sum_distrib_left)
+      have "(\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j)) = (\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j)))"
+        using step2 by (intro sum.cong refl)
+      then have "(\<Sum>j<N. a j * y j) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
+        using step1 step3 by presburger
+      moreover have "(\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j))) = (\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j))"
+        using step4 by (intro sum.cong refl)
+      ultimately show "(\<Sum>j<N. a j * y j) = b"
+        using step5 step6 hc_sum by simp
+    qed
+    show ?thesis using hj0 haj0 ha_hyp by blast
+  qed
   then obtain a :: "nat \<Rightarrow> real" and j0 :: nat and b :: real
     where hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
     and hA_hyp: "\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b"
@@ -25991,6 +26222,108 @@ proof -
   qed
 qed
 
+text \<open>Hyperplanes in R^N are closed: complement is open in the metric topology.\<close>
+lemma Rpow_hyperplane_closed:
+  fixes a :: "nat \<Rightarrow> real" and b :: real and N :: nat
+  assumes hN: "N > 0" and ha: "\<exists>j<N. a j \<noteq> 0"
+  shows "closedin_on (top1_Rpow_set N) (top1_Rpow_topology N)
+    {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}"
+  unfolding closedin_on_def
+proof (intro conjI)
+  show "{y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b} \<subseteq> top1_Rpow_set N" by blast
+  text \<open>The complement {y ∈ R^N | ∑a_j y_j ≠ b} is open in R^N.
+    For any y₀ in the complement, d = |∑a_j y₀_j - b| > 0.
+    If sup|y_j - y₀_j| < d/(N * M) where M = max|a_j| + 1,
+    then |∑a_j y_j - ∑a_j y₀_j| ≤ ∑|a_j| |y_j-y₀_j| ≤ N*M*ε < d.
+    So ∑a_j y_j ≠ b.\<close>
+  define C where "C = top1_Rpow_set N - {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}"
+  have hC_eq: "C = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) \<noteq> b}" unfolding C_def by blast
+  have hmet: "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+    by (rule top1_Rpow_sq_metric_is_metric)
+  have hTeq: "top1_Rpow_topology N = top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+    using top1_Rpow_topology_eq_sq_metric[OF hN] by simp
+  text \<open>Show C is open by showing every point has a metric ball around it in C.\<close>
+  show "C \<in> top1_Rpow_topology N"
+    unfolding hTeq top1_metric_topology_on_def top1_metric_basis_on_def
+      topology_generated_by_basis_def
+  proof (intro CollectI conjI ballI)
+    show "C \<subseteq> top1_Rpow_set N" unfolding C_def by blast
+  next
+    fix y0 assume hy0: "y0 \<in> C"
+    then have hy0_Rpow: "y0 \<in> top1_Rpow_set N" and hy0_ne: "(\<Sum>j<N. a j * y0 j) \<noteq> b"
+      unfolding hC_eq by auto
+    define d0 where "d0 = \<bar>(\<Sum>j<N. a j * y0 j) - b\<bar>"
+    have hd0: "d0 > 0" unfolding d0_def using hy0_ne by simp
+    define M where "M = (\<Sum>j<N. \<bar>a j\<bar>) + 1"
+    have "(\<Sum>j<N. \<bar>a j\<bar>) \<ge> 0" by (rule sum_nonneg) simp
+    then have hM: "M > 0" unfolding M_def by linarith
+    define e where "e = d0 / M"
+    have he: "e > 0" unfolding e_def using hd0 hM by simp
+    text \<open>Key estimate: for y in ball(y0, e), |∑a_j y_j - ∑a_j y0_j| < d0.\<close>
+    have hball_in_C: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) y0 e \<subseteq> C"
+    proof (intro subsetI)
+      fix y assume hy_ball: "y \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) y0 e"
+      then have hy_Rpow: "y \<in> top1_Rpow_set N" and hy_near: "top1_Rpow_sq_metric N y0 y < e"
+        unfolding top1_ball_on_def by auto
+      text \<open>Key: |y_j - y0_j| ≤ d(y0, y) for all j < N (from sup metric).\<close>
+      have hcoord_bound: "\<And>j. j < N \<Longrightarrow> \<bar>y j - y0 j\<bar> \<le> top1_Rpow_sq_metric N y0 y"
+      proof -
+        fix j assume hj: "j < N"
+        have "top1_Rpow_sq_metric N y0 y = (if N = 0 then 0 else Max {\<bar>y0 i - y i\<bar> |i. i < N})"
+          unfolding top1_Rpow_sq_metric_def by simp
+        moreover have "N > 0" using hN by simp
+        moreover have "\<bar>y0 j - y j\<bar> \<in> {\<bar>y0 i - y i\<bar> |i. i < N}" using hj by blast
+        then have "\<bar>y0 j - y j\<bar> \<le> Max {\<bar>y0 i - y i\<bar> |i. i < N}"
+          by (intro Max.coboundedI) auto
+        ultimately have "\<bar>y0 j - y j\<bar> \<le> top1_Rpow_sq_metric N y0 y" by presburger
+        then show "\<bar>y j - y0 j\<bar> \<le> top1_Rpow_sq_metric N y0 y" by (simp add: abs_minus_commute)
+      qed
+      text \<open>|∑ a_j y_j - ∑ a_j y0_j| ≤ ∑|a_j| * d(y0,y) < M * e = d0.\<close>
+      have hsum_diff: "\<bar>(\<Sum>j<N. a j * y j) - (\<Sum>j<N. a j * y0 j)\<bar> < d0"
+      proof -
+        have "(\<Sum>j<N. a j * y j) - (\<Sum>j<N. a j * y0 j) = (\<Sum>j<N. a j * (y j - y0 j))"
+          by (simp only: right_diff_distrib sum_subtractf)
+        then have "\<bar>(\<Sum>j<N. a j * y j) - (\<Sum>j<N. a j * y0 j)\<bar> = \<bar>\<Sum>j<N. a j * (y j - y0 j)\<bar>"
+          by simp
+        also have "\<dots> \<le> (\<Sum>j<N. \<bar>a j * (y j - y0 j)\<bar>)" by (rule sum_abs)
+        also have "\<dots> = (\<Sum>j<N. \<bar>a j\<bar> * \<bar>y j - y0 j\<bar>)" by (simp only: abs_mult)
+        also have "\<dots> \<le> (\<Sum>j<N. \<bar>a j\<bar> * top1_Rpow_sq_metric N y0 y)"
+          by (rule sum_mono) (simp add: mult_left_mono hcoord_bound)
+        also have "\<dots> = (\<Sum>j<N. \<bar>a j\<bar>) * top1_Rpow_sq_metric N y0 y"
+          by (simp only: sum_distrib_right)
+        also have "\<dots> \<le> (\<Sum>j<N. \<bar>a j\<bar>) * e"
+          by (rule mult_left_mono) (auto simp: sum_nonneg hy_near order.strict_implies_order)
+        also have "\<dots> < M * e"
+          unfolding M_def using he by (simp add: algebra_simps)
+        also have "\<dots> = d0" unfolding e_def using hM by simp
+        finally show ?thesis .
+      qed
+      then have "(\<Sum>j<N. a j * y j) \<noteq> b" unfolding d0_def by linarith
+      then show "y \<in> C" unfolding hC_eq using hy_Rpow by simp
+    qed
+    have hball_basis: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) y0 e
+      \<in> {top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) x ea |x ea.
+        x \<in> top1_Rpow_set N \<and> 0 < ea}"
+      using hy0_Rpow he by blast
+    have hd_self: "top1_Rpow_sq_metric N y0 y0 = 0"
+      using hmet hy0_Rpow unfolding top1_metric_on_def by blast
+    have "y0 \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) y0 e"
+      unfolding top1_ball_on_def using hy0_Rpow he hd_self by simp
+    then show "\<exists>ba\<in>{top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) x ea |x ea.
+      x \<in> top1_Rpow_set N \<and> 0 < ea}. y0 \<in> ba \<and> ba \<subseteq> C"
+      using hball_basis hball_in_C by blast
+  qed
+qed
+
+text \<open>Affine spans are closed in R^N (contained in a hyperplane which is closed).\<close>
+lemma affine_span_closed:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  shows "closedin_on (top1_Rpow_set N) (top1_Rpow_topology N)
+    {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}"
+  sorry
+
 text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
   we can find q near p such that S ∪ {q} is in general position.
   Uses affine_span_empty_interior + finite_union_empty_interior.\<close>
@@ -26013,22 +26346,58 @@ proof -
   text \<open>The "forbidden" sets: for each T ⊆ S with |T| ≤ N, the affine span of T.\<close>
   define F where "F T = {y \<in> top1_Rpow_set N.
     \<exists>c. (\<Sum>z\<in>T. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>T. c z * z j))}" for T :: "(nat \<Rightarrow> real) set"
-  define bad_sets where "bad_sets = {F T | T. T \<subseteq> S \<and> card T \<le> N}"
+  text \<open>For each T, the affine span F T is contained in a hyperplane (from
+    affine_span_empty_interior's proof). Use hyperplanes as bad_sets for closedness.\<close>
+  define hyp_T where "hyp_T T = (SOME H. \<exists>a j0 b. H = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}
+    \<and> j0 < N \<and> a j0 \<noteq> 0 \<and> F T \<subseteq> H)" for T :: "(nat \<Rightarrow> real) set"
+  have hhyp_exists: "\<And>T. T \<subseteq> S \<Longrightarrow> card T \<le> N \<Longrightarrow>
+    \<exists>a j0 b. hyp_T T = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}
+    \<and> j0 < N \<and> a j0 \<noteq> 0 \<and> F T \<subseteq> hyp_T T"
+    sorry
+  define bad_sets where "bad_sets = {hyp_T T | T. T \<subseteq> S \<and> card T \<le> N}"
   have hbs_fin: "finite bad_sets"
     unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
   have hbs_empty_int: "\<forall>H \<in> bad_sets. interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
   proof (intro ballI)
     fix H assume "H \<in> bad_sets"
-    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = F T"
+    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = hyp_T T"
       unfolding bad_sets_def by blast
-    have hTfin: "finite T" using hT(1) hFin by (meson finite_subset)
-    have hTsub: "T \<subseteq> top1_Rpow_set N" using hT(1) hS by blast
+    obtain a j0 b0 where hH_eq: "H = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b0}"
+      and hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
+      using hhyp_exists[OF hT(1) hT(2)] hT(3) by auto
     show "interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
-      unfolding hT(3) F_def
-      using affine_span_empty_interior[OF hN hTfin hT(2) hTsub] .
+      unfolding hH_eq
+    proof (rule equals0I)
+      fix p assume "p \<in> interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
+        {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b0}"
+      then obtain U where hU: "U \<in> top1_Rpow_topology N" "U \<subseteq> {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b0}" "p \<in> U"
+        unfolding interior_on_def by blast
+      have hp_Rpow: "p \<in> top1_Rpow_set N" using hU(2-3) by blast
+      have hmet: "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+        by (rule top1_Rpow_sq_metric_is_metric)
+      obtain e where he: "0 < e" and hball: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p e \<subseteq> U"
+        using top1_metric_open_contains_ball[OF hmet _ hU(3)]
+          hU(1) top1_Rpow_topology_eq_sq_metric[OF hN] by auto
+      obtain q where hq: "q \<in> top1_Rpow_set N" "top1_Rpow_sup_dist N p q < e"
+        "(\<Sum>j<N. a j * q j) \<noteq> b0"
+        using Rpow_hyperplane_empty_interior[of N j0 a p e b0] hN hj0 ha hp_Rpow he by auto
+      have "top1_Rpow_sq_metric N p q = top1_Rpow_sup_dist N p q"
+        sorry
+      then have "q \<in> U" using hq hball unfolding top1_ball_on_def by auto
+      then show False using hU(2) hq(1,3) by blast
+    qed
   qed
   have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
-    sorry
+  proof (intro ballI)
+    fix H assume "H \<in> bad_sets"
+    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = hyp_T T"
+      unfolding bad_sets_def by blast
+    obtain a j0 b0 where hH_eq: "H = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b0}"
+      and hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
+      using hhyp_exists[OF hT(1) hT(2)] hT(3) by auto
+    show "closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
+      unfolding hH_eq using Rpow_hyperplane_closed[OF hN] hj0 ha by blast
+  qed
   text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
   define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
   have hsup_eq_sq: "\<forall>x \<in> top1_Rpow_set N. \<forall>y \<in> top1_Rpow_set N.
@@ -26188,7 +26557,10 @@ proof -
           qed
           then show ?thesis unfolding F_def using hq_Rpow hc_sum by blast
         qed
-        moreover have "F T' \<in> bad_sets" unfolding bad_sets_def using hT'sub hT'card by blast
+        moreover have "F T' \<subseteq> hyp_T T'"
+          using hhyp_exists[OF hT'sub hT'card] by auto
+        moreover have "hyp_T T' \<in> bad_sets"
+          unfolding bad_sets_def using hT'sub hT'card by blast
         ultimately have "q \<in> \<Union>bad_sets" by blast
         then show ?thesis using hq_avoid by blast
       qed
