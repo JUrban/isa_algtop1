@@ -25335,22 +25335,20 @@ proof -
     using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
   have hTop: "is_topology_on X TX"
     using hComp unfolding top1_compact_on_def by presburger
-  have hHaus: "is_hausdorff_on X TX"
-    sorry
-  text \<open>C(X, R^N) is complete in the sup metric (R^N complete in square metric).\<close>
-  text \<open>Step 1: U_ε is open in C(X, R^N). Step 2: U_ε is dense.\<close>
-  text \<open>Step 3: By Baire category, ∩ U_{1/n} is dense, hence nonempty.\<close>
-  text \<open>Step 4: f in the intersection has Δ(f) = 0, so f is injective.\<close>
-  text \<open>Step 5: Compact + injective + continuous = embedding.\<close>
-  text \<open>Full proof is very long; key ingredients:
-    - Baire category (Theorem_48_2, PROVED)
-    - Partition of unity (Theorem_41_7, PROVED)
-    - General position (Lemma_50_4, sorry)
-    - dim_le gives coverings of order ≤ m+1 (PROVED)
-    - The construction g(x) = ∑ φ_i(x) z_i
-    - The key identity: g(x)=g(y) implies φ_i(x)=φ_i(y) by general position
-    - Hence x,y in same U_i, so d(x,y) < ε
-  \<close>
+  have hNormal: "top1_normal_on X TX"
+    using hMet by (rule Theorem_32_2)
+  have hReg: "top1_regular_on X TX" by (rule normal_imp_regular_on[OF hNormal])
+  have hHaus: "is_hausdorff_on X TX" by (rule regular_imp_hausdorff_on[OF hReg])
+  have hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+    unfolding hTX_eq top1_metric_topology_on_def topology_generated_by_basis_def by simp
+  text \<open>The space C(X, R^N) with the sup metric is a Baire space (complete metric).
+    Key infrastructure: Baire category (Theorem_48_2, PROVED),
+    partition of unity (Theorem_41_7, PROVED),
+    general position (Lemma_50_4, sorry),
+    dim_le gives coverings of order ≤ m+1 (PROVED).\<close>
+  text \<open>Step 1: For each ε > 0, U_ε is open and dense in C(X, R^N).
+    Step 2: By Baire category, ∩{U_{1/n}} is dense, hence nonempty.
+    Step 3: f in the intersection → injective → embedding (Theorem_26_6).\<close>
   show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
     sorry
 qed
