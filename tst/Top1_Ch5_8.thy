@@ -26933,7 +26933,34 @@ corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "top1_dim_le_on X TX m"
-  sorry
+proof -
+  have hHaus: "is_hausdorff_on X TX"
+    using hMan unfolding top1_m_manifold_on_def by blast
+  have hTop: "is_topology_on X TX"
+    using hHaus unfolding is_hausdorff_on_def by presburger
+  have hTsub: "\<forall>U\<in>TX. U \<subseteq> X" sorry
+  have hNormal: "top1_normal_on X TX"
+    using hComp hHaus by (rule Theorem_32_3)
+  text \<open>Charts give open cover.\<close>
+  have hCharts: "\<forall>x\<in>X. \<exists>U. U \<in> TX \<and> x \<in> U \<and>
+    (\<exists>g. top1_embedding_on U (subspace_topology X TX U) (top1_Rpow_set m) (top1_Rpow_topology m) g)"
+    using hMan unfolding top1_m_manifold_on_def neighborhood_of_def by blast
+  define \<U> where "\<U> = {U \<in> TX. \<exists>g. top1_embedding_on U (subspace_topology X TX U)
+    (top1_Rpow_set m) (top1_Rpow_topology m) g}"
+  have hUsub: "\<U> \<subseteq> TX" unfolding \<U>_def by blast
+  have hUcov: "X \<subseteq> \<Union>\<U>" using hCharts unfolding \<U>_def by blast
+  text \<open>Finite subcover.\<close>
+  have hFinSub: "\<exists>F. finite F \<and> F \<subseteq> \<U> \<and> X \<subseteq> \<Union>F"
+  proof -
+    have "\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+      using hComp unfolding top1_compact_on_def by presburger
+    then show ?thesis using hUsub hUcov by presburger
+  qed
+  obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> \<U>" and hFcov: "X \<subseteq> \<Union>F"
+    using hFinSub by blast
+  text \<open>Enumerate, shrink, apply dim_le_finite_closed_cover.\<close>
+  show ?thesis sorry
+qed
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
 corollary Corollary_50_8:
