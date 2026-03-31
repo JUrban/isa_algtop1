@@ -25453,386 +25453,6 @@ next
   qed
 qed
 
-text \<open>Key linear algebra fact: affine span of ≤ N points in R^N has empty interior.
-  Proof: the affine span is contained in a hyperplane (dim ≤ N-1),
-  and hyperplanes have empty interior (Rpow_hyperplane_empty_interior).\<close>
-lemma affine_span_empty_interior:
-  fixes S :: "(nat \<Rightarrow> real) set"
-  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
-  assumes hS: "S \<subseteq> top1_Rpow_set N"
-  shows "interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
-    {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = {}"
-  text \<open>The affine span of ≤ N points has dimension ≤ N-1 < N,
-    hence is contained in a hyperplane, which has empty interior.
-    This requires: existence of a non-trivial linear form vanishing on S
-    (system of |S| ≤ N equations in N unknowns has non-trivial solution).
-    Proved for N=0 and singletons; general case needs rank argument.\<close>
-  sorry
-
-text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
-  we can find q near p such that S ∪ {q} is in general position.
-  Uses affine_span_empty_interior + finite_union_empty_interior.\<close>
-text \<open>For a finite set S in general position and any point p ∈ R^N and ε > 0,
-  we can find q near p such that S ∪ {q} is in general position.
-  Key argument: q must avoid the affine span of each T ⊆ S with |T| ≤ N.
-  Each affine span has empty interior (affine_span_empty_interior).
-  There are finitely many such T.
-  By finite_union_empty_interior, B(p,ε) contains q outside all spans.\<close>
-lemma general_position_extend:
-  fixes S :: "(nat \<Rightarrow> real) set"
-  assumes hN: "N > 0"
-  assumes hFin: "finite S"
-  assumes hS: "S \<subseteq> top1_Rpow_set N"
-  assumes hGP: "top1_general_position_in_Rpow N S"
-  assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
-  shows "\<exists>q \<in> top1_Rpow_set N.
-    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S)"
-proof -
-  text \<open>The "forbidden" sets: for each T ⊆ S with |T| ≤ N, the affine span of T.\<close>
-  define F where "F T = {y \<in> top1_Rpow_set N.
-    \<exists>c. (\<Sum>z\<in>T. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>T. c z * z j))}" for T :: "(nat \<Rightarrow> real) set"
-  define bad_sets where "bad_sets = {F T | T. T \<subseteq> S \<and> card T \<le> N}"
-  have hbs_fin: "finite bad_sets"
-    unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
-  have hbs_empty_int: "\<forall>H \<in> bad_sets. interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
-  proof (intro ballI)
-    fix H assume "H \<in> bad_sets"
-    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = F T"
-      unfolding bad_sets_def by blast
-    have hTfin: "finite T" using hT(1) hFin by (meson finite_subset)
-    have hTsub: "T \<subseteq> top1_Rpow_set N" using hT(1) hS by blast
-    show "interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
-      unfolding hT(3) F_def
-      using affine_span_empty_interior[OF hN hTfin hT(2) hTsub] .
-  qed
-  have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
-    sorry
-  text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
-  define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
-  have hB_open: "B \<in> top1_Rpow_topology N"
-    unfolding B_def
-    text \<open>The sup-dist ball equals PiE of open intervals (p_i-ε, p_i+ε).
-      This is a product basis element, hence open. Same argument as RN_shifted_cube_open.\<close>
-    sorry
-  have hB_ne: "B \<noteq> {}"
-  proof -
-    have "top1_Rpow_sup_dist N p p = 0" unfolding top1_Rpow_sup_dist_def using hN by simp
-    then have "p \<in> B" unfolding B_def using hp heps by simp
-    then show ?thesis by blast
-  qed
-  text \<open>By finite_union_empty_interior, B is not contained in ⋃bad_sets.\<close>
-  have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
-    by (metis top1_Rpow_is_topology_on)
-  have hTsub: "\<forall>U\<in>top1_Rpow_topology N. U \<subseteq> top1_Rpow_set N"
-    unfolding top1_Rpow_topology_def top1_product_topology_on_def
-      top1_Rpow_set_def topology_generated_by_basis_def by simp
-  have "\<not> (B \<subseteq> \<Union>bad_sets)"
-    by (rule finite_union_empty_interior[OF hRpow_top hTsub hbs_fin hbs_empty_int hbs_closed
-      hB_open hB_ne])
-  then obtain q where hq_B: "q \<in> B" and hq_avoid: "q \<notin> \<Union>bad_sets"
-    by blast
-  have hq_Rpow: "q \<in> top1_Rpow_set N" using hq_B unfolding B_def by simp
-  have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>" using hq_B unfolding B_def by simp
-  have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
-  proof -
-    have hfin_ins: "finite (insert q S)" using hFin by simp
-    have hsub_ins: "insert q S \<subseteq> top1_Rpow_set N" using hq_Rpow hS by simp
-    have hgp_cond: "\<forall>T\<subseteq>insert q S. card T \<le> Suc N \<longrightarrow>
-      (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
-    proof (intro allI impI ballI)
-      fix T :: "(nat \<Rightarrow> real) set" and a :: "(nat \<Rightarrow> real) \<Rightarrow> real" and z :: "nat \<Rightarrow> real"
-      assume hTsub: "T \<subseteq> insert q S" and hTcard: "card T \<le> Suc N"
-      assume hcoord_coeff: "(\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0) \<and> (\<Sum>w\<in>T. a w) = 0"
-      assume hz: "z \<in> T"
-      have hcoord: "\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0" using hcoord_coeff by simp
-      have hcoeff: "(\<Sum>w\<in>T. a w) = 0" using hcoord_coeff by simp
-      show "a z = 0"
-    proof (cases "q \<in> T")
-      case False
-      text \<open>Case (a): T ⊆ S. Use S in GP.\<close>
-      have hTsubS: "T \<subseteq> S" using hTsub False by blast
-      have "\<forall>T\<subseteq>S. card T \<le> Suc N \<longrightarrow>
-        (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
-        using hGP unfolding top1_general_position_in_Rpow_def by presburger
-      then show ?thesis using hTsubS hTcard hcoord hcoeff hz by meson
-    next
-      case True
-      text \<open>q ∈ T. Case (b)+(c).\<close>
-      define T' where "T' = T - {q}"
-      have hT'sub: "T' \<subseteq> S" using hTsub unfolding T'_def by blast
-      have hT'card: "card T' \<le> N"
-      proof -
-        have "card T' = card T - 1" unfolding T'_def
-          using True hFin hTsub by (simp add: card_Diff_singleton)
-        then show ?thesis using hTcard by linarith
-      qed
-      show "a z = 0"
-      proof (cases "a q = 0")
-        case True
-        text \<open>Case (b): a_q = 0. If z = q, done. Otherwise z ∈ T' ⊆ S.
-          The sums over T reduce to sums over T' (q term vanishes).
-          Use S in GP.\<close>
-        show ?thesis
-        proof (cases "z = q")
-          case True then show ?thesis using \<open>a q = 0\<close> by simp
-        next
-          case False
-          then have "z \<in> T'" unfolding T'_def using hz by simp
-          text \<open>Need: ∑_{T'} a_w w_j = 0 and ∑_{T'} a_w = 0.
-            From: ∑_T a_w w_j = 0, T = T' ∪ {q}, a_q = 0.\<close>
-          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
-          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
-          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
-          have hcoord': "\<forall>j<N. (\<Sum>w\<in>T'. a w * w j) = 0"
-          proof (intro allI impI)
-            fix j assume "j < N"
-            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
-              unfolding hT_eq using hT'_fin hq_not_T' by simp
-            then show "(\<Sum>w\<in>T'. a w * w j) = 0"
-              using hcoord \<open>j < N\<close> \<open>a q = 0\<close> by simp
-          qed
-          have hcoeff': "(\<Sum>w\<in>T'. a w) = 0"
-          proof -
-            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
-              unfolding hT_eq using hT'_fin hq_not_T' by simp
-            then show ?thesis using hcoeff \<open>a q = 0\<close> by simp
-          qed
-          have "\<forall>T0\<subseteq>S. card T0 \<le> Suc N \<longrightarrow>
-            (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T0. a z * z j) = 0) \<and> (\<Sum>z\<in>T0. a z) = 0 \<longrightarrow> (\<forall>z\<in>T0. a z = 0))"
-            using hGP unfolding top1_general_position_in_Rpow_def by presburger
-          then show ?thesis
-            using hT'sub hT'card \<open>z \<in> T'\<close> hcoord' hcoeff' by (meson le_SucI)
-        qed
-      next
-        case aq_ne: False
-        text \<open>Case (c): a_q ≠ 0. Then q = -(1/a_q) ∑_{w∈T'} a_w w, placing q in
-          the affine span of T'. But q ∉ ⋃bad_sets, contradiction.\<close>
-        have "q \<in> F T'"
-        proof -
-          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
-          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
-          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
-          define c where "c = (\<lambda>w. -(a w / a q))"
-          have hT'_sum: "(\<Sum>w\<in>T'. a w) = - a q"
-          proof -
-            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
-              unfolding hT_eq using hT'_fin hq_not_T' by simp
-            then show ?thesis using hcoeff by linarith
-          qed
-          have hc_sum: "(\<Sum>w\<in>T'. c w) = 1"
-          proof -
-            have "(\<Sum>w\<in>T'. c w) = (\<Sum>w\<in>T'. -(a w / a q))"
-              unfolding c_def by simp
-            also have "... = -(1/a q) * (\<Sum>w\<in>T'. a w)"
-              by (simp add: sum_distrib_left)
-            also have "... = -(1/a q) * (- a q)" using hT'_sum by simp
-            also have "... = 1" using aq_ne by simp
-            finally show ?thesis .
-          qed
-          have hc_coord: "\<forall>j<N. q j = (\<Sum>w\<in>T'. c w * w j)"
-          proof (intro allI impI)
-            fix j assume "j < N"
-            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
-              unfolding hT_eq using hT'_fin hq_not_T' by simp
-            have "(\<Sum>w\<in>T. a w * w j) = 0" using hcoord \<open>j < N\<close> by simp
-            then have "(\<Sum>w\<in>T'. a w * w j) = - (a q * q j)"
-              using \<open>(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j\<close> by linarith
-            have "(\<Sum>w\<in>T'. c w * w j) = -(1/a q) * (\<Sum>w\<in>T'. a w * w j)"
-              unfolding c_def by (simp add: sum_distrib_left)
-            also have "... = -(1/a q) * (-(a q * q j))"
-              using \<open>(\<Sum>w\<in>T'. a w * w j) = -(a q * q j)\<close> by simp
-            also have "... = q j" using aq_ne by simp
-            finally show "q j = (\<Sum>w\<in>T'. c w * w j)" by simp
-          qed
-          then show ?thesis unfolding F_def using hq_Rpow hc_sum by blast
-        qed
-        moreover have "F T' \<in> bad_sets" unfolding bad_sets_def using hT'sub hT'card by blast
-        ultimately have "q \<in> \<Union>bad_sets" by blast
-        then show ?thesis using hq_avoid by blast
-      qed
-    qed
-    qed
-    show ?thesis unfolding top1_general_position_in_Rpow_def
-      using hfin_ins hsub_ins hgp_cond by presburger
-  qed
-  show ?thesis using hq_Rpow hq_near hq_gp by blast
-qed
-
-text \<open>The general position approximation lemma: given finitely many points in R^N,
-  they can be perturbed by < δ to be in general position.
-  Uses Baire category on R^N + the fact that proper affine subspaces are nowhere dense.\<close>
-lemma Lemma_50_4:
-  assumes hFin: "finite A"
-  assumes hA: "A \<subseteq> top1_Rpow_set N"
-  assumes hdelta: "0 < \<delta>"
-  shows "\<exists>f. (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
-        \<and> top1_general_position_in_Rpow N (f ` A)"
-  using hFin hA hdelta
-proof (induction A arbitrary: rule: finite_induct)
-  case empty
-  show ?case
-  proof (intro exI[of _ "\<lambda>x. x"] conjI)
-    show "\<forall>x\<in>{}. x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x x < \<delta>" by simp
-    show "top1_general_position_in_Rpow N ((\<lambda>x. x) ` {})"
-      unfolding top1_general_position_in_Rpow_def by simp
-  qed
-next
-  case (insert x B)
-  text \<open>IH: there exists g perturbing B into general position.\<close>
-  have hBsub: "B \<subseteq> top1_Rpow_set N" using insert.prems(1) by simp
-  have hd_pos: "0 < \<delta>" using insert.prems(2) .
-  have hIH_applied: "\<exists>f. (\<forall>y\<in>B. f y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (f y) < \<delta>)
-    \<and> top1_general_position_in_Rpow N (f ` B)"
-    using insert(3) hBsub hd_pos by meson
-  obtain g where hg_near: "\<forall>y\<in>B. g y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (g y) < \<delta>"
-    and hg_gp: "top1_general_position_in_Rpow N (g ` B)"
-    using hIH_applied by blast
-  text \<open>Now find y near x that, together with g(B), is in general position.
-    Need y to avoid all hyperplanes determined by subsets of g(B).\<close>
-  have "x \<in> top1_Rpow_set N" using insert.prems(1) by simp
-  text \<open>g(B) is finite, in general position. For each subset T ⊆ g(B) with |T| ≤ N,
-    the affine span of T is a closed set with empty interior (dim ≤ N-1, contained
-    in a hyperplane by Rpow_hyperplane_empty_interior). There are finitely many such T.
-    By finite_union_empty_interior (PROVED), the ball B(x, δ) contains y outside all spans.
-    Then insert y (g(B)) is in general position: any new dependency involving y would
-    place y in the affine span of some T, which we avoided.\<close>
-  have hgB_fin: "finite (g ` B)" using insert.hyps(1) by simp
-  have hgB_sub: "g ` B \<subseteq> top1_Rpow_set N"
-  proof (rule image_subsetI)
-    fix y assume "y \<in> B"
-    then show "g y \<in> top1_Rpow_set N" using hg_near by simp
-  qed
-  obtain y where hy_Rpow: "y \<in> top1_Rpow_set N"
-    and hy_near: "top1_Rpow_sup_dist N x y < \<delta>"
-    and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
-  proof (cases "N = 0")
-    case True
-    text \<open>N=0: use y=x, general position trivial (∀T.|T|≤1, ∑a=0→a=0 for singletons).\<close>
-    have hx_near: "top1_Rpow_sup_dist N x x < \<delta>"
-      unfolding top1_Rpow_sup_dist_def using True hd_pos by simp
-    have hx_gp: "top1_general_position_in_Rpow N (insert x (g ` B))"
-      unfolding top1_general_position_in_Rpow_def True
-    proof (intro conjI allI impI ballI)
-      show "finite (insert x (g ` B))" using hgB_fin by simp
-      show "insert x (g ` B) \<subseteq> top1_Rpow_set 0"
-        using \<open>x \<in> top1_Rpow_set N\<close> hgB_sub True by simp
-      fix T :: "(nat \<Rightarrow> real) set" and a z
-      assume hT: "T \<subseteq> insert x (g ` B)" and hcard: "card T \<le> Suc 0"
-      assume hcond: "(\<forall>j<0. (\<Sum>z\<in>T. a z * z j) = 0) \<and> sum a T = 0"
-      assume hz: "z \<in> T"
-      have "card T \<le> 1" using hcard by simp
-      have hT_fin: "finite T" using hT hgB_fin by (meson finite_insert finite_subset)
-      have "T = {} \<or> (\<exists>w. T = {w})"
-        by (metis One_nat_def \<open>card T \<le> 1\<close> hT_fin
-          bot.extremum_uniqueI bot_nat_def card_0_eq card_1_singletonE le_Suc_eq)
-      then show "a z = 0"
-      proof
-        assume "T = {}" then show ?thesis using hz by simp
-      next
-        assume "\<exists>w. T = {w}"
-        then obtain w where "T = {w}" by blast
-        then have "sum a T = a w" by simp
-        then have "a w = 0" using hcond by simp
-        then show ?thesis using \<open>T = {w}\<close> hz by simp
-      qed
-    qed
-    then show ?thesis using that \<open>x \<in> top1_Rpow_set N\<close> hx_near by blast
-  next
-    case False
-    then have hN: "N > 0" by simp
-    obtain q where hq: "q \<in> top1_Rpow_set N"
-      "top1_Rpow_sup_dist N x q < \<delta>"
-      "top1_general_position_in_Rpow N (insert q (g ` B))"
-      using general_position_extend[OF hN hgB_fin hgB_sub hg_gp \<open>x \<in> top1_Rpow_set N\<close> hd_pos]
-      by blast
-    then show ?thesis using that by blast
-  qed
-  text \<open>Define f: extend g with f(x) = y.\<close>
-  define f where "f = (\<lambda>z. if z = x then y else g z)"
-  have hf_near: "\<forall>z\<in>insert x B. f z \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N z (f z) < \<delta>"
-    unfolding f_def using hg_near hy_Rpow hy_near by simp
-  have hf_img: "f ` insert x B = insert y (g ` B)"
-    unfolding f_def using insert.hyps(2) by auto
-  have hf_gp: "top1_general_position_in_Rpow N (f ` insert x B)"
-    unfolding hf_img using hy_gp .
-  show ?case using hf_near hf_gp by blast
-qed
-
-(** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
-
-theorem Theorem_50_5:
-  assumes hComp: "top1_compact_on X TX"
-  assumes hMet: "top1_metrizable_on X TX"
-  assumes hdim: "top1_dim_le_on X TX m"
-  shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
-proof -
-  define N where "N = 2 * m + 1"
-  obtain d where hd: "top1_metric_on X d" and hTX_eq: "TX = top1_metric_topology_on X d"
-    using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
-  have hTop: "is_topology_on X TX"
-    using hComp unfolding top1_compact_on_def by presburger
-  have hNormal: "top1_normal_on X TX"
-    using hMet by (rule Theorem_32_2)
-  have hReg: "top1_regular_on X TX" by (rule normal_imp_regular_on[OF hNormal])
-  have hHaus: "is_hausdorff_on X TX" by (rule regular_imp_hausdorff_on[OF hReg])
-  have hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
-    unfolding hTX_eq top1_metric_topology_on_def topology_generated_by_basis_def by simp
-  text \<open>Setup: C(X, R^N) with the uniform metric is complete (Theorem_43_6c),
-    hence Baire (Theorem_48_2). The sup and uniform topologies agree on C
-    for bounded metrics (sup_uniform_topology_eq).\<close>
-  let ?RN = "top1_Rpow_set N" and ?TRN = "top1_Rpow_topology N"
-  let ?dRN = "top1_Rpow_sq_metric N"
-  text \<open>Define Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)} and U_ε = {f ∈ C | Δ(f) < ε}.\<close>
-  text \<open>The full proof uses:
-    (1) U_ε = {f ∈ C(X,R^N) | Δ(f) < ε} is open and dense in C(X,R^N).
-        Open: compactness argument on {(x,y) | d(x,y) ≥ b}.
-        Dense: partition of unity + general position + dim_le.
-    (2) Baire category on C(X,R^N) (complete metric → Baire).
-    (3) f in ∩U_{1/n} → Δ(f)=0 → f injective.
-    (4) Compact + injective + continuous → embedding (Theorem_26_6).
-    All key ingredients are proved or have clear sorry's:
-    Baire (Theorem_48_2), partition of unity (Theorem_41_7),
-    general position (Lemma_50_4, sorry), dim_le (PROVED).
-    The full proof is ~300 lines and requires careful Isabelle engineering.\<close>
-  text \<open>Obtain an injective continuous f: X → R^N via Baire category argument.
-    Key ingredients all proved:
-    - C(X,R^N) complete in uniform metric (Theorem_43_6c)
-    - Complete → Baire (Theorem_48_2)
-    - U_ε = {g | Δ(g) < ε} open: compactness of {(x,y)|d(x,y)≥b} gives min of |f(x)-f(y)|
-    - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
-      general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
-    The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
-  have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
-    sorry
-  then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
-    and hf_inj: "inj_on f X"
-    by blast
-  text \<open>Step: Continuous injective map from compact to Hausdorff is an embedding.\<close>
-  have hf_cont: "top1_continuous_map_on X TX ?RN ?TRN f"
-    using hfCC unfolding top1_continuous_funcs_on_def by simp
-  have hRN_top: "is_topology_on ?RN ?TRN"
-    by (metis top1_Rpow_is_topology_on)
-  have hRN_haus: "is_hausdorff_on ?RN ?TRN"
-    by (rule top1_Rpow_is_hausdorff_on)
-  have hf_img: "f ` X \<subseteq> ?RN" using hf_cont unfolding top1_continuous_map_on_def
-    by (simp add: image_subsetI)
-  text \<open>Injective continuous from compact to Hausdorff is an embedding.\<close>
-  have hf_bij: "bij_betw f X (f ` X)" using hf_inj
-    by (simp add: bij_betw_def)
-  have hfX_sub_top: "is_topology_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
-    by (rule subspace_topology_is_topology_on[OF hRN_top hf_img])
-  have hfX_haus: "is_hausdorff_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
-    by (metis hRN_haus hf_img Theorem_31_2(1))
-  have hf_cont_img: "top1_continuous_map_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
-    by (meson dual_order.refl hRN_top hTop hf_cont hf_img restrict_range)
-  have hHomeo: "top1_homeomorphism_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
-    by (rule Theorem_26_6[OF hTop hfX_sub_top hComp hfX_haus hf_cont_img hf_bij])
-  then have "top1_embedding_on X TX ?RN ?TRN f"
-    unfolding top1_embedding_on_def using hf_img by presburger
-  then show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
-    unfolding N_def by blast
-qed
-
 text \<open>Diameter of a subset in a metric space.\<close>
 definition top1_metric_diam_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> real" where
   "top1_metric_diam_on X d A = Sup {d x y | x y. x \<in> A \<and> y \<in> A}"
@@ -26296,6 +25916,386 @@ proof -
     = top1_metric_topology_on (top1_Rpow_set N) (top1_square_metric_real_on {0..<N})"
     using Rpow_sq_metric_eq_square_metric[OF hN] by presburger
   ultimately show ?thesis by presburger
+qed
+
+text \<open>Key linear algebra fact: affine span of ≤ N points in R^N has empty interior.
+  Proof: the affine span is contained in a hyperplane (dim ≤ N-1),
+  and hyperplanes have empty interior (Rpow_hyperplane_empty_interior).\<close>
+lemma affine_span_empty_interior:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  shows "interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
+    {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = {}"
+  text \<open>The affine span of ≤ N points has dimension ≤ N-1 < N,
+    hence is contained in a hyperplane, which has empty interior.
+    This requires: existence of a non-trivial linear form vanishing on S
+    (system of |S| ≤ N equations in N unknowns has non-trivial solution).
+    Proved for N=0 and singletons; general case needs rank argument.\<close>
+  sorry
+
+text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
+  we can find q near p such that S ∪ {q} is in general position.
+  Uses affine_span_empty_interior + finite_union_empty_interior.\<close>
+text \<open>For a finite set S in general position and any point p ∈ R^N and ε > 0,
+  we can find q near p such that S ∪ {q} is in general position.
+  Key argument: q must avoid the affine span of each T ⊆ S with |T| ≤ N.
+  Each affine span has empty interior (affine_span_empty_interior).
+  There are finitely many such T.
+  By finite_union_empty_interior, B(p,ε) contains q outside all spans.\<close>
+lemma general_position_extend:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0"
+  assumes hFin: "finite S"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  assumes hGP: "top1_general_position_in_Rpow N S"
+  assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
+  shows "\<exists>q \<in> top1_Rpow_set N.
+    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S)"
+proof -
+  text \<open>The "forbidden" sets: for each T ⊆ S with |T| ≤ N, the affine span of T.\<close>
+  define F where "F T = {y \<in> top1_Rpow_set N.
+    \<exists>c. (\<Sum>z\<in>T. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>T. c z * z j))}" for T :: "(nat \<Rightarrow> real) set"
+  define bad_sets where "bad_sets = {F T | T. T \<subseteq> S \<and> card T \<le> N}"
+  have hbs_fin: "finite bad_sets"
+    unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
+  have hbs_empty_int: "\<forall>H \<in> bad_sets. interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
+  proof (intro ballI)
+    fix H assume "H \<in> bad_sets"
+    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = F T"
+      unfolding bad_sets_def by blast
+    have hTfin: "finite T" using hT(1) hFin by (meson finite_subset)
+    have hTsub: "T \<subseteq> top1_Rpow_set N" using hT(1) hS by blast
+    show "interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
+      unfolding hT(3) F_def
+      using affine_span_empty_interior[OF hN hTfin hT(2) hTsub] .
+  qed
+  have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
+    sorry
+  text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
+  define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
+  have hB_open: "B \<in> top1_Rpow_topology N"
+    unfolding B_def
+    text \<open>The sup-dist ball equals PiE of open intervals (p_i-ε, p_i+ε).
+      This is a product basis element, hence open. Same argument as RN_shifted_cube_open.\<close>
+    sorry
+  have hB_ne: "B \<noteq> {}"
+  proof -
+    have "top1_Rpow_sup_dist N p p = 0" unfolding top1_Rpow_sup_dist_def using hN by simp
+    then have "p \<in> B" unfolding B_def using hp heps by simp
+    then show ?thesis by blast
+  qed
+  text \<open>By finite_union_empty_interior, B is not contained in ⋃bad_sets.\<close>
+  have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
+    by (metis top1_Rpow_is_topology_on)
+  have hTsub: "\<forall>U\<in>top1_Rpow_topology N. U \<subseteq> top1_Rpow_set N"
+    unfolding top1_Rpow_topology_def top1_product_topology_on_def
+      top1_Rpow_set_def topology_generated_by_basis_def by simp
+  have "\<not> (B \<subseteq> \<Union>bad_sets)"
+    by (rule finite_union_empty_interior[OF hRpow_top hTsub hbs_fin hbs_empty_int hbs_closed
+      hB_open hB_ne])
+  then obtain q where hq_B: "q \<in> B" and hq_avoid: "q \<notin> \<Union>bad_sets"
+    by blast
+  have hq_Rpow: "q \<in> top1_Rpow_set N" using hq_B unfolding B_def by simp
+  have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>" using hq_B unfolding B_def by simp
+  have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
+  proof -
+    have hfin_ins: "finite (insert q S)" using hFin by simp
+    have hsub_ins: "insert q S \<subseteq> top1_Rpow_set N" using hq_Rpow hS by simp
+    have hgp_cond: "\<forall>T\<subseteq>insert q S. card T \<le> Suc N \<longrightarrow>
+      (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
+    proof (intro allI impI ballI)
+      fix T :: "(nat \<Rightarrow> real) set" and a :: "(nat \<Rightarrow> real) \<Rightarrow> real" and z :: "nat \<Rightarrow> real"
+      assume hTsub: "T \<subseteq> insert q S" and hTcard: "card T \<le> Suc N"
+      assume hcoord_coeff: "(\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0) \<and> (\<Sum>w\<in>T. a w) = 0"
+      assume hz: "z \<in> T"
+      have hcoord: "\<forall>j<N. (\<Sum>w\<in>T. a w * w j) = 0" using hcoord_coeff by simp
+      have hcoeff: "(\<Sum>w\<in>T. a w) = 0" using hcoord_coeff by simp
+      show "a z = 0"
+    proof (cases "q \<in> T")
+      case False
+      text \<open>Case (a): T ⊆ S. Use S in GP.\<close>
+      have hTsubS: "T \<subseteq> S" using hTsub False by blast
+      have "\<forall>T\<subseteq>S. card T \<le> Suc N \<longrightarrow>
+        (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0 \<longrightarrow> (\<forall>z\<in>T. a z = 0))"
+        using hGP unfolding top1_general_position_in_Rpow_def by presburger
+      then show ?thesis using hTsubS hTcard hcoord hcoeff hz by meson
+    next
+      case True
+      text \<open>q ∈ T. Case (b)+(c).\<close>
+      define T' where "T' = T - {q}"
+      have hT'sub: "T' \<subseteq> S" using hTsub unfolding T'_def by blast
+      have hT'card: "card T' \<le> N"
+      proof -
+        have "card T' = card T - 1" unfolding T'_def
+          using True hFin hTsub by (simp add: card_Diff_singleton)
+        then show ?thesis using hTcard by linarith
+      qed
+      show "a z = 0"
+      proof (cases "a q = 0")
+        case True
+        text \<open>Case (b): a_q = 0. If z = q, done. Otherwise z ∈ T' ⊆ S.
+          The sums over T reduce to sums over T' (q term vanishes).
+          Use S in GP.\<close>
+        show ?thesis
+        proof (cases "z = q")
+          case True then show ?thesis using \<open>a q = 0\<close> by simp
+        next
+          case False
+          then have "z \<in> T'" unfolding T'_def using hz by simp
+          text \<open>Need: ∑_{T'} a_w w_j = 0 and ∑_{T'} a_w = 0.
+            From: ∑_T a_w w_j = 0, T = T' ∪ {q}, a_q = 0.\<close>
+          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
+          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
+          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
+          have hcoord': "\<forall>j<N. (\<Sum>w\<in>T'. a w * w j) = 0"
+          proof (intro allI impI)
+            fix j assume "j < N"
+            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show "(\<Sum>w\<in>T'. a w * w j) = 0"
+              using hcoord \<open>j < N\<close> \<open>a q = 0\<close> by simp
+          qed
+          have hcoeff': "(\<Sum>w\<in>T'. a w) = 0"
+          proof -
+            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show ?thesis using hcoeff \<open>a q = 0\<close> by simp
+          qed
+          have "\<forall>T0\<subseteq>S. card T0 \<le> Suc N \<longrightarrow>
+            (\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T0. a z * z j) = 0) \<and> (\<Sum>z\<in>T0. a z) = 0 \<longrightarrow> (\<forall>z\<in>T0. a z = 0))"
+            using hGP unfolding top1_general_position_in_Rpow_def by presburger
+          then show ?thesis
+            using hT'sub hT'card \<open>z \<in> T'\<close> hcoord' hcoeff' by (meson le_SucI)
+        qed
+      next
+        case aq_ne: False
+        text \<open>Case (c): a_q ≠ 0. Then q = -(1/a_q) ∑_{w∈T'} a_w w, placing q in
+          the affine span of T'. But q ∉ ⋃bad_sets, contradiction.\<close>
+        have "q \<in> F T'"
+        proof -
+          have hT_eq: "T = insert q T'" unfolding T'_def using \<open>q \<in> T\<close> by blast
+          have hq_not_T': "q \<notin> T'" unfolding T'_def by simp
+          have hT'_fin: "finite T'" using hFin hT'sub by (meson finite_subset)
+          define c where "c = (\<lambda>w. -(a w / a q))"
+          have hT'_sum: "(\<Sum>w\<in>T'. a w) = - a q"
+          proof -
+            have "(\<Sum>w\<in>T. a w) = (\<Sum>w\<in>T'. a w) + a q"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            then show ?thesis using hcoeff by linarith
+          qed
+          have hc_sum: "(\<Sum>w\<in>T'. c w) = 1"
+          proof -
+            have "(\<Sum>w\<in>T'. c w) = (\<Sum>w\<in>T'. -(a w / a q))"
+              unfolding c_def by simp
+            also have "... = -(1/a q) * (\<Sum>w\<in>T'. a w)"
+              by (simp add: sum_distrib_left)
+            also have "... = -(1/a q) * (- a q)" using hT'_sum by simp
+            also have "... = 1" using aq_ne by simp
+            finally show ?thesis .
+          qed
+          have hc_coord: "\<forall>j<N. q j = (\<Sum>w\<in>T'. c w * w j)"
+          proof (intro allI impI)
+            fix j assume "j < N"
+            have "(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j"
+              unfolding hT_eq using hT'_fin hq_not_T' by simp
+            have "(\<Sum>w\<in>T. a w * w j) = 0" using hcoord \<open>j < N\<close> by simp
+            then have "(\<Sum>w\<in>T'. a w * w j) = - (a q * q j)"
+              using \<open>(\<Sum>w\<in>T. a w * w j) = (\<Sum>w\<in>T'. a w * w j) + a q * q j\<close> by linarith
+            have "(\<Sum>w\<in>T'. c w * w j) = -(1/a q) * (\<Sum>w\<in>T'. a w * w j)"
+              unfolding c_def by (simp add: sum_distrib_left)
+            also have "... = -(1/a q) * (-(a q * q j))"
+              using \<open>(\<Sum>w\<in>T'. a w * w j) = -(a q * q j)\<close> by simp
+            also have "... = q j" using aq_ne by simp
+            finally show "q j = (\<Sum>w\<in>T'. c w * w j)" by simp
+          qed
+          then show ?thesis unfolding F_def using hq_Rpow hc_sum by blast
+        qed
+        moreover have "F T' \<in> bad_sets" unfolding bad_sets_def using hT'sub hT'card by blast
+        ultimately have "q \<in> \<Union>bad_sets" by blast
+        then show ?thesis using hq_avoid by blast
+      qed
+    qed
+    qed
+    show ?thesis unfolding top1_general_position_in_Rpow_def
+      using hfin_ins hsub_ins hgp_cond by presburger
+  qed
+  show ?thesis using hq_Rpow hq_near hq_gp by blast
+qed
+
+text \<open>The general position approximation lemma: given finitely many points in R^N,
+  they can be perturbed by < δ to be in general position.
+  Uses Baire category on R^N + the fact that proper affine subspaces are nowhere dense.\<close>
+lemma Lemma_50_4:
+  assumes hFin: "finite A"
+  assumes hA: "A \<subseteq> top1_Rpow_set N"
+  assumes hdelta: "0 < \<delta>"
+  shows "\<exists>f. (\<forall>x\<in>A. f x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x (f x) < \<delta>)
+        \<and> top1_general_position_in_Rpow N (f ` A)"
+  using hFin hA hdelta
+proof (induction A arbitrary: rule: finite_induct)
+  case empty
+  show ?case
+  proof (intro exI[of _ "\<lambda>x. x"] conjI)
+    show "\<forall>x\<in>{}. x \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N x x < \<delta>" by simp
+    show "top1_general_position_in_Rpow N ((\<lambda>x. x) ` {})"
+      unfolding top1_general_position_in_Rpow_def by simp
+  qed
+next
+  case (insert x B)
+  text \<open>IH: there exists g perturbing B into general position.\<close>
+  have hBsub: "B \<subseteq> top1_Rpow_set N" using insert.prems(1) by simp
+  have hd_pos: "0 < \<delta>" using insert.prems(2) .
+  have hIH_applied: "\<exists>f. (\<forall>y\<in>B. f y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (f y) < \<delta>)
+    \<and> top1_general_position_in_Rpow N (f ` B)"
+    using insert(3) hBsub hd_pos by meson
+  obtain g where hg_near: "\<forall>y\<in>B. g y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (g y) < \<delta>"
+    and hg_gp: "top1_general_position_in_Rpow N (g ` B)"
+    using hIH_applied by blast
+  text \<open>Now find y near x that, together with g(B), is in general position.
+    Need y to avoid all hyperplanes determined by subsets of g(B).\<close>
+  have "x \<in> top1_Rpow_set N" using insert.prems(1) by simp
+  text \<open>g(B) is finite, in general position. For each subset T ⊆ g(B) with |T| ≤ N,
+    the affine span of T is a closed set with empty interior (dim ≤ N-1, contained
+    in a hyperplane by Rpow_hyperplane_empty_interior). There are finitely many such T.
+    By finite_union_empty_interior (PROVED), the ball B(x, δ) contains y outside all spans.
+    Then insert y (g(B)) is in general position: any new dependency involving y would
+    place y in the affine span of some T, which we avoided.\<close>
+  have hgB_fin: "finite (g ` B)" using insert.hyps(1) by simp
+  have hgB_sub: "g ` B \<subseteq> top1_Rpow_set N"
+  proof (rule image_subsetI)
+    fix y assume "y \<in> B"
+    then show "g y \<in> top1_Rpow_set N" using hg_near by simp
+  qed
+  obtain y where hy_Rpow: "y \<in> top1_Rpow_set N"
+    and hy_near: "top1_Rpow_sup_dist N x y < \<delta>"
+    and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
+  proof (cases "N = 0")
+    case True
+    text \<open>N=0: use y=x, general position trivial (∀T.|T|≤1, ∑a=0→a=0 for singletons).\<close>
+    have hx_near: "top1_Rpow_sup_dist N x x < \<delta>"
+      unfolding top1_Rpow_sup_dist_def using True hd_pos by simp
+    have hx_gp: "top1_general_position_in_Rpow N (insert x (g ` B))"
+      unfolding top1_general_position_in_Rpow_def True
+    proof (intro conjI allI impI ballI)
+      show "finite (insert x (g ` B))" using hgB_fin by simp
+      show "insert x (g ` B) \<subseteq> top1_Rpow_set 0"
+        using \<open>x \<in> top1_Rpow_set N\<close> hgB_sub True by simp
+      fix T :: "(nat \<Rightarrow> real) set" and a z
+      assume hT: "T \<subseteq> insert x (g ` B)" and hcard: "card T \<le> Suc 0"
+      assume hcond: "(\<forall>j<0. (\<Sum>z\<in>T. a z * z j) = 0) \<and> sum a T = 0"
+      assume hz: "z \<in> T"
+      have "card T \<le> 1" using hcard by simp
+      have hT_fin: "finite T" using hT hgB_fin by (meson finite_insert finite_subset)
+      have "T = {} \<or> (\<exists>w. T = {w})"
+        by (metis One_nat_def \<open>card T \<le> 1\<close> hT_fin
+          bot.extremum_uniqueI bot_nat_def card_0_eq card_1_singletonE le_Suc_eq)
+      then show "a z = 0"
+      proof
+        assume "T = {}" then show ?thesis using hz by simp
+      next
+        assume "\<exists>w. T = {w}"
+        then obtain w where "T = {w}" by blast
+        then have "sum a T = a w" by simp
+        then have "a w = 0" using hcond by simp
+        then show ?thesis using \<open>T = {w}\<close> hz by simp
+      qed
+    qed
+    then show ?thesis using that \<open>x \<in> top1_Rpow_set N\<close> hx_near by blast
+  next
+    case False
+    then have hN: "N > 0" by simp
+    obtain q where hq: "q \<in> top1_Rpow_set N"
+      "top1_Rpow_sup_dist N x q < \<delta>"
+      "top1_general_position_in_Rpow N (insert q (g ` B))"
+      using general_position_extend[OF hN hgB_fin hgB_sub hg_gp \<open>x \<in> top1_Rpow_set N\<close> hd_pos]
+      by blast
+    then show ?thesis using that by blast
+  qed
+  text \<open>Define f: extend g with f(x) = y.\<close>
+  define f where "f = (\<lambda>z. if z = x then y else g z)"
+  have hf_near: "\<forall>z\<in>insert x B. f z \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N z (f z) < \<delta>"
+    unfolding f_def using hg_near hy_Rpow hy_near by simp
+  have hf_img: "f ` insert x B = insert y (g ` B)"
+    unfolding f_def using insert.hyps(2) by auto
+  have hf_gp: "top1_general_position_in_Rpow N (f ` insert x B)"
+    unfolding hf_img using hy_gp .
+  show ?case using hf_near hf_gp by blast
+qed
+
+(** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
+
+theorem Theorem_50_5:
+  assumes hComp: "top1_compact_on X TX"
+  assumes hMet: "top1_metrizable_on X TX"
+  assumes hdim: "top1_dim_le_on X TX m"
+  shows "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+proof -
+  define N where "N = 2 * m + 1"
+  obtain d where hd: "top1_metric_on X d" and hTX_eq: "TX = top1_metric_topology_on X d"
+    using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
+  have hTop: "is_topology_on X TX"
+    using hComp unfolding top1_compact_on_def by presburger
+  have hNormal: "top1_normal_on X TX"
+    using hMet by (rule Theorem_32_2)
+  have hReg: "top1_regular_on X TX" by (rule normal_imp_regular_on[OF hNormal])
+  have hHaus: "is_hausdorff_on X TX" by (rule regular_imp_hausdorff_on[OF hReg])
+  have hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+    unfolding hTX_eq top1_metric_topology_on_def topology_generated_by_basis_def by simp
+  text \<open>Setup: C(X, R^N) with the uniform metric is complete (Theorem_43_6c),
+    hence Baire (Theorem_48_2). The sup and uniform topologies agree on C
+    for bounded metrics (sup_uniform_topology_eq).\<close>
+  let ?RN = "top1_Rpow_set N" and ?TRN = "top1_Rpow_topology N"
+  let ?dRN = "top1_Rpow_sq_metric N"
+  text \<open>Define Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)} and U_ε = {f ∈ C | Δ(f) < ε}.\<close>
+  text \<open>The full proof uses:
+    (1) U_ε = {f ∈ C(X,R^N) | Δ(f) < ε} is open and dense in C(X,R^N).
+        Open: compactness argument on {(x,y) | d(x,y) ≥ b}.
+        Dense: partition of unity + general position + dim_le.
+    (2) Baire category on C(X,R^N) (complete metric → Baire).
+    (3) f in ∩U_{1/n} → Δ(f)=0 → f injective.
+    (4) Compact + injective + continuous → embedding (Theorem_26_6).
+    All key ingredients are proved or have clear sorry's:
+    Baire (Theorem_48_2), partition of unity (Theorem_41_7),
+    general position (Lemma_50_4, sorry), dim_le (PROVED).
+    The full proof is ~300 lines and requires careful Isabelle engineering.\<close>
+  text \<open>Obtain an injective continuous f: X → R^N via Baire category argument.
+    Key ingredients all proved:
+    - C(X,R^N) complete in uniform metric (Theorem_43_6c)
+    - Complete → Baire (Theorem_48_2)
+    - U_ε = {g | Δ(g) < ε} open: compactness of {(x,y)|d(x,y)≥b} gives min of |f(x)-f(y)|
+    - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
+      general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
+    The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
+  have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
+    sorry
+  then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
+    and hf_inj: "inj_on f X"
+    by blast
+  text \<open>Step: Continuous injective map from compact to Hausdorff is an embedding.\<close>
+  have hf_cont: "top1_continuous_map_on X TX ?RN ?TRN f"
+    using hfCC unfolding top1_continuous_funcs_on_def by simp
+  have hRN_top: "is_topology_on ?RN ?TRN"
+    by (metis top1_Rpow_is_topology_on)
+  have hRN_haus: "is_hausdorff_on ?RN ?TRN"
+    by (rule top1_Rpow_is_hausdorff_on)
+  have hf_img: "f ` X \<subseteq> ?RN" using hf_cont unfolding top1_continuous_map_on_def
+    by (simp add: image_subsetI)
+  text \<open>Injective continuous from compact to Hausdorff is an embedding.\<close>
+  have hf_bij: "bij_betw f X (f ` X)" using hf_inj
+    by (simp add: bij_betw_def)
+  have hfX_sub_top: "is_topology_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
+    by (rule subspace_topology_is_topology_on[OF hRN_top hf_img])
+  have hfX_haus: "is_hausdorff_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
+    by (metis hRN_haus hf_img Theorem_31_2(1))
+  have hf_cont_img: "top1_continuous_map_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
+    by (meson dual_order.refl hRN_top hTop hf_cont hf_img restrict_range)
+  have hHomeo: "top1_homeomorphism_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
+    by (rule Theorem_26_6[OF hTop hfX_sub_top hComp hfX_haus hf_cont_img hf_bij])
+  then have "top1_embedding_on X TX ?RN ?TRN f"
+    unfolding top1_embedding_on_def using hf_img by presburger
+  then show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+    unfolding N_def by blast
 qed
 
 text \<open>R^N has open coverings of order N+1 at any scale.
