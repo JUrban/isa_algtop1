@@ -25398,8 +25398,11 @@ lemma Lemma_50_4:
         \<and> top1_general_position_in_Rpow N (f ` A)"
   text \<open>Proof by induction on card A. At each step, perturb the new point
     to avoid all affine hulls of subsets of the existing points.
-    R^N is a Baire space, and a finite union of proper affine subspaces
-    has empty interior, so there's a point within δ avoiding all of them.\<close>
+    Key ingredient: Rpow_hyperplane_empty_interior (PROVED) shows that
+    each proper affine hyperplane has empty interior in R^N.
+    R^N is a Baire space (complete metric, Theorem_48_2 PROVED), so
+    a finite union of proper affine subspaces has empty interior.
+    Hence the open ball B(x, δ) contains points avoiding all hyperplanes.\<close>
   sorry
 
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
