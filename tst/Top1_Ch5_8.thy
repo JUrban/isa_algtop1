@@ -26949,13 +26949,13 @@ qed
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
   shows "top1_dim_le_on X TX m"
 proof -
   have hHaus: "is_hausdorff_on X TX"
     using hMan unfolding top1_m_manifold_on_def by blast
   have hTop: "is_topology_on X TX"
     using hHaus unfolding is_hausdorff_on_def by presburger
-  have hTsub: "\<forall>U\<in>TX. U \<subseteq> X" sorry
   have hNormal: "top1_normal_on X TX"
     using hComp hHaus by (rule Theorem_32_3)
   text \<open>Charts give open cover.\<close>
@@ -27118,7 +27118,9 @@ proof -
   have hMet: "top1_metrizable_on X TX"
     by (rule Theorem_34_1[OF hReg h2nd])
   have hdim: "top1_dim_le_on X TX m"
-    by (rule Corollary_50_7[OF hComp hMan])
+  proof (rule Corollary_50_7[OF hComp hMan])
+    show "\<forall>U\<in>TX. U \<subseteq> X" sorry
+  qed
   show ?thesis
     by (rule Theorem_50_5[OF hComp hMet hdim])
 qed
