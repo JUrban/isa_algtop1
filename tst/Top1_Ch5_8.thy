@@ -26959,6 +26959,43 @@ proof -
   obtain F where hFfin: "finite F" and hFsub: "F \<subseteq> \<U>" and hFcov: "X \<subseteq> \<Union>F"
     using hFinSub by blast
   text \<open>Enumerate, shrink, apply dim_le_finite_closed_cover.\<close>
+  text \<open>Enumerate the finite cover.\<close>
+  obtain n0 f where hF_enum: "F = f ` {i. i < n0}"
+    using finite_imp_nat_seg_image_inj_on[OF hFfin] sorry
+  define n where "n = n0"
+  define Ui where "Ui = f"
+  have hUiF: "\<forall>i<n. Ui i \<in> F" unfolding n_def Ui_def using hF_enum sorry
+  have hUiopen: "\<forall>i<n. Ui i \<in> TX" using hUiF hFsub hUsub sorry
+  have hUiemb: "\<forall>i<n. \<exists>g. top1_embedding_on (Ui i) (subspace_topology X TX (Ui i))
+    (top1_Rpow_set m) (top1_Rpow_topology m) g"
+    using hUiF hFsub unfolding \<U>_def sorry
+  have hUisubX: "\<forall>i<n. Ui i \<subseteq> X" using hUiopen hTsub sorry
+  have hXcov_n: "X \<subseteq> (\<Union>i<n. Ui i)"
+    using hFcov hF_enum unfolding n_def Ui_def sorry
+  text \<open>Shrink to closed cover.\<close>
+  have hShrink: "\<exists>V. (\<forall>i<n. V i \<in> TX \<and> V i \<subseteq> X \<and> closure_on X TX (V i) \<subseteq> Ui i) \<and> X \<subseteq> (\<Union>i<n. V i)"
+    sorry
+  obtain Vi where hVi_props: "\<forall>i<n. Vi i \<in> TX \<and> Vi i \<subseteq> X \<and> closure_on X TX (Vi i) \<subseteq> Ui i"
+    and hVicov: "X \<subseteq> (\<Union>i<n. Vi i)"
+    using hShrink by blast
+  have hVicl: "\<forall>i<n. closure_on X TX (Vi i) \<subseteq> Ui i" using hVi_props by blast
+  text \<open>Apply dim_le_finite_closed_cover.\<close>
+  define Ci where "Ci = (\<lambda>i. closure_on X TX (Vi i))"
+  have hXeq: "X = (\<Union>i<n. Ci i)" unfolding Ci_def sorry
+  have hCicl: "\<forall>i<n. closedin_on X TX (Ci i)" unfolding Ci_def sorry
+  have hCidim: "\<forall>i<n. top1_dim_le_on (Ci i) (subspace_topology X TX (Ci i)) m"
+  proof (intro allI impI)
+    fix i assume hi: "i < n"
+    have hCi_comp: "top1_compact_on (Ci i) (subspace_topology X TX (Ci i))"
+      sorry
+    have hCi_emb: "\<exists>g. top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
+      (top1_Rpow_set m) (top1_Rpow_topology m) g"
+      sorry
+    then obtain g where hg: "top1_embedding_on (Ci i) (subspace_topology X TX (Ci i))
+      (top1_Rpow_set m) (top1_Rpow_topology m) g" by blast
+    show "top1_dim_le_on (Ci i) (subspace_topology X TX (Ci i)) m"
+      by (rule compact_embedding_dim_le[OF hCi_comp hg])
+  qed
   show ?thesis sorry
 qed
 
