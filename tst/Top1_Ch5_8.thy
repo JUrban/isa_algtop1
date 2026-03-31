@@ -25497,8 +25497,8 @@ proof -
   define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
   have hB_open: "B \<in> top1_Rpow_topology N"
     unfolding B_def
-    text \<open>The sup-dist ball is a product of open intervals (p_i - ε, p_i + ε),
-      which is a product basis element, hence open in the product topology.\<close>
+    text \<open>The sup-dist ball equals PiE of open intervals (p_i-ε, p_i+ε).
+      This is a product basis element, hence open. Same argument as RN_shifted_cube_open.\<close>
     sorry
   have hB_ne: "B \<noteq> {}"
   proof -
