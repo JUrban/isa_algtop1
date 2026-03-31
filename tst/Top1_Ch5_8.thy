@@ -25453,6 +25453,37 @@ next
   qed
 qed
 
+text \<open>Key linear algebra fact: affine span of ≤ N points in R^N has empty interior.
+  Proof: the affine span is contained in a hyperplane (dim ≤ N-1),
+  and hyperplanes have empty interior (Rpow_hyperplane_empty_interior).\<close>
+lemma affine_span_empty_interior:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  shows "interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
+    {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = {}"
+  sorry
+
+text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
+  we can find q near p such that S ∪ {q} is in general position.
+  Uses affine_span_empty_interior + finite_union_empty_interior.\<close>
+text \<open>For a finite set S in general position and any point p ∈ R^N and ε > 0,
+  we can find q near p such that S ∪ {q} is in general position.
+  Key argument: q must avoid the affine span of each T ⊆ S with |T| ≤ N.
+  Each affine span has empty interior (affine_span_empty_interior).
+  There are finitely many such T.
+  By finite_union_empty_interior, B(p,ε) contains q outside all spans.\<close>
+lemma general_position_extend:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0"
+  assumes hFin: "finite S"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  assumes hGP: "top1_general_position_in_Rpow N S"
+  assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
+  shows "\<exists>q \<in> top1_Rpow_set N.
+    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S)"
+  sorry
+
 text \<open>The general position approximation lemma: given finitely many points in R^N,
   they can be perturbed by < δ to be in general position.
   Uses Baire category on R^N + the fact that proper affine subspaces are nowhere dense.\<close>
@@ -25491,10 +25522,29 @@ next
     By finite_union_empty_interior (PROVED), the ball B(x, δ) contains y outside all spans.
     Then insert y (g(B)) is in general position: any new dependency involving y would
     place y in the affine span of some T, which we avoided.\<close>
+  have hgB_fin: "finite (g ` B)" using insert.hyps(1) by simp
+  have hgB_sub: "g ` B \<subseteq> top1_Rpow_set N"
+  proof (rule image_subsetI)
+    fix y assume "y \<in> B"
+    then show "g y \<in> top1_Rpow_set N" using hg_near by simp
+  qed
   obtain y where hy_Rpow: "y \<in> top1_Rpow_set N"
     and hy_near: "top1_Rpow_sup_dist N x y < \<delta>"
     and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
-    sorry
+  proof (cases "N = 0")
+    case True
+    text \<open>N=0: R^0 is a single point, general position is trivial.\<close>
+    then show ?thesis sorry
+  next
+    case False
+    then have hN: "N > 0" by simp
+    obtain q where hq: "q \<in> top1_Rpow_set N"
+      "top1_Rpow_sup_dist N x q < \<delta>"
+      "top1_general_position_in_Rpow N (insert q (g ` B))"
+      using general_position_extend[OF hN hgB_fin hgB_sub hg_gp \<open>x \<in> top1_Rpow_set N\<close> hd_pos]
+      by blast
+    then show ?thesis using that by blast
+  qed
   text \<open>Define f: extend g with f(x) = y.\<close>
   define f where "f = (\<lambda>z. if z = x then y else g z)"
   have hf_near: "\<forall>z\<in>insert x B. f z \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N z (f z) < \<delta>"
