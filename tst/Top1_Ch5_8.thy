@@ -26772,14 +26772,59 @@ proof (intro allI impI)
 qed
 
 (** from \S50 Corollary 50.7 [top1.tex:7839] **)
+text \<open>Helper: if a compact Hausdorff subspace embeds in R^m, it has dim ≤ m.\<close>
+lemma compact_embedding_dim_le:
+  assumes hComp: "top1_compact_on A TA"
+  assumes hEmb: "top1_embedding_on A TA (top1_Rpow_set m) (top1_Rpow_topology m) g"
+  shows "top1_dim_le_on A TA m"
+proof -
+  have hRpow_top: "is_topology_on (top1_Rpow_set m) (top1_Rpow_topology m)"
+    using top1_Rpow_is_topology_on by simp
+  have hcont_g: "top1_continuous_map_on A TA (top1_Rpow_set m) (top1_Rpow_topology m) g"
+    using top1_embedding_on_imp_continuous hEmb by blast
+  have hgA_comp: "top1_compact_on (g ` A)
+    (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A))"
+    using top1_compact_on_continuous_image hComp hRpow_top hcont_g by blast
+  have hgA_sub: "g ` A \<subseteq> top1_Rpow_set m"
+    using hcont_g unfolding top1_continuous_map_on_def by blast
+  have hdim_gA: "top1_dim_le_on (g ` A)
+    (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) m"
+    by (rule Theorem_50_6[OF hgA_comp hgA_sub])
+  have hHomeo: "top1_homeomorphism_on A TA (g ` A)
+    (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) g"
+    using hEmb unfolding top1_embedding_on_def by presburger
+  have hHomeo_inv: "top1_homeomorphism_on (g ` A)
+    (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) A TA (inv_into A g)"
+  proof -
+    obtain hH1 hH2 hH3 hH4 hH5 where
+      hH1': "is_topology_on A TA" and
+      hH2': "is_topology_on (g ` A) (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A))" and
+      hH3': "bij_betw g A (g ` A)" and
+      hH4': "top1_continuous_map_on A TA (g ` A) (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) g" and
+      hH5': "top1_continuous_map_on (g ` A) (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) A TA (inv_into A g)"
+      using hHomeo unfolding top1_homeomorphism_on_def by satx
+    have hbij_inv: "bij_betw (inv_into A g) (g ` A) A"
+      using hH3' by (metis bij_betw_inv_into)
+    have hcont_inv_inv: "top1_continuous_map_on A TA (g ` A) (subspace_topology (top1_Rpow_set m) (top1_Rpow_topology m) (g ` A)) (inv_into (g ` A) (inv_into A g))"
+    proof -
+      have "\<forall>x\<in>A. inv_into (g ` A) (inv_into A g) x = g x"
+        using hH3' by (simp add: inv_into_inv_into_eq)
+      then show ?thesis using hH4' using top1_continuous_map_on_cong by blast
+    qed
+    show ?thesis unfolding top1_homeomorphism_on_def
+      using hH2' hH1' hbij_inv hH5' hcont_inv_inv by blast
+  qed
+  show ?thesis
+    using homeomorphism_preserves_dim_le[OF hHomeo_inv hdim_gA] by presburger
+qed
+
+text \<open>dim_le is inherited by closed subsets, then Theorem_50_2_dim_le allows induction.\<close>
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "top1_dim_le_on X TX m"
-  text \<open>Proof: From m-manifold definition, cover X by open sets each homeomorphic to
-    open subsets of ℝ^m. Finite subcover by compactness. Each closure compact
-    (closed in compact) and embeds in ℝ^m. By Theorem_50_6, each has dim ≤ m.
-    Inductive Theorem_50_2 gives dim X ≤ m.\<close>
+  text \<open>Proof sketch: cover X by chart neighborhoods, finite subcover,
+    use compact_embedding_dim_le on closures, then Theorem_50_2_dim_le.\<close>
   sorry
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
