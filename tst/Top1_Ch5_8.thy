@@ -26072,6 +26072,105 @@ next
   qed
 qed
 
+text \<open>Affine span of ≤ N points is contained in a hyperplane.\<close>
+lemma affine_span_in_hyperplane:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
+  assumes hS: "S \<subseteq> top1_Rpow_set N"
+  shows "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
+    (\<forall>y \<in> {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}.
+      (\<Sum>j<N. a j * y j) = b)"
+proof -
+  define A where "A = {y \<in> top1_Rpow_set N.
+    \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}"
+  have hA_eq: "{y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = A"
+    unfolding A_def by simp
+  have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and> (\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b)"
+  proof (cases "S = {}")
+  case True
+  have "A = {}" unfolding A_def using True by simp
+  then show ?thesis
+    using \<open>A = {}\<close> hN underdetermined_homogeneous_system by fastforce
+next
+  case False
+  then obtain z1 where hz1: "z1 \<in> S" by blast
+  define T where "T = S - {z1}"
+  have hTfin: "finite T" using hFin unfolding T_def by simp
+  have hTcard: "card T \<le> N - 1"
+    using hcard T_def hz1 by fastforce
+  obtain ts where hts: "set ts = T" and hdist: "distinct ts"
+    using finite_distinct_list[OF hTfin] by blast
+  define m where "m = length ts"
+  have hm_card: "m = card T" using hts hdist
+    by (metis m_def distinct_card)
+  have hm_lt: "m < N" using hm_card hTcard hN by linarith
+  define w where "w = (\<lambda>i j. if i < m then (ts ! i) j - z1 j else 0)"
+  obtain a where ha_nt: "\<exists>j0<N. a j0 \<noteq> 0"
+    and ha_eq: "\<forall>i<m. (\<Sum>j<N. a j * w i j) = 0"
+    using underdetermined_homogeneous_system[of m N w] hm_lt by blast
+  then obtain j0 where hj0: "j0 < N" and haj0: "a j0 \<noteq> 0" by blast
+  have ha_diff: "\<forall>z\<in>S. (\<Sum>j<N. a j * (z j - z1 j)) = 0"
+  proof (intro ballI)
+    fix z assume hz: "z \<in> S"
+    show "(\<Sum>j<N. a j * (z j - z1 j)) = 0"
+    proof (cases "z = z1")
+      case True then show ?thesis by simp
+    next
+      case False
+      then have "z \<in> T" unfolding T_def using hz by simp
+      then have "z \<in> set ts" using hts by simp
+      then obtain i where hi: "i < m" and hzi: "ts ! i = z"
+        using in_set_conv_nth by (metis hts m_def)
+      have "(\<Sum>j<N. a j * w i j) = 0" using ha_eq hi by simp
+      moreover have "w i j = z j - z1 j" for j
+        using hi hzi unfolding w_def by simp
+      ultimately show ?thesis
+        by (smt (verit) sum.cong)
+    qed
+  qed
+  define b where "b = (\<Sum>j<N. a j * z1 j)"
+  have ha_Sb: "\<forall>z\<in>S. (\<Sum>j<N. a j * z j) = b"
+  proof (intro ballI)
+    fix z assume hz: "z \<in> S"
+    have "(\<Sum>j<N. a j * (z j - z1 j)) = 0" using ha_diff hz by simp
+    then have "(\<Sum>j<N. a j * z j - a j * z1 j) = 0"
+      by (simp only: right_diff_distrib)
+    then have "(\<Sum>j<N. a j * z j) - (\<Sum>j<N. a j * z1 j) = 0"
+      by (simp only: sum_subtractf)
+    then show "(\<Sum>j<N. a j * z j) = b" unfolding b_def by linarith
+  qed
+  have ha_hyp: "\<forall>y\<in>A. (\<Sum>j<N. a j * y j) = b"
+  proof (intro ballI)
+    fix y assume hy: "y \<in> A"
+    then obtain c where hc_sum: "(\<Sum>z\<in>S. c z) = 1"
+      and hc_coord: "\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j)"
+      unfolding A_def by blast
+    have step1: "(\<Sum>j<N. a j * y j) = (\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j))"
+      by (intro sum.cong refl) (simp add: hc_coord)
+    have step2: "\<And>j. a j * (\<Sum>z\<in>S. c z * z j) = (\<Sum>z\<in>S. a j * (c z * z j))"
+      by (simp only: sum_distrib_left)
+    have step3: "(\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j))) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
+      by (rule sum.swap)
+    have step4: "\<And>z. (\<Sum>j<N. a j * (c z * z j)) = c z * (\<Sum>j<N. a j * z j)"
+      by (simp only: mult.left_commute sum_distrib_left)
+    have step5: "(\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j)) = (\<Sum>z\<in>S. c z * b)"
+      using ha_Sb by (intro sum.cong) simp_all
+    have step6: "(\<Sum>z\<in>S. c z * b) = b * (\<Sum>z\<in>S. c z)"
+      by (simp only: mult.commute sum_distrib_left)
+    have "(\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j)) = (\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j)))"
+      using step2 by (intro sum.cong refl)
+    then have "(\<Sum>j<N. a j * y j) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
+      using step1 step3 by presburger
+    moreover have "(\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j))) = (\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j))"
+      using step4 by (intro sum.cong refl)
+    ultimately show "(\<Sum>j<N. a j * y j) = b"
+      using step5 step6 hc_sum by simp
+  qed
+  show ?thesis using hj0 haj0 ha_hyp by blast
+  qed
+  then show ?thesis using hA_eq by simp
+qed
+
 lemma affine_span_empty_interior:
   fixes S :: "(nat \<Rightarrow> real) set"
   assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
@@ -26081,97 +26180,9 @@ lemma affine_span_empty_interior:
 proof -
   define A where "A = {y \<in> top1_Rpow_set N.
     \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}"
-  text \<open>The span A is contained in some hyperplane {y | ∑ a_j y_j = b} with some a_j ≠ 0.
-    Existence: the system ∑_j a_j (z_i_j - z_1_j) = 0 for i=2,...,k has k-1 < N
-    homogeneous equations in N unknowns, so has a non-trivial solution.
-    This is a standard linear algebra fact (underdetermined homogeneous system).\<close>
   have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
     (\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b)"
-  proof (cases "S = {}")
-    case True
-    text \<open>S empty: A is empty (no c with ∑{}. c z = 1), so any a works.\<close>
-    have "A = {}" unfolding A_def using True by simp
-    then show ?thesis
-      using \<open>A = {}\<close> hN underdetermined_homogeneous_system by fastforce
-  next
-    case False
-    text \<open>S nonempty: pick z₁ ∈ S, use underdetermined system on S-{z₁}.\<close>
-    then obtain z1 where hz1: "z1 \<in> S" by blast
-    define T where "T = S - {z1}"
-    have hTfin: "finite T" using hFin unfolding T_def by simp
-    have hTcard: "card T \<le> N - 1"
-      using hcard T_def hz1 by fastforce
-    obtain ts where hts: "set ts = T" and hdist: "distinct ts"
-      using finite_distinct_list[OF hTfin] by blast
-    define m where "m = length ts"
-    have hm_card: "m = card T" using hts hdist
-      by (metis m_def distinct_card)
-    have hm_lt: "m < N" using hm_card hTcard hN by linarith
-    define w where "w = (\<lambda>i j. if i < m then (ts ! i) j - z1 j else 0)"
-    obtain a where ha_nt: "\<exists>j0<N. a j0 \<noteq> 0"
-      and ha_eq: "\<forall>i<m. (\<Sum>j<N. a j * w i j) = 0"
-      using underdetermined_homogeneous_system[of m N w] hm_lt by blast
-    then obtain j0 where hj0: "j0 < N" and haj0: "a j0 \<noteq> 0" by blast
-    text \<open>Key: a kills all differences z - z₁ for z ∈ S.\<close>
-    have ha_diff: "\<forall>z\<in>S. (\<Sum>j<N. a j * (z j - z1 j)) = 0"
-    proof (intro ballI)
-      fix z assume hz: "z \<in> S"
-      show "(\<Sum>j<N. a j * (z j - z1 j)) = 0"
-      proof (cases "z = z1")
-        case True then show ?thesis by simp
-      next
-        case False
-        then have "z \<in> T" unfolding T_def using hz by simp
-        then have "z \<in> set ts" using hts by simp
-        then obtain i where hi: "i < m" and hzi: "ts ! i = z"
-          using in_set_conv_nth by (metis hts m_def)
-        have "(\<Sum>j<N. a j * w i j) = 0" using ha_eq hi by simp
-        moreover have "w i j = z j - z1 j" for j
-          using hi hzi unfolding w_def by simp
-        ultimately show ?thesis
-          by (smt (verit) sum.cong)
-      qed
-    qed
-    define b where "b = (\<Sum>j<N. a j * z1 j)"
-    have ha_Sb: "\<forall>z\<in>S. (\<Sum>j<N. a j * z j) = b"
-    proof (intro ballI)
-      fix z assume hz: "z \<in> S"
-      have "(\<Sum>j<N. a j * (z j - z1 j)) = 0" using ha_diff hz by simp
-      then have "(\<Sum>j<N. a j * z j - a j * z1 j) = 0"
-        by (simp only: right_diff_distrib)
-      then have "(\<Sum>j<N. a j * z j) - (\<Sum>j<N. a j * z1 j) = 0"
-        by (simp only: sum_subtractf)
-      then show "(\<Sum>j<N. a j * z j) = b" unfolding b_def by linarith
-    qed
-    have ha_hyp: "\<forall>y\<in>A. (\<Sum>j<N. a j * y j) = b"
-    proof (intro ballI)
-      fix y assume hy: "y \<in> A"
-      then obtain c where hc_sum: "(\<Sum>z\<in>S. c z) = 1"
-        and hc_coord: "\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j)"
-        unfolding A_def by blast
-      have step1: "(\<Sum>j<N. a j * y j) = (\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j))"
-        by (intro sum.cong refl) (simp add: hc_coord)
-      have step2: "\<And>j. a j * (\<Sum>z\<in>S. c z * z j) = (\<Sum>z\<in>S. a j * (c z * z j))"
-        by (simp only: sum_distrib_left)
-      have step3: "(\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j))) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
-        by (rule sum.swap)
-      have step4: "\<And>z. (\<Sum>j<N. a j * (c z * z j)) = c z * (\<Sum>j<N. a j * z j)"
-        by (simp only: mult.left_commute sum_distrib_left)
-      have step5: "(\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j)) = (\<Sum>z\<in>S. c z * b)"
-        using ha_Sb by (intro sum.cong) simp_all
-      have step6: "(\<Sum>z\<in>S. c z * b) = b * (\<Sum>z\<in>S. c z)"
-        by (simp only: mult.commute sum_distrib_left)
-      have "(\<Sum>j<N. a j * (\<Sum>z\<in>S. c z * z j)) = (\<Sum>j<N. (\<Sum>z\<in>S. a j * (c z * z j)))"
-        using step2 by (intro sum.cong refl)
-      then have "(\<Sum>j<N. a j * y j) = (\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j)))"
-        using step1 step3 by presburger
-      moreover have "(\<Sum>z\<in>S. (\<Sum>j<N. a j * (c z * z j))) = (\<Sum>z\<in>S. c z * (\<Sum>j<N. a j * z j))"
-        using step4 by (intro sum.cong refl)
-      ultimately show "(\<Sum>j<N. a j * y j) = b"
-        using step5 step6 hc_sum by simp
-    qed
-    show ?thesis using hj0 haj0 ha_hyp by blast
-  qed
+    using affine_span_in_hyperplane[OF hN hFin hcard hS] unfolding A_def by blast
   then obtain a :: "nat \<Rightarrow> real" and j0 :: nat and b :: real
     where hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
     and hA_hyp: "\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b"
@@ -26315,14 +26326,6 @@ proof (intro conjI)
   qed
 qed
 
-text \<open>Affine spans are closed in R^N (contained in a hyperplane which is closed).\<close>
-lemma affine_span_closed:
-  fixes S :: "(nat \<Rightarrow> real) set"
-  assumes hN: "N > 0" and hFin: "finite S" and hcard: "card S \<le> N"
-  assumes hS: "S \<subseteq> top1_Rpow_set N"
-  shows "closedin_on (top1_Rpow_set N) (top1_Rpow_topology N)
-    {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}"
-  sorry
 
 text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
   we can find q near p such that S ∪ {q} is in general position.
@@ -26353,7 +26356,27 @@ proof -
   have hhyp_exists: "\<And>T. T \<subseteq> S \<Longrightarrow> card T \<le> N \<Longrightarrow>
     \<exists>a j0 b. hyp_T T = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}
     \<and> j0 < N \<and> a j0 \<noteq> 0 \<and> F T \<subseteq> hyp_T T"
-    sorry
+  proof -
+    fix T assume hTsub: "T \<subseteq> S" and hTcard: "card T \<le> N"
+    have hTfin: "finite T" using hTsub hFin by (meson finite_subset)
+    have hTRpow: "T \<subseteq> top1_Rpow_set N" using hTsub hS by blast
+    text \<open>Get hyperplane containment from affine_span_in_hyperplane.\<close>
+    have hFT_eq: "F T = {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>T. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>T. c z * z j))}"
+      unfolding F_def by simp
+    have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
+      (\<forall>y \<in> F T. (\<Sum>j<N. a j * y j) = b)"
+      using affine_span_in_hyperplane[OF hN hTfin hTcard hTRpow] hFT_eq by simp
+    then obtain a0 j0 b0 where hj0: "j0 < N" and ha0: "a0 j0 \<noteq> 0"
+      and hA_hyp: "\<forall>y \<in> F T. (\<Sum>j<N. a0 j * y j) = b0" by blast
+    have hFT_sub: "F T \<subseteq> {y \<in> top1_Rpow_set N. (\<Sum>j<N. a0 j * y j) = b0}"
+      using hA_hyp unfolding F_def by auto
+    have hwitness: "\<exists>H. \<exists>a j0 b. H = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}
+      \<and> j0 < N \<and> a j0 \<noteq> 0 \<and> F T \<subseteq> H"
+      using hj0 ha0 hFT_sub by (intro exI[of _ "{y \<in> top1_Rpow_set N. (\<Sum>j<N. a0 j * y j) = b0}"]) blast
+    then show "\<exists>a j0 b. hyp_T T = {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}
+      \<and> j0 < N \<and> a j0 \<noteq> 0 \<and> F T \<subseteq> hyp_T T"
+      unfolding hyp_T_def by (rule someI_ex)
+  qed
   define bad_sets where "bad_sets = {hyp_T T | T. T \<subseteq> S \<and> card T \<le> N}"
   have hbs_fin: "finite bad_sets"
     unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
@@ -26382,7 +26405,15 @@ proof -
         "(\<Sum>j<N. a j * q j) \<noteq> b0"
         using Rpow_hyperplane_empty_interior[of N j0 a p e b0] hN hj0 ha hp_Rpow he by auto
       have "top1_Rpow_sq_metric N p q = top1_Rpow_sup_dist N p q"
-        sorry
+      proof -
+        have hfin: "finite ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N})" by simp
+        have hne: "((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}) \<noteq> {}" using hN by simp
+        have hset_eq: "{\<bar>p i - q i\<bar> |i. i < N} = (\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}" by force
+        have "Max {\<bar>p i - q i\<bar> |i. i < N} = Sup ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N})"
+          using cSup_eq_Max[OF hfin hne] hset_eq by presburger
+        then show ?thesis unfolding top1_Rpow_sq_metric_def top1_Rpow_sup_dist_def
+          using hN by presburger
+      qed
       then have "q \<in> U" using hq hball unfolding top1_ball_on_def by auto
       then show False using hU(2) hq(1,3) by blast
     qed
