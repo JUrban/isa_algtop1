@@ -25485,9 +25485,12 @@ next
   text \<open>Now find y near x that, together with g(B), is in general position.
     Need y to avoid all hyperplanes determined by subsets of g(B).\<close>
   have "x \<in> top1_Rpow_set N" using insert.prems(1) by simp
-  text \<open>The set g(B) is finite. The hyperplanes determined by its subsets are finitely many.
-    Each has empty interior (Rpow_hyperplane_empty_interior). By finite intersection of
-    dense open sets, we can find y in B(x, δ) avoiding all of them.\<close>
+  text \<open>g(B) is finite, in general position. For each subset T ⊆ g(B) with |T| ≤ N,
+    the affine span of T is a closed set with empty interior (dim ≤ N-1, contained
+    in a hyperplane by Rpow_hyperplane_empty_interior). There are finitely many such T.
+    By finite_union_empty_interior (PROVED), the ball B(x, δ) contains y outside all spans.
+    Then insert y (g(B)) is in general position: any new dependency involving y would
+    place y in the affine span of some T, which we avoided.\<close>
   obtain y where hy_Rpow: "y \<in> top1_Rpow_set N"
     and hy_near: "top1_Rpow_sup_dist N x y < \<delta>"
     and hy_gp: "top1_general_position_in_Rpow N (insert y (g ` B))"
