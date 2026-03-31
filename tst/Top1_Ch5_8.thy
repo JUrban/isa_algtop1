@@ -25927,12 +25927,65 @@ lemma affine_span_empty_interior:
   assumes hS: "S \<subseteq> top1_Rpow_set N"
   shows "interior_on (top1_Rpow_set N) (top1_Rpow_topology N)
     {y \<in> top1_Rpow_set N. \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))} = {}"
-  text \<open>The affine span of ≤ N points has dimension ≤ N-1 < N,
-    hence is contained in a hyperplane, which has empty interior.
-    This requires: existence of a non-trivial linear form vanishing on S
-    (system of |S| ≤ N equations in N unknowns has non-trivial solution).
-    Proved for N=0 and singletons; general case needs rank argument.\<close>
-  sorry
+proof -
+  define A where "A = {y \<in> top1_Rpow_set N.
+    \<exists>c. (\<Sum>z\<in>S. c z) = 1 \<and> (\<forall>j<N. y j = (\<Sum>z\<in>S. c z * z j))}"
+  text \<open>The span A is contained in some hyperplane {y | ∑ a_j y_j = b} with some a_j ≠ 0.
+    Existence: the system ∑_j a_j (z_i_j - z_1_j) = 0 for i=2,...,k has k-1 < N
+    homogeneous equations in N unknowns, so has a non-trivial solution.
+    This is a standard linear algebra fact (underdetermined homogeneous system).\<close>
+  have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
+    (\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b)"
+    sorry
+  then obtain a :: "nat \<Rightarrow> real" and j0 :: nat and b :: real
+    where hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
+    and hA_hyp: "\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b"
+    by blast
+  have hA_sub_hyp: "A \<subseteq> {y \<in> top1_Rpow_set N. (\<Sum>j<N. a j * y j) = b}"
+    using hA_hyp unfolding A_def by blast
+  text \<open>The hyperplane has empty interior (Rpow_hyperplane_empty_interior).\<close>
+  show ?thesis
+    unfolding A_def[symmetric]
+  proof (rule equals0I)
+    fix p assume hp: "p \<in> interior_on (top1_Rpow_set N) (top1_Rpow_topology N) A"
+    then obtain U where hU: "U \<in> top1_Rpow_topology N" "U \<subseteq> A" "p \<in> U"
+      unfolding interior_on_def by blast
+    have hp_Rpow: "p \<in> top1_Rpow_set N" using hU(2-3) unfolding A_def by blast
+    text \<open>U open and nonempty. p ∈ U ⊆ A ⊆ hyperplane. Get ball around p,
+      find q in ball off hyperplane → q ∈ U ⊆ hyperplane. Contradiction.\<close>
+    have hmet: "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+      by (rule top1_Rpow_sq_metric_is_metric)
+    have hU_metric: "U \<in> top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+      using hU(1) top1_Rpow_topology_eq_sq_metric[OF hN] by simp
+    obtain e where he: "0 < e" and hball_U: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p e \<subseteq> U"
+      using top1_metric_open_contains_ball[OF hmet hU_metric hU(3)] by blast
+    have "\<exists>q\<in>top1_Rpow_set N. top1_Rpow_sup_dist N p q < e \<and> (\<Sum>i<N. a i * q i) \<noteq> b"
+      using Rpow_hyperplane_empty_interior[of N j0 a p e b] hN hj0 ha hp_Rpow he by simp
+    then obtain q where hq_Rpow: "q \<in> top1_Rpow_set N"
+      and hq_near: "top1_Rpow_sup_dist N p q < e"
+      and hq_off: "(\<Sum>j<N. a j * q j) \<noteq> b"
+      by blast
+    text \<open>Convert sup_dist to sq_metric.\<close>
+    have "top1_Rpow_sq_metric N p q = top1_Rpow_sup_dist N p q"
+    proof -
+      have hfin: "finite ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N})" by simp
+      have hne: "((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}) \<noteq> {}" using hN by simp
+      have hset_eq: "{abs (p i - q i) | i. i < N} = (\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N}"
+        by force
+      have "Max {abs (p i - q i) | i. i < N} = Sup ((\<lambda>i. \<bar>p i - q i\<bar>) ` {0..<N})"
+        using cSup_eq_Max[OF hfin hne] hset_eq by presburger
+      then show ?thesis unfolding top1_Rpow_sq_metric_def top1_Rpow_sup_dist_def
+        using hN by presburger
+    qed
+    then have "top1_Rpow_sq_metric N p q < e" using hq_near by simp
+    then have "q \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p e"
+      unfolding top1_ball_on_def using hq_Rpow by simp
+    then have "q \<in> U" using hball_U by blast
+    then have "q \<in> A" using hU(2) by blast
+    then have "(\<Sum>j<N. a j * q j) = b" using hA_hyp by blast
+    then show False using hq_off by simp
+  qed
+qed
 
 text \<open>For a finite set S in general position with |S| ≤ N, and any point p ∈ R^N and ε > 0,
   we can find q near p such that S ∪ {q} is in general position.
