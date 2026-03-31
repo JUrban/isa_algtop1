@@ -25490,7 +25490,16 @@ proof -
   have hbs_fin: "finite bad_sets"
     unfolding bad_sets_def using hFin by (simp add: finite_subset_image)
   have hbs_empty_int: "\<forall>H \<in> bad_sets. interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
-    sorry
+  proof (intro ballI)
+    fix H assume "H \<in> bad_sets"
+    then obtain T where hT: "T \<subseteq> S" "card T \<le> N" "H = F T"
+      unfolding bad_sets_def by blast
+    have hTfin: "finite T" using hT(1) hFin by (meson finite_subset)
+    have hTsub: "T \<subseteq> top1_Rpow_set N" using hT(1) hS by blast
+    show "interior_on (top1_Rpow_set N) (top1_Rpow_topology N) H = {}"
+      unfolding hT(3) F_def
+      using affine_span_empty_interior[OF hN hTfin hT(2) hTsub] .
+  qed
   have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
     sorry
   text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
