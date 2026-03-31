@@ -26819,12 +26819,21 @@ proof -
 qed
 
 text \<open>dim_le is inherited by closed subsets, then Theorem_50_2_dim_le allows induction.\<close>
+text \<open>Inductive dim_le for finite closed covers: if X = ∪_{i<n} C_i with each C_i closed
+  and dim_le(C_i) ≤ m, then dim_le(X) ≤ m.\<close>
+lemma dim_le_finite_closed_cover:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hCov: "X = (\<Union>i<n. C i)"
+  assumes hCl: "\<forall>i<n. closedin_on X TX (C i)"
+  assumes hDim: "\<forall>i<n. top1_dim_le_on (C i) (subspace_topology X TX (C i)) m"
+  shows "top1_dim_le_on X TX m"
+  sorry
+
 corollary Corollary_50_7:
   assumes hComp: "top1_compact_on X TX"
   assumes hMan: "top1_m_manifold_on m X TX"
   shows "top1_dim_le_on X TX m"
-  text \<open>Proof sketch: cover X by chart neighborhoods, finite subcover,
-    use compact_embedding_dim_le on closures, then Theorem_50_2_dim_le.\<close>
   sorry
 
 (** from \S50 Corollary 50.8 [top1.tex:7841] **)
