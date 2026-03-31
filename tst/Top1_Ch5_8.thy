@@ -26964,25 +26964,80 @@ proof -
     using finite_imp_nat_seg_image_inj_on[OF hFfin] by fast
   then obtain n :: nat and Ui :: "nat \<Rightarrow> 'a set" where hF_enum: "F = Ui ` {i. i < n}"
     by blast
-  have hUiF: "\<forall>i<n. Ui i \<in> F" using hF_enum sorry
-  have hUiopen: "\<forall>i<n. Ui i \<in> TX" using hUiF hFsub hUsub sorry
+  have hUiF: "\<forall>i<n. Ui i \<in> F"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    then have "i \<in> {j. j < n}" by simp
+    then have "Ui i \<in> Ui ` {j. j < n}" by (rule imageI)
+    then show "Ui i \<in> F" using hF_enum by presburger
+  qed
+  have hUiopen: "\<forall>i<n. Ui i \<in> TX"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    then have "Ui i \<in> F" using hUiF by simp
+    then have "Ui i \<in> \<U>" using hFsub by (meson subsetD)
+    then show "Ui i \<in> TX" using hUsub by (meson subsetD)
+  qed
   have hUiemb: "\<forall>i<n. \<exists>g. top1_embedding_on (Ui i) (subspace_topology X TX (Ui i))
     (top1_Rpow_set m) (top1_Rpow_topology m) g"
-    using hUiF hFsub unfolding \<U>_def sorry
-  have hUisubX: "\<forall>i<n. Ui i \<subseteq> X" using hUiopen hTsub sorry
+  proof (intro allI impI)
+    fix i assume "i < n"
+    then have "Ui i \<in> F" using hUiF by simp
+    then have "Ui i \<in> \<U>" using hFsub by (meson subsetD)
+    then show "\<exists>g. top1_embedding_on (Ui i) (subspace_topology X TX (Ui i))
+      (top1_Rpow_set m) (top1_Rpow_topology m) g"
+      unfolding \<U>_def by simp
+  qed
+  have hUisubX: "\<forall>i<n. Ui i \<subseteq> X"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    then have "Ui i \<in> TX" using hUiopen by simp
+    then show "Ui i \<subseteq> X" using hTsub by simp
+  qed
   have hXcov_n: "X \<subseteq> (\<Union>i<n. Ui i)"
-    using hFcov hF_enum sorry
+  proof -
+    have "F = Ui ` {i. i < n}" using hF_enum .
+    then have "\<Union>F = (\<Union>i \<in> {i. i < n}. Ui i)" by simp
+    then show ?thesis using hFcov by (simp add: lessThan_def)
+  qed
   text \<open>Shrink to closed cover.\<close>
   have hShrink: "\<exists>V. (\<forall>i<n. V i \<in> TX \<and> V i \<subseteq> X \<and> closure_on X TX (V i) \<subseteq> Ui i) \<and> X \<subseteq> (\<Union>i<n. V i)"
-    sorry
+    by (rule normal_shrink_finite_open_cover[OF hNormal hUiopen hUisubX hXcov_n])
   obtain Vi where hVi_props: "\<forall>i<n. Vi i \<in> TX \<and> Vi i \<subseteq> X \<and> closure_on X TX (Vi i) \<subseteq> Ui i"
     and hVicov: "X \<subseteq> (\<Union>i<n. Vi i)"
     using hShrink by blast
   have hVicl: "\<forall>i<n. closure_on X TX (Vi i) \<subseteq> Ui i" using hVi_props by blast
   text \<open>Apply dim_le_finite_closed_cover.\<close>
   define Ci where "Ci = (\<lambda>i. closure_on X TX (Vi i))"
-  have hXeq: "X = (\<Union>i<n. Ci i)" unfolding Ci_def sorry
-  have hCicl: "\<forall>i<n. closedin_on X TX (Ci i)" unfolding Ci_def sorry
+  have hXeq: "X = (\<Union>i<n. Ci i)"
+  proof
+    show "X \<subseteq> (\<Union>i<n. Ci i)"
+    proof (rule subsetI)
+      fix x assume "x \<in> X"
+      then have "x \<in> (\<Union>i<n. Vi i)" using hVicov by (meson subsetD)
+      then obtain i where "i < n" "x \<in> Vi i" by (meson UN_E lessThan_iff)
+      then have "x \<in> closure_on X TX (Vi i)"
+        using subset_closure_on by (meson subsetD)
+      then show "x \<in> (\<Union>i<n. Ci i)" unfolding Ci_def using \<open>i < n\<close> sorry
+    qed
+  next
+    show "(\<Union>i<n. Ci i) \<subseteq> X"
+    proof (rule subsetI)
+      fix x assume "x \<in> (\<Union>i<n. Ci i)"
+      then obtain i where "i < n" "x \<in> Ci i" by (meson UN_E lessThan_iff)
+      have "Vi i \<subseteq> X" using hVi_props \<open>i < n\<close> by simp
+      then have "closure_on X TX (Vi i) \<subseteq> X"
+        by (rule closure_on_subset_carrier[OF hTop])
+      then show "x \<in> X" using \<open>x \<in> Ci i\<close> unfolding Ci_def by (meson subsetD)
+    qed
+  qed
+  have hCicl: "\<forall>i<n. closedin_on X TX (Ci i)"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    have "Vi i \<subseteq> X" using hVi_props \<open>i < n\<close> by simp
+    then show "closedin_on X TX (Ci i)" unfolding Ci_def
+      by (rule closure_on_closed[OF hTop])
+  qed
   have hCidim: "\<forall>i<n. top1_dim_le_on (Ci i) (subspace_topology X TX (Ci i)) m"
   proof (intro allI impI)
     fix i assume hi: "i < n"
