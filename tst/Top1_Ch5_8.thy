@@ -25974,11 +25974,31 @@ proof -
     sorry
   text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
   define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
+  have hsup_eq_sq: "\<forall>x \<in> top1_Rpow_set N. \<forall>y \<in> top1_Rpow_set N.
+    top1_Rpow_sup_dist N x y = top1_Rpow_sq_metric N x y"
+  proof (intro ballI)
+    fix x y assume "x \<in> top1_Rpow_set N" "y \<in> top1_Rpow_set N"
+    show "top1_Rpow_sup_dist N x y = top1_Rpow_sq_metric N x y"
+      unfolding top1_Rpow_sup_dist_def top1_Rpow_sq_metric_def using hN
+    proof -
+      have hfin: "finite ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})" by simp
+      have hne: "((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}) \<noteq> {}" using hN by simp
+      have hset_eq: "{abs (x i - y i) | i. i < N} = (\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}"
+        by force
+      have "Max {abs (x i - y i) | i. i < N} = Sup ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})"
+        using cSup_eq_Max[OF hfin hne] hset_eq by presburger
+      then show "(if N = 0 then 0 else Sup ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})) =
+        (if N = 0 then 0 else Max {\<bar>x i - y i\<bar> |i. i < N})"
+        using hN by presburger
+    qed
+  qed
+  have hB_eq_ball: "B = top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon>"
+    unfolding B_def top1_ball_on_def using hp hsup_eq_sq by auto
+  have hmet: "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+    by (rule top1_Rpow_sq_metric_is_metric)
   have hB_open: "B \<in> top1_Rpow_topology N"
-    unfolding B_def
-    text \<open>The sup-dist ball equals PiE of open intervals (p_i-ε, p_i+ε).
-      This is a product basis element, hence open. Same argument as RN_shifted_cube_open.\<close>
-    sorry
+    unfolding hB_eq_ball top1_Rpow_topology_eq_sq_metric[OF hN]
+    using top1_ball_open_in_metric_topology[OF hmet hp heps] .
   have hB_ne: "B \<noteq> {}"
   proof -
     have "top1_Rpow_sup_dist N p p = 0" unfolding top1_Rpow_sup_dist_def using hN by simp
