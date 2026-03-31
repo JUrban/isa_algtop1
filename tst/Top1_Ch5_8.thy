@@ -26930,6 +26930,11 @@ next
 qed
 
 text \<open>Restricting an embedding to a subset of the domain.\<close>
+lemma inv_into_preimage_eq:
+  assumes "inj_on g S" and "V \<subseteq> S"
+  shows "{y \<in> g ` S. inv_into S g y \<in> V} = g ` V"
+  sorry
+
 lemma top1_embedding_on_restrict_domain:
   assumes hEmb: "top1_embedding_on A TA Y TY g"
   assumes hBsub: "B \<subseteq> A"
@@ -27004,9 +27009,19 @@ proof (intro conjI)
       have hV_sub_B: "V \<subseteq> B" unfolding hVeq by simp
       have hinj_B: "inj_on g B" using hinj_A hBsub by (meson inj_on_subset)
       have hpreimg: "{y \<in> g ` B. inv_into B g y \<in> V} = g ` V"
-        sorry
+        by (rule inv_into_preimage_eq[OF hinj_B hV_sub_B])
       have hg_open_map: "\<forall>U0 \<in> TA. g ` U0 \<in> subspace_topology Y TY (g ` A)"
-        sorry
+      proof (intro ballI)
+        fix U0 assume hU0: "U0 \<in> TA"
+        have hcont_inv_A: "top1_continuous_map_on (g ` A) (subspace_topology Y TY (g ` A)) A TA (inv_into A g)"
+          using hHomeo unfolding top1_homeomorphism_on_def by presburger
+        then have hpre: "{y \<in> g ` A. inv_into A g y \<in> U0} \<in> subspace_topology Y TY (g ` A)"
+          unfolding top1_continuous_map_on_def using hU0 by simp
+        have "U0 \<subseteq> A" using hU0 hTAsub by simp
+        have "{y \<in> g ` A. inv_into A g y \<in> U0} = g ` U0"
+          by (rule inv_into_preimage_eq[OF hinj_A \<open>U0 \<subseteq> A\<close>])
+        then show "g ` U0 \<in> subspace_topology Y TY (g ` A)" using hpre by simp
+      qed
       then have "g ` U \<in> subspace_topology Y TY (g ` A)" using hU by simp
       then obtain W where hW: "W \<in> TY" and hgU: "g ` U = g ` A \<inter> W"
         unfolding subspace_topology_def by auto
