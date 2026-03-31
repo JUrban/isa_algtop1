@@ -25390,15 +25390,24 @@ qed
 text \<open>Finite union of closed sets with empty interior has empty interior.
   Equivalently: finite intersection of open dense sets is dense.
   This is a standard topological fact (doesn't need Baire).\<close>
-lemma finite_inter_open_dense_is_dense:
+text \<open>For non-empty open V and dense open U, V ∩ U is nonempty.\<close>
+lemma open_dense_inter_nonempty:
   assumes hTop: "is_topology_on X TX"
+  assumes hV: "V \<in> TX" "V \<noteq> {}" "V \<subseteq> X"
+  assumes hU: "U \<in> TX" and hUdense: "top1_densein_on X TX U"
+  shows "V \<inter> U \<noteq> {}"
+  sorry
+
+text \<open>Finite union of closed sets with empty interior has empty interior.
+  Formulated as: for any nonempty open V, V is not contained in the union.\<close>
+lemma finite_union_empty_interior:
+  assumes hTop: "is_topology_on X TX"
+  assumes hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
   assumes hFin: "finite S"
-  assumes hOpen: "\<forall>U \<in> S. U \<in> TX"
-  assumes hDense: "\<forall>U \<in> S. top1_densein_on X TX U"
-  shows "top1_densein_on X TX (\<Inter>S)"
-  text \<open>Proof by induction: base (⋂{} = UNIV, dense); step: U ∩ ⋂S' dense
-    since for any nonempty open V, V∩U is nonempty open (U dense+open),
-    then (V∩U) ∩ ⋂S' is nonempty (IH).\<close>
+  assumes hEmpty_int: "\<forall>H \<in> S. interior_on X TX H = {}"
+  assumes hClosed: "\<forall>H \<in> S. closedin_on X TX H"
+  assumes hV: "V \<in> TX" "V \<noteq> {}"
+  shows "\<not> (V \<subseteq> \<Union>S)"
   sorry
 
 text \<open>The general position approximation lemma: given finitely many points in R^N,
