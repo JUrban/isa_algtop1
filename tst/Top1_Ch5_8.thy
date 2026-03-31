@@ -26653,7 +26653,7 @@ proof (intro allI impI)
   have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
     by (rule top1_Rpow_topology_eq_sq_metric)
   have hTX_eq: "?TX = top1_metric_topology_on X (\<lambda>x y. ?d x y)"
-    sorry
+    using subspace_metric_topology_eq_metric_topology[OF hd hXsub] hTR_eq by simp
   text \<open>Step 2: Use Lebesgue number.\<close>
   have hComp': "top1_compact_on X (top1_metric_topology_on X ?d)"
     using hComp hTX_eq by simp
@@ -26687,9 +26687,12 @@ proof (intro allI impI)
     unfolding top1_open_covering_on_def
   proof (intro conjI)
     show "\<B> \<subseteq> ?TX"
-      unfolding \<B>_def subspace_topology_def
-      using hVcov unfolding top1_open_covering_on_def
-      sorry
+    proof
+      fix B assume "B \<in> \<B>"
+      then obtain V where "V \<in> \<V>" "B = X \<inter> V" unfolding \<B>_def by blast
+      have "V \<in> ?TR" using \<open>V \<in> \<V>\<close> hVcov unfolding top1_open_covering_on_def by blast
+      then show "B \<in> ?TX" unfolding \<open>B = X \<inter> V\<close> subspace_topology_def by blast
+    qed
     show "X \<subseteq> \<Union>\<B>"
     proof (rule subsetI)
       fix x assume hx: "x \<in> X"
@@ -26705,11 +26708,26 @@ proof (intro allI impI)
     fix B assume "B \<in> {X \<inter> V |V. V \<in> \<V>}"
     then obtain V where hV: "V \<in> \<V>" and hBeq: "B = X \<inter> V" by blast
     have hBsub: "B \<subseteq> X" unfolding hBeq by blast
-    have hB_diam: "top1_metric_diam_on X ?d B \<le> top1_metric_diam_on ?dR ?d V"
-      sorry
-    have "top1_metric_diam_on ?dR ?d V < \<delta>" using hVdiam hV by blast
-    then have "top1_metric_diam_on X ?d B < \<delta>" using hB_diam by linarith
-    then show "\<exists>A\<in>\<A>. B \<subseteq> A" using hLebesgue hBsub by blast
+    show "\<exists>A\<in>\<A>. B \<subseteq> A"
+    proof (cases "B = {}")
+      case True
+      have "\<A> \<noteq> {}" using hA hXne unfolding top1_open_covering_on_def by auto
+      then obtain A0 where "A0 \<in> \<A>" by blast
+      then show ?thesis using True by blast
+    next
+      case False
+      have hB_diam: "top1_metric_diam_on X ?d B \<le> top1_metric_diam_on ?dR ?d V"
+        unfolding top1_metric_diam_on_def
+      proof (rule cSup_subset_mono)
+        show "{?d x y |x y. x \<in> B \<and> y \<in> B} \<subseteq> {?d x y |x y. x \<in> V \<and> y \<in> V}"
+          unfolding hBeq by blast
+        show "bdd_above {?d x y |x y. x \<in> V \<and> y \<in> V}" sorry
+        show "{?d x y |x y. x \<in> B \<and> y \<in> B} \<noteq> {}" using False by blast
+      qed
+      have "top1_metric_diam_on ?dR ?d V < \<delta>" using hVdiam hV by blast
+      then have "top1_metric_diam_on X ?d B < \<delta>" using hB_diam by linarith
+      then show ?thesis using hLebesgue hBsub by blast
+    qed
   qed
   have hB_order: "top1_cover_order_le_on X \<B> N"
     unfolding top1_cover_order_le_on_def
