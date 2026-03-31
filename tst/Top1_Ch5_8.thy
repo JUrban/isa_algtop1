@@ -26747,6 +26747,25 @@ proof -
     - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
       general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
     The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
+  text \<open>Baire category argument: C(X,R^N) is Baire, U_ε open+dense → ∃ injective f.\<close>
+  have hXne: "X \<noteq> {}"
+    sorry
+  text \<open>Step A: C(X,R^N) with sup metric is complete.\<close>
+  have hRN_complete: "top1_complete_metric_on ?RN ?dRN"
+    sorry
+  have hC_complete: "top1_complete_metric_on
+    (top1_continuous_maps_metric_on X TX ?RN ?dRN) (top1_uniform_metric_on X ?dRN)"
+    using Theorem_43_6c hRN_complete hTop hXne top1_Rpow_sq_metric_is_metric by blast
+  text \<open>Step B: Complete → Baire.\<close>
+  let ?C = "top1_continuous_maps_metric_on X TX ?RN ?dRN"
+  let ?rho = "top1_uniform_metric_on X ?dRN"
+  have hBaire: "top1_baire_on ?C (top1_metric_topology_on ?C ?rho)"
+    using Theorem_48_2(2) hC_complete by blast
+  text \<open>Step C: For each ε>0, U_ε = {f ∈ C | Δ(f) < ε} is open and dense.
+    Open: compactness of {(x,y)|d≥b} gives min of |f(x)-f(y)|.
+    Dense: partition of unity + dim_le covering + general position.\<close>
+  text \<open>Step D: ∩U_{1/n} is nonempty by Baire.\<close>
+  text \<open>Step E: f ∈ ∩U_{1/n} → f injective.\<close>
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     sorry
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
