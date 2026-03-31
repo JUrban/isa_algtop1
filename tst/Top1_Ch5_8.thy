@@ -25908,7 +25908,69 @@ text \<open>R^N with the sq (Max) metric is complete.
   Each coordinate converges in R (which is complete). The limit is in R^N.\<close>
 lemma top1_Rpow_sq_metric_is_complete:
   shows "top1_complete_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
-  sorry
+  unfolding top1_complete_metric_on_def
+proof (intro conjI)
+  show "top1_metric_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)"
+    by (simp add: top1_Rpow_sq_metric_is_metric)
+next
+  show "\<forall>s. top1_cauchy_seq_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) s \<longrightarrow>
+    (\<exists>x\<in>top1_Rpow_set N. seq_converges_to_on s x (top1_Rpow_set N)
+      (top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N)))"
+  proof (intro allI impI)
+    fix s assume hCauchy: "top1_cauchy_seq_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) s"
+    text \<open>From Cauchy: eventually s n ∈ R^N.\<close>
+    have hseq_in: "\<exists>N0. \<forall>n\<ge>N0. s n \<in> top1_Rpow_set N"
+      using hCauchy unfolding top1_cauchy_seq_on_def
+      by (meson gt_ex)
+    text \<open>Coordinate projection: |s m i - s n i| ≤ sq_metric s_m s_n.\<close>
+    have hcoord_bound: "\<And>i m n. i < N \<Longrightarrow> s m \<in> top1_Rpow_set N \<Longrightarrow> s n \<in> top1_Rpow_set N \<Longrightarrow>
+      \<bar>s m i - s n i\<bar> \<le> top1_Rpow_sq_metric N (s m) (s n)"
+    proof -
+      fix i m n assume hi: "i < N" and hm: "s m \<in> top1_Rpow_set N" and hn: "s n \<in> top1_Rpow_set N"
+      have hN0: "N > 0" using hi neq0_conv by blast
+      have "\<bar>s m i - s n i\<bar> \<in> {\<bar>s m j - s n j\<bar> |j. j < N}" using hi by blast
+      then have "\<bar>s m i - s n i\<bar> \<le> Max {\<bar>s m j - s n j\<bar> |j. j < N}" by simp
+      then show "\<bar>s m i - s n i\<bar> \<le> top1_Rpow_sq_metric N (s m) (s n)"
+        unfolding top1_Rpow_sq_metric_def using hN0 by presburger
+    qed
+    have hcoord_cauchy: "\<And>i. i < N \<Longrightarrow> Cauchy (\<lambda>n. s n i)"
+    proof -
+      fix i assume hi: "i < N"
+      show "Cauchy (\<lambda>n. s n i)" unfolding Cauchy_def
+      proof (intro allI impI)
+        fix e :: real assume he: "0 < e"
+        obtain N0 where hN0: "\<forall>m\<ge>N0. \<forall>n\<ge>N0. s m \<in> top1_Rpow_set N \<and> s n \<in> top1_Rpow_set N
+          \<and> top1_Rpow_sq_metric N (s m) (s n) < e"
+          using hCauchy he unfolding top1_cauchy_seq_on_def by presburger
+        show "\<exists>M. \<forall>m\<ge>M. \<forall>n\<ge>M. dist (s m i) (s n i) < e"
+        proof (intro exI allI impI)
+          fix m n assume hm: "N0 \<le> m" and hn: "N0 \<le> n"
+          have "dist (s m i) (s n i) = \<bar>s m i - s n i\<bar>"
+            by (metis dist_real_def)
+          also have "\<dots> \<le> top1_Rpow_sq_metric N (s m) (s n)"
+            using hcoord_bound[OF hi] hN0 hm hn by blast
+          also have "\<dots> < e" using hN0 hm hn by presburger
+          finally show "dist (s m i) (s n i) < e" .
+        qed
+      qed
+    qed
+    have hcoord_conv: "\<And>i. i < N \<Longrightarrow> convergent (\<lambda>n. s n i)"
+      by (metis hcoord_cauchy real_Cauchy_convergent)
+    define x where "x = (\<lambda>i. if i < N then lim (\<lambda>n. s n i) else undefined)"
+    have hx_Rpow: "x \<in> top1_Rpow_set N"
+      unfolding x_def top1_Rpow_set_def top1_PiE_def top1_Pi_def top1_extensional_def
+      by fastforce
+    text \<open>Convergence: for any ε>0, eventually sq_metric(s n, x) < ε.
+      Since sq_metric = Max{|s n i - x i|}, need each |s n i - x i| < ε.
+      Each coordinate converges (hcoord_conv), so this holds eventually.\<close>
+    have hconv: "seq_converges_to_on s x (top1_Rpow_set N)
+      (top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N))"
+      sorry
+    show "\<exists>x\<in>top1_Rpow_set N. seq_converges_to_on s x (top1_Rpow_set N)
+      (top1_metric_topology_on (top1_Rpow_set N) (top1_Rpow_sq_metric N))"
+      by (metis hconv hx_Rpow)
+  qed
+qed
 
 lemma top1_Rpow_topology_eq_sq_metric:
   assumes hN: "N > 0"
