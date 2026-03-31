@@ -26673,7 +26673,21 @@ proof (intro allI impI)
   text \<open>Step 4: Restrict to X.\<close>
   define \<B> where "\<B> = {X \<inter> V | V. V \<in> \<V>}"
   have hB_cov: "top1_open_covering_on X ?TX \<B>"
-    sorry
+    unfolding top1_open_covering_on_def
+  proof (intro conjI)
+    show "\<B> \<subseteq> ?TX"
+      unfolding \<B>_def subspace_topology_def
+      using hVcov unfolding top1_open_covering_on_def
+      sorry
+    show "X \<subseteq> \<Union>\<B>"
+    proof (rule subsetI)
+      fix x assume hx: "x \<in> X"
+      then have "x \<in> \<Union>\<V>"
+        using hVcov hXsub unfolding top1_open_covering_on_def by blast
+      then obtain V where "V \<in> \<V>" "x \<in> V" by blast
+      then show "x \<in> \<Union>\<B>" unfolding \<B>_def using hx by blast
+    qed
+  qed
   have hB_refines: "top1_refines \<B> \<A>"
     unfolding top1_refines_def \<B>_def
   proof (intro ballI)
@@ -26687,7 +26701,24 @@ proof (intro allI impI)
     then show "\<exists>A\<in>\<A>. B \<subseteq> A" using hLebesgue hBsub by blast
   qed
   have hB_order: "top1_cover_order_le_on X \<B> N"
-    sorry
+    unfolding top1_cover_order_le_on_def
+  proof (intro ballI conjI)
+    fix x assume hx: "x \<in> X"
+    have hxR: "x \<in> ?dR" using hx hXsub by blast
+    have hsub_img: "{B \<in> \<B>. x \<in> B} \<subseteq> (\<lambda>V. X \<inter> V) ` {V \<in> \<V>. x \<in> V}"
+      unfolding \<B>_def by auto
+    have hfinV: "finite {V \<in> \<V>. x \<in> V}" and hcardV: "card {V \<in> \<V>. x \<in> V} \<le> Suc N"
+      using hVord hxR unfolding top1_cover_order_le_on_def by blast+
+    have "finite ((\<lambda>V. X \<inter> V) ` {V \<in> \<V>. x \<in> V})" using hfinV by blast
+    then show "finite {B \<in> \<B>. x \<in> B}"
+      using finite_subset[OF hsub_img] by blast
+    have "card {B \<in> \<B>. x \<in> B} \<le> card ((\<lambda>V. X \<inter> V) ` {V \<in> \<V>. x \<in> V})"
+      using card_mono[OF \<open>finite ((\<lambda>V. X \<inter> V) ` {V \<in> \<V>. x \<in> V})\<close> hsub_img] .
+    also have "... \<le> card {V \<in> \<V>. x \<in> V}"
+      using card_image_le[OF hfinV] .
+    also have "... \<le> Suc N" using hcardV .
+    finally show "card {B \<in> \<B>. x \<in> B} \<le> Suc N" .
+  qed
   show "\<exists>\<B>. top1_open_covering_on X ?TX \<B> \<and> top1_refines \<B> \<A> \<and> top1_cover_order_le_on X \<B> N"
     using hB_cov hB_refines hB_order by blast
 qed
