@@ -25936,6 +25936,10 @@ proof -
     This is a standard linear algebra fact (underdetermined homogeneous system).\<close>
   have "\<exists>a j0 (b::real). j0 < N \<and> a j0 \<noteq> (0::real) \<and>
     (\<forall>y \<in> A. (\<Sum>j<N. a j * y j) = b)"
+    text \<open>For S={}: A is empty, any non-trivial a works.
+      For |S|≥1: the system ∑ a_j (z_i_j - z₁_j) = 0 for z_i∈S has |S|-1 < N
+      equations in N unknowns, so has a non-trivial solution.
+      This is the key linear algebra fact (underdetermined system).\<close>
     sorry
   then obtain a :: "nat \<Rightarrow> real" and j0 :: nat and b :: real
     where hj0: "j0 < N" and ha: "a j0 \<noteq> 0"
