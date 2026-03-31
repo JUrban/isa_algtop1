@@ -25493,27 +25493,29 @@ proof -
     sorry
   have hbs_closed: "\<forall>H \<in> bad_sets. closedin_on (top1_Rpow_set N) (top1_Rpow_topology N) H"
     sorry
-  text \<open>The ball B(p, ε) is open and nonempty in R^N.\<close>
-  have hball_open: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<in> top1_Rpow_topology N"
-    sorry
-  have hball_ne: "top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<noteq> {}"
-    sorry
-  text \<open>By finite_union_empty_interior, the ball is not contained in ⋃bad_sets.\<close>
+  text \<open>The sup-dist ball is open and nonempty in R^N.\<close>
+  define B where "B = {q \<in> top1_Rpow_set N. top1_Rpow_sup_dist N p q < \<epsilon>}"
+  have hB_open: "B \<in> top1_Rpow_topology N"
+    unfolding B_def sorry
+  have hB_ne: "B \<noteq> {}"
+  proof -
+    have "top1_Rpow_sup_dist N p p = 0" unfolding top1_Rpow_sup_dist_def using hN by simp
+    then have "p \<in> B" unfolding B_def using hp heps by simp
+    then show ?thesis by blast
+  qed
+  text \<open>By finite_union_empty_interior, B is not contained in ⋃bad_sets.\<close>
   have hRpow_top: "is_topology_on (top1_Rpow_set N) (top1_Rpow_topology N)"
     by (metis top1_Rpow_is_topology_on)
   have hTsub: "\<forall>U\<in>top1_Rpow_topology N. U \<subseteq> top1_Rpow_set N"
     unfolding top1_Rpow_topology_def top1_product_topology_on_def
       top1_Rpow_set_def topology_generated_by_basis_def by simp
-  have "\<not> (top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon> \<subseteq> \<Union>bad_sets)"
+  have "\<not> (B \<subseteq> \<Union>bad_sets)"
     by (rule finite_union_empty_interior[OF hRpow_top hTsub hbs_fin hbs_empty_int hbs_closed
-      hball_open hball_ne])
-  then obtain q where hq_ball: "q \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) p \<epsilon>"
-    and hq_avoid: "q \<notin> \<Union>bad_sets"
+      hB_open hB_ne])
+  then obtain q where hq_B: "q \<in> B" and hq_avoid: "q \<notin> \<Union>bad_sets"
     by blast
-  have hq_Rpow: "q \<in> top1_Rpow_set N"
-    using hq_ball unfolding top1_ball_on_def by simp
-  have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>"
-    sorry
+  have hq_Rpow: "q \<in> top1_Rpow_set N" using hq_B unfolding B_def by simp
+  have hq_near: "top1_Rpow_sup_dist N p q < \<epsilon>" using hq_B unfolding B_def by simp
   have hq_gp: "top1_general_position_in_Rpow N (insert q S)"
     text \<open>Key argument: for T ⊆ insert q S with |T| ≤ N+1 and dependency:
       (a) q ∉ T: T ⊆ S, use S in GP.
