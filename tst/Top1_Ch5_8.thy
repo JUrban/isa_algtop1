@@ -26879,7 +26879,7 @@ next
     (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X))"
     by (rule top1_compact_on_continuous_image[OF hComp hRpow_top hcont_F])
   have hFX_sub: "F ` X \<subseteq> top1_Rpow_set N"
-    using hcont_F unfolding top1_continuous_map_on_def sorry
+    using hcont_F unfolding top1_continuous_map_on_def by blast
   have hdim_FX: "top1_dim_le_on (F ` X)
     (subspace_topology (top1_Rpow_set N) (top1_Rpow_topology N) (F ` X)) N"
     by (rule Theorem_50_6[OF hFX_comp hFX_sub])
