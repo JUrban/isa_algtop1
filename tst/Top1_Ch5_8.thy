@@ -25344,16 +25344,51 @@ proof -
   have hHaus: "is_hausdorff_on X TX" by (rule regular_imp_hausdorff_on[OF hReg])
   have hTsub: "\<forall>U\<in>TX. U \<subseteq> X"
     unfolding hTX_eq top1_metric_topology_on_def topology_generated_by_basis_def by simp
-  text \<open>The space C(X, R^N) with the sup metric is a Baire space (complete metric).
-    Key infrastructure: Baire category (Theorem_48_2, PROVED),
-    partition of unity (Theorem_41_7, PROVED),
-    general position (Lemma_50_4, sorry),
-    dim_le gives coverings of order ≤ m+1 (PROVED).\<close>
-  text \<open>Step 1: For each ε > 0, U_ε is open and dense in C(X, R^N).
-    Step 2: By Baire category, ∩{U_{1/n}} is dense, hence nonempty.
-    Step 3: f in the intersection → injective → embedding (Theorem_26_6).\<close>
-  show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+  text \<open>Setup: C(X, R^N) with the uniform metric is complete (Theorem_43_6c),
+    hence Baire (Theorem_48_2). The sup and uniform topologies agree on C
+    for bounded metrics (sup_uniform_topology_eq).\<close>
+  let ?RN = "top1_Rpow_set N" and ?TRN = "top1_Rpow_topology N"
+  let ?dRN = "top1_Rpow_sq_metric N"
+  text \<open>Define Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)} and U_ε = {f ∈ C | Δ(f) < ε}.\<close>
+  text \<open>The full proof uses:
+    (1) U_ε = {f ∈ C(X,R^N) | Δ(f) < ε} is open and dense in C(X,R^N).
+        Open: compactness argument on {(x,y) | d(x,y) ≥ b}.
+        Dense: partition of unity + general position + dim_le.
+    (2) Baire category on C(X,R^N) (complete metric → Baire).
+    (3) f in ∩U_{1/n} → Δ(f)=0 → f injective.
+    (4) Compact + injective + continuous → embedding (Theorem_26_6).
+    All key ingredients are proved or have clear sorry's:
+    Baire (Theorem_48_2), partition of unity (Theorem_41_7),
+    general position (Lemma_50_4, sorry), dim_le (PROVED).
+    The full proof is ~300 lines and requires careful Isabelle engineering.\<close>
+  text \<open>Obtain an injective continuous f: X → R^N.\<close>
+  obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
+    and hf_inj: "inj_on f X"
     sorry
+  text \<open>Step: Continuous injective map from compact to Hausdorff is an embedding.\<close>
+  have hf_cont: "top1_continuous_map_on X TX ?RN ?TRN f"
+    using hfCC unfolding top1_continuous_funcs_on_def by simp
+  have hRN_top: "is_topology_on ?RN ?TRN"
+    by (metis top1_Rpow_is_topology_on)
+  have hRN_haus: "is_hausdorff_on ?RN ?TRN"
+    by (rule top1_Rpow_is_hausdorff_on)
+  have hf_img: "f ` X \<subseteq> ?RN" using hf_cont unfolding top1_continuous_map_on_def
+    by (simp add: image_subsetI)
+  text \<open>Injective continuous from compact to Hausdorff is an embedding.\<close>
+  have hf_bij: "bij_betw f X (f ` X)" using hf_inj
+    by (simp add: bij_betw_def)
+  have hfX_sub_top: "is_topology_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
+    by (rule subspace_topology_is_topology_on[OF hRN_top hf_img])
+  have hfX_haus: "is_hausdorff_on (f ` X) (subspace_topology ?RN ?TRN (f ` X))"
+    by (metis hRN_haus hf_img Theorem_31_2(1))
+  have hf_cont_img: "top1_continuous_map_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
+    by (meson dual_order.refl hRN_top hTop hf_cont hf_img restrict_range)
+  have hHomeo: "top1_homeomorphism_on X TX (f ` X) (subspace_topology ?RN ?TRN (f ` X)) f"
+    by (rule Theorem_26_6[OF hTop hfX_sub_top hComp hfX_haus hf_cont_img hf_bij])
+  then have "top1_embedding_on X TX ?RN ?TRN f"
+    unfolding top1_embedding_on_def using hf_img by presburger
+  then show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+    unfolding N_def by blast
 qed
 
 text \<open>Diameter of a subset in a metric space.\<close>
