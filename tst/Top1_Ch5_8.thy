@@ -25410,9 +25410,12 @@ next
   text \<open>IH: there exists g perturbing B into general position.\<close>
   have hBsub: "B \<subseteq> top1_Rpow_set N" using insert.prems(1) by simp
   have hd_pos: "0 < \<delta>" using insert.prems(2) .
+  have hIH_applied: "\<exists>f. (\<forall>y\<in>B. f y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (f y) < \<delta>)
+    \<and> top1_general_position_in_Rpow N (f ` B)"
+    using insert(3) hBsub hd_pos by meson
   obtain g where hg_near: "\<forall>y\<in>B. g y \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N y (g y) < \<delta>"
     and hg_gp: "top1_general_position_in_Rpow N (g ` B)"
-    sorry
+    using hIH_applied by blast
   text \<open>Now find y near x that, together with g(B), is in general position.
     Need y to avoid all hyperplanes determined by subsets of g(B).\<close>
   have "x \<in> top1_Rpow_set N" using insert.prems(1) by simp
