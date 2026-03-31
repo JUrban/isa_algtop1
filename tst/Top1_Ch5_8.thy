@@ -27007,7 +27007,10 @@ proof (intro conjI)
       then have "g ` U \<in> subspace_topology Y TY (g ` A)" using hU by simp
       then obtain W where hW: "W \<in> TY" and hgU: "g ` U = g ` A \<inter> W"
         unfolding subspace_topology_def by auto
-      have "g ` V = g ` B \<inter> g ` U" unfolding hVeq sorry
+      have hU_sub_A: "U \<subseteq> A"
+        sorry
+      have "g ` V = g ` B \<inter> g ` U"
+        unfolding hVeq using hinj_A hBsub hU_sub_A sorry
       also have "... = g ` B \<inter> W" using hgU hgB_sub_gA sorry
       finally have "g ` V = g ` B \<inter> W" .
       then show "{y \<in> g ` B. inv_into B g y \<in> V} \<in> subspace_topology Y TY (g ` B)"
