@@ -25396,7 +25396,8 @@ lemma open_dense_inter_nonempty:
   assumes hV: "V \<in> TX" "V \<noteq> {}" "V \<subseteq> X"
   assumes hU: "U \<in> TX" and hUdense: "top1_densein_on X TX U"
   shows "V \<inter> U \<noteq> {}"
-  sorry
+  using top1_densein_on_intersects_nonempty_open[OF hTop hUdense hV(1) hV(3) hV(2)]
+  unfolding intersects_def by (simp add: Int_commute)
 
 text \<open>Finite union of closed sets with empty interior has empty interior.
   Formulated as: for any nonempty open V, V is not contained in the union.\<close>
@@ -25408,7 +25409,49 @@ lemma finite_union_empty_interior:
   assumes hClosed: "\<forall>H \<in> S. closedin_on X TX H"
   assumes hV: "V \<in> TX" "V \<noteq> {}"
   shows "\<not> (V \<subseteq> \<Union>S)"
-  sorry
+  using hFin hEmpty_int hClosed hV
+proof (induction S arbitrary: V rule: finite_induct)
+  case empty then show ?case by simp
+next
+  case (insert H S)
+  text \<open>Assume V ⊆ H ∪ ⋃S. Then V \ H ⊆ ⋃S.
+    V \ H is open (V open, H closed). V \ H ≠ {} (H has empty interior, V open nonempty).
+    By IH, V \ H ⊄ ⋃S. Contradiction.\<close>
+  show ?case
+  proof
+    assume hVsub: "V \<subseteq> \<Union>(insert H S)"
+    have hH_cl: "closedin_on X TX H" using insert.prems(2) by simp
+    have hH_empty: "interior_on X TX H = {}" using insert.prems(1) by simp
+    have hXminusH_open: "X - H \<in> TX"
+      using hH_cl unfolding closedin_on_def by blast
+    define W where "W = V \<inter> (X - H)"
+    have hW_open: "W \<in> TX"
+      unfolding W_def
+      using topology_inter2[OF hTop insert.prems(3) hXminusH_open] .
+    have hW_sub_X: "W \<subseteq> X"
+      unfolding W_def using hTsub insert.prems(3) by (meson IntD1 subsetD subsetI)
+    have hW_ne: "W \<noteq> {}"
+    proof -
+      text \<open>V ⊄ H because H has empty interior and V is open nonempty.\<close>
+      have "\<not> V \<subseteq> H"
+      proof
+        assume "V \<subseteq> H"
+        then have "V \<subseteq> interior_on X TX H"
+          unfolding interior_on_def using insert.prems(3) by blast
+        then have "V = {}" using hH_empty by simp
+        then show False using insert.prems(4) by simp
+      qed
+      then obtain v where "v \<in> V" "v \<notin> H" by blast
+      then have "v \<in> V \<inter> (X - H)" using hTsub insert.prems(3) by blast
+      then show ?thesis unfolding W_def by blast
+    qed
+    have hW_sub_S: "W \<subseteq> \<Union>S"
+      using hVsub unfolding W_def by blast
+    have "\<not> W \<subseteq> \<Union>S"
+      using insert(3)[of W] insert.prems(1-2) hW_open hW_ne by simp
+    then show False using hW_sub_S by blast
+  qed
+qed
 
 text \<open>The general position approximation lemma: given finitely many points in R^N,
   they can be perturbed by < δ to be in general position.
