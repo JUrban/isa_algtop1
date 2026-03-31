@@ -26608,7 +26608,8 @@ lemma RN_covering_order_N_plus_1:
   assumes heps: "\<epsilon> > 0"
   shows "\<exists>\<A>. top1_open_covering_on (top1_Rpow_set N) (top1_Rpow_topology N) \<A>
     \<and> top1_cover_order_le_on (top1_Rpow_set N) \<A> N
-    \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)"
+    \<and> (\<forall>A\<in>\<A>. top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>)
+    \<and> (\<forall>A\<in>\<A>. \<forall>x\<in>A. \<forall>y\<in>A. top1_Rpow_sq_metric N x y \<le> \<epsilon>)"
 proof -
   define c where "c = \<epsilon> / 2"
   have hc: "c > 0" using heps unfolding c_def by linarith
@@ -26625,6 +26626,17 @@ proof -
       using RN_shifted_cube_sc_diam[OF \<open>A \<in> ?\<A>\<close> hc] .
     also have "c < \<epsilon>" unfolding c_def using heps by linarith
     finally show "top1_metric_diam_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) A < \<epsilon>" .
+  qed
+  moreover have "\<forall>A\<in>?\<A>. \<forall>x\<in>A. \<forall>y\<in>A. top1_Rpow_sq_metric N x y \<le> \<epsilon>"
+  proof (intro ballI)
+    fix A x y assume "A \<in> ?\<A>" "x \<in> A" "y \<in> A"
+    obtain k n where "A = RN_shifted_cube_sc N k n c"
+      using \<open>A \<in> ?\<A>\<close> unfolding RN_grid_covering_sc_def RN_grid_family_sc_def by blast
+    have "top1_Rpow_sq_metric N x y \<le> c"
+      by (rule RN_shifted_cube_sc_dist_le[OF \<open>x \<in> A\<close>[unfolded \<open>A = _\<close>]
+                                             \<open>y \<in> A\<close>[unfolded \<open>A = _\<close>] hc])
+    also have "c \<le> \<epsilon>" unfolding c_def using heps by linarith
+    finally show "top1_Rpow_sq_metric N x y \<le> \<epsilon>" .
   qed
   ultimately show ?thesis by blast
 qed
@@ -26680,6 +26692,7 @@ proof (intro allI impI)
   obtain \<V> where hVcov: "top1_open_covering_on ?dR ?TR \<V>"
     and hVord: "top1_cover_order_le_on ?dR \<V> N"
     and hVdiam: "\<forall>V\<in>\<V>. top1_metric_diam_on ?dR ?d V < \<delta>"
+    and hVdist: "\<forall>V\<in>\<V>. \<forall>x\<in>V. \<forall>y\<in>V. ?d x y \<le> \<delta>"
     using RN_covering_order_N_plus_1[OF hd_pos] by blast
   text \<open>Step 4: Restrict to X.\<close>
   define \<B> where "\<B> = {X \<inter> V | V. V \<in> \<V>}"
@@ -26721,7 +26734,12 @@ proof (intro allI impI)
       proof (rule cSup_subset_mono)
         show "{?d x y |x y. x \<in> B \<and> y \<in> B} \<subseteq> {?d x y |x y. x \<in> V \<and> y \<in> V}"
           unfolding hBeq by blast
-        show "bdd_above {?d x y |x y. x \<in> V \<and> y \<in> V}" sorry
+        show "bdd_above {?d x y |x y. x \<in> V \<and> y \<in> V}"
+        proof -
+          have "\<forall>x \<in> V. \<forall>y \<in> V. ?d x y \<le> \<delta>"
+            using hVdist hV by blast
+          then show ?thesis unfolding bdd_above_def by blast
+        qed
         show "{?d x y |x y. x \<in> B \<and> y \<in> B} \<noteq> {}" using False by blast
       qed
       have "top1_metric_diam_on ?dR ?d V < \<delta>" using hVdiam hV by blast
