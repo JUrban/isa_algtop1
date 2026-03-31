@@ -26850,8 +26850,29 @@ next
   show ?case
   proof (cases "n = 0")
     case True
-    then have "X = C 0" using Suc.prems(3) sorry
-    then show ?thesis using Suc.prems(5) Suc.prems(2) sorry
+    then have "X = C 0"
+    proof -
+      assume hn0: "n = 0"
+      have "{..<Suc 0} = {0::nat}" by (simp add: lessThan_Suc)
+      then have "(\<Union>i<Suc n. C i) = C 0" using hn0 by simp
+      then show "X = C 0" using Suc.prems(3) by simp
+    qed
+    then have hsub_eq: "subspace_topology X TX (C 0) = TX"
+      unfolding subspace_topology_def
+    proof -
+      have "\<forall>U\<in>TX. C 0 \<inter> U = U" using Suc.prems(2) \<open>X = C 0\<close> by blast
+      then show "{C 0 \<inter> U |U. U \<in> TX} = TX"
+      proof (intro set_eqI iffI)
+        fix W assume "W \<in> {C 0 \<inter> U |U. U \<in> TX}"
+        then obtain U where "U \<in> TX" "W = C 0 \<inter> U" by blast
+        then show "W \<in> TX" using \<open>\<forall>U\<in>TX. C 0 \<inter> U = U\<close> by fastforce
+      next
+        fix W assume "W \<in> TX"
+        then have "W = C 0 \<inter> W" using \<open>\<forall>U\<in>TX. C 0 \<inter> U = U\<close> by fastforce
+        then show "W \<in> {C 0 \<inter> U |U. U \<in> TX}" using \<open>W \<in> TX\<close> by blast
+      qed
+    qed
+    then show ?thesis using Suc.prems(5) \<open>X = C 0\<close> sorry
   next
     case hFalse: False
     define Y where "Y = (\<Union>i<n. C i)"
