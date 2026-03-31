@@ -26822,8 +26822,7 @@ proof (intro allI impI)
   have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
   proof (cases "N = 0")
     case True
-    text \<open>N=0: both topologies are the discrete topology on the one-element set {undefined}.
-      This is a degenerate case that's technically fiddly but mathematically trivial.\<close>
+    text \<open>N=0: both topologies are {∅, {λi. undefined}} on the one-element set.\<close>
     then show ?thesis sorry
   next
     case False
