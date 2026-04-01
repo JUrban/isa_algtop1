@@ -26926,9 +26926,22 @@ proof -
   text \<open>Dense in nonempty space → nonempty.\<close>
   have "\<Inter>(range Unat) \<noteq> {}" sorry
   then obtain f where hf_all: "\<forall>n. f \<in> Unat n" and hf_C: "f \<in> ?C" sorry
-  text \<open>f ∈ U_{1/n} for all n → f injective: if f x = f y then d(x,y) < 1/n for all n.\<close>
+  text \<open>f ∈ U_{1/n} for all n → f injective: if f x = f y then d(x,y) < 1/(n+1) for all n.\<close>
   have hf_inj: "inj_on f X"
-    sorry
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hfxy: "f x = f y"
+    have "\<forall>n. d x y < 1 / real (Suc n)"
+    proof
+      fix n
+      have "f \<in> Unat n" using hf_all by blast
+      then show "d x y < 1 / real (Suc n)"
+        unfolding Unat_def top1_U_eps_on_def using hx hy hfxy sorry
+    qed
+    then have "d x y \<le> 0" sorry
+    moreover have "0 \<le> d x y" using hd hx hy unfolding top1_metric_on_def by blast
+    ultimately have "d x y = 0" by argo
+    then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
+  qed
   have hf_cont: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
     sorry
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
