@@ -26947,7 +26947,12 @@ proof -
         qed
       next
         case False
-        text \<open>∃ pair with d ≥ ε. Compactness argument for minimum of |f(x)-f(y)| on A.\<close>
+        text \<open>∃ pair with d ≥ ε. Compactness argument:
+          On A = {(x,y)|d≥ε}, f(x)≠f(y), so dRN(f(x),f(y)) > 0.
+          Minimum δ₀ on compact A is positive. Take δ = δ₀/2.\<close>
+        text \<open>The detailed proof needs product topology, compact subsets,
+          extreme value theorem, and triangle inequality for dRN and ρ.
+          This is ~50 lines of careful Isabelle code.\<close>
         show ?thesis sorry
       qed
       have hrho_met: "top1_metric_on ?C ?rho"
