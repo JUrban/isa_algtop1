@@ -26859,6 +26859,22 @@ proof (intro conjI allI impI)
   qed
 qed
 
+lemma Rpow_sq_metric_coord_bound:
+  assumes "j < N"
+  shows "\<bar>x j - y j\<bar> \<le> top1_Rpow_sq_metric N x y"
+proof -
+  have "N > 0" using assms by simp
+  have "\<bar>x j - y j\<bar> \<in> {\<bar>x i - y i\<bar> |i. i < N}" using assms by blast
+  then have "\<bar>x j - y j\<bar> \<le> Max {\<bar>x i - y i\<bar> |i. i < N}"
+    by (intro Max.coboundedI) auto
+  then show ?thesis unfolding top1_Rpow_sq_metric_def using \<open>N > 0\<close> by presburger
+qed
+
+lemma Rpow_sup_dist_coord_bound:
+  assumes "j < N"
+  shows "\<bar>x j - y j\<bar> \<le> top1_Rpow_sup_dist N x y"
+  sorry
+
 lemma metric_on_self_zero:
   assumes "top1_metric_on X d" and "x \<in> X"
   shows "d x x = 0"
@@ -27472,14 +27488,17 @@ proof -
           have hf_close: "?dRN (f0 x) (f0 (xi i)) < \<delta>/2"
             using hUi_fdiam hi hx_Ui hxi_Ui by simp
           have hcoord_f: "\<bar>f0 x j - f0 (xi i) j\<bar> < \<delta>/2"
-            sorry
+            using Rpow_sq_metric_coord_bound[OF hj] hf_close
+            using order_le_less_trans by blast
           text \<open>|f0(xi i) j - z i j| < δ/2 from hz_near_fi.\<close>
           have hz_close: "top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
             using hz_near_fi hi by blast
           have hcoord_z: "\<bar>f0 (xi i) j - z i j\<bar> < \<delta>/2"
-            sorry
-          show "\<bar>f0 x j - z i j\<bar> < \<delta>"
-            using hcoord_f hcoord_z sorry
+            using Rpow_sup_dist_coord_bound[OF hj] hz_close
+            using order_le_less_trans by blast
+          have "\<bar>f0 x j - z i j\<bar> \<le> \<bar>f0 x j - f0 (xi i) j\<bar> + \<bar>f0 (xi i) j - z i j\<bar>"
+            by linarith
+          then show "\<bar>f0 x j - z i j\<bar> < \<delta>" using hcoord_f hcoord_z by auto
         qed
         text \<open>Weighted sum: |Σ aᵢ bᵢ| ≤ Σ aᵢ |bᵢ| < δ Σ aᵢ = δ.\<close>
         show "\<bar>f0 x j - g x j\<bar> < \<delta>"
