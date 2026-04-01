@@ -27196,7 +27196,7 @@ proof -
       text \<open>--- Begin main construction ---\<close>
       text \<open>Step 1: Get finite open cover with the three properties.\<close>
       have hf0_cont: "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) f0"
-        sorry
+        using hf0_C unfolding top1_continuous_maps_metric_on_def by blast
       text \<open>Use Lebesgue number for a cover by metric balls of small radius,
         then refine using dim_le. The details require uniform continuity of f0.\<close>
       obtain n and Ui :: "nat \<Rightarrow> 'a set" where
@@ -27209,13 +27209,15 @@ proof -
         hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X"
         sorry
       text \<open>Step 2: Partition of unity.\<close>
-      text \<open>Need paracompact (compact → paracompact) and Hausdorff.\<close>
+      have hPara: "top1_paracompact_on X TX" using Theorem_41_4 hMet by blast
+      have hUi_cov: "top1_open_covering_on X TX (Ui ` {..<n})"
+        unfolding top1_open_covering_on_def using hUi_open hUi_cover hTop by blast
       obtain \<phi> :: "nat \<Rightarrow> 'a \<Rightarrow> real" where
         hphi_pou: "top1_partition_of_unity_dominated_family_on X TX {..<n} Ui \<phi>"
-        sorry
-      text \<open>Step 3: Pick xᵢ ∈ Uᵢ ∩ X, set aᵢ = f0(xᵢ). Perturb to GP.\<close>
+        using Theorem_41_7[OF hPara hHaus hTsub hUi_cov] by blast
+      text \<open>Step 3: Pick xᵢ ∈ Uᵢ ∩ X.\<close>
       obtain xi where hxi: "\<forall>i<n. xi i \<in> Ui i \<and> xi i \<in> X"
-        sorry
+        using hUi_ne by metis
       define a where "a = (\<lambda>i. f0 (xi i))"
       have ha_Rpow: "\<forall>i<n. a i \<in> ?RN"
         unfolding a_def using hxi continuous_maps_metric_on_eval hf0_C by fast
