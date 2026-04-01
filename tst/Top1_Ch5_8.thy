@@ -27408,7 +27408,19 @@ proof -
       have hphi_supp_sub: "\<forall>i<n. top1_support_on X TX (\<phi> i) \<subseteq> Ui i"
         using hphi_pou unfolding top1_partition_of_unity_dominated_family_on_def by simp
       have hphi_supp: "\<forall>i<n. \<forall>x\<in>X. \<phi> i x \<noteq> 0 \<longrightarrow> x \<in> Ui i"
-        using hphi_supp_sub unfolding top1_support_on_def sorry
+      proof (intro allI ballI impI)
+        fix i x assume hi: "i < n" and hx: "x \<in> X" and hnz: "\<phi> i x \<noteq> 0"
+        have "x \<in> {x \<in> X. \<phi> i x \<noteq> 0}" using hx hnz by simp
+        have "{x \<in> X. \<phi> i x \<noteq> 0} \<subseteq> closure_on X TX {x \<in> X. \<phi> i x \<noteq> 0}"
+          by (rule subset_closure_on)
+        have "closure_on X TX {x \<in> X. \<phi> i x \<noteq> 0} = top1_support_on X TX (\<phi> i)"
+          unfolding top1_support_on_def by metis
+        have "top1_support_on X TX (\<phi> i) \<subseteq> Ui i" using hphi_supp_sub hi by presburger
+        show "x \<in> Ui i" using \<open>x \<in> {x \<in> X. \<phi> i x \<noteq> 0}\<close>
+          \<open>{x \<in> X. \<phi> i x \<noteq> 0} \<subseteq> closure_on X TX {x \<in> X. \<phi> i x \<noteq> 0}\<close>
+          \<open>closure_on X TX {x \<in> X. \<phi> i x \<noteq> 0} = top1_support_on X TX (\<phi> i)\<close>
+          \<open>top1_support_on X TX (\<phi> i) \<subseteq> Ui i\<close> by blast
+      qed
       text \<open>Pointwise bound: for each x ∈ X, dRN(f0 x, g x) < δ.\<close>
       have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
         sorry
