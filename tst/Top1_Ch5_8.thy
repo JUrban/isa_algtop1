@@ -26873,7 +26873,14 @@ qed
 lemma Rpow_sup_dist_coord_bound:
   assumes "j < N"
   shows "\<bar>x j - y j\<bar> \<le> top1_Rpow_sup_dist N x y"
-  sorry
+proof -
+  have "N > 0" using assms by simp
+  have hmem: "\<bar>x j - y j\<bar> \<in> (\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N}" using assms by fastforce
+  have hbdd: "bdd_above ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})" by simp
+  have "\<bar>x j - y j\<bar> \<le> Sup ((\<lambda>i. \<bar>x i - y i\<bar>) ` {0..<N})"
+    using cSup_upper[OF hmem hbdd] by blast
+  then show ?thesis unfolding top1_Rpow_sup_dist_def using \<open>N > 0\<close> by presburger
+qed
 
 lemma metric_on_self_zero:
   assumes "top1_metric_on X d" and "x \<in> X"
