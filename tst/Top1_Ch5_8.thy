@@ -27211,13 +27211,30 @@ proof -
         and hBB_order: "top1_cover_order_le_on X \<BB> m"
         using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover] by blast
       text \<open>Step 1c: Extract finite subcover and enumerate.\<close>
-      text \<open>BB finite: use compactness of X (finite subcover of open covering).\<close>
-      have hBB_fin: "finite \<BB>" sorry
-      have hBB_diam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
-        using hBB_refines hVV_diam unfolding top1_refines_def by fast
-      have hBB_fdiam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. ?dRN (f0 x) (f0 y) < \<delta>/2"
-        using hBB_refines hVV_fdiam unfolding top1_refines_def by fast
-      text \<open>Enumerate BB as Ui 0, ..., Ui (n-1).\<close>
+      have hBB_open: "\<BB> \<subseteq> TX" using hBB_cover unfolding top1_open_covering_on_def by argo
+      text \<open>Extract finite subcover (compactness), inheriting all properties.\<close>
+      have hBB_Xcover: "X \<subseteq> \<Union>\<BB>" using hBB_cover unfolding top1_open_covering_on_def by satx
+      obtain \<BB>' where hBB'_fin: "finite \<BB>'" and hBB'_sub: "\<BB>' \<subseteq> \<BB>"
+        and hBB'_cover: "X \<subseteq> \<Union>\<BB>'"
+        using hComp[unfolded top1_compact_on_def, THEN conjunct2, rule_format,
+          OF conjI[OF hBB_open hBB_Xcover]] by blast
+      have hBB'_diam: "\<forall>B\<in>\<BB>'. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
+        using hBB'_sub hBB_refines hVV_diam unfolding top1_refines_def by fast
+      have hBB'_fdiam: "\<forall>B\<in>\<BB>'. \<forall>x\<in>B. \<forall>y\<in>B. ?dRN (f0 x) (f0 y) < \<delta>/2"
+        using hBB'_sub hBB_refines hVV_fdiam unfolding top1_refines_def by fast
+      have hBB'_order: "top1_cover_order_le_on X \<BB>' m"
+        unfolding top1_cover_order_le_on_def
+      proof (intro ballI conjI)
+        fix x assume hx: "x \<in> X"
+        have hsub: "{U \<in> \<BB>'. x \<in> U} \<subseteq> {U \<in> \<BB>. x \<in> U}" using hBB'_sub by blast
+        have hfin: "finite {U \<in> \<BB>. x \<in> U}" using hBB_order hx unfolding top1_cover_order_le_on_def by blast
+        show "finite {U \<in> \<BB>'. x \<in> U}" using hsub hfin hBB'_fin by simp
+        have hcard: "card {U \<in> \<BB>. x \<in> U} \<le> Suc m"
+          using hBB_order hx unfolding top1_cover_order_le_on_def by blast
+        show "card {U \<in> \<BB>'. x \<in> U} \<le> Suc m"
+          using card_mono[OF hfin hsub] hcard by presburger
+      qed
+      text \<open>Enumerate finite BB' as Ui 0, ..., Ui (n-1).\<close>
       obtain n and Ui :: "nat \<Rightarrow> 'a set" where
         hUi_fin: "n > 0" and
         hUi_open: "\<forall>i<n. Ui i \<in> TX" and
