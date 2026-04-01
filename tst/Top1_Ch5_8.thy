@@ -26924,8 +26924,13 @@ proof -
   text \<open>C is nonempty (contains constant zero function).\<close>
   have hC_ne: "?C \<noteq> {}" sorry
   text \<open>Dense in nonempty space → nonempty.\<close>
-  have "\<Inter>(range Unat) \<noteq> {}" sorry
-  then obtain f where hf_all: "\<forall>n. f \<in> Unat n" and hf_C: "f \<in> ?C" sorry
+  have hInter_sub: "(\<Inter>n. Unat n) \<subseteq> ?C"
+    unfolding Unat_def top1_U_eps_on_def by blast
+  have "\<Inter>(range Unat) \<noteq> {}"
+    using hInter_dense hC_ne unfolding top1_densein_on_def sorry
+  then obtain f where hf_inter: "f \<in> \<Inter>(range Unat)" by blast
+  have hf_all: "\<forall>n. f \<in> Unat n" using hf_inter by blast
+  have hf_C: "f \<in> ?C" using hf_inter hInter_sub by blast
   text \<open>f ∈ U_{1/n} for all n → f injective: if f x = f y then d(x,y) < 1/(n+1) for all n.\<close>
   have hf_inj: "inj_on f X"
   proof (rule inj_onI)
@@ -26954,8 +26959,11 @@ proof -
     ultimately have "d x y = 0" by argo
     then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
   qed
+  have hTRN_eq: "?TRN = top1_metric_topology_on ?RN ?dRN"
+    sorry
   have hf_cont: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
-    using hf_C sorry
+    using hf_C unfolding top1_continuous_funcs_on_def top1_continuous_maps_metric_on_def hTRN_eq
+    by satx
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     using hf_cont hf_inj by blast
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
