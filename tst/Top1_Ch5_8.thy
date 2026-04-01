@@ -27505,11 +27505,15 @@ proof -
           using hdiff by presburger
         have step2: "... \<le> (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>\<phi> i x * (f0 x j - z i j)\<bar>)"
           by simp
-        have step3: "... = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<bar>f0 x j - z i j\<bar>)"
-          using hphi_ge0 hx sorry
+        have step3: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>\<phi> i x * (f0 x j - z i j)\<bar>) =
+          (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<bar>f0 x j - z i j\<bar>)"
+          apply (rule sum.cong)
+          apply simp
+          using hphi_ge0 hx apply (simp add: abs_mult)
+          done
         have step4: "... < (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>)"
           using hbound hphi_ge0 hx hphi_sum1 hphi_fin_nz hd_pos sorry
-        have step5: "... = \<delta>"
+        have step5: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>) = \<delta>"
           using hphi_sum1 hx sorry
         show "\<bar>f0 x j - g x j\<bar> < \<delta>"
           using step1 step2 step3 step4 step5 by argo
