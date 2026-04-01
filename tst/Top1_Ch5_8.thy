@@ -27231,7 +27231,14 @@ proof -
       have hz_Rpow: "\<forall>i<n. z i \<in> ?RN"
         unfolding z_def using hz_near by blast
       have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
-        unfolding z_def a_def using hz_near sorry
+      proof (intro allI impI)
+        fix i assume hi: "i < n"
+        have "a i \<in> a ` {..<n}" using hi by blast
+        then have "z_map (a i) \<in> ?RN \<and> top1_Rpow_sup_dist N (a i) (z_map (a i)) < \<delta>/2"
+          using hz_near by blast
+        then show "top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
+          unfolding z_def a_def by satx
+      qed
       text \<open>Step 4: Define g(x) = Σᵢ φᵢ(x) zᵢ.\<close>
       define g where "g = (\<lambda>x. if x \<in> X then
         (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j) else undefined)"
