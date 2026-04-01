@@ -26983,9 +26983,53 @@ proof -
             using False by fastforce
           have hbdd: "bdd_below {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
             using Rpow_sq_metric_nonneg by fast
-          text \<open>Inf of positive set bounded below is ≥ 0.
-            But we need > 0, which requires compactness: the inf is achieved.\<close>
-          show "0 < \<delta>0" unfolding \<delta>0_def sorry
+          text \<open>Proof by contradiction using sequential compactness of X.\<close>
+          show "0 < \<delta>0"
+          proof (rule ccontr)
+            assume "\<not> 0 < \<delta>0"
+            then have h\<delta>0_le: "\<delta>0 \<le> 0" by linarith
+            text \<open>Since all elements > 0 and Inf ≤ 0, for each n ∃ element < 1/(n+1).\<close>
+            have hseq: "\<forall>n. \<exists>x \<in> X. \<exists>y \<in> X. \<epsilon> \<le> d x y \<and> ?dRN (f x) (f y) < 1 / real (Suc n)"
+            proof (intro allI)
+              fix n
+              have heps_n: "1 / real (Suc n) > (0::real)" by simp
+              have "\<not> (\<forall>z \<in> {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}. 1 / real (Suc n) \<le> z)"
+              proof
+                assume hall: "\<forall>z \<in> {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}. 1 / real (Suc n) \<le> z"
+                then have "1 / real (Suc n) \<le> \<delta>0" unfolding \<delta>0_def
+                  using hne by (meson cInf_greatest)
+                then show False using h\<delta>0_le heps_n by linarith
+              qed
+              then have "\<exists>z \<in> {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}. z < 1 / real (Suc n)"
+                by force
+              then show "\<exists>x\<in>X. \<exists>y\<in>X. \<epsilon> \<le> d x y \<and> ?dRN (f x) (f y) < 1 / real (Suc n)"
+                by blast
+            qed
+            text \<open>Choose sequences.\<close>
+            obtain sx sy where
+              hsx: "\<forall>n. sx n \<in> X" and hsy: "\<forall>n. sy n \<in> X" and
+              hdxy: "\<forall>n. \<epsilon> \<le> d (sx n) (sy n)" and
+              hfxy: "\<forall>n. ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)"
+              sorry
+            text \<open>By sequential compactness, extract convergent subsequences.\<close>
+            have hXcomplete: "top1_complete_metric_on X d"
+              using compact_imp_complete hd hComp hTX_eq by blast
+            have hXtb: "top1_totally_bounded_on X d"
+              using compact_imp_totally_bounded hd hComp hTX_eq by auto
+            obtain rx x0 where hrx: "strict_mono rx" and hx0: "x0 \<in> X"
+              and hsx_conv: "seq_converges_to_on (sx \<circ> rx) x0 X (top1_metric_topology_on X d)"
+              using complete_tb_convergent_subseq[OF hd hXcomplete hXtb hsx] by blast
+            obtain ry y0 where hry: "strict_mono ry" and hy0: "y0 \<in> X"
+              and hsy_conv: "seq_converges_to_on (sy \<circ> rx \<circ> ry) y0 X (top1_metric_topology_on X d)"
+              sorry
+            text \<open>d(x0, y0) ≥ ε (from continuity of d).\<close>
+            have "d x0 y0 \<ge> \<epsilon>" sorry
+            text \<open>f(x0) = f(y0) (from dRN(f(sx n), f(sy n)) → 0 and f continuous).\<close>
+            have "f x0 = f y0" sorry
+            text \<open>But f ∈ U_ε: f(x0) ≠ f(y0) when d ≥ ε. Contradiction.\<close>
+            then have "d x0 y0 < \<epsilon>" using hf_eps hx0 hy0 by blast
+            then show False using \<open>d x0 y0 \<ge> \<epsilon>\<close> by linarith
+          qed
         qed
         define \<delta>1 where "\<delta>1 = min \<delta>0 1"
         have h\<delta>1_pos: "0 < \<delta>1" unfolding \<delta>1_def using h\<delta>0_pos by simp
