@@ -26959,7 +26959,34 @@ proof -
         text \<open>Direct approach: define δ₀ as inf of dRN(f(x),f(y)) over {(x,y)|d≥ε}.
           Positive since f ∈ U_ε. Take δ = δ₀/3.\<close>
         define \<delta>0 where "\<delta>0 = Inf {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
-        have h\<delta>0_pos: "0 < \<delta>0" sorry
+        have h\<delta>0_pos: "0 < \<delta>0"
+        proof -
+          text \<open>Every element of {dRN(f x, f y) | d(x,y)≥ε} is positive.\<close>
+          have hpos: "\<forall>z \<in> {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}. 0 < z"
+          proof (intro ballI)
+            fix z assume "z \<in> {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
+            then obtain x' y' where hx': "x' \<in> X" and hy': "y' \<in> X"
+              and hd': "\<epsilon> \<le> d x' y'" and hz: "z = ?dRN (f x') (f y')" by blast
+            have "f x' \<noteq> f y'" using hf_eps hx' hy' hd' by fastforce
+            have hfx': "f x' \<in> ?RN"
+              using continuous_maps_metric_on_eval hf_C hx' by metis
+            have hfy': "f y' \<in> ?RN"
+              using continuous_maps_metric_on_eval hf_C hy' by metis
+            have "?dRN (f x') (f y') \<noteq> 0"
+              using \<open>f x' \<noteq> f y'\<close> top1_Rpow_sq_metric_is_metric hfx' hfy'
+              unfolding top1_metric_on_def by blast
+            moreover have "0 \<le> ?dRN (f x') (f y')"
+              using Rpow_sq_metric_nonneg by metis
+            ultimately show "0 < z" unfolding hz by linarith
+          qed
+          have hne: "{?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y} \<noteq> {}"
+            using False by fastforce
+          have hbdd: "bdd_below {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
+            using Rpow_sq_metric_nonneg by fast
+          text \<open>Inf of positive set bounded below is ≥ 0.
+            But we need > 0, which requires compactness: the inf is achieved.\<close>
+          show "0 < \<delta>0" unfolding \<delta>0_def sorry
+        qed
         define \<delta>1 where "\<delta>1 = min \<delta>0 1"
         have h\<delta>1_pos: "0 < \<delta>1" unfolding \<delta>1_def using h\<delta>0_pos by simp
         have h\<delta>1_le1: "\<delta>1 \<le> 1" unfolding \<delta>1_def by simp
