@@ -26960,7 +26960,7 @@ proof -
     then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
   qed
   have hTRN_eq: "?TRN = top1_metric_topology_on ?RN ?dRN"
-    sorry
+    using top1_Rpow_topology_eq_sq_metric by (simp add: N_def)
   have hf_cont: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
     using hf_C unfolding top1_continuous_funcs_on_def top1_continuous_maps_metric_on_def hTRN_eq
     by satx
