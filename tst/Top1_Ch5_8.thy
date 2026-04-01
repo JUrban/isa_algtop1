@@ -26934,7 +26934,22 @@ proof -
         Use compactness of X to get minimum.\<close>
       obtain \<delta> where hd_pos: "0 < \<delta>" and
         hd_ball: "\<forall>g \<in> ?C. ?rho f g < \<delta> \<longrightarrow> g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
-        sorry
+      proof (cases "\<forall>x\<in>X. \<forall>y\<in>X. d x y < \<epsilon>")
+        case True
+        text \<open>Diameter < ε: any continuous g has g ∈ U_ε.\<close>
+        have hall: "\<forall>g \<in> ?C. g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+          unfolding top1_U_eps_on_def using True by blast
+        show ?thesis
+        proof (rule that[of 1])
+          show "(0::real) < 1" by simp
+          show "\<forall>g\<in>?C. ?rho f g < 1 \<longrightarrow> g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+            using hall by simp
+        qed
+      next
+        case False
+        text \<open>∃ pair with d ≥ ε. Compactness argument for minimum of |f(x)-f(y)| on A.\<close>
+        show ?thesis sorry
+      qed
       have hrho_met: "top1_metric_on ?C ?rho"
         using hC_complete unfolding top1_complete_metric_on_def by auto
       have hf_self: "?rho f f = 0"
