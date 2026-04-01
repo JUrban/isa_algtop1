@@ -27421,7 +27421,9 @@ proof -
           \<open>closure_on X TX {x \<in> X. \<phi> i x \<noteq> 0} = top1_support_on X TX (\<phi> i)\<close>
           \<open>top1_support_on X TX (\<phi> i) \<subseteq> Ui i\<close> by blast
       qed
-      text \<open>Pointwise bound: for each x ∈ X, dRN(f0 x, g x) < δ.\<close>
+      text \<open>Pointwise bound: for each x ∈ X and j < N, |f0 x j - g x j| < δ.\<close>
+      have hg_pointwise_coord: "\<forall>x\<in>X. \<forall>j<N. \<bar>f0 x j - g x j\<bar> < \<delta>"
+        sorry
       have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
         sorry
       have hg_near: "?rho f0 g < \<delta>"
