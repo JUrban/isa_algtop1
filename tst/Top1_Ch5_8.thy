@@ -25984,8 +25984,11 @@ next
         proof -
           fix i assume hi: "i < N"
           have hex: "\<exists>M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>" using hcoord_close hi by blast
-          then show "\<forall>n\<ge>g i. \<bar>s n i - x i\<bar> < \<epsilon>" unfolding g_def
-            using someI_ex[OF hex] sorry
+          have "(\<lambda>M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>) (SOME M. \<forall>n\<ge>M. \<bar>s n i - x i\<bar> < \<epsilon>)"
+            apply (rule someI_ex)
+            apply (rule hex)
+            done
+          then show "\<forall>n\<ge>g i. \<bar>s n i - x i\<bar> < \<epsilon>" unfolding g_def by blast
         qed
         define M where "M = Max (g ` {0..<N})"
         have hM: "\<And>i. i < N \<Longrightarrow> g i \<le> M" unfolding M_def by simp
@@ -25999,7 +26002,19 @@ next
         fix n assume hn: "M \<le> n"
         show "s n \<in> top1_Rpow_set N" using hM2 hn unfolding M_def by simp
         show "top1_Rpow_sq_metric N (s n) x < \<epsilon>"
-          sorry
+        proof (cases "N = 0")
+          case True then show ?thesis unfolding top1_Rpow_sq_metric_def using he by presburger
+        next
+          case False
+          have hcoord_lt: "\<forall>i<N. \<bar>s n i - x i\<bar> < \<epsilon>" using hM1 hn unfolding M_def by simp
+          have hfin: "finite {\<bar>s n i - x i\<bar> |i. i < N}" by simp
+          have hne: "{\<bar>s n i - x i\<bar> |i. i < N} \<noteq> {}" using False by blast
+          have hall: "\<forall>a \<in> {\<bar>s n i - x i\<bar> |i. i < N}. a < \<epsilon>"
+            using hcoord_lt by blast
+          have hMax_lt: "Max {\<bar>s n i - x i\<bar> |i. i < N} < \<epsilon>"
+            using Max_less_iff[OF hfin hne] hall by presburger
+          then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
+        qed
       qed
     qed
     have hconv: "seq_converges_to_on s x (top1_Rpow_set N)
