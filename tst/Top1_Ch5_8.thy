@@ -26859,6 +26859,11 @@ proof (intro conjI allI impI)
   qed
 qed
 
+lemma metric_on_self_zero:
+  assumes "top1_metric_on X d" and "x \<in> X"
+  shows "d x x = 0"
+  using assms unfolding top1_metric_on_def by fast
+
 lemma metric_limit_preserves_le:
   assumes hd: "top1_metric_on X d"
   assumes hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
@@ -26875,14 +26880,18 @@ proof (rule ccontr)
   have hyX: "y \<in> X" using ht unfolding seq_converges_to_on_def by satx
   have hx_ball_open: "top1_ball_on X d x \<epsilon> \<in> top1_metric_topology_on X d"
     using top1_ball_open_in_metric_topology[OF hd hxX heps] by fastforce
+  have hdxx0: "d x x = 0" using metric_on_self_zero[OF hd hxX] by blast
+  have hdxx: "d x x < \<epsilon>" using hdxx0 heps by simp
   have hx_in_ball: "x \<in> top1_ball_on X d x \<epsilon>"
-    unfolding top1_ball_on_def using hxX heps hd unfolding top1_metric_on_def sorry
+    unfolding top1_ball_on_def using hxX hdxx by blast
   have hx_ball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x \<epsilon>)"
     unfolding neighborhood_of_def using hx_ball_open hx_in_ball by satx
   have hy_ball_open: "top1_ball_on X d y \<epsilon> \<in> top1_metric_topology_on X d"
     using top1_ball_open_in_metric_topology[OF hd hyX heps] by fastforce
+  have hdyy0: "d y y = 0" using metric_on_self_zero[OF hd hyX] by blast
+  have hdyy: "d y y < \<epsilon>" using hdyy0 heps by simp
   have hy_in_ball: "y \<in> top1_ball_on X d y \<epsilon>"
-    unfolding top1_ball_on_def using hyX heps hd unfolding top1_metric_on_def sorry
+    unfolding top1_ball_on_def using hyX hdyy by blast
   have hy_ball_nbhd: "neighborhood_of y X (top1_metric_topology_on X d) (top1_ball_on X d y \<epsilon>)"
     unfolding neighborhood_of_def using hy_ball_open hy_in_ball by satx
   obtain N1 where hN1: "\<forall>n\<ge>N1. s n \<in> top1_ball_on X d x \<epsilon>"
