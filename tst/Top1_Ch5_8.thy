@@ -26947,13 +26947,38 @@ proof -
         qed
       next
         case False
-        text \<open>∃ pair with d ≥ ε. Compactness argument:
-          On A = {(x,y)|d≥ε}, f(x)≠f(y), so dRN(f(x),f(y)) > 0.
-          Minimum δ₀ on compact A is positive. Take δ = δ₀/2.\<close>
-        text \<open>The detailed proof needs product topology, compact subsets,
-          extreme value theorem, and triangle inequality for dRN and ρ.
-          This is ~50 lines of careful Isabelle code.\<close>
-        show ?thesis sorry
+        text \<open>Compactness argument by contradiction: if no δ works, get sequences
+          x_n, y_n with d(x_n,y_n)≥ε and g_n→f but g_n(x_n)=g_n(y_n).
+          Sequential compactness gives x→x₀, y→y₀ with d≥ε and f(x₀)=f(y₀). Contradiction.\<close>
+        text \<open>Direct approach: define δ₀ as inf of dRN(f(x),f(y)) over {(x,y)|d≥ε}.
+          Positive since f ∈ U_ε. Take δ = δ₀/3.\<close>
+        define \<delta>0 where "\<delta>0 = Inf {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
+        have h\<delta>0_pos: "0 < \<delta>0" sorry
+        show ?thesis
+        proof (rule that[of "\<delta>0 / 3"])
+          show "0 < \<delta>0 / 3" using h\<delta>0_pos by auto
+          show "\<forall>g\<in>?C. ?rho f g < \<delta>0 / 3 \<longrightarrow>
+            g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+          proof (intro ballI impI)
+            fix g assume hg: "g \<in> ?C" and hrho: "?rho f g < \<delta>0 / 3"
+            show "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+              unfolding top1_U_eps_on_def
+            proof (intro CollectI conjI ballI impI)
+              show "g \<in> ?C" using hg by satx
+              fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hgxy: "g x = g y"
+              show "d x y < \<epsilon>"
+              proof (rule ccontr)
+                assume "\<not> d x y < \<epsilon>"
+                then have hge: "\<epsilon> \<le> d x y" by linarith
+                then have "?dRN (f x) (f y) \<ge> \<delta>0"
+                  unfolding \<delta>0_def using hx hy sorry
+                moreover have "?dRN (f x) (f y) < 2 * \<delta>0 / 3"
+                  sorry
+                ultimately show False using h\<delta>0_pos by linarith
+              qed
+            qed
+          qed
+        qed
       qed
       have hrho_met: "top1_metric_on ?C ?rho"
         using hC_complete unfolding top1_complete_metric_on_def by auto
