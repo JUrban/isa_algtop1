@@ -27436,9 +27436,11 @@ proof -
         have hf0xj: "f0 x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * f0 x j)"
         proof -
           have "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) * f0 x j = f0 x j"
-            using hphi_sum1 hx sorry
-          then show ?thesis
-            sorry
+            using hphi_sum1 hx by fastforce
+          moreover have "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * f0 x j) =
+            (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) * f0 x j"
+            by (simp add: sum_distrib_right)
+          ultimately show ?thesis by presburger
         qed
         text \<open>Σᵢ<n φᵢ(x) * z i j = Σᵢ∈{φ≠0} φᵢ(x) * z i j (zero terms vanish).\<close>
         have hgxj2: "(\<Sum>i<n. \<phi> i x * z i j) = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * z i j)"
