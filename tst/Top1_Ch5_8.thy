@@ -27463,7 +27463,24 @@ proof -
         qed
         text \<open>Bound: each |f0 x j - z i j| < δ when φᵢ(x) ≠ 0.\<close>
         have hbound: "\<forall>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>f0 x j - z i j\<bar> < \<delta>"
-          sorry
+        proof (intro ballI)
+          fix i assume hi_nz: "i \<in> {i \<in> {..<n}. \<phi> i x \<noteq> 0}"
+          then have hi: "i < n" and hnz: "\<phi> i x \<noteq> 0" by auto
+          have hx_Ui: "x \<in> Ui i" using hphi_supp hi hx hnz by fast
+          have hxi_Ui: "xi i \<in> Ui i" using hxi hi by presburger
+          text \<open>|f0 x j - f0(xi i) j| < δ/2 from hUi_fdiam.\<close>
+          have hf_close: "?dRN (f0 x) (f0 (xi i)) < \<delta>/2"
+            using hUi_fdiam hi hx_Ui hxi_Ui by simp
+          have hcoord_f: "\<bar>f0 x j - f0 (xi i) j\<bar> < \<delta>/2"
+            sorry
+          text \<open>|f0(xi i) j - z i j| < δ/2 from hz_near_fi.\<close>
+          have hz_close: "top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
+            using hz_near_fi hi by blast
+          have hcoord_z: "\<bar>f0 (xi i) j - z i j\<bar> < \<delta>/2"
+            sorry
+          show "\<bar>f0 x j - z i j\<bar> < \<delta>"
+            using hcoord_f hcoord_z sorry
+        qed
         text \<open>Weighted sum: |Σ aᵢ bᵢ| ≤ Σ aᵢ |bᵢ| < δ Σ aᵢ = δ.\<close>
         show "\<bar>f0 x j - g x j\<bar> < \<delta>"
           using hdiff hbound hphi_sum1 hx hphi_ge0 hphi_fin_nz hd_pos sorry
