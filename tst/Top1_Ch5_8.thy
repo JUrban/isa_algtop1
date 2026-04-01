@@ -26917,18 +26917,17 @@ proof (rule ccontr)
   have hball_sub_y: "top1_ball_on X d y \<epsilon> \<subseteq> X" unfolding top1_ball_on_def by blast
   have hsNX: "s N \<in> X" using hN1 hball_sub_x N_def by fastforce
   have htNX: "t N \<in> X" using hN2 hball_sub_y N_def by fastforce
+  have htri1: "d (s N) (t N) \<le> d (s N) x + d x (t N)"
+    using metric_on_triangle[OF hd hsNX hxX htNX] by satx
+  have htri2: "d x (t N) \<le> d x y + d y (t N)"
+    using metric_on_triangle[OF hd hxX hyX htNX] by satx
   have htri: "d (s N) (t N) \<le> d (s N) x + d x y + d y (t N)"
-    sorry
+    using htri1 htri2 by linarith
   have hdyx: "d y (t N) = d (t N) y"
-    sorry
+    using metric_on_sym[OF hd hyX htNX] by satx
+  have hbound: "d (s N) (t N) \<le> d (s N) x + d x y + d (t N) y" using htri hdyx by linarith
   have "d (s N) (t N) < c"
-  proof -
-    have "d (s N) (t N) \<le> d (s N) x + d x y + d (t N) y" using htri hdyx by linarith
-    also have "... < \<epsilon> + d x y + \<epsilon>" using hdsN hdtN by linarith
-    also have "... = 2 * ((c - d x y) / 3) + d x y" unfolding \<epsilon>_def sorry
-    also have "... < c" using hlt sorry
-    finally show ?thesis sorry
-  qed
+    using hbound hdsN hdtN hlt unfolding \<epsilon>_def by force
   then show False using hle by (metis leD)
 qed
 
