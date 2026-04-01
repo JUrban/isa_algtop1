@@ -27158,15 +27158,49 @@ proof -
     with order ≤ m+1, use partition of unity, perturb to general position.\<close>
   have hU_dense: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_densein_on ?C (top1_metric_topology_on ?C ?rho)
     (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
-  text \<open>Proof sketch: given f ∈ C and δ>0, find g ∈ U_ε with ρ(f,g)<δ.
-    (1) Cover X by {U₁,...,Uₙ}: diam Uᵢ < ε/2, diam f(Uᵢ) < δ/2, order ≤ m+1.
-        Uses: dim_le (hdim), Lebesgue number (compact metric), and refinement.
-    (2) Partition of unity {φᵢ} subordinate to {Uᵢ} (Theorem_41_7).
-    (3) Pick xᵢ ∈ Uᵢ, choose z₁,...,zₙ near f(xᵢ) in GP (Lemma_50_4).
-        N+1 = 2(m+1), and order ≤ m+1, so at most 2(m+1) nonzero terms.
-    (4) g(x) = Σ φᵢ(x) zᵢ. Show ρ(f,g)<δ and g ∈ U_ε.
-    Full proof: ~100 lines of careful Isabelle.\<close>
-    sorry
+  text \<open>Dense in metric space: ∀f∈C. ∀δ>0. ∃g∈U_ε. ρ(f,g)<δ.
+    Proof from Munkres §50, p.313.\<close>
+  proof -
+    fix \<epsilon> :: real assume he: "0 < \<epsilon>"
+    have hrho_met: "top1_metric_on ?C ?rho"
+      using hC_complete unfolding top1_complete_metric_on_def by argo
+    have hC_top: "is_topology_on ?C (top1_metric_topology_on ?C ?rho)"
+      using hrho_met top1_metric_topology_on_is_topology_on by blast
+    have hU_sub_C: "top1_U_eps_on X d TX ?RN ?dRN \<epsilon> \<subseteq> ?C"
+      unfolding top1_U_eps_on_def by blast
+    show "top1_densein_on ?C (top1_metric_topology_on ?C ?rho)
+      (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
+      apply (rule iffD2[OF top1_densein_on_iff_intersects_nonempty_open[OF hC_top hU_sub_C]])
+    proof (intro allI impI)
+      fix V assume hV: "V \<in> top1_metric_topology_on ?C ?rho \<and> V \<subseteq> ?C \<and> V \<noteq> {}"
+      text \<open>V is nonempty open in C. Get f ∈ V and δ > 0 with ball(f,δ) ⊆ V.\<close>
+      obtain f0 where hf0: "f0 \<in> V" using hV by blast
+      have hV_open: "V \<in> top1_metric_topology_on ?C ?rho" using hV by blast
+      obtain \<delta> where hd_pos: "0 < \<delta>" and hball_V: "top1_ball_on ?C ?rho f0 \<delta> \<subseteq> V"
+        using top1_metric_open_contains_ball[OF hrho_met hV_open hf0] by blast
+      have hf0_C: "f0 \<in> ?C" using hf0 hV by blast
+      text \<open>Construct g ∈ U_ε with ρ(f0, g) < δ following Munkres §50 p.313.\<close>
+      text \<open>Step 1: finite open cover with diam < ε/2, f-diam < δ/2, order ≤ m+1.\<close>
+      text \<open>Use Lebesgue number: cover X by balls of radius r where r is chosen
+        so that diam < ε/2 and f-diam < δ/2. Then refine to get order ≤ m+1
+        using dim_le.\<close>
+      text \<open>Step 2: partition of unity {φᵢ} dominated by the cover (Theorem_41_7).\<close>
+      text \<open>Step 3: pick xᵢ ∈ Uᵢ, then perturb {f(xᵢ)} to general position
+        {zᵢ} with |zᵢ - f(xᵢ)| < δ/2 (Lemma_50_4).\<close>
+      text \<open>Step 4: define g(x) = Σᵢ φᵢ(x) zᵢ. Then:
+        (a) g continuous: finite sum of continuous × constant.
+        (b) ρ(f,g) < δ: |g(x)-f(x)| = |Σφᵢ(zᵢ-f(xᵢ)) + Σφᵢ(f(xᵢ)-f(x))| < δ.
+        (c) g ∈ U_ε: if g(x)=g(y) then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0, coefficients sum to 0,
+            at most 2m+2 nonzero terms, GP gives all coefficients 0,
+            so φᵢ(x)=φᵢ(y) for all i, hence x,y ∈ same Uᵢ, hence d(x,y)<ε/2<ε.\<close>
+      obtain g where hg_C: "g \<in> ?C" and hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+        and hg_near: "?rho f0 g < \<delta>"
+        sorry
+      have "g \<in> V" using hg_near hg_C hball_V unfolding top1_ball_on_def by blast
+      then show "intersects V (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
+        using hg_Ueps unfolding intersects_def by blast
+    qed
+  qed
   text \<open>Step E: Baire category → ∩ U_{1/n} nonempty → injective f exists.\<close>
   define Unat where "Unat = (\<lambda>n::nat. top1_U_eps_on X d TX ?RN ?dRN (1 / (real (Suc n))))"
   have hUnat_open: "\<forall>n. Unat n \<in> top1_metric_topology_on ?C ?rho"
