@@ -26955,8 +26955,18 @@ proof -
     define f where "f = (\<lambda>x. if x \<in> X then p else undefined)"
     have hf_PiE: "f \<in> top1_PiE X (\<lambda>_. ?RN)"
       unfolding f_def top1_PiE_def top1_Pi_def top1_extensional_def using hp by simp
+    have hf_val: "\<And>x. x \<in> X \<Longrightarrow> f x = p" unfolding f_def by simp
     have hf_cont: "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) f"
-      sorry
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> X" then show "f x \<in> ?RN" using hf_val hp by presburger
+    next
+      fix V assume hV: "V \<in> top1_metric_topology_on ?RN ?dRN"
+      have hpreimage: "{x \<in> X. f x \<in> V} = (if p \<in> V then X else {})"
+        using hf_val by auto
+      show "{x \<in> X. f x \<in> V} \<in> TX"
+        unfolding hpreimage using hTop unfolding is_topology_on_def by presburger
+    qed
     have hf: "f \<in> ?C"
       unfolding top1_continuous_maps_metric_on_def using hf_PiE hf_cont by blast
     then show ?thesis by blast
