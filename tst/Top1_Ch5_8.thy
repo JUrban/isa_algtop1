@@ -27286,7 +27286,9 @@ proof -
             qed
             have hf_cont: "top1_continuous_map_on X (top1_metric_topology_on X d) ?RN (top1_metric_topology_on ?RN ?dRN) f"
               using hf_C unfolding top1_continuous_maps_metric_on_def hTX_eq by blast
-            have "f x0 = f y0" sorry
+            have "f x0 = f y0"
+              text \<open>From metric_seq_limit_eq with all ingredients above.\<close>
+              sorry
             text \<open>But f ∈ U_ε: f(x0) ≠ f(y0) when d ≥ ε. Contradiction.\<close>
             then have "d x0 y0 < \<epsilon>" using hf_eps hx0 hy0 by blast
             then show False using \<open>d x0 y0 \<ge> \<epsilon>\<close> by linarith
