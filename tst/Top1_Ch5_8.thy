@@ -26979,7 +26979,26 @@ proof -
                 then have "?dRN (f x) (f y) \<ge> \<delta>0"
                   unfolding \<delta>0_def by presburger
                 moreover have "?dRN (f x) (f y) < 2 * \<delta>0 / 3"
-                  sorry
+                proof -
+                  have hdRN_met: "top1_metric_on ?RN ?dRN"
+                    by (simp add: top1_Rpow_sq_metric_is_metric)
+                  have hfx: "f x \<in> ?RN" sorry
+                  have hfy: "f y \<in> ?RN" sorry
+                  have hgx: "g x \<in> ?RN" sorry
+                  have hgy: "g y \<in> ?RN"
+                    using hgx hgxy by fastforce
+                  have htri: "?dRN (f x) (f y) \<le> ?dRN (f x) (g x) + ?dRN (g x) (f y)"
+                    using hdRN_met hfx hfy hgx unfolding top1_metric_on_def by blast
+                  have htri2: "?dRN (g x) (f y) \<le> ?dRN (g x) (g y) + ?dRN (g y) (f y)"
+                    using hdRN_met hgx hgy hfy unfolding top1_metric_on_def by blast
+                  have hgxy0: "?dRN (g x) (g y) = 0"
+                    using hdRN_met hgx hgxy unfolding top1_metric_on_def by metis
+                  have hfg_x: "?dRN (f x) (g x) \<le> ?rho f g" sorry
+                  have hfg_y: "?dRN (f y) (g y) \<le> ?rho f g" sorry
+                  have hdRN_sym: "?dRN (g y) (f y) = ?dRN (f y) (g y)"
+                    using hdRN_met hgy hfy unfolding top1_metric_on_def by metis
+                  show ?thesis using htri htri2 hgxy0 hfg_x hfg_y hdRN_sym hrho by linarith
+                qed
                 ultimately show False using h\<delta>0_pos by linarith
               qed
             qed
