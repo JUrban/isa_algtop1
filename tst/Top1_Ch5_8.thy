@@ -27441,11 +27441,24 @@ proof -
             sorry
         qed
         text \<open>Σᵢ<n φᵢ(x) * z i j = Σᵢ∈{φ≠0} φᵢ(x) * z i j (zero terms vanish).\<close>
-        have hgxj2: "g x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * z i j)"
-          using hgxj sorry
+        have hgxj2: "(\<Sum>i<n. \<phi> i x * z i j) = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * z i j)"
+          apply (rule sum.mono_neutral_right)
+          apply simp
+          apply blast
+          apply simp
+          done
         text \<open>Difference.\<close>
         have hdiff: "f0 x j - g x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * (f0 x j - z i j))"
-          using hf0xj hgxj2 hphi_fin_nz hx sorry
+        proof -
+          have "f0 x j - g x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * f0 x j) -
+                                 (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * z i j)"
+            using hf0xj hgxj hgxj2 by presburger
+          also have "... = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * f0 x j - \<phi> i x * z i j)"
+            using hphi_fin_nz hx by (simp add: sum_subtractf)
+          also have "... = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * (f0 x j - z i j))"
+            by (metis (lifting) right_diff_distrib')
+          finally show ?thesis by satx
+        qed
         text \<open>Bound: each |f0 x j - z i j| < δ when φᵢ(x) ≠ 0.\<close>
         have hbound: "\<forall>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>f0 x j - z i j\<bar> < \<delta>"
           sorry
