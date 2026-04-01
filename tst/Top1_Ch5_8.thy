@@ -27193,9 +27193,51 @@ proof -
         (c) g ∈ U_ε: if g(x)=g(y) then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0, coefficients sum to 0,
             at most 2m+2 nonzero terms, GP gives all coefficients 0,
             so φᵢ(x)=φᵢ(y) for all i, hence x,y ∈ same Uᵢ, hence d(x,y)<ε/2<ε.\<close>
-      obtain g where hg_C: "g \<in> ?C" and hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
-        and hg_near: "?rho f0 g < \<delta>"
+      text \<open>--- Begin main construction ---\<close>
+      text \<open>Step 1: Get finite open cover with the three properties.\<close>
+      have hf0_cont: "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) f0"
         sorry
+      text \<open>Use Lebesgue number for a cover by metric balls of small radius,
+        then refine using dim_le. The details require uniform continuity of f0.\<close>
+      obtain n and Ui :: "nat \<Rightarrow> 'a set" where
+        hUi_fin: "n > 0" and
+        hUi_open: "\<forall>i<n. Ui i \<in> TX" and
+        hUi_cover: "X \<subseteq> (\<Union>i<n. Ui i)" and
+        hUi_diam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. d x y < \<epsilon>/2" and
+        hUi_fdiam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. ?dRN (f0 x) (f0 y) < \<delta>/2" and
+        hUi_order: "top1_cover_order_le_on X (Ui ` {..<n}) (m+1)" and
+        hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X"
+        sorry
+      text \<open>Step 2: Partition of unity.\<close>
+      text \<open>Need paracompact (compact → paracompact) and Hausdorff.\<close>
+      obtain \<phi> :: "nat \<Rightarrow> 'a \<Rightarrow> real" where
+        hphi_pou: "top1_partition_of_unity_dominated_family_on X TX {..<n} Ui \<phi>"
+        sorry
+      text \<open>Step 3: Pick xᵢ ∈ Uᵢ ∩ X, set aᵢ = f0(xᵢ). Perturb to GP.\<close>
+      obtain xi where hxi: "\<forall>i<n. xi i \<in> Ui i \<and> xi i \<in> X"
+        sorry
+      define a where "a = (\<lambda>i. f0 (xi i))"
+      have ha_Rpow: "\<forall>i<n. a i \<in> ?RN"
+        unfolding a_def using hxi continuous_maps_metric_on_eval hf0_C by fast
+      have ha_fin: "finite (a ` {..<n})" by simp
+      have ha_sub: "a ` {..<n} \<subseteq> ?RN" using ha_Rpow by fast
+      have hd2_pos: "0 < \<delta>/2" using hd_pos by simp
+      obtain z_map where hz_near: "\<forall>p\<in>a ` {..<n}. z_map p \<in> ?RN \<and> top1_Rpow_sup_dist N p (z_map p) < \<delta>/2"
+        and hz_gp: "top1_general_position_in_Rpow N (z_map ` (a ` {..<n}))"
+        using Lemma_50_4[OF ha_fin ha_sub hd2_pos] by blast
+      define z where "z = (\<lambda>i. z_map (a i))"
+      have hz_Rpow: "\<forall>i<n. z i \<in> ?RN"
+        unfolding z_def using hz_near by blast
+      have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
+        unfolding z_def a_def using hz_near sorry
+      text \<open>Step 4: Define g(x) = Σᵢ φᵢ(x) zᵢ.\<close>
+      define g where "g = (\<lambda>x. if x \<in> X then
+        (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j) else undefined)"
+      text \<open>Show g ∈ C, g ∈ U_ε, ρ(f0,g) < δ.\<close>
+      have hg_C: "g \<in> ?C" sorry
+      have hg_near: "?rho f0 g < \<delta>" sorry
+      have hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>" sorry
+      text \<open>--- End main construction ---\<close>
       have "g \<in> V" using hg_near hg_C hball_V unfolding top1_ball_on_def by blast
       then show "intersects V (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
         using hg_Ueps unfolding intersects_def by blast
