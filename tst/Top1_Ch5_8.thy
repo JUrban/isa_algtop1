@@ -26938,6 +26938,9 @@ lemma metric_seq_limit_eq:
   assumes hf: "top1_continuous_map_on X (top1_metric_topology_on X d) Y (top1_metric_topology_on Y d2) f"
   assumes hlim: "\<forall>n. d2 (f (s n)) (f (t n)) < 1 / real (Suc n)"
   shows "f x = f y"
+  text \<open>Proof: d2(f x, f y) = 0 by squeezing. For any ε, eventually
+    d2(f(s n), f(t n)) < ε and d2(f x, f(s n)) < ε and d2(f(t n), f y) < ε.
+    Triangle: d2(f x, f y) ≤ 3ε. Since ε arbitrary, d2 = 0 ⟹ f x = f y.\<close>
   sorry
 
 lemma continuous_maps_metric_on_eval:
