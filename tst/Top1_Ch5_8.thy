@@ -26970,8 +26970,14 @@ proof -
               proof (rule ccontr)
                 assume "\<not> d x y < \<epsilon>"
                 then have hge: "\<epsilon> \<le> d x y" by linarith
+                have hmem: "?dRN (f x) (f y) \<in> {?dRN (f x') (f y') | x' y'. x' \<in> X \<and> y' \<in> X \<and> \<epsilon> \<le> d x' y'}"
+                  using hx hy hge by blast
+                have hbdd: "bdd_below {?dRN (f x') (f y') | x' y'. x' \<in> X \<and> y' \<in> X \<and> \<epsilon> \<le> d x' y'}"
+                  using Rpow_sq_metric_nonneg by force
+                have "Inf {?dRN (f x') (f y') | x' y'. x' \<in> X \<and> y' \<in> X \<and> \<epsilon> \<le> d x' y'} \<le> ?dRN (f x) (f y)"
+                  using hmem hbdd by (simp add: cInf_lower)
                 then have "?dRN (f x) (f y) \<ge> \<delta>0"
-                  unfolding \<delta>0_def using hx hy sorry
+                  unfolding \<delta>0_def by presburger
                 moreover have "?dRN (f x) (f y) < 2 * \<delta>0 / 3"
                   sorry
                 ultimately show False using h\<delta>0_pos by linarith
