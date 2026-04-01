@@ -26865,7 +26865,33 @@ lemma metric_limit_preserves_le:
   assumes ht: "seq_converges_to_on t y X (top1_metric_topology_on X d)"
   assumes hle: "\<forall>n. c \<le> d (s n) (t n)"
   shows "c \<le> d x y"
-  sorry
+proof (rule ccontr)
+  assume "\<not> c \<le> d x y"
+  then have hlt: "d x y < c" by linarith
+  define \<epsilon> where "\<epsilon> = (c - d x y) / 3"
+  have heps: "0 < \<epsilon>" unfolding \<epsilon>_def using hlt by simp
+  text \<open>Balls in metric topology are neighborhoods.\<close>
+  have hxX: "x \<in> X" using hs unfolding seq_converges_to_on_def by satx
+  have hyX: "y \<in> X" using ht unfolding seq_converges_to_on_def by satx
+  have hx_ball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x \<epsilon>)"
+    using hd hxX heps sorry
+  have hy_ball_nbhd: "neighborhood_of y X (top1_metric_topology_on X d) (top1_ball_on X d y \<epsilon>)"
+    using hd hyX heps sorry
+  obtain N1 where hN1: "\<forall>n\<ge>N1. s n \<in> top1_ball_on X d x \<epsilon>"
+    using hs hx_ball_nbhd unfolding seq_converges_to_on_def by blast
+  obtain N2 where hN2: "\<forall>n\<ge>N2. t n \<in> top1_ball_on X d y \<epsilon>"
+    using ht hy_ball_nbhd unfolding seq_converges_to_on_def by blast
+  define N where "N = max N1 N2"
+  have hdsN: "d (s N) x < \<epsilon>"
+    using hN1 hd hxX unfolding top1_ball_on_def N_def top1_metric_on_def by simp
+  have hdtN: "d (t N) y < \<epsilon>"
+    using hN2 hd hyX unfolding top1_ball_on_def N_def top1_metric_on_def by simp
+  have htri: "d (s N) (t N) \<le> d (s N) x + d x y + d y (t N)"
+    sorry
+  have "d (s N) (t N) < c" using hdsN hdtN htri unfolding \<epsilon>_def
+    sorry
+  then show False using hle sorry
+qed
 
 lemma metric_seq_limit_eq:
   assumes hd: "top1_metric_on X d" and hd2: "top1_metric_on Y d2"
