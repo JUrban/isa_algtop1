@@ -26827,6 +26827,20 @@ next
   show ?case using hf_near hf_gp by blast
 qed
 
+text \<open>Δ(f) measures how far f deviates from being injective:
+  Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
+definition top1_Delta_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> real" where
+  "top1_Delta_on X d f = (if f ` X = {} then 0
+    else Sup {Sup {d x y | y. y \<in> X \<and> f y = f x} | x. x \<in> X})"
+
+text \<open>U_ε = {f ∈ C(X,R^N) | Δ(f) < ε}: the ε-injective maps.\<close>
+definition top1_U_eps_on ::
+  "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> real
+    \<Rightarrow> ('a \<Rightarrow> 'b) set" where
+  "top1_U_eps_on X d TX Y dY \<epsilon> =
+    {f \<in> top1_continuous_maps_metric_on X TX Y dY.
+      \<forall>x\<in>X. \<forall>y\<in>X. f x = f y \<longrightarrow> d x y < \<epsilon>}"
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
@@ -26885,11 +26899,20 @@ proof -
   let ?rho = "top1_uniform_metric_on X ?dRN"
   have hBaire: "top1_baire_on ?C (top1_metric_topology_on ?C ?rho)"
     using Theorem_48_2(2) hC_complete by blast
-  text \<open>Step C: For each ε>0, U_ε = {f ∈ C | Δ(f) < ε} is open and dense.
-    Open: compactness of {(x,y)|d≥b} gives min of |f(x)-f(y)|.
-    Dense: partition of unity + dim_le covering + general position.\<close>
-  text \<open>Step D: ∩U_{1/n} is nonempty by Baire.\<close>
-  text \<open>Step E: f ∈ ∩U_{1/n} → f injective.\<close>
+  text \<open>Step C: U_ε is open in C(X,R^N) for each ε > 0.
+    Proof: if f ∈ U_ε, choose b with Δ(f) < b < ε. The set A = {(x,y)|d≥b}
+    is compact in X×X, and |f(x)-f(y)| is positive on A.
+    Take δ = min|f(x)-f(y)|/2 on A. Then B(f,δ) ⊆ U_ε.\<close>
+  have hU_open: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>
+    \<in> top1_metric_topology_on ?C ?rho"
+    sorry
+  text \<open>Step D: U_ε is dense in C(X,R^N) for each ε > 0.
+    Proof: given f and δ, cover X by open sets of diam < ε/2 and f-diam < δ/2
+    with order ≤ m+1, use partition of unity, perturb to general position.\<close>
+  have hU_dense: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_densein_on ?C (top1_metric_topology_on ?C ?rho)
+    (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
+    sorry
+  text \<open>Step E: Baire category → ∩ U_{1/n} nonempty → injective f exists.\<close>
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     sorry
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
