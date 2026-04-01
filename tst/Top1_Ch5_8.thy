@@ -27197,8 +27197,27 @@ proof -
       text \<open>Step 1: Get finite open cover with the three properties.\<close>
       have hf0_cont: "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) f0"
         using hf0_C unfolding top1_continuous_maps_metric_on_def by blast
-      text \<open>Use Lebesgue number for a cover by metric balls of small radius,
-        then refine using dim_le. The details require uniform continuity of f0.\<close>
+      text \<open>Step 1a: Get initial cover with small diameter and f-diameter.
+        Uses uniform continuity of f0 (compact metric → unif. cont.)
+        and compactness to extract finite subcover.\<close>
+      obtain \<VV> where hVV_open: "\<VV> \<subseteq> TX" and hVV_cover: "top1_open_covering_on X TX \<VV>"
+        and hVV_fin: "finite \<VV>"
+        and hVV_diam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < \<epsilon>/2"
+        and hVV_fdiam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. ?dRN (f0 x) (f0 y) < \<delta>/2"
+        sorry
+      text \<open>Step 1b: Apply dim_le to get refinement with order ≤ m+1.\<close>
+      obtain \<BB> where hBB_cover: "top1_open_covering_on X TX \<BB>"
+        and hBB_refines: "top1_refines \<BB> \<VV>"
+        and hBB_order: "top1_cover_order_le_on X \<BB> (m+1)"
+        using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover]
+        sorry
+      text \<open>Step 1c: Extract finite subcover and enumerate.\<close>
+      have hBB_fin: "finite \<BB>" sorry
+      have hBB_diam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
+        using hBB_refines hVV_diam unfolding top1_refines_def by fast
+      have hBB_fdiam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. ?dRN (f0 x) (f0 y) < \<delta>/2"
+        using hBB_refines hVV_fdiam unfolding top1_refines_def by fast
+      text \<open>Enumerate BB as Ui 0, ..., Ui (n-1).\<close>
       obtain n and Ui :: "nat \<Rightarrow> 'a set" where
         hUi_fin: "n > 0" and
         hUi_open: "\<forall>i<n. Ui i \<in> TX" and
@@ -27244,7 +27263,15 @@ proof -
         (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j) else undefined)"
       text \<open>Show g ∈ C, g ∈ U_ε, ρ(f0,g) < δ.\<close>
       have hg_C: "g \<in> ?C" sorry
+      text \<open>ρ(f0,g) < δ: for each x∈X, |g(x)-f0(x)| < δ in R^N.
+        g(x) - f0(x) = Σφᵢ(x)(zᵢ-f0(xᵢ)) + Σφᵢ(x)(f0(xᵢ)-f0(x)).
+        |zᵢ-f0(xᵢ)| < δ/2, |f0(xᵢ)-f0(x)| < δ/2 when φᵢ(x)≠0,
+        and Σφᵢ(x)=1, so |g(x)-f0(x)| < δ.\<close>
       have hg_near: "?rho f0 g < \<delta>" sorry
+      text \<open>g ∈ U_ε: if g(x)=g(y), then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0.
+        Coefficients sum to 0, at most N+1 = 2(m+1) nonzero.
+        GP ⟹ all coefficients 0 ⟹ φᵢ(x)=φᵢ(y) ∀i.
+        Then ∃i with φᵢ(x)>0, so x,y ∈ Uᵢ, d(x,y) < ε/2 < ε.\<close>
       have hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>" sorry
       text \<open>--- End main construction ---\<close>
       have "g \<in> V" using hg_near hg_C hball_V unfolding top1_ball_on_def by blast
