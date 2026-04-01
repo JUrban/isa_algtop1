@@ -27006,11 +27006,12 @@ proof -
                 by blast
             qed
             text \<open>Choose sequences.\<close>
-            obtain sx sy where
-              hsx: "\<forall>n. sx n \<in> X" and hsy: "\<forall>n. sy n \<in> X" and
-              hdxy: "\<forall>n. \<epsilon> \<le> d (sx n) (sy n)" and
-              hfxy: "\<forall>n. ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)"
-              sorry
+            define sx where "sx = (\<lambda>n. SOME x. x \<in> X \<and> (\<exists>y \<in> X. \<epsilon> \<le> d x y \<and> ?dRN (f x) (f y) < 1 / real (Suc n)))"
+            define sy where "sy = (\<lambda>n. SOME y. y \<in> X \<and> \<epsilon> \<le> d (sx n) y \<and> ?dRN (f (sx n)) (f y) < 1 / real (Suc n))"
+            have hsx: "\<forall>n. sx n \<in> X" sorry
+            have hsy: "\<forall>n. sy n \<in> X" sorry
+            have hdxy: "\<forall>n. \<epsilon> \<le> d (sx n) (sy n)" sorry
+            have hfxy: "\<forall>n. ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)" sorry
             text \<open>By sequential compactness, extract convergent subsequences.\<close>
             have hXcomplete: "top1_complete_metric_on X d"
               using compact_imp_complete hd hComp hTX_eq by blast
