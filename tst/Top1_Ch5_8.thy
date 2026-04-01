@@ -26961,10 +26961,19 @@ lemma metric_seq_limit_eq:
   assumes hf: "top1_continuous_map_on X (top1_metric_topology_on X d) Y (top1_metric_topology_on Y d2) f"
   assumes hlim: "\<forall>n. d2 (f (s n)) (f (t n)) < 1 / real (Suc n)"
   shows "f x = f y"
-  text \<open>Proof: d2(f x, f y) = 0 by squeezing. For any ε, eventually
-    d2(f(s n), f(t n)) < ε and d2(f x, f(s n)) < ε and d2(f(t n), f y) < ε.
-    Triangle: d2(f x, f y) ≤ 3ε. Since ε arbitrary, d2 = 0 ⟹ f x = f y.\<close>
-  sorry
+proof -
+  have hxX: "x \<in> X" using hs unfolding seq_converges_to_on_def by satx
+  have hyX: "y \<in> X" using ht unfolding seq_converges_to_on_def by satx
+  have hfxY: "f x \<in> Y" using hf hxX unfolding top1_continuous_map_on_def by blast
+  have hfyY: "f y \<in> Y" using hf hyX unfolding top1_continuous_map_on_def by blast
+  text \<open>d2(f x, f y) ≤ 0: use metric_limit_preserves_le with c = -1/n.\<close>
+  have "\<forall>c > 0. d2 (f x) (f y) < c"
+    sorry
+  then have "d2 (f x) (f y) \<le> 0" by force
+  moreover have "d2 (f x) (f y) \<ge> 0" using hd2 hfxY hfyY unfolding top1_metric_on_def by blast
+  ultimately have "d2 (f x) (f y) = 0" by linarith
+  then show "f x = f y" using hd2 hfxY hfyY unfolding top1_metric_on_def by metis
+qed
 
 lemma continuous_maps_metric_on_eval:
   assumes "f \<in> top1_continuous_maps_metric_on X TX Y d" and "x \<in> X"
