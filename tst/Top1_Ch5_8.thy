@@ -27180,7 +27180,18 @@ proof -
               using metric_limit_preserves_le[OF hd hsx_ry_conv hsy_conv hdxy_comp] by satx
             text \<open>f(x0) = f(y0): dRN(f(sx∘rx∘ry n), f(sy∘rx∘ry n)) < 1/(n+1) → 0.\<close>
             have hfxy_comp: "\<forall>n. ?dRN (f ((sx \<circ> rx \<circ> ry) n)) (f ((sy \<circ> rx \<circ> ry) n)) < 1 / real (Suc n)"
-              sorry
+            proof (intro allI)
+              fix nn
+              have hrxry_ge: "rx (ry nn) \<ge> nn"
+                using strict_mono_imp_increasing[OF hrx] strict_mono_imp_increasing[OF hry]
+                using le_trans by blast
+              have "?dRN (f (sx (rx (ry nn)))) (f (sy (rx (ry nn)))) < 1 / real (Suc (rx (ry nn)))"
+                using hfxy by presburger
+              also have "... \<le> 1 / real (Suc nn)" using hrxry_ge
+                using inverse_of_nat_le by blast
+              finally show "?dRN (f ((sx \<circ> rx \<circ> ry) nn)) (f ((sy \<circ> rx \<circ> ry) nn)) < 1 / real (Suc nn)"
+                by simp
+            qed
             have hf_cont: "top1_continuous_map_on X (top1_metric_topology_on X d) ?RN (top1_metric_topology_on ?RN ?dRN) f"
               sorry
             have "f x0 = f y0" sorry
