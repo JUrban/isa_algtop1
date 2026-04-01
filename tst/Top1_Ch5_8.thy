@@ -26966,9 +26966,71 @@ proof -
   have hyX: "y \<in> X" using ht unfolding seq_converges_to_on_def by satx
   have hfxY: "f x \<in> Y" using hf hxX unfolding top1_continuous_map_on_def by blast
   have hfyY: "f y \<in> Y" using hf hyX unfolding top1_continuous_map_on_def by blast
-  text \<open>d2(f x, f y) ≤ 0: use metric_limit_preserves_le with c = -1/n.\<close>
+  text \<open>Continuous preserves sequential convergence.\<close>
+  have hfs_conv: "seq_converges_to_on (f \<circ> s) (f x) Y (top1_metric_topology_on Y d2)"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "f x \<in> Y" using hfxY by satx
+    fix U assume hU: "neighborhood_of (f x) Y (top1_metric_topology_on Y d2) U"
+    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by satx
+    have hfx_U: "f x \<in> U" using hU unfolding neighborhood_of_def by satx
+    have "f -` U \<inter> X \<in> top1_metric_topology_on X d"
+      using hf hU_open unfolding top1_continuous_map_on_def sorry
+    moreover have "x \<in> f -` U \<inter> X" using hfx_U hxX sorry
+    ultimately have "neighborhood_of x X (top1_metric_topology_on X d) (f -` U \<inter> X)"
+      unfolding neighborhood_of_def by satx
+    then obtain N where "\<forall>n\<ge>N. s n \<in> f -` U \<inter> X"
+      using hs unfolding seq_converges_to_on_def by blast
+    then show "\<exists>N. \<forall>n\<ge>N. (f \<circ> s) n \<in> U" by fastforce
+  qed
+  have hft_conv: "seq_converges_to_on (f \<circ> t) (f y) Y (top1_metric_topology_on Y d2)"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "f y \<in> Y" using hfyY by satx
+    fix U assume hU: "neighborhood_of (f y) Y (top1_metric_topology_on Y d2) U"
+    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by satx
+    have hfy_U: "f y \<in> U" using hU unfolding neighborhood_of_def by satx
+    have "f -` U \<inter> X \<in> top1_metric_topology_on X d"
+      using hf hU_open unfolding top1_continuous_map_on_def sorry
+    moreover have "y \<in> f -` U \<inter> X" using hfy_U hyX sorry
+    ultimately have "neighborhood_of y X (top1_metric_topology_on X d) (f -` U \<inter> X)"
+      unfolding neighborhood_of_def by satx
+    then obtain N where "\<forall>n\<ge>N. t n \<in> f -` U \<inter> X"
+      using ht unfolding seq_converges_to_on_def by blast
+    then show "\<exists>N. \<forall>n\<ge>N. (f \<circ> t) n \<in> U" by fastforce
+  qed
+  text \<open>d2(f x, f y) < c for all c > 0.\<close>
   have "\<forall>c > 0. d2 (f x) (f y) < c"
-    sorry
+  proof (intro allI impI)
+    fix c :: real assume hc: "0 < c"
+    define \<epsilon>3 where "\<epsilon>3 = c / 3"
+    have heps3: "0 < \<epsilon>3" unfolding \<epsilon>3_def using hc by simp
+    have hball_fx: "neighborhood_of (f x) Y (top1_metric_topology_on Y d2) (top1_ball_on Y d2 (f x) \<epsilon>3)"
+      unfolding neighborhood_of_def
+      using top1_ball_open_in_metric_topology[OF hd2 hfxY heps3]
+      sorry
+    obtain N1 where hN1: "\<forall>n\<ge>N1. (f \<circ> s) n \<in> top1_ball_on Y d2 (f x) \<epsilon>3"
+      using hfs_conv hball_fx unfolding seq_converges_to_on_def by blast
+    have hball_fy: "neighborhood_of (f y) Y (top1_metric_topology_on Y d2) (top1_ball_on Y d2 (f y) \<epsilon>3)"
+      unfolding neighborhood_of_def
+      using top1_ball_open_in_metric_topology[OF hd2 hfyY heps3]
+      sorry
+    obtain N2 where hN2: "\<forall>n\<ge>N2. (f \<circ> t) n \<in> top1_ball_on Y d2 (f y) \<epsilon>3"
+      using hft_conv hball_fy unfolding seq_converges_to_on_def by blast
+    obtain N3 where hN3: "1 / real (Suc N3) < \<epsilon>3"
+      using reals_Archimedean[OF heps3] sorry
+    define NN where "NN = max N1 (max N2 N3)"
+    have hNN_ge: "NN \<ge> N1 \<and> NN \<ge> N2 \<and> NN \<ge> N3" unfolding NN_def by auto
+    have "d2 (f x) (f (s NN)) < \<epsilon>3"
+      using hN1 hNN_ge hd2 hfxY unfolding top1_ball_on_def top1_metric_on_def sorry
+    moreover have "d2 (f (s NN)) (f (t NN)) < \<epsilon>3"
+      using hlim hN3 hNN_ge sorry
+    moreover have "d2 (f (t NN)) (f y) < \<epsilon>3"
+      using hN2 hNN_ge hd2 hfyY unfolding top1_ball_on_def top1_metric_on_def sorry
+    moreover have "d2 (f x) (f y) \<le> d2 (f x) (f (s NN)) + d2 (f (s NN)) (f (t NN)) + d2 (f (t NN)) (f y)"
+      sorry
+    ultimately show "d2 (f x) (f y) < c" unfolding \<epsilon>3_def by auto
+  qed
   then have "d2 (f x) (f y) \<le> 0" by force
   moreover have "d2 (f x) (f y) \<ge> 0" using hd2 hfxY hfyY unfolding top1_metric_on_def by blast
   ultimately have "d2 (f x) (f y) = 0" by linarith
