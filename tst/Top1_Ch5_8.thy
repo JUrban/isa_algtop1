@@ -27211,6 +27211,7 @@ proof -
         and hBB_order: "top1_cover_order_le_on X \<BB> m"
         using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover] by blast
       text \<open>Step 1c: Extract finite subcover and enumerate.\<close>
+      text \<open>BB may be infinite; extract finite subcover from compact X.\<close>
       have hBB_fin: "finite \<BB>" sorry
       have hBB_diam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
         using hBB_refines hVV_diam unfolding top1_refines_def by fast
