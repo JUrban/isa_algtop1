@@ -26958,6 +26958,7 @@ lemma metric_seq_limit_eq:
   assumes hd: "top1_metric_on X d" and hd2: "top1_metric_on Y d2"
   assumes hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
   assumes ht: "seq_converges_to_on t y X (top1_metric_topology_on X d)"
+  assumes hsX: "\<forall>n. s n \<in> X" and htX: "\<forall>n. t n \<in> X"
   assumes hf: "top1_continuous_map_on X (top1_metric_topology_on X d) Y (top1_metric_topology_on Y d2) f"
   assumes hlim: "\<forall>n. d2 (f (s n)) (f (t n)) < 1 / real (Suc n)"
   shows "f x = f y"
@@ -27020,17 +27021,35 @@ proof -
     obtain N2 where hN2: "\<forall>n\<ge>N2. (f \<circ> t) n \<in> top1_ball_on Y d2 (f y) \<epsilon>3"
       using hft_conv hball_fy unfolding seq_converges_to_on_def by blast
     obtain N3 where hN3: "1 / real (Suc N3) < \<epsilon>3"
-      using reals_Archimedean[OF heps3] sorry
+      using heps3 nat_approx_posE by auto
     define NN where "NN = max N1 (max N2 N3)"
     have hNN_ge: "NN \<ge> N1 \<and> NN \<ge> N2 \<and> NN \<ge> N3" unfolding NN_def by auto
     have "d2 (f x) (f (s NN)) < \<epsilon>3"
       using hN1 hNN_ge hd2 hfxY unfolding top1_ball_on_def top1_metric_on_def by auto
     moreover have "d2 (f (s NN)) (f (t NN)) < \<epsilon>3"
-      using hlim hN3 hNN_ge sorry
+    proof -
+      have "d2 (f (s NN)) (f (t NN)) < 1 / real (Suc NN)" using hlim by presburger
+      also have "... \<le> 1 / real (Suc N3)" using hNN_ge
+        using inverse_of_nat_le by blast
+      also have "... < \<epsilon>3" using hN3 by presburger
+      finally show ?thesis by presburger
+    qed
     moreover have "d2 (f (t NN)) (f y) < \<epsilon>3"
-      using hN2 hNN_ge hd2 hfyY unfolding top1_ball_on_def top1_metric_on_def sorry
+      using hN2 hNN_ge hd2 hfyY unfolding top1_ball_on_def top1_metric_on_def by simp
     moreover have "d2 (f x) (f y) \<le> d2 (f x) (f (s NN)) + d2 (f (s NN)) (f (t NN)) + d2 (f (t NN)) (f y)"
-      sorry
+    proof -
+      have hball_sub_fx: "top1_ball_on Y d2 (f x) \<epsilon>3 \<subseteq> Y" unfolding top1_ball_on_def by blast
+      have hball_sub_fy: "top1_ball_on Y d2 (f y) \<epsilon>3 \<subseteq> Y" unfolding top1_ball_on_def by blast
+      have hsNN_X: "s NN \<in> X" using hsX by blast
+      have htNN_X: "t NN \<in> X" using htX by blast
+      have hfsNN: "f (s NN) \<in> Y" using hf hsNN_X unfolding top1_continuous_map_on_def by blast
+      have hftNN: "f (t NN) \<in> Y" using hf htNN_X unfolding top1_continuous_map_on_def by blast
+      have "d2 (f x) (f y) \<le> d2 (f x) (f (s NN)) + d2 (f (s NN)) (f y)"
+        using metric_on_triangle[OF hd2 hfxY hfsNN hfyY] by satx
+      also have "d2 (f (s NN)) (f y) \<le> d2 (f (s NN)) (f (t NN)) + d2 (f (t NN)) (f y)"
+        using metric_on_triangle[OF hd2 hfsNN hftNN hfyY] by linarith
+      finally show ?thesis by linarith
+    qed
     ultimately show "d2 (f x) (f y) < c" unfolding \<epsilon>3_def by auto
   qed
   then have "d2 (f x) (f y) \<le> 0" by force
