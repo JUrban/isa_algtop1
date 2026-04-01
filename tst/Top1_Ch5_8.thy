@@ -26943,9 +26943,9 @@ proof -
     then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
   qed
   have hf_cont: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
-    sorry
+    using hf_C sorry
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
-    sorry
+    using hf_cont hf_inj by blast
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
     and hf_inj: "inj_on f X"
     by blast
