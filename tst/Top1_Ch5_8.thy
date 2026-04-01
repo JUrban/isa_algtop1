@@ -27418,8 +27418,11 @@ proof -
       text \<open>V is nonempty open in C. Get f ∈ V and δ > 0 with ball(f,δ) ⊆ V.\<close>
       obtain f0 where hf0: "f0 \<in> V" using hV by blast
       have hV_open: "V \<in> top1_metric_topology_on ?C ?rho" using hV by blast
-      obtain \<delta> where hd_pos: "0 < \<delta>" and hball_V: "top1_ball_on ?C ?rho f0 \<delta> \<subseteq> V"
+      obtain \<delta>0 where hd0_pos: "0 < \<delta>0" and hball_V: "top1_ball_on ?C ?rho f0 \<delta>0 \<subseteq> V"
         using top1_metric_open_contains_ball[OF hrho_met hV_open hf0] by blast
+      define \<delta> where "\<delta> = \<delta>0 / 2"
+      have hd_pos: "0 < \<delta>" unfolding \<delta>_def using hd0_pos by simp
+      have hd_lt_d0: "\<delta> < \<delta>0" unfolding \<delta>_def using hd0_pos by simp
       have hf0_C: "f0 \<in> ?C" using hf0 hV by blast
       text \<open>Construct g ∈ U_ε with ρ(f0, g) < δ following Munkres §50 p.313.\<close>
       text \<open>Step 1: finite open cover with diam < ε/2, f-diam < δ/2, order ≤ m+1.\<close>
@@ -27659,8 +27662,27 @@ proof -
           then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
         qed
       qed
-      have hg_near: "?rho f0 g < \<delta>"
-        sorry
+      have hg_near: "?rho f0 g \<le> \<delta>"
+      proof (cases "X = {}")
+        case True then show ?thesis unfolding top1_uniform_metric_on_def
+          using hd_pos by simp
+      next
+        case False
+        have hXne: "X \<noteq> {}" using False by blast
+        have "\<forall>v \<in> (\<lambda>i. top1_bounded_metric ?dRN (f0 i) (g i)) ` X. v \<le> 1"
+          unfolding top1_bounded_metric_def by fastforce
+        then have hbdd: "bdd_above ((\<lambda>i. top1_bounded_metric ?dRN (f0 i) (g i)) ` X)"
+          unfolding bdd_above_def by auto
+        have hpw_le: "\<forall>x\<in>X. top1_bounded_metric ?dRN (f0 x) (g x) \<le> \<delta>"
+          using hg_pointwise unfolding top1_bounded_metric_def by auto
+        have himg_le: "\<forall>v \<in> (\<lambda>i. top1_bounded_metric ?dRN (f0 i) (g i)) ` X. v \<le> \<delta>"
+          using hpw_le by simp
+        have himg_ne: "(\<lambda>i. top1_bounded_metric ?dRN (f0 i) (g i)) ` X \<noteq> {}"
+          using hXne by blast
+        have "Sup ((\<lambda>i. top1_bounded_metric ?dRN (f0 i) (g i)) ` X) \<le> \<delta>"
+          using cSup_least[OF himg_ne] himg_le by blast
+        then show "?rho f0 g \<le> \<delta>" unfolding top1_uniform_metric_on_def using hXne by presburger
+      qed
       text \<open>g ∈ U_ε: if g(x)=g(y), then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0.
         Coefficients sum to 0, at most N+1 = 2(m+1) nonzero.
         GP ⟹ all coefficients 0 ⟹ φᵢ(x)=φᵢ(y) ∀i.
@@ -27676,7 +27698,8 @@ proof -
         show ?thesis sorry
       qed
       text \<open>--- End main construction ---\<close>
-      have "g \<in> V" using hg_near hg_C hball_V unfolding top1_ball_on_def by blast
+      have hg_near_d0: "?rho f0 g < \<delta>0" using hg_near hd_lt_d0 by linarith
+      have "g \<in> V" using hg_near_d0 hg_C hball_V unfolding top1_ball_on_def by force
       then show "intersects V (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
         using hg_Ueps unfolding intersects_def by blast
     qed
