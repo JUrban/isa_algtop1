@@ -26841,6 +26841,28 @@ definition top1_U_eps_on ::
     {f \<in> top1_continuous_maps_metric_on X TX Y dY.
       \<forall>x\<in>X. \<forall>y\<in>X. f x = f y \<longrightarrow> d x y < \<epsilon>}"
 
+lemma subseq_converges_to:
+  assumes "seq_converges_to_on s x X TX" and "strict_mono r"
+  shows "seq_converges_to_on (s \<circ> r) x X TX"
+  using assms unfolding seq_converges_to_on_def sorry
+
+lemma metric_limit_preserves_le:
+  assumes hd: "top1_metric_on X d"
+  assumes hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
+  assumes ht: "seq_converges_to_on t y X (top1_metric_topology_on X d)"
+  assumes hle: "\<forall>n. c \<le> d (s n) (t n)"
+  shows "c \<le> d x y"
+  sorry
+
+lemma metric_seq_limit_eq:
+  assumes hd: "top1_metric_on X d" and hd2: "top1_metric_on Y d2"
+  assumes hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
+  assumes ht: "seq_converges_to_on t y X (top1_metric_topology_on X d)"
+  assumes hf: "top1_continuous_map_on X (top1_metric_topology_on X d) Y (top1_metric_topology_on Y d2) f"
+  assumes hlim: "\<forall>n. d2 (f (s n)) (f (t n)) < 1 / real (Suc n)"
+  shows "f x = f y"
+  sorry
+
 lemma continuous_maps_metric_on_eval:
   assumes "f \<in> top1_continuous_maps_metric_on X TX Y d" and "x \<in> X"
   shows "f x \<in> Y"
@@ -27045,9 +27067,19 @@ proof -
             obtain ry y0 where hry: "strict_mono ry" and hy0: "y0 \<in> X"
               and hsy_conv: "seq_converges_to_on ((sy \<circ> rx) \<circ> ry) y0 X (top1_metric_topology_on X d)"
               using complete_tb_convergent_subseq[OF hd hXcomplete hXtb hsy_rx] by blast
-            text \<open>d(x0, y0) ≥ ε (from continuity of d).\<close>
-            have "d x0 y0 \<ge> \<epsilon>" sorry
-            text \<open>f(x0) = f(y0) (from dRN(f(sx n), f(sy n)) → 0 and f continuous).\<close>
+            text \<open>sx ∘ rx ∘ ry also → x0 (subsequence of convergent).\<close>
+            have hsx_ry_conv: "seq_converges_to_on (sx \<circ> rx \<circ> ry) x0 X (top1_metric_topology_on X d)"
+              using subseq_converges_to[OF hsx_conv hry] by blast
+            text \<open>d(x0, y0) ≥ ε: from d(sx(rx(ry n)), sy(rx(ry n))) ≥ ε and limits.\<close>
+            have hdxy_comp: "\<forall>n. \<epsilon> \<le> d ((sx \<circ> rx \<circ> ry) n) ((sy \<circ> rx \<circ> ry) n)"
+              using hdxy by force
+            have "d x0 y0 \<ge> \<epsilon>"
+              using metric_limit_preserves_le[OF hd hsx_ry_conv hsy_conv hdxy_comp] by satx
+            text \<open>f(x0) = f(y0): dRN(f(sx∘rx∘ry n), f(sy∘rx∘ry n)) < 1/(n+1) → 0.\<close>
+            have hfxy_comp: "\<forall>n. ?dRN (f ((sx \<circ> rx \<circ> ry) n)) (f ((sy \<circ> rx \<circ> ry) n)) < 1 / real (Suc n)"
+              sorry
+            have hf_cont: "top1_continuous_map_on X (top1_metric_topology_on X d) ?RN (top1_metric_topology_on ?RN ?dRN) f"
+              sorry
             have "f x0 = f y0" sorry
             text \<open>But f ∈ U_ε: f(x0) ≠ f(y0) when d ≥ ε. Contradiction.\<close>
             then have "d x0 y0 < \<epsilon>" using hf_eps hx0 hy0 by blast
