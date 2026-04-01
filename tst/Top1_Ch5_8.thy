@@ -26965,7 +26965,22 @@ proof -
   have hInter_sub: "(\<Inter>n. Unat n) \<subseteq> ?C"
     unfolding Unat_def top1_U_eps_on_def by blast
   have "\<Inter>(range Unat) \<noteq> {}"
-    using hInter_dense hC_ne unfolding top1_densein_on_def sorry
+  proof -
+    have "closure_on ?C (top1_metric_topology_on ?C ?rho) (\<Inter>n. Unat n) = ?C"
+      using hInter_dense unfolding top1_densein_on_def by satx
+    moreover have "closure_on ?C (top1_metric_topology_on ?C ?rho) {} = {}"
+    proof -
+      have hTmet: "is_topology_on ?C (top1_metric_topology_on ?C ?rho)"
+        using hC_complete unfolding top1_complete_metric_on_def
+        using top1_metric_topology_on_is_topology_on by blast
+      have "closedin_on ?C (top1_metric_topology_on ?C ?rho) {}"
+        using hTmet unfolding closedin_on_def is_topology_on_def by simp
+      then show ?thesis unfolding closure_on_def by fast
+    qed
+    moreover have "(\<Inter>n. Unat n) = {} \<Longrightarrow> ?C = {}"
+      by (metis calculation(1) calculation(2))
+    ultimately show ?thesis using hC_ne by argo
+  qed
   then obtain f where hf_inter: "f \<in> \<Inter>(range Unat)" by blast
   have hf_all: "\<forall>n. f \<in> Unat n" using hf_inter by blast
   have hf_C: "f \<in> ?C" using hf_inter hInter_sub by blast
