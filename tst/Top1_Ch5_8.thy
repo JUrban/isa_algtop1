@@ -26873,10 +26873,18 @@ proof (rule ccontr)
   text \<open>Balls in metric topology are neighborhoods.\<close>
   have hxX: "x \<in> X" using hs unfolding seq_converges_to_on_def by satx
   have hyX: "y \<in> X" using ht unfolding seq_converges_to_on_def by satx
+  have hx_ball_open: "top1_ball_on X d x \<epsilon> \<in> top1_metric_topology_on X d"
+    using top1_ball_open_in_metric_topology[OF hd hxX heps] by fastforce
+  have hx_in_ball: "x \<in> top1_ball_on X d x \<epsilon>"
+    unfolding top1_ball_on_def using hxX heps hd unfolding top1_metric_on_def sorry
   have hx_ball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x \<epsilon>)"
-    using hd hxX heps sorry
+    unfolding neighborhood_of_def using hx_ball_open hx_in_ball by satx
+  have hy_ball_open: "top1_ball_on X d y \<epsilon> \<in> top1_metric_topology_on X d"
+    using top1_ball_open_in_metric_topology[OF hd hyX heps] by fastforce
+  have hy_in_ball: "y \<in> top1_ball_on X d y \<epsilon>"
+    unfolding top1_ball_on_def using hyX heps hd unfolding top1_metric_on_def sorry
   have hy_ball_nbhd: "neighborhood_of y X (top1_metric_topology_on X d) (top1_ball_on X d y \<epsilon>)"
-    using hd hyX heps sorry
+    unfolding neighborhood_of_def using hy_ball_open hy_in_ball by satx
   obtain N1 where hN1: "\<forall>n\<ge>N1. s n \<in> top1_ball_on X d x \<epsilon>"
     using hs hx_ball_nbhd unfolding seq_converges_to_on_def by blast
   obtain N2 where hN2: "\<forall>n\<ge>N2. t n \<in> top1_ball_on X d y \<epsilon>"
