@@ -26913,6 +26913,24 @@ proof -
     (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
     sorry
   text \<open>Step E: Baire category → ∩ U_{1/n} nonempty → injective f exists.\<close>
+  define Unat where "Unat = (\<lambda>n::nat. top1_U_eps_on X d TX ?RN ?dRN (1 / (real (Suc n))))"
+  have hUnat_open: "\<forall>n. Unat n \<in> top1_metric_topology_on ?C ?rho"
+    using hU_open unfolding Unat_def by simp
+  have hUnat_dense: "\<forall>n. top1_densein_on ?C (top1_metric_topology_on ?C ?rho) (Unat n)"
+    using hU_dense unfolding Unat_def by simp
+  text \<open>By Baire, the intersection is dense.\<close>
+  have hInter_dense: "top1_densein_on ?C (top1_metric_topology_on ?C ?rho) (\<Inter>n. Unat n)"
+    using hBaire hUnat_open hUnat_dense unfolding top1_baire_on_def by blast
+  text \<open>C is nonempty (contains constant zero function).\<close>
+  have hC_ne: "?C \<noteq> {}" sorry
+  text \<open>Dense in nonempty space → nonempty.\<close>
+  have "\<Inter>(range Unat) \<noteq> {}" sorry
+  then obtain f where hf_all: "\<forall>n. f \<in> Unat n" and hf_C: "f \<in> ?C" sorry
+  text \<open>f ∈ U_{1/n} for all n → f injective: if f x = f y then d(x,y) < 1/n for all n.\<close>
+  have hf_inj: "inj_on f X"
+    sorry
+  have hf_cont: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
+    sorry
   have "\<exists>f \<in> top1_continuous_funcs_on X TX ?RN ?TRN. inj_on f X"
     sorry
   then obtain f where hfCC: "f \<in> top1_continuous_funcs_on X TX ?RN ?TRN"
