@@ -26947,7 +26947,20 @@ proof -
     using hBaire hUnat_open hUnat_dense unfolding top1_baire_on_def by blast
   text \<open>C is nonempty (contains constant zero function).\<close>
   have hC_ne: "?C \<noteq> {}"
-    sorry
+  proof -
+    define p where "p = (\<lambda>i::nat. if i < N then (0::real) else undefined)"
+    have hp: "p \<in> ?RN"
+      unfolding p_def top1_Rpow_set_def top1_PiE_def top1_Pi_def top1_extensional_def
+      by fastforce
+    define f where "f = (\<lambda>x. if x \<in> X then p else undefined)"
+    have hf_PiE: "f \<in> top1_PiE X (\<lambda>_. ?RN)"
+      unfolding f_def top1_PiE_def top1_Pi_def top1_extensional_def using hp by simp
+    have hf_cont: "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) f"
+      sorry
+    have hf: "f \<in> ?C"
+      unfolding top1_continuous_maps_metric_on_def using hf_PiE hf_cont by blast
+    then show ?thesis by blast
+  qed
   text \<open>Dense in nonempty space → nonempty.\<close>
   have hInter_sub: "(\<Inter>n. Unat n) \<subseteq> ?C"
     unfolding Unat_def top1_U_eps_on_def by blast
