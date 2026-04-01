@@ -27286,9 +27286,11 @@ proof -
             qed
             have hf_cont: "top1_continuous_map_on X (top1_metric_topology_on X d) ?RN (top1_metric_topology_on ?RN ?dRN) f"
               using hf_C unfolding top1_continuous_maps_metric_on_def hTX_eq by blast
-            have "f x0 = f y0"
-              text \<open>From metric_seq_limit_eq with all ingredients above.\<close>
-              sorry
+            have hsxrxry_X: "\<forall>n. (sx \<circ> rx \<circ> ry) n \<in> X" using hsx by auto
+            have hsyrxry_X: "\<forall>n. (sy \<circ> rx \<circ> ry) n \<in> X" using hsy by auto
+            note msl = metric_seq_limit_eq[OF hd top1_Rpow_sq_metric_is_metric
+              hsx_ry_conv hsy_conv hsxrxry_X hsyrxry_X hf_cont]
+            have "f x0 = f y0" using msl hfxy_comp by blast
             text \<open>But f ∈ U_ε: f(x0) ≠ f(y0) when d ≥ ε. Contradiction.\<close>
             then have "d x0 y0 < \<epsilon>" using hf_eps hx0 hy0 by blast
             then show False using \<open>d x0 y0 \<ge> \<epsilon>\<close> by linarith
