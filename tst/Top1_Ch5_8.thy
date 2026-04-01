@@ -27211,7 +27211,7 @@ proof -
         and hBB_order: "top1_cover_order_le_on X \<BB> m"
         using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover] by blast
       text \<open>Step 1c: Extract finite subcover and enumerate.\<close>
-      text \<open>BB may be infinite; extract finite subcover from compact X.\<close>
+      text \<open>BB finite: use compactness of X (finite subcover of open covering).\<close>
       have hBB_fin: "finite \<BB>" sorry
       have hBB_diam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
         using hBB_refines hVV_diam unfolding top1_refines_def by fast
@@ -27267,12 +27267,29 @@ proof -
         g(x) - f0(x) = Σφᵢ(x)(zᵢ-f0(xᵢ)) + Σφᵢ(x)(f0(xᵢ)-f0(x)).
         |zᵢ-f0(xᵢ)| < δ/2, |f0(xᵢ)-f0(x)| < δ/2 when φᵢ(x)≠0,
         and Σφᵢ(x)=1, so |g(x)-f0(x)| < δ.\<close>
-      have hg_near: "?rho f0 g < \<delta>" sorry
+      have hg_near: "?rho f0 g < \<delta>"
+      proof -
+        text \<open>Key: for each x ∈ X, dRN(f0 x, g x) < δ.
+          g x = (Σᵢ φᵢ x * z i) coordwise, f0 x = (Σᵢ φᵢ x * f0 x) coordwise.
+          |g x - f0 x| ≤ Σᵢ φᵢ x * |z i - f0 x| < Σᵢ φᵢ x * δ = δ.\<close>
+        text \<open>Actually, |z i - f0 x| ≤ |z i - f0(xi i)| + |f0(xi i) - f0 x| < δ/2 + δ/2 = δ
+          when φᵢ x ≠ 0 (so x ∈ Uᵢ and xi ∈ Uᵢ, giving f-diam < δ/2).\<close>
+        show ?thesis sorry
+      qed
       text \<open>g ∈ U_ε: if g(x)=g(y), then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0.
         Coefficients sum to 0, at most N+1 = 2(m+1) nonzero.
         GP ⟹ all coefficients 0 ⟹ φᵢ(x)=φᵢ(y) ∀i.
         Then ∃i with φᵢ(x)>0, so x,y ∈ Uᵢ, d(x,y) < ε/2 < ε.\<close>
-      have hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>" sorry
+      have hg_Ueps: "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+      proof -
+        text \<open>g ∈ U_ε: if g x = g y, then Σ[φᵢ x - φᵢ y] z i = 0 (coordwise).
+          Coefficients sum to 0 (Σφᵢ x = Σφᵢ y = 1).
+          At most m+1 nonzero φᵢ x and m+1 nonzero φᵢ y → at most 2(m+1)=N+1 nonzero terms.
+          GP: ≤ N+1 points in GP with coeff sum 0 ⟹ all coeff 0.
+          So φᵢ x = φᵢ y for all i. Since ∃i. φᵢ x > 0, we have φᵢ y = φᵢ x > 0,
+          so y ∈ supp φᵢ ⊆ Uᵢ and x ∈ Uᵢ. Hence d x y < ε/2 < ε.\<close>
+        show ?thesis sorry
+      qed
       text \<open>--- End main construction ---\<close>
       have "g \<in> V" using hg_near hg_C hball_V unfolding top1_ball_on_def by blast
       then show "intersects V (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
