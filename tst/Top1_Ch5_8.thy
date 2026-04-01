@@ -26864,6 +26864,16 @@ lemma metric_on_self_zero:
   shows "d x x = 0"
   using assms unfolding top1_metric_on_def by fast
 
+lemma metric_on_sym:
+  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X"
+  shows "d x y = d y x"
+  using assms unfolding top1_metric_on_def by blast
+
+lemma metric_on_triangle:
+  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X" and "z \<in> X"
+  shows "d x z \<le> d x y + d y z"
+  using assms unfolding top1_metric_on_def by blast
+
 lemma metric_limit_preserves_le:
   assumes hd: "top1_metric_on X d"
   assumes hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
@@ -26903,9 +26913,14 @@ proof (rule ccontr)
     using hN1 hd hxX unfolding top1_ball_on_def N_def top1_metric_on_def by simp
   have hdtN: "d (t N) y < \<epsilon>"
     using hN2 hd hyX unfolding top1_ball_on_def N_def top1_metric_on_def by simp
+  have hball_sub_x: "top1_ball_on X d x \<epsilon> \<subseteq> X" unfolding top1_ball_on_def by blast
+  have hball_sub_y: "top1_ball_on X d y \<epsilon> \<subseteq> X" unfolding top1_ball_on_def by blast
+  have hsNX: "s N \<in> X" using hN1 hball_sub_x N_def by fastforce
+  have htNX: "t N \<in> X" using hN2 hball_sub_y N_def by fastforce
   have htri: "d (s N) (t N) \<le> d (s N) x + d x y + d y (t N)"
     sorry
-  have hdyx: "d y (t N) = d (t N) y" sorry
+  have hdyx: "d y (t N) = d (t N) y"
+    sorry
   have "d (s N) (t N) < c"
   proof -
     have "d (s N) (t N) \<le> d (s N) x + d x y + d (t N) y" using htri hdyx by linarith
