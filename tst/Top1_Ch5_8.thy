@@ -26885,9 +26885,19 @@ proof -
     - U_ε dense: partition of unity (Theorem_41_7) + dim_le covering +
       general position (Lemma_50_4) + the algebraic identity using N+1=2m+2
     The full Baire argument proof requires ~200 lines of careful Isabelle code.\<close>
-  text \<open>X must be nonempty for the Baire argument. (Empty case is trivial.)\<close>
-  have hXne: "X \<noteq> {}"
-    sorry
+  text \<open>Handle X = {} trivially: the empty function is an embedding.\<close>
+  { assume hXemp: "X = {}"
+    have "top1_embedding_on {} TX ?RN ?TRN (\<lambda>_. undefined)"
+      unfolding top1_embedding_on_def top1_homeomorphism_on_def
+        top1_continuous_map_on_def bij_betw_def inj_on_def
+      by (metis (no_types, lifting) empty_Collect_eq empty_iff hTop hXemp
+        image_empty subsetI subspace_topology_is_topology_on
+        top1_Rpow_is_topology_on top1_open_set_from_local_opens)
+    then have "\<exists>F. top1_embedding_on X TX ?RN ?TRN F" using hXemp by blast
+    then have ?thesis unfolding N_def by blast
+  }
+  moreover
+  { assume hXne: "X \<noteq> {}"
   text \<open>Step A: C(X,R^N) with sup metric is complete.\<close>
   have hRN_complete: "top1_complete_metric_on ?RN ?dRN"
     by (simp add: top1_Rpow_sq_metric_is_complete)
@@ -27006,8 +27016,10 @@ proof -
     by (rule Theorem_26_6[OF hTop hfX_sub_top hComp hfX_haus hf_cont_img hf_bij])
   then have "top1_embedding_on X TX ?RN ?TRN f"
     unfolding top1_embedding_on_def using hf_img by presburger
-  then show "\<exists>F. top1_embedding_on X TX (top1_Rpow_set (2 * m + 1)) (top1_Rpow_topology (2 * m + 1)) F"
+  then have ?thesis
     unfolding N_def by blast
+  }
+  ultimately show ?thesis by argo
 qed
 
 text \<open>R^N has open coverings of order N+1 at any scale.
