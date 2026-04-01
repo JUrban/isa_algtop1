@@ -26935,9 +26935,21 @@ proof -
       fix n
       have "f \<in> Unat n" using hf_all by blast
       then show "d x y < 1 / real (Suc n)"
-        unfolding Unat_def top1_U_eps_on_def using hx hy hfxy sorry
+        unfolding Unat_def top1_U_eps_on_def using hx hy hfxy by blast
     qed
-    then have "d x y \<le> 0" sorry
+    then have "d x y \<le> 0"
+    proof -
+      assume hall: "\<forall>n. d x y < 1 / real (Suc n)"
+      have "\<And>e. 0 < e \<Longrightarrow> d x y < e"
+      proof -
+        fix e :: real assume he: "0 < e"
+        obtain n where hn: "1 / real (Suc n) < e"
+          by (metis reals_Archimedean he nat_approx_posE)
+        have "d x y < 1 / real (Suc n)" using hall by blast
+        then show "d x y < e" using hn by linarith
+      qed
+      then show ?thesis using linorder_not_less by blast
+    qed
     moreover have "0 \<le> d x y" using hd hx hy unfolding top1_metric_on_def by blast
     ultimately have "d x y = 0" by argo
     then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
