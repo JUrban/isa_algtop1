@@ -26915,13 +26915,41 @@ proof -
     Take δ = min|f(x)-f(y)|/2 on A. Then B(f,δ) ⊆ U_ε.\<close>
   have hU_open: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>
     \<in> top1_metric_topology_on ?C ?rho"
-  text \<open>Proof sketch: given f ∈ U_ε, find δ>0 with B(f,δ) ⊆ U_ε.
-    (1) A = {(x,y) ∈ X×X | d(x,y) ≥ ε} is compact (closed in compact X×X).
-    (2) |f(x)-f(y)| > 0 on A (since f(x)=f(y) ⟹ d<ε, contrapositive).
-    (3) δ₀ = min{|f(x)-f(y)| | (x,y) ∈ A} > 0 (continuous on compact).
-    (4) Take δ = δ₀/2. If ρ(f,g)<δ then on A: |g(x)-g(y)| > 0, so g ∈ U_ε.
-    Full proof: ~100 lines using product topology + compact min.\<close>
-    sorry
+  proof -
+    fix \<epsilon> :: real assume he: "0 < \<epsilon>"
+    have hU_sub: "top1_U_eps_on X d TX ?RN ?dRN \<epsilon> \<subseteq> ?C"
+      unfolding top1_U_eps_on_def by fast
+    show "top1_U_eps_on X d TX ?RN ?dRN \<epsilon> \<in> top1_metric_topology_on ?C ?rho"
+      unfolding top1_metric_topology_on_def top1_metric_basis_on_def
+        topology_generated_by_basis_def
+    proof (intro CollectI conjI ballI)
+      show "top1_U_eps_on X d TX ?RN ?dRN \<epsilon> \<subseteq> ?C" using hU_sub by presburger
+    next
+      fix f assume hf: "f \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+      have hf_C: "f \<in> ?C" using hf unfolding top1_U_eps_on_def by blast
+      have hf_eps: "\<forall>x\<in>X. \<forall>y\<in>X. f x = f y \<longrightarrow> d x y < \<epsilon>"
+        using hf unfolding top1_U_eps_on_def by blast
+      text \<open>Find δ > 0 with ball(f,δ) ⊆ U_ε.
+        Key: on {(x,y)|d≥ε}, f(x) ≠ f(y), so dRN(f(x),f(y)) has positive inf.
+        Use compactness of X to get minimum.\<close>
+      obtain \<delta> where hd_pos: "0 < \<delta>" and
+        hd_ball: "\<forall>g \<in> ?C. ?rho f g < \<delta> \<longrightarrow> g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+        sorry
+      have hrho_met: "top1_metric_on ?C ?rho"
+        using hC_complete unfolding top1_complete_metric_on_def by auto
+      have hf_self: "?rho f f = 0"
+        using hrho_met hf_C unfolding top1_metric_on_def by blast
+      have hf_ball: "f \<in> top1_ball_on ?C ?rho f \<delta>"
+        unfolding top1_ball_on_def using hf_C hd_pos hf_self by fastforce
+      have hball_sub: "top1_ball_on ?C ?rho f \<delta> \<subseteq> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+        unfolding top1_ball_on_def using hd_ball by auto
+      have hball_basis: "top1_ball_on ?C ?rho f \<delta> \<in> {top1_ball_on ?C ?rho x ea |x ea. x \<in> ?C \<and> 0 < ea}"
+        using hf_C hd_pos by blast
+      show "\<exists>ba\<in>{top1_ball_on ?C ?rho x ea |x ea. x \<in> ?C \<and> 0 < ea}.
+        f \<in> ba \<and> ba \<subseteq> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
+        using hf_ball hball_sub hball_basis by blast
+    qed
+  qed
   text \<open>Step D: U_ε is dense in C(X,R^N) for each ε > 0.
     Proof: given f and δ, cover X by open sets of diam < ε/2 and f-diam < δ/2
     with order ≤ m+1, use partition of unity, perturb to general position.\<close>
