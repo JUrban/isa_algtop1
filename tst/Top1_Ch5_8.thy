@@ -27501,8 +27501,18 @@ proof -
           then show "\<bar>f0 x j - z i j\<bar> < \<delta>" using hcoord_f hcoord_z by auto
         qed
         text \<open>Weighted sum: |Σ aᵢ bᵢ| ≤ Σ aᵢ |bᵢ| < δ Σ aᵢ = δ.\<close>
+        have step1: "\<bar>f0 x j - g x j\<bar> = \<bar>\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * (f0 x j - z i j)\<bar>"
+          using hdiff by presburger
+        have step2: "... \<le> (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>\<phi> i x * (f0 x j - z i j)\<bar>)"
+          by simp
+        have step3: "... = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<bar>f0 x j - z i j\<bar>)"
+          using hphi_ge0 hx sorry
+        have step4: "... < (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>)"
+          using hbound hphi_ge0 hx hphi_sum1 hphi_fin_nz hd_pos sorry
+        have step5: "... = \<delta>"
+          using hphi_sum1 hx sorry
         show "\<bar>f0 x j - g x j\<bar> < \<delta>"
-          using hdiff hbound hphi_sum1 hx hphi_ge0 hphi_fin_nz hd_pos sorry
+          using step1 step2 step3 step4 step5 by argo
       qed
       have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
         sorry
