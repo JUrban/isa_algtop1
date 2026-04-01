@@ -26960,13 +26960,17 @@ proof -
           Positive since f ∈ U_ε. Take δ = δ₀/3.\<close>
         define \<delta>0 where "\<delta>0 = Inf {?dRN (f x) (f y) | x y. x \<in> X \<and> y \<in> X \<and> \<epsilon> \<le> d x y}"
         have h\<delta>0_pos: "0 < \<delta>0" sorry
+        define \<delta>1 where "\<delta>1 = min \<delta>0 1"
+        have h\<delta>1_pos: "0 < \<delta>1" unfolding \<delta>1_def using h\<delta>0_pos by simp
+        have h\<delta>1_le1: "\<delta>1 \<le> 1" unfolding \<delta>1_def by simp
+        have h\<delta>1_le_\<delta>0: "\<delta>1 \<le> \<delta>0" unfolding \<delta>1_def by simp
         show ?thesis
-        proof (rule that[of "\<delta>0 / 3"])
-          show "0 < \<delta>0 / 3" using h\<delta>0_pos by auto
-          show "\<forall>g\<in>?C. ?rho f g < \<delta>0 / 3 \<longrightarrow>
+        proof (rule that[of "\<delta>1 / 3"])
+          show "0 < \<delta>1 / 3" using h\<delta>1_pos by simp
+          show "\<forall>g\<in>?C. ?rho f g < \<delta>1 / 3 \<longrightarrow>
             g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
           proof (intro ballI impI)
-            fix g assume hg: "g \<in> ?C" and hrho: "?rho f g < \<delta>0 / 3"
+            fix g assume hg: "g \<in> ?C" and hrho: "?rho f g < \<delta>1 / 3"
             show "g \<in> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>"
               unfolding top1_U_eps_on_def
             proof (intro CollectI conjI ballI impI)
@@ -26982,9 +26986,9 @@ proof -
                   using Rpow_sq_metric_nonneg by force
                 have "Inf {?dRN (f x') (f y') | x' y'. x' \<in> X \<and> y' \<in> X \<and> \<epsilon> \<le> d x' y'} \<le> ?dRN (f x) (f y)"
                   using hmem hbdd by (simp add: cInf_lower)
-                then have "?dRN (f x) (f y) \<ge> \<delta>0"
-                  unfolding \<delta>0_def by presburger
-                moreover have "?dRN (f x) (f y) < 2 * \<delta>0 / 3"
+                then have "?dRN (f x) (f y) \<ge> \<delta>1"
+                  using h\<delta>1_le_\<delta>0 \<delta>0_def by argo
+                moreover have "?dRN (f x) (f y) < 2 * \<delta>1 / 3"
                 proof -
                   have hdRN_met: "top1_metric_on ?RN ?dRN"
                     by (simp add: top1_Rpow_sq_metric_is_metric)
@@ -27002,13 +27006,35 @@ proof -
                     using hdRN_met hgx hgy hfy unfolding top1_metric_on_def by blast
                   have hgxy0: "?dRN (g x) (g y) = 0"
                     using hdRN_met hgx hgxy unfolding top1_metric_on_def by metis
-                  have hfg_x: "?dRN (f x) (g x) \<le> ?rho f g" sorry
-                  have hfg_y: "?dRN (f y) (g y) \<le> ?rho f g" sorry
+                  text \<open>Since ρ(f,g) < δ₁/3 ≤ 1/3, the bounded metric = raw metric.\<close>
+                  have hrho_lt1: "?rho f g < 1" using hrho h\<delta>1_le1 by linarith
+                  have hmem_img: "top1_bounded_metric ?dRN (f x) (g x) \<in>
+                    (\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X"
+                    using hx by blast
+                  have hbdd_img: "bdd_above ((\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X)"
+                    sorry
+                  have hbounded_x: "top1_bounded_metric ?dRN (f x) (g x) \<le> ?rho f g"
+                    unfolding top1_uniform_metric_on_def using hXne hmem_img hbdd_img
+                    by (simp add: cSup_upper)
+                  have hbounded_lt1_x: "top1_bounded_metric ?dRN (f x) (g x) < 1"
+                    using hbounded_x hrho_lt1 by linarith
+                  have hfg_x: "?dRN (f x) (g x) \<le> ?rho f g"
+                    using hbounded_x hbounded_lt1_x unfolding top1_bounded_metric_def by linarith
+                  have hmem_img_y: "top1_bounded_metric ?dRN (f y) (g y) \<in>
+                    (\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X"
+                    using hy by blast
+                  have hbounded_y: "top1_bounded_metric ?dRN (f y) (g y) \<le> ?rho f g"
+                    unfolding top1_uniform_metric_on_def using hXne hmem_img_y hbdd_img
+                    by (simp add: cSup_upper)
+                  have hbounded_lt1_y: "top1_bounded_metric ?dRN (f y) (g y) < 1"
+                    using hbounded_y hrho_lt1 by linarith
+                  have hfg_y: "?dRN (f y) (g y) \<le> ?rho f g"
+                    using hbounded_y hbounded_lt1_y unfolding top1_bounded_metric_def by linarith
                   have hdRN_sym: "?dRN (g y) (f y) = ?dRN (f y) (g y)"
                     using hdRN_met hgy hfy unfolding top1_metric_on_def by metis
                   show ?thesis using htri htri2 hgxy0 hfg_x hfg_y hdRN_sym hrho by linarith
                 qed
-                ultimately show False using h\<delta>0_pos by linarith
+                ultimately show False using h\<delta>1_pos by linarith
               qed
             qed
           qed
