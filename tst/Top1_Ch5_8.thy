@@ -27527,7 +27527,24 @@ proof -
           using step1 step2 step3 step4 step5 by argo
       qed
       have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
-        sorry
+      proof (intro ballI)
+        fix x assume hx: "x \<in> X"
+        have hcoords: "\<forall>j<N. \<bar>f0 x j - g x j\<bar> < \<delta>" using hg_pointwise_coord hx by blast
+        show "?dRN (f0 x) (g x) < \<delta>"
+        proof (cases "N = 0")
+          case True then show ?thesis unfolding top1_Rpow_sq_metric_def using hd_pos by presburger
+        next
+          case False
+          then have hN0: "N > 0" by linarith
+          have hset_bound: "\<forall>v \<in> {\<bar>f0 x i - g x i\<bar> |i. i < N}. v < \<delta>"
+            using hcoords by blast
+          have hset_ne: "{\<bar>f0 x i - g x i\<bar> |i. i < N} \<noteq> {}" using hN0 by fast
+          have hset_fin: "finite {\<bar>f0 x i - g x i\<bar> |i. i < N}" by auto
+          have "Max {\<bar>f0 x i - g x i\<bar> |i. i < N} < \<delta>"
+            using Max_less_iff[OF hset_fin hset_ne] hset_bound by blast
+          then show ?thesis unfolding top1_Rpow_sq_metric_def using False by presburger
+        qed
+      qed
       have hg_near: "?rho f0 g < \<delta>"
         sorry
       text \<open>g ∈ U_ε: if g(x)=g(y), then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0.
