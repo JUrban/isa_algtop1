@@ -26841,6 +26841,12 @@ definition top1_U_eps_on ::
     {f \<in> top1_continuous_maps_metric_on X TX Y dY.
       \<forall>x\<in>X. \<forall>y\<in>X. f x = f y \<longrightarrow> d x y < \<epsilon>}"
 
+lemma continuous_maps_metric_on_eval:
+  assumes "f \<in> top1_continuous_maps_metric_on X TX Y d" and "x \<in> X"
+  shows "f x \<in> Y"
+  using assms unfolding top1_continuous_maps_metric_on_def top1_PiE_def top1_Pi_def
+  by blast
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
@@ -26982,9 +26988,12 @@ proof -
                 proof -
                   have hdRN_met: "top1_metric_on ?RN ?dRN"
                     by (simp add: top1_Rpow_sq_metric_is_metric)
-                  have hfx: "f x \<in> ?RN" sorry
-                  have hfy: "f y \<in> ?RN" sorry
-                  have hgx: "g x \<in> ?RN" sorry
+                  have hfx: "f x \<in> ?RN"
+                    using continuous_maps_metric_on_eval hf_C hx by meson
+                  have hfy: "f y \<in> ?RN"
+                    using continuous_maps_metric_on_eval hf_C hy by meson
+                  have hgx: "g x \<in> ?RN"
+                    using continuous_maps_metric_on_eval hg hx by meson
                   have hgy: "g y \<in> ?RN"
                     using hgx hgxy by fastforce
                   have htri: "?dRN (f x) (f y) \<le> ?dRN (f x) (g x) + ?dRN (g x) (f y)"
