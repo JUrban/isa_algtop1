@@ -28101,10 +28101,22 @@ proof (intro allI impI)
   have hTR_eq: "?TR = top1_metric_topology_on ?dR ?d"
   proof (cases "N = 0")
     case True
-    text \<open>When N=0, R^0 is a singleton and both topologies are indiscrete.\<close>
-    text \<open>N=0: Both product and metric topologies on R^0 (singleton) are {∅, {pt}}.
-      Proof requires unfolding product topology / metric topology on empty index set.\<close>
-    then show ?thesis sorry
+    text \<open>N=0: Both topologies on R^0 (singleton) must be equal: unique topology on singleton.\<close>
+    have hTR_top: "is_topology_on ?dR ?TR"
+      by (simp add: top1_Rpow_is_topology_on)
+    have hTR_sub: "\<forall>U\<in>?TR. U \<subseteq> ?dR"
+      unfolding top1_Rpow_topology_def top1_product_topology_on_def
+        top1_Rpow_set_def topology_generated_by_basis_def by blast
+    have hTmet_top: "is_topology_on ?dR (top1_metric_topology_on ?dR ?d)"
+      by (metis hd top1_metric_topology_on_is_topology_on)
+    have hTmet_sub: "\<forall>U\<in>top1_metric_topology_on ?dR ?d. U \<subseteq> ?dR"
+      using hd metric_topology_open_sub by blast
+    have hsingleton: "\<exists>!x. x \<in> ?dR"
+      using True unfolding top1_Rpow_set_def top1_PiE_def top1_Pi_def top1_extensional_def
+      by auto
+    have huniq: "\<And>T. is_topology_on ?dR T \<Longrightarrow> (\<forall>U\<in>T. U \<subseteq> ?dR) \<Longrightarrow> T = {?dR, {}}"
+      using hsingleton unfolding is_topology_on_def by auto
+    then show ?thesis using hTR_top hTR_sub hTmet_top hTmet_sub by metis
   next
     case False
     then show ?thesis using top1_Rpow_topology_eq_sq_metric by simp
