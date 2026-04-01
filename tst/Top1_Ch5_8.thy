@@ -26842,9 +26842,22 @@ definition top1_U_eps_on ::
       \<forall>x\<in>X. \<forall>y\<in>X. f x = f y \<longrightarrow> d x y < \<epsilon>}"
 
 lemma subseq_converges_to:
-  assumes "seq_converges_to_on s x X TX" and "strict_mono r"
+  assumes hconv: "seq_converges_to_on s x X TX" and hr: "strict_mono r"
   shows "seq_converges_to_on (s \<circ> r) x X TX"
-  using assms unfolding seq_converges_to_on_def sorry
+  unfolding seq_converges_to_on_def
+proof (intro conjI allI impI)
+  show "x \<in> X" using hconv unfolding seq_converges_to_on_def by satx
+  fix U assume hU: "neighborhood_of x X TX U"
+  obtain N where hN: "\<forall>n\<ge>N. s n \<in> U"
+    using hconv hU unfolding seq_converges_to_on_def by blast
+  show "\<exists>N. \<forall>n\<ge>N. (s \<circ> r) n \<in> U"
+  proof (intro exI[of _ N] allI impI)
+    fix n assume hn: "N \<le> n"
+    have "r n \<ge> n" using hr by (simp add: strict_mono_imp_increasing)
+    then have "r n \<ge> N" using hn by presburger
+    then show "(s \<circ> r) n \<in> U" using hN by simp
+  qed
+qed
 
 lemma metric_limit_preserves_le:
   assumes hd: "top1_metric_on X d"
