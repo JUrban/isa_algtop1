@@ -27012,7 +27012,11 @@ proof -
                     (\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X"
                     using hx by blast
                   have hbdd_img: "bdd_above ((\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X)"
-                    sorry
+                  proof -
+                    have "\<forall>z \<in> (\<lambda>i. top1_bounded_metric ?dRN (f i) (g i)) ` X. z \<le> 1"
+                      unfolding top1_bounded_metric_def by fastforce
+                    then show ?thesis unfolding bdd_above_def by blast
+                  qed
                   have hbounded_x: "top1_bounded_metric ?dRN (f x) (g x) \<le> ?rho f g"
                     unfolding top1_uniform_metric_on_def using hXne hmem_img hbdd_img
                     by (simp add: cSup_upper)
