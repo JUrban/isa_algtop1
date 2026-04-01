@@ -27208,9 +27208,8 @@ proof -
       text \<open>Step 1b: Apply dim_le to get refinement with order ≤ m+1.\<close>
       obtain \<BB> where hBB_cover: "top1_open_covering_on X TX \<BB>"
         and hBB_refines: "top1_refines \<BB> \<VV>"
-        and hBB_order: "top1_cover_order_le_on X \<BB> (m+1)"
-        using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover]
-        sorry
+        and hBB_order: "top1_cover_order_le_on X \<BB> m"
+        using hdim[unfolded top1_dim_le_on_def, rule_format, OF hVV_cover] by blast
       text \<open>Step 1c: Extract finite subcover and enumerate.\<close>
       have hBB_fin: "finite \<BB>" sorry
       have hBB_diam: "\<forall>B\<in>\<BB>. \<forall>x\<in>B. \<forall>y\<in>B. d x y < \<epsilon>/2"
@@ -27224,7 +27223,7 @@ proof -
         hUi_cover: "X \<subseteq> (\<Union>i<n. Ui i)" and
         hUi_diam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. d x y < \<epsilon>/2" and
         hUi_fdiam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. ?dRN (f0 x) (f0 y) < \<delta>/2" and
-        hUi_order: "top1_cover_order_le_on X (Ui ` {..<n}) (m+1)" and
+        hUi_order: "top1_cover_order_le_on X (Ui ` {..<n}) m" and
         hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X"
         sorry
       text \<open>Step 2: Partition of unity.\<close>
