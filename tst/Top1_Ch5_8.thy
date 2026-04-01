@@ -27396,15 +27396,24 @@ proof -
         g(x) - f0(x) = Σφᵢ(x)(zᵢ-f0(xᵢ)) + Σφᵢ(x)(f0(xᵢ)-f0(x)).
         |zᵢ-f0(xᵢ)| < δ/2, |f0(xᵢ)-f0(x)| < δ/2 when φᵢ(x)≠0,
         and Σφᵢ(x)=1, so |g(x)-f0(x)| < δ.\<close>
+      text \<open>Key helper: POU properties extracted.\<close>
+      have hphi_sum1: "\<forall>x\<in>X. (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) = 1"
+        using hphi_pou unfolding top1_partition_of_unity_dominated_family_on_def by blast
+      have hphi_cont_01: "\<forall>i<n. top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)"
+        using hphi_pou unfolding top1_partition_of_unity_dominated_family_on_def by blast
+      have hphi_in_01: "\<forall>i<n. \<forall>x\<in>X. \<phi> i x \<in> top1_closed_interval 0 1"
+        using hphi_cont_01 unfolding top1_continuous_map_on_def by metis
+      have hphi_ge0: "\<forall>i<n. \<forall>x\<in>X. 0 \<le> \<phi> i x"
+        using hphi_in_01 unfolding top1_closed_interval_def by simp
+      have hphi_supp_sub: "\<forall>i<n. top1_support_on X TX (\<phi> i) \<subseteq> Ui i"
+        using hphi_pou unfolding top1_partition_of_unity_dominated_family_on_def by simp
+      have hphi_supp: "\<forall>i<n. \<forall>x\<in>X. \<phi> i x \<noteq> 0 \<longrightarrow> x \<in> Ui i"
+        using hphi_supp_sub unfolding top1_support_on_def sorry
+      text \<open>Pointwise bound: for each x ∈ X, dRN(f0 x, g x) < δ.\<close>
+      have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
+        sorry
       have hg_near: "?rho f0 g < \<delta>"
-      proof -
-        text \<open>Key: for each x ∈ X, dRN(f0 x, g x) < δ.
-          g x = (Σᵢ φᵢ x * z i) coordwise, f0 x = (Σᵢ φᵢ x * f0 x) coordwise.
-          |g x - f0 x| ≤ Σᵢ φᵢ x * |z i - f0 x| < Σᵢ φᵢ x * δ = δ.\<close>
-        text \<open>Actually, |z i - f0 x| ≤ |z i - f0(xi i)| + |f0(xi i) - f0 x| < δ/2 + δ/2 = δ
-          when φᵢ x ≠ 0 (so x ∈ Uᵢ and xi ∈ Uᵢ, giving f-diam < δ/2).\<close>
-        show ?thesis sorry
-      qed
+        sorry
       text \<open>g ∈ U_ε: if g(x)=g(y), then Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0.
         Coefficients sum to 0, at most N+1 = 2(m+1) nonzero.
         GP ⟹ all coefficients 0 ⟹ φᵢ(x)=φᵢ(y) ∀i.
