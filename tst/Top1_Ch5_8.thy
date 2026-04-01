@@ -26896,9 +26896,16 @@ proof (rule ccontr)
     using hN2 hd hyX unfolding top1_ball_on_def N_def top1_metric_on_def by simp
   have htri: "d (s N) (t N) \<le> d (s N) x + d x y + d y (t N)"
     sorry
-  have "d (s N) (t N) < c" using hdsN hdtN htri unfolding \<epsilon>_def
-    sorry
-  then show False using hle sorry
+  have hdyx: "d y (t N) = d (t N) y" sorry
+  have "d (s N) (t N) < c"
+  proof -
+    have "d (s N) (t N) \<le> d (s N) x + d x y + d (t N) y" using htri hdyx by linarith
+    also have "... < \<epsilon> + d x y + \<epsilon>" using hdsN hdtN by linarith
+    also have "... = 2 * ((c - d x y) / 3) + d x y" unfolding \<epsilon>_def sorry
+    also have "... < c" using hlt sorry
+    finally show ?thesis sorry
+  qed
+  then show False using hle by (metis leD)
 qed
 
 lemma metric_seq_limit_eq:
