@@ -26905,12 +26905,26 @@ proof -
     Take δ = min|f(x)-f(y)|/2 on A. Then B(f,δ) ⊆ U_ε.\<close>
   have hU_open: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_U_eps_on X d TX ?RN ?dRN \<epsilon>
     \<in> top1_metric_topology_on ?C ?rho"
+  text \<open>Proof sketch: given f ∈ U_ε, find δ>0 with B(f,δ) ⊆ U_ε.
+    (1) A = {(x,y) ∈ X×X | d(x,y) ≥ ε} is compact (closed in compact X×X).
+    (2) |f(x)-f(y)| > 0 on A (since f(x)=f(y) ⟹ d<ε, contrapositive).
+    (3) δ₀ = min{|f(x)-f(y)| | (x,y) ∈ A} > 0 (continuous on compact).
+    (4) Take δ = δ₀/2. If ρ(f,g)<δ then on A: |g(x)-g(y)| > 0, so g ∈ U_ε.
+    Full proof: ~100 lines using product topology + compact min.\<close>
     sorry
   text \<open>Step D: U_ε is dense in C(X,R^N) for each ε > 0.
     Proof: given f and δ, cover X by open sets of diam < ε/2 and f-diam < δ/2
     with order ≤ m+1, use partition of unity, perturb to general position.\<close>
   have hU_dense: "\<And>\<epsilon>. 0 < \<epsilon> \<Longrightarrow> top1_densein_on ?C (top1_metric_topology_on ?C ?rho)
     (top1_U_eps_on X d TX ?RN ?dRN \<epsilon>)"
+  text \<open>Proof sketch: given f ∈ C and δ>0, find g ∈ U_ε with ρ(f,g)<δ.
+    (1) Cover X by {U₁,...,Uₙ}: diam Uᵢ < ε/2, diam f(Uᵢ) < δ/2, order ≤ m+1.
+        Uses: dim_le (hdim), Lebesgue number (compact metric), and refinement.
+    (2) Partition of unity {φᵢ} subordinate to {Uᵢ} (Theorem_41_7).
+    (3) Pick xᵢ ∈ Uᵢ, choose z₁,...,zₙ near f(xᵢ) in GP (Lemma_50_4).
+        N+1 = 2(m+1), and order ≤ m+1, so at most 2(m+1) nonzero terms.
+    (4) g(x) = Σ φᵢ(x) zᵢ. Show ρ(f,g)<δ and g ∈ U_ε.
+    Full proof: ~100 lines of careful Isabelle.\<close>
     sorry
   text \<open>Step E: Baire category → ∩ U_{1/n} nonempty → injective f exists.\<close>
   define Unat where "Unat = (\<lambda>n::nat. top1_U_eps_on X d TX ?RN ?dRN (1 / (real (Suc n))))"
@@ -26922,7 +26936,8 @@ proof -
   have hInter_dense: "top1_densein_on ?C (top1_metric_topology_on ?C ?rho) (\<Inter>n. Unat n)"
     using hBaire hUnat_open hUnat_dense unfolding top1_baire_on_def by blast
   text \<open>C is nonempty (contains constant zero function).\<close>
-  have hC_ne: "?C \<noteq> {}" sorry
+  have hC_ne: "?C \<noteq> {}"
+    sorry
   text \<open>Dense in nonempty space → nonempty.\<close>
   have hInter_sub: "(\<Inter>n. Unat n) \<subseteq> ?C"
     unfolding Unat_def top1_U_eps_on_def by blast
