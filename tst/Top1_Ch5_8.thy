@@ -27041,9 +27041,10 @@ proof -
             obtain rx x0 where hrx: "strict_mono rx" and hx0: "x0 \<in> X"
               and hsx_conv: "seq_converges_to_on (sx \<circ> rx) x0 X (top1_metric_topology_on X d)"
               using complete_tb_convergent_subseq[OF hd hXcomplete hXtb hsx] by blast
+            have hsy_rx: "\<forall>n. (sy \<circ> rx) n \<in> X" using hsy by auto
             obtain ry y0 where hry: "strict_mono ry" and hy0: "y0 \<in> X"
-              and hsy_conv: "seq_converges_to_on (sy \<circ> rx \<circ> ry) y0 X (top1_metric_topology_on X d)"
-              sorry
+              and hsy_conv: "seq_converges_to_on ((sy \<circ> rx) \<circ> ry) y0 X (top1_metric_topology_on X d)"
+              using complete_tb_convergent_subseq[OF hd hXcomplete hXtb hsy_rx] by blast
             text \<open>d(x0, y0) ≥ ε (from continuity of d).\<close>
             have "d x0 y0 \<ge> \<epsilon>" sorry
             text \<open>f(x0) = f(y0) (from dRN(f(sx n), f(sy n)) → 0 and f continuous).\<close>
