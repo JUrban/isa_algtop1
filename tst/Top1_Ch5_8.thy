@@ -27511,10 +27511,18 @@ proof -
           apply simp
           using hphi_ge0 hx apply (simp add: abs_mult)
           done
-        have step4: "... < (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>)"
-          using hbound hphi_ge0 hx hphi_sum1 hphi_fin_nz hd_pos sorry
+        have hne_nz: "{i\<in>{..<n}. \<phi> i x \<noteq> 0} \<noteq> {}"
+          using hphi_sum1 hx by fastforce
+        have step4_le: "\<forall>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<bar>f0 x j - z i j\<bar> < \<phi> i x * \<delta>"
+          using hbound hphi_ge0 hx by fastforce
+        have step4: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<bar>f0 x j - z i j\<bar>) <
+          (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>)"
+          using step4_le hne_nz hphi_fin_nz hx by (meson sum_strict_mono)
+        have step5a: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>) =
+          (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) * \<delta>"
+          by (simp add: sum_distrib_right)
         have step5: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * \<delta>) = \<delta>"
-          using hphi_sum1 hx sorry
+          using step5a hphi_sum1 hx by auto
         show "\<bar>f0 x j - g x j\<bar> < \<delta>"
           using step1 step2 step3 step4 step5 by argo
       qed
