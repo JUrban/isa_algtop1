@@ -27008,10 +27008,31 @@ proof -
             text \<open>Choose sequences.\<close>
             define sx where "sx = (\<lambda>n. SOME x. x \<in> X \<and> (\<exists>y \<in> X. \<epsilon> \<le> d x y \<and> ?dRN (f x) (f y) < 1 / real (Suc n)))"
             define sy where "sy = (\<lambda>n. SOME y. y \<in> X \<and> \<epsilon> \<le> d (sx n) y \<and> ?dRN (f (sx n)) (f y) < 1 / real (Suc n))"
-            have hsx: "\<forall>n. sx n \<in> X" sorry
-            have hsy: "\<forall>n. sy n \<in> X" sorry
-            have hdxy: "\<forall>n. \<epsilon> \<le> d (sx n) (sy n)" sorry
-            have hfxy: "\<forall>n. ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)" sorry
+            have hsx_prop: "\<forall>n. sx n \<in> X \<and> (\<exists>y \<in> X. \<epsilon> \<le> d (sx n) y \<and> ?dRN (f (sx n)) (f y) < 1 / real (Suc n))"
+            proof
+              fix n
+              have "\<exists>x. x \<in> X \<and> (\<exists>y \<in> X. \<epsilon> \<le> d x y \<and> ?dRN (f x) (f y) < 1 / real (Suc n))"
+                using hseq by fast
+              then show "sx n \<in> X \<and> (\<exists>y \<in> X. \<epsilon> \<le> d (sx n) y \<and> ?dRN (f (sx n)) (f y) < 1 / real (Suc n))"
+                unfolding sx_def
+                apply (rule someI_ex)
+                done
+            qed
+            have hsx: "\<forall>n. sx n \<in> X" using hsx_prop by presburger
+            have hsy_prop: "\<forall>n. sy n \<in> X \<and> \<epsilon> \<le> d (sx n) (sy n) \<and> ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)"
+            proof
+              fix n
+              have "\<exists>y. y \<in> X \<and> \<epsilon> \<le> d (sx n) y \<and> ?dRN (f (sx n)) (f y) < 1 / real (Suc n)"
+                using hsx_prop by metis
+              then show "sy n \<in> X \<and> \<epsilon> \<le> d (sx n) (sy n) \<and> ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)"
+                unfolding sy_def
+                apply (rule someI_ex)
+                done
+            qed
+            have hsy: "\<forall>n. sy n \<in> X" using hsy_prop by presburger
+            have hdxy: "\<forall>n. \<epsilon> \<le> d (sx n) (sy n)" using hsy_prop by presburger
+            have hfxy: "\<forall>n. ?dRN (f (sx n)) (f (sy n)) < 1 / real (Suc n)"
+              using hsy_prop by presburger
             text \<open>By sequential compactness, extract convergent subsequences.\<close>
             have hXcomplete: "top1_complete_metric_on X d"
               using compact_imp_complete hd hComp hTX_eq by blast
