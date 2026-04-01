@@ -27422,8 +27422,37 @@ proof -
           \<open>top1_support_on X TX (\<phi> i) \<subseteq> Ui i\<close> by blast
       qed
       text \<open>Pointwise bound: for each x ∈ X and j < N, |f0 x j - g x j| < δ.\<close>
+      have hphi_fin_nz: "\<forall>x\<in>X. finite {i \<in> {..<n}. \<phi> i x \<noteq> 0}"
+        by simp
+      have hphi_nz_sub: "\<forall>x\<in>X. {i \<in> {..<n}. \<phi> i x \<noteq> 0} \<subseteq> {..<n}"
+        by blast
+      have hg_val: "\<forall>x\<in>X. \<forall>j. g x j = (\<Sum>i<n. \<phi> i x * z i j)"
+        unfolding g_def by auto
       have hg_pointwise_coord: "\<forall>x\<in>X. \<forall>j<N. \<bar>f0 x j - g x j\<bar> < \<delta>"
-        sorry
+      proof (intro ballI allI impI)
+        fix x j assume hx: "x \<in> X" and hj: "j < N"
+        have hgxj: "g x j = (\<Sum>i<n. \<phi> i x * z i j)" using hg_val hx by blast
+        text \<open>f0 x j = Σᵢ φᵢ(x) * f0 x j since Σφᵢ = 1.\<close>
+        have hf0xj: "f0 x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * f0 x j)"
+        proof -
+          have "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) * f0 x j = f0 x j"
+            using hphi_sum1 hx sorry
+          then show ?thesis
+            sorry
+        qed
+        text \<open>Σᵢ<n φᵢ(x) * z i j = Σᵢ∈{φ≠0} φᵢ(x) * z i j (zero terms vanish).\<close>
+        have hgxj2: "g x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * z i j)"
+          using hgxj sorry
+        text \<open>Difference.\<close>
+        have hdiff: "f0 x j - g x j = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x * (f0 x j - z i j))"
+          using hf0xj hgxj2 hphi_fin_nz hx sorry
+        text \<open>Bound: each |f0 x j - z i j| < δ when φᵢ(x) ≠ 0.\<close>
+        have hbound: "\<forall>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<bar>f0 x j - z i j\<bar> < \<delta>"
+          sorry
+        text \<open>Weighted sum: |Σ aᵢ bᵢ| ≤ Σ aᵢ |bᵢ| < δ Σ aᵢ = δ.\<close>
+        show "\<bar>f0 x j - g x j\<bar> < \<delta>"
+          using hdiff hbound hphi_sum1 hx hphi_ge0 hphi_fin_nz hd_pos sorry
+      qed
       have hg_pointwise: "\<forall>x\<in>X. ?dRN (f0 x) (g x) < \<delta>"
         sorry
       have hg_near: "?rho f0 g < \<delta>"
