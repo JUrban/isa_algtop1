@@ -11980,7 +11980,41 @@ proof -
     show "f t \<in> ?I2" unfolding f_def top1_closed_interval_def using h1 h2 h3 h4 by simp
   qed
   have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f" sorry
-  have hf_surj: "f ` ?I = ?I2" sorry
+  have hf_surj: "f ` ?I = ?I2"
+  proof
+    show "f ` ?I \<subseteq> ?I2" using hf_range by blast
+    show "?I2 \<subseteq> f ` ?I"
+    proof
+      fix p assume hp: "p \<in> ?I2"
+      then have hx: "fst p \<in> ?I" and hy: "snd p \<in> ?I" by auto
+      have hclose: "\<forall>e>0. \<exists>t\<in>?I. \<bar>fst p - fst (f t)\<bar> < e \<and> \<bar>snd p - snd (f t)\<bar> < e"
+      proof (intro allI impI)
+        fix e :: real assume he: "e > 0"
+        obtain N :: nat where hN: "3 / 2^N < e"
+        proof -
+          obtain N where "3 / e < (2::real)^N" using real_arch_pow[of 2 "3/e"] by auto
+          then have "3 / 2^N < e" using he by (simp add: field_simps)
+          then show ?thesis using that by blast
+        qed
+        obtain t0 where ht0: "t0 \<in> ?I" and hclose_fst: "\<bar>fst p - fst (fn N t0)\<bar> \<le> 1 / 2^N"
+          and hclose_snd: "\<bar>snd p - snd (fn N t0)\<bar> \<le> 1 / 2^N"
+          using hfn_dense[THEN spec, of N, THEN bspec, OF hx, THEN bspec, OF hy] by metis
+        have hbd_fst: "\<bar>fst (fn N t0) - fst (f t0)\<bar> \<le> 2 / 2^N"
+          using hfst_bound ht0 unfolding f_def by simp
+        have "\<bar>fst p - fst (f t0)\<bar> \<le> 3 / 2^N"
+          using hclose_fst hbd_fst by linarith
+        have hbd_snd: "\<bar>snd (fn N t0) - snd (f t0)\<bar> \<le> 2 / 2^N"
+          using hsnd_bound ht0 unfolding f_def by simp
+        have "\<bar>snd p - snd (f t0)\<bar> \<le> 3 / 2^N"
+          using hclose_snd hbd_snd by linarith
+        show "\<exists>t\<in>?I. \<bar>fst p - fst (f t)\<bar> < e \<and> \<bar>snd p - snd (f t)\<bar> < e"
+          using ht0 \<open>\<bar>fst p - fst (f t0)\<bar> \<le> 3 / 2^N\<close> \<open>\<bar>snd p - snd (f t0)\<bar> \<le> 3 / 2^N\<close> hN by force
+      qed
+      text \<open>p is in the closure of f(I). Since f(I) is compact (continuous image
+        of compact I), it is closed. So p ∈ f(I).\<close>
+      then show "p \<in> f ` ?I" sorry
+    qed
+  qed
   have hf_exists: "\<exists>f. top1_continuous_map_on ?I ?TI ?I2 ?TI2 f \<and> f ` ?I = ?I2"
     using hf_cont hf_surj by blast
   show ?thesis using hf_exists by blast
