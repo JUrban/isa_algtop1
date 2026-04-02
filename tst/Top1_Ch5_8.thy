@@ -26933,8 +26933,6 @@ lemma Lemma_50_4_indexed:
   shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
-  text \<open>Follows from Lemma_50_4_indexed_ind which has the induction proof.
-    The connection fails due to Isabelle type variable instantiation issue.\<close>
   sorry
 
 text \<open>Δ(f) measures how far f deviates from being injective:
