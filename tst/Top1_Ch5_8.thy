@@ -27784,9 +27784,31 @@ proof -
                 apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
               ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" by presburger
             qed
-            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
-              text \<open>From hcoord_nz by sum grouping.\<close>
+            have hcoord_group: "\<And>j. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) =
+              (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j))"
               sorry
+            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
+            proof (intro allI impI)
+              fix j assume hj: "j < N"
+              have "(\<Sum>t\<in>T. c t * t j) = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y)) * t j)"
+                unfolding c_def by presburger
+              also have "... = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j))"
+              proof (rule sum.cong)
+                show "T = T" ..
+                fix t assume ht: "t \<in> T"
+                have "\<forall>i\<in>{i \<in> nz. z i = t}. z i j = t j" by blast
+                then have "(\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j) =
+                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * t j)" by simp
+                also have "... = (\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j"
+                  by (simp add: sum_distrib_right)
+                finally show "(\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j =
+                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j)" by auto
+              qed
+              also have "... = (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j)"
+                using hcoord_group by presburger
+              also have "... = 0" using hcoord_nz hj by presburger
+              finally show "(\<Sum>t\<in>T. c t * t j) = 0" by satx
+            qed
             text \<open>Step 2: Σ c(t) = 0.\<close>
             have hsum_nz: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = 0"
             proof -
@@ -27813,9 +27835,19 @@ proof -
                 done
               then show ?thesis using h_all by simp
             qed
+            have hnz_fin2: "finite nz" unfolding nz_def by simp
+            have hT_fin2: "finite T" unfolding T_def using hnz_fin2 by simp
+            have hfiber_fin: "\<forall>t\<in>T. finite {i \<in> nz. z i = t}"
+              using hnz_fin2 by (simp add: finite_subset)
+            have hfiber_disj: "\<forall>t1\<in>T. \<forall>t2\<in>T. t1 \<noteq> t2 \<longrightarrow> {i \<in> nz. z i = t1} \<inter> {i \<in> nz. z i = t2} = {}"
+              by blast
+            have hfiber_union: "(\<Union>t\<in>T. {i \<in> nz. z i = t}) = nz"
+              unfolding T_def by blast
+            have hsum_group: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = (\<Sum>t\<in>T. \<Sum>i\<in>{i\<in>nz. z i = t}. \<phi> i x - \<phi> i y)"
+              using sum.UNION_disjoint[OF hT_fin2 hfiber_fin hfiber_disj, of "\<lambda>i. \<phi> i x - \<phi> i y"]
+              hfiber_union by auto
             have hsum_zero: "(\<Sum>t\<in>T. c t) = 0"
-              text \<open>Follows from hsum_nz via sum grouping (sum.image_gen).\<close>
-              sorry
+              using hsum_group hsum_nz unfolding c_def by presburger
             text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
             have hT_sub: "T \<subseteq> z_map ` (a ` {..<n})" unfolding T_def z_def nz_def by auto
             have hnz_fin: "finite nz" unfolding nz_def by simp
