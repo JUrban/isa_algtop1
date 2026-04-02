@@ -26933,7 +26933,7 @@ lemma Lemma_50_4_indexed:
   shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
-  using Lemma_50_4_indexed_ind hN ha hd sorry
+  sorry
 
 text \<open>Δ(f) measures how far f deviates from being injective:
   Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
@@ -27633,8 +27633,10 @@ proof -
         and hz_inj: "inj_on z {..<n}"
       proof -
         have hN_pos: "N > 0" unfolding N_def by simp
-        note h = Lemma_50_4_indexed[OF hN_pos hUi_fin ha_Rpow hd2_pos]
-        show ?thesis sorry
+        obtain zz where hzz: "(\<forall>i<n. zz i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (zz i) < \<delta>/2)
+          \<and> top1_general_position_in_Rpow N (zz ` {..<n}) \<and> inj_on zz {..<n}"
+          using Lemma_50_4_indexed[OF hN_pos hUi_fin ha_Rpow hd2_pos] by blast
+        show ?thesis apply (rule that[of zz]) using hzz by auto
       qed
       have hz_Rpow: "\<forall>i<n. z i \<in> ?RN" using hz_props by presburger
       have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
