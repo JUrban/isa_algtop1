@@ -11979,7 +11979,17 @@ proof -
     have h4: "0 \<le> lim (\<lambda>n. snd (fn n t))" using convergent_lim_ge[OF hsnd_conv[THEN bspec, OF ht] hsnd_ge] by metis
     show "f t \<in> ?I2" unfolding f_def top1_closed_interval_def using h1 h2 h3 h4 by simp
   qed
-  have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f" sorry
+  text \<open>f is continuous: uniform limit of continuous functions.
+    This is the standard ε-δ argument using triangle inequality.\<close>
+  have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f"
+    text \<open>Proof sketch: for product topology, f is continuous iff each
+      coordinate is continuous. Each coordinate fst∘f = lim(fst∘fn)
+      is a uniform limit of continuous real functions (each fst∘fn
+      is continuous since fn is continuous I→I²). The uniform limit
+      of continuous functions is continuous (standard analysis).
+      Uses: hfn_cont (fn continuous), hfst_bound/hsnd_bound (uniform convergence),
+      and the ε-δ → continuous conversion (metric_epsilon_delta_imp_continuous).\<close>
+    sorry
   have hf_surj: "f ` ?I = ?I2"
   proof
     show "f ` ?I \<subseteq> ?I2" using hf_range by blast
