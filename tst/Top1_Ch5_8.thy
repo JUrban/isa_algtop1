@@ -27768,13 +27768,21 @@ proof -
               have hgxj_eq: "g x j = (\<Sum>i<n. \<phi> i x * z i j)" using hg_val hx by blast
               have hgyj_eq: "g y j = (\<Sum>i<n. \<phi> i y * z i j)" using hg_val hy by blast
               have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = g x j - g y j"
-                using hgxj_eq hgyj_eq sorry
+              proof -
+                have "\<And>i. (\<phi> i x - \<phi> i y) * z i j = \<phi> i x * z i j - \<phi> i y * z i j"
+                  by (simp add: algebra_simps)
+                then have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = (\<Sum>i<n. \<phi> i x * z i j - \<phi> i y * z i j)"
+                  by presburger
+                also have "... = (\<Sum>i<n. \<phi> i x * z i j) - (\<Sum>i<n. \<phi> i y * z i j)"
+                  by (rule sum_subtractf)
+                finally show ?thesis using hgxj_eq hgyj_eq by presburger
+              qed
               also have "... = 0" using hgxy by simp
               finally have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = 0" by satx
               moreover have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j)"
                 unfolding nz_def
                 apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
-              ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" sorry
+              ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" by presburger
             qed
             have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
               text \<open>From hcoord_nz by sum grouping.\<close>
