@@ -11804,6 +11804,35 @@ lemma geom_cauchy_converges:
   shows "convergent s"
   using geom_cauchy_Cauchy[OF assms] Cauchy_convergent by metis
 
+lemma geom_cauchy_lim_bound:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
+  shows "\<bar>s n - lim s\<bar> \<le> 2 / 2^n"
+proof -
+  have hconv: "convergent s" using geom_cauchy_converges[OF assms] by presburger
+  have hbound: "\<forall>n m. n \<le> m \<longrightarrow> \<bar>s n - s m\<bar> \<le> 2 / 2^n"
+    using geom_cauchy_bound[OF assms] by presburger
+  show ?thesis
+  proof (rule field_le_epsilon)
+    fix e :: real assume he: "e > 0"
+    obtain L where hL: "s \<longlonglongrightarrow> L" using hconv unfolding convergent_def by blast
+    have hLlim: "lim s = L" using limI hL by blast
+    obtain M where hM: "\<forall>m\<ge>M. \<bar>s m - L\<bar> < e"
+      using hL he unfolding lim_sequentially dist_real_def by presburger
+    define m where "m = max n M"
+    have hnm: "n \<le> m" unfolding m_def by simp
+    have hmM: "m \<ge> M" unfolding m_def by simp
+    have "\<bar>s n - lim s\<bar> \<le> \<bar>s n - s m\<bar> + \<bar>s m - lim s\<bar>" by linarith
+    also have "... \<le> 2 / 2^n + \<bar>s m - L\<bar>" using hbound hnm hLlim by simp
+    also have "... < 2 / 2^n + e"
+    proof -
+      have "\<bar>s m - L\<bar> < e" using hM hmM by simp
+      then show ?thesis by linarith
+    qed
+    finally show "\<bar>s n - lim s\<bar> \<le> 2 / 2^n + e" by linarith
+  qed
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
@@ -11872,14 +11901,38 @@ proof -
     remaining mathematical content.\<close>
   have hI_ne: "?I \<noteq> {}" unfolding top1_closed_interval_def by auto
   text \<open>The surjectivity argument is the key derivation.\<close>
+  text \<open>Coordinate-wise convergence.\<close>
+  have hfst_conv: "\<forall>t\<in>?I. convergent (\<lambda>n. fst (fn n t))"
+  proof (intro ballI)
+    fix t assume "t \<in> ?I"
+    show "convergent (\<lambda>n. fst (fn n t))"
+      using geom_cauchy_converges[of "\<lambda>n. fst (fn n t)"] hfn_cauchy \<open>t \<in> ?I\<close> by metis
+  qed
+  have hsnd_conv: "\<forall>t\<in>?I. convergent (\<lambda>n. snd (fn n t))"
+  proof (intro ballI)
+    fix t assume "t \<in> ?I"
+    show "convergent (\<lambda>n. snd (fn n t))"
+      using geom_cauchy_converges[of "\<lambda>n. snd (fn n t)"] hfn_cauchy \<open>t \<in> ?I\<close> by metis
+  qed
+  text \<open>Uniform bound on distance to limit.\<close>
+  have hfst_bound: "\<forall>t\<in>?I. \<forall>n. \<bar>fst (fn n t) - lim (\<lambda>m. fst (fn m t))\<bar> \<le> 2 / 2^n"
+  proof (intro ballI allI)
+    fix t n assume "t \<in> ?I"
+    show "\<bar>fst (fn n t) - lim (\<lambda>m. fst (fn m t))\<bar> \<le> 2 / 2^n"
+      using geom_cauchy_lim_bound[of "\<lambda>m. fst (fn m t)" n] hfn_cauchy \<open>t \<in> ?I\<close> by metis
+  qed
+  have hsnd_bound: "\<forall>t\<in>?I. \<forall>n. \<bar>snd (fn n t) - lim (\<lambda>m. snd (fn m t))\<bar> \<le> 2 / 2^n"
+  proof (intro ballI allI)
+    fix t n assume "t \<in> ?I"
+    show "\<bar>snd (fn n t) - lim (\<lambda>m. snd (fn m t))\<bar> \<le> 2 / 2^n"
+      using geom_cauchy_lim_bound[of "\<lambda>m. snd (fn m t)" n] hfn_cauchy \<open>t \<in> ?I\<close> by metis
+  qed
+  define f where "f t = (lim (\<lambda>n. fst (fn n t)), lim (\<lambda>n. snd (fn n t)))" for t
+  have hf_range: "\<forall>t\<in>?I. f t \<in> ?I2" sorry
+  have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f" sorry
+  have hf_surj: "f ` ?I = ?I2" sorry
   have hf_exists: "\<exists>f. top1_continuous_map_on ?I ?TI ?I2 ?TI2 f \<and> f ` ?I = ?I2"
-    text \<open>From completeness + Cauchy + density of images.
-      The limit f is continuous (uniform limit of continuous functions
-      in complete C(I,I²)). And f is surjective: for any point p in I²,
-      fn gets within 1/2ⁿ of p, and |fn - f| < 1/2ⁿ uniformly,
-      so |p - f(t)| < 2/2ⁿ for some t. Since f(I) is compact (hence closed),
-      p ∈ f(I).\<close>
-    sorry
+    using hf_cont hf_surj by blast
   show ?thesis using hf_exists by blast
 qed
 
