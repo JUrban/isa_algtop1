@@ -27786,7 +27786,8 @@ proof -
             qed
             have hcoord_group: "\<And>jj. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i jj) =
               (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i jj))"
-              text \<open>Same UNION_disjoint identity as hsum_group — fiber partition of nz.\<close>
+              text \<open>Same fiber partition as hsum_group via sum.UNION_disjoint.
+                Needs careful subst to avoid rewriting nz inside fibers.\<close>
               sorry
             have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
             proof (intro allI impI)
