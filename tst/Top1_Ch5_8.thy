@@ -27814,7 +27814,7 @@ proof -
               then show ?thesis using h_all by simp
             qed
             have hsum_zero: "(\<Sum>t\<in>T. c t) = 0"
-              text \<open>Follows from hsum_nz by grouping: Σ_T Σ_{fiber} = Σ_nz.\<close>
+              text \<open>Follows from hsum_nz via sum grouping (sum.image_gen).\<close>
               sorry
             text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
             have hT_sub: "T \<subseteq> z_map ` (a ` {..<n})" unfolding T_def z_def nz_def by auto
