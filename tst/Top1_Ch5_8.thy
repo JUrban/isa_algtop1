@@ -27930,7 +27930,27 @@ proof -
       define g where "g = (\<lambda>x. if x \<in> X then
         (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j) else undefined)"
       text \<open>Show g ∈ C, g ∈ U_ε, ρ(f0,g) < δ.\<close>
-      have hg_C: "g \<in> ?C" sorry
+      have hg_ext: "\<forall>x. x \<notin> X \<longrightarrow> g x = undefined"
+        unfolding g_def by simp
+      have hg_RN: "\<forall>x\<in>X. g x \<in> ?RN" sorry
+      have hg_C: "g \<in> ?C"
+        unfolding top1_continuous_maps_metric_on_def
+      proof (intro CollectI conjI IntI)
+        show "g \<in> top1_PiE X (\<lambda>_. ?RN)"
+          unfolding top1_PiE_def top1_Pi_def top1_extensional_def
+          using hg_ext hg_RN by blast
+        show "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) g"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> X"
+          show "g x \<in> ?RN" using hg_RN \<open>x \<in> X\<close> by blast
+        next
+          fix V assume "V \<in> top1_metric_topology_on ?RN ?dRN"
+          show "{x \<in> X. g x \<in> V} \<in> TX"
+            text \<open>g continuous: ε-δ argument using continuity of each φᵢ.\<close>
+            sorry
+        qed
+      qed
       text \<open>ρ(f0,g) < δ: for each x∈X, |g(x)-f0(x)| < δ in R^N.
         g(x) - f0(x) = Σφᵢ(x)(zᵢ-f0(xᵢ)) + Σφᵢ(x)(f0(xᵢ)-f0(x)).
         |zᵢ-f0(xᵢ)| < δ/2, |f0(xᵢ)-f0(x)| < δ/2 when φᵢ(x)≠0,
