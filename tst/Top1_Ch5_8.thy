@@ -26835,10 +26835,44 @@ lemma Lemma_50_4_indexed_ind:
         \<and> top1_general_position_in_Rpow N (z ` {..<k})
         \<and> inj_on z {..<k}"
 proof (induction k arbitrary: a)
-  case 0 show ?case sorry
+  case 0
+  have "top1_general_position_in_Rpow N ((\<lambda>_::nat. undefined :: nat \<Rightarrow> real) ` {..<0})"
+    unfolding top1_general_position_in_Rpow_def by auto
+  then show ?case by auto
 next
   case (Suc k)
-  show ?case sorry
+  show ?case
+  proof (cases "k = 0")
+    case True
+    text \<open>k=0, Suc k = 1. Need one point in GP.\<close>
+    show ?thesis sorry
+  next
+    case False
+    then have hk: "k > 0" by simp
+    have ha_k: "\<forall>i<k. a i \<in> top1_Rpow_set N" using Suc.prems by simp
+    obtain z0 where hz0: "\<forall>i<k. z0 i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z0 i) < \<delta>"
+      and hgp0: "top1_general_position_in_Rpow N (z0 ` {..<k})"
+      and hinj0: "inj_on z0 {..<k}"
+      using Suc.IH[OF ha_k Suc.prems(2)] by blast
+    have hfin0: "finite (z0 ` {..<k})" by simp
+    have hsub0: "z0 ` {..<k} \<subseteq> top1_Rpow_set N" using hz0 by auto
+    have hak: "a k \<in> top1_Rpow_set N" using Suc.prems by auto
+    obtain q where hq_RN: "q \<in> top1_Rpow_set N"
+      and hq_near: "top1_Rpow_sup_dist N (a k) q < \<delta>"
+      and hq_gp: "top1_general_position_in_Rpow N (insert q (z0 ` {..<k}))"
+      using general_position_extend[OF _ hfin0 hsub0 hgp0 hak Suc.prems(2)] sorry
+    define z where "z = (\<lambda>i. if i < k then z0 i else q)"
+    have himg: "z ` {..<Suc k} = insert q (z0 ` {..<k})"
+      unfolding z_def sorry
+    show ?thesis
+    proof (intro exI[of _ z] conjI)
+      show "\<forall>i<Suc k. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>"
+        unfolding z_def using hz0 hq_RN hq_near sorry
+      show "top1_general_position_in_Rpow N (z ` {..<Suc k})"
+        using hq_gp himg by presburger
+      show "inj_on z {..<Suc k}" sorry
+    qed
+  qed
 qed
 
 lemma Lemma_50_4_indexed:
