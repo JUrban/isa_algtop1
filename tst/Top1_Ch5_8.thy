@@ -26875,11 +26875,52 @@ next
       proof (intro allI impI conjI)
         fix i assume hi: "i < Suc k"
         show "z i \<in> top1_Rpow_set N" unfolding z_def using hz0 hq_RN hi by auto
-        show "top1_Rpow_sup_dist N (a i) (z i) < \<delta>" unfolding z_def using hz0 hq_near hi sorry
+        show "top1_Rpow_sup_dist N (a i) (z i) < \<delta>"
+        proof (cases "i < k")
+          case True then show ?thesis unfolding z_def using hz0 by simp
+        next
+          case False then have "i = k" using hi by simp
+          then show ?thesis unfolding z_def using hq_near by simp
+        qed
       qed
       show "top1_general_position_in_Rpow N (z ` {..<Suc k})"
         using hq_gp himg by presburger
-      show "inj_on z {..<Suc k}" sorry
+      show "inj_on z {..<Suc k}"
+      proof (rule inj_onI)
+        fix i j assume hi: "i \<in> {..<Suc k}" and hj: "j \<in> {..<Suc k}" and hzij: "z i = z j"
+        have hq_not_in: "q \<notin> z0 ` {..<k}" sorry
+        show "i = j"
+        proof (cases "i < k")
+          case True note hi_lt = this
+          show ?thesis
+          proof (cases "j < k")
+            case True
+            then show ?thesis using hi_lt hzij hinj0 unfolding z_def inj_on_def by simp
+          next
+            case False
+            then have "j = k" using hj by auto
+            have "z i = z0 i" using hi_lt unfolding z_def by simp
+            have "z j = q" using \<open>j = k\<close> unfolding z_def by presburger
+            then have "z0 i = q" using hzij \<open>z i = z0 i\<close> by presburger
+            then show ?thesis using hq_not_in hi_lt by blast
+          qed
+        next
+          case False
+          then have "i = k" using hi by fastforce
+          show ?thesis
+          proof (cases "j < k")
+            case True
+            text \<open>Symmetric: q = z0 j, contradiction.\<close>
+            have "z i = q" using \<open>i = k\<close> unfolding z_def by simp
+            have "z j = z0 j" using True unfolding z_def by simp
+            then have "q = z0 j" using hzij \<open>z i = q\<close> by presburger
+            then show ?thesis using hq_not_in True by blast
+          next
+            case False then have "j = k" using hj by auto
+            then show ?thesis using \<open>i = k\<close> by presburger
+          qed
+        qed
+      qed
     qed
   qed
 qed
