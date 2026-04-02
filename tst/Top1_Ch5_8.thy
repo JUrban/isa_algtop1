@@ -26830,7 +26830,7 @@ qed
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
 lemma Lemma_50_4_indexed_ind:
-  "(\<forall>i<(k::nat). a i \<in> top1_Rpow_set N) \<Longrightarrow> 0 < (\<delta>::real) \<Longrightarrow>
+  "N > 0 \<Longrightarrow> (\<forall>i<(k::nat). a i \<in> top1_Rpow_set N) \<Longrightarrow> 0 < (\<delta>::real) \<Longrightarrow>
     \<exists>z. (\<forall>i<k. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<k})
         \<and> inj_on z {..<k}"
@@ -26853,14 +26853,14 @@ next
     obtain z0 where hz0: "\<forall>i<k. z0 i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z0 i) < \<delta>"
       and hgp0: "top1_general_position_in_Rpow N (z0 ` {..<k})"
       and hinj0: "inj_on z0 {..<k}"
-      using Suc.IH[OF ha_k Suc.prems(2)] by blast
+      using Suc.IH[OF Suc.prems(1) ha_k Suc.prems(3)] by blast
     have hfin0: "finite (z0 ` {..<k})" by simp
     have hsub0: "z0 ` {..<k} \<subseteq> top1_Rpow_set N" using hz0 by auto
     have hak: "a k \<in> top1_Rpow_set N" using Suc.prems by auto
     obtain q where hq_RN: "q \<in> top1_Rpow_set N"
       and hq_near: "top1_Rpow_sup_dist N (a k) q < \<delta>"
       and hq_gp: "top1_general_position_in_Rpow N (insert q (z0 ` {..<k}))"
-      using general_position_extend[OF _ hfin0 hsub0 hgp0 hak Suc.prems(2)] sorry
+      using general_position_extend[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
     define z where "z = (\<lambda>i. if i < k then z0 i else q)"
     have himg: "z ` {..<Suc k} = insert q (z0 ` {..<k})"
       unfolding z_def sorry
@@ -26876,13 +26876,14 @@ next
 qed
 
 lemma Lemma_50_4_indexed:
+  assumes hN: "N > 0"
   assumes hn: "n > 0"
   assumes ha: "\<forall>i<n. a i \<in> top1_Rpow_set N"
   assumes hd: "0 < \<delta>"
   shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
-  using Lemma_50_4_indexed_ind ha hd sorry
+  using Lemma_50_4_indexed_ind hN ha hd sorry
 
 text \<open>Δ(f) measures how far f deviates from being injective:
   Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
@@ -27580,7 +27581,7 @@ proof -
       obtain z where hz_props: "\<forall>i<n. z i \<in> ?RN \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>/2"
         and hz_gp: "top1_general_position_in_Rpow N (z ` {..<n})"
         and hz_inj: "inj_on z {..<n}"
-        using Lemma_50_4_indexed[OF hUi_fin ha_Rpow hd2_pos] by metis
+        using Lemma_50_4_indexed[OF _ hUi_fin ha_Rpow hd2_pos] sorry
       have hz_Rpow: "\<forall>i<n. z i \<in> ?RN" using hz_props by presburger
       have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
         using hz_props unfolding a_def by presburger
