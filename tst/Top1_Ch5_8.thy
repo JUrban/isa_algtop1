@@ -26840,6 +26840,21 @@ qed
 
 text \<open>general_position_extend now includes q ∉ S in its conclusion.\<close>
 
+lemma metric_on_self_zero2:
+  assumes "top1_metric_on X d" and "x \<in> X"
+  shows "d x x = 0"
+  using assms unfolding top1_metric_on_def by fast
+
+lemma metric_on_sym2:
+  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X"
+  shows "d x y = d y x"
+  using assms unfolding top1_metric_on_def by blast
+
+lemma metric_on_triangle2:
+  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X" and "z \<in> X"
+  shows "d x z \<le> d x y + d y z"
+  using assms unfolding top1_metric_on_def by blast
+
 text \<open>Helper: construct finite open cover with controlled d-diam and f-diam
   from compact metric space + continuous map.\<close>
 lemma compact_metric_small_cover:
@@ -26853,7 +26868,123 @@ lemma compact_metric_small_cover:
     top1_open_covering_on X (top1_metric_topology_on X d) \<VV> \<and> finite \<VV> \<and>
     (\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < e) \<and>
     (\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d2 (f x) (f y) < e')"
-  sorry
+proof -
+  let ?TX = "top1_metric_topology_on X d"
+  have hTop: "is_topology_on X ?TX"
+    using top1_metric_topology_on_is_topology_on[OF hd] by blast
+  define r where "r = min (e/2) 1"
+  have hr: "0 < r" unfolding r_def using he by simp
+  text \<open>For each x∈X, define Vx = ball(x,r) ∩ {y∈X. d2(f x, f y) < e'/2}.\<close>
+  define Vx where "Vx x0 = top1_ball_on X d x0 r \<inter> {y \<in> X. d2 (f x0) (f y) < e'/2}" for x0
+  have hVx_open: "\<forall>x0\<in>X. Vx x0 \<in> ?TX"
+  proof (intro ballI)
+    fix x0 assume hx0: "x0 \<in> X"
+    have hball_open: "top1_ball_on X d x0 r \<in> ?TX"
+      using top1_ball_open_in_metric_topology[OF hd hx0 hr]
+      by presburger
+    have hfx0Y: "f x0 \<in> Y"
+      by (metis hx0 top1_continuous_map_on_def hf)
+    have hd2ball: "top1_ball_on Y d2 (f x0) (e'/2) \<in> top1_metric_topology_on Y d2"
+      using top1_ball_open_in_metric_topology[OF hd2 hfx0Y] hd'
+      by simp
+    have hpreimg: "{y \<in> X. f y \<in> top1_ball_on Y d2 (f x0) (e'/2)} \<in> ?TX"
+      using hf[unfolded top1_continuous_map_on_def] hd2ball
+      by blast
+    have hpreimg_eq: "{y \<in> X. d2 (f x0) (f y) < e'/2} = {y \<in> X. f y \<in> top1_ball_on Y d2 (f x0) (e'/2)}"
+      unfolding top1_ball_on_def
+      using hf top1_continuous_map_on_def[of X "top1_metric_topology_on X d" Y "top1_metric_topology_on Y d2" f]
+      by blast
+    have hpreimg2: "{y \<in> X. d2 (f x0) (f y) < e'/2} \<in> ?TX" using hpreimg hpreimg_eq
+      by presburger
+    show "Vx x0 \<in> ?TX" unfolding Vx_def
+      using topology_inter2[OF hTop hball_open hpreimg2]
+      by presburger
+  qed
+  have hVx_mem: "\<forall>x0\<in>X. x0 \<in> Vx x0"
+  proof (intro ballI)
+    fix x0 assume hx0: "x0 \<in> X"
+    have "d x0 x0 = 0" using metric_on_self_zero2[OF hd hx0] by presburger
+    then have h1: "x0 \<in> top1_ball_on X d x0 r" unfolding top1_ball_on_def using hx0 hr
+      by simp
+    have hfx0Y: "f x0 \<in> Y"
+      by (metis hx0 top1_continuous_map_on_def hf)
+    have "d2 (f x0) (f x0) = 0" using metric_on_self_zero2[OF hd2 hfx0Y] by presburger
+    then have h2: "x0 \<in> {y \<in> X. d2 (f x0) (f y) < e'/2}" using hx0 hd'
+      by simp
+    show "x0 \<in> Vx x0" unfolding Vx_def using h1 h2
+      by simp
+  qed
+  have hVx_diam: "\<forall>x0\<in>X. \<forall>x\<in>Vx x0. \<forall>y\<in>Vx x0. d x y < e"
+  proof (intro ballI)
+    fix x0 x y assume hx0X: "x0 \<in> X" and hxV: "x \<in> Vx x0" and hyV: "y \<in> Vx x0"
+    have hx0x: "d x0 x < r" using hxV unfolding Vx_def top1_ball_on_def
+      by blast
+    have hx0y: "d x0 y < r" using hyV unfolding Vx_def top1_ball_on_def
+      by blast
+    have hxX: "x \<in> X" using hxV unfolding Vx_def
+      by fast
+    have hyX: "y \<in> X" using hyV unfolding Vx_def
+      by blast
+    have "d x y \<le> d x x0 + d x0 y"
+      using metric_on_triangle2[OF hd hxX hx0X hyX]
+      by presburger
+    have "d x x0 = d x0 x" using metric_on_sym2[OF hd hxX hx0X]
+      by presburger
+    then have "d x y < r + r"
+      using \<open>d x y \<le> d x x0 + d x0 y\<close> hx0x hx0y by linarith
+    then show "d x y < e" unfolding r_def by linarith
+  qed
+  have hVx_fdiam: "\<forall>x0\<in>X. \<forall>x\<in>Vx x0. \<forall>y\<in>Vx x0. d2 (f x) (f y) < e'"
+  proof (intro ballI)
+    fix x0 x y assume hx0X2: "x0 \<in> X" and hxVx: "x \<in> Vx x0" and hyVx: "y \<in> Vx x0"
+    have hxX: "x \<in> X" using hxVx unfolding Vx_def
+      by blast
+    have hyX: "y \<in> X" using hyVx unfolding Vx_def
+      by blast
+    have hfx0x: "d2 (f x0) (f x) < e'/2" using hxVx unfolding Vx_def
+      by blast
+    have hfx0y: "d2 (f x0) (f y) < e'/2" using hyVx unfolding Vx_def
+      by blast
+    have hfxY: "f x \<in> Y"
+      by (metis hxX top1_continuous_map_on_def hf)
+    have hfyY: "f y \<in> Y"
+      by (metis top1_continuous_map_on_def hf hyX)
+    have hfx0Y: "f x0 \<in> Y"
+      by (metis top1_continuous_map_on_def hf \<open>x0 \<in> X\<close>)
+    have htri: "d2 (f x) (f y) \<le> d2 (f x) (f x0) + d2 (f x0) (f y)"
+      using metric_on_triangle2[OF hd2 hfxY hfx0Y hfyY]
+      by presburger
+    have hsym: "d2 (f x) (f x0) = d2 (f x0) (f x)"
+      using metric_on_sym2[OF hd2 hfxY hfx0Y]
+      by presburger
+    show "d2 (f x) (f y) < e'" using htri hsym hfx0x hfx0y
+      by linarith
+  qed
+  define \<AA> where "\<AA> = Vx ` X"
+  have hAA_open: "\<AA> \<subseteq> ?TX" using hVx_open unfolding \<AA>_def
+    by blast
+  have hAA_cover: "top1_open_covering_on X ?TX \<AA>"
+    unfolding top1_open_covering_on_def using hAA_open hVx_mem hTop unfolding \<AA>_def
+    by fast
+  text \<open>Compactness: finite subcover.\<close>
+  obtain \<FF> where hFF: "finite \<FF>" "\<FF> \<subseteq> \<AA>" "X \<subseteq> \<Union>\<FF>"
+    using hComp[unfolded top1_compact_on_def, THEN conjunct2, rule_format,
+      OF conjI[OF hAA_open]] hAA_cover unfolding top1_open_covering_on_def
+    by auto
+  have hFF_open: "\<FF> \<subseteq> ?TX" using hFF(2) hAA_open
+    by blast
+  have hFF_cover: "top1_open_covering_on X ?TX \<FF>"
+    unfolding top1_open_covering_on_def using hFF_open hFF(3) hTop
+    by presburger
+  have hFF_diam: "\<forall>V\<in>\<FF>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < e"
+    using hFF(2) hVx_diam unfolding \<AA>_def
+    by fast
+  have hFF_fdiam: "\<forall>V\<in>\<FF>. \<forall>x\<in>V. \<forall>y\<in>V. d2 (f x) (f y) < e'"
+    using hFF(2) hVx_fdiam unfolding \<AA>_def
+    by blast
+  show ?thesis using hFF_open hFF_cover hFF(1) hFF_diam hFF_fdiam
+    by blast
+qed
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
@@ -27243,6 +27374,34 @@ lemma continuous_maps_metric_on_eval:
   using assms unfolding top1_continuous_maps_metric_on_def top1_PiE_def top1_Pi_def
   by blast
 
+text \<open>Helper: enumerate a finite nonempty set of sets, filtering empty ones.\<close>
+lemma finite_cover_enumerate:
+  fixes \<BB> :: "'a set set"
+  assumes hfin: "finite \<BB>"
+  assumes hne: "X \<noteq> {}"
+  assumes hcover: "X \<subseteq> \<Union>\<BB>"
+  assumes hsub_X: "\<forall>B\<in>\<BB>. B \<subseteq> X"
+  shows "\<exists>n (Ui :: nat \<Rightarrow> 'a set). n > 0 \<and>
+    {B \<in> \<BB>. B \<noteq> {}} = Ui ` {..<n} \<and> inj_on Ui {..<n} \<and>
+    (\<forall>i<n. Ui i \<noteq> {}) \<and> (\<forall>i<n. Ui i \<in> \<BB>) \<and>
+    (\<forall>i<n. Ui i \<subseteq> X)"
+proof -
+  define \<CC> where "\<CC> = {B \<in> \<BB>. B \<noteq> {}}"
+  have hCC_fin: "finite \<CC>" unfolding \<CC>_def using hfin by simp
+  have hCC_ne: "\<CC> \<noteq> {}" unfolding \<CC>_def using hcover hne by blast
+  have hCC_allne: "\<forall>C\<in>\<CC>. C \<noteq> {}" unfolding \<CC>_def by simp
+  have hCC_sub: "\<CC> \<subseteq> \<BB>" unfolding \<CC>_def by simp
+  obtain n0 :: nat and Ui0 where himg: "\<CC> = Ui0 ` {i. i < n0}" and hinj: "inj_on Ui0 {i. i < n0}"
+    using finite_imp_nat_seg_image_inj_on[OF hCC_fin] by blast
+  have himg2: "\<CC> = Ui0 ` {..<n0}" using himg by blast
+  have hinj2: "inj_on Ui0 {..<n0}" using hinj by (metis hinj lessThan_def)
+  have hn0: "n0 > 0" using hCC_ne himg by fast
+  have hne2: "\<forall>i<n0. Ui0 i \<noteq> {}" using hCC_allne himg2 by blast
+  have hin_BB: "\<forall>i<n0. Ui0 i \<in> \<BB>" using hCC_sub himg2 by blast
+  have hin_X: "\<forall>i<n0. Ui0 i \<subseteq> X" using hin_BB hsub_X by blast
+  show ?thesis unfolding \<CC>_def[symmetric] using hn0 himg2 hinj2 hne2 hin_BB hin_X by blast
+qed
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
@@ -27628,12 +27787,17 @@ proof -
         For δ/2 > 0, ∃r>0. d(x,y)<r → dRN(f0 x, f0 y) < δ/2.
         Take r' = min(r, ε/2)/2. Cover X by balls of radius r'.
         Each ball has d-diam < ε/2 and f-diam < δ/2.\<close>
+      have hRN_met: "top1_metric_on ?RN ?dRN" by (rule top1_Rpow_sq_metric_is_metric)
+      have he2: "0 < \<epsilon>/2" using he by simp
+      have hd2_half: "0 < \<delta>/2" using hd_pos by simp
       obtain \<VV> where hVV_open: "\<VV> \<subseteq> TX" and hVV_cover: "top1_open_covering_on X TX \<VV>"
         and hVV_fin: "finite \<VV>"
         and hVV_diam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < \<epsilon>/2"
         and hVV_fdiam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. ?dRN (f0 x) (f0 y) < \<delta>/2"
         text \<open>From compact_metric_small_cover with ε/2, δ/2.\<close>
-        sorry
+        using compact_metric_small_cover[OF hd hComp[unfolded hTX_eq] hXne hRN_met
+          hf0_cont[unfolded hTX_eq] he2 hd2_half]
+        unfolding hTX_eq[symmetric] by auto
       text \<open>Step 1b: Apply dim_le to get refinement with order ≤ m+1.\<close>
       obtain \<BB> where hBB_cover: "top1_open_covering_on X TX \<BB>"
         and hBB_refines: "top1_refines \<BB> \<VV>"
