@@ -27784,8 +27784,8 @@ proof -
                 apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
               ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" by presburger
             qed
-            have hcoord_group: "\<And>j. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) =
-              (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j))"
+            have hcoord_group: "\<And>jj. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i jj) =
+              (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i jj))"
               sorry
             have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
             proof (intro allI impI)
