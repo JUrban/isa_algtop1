@@ -27757,6 +27757,26 @@ proof -
               Sum of coefficients = Σφᵢ(x) - Σφᵢ(y) = 1 - 1 = 0.
               Σ a(z)*z(j) = Σ[φᵢ(x)-φᵢ(y)]z(i)(j) = g(x)(j) - g(y)(j) = 0.\<close>
             text \<open>By GP: all a(z) = 0, i.e., φᵢ(x) = φᵢ(y) for i ∈ nz.\<close>
+            text \<open>Apply GP with grouped coefficients on T = z ` nz.\<close>
+            define T where "T = z ` nz"
+            define c where "c = (\<lambda>t. \<Sum>i\<in>{i\<in>nz. z i = t}. \<phi> i x - \<phi> i y)"
+            text \<open>Step 1: Σ c(t) * t(j) = 0 for j < N.\<close>
+            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0" sorry
+            text \<open>Step 2: Σ c(t) = 0.\<close>
+            have hsum_zero: "(\<Sum>t\<in>T. c t) = 0" sorry
+            text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
+            have hT_sub: "T \<subseteq> z_map ` (a ` {..<n})" unfolding T_def z_def nz_def by auto
+            have hnz_fin: "finite nz" unfolding nz_def by simp
+            have hT_card: "card T \<le> Suc N"
+            proof -
+              have "card T \<le> card nz" unfolding T_def using card_image_le[OF hnz_fin] sorry
+              then show ?thesis using hcard_nz by linarith
+            qed
+            text \<open>Step 4: GP gives c(t) = 0 for all t ∈ T.\<close>
+            have hc_zero: "\<forall>t\<in>T. c t = 0"
+              using hz_gp hT_sub hT_card hcoord_zero hsum_zero
+              unfolding top1_general_position_in_Rpow_def sorry
+            text \<open>Step 5: c(z i) = 0 AND z injective on {..<n} → φ i x = φ i y.\<close>
             have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0" sorry
             then show "\<forall>i<n. \<phi> i x = \<phi> i y" unfolding nz_def by simp
           qed
