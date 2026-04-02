@@ -27872,8 +27872,20 @@ proof -
                 using hgp_set hT_card unfolding top1_general_position_in_Rpow_def by auto
               then show ?thesis using hcoord_zero hsum_zero by fastforce
             qed
-            text \<open>Step 5: c(z i) = 0 AND z injective on {..<n} → φ i x = φ i y.\<close>
-            have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0" sorry
+            text \<open>Step 5: c(z i) = 0 → φ i x = φ i y.
+              For each i ∈ nz, c(z i) = Σ_{j: z j=z i} (φ j x - φ j y) = 0.
+              If the fiber {j∈nz: z j=z i} = {i} (z inj on nz), then φ i x - φ i y = 0.
+              Injectivity: z j = z_map(a j) = z_map(f0(xi j)). If a injective, z injective.\<close>
+            have hz_inj_nz: "inj_on z nz" sorry
+            have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0"
+            proof (intro ballI)
+              fix i assume hi: "i \<in> nz"
+              have "c (z i) = 0" using hc_zero hi unfolding T_def by auto
+              then have "(\<Sum>j\<in>{j\<in>nz. z j = z i}. \<phi> j x - \<phi> j y) = 0" unfolding c_def by simp
+              moreover have "{j\<in>nz. z j = z i} = {i}" using hz_inj_nz hi
+                unfolding inj_on_def by blast
+              ultimately show "\<phi> i x - \<phi> i y = 0" by force
+            qed
             then show "\<forall>i<n. \<phi> i x = \<phi> i y" unfolding nz_def by simp
           qed
           have "\<exists>i\<in>{..<n}. \<phi> i x > 0"
