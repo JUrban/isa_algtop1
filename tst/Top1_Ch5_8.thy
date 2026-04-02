@@ -26981,6 +26981,7 @@ next
 qed
 
 lemma Lemma_50_4_indexed:
+  fixes N :: nat and n :: nat and a :: "nat \<Rightarrow> nat \<Rightarrow> real" and \<delta> :: real
   assumes hN: "N > 0"
   assumes hn: "n > 0"
   assumes ha: "\<forall>i<n. a i \<in> top1_Rpow_set N"
@@ -26988,9 +26989,7 @@ lemma Lemma_50_4_indexed:
   shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
-proof -
-  show ?thesis sorry
-qed
+  using Lemma_50_4_indexed_ind[of N n a \<delta>] hN ha hd by simp
 
 text \<open>Δ(f) measures how far f deviates from being injective:
   Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
