@@ -11728,6 +11728,25 @@ qed
 
 section \<open>*\<S>44 A Space-Filling Curve\<close>
 
+text \<open>Helper: geometric series Cauchy bound for real sequences.\<close>
+lemma geom_cauchy_bound:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
+  shows "\<forall>n m. n \<le> m \<longrightarrow> \<bar>s n - s m\<bar> \<le> 2 / 2^n"
+  sorry
+
+lemma geom_cauchy_Cauchy:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
+  shows "Cauchy s"
+  sorry
+
+lemma geom_cauchy_converges:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
+  shows "convergent s"
+  using geom_cauchy_Cauchy[OF assms] Cauchy_convergent by metis
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
