@@ -12295,7 +12295,14 @@ proof -
       qed
       text \<open>p is in the closure of f(I). Since f(I) is compact (continuous image
         of compact I), it is closed. So p ∈ f(I).\<close>
-      then show "p \<in> f ` ?I" sorry
+      text \<open>f(I) is compact image of compact set, hence compact, hence closed in Hausdorff I².
+        p is in the closure of f(I). Closed → p ∈ f(I).\<close>
+      have hI_compact: "top1_compact_on ?I ?TI"
+        sorry
+      have hfI_compact: "top1_compact_on (f ` ?I) (subspace_topology (?I \<times> ?I) ?TI2 (f ` ?I))"
+        sorry
+      then show "p \<in> f ` ?I"
+        using hclose sorry
     qed
   qed
   have hf_exists: "\<exists>f. top1_continuous_map_on ?I ?TI ?I2 ?TI2 f \<and> f ` ?I = ?I2"
