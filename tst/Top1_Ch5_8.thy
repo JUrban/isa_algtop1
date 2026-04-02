@@ -26857,7 +26857,7 @@ next
   show ?case
   proof (cases "k = 0")
     case True
-    text \<open>k=0, Suc k=1. Take z 0 = a 0. GP of singleton trivial, dist=0<δ.\<close>
+    text \<open>k=0, Suc k=1. Singleton GP trivially.\<close>
     show ?thesis sorry
   next
     case False
