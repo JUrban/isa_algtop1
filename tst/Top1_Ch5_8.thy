@@ -26834,10 +26834,23 @@ lemma general_position_extend_notin:
   assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
   shows "\<exists>q \<in> top1_Rpow_set N.
     top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S) \<and> q \<notin> S"
-  text \<open>Follows from the proof of general_position_extend. The q is chosen
-    from ball(p,ε) \ ⋃bad_sets. Since S ⊆ ⋃bad_sets (each s is in its own
-    affine hull ⊆ some hyperplane ∈ bad_sets), q ∉ S automatically.\<close>
-  sorry
+proof -
+  obtain q where hq: "q \<in> top1_Rpow_set N"
+    "top1_Rpow_sup_dist N p q < \<epsilon>"
+    "top1_general_position_in_Rpow N (insert q S)"
+    using general_position_extend[OF hN hFin hS hGP hp heps] by blast
+  text \<open>If q ∉ S, done. If q ∈ S, apply again with smaller ε to get q' ≠ q.\<close>
+  show ?thesis
+  proof (cases "q \<in> S")
+    case False then show ?thesis using hq by blast
+  next
+    case True
+    text \<open>q ∈ S. Apply extend again with ε/2 to get q2 with GP(insert q2 S).
+      Keep trying with ε/2^k until we get q_k ∉ S. Since S is finite and
+      each ball contains infinitely many valid points, this must succeed.\<close>
+    show ?thesis sorry
+  qed
+qed
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
