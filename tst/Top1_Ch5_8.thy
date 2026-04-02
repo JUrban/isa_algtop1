@@ -27932,7 +27932,36 @@ proof -
       text \<open>Show g ∈ C, g ∈ U_ε, ρ(f0,g) < δ.\<close>
       have hg_ext: "\<forall>x. x \<notin> X \<longrightarrow> g x = undefined"
         unfolding g_def by simp
-      have hg_RN: "\<forall>x\<in>X. g x \<in> ?RN" sorry
+      have hg_RN: "\<forall>x\<in>X. g x \<in> ?RN"
+      proof (intro ballI)
+        fix x assume hxX: "x \<in> X"
+        have hz_ext: "\<forall>i<n. \<forall>j. j \<ge> N \<longrightarrow> z i j = undefined"
+          using hz_Rpow unfolding top1_Rpow_set_def top1_PiE_def top1_extensional_def
+          by simp
+        have hphi_supp_sum: "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) = 1"
+          using hphi_pou hxX unfolding top1_partition_of_unity_dominated_family_on_def
+          by blast
+        have hphi_full_sum: "(\<Sum>i<n. \<phi> i x) = 1"
+        proof -
+          have "(\<Sum>i<n. \<phi> i x) = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x)"
+            by (rule sum.mono_neutral_right) auto
+          then show ?thesis using hphi_supp_sum by metis
+        qed
+        have hg_j_ext: "\<forall>j\<ge>N. g x j = undefined"
+        proof (intro allI impI)
+          fix j assume hj: "j \<ge> N"
+          have "g x j = (\<Sum>i<n. \<phi> i x * z i j)" unfolding g_def using hxX by presburger
+          also have "... = (\<Sum>i<n. \<phi> i x * undefined)"
+            using hz_ext hj by simp
+          also have "... = (\<Sum>i<n. \<phi> i x) * undefined"
+            by (metis sum_distrib_right)
+          also have "... = 1 * undefined" using hphi_full_sum by metis
+          finally show "g x j = undefined" by linarith
+        qed
+        show "g x \<in> ?RN"
+          unfolding top1_Rpow_set_def top1_PiE_def top1_Pi_def top1_extensional_def
+          using hxX hg_j_ext by simp
+      qed
       have hg_C: "g \<in> ?C"
         unfolding top1_continuous_maps_metric_on_def
       proof (intro CollectI conjI IntI)
