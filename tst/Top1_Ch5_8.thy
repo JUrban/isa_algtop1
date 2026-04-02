@@ -12183,7 +12183,56 @@ proof -
         qed
       qed
       text \<open>snd∘f has continuous preimages (same argument).\<close>
-      have hf_snd_preimage: "\<forall>U\<in>?TI. {t \<in> ?I. snd (f t) \<in> U} \<in> ?TI" sorry
+      have hf_snd_preimage: "\<forall>U\<in>?TI. {t \<in> ?I. snd (f t) \<in> U} \<in> ?TI"
+      proof (intro ballI)
+        fix U assume hU: "U \<in> ?TI"
+        show "{t \<in> ?I. snd (f t) \<in> U} \<in> ?TI"
+        proof (rule top1_open_of_local_subsets[OF hTI_top])
+          show "{t \<in> ?I. snd (f t) \<in> U} \<subseteq> ?I" by blast
+          show "\<forall>t0\<in>{t \<in> ?I. snd (f t) \<in> U}. \<exists>W\<in>?TI. t0 \<in> W \<and> W \<subseteq> {t \<in> ?I. snd (f t) \<in> U}"
+          proof (intro ballI)
+            fix t0 assume ht0: "t0 \<in> {t \<in> ?I. snd (f t) \<in> U}"
+            have ht0I: "t0 \<in> ?I" and hft0U: "snd (f t0) \<in> U" using ht0 by simp_all
+            obtain \<epsilon>1 where heps1: "\<epsilon>1 > 0" and hball1: "{s \<in> ?I. \<bar>s - snd (f t0)\<bar> < \<epsilon>1} \<subseteq> U"
+              using interval_open_contains_eps_ball[OF hU hft0U] by blast
+            define \<epsilon> where "\<epsilon> = \<epsilon>1 / 3"
+            have heps: "\<epsilon> > 0" using heps1 \<epsilon>_def by linarith
+            obtain N :: nat where hN: "2 / 2^N < \<epsilon>"
+            proof -
+              obtain NN where "2 / \<epsilon> < (2::real)^NN" using real_arch_pow[of 2 "2/\<epsilon>"] by auto
+              then show ?thesis using that heps by (simp add: field_simps)
+            qed
+            have hfnN_close: "\<bar>snd (fn N t0) - snd (f t0)\<bar> \<le> 2 / 2^N"
+              using hsnd_bound ht0I unfolding f_def by simp
+            define V2 where "V2 = {s \<in> ?I. \<bar>s - snd (fn N t0)\<bar> < \<epsilon>}"
+            have hV2_open: "V2 \<in> ?TI" unfolding V2_def using interval_eps_ball_open heps by presburger
+            have ht0_V2: "t0 \<in> {t \<in> ?I. snd (fn N t) \<in> V2}"
+            proof -
+              have "snd (fn N t0) \<in> V2" unfolding V2_def
+                using hfn_range[THEN spec, of N, THEN bspec, OF ht0I] heps by auto
+              then show ?thesis using ht0I by simp
+            qed
+            have hW0: "{t \<in> ?I. snd (fn N t) \<in> V2} \<in> ?TI" using hfn_snd_preimage hV2_open by blast
+            have hW0_sub: "{t \<in> ?I. snd (fn N t) \<in> V2} \<subseteq> {t \<in> ?I. snd (f t) \<in> U}"
+            proof
+              fix t assume ht: "t \<in> {t \<in> ?I. snd (fn N t) \<in> V2}"
+              have htI: "t \<in> ?I" using ht by simp
+              have h1: "\<bar>snd (fn N t) - snd (fn N t0)\<bar> < \<epsilon>" using ht unfolding V2_def by simp
+              have h2: "\<bar>snd (fn N t) - snd (f t)\<bar> \<le> 2 / 2^N" using hsnd_bound htI unfolding f_def by simp
+              have "\<bar>snd (f t) - snd (f t0)\<bar> \<le> \<bar>snd (f t) - snd (fn N t)\<bar> + \<bar>snd (fn N t) - snd (fn N t0)\<bar> + \<bar>snd (fn N t0) - snd (f t0)\<bar>"
+                by linarith
+              also have "... < 2/2^N + \<epsilon> + 2/2^N" using h1 h2 hfnN_close by linarith
+              also have "... < 3 * \<epsilon>" using hN by linarith
+              also have "... = \<epsilon>1" unfolding \<epsilon>_def by linarith
+              finally have "\<bar>snd (f t) - snd (f t0)\<bar> < \<epsilon>1" by presburger
+              have "snd (f t) \<in> ?I" using hf_range htI by auto
+              then have "snd (f t) \<in> {s \<in> ?I. \<bar>s - snd (f t0)\<bar> < \<epsilon>1}" using \<open>\<bar>snd (f t) - snd (f t0)\<bar> < \<epsilon>1\<close> by blast
+              then show "t \<in> {t \<in> ?I. snd (f t) \<in> U}" using hball1 htI by blast
+            qed
+            show "\<exists>W\<in>?TI. t0 \<in> W \<and> W \<subseteq> {t \<in> ?I. snd (f t) \<in> U}" using hW0 ht0_V2 hW0_sub by meson
+          qed
+        qed
+      qed
       text \<open>Product continuity from coordinate continuity.\<close>
       show "\<forall>V\<in>?TI2. {t \<in> ?I. f t \<in> V} \<in> ?TI"
       proof (intro ballI)
