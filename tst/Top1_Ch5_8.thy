@@ -27496,8 +27496,17 @@ lemma interval_continuous_imp_abs_epsilon_delta:
 proof -
   define V where "V = {t \<in> top1_closed_interval 0 1. \<bar>\<phi> x0 - t\<bar> < \<epsilon>}"
   have hV_open: "V \<in> top1_closed_interval_topology 0 1"
-    text \<open>V = (φ x₀ - ε, φ x₀ + ε) ∩ [0,1], open in subspace topology.\<close>
-    sorry
+  proof -
+    define U where "U = open_interval (\<phi> x0 - \<epsilon>) (\<phi> x0 + \<epsilon>)"
+    have hab: "\<phi> x0 - \<epsilon> < \<phi> x0 + \<epsilon>" using heps by linarith
+    have hU_open: "U \<in> order_topology_on_UNIV"
+      unfolding U_def using open_interval_in_order_topology[OF hab] by presburger
+    have hV_eq: "V = top1_closed_interval 0 1 \<inter> U"
+      unfolding V_def U_def open_interval_def top1_closed_interval_def
+      using add_diff_cancel_left' by auto
+    show ?thesis unfolding top1_closed_interval_topology_def subspace_topology_def
+      using hU_open hV_eq by blast
+  qed
   have hx0_V: "\<phi> x0 \<in> V" unfolding V_def
     using hcont hx0 heps unfolding top1_continuous_map_on_def top1_closed_interval_def by auto
   have hpreimage: "{x \<in> X. \<phi> x \<in> V} \<in> top1_metric_topology_on X dX"
