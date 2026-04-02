@@ -27487,8 +27487,18 @@ proof -
         hUi_diam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. d x y < \<epsilon>/2" and
         hUi_fdiam: "\<forall>i<n. \<forall>x\<in>Ui i. \<forall>y\<in>Ui i. ?dRN (f0 x) (f0 y) < \<delta>/2" and
         hUi_order: "top1_cover_order_le_on X (Ui ` {..<n}) m" and
-        hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X"
+        hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X" and
+        hUi_inj: "inj_on Ui {..<n}"
         sorry
+      have hUi_idx_order: "\<forall>x\<in>X. card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> X"
+        have "card {i \<in> {..<n}. x \<in> Ui i} = card (Ui ` {i \<in> {..<n}. x \<in> Ui i})"
+          using card_image[OF inj_on_subset[OF hUi_inj]] sorry
+        also have "Ui ` {i \<in> {..<n}. x \<in> Ui i} = {U \<in> Ui ` {..<n}. x \<in> U}" sorry
+        also have "card ... \<le> Suc m" using hUi_order hx unfolding top1_cover_order_le_on_def sorry
+        finally show "card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m" sorry
+      qed
       text \<open>Step 2: Partition of unity.\<close>
       have hPara: "top1_paracompact_on X TX" using Theorem_41_4 hMet by blast
       have hUi_cov: "top1_open_covering_on X TX (Ui ` {..<n})"
@@ -27720,8 +27730,19 @@ proof -
               also have "... \<le> card {i \<in> {..<n}. \<phi> i x \<noteq> 0} + card {i \<in> {..<n}. \<phi> i y \<noteq> 0}"
                 by (rule card_Un_le)
               also have "... \<le> Suc m + Suc m"
-                using hUi_order hx hy unfolding top1_cover_order_le_on_def
-                sorry
+              proof -
+                have "card {i \<in> {..<n}. \<phi> i x \<noteq> 0} \<le> card {i \<in> {..<n}. x \<in> Ui i}"
+                  apply (rule card_mono) apply simp
+                  using hphi_supp hx by blast
+                also have "... \<le> Suc m" using hUi_idx_order hx by blast
+                finally have hx_bound: "card {i \<in> {..<n}. \<phi> i x \<noteq> 0} \<le> Suc m" by satx
+                have "card {i \<in> {..<n}. \<phi> i y \<noteq> 0} \<le> card {i \<in> {..<n}. y \<in> Ui i}"
+                  apply (rule card_mono) apply simp
+                  using hphi_supp hy by blast
+                also have "... \<le> Suc m" using hUi_idx_order hy by blast
+                finally have hy_bound: "card {i \<in> {..<n}. \<phi> i y \<noteq> 0} \<le> Suc m" by satx
+                show ?thesis using hx_bound hy_bound by presburger
+              qed
               also have "... = Suc N" unfolding N_def by presburger
               finally show ?thesis by linarith
             qed
