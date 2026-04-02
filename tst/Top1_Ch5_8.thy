@@ -27588,7 +27588,7 @@ proof -
           using card_mono[OF hfin hsub] hcard by presburger
       qed
       text \<open>Enumerate finite BB' as Ui 0, ..., Ui (n-1).\<close>
-      obtain n and Ui :: "nat \<Rightarrow> 'a set" where
+      obtain n :: nat and Ui :: "nat \<Rightarrow> 'a set" where
         hUi_fin: "n > 0" and
         hUi_open: "\<forall>i<n. Ui i \<in> TX" and
         hUi_cover: "X \<subseteq> (\<Union>i<n. Ui i)" and
