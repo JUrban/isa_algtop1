@@ -27452,6 +27452,40 @@ next
   qed
 qed
 
+text \<open>Continuous metric map implies ε-δ continuity (converse direction).\<close>
+lemma metric_continuous_imp_epsilon_delta:
+  assumes hdX: "top1_metric_on X dX"
+  assumes hdY: "top1_metric_on Y dY"
+  assumes hcont: "top1_continuous_map_on X (top1_metric_topology_on X dX) Y (top1_metric_topology_on Y dY) f"
+  assumes hx0: "x0 \<in> X" and heps: "\<epsilon> > (0::real)"
+  shows "\<exists>\<delta>>0. \<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> dY (f x0) (f y) < \<epsilon>"
+proof -
+  have hfx0Y: "f x0 \<in> Y" using hcont hx0 unfolding top1_continuous_map_on_def by simp
+  have hball_open: "top1_ball_on Y dY (f x0) \<epsilon> \<in> top1_metric_topology_on Y dY"
+    using top1_ball_open_in_metric_topology[OF hdY hfx0Y heps] by metis
+  have hpreimage: "{x \<in> X. f x \<in> top1_ball_on Y dY (f x0) \<epsilon>} \<in> top1_metric_topology_on X dX"
+    using hcont hball_open unfolding top1_continuous_map_on_def by simp
+  have hx0_mem: "x0 \<in> {x \<in> X. f x \<in> top1_ball_on Y dY (f x0) \<epsilon>}"
+  proof -
+    have "dY (f x0) (f x0) = 0" using metric_on_self_zero[OF hdY hfx0Y] by presburger
+    then have "dY (f x0) (f x0) < \<epsilon>" using heps by linarith
+    then show ?thesis unfolding top1_ball_on_def using hx0 hfx0Y by blast
+  qed
+  obtain \<delta> where hdel_pos: "\<delta> > 0" and hball_sub: "top1_ball_on X dX x0 \<delta> \<subseteq> {x \<in> X. f x \<in> top1_ball_on Y dY (f x0) \<epsilon>}"
+    using top1_metric_open_contains_ball[OF hdX hpreimage hx0_mem] by metis
+  show ?thesis
+  proof (intro exI[of _ \<delta>] conjI)
+    show "\<delta> > 0" using hdel_pos by simp
+    show "\<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> dY (f x0) (f y) < \<epsilon>"
+    proof (intro ballI impI)
+      fix y assume hyX: "y \<in> X" and hdist: "dX x0 y < \<delta>"
+      have "y \<in> top1_ball_on X dX x0 \<delta>" unfolding top1_ball_on_def using hyX hdist by blast
+      then have "y \<in> {x \<in> X. f x \<in> top1_ball_on Y dY (f x0) \<epsilon>}" using hball_sub by blast
+      then show "dY (f x0) (f y) < \<epsilon>" unfolding top1_ball_on_def by simp
+    qed
+  qed
+qed
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
