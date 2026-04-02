@@ -26989,13 +26989,7 @@ lemma Lemma_50_4_indexed:
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
 proof -
-  have ind: "N > 0 \<longrightarrow> (\<forall>i<n. a i \<in> top1_Rpow_set N) \<longrightarrow> 0 < \<delta> \<longrightarrow>
-    (\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
-        \<and> top1_general_position_in_Rpow N (z ` {..<n})
-        \<and> inj_on z {..<n})"
-    text \<open>From Lemma_50_4_indexed_ind which has the induction proof.\<close>
-    sorry
-  then show ?thesis using hN ha hd by blast
+  show ?thesis sorry
 qed
 
 text \<open>Δ(f) measures how far f deviates from being injective:
