@@ -26863,11 +26863,20 @@ next
       using general_position_extend[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
     define z where "z = (\<lambda>i. if i < k then z0 i else q)"
     have himg: "z ` {..<Suc k} = insert q (z0 ` {..<k})"
-      unfolding z_def sorry
+    proof
+      show "z ` {..<Suc k} \<subseteq> insert q (z0 ` {..<k})"
+        unfolding z_def by auto
+      show "insert q (z0 ` {..<k}) \<subseteq> z ` {..<Suc k}"
+        unfolding z_def by force
+    qed
     show ?thesis
     proof (intro exI[of _ z] conjI)
       show "\<forall>i<Suc k. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>"
-        unfolding z_def using hz0 hq_RN hq_near sorry
+      proof (intro allI impI conjI)
+        fix i assume hi: "i < Suc k"
+        show "z i \<in> top1_Rpow_set N" unfolding z_def using hz0 hq_RN hi by auto
+        show "top1_Rpow_sup_dist N (a i) (z i) < \<delta>" unfolding z_def using hz0 hq_near hi sorry
+      qed
       show "top1_general_position_in_Rpow N (z ` {..<Suc k})"
         using hq_gp himg by presburger
       show "inj_on z {..<Suc k}" sorry
