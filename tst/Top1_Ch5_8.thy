@@ -12185,7 +12185,33 @@ proof -
       text \<open>snd∘f has continuous preimages (same argument).\<close>
       have hf_snd_preimage: "\<forall>U\<in>?TI. {t \<in> ?I. snd (f t) \<in> U} \<in> ?TI" sorry
       text \<open>Product continuity from coordinate continuity.\<close>
-      show "\<forall>V\<in>?TI2. {t \<in> ?I. f t \<in> V} \<in> ?TI" sorry
+      show "\<forall>V\<in>?TI2. {t \<in> ?I. f t \<in> V} \<in> ?TI"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> ?TI2"
+        show "{t \<in> ?I. f t \<in> V} \<in> ?TI"
+        proof (rule top1_open_of_local_subsets[OF hTI_top])
+          show "{t \<in> ?I. f t \<in> V} \<subseteq> ?I" by blast
+          show "\<forall>t0\<in>{t \<in> ?I. f t \<in> V}. \<exists>W\<in>?TI. t0 \<in> W \<and> W \<subseteq> {t \<in> ?I. f t \<in> V}"
+          proof (intro ballI)
+            fix t0 assume ht0: "t0 \<in> {t \<in> ?I. f t \<in> V}"
+            have ht0I: "t0 \<in> ?I" and hft0V: "f t0 \<in> V" using ht0 by simp_all
+            obtain U1 U2 where hU1: "U1 \<in> ?TI" and hU2: "U2 \<in> ?TI"
+              and hft0_rect: "f t0 \<in> U1 \<times> U2" and hrect_V: "U1 \<times> U2 \<subseteq> V"
+              using hV hft0V top1_product_open_contains_rect by blast
+            have hft0_U1: "fst (f t0) \<in> U1" using hft0_rect by auto
+            have hft0_U2: "snd (f t0) \<in> U2" using hft0_rect by auto
+            have hW1: "{t \<in> ?I. fst (f t) \<in> U1} \<in> ?TI" using hf_fst_preimage hU1 by blast
+            have hW2: "{t \<in> ?I. snd (f t) \<in> U2} \<in> ?TI" using hf_snd_preimage hU2 by blast
+            define W where "W = {t \<in> ?I. fst (f t) \<in> U1} \<inter> {t \<in> ?I. snd (f t) \<in> U2}"
+            have hW_open: "W \<in> ?TI" unfolding W_def using topology_inter2[OF hTI_top hW1 hW2] by presburger
+            have ht0_W: "t0 \<in> W" unfolding W_def using ht0I hft0_U1 hft0_U2 by simp
+            have hW_sub: "W \<subseteq> {t \<in> ?I. f t \<in> V}"
+              unfolding W_def using hf_range hrect_V by auto
+            show "\<exists>W\<in>?TI. t0 \<in> W \<and> W \<subseteq> {t \<in> ?I. f t \<in> V}"
+              using hW_open ht0_W hW_sub by auto
+          qed
+        qed
+      qed
     qed
   qed
   have hf_surj: "f ` ?I = ?I2"
