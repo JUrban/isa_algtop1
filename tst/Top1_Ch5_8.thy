@@ -11785,7 +11785,23 @@ proof -
     The key idea: for any x ∈ I², fₙ comes within 1/2ⁿ, and |fₙ - f| → 0,
     so f comes arbitrarily close to x. Since f(I) is compact (hence closed),
     x ∈ f(I).\<close>
-  show ?thesis sorry
+  text \<open>Step 2: Pointwise convergence. For each t, the sequence (fst (fn n t))
+    and (snd (fn n t)) are Cauchy in R (consecutive terms differ by ≤ 1/2ⁿ,
+    so partial sums ≤ 2/2ⁿ → 0). Since R is complete, they converge.\<close>
+  text \<open>Step 3: Define f as the pointwise limit.\<close>
+  define f where "f t = (if t \<in> ?I then (lim (\<lambda>n. fst (fn n t)), lim (\<lambda>n. snd (fn n t))) else undefined)" for t
+  text \<open>Step 4: f maps I to I² (limits of sequences in [0,1] stay in [0,1]).\<close>
+  have hf_range: "\<forall>t\<in>?I. f t \<in> ?I2" sorry
+  text \<open>Step 5: f is continuous (uniform convergence of continuous functions).
+    The Cauchy property gives sup|fn - f| → 0, so f is the uniform limit.\<close>
+  have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f" sorry
+  text \<open>Step 6: f is surjective. For any (x,y) ∈ I² and any ε > 0:
+    choose N with 1/2ᴺ < ε/2 and sup|fₙ - f| < ε/2.
+    By hfn_dense, ∃t₀ with d((x,y), fₙ(t₀)) ≤ 1/2ᴺ.
+    Triangle inequality gives d((x,y), f(t₀)) < ε.
+    So (x,y) ∈ closure(f(I)). But f(I) is compact image → closed. QED.\<close>
+  have hf_surj: "f ` ?I = ?I2" sorry
+  show ?thesis using hf_cont hf_surj by blast
 qed
 
 section \<open>\<S>45 Compactness in Metric Spaces\<close>
