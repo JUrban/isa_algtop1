@@ -11728,6 +11728,17 @@ qed
 
 section \<open>*\<S>44 A Space-Filling Curve\<close>
 
+text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
+  Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
+  each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
+  The sequence is Cauchy in the sup metric (ρ(fₙ,fₙ₊₁) ≤ 1/2ⁿ), so converges
+  to a continuous f. Surjectivity: fₙ comes within 1/2ⁿ of every point in I².\<close>
+
+text \<open>The sequence fₙ of paths [0,1] → [0,1]² is defined by iterative refinement.
+  fₙ is a piecewise-linear function made of 4ⁿ triangular segments,
+  each in a square of side 1/2ⁿ. For the formal proof, we use only the
+  key properties (Cauchy + dense images) rather than the explicit construction.\<close>
+
 (** from \S44 Theorem 44.1 (Peano curve) [top1.tex:6444] **)
 theorem Theorem_44_1:
   shows "\<exists>f::real \<Rightarrow> (real \<times> real).
@@ -11735,7 +11746,47 @@ theorem Theorem_44_1:
       ((top1_closed_interval 0 1) \<times> (top1_closed_interval 0 1))
       (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1)) f
     \<and> f ` (top1_closed_interval 0 1) = (top1_closed_interval 0 1) \<times> (top1_closed_interval 0 1)"
-  sorry
+proof -
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?I2 = "?I \<times> ?I"
+  let ?TI2 = "product_topology_on ?TI ?TI"
+  text \<open>Step 1: Define the sequence fₙ.
+    We use a direct characterization: fₙ is a continuous function [0,1] → [0,1]²
+    such that ρ(fₙ, fₙ₊₁) ≤ 1/2ⁿ and fₙ comes within 1/2ⁿ of every point in I².\<close>
+  text \<open>Rather than constructing the explicit geometric sequence,
+    we use the abstract existence: the Cauchy sequence converges in the
+    complete space C(I, I²), and the limit is surjective.
+    The key properties are:
+    (1) Each fₙ is continuous [0,1] → [0,1]²
+    (2) ρ(fₙ, fₙ₊₁) ≤ 1/2ⁿ (Cauchy)
+    (3) For each point x ∈ I², there exists t ∈ I with d(x, fₙ(t)) ≤ 1/2ⁿ (dense image)
+    We take these as sorry's and derive the theorem from them.\<close>
+  have hex_seq: "\<exists>fn :: nat \<Rightarrow> (real \<Rightarrow> (real \<times> real)).
+    (\<forall>n. top1_continuous_map_on ?I ?TI ?I2 ?TI2 (fn n)) \<and>
+    (\<forall>n. \<forall>t\<in>?I. fn n t \<in> ?I2) \<and>
+    (\<forall>n. \<forall>t\<in>?I. \<bar>fst (fn n t) - fst (fn (Suc n) t)\<bar> \<le> 1 / 2^n \<and>
+                 \<bar>snd (fn n t) - snd (fn (Suc n) t)\<bar> \<le> 1 / 2^n) \<and>
+    (\<forall>n. \<forall>x\<in>?I. \<forall>y\<in>?I. \<exists>t\<in>?I. \<bar>x - fst (fn n t)\<bar> \<le> 1 / 2^n \<and>
+                                    \<bar>y - snd (fn n t)\<bar> \<le> 1 / 2^n)"
+    text \<open>The triangular path sequence satisfies these properties.\<close>
+    sorry
+  then obtain fn where hfn_cont: "\<forall>n. top1_continuous_map_on ?I ?TI ?I2 ?TI2 (fn n)"
+    and hfn_range: "\<forall>n. \<forall>t\<in>?I. fn n t \<in> ?I2"
+    and hfn_cauchy: "\<forall>n. \<forall>t\<in>?I. \<bar>fst (fn n t) - fst (fn (Suc n) t)\<bar> \<le> 1 / 2^n \<and>
+                         \<bar>snd (fn n t) - snd (fn (Suc n) t)\<bar> \<le> 1 / 2^n"
+    and hfn_dense: "\<forall>n. \<forall>x\<in>?I. \<forall>y\<in>?I. \<exists>t\<in>?I. \<bar>x - fst (fn n t)\<bar> \<le> 1 / 2^n \<and>
+                                              \<bar>y - snd (fn n t)\<bar> \<le> 1 / 2^n"
+    by blast
+  text \<open>Step 2: The sequence is Cauchy in the sup metric on C(I, I²).
+    Step 3: C(I, I²) is complete, so fn converges to some f.
+    Step 4: f is surjective (by density of fn images).\<close>
+  text \<open>These steps require completeness of C(I, I²) and the convergence argument.
+    The key idea: for any x ∈ I², fₙ comes within 1/2ⁿ, and |fₙ - f| → 0,
+    so f comes arbitrarily close to x. Since f(I) is compact (hence closed),
+    x ∈ f(I).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>45 Compactness in Metric Spaces\<close>
 
