@@ -27796,13 +27796,23 @@ proof -
             have hnz_fin: "finite nz" unfolding nz_def by simp
             have hT_card: "card T \<le> Suc N"
             proof -
-              have "card T \<le> card nz" unfolding T_def using card_image_le[OF hnz_fin] sorry
+              have "card T \<le> card nz" unfolding T_def by (rule card_image_le[OF hnz_fin])
               then show ?thesis using hcard_nz by linarith
             qed
             text \<open>Step 4: GP gives c(t) = 0 for all t ∈ T.\<close>
+            have hT_fin: "finite T" unfolding T_def using hnz_fin by simp
+            have hT_sub_RN: "T \<subseteq> top1_Rpow_set N"
+              using hz_gp hT_sub unfolding top1_general_position_in_Rpow_def by fast
             have hc_zero: "\<forall>t\<in>T. c t = 0"
-              using hz_gp hT_sub hT_card hcoord_zero hsum_zero
-              unfolding top1_general_position_in_Rpow_def sorry
+            proof -
+              have hgp_set: "top1_general_position_in_Rpow N (z_map ` (a ` {..<n}))"
+                using hz_gp by satx
+              have "T \<subseteq> z_map ` (a ` {..<n})" using hT_sub by presburger
+              then have hgp_T: "\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0
+                \<longrightarrow> (\<forall>z\<in>T. a z = 0)"
+                using hgp_set hT_card unfolding top1_general_position_in_Rpow_def by auto
+              then show ?thesis using hcoord_zero hsum_zero by fastforce
+            qed
             text \<open>Step 5: c(z i) = 0 AND z injective on {..<n} → φ i x = φ i y.\<close>
             have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0" sorry
             then show "\<forall>i<n. \<phi> i x = \<phi> i y" unfolding nz_def by simp
