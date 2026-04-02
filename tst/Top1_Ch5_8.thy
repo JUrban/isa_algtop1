@@ -11833,6 +11833,41 @@ proof -
   qed
 qed
 
+text \<open>Limits of bounded convergent real sequences stay in bounds.\<close>
+lemma convergent_lim_le:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "convergent s" and "\<forall>n. s n \<le> b"
+  shows "lim s \<le> b"
+proof -
+  obtain L where hL: "s \<longlonglongrightarrow> L" using assms(1) convergent_LIMSEQ_iff by blast
+  have "lim s = L" using limI hL by blast
+  have "L \<le> b"
+  proof (rule ccontr)
+    assume "\<not> L \<le> b" then have hd: "L - b > 0" by linarith
+    obtain N where "\<forall>n\<ge>N. dist (s n) L < L - b"
+      using hL hd unfolding lim_sequentially by blast
+    then have "\<bar>s N - L\<bar> < L - b" unfolding dist_real_def by simp
+    then show False using assms(2)[THEN spec, of N] by linarith
+  qed
+  then show ?thesis using \<open>lim s = L\<close> by presburger
+qed
+
+lemma convergent_lim_ge:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes "convergent s" and "\<forall>n. a \<le> s n"
+  shows "a \<le> lim s"
+proof (rule ccontr)
+  assume "\<not> a \<le> lim s" then have h: "lim s < a" by linarith
+  obtain L where hL: "s \<longlonglongrightarrow> L" using assms(1) convergent_LIMSEQ_iff by blast
+  have "lim s = L" using limI hL by blast
+  then have "L < a" using h by presburger
+  then have "a - L > 0" by linarith
+  then obtain N where "\<forall>n\<ge>N. dist (s n) L < a - L"
+    using hL unfolding lim_sequentially by blast
+  then have "\<bar>s N - L\<bar> < a - L" unfolding dist_real_def by simp
+  then show False using assms(2)[THEN spec, of N] by linarith
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
@@ -11928,7 +11963,22 @@ proof -
       using geom_cauchy_lim_bound[of "\<lambda>m. snd (fn m t)" n] hfn_cauchy \<open>t \<in> ?I\<close> by metis
   qed
   define f where "f t = (lim (\<lambda>n. fst (fn n t)), lim (\<lambda>n. snd (fn n t)))" for t
-  have hf_range: "\<forall>t\<in>?I. f t \<in> ?I2" sorry
+  have hf_range: "\<forall>t\<in>?I. f t \<in> ?I2"
+  proof (intro ballI)
+    fix t assume ht: "t \<in> ?I"
+    have hfn_I2: "\<forall>n. fn n t \<in> ?I2" using hfn_range ht by blast
+    have hfst_I: "\<forall>n. fst (fn n t) \<in> ?I" using hfn_I2 by (metis mem_Times_iff)
+    have hsnd_I: "\<forall>n. snd (fn n t) \<in> ?I" using hfn_I2 by (metis mem_Times_iff)
+    have hfst_le: "\<forall>n. fst (fn n t) \<le> 1" using hfst_I unfolding top1_closed_interval_def by simp
+    have hfst_ge: "\<forall>n. 0 \<le> fst (fn n t)" using hfst_I unfolding top1_closed_interval_def by simp
+    have hsnd_le: "\<forall>n. snd (fn n t) \<le> 1" using hsnd_I unfolding top1_closed_interval_def by simp
+    have hsnd_ge: "\<forall>n. 0 \<le> snd (fn n t)" using hsnd_I unfolding top1_closed_interval_def by simp
+    have h1: "lim (\<lambda>n. fst (fn n t)) \<le> 1" using convergent_lim_le[OF hfst_conv[THEN bspec, OF ht] hfst_le] by metis
+    have h2: "0 \<le> lim (\<lambda>n. fst (fn n t))" using convergent_lim_ge[OF hfst_conv[THEN bspec, OF ht] hfst_ge] by metis
+    have h3: "lim (\<lambda>n. snd (fn n t)) \<le> 1" using convergent_lim_le[OF hsnd_conv[THEN bspec, OF ht] hsnd_le] by metis
+    have h4: "0 \<le> lim (\<lambda>n. snd (fn n t))" using convergent_lim_ge[OF hsnd_conv[THEN bspec, OF ht] hsnd_ge] by metis
+    show "f t \<in> ?I2" unfolding f_def top1_closed_interval_def using h1 h2 h3 h4 by simp
+  qed
   have hf_cont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 f" sorry
   have hf_surj: "f ` ?I = ?I2" sorry
   have hf_exists: "\<exists>f. top1_continuous_map_on ?I ?TI ?I2 ?TI2 f \<and> f ` ?I = ?I2"
