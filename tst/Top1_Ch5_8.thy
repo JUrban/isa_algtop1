@@ -26840,6 +26840,21 @@ qed
 
 text \<open>general_position_extend now includes q ∉ S in its conclusion.\<close>
 
+text \<open>Helper: construct finite open cover with controlled d-diam and f-diam
+  from compact metric space + continuous map.\<close>
+lemma compact_metric_small_cover:
+  assumes hd: "top1_metric_on X d"
+  assumes hComp: "top1_compact_on X (top1_metric_topology_on X d)"
+  assumes hXne: "X \<noteq> {}"
+  assumes hd2: "top1_metric_on Y d2"
+  assumes hf: "top1_continuous_map_on X (top1_metric_topology_on X d) Y (top1_metric_topology_on Y d2) f"
+  assumes he: "0 < (e::real)" and hd': "0 < (e'::real)"
+  shows "\<exists>\<VV>. \<VV> \<subseteq> top1_metric_topology_on X d \<and>
+    top1_open_covering_on X (top1_metric_topology_on X d) \<VV> \<and> finite \<VV> \<and>
+    (\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < e) \<and>
+    (\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d2 (f x) (f y) < e')"
+  sorry
+
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
 lemma gp_singleton_set:
@@ -27617,6 +27632,7 @@ proof -
         and hVV_fin: "finite \<VV>"
         and hVV_diam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < \<epsilon>/2"
         and hVV_fdiam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. ?dRN (f0 x) (f0 y) < \<delta>/2"
+        text \<open>From compact_metric_small_cover with ε/2, δ/2.\<close>
         sorry
       text \<open>Step 1b: Apply dim_le to get refinement with order ≤ m+1.\<close>
       obtain \<BB> where hBB_cover: "top1_open_covering_on X TX \<BB>"
