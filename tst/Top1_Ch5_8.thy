@@ -27763,7 +27763,33 @@ proof -
             text \<open>Step 1: Σ c(t) * t(j) = 0 for j < N.\<close>
             have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0" sorry
             text \<open>Step 2: Σ c(t) = 0.\<close>
-            have hsum_zero: "(\<Sum>t\<in>T. c t) = 0" sorry
+            have hsum_nz: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = 0"
+            proof -
+              have hsx: "(\<Sum>i<n. \<phi> i x) = 1"
+              proof -
+                have "(\<Sum>i<n. \<phi> i x) = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x)"
+                  apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
+                also have "... = 1" using hphi_sum1 hx by blast
+                finally show ?thesis .
+              qed
+              have hsy: "(\<Sum>i<n. \<phi> i y) = 1"
+              proof -
+                have "(\<Sum>i<n. \<phi> i y) = (\<Sum>i\<in>{i\<in>{..<n}. \<phi> i y \<noteq> 0}. \<phi> i y)"
+                  apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
+                also have "... = 1" using hphi_sum1 hy by blast
+                finally show ?thesis .
+              qed
+              have h_all: "(\<Sum>i<n. \<phi> i x - \<phi> i y) = 0"
+                using hsx hsy by (simp add: sum_subtractf)
+              have "(\<Sum>i<n. \<phi> i x - \<phi> i y) = (\<Sum>i\<in>nz. \<phi> i x - \<phi> i y)"
+                unfolding nz_def
+                apply (rule sum.mono_neutral_right)
+                apply simp apply blast apply simp
+                done
+              then show ?thesis using h_all by simp
+            qed
+            have hsum_zero: "(\<Sum>t\<in>T. c t) = 0"
+              sorry
             text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
             have hT_sub: "T \<subseteq> z_map ` (a ` {..<n})" unfolding T_def z_def nz_def by auto
             have hnz_fin: "finite nz" unfolding nz_def by simp
