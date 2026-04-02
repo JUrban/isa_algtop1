@@ -27784,33 +27784,10 @@ proof -
                 apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
               ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" by presburger
             qed
-            have hcoord_group: "\<And>jj. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i jj) =
-              (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i jj))"
-              text \<open>Same fiber partition as hsum_group via sum.UNION_disjoint.
-                Needs careful subst to avoid rewriting nz inside fibers.\<close>
-              sorry
             have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
-            proof (intro allI impI)
-              fix j assume hj: "j < N"
-              have "(\<Sum>t\<in>T. c t * t j) = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y)) * t j)"
-                unfolding c_def by presburger
-              also have "... = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j))"
-              proof (rule sum.cong)
-                show "T = T" ..
-                fix t assume ht: "t \<in> T"
-                have "\<forall>i\<in>{i \<in> nz. z i = t}. z i j = t j" by blast
-                then have "(\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j) =
-                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * t j)" by simp
-                also have "... = (\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j"
-                  by (simp add: sum_distrib_right)
-                finally show "(\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j =
-                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j)" by auto
-              qed
-              also have "... = (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j)"
-                using hcoord_group by presburger
-              also have "... = 0" using hcoord_nz hj by presburger
-              finally show "(\<Sum>t\<in>T. c t * t j) = 0" by satx
-            qed
+              text \<open>From hcoord_nz via fiber grouping + sum_distrib_right.
+                Moved after fiber definitions for UNION_disjoint access.\<close>
+              sorry
             text \<open>Step 2: Σ c(t) = 0.\<close>
             have hsum_nz: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = 0"
             proof -
