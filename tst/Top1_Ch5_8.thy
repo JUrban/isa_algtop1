@@ -27534,9 +27534,10 @@ lemma weighted_sum_epsilon_delta:
   assumes hn: "n > 0" and hN: "N > 0"
   assumes hphi_ed: "\<forall>i<n. \<forall>x0\<in>X. \<forall>\<epsilon>'>0. \<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
   assumes hx0: "x0 \<in> X" and heps: "\<epsilon> > (0::real)"
-  defines "g x \<equiv> (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j)"
-  shows "\<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> top1_Rpow_sq_metric N (g x0) (g y) < \<epsilon>"
+  shows "\<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow>
+    top1_Rpow_sq_metric N (\<lambda>j. \<Sum>i<n. \<phi> i x0 * z i j) (\<lambda>j. \<Sum>i<n. \<phi> i y * z i j) < \<epsilon>"
 proof -
+  define g where "g x = (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j)" for x
   define M where "M = Max ((\<lambda>(i,j). \<bar>z i j\<bar>) ` ({..<n} \<times> {..<N}))"
   have hfin_ij: "finite ({..<n} \<times> {..<N})" by blast
   have hM_bound: "\<forall>i<n. \<forall>j<N. \<bar>z i j\<bar> \<le> M"
@@ -27570,7 +27571,7 @@ proof -
     then show "\<delta> \<le> \<delta>f i" unfolding \<delta>_def using \<open>i < n\<close> hn
       by (intro Min_le[OF finite_imageI[OF finite_lessThan]]) force
   qed
-  show ?thesis
+  show ?thesis unfolding g_def[symmetric]
   proof (intro exI[of _ \<delta>] conjI)
     show "\<delta> > 0" using hdel_pos by presburger
     show "\<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> top1_Rpow_sq_metric N (g x0) (g y) < \<epsilon>"
@@ -28215,11 +28216,17 @@ proof -
               using interval_continuous_imp_abs_epsilon_delta[OF hd _ \<open>x0 \<in> X\<close> \<open>0 < \<epsilon>'\<close>]
                 hphi_cont \<open>i < n\<close> unfolding hTX_eq by simp
           qed
+          have hN_pos: "N > 0" unfolding N_def by simp
+          have hg_eq: "\<And>x. x \<in> X \<Longrightarrow> g x = (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j)"
+            unfolding g_def by simp
           have hg_eps_delta: "\<forall>x\<in>X. \<forall>\<epsilon>>(0::real). \<exists>\<delta>>0.
             \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dRN (g x) (g y) < \<epsilon>"
-            text \<open>Apply weighted_sum_epsilon_delta with g(x)(j) = Σφᵢ(x)·zᵢ(j).
-              The helper is proved; application needs matching g_def + N > 0.\<close>
-            sorry
+          proof (intro ballI allI impI)
+            fix x0 and \<epsilon>0 :: real assume hx0X: "x0 \<in> X" and heps0: "0 < \<epsilon>0"
+            note hwsum = weighted_sum_epsilon_delta[OF hUi_fin hN_pos hphi_eps_delta hx0X heps0]
+            show "\<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> ?dRN (g x0) (g y) < \<epsilon>0"
+              using hwsum hg_eq hx0X by auto
+          qed
           have hg_cont_met: "top1_continuous_map_on X (top1_metric_topology_on X d)
             ?RN (top1_metric_topology_on ?RN ?dRN) g"
             using metric_epsilon_delta_imp_continuous hd
