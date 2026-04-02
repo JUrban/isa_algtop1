@@ -26842,6 +26842,12 @@ text \<open>general_position_extend now includes q ∉ S in its conclusion.\<clo
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
+lemma gp_singleton:
+  assumes "p \<in> top1_Rpow_set N" and "0 < \<delta>"
+  shows "\<exists>z. z 0 \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N p (z 0) < \<delta>
+    \<and> top1_general_position_in_Rpow N {z 0} \<and> inj_on z {..<Suc 0}"
+  sorry
+
 lemma Lemma_50_4_indexed_ind:
   "(N::nat) > 0 \<Longrightarrow> (\<forall>i<(k::nat). a i \<in> top1_Rpow_set N) \<Longrightarrow> 0 < (\<delta>::real) \<Longrightarrow>
     \<exists>z. (\<forall>i<k. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
@@ -26857,8 +26863,12 @@ next
   show ?case
   proof (cases "k = 0")
     case True
-    text \<open>k=0, Suc k=1. Singleton GP trivially.\<close>
-    show ?thesis sorry
+    have ha0: "a 0 \<in> top1_Rpow_set N" using Suc.prems(2) True by simp
+    obtain z where hz: "z 0 \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a 0) (z 0) < \<delta>
+      \<and> top1_general_position_in_Rpow N {z 0} \<and> inj_on z {..<Suc 0}"
+      using gp_singleton[OF ha0 Suc.prems(3)] by blast
+    have "z ` {..<Suc 0} = {z 0}" by auto
+    then show ?thesis using hz True sorry
   next
     case False
     then have hk: "k > 0" by simp
