@@ -27761,7 +27761,24 @@ proof -
             define T where "T = z ` nz"
             define c where "c = (\<lambda>t. \<Sum>i\<in>{i\<in>nz. z i = t}. \<phi> i x - \<phi> i y)"
             text \<open>Step 1: Σ c(t) * t(j) = 0 for j < N.\<close>
-            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0" sorry
+            text \<open>From g(x)=g(y): for each j, Σ_i (φx-φy)*z(i)(j) = gx(j)-gy(j) = 0.\<close>
+            have hcoord_nz: "\<forall>j<N. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0"
+            proof (intro allI impI)
+              fix j assume hj: "j < N"
+              have hgxj_eq: "g x j = (\<Sum>i<n. \<phi> i x * z i j)" using hg_val hx by blast
+              have hgyj_eq: "g y j = (\<Sum>i<n. \<phi> i y * z i j)" using hg_val hy by blast
+              have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = g x j - g y j"
+                using hgxj_eq hgyj_eq sorry
+              also have "... = 0" using hgxy by simp
+              finally have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = 0" by satx
+              moreover have "(\<Sum>i<n. (\<phi> i x - \<phi> i y) * z i j) = (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j)"
+                unfolding nz_def
+                apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
+              ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" sorry
+            qed
+            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
+              text \<open>From hcoord_nz by sum grouping.\<close>
+              sorry
             text \<open>Step 2: Σ c(t) = 0.\<close>
             have hsum_nz: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = 0"
             proof -
