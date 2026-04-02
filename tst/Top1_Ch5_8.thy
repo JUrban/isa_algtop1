@@ -27527,6 +27527,112 @@ proof -
   qed
 qed
 
+text \<open>Finite weighted sum of ε-δ continuous functions is ε-δ continuous in sq_metric.\<close>
+lemma weighted_sum_epsilon_delta:
+  fixes n N :: nat and \<phi> :: "nat \<Rightarrow> 'a \<Rightarrow> real" and z :: "nat \<Rightarrow> nat \<Rightarrow> real"
+    and d :: "'a \<Rightarrow> 'a \<Rightarrow> real" and X :: "'a set"
+  assumes hn: "n > 0" and hN: "N > 0"
+  assumes hphi_ed: "\<forall>i<n. \<forall>x0\<in>X. \<forall>\<epsilon>'>0. \<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
+  assumes hx0: "x0 \<in> X" and heps: "\<epsilon> > (0::real)"
+  defines "g x \<equiv> (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j)"
+  shows "\<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> top1_Rpow_sq_metric N (g x0) (g y) < \<epsilon>"
+proof -
+  define M where "M = Max ((\<lambda>(i,j). \<bar>z i j\<bar>) ` ({..<n} \<times> {..<N}))"
+  have hfin_ij: "finite ({..<n} \<times> {..<N})" by blast
+  have hM_bound: "\<forall>i<n. \<forall>j<N. \<bar>z i j\<bar> \<le> M"
+  proof (intro allI impI)
+    fix i j :: nat assume "i < n" "j < N"
+    have "\<bar>z i j\<bar> \<in> (\<lambda>(i,j). \<bar>z i j\<bar>) ` ({..<n} \<times> {..<N})"
+      using \<open>i < n\<close> \<open>j < N\<close> by force
+    then show "\<bar>z i j\<bar> \<le> M" unfolding M_def using Max_ge[OF finite_imageI[OF hfin_ij]] by blast
+  qed
+  have hM_nonneg: "M \<ge> 0"
+    using hM_bound[THEN spec, THEN mp, THEN spec, THEN mp] hn hN by force
+  define \<epsilon>' where "\<epsilon>' = \<epsilon> / (real n * (1 + M))"
+  have hnM_pos: "real n * (1 + M) > 0" using hn hM_nonneg by force
+  have heps': "\<epsilon>' > 0" unfolding \<epsilon>'_def using heps hnM_pos by simp
+  have hex: "\<forall>i\<in>{..<n}. \<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
+    using hphi_ed hx0 heps' by blast
+  obtain \<delta>f where hdelf: "\<forall>i\<in>{..<n}. \<delta>f i > 0 \<and> (\<forall>y\<in>X. d x0 y < \<delta>f i \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>')"
+    using bchoice[OF hex] by blast
+  define \<delta> where "\<delta> = Min (\<delta>f ` {..<n})"
+  have hdel_pos: "\<delta> > 0"
+  proof -
+    have hfin: "finite (\<delta>f ` {..<n})" by simp
+    have hne: "\<delta>f ` {..<n} \<noteq> {}" using hn by fastforce
+    have "\<forall>d \<in> \<delta>f ` {..<n}. d > 0" using hdelf by fastforce
+    then show ?thesis unfolding \<delta>_def
+      using Min_gr_iff[OF hfin hne] by presburger
+  qed
+  have hdel_le: "\<forall>i<n. \<delta> \<le> \<delta>f i"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    then show "\<delta> \<le> \<delta>f i" unfolding \<delta>_def using \<open>i < n\<close> hn
+      by (intro Min_le[OF finite_imageI[OF finite_lessThan]]) force
+  qed
+  show ?thesis
+  proof (intro exI[of _ \<delta>] conjI)
+    show "\<delta> > 0" using hdel_pos by presburger
+    show "\<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> top1_Rpow_sq_metric N (g x0) (g y) < \<epsilon>"
+    proof (intro ballI impI)
+      fix y assume hyX: "y \<in> X" and hdist: "d x0 y < \<delta>"
+      have hphi_close: "\<forall>i<n. \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
+      proof (intro allI impI)
+        fix i assume "i < n"
+        have "\<delta> \<le> \<delta>f i" using hdel_le \<open>i < n\<close> by simp
+        then have "d x0 y < \<delta>f i" using hdist by linarith
+        then show "\<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'" using hdelf \<open>i < n\<close> hyX by fastforce
+      qed
+      have hcoord_bound: "\<forall>j<N. \<bar>g x0 j - g y j\<bar> < \<epsilon>"
+      proof (intro allI impI)
+        fix j assume hj: "j < N"
+        have hdiff: "g x0 j - g y j = (\<Sum>i<n. (\<phi> i x0 - \<phi> i y) * z i j)"
+          unfolding g_def by (simp add: sum_subtractf[symmetric] algebra_simps)
+        have "\<bar>g x0 j - g y j\<bar> \<le> (\<Sum>i<n. \<bar>\<phi> i x0 - \<phi> i y\<bar> * \<bar>z i j\<bar>)"
+        proof -
+          have "\<bar>g x0 j - g y j\<bar> = \<bar>\<Sum>i<n. (\<phi> i x0 - \<phi> i y) * z i j\<bar>" using hdiff by presburger
+          also have "... \<le> (\<Sum>i<n. \<bar>(\<phi> i x0 - \<phi> i y) * z i j\<bar>)" by (rule sum_abs)
+          also have "... = (\<Sum>i<n. \<bar>\<phi> i x0 - \<phi> i y\<bar> * \<bar>z i j\<bar>)" by (simp add: abs_mult)
+          finally show ?thesis by presburger
+        qed
+        also have "... \<le> (\<Sum>i<n. \<epsilon>' * M)"
+        proof (rule sum_mono)
+          fix i assume "i \<in> {..<n}"
+          then have hi: "i < n" by simp
+          show "\<bar>\<phi> i x0 - \<phi> i y\<bar> * \<bar>z i j\<bar> \<le> \<epsilon>' * M"
+            using hphi_close[THEN spec, THEN mp, OF hi]
+              hM_bound[THEN spec, THEN mp, THEN spec, THEN mp, OF hi hj]
+              heps' hM_nonneg by (simp add: mult_mono)
+        qed
+        also have "... < \<epsilon>"
+        proof (cases "M = 0")
+          case True then show ?thesis using heps by simp
+        next
+          case False
+          then have "M > 0" using hM_nonneg by linarith
+          have "(\<Sum>i<n. \<epsilon>' * M) = real n * (\<epsilon>' * M)" by simp
+          also have "... < real n * (\<epsilon>' * (1 + M))"
+            using \<open>M > 0\<close> heps' hn by simp
+          also have "... = \<epsilon>"
+            by (metis hnM_pos heps \<epsilon>'_def of_nat_less_iff not_gr_zero
+              nonzero_mult_div_cancel_right mult.left_commute divide_cancel_right of_nat_0)
+          finally show ?thesis by presburger
+        qed
+        finally show "\<bar>g x0 j - g y j\<bar> < \<epsilon>" by presburger
+      qed
+      show "top1_Rpow_sq_metric N (g x0) (g y) < \<epsilon>"
+      proof -
+        have hfin: "finite {\<bar>g x0 j - g y j\<bar> |j. j < N}" by auto
+        have hne: "{\<bar>g x0 j - g y j\<bar> |j. j < N} \<noteq> {}" using hN by auto
+        have "\<forall>a \<in> {\<bar>g x0 j - g y j\<bar> |j. j < N}. a < \<epsilon>" using hcoord_bound by auto
+        then have "Max {\<bar>g x0 j - g y j\<bar> |j. j < N} < \<epsilon>"
+          using Max_less_iff[OF hfin hne] by presburger
+        then show ?thesis unfolding top1_Rpow_sq_metric_def using hN by presburger
+      qed
+    qed
+  qed
+qed
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
@@ -28111,10 +28217,8 @@ proof -
           qed
           have hg_eps_delta: "\<forall>x\<in>X. \<forall>\<epsilon>>(0::real). \<exists>\<delta>>0.
             \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dRN (g x) (g y) < \<epsilon>"
-            text \<open>ε-δ continuity via finite sum bound:
-              for each x₀, ε>0, choose ε' = ε/(n*(1+M)), get δᵢ for each i,
-              take δ = min δᵢ. Then |g(x)_j - g(x₀)_j| ≤ Σ|φᵢ(x)-φᵢ(x₀)|·|z_i_j|
-              < n·ε'·M ≤ ε. The sq_metric = max over j of |·| < ε.\<close>
+            text \<open>Apply weighted_sum_epsilon_delta with g(x)(j) = Σφᵢ(x)·zᵢ(j).
+              The helper is proved; application needs matching g_def + N > 0.\<close>
             sorry
           have hg_cont_met: "top1_continuous_map_on X (top1_metric_topology_on X d)
             ?RN (top1_metric_topology_on ?RN ?dRN) g"
