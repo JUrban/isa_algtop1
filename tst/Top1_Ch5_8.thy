@@ -27493,13 +27493,18 @@ proof -
       have hUi_idx_order: "\<forall>x\<in>X. card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m"
       proof (intro ballI)
         fix x assume hx: "x \<in> X"
+        have hsub: "{i \<in> {..<n}. x \<in> Ui i} \<subseteq> {..<n}" by blast
+        have hinj_sub: "inj_on Ui {i \<in> {..<n}. x \<in> Ui i}"
+          using inj_on_subset[OF hUi_inj hsub] by blast
+        have himg_eq: "Ui ` {i \<in> {..<n}. x \<in> Ui i} = {U \<in> Ui ` {..<n}. x \<in> U}"
+          by force
+        have hfin: "finite {i \<in> {..<n}. x \<in> Ui i}" by simp
         have "card {i \<in> {..<n}. x \<in> Ui i} = card (Ui ` {i \<in> {..<n}. x \<in> Ui i})"
-          using card_image[OF inj_on_subset[OF hUi_inj]] sorry
-        also have "Ui ` {i \<in> {..<n}. x \<in> Ui i} = {U \<in> Ui ` {..<n}. x \<in> U}"
-          by fast
-        also have "card ... \<le> Suc m" using hUi_order hx unfolding top1_cover_order_le_on_def
-          sorry
-        finally show "card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m" sorry
+          by (metis card_image hinj_sub)
+        also have "... = card {U \<in> Ui ` {..<n}. x \<in> U}" using himg_eq by presburger
+        also have "... \<le> Suc m"
+          using hUi_order hx unfolding top1_cover_order_le_on_def by blast
+        finally show "card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m" by blast
       qed
       text \<open>Step 2: Partition of unity.\<close>
       have hPara: "top1_paracompact_on X TX" using Theorem_41_4 hMet by blast
