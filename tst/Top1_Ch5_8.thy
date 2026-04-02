@@ -12298,9 +12298,15 @@ proof -
       text \<open>f(I) is compact image of compact set, hence compact, hence closed in Hausdorff I².
         p is in the closure of f(I). Closed → p ∈ f(I).\<close>
       have hI_compact: "top1_compact_on ?I ?TI"
-        sorry
+        using top1_closed_interval_compact[of 0 1] by simp
+      have hTI_top2: "is_topology_on ?I ?TI"
+        unfolding top1_closed_interval_topology_def
+        by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on])
+          (simp add: top1_closed_interval_def)
+      have hTI2_top: "is_topology_on (?I \<times> ?I) ?TI2"
+        using product_topology_on_is_topology_on[OF hTI_top2 hTI_top2] by presburger
       have hfI_compact: "top1_compact_on (f ` ?I) (subspace_topology (?I \<times> ?I) ?TI2 (f ` ?I))"
-        sorry
+        using top1_compact_on_continuous_image[OF hI_compact hTI2_top hf_cont] by blast
       then show "p \<in> f ` ?I"
         using hclose sorry
     qed
