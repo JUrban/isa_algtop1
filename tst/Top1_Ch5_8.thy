@@ -11964,6 +11964,21 @@ proof -
   qed
 qed
 
+text \<open>ε-balls in [0,1] are open in the interval topology.\<close>
+lemma interval_eps_ball_open:
+  assumes heps: "\<epsilon> > (0::real)"
+  shows "{s \<in> top1_closed_interval 0 1. \<bar>s - c\<bar> < \<epsilon>} \<in> top1_closed_interval_topology 0 1"
+proof -
+  have hab: "c - \<epsilon> < c + \<epsilon>" using heps by linarith
+  have hU_open: "open_interval (c - \<epsilon>) (c + \<epsilon>) \<in> order_topology_on_UNIV"
+    using open_interval_in_order_topology[OF hab] by presburger
+  have heq: "{s \<in> top1_closed_interval 0 1. \<bar>s - c\<bar> < \<epsilon>} =
+    top1_closed_interval 0 1 \<inter> open_interval (c - \<epsilon>) (c + \<epsilon>)"
+    unfolding open_interval_def top1_closed_interval_def using add_diff_cancel_left' by auto
+  show ?thesis unfolding top1_closed_interval_topology_def subspace_topology_def
+    using hU_open heq by blast
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
