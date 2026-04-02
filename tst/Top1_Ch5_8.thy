@@ -27486,6 +27486,38 @@ proof -
   qed
 qed
 
+text \<open>Continuity to [0,1] implies ε-δ for the absolute value metric.\<close>
+lemma interval_continuous_imp_abs_epsilon_delta:
+  assumes hdX: "top1_metric_on X dX"
+  assumes hcont: "top1_continuous_map_on X (top1_metric_topology_on X dX)
+    (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<phi>"
+  assumes hx0: "x0 \<in> X" and heps: "\<epsilon> > (0::real)"
+  shows "\<exists>\<delta>>0. \<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> \<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>"
+proof -
+  define V where "V = {t \<in> top1_closed_interval 0 1. \<bar>\<phi> x0 - t\<bar> < \<epsilon>}"
+  have hV_open: "V \<in> top1_closed_interval_topology 0 1"
+    text \<open>V = (φ x₀ - ε, φ x₀ + ε) ∩ [0,1], open in subspace topology.\<close>
+    sorry
+  have hx0_V: "\<phi> x0 \<in> V" unfolding V_def
+    using hcont hx0 heps unfolding top1_continuous_map_on_def top1_closed_interval_def by auto
+  have hpreimage: "{x \<in> X. \<phi> x \<in> V} \<in> top1_metric_topology_on X dX"
+    using hcont hV_open unfolding top1_continuous_map_on_def by blast
+  have hx0_preimage: "x0 \<in> {x \<in> X. \<phi> x \<in> V}" using hx0 hx0_V by blast
+  obtain \<delta> where hdel_pos: "\<delta> > 0" and hball_sub: "top1_ball_on X dX x0 \<delta> \<subseteq> {x \<in> X. \<phi> x \<in> V}"
+    using top1_metric_open_contains_ball[OF hdX hpreimage hx0_preimage] by blast
+  show ?thesis
+  proof (intro exI[of _ \<delta>] conjI)
+    show "\<delta> > 0" using hdel_pos by simp
+    show "\<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> \<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>"
+    proof (intro ballI impI)
+      fix y assume hyX: "y \<in> X" and hdist: "dX x0 y < \<delta>"
+      have "y \<in> top1_ball_on X dX x0 \<delta>" unfolding top1_ball_on_def using hyX hdist by blast
+      then have "y \<in> {x \<in> X. \<phi> x \<in> V}" using hball_sub by blast
+      then show "\<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>" unfolding V_def by blast
+    qed
+  qed
+qed
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
