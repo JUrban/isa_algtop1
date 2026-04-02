@@ -12025,8 +12025,45 @@ proof -
       is continuous since fn is continuous I→I²). The uniform limit
       of continuous functions is continuous (standard analysis).
       Uses: hfn_cont (fn continuous), hfst_bound/hsnd_bound (uniform convergence),
-      and the ε-δ → continuous conversion (metric_epsilon_delta_imp_continuous).\<close>
-    sorry
+      and the ε-δ → continuous conversion.\<close>
+  proof -
+    have hTI_top: "is_topology_on ?I ?TI"
+      unfolding top1_closed_interval_topology_def
+      by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on])
+        (simp add: top1_closed_interval_def)
+    have hI_in_TI: "?I \<in> ?TI" using hTI_top unfolding is_topology_on_def by presburger
+    have hfn_fst_preimage: "\<forall>n. \<forall>U\<in>?TI. {t \<in> ?I. fst (fn n t) \<in> U} \<in> ?TI"
+    proof (intro allI ballI)
+      fix n U assume hU: "U \<in> ?TI"
+      have hUI: "U \<times> ?I \<in> ?TI2" using product_rect_open[OF hU hI_in_TI] by presburger
+      have hpre: "{t \<in> ?I. fn n t \<in> U \<times> ?I} \<in> ?TI"
+        using hfn_cont[THEN spec, of n] hUI unfolding top1_continuous_map_on_def by simp
+      have heq: "{t \<in> ?I. fn n t \<in> U \<times> ?I} = {t \<in> ?I. fst (fn n t) \<in> U}"
+        using hfn_range by (metis (lifting) mem_Sigma_iff surjective_pairing)
+      show "{t \<in> ?I. fst (fn n t) \<in> U} \<in> ?TI" using hpre heq by metis
+    qed
+    have hfn_snd_preimage: "\<forall>n. \<forall>U\<in>?TI. {t \<in> ?I. snd (fn n t) \<in> U} \<in> ?TI"
+    proof (intro allI ballI)
+      fix n U assume hU: "U \<in> ?TI"
+      have hIU: "?I \<times> U \<in> ?TI2" using product_rect_open[OF hI_in_TI hU] by presburger
+      have hpre: "{t \<in> ?I. fn n t \<in> ?I \<times> U} \<in> ?TI"
+        using hfn_cont[THEN spec, of n] hIU unfolding top1_continuous_map_on_def by simp
+      have heq: "{t \<in> ?I. fn n t \<in> ?I \<times> U} = {t \<in> ?I. snd (fn n t) \<in> U}"
+        using hfn_range by (metis (no_types, lifting) mem_Sigma_iff surjective_pairing)
+      show "{t \<in> ?I. snd (fn n t) \<in> U} \<in> ?TI" using hpre heq by metis
+    qed
+    show ?thesis
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>x\<in>?I. f x \<in> ?I2" using hf_range by presburger
+    next
+      show "\<forall>V\<in>?TI2. {t \<in> ?I. f t \<in> V} \<in> ?TI"
+        text \<open>Product preimage from coordinate preimages + uniform convergence.
+          This is the remaining step: reduce to coordinate continuity of f,
+          which follows from uniform limit of hfn_fst/snd_preimage.\<close>
+        sorry
+    qed
+  qed
   have hf_surj: "f ` ?I = ?I2"
   proof
     show "f ` ?I \<subseteq> ?I2" using hf_range by blast
