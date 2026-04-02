@@ -26827,6 +26827,17 @@ next
   show ?case using hf_near hf_gp by blast
 qed
 
+lemma general_position_extend_notin:
+  fixes S :: "(nat \<Rightarrow> real) set"
+  assumes hN: "N > 0" and hFin: "finite S" and hS: "S \<subseteq> top1_Rpow_set N"
+  assumes hGP: "top1_general_position_in_Rpow N S"
+  assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
+  shows "\<exists>q \<in> top1_Rpow_set N.
+    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S) \<and> q \<notin> S"
+  text \<open>Follows from general_position_extend proof: q is chosen outside all
+    hyperplanes containing affine spans of subsets of S, which includes S itself.\<close>
+  sorry
+
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
 lemma Lemma_50_4_indexed_ind:
@@ -26860,7 +26871,8 @@ next
     obtain q where hq_RN: "q \<in> top1_Rpow_set N"
       and hq_near: "top1_Rpow_sup_dist N (a k) q < \<delta>"
       and hq_gp: "top1_general_position_in_Rpow N (insert q (z0 ` {..<k}))"
-      using general_position_extend[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
+      and hq_notin: "q \<notin> z0 ` {..<k}"
+      using general_position_extend_notin[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
     define z where "z = (\<lambda>i. if i < k then z0 i else q)"
     have himg: "z ` {..<Suc k} = insert q (z0 ` {..<k})"
     proof
@@ -26888,7 +26900,7 @@ next
       show "inj_on z {..<Suc k}"
       proof (rule inj_onI)
         fix i j assume hi: "i \<in> {..<Suc k}" and hj: "j \<in> {..<Suc k}" and hzij: "z i = z j"
-        have hq_not_in: "q \<notin> z0 ` {..<k}" sorry
+        have hq_not_in: "q \<notin> z0 ` {..<k}" using hq_notin by blast
         show "i = j"
         proof (cases "i < k")
           case True note hi_lt = this
