@@ -11729,11 +11729,40 @@ qed
 section \<open>*\<S>44 A Space-Filling Curve\<close>
 
 text \<open>Helper: geometric series Cauchy bound for real sequences.\<close>
+lemma geom_cauchy_bound_aux:
+  fixes s :: "nat \<Rightarrow> real"
+  assumes hb: "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
+  shows "\<bar>s n - s (n + k)\<bar> \<le> 2 * (1 - 1/2^k) / 2^n"
+proof (induction k)
+  case 0 then show ?case by simp
+next
+  case (Suc k)
+  have "\<bar>s n - s (n + Suc k)\<bar> \<le> \<bar>s n - s (n + k)\<bar> + \<bar>s (n + k) - s (n + Suc k)\<bar>"
+    by linarith
+  also have "... \<le> 2 * (1 - 1/2^k) / 2^n + 1 / 2^(n+k)"
+  proof -
+    have h1: "\<bar>s n - s (n + k)\<bar> \<le> 2 * (1 - 1/2^k) / 2^n" using Suc.IH by presburger
+    have "\<bar>s (n + k) - s (Suc (n + k))\<bar> \<le> 1 / 2^(n+k)" using hb by presburger
+    then have h2: "\<bar>s (n + k) - s (n + Suc k)\<bar> \<le> 1 / 2^(n+k)" by simp
+    show ?thesis using h1 h2 by linarith
+  qed
+  also have "... = 2 * (1 - 1/2^(Suc k)) / 2^n"
+    by (simp add: field_simps power_add)
+  finally show ?case by presburger
+qed
+
 lemma geom_cauchy_bound:
   fixes s :: "nat \<Rightarrow> real"
   assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
   shows "\<forall>n m. n \<le> m \<longrightarrow> \<bar>s n - s m\<bar> \<le> 2 / 2^n"
-  sorry
+proof (intro allI impI)
+  fix n m :: nat assume "n \<le> m"
+  then obtain k where "m = n + k" using le_iff_add by metis
+  then have "\<bar>s n - s m\<bar> \<le> 2 * (1 - 1/2^k) / 2^n"
+    using geom_cauchy_bound_aux[OF assms] by metis
+  also have "... \<le> 2 / 2^n" by (simp add: divide_right_mono)
+  finally show "\<bar>s n - s m\<bar> \<le> 2 / 2^n" by presburger
+qed
 
 lemma geom_cauchy_Cauchy:
   fixes s :: "nat \<Rightarrow> real"
@@ -11742,7 +11771,12 @@ lemma geom_cauchy_Cauchy:
   unfolding Cauchy_def
 proof (intro allI impI)
   fix e :: real assume he: "e > 0"
-  obtain N :: nat where hN: "2 / 2^N < e" sorry
+  obtain N :: nat where hN: "2 / 2^N < e"
+  proof -
+    obtain N where "2 / e < (2::real)^N" using real_arch_pow[of 2 "2/e"] by auto
+    then have "2 / 2^N < e" using he by (simp add: field_simps)
+    then show ?thesis using that by blast
+  qed
   show "\<exists>M. \<forall>m\<ge>M. \<forall>n\<ge>M. dist (s m) (s n) < e"
   proof (intro exI[of _ N] allI impI)
     fix m n0 assume hm: "N \<le> m" and hn0: "N \<le> n0"
