@@ -27534,7 +27534,7 @@ proof -
       obtain z where hz_props: "\<forall>i<n. z i \<in> ?RN \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>/2"
         and hz_gp: "top1_general_position_in_Rpow N (z ` {..<n})"
         and hz_inj: "inj_on z {..<n}"
-        using Lemma_50_4_indexed[OF hUi_fin ha_Rpow hd2_pos] sorry
+        using Lemma_50_4_indexed[OF hUi_fin ha_Rpow hd2_pos] by metis
       have hz_Rpow: "\<forall>i<n. z i \<in> ?RN" using hz_props by presburger
       have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
         using hz_props unfolding a_def by presburger
