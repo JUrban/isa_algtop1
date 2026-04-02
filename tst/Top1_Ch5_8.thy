@@ -27699,7 +27699,39 @@ proof -
         proof (intro CollectI conjI ballI impI)
           show "g \<in> ?C" using hg_C by presburger
           fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hgxy: "g x = g y"
-          have hphi_eq: "\<forall>i<n. \<phi> i x = \<phi> i y" sorry
+          text \<open>GP argument: g(x)=g(y) → Σ[φᵢ(x)-φᵢ(y)]zᵢ = 0 → all coeff 0.\<close>
+          have hphi_eq: "\<forall>i<n. \<phi> i x = \<phi> i y"
+          proof -
+            text \<open>The set of zᵢ with nonzero coefficient.\<close>
+            define nz where "nz = {i \<in> {..<n}. \<phi> i x \<noteq> \<phi> i y}"
+            define T where "T = z ` nz"
+            text \<open>T ⊆ z_map ` (a ` {..<n}), which is in GP.\<close>
+            have hT_sub_gp: "T \<subseteq> z_map ` (a ` {..<n})"
+              unfolding T_def z_def nz_def by auto
+            text \<open>card T ≤ card nz ≤ 2(m+1) = N+1.\<close>
+            have hnz_sub: "nz \<subseteq> {i \<in> {..<n}. \<phi> i x \<noteq> 0} \<union> {i \<in> {..<n}. \<phi> i y \<noteq> 0}"
+              unfolding nz_def by auto
+            have hcard_nz: "card nz \<le> Suc N"
+            proof -
+              have hfin_nzx: "finite {i \<in> {..<n}. \<phi> i x \<noteq> 0}" by simp
+              have hfin_nzy: "finite {i \<in> {..<n}. \<phi> i y \<noteq> 0}" by simp
+              have "card nz \<le> card ({i \<in> {..<n}. \<phi> i x \<noteq> 0} \<union> {i \<in> {..<n}. \<phi> i y \<noteq> 0})"
+                using card_mono[OF _ hnz_sub] hfin_nzx hfin_nzy by simp
+              also have "... \<le> card {i \<in> {..<n}. \<phi> i x \<noteq> 0} + card {i \<in> {..<n}. \<phi> i y \<noteq> 0}"
+                using card_Un_le sorry
+              also have "... \<le> Suc m + Suc m"
+                using hUi_order hx hy unfolding top1_cover_order_le_on_def
+                sorry
+              also have "... = Suc N" unfolding N_def by presburger
+              finally show ?thesis by linarith
+            qed
+            text \<open>Coefficients: a(zᵢ) = φᵢ(x) - φᵢ(y).
+              Sum of coefficients = Σφᵢ(x) - Σφᵢ(y) = 1 - 1 = 0.
+              Σ a(z)*z(j) = Σ[φᵢ(x)-φᵢ(y)]z(i)(j) = g(x)(j) - g(y)(j) = 0.\<close>
+            text \<open>By GP: all a(z) = 0, i.e., φᵢ(x) = φᵢ(y) for i ∈ nz.\<close>
+            have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0" sorry
+            then show "\<forall>i<n. \<phi> i x = \<phi> i y" unfolding nz_def by simp
+          qed
           have "\<exists>i\<in>{..<n}. \<phi> i x > 0"
           proof (rule ccontr)
             assume "\<not> (\<exists>i\<in>{..<n}. 0 < \<phi> i x)"
