@@ -27703,7 +27703,15 @@ proof -
           have "\<exists>i\<in>{..<n}. \<phi> i x > 0"
           proof (rule ccontr)
             assume "\<not> (\<exists>i\<in>{..<n}. 0 < \<phi> i x)"
-            then have "\<forall>i\<in>{..<n}. \<phi> i x = 0" using hphi_ge0 hx sorry
+            then have hle0: "\<forall>i<n. \<not> (0 < \<phi> i x)" by auto
+            then have "\<forall>i\<in>{..<n}. \<phi> i x = 0"
+            proof (intro ballI)
+              fix i assume "i \<in> {..<n}"
+              then have "i < n" by simp
+              then have "0 \<le> \<phi> i x" using hphi_ge0 hx by blast
+              moreover have "\<not> (0 < \<phi> i x)" using hle0 \<open>i < n\<close> by blast
+              ultimately show "\<phi> i x = 0" by linarith
+            qed
             then have "{i \<in> {..<n}. \<phi> i x \<noteq> 0} = {}" by blast
             then have "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) = 0" by simp
             then show False using hphi_sum1 hx by simp
