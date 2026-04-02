@@ -11905,6 +11905,65 @@ proof -
   qed
 qed
 
+text \<open>Open sets in the closed interval topology contain ε-balls.\<close>
+lemma interval_open_contains_eps_ball:
+  assumes hU: "U \<in> top1_closed_interval_topology (0::real) 1"
+  assumes hx: "x \<in> U"
+  shows "\<exists>\<epsilon>>0. {t \<in> top1_closed_interval 0 1. \<bar>t - x\<bar> < \<epsilon>} \<subseteq> U"
+proof -
+  have hUss: "U \<in> subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
+    using hU unfolding top1_closed_interval_topology_def by presburger
+  then obtain W where hW: "W \<in> order_topology_on_UNIV" and hUeq: "U = top1_closed_interval 0 1 \<inter> W"
+    unfolding subspace_topology_def by blast
+  have hxW: "x \<in> W" using hx hUeq by simp
+  have hWgen: "W \<in> topology_generated_by_basis UNIV basis_order_topology"
+    using hW unfolding order_topology_on_UNIV_def by presburger
+  then obtain b where hb: "b \<in> basis_order_topology" and hxb: "x \<in> b" and hbW: "b \<subseteq> W"
+    using hxW unfolding topology_generated_by_basis_def by blast
+  have hb_cases: "b \<in> {open_interval a c |a c. a < c} \<union> {open_ray_gt a |a. True} \<union> {open_ray_lt a |a. True} \<union> {UNIV}"
+    using hb unfolding basis_order_topology_def by presburger
+  have "\<exists>\<epsilon>>0. {t::real. \<bar>t - x\<bar> < \<epsilon>} \<subseteq> b"
+  proof -
+    from hb_cases show ?thesis
+    proof (elim UnE)
+      assume "b \<in> {open_interval a c |a c. a < c}"
+      then obtain a c where hab: "a < c" and hbeq: "b = open_interval a c" by blast
+      have "a < x \<and> x < c" using hxb hbeq unfolding open_interval_def by blast
+      define \<epsilon> where "\<epsilon> = min (x - a) (c - x)"
+      have "\<epsilon> > 0" unfolding \<epsilon>_def using \<open>a < x \<and> x < c\<close> by auto
+      have "{t. \<bar>t - x\<bar> < \<epsilon>} \<subseteq> open_interval a c"
+        unfolding \<epsilon>_def open_interval_def by auto
+      then show ?thesis using \<open>\<epsilon> > 0\<close> hbeq by blast
+    next
+      assume "b \<in> {open_ray_gt a |a. True}"
+      then obtain a where hbeq: "b = open_ray_gt a" by blast
+      have "x > a" using hxb hbeq unfolding open_ray_gt_def by simp
+      then have "x - a > 0" by linarith
+      have "{t::real. \<bar>t - x\<bar> < x - a} \<subseteq> open_ray_gt a"
+        unfolding open_ray_gt_def by auto
+      then show ?thesis using \<open>x - a > 0\<close> hbeq by blast
+    next
+      assume "b \<in> {open_ray_lt a |a. True}"
+      then obtain a where hbeq: "b = open_ray_lt a" by blast
+      have "x < a" using hxb hbeq unfolding open_ray_lt_def by simp
+      then have "a - x > 0" by linarith
+      have "{t::real. \<bar>t - x\<bar> < a - x} \<subseteq> open_ray_lt a"
+        unfolding open_ray_lt_def by auto
+      then show ?thesis using \<open>a - x > 0\<close> hbeq by blast
+    next
+      assume "b \<in> {UNIV}"
+      then show ?thesis using zero_less_one by blast
+    qed
+  qed
+  then obtain \<epsilon> where heps: "\<epsilon> > 0" and hball: "{t. \<bar>t - x\<bar> < \<epsilon>} \<subseteq> b" by blast
+  show ?thesis
+  proof (intro exI[of _ \<epsilon>] conjI)
+    show "\<epsilon> > 0" using heps by presburger
+    show "{t \<in> top1_closed_interval 0 1. \<bar>t - x\<bar> < \<epsilon>} \<subseteq> U"
+      using hball hbW hUeq by blast
+  qed
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
