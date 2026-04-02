@@ -26834,8 +26834,9 @@ lemma general_position_extend_notin:
   assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
   shows "\<exists>q \<in> top1_Rpow_set N.
     top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S) \<and> q \<notin> S"
-  text \<open>Follows from general_position_extend proof: q is chosen outside all
-    hyperplanes containing affine spans of subsets of S, which includes S itself.\<close>
+  text \<open>Follows from the proof of general_position_extend. The q is chosen
+    from ball(p,ε) \ ⋃bad_sets. Since S ⊆ ⋃bad_sets (each s is in its own
+    affine hull ⊆ some hyperplane ∈ bad_sets), q ∉ S automatically.\<close>
   sorry
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
