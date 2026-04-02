@@ -27784,10 +27784,7 @@ proof -
                 apply (rule sum.mono_neutral_right) apply simp apply blast apply simp done
               ultimately show "(\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j) = 0" by presburger
             qed
-            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
-              text \<open>From hcoord_nz via fiber grouping + sum_distrib_right.
-                Moved after fiber definitions for UNION_disjoint access.\<close>
-              sorry
+            text \<open>hcoord_zero proved below after fiber definitions.\<close>
             text \<open>Step 2: Σ c(t) = 0.\<close>
             have hsum_nz: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = 0"
             proof -
@@ -27825,6 +27822,32 @@ proof -
             have hsum_group: "(\<Sum>i\<in>nz. \<phi> i x - \<phi> i y) = (\<Sum>t\<in>T. \<Sum>i\<in>{i\<in>nz. z i = t}. \<phi> i x - \<phi> i y)"
               using sum.UNION_disjoint[OF hT_fin2 hfiber_fin hfiber_disj, of "\<lambda>i. \<phi> i x - \<phi> i y"]
               hfiber_union by auto
+            have hcoord_group: "\<And>jj. (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i jj) =
+              (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i jj))"
+              using sum.UNION_disjoint[OF hT_fin2 hfiber_fin hfiber_disj, of "\<lambda>i. (\<phi> i x - \<phi> i y) * z i _"]
+              hfiber_union by auto
+            have hcoord_zero: "\<forall>j<N. (\<Sum>t\<in>T. c t * t j) = 0"
+            proof (intro allI impI)
+              fix j assume hj: "j < N"
+              have "(\<Sum>t\<in>T. c t * t j) = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y)) * t j)"
+                unfolding c_def by presburger
+              also have "... = (\<Sum>t\<in>T. (\<Sum>i\<in>{i\<in>nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j))"
+              proof (rule sum.cong)
+                show "T = T" ..
+                fix t assume ht: "t \<in> T"
+                have "\<forall>i\<in>{i \<in> nz. z i = t}. z i j = t j" by blast
+                then have "(\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j) =
+                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * t j)" by simp
+                also have "... = (\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j"
+                  by (simp add: sum_distrib_right)
+                finally show "(\<Sum>i\<in>{i \<in> nz. z i = t}. \<phi> i x - \<phi> i y) * t j =
+                  (\<Sum>i\<in>{i \<in> nz. z i = t}. (\<phi> i x - \<phi> i y) * z i j)" by auto
+              qed
+              also have "... = (\<Sum>i\<in>nz. (\<phi> i x - \<phi> i y) * z i j)"
+                using hcoord_group by presburger
+              also have "... = 0" using hcoord_nz hj by presburger
+              finally show "(\<Sum>t\<in>T. c t * t j) = 0" by satx
+            qed
             have hsum_zero: "(\<Sum>t\<in>T. c t) = 0"
               using hsum_group hsum_nz unfolding c_def by presburger
             text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
