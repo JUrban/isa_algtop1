@@ -27695,7 +27695,26 @@ proof -
           GP: ≤ N+1 points in GP with coeff sum 0 ⟹ all coeff 0.
           So φᵢ x = φᵢ y for all i. Since ∃i. φᵢ x > 0, we have φᵢ y = φᵢ x > 0,
           so y ∈ supp φᵢ ⊆ Uᵢ and x ∈ Uᵢ. Hence d x y < ε/2 < ε.\<close>
-        show ?thesis sorry
+        show ?thesis unfolding top1_U_eps_on_def
+        proof (intro CollectI conjI ballI impI)
+          show "g \<in> ?C" using hg_C by presburger
+          fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hgxy: "g x = g y"
+          have hphi_eq: "\<forall>i<n. \<phi> i x = \<phi> i y" sorry
+          have "\<exists>i\<in>{..<n}. \<phi> i x > 0"
+          proof (rule ccontr)
+            assume "\<not> (\<exists>i\<in>{..<n}. 0 < \<phi> i x)"
+            then have "\<forall>i\<in>{..<n}. \<phi> i x = 0" using hphi_ge0 hx sorry
+            then have "{i \<in> {..<n}. \<phi> i x \<noteq> 0} = {}" by blast
+            then have "(\<Sum>i\<in>{i\<in>{..<n}. \<phi> i x \<noteq> 0}. \<phi> i x) = 0" by simp
+            then show False using hphi_sum1 hx by simp
+          qed
+          then obtain i0 where hi0: "i0 < n" and hi0_pos: "\<phi> i0 x > 0" by blast
+          have "x \<in> Ui i0" using hphi_supp hi0 hx hi0_pos by fastforce
+          moreover have "y \<in> Ui i0"
+            using hphi_supp hi0 hy hphi_eq hi0 hi0_pos by force
+          ultimately have "d x y < \<epsilon>/2" using hUi_diam hi0 by blast
+          then show "d x y < \<epsilon>" using he by simp
+        qed
       qed
       text \<open>--- End main construction ---\<close>
       have hg_near_d0: "?rho f0 g < \<delta>0" using hg_near hd_lt_d0 by linarith
