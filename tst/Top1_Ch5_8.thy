@@ -27827,7 +27827,51 @@ proof -
         show "card {U \<in> \<BB>'. x \<in> U} \<le> Suc m"
           using card_mono[OF hfin hsub] hcard by presburger
       qed
-      text \<open>Enumerate finite BB' as Ui 0, ..., Ui (n-1).\<close>
+      text \<open>Enumerate finite BB' as Ui 0, ..., Ui (n-1).
+        Use finite_cover_enumerate to filter empty sets and enumerate.\<close>
+      have hBB'_open: "\<BB>' \<subseteq> TX" using hBB'_sub hBB_open by order
+      have hBB'_sub_X: "\<forall>B\<in>\<BB>'. B \<subseteq> X" using hBB'_open hTsub by blast
+      have hEnum_ex: "\<exists>n (Ui :: nat \<Rightarrow> 'a set). n > 0 \<and>
+        {B \<in> \<BB>'. B \<noteq> {}} = Ui ` {..<n} \<and> inj_on Ui {..<n} \<and>
+        (\<forall>i<n. Ui i \<noteq> {}) \<and> (\<forall>i<n. Ui i \<in> \<BB>') \<and> (\<forall>i<n. Ui i \<subseteq> X)"
+        using finite_cover_enumerate[OF hBB'_fin hXne hBB'_cover hBB'_sub_X] by presburger
+      obtain nn Ui0 where hnn: "nn > (0::nat)"
+        and himg: "{B \<in> \<BB>'. B \<noteq> {}} = Ui0 ` {..<nn}"
+        and hinj0: "inj_on Ui0 {..<nn}"
+        and hne0: "\<forall>i<nn. Ui0 i \<noteq> {}"
+        and hin_BB: "\<forall>i<nn. Ui0 i \<in> \<BB>'"
+        and hsub_X0: "\<forall>i<nn. Ui0 i \<subseteq> X"
+        using hEnum_ex by auto
+      have hUi0_open: "\<forall>i<nn. Ui0 i \<in> TX" using hin_BB hBB'_open by fast
+      have hUi0_cover: "X \<subseteq> (\<Union>i<nn. Ui0 i)"
+      proof
+        fix x assume "x \<in> X"
+        then obtain B where "B \<in> \<BB>'" "x \<in> B" using hBB'_cover by blast
+        then have "B \<noteq> {}" by blast
+        then have "B \<in> {B \<in> \<BB>'. B \<noteq> {}}" using \<open>B \<in> \<BB>'\<close> by blast
+        then have "B \<in> Ui0 ` {..<nn}" using himg by blast
+        then obtain i where "i < nn" "Ui0 i = B" by blast
+        then show "x \<in> (\<Union>i<nn. Ui0 i)" using \<open>x \<in> B\<close> by blast
+      qed
+      have hUi0_diam: "\<forall>i<nn. \<forall>x\<in>Ui0 i. \<forall>y\<in>Ui0 i. d x y < \<epsilon>/2"
+        using hin_BB hBB'_diam by blast
+      have hUi0_fdiam: "\<forall>i<nn. \<forall>x\<in>Ui0 i. \<forall>y\<in>Ui0 i. ?dRN (f0 x) (f0 y) < \<delta>/2"
+        using hin_BB hBB'_fdiam by blast
+      have hUi0_order: "top1_cover_order_le_on X (Ui0 ` {..<nn}) m"
+        unfolding top1_cover_order_le_on_def
+      proof (intro ballI conjI)
+        fix x assume hx: "x \<in> X"
+        have hsub: "{U \<in> Ui0 ` {..<nn}. x \<in> U} \<subseteq> {U \<in> \<BB>'. x \<in> U}"
+          using hin_BB by blast
+        have hfin: "finite {U \<in> \<BB>'. x \<in> U}" using hBB'_fin by simp
+        show "finite {U \<in> Ui0 ` {..<nn}. x \<in> U}" using finite_subset[OF hsub hfin] by presburger
+        have hcard: "card {U \<in> \<BB>'. x \<in> U} \<le> Suc m"
+          using hBB'_order hx unfolding top1_cover_order_le_on_def by blast
+        show "card {U \<in> Ui0 ` {..<nn}. x \<in> U} \<le> Suc m"
+          using card_mono[OF hfin hsub] hcard by presburger
+      qed
+      have hUi0_ne: "\<forall>i<nn. \<exists>x. x \<in> Ui0 i \<and> x \<in> X"
+        using hne0 hsub_X0 by blast
       obtain n :: nat and Ui :: "nat \<Rightarrow> 'a set" where
         hUi_fin: "n > 0" and
         hUi_open: "\<forall>i<n. Ui i \<in> TX" and
@@ -27837,7 +27881,8 @@ proof -
         hUi_order: "top1_cover_order_le_on X (Ui ` {..<n}) m" and
         hUi_ne: "\<forall>i<n. \<exists>x. x \<in> Ui i \<and> x \<in> X" and
         hUi_inj: "inj_on Ui {..<n}"
-        sorry
+        using hUi0_cover hUi0_diam hUi0_fdiam hUi0_ne hUi0_open hUi0_order hinj0
+          hnn by blast
       have hUi_idx_order: "\<forall>x\<in>X. card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m"
       proof (intro ballI)
         fix x assume hx: "x \<in> X"
