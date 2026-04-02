@@ -26842,11 +26842,38 @@ text \<open>general_position_extend now includes q ∉ S in its conclusion.\<clo
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
+lemma gp_singleton_set:
+  assumes hp: "p \<in> top1_Rpow_set N"
+  shows "top1_general_position_in_Rpow N {p}"
+  unfolding top1_general_position_in_Rpow_def
+proof (intro conjI allI ballI impI)
+  show "finite {p}" by simp
+  show "{p} \<subseteq> top1_Rpow_set N" using hp by simp
+  fix T :: "(nat \<Rightarrow> real) set" and a z
+  assume hT: "T \<subseteq> {p}" and hc: "card T \<le> Suc N"
+    and ha: "(\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0"
+    and hz: "z \<in> T"
+  from hT hz have "z = p" by blast
+  from hT have "T = {p}" using hz by blast
+  then have "(\<Sum>z\<in>T. a z) = a p" by simp
+  then have "a p = 0" using ha by simp
+  then show "a z = 0" using \<open>z = p\<close> by simp
+qed
+
 lemma gp_singleton:
   assumes "p \<in> top1_Rpow_set N" and "0 < \<delta>"
   shows "\<exists>z. z 0 \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N p (z 0) < \<delta>
     \<and> top1_general_position_in_Rpow N {z 0} \<and> inj_on z {..<Suc 0}"
-  sorry
+proof (intro exI[of _ "\<lambda>_. p"] conjI)
+  show "p \<in> top1_Rpow_set N" using assms(1) .
+  show "top1_Rpow_sup_dist N p p < \<delta>"
+    unfolding top1_Rpow_sup_dist_def using assms by simp
+  have "(\<lambda>_::nat. p) ` {..<Suc 0} = {p}" by force
+  then show "top1_general_position_in_Rpow N {(\<lambda>_::nat. p) 0}"
+    using gp_singleton_set[OF assms(1)] by simp
+  show "inj_on (\<lambda>_::nat. p) {..<Suc 0}"
+    unfolding inj_on_def by simp
+qed
 
 lemma Lemma_50_4_indexed_ind:
   "(N::nat) > 0 \<Longrightarrow> (\<forall>i<(k::nat). a i \<in> top1_Rpow_set N) \<Longrightarrow> 0 < (\<delta>::real) \<Longrightarrow>
@@ -26867,8 +26894,12 @@ next
     obtain z where hz: "z 0 \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a 0) (z 0) < \<delta>
       \<and> top1_general_position_in_Rpow N {z 0} \<and> inj_on z {..<Suc 0}"
       using gp_singleton[OF ha0 Suc.prems(3)] by blast
-    have "z ` {..<Suc 0} = {z 0}" by auto
-    then show ?thesis using hz True sorry
+    have himg: "z ` {..<Suc 0} = {z 0}" by force
+    have "\<forall>i<Suc 0. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>"
+      using hz True by simp
+    then show ?thesis using hz himg True
+      apply (intro exI[of _ z])
+      apply (intro conjI) apply simp apply simp apply simp done
   next
     case False
     then have hk: "k > 0" by simp
