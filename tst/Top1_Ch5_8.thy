@@ -27575,6 +27575,10 @@ proof -
       text \<open>Step 1a: Get initial cover with small diameter and f-diameter.
         Uses uniform continuity of f0 (compact metric → unif. cont.)
         and compactness to extract finite subcover.\<close>
+      text \<open>Uniform continuity of f0: compact metric → uniformly continuous.
+        For δ/2 > 0, ∃r>0. d(x,y)<r → dRN(f0 x, f0 y) < δ/2.
+        Take r' = min(r, ε/2)/2. Cover X by balls of radius r'.
+        Each ball has d-diam < ε/2 and f-diam < δ/2.\<close>
       obtain \<VV> where hVV_open: "\<VV> \<subseteq> TX" and hVV_cover: "top1_open_covering_on X TX \<VV>"
         and hVV_fin: "finite \<VV>"
         and hVV_diam: "\<forall>V\<in>\<VV>. \<forall>x\<in>V. \<forall>y\<in>V. d x y < \<epsilon>/2"
