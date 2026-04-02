@@ -26829,6 +26829,18 @@ qed
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
+lemma Lemma_50_4_indexed_ind:
+  "(\<forall>i<(k::nat). a i \<in> top1_Rpow_set N) \<Longrightarrow> 0 < (\<delta>::real) \<Longrightarrow>
+    \<exists>z. (\<forall>i<k. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
+        \<and> top1_general_position_in_Rpow N (z ` {..<k})
+        \<and> inj_on z {..<k}"
+proof (induction k arbitrary: a)
+  case 0 show ?case sorry
+next
+  case (Suc k)
+  show ?case sorry
+qed
+
 lemma Lemma_50_4_indexed:
   assumes hn: "n > 0"
   assumes ha: "\<forall>i<n. a i \<in> top1_Rpow_set N"
@@ -26836,7 +26848,7 @@ lemma Lemma_50_4_indexed:
   shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
         \<and> top1_general_position_in_Rpow N (z ` {..<n})
         \<and> inj_on z {..<n}"
-  sorry
+  using Lemma_50_4_indexed_ind ha hd sorry
 
 text \<open>Δ(f) measures how far f deviates from being injective:
   Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
