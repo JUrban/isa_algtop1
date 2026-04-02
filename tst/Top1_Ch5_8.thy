@@ -26468,7 +26468,7 @@ lemma general_position_extend:
   assumes hGP: "top1_general_position_in_Rpow N S"
   assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
   shows "\<exists>q \<in> top1_Rpow_set N.
-    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S)"
+    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S) \<and> q \<notin> S"
 proof -
   text \<open>The "forbidden" sets: for each T ⊆ S with |T| ≤ N, the affine span of T.\<close>
   define F where "F T = {y \<in> top1_Rpow_set N.
@@ -26724,7 +26724,18 @@ proof -
     show ?thesis unfolding top1_general_position_in_Rpow_def
       using hfin_ins hsub_ins hgp_cond by presburger
   qed
-  show ?thesis using hq_Rpow hq_near hq_gp by blast
+  have hq_notin: "q \<notin> S"
+  proof
+    assume hqS: "q \<in> S"
+    have "{q} \<subseteq> S" using hqS by blast
+    moreover have "card {q} \<le> N" using hN by simp
+    ultimately have "hyp_T {q} \<in> bad_sets" unfolding bad_sets_def by blast
+    moreover have "q \<in> F {q}" unfolding F_def using hq_Rpow hFin hqS hS by auto
+    moreover have "F {q} \<subseteq> hyp_T {q}" using hhyp_exists[of "{q}"] hqS hN by auto
+    ultimately have "q \<in> \<Union>bad_sets" by blast
+    then show False using hq_avoid by blast
+  qed
+  show ?thesis using hq_Rpow hq_near hq_gp hq_notin by blast
 qed
 
 text \<open>The general position approximation lemma: given finitely many points in R^N,
@@ -26827,30 +26838,7 @@ next
   show ?case using hf_near hf_gp by blast
 qed
 
-lemma general_position_extend_notin:
-  fixes S :: "(nat \<Rightarrow> real) set"
-  assumes hN: "N > 0" and hFin: "finite S" and hS: "S \<subseteq> top1_Rpow_set N"
-  assumes hGP: "top1_general_position_in_Rpow N S"
-  assumes hp: "p \<in> top1_Rpow_set N" and heps: "0 < \<epsilon>"
-  shows "\<exists>q \<in> top1_Rpow_set N.
-    top1_Rpow_sup_dist N p q < \<epsilon> \<and> top1_general_position_in_Rpow N (insert q S) \<and> q \<notin> S"
-proof -
-  obtain q where hq: "q \<in> top1_Rpow_set N"
-    "top1_Rpow_sup_dist N p q < \<epsilon>"
-    "top1_general_position_in_Rpow N (insert q S)"
-    using general_position_extend[OF hN hFin hS hGP hp heps] by blast
-  text \<open>If q ∉ S, done. If q ∈ S, apply again with smaller ε to get q' ≠ q.\<close>
-  show ?thesis
-  proof (cases "q \<in> S")
-    case False then show ?thesis using hq by blast
-  next
-    case True
-    text \<open>q ∈ S. Apply extend again with ε/2 to get q2 with GP(insert q2 S).
-      Keep trying with ε/2^k until we get q_k ∉ S. Since S is finite and
-      each ball contains infinitely many valid points, this must succeed.\<close>
-    show ?thesis sorry
-  qed
-qed
+text \<open>general_position_extend now includes q ∉ S in its conclusion.\<close>
 
 text \<open>Index-based GP: given n points in R^N, perturb each independently
   to get n DISTINCT points in GP, each near its original.\<close>
@@ -26886,7 +26874,7 @@ next
       and hq_near: "top1_Rpow_sup_dist N (a k) q < \<delta>"
       and hq_gp: "top1_general_position_in_Rpow N (insert q (z0 ` {..<k}))"
       and hq_notin: "q \<notin> z0 ` {..<k}"
-      using general_position_extend_notin[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
+      using general_position_extend[OF Suc.prems(1) hfin0 hsub0 hgp0 hak Suc.prems(3)] by blast
     define z where "z = (\<lambda>i. if i < k then z0 i else q)"
     have himg: "z ` {..<Suc k} = insert q (z0 ` {..<k})"
     proof
