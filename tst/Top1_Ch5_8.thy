@@ -11868,6 +11868,43 @@ proof (rule ccontr)
   then show False using assms(2)[THEN spec, of N] by linarith
 qed
 
+text \<open>ε-δ from metric continuity to [0,1] (self-contained for Peano).\<close>
+lemma metric_to_interval_eps_delta:
+  assumes hdX: "top1_metric_on X dX"
+  assumes hcont: "top1_continuous_map_on X (top1_metric_topology_on X dX)
+    (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<phi>"
+  assumes hx0: "x0 \<in> X" and heps: "\<epsilon> > (0::real)"
+  shows "\<exists>\<delta>>0. \<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> \<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>"
+proof -
+  define V where "V = {t \<in> top1_closed_interval 0 1. \<bar>\<phi> x0 - t\<bar> < \<epsilon>}"
+  have hab: "\<phi> x0 - \<epsilon> < \<phi> x0 + \<epsilon>" using heps by linarith
+  have hU_open: "open_interval (\<phi> x0 - \<epsilon>) (\<phi> x0 + \<epsilon>) \<in> order_topology_on_UNIV"
+    using open_interval_in_order_topology[OF hab] by presburger
+  have hV_eq: "V = top1_closed_interval 0 1 \<inter> open_interval (\<phi> x0 - \<epsilon>) (\<phi> x0 + \<epsilon>)"
+    unfolding V_def open_interval_def top1_closed_interval_def using add_diff_cancel_left' by auto
+  have hV_open: "V \<in> top1_closed_interval_topology 0 1"
+    unfolding top1_closed_interval_topology_def subspace_topology_def
+    using hU_open hV_eq by blast
+  have hx0_V: "\<phi> x0 \<in> V" unfolding V_def
+    using hcont hx0 heps unfolding top1_continuous_map_on_def top1_closed_interval_def by auto
+  have hpreimage: "{x \<in> X. \<phi> x \<in> V} \<in> top1_metric_topology_on X dX"
+    using hcont hV_open unfolding top1_continuous_map_on_def by blast
+  have hx0_preimage: "x0 \<in> {x \<in> X. \<phi> x \<in> V}" using hx0 hx0_V by blast
+  obtain \<delta> where hdel_pos: "\<delta> > 0" and hball_sub: "top1_ball_on X dX x0 \<delta> \<subseteq> {x \<in> X. \<phi> x \<in> V}"
+    using top1_metric_open_contains_ball[OF hdX hpreimage hx0_preimage] by blast
+  show ?thesis
+  proof (intro exI[of _ \<delta>] conjI)
+    show "\<delta> > 0" using hdel_pos by simp
+    show "\<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> \<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>"
+    proof (intro ballI impI)
+      fix y assume hyX: "y \<in> X" and hdist: "dX x0 y < \<delta>"
+      have "y \<in> top1_ball_on X dX x0 \<delta>" unfolding top1_ball_on_def using hyX hdist by blast
+      then have "y \<in> {x \<in> X. \<phi> x \<in> V}" using hball_sub by blast
+      then show "\<bar>\<phi> x0 - \<phi> y\<bar> < \<epsilon>" unfolding V_def by blast
+    qed
+  qed
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
