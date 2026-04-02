@@ -27402,6 +27402,56 @@ proof -
   show ?thesis unfolding \<CC>_def[symmetric] using hn0 himg2 hinj2 hne2 hin_BB hin_X by blast
 qed
 
+text \<open>ε-δ continuity implies open preimage continuity for metric spaces.\<close>
+lemma metric_epsilon_delta_imp_continuous:
+  assumes hdX: "top1_metric_on X dX"
+  assumes hdY: "top1_metric_on Y dY"
+  assumes hfX: "\<forall>x\<in>X. f x \<in> Y"
+  assumes heps: "\<forall>x\<in>X. \<forall>\<epsilon>>0. \<exists>\<delta>>0. \<forall>y\<in>X. dX x y < \<delta> \<longrightarrow> dY (f x) (f y) < \<epsilon>"
+  shows "top1_continuous_map_on X (top1_metric_topology_on X dX) Y (top1_metric_topology_on Y dY) f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI)
+  show "\<forall>x\<in>X. f x \<in> Y" using hfX by metis
+next
+  show "\<forall>V\<in>top1_metric_topology_on Y dY. {x \<in> X. f x \<in> V} \<in> top1_metric_topology_on X dX"
+  proof (intro ballI)
+  fix V assume hV: "V \<in> top1_metric_topology_on Y dY"
+  show "{x \<in> X. f x \<in> V} \<in> top1_metric_topology_on X dX"
+  proof (rule top1_open_of_local_subsets[OF
+      top1_metric_topology_on_is_topology_on[OF hdX]])
+    show "{x \<in> X. f x \<in> V} \<subseteq> X" by simp
+    show "\<forall>x\<in>{x \<in> X. f x \<in> V}. \<exists>U\<in>top1_metric_topology_on X dX.
+      x \<in> U \<and> U \<subseteq> {x \<in> X. f x \<in> V}"
+    proof (intro ballI)
+      fix x0 assume hx0: "x0 \<in> {x \<in> X. f x \<in> V}"
+      have hx0X: "x0 \<in> X" using hx0 by simp
+      have hfx0V: "f x0 \<in> V" using hx0 by simp
+      obtain \<epsilon> where heps_pos: "\<epsilon> > 0" and hball_V: "top1_ball_on Y dY (f x0) \<epsilon> \<subseteq> V"
+        using top1_metric_open_contains_ball[OF hdY hV hfx0V] by blast
+      obtain \<delta> where hdel_pos: "\<delta> > 0" and hdel: "\<forall>y\<in>X. dX x0 y < \<delta> \<longrightarrow> dY (f x0) (f y) < \<epsilon>"
+        using heps[rule_format, OF hx0X heps_pos] by metis
+      have hball_open: "top1_ball_on X dX x0 \<delta> \<in> top1_metric_topology_on X dX"
+        using top1_ball_open_in_metric_topology[OF hdX hx0X hdel_pos] by blast
+      have hx0_ball: "x0 \<in> top1_ball_on X dX x0 \<delta>"
+        unfolding top1_ball_on_def using hx0X hdel_pos
+          metric_on_self_zero[OF hdX hx0X] by simp
+      have hball_sub: "top1_ball_on X dX x0 \<delta> \<subseteq> {x \<in> X. f x \<in> V}"
+      proof
+        fix y assume "y \<in> top1_ball_on X dX x0 \<delta>"
+        then have hyX: "y \<in> X" and hdist: "dX x0 y < \<delta>"
+          unfolding top1_ball_on_def by simp_all
+        have "dY (f x0) (f y) < \<epsilon>" using hdel hyX hdist by simp
+        then have "f y \<in> top1_ball_on Y dY (f x0) \<epsilon>"
+          unfolding top1_ball_on_def using hfX hyX by blast
+        then show "y \<in> {x \<in> X. f x \<in> V}" using hball_V hyX by blast
+      qed
+      show "\<exists>U\<in>top1_metric_topology_on X dX. x0 \<in> U \<and> U \<subseteq> {x \<in> X. f x \<in> V}"
+        using hball_open hx0_ball hball_sub by blast
+    qed
+  qed
+  qed
+qed
+
 (** from \S50 Theorem 50.5 (The imbedding theorem) [top1.tex:7710] **)
 
 theorem Theorem_50_5:
@@ -27969,15 +28019,20 @@ proof -
           unfolding top1_PiE_def top1_Pi_def top1_extensional_def
           using hg_ext hg_RN by blast
         show "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) g"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          fix x assume "x \<in> X"
-          show "g x \<in> ?RN" using hg_RN \<open>x \<in> X\<close> by blast
-        next
-          fix V assume "V \<in> top1_metric_topology_on ?RN ?dRN"
-          show "{x \<in> X. g x \<in> V} \<in> TX"
-            text \<open>g continuous: ε-δ argument using continuity of each φᵢ.\<close>
+        proof -
+          have hRN_met: "top1_metric_on ?RN ?dRN" by (rule top1_Rpow_sq_metric_is_metric)
+          have hg_eps_delta: "\<forall>x\<in>X. \<forall>\<epsilon>>(0::real). \<exists>\<delta>>0.
+            \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dRN (g x) (g y) < \<epsilon>"
+            text \<open>ε-δ continuity: finite sum of continuous × constant.
+              Each φᵢ is continuous, so for ε/(n*(1+M)) find δᵢ, take min.\<close>
             sorry
+          have hg_cont_met: "top1_continuous_map_on X (top1_metric_topology_on X d)
+            ?RN (top1_metric_topology_on ?RN ?dRN) g"
+            using metric_epsilon_delta_imp_continuous hd
+              top1_Rpow_sq_metric_is_metric hg_RN hg_eps_delta
+            by blast
+          show ?thesis using hg_cont_met unfolding hTX_eq
+            by blast
         qed
       qed
       text \<open>ρ(f0,g) < δ: for each x∈X, |g(x)-f0(x)| < δ in R^N.
