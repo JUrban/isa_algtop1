@@ -27495,8 +27495,10 @@ proof -
         fix x assume hx: "x \<in> X"
         have "card {i \<in> {..<n}. x \<in> Ui i} = card (Ui ` {i \<in> {..<n}. x \<in> Ui i})"
           using card_image[OF inj_on_subset[OF hUi_inj]] sorry
-        also have "Ui ` {i \<in> {..<n}. x \<in> Ui i} = {U \<in> Ui ` {..<n}. x \<in> U}" sorry
-        also have "card ... \<le> Suc m" using hUi_order hx unfolding top1_cover_order_le_on_def sorry
+        also have "Ui ` {i \<in> {..<n}. x \<in> Ui i} = {U \<in> Ui ` {..<n}. x \<in> U}"
+          by fast
+        also have "card ... \<le> Suc m" using hUi_order hx unfolding top1_cover_order_le_on_def
+          sorry
         finally show "card {i \<in> {..<n}. x \<in> Ui i} \<le> Suc m" sorry
       qed
       text \<open>Step 2: Partition of unity.\<close>
