@@ -28096,10 +28096,25 @@ proof -
         show "top1_continuous_map_on X TX ?RN (top1_metric_topology_on ?RN ?dRN) g"
         proof -
           have hRN_met: "top1_metric_on ?RN ?dRN" by (rule top1_Rpow_sq_metric_is_metric)
+          text \<open>Extract φᵢ continuity from POU.\<close>
+          have hphi_cont: "\<forall>i<n. top1_continuous_map_on X TX
+            (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) (\<phi> i)"
+            using hphi_pou unfolding top1_partition_of_unity_dominated_family_on_def by blast
+          text \<open>Convert to ε-δ form using helper.\<close>
+          have hphi_eps_delta: "\<forall>i<n. \<forall>x0\<in>X. \<forall>\<epsilon>'>0.
+            \<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
+          proof (intro allI impI ballI)
+            fix i :: nat and x0 and \<epsilon>' :: real assume "i < n" "x0 \<in> X" "0 < \<epsilon>'"
+            show "\<exists>\<delta>>0. \<forall>y\<in>X. d x0 y < \<delta> \<longrightarrow> \<bar>\<phi> i x0 - \<phi> i y\<bar> < \<epsilon>'"
+              using interval_continuous_imp_abs_epsilon_delta[OF hd _ \<open>x0 \<in> X\<close> \<open>0 < \<epsilon>'\<close>]
+                hphi_cont \<open>i < n\<close> unfolding hTX_eq by simp
+          qed
           have hg_eps_delta: "\<forall>x\<in>X. \<forall>\<epsilon>>(0::real). \<exists>\<delta>>0.
             \<forall>y\<in>X. d x y < \<delta> \<longrightarrow> ?dRN (g x) (g y) < \<epsilon>"
-            text \<open>ε-δ continuity: finite sum of continuous × constant.
-              Each φᵢ is continuous, so for ε/(n*(1+M)) find δᵢ, take min.\<close>
+            text \<open>ε-δ continuity via finite sum bound:
+              for each x₀, ε>0, choose ε' = ε/(n*(1+M)), get δᵢ for each i,
+              take δ = min δᵢ. Then |g(x)_j - g(x₀)_j| ≤ Σ|φᵢ(x)-φᵢ(x₀)|·|z_i_j|
+              < n·ε'·M ≤ ε. The sq_metric = max over j of |·| < ε.\<close>
             sorry
           have hg_cont_met: "top1_continuous_map_on X (top1_metric_topology_on X d)
             ?RN (top1_metric_topology_on ?RN ?dRN) g"
