@@ -26827,6 +26827,17 @@ next
   show ?case using hf_near hf_gp by blast
 qed
 
+text \<open>Index-based GP: given n points in R^N, perturb each independently
+  to get n DISTINCT points in GP, each near its original.\<close>
+lemma Lemma_50_4_indexed:
+  assumes hn: "n > 0"
+  assumes ha: "\<forall>i<n. a i \<in> top1_Rpow_set N"
+  assumes hd: "0 < \<delta>"
+  shows "\<exists>z. (\<forall>i<n. z i \<in> top1_Rpow_set N \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>)
+        \<and> top1_general_position_in_Rpow N (z ` {..<n})
+        \<and> inj_on z {..<n}"
+  sorry
+
 text \<open>Δ(f) measures how far f deviates from being injective:
   Δ(f) = sup{diam f⁻¹({z}) | z ∈ f(X)}.\<close>
 definition top1_Delta_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> real" where
@@ -27519,24 +27530,14 @@ proof -
       define a where "a = (\<lambda>i. f0 (xi i))"
       have ha_Rpow: "\<forall>i<n. a i \<in> ?RN"
         unfolding a_def using hxi continuous_maps_metric_on_eval hf0_C by fast
-      have ha_fin: "finite (a ` {..<n})" by simp
-      have ha_sub: "a ` {..<n} \<subseteq> ?RN" using ha_Rpow by fast
       have hd2_pos: "0 < \<delta>/2" using hd_pos by simp
-      obtain z_map where hz_near: "\<forall>p\<in>a ` {..<n}. z_map p \<in> ?RN \<and> top1_Rpow_sup_dist N p (z_map p) < \<delta>/2"
-        and hz_gp: "top1_general_position_in_Rpow N (z_map ` (a ` {..<n}))"
-        using Lemma_50_4[OF ha_fin ha_sub hd2_pos] by blast
-      define z where "z = (\<lambda>i. z_map (a i))"
-      have hz_Rpow: "\<forall>i<n. z i \<in> ?RN"
-        unfolding z_def using hz_near by blast
+      obtain z where hz_props: "\<forall>i<n. z i \<in> ?RN \<and> top1_Rpow_sup_dist N (a i) (z i) < \<delta>/2"
+        and hz_gp: "top1_general_position_in_Rpow N (z ` {..<n})"
+        and hz_inj: "inj_on z {..<n}"
+        using Lemma_50_4_indexed[OF hUi_fin ha_Rpow hd2_pos] sorry
+      have hz_Rpow: "\<forall>i<n. z i \<in> ?RN" using hz_props by presburger
       have hz_near_fi: "\<forall>i<n. top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
-      proof (intro allI impI)
-        fix i assume hi: "i < n"
-        have "a i \<in> a ` {..<n}" using hi by blast
-        then have "z_map (a i) \<in> ?RN \<and> top1_Rpow_sup_dist N (a i) (z_map (a i)) < \<delta>/2"
-          using hz_near by blast
-        then show "top1_Rpow_sup_dist N (f0 (xi i)) (z i) < \<delta>/2"
-          unfolding z_def a_def by satx
-      qed
+        using hz_props unfolding a_def by presburger
       text \<open>Step 4: Define g(x) = Σᵢ φᵢ(x) zᵢ.\<close>
       define g where "g = (\<lambda>x. if x \<in> X then
         (\<lambda>j. \<Sum>i<n. \<phi> i x * z i j) else undefined)"
@@ -27722,9 +27723,9 @@ proof -
             text \<open>The set of zᵢ with nonzero coefficient.\<close>
             define nz where "nz = {i \<in> {..<n}. \<phi> i x \<noteq> \<phi> i y}"
             define T where "T = z ` nz"
-            text \<open>T ⊆ z_map ` (a ` {..<n}), which is in GP.\<close>
-            have hT_sub_gp: "T \<subseteq> z_map ` (a ` {..<n})"
-              unfolding T_def z_def nz_def by auto
+            text \<open>T ⊆ z ` {..<n}, which is in GP.\<close>
+            have hT_sub_gp: "T \<subseteq> z ` {..<n}"
+              unfolding T_def nz_def by auto
             text \<open>card T ≤ card nz ≤ 2(m+1) = N+1.\<close>
             have hnz_sub: "nz \<subseteq> {i \<in> {..<n}. \<phi> i x \<noteq> 0} \<union> {i \<in> {..<n}. \<phi> i y \<noteq> 0}"
               unfolding nz_def by auto
@@ -27851,7 +27852,7 @@ proof -
             have hsum_zero: "(\<Sum>t\<in>T. c t) = 0"
               using hsum_group hsum_nz unfolding c_def by presburger
             text \<open>Step 3: T ⊆ GP set, card T ≤ Suc N.\<close>
-            have hT_sub: "T \<subseteq> z_map ` (a ` {..<n})" unfolding T_def z_def nz_def by auto
+            have hT_sub: "T \<subseteq> z ` {..<n}" unfolding T_def nz_def by auto
             have hnz_fin: "finite nz" unfolding nz_def by simp
             have hT_card: "card T \<le> Suc N"
             proof -
@@ -27864,9 +27865,9 @@ proof -
               using hz_gp hT_sub unfolding top1_general_position_in_Rpow_def by fast
             have hc_zero: "\<forall>t\<in>T. c t = 0"
             proof -
-              have hgp_set: "top1_general_position_in_Rpow N (z_map ` (a ` {..<n}))"
+              have hgp_set: "top1_general_position_in_Rpow N (z ` {..<n})"
                 using hz_gp by satx
-              have "T \<subseteq> z_map ` (a ` {..<n})" using hT_sub by presburger
+              have "T \<subseteq> z ` {..<n}" using hT_sub by presburger
               then have hgp_T: "\<forall>a. (\<forall>j<N. (\<Sum>z\<in>T. a z * z j) = 0) \<and> (\<Sum>z\<in>T. a z) = 0
                 \<longrightarrow> (\<forall>z\<in>T. a z = 0)"
                 using hgp_set hT_card unfolding top1_general_position_in_Rpow_def by auto
@@ -27876,7 +27877,9 @@ proof -
               For each i ∈ nz, c(z i) = Σ_{j: z j=z i} (φ j x - φ j y) = 0.
               If the fiber {j∈nz: z j=z i} = {i} (z inj on nz), then φ i x - φ i y = 0.
               Injectivity: z j = z_map(a j) = z_map(f0(xi j)). If a injective, z injective.\<close>
-            have hz_inj_nz: "inj_on z nz" sorry
+            have hnz_sub_n: "nz \<subseteq> {..<n}" unfolding nz_def by blast
+            have hz_inj_nz: "inj_on z nz"
+              using inj_on_subset[OF hz_inj hnz_sub_n] by simp
             have "\<forall>i \<in> nz. \<phi> i x - \<phi> i y = 0"
             proof (intro ballI)
               fix i assume hi: "i \<in> nz"
