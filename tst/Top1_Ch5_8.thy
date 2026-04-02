@@ -27718,7 +27718,7 @@ proof -
               have "card nz \<le> card ({i \<in> {..<n}. \<phi> i x \<noteq> 0} \<union> {i \<in> {..<n}. \<phi> i y \<noteq> 0})"
                 using card_mono[OF _ hnz_sub] hfin_nzx hfin_nzy by simp
               also have "... \<le> card {i \<in> {..<n}. \<phi> i x \<noteq> 0} + card {i \<in> {..<n}. \<phi> i y \<noteq> 0}"
-                using card_Un_le sorry
+                by (rule card_Un_le)
               also have "... \<le> Suc m + Suc m"
                 using hUi_order hx hy unfolding top1_cover_order_le_on_def
                 sorry
