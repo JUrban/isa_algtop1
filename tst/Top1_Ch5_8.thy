@@ -11739,7 +11739,30 @@ lemma geom_cauchy_Cauchy:
   fixes s :: "nat \<Rightarrow> real"
   assumes "\<forall>n. \<bar>s n - s (Suc n)\<bar> \<le> 1 / 2^n"
   shows "Cauchy s"
-  sorry
+  unfolding Cauchy_def
+proof (intro allI impI)
+  fix e :: real assume he: "e > 0"
+  obtain N :: nat where hN: "2 / 2^N < e" sorry
+  show "\<exists>M. \<forall>m\<ge>M. \<forall>n\<ge>M. dist (s m) (s n) < e"
+  proof (intro exI[of _ N] allI impI)
+    fix m n0 assume hm: "N \<le> m" and hn0: "N \<le> n0"
+    show "dist (s m) (s n0) < e"
+    proof (cases "m \<le> n0")
+      case True
+      have "\<bar>s m - s n0\<bar> \<le> 2 / 2^m"
+        using geom_cauchy_bound[OF assms, THEN spec, THEN spec, THEN mp, OF True] by presburger
+      also have "... \<le> 2 / 2^N" using hm by (simp add: divide_left_mono)
+      finally show ?thesis using hN unfolding dist_real_def by linarith
+    next
+      case False
+      then have h: "n0 \<le> m" by linarith
+      have "\<bar>s n0 - s m\<bar> \<le> 2 / 2^n0"
+        using geom_cauchy_bound[OF assms, THEN spec, THEN spec, THEN mp, OF h] by presburger
+      also have "... \<le> 2 / 2^N" using hn0 by (simp add: divide_left_mono)
+      finally show ?thesis using hN unfolding dist_real_def by linarith
+    qed
+  qed
+qed
 
 lemma geom_cauchy_converges:
   fixes s :: "nat \<Rightarrow> real"
