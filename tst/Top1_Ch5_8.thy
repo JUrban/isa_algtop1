@@ -28109,7 +28109,7 @@ proof -
     then show ?thesis unfolding top1_ball_on_def using hx0 hfx0Y by blast
   qed
   obtain \<delta> where hdel_pos: "\<delta> > 0" and hball_sub: "top1_ball_on X dX x0 \<delta> \<subseteq> {x \<in> X. f x \<in> top1_ball_on Y dY (f x0) \<epsilon>}"
-    using top1_metric_open_contains_ball[OF hdX hpreimage hx0_mem] by metis
+    using top1_metric_open_contains_ball[OF hdX hpreimage hx0_mem] by blast
   show ?thesis
   proof (intro exI[of _ \<delta>] conjI)
     show "\<delta> > 0" using hdel_pos by simp
