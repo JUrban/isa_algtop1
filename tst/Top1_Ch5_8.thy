@@ -28762,7 +28762,7 @@ proof -
           by force
         have hfin: "finite {i \<in> {..<n}. x \<in> Ui i}" by simp
         have "card {i \<in> {..<n}. x \<in> Ui i} = card (Ui ` {i \<in> {..<n}. x \<in> Ui i})"
-          by (metis card_image hinj_sub)
+          using card_image hinj_sub by fastforce
         also have "... = card {U \<in> Ui ` {..<n}. x \<in> U}" using himg_eq by presburger
         also have "... \<le> Suc m"
           using hUi_order hx unfolding top1_cover_order_le_on_def by blast
