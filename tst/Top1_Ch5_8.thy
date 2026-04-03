@@ -12906,7 +12906,18 @@ next
           Compose with hcomp_cont to get hk continuous on Qk.\<close>
         define aff where "aff p = ((real qx + fst p) / 2, (real qy + snd p) / 2)" for p :: "real \<times> real"
         have haff_cont: "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) (?I \<times> ?I) (product_topology_on ?TI ?TI) aff"
-          sorry
+        proof -
+          let ?TP = "product_topology_on ?TI ?TI"
+          have hTP2: "is_topology_on (?I \<times> ?I) ?TP"
+            by (rule product_topology_on_is_topology_on[OF hTI hTI])
+          text \<open>Each component of aff is continuous.\<close>
+          text \<open>pi1 ∘ aff = (x,y) ↦ (qx+x)/2 = affine ∘ pi1. Both continuous.\<close>
+          have hpi1_aff: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI (pi1 \<circ> aff)"
+            sorry
+          have hpi2_aff: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI (pi2 \<circ> aff)"
+            sorry
+          show ?thesis using Theorem_18_4[OF hTP2 hTI hTI] hpi1_aff hpi2_aff by blast
+        qed
         have hhk_eq: "hk = aff \<circ> (\<lambda>t. hilbert_rec sub_o n (4 * t - real k))"
           unfolding hk_def aff_def by (rule ext, simp add: o_def)
         have hhk_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
