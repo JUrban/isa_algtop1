@@ -18105,8 +18105,22 @@ proof -
   have hclosedin_eq: "closedin_on ?C ?Ts_sub \<F> \<longleftrightarrow> closedin_on ?C ?Tu_sub \<F>"
     using htopo_eq by simp
   text \<open>Sup-bounded → pointwise bounded (for bounded metrics, evaluation at each point is bounded).\<close>
+  have hF_PiE: "\<F> \<subseteq> ?PiE" using hFsub unfolding top1_continuous_funcs_on_def by auto
+  have hbdd_above_all: "\<forall>f\<in>\<F>. \<forall>g\<in>?PiE. bdd_above ((\<lambda>x. d (g x) (f x)) ` X)"
+  proof (intro ballI)
+    fix f g assume "f \<in> \<F>" "g \<in> ?PiE"
+    have "f \<in> ?PiE" using \<open>f \<in> \<F>\<close> hF_PiE by blast
+    show "bdd_above ((\<lambda>x. d (g x) (f x)) ` X)"
+    proof (rule bdd_aboveI[of _ M])
+      fix v assume "v \<in> (\<lambda>x. d (g x) (f x)) ` X"
+      then obtain x where hx: "x \<in> X" and hv: "v = d (g x) (f x)" by auto
+      have "g x \<in> Y" using \<open>g \<in> ?PiE\<close> hx unfolding top1_PiE_iff by auto
+      moreover have "f x \<in> Y" using \<open>f \<in> ?PiE\<close> hx unfolding top1_PiE_iff by auto
+      ultimately show "v \<le> M" unfolding hv using hd_bdd by blast
+    qed
+  qed
   have hbdd_pw: "top1_metric_bounded_subset_on ?PiE ?ds \<F> \<longrightarrow> top1_pointwise_bounded_family_on X Y d \<F>"
-    sorry
+    using uniform_bounded_imp_pointwise_bounded[OF hd hF_PiE _ hbdd_above_all] by blast
   text \<open>Pointwise bounded → sup-bounded (for bounded metrics).\<close>
   have hpw_bdd: "top1_pointwise_bounded_family_on X Y d \<F> \<longrightarrow> top1_metric_bounded_subset_on ?PiE ?ds \<F>"
     sorry
