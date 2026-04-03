@@ -12245,8 +12245,12 @@ proof -
     finally show ?thesis by simp
   qed
   text \<open>Since values are in [0,1], clamping doesn't change them.\<close>
-  have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1" sorry
-  have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1" sorry
+  have hnx_bound: "nx < N" using hnext unfolding snake_pos_def Let_def using hN sorry
+  have hny_bound: "ny < N" using hnext unfolding snake_pos_def Let_def using hN sorry
+  have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1"
+    using hfst_raw hcol hnx_bound hN sorry
+  have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1"
+    using hsnd_raw hrow hny_bound hN sorry
   have hfst_clamp: "fst (sfa_n n t) = fst (sfa_raw n t)"
     unfolding sfa_n_def clamp01_def using hfst_in by simp
   have hsnd_clamp: "snd (sfa_n n t) = snd (sfa_raw n t)"
