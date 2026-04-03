@@ -12832,7 +12832,61 @@ next
       qed
       have hgk_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
         (product_topology_on ?TI ?TI) gk"
-        sorry
+      proof -
+        let ?R = "UNIV :: real set"
+        let ?TR = "order_topology_on_UNIV :: real set set"
+        define sub_o where "sub_o = hilbert_sub o' k"
+        obtain qx qy :: nat where hqxy: "hilbert_quad o' k = (qx, qy)"
+          by (cases "hilbert_quad o' k")
+        text \<open>Step 1: linear reparametrization 4t-k continuous from Qk to [0,1].\<close>
+        have hTR2: "is_topology_on ?R ?TR" by (rule order_topology_on_UNIV_is_topology_on)
+        have hid2: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. t)"
+        proof -
+          have "top1_continuous_map_on ?R ?TR ?R ?TR id" by (rule top1_continuous_map_on_id[OF hTR2])
+          then show ?thesis unfolding top1_closed_interval_topology_def id_def
+            using top1_continuous_map_on_restrict_domain_simple by fastforce
+        qed
+        have hconst2: "\<And>c::real. top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. c)"
+          by (rule top1_continuous_map_on_const[OF hTI hTR2], simp)
+        have hadd2: "\<And>f g. top1_continuous_map_on ?I ?TI ?R ?TR f \<Longrightarrow>
+          top1_continuous_map_on ?I ?TI ?R ?TR g \<Longrightarrow>
+          top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. f t + g t)"
+          by (rule top1_continuous_add_real[OF hTI])
+        have hmul2: "\<And>f g. top1_continuous_map_on ?I ?TI ?R ?TR f \<Longrightarrow>
+          top1_continuous_map_on ?I ?TI ?R ?TR g \<Longrightarrow>
+          top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. f t * g t)"
+          by (rule top1_continuous_mul_real[OF hTI])
+        have hlin_R: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. 4 * t - real k)"
+        proof -
+          have h4t: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. 4 * t)"
+            using hmul2[OF hconst2[of 4] hid2] by (simp add: mult.commute)
+          show ?thesis using hadd2[OF h4t hconst2[of "- real k"]] by simp
+        qed
+        have hlin_Qk_R: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) ?R ?TR (\<lambda>t. 4 * t - real k)"
+          using top1_continuous_map_on_restrict_domain_simple[OF hlin_R hQk_sub] by simp
+        have hlin_range: "(\<lambda>t. 4 * t - real k) ` Qk \<subseteq> ?I"
+          unfolding Qk_def top1_closed_interval_def by auto
+        have hlin_Qk_I: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) ?I ?TI (\<lambda>t. 4 * t - real k)"
+        proof -
+          text \<open>The function is continuous Qk → UNIV. Since range ⊆ [0,1], restrict to [0,1].
+            But Qk's topology is subspace of [0,1], and [0,1]'s topology is subspace of UNIV.
+            Need: if f cont. from (subspace of [0,1]) to UNIV, and range ⊆ [0,1], then cont. to [0,1].\<close>
+          show ?thesis using hlin_Qk_R hlin_range
+            unfolding top1_continuous_map_on_def top1_closed_interval_topology_def
+            sorry
+        qed
+        text \<open>Step 2: compose with IH function.\<close>
+        have hIH_sub: "top1_continuous_map_on ?I ?TI (?I \<times> ?I) (product_topology_on ?TI ?TI) (hilbert_rec sub_o n)"
+          using hIH_all by blast
+        text \<open>Step 3: compose with affine_scale.\<close>
+        have hqx01: "qx \<in> {0, 1}" and hqy01: "qy \<in> {0, 1}"
+          using hilbert_quad_range[of o' k] hqxy by auto
+        text \<open>Combine: gk = affine ∘ hilbert_rec sub ∘ linear.\<close>
+        have "gk = (\<lambda>t. ((real qx + fst (hilbert_rec sub_o n (4 * t - real k))) / 2,
+                         (real qy + snd (hilbert_rec sub_o n (4 * t - real k))) / 2))"
+          unfolding gk_def sub_o_def using hqxy sorry
+        then show ?thesis sorry
+      qed
       have hTQk: "is_topology_on Qk (subspace_topology ?I ?TI Qk)"
         by (rule subspace_topology_is_topology_on[OF hTI hQk_sub])
       have hPk_eq: "Pk k = {t \<in> Qk. gk t \<in> C}"
