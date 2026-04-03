@@ -12084,7 +12084,21 @@ lemma sfa_n_cauchy: "t \<in> top1_closed_interval 0 1 \<Longrightarrow>
   \<bar>snd (sfa_n n t) - snd (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n" sorry
 lemma sfa_n_dense: "x \<in> top1_closed_interval 0 1 \<Longrightarrow> y \<in> top1_closed_interval 0 1 \<Longrightarrow>
   \<exists>t\<in>top1_closed_interval 0 1.
-    \<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
+    \<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
+proof -
+  assume hx: "x \<in> top1_closed_interval 0 1" and hy: "y \<in> top1_closed_interval 0 1"
+  text \<open>The snake path visits all N×N cells. At the midpoint of cell k's time,
+    sfa_n returns approximately the cell center, within 1/(2N) ≤ 1/2ⁿ of (x,y).\<close>
+  define N where "N = (2::nat)^n"
+  have hN: "N > 0" unfolding N_def by simp
+  define row where "row = min (nat \<lfloor>real N * y\<rfloor>) (N - 1)"
+  define col where "col = min (nat \<lfloor>real N * x\<rfloor>) (N - 1)"
+  define k where "k = row * N + (if even row then col else N - 1 - col)"
+  define t where "t = (real k + 0.5) / real (N * N)"
+  have ht_I: "t \<in> top1_closed_interval 0 1" sorry
+  have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
+  show ?thesis using ht_I hclose by blast
+qed
 
 text \<open>The sequence fₙ uses the snake-order space-filling approximation.\<close>
 
