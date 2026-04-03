@@ -12197,10 +12197,64 @@ proof -
     also have "... \<le> 1 / (2::real)^n" by (intro divide_left_mono) auto
     finally show ?thesis by presburger
   qed
+  text \<open>Trace sfa_n computation at t = (k+0.25)/N².\<close>
+  have ht01: "0 \<le> t \<and> t \<le> 1" using ht_I unfolding top1_closed_interval_def by simp
+  have hclamp_t: "clamp01 t = t" unfolding clamp01_def using ht01 by simp
+  have hNsq_t: "real (N*N) * t = real k + 0.25"
+    unfolding t_def using hNsq by (simp add: field_simps)
+  have hfloor_k: "nat \<lfloor>real (N*N) * t\<rfloor> = k"
+    using hNsq_t hk by (simp add: nat_eq_iff floor_eq_iff)
+  have hk_comp: "min (nat \<lfloor>real (N*N) * t\<rfloor>) (N*N - 1) = k"
+    using hfloor_k hk by simp
+  have hfrac: "clamp01 (real (N*N) * t - real k) = 0.25"
+    using hNsq_t unfolding clamp01_def by simp
+  text \<open>Now bound fst(sfa_n n t) using the snake_pos values.\<close>
+  obtain nx ny where hnext: "snake_pos N (min (k+1) (N*N-1)) = (nx, ny)" by (cases "snake_pos N (min (k+1) (N*N-1))")
+  have hfst_raw: "fst (sfa_raw n t) = (real col + 0.5 + 0.25 * (real nx - real col)) / real N"
+    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
+    using hsnake hnext sorry
+  have hsnd_raw: "snd (sfa_raw n t) = (real row + 0.5 + 0.25 * (real ny - real row)) / real N"
+    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
+    using hsnake hnext sorry
+  text \<open>Snake adjacency: |nx - col| ≤ 1 and |ny - row| ≤ 1.\<close>
+  have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1" sorry
+  have hny_close: "\<bar>real ny - real row\<bar> \<le> 1" sorry
+  text \<open>Bound fst(sfa_n n t) distance from (col+0.5)/N.\<close>
+  have hfst_dist: "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> \<le> 0.25 / real N"
+    using hfst_raw hnx_close hN sorry
+  have hsnd_dist: "\<bar>snd (sfa_raw n t) - (real row + 0.5) / real N\<bar> \<le> 0.25 / real N"
+    using hsnd_raw hny_close hN sorry
+  text \<open>Since values are in [0,1], clamping doesn't change them.\<close>
+  have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1" sorry
+  have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1" sorry
+  have hfst_clamp: "fst (sfa_n n t) = fst (sfa_raw n t)"
+    unfolding sfa_n_def clamp01_def using hfst_in by simp
+  have hsnd_clamp: "snd (sfa_n n t) = snd (sfa_raw n t)"
+    unfolding sfa_n_def clamp01_def using hsnd_in by simp
   have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
-    text \<open>fst(sfa_n n t) ≈ (col+0.5)/N (within 0.25/N interpolation error).
-      Total: |x - fst| ≤ 1/(2N) + 0.25/N = 0.75/N ≤ 1/N = 1/2ⁿ.\<close>
-    sorry
+  proof (intro conjI)
+    have "\<bar>x - fst (sfa_n n t)\<bar> \<le> \<bar>x - (real col + 0.5)/real N\<bar> + \<bar>(real col + 0.5)/real N - fst (sfa_n n t)\<bar>"
+      by linarith
+    also have "... \<le> 1/(2*real N) + 0.25/real N" using hx_col hfst_dist hfst_clamp by linarith
+    also have "... = 0.75 / real N" by (simp add: field_simps)
+    also have "... \<le> 1 / real N" proof -
+        have "(0.75::real) \<le> 1" by simp
+        then show ?thesis using hN by (intro divide_right_mono) simp_all
+      qed
+    also have "... = 1 / 2^n" unfolding N_def by simp
+    finally show "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n" by presburger
+  next
+    have "\<bar>y - snd (sfa_n n t)\<bar> \<le> \<bar>y - (real row + 0.5)/real N\<bar> + \<bar>(real row + 0.5)/real N - snd (sfa_n n t)\<bar>"
+      by linarith
+    also have "... \<le> 1/(2*real N) + 0.25/real N" using hy_row hsnd_dist hsnd_clamp by linarith
+    also have "... = 0.75 / real N" by (simp add: field_simps)
+    also have "... \<le> 1 / real N" proof -
+        have "(0.75::real) \<le> 1" by simp
+        then show ?thesis using hN by (intro divide_right_mono) simp_all
+      qed
+    also have "... = 1 / 2^n" unfolding N_def by simp
+    finally show "\<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" by presburger
+  qed
   show ?thesis using ht_I hclose by blast
 qed
 
