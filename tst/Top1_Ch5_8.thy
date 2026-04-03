@@ -18189,8 +18189,19 @@ proof -
       F compact in sup → F compact in uniform (hcompact_eq).
       In uniform: closure(F) ⊇ F, and compact F is closed → closure(F) = F.
       Theorem_45_4: compact(closure(F)) → equicont(F) ∧ pointwise_bounded(F).\<close>
+    have hcomp_u: "top1_compact_on \<F> (subspace_topology ?C ?Tu_sub \<F>)"
+      using hcomp hcompact_eq by blast
+    have hclosed_u: "closedin_on ?C ?Tu_sub \<F>"
+      using \<open>closedin_on ?C ?Ts_sub \<F>\<close> hclosedin_eq by blast
+    have hcl_eq_u: "closure_on ?C ?Tu_sub \<F> = \<F>"
+      using closure_on_subset_of_closed[OF hclosed_u subset_refl]
+        subset_closure_on[of \<F> ?C ?Tu_sub] by blast
+    have hThm454: "top1_compact_on (closure_on ?C ?Tu_sub \<F>)
+      (subspace_topology ?C ?Tu_sub (closure_on ?C ?Tu_sub \<F>))
+      \<longleftrightarrow> (top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
+      using Theorem_45_4[OF hCompX hd hYcomp hTX_sub hYproper hFsub hYne hFne hXne] by blast
     show "top1_equicontinuous_family_on X TX Y d \<F>"
-      sorry
+      using hThm454 hcl_eq_u hcomp_u by simp
   qed
   text \<open>Backward: closed + bounded + equicont → compact via Theorem_45_4.
     F closed → F = closure(F). Bounded → pointwise bounded (hbdd_pw).
