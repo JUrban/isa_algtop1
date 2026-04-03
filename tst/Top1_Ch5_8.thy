@@ -12127,7 +12127,28 @@ proof -
   text \<open>At t = (k+0.25)/N², sfa_n returns approximately cell k center.
     snake_pos N k = (col, row) by the snake reversal property.
     Cell center = ((col+0.5)/N, (row+0.5)/N), within 1/(2N) of (x,y).\<close>
+  text \<open>Key fact: snake_pos N k = (col, row) — the snake reversal undoes itself.\<close>
+  have hinner: "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
+  have hk_div: "k div N = row" unfolding k_def using hinner hN by simp
+  have hk_mod: "k mod N = (if even row then col else N - 1 - col)"
+    unfolding k_def using hinner hN by simp
+  have hsnake: "snake_pos N k = (col, row)"
+    unfolding snake_pos_def Let_def hk_div hk_mod using hcol hrow hN by simp
+  text \<open>At t, the sfa_n x-coordinate is close to (col+0.5)/N, which is close to x.\<close>
+  have hx_col: "\<bar>x - (real col + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
+    using hx hN unfolding col_def top1_closed_interval_def sorry
+  have hy_row: "\<bar>y - (real row + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
+    using hy hN unfolding row_def top1_closed_interval_def sorry
+  have hN_bound: "1 / (2 * real N) \<le> 1 / 2^n"
+  proof -
+    have "2 * real N = 2^(n+1)" unfolding N_def by (simp add: power_Suc)
+    then have "1 / (2 * real N) = 1 / 2^(n+1)" by presburger
+    also have "... \<le> 1 / (2::real)^n" by (intro divide_left_mono) auto
+    finally show ?thesis by presburger
+  qed
   have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
+    text \<open>fst(sfa_n n t) ≈ (col+0.5)/N (within 0.25/N interpolation error).
+      Total: |x - fst| ≤ 1/(2N) + 0.25/N = 0.75/N ≤ 1/N = 1/2ⁿ.\<close>
     sorry
   show ?thesis using ht_I hclose by blast
 qed
