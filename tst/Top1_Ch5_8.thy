@@ -11979,6 +11979,64 @@ proof -
     using hU_open heq by blast
 qed
 
+text \<open>Dense approach to compact image implies membership.\<close>
+lemma dense_in_compact_image:
+  fixes f :: "real \<Rightarrow> real \<times> real"
+  assumes hcomp: "top1_compact_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)"
+  assumes hcont: "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+    (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1)) f"
+  assumes hrange: "\<forall>t\<in>top1_closed_interval 0 1. f t \<in> top1_closed_interval 0 1 \<times> top1_closed_interval 0 1"
+  assumes hp: "p \<in> top1_closed_interval 0 1 \<times> top1_closed_interval 0 1"
+  assumes hclose: "\<forall>e>(0::real). \<exists>t\<in>top1_closed_interval 0 1.
+    \<bar>fst p - fst (f t)\<bar> < e \<and> \<bar>snd p - snd (f t)\<bar> < e"
+  shows "p \<in> f ` (top1_closed_interval 0 1)"
+proof -
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?TI2 = "product_topology_on ?TI ?TI"
+  have hTI_top: "is_topology_on ?I ?TI"
+    unfolding top1_closed_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on])
+      (simp add: top1_closed_interval_def)
+  have hTI2_top: "is_topology_on (?I \<times> ?I) ?TI2"
+    using product_topology_on_is_topology_on[OF hTI_top hTI_top] by presburger
+  have hfI_compact: "top1_compact_on (f ` ?I) (subspace_topology (?I \<times> ?I) ?TI2 (f ` ?I))"
+    using top1_compact_on_continuous_image[OF hcomp hTI2_top hcont] by presburger
+  have hfI_sub: "f ` ?I \<subseteq> ?I \<times> ?I" using hrange by blast
+  have hI2_haus: "is_hausdorff_on (?I \<times> ?I) ?TI2"
+    by (metis closed_interval_hausdorff Theorem_17_11)
+  have hfI_closed: "closedin_on (?I \<times> ?I) ?TI2 (f ` ?I)"
+    using Theorem_26_3[OF hI2_haus hfI_sub hfI_compact] by presburger
+  show "p \<in> f ` ?I"
+  proof (rule ccontr)
+    assume "p \<notin> f ` ?I"
+    then have hp2: "p \<in> (?I \<times> ?I) - f ` ?I" using hp by blast
+    have "(?I \<times> ?I) - f ` ?I \<in> ?TI2" using hfI_closed unfolding closedin_on_def by simp
+    then obtain U1 U2 where hU1: "U1 \<in> ?TI" and hU2: "U2 \<in> ?TI"
+      and hpU: "p \<in> U1 \<times> U2" and hUrect: "U1 \<times> U2 \<subseteq> (?I \<times> ?I) - f ` ?I"
+      using hp2 top1_product_open_contains_rect by blast
+    have hfstU: "fst p \<in> U1" using hpU by (metis mem_Times_iff)
+    have hsndU: "snd p \<in> U2" using hpU by (metis mem_Times_iff)
+    obtain \<epsilon>1 where heps1: "\<epsilon>1 > 0" and hball1: "{s \<in> ?I. \<bar>s - fst p\<bar> < \<epsilon>1} \<subseteq> U1"
+      using interval_open_contains_eps_ball[OF hU1 hfstU] by blast
+    obtain \<epsilon>2 where heps2: "\<epsilon>2 > 0" and hball2: "{s \<in> ?I. \<bar>s - snd p\<bar> < \<epsilon>2} \<subseteq> U2"
+      using interval_open_contains_eps_ball[OF hU2 hsndU] by blast
+    define \<epsilon> where "\<epsilon> = min \<epsilon>1 \<epsilon>2"
+    have heps: "\<epsilon> > 0" using heps1 heps2 \<epsilon>_def by linarith
+    obtain t where ht: "t \<in> ?I" and hct: "\<bar>fst p - fst (f t)\<bar> < \<epsilon> \<and> \<bar>snd p - snd (f t)\<bar> < \<epsilon>"
+      using hclose heps by blast
+    have hft: "f t \<in> ?I \<times> ?I" using hrange ht by simp
+    have hfst_I: "fst (f t) \<in> ?I" using hft by auto
+    have hsnd_I: "snd (f t) \<in> ?I" using hft by auto
+    have "fst (f t) \<in> U1" using hball1 hfst_I hct \<epsilon>_def by auto
+    moreover have "snd (f t) \<in> U2" using hball2 hsnd_I hct \<epsilon>_def by auto
+    ultimately have "f t \<in> U1 \<times> U2"
+      by (metis mem_Times_iff surjective_pairing)
+    then show False using hUrect ht by force
+  qed
+qed
+
 text \<open>The Peano space-filling curve. We construct a continuous surjection [0,1] → [0,1]².
   Proof follows Munkres §44: define a sequence fₙ of piecewise-linear paths,
   each fₙ₊₁ refining fₙ by replacing triangular segments with 4 sub-triangular ones.
@@ -12308,7 +12366,7 @@ proof -
       have hfI_compact: "top1_compact_on (f ` ?I) (subspace_topology (?I \<times> ?I) ?TI2 (f ` ?I))"
         using top1_compact_on_continuous_image[OF hI_compact hTI2_top hf_cont] by blast
       then show "p \<in> f ` ?I"
-        using hclose sorry
+        using dense_in_compact_image[OF hI_compact hf_cont _ hp] hf_range hclose by blast
     qed
   qed
   have hf_exists: "\<exists>f. top1_continuous_map_on ?I ?TI ?I2 ?TI2 f \<and> f ` ?I = ?I2"
