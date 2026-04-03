@@ -12067,8 +12067,17 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
   in (x, y))"
 
+lemma div_add_small: "(N::nat) > 0 \<Longrightarrow> r < N \<Longrightarrow> (q * N + r) div N = q"
+  by simp
+
 lemma div_same_row: "(N::nat) > 0 \<Longrightarrow> k mod N + 1 < N \<Longrightarrow> (k+1) div N = k div N"
-  sorry
+proof -
+  assume hN: "N > 0" and hlt: "k mod N + 1 < N"
+  have "k + 1 = k div N * N + (k mod N + 1)" by simp
+  then have "(k + 1) div N = (k div N * N + (k mod N + 1)) div N" by presburger
+  also have "... = k div N" using div_add_small[OF hN hlt] by presburger
+  finally show ?thesis by presburger
+qed
 
 lemma mod_at_boundary: "(N::nat) > 0 \<Longrightarrow> \<not> (k mod N + 1 < N) \<Longrightarrow> k mod N = N - Suc 0"
 proof -
