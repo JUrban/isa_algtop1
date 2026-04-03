@@ -12871,9 +12871,20 @@ next
           text \<open>The function is continuous Qk → UNIV. Since range ⊆ [0,1], restrict to [0,1].
             But Qk's topology is subspace of [0,1], and [0,1]'s topology is subspace of UNIV.
             Need: if f cont. from (subspace of [0,1]) to UNIV, and range ⊆ [0,1], then cont. to [0,1].\<close>
-          show ?thesis using hlin_Qk_R hlin_range
-            unfolding top1_continuous_map_on_def top1_closed_interval_topology_def
-            sorry
+          show ?thesis unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix t assume "t \<in> Qk"
+            then show "(4 * t - real k) \<in> ?I" using hlin_range by auto
+          next
+            fix V assume hV: "V \<in> ?TI"
+            then obtain U where hU: "U \<in> ?TR" and hV_eq: "V = ?I \<inter> U"
+              unfolding top1_closed_interval_topology_def subspace_topology_def by blast
+            have "{t \<in> Qk. 4 * t - real k \<in> V} = {t \<in> Qk. 4 * t - real k \<in> U}"
+              using hV_eq hlin_range by auto
+            also have "... \<in> subspace_topology ?I ?TI Qk"
+              using hlin_Qk_R hU unfolding top1_continuous_map_on_def by blast
+            finally show "{t \<in> Qk. 4 * t - real k \<in> V} \<in> subspace_topology ?I ?TI Qk" .
+          qed
         qed
         text \<open>Step 2: compose with IH function.\<close>
         have hIH_sub: "top1_continuous_map_on ?I ?TI (?I \<times> ?I) (product_topology_on ?TI ?TI) (hilbert_rec sub_o n)"
@@ -12881,11 +12892,39 @@ next
         text \<open>Step 3: compose with affine_scale.\<close>
         have hqx01: "qx \<in> {0, 1}" and hqy01: "qy \<in> {0, 1}"
           using hilbert_quad_range[of o' k] hqxy by auto
-        text \<open>Combine: gk = affine ∘ hilbert_rec sub ∘ linear.\<close>
-        have "gk = (\<lambda>t. ((real qx + fst (hilbert_rec sub_o n (4 * t - real k))) / 2,
-                         (real qy + snd (hilbert_rec sub_o n (4 * t - real k))) / 2))"
-          unfolding gk_def sub_o_def using hqxy sorry
-        then show ?thesis sorry
+        text \<open>On Qk, gk equals affine ∘ hilbert_rec sub ∘ linear.\<close>
+        define hk where "hk t = ((real qx + fst (hilbert_rec sub_o n (4 * t - real k))) / 2,
+                         (real qy + snd (hilbert_rec sub_o n (4 * t - real k))) / 2)" for t
+        have hgk_hk: "\<And>t. t \<in> Qk \<Longrightarrow> gk t = hk t"
+          unfolding gk_def hk_def sub_o_def Let_def case_prod_beta
+          using hqxy Qk_def top1_closed_interval_def clamp01_def by auto
+        text \<open>hk is continuous on Qk: composition of continuous functions.\<close>
+        have hcomp_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
+          (product_topology_on ?TI ?TI) (\<lambda>t. hilbert_rec sub_o n (4 * t - real k))"
+          using top1_continuous_map_on_comp[OF hlin_Qk_I hIH_sub] by (simp add: o_def)
+        text \<open>hk = affine_transform ∘ hcomp. affine_transform is continuous [0,1]²→[0,1]².
+          Compose with hcomp_cont to get hk continuous on Qk.\<close>
+        define aff where "aff p = ((real qx + fst p) / 2, (real qy + snd p) / 2)" for p :: "real \<times> real"
+        have haff_cont: "top1_continuous_map_on (?I \<times> ?I) (product_topology_on ?TI ?TI) (?I \<times> ?I) (product_topology_on ?TI ?TI) aff"
+          sorry
+        have hhk_eq: "hk = aff \<circ> (\<lambda>t. hilbert_rec sub_o n (4 * t - real k))"
+          unfolding hk_def aff_def by (rule ext, simp add: o_def)
+        have hhk_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
+          (product_topology_on ?TI ?TI) hk"
+          unfolding hhk_eq using top1_continuous_map_on_comp[OF hcomp_cont haff_cont] by simp
+        text \<open>Since gk = hk on Qk and hk is continuous, gk is continuous on Qk.\<close>
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix t assume "t \<in> Qk"
+          then show "gk t \<in> ?I \<times> ?I"
+            using hgk_hk hhk_cont unfolding top1_continuous_map_on_def by (simp del: hilbert_rec.simps)
+        next
+          fix V assume "V \<in> product_topology_on ?TI ?TI"
+          have "{t \<in> Qk. gk t \<in> V} = {t \<in> Qk. hk t \<in> V}" using hgk_hk by auto
+          also have "... \<in> subspace_topology ?I ?TI Qk"
+            using hhk_cont \<open>V \<in> _\<close> unfolding top1_continuous_map_on_def by blast
+          finally show "{t \<in> Qk. gk t \<in> V} \<in> subspace_topology ?I ?TI Qk" .
+        qed
       qed
       have hTQk: "is_topology_on Qk (subspace_topology ?I ?TI Qk)"
         by (rule subspace_topology_is_topology_on[OF hTI hQk_sub])
