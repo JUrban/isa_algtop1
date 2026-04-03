@@ -12067,6 +12067,57 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
   in (x, y))"
 
+lemma snake_adjacent:
+  assumes "N > 0" "k < N * N"
+  shows "\<bar>real (fst (snake_pos N (min (k+1) (N*N-1)))) - real (fst (snake_pos N k))\<bar> \<le> 1"
+    and "\<bar>real (snd (snake_pos N (min (k+1) (N*N-1)))) - real (snd (snake_pos N k))\<bar> \<le> 1"
+proof -
+  let ?k' = "min (k+1) (N*N-1)"
+  show "\<bar>real (fst (snake_pos N ?k')) - real (fst (snake_pos N k))\<bar> \<le> 1"
+  proof (cases "k + 1 < N * N")
+    case True
+    then have hk': "?k' = k + 1" by simp
+    show ?thesis
+    proof (cases "k mod N + 1 < N")
+      case True \<comment> \<open>same row\<close>
+      then have hrow_eq: "(k+1) div N = k div N" sorry
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq
+        using True assms sorry
+    next
+      case False \<comment> \<open>row boundary\<close>
+      then have hmod: "k mod N = N - 1" using assms sorry
+      then have hrow_next: "(k+1) div N = k div N + 1" using assms sorry
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next hmod using assms sorry
+    qed
+  next
+    case False
+    then have "?k' = k" using assms by simp
+    then show ?thesis by simp
+  qed
+next
+  let ?k' = "min (k+1) (N*N-1)"
+  show "\<bar>real (snd (snake_pos N ?k')) - real (snd (snake_pos N k))\<bar> \<le> 1"
+  proof (cases "k + 1 < N * N")
+    case True
+    then have hk': "?k' = k + 1" by simp
+    show ?thesis
+    proof (cases "k mod N + 1 < N")
+      case True
+      then have hrow_eq: "(k+1) div N = k div N" sorry
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq by simp
+    next
+      case False
+      then have hmod: "k mod N = N - 1" using assms sorry
+      then have hrow_next: "(k+1) div N = k div N + 1" using assms sorry
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next by simp
+    qed
+  next
+    case False
+    then have "?k' = k" using assms by simp
+    then show ?thesis by simp
+  qed
+qed
+
 lemma snake_pos_bound:
   assumes "N > 0" "k < N * N"
   shows "fst (snake_pos N k) < N \<and> snd (snake_pos N k) < N"
@@ -12225,10 +12276,10 @@ proof -
   have hsnd_raw: "snd (sfa_raw n t) = (real row + 0.5 + 0.25 * (real ny - real row)) / real N"
     using hsfa_raw by simp
   text \<open>Snake adjacency: |nx - col| ≤ 1 and |ny - row| ≤ 1.\<close>
-  text \<open>Snake adjacency: consecutive cells differ by at most 1 in each coordinate.
-    Within a row: column changes by 1. Between rows: row changes by 1, column stays.\<close>
-  have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1" sorry
-  have hny_close: "\<bar>real ny - real row\<bar> \<le> 1" sorry
+  have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1"
+    using snake_adjacent(1)[OF hN hk] hsnake hnext by simp
+  have hny_close: "\<bar>real ny - real row\<bar> \<le> 1"
+    using snake_adjacent(2)[OF hN hk] hsnake hnext by simp
   text \<open>Bound fst(sfa_n n t) distance from (col+0.5)/N.\<close>
   have hfst_dist: "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> \<le> 0.25 / real N"
   proof -
