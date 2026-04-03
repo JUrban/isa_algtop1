@@ -12365,7 +12365,16 @@ proof -
     have "0.75 * real col + 0.25 * real nx \<le> real N - 1"
       using hcol hnx_bound hM by simp
     then have "0.75 * real col + 0.25 * real nx + 0.5 \<le> real N - 0.5" by linarith
-    then have h1: "fst (sfa_raw n t) \<le> 1" using hfst_raw hnum hN sorry
+    then have h1: "fst (sfa_raw n t) \<le> 1"
+    proof -
+      have "fst (sfa_raw n t) = (0.75 * real col + 0.25 * real nx + 0.5) / real N"
+        using hfst_raw hnum by presburger
+      moreover have "(0.75 * real col + 0.25 * real nx + 0.5) / real N \<le> (real N - 0.5) / real N"
+        using \<open>0.75 * real col + 0.25 * real nx + 0.5 \<le> real N - 0.5\<close> hN
+        by (intro divide_right_mono) simp_all
+      moreover have "(real N - 0.5) / real N \<le> 1" using hN by (simp add: field_simps)
+      ultimately show ?thesis by linarith
+    qed
     show ?thesis using h0 h1 by blast
   qed
   have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1"
@@ -12381,7 +12390,16 @@ proof -
     have "0.75 * real row + 0.25 * real ny \<le> real N - 1"
       using \<open>row \<le> N - 1\<close> \<open>ny \<le> N - 1\<close> hM by simp
     then have "0.75 * real row + 0.25 * real ny + 0.5 \<le> real N - 0.5" by linarith
-    then have h1: "snd (sfa_raw n t) \<le> 1" using hsnd_raw hnum hN sorry
+    then have h1: "snd (sfa_raw n t) \<le> 1"
+    proof -
+      have "snd (sfa_raw n t) = (0.75 * real row + 0.25 * real ny + 0.5) / real N"
+        using hsnd_raw hnum by presburger
+      moreover have "(0.75 * real row + 0.25 * real ny + 0.5) / real N \<le> (real N - 0.5) / real N"
+        using \<open>0.75 * real row + 0.25 * real ny + 0.5 \<le> real N - 0.5\<close> hN
+        by (intro divide_right_mono) simp_all
+      moreover have "(real N - 0.5) / real N \<le> 1" using hN by (simp add: field_simps)
+      ultimately show ?thesis by linarith
+    qed
     show ?thesis using h0 h1 by blast
   qed
   have hfst_clamp: "fst (sfa_n n t) = fst (sfa_raw n t)"
