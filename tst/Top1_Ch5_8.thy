@@ -12043,27 +12043,37 @@ text \<open>The Peano space-filling curve. We construct a continuous surjection 
   The sequence is Cauchy in the sup metric (ρ(fₙ,fₙ₊₁) ≤ 1/2ⁿ), so converges
   to a continuous f. Surjectivity: fₙ comes within 1/2ⁿ of every point in I².\<close>
 
+text \<open>Clamp to [0,1].\<close>
+definition clamp01 :: "real \<Rightarrow> real" where "clamp01 x = min (max x 0) 1"
+
+lemma clamp01_range: "0 \<le> clamp01 x \<and> clamp01 x \<le> 1"
+  unfolding clamp01_def by simp
+
 text \<open>Snake order: maps cell index k to (col, row) in N×N grid.\<close>
 definition snake_pos :: "nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat" where
   "snake_pos N k = (let row = k div N; col = k mod N in
     (if even row then col else N - 1 - col, row))"
 
-text \<open>Space-filling approximation via piecewise-linear snake path.\<close>
-definition sfa_n :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
-  "sfa_n n t = (let
+text \<open>Raw (unclamped) space-filling approximation.\<close>
+definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "sfa_raw n t = (let
     N = (2::nat)^n; Nsq = N * N;
-    s = min (max t 0) 1;
+    s = clamp01 t;
     k = min (nat \<lfloor>real Nsq * s\<rfloor>) (Nsq - 1);
-    frac = min (max (real Nsq * s - real k) 0) 1;
+    frac = clamp01 (real Nsq * s - real k);
     (cx, cy) = snake_pos N k;
     (nx, ny) = snake_pos N (min (k + 1) (Nsq - 1));
     x = (real cx + 0.5 + frac * (real nx - real cx)) / real N;
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
-  in (min (max x 0) 1, min (max y 0) 1))"
+  in (x, y))"
 
-text \<open>Properties of sfa_n (sorry — require detailed arithmetic on floor/div/mod).\<close>
+text \<open>Clamped space-filling approximation.\<close>
+definition sfa_n :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "sfa_n n t = (clamp01 (fst (sfa_raw n t)), clamp01 (snd (sfa_raw n t)))"
+
+text \<open>Properties of sfa_n.\<close>
 lemma sfa_n_range: "sfa_n n t \<in> top1_closed_interval 0 1 \<times> top1_closed_interval 0 1"
-  unfolding sfa_n_def snake_pos_def top1_closed_interval_def Let_def sorry
+  unfolding sfa_n_def top1_closed_interval_def using clamp01_range by auto
 lemma sfa_n_continuous:
   "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
     (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
