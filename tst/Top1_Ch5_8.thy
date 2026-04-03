@@ -12428,6 +12428,37 @@ proof -
   qed
 qed
 
+lemma affine_on_interval_continuous:
+  assumes ha: "a \<in> {0::nat, 1}"
+  shows "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (\<lambda>t. (real a + t) / 2)"
+proof -
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?R = "UNIV :: real set"
+  let ?TR = "order_topology_on_UNIV :: real set set"
+  have hTI: "is_topology_on ?I ?TI" using closed_interval_01_is_topology by blast
+  have hTR: "is_topology_on ?R ?TR" by (rule order_topology_on_UNIV_is_topology_on)
+  have hid: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. t)"
+  proof -
+    have "top1_continuous_map_on ?R ?TR ?R ?TR id" by (rule top1_continuous_map_on_id[OF hTR])
+    then show ?thesis unfolding top1_closed_interval_topology_def id_def
+      using top1_continuous_map_on_restrict_domain_simple by fastforce
+  qed
+  have hconst: "\<And>c::real. top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. c)"
+    by (rule top1_continuous_map_on_const[OF hTI hTR], simp)
+  have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. real a + t)"
+    using top1_continuous_add_real[OF hTI hconst[of "real a"] hid] by simp
+  then have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real a + t) * (1/2))"
+    using top1_continuous_mul_real[OF hTI _ hconst[of "1/2"]] by simp
+  then have hR: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real a + t) / 2)"
+    by (simp add: field_simps)
+  have hrange: "(\<lambda>t. (real a + t) / 2) ` ?I \<subseteq> ?I"
+    unfolding top1_closed_interval_def using ha by force
+  show ?thesis using continuous_restrict_to_interval[OF hR hrange] by simp
+qed
+
 text \<open>Affine scaling of a continuous function preserves continuity.\<close>
 lemma affine_scale_continuous:
   assumes hg: "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
@@ -12912,10 +12943,22 @@ next
             by (rule product_topology_on_is_topology_on[OF hTI hTI])
           text \<open>Each component of aff is continuous.\<close>
           text \<open>pi1 ∘ aff = (x,y) ↦ (qx+x)/2 = affine ∘ pi1. Both continuous.\<close>
+          have hpi1: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI pi1"
+            by (rule top1_continuous_pi1[OF hTI hTI])
+          have hpi2: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI pi2"
+            by (rule top1_continuous_pi2[OF hTI hTI])
+          have haff1: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>x. (real qx + x) / 2)"
+            using affine_on_interval_continuous[OF hqx01] by simp
+          have haff2: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>x. (real qy + x) / 2)"
+            using affine_on_interval_continuous[OF hqy01] by simp
+          have hpi1_eq: "pi1 \<circ> aff = (\<lambda>p. (real qx + pi1 p) / 2)"
+            unfolding aff_def pi1_def by (rule ext, simp)
+          have hpi2_eq: "pi2 \<circ> aff = (\<lambda>p. (real qy + pi2 p) / 2)"
+            unfolding aff_def pi2_def by (rule ext, simp)
           have hpi1_aff: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI (pi1 \<circ> aff)"
-            sorry
+            unfolding hpi1_eq using top1_continuous_map_on_comp[OF hpi1 haff1] by (simp add: o_def)
           have hpi2_aff: "top1_continuous_map_on (?I \<times> ?I) ?TP ?I ?TI (pi2 \<circ> aff)"
-            sorry
+            unfolding hpi2_eq using top1_continuous_map_on_comp[OF hpi2 haff2] by (simp add: o_def)
           show ?thesis using Theorem_18_4[OF hTP2 hTI hTI] hpi1_aff hpi2_aff by blast
         qed
         have hhk_eq: "hk = aff \<circ> (\<lambda>t. hilbert_rec sub_o n (4 * t - real k))"
