@@ -18157,8 +18157,17 @@ proof -
   proof (intro impI conjI)
     assume hcomp: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)"
     text \<open>Compact → closed: compact subsets of Hausdorff spaces are closed.\<close>
+    have hdu_metric: "top1_metric_on ?PiE ?du"
+      using top1_uniform_metric_is_metric[OF hXne hd] by blast
+    have hHaus_PiE: "is_hausdorff_on ?PiE (top1_metric_topology_on ?PiE ?du)"
+      using metric_topology_hausdorff[OF hdu_metric] by blast
+    have hC_PiE: "?C \<subseteq> ?PiE" unfolding top1_continuous_funcs_on_def by simp
+    have hHaus_C: "is_hausdorff_on ?C ?Tu_sub"
+      using conjunct2[OF conjunct2[OF Theorem_17_11]] hHaus_PiE hC_PiE by blast
+    have hHaus_Cs: "is_hausdorff_on ?C ?Ts_sub"
+      using hHaus_C htopo_eq by simp
     show "closedin_on ?C ?Ts_sub \<F>"
-      sorry
+      using compact_in_hausdorff_closed[OF hHaus_Cs hcomp hFsub] by blast
     text \<open>Compact → bounded: compact subsets of metric spaces are bounded.\<close>
     show "top1_metric_bounded_subset_on ?PiE ?ds \<F>"
       sorry
