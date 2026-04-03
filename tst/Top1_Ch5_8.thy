@@ -12094,6 +12094,13 @@ proof -
   define row where "row = min (nat \<lfloor>real N * y\<rfloor>) (N - 1)"
   define col where "col = min (nat \<lfloor>real N * x\<rfloor>) (N - 1)"
   define k where "k = row * N + (if even row then col else N - 1 - col)"
+  have hrow: "row < N" unfolding row_def using hN by linarith
+  have hcol: "col < N" unfolding col_def using hN by linarith
+  have hk: "k < N * N"
+  proof -
+    have "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
+    then show ?thesis unfolding k_def using hrow hN sorry
+  qed
   define t where "t = (real k + 0.5) / real (N * N)"
   have ht_I: "t \<in> top1_closed_interval 0 1" sorry
   have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
