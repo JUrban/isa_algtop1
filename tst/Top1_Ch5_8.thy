@@ -18154,7 +18154,21 @@ proof -
   have hfwd: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>) \<longrightarrow>
     closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
     top1_equicontinuous_family_on X TX Y d \<F>"
-    sorry
+  proof (intro impI conjI)
+    assume hcomp: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)"
+    text \<open>Compact → closed: compact subsets of Hausdorff spaces are closed.\<close>
+    show "closedin_on ?C ?Ts_sub \<F>"
+      sorry
+    text \<open>Compact → bounded: compact subsets of metric spaces are bounded.\<close>
+    show "top1_metric_bounded_subset_on ?PiE ?ds \<F>"
+      sorry
+    text \<open>Compact → equicontinuous: by Theorem_45_4 forward direction.
+      F compact in sup → F compact in uniform (hcompact_eq).
+      In uniform: closure(F) ⊇ F, and compact F is closed → closure(F) = F.
+      Theorem_45_4: compact(closure(F)) → equicont(F) ∧ pointwise_bounded(F).\<close>
+    show "top1_equicontinuous_family_on X TX Y d \<F>"
+      sorry
+  qed
   text \<open>Backward: closed + bounded + equicont → compact via Theorem_45_4.
     F closed → F = closure(F). Bounded → pointwise bounded (hbdd_pw).
     Theorem_45_4 gives compact(closure(F)) from equicont + pointwise_bounded.
