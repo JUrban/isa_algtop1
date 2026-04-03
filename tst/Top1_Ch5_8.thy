@@ -12225,6 +12225,8 @@ proof -
   have hsnd_raw: "snd (sfa_raw n t) = (real row + 0.5 + 0.25 * (real ny - real row)) / real N"
     using hsfa_raw by simp
   text \<open>Snake adjacency: |nx - col| ≤ 1 and |ny - row| ≤ 1.\<close>
+  text \<open>Snake adjacency: consecutive cells differ by at most 1 in each coordinate.
+    Within a row: column changes by 1. Between rows: row changes by 1, column stays.\<close>
   have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1" sorry
   have hny_close: "\<bar>real ny - real row\<bar> \<le> 1" sorry
   text \<open>Bound fst(sfa_n n t) distance from (col+0.5)/N.\<close>
