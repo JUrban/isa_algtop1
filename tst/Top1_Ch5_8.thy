@@ -15345,6 +15345,13 @@ corollary Corollary_45_5:
   assumes hCompX: "top1_compact_on X TX"
   assumes hd: "top1_metric_on Y d"
   assumes hd_bdd: "\<forall>x\<in>Y. \<forall>y\<in>Y. d x y \<le> M"
+  assumes hYcomp: "top1_complete_metric_on Y d"
+  assumes hTX_sub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hYproper: "\<forall>A\<subseteq>Y. closedin_on Y (top1_metric_topology_on Y d) A
+      \<and> top1_metric_bounded_subset_on Y d A \<longrightarrow>
+      top1_compact_on A (subspace_topology Y (top1_metric_topology_on Y d) A)"
+  assumes hYne: "Y \<noteq> {}" and hXne: "X \<noteq> {}"
+  assumes hFne: "\<F> \<noteq> {}"
   assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
   shows
     "top1_compact_on \<F>
@@ -15365,11 +15372,11 @@ corollary Corollary_45_5:
        \<F>
      \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
      \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
-  text \<open>Note: In Munkres, Corollary 45.5 is stated for C(X, ℝⁿ) where ℝⁿ is
-    both complete and proper (Heine-Borel). The formalization generalizes to bounded
-    metric spaces, but may need additional assumptions (completeness/properness)
-    for the proof via Theorem_45_4. The sup_uniform_topology_eq_on_continuous lemma
-    bridges the topology gap. Not used downstream — standalone result.\<close>
+  text \<open>Proof: use sup_uniform_topology_eq_on_continuous (§46) to replace sup with uniform
+    topology on C. Then F closed → F = closure(F); sup-bounded → pointwise bounded;
+    equicontinuous → Theorem_45_4 gives closure(F) compact → F compact.
+    Forward: compact → closed + bounded (metric) + equicontinuous (Theorem_45_4).
+    The topology equality lemma is proved later in this file (§46, line ~17900).\<close>
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
