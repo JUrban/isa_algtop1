@@ -12223,9 +12223,27 @@ proof -
   have hny_close: "\<bar>real ny - real row\<bar> \<le> 1" sorry
   text \<open>Bound fst(sfa_n n t) distance from (col+0.5)/N.\<close>
   have hfst_dist: "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> \<le> 0.25 / real N"
-    using hfst_raw hnx_close hN sorry
+  proof -
+    have "fst (sfa_raw n t) - (real col + 0.5) / real N = 0.25 * (real nx - real col) / real N"
+      using hfst_raw hN by (simp add: field_simps)
+    then have "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> = \<bar>0.25 * (real nx - real col)\<bar> / real N"
+      using hN by (simp add: abs_divide)
+    also have "... = 0.25 * \<bar>real nx - real col\<bar> / real N" by (simp add: abs_mult)
+    also have "... \<le> 0.25 * 1 / real N"
+      using hnx_close hN by (intro divide_right_mono mult_left_mono) auto
+    finally show ?thesis by simp
+  qed
   have hsnd_dist: "\<bar>snd (sfa_raw n t) - (real row + 0.5) / real N\<bar> \<le> 0.25 / real N"
-    using hsnd_raw hny_close hN sorry
+  proof -
+    have "snd (sfa_raw n t) - (real row + 0.5) / real N = 0.25 * (real ny - real row) / real N"
+      using hsnd_raw hN by (simp add: field_simps)
+    then have "\<bar>snd (sfa_raw n t) - (real row + 0.5) / real N\<bar> = \<bar>0.25 * (real ny - real row)\<bar> / real N"
+      using hN by (simp add: abs_divide)
+    also have "... = 0.25 * \<bar>real ny - real row\<bar> / real N" by (simp add: abs_mult)
+    also have "... \<le> 0.25 * 1 / real N"
+      using hny_close hN by (intro divide_right_mono mult_left_mono) auto
+    finally show ?thesis by simp
+  qed
   text \<open>Since values are in [0,1], clamping doesn't change them.\<close>
   have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1" sorry
   have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1" sorry
