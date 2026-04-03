@@ -18148,16 +18148,41 @@ proof -
       qed
     qed (rule hf0_PiE)
   qed
-  text \<open>Forward: compact → closed + bounded + equicontinuous.\<close>
+  text \<open>Forward: compact → closed + bounded + equicontinuous.
+    Compact in metric → closed + bounded. Equicontinuous from Theorem_45_4
+    applied in uniform topology (via htopo_eq). F compact → closure(F) = F → Thm 45.4.\<close>
   have hfwd: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>) \<longrightarrow>
     closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
     top1_equicontinuous_family_on X TX Y d \<F>"
     sorry
-  text \<open>Backward: closed + bounded + equicont → compact via Theorem_45_4.\<close>
+  text \<open>Backward: closed + bounded + equicont → compact via Theorem_45_4.
+    F closed → F = closure(F). Bounded → pointwise bounded (hbdd_pw).
+    Theorem_45_4 gives compact(closure(F)) from equicont + pointwise_bounded.
+    Since F = closure(F), F is compact.\<close>
   have hbwd: "closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
     top1_equicontinuous_family_on X TX Y d \<F> \<longrightarrow>
     top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)"
-    sorry
+  proof (intro impI)
+    assume h: "closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
+      top1_equicontinuous_family_on X TX Y d \<F>"
+    have hclosed: "closedin_on ?C ?Tu_sub \<F>" using h hclosedin_eq by blast
+    have hbounded: "top1_metric_bounded_subset_on ?PiE ?ds \<F>" using h by blast
+    have hequi: "top1_equicontinuous_family_on X TX Y d \<F>" using h by blast
+    have hpwbdd: "top1_pointwise_bounded_family_on X Y d \<F>" using hbdd_pw hbounded by blast
+    text \<open>F closed in uniform-subspace → closure(F) = F.\<close>
+    have hcl_eq: "closure_on ?C ?Tu_sub \<F> = \<F>"
+      using closure_on_subset_of_closed[OF hclosed subset_refl]
+        subset_closure_on[of \<F> ?C ?Tu_sub] by blast
+    text \<open>Apply Theorem_45_4: closure(F) compact ↔ equicont + pointwise bounded.\<close>
+    have hThm454: "top1_compact_on (closure_on ?C ?Tu_sub \<F>)
+      (subspace_topology ?C ?Tu_sub (closure_on ?C ?Tu_sub \<F>))
+      \<longleftrightarrow> (top1_equicontinuous_family_on X TX Y d \<F> \<and> top1_pointwise_bounded_family_on X Y d \<F>)"
+      using Theorem_45_4[OF hCompX hd hYcomp hTX_sub hYproper hFsub hYne hFne hXne] by blast
+    have "top1_compact_on \<F> (subspace_topology ?C ?Tu_sub \<F>)"
+      using hThm454 hcl_eq hequi hpwbdd by simp
+    then show "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)"
+      using hcompact_eq by blast
+  qed
   show ?thesis using hfwd hbwd by blast
 qed
 
