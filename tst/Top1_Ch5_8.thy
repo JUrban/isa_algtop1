@@ -12067,6 +12067,16 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
   in (x, y))"
 
+lemma grid_index_bound: "(a::nat) < N \<Longrightarrow> b < N \<Longrightarrow> a * N + b < N * N"
+proof -
+  assume "a < N" "b < N"
+  have "a * N + b < a * N + N" using \<open>b < N\<close> by linarith
+  also have "... = Suc a * N" by simp
+  also have "... \<le> N * N" using \<open>a < N\<close>
+    by (meson Suc_leI mult_le_mono1)
+  finally show ?thesis by presburger
+qed
+
 text \<open>Clamped space-filling approximation.\<close>
 definition sfa_n :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
   "sfa_n n t = (clamp01 (fst (sfa_raw n t)), clamp01 (snd (sfa_raw n t)))"
@@ -12099,10 +12109,20 @@ proof -
   have hk: "k < N * N"
   proof -
     have "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
-    then show ?thesis unfolding k_def using hrow hN sorry
+    then show ?thesis unfolding k_def using grid_index_bound[OF hrow] by presburger
   qed
   define t where "t = (real k + 0.5) / real (N * N)"
-  have ht_I: "t \<in> top1_closed_interval 0 1" sorry
+  have ht_I: "t \<in> top1_closed_interval 0 1"
+  proof -
+    have "N * N > 0" using hN by simp
+    have "0 \<le> t" unfolding t_def using hk \<open>N * N > 0\<close> by simp
+    moreover have "t \<le> 1"
+    proof -
+      have "real k + 0.5 \<le> real (N * N)" using hk by linarith
+      then show ?thesis unfolding t_def using \<open>N * N > 0\<close> by (simp add: field_simps)
+    qed
+    ultimately show ?thesis unfolding top1_closed_interval_def by simp
+  qed
   have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
   show ?thesis using ht_I hclose by blast
 qed
