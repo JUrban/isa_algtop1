@@ -15340,44 +15340,8 @@ proof -
   show ?thesis using hback hfwd by blast
 qed
 
-(** from \S45 Corollary 45.5 [top1.tex:6679] **)
-corollary Corollary_45_5:
-  assumes hCompX: "top1_compact_on X TX"
-  assumes hd: "top1_metric_on Y d"
-  assumes hd_bdd: "\<forall>x\<in>Y. \<forall>y\<in>Y. d x y \<le> M"
-  assumes hYcomp: "top1_complete_metric_on Y d"
-  assumes hTX_sub: "\<forall>U\<in>TX. U \<subseteq> X"
-  assumes hYproper: "\<forall>A\<subseteq>Y. closedin_on Y (top1_metric_topology_on Y d) A
-      \<and> top1_metric_bounded_subset_on Y d A \<longrightarrow>
-      top1_compact_on A (subspace_topology Y (top1_metric_topology_on Y d) A)"
-  assumes hYne: "Y \<noteq> {}" and hXne: "X \<noteq> {}"
-  assumes hFne: "\<F> \<noteq> {}"
-  assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
-  shows
-    "top1_compact_on \<F>
-       (subspace_topology
-          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
-          (subspace_topology
-             (top1_PiE X (\<lambda>_. Y))
-             (top1_sup_topology_on X Y d)
-             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
-          \<F>)
-    \<longleftrightarrow>
-    (closedin_on
-       (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
-       (subspace_topology
-          (top1_PiE X (\<lambda>_. Y))
-          (top1_sup_topology_on X Y d)
-          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
-       \<F>
-     \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
-     \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
-  text \<open>Proof: use sup_uniform_topology_eq_on_continuous (§46) to replace sup with uniform
-    topology on C. Then F closed → F = closure(F); sup-bounded → pointwise bounded;
-    equicontinuous → Theorem_45_4 gives closure(F) compact → F compact.
-    Forward: compact → closed + bounded (metric) + equicontinuous (Theorem_45_4).
-    The topology equality lemma is proved later in this file (§46, line ~17900).\<close>
-  sorry
+text \<open>Corollary 45.5 is moved to after §46 where sup_uniform_topology_eq_on_continuous
+  is available.\<close>
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
 
@@ -18087,6 +18051,76 @@ proof -
       unfolding subspace_topology_def using hW_open by blast
   qed
   show ?thesis using hTs_sub hTu_sub by order
+qed
+
+(** from \S45 Corollary 45.5 [top1.tex:6679] — moved here to use sup_uniform_topology_eq **)
+corollary Corollary_45_5:
+  assumes hCompX: "top1_compact_on X TX"
+  assumes hd: "top1_metric_on Y d"
+  assumes hd_bdd: "\<forall>x\<in>Y. \<forall>y\<in>Y. d x y \<le> M"
+  assumes hYcomp: "top1_complete_metric_on Y d"
+  assumes hTX_sub: "\<forall>U\<in>TX. U \<subseteq> X"
+  assumes hYproper: "\<forall>A\<subseteq>Y. closedin_on Y (top1_metric_topology_on Y d) A
+      \<and> top1_metric_bounded_subset_on Y d A \<longrightarrow>
+      top1_compact_on A (subspace_topology Y (top1_metric_topology_on Y d) A)"
+  assumes hYne: "Y \<noteq> {}" and hXne: "X \<noteq> {}"
+  assumes hFne: "\<F> \<noteq> {}"
+  assumes hFsub: "\<F> \<subseteq> top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)"
+  shows
+    "top1_compact_on \<F>
+       (subspace_topology
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+          (subspace_topology
+             (top1_PiE X (\<lambda>_. Y))
+             (top1_sup_topology_on X Y d)
+             (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+          \<F>)
+    \<longleftrightarrow>
+    (closedin_on
+       (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d))
+       (subspace_topology
+          (top1_PiE X (\<lambda>_. Y))
+          (top1_sup_topology_on X Y d)
+          (top1_continuous_funcs_on X TX Y (top1_metric_topology_on Y d)))
+       \<F>
+     \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
+     \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
+proof -
+  let ?TY = "top1_metric_topology_on Y d"
+  let ?C = "top1_continuous_funcs_on X TX Y ?TY"
+  let ?PiE = "top1_PiE X (\<lambda>_. Y)"
+  let ?ds = "top1_sup_metric_on X d"
+  let ?du = "top1_uniform_metric_on X d"
+  let ?Ts_sub = "subspace_topology ?PiE (top1_sup_topology_on X Y d) ?C"
+  let ?Tu_sub = "subspace_topology ?PiE (top1_metric_topology_on ?PiE ?du) ?C"
+  have hTopX: "is_topology_on X TX" using hCompX top1_compact_on_def by blast
+  text \<open>Key: sup and uniform subspace topologies on C agree.\<close>
+  have htopo_eq: "?Ts_sub = ?Tu_sub"
+    using sup_uniform_topology_eq_on_continuous[OF hTopX hd hCompX hXne hd_bdd]
+    unfolding top1_sup_topology_on_def top1_uniform_topology_on_def by simp
+  text \<open>Translate compactness and closedin between topologies.\<close>
+  have hcompact_eq: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)
+    \<longleftrightarrow> top1_compact_on \<F> (subspace_topology ?C ?Tu_sub \<F>)"
+    using htopo_eq by simp
+  have hclosedin_eq: "closedin_on ?C ?Ts_sub \<F> \<longleftrightarrow> closedin_on ?C ?Tu_sub \<F>"
+    using htopo_eq by simp
+  text \<open>Sup-bounded → pointwise bounded (for bounded metrics, evaluation at each point is bounded).\<close>
+  have hbdd_pw: "top1_metric_bounded_subset_on ?PiE ?ds \<F> \<longrightarrow> top1_pointwise_bounded_family_on X Y d \<F>"
+    sorry
+  text \<open>Pointwise bounded → sup-bounded (for bounded metrics).\<close>
+  have hpw_bdd: "top1_pointwise_bounded_family_on X Y d \<F> \<longrightarrow> top1_metric_bounded_subset_on ?PiE ?ds \<F>"
+    sorry
+  text \<open>Forward: compact → closed + bounded + equicontinuous.\<close>
+  have hfwd: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>) \<longrightarrow>
+    closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
+    top1_equicontinuous_family_on X TX Y d \<F>"
+    sorry
+  text \<open>Backward: closed + bounded + equicont → compact via Theorem_45_4.\<close>
+  have hbwd: "closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
+    top1_equicontinuous_family_on X TX Y d \<F> \<longrightarrow>
+    top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>)"
+    sorry
+  show ?thesis using hfwd hbwd by blast
 qed
 
 (** from \S46 Theorem 46.8 [top1.tex:6839] **)
