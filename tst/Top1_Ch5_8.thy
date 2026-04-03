@@ -12113,13 +12113,28 @@ proof -
     proof (cases "k mod N + 1 < N")
       case True \<comment> \<open>same row\<close>
       then have hrow_eq: "(k+1) div N = k div N" using div_same_row assms by blast
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq
-        using True assms sorry
+      have hmod_next: "(k+1) mod N = k mod N + 1"
+      proof -
+        have "k + 1 = k div N * N + (k mod N + 1)" by simp
+        then show ?thesis using True assms by (metis mod_if mod_mult_self3)
+      qed
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq hmod_next
+        using True assms by auto
     next
       case False \<comment> \<open>row boundary\<close>
       then have hmod: "k mod N = N - Suc 0" using mod_at_boundary assms by blast
       then have hrow_next: "(k+1) div N = k div N + 1" using div_next_row assms by blast
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next hmod using assms sorry
+      have hmod_next: "(k+1) mod N = 0"
+      proof -
+        have hNge: "N \<ge> Suc 0" using assms by simp
+        have "N - Suc 0 + 1 = N" using hNge by simp
+        have "k = k div N * N + k mod N" by simp
+        then have "k + 1 = k div N * N + (k mod N + 1)" by simp
+        then have "k + 1 = k div N * N + N" using hmod \<open>N - Suc 0 + 1 = N\<close> by presburger
+        then have "k + 1 = (k div N + 1) * N" by (simp add: algebra_simps)
+        then show ?thesis using assms by simp
+      qed
+      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next hmod hmod_next using assms by force
     qed
   next
     case False
