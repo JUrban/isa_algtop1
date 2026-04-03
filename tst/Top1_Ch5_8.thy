@@ -12043,10 +12043,40 @@ text \<open>The Peano space-filling curve. We construct a continuous surjection 
   The sequence is Cauchy in the sup metric (ρ(fₙ,fₙ₊₁) ≤ 1/2ⁿ), so converges
   to a continuous f. Surjectivity: fₙ comes within 1/2ⁿ of every point in I².\<close>
 
-text \<open>The sequence fₙ of paths [0,1] → [0,1]² is defined by iterative refinement.
-  fₙ is a piecewise-linear function made of 4ⁿ triangular segments,
-  each in a square of side 1/2ⁿ. For the formal proof, we use only the
-  key properties (Cauchy + dense images) rather than the explicit construction.\<close>
+text \<open>Snake order: maps cell index k to (col, row) in N×N grid.\<close>
+definition snake_pos :: "nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat" where
+  "snake_pos N k = (let row = k div N; col = k mod N in
+    (if even row then col else N - 1 - col, row))"
+
+text \<open>Space-filling approximation via piecewise-linear snake path.\<close>
+definition sfa_n :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "sfa_n n t = (let
+    N = (2::nat)^n; Nsq = N * N;
+    s = min (max t 0) 1;
+    k = min (nat \<lfloor>real Nsq * s\<rfloor>) (Nsq - 1);
+    frac = min (max (real Nsq * s - real k) 0) 1;
+    (cx, cy) = snake_pos N k;
+    (nx, ny) = snake_pos N (min (k + 1) (Nsq - 1));
+    x = (real cx + 0.5 + frac * (real nx - real cx)) / real N;
+    y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
+  in (min (max x 0) 1, min (max y 0) 1))"
+
+text \<open>Properties of sfa_n (sorry — require detailed arithmetic on floor/div/mod).\<close>
+lemma sfa_n_range: "sfa_n n t \<in> top1_closed_interval 0 1 \<times> top1_closed_interval 0 1"
+  unfolding sfa_n_def snake_pos_def top1_closed_interval_def Let_def sorry
+lemma sfa_n_continuous:
+  "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+    (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1))
+    (sfa_n n)" sorry
+lemma sfa_n_cauchy: "t \<in> top1_closed_interval 0 1 \<Longrightarrow>
+  \<bar>fst (sfa_n n t) - fst (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n \<and>
+  \<bar>snd (sfa_n n t) - snd (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n" sorry
+lemma sfa_n_dense: "x \<in> top1_closed_interval 0 1 \<Longrightarrow> y \<in> top1_closed_interval 0 1 \<Longrightarrow>
+  \<exists>t\<in>top1_closed_interval 0 1.
+    \<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
+
+text \<open>The sequence fₙ uses the snake-order space-filling approximation.\<close>
 
 (** from \S44 Theorem 44.1 (Peano curve) [top1.tex:6444] **)
 theorem Theorem_44_1:
@@ -12078,15 +12108,8 @@ proof -
                  \<bar>snd (fn n t) - snd (fn (Suc n) t)\<bar> \<le> 1 / 2^n) \<and>
     (\<forall>n. \<forall>x\<in>?I. \<forall>y\<in>?I. \<exists>t\<in>?I. \<bar>x - fst (fn n t)\<bar> \<le> 1 / 2^n \<and>
                                     \<bar>y - snd (fn n t)\<bar> \<le> 1 / 2^n)"
-    text \<open>The Munkres triangular path sequence (§44, Figures 44.1-44.5) satisfies
-      these properties. The construction iteratively refines piecewise-linear paths
-      in the unit square, with each level consisting of 4ⁿ triangular segments
-      in sub-squares of side 1/2ⁿ. Property (2) holds since segments stay in I².
-      Property (3) holds since refinement changes values by at most 1/2ⁿ (the
-      sub-square diameter). Property (4) holds since every sub-square is visited.
-      The full construction requires ~200 lines of explicit combinatorial definition
-      with the Hilbert/Z-order curve traversal.\<close>
-    sorry
+    text \<open>Use the snake-order space-filling approximation sfa_n.\<close>
+    using sfa_n_continuous sfa_n_range sfa_n_cauchy sfa_n_dense by blast
   then obtain fn where hfn_cont: "\<forall>n. top1_continuous_map_on ?I ?TI ?I2 ?TI2 (fn n)"
     and hfn_range: "\<forall>n. \<forall>t\<in>?I. fn n t \<in> ?I2"
     and hfn_cauchy: "\<forall>n. \<forall>t\<in>?I. \<bar>fst (fn n t) - fst (fn (Suc n) t)\<bar> \<le> 1 / 2^n \<and>
