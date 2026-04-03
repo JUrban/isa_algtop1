@@ -12111,19 +12111,24 @@ proof -
     have "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
     then show ?thesis unfolding k_def using grid_index_bound[OF hrow] by presburger
   qed
-  define t where "t = (real k + 0.5) / real (N * N)"
+  define t where "t = (real k + 0.25) / real (N * N)"
+  have hNsq: "N * N > 0" using hN by simp
   have ht_I: "t \<in> top1_closed_interval 0 1"
   proof -
-    have "N * N > 0" using hN by simp
-    have "0 \<le> t" unfolding t_def using hk \<open>N * N > 0\<close> by simp
+    have "0 \<le> t" unfolding t_def using hk hNsq by simp
     moreover have "t \<le> 1"
     proof -
-      have "real k + 0.5 \<le> real (N * N)" using hk by linarith
-      then show ?thesis unfolding t_def using \<open>N * N > 0\<close> by (simp add: field_simps)
+      have "k + 1 \<le> N * N" using hk by linarith
+      then have "real k + 1 \<le> real (N * N)" by linarith
+      then show ?thesis unfolding t_def using hNsq by (simp add: field_simps)
     qed
     ultimately show ?thesis unfolding top1_closed_interval_def by simp
   qed
-  have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" sorry
+  text \<open>At t = (k+0.25)/N², sfa_n returns approximately cell k center.
+    snake_pos N k = (col, row) by the snake reversal property.
+    Cell center = ((col+0.5)/N, (row+0.5)/N), within 1/(2N) of (x,y).\<close>
+  have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
+    sorry
   show ?thesis using ht_I hclose by blast
 qed
 
