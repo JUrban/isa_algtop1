@@ -12355,9 +12355,35 @@ proof -
   have hnx_bound: "nx < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
   have hny_bound: "ny < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
   have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1"
-    using hfst_raw hcol hnx_bound hN sorry
+  proof -
+    have hnum: "real col + 0.5 + 0.25 * (real nx - real col) = 0.75 * real col + 0.25 * real nx + 0.5"
+      by (simp add: field_simps)
+    have "0.75 * real col + 0.25 * real nx + 0.5 \<ge> 0" by simp
+    then have h0: "0 \<le> fst (sfa_raw n t)" using hfst_raw hnum hN
+      by (simp add: divide_nonneg_pos)
+    obtain M where hM: "N = Suc M" using hN by (cases N) auto
+    have "0.75 * real col + 0.25 * real nx \<le> real N - 1"
+      using hcol hnx_bound hM by simp
+    then have "0.75 * real col + 0.25 * real nx + 0.5 \<le> real N - 0.5" by linarith
+    then have h1: "fst (sfa_raw n t) \<le> 1" using hfst_raw hnum hN sorry
+    show ?thesis using h0 h1 by blast
+  qed
   have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1"
-    using hsnd_raw hrow hny_bound hN sorry
+  proof -
+    have hnum: "real row + 0.5 + 0.25 * (real ny - real row) = 0.75 * real row + 0.25 * real ny + 0.5"
+      by (simp add: field_simps)
+    have "0.75 * real row + 0.25 * real ny + 0.5 \<ge> 0" by simp
+    then have h0: "0 \<le> snd (sfa_raw n t)" using hsnd_raw hnum hN
+      by (simp add: divide_nonneg_pos)
+    have "row \<le> N - 1" using hrow by linarith
+    have "ny \<le> N - 1" using hny_bound by linarith
+    obtain M where hM: "N = Suc M" using hN by (cases N) auto
+    have "0.75 * real row + 0.25 * real ny \<le> real N - 1"
+      using \<open>row \<le> N - 1\<close> \<open>ny \<le> N - 1\<close> hM by simp
+    then have "0.75 * real row + 0.25 * real ny + 0.5 \<le> real N - 0.5" by linarith
+    then have h1: "snd (sfa_raw n t) \<le> 1" using hsnd_raw hnum hN sorry
+    show ?thesis using h0 h1 by blast
+  qed
   have hfst_clamp: "fst (sfa_n n t) = fst (sfa_raw n t)"
     unfolding sfa_n_def clamp01_def using hfst_in by simp
   have hsnd_clamp: "snd (sfa_n n t) = snd (sfa_raw n t)"
