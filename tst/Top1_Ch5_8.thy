@@ -12136,9 +12136,60 @@ proof -
     unfolding snake_pos_def Let_def hk_div hk_mod using hcol hrow hN by simp
   text \<open>At t, the sfa_n x-coordinate is close to (col+0.5)/N, which is close to x.\<close>
   have hx_col: "\<bar>x - (real col + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
-    using hx hN unfolding col_def top1_closed_interval_def sorry
+  proof -
+    have hx01: "0 \<le> x \<and> x \<le> 1" using hx unfolding top1_closed_interval_def by simp
+    have "col \<le> nat \<lfloor>real N * x\<rfloor>" unfolding col_def by simp
+    have "col \<le> N - 1" unfolding col_def by simp
+    have hNx_nn: "0 \<le> real N * x" using hx01 hN by simp
+    have hfloor: "\<lfloor>real N * x\<rfloor> \<ge> 0" using hNx_nn by simp
+    have "real col \<le> real N * x"
+    proof -
+      have "col \<le> nat \<lfloor>real N * x\<rfloor>" unfolding col_def by simp
+      then have "real col \<le> real (nat \<lfloor>real N * x\<rfloor>)" by simp
+      also have "... = \<lfloor>real N * x\<rfloor>" using hfloor by simp
+      also have "... \<le> real N * x" by linarith
+      finally show ?thesis by presburger
+    qed
+    have "real N * x \<le> real col + 1"
+    proof -
+      have "real N * x \<le> real N * 1" using hx01 hN by simp
+      then have "real N * x \<le> real N" by simp
+      also have "... = real (N - 1) + 1" using hN by simp
+      finally have "real N * x \<le> real (N - 1) + 1" by presburger
+      moreover have "real N * x \<le> \<lfloor>real N * x\<rfloor> + 1" by linarith
+      moreover have "\<lfloor>real N * x\<rfloor> + 1 = real (nat \<lfloor>real N * x\<rfloor>) + 1" using hfloor by simp
+      ultimately show ?thesis unfolding col_def by linarith
+    qed
+    then have "x \<le> (real col + 1) / real N" using hN by (simp add: field_simps)
+    have "real col / real N \<le> x" using \<open>real col \<le> real N * x\<close> hN by (simp add: field_simps)
+    show ?thesis using \<open>x \<le> (real col + 1) / real N\<close> \<open>real col / real N \<le> x\<close> hN by (simp add: abs_le_iff field_simps)
+  qed
   have hy_row: "\<bar>y - (real row + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
-    using hy hN unfolding row_def top1_closed_interval_def sorry
+  proof -
+    have hy01: "0 \<le> y \<and> y \<le> 1" using hy unfolding top1_closed_interval_def by simp
+    have hNy_nn: "0 \<le> real N * y" using hy01 hN by simp
+    have hfloor_y: "\<lfloor>real N * y\<rfloor> \<ge> 0" using hNy_nn by simp
+    have "real row \<le> real N * y"
+    proof -
+      have "row \<le> nat \<lfloor>real N * y\<rfloor>" unfolding row_def by simp
+      then have "real row \<le> real (nat \<lfloor>real N * y\<rfloor>)" by simp
+      also have "... = \<lfloor>real N * y\<rfloor>" using hfloor_y by simp
+      also have "... \<le> real N * y" by linarith
+      finally show ?thesis by presburger
+    qed
+    have "real N * y \<le> real row + 1"
+    proof -
+      have "real N * y \<le> real N" using hy01 hN by simp
+      also have "... = real (N - 1) + 1" using hN by simp
+      finally have h1: "real N * y \<le> real (N - 1) + 1" by presburger
+      have h2: "real N * y \<le> \<lfloor>real N * y\<rfloor> + 1" by linarith
+      have h3: "\<lfloor>real N * y\<rfloor> + 1 = real (nat \<lfloor>real N * y\<rfloor>) + 1" using hfloor_y by simp
+      show ?thesis unfolding row_def using h1 h2 h3 by linarith
+    qed
+    then have "y \<le> (real row + 1) / real N" using hN by (simp add: field_simps)
+    have "real row / real N \<le> y" using \<open>real row \<le> real N * y\<close> hN by (simp add: field_simps)
+    show ?thesis using \<open>y \<le> (real row + 1) / real N\<close> \<open>real row / real N \<le> y\<close> hN by (simp add: abs_le_iff field_simps)
+  qed
   have hN_bound: "1 / (2 * real N) \<le> 1 / 2^n"
   proof -
     have "2 * real N = 2^(n+1)" unfolding N_def by (simp add: power_Suc)
