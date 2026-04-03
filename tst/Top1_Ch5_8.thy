@@ -18143,7 +18143,8 @@ proof -
       next
         case False
         show "Sup ((\<lambda>x. d (f0 x) (f x)) ` X) \<le> M"
-          sorry (* cSup_least + hbdd, arithmetic with Sup *)
+          using hbdd hbdd_above False
+          by (intro cSup_least) auto
       qed
     qed (rule hf0_PiE)
   qed
