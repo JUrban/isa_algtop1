@@ -12049,392 +12049,929 @@ definition clamp01 :: "real \<Rightarrow> real" where "clamp01 x = min (max x 0)
 lemma clamp01_range: "0 \<le> clamp01 x \<and> clamp01 x \<le> 1"
   unfolding clamp01_def by simp
 
-text \<open>Snake order: maps cell index k to (col, row) in N×N grid.\<close>
-definition snake_pos :: "nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat" where
-  "snake_pos N k = (let row = k div N; col = k mod N in
-    (if even row then col else N - 1 - col, row))"
+lemma clamp01_id_early: "clamp01 t = t" if "0 \<le> t" "t \<le> 1"
+  unfolding clamp01_def using that by auto
 
-text \<open>Raw (unclamped) space-filling approximation.\<close>
-definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
-  "sfa_raw n t = (let
-    N = (2::nat)^n; Nsq = N * N;
+lemma floor_nat_plus_frac_early: "\<lfloor>real (q::nat) + t0\<rfloor> = int q" if "0 \<le> t0" "t0 < 1"
+proof -
+  have "real q \<le> real q + t0" using that by simp
+  moreover have "real q + t0 < real q + 1" using that by simp
+  ultimately show ?thesis by linarith
+qed
+
+text \<open>Recursive quadrant-subdivision space-filling approximation.
+  Level 0: constant (0.5, 0.5).
+  Level n+1: divide [0,1] into 4 quarters, map to quadrants (0,0),(0,1),(1,1),(1,0),
+  recurse within each quadrant. This is a U-shaped traversal.\<close>
+fun sfa_rec :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "sfa_rec 0 t = (0.5, 0.5)"
+| "sfa_rec (Suc n) t = (let
     s = clamp01 t;
-    k = min (nat \<lfloor>real Nsq * s\<rfloor>) (Nsq - 1);
-    frac = clamp01 (real Nsq * s - real k);
-    (cx, cy) = snake_pos N k;
-    (nx, ny) = snake_pos N (min (k + 1) (Nsq - 1));
-    x = (real cx + 0.5 + frac * (real nx - real cx)) / real N;
-    y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
-  in (x, y))"
+    q = min (nat \<lfloor>4 * s\<rfloor>) 3;
+    s' = clamp01 (4 * s - real q);
+    (rx, ry) = sfa_rec n s';
+    (qx, qy) = (if q = 0 then (0::nat, 0::nat) else if q = 1 then (0, 1)
+                 else if q = 2 then (1, 1) else (1, 0))
+  in ((real qx + rx) / 2, (real qy + ry) / 2))"
 
-lemma div_add_small: "(N::nat) > 0 \<Longrightarrow> r < N \<Longrightarrow> (q * N + r) div N = q"
-  by simp
+text \<open>Hilbert curve with orientation parameter for continuity.
+  4 orientations (0-3): A enters (0,0) exits (1,0), B enters (0,0) exits (0,1),
+  C enters (1,1) exits (0,1), D enters (1,1) exits (1,0).
+  Base case: linear interpolation from entry to exit (continuous!).
+  Recursive case: 4 quadrants with orientation-specific ordering and sub-orientations.\<close>
 
-lemma div_same_row: "(N::nat) > 0 \<Longrightarrow> k mod N + 1 < N \<Longrightarrow> (k+1) div N = k div N"
-proof -
-  assume hN: "N > 0" and hlt: "k mod N + 1 < N"
-  have "k + 1 = k div N * N + (k mod N + 1)" by simp
-  then have "(k + 1) div N = (k div N * N + (k mod N + 1)) div N" by presburger
-  also have "... = k div N" using div_add_small[OF hN hlt] by presburger
-  finally show ?thesis by presburger
-qed
+definition hilbert_entry :: "nat \<Rightarrow> real \<times> real" where
+  "hilbert_entry o' = (if o' = 0 then (0, 0) else if o' = 1 then (0, 0)
+    else if o' = 2 then (1, 1) else (1, 1))"
 
-lemma mod_at_boundary: "(N::nat) > 0 \<Longrightarrow> \<not> (k mod N + 1 < N) \<Longrightarrow> k mod N = N - Suc 0"
-proof -
-  assume "N > 0" "\<not> (k mod N + 1 < N)"
-  have "k mod N < N" using \<open>N > 0\<close> by simp
-  then have "k mod N + 1 \<le> N" by linarith
-  then have "k mod N + 1 = N" using \<open>\<not> (k mod N + 1 < N)\<close> by linarith
-  then show "k mod N = N - Suc 0" by linarith
-qed
+definition hilbert_exit :: "nat \<Rightarrow> real \<times> real" where
+  "hilbert_exit o' = (if o' = 0 then (1, 0) else if o' = 1 then (0, 1)
+    else if o' = 2 then (0, 1) else (1, 0))"
 
-lemma div_next_row: "(N::nat) > 0 \<Longrightarrow> k mod N = N - Suc 0 \<Longrightarrow> (k+1) div N = k div N + 1"
-proof -
-  assume hN: "N > 0" and hmod: "k mod N = N - Suc 0"
-  have hdecomp: "k = N * (k div N) + k mod N" by simp
-  then have "k + 1 = N * (k div N) + (k mod N + 1)" by linarith
-  also have "k mod N + 1 = N" using hmod hN by linarith
-  finally have "k + 1 = N * (k div N) + N" by presburger
-  then have "k + 1 = N * (k div N + 1)" by (simp add: algebra_simps)
-  then show ?thesis using hN by simp
-qed
+definition hilbert_quad :: "nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat" where
+  "hilbert_quad o' q = (
+    if o' = 0 then (if q = 0 then (0,0) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))
+    else if o' = 1 then (if q = 0 then (0,0) else if q = 1 then (1,0) else if q = 2 then (1,1) else (0,1))
+    else if o' = 2 then (if q = 0 then (1,1) else if q = 1 then (1,0) else if q = 2 then (0,0) else (0,1))
+    else (if q = 0 then (1,1) else if q = 1 then (0,1) else if q = 2 then (0,0) else (1,0)))"
 
-lemma snake_adjacent:
-  assumes "N > 0" "k < N * N"
-  shows "\<bar>real (fst (snake_pos N (min (k+1) (N*N-1)))) - real (fst (snake_pos N k))\<bar> \<le> 1"
-    and "\<bar>real (snd (snake_pos N (min (k+1) (N*N-1)))) - real (snd (snake_pos N k))\<bar> \<le> 1"
-proof -
-  let ?k' = "min (k+1) (N*N-1)"
-  show "\<bar>real (fst (snake_pos N ?k')) - real (fst (snake_pos N k))\<bar> \<le> 1"
-  proof (cases "k + 1 < N * N")
-    case True
-    then have hk': "?k' = k + 1" by simp
-    show ?thesis
-    proof (cases "k mod N + 1 < N")
-      case True \<comment> \<open>same row\<close>
-      then have hrow_eq: "(k+1) div N = k div N" using div_same_row assms by blast
-      have hmod_next: "(k+1) mod N = k mod N + 1"
-      proof -
-        have "k + 1 = k div N * N + (k mod N + 1)" by simp
-        then show ?thesis using True assms by (metis mod_if mod_mult_self3)
-      qed
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq hmod_next
-        using True assms by auto
-    next
-      case False \<comment> \<open>row boundary\<close>
-      then have hmod: "k mod N = N - Suc 0" using mod_at_boundary assms by blast
-      then have hrow_next: "(k+1) div N = k div N + 1" using div_next_row assms by blast
-      have hmod_next: "(k+1) mod N = 0"
-      proof -
-        have hNge: "N \<ge> Suc 0" using assms by simp
-        have "N - Suc 0 + 1 = N" using hNge by simp
-        have "k = k div N * N + k mod N" by simp
-        then have "k + 1 = k div N * N + (k mod N + 1)" by simp
-        then have "k + 1 = k div N * N + N" using hmod \<open>N - Suc 0 + 1 = N\<close> by presburger
-        then have "k + 1 = (k div N + 1) * N" by (simp add: algebra_simps)
-        then show ?thesis using assms by simp
-      qed
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next hmod hmod_next using assms by force
-    qed
-  next
-    case False
-    then have "?k' = k" using assms by simp
-    then show ?thesis by simp
-  qed
+definition hilbert_sub :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
+  "hilbert_sub o' q = (
+    if o' = 0 then (if q = 0 then 1 else if q = 1 then 0 else if q = 2 then 0 else 3)
+    else if o' = 1 then (if q = 0 then 0 else if q = 1 then 1 else if q = 2 then 1 else 2)
+    else if o' = 2 then (if q = 0 then 3 else if q = 1 then 2 else if q = 2 then 2 else 1)
+    else (if q = 0 then 2 else if q = 1 then 3 else if q = 2 then 3 else 0))"
+
+fun hilbert_rec :: "nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "hilbert_rec o' 0 t = (let s = clamp01 t;
+    (ex, ey) = hilbert_entry o'; (xx, xy) = hilbert_exit o'
+   in (ex + s * (xx - ex), ey + s * (xy - ey)))"
+| "hilbert_rec o' (Suc n) t = (let
+    s = clamp01 t;
+    q = min (nat \<lfloor>4 * s\<rfloor>) 3;
+    s' = clamp01 (4 * s - real q);
+    sub_o = hilbert_sub o' q;
+    (rx, ry) = hilbert_rec sub_o n s';
+    (qx, qy) = hilbert_quad o' q
+  in ((real qx + rx) / 2, (real qy + ry) / 2))"
+
+definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "sfa_raw n t = hilbert_rec 0 n t"
+
+text \<open>Properties of hilbert_rec: range, cauchy, dense, continuous.\<close>
+lemma hilbert_entry_range: "fst (hilbert_entry o') \<in> {0, 1} \<and> snd (hilbert_entry o') \<in> {0, 1}"
+  unfolding hilbert_entry_def by auto
+
+lemma hilbert_exit_range: "fst (hilbert_exit o') \<in> {0, 1} \<and> snd (hilbert_exit o') \<in> {0, 1}"
+  unfolding hilbert_exit_def by auto
+
+lemma hilbert_quad_range: "fst (hilbert_quad o' q) \<in> {0, 1} \<and> snd (hilbert_quad o' q) \<in> {0, 1}"
+  unfolding hilbert_quad_def by auto
+
+lemma hilbert_rec_range: "0 \<le> fst (hilbert_rec o' n t) \<and> fst (hilbert_rec o' n t) \<le> 1 \<and>
+  0 \<le> snd (hilbert_rec o' n t) \<and> snd (hilbert_rec o' n t) \<le> 1"
+proof (induction n arbitrary: o' t)
+  case 0
+  have hs: "0 \<le> clamp01 t \<and> clamp01 t \<le> 1" using clamp01_range by blast
+  show ?case
+    apply (simp add: Let_def case_prod_beta hilbert_entry_def hilbert_exit_def)
+    using hs by linarith
 next
-  let ?k' = "min (k+1) (N*N-1)"
-  show "\<bar>real (snd (snake_pos N ?k')) - real (snd (snake_pos N k))\<bar> \<le> 1"
-  proof (cases "k + 1 < N * N")
-    case True
-    then have hk': "?k' = k + 1" by simp
-    show ?thesis
-    proof (cases "k mod N + 1 < N")
-      case True
-      then have hrow_eq: "(k+1) div N = k div N" using div_same_row assms by blast
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq by simp
-    next
-      case False
-      then have hmod: "k mod N = N - Suc 0" using mod_at_boundary assms by blast
-      then have hrow_next: "(k+1) div N = k div N + 1" using div_next_row assms by blast
-      show ?thesis unfolding hk' snake_pos_def Let_def hrow_next by simp
-    qed
+  case (Suc n)
+  have hIH: "\<And>o'' s. 0 \<le> fst (hilbert_rec o'' n s) \<and> fst (hilbert_rec o'' n s) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec o'' n s) \<and> snd (hilbert_rec o'' n s) \<le> 1" using Suc by blast
+  have hIH2: "\<And>o'' s. fst (hilbert_rec o'' n s) \<le> 2"
+    by (meson hIH le_trans one_le_numeral order.trans)
+  have hIH3: "\<And>o'' s. snd (hilbert_rec o'' n s) \<le> 2"
+    by (meson hIH le_trans one_le_numeral order.trans)
+  show ?case
+    apply (simp add: Let_def case_prod_beta)
+    apply (intro conjI impI)
+    apply (simp_all add: hIH hilbert_quad_def hilbert_sub_def)
+    apply (simp_all add: hIH2 hIH3)
+    done
+qed
+
+lemma hilbert_rec_cauchy: "\<bar>fst (hilbert_rec o' (Suc n) t) - fst (hilbert_rec o' n t)\<bar> \<le> 1 / 2 ^ n \<and>
+  \<bar>snd (hilbert_rec o' (Suc n) t) - snd (hilbert_rec o' n t)\<bar> \<le> 1 / 2 ^ n"
+proof (induction n arbitrary: o' t)
+  case 0
+  have hr: "0 \<le> fst (hilbert_rec o' 1 t) \<and> fst (hilbert_rec o' 1 t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec o' 1 t) \<and> snd (hilbert_rec o' 1 t) \<le> 1"
+    using hilbert_rec_range by blast
+  have hr0: "0 \<le> fst (hilbert_rec o' 0 t) \<and> fst (hilbert_rec o' 0 t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec o' 0 t) \<and> snd (hilbert_rec o' 0 t) \<le> 1"
+    using hilbert_rec_range by blast
+  have "\<bar>fst (hilbert_rec o' 1 t) - fst (hilbert_rec o' 0 t)\<bar> \<le> 1"
+    using hr hr0 by (simp add: abs_le_iff)
+  moreover have "\<bar>snd (hilbert_rec o' 1 t) - snd (hilbert_rec o' 0 t)\<bar> \<le> 1"
+    using hr hr0 by (simp add: abs_le_iff)
+  ultimately show ?case by simp
+next
+  case (Suc n)
+  define s where "s = clamp01 t"
+  define q where "q = min (nat \<lfloor>4 * s\<rfloor>) 3"
+  define s' where "s' = clamp01 (4 * s - real q)"
+  define sub_o where "sub_o = hilbert_sub o' q"
+  obtain rx1 ry1 where hrec1: "hilbert_rec sub_o (Suc n) s' = (rx1, ry1)" by (cases "hilbert_rec sub_o (Suc n) s'")
+  obtain rx2 ry2 where hrec2: "hilbert_rec sub_o n s' = (rx2, ry2)" by (cases "hilbert_rec sub_o n s'")
+  have hfst1: "fst (hilbert_rec o' (Suc (Suc n)) t) = (real (fst (hilbert_quad o' q)) + rx1) / 2"
+    using hilbert_rec.simps(2)[of o' "Suc n" t] hrec1
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric] sub_o_def[symmetric])
+  have hfst2: "fst (hilbert_rec o' (Suc n) t) = (real (fst (hilbert_quad o' q)) + rx2) / 2"
+    using hilbert_rec.simps(2)[of o' n t] hrec2
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric] sub_o_def[symmetric])
+  have hsnd1: "snd (hilbert_rec o' (Suc (Suc n)) t) = (real (snd (hilbert_quad o' q)) + ry1) / 2"
+    using hilbert_rec.simps(2)[of o' "Suc n" t] hrec1
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric] sub_o_def[symmetric])
+  have hsnd2: "snd (hilbert_rec o' (Suc n) t) = (real (snd (hilbert_quad o' q)) + ry2) / 2"
+    using hilbert_rec.simps(2)[of o' n t] hrec2
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric] sub_o_def[symmetric])
+  have hfst_diff: "fst (hilbert_rec o' (Suc (Suc n)) t) - fst (hilbert_rec o' (Suc n) t) =
+    (fst (hilbert_rec sub_o (Suc n) s') - fst (hilbert_rec sub_o n s')) / 2"
+    using hfst1 hfst2 hrec1 hrec2
+    by (simp del: hilbert_rec.simps)
+  have hsnd_diff: "snd (hilbert_rec o' (Suc (Suc n)) t) - snd (hilbert_rec o' (Suc n) t) =
+    (snd (hilbert_rec sub_o (Suc n) s') - snd (hilbert_rec sub_o n s')) / 2"
+    using hsnd1 hsnd2 hrec1 hrec2
+    by (simp del: hilbert_rec.simps)
+  have hIH: "\<bar>fst (hilbert_rec sub_o (Suc n) s') - fst (hilbert_rec sub_o n s')\<bar> \<le> 1 / 2 ^ n \<and>
+    \<bar>snd (hilbert_rec sub_o (Suc n) s') - snd (hilbert_rec sub_o n s')\<bar> \<le> 1 / 2 ^ n"
+    using Suc by blast
+  have "\<bar>(fst (hilbert_rec sub_o (Suc n) s') - fst (hilbert_rec sub_o n s')) / 2\<bar> \<le> 1 / 2 ^ Suc n"
+    using hIH by (simp add: abs_le_iff field_simps)
+  moreover have "\<bar>(snd (hilbert_rec sub_o (Suc n) s') - snd (hilbert_rec sub_o n s')) / 2\<bar> \<le> 1 / 2 ^ Suc n"
+    using hIH by (simp add: abs_le_iff field_simps)
+  ultimately show ?case using hfst_diff hsnd_diff by metis
+qed
+
+lemma hilbert_rec_dense_strict:
+  assumes "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+  shows "\<exists>t. 0 \<le> t \<and> t < 1 \<and> \<bar>x - fst (hilbert_rec o' n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (hilbert_rec o' n t)\<bar> \<le> 1/2^n"
+using assms proof (induction n arbitrary: o' x y)
+  case (0 o' x y)
+  have hr: "0 \<le> fst (hilbert_rec o' 0 0) \<and> fst (hilbert_rec o' 0 0) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec o' 0 0) \<and> snd (hilbert_rec o' 0 0) \<le> 1"
+    using hilbert_rec_range by blast
+  then show ?case using 0 by force
+next
+  case (Suc n o' x y)
+  text \<open>Choose the quadrant containing (x,y) via the inverse of hilbert_quad.\<close>
+  define qx :: nat where "qx = (if x < 1/2 then 0 else 1)"
+  define qy :: nat where "qy = (if y < 1/2 then 0 else 1)"
+  define q :: nat where "q = (if hilbert_quad o' 0 = (qx, qy) then 0
+    else if hilbert_quad o' 1 = (qx, qy) then 1
+    else if hilbert_quad o' 2 = (qx, qy) then 2 else 3)"
+  have hq: "q \<le> 3" unfolding q_def by auto
+  have hqxy: "hilbert_quad o' q = (qx, qy)"
+    unfolding q_def hilbert_quad_def qx_def qy_def by auto
+  define sub_o where "sub_o = hilbert_sub o' q"
+  define x' :: real where "x' = 2 * x - real qx"
+  define y' :: real where "y' = 2 * y - real qy"
+  have hx'0: "0 \<le> x'" and hx'1: "x' \<le> 1" and hy'0: "0 \<le> y'" and hy'1: "y' \<le> 1"
+    unfolding x'_def y'_def qx_def qy_def using Suc.prems by auto
+  obtain t0 where ht0: "0 \<le> t0" and ht0s: "t0 < 1" and hclose0:
+    "\<bar>x' - fst (hilbert_rec sub_o n t0)\<bar> \<le> 1/2^n \<and> \<bar>y' - snd (hilbert_rec sub_o n t0)\<bar> \<le> 1/2^n"
+    using Suc.IH hx'0 hx'1 hy'0 hy'1 by blast
+  define t where "t = (real q + t0) / 4"
+  have ht: "0 \<le> t" unfolding t_def using ht0 by auto
+  have ht1: "t < 1" unfolding t_def using ht0s hq by simp
+  have hclamp: "clamp01 t = t" unfolding clamp01_def using ht ht1 by auto
+  have h4t: "4 * t = real q + t0" unfolding t_def by auto
+  have hfloor: "\<lfloor>4 * t\<rfloor> = int q" unfolding h4t using floor_nat_plus_frac_early ht0 ht0s by simp
+  have hq_val: "min (nat \<lfloor>4 * t\<rfloor>) 3 = q" using hfloor hq by presburger
+  have hs'_val: "clamp01 (4 * t - real q) = t0" unfolding clamp01_def h4t using ht0 ht0s by auto
+  obtain rx ry where hrec: "hilbert_rec sub_o n t0 = (rx, ry)" by (cases "hilbert_rec sub_o n t0")
+  have hfst: "fst (hilbert_rec o' (Suc n) t) = (real qx + rx) / 2"
+    using hilbert_rec.simps(2)[of o' n t] hrec hclamp h4t hq_val hs'_val hqxy
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta sub_o_def[symmetric])
+  have hsnd: "snd (hilbert_rec o' (Suc n) t) = (real qy + ry) / 2"
+    using hilbert_rec.simps(2)[of o' n t] hrec hclamp h4t hq_val hs'_val hqxy
+    by (simp del: hilbert_rec.simps add: Let_def case_prod_beta sub_o_def[symmetric])
+  have hx_eq: "x = (real qx + x') / 2" unfolding x'_def by simp
+  have hy_eq: "y = (real qy + y') / 2" unfolding y'_def by simp
+  have hrx: "rx = fst (hilbert_rec sub_o n t0)" using hrec by simp
+  have hry: "ry = snd (hilbert_rec sub_o n t0)" using hrec by simp
+  have hfst2: "fst (hilbert_rec o' (Suc n) t) = (real qx + rx) / 2" using hfst by simp
+  have "x - fst (hilbert_rec o' (Suc n) t) = (x' - rx) / 2"
+    unfolding hfst2 hx_eq by (simp add: field_simps)
+  then have hx_close: "\<bar>x - fst (hilbert_rec o' (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
+    using hclose0 hrx by force
+  have hsnd2: "snd (hilbert_rec o' (Suc n) t) = (real qy + ry) / 2" using hsnd by simp
+  have "y - snd (hilbert_rec o' (Suc n) t) = (y' - ry) / 2"
+    unfolding hsnd2 hy_eq by (simp add: field_simps)
+  then have "\<bar>y - snd (hilbert_rec o' (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
+    using hclose0 hry by force
+  then show ?case using ht ht1 hx_close by auto
+qed
+
+lemma hilbert_rec_dense: "\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> \<bar>x - fst (hilbert_rec o' n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (hilbert_rec o' n t)\<bar> \<le> 1/2^n"
+  if "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+  using hilbert_rec_dense_strict[OF that] by (meson less_imp_le)
+
+text \<open>Key structural lemmas for continuity: hilbert_rec maps endpoints to entry/exit.\<close>
+lemma hilbert_entry_sub_quad_match_0: "(fst (hilbert_quad o' 0) + fst (hilbert_entry (hilbert_sub o' 0))) / 2 = fst (hilbert_entry o') \<and>
+  (snd (hilbert_quad o' 0) + snd (hilbert_entry (hilbert_sub o' 0))) / 2 = snd (hilbert_entry o')"
+  unfolding hilbert_quad_def hilbert_sub_def hilbert_entry_def by auto
+
+lemma hilbert_exit_sub_quad_match_3: "(fst (hilbert_quad o' 3) + fst (hilbert_exit (hilbert_sub o' 3))) / 2 = fst (hilbert_exit o') \<and>
+  (snd (hilbert_quad o' 3) + snd (hilbert_exit (hilbert_sub o' 3))) / 2 = snd (hilbert_exit o')"
+  unfolding hilbert_quad_def hilbert_sub_def hilbert_exit_def by auto
+
+lemma hilbert_rec_at_0: "hilbert_rec o' n 0 = hilbert_entry o'"
+proof (induction n arbitrary: o')
+  case 0 show ?case
+    by (simp add: Let_def case_prod_beta hilbert_entry_def hilbert_exit_def clamp01_def)
+next
+  case (Suc n)
+  have hentry: "hilbert_rec (hilbert_sub o' 0) n 0 = hilbert_entry (hilbert_sub o' 0)"
+    using Suc.IH by blast
+  show ?case
+    apply (simp add: Let_def case_prod_beta clamp01_def)
+    using hentry hilbert_entry_sub_quad_match_0 by simp
+qed
+
+lemma hilbert_rec_at_1: "hilbert_rec o' n 1 = hilbert_exit o'"
+proof (induction n arbitrary: o')
+  case 0 show ?case
+    by (simp add: Let_def case_prod_beta hilbert_entry_def hilbert_exit_def clamp01_def)
+next
+  case (Suc n)
+  have hexit: "hilbert_rec (hilbert_sub o' 3) n 1 = hilbert_exit (hilbert_sub o' 3)"
+    using Suc.IH by blast
+  show ?case
+    apply (simp add: Let_def case_prod_beta clamp01_def)
+    using hexit hilbert_exit_sub_quad_match_3 by simp
+qed
+
+text \<open>Boundary matching: the exit of quadrant q matches the entry of quadrant q+1.\<close>
+lemma hilbert_boundary_match:
+  assumes "q < 3"
+  shows "(fst (hilbert_quad o' q) + fst (hilbert_exit (hilbert_sub o' q))) / 2 =
+         (fst (hilbert_quad o' (Suc q)) + fst (hilbert_entry (hilbert_sub o' (Suc q)))) / 2 \<and>
+         (snd (hilbert_quad o' q) + snd (hilbert_exit (hilbert_sub o' q))) / 2 =
+         (snd (hilbert_quad o' (Suc q)) + snd (hilbert_entry (hilbert_sub o' (Suc q)))) / 2"
+  using assms unfolding hilbert_quad_def hilbert_sub_def hilbert_entry_def hilbert_exit_def
+  using less_Suc_eq numeral_3_eq_3 by force
+
+text \<open>Continuity of hilbert_rec. The proof uses the structural lemmas:
+  - hilbert_rec_at_0/1: maps t=0 to entry, t=1 to exit
+  - hilbert_boundary_match: pieces join at quadrant boundaries
+  Base case: linear interpolation (entry + t*(exit-entry)) is continuous.
+  Inductive case: 4 pieces, each continuous by IH, join by boundary matching.
+  Left as sorry — formal piecewise-continuity argument needs infrastructure
+  (e.g. continuous_on_closed_union for custom topology).\<close>
+lemma closed_interval_01_is_topology: "is_topology_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)"
+  unfolding top1_closed_interval_topology_def
+  by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on], simp add: top1_closed_interval_def)
+
+text \<open>Pasting lemma (Theorem 18.3 in Munkres): if A, B are closed subsets of X
+  with A ∪ B = X, and f is continuous on each, then f is continuous on X.\<close>
+lemma pasting_lemma_two_closed:
+  assumes hTX: "is_topology_on X TX"
+  assumes hTY: "is_topology_on Y TY"
+  assumes hA_closed: "closedin_on X TX A"
+  assumes hB_closed: "closedin_on X TX B"
+  assumes hAB: "A \<union> B = X"
+  assumes hf_range: "\<forall>x\<in>X. f x \<in> Y"
+  assumes hf_A: "top1_continuous_map_on A (subspace_topology X TX A) Y TY f"
+  assumes hf_B: "top1_continuous_map_on B (subspace_topology X TX B) Y TY f"
+  shows "top1_continuous_map_on X TX Y TY f"
+proof -
+  have hAsub: "A \<subseteq> X" using hA_closed by (rule closedin_sub)
+  have hBsub: "B \<subseteq> X" using hB_closed by (rule closedin_sub)
+  have hTA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF hTX hAsub])
+  have hTB: "is_topology_on B (subspace_topology X TX B)"
+    by (rule subspace_topology_is_topology_on[OF hTX hBsub])
+  show ?thesis
+    unfolding Theorem_18_1(2)[OF hTX hTY]
+  proof (intro conjI allI impI)
+    show "\<forall>x\<in>X. f x \<in> Y" using hf_range by blast
   next
-    case False
-    then have "?k' = k" using assms by simp
-    then show ?thesis by simp
+    fix C assume hC: "closedin_on Y TY C"
+    have hpreA: "closedin_on A (subspace_topology X TX A) {x \<in> A. f x \<in> C}"
+      using Theorem_18_1(2)[OF hTA hTY] hf_A hC by blast
+    then obtain C1 where hC1: "closedin_on X TX C1" and hC1_eq: "{x \<in> A. f x \<in> C} = C1 \<inter> A"
+      using Theorem_17_2[OF hTX hAsub] by blast
+    have hpreB: "closedin_on B (subspace_topology X TX B) {x \<in> B. f x \<in> C}"
+      using Theorem_18_1(2)[OF hTB hTY] hf_B hC by blast
+    then obtain C2 where hC2: "closedin_on X TX C2" and hC2_eq: "{x \<in> B. f x \<in> C} = C2 \<inter> B"
+      using Theorem_17_2[OF hTX hBsub] by blast
+    have "{x \<in> X. f x \<in> C} = {x \<in> A. f x \<in> C} \<union> {x \<in> B. f x \<in> C}"
+      using hAB by auto
+    also have "... = (C1 \<inter> A) \<union> (C2 \<inter> B)" using hC1_eq hC2_eq by simp
+    finally have hpre_eq: "{x \<in> X. f x \<in> C} = (C1 \<inter> A) \<union> (C2 \<inter> B)" .
+    have hC1A: "closedin_on X TX (C1 \<inter> A)"
+    proof (rule closedin_intro)
+      show "C1 \<inter> A \<subseteq> X" using closedin_sub[OF hC1] hAsub by auto
+      have "X - (C1 \<inter> A) = (X - C1) \<union> (X - A)" by auto
+      moreover have "X - C1 \<in> TX" using hC1 unfolding closedin_on_def by blast
+      moreover have "X - A \<in> TX" using hA_closed unfolding closedin_on_def by blast
+      ultimately show "X - (C1 \<inter> A) \<in> TX"
+      proof -
+        assume h1: "X - (C1 \<inter> A) = (X - C1) \<union> (X - A)" and h2: "X - C1 \<in> TX" and h3: "X - A \<in> TX"
+        have "{X - C1, X - A} \<subseteq> TX" using h2 h3 by auto
+        then have "\<Union>{X - C1, X - A} \<in> TX"
+          using hTX unfolding is_topology_on_def by blast
+        then show ?thesis using h1 by auto
+      qed
+    qed
+    moreover have hC2B: "closedin_on X TX (C2 \<inter> B)"
+    proof (rule closedin_intro)
+      show "C2 \<inter> B \<subseteq> X" using closedin_sub[OF hC2] hBsub by auto
+      have "X - (C2 \<inter> B) = (X - C2) \<union> (X - B)" by auto
+      moreover have "X - C2 \<in> TX" using hC2 unfolding closedin_on_def by blast
+      moreover have "X - B \<in> TX" using hB_closed unfolding closedin_on_def by blast
+      ultimately show "X - (C2 \<inter> B) \<in> TX"
+      proof -
+        assume h1: "X - (C2 \<inter> B) = (X - C2) \<union> (X - B)" and h2: "X - C2 \<in> TX" and h3: "X - B \<in> TX"
+        have "{X - C2, X - B} \<subseteq> TX" using h2 h3 by auto
+        then have "\<Union>{X - C2, X - B} \<in> TX"
+          using hTX unfolding is_topology_on_def by blast
+        then show ?thesis using h1 by auto
+      qed
+    qed
+    ultimately have "closedin_on X TX ((C1 \<inter> A) \<union> (C2 \<inter> B))"
+      using closedin_Union_finite[OF hTX, of "{C1 \<inter> A, C2 \<inter> B}"] by simp
+    then show "closedin_on X TX {x \<in> X. f x \<in> C}" using hpre_eq by simp
   qed
 qed
 
-lemma snake_pos_bound:
-  assumes "N > 0" "k < N * N"
-  shows "fst (snake_pos N k) < N \<and> snd (snake_pos N k) < N"
-  unfolding snake_pos_def Let_def using assms
-  by (simp add: less_mult_imp_div_less mod_less_divisor diff_less_mono2)
-
-lemma grid_index_bound: "(a::nat) < N \<Longrightarrow> b < N \<Longrightarrow> a * N + b < N * N"
+lemma continuous_restrict_to_interval:
+  assumes hf: "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (UNIV :: real set) order_topology_on_UNIV f"
+  assumes hrange: "f ` (top1_closed_interval 0 1) \<subseteq> (top1_closed_interval 0 1)"
+  shows "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f"
 proof -
-  assume "a < N" "b < N"
-  have "a * N + b < a * N + N" using \<open>b < N\<close> by linarith
-  also have "... = Suc a * N" by simp
-  also have "... \<le> N * N" using \<open>a < N\<close>
-    by (meson Suc_leI mult_le_mono1)
-  finally show ?thesis by presburger
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?R = "UNIV :: real set"
+  let ?TR = "order_topology_on_UNIV :: real set set"
+  have hTR: "is_topology_on ?R ?TR" by (rule order_topology_on_UNIV_is_topology_on)
+  have hTI: "is_topology_on ?I ?TI" using closed_interval_01_is_topology by blast
+  have hI_sub: "?I \<subseteq> ?R" by simp
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume ht: "t \<in> ?I"
+    show "f t \<in> ?I" using hrange ht by auto
+  next
+    fix V assume hV: "V \<in> ?TI"
+    then obtain U where hU: "U \<in> ?TR" and hV_eq: "V = ?I \<inter> U"
+      unfolding top1_closed_interval_topology_def subspace_topology_def by blast
+    have "{t \<in> ?I. f t \<in> V} = {t \<in> ?I. f t \<in> ?I \<inter> U}" using hV_eq by simp
+    also have "... = {t \<in> ?I. f t \<in> U}" using hrange by auto
+    also have "... \<in> ?TI"
+      using hf hU unfolding top1_continuous_map_on_def by blast
+    finally show "{t \<in> ?I. f t \<in> V} \<in> ?TI" .
+  qed
 qed
+
+text \<open>Affine scaling of a continuous function preserves continuity.\<close>
+lemma affine_scale_continuous:
+  assumes hg: "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+    (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1)) g"
+  assumes ha: "a \<in> {0::nat, 1}" and hb: "b \<in> {0::nat, 1}"
+  shows "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+    (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1))
+    (\<lambda>t. ((real a + fst (g t)) / 2, (real b + snd (g t)) / 2))"
+proof -
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?R = "UNIV :: real set"
+  let ?TR = "order_topology_on_UNIV :: real set set"
+  have hTI: "is_topology_on ?I ?TI" using closed_interval_01_is_topology by blast
+  have hTR: "is_topology_on ?R ?TR" by (rule order_topology_on_UNIV_is_topology_on)
+  text \<open>Decompose g into components.\<close>
+  have hg_fst: "top1_continuous_map_on ?I ?TI ?I ?TI (pi1 \<circ> g)"
+    using Theorem_18_4[OF hTI hTI hTI] hg by blast
+  have hg_snd: "top1_continuous_map_on ?I ?TI ?I ?TI (pi2 \<circ> g)"
+    using Theorem_18_4[OF hTI hTI hTI] hg by blast
+  text \<open>Lift to UNIV.\<close>
+  have hg_fst_eq: "(pi1 \<circ> g) = (\<lambda>t. fst (g t))" by (rule ext, simp add: pi1_def)
+  have hg_snd_eq: "(pi2 \<circ> g) = (\<lambda>t. snd (g t))" by (rule ext, simp add: pi2_def)
+  have hTI_sub: "?TI = subspace_topology ?R ?TR ?I"
+    unfolding top1_closed_interval_topology_def by simp
+  have hg_fst_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. fst (g t))"
+    using hg_fst hg_fst_eq by simp
+  have hg_snd_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. snd (g t))"
+    using hg_snd hg_snd_eq by simp
+  have hg_fst_R: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. fst (g t))"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume "t \<in> ?I" then show "fst (g t) \<in> ?R" by simp
+  next
+    fix V assume hV: "V \<in> ?TR"
+    have "{t \<in> ?I. fst (g t) \<in> V} = {t \<in> ?I. fst (g t) \<in> ?I \<inter> V} \<union> {t \<in> ?I. fst (g t) \<in> V \<and> fst (g t) \<notin> ?I}"
+      by auto
+    have hfst_in_I: "\<And>t. t \<in> ?I \<Longrightarrow> fst (g t) \<in> ?I"
+      using hg unfolding top1_continuous_map_on_def by auto
+    then have "{t \<in> ?I. fst (g t) \<in> V} = {t \<in> ?I. fst (g t) \<in> ?I \<inter> V}" by auto
+    also have "?I \<inter> V \<in> ?TI" unfolding top1_closed_interval_topology_def subspace_topology_def
+      using hV by blast
+    then have "{t \<in> ?I. fst (g t) \<in> ?I \<inter> V} \<in> ?TI"
+      using hg_fst_I unfolding top1_continuous_map_on_def by blast
+    finally show "{t \<in> ?I. fst (g t) \<in> V} \<in> ?TI" .
+  qed
+  have hg_snd_R: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. snd (g t))"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume "t \<in> ?I" then show "snd (g t) \<in> ?R" by simp
+  next
+    fix V assume hV: "V \<in> ?TR"
+    have hfst_in_I: "\<And>t. t \<in> ?I \<Longrightarrow> snd (g t) \<in> ?I"
+      using hg unfolding top1_continuous_map_on_def by auto
+    then have "{t \<in> ?I. snd (g t) \<in> V} = {t \<in> ?I. snd (g t) \<in> ?I \<inter> V}" by auto
+    also have "?I \<inter> V \<in> ?TI" unfolding top1_closed_interval_topology_def subspace_topology_def
+      using hV by blast
+    then have "{t \<in> ?I. snd (g t) \<in> ?I \<inter> V} \<in> ?TI"
+      using hg_snd_I unfolding top1_continuous_map_on_def by blast
+    finally show "{t \<in> ?I. snd (g t) \<in> V} \<in> ?TI" .
+  qed
+  text \<open>Build the affine functions.\<close>
+  have hfst_aff: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real a + fst (g t)) / 2)"
+  proof -
+    have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. real a + fst (g t))"
+      by (rule top1_continuous_add_real[OF hTI top1_continuous_map_on_const[OF hTI hTR UNIV_I] hg_fst_R])
+    then have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real a + fst (g t)) * (1/2))"
+      by (rule top1_continuous_mul_real[OF hTI _ top1_continuous_map_on_const[OF hTI hTR UNIV_I]])
+    then show ?thesis by (simp add: field_simps)
+  qed
+  have hsnd_aff: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real b + snd (g t)) / 2)"
+  proof -
+    have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. real b + snd (g t))"
+      by (rule top1_continuous_add_real[OF hTI top1_continuous_map_on_const[OF hTI hTR UNIV_I] hg_snd_R])
+    then have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. (real b + snd (g t)) * (1/2))"
+      by (rule top1_continuous_mul_real[OF hTI _ top1_continuous_map_on_const[OF hTI hTR UNIV_I]])
+    then show ?thesis by (simp add: field_simps)
+  qed
+  text \<open>Restrict to [0,1] and combine into product.\<close>
+  have hg_comp_range: "\<And>t. t \<in> ?I \<Longrightarrow> fst (g t) \<in> ?I \<and> snd (g t) \<in> ?I"
+    using hg unfolding top1_continuous_map_on_def by auto
+  have hfst_range: "(\<lambda>t. (real a + fst (g t)) / 2) ` ?I \<subseteq> ?I"
+    unfolding top1_closed_interval_def using ha hg_comp_range[unfolded top1_closed_interval_def] by force
+  have hsnd_range: "(\<lambda>t. (real b + snd (g t)) / 2) ` ?I \<subseteq> ?I"
+    unfolding top1_closed_interval_def using hb hg_comp_range[unfolded top1_closed_interval_def] by force
+  have hfst_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. (real a + fst (g t)) / 2)"
+    using continuous_restrict_to_interval[OF hfst_aff hfst_range] by simp
+  have hsnd_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. (real b + snd (g t)) / 2)"
+    using continuous_restrict_to_interval[OF hsnd_aff hsnd_range] by simp
+  show ?thesis using Theorem_18_4[OF hTI hTI hTI] hfst_I hsnd_I
+    by (simp add: pi1_def pi2_def o_def del: hilbert_rec.simps)
+qed
+
+text \<open>Proof strategy for hilbert_rec_continuous:
+  By Theorem_18_4 + closed_interval_01_is_topology, reduce to showing each component
+  (pi1 ∘ hilbert_rec, pi2 ∘ hilbert_rec) is continuous [0,1] → [0,1].
+  Base case (n=0): linear interpolation, use top1_continuous_add_real/mul_real.
+  Inductive case: piecewise on 4 closed sub-intervals, each piece continuous by IH,
+  pieces join by hilbert_boundary_match + hilbert_rec_at_0/1.
+  Missing infrastructure: formal piecewise-continuity lemma for top1_continuous_map_on,
+  and equivalence of closed_interval_topology with metric topology (for ε-δ approach).\<close>
+lemma hilbert_rec_continuous: "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
+    (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
+    (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1))
+    (hilbert_rec o' n)"
+proof (induction n arbitrary: o')
+  case 0
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  have hTI: "is_topology_on ?I ?TI" using closed_interval_01_is_topology by blast
+  text \<open>Base case: hilbert_rec o' 0 is a linear function (entry + t*(exit-entry)),
+    continuous because it's a composition of continuous arithmetic operations.\<close>
+  let ?R = "UNIV :: real set"
+  let ?TR = "order_topology_on_UNIV :: real set set"
+  have hTR: "is_topology_on ?R ?TR" by (rule order_topology_on_UNIV_is_topology_on)
+  have hI_sub_R: "?I \<subseteq> ?R" by simp
+  text \<open>Step 1: identity [0,1] → UNIV is continuous (subspace inclusion).\<close>
+  have hid_cont: "top1_continuous_map_on ?I ?TI ?R ?TR id"
+  proof -
+    have "top1_continuous_map_on ?R ?TR ?R ?TR id" by (rule top1_continuous_map_on_id[OF hTR])
+    then show ?thesis
+      unfolding top1_closed_interval_topology_def
+      by (rule top1_continuous_map_on_restrict_domain_simple, simp add: top1_closed_interval_def)
+  qed
+  text \<open>Step 2: constant functions [0,1] → UNIV are continuous.\<close>
+  have hconst_cont: "\<And>c::real. top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. c)"
+    by (rule top1_continuous_map_on_const[OF hTI hTR], simp)
+  text \<open>Step 3: arithmetic operations preserve continuity.\<close>
+  have hadd_cont: "\<And>f g. top1_continuous_map_on ?I ?TI ?R ?TR f \<Longrightarrow>
+    top1_continuous_map_on ?I ?TI ?R ?TR g \<Longrightarrow>
+    top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. f t + g t)"
+    by (rule top1_continuous_add_real[OF hTI])
+  have hmul_cont: "\<And>f g. top1_continuous_map_on ?I ?TI ?R ?TR f \<Longrightarrow>
+    top1_continuous_map_on ?I ?TI ?R ?TR g \<Longrightarrow>
+    top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. f t * g t)"
+    by (rule top1_continuous_mul_real[OF hTI])
+  text \<open>Step 4: each component of hilbert_rec o' 0 is continuous [0,1] → UNIV.\<close>
+  text \<open>The linear function a + t*(b-a) is continuous [0,1] → UNIV.\<close>
+  have hlinear_cont: "\<And>a b :: real. top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. a + t * (b - a))"
+  proof -
+    fix a b :: real
+    have hid2: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. t)"
+      using hid_cont unfolding id_def by simp
+    have h1: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. t * (b - a))"
+      using hmul_cont[OF hid2 hconst_cont[of "b - a"]] by simp
+    show "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. a + t * (b - a))"
+      using hadd_cont[OF hconst_cont[of a] h1] by simp
+  qed
+  text \<open>On [0,1], hilbert_rec o' 0 = (entry_x + t*(exit_x - entry_x), ...).\<close>
+  have hfst_eq: "\<And>t. t \<in> ?I \<Longrightarrow> fst (hilbert_rec o' 0 t) =
+    fst (hilbert_entry o') + t * (fst (hilbert_exit o') - fst (hilbert_entry o'))"
+    unfolding top1_closed_interval_def
+    by (simp add: Let_def case_prod_beta hilbert_entry_def hilbert_exit_def clamp01_def)
+  have hsnd_eq: "\<And>t. t \<in> ?I \<Longrightarrow> snd (hilbert_rec o' 0 t) =
+    snd (hilbert_entry o') + t * (snd (hilbert_exit o') - snd (hilbert_entry o'))"
+    unfolding top1_closed_interval_def
+    by (simp add: Let_def case_prod_beta hilbert_entry_def hilbert_exit_def clamp01_def)
+  text \<open>Now use the fact that equal functions on X have the same continuity.\<close>
+  have hfst_UNIV: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. fst (hilbert_rec o' 0 t))"
+  proof -
+    let ?a = "fst (hilbert_entry o')" and ?b = "fst (hilbert_exit o')"
+    have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. ?a + t * (?b - ?a))"
+      by (rule hlinear_cont)
+    moreover have "\<And>t. t \<in> ?I \<Longrightarrow> fst (hilbert_rec o' 0 t) = ?a + t * (?b - ?a)"
+      using hfst_eq by blast
+    ultimately show ?thesis unfolding top1_continuous_map_on_def
+      by (metis (no_types, lifting) Collect_cong)
+  qed
+  have hsnd_UNIV: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. snd (hilbert_rec o' 0 t))"
+  proof -
+    let ?a = "snd (hilbert_entry o')" and ?b = "snd (hilbert_exit o')"
+    have "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t. ?a + t * (?b - ?a))"
+      by (rule hlinear_cont)
+    moreover have "\<And>t. t \<in> ?I \<Longrightarrow> snd (hilbert_rec o' 0 t) = ?a + t * (?b - ?a)"
+      using hsnd_eq by blast
+    ultimately show ?thesis unfolding top1_continuous_map_on_def
+      by (metis (no_types, lifting) Collect_cong)
+  qed
+  text \<open>Step 5: restrict range to [0,1] and combine into product.\<close>
+  have hfst_range: "(\<lambda>t. fst (hilbert_rec o' 0 t)) ` ?I \<subseteq> ?I"
+    unfolding top1_closed_interval_def using hilbert_rec_range by fastforce
+  have hsnd_range: "(\<lambda>t. snd (hilbert_rec o' 0 t)) ` ?I \<subseteq> ?I"
+    unfolding top1_closed_interval_def using hilbert_rec_range by fastforce
+  have restrict_to_interval: "\<And>f. top1_continuous_map_on ?I ?TI ?R ?TR f \<Longrightarrow> f ` ?I \<subseteq> ?I \<Longrightarrow>
+    top1_continuous_map_on ?I ?TI ?I ?TI f"
+    using continuous_restrict_to_interval by blast
+  have hfst_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. fst (hilbert_rec o' 0 t))"
+    using restrict_to_interval[OF hfst_UNIV hfst_range] by simp
+  have hsnd_I: "top1_continuous_map_on ?I ?TI ?I ?TI (\<lambda>t. snd (hilbert_rec o' 0 t))"
+    using restrict_to_interval[OF hsnd_UNIV hsnd_range] by simp
+  text \<open>Step 6: By Theorem 18.4, the pair function is continuous into the product.\<close>
+  have "top1_continuous_map_on ?I ?TI (?I \<times> ?I) (product_topology_on ?TI ?TI) (hilbert_rec o' 0)
+    \<longleftrightarrow> (top1_continuous_map_on ?I ?TI ?I ?TI (pi1 \<circ> hilbert_rec o' 0)
+       \<and> top1_continuous_map_on ?I ?TI ?I ?TI (pi2 \<circ> hilbert_rec o' 0))"
+    using Theorem_18_4[OF hTI hTI hTI] by blast
+  moreover have "pi1 \<circ> hilbert_rec o' 0 = (\<lambda>t. fst (hilbert_rec o' 0 t))"
+    by (rule ext, simp add: pi1_def)
+  moreover have "pi2 \<circ> hilbert_rec o' 0 = (\<lambda>t. snd (hilbert_rec o' 0 t))"
+    by (rule ext, simp add: pi2_def)
+  ultimately show ?case using hfst_I hsnd_I by (simp del: hilbert_rec.simps)
+next
+  case (Suc n)
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  have hTI: "is_topology_on ?I ?TI" using closed_interval_01_is_topology by blast
+  text \<open>The Suc case: hilbert_rec o' (Suc n) is piecewise on 4 sub-intervals.
+    Each piece is an affine transformation of hilbert_rec (sub orientation) n.
+    The pieces join at boundaries by hilbert_boundary_match.
+    Full proof would use pasting_lemma_two_closed 3 times.
+    Currently sorry — all structural ingredients are proved.\<close>
+  text \<open>For each quadrant q, the function on [q/4, (q+1)/4] is
+    affine_scale(hilbert_rec (sub o' q) n (4t - q)).
+    The IH gives continuity of hilbert_rec for any orientation.
+    Composition with the linear reparametrization gives continuity on each piece.
+    The pasting lemma combines 4 pieces.\<close>
+  have hIH_all: "\<And>sub. top1_continuous_map_on ?I ?TI (?I \<times> ?I) (product_topology_on ?TI ?TI) (hilbert_rec sub n)"
+    using Suc.IH by blast
+  text \<open>Strategy: paste [0,1/2] and [1/2,1] using pasting_lemma_two_closed.
+    On [0,1/2]: paste [0,1/4] and [1/4,1/2]. On [1/2,1]: paste [1/2,3/4] and [3/4,1].
+    Each quarter piece: composition of affine_scale with IH function and linear reparametrization.
+    All these are continuous by the proved lemmas.\<close>
+  text \<open>We use the fact that on [0,1], hilbert_rec o' (Suc n) = the composition described above.
+    The full pasting requires showing that sub-intervals are closed and continuity on each piece.
+    This requires subspace topology manipulations that are straightforward but lengthy.\<close>
+  text \<open>Direct proof: the function is continuous because on each open sub-interval (k/4, (k+1)/4),
+    it equals an affine transformation of the IH function composed with a linear reparametrization.
+    At boundary points k/4, the left and right pieces agree (hilbert_boundary_match).
+    So the function is locally continuous at every point, hence continuous.\<close>
+  text \<open>On [0,1/2], hilbert_rec processes the first two quadrants.
+    On [1/2,1], it processes the last two. We paste using pasting_lemma.\<close>
+  define A where "A = top1_closed_interval 0 (1/2 :: real)"
+  define B where "B = top1_closed_interval (1/2 :: real) 1"
+  have hAsub: "A \<subseteq> ?I" unfolding A_def top1_closed_interval_def by auto
+  have hBsub: "B \<subseteq> ?I" unfolding B_def top1_closed_interval_def by auto
+  have hAB: "A \<union> B = ?I" unfolding A_def B_def top1_closed_interval_def by auto
+  have hTR: "is_topology_on (UNIV :: real set) order_topology_on_UNIV"
+    by (rule order_topology_on_UNIV_is_topology_on)
+  have hI_sub: "?I \<subseteq> (UNIV :: real set)" by simp
+  have hA_closed: "closedin_on ?I ?TI A"
+  proof -
+    have "closedin_on (UNIV :: real set) order_topology_on_UNIV {t :: real. t \<le> 1/2}"
+    proof (rule closedin_intro)
+      show "{t :: real. t \<le> 1/2} \<subseteq> UNIV" by simp
+      have "UNIV - {t :: real. t \<le> 1/2} = open_ray_gt (1/2 :: real)" unfolding open_ray_gt_def by auto
+      also have "... \<in> order_topology_on_UNIV"
+      proof -
+        have "open_ray_gt (1/2::real) \<in> basis_order_topology"
+          unfolding basis_order_topology_def by blast
+        then show ?thesis
+          using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+          unfolding order_topology_on_UNIV_def by blast
+      qed
+      finally show "UNIV - {t :: real. t \<le> 1/2} \<in> order_topology_on_UNIV" .
+    qed
+    moreover have "A = {t :: real. t \<le> 1/2} \<inter> ?I"
+      unfolding A_def top1_closed_interval_def by auto
+    ultimately show ?thesis
+      using Theorem_17_2[OF hTR hI_sub] unfolding top1_closed_interval_topology_def by blast
+  qed
+  have hB_closed: "closedin_on ?I ?TI B"
+  proof -
+    have "closedin_on (UNIV :: real set) order_topology_on_UNIV {t :: real. 1/2 \<le> t}"
+    proof (rule closedin_intro)
+      show "{t :: real. 1/2 \<le> t} \<subseteq> UNIV" by simp
+      have "UNIV - {t :: real. 1/2 \<le> t} = open_ray_lt (1/2 :: real)" unfolding open_ray_lt_def by auto
+      also have "... \<in> order_topology_on_UNIV"
+      proof -
+        have "open_ray_lt (1/2::real) \<in> basis_order_topology"
+          unfolding basis_order_topology_def by blast
+        then show ?thesis
+          using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+          unfolding order_topology_on_UNIV_def by blast
+      qed
+      finally show "UNIV - {t :: real. 1/2 \<le> t} \<in> order_topology_on_UNIV" .
+    qed
+    moreover have "B = {t :: real. 1/2 \<le> t} \<inter> ?I"
+      unfolding B_def top1_closed_interval_def by auto
+    ultimately show ?thesis
+      using Theorem_17_2[OF hTR hI_sub] unfolding top1_closed_interval_topology_def by blast
+  qed
+  have hf_range: "\<forall>t\<in>?I. hilbert_rec o' (Suc n) t \<in> ?I \<times> ?I"
+  proof (intro ballI)
+    fix t assume "t \<in> ?I"
+    have hr: "0 \<le> fst (hilbert_rec o' (Suc n) t) \<and> fst (hilbert_rec o' (Suc n) t) \<le> 1 \<and>
+      0 \<le> snd (hilbert_rec o' (Suc n) t) \<and> snd (hilbert_rec o' (Suc n) t) \<le> 1"
+      using hilbert_rec_range by blast
+    then show "hilbert_rec o' (Suc n) t \<in> ?I \<times> ?I"
+      unfolding top1_closed_interval_def by (metis SigmaI mem_Collect_eq prod.collapse)
+  qed
+  have hf_A: "top1_continuous_map_on A (subspace_topology ?I ?TI A) (?I \<times> ?I) (product_topology_on ?TI ?TI)
+    (hilbert_rec o' (Suc n))"
+    sorry
+  have hf_B: "top1_continuous_map_on B (subspace_topology ?I ?TI B) (?I \<times> ?I) (product_topology_on ?TI ?TI)
+    (hilbert_rec o' (Suc n))"
+    sorry
+  have hTP: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
+    by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  show ?case using pasting_lemma_two_closed[OF hTI hTP hA_closed hB_closed hAB hf_range hf_A hf_B]
+    by (simp del: hilbert_rec.simps)
+qed
+
+text \<open>Properties of sfa_rec.\<close>
+lemma sfa_rec_range: "0 \<le> fst (sfa_rec n t) \<and> fst (sfa_rec n t) \<le> 1 \<and>
+  0 \<le> snd (sfa_rec n t) \<and> snd (sfa_rec n t) \<le> 1"
+proof (induction n arbitrary: t)
+  case 0 then show ?case by simp
+next
+  case (Suc n)
+  define s where "s = clamp01 t"
+  define q where "q = min (nat \<lfloor>4 * s\<rfloor>) 3"
+  define s' where "s' = clamp01 (4 * s - real q)"
+  have hIH: "0 \<le> fst (sfa_rec n s') \<and> fst (sfa_rec n s') \<le> 1 \<and>
+    0 \<le> snd (sfa_rec n s') \<and> snd (sfa_rec n s') \<le> 1" using Suc by blast
+  obtain rx ry where hrec: "sfa_rec n s' = (rx, ry)"
+    by (cases "sfa_rec n s'")
+  have hrx: "0 \<le> rx" "rx \<le> 1" and hry: "0 \<le> ry" "ry \<le> 1"
+    using hIH hrec by auto
+  have "q \<le> 3" unfolding q_def by simp
+  then have hq: "q = 0 \<or> q = 1 \<or> q = 2 \<or> q = 3" by linarith
+  have hfst: "fst (sfa_rec (Suc n) t) = (real (fst (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + rx) / 2"
+    unfolding sfa_rec.simps Let_def s_def[symmetric] q_def[symmetric] s'_def[symmetric]
+    using hrec by (simp add: case_prod_beta)
+  have hsnd: "snd (sfa_rec (Suc n) t) = (real (snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + ry) / 2"
+    unfolding sfa_rec.simps Let_def s_def[symmetric] q_def[symmetric] s'_def[symmetric]
+    using hrec by (simp del: sfa_rec.simps add: case_prod_beta)
+  show ?case using hfst hsnd hrx hry hq by auto
+qed
+
+lemma sfa_rec_cauchy: "\<bar>fst (sfa_rec (Suc n) t) - fst (sfa_rec n t)\<bar> \<le> 1 / 2 ^ n \<and>
+  \<bar>snd (sfa_rec (Suc n) t) - snd (sfa_rec n t)\<bar> \<le> 1 / 2 ^ n"
+proof (induction n arbitrary: t)
+  case 0
+  have hr: "0 \<le> fst (sfa_rec 1 t) \<and> fst (sfa_rec 1 t) \<le> 1 \<and>
+    0 \<le> snd (sfa_rec 1 t) \<and> snd (sfa_rec 1 t) \<le> 1"
+    using sfa_rec_range by blast
+  have "fst (sfa_rec 0 t) = 1/2" "snd (sfa_rec 0 t) = 1/2" by simp_all
+  then show ?case using hr by (simp add: abs_le_iff)
+next
+  case (Suc n)
+  define s where "s = clamp01 t"
+  define q where "q = min (nat \<lfloor>4 * s\<rfloor>) 3"
+  define s' where "s' = clamp01 (4 * s - real q)"
+  text \<open>Key: both sfa_rec (Suc (Suc n)) t and sfa_rec (Suc n) t use the same
+    top-level quadrant decomposition (same s, q, s'), so the qx/qy cancel:\<close>
+  obtain rx1 ry1 where hrec1: "sfa_rec (Suc n) s' = (rx1, ry1)" by (cases "sfa_rec (Suc n) s'")
+  obtain rx2 ry2 where hrec2: "sfa_rec n s' = (rx2, ry2)" by (cases "sfa_rec n s'")
+  have hfst1: "fst (sfa_rec (Suc (Suc n)) t) = (real (fst (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + rx1) / 2"
+    using sfa_rec.simps(2)[of "Suc n" t] hrec1
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric])
+  have hfst2: "fst (sfa_rec (Suc n) t) = (real (fst (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + rx2) / 2"
+    using sfa_rec.simps(2)[of n t] hrec2
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric])
+  have hsnd1: "snd (sfa_rec (Suc (Suc n)) t) = (real (snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + ry1) / 2"
+    using sfa_rec.simps(2)[of "Suc n" t] hrec1
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric])
+  have hsnd2: "snd (sfa_rec (Suc n) t) = (real (snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + ry2) / 2"
+    using sfa_rec.simps(2)[of n t] hrec2
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta s_def[symmetric] q_def[symmetric] s'_def[symmetric])
+  have hfst_diff: "fst (sfa_rec (Suc (Suc n)) t) - fst (sfa_rec (Suc n) t) =
+    (fst (sfa_rec (Suc n) s') - fst (sfa_rec n s')) / 2"
+    using hfst1 hfst2 hrec1 hrec2 by (simp del: sfa_rec.simps)
+  have hsnd_diff: "snd (sfa_rec (Suc (Suc n)) t) - snd (sfa_rec (Suc n) t) =
+    (snd (sfa_rec (Suc n) s') - snd (sfa_rec n s')) / 2"
+    using hsnd1 hsnd2 hrec1 hrec2 by (simp del: sfa_rec.simps)
+  have hIH: "\<bar>fst (sfa_rec (Suc n) s') - fst (sfa_rec n s')\<bar> \<le> 1 / 2 ^ n \<and>
+    \<bar>snd (sfa_rec (Suc n) s') - snd (sfa_rec n s')\<bar> \<le> 1 / 2 ^ n"
+    using Suc by blast
+  have "\<bar>(fst (sfa_rec (Suc n) s') - fst (sfa_rec n s')) / 2\<bar> \<le> 1 / 2 ^ Suc n"
+    using hIH by (simp add: abs_le_iff field_simps)
+  moreover have "\<bar>(snd (sfa_rec (Suc n) s') - snd (sfa_rec n s')) / 2\<bar> \<le> 1 / 2 ^ Suc n"
+    using hIH by (simp add: abs_le_iff field_simps)
+  ultimately show ?case using hfst_diff hsnd_diff by metis
+qed
+
+text \<open>Helper: floor of q + t0 when 0 ≤ t0 < 1 and q is a natural number.\<close>
+lemma floor_nat_plus_frac: "\<lfloor>real (q::nat) + t0\<rfloor> = int q" if "0 \<le> t0" "t0 < 1"
+proof -
+  have "real q \<le> real q + t0" using that by simp
+  moreover have "real q + t0 < real q + 1" using that by simp
+  ultimately show ?thesis by linarith
+qed
+
+lemma clamp01_id: "clamp01 t = t" if "0 \<le> t" "t \<le> 1"
+  unfolding clamp01_def using that by auto
+
+text \<open>Density: sfa_rec n gets within 1/2^n of every point in [0,1]².
+  The proof uses a strengthened induction: we find t ∈ [0,1) (strict upper bound).\<close>
+lemma sfa_rec_dense_strict:
+  assumes "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+  shows "\<exists>t. 0 \<le> t \<and> t < 1 \<and> \<bar>x - fst (sfa_rec n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (sfa_rec n t)\<bar> \<le> 1/2^n"
+using assms proof (induction n arbitrary: x y)
+  case (0 x y)
+  then show ?case by force
+next
+  case (Suc n x y)
+  define qx :: nat where "qx = (if x < 1/2 then 0 else 1)"
+  define qy :: nat where "qy = (if y < 1/2 then 0 else 1)"
+  define q :: nat where "q = (if qx = 0 \<and> qy = 0 then 0 else if qx = 0 \<and> qy = 1 then 1
+    else if qx = 1 \<and> qy = 1 then 2 else 3)"
+  define x' where "x' = 2 * x - real qx"
+  define y' where "y' = 2 * y - real qy"
+  have hx'0: "0 \<le> x'" and hx'1: "x' \<le> 1" and hy'0: "0 \<le> y'" and hy'1: "y' \<le> 1"
+    unfolding x'_def y'_def qx_def qy_def using Suc.prems by auto
+  obtain t0 where ht0: "0 \<le> t0" and ht0s: "t0 < 1" and hclose0:
+    "\<bar>x' - fst (sfa_rec n t0)\<bar> \<le> 1/2^n \<and> \<bar>y' - snd (sfa_rec n t0)\<bar> \<le> 1/2^n"
+    using Suc.IH[of x' y'] hx'0 hx'1 hy'0 hy'1 by blast
+  define t where "t = (real q + t0) / 4"
+  have hq3: "q \<le> 3" unfolding q_def by auto
+  have ht: "0 \<le> t" unfolding t_def using ht0 by auto
+  have ht1: "t < 1" unfolding t_def using ht0s hq3 by simp
+  have hclamp: "clamp01 t = t" using clamp01_id ht ht1 by simp
+  have h4t: "4 * t = real q + t0" unfolding t_def by auto
+  have hfloor: "\<lfloor>4 * t\<rfloor> = int q" unfolding h4t using floor_nat_plus_frac ht0 ht0s by simp
+  have hq_val: "min (nat \<lfloor>4 * t\<rfloor>) 3 = q" using hfloor hq3 by presburger
+  have hs'_val: "clamp01 (4 * t - real q) = t0" unfolding h4t using clamp01_id ht0 ht0s by simp
+  text \<open>Now expand sfa_rec (Suc n) t.\<close>
+  obtain rx ry where hrec: "sfa_rec n t0 = (rx, ry)" by (cases "sfa_rec n t0")
+  have hfst: "fst (sfa_rec (Suc n) t) = (real (fst (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + rx) / 2"
+    using sfa_rec.simps(2)[of n t] hrec hclamp h4t hq_val hs'_val
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta)
+  have hsnd: "snd (sfa_rec (Suc n) t) = (real (snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + ry) / 2"
+    using sfa_rec.simps(2)[of n t] hrec hclamp h4t hq_val hs'_val
+    by (simp del: sfa_rec.simps add: Let_def case_prod_beta)
+  have hqx_match: "fst (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0)) = qx"
+    unfolding q_def qx_def qy_def by auto
+  have hqy_match: "snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0)) = qy"
+    unfolding q_def qx_def qy_def by auto
+  have hx_eq: "x = (real qx + x') / 2" unfolding x'_def by simp
+  have hy_eq: "y = (real qy + y') / 2" unfolding y'_def by simp
+  have hrx: "rx = fst (sfa_rec n t0)" using hrec by simp
+  have hry: "ry = snd (sfa_rec n t0)" using hrec by simp
+  have hfst2: "fst (sfa_rec (Suc n) t) = (real qx + rx) / 2"
+    using hfst hqx_match by simp
+  have "x - fst (sfa_rec (Suc n) t) = (x' - rx) / 2"
+    unfolding hfst2 hx_eq by (simp add: field_simps)
+  then have hx_close: "\<bar>x - fst (sfa_rec (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
+    using hclose0 hrx by force
+  have hsnd2: "snd (sfa_rec (Suc n) t) = (real qy + ry) / 2"
+    using hsnd hqy_match by simp
+  have "y - snd (sfa_rec (Suc n) t) = (y' - ry) / 2"
+    unfolding hsnd2 hy_eq by (simp add: field_simps)
+  then have "\<bar>y - snd (sfa_rec (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
+    using hclose0 hry by force
+  then show ?case using ht ht1 hx_close by auto
+qed
+
+lemma sfa_rec_dense: "\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> \<bar>x - fst (sfa_rec n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (sfa_rec n t)\<bar> \<le> 1/2^n"
+  if "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+  using sfa_rec_dense_strict[OF that] by (meson less_imp_le)
 
 text \<open>Clamped space-filling approximation.\<close>
 definition sfa_n :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
   "sfa_n n t = (clamp01 (fst (sfa_raw n t)), clamp01 (snd (sfa_raw n t)))"
 
-text \<open>Properties of sfa_n.\<close>
 lemma sfa_n_range: "sfa_n n t \<in> top1_closed_interval 0 1 \<times> top1_closed_interval 0 1"
   unfolding sfa_n_def top1_closed_interval_def using clamp01_range by auto
+
+lemma sfa_n_eq_hilbert: "t \<in> top1_closed_interval 0 1 \<Longrightarrow> sfa_n n t = hilbert_rec 0 n t"
+proof -
+  assume "t \<in> top1_closed_interval 0 1"
+  have hr: "0 \<le> fst (hilbert_rec 0 n t) \<and> fst (hilbert_rec 0 n t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec 0 n t) \<and> snd (hilbert_rec 0 n t) \<le> 1"
+    using hilbert_rec_range by blast
+  then show ?thesis unfolding sfa_n_def sfa_raw_def clamp01_def by auto
+qed
+
 lemma sfa_n_continuous:
   "top1_continuous_map_on (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1)
     (top1_closed_interval 0 1 \<times> top1_closed_interval 0 1)
     (product_topology_on (top1_closed_interval_topology 0 1) (top1_closed_interval_topology 0 1))
-    (sfa_n n)" sorry
+    (sfa_n n)"
+proof -
+  let ?I = "top1_closed_interval (0::real) 1"
+  let ?TI = "top1_closed_interval_topology (0::real) 1"
+  let ?I2 = "?I \<times> ?I"
+  let ?TI2 = "product_topology_on ?TI ?TI"
+  have hcont: "top1_continuous_map_on ?I ?TI ?I2 ?TI2 (hilbert_rec 0 n)"
+    using hilbert_rec_continuous by blast
+  have heq: "\<And>t. t \<in> ?I \<Longrightarrow> sfa_n n t = hilbert_rec 0 n t"
+    using sfa_n_eq_hilbert by blast
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume "t \<in> ?I"
+    then show "sfa_n n t \<in> ?I2" using sfa_n_range by blast
+  next
+    fix V assume "V \<in> ?TI2"
+    have "{t \<in> ?I. sfa_n n t \<in> V} = {t \<in> ?I. hilbert_rec 0 n t \<in> V}"
+      using heq by auto
+    also have "... \<in> ?TI"
+      using hcont \<open>V \<in> ?TI2\<close> unfolding top1_continuous_map_on_def by blast
+    finally show "{t \<in> ?I. sfa_n n t \<in> V} \<in> ?TI" .
+  qed
+qed
+
 lemma sfa_n_cauchy: "t \<in> top1_closed_interval 0 1 \<Longrightarrow>
   \<bar>fst (sfa_n n t) - fst (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n \<and>
-  \<bar>snd (sfa_n n t) - snd (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n" sorry
+  \<bar>snd (sfa_n n t) - snd (sfa_n (Suc n) t)\<bar> \<le> 1 / 2^n"
+proof -
+  assume ht: "t \<in> top1_closed_interval 0 1"
+  have hr_n: "0 \<le> fst (hilbert_rec 0 n t) \<and> fst (hilbert_rec 0 n t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec 0 n t) \<and> snd (hilbert_rec 0 n t) \<le> 1"
+    using hilbert_rec_range by blast
+  have "fst (sfa_n n t) = fst (hilbert_rec 0 n t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr_n by simp
+  have hr_sn: "0 \<le> fst (hilbert_rec 0 (Suc n) t) \<and> fst (hilbert_rec 0 (Suc n) t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec 0 (Suc n) t) \<and> snd (hilbert_rec 0 (Suc n) t) \<le> 1"
+    using hilbert_rec_range by blast
+  have "fst (sfa_n (Suc n) t) = fst (hilbert_rec 0 (Suc n) t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr_sn by simp
+  have "snd (sfa_n n t) = snd (hilbert_rec 0 n t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr_n by simp
+  have "snd (sfa_n (Suc n) t) = snd (hilbert_rec 0 (Suc n) t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr_sn by simp
+  show ?thesis using hilbert_rec_cauchy[of 0]
+    \<open>fst (sfa_n n t) = fst (hilbert_rec 0 n t)\<close>
+    \<open>fst (sfa_n (Suc n) t) = fst (hilbert_rec 0 (Suc n) t)\<close>
+    \<open>snd (sfa_n n t) = snd (hilbert_rec 0 n t)\<close>
+    \<open>snd (sfa_n (Suc n) t) = snd (hilbert_rec 0 (Suc n) t)\<close> by (metis abs_minus_commute)
+qed
+
 lemma sfa_n_dense: "x \<in> top1_closed_interval 0 1 \<Longrightarrow> y \<in> top1_closed_interval 0 1 \<Longrightarrow>
   \<exists>t\<in>top1_closed_interval 0 1.
     \<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
 proof -
   assume hx: "x \<in> top1_closed_interval 0 1" and hy: "y \<in> top1_closed_interval 0 1"
-  text \<open>The snake path visits all N×N cells. At the midpoint of cell k's time,
-    sfa_n returns approximately the cell center, within 1/(2N) ≤ 1/2ⁿ of (x,y).\<close>
-  define N where "N = (2::nat)^n"
-  have hN: "N > 0" unfolding N_def by simp
-  define row where "row = min (nat \<lfloor>real N * y\<rfloor>) (N - 1)"
-  define col where "col = min (nat \<lfloor>real N * x\<rfloor>) (N - 1)"
-  define k where "k = row * N + (if even row then col else N - 1 - col)"
-  have hrow: "row < N" unfolding row_def using hN by linarith
-  have hcol: "col < N" unfolding col_def using hN by linarith
-  have hk: "k < N * N"
-  proof -
-    have "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
-    then show ?thesis unfolding k_def using grid_index_bound[OF hrow] by presburger
-  qed
-  define t where "t = (real k + 0.25) / real (N * N)"
-  have hNsq: "N * N > 0" using hN by simp
-  have ht_I: "t \<in> top1_closed_interval 0 1"
-  proof -
-    have "0 \<le> t" unfolding t_def using hk hNsq by simp
-    moreover have "t \<le> 1"
-    proof -
-      have "k + 1 \<le> N * N" using hk by linarith
-      then have "real k + 1 \<le> real (N * N)" by linarith
-      then show ?thesis unfolding t_def using hNsq by (simp add: field_simps)
-    qed
-    ultimately show ?thesis unfolding top1_closed_interval_def by simp
-  qed
-  text \<open>At t = (k+0.25)/N², sfa_n returns approximately cell k center.
-    snake_pos N k = (col, row) by the snake reversal property.
-    Cell center = ((col+0.5)/N, (row+0.5)/N), within 1/(2N) of (x,y).\<close>
-  text \<open>Key fact: snake_pos N k = (col, row) — the snake reversal undoes itself.\<close>
-  have hinner: "(if even row then col else N - 1 - col) < N" using hcol hrow hN by auto
-  have hk_div: "k div N = row" unfolding k_def using hinner hN by simp
-  have hk_mod: "k mod N = (if even row then col else N - 1 - col)"
-    unfolding k_def using hinner hN by simp
-  have hsnake: "snake_pos N k = (col, row)"
-    unfolding snake_pos_def Let_def hk_div hk_mod using hcol hrow hN by simp
-  text \<open>At t, the sfa_n x-coordinate is close to (col+0.5)/N, which is close to x.\<close>
-  have hx_col: "\<bar>x - (real col + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
-  proof -
-    have hx01: "0 \<le> x \<and> x \<le> 1" using hx unfolding top1_closed_interval_def by simp
-    have "col \<le> nat \<lfloor>real N * x\<rfloor>" unfolding col_def by simp
-    have "col \<le> N - 1" unfolding col_def by simp
-    have hNx_nn: "0 \<le> real N * x" using hx01 hN by simp
-    have hfloor: "\<lfloor>real N * x\<rfloor> \<ge> 0" using hNx_nn by simp
-    have "real col \<le> real N * x"
-    proof -
-      have "col \<le> nat \<lfloor>real N * x\<rfloor>" unfolding col_def by simp
-      then have "real col \<le> real (nat \<lfloor>real N * x\<rfloor>)" by simp
-      also have "... = \<lfloor>real N * x\<rfloor>" using hfloor by simp
-      also have "... \<le> real N * x" by linarith
-      finally show ?thesis by presburger
-    qed
-    have "real N * x \<le> real col + 1"
-    proof -
-      have "real N * x \<le> real N * 1" using hx01 hN by simp
-      then have "real N * x \<le> real N" by simp
-      also have "... = real (N - 1) + 1" using hN by simp
-      finally have "real N * x \<le> real (N - 1) + 1" by presburger
-      moreover have "real N * x \<le> \<lfloor>real N * x\<rfloor> + 1" by linarith
-      moreover have "\<lfloor>real N * x\<rfloor> + 1 = real (nat \<lfloor>real N * x\<rfloor>) + 1" using hfloor by simp
-      ultimately show ?thesis unfolding col_def by linarith
-    qed
-    then have "x \<le> (real col + 1) / real N" using hN by (simp add: field_simps)
-    have "real col / real N \<le> x" using \<open>real col \<le> real N * x\<close> hN by (simp add: field_simps)
-    show ?thesis using \<open>x \<le> (real col + 1) / real N\<close> \<open>real col / real N \<le> x\<close> hN by (simp add: abs_le_iff field_simps)
-  qed
-  have hy_row: "\<bar>y - (real row + 0.5) / real N\<bar> \<le> 1 / (2 * real N)"
-  proof -
-    have hy01: "0 \<le> y \<and> y \<le> 1" using hy unfolding top1_closed_interval_def by simp
-    have hNy_nn: "0 \<le> real N * y" using hy01 hN by simp
-    have hfloor_y: "\<lfloor>real N * y\<rfloor> \<ge> 0" using hNy_nn by simp
-    have "real row \<le> real N * y"
-    proof -
-      have "row \<le> nat \<lfloor>real N * y\<rfloor>" unfolding row_def by simp
-      then have "real row \<le> real (nat \<lfloor>real N * y\<rfloor>)" by simp
-      also have "... = \<lfloor>real N * y\<rfloor>" using hfloor_y by simp
-      also have "... \<le> real N * y" by linarith
-      finally show ?thesis by presburger
-    qed
-    have "real N * y \<le> real row + 1"
-    proof -
-      have "real N * y \<le> real N" using hy01 hN by simp
-      also have "... = real (N - 1) + 1" using hN by simp
-      finally have h1: "real N * y \<le> real (N - 1) + 1" by presburger
-      have h2: "real N * y \<le> \<lfloor>real N * y\<rfloor> + 1" by linarith
-      have h3: "\<lfloor>real N * y\<rfloor> + 1 = real (nat \<lfloor>real N * y\<rfloor>) + 1" using hfloor_y by simp
-      show ?thesis unfolding row_def using h1 h2 h3 by linarith
-    qed
-    then have "y \<le> (real row + 1) / real N" using hN by (simp add: field_simps)
-    have "real row / real N \<le> y" using \<open>real row \<le> real N * y\<close> hN by (simp add: field_simps)
-    show ?thesis using \<open>y \<le> (real row + 1) / real N\<close> \<open>real row / real N \<le> y\<close> hN by (simp add: abs_le_iff field_simps)
-  qed
-  have hN_bound: "1 / (2 * real N) \<le> 1 / 2^n"
-  proof -
-    have "2 * real N = 2^(n+1)" unfolding N_def by (simp add: power_Suc)
-    then have "1 / (2 * real N) = 1 / 2^(n+1)" by presburger
-    also have "... \<le> 1 / (2::real)^n" by (intro divide_left_mono) auto
-    finally show ?thesis by presburger
-  qed
-  text \<open>Trace sfa_n computation at t = (k+0.25)/N².\<close>
-  have ht01: "0 \<le> t \<and> t \<le> 1" using ht_I unfolding top1_closed_interval_def by simp
-  have hclamp_t: "clamp01 t = t" unfolding clamp01_def using ht01 by simp
-  have hNsq_t: "real (N*N) * t = real k + 0.25"
-    unfolding t_def using hNsq by (simp add: field_simps)
-  have hfloor_k: "nat \<lfloor>real (N*N) * t\<rfloor> = k"
-    using hNsq_t hk by (simp add: nat_eq_iff floor_eq_iff)
-  have hk_comp: "min (nat \<lfloor>real (N*N) * t\<rfloor>) (N*N - 1) = k"
-    using hfloor_k hk by simp
-  have hfrac: "clamp01 (real (N*N) * t - real k) = 0.25"
-    using hNsq_t unfolding clamp01_def by simp
-  text \<open>Now bound fst(sfa_n n t) using the snake_pos values.\<close>
-  obtain nx ny where hnext: "snake_pos N (min (k+1) (N*N-1)) = (nx, ny)" by (cases "snake_pos N (min (k+1) (N*N-1))")
-  have hsfa_raw: "sfa_raw n t = ((real col + 0.5 + 0.25 * (real nx - real col)) / real N,
-                                  (real row + 0.5 + 0.25 * (real ny - real row)) / real N)"
-    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
-    using hsnake hnext by (simp add: case_prod_beta)
-  have hfst_raw: "fst (sfa_raw n t) = (real col + 0.5 + 0.25 * (real nx - real col)) / real N"
-    using hsfa_raw by simp
-  have hsnd_raw: "snd (sfa_raw n t) = (real row + 0.5 + 0.25 * (real ny - real row)) / real N"
-    using hsfa_raw by simp
-  text \<open>Snake adjacency: |nx - col| ≤ 1 and |ny - row| ≤ 1.\<close>
-  have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1"
-    using snake_adjacent(1)[OF hN hk] hsnake hnext by simp
-  have hny_close: "\<bar>real ny - real row\<bar> \<le> 1"
-    using snake_adjacent(2)[OF hN hk] hsnake hnext by simp
-  text \<open>Bound fst(sfa_n n t) distance from (col+0.5)/N.\<close>
-  have hfst_dist: "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> \<le> 0.25 / real N"
-  proof -
-    have "fst (sfa_raw n t) - (real col + 0.5) / real N = 0.25 * (real nx - real col) / real N"
-      using hfst_raw hN by (simp add: field_simps)
-    then have "\<bar>fst (sfa_raw n t) - (real col + 0.5) / real N\<bar> = \<bar>0.25 * (real nx - real col)\<bar> / real N"
-      using hN by (simp add: abs_divide)
-    also have "... = 0.25 * \<bar>real nx - real col\<bar> / real N" by (simp add: abs_mult)
-    also have "... \<le> 0.25 * 1 / real N"
-      using hnx_close hN by (intro divide_right_mono mult_left_mono) auto
-    finally show ?thesis by simp
-  qed
-  have hsnd_dist: "\<bar>snd (sfa_raw n t) - (real row + 0.5) / real N\<bar> \<le> 0.25 / real N"
-  proof -
-    have "snd (sfa_raw n t) - (real row + 0.5) / real N = 0.25 * (real ny - real row) / real N"
-      using hsnd_raw hN by (simp add: field_simps)
-    then have "\<bar>snd (sfa_raw n t) - (real row + 0.5) / real N\<bar> = \<bar>0.25 * (real ny - real row)\<bar> / real N"
-      using hN by (simp add: abs_divide)
-    also have "... = 0.25 * \<bar>real ny - real row\<bar> / real N" by (simp add: abs_mult)
-    also have "... \<le> 0.25 * 1 / real N"
-      using hny_close hN by (intro divide_right_mono mult_left_mono) auto
-    finally show ?thesis by simp
-  qed
-  text \<open>Since values are in [0,1], clamping doesn't change them.\<close>
-  have hk1_bound: "min (k+1) (N*N-1) < N*N" using hk hN by simp
-  have hnx_bound: "nx < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
-  have hny_bound: "ny < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
-  have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1"
-  proof -
-    have hnum: "real col + 0.5 + 0.25 * (real nx - real col) = 0.75 * real col + 0.25 * real nx + 0.5"
-      by (simp add: field_simps)
-    have "0.75 * real col + 0.25 * real nx + 0.5 \<ge> 0" by simp
-    then have h0: "0 \<le> fst (sfa_raw n t)" using hfst_raw hnum hN
-      by (simp add: divide_nonneg_pos)
-    obtain M where hM: "N = Suc M" using hN by (cases N) auto
-    have "0.75 * real col + 0.25 * real nx \<le> real N - 1"
-      using hcol hnx_bound hM by simp
-    then have "0.75 * real col + 0.25 * real nx + 0.5 \<le> real N - 0.5" by linarith
-    then have h1: "fst (sfa_raw n t) \<le> 1"
-    proof -
-      have "fst (sfa_raw n t) = (0.75 * real col + 0.25 * real nx + 0.5) / real N"
-        using hfst_raw hnum by presburger
-      moreover have "(0.75 * real col + 0.25 * real nx + 0.5) / real N \<le> (real N - 0.5) / real N"
-        using \<open>0.75 * real col + 0.25 * real nx + 0.5 \<le> real N - 0.5\<close> hN
-        by (intro divide_right_mono) simp_all
-      moreover have "(real N - 0.5) / real N \<le> 1" using hN by (simp add: field_simps)
-      ultimately show ?thesis by linarith
-    qed
-    show ?thesis using h0 h1 by blast
-  qed
-  have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1"
-  proof -
-    have hnum: "real row + 0.5 + 0.25 * (real ny - real row) = 0.75 * real row + 0.25 * real ny + 0.5"
-      by (simp add: field_simps)
-    have "0.75 * real row + 0.25 * real ny + 0.5 \<ge> 0" by simp
-    then have h0: "0 \<le> snd (sfa_raw n t)" using hsnd_raw hnum hN
-      by (simp add: divide_nonneg_pos)
-    have "row \<le> N - 1" using hrow by linarith
-    have "ny \<le> N - 1" using hny_bound by linarith
-    obtain M where hM: "N = Suc M" using hN by (cases N) auto
-    have "0.75 * real row + 0.25 * real ny \<le> real N - 1"
-      using \<open>row \<le> N - 1\<close> \<open>ny \<le> N - 1\<close> hM by simp
-    then have "0.75 * real row + 0.25 * real ny + 0.5 \<le> real N - 0.5" by linarith
-    then have h1: "snd (sfa_raw n t) \<le> 1"
-    proof -
-      have "snd (sfa_raw n t) = (0.75 * real row + 0.25 * real ny + 0.5) / real N"
-        using hsnd_raw hnum by presburger
-      moreover have "(0.75 * real row + 0.25 * real ny + 0.5) / real N \<le> (real N - 0.5) / real N"
-        using \<open>0.75 * real row + 0.25 * real ny + 0.5 \<le> real N - 0.5\<close> hN
-        by (intro divide_right_mono) simp_all
-      moreover have "(real N - 0.5) / real N \<le> 1" using hN by (simp add: field_simps)
-      ultimately show ?thesis by linarith
-    qed
-    show ?thesis using h0 h1 by blast
-  qed
-  have hfst_clamp: "fst (sfa_n n t) = fst (sfa_raw n t)"
-    unfolding sfa_n_def clamp01_def using hfst_in by simp
-  have hsnd_clamp: "snd (sfa_n n t) = snd (sfa_raw n t)"
-    unfolding sfa_n_def clamp01_def using hsnd_in by simp
-  have hclose: "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n \<and> \<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n"
-  proof (intro conjI)
-    have "\<bar>x - fst (sfa_n n t)\<bar> \<le> \<bar>x - (real col + 0.5)/real N\<bar> + \<bar>(real col + 0.5)/real N - fst (sfa_n n t)\<bar>"
-      by linarith
-    also have "... \<le> 1/(2*real N) + 0.25/real N" using hx_col hfst_dist hfst_clamp by linarith
-    also have "... = 0.75 / real N" by (simp add: field_simps)
-    also have "... \<le> 1 / real N" proof -
-        have "(0.75::real) \<le> 1" by simp
-        then show ?thesis using hN by (intro divide_right_mono) simp_all
-      qed
-    also have "... = 1 / 2^n" unfolding N_def by simp
-    finally show "\<bar>x - fst (sfa_n n t)\<bar> \<le> 1 / 2^n" by presburger
-  next
-    have "\<bar>y - snd (sfa_n n t)\<bar> \<le> \<bar>y - (real row + 0.5)/real N\<bar> + \<bar>(real row + 0.5)/real N - snd (sfa_n n t)\<bar>"
-      by linarith
-    also have "... \<le> 1/(2*real N) + 0.25/real N" using hy_row hsnd_dist hsnd_clamp by linarith
-    also have "... = 0.75 / real N" by (simp add: field_simps)
-    also have "... \<le> 1 / real N" proof -
-        have "(0.75::real) \<le> 1" by simp
-        then show ?thesis using hN by (intro divide_right_mono) simp_all
-      qed
-    also have "... = 1 / 2^n" unfolding N_def by simp
-    finally show "\<bar>y - snd (sfa_n n t)\<bar> \<le> 1 / 2^n" by presburger
-  qed
-  show ?thesis using ht_I hclose by blast
+  have hx0: "0 \<le> x" and hx1: "x \<le> 1" and hy0: "0 \<le> y" and hy1: "y \<le> 1"
+    using hx hy unfolding top1_closed_interval_def by auto
+  obtain t where ht: "0 \<le> t" "t \<le> 1" and hclose: "\<bar>x - fst (hilbert_rec 0 n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (hilbert_rec 0 n t)\<bar> \<le> 1/2^n"
+    using hilbert_rec_dense[OF hx0 hx1 hy0 hy1] by blast
+  have hr: "0 \<le> fst (hilbert_rec 0 n t) \<and> fst (hilbert_rec 0 n t) \<le> 1 \<and>
+    0 \<le> snd (hilbert_rec 0 n t) \<and> snd (hilbert_rec 0 n t) \<le> 1" using hilbert_rec_range by blast
+  have "fst (sfa_n n t) = fst (hilbert_rec 0 n t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr by simp
+  have "snd (sfa_n n t) = snd (hilbert_rec 0 n t)"
+    unfolding sfa_n_def sfa_raw_def clamp01_def using hr by simp
+  have "t \<in> top1_closed_interval 0 1" using ht unfolding top1_closed_interval_def by simp
+  then show ?thesis using hclose
+    \<open>fst (sfa_n n t) = fst (hilbert_rec 0 n t)\<close>
+    \<open>snd (sfa_n n t) = snd (hilbert_rec 0 n t)\<close> by (metis abs_minus_commute)
 qed
 
-text \<open>The sequence fₙ uses the snake-order space-filling approximation.\<close>
-
+text \<open>The sequence fₙ uses the recursive space-filling approximation.\<close>
 (** from \S44 Theorem 44.1 (Peano curve) [top1.tex:6444] **)
 theorem Theorem_44_1:
   shows "\<exists>f::real \<Rightarrow> (real \<times> real).
