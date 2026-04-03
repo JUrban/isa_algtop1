@@ -12145,10 +12145,10 @@ next
   have hIH3: "\<And>o'' s. snd (hilbert_rec o'' n s) \<le> 2"
     by (meson hIH le_trans one_le_numeral order.trans)
   show ?case
-    apply (simp add: Let_def case_prod_beta)
+    apply (simp only: hilbert_rec.simps Let_def case_prod_beta)
     apply (intro conjI impI)
-    apply (simp_all add: hIH hilbert_quad_def hilbert_sub_def)
-    apply (simp_all add: hIH2 hIH3)
+    apply (simp_all only: hIH hilbert_quad_def hilbert_sub_def fst_conv snd_conv if_True if_False)
+    apply (simp_all add: hIH hIH2 hIH3)
     done
 qed
 
@@ -12166,7 +12166,7 @@ proof (induction n arbitrary: o' t)
     using hr hr0 by (simp add: abs_le_iff)
   moreover have "\<bar>snd (hilbert_rec o' 1 t) - snd (hilbert_rec o' 0 t)\<bar> \<le> 1"
     using hr hr0 by (simp add: abs_le_iff)
-  ultimately show ?case by simp
+  ultimately show ?case by (simp del: hilbert_rec.simps)
 next
   case (Suc n)
   define s where "s = clamp01 t"
@@ -13102,7 +13102,7 @@ next
   have hsnd: "snd (sfa_rec (Suc n) t) = (real (snd (if q = 0 then (0::nat,0::nat) else if q = 1 then (0,1) else if q = 2 then (1,1) else (1,0))) + ry) / 2"
     unfolding sfa_rec.simps Let_def s_def[symmetric] q_def[symmetric] s'_def[symmetric]
     using hrec by (simp del: sfa_rec.simps add: case_prod_beta)
-  show ?case using hfst hsnd hrx hry hq by auto
+  show ?case using hfst hsnd hrx hry hq by (auto simp del: sfa_rec.simps)
 qed
 
 lemma sfa_rec_cauchy: "\<bar>fst (sfa_rec (Suc n) t) - fst (sfa_rec n t)\<bar> \<le> 1 / 2 ^ n \<and>
@@ -15365,9 +15365,11 @@ corollary Corollary_45_5:
        \<F>
      \<and> top1_metric_bounded_subset_on (top1_PiE X (\<lambda>_. Y)) (top1_sup_metric_on X d) \<F>
      \<and> top1_equicontinuous_family_on X TX Y d \<F>)"
-  text \<open>Proof: the sup and uniform topologies agree on C(X,Y) when X compact
-    (by sup_uniform_topology_eq_on_continuous). So compactness in
-    sup = compactness in uniform. Theorem_45_4 gives the equicontinuity characterization.\<close>
+  text \<open>Note: In Munkres, Corollary 45.5 is stated for C(X, ℝⁿ) where ℝⁿ is
+    both complete and proper (Heine-Borel). The formalization generalizes to bounded
+    metric spaces, but may need additional assumptions (completeness/properness)
+    for the proof via Theorem_45_4. The sup_uniform_topology_eq_on_continuous lemma
+    bridges the topology gap. Not used downstream — standalone result.\<close>
   sorry
 
 section \<open>\<S>46 Pointwise and Compact Convergence\<close>
