@@ -12067,6 +12067,13 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
   in (x, y))"
 
+lemma div_same_row: "(N::nat) > 0 \<Longrightarrow> k mod N + 1 < N \<Longrightarrow> (k+1) div N = k div N"
+  sorry
+lemma mod_at_boundary: "(N::nat) > 0 \<Longrightarrow> \<not> (k mod N + 1 < N) \<Longrightarrow> k mod N = N - Suc 0"
+  sorry
+lemma div_next_row: "(N::nat) > 0 \<Longrightarrow> k mod N = N - Suc 0 \<Longrightarrow> (k+1) div N = k div N + 1"
+  sorry
+
 lemma snake_adjacent:
   assumes "N > 0" "k < N * N"
   shows "\<bar>real (fst (snake_pos N (min (k+1) (N*N-1)))) - real (fst (snake_pos N k))\<bar> \<le> 1"
@@ -12080,13 +12087,13 @@ proof -
     show ?thesis
     proof (cases "k mod N + 1 < N")
       case True \<comment> \<open>same row\<close>
-      then have hrow_eq: "(k+1) div N = k div N" sorry
+      then have hrow_eq: "(k+1) div N = k div N" using div_same_row assms by blast
       show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq
         using True assms sorry
     next
       case False \<comment> \<open>row boundary\<close>
-      then have hmod: "k mod N = N - 1" using assms sorry
-      then have hrow_next: "(k+1) div N = k div N + 1" using assms sorry
+      then have hmod: "k mod N = N - Suc 0" using mod_at_boundary assms by blast
+      then have hrow_next: "(k+1) div N = k div N + 1" using div_next_row assms by blast
       show ?thesis unfolding hk' snake_pos_def Let_def hrow_next hmod using assms sorry
     qed
   next
@@ -12103,12 +12110,12 @@ next
     show ?thesis
     proof (cases "k mod N + 1 < N")
       case True
-      then have hrow_eq: "(k+1) div N = k div N" sorry
+      then have hrow_eq: "(k+1) div N = k div N" using div_same_row assms by blast
       show ?thesis unfolding hk' snake_pos_def Let_def hrow_eq by simp
     next
       case False
-      then have hmod: "k mod N = N - 1" using assms sorry
-      then have hrow_next: "(k+1) div N = k div N + 1" using assms sorry
+      then have hmod: "k mod N = N - Suc 0" using mod_at_boundary assms by blast
+      then have hrow_next: "(k+1) div N = k div N + 1" using div_next_row assms by blast
       show ?thesis unfolding hk' snake_pos_def Let_def hrow_next by simp
     qed
   next
