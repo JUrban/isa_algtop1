@@ -12210,12 +12210,14 @@ proof -
     using hNsq_t unfolding clamp01_def by simp
   text \<open>Now bound fst(sfa_n n t) using the snake_pos values.\<close>
   obtain nx ny where hnext: "snake_pos N (min (k+1) (N*N-1)) = (nx, ny)" by (cases "snake_pos N (min (k+1) (N*N-1))")
+  have hsfa_raw: "sfa_raw n t = ((real col + 0.5 + 0.25 * (real nx - real col)) / real N,
+                                  (real row + 0.5 + 0.25 * (real ny - real row)) / real N)"
+    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
+    using hsnake hnext by (simp add: case_prod_beta)
   have hfst_raw: "fst (sfa_raw n t) = (real col + 0.5 + 0.25 * (real nx - real col)) / real N"
-    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
-    using hsnake hnext sorry
+    using hsfa_raw by simp
   have hsnd_raw: "snd (sfa_raw n t) = (real row + 0.5 + 0.25 * (real ny - real row)) / real N"
-    unfolding sfa_raw_def Let_def N_def[symmetric] hclamp_t hk_comp hfrac
-    using hsnake hnext sorry
+    using hsfa_raw by simp
   text \<open>Snake adjacency: |nx - col| ≤ 1 and |ny - row| ≤ 1.\<close>
   have hnx_close: "\<bar>real nx - real col\<bar> \<le> 1" sorry
   have hny_close: "\<bar>real ny - real row\<bar> \<le> 1" sorry
