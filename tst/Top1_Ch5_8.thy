@@ -18169,8 +18169,22 @@ proof -
     show "closedin_on ?C ?Ts_sub \<F>"
       using compact_in_hausdorff_closed[OF hHaus_Cs hcomp hFsub] by blast
     text \<open>Compact → bounded: compact subsets of metric spaces are bounded.\<close>
+    text \<open>Since d is bounded by M, ds ≤ M, so F is trivially bounded.\<close>
     show "top1_metric_bounded_subset_on ?PiE ?ds \<F>"
-      sorry
+    proof -
+      obtain f0 where hf0: "f0 \<in> \<F>" using hFne by blast
+      have hf0_PiE: "f0 \<in> ?PiE" using hf0 hF_PiE by blast
+      show ?thesis unfolding top1_metric_bounded_subset_on_def
+      proof (intro bexI[of _ f0] exI[of _ M] ballI)
+        fix f assume "f \<in> \<F>"
+        then have "f \<in> ?PiE" using hF_PiE by blast
+        have "\<And>x. x \<in> X \<Longrightarrow> d (f0 x) (f x) \<le> M"
+          using hf0_PiE \<open>f \<in> ?PiE\<close> hd_bdd unfolding top1_PiE_iff by blast
+        then show "?ds f0 f \<le> M" unfolding top1_sup_metric_on_def
+          using hbdd_above_all[rule_format, OF hf0 hf0_PiE] hXne
+          by (intro cSup_least) auto
+      qed (rule hf0_PiE)
+    qed
     text \<open>Compact → equicontinuous: by Theorem_45_4 forward direction.
       F compact in sup → F compact in uniform (hcompact_eq).
       In uniform: closure(F) ⊇ F, and compact F is closed → closure(F) = F.
