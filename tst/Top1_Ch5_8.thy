@@ -12067,6 +12067,12 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
     y = (real cy + 0.5 + frac * (real ny - real cy)) / real N
   in (x, y))"
 
+lemma snake_pos_bound:
+  assumes "N > 0" "k < N * N"
+  shows "fst (snake_pos N k) < N \<and> snd (snake_pos N k) < N"
+  unfolding snake_pos_def Let_def using assms
+  by (simp add: less_mult_imp_div_less mod_less_divisor diff_less_mono2)
+
 lemma grid_index_bound: "(a::nat) < N \<Longrightarrow> b < N \<Longrightarrow> a * N + b < N * N"
 proof -
   assume "a < N" "b < N"
@@ -12245,8 +12251,9 @@ proof -
     finally show ?thesis by simp
   qed
   text \<open>Since values are in [0,1], clamping doesn't change them.\<close>
-  have hnx_bound: "nx < N" using hnext unfolding snake_pos_def Let_def using hN sorry
-  have hny_bound: "ny < N" using hnext unfolding snake_pos_def Let_def using hN sorry
+  have hk1_bound: "min (k+1) (N*N-1) < N*N" using hk hN by simp
+  have hnx_bound: "nx < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
+  have hny_bound: "ny < N" using snake_pos_bound[OF hN hk1_bound] hnext by simp
   have hfst_in: "0 \<le> fst (sfa_raw n t) \<and> fst (sfa_raw n t) \<le> 1"
     using hfst_raw hcol hnx_bound hN sorry
   have hsnd_in: "0 \<le> snd (sfa_raw n t) \<and> snd (sfa_raw n t) \<le> 1"
