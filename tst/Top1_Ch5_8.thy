@@ -18123,7 +18123,30 @@ proof -
     using uniform_bounded_imp_pointwise_bounded[OF hd hF_PiE _ hbdd_above_all] by blast
   text \<open>Pointwise bounded → sup-bounded (for bounded metrics).\<close>
   have hpw_bdd: "top1_pointwise_bounded_family_on X Y d \<F> \<longrightarrow> top1_metric_bounded_subset_on ?PiE ?ds \<F>"
-    sorry
+  proof
+    assume hpw: "top1_pointwise_bounded_family_on X Y d \<F>"
+    obtain f0 where hf0: "f0 \<in> \<F>" using hFne by blast
+    have hf0_PiE: "f0 \<in> ?PiE" using hf0 hF_PiE by blast
+    show "top1_metric_bounded_subset_on ?PiE ?ds \<F>"
+      unfolding top1_metric_bounded_subset_on_def
+    proof (intro bexI[of _ f0] exI[of _ M] ballI)
+      fix f assume hf: "f \<in> \<F>"
+      have hf_PiE: "f \<in> ?PiE" using hf hF_PiE by blast
+      have hbdd: "\<And>x. x \<in> X \<Longrightarrow> d (f0 x) (f x) \<le> M"
+        using hf0_PiE hf_PiE hd_bdd unfolding top1_PiE_iff by blast
+      have hbdd_above: "bdd_above ((\<lambda>x. d (f0 x) (f x)) ` X)"
+        by (rule bdd_aboveI[of _ M], auto intro: hbdd)
+      show "?ds f0 f \<le> M" unfolding top1_sup_metric_on_def
+      proof (cases "X = {}")
+        case True then show "Sup ((\<lambda>x. d (f0 x) (f x)) ` X) \<le> M"
+          using hXne by simp
+      next
+        case False
+        show "Sup ((\<lambda>x. d (f0 x) (f x)) ` X) \<le> M"
+          sorry (* cSup_least + hbdd, arithmetic with Sup *)
+      qed
+    qed (rule hf0_PiE)
+  qed
   text \<open>Forward: compact → closed + bounded + equicontinuous.\<close>
   have hfwd: "top1_compact_on \<F> (subspace_topology ?C ?Ts_sub \<F>) \<longrightarrow>
     closedin_on ?C ?Ts_sub \<F> \<and> top1_metric_bounded_subset_on ?PiE ?ds \<F> \<and>
