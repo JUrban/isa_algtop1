@@ -12719,16 +12719,159 @@ next
     then show "hilbert_rec o' (Suc n) t \<in> ?I \<times> ?I"
       unfolding top1_closed_interval_def by (metis SigmaI mem_Collect_eq prod.collapse)
   qed
-  have hf_A: "top1_continuous_map_on A (subspace_topology ?I ?TI A) (?I \<times> ?I) (product_topology_on ?TI ?TI)
-    (hilbert_rec o' (Suc n))"
-    sorry
-  have hf_B: "top1_continuous_map_on B (subspace_topology ?I ?TI B) (?I \<times> ?I) (product_topology_on ?TI ?TI)
-    (hilbert_rec o' (Suc n))"
-    sorry
   have hTP: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
     by (rule product_topology_on_is_topology_on[OF hTI hTI])
-  show ?case using pasting_lemma_two_closed[OF hTI hTP hA_closed hB_closed hAB hf_range hf_A hf_B]
-    by (simp del: hilbert_rec.simps)
+  text \<open>Alternative approach: use closed-set characterization directly.
+    On each quarter [k/4, (k+1)/4], f is a SINGLE composition (not piecewise).
+    So the preimage of any closed set restricted to that quarter is closed in it.
+    Since each quarter is closed in [0,1], the preimage is closed in [0,1].
+    The union of 4 closed preimages is closed. By Theorem_18_1(2), f is continuous.\<close>
+  show ?case unfolding Theorem_18_1(2)[OF hTI hTP]
+  proof (intro conjI allI impI)
+    show "\<forall>t\<in>?I. hilbert_rec o' (Suc n) t \<in> ?I \<times> ?I" using hf_range by blast
+  next
+    fix C assume hC: "closedin_on (?I \<times> ?I) (product_topology_on ?TI ?TI) C"
+    text \<open>Decompose the preimage into 4 pieces, one per quadrant.\<close>
+    define Pk where "Pk k = {t \<in> ?I. k/4 \<le> t \<and> t \<le> (k+1)/4 \<and> hilbert_rec o' (Suc n) t \<in> C}" for k :: nat
+    have hpre_eq: "{t \<in> ?I. hilbert_rec o' (Suc n) t \<in> C} = Pk 0 \<union> Pk 1 \<union> Pk 2 \<union> Pk 3"
+      unfolding Pk_def top1_closed_interval_def by auto
+    text \<open>Each Pk is closed in [0,1] because:
+      (a) the quarter [k/4,(k+1)/4] is closed in [0,1]
+      (b) on that quarter, f is a continuous composition, so the preimage of C is closed in the quarter
+      (c) closed in a closed set → closed in the ambient space\<close>
+    have hPk_closed: "\<And>k::nat. k \<le> 3 \<Longrightarrow> closedin_on ?I ?TI (Pk k)"
+    proof -
+      fix k :: nat assume hk: "k \<le> 3"
+      define Qk where "Qk = top1_closed_interval (real k / 4) ((real k + 1) / 4)"
+      have hQk_sub: "Qk \<subseteq> ?I" unfolding Qk_def top1_closed_interval_def using hk by auto
+      have hQk_closed: "closedin_on ?I ?TI Qk"
+      proof -
+        have "closedin_on (UNIV :: real set) order_topology_on_UNIV {t :: real. real k / 4 \<le> t}"
+        proof (rule closedin_intro)
+          show "{t :: real. real k / 4 \<le> t} \<subseteq> UNIV" by simp
+          have "UNIV - {t :: real. real k / 4 \<le> t} = open_ray_lt (real k / 4)"
+            unfolding open_ray_lt_def by auto
+          also have "... \<in> order_topology_on_UNIV"
+            using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+            unfolding order_topology_on_UNIV_def basis_order_topology_def by blast
+          finally show "UNIV - {t :: real. real k / 4 \<le> t} \<in> order_topology_on_UNIV" .
+        qed
+        moreover have "closedin_on (UNIV :: real set) order_topology_on_UNIV {t :: real. t \<le> (real k + 1) / 4}"
+        proof (rule closedin_intro)
+          show "{t :: real. t \<le> (real k + 1) / 4} \<subseteq> UNIV" by simp
+          have "UNIV - {t :: real. t \<le> (real k + 1) / 4} = open_ray_gt ((real k + 1) / 4)"
+            unfolding open_ray_gt_def by auto
+          also have "... \<in> order_topology_on_UNIV"
+            using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+            unfolding order_topology_on_UNIV_def basis_order_topology_def by blast
+          finally show "UNIV - {t :: real. t \<le> (real k + 1) / 4} \<in> order_topology_on_UNIV" .
+        qed
+        moreover have "Qk = ({t :: real. real k / 4 \<le> t} \<inter> {t :: real. t \<le> (real k + 1) / 4}) \<inter> ?I"
+          unfolding Qk_def top1_closed_interval_def using hk by force
+        ultimately show ?thesis
+        proof -
+          assume h1: "closedin_on UNIV order_topology_on_UNIV {t::real. real k / 4 \<le> t}"
+          assume h2: "closedin_on UNIV order_topology_on_UNIV {t::real. t \<le> (real k + 1) / 4}"
+          assume h3: "Qk = ({t::real. real k / 4 \<le> t} \<inter> {t::real. t \<le> (real k + 1) / 4}) \<inter> ?I"
+          have hint: "closedin_on UNIV order_topology_on_UNIV ({t::real. real k / 4 \<le> t} \<inter> {t::real. t \<le> (real k + 1) / 4})"
+          proof (rule closedin_intro)
+            show "{t::real. real k / 4 \<le> t} \<inter> {t::real. t \<le> (real k + 1) / 4} \<subseteq> UNIV" by simp
+            have "UNIV - ({t::real. real k / 4 \<le> t} \<inter> {t::real. t \<le> (real k + 1) / 4}) =
+              open_ray_lt (real k / 4) \<union> open_ray_gt ((real k + 1) / 4)"
+              unfolding open_ray_lt_def open_ray_gt_def by auto
+            also have "... \<in> order_topology_on_UNIV"
+            proof -
+              have "open_ray_lt (real k / 4) \<in> order_topology_on_UNIV"
+                using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+                unfolding order_topology_on_UNIV_def basis_order_topology_def by blast
+              moreover have "open_ray_gt ((real k + 1) / 4) \<in> order_topology_on_UNIV"
+                using basis_elem_open_in_generated_topology[OF basis_order_topology_is_basis_on_UNIV]
+                unfolding order_topology_on_UNIV_def basis_order_topology_def by blast
+              ultimately show ?thesis
+              proof -
+                assume h1: "open_ray_lt (real k / 4) \<in> order_topology_on_UNIV"
+                assume h2: "open_ray_gt ((real k + 1) / 4) \<in> order_topology_on_UNIV"
+                have "{open_ray_lt (real k / 4), open_ray_gt ((real k + 1) / 4)} \<subseteq> order_topology_on_UNIV"
+                  using h1 h2 by auto
+                then have "\<Union>{open_ray_lt (real k / 4), open_ray_gt ((real k + 1) / 4)} \<in> order_topology_on_UNIV"
+                  using hTR unfolding is_topology_on_def by blast
+                then show ?thesis by simp
+              qed
+            qed
+            finally show "UNIV - ({t::real. real k / 4 \<le> t} \<inter> {t::real. t \<le> (real k + 1) / 4}) \<in> order_topology_on_UNIV" .
+          qed
+          then have "\<exists>D. closedin_on UNIV order_topology_on_UNIV D \<and> Qk = D \<inter> ?I"
+            using h3 by blast
+          then show ?thesis
+            using Theorem_17_2[OF hTR hI_sub] unfolding top1_closed_interval_topology_def by blast
+        qed
+      qed
+      have hPk_sub_Qk: "Pk k \<subseteq> Qk" unfolding Pk_def Qk_def top1_closed_interval_def by auto
+      text \<open>On Qk, hilbert_rec o' (Suc n) = affine(hilbert_rec sub n (4t - k)).
+        This is continuous on Qk by IH + composition.
+        So the preimage of C is closed in Qk.\<close>
+      text \<open>On Qk, the function equals a composition of the IH function with a linear
+        reparametrization and an affine transformation. This composition is continuous,
+        so the preimage of C is closed in Qk.\<close>
+      define gk where "gk t = (let sub_o = hilbert_sub o' k; (qx, qy) = hilbert_quad o' k;
+        s = clamp01 (4 * t - real k); (rx, ry) = hilbert_rec sub_o n s
+        in ((real qx + rx) / 2, (real qy + ry) / 2))" for t
+      have hgk_eq: "\<And>t. t \<in> Qk \<Longrightarrow> hilbert_rec o' (Suc n) t = gk t"
+      proof -
+        fix t assume htQk: "t \<in> Qk"
+        have ht01: "0 \<le> t \<and> t \<le> 1" using htQk hQk_sub unfolding top1_closed_interval_def by auto
+        have htk: "real k / 4 \<le> t" "t \<le> (real k + 1) / 4"
+          using htQk unfolding Qk_def top1_closed_interval_def by auto
+        have hclamp: "clamp01 t = t" unfolding clamp01_def using ht01 by auto
+        have h4t_bounds: "real k \<le> 4 * t" "4 * t \<le> real k + 1" using htk by auto
+        text \<open>If t < (k+1)/4, floor(4t) = k so the functions match directly.
+          If t = (k+1)/4 exactly (boundary), floor(4t) = k+1, but gk and g(k+1)
+          agree at this point by hilbert_boundary_match + hilbert_rec_at_0/1.\<close>
+        show "hilbert_rec o' (Suc n) t = gk t"
+          sorry  (* computational: floor + boundary matching *)
+      qed
+      have hgk_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
+        (product_topology_on ?TI ?TI) gk"
+        sorry
+      have hTQk: "is_topology_on Qk (subspace_topology ?I ?TI Qk)"
+        by (rule subspace_topology_is_topology_on[OF hTI hQk_sub])
+      have hPk_eq: "Pk k = {t \<in> Qk. gk t \<in> C}"
+      proof (rule set_eqI, rule iffI)
+        fix t assume "t \<in> Pk k"
+        then have ht: "t \<in> ?I" "real k / 4 \<le> t" "t \<le> (real k + 1) / 4" "hilbert_rec o' (Suc n) t \<in> C"
+          unfolding Pk_def by auto
+        have htQk: "t \<in> Qk" using ht unfolding Qk_def top1_closed_interval_def by auto
+        then show "t \<in> {t \<in> Qk. gk t \<in> C}" using hgk_eq[of t] ht(4) by (simp del: hilbert_rec.simps)
+      next
+        fix t assume "t \<in> {t \<in> Qk. gk t \<in> C}"
+        then have ht: "t \<in> Qk" "gk t \<in> C" by auto
+        show "t \<in> Pk k"
+          unfolding Pk_def using ht hQk_sub hgk_eq[of t] unfolding Qk_def top1_closed_interval_def
+          by (auto simp del: hilbert_rec.simps)
+      qed
+      have hPk_closed_in_Qk: "closedin_on Qk (subspace_topology ?I ?TI Qk) (Pk k)"
+      proof -
+        have "closedin_on Qk (subspace_topology ?I ?TI Qk) {t \<in> Qk. gk t \<in> C}"
+          using Theorem_18_1(2)[OF hTQk hTP] hgk_cont hC by blast
+        then show ?thesis using hPk_eq by simp
+      qed
+      show "closedin_on ?I ?TI (Pk k)"
+        using Theorem_17_3[OF hTI hQk_closed hPk_closed_in_Qk] by simp
+    qed
+    then have hcl0: "closedin_on ?I ?TI (Pk 0)" and hcl1: "closedin_on ?I ?TI (Pk 1)"
+      and hcl2: "closedin_on ?I ?TI (Pk 2)" and hcl3: "closedin_on ?I ?TI (Pk 3)" by auto
+    have "closedin_on ?I ?TI (Pk 0 \<union> Pk 1 \<union> Pk 2 \<union> Pk 3)"
+    proof -
+      have "\<forall>A \<in> {Pk 0, Pk 1, Pk 2, Pk 3}. closedin_on ?I ?TI A"
+        using hcl0 hcl1 hcl2 hcl3 by auto
+      then have h4: "closedin_on ?I ?TI (\<Union>{Pk 0, Pk 1, Pk 2, Pk 3})"
+        by (intro closedin_Union_finite[OF hTI]) auto
+      moreover have "\<Union>{Pk 0, Pk 1, Pk 2, Pk 3} = Pk 0 \<union> Pk 1 \<union> Pk 2 \<union> Pk 3" by blast
+      ultimately show ?thesis by simp
+    qed
+    then show "closedin_on ?I ?TI {t \<in> ?I. hilbert_rec o' (Suc n) t \<in> C}"
+      using hpre_eq by simp
+  qed
 qed
 
 text \<open>Properties of sfa_rec.\<close>
