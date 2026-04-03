@@ -12069,10 +12069,26 @@ definition sfa_raw :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" 
 
 lemma div_same_row: "(N::nat) > 0 \<Longrightarrow> k mod N + 1 < N \<Longrightarrow> (k+1) div N = k div N"
   sorry
+
 lemma mod_at_boundary: "(N::nat) > 0 \<Longrightarrow> \<not> (k mod N + 1 < N) \<Longrightarrow> k mod N = N - Suc 0"
-  sorry
+proof -
+  assume "N > 0" "\<not> (k mod N + 1 < N)"
+  have "k mod N < N" using \<open>N > 0\<close> by simp
+  then have "k mod N + 1 \<le> N" by linarith
+  then have "k mod N + 1 = N" using \<open>\<not> (k mod N + 1 < N)\<close> by linarith
+  then show "k mod N = N - Suc 0" by linarith
+qed
+
 lemma div_next_row: "(N::nat) > 0 \<Longrightarrow> k mod N = N - Suc 0 \<Longrightarrow> (k+1) div N = k div N + 1"
-  sorry
+proof -
+  assume hN: "N > 0" and hmod: "k mod N = N - Suc 0"
+  have hdecomp: "k = N * (k div N) + k mod N" by simp
+  then have "k + 1 = N * (k div N) + (k mod N + 1)" by linarith
+  also have "k mod N + 1 = N" using hmod hN by linarith
+  finally have "k + 1 = N * (k div N) + N" by presburger
+  then have "k + 1 = N * (k div N + 1)" by (simp add: algebra_simps)
+  then show ?thesis using hN by simp
+qed
 
 lemma snake_adjacent:
   assumes "N > 0" "k < N * N"
