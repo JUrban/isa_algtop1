@@ -12859,7 +12859,64 @@ next
           If t = (k+1)/4 exactly (boundary), floor(4t) = k+1, but gk and g(k+1)
           agree at this point by hilbert_boundary_match + hilbert_rec_at_0/1.\<close>
         show "hilbert_rec o' (Suc n) t = gk t"
-          sorry  (* computational: floor + boundary matching *)
+        proof (cases "4 * t < real k + 1")
+          case True
+          text \<open>Interior: floor(4t) = k, so the function directly matches gk.\<close>
+          have hfloor: "\<lfloor>4 * t\<rfloor> = int k" using h4t_bounds True by linarith
+          have hq: "min (nat \<lfloor>4 * t\<rfloor>) 3 = k" using hfloor hk by auto
+          show ?thesis
+            unfolding gk_def hilbert_rec.simps Let_def hclamp hq
+            by (simp del: hilbert_rec.simps add: case_prod_beta)
+        next
+          case False
+          text \<open>Boundary: t = (k+1)/4. floor(4t) = k+1. The function uses quadrant k+1.\<close>
+          have ht_boundary: "4 * t = real k + 1" using h4t_bounds False by linarith
+          show ?thesis
+          proof (cases "k = 3")
+            case True
+            text \<open>k=3: min(nat(k+1), 3) = min(4,3) = 3 = k. Same as interior.\<close>
+            have hfloor: "\<lfloor>4 * t\<rfloor> = 4" using ht_boundary True by simp
+            have hq: "min (nat \<lfloor>4 * t\<rfloor>) 3 = 3" using hfloor by simp
+            show ?thesis unfolding gk_def hilbert_rec.simps Let_def hclamp hq using True
+              by (simp del: hilbert_rec.simps add: case_prod_beta)
+          next
+            case False
+            text \<open>k < 3: min(nat(k+1), 3) = k+1 ≠ k. But gk and g(k+1) agree at boundary.\<close>
+            have hk_lt: "k < 3" using hk False by linarith
+            have hfloor: "\<lfloor>4 * t\<rfloor> = int k + 1" using ht_boundary by simp
+            have hq: "min (nat \<lfloor>4 * t\<rfloor>) 3 = k + 1" using hfloor hk_lt by auto
+            have hs'_val: "clamp01 (4 * t - real (k + 1)) = 0"
+              using ht_boundary unfolding clamp01_def by simp
+            have hs_val: "clamp01 (4 * t - real k) = 1"
+              using ht_boundary unfolding clamp01_def by simp
+            text \<open>hilbert_rec uses quadrant k+1 with s'=0.\<close>
+            have hval_kp1: "hilbert_rec o' (Suc n) t = (let
+              (qx', qy') = hilbert_quad o' (k+1);
+              (rx, ry) = hilbert_rec (hilbert_sub o' (k+1)) n 0
+              in ((real qx' + rx) / 2, (real qy' + ry) / 2))"
+              unfolding hilbert_rec.simps Let_def hclamp hq hs'_val
+              by (simp del: hilbert_rec.simps add: case_prod_beta)
+            text \<open>gk uses quadrant k with s'=1.\<close>
+            have hval_k: "gk t = (let
+              (qx0, qy0) = hilbert_quad o' k;
+              (rx, ry) = hilbert_rec (hilbert_sub o' k) n 1
+              in ((real qx0 + rx) / 2, (real qy0 + ry) / 2))"
+              unfolding gk_def Let_def hs_val
+              by (simp del: hilbert_rec.simps add: case_prod_beta)
+            text \<open>By hilbert_rec_at_0/1 and hilbert_boundary_match, these are equal.\<close>
+            have hat0: "hilbert_rec (hilbert_sub o' (k+1)) n 0 = hilbert_entry (hilbert_sub o' (k+1))"
+              using hilbert_rec_at_0 by blast
+            have hat1: "hilbert_rec (hilbert_sub o' k) n 1 = hilbert_exit (hilbert_sub o' k)"
+              using hilbert_rec_at_1 by blast
+            have hbm: "(fst (hilbert_quad o' k) + fst (hilbert_exit (hilbert_sub o' k))) / 2 =
+              (fst (hilbert_quad o' (Suc k)) + fst (hilbert_entry (hilbert_sub o' (Suc k)))) / 2 \<and>
+              (snd (hilbert_quad o' k) + snd (hilbert_exit (hilbert_sub o' k))) / 2 =
+              (snd (hilbert_quad o' (Suc k)) + snd (hilbert_entry (hilbert_sub o' (Suc k)))) / 2"
+              using hilbert_boundary_match[OF hk_lt] by simp
+            show ?thesis using hval_kp1 hval_k hat0 hat1 hbm
+              by (simp del: hilbert_rec.simps add: Let_def case_prod_beta)
+          qed
+        qed
       qed
       have hgk_cont: "top1_continuous_map_on Qk (subspace_topology ?I ?TI Qk) (?I \<times> ?I)
         (product_topology_on ?TI ?TI) gk"
