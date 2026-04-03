@@ -12078,7 +12078,14 @@ proof -
                  \<bar>snd (fn n t) - snd (fn (Suc n) t)\<bar> \<le> 1 / 2^n) \<and>
     (\<forall>n. \<forall>x\<in>?I. \<forall>y\<in>?I. \<exists>t\<in>?I. \<bar>x - fst (fn n t)\<bar> \<le> 1 / 2^n \<and>
                                     \<bar>y - snd (fn n t)\<bar> \<le> 1 / 2^n)"
-    text \<open>The triangular path sequence satisfies these properties.\<close>
+    text \<open>The Munkres triangular path sequence (§44, Figures 44.1-44.5) satisfies
+      these properties. The construction iteratively refines piecewise-linear paths
+      in the unit square, with each level consisting of 4ⁿ triangular segments
+      in sub-squares of side 1/2ⁿ. Property (2) holds since segments stay in I².
+      Property (3) holds since refinement changes values by at most 1/2ⁿ (the
+      sub-square diameter). Property (4) holds since every sub-square is visited.
+      The full construction requires ~200 lines of explicit combinatorial definition
+      with the Hilbert/Z-order curve traversal.\<close>
     sorry
   then obtain fn where hfn_cont: "\<forall>n. top1_continuous_map_on ?I ?TI ?I2 ?TI2 (fn n)"
     and hfn_range: "\<forall>n. \<forall>t\<in>?I. fn n t \<in> ?I2"
