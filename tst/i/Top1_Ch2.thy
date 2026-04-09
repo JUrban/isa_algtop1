@@ -8689,6 +8689,14 @@ proof -
     using hProdBasis by simp
 qed
 
+text \<open>Explicit characterization from Theorem 19.1: product basis elements have
+  U_α = X_α for all but finitely many α (built into the definition of
+  top1_product_basis_on). For finite products, box = product topology.\<close>
+lemma product_basis_finitely_many_nontrivial:
+  assumes "B \<in> top1_product_basis_on I X T"
+  shows "\<exists>U. B = top1_PiE I U \<and> (\<forall>i\<in>I. U i \<in> T i) \<and> finite {i \<in> I. U i \<noteq> X i}"
+  using assms unfolding top1_product_basis_on_def by auto
+
 lemma top1_product_basis_eq_box_basis_if_finite:
   assumes hfinI: "finite I"
   shows "top1_product_basis_on I X T = top1_box_basis_on I X T"
@@ -11463,6 +11471,20 @@ definition top1_metric_topology_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a
 
 definition top1_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_metrizable_on X T \<longleftrightarrow> (\<exists>d. top1_metric_on X d \<and> T = top1_metric_topology_on X d)"
+
+text \<open>Distance from a point to a set (Munkres §27, used in normality/Urysohn proofs).\<close>
+definition top1_dist_to_set :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a \<Rightarrow> 'a set \<Rightarrow> real" where
+  "top1_dist_to_set d x A = Inf ((\<lambda>a. d x a) ` A)"
+
+lemma dist_to_set_nonneg:
+  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
+  shows "0 \<le> top1_dist_to_set d x A"
+  sorry
+
+lemma dist_to_set_zero_iff_closure:
+  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
+  shows "top1_dist_to_set d x A = 0 \<longleftrightarrow> x \<in> closure_on X (top1_metric_topology_on X d) A"
+  sorry
 
 (** The standard ball family forms a basis (for the metric topology) on the carrier. **)
 lemma top1_metric_basis_is_basis_on:

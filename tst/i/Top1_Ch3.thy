@@ -19,6 +19,69 @@ lemma Lemma_23_1:
   "top1_connected_on X T \<longleftrightarrow> is_topology_on X T \<and> (\<nexists>U V. top1_is_separation_on X T U V)"
   unfolding top1_connected_on_def top1_is_separation_on_def by blast
 
+text \<open>Proper Lemma 23.1 (Munkres): A separation of Y (subspace of X) is a pair
+  of disjoint nonempty sets A, B with A ∪ B = Y such that neither contains a limit
+  point of the other. Equivalently, A and B are both open and closed in Y.\<close>
+lemma Lemma_23_1_proper:
+  assumes hTX: "is_topology_on X TX"
+  assumes hYX: "Y \<subseteq> X"
+  defines "TY \<equiv> subspace_topology X TX Y"
+  shows "top1_connected_on Y TY \<longleftrightarrow>
+    is_topology_on Y TY \<and>
+    (\<nexists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
+           A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {})"
+  sorry  (* needs closure_on properties for subspace separation characterization *)
+
+text \<open>Alternate characterization: X is connected iff the only clopen subsets are {} and X.\<close>
+lemma connected_iff_clopen:
+  assumes hTX: "is_topology_on X TX"
+  shows "top1_connected_on X TX \<longleftrightarrow>
+    is_topology_on X TX \<and> (\<forall>U. U \<in> TX \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+proof (rule iffI)
+  assume hconn: "top1_connected_on X TX"
+  show "is_topology_on X TX \<and> (\<forall>U. U \<in> TX \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+  proof (intro conjI allI impI)
+    show "is_topology_on X TX" using hTX by blast
+  next
+    fix U assume hU: "U \<in> TX \<and> closedin_on X TX U"
+    show "U = {} \<or> U = X"
+    proof (rule ccontr)
+      assume "\<not>(U = {} \<or> U = X)"
+      then have hUne: "U \<noteq> {}" and hUneX: "U \<noteq> X" by auto
+      have hUsub: "U \<subseteq> X" using hU unfolding closedin_on_def by blast
+      define V where "V = X - U"
+      have hVne: "V \<noteq> {}" using hUneX hUsub unfolding V_def by auto
+      have hVopen: "V \<in> TX" using hU unfolding closedin_on_def V_def by blast
+      have hUV: "U \<union> V = X" unfolding V_def using hUsub by auto
+      have hUVdisj: "U \<inter> V = {}" unfolding V_def by auto
+      then have "top1_is_separation_on X TX U V"
+        unfolding top1_is_separation_on_def using hU hVopen hUne hVne hUVdisj hUV by blast
+      then show False using hconn unfolding top1_connected_on_def top1_is_separation_on_def
+        using hU hVopen hUne hVne hUVdisj hUV by blast
+    qed
+  qed
+next
+  assume h: "is_topology_on X TX \<and> (\<forall>U. U \<in> TX \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+  show "top1_connected_on X TX"
+    unfolding top1_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on X TX" using h by blast
+  next
+    show "\<nexists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+    proof (rule notI)
+      assume "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+      then obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hUne: "U \<noteq> {}"
+        and hVne: "V \<noteq> {}" and hdisj: "U \<inter> V = {}" and hunion: "U \<union> V = X" by blast
+      have hUsub: "U \<subseteq> X" using hunion by auto
+      have "X - U = V" using hdisj hunion by auto
+      then have "X - U \<in> TX" using hV by simp
+      then have "closedin_on X TX U" unfolding closedin_on_def using hUsub by blast
+      then have "U = {} \<or> U = X" using h hU by blast
+      then show False using hUne hVne hunion hdisj by auto
+    qed
+  qed
+qed
+
 (** from \S23 Lemma 23.2 [top1.tex:~2635] **)
 lemma Lemma_23_2:
   assumes hTX: "is_topology_on X TX"
@@ -5195,6 +5258,15 @@ proof -
     qed
   qed
 qed
+
+text \<open>Corollary: Finite products of compact spaces are compact (general version).
+  This follows from Theorem 26.7 by induction on the size of the finite index set.
+  (Theorem 26.7 proves the binary case.)\<close>
+corollary compact_finite_product:
+  assumes hfin: "finite I"
+  assumes hcomp: "\<forall>i\<in>I. top1_compact_on (X i) (T i)"
+  shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X T)"
+  sorry
 
 (** from \S26 Theorem 26.9 (Finite intersection property characterization) [top1.tex:3268] **)
 theorem Theorem_26_9:
