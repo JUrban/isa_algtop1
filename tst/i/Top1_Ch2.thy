@@ -16,11 +16,26 @@ section \<open>\<S>12 Topological Spaces\<close>
 
 (** from \S12 Definition (Topology on a set) [top1.tex:49] **)
 (** LATEX VERSION: "A topology on a set X is a collection T of subsets of X ..." **)
+text \<open>Note: This definition does not include T ⊆ Pow X (every open set is a subset of X).
+  This is weaker than the standard definition. All theorems carry explicit is\_topology\_on
+  assumptions that make the proofs sound, but the definition is less defensive than ideal.
+  A strict version is provided as is\_topology\_on\_strict below.\<close>
 definition is_topology_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "is_topology_on X T \<longleftrightarrow>
      {} \<in> T \<and> X \<in> T \<and>
      (\<forall>U. U \<subseteq> T \<longrightarrow> (\<Union>U) \<in> T) \<and>
      (\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> (\<Inter>F) \<in> T)"
+
+text \<open>Strict version that additionally requires every open set to be a subset of X.
+  This is the standard mathematical definition of a topology on X.\<close>
+definition is_topology_on_strict :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "is_topology_on_strict X T \<longleftrightarrow> is_topology_on X T \<and> T \<subseteq> Pow X"
+
+lemma is_topology_on_strict_imp: "is_topology_on_strict X T \<Longrightarrow> is_topology_on X T"
+  unfolding is_topology_on_strict_def by blast
+
+lemma is_topology_on_strict_opens_sub: "is_topology_on_strict X T \<Longrightarrow> U \<in> T \<Longrightarrow> U \<subseteq> X"
+  unfolding is_topology_on_strict_def by blast
 
 (** Basic derived closure properties for a topology. **)
 lemma topology_inter2:
@@ -993,8 +1008,13 @@ qed
 
 (** from \S12 (Open set terminology) [top1.tex:~55] **)
 (** LATEX VERSION: "U is open in X iff U \<in> T." **)
+text \<open>Note: openin\_on does not require U ⊆ X. Under is\_topology\_on\_strict, this follows
+  automatically from U ∈ T. The weaker version is retained for backward compatibility.\<close>
 definition openin_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "openin_on X T U \<longleftrightarrow> U \<in> T"
+
+lemma openin_on_sub_strict: "is_topology_on_strict X T \<Longrightarrow> openin_on X T U \<Longrightarrow> U \<subseteq> X"
+  unfolding openin_on_def using is_topology_on_strict_opens_sub by blast
 
 (** from \S12 Definition (Finer/coarser/comparable) [top1.tex:96] **)
 (** LATEX VERSION: "T' is finer than T iff T \<subseteq> T' ..." **)
