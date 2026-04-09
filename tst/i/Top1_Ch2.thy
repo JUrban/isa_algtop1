@@ -11499,7 +11499,17 @@ definition top1_dist_to_set :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Right
 lemma dist_to_set_nonneg:
   assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
   shows "0 \<le> top1_dist_to_set d x A"
-  sorry
+proof -
+  have hnn: "\<forall>a\<in>A. 0 \<le> d x a" using hd hx hA unfolding top1_metric_on_def by blast
+  have hbdd: "bdd_below ((\<lambda>a. d x a) ` A)" using hnn by (intro bdd_belowI[of _ 0]) auto
+  obtain a0 where "a0 \<in> A" using hAne by blast
+  then have "top1_dist_to_set d x A \<le> d x a0"
+    unfolding top1_dist_to_set_def by (intro cInf_lower) (auto simp: hbdd)
+  moreover have "0 \<le> d x a0" using hnn \<open>a0 \<in> A\<close> by blast
+  ultimately show ?thesis
+    unfolding top1_dist_to_set_def using hnn hAne hbdd
+    by (intro cInf_greatest) auto
+qed
 
 lemma dist_to_set_zero_iff_closure:
   assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
