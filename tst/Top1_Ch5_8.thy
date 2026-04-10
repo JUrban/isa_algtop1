@@ -32572,7 +32572,28 @@ proof -
       using hseq unfolding top1_sequentially_compact_on_def by blast
     text \<open>Step A: Totally bounded.\<close>
     have htb: "\<forall>\<epsilon>>0. \<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x \<epsilon>)"
-      sorry
+    proof (intro allI impI)
+      fix \<epsilon> :: real assume heps: "0 < \<epsilon>"
+      text \<open>Proof by contradiction: if not totally bounded, build sequence with
+        pairwise distance ≥ε, contradicting seq-compactness.\<close>
+      show "\<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x \<epsilon>)"
+      proof (rule ccontr)
+        assume hneg: "\<not> (\<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x \<epsilon>))"
+        text \<open>Inductively build s(n) ∈ X with d(s(i), s(j)) ≥ε for i≠j.\<close>
+        have hstep: "\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow> \<exists>x\<in>X. x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)"
+          using hneg by blast
+        obtain s :: "nat \<Rightarrow> 'a" where hs_in: "\<forall>n. s n \<in> X"
+          and hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
+          sorry
+        text \<open>By seq-compactness, s has a convergent subsequence.\<close>
+        obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
+          and hconv: "seq_converges_to_on (s \<circ> sub) x X T"
+          using hseq hs_in unfolding top1_sequentially_compact_on_def by metis
+        text \<open>Convergent ⟹ eventually close, contradicting hs_far.\<close>
+        show False
+          sorry
+      qed
+    qed
     text \<open>Step B: Lebesgue number.\<close>
     have hlebesgue: "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
       sorry
