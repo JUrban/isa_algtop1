@@ -10526,8 +10526,13 @@ proof -
           using hlpc hAinf unfolding top1_limit_point_compact_on_def by blast
         text \<open>x is a limit point, so every ball B(x,ε) contains some s(n) ≠ x (hence ∈ range(s)).
           Since range(s) is infinite, we can always find new indices.\<close>
+        text \<open>x ∈ closure(range s) in the metric space. By Lemma_21_2_sequence_converse,
+          there's a sequence in range(s) converging to x.\<close>
+        have hxcl: "x \<in> closure_on X (top1_metric_topology_on X d) (s ` UNIV)"
+          using hlp hTd
+          sorry
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
-          sorry  (* limit point + infinite range → balls hit at arbitrarily large indices *)
+          sorry  (* from hxcl + infinite range: every ball has infinitely many indices *)
         text \<open>Build strict_mono sub with d(x, s(sub k)) < 1/(k+2), using LEAST.\<close>
         define pick2 where "pick2 = (\<lambda>(bound::nat) (k::nat). LEAST n. n > bound \<and> d x (s n) < 1 / real (k + 2))"
         define sub2 where "sub2 = rec_nat (pick2 0 0) (\<lambda>k prev. pick2 prev (Suc k))"
