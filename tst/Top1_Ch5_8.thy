@@ -32736,9 +32736,32 @@ proof -
     qed
     text \<open>Step B: Lebesgue number.\<close>
     have hlebesgue: "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
-      sorry  (* Lebesgue number lemma: proof by contradiction, build sequence x_n with
-         B(x_n, 1/(n+1)) not in any cover element, extract convergent subseq,
-         limit in some cover element → contradiction for large n *)
+    proof (intro allI impI)
+      fix Uc assume hUc: "Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc"
+      show "\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+      proof (rule ccontr)
+        assume hneg: "\<not> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
+        text \<open>For each n, ∃x_n with B(x_n, 1/(n+1)) not in any cover element.\<close>
+        have hstep: "\<And>n. \<exists>x\<in>X. \<forall>U\<in>Uc. \<not> top1_ball_on X d x (1/real(Suc n)) \<subseteq> U"
+          sorry
+        obtain t where ht_in: "\<forall>n. t n \<in> X"
+          and ht_bad: "\<forall>n. \<forall>U\<in>Uc. \<not> top1_ball_on X d (t n) (1/real(Suc n)) \<subseteq> U"
+          sorry
+        text \<open>Convergent subsequence.\<close>
+        obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
+          and hconv: "seq_converges_to_on (t \<circ> sub) x X T"
+          using hseq ht_in unfolding top1_sequentially_compact_on_def by metis
+        text \<open>x is in some cover element U, which contains B(x,ε).\<close>
+        obtain U where hU: "U \<in> Uc" and hxU: "x \<in> U"
+          using hUc hxX by blast
+        obtain \<epsilon> where heps: "0 < \<epsilon>" and hball_sub: "top1_ball_on X d x \<epsilon> \<subseteq> U"
+          sorry
+        text \<open>For large k: t(sub k) ∈ B(x,ε/2) and 1/(sub k+1) < ε/2,
+          so B(t(sub k), 1/(sub k+1)) ⊆ B(x,ε) ⊆ U, contradiction.\<close>
+        show False
+          sorry
+      qed
+    qed
     text \<open>Step C: Combine.\<close>
     show "top1_compact_on X T"
       unfolding top1_compact_on_def
