@@ -32478,7 +32478,7 @@ proof -
         proof -
           fix e :: real and m :: nat assume he: "0 < e"
           have hball_open: "top1_ball_on X d x e \<in> T"
-            sorry
+            using top1_ball_open_in_metric_topology[OF hd hxX he] hTd by simp
           have hx_ball: "x \<in> top1_ball_on X d x e"
             by (metis hxX hd he top1_metric_ball_self_mem)
           have "neighborhood_of x X T (top1_ball_on X d x e)"
@@ -32486,7 +32486,13 @@ proof -
           then have hinf_int: "infinite (top1_ball_on X d x e \<inter> s ` UNIV)"
             using hball_inf by blast
           then have "infinite {n. s n \<in> top1_ball_on X d x e}"
-            sorry
+          proof (rule contrapos_nn)
+            assume "finite {n. s n \<in> top1_ball_on X d x e}"
+            then have "finite (s ` {n. s n \<in> top1_ball_on X d x e})" by blast
+            moreover have "top1_ball_on X d x e \<inter> s ` UNIV \<subseteq> s ` {n. s n \<in> top1_ball_on X d x e}" by auto
+            ultimately show "finite (top1_ball_on X d x e \<inter> s ` UNIV)"
+              using finite_subset by blast
+          qed
           then have "\<not> {n. s n \<in> top1_ball_on X d x e} \<subseteq> {..m}"
             by (metis atMost_def finite_Collect_le_nat rev_finite_subset)
           then obtain n where "n \<notin> {..m}" "s n \<in> top1_ball_on X d x e" by blast
