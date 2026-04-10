@@ -10474,7 +10474,61 @@ proof -
     next
       fix s :: "nat \<Rightarrow> 'a" assume hs: "\<forall>n. s n \<in> X"
       show "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
-        sorry
+      proof (cases "finite (s ` UNIV)")
+        case True
+        text \<open>Finite range: pigeonhole gives constant subsequence.\<close>
+        then obtain a0 where hinf0: "infinite {n. s n = s a0}"
+          using pigeonhole_infinite[of UNIV s] by auto
+        define x where "x = s a0"
+        have hinf: "infinite {n. s n = x}" using hinf0 x_def by auto
+        have hxX: "x \<in> X" using hs x_def by auto
+        text \<open>Build strict_mono sub from infinite {n. s n = x}.\<close>
+        have hunb: "\<forall>m. \<exists>n > m. s n = x"
+          sorry
+        define pick where "pick = (\<lambda>m. LEAST n. n > m \<and> s n = x)"
+        have hpick_prop: "\<And>m. pick m > m \<and> s (pick m) = x"
+          sorry
+        define sub where "sub = rec_nat (pick 0) (\<lambda>_ prev. pick prev)"
+        have hsub0: "sub 0 = pick 0" unfolding sub_def by simp
+        have hsubS: "\<And>n. sub (Suc n) = pick (sub n)" unfolding sub_def by simp
+        have hsub_val: "\<And>n. s (sub n) = x"
+          sorry
+        have hsub_mono: "\<And>n. sub n < sub (Suc n)"
+          sorry
+        have hsub_strict: "strict_mono sub"
+          using hsub_mono strict_mono_Suc_iff by auto
+        have hsub_conv: "seq_converges_to_on (s \<circ> sub) x X T"
+          sorry
+        then show ?thesis using hsub_strict hxX by blast
+      next
+        case False
+        text \<open>Infinite range: limit point → convergent subsequence.\<close>
+        have hAinf: "infinite (s ` UNIV)" using False by blast
+        have hA: "s ` UNIV \<subseteq> X" using hs by auto
+        obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (s ` UNIV) X T"
+          sorry
+        text \<open>x ∈ closure(range s), extract convergent subsequence via metric balls.\<close>
+        have hxcl: "x \<in> closure_on X T (s ` UNIV)"
+          sorry
+        have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
+          sorry
+        text \<open>Build sub with d(x, s(sub k)) < 1/(k+2).\<close>
+        define pick2 where "pick2 = (\<lambda>(b::nat) (k::nat). LEAST n. n > b \<and> d x (s n) < 1 / real (k + 2))"
+        have hpick2_prop: "\<And>b k. pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
+          sorry
+        define sub2 where "sub2 = rec_nat (pick2 0 0) (\<lambda>k prev. pick2 prev (Suc k))"
+        have hsub2_0: "sub2 0 = pick2 0 0" unfolding sub2_def by simp
+        have hsub2_S: "\<And>k. sub2 (Suc k) = pick2 (sub2 k) (Suc k)" unfolding sub2_def by simp
+        have hsub2_mono: "\<And>k. sub2 k < sub2 (Suc k)"
+          sorry
+        have hsub2_close: "\<And>k. d x (s (sub2 k)) < 1 / real (k + 2)"
+          sorry
+        have hsub2_strict: "strict_mono sub2"
+          using hsub2_mono strict_mono_Suc_iff by auto
+        have hsub2_conv: "seq_converges_to_on (s \<circ> sub2) x X T"
+          sorry
+        then show ?thesis using hsub2_strict hxX by blast
+      qed
     qed
   qed
   text \<open>(3)→(1): seq-compact → compact (Munkres p.179-180).

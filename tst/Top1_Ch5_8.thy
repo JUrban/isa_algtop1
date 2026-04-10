@@ -32359,5 +32359,4 @@ next
     unfolding top1_finite_dimensional_on_def by blast
 qed
 
-
 end
