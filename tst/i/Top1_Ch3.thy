@@ -10526,7 +10526,7 @@ proof -
         have hAinf: "infinite (s ` UNIV)" using False by blast
         have hA: "s ` UNIV \<subseteq> X" using hs by auto
         obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (s ` UNIV) X T"
-          sorry
+          using hlpc hAinf hA unfolding top1_limit_point_compact_on_def by blast
         text \<open>x ∈ closure(range s), extract convergent subsequence via metric balls.\<close>
         have hxcl: "x \<in> closure_on X T (s ` UNIV)"
         proof -
@@ -10539,12 +10539,20 @@ proof -
         text \<open>Build sub with d(x, s(sub k)) < 1/(k+2).\<close>
         define pick2 where "pick2 = (\<lambda>(b::nat) (k::nat). LEAST n. n > b \<and> d x (s n) < 1 / real (k + 2))"
         have hpick2_prop: "\<And>b k. pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
-          sorry
+        proof -
+          fix b k
+          from hball_hit have "\<exists>n. n > b \<and> d x (s n) < 1 / real (k + 2)" by simp
+          then have "(LEAST n. n > b \<and> d x (s n) < 1 / real (k + 2)) > b \<and>
+            d x (s (LEAST n. n > b \<and> d x (s n) < 1 / real (k + 2))) < 1 / real (k + 2)"
+            by (rule LeastI_ex)
+          then show "pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
+            unfolding pick2_def by blast
+        qed
         define sub2 where "sub2 = rec_nat (pick2 0 0) (\<lambda>k prev. pick2 prev (Suc k))"
         have hsub2_0: "sub2 0 = pick2 0 0" unfolding sub2_def by simp
         have hsub2_S: "\<And>k. sub2 (Suc k) = pick2 (sub2 k) (Suc k)" unfolding sub2_def by simp
         have hsub2_mono: "\<And>k. sub2 k < sub2 (Suc k)"
-          sorry
+          using hsub2_S hpick2_prop by simp
         have hsub2_close: "\<And>k. d x (s (sub2 k)) < 1 / real (k + 2)"
           sorry
         have hsub2_strict: "strict_mono sub2"
