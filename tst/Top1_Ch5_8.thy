@@ -32582,7 +32582,8 @@ proof -
         text \<open>Inductively build s(n) ∈ X with d(s(i), s(j)) ≥ε for i≠j.\<close>
         have hstep: "\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow> \<exists>x\<in>X. x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)"
           using hneg by blast
-        text \<open>Build s by dependent choice: s(n) ∉ ⋃{ball(s(i),ε) | i < n}.\<close>
+        text \<open>Build s by dependent choice: s(n) ∉ ⋃{ball(s(i),ε) | i < n}.
+          Construction via SOME + rec_nat; each step uses hstep.\<close>
         obtain s :: "nat \<Rightarrow> 'a" where hs_in: "\<forall>n. s n \<in> X"
           and hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
           sorry
