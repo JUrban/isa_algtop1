@@ -10457,8 +10457,21 @@ proof -
   have h12: "top1_compact_on X T \<longrightarrow> top1_limit_point_compact_on X T"
     using Theorem_28_1 by blast
   have h23: "top1_limit_point_compact_on X T \<longrightarrow> top1_sequentially_compact_on X T"
-    sorry  (* Munkres proof: finite range → constant subseq; infinite range → limit point →
-              extract subseq x_{n_k} ∈ B(x, 1/k) using metric *)
+  proof
+    assume hlpc: "top1_limit_point_compact_on X T"
+    have hTop: "is_topology_on X T" using hlpc unfolding top1_limit_point_compact_on_def by blast
+    show "top1_sequentially_compact_on X T"
+      unfolding top1_sequentially_compact_on_def
+    proof (intro conjI allI impI)
+      show "is_topology_on X T" using hTop by blast
+    next
+      fix s :: "nat \<Rightarrow> 'a" assume hs: "\<forall>n. s n \<in> X"
+      text \<open>If the range is infinite, there's a limit point; extract convergent subsequence.
+        If finite, there's a constant subsequence. Full proof needs metric arguments.\<close>
+      show "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
+        sorry
+    qed
+  qed
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
     sorry  (* Lebesgue number lemma + total boundedness *)
   show ?thesis using h12 h23 h31 by blast
