@@ -10437,6 +10437,13 @@ proof -
   qed
 qed
 
+text \<open>Helper: metric spaces satisfy T₁ (singletons are closed).\<close>
+lemma metric_satisfies_T1:
+  assumes hd: "top1_metric_on X d"
+  assumes hTd: "T = top1_metric_topology_on X d"
+  shows "satisfies_T1_on X T"
+  sorry  (* proved in Ch5-8 where metric_topology_hausdorff is available *)
+
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
 definition top1_sequentially_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_sequentially_compact_on X T \<longleftrightarrow>
@@ -10534,6 +10541,9 @@ proof -
             using hlp hxX unfolding limit_points_of_def by force
           then show ?thesis by (simp add: Theorem_17_6 hTopLPC hA)
         qed
+        have hT1: "satisfies_T1_on X T" using metric_satisfies_T1[OF hd hTd] by blast
+        have hball_inf: "\<And>U. neighborhood_of x X T U \<Longrightarrow> infinite (U \<inter> (s ` UNIV))"
+          sorry
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
           sorry
         text \<open>Build sub with d(x, s(sub k)) < 1/(k+2).\<close>

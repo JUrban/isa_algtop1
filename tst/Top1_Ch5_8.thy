@@ -32359,4 +32359,17 @@ next
     unfolding top1_finite_dimensional_on_def by blast
 qed
 
+text \<open>Metric spaces satisfy T₁ (proved here where metric_topology_hausdorff is available).\<close>
+lemma metric_satisfies_T1:
+  assumes hd: "top1_metric_on X d"
+  assumes hTd: "T = top1_metric_topology_on X d"
+  shows "satisfies_T1_on X T"
+  unfolding satisfies_T1_on_def
+proof (intro conjI ballI)
+  show "is_topology_on X T" using hTd top1_metric_topology_on_is_topology_on[OF hd] by blast
+  fix y assume hyX: "y \<in> X"
+  have hHaus: "is_hausdorff_on X T" using hTd metric_topology_hausdorff[OF hd] by blast
+  show "closedin_on X T {y}" by (metis hyX hHaus singleton_closed_in_hausdorff)
+qed
+
 end
