@@ -1018,6 +1018,8 @@ lemma openin_on_sub_strict: "is_topology_on_strict X T \<Longrightarrow> openin_
 
 (** from \S12 Definition (Finer/coarser/comparable) [top1.tex:96] **)
 (** LATEX VERSION: "T' is finer than T iff T \<subseteq> T' ..." **)
+text \<open>Note: finer\_than does not require T and T' to be topologies on the same set.
+  In practice, this is always ensured by the context (assumptions carry is\_topology\_on).\<close>
 definition finer_than :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "finer_than T T' \<longleftrightarrow> T \<subseteq> T'"
 
@@ -8357,6 +8359,9 @@ lemma top1_PiE_iff:
   "f \<in> top1_PiE I X \<longleftrightarrow> (\<forall>i\<in>I. f i \<in> X i) \<and> (\<forall>i. i \<notin> I \<longrightarrow> f i = undefined)"
   unfolding top1_PiE_def top1_Pi_def top1_extensional_def by simp
 
+text \<open>Note: the condition U i ⊆ X i is technically redundant under is\_topology\_on\_strict
+  (where T i ⊆ Pow (X i) is required). It is kept for compatibility with the weaker
+  is\_topology\_on definition.\<close>
 definition top1_box_basis_on ::
   "'i set \<Rightarrow> ('i \<Rightarrow> 'a set) \<Rightarrow> ('i \<Rightarrow> 'a set set) \<Rightarrow> ('i \<Rightarrow> 'a) set set"
   where

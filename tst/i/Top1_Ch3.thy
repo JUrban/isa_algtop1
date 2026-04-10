@@ -10446,12 +10446,22 @@ definition top1_sequentially_compact_on :: "'a set \<Rightarrow> 'a set set \<Ri
 
 text \<open>Theorem 28.2 (Munkres): In a metrizable space, compact ↔ limit-point compact
   ↔ sequentially compact.\<close>
+text \<open>Theorem 28.2: (1) compact → (2) lp-compact → (3) seq-compact → (1).
+  Part (1)→(2) is Theorem_28_1. Parts (2)→(3) and (3)→(1) need metric arguments.\<close>
 theorem Theorem_28_2:
   assumes hd: "top1_metric_on X d"
   assumes hTd: "T = top1_metric_topology_on X d"
   shows "(top1_compact_on X T \<longleftrightarrow> top1_limit_point_compact_on X T)
        \<and> (top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T)"
-  sorry
+proof -
+  have h12: "top1_compact_on X T \<longrightarrow> top1_limit_point_compact_on X T"
+    using Theorem_28_1 by blast
+  have h23: "top1_limit_point_compact_on X T \<longrightarrow> top1_sequentially_compact_on X T"
+    sorry  (* extract convergent subsequence from limit point *)
+  have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
+    sorry  (* Lebesgue number lemma + total boundedness *)
+  show ?thesis using h12 h23 h31 by blast
+qed
 
 section \<open>\<S>29 Local Compactness\<close>
 
