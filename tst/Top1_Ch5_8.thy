@@ -32766,8 +32766,55 @@ proof -
           using top1_metric_open_contains_ball[OF hd _ hxU] hTd by auto
         text \<open>For large k: t(sub k) ∈ B(x,ε/2) and 1/(sub k+1) < ε/2,
           so B(t(sub k), 1/(sub k+1)) ⊆ B(x,ε) ⊆ U, contradiction.\<close>
-        show False
-          sorry
+        text \<open>Eventually t(sub k) close to x and 1/(sub k+1) small.\<close>
+        have heps2: "0 < \<epsilon>/2" using heps by simp
+        have hball2_open: "top1_ball_on X d x (\<epsilon>/2) \<in> T"
+          using top1_ball_open_in_metric_topology[OF hd hxX heps2] hTd by simp
+        have hx_ball2: "x \<in> top1_ball_on X d x (\<epsilon>/2)"
+          by (metis hxX hd heps2 top1_metric_ball_self_mem)
+        have "neighborhood_of x X T (top1_ball_on X d x (\<epsilon>/2))"
+          by (metis hx_ball2 neighborhood_of_def hball2_open)
+        then obtain N1 where hN1: "\<forall>n\<ge>N1. (t \<circ> sub) n \<in> top1_ball_on X d x (\<epsilon>/2)"
+          by (meson hconv seq_converges_to_on_def)
+        have "\<exists>N2::nat. 1 / real (Suc (sub N2)) < \<epsilon>/2"
+        proof -
+          obtain n :: nat where "real n > 2 / \<epsilon>" using heps
+            by (meson less_imp_inverse_less reals_Archimedean2)
+          then have "1 / real (Suc n) < \<epsilon>/2" using heps by (simp add: field_simps)
+          moreover have "sub n \<ge> n" using hsub strict_mono_imp_increasing by blast
+          ultimately have "1 / real (Suc (sub n)) \<le> 1 / real (Suc n)"
+            by (simp add: frac_le)
+          then have "1 / real (Suc (sub n)) < \<epsilon>/2"
+            using \<open>1 / real (Suc n) < \<epsilon>/2\<close> by linarith
+          then show ?thesis by blast
+        qed
+        then obtain N2 :: nat where hN2: "1 / real (Suc (sub N2)) < \<epsilon>/2" by blast
+        define K where "K = max N1 N2"
+        text \<open>B(t(sub K), 1/(sub K+1)) ⊆ B(x,ε) ⊆ U.\<close>
+        have hK1: "K \<ge> N1" unfolding K_def by simp
+        have hK2: "K \<ge> N2" unfolding K_def by simp
+        have htK_ball: "(t \<circ> sub) K \<in> top1_ball_on X d x (\<epsilon>/2)" using hN1 hK1 by simp
+        have htK_dist: "d x (t (sub K)) < \<epsilon>/2" using htK_ball unfolding top1_ball_on_def by auto
+        have hsubK_ge: "sub K \<ge> sub N2" using hK2 hsub strict_mono_less_eq by blast
+        have h1K: "1 / real (Suc (sub K)) \<le> 1 / real (Suc (sub N2))"
+          using hsubK_ge by (simp add: frac_le)
+
+        have h1K_eps: "1 / real (Suc (sub K)) < \<epsilon>/2" using h1K hN2 by linarith
+        have htKX: "t (sub K) \<in> X" using ht_in by simp
+        have "top1_ball_on X d (t (sub K)) (1/real(Suc(sub K))) \<subseteq> top1_ball_on X d x \<epsilon>"
+        proof (rule subsetI)
+          fix y assume "y \<in> top1_ball_on X d (t (sub K)) (1/real(Suc(sub K)))"
+          then have hyX: "y \<in> X" and hdy: "d (t (sub K)) y < 1/real(Suc(sub K))"
+            unfolding top1_ball_on_def by auto
+          have htri: "d x y \<le> d x (t (sub K)) + d (t (sub K)) y"
+            using hd hxX htKX hyX unfolding top1_metric_on_def by blast
+          have "d x y < \<epsilon>/2 + \<epsilon>/2" using htri htK_dist hdy h1K_eps by linarith
+          then have "d x y < \<epsilon>" by simp
+          then show "y \<in> top1_ball_on X d x \<epsilon>" using hyX unfolding top1_ball_on_def by auto
+        qed
+        then have "top1_ball_on X d (t (sub K)) (1/real(Suc(sub K))) \<subseteq> U"
+          using hball_sub by blast
+        then show False using ht_bad hU by blast
       qed
     qed
     text \<open>Step C: Combine.\<close>
