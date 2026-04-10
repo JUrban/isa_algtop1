@@ -11492,77 +11492,6 @@ definition top1_metric_topology_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a
 definition top1_metrizable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_metrizable_on X T \<longleftrightarrow> (\<exists>d. top1_metric_on X d \<and> T = top1_metric_topology_on X d)"
 
-text \<open>Distance from a point to a set (Munkres §27, used in normality/Urysohn proofs).\<close>
-definition top1_dist_to_set :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a \<Rightarrow> 'a set \<Rightarrow> real" where
-  "top1_dist_to_set d x A = Inf ((\<lambda>a. d x a) ` A)"
-
-lemma dist_to_set_nonneg:
-  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
-  shows "0 \<le> top1_dist_to_set d x A"
-proof -
-  have hnn: "\<forall>a\<in>A. 0 \<le> d x a" using hd hx hA unfolding top1_metric_on_def by blast
-  have hbdd: "bdd_below ((\<lambda>a. d x a) ` A)" using hnn by (intro bdd_belowI[of _ 0]) auto
-  obtain a0 where "a0 \<in> A" using hAne by blast
-  then have "top1_dist_to_set d x A \<le> d x a0"
-    unfolding top1_dist_to_set_def by (intro cInf_lower) (auto simp: hbdd)
-  moreover have "0 \<le> d x a0" using hnn \<open>a0 \<in> A\<close> by blast
-  ultimately show ?thesis
-    unfolding top1_dist_to_set_def using hnn hAne hbdd
-    by (intro cInf_greatest) auto
-qed
-
-text \<open>d(x,A) = 0 iff for every ε > 0, there exists a ∈ A with d(x,a) < ε.\<close>
-lemma dist_to_set_zero_iff_eps:
-  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
-  shows "top1_dist_to_set d x A = 0 \<longleftrightarrow> (\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>)"
-proof -
-  let ?S = "(\<lambda>a. d x a) ` A"
-  have hSne: "?S \<noteq> {}" using hAne by auto
-  have hnn: "\<forall>a\<in>A. 0 \<le> d x a" using hd hx hA unfolding top1_metric_on_def by blast
-  have hbdd: "bdd_below ?S" using hnn by (intro bdd_belowI[of _ 0]) auto
-  have hInf_nn: "0 \<le> Inf ?S" using hnn hSne hbdd by (intro cInf_greatest) auto
-  show ?thesis unfolding top1_dist_to_set_def
-  proof (rule iffI)
-    assume hzero: "Inf ?S = 0"
-    show "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
-    proof (intro allI impI)
-      fix \<epsilon> :: real assume heps: "0 < \<epsilon>"
-      have "\<not> (\<forall>s\<in>?S. \<epsilon> \<le> s)"
-      proof
-        assume "\<forall>s\<in>?S. \<epsilon> \<le> s"
-        then have "\<epsilon> \<le> Inf ?S" using hSne hbdd by (intro cInf_greatest) auto
-        then show False using hzero heps by simp
-      qed
-      then obtain s where "s \<in> ?S" "s < \<epsilon>" by (meson not_le)
-      then obtain a where "a \<in> A" "d x a < \<epsilon>" by auto
-      then show "\<exists>a\<in>A. d x a < \<epsilon>" by blast
-    qed
-  next
-    assume heps: "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
-    show "Inf ?S = 0"
-    proof (rule antisym)
-      show "Inf ?S \<ge> 0" using hInf_nn by simp
-    next
-      show "Inf ?S \<le> 0"
-      proof (rule ccontr)
-        assume "\<not> Inf ?S \<le> 0"
-        then have hgt: "Inf ?S > 0" by simp
-        then obtain a where "a \<in> A" "d x a < Inf ?S"
-          using heps by blast
-        then have "d x a \<in> ?S" by auto
-        then have "Inf ?S \<le> d x a" using hbdd cInf_lower by blast
-        then show False using \<open>d x a < Inf ?S\<close> by simp
-      qed
-    qed
-  qed
-qed
-
-lemma dist_to_set_zero_iff_closure:
-  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
-  shows "top1_dist_to_set d x A = 0 \<longleftrightarrow> x \<in> closure_on X (top1_metric_topology_on X d) A"
-  sorry
-
-(** The standard ball family forms a basis (for the metric topology) on the carrier. **)
 lemma top1_metric_basis_is_basis_on:
   assumes hd: "top1_metric_on X d"
   shows "is_basis_on X (top1_metric_basis_on X d)"
@@ -16789,6 +16718,115 @@ proof -
     qed
 *)
   qed
+qed
+
+
+text \<open>Distance from a point to a set (Munkres §27, used in normality/Urysohn proofs).\<close>
+definition top1_dist_to_set :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a \<Rightarrow> 'a set \<Rightarrow> real" where
+  "top1_dist_to_set d x A = Inf ((\<lambda>a. d x a) ` A)"
+
+lemma dist_to_set_nonneg:
+  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
+  shows "0 \<le> top1_dist_to_set d x A"
+proof -
+  have hnn: "\<forall>a\<in>A. 0 \<le> d x a" using hd hx hA unfolding top1_metric_on_def by blast
+  have hbdd: "bdd_below ((\<lambda>a. d x a) ` A)" using hnn by (intro bdd_belowI[of _ 0]) auto
+  obtain a0 where "a0 \<in> A" using hAne by blast
+  then have "top1_dist_to_set d x A \<le> d x a0"
+    unfolding top1_dist_to_set_def by (intro cInf_lower) (auto simp: hbdd)
+  moreover have "0 \<le> d x a0" using hnn \<open>a0 \<in> A\<close> by blast
+  ultimately show ?thesis
+    unfolding top1_dist_to_set_def using hnn hAne hbdd
+    by (intro cInf_greatest) auto
+qed
+
+text \<open>d(x,A) = 0 iff for every ε > 0, there exists a ∈ A with d(x,a) < ε.\<close>
+lemma dist_to_set_zero_iff_eps:
+  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
+  shows "top1_dist_to_set d x A = 0 \<longleftrightarrow> (\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>)"
+proof -
+  let ?S = "(\<lambda>a. d x a) ` A"
+  have hSne: "?S \<noteq> {}" using hAne by auto
+  have hnn: "\<forall>a\<in>A. 0 \<le> d x a" using hd hx hA unfolding top1_metric_on_def by blast
+  have hbdd: "bdd_below ?S" using hnn by (intro bdd_belowI[of _ 0]) auto
+  have hInf_nn: "0 \<le> Inf ?S" using hnn hSne hbdd by (intro cInf_greatest) auto
+  show ?thesis unfolding top1_dist_to_set_def
+  proof (rule iffI)
+    assume hzero: "Inf ?S = 0"
+    show "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
+    proof (intro allI impI)
+      fix \<epsilon> :: real assume heps: "0 < \<epsilon>"
+      have "\<not> (\<forall>s\<in>?S. \<epsilon> \<le> s)"
+      proof
+        assume "\<forall>s\<in>?S. \<epsilon> \<le> s"
+        then have "\<epsilon> \<le> Inf ?S" using hSne hbdd by (intro cInf_greatest) auto
+        then show False using hzero heps by simp
+      qed
+      then obtain s where "s \<in> ?S" "s < \<epsilon>" by (meson not_le)
+      then obtain a where "a \<in> A" "d x a < \<epsilon>" by auto
+      then show "\<exists>a\<in>A. d x a < \<epsilon>" by blast
+    qed
+  next
+    assume heps: "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
+    show "Inf ?S = 0"
+    proof (rule antisym)
+      show "Inf ?S \<ge> 0" using hInf_nn by simp
+    next
+      show "Inf ?S \<le> 0"
+      proof (rule ccontr)
+        assume "\<not> Inf ?S \<le> 0"
+        then have hgt: "Inf ?S > 0" by simp
+        then obtain a where "a \<in> A" "d x a < Inf ?S"
+          using heps by blast
+        then have "d x a \<in> ?S" by auto
+        then have "Inf ?S \<le> d x a" using hbdd cInf_lower by blast
+        then show False using \<open>d x a < Inf ?S\<close> by simp
+      qed
+    qed
+  qed
+qed
+
+lemma dist_to_set_zero_iff_closure:
+  assumes hd: "top1_metric_on X d" and hx: "x \<in> X" and hA: "A \<subseteq> X" and hAne: "A \<noteq> {}"
+  shows "top1_dist_to_set d x A = 0 \<longleftrightarrow> x \<in> closure_on X (top1_metric_topology_on X d) A"
+proof -
+  let ?T = "top1_metric_topology_on X d"
+  have hT: "is_topology_on X ?T" by (rule top1_metric_topology_on_is_topology_on[OF hd])
+  have heps_iff: "top1_dist_to_set d x A = 0 \<longleftrightarrow> (\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>)"
+    by (rule dist_to_set_zero_iff_eps[OF hd hx hA hAne])
+  have hcl_iff: "x \<in> closure_on X ?T A \<longleftrightarrow> (\<forall>U. neighborhood_of x X ?T U \<longrightarrow> intersects U A)"
+    by (rule Theorem_17_5a[OF hT hx hA])
+  have "(\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>) \<longleftrightarrow> (\<forall>U. neighborhood_of x X ?T U \<longrightarrow> intersects U A)"
+  proof (rule iffI)
+    assume heps: "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
+    show "\<forall>U. neighborhood_of x X ?T U \<longrightarrow> intersects U A"
+    proof (intro allI impI)
+      fix U assume hU: "neighborhood_of x X ?T U"
+      obtain e where he: "0 < e" and hball: "top1_ball_on X d x e \<subseteq> U"
+        using top1_metric_open_contains_ball[OF hd] hU unfolding neighborhood_of_def by blast
+      obtain a where ha: "a \<in> A" and hdxa: "d x a < e" using heps he by blast
+      have "a \<in> top1_ball_on X d x e" unfolding top1_ball_on_def using ha hA hdxa by blast
+      then show "intersects U A" unfolding intersects_def using ha hball by blast
+    qed
+  next
+    assume hnbhd: "\<forall>U. neighborhood_of x X ?T U \<longrightarrow> intersects U A"
+    show "\<forall>\<epsilon>>0. \<exists>a\<in>A. d x a < \<epsilon>"
+    proof (intro allI impI)
+      fix \<epsilon> :: real assume heps: "0 < \<epsilon>"
+      have hball_open: "top1_ball_on X d x \<epsilon> \<in> ?T"
+        using top1_ball_open_in_metric_topology[OF hd hx heps] by blast
+      have "d x x = 0" using hd hx unfolding top1_metric_on_def by blast
+      then have hx_ball: "x \<in> top1_ball_on X d x \<epsilon>"
+        unfolding top1_ball_on_def using hx heps by simp
+      have "neighborhood_of x X ?T (top1_ball_on X d x \<epsilon>)"
+        unfolding neighborhood_of_def using hball_open hx_ball by blast
+      then have "intersects (top1_ball_on X d x \<epsilon>) A" using hnbhd by blast
+      then obtain a where "a \<in> top1_ball_on X d x \<epsilon>" "a \<in> A"
+        unfolding intersects_def by blast
+      then show "\<exists>a\<in>A. d x a < \<epsilon>" unfolding top1_ball_on_def by blast
+    qed
+  qed
+  then show ?thesis using heps_iff hcl_iff by simp
 qed
 
 section \<open>\<S>21 The Metric Topology (continued)\<close>
