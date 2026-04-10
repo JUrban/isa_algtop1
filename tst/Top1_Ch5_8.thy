@@ -32743,10 +32743,17 @@ proof -
         assume hneg: "\<not> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
         text \<open>For each n, ∃x_n with B(x_n, 1/(n+1)) not in any cover element.\<close>
         have hstep: "\<And>n. \<exists>x\<in>X. \<forall>U\<in>Uc. \<not> top1_ball_on X d x (1/real(Suc n)) \<subseteq> U"
-          sorry
+        proof -
+          fix n
+          have "1 / real (Suc n) > 0" by simp
+          have "\<not> (\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x (1/real(Suc n)) \<subseteq> U)"
+            using hneg \<open>1 / real (Suc n) > 0\<close> by simp
+          then show "\<exists>x\<in>X. \<forall>U\<in>Uc. \<not> top1_ball_on X d x (1/real(Suc n)) \<subseteq> U"
+            by blast
+        qed
         obtain t where ht_in: "\<forall>n. t n \<in> X"
           and ht_bad: "\<forall>n. \<forall>U\<in>Uc. \<not> top1_ball_on X d (t n) (1/real(Suc n)) \<subseteq> U"
-          sorry
+          by (metis hstep)
         text \<open>Convergent subsequence.\<close>
         obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
           and hconv: "seq_converges_to_on (t \<circ> sub) x X T"
@@ -32754,8 +32761,9 @@ proof -
         text \<open>x is in some cover element U, which contains B(x,ε).\<close>
         obtain U where hU: "U \<in> Uc" and hxU: "x \<in> U"
           using hUc hxX by blast
-        obtain \<epsilon> where heps: "0 < \<epsilon>" and hball_sub: "top1_ball_on X d x \<epsilon> \<subseteq> U"
-          sorry
+        have "U \<in> T" using hU hUc by blast
+        then obtain \<epsilon> where heps: "0 < \<epsilon>" and hball_sub: "top1_ball_on X d x \<epsilon> \<subseteq> U"
+          using top1_metric_open_contains_ball[OF hd _ hxU] hTd by auto
         text \<open>For large k: t(sub k) ∈ B(x,ε/2) and 1/(sub k+1) < ε/2,
           so B(t(sub k), 1/(sub k+1)) ⊆ B(x,ε) ⊆ U, contradiction.\<close>
         show False
