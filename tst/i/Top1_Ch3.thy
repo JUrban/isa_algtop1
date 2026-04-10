@@ -10484,7 +10484,14 @@ proof -
         have hxX: "x \<in> X" using hs x_def by auto
         text \<open>Build strict_mono sub from infinite {n. s n = x}.\<close>
         have hunb: "\<forall>m. \<exists>n > m. s n = x"
-          sorry
+        proof (intro allI)
+          fix m
+          have "\<not> {n. s n = x} \<subseteq> {..m}"
+            by (metis hinf atMost_def finite_Collect_le_nat rev_finite_subset)
+          then obtain n where "n \<notin> {..m}" "s n = x" by blast
+          then have "n > m" "s n = x" by auto
+          then show "\<exists>n > m. s n = x" by blast
+        qed
         define pick where "pick = (\<lambda>m. LEAST n. n > m \<and> s n = x)"
         have hpick_prop: "\<And>m. pick m > m \<and> s (pick m) = x"
           sorry
@@ -10492,13 +10499,20 @@ proof -
         have hsub0: "sub 0 = pick 0" unfolding sub_def by simp
         have hsubS: "\<And>n. sub (Suc n) = pick (sub n)" unfolding sub_def by simp
         have hsub_val: "\<And>n. s (sub n) = x"
-          sorry
+          by (metis hsubS hpick_prop hsub0 not0_implies_Suc)
         have hsub_mono: "\<And>n. sub n < sub (Suc n)"
-          sorry
+          using hsubS hpick_prop by simp
         have hsub_strict: "strict_mono sub"
           using hsub_mono strict_mono_Suc_iff by auto
         have hsub_conv: "seq_converges_to_on (s \<circ> sub) x X T"
-          sorry
+          unfolding seq_converges_to_on_def
+        proof (intro conjI allI impI)
+          show "x \<in> X" using hxX by blast
+          fix U assume "neighborhood_of x X T U"
+          then have "x \<in> U" by (simp add: neighborhood_of_def)
+          then show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub) n \<in> U"
+            by (metis \<open>x \<in> U\<close> hsub_val comp_apply)
+        qed
         then show ?thesis using hsub_strict hxX by blast
       next
         case False
@@ -10509,7 +10523,11 @@ proof -
           sorry
         text \<open>x ∈ closure(range s), extract convergent subsequence via metric balls.\<close>
         have hxcl: "x \<in> closure_on X T (s ` UNIV)"
-          sorry
+        proof -
+          have "x \<in> limit_points_of (s ` UNIV) X T"
+            using hlp hxX unfolding limit_points_of_def by force
+          then show ?thesis by (simp add: Theorem_17_6 hTopLPC hA)
+        qed
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
           sorry
         text \<open>Build sub with d(x, s(sub k)) < 1/(k+2).\<close>
