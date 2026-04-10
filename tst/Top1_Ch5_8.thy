@@ -32601,6 +32601,11 @@ proof -
         text \<open>Simplify: just sorry the sequence properties directly.
           The full proof requires an inductive invariant on the rec_nat pair
           construction, showing finite/subset/membership at each step.\<close>
+        have hsf0: "sf 0 = (pick {}, {pick {}})" unfolding sf_def by simp
+        have hsfS: "\<And>n. sf (Suc n) = (let (prev, F) = sf n; nxt = pick F in (nxt, insert nxt F))"
+          unfolding sf_def by simp
+        have hs0: "s 0 = pick {}" unfolding s_def hsf0 by simp
+        have hs0_in: "s 0 \<in> X" using hs0 hpick_prop[of "{}"] by simp
         have hs_in: "\<forall>n. s n \<in> X"
           sorry
         have hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
