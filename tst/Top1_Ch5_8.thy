@@ -32584,8 +32584,23 @@ proof -
           using hneg by blast
         text \<open>Build s by dependent choice: s(n) ∉ ⋃{ball(s(i),ε) | i < n}.
           Construction via SOME + rec_nat; each step uses hstep.\<close>
-        obtain s :: "nat \<Rightarrow> 'a" where hs_in: "\<forall>n. s n \<in> X"
-          and hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
+        text \<open>Build sequence + accumulated set using rec_nat on pairs.\<close>
+        define pick where "pick = (\<lambda>(F::'a set). SOME x. x \<in> X \<and> x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>))"
+        have hpick_prop: "\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow>
+          pick F \<in> X \<and> pick F \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)"
+        proof -
+          fix F :: "'a set" assume hfin: "finite F" and hFX: "F \<subseteq> X"
+          from hstep[OF hfin hFX] obtain x where "x \<in> X" "x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)" by blast
+          then have "\<exists>x. x \<in> X \<and> x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)" by blast
+          then show "pick F \<in> X \<and> pick F \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)"
+            unfolding pick_def by (rule someI_ex)
+        qed
+        define sf where "sf = rec_nat (pick {}, {pick {}})
+          (\<lambda>n (prev, F). let nxt = pick F in (nxt, insert nxt F))"
+        define s where "s n = fst (sf n)" for n
+        have hs_in: "\<forall>n. s n \<in> X"
+          sorry
+        have hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
           sorry
         text \<open>By seq-compactness, s has a convergent subsequence.\<close>
         obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
