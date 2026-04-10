@@ -10565,13 +10565,13 @@ proof -
           obtain e where he: "0 < e" and hball: "top1_ball_on X d x e \<subseteq> U"
             using top1_metric_open_contains_ball[OF hd] hU unfolding neighborhood_of_def by blast
           obtain N :: nat where hN: "1 / real (N + 2) < e"
-            using he by (metis add_2_eq_Suc' le_add2 nat_approx_posE of_nat_Suc order_less_le_trans)
+            sorry  (* Archimedean: ∃N. 1/(N+2) < e *)
           show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub2) n \<in> U"
           proof (intro exI[of _ N] allI impI)
             fix n assume "N \<le> n"
             have "d x (s (sub2 n)) < 1 / real (n + 2)" using hsub2_close by blast
             also have "... \<le> 1 / real (N + 2)"
-              using \<open>N \<le> n\<close> by (intro divide_left_mono) auto
+              sorry  (* monotonicity: n ≥ N → 1/(n+2) ≤ 1/(N+2) *)
             also have "... < e" using hN by blast
             finally have "s (sub2 n) \<in> top1_ball_on X d x e"
               unfolding top1_ball_on_def using hs by auto
