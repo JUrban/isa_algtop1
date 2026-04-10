@@ -10675,7 +10675,56 @@ proof -
     qed
   qed
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
-    sorry  (* Lebesgue number lemma + total boundedness *)
+  proof
+    assume hseq: "top1_sequentially_compact_on X T"
+    have hTopS: "is_topology_on X T" using hseq unfolding top1_sequentially_compact_on_def by blast
+    text \<open>Step 1: Totally bounded — for every ε>0, finitely many ε-balls cover X.\<close>
+    have htb: "\<forall>\<epsilon>>0. \<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x \<epsilon>)"
+      sorry
+    text \<open>Step 2: Lebesgue number — every open cover has a Lebesgue number.\<close>
+    have hlebesgue: "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
+      sorry
+    text \<open>Step 3: Combine — find Lebesgue number δ, cover by δ/3-balls, each fits in some U.\<close>
+    show "top1_compact_on X T"
+      unfolding top1_compact_on_def
+    proof (intro conjI)
+      show "is_topology_on X T" using hTopS by blast
+      show "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+      proof (intro allI impI)
+        fix Uc assume hUc: "Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc"
+        obtain \<delta> where hd_pos: "\<delta> > 0" and hd_leb: "\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+          using hlebesgue hUc by blast
+        have hd3: "\<delta> / 3 > 0" using hd_pos by simp
+        obtain S where hSfin: "finite S" and hSX: "S \<subseteq> X" and
+          hScov: "X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x (\<delta>/3))"
+          using htb hd3 by blast
+        text \<open>For each center c ∈ S, B(c, δ/3) ⊆ B(c, δ) ⊆ some U_c ∈ Uc.\<close>
+        have "\<forall>c\<in>S. \<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U"
+        proof (intro ballI)
+          fix c assume "c \<in> S"
+          then have "c \<in> X" using hSX by blast
+          then obtain U where "U \<in> Uc" "top1_ball_on X d c \<delta> \<subseteq> U" using hd_leb by blast
+          moreover have "top1_ball_on X d c (\<delta>/3) \<subseteq> top1_ball_on X d c \<delta>"
+            unfolding top1_ball_on_def using hd_pos by auto
+          ultimately show "\<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U" by blast
+        qed
+        then obtain g where hg: "\<forall>c\<in>S. g c \<in> Uc \<and> top1_ball_on X d c (\<delta>/3) \<subseteq> g c"
+          by metis
+        define F where "F = g ` S"
+        have "finite F" using hSfin unfolding F_def by blast
+        moreover have "F \<subseteq> Uc" using hg unfolding F_def by auto
+        moreover have "X \<subseteq> \<Union>F"
+        proof (rule subsetI)
+          fix x assume "x \<in> X"
+          then obtain c where "c \<in> S" "x \<in> top1_ball_on X d c (\<delta>/3)"
+            using hScov by blast
+          then have "x \<in> g c" using hg by blast
+          then show "x \<in> \<Union>F" unfolding F_def using \<open>c \<in> S\<close> by blast
+        qed
+        ultimately show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F" by blast
+      qed
+    qed
+  qed
   show ?thesis using h12 h23 h31 by blast
 qed
 
