@@ -10524,8 +10524,56 @@ proof -
         have hA: "s ` UNIV \<subseteq> X" using hs by auto
         then obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (s ` UNIV) X T"
           using hlpc hAinf unfolding top1_limit_point_compact_on_def by blast
-        text \<open>From the limit point, extract a convergent subsequence using metric balls.\<close>
-        show ?thesis sorry
+        text \<open>x is a limit point, so every ball B(x,ε) contains some s(n) ≠ x (hence ∈ range(s)).
+          Since range(s) is infinite, we can always find new indices.\<close>
+        have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
+          sorry  (* limit point + infinite range → balls hit at arbitrarily large indices *)
+        text \<open>Build strict_mono sub with d(x, s(sub k)) < 1/(k+2), using LEAST.\<close>
+        define pick2 where "pick2 = (\<lambda>(bound::nat) (k::nat). LEAST n. n > bound \<and> d x (s n) < 1 / real (k + 2))"
+        define sub2 where "sub2 = rec_nat (pick2 0 0) (\<lambda>k prev. pick2 prev (Suc k))"
+        have hsub2_0: "sub2 0 = pick2 0 0" unfolding sub2_def by simp
+        have hsub2_S: "\<And>k. sub2 (Suc k) = pick2 (sub2 k) (Suc k)" unfolding sub2_def by simp
+        have hpick2_prop: "\<And>b k. pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
+        proof -
+          fix b k
+          have "\<exists>n > b. d x (s n) < 1 / real (k + 2)" using hball_hit by simp
+          then show "pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
+            unfolding pick2_def by (metis (mono_tags, lifting) LeastI_ex)
+        qed
+        have hsub2_mono: "\<And>k. sub2 k < sub2 (Suc k)"
+          using hsub2_S hpick2_prop by simp
+        have hsub2_close: "\<And>k. d x (s (sub2 k)) < 1 / real (k + 2)"
+        proof -
+          fix k show "d x (s (sub2 k)) < 1 / real (k + 2)"
+          proof (induction k)
+            case 0 show ?case using hsub2_0 hpick2_prop[of 0 0] by simp
+          next
+            case (Suc k) show ?case using hsub2_S hpick2_prop[of "sub2 k" "Suc k"] by simp
+          qed
+        qed
+        have "strict_mono sub2" using hsub2_mono by (simp add: strict_mono_Suc_iff)
+        moreover have "seq_converges_to_on (s \<circ> sub2) x X T"
+          unfolding seq_converges_to_on_def hTd
+        proof (intro conjI allI impI)
+          show "x \<in> X" using hxX by blast
+          fix U assume hU: "neighborhood_of x X (top1_metric_topology_on X d) U"
+          obtain e where he: "0 < e" and hball: "top1_ball_on X d x e \<subseteq> U"
+            using top1_metric_open_contains_ball[OF hd] hU unfolding neighborhood_of_def by blast
+          obtain N :: nat where hN: "1 / real (N + 2) < e"
+            using he by (metis add_2_eq_Suc' le_add2 nat_approx_posE of_nat_Suc order_less_le_trans)
+          show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub2) n \<in> U"
+          proof (intro exI[of _ N] allI impI)
+            fix n assume "N \<le> n"
+            have "d x (s (sub2 n)) < 1 / real (n + 2)" using hsub2_close by blast
+            also have "... \<le> 1 / real (N + 2)"
+              using \<open>N \<le> n\<close> by (intro divide_left_mono) auto
+            also have "... < e" using hN by blast
+            finally have "s (sub2 n) \<in> top1_ball_on X d x e"
+              unfolding top1_ball_on_def using hs by auto
+            then show "(s \<circ> sub2) n \<in> U" using hball by (auto simp: o_def)
+          qed
+        qed
+        ultimately show ?thesis using hxX by blast
       qed
     qed
   qed
