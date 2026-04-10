@@ -32636,10 +32636,26 @@ proof -
           which contains all previous s values.\<close>
         text \<open>Key: snd(sf n) contains all s values through n.\<close>
         have hsnd_contains: "\<forall>n. s ` {..n} \<subseteq> snd (sf n)"
-        proof (rule allI, rule subsetI)
-          fix n x assume "x \<in> s ` {..n}"
-          then show "x \<in> snd (sf n)"
-            sorry
+        proof (rule allI)
+          fix n show "s ` {..n} \<subseteq> snd (sf n)"
+          proof (induction n)
+            case 0
+            have "snd (sf 0) = {pick {}}" unfolding sf_def by simp
+            moreover have "s 0 = pick {}" unfolding s_def sf_def by simp
+            ultimately show ?case by simp
+          next
+            case (Suc n)
+            have "snd (sf (Suc n)) = insert (pick (snd (sf n))) (snd (sf n))"
+              unfolding sf_def by (simp add: case_prod_beta Let_def)
+            moreover have "s (Suc n) = pick (snd (sf n))" unfolding s_def sf_def
+              by (simp add: case_prod_beta Let_def)
+            moreover have "s ` {..n} \<subseteq> snd (sf n)" using Suc by blast
+            ultimately show ?case
+              apply (intro subsetI)
+              apply (simp add: atMost_Suc image_Un)
+              apply blast
+              done
+          qed
         qed
         have hs_outside: "\<forall>n. s (Suc n) \<notin> (\<Union>y\<in>snd(sf n). top1_ball_on X d y \<epsilon>)"
         proof (rule allI)
