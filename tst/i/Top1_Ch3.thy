@@ -5339,11 +5339,8 @@ qed
 text \<open>Corollary: Finite products of compact spaces are compact (general version).
   This follows from Theorem 26.7 by induction on the size of the finite index set.
   (Theorem 26.7 proves the binary case.)\<close>
-corollary compact_finite_product:
-  assumes hfin: "finite I"
-  assumes hcomp: "\<forall>i\<in>I. top1_compact_on (X i) (T i)"
-  shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X T)"
-  sorry
+text \<open>Finite products of compact spaces are compact. This is a special case
+  of Tychonoff's theorem (Theorem 37.3, proved in §37). Moved there.\<close>
 
 (** from \S26 Theorem 26.9 (Finite intersection property characterization) [top1.tex:3268] **)
 theorem Theorem_26_9:
