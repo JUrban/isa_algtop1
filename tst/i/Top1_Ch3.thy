@@ -30,7 +30,84 @@ lemma Lemma_23_1_proper:
     is_topology_on Y TY \<and>
     (\<nexists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
            A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {})"
-  sorry  (* needs closure_on properties for subspace separation characterization *)
+proof -
+  have hTY: "is_topology_on Y TY" unfolding TY_def
+    by (rule subspace_topology_is_topology_on[OF hTX hYX])
+  show ?thesis
+  proof (rule iffI)
+    assume hconn: "top1_connected_on Y TY"
+    show "is_topology_on Y TY \<and> (\<nexists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
+           A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {})"
+    proof (intro conjI)
+      show "is_topology_on Y TY" using hTY by blast
+    next
+      show "\<nexists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
+             A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {}"
+      proof (rule notI)
+        assume "\<exists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
+               A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {}"
+        then obtain A B where hAne: "A \<noteq> {}" and hBne: "B \<noteq> {}" and hAB: "A \<union> B = Y"
+          and hdisj: "A \<inter> B = {}" and hAclB: "A \<inter> closure_on Y TY B = {}"
+          and hBclA: "B \<inter> closure_on Y TY A = {}" by blast
+        text \<open>A ∩ cl(B) = {} means cl(B) ⊆ B (since A ∪ B = Y).
+          So B is closed in Y. Similarly A is closed. So A and B are open.\<close>
+        have hBsub: "B \<subseteq> Y" using hAB by blast
+        have hAsub: "A \<subseteq> Y" using hAB by blast
+        have hclB_Y: "closure_on Y TY B \<subseteq> Y"
+          by (rule closure_on_subset_carrier[OF hTY hBsub])
+        have hclB_sub: "closure_on Y TY B \<subseteq> B"
+          using hAclB hAB hclB_Y by blast
+        have "B \<subseteq> closure_on Y TY B" by (rule subset_closure_on)
+        then have hclB_eq: "closure_on Y TY B = B" using hclB_sub by blast
+        have hBclosed: "closedin_on Y TY B"
+          using closure_on_closed[OF hTY hBsub] hclB_eq by simp
+        have hclA_Y: "closure_on Y TY A \<subseteq> Y"
+          by (rule closure_on_subset_carrier[OF hTY hAsub])
+        have hclA_sub: "closure_on Y TY A \<subseteq> A"
+          using hBclA hAB hclA_Y by blast
+        have "A \<subseteq> closure_on Y TY A" by (rule subset_closure_on)
+        then have hclA_eq: "closure_on Y TY A = A" using hclA_sub by blast
+        have hAclosed: "closedin_on Y TY A"
+          using closure_on_closed[OF hTY hAsub] hclA_eq by simp
+        have hYmB: "Y - B = A" using hAB hdisj by auto
+        have hYmA: "Y - A = B" using hAB hdisj by auto
+        have hAopen: "A \<in> TY" using hBclosed hYmB unfolding closedin_on_def by auto
+        have hBopen: "B \<in> TY" using hAclosed hYmA unfolding closedin_on_def by auto
+        then have "top1_is_separation_on Y TY A B"
+          unfolding top1_is_separation_on_def using hAopen hBopen hAne hBne hdisj hAB by blast
+        then show False using hconn unfolding top1_connected_on_def top1_is_separation_on_def
+          using hAopen hBopen hAne hBne hdisj hAB by blast
+      qed
+    qed
+  next
+    assume h: "is_topology_on Y TY \<and> (\<nexists>A B. A \<noteq> {} \<and> B \<noteq> {} \<and> A \<union> B = Y \<and> A \<inter> B = {} \<and>
+           A \<inter> closure_on Y TY B = {} \<and> B \<inter> closure_on Y TY A = {})"
+    show "top1_connected_on Y TY"
+      unfolding top1_connected_on_def
+    proof (intro conjI)
+      show "is_topology_on Y TY" using hTY by blast
+    next
+      show "\<nexists>U V. U \<in> TY \<and> V \<in> TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = Y"
+      proof (rule notI)
+        assume "\<exists>U V. U \<in> TY \<and> V \<in> TY \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = Y"
+        then obtain U V where hU: "U \<in> TY" and hV: "V \<in> TY" and hUne: "U \<noteq> {}"
+          and hVne: "V \<noteq> {}" and hdisj: "U \<inter> V = {}" and hunion: "U \<union> V = Y" by blast
+        text \<open>U, V open + complementary in Y → each is closed. So cl(U) = U, cl(V) = V.\<close>
+        have hUsub: "U \<subseteq> Y" using hunion by auto
+        have hVsub: "V \<subseteq> Y" using hunion by auto
+        have "Y - U = V" using hdisj hunion by auto
+        then have hUclosed: "closedin_on Y TY U" unfolding closedin_on_def using hUsub hV by auto
+        have "Y - V = U" using hdisj hunion by auto
+        then have hVclosed: "closedin_on Y TY V" unfolding closedin_on_def using hVsub hU by auto
+        have hclV_sub: "closure_on Y TY V \<subseteq> V" by (rule closure_on_subset_of_closed[OF hVclosed subset_refl])
+        then have hUclU: "U \<inter> closure_on Y TY V = {}" using hdisj by blast
+        have hclU_sub: "closure_on Y TY U \<subseteq> U" by (rule closure_on_subset_of_closed[OF hUclosed subset_refl])
+        then have hVclV: "V \<inter> closure_on Y TY U = {}" using hdisj by blast
+        then show False using h hUne hVne hunion hdisj hUclU hVclV by blast
+      qed
+    qed
+  qed
+qed
 
 text \<open>Alternate characterization: X is connected iff the only clopen subsets are {} and X.\<close>
 lemma connected_iff_clopen:
