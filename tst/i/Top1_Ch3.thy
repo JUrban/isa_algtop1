@@ -270,6 +270,15 @@ proof -
   qed
 qed
 
+text \<open>Lemma 23.2 alternate form: Y misses C or D entirely.\<close>
+corollary Lemma_23_2_disjoint:
+  assumes hTX: "is_topology_on X TX"
+  assumes hsep: "top1_is_separation_on X TX C D"
+  assumes hYX: "Y \<subseteq> X"
+  assumes hconn: "top1_connected_on Y (subspace_topology X TX Y)"
+  shows "Y \<inter> D = {} \<or> Y \<inter> C = {}"
+  using Lemma_23_2[OF assms] assms(2) unfolding top1_is_separation_on_def by blast
+
 (** from \S23 Theorem 23.3 [top1.tex:2647] **)
 theorem Theorem_23_3:
   fixes A :: "'i \<Rightarrow> 'a set"
@@ -10427,6 +10436,22 @@ proof -
     qed
   qed
 qed
+
+text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
+definition top1_sequentially_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_sequentially_compact_on X T \<longleftrightarrow>
+     is_topology_on X T \<and>
+     (\<forall>s. (\<forall>n::nat. s n \<in> X) \<longrightarrow>
+       (\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T))"
+
+text \<open>Theorem 28.2 (Munkres): In a metrizable space, compact ↔ limit-point compact
+  ↔ sequentially compact.\<close>
+theorem Theorem_28_2:
+  assumes hd: "top1_metric_on X d"
+  assumes hTd: "T = top1_metric_topology_on X d"
+  shows "(top1_compact_on X T \<longleftrightarrow> top1_limit_point_compact_on X T)
+       \<and> (top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T)"
+  sorry
 
 section \<open>\<S>29 Local Compactness\<close>
 
