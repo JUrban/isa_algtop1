@@ -10534,8 +10534,33 @@ proof -
             unfolding limit_points_of_def using hlp hxX by blast
           then show ?thesis using Theorem_17_6[OF hTop hA] by blast
         qed
+        text \<open>In a T₁ space, limit point → every nbhd has infinitely many A-points (Thm 17.9).
+          Since metric spaces are Hausdorff hence T₁.\<close>
+        have hT1: "satisfies_T1_on X T"
+          unfolding satisfies_T1_on_def hTd
+          sorry  (* metric Hausdorff → T₁: singletons closed in Hausdorff *)
+        have hball_inf: "\<And>U. neighborhood_of x X T U \<Longrightarrow> infinite (U \<inter> (s ` UNIV))"
+          using Theorem_17_9[OF hT1 hA hxX] hlp by blast
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
-          sorry  (* from hxcl + infinite range: every ball has infinitely many indices *)
+        proof -
+          fix e :: real and m :: nat assume he: "0 < e"
+          have hball_open: "top1_ball_on X d x e \<in> T"
+            using top1_ball_open_in_metric_topology[OF hd hxX he] hTd by simp
+          have "d x x = 0" using hd hxX unfolding top1_metric_on_def by blast
+          then have hx_ball: "x \<in> top1_ball_on X d x e"
+            unfolding top1_ball_on_def using hxX he by simp
+          have "neighborhood_of x X T (top1_ball_on X d x e)"
+            unfolding neighborhood_of_def using hball_open hx_ball by blast
+          then have hinf_ball: "infinite (top1_ball_on X d x e \<inter> (s ` UNIV))" using hball_inf by blast
+          have "s ` {n. s n \<in> top1_ball_on X d x e} = top1_ball_on X d x e \<inter> (s ` UNIV)"
+            by auto
+          then have "infinite {n. s n \<in> top1_ball_on X d x e}"
+            using hinf_ball finite_imageD by (metis finite_image_iff)
+          then have "\<not> {n. s n \<in> top1_ball_on X d x e} \<subseteq> {..m}"
+            using finite_atMost finite_subset by blast
+          then obtain n where "s n \<in> top1_ball_on X d x e" "n > m" by auto
+          then show "\<exists>n > m. d x (s n) < e" unfolding top1_ball_on_def by auto
+        qed
         text \<open>Build strict_mono sub with d(x, s(sub k)) < 1/(k+2), using LEAST.\<close>
         define pick2 where "pick2 = (\<lambda>(bound::nat) (k::nat). LEAST n. n > bound \<and> d x (s n) < 1 / real (k + 2))"
         define sub2 where "sub2 = rec_nat (pick2 0 0) (\<lambda>k prev. pick2 prev (Suc k))"
