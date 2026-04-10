@@ -10537,7 +10537,58 @@ proof -
         text \<open>In a T₁ space, limit point → every nbhd has infinitely many A-points (Thm 17.9).
           Since metric spaces are Hausdorff hence T₁.\<close>
         have hT1: "satisfies_T1_on X T"
-          sorry  (* metric → Hausdorff → T₁ *)
+          unfolding satisfies_T1_on_def
+        proof (intro conjI ballI)
+          show "is_topology_on X T" using hTop by blast
+        next
+          fix y assume hyX: "y \<in> X"
+          show "closedin_on X T {y}"
+          proof (rule closedin_intro)
+            show "{y} \<subseteq> X" using hyX by blast
+            text \<open>X - {y} is open: for each z ≠ y, B(z, d(z,y)) is an open set containing z
+              and missing y. So X - {y} is a union of open sets.\<close>
+            have hcover: "\<forall>z \<in> X - {y}. \<exists>U. U \<in> T \<and> z \<in> U \<and> U \<subseteq> X - {y}"
+            proof (intro ballI)
+              fix z assume hz: "z \<in> X - {y}"
+              then have hzX: "z \<in> X" and hzy: "z \<noteq> y" by auto
+              have hdpos: "d z y > 0"
+                using hd hzX hyX hzy unfolding top1_metric_on_def by (metis order_le_less)
+              have hball_open: "top1_ball_on X d z (d z y) \<in> T"
+                using top1_ball_open_in_metric_topology[OF hd hzX hdpos] hTd by simp
+              have "d z z = 0" using hd hzX unfolding top1_metric_on_def by blast
+              then have hz_in: "z \<in> top1_ball_on X d z (d z y)"
+                unfolding top1_ball_on_def using hzX hdpos by simp
+              have hball_sub: "top1_ball_on X d z (d z y) \<subseteq> X - {y}"
+              proof (rule subsetI)
+                fix w assume "w \<in> top1_ball_on X d z (d z y)"
+                then have hwX: "w \<in> X" and hdwz: "d z w < d z y"
+                  unfolding top1_ball_on_def by auto
+                have "w \<noteq> y"
+                proof
+                  assume "w = y"
+                  then have "d z w = d z y" by simp
+                  then show False using hdwz by simp
+                qed
+                then show "w \<in> X - {y}" using hwX by blast
+              qed
+              show "\<exists>U. U \<in> T \<and> z \<in> U \<and> U \<subseteq> X - {y}"
+                using hball_open hz_in hball_sub by blast
+            qed
+            show "X - {y} \<in> T"
+            proof -
+              define UU where "UU = {U \<in> T. U \<subseteq> X - {y}}"
+              have "UU \<subseteq> T" unfolding UU_def by blast
+              then have hUU_open: "\<Union>UU \<in> T"
+                using hTop unfolding is_topology_on_def by blast
+              have "\<Union>UU = X - {y}"
+              proof (rule equalityI)
+                show "\<Union>UU \<subseteq> X - {y}" unfolding UU_def by blast
+                show "X - {y} \<subseteq> \<Union>UU" using hcover unfolding UU_def by blast
+              qed
+              then show ?thesis using hUU_open by simp
+            qed
+          qed
+        qed
         have hball_inf: "\<And>U. neighborhood_of x X T U \<Longrightarrow> infinite (U \<inter> (s ` UNIV))"
           using Theorem_17_9[OF hT1 hA hxX] hlp by blast
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
