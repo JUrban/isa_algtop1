@@ -10457,10 +10457,20 @@ proof -
   text \<open>(1)→(2): compact → lp-compact by Theorem_28_1.\<close>
   have h12: "top1_compact_on X T \<longrightarrow> top1_limit_point_compact_on X T"
     using Theorem_28_1 by blast
-  text \<open>(2)→(3): lp-compact → seq-compact.\<close>
+  text \<open>(2)→(3): lp-compact → seq-compact (Munkres p.179).
+    Given sequence (x_n): if range finite, pigeonhole → constant subseq.
+    If range infinite, lp-compactness → limit point x. By T₁ (from metric),
+    Theorem_17_9 gives infinitely many range points in each B(x,1/k).
+    Build strict_mono sub with d(x,s(sub k)) < 1/(k+2) via LEAST.\<close>
   have h23: "top1_limit_point_compact_on X T \<longrightarrow> top1_sequentially_compact_on X T"
     sorry
-  text \<open>(3)→(1): seq-compact → compact.\<close>
+  text \<open>(3)→(1): seq-compact → compact (Munkres p.179-180).
+    Step A: seq-compact → totally bounded (if not, ∃ε and infinite sequence with pairwise
+    distance ≥ε, contradicting seq-compactness).
+    Step B: Lebesgue number lemma — every open cover of a seq-compact metric space has
+    a Lebesgue number δ (if not, ∃x_n with B(x_n,1/n) not in any cover element;
+    convergent subseq → contradiction).
+    Step C: combine — Lebesgue number δ, cover by δ/3-balls, each fits in cover element.\<close>
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
     sorry
   show ?thesis using h12 h23 h31 by blast
