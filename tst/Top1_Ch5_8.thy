@@ -32473,9 +32473,27 @@ proof -
         qed
         have hT1: "satisfies_T1_on X T" using metric_satisfies_T1[OF hd hTd] by blast
         have hball_inf: "\<And>U. neighborhood_of x X T U \<Longrightarrow> infinite (U \<inter> (s ` UNIV))"
-          sorry
+          by (metis Theorem_17_9 hlp hxX hA hT1)
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
-          sorry
+        proof -
+          fix e :: real and m :: nat assume he: "0 < e"
+          have hball_open: "top1_ball_on X d x e \<in> T"
+            sorry
+          have hx_ball: "x \<in> top1_ball_on X d x e"
+            by (metis hxX hd he top1_metric_ball_self_mem)
+          have "neighborhood_of x X T (top1_ball_on X d x e)"
+            by (metis hx_ball hball_open neighborhood_of_def)
+          then have hinf_int: "infinite (top1_ball_on X d x e \<inter> s ` UNIV)"
+            using hball_inf by blast
+          then have "infinite {n. s n \<in> top1_ball_on X d x e}"
+            sorry
+          then have "\<not> {n. s n \<in> top1_ball_on X d x e} \<subseteq> {..m}"
+            by (metis atMost_def finite_Collect_le_nat rev_finite_subset)
+          then obtain n where "n \<notin> {..m}" "s n \<in> top1_ball_on X d x e" by blast
+          then have "n > m" "s n \<in> top1_ball_on X d x e" by auto
+          then show "\<exists>n > m. d x (s n) < e"
+            unfolding top1_ball_on_def by blast
+        qed
         text \<open>Build sub with d(x, s(sub k)) < 1/(k+2).\<close>
         define pick2 where "pick2 = (\<lambda>(b::nat) (k::nat). LEAST n. n > b \<and> d x (s n) < 1 / real (k + 2))"
         have hpick2_prop: "\<And>b k. pick2 b k > b \<and> d x (s (pick2 b k)) < 1 / real (k + 2)"
