@@ -10536,9 +10536,26 @@ proof -
         qed
         text \<open>In a T₁ space, limit point → every nbhd has infinitely many A-points (Thm 17.9).
           Since metric spaces are Hausdorff hence T₁.\<close>
+        have hHaus: "is_hausdorff_on X T"
+          sorry  (* metric spaces are Hausdorff: x≠y → d(x,y)>0 → disjoint balls *)
         have hT1: "satisfies_T1_on X T"
-          unfolding satisfies_T1_on_def hTd
-          sorry  (* metric Hausdorff → T₁: singletons closed in Hausdorff *)
+          unfolding satisfies_T1_on_def
+        proof (intro conjI ballI)
+          show "is_topology_on X T" using hTop by blast
+          fix y assume "y \<in> X"
+          show "closedin_on X T {y}"
+          proof (rule closedin_intro)
+            show "{y} \<subseteq> X" using \<open>y \<in> X\<close> by blast
+            show "X - {y} \<in> T"
+            proof -
+              have "\<forall>z \<in> X - {y}. \<exists>U \<in> T. z \<in> U \<and> U \<subseteq> X - {y}"
+                using hHaus \<open>y \<in> X\<close> unfolding is_hausdorff_on_def by blast
+              then have "X - {y} = \<Union>{U \<in> T. U \<subseteq> X - {y}}"
+                using hTop unfolding is_topology_on_def by blast
+              then show ?thesis using hTop unfolding is_topology_on_def by blast
+            qed
+          qed
+        qed
         have hball_inf: "\<And>U. neighborhood_of x X T U \<Longrightarrow> infinite (U \<inter> (s ` UNIV))"
           using Theorem_17_9[OF hT1 hA hxX] hlp by blast
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
