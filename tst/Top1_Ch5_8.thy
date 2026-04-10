@@ -32528,7 +32528,32 @@ proof -
         have hsub2_strict: "strict_mono sub2"
           using hsub2_mono strict_mono_Suc_iff by auto
         have hsub2_conv: "seq_converges_to_on (s \<circ> sub2) x X T"
-          sorry
+          unfolding seq_converges_to_on_def hTd
+        proof (intro conjI allI impI)
+          show "x \<in> X" using hxX by blast
+          fix U assume hU: "neighborhood_of x X (top1_metric_topology_on X d) U"
+          obtain e where he: "0 < e" and hball: "top1_ball_on X d x e \<subseteq> U"
+            using top1_metric_open_contains_ball[OF hd] hU unfolding neighborhood_of_def by blast
+          have "\<exists>N::nat. 1 / real (N + 2) < e"
+          proof -
+            obtain n :: nat where "real n > 1 / e" using he
+              by (meson less_imp_inverse_less reals_Archimedean2)
+            then have "1 / real (n + 2) < e" using he by (simp add: field_simps)
+            then show ?thesis by blast
+          qed
+          then obtain N :: nat where hN: "1 / real (N + 2) < e" by blast
+          show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub2) n \<in> U"
+          proof (intro exI[of _ N] allI impI)
+            fix n assume "N \<le> n"
+            have "d x (s (sub2 n)) < 1 / real (n + 2)" using hsub2_close by blast
+            also have "... \<le> 1 / real (N + 2)"
+              using \<open>N \<le> n\<close> by (intro divide_left_mono, simp_all)
+            also have "... < e" using hN by blast
+            finally have "s (sub2 n) \<in> top1_ball_on X d x e"
+              unfolding top1_ball_on_def using hs by auto
+            then show "(s \<circ> sub2) n \<in> U" using hball by (auto simp: o_def)
+          qed
+        qed
         then show ?thesis using hsub2_strict hxX by blast
       qed
     qed
