@@ -10463,7 +10463,20 @@ proof -
     Theorem_17_9 gives infinitely many range points in each B(x,1/k).
     Build strict_mono sub with d(x,s(sub k)) < 1/(k+2) via LEAST.\<close>
   have h23: "top1_limit_point_compact_on X T \<longrightarrow> top1_sequentially_compact_on X T"
-    sorry
+  proof
+    assume hlpc: "top1_limit_point_compact_on X T"
+    have hTopLPC: "is_topology_on X T"
+      using hlpc unfolding top1_limit_point_compact_on_def by blast
+    show "top1_sequentially_compact_on X T"
+      unfolding top1_sequentially_compact_on_def
+    proof (intro conjI allI impI)
+      show "is_topology_on X T" using hTopLPC by blast
+    next
+      fix s :: "nat \<Rightarrow> 'a" assume hs: "\<forall>n. s n \<in> X"
+      show "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
+        sorry
+    qed
+  qed
   text \<open>(3)→(1): seq-compact → compact (Munkres p.179-180).
     Step A: seq-compact → totally bounded (if not, ∃ε and infinite sequence with pairwise
     distance ≥ε, contradicting seq-compactness).
