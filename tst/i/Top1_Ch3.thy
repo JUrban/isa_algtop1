@@ -10494,7 +10494,13 @@ proof -
         qed
         define pick where "pick = (\<lambda>m. LEAST n. n > m \<and> s n = x)"
         have hpick_prop: "\<And>m. pick m > m \<and> s (pick m) = x"
-          sorry
+        proof -
+          fix m
+          from hunb have "\<exists>n. n > m \<and> s n = x" by blast
+          then have "(LEAST n. n > m \<and> s n = x) > m \<and> s (LEAST n. n > m \<and> s n = x) = x"
+            by (rule LeastI_ex)
+          then show "pick m > m \<and> s (pick m) = x" unfolding pick_def by blast
+        qed
         define sub where "sub = rec_nat (pick 0) (\<lambda>_ prev. pick prev)"
         have hsub0: "sub 0 = pick 0" unfolding sub_def by simp
         have hsubS: "\<And>n. sub (Suc n) = pick (sub n)" unfolding sub_def by simp
