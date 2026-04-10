@@ -32518,7 +32518,13 @@ proof -
         have hsub2_mono: "\<And>k. sub2 k < sub2 (Suc k)"
           using hsub2_S hpick2_prop by simp
         have hsub2_close: "\<And>k. d x (s (sub2 k)) < 1 / real (k + 2)"
-          sorry
+        proof -
+          fix k show "d x (s (sub2 k)) < 1 / real (k + 2)"
+          proof (induction k)
+            case 0 show ?case using hsub2_0 hpick2_prop[of 0 0] by simp
+            case (Suc k) show ?case using hsub2_S hpick2_prop[of "sub2 k" "Suc k"] by simp
+          qed
+        qed
         have hsub2_strict: "strict_mono sub2"
           using hsub2_mono strict_mono_Suc_iff by auto
         have hsub2_conv: "seq_converges_to_on (s \<circ> sub2) x X T"
