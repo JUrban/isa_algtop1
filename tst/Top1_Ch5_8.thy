@@ -32582,6 +32582,7 @@ proof -
         text \<open>Inductively build s(n) ∈ X with d(s(i), s(j)) ≥ε for i≠j.\<close>
         have hstep: "\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow> \<exists>x\<in>X. x \<notin> (\<Union>y\<in>F. top1_ball_on X d y \<epsilon>)"
           using hneg by blast
+        text \<open>Build s by dependent choice: s(n) ∉ ⋃{ball(s(i),ε) | i < n}.\<close>
         obtain s :: "nat \<Rightarrow> 'a" where hs_in: "\<forall>n. s n \<in> X"
           and hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
           sorry
@@ -32589,9 +32590,34 @@ proof -
         obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
           and hconv: "seq_converges_to_on (s \<circ> sub) x X T"
           using hseq hs_in unfolding top1_sequentially_compact_on_def by metis
-        text \<open>Convergent ⟹ eventually close, contradicting hs_far.\<close>
-        show False
-          sorry
+        text \<open>Convergent ⟹ eventually in B(x,ε/2), so d(s(sub i),s(sub j)) < ε, contradiction.\<close>
+        have heps2: "0 < \<epsilon>/2" using heps by simp
+        have hball_open: "top1_ball_on X d x (\<epsilon>/2) \<in> T"
+          using top1_ball_open_in_metric_topology[OF hd hxX heps2] hTd by simp
+        have hx_ball: "x \<in> top1_ball_on X d x (\<epsilon>/2)"
+          by (metis hxX hd heps2 top1_metric_ball_self_mem)
+        have "neighborhood_of x X T (top1_ball_on X d x (\<epsilon>/2))"
+          by (metis hx_ball neighborhood_of_def hball_open)
+        then obtain N where hN: "\<forall>n\<ge>N. (s \<circ> sub) n \<in> top1_ball_on X d x (\<epsilon>/2)"
+          by (meson hconv seq_converges_to_on_def)
+        text \<open>s(sub N) and s(sub(N+1)) are both in B(x,ε/2), so d between them < ε.\<close>
+        have hsN: "s (sub N) \<in> top1_ball_on X d x (\<epsilon>/2)" using hN by simp
+        have hsSN: "s (sub (Suc N)) \<in> top1_ball_on X d x (\<epsilon>/2)" using hN by simp
+        have "d (s (sub N)) (s (sub (Suc N))) < \<epsilon>"
+        proof -
+          have hd1: "d x (s (sub N)) < \<epsilon>/2" using hsN unfolding top1_ball_on_def by blast
+          have hd2: "d x (s (sub (Suc N))) < \<epsilon>/2" using hsSN unfolding top1_ball_on_def by blast
+          have htri: "d (s (sub N)) (s (sub (Suc N))) \<le> d (s (sub N)) x + d x (s (sub (Suc N)))"
+            using hd hs_in hxX unfolding top1_metric_on_def by blast
+          have hsym: "d (s (sub N)) x = d x (s (sub N))"
+            using hd hs_in hxX unfolding top1_metric_on_def by blast
+          show ?thesis using htri hsym hd1 hd2 by linarith
+        qed
+        moreover have "sub N \<noteq> sub (Suc N)"
+          by (simp add: hsub strict_mono_eq)
+        moreover have "d (s (sub N)) (s (sub (Suc N))) \<ge> \<epsilon>"
+          using hs_far calculation(2) by presburger
+        ultimately show False by linarith
       qed
     qed
     text \<open>Step B: Lebesgue number.\<close>
