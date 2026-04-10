@@ -32634,8 +32634,29 @@ proof -
         have hs_in: "\<forall>n. s n \<in> X" using hinv unfolding s_def by blast
         text \<open>Pairwise distance: s(Suc n) is picked outside balls of all elements in snd(sf n),
           which contains all previous s values.\<close>
+        text \<open>Key: snd(sf n) contains all s values through n.\<close>
+        have hsnd_contains: "\<forall>n. s ` {..n} \<subseteq> snd (sf n)"
+        proof (rule allI, rule subsetI)
+          fix n x assume "x \<in> s ` {..n}"
+          then show "x \<in> snd (sf n)"
+            sorry
+        qed
+        have hs_outside: "\<forall>n. s (Suc n) \<notin> (\<Union>y\<in>snd(sf n). top1_ball_on X d y \<epsilon>)"
+        proof (rule allI)
+          fix n
+          have "sf (Suc n) = (pick (snd (sf n)), insert (pick (snd (sf n))) (snd (sf n)))"
+            unfolding sf_def by (simp add: case_prod_beta Let_def)
+          then have "s (Suc n) = pick (snd (sf n))" unfolding s_def by simp
+          moreover have "finite (snd (sf n))" and "snd (sf n) \<subseteq> X" using hinv by blast+
+          ultimately show "s (Suc n) \<notin> (\<Union>y\<in>snd(sf n). top1_ball_on X d y \<epsilon>)"
+            using hpick_prop by simp
+        qed
         have hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
-          sorry
+        proof (intro allI impI)
+          fix i j :: nat assume hij: "i \<noteq> j"
+          show "d (s i) (s j) \<ge> \<epsilon>"
+            sorry
+        qed
         text \<open>By seq-compactness, s has a convergent subsequence.\<close>
         obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
           and hconv: "seq_converges_to_on (s \<circ> sub) x X T"
