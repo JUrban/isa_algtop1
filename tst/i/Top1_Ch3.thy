@@ -10468,9 +10468,65 @@ proof -
       fix s :: "nat \<Rightarrow> 'a" assume hs: "\<forall>n. s n \<in> X"
       text \<open>If the range is infinite, there's a limit point; extract convergent subsequence.
         If finite, there's a constant subsequence. Full proof needs metric arguments.\<close>
+      text \<open>Case split: finite or infinite range.\<close>
       show "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
-        sorry  (* Munkres proof: finite range → pigeonhole → constant subseq;
-                   infinite range → limit point → metric ball extraction *)
+      proof (cases "finite (s ` UNIV)")
+        case True
+        text \<open>Finite range: some value x repeats infinitely. Constant subsequence converges.\<close>
+        then obtain x where "x \<in> s ` UNIV" "infinite {n. s n = x}"
+          using pigeonhole_infinite[of UNIV s] by auto
+        then have hxX: "x \<in> X" and hinf: "infinite {n. s n = x}" using hs by auto
+        text \<open>Build strict_mono sub with s(sub n) = x using Hilbert choice.\<close>
+        define pick where "pick = (\<lambda>bound. LEAST n. n > bound \<and> s n = x)"
+        have hpick: "\<And>m. \<exists>n > m. s n = x"
+        proof -
+          fix m
+          have "\<not> {n. s n = x} \<subseteq> {..m}"
+            using hinf finite_subset finite_atMost by blast
+          then obtain n where "n \<notin> {..m}" "s n = x" by blast
+          then have "n > m" "s n = x" by auto
+          then show "\<exists>n > m. s n = x" by blast
+        qed
+        have hpick_gt: "\<And>m. pick m > m \<and> s (pick m) = x"
+        proof -
+          fix m
+          from hpick obtain n where "n > m" "s n = x" by blast
+          then show "pick m > m \<and> s (pick m) = x"
+            unfolding pick_def by (metis (mono_tags, lifting) LeastI_ex)
+        qed
+        define sub where "sub = rec_nat (pick 0) (\<lambda>_ prev. pick prev)"
+        have hsub0: "sub 0 = pick 0" unfolding sub_def by simp
+        have hsubS: "\<And>n. sub (Suc n) = pick (sub n)" unfolding sub_def by simp
+        have hsub_val: "\<And>n. s (sub n) = x"
+        proof -
+          fix n show "s (sub n) = x"
+            by (induction n) (simp_all add: hsub0 hsubS hpick_gt)
+        qed
+        have hsub_mono: "\<And>n. sub n < sub (Suc n)"
+          using hsubS hpick_gt by simp
+        have "strict_mono sub" using hsub_mono by (simp add: strict_mono_Suc_iff)
+        moreover have "seq_converges_to_on (s \<circ> sub) x X T"
+          unfolding seq_converges_to_on_def
+        proof (intro conjI allI impI)
+          show "x \<in> X" using hxX by blast
+          fix U assume "neighborhood_of x X T U"
+          then have "x \<in> U" unfolding neighborhood_of_def by blast
+          then show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub) n \<in> U" using hsub_val
+            by (intro exI[of _ 0]) (simp add: o_def)
+        qed
+        ultimately show ?thesis using hxX by blast
+      next
+        case False
+        text \<open>Infinite range: has a limit point x by lp-compactness.
+          Use Lemma_21_2_sequence_converse to get a convergent sequence in range(s),
+          then lift to a subsequence of s.\<close>
+        have hAinf: "infinite (s ` UNIV)" using False by blast
+        have hA: "s ` UNIV \<subseteq> X" using hs by auto
+        then obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (s ` UNIV) X T"
+          using hlpc hAinf unfolding top1_limit_point_compact_on_def by blast
+        text \<open>From the limit point, extract a convergent subsequence using metric balls.\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
