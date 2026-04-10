@@ -10469,7 +10469,38 @@ proof -
       text \<open>If the range is infinite, there's a limit point; extract convergent subsequence.
         If finite, there's a constant subsequence. Full proof needs metric arguments.\<close>
       show "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
-        sorry
+      proof (cases "finite (range s)")
+        case True
+        text \<open>Finite range: pigeonhole gives infinitely many occurrences of some value.\<close>
+        then obtain x where hx: "x \<in> range s" and hinf: "infinite {n. s n = x}"
+          using pigeonhole_infinite[of UNIV s] by auto
+        have hxX: "x \<in> X" using hx hs by auto
+        obtain sub :: "nat \<Rightarrow> nat" where hsub: "strict_mono sub" and hval: "\<forall>n. s (sub n) = x"
+          sorry  (* standard: infinite nat set → strict_mono enumeration *)
+        have "seq_converges_to_on (s \<circ> sub) x X T"
+          unfolding seq_converges_to_on_def
+        proof (intro conjI)
+          show "x \<in> X" using hxX by blast
+          show "\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. (s \<circ> sub) n \<in> U)"
+          proof (intro allI impI)
+            fix U assume "neighborhood_of x X T U"
+            then have "x \<in> U" unfolding neighborhood_of_def by blast
+            then show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub) n \<in> U" using hval by (intro exI[of _ 0]) auto
+          qed
+        qed
+        then show ?thesis using hsub hxX by blast
+      next
+        case False
+        text \<open>Infinite range: limit-point compactness gives a limit point.
+          In the metric space, extract a convergent subsequence via balls B(x,1/k).\<close>
+        have hA: "range s \<subseteq> X" using hs by auto
+        have "infinite (range s)" using False by blast
+        then obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (range s) X T"
+          using hlpc unfolding top1_limit_point_compact_on_def using hA by blast
+        text \<open>Use Lemma_21_2_sequence_converse (in Ch2) to get a sequence in range(s)
+          converging to x, then extract a subsequence of the original.\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
