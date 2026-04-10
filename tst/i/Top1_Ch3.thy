@@ -10453,7 +10453,18 @@ theorem Theorem_28_2:
   assumes hTd: "T = top1_metric_topology_on X d"
   shows "(top1_compact_on X T \<longleftrightarrow> top1_limit_point_compact_on X T)
        \<and> (top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T)"
-  sorry
+proof -
+  text \<open>(1)→(2): compact → lp-compact by Theorem_28_1.\<close>
+  have h12: "top1_compact_on X T \<longrightarrow> top1_limit_point_compact_on X T"
+    using Theorem_28_1 by blast
+  text \<open>(2)→(3): lp-compact → seq-compact.\<close>
+  have h23: "top1_limit_point_compact_on X T \<longrightarrow> top1_sequentially_compact_on X T"
+    sorry
+  text \<open>(3)→(1): seq-compact → compact.\<close>
+  have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
+    sorry
+  show ?thesis using h12 h23 h31 by blast
+qed
 
 
 section \<open>\<S>29 Local Compactness\<close>
