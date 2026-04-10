@@ -32598,9 +32598,9 @@ proof -
         define sf where "sf = rec_nat (pick {}, {pick {}})
           (\<lambda>n (prev, F). let nxt = pick F in (nxt, insert nxt F))"
         define s where "s n = fst (sf n)" for n
-        have hsf_props: "\<forall>n. fst (sf n) \<in> X \<and> finite (snd (sf n)) \<and> snd (sf n) \<subseteq> X \<and>
-          fst (sf n) \<notin> (\<Union>y\<in>(snd (sf n) - {fst (sf n)}). top1_ball_on X d y \<epsilon>)"
-          sorry
+        text \<open>Simplify: just sorry the sequence properties directly.
+          The full proof requires an inductive invariant on the rec_nat pair
+          construction, showing finite/subset/membership at each step.\<close>
         have hs_in: "\<forall>n. s n \<in> X"
           sorry
         have hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
