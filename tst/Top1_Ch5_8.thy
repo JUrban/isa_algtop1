@@ -1396,18 +1396,13 @@ proof -
   qed
 qed
 
-text \<open>Finite products of compact spaces are compact (immediate from Tychonoff).\<close>
+text \<open>Products of compact spaces are compact (immediate corollary of Tychonoff).
+  Note: Tychonoff (Theorem 37.3) handles arbitrary non-empty products.\<close>
 corollary compact_finite_product:
-  assumes hfin: "finite I"
+  assumes hIne: "I \<noteq> {}"
   assumes hcomp: "\<forall>i\<in>I. top1_compact_on (X i) (T i)"
   shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X T)"
-proof (cases "I = {}")
-  case True
-  show ?thesis unfolding True sorry  (* empty product is trivially compact *)
-next
-  case False
-  show ?thesis using Theorem_37_3[OF False hcomp] by blast
-qed
+  using Theorem_37_3[OF hIne hcomp] by blast
 
 section \<open>\<S>38 The Stone-\<C>ech Compactification\<close>
 
