@@ -32585,17 +32585,33 @@ proof -
       proof (intro allI impI)
         fix Uc assume hUc: "Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc"
         obtain \<delta> where hd_pos: "\<delta> > 0" and hd_leb: "\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
-          sorry
+          by (metis hUc hlebesgue)
+        have hd3: "\<delta>/3 > 0" using hd_pos by simp
         obtain S where hSfin: "finite S" and hSX: "S \<subseteq> X" and
           hScov: "X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x (\<delta>/3))"
           sorry
-        have "\<forall>c\<in>S. \<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U"
-          sorry
+        have hball_in_cover: "\<forall>c\<in>S. \<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U"
+        proof (intro ballI)
+          fix c assume "c \<in> S"
+          then have "c \<in> X" using hSX by blast
+          then obtain U where "U \<in> Uc" "top1_ball_on X d c \<delta> \<subseteq> U" using hd_leb sorry
+          moreover have "top1_ball_on X d c (\<delta>/3) \<subseteq> top1_ball_on X d c \<delta>"
+            sorry
+          ultimately show "\<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U" by blast
+        qed
         then obtain g where hg: "\<forall>c\<in>S. g c \<in> Uc \<and> top1_ball_on X d c (\<delta>/3) \<subseteq> g c"
           sorry
         define F where "F = g ` S"
-        show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
-          sorry
+        have "finite F" using hSfin unfolding F_def by blast
+        moreover have "F \<subseteq> Uc" using hg unfolding F_def by auto
+        moreover have "X \<subseteq> \<Union>F"
+        proof (rule subsetI)
+          fix x assume "x \<in> X"
+          then obtain c where "c \<in> S" "x \<in> top1_ball_on X d c (\<delta>/3)"
+            sorry
+          then show "x \<in> \<Union>F" using hg unfolding F_def by blast
+        qed
+        ultimately show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F" by blast
       qed
     qed
   qed
