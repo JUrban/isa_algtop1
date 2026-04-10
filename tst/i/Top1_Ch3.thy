@@ -10552,13 +10552,20 @@ proof -
           have "neighborhood_of x X T (top1_ball_on X d x e)"
             unfolding neighborhood_of_def using hball_open hx_ball by blast
           then have hinf_ball: "infinite (top1_ball_on X d x e \<inter> (s ` UNIV))" using hball_inf by blast
-          have "s ` {n. s n \<in> top1_ball_on X d x e} = top1_ball_on X d x e \<inter> (s ` UNIV)"
-            by auto
-          then have "infinite {n. s n \<in> top1_ball_on X d x e}"
-            using hinf_ball finite_imageD by (metis finite_image_iff)
+          have "infinite {n. s n \<in> top1_ball_on X d x e}"
+          proof (rule ccontr)
+            assume "\<not> infinite {n. s n \<in> top1_ball_on X d x e}"
+            then have hfin_idx: "finite {n. s n \<in> top1_ball_on X d x e}" by simp
+            have "top1_ball_on X d x e \<inter> (s ` UNIV) \<subseteq> s ` {n. s n \<in> top1_ball_on X d x e}"
+              by auto
+            then have "finite (top1_ball_on X d x e \<inter> (s ` UNIV))"
+              using finite_surj[OF hfin_idx] by blast
+            then show False using hinf_ball by blast
+          qed
           then have "\<not> {n. s n \<in> top1_ball_on X d x e} \<subseteq> {..m}"
             using finite_atMost finite_subset by blast
-          then obtain n where "s n \<in> top1_ball_on X d x e" "n > m" by auto
+          then obtain n where "n \<notin> {..m}" "s n \<in> top1_ball_on X d x e" by blast
+          then have "s n \<in> top1_ball_on X d x e" "n > m" by auto
           then show "\<exists>n > m. d x (s n) < e" unfolding top1_ball_on_def by auto
         qed
         text \<open>Build strict_mono sub with d(x, s(sub k)) < 1/(k+2), using LEAST.\<close>
