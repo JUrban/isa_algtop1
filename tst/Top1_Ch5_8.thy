@@ -32623,7 +32623,9 @@ proof -
     qed
     text \<open>Step B: Lebesgue number.\<close>
     have hlebesgue: "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
-      sorry
+      sorry  (* Lebesgue number lemma: proof by contradiction, build sequence x_n with
+         B(x_n, 1/(n+1)) not in any cover element, extract convergent subseq,
+         limit in some cover element → contradiction for large n *)
     text \<open>Step C: Combine.\<close>
     show "top1_compact_on X T"
       unfolding top1_compact_on_def
