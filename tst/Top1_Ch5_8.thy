@@ -32670,8 +32670,35 @@ proof -
         have hs_far: "\<forall>i j. i \<noteq> j \<longrightarrow> d (s i) (s j) \<ge> \<epsilon>"
         proof (intro allI impI)
           fix i j :: nat assume hij: "i \<noteq> j"
-          show "d (s i) (s j) \<ge> \<epsilon>"
-            sorry
+          text \<open>WLOG i < j (symmetry for the other case).\<close>
+          have hcase: "i < j \<or> j < i" using hij by linarith
+          then show "d (s i) (s j) \<ge> \<epsilon>"
+          proof
+            assume hij2: "i < j"
+            define k where "k = j - 1"
+            have hj: "j = Suc k" using hij2 k_def by simp
+            have hik: "i \<le> k" using hij2 k_def by simp
+            have "s i \<in> s ` {..k}" using hik by auto
+            then have "s i \<in> snd (sf k)" using hsnd_contains by blast
+            then have "s (Suc k) \<notin> top1_ball_on X d (s i) \<epsilon>"
+              using hs_outside by (metis UN_iff)
+            then have "\<not> d (s i) (s j) < \<epsilon>" unfolding hj top1_ball_on_def using hs_in by blast
+            then show "d (s i) (s j) \<ge> \<epsilon>" by linarith
+          next
+            assume hji: "j < i"
+            then have hji2: "j \<noteq> i" by simp
+            define k' where "k' = i - 1"
+            have hi: "i = Suc k'" using hji k'_def by simp
+            have hjk: "j \<le> k'" using hji k'_def by simp
+            have "s j \<in> s ` {..k'}" using hjk by auto
+            then have "s j \<in> snd (sf k')" using hsnd_contains by blast
+            then have "s (Suc k') \<notin> top1_ball_on X d (s j) \<epsilon>"
+              using hs_outside by (metis UN_iff)
+            then have "\<not> d (s j) (s i) < \<epsilon>" unfolding hi top1_ball_on_def using hs_in by blast
+            then have "d (s j) (s i) \<ge> \<epsilon>" by linarith
+            then show "d (s i) (s j) \<ge> \<epsilon>"
+              using hd hs_in unfolding top1_metric_on_def by metis
+          qed
         qed
         text \<open>By seq-compactness, s has a convergent subsequence.\<close>
         obtain sub x where hsub: "strict_mono sub" and hxX: "x \<in> X"
