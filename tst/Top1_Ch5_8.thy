@@ -32589,18 +32589,18 @@ proof -
         have hd3: "\<delta>/3 > 0" using hd_pos by simp
         obtain S where hSfin: "finite S" and hSX: "S \<subseteq> X" and
           hScov: "X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x (\<delta>/3))"
-          sorry
+          using htb[rule_format, OF hd3] by metis
         have hball_in_cover: "\<forall>c\<in>S. \<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U"
         proof (intro ballI)
           fix c assume "c \<in> S"
           then have "c \<in> X" using hSX by blast
-          then obtain U where "U \<in> Uc" "top1_ball_on X d c \<delta> \<subseteq> U" using hd_leb sorry
+          then obtain U where "U \<in> Uc" "top1_ball_on X d c \<delta> \<subseteq> U" using hd_leb by metis
           moreover have "top1_ball_on X d c (\<delta>/3) \<subseteq> top1_ball_on X d c \<delta>"
-            sorry
+            unfolding top1_ball_on_def using hd_pos by auto
           ultimately show "\<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U" by blast
         qed
         then obtain g where hg: "\<forall>c\<in>S. g c \<in> Uc \<and> top1_ball_on X d c (\<delta>/3) \<subseteq> g c"
-          sorry
+          by (metis hball_in_cover)
         define F where "F = g ` S"
         have "finite F" using hSfin unfolding F_def by blast
         moreover have "F \<subseteq> Uc" using hg unfolding F_def by auto
@@ -32608,7 +32608,7 @@ proof -
         proof (rule subsetI)
           fix x assume "x \<in> X"
           then obtain c where "c \<in> S" "x \<in> top1_ball_on X d c (\<delta>/3)"
-            sorry
+            using hScov by auto
           then show "x \<in> \<Union>F" using hg unfolding F_def by blast
         qed
         ultimately show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F" by blast
