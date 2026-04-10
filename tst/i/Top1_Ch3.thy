@@ -10528,9 +10528,12 @@ proof -
           Since range(s) is infinite, we can always find new indices.\<close>
         text \<open>x ∈ closure(range s) in the metric space. By Lemma_21_2_sequence_converse,
           there's a sequence in range(s) converging to x.\<close>
-        have hxcl: "x \<in> closure_on X (top1_metric_topology_on X d) (s ` UNIV)"
-          using hlp hTd
-          sorry
+        have hxcl: "x \<in> closure_on X T (s ` UNIV)"
+        proof -
+          have "x \<in> limit_points_of (s ` UNIV) X T"
+            unfolding limit_points_of_def using hlp hxX by blast
+          then show ?thesis using Theorem_17_6[OF hTop hA] by blast
+        qed
         have hball_hit: "\<And>e m. 0 < e \<Longrightarrow> \<exists>n > m. d x (s n) < e"
           sorry  (* from hxcl + infinite range: every ball has infinitely many indices *)
         text \<open>Build strict_mono sub with d(x, s(sub k)) < 1/(k+2), using LEAST.\<close>
