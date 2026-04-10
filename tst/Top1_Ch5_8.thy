@@ -32566,7 +32566,39 @@ proof -
     convergent subseq → contradiction).
     Step C: combine — Lebesgue number δ, cover by δ/3-balls, each fits in cover element.\<close>
   have h31: "top1_sequentially_compact_on X T \<longrightarrow> top1_compact_on X T"
-    sorry
+  proof
+    assume hseq: "top1_sequentially_compact_on X T"
+    have hTopS: "is_topology_on X T"
+      using hseq unfolding top1_sequentially_compact_on_def by blast
+    text \<open>Step A: Totally bounded.\<close>
+    have htb: "\<forall>\<epsilon>>0. \<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x \<epsilon>)"
+      sorry
+    text \<open>Step B: Lebesgue number.\<close>
+    have hlebesgue: "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>\<delta>>0. \<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U)"
+      sorry
+    text \<open>Step C: Combine.\<close>
+    show "top1_compact_on X T"
+      unfolding top1_compact_on_def
+    proof (intro conjI)
+      show "is_topology_on X T" using hTopS by blast
+      show "\<forall>Uc. Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+      proof (intro allI impI)
+        fix Uc assume hUc: "Uc \<subseteq> T \<and> X \<subseteq> \<Union>Uc"
+        obtain \<delta> where hd_pos: "\<delta> > 0" and hd_leb: "\<forall>x\<in>X. \<exists>U\<in>Uc. top1_ball_on X d x \<delta> \<subseteq> U"
+          sorry
+        obtain S where hSfin: "finite S" and hSX: "S \<subseteq> X" and
+          hScov: "X \<subseteq> (\<Union>x\<in>S. top1_ball_on X d x (\<delta>/3))"
+          sorry
+        have "\<forall>c\<in>S. \<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U"
+          sorry
+        then obtain g where hg: "\<forall>c\<in>S. g c \<in> Uc \<and> top1_ball_on X d c (\<delta>/3) \<subseteq> g c"
+          sorry
+        define F where "F = g ` S"
+        show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
+          sorry
+      qed
+    qed
+  qed
   show ?thesis using h12 h23 h31 by blast
 qed
 
