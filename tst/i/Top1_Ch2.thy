@@ -5455,6 +5455,8 @@ definition intersects :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
 
 (** from \S17 Theorem 17.5 [top1.tex:713] **)
 (** LATEX VERSION: "x\<in>Cl A iff every open neighborhood intersects A; basis version too." **)
+text \<open>Note: neighborhood\_of does not require x ∈ X or U ⊆ X. Under is\_topology\_on\_strict,
+  U ∈ T implies U ⊆ X, and in practice x ∈ X is always given in the context.\<close>
 definition neighborhood_of :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "neighborhood_of x X T U \<longleftrightarrow> U \<in> T \<and> x \<in> U"
 
