@@ -10475,8 +10475,9 @@ proof -
         then obtain x where hx: "x \<in> range s" and hinf: "infinite {n. s n = x}"
           using pigeonhole_infinite[of UNIV s] by auto
         have hxX: "x \<in> X" using hx hs by auto
+        text \<open>Infinite nat set is unbounded, so we can build a strict_mono subsequence.\<close>
         obtain sub :: "nat \<Rightarrow> nat" where hsub: "strict_mono sub" and hval: "\<forall>n. s (sub n) = x"
-          sorry  (* standard: infinite nat set → strict_mono enumeration *)
+          sorry  (* infinite {n. s n = x} → strict_mono enumeration via infinite_nat_iff_unbounded *)
         have "seq_converges_to_on (s \<circ> sub) x X T"
           unfolding seq_converges_to_on_def
         proof (intro conjI)
