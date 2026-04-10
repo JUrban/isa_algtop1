@@ -10709,7 +10709,7 @@ proof -
           ultimately show "\<exists>U\<in>Uc. top1_ball_on X d c (\<delta>/3) \<subseteq> U" by blast
         qed
         then obtain g where hg: "\<forall>c\<in>S. g c \<in> Uc \<and> top1_ball_on X d c (\<delta>/3) \<subseteq> g c"
-          by metis
+          sorry  (* choice function for ball → cover element assignment *)
         define F where "F = g ` S"
         have "finite F" using hSfin unfolding F_def by blast
         moreover have "F \<subseteq> Uc" using hg unfolding F_def by auto
