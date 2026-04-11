@@ -12171,9 +12171,9 @@ proof (induction n arbitrary: o' t)
     0 \<le> snd (hilbert_rec o' 0 t) \<and> snd (hilbert_rec o' 0 t) \<le> 1"
     using hilbert_rec_range by blast
   have "\<bar>fst (hilbert_rec o' 1 t) - fst (hilbert_rec o' 0 t)\<bar> \<le> 1"
-    using hr hr0 by (simp add: abs_le_iff)
+    using hr hr0 by linarith
   moreover have "\<bar>snd (hilbert_rec o' 1 t) - snd (hilbert_rec o' 0 t)\<bar> \<le> 1"
-    using hr hr0 by (simp add: abs_le_iff)
+    using hr hr0 by linarith
   ultimately show ?case by (simp del: hilbert_rec.simps)
 next
   case (Suc n)
