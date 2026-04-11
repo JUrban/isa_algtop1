@@ -10453,6 +10453,23 @@ proof -
   qed
 qed
 
+text \<open>In a T₁ space, LP-compact is equivalent to: every infinite subset A
+  has a point x such that every neighborhood of x meets A in infinitely many points.
+  This follows from Theorem 17.9 (T₁ ⟹ limit point ↔ infinite intersection).\<close>
+corollary lp_compact_T1_infinite_intersection:
+  assumes hT1: "satisfies_T1_on X T"
+  and hLPC: "top1_limit_point_compact_on X T"
+  and hA: "A \<subseteq> X" and hAinf: "infinite A"
+  shows "\<exists>x\<in>X. \<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> A)"
+proof -
+  have hTop: "is_topology_on X T" using hLPC unfolding top1_limit_point_compact_on_def by blast
+  obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x A X T"
+    using hLPC hA hAinf unfolding top1_limit_point_compact_on_def by blast
+  have "\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> A)"
+    using Theorem_17_9[OF hT1 hA hxX] hlp by blast
+  then show ?thesis using hxX by blast
+qed
+
 text \<open>Sequential compactness and Theorem 28.2 moved to Ch5-8 where
   metric_topology_hausdorff is available.\<close>
 
