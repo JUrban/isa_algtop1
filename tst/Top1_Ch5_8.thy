@@ -32431,6 +32431,13 @@ lemma seq_conv_comp:
   shows "seq_converges_to_on (s \<circ> g) x X T"
   by (metis (lifting) ext assms(1,2))
 
+lemma seq_conv_rename:
+  assumes "seq_converges_to_on t x X T" "\<forall>n. t n = s (g n)"
+  shows "seq_converges_to_on (s \<circ> g) x X T"
+proof -
+  have "\<forall>n. t n = (s \<circ> g) n" using assms(2) by simp
+  then show ?thesis using assms(1) by (metis (lifting) ext)
+qed
 
 text \<open>Helper: infinite range + LP-compact + T1 + first-countable gives convergent subsequence.\<close>
 lemma infinite_range_lpc_subseq:
@@ -32478,7 +32485,16 @@ proof -
     using h1st hxX
     unfolding top1_first_countable_on_def top1_countable_neighborhood_basis_at_def
     by metis
-  show ?thesis using hxX hunb hBnb hBref hTop sorry
+  have hxcl: "x \<in> closure_on X T (s ` UNIV)"
+    using limit_point_imp_closure[OF hTop hsX hxX hlp] sorry
+  obtain t where ht_in: "\<forall>n. t n \<in> s ` UNIV"
+    and htconv: "seq_converges_to_on t x X T"
+    using first_countable_closure_imp_seq[OF hTop hsX h1st hxcl] sorry
+  have hek: "\<forall>n. \<exists>k::nat. t n = s k" using ht_in sorry
+  then obtain g :: "nat \<Rightarrow> nat" where hg: "\<forall>n. t n = s (g n)" sorry
+  have hsg: "seq_converges_to_on (s \<circ> g) x X T"
+    using seq_conv_rename htconv hg sorry
+  show ?thesis using hxX hsg sorry
 qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
