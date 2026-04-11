@@ -32419,7 +32419,20 @@ proof -
   then show ?thesis using hsub_strict hxX by blast
 qed
 
-text \<open>Helper: infinite range + LP-compact + T₁ + first-countable → convergent subsequence.\<close>
+lemma limit_point_imp_closure:
+  assumes "is_topology_on X T" "A \<subseteq> X" "x \<in> X"
+  and "is_limit_point_of x A X T"
+  shows "x \<in> closure_on X T A"
+  using Theorem_17_5a[OF assms(1) assms(3) assms(2)] assms(4)
+  unfolding is_limit_point_of_def intersects_def by blast
+
+lemma seq_conv_comp:
+  assumes "seq_converges_to_on t x X T" "\<forall>n. t n = (s \<circ> g) n"
+  shows "seq_converges_to_on (s \<circ> g) x X T"
+  by (metis (lifting) ext assms(1,2))
+
+
+text \<open>Helper: infinite range + LP-compact + T1 + first-countable gives convergent subsequence.\<close>
 lemma infinite_range_lpc_subseq:
   assumes hTop: "is_topology_on X T"
   and hT1: "satisfies_T1_on X T"
