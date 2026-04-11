@@ -32887,4 +32887,184 @@ corollary lp_compact_iff_seq_compact_metric:
   shows "top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T"
   using Theorem_28_2[OF assms] by blast
 
+text \<open>Supplementary: Nets in topological spaces.
+  Nets generalize sequences by replacing the natural numbers with an arbitrary
+  directed set. This allows characterization of closure, continuity, and
+  compactness in general topological spaces (where sequences do not suffice).
+  Munkres treats nets in supplementary sections; they are included here for
+  completeness.\<close>
+
+definition top1_directed_set :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
+  "top1_directed_set D le \<longleftrightarrow>
+     D \<noteq> {} \<and>
+     (\<forall>a\<in>D. le a a) \<and>
+     (\<forall>a\<in>D. \<forall>b\<in>D. \<forall>c\<in>D. le a b \<and> le b c \<longrightarrow> le a c) \<and>
+     (\<forall>a\<in>D. \<forall>b\<in>D. \<exists>c\<in>D. le a c \<and> le b c)"
+
+text \<open>A net in X is a function from a directed set into X.\<close>
+definition top1_is_net_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'b set \<Rightarrow> bool" where
+  "top1_is_net_on D le f X \<longleftrightarrow>
+     top1_directed_set D le \<and> (\<forall>a\<in>D. f a \<in> X)"
+
+text \<open>A net converges to x if for every neighborhood U of x, the net is eventually in U.\<close>
+definition top1_net_converges_to_on ::
+  "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> bool" where
+  "top1_net_converges_to_on D le f x X T \<longleftrightarrow>
+     top1_is_net_on D le f X \<and> x \<in> X \<and>
+     (\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<exists>a\<in>D. \<forall>b\<in>D. le a b \<longrightarrow> f b \<in> U))"
+
+text \<open>A point x is an accumulation point of a net if the net is frequently in
+  every neighborhood of x.\<close>
+definition top1_net_accumulation_point ::
+  "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> bool" where
+  "top1_net_accumulation_point D le f x X T \<longleftrightarrow>
+     top1_is_net_on D le f X \<and> x \<in> X \<and>
+     (\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<forall>a\<in>D. \<exists>b\<in>D. le a b \<and> f b \<in> U))"
+
+text \<open>The natural numbers form a directed set under ≤.\<close>
+lemma nat_directed_set: "top1_directed_set (UNIV::nat set) (\<le>)"
+  unfolding top1_directed_set_def
+  by (metis empty_not_UNIV dual_order.trans linorder_le_cases)
+
+text \<open>A sequence is a net over (nat, ≤).
+  Net convergence for sequences reduces to the usual definition.\<close>
+lemma net_convergence_iff_seq_convergence:
+  assumes hTop: "is_topology_on X T" and hs: "\<forall>n::nat. s n \<in> X" and hx: "x \<in> X"
+  shows "top1_net_converges_to_on UNIV (\<le>) s x X T \<longleftrightarrow> seq_converges_to_on s x X T"
+proof (intro iffI)
+  assume hnet: "top1_net_converges_to_on UNIV (\<le>) s x X T"
+  show "seq_converges_to_on s x X T"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "x \<in> X" by (rule hx)
+    fix U assume "neighborhood_of x X T U"
+    then obtain N where "\<forall>b\<ge>(N::nat). s b \<in> U"
+      using hnet unfolding top1_net_converges_to_on_def by blast
+    then show "\<exists>N. \<forall>n\<ge>N. s n \<in> U" by blast
+  qed
+next
+  assume hseq: "seq_converges_to_on s x X T"
+  have hnet_on: "top1_is_net_on UNIV (\<le>) s X"
+    unfolding top1_is_net_on_def using nat_directed_set hs by simp
+  show "top1_net_converges_to_on UNIV (\<le>) s x X T"
+    unfolding top1_net_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "top1_is_net_on UNIV (\<le>) s X" by (rule hnet_on)
+    show "x \<in> X" by (rule hx)
+    fix U assume "neighborhood_of x X T U"
+    then obtain N where "\<forall>n\<ge>N. s n \<in> U"
+      using hseq unfolding seq_converges_to_on_def by blast
+    then show "\<exists>a\<in>UNIV. \<forall>b\<in>UNIV. (a::nat) \<le> b \<longrightarrow> s b \<in> U" by blast
+  qed
+qed
+
+text \<open>Forward direction: if a net in A converges to x, then x ∈ closure(A).\<close>
+lemma net_limit_in_closure:
+  assumes hTop: "is_topology_on X T" and hAX: "A \<subseteq> X" and hxX: "x \<in> X"
+  and hconv: "top1_net_converges_to_on D le f x X T"
+  and hfA: "\<forall>a\<in>D. f a \<in> A"
+  shows "x \<in> closure_on X T A"
+proof (rule iffD2[OF Theorem_17_5a[OF hTop hxX hAX]], intro allI impI)
+  fix U assume hU: "neighborhood_of x X T U"
+  obtain a where ha: "a \<in> D" and hev: "\<forall>b\<in>D. le a b \<longrightarrow> f b \<in> U"
+    using hconv hU unfolding top1_net_converges_to_on_def by blast
+  have "le a a" using hconv ha
+    unfolding top1_net_converges_to_on_def top1_is_net_on_def top1_directed_set_def by blast
+  then have "f a \<in> U" using hev ha by blast
+  moreover have "f a \<in> A" using hfA ha by blast
+  ultimately show "intersects U A" unfolding intersects_def by blast
+qed
+
+text \<open>Backward direction: if x ∈ closure(A), construct a net in A converging to x.
+  The directed set is the neighborhood filter ordered by reverse inclusion.\<close>
+lemma closure_imp_net_converges:
+  assumes hTop: "is_topology_on X T" and hAX: "A \<subseteq> X" and hxX: "x \<in> X"
+  and hcl: "x \<in> closure_on X T A"
+  shows "\<exists>f. top1_net_converges_to_on {U \<in> T. x \<in> U} (\<supseteq>) f x X T \<and> (\<forall>U \<in> {U \<in> T. x \<in> U}. f U \<in> A)"
+proof -
+  define D where "D = {U \<in> T. x \<in> U}"
+  have hint: "\<forall>U\<in>D. U \<inter> A \<noteq> {}"
+    using iffD1[OF Theorem_17_5a[OF hTop hxX hAX] hcl] unfolding intersects_def D_def
+    by (simp add: neighborhood_of_def)
+  then have hpick: "\<forall>U\<in>D. \<exists>y. y \<in> U \<and> y \<in> A"
+    by blast
+  obtain f where hf: "\<forall>U\<in>D. f U \<in> U \<and> f U \<in> A"
+    using bchoice[OF hpick] by blast
+  have hdir: "top1_directed_set D (\<supseteq>)"
+    unfolding top1_directed_set_def D_def
+  proof (intro conjI ballI)
+    show "{U \<in> T. x \<in> U} \<noteq> {}" using hTop unfolding is_topology_on_def using hxX by blast
+    fix a assume "a \<in> {U \<in> T. x \<in> U}" then show "a \<supseteq> a" by blast
+  next
+    fix a b c assume "a \<in> {U \<in> T. x \<in> U}" "b \<in> {U \<in> T. x \<in> U}" "c \<in> {U \<in> T. x \<in> U}"
+    show "a \<supseteq> b \<and> b \<supseteq> c \<longrightarrow> a \<supseteq> c" by blast
+  next
+    fix a b assume ha: "a \<in> {U \<in> T. x \<in> U}" and hb: "b \<in> {U \<in> T. x \<in> U}"
+    have "a \<inter> b \<in> T" using ha hb topology_inter2[OF hTop] by blast
+    moreover have "x \<in> a \<inter> b" using ha hb by blast
+    ultimately have "a \<inter> b \<in> {U \<in> T. x \<in> U}" by blast
+    moreover have "a \<inter> b \<subseteq> a" and "a \<inter> b \<subseteq> b" by blast+
+    ultimately show "\<exists>c\<in>{U \<in> T. x \<in> U}. a \<supseteq> c \<and> b \<supseteq> c" by blast
+  qed
+  have hnet: "top1_is_net_on D (\<supseteq>) f X"
+    unfolding top1_is_net_on_def using hf hAX hdir by fastforce
+  have hconv: "top1_net_converges_to_on D (\<supseteq>) f x X T"
+    unfolding top1_net_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "top1_is_net_on D (\<supseteq>) f X" by (rule hnet)
+    show "x \<in> X" by (rule hxX)
+    fix U assume "neighborhood_of x X T U"
+    then obtain V where "V \<in> T" "x \<in> V" "V \<subseteq> U"
+      unfolding neighborhood_of_def by blast
+    then have "V \<in> D" unfolding D_def by blast
+    moreover have "\<forall>W\<in>D. V \<supseteq> W \<longrightarrow> f W \<in> U"
+    proof (intro ballI impI)
+      fix W assume "W \<in> D" "V \<supseteq> W"
+      then have "f W \<in> W" using hf by blast
+      then show "f W \<in> U" using \<open>V \<supseteq> W\<close> \<open>V \<subseteq> U\<close> by blast
+    qed
+    ultimately show "\<exists>a\<in>D. \<forall>b\<in>D. a \<supseteq> b \<longrightarrow> f b \<in> U" by blast
+  qed
+  have hfA: "\<forall>U\<in>D. f U \<in> A" using hf by blast
+  show ?thesis unfolding D_def using hconv hfA D_def by blast
+qed
+
+text \<open>Continuity preserves net convergence (forward direction).\<close>
+lemma continuous_preserves_net_convergence:
+  assumes hTop: "is_topology_on X TX" and hTopY: "is_topology_on Y TY"
+  and hcont: "top1_continuous_map_on X TX Y TY f"
+  and hconv: "top1_net_converges_to_on D le g x X TX"
+  shows "top1_net_converges_to_on D le (f \<circ> g) (f x) Y TY"
+  unfolding top1_net_converges_to_on_def
+proof (intro conjI allI impI)
+  have hxX: "x \<in> X" using hconv unfolding top1_net_converges_to_on_def by blast
+  have hgD: "\<forall>a\<in>D. g a \<in> X" using hconv
+    unfolding top1_net_converges_to_on_def top1_is_net_on_def by blast
+  have hfX: "\<forall>x\<in>X. f x \<in> Y" using hcont unfolding top1_continuous_map_on_def by blast
+  show "top1_is_net_on D le (f \<circ> g) Y"
+    unfolding top1_is_net_on_def
+  proof (intro conjI ballI)
+    show "top1_directed_set D le" using hconv
+      unfolding top1_net_converges_to_on_def top1_is_net_on_def by blast
+    fix a assume "a \<in> D"
+    then show "(f \<circ> g) a \<in> Y" using hgD hfX by auto
+  qed
+  show "f x \<in> Y" using hxX hfX by blast
+  fix V assume hV: "neighborhood_of (f x) Y TY V"
+  have hpre: "\<forall>U\<in>TY. {x\<in>X. f x \<in> U} \<in> TX"
+    using hcont unfolding top1_continuous_map_on_def by blast
+  obtain W where "W \<in> TY" "f x \<in> W" "W \<subseteq> V"
+    using hV unfolding neighborhood_of_def by blast
+  have hpW: "{x\<in>X. f x \<in> W} \<in> TX" using hpre \<open>W \<in> TY\<close> by blast
+  have "x \<in> {x\<in>X. f x \<in> W}" using \<open>f x \<in> W\<close> hxX by blast
+  then have "neighborhood_of x X TX {x\<in>X. f x \<in> W}"
+    unfolding neighborhood_of_def using hpW by blast
+  then obtain a where "a \<in> D" "\<forall>b\<in>D. le a b \<longrightarrow> g b \<in> {x\<in>X. f x \<in> W}"
+    using hconv unfolding top1_net_converges_to_on_def by blast
+  then have "\<forall>b\<in>D. le a b \<longrightarrow> (f \<circ> g) b \<in> V"
+    using \<open>W \<subseteq> V\<close> by auto
+  then show "\<exists>a\<in>D. \<forall>b\<in>D. le a b \<longrightarrow> (f \<circ> g) b \<in> V"
+    using \<open>a \<in> D\<close> by blast
+qed
+
 end
