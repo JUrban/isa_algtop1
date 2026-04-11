@@ -32473,7 +32473,12 @@ proof -
     then have "n > m" by simp
     then show "\<exists>n > m. s n \<in> U" using \<open>s n \<in> U\<close> by blast
   qed
-  show ?thesis using hxX hunb hTop h1st sorry
+  obtain B where hBnb: "\<forall>U\<in>B. neighborhood_of x X T U"
+    and hBref: "\<forall>V. neighborhood_of x X T V \<longrightarrow> (\<exists>U\<in>B. U \<subseteq> V)"
+    using h1st hxX
+    unfolding top1_first_countable_on_def top1_countable_neighborhood_basis_at_def
+    by metis
+  show ?thesis using hxX hunb hBnb hBref hTop sorry
 qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
