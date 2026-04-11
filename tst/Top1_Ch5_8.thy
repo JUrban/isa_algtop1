@@ -32879,6 +32879,20 @@ text \<open>Note: The equivalences in Theorem 28.2 are specific to metrizable sp
   Formalizing these counterexamples requires ordinal spaces beyond what is currently
   available in the library.\<close>
 
+text \<open>In first-countable T₁ spaces, LP-compact implies sequentially compact.
+  This generalizes part of Theorem 28.2 beyond metric spaces.\<close>
+lemma lp_compact_first_countable_imp_seq_compact:
+  assumes hT1: "satisfies_T1_on X T"
+  and h1st: "top1_first_countable_on X T"
+  and hLPC: "top1_limit_point_compact_on X T"
+  shows "top1_sequentially_compact_on X T"
+proof -
+  have hTop: "is_topology_on X T"
+    using hLPC unfolding top1_limit_point_compact_on_def sorry
+  show ?thesis unfolding top1_sequentially_compact_on_def
+    sorry
+qed
+
 text \<open>Useful corollaries: extract individual equivalences.\<close>
 
 corollary compact_iff_lp_compact_metric:
