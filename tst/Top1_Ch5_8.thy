@@ -32461,15 +32461,8 @@ proof -
     moreover have "s ` {n. s n \<in> U} = U \<inter> s ` UNIV" by auto
     ultimately show "infinite {n. s n \<in> U}" by (metis finite_imageI)
   qed
-  text \<open>Now build strict_mono sub using first-countable basis + LEAST pick.
-    Get nested basis B_0 ⊇ B_1 ⊇ ..., pick sub(k) > sub(k-1) with s(sub k) ∈ B_k.\<close>
-  have hxcl: "x \<in> closure_on X T (s ` UNIV)"
-    using limit_point_imp_closure[OF hTop hsX hxX hlp] by blast
-  obtain t where "\<forall>n. t n \<in> s ` UNIV" "seq_converges_to_on t x X T"
-    using first_countable_closure_imp_seq[OF hTop hsX h1st hxcl] by blast
-  text \<open>t converges to x and each t(n) ∈ range(s).
-    For any neighborhood U of x, eventually t(n) ∈ U, so s hits U at t's indices.
-    Since {n. s n ∈ U} is infinite, we can always find larger indices.\<close>
+  text \<open>Since {n. s n ∈ U} is infinite for every neighborhood U,
+    we can always find larger indices hitting U.\<close>
   have hunb: "\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<forall>m. \<exists>n > m. s n \<in> U)"
   proof (intro allI impI)
     fix U m assume "neighborhood_of x X T U"
@@ -32480,21 +32473,149 @@ proof -
     then have "n > m" by simp
     then show "\<exists>n > m. s n \<in> U" using \<open>s n \<in> U\<close> by blast
   qed
-  obtain B where hBnb: "\<forall>U\<in>B. neighborhood_of x X T U"
+  obtain B where hBcnt: "top1_countable B"
+    and hBnb: "\<forall>U\<in>B. neighborhood_of x X T U"
     and hBref: "\<forall>V. neighborhood_of x X T V \<longrightarrow> (\<exists>U\<in>B. U \<subseteq> V)"
     using h1st hxX
     unfolding top1_first_countable_on_def top1_countable_neighborhood_basis_at_def
     by metis
-  have hxcl: "x \<in> closure_on X T (s ` UNIV)"
-    using limit_point_imp_closure[OF hTop hsX hxX hlp] sorry
-  obtain t where ht_in: "\<forall>n. t n \<in> s ` UNIV"
-    and htconv: "seq_converges_to_on t x X T"
-    using first_countable_closure_imp_seq[OF hTop hsX h1st hxcl] sorry
-  have hek: "\<forall>n. \<exists>k::nat. t n = s k" using ht_in sorry
-  then obtain g :: "nat \<Rightarrow> nat" where hg: "\<forall>n. t n = s (g n)" sorry
-  have hsg: "seq_converges_to_on (s \<circ> g) x X T"
-    using seq_conv_rename htconv hg sorry
-  show ?thesis using hxX hsg sorry
+  text \<open>Build strict_mono sub using hunb and the first-countable basis.
+    The basis B is countable, so enumerate it. Build nested neighborhoods U n
+    as finite intersections of basis elements, then pick sub(n) > sub(n-1) with
+    s(sub n) ∈ U n using hunb.\<close>
+  obtain fb :: "'a set \<Rightarrow> nat" where hfb: "inj_on fb B"
+    using hBcnt unfolding top1_countable_def by blast
+  have hXT: "X \<in> T" using hTop unfolding is_topology_on_def by blast
+  have hXnb: "neighborhood_of x X T X"
+    unfolding neighborhood_of_def using hXT hxX by blast
+  obtain b0 where hb0B: "b0 \<in> B" and hb0sub: "b0 \<subseteq> X"
+    using hBref hXnb by blast
+  have hb0nb: "neighborhood_of x X T b0"
+    using hBnb hb0B by blast
+  define S where "S n = {b \<in> B. fb b \<le> n}" for n
+  define U where "U n = \<Inter>(insert b0 (S n))" for n
+  have hSsubB: "\<And>n. S n \<subseteq> B" unfolding S_def by blast
+  have hSfinite: "\<And>n. finite (S n)"
+  proof -
+    fix n
+    have "fb ` (S n) \<subseteq> {0..n}" unfolding S_def by fastforce
+    then have hfinimg: "finite (fb ` (S n))" by (rule finite_subset) simp
+    have "inj_on fb (S n)"
+      by (rule inj_on_subset[OF hfb hSsubB])
+    then show "finite (S n)" using hfinimg finite_image_iff by blast
+  qed
+  have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+    using hTop unfolding is_topology_on_def by blast
+  have hb0T: "b0 \<in> T" using hb0nb unfolding neighborhood_of_def by blast
+  have hSsubT: "\<And>n. S n \<subseteq> T"
+  proof (rule subsetI)
+    fix n b assume "b \<in> S n"
+    then have "b \<in> B" unfolding S_def by blast
+    then have "neighborhood_of x X T b" using hBnb by blast
+    then show "b \<in> T" unfolding neighborhood_of_def by blast
+  qed
+  have hU_open: "\<And>n. U n \<in> T"
+  proof -
+    fix n
+    have hfin: "finite (insert b0 (S n))" using hSfinite by simp
+    have hne: "insert b0 (S n) \<noteq> {}" by simp
+    have hsub: "insert b0 (S n) \<subseteq> T" using hb0T hSsubT by blast
+    have "finite (insert b0 (S n)) \<and> insert b0 (S n) \<noteq> {} \<and> insert b0 (S n) \<subseteq> T"
+      using hfin hne hsub by blast
+    then have "\<Inter>(insert b0 (S n)) \<in> T" using inter_T by blast
+    then show "U n \<in> T" unfolding U_def by simp
+  qed
+  have hU_mem: "\<And>n. x \<in> U n"
+  proof -
+    fix n show "x \<in> U n" unfolding U_def
+    proof (rule InterI)
+      fix b assume "b \<in> insert b0 (S n)"
+      then consider "b = b0" | "b \<in> S n" by blast
+      then show "x \<in> b"
+      proof cases
+        case 1 then show ?thesis using hb0nb unfolding neighborhood_of_def by blast
+      next
+        case 2 then have "b \<in> B" using hSsubB by blast
+        then show ?thesis using hBnb unfolding neighborhood_of_def by blast
+      qed
+    qed
+  qed
+  have hU_nb: "\<And>n. neighborhood_of x X T (U n)"
+    unfolding neighborhood_of_def using hU_open hU_mem by blast
+  have hU_mono: "\<And>m n. n \<le> m \<Longrightarrow> U m \<subseteq> U n"
+  proof -
+    fix m n :: nat assume "n \<le> m"
+    then have "S n \<subseteq> S m" unfolding S_def by fastforce
+    then have "insert b0 (S n) \<subseteq> insert b0 (S m)" by blast
+    then show "U m \<subseteq> U n" unfolding U_def by (rule Inter_anti_mono)
+  qed
+  have hU_ref: "\<forall>V. neighborhood_of x X T V \<longrightarrow> (\<exists>N. U N \<subseteq> V)"
+  proof (intro allI impI)
+    fix V assume "neighborhood_of x X T V"
+    then obtain b where "b \<in> B" "b \<subseteq> V" using hBref by blast
+    then have "b \<in> S (fb b)" unfolding S_def by simp
+    then have "b \<in> insert b0 (S (fb b))" by blast
+    then have "U (fb b) \<subseteq> b" unfolding U_def by (rule Inter_lower)
+    then show "\<exists>N. U N \<subseteq> V" using \<open>b \<subseteq> V\<close> by (intro exI[where x="fb b"]) blast
+  qed
+  text \<open>Now build the strict_mono subsequence using LEAST + rec_nat.\<close>
+  define pick where "pick = (\<lambda>n m. LEAST k. k > m \<and> s k \<in> U n)"
+  have hpick: "\<And>n m. pick n m > m \<and> s (pick n m) \<in> U n"
+  proof -
+    fix n m
+    have "neighborhood_of x X T (U n)" by (rule hU_nb)
+    then have "\<exists>k > m. s k \<in> U n" using hunb by blast
+    then have "\<exists>k. k > m \<and> s k \<in> U n" by blast
+    then show "pick n m > m \<and> s (pick n m) \<in> U n"
+      unfolding pick_def by (rule LeastI_ex)
+  qed
+  define sub where "sub = rec_nat (pick 0 0) (\<lambda>n prev. pick (Suc n) prev)"
+  have hsub_0: "sub 0 = pick 0 0" unfolding sub_def by simp
+  have hsub_Suc: "\<And>n. sub (Suc n) = pick (Suc n) (sub n)"
+    unfolding sub_def by simp
+  have hsub_gt: "\<And>n. sub n < sub (Suc n)"
+  proof -
+    fix n
+    have "sub (Suc n) = pick (Suc n) (sub n)" by (rule hsub_Suc)
+    moreover have "pick (Suc n) (sub n) > sub n"
+      using hpick[where n="Suc n" and m="sub n"] by blast
+    ultimately show "sub n < sub (Suc n)" by simp
+  qed
+  have hsub_strict: "strict_mono sub"
+    using hsub_gt by (simp add: strict_mono_Suc_iff)
+  have hsub_in_U: "\<And>n. s (sub n) \<in> U n"
+  proof -
+    fix n show "s (sub n) \<in> U n"
+    proof (cases n)
+      case 0
+      have "sub 0 = pick 0 0" by (rule hsub_0)
+      moreover have "s (pick 0 0) \<in> U 0"
+        using hpick[where n=0 and m=0] by blast
+      ultimately show ?thesis using 0 by simp
+    next
+      case (Suc m)
+      have "sub (Suc m) = pick (Suc m) (sub m)" by (rule hsub_Suc)
+      moreover have "s (pick (Suc m) (sub m)) \<in> U (Suc m)"
+        using hpick[where n="Suc m" and m="sub m"] by blast
+      ultimately show ?thesis using Suc by simp
+    qed
+  qed
+  have hsub_conv: "seq_converges_to_on (s \<circ> sub) x X T"
+    unfolding seq_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "x \<in> X" by (rule hxX)
+    fix V assume "neighborhood_of x X T V"
+    then obtain N where hUN: "U N \<subseteq> V" using hU_ref by blast
+    show "\<exists>N. \<forall>n\<ge>N. (s \<circ> sub) n \<in> V"
+    proof (intro exI[where x=N] allI impI)
+      fix n assume "N \<le> n"
+      then have "U n \<subseteq> U N" using hU_mono by blast
+      then have "U n \<subseteq> V" using hUN by blast
+      moreover have "s (sub n) \<in> U n" by (rule hsub_in_U)
+      ultimately show "(s \<circ> sub) n \<in> V" by fastforce
+    qed
+  qed
+  show ?thesis using hxX hsub_conv hsub_strict by blast
 qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
