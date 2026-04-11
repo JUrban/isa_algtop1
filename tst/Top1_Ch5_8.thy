@@ -12756,7 +12756,7 @@ next
       0 \<le> snd (hilbert_rec o' (Suc n) t) \<and> snd (hilbert_rec o' (Suc n) t) \<le> 1"
       using hilbert_rec_range by blast
     then show "hilbert_rec o' (Suc n) t \<in> ?I \<times> ?I"
-      unfolding top1_closed_interval_def by (metis SigmaI mem_Collect_eq prod.collapse)
+      by (cases "hilbert_rec o' (Suc n) t") (auto simp: top1_closed_interval_def)
   qed
   have hTP: "is_topology_on (?I \<times> ?I) (product_topology_on ?TI ?TI)"
     by (rule product_topology_on_is_topology_on[OF hTI hTI])
@@ -32859,6 +32859,32 @@ proof -
   show ?thesis using h12 h23 h31 by blast
 qed
 
+text \<open>Note: The equivalences in Theorem 28.2 are specific to metrizable spaces.
+  In general topological spaces:
+  - Compact always implies limit-point compact (Theorem 28.1), but not conversely.
+    The standard counterexample is S_Ω = [0, Ω) with the order topology, where Ω is
+    the first uncountable ordinal: every uncountable subset has a limit point, but the
+    open cover \{[0,α) | α < Ω\} has no finite subcover.
+  - Limit-point compact does not imply sequentially compact in general.
+  - Sequentially compact does not imply compact in general.
+  Formalizing these counterexamples requires ordinal spaces beyond what is currently
+  available in the library.\<close>
 
+text \<open>Useful corollaries: extract individual equivalences.\<close>
+
+corollary compact_iff_lp_compact_metric:
+  assumes "top1_metric_on X d" "T = top1_metric_topology_on X d"
+  shows "top1_compact_on X T \<longleftrightarrow> top1_limit_point_compact_on X T"
+  using Theorem_28_2[OF assms] by blast
+
+corollary compact_iff_seq_compact_metric:
+  assumes "top1_metric_on X d" "T = top1_metric_topology_on X d"
+  shows "top1_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T"
+  using Theorem_28_2[OF assms] by blast
+
+corollary lp_compact_iff_seq_compact_metric:
+  assumes "top1_metric_on X d" "T = top1_metric_topology_on X d"
+  shows "top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T"
+  using Theorem_28_2[OF assms] by blast
 
 end
