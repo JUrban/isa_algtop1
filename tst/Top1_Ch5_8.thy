@@ -32389,7 +32389,35 @@ lemma finite_range_const_subseq:
   and hs: "\<forall>n::nat. s n \<in> X"
   and hfin: "finite (s ` UNIV)"
   shows "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
-  sorry
+proof -
+  obtain a0 where hinf0: "infinite {n. s n = s a0}"
+    using pigeonhole_infinite[of UNIV s] hfin by auto
+  define x where "x = s a0"
+  have hxX: "x \<in> X" using hs x_def by simp
+  have hinf: "infinite {n. s n = x}" using hinf0 x_def by simp
+  have hunb: "\<forall>m. \<exists>n > m. s n = x"
+  proof (intro allI)
+    fix m have "\<not> {n. s n = x} \<subseteq> {..m}"
+      by (metis hinf atMost_def finite_Collect_le_nat rev_finite_subset)
+    then obtain n where "n \<notin> {..m}" "s n = x" by blast
+    then have "n > m" "s n = x" by auto
+    then show "\<exists>n > m. s n = x" by blast
+  qed
+  define pick where "pick = (\<lambda>m. LEAST n. n > m \<and> s n = x)"
+  have hpick: "\<And>m. pick m > m \<and> s (pick m) = x"
+  proof -
+    fix m from hunb have "\<exists>n. n > m \<and> s n = x" by blast
+    then show "pick m > m \<and> s (pick m) = x" unfolding pick_def by (rule LeastI_ex)
+  qed
+  define sub where "sub = rec_nat (pick 0) (\<lambda>_ prev. pick prev)"
+  have hsub_val: "\<And>n. s (sub n) = x"
+    by (metis hpick sub_def old.nat.exhaust old.nat.simps(7) rec_nat_0_imp)
+  have hsub_strict: "strict_mono sub"
+    by (metis strict_mono_Suc_iff hpick sub_def old.nat.simps(7))
+  have "seq_converges_to_on (s \<circ> sub) x X T"
+    unfolding seq_converges_to_on_def using hxX hsub_val neighborhood_of_def hTop by fastforce
+  then show ?thesis using hsub_strict hxX by blast
+qed
 
 text \<open>Helper: infinite range + LP-compact + T₁ + first-countable → convergent subsequence.\<close>
 lemma infinite_range_lpc_subseq:
