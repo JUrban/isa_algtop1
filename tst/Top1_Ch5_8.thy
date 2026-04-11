@@ -32463,7 +32463,17 @@ proof -
   text \<open>t converges to x and each t(n) ∈ range(s).
     For any neighborhood U of x, eventually t(n) ∈ U, so s hits U at t's indices.
     Since {n. s n ∈ U} is infinite, we can always find larger indices.\<close>
-  show ?thesis using hxX hhit_idx hTop h1st sorry
+  have hunb: "\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<forall>m. \<exists>n > m. s n \<in> U)"
+  proof (intro allI impI)
+    fix U m assume "neighborhood_of x X T U"
+    then have "infinite {n. s n \<in> U}" using hhit_idx by blast
+    then have "\<not> {n. s n \<in> U} \<subseteq> {..m}"
+      by (metis atMost_def finite_Collect_le_nat rev_finite_subset)
+    then obtain n where "n \<notin> {..m}" "s n \<in> U" by blast
+    then have "n > m" by simp
+    then show "\<exists>n > m. s n \<in> U" using \<open>s n \<in> U\<close> by blast
+  qed
+  show ?thesis using hxX hunb hTop h1st sorry
 qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
