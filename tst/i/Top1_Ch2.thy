@@ -37,6 +37,17 @@ lemma is_topology_on_strict_imp: "is_topology_on_strict X T \<Longrightarrow> is
 lemma is_topology_on_strict_opens_sub: "is_topology_on_strict X T \<Longrightarrow> U \<in> T \<Longrightarrow> U \<subseteq> X"
   unfolding is_topology_on_strict_def by blast
 
+text \<open>Counterexample from the review: T = \{∅, \{0\}, \{1\}, \{0,1\}\} satisfies
+  is\_topology\_on \{0\} T (the weaker predicate) but NOT is\_topology\_on\_strict \{0\} T
+  (because \{1\} ∉ Pow \{0\}). This motivates the strict version.\<close>
+lemma is_topology_on_counterexample:
+  "is_topology_on {0::nat} {{}, {0}, {1}, {0,1}}"
+  unfolding is_topology_on_def by auto
+
+lemma is_topology_on_strict_counterexample:
+  "\<not> is_topology_on_strict {0::nat} {{}, {0}, {1}, {0,1}}"
+  unfolding is_topology_on_strict_def by auto
+
 (** Basic derived closure properties for a topology. **)
 lemma topology_inter2:
   assumes hT: "is_topology_on X T"
