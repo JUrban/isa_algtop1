@@ -1011,15 +1011,21 @@ qed
 text \<open>Note: openin\_on does not require U ⊆ X. Under is\_topology\_on\_strict, this follows
   automatically from U ∈ T. The weaker version is retained for backward compatibility.\<close>
 definition openin_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
-  "openin_on X T U \<longleftrightarrow> U \<in> T"
+  "openin_on X T U \<longleftrightarrow> U \<in> T \<and> U \<subseteq> X"
+
+lemma openin_on_mem: "openin_on X T U \<Longrightarrow> U \<in> T"
+  unfolding openin_on_def by blast
+
+lemma openin_on_sub: "openin_on X T U \<Longrightarrow> U \<subseteq> X"
+  unfolding openin_on_def by blast
 
 lemma openin_on_sub_strict: "is_topology_on_strict X T \<Longrightarrow> openin_on X T U \<Longrightarrow> U \<subseteq> X"
-  unfolding openin_on_def using is_topology_on_strict_opens_sub by blast
+  unfolding openin_on_def by blast
 
 (** from \S12 Definition (Finer/coarser/comparable) [top1.tex:96] **)
 (** LATEX VERSION: "T' is finer than T iff T \<subseteq> T' ..." **)
-text \<open>Note: finer\_than does not require T and T' to be topologies on the same set.
-  In practice, this is always ensured by the context (assumptions carry is\_topology\_on).\<close>
+text \<open>Finer/coarser: T' is finer than T if T ⊆ T'. In practice, both T and T' are
+  topologies on the same set X (ensured by context assumptions).\<close>
 definition finer_than :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "finer_than T T' \<longleftrightarrow> T \<subseteq> T'"
 
