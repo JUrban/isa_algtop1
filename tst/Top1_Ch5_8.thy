@@ -32454,7 +32454,16 @@ proof -
     moreover have "s ` {n. s n \<in> U} = U \<inter> s ` UNIV" by auto
     ultimately show "infinite {n. s n \<in> U}" by (metis finite_imageI)
   qed
-  show ?thesis using hxX hhit_idx sorry
+  text \<open>Now build strict_mono sub using first-countable basis + LEAST pick.
+    Get nested basis B_0 ⊇ B_1 ⊇ ..., pick sub(k) > sub(k-1) with s(sub k) ∈ B_k.\<close>
+  have hxcl: "x \<in> closure_on X T (s ` UNIV)"
+    using limit_point_imp_closure[OF hTop hsX hxX hlp] by blast
+  obtain t where "\<forall>n. t n \<in> s ` UNIV" "seq_converges_to_on t x X T"
+    using first_countable_closure_imp_seq[OF hTop hsX h1st hxcl] by blast
+  text \<open>t converges to x and each t(n) ∈ range(s).
+    For any neighborhood U of x, eventually t(n) ∈ U, so s hits U at t's indices.
+    Since {n. s n ∈ U} is infinite, we can always find larger indices.\<close>
+  show ?thesis using hxX hhit_idx hTop h1st sorry
 qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
