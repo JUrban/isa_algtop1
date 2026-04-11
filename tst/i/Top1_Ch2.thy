@@ -5491,6 +5491,24 @@ text \<open>Note: neighborhood\_of does not require x ∈ X or U ⊆ X. Under is
 definition neighborhood_of :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "neighborhood_of x X T U \<longleftrightarrow> U \<in> T \<and> x \<in> U"
 
+text \<open>Strict version that additionally constrains x ∈ X.
+  Under is\_topology\_on\_strict, neighborhood\_of already implies x ∈ X
+  (since U ∈ T and T ⊆ Pow X gives U ⊆ X, then x ∈ U implies x ∈ X).\<close>
+definition neighborhood_of_strict :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "neighborhood_of_strict x X T U \<longleftrightarrow> U \<in> T \<and> x \<in> U \<and> x \<in> X"
+
+lemma neighborhood_of_strict_imp:
+  "neighborhood_of_strict x X T U \<Longrightarrow> neighborhood_of x X T U"
+  unfolding neighborhood_of_strict_def neighborhood_of_def by blast
+
+lemma neighborhood_of_strict_carrier:
+  "neighborhood_of_strict x X T U \<Longrightarrow> x \<in> X"
+  unfolding neighborhood_of_strict_def by blast
+
+lemma neighborhood_of_to_strict:
+  "is_topology_on_strict X T \<Longrightarrow> neighborhood_of x X T U \<Longrightarrow> neighborhood_of_strict x X T U"
+  unfolding neighborhood_of_strict_def neighborhood_of_def is_topology_on_strict_def by blast
+
 theorem Theorem_17_5a:
   assumes hT: "is_topology_on X T"
   assumes hxX: "x \<in> X" and hAX: "A \<subseteq> X"
