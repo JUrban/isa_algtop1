@@ -32441,7 +32441,21 @@ lemma infinite_range_lpc_subseq:
   and hs: "\<forall>n::nat. s n \<in> X"
   and hinf: "infinite (s ` UNIV)"
   shows "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
-  sorry
+proof -
+  have hsX: "s ` UNIV \<subseteq> X" using hs by blast
+  obtain x where hxX: "x \<in> X" and hlp: "is_limit_point_of x (s ` UNIV) X T"
+    using hLPC hsX hinf unfolding top1_limit_point_compact_on_def by blast
+  have hhit: "\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite (U \<inter> s ` UNIV)"
+    by (meson Theorem_17_9 hT1 hlp hsX hxX)
+  have hhit_idx: "\<forall>U. neighborhood_of x X T U \<longrightarrow> infinite {n. s n \<in> U}"
+  proof (intro allI impI)
+    fix U assume hU: "neighborhood_of x X T U"
+    have "infinite (U \<inter> s ` UNIV)" using hhit hU by blast
+    moreover have "s ` {n. s n \<in> U} = U \<inter> s ` UNIV" by auto
+    ultimately show "infinite {n. s n \<in> U}" by (metis finite_imageI)
+  qed
+  show ?thesis using hxX hhit_idx sorry
+qed
 
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
 definition top1_sequentially_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
