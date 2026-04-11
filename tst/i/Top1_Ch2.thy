@@ -8419,6 +8419,18 @@ definition top1_box_basis_on ::
   "top1_box_basis_on I X T =
      { top1_PiE I U | U. (\<forall>i\<in>I. U i \<in> T i \<and> U i \<subseteq> X i) }"
 
+text \<open>Under is\_topology\_on\_strict, the U i ⊆ X i condition is redundant.\<close>
+lemma top1_box_basis_on_strict_eq:
+  assumes "\<forall>i\<in>I. is_topology_on_strict (X i) (T i)"
+  shows "top1_box_basis_on I X T = { top1_PiE I U | U. (\<forall>i\<in>I. U i \<in> T i) }"
+proof (rule equalityI)
+  show "top1_box_basis_on I X T \<subseteq> {top1_PiE I U |U. \<forall>i\<in>I. U i \<in> T i}"
+    unfolding top1_box_basis_on_def by blast
+  show "{top1_PiE I U |U. \<forall>i\<in>I. U i \<in> T i} \<subseteq> top1_box_basis_on I X T"
+    unfolding top1_box_basis_on_def using assms
+    unfolding is_topology_on_strict_def by blast
+qed
+
 definition top1_box_topology_on ::
   "'i set \<Rightarrow> ('i \<Rightarrow> 'a set) \<Rightarrow> ('i \<Rightarrow> 'a set set) \<Rightarrow> ('i \<Rightarrow> 'a) set set"
   where
