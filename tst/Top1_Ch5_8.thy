@@ -32888,7 +32888,7 @@ lemma lp_compact_first_countable_imp_seq_compact:
   shows "top1_sequentially_compact_on X T"
 proof -
   have hTop: "is_topology_on X T"
-    using hLPC unfolding top1_limit_point_compact_on_def sorry
+    using hLPC unfolding top1_limit_point_compact_on_def by blast
   show ?thesis sorry
 qed
 
