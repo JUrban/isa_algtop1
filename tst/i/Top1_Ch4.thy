@@ -491,7 +491,8 @@ proof -
       have hxU: "x \<in> U"
         unfolding hUeq using hxY hxV by blast
       show "neighborhood_of x Y ?TY U"
-        unfolding neighborhood_of_def using hUTY hxU hxY by blast
+        unfolding neighborhood_of_def
+        by (intro conjI, rule hUTY, rule hxU)
     qed
 
     have hBref': "\<forall>V. neighborhood_of x Y ?TY V \<longrightarrow> (\<exists>U\<in>B'. U \<subseteq> V)"
@@ -507,7 +508,7 @@ proof -
       have hxW: "x \<in> W"
         using hxV hxY unfolding hVeq by blast
       have hWnb: "neighborhood_of x X T W"
-        unfolding neighborhood_of_def using hW hxW hxX by blast
+        unfolding neighborhood_of_def using hW hxW by blast
 
       obtain U0 where hU0: "U0 \<in> B" and hU0sub: "U0 \<subseteq> W"
         using hBref hWnb by blast
@@ -584,8 +585,8 @@ proof -
       using hxY unfolding top1_PiE_iff by blast
 
     show "\<exists>B0. top1_countable B0
-         \<and> (\<forall>U\<in>B0. U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y)
-         \<and> (\<forall>V. V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y \<longrightarrow> (\<exists>U\<in>B0. U \<subseteq> V))"
+         \<and> (\<forall>U\<in>B0. U \<in> ?TP \<and> x \<in> U)
+         \<and> (\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>B0. U \<subseteq> V))"
     proof (cases "\<exists>b\<in>?B. x \<in> b")
       case False
 
@@ -784,7 +785,7 @@ proof -
           using hP hFin3 by blast
       qed
 
-      have hBBnb: "\<forall>U\<in>BB. U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y"
+      have hBBnb: "\<forall>U\<in>BB. U \<in> ?TP \<and> x \<in> U"
       proof (intro ballI)
         fix U
         assume hU: "U \<in> BB"
@@ -882,14 +883,14 @@ proof -
             done
         qed
 
-        show "U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y"
-          unfolding hUeq using hOpen hxU' hxY by blast
+        show "U \<in> ?TP \<and> x \<in> U"
+          unfolding hUeq using hOpen hxU' by blast
       qed
 
-      have hBBref: "\<forall>V. V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y \<longrightarrow> (\<exists>U\<in>BB. U \<subseteq> V)"
+      have hBBref: "\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>BB. U \<subseteq> V)"
       proof (intro allI impI)
         fix V
-        assume hV: "V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y"
+        assume hV: "V \<in> ?TP \<and> x \<in> V"
         have hVgen: "V \<in> topology_generated_by_basis ?Y ?B"
           using hV unfolding top1_product_topology_on_def by simp
         obtain b1 where hb1: "b1 \<in> ?B" and hxb1: "x \<in> b1" and hb1V: "b1 \<subseteq> V"
@@ -907,8 +908,6 @@ proof -
           assume hiJ: "i \<in> J"
           have hiI: "i \<in> I"
             using hiJ unfolding J_def by blast
-          have hxiXi: "x i \<in> X i"
-            using hxY hiI unfolding top1_PiE_iff by blast
           have hU1nb: "neighborhood_of (x i) (X i) (T i) (U1 i)"
           proof -
             have hU1open: "U1 i \<in> T i" and hU1sub: "U1 i \<subseteq> X i"
@@ -916,7 +915,7 @@ proof -
             have hxiU1: "x i \<in> U1 i"
               using hxb1 unfolding hb1def top1_PiE_iff using hiI by blast
             show ?thesis
-              unfolding neighborhood_of_def using hU1open hxiU1 hxiXi by blast
+              unfolding neighborhood_of_def using hU1open hxiU1 by blast
           qed
           have hBref: "\<forall>V'. neighborhood_of (x i) (X i) (T i) V' \<longrightarrow> (\<exists>U\<in>B0 i. U \<subseteq> V')"
             using hB0 hiI by blast
@@ -1616,7 +1615,7 @@ proof -
     by (rule conjunct1[OF conjunct2[OF hTX[unfolded is_topology_on_def]]])
 
   have hXnb: "neighborhood_of x X TX X"
-    unfolding neighborhood_of_def using X_TX hxX by blast
+    unfolding neighborhood_of_def by (intro conjI, rule X_TX, rule hxX)
 
   obtain b0 where hb0B: "b0 \<in> B" and hb0subX: "b0 \<subseteq> X"
     using hBref hXnb by blast
@@ -1739,7 +1738,8 @@ proof -
 	  qed
 
   have hU_nb: "\<And>n. neighborhood_of x X TX (U n)"
-    unfolding neighborhood_of_def using hU_open hU_mem hxX by blast
+    unfolding neighborhood_of_def
+    by (intro conjI, rule hU_open, rule hU_mem)
 
   have hU_mono: "\<And>m n. n \<le> m \<Longrightarrow> U m \<subseteq> U n"
   proof -
@@ -2476,7 +2476,8 @@ proof -
       have hyVmem: "y \<in> V"
         using hyV by blast
       have hnby: "neighborhood_of y X T V"
-        unfolding neighborhood_of_def using hV hyVmem hyX by blast
+        unfolding neighborhood_of_def
+        by (intro conjI, rule hV, rule hyVmem)
       show "\<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}"
         by (rule exI[where x=U], rule exI[where x=V], intro conjI, rule hnbx, rule hnby, rule hdisj)
     qed
@@ -2585,7 +2586,7 @@ proof -
           unfolding U'_def using hxY hxU by blast
       qed
       have hnbxY: "neighborhood_of x Y ?TY U'"
-        unfolding neighborhood_of_def using hU'TY hxU' hxY by blast
+        unfolding neighborhood_of_def by (intro conjI, rule hU'TY, rule hxU')
 
       have hCsubV': "C \<subseteq> V'"
       proof -
@@ -3112,7 +3113,8 @@ proof -
         qed
 
         have hnbhd: "neighborhood_of p (X \<times> Y) ?TP ?U"
-          unfolding neighborhood_of_def using hUopen hpU hpXY by blast
+          unfolding neighborhood_of_def
+          by (intro conjI hUopen hpU)
 
         show "\<exists>U V. neighborhood_of p (X \<times> Y) ?TP U \<and> V \<in> ?TP \<and> C \<subseteq> V \<and> U \<inter> V = {}"
           apply (rule exI[where x="?U"])
@@ -3220,7 +3222,7 @@ next
       qed
 
       have hnbV: "neighborhood_of x X T V"
-        unfolding neighborhood_of_def using hV hxV hxX by blast
+        unfolding neighborhood_of_def by (intro conjI, rule hV, rule hxV)
       have hdisj: "V \<inter> (X - closure_on X T V) = {}"
       proof (rule equalityI)
         show "V \<inter> (X - closure_on X T V) \<subseteq> {}"
@@ -3999,9 +4001,9 @@ proof -
       show "\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {}"
       proof -
         have hnbU: "neighborhood_of x X TX (top1_ball_on X d x r)"
-          unfolding neighborhood_of_def using hUopen hxU hxX by blast
+          unfolding neighborhood_of_def using hUopen hxU by blast
         have hnbV: "neighborhood_of y X TX (top1_ball_on X d y r)"
-          unfolding neighborhood_of_def using hVopen hyV hyX by blast
+          unfolding neighborhood_of_def using hVopen hyV by blast
         show ?thesis
           apply (rule exI[where x="top1_ball_on X d x r"])
           apply (rule exI[where x="top1_ball_on X d y r"])
@@ -4731,7 +4733,7 @@ proof -
       have hxU: "x \<in> U"
         using hUx by blast
       have hnbhd: "neighborhood_of x X T U"
-        unfolding neighborhood_of_def using hUT hxU hxX by blast
+        unfolding neighborhood_of_def using hUT hxU by blast
 
       show "\<exists>U V. neighborhood_of x X T U \<and> V \<in> T \<and> C \<subseteq> V \<and> U \<inter> V = {}"
         apply (rule exI[where x=U])
@@ -8414,7 +8416,11 @@ proof -
 	      qed
 
       have hnbhd: "neighborhood_of x X TX ?U"
-        unfolding neighborhood_of_def using hU_open hxc hxX by blast
+        unfolding neighborhood_of_def
+        apply (intro conjI)
+         apply (rule hU_open)
+        apply (rule hxc)
+        done
 
       show "\<exists>U V. neighborhood_of x X TX U \<and> V \<in> TX \<and> C \<subseteq> V \<and> U \<inter> V = {}"
         apply (rule exI[where x="?U"])
@@ -10007,7 +10013,7 @@ proof -
 	        have hxU: "x \<in> X - {y}"
 	          using hxX hne by blast
 	        have hnb: "neighborhood_of x X TX (X - {y})"
-	          unfolding neighborhood_of_def using hU hxU hxX by blast
+	          unfolding neighborhood_of_def using hU hxU by blast
 	        obtain n where hn1: "fseq n x = 1" and hn0: "\<forall>u\<in>X - (X - {y}). fseq n u = 0"
 	          using fseq_support[rule_format, OF hxX, of "X - {y}"] hnb by blast
 	        have hy0: "fseq n y = 0"
@@ -10480,7 +10486,7 @@ proof -
 		      have hx0X: "x0 \<in> X"
 		        using hUX hx0U by blast
 		      have hnb: "neighborhood_of x0 X TX U"
-		        unfolding neighborhood_of_def using hU hx0U hx0X by blast
+		        unfolding neighborhood_of_def using hU hx0U by simp
 		      obtain n where hnx: "fseq n x0 = 1" and hzero: "\<forall>x\<in>X - U. fseq n x = 0"
 		        using fseq_support hx0X hnb by blast
 		      define r where "r = (1/2::real)^n / 2"
@@ -10653,7 +10659,7 @@ proof -
       have hxU: "x \<in> X - {y}"
         using hxX hxy by blast
       have hnbd: "neighborhood_of x X TX (X - {y})"
-        unfolding neighborhood_of_def using hUopen hxU hxX by blast
+        unfolding neighborhood_of_def using hUopen hxU by blast
 
       obtain i where hiJ: "i \<in> J" and hpos: "0 < f i x" and hzero: "\<forall>z\<in>X - (X - {y}). f i z = 0"
         using hloc hxX hnbd by blast
@@ -10756,7 +10762,7 @@ proof -
       have hyU: "y \<in> U"
         unfolding U_def using hyW hyB by blast
       have hUnbd: "neighborhood_of y ?W ?TW U"
-        unfolding neighborhood_of_def using hUopen hyU hyW by blast
+        unfolding neighborhood_of_def using hUopen hyU by blast
 
       have hUsub: "inv_into X F ` U \<subseteq> V"
       proof (rule subsetI)
