@@ -32383,6 +32383,25 @@ qed
 
 text \<open>Helper: metric spaces satisfy T₁ (singletons are closed).\<close>
 
+text \<open>Helper: finite range sequence has a constant convergent subsequence.\<close>
+lemma finite_range_const_subseq:
+  assumes hTop: "is_topology_on X T"
+  and hs: "\<forall>n::nat. s n \<in> X"
+  and hfin: "finite (s ` UNIV)"
+  shows "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
+  sorry
+
+text \<open>Helper: infinite range + LP-compact + T₁ + first-countable → convergent subsequence.\<close>
+lemma infinite_range_lpc_subseq:
+  assumes hTop: "is_topology_on X T"
+  and hT1: "satisfies_T1_on X T"
+  and h1st: "top1_first_countable_on X T"
+  and hLPC: "top1_limit_point_compact_on X T"
+  and hs: "\<forall>n::nat. s n \<in> X"
+  and hinf: "infinite (s ` UNIV)"
+  shows "\<exists>sub x. strict_mono sub \<and> x \<in> X \<and> seq_converges_to_on (s \<circ> sub) x X T"
+  sorry
+
 text \<open>Sequential compactness: every sequence has a convergent subsequence.\<close>
 definition top1_sequentially_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_sequentially_compact_on X T \<longleftrightarrow>
@@ -32889,7 +32908,9 @@ lemma lp_compact_first_countable_imp_seq_compact:
 proof -
   have hTop: "is_topology_on X T"
     using hLPC unfolding top1_limit_point_compact_on_def by blast
-  show ?thesis sorry
+  show ?thesis unfolding top1_sequentially_compact_on_def
+    using hTop finite_range_const_subseq[OF hTop] infinite_range_lpc_subseq[OF hTop hT1 h1st hLPC]
+    by blast
 qed
 
 text \<open>Useful corollaries: extract individual equivalences.\<close>
