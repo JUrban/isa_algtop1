@@ -118,8 +118,8 @@ proof -
       using hxY unfolding top1_PiE_iff by blast
 
     show "\<exists>B0. top1_countable B0
-         \<and> (\<forall>U\<in>B0. U \<in> ?TP \<and> x \<in> U)
-         \<and> (\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>B0. U \<subseteq> V))"
+         \<and> (\<forall>U\<in>B0. U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y)
+         \<and> (\<forall>V. V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y \<longrightarrow> (\<exists>U\<in>B0. U \<subseteq> V))"
     proof (cases "\<exists>b\<in>?B. x \<in> b")
       case False
       have hnone: "\<forall>V. \<not> (V \<in> ?TP \<and> x \<in> V)"
@@ -328,7 +328,7 @@ proof -
           using hP hFin3 by blast
       qed
 
-      have hBBnb: "\<forall>U\<in>BB. U \<in> ?TP \<and> x \<in> U"
+      have hBBnb: "\<forall>U\<in>BB. U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y"
       proof (intro ballI)
         fix U assume hU: "U \<in> BB"
         obtain l where hl: "l \<in> lists (SIGMA i:I. C i)" and hUeq: "U = mkU l"
@@ -394,13 +394,13 @@ proof -
             done
         qed
 
-        show "U \<in> ?TP \<and> x \<in> U"
-          unfolding hUeq using hOpen hxU' by blast
+        show "U \<in> ?TP \<and> x \<in> U \<and> x \<in> ?Y"
+          unfolding hUeq using hOpen hxU' hxY by blast
       qed
 
-      have hBBref: "\<forall>V. V \<in> ?TP \<and> x \<in> V \<longrightarrow> (\<exists>U\<in>BB. U \<subseteq> V)"
+      have hBBref: "\<forall>V. V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y \<longrightarrow> (\<exists>U\<in>BB. U \<subseteq> V)"
       proof (intro allI impI)
-        fix V assume hV: "V \<in> ?TP \<and> x \<in> V"
+        fix V assume hV: "V \<in> ?TP \<and> x \<in> V \<and> x \<in> ?Y"
         have hVgen: "V \<in> topology_generated_by_basis ?Y ?B"
           using hV unfolding top1_product_topology_on_def by simp
         obtain b1 where hb1: "b1 \<in> ?B" and hxb1: "x \<in> b1" and hb1V: "b1 \<subseteq> V"
@@ -417,6 +417,8 @@ proof -
           fix i assume hiJ: "i \<in> J"
           have hiI: "i \<in> I"
             using hiJ unfolding J_def by blast
+          have hxiXi: "x i \<in> X i"
+            using hxY hiI unfolding top1_PiE_iff by blast
           have hU1nb: "neighborhood_of (x i) (X i) (T i) (U1 i)"
           proof -
             have hU1open: "U1 i \<in> T i" and hU1sub: "U1 i \<subseteq> X i"
@@ -424,7 +426,7 @@ proof -
             have hxiU1: "x i \<in> U1 i"
               using hxb1 unfolding hb1def top1_PiE_iff using hiI by blast
             show ?thesis
-              unfolding neighborhood_of_def using hU1open hxiU1 by blast
+              unfolding neighborhood_of_def using hU1open hxiU1 hxiXi by blast
           qed
           have hBref: "\<forall>V'. neighborhood_of (x i) (X i) (T i) V' \<longrightarrow> (\<exists>U\<in>B0 i. U \<subseteq> V')"
             using hB0 hiI by blast
@@ -5489,7 +5491,19 @@ definition intersects :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
 text \<open>Note: neighborhood\_of does not require x ∈ X or U ⊆ X. Under is\_topology\_on\_strict,
   U ∈ T implies U ⊆ X, and in practice x ∈ X is always given in the context.\<close>
 definition neighborhood_of :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
-  "neighborhood_of x X T U \<longleftrightarrow> U \<in> T \<and> x \<in> U"
+  "neighborhood_of x X T U \<longleftrightarrow> U \<in> T \<and> x \<in> U \<and> x \<in> X"
+
+lemma neighborhood_ofI: "\<lbrakk>U \<in> T; x \<in> U; x \<in> X\<rbrakk> \<Longrightarrow> neighborhood_of x X T U"
+  unfolding neighborhood_of_def by blast
+
+lemma neighborhood_of_open: "neighborhood_of x X T U \<Longrightarrow> U \<in> T"
+  unfolding neighborhood_of_def by blast
+
+lemma neighborhood_of_mem: "neighborhood_of x X T U \<Longrightarrow> x \<in> U"
+  unfolding neighborhood_of_def by blast
+
+lemma neighborhood_of_carrier: "neighborhood_of x X T U \<Longrightarrow> x \<in> X"
+  unfolding neighborhood_of_def by blast
 
 theorem Theorem_17_5a:
   assumes hT: "is_topology_on X T"
@@ -5504,7 +5518,7 @@ proof (rule iffI)
     have hUT: "U \<in> T"
       by (rule conjunct1[OF hU[unfolded neighborhood_of_def]])
     have hxU: "x \<in> U"
-      by (rule conjunct2[OF hU[unfolded neighborhood_of_def]])
+      by (rule conjunct1[OF conjunct2[OF hU[unfolded neighborhood_of_def]]])
     have X_T: "X \<in> T"
       by (rule conjunct1[OF conjunct2[OF hT[unfolded is_topology_on_def]]])
     have inter_T: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
@@ -5552,7 +5566,7 @@ next
       have hxXmC: "x \<in> X - C"
         apply (rule DiffI, rule hxX, rule hxnC) done
       have hneigh: "neighborhood_of x X T (X - C)"
-        apply (unfold neighborhood_of_def, rule conjI, rule hXmCT, rule hxXmC) done
+        unfolding neighborhood_of_def using hXmCT hxXmC hxX by blast
       have hinters: "intersects (X - C) A"
         by (rule h[rule_format, OF hneigh])
       have hdisjoint: "(X - C) \<inter> A = {}"
@@ -5797,7 +5811,7 @@ proof (rule iffI)
       have hXmAT: "X - A \<in> T" by (rule closedin_diff_open[OF hAcl])
       have hxXmA: "x \<in> X - A" by (rule DiffI, rule hxX, rule hxnA)
       have hneigh: "neighborhood_of x X T (X - A)"
-        apply (unfold neighborhood_of_def, rule conjI, rule hXmAT, rule hxXmA) done
+        unfolding neighborhood_of_def using hXmAT hxXmA hxX by blast
       have hinters: "intersects (X - A - {x}) A"
         by (rule hlp_nbds[rule_format, OF hneigh])
       have hdisjoint: "(X - A - {x}) \<inter> A = {}"
@@ -6025,10 +6039,7 @@ proof -
         (* x ∈ U ∩ (X-S), so it is a neighborhood of x *)
         have hxnS: "x \<notin> S" unfolding S_def by simp
         have hneigh: "neighborhood_of x X T (U \<inter> (X - S))"
-          unfolding neighborhood_of_def
-          apply (rule conjI, rule hUXmS_T)
-          apply (rule IntI, rule hxU, rule DiffI, rule hxX, rule hxnS)
-          done
+          unfolding neighborhood_of_def using hUXmS_T hxU hxX hxnS by blast
         (* x limit point → (U ∩ (X-S) - {x}) ∩ A ≠ {} *)
         have hinters: "intersects (U \<inter> (X - S) - {x}) A"
           by (rule hlp_nbds[rule_format, OF hneigh])
@@ -6428,9 +6439,9 @@ next
         have hq_in: "q \<in> V1 \<times> X2" using hq1V1 hq2X2 hqeq by simp
         have hdisj: "(U1 \<times> X2) \<inter> (V1 \<times> X2) = {}" using hdisj1 by blast
         have hnp: "neighborhood_of p (X1 \<times> X2) ?TP (U1 \<times> X2)"
-          unfolding neighborhood_of_def using hU1X2 hp_in by blast
+          unfolding neighborhood_of_def using hU1X2 hp_in hpX by blast
         have hnq: "neighborhood_of q (X1 \<times> X2) ?TP (V1 \<times> X2)"
-          unfolding neighborhood_of_def using hV1X2 hq_in by blast
+          unfolding neighborhood_of_def using hV1X2 hq_in hqX by blast
         show ?thesis using hnp hnq hdisj by blast
       next
         assume hne2: "p2 \<noteq> q2"
@@ -6447,9 +6458,9 @@ next
         have hq_in: "q \<in> X1 \<times> V2" using hq1X1 hq2V2 hqeq by simp
         have hdisj: "(X1 \<times> U2) \<inter> (X1 \<times> V2) = {}" using hdisj2 by blast
         have hnp: "neighborhood_of p (X1 \<times> X2) ?TP (X1 \<times> U2)"
-          unfolding neighborhood_of_def using hX1U2 hp_in by blast
+          unfolding neighborhood_of_def using hX1U2 hp_in hpX by blast
         have hnq: "neighborhood_of q (X1 \<times> X2) ?TP (X1 \<times> V2)"
-          unfolding neighborhood_of_def using hX1V2 hq_in by blast
+          unfolding neighborhood_of_def using hX1V2 hq_in hqX by blast
         show ?thesis using hnp hnq hdisj by blast
       qed
     qed
@@ -6661,9 +6672,9 @@ proof (unfold is_hausdorff_on_def, intro conjI)
       using hyX hfyV by simp
 
     have hneigh_x: "neighborhood_of x X TX ?Ux"
-      unfolding neighborhood_of_def using hUxT hxUx by blast
+      unfolding neighborhood_of_def using hUxT hxUx hxX by blast
     have hneigh_y: "neighborhood_of y X TX ?Vy"
-      unfolding neighborhood_of_def using hVyT hyVy by blast
+      unfolding neighborhood_of_def using hVyT hyVy hyX by blast
 
     have hpre_disj: "?Ux \<inter> ?Vy = {}"
     proof (rule ccontr)
@@ -7370,7 +7381,7 @@ proof -
           assume hxS: "x \<in> S"
           have hxX: "x \<in> X" and hfxV: "f x \<in> V" using hxS unfolding S_def by blast+
           have hnbhdV: "neighborhood_of (f x) Y TY V"
-            unfolding neighborhood_of_def using hV hfxV by blast
+            unfolding neighborhood_of_def using hV hfxV hmap hxX by blast
           obtain U where hU: "neighborhood_of x X TX U" and hfU: "f ` U \<subseteq> V"
             using hloc hxX hnbhdV by blast
           have hU_TX: "U \<in> TX" and hxU: "x \<in> U"
@@ -10679,16 +10690,7 @@ proof -
               neighborhood_of f (top1_PiE I X) (top1_box_topology_on I X T) U \<and>
               neighborhood_of g (top1_PiE I X) (top1_box_topology_on I X T) V \<and>
               U \<inter> V = {}"
-        apply (rule exI[where x="top1_PiE I WU"])
-        apply (rule exI[where x="top1_PiE I WV"])
-        unfolding neighborhood_of_def
-        apply (intro conjI)
-          apply (rule hUopen)
-         apply (rule hfU)
-          apply (rule hVopen)
-         apply (rule hgV)
-        apply (rule hUVdisj)
-        done
+        using hUopen hfU hf hVopen hgV hg hUVdisj unfolding neighborhood_of_def by blast
     qed
   qed
 qed
@@ -10822,16 +10824,7 @@ proof -
               neighborhood_of f (top1_PiE I X) (top1_product_topology_on I X T) U \<and>
               neighborhood_of g (top1_PiE I X) (top1_product_topology_on I X T) V \<and>
               U \<inter> V = {}"
-        apply (rule exI[where x=U0])
-        apply (rule exI[where x=V0])
-        unfolding neighborhood_of_def
-        apply (intro conjI)
-          apply (rule hU0open)
-         apply (rule hfU0)
-          apply (rule hV0open)
-         apply (rule hgV0)
-        apply (rule hU0V0_disj)
-        done
+        using hU0open hfU0 hf hV0open hgV0 hg hU0V0_disj unfolding neighborhood_of_def by blast
     qed
   qed
 qed
@@ -10971,7 +10964,7 @@ proof (rule equalityI)
         qed
 
         have hnbdW: "neighborhood_of x ?PX ?TB (top1_PiE I W)"
-          unfolding neighborhood_of_def using hWopen hxW by blast
+          unfolding neighborhood_of_def using hWopen hxW hxPX by blast
 
         have hinter: "intersects (top1_PiE I W) ?PA"
           using hxcl_prop hnbdW by blast
@@ -11081,7 +11074,7 @@ proof (rule equalityI)
           by (rule iffD1[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord[rule_format, OF hi]])
 
         have "intersects (U0 i) (A i)"
-          using hxcl_i_prop hU0i hxiU0 unfolding neighborhood_of_def by blast
+          using hxcl_i_prop hU0i hxiU0 hxiX unfolding neighborhood_of_def by blast
         thus "\<exists>y. y \<in> U0 i \<inter> A i"
           unfolding intersects_def by blast
       qed
@@ -11279,7 +11272,7 @@ proof (rule equalityI)
         qed
 
         have hnbdW: "neighborhood_of x ?PX ?TP (top1_PiE I W)"
-          unfolding neighborhood_of_def using hWopen hxW by blast
+          unfolding neighborhood_of_def using hWopen hxW hxPX by blast
 
         have hinter: "intersects (top1_PiE I W) ?PA"
           using hxcl_prop hnbdW by blast
@@ -11390,7 +11383,7 @@ proof (rule equalityI)
           by (rule iffD1[OF Theorem_17_5a[OF hTopi hxiX hAiX], OF hxcoord[rule_format, OF hi]])
 
         have "intersects (U0 i) (A i)"
-          using hxcl_i_prop hU0i hxiU0 unfolding neighborhood_of_def by blast
+          using hxcl_i_prop hU0i hxiU0 hxiX unfolding neighborhood_of_def by blast
         thus "\<exists>y. y \<in> U0 i \<inter> A i"
           unfolding intersects_def by blast
       qed
@@ -16886,7 +16879,7 @@ proof -
       then have hx_ball: "x \<in> top1_ball_on X d x \<epsilon>"
         unfolding top1_ball_on_def using hx heps by simp
       have "neighborhood_of x X ?T (top1_ball_on X d x \<epsilon>)"
-        unfolding neighborhood_of_def using hball_open hx_ball by blast
+        unfolding neighborhood_of_def using hball_open hx_ball hx by blast
       then have "intersects (top1_ball_on X d x \<epsilon>) A" using hnbhd by blast
       then obtain a where "a \<in> top1_ball_on X d x \<epsilon>" "a \<in> A"
         unfolding intersects_def by blast
@@ -17123,7 +17116,7 @@ proof -
         unfolding top1_ball_on_def using hxX hpos by simp
     qed
     have hnbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x (inverse (of_nat (Suc n))))"
-      unfolding neighborhood_of_def using hopen hxball by blast
+      unfolding neighborhood_of_def using hopen hxball hxX by blast
     have "intersects (top1_ball_on X d x (inverse (of_nat (Suc n)))) A"
       using hnbhd_inter hnbhd by blast
     thus "\<exists>a. a \<in> top1_ball_on X d x (inverse (of_nat (Suc n))) \<inter> A"
