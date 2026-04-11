@@ -8722,6 +8722,13 @@ lemma top1_product_topology_on_is_topology_on:
   unfolding top1_product_topology_on_def
   by (rule topology_generated_by_basis_is_topology_on[OF top1_product_basis_is_basis_on[OF hTop]])
 
+text \<open>Product topologies are strict.\<close>
+lemma product_topology_is_strict:
+  assumes "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  shows "is_topology_on_strict (top1_PiE I X) (top1_product_topology_on I X T)"
+  unfolding top1_product_topology_on_def
+  by (rule topology_generated_by_basis_is_strict[OF top1_product_basis_is_basis_on[OF assms]])
+
 (** from \S19 Theorem 19.1 (Comparison of the box and product topologies) [top1.tex:1382] **)
 theorem Theorem_19_1:
   assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
