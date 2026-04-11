@@ -33067,4 +33067,30 @@ proof (intro conjI allI impI)
     using \<open>a \<in> D\<close> by blast
 qed
 
+text \<open>In a Hausdorff space, net limits are unique.\<close>
+lemma hausdorff_net_unique_limit:
+  assumes hHaus: "is_hausdorff_on X T"
+  and hconv1: "top1_net_converges_to_on D le f x X T"
+  and hconv2: "top1_net_converges_to_on D le f y X T"
+  shows "x = y"
+proof (rule ccontr)
+  assume hne: "x \<noteq> y"
+  have hxX: "x \<in> X" using hconv1 unfolding top1_net_converges_to_on_def by blast
+  have hyX: "y \<in> X" using hconv2 unfolding top1_net_converges_to_on_def by blast
+  obtain U V where hnU: "neighborhood_of x X T U" and hnV: "neighborhood_of y X T V"
+    and hdisj: "U \<inter> V = {}"
+    using hHaus hxX hyX hne unfolding is_hausdorff_on_def by blast
+  obtain a1 where ha1: "a1 \<in> D" and ha1ev: "\<forall>b\<in>D. le a1 b \<longrightarrow> f b \<in> U"
+    using hconv1 hnU unfolding top1_net_converges_to_on_def by blast
+  obtain a2 where ha2: "a2 \<in> D" and ha2ev: "\<forall>b\<in>D. le a2 b \<longrightarrow> f b \<in> V"
+    using hconv2 hnV unfolding top1_net_converges_to_on_def by blast
+  obtain c where hcD: "c \<in> D" and hc1: "le a1 c" and hc2: "le a2 c"
+    using hconv1 ha1 ha2
+    unfolding top1_net_converges_to_on_def top1_is_net_on_def top1_directed_set_def by blast
+  have "f c \<in> U" using ha1ev hcD hc1 by blast
+  moreover have "f c \<in> V" using ha2ev hcD hc2 by blast
+  ultimately have "f c \<in> U \<inter> V" by blast
+  then show False using hdisj by blast
+qed
+
 end
