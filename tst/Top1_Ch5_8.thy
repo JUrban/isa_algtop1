@@ -5174,6 +5174,15 @@ proof -
     by blast
 qed
 
+lemma metrizable_imp_hausdorff:
+  assumes "top1_metrizable_on X T"
+  shows "is_hausdorff_on X T"
+proof -
+  obtain d where "top1_metric_on X d" "T = top1_metric_topology_on X d"
+    using assms unfolding top1_metrizable_on_def by blast
+  then show ?thesis using metric_topology_hausdorff by blast
+qed
+
 text \<open>Metrizable spaces are regular: for x and closed C with x \<notin> C,
   use d(x,C)/2 balls to separate.\<close>
 lemma metrizable_imp_regular:
