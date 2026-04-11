@@ -7124,7 +7124,7 @@ proof -
               have hpreV: "{z \<in> X. f z \<in> V} \<in> TX"
                 using hpre hVTY by blast
               have hneigh: "neighborhood_of x X TX {z \<in> X. f z \<in> V}"
-                unfolding neighborhood_of_def using hpreV hxX hfxV by simp
+                unfolding neighborhood_of_def using hpreV hxX hfxV by blast
               have hcl_char:
                 "\<forall>U. neighborhood_of x X TX U \<longrightarrow> intersects U A"
                 using Theorem_17_5a[OF hTX hxX hAX] hxcl by blast
@@ -7333,7 +7333,7 @@ proof -
         have hUopen: "{z \<in> X. f z \<in> V} \<in> TX"
           using hpre hVTY by blast
         have hU: "neighborhood_of x X TX {z \<in> X. f z \<in> V}"
-          unfolding neighborhood_of_def using hUopen hxX hfxV by simp
+          unfolding neighborhood_of_def using hUopen hxX hfxV by blast
         have himg: "f ` {z \<in> X. f z \<in> V} \<subseteq> V" by blast
         show "\<exists>U. neighborhood_of x X TX U \<and> f ` U \<subseteq> V"
           apply (rule exI[where x="{z \<in> X. f z \<in> V}"])
@@ -17280,7 +17280,7 @@ proof -
       have hpre: "{u\<in>X. f u \<in> V} \<in> TX"
         using hcont hVTY unfolding top1_continuous_map_on_def by blast
       have hnbhd: "neighborhood_of x X TX {u\<in>X. f u \<in> V}"
-        unfolding neighborhood_of_def using hpre hxX hfxV by simp
+        unfolding neighborhood_of_def using hpre hxX hfxV by blast
       obtain N where hN: "\<forall>n\<ge>N. s n \<in> {u\<in>X. f u \<in> V}"
         using hx hnbhd unfolding seq_converges_to_on_def by blast
       show "\<exists>N. \<forall>n\<ge>N. f (s n) \<in> V"

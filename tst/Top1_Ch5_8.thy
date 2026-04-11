@@ -985,7 +985,7 @@ proof -
       then show "f i \<in> X i" using hi by (simp add: top1_PiE_iff)
     qed
     have hU_nbhd: "neighborhood_of (x i) (X i) (TX i) U"
-      unfolding neighborhood_of_def using hU hxU by simp
+      unfolding neighborhood_of_def using hU hxU by blast
     have hxiX: "x i \<in> X i"
       using hxProd hi by (simp add: top1_PiE_iff)
     have hclchar: "x i \<in> closure_on (X i) (TX i) ((\<lambda>f. f i) ` D0) \<longleftrightarrow>
@@ -3017,7 +3017,7 @@ proof -
     using hChar hycl by blast
 
   have hNbhU: "neighborhood_of y X TX U"
-    unfolding neighborhood_of_def using hU hyU by simp
+    unfolding neighborhood_of_def using hU hyU by blast
   have hUA: "intersects U A"
     using hAll hNbhU by blast
 
@@ -3599,7 +3599,7 @@ proof (rule subset_antisym)
           have "neighborhood_of x X TX (V A)"
             using hVprop hA by blast
           hence "V A \<in> TX"
-            unfolding neighborhood_of_def by simp
+            unfolding neighborhood_of_def by blast
           thus "Z \<in> TX"
             unfolding hZdef by simp
         qed
@@ -3635,7 +3635,7 @@ proof (rule subset_antisym)
           have "neighborhood_of x X TX (V A)"
             using hVprop hA by blast
           hence "x \<in> V A"
-            unfolding neighborhood_of_def by simp
+            unfolding neighborhood_of_def by blast
           thus "x \<in> Z"
             unfolding hZdef by simp
         qed
@@ -3648,7 +3648,7 @@ proof (rule subset_antisym)
       qed
 
       have hWnbh: "neighborhood_of x X TX W"
-        unfolding neighborhood_of_def using hWopen hxW by simp
+        unfolding neighborhood_of_def using hWopen hxW by blast
 
       have hWdisj: "\<not> intersects W (\<Union>\<A>)"
       proof -
@@ -5158,11 +5158,11 @@ proof -
       have hUnbhd: "neighborhood_of x X ?TX ?U"
         unfolding neighborhood_of_def using hUopen hxU
         
-        by argo
+        by blast
       have hVnbhd: "neighborhood_of y X ?TX ?V"
         unfolding neighborhood_of_def using hVopen hyV
         
-        by argo
+        by blast
       show "\<exists>U V. neighborhood_of x X ?TX U \<and> neighborhood_of y X ?TX V \<and> U \<inter> V = {}"
         using hUnbhd hVnbhd hUV_disj
         
@@ -5298,7 +5298,7 @@ proof -
     have hUnbhd: "neighborhood_of x X TX ?U"
       unfolding neighborhood_of_def using hU_open hxU
       
-      by argo
+      by blast
     show "\<exists>U V. neighborhood_of x X TX U \<and> V \<in> TX \<and> C \<subseteq> V \<and> U \<inter> V = {}"
       using hUnbhd hV_open hC_sub_V hUV_disj
       
@@ -6330,7 +6330,7 @@ next
             by blast
           have "neighborhood_of x X TX (X - {y})"
             unfolding neighborhood_of_def using hXmy_open hx_in
-            by satx
+            by blast
           then obtain B where hB: "B \<in> \<B>" and hgBx: "0 < gB B x" and hgBy0: "\<forall>z\<in>X - (X - {y}). gB B z = 0"
             using hSep hxX
             by blast
@@ -9962,7 +9962,7 @@ proof (rule iffI)
       qed
 
       have hNbhC: "neighborhood_of x (top1_PiE I X) (top1_product_topology_on I X TX) C"
-        unfolding neighborhood_of_def using hC_open hxC by simp
+        unfolding neighborhood_of_def using hC_open hxC by blast
 
       obtain N where hN: "\<forall>n\<ge>N. s n \<in> C"
         using hconv_def hNbhC by blast
@@ -10037,7 +10037,7 @@ next
       have hxiU0: "x i \<in> U0 i"
         using hxU0 hi by blast
       have hNbhU0: "neighborhood_of (x i) (X i) (TX i) (U0 i)"
-        unfolding neighborhood_of_def using hU0i hxiU0 by simp
+        unfolding neighborhood_of_def using hU0i hxiU0 by blast
       have hconv_def:
         "\<forall>V. neighborhood_of (x i) (X i) (TX i) V \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. (s n) i \<in> V)"
         using hconv_i unfolding seq_converges_to_on_def by blast
@@ -10741,7 +10741,7 @@ proof (rule field_le_epsilon)
   have hnbhd: "neighborhood_of a Y (top1_metric_topology_on Y d) (top1_ball_on Y d a e')"
     unfolding neighborhood_of_def using hball_open ha_in_ball
     
-    by satx
+    by blast
   obtain M where hM: "\<forall>n\<ge>M. s n \<in> top1_ball_on Y d a e'"
     using hconv hnbhd unfolding seq_converges_to_on_def
     
@@ -10807,7 +10807,7 @@ proof
       by auto
     have hball_nbhd: "neighborhood_of x X ?TX (top1_ball_on X d x \<epsilon>)"
       unfolding neighborhood_of_def using hball_open hx_in_ball
-      by satx
+      by blast
     obtain N where hN: "\<forall>n\<ge>N. s n \<in> top1_ball_on X d x \<epsilon>"
       using hconv hball_nbhd unfolding seq_converges_to_on_def
       by blast
@@ -10840,7 +10840,7 @@ next
     fix U assume hU: "neighborhood_of x X ?TX U"
     have hUopen: "\<exists>V\<in>?TX. x \<in> V \<and> V \<subseteq> U"
       using hU unfolding neighborhood_of_def
-      by auto
+      by blast
     then obtain V where hV: "V \<in> ?TX" and hxV: "x \<in> V" and hVU: "V \<subseteq> U"
       by blast
     obtain r where hrpos: "0 < r" and hball_sub: "top1_ball_on X d x r \<subseteq> V"
@@ -11414,7 +11414,7 @@ proof (rule ccontr)
     by force
   have hball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x r)"
     unfolding neighborhood_of_def using hball_open hx_in_ball
-    by presburger
+    by blast
   obtain M :: nat where hM: "\<forall>n\<ge>M. s n \<in> top1_ball_on X d x r"
     using hconv hball_nbhd unfolding seq_converges_to_on_def
     by blast
@@ -15948,7 +15948,7 @@ lemma unif_compact_imp_cc_conv:
 proof (intro conjI hfPiE allI impI)
   fix U assume hUnbhd: "neighborhood_of f (top1_PiE X (\<lambda>_. Y)) (top1_compact_convergence_topology_on X TX Y d) U"
   then have hUcc: "U \<in> top1_compact_convergence_topology_on X TX Y d" and hfU: "f \<in> U"
-    unfolding neighborhood_of_def by auto
+    unfolding neighborhood_of_def by blast+
   obtain f0 C \<delta> where hf0PiE: "f0 \<in> top1_PiE X (\<lambda>_. Y)"
     and hCcomp: "top1_compact_on C (subspace_topology X TX C)" and hCX: "C \<subseteq> X"
     and h\<delta>pos: "0 < \<delta>"
@@ -16109,7 +16109,7 @@ proof -
           using hAintC0 unfolding subspace_topology_def by blast
 
         have hxU0: "x \<in> U0"
-          using hU0 unfolding neighborhood_of_def by simp
+          using hU0 unfolding neighborhood_of_def by blast
         have hxC0: "x \<in> C0"
           unfolding C0_def by (rule subsetD[OF subset_closure_on hxU0])
         have hxAintC0: "x \<in> A \<inter> C0"
@@ -16466,7 +16466,7 @@ proof -
       using hfX' hfNotS by simp
 
     have hNbh: "neighborhood_of f ?X' ?T' (?X' - ?S)"
-      unfolding neighborhood_of_def using hCompOpen hfComp by simp
+      unfolding neighborhood_of_def using hCompOpen hfComp by blast
 
     have hConv: "\<forall>U. neighborhood_of f ?X' ?T' U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. fseq n \<in> U)"
       using hconv unfolding seq_converges_to_on_def by (rule conjunct2)
@@ -21931,7 +21931,7 @@ proof -
   have hxX: "x \<in> X"
     using hUX hxU by blast
   have hN: "neighborhood_of x X TX U"
-    unfolding neighborhood_of_def using hU hxU by simp
+    unfolding neighborhood_of_def using hU hxU by blast
   show ?thesis
     by (rule top1_densein_on_intersects_neighborhood[OF hTop hD hxX hN])
 qed
@@ -22257,7 +22257,7 @@ proof -
       have hWUintTX: "W \<inter> U \<in> TX"
         by (rule topology_inter2[OF hTop hWT hU])
       have hNbhWU: "neighborhood_of x X TX (W \<inter> U)"
-        unfolding neighborhood_of_def using hWUintTX hxWU by simp
+        unfolding neighborhood_of_def using hWUintTX hxWU by blast
 
       have hIntersectsWU_D: "intersects (W \<inter> U) D"
         by (rule hClCharD[rule_format, OF hNbhWU])
@@ -24188,7 +24188,7 @@ proof -
           have hnbhd: "neighborhood_of (g x) Y ?TY (top1_ball_on Y d (g x) (e / 2))"
             unfolding neighborhood_of_def using hball_open hgx_in_ball
             
-            by presburger
+            by blast
           obtain N where hN: "\<forall>n\<ge>N. f n x \<in> top1_ball_on Y d (g x) (e / 2)"
             using hconv hnbhd unfolding seq_converges_to_on_def
             
@@ -24655,7 +24655,7 @@ proof -
           have hW_nbhd: "neighborhood_of x0 X TX W"
             unfolding neighborhood_of_def using hW_open hx0W
             
-            by presburger
+            by blast
           text \<open>g maps W into ball(g(x0), ε).\<close>
           have hg_image: "g ` W \<subseteq> top1_ball_on Y d (g x0) \<epsilon>"
           proof (rule subsetI)
@@ -26005,8 +26005,8 @@ next
       proof (intro allI impI)
         fix U assume hU: "neighborhood_of f top1_C01 (top1_metric_topology_on top1_C01 top1_rho49) U"
         have hUopen: "U \<in> top1_metric_topology_on top1_C01 top1_rho49"
-          using hU unfolding neighborhood_of_def by simp
-        have hfU: "f \<in> U" using hU unfolding neighborhood_of_def by simp
+          using hU unfolding neighborhood_of_def by blast
+        have hfU: "f \<in> U" using hU unfolding neighborhood_of_def by blast
         obtain e where he: "0 < e" and hball: "top1_ball_on top1_C01 top1_rho49 f e \<subseteq> U"
           using top1_metric_open_contains_ball[OF top1_rho49_is_metric hUopen hfU] by meson
         obtain N where hN: "\<forall>n\<ge>N. top1_rho49 (s n) f < e"
@@ -29298,7 +29298,7 @@ proof (rule ccontr)
   have hx_in_ball: "x \<in> top1_ball_on X d x \<epsilon>"
     unfolding top1_ball_on_def using hxX hdxx by blast
   have hx_ball_nbhd: "neighborhood_of x X (top1_metric_topology_on X d) (top1_ball_on X d x \<epsilon>)"
-    unfolding neighborhood_of_def using hx_ball_open hx_in_ball by satx
+    unfolding neighborhood_of_def using hx_ball_open hx_in_ball by blast
   have hy_ball_open: "top1_ball_on X d y \<epsilon> \<in> top1_metric_topology_on X d"
     using top1_ball_open_in_metric_topology[OF hd hyX heps] by fastforce
   have hdyy0: "d y y = 0" using metric_on_self_zero[OF hd hyX] by blast
@@ -29306,7 +29306,7 @@ proof (rule ccontr)
   have hy_in_ball: "y \<in> top1_ball_on X d y \<epsilon>"
     unfolding top1_ball_on_def using hyX hdyy by blast
   have hy_ball_nbhd: "neighborhood_of y X (top1_metric_topology_on X d) (top1_ball_on X d y \<epsilon>)"
-    unfolding neighborhood_of_def using hy_ball_open hy_in_ball by satx
+    unfolding neighborhood_of_def using hy_ball_open hy_in_ball by blast
   obtain N1 where hN1: "\<forall>n\<ge>N1. s n \<in> top1_ball_on X d x \<epsilon>"
     using hs hx_ball_nbhd unfolding seq_converges_to_on_def by blast
   obtain N2 where hN2: "\<forall>n\<ge>N2. t n \<in> top1_ball_on X d y \<epsilon>"
@@ -29353,8 +29353,8 @@ proof -
   proof (intro conjI allI impI)
     show "f x \<in> Y" using hfxY by satx
     fix U assume hU: "neighborhood_of (f x) Y (top1_metric_topology_on Y d2) U"
-    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by satx
-    have hfx_U: "f x \<in> U" using hU unfolding neighborhood_of_def by satx
+    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by blast
+    have hfx_U: "f x \<in> U" using hU unfolding neighborhood_of_def by blast
     have hpre: "{xa \<in> X. f xa \<in> U} \<in> top1_metric_topology_on X d"
       using hf hU_open unfolding top1_continuous_map_on_def by blast
     have "x \<in> {xa \<in> X. f xa \<in> U}" using hfx_U hxX by auto
@@ -29369,8 +29369,8 @@ proof -
   proof (intro conjI allI impI)
     show "f y \<in> Y" using hfyY by satx
     fix U assume hU: "neighborhood_of (f y) Y (top1_metric_topology_on Y d2) U"
-    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by satx
-    have hfy_U: "f y \<in> U" using hU unfolding neighborhood_of_def by satx
+    have hU_open: "U \<in> top1_metric_topology_on Y d2" using hU unfolding neighborhood_of_def by blast
+    have hfy_U: "f y \<in> U" using hU unfolding neighborhood_of_def by blast
     have hpre: "{xa \<in> X. f xa \<in> U} \<in> top1_metric_topology_on X d"
       using hf hU_open unfolding top1_continuous_map_on_def by blast
     have "y \<in> {xa \<in> X. f xa \<in> U}" using hfy_U hyX by auto

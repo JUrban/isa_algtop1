@@ -10486,7 +10486,7 @@ proof -
 		      have hx0X: "x0 \<in> X"
 		        using hUX hx0U by blast
 		      have hnb: "neighborhood_of x0 X TX U"
-		        unfolding neighborhood_of_def using hU hx0U by simp
+		        unfolding neighborhood_of_def using hU hx0U by blast
 		      obtain n where hnx: "fseq n x0 = 1" and hzero: "\<forall>x\<in>X - U. fseq n x = 0"
 		        using fseq_support hx0X hnb by blast
 		      define r where "r = (1/2::real)^n / 2"
