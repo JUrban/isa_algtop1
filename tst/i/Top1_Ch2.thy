@@ -1035,6 +1035,12 @@ definition strictly_finer_than :: "'a set set \<Rightarrow> 'a set set \<Rightar
 definition comparable_topologies :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "comparable_topologies T T' \<longleftrightarrow> (T \<subseteq> T' \<or> T' \<subseteq> T)"
 
+text \<open>Strict versions that additionally require both to be topologies on the same set.\<close>
+definition finer_than_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "finer_than_on X T T' \<longleftrightarrow> is_topology_on X T \<and> is_topology_on X T' \<and> T \<subseteq> T'"
+
+lemma finer_than_on_imp: "finer_than_on X T T' \<Longrightarrow> finer_than T T'"
+  unfolding finer_than_on_def finer_than_def by blast
 
 section \<open>\<S>13 Basis for a Topology\<close>
 
