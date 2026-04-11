@@ -33093,4 +33093,46 @@ proof (rule ccontr)
   then show False using hdisj by blast
 qed
 
+text \<open>A subnet is a composition of the net with a cofinal map from another directed set.\<close>
+definition top1_is_subnet ::
+  "'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> 'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_is_subnet D le E leE h \<longleftrightarrow>
+     top1_directed_set E leE \<and>
+     (\<forall>a\<in>E. h a \<in> D) \<and>
+     (\<forall>d\<in>D. \<exists>e\<in>E. \<forall>e'\<in>E. leE e e' \<longrightarrow> le d (h e'))"
+
+text \<open>If a net converges, every subnet converges to the same limit.\<close>
+lemma subnet_converges_to_same_limit:
+  assumes hconv: "top1_net_converges_to_on D le f x X T"
+  and hsub: "top1_is_subnet D le E leE h"
+  shows "top1_net_converges_to_on E leE (f \<circ> h) x X T"
+proof -
+  have hxX: "x \<in> X" using hconv unfolding top1_net_converges_to_on_def by blast
+  have hfD: "\<forall>a\<in>D. f a \<in> X" using hconv
+    unfolding top1_net_converges_to_on_def top1_is_net_on_def by blast
+  have hhD: "\<forall>a\<in>E. h a \<in> D" using hsub unfolding top1_is_subnet_def by blast
+  have hfhE: "\<forall>a\<in>E. (f \<circ> h) a \<in> X" using hhD hfD by auto
+  have hdirE: "top1_directed_set E leE" using hsub unfolding top1_is_subnet_def by blast
+  have hnet: "top1_is_net_on E leE (f \<circ> h) X"
+    unfolding top1_is_net_on_def using hdirE hfhE by blast
+  show ?thesis unfolding top1_net_converges_to_on_def
+  proof (intro conjI allI impI)
+    show "top1_is_net_on E leE (f \<circ> h) X" by (rule hnet)
+    show "x \<in> X" by (rule hxX)
+    fix U assume hU: "neighborhood_of x X T U"
+    obtain a where "a \<in> D" "\<forall>b\<in>D. le a b \<longrightarrow> f b \<in> U"
+      using hconv hU unfolding top1_net_converges_to_on_def by blast
+    obtain e where "e \<in> E" "\<forall>e'\<in>E. leE e e' \<longrightarrow> le a (h e')"
+      using hsub \<open>a \<in> D\<close> unfolding top1_is_subnet_def by blast
+    have "\<forall>e'\<in>E. leE e e' \<longrightarrow> (f \<circ> h) e' \<in> U"
+    proof (intro ballI impI)
+      fix e' assume "e' \<in> E" "leE e e'"
+      then have "le a (h e')" using \<open>\<forall>e'\<in>E. leE e e' \<longrightarrow> le a (h e')\<close> by blast
+      moreover have "h e' \<in> D" using hhD \<open>e' \<in> E\<close> by blast
+      ultimately show "(f \<circ> h) e' \<in> U" using \<open>\<forall>b\<in>D. le a b \<longrightarrow> f b \<in> U\<close> by auto
+    qed
+    then show "\<exists>a\<in>E. \<forall>b\<in>E. leE a b \<longrightarrow> (f \<circ> h) b \<in> U" using \<open>e \<in> E\<close> by blast
+  qed
+qed
+
 end
