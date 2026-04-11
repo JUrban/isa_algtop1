@@ -11666,6 +11666,21 @@ lemma metric_topology_is_strict:
   unfolding top1_metric_topology_on_def
   by (rule topology_generated_by_basis_is_strict[OF top1_metric_basis_is_basis_on[OF assms]])
 
+text \<open>Corollary: metrizable topologies are strict.\<close>
+lemma metrizable_imp_strict:
+  assumes "top1_metrizable_on X T"
+  shows "is_topology_on_strict X T"
+proof -
+  obtain d where "top1_metric_on X d" "T = top1_metric_topology_on X d"
+    using assms unfolding top1_metrizable_on_def by blast
+  then show ?thesis using metric_topology_is_strict by blast
+qed
+
+text \<open>In a strict topology, every open set is a subset of the carrier.\<close>
+lemma strict_open_sub:
+  "\<lbrakk>is_topology_on_strict X T; U \<in> T\<rbrakk> \<Longrightarrow> U \<subseteq> X"
+  unfolding is_topology_on_strict_def by blast
+
 (** Standard bounded metric corresponding to a given metric (top1.tex, Theorem 20.1). **)
 definition top1_bounded_metric :: "('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> real" where
   "top1_bounded_metric d x y = min (d x y) 1"
