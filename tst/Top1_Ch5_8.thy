@@ -32887,6 +32887,16 @@ corollary lp_compact_iff_seq_compact_metric:
   shows "top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T"
   using Theorem_28_2[OF assms] by blast
 
+text \<open>Metrizable version: stated in terms of top1\_metrizable\_on.\<close>
+corollary compact_iff_seq_compact_metrizable:
+  assumes "top1_metrizable_on X T"
+  shows "top1_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T"
+proof -
+  obtain d where "top1_metric_on X d" "T = top1_metric_topology_on X d"
+    using assms unfolding top1_metrizable_on_def by blast
+  then show ?thesis using compact_iff_seq_compact_metric by blast
+qed
+
 text \<open>Supplementary: Nets in topological spaces.
   Nets generalize sequences by replacing the natural numbers with an arbitrary
   directed set. This allows characterization of closure, continuity, and
