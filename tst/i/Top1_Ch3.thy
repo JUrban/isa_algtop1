@@ -15,6 +15,9 @@ definition top1_is_separation_on :: "'a set \<Rightarrow> 'a set set \<Rightarro
      U \<in> T \<and> V \<in> T \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
 
 (** from \S23 Lemma 23.1 (Separation and connectedness) [top1.tex:2607] **)
+text \<open>Note: This is a trivial definitional equivalence, NOT the real Lemma 23.1 from Munkres.
+  The actual result (characterizing connectedness via closure-disjointness) is
+  Lemma\_23\_1\_proper below.\<close>
 lemma Lemma_23_1:
   "top1_connected_on X T \<longleftrightarrow> is_topology_on X T \<and> (\<nexists>U V. top1_is_separation_on X T U V)"
   unfolding top1_connected_on_def top1_is_separation_on_def by blast
