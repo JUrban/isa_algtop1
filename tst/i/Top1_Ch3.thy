@@ -10167,6 +10167,22 @@ definition top1_limit_point_compact_on :: "'a set \<Rightarrow> 'a set set \<Rig
      is_topology_on X T \<and>
      (\<forall>A. A \<subseteq> X \<and> infinite A \<longrightarrow> (\<exists>x\<in>X. is_limit_point_of x A X T))"
 
+text \<open>Countable compactness: every countable open cover has a finite subcover.
+  Note: compact ⟹ countably compact (trivially), and in T₁ spaces
+  countably compact ⟹ limit-point compact. The full hierarchy is:
+  compact ⟹ countably compact ⟹ LP-compact.
+  In metrizable spaces, all three notions coincide (Theorem 28.2).\<close>
+definition top1_countably_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_countably_compact_on X T \<longleftrightarrow>
+     is_topology_on X T \<and>
+     (\<forall>Uc. Uc \<subseteq> T \<and> countable Uc \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F))"
+
+text \<open>Compact implies countably compact (trivially).\<close>
+lemma compact_imp_countably_compact:
+  assumes "top1_compact_on X T"
+  shows "top1_countably_compact_on X T"
+  using assms unfolding top1_compact_on_def top1_countably_compact_on_def by blast
+
 (** from \S28 Theorem 28.1 (Compact \<Longrightarrow> limit point compact) [top1.tex:~3600] **)
 theorem Theorem_28_1:
   assumes hcomp: "top1_compact_on X T"

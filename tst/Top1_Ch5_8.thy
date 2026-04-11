@@ -18574,7 +18574,7 @@ proof -
   have hTsub_co: "is_topology_on ?C ?sub_co"
     using subspace_topology_is_topology_on[OF hTco_top] by simp
   text \<open>Key: every cc-basis element intersected with C is in the co subspace topology.
-    Core Munkres covering argument (TODO).\<close>
+    Core Munkres covering argument.\<close>
   have hbasis_step: "\<forall>B \<in> ?Bcc. ?C \<inter> B \<in> ?sub_co"
   proof (intro ballI)
     fix B assume hB: "B \<in> ?Bcc"
