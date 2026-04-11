@@ -32889,13 +32889,6 @@ lemma lp_compact_first_countable_imp_seq_compact:
 proof -
   have hTop: "is_topology_on X T"
     using hLPC unfolding top1_limit_point_compact_on_def sorry
-  text \<open>Proof sketch: Given sequence s in X,
-    - If range(s) is finite: pigeonhole → constant subsequence → converges.
-    - If range(s) is infinite: LP-compact → limit point x of range(s).
-      By Theorem 17.9 (T₁), every neighborhood of x hits range(s) infinitely.
-      By first-countability, x has countable neighborhood basis \{B_n\}.
-      Inductively pick sub(n) with s(sub(n)) ∈ B_0 ∩ ... ∩ B_n and sub(n) > sub(n-1).
-      Then s ∘ sub converges to x.\<close>
   show ?thesis sorry
 qed
 
