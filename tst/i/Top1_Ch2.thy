@@ -11693,7 +11693,7 @@ proof (unfold is_basis_on_def, intro conjI)
   proof (intro ballI)
     fix x assume hxX: "x \<in> X"
     have hdx: "d x x = 0"
-      using hd hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_self_zero[OF hd hxX])
     have hxball: "x \<in> top1_ball_on X d x 1"
       unfolding top1_ball_on_def using hxX hdx by simp
     show "\<exists>b\<in>top1_metric_basis_on X d. x \<in> b"
@@ -11733,7 +11733,7 @@ proof (unfold is_basis_on_def, intro conjI)
       unfolding r_def using hdx1 hdx2 by linarith
 
     have hdx0: "d x x = 0"
-      using hd hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_self_zero[OF hd hxX])
     have hx_in_r: "x \<in> top1_ball_on X d x r"
       unfolding top1_ball_on_def using hxX hdx0 hr_pos by simp
 
@@ -12020,7 +12020,7 @@ proof -
     have hyX: "y \<in> X" and hdxy: "d x y < r"
       using hy unfolding top1_ball_on_def by blast+
     have htri_cxy: "d c y \<le> d c x + d x y"
-      using hd hcX hxX hyX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd hcX hxX hyX])
     have "d c y < d c x + r"
       using htri_cxy hdxy by simp
     also have "... = (d c x + e) / 2"
@@ -12145,7 +12145,7 @@ proof -
         proof -
           have hxX: "x \<in> X" using hUX hxU by blast
           have "d x x = 0"
-            using hd hxX unfolding top1_metric_on_def by blast
+            by (rule top1_metric_self_zero[OF hd hxX])
           thus ?thesis
             unfolding top1_ball_on_def using hxX he'pos by simp
         qed
@@ -12189,7 +12189,7 @@ proof (rule iffI)
       using hsub hopen_ball by blast
 
     have hdx0: "d x x = 0"
-      using hd hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_self_zero[OF hd hxX])
     have hx_in_ball: "x \<in> top1_ball_on X d x \<epsilon>"
       unfolding top1_ball_on_def using hxX hdx0 heps by simp
 
@@ -12236,7 +12236,7 @@ next
           have hzX: "z \<in> X" and hdyz: "d y z < r"
             using hz unfolding top1_ball_on_def by blast+
           have htri: "d x z \<le> d x y + d y z"
-            using hd hxX hyX hzX unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd hxX hyX hzX])
           have "d x z < d x y + r"
             using htri hdyz by simp
           also have "... = (d x y + \<epsilon>) / 2"
@@ -17263,7 +17263,7 @@ proof -
     have hxball: "x \<in> top1_ball_on X d x (inverse (of_nat (Suc n)))"
     proof -
       have "d x x = 0"
-        using hd hxX unfolding top1_metric_on_def by blast
+        by (rule top1_metric_self_zero[OF hd hxX])
       thus ?thesis
         unfolding top1_ball_on_def using hxX hpos by simp
     qed
