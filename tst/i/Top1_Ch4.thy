@@ -3265,6 +3265,14 @@ definition top1_normal_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool
      (\<forall>C D. closedin_on X T C \<and> closedin_on X T D \<and> C \<inter> D = {}
         \<longrightarrow> (\<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}))"
 
+lemma normal_is_T1: "top1_normal_on X T \<Longrightarrow> top1_T1_on X T"
+  unfolding top1_normal_on_def by meson
+
+lemma normal_separation:
+  "\<lbrakk>top1_normal_on X T; closedin_on X T C; closedin_on X T D; C \<inter> D = {}\<rbrakk>
+   \<Longrightarrow> \<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}"
+  unfolding top1_normal_on_def by meson
+
 (** from \S32 Theorem 32.1 (Regular + second-countable \<Longrightarrow> normal) [top1.tex:~4178] **)
 theorem Theorem_32_1:
   assumes hR: "top1_regular_on X TX"
