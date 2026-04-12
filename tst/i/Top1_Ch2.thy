@@ -5920,6 +5920,14 @@ definition is_hausdorff_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
      (\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
         (\<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}))"
 
+lemma hausdorff_is_topology: "is_hausdorff_on X T \<Longrightarrow> is_topology_on X T"
+  unfolding is_hausdorff_on_def by meson
+
+lemma hausdorff_separation:
+  "\<lbrakk>is_hausdorff_on X T; x \<in> X; y \<in> X; x \<noteq> y\<rbrakk>
+   \<Longrightarrow> \<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}"
+  unfolding is_hausdorff_on_def by meson
+
 (** Helper: every singleton is closed in a Hausdorff space. **)
 lemma singleton_closed_in_hausdorff:
   assumes hH: "is_hausdorff_on X T"
