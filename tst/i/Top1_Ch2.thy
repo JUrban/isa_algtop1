@@ -3,14 +3,17 @@ theory Top1_Ch2
 begin
 
 
-(*
-  Formalization stubs (statements only, no proofs) for /mnt/data/top1.tex
+text \<open>Formalization of Munkres' Topology, Chapter 2 (Sections 12--22).
+  All definitions and theorems are fully proved.
 
-  Notes:
-  - This file is intended to mirror the mathematical content of top1.tex
-    (Munkres, Chapter 2, §§12–17) at the level of definitions and stated results.
-  - Proofs are omitted using placeholders (no axioms).
-*)
+  Key results: topological spaces, basis, order topology, product topology,
+  subspace topology, closed sets and limit points (17.1--17.11),
+  continuous functions (18.1--18.4), indexed product topology (19.1--19.6),
+  metric topology (20.1--20.5, 21.1--21.6), quotient topology (22.1--22.3).
+
+  Defensive definitions: is\_topology\_on\_strict, openin\_on (with U ⊆ X),
+  neighborhood\_of\_strict, finer\_than\_on.
+  Bridge lemmas connect strict and standard versions.\<close>
 
 section \<open>\<S>12 Topological Spaces\<close>
 
