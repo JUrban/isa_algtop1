@@ -14253,6 +14253,12 @@ proof -
     using hBcnt hBasis by blast
 qed
 
+corollary compact_metric_imp_separable:
+  assumes "top1_metric_on X d"
+  and "top1_compact_on X (top1_metric_topology_on X d)"
+  shows "\<exists>D. top1_countable D \<and> D \<subseteq> X \<and> closure_on X (top1_metric_topology_on X d) D = X"
+  using Theorem_30_3b[OF compact_metric_imp_second_countable[OF assms]] by blast
+
 definition top1_equicontinuous_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
   "top1_equicontinuous_family_on X TX Y d \<F> \<longleftrightarrow>
