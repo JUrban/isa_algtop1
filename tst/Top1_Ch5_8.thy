@@ -1959,14 +1959,14 @@ proof -
     by blast
 
   have hImgf: "\<forall>x\<in>X. f x \<in> Y"
-    using hf unfolding top1_continuous_map_on_def by blast
+    by (rule continuous_map_maps_to_all[OF hf])
   have hImgg: "\<forall>x\<in>X. g x \<in> Y"
-    using hg unfolding top1_continuous_map_on_def by blast
+    by (rule continuous_map_maps_to_all[OF hg])
 
   have hPreimf: "\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX"
-    using hf unfolding top1_continuous_map_on_def by blast
+    by (rule continuous_map_preimage_open_all[OF hf])
   have hPreimg: "\<forall>V\<in>TY. {x\<in>X. g x \<in> V} \<in> TX"
-    using hg unfolding top1_continuous_map_on_def by blast
+    by (rule continuous_map_preimage_open_all[OF hg])
 
   have hHaus: "\<forall>a\<in>Y. \<forall>b\<in>Y. a \<noteq> b \<longrightarrow>
       (\<exists>U V. neighborhood_of a Y TY U \<and> neighborhood_of b Y TY V \<and> U \<inter> V = {})"

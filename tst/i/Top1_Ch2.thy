@@ -6677,6 +6677,14 @@ lemma continuous_map_preimage_open:
   "\<lbrakk>top1_continuous_map_on X TX Y TY f; V \<in> TY\<rbrakk> \<Longrightarrow> {x \<in> X. f x \<in> V} \<in> TX"
   unfolding top1_continuous_map_on_def by meson
 
+lemma continuous_map_maps_to_all:
+  "top1_continuous_map_on X TX Y TY f \<Longrightarrow> \<forall>x\<in>X. f x \<in> Y"
+  unfolding top1_continuous_map_on_def by meson
+
+lemma continuous_map_preimage_open_all:
+  "top1_continuous_map_on X TX Y TY f \<Longrightarrow> \<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX"
+  unfolding top1_continuous_map_on_def by meson
+
 lemma continuous_map_onI:
   "\<lbrakk>\<forall>x\<in>X. f x \<in> Y; \<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX\<rbrakk>
    \<Longrightarrow> top1_continuous_map_on X TX Y TY f"
