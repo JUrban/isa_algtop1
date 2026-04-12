@@ -14509,11 +14509,11 @@ next
         have hfx_Y: "f x \<in> Y" using hfPiE hx unfolding top1_PiE_iff by blast
         have hfai_Y: "f ai \<in> Y" using hfPiE hai_X unfolding top1_PiE_iff by fast
         have htri_ab: "d (f x) (r x) \<le> d (f x) (f ai) + d (f ai) (r x)"
-          using hd hfx_Y hfai_Y hrx_Y unfolding top1_metric_on_def by blast
+          by (rule top1_metric_triangle[OF hd hfx_Y hfai_Y hrx_Y ])
         have htri_cd: "d (f ai) (r x) \<le> d (f ai) (af ai) + d (af ai) (r x)"
-          using hd hfai_Y hafai_Y hrx_Y unfolding top1_metric_on_def by blast
+          by (rule top1_metric_triangle[OF hd hfai_Y hafai_Y hrx_Y ])
         have htri_ef: "d (af ai) (r x) \<le> d (af ai) (r ai) + d (r ai) (r x)"
-          using hd hafai_Y hrai_Y hrx_Y unfolding top1_metric_on_def by blast
+          by (rule top1_metric_triangle[OF hd hafai_Y hrai_Y hrx_Y ])
         show "d (f x) (r x) < 4 * \<delta>"
           using htri_ab htri_cd htri_ef hd1 hd2 hd3 hd4 by argo
       qed
@@ -17245,7 +17245,7 @@ proof -
             have hgx: "g x \<in> Y"
               using hgX hx unfolding top1_PiE_iff by blast
             have hdx: "d (g x) (g x) = 0"
-              using hd hgx unfolding top1_metric_on_def by blast
+              by (rule top1_metric_self_zero[OF hd hgx])
             show "top1_bounded_metric d (g x) (g x) = 0"
               unfolding top1_bounded_metric_def using hdx by simp
           qed
@@ -17619,7 +17619,7 @@ proof -
             have hgx: "g x \<in> Y"
               using hgXfun hxX unfolding top1_PiE_iff by blast
             have hdx: "d (g x) (g x) = 0"
-              using hd hgx unfolding top1_metric_on_def by blast
+              by (rule top1_metric_self_zero[OF hd hgx])
             show "top1_bounded_metric d (g x) (g x) = 0"
               unfolding top1_bounded_metric_def using hdx by simp
           qed
@@ -17956,7 +17956,7 @@ proof -
             unfolding top1_sup_metric_on_def
             using cSup_upper hbdd_fg by (meson cSup_upper)
           have "d (c x) (g x) \<le> d (c x) (f x) + d (f x) (g x)"
-            using hd hcxY hfxY hgxY unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd hcxY hfxY hgxY ])
           also have "... \<le> ?ds c f + ?ds f g" using hcf_le hfg_le by linarith
           finally show "d (c x) (g x) \<le> ?ds c f + ?ds f g" .
         qed
@@ -22883,7 +22883,7 @@ proof -
       by (rule top1_metric_sym[OF hd huX hxX])
 
     have htri: "d u v \<le> d u x + d x v"
-      using hd huX hxX hvX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd huX hxX hvX ])
 
     have hxu_le: "d x u \<le> r"
       by (rule top1_metric_closure_ball_imp_dist_le[OF hd hxX hr huvC(1)])
@@ -23575,7 +23575,7 @@ proof -
     have haX: "a \<in> X" using hAX haA by blast
     have hbX: "b \<in> X" using hAX hbA by blast
     have "d a b \<le> d a x + d x b"
-      using hd haX hxX hbX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd haX hxX hbX ])
     have "d a x = d x a"
       by (rule top1_metric_sym[OF hd haX hxX])
     have "d x a \<le> M" using hM haA by blast
@@ -27827,7 +27827,7 @@ next
           have haX: "a \<in> X" using \<open>a \<in> B\<close> hBX by blast
           have hbX: "b \<in> X" using \<open>b \<in> B\<close> hBX by blast
           have "d a b \<le> d a cb + d cb b"
-            using hd haX hbX hcbX unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd haX hcbX hbX])
           also have "d a cb = d cb a" by (meson haX hcbX hd metric_sym)
           also have "d cb a + d cb b \<le> Mb + Mb" by (meson add_mono hMb haX hbX)
           finally show "d a b \<le> 2 * Mb" by argo
@@ -33074,7 +33074,7 @@ proof -
           then have hyX: "y \<in> X" and hdy: "d (t (sub K)) y < 1/real(Suc(sub K))"
             unfolding top1_ball_on_def by auto
           have htri: "d x y \<le> d x (t (sub K)) + d (t (sub K)) y"
-            using hd hxX htKX hyX unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd hxX htKX hyX ])
           have "d x y < \<epsilon>/2 + \<epsilon>/2" using htri htK_dist hdy h1K_eps by linarith
           then have "d x y < \<epsilon>" by simp
           then show "y \<in> top1_ball_on X d x \<epsilon>" using hyX unfolding top1_ball_on_def by auto
