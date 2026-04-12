@@ -8722,7 +8722,7 @@ theorem Theorem_41_7:
   shows "\<exists>\<phi>. top1_partition_of_unity_dominated_family_on X TX I U \<phi>
     \<and> (\<forall>x\<in>X. \<exists>W\<in>TX. x \<in> W \<and> finite {i\<in>I. \<exists>y\<in>W. \<phi> i y \<noteq> 0})"
 proof -
-  have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by linarith
+  have hTopX: "is_topology_on X TX" by (rule hausdorff_is_topology[OF hHaus])
   have hReg: "top1_regular_on X TX"
     using paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub] by blast
   have hNormal: "top1_normal_on X TX" using Theorem_41_1[OF hPara hHaus hTsub] by blast
@@ -9076,7 +9076,7 @@ theorem Theorem_41_8:
     Apply Theorem_41_7 for partition of unity. Define \<delta>_\<alpha> = min \<epsilon>_C over
     C meeting supp(\<phi>_\<alpha>). Then f = \<Sum> \<delta>_\<alpha> \<phi>_\<alpha>.\<close>
 proof -
-  have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by linarith
+  have hTopX: "is_topology_on X TX" by (rule hausdorff_is_topology[OF hHaus])
   text \<open>Step 1: Open covering from local finiteness witnesses.\<close>
   have hCov_fam: "\<forall>x\<in>X. \<exists>Ux\<in>TX. x \<in> Ux \<and> finite {C\<in>\<C>. intersects C Ux}"
     using hLF unfolding top1_locally_finite_family_on_def by blast
@@ -20754,7 +20754,7 @@ proof -
     ultimately show "top1_homeomorphism_on X TX (F ` X) (subspace_topology Y (subspace_topology ?Z ?TZ Y) (F ` X)) F"
       by presburger
   qed
-  have hTopY: "is_topology_on Y TY" using hY_haus unfolding is_hausdorff_on_def by blast
+  have hTopY: "is_topology_on Y TY" by (rule hausdorff_is_topology[OF hY_haus])
   have hDense: "closure_on Y TY (F ` X) = Y"
     unfolding Y_def TY_def using dense_in_own_closure[OF hTopZ hFX_sub_Z] by blast
   have hCompactification: "top1_compactification_via_on X TX Y TY F"
@@ -33371,7 +33371,7 @@ proof (rule ccontr)
   have hyX: "y \<in> X" using hconv2 unfolding top1_net_converges_to_on_def by blast
   obtain U V where hnU: "neighborhood_of x X T U" and hnV: "neighborhood_of y X T V"
     and hdisj: "U \<inter> V = {}"
-    using hHaus hxX hyX hne unfolding is_hausdorff_on_def by blast
+    using hausdorff_separation[OF hHaus hxX hyX hne] by blast
   obtain a1 where ha1: "a1 \<in> D" and ha1ev: "\<forall>b\<in>D. le a1 b \<longrightarrow> f b \<in> U"
     using hconv1 hnU unfolding top1_net_converges_to_on_def by blast
   obtain a2 where ha2: "a2 \<in> D" and ha2ev: "\<forall>b\<in>D. le a2 b \<longrightarrow> f b \<in> V"
