@@ -2259,7 +2259,7 @@ proof (intro allI impI)
   qed
   text \<open>Existence: embed C into [0,1]^J2, extend coordinate functions, assemble.\<close>
   have hTopC: "is_topology_on C TC"
-    using hHausC unfolding is_hausdorff_on_def by blast
+    by (rule hausdorff_is_topology[OF hHausC])
   have "\<exists>g. top1_continuous_map_on Y TY C TC g \<and> (\<forall>x\<in>X. g (e x) = f x)"
   proof -
     text \<open>Step 1: Embed C into [0,1]^J2.\<close>
@@ -6882,7 +6882,7 @@ lemma paracompact_hausdorff_imp_regular:
   shows "top1_regular_on X TX"
 proof -
   have hTop: "is_topology_on X TX"
-    using hHaus unfolding is_hausdorff_on_def by blast
+    by (rule hausdorff_is_topology[OF hHaus])
 
   text \<open>One-point sets are closed (from Hausdorff via T1).\<close>
   have hT1: "top1_T1_on X TX"
@@ -21652,7 +21652,7 @@ proof -
     have hK_sub_C: "K \<subseteq> ?C"
     proof -
       have "is_topology_on K (subspace_topology ?C (subspace_topology ?PiE ?Tcc ?C) K)"
-        using hKcomp unfolding top1_compact_on_def by blast
+        by (rule compact_is_topology[OF hKcomp])
       then show ?thesis unfolding is_topology_on_def subspace_topology_def by auto
     qed
     have hK_sub_PiE: "K \<subseteq> ?PiE" using hK_sub_C hC_sub_PiE by order
