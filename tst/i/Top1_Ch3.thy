@@ -589,6 +589,14 @@ proof -
   qed
 qed
 
+corollary closure_of_connected_is_connected:
+  assumes hTX: "is_topology_on X TX"
+  and hAX: "A \<subseteq> X"
+  and hconn: "top1_connected_on A (subspace_topology X TX A)"
+  shows "top1_connected_on (closure_on X TX A) (subspace_topology X TX (closure_on X TX A))"
+  using Theorem_23_4[OF hTX hAX closure_on_subset_carrier[OF hTX hAX]
+    subset_closure_on order_refl hconn] by blast
+
 (** from \S23 Theorem 23.5 [top1.tex:2656] **)
 theorem Theorem_23_5:
   assumes hTX: "is_topology_on X TX"
