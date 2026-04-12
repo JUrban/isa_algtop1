@@ -14240,7 +14240,7 @@ lemma cont_at_metric_nbhd:
   shows "\<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>x\<in>U. x \<in> X \<longrightarrow> d (fi x) (fi x0) < \<delta>)"
 proof -
   have hfix0Y: "fi x0 \<in> Y"
-    using hcont hx0 unfolding top1_continuous_map_on_def by blast
+    using continuous_map_maps_to[OF hcont hx0] by blast
   have hball_open: "top1_ball_on Y d (fi x0) \<delta> \<in> top1_metric_topology_on Y d"
     using top1_ball_open_in_metric_topology[OF hd hfix0Y hd_pos] by presburger
   have hfix0_in_ball: "fi x0 \<in> top1_ball_on Y d (fi x0) \<delta>"
