@@ -2707,7 +2707,7 @@ proof -
         have hpre2: "{x\<in>Y1. f2 x \<in> {y\<in>Y2. f1 y \<in> V}} \<in> TY1"
           using hf2cont hpre1 unfolding top1_continuous_map_on_def by blast
         have hf2img: "\<forall>x\<in>Y1. f2 x \<in> Y2"
-          using hf2cont unfolding top1_continuous_map_on_def by blast
+          by (rule continuous_map_maps_to_all[OF hf2cont])
         have heq: "{x\<in>Y1. f1 (f2 x) \<in> V} = {x\<in>Y1. f2 x \<in> {y\<in>Y2. f1 y \<in> V}}"
           using hf2img by blast
         show ?thesis unfolding comp_def using hpre2 heq by presburger
@@ -19538,7 +19538,7 @@ proof -
         using top1_continuous_map_on_cong[OF hEqOn] hcur by blast
 
       have hFmap: "\<forall>x\<in>X. F z x \<in> Y"
-        using hFcont unfolding top1_continuous_map_on_def by blast
+        by (rule continuous_map_maps_to_all[OF hFcont])
       have hFext: "\<forall>x. x \<notin> X \<longrightarrow> F z x = undefined"
         unfolding F_def by simp
 
@@ -33344,7 +33344,7 @@ proof (intro conjI allI impI)
   show "f x \<in> Y" using hxX hfX by blast
   fix V assume hV: "neighborhood_of (f x) Y TY V"
   have hpre: "\<forall>U\<in>TY. {x\<in>X. f x \<in> U} \<in> TX"
-    using hcont unfolding top1_continuous_map_on_def by blast
+    by (rule continuous_map_preimage_open_all[OF hcont])
   obtain W where "W \<in> TY" "f x \<in> W" "W \<subseteq> V"
     using hV unfolding neighborhood_of_def by blast
   have hpW: "{x\<in>X. f x \<in> W} \<in> TX" using hpre \<open>W \<in> TY\<close> by blast
