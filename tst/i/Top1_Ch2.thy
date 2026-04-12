@@ -5119,6 +5119,12 @@ proof -
     apply (rule cl_union)
     done
 qed
+lemma closedin_empty: "is_topology_on X T \<Longrightarrow> closedin_on X T {}"
+  using Theorem_17_1 by meson
+
+lemma closedin_carrier: "is_topology_on X T \<Longrightarrow> closedin_on X T X"
+  using Theorem_17_1 by meson
+
 text \<open>Extraction: arbitrary intersection of closed sets is closed.\<close>
 lemma closedin_Inter:
   assumes hT: "is_topology_on X T" and hne: "F \<noteq> {}"
