@@ -6742,6 +6742,56 @@ proof -
     done
 qed
 
+text \<open>Continuous from compact to Hausdorff is a closed map.\<close>
+lemma compact_hausdorff_continuous_closed_map:
+  assumes hcomp: "top1_compact_on X TX"
+  and hH: "is_hausdorff_on Y TY"
+  and hf: "top1_continuous_map_on X TX Y TY f"
+  and hA: "closedin_on X TX A"
+  shows "closedin_on Y TY (f ` A)"
+proof -
+  have hTX: "is_topology_on X TX"
+    using hcomp unfolding top1_compact_on_def by blast
+  have hTY: "is_topology_on Y TY"
+    using hH unfolding is_hausdorff_on_def by blast
+  have hAX: "A \<subseteq> X"
+    by (rule closedin_sub[OF hA])
+  have hAcomp: "top1_compact_on A (subspace_topology X TX A)"
+    by (rule Theorem_26_2[OF hcomp hA])
+  have hsub_topA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF hTX hAX])
+  have hcontA: "top1_continuous_map_on A (subspace_topology X TX A) Y TY f"
+  proof -
+    have hrd:
+      "\<forall>B g. top1_continuous_map_on X TX Y TY g \<and> B \<subseteq> X
+        \<longrightarrow> top1_continuous_map_on B (subspace_topology X TX B) Y TY g"
+      using Theorem_18_2(4)[OF hTX hTY hTY] .
+    have "top1_continuous_map_on X TX Y TY f \<and> A \<subseteq> X"
+      apply (intro conjI)
+       apply (rule hf)
+      apply (rule hAX)
+      done
+    thus ?thesis
+      using hrd by blast
+  qed
+  have himg_compact: "top1_compact_on (f ` A) (subspace_topology Y TY (f ` A))"
+    by (rule Theorem_26_5[OF hsub_topA hTY hAcomp hcontA])
+  have hfAsub: "f ` A \<subseteq> Y"
+  proof (rule subsetI)
+    fix y
+    assume hy: "y \<in> f ` A"
+    then obtain x where hxA: "x \<in> A" and hyfx: "y = f x"
+      by blast
+    have hxX: "x \<in> X"
+      using hAX hxA by blast
+    have hmap: "\<forall>x\<in>X. f x \<in> Y"
+      using hf unfolding top1_continuous_map_on_def by blast
+    show "y \<in> Y" using hmap hxX hyfx by blast
+  qed
+  show ?thesis
+    by (rule Theorem_26_3[OF hH hfAsub himg_compact])
+qed
+
 (** from \S26 Theorem 26.6 [top1.tex:3180] **)
 theorem Theorem_26_6:
   assumes hTX: "is_topology_on X TX"
