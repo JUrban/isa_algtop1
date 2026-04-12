@@ -14154,7 +14154,11 @@ corollary compact_metric_imp_second_countable:
   assumes hd: "top1_metric_on X d"
   and hcomp: "top1_compact_on X (top1_metric_topology_on X d)"
   shows "top1_second_countable_on X (top1_metric_topology_on X d)"
-  sorry
+proof -
+  have hTB: "top1_totally_bounded_on X d"
+    using Theorem_45_1[OF hd] hcomp by blast
+  show ?thesis sorry
+qed
 
 definition top1_equicontinuous_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
