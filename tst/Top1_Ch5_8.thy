@@ -14161,7 +14161,96 @@ proof -
     by (rule compact_is_topology[OF hcomp])
   have hnet: "\<forall>n::nat. \<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>s\<in>S. top1_ball_on X d s (1/real(Suc n)))"
     using hTB unfolding top1_totally_bounded_on_def by auto
-  show ?thesis sorry
+  obtain Sn where hSn: "\<forall>n::nat. finite (Sn n) \<and> Sn n \<subseteq> X
+      \<and> X \<subseteq> (\<Union>s\<in>Sn n. top1_ball_on X d s (1/real(Suc n)))"
+    by (metis hnet)
+  define B where "B = (\<Union>n. (\<lambda>s. top1_ball_on X d s (1/real(Suc n))) ` Sn n)"
+  have hNAT_cnt: "top1_countable (UNIV::nat set)"
+    unfolding top1_countable_def
+    apply (rule exI[where x=id])
+    apply (rule inj_on_id)
+    done
+  have hSn_cnt: "\<forall>n::nat. top1_countable (Sn n)"
+  proof (intro allI)
+    fix n :: nat
+    have hfin: "finite (Sn n)" using hSn by blast
+    obtain f :: "'a \<Rightarrow> nat" and m where "inj_on f (Sn n)"
+      using finite_imp_inj_to_nat_seg[OF hfin] by blast
+    then show "top1_countable (Sn n)"
+      unfolding top1_countable_def by blast
+  qed
+  have hBcnt: "top1_countable B"
+  proof -
+    have hSig: "top1_countable (SIGMA n:UNIV. Sn n)"
+      by (rule top1_countable_SIGMA[OF hNAT_cnt]) (simp add: hSn_cnt)
+    define g where "g p = top1_ball_on X d (snd p) (1/real(Suc (fst p)))" for p :: "nat \<times> 'a"
+    have "B = g ` (SIGMA n:UNIV. Sn n)"
+      unfolding B_def g_def by force
+    then show ?thesis
+      using top1_countable_image[OF hSig] by simp
+  qed
+  have hTsub: "\<forall>U\<in>top1_metric_topology_on X d. U \<subseteq> X"
+    by (metis hd metric_topology_is_strict is_topology_on_strict_opens_sub)
+  have hB_sub_TX: "B \<subseteq> top1_metric_topology_on X d"
+  proof (rule subsetI)
+    fix U assume "U \<in> B"
+    then obtain n s where "s \<in> Sn n" "U = top1_ball_on X d s (1/real(Suc n))"
+      unfolding B_def by blast
+    have "s \<in> X" using \<open>s \<in> Sn n\<close> hSn by blast
+    have h1pos: "0 < 1/real(Suc n)"
+      by force
+    show "U \<in> top1_metric_topology_on X d"
+      using \<open>U = top1_ball_on X d s (1/real(Suc n))\<close>
+        top1_ball_open_in_metric_topology[OF hd \<open>s \<in> X\<close> h1pos]
+      by blast
+  qed
+  have hB_covers: "X \<subseteq> \<Union>B"
+  proof (rule subsetI)
+    fix x assume "x \<in> X"
+    then obtain s where "s \<in> Sn 0" "x \<in> top1_ball_on X d s (1/real(Suc 0))"
+      using hSn by blast
+    then show "x \<in> \<Union>B"
+      unfolding B_def by blast
+  qed
+  have hB_refines: "\<forall>U\<in>top1_metric_topology_on X d. \<forall>x\<in>U.
+    \<exists>D\<in>B. x \<in> D \<and> D \<subseteq> U"
+  proof (intro ballI)
+    fix U x assume hU: "U \<in> top1_metric_topology_on X d" and hxU: "x \<in> U"
+    have hxX: "x \<in> X" using hxU hTsub hU by blast
+    obtain eps where heps: "eps > 0" "top1_ball_on X d x eps \<subseteq> U"
+      using top1_metric_open_contains_ball[OF hd hU hxU] by blast
+    obtain n where hn: "1/real(Suc n) < eps/2"
+      by (meson half_gt_zero_iff heps(1) nat_approx_posE)
+    have hn_pos: "0 < 1/real(Suc n)"
+      by simp
+    obtain s where hsn: "s \<in> Sn n" "x \<in> top1_ball_on X d s (1/real(Suc n))"
+      using hSn hxX by blast
+    have hsX: "s \<in> X" using hsn(1) hSn by blast
+    have hball_in_B: "top1_ball_on X d s (1/real(Suc n)) \<in> B"
+      unfolding B_def using hsn(1) by blast
+    have hball_sub_U: "top1_ball_on X d s (1/real(Suc n)) \<subseteq> U"
+    proof (rule subsetI)
+      fix y assume hy: "y \<in> top1_ball_on X d s (1/real(Suc n))"
+      have hyX: "y \<in> X" using hy unfolding top1_ball_on_def by blast
+      have hdsy: "d s y < 1/real(Suc n)" using hy unfolding top1_ball_on_def by blast
+      have hdsx: "d s x < 1/real(Suc n)" using hsn(2) unfolding top1_ball_on_def by blast
+      have hdxs: "d x s < 1/real(Suc n)"
+        using hdsx top1_metric_sym[OF hd hsX hxX] by linarith
+      have hdxy: "d x y \<le> d x s + d s y"
+        by (rule top1_metric_triangle[OF hd hxX hsX hyX])
+      have "d x y < eps"
+        using hdxy hdxs hdsy hn by linarith
+      then show "y \<in> U"
+        using heps(2) hyX hxX unfolding top1_ball_on_def by blast
+    qed
+    show "\<exists>D\<in>B. x \<in> D \<and> D \<subseteq> U"
+      using hball_in_B hsn(2) hball_sub_U by blast
+  qed
+  have hBasis: "basis_for X B (top1_metric_topology_on X d)"
+    by (rule open_family_basis_criterion[OF hTop hTsub hB_sub_TX hB_covers hB_refines])
+  show ?thesis
+    unfolding top1_second_countable_on_def
+    using hBcnt hBasis by blast
 qed
 
 definition top1_equicontinuous_family_on ::
