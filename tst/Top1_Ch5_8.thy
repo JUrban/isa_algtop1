@@ -13717,7 +13717,7 @@ proof (intro allI impI)
   have hU_sub_T: "\<U> \<subseteq> ?T" unfolding \<U>_def using hball_open by blast
   have hX_sub_U: "X \<subseteq> \<Union>\<U>" unfolding \<U>_def using hball_self by blast
   obtain \<V> where "finite \<V>" "\<V> \<subseteq> \<U>" "X \<subseteq> \<Union>\<V>"
-    using hComp hU_sub_T hX_sub_U unfolding top1_compact_on_def by blast
+    using compact_finite_subcover[OF hComp hU_sub_T hX_sub_U] by blast
   have "\<forall>V\<in>\<V>. \<exists>x\<in>X. V = top1_ball_on X d x e"
     using \<open>\<V> \<subseteq> \<U>\<close> unfolding \<U>_def by blast
   then obtain c where hc: "\<forall>V\<in>\<V>. c V \<in> X \<and> V = top1_ball_on X d (c V) e"
@@ -21768,7 +21768,7 @@ proof -
         have hUc_sub: "Uc \<subseteq> subspace_topology ?PiE ?Tcc K" unfolding Uc_def using hccK_open by fastforce
         have hUc_cov: "K \<subseteq> \<Union>Uc" unfolding Uc_def using hself_mem by blast
         obtain Fsets where hFfin: "finite Fsets" and hFsub: "Fsets \<subseteq> Uc" and hFcov: "K \<subseteq> \<Union>Fsets"
-          using hKcomp_cc hUc_sub hUc_cov unfolding top1_compact_on_def by meson
+          using compact_finite_subcover[OF hKcomp_cc hUc_sub hUc_cov] by meson
         text \<open>Each F ∈ Fsets is ccball fi ∩ K for some fi. Pick one per element.\<close>
         have hFsets_form: "\<forall>F \<in> Fsets. \<exists>fi \<in> K. F = ccball fi \<inter> K"
           using hFsub unfolding Uc_def by fast
@@ -22098,7 +22098,7 @@ proof (rule ccontr)
   qed
 
   obtain G where hGfin: "finite G" and hGsub: "G \<subseteq> ?F" and hGcover: "X \<subseteq> \<Union>G"
-    using hcomp hFsubTX hCover unfolding top1_compact_on_def by meson
+    using compact_finite_subcover[OF hcomp hFsubTX hCover] by meson
 
   have hGne: "G \<noteq> {}"
   proof
