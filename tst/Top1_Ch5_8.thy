@@ -3827,7 +3827,7 @@ proof -
   have hxX: "x \<in> X"
     using hxS hSX by fast
   have hdxx: "d x x = 0"
-    using hd hxX unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hxX])
   have hxball: "x \<in> top1_ball_on X d x r"
     unfolding top1_ball_on_def using hxX hdxx hr by simp
   show ?thesis
@@ -14056,7 +14056,7 @@ proof (rule ccontr)
   text \<open>Step 5: Eventually d(s(r n), x) < eps/2.\<close>
   have heps2: "\<epsilon>/2 > 0" using heps by simp
   have hdxx: "d x x = 0"
-    using hd hxX unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hxX])
   have hx_in_ball: "x \<in> top1_ball_on X d x (\<epsilon>/2)"
     unfolding top1_ball_on_def using hxX hdxx heps2 by simp
   have hball_open: "top1_ball_on X d x (\<epsilon>/2) \<in> top1_metric_topology_on X d"
@@ -14092,7 +14092,7 @@ proof (rule ccontr)
       using hsrK_ball unfolding top1_ball_on_def comp_def by simp
     have hsrKX: "s (r K) \<in> X" using hsX by blast
     have htri: "d x y \<le> d x (s (r K)) + d (s (r K)) y"
-      using hd hxX hsrKX hyX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd hxX hsrKX hyX])
     have "d x y < \<epsilon>"
       using htri hdxs hdy heps_rK by linarith
     then show "y \<in> U"
@@ -17827,7 +17827,7 @@ proof -
     then have hyX: "y \<in> X" and hdxy: "d x y < \<delta>"
       unfolding top1_ball_on_def by auto
     have "d c y \<le> d c x + d x y"
-      using hd hc hxX hyX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd hc hxX hyX])
     also have "... < d c x + \<delta>" using hdxy by simp
     also have "... = r" using \<delta>_def by argo
     finally show "y \<in> b" unfolding hbeq top1_ball_on_def using hyX by simp
@@ -22674,7 +22674,7 @@ lemma top1_metric_ball_self_mem:
   shows "x \<in> top1_ball_on X d x e"
 proof -
   have "d x x = 0"
-    using hd hxX unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hxX])
   thus ?thesis
     unfolding top1_ball_on_def using hxX he by simp
 qed
@@ -22745,7 +22745,7 @@ proof (rule ccontr)
       using hz unfolding top1_ball_on_def by blast
 
     have htri: "d x y \<le> d x z + d z y"
-      using hd hxX hzX hyX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd hxX hzX hyX])
     have hsym: "d z y = d y z"
       using hd hzX hyX unfolding top1_metric_on_def by blast
 
@@ -22837,7 +22837,7 @@ proof -
     unfolding top1_ball_on_def by blast
 
   have hxx0: "d x x = 0"
-    using hd hxX unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hxX])
 
   have hxB: "x \<in> ?B"
     unfolding top1_ball_on_def using hxX hxx0 hr by simp
@@ -27586,7 +27586,7 @@ proof -
     then have "f x \<le> d x z0"
       unfolding f_def using cInf_lower hbbl_x by meson
     also have "d x z0 \<le> d x y + d y z0"
-      using hd hxX hyX hz0X unfolding top1_metric_on_def by blast
+      by (rule top1_metric_triangle[OF hd hxX hyX hz0X])
     finally show "f x \<le> d x y + d y z0" .
   qed
   then have "\<forall>z0\<in>S. f x - d x y \<le> d y z0" by fastforce
