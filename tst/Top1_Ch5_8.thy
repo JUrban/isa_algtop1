@@ -13784,7 +13784,7 @@ proof (intro conjI)
         unfolding top1_ball_on_def using hd hex unfolding top1_metric_on_def by fastforce
       then have "X \<subseteq> \<Union>((\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X)" by blast
       then obtain \<V> where "finite \<V>" "\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X" "X \<subseteq> \<Union>\<V>"
-        using hComp hBalls unfolding top1_compact_on_def by meson
+        using compact_finite_subcover[OF hComp hBalls] by meson
       have "\<forall>V\<in>\<V>. \<exists>x. x \<in> X \<and> V = top1_ball_on X d x (ex x / 2)"
         using \<open>\<V> \<subseteq> (\<lambda>x. top1_ball_on X d x (ex x / 2)) ` X\<close> by fast
       then obtain c where hc: "\<forall>V\<in>\<V>. c V \<in> X \<and> V = top1_ball_on X d (c V) (ex (c V) / 2)"
@@ -14430,7 +14430,7 @@ next
       then show "x \<in> \<Union>(Ua ` X)" using \<open>x \<in> X\<close> by blast
     qed
     obtain \<V> where hVfin: "finite \<V>" and hVsub: "\<V> \<subseteq> Ua ` X" and hVcov: "X \<subseteq> \<Union>\<V>"
-      using hCompX hUa_cov hX_sub_Ua unfolding top1_compact_on_def by meson
+      using compact_finite_subcover[OF hCompX hUa_cov hX_sub_Ua] by meson
     obtain A where hAfin: "finite A" and hAsub: "A \<subseteq> X" and hAcov: "X \<subseteq> \<Union>(Ua ` A)"
       using hVfin hVsub hVcov by (metis finite_subset_image)
     text \<open>Step 3: Y is compact hence totally bounded. Cover Y by finitely many \<delta>-balls.\<close>
@@ -27658,7 +27658,7 @@ next
   have hA_open: "\<A> \<subseteq> ?T" and hA_covers: "X \<subseteq> \<Union>\<A>"
     using hCov unfolding top1_open_covering_on_def by blast+
   obtain F where hFfin: "finite F" and hFA: "F \<subseteq> \<A>" and hFcov: "X \<subseteq> \<Union>F"
-    using hComp hA_open hA_covers unfolding top1_compact_on_def by meson
+    using compact_finite_subcover[OF hComp hA_open hA_covers] by meson
   have hFne: "F \<noteq> {}" using hFcov hXne by blast
   text \<open>Step 2: Distance-to-set function and Lebesgue function.\<close>
   define dist_set where "dist_set = (\<lambda>S x. Inf {d x y | y. y \<in> S})"
