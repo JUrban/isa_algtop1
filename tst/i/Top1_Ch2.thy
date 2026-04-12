@@ -6150,6 +6150,15 @@ definition seq_converges_to_on :: "(nat \<Rightarrow> 'a) \<Rightarrow> 'a \<Rig
      x \<in> X \<and>
      (\<forall>U. neighborhood_of x X T U \<longrightarrow> (\<exists>N. \<forall>n\<ge>N. s n \<in> U))"
 
+lemma seq_converges_limit_in_X:
+  "seq_converges_to_on s x X T \<Longrightarrow> x \<in> X"
+  unfolding seq_converges_to_on_def by meson
+
+lemma seq_converges_eventually:
+  "\<lbrakk>seq_converges_to_on s x X T; neighborhood_of x X T U\<rbrakk>
+   \<Longrightarrow> \<exists>N. \<forall>n\<ge>N. s n \<in> U"
+  unfolding seq_converges_to_on_def by meson
+
 (** from \S17 Theorem 17.10 [top1.tex:801] **)
 (** LATEX VERSION: "In Hausdorff space, a sequence converges to at most one point." **)
 theorem Theorem_17_10:
