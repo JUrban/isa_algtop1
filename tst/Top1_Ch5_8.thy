@@ -14161,55 +14161,7 @@ proof -
     by (rule compact_is_topology[OF hcomp])
   have hnet: "\<forall>n::nat. \<exists>S. finite S \<and> S \<subseteq> X \<and> X \<subseteq> (\<Union>s\<in>S. top1_ball_on X d s (1/real(Suc n)))"
     using hTB unfolding top1_totally_bounded_on_def by auto
-  text \<open>Use choice to pick finite 1/(n+1)-nets Sn for each n.\<close>
-  obtain Sn :: "nat \<Rightarrow> 'a set"
-    where hSn_fin: "\<forall>n. finite (Sn n)"
-    and hSn_sub: "\<forall>n. Sn n \<subseteq> X"
-    and hSn_cov: "\<forall>n. X \<subseteq> (\<Union>s\<in>Sn n. top1_ball_on X d s (1/real(Suc n)))"
-    sorry
-  text \<open>Define the candidate basis: all balls of radius 1/(n+1) centered at net points.\<close>
-  define B where "B = (\<Union>n. (\<lambda>s. top1_ball_on X d s (1/real(Suc n))) ` (Sn n))"
-  have hStrict: "is_topology_on_strict X (top1_metric_topology_on X d)"
-    sorry
-  have hTsub: "\<forall>U\<in>top1_metric_topology_on X d. U \<subseteq> X"
-    sorry
-  text \<open>B is countable.\<close>
-  have hB_cnt: "top1_countable B"
-    sorry
-  text \<open>Every element of B is open in the metric topology.\<close>
-  have hB_sub_TX: "B \<subseteq> top1_metric_topology_on X d"
-    sorry
-  text \<open>B covers X.\<close>
-  have hB_covers: "X \<subseteq> \<Union>B"
-    sorry
-  text \<open>Refinement: for open U and x \<in> U, find a basis element in B containing x inside U.\<close>
-  have hB_refine: "\<forall>U\<in>top1_metric_topology_on X d. \<forall>x\<in>U. \<exists>D\<in>B. x \<in> D \<and> D \<subseteq> U"
-  proof (intro ballI)
-    fix U x assume hU: "U \<in> top1_metric_topology_on X d" and hx: "x \<in> U"
-    have hxX: "x \<in> X" using hTsub hU hx sorry
-    obtain \<epsilon> where heps: "\<epsilon> > 0" and hball_U: "top1_ball_on X d x \<epsilon> \<subseteq> U"
-      sorry
-    text \<open>Pick n with 1/(n+1) < \<epsilon>/2.\<close>
-    obtain n where hn: "1 / real (Suc n) < \<epsilon> / 2"
-      sorry
-    text \<open>Pick s \<in> Sn n with x \<in> ball(s, 1/(n+1)).\<close>
-    obtain s where hs_Sn: "s \<in> Sn n" and hx_ball_s: "x \<in> top1_ball_on X d s (1/real(Suc n))"
-      sorry
-    text \<open>ball(s, 1/(n+1)) \<in> B.\<close>
-    have hball_in_B: "top1_ball_on X d s (1/real(Suc n)) \<in> B"
-      sorry
-    text \<open>ball(s, 1/(n+1)) \<subseteq> ball(x, \<epsilon>) \<subseteq> U.\<close>
-    have hball_s_sub_U: "top1_ball_on X d s (1/real(Suc n)) \<subseteq> U"
-      sorry
-    show "\<exists>D\<in>B. x \<in> D \<and> D \<subseteq> U"
-      sorry
-  qed
-  text \<open>Apply the basis criterion.\<close>
-  have hBasis: "basis_for X B (top1_metric_topology_on X d)"
-    sorry
-  show ?thesis
-    unfolding top1_second_countable_on_def
-    sorry
+  show ?thesis sorry
 qed
 
 definition top1_equicontinuous_family_on ::
