@@ -29058,15 +29058,8 @@ lemma metric_on_self_zero2:
   shows "d x x = 0"
   using assms unfolding top1_metric_on_def by fast
 
-lemma metric_on_sym2:
-  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X"
-  shows "d x y = d y x"
-  using assms unfolding top1_metric_on_def by blast
-
-lemma metric_on_triangle2:
-  assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X" and "z \<in> X"
-  shows "d x z \<le> d x y + d y z"
-  using assms unfolding top1_metric_on_def by blast
+lemmas metric_on_sym2 = top1_metric_sym
+lemmas metric_on_triangle2 = top1_metric_triangle
 
 text \<open>Helper: construct finite open cover with controlled d-diam and f-diam
   from compact metric space + continuous map.\<close>
