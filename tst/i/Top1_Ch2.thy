@@ -6677,6 +6677,11 @@ lemma continuous_map_preimage_open:
   "\<lbrakk>top1_continuous_map_on X TX Y TY f; V \<in> TY\<rbrakk> \<Longrightarrow> {x \<in> X. f x \<in> V} \<in> TX"
   unfolding top1_continuous_map_on_def by meson
 
+lemma continuous_map_onI:
+  "\<lbrakk>\<forall>x\<in>X. f x \<in> Y; \<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX\<rbrakk>
+   \<Longrightarrow> top1_continuous_map_on X TX Y TY f"
+  unfolding top1_continuous_map_on_def by meson
+
 (** Helper: an injective continuous map into a Hausdorff space has Hausdorff domain. **)
 lemma hausdorff_on_of_inj_continuous_map:
   fixes f :: "'a \<Rightarrow> 'b"
