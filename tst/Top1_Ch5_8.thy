@@ -19254,7 +19254,7 @@ proof -
   let ?eval = "(\<lambda>p. (snd p) (fst p))"
 
   have hTopX: "is_topology_on X TX"
-    using hHausX unfolding is_hausdorff_on_def by blast
+    by (rule hausdorff_is_topology[OF hHausX])
 
   have hShrink:
     "\<forall>x\<in>X. \<forall>U. neighborhood_of x X TX U \<longrightarrow>
@@ -19462,7 +19462,7 @@ proof -
   let ?TPXZ = "product_topology_on TX TZ"
 
   have hTopX: "is_topology_on X TX"
-    using hHausX unfolding is_hausdorff_on_def by blast
+    by (rule hausdorff_is_topology[OF hHausX])
 
   show "(\<forall>f. top1_continuous_map_on (X \<times> Z) ?TPXZ Y TY f
         \<longrightarrow> top1_continuous_map_on Z TZ ?C ?Tco (\<lambda>z x. if x \<in> X then f (x, z) else undefined))"
@@ -22052,7 +22052,7 @@ lemma top1_compact_on_Inter_nested_closed_nonempty:
 proof (rule ccontr)
   assume hempty: "\<not> ((\<Inter>n. C n) \<noteq> {})"
   have hTop: "is_topology_on X TX"
-    using hcomp unfolding top1_compact_on_def by blast
+    by (rule compact_is_topology[OF hcomp])
 
   have hXne: "X \<noteq> {}"
   proof -
@@ -22332,7 +22332,7 @@ lemma top1_compact_hausdorff_imp_baire:
   shows "top1_baire_on X TX"
 proof -
   have hTop: "is_topology_on X TX"
-    using hcomp unfolding top1_compact_on_def by blast
+    by (rule compact_is_topology[OF hcomp])
   have hNormal: "top1_normal_on X TX"
     by (rule Theorem_32_3[OF hcomp hHaus])
   have hReg: "top1_regular_on X TX"
