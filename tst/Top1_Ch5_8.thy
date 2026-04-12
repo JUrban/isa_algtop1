@@ -14904,7 +14904,7 @@ proof -
       fix z assume hz: "z \<in> top1_ball_on Y d y e"
       then have hzY: "z \<in> Y" and hdyz: "d y z < e" unfolding top1_ball_on_def by auto
       have htri: "d y0 y \<le> d y0 z + d z y"
-        using hd hy0 hzY hyY unfolding top1_metric_on_def by blast
+        by (rule top1_metric_triangle[OF hd hy0 hzY hyY])
       have hdsym: "d z y = d y z" using hd hzY hyY unfolding top1_metric_on_def by blast
       have "d y0 z > r" using htri hdsym hdyz unfolding e_def by argo
       then show "z \<in> Y - ?A" using hzY by simp
@@ -18762,7 +18762,7 @@ proof -
                 fix z assume hz: "z \<in> top1_ball_on Y d y0 \<epsilon>0"
                 then have hzY: "z \<in> Y" and hdzy0: "d y0 z < \<epsilon>0" unfolding top1_ball_on_def by auto
                 have "d y0 (g xi) \<le> d y0 z + d z (g xi)"
-                  using hd hy0Y hzY hgxiY unfolding top1_metric_on_def by blast
+                  by (rule top1_metric_triangle[OF hd hy0Y hzY hgxiY])
                 then show "d z (g xi) > r" using hdzy0 hdy0 unfolding \<epsilon>0_def by linarith
               qed
               then have "top1_ball_on Y d y0 \<epsilon>0 \<subseteq> {y \<in> Y. d y (g xi) > r}" unfolding top1_ball_on_def by fast
@@ -21898,9 +21898,9 @@ proof -
           then have hfix_Y: "fi x \<in> Y" using hxX unfolding top1_PiE_iff by fastforce
           have hfix0_Y: "fi x0 \<in> Y" using \<open>fi \<in> ?PiE\<close> hx0 unfolding top1_PiE_iff by blast
           have htri1: "d (g x) (g x0) \<le> d (g x) (fi x) + d (fi x) (g x0)"
-            using hd hgx_Y hfix_Y hgx0_Y unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd hgx_Y hfix_Y hgx0_Y])
           have htri2: "d (fi x) (g x0) \<le> d (fi x) (fi x0) + d (fi x0) (g x0)"
-            using hd hfix_Y hfix0_Y hgx0_Y unfolding top1_metric_on_def by blast
+            by (rule top1_metric_triangle[OF hd hfix_Y hfix0_Y hgx0_Y])
           have hdsym1: "d (g x) (fi x) = d (fi x) (g x)"
             by (rule top1_metric_sym[OF hd hgx_Y hfix_Y])
           show "d (g x) (g x0) < \<epsilon>"
