@@ -8382,13 +8382,13 @@ lemma top1_diameter_on_pair_le:
   shows "top1_diameter_on d {x, y} \<le> d x y"
 proof -
   have hxy0: "0 \<le> d x y"
-    using hd hx hy unfolding top1_metric_on_def by blast
+    by (rule top1_metric_nonneg[OF hd hx hy])
   have hsym: "d y x = d x y"
-    using hd hx hy unfolding top1_metric_on_def by blast
+    by (rule top1_metric_sym[OF hd hy hx])
   have hxx: "d x x = 0"
-    using hd hx unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hx])
   have hyy: "d y y = 0"
-    using hd hy unfolding top1_metric_on_def by blast
+    by (rule top1_metric_self_zero[OF hd hy])
 
   define D where "D = {d u v | u v. u \<in> {x, y} \<and> v \<in> {x, y}}"
 
@@ -8692,7 +8692,7 @@ next
         using hy unfolding top1_ball_on_def by blast+
 
       have hcx': "d c y \<le> d c x + d x y"
-        using hd hcX hxX hyX unfolding top1_metric_on_def by blast
+        by (rule top1_metric_triangle[OF hd hcX hxX hyX])
       have "d c x + d x y < d c x + r"
         using hxy by simp
       also have "\<dots> < e"
@@ -8766,7 +8766,7 @@ next
     fix x
     assume hxX: "x \<in> X"
     have hdx0: "d x x = 0"
-      using hd hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_self_zero[OF hd hxX])
     have hxV: "x \<in> V x"
       unfolding V_def top1_ball_on_def using hxX hdx0 hradpos[rule_format, OF hxX] by simp
     have "V x \<in> Vc"
@@ -8862,7 +8862,7 @@ next
         using hy unfolding top1_ball_on_def by blast+
 
       have htri: "d (center B) y \<le> d (center B) x + d x y"
-        using hd hcX hxX hyX unfolding top1_metric_on_def by blast
+        by (rule top1_metric_triangle[OF hd hcX hxX hyX])
       have "d (center B) x + d x y < rad (center B) / 2 + \<delta>"
         using hcx hxy by linarith
       also have "\<dots> \<le> rad (center B) / 2 + rad (center B) / 2"
@@ -9054,7 +9054,7 @@ proof -
 	        have hfxY: "f x \<in> Y"
 	          by (rule hmapD[OF hxX])
 	        have hdiag: "dY (f x) (f x) = 0"
-	          using hdY hfxY unfolding top1_metric_on_def by blast
+	          by (rule top1_metric_self_zero[OF hdY hfxY])
 	        have hxU: "x \<in> {z\<in>X. dY (f x) (f z) < \<epsilon> / 2}"
 	        proof -
 	          have hpos: "0 < \<epsilon> / 2"
