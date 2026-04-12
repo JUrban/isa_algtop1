@@ -23420,7 +23420,7 @@ proof -
       have hmX: "xseq m \<in> X" using hxseqX by blast
       have hnX: "xseq n \<in> X" using hxseqX by blast
       have hsym: "d (xseq m) x = d x (xseq m)"
-        using hmetric hmX hxX unfolding top1_metric_on_def by blast
+        by (rule top1_metric_sym[OF hmetric hmX hxX])
       have htri: "d (xseq n) x \<le> d (xseq n) (xseq m) + d (xseq m) x"
         using hmetric hnX hmX hxX unfolding top1_metric_on_def by blast
       show "d (xseq n) x < rseq n + \<delta>"
@@ -23577,7 +23577,7 @@ proof -
     have "d a b \<le> d a x + d x b"
       using hd haX hxX hbX unfolding top1_metric_on_def by blast
     have "d a x = d x a"
-      using hd haX hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_sym[OF hd haX hxX])
     have "d x a \<le> M" using hM haA by blast
     have "d x b \<le> M" using hM hbA by blast
     have "d a b \<le> d x a + d x b"
@@ -30801,7 +30801,7 @@ proof -
     qed
     moreover have "0 \<le> d x y" using hd hx hy unfolding top1_metric_on_def by blast
     ultimately have "d x y = 0" by argo
-    then show "x = y" using hd hx hy unfolding top1_metric_on_def by blast
+    then show "x = y" using top1_metric_zero_iff[OF hd hx hy] by blast
   qed
   have hTRN_eq: "?TRN = top1_metric_topology_on ?RN ?dRN"
     using top1_Rpow_topology_eq_sq_metric by (simp add: N_def)
