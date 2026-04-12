@@ -1,0 +1,7 @@
+bck1019: Structured proof skeleton for compact_metric_imp_second_countable
+
+- Replaced `show ?thesis sorry` (line 14164) with a full structured proof skeleton
+- Steps (all sorry): choice for Sn nets, define basis B, countability, openness,
+  covering, refinement (with substeps for epsilon, archimedean n, net point s,
+  ball membership, ball containment), basis criterion, conclusion
+- Build passes in 53s
