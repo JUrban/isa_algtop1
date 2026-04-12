@@ -5119,6 +5119,14 @@ proof -
     apply (rule cl_union)
     done
 qed
+text \<open>Extraction: arbitrary intersection of closed sets is closed.\<close>
+lemma closedin_Inter:
+  assumes hT: "is_topology_on X T" and hne: "F \<noteq> {}"
+  and hcl: "\<forall>A\<in>F. closedin_on X T A"
+  shows "closedin_on X T (\<Inter>F)"
+  using conjunct1[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]] hne hcl
+  by meson
+
 (** from \S17 Theorem 17.2 [top1.tex:665] **)
 (** LATEX VERSION: "A closed in Y iff A = C\<inter>Y for some closed C in X." **)
 (** Note: requires Y \<subseteq> X for the backward direction. **)
