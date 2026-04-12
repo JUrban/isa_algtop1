@@ -3879,7 +3879,7 @@ proof -
       have hball: "top1_ball_on X d x (1 / real (Suc n)) \<subseteq> U"
         using hxSn unfolding Sn_def by blast
       have hxX: "x \<in> X" using hxSn unfolding Sn_def by fast
-      have hdxx: "d x x = 0" using hd hxX unfolding top1_metric_on_def by blast
+      have hdxx: "d x x = 0" by (rule top1_metric_self_zero[OF hd hxX])
       have hxball: "x \<in> top1_ball_on X d x (1 / real (Suc n))"
         unfolding top1_ball_on_def using hxX hdxx by auto
       show "x \<in> U" using hball hxball by blast

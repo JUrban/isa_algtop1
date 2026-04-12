@@ -11565,7 +11565,7 @@ proof -
 	      have hxball: "x \<in> top1_ball_on Y d x e"
 	      proof -
 	        have hxx0: "d x x = 0"
-	          using hd hxX unfolding top1_metric_on_def by blast
+	          by (rule top1_metric_self_zero[OF hd hxX])
 	        show ?thesis
 	          unfolding top1_ball_on_def using hxY he hxx0 by simp
 	      qed
