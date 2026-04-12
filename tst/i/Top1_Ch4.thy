@@ -2,6 +2,14 @@ theory Top1_Ch4
   imports Top1_Ch3
 begin
 
+text \<open>Formalization of Munkres' Topology, Chapter 4 (Sections 30--36).
+  All definitions and theorems are fully proved.
+
+  Key results: countability axioms (30.1--30.3), separation axioms (31.1--31.2),
+  normal spaces (32.1--32.4), Urysohn Lemma (33.1--33.2),
+  Urysohn Metrization Theorem (34.1--34.3), Tietze Extension Theorem (35.1),
+  manifold imbeddings (36.1--36.2).\<close>
+
 section \<open>\<S>30 The Countability Axioms\<close>
 
 (** Basic predicate for countable sets (to avoid extra session dependencies). **)

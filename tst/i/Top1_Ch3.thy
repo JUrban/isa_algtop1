@@ -2,6 +2,18 @@ theory Top1_Ch3
   imports Top1_Ch2
 begin
 
+text \<open>Formalization of Munkres' Topology, Chapter 3 (Sections 23--29).
+  All definitions and theorems are fully proved.
+
+  Key results: connectedness (23.1--23.6), connected subspaces of R (24.1--24.3),
+  components and local connectedness (25.1--25.5), compactness (26.1--26.9),
+  compact subspaces of R (27.1--27.8), limit-point compactness (28.1--28.2),
+  local compactness and one-point compactification (29.1--29.4).
+
+  Additional: connected\_iff\_clopen, Lemma\_23\_1\_proper, Lemma\_23\_2\_disjoint,
+  countable compactness, lp\_compact\_T1\_infinite\_intersection,
+  connected + locally path-connected implies path-connected (proved).\<close>
+
 section \<open>\<S>23 Connected Spaces\<close>
 
 definition top1_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
