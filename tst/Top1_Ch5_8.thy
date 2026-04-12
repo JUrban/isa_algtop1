@@ -14730,7 +14730,7 @@ proof -
         have hball_open: "top1_ball_on C du g \<delta> \<in> Tc"
           using hTc_is_metric top1_ball_open_in_metric_topology[OF hdu_metric_C hgC hdelta_pos] by fast
         have hg_self_zero: "du g g = 0"
-          using hdu_metric_C hgC unfolding top1_metric_on_def by blast
+          by (rule top1_metric_self_zero[OF hdu_metric_C hgC])
         have hg_in_ball: "g \<in> top1_ball_on C du g \<delta>"
           unfolding top1_ball_on_def using hgC hg_self_zero hdelta_pos by simp
         have hint: "intersects (closure_on C Tc \<F>) (top1_ball_on C du g \<delta>)"
@@ -28543,7 +28543,7 @@ proof (intro conjI)
         x \<in> top1_Rpow_set N \<and> 0 < ea}"
       using hy0_Rpow he by blast
     have hd_self: "top1_Rpow_sq_metric N y0 y0 = 0"
-      using hmet hy0_Rpow unfolding top1_metric_on_def by blast
+      by (rule top1_metric_self_zero[OF hmet hy0_Rpow])
     have "y0 \<in> top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) y0 e"
       unfolding top1_ball_on_def using hy0_Rpow he hd_self by simp
     then show "\<exists>ba\<in>{top1_ball_on (top1_Rpow_set N) (top1_Rpow_sq_metric N) x ea |x ea.
@@ -30009,9 +30009,9 @@ proof -
                   have hgy: "g y \<in> ?RN"
                     using hgx hgxy by fastforce
                   have htri: "?dRN (f x) (f y) \<le> ?dRN (f x) (g x) + ?dRN (g x) (f y)"
-                    using hdRN_met hfx hfy hgx unfolding top1_metric_on_def by blast
+                    by (rule top1_metric_triangle[OF hdRN_met hfx hgx hfy])
                   have htri2: "?dRN (g x) (f y) \<le> ?dRN (g x) (g y) + ?dRN (g y) (f y)"
-                    using hdRN_met hgx hgy hfy unfolding top1_metric_on_def by blast
+                    by (rule top1_metric_triangle[OF hdRN_met hgx hgy hfy])
                   have hgxy0: "?dRN (g x) (g y) = 0"
                     using hdRN_met hgx hgxy unfolding top1_metric_on_def by metis
                   text \<open>Since ρ(f,g) < δ₁/3 ≤ 1/3, the bounded metric = raw metric.\<close>
