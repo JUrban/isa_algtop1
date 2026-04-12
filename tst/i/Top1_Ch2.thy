@@ -7455,6 +7455,22 @@ proof -
   qed
 qed
 
+text \<open>Preimage of a closed set under a continuous map is closed.\<close>
+lemma continuous_preimage_closedin:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+  and hcont: "top1_continuous_map_on X TX Y TY f"
+  and hC: "closedin_on Y TY C"
+  shows "closedin_on X TX {x \<in> X. f x \<in> C}"
+proof -
+  have hCY: "C \<subseteq> Y" using hC unfolding closedin_on_def by blast
+  have hYmC: "Y - C \<in> TY" using hC by (rule closedin_diff_open)
+  have hpre: "{x \<in> X. f x \<in> Y - C} \<in> TX"
+    using hcont hYmC unfolding top1_continuous_map_on_def by blast
+  have heq: "X - {x \<in> X. f x \<in> C} = {x \<in> X. f x \<in> Y - C}"
+    using hcont hCY unfolding top1_continuous_map_on_def by blast
+  show ?thesis unfolding closedin_on_def using hpre heq by auto
+qed
+
 (** from \S18 Theorem 18.2 [top1.tex:1089] **)
 (** LATEX VERSION: "Rules for constructing continuous functions." **)
 theorem Theorem_18_2:
