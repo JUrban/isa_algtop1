@@ -4518,6 +4518,17 @@ proof (intro conjI)
   qed
 qed
 
+text \<open>Connected + locally path-connected + nonempty implies path-connected.
+  Proof: by Theorem 25.5, path components = components. Connected means one
+  component = X. So path component of any point is X, hence path-connected.\<close>
+corollary connected_locally_path_connected_imp_path_connected:
+  assumes hTX: "is_topology_on X TX"
+  and hconn: "top1_connected_on X TX"
+  and hlocp: "top1_locally_path_connected_on X TX"
+  and hne: "X \<noteq> {}"
+  shows "top1_path_connected_on X TX"
+  sorry
+
 section \<open>\<S>26 Compact Spaces\<close>
 
 definition top1_compact_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
