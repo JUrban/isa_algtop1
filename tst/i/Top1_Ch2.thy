@@ -6660,6 +6660,14 @@ definition top1_continuous_map_on ::
   "top1_continuous_map_on X TX Y TY f \<longleftrightarrow>
      (\<forall>x\<in>X. f x \<in> Y) \<and> (\<forall>V\<in>TY. {x\<in>X. f x \<in> V} \<in> TX)"
 
+lemma continuous_map_maps_to:
+  "\<lbrakk>top1_continuous_map_on X TX Y TY f; x \<in> X\<rbrakk> \<Longrightarrow> f x \<in> Y"
+  unfolding top1_continuous_map_on_def by meson
+
+lemma continuous_map_preimage_open:
+  "\<lbrakk>top1_continuous_map_on X TX Y TY f; V \<in> TY\<rbrakk> \<Longrightarrow> {x \<in> X. f x \<in> V} \<in> TX"
+  unfolding top1_continuous_map_on_def by meson
+
 (** Helper: an injective continuous map into a Hausdorff space has Hausdorff domain. **)
 lemma hausdorff_on_of_inj_continuous_map:
   fixes f :: "'a \<Rightarrow> 'b"
