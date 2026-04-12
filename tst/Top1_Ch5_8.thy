@@ -14265,12 +14265,7 @@ definition top1_equicontinuous_family_on ::
      (\<forall>f\<in>\<F>. \<forall>x\<in>X. f x \<in> Y)
      \<and> (\<forall>x0\<in>X. \<forall>\<epsilon>>0. \<exists>U\<in>TX. x0 \<in> U \<and> (\<forall>f\<in>\<F>. \<forall>x\<in>U. d (f x) (f x0) < \<epsilon>))"
 
-lemma metric_sym:
-  assumes hd: "top1_metric_on Y d" and "a \<in> Y" "b \<in> Y"
-  shows "d a b = d b a"
-  using assms unfolding top1_metric_on_def
-  apply (elim conjE) apply (erule_tac x=a in ballE) apply (erule_tac x=b in ballE)
-  apply simp apply fast apply fast done
+lemmas metric_sym = top1_metric_sym
 
 definition top1_metric_bounded_subset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_metric_bounded_subset_on Y d A \<longleftrightarrow> (\<exists>y0\<in>Y. \<exists>M. \<forall>y\<in>A. d y0 y \<le> M)"
@@ -29053,10 +29048,7 @@ qed
 
 text \<open>general_position_extend now includes q ∉ S in its conclusion.\<close>
 
-lemma metric_on_self_zero2:
-  assumes "top1_metric_on X d" and "x \<in> X"
-  shows "d x x = 0"
-  using assms unfolding top1_metric_on_def by fast
+lemmas metric_on_self_zero2 = top1_metric_self_zero
 
 lemmas metric_on_sym2 = top1_metric_sym
 lemmas metric_on_triangle2 = top1_metric_triangle
@@ -29398,10 +29390,7 @@ proof -
   then show ?thesis unfolding top1_Rpow_sup_dist_def using \<open>N > 0\<close> by presburger
 qed
 
-lemma metric_on_self_zero:
-  assumes "top1_metric_on X d" and "x \<in> X"
-  shows "d x x = 0"
-  using assms unfolding top1_metric_on_def by fast
+lemmas metric_on_self_zero = top1_metric_self_zero
 
 lemma metric_on_sym:
   assumes "top1_metric_on X d" and "x \<in> X" and "y \<in> X"
