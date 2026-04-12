@@ -8350,7 +8350,7 @@ lemma Lemma_41_6:
         \<and> top1_open_covering_on X TX V \<and> top1_locally_finite_family_on X TX V \<and> top1_refines V \<A>"
 proof -
   have hTop: "is_topology_on X TX"
-    using hHaus unfolding is_hausdorff_on_def by presburger
+    by (rule hausdorff_is_topology[OF hHaus])
   have hReg: "top1_regular_on X TX"
     by (rule paracompact_hausdorff_imp_regular[OF hPara hHaus hTsub])
   define \<A>' where "\<A>' = {U \<in> TX. \<exists>A\<in>\<A>. closure_on X TX U \<subseteq> A}"
@@ -20708,7 +20708,7 @@ proof -
   have hZ_haus: "is_hausdorff_on ?Z ?TZ"
     by (rule hausdorff_product[OF hI_haus hTI_sub])
   have hTopZ: "is_topology_on ?Z ?TZ"
-    using hZ_haus unfolding is_hausdorff_on_def by blast
+    by (rule hausdorff_is_topology[OF hZ_haus])
   have hI_compact: "\<forall>j\<in>J. top1_compact_on ?I ?TI"
     using top1_closed_interval_compact[of 0 1] by simp
   have hZ_compact: "top1_compact_on ?Z ?TZ"
@@ -32146,7 +32146,7 @@ proof -
   have hHaus: "is_hausdorff_on X TX"
     using hMan unfolding top1_m_manifold_on_def by blast
   have hTop: "is_topology_on X TX"
-    using hHaus unfolding is_hausdorff_on_def by presburger
+    by (rule hausdorff_is_topology[OF hHaus])
   have hNormal: "top1_normal_on X TX"
     using hComp hHaus by (rule Theorem_32_3)
   text \<open>Charts give open cover.\<close>
