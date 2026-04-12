@@ -14982,7 +14982,7 @@ proof -
   let ?Tc = "subspace_topology ?PiE ?Tu ?C"
   let ?clF = "closure_on ?C ?Tc \<F>"
   have hTopX: "is_topology_on X TX"
-    using hCompX top1_compact_on_def by blast
+    by (rule compact_is_topology[OF hCompX])
   have hFpiE: "\<F> \<subseteq> ?PiE"
     using hFsub unfolding top1_continuous_funcs_on_def by blast
   have hC_eq: "?C = top1_continuous_maps_metric_on X TX Y d"
@@ -16374,7 +16374,7 @@ proof -
     by (rule choice[THEN exE]) fast
   text \<open>hseq n → g uniformly on C. Apply uniform_limit_continuous on subspace C.\<close>
   have hTopC: "is_topology_on C (subspace_topology X TX C)"
-    using hC unfolding top1_compact_on_def by (elim conjE) assumption
+    by (rule compact_is_topology[OF hC])
   have hTopY: "is_topology_on Y ?TY"
     by (rule top1_metric_topology_on_is_topology_on[OF hd])
   have hseq_cont_C: "\<forall>n. top1_continuous_map_on C (subspace_topology X TX C) Y ?TY (hseq n)"
@@ -29748,7 +29748,7 @@ proof -
   obtain d where hd: "top1_metric_on X d" and hTX_eq: "TX = top1_metric_topology_on X d"
     using hMet unfolding top1_metrizable_on_def by (elim exE conjE) simp
   have hTop: "is_topology_on X TX"
-    using hComp unfolding top1_compact_on_def by presburger
+    by (rule compact_is_topology[OF hComp])
   have hNormal: "top1_normal_on X TX"
     using hMet by (rule Theorem_32_2)
   have hReg: "top1_regular_on X TX" by (rule normal_imp_regular_on[OF hNormal])
