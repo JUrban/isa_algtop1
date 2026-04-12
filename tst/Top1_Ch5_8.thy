@@ -14148,6 +14148,14 @@ next
     using complete_totally_bounded_imp_compact[OF hd] by blast
 qed
 
+text \<open>Compact metric spaces are second countable: totally bounded gives
+  countable 1/n-nets, their union is a countable dense subset, hence second countable.\<close>
+corollary compact_metric_imp_second_countable:
+  assumes hd: "top1_metric_on X d"
+  and hcomp: "top1_compact_on X (top1_metric_topology_on X d)"
+  shows "top1_second_countable_on X (top1_metric_topology_on X d)"
+  sorry
+
 definition top1_equicontinuous_family_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> real) \<Rightarrow> ('a \<Rightarrow> 'b) set \<Rightarrow> bool" where
   "top1_equicontinuous_family_on X TX Y d \<F> \<longleftrightarrow>
