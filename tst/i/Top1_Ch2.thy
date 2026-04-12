@@ -11611,6 +11611,27 @@ definition top1_metric_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Righta
      (\<forall>x\<in>X. \<forall>y\<in>X. d x y = d y x) \<and>
      (\<forall>x\<in>X. \<forall>y\<in>X. \<forall>z\<in>X. d x z \<le> d x y + d y z)"
 
+text \<open>Extraction lemmas for metric properties.\<close>
+lemma top1_metric_nonneg:
+  "\<lbrakk>top1_metric_on X d; x \<in> X; y \<in> X\<rbrakk> \<Longrightarrow> 0 \<le> d x y"
+  unfolding top1_metric_on_def by meson
+
+lemma top1_metric_zero_iff:
+  "\<lbrakk>top1_metric_on X d; x \<in> X; y \<in> X\<rbrakk> \<Longrightarrow> (d x y = 0) = (x = y)"
+  unfolding top1_metric_on_def by metis
+
+lemma top1_metric_sym:
+  "\<lbrakk>top1_metric_on X d; x \<in> X; y \<in> X\<rbrakk> \<Longrightarrow> d x y = d y x"
+  unfolding top1_metric_on_def by meson
+
+lemma top1_metric_triangle:
+  "\<lbrakk>top1_metric_on X d; x \<in> X; y \<in> X; z \<in> X\<rbrakk> \<Longrightarrow> d x z \<le> d x y + d y z"
+  unfolding top1_metric_on_def by meson
+
+lemma top1_metric_self_zero:
+  "\<lbrakk>top1_metric_on X d; x \<in> X\<rbrakk> \<Longrightarrow> d x x = 0"
+  using top1_metric_zero_iff by meson
+
 definition top1_ball_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> real) \<Rightarrow> 'a \<Rightarrow> real \<Rightarrow> 'a set" where
   "top1_ball_on X d x e = {y \<in> X. d x y < e}"
 
