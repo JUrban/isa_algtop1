@@ -1899,7 +1899,7 @@ lemma hausdorff_subspace:
   shows "is_hausdorff_on A (subspace_topology X TX A)"
   unfolding is_hausdorff_on_def
 proof (intro conjI)
-  have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by blast
+  have hTopX: "is_topology_on X TX" by (rule hausdorff_is_topology[OF hHaus])
   show hTopA: "is_topology_on A (subspace_topology X TX A)"
     by (rule subspace_topology_is_topology_on[OF hTopX hAsub])
   show "\<forall>x\<in>A. \<forall>y\<in>A. x \<noteq> y \<longrightarrow>
@@ -2624,7 +2624,7 @@ proof -
   have he2sub: "e2 ` X \<subseteq> Y2" using he2emb unfolding top1_embedding_on_def by blast
   have he2_sub_cont: "top1_continuous_map_on X TX (e2 ` X) (subspace_topology Y2 TY2 (e2 ` X)) e2"
     using he2emb unfolding top1_embedding_on_def top1_homeomorphism_on_def by blast
-  have hTopY2: "is_topology_on Y2 TY2" using hHausY2 unfolding is_hausdorff_on_def by blast
+  have hTopY2: "is_topology_on Y2 TY2" by (rule hausdorff_is_topology[OF hHausY2])
   have hTopSub2: "is_topology_on (e2 ` X) (subspace_topology Y2 TY2 (e2 ` X))"
     by (rule subspace_topology_is_topology_on[OF hTopY2 he2sub])
   have he2cont: "top1_continuous_map_on X TX Y2 TY2 e2"
@@ -2640,7 +2640,7 @@ proof -
   have he1sub: "e1 ` X \<subseteq> Y1" using he1emb unfolding top1_embedding_on_def by blast
   have he1_sub_cont: "top1_continuous_map_on X TX (e1 ` X) (subspace_topology Y1 TY1 (e1 ` X)) e1"
     using he1emb unfolding top1_embedding_on_def top1_homeomorphism_on_def by blast
-  have hTopY1: "is_topology_on Y1 TY1" using hHausY1 unfolding is_hausdorff_on_def by blast
+  have hTopY1: "is_topology_on Y1 TY1" by (rule hausdorff_is_topology[OF hHausY1])
   have hTopSub1: "is_topology_on (e1 ` X) (subspace_topology Y1 TY1 (e1 ` X))"
     by (rule subspace_topology_is_topology_on[OF hTopY1 he1sub])
   have he1cont: "top1_continuous_map_on X TX Y1 TY1 e1"
@@ -9623,7 +9623,7 @@ next
       D = ∪m Dm is σ-LF basis for X.\<close>
     have "\<exists>\<B>. basis_for X \<B> TX \<and> top1_sigma_locally_finite_family_on X TX \<B>"
     proof -
-      have hTopX: "is_topology_on X TX" using hHaus unfolding is_hausdorff_on_def by blast
+      have hTopX: "is_topology_on X TX" by (rule hausdorff_is_topology[OF hHaus])
       show ?thesis by (rule locally_metrizable_paracompact_imp_sigma_lf_basis[OF hPara hLM hTsub hTopX])
     qed
     then obtain \<B> where "basis_for X \<B> TX" "top1_sigma_locally_finite_family_on X TX \<B>"
