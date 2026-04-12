@@ -5127,6 +5127,12 @@ lemma closedin_Inter:
   using conjunct1[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hT]]]] hne hcl
   by meson
 
+lemma closedin_inter2:
+  assumes hT: "is_topology_on X T"
+  and hA: "closedin_on X T A" and hB: "closedin_on X T B"
+  shows "closedin_on X T (A \<inter> B)"
+  using closedin_Inter[OF hT, of "{A, B}"] hA hB by simp
+
 (** from \S17 Theorem 17.2 [top1.tex:665] **)
 (** LATEX VERSION: "A closed in Y iff A = C\<inter>Y for some closed C in X." **)
 (** Note: requires Y \<subseteq> X for the backward direction. **)
