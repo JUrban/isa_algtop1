@@ -4527,7 +4527,35 @@ corollary connected_locally_path_connected_imp_path_connected:
   and hlocp: "top1_locally_path_connected_on X TX"
   and hne: "X \<noteq> {}"
   shows "top1_path_connected_on X TX"
-  sorry
+proof -
+  obtain x0 where hx0: "x0 \<in> X" using hne by blast
+  have hPC_open: "top1_path_component_of_on X TX x0 \<in> TX"
+    using top1_path_component_of_on_open_if_locally_path_connected[OF hTX hlocp hx0] by blast
+  have hPC_closed: "closedin_on X TX (top1_path_component_of_on X TX x0)"
+    unfolding closedin_on_def
+    using top1_path_component_of_on_complement_open_if_locally_path_connected[OF hTX hlocp hx0]
+          top1_path_component_of_on_subset[OF hTX hx0] by blast
+  have hPC_ne: "top1_path_component_of_on X TX x0 \<noteq> {}"
+    using top1_path_component_of_on_self_mem[OF hTX hx0] by blast
+  have hPC_eq_X: "top1_path_component_of_on X TX x0 = X"
+    using connected_iff_clopen[OF hTX] hconn hPC_open hPC_closed hPC_ne by blast
+  have paths: "\<forall>x\<in>X. \<forall>y\<in>X. \<exists>f. top1_is_path_on X TX x y f"
+  proof (rule ballI, rule ballI)
+    fix x y assume hx: "x \<in> X" and hy: "y \<in> X"
+    have hx0x: "top1_in_same_path_component_on X TX x0 x"
+      using hx hPC_eq_X unfolding top1_path_component_of_on_def by blast
+    have hx0y: "top1_in_same_path_component_on X TX x0 y"
+      using hy hPC_eq_X unfolding top1_path_component_of_on_def by blast
+    have hxx0: "top1_in_same_path_component_on X TX x x0"
+      using top1_in_same_path_component_on_sym[OF hTX hx0x] by blast
+    have hxy: "top1_in_same_path_component_on X TX x y"
+      using top1_in_same_path_component_on_trans[OF hTX hxx0 hx0y] by blast
+    show "\<exists>f. top1_is_path_on X TX x y f"
+      using hxy unfolding top1_in_same_path_component_on_def by blast
+  qed
+  show ?thesis unfolding top1_path_connected_on_def
+    using hTX paths by blast
+qed
 
 section \<open>\<S>26 Compact Spaces\<close>
 
