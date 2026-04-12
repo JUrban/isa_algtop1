@@ -21160,7 +21160,7 @@ proof -
           have hg_Vx: "g \<in> Vx"
           proof -
             have "d (g x) (g x) = 0" using hd hgxY unfolding top1_metric_on_def by blast
-            moreover have "d (g x0) (g x0) = 0" using hd hgx0Y unfolding top1_metric_on_def by blast
+            moreover have "d (g x0) (g x0) = 0" by (rule top1_metric_self_zero[OF hd hgx0Y])
             moreover have "g \<in> ?PiE" using hgG hG_PiE by blast
             ultimately show ?thesis unfolding Vx_def using heps3 by simp
           qed
@@ -21444,7 +21444,7 @@ proof -
             have hgxY: "g x \<in> Y" using hgPiE hxX top1_PiE_const_val by fast
             have hhxY: "h x \<in> Y" using hhPiE hxX top1_PiE_const_val by fast
             have "d (g x) (h x) = d (h x) (g x)"
-              using hd hgxY hhxY unfolding top1_metric_on_def by blast
+              by (rule top1_metric_sym[OF hd hgxY hhxY])
             then have "d (g x) (h x) < 3 * \<delta>" using hd_hx_gx by linarith
             then have "top1_bounded_metric d (g x) (h x) < 3 * \<delta>"
               unfolding top1_bounded_metric_def by auto
@@ -21902,7 +21902,7 @@ proof -
           have htri2: "d (fi x) (g x0) \<le> d (fi x) (fi x0) + d (fi x0) (g x0)"
             using hd hfix_Y hfix0_Y hgx0_Y unfolding top1_metric_on_def by blast
           have hdsym1: "d (g x) (fi x) = d (fi x) (g x)"
-            using hd hgx_Y hfix_Y unfolding top1_metric_on_def by blast
+            by (rule top1_metric_sym[OF hd hgx_Y hfix_Y])
           show "d (g x) (g x0) < \<epsilon>"
             using htri1 htri2 hdsym1 hd_fix_gx hd_fix0_gx0 hd_fix_fix0 h\<delta>_le_eps3 by linarith
         qed
@@ -22747,7 +22747,7 @@ proof (rule ccontr)
     have htri: "d x y \<le> d x z + d z y"
       by (rule top1_metric_triangle[OF hd hxX hzX hyX])
     have hsym: "d z y = d y z"
-      using hd hzX hyX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_sym[OF hd hzX hyX])
 
     have "d x y < r + e"
     proof -
@@ -22880,7 +22880,7 @@ proof -
       using hCsubX huvC(2) by blast
 
     have hsymu: "d u x = d x u"
-      using hd huX hxX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_sym[OF hd huX hxX])
 
     have htri: "d u v \<le> d u x + d x v"
       using hd huX hxX hvX unfolding top1_metric_on_def by blast
@@ -23257,7 +23257,7 @@ proof -
     have htri: "d (xseq (n-1)) y \<le> d (xseq (n-1)) (xseq n) + d (xseq n) y"
       using hmetric hn1X hnX hyX unfolding top1_metric_on_def by blast
     have hsym: "d (xseq (n-1)) (xseq n) = d (xseq n) (xseq (n-1))"
-      using hmetric hn1X hnX unfolding top1_metric_on_def by blast
+      by (rule top1_metric_sym[OF hmetric hn1X hnX])
     have "d (xseq (n-1)) y < rseq (n-1)"
       using htri hsym hdy hdn by linarith
     then show "y \<in> top1_ball_on X d (xseq (n-(1::nat))) (rseq (n-1))"
@@ -23365,7 +23365,7 @@ proof -
       have htri: "d (xseq m) (xseq n) \<le> d (xseq m) (xseq N) + d (xseq N) (xseq n)"
         using hmetric hmX hNX hnX unfolding top1_metric_on_def by blast
       have hsym: "d (xseq m) (xseq N) = d (xseq N) (xseq m)"
-        using hmetric hmX hNX unfolding top1_metric_on_def by blast
+        by (rule top1_metric_sym[OF hmetric hmX hNX])
       have "d (xseq m) (xseq n) < 2 * rseq N"
         using htri hsym hm_ball hn_ball by linarith
       then have "d (xseq m) (xseq n) < e"
