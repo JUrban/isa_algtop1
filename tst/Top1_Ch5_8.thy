@@ -29467,7 +29467,7 @@ proof -
   then have "d2 (f x) (f y) \<le> 0" by force
   moreover have "d2 (f x) (f y) \<ge> 0" using hd2 hfxY hfyY unfolding top1_metric_on_def by blast
   ultimately have "d2 (f x) (f y) = 0" by linarith
-  then show "f x = f y" using hd2 hfxY hfyY unfolding top1_metric_on_def by metis
+  then show "f x = f y" using top1_metric_zero_iff[OF hd2 hfxY hfyY] by metis
 qed
 
 lemma continuous_maps_metric_on_eval:
@@ -30043,7 +30043,7 @@ proof -
                   have hfg_y: "?dRN (f y) (g y) \<le> ?rho f g"
                     using hbounded_y hbounded_lt1_y unfolding top1_bounded_metric_def by linarith
                   have hdRN_sym: "?dRN (g y) (f y) = ?dRN (f y) (g y)"
-                    using hdRN_met hgy hfy unfolding top1_metric_on_def by metis
+                    by (rule top1_metric_sym[OF hdRN_met hgy hfy])
                   show ?thesis using htri htri2 hgxy0 hfg_x hfg_y hdRN_sym hrho by linarith
                 qed
                 ultimately show False using h\<delta>1_pos by linarith
@@ -30799,7 +30799,7 @@ proof -
       qed
       then show ?thesis using linorder_not_less by blast
     qed
-    moreover have "0 \<le> d x y" using hd hx hy unfolding top1_metric_on_def by blast
+    moreover have "0 \<le> d x y" by (rule top1_metric_nonneg[OF hd hx hy])
     ultimately have "d x y = 0" by argo
     then show "x = y" using top1_metric_zero_iff[OF hd hx hy] by blast
   qed
