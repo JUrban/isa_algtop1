@@ -4593,6 +4593,19 @@ lemma compact_finite_subcover:
    \<Longrightarrow> \<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
   unfolding top1_compact_on_def by meson
 
+lemma compact_onI:
+  "\<lbrakk>is_topology_on X T;
+    \<And>Uc. \<lbrakk>Uc \<subseteq> T; X \<subseteq> \<Union>Uc\<rbrakk> \<Longrightarrow> \<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F\<rbrakk>
+   \<Longrightarrow> top1_compact_on X T"
+  unfolding top1_compact_on_def by meson
+
+lemma hausdorff_onI:
+  "\<lbrakk>is_topology_on X T;
+    \<And>x y. \<lbrakk>x \<in> X; y \<in> X; x \<noteq> y\<rbrakk> \<Longrightarrow>
+      \<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}\<rbrakk>
+   \<Longrightarrow> is_hausdorff_on X T"
+  unfolding is_hausdorff_on_def by meson
+
 (** from \S26 Lemma 26.1 (Compactness of subspaces, open covers from the ambient space) [top1.tex:3096] **)
 theorem Lemma_26_1:
   assumes hTX: "is_topology_on X TX"
