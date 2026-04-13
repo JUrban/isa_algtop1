@@ -11856,6 +11856,18 @@ proof -
     unfolding top1_metric_topology_on_def using hopen by simp
 qed
 
+text \<open>Metric balls satisfy openin\_on: they are open and contained in X.\<close>
+lemma top1_ball_openin_on_metric_topology:
+  assumes "top1_metric_on X d" "x \<in> X" "0 < e"
+  shows "openin_on X (top1_metric_topology_on X d) (top1_ball_on X d x e)"
+proof -
+  have "top1_ball_on X d x e \<in> top1_metric_topology_on X d"
+    by (rule top1_ball_open_in_metric_topology[OF assms])
+  moreover have "top1_ball_on X d x e \<subseteq> X"
+    unfolding top1_ball_on_def by blast
+  ultimately show ?thesis unfolding openin_on_def by blast
+qed
+
 lemma top1_metric_topology_on_is_topology_on:
   assumes hd: "top1_metric_on X d"
   shows "is_topology_on X (top1_metric_topology_on X d)"

@@ -2613,6 +2613,24 @@ proof -
   qed
 qed
 
+text \<open>Regular separation with openin\_on: under strict topology, the separating
+  open set containing C is openin\_on.\<close>
+lemma regular_separation_openin_on:
+  "\<lbrakk>top1_regular_on X T; is_topology_on_strict X T;
+    x \<in> X; closedin_on X T C; x \<notin> C\<rbrakk>
+   \<Longrightarrow> \<exists>U V. neighborhood_of_strict x X T U \<and> openin_on X T V \<and> C \<subseteq> V \<and> U \<inter> V = {}"
+proof -
+  assume hR: "top1_regular_on X T" and hS: "is_topology_on_strict X T"
+    and hx: "x \<in> X" and hC: "closedin_on X T C" and hxC: "x \<notin> C"
+  obtain U V where hU: "neighborhood_of x X T U" and hV: "V \<in> T" and hCV: "C \<subseteq> V"
+    and hdisj: "U \<inter> V = {}"
+    using hR hx hC hxC unfolding top1_regular_on_def by blast
+  have "neighborhood_of_strict x X T U" by (rule neighborhood_of_to_strict[OF hS hU])
+  moreover have "openin_on X T V" unfolding openin_on_def
+    using hV is_topology_on_strict_opens_sub[OF hS hV] by blast
+  ultimately show ?thesis using hCV hdisj by blast
+qed
+
 (** Regularity yields the standard "point shrinking" lemma:
     if x lies in an open set U, there exists an open neighborhood V of x whose closure is still inside U. **)
 lemma regular_refine_point_into_open:
@@ -3272,6 +3290,25 @@ lemma normal_separation:
   "\<lbrakk>top1_normal_on X T; closedin_on X T C; closedin_on X T D; C \<inter> D = {}\<rbrakk>
    \<Longrightarrow> \<exists>U V. U \<in> T \<and> V \<in> T \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}"
   unfolding top1_normal_on_def by meson
+
+text \<open>Normal separation with openin\_on: under strict topology, the separating
+  open sets are guaranteed to be subsets of X.\<close>
+lemma normal_separation_openin_on:
+  "\<lbrakk>top1_normal_on X T; is_topology_on_strict X T;
+    closedin_on X T C; closedin_on X T D; C \<inter> D = {}\<rbrakk>
+   \<Longrightarrow> \<exists>U V. openin_on X T U \<and> openin_on X T V \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}"
+proof -
+  assume hN: "top1_normal_on X T" and hS: "is_topology_on_strict X T"
+    and hC: "closedin_on X T C" and hD: "closedin_on X T D" and hdisj: "C \<inter> D = {}"
+  obtain U V where hU: "U \<in> T" and hV: "V \<in> T" and hCU: "C \<subseteq> U" and hDV: "D \<subseteq> V"
+    and hUV: "U \<inter> V = {}"
+    using normal_separation[OF hN hC hD hdisj] by blast
+  have "openin_on X T U" unfolding openin_on_def
+    using hU is_topology_on_strict_opens_sub[OF hS hU] by blast
+  moreover have "openin_on X T V" unfolding openin_on_def
+    using hV is_topology_on_strict_opens_sub[OF hS hV] by blast
+  ultimately show ?thesis using hCU hDV hUV by blast
+qed
 
 (** from \S32 Theorem 32.1 (Regular + second-countable \<Longrightarrow> normal) [top1.tex:~4178] **)
 theorem Theorem_32_1:

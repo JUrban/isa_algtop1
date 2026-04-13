@@ -174,6 +174,47 @@ next
   qed
 qed
 
+text \<open>Clopen characterization using openin\_on: under strict topology, clopen sets
+  are both openin\_on and closedin\_on.\<close>
+corollary connected_iff_clopen_openin_on:
+  "\<lbrakk>is_topology_on_strict X TX\<rbrakk> \<Longrightarrow>
+    top1_connected_on X TX \<longleftrightarrow>
+      is_topology_on X TX \<and>
+      (\<forall>U. openin_on X TX U \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+proof -
+  assume hS: "is_topology_on_strict X TX"
+  have hTX: "is_topology_on X TX" by (rule is_topology_on_strict_imp[OF hS])
+  show ?thesis
+  proof (rule iffI)
+    assume hconn: "top1_connected_on X TX"
+    have hclopen: "\<forall>U. U \<in> TX \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X"
+      using connected_iff_clopen[OF hTX] hconn by blast
+    show "is_topology_on X TX \<and> (\<forall>U. openin_on X TX U \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+    proof (intro conjI allI impI)
+      show "is_topology_on X TX" by (rule hTX)
+    next
+      fix U assume h: "openin_on X TX U \<and> closedin_on X TX U"
+      then have "U \<in> TX" unfolding openin_on_def by blast
+      thus "U = {} \<or> U = X" using h hclopen by blast
+    qed
+  next
+    assume h: "is_topology_on X TX \<and> (\<forall>U. openin_on X TX U \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+    show "top1_connected_on X TX"
+      using connected_iff_clopen[OF hTX]
+    proof (rule iffD2)
+      show "is_topology_on X TX \<and> (\<forall>U. U \<in> TX \<and> closedin_on X TX U \<longrightarrow> U = {} \<or> U = X)"
+      proof (intro conjI allI impI)
+        show "is_topology_on X TX" by (rule hTX)
+      next
+        fix U assume hU: "U \<in> TX \<and> closedin_on X TX U"
+        have "U \<subseteq> X" using is_topology_on_strict_opens_sub[OF hS] hU by blast
+        then have "openin_on X TX U" unfolding openin_on_def using hU by blast
+        thus "U = {} \<or> U = X" using hU h by blast
+      qed
+    qed
+  qed
+qed
+
 (** from \S23 Lemma 23.2 [top1.tex:~2635] **)
 lemma Lemma_23_2:
   assumes hTX: "is_topology_on X TX"

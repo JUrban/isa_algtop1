@@ -5233,6 +5233,16 @@ lemma metrizable_open_sub_carrier:
   "\<lbrakk>top1_metrizable_on X T; U \<in> T\<rbrakk> \<Longrightarrow> U \<subseteq> X"
   using metrizable_imp_strict is_topology_on_strict_opens_sub by blast
 
+text \<open>In metrizable spaces, every open set satisfies openin\_on.\<close>
+lemma metrizable_openin_on:
+  "\<lbrakk>top1_metrizable_on X T; U \<in> T\<rbrakk> \<Longrightarrow> openin_on X T U"
+  unfolding openin_on_def using metrizable_open_sub_carrier by blast
+
+text \<open>In metrizable spaces, every closed set has complement that is openin\_on.\<close>
+lemma metrizable_closedin_complement_openin_on:
+  "\<lbrakk>top1_metrizable_on X T; closedin_on X T C\<rbrakk> \<Longrightarrow> openin_on X T (X - C)"
+  unfolding openin_on_def closedin_on_def by blast
+
 text \<open>Metrizable spaces are regular: for x and closed C with x \<notin> C,
   use d(x,C)/2 balls to separate.\<close>
 lemma metrizable_imp_regular:
