@@ -51,6 +51,24 @@ lemma is_topology_on_strict_counterexample:
   "\<not> is_topology_on_strict {0::nat} {{}, {0}, {1}, {0,1}}"
   unfolding is_topology_on_strict_def by auto
 
+lemma is_topology_on_strictI:
+  "\<lbrakk>is_topology_on X T; T \<subseteq> Pow X\<rbrakk> \<Longrightarrow> is_topology_on_strict X T"
+  unfolding is_topology_on_strict_def by blast
+
+lemma is_topology_on_strict_Pow: "is_topology_on_strict X T \<Longrightarrow> T \<subseteq> Pow X"
+  unfolding is_topology_on_strict_def by blast
+
+text \<open>Under strict topology, unions and finite intersections of opens remain in Pow X.
+  This is trivially true by T ⊆ Pow X, but spelling it out shows that the strict
+  predicate correctly tracks carrier-set containment.\<close>
+lemma strict_union_sub_carrier:
+  "\<lbrakk>is_topology_on_strict X T; \<forall>U\<in>Uc. U \<in> T\<rbrakk> \<Longrightarrow> \<Union>Uc \<subseteq> X"
+  unfolding is_topology_on_strict_def by blast
+
+lemma strict_inter_sub_carrier:
+  "\<lbrakk>is_topology_on_strict X T; U \<in> T; V \<in> T\<rbrakk> \<Longrightarrow> U \<inter> V \<subseteq> X"
+  unfolding is_topology_on_strict_def by blast
+
 (** Basic derived closure properties for a topology. **)
 lemma topology_inter2:
   assumes hT: "is_topology_on X T"
@@ -5928,6 +5946,27 @@ lemma hausdorff_separation:
    \<Longrightarrow> \<exists>U V. neighborhood_of x X T U \<and> neighborhood_of y X T V \<and> U \<inter> V = {}"
   unfolding is_hausdorff_on_def by meson
 
+text \<open>Hausdorff separation with strict neighborhoods: under a strict topology,
+  the separating neighborhoods are guaranteed to be subsets of the carrier.\<close>
+lemma hausdorff_separation_strict:
+  "\<lbrakk>is_hausdorff_on X T; is_topology_on_strict X T; x \<in> X; y \<in> X; x \<noteq> y\<rbrakk>
+   \<Longrightarrow> \<exists>U V. neighborhood_of_strict x X T U \<and> neighborhood_of_strict y X T V \<and> U \<inter> V = {}"
+proof -
+  assume hH: "is_hausdorff_on X T" and hS: "is_topology_on_strict X T"
+    and hx: "x \<in> X" and hy: "y \<in> X" and hne: "x \<noteq> y"
+  obtain U V where hU: "neighborhood_of x X T U" and hV: "neighborhood_of y X T V"
+    and hdisj: "U \<inter> V = {}"
+    using hausdorff_separation[OF hH hx hy hne] by blast
+  have "neighborhood_of_strict x X T U" by (rule neighborhood_of_to_strict[OF hS hU])
+  moreover have "neighborhood_of_strict y X T V" by (rule neighborhood_of_to_strict[OF hS hV])
+  ultimately show ?thesis using hdisj by blast
+qed
+
+text \<open>A Hausdorff space with a strict topology is itself strict.\<close>
+lemma hausdorff_strict_is_strict:
+  "\<lbrakk>is_hausdorff_on X T; T \<subseteq> Pow X\<rbrakk> \<Longrightarrow> is_topology_on_strict X T"
+  by (rule is_topology_on_strictI[OF hausdorff_is_topology])
+
 (** Helper: every singleton is closed in a Hausdorff space. **)
 lemma singleton_closed_in_hausdorff:
   assumes hH: "is_hausdorff_on X T"
@@ -6689,6 +6728,25 @@ lemma continuous_map_onI:
   "\<lbrakk>\<forall>x\<in>X. f x \<in> Y; \<forall>V\<in>TY. {x \<in> X. f x \<in> V} \<in> TX\<rbrakk>
    \<Longrightarrow> top1_continuous_map_on X TX Y TY f"
   unfolding top1_continuous_map_on_def by meson
+
+text \<open>Under a strict source topology, preimages of open sets are openin\_on.\<close>
+lemma continuous_map_preimage_openin_on:
+  "\<lbrakk>top1_continuous_map_on X TX Y TY f; is_topology_on_strict X TX; V \<in> TY\<rbrakk>
+   \<Longrightarrow> openin_on X TX {x \<in> X. f x \<in> V}"
+  unfolding openin_on_def
+  using continuous_map_preimage_open by blast
+
+text \<open>A continuous map between strict topologies preserves strictness of the
+  image topology (the subspace topology on f(X) inherits strict from the codomain).\<close>
+lemma continuous_map_image_subspace_strict:
+  "\<lbrakk>top1_continuous_map_on X TX Y TY f; is_topology_on_strict Y TY\<rbrakk>
+   \<Longrightarrow> is_topology_on_strict (f ` X) (subspace_topology Y TY (f ` X))"
+proof -
+  assume hcont: "top1_continuous_map_on X TX Y TY f"
+    and hS: "is_topology_on_strict Y TY"
+  have "f ` X \<subseteq> Y" using continuous_map_maps_to_all[OF hcont] by blast
+  thus ?thesis by (rule subspace_topology_is_strict[OF hS])
+qed
 
 (** Helper: an injective continuous map into a Hausdorff space has Hausdorff domain. **)
 lemma hausdorff_on_of_inj_continuous_map:

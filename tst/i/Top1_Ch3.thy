@@ -4606,6 +4606,26 @@ lemma hausdorff_onI:
    \<Longrightarrow> is_hausdorff_on X T"
   unfolding is_hausdorff_on_def by meson
 
+text \<open>Strict topology integration: compact and connected spaces inherit strictness.\<close>
+lemma compact_strict:
+  "\<lbrakk>top1_compact_on X T; T \<subseteq> Pow X\<rbrakk> \<Longrightarrow> is_topology_on_strict X T"
+  by (rule is_topology_on_strictI[OF compact_is_topology])
+
+lemma connected_strict:
+  "\<lbrakk>top1_connected_on X T; T \<subseteq> Pow X\<rbrakk> \<Longrightarrow> is_topology_on_strict X T"
+  using top1_connected_on_def is_topology_on_strict_def by meson
+
+text \<open>A compact subspace of a strict topology inherits strictness.\<close>
+lemma compact_subspace_strict:
+  "\<lbrakk>is_topology_on_strict X TX; Y \<subseteq> X; top1_compact_on Y (subspace_topology X TX Y)\<rbrakk>
+   \<Longrightarrow> is_topology_on_strict Y (subspace_topology X TX Y)"
+  by (rule subspace_topology_is_strict)
+
+text \<open>Open cover of a strict compact space: every element of the cover is a subset of X.\<close>
+lemma compact_strict_cover_sub:
+  "\<lbrakk>top1_compact_on X T; is_topology_on_strict X T; U \<in> T\<rbrakk> \<Longrightarrow> U \<subseteq> X"
+  by (rule is_topology_on_strict_opens_sub)
+
 (** from \S26 Lemma 26.1 (Compactness of subspaces, open covers from the ambient space) [top1.tex:3096] **)
 theorem Lemma_26_1:
   assumes hTX: "is_topology_on X TX"
@@ -6302,6 +6322,26 @@ proof -
       ultimately show "X - A \<in> TX" by simp
     qed
   qed
+qed
+
+text \<open>Integration of is\_topology\_on\_strict with Theorem 26.3: in a strict Hausdorff space,
+  compact subsets are closedin\_on (complement is open and ⊆ X).\<close>
+corollary compact_in_strict_hausdorff_closedin_on:
+  "\<lbrakk>is_hausdorff_on X TX; is_topology_on_strict X TX;
+    Y \<subseteq> X; top1_compact_on Y (subspace_topology X TX Y)\<rbrakk>
+   \<Longrightarrow> closedin_on X TX Y"
+  using Theorem_26_3 by blast
+
+text \<open>Compact subset of a strict Hausdorff space: complement is openin\_on.\<close>
+corollary compact_in_strict_hausdorff_complement_openin_on:
+  "\<lbrakk>is_hausdorff_on X TX; is_topology_on_strict X TX;
+    Y \<subseteq> X; top1_compact_on Y (subspace_topology X TX Y)\<rbrakk>
+   \<Longrightarrow> openin_on X TX (X - Y)"
+proof -
+  assume hH: "is_hausdorff_on X TX" and hS: "is_topology_on_strict X TX"
+    and hYX: "Y \<subseteq> X" and hcomp: "top1_compact_on Y (subspace_topology X TX Y)"
+  have "closedin_on X TX Y" by (rule Theorem_26_3[OF hH hYX hcomp])
+  thus ?thesis unfolding closedin_on_def openin_on_def by blast
 qed
 
 (** from \S26 Lemma 26.4 [top1.tex:3157] **)

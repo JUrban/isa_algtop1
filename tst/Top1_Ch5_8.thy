@@ -1427,6 +1427,18 @@ corollary compact_finite_product:
   shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X T)"
   using Theorem_37_3[OF hIne hcomp] by blast
 
+text \<open>Strict topology integration: product of strict compact spaces is strict compact.\<close>
+corollary compact_product_strict:
+  assumes hIne: "I \<noteq> {}"
+  assumes hcomp: "\<forall>i\<in>I. top1_compact_on (X i) (T i)"
+  assumes hstrict: "\<forall>i\<in>I. is_topology_on_strict (X i) (T i)"
+  shows "is_topology_on_strict (top1_PiE I X) (top1_product_topology_on I X T)"
+proof -
+  have "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+    using hstrict is_topology_on_strict_imp by blast
+  thus ?thesis by (rule product_topology_is_strict)
+qed
+
 section \<open>\<S>38 The Stone-\<C>ech Compactification\<close>
 
 text \<open>
@@ -5205,6 +5217,21 @@ proof -
     using assms unfolding top1_metrizable_on_def by blast
   then show ?thesis using metric_topology_hausdorff by blast
 qed
+
+text \<open>Metrizable spaces are always strict: metric balls are subsets of the carrier.\<close>
+lemma metrizable_imp_strict:
+  assumes "top1_metrizable_on X T"
+  shows "is_topology_on_strict X T"
+proof -
+  obtain d where hd: "top1_metric_on X d" and hT: "T = top1_metric_topology_on X d"
+    using assms unfolding top1_metrizable_on_def by blast
+  show ?thesis unfolding hT by (rule metric_topology_is_strict[OF hd])
+qed
+
+text \<open>In a metrizable space, every open set is a subset of the carrier.\<close>
+lemma metrizable_open_sub_carrier:
+  "\<lbrakk>top1_metrizable_on X T; U \<in> T\<rbrakk> \<Longrightarrow> U \<subseteq> X"
+  using metrizable_imp_strict is_topology_on_strict_opens_sub by blast
 
 text \<open>Metrizable spaces are regular: for x and closed C with x \<notin> C,
   use d(x,C)/2 balls to separate.\<close>
@@ -33271,6 +33298,11 @@ proof -
     using assms unfolding top1_metrizable_on_def by blast
   then show ?thesis using compact_iff_seq_compact_metric by blast
 qed
+
+text \<open>Strict integration: compact metrizable spaces have strict topologies.\<close>
+corollary compact_metrizable_strict:
+  "\<lbrakk>top1_compact_on X T; top1_metrizable_on X T\<rbrakk> \<Longrightarrow> is_topology_on_strict X T"
+  using metrizable_imp_strict by blast
 
 text \<open>Supplementary: Nets in topological spaces.
   Nets generalize sequences by replacing the natural numbers with an arbitrary
