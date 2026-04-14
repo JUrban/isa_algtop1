@@ -12428,12 +12428,7 @@ proof -
       using hfA0 by simp
 
     show "\<exists>f\<in>J. 0 < f x0 \<and> (\<forall>x\<in>X - U. f x = 0)"
-      apply (rule bexI[where x=f])
-       apply (intro conjI)
-        apply (rule hpos)
-       apply (rule hfout)
-      apply (rule hfJ)
-      done
+      using hpos hfout hfJ by blast
   qed
 
   have hEmbR:
@@ -13784,12 +13779,7 @@ proof -
 
           show "\<exists>bb\<in>product_basis ?TR ?TR.
               p \<in> bb \<and> bb \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
-            apply (rule bexI[where x="?U \<times> ?V"])
-             apply (intro conjI)
-              apply (rule hpUV)
-             apply (rule hUV_sub)
-            apply (rule hUV_basis)
-            done
+            using hpUV hUV_sub hUV_basis by blast
         qed
       qed
     next
@@ -13885,12 +13875,7 @@ proof -
 
             show "\<exists>bb\<in>product_basis ?TR ?TR.
                 p \<in> bb \<and> bb \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_gt a}"
-              apply (rule bexI[where x="?U \<times> ?V"])
-               apply (intro conjI)
-                apply (rule hpUV)
-               apply (rule hUV_sub)
-              apply (rule hUV_basis)
-              done
+              using hpUV hUV_sub hUV_basis by blast
           qed
         qed
       next
@@ -13993,12 +13978,7 @@ proof -
 
               show "\<exists>bb\<in>product_basis ?TR ?TR.
                   p \<in> bb \<and> bb \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_lt a}"
-                apply (rule bexI[where x="?U \<times> ?V"])
-                 apply (intro conjI)
-                  apply (rule hpUV)
-                 apply (rule hUV_sub)
-                apply (rule hUV_basis)
-                done
+                using hpUV hUV_sub hUV_basis by blast
             qed
           qed
         next
