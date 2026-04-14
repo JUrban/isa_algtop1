@@ -10877,16 +10877,8 @@ proof -
               neighborhood_of f (top1_PiE I X) (top1_product_topology_on I X T) U \<and>
               neighborhood_of g (top1_PiE I X) (top1_product_topology_on I X T) V \<and>
               U \<inter> V = {}"
-        apply (rule exI[where x=U0])
-        apply (rule exI[where x=V0])
-        unfolding neighborhood_of_def
-        apply (intro conjI)
-          apply (rule hU0open)
-         apply (rule hfU0)
-          apply (rule hV0open)
-         apply (rule hgV0)
-        apply (rule hU0V0_disj)
-        done
+        apply (rule exI[where x=U0], rule exI[where x=V0])
+        unfolding neighborhood_of_def using hU0open hfU0 hV0open hgV0 hU0V0_disj by blast
     qed
   qed
 qed
@@ -19639,14 +19631,7 @@ next
   qed
 
   show "top1_quotient_map_on X TX Y TY f"
-    unfolding top1_quotient_map_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule hTopY)
-      apply (rule hcontf)
-     apply (rule hsurjf)
-    apply (rule hQf)
-    done
+    unfolding top1_quotient_map_on_def using hTopX hTopY hcontf hsurjf hQf by blast
 qed
 
 (** Composite of quotient maps is a quotient map [top1.tex:2428–2432]. **)
@@ -19816,14 +19801,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding top1_quotient_map_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule hTopZ)
-      apply (rule hcontqp)
-     apply (rule hsurjqp)
-    apply (rule hQqp)
-    done
+    unfolding top1_quotient_map_on_def using hTopX hTopZ hcontqp hsurjqp hQqp by blast
 qed
 
 theorem Theorem_22_2:
