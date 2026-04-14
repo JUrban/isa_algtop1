@@ -1532,6 +1532,37 @@ proof -
 qed
 
 
+text \<open>Lemma 13.3 with finer\_than\_on.\<close>
+corollary Lemma_13_3_on:
+  assumes hB: "basis_for X B T" and hB': "basis_for X B' T'"
+  shows "finer_than_on X T T' \<longleftrightarrow>
+    (\<forall>x\<in>X. \<forall>b\<in>B. x \<in> b \<longrightarrow> (\<exists>b'\<in>B'. x \<in> b' \<and> b' \<subseteq> b))"
+proof -
+  have hBasis: "is_basis_on X B" using hB unfolding basis_for_def by blast
+  have hTeq: "T = topology_generated_by_basis X B" using hB unfolding basis_for_def by blast
+  have hTX: "is_topology_on X T"
+    unfolding hTeq by (rule topology_generated_by_basis_is_topology_on[OF hBasis])
+  have hBasis': "is_basis_on X B'" using hB' unfolding basis_for_def by blast
+  have hT'eq: "T' = topology_generated_by_basis X B'" using hB' unfolding basis_for_def by blast
+  have hT'X: "is_topology_on X T'"
+    unfolding hT'eq by (rule topology_generated_by_basis_is_topology_on[OF hBasis'])
+  show ?thesis
+    unfolding finer_than_on_def using hTX hT'X Lemma_13_3[OF hB hB']
+    unfolding finer_than_def by blast
+qed
+
+text \<open>If the finer topology is strict, the coarser one is too.\<close>
+lemma finer_than_on_strict:
+  assumes "finer_than_on X T T'" "is_topology_on_strict X T'"
+  shows "is_topology_on_strict X T"
+proof -
+  have "is_topology_on X T" using assms(1) unfolding finer_than_on_def by blast
+  moreover have "T \<subseteq> T'" using assms(1) unfolding finer_than_on_def by blast
+  moreover have "T' \<subseteq> Pow X" using assms(2) unfolding is_topology_on_strict_def by blast
+  ultimately have "T \<subseteq> Pow X" by blast
+  thus ?thesis by (rule is_topology_on_strictI[OF \<open>is_topology_on X T\<close>])
+qed
+
 subsection \<open>Standard, lower limit, and K-topologies on \<real>\<close>
 
 (** from \S13 Definition (standard, lower limit, K-topology) [top1.tex:205] **)
@@ -5748,6 +5779,15 @@ definition is_limit_point_of :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set \<
 definition limit_points_of :: "'a set \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set" where
   "limit_points_of A X T = {x\<in>X. is_limit_point_of x A X T}"
 
+text \<open>Under strict topology, limit points via strict neighborhoods.\<close>
+lemma limit_point_strict_nbhd:
+  assumes "is_limit_point_of x A X T" "neighborhood_of_strict x X T U"
+  shows "intersects (U - {x}) A"
+proof -
+  have "neighborhood_of x X T U" by (rule neighborhood_of_strict_imp[OF assms(2)])
+  thus ?thesis using assms(1) unfolding is_limit_point_of_def by blast
+qed
+
 (** from \S17 Theorem 17.6 [top1.tex:751] **)
 (** LATEX VERSION: "Cl A = A \<union> A'." **)
 theorem Theorem_17_6:
@@ -6197,6 +6237,16 @@ lemma seq_converges_eventually:
   "\<lbrakk>seq_converges_to_on s x X T; neighborhood_of x X T U\<rbrakk>
    \<Longrightarrow> \<exists>N. \<forall>n\<ge>N. s n \<in> U"
   unfolding seq_converges_to_on_def by meson
+
+text \<open>Strict neighborhood version of sequence convergence.\<close>
+lemma seq_converges_eventually_strict:
+  "\<lbrakk>seq_converges_to_on s x X T; neighborhood_of_strict x X T U\<rbrakk>
+   \<Longrightarrow> \<exists>N. \<forall>n\<ge>N. s n \<in> U"
+proof -
+  assume hs: "seq_converges_to_on s x X T" and hU: "neighborhood_of_strict x X T U"
+  have "neighborhood_of x X T U" by (rule neighborhood_of_strict_imp[OF hU])
+  thus ?thesis by (rule seq_converges_eventually[OF hs])
+qed
 
 (** from \S17 Theorem 17.10 [top1.tex:801] **)
 (** LATEX VERSION: "In Hausdorff space, a sequence converges to at most one point." **)

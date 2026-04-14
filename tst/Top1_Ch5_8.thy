@@ -33402,6 +33402,17 @@ proof (rule iffD2[OF Theorem_17_5a[OF hTop hxX hAX]], intro allI impI)
   ultimately show "intersects U A" unfolding intersects_def by blast
 qed
 
+text \<open>Strict neighborhood version of net convergence.\<close>
+lemma net_converges_eventually_strict:
+  "\<lbrakk>top1_net_converges_to_on D le f x X T; neighborhood_of_strict x X T U\<rbrakk>
+   \<Longrightarrow> \<exists>a\<in>D. \<forall>b\<in>D. le a b \<longrightarrow> f b \<in> U"
+proof -
+  assume hconv: "top1_net_converges_to_on D le f x X T"
+    and hU: "neighborhood_of_strict x X T U"
+  have "neighborhood_of x X T U" by (rule neighborhood_of_strict_imp[OF hU])
+  thus ?thesis using hconv unfolding top1_net_converges_to_on_def by blast
+qed
+
 text \<open>Backward direction: if x ∈ closure(A), construct a net in A converging to x.
   The directed set is the neighborhood filter ordered by reverse inclusion.\<close>
 lemma closure_imp_net_converges:
