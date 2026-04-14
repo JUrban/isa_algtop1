@@ -14193,6 +14193,15 @@ next
     using complete_totally_bounded_imp_compact[OF hd] by blast
 qed
 
+text \<open>Theorem 45.1 with strict: metric topology is always strict, so
+  compactness ↔ complete + totally bounded in a strict topology.\<close>
+corollary Theorem_45_1_strict:
+  assumes "top1_metric_on X d"
+  shows "is_topology_on_strict X (top1_metric_topology_on X d)
+    \<and> (top1_compact_on X (top1_metric_topology_on X d)
+       \<longleftrightarrow> (top1_complete_metric_on X d \<and> top1_totally_bounded_on X d))"
+  using Theorem_45_1[OF assms] metric_topology_is_strict[OF assms] by blast
+
 text \<open>Compact metric spaces are second countable: totally bounded gives
   countable 1/n-nets, their union is a countable dense subset, hence second countable.\<close>
 corollary compact_metric_imp_second_countable:
