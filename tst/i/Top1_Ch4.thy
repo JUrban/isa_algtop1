@@ -11445,12 +11445,7 @@ proof -
       have hballBasis: "top1_ball_on Y d x e \<in> top1_metric_basis_on Y d"
         unfolding top1_metric_basis_on_def using hxY he by blast
       show "\<exists>b\<in>top1_metric_basis_on Y d. x \<in> b \<and> b \<subseteq> W"
-        apply (rule bexI[where x="top1_ball_on Y d x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hballW)
-        apply (rule hballBasis)
-        done
+        using hxball hballW hballBasis by blast
     qed
 
     show "W \<in> ?TY"
@@ -11573,12 +11568,7 @@ proof -
       show "\<exists>f::'a \<Rightarrow> real.
           top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) f \<and>
           f x0 = 1 \<and> (\<forall>x\<in>A. f x = 0)"
-        apply (rule exI[where x=f])
-        apply (intro conjI)
-          apply (rule hfcont)
-         apply (rule hfx0)
-        apply (rule hfA0')
-        done
+        using hfcont hfx0 hfA0' by blast
     qed
   qed
 qed
@@ -11981,13 +11971,7 @@ proof -
 	            qed
 	          qed
 
-          show ?case
-            apply (rule exI[where x=F1])
-            apply (intro conjI)
-              apply (rule hF1cont)
-             apply (rule hF1p0)
-            apply (rule hF1zero)
-            done
+          show ?case using hF1cont hF1p0 hF1zero by blast
         qed
 
         have "\<exists>F. top1_continuous_map_on ?P ?TP ?I ?TI F \<and> F p0 = 1
@@ -12073,12 +12057,7 @@ proof -
       qed
 
       show "\<exists>f. top1_continuous_map_on ?P ?TP ?I ?TI f \<and> f p0 = 1 \<and> (\<forall>p\<in>A. f p = 0)"
-        apply (rule exI[where x=F])
-        apply (intro conjI)
-          apply (rule hFcont)
-         apply (rule hFp0)
-        apply (rule hF_A0)
-        done
+        using hFcont hFp0 hF_A0 by blast
     qed
   qed
 qed
@@ -12336,12 +12315,7 @@ proof -
       show "\<exists>h::'a \<Rightarrow> real.
            top1_continuous_map_on X TX (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) h
            \<and> h x0 = 1 \<and> (\<forall>x\<in>A. h x = 0)"
-        apply (rule exI[where x=h])
-        apply (intro conjI)
-          apply (rule hhcont)
-         apply (rule hhx0)
-        apply (rule hhA0)
-        done
+        using hhcont hhx0 hhA0 by blast
     qed
   qed
 qed
