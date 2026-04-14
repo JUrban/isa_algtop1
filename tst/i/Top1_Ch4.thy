@@ -7494,12 +7494,7 @@ proof -
 		            assume hk: "k \<le> (2::nat) ^ n"
 		            assume hxUk: "x \<in> U n k"
 		            show "\<exists>n k. k \<le> (2::nat) ^ n \<and> x \<in> U n k"
-		              apply (rule exI[where x=n])
-		              apply (rule exI[where x=k])
-		              apply (intro conjI)
-		               apply (rule hk)
-		              apply (rule hxUk)
-		              done
+		              using hk hxUk by blast
 		          qed
 		          thus ?thesis
 		            using hnone by contradiction
@@ -8536,12 +8531,7 @@ proof -
 
       show "\<exists>f::'a \<Rightarrow> real.
           top1_continuous_map_on Y ?TY ?I ?TI f \<and> f y0 = 1 \<and> (\<forall>x\<in>A. f x = 0)"
-        apply (rule exI[where x=f])
-        apply (intro conjI)
-          apply (rule hfcontY)
-         apply (rule hfy0)
-        apply (rule hfA)
-        done
+        using hfcontY hfy0 hfA by blast
     qed
   qed
 qed
@@ -9265,12 +9255,7 @@ proof -
 
       show "\<exists>F::('a \<times> 'b) \<Rightarrow> real.
           top1_continuous_map_on (X \<times> Y) ?TP ?I ?TI F \<and> F p0 = 1 \<and> (\<forall>p\<in>A. F p = 0)"
-        apply (rule exI[where x=F])
-        apply (intro conjI)
-          apply (rule hFcont)
-         apply (rule hFp0)
-        apply (rule hFA0)
-        done
+        using hFcont hFp0 hFA0 by blast
     qed
   qed
 qed
