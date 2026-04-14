@@ -4396,12 +4396,7 @@ proof -
     by (rule spec[where x="?C", OF spec[where x=A, OF hSep]])
 
   have hSepAC2: "\<exists>U0 V0. U0 \<in> T \<and> V0 \<in> T \<and> A \<subseteq> U0 \<and> ?C \<subseteq> V0 \<and> U0 \<inter> V0 = {}"
-    apply (rule mp[OF hSepAC])
-    apply (intro conjI)
-      apply (rule hA)
-     apply (rule hCcl)
-    apply (rule hAdisjC)
-    done
+    using hSepAC hA hCcl hAdisjC by blast
 
   obtain U0 V0 where hU0: "U0 \<in> T" and hV0: "V0 \<in> T"
       and hAU0: "A \<subseteq> U0" and hCV0: "?C \<subseteq> V0" and hdisj: "U0 \<inter> V0 = {}"
@@ -4689,12 +4684,7 @@ proof -
       qed
 
       have hSep2: "\<exists>U V. U \<in> T \<and> V \<in> T \<and> {x} \<subseteq> U \<and> C \<subseteq> V \<and> U \<inter> V = {}"
-        apply (rule mp[OF hSep1])
-        apply (intro conjI)
-          apply (rule hsing_cl)
-         apply (rule hCcl)
-        apply (rule hdisj)
-        done
+        using hSep1 hsing_cl hCcl hdisj by blast
 
       obtain U V where hUT: "U \<in> T" and hVT: "V \<in> T"
           and hUx: "{x} \<subseteq> U" and hCV: "C \<subseteq> V" and hUV: "U \<inter> V = {}"
@@ -10711,13 +10701,7 @@ proof -
 
   have hhomeo: "top1_homeomorphism_on X TX ?W ?TW F"
     unfolding top1_homeomorphism_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule subspace_topology_is_topology_on[OF hTopY hWsubY])
-      apply (rule hbij)
-     apply (rule hcontF_W)
-    apply (rule hcontInv)
-    done
+    using hTopX subspace_topology_is_topology_on[OF hTopY hWsubY] hbij hcontF_W hcontInv by blast
 
   show ?thesis
     unfolding top1_embedding_on_def

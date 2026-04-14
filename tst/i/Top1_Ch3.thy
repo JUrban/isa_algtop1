@@ -5698,12 +5698,7 @@ next
               have hFsub: "F \<subseteq> Uc"
                 using hF by (rule conjunct2)
               show "finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F"
-                apply (rule conjI)
-                 apply (rule hFfin)
-                apply (rule conjI)
-                 apply (rule hFsub)
-                apply (rule hcov)
-                done
+                using hFfin hFsub hcov by blast
             qed
             thus False
               using hNoFin by blast
@@ -6992,14 +6987,7 @@ proof -
     by (rule iffD2[OF cont_inv_closed], intro conjI, rule inv_maps, rule inv_closed_preimage)
 
   show ?thesis
-    unfolding top1_homeomorphism_on_def
-    apply (intro conjI)
-        apply (rule hTX)
-       apply (rule hTY)
-      apply (rule hbij)
-     apply (rule hf)
-    apply (rule inv_cont)
-    done
+    unfolding top1_homeomorphism_on_def using hTX hTY hbij hf inv_cont by blast
 qed
 
 lemma top1_embedding_on_compact_inj:
