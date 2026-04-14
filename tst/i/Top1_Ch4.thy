@@ -2543,13 +2543,7 @@ proof -
          apply (rule refl)
         using hnbx unfolding neighborhood_of_def by blast
       have hV'TY: "V' \<in> ?TY"
-        unfolding V'_def subspace_topology_def
-        apply (rule CollectI)
-        apply (rule exI[where x=V])
-        apply (intro conjI)
-         apply (rule refl)
-        apply (rule hV)
-        done
+        unfolding V'_def subspace_topology_def using hV by blast
 
       have hxU': "x \<in> U'"
       proof -
@@ -4494,14 +4488,7 @@ proof -
   have hclV_sub_U: "closure_on X T ?V \<subseteq> U"
     by (rule subset_trans[OF hclV_sub_XmW hXmW_sub_U])
 
-  show ?thesis
-    apply (rule exI[where x="?V"])
-    apply (intro conjI)
-       apply (rule hVopen)
-      apply (rule hVsubX)
-     apply (rule hAsubV)
-    apply (rule hclV_sub_U)
-    done
+  show ?thesis using hVopen hVsubX hAsubV hclV_sub_U by blast
 qed
 
 (** from \S31 Lemma 31.1(b) [top1.tex:~4090] **)
@@ -6905,12 +6892,7 @@ proof -
 
   show ?thesis
     apply (rule exI[where x=n])
-    apply (rule exI[where x="nat (?z + 1)"])
-    apply (intro conjI)
-      apply (rule hk_le)
-     apply (rule hdyad_gt)
-    apply (rule hdyad_lt)
-    done
+    using hk_le hdyad_gt hdyad_lt by blast
 qed
 
 lemma top1_urysohn_U_mono_same_level:
