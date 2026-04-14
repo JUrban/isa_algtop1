@@ -14207,12 +14207,7 @@ proof -
           qed
 
           show "\<exists>b'\<in>product_basis ?TR ?TR. p \<in> b' \<and> b' \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_interval a c}"
-            apply (rule bexI[where x="U \<times> V"])
-             apply (intro conjI)
-              apply (rule hpUV)
-             apply (rule hUV_sub)
-            apply (rule hUV_basis)
-            done
+            using hpUV hUV_sub hUV_basis by blast
         qed
 
         have hPre': "{p. ?plus p \<in> b} \<in> ?TP"
@@ -14312,12 +14307,7 @@ proof -
           qed
 
           show "\<exists>b'\<in>product_basis ?TR ?TR. p \<in> b' \<and> b' \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_gt a}"
-            apply (rule bexI[where x="U \<times> V"])
-             apply (intro conjI)
-              apply (rule hpUV)
-             apply (rule hUV_sub)
-            apply (rule hUV_basis)
-            done
+            using hpUV hUV_sub hUV_basis by blast
         qed
 
         have hPre': "{p. ?plus p \<in> b} \<in> ?TP"
@@ -14417,12 +14407,7 @@ proof -
           qed
 
           show "\<exists>b'\<in>product_basis ?TR ?TR. p \<in> b' \<and> b' \<subseteq> {p \<in> ?R \<times> ?R. ?plus p \<in> open_ray_lt a}"
-            apply (rule bexI[where x="U \<times> V"])
-             apply (intro conjI)
-              apply (rule hpUV)
-             apply (rule hUV_sub)
-            apply (rule hUV_basis)
-            done
+            using hpUV hUV_sub hUV_basis by blast
         qed
 
         have hPre': "{p. ?plus p \<in> b} \<in> ?TP"
