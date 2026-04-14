@@ -1368,17 +1368,7 @@ proof -
       have hc1T: "c1 \<in> T" using hCcT hc1 by blast
       have hc2T: "c2 \<in> T" using hCcT hc2 by blast
       have hc12T: "c1 \<inter> c2 \<in> T"
-      proof -
-        have hF: "{c1, c2} \<subseteq> T" using hc1T hc2T by blast
-        have hIT: "\<Inter>{c1, c2} \<in> T"
-          apply (rule hinter[rule_format])
-          apply (intro conjI)
-            apply simp
-           apply (rule insert_not_empty)
-          apply (rule hF)
-          done
-        show "c1 \<inter> c2 \<in> T" using hIT by simp
-      qed
+        using hinter[rule_format, of "{c1, c2}"] hc1T hc2T by simp
       obtain C where hCCc: "C \<in> Cc" and hyC: "y \<in> C" and hCsub: "C \<subseteq> c1 \<inter> c2"
         using hrefine[OF hc12T hy] by blast
       show "\<exists>c3\<in>Cc. y \<in> c3 \<and> c3 \<subseteq> c1 \<inter> c2" using hCCc hyC hCsub by blast
@@ -1922,13 +1912,7 @@ proof -
     show "\<forall>x\<in>b. \<exists>c\<in>B. x \<in> c \<and> c \<subseteq> b"
     proof (intro ballI)
       fix x assume hx: "x \<in> b"
-      show "\<exists>c\<in>B. x \<in> c \<and> c \<subseteq> b"
-        apply (rule bexI[where x=b])
-         apply (intro conjI)
-          apply (rule hx)
-         apply (rule subset_refl)
-        apply (rule hb)
-        done
+      show "\<exists>c\<in>B. x \<in> c \<and> c \<subseteq> b" using hx hb by blast
     qed
   qed
 qed
