@@ -17477,46 +17477,18 @@ proof -
 qed
 
 (** from \S21 Lemma 21.2 (The sequence lemma) [top1.tex:2002] **)
+text \<open>Combines Lemma\_21\_2\_sequence (forward) and Lemma\_21\_2\_sequence\_converse (metric converse).\<close>
 theorem Lemma_21_2:
-  assumes hTX: "is_topology_on X TX"
-  assumes hAX: "A \<subseteq> X"
-  shows "(\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)
-          \<longrightarrow> x \<in> closure_on X TX A"
-    and "top1_metrizable_on X TX
-          \<longrightarrow> x \<in> closure_on X TX A
+  assumes hTX: "is_topology_on X TX" and hAX: "A \<subseteq> X"
+  shows "(\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX) \<longrightarrow> x \<in> closure_on X TX A"
+    and "top1_metrizable_on X TX \<longrightarrow> x \<in> closure_on X TX A
           \<longrightarrow> (\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)"
 proof -
-  show "(\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)
-          \<longrightarrow> x \<in> closure_on X TX A"
-  proof
-    assume hex: "\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX"
-    obtain s where hsA: "\<forall>n. s n \<in> A" and hsconv: "seq_converges_to_on s x X TX"
-      using hex by blast
-    show "x \<in> closure_on X TX A"
-      by (rule Lemma_21_2_sequence[OF hTX hsconv hsA hAX])
-  qed
-
-  show "top1_metrizable_on X TX
-          \<longrightarrow> x \<in> closure_on X TX A
-          \<longrightarrow> (\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)"
-  proof (intro impI)
-    assume hmet: "top1_metrizable_on X TX"
-    assume hxcl: "x \<in> closure_on X TX A"
-    obtain d where hd: "top1_metric_on X d" and hTXeq: "TX = top1_metric_topology_on X d"
-      using hmet unfolding top1_metrizable_on_def by blast
-    have hxcl': "x \<in> closure_on X (top1_metric_topology_on X d) A"
-      unfolding hTXeq[symmetric] by (rule hxcl)
-    obtain s where hsA: "\<forall>n. s n \<in> A"
-        and hsconv: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
-      using Lemma_21_2_sequence_converse[OF hd hxcl' hAX] by blast
-    show "\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX"
-      apply (rule exI[where x=s])
-      apply (intro conjI)
-       apply (rule hsA)
-      unfolding hTXeq
-      apply (rule hsconv)
-      done
-  qed
+  show "(\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX) \<longrightarrow> x \<in> closure_on X TX A"
+    using Lemma_21_2_sequence[OF hTX] hAX by metis
+  show "top1_metrizable_on X TX \<longrightarrow> x \<in> closure_on X TX A
+        \<longrightarrow> (\<exists>s. (\<forall>n. s n \<in> A) \<and> seq_converges_to_on s x X TX)"
+    using Lemma_21_2_sequence_converse hAX unfolding top1_metrizable_on_def by metis
 qed
 
 (** from \S21 Theorem 21.3 (Sequential characterization of continuity) [top1.tex:2006] **)
@@ -17620,10 +17592,10 @@ proof -
 qed
 
 (** from \S21 Theorem 21.3 (combined statement, with metrizable converse). **)
+text \<open>Compressed: combines forward and converse directions.\<close>
 theorem Theorem_21_3:
-  assumes hTX: "is_topology_on X TX"
-  assumes hTY: "is_topology_on Y TY"
-  assumes hmap: "\<forall>x\<in>X. f x \<in> Y"
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+    and hmap: "\<forall>x\<in>X. f x \<in> Y"
   shows "top1_continuous_map_on X TX Y TY f
           \<longrightarrow> (\<forall>s x. seq_converges_to_on s x X TX
                  \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY)"
@@ -17635,44 +17607,21 @@ proof -
   show "top1_continuous_map_on X TX Y TY f
           \<longrightarrow> (\<forall>s x. seq_converges_to_on s x X TX
                  \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY)"
-  proof
-    assume hcont: "top1_continuous_map_on X TX Y TY f"
-    show "\<forall>s x. seq_converges_to_on s x X TX
-            \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
-    proof (intro allI impI)
-      fix s x
-      assume hx: "seq_converges_to_on s x X TX"
-      show "seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
-        by (rule Theorem_21_3_forward[OF hTX hTY hcont hx])
-    qed
-  qed
-
+    using Theorem_21_3_forward[OF hTX hTY] by blast
   show "top1_metrizable_on X TX
           \<longrightarrow> (\<forall>s x. seq_converges_to_on s x X TX
                  \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY)
           \<longrightarrow> top1_continuous_map_on X TX Y TY f"
   proof (intro impI)
     assume hmet: "top1_metrizable_on X TX"
-    assume hseq:
-      "\<forall>s x. seq_converges_to_on s x X TX
-            \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
+      and hseq: "\<forall>s x. seq_converges_to_on s x X TX
+                 \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
     obtain d where hd: "top1_metric_on X d" and hTXeq: "TX = top1_metric_topology_on X d"
       using hmet unfolding top1_metrizable_on_def by blast
-    have hseq': "\<forall>s x. seq_converges_to_on s x X (top1_metric_topology_on X d)
-            \<longrightarrow> seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
-    proof (intro allI impI)
-      fix s x
-      assume hs: "seq_converges_to_on s x X (top1_metric_topology_on X d)"
-      have hsTX: "seq_converges_to_on s x X TX"
-        unfolding hTXeq by (rule hs)
-      show "seq_converges_to_on (\<lambda>n. f (s n)) (f x) Y TY"
-        using hseq hsTX by blast
-    qed
-    have hcont:
-      "top1_continuous_map_on X (top1_metric_topology_on X d) Y TY f"
-      by (rule Theorem_21_3_converse_metric[OF hd hTY hmap hseq'])
     show "top1_continuous_map_on X TX Y TY f"
-      unfolding hTXeq using hcont by simp
+      unfolding hTXeq
+      by (rule Theorem_21_3_converse_metric[OF hd hTY hmap])
+         (use hseq hTXeq in blast)
   qed
 qed
 
