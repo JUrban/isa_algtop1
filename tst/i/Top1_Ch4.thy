@@ -1063,13 +1063,7 @@ proof -
           done
       qed
 
-      show ?thesis
-        apply (rule exI[where x=BB])
-        apply (intro conjI)
-          apply (rule hBBcnt)
-         apply (rule hBBnb)
-        apply (rule hBBref)
-        done
+      show ?thesis using hBBcnt hBBnb hBBref by blast
     qed
   qed
 qed
@@ -16948,14 +16942,7 @@ proof -
     unfolding top1_support_on_def
     by (rule closure_on_mono[OF hnz_sub])
 
-  show ?thesis
-    apply (rule exI[where x=\<psi>])
-    apply (intro conjI)
-       apply (rule conjunct1[OF hpsi])
-      apply (rule conjunct2[OF conjunct2[OF hpsi]])
-     apply (rule conjunct1[OF conjunct2[OF hpsi]])
-    apply (rule hsupp)
-    done
+  show ?thesis using hpsi hsupp by blast
 qed
 
 (** Step 2 of the construction in Theorem 36.1: from a finite open cover of a normal space,
@@ -17039,13 +17026,7 @@ proof -
     qed
 
     show "\<exists>\<psi>. P i \<psi>"
-      unfolding P_def
-      apply (rule exI[where x=psi0])
-      apply (intro conjI)
-        apply (rule conjunct1[OF hpsi])
-       apply (rule hsuppUi)
-      apply (rule conjunct1[OF conjunct2[OF hpsi]])
-      done
+      unfolding P_def using hpsi hsuppUi by blast
   qed
 
   let ?psi = "(\<lambda>i. if i < n then (SOME \<psi>. P i \<psi>) else (\<lambda>x. (0::real)))"
