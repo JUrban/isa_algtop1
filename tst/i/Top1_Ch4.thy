@@ -10340,12 +10340,7 @@ proof -
 	      obtain b where hbB: "b \<in> B" and hyb: "y \<in> b" and hbV: "b \<subseteq> V"
 	        using basis_refine[OF hVT hyV] by blast
 	      show "\<exists>b\<in>B. y \<in> b \<and> b \<subseteq> top1_ball_on X d x e"
-	        apply (rule bexI[where x=b])
-	         apply (intro conjI)
-	          apply (rule hyb)
-	         apply (rule subset_trans[OF hbV hVsub'])
-	        apply (rule hbB)
-	        done
+	        using hbB hyb hbV hVsub' by blast
 		  qed
 	    have hball: "top1_ball_on X d x e \<in> topology_generated_by_basis X B"
 	      unfolding topology_generated_by_basis_def
@@ -10442,12 +10437,7 @@ proof -
 		      have hbasis: "top1_ball_on X d x0 r \<in> top1_metric_basis_on X d"
 		        unfolding top1_metric_basis_on_def using hx0X hrpos by blast
 		      show "\<exists>b\<in>top1_metric_basis_on X d. x0 \<in> b \<and> b \<subseteq> U"
-		        apply (rule bexI[where x="top1_ball_on X d x0 r"])
-		         apply (intro conjI)
-		          apply (rule hx0ball)
-		         apply (rule hsub)
-		        apply (rule hbasis)
-		        done
+		        using hx0ball hsub hbasis by blast
 		    qed
 		
 		    have "U \<in> topology_generated_by_basis X (top1_metric_basis_on X d)"
@@ -11146,12 +11136,7 @@ proof -
           by simp
       qed
       show "\<exists>ba\<in>top1_metric_basis_on ?X ?d. x \<in> ba \<and> ba \<subseteq> {x. a < x \<and> x < b}"
-        apply (rule bexI[where x="top1_ball_on ?X ?d x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hball_sub)
-        apply (rule hball_basis)
-        done
+        using hxball hball_sub hball_basis by blast
     qed
   qed
   show ?thesis
@@ -11202,12 +11187,7 @@ proof -
           by simp
       qed
       show "\<exists>ba\<in>top1_metric_basis_on ?X ?d. x \<in> ba \<and> ba \<subseteq> {t. a < t}"
-        apply (rule bexI[where x="top1_ball_on ?X ?d x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hball_sub)
-        apply (rule hball_basis)
-        done
+        using hxball hball_sub hball_basis by blast
     qed
   qed
   show ?thesis
@@ -11258,12 +11238,7 @@ proof -
           by simp
       qed
       show "\<exists>ba\<in>top1_metric_basis_on ?X ?d. x \<in> ba \<and> ba \<subseteq> {t. t < a}"
-        apply (rule bexI[where x="top1_ball_on ?X ?d x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hball_sub)
-        apply (rule hball_basis)
-        done
+        using hxball hball_sub hball_basis by blast
     qed
   qed
   show ?thesis
