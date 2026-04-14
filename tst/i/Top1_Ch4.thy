@@ -3108,14 +3108,7 @@ proof -
           by (intro conjI hUopen hpU)
 
         show "\<exists>U V. neighborhood_of p (X \<times> Y) ?TP U \<and> V \<in> ?TP \<and> C \<subseteq> V \<and> U \<inter> V = {}"
-          apply (rule exI[where x="?U"])
-          apply (rule exI[where x="?V"])
-          apply (intro conjI)
-             apply (rule hnbhd)
-            apply (rule hVopen)
-           apply (rule hC_sub_V)
-          apply (rule hdisj)
-          done
+          using hnbhd hVopen hC_sub_V hdisj by blast
       qed
     qed
   qed
@@ -6214,16 +6207,7 @@ proof -
               show "{} \<subseteq> U \<inter> V" by simp
             qed
 
-	            show ?thesis
-	              apply (rule exI[where x=U])
-	              apply (rule exI[where x=V])
-	              apply (intro conjI)
-	                   apply (rule hUopen)
-	                  apply (rule hVopen)
-	                 apply (rule hA_sub)
-	                apply (rule hB_sub)
-	              apply (rule hUV_disj)
-	              done
+	            show ?thesis using hUopen hVopen hA_sub hB_sub hUV_disj by blast
 	          qed
 	        qed
 	      qed
@@ -6365,14 +6349,7 @@ proof -
 
   have hex:
     "\<exists>W. W \<in> TX \<and> W \<subseteq> X \<and> closure_on X TX ?UL \<subseteq> W \<and> closure_on X TX W \<subseteq> ?UR"
-    apply (rule normal_insert_open_between[where U="?UL" and V="?UR"])
-          apply (rule hN)
-         apply (rule hL(1))
-        apply (rule hL(2))
-       apply (rule hR(1))
-      apply (rule hR(2))
-     apply (rule hcl)
-    done
+    by (rule normal_insert_open_between[OF hN hL(1) hL(2) hR(1) hR(2) hcl])
 
   have hSome:
     "(SOME W. W \<in> TX \<and> W \<subseteq> X \<and> closure_on X TX ?UL \<subseteq> W \<and> closure_on X TX W \<subseteq> ?UR)
@@ -8417,14 +8394,7 @@ proof -
         done
 
       show "\<exists>U V. neighborhood_of x X TX U \<and> V \<in> TX \<and> C \<subseteq> V \<and> U \<inter> V = {}"
-        apply (rule exI[where x="?U"])
-        apply (rule exI[where x="?V"])
-        apply (intro conjI)
-           apply (rule hnbhd)
-          apply (rule hV_open)
-         apply (rule hC_sub_V)
-        apply (rule hUV_disj)
-        done
+        using hnbhd hV_open hC_sub_V hUV_disj by blast
     qed
   qed
 qed
