@@ -5054,28 +5054,14 @@ next
   have UG_sub: "\<Union>G \<subseteq> X" by (rule closedin_sub, rule hUG)
   have XmA_T: "X - a \<in> T" by (rule closedin_diff_open, rule ha)
   have XmUG_T: "X - \<Union>G \<in> T" by (rule closedin_diff_open, rule hUG)
-  have two_inter: "\<Inter>{X - a, X - \<Union>G} \<in> T"
-    apply (rule inter_T[rule_format])
-    apply (intro conjI)
-      apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
-     apply (rule insert_not_empty)
-    apply (rule subsetI)
-    apply (erule insertE)
-     apply (erule ssubst, rule XmA_T)
-    apply (erule singletonE)
-    apply (erule ssubst, rule XmUG_T)
-    done
-  have inter_eq: "\<Inter>{X - a, X - \<Union>G} = (X - a) \<inter> (X - \<Union>G)"
-    by simp
+  have XmaXmUG_T: "(X - a) \<inter> (X - \<Union>G) \<in> T"
+    by (rule topology_inter2[OF hT XmA_T XmUG_T])
   show ?case
-    apply (rule closedin_intro)
-     apply (simp only: Union_insert)
-     apply (rule Un_least, rule a_sub, rule UG_sub)
-    apply (simp only: Union_insert)
-    apply (simp only: Diff_Un)
-    apply (fold inter_eq)
-    apply (rule two_inter)
-    done
+  proof (rule closedin_intro)
+    show "\<Union>(insert a G) \<subseteq> X" using a_sub UG_sub by (simp add: Union_insert)
+    show "X - \<Union>(insert a G) \<in> T"
+      by (simp only: Union_insert Diff_Un, rule XmaXmUG_T)
+  qed
 qed
 
 theorem Theorem_17_1:

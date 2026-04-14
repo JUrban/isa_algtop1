@@ -2359,16 +2359,7 @@ proof -
 
     have hSep:
       "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
-      apply (rule exI[where x="{x\<in>X. f x \<in> open_ray_lt r}"])
-      apply (rule exI[where x="{x\<in>X. f x \<in> open_ray_gt r}"])
-      apply (intro conjI)
-           apply (rule hUopen)
-          apply (rule hVopen)
-         apply (rule hU_ne)
-        apply (rule hV_ne)
-       apply (rule hDisj)
-      apply (rule hCover)
-      done
+      using hUopen hVopen hU_ne hV_ne hDisj hCover by blast
 
     show False
       using hNoSep hSep by blast
@@ -4989,16 +4980,7 @@ next
     have hx0U: "x0 \<in> U" and hyV: "y \<in> V"
       using hpUV by blast+
     show "\<exists>U\<in>TX. \<exists>V\<in>TY. x0 \<in> U \<and> y \<in> V \<and> U \<times> V \<subseteq> N"
-      apply (rule bexI[where x=U])
-       apply (rule bexI[where x=V])
-        apply (rule conjI)
-         apply (rule hx0U)
-        apply (rule conjI)
-         apply (rule hyV)
-        apply (rule hsub)
-       apply (rule hV)
-      apply (rule hU)
-      done
+      using hU hV hx0U hyV hsub by blast
   qed
 
   obtain f where hf:
@@ -6413,16 +6395,7 @@ proof -
   show ?thesis
   proof (cases "Y = {}")
     case True
-    show ?thesis
-      apply (rule exI[where x=X])
-      apply (rule exI[where x="{}"])
-      apply (intro conjI)
-          apply (rule X_TX)
-         apply (rule empty_TX)
-        apply (rule hx0X)
-       apply (simp only: True)
-      apply simp
-      done
+    show ?thesis using X_TX empty_TX hx0X True by blast
   next
     case False
 
@@ -6671,16 +6644,7 @@ proof -
       thus False using hdisjUV by blast
     qed
 
-    show ?thesis
-      apply (rule exI[where x="\<Inter>Vset"])
-      apply (rule exI[where x="\<Union>Uset"])
-      apply (intro conjI)
-          apply (rule hUopen)
-         apply (rule hVopen)
-        apply (rule hx0U)
-       apply (rule hYsubV)
-      apply (rule hdisj)
-      done
+    show ?thesis using hUopen hVopen hx0U hYsubV hdisj by blast
   qed
 qed
 
@@ -9875,17 +9839,7 @@ proof -
   qed
 
   show ?thesis
-    apply (rule exI[where x=V])
-    apply (rule conjI)
-     apply (rule hVT)
-    apply (rule conjI)
-     apply (rule hVsubX)
-    apply (rule conjI)
-     apply (rule hVsubU)
-    apply (rule conjI)
-     apply (rule hVne)
-    apply (rule hx_not_cl)
-    done
+    using hVT hVsubX hVsubU hVne hx_not_cl by blast
 qed
 
 (** A small countability helper: a nonempty countable set is the image of a map \<open>nat \<Rightarrow> X\<close>. **)
