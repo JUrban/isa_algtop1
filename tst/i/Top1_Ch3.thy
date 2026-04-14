@@ -11058,14 +11058,7 @@ proof -
         done
 
       show "\<exists>U0 V0. neighborhood_of x X TX U0 \<and> neighborhood_of y X TX V0 \<and> U0 \<inter> V0 = {}"
-        apply (rule exI[where x=U])
-        apply (rule exI[where x=V])
-        apply (rule conjI)
-         apply (rule hnbx)
-        apply (rule conjI)
-         apply (rule hnby)
-        apply (rule hUVdisj)
-        done
+        using hnbx hnby hUVdisj by blast
     qed
   qed
 qed

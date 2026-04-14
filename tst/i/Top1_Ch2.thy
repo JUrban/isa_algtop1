@@ -8897,15 +8897,7 @@ proof (unfold is_basis_on_def, intro conjI)
       unfolding hb1U hb2V W_def using top1_PiE_Int[of I U V] by simp
 
     have hb3: "top1_PiE I W \<in> top1_product_basis_on I X T"
-      unfolding top1_product_basis_on_def
-      apply (rule CollectI)
-      apply (rule exI[where x=W])
-      apply (rule conjI)
-       apply simp
-      apply (rule conjI)
-       apply (rule hW)
-      apply (rule hWfin)
-      done
+      unfolding top1_product_basis_on_def using hW hWfin by auto
 
     show "\<exists>b3\<in>top1_product_basis_on I X T. x \<in> b3 \<and> b3 \<subseteq> b1 \<inter> b2"
     proof -
@@ -8980,15 +8972,7 @@ proof (rule equalityI)
     have hfin: "finite {i \<in> I. U i \<noteq> X i}"
       by (rule finite_subset[OF hsub hfinI])
     show "b \<in> top1_product_basis_on I X T"
-      unfolding top1_product_basis_on_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      apply (rule conjI)
-       apply (rule hbU)
-      apply (rule conjI)
-       apply (rule hU)
-      apply (rule hfin)
-      done
+      unfolding top1_product_basis_on_def using hbU hU hfin by auto
   qed
 qed
 
