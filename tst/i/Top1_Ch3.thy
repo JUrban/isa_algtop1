@@ -5947,12 +5947,7 @@ proof -
     qed
 
     show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F"
-      apply (rule exI[where x=Fc])
-      apply (intro conjI)
-        apply (rule hFcfin)
-       apply (rule hFcsub)
-      apply (rule hAcovFc)
-      done
+      using hFcfin hFcsub hAcovFc by blast
   qed
 
   show ?thesis
@@ -6289,12 +6284,7 @@ proof -
         qed
 
         show "\<exists>V. V \<in> TX \<and> x \<in> V \<and> V \<subseteq> X - A"
-          apply (rule exI[where x="X \<inter> \<Inter>Vset"])
-          apply (intro conjI)
-            apply (rule hV0open)
-           apply (rule hxV0')
-          apply (rule hV0sub)
-          done
+          using hV0open hxV0' hV0sub by blast
       qed
 
       define G where "G = {V. V \<in> TX \<and> V \<subseteq> X - A}"
@@ -6787,11 +6777,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding top1_compact_on_def
-    apply (intro conjI)
-     apply (rule hsub_top)
-    apply (rule cover_fX)
-    done
+    unfolding top1_compact_on_def using hsub_top cover_fX by blast
 qed
 
 text \<open>Continuous from compact to Hausdorff is a closed map.\<close>
