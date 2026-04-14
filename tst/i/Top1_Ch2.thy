@@ -9620,13 +9620,7 @@ proof -
       using hCcT hCmem by blast
 
     show "\<exists>C\<in>Cc. C \<in> top1_box_topology_on I X T \<and> x \<in> C \<and> C \<subseteq> U"
-      apply (rule bexI[where x="top1_PiE I V"])
-       apply (intro conjI)
-         apply (rule hCopen)
-        apply (rule hxC)
-       apply (rule hCsubU)
-      apply (rule hCmem)
-      done
+      using hCopen hxC hCsubU hCmem by blast
   qed
 
 	  have hBF: "basis_for (top1_PiE I X) Cc (top1_box_topology_on I X T)"
@@ -9910,13 +9904,7 @@ proof -
       using hCcT hCmem by blast
 
     show "\<exists>C\<in>Cc. C \<in> top1_product_topology_on I X T \<and> x \<in> C \<and> C \<subseteq> U"
-      apply (rule bexI[where x="top1_PiE I V"])
-       apply (intro conjI)
-         apply (rule hCopen)
-        apply (rule hxC)
-       apply (rule hCsubU)
-      apply (rule hCmem)
-      done
+      using hCopen hxC hCsubU hCmem by blast
   qed
 
   have hBF: "basis_for (top1_PiE I X) Cc (top1_product_topology_on I X T)"
@@ -12268,12 +12256,7 @@ next
           unfolding top1_metric_basis_on_def using hyX hdel by blast
 
         show "\<exists>b'\<in>top1_metric_basis_on X d'. y \<in> b' \<and> b' \<subseteq> top1_ball_on X d x \<epsilon>"
-          apply (rule bexI[where x="top1_ball_on X d' y \<delta>"])
-           apply (intro conjI)
-            apply (rule hy_in)
-           apply (rule hsub2)
-          apply (rule hbasis)
-          done
+          using hy_in hsub2 hbasis by blast
       qed
     qed
 
