@@ -12843,13 +12843,7 @@ proof -
 									              by blast
 									          qed
 									          show "W \<in> ?TS"
-									            unfolding subspace_topology_def
-									            apply (rule CollectI)
-									            apply (rule exI[where x=W])
-									            apply (intro conjI)
-									             apply (rule hEq)
-									            apply (rule hWopen)
-									            done
+									            unfolding subspace_topology_def using hEq hWopen by blast
 									        next
 									          assume hWopen: "W \<in> ?TS"
 									          obtain U where hU: "U \<in> TY" and hEq: "W = ?S \<inter> U"
@@ -12871,13 +12865,7 @@ proof -
 									              by blast
 									          qed
 									          show "W \<in> ?TS'"
-									            unfolding subspace_topology_def
-									            apply (rule CollectI)
-									            apply (rule exI[where x=W])
-									            apply (intro conjI)
-									             apply (rule hEq)
-									            apply (rule hWopen)
-									            done
+									            unfolding subspace_topology_def using hEq hWopen by blast
 									        next
 									          assume hWopen: "W \<in> ?TS'"
 									          obtain U where hU: "U \<in> TY'" and hEq: "W = ?S \<inter> U"
@@ -13385,11 +13373,7 @@ proof -
              top1_compact_on (closure_on X TX V) (subspace_topology X TX (closure_on X TX V)) \<and>
              closure_on X TX V \<subseteq> U"
         apply (rule exI[where x=V])
-        apply (intro conjI)
-          apply (rule hVnbhd)
-         apply (rule clV_comp)
-        apply (rule clV_sub_U)
-        done
+        using hVnbhd clV_comp clV_sub_U by blast
     qed
   next
     assume hProp:
@@ -13420,11 +13404,7 @@ proof -
         show "\<exists>U. neighborhood_of x X TX U \<and> U \<subseteq> X \<and>
             top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
           apply (rule exI[where x=V])
-          apply (intro conjI)
-            apply (rule hV)
-           apply (rule hVsubX)
-          apply (rule hVcomp)
-          done
+          using hV hVsubX hVcomp by blast
       qed
     qed
   qed
@@ -13658,13 +13638,7 @@ proof -
 		              by (rule Int_lower2)
 		          qed
 	          have hVTA: "V \<in> ?TA"
-	            unfolding subspace_topology_def
-	            apply (rule CollectI)
-	            apply (rule exI[where x=V])
-	            apply (intro conjI)
-	             apply (rule hVeq)
-	            apply (rule hVT)
-	            done
+	            unfolding subspace_topology_def using hVeq hVT by blast
 	          show ?thesis
 	            unfolding neighborhood_of_def
 	            by (intro conjI, rule hVTA, rule hxV)
