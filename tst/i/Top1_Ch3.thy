@@ -645,6 +645,16 @@ proof -
   qed
 qed
 
+text \<open>Theorem 23.4 with strict: if A is connected in a strict topology, then B
+  (between A and its closure) is connected in a strict subspace.\<close>
+corollary Theorem_23_4_strict:
+  assumes "is_topology_on_strict X TX" "A \<subseteq> X" "B \<subseteq> X" "A \<subseteq> B"
+    "B \<subseteq> closure_on X TX A" "top1_connected_on A (subspace_topology X TX A)"
+  shows "top1_connected_on B (subspace_topology X TX B)
+    \<and> is_topology_on_strict B (subspace_topology X TX B)"
+  using Theorem_23_4[OF is_topology_on_strict_imp[OF assms(1)] assms(2-6)]
+    subspace_topology_is_strict[OF assms(1) assms(3)] by blast
+
 corollary closure_of_connected_is_connected:
   assumes hTX: "is_topology_on X TX"
   and hAX: "A \<subseteq> X"
@@ -6361,8 +6371,21 @@ proof -
   qed
 qed
 
-text \<open>Integration of is\_topology\_on\_strict with Theorem 26.3: in a strict Hausdorff space,
-  compact subsets are closedin\_on (complement is open and ⊆ X).\<close>
+text \<open>Theorem 26.3 with strict topology: in a strict Hausdorff space,
+  compact subsets are closedin\_on and the complement is openin\_on.\<close>
+corollary Theorem_26_3_strict:
+  "\<lbrakk>is_hausdorff_on X TX; is_topology_on_strict X TX;
+    Y \<subseteq> X; top1_compact_on Y (subspace_topology X TX Y)\<rbrakk>
+   \<Longrightarrow> closedin_on X TX Y \<and> openin_on X TX (X - Y)"
+proof -
+  assume hH: "is_hausdorff_on X TX" and hS: "is_topology_on_strict X TX"
+    and hYX: "Y \<subseteq> X" and hcomp: "top1_compact_on Y (subspace_topology X TX Y)"
+  have hcl: "closedin_on X TX Y" by (rule Theorem_26_3[OF hH hYX hcomp])
+  have "X - Y \<in> TX" using hcl unfolding closedin_on_def by blast
+  then have "openin_on X TX (X - Y)" unfolding openin_on_def by blast
+  thus ?thesis using hcl by blast
+qed
+
 corollary compact_in_strict_hausdorff_closedin_on:
   "\<lbrakk>is_hausdorff_on X TX; is_topology_on_strict X TX;
     Y \<subseteq> X; top1_compact_on Y (subspace_topology X TX Y)\<rbrakk>
@@ -6819,6 +6842,21 @@ proof -
 
   show ?thesis
     unfolding top1_compact_on_def using hsub_top cover_fX by blast
+qed
+
+text \<open>Theorem 26.5 with strict: continuous image of strict compact into strict
+  codomain gives strict compact image.\<close>
+corollary Theorem_26_5_strict:
+  assumes "is_topology_on_strict X TX" "is_topology_on_strict Y TY"
+    "top1_compact_on X TX" "top1_continuous_map_on X TX Y TY f"
+  shows "top1_compact_on (f ` X) (subspace_topology Y TY (f ` X))
+    \<and> is_topology_on_strict (f ` X) (subspace_topology Y TY (f ` X))"
+proof (intro conjI)
+  show "top1_compact_on (f ` X) (subspace_topology Y TY (f ` X))"
+    by (rule Theorem_26_5[OF is_topology_on_strict_imp[OF assms(1)]
+        is_topology_on_strict_imp[OF assms(2)] assms(3) assms(4)])
+  show "is_topology_on_strict (f ` X) (subspace_topology Y TY (f ` X))"
+    by (rule continuous_map_image_subspace_strict[OF assms(4) assms(2)])
 qed
 
 text \<open>Continuous from compact to Hausdorff is a closed map.\<close>
