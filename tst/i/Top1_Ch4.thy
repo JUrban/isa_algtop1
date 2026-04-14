@@ -16168,6 +16168,24 @@ proof -
     done
 qed
 
+text \<open>Theorem 35.1 (Tietze) with strict: the extension's preimages are openin\_on.\<close>
+corollary Theorem_35_1_strict:
+  fixes f :: "'a \<Rightarrow> real"
+  defines "I \<equiv> top1_closed_interval (-1) 1"
+  defines "TI \<equiv> top1_closed_interval_topology (-1) 1"
+  assumes hX: "top1_normal_on X TX" and hS: "is_topology_on_strict X TX"
+  assumes hA: "closedin_on X TX A"
+  assumes hf: "top1_continuous_map_on A (subspace_topology X TX A) I TI f"
+  shows "\<exists>F. top1_continuous_map_on X TX I TI F \<and> (\<forall>x\<in>A. F x = f x)
+    \<and> (\<forall>V\<in>TI. openin_on X TX {x \<in> X. F x \<in> V})"
+proof -
+  obtain F where hF: "top1_continuous_map_on X TX I TI F" and hext: "\<forall>x\<in>A. F x = f x"
+    using Theorem_35_1[OF hX hA hf[unfolded I_def TI_def]] unfolding I_def TI_def by blast
+  have "\<forall>V\<in>TI. openin_on X TX {x \<in> X. F x \<in> V}"
+    using continuous_map_preimage_openin_on[OF hF hS] by blast
+  thus ?thesis using hF hext by blast
+qed
+
 section \<open>*\<S>36 Imbeddings of Manifolds\<close>
 
 text \<open>

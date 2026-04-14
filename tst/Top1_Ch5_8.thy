@@ -1439,6 +1439,14 @@ proof -
   thus ?thesis by (rule product_topology_is_strict)
 qed
 
+text \<open>Tychonoff (Theorem 37.3) with strict: product of compact spaces with strict
+  factor topologies gives a strict compact product topology.\<close>
+corollary Theorem_37_3_strict:
+  assumes "I \<noteq> {}" "\<forall>i\<in>I. top1_compact_on (X i) (T i)" "\<forall>i\<in>I. is_topology_on_strict (X i) (T i)"
+  shows "top1_compact_on (top1_PiE I X) (top1_product_topology_on I X T)
+    \<and> is_topology_on_strict (top1_PiE I X) (top1_product_topology_on I X T)"
+  using Theorem_37_3[OF assms(1) assms(2)] compact_product_strict[OF assms] by blast
+
 section \<open>\<S>38 The Stone-\<C>ech Compactification\<close>
 
 text \<open>
