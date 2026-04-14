@@ -4888,12 +4888,7 @@ definition closedin_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set 
 
 (** de Morgan helper: X - Inter F = Union of (X - A) for A in F **)
 lemma diff_Inter_eq: "(X :: 'a set) - \<Inter>F = \<Union>{X - A | A. A \<in> F}"
-  apply (rule equalityI)
-   apply (rule subsetI)
-   apply blast
-  apply (rule subsetI)
-  apply blast
-  done
+  by blast
 
 (** Helper lemmas for closedin_on **)
 lemma closedin_sub: "closedin_on X T A \<Longrightarrow> A \<subseteq> X"
@@ -5105,13 +5100,7 @@ proof -
       show "X - V \<subseteq> X" by (rule Diff_subset)
       show "X - (X - V) \<in> T"
       proof -
-        have eq: "X - (X - V) = X \<inter> V"
-          apply (rule equalityI)
-           apply (rule subsetI)
-           apply blast
-          apply (rule subsetI)
-          apply blast
-          done
+        have eq: "X - (X - V) = X \<inter> V" by blast
         show ?thesis using eq XV_T by simp
       qed
     qed
@@ -5267,13 +5256,7 @@ lemma closure_on_subset_of_closed:
   assumes hC: "closedin_on X T C"
   assumes hAC: "A \<subseteq> C"
   shows "closure_on X T A \<subseteq> C"
-  unfolding closure_on_def
-  apply (rule Inter_lower)
-  apply (rule CollectI)
-  apply (intro conjI)
-   apply (rule hC)
-  apply (rule hAC)
-  done
+  unfolding closure_on_def using hC hAC by blast
 
 lemma closure_on_closed:
   assumes hT: "is_topology_on X T"
