@@ -3288,20 +3288,10 @@ proof -
 
   have hIA_open: "?I - ?A \<in> ?TI"
     unfolding top1_unit_interval_topology_def subspace_topology_def
-    apply (rule CollectI)
-    apply (rule exI[where x="{(1/2::real) <..}"])
-    apply (intro conjI)
-     apply (rule hIA)
-    apply (rule hOpen_gt)
-    done
+    using hIA hOpen_gt by blast
   have hIB_open: "?I - ?B \<in> ?TI"
     unfolding top1_unit_interval_topology_def subspace_topology_def
-    apply (rule CollectI)
-    apply (rule exI[where x="{..< (1/2::real)}"])
-    apply (intro conjI)
-     apply (rule hIB)
-    apply (rule hOpen_lt)
-    done
+    using hIB hOpen_lt by blast
 
   have hA_closed: "closedin_on ?I ?TI ?A"
     by (rule closedin_intro[OF hA_sub hIA_open])
@@ -4451,21 +4441,9 @@ proof (rule subsetI)
       define V where "V = ?C \<inter> (X - ?P)"
 
       have hU_mem: "U \<in> subspace_topology X TX ?C"
-        unfolding subspace_topology_def U_def
-        apply (rule CollectI)
-        apply (rule exI[where x="?P"])
-        apply (intro conjI)
-         apply (rule refl)
-        apply (rule hPopen)
-        done
+        unfolding subspace_topology_def U_def using hPopen by blast
       have hV_mem: "V \<in> subspace_topology X TX ?C"
-        unfolding subspace_topology_def V_def
-        apply (rule CollectI)
-        apply (rule exI[where x="X - ?P"])
-        apply (intro conjI)
-         apply (rule refl)
-        apply (rule hXPopen)
-        done
+        unfolding subspace_topology_def V_def using hXPopen by blast
 
       have hU_ne: "U \<noteq> {}"
       proof -
