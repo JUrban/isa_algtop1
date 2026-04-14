@@ -9591,10 +9591,7 @@ proof -
     qed
 
     have hUbox: "top1_PiE I U \<in> top1_box_basis_on I X T"
-      unfolding top1_box_basis_on_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      using hUiT hUiX by blast
+      unfolding top1_box_basis_on_def using hUiT hUiX by blast
 
     have hBasisBox: "is_basis_on (top1_PiE I X) (top1_box_basis_on I X T)"
       by (rule top1_box_basis_is_basis_on[OF hTop])
@@ -9662,10 +9659,7 @@ proof -
 	      using bchoice[OF hchoose] by blast
 
     have hCmem: "top1_PiE I V \<in> Cc"
-      unfolding Cc_def
-      apply (rule CollectI)
-      apply (rule exI[where x=V])
-      using hV by blast
+      unfolding Cc_def using hV by blast
 
     have hxext: "\<forall>i. i \<notin> I \<longrightarrow> x i = undefined"
       using hxX unfolding top1_PiE_iff by blast
@@ -9784,10 +9778,7 @@ proof -
     qed
 
     have hUprod: "top1_PiE I U \<in> top1_product_basis_on I X T"
-      unfolding top1_product_basis_on_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      using hUiT hUiX hfin by blast
+      unfolding top1_product_basis_on_def using hUiT hUiX hfin by blast
 
     have hBasisProd: "is_basis_on (top1_PiE I X) (top1_product_basis_on I X T)"
       by (rule top1_product_basis_is_basis_on[OF hTop])
