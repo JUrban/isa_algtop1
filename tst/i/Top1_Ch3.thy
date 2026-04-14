@@ -2569,13 +2569,7 @@ proof -
     have hconn_id: "\<forall>C\<in>I. top1_connected_on (id C) (subspace_topology X TX (id C))"
       using hconn_fun by simp
     show ?thesis
-      apply (rule Theorem_23_3[where A=id and I=I and p=y])
-           apply (rule hTX)
-          apply (rule hI_ne)
-         apply (rule hA_id)
-        apply (rule hconn_id)
-       apply (rule hyInter)
-      done
+      by (rule Theorem_23_3[OF hTX hI_ne hA_id hconn_id hyInter])
   qed
   have hUnion_sub: "(\<Union>C\<in>I. id C) \<subseteq> X"
   proof (rule subsetI)
@@ -2676,13 +2670,7 @@ proof -
     have hI_conn_id: "\<forall>C\<in>I. top1_connected_on (id C) (subspace_topology X TX (id C))"
       using hI_conn by simp
     show ?thesis
-      apply (rule Theorem_23_3[where A=id and I=I and p=x])
-           apply (rule hTX)
-          apply (rule hI_ne)
-         apply (rule hI_subX_id)
-        apply (rule hI_conn_id)
-       apply (rule hxInter)
-      done
+      by (rule Theorem_23_3[OF hTX hI_ne hI_subX_id hI_conn_id hxInter])
   qed
 
   have hUnion_eq: "(\<Union>C\<in>I. id C) = top1_component_of_on X TX x"
