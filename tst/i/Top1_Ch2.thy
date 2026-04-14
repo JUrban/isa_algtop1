@@ -4838,13 +4838,7 @@ proof -
     qed
 
     show "W \<in> subspace_topology X (order_topology_on X) Y"
-      unfolding subspace_topology_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      apply (intro conjI)
-       apply (rule hWeq)
-      apply (rule hUopen)
-      done
+      unfolding subspace_topology_def using hWeq hUopen by blast
   qed
 
   have h2: "subspace_topology X (order_topology_on X) Y \<subseteq> order_topology_on Y"
@@ -18102,13 +18096,7 @@ proof -
 			              have hEq: "?W \<inter> U = U"
 			                using hUsubW by blast
 		              show ?thesis
-			                unfolding subspace_topology_def
-			                apply (rule CollectI)
-			                apply (rule exI[where x=U])
-			                apply (intro conjI)
-			                 apply (rule sym[OF hEq])
-			                apply (rule hU_TR)
-			                done
+			                unfolding subspace_topology_def using hEq hU_TR by blast
 		            qed
             have hpU: "p \<in> U"
               unfolding U_def open_interval_def using hd by simp
@@ -19182,12 +19170,7 @@ proof -
               by blast
           qed
 	          show "V \<in> {p ` A \<inter> U |U. U \<in> TY}"
-	            apply (rule CollectI)
-	            apply (rule exI[where x=V])
-	            apply (intro conjI)
-	             apply (rule hInt)
-	            apply (rule hV_open_Y)
-	            done
+	            using hInt hV_open_Y by blast
 	        qed
 	      next
 	        case False
@@ -19381,13 +19364,7 @@ proof -
 	          finally show ?thesis .
 	        qed
 	        show ?thesis
-	          unfolding subspace_topology_def
-	          apply (rule CollectI)
-	          apply (rule exI[where x="p ` U"])
-	          apply (intro conjI)
-	           apply (rule hVeq)
-	          apply (rule hPU)
-	          done
+	          unfolding subspace_topology_def using hVeq hPU by blast
 	      next
 	        case False
 	        have hclosed: "top1_closed_map_on X TX Y TY p"
