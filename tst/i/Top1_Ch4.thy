@@ -2697,14 +2697,7 @@ proof -
   have hclV_sub_U: "closure_on X T ?V \<subseteq> U"
     by (rule subset_trans[OF hclV_sub_XmW hXmW_sub_U])
 
-  show ?thesis
-    apply (rule exI[where x="?V"])
-    apply (intro conjI)
-       apply (rule hVopen)
-      apply (rule hVsubX)
-     apply (rule hxV)
-    apply (rule hclV_sub_U)
-    done
+  show ?thesis using hVopen hVsubX hxV hclV_sub_U by blast
 qed
 
 (** Closure of a rectangle is contained in the product of closures (for the product topology). **)
@@ -4009,14 +4002,7 @@ proof -
           unfolding neighborhood_of_def using hUopen hxU by blast
         have hnbV: "neighborhood_of y X TX (top1_ball_on X d y r)"
           unfolding neighborhood_of_def using hVopen hyV by blast
-        show ?thesis
-          apply (rule exI[where x="top1_ball_on X d x r"])
-          apply (rule exI[where x="top1_ball_on X d y r"])
-          apply (intro conjI)
-            apply (rule hnbU)
-           apply (rule hnbV)
-          apply (rule hdisj)
-          done
+        show ?thesis using hnbU hnbV hdisj by blast
       qed
     qed
   qed
@@ -10303,12 +10289,7 @@ proof -
 	    qed
 	
 	    show "\<exists>V\<in>TX. x \<in> V \<and> V \<subseteq> top1_ball_on X d x e"
-	      apply (rule bexI[where x="\<Inter>F"])
-	       apply (intro conjI)
-	        apply (rule hxInter)
-	       apply (rule hInter_sub_ball)
-	      apply (rule hInterF)
-	      done
+	      using hxInter hInter_sub_ball hInterF by blast
 		  qed
 		
 			  have ball_open_TX:
