@@ -8851,6 +8851,12 @@ proof -
     using hProdBasis by simp
 qed
 
+text \<open>Theorem 19.1 with strict: product and box topologies are automatically strict.\<close>
+corollary Theorem_19_1_strict:
+  assumes "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  shows "is_topology_on_strict (top1_PiE I X) (top1_product_topology_on I X T)"
+  using product_topology_is_strict[OF assms] by blast
+
 text \<open>Explicit characterization from Theorem 19.1: product basis elements have
   U_α = X_α for all but finitely many α (built into the definition of
   top1_product_basis_on). For finite products, box = product topology.\<close>

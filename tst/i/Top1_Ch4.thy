@@ -8175,6 +8175,24 @@ next
   qed
 qed
 
+text \<open>Theorem 33.1 (Urysohn) with strict: preimages of open intervals under the
+  Urysohn function are openin\_on in the strict source topology.\<close>
+corollary Theorem_33_1_strict:
+  assumes hN: "top1_normal_on X TX" and hS: "is_topology_on_strict X TX"
+    and hA: "closedin_on X TX A" and hB: "closedin_on X TX B"
+    and hdisj: "A \<inter> B = {}" and hab: "a \<le> b"
+  shows "\<exists>f. top1_continuous_map_on X TX (top1_closed_interval a b) (top1_closed_interval_topology a b) f
+            \<and> (\<forall>x\<in>A. f x = a) \<and> (\<forall>x\<in>B. f x = b)
+            \<and> (\<forall>V \<in> top1_closed_interval_topology a b. openin_on X TX {x \<in> X. f x \<in> V})"
+proof -
+  obtain f where hf: "top1_continuous_map_on X TX (top1_closed_interval a b) (top1_closed_interval_topology a b) f"
+    and hfA: "\<forall>x\<in>A. f x = a" and hfB: "\<forall>x\<in>B. f x = b"
+    using Theorem_33_1[OF hN hA hB hdisj hab] by blast
+  have hpre: "\<forall>V \<in> top1_closed_interval_topology a b. openin_on X TX {x \<in> X. f x \<in> V}"
+    using continuous_map_preimage_openin_on[OF hf hS] by blast
+  show ?thesis using hf hfA hfB hpre by blast
+qed
+
 subsection \<open>Completely regular spaces\<close>
 
 (** A space is completely regular if it is T1 and points can be separated from closed sets
