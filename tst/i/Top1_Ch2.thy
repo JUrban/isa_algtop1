@@ -3812,13 +3812,7 @@ proof -
       by (rule union_T[rule_format, OF hVsub])
 
     show "\<Union>Uc \<in> ?TY"
-      unfolding subspace_topology_def
-      apply (rule CollectI)
-      apply (rule exI[where x="\<Union>V"])
-      apply (intro conjI)
-       apply (rule hUnion_eq)
-      apply (rule hUnionV_T)
-      done
+      unfolding subspace_topology_def using hUnion_eq hUnionV_T by blast
   qed
 
   have inter_TY:
@@ -3874,13 +3868,7 @@ proof -
     then obtain U where hU: "U \<in> T" and hInter: "\<Inter>F = Y \<inter> U"
       by blast
     show "\<Inter>F \<in> ?TY"
-      unfolding subspace_topology_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      apply (intro conjI)
-       apply (rule hInter)
-      apply (rule hU)
-      done
+      unfolding subspace_topology_def using hInter hU by blast
   qed
 
   show ?thesis
@@ -3910,25 +3898,13 @@ proof (rule set_eqI)
     have hW_eq2: "W = C \<inter> U"
       using hW_eq hV_eq hCB by blast
     show "W \<in> subspace_topology X T C"
-      unfolding subspace_topology_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      apply (intro conjI)
-       apply (rule hW_eq2)
-      apply (rule hU)
-      done
+      unfolding subspace_topology_def using hW_eq2 hU by blast
   next
     assume hW: "W \<in> subspace_topology X T C"
     obtain U where hU: "U \<in> T" and hW_eq: "W = C \<inter> U"
       using hW unfolding subspace_topology_def by blast
     have hV: "B \<inter> U \<in> subspace_topology X T B"
-      unfolding subspace_topology_def
-      apply (rule CollectI)
-      apply (rule exI[where x=U])
-      apply (intro conjI)
-       apply (rule refl)
-      apply (rule hU)
-      done
+      unfolding subspace_topology_def using hU by blast
     have hW_eq2: "W = C \<inter> (B \<inter> U)"
       using hW_eq hCB by blast
     show "W \<in> subspace_topology B (subspace_topology X T B) C"
