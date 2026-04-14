@@ -12734,12 +12734,7 @@ proof -
       qed
 
       show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_interval a b"
-        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hsub)
-        apply (rule hball_basis)
-        done
+        using hxball hsub hball_basis by blast
     qed
   qed
 qed
@@ -12827,12 +12822,7 @@ proof -
       qed
 
       show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_gt a"
-        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hsub)
-        apply (rule hball_basis)
-        done
+        using hxball hsub hball_basis by blast
     qed
   qed
 qed
@@ -12920,12 +12910,7 @@ proof -
       qed
 
       show "\<exists>ba\<in>?B. x \<in> ba \<and> ba \<subseteq> open_ray_lt a"
-        apply (rule bexI[where x="top1_ball_on UNIV top1_real_bounded_metric x e"])
-         apply (intro conjI)
-          apply (rule hxball)
-         apply (rule hsub)
-        apply (rule hball_basis)
-        done
+        using hxball hsub hball_basis by blast
     qed
   qed
 qed
@@ -15344,13 +15329,7 @@ next
           have hball_sub: "top1_ball_on ?X (top1_uniform_metric_real_on I) x \<delta> \<subseteq> b"
             unfolding hb_eqX by (simp add: top1_ball_on_def)
 
-          show ?thesis
-            apply (rule bexI[where x="top1_ball_on ?X (top1_uniform_metric_real_on I) x \<delta>"])
-             apply (intro conjI)
-              apply (rule hxball)
-             apply (rule hball_sub)
-            apply (rule hball_basis)
-            done
+          show ?thesis using hxball hball_sub hball_basis by blast
         next
           case False
           have hcoord:
@@ -15466,13 +15445,7 @@ next
               unfolding hbU top1_PiE_iff using hyU hyExt by blast
           qed
 
-          show ?thesis
-            apply (rule bexI[where x="top1_ball_on ?X (top1_uniform_metric_real_on I) x \<delta>"])
-             apply (intro conjI)
-              apply (rule hxball)
-             apply (rule hball_sub)
-            apply (rule hball_basis)
-            done
+          show ?thesis using hxball hball_sub hball_basis by blast
         qed
       qed
     qed
@@ -16393,12 +16366,7 @@ proof -
           unfolding top1_metric_basis_on_def using hxX hr_pos by blast
 
         show "\<exists>ba\<in>top1_metric_basis_on X\<omega> top1_D_metric_real_omega. x \<in> ba \<and> ba \<subseteq> b"
-          apply (rule bexI[where x="top1_ball_on X\<omega> top1_D_metric_real_omega x r"])
-           apply (intro conjI)
-            apply (rule hx_in_ball)
-           apply (rule hball_sub)
-          apply (rule hball_basis)
-          done
+          using hx_in_ball hball_sub hball_basis by blast
       qed
     qed
 
@@ -16819,13 +16787,7 @@ proof -
                   unfolding top1_metric_basis_on_def using hxX by simp
                 have hsub: "top1_ball_on X\<omega> top1_D_metric_real_omega x 1 \<subseteq> b"
                   unfolding hb_all by simp
-                show ?thesis
-                  apply (rule bexI[where x="top1_ball_on X\<omega> top1_D_metric_real_omega x 1"])
-                   apply (intro conjI)
-                    apply (rule hxball)
-                   apply (rule hsub)
-                  apply (rule hball_basis)
-                  done
+                show ?thesis using hxball hsub hball_basis by blast
               next
                 case False
                 have hxX: "x \<in> X\<omega>"
@@ -16924,13 +16886,7 @@ proof -
                 have hball_basis: "top1_ball_on X\<omega> top1_D_metric_real_omega x r \<in> top1_metric_basis_on X\<omega> top1_D_metric_real_omega"
                   unfolding top1_metric_basis_on_def using hxX hr_pos by blast
 
-                show ?thesis
-                  apply (rule bexI[where x="top1_ball_on X\<omega> top1_D_metric_real_omega x r"])
-                   apply (intro conjI)
-                    apply (rule hx_in_ball)
-                   apply (rule hball_sub)
-                  apply (rule hball_basis)
-                  done
+                show ?thesis using hx_in_ball hball_sub hball_basis by blast
               qed
             qed
           qed
