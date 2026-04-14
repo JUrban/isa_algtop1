@@ -4353,13 +4353,7 @@ proof -
       qed
 
       show "W \<in> subspace_topology X order_topology_on_UNIV Y"
-        unfolding subspace_topology_def
-        apply (rule CollectI)
-        apply (rule exI[where x=U])
-        apply (intro conjI)
-         apply (rule hWeq)
-        apply (rule hUopen)
-        done
+        unfolding subspace_topology_def using hWeq hUopen by blast
     next
       assume hW: "W \<in> subspace_topology X order_topology_on_UNIV Y"
       obtain U where hUopen: "U \<in> order_topology_on_UNIV" and hWeq: "W = Y \<inter> U"
@@ -8164,13 +8158,7 @@ proof (rule iffI)
       show "\<forall>p\<in>b. \<exists>b'\<in>product_basis TX TY. p \<in> b' \<and> b' \<subseteq> b"
       proof (intro ballI)
         fix p assume hp: "p \<in> b"
-        show "\<exists>b'\<in>product_basis TX TY. p \<in> b' \<and> b' \<subseteq> b"
-          apply (rule bexI[where x=b])
-           apply (intro conjI)
-            apply (rule hp)
-           apply (rule subset_refl)
-          apply (rule hb)
-          done
+        show "\<exists>b'\<in>product_basis TX TY. p \<in> b' \<and> b' \<subseteq> b" using hp hb by blast
       qed
     qed
   qed
@@ -8712,13 +8700,7 @@ proof (unfold is_basis_on_def, intro conjI)
         unfolding hInt by (rule hx)
       have hsubW: "top1_PiE I W \<subseteq> b1 \<inter> b2"
         unfolding hInt by simp
-      show ?thesis
-        apply (rule bexI[where x="top1_PiE I W"])
-         apply (intro conjI)
-          apply (rule hxW)
-         apply (rule hsubW)
-        apply (rule hb3)
-        done
+      show ?thesis using hxW hsubW hb3 by blast
     qed
   qed
 qed
@@ -8846,13 +8828,7 @@ proof (unfold is_basis_on_def, intro conjI)
         unfolding hInt by (rule hx)
       have hsubW: "top1_PiE I W \<subseteq> b1 \<inter> b2"
         unfolding hInt by simp
-      show ?thesis
-        apply (rule bexI[where x="top1_PiE I W"])
-         apply (intro conjI)
-          apply (rule hxW)
-         apply (rule hsubW)
-        apply (rule hb3)
-        done
+      show ?thesis using hxW hsubW hb3 by blast
     qed
   qed
 qed
@@ -10193,12 +10169,7 @@ proof -
         using hVsubA hVsubb hbU by blast
 
       show "\<exists>b\<in>top1_box_basis_on I A TA. x \<in> b \<and> b \<subseteq> W"
-        apply (rule bexI[where x="top1_PiE I V"])
-         apply (intro conjI)
-           apply (rule hxV)
-          apply (rule hVsubW)
-        apply (rule hVbasis)
-        done
+        using hxV hVsubW hVbasis by blast
     qed
 
     have "W \<in> top1_box_topology_on I A TA"
@@ -10537,12 +10508,7 @@ proof -
         using hVsubA hVsubb hbU by blast
 
       show "\<exists>b\<in>top1_product_basis_on I A TA. x \<in> b \<and> b \<subseteq> W"
-        apply (rule bexI[where x="top1_PiE I V"])
-         apply (intro conjI)
-           apply (rule hxV)
-          apply (rule hVsubW)
-        apply (rule hVbasis)
-        done
+        using hxV hVsubW hVbasis by blast
     qed
 
     have "W \<in> top1_product_topology_on I A TA"
@@ -20226,13 +20192,7 @@ proof -
     \<and> (\<forall>x\<in>X. f (p x) = g x)
     \<and> (top1_continuous_map_on Y TY Z TZ f \<longleftrightarrow> top1_continuous_map_on X TX Z TZ g)
     \<and> (top1_quotient_map_on Y TY Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g)"
-    apply (rule exI[where x=f])
-    apply (intro conjI)
-       apply (rule hf_map)
-      apply (rule hf_factor)
-     apply (rule hcont_equiv)
-    apply (rule hquot_equiv)
-    done
+    using hf_map hf_factor hcont_equiv hquot_equiv by blast
 qed
 
 (** Quotient topology induced by a surjective map (used for Corollary 22.3). **)
@@ -20998,12 +20958,7 @@ proof -
       bij_betw f Xstar Z
       \<and> top1_continuous_map_on Xstar Tstar Z TZ f
       \<and> (top1_homeomorphism_on Xstar Tstar Z TZ f \<longleftrightarrow> top1_quotient_map_on X TX Z TZ g)"
-    apply (rule exI[where x=f])
-    apply (intro conjI)
-      apply (rule hbij)
-     apply (rule hfcont)
-    apply (rule hhomeo_iff_gquot)
-    done
+    using hbij hfcont hhomeo_iff_gquot by blast
 
   show "is_hausdorff_on Z TZ \<longrightarrow> is_hausdorff_on Xstar Tstar"
   proof (intro impI)
