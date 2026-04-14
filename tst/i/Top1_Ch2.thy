@@ -396,13 +396,7 @@ proof -
            apply (rule hSubY)
           apply (intro ballI)
           fix y assume hy: "y \<in> mkU l"
-          show "\<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> mkU l"
-            apply (rule bexI[where x="mkU l"])
-             apply (intro conjI)
-              apply (rule hy)
-             apply (rule subset_refl)
-            apply (rule hBasis)
-            done
+          show "\<exists>b\<in>?B. y \<in> b \<and> b \<subseteq> mkU l" using hy hBasis by blast
           done
 
         have hxU': "x \<in> mkU l"
@@ -563,13 +557,7 @@ proof -
           done
       qed
 
-      show ?thesis
-        apply (rule exI[where x=BB])
-        apply (intro conjI)
-          apply (rule hBBcnt)
-         apply (rule hBBnb)
-        apply (rule hBBref)
-        done
+      show ?thesis using hBBcnt hBBnb hBBref by blast
     qed
   qed
 qed
@@ -754,12 +742,7 @@ proof -
       apply (intro ballI)
       fix y assume hy: "y \<in> mkU l"
       show "\<exists>b\<in>top1_product_basis_on I X T. y \<in> b \<and> b \<subseteq> mkU l"
-        apply (rule bexI[where x="mkU l"])
-         apply (intro conjI)
-          apply (rule hy)
-         apply (rule subset_refl)
-        apply (rule hBasisU)
-        done
+        using hy hBasisU by blast
       done
 
     show "U \<in> ?TP"
