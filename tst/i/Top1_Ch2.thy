@@ -3522,12 +3522,7 @@ proof -
           have hsub: "U \<times> UNIV \<subseteq> s"
             unfolding hseq preimage_def pi1_def by auto
           show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
-            apply (rule bexI[where x="U \<times> UNIV"])
-             apply (intro conjI hxUV hsub)
-            apply (rule CollectI)
-            apply (rule exI[where x=U], rule exI[where x=UNIV])
-            apply (intro conjI refl hU hUNIV_TY)
-            done
+            using hxUV hsub hU hUNIV_TY by blast
         qed
       qed
     next
@@ -3546,12 +3541,7 @@ proof -
           have hsub: "UNIV \<times> V \<subseteq> s"
             unfolding hseq preimage_def pi2_def by auto
           show "\<exists>b\<in>{U \<times> V | U V. U \<in> TX \<and> V \<in> TY}. x \<in> b \<and> b \<subseteq> s"
-            apply (rule bexI[where x="UNIV \<times> V"])
-             apply (intro conjI hxUV hsub)
-            apply (rule CollectI)
-            apply (rule exI[where x=UNIV], rule exI[where x=V])
-            apply (intro conjI refl hUNIV_TX hV)
-            done
+            using hxUV hsub hUNIV_TX hV by blast
         qed
       qed
     qed
@@ -3704,21 +3694,13 @@ proof -
         apply (rule hRect_in_finite_intersections)
         done
       show "W \<in> topology_generated_by_subbasis UNIV S"
-        unfolding topology_generated_by_subbasis_def
-        apply (rule CollectI)
-        apply (rule exI[where x=U])
-        apply (intro conjI)
-         apply (rule hWU)
-        apply (rule hUsub)
-        done
+        unfolding topology_generated_by_subbasis_def using hWU hUsub by blast
     next
       assume hW: "W \<in> topology_generated_by_subbasis UNIV S"
       obtain U where hWU: "W = \<Union>U" and hUsub: "U \<subseteq> finite_intersections S"
         using hW unfolding topology_generated_by_subbasis_def by blast
       have hUsubP: "U \<subseteq> ?P"
-        apply (rule subset_trans[OF hUsub])
-        apply (rule hFinInter_S_sub_P)
-        done
+        using hUsub hFinInter_S_sub_P by blast
       show "W \<in> ?P"
         using hP_top hUsubP hWU unfolding is_topology_on_def by blast
     qed
