@@ -3462,24 +3462,10 @@ proof -
       show "x \<in> {preimage pi1 Ua |Ua. Ua \<in> TX} \<union> {preimage pi2 Va |Va. Va \<in> TY}"
       proof (rule disjE[OF hx_cases])
         assume "x = preimage pi1 U"
-        show ?thesis
-          apply (rule UnI1)
-          apply (rule CollectI)
-          apply (rule exI[where x=U])
-          apply (intro conjI)
-           apply (rule \<open>x = preimage pi1 U\<close>)
-          apply (rule hU)
-          done
+        show ?thesis using \<open>x = preimage pi1 U\<close> hU by blast
       next
         assume "x = preimage pi2 V"
-        show ?thesis
-          apply (rule UnI2)
-          apply (rule CollectI)
-          apply (rule exI[where x=V])
-          apply (intro conjI)
-           apply (rule \<open>x = preimage pi2 V\<close>)
-          apply (rule hV)
-          done
+        show ?thesis using \<open>x = preimage pi2 V\<close> hV by blast
       qed
     qed
     have hfin: "finite {preimage pi1 U, preimage pi2 V}"
