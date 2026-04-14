@@ -3901,6 +3901,19 @@ proof -
   qed
 qed
 
+text \<open>Theorem 32.1 with strict topology: normal separation gives openin\_on witnesses.\<close>
+corollary Theorem_32_1_strict:
+  assumes "top1_regular_on X TX" "top1_second_countable_on X TX" "is_topology_on_strict X TX"
+  shows "top1_normal_on X TX
+    \<and> (\<forall>C D. closedin_on X TX C \<and> closedin_on X TX D \<and> C \<inter> D = {}
+        \<longrightarrow> (\<exists>U V. openin_on X TX U \<and> openin_on X TX V \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}))"
+proof (intro conjI allI impI)
+  show hN: "top1_normal_on X TX" by (rule Theorem_32_1[OF assms(1) assms(2)])
+  fix C D assume h: "closedin_on X TX C \<and> closedin_on X TX D \<and> C \<inter> D = {}"
+  show "\<exists>U V. openin_on X TX U \<and> openin_on X TX V \<and> C \<subseteq> U \<and> D \<subseteq> V \<and> U \<inter> V = {}"
+    by (rule normal_separation_openin_on[OF hN assms(3)]) (use h in blast)+
+qed
+
 (** from \S32 Theorem 32.2 (Every metrizable space is normal) [top1.tex:4202] **)
 theorem Theorem_32_2:
   assumes hmet: "top1_metrizable_on X TX"
