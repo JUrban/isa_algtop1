@@ -12301,7 +12301,7 @@ next
     else if hilbert_quad o' 2 = (qx, qy) then 2 else 3)"
   have hq: "q \<le> 3" unfolding q_def by auto
   have hqxy: "hilbert_quad o' q = (qx, qy)"
-    unfolding q_def hilbert_quad_def qx_def qy_def by auto
+    unfolding q_def hilbert_quad_def qx_def qy_def by (cases "x < 1/2"; cases "y < 1/2"; auto)
   define sub_o where "sub_o = hilbert_sub o' q"
   define x' :: real where "x' = 2 * x - real qx"
   define y' :: real where "y' = 2 * y - real qy"
@@ -12339,7 +12339,7 @@ next
     unfolding hsnd2 hy_eq by (simp add: field_simps)
   then have "\<bar>y - snd (hilbert_rec o' (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
     using hclose0 hry by force
-  then show ?case using ht ht1 hx_close by auto
+  then show ?case using ht ht1 hx_close by blast
 qed
 
 lemma hilbert_rec_dense: "\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> \<bar>x - fst (hilbert_rec o' n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (hilbert_rec o' n t)\<bar> \<le> 1/2^n"
@@ -13297,7 +13297,7 @@ next
     unfolding hsnd2 hy_eq by (simp add: field_simps)
   then have "\<bar>y - snd (sfa_rec (Suc n) t)\<bar> \<le> 1 / 2 ^ Suc n"
     using hclose0 hry by force
-  then show ?case using ht ht1 hx_close by auto
+  then show ?case using ht ht1 hx_close by blast
 qed
 
 lemma sfa_rec_dense: "\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> \<bar>x - fst (sfa_rec n t)\<bar> \<le> 1/2^n \<and> \<bar>y - snd (sfa_rec n t)\<bar> \<le> 1/2^n"
