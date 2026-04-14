@@ -2813,6 +2813,27 @@ definition top1_locally_connected_at :: "'a set \<Rightarrow> 'a set set \<Right
 definition top1_locally_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_locally_connected_on X TX \<longleftrightarrow> is_topology_on X TX \<and> (\<forall>x\<in>X. top1_locally_connected_at X TX x)"
 
+text \<open>Under strict topology, local connectedness can be stated via strict neighborhoods:
+  every strict neighborhood contains a smaller connected strict neighborhood.\<close>
+lemma locally_connected_at_strict:
+  assumes hS: "is_topology_on_strict X TX" and hx: "x \<in> X"
+    and hlc: "top1_locally_connected_at X TX x"
+    and hU: "neighborhood_of_strict x X TX U"
+  shows "\<exists>V. neighborhood_of_strict x X TX V \<and> V \<subseteq> U
+             \<and> top1_connected_on V (subspace_topology X TX V)"
+proof -
+  have hUnbhd: "neighborhood_of x X TX U"
+    by (rule neighborhood_of_strict_imp[OF hU])
+  have "U \<subseteq> X" by (rule is_topology_on_strict_opens_sub[OF hS])
+    (use hU in \<open>simp add: neighborhood_of_strict_def\<close>)
+  then obtain V where hVnbhd: "neighborhood_of x X TX V" and hVU: "V \<subseteq> U"
+    and hVX: "V \<subseteq> X" and hVconn: "top1_connected_on V (subspace_topology X TX V)"
+    using hlc hUnbhd unfolding top1_locally_connected_at_def by blast
+  have "neighborhood_of_strict x X TX V"
+    by (rule neighborhood_of_to_strict[OF hS hVnbhd])
+  thus ?thesis using hVU hVconn by blast
+qed
+
 (** from *\S25 Theorem 25.3 (Local connectedness via open components) [top1.tex:2987] **)
 theorem Theorem_25_3:
   assumes hTX: "is_topology_on X TX"
@@ -3042,6 +3063,26 @@ definition top1_locally_path_connected_at :: "'a set \<Rightarrow> 'a set set \<
 definition top1_locally_path_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_locally_path_connected_on X TX \<longleftrightarrow>
      is_topology_on X TX \<and> (\<forall>x\<in>X. top1_locally_path_connected_at X TX x)"
+
+text \<open>Under strict topology, local path-connectedness via strict neighborhoods.\<close>
+lemma locally_path_connected_at_strict:
+  assumes hS: "is_topology_on_strict X TX" and hx: "x \<in> X"
+    and hlpc: "top1_locally_path_connected_at X TX x"
+    and hU: "neighborhood_of_strict x X TX U"
+  shows "\<exists>V. neighborhood_of_strict x X TX V \<and> V \<subseteq> U
+             \<and> top1_path_connected_on V (subspace_topology X TX V)"
+proof -
+  have hUnbhd: "neighborhood_of x X TX U"
+    by (rule neighborhood_of_strict_imp[OF hU])
+  have "U \<subseteq> X" by (rule is_topology_on_strict_opens_sub[OF hS])
+    (use hU in \<open>simp add: neighborhood_of_strict_def\<close>)
+  then obtain V where hVnbhd: "neighborhood_of x X TX V" and hVU: "V \<subseteq> U"
+    and hVX: "V \<subseteq> X" and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+    using hlpc hUnbhd unfolding top1_locally_path_connected_at_def by blast
+  have "neighborhood_of_strict x X TX V"
+    by (rule neighborhood_of_to_strict[OF hS hVnbhd])
+  thus ?thesis using hVU hVpc by blast
+qed
 
 (** The unit interval topology is a topology (as a subspace of \<real>). **)
 lemma top1_unit_interval_topology_is_topology_on:

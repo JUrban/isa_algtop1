@@ -8928,6 +8928,34 @@ proof -
     using hbasis by simp
 qed
 
+text \<open>The product topology is coarser than the box topology (finer\_than\_on).\<close>
+lemma product_coarser_than_box:
+  assumes hTop: "\<forall>i\<in>I. is_topology_on (X i) (T i)"
+  shows "finer_than_on (top1_PiE I X)
+    (top1_product_topology_on I X T) (top1_box_topology_on I X T)"
+proof -
+  have hProd: "is_topology_on (top1_PiE I X) (top1_product_topology_on I X T)"
+    unfolding top1_product_topology_on_def
+    by (rule topology_generated_by_basis_is_topology_on[OF top1_product_basis_is_basis_on[OF hTop]])
+  have hBox: "is_topology_on (top1_PiE I X) (top1_box_topology_on I X T)"
+    unfolding top1_box_topology_on_def
+    by (rule topology_generated_by_basis_is_topology_on[OF top1_box_basis_is_basis_on[OF hTop]])
+  have hBsub: "top1_product_basis_on I X T \<subseteq> top1_box_basis_on I X T"
+    unfolding top1_product_basis_on_def top1_box_basis_on_def by blast
+  have hBsub': "top1_product_basis_on I X T \<subseteq> top1_box_topology_on I X T"
+  proof (rule subsetI)
+    fix b assume "b \<in> top1_product_basis_on I X T"
+    then have "b \<in> top1_box_basis_on I X T" using hBsub by blast
+    thus "b \<in> top1_box_topology_on I X T"
+      unfolding top1_box_topology_on_def
+      by (rule basis_elem_open_in_generated_topology[OF top1_box_basis_is_basis_on[OF hTop]])
+  qed
+  have "top1_product_topology_on I X T \<subseteq> top1_box_topology_on I X T"
+    unfolding top1_product_topology_on_def
+    by (rule topology_generated_by_basis_subset[OF hBox hBsub'])
+  thus ?thesis unfolding finer_than_on_def using hProd hBox by blast
+qed
+
 subsection \<open>Projections and continuity (\<S>19)\<close>
 
 lemma top1_PiE_fun_eqI:
