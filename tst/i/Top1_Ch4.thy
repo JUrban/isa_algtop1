@@ -4370,15 +4370,7 @@ proof -
       qed
 
       show "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> A \<subseteq> U \<and> B \<subseteq> V \<and> U \<inter> V = {}"
-        apply (rule exI[where x=U])
-        apply (rule exI[where x=V])
-        apply (intro conjI)
-            apply (rule hUopen)
-           apply (rule hVopen)
-          apply (rule hA_sub_U)
-         apply (rule hB_sub_V)
-        apply (rule hUV_disj)
-        done
+        using hUopen hVopen hA_sub_U hB_sub_V hUV_disj by blast
     qed
   qed
 qed
@@ -4754,14 +4746,7 @@ proof -
         unfolding neighborhood_of_def using hUT hxU by blast
 
       show "\<exists>U V. neighborhood_of x X T U \<and> V \<in> T \<and> C \<subseteq> V \<and> U \<inter> V = {}"
-        apply (rule exI[where x=U])
-        apply (rule exI[where x=V])
-        apply (intro conjI)
-           apply (rule hnbhd)
-          apply (rule hVT)
-         apply (rule hCV)
-        apply (rule hUV)
-        done
+        using hnbhd hVT hCV hUV by blast
     qed
   qed
 qed
@@ -4819,16 +4804,7 @@ proof -
         next
           case False
           have hBemp: "B = {}" using True False by blast
-          show ?thesis
-            apply (rule exI[where x=X])
-            apply (rule exI[where x="{}"])
-            apply (intro conjI)
-                apply (rule X_TX)
-               apply (rule empty_TX)
-              apply (rule hAX)
-             apply (simp only: hBemp)
-            apply simp
-            done
+          show ?thesis using X_TX empty_TX hAX hBemp by blast
         qed
       next
         case False
