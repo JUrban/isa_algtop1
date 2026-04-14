@@ -6043,14 +6043,8 @@ proof -
         have hUXmS_T: "U \<inter> (X - S) \<in> T"
         proof -
           have h_sub: "{U, X - S} \<subseteq> T" using hUT hXmS_T by blast
-          have h_inter: "\<Inter>{U, X - S} \<in> T"
-            apply (rule inter_T[rule_format])
-            apply (intro conjI)
-              apply (rule finite.insertI, rule finite.insertI, rule finite.emptyI)
-             apply (rule insert_not_empty)
-            apply (rule h_sub)
-            done
-          then show "U \<inter> (X - S) \<in> T" by simp
+          show "U \<inter> (X - S) \<in> T"
+            by (rule topology_inter2[OF hT]) (use h_sub in blast)+
         qed
         (* x ∈ U ∩ (X-S), so it is a neighborhood of x *)
         have hxnS: "x \<notin> S" unfolding S_def by simp
@@ -10749,14 +10743,7 @@ proof -
               U \<inter> V = {}"
         apply (rule exI[where x="top1_PiE I WU"])
         apply (rule exI[where x="top1_PiE I WV"])
-        unfolding neighborhood_of_def
-        apply (intro conjI)
-          apply (rule hUopen)
-         apply (rule hfU)
-          apply (rule hVopen)
-         apply (rule hgV)
-        apply (rule hUVdisj)
-        done
+        unfolding neighborhood_of_def using hUopen hfU hVopen hgV hUVdisj by blast
     qed
   qed
 qed
@@ -19616,14 +19603,7 @@ proof (rule iffI)
   qed
 
   show "top1_quotient_map_on X TX Y TY g"
-    unfolding top1_quotient_map_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule hTopY)
-      apply (rule hcontg)
-     apply (rule hsurjg)
-    apply (rule hQg)
-    done
+    unfolding top1_quotient_map_on_def using hTopX hTopY hcontg hsurjg hQg by blast
 next
   assume hg: "top1_quotient_map_on X TX Y TY g"
   have hTopX: "is_topology_on X TX"
@@ -20118,14 +20098,7 @@ proof -
 	    qed
 
     show "top1_quotient_map_on Y TY Z TZ f"
-      unfolding top1_quotient_map_on_def
-      apply (intro conjI)
-          apply (rule hTopY)
-         apply (rule hTopZ)
-        apply (rule hfcont)
-       apply (rule hsurjf)
-      apply (rule hQf)
-      done
+      unfolding top1_quotient_map_on_def using hTopY hTopZ hfcont hsurjf hQf by blast
   qed
 
   show "\<exists>f.
