@@ -5045,13 +5045,7 @@ proof -
     apply assumption
     apply assumption
     done
-  show ?thesis
-    apply (intro conjI)
-       apply (rule cl_empty)
-      apply (rule cl_X)
-     apply (rule cl_inter)
-    apply (rule cl_union)
-    done
+  show ?thesis using cl_empty cl_X cl_inter cl_union by blast
 qed
 lemma closedin_empty: "is_topology_on X T \<Longrightarrow> closedin_on X T {}"
   using Theorem_17_1 by meson
@@ -20319,13 +20313,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding is_topology_on_def
-    apply (intro conjI)
-       apply (rule empty_TY)
-      apply (rule Y_TY)
-     apply (rule union_TY)
-    apply (rule inter_TY)
-    done
+    unfolding is_topology_on_def using empty_TY Y_TY union_TY inter_TY by blast
 qed
 
 (** A map equipped with its induced quotient topology is a quotient map. **)
@@ -20360,14 +20348,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding top1_quotient_map_on_def
-    apply (intro conjI)
-        apply (rule hTX)
-       apply (rule hTY)
-      apply (rule hpcont)
-     apply (rule hsurj)
-    apply (rule hQ)
-    done
+    unfolding top1_quotient_map_on_def using hTX hTY hpcont hsurj hQ by blast
 qed
 
 (** A homeomorphism is a quotient map (in the sense of \<S>22). **)
@@ -20446,14 +20427,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding top1_quotient_map_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule hTopY)
-      apply (rule hfcont)
-     apply (rule hsurj)
-    apply (rule hQ)
-    done
+    unfolding top1_quotient_map_on_def using hTopX hTopY hfcont hsurj hQ by blast
 qed
 
 (** A bijective quotient map is a homeomorphism. **)
@@ -20627,14 +20601,7 @@ proof -
   qed
 
   show ?thesis
-    unfolding top1_homeomorphism_on_def
-    apply (intro conjI)
-        apply (rule hTopX)
-       apply (rule hTopY)
-      apply (rule hbij)
-     apply (rule hfcont)
-    apply (rule hinvcont)
-    done
+    unfolding top1_homeomorphism_on_def using hTopX hTopY hbij hfcont hinvcont by blast
 qed
 
 (** Fiber partition determined by a map \<open>g\<close>: the collection \<open>{g^{-1}({z}) | z\<in>Z}\<close> (restricted to \<open>X\<close>). **)
