@@ -2379,6 +2379,19 @@ proof -
     by (rule Theorem_30_3b[OF h2nd])
 qed
 
+text \<open>Theorem 30.3 with strict: under strict second-countable topology,
+  every open cover has a countable subcover of openin\_on sets.\<close>
+corollary Theorem_30_3_strict:
+  assumes h2nd: "top1_second_countable_on X T" and hS: "is_topology_on_strict X T"
+  shows "\<forall>Uc. (\<forall>U\<in>Uc. openin_on X T U) \<and> X \<subseteq> \<Union>Uc
+           \<longrightarrow> (\<exists>V. top1_countable V \<and> V \<subseteq> Uc \<and> X \<subseteq> \<Union>V)"
+proof (intro allI impI)
+  fix Uc assume h: "(\<forall>U\<in>Uc. openin_on X T U) \<and> X \<subseteq> \<Union>Uc"
+  have "Uc \<subseteq> T" using h unfolding openin_on_def by blast
+  thus "\<exists>V. top1_countable V \<and> V \<subseteq> Uc \<and> X \<subseteq> \<Union>V"
+    using Theorem_30_3(1)[OF h2nd] h by blast
+qed
+
 section \<open>\<S>31 The Separation Axioms\<close>
 
 definition top1_T1_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
