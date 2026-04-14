@@ -17325,6 +17325,42 @@ proof -
     using h1 h2 by simp
 qed
 
+text \<open>Theorem 46.7 restated with finer\_than\_on: the topology comparison is anchored
+  to the function space top1\_PiE X (λ\_. Y).\<close>
+corollary Theorem_46_7_finer_than_on:
+  assumes hTopX: "is_topology_on X TX" and hd: "top1_metric_on Y d" and hXne: "X \<noteq> {}"
+  defines "F \<equiv> top1_PiE X (\<lambda>_. Y)"
+  shows "finer_than_on F
+    (top1_compact_convergence_topology_on X TX Y d)
+    (top1_uniform_topology_on X Y d)"
+    and "finer_than_on F
+    (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))
+    (top1_compact_convergence_topology_on X TX Y d)"
+proof -
+  have h46_7: "top1_uniform_topology_on X Y d \<supseteq> top1_compact_convergence_topology_on X TX Y d
+    \<and> top1_compact_convergence_topology_on X TX Y d
+       \<supseteq> top1_pointwise_topology_on X Y (top1_metric_topology_on Y d)"
+    by (rule Theorem_46_7[OF hTopX hd])
+  have hTcc: "is_topology_on F (top1_compact_convergence_topology_on X TX Y d)"
+    unfolding F_def by (rule cc_topology_is_topology[OF hTopX hd])
+  have hTunif: "is_topology_on F (top1_uniform_topology_on X Y d)"
+    unfolding F_def top1_uniform_topology_on_def
+    by (rule top1_metric_topology_on_is_topology_on[OF top1_uniform_metric_is_metric[OF hXne hd]])
+  have hmet_top: "\<forall>x. is_topology_on (Y) (top1_metric_topology_on Y d)"
+    by (simp add: top1_metric_topology_on_is_topology_on[OF hd])
+  have hTpw: "is_topology_on F (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))"
+    unfolding F_def top1_pointwise_topology_on_def
+    by (rule top1_product_topology_on_is_topology_on) (simp add: top1_metric_topology_on_is_topology_on[OF hd])
+  show "finer_than_on F
+    (top1_compact_convergence_topology_on X TX Y d)
+    (top1_uniform_topology_on X Y d)"
+    unfolding finer_than_on_def using hTcc hTunif h46_7 by blast
+  show "finer_than_on F
+    (top1_pointwise_topology_on X Y (top1_metric_topology_on Y d))
+    (top1_compact_convergence_topology_on X TX Y d)"
+    unfolding finer_than_on_def using hTpw hTcc h46_7 by blast
+qed
+
 (*
 proof -
   let ?Xfun = "top1_PiE X (\<lambda>_. Y)"
