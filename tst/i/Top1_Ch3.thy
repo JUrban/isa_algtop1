@@ -5438,13 +5438,7 @@ proof -
       qed
 
       show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<times> Y \<subseteq> \<Union>F"
-        apply (rule exI[where x=F])
-        apply (rule conjI)
-         apply (rule hFfin)
-        apply (rule conjI)
-         apply (rule hFsubUc)
-        apply (rule hFcov)
-        done
+        using hFfin hFsubUc hFcov by blast
     qed
   qed
 qed
@@ -6768,12 +6762,7 @@ proof -
     qed
 
     show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> f ` X \<subseteq> \<Union>F"
-      apply (rule exI[where x=Fc])
-      apply (intro conjI)
-        apply (rule hFc_fin)
-       apply (rule hFc_sub)
-      apply (rule hcovFc)
-      done
+      using hFc_fin hFc_sub hcovFc by blast
   qed
 
   show ?thesis
@@ -12298,12 +12287,7 @@ proof -
 	          qed
 	        qed
         show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> Y \<subseteq> \<Union>F"
-          apply (rule exI[where x=F])
-          apply (intro conjI)
-            apply (rule hFfin)
-           apply (rule hFsub)
-          apply (rule hFcov)
-          done
+          using hFfin hFsub hFcov by blast
       qed
     qed
 
