@@ -7632,13 +7632,7 @@ proof -
           show "x \<in> {x \<in> A. id x \<in> V} \<longleftrightarrow> x \<in> A \<inter> V" by simp
         qed
         show "{x \<in> A. id x \<in> V} \<in> subspace_topology X TX A"
-          unfolding subspace_topology_def
-          apply (rule CollectI)
-          apply (rule exI[where x=V])
-          apply (intro conjI)
-           apply (rule hEq)
-          apply (rule hV)
-          done
+          unfolding subspace_topology_def using hEq hV by blast
       qed
     qed
   qed
@@ -7772,13 +7766,7 @@ proof -
       proof (intro ballI)
         fix V assume hV: "V \<in> TZ"
         have hVY: "Y \<inter> V \<in> TY"
-          unfolding hTYeq subspace_topology_def
-          apply (rule CollectI)
-          apply (rule exI[where x=V])
-          apply (intro conjI)
-           apply (rule refl)
-          apply (rule hV)
-          done
+          unfolding hTYeq subspace_topology_def using hV by blast
         have hOpen: "{x \<in> X. f x \<in> (Y \<inter> V)} \<in> TX"
           using hf hVY unfolding top1_continuous_map_on_def by blast
         have hEq: "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> (Y \<inter> V)}"
@@ -15071,12 +15059,7 @@ next
 
         show "\<exists>ba\<in>top1_box_basis_on I ?XR (\<lambda>_. ?TR).
                 y \<in> ba \<and> ba \<subseteq> top1_ball_on ?X (top1_uniform_metric_real_on I) x e"
-          apply (rule bexI[where x="top1_PiE I U"])
-           apply (intro conjI)
-            apply (rule hybox)
-           apply (rule hbox_sub_ball)
-          apply (rule hbox_basis)
-          done
+          using hybox hbox_sub_ball hbox_basis by blast
       qed
     qed
 
@@ -16672,12 +16655,7 @@ proof -
 
               show "\<exists>ba\<in>top1_product_basis_on (UNIV::nat set) XR (\<lambda>_. TR).
                       y \<in> ba \<and> ba \<subseteq> top1_ball_on X\<omega> top1_D_metric_real_omega x e"
-                apply (rule bexI[where x=ba])
-                 apply (intro conjI)
-                  apply (rule hy_in_ba)
-                 apply (rule hba_sub_ball)
-                apply (rule hba_basis)
-                done
+                using hy_in_ba hba_sub_ball hba_basis by blast
             qed
           qed
 
