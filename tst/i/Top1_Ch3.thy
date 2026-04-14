@@ -7992,13 +7992,7 @@ proof -
       qed
 
       show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> FX \<subseteq> \<Union>F"
-        apply (rule exI[where x=F])
-        apply (rule conjI)
-         apply (rule hFfin)
-        apply (rule conjI)
-         apply (rule hFsub)
-        apply (rule hFcov)
-        done
+        using hFfin hFsub hFcov by blast
     qed
   qed
 
@@ -10941,12 +10935,7 @@ proof -
 
       show "\<exists>U. neighborhood_of x X TX U \<and> U \<subseteq> X
         \<and> top1_compact_on (closure_on X TX U) (subspace_topology X TX (closure_on X TX U))"
-        apply (rule exI[where x=U])
-        apply (intro conjI)
-          apply (rule hUnbhd)
-         apply (rule hUX)
-        apply (rule hcomp_closureU)
-        done
+        using hUnbhd hUX hcomp_closureU by blast
     qed
   qed
 qed
@@ -11184,14 +11173,7 @@ proof -
   have hclU_comp: "top1_compact_on (closure_on Y TY U) (subspace_topology Y TY (closure_on Y TY U))"
     by (rule Theorem_26_2[OF hComp hclU_closed])
 
-  show ?thesis
-    apply (rule exI[where x=U])
-    apply (intro conjI)
-       apply (rule hUnb)
-      apply (rule hUsubO0)
-     apply (rule hclU_sub_O0)
-    apply (rule hclU_comp)
-    done
+  show ?thesis using hUnb hUsubO0 hclU_sub_O0 hclU_comp by blast
 qed
 
 (** Open subspaces of compact Hausdorff spaces are locally compact. **)
@@ -11534,12 +11516,7 @@ proof -
       qed
 
       show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> ?AB \<subseteq> \<Union>F"
-        apply (rule exI[where x=F])
-        apply (intro conjI)
-          apply (rule hFfin)
-         apply (rule hFsub)
-        apply (rule hFcov)
-        done
+        using hFfin hFsub hFcov by blast
     qed
   qed
 qed
@@ -11913,13 +11890,7 @@ proof -
         proof (intro ballI)
           fix x
           assume hx: "x \<in> b"
-          show "\<exists>ba\<in>B. x \<in> ba \<and> ba \<subseteq> b"
-            apply (rule bexI[where x=b])
-             apply (intro conjI)
-              apply (rule hx)
-             apply (rule subset_refl)
-            apply (rule hb)
-            done
+          show "\<exists>ba\<in>B. x \<in> ba \<and> ba \<subseteq> b" using hx hb by blast
         qed
       qed
     qed
