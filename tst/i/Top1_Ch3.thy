@@ -485,6 +485,21 @@ proof -
   qed
 qed
 
+text \<open>Theorem 23.3 with strict topology: the union is connected in a strict subspace.\<close>
+corollary Theorem_23_3_strict:
+  assumes "is_topology_on_strict X TX" "I \<noteq> {}" "\<forall>i\<in>I. A i \<subseteq> X"
+    "\<forall>i\<in>I. top1_connected_on (A i) (subspace_topology X TX (A i))" "p \<in> \<Inter>(A ` I)"
+  defines "Y \<equiv> (\<Union>i\<in>I. A i)"
+  shows "top1_connected_on Y (subspace_topology X TX Y)
+    \<and> is_topology_on_strict Y (subspace_topology X TX Y)"
+proof (intro conjI)
+  show "top1_connected_on Y (subspace_topology X TX Y)"
+    unfolding Y_def by (rule Theorem_23_3[OF is_topology_on_strict_imp[OF assms(1)] assms(2-5)])
+  have "Y \<subseteq> X" unfolding Y_def using assms(3) by blast
+  thus "is_topology_on_strict Y (subspace_topology X TX Y)"
+    by (rule subspace_topology_is_strict[OF assms(1)])
+qed
+
 (** from \S23 Theorem 23.4 [top1.tex:2651] **)
 theorem Theorem_23_4:
   assumes hTX: "is_topology_on X TX"
@@ -5974,6 +5989,19 @@ proof -
      apply (rule hsub_top)
     apply (rule cover_A)
     done
+qed
+
+text \<open>Theorem 26.2 with strict topology: closed subset of strict compact is strict compact.\<close>
+corollary Theorem_26_2_strict:
+  assumes "top1_compact_on X TX" "is_topology_on_strict X TX" "closedin_on X TX A"
+  shows "top1_compact_on A (subspace_topology X TX A)
+    \<and> is_topology_on_strict A (subspace_topology X TX A)"
+proof (intro conjI)
+  show "top1_compact_on A (subspace_topology X TX A)"
+    by (rule Theorem_26_2[OF assms(1) assms(3)])
+  have "A \<subseteq> X" using assms(3) unfolding closedin_on_def by blast
+  thus "is_topology_on_strict A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_strict[OF assms(2)])
 qed
 
 (** from \S26 Theorem 26.3 [top1.tex:3128] **)

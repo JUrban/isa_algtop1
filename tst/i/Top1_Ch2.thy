@@ -5042,6 +5042,14 @@ proof -
     done
   show ?thesis using cl_empty cl_X cl_inter cl_union by blast
 qed
+text \<open>Theorem 17.1 with strict topology: same result, stronger assumption.\<close>
+corollary Theorem_17_1_strict:
+  "is_topology_on_strict X T \<Longrightarrow>
+    closedin_on X T {} \<and> closedin_on X T X
+    \<and> (\<forall>F. F \<noteq> {} \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Inter>F))
+    \<and> (\<forall>F. finite F \<longrightarrow> (\<forall>A\<in>F. closedin_on X T A) \<longrightarrow> closedin_on X T (\<Union>F))"
+  using Theorem_17_1 is_topology_on_strict_imp by blast
+
 lemma closedin_empty: "is_topology_on X T \<Longrightarrow> closedin_on X T {}"
   using Theorem_17_1 by meson
 
@@ -7475,6 +7483,17 @@ proof -
       unfolding top1_continuous_map_on_def
       by (intro conjI hmap, rule hpre)
   qed
+qed
+
+text \<open>Theorem 18.1 with strict topologies: preimages of open sets are openin\_on.\<close>
+corollary Theorem_18_1_strict:
+  assumes "is_topology_on_strict X TX" "is_topology_on_strict Y TY"
+  shows "top1_continuous_map_on X TX Y TY f \<longrightarrow>
+    (\<forall>V\<in>TY. openin_on X TX {x \<in> X. f x \<in> V})"
+proof (intro impI ballI)
+  fix V assume hcont: "top1_continuous_map_on X TX Y TY f" and hV: "V \<in> TY"
+  show "openin_on X TX {x \<in> X. f x \<in> V}"
+    by (rule continuous_map_preimage_openin_on[OF hcont assms(1) hV])
 qed
 
 text \<open>Preimage of a closed set under a continuous map is closed.\<close>

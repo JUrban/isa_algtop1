@@ -33328,6 +33328,15 @@ proof -
     by blast
 qed
 
+text \<open>Theorem 28.2 strict: the metric topology is always strict, so compactness
+  equivalences hold in a strict topology.\<close>
+corollary Theorem_28_2_strict:
+  assumes "top1_metric_on X d" "T = top1_metric_topology_on X d"
+  shows "is_topology_on_strict X T
+    \<and> (top1_compact_on X T \<longleftrightarrow> top1_limit_point_compact_on X T)
+    \<and> (top1_limit_point_compact_on X T \<longleftrightarrow> top1_sequentially_compact_on X T)"
+  using Theorem_28_2[OF assms] metric_topology_is_strict[OF assms(1)] assms(2) by blast
+
 text \<open>Useful corollaries: extract individual equivalences.\<close>
 
 corollary compact_iff_lp_compact_metric:
