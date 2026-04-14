@@ -2142,41 +2142,19 @@ proof -
     unfolding V_def by (rule top1_countable_image[OF hJcnt])
 
   have hVsub: "V \<subseteq> Uc"
-  proof (rule subsetI)
-    fix U assume hU: "U \<in> V"
-    obtain b where hbJ: "b \<in> J" and hUeq: "U = pick b"
-      using hU unfolding V_def by blast
-    have "pick b \<in> Uc"
-      using hpick hbJ by blast
-    thus "U \<in> Uc"
-      using hUeq by simp
-  qed
+    unfolding V_def using hpick by blast
 
   have hVcov: "X \<subseteq> \<Union>V"
   proof (rule subsetI)
     fix x assume hxX: "x \<in> X"
-    have hxUc: "x \<in> \<Union>Uc"
+    obtain U0 where hU0Uc: "U0 \<in> Uc" and hxU0: "x \<in> U0"
       using hcov hxX by blast
-    then obtain U0 where hU0Uc: "U0 \<in> Uc" and hxU0: "x \<in> U0"
-      by blast
-    have hU0T: "U0 \<in> T"
-      using hUc hU0Uc by blast
-    have hU0_open: "U0 \<in> topology_generated_by_basis X B"
-      using hU0T unfolding hT_def by simp
-    have exb: "\<exists>b\<in>B. x \<in> b \<and> b \<subseteq> U0"
-      using hU0_open hxU0 unfolding topology_generated_by_basis_def by blast
     obtain b where hbB: "b \<in> B" and hxb: "x \<in> b" and hbU0: "b \<subseteq> U0"
-      using exb by blast
-    have hbJ: "b \<in> J"
-      unfolding J_def using hbB hU0Uc hbU0 by blast
-    have hpb: "pick b \<in> Uc \<and> b \<subseteq> pick b"
-      using hpick hbJ by blast
-    have hxpick: "x \<in> pick b"
-      using hxb hpb by blast
-    have "pick b \<in> V"
-      unfolding V_def by (rule imageI[OF hbJ])
-    thus "x \<in> \<Union>V"
-      using hxpick by blast
+      using hUc hU0Uc hxU0 unfolding hT_def topology_generated_by_basis_def by blast
+    have "b \<in> J" unfolding J_def using hbB hU0Uc hbU0 by blast
+    then have "pick b \<in> V" unfolding V_def by blast
+    moreover have "x \<in> pick b" using hxb hpick \<open>b \<in> J\<close> by blast
+    ultimately show "x \<in> \<Union>V" by blast
   qed
 
   show ?thesis
@@ -2331,26 +2309,15 @@ proof -
   have hDcnt: "top1_countable D"
     unfolding D_def by (rule top1_countable_image[OF hB0cnt])
 
+  have hBsub: "\<forall>b\<in>B. b \<subseteq> X"
+    using hBasis unfolding basis_for_def is_basis_on_def by blast
   have hDsubX: "D \<subseteq> X"
   proof (rule subsetI)
-    fix x assume hx: "x \<in> D"
-    obtain b where hb0: "b \<in> B0" and hxeq: "x = pickpt b"
-      using hx unfolding D_def by blast
-    have hxb: "x \<in> b"
-    proof -
-      have "pickpt b \<in> b"
-        by (rule pickpt_mem[OF hb0])
-      thus ?thesis
-        using hxeq by simp
-    qed
-    have hbB: "b \<in> B"
-      using hb0 unfolding B0_def by blast
-    have hBsub: "\<forall>b\<in>B. b \<subseteq> X"
-      using hBasis unfolding basis_for_def is_basis_on_def by blast
-    have hbX: "b \<subseteq> X"
-      using hBsub hbB by blast
-    show "x \<in> X"
-      using hxb hbX by blast
+    fix x assume "x \<in> D"
+    then obtain b where hb0: "b \<in> B0" and hxeq: "x = pickpt b"
+      unfolding D_def by blast
+    have "b \<subseteq> X" using hBsub hb0 unfolding B0_def by blast
+    thus "x \<in> X" using pickpt_mem[OF hb0] hxeq by blast
   qed
 
   have hDdense: "closure_on X T D = X"
@@ -2387,9 +2354,7 @@ proof -
         thus "intersects U D"
           unfolding intersects_def by simp
       qed
-      hence "x \<in> closure_on X T D"
-        using hxcl by blast
-      thus "x \<in> closure_on X T D" .
+      thus "x \<in> closure_on X T D" using hxcl by blast
     qed
   qed
 
