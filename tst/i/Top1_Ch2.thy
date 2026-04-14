@@ -5542,6 +5542,34 @@ next
   qed
 qed
 
+text \<open>Theorem 17.5a with strict neighborhoods: closure characterized via
+  neighborhood\_of\_strict instead of neighborhood\_of.\<close>
+corollary Theorem_17_5a_strict:
+  assumes hS: "is_topology_on_strict X T" and hxX: "x \<in> X" and hAX: "A \<subseteq> X"
+  shows "x \<in> closure_on X T A \<longleftrightarrow>
+    (\<forall>U. neighborhood_of_strict x X T U \<longrightarrow> intersects U A)"
+proof (rule iffI)
+  assume hcl: "x \<in> closure_on X T A"
+  have hall: "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects U A"
+    using iffD1[OF Theorem_17_5a[OF is_topology_on_strict_imp[OF hS] hxX hAX] hcl] by blast
+  show "\<forall>U. neighborhood_of_strict x X T U \<longrightarrow> intersects U A"
+  proof (intro allI impI)
+    fix U assume hU: "neighborhood_of_strict x X T U"
+    have "neighborhood_of x X T U" by (rule neighborhood_of_strict_imp[OF hU])
+    thus "intersects U A" using hall by blast
+  qed
+next
+  assume h: "\<forall>U. neighborhood_of_strict x X T U \<longrightarrow> intersects U A"
+  have "\<forall>U. neighborhood_of x X T U \<longrightarrow> intersects U A"
+  proof (intro allI impI)
+    fix U assume "neighborhood_of x X T U"
+    then have "neighborhood_of_strict x X T U" by (rule neighborhood_of_to_strict[OF hS])
+    thus "intersects U A" using h by blast
+  qed
+  thus "x \<in> closure_on X T A"
+    using iffD2[OF Theorem_17_5a[OF is_topology_on_strict_imp[OF hS] hxX hAX]] by blast
+qed
+
 theorem Theorem_17_5b:
   assumes hB: "basis_for X B T"
   assumes hxX: "x \<in> X" and hAX: "A \<subseteq> X"
