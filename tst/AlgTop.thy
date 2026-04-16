@@ -1224,13 +1224,15 @@ proof -
     sorry
   \<comment> \<open>New coefficients a'_k = a_k / c^{n-k}.\<close>
   let ?a' = "\<lambda>k. a k / complex_of_real (c ^ (n - k))"
+  have h_cmod_eq: "\<forall>k<n. cmod (?a' k) = cmod (a k) / c ^ (n - k)"
+    using hc by (simp add: norm_divide norm_power)
   have hbound': "(\<Sum>k<n. cmod (?a' k)) < 1"
-    sorry
+    using h_cmod_eq hsum_small by simp
   obtain y where hy: "cmod y \<le> 1" and hroot': "y^n + (\<Sum>k<n. ?a' k * y^k) = 0"
     using Theorem_56_1_step_3[OF assms hbound'] by blast
   let ?x = "complex_of_real c * y"
-  have "?x^n + (\<Sum>k<n. a k * ?x^k) = 0"
-    sorry
+  \<comment> \<open>Multiply y-root equation by c^n and simplify to get x-root equation.\<close>
+  have "?x^n + (\<Sum>k<n. a k * ?x^k) = 0" sorry
   thus ?thesis by blast
 qed
 
