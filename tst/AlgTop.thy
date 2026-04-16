@@ -316,8 +316,67 @@ proof -
   \<comment> \<open>Close sets A = I \<times> [0, 1/2] and B = I \<times> [1/2, 1].\<close>
   let ?A = "I_set \<times> {t\<in>I_set. t \<le> 1/2}"
   let ?B = "I_set \<times> {t\<in>I_set. t \<ge> 1/2}"
-  have hA_closed: "closedin_on (I_set \<times> I_set) II_topology ?A" sorry
-  have hB_closed: "closedin_on (I_set \<times> I_set) II_topology ?B" sorry
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hI_open: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by blast
+  have hA_half_closed: "closedin_on I_set I_top {t\<in>I_set. t \<le> 1/2}"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "{t\<in>I_set. t \<le> 1/2} \<subseteq> I_set" by auto
+    have "I_set - {t\<in>I_set. t \<le> 1/2} = I_set \<inter> {s :: real. s > 1/2}"
+      unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> I_top"
+      unfolding top1_unit_interval_topology_def subspace_topology_def
+      using open_greaterThan[of "1/2::real"]
+      unfolding top1_open_sets_def greaterThan_def by blast
+    finally show "I_set - {t\<in>I_set. t \<le> 1/2} \<in> I_top" .
+  qed
+  have hB_half_closed: "closedin_on I_set I_top {t\<in>I_set. t \<ge> 1/2}"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "{t\<in>I_set. t \<ge> 1/2} \<subseteq> I_set" by auto
+    have "I_set - {t\<in>I_set. t \<ge> 1/2} = I_set \<inter> {s :: real. s < 1/2}"
+      unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> I_top"
+      unfolding top1_unit_interval_topology_def subspace_topology_def
+      using open_lessThan[of "1/2::real"]
+      unfolding top1_open_sets_def lessThan_def by blast
+    finally show "I_set - {t\<in>I_set. t \<ge> 1/2} \<in> I_top" .
+  qed
+  have hA_closed: "closedin_on (I_set \<times> I_set) II_topology ?A"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?A \<subseteq> I_set \<times> I_set" by auto
+    have "I_set \<times> I_set - ?A = I_set \<times> {t\<in>I_set. t > 1/2}"
+      unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> II_topology"
+    proof -
+      have "{t\<in>I_set. t > 1/2} = I_set - {t\<in>I_set. t \<le> 1/2}"
+        unfolding top1_unit_interval_def by auto
+      hence "{t\<in>I_set. t > 1/2} \<in> I_top"
+        using hA_half_closed unfolding closedin_on_def by simp
+      thus ?thesis
+        unfolding II_topology_def by (rule product_rect_open[OF hI_open])
+    qed
+    finally show "I_set \<times> I_set - ?A \<in> II_topology" .
+  qed
+  have hB_closed: "closedin_on (I_set \<times> I_set) II_topology ?B"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?B \<subseteq> I_set \<times> I_set" by auto
+    have "I_set \<times> I_set - ?B = I_set \<times> {t\<in>I_set. t < 1/2}"
+      unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> II_topology"
+    proof -
+      have "{t\<in>I_set. t < 1/2} = I_set - {t\<in>I_set. t \<ge> 1/2}"
+        unfolding top1_unit_interval_def by auto
+      hence "{t\<in>I_set. t < 1/2} \<in> I_top"
+        using hB_half_closed unfolding closedin_on_def by simp
+      thus ?thesis
+        unfolding II_topology_def by (rule product_rect_open[OF hI_open])
+    qed
+    finally show "I_set \<times> I_set - ?B \<in> II_topology" .
+  qed
   have hcover: "I_set \<times> I_set = ?A \<union> ?B"
     unfolding top1_unit_interval_def by auto
   \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
