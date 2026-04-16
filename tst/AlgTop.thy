@@ -2490,6 +2490,11 @@ definition top1_quotient_group_carrier_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set set" where
   "top1_quotient_group_carrier_on G mul N = {top1_group_coset_on G mul N g | g. g \<in> G}"
 
+text \<open>Multiplication on cosets: (gN)(hN) = (gh)N, computed as set product.\<close>
+definition top1_quotient_group_mul_on ::
+  "('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set \<Rightarrow> 'g set" where
+  "top1_quotient_group_mul_on mul C1 C2 = {mul g h | g h. g \<in> C1 \<and> h \<in> C2}"
+
 text \<open>Iterated product in a group (g * g * ... * g, n times).\<close>
 fun top1_group_pow :: "('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> nat \<Rightarrow> 'g" where
   "top1_group_pow mul e x 0 = e"
@@ -2665,6 +2670,12 @@ definition top1_commutator_subgroup_on ::
   "top1_commutator_subgroup_on G mul e invg =
      top1_subgroup_generated_on G mul e invg
        { top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G }"
+
+text \<open>Normalizer of H in G: N(H) = {g \<in> G | gHg\<inverse> = H}.\<close>
+definition top1_normalizer_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set" where
+  "top1_normalizer_on G mul invg H =
+     {g \<in> G. {mul (mul g h) (invg g) | h. h \<in> H} = H}"
 
 text \<open>H is the abelianization of G: H = G/[G, G] with the induced abelian structure.
   Equivalently, H is an abelian group together with a surjective homomorphism
@@ -3442,15 +3453,25 @@ definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \
 theorem Theorem_81_2_covering_group_iso:
   fixes E :: "'e set" and TE :: "'e set set"
     and B :: "'b set" and TB :: "'b set set"
-    and p :: "'e \<Rightarrow> 'b" and b0 :: 'b
+    and p :: "'e \<Rightarrow> 'b" and b0 :: 'b and e0 :: 'e
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
       and "top1_covering_map_on E TE B TB p"
-      and "b0 \<in> B"
-  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) mulC eC invgC (Q::'b set) mulQ eQ invgQ.
+      and "top1_path_connected_on E TE"
+      and "top1_locally_path_connected_on E TE"
+      and "e0 \<in> E" and "p e0 = b0"
+  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) mulC eC invgC.
            top1_is_group_on Cov mulC eC invgC
-         \<and> (\<forall>h\<in>Cov. top1_covering_transformation_on E TE B TB p h)
-         \<and> top1_is_group_on Q mulQ eQ invgQ
-         \<and> top1_groups_isomorphic_on Cov mulC Q mulQ"
+         \<and> Cov = {h. top1_covering_transformation_on E TE B TB p h}
+         \<and> top1_groups_isomorphic_on Cov mulC
+             (top1_quotient_group_carrier_on
+                (top1_normalizer_on
+                   (top1_fundamental_group_carrier B TB b0)
+                   (top1_fundamental_group_mul B TB b0)
+                   (top1_fundamental_group_invg B TB b0)
+                   (top1_fundamental_group_image_hom E TE e0 B TB b0 p))
+                (top1_fundamental_group_mul B TB b0)
+                (top1_fundamental_group_image_hom E TE e0 B TB b0 p))
+             (top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0))"
   sorry
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
@@ -3464,7 +3485,9 @@ definition top1_semilocally_simply_connected_on ::
         (\<forall>f. top1_is_loop_on U (subspace_topology X TX U) x f \<longrightarrow>
              top1_path_homotopic_on X TX x x f (top1_constant_path x)))"
 
-(** from \<S>82 Theorem 82.1: existence of covering space for any subgroup **)
+(** from \<S>82 Theorem 82.1: existence of covering space for any subgroup.
+    Given a subgroup H \<le> \<pi>_1(B, b_0), there exists a connected, locally path-connected
+    covering (E, p) with a base-point e_0 over b_0 such that p_*(\<pi>_1(E, e_0)) = H. **)
 theorem Theorem_82_1_covering_existence:
   assumes "is_topology_on_strict B TB"
       and "top1_path_connected_on B TB"
@@ -3474,7 +3497,10 @@ theorem Theorem_82_1_covering_existence:
       and "H \<subseteq> top1_fundamental_group_carrier B TB b0"
   shows "\<exists>E TE p e0. is_topology_on_strict E TE
     \<and> top1_covering_map_on E TE B TB p
-    \<and> e0 \<in> E \<and> p e0 = b0"
+    \<and> top1_path_connected_on E TE
+    \<and> top1_locally_path_connected_on E TE
+    \<and> e0 \<in> E \<and> p e0 = b0
+    \<and> top1_fundamental_group_image_hom E TE e0 B TB b0 p = H"
   sorry
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
