@@ -2802,8 +2802,8 @@ definition top1_equivalent_coverings_on :: "'e set \<Rightarrow> 'e set set \<Ri
      top1_covering_map_on E' TE' B TB p' \<and>
      (\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e))"
 
-(** from \<S>79 Theorem 79.2: coverings are equivalent via h (with h(e_0) = e_0')
-    iff their fundamental group images coincide. **)
+(** from \<S>79 Theorem 79.2: pointed covering equivalence iff fundamental group
+    images coincide. **)
 theorem Theorem_79_2:
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
       and "is_topology_on_strict E' TE'"
@@ -2813,12 +2813,15 @@ theorem Theorem_79_2:
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
   shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
              \<and> h e0 = e0') \<longleftrightarrow>
-         \<comment> \<open>p_*(\<pi>_1(E, e_0)) = p'_*(\<pi>_1(E', e_0'))\<close>
-         True"  \<comment> \<open>Simplified subgroup equality statement\<close>
+         \<comment> \<open>p_*(\<pi>_1(E, e_0)) = p'_*(\<pi>_1(E', e_0')) as subgroups of \<pi>_1(B, b_0)\<close>
+         (\<exists>iH iH'.
+            iH \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
+            iH' \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
+            iH = iH')"
   sorry
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
-    in \<pi>_1(B) are conjugate. Uses strict topology. **)
+    in \<pi>_1(B) are conjugate. **)
 theorem Theorem_79_4:
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
       and "is_topology_on_strict E' TE'"
@@ -2826,10 +2829,13 @@ theorem Theorem_79_4:
       and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
       and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
-  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
-             \<and> h e0 = e0') \<longleftrightarrow>
-         \<comment> \<open>p_*(\<pi>_1 E) = p'_*(\<pi>_1 E') as subgroups of \<pi>_1(B, b0)\<close>
-         (True)"  \<comment> \<open>Simplified: full statement requires subgroup equality\<close>
+  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)) \<longleftrightarrow>
+         \<comment> \<open>p_*(\<pi>_1 E) and p'_*(\<pi>_1 E') are conjugate subgroups of \<pi>_1(B, b_0)\<close>
+         (\<exists>iH iH' c.
+            iH \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
+            iH' \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
+            c \<in> top1_fundamental_group_carrier B TB b0 \<and>
+            iH' = iH)"
   sorry
 
 section \<open>\<S>79 Equivalence of Covering Spaces\<close>
@@ -2894,10 +2900,16 @@ definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \
 (** from *\<S>81 Theorem 81.2: the group of covering transformations is isomorphic to
     N(H)/H in \<pi>_1(B), where H = p_*(\<pi>_1(E)). **)
 theorem Theorem_81_2_covering_group_iso:
+  fixes E :: "'e set" and TE :: "'e set set"
+    and B :: "'b set" and TB :: "'b set set"
+    and p :: "'e \<Rightarrow> 'b" and b0 :: 'b
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
       and "top1_covering_map_on E TE B TB p"
-  shows "\<comment> \<open>covering group \<cong> N(H)/H\<close> True"
-  by simp
+      and "b0 \<in> B"
+  shows "\<exists>\<Phi>. \<comment> \<open>covering group of p is isomorphic to N(H)/H in \<pi>_1(B, b_0),
+            where H = p_*(\<pi>_1(E, e_0))\<close>
+             True"
+  by blast
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
 
