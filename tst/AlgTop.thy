@@ -802,7 +802,16 @@ definition top1_S1_arc_S :: "(real \<times> real) set" where
   "top1_S1_arc_S = {(x,y). x^2 + y^2 = 1 \<and> y < 0}"
 
 lemma top1_S1_arcs_cover: "top1_S1 \<subseteq> top1_S1_arc_E \<union> top1_S1_arc_W \<union> top1_S1_arc_N \<union> top1_S1_arc_S"
-  sorry
+proof (intro subsetI)
+  fix p :: "real \<times> real"
+  assume hp: "p \<in> top1_S1"
+  obtain x y where hpxy: "p = (x, y)" by (cases p) blast
+  have heq: "x^2 + y^2 = 1" using hp hpxy unfolding top1_S1_def by simp
+  have hne: "x \<noteq> 0 \<or> y \<noteq> 0" using heq by auto
+  show "p \<in> top1_S1_arc_E \<union> top1_S1_arc_W \<union> top1_S1_arc_N \<union> top1_S1_arc_S"
+    unfolding top1_S1_arc_E_def top1_S1_arc_W_def top1_S1_arc_N_def top1_S1_arc_S_def
+    using hne heq hpxy by auto
+qed
 
 lemma top1_S1_arc_E_preimage:
   "{x. top1_R_to_S1 x \<in> top1_S1_arc_E} = (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
