@@ -964,7 +964,8 @@ proof -
     using Lemma_54_1_uniqueness[OF hcov he0 hpe0 hf hFt_bot_path hFt_bot_lift hft hftp] by blast
   \<comment> \<open>Ftilde(·, 1) is a path in E lifting g, starting at Ftilde(0,1).\<close>
   have h1I0: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-  have hFt_top_start: "Ftilde (0, 1) = e0" sorry
+  have hFt_top_start: "Ftilde (0, 1) = e0"
+    using hFt_left h1I0 by blast
   have hFt_top_path: "top1_is_path_on E TE e0 (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))"
   proof -
     have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 1))"
