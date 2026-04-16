@@ -896,8 +896,10 @@ proof -
              and hF_b0: "\<forall>t\<in>I_set. F (0, t) = b0"
              and hF_b1: "\<forall>t\<in>I_set. F (1, t) = b1"
     sorry
-  \<comment> \<open>Step 2: lift F to Ftilde via Lemma 54.2\<close>
-  have hF_00: "F (0, 0) = b0" sorry
+  \<comment> \<open>Step 2: lift F to Ftilde via Lemma 54.2. F(0,0) = f(0) = b0.\<close>
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hF_00: "F (0, 0) = b0"
+    using hF_f[rule_format, OF h0I] hf unfolding top1_is_path_on_def by simp
   obtain Ftilde where
         hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
     and hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
@@ -909,8 +911,24 @@ proof -
   \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting\<close>
   have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s" sorry
   have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s" sorry
-  \<comment> \<open>Step 5: assemble endpoints equal and path homotopy\<close>
-  have heq: "e1 = e1'" sorry
+  \<comment> \<open>Step 5: assemble endpoints equal and path homotopy.\<close>
+  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hft_1: "ftilde 1 = e1"
+    using hft unfolding top1_is_path_on_def by simp
+  have hgt_1: "gtilde 1 = e1'"
+    using hgt unfolding top1_is_path_on_def by simp
+  \<comment> \<open>Ftilde(1, 0) = ftilde(1) = e1 and Ftilde(1, 1) = gtilde(1) = e1', and the fiber is constant.\<close>
+  have heq: "e1 = e1'"
+  proof -
+    obtain e where hc: "\<forall>t\<in>I_set. Ftilde (1, t) = e" using hFt_right_const by blast
+    have h0: "Ftilde (1, 0) = e" using hc h0I by blast
+    have h1: "Ftilde (1, 1) = e" using hc h1I by blast
+    have "Ftilde (1, 0) = ftilde 1" using hFt_bot h1I by blast
+    hence "e1 = e" using hft_1 h0 by simp
+    moreover have "Ftilde (1, 1) = gtilde 1" using hFt_top h1I by blast
+    hence "e1' = e" using hgt_1 h1 by simp
+    ultimately show ?thesis by simp
+  qed
   have hhomo: "top1_path_homotopic_on E TE e0 e1 ftilde gtilde" sorry
   show ?thesis using heq hhomo by blast
 qed
