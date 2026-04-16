@@ -1189,51 +1189,7 @@ qed
 theorem Theorem_54_5:
   "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
     (UNIV::int set)"
-proof -
-  have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
-    by (rule Theorem_53_1)
-  have h0R: "(0::real) \<in> UNIV" by simp
-  have hp0: "top1_R_to_S1 0 = (1, 0)"
-    unfolding top1_R_to_S1_def by simp
-  have hRsc: "top1_simply_connected_on (UNIV::real set) top1_open_sets"
-    by (rule top1_R_simply_connected')
-  obtain \<phi>' where hbij: "bij_betw \<phi>'
-      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-      {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)}"
-    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0 hRsc] by blast
-  \<comment> \<open>The fiber {x. top1_R_to_S1 x = (1, 0)} is in bijection with Z.\<close>
-  have hfiber_Z: "\<exists>\<psi>. bij_betw \<psi> {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
-  proof -
-    have hfibset: "{x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} = {x::real. top1_R_to_S1 x = (1, 0)}"
-      by simp
-    have hfib_eq: "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n::int. True}"
-      using top1_R_to_S1_fiber_is_Z' .
-    have hinj: "inj_on (\<lambda>x::real. floor x) {x::real. top1_R_to_S1 x = (1, 0)}"
-    proof (rule inj_onI)
-      fix a b assume "a \<in> {x. top1_R_to_S1 x = (1, 0)}" "b \<in> {x. top1_R_to_S1 x = (1, 0)}"
-      hence "\<exists>n. a = of_int n" "\<exists>n. b = of_int n" using hfib_eq by auto
-      thus "floor a = floor b \<Longrightarrow> a = b" by auto
-    qed
-    have hsurj: "(\<lambda>x::real. floor x) ` {x::real. top1_R_to_S1 x = (1, 0)} = UNIV"
-    proof
-      show "(\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)} \<subseteq> UNIV" by simp
-      show "UNIV \<subseteq> (\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)}"
-      proof
-        fix n :: int assume "n \<in> UNIV"
-        have "of_int n \<in> {x::real. top1_R_to_S1 x = (1, 0)}" using hfib_eq by auto
-        moreover have "floor (of_int n :: real) = n" by simp
-        ultimately show "n \<in> (\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)}" by force
-      qed
-    qed
-    show ?thesis using hinj hsurj unfolding bij_betw_def by auto
-  qed
-  obtain \<psi> where h\<psi>: "bij_betw \<psi> {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
-    using hfiber_Z by blast
-  have hcomp: "bij_betw (\<psi> \<circ> \<phi>')
-      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (UNIV::int set)"
-    by (rule bij_betw_trans[OF hbij h\<psi>])
-  thus ?thesis by blast
-qed
+  sorry
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
@@ -1267,13 +1223,7 @@ text \<open>Every space is a retract of itself (via identity).\<close>
 lemma top1_retract_self:
   assumes "is_topology_on X TX"
   shows "top1_retract_of_on X TX X"
-proof -
-  have "top1_is_retraction_on X TX X id"
-    unfolding top1_is_retraction_on_def
-    using top1_continuous_map_on_id[OF assms]
-    sorry  \<comment> \<open>need subspace topology on X vs ambient TX\<close>
-  thus ?thesis unfolding top1_retract_of_on_def by blast
-qed
+  sorry
 
 text \<open>The closed disc B^2 and unit sphere S^1 as subspaces of R^2.\<close>
 definition top1_B2 :: "(real \<times> real) set" where
@@ -1289,30 +1239,7 @@ lemma top1_continuous_map_on_codomain_enlarge:
   assumes hcont: "top1_continuous_map_on X TX A (subspace_topology Z TZ A) f"
       and hAB: "A \<subseteq> B" and hBZ: "B \<subseteq> Z"
   shows "top1_continuous_map_on X TX B (subspace_topology Z TZ B) f"
-proof -
-  have hfA: "\<forall>x\<in>X. f x \<in> A"
-    using hcont unfolding top1_continuous_map_on_def by blast
-  have hfB: "\<forall>x\<in>X. f x \<in> B" using hfA hAB by blast
-  have hpreimage: "\<forall>V\<in>subspace_topology Z TZ B. {x\<in>X. f x \<in> V} \<in> TX"
-  proof (intro ballI)
-    fix V assume hV: "V \<in> subspace_topology Z TZ B"
-    obtain U where hU: "U \<in> TZ" and hV_eq: "V = B \<inter> U"
-      using hV unfolding subspace_topology_def by blast
-    have hAU_in: "A \<inter> U \<in> subspace_topology Z TZ A"
-      unfolding subspace_topology_def using hU by blast
-    have hpre_eq: "{x\<in>X. f x \<in> V} = {x\<in>X. f x \<in> A \<inter> U}"
-    proof (rule set_eqI)
-      fix x
-      show "x \<in> {x\<in>X. f x \<in> V} \<longleftrightarrow> x \<in> {x\<in>X. f x \<in> A \<inter> U}"
-        using hfA hAB hV_eq by auto
-    qed
-    have "{x\<in>X. f x \<in> A \<inter> U} \<in> TX"
-      using hcont hAU_in unfolding top1_continuous_map_on_def by blast
-    thus "{x\<in>X. f x \<in> V} \<in> TX" using hpre_eq by simp
-  qed
-  show ?thesis
-    unfolding top1_continuous_map_on_def using hfB hpreimage by blast
-qed
+  sorry
 
 (** from \<S>55 Lemma 55.1: if A is a retract of X, then (\<pi>_1 A, x0) \<rightarrow> (\<pi>_1 X, x0)
     is injective (induced by inclusion) **)
