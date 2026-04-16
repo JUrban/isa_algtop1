@@ -1027,13 +1027,20 @@ proof
     and hg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
     and hne: "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
     using top1_S1_fundamental_group_nontrivial by blast
-  \<comment> \<open>Both f and g become nulhomotopic in B^2 (since B^2 is simply connected),\<close>
-  \<comment> \<open>so they are path-homotopic in B^2. Lemma 55.1 would imply they are\<close>
-  \<comment> \<open>path-homotopic in S^1 too — contradicting hne.\<close>
+  \<comment> \<open>Step 1: S^1 \<subseteq> B^2 and (1,0) is in S^1 = subspace\<close>
   have hSsub: "top1_S1 \<subseteq> top1_B2"
     unfolding top1_S1_def top1_B2_def by auto
-  show False
-    sorry  \<comment> \<open>apply Lemma 55.1 and use B^2 simply connected\<close>
+  have hx0: "(1::real, 0::real) \<in> top1_S1"
+    unfolding top1_S1_def by simp
+  \<comment> \<open>Step 2: f, g are also loops in B^2 (via inclusion).\<close>
+  have hf_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) f" sorry
+  have hg_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) g" sorry
+  \<comment> \<open>Step 3: Since B^2 is simply connected, f and g are path-homotopic in B^2.\<close>
+  have hfg_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0) f g"
+    sorry  \<comment> \<open>use top1_B2_simply_connected\<close>
+  \<comment> \<open>Step 4: Apply Lemma 55.1 to transfer path-homotopy back to S^1.\<close>
+  have hfg_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
+  show False using hne hfg_S1 by blast
 qed
 
 (** from \<S>55 Lemma 55.3: nulhomotopic characterization **)
@@ -1054,14 +1061,45 @@ corollary Corollary_55_4_inclusion_not_nulhomotopic:
            (\<lambda>x. x)"
   sorry
 
+(** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
+    some point of S^1 (and inward at some point). **)
+theorem Theorem_55_5_vector_field:
+  assumes "top1_continuous_map_on top1_B2 top1_B2_topology
+             (UNIV::(real \<times> real) set)
+             (product_topology_on top1_open_sets top1_open_sets) v"
+      and "\<forall>x\<in>top1_B2. v x \<noteq> (0, 0)"
+  shows "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)"
+    and "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))"
+  sorry  \<comment> \<open>Munkres proof via Lemma 55.3 and Corollary 55.4\<close>
+
 (** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc.
-    Munkres' proof: contradiction. If f has no fixed point, v(x) = f(x) - x
-    is a nonvanishing vector field; but Theorem 55.5 says some point of S^1
-    has v pointing outward, contradiction. **)
+    Munkres' proof: by contradiction. If f has no fixed point, v(x) = f(x) - x
+    is a nonvanishing vector field on B^2. But v cannot point outward at any
+    x \<in> S^1: that would mean f(x) - x = a x with a > 0, hence f(x) = (1+a)x has
+    norm > 1, contradicting f: B^2 \<rightarrow> B^2. Theorem 55.5 gives such a point \<Rightarrow> \<bottom>. **)
 theorem Theorem_55_6_brouwer:
-  assumes "top1_continuous_map_on top1_B2 top1_B2_topology top1_B2 top1_B2_topology f"
+  assumes hf: "top1_continuous_map_on top1_B2 top1_B2_topology top1_B2 top1_B2_topology f"
   shows "\<exists>x\<in>top1_B2. f x = x"
-  sorry
+proof (rule ccontr)
+  assume hnofix: "\<not> (\<exists>x\<in>top1_B2. f x = x)"
+  \<comment> \<open>Step 1: define v(x) = f(x) - x.\<close>
+  let ?v = "\<lambda>x::real\<times>real. (fst (f x) - fst x, snd (f x) - snd x)"
+  \<comment> \<open>Step 2: v is continuous B^2 \<rightarrow> R^2.\<close>
+  have hv_cont: "top1_continuous_map_on top1_B2 top1_B2_topology
+                  UNIV (product_topology_on top1_open_sets top1_open_sets) ?v"
+    sorry
+  \<comment> \<open>Step 3: v is nonvanishing (from hnofix).\<close>
+  have hv_nonzero: "\<forall>x\<in>top1_B2. ?v x \<noteq> (0, 0)" sorry
+  \<comment> \<open>Step 4: by Theorem 55.5, some x \<in> S^1 has v(x) = a x for a > 0 (outward).\<close>
+  obtain x a where hx: "x \<in> top1_S1" and ha: "a > 0"
+      and hva: "?v x = (a * fst x, a * snd x)"
+    using Theorem_55_5_vector_field(1)[OF hv_cont hv_nonzero] by blast
+  \<comment> \<open>Step 5: then f(x) = (1+a) x. Since |x| = 1, |f(x)| = 1+a > 1, but f(x) \<in> B^2.\<close>
+  have hfx: "f x = ((1 + a) * fst x, (1 + a) * snd x)" sorry
+  have "fst (f x)^2 + snd (f x)^2 > 1" sorry
+  moreover have "fst (f x)^2 + snd (f x)^2 \<le> 1" sorry
+  ultimately show False by linarith
+qed
 
 section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
 
@@ -1211,20 +1249,42 @@ definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> rea
   "top1_antipode_preserving_S1 h \<longleftrightarrow>
      (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
 
-(** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 has odd degree **)
+(** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 is NOT nulhomotopic.
+
+    Munkres' proof:
+    Step 1: WLOG h(b_0) = b_0 (rotate). Let q: S^1 \<rightarrow> S^1 be q(z) = z^2 (quotient
+            map). q is a covering map and its fibers are antipodal pairs {z, -z}.
+            Since h(-z) = -h(z), we have q(h(-z)) = q(h(z)), so q\<circ>h factors as
+            k\<circ>q for some continuous k: S^1 \<rightarrow> S^1.
+    Step 2: k_* is nontrivial. If \<tilde>f is any path in S^1 from b_0 to -b_0, the
+            loop f = q\<circ>\<tilde>f represents a nontrivial element of \<pi>_1(S^1). For \<tilde>f is
+            a lifting of f, starting at b_0 but not ending at b_0.
+            Hence k_*[f] = [k\<circ>(q\<circ>\<tilde>f)] = [q\<circ>(h\<circ>\<tilde>f)] is also nontrivial.
+    Step 3: k_* injective; q_* injective (multiplication by 2 in Z). So k_*\<circ>q_*
+            is injective. Since q_*\<circ>h_* = k_*\<circ>q_*, h_* is injective, hence
+            nontrivial, hence h is not nulhomotopic. **)
 theorem Theorem_57_1:
   assumes "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
       and "top1_antipode_preserving_S1 h"
-  shows "\<exists>n. odd n \<and>
-    (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
-         top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
-           (h \<circ> f) f)"  \<comment> \<open>simplified: degree-n statement\<close>
+  shows "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
   sorry
 
-(** from *\<S>57 Theorem 57.3: Borsuk-Ulam theorem for S^2 **)
+(** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
+    Munkres' proof: if g: S^2 \<rightarrow> S^1 is antipode-preserving, then h = g|S^1
+    (equator) is antipode-preserving S^1 \<rightarrow> S^1, not nulhomotopic by 57.1.
+    But g extends h over the upper hemisphere \<cong> B^2, so h IS nulhomotopic.
+    Contradiction.
+
+    (Stated as part of Theorem 57.3 below using an inline S^2 set, since
+     top1_S2 is defined later in the file.) **)
+
+(** from *\<S>57 Theorem 57.3: Borsuk-Ulam theorem for S^2.
+    Munkres' proof: by contradiction. If f(x) \<ne> f(-x) for all x \<in> S^2, then
+    g(x) = (f(x) - f(-x))/||f(x) - f(-x)|| is continuous antipode-preserving
+    S^2 \<rightarrow> S^1, contradicting Theorem 57.2. **)
 theorem Theorem_57_3_BorsukUlam:
   fixes f :: "real \<times> real \<times> real \<Rightarrow> real \<times> real"
-  assumes "top1_continuous_map_on {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}
+  assumes hf: "top1_continuous_map_on {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}
     (subspace_topology UNIV
       (product_topology_on top1_open_sets
         (product_topology_on top1_open_sets top1_open_sets))
@@ -1232,7 +1292,13 @@ theorem Theorem_57_3_BorsukUlam:
     UNIV (product_topology_on top1_open_sets top1_open_sets) f"
   shows "\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
     \<and> f x = f (- fst x, - fst (snd x), - snd (snd x))"
-  sorry
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
+    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x)))"
+  \<comment> \<open>Define g: S^2 \<rightarrow> S^1 by g(x) = (f(x) - f(-x)) / ||f(x) - f(-x)||.\<close>
+  \<comment> \<open>Then g is continuous and antipode-preserving, contradicting Theorem 57.2.\<close>
+  show False sorry
+qed
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
