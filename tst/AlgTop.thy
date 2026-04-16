@@ -2003,9 +2003,11 @@ lemma Lemma_58_5_basepoint_change:
     Hence f_* is a bijection onto pi_1(Y, f x_0). **)
 theorem Theorem_58_7:
   assumes "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier X TX x0)
-    (top1_fundamental_group_carrier Y TY (f x0))"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_fundamental_group_carrier Y TY (f x0))
+           (top1_fundamental_group_mul Y TY (f x0))"
   sorry
 
 (** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
@@ -2015,22 +2017,13 @@ theorem Theorem_58_7:
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
 theorem Theorem_58_3:
   assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-    (top1_fundamental_group_carrier X TX x0)"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+           (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)"
   \<comment> \<open>By homotopy equivalence j : A \<hookrightarrow> X and r = H(\<cdot>, 1) : X \<rightarrow> A; apply Theorem 58.7.\<close>
-proof -
-  have hA_sub: "A \<subseteq> X" using hdef unfolding top1_deformation_retract_of_on_def by blast
-  have hequiv: "\<exists>f g. top1_homotopy_equivalence_on A (subspace_topology X TX A) X TX f g
-                     \<and> f x0 = x0" sorry
-  obtain f g where hhe: "top1_homotopy_equivalence_on A (subspace_topology X TX A) X TX f g"
-      and hfx0: "f x0 = x0" using hequiv by blast
-  obtain \<phi> where hbij: "bij_betw \<phi>
-      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-      (top1_fundamental_group_carrier X TX (f x0))"
-    using Theorem_58_7[OF hhe hx0] by blast
-  thus ?thesis using hfx0 by auto
-qed
+  sorry
 
 (** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
 
@@ -2038,9 +2031,14 @@ qed
     H(x, t) = (1-t)x + t(x/||x||). By Theorem 58.3, the inclusion induces
     an isomorphism of fundamental groups. **)
 theorem Theorem_58_2_inclusion_iso:
-  "\<exists>\<phi>. bij_betw \<phi>
+  "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+    (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
     (top1_fundamental_group_carrier
+       (UNIV - {(0, 0)})
+       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+       (1, 0))
+    (top1_fundamental_group_mul
        (UNIV - {(0, 0)})
        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
        (1, 0))"
@@ -2050,9 +2048,11 @@ theorem Theorem_58_2_inclusion_iso:
 corollary Theorem_58_7_strict:
   assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
     and "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier X TX x0)
-    (top1_fundamental_group_carrier Y TY (f x0))"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_fundamental_group_carrier Y TY (f x0))
+           (top1_fundamental_group_mul Y TY (f x0))"
   using Theorem_58_7[OF assms(3) assms(4)] by blast
 
 text \<open>Strict version: if X and Y have the same homotopy type and X is strict,
