@@ -825,6 +825,7 @@ qed
 
 lemma top1_S1_arc_E_preimage:
   "{x. top1_R_to_S1 x \<in> top1_S1_arc_E} = (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
+  \<comment> \<open>Proof: top1_R_to_S1 x \<in> arc_E iff cos(2\<pi>x) > 0 iff x \<in> (n - 1/4, n + 1/4) for some n.\<close>
   sorry
 
 theorem Theorem_53_1:
