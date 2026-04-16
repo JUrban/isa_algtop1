@@ -189,11 +189,12 @@ text \<open>Helper: concatenation of homotopies via pasting lemma.
   Given F: X\<times>I \<rightarrow> Y and F': X\<times>I \<rightarrow> Y with F(x,1) = F'(x,0), define
   G(x,t) = F(x,2t) for t\<le>1/2, G(x,t) = F'(x,2t-1) for t\<ge>1/2.\<close>
 lemma homotopy_concat_continuous:
-  assumes "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
-      and "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F'"
-      and "\<forall>x\<in>X. F (x, 1) = F' (x, 0)"
+  assumes hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+      and hF': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F'"
+      and hmatch: "\<forall>x\<in>X. F (x, 1) = F' (x, 0)"
   shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
     (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
+  \<comment> \<open>Proof structure identical to path_homotopy_concat_continuous but for X \<times> I \<rightarrow> Y.\<close>
   sorry
 
 lemma Lemma_51_1_homotopic_trans:
@@ -299,14 +300,36 @@ proof -
     using h hG hG0 hG1 hGleft hGright unfolding top1_path_homotopic_on_def by blast
 qed
 
-text \<open>Helper: concatenation of path homotopies.\<close>
+text \<open>Helper: concatenation of path homotopies.
+
+  Proof via pasting lemma (Theorem 18.3):
+  A = I \<times> [0, 1/2] and B = I \<times> [1/2, 1] are closed in I \<times> I;
+  F(fst p, 2\<cdot>snd p) is continuous on A; F'(fst p, 2\<cdot>snd p - 1) is
+  continuous on B; they agree on A \<inter> B (where snd p = 1/2) by hmatch.\<close>
 lemma path_homotopy_concat_continuous:
-  assumes "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-      and "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F'"
-      and "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)"
+  assumes hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F'"
+      and hmatch: "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)"
   shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
     (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
-  sorry
+proof -
+  \<comment> \<open>Close sets A = I \<times> [0, 1/2] and B = I \<times> [1/2, 1].\<close>
+  let ?A = "I_set \<times> {t\<in>I_set. t \<le> 1/2}"
+  let ?B = "I_set \<times> {t\<in>I_set. t \<ge> 1/2}"
+  have hA_closed: "closedin_on (I_set \<times> I_set) II_topology ?A" sorry
+  have hB_closed: "closedin_on (I_set \<times> I_set) II_topology ?B" sorry
+  have hcover: "I_set \<times> I_set = ?A \<union> ?B" sorry
+  \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
+  have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
+                                   X TX (\<lambda>p. F (fst p, 2 * snd p))" sorry
+  \<comment> \<open>On B, (s,t) \<mapsto> F'(s, 2t-1) is continuous.\<close>
+  have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
+                                   X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))" sorry
+  \<comment> \<open>Agreement on A \<inter> B (where snd p = 1/2).\<close>
+  have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)" sorry
+  \<comment> \<open>Apply pasting lemma (Theorem 18.3).\<close>
+  show ?thesis sorry
+qed
 
 lemma Lemma_51_1_path_homotopic_trans:
   assumes h1: "top1_path_homotopic_on X TX x0 x1 f f'"
