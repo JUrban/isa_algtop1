@@ -2920,13 +2920,9 @@ definition top1_is_surface_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 
 
 section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
 
-text \<open>The n-fold torus T_n = S^1 \<times> S^1 \<times> ... \<times> S^1 (n times), iterated connected sum.\<close>
-definition top1_n_fold_torus :: "nat \<Rightarrow> ('a set)" where
-  "top1_n_fold_torus n = undefined"  \<comment> \<open>Placeholder: connected sum construction\<close>
-
-text \<open>The m-fold projective plane P_m.\<close>
-definition top1_m_fold_projective :: "nat \<Rightarrow> ('a set)" where
-  "top1_m_fold_projective m = undefined"
+\<comment> \<open>Unused undefined placeholders top1_n_fold_torus and top1_m_fold_projective
+    removed. Use top1_is_n_fold_torus_on and top1_is_m_fold_projective_on predicates
+    (defined earlier) on a space (X, TX) instead.\<close>
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
