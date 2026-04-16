@@ -978,9 +978,11 @@ lemma top1_R_simply_connected:
   "top1_simply_connected_on (UNIV::real set) top1_open_sets"
   sorry
 
-text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.\<close>
+text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.
+  top1_R_to_S1 x = (1, 0) iff cos(2\<pi>x) = 1 and sin(2\<pi>x) = 0 iff 2\<pi>x = 2\<pi>n, i.e. x = n \<in> Z.\<close>
 lemma top1_R_to_S1_fiber_is_Z:
   "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n. True}"
+  \<comment> \<open>Uses cos_eq_1 and sin_eq_0: 2\<pi>x = 2\<pi>n.\<close>
   sorry
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
@@ -1269,7 +1271,50 @@ proof (rule ccontr)
   have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
      z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0"
     \<comment> \<open>Munkres inequality: |F| \<ge> 1 - t(\<Sum>|a_k|) > 0 since t \<le> 1 and \<Sum>|a_k| < 1.\<close>
-    sorry
+  proof -
+    fix z :: complex and t :: real
+    assume hz: "cmod z = 1" and ht: "t \<in> I_set"
+    have ht0: "t \<ge> 0" using ht unfolding top1_unit_interval_def by simp
+    have ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+    have hzn: "cmod (z^n) = 1" using hz by (simp add: norm_power)
+    have h_sum_bound: "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j))"
+    proof -
+      have "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j * z^j))"
+        by (rule norm_sum)
+      also have "\<dots> = (\<Sum>j<n. cmod (a j) * (cmod z)^j)"
+        by (simp add: norm_mult norm_power)
+      also have "\<dots> = (\<Sum>j<n. cmod (a j))" using hz by simp
+      finally show ?thesis .
+    qed
+    have ht_sum: "t * (\<Sum>j<n. cmod (a j)) < 1"
+    proof (cases "(\<Sum>j<n. cmod (a j)) = 0")
+      case True thus ?thesis by simp
+    next
+      case False
+      have hpos: "(\<Sum>j<n. cmod (a j)) > 0"
+        using False sum_nonneg[of "{..<n}" "\<lambda>j. cmod (a j)"] by simp
+      have "t * (\<Sum>j<n. cmod (a j)) \<le> 1 * (\<Sum>j<n. cmod (a j))"
+        using ht1 hpos by (simp add: mult_right_mono)
+      also have "\<dots> < 1" using hbound by simp
+      finally show ?thesis .
+    qed
+    have hF_abs: "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j))
+                \<ge> 1 - t * (\<Sum>j<n. cmod (a j))"
+    proof -
+      let ?A = "z^n"
+      let ?B = "complex_of_real t * (\<Sum>j<n. a j * z^j)"
+      have htri: "cmod ?A \<le> cmod (?A + ?B) + cmod ?B"
+        using norm_triangle_ineq4[of "?A + ?B" ?B] by (simp add: norm_minus_commute)
+      have hnormB: "cmod ?B = t * cmod (\<Sum>j<n. a j * z^j)"
+        by (simp add: norm_mult ht0)
+      have hB_le: "cmod ?B \<le> t * (\<Sum>j<n. cmod (a j))"
+        using hnormB h_sum_bound ht0 by (simp add: mult_left_mono)
+      show ?thesis using htri hzn hB_le by linarith
+    qed
+    have "1 - t * (\<Sum>j<n. cmod (a j)) > 0" using ht_sum by simp
+    hence "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)) > 0" using hF_abs by linarith
+    thus "z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" by auto
+  qed
   \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
   have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
                        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
