@@ -4,9 +4,9 @@ session Top0 in i = HOL +
     Top1_Ch2
     Top1_Ch3
     Top1_Ch4
+    Top1_Ch5_8
 
-session Top1 = Top0 +
+session AlgTop = Top0 +
   options [quick_and_dirty, timeout = 120]
   theories
-    Top1_Ch5_8
-    Top1
+    AlgTop

@@ -1,5 +1,5 @@
 theory Top1_Ch5_8
-  imports "Top0.Top1_Ch4"
+  imports Top1_Ch4
 begin
 
 text \<open>This theory covers Chapters 5--8 of Munkres' Topology (Sections 37--50).
