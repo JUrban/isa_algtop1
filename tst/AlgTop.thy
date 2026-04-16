@@ -3107,11 +3107,14 @@ theorem Theorem_72_1_attaching_two_cell:
       and "bij_betw h (top1_B2 - top1_S1) (X - A)"
       and "h ` top1_S1 \<subseteq> A"
       and "h (1, 0) = a"
-  shows "\<exists>\<iota> Q mulQ.
+  shows "\<exists>\<iota>.
             top1_continuous_map_on top1_S1 top1_S1_topology A
                  (subspace_topology X TX A) \<iota>
           \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
-          \<and> Q = top1_quotient_group_carrier_on
+          \<and> top1_groups_isomorphic_on
+                (top1_fundamental_group_carrier X TX a)
+                (top1_fundamental_group_mul X TX a)
+                (top1_quotient_group_carrier_on
                    (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
                    (top1_fundamental_group_mul A (subspace_topology X TX A) a)
                    (top1_normal_subgroup_generated_on
@@ -3121,13 +3124,10 @@ theorem Theorem_72_1_attaching_two_cell:
                       (top1_fundamental_group_invg A (subspace_topology X TX A) a)
                       {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
                          A (subspace_topology X TX A) a \<iota>
-                         (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))})
-          \<and> top1_groups_isomorphic_on
-                (top1_fundamental_group_carrier X TX a)
-                (top1_fundamental_group_mul X TX a)
-                Q mulQ"
-  \<comment> \<open>Q is the quotient π_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle>; mulQ is the induced coset product.
-      \<pi>_1(X, a) \<cong> Q as groups.\<close>
+                         (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))}))
+                (top1_quotient_group_mul_on
+                   (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
+  \<comment> \<open>\<iota> is k = h|S^1. \<pi>_1(X, a) \<cong> \<pi>_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> with coset product.\<close>
   sorry
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
@@ -3171,18 +3171,31 @@ theorem Theorem_70_2_SvK:
       and "top1_path_connected_on U (subspace_topology X TX U)"
       and "top1_path_connected_on V (subspace_topology X TX V)"
       and "x0 \<in> U \<inter> V"
-  shows "top1_fundamental_group_image_hom U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x)
-       \<union> top1_fundamental_group_image_hom V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x)
-       = top1_fundamental_group_carrier X TX x0
-       \<and> (\<exists>\<pi>. top1_group_hom_on
-              (top1_fundamental_group_carrier X TX x0)
-              (top1_fundamental_group_mul X TX x0)
-              (top1_fundamental_group_carrier X TX x0)
-              (top1_fundamental_group_mul X TX x0) \<pi>
-         \<and> \<pi> ` (top1_fundamental_group_carrier X TX x0)
-              = top1_fundamental_group_carrier X TX x0)"
-  \<comment> \<open>Full SvK statement: \<pi>_1(X, x_0) \<cong> \<pi>_1(U, x_0) \<star>_{\<pi>_1(U\<inter>V, x_0)} \<pi>_1(V, x_0).
-      Represented above as: images generate and there is the canonical homomorphism.\<close>
+  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam.
+           top1_is_free_product_on FP mulFP eFP invgFP
+             (\<lambda>i::nat. if i = 0
+                then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+                else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+             (\<lambda>i. if i = 0
+                then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+                else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+             \<iota>fam {0, 1}
+         \<and> top1_groups_isomorphic_on
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)
+             (top1_quotient_group_carrier_on FP mulFP
+                (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+                   { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on
+                        (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+                        U (subspace_topology X TX U) x0 (\<lambda>x. x) c))
+                          (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on
+                            (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+                            V (subspace_topology X TX V) x0 (\<lambda>x. x) c)))
+                    | c. c \<in> top1_fundamental_group_carrier
+                           (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 }))
+             (top1_quotient_group_mul_on mulFP)"
+  \<comment> \<open>Seifert-van Kampen: \<pi>_1(X, x_0) \<cong> (\<pi>_1(U) \<star> \<pi>_1(V)) / \<langle>\<langle>{i_1(\<gamma>) \<cdot> i_2(\<gamma>)\<inverse> |
+      \<gamma> \<in> \<pi>_1(U\<inter>V)}\<rangle>\<rangle>: the amalgamated free product over \<pi>_1(U\<inter>V).\<close>
   sorry
 
 section \<open>Chapter 12: Classification of Surfaces\<close>
