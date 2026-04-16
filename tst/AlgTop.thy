@@ -939,7 +939,25 @@ proof -
     hence "e1' = e" using hgt_1 h1 by simp
     ultimately show ?thesis by simp
   qed
-  have hhomo: "top1_path_homotopic_on E TE e0 e1 ftilde gtilde" sorry
+  have hhomo: "top1_path_homotopic_on E TE e0 e1 ftilde gtilde"
+  proof -
+    \<comment> \<open>Ftilde is the path homotopy: cont, boundary ftilde/gtilde, sides e0/e1.\<close>
+    have hgt': "top1_is_path_on E TE e0 e1 gtilde" using hgt heq by simp
+    have hFt_b0: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s" using hFt_bot .
+    have hFt_b1: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s" using hFt_top .
+    have hFt_l0: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" using hFt_left .
+    have hFt_r1: "\<forall>t\<in>I_set. Ftilde (1, t) = e1"
+    proof -
+      obtain e where hc: "\<forall>t\<in>I_set. Ftilde (1, t) = e" using hFt_right_const by blast
+      have "Ftilde (1, 0) = e" using hc h0I by blast
+      moreover have "Ftilde (1, 0) = ftilde 1" using hFt_bot h1I by blast
+      ultimately have "e = e1" using hft_1 by simp
+      thus ?thesis using hc by simp
+    qed
+    show ?thesis
+      unfolding top1_path_homotopic_on_def
+      using hft hgt' hFt_cont hFt_b0 hFt_b1 hFt_l0 hFt_r1 by blast
+  qed
   show ?thesis using heq hhomo by blast
 qed
 
