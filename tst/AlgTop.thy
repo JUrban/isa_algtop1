@@ -2871,7 +2871,9 @@ theorem Theorem_71_1_wedge_of_circles_finite:
   assumes "top1_is_wedge_of_circles_on X TX {..<n} p"
   shows "\<exists>(G::'g set) mul e invg (\<iota>::nat \<Rightarrow> 'g).
            top1_is_free_group_full_on G mul e invg \<iota> {..<n}
-         \<and> (\<exists>\<phi>. bij_betw \<phi> G (top1_fundamental_group_carrier X TX p))"
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
   sorry
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
@@ -2880,7 +2882,9 @@ theorem Theorem_71_3_wedge_of_circles_general:
   assumes "top1_is_wedge_of_circles_on X TX J p"
   shows "\<exists>(G::'g set) mul e invg (\<iota>::'i \<Rightarrow> 'g).
            top1_is_free_group_full_on G mul e invg \<iota> J
-         \<and> (\<exists>\<phi>. bij_betw \<phi> G (top1_fundamental_group_carrier X TX p))"
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
   sorry
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
