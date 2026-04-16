@@ -2994,26 +2994,33 @@ theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
   sorry
 
-(** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n is
-    F_{2n} / \<langle>[\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>. **)
+(** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n has the
+    presentation \<langle>\<alpha>_1, \<beta>_1, \<cdots>, \<alpha>_n, \<beta>_n | [\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>. **)
 theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-          (top1_fundamental_group_carrier X TX x0)
-          (\<comment> \<open>F_{2n} / normal-closure(\<Prod> [\<alpha>_i,\<beta>_i])\<close>
-           UNIV::'b set)"
-  \<comment> \<open>Uses top1_group_presented_by_on to encode the presentation.\<close>
+      and "x0 \<in> X"
+  shows "\<exists>(G::'g set) mul e invg S R.
+           top1_group_presented_by_on G mul e invg S R
+         \<and> card S = 2*n
+         \<and> card R = 1
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)"
   sorry
 
-(** from \<S>74 Theorem 74.4: fundamental group of m-fold projective plane **)
+(** from \<S>74 Theorem 74.4: \<pi>_1(P_m) = F_m / normal-closure(\<alpha>_1^2 \<cdots> \<alpha>_m^2). **)
 theorem Theorem_74_4_fund_group_m_projective:
-  \<comment> \<open>\<pi>_1(P_m) is F_m / normal-closure(\<alpha>_1^2 \<cdots> \<alpha>_m^2)\<close>
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-          (top1_fundamental_group_carrier X TX x0)
-          (UNIV::'b set)"
+      and "x0 \<in> X"
+  shows "\<exists>(G::'g set) mul e invg S R.
+           top1_group_presented_by_on G mul e invg S R
+         \<and> card S = m
+         \<and> card R = 1
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)"
   sorry
 
 section \<open>\<S>76 Cutting and Pasting\<close>
