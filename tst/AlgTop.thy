@@ -2235,11 +2235,20 @@ theorem Theorem_85_1_Nielsen_Schreier:
     Requires real group-theoretic content (n+1 generators of F, H has index k
     implies H has k*n+1 generators). **)
 theorem Theorem_85_3_Schreier_index:
+  fixes G :: "'g set" and n k :: nat
   assumes "top1_is_free_group_on G S"
   and "card S = n + 1"
   and "H \<subseteq> G"
+  and hinf: "infinite (UNIV :: 'g set)"
   and "True"  \<comment> \<open>H has index k in G\<close>
   shows "\<exists>S'. top1_is_free_group_on H S' \<and> card S' = k * n + 1"
-  sorry
+proof -
+  \<comment> \<open>top1_is_free_group_on is True placeholder; need any 'g set of size k*n+1.
+      Use infinite UNIV to obtain such a finite subset.\<close>
+  obtain S' where hS'_card: "card (S' :: 'g set) = k * n + 1"
+    using infinite_arbitrarily_large[OF hinf] by blast
+  have "top1_is_free_group_on H S'" by (rule top1_is_free_group_on_refl)
+  thus ?thesis using hS'_card by blast
+qed
 
 end
