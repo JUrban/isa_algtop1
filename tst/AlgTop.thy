@@ -62,7 +62,22 @@ lemma homotopy_const_continuous:
   and hTX: "is_topology_on X TX"
   shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
     (\<lambda>p. f (fst p))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX hTI])
+  have hid: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+    (X \<times> I_set) (product_topology_on TX I_top) id"
+    by (rule top1_continuous_map_on_id[OF hTP])
+  have hpi1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (pi1 \<circ> id)"
+    using iffD1[OF Theorem_18_4[OF hTP hTX hTI] hid] by blast
+  have hpi1': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX pi1"
+    using hpi1 by (simp add: comp_def)
+  have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY (f \<circ> pi1)"
+    by (rule top1_continuous_map_on_comp[OF hpi1' hf])
+  thus ?thesis by (simp add: comp_def pi1_def)
+qed
 
 (** from \<S>51 Lemma 51.1: \<simeq> and \<simeq>_p are equivalence relations **)
 lemma Lemma_51_1_homotopic_refl:
@@ -137,9 +152,26 @@ qed
 
 text \<open>Helper: f \<circ> pi_1 continuous from I \<times> I \<rightarrow> X when f: I \<rightarrow> X is continuous.\<close>
 lemma path_homotopy_const_continuous:
-  assumes "top1_continuous_map_on I_set I_top X TX f"
+  assumes hf: "top1_continuous_map_on I_set I_top X TX f"
   shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTP: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  have hid: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+    (I_set \<times> I_set) II_topology id"
+    by (rule top1_continuous_map_on_id[OF hTP])
+  have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> id)"
+    unfolding II_topology_def
+    using iffD1[OF Theorem_18_4[OF hTP[unfolded II_topology_def] hTI hTI] hid[unfolded II_topology_def]]
+    by blast
+  have hpi1': "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+    using hpi1 by (simp add: comp_def)
+  have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> pi1)"
+    by (rule top1_continuous_map_on_comp[OF hpi1' hf])
+  thus ?thesis by (simp add: comp_def pi1_def)
+qed
 
 lemma Lemma_51_1_path_homotopic_refl:
   assumes hf: "top1_is_path_on X TX x0 x1 f"
