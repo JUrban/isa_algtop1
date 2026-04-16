@@ -870,13 +870,52 @@ text \<open>Helper: s \<mapsto> (s, c) is continuous I \<rightarrow> I \<times> 
 lemma pair_s_const_continuous:
   assumes hc: "c \<in> I_set"
   shows "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, c))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  \<comment> \<open>pi_1 ∘ (s ↦ (s, c)) = id, and pi_2 ∘ (s ↦ (s, c)) = const c; both continuous.\<close>
+  have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
+    by (rule top1_continuous_map_on_id[OF hTI])
+  have hconst_c: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. c)"
+    by (rule top1_continuous_map_on_const[OF hTI hTI hc])
+  have hpi1_eq: "(pi1 \<circ> (\<lambda>s. (s, c))) = id"
+    unfolding pi1_def by (rule ext) simp
+  have hpi2_eq: "(pi2 \<circ> (\<lambda>s. (s, c))) = (\<lambda>_. c)"
+    unfolding pi2_def by (rule ext) simp
+  have hpi1_cont: "top1_continuous_map_on I_set I_top I_set I_top (pi1 \<circ> (\<lambda>s. (s, c)))"
+    using hid unfolding hpi1_eq .
+  have hpi2_cont: "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> (\<lambda>s. (s, c)))"
+    using hconst_c unfolding hpi2_eq .
+  show ?thesis
+    unfolding II_topology_def
+    using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hpi1_cont hpi2_cont by blast
+qed
 
 text \<open>Helper: t \<mapsto> (c, t) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
 lemma pair_const_t_continuous:
   assumes hc: "c \<in> I_set"
   shows "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (c, t))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
+    by (rule top1_continuous_map_on_id[OF hTI])
+  have hconst_c: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. c)"
+    by (rule top1_continuous_map_on_const[OF hTI hTI hc])
+  have hpi1_eq: "(pi1 \<circ> (\<lambda>t. (c, t))) = (\<lambda>_. c)"
+    unfolding pi1_def by (rule ext) simp
+  have hpi2_eq: "(pi2 \<circ> (\<lambda>t. (c, t))) = id"
+    unfolding pi2_def by (rule ext) simp
+  have hpi1_cont: "top1_continuous_map_on I_set I_top I_set I_top (pi1 \<circ> (\<lambda>t. (c, t)))"
+    using hconst_c unfolding hpi1_eq .
+  have hpi2_cont: "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> (\<lambda>t. (c, t)))"
+    using hid unfolding hpi2_eq .
+  show ?thesis
+    unfolding II_topology_def
+    using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hpi1_cont hpi2_cont by blast
+qed
 
 (** Uniqueness part of Lemma 54.1 (implicit in Munkres): given a path f in B with
     two lifts ftilde_1, ftilde_2 in E both starting at e_0, they are equal. **)
