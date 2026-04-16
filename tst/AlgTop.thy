@@ -635,6 +635,26 @@ definition top1_fundamental_group_carrier :: "'a set \<Rightarrow> 'a set set \<
   "top1_fundamental_group_carrier X TX x0 =
      { {g. top1_loop_equiv_on X TX x0 f g} | f. top1_is_loop_on X TX x0 f }"
 
+text \<open>Group operation on \<pi>_1(X, x_0): [f] * [g] = [f * g] (path concatenation).
+  Well-defined on equivalence classes via Theorem 51.2 operations.\<close>
+definition top1_fundamental_group_mul ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow>
+   (real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'a) set" where
+  "top1_fundamental_group_mul X TX x0 c1 c2 =
+     {h. \<exists>f\<in>c1. \<exists>g\<in>c2. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+
+text \<open>Identity element of \<pi>_1(X, x_0): the equivalence class of the constant loop.\<close>
+definition top1_fundamental_group_id ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> (real \<Rightarrow> 'a) set" where
+  "top1_fundamental_group_id X TX x0 =
+     {g. top1_loop_equiv_on X TX x0 (top1_constant_path x0) g}"
+
+text \<open>Inverse in \<pi>_1(X, x_0): [f] \<rightarrow> [reverse f].\<close>
+definition top1_fundamental_group_invg ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'a) set" where
+  "top1_fundamental_group_invg X TX x0 c =
+     {h. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+
 text \<open>Simply connected: path-connected with trivial fundamental group.
   We keep the base definition polymorphic; a strict version is given below.\<close>
 definition top1_simply_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
@@ -2521,13 +2541,31 @@ definition top1_is_free_product_on ::
         (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
         foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e)"
 
-text \<open>The integers Z as an (additive) abelian group.\<close>
+text \<open>The integers Z as an additive abelian group.\<close>
 definition top1_Z_group :: "int set" where
   "top1_Z_group = UNIV"
 
-text \<open>The cyclic group Z/nZ.\<close>
+definition top1_Z_mul :: "int \<Rightarrow> int \<Rightarrow> int" where
+  "top1_Z_mul a b = a + b"
+
+definition top1_Z_id :: "int" where
+  "top1_Z_id = 0"
+
+definition top1_Z_invg :: "int \<Rightarrow> int" where
+  "top1_Z_invg a = - a"
+
+text \<open>The cyclic group Z/nZ with modular addition.\<close>
 definition top1_Zn_group :: "nat \<Rightarrow> int set" where
   "top1_Zn_group n = {0..<int n}"
+
+definition top1_Zn_mul :: "nat \<Rightarrow> int \<Rightarrow> int \<Rightarrow> int" where
+  "top1_Zn_mul n a b = (a + b) mod int n"
+
+definition top1_Zn_id :: "int" where
+  "top1_Zn_id = 0"
+
+definition top1_Zn_invg :: "nat \<Rightarrow> int \<Rightarrow> int" where
+  "top1_Zn_invg n a = (int n - a) mod int n"
 
 text \<open>Iterated product in a group (g * g * ... * g, n times).\<close>
 fun top1_group_pow :: "('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> nat \<Rightarrow> 'g" where
