@@ -163,12 +163,18 @@ definition top1_fundamental_group_carrier :: "'a set \<Rightarrow> 'a set set \<
   "top1_fundamental_group_carrier X TX x0 =
      { {g. top1_loop_equiv_on X TX x0 f g} | f. top1_is_loop_on X TX x0 f }"
 
-text \<open>Simply connected: path-connected with trivial fundamental group.\<close>
+text \<open>Simply connected: path-connected with trivial fundamental group.
+  We keep the base definition polymorphic; a strict version is given below.\<close>
 definition top1_simply_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_simply_connected_on X TX \<longleftrightarrow>
      top1_path_connected_on X TX \<and>
      (\<forall>x0\<in>X. \<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
         top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0))"
+
+text \<open>Strict version: simply connected in a strict topology.\<close>
+definition top1_simply_connected_strict :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_simply_connected_strict X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and> top1_simply_connected_on X TX"
 
 text \<open>The fundamental group operation: [f]*[g] = [f*g] on equivalence classes.
   Well-defined by Theorem 51.2.\<close>
@@ -178,15 +184,50 @@ definition top1_induced_homomorphism_on :: "'a set \<Rightarrow> 'a set set \<Ri
   \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'b)" where
   "top1_induced_homomorphism_on X TX Y TY h f = h \<circ> f"
 
+text \<open>Change of basepoint map: alpha-hat([f]) = [rev-alpha * f * alpha] where alpha is a path x0 -> x1.\<close>
+definition top1_basepoint_change_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a
+  \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a)" where
+  "top1_basepoint_change_on X TX x0 x1 alpha f =
+     top1_path_product (top1_path_reverse alpha) (top1_path_product f alpha)"
+
+(** from \<S>52 Theorem 52.1: the basepoint-change map is a group isomorphism **)
+theorem Theorem_52_1:
+  assumes "top1_is_path_on X TX x0 x1 alpha"
+      and "top1_is_loop_on X TX x0 f"
+      and "top1_is_loop_on X TX x0 g"
+  shows "top1_path_homotopic_on X TX x1 x1
+    (top1_basepoint_change_on X TX x0 x1 alpha (top1_path_product f g))
+    (top1_path_product
+      (top1_basepoint_change_on X TX x0 x1 alpha f)
+      (top1_basepoint_change_on X TX x0 x1 alpha g))"
+  sorry
+
+text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
+(** from \<S>52 Theorem 52.4 **)
+theorem Theorem_52_4_composition:
+  assumes "top1_continuous_map_on X TX Y TY h"
+      and "top1_continuous_map_on Y TY Z TZ k"
+      and "top1_is_loop_on X TX x0 f"
+  shows "top1_induced_homomorphism_on X TX Z TZ (k \<circ> h) f =
+         top1_induced_homomorphism_on Y TY Z TZ k
+           (top1_induced_homomorphism_on X TX Y TY h f)"
+  sorry
+
+theorem Theorem_52_4_identity:
+  assumes "top1_is_loop_on X TX x0 f"
+  shows "top1_induced_homomorphism_on X TX X TX id f = f"
+  sorry
+
 section \<open>\<S>53 Covering Spaces\<close>
 
 text \<open>Evenly covered: an open U \<subseteq> B is evenly covered by p: E \<rightarrow> B if
-  p\<inverse>(U) is a disjoint union of open V\<alpha> \<subseteq> E, each mapped homeomorphically by p.\<close>
+  p\<inverse>(U) is a disjoint union of open V\<alpha> \<subseteq> E, each mapped homeomorphically by p.
+  Uses openin_on: each V is open in E and a subset of E.\<close>
 definition top1_evenly_covered_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'b set \<Rightarrow> 'b set set
   \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> 'b set \<Rightarrow> bool" where
   "top1_evenly_covered_on E TE B TB p U \<longleftrightarrow>
-     U \<in> TB \<and>
-     (\<exists>\<V>. (\<forall>V\<in>\<V>. V \<in> TE) \<and>
+     openin_on B TB U \<and>
+     (\<exists>\<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and>
           (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}) \<and>
           {x\<in>E. p x \<in> U} = \<Union>\<V> \<and>
           (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
@@ -207,6 +248,87 @@ definition top1_is_lifting_on :: "'x set \<Rightarrow> 'x set set \<Rightarrow> 
      top1_continuous_map_on X TX E TE ftilde \<and>
      (\<forall>x\<in>X. p (ftilde x) = f x)"
 
+text \<open>The unit circle S^1 as a subspace of R^2.\<close>
+definition top1_S1 :: "(real \<times> real) set" where
+  "top1_S1 = {p. fst p ^ 2 + snd p ^ 2 = 1}"
+
+definition top1_S1_topology :: "(real \<times> real) set set" where
+  "top1_S1_topology = subspace_topology UNIV
+     (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+
+text \<open>The canonical covering map p: R \<rightarrow> S^1 given by p(x) = (cos 2\<pi>x, sin 2\<pi>x).\<close>
+definition top1_R_to_S1 :: "real \<Rightarrow> real \<times> real" where
+  "top1_R_to_S1 x = (cos (2 * pi * x), sin (2 * pi * x))"
+
+(** from \<S>53 Theorem 53.1: the canonical map R \<rightarrow> S^1 is a covering map **)
+theorem Theorem_53_1:
+  "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+  sorry
+
+(** from \<S>53 Theorem 53.2: restriction of a covering map to a subspace is a covering map.
+    Uses strict topology: subspace of strict is strict. **)
+theorem Theorem_53_2:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "B0 \<subseteq> B"
+      and "E0 = {e\<in>E. p e \<in> B0}"
+  shows "top1_covering_map_on E0 (subspace_topology E TE E0)
+    B0 (subspace_topology B TB B0) p"
+  sorry
+
+(** from \<S>53 Theorem 53.3: product of covering maps is a covering map.
+    Uses strict topology: product of strict is strict. **)
+theorem Theorem_53_3:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "top1_covering_map_on E' TE' B' TB' p'"
+      and "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "is_topology_on_strict E' TE'" and "is_topology_on_strict B' TB'"
+  shows "top1_covering_map_on (E \<times> E') (product_topology_on TE TE')
+    (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))"
+  sorry
+
+section \<open>\<S>54 The Fundamental Group of the Circle\<close>
+
+(** from \<S>54 Lemma 54.1: path-lifting lemma **)
+lemma Lemma_54_1_path_lifting:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_is_path_on B TB b0 b1 f"
+  shows "\<exists>ftilde. top1_is_path_on E TE e0 (ftilde 1) ftilde
+    \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
+  sorry
+
+(** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
+lemma Lemma_54_2_homotopy_lifting:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
+      and "F (0, 0) = b0"
+  shows "\<exists>Ftilde. top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde
+    \<and> (\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t))
+    \<and> Ftilde (0, 0) = e0"
+  sorry
+
+(** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths **)
+theorem Theorem_54_3:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_is_path_on B TB b0 b1 f"
+      and "top1_is_path_on B TB b0 b1 g"
+      and "top1_path_homotopic_on B TB b0 b1 f g"
+      and "top1_is_path_on E TE e0 e1 ftilde"
+      and "(\<forall>s\<in>I_set. p (ftilde s) = f s)"
+      and "top1_is_path_on E TE e0 e1' gtilde"
+      and "(\<forall>s\<in>I_set. p (gtilde s) = g s)"
+  shows "e1 = e1' \<and> top1_path_homotopic_on E TE e0 e1 ftilde gtilde"
+  sorry
+
+(** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z **)
+theorem Theorem_54_5:
+  "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+    (UNIV::int set)"
+  sorry
+
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
 text \<open>Retraction: r: X \<rightarrow> A continuous with r|A = id_A.\<close>
@@ -219,6 +341,75 @@ definition top1_is_retraction_on :: "'a set \<Rightarrow> 'a set set \<Rightarro
 text \<open>A is a retract of X if there exists a retraction X \<rightarrow> A.\<close>
 definition top1_retract_of_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_retract_of_on X TX A \<longleftrightarrow> (\<exists>r. top1_is_retraction_on X TX A r)"
+
+text \<open>The closed disc B^2 and unit sphere S^1 as subspaces of R^2.\<close>
+definition top1_B2 :: "(real \<times> real) set" where
+  "top1_B2 = {p. fst p ^ 2 + snd p ^ 2 \<le> 1}"
+
+definition top1_B2_topology :: "(real \<times> real) set set" where
+  "top1_B2_topology = subspace_topology UNIV
+     (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+
+(** from \<S>55 Lemma 55.1: if A is a retract of X, then (\<pi>_1 A, x0) \<rightarrow> (\<pi>_1 X, x0)
+    is injective (induced by inclusion) **)
+lemma Lemma_55_1_retract_injective:
+  assumes "top1_retract_of_on X TX A"
+      and "x0 \<in> A"
+      and "top1_is_loop_on A (subspace_topology X TX A) x0 f"
+      and "top1_is_loop_on A (subspace_topology X TX A) x0 g"
+      and "top1_path_homotopic_on X TX x0 x0 f g"
+  shows "top1_path_homotopic_on A (subspace_topology X TX A) x0 x0 f g"
+  sorry
+
+(** from \<S>55 Theorem 55.2: No-retraction theorem: no retraction B^2 \<rightarrow> S^1 **)
+theorem Theorem_55_2_no_retraction:
+  "\<not> top1_retract_of_on top1_B2 top1_B2_topology top1_S1"
+  sorry
+
+(** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc **)
+theorem Theorem_55_6_brouwer:
+  assumes "top1_continuous_map_on top1_B2 top1_B2_topology top1_B2 top1_B2_topology f"
+  shows "\<exists>x\<in>top1_B2. f x = x"
+  sorry
+
+section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
+
+(** from *\<S>56 Theorem 56.1: Fundamental Theorem of Algebra **)
+theorem Theorem_56_1_FTA:
+  fixes a :: "nat \<Rightarrow> complex"
+  assumes "n > 0" and "a n \<noteq> 0"
+  shows "\<exists>z. (\<Sum>k\<le>n. a k * z^k) = 0"
+  sorry
+
+section \<open>\<S>57 The Borsuk-Ulam Theorem\<close>
+
+text \<open>Antipode-preserving map on the plane: h(-x) = -h(x) pointwise.\<close>
+definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> real \<times> real) \<Rightarrow> bool" where
+  "top1_antipode_preserving_S1 h \<longleftrightarrow>
+     (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
+
+(** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 has odd degree **)
+theorem Theorem_57_1:
+  assumes "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
+      and "top1_antipode_preserving_S1 h"
+  shows "\<exists>n. odd n \<and>
+    (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
+         top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+           (h \<circ> f) f)"  \<comment> \<open>simplified: degree-n statement\<close>
+  sorry
+
+(** from *\<S>57 Theorem 57.3: Borsuk-Ulam theorem for S^2 **)
+theorem Theorem_57_3_BorsukUlam:
+  fixes f :: "real \<times> real \<times> real \<Rightarrow> real \<times> real"
+  assumes "top1_continuous_map_on {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}
+    (subspace_topology UNIV
+      (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets))
+      {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1})
+    UNIV (product_topology_on top1_open_sets top1_open_sets) f"
+  shows "\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
+    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x))"
+  sorry
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
@@ -244,5 +435,169 @@ text \<open>Spaces have the same homotopy type if there is a homotopy equivalenc
 definition top1_same_homotopy_type_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> bool" where
   "top1_same_homotopy_type_on X TX Y TY \<longleftrightarrow>
      (\<exists>f g. top1_homotopy_equivalence_on X TX Y TY f g)"
+
+(** from \<S>58 Theorem 58.2: inclusion S^n \<rightarrow> R^{n+1}-0 induces isomorphism of fundamental groups **)
+theorem Theorem_58_2_inclusion_iso:
+  "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+    (top1_fundamental_group_carrier
+       (UNIV - {(0, 0)})
+       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+       (1, 0))"
+  sorry
+
+(** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups **)
+theorem Theorem_58_3:
+  assumes "top1_deformation_retract_of_on X TX A" and "x0 \<in> A"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+    (top1_fundamental_group_carrier X TX x0)"
+  sorry
+
+(** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
+    The strict version is trivially related. **)
+theorem Theorem_58_7:
+  assumes "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier X TX x0)
+    (top1_fundamental_group_carrier Y TY (f x0))"
+  sorry
+
+corollary Theorem_58_7_strict:
+  assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
+    and "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier X TX x0)
+    (top1_fundamental_group_carrier Y TY (f x0))"
+  using Theorem_58_7[OF assms(3) assms(4)] by blast
+
+section \<open>\<S>59 The Fundamental Group of S^n\<close>
+
+text \<open>The n-sphere S^n embedded in R^{n+1}.\<close>
+definition top1_Sn :: "nat \<Rightarrow> (nat \<Rightarrow> real) set" where
+  "top1_Sn n = {x. (\<forall>i \<ge> Suc n. x i = 0) \<and> (\<Sum>i\<le>n. (x i)^2) = 1}"
+
+(** from \<S>59 Theorem 59.1: van Kampen-like union theorem for fundamental groups.
+    Uses strict topology: under strict TX, U and V are automatically subsets of X. **)
+theorem Theorem_59_1:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "x0 \<in> U \<inter> V"
+  shows "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+    (\<exists>g h. top1_is_loop_on X TX x0 g \<and> top1_is_loop_on X TX x0 h
+      \<and> (\<forall>s\<in>I_set. (g s \<in> U \<or> h s \<in> V))
+      \<and> top1_path_homotopic_on X TX x0 x0 f (top1_path_product g h))"
+  sorry
+
+(** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected **)
+theorem Theorem_59_3:
+  assumes "n \<ge> 2"
+  shows "top1_simply_connected_on (top1_Sn n)
+    (subspace_topology UNIV
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
+      (top1_Sn n))"
+  sorry
+
+section \<open>\<S>60 Fundamental Groups of Some Surfaces\<close>
+
+(** from \<S>60 Theorem 60.1: fundamental group of product is product of fundamental groups.
+    Uses strict topology: product of strict topologies is strict. **)
+theorem Theorem_60_1_product:
+  assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
+      and "x0 \<in> X" and "y0 \<in> Y"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier (X \<times> Y) (product_topology_on TX TY) (x0, y0))
+    ((top1_fundamental_group_carrier X TX x0) \<times>
+     (top1_fundamental_group_carrier Y TY y0))"
+  sorry
+
+section \<open>Chapter 10: Separation Theorems in the Plane\<close>
+
+section \<open>\<S>63 The Jordan Curve Theorem\<close>
+
+text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.\<close>
+definition top1_simple_closed_curve_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_simple_closed_curve_on X TX C \<longleftrightarrow>
+     (\<exists>f. top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<and> inj_on f top1_S1
+          \<and> f ` top1_S1 = C)"
+
+(** from \<S>63 Theorem 63.4: Jordan Curve Theorem **)
+theorem Theorem_63_4_JordanCurve:
+  fixes C :: "(real \<times> real) set"
+  assumes "top1_simple_closed_curve_on
+    UNIV (product_topology_on top1_open_sets top1_open_sets) C"
+  shows "\<exists>U V. U \<inter> V = {} \<and> U \<union> V = UNIV - C
+    \<and> top1_path_connected_on U
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
+    \<and> top1_path_connected_on V
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)"
+  sorry
+
+section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
+
+section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
+
+(** from \<S>70 Theorem 70.1/70.2: Seifert-van Kampen Theorem.
+    Conclusion: every loop in X at x0 is path-homotopic to a finite product of
+    loops, each lying entirely in U or entirely in V.
+    Uses strict topology and openin_on. **)
+theorem Theorem_70_2_SvK:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_path_connected_on U (subspace_topology X TX U)"
+      and "top1_path_connected_on V (subspace_topology X TX V)"
+      and "x0 \<in> U \<inter> V"
+  shows "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+    (\<exists>n loops. (\<forall>i<n. (\<exists>x\<in>X. top1_is_loop_on X TX x0 (loops i)
+        \<and> (loops i) ` I_set \<subseteq> U \<union> V \<and>
+        ((loops i) ` I_set \<subseteq> U \<or> (loops i) ` I_set \<subseteq> V))))"
+  sorry  \<comment> \<open>Simplified: loops decompose into loops in U or V\<close>
+
+section \<open>Chapter 12: Classification of Surfaces\<close>
+
+text \<open>Surface: a connected, Hausdorff, compact 2-manifold.
+  A 2-manifold is a space where every point has a neighborhood homeomorphic
+  to an open subset of R^2.\<close>
+definition top1_is_2_manifold_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_2_manifold_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<forall>x\<in>X. \<exists>U (V :: (real \<times> real) set) h.
+        x \<in> U \<and> openin_on X TX U \<and>
+        V \<in> product_topology_on top1_open_sets top1_open_sets \<and>
+        top1_homeomorphism_on U (subspace_topology X TX U) V
+          (subspace_topology UNIV
+             (product_topology_on top1_open_sets top1_open_sets) V)
+          h)"
+
+definition top1_is_surface_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_surface_on X TX \<longleftrightarrow>
+     top1_is_2_manifold_on X TX \<and>
+     top1_connected_on X TX \<and>
+     is_hausdorff_on X TX \<and>
+     top1_compact_on X TX"
+
+section \<open>Chapter 13: Classification of Covering Spaces\<close>
+
+text \<open>Equivalence of covering spaces: homeomorphism commuting with covering maps.\<close>
+definition top1_equivalent_coverings_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'e' set \<Rightarrow> 'e' set set
+  \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('e' \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_equivalent_coverings_on E TE E' TE' B TB p p' \<longleftrightarrow>
+     top1_covering_map_on E TE B TB p \<and>
+     top1_covering_map_on E' TE' B TB p' \<and>
+     (\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e))"
+
+(** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
+    in \<pi>_1(B) are conjugate **)
+theorem Theorem_79_4:
+  assumes "top1_covering_map_on E TE B TB p" and "p e0 = b0"
+      and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
+      and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+      and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
+             \<and> h e0 = e0') \<longleftrightarrow>
+         \<comment> \<open>p_*(\<pi>_1 E) = p'_*(\<pi>_1 E') as subgroups of \<pi>_1(B, b0)\<close>
+         (True)"  \<comment> \<open>Simplified: full statement requires subgroup equality\<close>
+  sorry
 
 end
