@@ -499,6 +499,46 @@ text \<open>A loop at x0: a path starting and ending at x0.\<close>
 definition top1_is_loop_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> bool" where
   "top1_is_loop_on X TX x0 f \<longleftrightarrow> top1_is_path_on X TX x0 x0 f"
 
+lemma top1_is_loop_on_continuous:
+  "top1_is_loop_on X TX x0 f \<Longrightarrow> top1_continuous_map_on I_set I_top X TX f"
+  unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+
+lemma top1_is_loop_on_start:
+  "top1_is_loop_on X TX x0 f \<Longrightarrow> f 0 = x0"
+  unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+
+lemma top1_is_loop_on_end:
+  "top1_is_loop_on X TX x0 f \<Longrightarrow> f 1 = x0"
+  unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+
+lemma top1_constant_path_is_loop:
+  assumes "is_topology_on X TX" and "x \<in> X"
+  shows "top1_is_loop_on X TX x (top1_constant_path x)"
+  unfolding top1_is_loop_on_def using top1_constant_path_is_path[OF assms] .
+
+text \<open>Product of loops at x0 is a loop at x0.\<close>
+lemma top1_path_product_is_loop:
+  assumes hf: "top1_is_loop_on X TX x0 f" and hg: "top1_is_loop_on X TX x0 g"
+  shows "top1_is_loop_on X TX x0 (top1_path_product f g)"
+proof -
+  have "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  moreover have "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
+  ultimately have "top1_is_path_on X TX x0 x0 (top1_path_product f g)"
+    by (rule top1_path_product_is_path)
+  thus ?thesis unfolding top1_is_loop_on_def .
+qed
+
+text \<open>Reverse of a loop is a loop at the same basepoint.\<close>
+lemma top1_path_reverse_is_loop:
+  assumes hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_is_loop_on X TX x0 (top1_path_reverse f)"
+proof -
+  have "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  hence "top1_is_path_on X TX x0 x0 (top1_path_reverse f)"
+    by (rule top1_path_reverse_is_path)
+  thus ?thesis unfolding top1_is_loop_on_def .
+qed
+
 text \<open>The path-homotopy equivalence class of a loop is the same as
   path-homotopy equivalence restricted to loops at x0.\<close>
 definition top1_loop_equiv_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a
@@ -546,6 +586,18 @@ text \<open>Strict version: simply connected in a strict topology.\<close>
 definition top1_simply_connected_strict :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_simply_connected_strict X TX \<longleftrightarrow>
      is_topology_on_strict X TX \<and> top1_simply_connected_on X TX"
+
+lemma top1_simply_connected_strict_imp:
+  "top1_simply_connected_strict X TX \<Longrightarrow> top1_simply_connected_on X TX"
+  unfolding top1_simply_connected_strict_def by blast
+
+lemma top1_simply_connected_strict_is_topology_strict:
+  "top1_simply_connected_strict X TX \<Longrightarrow> is_topology_on_strict X TX"
+  unfolding top1_simply_connected_strict_def by blast
+
+lemma top1_simply_connected_on_path_connected:
+  "top1_simply_connected_on X TX \<Longrightarrow> top1_path_connected_on X TX"
+  unfolding top1_simply_connected_on_def by blast
 
 text \<open>The fundamental group operation: [f]*[g] = [f*g] on equivalence classes.
   Well-defined by Theorem 51.2.\<close>
@@ -713,6 +765,33 @@ text \<open>A is a retract of X if there exists a retraction X \<rightarrow> A.\
 definition top1_retract_of_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_retract_of_on X TX A \<longleftrightarrow> (\<exists>r. top1_is_retraction_on X TX A r)"
 
+lemma top1_is_retraction_on_subset:
+  assumes "top1_is_retraction_on X TX A r"
+  shows "A \<subseteq> X"
+  using assms unfolding top1_is_retraction_on_def by blast
+
+lemma top1_is_retraction_on_continuous:
+  assumes "top1_is_retraction_on X TX A r"
+  shows "top1_continuous_map_on X TX A (subspace_topology X TX A) r"
+  using assms unfolding top1_is_retraction_on_def by blast
+
+lemma top1_is_retraction_on_fixes_A:
+  assumes "top1_is_retraction_on X TX A r" and "a \<in> A"
+  shows "r a = a"
+  using assms unfolding top1_is_retraction_on_def by blast
+
+text \<open>Every space is a retract of itself (via identity).\<close>
+lemma top1_retract_self:
+  assumes "is_topology_on X TX"
+  shows "top1_retract_of_on X TX X"
+proof -
+  have "top1_is_retraction_on X TX X id"
+    unfolding top1_is_retraction_on_def
+    using top1_continuous_map_on_id[OF assms]
+    sorry  \<comment> \<open>need subspace topology on X vs ambient TX\<close>
+  thus ?thesis unfolding top1_retract_of_on_def by blast
+qed
+
 text \<open>The closed disc B^2 and unit sphere S^1 as subspaces of R^2.\<close>
 definition top1_B2 :: "(real \<times> real) set" where
   "top1_B2 = {p. fst p ^ 2 + snd p ^ 2 \<le> 1}"
@@ -806,6 +885,19 @@ text \<open>Spaces have the same homotopy type if there is a homotopy equivalenc
 definition top1_same_homotopy_type_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> bool" where
   "top1_same_homotopy_type_on X TX Y TY \<longleftrightarrow>
      (\<exists>f g. top1_homotopy_equivalence_on X TX Y TY f g)"
+
+text \<open>Homotopy equivalence is symmetric (swap f and g).\<close>
+lemma top1_homotopy_equivalence_on_sym:
+  assumes "top1_homotopy_equivalence_on X TX Y TY f g"
+  shows "top1_homotopy_equivalence_on Y TY X TX g f"
+  using assms unfolding top1_homotopy_equivalence_on_def by blast
+
+text \<open>Same homotopy type is symmetric.\<close>
+lemma top1_same_homotopy_type_on_sym:
+  assumes "top1_same_homotopy_type_on X TX Y TY"
+  shows "top1_same_homotopy_type_on Y TY X TX"
+  using assms top1_homotopy_equivalence_on_sym
+  unfolding top1_same_homotopy_type_on_def by blast
 
 (** from \<S>58 Theorem 58.2: inclusion S^n \<rightarrow> R^{n+1}-0 induces isomorphism of fundamental groups **)
 theorem Theorem_58_2_inclusion_iso:
