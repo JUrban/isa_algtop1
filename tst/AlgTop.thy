@@ -1946,13 +1946,24 @@ lemma Lemma_58_1_basepoint_fixed:
   \<comment> \<open>Munkres: H \<circ> (f \<times> id) gives the needed path homotopy.\<close>
   sorry
 
-(** from \<S>58 Lemma 58.5: if j: A \<hookrightarrow> X is inclusion and H: X\<times>I \<rightarrow> X a homotopy with
-    H(a, t) \<in> A for all t, then the basepoint-change under the path t \<mapsto> H(a, t)
-    satisfies certain commutativity. Used for Theorem 58.7. **)
+(** from \<S>58 Lemma 58.5: if A \<subseteq> X, H : X\<times>I \<rightarrow> X is a homotopy from id_X
+    to some map k : X \<rightarrow> X with H(a, t) \<in> A for all a \<in> A and t \<in> I,
+    and \<alpha>(t) = H(x_0, t) is the "base-tracking" path from x_0 to k(x_0),
+    then the basepoint-change \<alpha>\<^sup>\<hat> commutes with the induced map on \<pi>_1. **)
 lemma Lemma_58_5_basepoint_change:
-  assumes "\<comment> \<open>various assumptions about H and A\<close> True"
-  shows "True"
-  by simp
+  fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
+    and H :: "'a \<times> real \<Rightarrow> 'a" and k :: "'a \<Rightarrow> 'a" and x0 :: 'a
+  assumes "is_topology_on_strict X TX"
+      and "A \<subseteq> X"
+      and "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+      and "\<forall>x\<in>X. H (x, 0) = x"
+      and "\<forall>x\<in>X. H (x, 1) = k x"
+      and "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) \<in> A"
+      and "x0 \<in> A"
+  shows "\<comment> \<open>The tracking path \<alpha>(t) = H(x_0, t) goes from x_0 to k(x_0);
+             the basepoint-change \<alpha>-hat then commutes with k_* appropriately.\<close>
+         top1_is_path_on X TX x0 (k x0) (\<lambda>t. H (x0, t))"
+  sorry
 
 (** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
     The strict version is trivially related.
