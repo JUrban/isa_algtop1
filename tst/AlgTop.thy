@@ -900,13 +900,13 @@ theorem Theorem_54_3:
       and hgtp: "(\<forall>s\<in>I_set. p (gtilde s) = g s)"
   shows "e1 = e1' \<and> top1_path_homotopic_on E TE e0 e1 ftilde gtilde"
 proof -
-  \<comment> \<open>Step 1: obtain a homotopy F from f to g in B\<close>
+  \<comment> \<open>Step 1: obtain a homotopy F from f to g in B by unfolding path-homotopy.\<close>
   obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
              and hF_f: "\<forall>s\<in>I_set. F (s, 0) = f s"
              and hF_g: "\<forall>s\<in>I_set. F (s, 1) = g s"
              and hF_b0: "\<forall>t\<in>I_set. F (0, t) = b0"
              and hF_b1: "\<forall>t\<in>I_set. F (1, t) = b1"
-    sorry
+    using hfg unfolding top1_path_homotopic_on_def by blast
   \<comment> \<open>Step 2: lift F to Ftilde via Lemma 54.2. F(0,0) = f(0) = b0.\<close>
   have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
   have hF_00: "F (0, 0) = b0"
