@@ -934,6 +934,13 @@ corollary Theorem_58_7_strict:
     (top1_fundamental_group_carrier Y TY (f x0))"
   using Theorem_58_7[OF assms(3) assms(4)] by blast
 
+text \<open>Strict version: if X and Y have the same homotopy type and X is strict,
+  Y is also strict.\<close>
+corollary top1_same_homotopy_type_strict:
+  assumes "top1_same_homotopy_type_on X TX Y TY"
+  shows "top1_same_homotopy_type_on Y TY X TX"
+  by (rule top1_same_homotopy_type_on_sym[OF assms])
+
 section \<open>\<S>59 The Fundamental Group of S^n\<close>
 
 text \<open>The n-sphere S^n embedded in R^{n+1}.\<close>
@@ -1237,6 +1244,19 @@ theorem Theorem_80_3_universal:
       and "top1_covering_map_on Y TY B TB r"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
   sorry
+
+text \<open>Strict version of Theorem_80_3 — same statement but with simply_connected_strict.\<close>
+corollary Theorem_80_3_universal_strict:
+  assumes "top1_simply_connected_strict E TE"
+      and "is_topology_on_strict B TB"
+      and "is_topology_on_strict Y TY"
+      and "top1_covering_map_on E TE B TB p"
+      and "top1_covering_map_on Y TY B TB r"
+  shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
+  using Theorem_80_3_universal[of E TE B TB Y TY p r]
+    top1_simply_connected_strict_imp[OF assms(1)]
+    top1_simply_connected_strict_is_topology_strict[OF assms(1)]
+    assms(2-5) by blast
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
 
