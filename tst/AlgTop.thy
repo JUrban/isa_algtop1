@@ -112,7 +112,46 @@ lemma flip_t_continuous_product:
   assumes hTX: "is_topology_on X TX"
   shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
     (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, 1 - snd p))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX hTI])
+  let ?g = "\<lambda>p::'a \<times> real. (fst p, 1 - snd p)"
+  have hid: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+    (X \<times> I_set) (product_topology_on TX I_top) id"
+    by (rule top1_continuous_map_on_id[OF hTP])
+  have hpi12: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (pi1 \<circ> id)
+            \<and> top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (pi2 \<circ> id)"
+    using iffD1[OF Theorem_18_4[OF hTP hTX hTI] hid] by blast
+  have hpi1_eq: "(pi1 :: 'a \<times> real \<Rightarrow> 'a) = fst" unfolding pi1_def by (rule ext) simp
+  have hpi2_eq: "(pi2 :: 'a \<times> real \<Rightarrow> real) = snd" unfolding pi2_def by (rule ext) simp
+  have hpi1fst: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX fst"
+    using hpi12 unfolding hpi1_eq by (simp add: comp_def)
+  have hpi2snd: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top snd"
+    using hpi12 unfolding hpi2_eq by (simp add: comp_def)
+  have hc1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (pi1 \<circ> ?g)"
+  proof -
+    have "pi1 \<circ> ?g = fst" unfolding hpi1_eq by auto
+    thus ?thesis using hpi1fst by simp
+  qed
+  have hrev_snd: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (\<lambda>p. 1 - snd p)"
+  proof -
+    have hrev: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+      by (rule op_minus_continuous_on_interval)
+    have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top
+      ((\<lambda>t. 1 - t) \<circ> snd)"
+      by (rule top1_continuous_map_on_comp[OF hpi2snd hrev])
+    thus ?thesis by (simp add: comp_def)
+  qed
+  have hc2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (pi2 \<circ> ?g)"
+  proof -
+    have "pi2 \<circ> ?g = (\<lambda>p. 1 - snd p)" unfolding hpi2_eq by auto
+    thus ?thesis using hrev_snd by simp
+  qed
+  show ?thesis
+    using iffD2[OF Theorem_18_4[OF hTP hTX hTI]] hc1 hc2 by blast
+qed
 
 lemma homotopy_reverse_continuous:
   assumes hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
