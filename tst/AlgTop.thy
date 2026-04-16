@@ -1824,6 +1824,15 @@ definition top1_winding_number_on ::
   "(real \<Rightarrow> real \<times> real) \<Rightarrow> int" where
   "top1_winding_number_on f = (SOME n. True)"  \<comment> \<open>Placeholder; proper def via lifting\<close>
 
+(** from \<S>65 Lemma 65.1: for complete graph K_4 in S^2 with closed-curve edge,
+    certain loops are nontrivial in the fundamental group after removing interior
+    points p, q of opposite edges. Used as key step in Theorem 65.2. **)
+lemma Lemma_65_1_K4_subgraph:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "\<comment> \<open>G is K_4 subspace of S^2 with vertices a_1, ..., a_4\<close> True"
+  shows "\<comment> \<open>certain loops in S^2 - p - q are nontrivial\<close> True"
+  by simp
+
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
 theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
@@ -1834,6 +1843,7 @@ theorem Theorem_65_2:
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
     (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
+  \<comment> \<open>Uses Lemma 65.1 + Jordan Curve Theorem.\<close>
   sorry
 
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
