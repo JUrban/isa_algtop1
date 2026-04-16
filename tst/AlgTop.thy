@@ -1868,7 +1868,18 @@ theorem Theorem_58_2_inclusion_iso:
        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
        (1, 0))"
   \<comment> \<open>By Theorem 58.3, it suffices to show S^1 is a deformation retract of R^2 - 0.\<close>
-  sorry
+proof -
+  let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+  let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+  have hdef: "top1_deformation_retract_of_on ?R2_0 ?TR2_0 top1_S1" sorry
+  have hx0: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+  obtain \<phi> where "bij_betw \<phi>
+      (top1_fundamental_group_carrier top1_S1 (subspace_topology ?R2_0 ?TR2_0 top1_S1) (1, 0))
+      (top1_fundamental_group_carrier ?R2_0 ?TR2_0 (1, 0))"
+    using Theorem_58_3[OF hdef hx0] by blast
+  \<comment> \<open>Need: subspace_topology ?R2_0 ?TR2_0 top1_S1 = top1_S1_topology (subspace_topology_trans).\<close>
+  thus ?thesis sorry
+qed
 
 corollary Theorem_58_7_strict:
   assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
