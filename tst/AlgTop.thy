@@ -513,6 +513,41 @@ theorem Theorem_60_1_product:
 
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 
+section \<open>\<S>61 The Jordan Separation Theorem\<close>
+
+text \<open>The 2-sphere S^2 as a subspace of R^3.\<close>
+definition top1_S2 :: "(real \<times> real \<times> real) set" where
+  "top1_S2 = {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}"
+
+definition top1_S2_topology :: "(real \<times> real \<times> real) set set" where
+  "top1_S2_topology = subspace_topology UNIV
+     (product_topology_on top1_open_sets
+       (product_topology_on top1_open_sets top1_open_sets)) top1_S2"
+
+text \<open>A set C separates a space X if X - C has more than one component.\<close>
+definition top1_separates_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_separates_on X TX C \<longleftrightarrow>
+     \<not> top1_connected_on (X - C) (subspace_topology X TX (X - C))"
+
+(** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2 **)
+theorem Theorem_61_3_JordanSeparation_S2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  shows "top1_separates_on top1_S2 top1_S2_topology C"
+  sorry
+
+(** from \<S>61 Theorem 61.4: general separation theorem for S^2 **)
+theorem Theorem_61_4_general_separation:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "A1 \<subseteq> top1_S2" and "A2 \<subseteq> top1_S2"
+  and "closedin_on top1_S2 top1_S2_topology A1"
+  and "closedin_on top1_S2 top1_S2_topology A2"
+  and "top1_connected_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+  and "top1_connected_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+  and "card (A1 \<inter> A2) = 2"
+  shows "top1_separates_on top1_S2 top1_S2_topology (A1 \<union> A2)"
+  sorry
+
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.\<close>
@@ -534,7 +569,79 @@ theorem Theorem_63_4_JordanCurve:
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)"
   sorry
 
+section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
+
+text \<open>The winding number of a loop f in R^2-{0} around the origin.
+  It is an integer, well-defined up to homotopy.\<close>
+definition top1_winding_number_on ::
+  "(real \<Rightarrow> real \<times> real) \<Rightarrow> int" where
+  "top1_winding_number_on f = (SOME n. True)"  \<comment> \<open>Placeholder; proper def via lifting\<close>
+
+(** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
+theorem Theorem_65_2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
+  and "\<comment> \<open>p, q in different components of S^2 - C\<close> True"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
+  sorry
+
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
+
+section \<open>\<S>67 Direct Sums of Abelian Groups\<close>
+
+text \<open>External direct sum: the set of finitely-supported functions J \<rightarrow> \<Union>G_\<alpha>.\<close>
+definition top1_direct_sum_carrier :: "'i set \<Rightarrow> ('i \<Rightarrow> 'g set) \<Rightarrow> ('i \<Rightarrow> 'g) set" where
+  "top1_direct_sum_carrier J G =
+     {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = undefined) \<and>
+         finite {i\<in>J. f i \<noteq> undefined}}"  \<comment> \<open>approximation; real: f i \<noteq> 0_{G_i}\<close>
+
+(** from \<S>67 Theorem 67.4: existence of external direct sum **)
+theorem Theorem_67_4_direct_sum_exists:
+  "\<exists>G (inj :: 'i \<Rightarrow> 'g \<Rightarrow> ('i \<Rightarrow> 'g)). True"
+    \<comment> \<open>Simplified existence statement\<close>
+  sorry
+
+(** from \<S>67 Theorem 67.6: uniqueness of direct sums **)
+theorem Theorem_67_6_direct_sum_unique:
+  fixes G G' :: "'g set" and inj inj' :: "'i \<Rightarrow> 'h \<Rightarrow> 'g"
+  shows "True"  \<comment> \<open>Simplified uniqueness statement\<close>
+  sorry
+
+(** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined **)
+theorem Theorem_67_8_rank_unique:
+  fixes n m :: nat
+  shows "True"  \<comment> \<open>Simplified: n is determined by G\<close>
+  sorry
+
+section \<open>\<S>68 Free Products of Groups\<close>
+
+text \<open>Reduced words in a free product G_1 * G_2.\<close>
+definition top1_free_product_carrier :: "'g set \<Rightarrow> 'g set \<Rightarrow> 'g list set" where
+  "top1_free_product_carrier G1 G2 =
+     {ws. \<forall>i<length ws. ws!i \<in> G1 \<union> G2}"  \<comment> \<open>approximation\<close>
+
+section \<open>\<S>69 Free Groups\<close>
+
+text \<open>Free group on a set of generators.\<close>
+definition top1_is_free_group_on :: "'g set \<Rightarrow> 'g set \<Rightarrow> bool" where
+  "top1_is_free_group_on G S \<longleftrightarrow> True"  \<comment> \<open>Placeholder: universal property\<close>
+
+(** from \<S>69 Theorem 69.2: free product of free groups is free **)
+theorem Theorem_69_2:
+  assumes "top1_is_free_group_on G1 S1" and "top1_is_free_group_on G2 S2"
+      and "S1 \<inter> S2 = {}"
+  shows "\<exists>G. top1_is_free_group_on G (S1 \<union> S2)"
+  sorry
+
+(** from \<S>69 Theorem 69.4: abelianization of free group is free abelian **)
+theorem Theorem_69_4:
+  assumes "top1_is_free_group_on G S"
+  shows "True"  \<comment> \<open>G/[G,G] is free abelian on classes [a_\<alpha>]\<close>
+  sorry
 
 section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
 
@@ -577,6 +684,60 @@ definition top1_is_surface_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 
      is_hausdorff_on X TX \<and>
      top1_compact_on X TX"
 
+section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
+
+text \<open>The n-fold torus T_n = S^1 \<times> S^1 \<times> ... \<times> S^1 (n times), iterated connected sum.\<close>
+definition top1_n_fold_torus :: "nat \<Rightarrow> ('a set)" where
+  "top1_n_fold_torus n = undefined"  \<comment> \<open>Placeholder: connected sum construction\<close>
+
+text \<open>The m-fold projective plane P_m.\<close>
+definition top1_m_fold_projective :: "nat \<Rightarrow> ('a set)" where
+  "top1_m_fold_projective m = undefined"
+
+(** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
+theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "is_topology_on_strict X TX"
+  and "True"  \<comment> \<open>X is quotient of finite polygonal region by edge-pasting\<close>
+  shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
+  sorry
+
+(** from \<S>74 Theorem 74.3: fundamental group of n-fold torus **)
+theorem Theorem_74_3_fund_group_n_torus:
+  "True"  \<comment> \<open>\<pi>_1(T_n) \<cong> F_{2n} / \<langle>[\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>\<close>
+  sorry
+
+(** from \<S>74 Theorem 74.4: fundamental group of m-fold projective plane **)
+theorem Theorem_74_4_fund_group_m_projective:
+  "True"  \<comment> \<open>\<pi>_1(P_m) \<cong> F_m / \<langle>\<alpha>_1^2 \<cdots> \<alpha>_m^2\<rangle>\<close>
+  sorry
+
+section \<open>\<S>75 Homology of Surfaces\<close>
+
+(** from \<S>75 Theorem 75.1: H_1 is abelianization of \<pi>_1 **)
+theorem Theorem_75_1_H1_abelianization:
+  "True"  \<comment> \<open>Simplified statement\<close>
+  sorry
+
+(** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n **)
+theorem Theorem_75_3_H1_n_torus:
+  "True"  \<comment> \<open>H_1(T_n) \<cong> Z^{2n}\<close>
+  sorry
+
+(** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane **)
+theorem Theorem_75_4_H1_m_projective:
+  "True"  \<comment> \<open>T(P_m) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close>
+  sorry
+
+section \<open>\<S>77 The Classification Theorem\<close>
+
+(** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces **)
+theorem Theorem_77_5_classification:
+  assumes "top1_is_surface_on X TX"
+  and "True"  \<comment> \<open>X is quotient of polygonal region\<close>
+  shows "\<comment> \<open>X is homeomorphic to S^2, T_n, or P_m\<close> True"
+  sorry
+
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
 text \<open>Equivalence of covering spaces: homeomorphism commuting with covering maps.\<close>
@@ -588,9 +749,11 @@ definition top1_equivalent_coverings_on :: "'e set \<Rightarrow> 'e set set \<Ri
      (\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e))"
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
-    in \<pi>_1(B) are conjugate **)
+    in \<pi>_1(B) are conjugate. Uses strict topology. **)
 theorem Theorem_79_4:
-  assumes "top1_covering_map_on E TE B TB p" and "p e0 = b0"
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "is_topology_on_strict E' TE'"
+      and "top1_covering_map_on E TE B TB p" and "p e0 = b0"
       and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
       and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
@@ -598,6 +761,63 @@ theorem Theorem_79_4:
              \<and> h e0 = e0') \<longleftrightarrow>
          \<comment> \<open>p_*(\<pi>_1 E) = p'_*(\<pi>_1 E') as subgroups of \<pi>_1(B, b0)\<close>
          (True)"  \<comment> \<open>Simplified: full statement requires subgroup equality\<close>
+  sorry
+
+section \<open>\<S>80 The Universal Covering Space\<close>
+
+(** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
+theorem Theorem_80_3_universal:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "is_topology_on_strict Y TY"
+      and "top1_covering_map_on E TE B TB p"
+      and "top1_simply_connected_on E TE"
+      and "top1_covering_map_on Y TY B TB r"
+  shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
+  sorry
+
+section \<open>\<S>82 Existence of Covering Spaces\<close>
+
+text \<open>Semilocally simply connected: every point has a neighborhood U such that
+  every loop in U is nulhomotopic in X.\<close>
+definition top1_semilocally_simply_connected_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_semilocally_simply_connected_on X TX \<longleftrightarrow>
+     (\<forall>x\<in>X. \<exists>U. openin_on X TX U \<and> x \<in> U \<and>
+        (\<forall>f. top1_is_loop_on U (subspace_topology X TX U) x f \<longrightarrow>
+             top1_path_homotopic_on X TX x x f (top1_constant_path x)))"
+
+(** from \<S>82 Theorem 82.1: existence of covering space for any subgroup **)
+theorem Theorem_82_1_covering_existence:
+  assumes "is_topology_on_strict B TB"
+      and "top1_path_connected_on B TB"
+      and "top1_locally_path_connected_on B TB"
+      and "top1_semilocally_simply_connected_on B TB"
+      and "b0 \<in> B"
+      and "H \<subseteq> top1_fundamental_group_carrier B TB b0"
+  shows "\<exists>E TE p e0. is_topology_on_strict E TE
+    \<and> top1_covering_map_on E TE B TB p
+    \<and> e0 \<in> E \<and> p e0 = b0"
+  sorry
+
+section \<open>Chapter 14: Applications to Group Theory\<close>
+
+section \<open>\<S>85 Subgroups of Free Groups\<close>
+
+(** from \<S>85 Theorem 85.1 (Nielsen-Schreier): subgroups of free groups are free **)
+theorem Theorem_85_1_Nielsen_Schreier:
+  assumes "top1_is_free_group_on G S"
+  and "H \<subseteq> G"
+  and "True"  \<comment> \<open>H is a subgroup\<close>
+  shows "\<exists>S'. top1_is_free_group_on H S'"
+  sorry
+
+(** from \<S>85 Theorem 85.3: Schreier index formula **)
+theorem Theorem_85_3_Schreier_index:
+  assumes "top1_is_free_group_on G S"
+  and "card S = n + 1"
+  and "H \<subseteq> G"
+  and "True"  \<comment> \<open>H has index k in G\<close>
+  shows "\<exists>S'. top1_is_free_group_on H S' \<and> card S' = k * n + 1"
   sorry
 
 end
