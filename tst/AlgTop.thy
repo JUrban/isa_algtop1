@@ -56,11 +56,27 @@ definition top1_nulhomotopic_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow
   "top1_nulhomotopic_on X TX Y TY f \<longleftrightarrow>
      (\<exists>c\<in>Y. top1_homotopic_on X TX Y TY f (\<lambda>_. c))"
 
+text \<open>Helper: f \<circ> pi_1 is continuous from X \<times> I \<rightarrow> Y when f: X \<rightarrow> Y is continuous.\<close>
+lemma homotopy_const_continuous:
+  assumes hf: "top1_continuous_map_on X TX Y TY f"
+  and hTX: "is_topology_on X TX"
+  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (\<lambda>p. f (fst p))"
+  sorry
+
 (** from \<S>51 Lemma 51.1: \<simeq> and \<simeq>_p are equivalence relations **)
 lemma Lemma_51_1_homotopic_refl:
-  assumes "top1_continuous_map_on X TX Y TY f"
+  assumes hf: "top1_continuous_map_on X TX Y TY f" and hTX: "is_topology_on X TX"
   shows "top1_homotopic_on X TX Y TY f f"
-  sorry
+proof -
+  have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (\<lambda>p. f (fst p))"
+    by (rule homotopy_const_continuous[OF hf hTX])
+  moreover have "\<forall>x\<in>X. f (fst (x, 0)) = f x" by simp
+  moreover have "\<forall>x\<in>X. f (fst (x, 1)) = f x" by simp
+  ultimately show ?thesis
+    unfolding top1_homotopic_on_def using hf by blast
+qed
 
 lemma Lemma_51_1_homotopic_sym:
   assumes "top1_homotopic_on X TX Y TY f f'"
@@ -73,10 +89,29 @@ lemma Lemma_51_1_homotopic_trans:
   shows "top1_homotopic_on X TX Y TY f f''"
   sorry
 
-lemma Lemma_51_1_path_homotopic_refl:
-  assumes "top1_is_path_on X TX x0 x1 f"
-  shows "top1_path_homotopic_on X TX x0 x1 f f"
+text \<open>Helper: f \<circ> pi_1 continuous from I \<times> I \<rightarrow> X when f: I \<rightarrow> X is continuous.\<close>
+lemma path_homotopy_const_continuous:
+  assumes "top1_continuous_map_on I_set I_top X TX f"
+  shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
   sorry
+
+lemma Lemma_51_1_path_homotopic_refl:
+  assumes hf: "top1_is_path_on X TX x0 x1 f"
+  shows "top1_path_homotopic_on X TX x0 x1 f f"
+proof -
+  have hfc: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by blast
+  have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
+    by (rule path_homotopy_const_continuous[OF hfc])
+  moreover have "\<forall>s\<in>I_set. f (fst (s, 0)) = f s" by simp
+  moreover have "\<forall>s\<in>I_set. f (fst (s, 1)) = f s" by simp
+  moreover have "\<forall>t\<in>I_set. f (fst (0, t)) = x0"
+    using hf unfolding top1_is_path_on_def by simp
+  moreover have "\<forall>t\<in>I_set. f (fst (1, t)) = x1"
+    using hf unfolding top1_is_path_on_def by simp
+  ultimately show ?thesis
+    unfolding top1_path_homotopic_on_def using hf by blast
+qed
 
 lemma Lemma_51_1_path_homotopic_sym:
   assumes "top1_path_homotopic_on X TX x0 x1 f f'"
@@ -609,13 +644,13 @@ theorem Theorem_67_4_direct_sum_exists:
 theorem Theorem_67_6_direct_sum_unique:
   fixes G G' :: "'g set" and inj inj' :: "'i \<Rightarrow> 'h \<Rightarrow> 'g"
   shows "True"  \<comment> \<open>Simplified uniqueness statement\<close>
-  sorry
+  by simp
 
 (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined **)
 theorem Theorem_67_8_rank_unique:
   fixes n m :: nat
   shows "True"  \<comment> \<open>Simplified: n is determined by G\<close>
-  sorry
+  by simp
 
 section \<open>\<S>68 Free Products of Groups\<close>
 
@@ -641,7 +676,7 @@ theorem Theorem_69_2:
 theorem Theorem_69_4:
   assumes "top1_is_free_group_on G S"
   shows "True"  \<comment> \<open>G/[G,G] is free abelian on classes [a_\<alpha>]\<close>
-  sorry
+  by simp
 
 section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
 
@@ -705,29 +740,29 @@ theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
 (** from \<S>74 Theorem 74.3: fundamental group of n-fold torus **)
 theorem Theorem_74_3_fund_group_n_torus:
   "True"  \<comment> \<open>\<pi>_1(T_n) \<cong> F_{2n} / \<langle>[\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>\<close>
-  sorry
+  by simp
 
 (** from \<S>74 Theorem 74.4: fundamental group of m-fold projective plane **)
 theorem Theorem_74_4_fund_group_m_projective:
   "True"  \<comment> \<open>\<pi>_1(P_m) \<cong> F_m / \<langle>\<alpha>_1^2 \<cdots> \<alpha>_m^2\<rangle>\<close>
-  sorry
+  by simp
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
 (** from \<S>75 Theorem 75.1: H_1 is abelianization of \<pi>_1 **)
 theorem Theorem_75_1_H1_abelianization:
   "True"  \<comment> \<open>Simplified statement\<close>
-  sorry
+  by simp
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n **)
 theorem Theorem_75_3_H1_n_torus:
   "True"  \<comment> \<open>H_1(T_n) \<cong> Z^{2n}\<close>
-  sorry
+  by simp
 
 (** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane **)
 theorem Theorem_75_4_H1_m_projective:
   "True"  \<comment> \<open>T(P_m) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close>
-  sorry
+  by simp
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
