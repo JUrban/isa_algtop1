@@ -2815,15 +2815,16 @@ definition top1_is_wedge_of_circles_on :: "'a set \<Rightarrow> 'a set set \<Rig
 
 text \<open>A polygonal region in R^2 with n \<ge> 3 sides: a closed convex polygon, i.e.,
   the convex hull of n vertices v_0, ..., v_{n-1} that are pairwise distinct and
-  in convex position (no vertex lies in the convex hull of the others).\<close>
+  in convex position (no vertex lies in the convex hull of the others).
+  The three conjuncts of the definition are: (i) vertices pairwise distinct,
+  (ii) convex position (no vertex is a convex combination of the others),
+  (iii) P is the convex hull as convex combinations of the vertices.\<close>
 definition top1_is_polygonal_region_on :: "(real \<times> real) set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_polygonal_region_on P n \<longleftrightarrow>
      n \<ge> 3 \<and>
      (\<exists>vx vy :: nat \<Rightarrow> real.
-        (\<comment> \<open>vertices are pairwise distinct\<close>
-         \<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
-      \<and> (\<comment> \<open>no vertex is a convex combination of the others — convex position\<close>
-         \<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+        (\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
                           \<and> coeffs k = 0
                           \<and> (\<Sum>i<n. coeffs i) = 1
                           \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
@@ -2839,11 +2840,18 @@ text \<open>Edge scheme: a word w = y_1 y_2 ... y_n where each y_i is (label, or
   True means forward, False means reversed.\<close>
 type_synonym 'a top1_edge_scheme = "('a \<times> bool) list"
 
-text \<open>X is the quotient space obtained from a polygonal region P (with n = length scheme
-  sides, labelled by the scheme) by identifying boundary edges as the scheme specifies:
-  for each label a, the two edges of P bearing label a are glued homeomorphically, with
-  orientation compatible with the boolean flag. Interior points of P map injectively
-  under q; boundary points get identified according to the scheme's edge-equivalence.\<close>
+text \<open>X is the quotient space obtained from a polygonal region P (with n = length
+  scheme sides, labelled by the scheme) by identifying boundary edges as the scheme
+  specifies. The existential witnesses are: the polygonal region P; the quotient
+  map q : P \<rightarrow> X; and the edge parametrization edge : nat \<Rightarrow> real \<Rightarrow> P (edge i
+  parametrizes the i-th side of P). The conjuncts assert:
+  (i) P is a polygonal region with length(scheme) sides;
+  (ii) q is a quotient map;
+  (iii) each edge i maps I into P;
+  (iv) two edges with the same label are identified compatibly with their
+      orientation (same bool \<Rightarrow> direct identification t\<sim>t; opposite bool \<Rightarrow>
+      reversed identification t\<sim>1-t);
+  (v) interior points of P (not on any scheme edge) have trivial q-fibre.\<close>
 definition top1_quotient_of_scheme_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b top1_edge_scheme \<Rightarrow> bool" where
   "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
@@ -2852,19 +2860,13 @@ definition top1_quotient_of_scheme_on ::
         top1_is_polygonal_region_on P (length scheme)
       \<and> top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
-      \<and> (\<comment> \<open>edge i : [0, 1] \<rightarrow> boundary of P parametrizes the i-th edge of P\<close>
-         \<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<in> P)
-      \<and> (\<comment> \<open>two edges with the same label are identified compatibly with their
-             orientation: edges i, j labelled (a, bi), (a, bj) give same image under q
-             at corresponding parameter-values, where same orientation identifies t\<sim>t
-             and opposite orientation identifies t\<sim>1-t.\<close>
-         \<forall>i<length scheme. \<forall>j<length scheme.
+      \<and> (\<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<in> P)
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
             fst (scheme!i) = fst (scheme!j) \<longrightarrow>
             (\<forall>t\<in>I_set.
                q (edge i t) = q (edge j
                  (if snd (scheme!i) = snd (scheme!j) then t else 1 - t))))
-      \<and> (\<comment> \<open>interior points of P (not on any scheme-edge) have trivial q-fibre\<close>
-         \<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<noteq> p)
+      \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<noteq> p)
                \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
 
 text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
