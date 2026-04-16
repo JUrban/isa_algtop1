@@ -982,8 +982,24 @@ text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.
   top1_R_to_S1 x = (1, 0) iff cos(2\<pi>x) = 1 and sin(2\<pi>x) = 0 iff 2\<pi>x = 2\<pi>n, i.e. x = n \<in> Z.\<close>
 lemma top1_R_to_S1_fiber_is_Z:
   "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n. True}"
-  \<comment> \<open>Uses cos_eq_1 and sin_eq_0: 2\<pi>x = 2\<pi>n.\<close>
-  sorry
+proof (intro subset_antisym subsetI)
+  fix x :: real assume "x \<in> {x. top1_R_to_S1 x = (1, 0)}"
+  hence hcos: "cos (2 * pi * x) = 1" and hsin: "sin (2 * pi * x) = 0"
+    unfolding top1_R_to_S1_def by simp_all
+  from hcos obtain n :: int where hn: "2 * pi * x = 2 * pi * of_int n"
+    by (auto simp: cos_one_2pi_int)
+  have "x = of_int n" using hn by simp
+  thus "x \<in> {of_int n | n. True}" by blast
+next
+  fix x :: real assume "x \<in> {of_int n | n. True}"
+  then obtain n :: int where hn: "x = of_int n" by blast
+  have "cos (2 * pi * of_int n) = 1"
+    using cos_int_2pin by (simp add: mult.commute)
+  moreover have "sin (2 * pi * of_int n) = 0"
+    using sin_int_2pin by (simp add: mult.commute)
+  ultimately show "x \<in> {x. top1_R_to_S1 x = (1, 0)}"
+    unfolding top1_R_to_S1_def using hn by simp
+qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
