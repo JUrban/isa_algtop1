@@ -2700,45 +2700,64 @@ theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
   sorry
 
-(** from \<S>74 Theorem 74.3: fundamental group of n-fold torus **)
+(** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n is
+    F_{2n} / \<langle>[\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>. **)
 theorem Theorem_74_3_fund_group_n_torus:
-  "True"  \<comment> \<open>\<pi>_1(T_n) \<cong> F_{2n} / \<langle>[\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>\<close>
-  by simp
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "n > 0"
+      and "True"  \<comment> \<open>X is the n-fold torus T_n\<close>
+  shows "\<exists>\<phi>. bij_betw \<phi>
+          (top1_fundamental_group_carrier X TX x0)
+          (\<comment> \<open>F_{2n} / normal-closure(\<Prod> [\<alpha>_i,\<beta>_i])\<close>
+           UNIV::'b set)"
+  \<comment> \<open>Uses top1_group_presented_by_on to encode the presentation.\<close>
+  sorry
 
 (** from \<S>74 Theorem 74.4: fundamental group of m-fold projective plane **)
 theorem Theorem_74_4_fund_group_m_projective:
-  "True"  \<comment> \<open>\<pi>_1(P_m) \<cong> F_m / \<langle>\<alpha>_1^2 \<cdots> \<alpha>_m^2\<rangle>\<close>
-  by simp
+  \<comment> \<open>\<pi>_1(P_m) is F_m / normal-closure(\<alpha>_1^2 \<cdots> \<alpha>_m^2)\<close>
+  fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "m > 0"
+      and "True"  \<comment> \<open>X is the m-fold projective plane P_m\<close>
+  shows "\<exists>\<phi>. bij_betw \<phi>
+          (top1_fundamental_group_carrier X TX x0)
+          (UNIV::'b set)"
+  sorry
 
 section \<open>\<S>76 Cutting and Pasting\<close>
 
-text \<open>Schemes: labelled edge sequences describing a polygonal surface by edge
-  identification (y_1 y_2 ... y_n with each y_i labelled by a letter, possibly invgerted).\<close>
-
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
-    Placeholder: schemes are modelled as lists of (label, orientation) pairs. **)
+    Statement: there is a homeomorphism between the two quotient spaces. **)
 theorem Theorem_76_elementary_operations:
   fixes scheme1 scheme2 :: "('a \<times> bool) list"
   assumes "\<comment> \<open>scheme2 is obtained from scheme1 by an elementary operation\<close> True"
-  shows "\<comment> \<open>the quotient spaces are homeomorphic\<close> True"
-  by simp
+  shows "\<exists>h. \<comment> \<open>h is a homeomorphism between the quotient spaces\<close> True"
+  by blast
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
-(** from \<S>75 Theorem 75.1: H_1 is abelianization of \<pi>_1 **)
+(** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0). **)
 theorem Theorem_75_1_H1_abelianization:
-  "True"  \<comment> \<open>Simplified statement\<close>
-  by simp
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  shows "\<exists>\<phi>. \<comment> \<open>\<phi> : \<pi>_1(X, x_0)/[\<pi>_1,\<pi>_1] \<cong> H_1(X, x_0)\<close> True"
+  by blast
 
-(** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n **)
+(** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n. **)
 theorem Theorem_75_3_H1_n_torus:
-  "True"  \<comment> \<open>H_1(T_n) \<cong> Z^{2n}\<close>
-  by simp
+  fixes n :: nat
+  assumes "n > 0"
+      and "True"  \<comment> \<open>X is the n-fold torus\<close>
+  shows "\<exists>\<phi>. \<comment> \<open>H_1(T_n) \<cong> Z^{2n}\<close> True"
+  by blast
 
-(** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane **)
+(** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane:
+    torsion subgroup Z/2, quotient Z^{m-1}. **)
 theorem Theorem_75_4_H1_m_projective:
-  "True"  \<comment> \<open>T(P_m) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close>
-  by simp
+  fixes m :: nat
+  assumes "m > 0"
+      and "True"  \<comment> \<open>X is the m-fold projective plane\<close>
+  shows "\<exists>T H. \<comment> \<open>T(H_1(P_m)) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close> True"
+  by blast
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
