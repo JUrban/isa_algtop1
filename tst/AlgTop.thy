@@ -318,7 +318,8 @@ proof -
   let ?B = "I_set \<times> {t\<in>I_set. t \<ge> 1/2}"
   have hA_closed: "closedin_on (I_set \<times> I_set) II_topology ?A" sorry
   have hB_closed: "closedin_on (I_set \<times> I_set) II_topology ?B" sorry
-  have hcover: "I_set \<times> I_set = ?A \<union> ?B" sorry
+  have hcover: "I_set \<times> I_set = ?A \<union> ?B"
+    unfolding top1_unit_interval_def by auto
   \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
   have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
                                    X TX (\<lambda>p. F (fst p, 2 * snd p))" sorry
@@ -326,7 +327,16 @@ proof -
   have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
                                    X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))" sorry
   \<comment> \<open>Agreement on A \<inter> B (where snd p = 1/2).\<close>
-  have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)" sorry
+  have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
+  proof (intro ballI)
+    fix p assume hp: "p \<in> ?A \<inter> ?B"
+    have ht_half: "snd p = 1/2" using hp by force
+    have hs: "fst p \<in> I_set" using hp by force
+    have h2t: "2 * snd p = 1" using ht_half by simp
+    have h2tm1: "2 * snd p - 1 = 0" using ht_half by simp
+    show "F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
+      using h2t h2tm1 hmatch[rule_format, OF hs] by simp
+  qed
   \<comment> \<open>Apply pasting lemma (Theorem 18.3).\<close>
   show ?thesis sorry
 qed
