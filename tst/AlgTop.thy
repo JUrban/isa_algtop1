@@ -2696,10 +2696,11 @@ theorem Theorem_68_7_quotient_free_product:
 
 section \<open>\<S>69 Free Groups\<close>
 
-text \<open>Free group on a set of generators. The property is: any function from S to
-  any group H extends uniquely to a group homomorphism G \<rightarrow> H.
-  Here we use a simplified bool placeholder and track what's needed.\<close>
-\<comment> \<open>(old placeholder top1_is_free_group_on removed; use top1_is_free_group_full_on instead)\<close>
+text \<open>A free group on a set S is a group G together with \<iota>: S \<hookrightarrow> G such that
+  \<iota>(S) generates G, \<iota> is injective, and (externally) for any group H and
+  function \<phi>: S \<rightarrow> H there is a unique homomorphism \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi>.
+  See top1_is_free_group_full_on (intrinsic) and top1_free_group_universal_prop
+  (external) above.\<close>
 
 (** from \<S>69 Theorem 69.2: free product of free groups on S1, S2 (disjoint)
     is the free group on S1 \<union> S2. **)
