@@ -386,6 +386,34 @@ text \<open>Constant path at a point x.\<close>
 definition top1_constant_path :: "'a \<Rightarrow> (real \<Rightarrow> 'a)" where
   "top1_constant_path x = (\<lambda>_. x)"
 
+lemma top1_path_product_at_start:
+  "top1_path_product f g 0 = f 0"
+  unfolding top1_path_product_def by simp
+
+lemma top1_path_product_at_end:
+  "top1_path_product f g 1 = g 1"
+  unfolding top1_path_product_def by simp
+
+lemma top1_path_product_at_half:
+  "top1_path_product f g (1/2) = f 1"
+  unfolding top1_path_product_def by simp
+
+lemma top1_path_reverse_at_start:
+  "top1_path_reverse f 0 = f 1"
+  unfolding top1_path_reverse_def by simp
+
+lemma top1_path_reverse_at_end:
+  "top1_path_reverse f 1 = f 0"
+  unfolding top1_path_reverse_def by simp
+
+lemma top1_path_reverse_twice:
+  "top1_path_reverse (top1_path_reverse f) = f"
+  unfolding top1_path_reverse_def by auto
+
+lemma top1_constant_path_value:
+  "top1_constant_path x t = x"
+  unfolding top1_constant_path_def by simp
+
 text \<open>The product of paths is well-defined when endpoints match.\<close>
 
 text \<open>Helper: the reverse path is continuous.\<close>
