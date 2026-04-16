@@ -1239,6 +1239,14 @@ definition top1_B2_topology :: "(real \<times> real) set set" where
   "top1_B2_topology = subspace_topology UNIV
      (product_topology_on top1_open_sets top1_open_sets) top1_B2"
 
+text \<open>Helper: if f : X \<rightarrow> A is continuous (with subspace topology from ambient Z),
+  and A \<subseteq> B \<subseteq> Z, then f : X \<rightarrow> B is also continuous (with subspace topology from Z).\<close>
+lemma top1_continuous_map_on_codomain_enlarge:
+  assumes "top1_continuous_map_on X TX A (subspace_topology Z TZ A) f"
+      and "A \<subseteq> B" and "B \<subseteq> Z"
+  shows "top1_continuous_map_on X TX B (subspace_topology Z TZ B) f"
+  sorry
+
 (** from \<S>55 Lemma 55.1: if A is a retract of X, then (\<pi>_1 A, x0) \<rightarrow> (\<pi>_1 X, x0)
     is injective (induced by inclusion) **)
 lemma Lemma_55_1_retract_injective:
@@ -1282,8 +1290,28 @@ proof
   have hx0: "(1::real, 0::real) \<in> top1_S1"
     unfolding top1_S1_def by simp
   \<comment> \<open>Step 2: f, g are also loops in B^2 (via inclusion).\<close>
-  have hf_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) f" sorry
-  have hg_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) g" sorry
+  have hS1sub_UNIV: "top1_S1 \<subseteq> UNIV" by simp
+  have hB2sub_UNIV: "top1_B2 \<subseteq> UNIV" by simp
+  have hf_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+  have hg_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology g"
+    using hg unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+  have hf_B2_cont: "top1_continuous_map_on I_set I_top top1_B2 top1_B2_topology f"
+    using top1_continuous_map_on_codomain_enlarge[OF hf_cont[unfolded top1_S1_topology_def] hSsub hB2sub_UNIV]
+    unfolding top1_B2_topology_def .
+  have hg_B2_cont: "top1_continuous_map_on I_set I_top top1_B2 top1_B2_topology g"
+    using top1_continuous_map_on_codomain_enlarge[OF hg_cont[unfolded top1_S1_topology_def] hSsub hB2sub_UNIV]
+    unfolding top1_B2_topology_def .
+  have hf_0: "f 0 = (1, 0)" "f 1 = (1, 0)"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have hg_0: "g 0 = (1, 0)" "g 1 = (1, 0)"
+    using hg unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have hf_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) f"
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using hf_B2_cont hf_0 by blast
+  have hg_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) g"
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using hg_B2_cont hg_0 by blast
   \<comment> \<open>Step 3: Since B^2 is simply connected, f and g are path-homotopic in B^2.\<close>
   have hf_path_B2: "top1_is_path_on top1_B2 top1_B2_topology (1, 0) (1, 0) f"
     using hf_B2 unfolding top1_is_loop_on_def .
