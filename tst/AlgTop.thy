@@ -1252,6 +1252,15 @@ proof -
   thus ?thesis by blast
 qed
 
+(** Strengthened version: \<pi>_1(S^1, (1,0)) is isomorphic to Z as groups (not just bijective). **)
+theorem Theorem_54_5_iso:
+  "top1_groups_isomorphic_on
+     (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+     (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+     top1_Z_group
+     top1_Z_mul"
+  sorry
+
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
 text \<open>Retraction: r: X \<rightarrow> A continuous with r|A = id_A.\<close>
