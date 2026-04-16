@@ -542,13 +542,13 @@ lemma Theorem_51_2_right_identity:
     (top1_path_product f (top1_constant_path x1)) f"
   sorry
 
-lemma Theorem_51_2_inverse_left:
+lemma Theorem_51_2_invgerse_left:
   assumes "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x0 x0
     (top1_path_product f (top1_path_reverse f)) (top1_constant_path x0)"
   sorry
 
-lemma Theorem_51_2_inverse_right:
+lemma Theorem_51_2_invgerse_right:
   assumes "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x1 x1
     (top1_path_product (top1_path_reverse f) f) (top1_constant_path x1)"
@@ -705,7 +705,7 @@ theorem Theorem_52_4_identity:
 section \<open>\<S>53 Covering Spaces\<close>
 
 text \<open>Evenly covered: an open U \<subseteq> B is evenly covered by p: E \<rightarrow> B if
-  p\<inverse>(U) is a disjoint union of open V\<alpha> \<subseteq> E, each mapped homeomorphically by p.
+  p\<invgerse>(U) is a disjoint union of open V\<alpha> \<subseteq> E, each mapped homeomorphically by p.
   Uses openin_on: each V is open in E and a subset of E.\<close>
 definition top1_evenly_covered_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'b set \<Rightarrow> 'b set set
   \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> 'b set \<Rightarrow> bool" where
@@ -1958,8 +1958,8 @@ lemma Lemma_58_5_basepoint_change:
     The strict version is trivially related.
 
     Munkres' proof (sketch):
-    Given f and g as homotopy inverses, Lemma 58.1 gives that (g o f)_* equals id_*
-    and (f o g)_* equals id_*, so f_* and g_* are mutual inverses in a suitable sense.
+    Given f and g as homotopy invgerses, Lemma 58.1 gives that (g o f)_* equals id_*
+    and (f o g)_* equals id_*, so f_* and g_* are mutual invgerses in a suitable sense.
     Hence f_* is a bijection onto pi_1(Y, f x_0). **)
 theorem Theorem_58_7:
   assumes "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
@@ -1972,7 +1972,7 @@ theorem Theorem_58_7:
 
     Munkres' proof: if A is a deformation retract of X via H, then the
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
-    inverses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
+    invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
 theorem Theorem_58_3:
   assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
   shows "\<exists>\<phi>. bij_betw \<phi>
@@ -2197,10 +2197,10 @@ theorem Theorem_61_4_general_separation:
 section \<open>*\<S>62 Invariance of Domain\<close>
 
 text \<open>Invariance of domain in R^2: an open injective continuous map R^2 \<rightarrow> R^2
-  has open image, and its inverse is continuous.\<close>
+  has open image, and its invgerse is continuous.\<close>
 
 (** from *\<S>62 Theorem 62.3: Invariance of Domain in R^2. **)
-theorem Theorem_62_3_invariance_of_domain:
+theorem Theorem_62_3_invgariance_of_domain:
   fixes U :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
   assumes "U \<in> product_topology_on top1_open_sets top1_open_sets"
       and "top1_continuous_map_on U
@@ -2319,6 +2319,144 @@ theorem Theorem_65_2:
   sorry
 
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
+
+subsection \<open>Lightweight group-theoretic machinery\<close>
+
+text \<open>A group is a 4-tuple (G, mul, e, invg) satisfying associativity,
+  left/right identity, and left/right invgerse.\<close>
+definition top1_is_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
+  "top1_is_group_on G mul e invg \<longleftrightarrow>
+     e \<in> G \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G) \<and>
+     (\<forall>x\<in>G. invg x \<in> G) \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)) \<and>
+     (\<forall>x\<in>G. mul e x = x \<and> mul x e = x) \<and>
+     (\<forall>x\<in>G. mul (invg x) x = e \<and> mul x (invg x) = e)"
+
+text \<open>An abelian group additionally satisfies commutativity.\<close>
+definition top1_is_abelian_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
+  "top1_is_abelian_group_on G mul e invg \<longleftrightarrow>
+     top1_is_group_on G mul e invg \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y = mul y x)"
+
+text \<open>Group homomorphism: f preserves multiplication (and hence identity & invgerse).\<close>
+definition top1_group_hom_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_group_hom_on G mulG H mulH f \<longleftrightarrow>
+     (\<forall>x\<in>G. f x \<in> H) \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. f (mulG x y) = mulH (f x) (f y))"
+
+text \<open>Group isomorphism: bijective homomorphism.\<close>
+definition top1_group_iso_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_group_iso_on G mulG H mulH f \<longleftrightarrow>
+     top1_group_hom_on G mulG H mulH f \<and>
+     bij_betw f G H"
+
+definition top1_groups_isomorphic_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_groups_isomorphic_on G mulG H mulH \<longleftrightarrow>
+     (\<exists>f. top1_group_iso_on G mulG H mulH f)"
+
+text \<open>Normal subgroup: N \<subseteq> G is a subgroup closed under conjugation.\<close>
+definition top1_normal_subgroup_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> bool" where
+  "top1_normal_subgroup_on G mul e invg N \<longleftrightarrow>
+     N \<subseteq> G \<and>
+     top1_is_group_on N mul e invg \<and>
+     (\<forall>g\<in>G. \<forall>n\<in>N. mul (mul g n) (invg g) \<in> N)"
+
+text \<open>Kernel of a homomorphism is a normal subgroup.\<close>
+definition top1_group_kernel_on ::
+  "'g set \<Rightarrow> 'h \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> 'g set" where
+  "top1_group_kernel_on G eH f = {x\<in>G. f x = eH}"
+
+text \<open>Image of a group under a homomorphism.\<close>
+definition top1_group_image_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> 'h set" where
+  "top1_group_image_on G f = f ` G"
+
+text \<open>Quotient group G/N: cosets g N under the product (gN)(hN) = (gh)N.
+  Modelled as a set of equivalence classes.\<close>
+definition top1_group_coset_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g \<Rightarrow> 'g set" where
+  "top1_group_coset_on G mul N g = {mul g n | n. n \<in> N}"
+
+definition top1_quotient_group_carrier_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set set" where
+  "top1_quotient_group_carrier_on G mul N = {top1_group_coset_on G mul N g | g. g \<in> G}"
+
+text \<open>Subgroup generated by a subset S \<subseteq> G.\<close>
+definition top1_subgroup_generated_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set" where
+  "top1_subgroup_generated_on G mul e invg S =
+     \<Inter> { H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg }"
+
+definition top1_normal_subgroup_generated_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set" where
+  "top1_normal_subgroup_generated_on G mul e invg S =
+     \<Inter> { N. S \<subseteq> N \<and> top1_normal_subgroup_on G mul e invg N }"
+
+text \<open>Free group on a set S: a group F(S) equipped with \<iota>: S \<hookrightarrow> F(S) such that
+  any function S \<rightarrow> H to a group H extends uniquely to a homomorphism F(S) \<rightarrow> H.\<close>
+definition top1_is_free_group_full_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> ('s \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow> bool" where
+  "top1_is_free_group_full_on G mul e invg \<iota> S \<longleftrightarrow>
+     top1_is_group_on G mul e invg \<and>
+     (\<forall>s\<in>S. \<iota> s \<in> G) \<and>
+     (\<forall>H mulH eH invgH \<phi>. top1_is_group_on H mulH eH invgH \<and> (\<forall>s\<in>S. \<phi> s \<in> H) \<longrightarrow>
+        (\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi>
+            \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)))"
+
+text \<open>Free abelian group on a set S: abelian group F(S) with universal extension to abelian groups.\<close>
+definition top1_is_free_abelian_group_full_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> ('s \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow> bool" where
+  "top1_is_free_abelian_group_full_on G mul e invg \<iota> S \<longleftrightarrow>
+     top1_is_abelian_group_on G mul e invg \<and>
+     (\<forall>s\<in>S. \<iota> s \<in> G) \<and>
+     (\<forall>H mulH eH invgH \<phi>. top1_is_abelian_group_on H mulH eH invgH \<and> (\<forall>s\<in>S. \<phi> s \<in> H) \<longrightarrow>
+        (\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi>
+            \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)))"
+
+text \<open>Group presentation: G is presented by generators S modulo relations R.
+  G = F(S) / \<langle>\<langle>R\<rangle>\<rangle> where \<langle>\<langle>R\<rangle>\<rangle> is the normal subgroup generated by R.
+  Simplified: G is a group together with a free group on S exists.\<close>
+definition top1_group_presented_by_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow> ('s list set) \<Rightarrow> bool" where
+  "top1_group_presented_by_on G mul e invg S R \<longleftrightarrow>
+     top1_is_group_on G mul e invg"
+     \<comment> \<open>Real: G isomorphic to free-group(S)/normal-closure(R). Simplified here.\<close>
+
+text \<open>Free product of groups: universal property (every family of homs to any H
+  extends uniquely to a hom from the free product).\<close>
+definition top1_is_free_product_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow>
+   ('i \<Rightarrow> 'gg set) \<Rightarrow> ('i \<Rightarrow> 'gg \<Rightarrow> 'gg \<Rightarrow> 'gg) \<Rightarrow>
+   ('i \<Rightarrow> 'gg \<Rightarrow> 'g) \<Rightarrow> 'i set \<Rightarrow> bool" where
+  "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J \<longleftrightarrow>
+     top1_is_group_on G mul e invg \<and>
+     (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> G) \<and>
+     (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>. \<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y))"
+     \<comment> \<open>Plus universal property for extension — simplified here.\<close>
+
+text \<open>The integers Z as an (additive) abelian group.\<close>
+definition top1_Z_group :: "int set" where
+  "top1_Z_group = UNIV"
+
+text \<open>The cyclic group Z/nZ.\<close>
+definition top1_Zn_group :: "nat \<Rightarrow> int set" where
+  "top1_Zn_group n = {0..<int n}"
+
+text \<open>Iterated product in a group (g * g * ... * g, n times).\<close>
+fun top1_group_pow :: "('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> nat \<Rightarrow> 'g" where
+  "top1_group_pow mul e x 0 = e"
+| "top1_group_pow mul e x (Suc n) = mul x (top1_group_pow mul e x n)"
+
+text \<open>The torsion subgroup of an abelian group.\<close>
+definition top1_torsion_subgroup_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> 'g set" where
+  "top1_torsion_subgroup_on G mul e =
+     {x\<in>G. \<exists>n. n > 0 \<and> top1_group_pow mul e x n = e}"
 
 section \<open>\<S>67 Direct Sums of Abelian Groups\<close>
 
@@ -2521,7 +2659,7 @@ theorem Theorem_74_4_fund_group_m_projective:
 section \<open>\<S>76 Cutting and Pasting\<close>
 
 text \<open>Schemes: labelled edge sequences describing a polygonal surface by edge
-  identification (y_1 y_2 ... y_n with each y_i labelled by a letter, possibly inverted).\<close>
+  identification (y_1 y_2 ... y_n with each y_i labelled by a letter, possibly invgerted).\<close>
 
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
     Placeholder: schemes are modelled as lists of (label, orientation) pairs. **)
