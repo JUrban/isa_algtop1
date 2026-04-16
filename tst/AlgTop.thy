@@ -3538,10 +3538,10 @@ theorem Theorem_81_2_covering_group_iso:
       and "top1_path_connected_on E TE"
       and "top1_locally_path_connected_on E TE"
       and "e0 \<in> E" and "p e0 = b0"
-  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) mulC eC invgC.
-           top1_is_group_on Cov mulC eC invgC
-         \<and> Cov = {h. top1_covering_transformation_on E TE B TB p h}
-         \<and> top1_groups_isomorphic_on Cov mulC
+  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) eC invgC.
+           Cov = {h. top1_covering_transformation_on E TE B TB p h}
+         \<and> top1_is_group_on Cov (\<lambda>h k e. h (k e)) eC invgC
+         \<and> top1_groups_isomorphic_on Cov (\<lambda>h k e. h (k e))
              (top1_quotient_group_carrier_on
                 (top1_normalizer_on
                    (top1_fundamental_group_carrier B TB b0)
