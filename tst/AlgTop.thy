@@ -889,12 +889,63 @@ lemma Lemma_55_1_retract_injective:
   shows "top1_path_homotopic_on A (subspace_topology X TX A) x0 x0 f g"
   sorry
 
-(** from \<S>55 Theorem 55.2: No-retraction theorem: no retraction B^2 \<rightarrow> S^1 **)
+text \<open>Helper: \<pi>_1(S^1) is nontrivial.\<close>
+lemma top1_S1_fundamental_group_nontrivial:
+  "\<exists>f g. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+       \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g
+       \<and> \<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
+  sorry  \<comment> \<open>follows from Theorem 54.5: \<pi>_1(S^1) \<cong> Z\<close>
+
+text \<open>Helper: B^2 is simply connected.\<close>
+lemma top1_B2_simply_connected:
+  "top1_simply_connected_on top1_B2 top1_B2_topology"
+  sorry  \<comment> \<open>B^2 is convex, so any two paths are straight-line path-homotopic\<close>
+
+(** from \<S>55 Theorem 55.2: No-retraction theorem: no retraction B^2 \<rightarrow> S^1.
+    Munkres' proof: if S^1 were a retract of B^2, then the inclusion-induced
+    homomorphism would be injective (Lemma 55.1). But \<pi>_1(S^1) is nontrivial
+    and \<pi>_1(B^2) is trivial — contradiction. **)
 theorem Theorem_55_2_no_retraction:
   "\<not> top1_retract_of_on top1_B2 top1_B2_topology top1_S1"
+proof
+  assume hret: "top1_retract_of_on top1_B2 top1_B2_topology top1_S1"
+  \<comment> \<open>By Lemma 55.1, inclusion S^1 \<rightarrow> B^2 induces injective hom on \<pi>_1.\<close>
+  \<comment> \<open>But \<pi>_1(S^1) is nontrivial and \<pi>_1(B^2) is trivial — contradiction.\<close>
+  obtain f g where hf: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+    and hg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
+    and hne: "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
+    using top1_S1_fundamental_group_nontrivial by blast
+  \<comment> \<open>Both f and g become nulhomotopic in B^2 (since B^2 is simply connected),\<close>
+  \<comment> \<open>so they are path-homotopic in B^2. Lemma 55.1 would imply they are\<close>
+  \<comment> \<open>path-homotopic in S^1 too — contradicting hne.\<close>
+  have hSsub: "top1_S1 \<subseteq> top1_B2"
+    unfolding top1_S1_def top1_B2_def by auto
+  show False
+    sorry  \<comment> \<open>apply Lemma 55.1 and use B^2 simply connected\<close>
+qed
+
+(** from \<S>55 Lemma 55.3: nulhomotopic characterization **)
+lemma Lemma_55_3_nulhomotopic_characterization:
+  fixes h :: "real \<times> real \<Rightarrow> 'a"
+  assumes "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+  shows "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h
+      \<longleftrightarrow> (\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k
+               \<and> (\<forall>x\<in>top1_S1. k x = h x))"
+  sorry  \<comment> \<open>equivalence (1) \<Leftrightarrow> (2) of Lemma 55.3\<close>
+
+(** from \<S>55 Corollary 55.4: inclusion S^1 \<rightarrow> R^2 - {0} is not nulhomotopic.
+    Follows from Theorem 55.2 via retraction R^2 - {0} \<rightarrow> S^1 by x/|x|. **)
+corollary Corollary_55_4_inclusion_not_nulhomotopic:
+  shows "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology
+           (UNIV - {(0, 0)})
+           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+           (\<lambda>x. x)"
   sorry
 
-(** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc **)
+(** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc.
+    Munkres' proof: contradiction. If f has no fixed point, v(x) = f(x) - x
+    is a nonvanishing vector field; but Theorem 55.5 says some point of S^1
+    has v pointing outward, contradiction. **)
 theorem Theorem_55_6_brouwer:
   assumes "top1_continuous_map_on top1_B2 top1_B2_topology top1_B2 top1_B2_topology f"
   shows "\<exists>x\<in>top1_B2. f x = x"
