@@ -866,6 +866,18 @@ lemma Lemma_54_1_path_lifting:
     \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
   sorry
 
+text \<open>Helper: s \<mapsto> (s, c) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
+lemma pair_s_const_continuous:
+  assumes hc: "c \<in> I_set"
+  shows "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, c))"
+  sorry
+
+text \<open>Helper: t \<mapsto> (c, t) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
+lemma pair_const_t_continuous:
+  assumes hc: "c \<in> I_set"
+  shows "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (c, t))"
+  sorry
+
 (** Uniqueness part of Lemma 54.1 (implicit in Munkres): given a path f in B with
     two lifts ftilde_1, ftilde_2 in E both starting at e_0, they are equal. **)
 lemma Lemma_54_1_uniqueness:
@@ -935,13 +947,35 @@ proof -
   \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting.\<close>
   have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
   \<comment> \<open>Ftilde(·, 0) is a path in E lifting f, starting at e0.\<close>
-  have hFt_bot_path: "top1_is_path_on E TE e0 (Ftilde (1, 0)) (\<lambda>s. Ftilde (s, 0))" sorry
+  have hFt_bot_path: "top1_is_path_on E TE e0 (Ftilde (1, 0)) (\<lambda>s. Ftilde (s, 0))"
+  proof -
+    have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 0))"
+      by (rule pair_s_const_continuous[OF h0I])
+    have hcomp: "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>s. (s, 0)))"
+      by (rule top1_continuous_map_on_comp[OF hpair hFt_cont])
+    have hcont: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 0))"
+      using hcomp by (simp add: comp_def)
+    show ?thesis
+      unfolding top1_is_path_on_def using hcont hFt_00 by simp
+  qed
   have hFt_bot_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 0)) = f s"
     using hFt_lift hF_f h0I by auto
   have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s"
     using Lemma_54_1_uniqueness[OF hcov he0 hpe0 hf hFt_bot_path hFt_bot_lift hft hftp] by blast
-  \<comment> \<open>Ftilde(·, 1) is a path in E lifting g, starting at e0 (via Ftilde(0,1) = e0).\<close>
-  have hFt_top_path: "top1_is_path_on E TE e0 (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))" sorry
+  \<comment> \<open>Ftilde(·, 1) is a path in E lifting g, starting at Ftilde(0,1).\<close>
+  have h1I0: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hFt_top_start: "Ftilde (0, 1) = e0" sorry
+  have hFt_top_path: "top1_is_path_on E TE e0 (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))"
+  proof -
+    have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 1))"
+      by (rule pair_s_const_continuous[OF h1I0])
+    have hcomp: "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>s. (s, 1)))"
+      by (rule top1_continuous_map_on_comp[OF hpair hFt_cont])
+    have hcont: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
+      using hcomp by (simp add: comp_def)
+    show ?thesis
+      unfolding top1_is_path_on_def using hcont hFt_top_start by simp
+  qed
   have hFt_top_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = g s"
     using hFt_lift hF_g unfolding top1_unit_interval_def by auto
   have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s"
