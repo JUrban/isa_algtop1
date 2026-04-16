@@ -2962,26 +2962,34 @@ definition top1_is_tree_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
      top1_connected_on X TX \<and>
      top1_simply_connected_on X TX"
 
-(** from \<S>84 Theorem 84.7: the fundamental group of a graph is free. **)
+(** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
+    Specifically, there exists a group structure on \<pi>_1(X, x_0) making it
+    a free group on a set of generators (one per loop in a spanning-tree complement). **)
 theorem Theorem_84_7_fund_group_graph_is_free:
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_graph_on X TX"
       and "top1_connected_on X TX"
       and "x0 \<in> X"
-  shows "\<exists>G S. top1_is_free_group_on G S"
-  using top1_is_free_group_on_refl by blast
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::'s \<Rightarrow> 'g) S.
+           top1_is_free_group_full_on G mul e invg \<iota> S
+         \<and> (\<exists>\<phi>. bij_betw \<phi> G (top1_fundamental_group_carrier X TX x0))"
+  sorry
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
 
 (** from \<S>85 Theorem 85.1 (Nielsen-Schreier): subgroups of free groups are free.
-    Note: the placeholder top1_is_free_group_on is True by default,
-    so this is trivially true at the formalization level.
-    The real theorem requires actual group structure. **)
+    If G is free on S and H \<le> G is a subgroup, then H is free on some set S'. **)
 theorem Theorem_85_1_Nielsen_Schreier:
-  assumes "top1_is_free_group_on G S"
-  and "H \<subseteq> G"
-  and "True"  \<comment> \<open>H is a subgroup\<close>
-  shows "\<exists>S'. top1_is_free_group_on H S'"
-  using top1_is_free_group_on_refl by blast
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and H :: "'g set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+      and "top1_is_group_on H mul e invg"
+      and "H \<subseteq> G"
+  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+           top1_is_free_group_full_on H mul e invg \<iota>H SH"
+  sorry
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
     Requires real group-theoretic content (n+1 generators of F, H has index k
