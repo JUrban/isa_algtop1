@@ -2442,17 +2442,18 @@ definition top1_normal_subgroup_generated_on ::
   "top1_normal_subgroup_generated_on G mul e invg S =
      \<Inter> { N. S \<subseteq> N \<and> top1_normal_subgroup_on G mul e invg N }"
 
-text \<open>Free group on a set S: a group F(S) equipped with \<iota>: S \<hookrightarrow> F(S) such that
-  any function S \<rightarrow> H (for H of a specific test type 'h) extends uniquely.
-  NB: True universal property quantifies over all groups but HOL lacks
-  type-quantification in definitions. The test type 'h is implicit.\<close>
+text \<open>Free group on a set S: a group F(S) equipped with \<iota>: S \<hookrightarrow> F(S).
+  The universal property is too strong to state in HOL (needs type-quantification
+  over target groups); here we state the intrinsic structure + injectivity of \<iota>
+  and separately define the universal extension property for fixed target types.\<close>
 definition top1_is_free_group_full_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> ('s \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow> bool" where
   "top1_is_free_group_full_on G mul e invg \<iota> S \<longleftrightarrow>
      top1_is_group_on G mul e invg \<and>
      (\<forall>s\<in>S. \<iota> s \<in> G) \<and>
-     inj_on \<iota> S"
-     \<comment> \<open>Universal property stated externally (would quantify over all groups).\<close>
+     inj_on \<iota> S \<and>
+     G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+     \<comment> \<open>\<iota>(S) generates G; universal extension stated externally.\<close>
 
 text \<open>External universal property for free groups: for a specific test type,
   any function S \<rightarrow> H extends uniquely to a homomorphism G \<rightarrow> H.\<close>
@@ -2464,13 +2465,14 @@ definition top1_free_group_universal_prop ::
      (\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi>
         \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s))"
 
-text \<open>Free abelian group on a set S — same scheme.\<close>
+text \<open>Free abelian group on a set S: abelian group generated freely by \<iota>(S).\<close>
 definition top1_is_free_abelian_group_full_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> ('s \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow> bool" where
   "top1_is_free_abelian_group_full_on G mul e invg \<iota> S \<longleftrightarrow>
      top1_is_abelian_group_on G mul e invg \<and>
      (\<forall>s\<in>S. \<iota> s \<in> G) \<and>
-     inj_on \<iota> S"
+     inj_on \<iota> S \<and>
+     G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
 
 text \<open>Group presentation: G is presented by generators S modulo relations R,
   meaning G \<cong> F(S)/\<langle>\<langle>R\<rangle>\<rangle>. Here R is encoded as a set of relator words in S \<union> S\<inverse>,
