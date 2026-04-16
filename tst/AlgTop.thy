@@ -1642,7 +1642,24 @@ theorem Theorem_59_1:
       \<and> top1_path_homotopic_on X TX x0 x0 f (top1_path_product g h))"
   sorry
 
-(** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected **)
+(** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
+    and nonempty \<Longrightarrow> X = U \<union> V is simply connected. **)
+corollary Corollary_59_2:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V \<noteq> {}"
+      and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_simply_connected_on U (subspace_topology X TX U)"
+      and "top1_simply_connected_on V (subspace_topology X TX V)"
+  shows "top1_simply_connected_on X TX"
+  \<comment> \<open>Follows from Theorem 59.1 since both i_*, j_* are trivial.\<close>
+  sorry
+
+(** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
+
+    Munkres' proof (2 steps):
+    Step 1: S^n - p is homeomorphic to R^n via stereographic projection.
+    Step 2: Apply Corollary 59.2 with U = S^n - p, V = S^n - q. **)
 theorem Theorem_59_3:
   assumes "n \<ge> 2"
   shows "top1_simply_connected_on (top1_Sn n)
