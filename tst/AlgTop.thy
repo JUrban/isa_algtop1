@@ -494,14 +494,173 @@ lemma top1_constant_path_is_path:
 
 text \<open>Helper: the concatenated path is continuous via the pasting lemma on [0,1/2] \<union> [1/2,1].\<close>
 lemma top1_path_product_continuous:
-  assumes "top1_continuous_map_on I_set I_top X TX f"
-      and "top1_continuous_map_on I_set I_top X TX g"
-      and "f 1 = g 0"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_continuous_map_on I_set I_top X TX f"
+      and hg: "top1_continuous_map_on I_set I_top X TX g"
+      and hmatch: "f 1 = g 0"
   shows "top1_continuous_map_on I_set I_top X TX (top1_path_product f g)"
-  sorry
+proof -
+  let ?A = "{s\<in>I_set. s \<le> 1/2}"
+  let ?B = "{s\<in>I_set. s \<ge> 1/2}"
+  let ?h = "top1_path_product f g"
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hAB: "?A \<union> ?B = I_set"
+    unfolding top1_unit_interval_def by auto
+  \<comment> \<open>Range: f*g maps into X.\<close>
+  have hf_range: "\<forall>s\<in>I_set. f s \<in> X"
+    using hf unfolding top1_continuous_map_on_def by blast
+  have hg_range: "\<forall>s\<in>I_set. g s \<in> X"
+    using hg unfolding top1_continuous_map_on_def by blast
+  have hh_range: "\<forall>s\<in>I_set. ?h s \<in> X"
+  proof (intro ballI)
+    fix s assume hs: "s \<in> I_set"
+    show "?h s \<in> X"
+    proof (cases "s \<le> 1/2")
+      case True
+      have "2 * s \<in> I_set" using hs True unfolding top1_unit_interval_def by simp
+      thus ?thesis unfolding top1_path_product_def using True hf_range by simp
+    next
+      case False
+      have "2 * s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by simp
+      thus ?thesis unfolding top1_path_product_def using False hg_range by simp
+    qed
+  qed
+  \<comment> \<open>Closedness of A and B in I, and continuity on each piece — requires pasting infrastructure.\<close>
+  have hA_closed: "closedin_on I_set I_top ?A"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?A \<subseteq> I_set" by auto
+  next
+    show "I_set - ?A \<in> I_top"
+    proof -
+      have heq: "I_set - ?A = I_set \<inter> {s :: real. s > 1/2}"
+        unfolding top1_unit_interval_def by auto
+      have hopen: "{s :: real. s > 1/2} \<in> top1_open_sets"
+        unfolding top1_open_sets_def
+        using open_greaterThan[of "1/2 :: real"]
+        by (simp add: greaterThan_def Collect_mono_iff)
+      show ?thesis
+        unfolding heq top1_unit_interval_topology_def subspace_topology_def
+        using hopen by blast
+    qed
+  qed
+  have hB_closed: "closedin_on I_set I_top ?B"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?B \<subseteq> I_set" by auto
+  next
+    show "I_set - ?B \<in> I_top"
+    proof -
+      have heq: "I_set - ?B = I_set \<inter> {s :: real. s < 1/2}"
+        unfolding top1_unit_interval_def by auto
+      have hopen: "{s :: real. s < 1/2} \<in> top1_open_sets"
+        unfolding top1_open_sets_def
+        using open_lessThan[of "1/2 :: real"]
+        by (simp add: lessThan_def Collect_mono_iff)
+      show ?thesis
+        unfolding heq top1_unit_interval_topology_def subspace_topology_def
+        using hopen by blast
+    qed
+  qed
+  have hhA: "top1_continuous_map_on ?A (subspace_topology I_set I_top ?A) X TX ?h"
+  proof -
+    \<comment> \<open>On A, h = f \<circ> (2\<cdot>). Scale is continuous A \<rightarrow> I.\<close>
+    have hscale_map: "\<And>s. s \<in> ?A \<Longrightarrow> 2 * s \<in> I_set"
+      unfolding top1_unit_interval_def by auto
+    have hscale_cont: "continuous_on UNIV (\<lambda>s :: real. 2 * s)"
+      by (intro continuous_intros)
+    have hsub_eq: "subspace_topology I_set I_top ?A = subspace_topology UNIV top1_open_sets ?A"
+      unfolding top1_unit_interval_topology_def
+      by (rule subspace_topology_trans, auto)
+    have hItop_eq: "I_top = subspace_topology UNIV top1_open_sets I_set"
+      unfolding top1_unit_interval_topology_def by rule
+    have hscale_raw: "top1_continuous_map_on ?A (subspace_topology UNIV top1_open_sets ?A)
+                       I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>s. 2 * s)"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hscale_map hscale_cont])
+    have hscale: "top1_continuous_map_on ?A (subspace_topology I_set I_top ?A)
+                   I_set I_top (\<lambda>s. 2 * s)"
+      using hscale_raw hsub_eq hItop_eq by simp
+    have hcomp: "top1_continuous_map_on ?A (subspace_topology I_set I_top ?A) X TX (f \<circ> (\<lambda>s. 2 * s))"
+      by (rule top1_continuous_map_on_comp[OF hscale hf])
+    \<comment> \<open>h agrees with f \<circ> (2\<cdot>) on A.\<close>
+    have hfunceq: "\<And>s. s \<in> ?A \<Longrightarrow> ?h s = (f \<circ> (\<lambda>s. 2 * s)) s"
+      unfolding top1_path_product_def comp_def by auto
+    \<comment> \<open>h agrees with f \<circ> (2\<cdot>) on A, and that's continuous.\<close>
+    show ?thesis
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>s\<in>?A. ?h s \<in> X" using hh_range by auto
+    next
+      show "\<forall>V\<in>TX. {s \<in> ?A. ?h s \<in> V} \<in> subspace_topology I_set I_top ?A"
+      proof
+        fix V assume hV: "V \<in> TX"
+        have "{s \<in> ?A. ?h s \<in> V} = {s \<in> ?A. (f \<circ> (\<lambda>s. 2 * s)) s \<in> V}"
+          using hfunceq by auto
+        also have "\<dots> \<in> subspace_topology I_set I_top ?A"
+          using hcomp hV unfolding top1_continuous_map_on_def by blast
+        finally show "{s \<in> ?A. ?h s \<in> V} \<in> subspace_topology I_set I_top ?A" .
+      qed
+    qed
+  qed
+  have hhB: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B) X TX ?h"
+  proof -
+    have hscale_map: "\<And>s. s \<in> ?B \<Longrightarrow> 2 * s - 1 \<in> I_set"
+      unfolding top1_unit_interval_def by auto
+    have hscale_cont: "continuous_on UNIV (\<lambda>s :: real. 2 * s - 1)"
+      by (intro continuous_intros)
+    have hsub_eq: "subspace_topology I_set I_top ?B = subspace_topology UNIV top1_open_sets ?B"
+      unfolding top1_unit_interval_topology_def
+      by (rule subspace_topology_trans, auto)
+    have hItop_eq: "I_top = subspace_topology UNIV top1_open_sets I_set"
+      unfolding top1_unit_interval_topology_def by rule
+    have hscale_raw: "top1_continuous_map_on ?B (subspace_topology UNIV top1_open_sets ?B)
+                       I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>s. 2 * s - 1)"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hscale_map hscale_cont])
+    have hscale: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B)
+                   I_set I_top (\<lambda>s. 2 * s - 1)"
+      using hscale_raw hsub_eq hItop_eq by simp
+    have hcomp: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B) X TX (g \<circ> (\<lambda>s. 2 * s - 1))"
+      by (rule top1_continuous_map_on_comp[OF hscale hg])
+    have hfunceq: "\<And>s. s \<in> ?B \<Longrightarrow> ?h s = (g \<circ> (\<lambda>s. 2 * s - 1)) s"
+    proof -
+      fix s :: real assume hs: "s \<in> ?B"
+      hence hge: "s \<ge> 1/2" by auto
+      show "?h s = (g \<circ> (\<lambda>s. 2 * s - 1)) s"
+      proof (cases "s > 1/2")
+        case True
+        hence "\<not> (s \<le> 1/2)" by simp
+        thus ?thesis unfolding top1_path_product_def comp_def by simp
+      next
+        case False
+        hence "s = 1/2" using hge by simp
+        hence h2s: "2 * s = 1" and h2sm1: "2 * s - 1 = 0" by simp_all
+        show ?thesis unfolding top1_path_product_def comp_def
+          using h2s h2sm1 hmatch by simp
+      qed
+    qed
+    show ?thesis
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI)
+      show "\<forall>s\<in>?B. ?h s \<in> X" using hh_range by auto
+    next
+      show "\<forall>V\<in>TX. {s \<in> ?B. ?h s \<in> V} \<in> subspace_topology I_set I_top ?B"
+      proof
+        fix V assume hV: "V \<in> TX"
+        have "{s \<in> ?B. ?h s \<in> V} = {s \<in> ?B. (g \<circ> (\<lambda>s. 2 * s - 1)) s \<in> V}"
+          using hfunceq by auto
+        also have "\<dots> \<in> subspace_topology I_set I_top ?B"
+          using hcomp hV unfolding top1_continuous_map_on_def by blast
+        finally show "{s \<in> ?B. ?h s \<in> V} \<in> subspace_topology I_set I_top ?B" .
+      qed
+    qed
+  qed
+  show ?thesis
+    by (rule pasting_lemma_two_closed[OF hTI hTX hA_closed hB_closed hAB hh_range hhA hhB])
+qed
 
 lemma top1_path_product_is_path:
-  assumes hf: "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
       and hg: "top1_is_path_on X TX x1 x2 g"
   shows "top1_is_path_on X TX x0 x2 (top1_path_product f g)"
 proof -
@@ -511,7 +670,7 @@ proof -
     using hg unfolding top1_is_path_on_def by blast+
   have hmatch: "f 1 = g 0" using hf1 hg0 by simp
   have hcont: "top1_continuous_map_on I_set I_top X TX (top1_path_product f g)"
-    by (rule top1_path_product_continuous[OF hfc hgc hmatch])
+    by (rule top1_path_product_continuous[OF hTX hfc hgc hmatch])
   have hstart: "top1_path_product f g 0 = x0"
     unfolding top1_path_product_def using hf0 by simp
   have hend: "top1_path_product f g 1 = x2"
@@ -579,13 +738,14 @@ lemma top1_constant_path_is_loop:
 
 text \<open>Product of loops at x0 is a loop at x0.\<close>
 lemma top1_path_product_is_loop:
-  assumes hf: "top1_is_loop_on X TX x0 f" and hg: "top1_is_loop_on X TX x0 g"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_loop_on X TX x0 f" and hg: "top1_is_loop_on X TX x0 g"
   shows "top1_is_loop_on X TX x0 (top1_path_product f g)"
 proof -
   have "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
   moreover have "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
   ultimately have "top1_is_path_on X TX x0 x0 (top1_path_product f g)"
-    by (rule top1_path_product_is_path)
+    by (rule top1_path_product_is_path[OF hTX])
   thus ?thesis unfolding top1_is_loop_on_def .
 qed
 
