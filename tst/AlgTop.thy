@@ -943,7 +943,36 @@ proof -
     and hFt_00: "Ftilde (0, 0) = e0"
     using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00] by blast
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
-  have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" sorry
+  have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0"
+  proof -
+    have h0I0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (0, t))"
+      by (rule pair_const_t_continuous[OF h0I0])
+    have hcomp: "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>t. (0, t)))"
+      by (rule top1_continuous_map_on_comp[OF hpair hFt_cont])
+    have hcont_left: "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (0, t))"
+      using hcomp by (simp add: comp_def)
+    have hleft_lift: "\<forall>t\<in>I_set. p (Ftilde (0, t)) = b0"
+      using hFt_lift hF_b0 h0I0 by auto
+    have hpath_left: "top1_is_path_on E TE e0 (Ftilde (0, 1)) (\<lambda>t. Ftilde (0, t))"
+      unfolding top1_is_path_on_def using hcont_left hFt_00 by simp
+    \<comment> \<open>Constant path at b_0, lifted to constant path at e_0.\<close>
+    have hb0_in_B: "b0 \<in> B"
+      using hf unfolding top1_is_path_on_def top1_continuous_map_on_def
+      using h0I0 by blast
+    have hconst_B: "top1_is_path_on B TB b0 b0 (top1_constant_path b0)"
+      by (rule top1_constant_path_is_path[OF hTB hb0_in_B])
+    have hconst_E: "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
+      by (rule top1_constant_path_is_path[OF hTE he0])
+    have hconst_lift: "\<forall>s\<in>I_set. p (top1_constant_path e0 s) = top1_constant_path b0 s"
+      unfolding top1_constant_path_def using hpe0 by simp
+    have hleft_const_lift': "\<forall>s\<in>I_set. p (Ftilde (0, s)) = top1_constant_path b0 s"
+      using hleft_lift unfolding top1_constant_path_def by simp
+    have "\<forall>t\<in>I_set. Ftilde (0, t) = top1_constant_path e0 t"
+      using Lemma_54_1_uniqueness[OF hcov he0 hpe0 hconst_B hpath_left
+                                      hleft_const_lift' hconst_E hconst_lift] .
+    thus ?thesis unfolding top1_constant_path_def by simp
+  qed
   have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e"
   proof -
     let ?e1loc = "Ftilde (1, 0)"
