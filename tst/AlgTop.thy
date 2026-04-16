@@ -2346,11 +2346,18 @@ theorem Theorem_63_4_JordanCurve:
   fixes C :: "(real \<times> real) set"
   assumes "top1_simple_closed_curve_on
     UNIV (product_topology_on top1_open_sets top1_open_sets) C"
-  shows "\<exists>U V. U \<inter> V = {} \<and> U \<union> V = UNIV - C
+  shows "\<exists>U V. U \<noteq> {} \<and> V \<noteq> {}
+    \<and> U \<inter> V = {} \<and> U \<union> V = UNIV - C
     \<and> top1_path_connected_on U
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
     \<and> top1_path_connected_on V
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)"
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)
+    \<comment> \<open>One component is bounded (interior), the other unbounded (exterior).\<close>
+    \<and> (\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M)
+    \<and> (\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M)
+    \<comment> \<open>Both components have C as boundary.\<close>
+    \<and> closure U = U \<union> C
+    \<and> closure V = V \<union> C"
   sorry
 
 (** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into two components. **)
