@@ -1322,9 +1322,30 @@ lemma top1_is_retraction_on_fixes_A:
 
 text \<open>Every space is a retract of itself (via identity).\<close>
 lemma top1_retract_self:
-  assumes "is_topology_on X TX"
+  assumes hTX: "is_topology_on X TX"
   shows "top1_retract_of_on X TX X"
-  sorry
+proof -
+  have hX: "X \<in> TX" using hTX unfolding is_topology_on_def by blast
+  have hid: "top1_continuous_map_on X TX X (subspace_topology X TX X) id"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x \<in> X. id x \<in> X" by simp
+  next
+    show "\<forall>V \<in> subspace_topology X TX X. {x \<in> X. id x \<in> V} \<in> TX"
+    proof
+      fix V assume hV: "V \<in> subspace_topology X TX X"
+      then obtain U where hU: "U \<in> TX" and hVeq: "V = X \<inter> U"
+        unfolding subspace_topology_def by blast
+      have "X \<inter> U \<in> TX" by (rule topology_inter2[OF hTX hX hU])
+      hence "V \<in> TX" using hVeq by simp
+      moreover have "{x \<in> X. id x \<in> V} = V" using hVeq by auto
+      ultimately show "{x \<in> X. id x \<in> V} \<in> TX" by simp
+    qed
+  qed
+  have hret: "top1_is_retraction_on X TX X id"
+    unfolding top1_is_retraction_on_def using hid by simp
+  thus ?thesis unfolding top1_retract_of_on_def by blast
+qed
 
 text \<open>The closed disc B^2 and unit sphere S^1 as subspaces of R^2.\<close>
 definition top1_B2 :: "(real \<times> real) set" where
