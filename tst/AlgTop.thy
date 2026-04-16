@@ -3331,8 +3331,8 @@ definition top1_is_tree_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> boo
      top1_simply_connected_on X TX"
 
 (** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
-    Specifically, there exists a group structure on \<pi>_1(X, x_0) making it
-    a free group on a set of generators (one per loop in a spanning-tree complement). **)
+    Specifically, \<pi>_1(X, x_0) is isomorphic to a free group on a set of generators
+    (one per loop in a spanning-tree complement). **)
 theorem Theorem_84_7_fund_group_graph_is_free:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_graph_on X TX"
@@ -3340,7 +3340,9 @@ theorem Theorem_84_7_fund_group_graph_is_free:
       and "x0 \<in> X"
   shows "\<exists>(G::'g set) mul e invg (\<iota>::'s \<Rightarrow> 'g) S.
            top1_is_free_group_full_on G mul e invg \<iota> S
-         \<and> (\<exists>\<phi>. bij_betw \<phi> G (top1_fundamental_group_carrier X TX x0))"
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)"
   sorry
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
