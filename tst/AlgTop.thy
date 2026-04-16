@@ -2940,17 +2940,30 @@ definition top1_quotient_of_scheme_on ::
   "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b top1_edge_scheme \<Rightarrow> bool" where
   "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
      is_topology_on_strict X TX \<and>
-     (\<exists>P q edge.
+     (\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
         top1_is_polygonal_region_on P (length scheme)
       \<and> top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
-      \<and> (\<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<in> P)
+      \<comment> \<open>vx, vy are the polygon vertices, pairwise distinct and in convex position.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+             i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+      \<comment> \<open>The i-th edge is the segment from (vx i, vy i) to (vx ((i+1) mod n), vy ...).
+          Same-label edges are identified with compatible orientation.\<close>
       \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
             fst (scheme!i) = fst (scheme!j) \<longrightarrow>
             (\<forall>t\<in>I_set.
-               q (edge i t) = q (edge j
-                 (if snd (scheme!i) = snd (scheme!j) then t else 1 - t))))
-      \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set. edge i t \<noteq> p)
+               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme))
+             = (if snd (scheme!i) = snd (scheme!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                        (1-t) * vy j + t * vy (Suc j mod length scheme))
+                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                        t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+      \<comment> \<open>Interior points (not on any boundary edge) have singleton q-fibre.\<close>
+      \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                          (1-t) * vy i + t * vy (Suc i mod length scheme)))
                \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
 
 text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
