@@ -1793,34 +1793,6 @@ lemma top1_same_homotopy_type_on_sym:
   using assms top1_homotopy_equivalence_on_sym
   unfolding top1_same_homotopy_type_on_def by blast
 
-(** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
-
-    Munkres' proof: S^1 is a deformation retract of R^2 - 0 via
-    H(x, t) = (1-t)x + t(x/||x||). By Theorem 58.3, the inclusion induces
-    an isomorphism of fundamental groups. **)
-theorem Theorem_58_2_inclusion_iso:
-  "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-    (top1_fundamental_group_carrier
-       (UNIV - {(0, 0)})
-       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
-       (1, 0))"
-  \<comment> \<open>By Theorem 58.3, it suffices to show S^1 is a deformation retract of R^2 - 0.\<close>
-  sorry
-
-(** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
-
-    Munkres' proof: if A is a deformation retract of X via H, then the
-    inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
-    inverses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
-theorem Theorem_58_3:
-  assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-    (top1_fundamental_group_carrier X TX x0)"
-  \<comment> \<open>By homotopy equivalence j : A \<hookrightarrow> X and r = H(\<cdot>, 1) : X \<rightarrow> A; apply Theorem 58.7.\<close>
-  sorry
-
 (** from \<S>58 Lemma 58.1: if h, k: (X, x_0) \<rightarrow> (Y, y_0) are homotopic with basepoint
     fixed during the homotopy, then h_* = k_* on fundamental groups. **)
 lemma Lemma_58_1_basepoint_fixed:
@@ -1857,6 +1829,45 @@ theorem Theorem_58_7:
   shows "\<exists>\<phi>. bij_betw \<phi>
     (top1_fundamental_group_carrier X TX x0)
     (top1_fundamental_group_carrier Y TY (f x0))"
+  sorry
+
+(** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
+
+    Munkres' proof: if A is a deformation retract of X via H, then the
+    inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
+    inverses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
+theorem Theorem_58_3:
+  assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
+  shows "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+    (top1_fundamental_group_carrier X TX x0)"
+  \<comment> \<open>By homotopy equivalence j : A \<hookrightarrow> X and r = H(\<cdot>, 1) : X \<rightarrow> A; apply Theorem 58.7.\<close>
+proof -
+  have hA_sub: "A \<subseteq> X" using hdef unfolding top1_deformation_retract_of_on_def by blast
+  have hequiv: "\<exists>f g. top1_homotopy_equivalence_on A (subspace_topology X TX A) X TX f g
+                     \<and> f x0 = x0" sorry
+  obtain f g where hhe: "top1_homotopy_equivalence_on A (subspace_topology X TX A) X TX f g"
+      and hfx0: "f x0 = x0" using hequiv by blast
+  obtain \<phi> where hbij: "bij_betw \<phi>
+      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_carrier X TX (f x0))"
+    using Theorem_58_7[OF hhe hx0] by blast
+  thus ?thesis using hfx0 by auto
+qed
+
+(** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
+
+    Munkres' proof: S^1 is a deformation retract of R^2 - 0 via
+    H(x, t) = (1-t)x + t(x/||x||). By Theorem 58.3, the inclusion induces
+    an isomorphism of fundamental groups. **)
+theorem Theorem_58_2_inclusion_iso:
+  "\<exists>\<phi>. bij_betw \<phi>
+    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+    (top1_fundamental_group_carrier
+       (UNIV - {(0, 0)})
+       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+       (1, 0))"
+  \<comment> \<open>By Theorem 58.3, it suffices to show S^1 is a deformation retract of R^2 - 0.\<close>
   sorry
 
 corollary Theorem_58_7_strict:
