@@ -2977,6 +2977,14 @@ definition top1_quotient_of_scheme_on ::
       \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
              i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
       \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+      \<comment> \<open>Vertices are in cyclic order: non-adjacent edges don't share interior points.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+            i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
+            (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+               ((1-s) * vx i + s * vx (Suc i mod length scheme),
+                (1-s) * vy i + s * vy (Suc i mod length scheme))
+             \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                (1-t) * vy j + t * vy (Suc j mod length scheme))))
       \<comment> \<open>The i-th edge is the segment from (vx i, vy i) to (vx ((i+1) mod n), vy ...).
           Same-label edges are identified with compatible orientation.\<close>
       \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
