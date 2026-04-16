@@ -2781,12 +2781,16 @@ theorem Theorem_74_4_fund_group_m_projective:
 section \<open>\<S>76 Cutting and Pasting\<close>
 
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
-    Statement: there is a homeomorphism between the two quotient spaces. **)
+    If X1 is the quotient space induced by scheme1 and X2 by scheme2, and scheme2
+    is obtained from scheme1 via an elementary operation, then X1 \<cong> X2. **)
 theorem Theorem_76_elementary_operations:
   fixes scheme1 scheme2 :: "('a \<times> bool) list"
-  assumes "\<comment> \<open>scheme2 is obtained from scheme1 by an elementary operation\<close> True"
-  shows "\<exists>h. \<comment> \<open>h is a homeomorphism between the quotient spaces\<close> True"
-  by blast
+    and X1 X2 :: "'x set" and TX1 TX2 :: "'x set set"
+  assumes "is_topology_on_strict X1 TX1" and "is_topology_on_strict X2 TX2"
+      and "True"  \<comment> \<open>scheme2 is obtained from scheme1 by an elementary operation\<close>
+      and "True"  \<comment> \<open>X1 is the quotient of polygonal region via scheme1, X2 via scheme2\<close>
+  shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+  sorry
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
@@ -2830,33 +2834,45 @@ section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 (** from \<S>78 Theorem 78.1: compact triangulable surfaces are quotients of
     triangular regions by edge pasting. **)
 theorem Theorem_78_1_triangulable_surface:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_is_surface_on X TX"
-      and "\<comment> \<open>X is triangulable\<close> True"
-  shows "\<comment> \<open>X is homeomorphic to a quotient of triangular regions\<close> True"
-  by simp
+      and "True"  \<comment> \<open>X is triangulable\<close>
+  shows "\<exists>(\<T> :: (real \<times> real) set set) q.
+           \<comment> \<open>\<T> is a collection of triangular regions in R^2, q quotient-pastes to X\<close>
+           (\<forall>T \<in> \<T>. top1_continuous_map_on T
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q)
+         \<and> (\<Union>T\<in>\<T>. q ` T) = X"
+  sorry
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
     quotients of a single polygonal region. **)
 theorem Theorem_78_2_connected_polygonal_quotient:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_is_surface_on X TX"
       and "top1_connected_on X TX"
       and "True"  \<comment> \<open>X is triangulable\<close>
-  shows "\<exists>P TP q. \<comment> \<open>(P,TP) is a polygonal region, q : P \<rightarrow> X is an edge-pasting quotient\<close> True"
-  by blast
+  shows "\<exists>(P :: (real \<times> real) set) q.
+           \<comment> \<open>P is a polygonal region, q : P \<rightarrow> X an edge-pasting quotient surjection\<close>
+           top1_continuous_map_on P
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+         \<and> q ` P = X"
+  sorry
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
 (** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
-    Every compact connected surface is homeomorphic to either:
+    Every compact connected triangulable surface is homeomorphic to either:
     - the sphere S^2,
-    - the n-fold torus T_n for some n \<ge> 1,
+    - the n-fold torus T_n for some n \<ge> 1, or
     - the m-fold projective plane P_m for some m \<ge> 1. **)
 theorem Theorem_77_5_classification:
   fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_is_surface_on X TX"
       and "True"  \<comment> \<open>X is triangulable\<close>
-  shows "\<exists>h. \<comment> \<open>h is a homeomorphism from X to S^2 or T_n or P_m\<close> True"
-  by blast
+  shows "(\<exists>h. top1_homeomorphism_on X TX top1_S2 top1_S2_topology h)
+       \<or> (\<exists>n > 0. \<exists>(T_n::'a set) TT h. top1_homeomorphism_on X TX T_n TT h)
+       \<or> (\<exists>m > 0. \<exists>(P_m::'a set) TP h. top1_homeomorphism_on X TX P_m TP h)"
+  sorry
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
