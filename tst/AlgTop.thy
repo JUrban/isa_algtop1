@@ -824,10 +824,40 @@ theorem Theorem_54_3:
   shows "e1 = e1' \<and> top1_path_homotopic_on E TE e0 e1 ftilde gtilde"
   sorry
 
-(** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z **)
+(** from \<S>54 Theorem 54.4: lifting correspondence for path-connected / simply connected E **)
+theorem Theorem_54_4_lifting_correspondence:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_path_connected_on E TE"
+  shows "\<exists>\<phi>. \<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+                \<phi> c \<in> {e\<in>E. p e = b0}"
+        \<comment> \<open>Simplified; real statement: \<phi> is surjective lifting correspondence\<close>
+  sorry
+
+theorem Theorem_54_4_bijective_simply_connected:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_simply_connected_on E TE"
+  shows "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier B TB b0) {e\<in>E. p e = b0}"
+  sorry
+
+(** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z.
+    Munkres' proof: use covering p: R \<rightarrow> S^1 (Theorem 53.1). Since R is simply
+    connected, the lifting correspondence (Theorem 54.4) is bijective onto
+    p^{-1}(b_0) = Z. Then show it's a homomorphism. **)
 theorem Theorem_54_5:
   "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
     (UNIV::int set)"
+  sorry
+
+text \<open>Helper: R is simply connected (convex, hence any two paths are straight-line homotopic).\<close>
+lemma top1_R_simply_connected:
+  "top1_simply_connected_on (UNIV::real set) top1_open_sets"
+  sorry
+
+text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.\<close>
+lemma top1_R_to_S1_fiber_is_Z:
+  "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n. True}"
   sorry
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
