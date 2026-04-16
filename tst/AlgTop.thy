@@ -1699,7 +1699,27 @@ lemma top1_separates_onI:
     top1_separates_on X TX C"
   unfolding top1_separates_on_def by blast
 
-(** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2 **)
+(** from \<S>61 Lemma 61.1: unbounded/bounded components of R^2-h(C) correspond to
+    S^2-b components under a homeomorphism h: S^2-b \<rightarrow> R^2. **)
+lemma Lemma_61_1_components_correspond:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "C \<subseteq> top1_S2" and "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+  and "b \<in> top1_S2 - C"
+  and "\<comment> \<open>h is a homeomorphism S^2 - b \<rightarrow> R^2\<close> True"
+  shows "\<comment> \<open>Components of S^2 - C \<leftrightarrow> bounded/unbounded components of R^2 - h(C)\<close> True"
+  by simp
+
+(** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): a continuous map A \<rightarrow> S^2 - b
+    factoring through an arc (a,b) is nulhomotopic. Used in Theorem 63.2. **)
+lemma Lemma_61_2_nulhomotopy:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "\<comment> \<open>A is compact, b \<in> S^2\<close> True"
+  shows "\<comment> \<open>any continuous A \<rightarrow> S^2 - b is nulhomotopic\<close> True"
+  by simp
+
+(** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
+
+    Munkres' proof: by contradiction via Lemmas 61.1 & 61.2 + Theorem 55.2. **)
 theorem Theorem_61_3_JordanSeparation_S2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
