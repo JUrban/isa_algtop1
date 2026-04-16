@@ -2617,12 +2617,11 @@ definition top1_is_free_product_on ::
         \<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)) \<and>
      (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (GG \<alpha>)) \<and>
      G = top1_subgroup_generated_on G mul e invg (\<Union>\<alpha>\<in>J. \<iota>fam \<alpha> ` GG \<alpha>) \<and>
-     (\<forall>indices word eFam.
-        (\<forall>\<alpha>\<in>J. eFam \<alpha> \<in> GG \<alpha>) \<longrightarrow>
+     (\<forall>indices word.
         length indices = length word \<longrightarrow>
         length indices > 0 \<longrightarrow>
         (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
-                          \<and> word!i \<noteq> eFam (indices!i)) \<longrightarrow>
+                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e) \<longrightarrow>
         (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
         foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e)"
 
@@ -2972,17 +2971,23 @@ definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bo
   "top1_is_torus_on X TX \<longleftrightarrow>
      top1_is_n_fold_torus_on X TX 1"
 
-text \<open>n-fold dunce cap: quotient of B^2 by identifying points on S^1 via z \<sim> e^(2\<pi>i/n) z.
-  The resulting space has \<pi>_1 = Z/nZ.\<close>
+text \<open>n-fold dunce cap: quotient of B^2 where on S^1, q(z) = q(z') iff z' is a
+  rotation of z by a multiple of 2\<pi>/n; on the interior, q is injective; interior
+  and boundary orbits are separated.  The resulting space has \<pi>_1 = Z/nZ.\<close>
 definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_dunce_cap_on X TX n \<longleftrightarrow>
      is_topology_on_strict X TX \<and>
      n > 0 \<and>
      (\<exists>q. top1_quotient_map_on top1_B2 top1_B2_topology X TX q
-        \<and> (\<forall>z\<in>top1_S1. q z
-              = q (cos (2*pi/real n) * fst z - sin (2*pi/real n) * snd z,
-                   sin (2*pi/real n) * fst z + cos (2*pi/real n) * snd z))
-        \<and> (\<forall>z\<in>top1_B2 - top1_S1. inj_on q (top1_B2 - top1_S1)))"
+        \<and> (\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+              q z = q z' \<longleftrightarrow>
+              (\<exists>k::nat. k < n \<and>
+                 z' = (cos (2*pi*real k/real n) * fst z
+                         - sin (2*pi*real k/real n) * snd z,
+                       sin (2*pi*real k/real n) * fst z
+                         + cos (2*pi*real k/real n) * snd z)))
+        \<and> inj_on q (top1_B2 - top1_S1)
+        \<and> (\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'))"
 
 text \<open>The standard closed 2-simplex {(x, y). x \<ge> 0 \<and> y \<ge> 0 \<and> x + y \<le> 1}.\<close>
 definition top1_standard_simplex :: "(real \<times> real) set" where
