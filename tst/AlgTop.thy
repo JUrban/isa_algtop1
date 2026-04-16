@@ -2789,7 +2789,10 @@ theorem Theorem_67_8_rank_unique:
     and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
   assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
       and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
-  shows "card S1 = card S2"
+  shows "\<exists>f. bij_betw f S1 S2"
+  \<comment> \<open>S1 and S2 have the same cardinality (as sets): there's a bijection S1 \<rightarrow> S2.
+     Note: we cannot use 'card S1 = card S2' because Isabelle's card returns 0 for
+     infinite sets, making the statement trivial for infinite-rank free abelian groups.\<close>
   sorry
 
 section \<open>\<S>68 Free Products of Groups\<close>
