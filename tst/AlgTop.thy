@@ -3627,6 +3627,11 @@ theorem Theorem_82_1_covering_existence:
       and "top1_semilocally_simply_connected_on B TB"
       and "b0 \<in> B"
       and "H \<subseteq> top1_fundamental_group_carrier B TB b0"
+      \<comment> \<open>H must be a subgroup, not just a subset.\<close>
+      and "top1_is_group_on H
+             (top1_fundamental_group_mul B TB b0)
+             (top1_fundamental_group_id B TB b0)
+             (top1_fundamental_group_invg B TB b0)"
   shows "\<exists>E TE p e0. is_topology_on_strict E TE
     \<and> top1_covering_map_on E TE B TB p
     \<and> top1_path_connected_on E TE
