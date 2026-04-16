@@ -705,6 +705,33 @@ lemma top1_covering_map_on_evenly_covered:
     \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U"
   unfolding top1_covering_map_on_def by blast
 
+text \<open>Helper: evenly-covered U is open (by definition).\<close>
+lemma top1_evenly_covered_on_openin_on:
+  assumes "top1_evenly_covered_on E TE B TB p U"
+  shows "openin_on B TB U"
+proof -
+  from assms have "openin_on B TB U \<and>
+     (\<exists>\<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and>
+          (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}) \<and>
+          {x\<in>E. p x \<in> U} = \<Union>\<V> \<and>
+          (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                       (subspace_topology B TB U) p))"
+    unfolding top1_evenly_covered_on_def .
+  thus ?thesis by (rule conjunct1)
+qed
+
+text \<open>In a strict cover, every open cover point has an open neighborhood.\<close>
+lemma top1_covering_map_on_strict_evenly_covered_openin:
+  assumes "top1_covering_map_on E TE B TB p"
+  and "b \<in> B"
+  shows "\<exists>U. b \<in> U \<and> openin_on B TB U"
+proof -
+  obtain U where hbU: "b \<in> U" and hec: "top1_evenly_covered_on E TE B TB p U"
+    using top1_covering_map_on_evenly_covered[OF assms] by blast
+  have "openin_on B TB U" by (rule top1_evenly_covered_on_openin_on[OF hec])
+  thus ?thesis using hbU by blast
+qed
+
 text \<open>Lifting of a continuous map: f\<tilde>: X \<rightarrow> E with p \<circ> f\<tilde> = f.\<close>
 definition top1_is_lifting_on :: "'x set \<Rightarrow> 'x set set \<Rightarrow> 'e set \<Rightarrow> 'e set set
   \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('x \<Rightarrow> 'b) \<Rightarrow> ('x \<Rightarrow> 'e) \<Rightarrow> bool" where
