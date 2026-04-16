@@ -2645,59 +2645,126 @@ section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
 
 section \<open>\<S>71 The Fundamental Group of a Wedge of Circles\<close>
 
-text \<open>A wedge of circles at a common point: predicate. The precise construction
-  (quotient of disjoint copies of S^1 by identifying a common point) is omitted here.\<close>
+text \<open>A wedge of circles at a common point p (Munkres §71): a Hausdorff space X
+  with a family \<C>_\<alpha> (\<alpha>\<in>J) of subspaces, each homeomorphic to S^1, pairwise
+  intersecting only at p, whose union is X. The topology on X is the weak
+  topology: a set is closed iff its intersection with each C_\<alpha> is closed.\<close>
 definition top1_is_wedge_of_circles_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'i set \<Rightarrow> 'a \<Rightarrow> bool" where
   "top1_is_wedge_of_circles_on X TX J p \<longleftrightarrow>
-     is_topology_on_strict X TX \<and> p \<in> X"
-  \<comment> \<open>Placeholder: real definition requires the wedge-sum construction \<Sqinter>_{\<alpha>\<in>J} S^1.\<close>
+     is_topology_on_strict X TX \<and>
+     is_hausdorff_on X TX \<and>
+     p \<in> X \<and>
+     (\<exists>C. (\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
+        \<and> (\<Union>\<alpha>\<in>J. C \<alpha>) = X
+        \<and> (\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p})
+        \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+             (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))))"
 
-text \<open>n-fold torus: connected sum of n copies of S^1 \<times> S^1. T_1 = torus, T_2 = double torus, ...\<close>
+text \<open>A polygonal region in R^2: a closed bounded convex polygon with n \<ge> 3 sides,
+  expressed as the convex hull of n vertices. (Explicit pointwise combination since
+  real \<times> real has no real_vector instance here.)\<close>
+definition top1_is_polygonal_region_on :: "(real \<times> real) set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_polygonal_region_on P n \<longleftrightarrow>
+     n \<ge> 3 \<and>
+     (\<exists>vx vy :: nat \<Rightarrow> real.
+        P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<n. coeffs i * vy i)})"
+
+text \<open>Edge scheme: a word w = y_1 y_2 ... y_n where each y_i is (label, orientation)
+  specifying how boundary edges of a polygonal region are identified. Orientation
+  True means forward, False means reversed.\<close>
+type_synonym 'a top1_edge_scheme = "('a \<times> bool) list"
+
+text \<open>X is the quotient space obtained from a polygonal region P by identifying
+  boundary edges according to the scheme. There is a quotient map q : P \<rightarrow> X
+  that respects the scheme's edge equivalences.\<close>
+definition top1_quotient_of_scheme_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b top1_edge_scheme \<Rightarrow> bool" where
+  "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>P. top1_is_polygonal_region_on P (length scheme)
+       \<and> (\<exists>q. top1_quotient_map_on P
+               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+               X TX q))"
+
+text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
+definition top1_is_polygonal_quotient_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_polygonal_quotient_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme)"
+
+text \<open>Standard scheme for the n-fold torus: a_1 b_1 a_1\<inverse> b_1\<inverse> \<cdots> a_n b_n a_n\<inverse> b_n\<inverse>,
+  i.e. a 4n-sided polygon with this edge-identification word.\<close>
+definition top1_n_torus_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
+  "top1_n_torus_scheme n =
+     concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<n])"
+
+text \<open>Standard scheme for the m-fold projective plane: a_1 a_1 a_2 a_2 \<cdots> a_m a_m,
+  a 2m-sided polygon.\<close>
+definition top1_m_projective_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
+  "top1_m_projective_scheme m =
+     concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])"
+
+text \<open>n-fold torus T_n = quotient of a 4n-gon by the standard torus scheme.\<close>
 definition top1_is_n_fold_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_n_fold_torus_on X TX n \<longleftrightarrow>
-     is_topology_on_strict X TX \<and> n > 0"
-  \<comment> \<open>Placeholder: needs connected-sum construction.\<close>
+     n > 0 \<and> top1_quotient_of_scheme_on X TX (top1_n_torus_scheme n)"
 
-text \<open>m-fold projective plane: connected sum of m copies of RP^2.\<close>
+text \<open>m-fold projective plane P_m = quotient of a 2m-gon by the standard scheme.\<close>
 definition top1_is_m_fold_projective_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_m_fold_projective_on X TX m \<longleftrightarrow>
-     is_topology_on_strict X TX \<and> m > 0"
+     m > 0 \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
 
-text \<open>n-fold dunce cap: disc with boundary wrapped n times.\<close>
-definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_dunce_cap_on X TX n \<longleftrightarrow>
-     is_topology_on_strict X TX \<and> n > 0"
-
-text \<open>Triangulable surface: admits a triangulation by closed 2-simplices.\<close>
-definition top1_is_triangulable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_triangulable_on X TX \<longleftrightarrow>
-     is_topology_on_strict X TX"
-  \<comment> \<open>Placeholder: real definition requires a simplicial complex structure on X.\<close>
-
-text \<open>Torus as a specific space: the product S^1 \<times> S^1.\<close>
+text \<open>The torus T² = S¹ × S¹ (the 1-fold torus in Munkres' sense).\<close>
 definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_is_torus_on X TX \<longleftrightarrow>
      top1_is_n_fold_torus_on X TX 1"
 
-text \<open>Polygonal quotient: X is obtained from a polygonal region in R^2 by edge-pasting.\<close>
-definition top1_is_polygonal_quotient_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_polygonal_quotient_on X TX \<longleftrightarrow>
-     is_topology_on_strict X TX"
-  \<comment> \<open>Placeholder: real definition requires a polygonal region + edge-pasting relation.\<close>
+text \<open>n-fold dunce cap: quotient of B^2 by identifying points on S^1 via z \<sim> e^(2\<pi>i/n) z.
+  The resulting space has \<pi>_1 = Z/nZ.\<close>
+definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_dunce_cap_on X TX n \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     n > 0 \<and>
+     (\<exists>q. top1_quotient_map_on top1_B2 top1_B2_topology X TX q
+        \<and> (\<forall>z\<in>top1_S1. q z
+              = q (cos (2*pi/real n) * fst z - sin (2*pi/real n) * snd z,
+                   sin (2*pi/real n) * fst z + cos (2*pi/real n) * snd z))
+        \<and> (\<forall>z\<in>top1_B2 - top1_S1. inj_on q (top1_B2 - top1_S1)))"
 
-text \<open>Elementary scheme operation: a local rewrite on edge schemes that preserves
-  the resulting quotient topology (cutting, pasting, relabelling, etc.).\<close>
-definition top1_elementary_scheme_operation ::
-  "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
-  "top1_elementary_scheme_operation scheme1 scheme2 \<longleftrightarrow> True"
-  \<comment> \<open>Placeholder; true elementary operations form a finite set of rewriting rules.\<close>
+text \<open>Triangulable: X has a triangulation — a finite collection \<T> of closed subspaces
+  each homeomorphic to a triangle, whose union is X, and any two intersect in a
+  common edge or vertex (or not at all).\<close>
+definition top1_is_triangulable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_triangulable_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>\<T>. finite \<T>
+        \<and> (\<forall>T\<in>\<T>. T \<subseteq> X
+            \<and> closedin_on X TX T
+            \<and> (\<exists>h. top1_homeomorphism_on
+                     {p::real \<times> real. fst p \<ge> 0 \<and> snd p \<ge> 0 \<and> fst p + snd p \<le> 1}
+                     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+                        {p. fst p \<ge> 0 \<and> snd p \<ge> 0 \<and> fst p + snd p \<le> 1})
+                     T (subspace_topology X TX T) h))
+        \<and> (\<Union>\<T>) = X)"
 
-text \<open>X1 is the quotient space induced by a polygonal scheme.\<close>
-definition top1_quotient_of_scheme_on ::
-  "'a set \<Rightarrow> 'a set set \<Rightarrow> ('b \<times> bool) list \<Rightarrow> bool" where
-  "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
-     is_topology_on_strict X TX"
-  \<comment> \<open>Placeholder.\<close>
+text \<open>Elementary scheme operations (Munkres §76): inductive rewrite rules on edge
+  schemes preserving the quotient topology. The actual rules are:
+  cut a chain, paste a matched edge pair, cancel a-a\<inverse>, relabel, or permute.\<close>
+inductive top1_elementary_scheme_operation ::
+  "'a top1_edge_scheme \<Rightarrow> 'a top1_edge_scheme \<Rightarrow> bool" where
+    refl:    "top1_elementary_scheme_operation s s"
+  | rotate:  "top1_elementary_scheme_operation (xs @ ys) (ys @ xs)"
+  | reverse: "top1_elementary_scheme_operation
+               (xs @ [(a, True), (a, False)] @ ys)
+               (xs @ ys)"
+    \<comment> \<open>Cancellation of a-a\<inverse> pair. Other elementary ops (cut/paste/relabel)
+        similarly generate Munkres' equivalence of polygonal schemes.\<close>
 
 text \<open>Subgroup index: H has index k in G if there are exactly k left cosets.\<close>
 definition top1_subgroup_has_index_on ::
@@ -3101,12 +3168,37 @@ section \<open>Chapter 14: Applications to Group Theory\<close>
 
 section \<open>\<S>83 Covering Spaces of a Graph\<close>
 
-text \<open>A graph in Munkres' sense: a space X decomposed as a union of arcs (edges)
-  glued at endpoints (vertices).\<close>
+text \<open>An arc is a space homeomorphic to the closed unit interval [0, 1].\<close>
+definition top1_is_arc_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_arc_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>h. top1_homeomorphism_on I_set I_top X TX h)"
+
+text \<open>Endpoints of an arc A are the two (distinct) points p, q such that
+  A - p and A - q are both connected.\<close>
+definition top1_arc_endpoints_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set" where
+  "top1_arc_endpoints_on A TA =
+     {p. p \<in> A \<and> top1_connected_on (A - {p}) (subspace_topology A TA (A - {p}))}"
+
+text \<open>A graph (Munkres §83): a Hausdorff space X with a collection \<A> of subspaces
+  (arcs), each homeomorphic to [0,1], such that:
+  (1) X is the union of all arcs in \<A>,
+  (2) any two distinct arcs intersect in a set of at most two common endpoints,
+  (3) the topology on X is the weak topology w.r.t. \<A> (a set is closed iff its
+      intersection with each arc is closed in the arc).\<close>
 definition top1_is_graph_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_is_graph_on X TX \<longleftrightarrow>
      is_topology_on_strict X TX \<and>
-     (\<comment> \<open>X is the union of arcs, each homeomorphic to [0, 1], pairwise joined at endpoints\<close> True)"
+     is_hausdorff_on X TX \<and>
+     (\<exists>\<A>. (\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
+        \<and> (\<Union>\<A>) = X
+        \<and> (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)
+        \<and> (\<forall>C. C \<subseteq> X \<longrightarrow>
+             (closedin_on X TX C \<longleftrightarrow>
+              (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))))"
 
 (** from \<S>83 Theorem 83.2: any covering space of a graph is itself a graph. **)
 theorem Theorem_83_2_covering_of_graph_is_graph:
