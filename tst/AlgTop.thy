@@ -3398,13 +3398,22 @@ theorem Theorem_78_1_triangulable_surface:
       and "top1_is_triangulable_on X TX"
   shows "\<exists>(\<T> :: (real \<times> real) set set) q.
            finite \<T>
+         \<and> \<T> \<noteq> {}
          \<and> (\<forall>T \<in> \<T>. top1_is_polygonal_region_on T 3)
-         \<and> (\<forall>T \<in> \<T>. top1_quotient_map_on T
+         \<comment> \<open>q on each triangle is continuous (not necessarily surjective).\<close>
+         \<and> (\<forall>T \<in> \<T>. top1_continuous_map_on T
               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T)
               X TX q)
-         \<and> (\<Union>T\<in>\<T>. q ` T) = X"
-  \<comment> \<open>\<T> is a finite collection of triangular regions (3-sided polygonal regions),
-      and q edge-pastes them to form X.\<close>
+         \<comment> \<open>Together the triangles' images cover X.\<close>
+         \<and> (\<Union>T\<in>\<T>. q ` T) = X
+         \<comment> \<open>X has the final (quotient) topology w.r.t. q from the disjoint union of T's:
+            U \<subseteq> X is open iff its pre-image in every triangle is open there.\<close>
+         \<and> (\<forall>U. U \<subseteq> X \<longrightarrow>
+             (U \<in> TX \<longleftrightarrow>
+              (\<forall>T\<in>\<T>. {p\<in>T. q p \<in> U} \<in>
+                subspace_topology UNIV
+                  (product_topology_on top1_open_sets top1_open_sets) T)))"
+  \<comment> \<open>\<T> is a finite collection of triangular regions; q edge-pastes them to form X.\<close>
   sorry
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
