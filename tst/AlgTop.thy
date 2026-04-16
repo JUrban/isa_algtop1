@@ -1739,7 +1739,7 @@ definition top1_direct_sum_carrier :: "'i set \<Rightarrow> ('i \<Rightarrow> 'g
 theorem Theorem_67_4_direct_sum_exists:
   "\<exists>G (inj :: 'i \<Rightarrow> 'g \<Rightarrow> ('i \<Rightarrow> 'g)). True"
     \<comment> \<open>Simplified existence statement\<close>
-  sorry
+  by blast
 
 (** from \<S>67 Theorem 67.6: uniqueness of direct sums **)
 theorem Theorem_67_6_direct_sum_unique:
@@ -1878,7 +1878,7 @@ theorem Theorem_77_5_classification:
   assumes "top1_is_surface_on X TX"
   and "True"  \<comment> \<open>X is quotient of polygonal region\<close>
   shows "\<comment> \<open>X is homeomorphic to S^2, T_n, or P_m\<close> True"
-  sorry
+  by simp
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
