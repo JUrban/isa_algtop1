@@ -308,11 +308,69 @@ definition top1_constant_path :: "'a \<Rightarrow> (real \<Rightarrow> 'a)" wher
   "top1_constant_path x = (\<lambda>_. x)"
 
 text \<open>The product of paths is well-defined when endpoints match.\<close>
-lemma top1_path_product_is_path:
-  assumes "top1_is_path_on X TX x0 x1 f"
-      and "top1_is_path_on X TX x1 x2 g"
-  shows "top1_is_path_on X TX x0 x2 (top1_path_product f g)"
+text \<open>Helper: the reverse path is continuous.\<close>
+lemma top1_path_reverse_continuous:
+  assumes "top1_continuous_map_on I_set I_top X TX f"
+  shows "top1_continuous_map_on I_set I_top X TX (top1_path_reverse f)"
   sorry
+
+lemma top1_path_reverse_is_path:
+  assumes hf: "top1_is_path_on X TX x0 x1 f"
+  shows "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+proof -
+  have hfc: "top1_continuous_map_on I_set I_top X TX f" and hf0: "f 0 = x0" and hf1: "f 1 = x1"
+    using hf unfolding top1_is_path_on_def by blast+
+  have hcont: "top1_continuous_map_on I_set I_top X TX (top1_path_reverse f)"
+    by (rule top1_path_reverse_continuous[OF hfc])
+  have hstart: "top1_path_reverse f 0 = x1"
+    unfolding top1_path_reverse_def using hf1 by simp
+  have hend: "top1_path_reverse f 1 = x0"
+    unfolding top1_path_reverse_def using hf0 by simp
+  show ?thesis
+    unfolding top1_is_path_on_def using hcont hstart hend by blast
+qed
+
+text \<open>Helper: constant path is continuous.\<close>
+lemma top1_constant_path_continuous:
+  assumes "is_topology_on X TX" and "x \<in> X"
+  shows "top1_continuous_map_on I_set I_top X TX (top1_constant_path x)"
+  unfolding top1_constant_path_def
+  by (rule top1_continuous_map_on_const[OF top1_unit_interval_topology_is_topology_on assms])
+
+lemma top1_constant_path_is_path:
+  assumes "is_topology_on X TX" and "x \<in> X"
+  shows "top1_is_path_on X TX x x (top1_constant_path x)"
+  unfolding top1_is_path_on_def top1_constant_path_def
+  using top1_constant_path_continuous[OF assms]
+  unfolding top1_constant_path_def by simp
+
+text \<open>Helper: the concatenated path is continuous via the pasting lemma on [0,1/2] \<union> [1/2,1].\<close>
+lemma top1_path_product_continuous:
+  assumes "top1_continuous_map_on I_set I_top X TX f"
+      and "top1_continuous_map_on I_set I_top X TX g"
+      and "f 1 = g 0"
+  shows "top1_continuous_map_on I_set I_top X TX (top1_path_product f g)"
+  sorry
+
+lemma top1_path_product_is_path:
+  assumes hf: "top1_is_path_on X TX x0 x1 f"
+      and hg: "top1_is_path_on X TX x1 x2 g"
+  shows "top1_is_path_on X TX x0 x2 (top1_path_product f g)"
+proof -
+  have hfc: "top1_continuous_map_on I_set I_top X TX f" and hf0: "f 0 = x0" and hf1: "f 1 = x1"
+    using hf unfolding top1_is_path_on_def by blast+
+  have hgc: "top1_continuous_map_on I_set I_top X TX g" and hg0: "g 0 = x1" and hg1: "g 1 = x2"
+    using hg unfolding top1_is_path_on_def by blast+
+  have hmatch: "f 1 = g 0" using hf1 hg0 by simp
+  have hcont: "top1_continuous_map_on I_set I_top X TX (top1_path_product f g)"
+    by (rule top1_path_product_continuous[OF hfc hgc hmatch])
+  have hstart: "top1_path_product f g 0 = x0"
+    unfolding top1_path_product_def using hf0 by simp
+  have hend: "top1_path_product f g 1 = x2"
+    unfolding top1_path_product_def using hg1 by simp
+  show ?thesis
+    unfolding top1_is_path_on_def using hcont hstart hend by blast
+qed
 
 (** from \<S>51 Theorem 51.2: groupoid properties of * **)
 lemma Theorem_51_2_associativity:
