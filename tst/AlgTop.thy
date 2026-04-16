@@ -2576,7 +2576,9 @@ text \<open>Free product of a family of groups (Munkres §68): a group (G, mul, 
   (1) the images \<iota>_\<alpha>(G_\<alpha>) generate G, and
   (2) any non-empty reduced product of elements (alternating between different
       \<iota>_\<alpha>(G_\<alpha>\<setminus>{e_\<alpha>})) is not the identity of G.
-  Condition (2) captures the normal form / uniqueness of reduced words.\<close>
+  The last conjunct encodes (2): word = list of (index, element) pairs where
+  each element differs from its group's identity and consecutive indices differ;
+  its product in G is not e.\<close>
 definition top1_is_free_product_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow>
    ('i \<Rightarrow> 'gg set) \<Rightarrow> ('i \<Rightarrow> 'gg \<Rightarrow> 'gg \<Rightarrow> 'gg) \<Rightarrow>
@@ -2589,9 +2591,6 @@ definition top1_is_free_product_on ::
      (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (GG \<alpha>)) \<and>
      G = top1_subgroup_generated_on G mul e invg (\<Union>\<alpha>\<in>J. \<iota>fam \<alpha> ` GG \<alpha>) \<and>
      (\<forall>indices word eFam.
-        \<comment> \<open>No nontrivial reduced word equals e: word = list of (index, element),
-            each element not equal to its group's identity, consecutive indices differ,
-            gives a product in G not equal to e.\<close>
         (\<forall>\<alpha>\<in>J. eFam \<alpha> \<in> GG \<alpha>) \<longrightarrow>
         length indices = length word \<longrightarrow>
         length indices > 0 \<longrightarrow>
@@ -3132,10 +3131,10 @@ theorem Theorem_78_1_triangulable_surface:
   assumes "top1_is_surface_on X TX"
       and "top1_is_triangulable_on X TX"
   shows "\<exists>(\<T> :: (real \<times> real) set set) q.
-           \<comment> \<open>\<T> is a collection of triangular regions in R^2, q quotient-pastes to X\<close>
            (\<forall>T \<in> \<T>. top1_continuous_map_on T
               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q)
          \<and> (\<Union>T\<in>\<T>. q ` T) = X"
+  \<comment> \<open>\<T> is a collection of triangular regions in R^2, q quotient-pastes to X.\<close>
   sorry
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
@@ -3146,10 +3145,10 @@ theorem Theorem_78_2_connected_polygonal_quotient:
       and "top1_connected_on X TX"
       and "top1_is_triangulable_on X TX"
   shows "\<exists>(P :: (real \<times> real) set) q.
-           \<comment> \<open>P is a polygonal region, q : P \<rightarrow> X an edge-pasting quotient surjection\<close>
            top1_continuous_map_on P
              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
          \<and> q ` P = X"
+  \<comment> \<open>P is a polygonal region, q : P \<rightarrow> X an edge-pasting quotient surjection.\<close>
   sorry
 
 section \<open>\<S>77 The Classification Theorem\<close>
@@ -3203,13 +3202,13 @@ theorem Theorem_79_4:
       and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
   shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)) \<longleftrightarrow>
-         \<comment> \<open>p_*(\<pi>_1(E, e_0)) and p'_*(\<pi>_1(E', e_0')) are conjugate subgroups of \<pi>_1(B, b_0).\<close>
          (\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
             top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
             = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
                 ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                           (top1_fundamental_group_invg B TB b0 c)) ` H))
                 (top1_fundamental_group_image_hom E TE e0 B TB b0 p))"
+  \<comment> \<open>p_*(\<pi>_1(E, e_0)) and p'_*(\<pi>_1(E', e_0')) are conjugate subgroups of \<pi>_1(B, b_0).\<close>
   sorry
 
 section \<open>\<S>79 Equivalence of Covering Spaces\<close>
