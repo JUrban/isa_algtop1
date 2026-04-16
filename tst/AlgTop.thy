@@ -2386,14 +2386,33 @@ definition top1_winding_number_on ::
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
     edges a_1 a_3 and a_2 a_4, the loop traversing C is nontrivial in \<pi>_1(S^2-p-q, x_0). **)
 lemma Lemma_65_1_K4_subgraph:
-  fixes G :: "(real \<times> real \<times> real) set" and C :: "(real \<times> real \<times> real) set"
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+    and C :: "(real \<times> real \<times> real) set"
     and p q :: "real \<times> real \<times> real"
     and f :: "real \<Rightarrow> real \<times> real \<times> real"
     and x0 :: "real \<times> real \<times> real"
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "G \<subseteq> top1_S2"
-      and "C \<subseteq> G"
-      and "p \<in> G - C" and "q \<in> G - C"
+      \<comment> \<open>K_4 structure: 4 distinct vertices on S^2, plus 6 arcs between them.\<close>
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      \<comment> \<open>p, q are interior points of the two 'diagonal' edges.\<close>
+      and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+      \<comment> \<open>C is the 4-cycle a_1 a_2 a_3 a_4 a_1.\<close>
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+      \<comment> \<open>f is a loop at x_0 in S^2-{p,q} whose image is C.\<close>
       and "top1_is_loop_on (top1_S2 - {p} - {q})
              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x0 f"
       and "f ` I_set = C"
