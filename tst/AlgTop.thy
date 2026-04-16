@@ -1963,6 +1963,21 @@ definition top1_equivalent_coverings_on :: "'e set \<Rightarrow> 'e set set \<Ri
      top1_covering_map_on E' TE' B TB p' \<and>
      (\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e))"
 
+(** from \<S>79 Theorem 79.2: coverings are equivalent via h (with h(e_0) = e_0')
+    iff their fundamental group images coincide. **)
+theorem Theorem_79_2:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "is_topology_on_strict E' TE'"
+      and "top1_covering_map_on E TE B TB p" and "p e0 = b0"
+      and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
+      and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+      and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
+             \<and> h e0 = e0') \<longleftrightarrow>
+         \<comment> \<open>p_*(\<pi>_1(E, e_0)) = p'_*(\<pi>_1(E', e_0'))\<close>
+         True"  \<comment> \<open>Simplified subgroup equality statement\<close>
+  sorry
+
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. Uses strict topology. **)
 theorem Theorem_79_4:
@@ -1979,6 +1994,27 @@ theorem Theorem_79_4:
   sorry
 
 section \<open>\<S>80 The Universal Covering Space\<close>
+
+text \<open>A universal covering space is a simply connected covering space of B.\<close>
+definition top1_is_universal_covering_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'b set \<Rightarrow> 'b set set
+  \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> bool" where
+  "top1_is_universal_covering_on E TE B TB p \<longleftrightarrow>
+     top1_covering_map_on E TE B TB p \<and>
+     top1_simply_connected_on E TE"
+
+(** from \<S>80: any two universal covering spaces are equivalent (via Theorem 79.4). **)
+theorem Theorem_80_1_universal_unique:
+  assumes "is_topology_on_strict B TB"
+      and "top1_is_universal_covering_on E TE B TB p"
+      and "top1_is_universal_covering_on E' TE' B TB p'"
+      and "is_topology_on_strict E TE" and "is_topology_on_strict E' TE'"
+      and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+      and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+      and "p e0 = b0" and "p' e0' = b0"
+  shows "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+  \<comment> \<open>By Theorem 79.4: simply connected E gives trivial subgroup p_*(\<pi>_1 E) = {1};
+      same for E'; and {1} is conjugate to itself.\<close>
+  sorry
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
