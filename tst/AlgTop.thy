@@ -2784,10 +2784,24 @@ theorem Theorem_68_7_quotient_free_product:
       and "top1_is_group_on G2 mul2 e2 invg2"
       and "top1_normal_subgroup_on G1 mul1 e1 invg1 N1"
       and "top1_normal_subgroup_on G2 mul2 e2 invg2 N2"
-  shows "\<exists>(L::'g set set) mulL eL invgL
-         (R::'g set set) mulR eR invgR.
-           top1_groups_isomorphic_on L mulL R mulR"
-  \<comment> \<open>L represents (G_1*G_2)/\<langle>\<langle>N_1\<union>N_2\<rangle>\<rangle>, R represents (G_1/N_1)*(G_2/N_2).\<close>
+  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12
+          (FPQ::'fq set) mulFPQ eFPQ invgFPQ \<iota>famQ.
+           top1_is_free_product_on FP mulFP eFP invgFP
+             (\<lambda>i::nat. if i = 0 then G1 else G2)
+             (\<lambda>i. if i = 0 then mul1 else mul2)
+             \<iota>fam12 {0, 1}
+         \<and> top1_is_free_product_on FPQ mulFPQ eFPQ invgFPQ
+             (\<lambda>i::nat. if i = 0
+                       then top1_quotient_group_carrier_on G1 mul1 N1
+                       else top1_quotient_group_carrier_on G2 mul2 N2)
+             (\<lambda>i::nat. top1_quotient_group_mul_on (if i = 0 then mul1 else mul2))
+             \<iota>famQ {0, 1}
+         \<and> top1_groups_isomorphic_on
+             (top1_quotient_group_carrier_on FP mulFP
+                (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+                   (\<iota>fam12 0 ` N1 \<union> \<iota>fam12 1 ` N2)))
+             (top1_quotient_group_mul_on mulFP)
+             FPQ mulFPQ"
   sorry
 
 section \<open>\<S>69 Free Groups\<close>
