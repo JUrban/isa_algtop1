@@ -1302,12 +1302,83 @@ lemma Lemma_55_1_retract_injective:
   shows "top1_path_homotopic_on A (subspace_topology X TX A) x0 x0 f g"
   sorry
 
-text \<open>Helper: \<pi>_1(S^1) is nontrivial.\<close>
+text \<open>Helper: \<pi>_1(S^1) is nontrivial — follows from Theorem 54.5 since Z has \<ge> 2 elements.\<close>
 lemma top1_S1_fundamental_group_nontrivial:
   "\<exists>f g. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
        \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g
        \<and> \<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
-  sorry  \<comment> \<open>follows from Theorem 54.5: \<pi>_1(S^1) \<cong> Z\<close>
+proof -
+  obtain \<phi> where hbij: "bij_betw \<phi>
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (UNIV::int set)"
+    using Theorem_54_5 by blast
+  \<comment> \<open>Since UNIV::int has \<ge> 2 elements and \<phi> is a bijection, the carrier has \<ge> 2 elements.
+      Each element is an equivalence class of a loop; distinct classes give non-homotopic loops.\<close>
+  obtain c1 c2 where hc1: "c1 \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      and hc2: "c2 \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      and hne: "c1 \<noteq> c2"
+  proof -
+    have "card (UNIV::int set) \<noteq> 1" by simp
+    hence "card (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) \<noteq> 1"
+      using bij_betw_same_card[OF hbij] by simp
+    hence "\<exists>x y. x \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)
+               \<and> y \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0) \<and> x \<noteq> y"
+    proof -
+      have hsurj: "\<phi> ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0) = UNIV"
+        using hbij unfolding bij_betw_def by blast
+      have hinj: "inj_on \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))"
+        using hbij unfolding bij_betw_def by blast
+      have h0mem: "(0::int) \<in> \<phi> ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+        using hsurj by blast
+      obtain xa where hxa_mem: "xa \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+          and hxa: "\<phi> xa = 0"
+        using h0mem by (auto simp: image_iff)
+      have h1mem: "(1::int) \<in> \<phi> ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+        using hsurj by blast
+      obtain xb where hxb_mem: "xb \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+          and hxb: "\<phi> xb = 1"
+        using h1mem by (auto simp: image_iff)
+      have "xa \<noteq> xb" using hxa hxb by (metis zero_neq_one)
+      thus ?thesis using hxa_mem hxb_mem by blast
+    qed
+    thus ?thesis using that by blast
+  qed
+  \<comment> \<open>Each class is {g. f \<simeq>_p g} for some loop f at (1,0). Pick representatives.\<close>
+  obtain f where hf: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+      and hc1_eq: "c1 = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f g}"
+    using hc1 unfolding top1_fundamental_group_carrier_def by blast
+  obtain g where hg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
+      and hc2_eq: "c2 = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h}"
+    using hc2 unfolding top1_fundamental_group_carrier_def by blast
+  \<comment> \<open>Since c1 \<ne> c2, f and g are not loop-equivalent, i.e., not path-homotopic.\<close>
+  have hne_eq: "\<not> top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f g"
+  proof (rule ccontr)
+    assume "\<not> \<not> top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f g"
+    hence heq: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f g" by simp
+    have "c1 \<subseteq> c2"
+    proof
+      fix h assume "h \<in> c1"
+      hence hfh: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f h" using hc1_eq by blast
+      have hgf: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g f"
+        by (rule top1_loop_equiv_on_sym[OF heq])
+      have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h"
+        by (rule top1_loop_equiv_on_trans[OF hgf hfh])
+      thus "h \<in> c2" using hc2_eq by blast
+    qed
+    moreover have "c2 \<subseteq> c1"
+    proof
+      fix h assume "h \<in> c2"
+      hence hgh: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h" using hc2_eq by blast
+      have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f h"
+        by (rule top1_loop_equiv_on_trans[OF heq hgh])
+      thus "h \<in> c1" using hc1_eq by blast
+    qed
+    ultimately have "c1 = c2" by blast
+    thus False using hne by blast
+  qed
+  hence hnot_pho: "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
+    using hf hg unfolding top1_loop_equiv_on_def by blast
+  show ?thesis using hf hg hnot_pho by blast
+qed
 
 text \<open>Helper: B^2 is simply connected.\<close>
 lemma top1_B2_simply_connected:
