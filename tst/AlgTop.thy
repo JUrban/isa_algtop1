@@ -1185,7 +1185,7 @@ proof (rule ccontr)
   assume hno: "\<not> (\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0)"
   \<comment> \<open>Define k: B^2 \<rightarrow> C-{0} by k(z) = z^n + \<Sum> a_j z^j.\<close>
   let ?k = "\<lambda>z::complex. z^n + (\<Sum>j<n. a j * z^j)"
-  have hk_nonzero: "\<And>z. cmod z \<le> 1 \<Longrightarrow> ?k z \<noteq> 0" sorry
+  have hk_nonzero: "\<And>z. cmod z \<le> 1 \<Longrightarrow> ?k z \<noteq> 0" using hno by blast
   \<comment> \<open>Let h be k restricted to S^1.\<close>
   let ?h = "\<lambda>z::complex. ?k z"
   \<comment> \<open>h is nulhomotopic in C-{0} because it extends to B^2 \<rightarrow> C-{0}.\<close>
@@ -1197,7 +1197,9 @@ proof (rule ccontr)
                    (product_topology_on top1_S1_complex_topology I_top)
                    top1_C_minus_0 top1_C_minus_0_topology ?F" sorry
   have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
-     z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" sorry
+     z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0"
+    \<comment> \<open>Munkres inequality: |F| \<ge> 1 - t(\<Sum>|a_k|) > 0 since t \<le> 1 and \<Sum>|a_k| < 1.\<close>
+    sorry
   \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
   have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
                        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
@@ -1246,8 +1248,12 @@ proof -
   then obtain z where hroot_monic: "z^n + (\<Sum>k<n. ?b k * z^k) = 0"
     by blast
   \<comment> \<open>This z is a root of the original polynomial too.\<close>
+  have h_split: "(\<Sum>k\<le>n. a k * z^k) = (\<Sum>k<n. a k * z^k) + a n * z^n"
+    by (simp add: lessThan_Suc_atMost[symmetric] sum.lessThan_Suc)
+  have h_factor: "(\<Sum>k<n. a k * z^k) = a n * (\<Sum>k<n. ?b k * z^k)"
+    by (simp add: sum_distrib_left assms(2) field_simps)
   have "(\<Sum>k\<le>n. a k * z^k) = a n * (z^n + (\<Sum>k<n. ?b k * z^k))"
-    sorry  \<comment> \<open>algebraic manipulation: split sum at k=n; a k = a n * (a k / a n).\<close>
+    using h_split h_factor by (simp add: distrib_left mult.commute)
   thus ?thesis using hroot_monic assms(2) by fastforce
 qed
 
