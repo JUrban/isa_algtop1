@@ -362,6 +362,26 @@ definition top1_loop_equiv_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 
      top1_is_loop_on X TX x0 f \<and> top1_is_loop_on X TX x0 g
      \<and> top1_path_homotopic_on X TX x0 x0 f g"
 
+lemma top1_loop_equiv_on_refl:
+  assumes "top1_is_loop_on X TX x0 f"
+  shows "top1_loop_equiv_on X TX x0 f f"
+  unfolding top1_loop_equiv_on_def
+  using assms Lemma_51_1_path_homotopic_refl[of X TX x0 x0 f]
+  unfolding top1_is_loop_on_def by blast
+
+lemma top1_loop_equiv_on_sym:
+  assumes "top1_loop_equiv_on X TX x0 f g"
+  shows "top1_loop_equiv_on X TX x0 g f"
+  using assms Lemma_51_1_path_homotopic_sym[of X TX x0 x0 f g]
+  unfolding top1_loop_equiv_on_def by blast
+
+lemma top1_loop_equiv_on_trans:
+  assumes "top1_loop_equiv_on X TX x0 f g"
+      and "top1_loop_equiv_on X TX x0 g h"
+  shows "top1_loop_equiv_on X TX x0 f h"
+  using assms Lemma_51_1_path_homotopic_trans[of X TX x0 x0 f g h]
+  unfolding top1_loop_equiv_on_def by blast
+
 text \<open>The set of loops at x0 modulo path homotopy — the carrier of pi_1(X, x0).
   Represented as equivalence classes of loops.\<close>
 definition top1_fundamental_group_carrier :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a
