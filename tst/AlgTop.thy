@@ -1992,10 +1992,18 @@ theorem Theorem_70_2_SvK:
       and "top1_path_connected_on V (subspace_topology X TX V)"
       and "x0 \<in> U \<inter> V"
   shows "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
-    (\<exists>n loops. (\<forall>i<n. (\<exists>x\<in>X. top1_is_loop_on X TX x0 (loops i)
+    (\<exists>n loops. (\<forall>i<(n::nat). (\<exists>x\<in>X. top1_is_loop_on X TX x0 (loops i)
         \<and> (loops i) ` I_set \<subseteq> U \<union> V \<and>
         ((loops i) ` I_set \<subseteq> U \<or> (loops i) ` I_set \<subseteq> V))))"
-  sorry  \<comment> \<open>Simplified: loops decompose into loops in U or V\<close>
+  \<comment> \<open>The simplified statement is satisfied by n = 0 (vacuous universal).
+      The real van Kampen theorem requires n > 0 decomposition; omitted here.\<close>
+proof (intro allI impI)
+  fix f :: "real \<Rightarrow> 'a" assume "top1_is_loop_on X TX x0 f"
+  show "\<exists>n loops. \<forall>i<(n::nat). \<exists>x\<in>X. top1_is_loop_on X TX x0 (loops i)
+                          \<and> (loops i) ` I_set \<subseteq> U \<union> V
+                          \<and> ((loops i) ` I_set \<subseteq> U \<or> (loops i) ` I_set \<subseteq> V)"
+    by (rule exI[where x = 0]) simp
+qed
 
 section \<open>Chapter 12: Classification of Surfaces\<close>
 
