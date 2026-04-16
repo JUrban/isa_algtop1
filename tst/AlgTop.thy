@@ -2543,10 +2543,13 @@ definition top1_torsion_subgroup_on ::
 section \<open>\<S>67 Direct Sums of Abelian Groups\<close>
 
 text \<open>External direct sum: the set of finitely-supported functions J \<rightarrow> \<Union>G_\<alpha>.\<close>
-definition top1_direct_sum_carrier :: "'i set \<Rightarrow> ('i \<Rightarrow> 'g set) \<Rightarrow> ('i \<Rightarrow> 'g) set" where
-  "top1_direct_sum_carrier J G =
-     {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = undefined) \<and>
-         finite {i\<in>J. f i \<noteq> undefined}}"  \<comment> \<open>approximation; real: f i \<noteq> 0_{G_i}\<close>
+text \<open>External direct sum: the set of finitely-supported functions f : J \<rightarrow> \<Union>_\<alpha> G_\<alpha>
+  with f \<alpha> \<in> G_\<alpha> and f \<alpha> = e_\<alpha> (the identity of G_\<alpha>) for all but finitely many \<alpha>.\<close>
+definition top1_direct_sum_carrier ::
+  "'i set \<Rightarrow> ('i \<Rightarrow> 'g set) \<Rightarrow> ('i \<Rightarrow> 'g) \<Rightarrow> ('i \<Rightarrow> 'g) set" where
+  "top1_direct_sum_carrier J G eFam =
+     {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = eFam i) \<and>
+         finite {i\<in>J. f i \<noteq> eFam i}}"
 
 (** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups. **)
 theorem Theorem_67_4_direct_sum_exists:
@@ -2590,9 +2593,18 @@ theorem Theorem_67_8_rank_unique:
 section \<open>\<S>68 Free Products of Groups\<close>
 
 text \<open>Reduced words in a free product G_1 * G_2.\<close>
-definition top1_free_product_carrier :: "'g set \<Rightarrow> 'g set \<Rightarrow> 'g list set" where
-  "top1_free_product_carrier G1 G2 =
-     {ws. \<forall>i<length ws. ws!i \<in> G1 \<union> G2}"  \<comment> \<open>approximation\<close>
+text \<open>Reduced words in the free product G_1 * G_2: non-empty alternating sequences
+  w_1 w_2 ... w_n where each w_i is in G_1 \<setminus> {e_1} or G_2 \<setminus> {e_2}, and
+  consecutive w_i's come from different factors.\<close>
+definition top1_free_product_carrier ::
+  "'g set \<Rightarrow> 'g \<Rightarrow> 'g set \<Rightarrow> 'g \<Rightarrow> (('g \<times> bool) list) set" where
+  "top1_free_product_carrier G1 e1 G2 e2 =
+     {ws. (\<forall>i<length ws.
+              (snd (ws!i) \<longrightarrow> fst (ws!i) \<in> G1 \<and> fst (ws!i) \<noteq> e1)
+            \<and> (\<not> snd (ws!i) \<longrightarrow> fst (ws!i) \<in> G2 \<and> fst (ws!i) \<noteq> e2))
+        \<and> (\<forall>i. i+1 < length ws \<longrightarrow> snd (ws!i) \<noteq> snd (ws!(i+1)))}"
+     \<comment> \<open>The boolean flag indicates which factor each element belongs to.
+         Empty list represents the identity.\<close>
 
 (** from \<S>68 Theorem 68.2: given a family of groups, a free product exists. **)
 theorem Theorem_68_2_free_product_exists:
