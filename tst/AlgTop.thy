@@ -3124,7 +3124,10 @@ definition top1_left_cosets_on ::
 definition top1_subgroup_has_index_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_subgroup_has_index_on G mul H k \<longleftrightarrow>
+     finite (top1_left_cosets_on G mul H) \<and>
      card (top1_left_cosets_on G mul H) = k"
+     \<comment> \<open>Finite index only. Infinite-index subgroups are expressed by negating this
+         predicate (or by asserting infinite (top1_left_cosets_on ...)), not by k = 0.\<close>
 
 
 (** from \<S>71 Theorem 71.1: finite wedge of circles has free fundamental group
