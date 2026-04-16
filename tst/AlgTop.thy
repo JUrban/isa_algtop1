@@ -3035,13 +3035,28 @@ theorem Theorem_72_1_attaching_two_cell:
       and "a \<in> A"
       and "bij_betw h (top1_B2 - top1_S1) (X - A)"
       and "h ` top1_S1 \<subseteq> A"
-  shows "\<exists>(Q::'g set) mulQ eQ invgQ S R.
-           top1_group_presented_by_on Q mulQ eQ invgQ S R
-         \<and> top1_groups_isomorphic_on
-             (top1_fundamental_group_carrier X TX a)
-             (top1_fundamental_group_mul X TX a)
-             Q mulQ"
-  \<comment> \<open>\<pi>_1(X, a) is the quotient \<pi>_1(A, a) / \<langle>\<langle>[k \<circ> p]\<rangle>\<rangle>, i.e. a presentation Q.\<close>
+      and "h (1, 0) = a"
+  shows "\<exists>\<iota> Q mulQ.
+            top1_continuous_map_on top1_S1 top1_S1_topology A
+                 (subspace_topology X TX A) \<iota>
+          \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
+          \<and> Q = top1_quotient_group_carrier_on
+                   (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+                   (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+                   (top1_normal_subgroup_generated_on
+                      (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_id A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+                      {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                         A (subspace_topology X TX A) a \<iota>
+                         (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))})
+          \<and> top1_groups_isomorphic_on
+                (top1_fundamental_group_carrier X TX a)
+                (top1_fundamental_group_mul X TX a)
+                Q mulQ"
+  \<comment> \<open>Q is the quotient π_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle>; mulQ is the induced coset product.
+      \<pi>_1(X, a) \<cong> Q as groups.\<close>
   sorry
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
@@ -3137,29 +3152,31 @@ theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   sorry
 
 (** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n has the
-    presentation \<langle>\<alpha>_1, \<beta>_1, \<cdots>, \<alpha>_n, \<beta>_n | [\<alpha>_1,\<beta>_1]\<cdots>[\<alpha>_n,\<beta>_n]\<rangle>. **)
+    presentation \<langle>a_1, b_1, \<dots>, a_n, b_n | [a_1,b_1]\<cdots>[a_n,b_n]\<rangle>.
+    The single relator is the product (a_1 b_1 a_1\<inverse> b_1\<inverse>)\<cdots>(a_n b_n a_n\<inverse> b_n\<inverse>).
+    We index generators 0, 1, ..., 2n-1 as a_i := 2i, b_i := 2i+1. **)
 theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
       and "x0 \<in> X"
-  shows "\<exists>(G::'g set) mul e invg S R.
-           top1_group_presented_by_on G mul e invg S R
-         \<and> card S = 2*n
-         \<and> card R = 1
+  shows "\<exists>(G::'g set) mul e invg.
+           top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
+             { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                                   (2*i, False), (2*i+1, False)]) [0..<n]) }
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
   sorry
 
-(** from \<S>74 Theorem 74.4: \<pi>_1(P_m) = F_m / normal-closure(\<alpha>_1^2 \<cdots> \<alpha>_m^2). **)
+(** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1\<^sup>2 \<cdots> a_m\<^sup>2\<rangle>.
+    The single relator is (a_1 a_1)(a_2 a_2)\<cdots>(a_m a_m). **)
 theorem Theorem_74_4_fund_group_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"
-  shows "\<exists>(G::'g set) mul e invg S R.
-           top1_group_presented_by_on G mul e invg S R
-         \<and> card S = m
-         \<and> card R = 1
+  shows "\<exists>(G::'g set) mul e invg.
+           top1_group_presented_by_on G mul e invg ({..<m}::nat set)
+             { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
@@ -3224,10 +3241,14 @@ theorem Theorem_78_1_triangulable_surface:
   assumes "top1_is_surface_on X TX"
       and "top1_is_triangulable_on X TX"
   shows "\<exists>(\<T> :: (real \<times> real) set set) q.
-           (\<forall>T \<in> \<T>. top1_continuous_map_on T
-              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q)
+           finite \<T>
+         \<and> (\<forall>T \<in> \<T>. top1_is_polygonal_region_on T 3)
+         \<and> (\<forall>T \<in> \<T>. top1_quotient_map_on T
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T)
+              X TX q)
          \<and> (\<Union>T\<in>\<T>. q ` T) = X"
-  \<comment> \<open>\<T> is a collection of triangular regions in R^2, q quotient-pastes to X.\<close>
+  \<comment> \<open>\<T> is a finite collection of triangular regions (3-sided polygonal regions),
+      and q edge-pastes them to form X.\<close>
   sorry
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
@@ -3237,11 +3258,12 @@ theorem Theorem_78_2_connected_polygonal_quotient:
   assumes "top1_is_surface_on X TX"
       and "top1_connected_on X TX"
       and "top1_is_triangulable_on X TX"
-  shows "\<exists>(P :: (real \<times> real) set) q.
-           top1_continuous_map_on P
-             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
-         \<and> q ` P = X"
-  \<comment> \<open>P is a polygonal region, q : P \<rightarrow> X an edge-pasting quotient surjection.\<close>
+  shows "\<exists>(P :: (real \<times> real) set) n q.
+           top1_is_polygonal_region_on P n
+         \<and> top1_quotient_map_on P
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+             X TX q"
+  \<comment> \<open>P is a polygonal region with n sides, q : P \<rightarrow> X is the edge-pasting quotient map.\<close>
   sorry
 
 section \<open>\<S>77 The Classification Theorem\<close>
@@ -3256,8 +3278,12 @@ theorem Theorem_77_5_classification:
   assumes "top1_is_surface_on X TX"
       and "top1_is_triangulable_on X TX"
   shows "(\<exists>h. top1_homeomorphism_on X TX top1_S2 top1_S2_topology h)
-       \<or> (\<exists>n > 0. \<exists>(T_n::'a set) TT h. top1_homeomorphism_on X TX T_n TT h)
-       \<or> (\<exists>m > 0. \<exists>(P_m::'a set) TP h. top1_homeomorphism_on X TX P_m TP h)"
+       \<or> (\<exists>n > 0. \<exists>(T_n::'a set) TT h.
+             top1_is_n_fold_torus_on T_n TT n
+           \<and> top1_homeomorphism_on X TX T_n TT h)
+       \<or> (\<exists>m > 0. \<exists>(P_m::'a set) TP h.
+             top1_is_m_fold_projective_on P_m TP m
+           \<and> top1_homeomorphism_on X TX P_m TP h)"
   sorry
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
