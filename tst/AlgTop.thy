@@ -2034,17 +2034,49 @@ lemma Lemma_58_1_basepoint_fixed:
 lemma Lemma_58_5_basepoint_change:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and H :: "'a \<times> real \<Rightarrow> 'a" and k :: "'a \<Rightarrow> 'a" and x0 :: 'a
-  assumes "is_topology_on_strict X TX"
-      and "A \<subseteq> X"
-      and "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
-      and "\<forall>x\<in>X. H (x, 0) = x"
-      and "\<forall>x\<in>X. H (x, 1) = k x"
-      and "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) \<in> A"
-      and "x0 \<in> A"
+  assumes hTX: "is_topology_on_strict X TX"
+      and hAsub: "A \<subseteq> X"
+      and hHcont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+      and hH0: "\<forall>x\<in>X. H (x, 0) = x"
+      and hH1: "\<forall>x\<in>X. H (x, 1) = k x"
+      and hHA: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) \<in> A"
+      and hx0A: "x0 \<in> A"
   shows "top1_is_path_on X TX x0 (k x0) (\<lambda>t. H (x0, t))"
-  \<comment> \<open>The tracking path \<alpha>(t) = H(x_0, t) goes from x_0 to k(x_0);
-      the basepoint-change \<alpha>-hat then commutes with k_* appropriately.\<close>
-  sorry
+proof -
+  have hx0X: "x0 \<in> X" using hx0A hAsub by blast
+  have hTX': "is_topology_on X TX" by (rule is_topology_on_strict_imp[OF hTX])
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX' hTI])
+  \<comment> \<open>Continuity of t \<mapsto> (x_0, t) : I \<rightarrow> X \<times> I via Theorem_18_4.\<close>
+  have hconst_x0: "top1_continuous_map_on I_set I_top X TX (\<lambda>_. x0)"
+    by (rule top1_continuous_map_on_const[OF hTI hTX' hx0X])
+  have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+    by (rule top1_continuous_map_on_id[OF hTI])
+  have hpi1_eq: "(pi1 \<circ> (\<lambda>t. (x0, t))) = (\<lambda>_. x0)"
+    unfolding pi1_def by (rule ext) simp
+  have hpi2_eq: "(pi2 \<circ> (\<lambda>t. (x0, t))) = id"
+    unfolding pi2_def by (rule ext) simp
+  have hpi1_cont: "top1_continuous_map_on I_set I_top X TX (pi1 \<circ> (\<lambda>t. (x0, t)))"
+    using hconst_x0 unfolding hpi1_eq .
+  have hpi2_cont: "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> (\<lambda>t. (x0, t)))"
+    using hid_I unfolding hpi2_eq .
+  have hpair: "top1_continuous_map_on I_set I_top (X \<times> I_set) (product_topology_on TX I_top)
+                 (\<lambda>t. (x0, t))"
+    using iffD2[OF Theorem_18_4[OF hTI hTX' hTI]] hpi1_cont hpi2_cont by blast
+  \<comment> \<open>Composition H \<circ> (\<lambda>t. (x_0, t)) : I \<rightarrow> X is continuous.\<close>
+  have hcomp: "top1_continuous_map_on I_set I_top X TX (H \<circ> (\<lambda>t. (x0, t)))"
+    by (rule top1_continuous_map_on_comp[OF hpair hHcont])
+  have hcont: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. H (x0, t))"
+    using hcomp by (simp add: comp_def)
+  \<comment> \<open>Endpoints: H(x_0, 0) = x_0 and H(x_0, 1) = k x_0.\<close>
+  have hstart: "H (x0, 0) = x0" using hH0 hx0X by blast
+  have hend: "H (x0, 1) = k x0" using hH1 hx0X by blast
+  show ?thesis
+    unfolding top1_is_path_on_def
+    using hcont hstart hend by simp
+qed
 
 (** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
     The strict version is trivially related.
