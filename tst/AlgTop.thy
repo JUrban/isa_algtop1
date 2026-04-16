@@ -2354,10 +2354,18 @@ theorem Theorem_63_5_two_closed_connected:
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
 
 text \<open>The winding number of a loop f in R^2-{0} around the origin.
-  It is an integer, well-defined up to homotopy.\<close>
+  Munkres' definition: lift the loop (cos 2\<pi>t, sin 2\<pi>t)-valued normalization
+  f/|f| to a path \<tilde>f in R via the covering p: R \<rightarrow> S^1, p(x) = (cos 2\<pi>x, sin 2\<pi>x),
+  and define winding number = \<tilde>f(1) - \<tilde>f(0). This is an integer since f is a loop.\<close>
 definition top1_winding_number_on ::
   "(real \<Rightarrow> real \<times> real) \<Rightarrow> int" where
-  "top1_winding_number_on f = (SOME n. True)"  \<comment> \<open>Placeholder; proper def via lifting\<close>
+  "top1_winding_number_on f =
+     (SOME n::int.
+        \<exists>ftilde. top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets ftilde
+              \<and> (\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s)
+                   = (fst (f s) / sqrt (fst (f s)^2 + snd (f s)^2),
+                      snd (f s) / sqrt (fst (f s)^2 + snd (f s)^2)))
+              \<and> n = \<lfloor>ftilde 1 - ftilde 0\<rfloor>)"
 
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
