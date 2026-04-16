@@ -1252,8 +1252,45 @@ proof -
   \<comment> \<open>Munkres Step 4: Choose c large so that \<Sum> |a_k/c^{n-k}| < 1.\<close>
   \<comment> \<open>Substitute x = cy: equation becomes y^n + \<Sum> (a_k / c^{n-k}) y^k = 0.\<close>
   \<comment> \<open>By Step 3, there's a root y_0 with |y_0| \<le> 1; then x_0 = c y_0 is a root.\<close>
-  obtain c where hc: "c > 0" and hsum_small: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1"
-    sorry
+  \<comment> \<open>Pick c = max 1 (1 + 2 * n * \<Sum> cmod (a k)). Then c \<ge> 1 and c > 2 n M where
+      M = \<Sum> cmod (a k), so each term cmod(a k)/c^(n-k) \<le> cmod(a k)/c < M/(2nM) = 1/(2n)
+      when M > 0, giving sum < 1/2 < 1. When M = 0 each cmod(a k) = 0, sum = 0 < 1.\<close>
+  define M where "M = (\<Sum>k<n. cmod (a k))"
+  define c where "c = M + 1"
+  have hM: "M \<ge> 0" unfolding M_def by (simp add: sum_nonneg)
+  have hc: "c > 0" unfolding c_def using hM by simp
+  have hc_ge1: "c \<ge> 1" unfolding c_def using hM by simp
+  have hc_pow_ge: "\<forall>k<n. c ^ (n - k) \<ge> c"
+  proof (intro allI impI)
+    fix k assume hk: "k < n"
+    have hge1: "n - k \<ge> 1" using hk by simp
+    have "c ^ 1 \<le> c ^ (n - k)"
+      by (rule power_increasing[OF hge1 hc_ge1])
+    thus "c ^ (n - k) \<ge> c" by simp
+  qed
+  have hsum_small: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1"
+  proof -
+    have h_each: "\<forall>k<n. cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
+    proof (intro allI impI)
+      fix k assume hk: "k < n"
+      have hcpos: "c ^ (n - k) > 0" using hc by (simp add: zero_less_power)
+      have hcpow_ge_c: "c ^ (n - k) \<ge> c" using hc_pow_ge hk by blast
+      have hak: "cmod (a k) \<ge> 0" by simp
+      show "cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
+        using hc hcpos hcpow_ge_c hak by (simp add: frac_le)
+    qed
+    have h_sum_le: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) \<le> (\<Sum>k<n. cmod (a k) / c)"
+      by (rule sum_mono, simp add: h_each)
+    also have "(\<Sum>k<n. cmod (a k) / c) = M / c"
+      unfolding M_def by (simp add: sum_divide_distrib)
+    also have "\<dots> < 1"
+    proof -
+      have "M / c < 1 \<longleftrightarrow> M < c" using hc by (simp add: divide_less_eq)
+      moreover have "M < c" unfolding c_def by simp
+      ultimately show ?thesis by blast
+    qed
+    finally show "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1" .
+  qed
   \<comment> \<open>New coefficients a'_k = a_k / c^{n-k}.\<close>
   let ?a' = "\<lambda>k. a k / complex_of_real (c ^ (n - k))"
   have h_cmod_eq: "\<forall>k<n. cmod (?a' k) = cmod (a k) / c ^ (n - k)"
