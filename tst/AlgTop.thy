@@ -3183,7 +3183,13 @@ theorem Theorem_72_1_attaching_two_cell:
       and "top1_path_connected_on A (subspace_topology X TX A)"
       and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
       and "a \<in> A"
-      and "bij_betw h (top1_B2 - top1_S1) (X - A)"
+      \<comment> \<open>h restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.\<close>
+      and "top1_homeomorphism_on
+             (top1_B2 - top1_S1)
+             (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+             (X - A)
+             (subspace_topology X TX (X - A))
+             h"
       and "h ` top1_S1 \<subseteq> A"
       and "h (1, 0) = a"
   shows "\<exists>\<iota>.
