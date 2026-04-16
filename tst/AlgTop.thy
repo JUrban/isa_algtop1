@@ -2702,12 +2702,24 @@ definition top1_direct_sum_carrier ::
      {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = eFam i) \<and>
          finite {i\<in>J. f i \<noteq> eFam i}}"
 
-(** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups. **)
+(** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups.
+    The direct sum (finitely-supported coordinate-wise functions) is an abelian group,
+    equipped with natural injections \<iota>fam_\<alpha> : G_\<alpha> \<hookrightarrow> \<oplus>_\<alpha> G_\<alpha>. **)
 theorem Theorem_67_4_direct_sum_exists:
   assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_abelian_group_on (G \<alpha>::'g set) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
-  shows "\<exists>(H::'g set) mulH eH invgH \<iota>fam. top1_is_abelian_group_on H mulH eH invgH
-           \<and> (\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H mulH (\<iota>fam \<alpha>))
-           \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>))"
+  shows "\<exists>\<iota>fam.
+           top1_is_abelian_group_on
+             (top1_direct_sum_carrier J G e)
+             (\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>)
+             e
+             (\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>)
+         \<and> (\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>)
+               (top1_direct_sum_carrier J G e)
+               (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>)
+               (\<iota>fam \<alpha>))
+         \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>))
+         \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. \<iota>fam \<alpha> x \<alpha> = x \<and>
+              (\<forall>\<beta>. \<beta> \<noteq> \<alpha> \<longrightarrow> \<iota>fam \<alpha> x \<beta> = e \<beta>))"
   sorry
 
 (** from \<S>67 Theorem 67.6: uniqueness of external direct sum.
@@ -2824,8 +2836,14 @@ theorem Theorem_69_2:
   assumes "top1_is_free_group_full_on G1 mul1 e1 invg1 \<iota>1 S1"
       and "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 S2"
       and "S1 \<inter> S2 = {}"
-  shows "\<exists>G mul e invg \<iota>.
-           top1_is_free_group_full_on (G::'g set) mul e invg \<iota> (S1 \<union> S2)"
+  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
+           top1_is_free_product_on FP mulFP eFP invgFP
+             (\<lambda>i::nat. if i = 0 then G1 else G2)
+             (\<lambda>i. if i = 0 then mul1 else mul2)
+             \<iota>fam12 {0, 1}
+         \<and> top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
+         \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s))
+         \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
   sorry
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
@@ -2838,8 +2856,10 @@ theorem Theorem_69_4:
     and \<iota> :: "'s \<Rightarrow> 'g"
     and S :: "'s set"
   assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
-  shows "\<exists>H mulH eH invgH \<iota>H.
-           top1_is_free_abelian_group_full_on (H::'h set) mulH eH invgH \<iota>H S"
+  shows "\<exists>(H::'h set) mulH eH invgH \<phi> \<iota>H.
+           top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
+         \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
+         \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))"
   sorry
 
 section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
