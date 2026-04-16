@@ -992,9 +992,17 @@ theorem Theorem_54_5:
     (UNIV::int set)"
   sorry
 
-text \<open>Helper: R is simply connected (convex, hence any two paths are straight-line homotopic).\<close>
+text \<open>Helper: R is path-connected via the straight-line path t \<mapsto> (1-t)\<cdot>x + t\<cdot>y.\<close>
+lemma top1_R_path_connected:
+  "top1_path_connected_on (UNIV::real set) top1_open_sets"
+  \<comment> \<open>Straight-line paths between any two reals.\<close>
+  sorry
+
+text \<open>Helper: R is simply connected — any loop f is homotopic to constant via
+  F(s, t) = (1 - t) * f(s) + t * x0 (straight-line homotopy to the basepoint).\<close>
 lemma top1_R_simply_connected:
   "top1_simply_connected_on (UNIV::real set) top1_open_sets"
+  \<comment> \<open>R is convex; use straight-line homotopy F(s,t) = (1-t)*f(s) + t*x0.\<close>
   sorry
 
 text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.
