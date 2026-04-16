@@ -2529,11 +2529,21 @@ theorem Theorem_67_4_direct_sum_exists:
   sorry
 
 (** from \<S>67 Theorem 67.6: uniqueness of external direct sum.
-    Any two external direct sums of the same family are isomorphic. **)
+    If (H_1, \<iota>_1) and (H_2, \<iota>_2) are both direct sums of a family {G_\<alpha>}_{\<alpha>\<in>J} of
+    abelian groups (with injective homomorphisms \<iota>_i_\<alpha>: G_\<alpha> \<rightarrow> H_i making H_i the
+    internal direct sum of their images), then H_1 \<cong> H_2 as abelian groups. **)
 theorem Theorem_67_6_direct_sum_unique:
-  assumes "top1_is_abelian_group_on (H1::'g set) mulH1 eH1 invgH1"
-      and "top1_is_abelian_group_on (H2::'g set) mulH2 eH2 invgH2"
-      and "True"  \<comment> \<open>Both H1, H2 are direct sums of the same family\<close>
+  fixes J :: "'i set"
+    and G :: "'i \<Rightarrow> 'g set" and mul :: "'i \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and H1 H2 :: "'h set" and mulH1 mulH2 :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+    and eH1 eH2 :: 'h and invgH1 invgH2 :: "'h \<Rightarrow> 'h"
+    and \<iota>fam1 \<iota>fam2 :: "'i \<Rightarrow> 'g \<Rightarrow> 'h"
+  assumes "top1_is_abelian_group_on H1 mulH1 eH1 invgH1"
+      and "top1_is_abelian_group_on H2 mulH2 eH2 invgH2"
+      and "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H1 mulH1 (\<iota>fam1 \<alpha>)
+                \<and> inj_on (\<iota>fam1 \<alpha>) (G \<alpha>)"
+      and "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H2 mulH2 (\<iota>fam2 \<alpha>)
+                \<and> inj_on (\<iota>fam2 \<alpha>) (G \<alpha>)"
   shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
   sorry
 
