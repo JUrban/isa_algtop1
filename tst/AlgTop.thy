@@ -2833,14 +2833,23 @@ definition top1_is_wedge_of_circles_on :: "'a set \<Rightarrow> 'a set set \<Rig
              (closedin_on X TX D \<longleftrightarrow>
               (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))))"
 
-text \<open>A polygonal region in R^2: a closed bounded convex polygon with n \<ge> 3 sides,
-  expressed as the convex hull of n vertices. (Explicit pointwise combination since
-  real \<times> real has no real_vector instance here.)\<close>
+text \<open>A polygonal region in R^2 with n \<ge> 3 sides: a closed convex polygon, i.e.,
+  the convex hull of n vertices v_0, ..., v_{n-1} that are pairwise distinct and
+  in convex position (no vertex lies in the convex hull of the others).\<close>
 definition top1_is_polygonal_region_on :: "(real \<times> real) set \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_polygonal_region_on P n \<longleftrightarrow>
      n \<ge> 3 \<and>
      (\<exists>vx vy :: nat \<Rightarrow> real.
-        P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+        (\<comment> \<open>vertices are pairwise distinct\<close>
+         \<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<comment> \<open>no vertex is a convex combination of the others — convex position\<close>
+         \<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                          \<and> coeffs k = 0
+                          \<and> (\<Sum>i<n. coeffs i) = 1
+                          \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
+                          \<and> vy k = (\<Sum>i<n. coeffs i * vy i)))
+      \<and> P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
                        \<and> (\<Sum>i<n. coeffs i) = 1
                        \<and> x = (\<Sum>i<n. coeffs i * vx i)
                        \<and> y = (\<Sum>i<n. coeffs i * vy i)})"
@@ -2966,17 +2975,31 @@ definition top1_is_triangulable_on :: "'a set \<Rightarrow> 'a set set \<Rightar
                  T1 \<inter> T2 = h T1 ` E1 \<and> h T1 ` E1 = h T2 ` E2)))"
 
 text \<open>Elementary scheme operations (Munkres §76): inductive rewrite rules on edge
-  schemes preserving the quotient topology. The actual rules are:
-  cut a chain, paste a matched edge pair, cancel a-a\<inverse>, relabel, or permute.\<close>
+  schemes preserving the resulting quotient topology. Munkres defines:
+  (i) cyclic permutation (rotate), (ii) cancellation of aa\<inverse> (when length \<ge> 5),
+  (iii) relabel one letter to a new fresh letter (and consistently flip the bool),
+  (iv) cut: replace w_1 w_2 by w_1 c c\<inverse> w_2 for a fresh letter c, (v) paste: the
+  reverse of cut when edges form an adjacent pair, (vi) inverse: flip an edge.\<close>
 inductive top1_elementary_scheme_operation ::
   "'a top1_edge_scheme \<Rightarrow> 'a top1_edge_scheme \<Rightarrow> bool" where
-    refl:    "top1_elementary_scheme_operation s s"
-  | rotate:  "top1_elementary_scheme_operation (xs @ ys) (ys @ xs)"
-  | reverse: "top1_elementary_scheme_operation
-               (xs @ [(a, True), (a, False)] @ ys)
-               (xs @ ys)"
-    \<comment> \<open>Cancellation of a-a\<inverse> pair. Other elementary ops (cut/paste/relabel)
-        similarly generate Munkres' equivalence of polygonal schemes.\<close>
+    refl:     "top1_elementary_scheme_operation s s"
+  | sym:      "top1_elementary_scheme_operation s t \<Longrightarrow>
+               top1_elementary_scheme_operation t s"
+  | trans:    "\<lbrakk>top1_elementary_scheme_operation s t;
+                top1_elementary_scheme_operation t u\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation s u"
+  | rotate:   "top1_elementary_scheme_operation (xs @ ys) (ys @ xs)"
+  | cancel:   "top1_elementary_scheme_operation
+                 (xs @ [(a, b), (a, \<not> b)] @ ys)
+                 (xs @ ys)"
+  | relabel:  "\<lbrakk>a \<notin> fst ` set (xs @ ys); a \<noteq> c\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation
+                 (xs @ [(c, b)] @ ys)
+                 (xs @ [(a, b)] @ ys)"
+  | cut:      "\<lbrakk>c \<notin> fst ` set (xs @ ys)\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation
+                 (xs @ ys)
+                 (xs @ [(c, True), (c, False)] @ ys)"
 
 text \<open>Subgroup index: H has index k in G iff there are exactly k left cosets g H.
   We represent the set of left cosets directly (does not require H to be normal).\<close>
