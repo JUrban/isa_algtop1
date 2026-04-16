@@ -2790,28 +2790,40 @@ theorem Theorem_76_elementary_operations:
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
-(** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0). **)
+(** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0).
+    There exists an abelian group (H_1, mul, e, invg) together with a surjective
+    group homomorphism \<pi>_1(X, x_0) \<rightarrow> H_1 whose kernel is the commutator subgroup. **)
 theorem Theorem_75_1_H1_abelianization:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
-  shows "\<exists>\<phi>. \<comment> \<open>\<phi> : \<pi>_1(X, x_0)/[\<pi>_1,\<pi>_1] \<cong> H_1(X, x_0)\<close> True"
-  by blast
+    and \<pi>1_mul :: "(real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'a) set"
+  shows "\<exists>(H::'h set) mulH eH invgH \<phi>.
+           top1_is_abelian_group_on H mulH eH invgH
+         \<and> top1_group_hom_on (top1_fundamental_group_carrier X TX x0) \<pi>1_mul H mulH \<phi>
+         \<and> \<phi> ` (top1_fundamental_group_carrier X TX x0) = H"
+  sorry
 
-(** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n. **)
+(** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
+    There exists a free abelian group on 2n generators, isomorphic to H_1(T_n). **)
 theorem Theorem_75_3_H1_n_torus:
-  fixes n :: nat
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "n > 0"
-      and "True"  \<comment> \<open>X is the n-fold torus\<close>
-  shows "\<exists>\<phi>. \<comment> \<open>H_1(T_n) \<cong> Z^{2n}\<close> True"
-  by blast
+      and "True"  \<comment> \<open>X is the n-fold torus T_n\<close>
+  shows "\<exists>(H::'h set) mulH eH invgH (\<iota>::nat \<Rightarrow> 'h).
+           top1_is_free_abelian_group_full_on H mulH eH invgH \<iota> {..<2*n}
+         \<and> (\<exists>\<phi>. bij_betw \<phi> H (top1_fundamental_group_carrier X TX x0))"
+  sorry
 
-(** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane:
-    torsion subgroup Z/2, quotient Z^{m-1}. **)
+(** from \<S>75 Theorem 75.4: H_1(m-fold projective plane):
+    torsion subgroup is Z/2, free part is Z^{m-1}. **)
 theorem Theorem_75_4_H1_m_projective:
-  fixes m :: nat
+  fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "m > 0"
-      and "True"  \<comment> \<open>X is the m-fold projective plane\<close>
-  shows "\<exists>T H. \<comment> \<open>T(H_1(P_m)) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close> True"
-  by blast
+      and "True"  \<comment> \<open>X is the m-fold projective plane P_m\<close>
+  shows "\<exists>(H::'h set) mulH eH invgH.
+           top1_is_abelian_group_on H mulH eH invgH
+         \<and> card (top1_torsion_subgroup_on H mulH eH) = 2
+         \<and> (\<exists>\<phi>. bij_betw \<phi> H (top1_fundamental_group_carrier X TX x0))"
+  sorry
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
