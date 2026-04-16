@@ -3118,10 +3118,13 @@ inductive top1_elementary_scheme_operation ::
   | cancel:   "top1_elementary_scheme_operation
                  (xs @ [(a, b), (a, \<not> b)] @ ys)
                  (xs @ ys)"
-  | relabel:  "\<lbrakk>a \<notin> fst ` set (xs @ ys); a \<noteq> c\<rbrakk> \<Longrightarrow>
+  | relabel:  "\<lbrakk>a \<notin> fst ` set s; a \<noteq> c\<rbrakk> \<Longrightarrow>
                top1_elementary_scheme_operation
-                 (xs @ [(c, b)] @ ys)
-                 (xs @ [(a, b)] @ ys)"
+                 s
+                 (map (\<lambda>(x, b). (if x = c then a else x, b)) s)"
+  | invert:   "top1_elementary_scheme_operation
+                 s
+                 (rev (map (\<lambda>(x, b). (x, \<not> b)) s))"
   | cut:      "\<lbrakk>c \<notin> fst ` set (xs @ ys)\<rbrakk> \<Longrightarrow>
                top1_elementary_scheme_operation
                  (xs @ ys)
