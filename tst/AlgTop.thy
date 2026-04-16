@@ -2899,13 +2899,16 @@ theorem Theorem_72_1_attaching_two_cell:
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
-    i.e. isomorphic to Z \<times> Z (free abelian on 2 generators). **)
+    i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
 theorem Theorem_73_1_torus_presentation:
   fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
   assumes "top1_is_torus_on T_torus TT"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-          (top1_fundamental_group_carrier T_torus TT x0)
-          (UNIV::(int \<times> int) set)"
+      and "x0 \<in> T_torus"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier T_torus TT x0)
+           (top1_fundamental_group_mul T_torus TT x0)
+           (UNIV::(int \<times> int) set)
+           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
   sorry
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
@@ -2913,9 +2916,12 @@ theorem Theorem_73_4_dunce_cap:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "n > 0"
       and "top1_is_dunce_cap_on X TX n"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-          (top1_fundamental_group_carrier X TX x0)
-          (top1_Zn_group n)"
+      and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_Zn_group n)
+           (top1_Zn_mul n)"
   sorry
 
 (** from \<S>70 Theorem 70.1/70.2: Seifert-van Kampen Theorem.
