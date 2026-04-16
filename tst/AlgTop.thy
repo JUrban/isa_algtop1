@@ -2104,18 +2104,130 @@ lemma top1_same_homotopy_type_on_sym:
 (** from \<S>58 Lemma 58.1: if h, k: (X, x_0) \<rightarrow> (Y, y_0) are homotopic with basepoint
     fixed during the homotopy, then h_* = k_* on fundamental groups. **)
 lemma Lemma_58_1_basepoint_fixed:
-  assumes "top1_continuous_map_on X TX Y TY h"
-      and "top1_continuous_map_on X TX Y TY k"
-      and "h x0 = y0" and "k x0 = y0"
-      and "\<exists>H. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H
+  assumes hTX: "is_topology_on X TX"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hk: "top1_continuous_map_on X TX Y TY k"
+      and hhx0: "h x0 = y0" and hkx0: "k x0 = y0"
+      and hH: "\<exists>H. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H
               \<and> (\<forall>x\<in>X. H (x, 0) = h x) \<and> (\<forall>x\<in>X. H (x, 1) = k x)
               \<and> (\<forall>t\<in>I_set. H (x0, t) = y0)"
-      and "top1_is_loop_on X TX x0 f"
+      and hf: "top1_is_loop_on X TX x0 f"
   shows "top1_path_homotopic_on Y TY y0 y0
            (top1_induced_homomorphism_on X TX Y TY h f)
            (top1_induced_homomorphism_on X TX Y TY k f)"
-  \<comment> \<open>Munkres: H \<circ> (f \<times> id) gives the needed path homotopy.\<close>
-  sorry
+proof -
+  obtain H where hHcont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H"
+      and hH0: "\<forall>x\<in>X. H (x, 0) = h x" and hH1: "\<forall>x\<in>X. H (x, 1) = k x"
+      and hHbase: "\<forall>t\<in>I_set. H (x0, t) = y0"
+    using hH by blast
+  have hfcont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+  have hf_vals: "\<forall>s\<in>I_set. f s \<in> X"
+    using hfcont unfolding top1_continuous_map_on_def by blast
+  have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX hTI])
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  \<comment> \<open>Continuity of (s,t) \<mapsto> (f s, t) : I \<times> I \<rightarrow> X \<times> I via Theorem_18_4.\<close>
+  have hid_II': "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                  (I_set \<times> I_set) (product_topology_on I_top I_top) id"
+    using top1_continuous_map_on_id[OF hTII] unfolding II_topology_def .
+  have hpi1_II: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+  proof -
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> id)"
+      using iffD1[OF Theorem_18_4[OF hTII hTI hTI] hid_II'] by blast
+    thus ?thesis by (simp add: comp_def)
+  qed
+  have hpi2_II: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
+  proof -
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi2 \<circ> id)"
+      using iffD1[OF Theorem_18_4[OF hTII hTI hTI] hid_II'] by blast
+    thus ?thesis by (simp add: comp_def)
+  qed
+  have hfpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> pi1)"
+    by (rule top1_continuous_map_on_comp[OF hpi1_II hfcont])
+  \<comment> \<open>Build (\<lambda>(s,t). (f s, t)) via Theorem_18_4.\<close>
+  have hpi1_pair: "(pi1 \<circ> (\<lambda>p::real\<times>real. (f (fst p), snd p))) = f \<circ> pi1"
+    unfolding pi1_def by (rule ext) simp
+  have hpi2_pair: "(pi2 \<circ> (\<lambda>p::real\<times>real. (f (fst p), snd p))) = pi2"
+    unfolding pi2_def by (rule ext) simp
+  have hpi1_pair_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
+                         (pi1 \<circ> (\<lambda>p::real\<times>real. (f (fst p), snd p)))"
+    using hfpi1 unfolding hpi1_pair .
+  have hpi2_pair_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top
+                         (pi2 \<circ> (\<lambda>p::real\<times>real. (f (fst p), snd p)))"
+    using hpi2_II unfolding hpi2_pair .
+  have hpair: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                 (X \<times> I_set) (product_topology_on TX I_top)
+                 (\<lambda>p::real\<times>real. (f (fst p), snd p))"
+    using iffD2[OF Theorem_18_4[OF hTII hTX hTI]] hpi1_pair_cont hpi2_pair_cont
+    unfolding II_topology_def by blast
+  \<comment> \<open>Composition: F(s,t) = H(f s, t).\<close>
+  let ?F = "\<lambda>p::real\<times>real. H (f (fst p), snd p)"
+  have hFcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY
+                 (H \<circ> (\<lambda>p::real\<times>real. (f (fst p), snd p)))"
+    by (rule top1_continuous_map_on_comp[OF hpair hHcont])
+  have hFcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY ?F"
+    using hFcomp by (simp add: comp_def)
+  \<comment> \<open>Boundary values.\<close>
+  have h_hf_path: "top1_is_path_on Y TY y0 y0 (h \<circ> f)"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top Y TY (h \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hfcont hh])
+  next
+    show "(h \<circ> f) 0 = y0" using hf0 hhx0 by (simp add: comp_def)
+  next
+    show "(h \<circ> f) 1 = y0" using hf1 hhx0 by (simp add: comp_def)
+  qed
+  have h_kf_path: "top1_is_path_on Y TY y0 y0 (k \<circ> f)"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top Y TY (k \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hfcont hk])
+  next
+    show "(k \<circ> f) 0 = y0" using hf0 hkx0 by (simp add: comp_def)
+  next
+    show "(k \<circ> f) 1 = y0" using hf1 hkx0 by (simp add: comp_def)
+  qed
+  have hFs0: "\<forall>s\<in>I_set. ?F (s, 0) = (h \<circ> f) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "f s \<in> X" using hf_vals hs by blast
+    hence "H (f s, 0) = h (f s)" using hH0 by blast
+    thus "?F (s, 0) = (h \<circ> f) s" by (simp add: comp_def)
+  qed
+  have hFs1: "\<forall>s\<in>I_set. ?F (s, 1) = (k \<circ> f) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "f s \<in> X" using hf_vals hs by blast
+    hence "H (f s, 1) = k (f s)" using hH1 by blast
+    thus "?F (s, 1) = (k \<circ> f) s" by (simp add: comp_def)
+  qed
+  have hF0t: "\<forall>t\<in>I_set. ?F (0, t) = y0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "f 0 = x0" by (rule hf0)
+    hence "?F (0, t) = H (x0, t)" by simp
+    also have "\<dots> = y0" using hHbase ht by blast
+    finally show "?F (0, t) = y0" .
+  qed
+  have hF1t: "\<forall>t\<in>I_set. ?F (1, t) = y0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "f 1 = x0" by (rule hf1)
+    hence "?F (1, t) = H (x0, t)" by simp
+    also have "\<dots> = y0" using hHbase ht by blast
+    finally show "?F (1, t) = y0" .
+  qed
+  show ?thesis
+    unfolding top1_path_homotopic_on_def top1_induced_homomorphism_on_def
+    using h_hf_path h_kf_path hFcont hFs0 hFs1 hF0t hF1t by blast
+qed
 
 (** from \<S>58 Lemma 58.5: if A \<subseteq> X, H : X\<times>I \<rightarrow> X is a homotopy from id_X
     to some map k : X \<rightarrow> X with H(a, t) \<in> A for all a \<in> A and t \<in> I,
