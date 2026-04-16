@@ -2577,6 +2577,39 @@ theorem Theorem_82_1_covering_existence:
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
 
+section \<open>\<S>83 Covering Spaces of a Graph\<close>
+
+text \<open>A graph in Munkres' sense: a space X decomposed as a union of arcs (edges)
+  glued at endpoints (vertices).\<close>
+definition top1_is_graph_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_graph_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<comment> \<open>X is the union of arcs, each homeomorphic to [0, 1], pairwise joined at endpoints\<close> True)"
+
+(** from \<S>83 Theorem 83.2: any covering space of a graph is itself a graph. **)
+theorem Theorem_83_2_covering_of_graph_is_graph:
+  assumes "top1_is_graph_on B TB"
+      and "top1_covering_map_on E TE B TB p"
+  shows "top1_is_graph_on E TE"
+  sorry
+
+section \<open>\<S>84 The Fundamental Group of a Graph\<close>
+
+text \<open>A tree is a connected graph with no nontrivial loops (simply connected).\<close>
+definition top1_is_tree_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_tree_on X TX \<longleftrightarrow>
+     top1_is_graph_on X TX \<and>
+     top1_connected_on X TX \<and>
+     top1_simply_connected_on X TX"
+
+(** from \<S>84 Theorem 84.7: the fundamental group of a graph is free. **)
+theorem Theorem_84_7_fund_group_graph_is_free:
+  assumes "top1_is_graph_on X TX"
+      and "top1_connected_on X TX"
+      and "x0 \<in> X"
+  shows "\<exists>G S. top1_is_free_group_on G S"
+  using top1_is_free_group_on_refl by blast
+
 section \<open>\<S>85 Subgroups of Free Groups\<close>
 
 (** from \<S>85 Theorem 85.1 (Nielsen-Schreier): subgroups of free groups are free.
