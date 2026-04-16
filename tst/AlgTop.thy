@@ -866,6 +866,19 @@ lemma Lemma_54_1_path_lifting:
     \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
   sorry
 
+(** Uniqueness part of Lemma 54.1 (implicit in Munkres): given a path f in B with
+    two lifts ftilde_1, ftilde_2 in E both starting at e_0, they are equal. **)
+lemma Lemma_54_1_uniqueness:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_is_path_on B TB b0 b1 f"
+      and "top1_is_path_on E TE e0 e1 ftilde_1"
+      and "(\<forall>s\<in>I_set. p (ftilde_1 s) = f s)"
+      and "top1_is_path_on E TE e0 e1' ftilde_2"
+      and "(\<forall>s\<in>I_set. p (ftilde_2 s) = f s)"
+  shows "\<forall>s\<in>I_set. ftilde_1 s = ftilde_2 s"
+  sorry
+
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
   assumes "top1_covering_map_on E TE B TB p"
@@ -919,9 +932,20 @@ proof -
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
   have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" sorry
   have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e" sorry
-  \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting\<close>
-  have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s" sorry
-  have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s" sorry
+  \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting.\<close>
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  \<comment> \<open>Ftilde(·, 0) is a path in E lifting f, starting at e0.\<close>
+  have hFt_bot_path: "top1_is_path_on E TE e0 (Ftilde (1, 0)) (\<lambda>s. Ftilde (s, 0))" sorry
+  have hFt_bot_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 0)) = f s"
+    using hFt_lift hF_f h0I by auto
+  have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s"
+    using Lemma_54_1_uniqueness[OF hcov he0 hpe0 hf hFt_bot_path hFt_bot_lift hft hftp] by blast
+  \<comment> \<open>Ftilde(·, 1) is a path in E lifting g, starting at e0 (via Ftilde(0,1) = e0).\<close>
+  have hFt_top_path: "top1_is_path_on E TE e0 (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))" sorry
+  have hFt_top_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = g s"
+    using hFt_lift hF_g unfolding top1_unit_interval_def by auto
+  have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s"
+    using Lemma_54_1_uniqueness[OF hcov he0 hpe0 hg hFt_top_path hFt_top_lift hgt hgtp] by blast
   \<comment> \<open>Step 5: assemble endpoints equal and path homotopy.\<close>
   have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
   have hft_1: "ftilde 1 = e1"
