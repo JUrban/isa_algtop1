@@ -2442,9 +2442,9 @@ theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
-  and "\<not> top1_path_connected_on (top1_S2 - C)
-           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
-       \<comment> \<open>p, q in different path-components of S^2 - C\<close>
+  \<comment> \<open>p, q in different path-components of S^2 - C (stronger than 'not connected').\<close>
+  and "\<not> (\<exists>f. top1_is_path_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f)"
   and "c0 \<in> C"
   shows "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
