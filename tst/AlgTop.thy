@@ -3207,12 +3207,18 @@ theorem Theorem_72_1_attaching_two_cell:
                       (top1_fundamental_group_mul A (subspace_topology X TX A) a)
                       (top1_fundamental_group_id A (subspace_topology X TX A) a)
                       (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+                      \<comment> \<open>Relator: the image under \<iota>_* of the class of the standard
+                          S^1 loop p(s) = (cos 2\<pi>s, sin 2\<pi>s) based at (1, 0). This
+                          class is {g. loop_equiv_on S^1 ((1,0)) p g} — the
+                          equivalence class of p in \<pi>_1(S^1, (1,0)).\<close>
                       {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
                          A (subspace_topology X TX A) a \<iota>
-                         (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))}))
+                         {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                               (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
                 (top1_quotient_group_mul_on
                    (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
-  \<comment> \<open>\<iota> is k = h|S^1. \<pi>_1(X, a) \<cong> \<pi>_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> with coset product.\<close>
+  \<comment> \<open>\<iota> is k = h|S^1. \<pi>_1(X, a) \<cong> \<pi>_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> with coset product,
+      where p is the standard S^1 loop and k\<circ>p is a loop in A.\<close>
   sorry
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
