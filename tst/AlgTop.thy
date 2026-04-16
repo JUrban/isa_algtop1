@@ -1420,13 +1420,72 @@ qed
 (** from \<S>55 Lemma 55.1: if A is a retract of X, then (\<pi>_1 A, x0) \<rightarrow> (\<pi>_1 X, x0)
     is injective (induced by inclusion) **)
 lemma Lemma_55_1_retract_injective:
-  assumes "top1_retract_of_on X TX A"
-      and "x0 \<in> A"
-      and "top1_is_loop_on A (subspace_topology X TX A) x0 f"
-      and "top1_is_loop_on A (subspace_topology X TX A) x0 g"
-      and "top1_path_homotopic_on X TX x0 x0 f g"
+  assumes hret: "top1_retract_of_on X TX A"
+      and hx0A: "x0 \<in> A"
+      and hf_loop: "top1_is_loop_on A (subspace_topology X TX A) x0 f"
+      and hg_loop: "top1_is_loop_on A (subspace_topology X TX A) x0 g"
+      and hfg_hom: "top1_path_homotopic_on X TX x0 x0 f g"
   shows "top1_path_homotopic_on A (subspace_topology X TX A) x0 x0 f g"
-  sorry
+proof -
+  obtain r where hr: "top1_is_retraction_on X TX A r"
+    using hret unfolding top1_retract_of_on_def by blast
+  have hr_cont: "top1_continuous_map_on X TX A (subspace_topology X TX A) r"
+    using hr unfolding top1_is_retraction_on_def by blast
+  have hr_fix: "\<forall>a\<in>A. r a = a"
+    using hr unfolding top1_is_retraction_on_def by blast
+  obtain F where hFcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hFs0: "\<forall>s\<in>I_set. F (s, 0) = f s"
+      and hFs1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hF0t: "\<forall>t\<in>I_set. F (0, t) = x0"
+      and hF1t: "\<forall>t\<in>I_set. F (1, t) = x0"
+    using hfg_hom unfolding top1_path_homotopic_on_def by blast
+  have hf_path: "top1_is_path_on A (subspace_topology X TX A) x0 x0 f"
+    using hf_loop unfolding top1_is_loop_on_def .
+  have hg_path: "top1_is_path_on A (subspace_topology X TX A) x0 x0 g"
+    using hg_loop unfolding top1_is_loop_on_def .
+  let ?G = "\<lambda>p. r (F p)"
+  have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology A (subspace_topology X TX A) ?G"
+    using top1_continuous_map_on_comp[OF hFcont hr_cont] by (simp add: comp_def)
+  have hf_in_A: "\<forall>s\<in>I_set. f s \<in> A"
+    using hf_path unfolding top1_is_path_on_def top1_continuous_map_on_def by blast
+  have hg_in_A: "\<forall>s\<in>I_set. g s \<in> A"
+    using hg_path unfolding top1_is_path_on_def top1_continuous_map_on_def by blast
+  have hGs0: "\<forall>s\<in>I_set. ?G (s, 0) = f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "F (s, 0) = f s" using hs hFs0 by blast
+    hence "r (F (s, 0)) = r (f s)" by simp
+    also have "... = f s" using hr_fix hf_in_A hs by blast
+    finally show "?G (s, 0) = f s" by simp
+  qed
+  have hGs1: "\<forall>s\<in>I_set. ?G (s, 1) = g s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "F (s, 1) = g s" using hs hFs1 by blast
+    hence "r (F (s, 1)) = r (g s)" by simp
+    also have "... = g s" using hr_fix hg_in_A hs by blast
+    finally show "?G (s, 1) = g s" by simp
+  qed
+  have hG0t: "\<forall>t\<in>I_set. ?G (0, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "F (0, t) = x0" using ht hF0t by blast
+    hence "r (F (0, t)) = r x0" by simp
+    also have "... = x0" using hr_fix hx0A by blast
+    finally show "?G (0, t) = x0" by simp
+  qed
+  have hG1t: "\<forall>t\<in>I_set. ?G (1, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "F (1, t) = x0" using ht hF1t by blast
+    hence "r (F (1, t)) = r x0" by simp
+    also have "... = x0" using hr_fix hx0A by blast
+    finally show "?G (1, t) = x0" by simp
+  qed
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hf_path hg_path hGcont hGs0 hGs1 hG0t hG1t by blast
+qed
 
 text \<open>Helper: \<pi>_1(S^1) is nontrivial — follows from Theorem 54.5 since Z has \<ge> 2 elements.\<close>
 lemma top1_S1_fundamental_group_nontrivial:
