@@ -1338,7 +1338,11 @@ lemma top1_same_homotopy_type_on_sym:
   using assms top1_homotopy_equivalence_on_sym
   unfolding top1_same_homotopy_type_on_def by blast
 
-(** from \<S>58 Theorem 58.2: inclusion S^n \<rightarrow> R^{n+1}-0 induces isomorphism of fundamental groups **)
+(** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
+
+    Munkres' proof: S^1 is a deformation retract of R^2 - 0 via
+    H(x, t) = (1-t)x + t(x/||x||). By Theorem 58.3, the inclusion induces
+    an isomorphism of fundamental groups. **)
 theorem Theorem_58_2_inclusion_iso:
   "\<exists>\<phi>. bij_betw \<phi>
     (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
@@ -1346,14 +1350,20 @@ theorem Theorem_58_2_inclusion_iso:
        (UNIV - {(0, 0)})
        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
        (1, 0))"
+  \<comment> \<open>By Theorem 58.3, it suffices to show S^1 is a deformation retract of R^2 - 0.\<close>
   sorry
 
-(** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups **)
+(** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
+
+    Munkres' proof: if A is a deformation retract of X via H, then the
+    inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
+    inverses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
 theorem Theorem_58_3:
-  assumes "top1_deformation_retract_of_on X TX A" and "x0 \<in> A"
+  assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
   shows "\<exists>\<phi>. bij_betw \<phi>
     (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
     (top1_fundamental_group_carrier X TX x0)"
+  \<comment> \<open>By homotopy equivalence j : A \<hookrightarrow> X and r = H(\<cdot>, 1) : X \<rightarrow> A; apply Theorem 58.7.\<close>
   sorry
 
 (** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
