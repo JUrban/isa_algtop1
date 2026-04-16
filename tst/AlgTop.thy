@@ -1670,16 +1670,40 @@ definition top1_Sn :: "nat \<Rightarrow> (nat \<Rightarrow> real) set" where
   "top1_Sn n = {x. (\<forall>i \<ge> Suc n. x i = 0) \<and> (\<Sum>i\<le>n. (x i)^2) = 1}"
 
 (** from \<S>59 Theorem 59.1: van Kampen-like union theorem for fundamental groups.
-    Uses strict topology: under strict TX, U and V are automatically subsets of X. **)
+    Uses strict topology: under strict TX, U and V are automatically subsets of X.
+
+    Simplified form: witness g = f, h = const_x0. Then h(s) = x0 \<in> V \<subseteq> U \<union> V,
+    and f \<simeq> f * const_x0 by Theorem 51.2 (right identity).
+    (Full Munkres version requires Lebesgue number decomposition.) **)
 theorem Theorem_59_1:
-  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
-      and "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
-      and "x0 \<in> U \<inter> V"
+  assumes hT: "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and hUV: "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hx0: "x0 \<in> U \<inter> V"
   shows "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
     (\<exists>g h. top1_is_loop_on X TX x0 g \<and> top1_is_loop_on X TX x0 h
       \<and> (\<forall>s\<in>I_set. (g s \<in> U \<or> h s \<in> V))
       \<and> top1_path_homotopic_on X TX x0 x0 f (top1_path_product g h))"
-  sorry
+proof (intro allI impI)
+  fix f assume hf: "top1_is_loop_on X TX x0 f"
+  have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by blast
+  have hx0X: "x0 \<in> X" using hx0 hUV by blast
+  have hx0V: "x0 \<in> V" using hx0 by blast
+  let ?g = "f"
+  let ?h = "top1_constant_path x0"
+  have hg_loop: "top1_is_loop_on X TX x0 ?g" using hf .
+  have hh_loop: "top1_is_loop_on X TX x0 ?h"
+    by (rule top1_constant_path_is_loop[OF hTX hx0X])
+  have hcond: "\<forall>s\<in>I_set. (?g s \<in> U \<or> ?h s \<in> V)"
+    using hx0V by (simp add: top1_constant_path_def)
+  have hf_path: "top1_is_path_on X TX x0 x0 f"
+    using hf unfolding top1_is_loop_on_def .
+  have hfh: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f ?h)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hf_path]])
+  show "\<exists>g h. top1_is_loop_on X TX x0 g \<and> top1_is_loop_on X TX x0 h
+      \<and> (\<forall>s\<in>I_set. (g s \<in> U \<or> h s \<in> V))
+      \<and> top1_path_homotopic_on X TX x0 x0 f (top1_path_product g h)"
+    using hg_loop hh_loop hcond hfh by blast
+qed
 
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
     and nonempty \<Longrightarrow> X = U \<union> V is simply connected. **)
