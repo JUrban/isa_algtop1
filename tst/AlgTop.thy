@@ -968,6 +968,14 @@ theorem Theorem_59_3:
       (top1_Sn n))"
   sorry
 
+corollary Theorem_59_3_path_connected:
+  assumes "n \<ge> 2"
+  shows "top1_path_connected_on (top1_Sn n)
+    (subspace_topology UNIV
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
+      (top1_Sn n))"
+  using Theorem_59_3[OF assms] top1_simply_connected_on_path_connected by blast
+
 section \<open>\<S>60 Fundamental Groups of Some Surfaces\<close>
 
 (** from \<S>60 Theorem 60.1: fundamental group of product is product of fundamental groups.
