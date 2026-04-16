@@ -2360,7 +2360,7 @@ theorem Theorem_63_4_JordanCurve:
     \<and> closure V = V \<union> C"
   sorry
 
-(** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into two components. **)
+(** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into exactly two components. **)
 theorem Theorem_63_5_two_closed_connected:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "closedin_on top1_S2 top1_S2_topology C1"
@@ -2370,7 +2370,13 @@ theorem Theorem_63_5_two_closed_connected:
   and "card (C1 \<inter> C2) = 2"
   and "\<not> top1_separates_on top1_S2 top1_S2_topology C1"
   and "\<not> top1_separates_on top1_S2 top1_S2_topology C2"
-  shows "top1_separates_on top1_S2 top1_S2_topology (C1 \<union> C2)"
+  shows "\<exists>U V. U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {}
+    \<and> U \<union> V = top1_S2 - (C1 \<union> C2)
+    \<and> top1_connected_on U
+        (subspace_topology top1_S2 top1_S2_topology U)
+    \<and> top1_connected_on V
+        (subspace_topology top1_S2 top1_S2_topology V)"
+  \<comment> \<open>Exactly two components (U and V), not just 'not connected'.\<close>
   sorry
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
