@@ -289,12 +289,12 @@ theorem Theorem_52_4_composition:
   shows "top1_induced_homomorphism_on X TX Z TZ (k \<circ> h) f =
          top1_induced_homomorphism_on Y TY Z TZ k
            (top1_induced_homomorphism_on X TX Y TY h f)"
-  sorry
+  unfolding top1_induced_homomorphism_on_def by (simp add: comp_assoc)
 
 theorem Theorem_52_4_identity:
   assumes "top1_is_loop_on X TX x0 f"
   shows "top1_induced_homomorphism_on X TX X TX id f = f"
-  sorry
+  unfolding top1_induced_homomorphism_on_def by simp
 
 section \<open>\<S>53 Covering Spaces\<close>
 
