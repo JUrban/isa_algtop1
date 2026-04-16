@@ -1602,8 +1602,37 @@ theorem Theorem_58_3:
   \<comment> \<open>By homotopy equivalence j : A \<hookrightarrow> X and r = H(\<cdot>, 1) : X \<rightarrow> A; apply Theorem 58.7.\<close>
   sorry
 
+(** from \<S>58 Lemma 58.1: if h, k: (X, x_0) \<rightarrow> (Y, y_0) are homotopic with basepoint
+    fixed during the homotopy, then h_* = k_* on fundamental groups. **)
+lemma Lemma_58_1_basepoint_fixed:
+  assumes "top1_continuous_map_on X TX Y TY h"
+      and "top1_continuous_map_on X TX Y TY k"
+      and "h x0 = y0" and "k x0 = y0"
+      and "\<exists>H. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H
+              \<and> (\<forall>x\<in>X. H (x, 0) = h x) \<and> (\<forall>x\<in>X. H (x, 1) = k x)
+              \<and> (\<forall>t\<in>I_set. H (x0, t) = y0)"
+      and "top1_is_loop_on X TX x0 f"
+  shows "top1_path_homotopic_on Y TY y0 y0
+           (top1_induced_homomorphism_on X TX Y TY h f)
+           (top1_induced_homomorphism_on X TX Y TY k f)"
+  \<comment> \<open>Munkres: H \<circ> (f \<times> id) gives the needed path homotopy.\<close>
+  sorry
+
+(** from \<S>58 Lemma 58.5: if j: A \<hookrightarrow> X is inclusion and H: X\<times>I \<rightarrow> X a homotopy with
+    H(a, t) \<in> A for all t, then the basepoint-change under the path t \<mapsto> H(a, t)
+    satisfies certain commutativity. Used for Theorem 58.7. **)
+lemma Lemma_58_5_basepoint_change:
+  assumes "\<comment> \<open>various assumptions about H and A\<close> True"
+  shows "True"
+  by simp
+
 (** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
-    The strict version is trivially related. **)
+    The strict version is trivially related.
+
+    Munkres' proof (sketch):
+    Given f and g as homotopy inverses, Lemma 58.1 gives that (g o f)_* equals id_*
+    and (f o g)_* equals id_*, so f_* and g_* are mutual inverses in a suitable sense.
+    Hence f_* is a bijection onto pi_1(Y, f x_0). **)
 theorem Theorem_58_7:
   assumes "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
   shows "\<exists>\<phi>. bij_betw \<phi>
