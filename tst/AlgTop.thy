@@ -78,10 +78,29 @@ proof -
     unfolding top1_homotopic_on_def using hf by blast
 qed
 
-lemma Lemma_51_1_homotopic_sym:
-  assumes "top1_homotopic_on X TX Y TY f f'"
-  shows "top1_homotopic_on X TX Y TY f' f"
+text \<open>Helper: if F: X\<times>I\<rightarrow>Y is continuous, so is G(x,t) = F(x, 1-t).\<close>
+lemma homotopy_reverse_continuous:
+  assumes "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (\<lambda>p. F (fst p, 1 - snd p))"
   sorry
+
+lemma Lemma_51_1_homotopic_sym:
+  assumes h: "top1_homotopic_on X TX Y TY f f'"
+  shows "top1_homotopic_on X TX Y TY f' f"
+proof -
+  obtain F where hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+    and hF0: "\<forall>x\<in>X. F (x, 0) = f x" and hF1: "\<forall>x\<in>X. F (x, 1) = f' x"
+    using h unfolding top1_homotopic_on_def by blast
+  let ?G = "\<lambda>p. F (fst p, 1 - snd p)"
+  have hG: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?G"
+    by (rule homotopy_reverse_continuous[OF hF])
+  have hG0: "\<forall>x\<in>X. ?G (x, 0) = f' x" using hF1 by simp
+  have hG1: "\<forall>x\<in>X. ?G (x, 1) = f x" using hF0 by simp
+  show ?thesis
+    unfolding top1_homotopic_on_def
+    using h hG hG0 hG1 unfolding top1_homotopic_on_def by blast
+qed
 
 lemma Lemma_51_1_homotopic_trans:
   assumes "top1_homotopic_on X TX Y TY f f'"
@@ -113,10 +132,34 @@ proof -
     unfolding top1_path_homotopic_on_def using hf by blast
 qed
 
-lemma Lemma_51_1_path_homotopic_sym:
-  assumes "top1_path_homotopic_on X TX x0 x1 f f'"
-  shows "top1_path_homotopic_on X TX x0 x1 f' f"
+text \<open>Helper: if F: I\<times>I\<rightarrow>X is continuous, so is G(s,t) = F(s, 1-t).\<close>
+lemma path_homotopy_reverse_continuous:
+  assumes "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+  shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
+    (\<lambda>p. F (fst p, 1 - snd p))"
   sorry
+
+lemma Lemma_51_1_path_homotopic_sym:
+  assumes h: "top1_path_homotopic_on X TX x0 x1 f f'"
+  shows "top1_path_homotopic_on X TX x0 x1 f' f"
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+    and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = f' s"
+    and hFleft: "\<forall>t\<in>I_set. F (0, t) = x0" and hFright: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using h unfolding top1_path_homotopic_on_def by blast
+  let ?G = "\<lambda>p. F (fst p, 1 - snd p)"
+  have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+    by (rule path_homotopy_reverse_continuous[OF hF])
+  have hG0: "\<forall>s\<in>I_set. ?G (s, 0) = f' s" using hF1 by simp
+  have hG1: "\<forall>s\<in>I_set. ?G (s, 1) = f s" using hF0 by simp
+  have hGleft: "\<forall>t\<in>I_set. ?G (0, t) = x0"
+    using hFleft unfolding top1_unit_interval_def by simp
+  have hGright: "\<forall>t\<in>I_set. ?G (1, t) = x1"
+    using hFright unfolding top1_unit_interval_def by simp
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using h hG hG0 hG1 hGleft hGright unfolding top1_path_homotopic_on_def by blast
+qed
 
 lemma Lemma_51_1_path_homotopic_trans:
   assumes "top1_path_homotopic_on X TX x0 x1 f f'"
