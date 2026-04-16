@@ -1355,7 +1355,9 @@ proof (rule ccontr)
                        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
     using Theorem_56_1_step_2[OF hn] .
   have hg_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)" sorry
+                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+    \<comment> \<open>F homotopies g to h; hh_nulhomo gives h to const; transitivity gives g nulhomotopic.\<close>
+    sorry
   show False using hg_notnull hg_nulhomo by blast
 qed
 
