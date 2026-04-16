@@ -2409,6 +2409,9 @@ lemma Lemma_65_1_K4_subgraph:
       \<comment> \<open>K_4 structure: 4 distinct vertices on S^2, plus 6 arcs between them.\<close>
       and "card {a1, a2, a3, a4} = 4"
       and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      \<comment> \<open>All 6 arcs are subsets of S^2.\<close>
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
       and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
       and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
       and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
