@@ -1130,15 +1130,53 @@ proof (rule ccontr)
                   UNIV (product_topology_on top1_open_sets top1_open_sets) ?v"
     sorry
   \<comment> \<open>Step 3: v is nonvanishing (from hnofix).\<close>
-  have hv_nonzero: "\<forall>x\<in>top1_B2. ?v x \<noteq> (0, 0)" sorry
+  have hv_nonzero: "\<forall>x\<in>top1_B2. ?v x \<noteq> (0, 0)"
+  proof (intro ballI)
+    fix x assume hxB2: "x \<in> top1_B2"
+    have "f x \<noteq> x" using hnofix hxB2 by blast
+    hence "fst (f x) \<noteq> fst x \<or> snd (f x) \<noteq> snd x"
+      by (simp add: prod_eq_iff)
+    thus "?v x \<noteq> (0, 0)" by auto
+  qed
   \<comment> \<open>Step 4: by Theorem 55.5, some x \<in> S^1 has v(x) = a x for a > 0 (outward).\<close>
   obtain x a where hx: "x \<in> top1_S1" and ha: "a > 0"
       and hva: "?v x = (a * fst x, a * snd x)"
     using Theorem_55_5_vector_field(1)[OF hv_cont hv_nonzero] by blast
   \<comment> \<open>Step 5: then f(x) = (1+a) x. Since |x| = 1, |f(x)| = 1+a > 1, but f(x) \<in> B^2.\<close>
-  have hfx: "f x = ((1 + a) * fst x, (1 + a) * snd x)" sorry
-  have "fst (f x)^2 + snd (f x)^2 > 1" sorry
-  moreover have "fst (f x)^2 + snd (f x)^2 \<le> 1" sorry
+  have hfx: "f x = ((1 + a) * fst x, (1 + a) * snd x)"
+  proof -
+    have "fst (f x) - fst x = a * fst x" using hva by simp
+    hence h1: "fst (f x) = (1 + a) * fst x" by (simp add: algebra_simps)
+    have "snd (f x) - snd x = a * snd x" using hva by simp
+    hence h2: "snd (f x) = (1 + a) * snd x" by (simp add: algebra_simps)
+    show ?thesis using h1 h2 by (simp add: prod_eq_iff)
+  qed
+  have hx_norm: "fst x^2 + snd x^2 = 1" using hx unfolding top1_S1_def by simp
+  have hfx_norm: "fst (f x)^2 + snd (f x)^2 = (1 + a)^2"
+  proof -
+    have h1: "fst (f x)^2 = (1 + a)^2 * fst x^2"
+      using hfx by (simp add: power_mult_distrib)
+    have h2: "snd (f x)^2 = (1 + a)^2 * snd x^2"
+      using hfx by (simp add: power_mult_distrib)
+    have "fst (f x)^2 + snd (f x)^2 = (1 + a)^2 * (fst x^2 + snd x^2)"
+      using h1 h2 by (simp add: ring_distribs)
+    also have "\<dots> = (1 + a)^2" using hx_norm by simp
+    finally show ?thesis .
+  qed
+  have ha_pos: "(1 + a)^2 > 1"
+  proof -
+    have "(1 + a)^2 = 1 + 2*a + a^2" by (simp add: power2_sum)
+    moreover have "2 * a + a^2 > 0" using ha by (simp add: add_pos_nonneg)
+    ultimately show ?thesis by linarith
+  qed
+  hence "fst (f x)^2 + snd (f x)^2 > 1" using hfx_norm by simp
+  moreover have "fst (f x)^2 + snd (f x)^2 \<le> 1"
+  proof -
+    have hxB2: "x \<in> top1_B2" using hx unfolding top1_S1_def top1_B2_def by simp
+    have "f x \<in> top1_B2"
+      using hf hxB2 unfolding top1_continuous_map_on_def by blast
+    thus ?thesis unfolding top1_B2_def by simp
+  qed
   ultimately show False by linarith
 qed
 
