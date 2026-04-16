@@ -93,15 +93,44 @@ proof -
     unfolding top1_homotopic_on_def using hf by blast
 qed
 
-text \<open>Helper: if F: X\<times>I\<rightarrow>Y is continuous, so is G(x,t) = F(x, 1-t).\<close>
-lemma homotopy_reverse_continuous:
-  assumes "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
-  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
-    (\<lambda>p. F (fst p, 1 - snd p))"
+text \<open>The function t \<mapsto> 1-t is continuous I \<rightarrow> I.\<close>
+lemma op_minus_continuous_on_interval:
+  "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+proof -
+  have hmap: "\<And>x. x \<in> I_set \<Longrightarrow> 1 - x \<in> I_set"
+    unfolding top1_unit_interval_def by simp
+  have hcont: "continuous_on UNIV (\<lambda>t::real. 1 - t)"
+    by (rule continuous_on_op_minus)
+  show ?thesis
+    unfolding top1_unit_interval_topology_def
+    by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hcont])
+qed
+
+text \<open>Helper: (x,t) \<mapsto> (x, 1-t) is continuous X\<times>I \<rightarrow> X\<times>I.
+  Uses Theorem 18.4: map into product is continuous iff components are.\<close>
+lemma flip_t_continuous_product:
+  assumes hTX: "is_topology_on X TX"
+  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+    (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, 1 - snd p))"
   sorry
 
+lemma homotopy_reverse_continuous:
+  assumes hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+    and hTX: "is_topology_on X TX"
+  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (\<lambda>p. F (fst p, 1 - snd p))"
+proof -
+  have hflip: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+    (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, 1 - snd p))"
+    by (rule flip_t_continuous_product[OF hTX])
+  have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (F \<circ> (\<lambda>p. (fst p, 1 - snd p)))"
+    by (rule top1_continuous_map_on_comp[OF hflip hF])
+  thus ?thesis by (simp add: comp_def)
+qed
+
 lemma Lemma_51_1_homotopic_sym:
-  assumes h: "top1_homotopic_on X TX Y TY f f'"
+  assumes h: "top1_homotopic_on X TX Y TY f f'" and hTX: "is_topology_on X TX"
   shows "top1_homotopic_on X TX Y TY f' f"
 proof -
   obtain F where hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
@@ -109,7 +138,7 @@ proof -
     using h unfolding top1_homotopic_on_def by blast
   let ?G = "\<lambda>p. F (fst p, 1 - snd p)"
   have hG: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?G"
-    by (rule homotopy_reverse_continuous[OF hF])
+    by (rule homotopy_reverse_continuous[OF hF hTX])
   have hG0: "\<forall>x\<in>X. ?G (x, 0) = f' x" using hF1 by simp
   have hG1: "\<forall>x\<in>X. ?G (x, 1) = f x" using hF0 by simp
   show ?thesis
@@ -193,10 +222,21 @@ qed
 
 text \<open>Helper: if F: I\<times>I\<rightarrow>X is continuous, so is G(s,t) = F(s, 1-t).\<close>
 lemma path_homotopy_reverse_continuous:
-  assumes "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+  assumes hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
   shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
     (\<lambda>p. F (fst p, 1 - snd p))"
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hflip: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+    (I_set \<times> I_set) II_topology (\<lambda>p. (fst p, 1 - snd p))"
+    unfolding II_topology_def
+    by (rule flip_t_continuous_product[OF hTI])
+  have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
+    (F \<circ> (\<lambda>p. (fst p, 1 - snd p)))"
+    by (rule top1_continuous_map_on_comp[OF hflip hF])
+  thus ?thesis by (simp add: comp_def)
+qed
 
 lemma Lemma_51_1_path_homotopic_sym:
   assumes h: "top1_path_homotopic_on X TX x0 x1 f f'"
@@ -308,11 +348,19 @@ definition top1_constant_path :: "'a \<Rightarrow> (real \<Rightarrow> 'a)" wher
   "top1_constant_path x = (\<lambda>_. x)"
 
 text \<open>The product of paths is well-defined when endpoints match.\<close>
+
 text \<open>Helper: the reverse path is continuous.\<close>
 lemma top1_path_reverse_continuous:
-  assumes "top1_continuous_map_on I_set I_top X TX f"
+  assumes hf: "top1_continuous_map_on I_set I_top X TX f"
   shows "top1_continuous_map_on I_set I_top X TX (top1_path_reverse f)"
-  sorry
+proof -
+  have hr: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+    by (rule op_minus_continuous_on_interval)
+  have "top1_continuous_map_on I_set I_top X TX (f \<circ> (\<lambda>t. 1 - t))"
+    by (rule top1_continuous_map_on_comp[OF hr hf])
+  thus ?thesis
+    unfolding top1_path_reverse_def by (simp add: comp_def)
+qed
 
 lemma top1_path_reverse_is_path:
   assumes hf: "top1_is_path_on X TX x0 x1 f"
