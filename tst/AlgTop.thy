@@ -761,9 +761,33 @@ text \<open>The canonical covering map p: R \<rightarrow> S^1 given by p(x) = (c
 definition top1_R_to_S1 :: "real \<Rightarrow> real \<times> real" where
   "top1_R_to_S1 x = (cos (2 * pi * x), sin (2 * pi * x))"
 
-(** from \<S>53 Theorem 53.1: the canonical map R \<rightarrow> S^1 is a covering map **)
+(** from \<S>53 Theorem 53.1: the canonical map R \<rightarrow> S^1 is a covering map.
+
+    Munkres' proof: for U \<subseteq> S^1 the open arc with positive first coord,
+    p^{-1}(U) is \<Union>_{n\<in>Z} (n - 1/4, n + 1/4). Each such interval maps
+    homeomorphically to U (cos is a bijection between (-1/4,1/4) and (-\<pi>/2, \<pi>/2)
+    mod 2\<pi>). The four similar arcs (positive/negative first/second coordinate) cover S^1. **)
+
+text \<open>Helper: four open arcs covering S^1.\<close>
+definition top1_S1_arc_E :: "(real \<times> real) set" where
+  "top1_S1_arc_E = {(x,y). x^2 + y^2 = 1 \<and> x > 0}"
+definition top1_S1_arc_W :: "(real \<times> real) set" where
+  "top1_S1_arc_W = {(x,y). x^2 + y^2 = 1 \<and> x < 0}"
+definition top1_S1_arc_N :: "(real \<times> real) set" where
+  "top1_S1_arc_N = {(x,y). x^2 + y^2 = 1 \<and> y > 0}"
+definition top1_S1_arc_S :: "(real \<times> real) set" where
+  "top1_S1_arc_S = {(x,y). x^2 + y^2 = 1 \<and> y < 0}"
+
+lemma top1_S1_arcs_cover: "top1_S1 \<subseteq> top1_S1_arc_E \<union> top1_S1_arc_W \<union> top1_S1_arc_N \<union> top1_S1_arc_S"
+  sorry
+
+lemma top1_S1_arc_E_preimage:
+  "{x. top1_R_to_S1 x \<in> top1_S1_arc_E} = (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
+  sorry
+
 theorem Theorem_53_1:
   "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+  \<comment> \<open>Per Munkres: each open arc is evenly covered by p, and the four arcs cover S^1.\<close>
   sorry
 
 (** from \<S>53 Theorem 53.2: restriction of a covering map to a subspace is a covering map.
@@ -810,19 +834,54 @@ lemma Lemma_54_2_homotopy_lifting:
     \<and> Ftilde (0, 0) = e0"
   sorry
 
-(** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths **)
+(** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
+
+    Munkres' proof:
+    (1) By definition of path homotopy, there is F: I\<times>I \<rightarrow> B with F(s,0)=f(s),
+        F(s,1)=g(s), F(0,t)=b0, F(1,t)=b1.
+    (2) Lift F to Ftilde: I\<times>I \<rightarrow> E with Ftilde(0,0)=e0, p\<circ>Ftilde=F (Lemma 54.2).
+    (3) Ftilde(0,t) lies in p^{-1}(b0) (fiber), which is discrete, so it is
+        constantly e0. Similarly Ftilde(1,t) is constant \<Rightarrow> e1 = e1'.
+    (4) Ftilde(s,0) is a lift of f starting at e0, so = ftilde (by uniqueness).
+        Ftilde(s,1) is a lift of g starting at e0, so = gtilde.
+    (5) Hence Ftilde is a path homotopy from ftilde to gtilde. **)
 theorem Theorem_54_3:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "e0 \<in> E" and "p e0 = b0"
-      and "top1_is_path_on B TB b0 b1 f"
-      and "top1_is_path_on B TB b0 b1 g"
-      and "top1_path_homotopic_on B TB b0 b1 f g"
-      and "top1_is_path_on E TE e0 e1 ftilde"
-      and "(\<forall>s\<in>I_set. p (ftilde s) = f s)"
-      and "top1_is_path_on E TE e0 e1' gtilde"
-      and "(\<forall>s\<in>I_set. p (gtilde s) = g s)"
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
+      and hf: "top1_is_path_on B TB b0 b1 f"
+      and hg: "top1_is_path_on B TB b0 b1 g"
+      and hfg: "top1_path_homotopic_on B TB b0 b1 f g"
+      and hft: "top1_is_path_on E TE e0 e1 ftilde"
+      and hftp: "(\<forall>s\<in>I_set. p (ftilde s) = f s)"
+      and hgt: "top1_is_path_on E TE e0 e1' gtilde"
+      and hgtp: "(\<forall>s\<in>I_set. p (gtilde s) = g s)"
   shows "e1 = e1' \<and> top1_path_homotopic_on E TE e0 e1 ftilde gtilde"
-  sorry
+proof -
+  \<comment> \<open>Step 1: obtain a homotopy F from f to g in B\<close>
+  obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
+             and hF_f: "\<forall>s\<in>I_set. F (s, 0) = f s"
+             and hF_g: "\<forall>s\<in>I_set. F (s, 1) = g s"
+             and hF_b0: "\<forall>t\<in>I_set. F (0, t) = b0"
+             and hF_b1: "\<forall>t\<in>I_set. F (1, t) = b1"
+    sorry
+  \<comment> \<open>Step 2: lift F to Ftilde via Lemma 54.2\<close>
+  have hF_00: "F (0, 0) = b0" sorry
+  obtain Ftilde where
+        hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
+    and hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
+    and hFt_00: "Ftilde (0, 0) = e0"
+    sorry
+  \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
+  have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" sorry
+  have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e" sorry
+  \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting\<close>
+  have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s" sorry
+  have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s" sorry
+  \<comment> \<open>Step 5: assemble endpoints equal and path homotopy\<close>
+  have heq: "e1 = e1'" sorry
+  have hhomo: "top1_path_homotopic_on E TE e0 e1 ftilde gtilde" sorry
+  show ?thesis using heq hhomo by blast
+qed
 
 (** from \<S>54 Theorem 54.4: lifting correspondence for path-connected / simply connected E **)
 theorem Theorem_54_4_lifting_correspondence:
@@ -1004,10 +1063,18 @@ definition top1_C_minus_0 :: "complex set" where
 definition top1_C_minus_0_topology :: "complex set set" where
   "top1_C_minus_0_topology = subspace_topology UNIV top1_open_sets top1_C_minus_0"
 
-(** Step 1: induced homomorphism of z^n on S^1 is multiplication by n (hence injective for n > 0). **)
+(** Step 1: induced homomorphism of f(z) = z^n on S^1 is multiplication by n.
+
+    Munkres' proof: the standard loop p_0(s) = e^{2\<pi>is} corresponds to 1 \<in> Z.
+    Its image f \<circ> p_0(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns, which corresponds to n.
+    So f_* is multiplication by n on \<pi>_1(S^1, b_0) \<cong> Z, hence injective for n > 0.
+
+    Here we only record the essential injectivity consequence: if two loops
+    become path-homotopic after composition with z^n, then they were already
+    path-homotopic. **)
 lemma Theorem_56_1_step_1:
   fixes n :: nat
-  assumes "n > 0"
+  assumes hn: "n > 0"
   shows "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
                                top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)
        \<and> (\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
@@ -1015,23 +1082,60 @@ lemma Theorem_56_1_step_1:
               \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
                    (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
               \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
+  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
   sorry
 
-(** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic **)
+(** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic.
+
+    Munkres' proof: g = j \<circ> f where j: S^1 \<hookrightarrow> C-{0} is inclusion and f = z^n.
+    Since S^1 is a retract of C-{0} (retraction r(z) = z/|z|), j_* is injective.
+    By Step 1, f_* is injective. So g_* = j_* \<circ> f_* is injective, hence nontrivial,
+    hence g is not nulhomotopic. **)
 lemma Theorem_56_1_step_2:
   fixes n :: nat
-  assumes "n > 0"
+  assumes hn: "n > 0"
   shows "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
             top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+  \<comment> \<open>Uses: S^1 is a retract of C - {0} via r(z) = z/|z|; induced maps are injective.\<close>
   sorry
 
-(** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1 **)
+(** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1.
+
+    Munkres' proof: by contradiction. If there is no root in B^2, define
+    k: B^2 \<rightarrow> C - {0} by k(z) = z^n + \<Sum> a_k z^k. Let h = k|_{S^1}. Since
+    h extends over B^2, h is nulhomotopic. But F(z,t) = z^n + t*(\<Sum> a_k z^k)
+    is a homotopy from g = z^n (Step 2: NOT nulhomotopic) to h in C - {0};
+    F(z,t) \<ne> 0 because |F| \<ge> 1 - t*(\<Sum>|a_k|) > 0. Contradiction. **)
 lemma Theorem_56_1_step_3:
   fixes a :: "nat \<Rightarrow> complex" and n :: nat
   assumes hn: "n > 0"
   and hbound: "(\<Sum>k<n. cmod (a k)) < 1"
   shows "\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0"
-  sorry
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0)"
+  \<comment> \<open>Define k: B^2 \<rightarrow> C-{0} by k(z) = z^n + \<Sum> a_j z^j.\<close>
+  let ?k = "\<lambda>z::complex. z^n + (\<Sum>j<n. a j * z^j)"
+  have hk_nonzero: "\<And>z. cmod z \<le> 1 \<Longrightarrow> ?k z \<noteq> 0" sorry
+  \<comment> \<open>Let h be k restricted to S^1.\<close>
+  let ?h = "\<lambda>z::complex. ?k z"
+  \<comment> \<open>h is nulhomotopic in C-{0} because it extends to B^2 \<rightarrow> C-{0}.\<close>
+  have hh_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology ?h" sorry
+  \<comment> \<open>Homotopy F(z,t) = z^n + t*\<Sum>a_j z^j from g=z^n to h, all in C-{0}.\<close>
+  let ?F = "\<lambda>(z::complex, t::real). z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)"
+  have hF_cont: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+                   (product_topology_on top1_S1_complex_topology I_top)
+                   top1_C_minus_0 top1_C_minus_0_topology ?F" sorry
+  have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+     z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" sorry
+  \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
+  have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+    using Theorem_56_1_step_2[OF hn] .
+  have hg_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)" sorry
+  show False using hg_notnull hg_nulhomo by blast
+qed
 
 (** Step 4: FTA general case: any monic polynomial has a root.
     Reduction: substitute x = cy for large c to reduce to Step 3.
