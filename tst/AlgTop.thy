@@ -2140,22 +2140,45 @@ lemma top1_separates_onI:
   unfolding top1_separates_on_def by blast
 
 (** from \<S>61 Lemma 61.1: unbounded/bounded components of R^2-h(C) correspond to
-    S^2-b components under a homeomorphism h: S^2-b \<rightarrow> R^2. **)
+    S^2-b components under a homeomorphism h: S^2-b \<rightarrow> R^2.
+    If U is a component of S^2 - C not containing b, then h(U) is a BOUNDED
+    component of R^2 - h(C). If U contains b, then h(U - {b}) is the UNBOUNDED
+    component of R^2 - h(C). **)
 lemma Lemma_61_1_components_correspond:
+  fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
+    and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-  and "C \<subseteq> top1_S2" and "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
-  and "b \<in> top1_S2 - C"
-  and "\<comment> \<open>h is a homeomorphism S^2 - b \<rightarrow> R^2\<close> True"
-  shows "\<comment> \<open>Components of S^2 - C \<leftrightarrow> bounded/unbounded components of R^2 - h(C)\<close> True"
-  by simp
+      and "C \<subseteq> top1_S2"
+      and "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+      and "b \<in> top1_S2 - C"
+      and "top1_homeomorphism_on (top1_S2 - {b})
+             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+             (UNIV::(real \<times> real) set)
+             (product_topology_on top1_open_sets top1_open_sets) h"
+      and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      and "U \<subseteq> top1_S2 - C"
+  shows "(b \<notin> U \<longrightarrow> (\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M))
+       \<and> (b \<in> U \<longrightarrow> (\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M))"
+  sorry
 
-(** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): a continuous map A \<rightarrow> S^2 - b
-    factoring through an arc (a,b) is nulhomotopic. Used in Theorem 63.2. **)
+(** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
+    space A into S^2 - b whose image factors through an arc is nulhomotopic. **)
 lemma Lemma_61_2_nulhomotopy:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+    and b :: "real \<times> real \<times> real"
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-  and "\<comment> \<open>A is compact, b \<in> S^2\<close> True"
-  shows "\<comment> \<open>any continuous A \<rightarrow> S^2 - b is nulhomotopic\<close> True"
-  by simp
+      and "top1_compact_on A TA"
+      and "b \<in> top1_S2"
+      and "top1_continuous_map_on A TA
+             (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+      and "\<exists>D. D \<subseteq> top1_S2 - {b} \<and> f ` A \<subseteq> D
+            \<and> (\<exists>\<gamma>. top1_continuous_map_on I_set I_top D
+                     (subspace_topology top1_S2 top1_S2_topology D) \<gamma>
+                  \<and> inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D)"
+             \<comment> \<open>f factors through an arc D\<close>
+  shows "top1_nulhomotopic_on A TA
+           (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+  sorry
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
 
