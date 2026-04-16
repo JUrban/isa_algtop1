@@ -692,12 +692,35 @@ definition top1_covering_map_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow
      p ` E = B \<and>
      (\<forall>b\<in>B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U)"
 
+lemma top1_covering_map_on_continuous:
+  "top1_covering_map_on E TE B TB p \<Longrightarrow> top1_continuous_map_on E TE B TB p"
+  unfolding top1_covering_map_on_def by blast
+
+lemma top1_covering_map_on_surj:
+  "top1_covering_map_on E TE B TB p \<Longrightarrow> p ` E = B"
+  unfolding top1_covering_map_on_def by blast
+
+lemma top1_covering_map_on_evenly_covered:
+  "top1_covering_map_on E TE B TB p \<Longrightarrow> b \<in> B \<Longrightarrow>
+    \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U"
+  unfolding top1_covering_map_on_def by blast
+
 text \<open>Lifting of a continuous map: f\<tilde>: X \<rightarrow> E with p \<circ> f\<tilde> = f.\<close>
 definition top1_is_lifting_on :: "'x set \<Rightarrow> 'x set set \<Rightarrow> 'e set \<Rightarrow> 'e set set
   \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('x \<Rightarrow> 'b) \<Rightarrow> ('x \<Rightarrow> 'e) \<Rightarrow> bool" where
   "top1_is_lifting_on X TX E TE B TB p f ftilde \<longleftrightarrow>
      top1_continuous_map_on X TX E TE ftilde \<and>
      (\<forall>x\<in>X. p (ftilde x) = f x)"
+
+lemma top1_is_lifting_on_continuous:
+  "top1_is_lifting_on X TX E TE B TB p f ftilde \<Longrightarrow>
+    top1_continuous_map_on X TX E TE ftilde"
+  unfolding top1_is_lifting_on_def by blast
+
+lemma top1_is_lifting_on_covers:
+  "top1_is_lifting_on X TX E TE B TB p f ftilde \<Longrightarrow>
+    \<forall>x\<in>X. p (ftilde x) = f x"
+  unfolding top1_is_lifting_on_def by blast
 
 text \<open>The unit circle S^1 as a subspace of R^2.\<close>
 definition top1_S1 :: "(real \<times> real) set" where
@@ -1034,6 +1057,16 @@ text \<open>A set C separates a space X if X - C has more than one component.\<c
 definition top1_separates_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_separates_on X TX C \<longleftrightarrow>
      \<not> top1_connected_on (X - C) (subspace_topology X TX (X - C))"
+
+lemma top1_separates_on_def_expand:
+  "top1_separates_on X TX C \<Longrightarrow>
+     \<not> top1_connected_on (X - C) (subspace_topology X TX (X - C))"
+  unfolding top1_separates_on_def by blast
+
+lemma top1_separates_onI:
+  "\<not> top1_connected_on (X - C) (subspace_topology X TX (X - C)) \<Longrightarrow>
+    top1_separates_on X TX C"
+  unfolding top1_separates_on_def by blast
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2 **)
 theorem Theorem_61_3_JordanSeparation_S2:
