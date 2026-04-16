@@ -2990,8 +2990,9 @@ definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \
   "top1_covering_transformation_on E TE B TB p h \<longleftrightarrow>
      top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e)"
 
-(** from *\<S>81 Theorem 81.2: the group of covering transformations is isomorphic to
-    N(H)/H in \<pi>_1(B), where H = p_*(\<pi>_1(E)). **)
+(** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
+    isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
+    in \<pi>_1(B, b_0). **)
 theorem Theorem_81_2_covering_group_iso:
   fixes E :: "'e set" and TE :: "'e set set"
     and B :: "'b set" and TB :: "'b set set"
@@ -2999,10 +3000,12 @@ theorem Theorem_81_2_covering_group_iso:
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
       and "top1_covering_map_on E TE B TB p"
       and "b0 \<in> B"
-  shows "\<exists>\<Phi>. \<comment> \<open>covering group of p is isomorphic to N(H)/H in \<pi>_1(B, b_0),
-            where H = p_*(\<pi>_1(E, e_0))\<close>
-             True"
-  by blast
+  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) mulC eC invgC (Q::'b set) mulQ eQ invgQ.
+           top1_is_group_on Cov mulC eC invgC
+         \<and> (\<forall>h\<in>Cov. top1_covering_transformation_on E TE B TB p h)
+         \<and> top1_is_group_on Q mulQ eQ invgQ
+         \<and> top1_groups_isomorphic_on Cov mulC Q mulQ"
+  sorry
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
 
