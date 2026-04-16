@@ -2319,14 +2319,25 @@ definition top1_winding_number_on ::
   "(real \<Rightarrow> real \<times> real) \<Rightarrow> int" where
   "top1_winding_number_on f = (SOME n. True)"  \<comment> \<open>Placeholder; proper def via lifting\<close>
 
-(** from \<S>65 Lemma 65.1: for complete graph K_4 in S^2 with closed-curve edge,
-    certain loops are nontrivial in the fundamental group after removing interior
-    points p, q of opposite edges. Used as key step in Theorem 65.2. **)
+(** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
+    closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
+    edges a_1 a_3 and a_2 a_4, the loop traversing C is nontrivial in \<pi>_1(S^2-p-q, x_0). **)
 lemma Lemma_65_1_K4_subgraph:
+  fixes G :: "(real \<times> real \<times> real) set" and C :: "(real \<times> real \<times> real) set"
+    and p q :: "real \<times> real \<times> real"
+    and f :: "real \<Rightarrow> real \<times> real \<times> real"
+    and x0 :: "real \<times> real \<times> real"
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-  and "\<comment> \<open>G is K_4 subspace of S^2 with vertices a_1, ..., a_4\<close> True"
-  shows "\<comment> \<open>certain loops in S^2 - p - q are nontrivial\<close> True"
-  by simp
+      and "G \<subseteq> top1_S2"
+      and "C \<subseteq> G"
+      and "p \<in> G - C" and "q \<in> G - C"
+      and "top1_is_loop_on (top1_S2 - {p} - {q})
+             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x0 f"
+      and "f ` I_set = C"
+  shows "\<not> top1_path_homotopic_on (top1_S2 - {p} - {q})
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q}))
+           x0 x0 f (top1_constant_path x0)"
+  sorry
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
 theorem Theorem_65_2:
@@ -2516,11 +2527,16 @@ theorem Theorem_67_6_direct_sum_unique:
   sorry
 
 (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
-    Simplified placeholder: card of basis is well-defined (uses a Munkres-specific
-    formulation requiring more machinery than we have). **)
+    Any two bases of a free abelian group have the same cardinality. **)
 theorem Theorem_67_8_rank_unique:
-  "True"
-  by simp
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and iota1 :: "'s1 \<Rightarrow> 'g" and S1 :: "'s1 set"
+    and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
+  assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
+      and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
+  shows "card S1 = card S2"
+  sorry
 
 section \<open>\<S>68 Free Products of Groups\<close>
 
