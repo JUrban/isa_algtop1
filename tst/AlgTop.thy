@@ -1709,7 +1709,51 @@ definition top1_simple_closed_curve_on :: "'a set \<Rightarrow> 'a set set \<Rig
           \<and> inj_on f top1_S1
           \<and> f ` top1_S1 = C)"
 
-(** from \<S>63 Theorem 63.4: Jordan Curve Theorem **)
+(** from \<S>63 Theorem 63.1: if X = U \<union> V with U \<inter> V = A \<union> B (disjoint open),
+    and alpha: a to b in U, beta: b to a in V, then the loop f = alpha * beta is
+    nontrivial in pi_1(X, a) (plus further properties: homotopy lifts, f^m and f^k
+    are nonconjugate when the components are different). Used in Munkres' proof of
+    the Jordan Curve Theorem. **)
+theorem Theorem_63_1_loop_nontrivial:
+  assumes "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+      and "top1_is_path_on V (subspace_topology X TX V) b a beta"
+  shows "\<not> top1_path_homotopic_on X TX a a
+           (top1_path_product alpha beta) (top1_constant_path a)"
+  sorry
+
+(** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
+    Munkres' proof: by contradiction + Theorem 63.1; use that \<pi>_1(S^2) is trivial. **)
+theorem Theorem_63_2_arc_no_separation:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "D \<subseteq> top1_S2"
+  and "\<comment> \<open>D is an arc: homeomorphic image of [0,1]\<close> True"
+  shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
+  sorry
+
+(** from \<S>63 Theorem 63.3: general non-separation theorem. **)
+theorem Theorem_63_3_general_nonseparation:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "closedin_on top1_S2 top1_S2_topology D1"
+  and "closedin_on top1_S2 top1_S2_topology D2"
+  and "top1_simply_connected_on (top1_S2 - (D1 \<inter> D2))
+         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2)))"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology D1"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology D2"
+  shows "\<not> top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)"
+  sorry
+
+(** from \<S>63 Theorem 63.4: Jordan Curve Theorem.
+
+    Munkres' proof: use Theorem 61.3 (separation) + locally connected property +
+    Theorem 63.1 argument to show at most 2 components. Each component has C as
+    boundary by an auxiliary argument.
+
+    NB: Currently stated for C \<subseteq> R^2 (as in the original formalization). **)
 theorem Theorem_63_4_JordanCurve:
   fixes C :: "(real \<times> real) set"
   assumes "top1_simple_closed_curve_on
@@ -1719,6 +1763,19 @@ theorem Theorem_63_4_JordanCurve:
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
     \<and> top1_path_connected_on V
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)"
+  sorry
+
+(** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into two components. **)
+theorem Theorem_63_5_two_closed_connected:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "closedin_on top1_S2 top1_S2_topology C1"
+  and "closedin_on top1_S2 top1_S2_topology C2"
+  and "top1_connected_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+  and "top1_connected_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+  and "card (C1 \<inter> C2) = 2"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology C1"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology C2"
+  shows "top1_separates_on top1_S2 top1_S2_topology (C1 \<union> C2)"
   sorry
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
