@@ -1263,8 +1263,38 @@ proof -
   obtain y where hy: "cmod y \<le> 1" and hroot': "y^n + (\<Sum>k<n. ?a' k * y^k) = 0"
     using Theorem_56_1_step_3[OF assms hbound'] by blast
   let ?x = "complex_of_real c * y"
-  \<comment> \<open>Multiply y-root equation by c^n and simplify to get x-root equation.\<close>
-  have "?x^n + (\<Sum>k<n. a k * ?x^k) = 0" sorry
+  let ?cc = "complex_of_real c"
+  have hcc_nz: "?cc \<noteq> 0" using hc by simp
+  \<comment> \<open>Term-wise identity: c^n * (a k / c^(n-k) * y^k) = a k * (c*y)^k when k<n.\<close>
+  have h_term: "\<And>k. k < n \<Longrightarrow> ?cc^n * (?a' k * y^k) = a k * ?x^k"
+  proof -
+    fix k :: nat assume hk: "k < n"
+    have hpow_split: "?cc^n = ?cc^(n-k) * ?cc^k"
+      using hk by (simp add: power_add[symmetric])
+    have hpow_eq: "?cc^(n-k) = complex_of_real (c^(n-k))" by simp
+    have "?cc^n * (?a' k * y^k) = ?cc^(n-k) * ?cc^k * (a k / complex_of_real (c^(n-k)) * y^k)"
+      using hpow_split by simp
+    also have "\<dots> = ?cc^k * (a k * y^k)"
+      using hpow_eq hcc_nz by (simp add: field_simps power_not_zero)
+    also have "\<dots> = a k * ?x^k"
+      by (simp add: power_mult_distrib mult.commute mult.left_commute)
+    finally show "?cc^n * (?a' k * y^k) = a k * ?x^k" .
+  qed
+  have h_cn_sum: "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. a k * ?x^k)"
+  proof -
+    have "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. ?cc^n * (?a' k * y^k))"
+      by (simp add: sum_distrib_left)
+    also have "\<dots> = (\<Sum>k<n. a k * ?x^k)"
+      by (rule sum.cong, simp, rule h_term, simp)
+    finally show ?thesis .
+  qed
+  have hxn_eq: "?x^n = ?cc^n * y^n" by (simp add: power_mult_distrib)
+  \<comment> \<open>Multiply root equation by c^n to get x-root equation.\<close>
+  have "?cc^n * (y^n + (\<Sum>k<n. ?a' k * y^k)) = 0" using hroot' by simp
+  hence "?cc^n * y^n + ?cc^n * (\<Sum>k<n. ?a' k * y^k) = 0"
+    by (simp add: distrib_left)
+  hence "?x^n + (\<Sum>k<n. a k * ?x^k) = 0"
+    using hxn_eq h_cn_sum by simp
   thus ?thesis by blast
 qed
 
