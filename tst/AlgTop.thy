@@ -915,7 +915,7 @@ proof -
         hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
     and hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
     and hFt_00: "Ftilde (0, 0) = e0"
-    sorry
+    using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00] by blast
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
   have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" sorry
   have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e" sorry
