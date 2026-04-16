@@ -102,11 +102,38 @@ proof -
     using h hG hG0 hG1 unfolding top1_homotopic_on_def by blast
 qed
 
-lemma Lemma_51_1_homotopic_trans:
-  assumes "top1_homotopic_on X TX Y TY f f'"
-      and "top1_homotopic_on X TX Y TY f' f''"
-  shows "top1_homotopic_on X TX Y TY f f''"
+text \<open>Helper: concatenation of homotopies via pasting lemma.
+  Given F: X\<times>I \<rightarrow> Y and F': X\<times>I \<rightarrow> Y with F(x,1) = F'(x,0), define
+  G(x,t) = F(x,2t) for t\<le>1/2, G(x,t) = F'(x,2t-1) for t\<ge>1/2.\<close>
+lemma homotopy_concat_continuous:
+  assumes "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+      and "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F'"
+      and "\<forall>x\<in>X. F (x, 1) = F' (x, 0)"
+  shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+    (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
   sorry
+
+lemma Lemma_51_1_homotopic_trans:
+  assumes h1: "top1_homotopic_on X TX Y TY f f'"
+      and h2: "top1_homotopic_on X TX Y TY f' f''"
+  shows "top1_homotopic_on X TX Y TY f f''"
+proof -
+  obtain F where hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+    and hF0: "\<forall>x\<in>X. F (x, 0) = f x" and hF1: "\<forall>x\<in>X. F (x, 1) = f' x"
+    using h1 unfolding top1_homotopic_on_def by blast
+  obtain F' where hF': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F'"
+    and hF'0: "\<forall>x\<in>X. F' (x, 0) = f' x" and hF'1: "\<forall>x\<in>X. F' (x, 1) = f'' x"
+    using h2 unfolding top1_homotopic_on_def by blast
+  have hmatch: "\<forall>x\<in>X. F (x, 1) = F' (x, 0)" using hF1 hF'0 by simp
+  let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
+  have hG: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?G"
+    by (rule homotopy_concat_continuous[OF hF hF' hmatch])
+  have hG0: "\<forall>x\<in>X. ?G (x, 0) = f x" using hF0 by simp
+  have hG1: "\<forall>x\<in>X. ?G (x, 1) = f'' x" using hF'1 by simp
+  show ?thesis
+    unfolding top1_homotopic_on_def
+    using h1 h2 hG hG0 hG1 unfolding top1_homotopic_on_def by blast
+qed
 
 text \<open>Helper: f \<circ> pi_1 continuous from I \<times> I \<rightarrow> X when f: I \<rightarrow> X is continuous.\<close>
 lemma path_homotopy_const_continuous:
@@ -161,11 +188,80 @@ proof -
     using h hG hG0 hG1 hGleft hGright unfolding top1_path_homotopic_on_def by blast
 qed
 
-lemma Lemma_51_1_path_homotopic_trans:
-  assumes "top1_path_homotopic_on X TX x0 x1 f f'"
-      and "top1_path_homotopic_on X TX x0 x1 f' f''"
-  shows "top1_path_homotopic_on X TX x0 x1 f f''"
+text \<open>Helper: concatenation of path homotopies.\<close>
+lemma path_homotopy_concat_continuous:
+  assumes "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F'"
+      and "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)"
+  shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
+    (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
   sorry
+
+lemma Lemma_51_1_path_homotopic_trans:
+  assumes h1: "top1_path_homotopic_on X TX x0 x1 f f'"
+      and h2: "top1_path_homotopic_on X TX x0 x1 f' f''"
+  shows "top1_path_homotopic_on X TX x0 x1 f f''"
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+    and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = f' s"
+    and hFleft: "\<forall>t\<in>I_set. F (0, t) = x0" and hFright: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using h1 unfolding top1_path_homotopic_on_def by blast
+  obtain F' where hF': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F'"
+    and hF'0: "\<forall>s\<in>I_set. F' (s, 0) = f' s" and hF'1: "\<forall>s\<in>I_set. F' (s, 1) = f'' s"
+    and hF'left: "\<forall>t\<in>I_set. F' (0, t) = x0" and hF'right: "\<forall>t\<in>I_set. F' (1, t) = x1"
+    using h2 unfolding top1_path_homotopic_on_def by blast
+  have hmatch: "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)" using hF1 hF'0 by simp
+  let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
+  have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+    by (rule path_homotopy_concat_continuous[OF hF hF' hmatch])
+  have hG0: "\<forall>s\<in>I_set. ?G (s, 0) = f s" using hF0 by simp
+  have hG1: "\<forall>s\<in>I_set. ?G (s, 1) = f'' s" using hF'1 by simp
+  have hGleft: "\<forall>t\<in>I_set. ?G (0, t) = x0"
+  proof (intro ballI)
+    fix t assume ht: "t \<in> I_set"
+    have htpos: "0 \<le> t" using ht unfolding top1_unit_interval_def by simp
+    have htle1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+    show "?G (0, t) = x0"
+    proof (cases "t \<le> 1/2")
+      case True
+      have h2t: "2 * t \<in> I_set" using htpos True unfolding top1_unit_interval_def by simp
+      have "?G (0, t) = F (0, 2 * t)" using True by simp
+      also have "... = x0" using hFleft h2t by simp
+      finally show ?thesis .
+    next
+      case False
+      have h2t: "2 * t - 1 \<in> I_set"
+        using False htle1 unfolding top1_unit_interval_def by simp
+      have "?G (0, t) = F' (0, 2 * t - 1)" using False by simp
+      also have "... = x0" using hF'left h2t by simp
+      finally show ?thesis .
+    qed
+  qed
+  have hGright: "\<forall>t\<in>I_set. ?G (1, t) = x1"
+  proof (intro ballI)
+    fix t assume ht: "t \<in> I_set"
+    have htpos: "0 \<le> t" using ht unfolding top1_unit_interval_def by simp
+    have htle1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+    show "?G (1, t) = x1"
+    proof (cases "t \<le> 1/2")
+      case True
+      have h2t: "2 * t \<in> I_set" using htpos True unfolding top1_unit_interval_def by simp
+      have "?G (1, t) = F (1, 2 * t)" using True by simp
+      also have "... = x1" using hFright h2t by simp
+      finally show ?thesis .
+    next
+      case False
+      have h2t: "2 * t - 1 \<in> I_set"
+        using False htle1 unfolding top1_unit_interval_def by simp
+      have "?G (1, t) = F' (1, 2 * t - 1)" using False by simp
+      also have "... = x1" using hF'right h2t by simp
+      finally show ?thesis .
+    qed
+  qed
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using h1 h2 hG hG0 hG1 hGleft hGright unfolding top1_path_homotopic_on_def by blast
+qed
 
 text \<open>Product of paths: f*g is f followed by g, reparameterized to [0,1].\<close>
 definition top1_path_product :: "(real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a)" where
