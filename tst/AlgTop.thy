@@ -2140,15 +2140,19 @@ corollary Theorem_59_3_path_connected:
 
 section \<open>\<S>60 Fundamental Groups of Some Surfaces\<close>
 
-(** from \<S>60 Theorem 60.1: fundamental group of product is product of fundamental groups.
-    Uses strict topology: product of strict topologies is strict. **)
+(** from \<S>60 Theorem 60.1: \<pi>_1(X \<times> Y, (x_0, y_0)) \<cong> \<pi>_1(X, x_0) \<times> \<pi>_1(Y, y_0).
+    The iso is given by the product map induced by the two projections. **)
 theorem Theorem_60_1_product:
   assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
       and "x0 \<in> X" and "y0 \<in> Y"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-    (top1_fundamental_group_carrier (X \<times> Y) (product_topology_on TX TY) (x0, y0))
-    ((top1_fundamental_group_carrier X TX x0) \<times>
-     (top1_fundamental_group_carrier Y TY y0))"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier (X \<times> Y) (product_topology_on TX TY) (x0, y0))
+           (top1_fundamental_group_mul (X \<times> Y) (product_topology_on TX TY) (x0, y0))
+           ((top1_fundamental_group_carrier X TX x0) \<times>
+            (top1_fundamental_group_carrier Y TY y0))
+           (\<lambda>(c1, c2) (d1, d2).
+              (top1_fundamental_group_mul X TX x0 c1 d1,
+               top1_fundamental_group_mul Y TY y0 c2 d2))"
   sorry
 
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
@@ -2392,10 +2396,16 @@ theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
-  and "\<comment> \<open>p, q in different components of S^2 - C\<close> True"
-  shows "\<exists>\<phi>. bij_betw \<phi>
+  and "\<comment> \<open>p, q in different path-components of S^2 - C\<close>
+       \<not> top1_path_connected_on (top1_S2 - C)
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+  and "c0 \<in> C"
+  shows "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
     (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
   \<comment> \<open>Uses Lemma 65.1 + Jordan Curve Theorem.\<close>
   sorry
