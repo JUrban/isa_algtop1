@@ -2700,6 +2700,24 @@ definition top1_direct_sum_carrier ::
      {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = eFam i) \<and>
          finite {i\<in>J. f i \<noteq> eFam i}}"
 
+text \<open>H is an (internal) direct sum of the abelian groups {G_\<alpha>}_{\<alpha>\<in>J} along
+  injections \<iota>fam_\<alpha>: G_\<alpha> \<hookrightarrow> H iff H is abelian and the natural map from the
+  external direct sum to H (sending f to the finite product \<Prod>_\<alpha> \<iota>fam_\<alpha>(f \<alpha>))
+  is a group isomorphism whose restriction to the \<alpha>-th 'axis' is \<iota>fam_\<alpha>.\<close>
+definition top1_is_direct_sum_of_on ::
+  "'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> 'h \<Rightarrow> ('h \<Rightarrow> 'h) \<Rightarrow>
+   'i set \<Rightarrow> ('i \<Rightarrow> 'g set) \<Rightarrow> ('i \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow>
+   ('i \<Rightarrow> 'g) \<Rightarrow> ('i \<Rightarrow> 'g \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_is_direct_sum_of_on H mulH eH invgH J G mulG eG \<iota>fam \<longleftrightarrow>
+     top1_is_abelian_group_on H mulH eH invgH \<and>
+     (\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mulG \<alpha>) H mulH (\<iota>fam \<alpha>)) \<and>
+     (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>)) \<and>
+     (\<exists>\<Phi>. top1_group_iso_on
+            (top1_direct_sum_carrier J G eG)
+            (\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mulG \<alpha> (f \<alpha>) (g \<alpha>) else eG \<alpha>)
+            H mulH \<Phi>
+          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. \<Phi> (\<lambda>\<beta>. if \<beta> = \<alpha> then x else eG \<beta>) = \<iota>fam \<alpha> x))"
+
 (** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups.
     The direct sum (finitely-supported coordinate-wise functions) is an abelian group,
     equipped with natural injections \<iota>fam_\<alpha> : G_\<alpha> \<hookrightarrow> \<oplus>_\<alpha> G_\<alpha>. **)
@@ -2727,15 +2745,12 @@ theorem Theorem_67_4_direct_sum_exists:
 theorem Theorem_67_6_direct_sum_unique:
   fixes J :: "'i set"
     and G :: "'i \<Rightarrow> 'g set" and mul :: "'i \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and eG :: "'i \<Rightarrow> 'g"
     and H1 H2 :: "'h set" and mulH1 mulH2 :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
     and eH1 eH2 :: 'h and invgH1 invgH2 :: "'h \<Rightarrow> 'h"
     and \<iota>fam1 \<iota>fam2 :: "'i \<Rightarrow> 'g \<Rightarrow> 'h"
-  assumes "top1_is_abelian_group_on H1 mulH1 eH1 invgH1"
-      and "top1_is_abelian_group_on H2 mulH2 eH2 invgH2"
-      and "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H1 mulH1 (\<iota>fam1 \<alpha>)
-                \<and> inj_on (\<iota>fam1 \<alpha>) (G \<alpha>)"
-      and "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H2 mulH2 (\<iota>fam2 \<alpha>)
-                \<and> inj_on (\<iota>fam2 \<alpha>) (G \<alpha>)"
+  assumes "top1_is_direct_sum_of_on H1 mulH1 eH1 invgH1 J G mul eG \<iota>fam1"
+      and "top1_is_direct_sum_of_on H2 mulH2 eH2 invgH2 J G mul eG \<iota>fam2"
   shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
   sorry
 
