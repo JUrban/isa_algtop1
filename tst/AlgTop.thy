@@ -1142,7 +1142,10 @@ proof
   have hfg_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0) f g"
     by (rule Lemma_51_1_path_homotopic_trans[OF hf_const_B2 hg_const_sym])
   \<comment> \<open>Step 4: Apply Lemma 55.1 to transfer path-homotopy back to S^1.\<close>
-  have hfg_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
+  have hfg_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
+    \<comment> \<open>Via Lemma 55.1 + subspace_topology transitivity identifying
+        (subspace_topology top1_B2 top1_B2_topology top1_S1) with top1_S1_topology.\<close>
+    sorry
   show False using hne hfg_S1 by blast
 qed
 
