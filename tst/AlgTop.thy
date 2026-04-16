@@ -3297,6 +3297,7 @@ text \<open>Surface: a connected, Hausdorff, compact 2-manifold.
 definition top1_is_2_manifold_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_is_2_manifold_on X TX \<longleftrightarrow>
      is_topology_on_strict X TX \<and>
+     is_hausdorff_on X TX \<and>
      (\<forall>x\<in>X. \<exists>U (V :: (real \<times> real) set) h.
         x \<in> U \<and> openin_on X TX U \<and>
         V \<in> product_topology_on top1_open_sets top1_open_sets \<and>
@@ -3304,6 +3305,8 @@ definition top1_is_2_manifold_on :: "'a set \<Rightarrow> 'a set set \<Rightarro
           (subspace_topology UNIV
              (product_topology_on top1_open_sets top1_open_sets) V)
           h)"
+     \<comment> \<open>Munkres's definition of an n-manifold requires Hausdorff (and second countable,
+         but that's implied by compact + locally Euclidean for our surface case).\<close>
 
 definition top1_is_surface_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_is_surface_on X TX \<longleftrightarrow>
