@@ -1122,8 +1122,25 @@ proof
   have hf_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) f" sorry
   have hg_B2: "top1_is_loop_on top1_B2 top1_B2_topology (1, 0) g" sorry
   \<comment> \<open>Step 3: Since B^2 is simply connected, f and g are path-homotopic in B^2.\<close>
+  have hf_path_B2: "top1_is_path_on top1_B2 top1_B2_topology (1, 0) (1, 0) f"
+    using hf_B2 unfolding top1_is_loop_on_def .
+  have hg_path_B2: "top1_is_path_on top1_B2 top1_B2_topology (1, 0) (1, 0) g"
+    using hg_B2 unfolding top1_is_loop_on_def .
+  have hx0_B2: "(1::real, 0::real) \<in> top1_B2"
+    unfolding top1_B2_def by simp
+  have hf_const_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0)
+                                             f (top1_constant_path (1, 0))"
+    using top1_B2_simply_connected hf_B2 hx0_B2
+    unfolding top1_simply_connected_on_def by blast
+  have hg_const_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0)
+                                             g (top1_constant_path (1, 0))"
+    using top1_B2_simply_connected hg_B2 hx0_B2
+    unfolding top1_simply_connected_on_def by blast
+  have hg_const_sym: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0)
+                                              (top1_constant_path (1, 0)) g"
+    by (rule Lemma_51_1_path_homotopic_sym[OF hg_const_B2])
   have hfg_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0) f g"
-    sorry  \<comment> \<open>use top1_B2_simply_connected\<close>
+    by (rule Lemma_51_1_path_homotopic_trans[OF hf_const_B2 hg_const_sym])
   \<comment> \<open>Step 4: Apply Lemma 55.1 to transfer path-homotopy back to S^1.\<close>
   have hfg_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
   show False using hne hfg_S1 by blast
