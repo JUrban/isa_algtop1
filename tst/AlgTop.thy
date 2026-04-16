@@ -3298,7 +3298,11 @@ definition top1_is_surface_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 
      top1_is_2_manifold_on X TX \<and>
      top1_connected_on X TX \<and>
      is_hausdorff_on X TX \<and>
-     top1_compact_on X TX"
+     top1_compact_on X TX \<and>
+     X \<noteq> {}"
+     \<comment> \<open>Non-emptiness is required: classification theorem §77.5 says a surface is
+         S^2, T_n, or P_m, none of which are empty. Without X \<noteq> {}, the empty set
+         would vacuously satisfy locally-Euclidean and falsify §77.5.\<close>
 
 section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
 
