@@ -902,12 +902,99 @@ theorem Theorem_55_6_brouwer:
 
 section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
 
-(** from *\<S>56 Theorem 56.1: Fundamental Theorem of Algebra **)
+text \<open>Following Munkres' proof in 4 steps via the fundamental group of S^1:
+  Step 1: f(z) = z^n on S^1 induces the "multiplication by n" homomorphism
+          on pi_1(S^1), which is injective for n > 0.
+  Step 2: g(z) = z^n as map S^1 -> R^2 - {0} is not nulhomotopic.
+  Step 3: If |a_{n-1}| + ... + |a_0| < 1, the monic polynomial has a root in B^2.
+  Step 4: General case by substitution x = cy with c large enough.\<close>
+
+text \<open>The complex unit circle.\<close>
+definition top1_S1_complex :: "complex set" where
+  "top1_S1_complex = {z. cmod z = 1}"
+
+definition top1_S1_complex_topology :: "complex set set" where
+  "top1_S1_complex_topology = subspace_topology UNIV top1_open_sets top1_S1_complex"
+
+text \<open>The punctured complex plane C - {0}, same topology as ambient.\<close>
+definition top1_C_minus_0 :: "complex set" where
+  "top1_C_minus_0 = UNIV - {0}"
+
+definition top1_C_minus_0_topology :: "complex set set" where
+  "top1_C_minus_0_topology = subspace_topology UNIV top1_open_sets top1_C_minus_0"
+
+(** Step 1: induced homomorphism of z^n on S^1 is multiplication by n (hence injective for n > 0). **)
+lemma Theorem_56_1_step_1:
+  fixes n :: nat
+  assumes "n > 0"
+  shows "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+                               top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)
+       \<and> (\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+              \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+              \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+                   (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
+              \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
+  sorry
+
+(** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic **)
+lemma Theorem_56_1_step_2:
+  fixes n :: nat
+  assumes "n > 0"
+  shows "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+            top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+  sorry
+
+(** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1 **)
+lemma Theorem_56_1_step_3:
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
+  assumes hn: "n > 0"
+  and hbound: "(\<Sum>k<n. cmod (a k)) < 1"
+  shows "\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0"
+  sorry
+
+(** Step 4: FTA general case: any monic polynomial has a root.
+    Reduction: substitute x = cy for large c to reduce to Step 3.
+    This is the statement of Theorem_56_1 proper in Munkres. **)
 theorem Theorem_56_1_FTA:
-  fixes a :: "nat \<Rightarrow> complex"
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
+  assumes "n > 0"
+  shows "\<exists>z. z^n + (\<Sum>k<n. a k * z^k) = 0"
+proof -
+  \<comment> \<open>Munkres Step 4: Choose c large so that \<Sum> |a_k/c^{n-k}| < 1.\<close>
+  \<comment> \<open>Substitute x = cy: equation becomes y^n + \<Sum> (a_k / c^{n-k}) y^k = 0.\<close>
+  \<comment> \<open>By Step 3, there's a root y_0 with |y_0| \<le> 1; then x_0 = c y_0 is a root.\<close>
+  obtain c where hc: "c > 0" and hsum_small: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1"
+    sorry
+  \<comment> \<open>New coefficients a'_k = a_k / c^{n-k}.\<close>
+  let ?a' = "\<lambda>k. a k / complex_of_real (c ^ (n - k))"
+  have hbound': "(\<Sum>k<n. cmod (?a' k)) < 1"
+    sorry
+  obtain y where hy: "cmod y \<le> 1" and hroot': "y^n + (\<Sum>k<n. ?a' k * y^k) = 0"
+    using Theorem_56_1_step_3[OF assms hbound'] by blast
+  let ?x = "complex_of_real c * y"
+  have "?x^n + (\<Sum>k<n. a k * ?x^k) = 0"
+    sorry
+  thus ?thesis by blast
+qed
+
+text \<open>Original form (FTA for arbitrary polynomials with nonzero leading coefficient).\<close>
+corollary Theorem_56_1_FTA_leading:
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
   assumes "n > 0" and "a n \<noteq> 0"
   shows "\<exists>z. (\<Sum>k\<le>n. a k * z^k) = 0"
-  sorry
+proof -
+  \<comment> \<open>Divide by a n to get monic form.\<close>
+  let ?b = "\<lambda>k. a k / a n"
+  have hbn: "?b n = 1" using assms(2) by simp
+  have "\<exists>z. z^n + (\<Sum>k<n. ?b k * z^k) = 0"
+    by (rule Theorem_56_1_FTA[OF assms(1)])
+  then obtain z where hroot_monic: "z^n + (\<Sum>k<n. ?b k * z^k) = 0"
+    by blast
+  \<comment> \<open>This z is a root of the original polynomial too.\<close>
+  have "(\<Sum>k\<le>n. a k * z^k) = a n * (z^n + (\<Sum>k<n. ?b k * z^k))"
+    sorry  \<comment> \<open>algebraic manipulation: split sum at k=n; a k = a n * (a k / a n).\<close>
+  thus ?thesis using hroot_monic assms(2) by fastforce
+qed
 
 section \<open>\<S>57 The Borsuk-Ulam Theorem\<close>
 
