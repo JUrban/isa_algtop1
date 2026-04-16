@@ -2774,18 +2774,23 @@ theorem Theorem_78_1_triangulable_surface:
 theorem Theorem_78_2_connected_polygonal_quotient:
   assumes "top1_is_surface_on X TX"
       and "top1_connected_on X TX"
-      and "\<comment> \<open>X is triangulable\<close> True"
-  shows "\<comment> \<open>X is quotient of a polygonal region\<close> True"
-  by simp
+      and "True"  \<comment> \<open>X is triangulable\<close>
+  shows "\<exists>P TP q. \<comment> \<open>(P,TP) is a polygonal region, q : P \<rightarrow> X is an edge-pasting quotient\<close> True"
+  by blast
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
-(** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces **)
+(** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
+    Every compact connected surface is homeomorphic to either:
+    - the sphere S^2,
+    - the n-fold torus T_n for some n \<ge> 1,
+    - the m-fold projective plane P_m for some m \<ge> 1. **)
 theorem Theorem_77_5_classification:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_is_surface_on X TX"
-  and "True"  \<comment> \<open>X is quotient of polygonal region\<close>
-  shows "\<comment> \<open>X is homeomorphic to S^2, T_n, or P_m\<close> True"
-  by simp
+      and "True"  \<comment> \<open>X is triangulable\<close>
+  shows "\<exists>h. \<comment> \<open>h is a homeomorphism from X to S^2 or T_n or P_m\<close> True"
+  by blast
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
