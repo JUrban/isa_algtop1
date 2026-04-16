@@ -915,6 +915,7 @@ lemma Lemma_54_2_homotopy_lifting:
     (5) Hence Ftilde is a path homotopy from ftilde to gtilde. **)
 theorem Theorem_54_3:
   assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTE: "is_topology_on E TE" and hTB: "is_topology_on B TB"
       and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
       and hf: "top1_is_path_on B TB b0 b1 f"
       and hg: "top1_is_path_on B TB b0 b1 g"
@@ -943,7 +944,42 @@ proof -
     using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00] by blast
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
   have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0" sorry
-  have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e" sorry
+  have hFt_right_const: "\<exists>e. \<forall>t\<in>I_set. Ftilde (1, t) = e"
+  proof -
+    let ?e1loc = "Ftilde (1, 0)"
+    have h0I_: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have h1I_: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (1, t))"
+      by (rule pair_const_t_continuous[OF h1I_])
+    have hcomp: "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>t. (1, t)))"
+      by (rule top1_continuous_map_on_comp[OF hpair hFt_cont])
+    have hcont_right: "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (1, t))"
+      using hcomp by (simp add: comp_def)
+    have hright_lift: "\<forall>t\<in>I_set. p (Ftilde (1, t)) = b1"
+      using hFt_lift hF_b1 h1I_ by auto
+    have he1_in_E: "?e1loc \<in> E"
+      using hcont_right h0I_ unfolding top1_continuous_map_on_def by blast
+    have hpe1: "p ?e1loc = b1" using hright_lift h0I_ by blast
+    have hpath_right: "top1_is_path_on E TE ?e1loc (Ftilde (1, 1)) (\<lambda>t. Ftilde (1, t))"
+      unfolding top1_is_path_on_def using hcont_right by simp
+    \<comment> \<open>Constant path at b_1 in B, lifted to constant path at ?e1loc in E.\<close>
+    have hb1_in_B: "b1 \<in> B" using hf unfolding top1_is_path_on_def top1_continuous_map_on_def
+      using h1I_ by blast
+    have hconst_B: "top1_is_path_on B TB b1 b1 (top1_constant_path b1)"
+      by (rule top1_constant_path_is_path[OF hTB hb1_in_B])
+    have hconst_E: "top1_is_path_on E TE ?e1loc ?e1loc (top1_constant_path ?e1loc)"
+      by (rule top1_constant_path_is_path[OF hTE he1_in_E])
+    have hconst_lift: "\<forall>s\<in>I_set. p (top1_constant_path ?e1loc s) = top1_constant_path b1 s"
+      unfolding top1_constant_path_def using hpe1 by simp
+    have hright_const_lift': "\<forall>s\<in>I_set. p (Ftilde (1, s)) = top1_constant_path b1 s"
+      using hright_lift unfolding top1_constant_path_def by simp
+    have "\<forall>t\<in>I_set. Ftilde (1, t) = top1_constant_path ?e1loc t"
+      using Lemma_54_1_uniqueness[OF hcov he1_in_E hpe1 hconst_B hpath_right
+                                      hright_const_lift' hconst_E hconst_lift] .
+    hence "\<forall>t\<in>I_set. Ftilde (1, t) = ?e1loc"
+      unfolding top1_constant_path_def by simp
+    thus ?thesis by blast
+  qed
   \<comment> \<open>Step 4: Ftilde(s,0) = ftilde and Ftilde(s,1) = gtilde by uniqueness of path lifting.\<close>
   have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
   \<comment> \<open>Ftilde(·, 0) is a path in E lifting f, starting at e0.\<close>
