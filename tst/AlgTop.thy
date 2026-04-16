@@ -694,7 +694,10 @@ definition top1_basepoint_change_on :: "'a set \<Rightarrow> 'a set set \<Righta
   "top1_basepoint_change_on X TX x0 x1 alpha f =
      top1_path_product (top1_path_reverse alpha) (top1_path_product f alpha)"
 
-(** from \<S>52 Theorem 52.1: the basepoint-change map is a group isomorphism **)
+(** from \<S>52 Theorem 52.1 (homomorphism part): the basepoint-change map
+    \<alpha>-hat preserves the path-product operation up to path homotopy.
+    Combined with bijectivity this gives a group isomorphism of \<pi>_1(X, x_0)
+    with \<pi>_1(X, x_1). **)
 theorem Theorem_52_1:
   assumes "top1_is_path_on X TX x0 x1 alpha"
       and "top1_is_loop_on X TX x0 f"
@@ -704,6 +707,19 @@ theorem Theorem_52_1:
     (top1_path_product
       (top1_basepoint_change_on X TX x0 x1 alpha f)
       (top1_basepoint_change_on X TX x0 x1 alpha g))"
+  sorry
+
+(** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
+    \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
+theorem Theorem_52_1_iso:
+  assumes "is_topology_on_strict X TX"
+      and "top1_path_connected_on X TX"
+      and "x0 \<in> X" and "x1 \<in> X"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_fundamental_group_carrier X TX x1)
+           (top1_fundamental_group_mul X TX x1)"
   sorry
 
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
