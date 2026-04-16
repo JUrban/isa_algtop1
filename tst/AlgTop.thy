@@ -2194,6 +2194,22 @@ theorem Theorem_61_4_general_separation:
   shows "top1_separates_on top1_S2 top1_S2_topology (A1 \<union> A2)"
   sorry
 
+section \<open>*\<S>62 Invariance of Domain\<close>
+
+text \<open>Invariance of domain in R^2: an open injective continuous map R^2 \<rightarrow> R^2
+  has open image, and its inverse is continuous.\<close>
+
+(** from *\<S>62 Theorem 62.3: Invariance of Domain in R^2. **)
+theorem Theorem_62_3_invariance_of_domain:
+  fixes U :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
+  assumes "U \<in> product_topology_on top1_open_sets top1_open_sets"
+      and "top1_continuous_map_on U
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
+             UNIV (product_topology_on top1_open_sets top1_open_sets) f"
+      and "inj_on f U"
+  shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
+  sorry
+
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.\<close>
@@ -2439,6 +2455,19 @@ theorem Theorem_74_4_fund_group_m_projective:
   "True"  \<comment> \<open>\<pi>_1(P_m) \<cong> F_m / \<langle>\<alpha>_1^2 \<cdots> \<alpha>_m^2\<rangle>\<close>
   by simp
 
+section \<open>\<S>76 Cutting and Pasting\<close>
+
+text \<open>Schemes: labelled edge sequences describing a polygonal surface by edge
+  identification (y_1 y_2 ... y_n with each y_i labelled by a letter, possibly inverted).\<close>
+
+(** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
+    Placeholder: schemes are modelled as lists of (label, orientation) pairs. **)
+theorem Theorem_76_elementary_operations:
+  fixes scheme1 scheme2 :: "('a \<times> bool) list"
+  assumes "\<comment> \<open>scheme2 is obtained from scheme1 by an elementary operation\<close> True"
+  shows "\<comment> \<open>the quotient spaces are homeomorphic\<close> True"
+  by simp
+
 section \<open>\<S>75 Homology of Surfaces\<close>
 
 (** from \<S>75 Theorem 75.1: H_1 is abelianization of \<pi>_1 **)
@@ -2454,6 +2483,25 @@ theorem Theorem_75_3_H1_n_torus:
 (** from \<S>75 Theorem 75.4: H_1 of m-fold projective plane **)
 theorem Theorem_75_4_H1_m_projective:
   "True"  \<comment> \<open>T(P_m) \<cong> Z/2, H_1(P_m)/T \<cong> Z^{m-1}\<close>
+  by simp
+
+section \<open>*\<S>78 Constructing Compact Surfaces\<close>
+
+(** from \<S>78 Theorem 78.1: compact triangulable surfaces are quotients of
+    triangular regions by edge pasting. **)
+theorem Theorem_78_1_triangulable_surface:
+  assumes "top1_is_surface_on X TX"
+      and "\<comment> \<open>X is triangulable\<close> True"
+  shows "\<comment> \<open>X is homeomorphic to a quotient of triangular regions\<close> True"
+  by simp
+
+(** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
+    quotients of a single polygonal region. **)
+theorem Theorem_78_2_connected_polygonal_quotient:
+  assumes "top1_is_surface_on X TX"
+      and "top1_connected_on X TX"
+      and "\<comment> \<open>X is triangulable\<close> True"
+  shows "\<comment> \<open>X is quotient of a polygonal region\<close> True"
   by simp
 
 section \<open>\<S>77 The Classification Theorem\<close>
@@ -2505,6 +2553,10 @@ theorem Theorem_79_4:
          (True)"  \<comment> \<open>Simplified: full statement requires subgroup equality\<close>
   sorry
 
+section \<open>\<S>79 Equivalence of Covering Spaces\<close>
+
+\<comment> \<open>Theorems 79.2 and 79.4 are already above; this section heading organizes them.\<close>
+
 section \<open>\<S>80 The Universal Covering Space\<close>
 
 text \<open>A universal covering space is a simply connected covering space of B.\<close>
@@ -2550,6 +2602,23 @@ corollary Theorem_80_3_universal_strict:
     top1_simply_connected_strict_imp[OF assms(1)]
     top1_simply_connected_strict_is_topology_strict[OF assms(1)]
     assms(2-5) by blast
+
+section \<open>*\<S>81 Covering Transformations\<close>
+
+text \<open>A covering transformation of p : E \<rightarrow> B is a homeomorphism h : E \<rightarrow> E
+  with p \<circ> h = p. The group of covering transformations acts on the fiber.\<close>
+definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'b set \<Rightarrow> 'b set set
+  \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('e \<Rightarrow> 'e) \<Rightarrow> bool" where
+  "top1_covering_transformation_on E TE B TB p h \<longleftrightarrow>
+     top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e)"
+
+(** from *\<S>81 Theorem 81.2: the group of covering transformations is isomorphic to
+    N(H)/H in \<pi>_1(B), where H = p_*(\<pi>_1(E)). **)
+theorem Theorem_81_2_covering_group_iso:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+      and "top1_covering_map_on E TE B TB p"
+  shows "\<comment> \<open>covering group \<cong> N(H)/H\<close> True"
+  by simp
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
 
