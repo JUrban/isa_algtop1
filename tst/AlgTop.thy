@@ -1448,10 +1448,18 @@ proof
   have hfg_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0) f g"
     by (rule Lemma_51_1_path_homotopic_trans[OF hf_const_B2 hg_const_sym])
   \<comment> \<open>Step 4: Apply Lemma 55.1 to transfer path-homotopy back to S^1.\<close>
+  \<comment> \<open>Identify subspace_topology top1_B2 top1_B2_topology top1_S1 with top1_S1_topology.\<close>
+  have htop_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+    unfolding top1_B2_topology_def top1_S1_topology_def
+    by (rule subspace_topology_trans[OF hSsub])
+  have hf_sub: "top1_is_loop_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) (1,0) f"
+    using hf unfolding htop_eq .
+  have hg_sub: "top1_is_loop_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) (1,0) g"
+    using hg unfolding htop_eq .
+  have hfg_sub: "top1_path_homotopic_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) (1,0) (1,0) f g"
+    using Lemma_55_1_retract_injective[OF hret hx0 hf_sub hg_sub hfg_B2] .
   have hfg_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g"
-    \<comment> \<open>Via Lemma 55.1 + subspace_topology transitivity identifying
-        (subspace_topology top1_B2 top1_B2_topology top1_S1) with top1_S1_topology.\<close>
-    sorry
+    using hfg_sub unfolding htop_eq .
   show False using hne hfg_S1 by blast
 qed
 
