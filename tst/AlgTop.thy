@@ -1197,11 +1197,42 @@ theorem Theorem_54_4_bijective_simply_connected:
   shows "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier B TB b0) {e\<in>E. p e = b0}"
   sorry
 
+text \<open>Helper: subspace of UNIV with top1_open_sets is top1_open_sets itself.\<close>
+lemma subspace_topology_UNIV_self:
+  "subspace_topology UNIV (T::'a set set) UNIV = T"
+  unfolding subspace_topology_def by auto
+
 text \<open>Helper: R is path-connected via the straight-line path t \<mapsto> (1-t)\<cdot>x + t\<cdot>y.\<close>
 lemma top1_R_path_connected':
   "top1_path_connected_on (UNIV::real set) top1_open_sets"
-  \<comment> \<open>Straight-line paths between any two reals.\<close>
-  sorry
+proof -
+  have hTop: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hpath: "\<forall>x::real\<in>UNIV. \<forall>y::real\<in>UNIV. \<exists>f. top1_is_path_on UNIV top1_open_sets x y f"
+  proof (intro ballI)
+    fix x y :: real
+    assume "x \<in> UNIV" "y \<in> UNIV"
+    let ?f = "\<lambda>t::real. (1-t)*x + t*y"
+    have hfcont: "continuous_on UNIV ?f"
+      by (intro continuous_intros)
+    have hmap: "\<And>s. s \<in> I_set \<Longrightarrow> ?f s \<in> UNIV" by simp
+    have hcont_sub: "top1_continuous_map_on I_set
+          (subspace_topology UNIV top1_open_sets I_set)
+          UNIV (subspace_topology UNIV top1_open_sets UNIV) ?f"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hfcont])
+    have hI_top: "(subspace_topology UNIV top1_open_sets I_set) = I_top"
+      unfolding top1_unit_interval_topology_def by rule
+    have hUNIV_top: "(subspace_topology UNIV top1_open_sets UNIV) = top1_open_sets"
+      by (rule subspace_topology_UNIV_self)
+    have hcont: "top1_continuous_map_on I_set I_top UNIV top1_open_sets ?f"
+      using hcont_sub unfolding hI_top hUNIV_top .
+    have hstart: "?f 0 = x" by simp
+    have hend: "?f 1 = y" by simp
+    show "\<exists>f. top1_is_path_on UNIV top1_open_sets x y f"
+      unfolding top1_is_path_on_def using hcont hstart hend by blast
+  qed
+  show ?thesis unfolding top1_path_connected_on_def using hTop hpath by simp
+qed
 
 text \<open>Helper: R is simply connected — any loop f is homotopic to constant via
   F(s, t) = (1 - t) * f(s) + t * x0 (straight-line homotopy to the basepoint).\<close>
