@@ -1189,7 +1189,48 @@ qed
 theorem Theorem_54_5:
   "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
     (UNIV::int set)"
-  sorry
+proof -
+  have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    by (rule Theorem_53_1)
+  have h0R: "(0::real) \<in> UNIV" by simp
+  have hp0: "top1_R_to_S1 0 = (1, 0)"
+    unfolding top1_R_to_S1_def by simp
+  have hRsc: "top1_simply_connected_on (UNIV::real set) top1_open_sets"
+    by (rule top1_R_simply_connected')
+  obtain \<phi>' where hbij: "bij_betw \<phi>'
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)}"
+    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0 hRsc] by blast
+  have hfiber_Z: "\<exists>\<psi>. bij_betw \<psi> {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
+  proof -
+    have hfib_eq: "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n::int. True}"
+      using top1_R_to_S1_fiber_is_Z' .
+    have hinj: "inj_on (\<lambda>x::real. floor x) {x::real. top1_R_to_S1 x = (1, 0)}"
+    proof (rule inj_onI)
+      fix a b assume "a \<in> {x. top1_R_to_S1 x = (1, 0)}" "b \<in> {x. top1_R_to_S1 x = (1, 0)}"
+      hence "\<exists>n. a = of_int n" "\<exists>n. b = of_int n" using hfib_eq by auto
+      thus "floor a = floor b \<Longrightarrow> a = b" by auto
+    qed
+    have hsurj: "(\<lambda>x::real. floor x) ` {x::real. top1_R_to_S1 x = (1, 0)} = UNIV"
+    proof
+      show "(\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)} \<subseteq> UNIV" by simp
+      show "UNIV \<subseteq> (\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)}"
+      proof
+        fix n :: int assume "n \<in> UNIV"
+        have "of_int n \<in> {x::real. top1_R_to_S1 x = (1, 0)}" using hfib_eq by auto
+        moreover have "floor (of_int n :: real) = n" by simp
+        ultimately show "n \<in> (\<lambda>x::real. floor x) ` {x. top1_R_to_S1 x = (1, 0)}" by force
+      qed
+    qed
+    show ?thesis using hinj hsurj unfolding bij_betw_def by auto
+  qed
+  obtain \<psi> where h\<psi>: "bij_betw \<psi> {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
+    using hfiber_Z by blast
+  have hcomp: "bij_betw (\<psi> \<circ> \<phi>')
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (UNIV::int set)"
+    by (rule bij_betw_trans[OF hbij h\<psi>])
+  thus ?thesis by blast
+qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
