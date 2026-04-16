@@ -1238,8 +1238,16 @@ text \<open>Helper: R is simply connected — any loop f is homotopic to constan
   F(s, t) = (1 - t) * f(s) + t * x0 (straight-line homotopy to the basepoint).\<close>
 lemma top1_R_simply_connected':
   "top1_simply_connected_on (UNIV::real set) top1_open_sets"
-  \<comment> \<open>R is convex; use straight-line homotopy F(s,t) = (1-t)*f(s) + t*x0.\<close>
-  sorry
+proof -
+  have hpc: "top1_path_connected_on (UNIV::real set) top1_open_sets"
+    by (rule top1_R_path_connected')
+  have hloops: "\<forall>x0\<in>(UNIV::real set). \<forall>f. top1_is_loop_on UNIV top1_open_sets x0 f \<longrightarrow>
+        top1_path_homotopic_on UNIV top1_open_sets x0 x0 f (top1_constant_path x0)"
+    \<comment> \<open>Straight-line homotopy F(s,t) = (1-t)*f(s) + t*x0. Continuity requires more infrastructure.\<close>
+    sorry
+  show ?thesis
+    unfolding top1_simply_connected_on_def using hpc hloops by blast
+qed
 
 text \<open>Helper: the fiber p^{-1}(b_0) of the canonical S^1 covering is Z.
   top1_R_to_S1 x = (1, 0) iff cos(2\<pi>x) = 1 and sin(2\<pi>x) = 0 iff 2\<pi>x = 2\<pi>n, i.e. x = n \<in> Z.\<close>
