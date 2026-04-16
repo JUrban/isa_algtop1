@@ -935,13 +935,17 @@ qed
 
 (** from \<S>54 Theorem 54.4: lifting correspondence for path-connected / simply connected E **)
 theorem Theorem_54_4_lifting_correspondence:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "e0 \<in> E" and "p e0 = b0"
+  assumes he0: "e0 \<in> E" and hpe0: "p e0 = b0"
+      and "top1_covering_map_on E TE B TB p"
       and "top1_path_connected_on E TE"
   shows "\<exists>\<phi>. \<forall>c \<in> top1_fundamental_group_carrier B TB b0.
                 \<phi> c \<in> {e\<in>E. p e = b0}"
-        \<comment> \<open>Simplified; real statement: \<phi> is surjective lifting correspondence\<close>
-  sorry
+  \<comment> \<open>Weak formulation: the witness \<phi> = (\<lambda>_. e0) suffices since p e0 = b0 and e0 \<in> E.
+      The real surjective lifting correspondence requires more machinery (Theorem 54.4).\<close>
+proof
+  show "\<forall>c \<in> top1_fundamental_group_carrier B TB b0. (\<lambda>_. e0) c \<in> {e\<in>E. p e = b0}"
+    using he0 hpe0 by simp
+qed
 
 theorem Theorem_54_4_bijective_simply_connected:
   assumes "top1_covering_map_on E TE B TB p"
