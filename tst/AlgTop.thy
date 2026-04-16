@@ -655,6 +655,22 @@ definition top1_fundamental_group_invg ::
   "top1_fundamental_group_invg X TX x0 c =
      {h. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
 
+text \<open>The induced homomorphism on \<pi>_1: for continuous h: (X, x_0) \<rightarrow> (Y, y_0),
+  h_*([f]) = [h \<circ> f]. This sends an equivalence class to the class containing h \<circ> f.\<close>
+definition top1_fundamental_group_induced_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> 'b
+   \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (real \<Rightarrow> 'b) set" where
+  "top1_fundamental_group_induced_on X TX x0 Y TY y0 h c =
+     {g. \<exists>f\<in>c. top1_loop_equiv_on Y TY y0 (h \<circ> f) g}"
+
+text \<open>The image subgroup h_*(\<pi>_1(X, x_0)) \<subseteq> \<pi>_1(Y, y_0).\<close>
+definition top1_fundamental_group_image_hom ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> 'b
+   \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
+  "top1_fundamental_group_image_hom X TX x0 Y TY y0 h =
+     (top1_fundamental_group_induced_on X TX x0 Y TY y0 h) `
+       (top1_fundamental_group_carrier X TX x0)"
+
 text \<open>Simply connected: path-connected with trivial fundamental group.
   We keep the base definition polymorphic; a strict version is given below.\<close>
 definition top1_simply_connected_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
@@ -2005,9 +2021,9 @@ lemma Lemma_58_5_basepoint_change:
       and "\<forall>x\<in>X. H (x, 1) = k x"
       and "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) \<in> A"
       and "x0 \<in> A"
-  shows "\<comment> \<open>The tracking path \<alpha>(t) = H(x_0, t) goes from x_0 to k(x_0);
-             the basepoint-change \<alpha>-hat then commutes with k_* appropriately.\<close>
-         top1_is_path_on X TX x0 (k x0) (\<lambda>t. H (x0, t))"
+  shows "top1_is_path_on X TX x0 (k x0) (\<lambda>t. H (x0, t))"
+  \<comment> \<open>The tracking path \<alpha>(t) = H(x_0, t) goes from x_0 to k(x_0);
+      the basepoint-change \<alpha>-hat then commutes with k_* appropriately.\<close>
   sorry
 
 (** from \<S>58 Theorem 58.7: a homotopy equivalence induces an isomorphism of fundamental groups.
@@ -2324,7 +2340,7 @@ theorem Theorem_63_1_loop_nontrivial:
 theorem Theorem_63_2_arc_no_separation:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "D \<subseteq> top1_S2"
-  and "\<comment> \<open>D is an arc: homeomorphic image of [0,1]\<close> True"
+  and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
   sorry
 
@@ -2412,9 +2428,9 @@ theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
-  and "\<comment> \<open>p, q in different path-components of S^2 - C\<close>
-       \<not> top1_path_connected_on (top1_S2 - C)
+  and "\<not> top1_path_connected_on (top1_S2 - C)
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+       \<comment> \<open>p, q in different path-components of S^2 - C\<close>
   and "c0 \<in> C"
   shows "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
@@ -2928,11 +2944,15 @@ theorem Theorem_72_1_attaching_two_cell:
       and "top1_path_connected_on A (subspace_topology X TX A)"
       and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
       and "a \<in> A"
-      and "\<comment> \<open>h|Int B^2 is a bijection onto X - A and h(S^1) \<subseteq> A\<close> True"
-  shows "\<exists>\<phi>. bij_betw \<phi>
-           (top1_fundamental_group_carrier X TX a)
-           (\<comment> \<open>\<pi>_1(A, a) / normal-closure([k \<circ> p])\<close>
-            UNIV::'g set)"
+      and "bij_betw h (top1_B2 - top1_S1) (X - A)"
+      and "h ` top1_S1 \<subseteq> A"
+  shows "\<exists>(Q::'g set) mulQ eQ invgQ S R.
+           top1_group_presented_by_on Q mulQ eQ invgQ S R
+         \<and> top1_groups_isomorphic_on
+             (top1_fundamental_group_carrier X TX a)
+             (top1_fundamental_group_mul X TX a)
+             Q mulQ"
+  \<comment> \<open>\<pi>_1(X, a) is the quotient \<pi>_1(A, a) / \<langle>\<langle>[k \<circ> p]\<rangle>\<rangle>, i.e. a presentation Q.\<close>
   sorry
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
@@ -3169,11 +3189,8 @@ theorem Theorem_79_2:
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
   shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
              \<and> h e0 = e0') \<longleftrightarrow>
-         \<comment> \<open>p_*(\<pi>_1(E, e_0)) = p'_*(\<pi>_1(E', e_0')) as subgroups of \<pi>_1(B, b_0)\<close>
-         (\<exists>iH iH'.
-            iH \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
-            iH' \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
-            iH = iH')"
+         top1_fundamental_group_image_hom E TE e0 B TB b0 p
+           = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
   sorry
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
@@ -3186,12 +3203,13 @@ theorem Theorem_79_4:
       and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
   shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)) \<longleftrightarrow>
-         \<comment> \<open>p_*(\<pi>_1 E) and p'_*(\<pi>_1 E') are conjugate subgroups of \<pi>_1(B, b_0)\<close>
-         (\<exists>iH iH' c.
-            iH \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
-            iH' \<subseteq> top1_fundamental_group_carrier B TB b0 \<and>
-            c \<in> top1_fundamental_group_carrier B TB b0 \<and>
-            iH' = iH)"
+         \<comment> \<open>p_*(\<pi>_1(E, e_0)) and p'_*(\<pi>_1(E', e_0')) are conjugate subgroups of \<pi>_1(B, b_0).\<close>
+         (\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
+            top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+            = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+                ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                          (top1_fundamental_group_invg B TB b0 c)) ` H))
+                (top1_fundamental_group_image_hom E TE e0 B TB b0 p))"
   sorry
 
 section \<open>\<S>79 Equivalence of Covering Spaces\<close>
