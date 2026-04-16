@@ -1177,19 +1177,18 @@ proof -
   show ?thesis using heq hhomo by blast
 qed
 
-(** from \<S>54 Theorem 54.4: lifting correspondence for path-connected / simply connected E **)
+(** from \<S>54 Theorem 54.4: lifting correspondence.
+    Given a covering p : (E, e_0) \<to> (B, b_0) and E path-connected, the map
+    \<Phi> : \<pi>_1(B, b_0) \<to> p\<inverse>(b_0) sending [f] to \<tilde>f(1) (where \<tilde>f is the lift
+    starting at e_0) is surjective. **)
 theorem Theorem_54_4_lifting_correspondence:
   assumes he0: "e0 \<in> E" and hpe0: "p e0 = b0"
       and "top1_covering_map_on E TE B TB p"
       and "top1_path_connected_on E TE"
-  shows "\<exists>\<phi>. \<forall>c \<in> top1_fundamental_group_carrier B TB b0.
-                \<phi> c \<in> {e\<in>E. p e = b0}"
-  \<comment> \<open>Weak formulation: the witness \<phi> = (\<lambda>_. e0) suffices since p e0 = b0 and e0 \<in> E.
-      The real surjective lifting correspondence requires more machinery (Theorem 54.4).\<close>
-proof
-  show "\<forall>c \<in> top1_fundamental_group_carrier B TB b0. (\<lambda>_. e0) c \<in> {e\<in>E. p e = b0}"
-    using he0 hpe0 by simp
-qed
+  shows "\<exists>\<phi>. (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+                \<phi> c \<in> {e\<in>E. p e = b0})
+           \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+  sorry
 
 theorem Theorem_54_4_bijective_simply_connected:
   assumes "top1_covering_map_on E TE B TB p"
