@@ -3018,16 +3018,6 @@ definition top1_is_n_fold_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightar
   "top1_is_n_fold_torus_on X TX n \<longleftrightarrow>
      n > 0 \<and> top1_quotient_of_scheme_on X TX (top1_n_torus_scheme n)"
 
-text \<open>m-fold projective plane P_m = quotient of a 2m-gon by the standard scheme.\<close>
-definition top1_is_m_fold_projective_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_m_fold_projective_on X TX m \<longleftrightarrow>
-     m > 0 \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
-
-text \<open>The torus T² = S¹ × S¹ (the 1-fold torus in Munkres' sense).\<close>
-definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_torus_on X TX \<longleftrightarrow>
-     top1_is_n_fold_torus_on X TX 1"
-
 text \<open>n-fold dunce cap: quotient of B^2 where on S^1, q(z) = q(z') iff z' is a
   rotation of z by a multiple of 2\<pi>/n; on the interior, q is injective; interior
   and boundary orbits are separated.  The resulting space has \<pi>_1 = Z/nZ.\<close>
@@ -3045,6 +3035,20 @@ definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow
                          + cos (2*pi*real k/real n) * snd z)))
         \<and> inj_on q (top1_B2 - top1_S1)
         \<and> (\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'))"
+
+text \<open>m-fold projective plane P_m: quotient of a 2m-gon by the scheme a_1 a_1 ... a_m a_m.
+  For m = 1 this would require a 2-gon (not a valid polygonal region, which requires
+  n \<ge> 3), so we handle m = 1 separately: P_1 = real projective plane RP^2 = quotient
+  of B^2 by antipodal identification on S^1 = the 2-fold dunce cap.\<close>
+definition top1_is_m_fold_projective_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_m_fold_projective_on X TX m \<longleftrightarrow>
+     (m = 1 \<and> top1_is_dunce_cap_on X TX (2::nat)) \<or>
+     (m \<ge> 2 \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m))"
+
+text \<open>The torus T² = S¹ × S¹ (the 1-fold torus in Munkres' sense).\<close>
+definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_torus_on X TX \<longleftrightarrow>
+     top1_is_n_fold_torus_on X TX 1"
 
 text \<open>The standard closed 2-simplex {(x, y). x \<ge> 0 \<and> y \<ge> 0 \<and> x + y \<le> 1}.\<close>
 definition top1_standard_simplex :: "(real \<times> real) set" where
