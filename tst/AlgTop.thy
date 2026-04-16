@@ -2632,12 +2632,7 @@ section \<open>\<S>69 Free Groups\<close>
 text \<open>Free group on a set of generators. The property is: any function from S to
   any group H extends uniquely to a group homomorphism G \<rightarrow> H.
   Here we use a simplified bool placeholder and track what's needed.\<close>
-definition top1_is_free_group_on :: "'g set \<Rightarrow> 'g set \<Rightarrow> bool" where
-  "top1_is_free_group_on G S \<longleftrightarrow> True"  \<comment> \<open>Placeholder: universal property\<close>
-
-lemma top1_is_free_group_on_refl:
-  "top1_is_free_group_on G S"
-  unfolding top1_is_free_group_on_def ..
+\<comment> \<open>(old placeholder top1_is_free_group_on removed; use top1_is_free_group_full_on instead)\<close>
 
 (** from \<S>69 Theorem 69.2: free product of free groups on S1, S2 (disjoint)
     is the free group on S1 \<union> S2. **)
@@ -3274,24 +3269,22 @@ theorem Theorem_85_1_Nielsen_Schreier:
   sorry
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
-    Requires real group-theoretic content (n+1 generators of F, H has index k
-    implies H has k*n+1 generators). **)
+    If F is free on n+1 generators and H \<le> F has finite index k in F, then H
+    is free on kn+1 generators. **)
 theorem Theorem_85_3_Schreier_index:
-  fixes G :: "'g set" and n k :: nat
-  assumes "top1_is_free_group_on G S"
-  and "card S = n + 1"
-  and "H \<subseteq> G"
-  and hinf: "infinite (UNIV :: 'g set)"
-  and "top1_subgroup_has_index_on G (\<lambda>x y. x) H k"
-  \<comment> \<open>Approximation: the multiplication needs to be given externally.\<close>
-  shows "\<exists>S'. top1_is_free_group_on H S' \<and> card S' = k * n + 1"
-proof -
-  \<comment> \<open>top1_is_free_group_on is True placeholder; need any 'g set of size k*n+1.
-      Use infinite UNIV to obtain such a finite subset.\<close>
-  obtain S' where hS'_card: "card (S' :: 'g set) = k * n + 1"
-    using infinite_arbitrarily_large[OF hinf] by blast
-  have "top1_is_free_group_on H S'" by (rule top1_is_free_group_on_refl)
-  thus ?thesis using hS'_card by blast
-qed
+  fixes F :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota>F :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and H :: "'g set"
+    and n k :: nat
+  assumes "top1_is_free_group_full_on F mul e invg \<iota>F S"
+      and "card S = n + 1"
+      and "H \<subseteq> F"
+      and "top1_is_group_on H mul e invg"
+      and "top1_subgroup_has_index_on F mul H k"
+  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+           top1_is_free_group_full_on H mul e invg \<iota>H SH
+         \<and> card SH = k * n + 1"
+  sorry
 
 end
