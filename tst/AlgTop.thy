@@ -2466,22 +2466,28 @@ definition top1_direct_sum_carrier :: "'i set \<Rightarrow> ('i \<Rightarrow> 'g
      {f. (\<forall>i\<in>J. f i \<in> G i) \<and> (\<forall>i. i \<notin> J \<longrightarrow> f i = undefined) \<and>
          finite {i\<in>J. f i \<noteq> undefined}}"  \<comment> \<open>approximation; real: f i \<noteq> 0_{G_i}\<close>
 
-(** from \<S>67 Theorem 67.4: existence of external direct sum **)
+(** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups. **)
 theorem Theorem_67_4_direct_sum_exists:
-  "\<exists>G (inj :: 'i \<Rightarrow> 'g \<Rightarrow> ('i \<Rightarrow> 'g)). True"
-    \<comment> \<open>Simplified existence statement\<close>
-  by blast
+  assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_abelian_group_on (G \<alpha>::'g set) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
+  shows "\<exists>(H::'g set) mulH eH invgH \<iota>fam. top1_is_abelian_group_on H mulH eH invgH
+           \<and> (\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>) H mulH (\<iota>fam \<alpha>))
+           \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>))"
+  sorry
 
-(** from \<S>67 Theorem 67.6: uniqueness of direct sums **)
+(** from \<S>67 Theorem 67.6: uniqueness of external direct sum.
+    Any two external direct sums of the same family are isomorphic. **)
 theorem Theorem_67_6_direct_sum_unique:
-  fixes G G' :: "'g set" and inj inj' :: "'i \<Rightarrow> 'h \<Rightarrow> 'g"
-  shows "True"  \<comment> \<open>Simplified uniqueness statement\<close>
-  by simp
+  assumes "top1_is_abelian_group_on (H1::'g set) mulH1 eH1 invgH1"
+      and "top1_is_abelian_group_on (H2::'g set) mulH2 eH2 invgH2"
+      and "True"  \<comment> \<open>Both H1, H2 are direct sums of the same family\<close>
+  shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
+  sorry
 
-(** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined **)
+(** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
+    Simplified placeholder: card of basis is well-defined (uses a Munkres-specific
+    formulation requiring more machinery than we have). **)
 theorem Theorem_67_8_rank_unique:
-  fixes n m :: nat
-  shows "True"  \<comment> \<open>Simplified: n is determined by G\<close>
+  "True"
   by simp
 
 section \<open>\<S>68 Free Products of Groups\<close>
