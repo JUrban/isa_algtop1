@@ -3847,9 +3847,44 @@ definition top1_Zn_invg :: "nat \<Rightarrow> int \<Rightarrow> int" where
 lemma top1_Zn_is_abelian_group:
   assumes hn: "n \<ge> 1"
   shows "top1_is_abelian_group_on (top1_Zn_group n) (top1_Zn_mul n) top1_Zn_id (top1_Zn_invg n)"
-  unfolding top1_is_abelian_group_on_def top1_is_group_on_def
-            top1_Zn_group_def top1_Zn_mul_def top1_Zn_id_def top1_Zn_invg_def
-  sorry \<comment> \<open>Modular arithmetic group axioms — routine but needs mod reasoning.\<close>
+proof -
+  have hn_pos: "int n > 0" using hn by simp
+  show ?thesis
+    unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+              top1_Zn_group_def top1_Zn_mul_def top1_Zn_id_def top1_Zn_invg_def
+  proof (intro conjI ballI)
+    show "(0::int) \<in> {0..<int n}" using hn by simp
+  next
+    fix x y assume "x \<in> {0::int..<int n}" "y \<in> {0::int..<int n}"
+    thus "(x + y) mod int n \<in> {0..<int n}" using hn_pos by simp
+  next
+    fix x assume "x \<in> {0::int..<int n}"
+    thus "(int n - x) mod int n \<in> {0..<int n}" using hn_pos by simp
+  next
+    fix x y z assume hx: "x \<in> {0::int..<int n}" and hy: "y \<in> {0::int..<int n}" and hz: "z \<in> {0::int..<int n}"
+    show "((x + y) mod int n + z) mod int n = (x + (y + z) mod int n) mod int n"
+      by (simp add: mod_add_left_eq mod_add_right_eq add.assoc)
+  next
+    fix x assume hx: "x \<in> {0::int..<int n}"
+    hence hx0: "0 \<le> x" and hxn: "x < int n" by auto
+    show "(0 + x) mod int n = x" using hx0 hxn by simp
+  next
+    fix x assume hx: "x \<in> {0::int..<int n}"
+    hence hx0: "0 \<le> x" and hxn: "x < int n" by auto
+    show "(x + 0) mod int n = x" using hx0 hxn by simp
+  next
+    fix x assume hx: "x \<in> {0::int..<int n}"
+    show "((int n - x) mod int n + x) mod int n = 0"
+      using hx hn_pos by (simp add: mod_add_left_eq)
+  next
+    fix x assume hx: "x \<in> {0::int..<int n}"
+    show "(x + (int n - x) mod int n) mod int n = 0"
+      using hx hn_pos by (simp add: mod_add_right_eq)
+  next
+    fix x y assume "x \<in> {0::int..<int n}" "y \<in> {0::int..<int n}"
+    show "(x + y) mod int n = (y + x) mod int n" by (simp add: add.commute)
+  qed
+qed
 
 text \<open>The torsion subgroup of an abelian group.\<close>
 definition top1_torsion_subgroup_on ::
