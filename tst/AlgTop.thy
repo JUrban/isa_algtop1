@@ -7473,9 +7473,41 @@ proof -
   have hU_open: "openin_on ?Sn ?TSn ?U" sorry
   have hV_open: "openin_on ?Sn ?TSn ?V" sorry
   \<comment> \<open>U \<union> V = S^n (every point of S^n differs from p or q).\<close>
-  have hUV: "?U \<union> ?V = ?Sn" sorry
+  have hpq_ne: "?p \<noteq> ?q"
+  proof -
+    have "?p 0 = (1::real)" by simp
+    moreover have "?q 0 = (-1::real)" by simp
+    ultimately show ?thesis by (metis one_neq_neg_one)
+  qed
+  have hUV: "?U \<union> ?V = ?Sn" using hpq_ne by (by100 blast)
   \<comment> \<open>U \<inter> V = S^n - {p, q} is path-connected for n \<ge> 2.\<close>
-  have hUV_ne: "?U \<inter> ?V \<noteq> {}" sorry
+  have hUV_ne: "?U \<inter> ?V \<noteq> {}"
+  proof -
+    \<comment> \<open>The point with x(1)=1 and x(i)=0 otherwise is in S^n (for n\<ge>2) and differs from p,q.\<close>
+    let ?r = "\<lambda>i::nat. if i = 1 then (1::real) else 0"
+    have hr_Sn: "?r \<in> ?Sn" unfolding top1_Sn_def
+    proof (intro CollectI conjI allI impI)
+      fix i :: nat assume "i \<ge> Suc n"
+      hence "i \<noteq> 1" using assms by linarith
+      thus "?r i = 0" by simp
+    next
+      show "(\<Sum>i\<le>n. (?r i)\<^sup>2) = 1" sorry
+    qed
+    have hr_ne_p: "?r \<noteq> ?p"
+    proof -
+      have "?r 0 = (0::real)" by simp
+      moreover have "?p 0 = (1::real)" by simp
+      ultimately show ?thesis by (metis zero_neq_one)
+    qed
+    have hr_ne_q: "?r \<noteq> ?q"
+    proof -
+      have "?r 0 = (0::real)" by simp
+      moreover have "?q 0 = (-1::real)" by simp
+      ultimately show ?thesis by (metis neg_0_equal_iff_equal zero_neq_one)
+    qed
+    have "?r \<in> ?U \<inter> ?V" using hr_Sn hr_ne_p hr_ne_q by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
       (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" sorry
   have hT_strict: "is_topology_on_strict ?Sn ?TSn" sorry
