@@ -7416,10 +7416,14 @@ proof -
     using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
   have hg_path: "top1_is_path_on U TU x0 x1 g"
     using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
-  from hhom obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U TU F"
+  have "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology U TU F
+      \<and> (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s)
+      \<and> (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x1)"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+  then obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U TU F"
       and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
       and hFl: "\<forall>t\<in>I_set. F (0, t) = x0" and hFr: "\<forall>t\<in>I_set. F (1, t) = x1"
-    unfolding top1_path_homotopic_on_def sorry
+    by (by100 auto)
   \<comment> \<open>F is continuous in X (subspace continuous \<Rightarrow> ambient continuous).\<close>
   have hF_cont_X: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
     unfolding top1_continuous_map_on_def
