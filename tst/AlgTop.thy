@@ -4099,7 +4099,12 @@ proof -
   \<comment> \<open>Munkres 53.3: product of covering maps.\<close>
   have hpxp_cont: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE')
       (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))" sorry
-  have hpxp_surj: "(\<lambda>(x, y). (p x, p' y)) ` (E \<times> E') = B \<times> B'" sorry
+  have hpxp_surj: "(\<lambda>(x, y). (p x, p' y)) ` (E \<times> E') = B \<times> B'"
+  proof -
+    have hp_surj: "p ` E = B" using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    have hp'_surj: "p' ` E' = B'" using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+    show ?thesis using hp_surj hp'_surj by force
+  qed
   have hpxp_evenly: "\<forall>bb\<in>B \<times> B'. \<exists>W. bb \<in> W \<and>
       top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
         (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W"
