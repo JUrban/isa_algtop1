@@ -7467,10 +7467,25 @@ proof -
         assume hU_case: "gs!i ` I_set \<subseteq> U"
         \<comment> \<open>gs!i is a loop in U. U simply connected \<Rightarrow> nulhomotopic in U.\<close>
         have hgi_loop_U: "top1_is_loop_on U (subspace_topology X TX U) x0 (gs!i)"
-          using hgi_loop hU_case hx0 sorry
+        proof -
+          have hcont_X: "top1_continuous_map_on I_set I_top X TX (gs!i)"
+            using hgi_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have himg: "(gs!i) ` I_set \<subseteq> U" using hU_case .
+          have hUsub: "U \<subseteq> X" using openin_on_sub[OF assms(2)] .
+          have hcont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (gs!i)"
+            by (rule top1_continuous_map_on_codomain_shrink[OF hcont_X himg hUsub])
+          have hg0: "(gs!i) 0 = x0" and hg1: "(gs!i) 1 = x0"
+            using hgi_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+          show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+            using hcont_U hg0 hg1 by (by100 simp)
+        qed
         have hgi_nul_U: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
             (gs!i) (top1_constant_path x0)"
-          using assms(7) hgi_loop_U hx0 unfolding top1_simply_connected_on_def sorry
+        proof -
+          have hx0U: "x0 \<in> U" using hx0 by (by100 blast)
+          show ?thesis using assms(7) hgi_loop_U hx0U
+            unfolding top1_simply_connected_on_def by (by100 blast)
+        qed
         show ?thesis
           by (rule path_homotopic_subspace_to_ambient[OF
                 is_topology_on_strict_imp[OF assms(1)] _ refl hgi_nul_U])
@@ -7478,10 +7493,25 @@ proof -
       next
         assume hV_case: "gs!i ` I_set \<subseteq> V"
         have hgi_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 (gs!i)"
-          using hgi_loop hV_case hx0 sorry
+        proof -
+          have hcont_X: "top1_continuous_map_on I_set I_top X TX (gs!i)"
+            using hgi_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have himg: "(gs!i) ` I_set \<subseteq> V" using hV_case .
+          have hVsub: "V \<subseteq> X" using openin_on_sub[OF assms(3)] .
+          have hcont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) (gs!i)"
+            by (rule top1_continuous_map_on_codomain_shrink[OF hcont_X himg hVsub])
+          have hg0: "(gs!i) 0 = x0" and hg1: "(gs!i) 1 = x0"
+            using hgi_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+          show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+            using hcont_V hg0 hg1 by (by100 simp)
+        qed
         have hgi_nul_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
             (gs!i) (top1_constant_path x0)"
-          using assms(8) hgi_loop_V hx0 unfolding top1_simply_connected_on_def sorry
+        proof -
+          have hx0V: "x0 \<in> V" using hx0 by (by100 blast)
+          show ?thesis using assms(8) hgi_loop_V hx0V
+            unfolding top1_simply_connected_on_def by (by100 blast)
+        qed
         show ?thesis
           by (rule path_homotopic_subspace_to_ambient[OF
                 is_topology_on_strict_imp[OF assms(1)] _ refl hgi_nul_V])
