@@ -1313,9 +1313,9 @@ proof -
         moreover have "4*s / (1+t) \<ge> 0" using hs0 ht0 by simp
         moreover have "4*s / (1+t) \<le> 1" using h4s ht0 by (simp add: divide_le_eq)
         ultimately have "?\<rho>f p = 4*s / (1+t)" using hst by auto
-        hence "(f \<circ> ?\<rho>f) p = f (4*s / (1+t))" unfolding comp_def by simp
-        moreover have "?F p = f (4*s / (1+t))" using hst h4s by simp
-        ultimately show "(f \<circ> ?\<rho>f) p = ?F p" by simp
+        hence lhs: "(f \<circ> ?\<rho>f) p = f (4*s / (1+t))" unfolding comp_def by simp
+        have rhs: "?F p = f (4*s / (1+t))" using hst h4s by simp
+        show "(f \<circ> ?\<rho>f) p = ?F p" using lhs rhs by metis
       qed
       have hg_agree: "\<forall>p\<in>?Cg. (g \<circ> ?\<rho>g) p = ?F p"
       proof
