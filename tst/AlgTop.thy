@@ -7412,16 +7412,77 @@ lemma path_homotopic_subspace_to_ambient:
 proof -
   \<comment> \<open>A path homotopy F: I\<times>I \<rightarrow> U in the subspace is also a path homotopy F: I\<times>I \<rightarrow> X
      in the ambient space, since U \<subseteq> X and the subspace topology makes F continuous in X.\<close>
+  have hf_path: "top1_is_path_on U TU x0 x1 f"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+  have hg_path: "top1_is_path_on U TU x0 x1 g"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
   from hhom obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U TU F"
       and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
       and hFl: "\<forall>t\<in>I_set. F (0, t) = x0" and hFr: "\<forall>t\<in>I_set. F (1, t) = x1"
-      and hf_path: "top1_is_path_on U TU x0 x1 f" and hg_path: "top1_is_path_on U TU x0 x1 g"
     unfolding top1_path_homotopic_on_def sorry
   \<comment> \<open>F is continuous in X (subspace continuous \<Rightarrow> ambient continuous).\<close>
   have hF_cont_X: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-    using hF_cont hUsub hTU sorry
-  have hf_path_X: "top1_is_path_on X TX x0 x1 f" using hf_path hUsub hTU sorry
-  have hg_path_X: "top1_is_path_on X TX x0 x1 g" using hg_path hUsub hTU sorry
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    have "F p \<in> U" using hF_cont hp unfolding top1_continuous_map_on_def by (by100 blast)
+    thus "F p \<in> X" using hUsub by (by100 blast)
+  next
+    fix V assume hV: "V \<in> TX"
+    have hVU: "U \<inter> V \<in> TU" unfolding hTU subspace_topology_def using hV by (by100 blast)
+    have "{p \<in> I_set \<times> I_set. F p \<in> V} = {p \<in> I_set \<times> I_set. F p \<in> U \<inter> V}"
+    proof (rule set_eqI)
+      fix p show "(p \<in> {p \<in> I_set \<times> I_set. F p \<in> V}) = (p \<in> {p \<in> I_set \<times> I_set. F p \<in> U \<inter> V})"
+        using hF_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    qed
+    also have "\<dots> \<in> II_topology"
+      using hF_cont hVU unfolding top1_continuous_map_on_def by (by100 blast)
+    finally show "{p \<in> I_set \<times> I_set. F p \<in> V} \<in> II_topology" .
+  qed
+  have hf_path_X: "top1_is_path_on X TX x0 x1 f"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    have hf_cont_U: "top1_continuous_map_on I_set I_top U TU f"
+      using hf_path unfolding top1_is_path_on_def by (by100 blast)
+    show "top1_continuous_map_on I_set I_top X TX f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> I_set"
+      thus "f s \<in> X" using hf_cont_U hUsub unfolding top1_continuous_map_on_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> TX"
+      have hVU: "U \<inter> V \<in> TU" unfolding hTU subspace_topology_def using hV by (by100 blast)
+      have "{s \<in> I_set. f s \<in> V} = {s \<in> I_set. f s \<in> U \<inter> V}"
+        using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+      also have "\<dots> \<in> I_top"
+        using hf_cont_U hVU unfolding top1_continuous_map_on_def by (by100 blast)
+      finally show "{s \<in> I_set. f s \<in> V} \<in> I_top" .
+    qed
+    show "f 0 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+    show "f 1 = x1" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+  qed
+  have hg_path_X: "top1_is_path_on X TX x0 x1 g"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    have hg_cont_U: "top1_continuous_map_on I_set I_top U TU g"
+      using hg_path unfolding top1_is_path_on_def by (by100 blast)
+    show "top1_continuous_map_on I_set I_top X TX g"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> I_set"
+      thus "g s \<in> X" using hg_cont_U hUsub unfolding top1_continuous_map_on_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> TX"
+      have hVU: "U \<inter> V \<in> TU" unfolding hTU subspace_topology_def using hV by (by100 blast)
+      have "{s \<in> I_set. g s \<in> V} = {s \<in> I_set. g s \<in> U \<inter> V}"
+        using hg_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+      also have "\<dots> \<in> I_top"
+        using hg_cont_U hVU unfolding top1_continuous_map_on_def by (by100 blast)
+      finally show "{s \<in> I_set. g s \<in> V} \<in> I_top" .
+    qed
+    show "g 0 = x0" using hg_path unfolding top1_is_path_on_def by (by100 blast)
+    show "g 1 = x1" using hg_path unfolding top1_is_path_on_def by (by100 blast)
+  qed
   show ?thesis unfolding top1_path_homotopic_on_def
     using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
 qed
