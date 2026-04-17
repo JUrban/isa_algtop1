@@ -1400,8 +1400,10 @@ proof -
             unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
           moreover have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} = (I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p < 1}"
             by auto
-          ultimately have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} \<in> II_topology" by simp
-          thus ?thesis unfolding subspace_topology_def by blast
+          ultimately have hopen_II: "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} \<in> II_topology" by simp
+          have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} = ?Cfg \<inter> {(s,t) \<in> I_set \<times> I_set. 4*s < 1+t}"
+            by auto
+          thus ?thesis unfolding subspace_topology_def using hopen_II by blast
         qed
         finally show "?Cfg - ?Cg \<in> subspace_topology (I_set \<times> I_set) II_topology ?Cfg" .
       qed
