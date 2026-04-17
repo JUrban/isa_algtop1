@@ -410,13 +410,34 @@ proof -
   \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
   have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
                                    X TX (\<lambda>p. F (fst p, 2 * snd p))"
-    \<comment> \<open>F \<circ> (id \<times> (2\<cdot>)). Needs pair continuity via Theorem_18_4 + scaling on subspace.\<close>
-    sorry
-  \<comment> \<open>On B, (s,t) \<mapsto> F'(s, 2t-1) is continuous.\<close>
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>p\<in>?A. F (fst p, 2 * snd p) \<in> X"
+    proof
+      fix p assume hp: "p \<in> ?A"
+      hence "(fst p, 2 * snd p) \<in> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+      thus "F (fst p, 2 * snd p) \<in> X"
+        using hF unfolding top1_continuous_map_on_def by blast
+    qed
+  next
+    show "\<forall>V\<in>TX. {p \<in> ?A. F (fst p, 2 * snd p) \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?A"
+      sorry \<comment> \<open>Preimage condition for piece A — needs inner map (id \<times> 2\<cdot>) continuity.\<close>
+  qed
   have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
                                    X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))"
-    \<comment> \<open>F' \<circ> (id \<times> (2\<cdot>-1)). Same pattern as hfA.\<close>
-    sorry
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>p\<in>?B. F' (fst p, 2 * snd p - 1) \<in> X"
+    proof
+      fix p assume hp: "p \<in> ?B"
+      hence "(fst p, 2 * snd p - 1) \<in> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+      thus "F' (fst p, 2 * snd p - 1) \<in> X"
+        using hF' unfolding top1_continuous_map_on_def by blast
+    qed
+  next
+    show "\<forall>V\<in>TX. {p \<in> ?B. F' (fst p, 2 * snd p - 1) \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B"
+      sorry \<comment> \<open>Preimage condition for piece B — needs inner map (id \<times> (2\<cdot>-1)) continuity.\<close>
+  qed
   \<comment> \<open>Agreement on A \<inter> B (where snd p = 1/2).\<close>
   have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
   proof (intro ballI)
