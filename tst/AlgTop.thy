@@ -3974,7 +3974,23 @@ proof -
      p\<inverse>(U_i) = \<Union>_n (n + open interval) — a disjoint union of sheets homeomorphic to U_i.\<close>
   have hp_evenly: "\<forall>b\<in>top1_S1. \<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
       \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U" sorry
-  show ?thesis unfolding top1_covering_map_on_def using hp_cont hp_surj hp_evenly sorry
+  show ?thesis unfolding top1_covering_map_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      by (rule hp_cont)
+    show "top1_R_to_S1 ` UNIV = top1_S1" by (rule hp_surj)
+    show "\<forall>b\<in>top1_S1. \<exists>U. b \<in> U \<and>
+        top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
+    proof
+      fix b assume "b \<in> top1_S1"
+      then obtain U where "openin_on top1_S1 top1_S1_topology U" "b \<in> U"
+          "top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
+        using hp_evenly by blast
+      thus "\<exists>U. b \<in> U \<and>
+          top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
+        by blast
+    qed
+  qed
 qed
 
 (** from \<S>53 Theorem 53.2: restriction of a covering map to a subspace is a covering map.
@@ -7854,7 +7870,12 @@ proof -
      (where C1\<inter>C2 = {p,q}), but \<pi>_1(S^2-{p,q}) \<cong> Z has only one generator.
      So exactly 2 components.\<close>
   have hsep: "top1_separates_on top1_S2 top1_S2_topology (C1 \<union> C2)"
-    using Theorem_61_4_general_separation[OF assms(1) _ _ assms(2,3,4,5,6)] sorry
+  proof -
+    have hC1sub: "C1 \<subseteq> top1_S2" using assms(2) unfolding closedin_on_def by blast
+    have hC2sub: "C2 \<subseteq> top1_S2" using assms(3) unfolding closedin_on_def by blast
+    show ?thesis
+      by (rule Theorem_61_4_general_separation[OF assms(1) hC1sub hC2sub assms(2,3,4,5,6)])
+  qed
   \<comment> \<open>At least two components from separation.\<close>
   \<comment> \<open>At most two: \<pi>_1(S^2-{a,b}) \<cong> Z can distinguish at most 2 components via Theorem 63.1.\<close>
   show ?thesis sorry
