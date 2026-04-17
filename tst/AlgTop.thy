@@ -7946,6 +7946,33 @@ proof -
      Step 3: By the Jordan Separation Theorem (61.3), f(Bd B) separates R^2.
      Step 4: f(x) is in the bounded component W of R^2 - f(Bd B).
      Step 5: W \<subseteq> f(Int B) \<subseteq> f(U), so f(x) \<in> Int(f(U)).\<close>
+  have "\<forall>x\<in>U. \<exists>W. x \<in> W \<and> W \<in> product_topology_on top1_open_sets top1_open_sets \<and> W \<subseteq> f ` U"
+  proof
+    fix x assume hx: "x \<in> U"
+    \<comment> \<open>Step 1: Take closed ball B with x \<in> Int(B) \<subseteq> B \<subseteq> U.\<close>
+    obtain B where hBsub: "B \<subseteq> U"
+        and hB_compact: "top1_compact_on B (subspace_topology UNIV
+            (product_topology_on top1_open_sets top1_open_sets) B)"
+        and hx_int: "x \<in> B - frontier B"
+        and hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+            (frontier B) (subspace_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) (frontier B)) h"
+      sorry
+    \<comment> \<open>Step 2: f(Bd B) is a simple closed curve (f injective on compact Bd B \<cong> S^1).\<close>
+    have hfBd_curve: "top1_simple_closed_curve_on UNIV
+        (product_topology_on top1_open_sets top1_open_sets) (f ` frontier B)" sorry
+    \<comment> \<open>Step 3: By Jordan Curve Theorem, f(Bd B) separates R^2 into two components.\<close>
+    obtain W1 W2 where hW_disj: "W1 \<inter> W2 = {}" and hW_union: "W1 \<union> W2 = UNIV - f ` frontier B"
+        and hW1_ne: "W1 \<noteq> {}" and hW2_ne: "W2 \<noteq> {}"
+        and hW1_open: "W1 \<in> product_topology_on top1_open_sets top1_open_sets"
+      sorry \<comment> \<open>By Jordan Curve Theorem (Theorem 63.4).\<close>
+    \<comment> \<open>Step 4: f(x) is in the bounded component.\<close>
+    have hfx_in_W: "f x \<in> W1" sorry
+    \<comment> \<open>Step 5: W1 \<subseteq> f(Int B) \<subseteq> f(U).\<close>
+    have hW1_sub: "W1 \<subseteq> f ` U" sorry
+    show "\<exists>W. x \<in> W \<and> W \<in> product_topology_on top1_open_sets top1_open_sets \<and> W \<subseteq> f ` U"
+      sorry
+  qed
   show ?thesis sorry
 qed
 
@@ -8239,7 +8266,24 @@ proof -
      would give a nulhomotopy disjoint from both p and q, but by Lemma 65.1
      the standard loop on C is nontrivial.
      Combines Lemma 65.1 with Theorem 63.1.\<close>
-  show ?thesis sorry
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  let ?Xpq = "top1_S2 - {p} - {q}"
+  let ?TXpq = "subspace_topology top1_S2 top1_S2_topology ?Xpq"
+  \<comment> \<open>Step 1 (Surjectivity): the inclusion j_* is surjective via K4-graph argument.\<close>
+  have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))
+      ` (top1_fundamental_group_carrier C ?TC c0)
+      = top1_fundamental_group_carrier ?Xpq ?TXpq c0" sorry
+  \<comment> \<open>Step 2 (Injectivity): j_* is injective via Lemma 65.1 nontriviality.\<close>
+  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))
+      (top1_fundamental_group_carrier C ?TC c0)" sorry
+  \<comment> \<open>Step 3 (Homomorphism): j_* preserves products by functoriality.\<close>
+  have hj_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier ?Xpq ?TXpq c0) (top1_fundamental_group_mul ?Xpq ?TXpq c0)
+      (top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))" sorry
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using hj_hom hj_inj hj_surj unfolding bij_betw_def by (by100 blast)
 qed
 
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
@@ -9145,9 +9189,24 @@ proof -
      Multiplication = concatenation + iterative reduction (cancel adjacent elements
      from the same group, contract e's).
      The natural inclusions \<iota>\<alpha>(g) = [(a, g)] are injective homomorphisms.\<close>
-  \<comment> \<open>Step 1: Define the carrier as reduced words.\<close>
-  \<comment> \<open>Step 2: Define multiplication as concatenation + reduction.\<close>
-  \<comment> \<open>Step 3: Verify group axioms and the free product conditions.\<close>
+  \<comment> \<open>Step 1: Define the carrier G as reduced words (lists of (index, element) pairs
+     with alternating indices and non-identity elements).\<close>
+  \<comment> \<open>Step 2: Define multiplication as concatenation + iterative reduction.\<close>
+  \<comment> \<open>Step 3: Verify group axioms.\<close>
+  have hG_group: "\<exists>(G::'gg set) mul e invg.
+      top1_is_group_on G mul e invg
+    \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<exists>g\<in>G. True)
+    \<and> (\<forall>\<alpha>\<in>J. \<exists>\<iota>. inj_on \<iota> (GG \<alpha>) \<and> (\<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>.
+         \<iota> (mulGG \<alpha> x y) = mul (\<iota> x) (\<iota> y)))" sorry
+  \<comment> \<open>Step 4: No nonempty reduced word represents the identity (freeness condition).\<close>
+  have hG_free: "\<exists>(G::'gg set) mul e invg \<iota>fam.
+      top1_is_group_on G mul e invg
+    \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (GG \<alpha>))
+    \<and> (\<forall>indices word. length indices = length word \<longrightarrow> length indices > 0 \<longrightarrow>
+        (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
+                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e) \<longrightarrow>
+        (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
+        foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e)" sorry
   show ?thesis sorry
 qed
 
@@ -9523,7 +9582,19 @@ proof -
      X_{n-1} \<inter> C_n = {p}, which is path-connected.
      By SvK, \<pi>_1(X) = \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial relations
      = free on (n-1) generators * Z = free on n generators.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Base: n=0 gives trivial group; n=1 gives \<pi>_1(S^1) \<cong> Z.\<close>
+  have hbase: "n = 0 \<longrightarrow> ?thesis" sorry
+  \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_n. Apply SvK.\<close>
+  have hstep: "n > 0 \<longrightarrow> (\<exists>Xprev TXprev Cn.
+      Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
+    \<and> top1_is_wedge_of_circles_on Xprev TXprev {..<n-1} p
+    \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier Cn (subspace_topology X TX Cn) p)
+        (top1_fundamental_group_mul Cn (subspace_topology X TX Cn) p)
+        top1_Z_group top1_Z_mul)" sorry
+  \<comment> \<open>By SvK (Theorem 70.2), \<pi>_1(X) \<cong> \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial = free on n gens.\<close>
+  have hsvk: "n > 0 \<longrightarrow> ?thesis" sorry
+  show ?thesis using hbase hsvk by (by100 blast)
 qed
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
@@ -9540,6 +9611,14 @@ proof -
      argument. Each finite sub-wedge gives a free group on that subset of generators.
      The direct limit over finite subsets gives the free group on all of J.
      Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
+  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free fundamental group on F.\<close>
+  have hfinite: "\<forall>F. finite F \<and> F \<subseteq> J \<longrightarrow>
+      (\<exists>(G::'g set) mul e invg \<iota>. top1_is_free_group_full_on G mul e invg \<iota> F
+        \<and> top1_groups_isomorphic_on G mul
+            (top1_fundamental_group_carrier X TX p)
+            (top1_fundamental_group_mul X TX p))" sorry
+  \<comment> \<open>Step 2: The direct limit of these free groups (as F ranges over finite subsets)
+     is the free group on J.\<close>
   show ?thesis sorry
 qed
 
@@ -9829,6 +9908,24 @@ proof -
      By Theorem 72.1 (attaching the 2-cell), \<pi>_1(T_n) is the quotient of the
      free group on 2n generators by the normal closure of the single relator
      [a_1,b_1]...[a_n,b_n].\<close>
+  \<comment> \<open>Step 1: All vertices of the 4n-gon are identified to one point (1-skeleton is a wedge).\<close>
+  have h_1skel: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_is_wedge_of_circles_on A TA {..<2*n} x0" sorry
+  \<comment> \<open>Step 2: Applying Theorem 72.1 (attaching the 2-cell) gives the presentation.\<close>
+  have h_attach: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)
+        (top1_quotient_group_carrier_on
+           (top1_fundamental_group_carrier A TA x0)
+           (top1_fundamental_group_mul A TA x0)
+           (top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier A TA x0)
+              (top1_fundamental_group_mul A TA x0)
+              (top1_fundamental_group_id A TA x0)
+              (top1_fundamental_group_invg A TA x0)
+              {top1_fundamental_group_id A TA x0}))
+        (top1_quotient_group_mul_on (top1_fundamental_group_mul A TA x0))" sorry
   show ?thesis sorry
 qed
 
@@ -9849,6 +9946,24 @@ proof -
      The 1-skeleton is a wedge of m circles. By Theorem 72.1, \<pi>_1(P_m) is the
      quotient of the free group on m generators by the normal closure of
      the single relator a_1^2 a_2^2 ... a_m^2.\<close>
+  \<comment> \<open>Step 1: 1-skeleton is a wedge of m circles.\<close>
+  have h_1skel: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_is_wedge_of_circles_on A TA {..<m} x0" sorry
+  \<comment> \<open>Step 2: Attaching the 2-cell with relator a_1^2...a_m^2 gives the presentation.\<close>
+  have h_attach: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)
+        (top1_quotient_group_carrier_on
+           (top1_fundamental_group_carrier A TA x0)
+           (top1_fundamental_group_mul A TA x0)
+           (top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier A TA x0)
+              (top1_fundamental_group_mul A TA x0)
+              (top1_fundamental_group_id A TA x0)
+              (top1_fundamental_group_invg A TA x0)
+              {top1_fundamental_group_id A TA x0}))
+        (top1_quotient_group_mul_on (top1_fundamental_group_mul A TA x0))" sorry
   show ?thesis sorry
 qed
 
@@ -9870,7 +9985,13 @@ proof -
      corresponds to a topological operation on the polygonal region that preserves the
      homeomorphism type of the quotient space.
      Proof by induction on the derivation of top1_elementary_scheme_operation.\<close>
-  show ?thesis using assms(3,4) sorry
+  \<comment> \<open>Each case: rotate preserves the polygon; cancel removes a pair of edges;
+     relabel renames consistently; cut/paste split/join polygons; invert reverses.\<close>
+  have hcases: "\<And>s t. top1_elementary_scheme_operation s t \<Longrightarrow>
+      top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
+      top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
+      \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" sorry
+  show ?thesis using hcases assms(3,4) sorry
 qed
 
 section \<open>\<S>75 Homology of Surfaces\<close>
@@ -9892,6 +10013,19 @@ proof -
      Define H = \<pi>_1(X)/[\<pi>_1(X), \<pi>_1(X)] with the natural projection \<phi>.
      H is abelian, \<phi> is surjective, and ker(\<phi>) = [\<pi>_1(X), \<pi>_1(X)] by construction.
      This is the first homology group H_1(X).\<close>
+  let ?G = "top1_fundamental_group_carrier X TX x0"
+  let ?mul = "top1_fundamental_group_mul X TX x0"
+  let ?e = "top1_fundamental_group_id X TX x0"
+  let ?inv = "top1_fundamental_group_invg X TX x0"
+  let ?comm = "top1_commutator_subgroup_on ?G ?mul ?e ?inv"
+  \<comment> \<open>Step 1: [G,G] is a normal subgroup of G.\<close>
+  have h_comm_normal: "top1_normal_subgroup_on ?G ?mul ?e ?inv ?comm" sorry
+  \<comment> \<open>Step 2: G/[G,G] is an abelian group with the natural projection \<phi>.\<close>
+  have h_quotient_abelian: "\<exists>\<phi>. top1_group_hom_on ?G ?mul
+      (top1_quotient_group_carrier_on ?G ?mul ?comm)
+      (top1_quotient_group_mul_on ?mul) \<phi>
+    \<and> \<phi> ` ?G = top1_quotient_group_carrier_on ?G ?mul ?comm
+    \<and> top1_group_kernel_on ?G (top1_quotient_group_mul_on ?mul ?comm ?comm) \<phi> = ?comm" sorry
   show ?thesis sorry
 qed
 
@@ -9913,6 +10047,14 @@ theorem Theorem_75_3_H1_n_torus:
 proof -
   \<comment> \<open>Munkres 75.3: \<pi>_1(T_n) has presentation \<langle>a_1,...,b_n | [a_1,b_1]...[a_n,b_n]\<rangle>.
      Abelianizing: the commutator relation becomes trivial, so H_1(T_n) \<cong> Z^{2n}.\<close>
+  \<comment> \<open>Step 1: By Theorem 74.3, \<pi>_1(T_n) has presentation with relator [a_1,b_1]...[a_n,b_n].\<close>
+  have h_presentation: "\<exists>(G::'g set) mul e invg.
+      top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
+        { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                              (2*i, False), (2*i+1, False)]) [0..<n]) }"
+    using Theorem_74_3_fund_group_n_torus[OF assms] sorry
+  \<comment> \<open>Step 2: Abelianizing kills all commutators, making the relator trivial.
+     So H_1(T_n) = Z^{2n} (free abelian on 2n generators).\<close>
   show ?thesis sorry
 qed
 
