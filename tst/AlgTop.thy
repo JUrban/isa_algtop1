@@ -3079,6 +3079,53 @@ proof -
   show ?thesis unfolding top1_loop_equiv_on_def using hhat_f hhat_g hhom by blast
 qed
 
+text \<open>Helper: mul(class f, class g) = class(f*g) for the fundamental group.\<close>
+lemma top1_fundamental_group_mul_class:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_loop_on X TX x0 f"
+      and hg: "top1_is_loop_on X TX x0 g"
+  shows "top1_fundamental_group_mul X TX x0
+      {h. top1_loop_equiv_on X TX x0 f h}
+      {h. top1_loop_equiv_on X TX x0 g h}
+    = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+proof (intro set_eqI iffI)
+  fix h assume "h \<in> top1_fundamental_group_mul X TX x0
+      {h. top1_loop_equiv_on X TX x0 f h} {h. top1_loop_equiv_on X TX x0 g h}"
+  then obtain f' g' where hf': "top1_loop_equiv_on X TX x0 f f'"
+      and hg': "top1_loop_equiv_on X TX x0 g g'"
+      and hfg': "top1_loop_equiv_on X TX x0 (top1_path_product f' g') h"
+    unfolding top1_fundamental_group_mul_def by blast
+  have hf'_path: "top1_is_path_on X TX x0 x0 f'"
+    using hf' unfolding top1_loop_equiv_on_def top1_is_loop_on_def by blast
+  have hff': "top1_path_homotopic_on X TX x0 x0 f f'"
+    using hf' unfolding top1_loop_equiv_on_def by blast
+  have hg_path: "top1_is_path_on X TX x0 x0 g"
+    using hg unfolding top1_is_loop_on_def .
+  have hfg_step: "top1_path_homotopic_on X TX x0 x0 (top1_path_product f g) (top1_path_product f' g)"
+    by (rule path_homotopic_product_left[OF hTX hff' hg_path])
+  have hgg': "top1_path_homotopic_on X TX x0 x0 g g'"
+    using hg' unfolding top1_loop_equiv_on_def by blast
+  have hgg_step: "top1_path_homotopic_on X TX x0 x0 (top1_path_product f' g) (top1_path_product f' g')"
+    by (rule path_homotopic_product_right[OF hTX hgg' hf'_path])
+  have hprod_hom: "top1_path_homotopic_on X TX x0 x0 (top1_path_product f g) (top1_path_product f' g')"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX hfg_step hgg_step])
+  have hfg_loop: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+    unfolding top1_is_loop_on_def
+    by (rule top1_path_product_is_path[OF hTX])
+       (use hf hg in \<open>auto simp: top1_is_loop_on_def\<close>)
+  have hfg_equiv: "top1_loop_equiv_on X TX x0 (top1_path_product f g) (top1_path_product f' g')"
+    unfolding top1_loop_equiv_on_def
+    using hfg_loop hfg' hprod_hom unfolding top1_loop_equiv_on_def by blast
+  show "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+    using top1_loop_equiv_on_trans[OF hTX hfg_equiv hfg'] by simp
+next
+  fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+  thus "h \<in> top1_fundamental_group_mul X TX x0
+      {h. top1_loop_equiv_on X TX x0 f h} {h. top1_loop_equiv_on X TX x0 g h}"
+    unfolding top1_fundamental_group_mul_def
+    using top1_loop_equiv_on_refl[OF hf] top1_loop_equiv_on_refl[OF hg] by blast
+qed
+
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
 theorem Theorem_52_1_iso:
@@ -3280,7 +3327,7 @@ proof -
       {h. top1_loop_equiv_on Y TY y0 f h}
       {h. top1_loop_equiv_on Y TY y0 g h}
     = {h. top1_loop_equiv_on Y TY y0 (top1_path_product f g) h}"
-    sorry
+    by (rule top1_fundamental_group_mul_class)
   \<comment> \<open>Homomorphism: \<phi> preserves multiplication.\<close>
   have hphi_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
     \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
