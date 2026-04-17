@@ -493,8 +493,9 @@ proof -
       finally show "{x \<in> ?B. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B" .
     qed
   qed
-  show ?thesis sorry \<comment> \<open>pasting_lemma_two_closed[OF hTII hTX hA_closed hB_closed hcover hG_range hgA hgB]
-    — unification issue prevents direct application; all 8 ingredients are proved.\<close>
+  show ?thesis sorry \<comment> \<open>All 8 premises for pasting_lemma_two_closed proved:
+    hTII, hTX, hA_closed, hB_closed, hcover, hG_range, hgA, hgB.
+    Isar unification prevents direct rule application (let-binding mismatch).\<close>
 qed
 
 lemma Lemma_51_1_path_homotopic_trans:
