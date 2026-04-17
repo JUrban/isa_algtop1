@@ -5901,7 +5901,7 @@ proof -
       unfolding top1_S1_topology_def
       by (rule subspace_topology_trans[OF hS1sub, symmetric])
   qed
-  show ?thesis sorry \<comment> \<open>Topology rewriting issue; Theorem_58_3[OF hdef hTR2_0 h10] gives the result with subspace topology.\<close>
+  show ?thesis sorry \<comment> \<open>Topology rewriting: need top1_S1_topology = subspace of R2-0 restricted to S1.\<close>
 qed
 
 corollary Theorem_58_7_strict:
