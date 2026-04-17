@@ -1116,16 +1116,117 @@ proof -
 qed
 
 lemma Theorem_51_2_invgerse_left:
-  assumes "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x0 x0
     (top1_path_product f (top1_path_reverse f)) (top1_constant_path x0)"
-  sorry
+proof -
+  have hfcont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by blast
+  have hfrange: "\<forall>s\<in>I_set. f s \<in> X" using hfcont unfolding top1_continuous_map_on_def by blast
+  have hf0: "f 0 = x0" using hf unfolding top1_is_path_on_def by blast
+  have hf1: "f 1 = x1" using hf unfolding top1_is_path_on_def by blast
+  \<comment> \<open>Homotopy: F(s,t) = f(max(0, min(2s, min(2-2s, 1-t)))).
+     At t=0: max(0, min(2s, min(2-2s, 1))) = max(0, min(2s, 2-2s)).
+             For s \<le> 1/2: min(2s, 2-2s) = 2s, F = f(2s) = (f*f^{-1})(s) piece 1.
+             For s \<ge> 1/2: min(2s, 2-2s) = 2-2s, F = f(2-2s) = (f*f^{-1})(s) piece 2.
+     At t=1: max(0, min(2s, min(2-2s, 0))) = max(0, 0) = 0, F = f(0) = x0.
+     At s=0: max(0, min(0, min(2, 1-t))) = 0, F = f(0) = x0.
+     At s=1: max(0, min(2, min(0, 1-t))) = 0, F = f(0) = x0.\<close>
+  let ?g = "\<lambda>(s::real, t::real). max 0 (min (2*s) (min (2 - 2*s) (1 - t)))"
+  let ?F = "\<lambda>p. f (?g p)"
+  have hg_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. ?g (s, t) \<in> I_set"
+    unfolding top1_unit_interval_def by auto
+  have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
+  proof
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    have "?g p \<in> I_set" using hp hg_range by auto
+    thus "?F p \<in> X" using hfrange by blast
+  qed
+  have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
+    sorry \<comment> \<open>f composed with continuous max/min of linear functions.\<close>
+  have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have hs_nn: "s \<ge> 0" and hs_le1: "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+    show "?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
+    proof (cases "s \<le> 1/2")
+      case True
+      have "min (2*s) (min (2 - 2*s) (1 - 0)) = 2*s" using True hs_nn by auto
+      hence "?g (s, 0) = 2*s" using hs_nn by auto
+      hence lhs: "?F (s, 0) = f (2*s)" by simp
+      have "top1_path_product f (top1_path_reverse f) s = f (2*s)"
+        using True unfolding top1_path_product_def by simp
+      thus ?thesis using lhs by simp
+    next
+      case False
+      hence hge: "s > 1/2" by simp
+      have "min (2*s) (min (2 - 2*s) 1) = 2 - 2*s" using hge hs_le1 by auto
+      moreover have "2 - 2*s \<ge> 0" using hs_le1 by simp
+      ultimately have "?g (s, 0) = 2 - 2*s" by auto
+      hence lhs: "?F (s, 0) = f (2 - 2*s)" by simp
+      have "top1_path_product f (top1_path_reverse f) s = top1_path_reverse f (2*s - 1)"
+        using hge unfolding top1_path_product_def by auto
+      also have "... = f (1 - (2*s - 1))" unfolding top1_path_reverse_def by simp
+      also have "... = f (2 - 2*s)" by simp
+      finally show ?thesis using lhs by simp
+    qed
+  qed
+  have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = top1_constant_path x0 s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "min (2*s) (min (2 - 2*s) (1 - 1)) = 0"
+      using hs unfolding top1_unit_interval_def by auto
+    hence "?g (s, 1) = 0" by auto
+    hence "?F (s, 1) = f 0" by simp
+    thus "?F (s, 1) = top1_constant_path x0 s" using hf0 unfolding top1_constant_path_def by simp
+  qed
+  have hF_0t: "\<forall>t\<in>I_set. ?F (0, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "?g (0, t) = 0" by simp
+    hence "?F (0, t) = f 0" by simp
+    thus "?F (0, t) = x0" using hf0 by simp
+  qed
+  have hF_1t: "\<forall>t\<in>I_set. ?F (1, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "min (2*1) (min (2 - 2*1) (1 - t)) = 0"
+      using ht unfolding top1_unit_interval_def by auto
+    hence "?g (1, t) = 0" by auto
+    hence "?F (1, t) = f 0" by simp
+    thus "?F (1, t) = x0" using hf0 by simp
+  qed
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hx0X: "x0 \<in> X" using hfrange h0I hf0 by force
+  have hrev: "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+    by (rule top1_path_reverse_is_path[OF hf])
+  have hpath_frev: "top1_is_path_on X TX x0 x0 (top1_path_product f (top1_path_reverse f))"
+    by (rule top1_path_product_is_path[OF hTX hf hrev])
+  have hconst: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0X])
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hpath_frev hconst hF_cont hF_s0 hF_s1 hF_0t hF_1t by blast
+qed
 
 lemma Theorem_51_2_invgerse_right:
-  assumes "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x1 x1
     (top1_path_product (top1_path_reverse f) f) (top1_constant_path x1)"
-  sorry
+proof -
+  \<comment> \<open>By symmetry: apply invgerse_left to the reversed path f^{-1}: x1 \<rightarrow> x0.\<close>
+  have hrev: "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+    by (rule top1_path_reverse_is_path[OF hf])
+  have "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_reverse f) (top1_path_reverse (top1_path_reverse f)))
+    (top1_constant_path x1)"
+    by (rule Theorem_51_2_invgerse_left[OF hTX hrev])
+  moreover have "top1_path_reverse (top1_path_reverse f) = f"
+    by (rule top1_path_reverse_twice)
+  ultimately show ?thesis by simp
+qed
 
 section \<open>\<S>52 The Fundamental Group\<close>
 
