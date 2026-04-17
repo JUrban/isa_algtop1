@@ -7403,6 +7403,29 @@ proof (intro allI impI)
     using hm hgs_len hgs_loops hgs_product by (by100 auto)
 qed
 
+text \<open>Helper: path homotopy in a subspace implies path homotopy in the ambient space.\<close>
+lemma path_homotopic_subspace_to_ambient:
+  assumes hTX: "is_topology_on X TX" and hUsub: "U \<subseteq> X"
+      and hTU: "TU = subspace_topology X TX U"
+      and hhom: "top1_path_homotopic_on U TU x0 x1 f g"
+  shows "top1_path_homotopic_on X TX x0 x1 f g"
+proof -
+  \<comment> \<open>A path homotopy F: I\<times>I \<rightarrow> U in the subspace is also a path homotopy F: I\<times>I \<rightarrow> X
+     in the ambient space, since U \<subseteq> X and the subspace topology makes F continuous in X.\<close>
+  from hhom obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U TU F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFl: "\<forall>t\<in>I_set. F (0, t) = x0" and hFr: "\<forall>t\<in>I_set. F (1, t) = x1"
+      and hf_path: "top1_is_path_on U TU x0 x1 f" and hg_path: "top1_is_path_on U TU x0 x1 g"
+    unfolding top1_path_homotopic_on_def sorry
+  \<comment> \<open>F is continuous in X (subspace continuous \<Rightarrow> ambient continuous).\<close>
+  have hF_cont_X: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+    using hF_cont hUsub hTU sorry
+  have hf_path_X: "top1_is_path_on X TX x0 x1 f" using hf_path hUsub hTU sorry
+  have hg_path_X: "top1_is_path_on X TX x0 x1 g" using hg_path hUsub hTU sorry
+  show ?thesis unfolding top1_path_homotopic_on_def
+    using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
+qed
+
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
     and nonempty \<Longrightarrow> X = U \<union> V is simply connected. **)
 corollary Corollary_59_2:
@@ -7439,7 +7462,31 @@ proof -
       have "gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V" using hgs hi by (by100 blast)
       \<comment> \<open>If in U: simply connected U \<Rightarrow> nulhomotopic in U \<Rightarrow> nulhomotopic in X.
          If in V: simply connected V \<Rightarrow> nulhomotopic in V \<Rightarrow> nulhomotopic in X.\<close>
-      thus "top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)" sorry
+      thus "top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
+      proof
+        assume hU_case: "gs!i ` I_set \<subseteq> U"
+        \<comment> \<open>gs!i is a loop in U. U simply connected \<Rightarrow> nulhomotopic in U.\<close>
+        have hgi_loop_U: "top1_is_loop_on U (subspace_topology X TX U) x0 (gs!i)"
+          using hgi_loop hU_case hx0 sorry
+        have hgi_nul_U: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
+            (gs!i) (top1_constant_path x0)"
+          using assms(7) hgi_loop_U hx0 unfolding top1_simply_connected_on_def sorry
+        show ?thesis
+          by (rule path_homotopic_subspace_to_ambient[OF
+                is_topology_on_strict_imp[OF assms(1)] _ refl hgi_nul_U])
+             (rule openin_on_sub[OF assms(2)])
+      next
+        assume hV_case: "gs!i ` I_set \<subseteq> V"
+        have hgi_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 (gs!i)"
+          using hgi_loop hV_case hx0 sorry
+        have hgi_nul_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+            (gs!i) (top1_constant_path x0)"
+          using assms(8) hgi_loop_V hx0 unfolding top1_simply_connected_on_def sorry
+        show ?thesis
+          by (rule path_homotopic_subspace_to_ambient[OF
+                is_topology_on_strict_imp[OF assms(1)] _ refl hgi_nul_V])
+             (rule openin_on_sub[OF assms(3)])
+      qed
     qed
     \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.\<close>
     have "top1_path_homotopic_on X TX x0 x0
