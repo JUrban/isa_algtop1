@@ -378,16 +378,18 @@ text \<open>Helper: concatenation of homotopies via pasting lemma.
   Given F: X\<times>I \<rightarrow> Y and F': X\<times>I \<rightarrow> Y with F(x,1) = F'(x,0), define
   G(x,t) = F(x,2t) for t\<le>1/2, G(x,t) = F'(x,2t-1) for t\<ge>1/2.\<close>
 lemma homotopy_concat_continuous:
-  assumes hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hF: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F"
       and hF': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F'"
       and hmatch: "\<forall>x\<in>X. F (x, 1) = F' (x, 0)"
   shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
     (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
-  \<comment> \<open>Proof structure identical to path_homotopy_concat_continuous but for X \<times> I \<rightarrow> Y.\<close>
+  \<comment> \<open>Same structure as path_homotopy_concat_continuous but for X \<times> I \<rightarrow> Y.\<close>
   sorry
 
 lemma Lemma_51_1_homotopic_trans:
-  assumes h1: "top1_homotopic_on X TX Y TY f f'"
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and h1: "top1_homotopic_on X TX Y TY f f'"
       and h2: "top1_homotopic_on X TX Y TY f' f''"
   shows "top1_homotopic_on X TX Y TY f f''"
 proof -
@@ -400,7 +402,7 @@ proof -
   have hmatch: "\<forall>x\<in>X. F (x, 1) = F' (x, 0)" using hF1 hF'0 by simp
   let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
   have hG: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?G"
-    by (rule homotopy_concat_continuous[OF hF hF' hmatch])
+    by (rule homotopy_concat_continuous[OF hTX hTY hF hF' hmatch])
   have hG0: "\<forall>x\<in>X. ?G (x, 0) = f x" using hF0 by simp
   have hG1: "\<forall>x\<in>X. ?G (x, 1) = f'' x" using hF'1 by simp
   show ?thesis
