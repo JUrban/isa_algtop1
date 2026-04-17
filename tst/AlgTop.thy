@@ -2856,12 +2856,151 @@ proof -
   show ?thesis unfolding top1_basepoint_change_on_def using result .
 qed
 
+text \<open>Helper: basepoint change preserves path homotopy (congruence).\<close>
+lemma top1_basepoint_change_congruence:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+      and hf: "top1_is_loop_on X TX x0 f"
+      and hf': "top1_is_loop_on X TX x0 f'"
+      and hff': "top1_path_homotopic_on X TX x0 x0 f f'"
+  shows "top1_path_homotopic_on X TX x1 x1
+    (top1_basepoint_change_on X TX x0 x1 alpha f)
+    (top1_basepoint_change_on X TX x0 x1 alpha f')"
+  unfolding top1_basepoint_change_on_def
+proof -
+  have hrev: "top1_is_path_on X TX x1 x0 (top1_path_reverse alpha)"
+    by (rule top1_path_reverse_is_path[OF halpha])
+  \<comment> \<open>Step 1: f * \<alpha> \<simeq> f' * \<alpha> (left congruence)\<close>
+  have step1: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product f alpha) (top1_path_product f' alpha)"
+    by (rule path_homotopic_product_left[OF hTX hff' halpha])
+  \<comment> \<open>Step 2: \<alpha>^{-1} * (f * \<alpha>) \<simeq> \<alpha>^{-1} * (f' * \<alpha>) (right congruence)\<close>
+  show "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_reverse alpha) (top1_path_product f alpha))
+    (top1_path_product (top1_path_reverse alpha) (top1_path_product f' alpha))"
+    by (rule path_homotopic_product_right[OF hTX step1 hrev])
+qed
+
+text \<open>Helper: round-trip of basepoint change is homotopic to identity.
+  \<alpha>-hat sends loops at x0 to loops at x1 via [f] \<mapsto> [\<alpha>^{-1} * f * \<alpha>].
+  The round-trip via \<beta> = \<alpha>^{-1} composes to the identity on equivalence classes.\<close>
+lemma top1_basepoint_change_roundtrip:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_path_homotopic_on X TX x0 x0 f
+    (top1_basepoint_change_on X TX x1 x0 (top1_path_reverse alpha)
+      (top1_basepoint_change_on X TX x0 x1 alpha f))"
+proof -
+  let ?a = alpha and ?ra = "top1_path_reverse alpha" and ?e = "top1_constant_path x0"
+  have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  have hra: "top1_is_path_on X TX x1 x0 ?ra"
+    by (rule top1_path_reverse_is_path[OF halpha])
+  have hfa: "top1_is_path_on X TX x0 x1 (top1_path_product f ?a)"
+    by (rule top1_path_product_is_path[OF hTX hfp halpha])
+  have hara: "top1_is_path_on X TX x0 x0 (top1_path_product ?a ?ra)"
+    by (rule top1_path_product_is_path[OF hTX halpha hra])
+  have hrafa: "top1_is_path_on X TX x1 x1 (top1_path_product ?ra (top1_path_product f ?a))"
+    by (rule top1_path_product_is_path[OF hTX hra hfa])
+  have hrafara: "top1_is_path_on X TX x1 x0
+      (top1_path_product (top1_path_product ?ra (top1_path_product f ?a)) ?ra)"
+    by (rule top1_path_product_is_path[OF hTX hrafa hra])
+  have hx0X: "x0 \<in> X"
+  proof -
+    have "alpha 0 \<in> X" using halpha unfolding top1_is_path_on_def top1_continuous_map_on_def
+      top1_unit_interval_def by auto
+    moreover have "alpha 0 = x0" using halpha unfolding top1_is_path_on_def by blast
+    ultimately show ?thesis by simp
+  qed
+  have he: "top1_is_path_on X TX x0 x0 ?e"
+    by (rule top1_constant_path_is_path[OF hTX hx0X])
+  have hefa: "top1_is_path_on X TX x0 x1 (top1_path_product ?e (top1_path_product f ?a))"
+    by (rule top1_path_product_is_path[OF hTX he hfa])
+  have harafa: "top1_is_path_on X TX x0 x1
+      (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a))"
+    by (rule top1_path_product_is_path[OF hTX hara hfa])
+  have harafap: "top1_is_path_on X TX x0 x1
+      (top1_path_product ?a (top1_path_product ?ra (top1_path_product f ?a)))"
+    by (rule top1_path_product_is_path[OF hTX halpha hrafa])
+  \<comment> \<open>Chain: f \<simeq> ... \<simeq> a * ((ra * (f * a)) * ra) using 7 groupoid steps.\<close>
+  \<comment> \<open>Step 1: f \<simeq> f * e\<close>
+  have s1: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f ?e)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTX hfp]])
+  \<comment> \<open>Step 2: f * e \<simeq> f * (a * ra)\<close>
+  have hinv_sym: "top1_path_homotopic_on X TX x0 x0 ?e (top1_path_product ?a ?ra)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_left[OF hTX halpha]])
+  have s2: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product f ?e) (top1_path_product f (top1_path_product ?a ?ra))"
+    by (rule path_homotopic_product_right[OF hTX hinv_sym hfp])
+  \<comment> \<open>Step 3: f * (a * ra) \<simeq> (f * a) * ra\<close>
+  have s3: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product f (top1_path_product ?a ?ra))
+      (top1_path_product (top1_path_product f ?a) ?ra)"
+    by (rule Theorem_51_2_associativity[OF hTX hfp halpha hra])
+  \<comment> \<open>Step 4: (f * a) * ra \<simeq> (e * (f * a)) * ra\<close>
+  have hlid_sym: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product f ?a) (top1_path_product ?e (top1_path_product f ?a))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTX hfa]])
+  have s4: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_path_product f ?a) ?ra)
+      (top1_path_product (top1_path_product ?e (top1_path_product f ?a)) ?ra)"
+    by (rule path_homotopic_product_left[OF hTX hlid_sym hra])
+  \<comment> \<open>Step 5: (e * (f * a)) * ra \<simeq> ((a * ra) * (f * a)) * ra\<close>
+  have hcong5: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product ?e (top1_path_product f ?a))
+      (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a))"
+    by (rule path_homotopic_product_left[OF hTX hinv_sym hfa])
+  have s5: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_path_product ?e (top1_path_product f ?a)) ?ra)
+      (top1_path_product (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a)) ?ra)"
+    by (rule path_homotopic_product_left[OF hTX hcong5 hra])
+  \<comment> \<open>Step 6: ((a * ra) * (f * a)) * ra \<simeq> (a * (ra * (f * a))) * ra\<close>
+  have hassoc_sym: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a))
+      (top1_path_product ?a (top1_path_product ?ra (top1_path_product f ?a)))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_associativity[OF hTX halpha hra hfa]])
+  have s6: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a)) ?ra)
+      (top1_path_product (top1_path_product ?a (top1_path_product ?ra (top1_path_product f ?a))) ?ra)"
+    by (rule path_homotopic_product_left[OF hTX hassoc_sym hra])
+  \<comment> \<open>Step 7: (a * (ra * (f * a))) * ra \<simeq> a * ((ra * (f * a)) * ra)\<close>
+  have s7: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_path_product ?a (top1_path_product ?ra (top1_path_product f ?a))) ?ra)
+      (top1_path_product ?a (top1_path_product (top1_path_product ?ra (top1_path_product f ?a)) ?ra))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_associativity[OF hTX halpha hrafa hra]])
+  \<comment> \<open>Chain all 7 steps.\<close>
+  have chain12: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product f (top1_path_product ?a ?ra))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s1 s2])
+  have chain123: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product (top1_path_product f ?a) ?ra)"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain12 s3])
+  have chain1234: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product (top1_path_product ?e (top1_path_product f ?a)) ?ra)"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain123 s4])
+  have chain12345: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product (top1_path_product (top1_path_product ?a ?ra) (top1_path_product f ?a)) ?ra)"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain1234 s5])
+  have chain123456: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product (top1_path_product ?a (top1_path_product ?ra (top1_path_product f ?a))) ?ra)"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain12345 s6])
+  have chain1234567: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product ?a (top1_path_product (top1_path_product ?ra (top1_path_product f ?a)) ?ra))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain123456 s7])
+  \<comment> \<open>The target is exactly the expanded basepoint change.\<close>
+  have htarget_eq: "top1_basepoint_change_on X TX x1 x0 ?ra
+      (top1_basepoint_change_on X TX x0 x1 ?a f)
+    = top1_path_product ?a (top1_path_product (top1_path_product ?ra (top1_path_product f ?a)) ?ra)"
+    unfolding top1_basepoint_change_on_def top1_path_reverse_twice by rule
+  show ?thesis using chain1234567 unfolding htarget_eq .
+qed
+
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
 theorem Theorem_52_1_iso:
-  assumes "is_topology_on_strict X TX"
-      and "top1_path_connected_on X TX"
-      and "x0 \<in> X" and "x1 \<in> X"
+  assumes hstrict: "is_topology_on_strict X TX"
+      and hpc: "top1_path_connected_on X TX"
+      and hx0: "x0 \<in> X" and hx1: "x1 \<in> X"
   shows "top1_groups_isomorphic_on
            (top1_fundamental_group_carrier X TX x0)
            (top1_fundamental_group_mul X TX x0)
