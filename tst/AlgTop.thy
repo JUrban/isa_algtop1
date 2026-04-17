@@ -7367,7 +7367,7 @@ proof -
                       \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
         and hprod: "top1_path_homotopic_on X TX x0 x0 f
             (foldr top1_path_product gs (top1_constant_path x0))"
-      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf sorry
+      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf by auto
     \<comment> \<open>Each gi lies in U or V, hence is nulhomotopic there (simply connected).\<close>
     have hgi_nul: "\<forall>i<n. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
     proof (intro allI impI)
@@ -7558,7 +7558,7 @@ proof -
      Step 3: S^2-{b} \<cong> R^2 (stereographic projection), so the nulhomotopy transfers.\<close>
   obtain D where hD: "D \<subseteq> top1_S2 - {b}" and hfD: "f ` A \<subseteq> D"
       and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
-    using assms(5) sorry
+    using assms(5) by auto
   \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
   have hD_contractible: "top1_simply_connected_on D
       (subspace_topology top1_S2 top1_S2_topology D)" sorry
@@ -10066,7 +10066,7 @@ proof -
      The intersection condition and weak topology lift from B to E.\<close>
   obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
       and hcover: "(\<Union>\<A>B) = B"
-    using assms(1) unfolding top1_is_graph_on_def sorry
+    using assms(1) unfolding top1_is_graph_on_def by auto
   \<comment> \<open>Step 1: Lift each arc A to its sheets in E.\<close>
   have "\<exists>\<A>E. (\<forall>A\<in>\<A>E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A))
       \<and> (\<Union>\<A>E) = E
