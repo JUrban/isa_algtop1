@@ -3976,9 +3976,32 @@ theorem Theorem_53_2:
       and "E0 = {e\<in>E. p e \<in> B0}"
   shows "top1_covering_map_on E0 (subspace_topology E TE E0)
     B0 (subspace_topology B TB B0) p"
-  \<comment> \<open>Munkres 53.2: Given b0\<in>B0, take evenly covered U\<ni>b0. Then U\<inter>B0 is open in B0,
-     and {V\<alpha>\<inter>E0} partitions p\<inverse>(U\<inter>B0) into slices, each homeomorphic to U\<inter>B0.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 53.2: restrict covering to subspace.\<close>
+  have hE0sub: "E0 \<subseteq> E" using assms(5) sorry
+  have hp_cont: "top1_continuous_map_on E0 (subspace_topology E TE E0)
+      B0 (subspace_topology B TB B0) p" sorry
+  have hp_surj: "p ` E0 = B0" sorry
+  have hp_evenly: "\<forall>b0\<in>B0. \<exists>U0. b0 \<in> U0 \<and>
+      top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p U0"
+  proof
+    fix b0 assume hb0: "b0 \<in> B0"
+    \<comment> \<open>b0 \<in> B, so there exists evenly covered U \<ni> b0 in B.\<close>
+    have hb0B: "b0 \<in> B" using hb0 assms(4) sorry
+    obtain U where hU: "b0 \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+      using top1_covering_map_on_evenly_covered[OF assms(1) hb0B] sorry
+    \<comment> \<open>U0 = U \<inter> B0 is open in B0. The slices V\<alpha> \<inter> E0 partition p\<inverse>(U0) \<inter> E0.\<close>
+    let ?U0 = "U \<inter> B0"
+    have "b0 \<in> ?U0" using hU hb0 sorry
+    moreover have "top1_evenly_covered_on E0 (subspace_topology E TE E0)
+        B0 (subspace_topology B TB B0) p ?U0" sorry
+    ultimately show "\<exists>U0. b0 \<in> U0 \<and>
+        top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p U0"
+      sorry
+  qed
+  show ?thesis unfolding top1_covering_map_on_def
+    using hp_cont hp_surj hp_evenly sorry
+qed
 
 (** from \<S>53 Theorem 53.3: product of covering maps is a covering map.
     Uses strict topology: product of strict is strict. **)
@@ -7054,20 +7077,9 @@ corollary Corollary_59_2:
       and "top1_simply_connected_on U (subspace_topology X TX U)"
       and "top1_simply_connected_on V (subspace_topology X TX V)"
   shows "top1_simply_connected_on X TX"
-proof -
-  \<comment> \<open>Munkres Corollary 59.2: By Theorem 59.1, every loop f at x0 in X is
-     homotopic to a product g1*...*gn where each gi lies in U or V.
-     Since U and V are simply connected, each gi is null-homotopic.
-     So f is null-homotopic, hence X is simply connected.\<close>
-  have hTX: "is_topology_on X TX" using assms(1) by (rule is_topology_on_strict_imp)
-  have hpc: "top1_path_connected_on X TX" sorry \<comment> \<open>From U,V path-connected + U\<inter>V path-connected.\<close>
-  obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by blast
-  have hloops: "\<forall>x\<in>X. \<forall>f. top1_is_loop_on X TX x f \<longrightarrow>
-      top1_path_homotopic_on X TX x x f (top1_constant_path x)"
-    sorry \<comment> \<open>By Thm 59.1: decompose f into loops in U or V. Each is null-homotopic
-           (U, V simply connected). Product of null-homotopic loops is null-homotopic.\<close>
-  show ?thesis unfolding top1_simply_connected_on_def using hpc hloops by blast
-qed
+  \<comment> \<open>Munkres 59.2: By Thm 59.1, every loop decomposes into loops in U or V.
+     U, V simply connected \<Rightarrow> each piece null-homotopic \<Rightarrow> whole loop null-homotopic.\<close>
+  sorry
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
