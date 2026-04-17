@@ -136,6 +136,26 @@ next
     unfolding subspace_topology_def by blast
 qed
 
+text \<open>II_topology equals the subspace of R^2 on I × I.\<close>
+lemma II_topology_eq_subspace:
+  "product_topology_on I_top I_top =
+   subspace_topology (UNIV :: (real \<times> real) set)
+     (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+proof -
+  have hTR: "is_topology_on (UNIV :: real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have "product_topology_on
+          (subspace_topology UNIV top1_open_sets I_set)
+          (subspace_topology UNIV top1_open_sets I_set)
+        = subspace_topology (UNIV \<times> UNIV) (product_topology_on top1_open_sets top1_open_sets)
+            (I_set \<times> I_set)"
+    by (rule Theorem_16_3[OF hTR hTR])
+  moreover have "(UNIV :: real set) \<times> (UNIV :: real set) = (UNIV :: (real \<times> real) set)" by simp
+  moreover have "I_top = subspace_topology UNIV top1_open_sets I_set"
+    unfolding top1_unit_interval_topology_def by rule
+  ultimately show ?thesis by simp
+qed
+
 text \<open>The product space I \<times> I with the product topology.\<close>
 definition II_topology :: "(real \<times> real) set set" where
   "II_topology = product_topology_on I_top I_top"
@@ -522,7 +542,33 @@ proof -
   \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous via composition with reparametrization.\<close>
   have h\<phi>A: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
                (I_set \<times> I_set) II_topology (\<lambda>p. (fst p, 2 * snd (p::real\<times>real)))"
-    sorry \<comment> \<open>Via Theorem_16_3 + Theorem_18_4: fst continuous, (2\<cdot>) \<circ> snd continuous.\<close>
+  proof -
+    let ?\<phi> = "\<lambda>p :: real \<times> real. (fst p, 2 * snd p)"
+    have hcont: "continuous_on UNIV ?\<phi>" by (intro continuous_intros)
+    have hmap: "\<And>p. p \<in> ?A \<Longrightarrow> ?\<phi> p \<in> I_set \<times> I_set"
+      unfolding top1_unit_interval_def by auto
+    have hraw: "top1_continuous_map_on ?A
+                 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?A)
+                 (I_set \<times> I_set)
+                 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set))
+                 ?\<phi>"
+      by (rule top1_continuous_map_on_real2_subspace[OF hmap hcont])
+    have hAsub: "?A \<subseteq> I_set \<times> I_set" by auto
+    have hdom_eq: "subspace_topology (I_set \<times> I_set) II_topology ?A
+                 = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?A"
+    proof -
+      have "subspace_topology (I_set \<times> I_set)
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set))
+              ?A
+            = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?A"
+        by (rule subspace_topology_trans[OF hAsub])
+      thus ?thesis unfolding II_topology_def II_topology_eq_subspace .
+    qed
+    have hcod_eq: "II_topology
+                 = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+      unfolding II_topology_def by (rule II_topology_eq_subspace)
+    show ?thesis using hraw hdom_eq hcod_eq by simp
+  qed
   have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
                                    X TX (\<lambda>p. F (fst p, 2 * snd p))"
   proof -
@@ -535,7 +581,33 @@ proof -
   qed
   have h\<phi>B: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
                (I_set \<times> I_set) II_topology (\<lambda>p. (fst p, 2 * snd (p::real\<times>real) - 1))"
-    sorry \<comment> \<open>Via Theorem_16_3 + Theorem_18_4: fst continuous, (2\<cdot>-1) \<circ> snd continuous.\<close>
+  proof -
+    let ?\<psi> = "\<lambda>p :: real \<times> real. (fst p, 2 * snd p - 1)"
+    have hcont: "continuous_on UNIV ?\<psi>" by (intro continuous_intros)
+    have hmap: "\<And>p. p \<in> ?B \<Longrightarrow> ?\<psi> p \<in> I_set \<times> I_set"
+      unfolding top1_unit_interval_def by auto
+    have hraw: "top1_continuous_map_on ?B
+                 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?B)
+                 (I_set \<times> I_set)
+                 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set))
+                 ?\<psi>"
+      by (rule top1_continuous_map_on_real2_subspace[OF hmap hcont])
+    have hBsub: "?B \<subseteq> I_set \<times> I_set" by auto
+    have hdom_eq: "subspace_topology (I_set \<times> I_set) II_topology ?B
+                 = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?B"
+    proof -
+      have "subspace_topology (I_set \<times> I_set)
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set))
+              ?B
+            = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?B"
+        by (rule subspace_topology_trans[OF hBsub])
+      thus ?thesis unfolding II_topology_def II_topology_eq_subspace .
+    qed
+    have hcod_eq: "II_topology
+                 = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+      unfolding II_topology_def by (rule II_topology_eq_subspace)
+    show ?thesis using hraw hdom_eq hcod_eq by simp
+  qed
   have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
                                    X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))"
   proof -
