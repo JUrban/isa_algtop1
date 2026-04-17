@@ -5878,8 +5878,31 @@ theorem Theorem_58_2_inclusion_iso:
        (UNIV - {(0, 0)})
        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
        (1, 0))"
-  \<comment> \<open>By Theorem 58.3, it suffices to show S^1 is a deformation retract of R^2 - 0.\<close>
-  sorry
+proof -
+  let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+  let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+  \<comment> \<open>S^1 is a deformation retract of R^2 - {0} via H(x,t) = (1-t)x + t(x/|x|).\<close>
+  have hdef: "top1_deformation_retract_of_on ?R2_0 ?TR2_0 top1_S1"
+    sorry
+  have hTR2_0: "is_topology_on ?R2_0 ?TR2_0"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+  qed
+  have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+  have hS1_eq: "top1_S1_topology = subspace_topology ?R2_0 ?TR2_0 top1_S1"
+  proof -
+    have hS1sub: "top1_S1 \<subseteq> ?R2_0"
+      unfolding top1_S1_def by auto
+    show ?thesis
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_trans[OF hS1sub, symmetric])
+  qed
+  show ?thesis sorry \<comment> \<open>Topology rewriting issue; Theorem_58_3[OF hdef hTR2_0 h10] gives the result with subspace topology.\<close>
+qed
 
 corollary Theorem_58_7_strict:
   assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
