@@ -6276,7 +6276,25 @@ proof -
             top1_loop_equiv_on_sym[OF hbc1] hgfl1'] hbc2])
     qed
     \<comment> \<open>bc is injective by basepoint_change_iso_via_path + roundtrip.\<close>
-    have hra1: "top1_is_path_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1" sorry
+    have hra1: "top1_is_path_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1"
+    proof -
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hconst: "top1_continuous_map_on I_set I_top X TX (\<lambda>_. x0)"
+        by (rule top1_continuous_map_on_const[OF hTI hTX hx0])
+      have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+        by (rule top1_continuous_map_on_id[OF hTI])
+      have hp1: "(pi1 \<circ> (\<lambda>t. (x0, t))) = (\<lambda>_. x0)" unfolding pi1_def by (rule ext) simp
+      have hp2: "(pi2 \<circ> (\<lambda>t. (x0, t))) = id" unfolding pi2_def by (rule ext) simp
+      have hpair: "top1_continuous_map_on I_set I_top (X \<times> I_set) (product_topology_on TX I_top)
+                     (\<lambda>t. (x0, t))"
+        using iffD2[OF Theorem_18_4[OF hTI hTX hTI]]
+              hconst[folded hp1] hid_I[folded hp2] by blast
+      have hcomp: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. H1 (x0, t))"
+        using top1_continuous_map_on_comp[OF hpair hH1cont] by (simp add: comp_def)
+      have "?\<alpha>1 0 = (g \<circ> f) x0" using hH10 hx0 by auto
+      moreover have "?\<alpha>1 1 = x0" using hH11 hx0 by auto
+      ultimately show ?thesis unfolding top1_is_path_on_def using hcomp by auto
+    qed
     have hrev_a1: "top1_is_path_on X TX x0 ((g \<circ> f) x0) (top1_path_reverse ?\<alpha>1)"
       by (rule top1_path_reverse_is_path[OF hra1])
     \<comment> \<open>Roundtrip: li \<simeq> inv_bc(bc(li)). So bc(l1)\<simeq>bc(l2) \<Rightarrow> l1\<simeq>l2.\<close>
