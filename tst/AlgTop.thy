@@ -10431,7 +10431,7 @@ proof -
       top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
       top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
       \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" sorry
-  show ?thesis using hcases assms(3,4) sorry
+  show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
 qed
 
 section \<open>\<S>75 Homology of Surfaces\<close>
