@@ -1915,8 +1915,9 @@ proof -
         by (intro continuous_on_max continuous_on_const hmin2)
       thus ?thesis by (simp add: case_prod_unfold)
     qed
+    have hg_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set" using hg_range by auto
     have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
-      by (rule top1_continuous_map_on_II_to_I) (use hg_range in auto, rule hg_cont)
+      by (rule top1_continuous_map_on_II_to_I[OF hg_map hg_cont])
     have "f \<circ> ?g = ?F" by (rule ext) (simp add: comp_def case_prod_unfold)
     hence hcomp: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX ?F"
       using top1_continuous_map_on_comp[OF hg_top1 hfcont] by simp
