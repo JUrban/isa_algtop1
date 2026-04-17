@@ -5559,11 +5559,24 @@ qed
 (** from \<S>55 Lemma 55.3: nulhomotopic characterization **)
 lemma Lemma_55_3_nulhomotopic_characterization:
   fixes h :: "real \<times> real \<Rightarrow> 'a"
-  assumes "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+  assumes hh: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+      and hTX: "is_topology_on X TX"
   shows "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h
       \<longleftrightarrow> (\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k
                \<and> (\<forall>x\<in>top1_S1. k x = h x))"
-  sorry  \<comment> \<open>equivalence (1) \<Leftrightarrow> (2) of Lemma 55.3\<close>
+proof (intro iffI)
+  \<comment> \<open>Forward: nulhomotopic \<Rightarrow> extension to B^2 (cone construction).\<close>
+  assume "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
+  thus "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
+    sorry
+next
+  \<comment> \<open>Backward: extension to B^2 \<Rightarrow> nulhomotopic (Lemma_55_3_backward).\<close>
+  assume "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
+  then obtain k where hk: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k"
+      and hext: "\<forall>x\<in>top1_S1. k x = h x" by blast
+  show "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
+    by (rule Lemma_55_3_backward[OF hh hTX hk hext])
+qed
 
 (** from \<S>55 Corollary 55.4: inclusion S^1 \<rightarrow> R^2 - {0} is not nulhomotopic.
     Follows from Theorem 55.2 via retraction R^2 - {0} \<rightarrow> S^1 by x/|x|. **)
