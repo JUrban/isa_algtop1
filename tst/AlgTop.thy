@@ -2407,10 +2407,20 @@ next
   \<comment> \<open>Choose path \<alpha> from x0 to x1 (path-connected). Conjugate: \<alpha>\<inverse> * f * \<alpha> is loop at x0.
      By hypothesis, \<alpha>\<inverse> * f * \<alpha> is nulhomotopic. Hence f is nulhomotopic at x1.\<close>
   obtain \<alpha> where h\<alpha>: "top1_is_path_on X TX x0 x1 \<alpha>"
-    using hpc hx0 hx1 sorry
+    using hpc hx0 hx1 unfolding top1_path_connected_on_def by (by100 blast)
   \<comment> \<open>Conjugate loop \<alpha>\<inverse> * f * \<alpha> at x0 is nulhomotopic.\<close>
-  let ?conj = "top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>"
-  have hconj_loop: "top1_is_loop_on X TX x0 ?conj" sorry
+  \<comment> \<open>Conjugate: \<alpha> * f * \<alpha>\<inverse> is a loop at x0.\<close>
+  let ?conj = "top1_path_product (top1_path_product \<alpha> f) (top1_path_reverse \<alpha>)"
+  have h\<alpha>_rev: "top1_is_path_on X TX x1 x0 (top1_path_reverse \<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>])
+  have hf_path: "top1_is_path_on X TX x1 x1 f"
+    using hf1 unfolding top1_is_loop_on_def .
+  have h\<alpha>f: "top1_is_path_on X TX x0 x1 (top1_path_product \<alpha> f)"
+    by (rule top1_path_product_is_path[OF hTX h\<alpha> hf_path])
+  have hconj_path: "top1_is_path_on X TX x0 x0 ?conj"
+    by (rule top1_path_product_is_path[OF hTX h\<alpha>f h\<alpha>_rev])
+  have hconj_loop: "top1_is_loop_on X TX x0 ?conj"
+    unfolding top1_is_loop_on_def using hconj_path by (by100 simp)
   have hconj_nul: "top1_path_homotopic_on X TX x0 x0 ?conj (top1_constant_path x0)"
     using hnul hconj_loop by (by100 blast)
   \<comment> \<open>From conjugate nulhomotopic, extract f nulhomotopic at x1.\<close>
