@@ -7054,8 +7054,20 @@ corollary Corollary_59_2:
       and "top1_simply_connected_on U (subspace_topology X TX U)"
       and "top1_simply_connected_on V (subspace_topology X TX V)"
   shows "top1_simply_connected_on X TX"
-  \<comment> \<open>Follows from Theorem 59.1 since both i_*, j_* are trivial.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres Corollary 59.2: By Theorem 59.1, every loop f at x0 in X is
+     homotopic to a product g1*...*gn where each gi lies in U or V.
+     Since U and V are simply connected, each gi is null-homotopic.
+     So f is null-homotopic, hence X is simply connected.\<close>
+  have hTX: "is_topology_on X TX" using assms(1) by (rule is_topology_on_strict_imp)
+  have hpc: "top1_path_connected_on X TX" sorry \<comment> \<open>From U,V path-connected + U\<inter>V path-connected.\<close>
+  obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by blast
+  have hloops: "\<forall>x\<in>X. \<forall>f. top1_is_loop_on X TX x f \<longrightarrow>
+      top1_path_homotopic_on X TX x x f (top1_constant_path x)"
+    sorry \<comment> \<open>By Thm 59.1: decompose f into loops in U or V. Each is null-homotopic
+           (U, V simply connected). Product of null-homotopic loops is null-homotopic.\<close>
+  show ?thesis unfolding top1_simply_connected_on_def using hpc hloops by blast
+qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
@@ -7068,7 +7080,13 @@ theorem Theorem_59_3:
     (subspace_topology UNIV
       (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
       (top1_Sn n))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 59.3: Let p = north pole, q = south pole. U = S^n - {p}, V = S^n - {q}.
+     Step 1: S^n - {p} \<cong> R^n via stereographic projection (simply connected for n\<ge>2).
+     Step 2: U \<inter> V = S^n - {p,q} \<cong> R^n - {0} which is path-connected for n\<ge>2.
+     Apply Corollary 59.2: U,V open simply connected, U\<inter>V path-connected \<Rightarrow> S^n simply connected.\<close>
+  show ?thesis sorry
+qed
 
 corollary Theorem_59_3_path_connected:
   assumes "n \<ge> 2"
@@ -7093,6 +7111,10 @@ theorem Theorem_60_1_product:
            (\<lambda>(c1, c2) (d1, d2).
               (top1_fundamental_group_mul X TX x0 c1 d1,
                top1_fundamental_group_mul Y TY y0 c2 d2))"
+  \<comment> \<open>Munkres 60.1: \<Phi>([f]) = (p_*([f]), q_*([f])) = ([p\<circ>f], [q\<circ>f]) where p,q are projections.
+     \<Phi> is a homomorphism (projections preserve products). Injective: if p\<circ>f \<simeq> const and
+     q\<circ>f \<simeq> const, then f \<simeq> const (homotopy is componentwise). Surjective: given loops
+     g in X and h in Y, the product loop f(s)=(g(s),h(s)) satisfies \<Phi>([f])=([g],[h]).\<close>
   sorry
 
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
@@ -7143,6 +7165,9 @@ lemma Lemma_61_1_components_correspond:
       and "U \<subseteq> top1_S2 - C"
   shows "(b \<notin> U \<longrightarrow> (\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M))
        \<and> (b \<in> U \<longrightarrow> (\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M))"
+  \<comment> \<open>Munkres 61.1: h maps components of S^2-C to components of R^2-h(C). The component
+     containing b maps to the unbounded component; others map to bounded components.
+     Uses compactness of C to show h(C) is compact hence bounded in R^2.\<close>
   sorry
 
 (** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
@@ -7162,6 +7187,9 @@ lemma Lemma_61_2_nulhomotopy:
              \<comment> \<open>f factors through an arc D\<close>
   shows "top1_nulhomotopic_on A TA
            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+  \<comment> \<open>Munkres 61.2: f factors through an arc D \<subseteq> S^2-{b}. An arc is homeomorphic to [0,1],
+     which is convex, so any map into an arc is nulhomotopic. Since S^2-{b} \<cong> R^2,
+     the composition is nulhomotopic in S^2-{b}.\<close>
   sorry
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
@@ -7199,6 +7227,10 @@ theorem Theorem_61_4_general_separation:
   and "top1_connected_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
   and "card (A1 \<inter> A2) = 2"
   shows "top1_separates_on top1_S2 top1_S2_topology (A1 \<union> A2)"
+  \<comment> \<open>Munkres 61.4: Same argument as 61.3. Write C=A1\<union>A2 with A1\<inter>A2={a,b}.
+     X = S^2-{a,b} \<cong> R^2-{0}, U = S^2-A1, V = S^2-A2. X=U\<union>V.
+     If S^2-C connected then U\<inter>V path connected. By 59.1 + 61.2 (nulhomotopy),
+     \<pi>_1(X) trivial. But \<pi>_1(R^2-{0}) nontrivial. Contradiction.\<close>
   sorry
 
 section \<open>*\<S>62 Invariance of Domain\<close>
@@ -7215,6 +7247,9 @@ theorem Theorem_62_3_invgariance_of_domain:
              UNIV (product_topology_on top1_open_sets top1_open_sets) f"
       and "inj_on f U"
   shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
+  \<comment> \<open>Munkres 62.3: For x\<in>U, show f(x)\<in>Int(f(U)). Take small ball B\<ni>x with B\<subseteq>U.
+     f|B is injective continuous on compact B. By separation theorems (61.3),
+     f(Bd B) separates R^2, f(x) is in bounded component, which is open and \<subseteq> f(U).\<close>
   sorry
 
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
