@@ -1206,7 +1206,68 @@ proof -
     qed
   qed
   have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
-    sorry \<comment> \<open>Piecewise linear reparametrization — three-piece pasting lemma.\<close>
+  proof -
+    \<comment> \<open>Two-level pasting: first paste f,g pieces, then paste with h piece.\<close>
+    let ?Cfg = "{(s,t) \<in> I_set \<times> I_set. 4*s \<le> 2+t}"
+    let ?Ch = "{(s,t) \<in> I_set \<times> I_set. 4*s \<ge> 2+t}"
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    \<comment> \<open>Closedness of Cfg and Ch.\<close>
+    have hCfg_closed: "closedin_on (I_set \<times> I_set) II_topology ?Cfg"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?Cfg \<subseteq> I_set \<times> I_set" by auto
+      have "I_set \<times> I_set - ?Cfg = {(s,t) \<in> I_set \<times> I_set. 4*s > 2+t}" by auto
+      also have "\<dots> = (I_set \<times> I_set) \<inter> {p :: real \<times> real. 4 * fst p - snd p > 2}"
+        by auto
+      also have "\<dots> \<in> II_topology"
+      proof -
+        have "open {p :: real \<times> real. 4 * fst p - snd p > 2}"
+          by (intro open_Collect_less continuous_intros)
+        hence "{p :: real \<times> real. 4 * fst p - snd p > 2} \<in> (top1_open_sets :: (real\<times>real) set set)"
+          unfolding top1_open_sets_def by blast
+        hence "{p :: real \<times> real. 4 * fst p - snd p > 2}
+               \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+        thus ?thesis
+          unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
+      qed
+      finally show "I_set \<times> I_set - ?Cfg \<in> II_topology" .
+    qed
+    have hCh_closed: "closedin_on (I_set \<times> I_set) II_topology ?Ch"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?Ch \<subseteq> I_set \<times> I_set" by auto
+      have "I_set \<times> I_set - ?Ch = {(s,t) \<in> I_set \<times> I_set. 4*s < 2+t}" by auto
+      also have "\<dots> = (I_set \<times> I_set) \<inter> {p :: real \<times> real. 4 * fst p - snd p < 2}"
+        by auto
+      also have "\<dots> \<in> II_topology"
+      proof -
+        have "open {p :: real \<times> real. 4 * fst p - snd p < 2}"
+          by (intro open_Collect_less continuous_intros)
+        hence "{p :: real \<times> real. 4 * fst p - snd p < 2} \<in> (top1_open_sets :: (real\<times>real) set set)"
+          unfolding top1_open_sets_def by blast
+        hence "{p :: real \<times> real. 4 * fst p - snd p < 2}
+               \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+        thus ?thesis
+          unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
+      qed
+      finally show "I_set \<times> I_set - ?Ch \<in> II_topology" .
+    qed
+    have hcover: "?Cfg \<union> ?Ch = I_set \<times> I_set" by auto
+    \<comment> \<open>Continuity of F on Cfg (inner pasting of f and g).\<close>
+    have hFcfg: "top1_continuous_map_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg)
+                  X TX ?F"
+      sorry \<comment> \<open>Paste f(4s/(1+t)) on {4s \<le> 1+t} with g(4s-1-t) on {1+t \<le> 4s \<le> 2+t}.\<close>
+    \<comment> \<open>Continuity of F on Ch: h((4s-2-t)/(2-t)).\<close>
+    have hFch: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
+                 X TX ?F"
+      sorry \<comment> \<open>h composed with (4s-2-t)/(2-t), continuous by continuous_on_divide.\<close>
+    show ?thesis
+      by (rule pasting_lemma_two_closed[OF hTII hTX hCfg_closed hCh_closed hcover hF_range hFcfg hFch])
+  qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product (top1_path_product f g) h s"
   proof
     fix s assume hs: "s \<in> I_set"
