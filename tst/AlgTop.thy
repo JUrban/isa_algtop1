@@ -377,6 +377,21 @@ proof -
     using h hG hG0 hG1 unfolding top1_homotopic_on_def by blast
 qed
 
+text \<open>If two functions agree on S, and one is continuous on S, so is the other.\<close>
+lemma top1_continuous_map_on_agree':
+  assumes "top1_continuous_map_on S TS Y TY f" and "\<forall>x\<in>S. f x = g x"
+  shows "top1_continuous_map_on S TS Y TY g"
+proof -
+  have "\<forall>x\<in>S. g x \<in> Y" using assms unfolding top1_continuous_map_on_def by auto
+  moreover have "\<forall>V\<in>TY. {x \<in> S. g x \<in> V} \<in> TS"
+  proof (intro ballI)
+    fix V assume "V \<in> TY"
+    have "{x \<in> S. g x \<in> V} = {x \<in> S. f x \<in> V}" using assms(2) by auto
+    thus "{x \<in> S. g x \<in> V} \<in> TS" using assms(1) \<open>V \<in> TY\<close> unfolding top1_continuous_map_on_def by simp
+  qed
+  ultimately show ?thesis unfolding top1_continuous_map_on_def by blast
+qed
+
 text \<open>Helper: concatenation of homotopies via pasting lemma.
   Given F: X\<times>I \<rightarrow> Y and F': X\<times>I \<rightarrow> Y with F(x,1) = F'(x,0), define
   G(x,t) = F(x,2t) for t\<le>1/2, G(x,t) = F'(x,2t-1) for t\<ge>1/2.\<close>
@@ -446,11 +461,72 @@ proof -
       thus ?thesis using False hF'_range by simp
     qed
   qed
-  \<comment> \<open>Piece continuity via direct open-set argument (avoids topology equation).\<close>
+  \<comment> \<open>Reparametrize only 2nd component: (id_X, \<phi>) continuous from subspace to product.\<close>
+  have reparam_snd: "\<And>S \<phi>. \<lbrakk>S \<subseteq> I_set;
+    top1_continuous_map_on S (subspace_topology I_set I_top S) I_set I_top \<phi>\<rbrakk> \<Longrightarrow>
+    top1_continuous_map_on (X \<times> S) (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> S))
+      (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, \<phi> (snd p)))"
+    sorry \<comment> \<open>Preimage of U1\<times>U2: (X\<times>S) \<inter> (U1 \<times> \<phi>⁻¹(U2)), where \<phi>⁻¹(U2) = S \<inter> V for V \<in> I_top.
+           So preimage = (X\<times>S) \<inter> (U1 \<times> V) \<in> sub (X\<times>I) (product TX I_top) (X\<times>S).\<close>
+  have hscale2: "top1_continuous_map_on {t\<in>I_set. t \<le> 1/2}
+    (subspace_topology I_set I_top {t\<in>I_set. t \<le> 1/2}) I_set I_top (\<lambda>t. 2*t)"
+  proof -
+    have hmap: "\<And>t. t \<in> {t\<in>I_set. t \<le> 1/2} \<Longrightarrow> 2*t \<in> I_set" unfolding top1_unit_interval_def by auto
+    have hcont: "continuous_on UNIV ((*) (2::real))" by (intro continuous_intros)
+    have hraw: "top1_continuous_map_on {t\<in>I_set. t \<le> 1/2}
+      (subspace_topology UNIV top1_open_sets {t\<in>I_set. t \<le> 1/2})
+      I_set (subspace_topology UNIV top1_open_sets I_set) ((*) 2)"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hcont])
+    have hdom: "subspace_topology I_set I_top {t\<in>I_set. t \<le> 1/2}
+              = subspace_topology UNIV top1_open_sets {t\<in>I_set. t \<le> 1/2}"
+      unfolding top1_unit_interval_topology_def by (rule subspace_topology_trans) auto
+    have hcod: "I_top = subspace_topology UNIV top1_open_sets I_set"
+      unfolding top1_unit_interval_topology_def by rule
+    have "top1_continuous_map_on {t\<in>I_set. t \<le> 1/2}
+      (subspace_topology I_set I_top {t\<in>I_set. t \<le> 1/2}) I_set I_top ((*) 2)"
+      using hraw hdom hcod by simp
+    moreover have "((*) (2::real)) = (\<lambda>t. 2*t)" by (rule ext) simp
+    ultimately show ?thesis by simp
+  qed
+  have hscale2m1: "top1_continuous_map_on {t\<in>I_set. t \<ge> 1/2}
+    (subspace_topology I_set I_top {t\<in>I_set. t \<ge> 1/2}) I_set I_top (\<lambda>t. 2*t - 1)"
+  proof -
+    have hmap: "\<And>t. t \<in> {t\<in>I_set. t \<ge> 1/2} \<Longrightarrow> 2*t - 1 \<in> I_set" unfolding top1_unit_interval_def by auto
+    have hcont: "continuous_on UNIV (\<lambda>t::real. 2*t - 1)" by (intro continuous_intros)
+    have hraw: "top1_continuous_map_on {t\<in>I_set. t \<ge> 1/2}
+      (subspace_topology UNIV top1_open_sets {t\<in>I_set. t \<ge> 1/2})
+      I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>t. 2*t - 1)"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hcont])
+    have hdom: "subspace_topology I_set I_top {t\<in>I_set. t \<ge> 1/2}
+              = subspace_topology UNIV top1_open_sets {t\<in>I_set. t \<ge> 1/2}"
+      unfolding top1_unit_interval_topology_def by (rule subspace_topology_trans) auto
+    have hcod: "I_top = subspace_topology UNIV top1_open_sets I_set"
+      unfolding top1_unit_interval_topology_def by rule
+    show ?thesis using hraw hdom hcod by simp
+  qed
+  have hFA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A)
+    Y TY (\<lambda>p. F (fst p, 2 * snd p))"
+    using top1_continuous_map_on_comp[OF reparam_snd[OF _ hscale2] hF] by (auto simp: comp_def)
   have hGA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A) Y TY ?G"
-    sorry \<comment> \<open>F(x, 2t) continuous on A via reparametrization.\<close>
+    by (rule top1_continuous_map_on_agree'[OF hFA]) auto
+  have hFB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B)
+    Y TY (\<lambda>p. F' (fst p, 2 * snd p - 1))"
+    using top1_continuous_map_on_comp[OF reparam_snd[OF _ hscale2m1] hF'] by (auto simp: comp_def)
   have hGB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B) Y TY ?G"
-    sorry \<comment> \<open>F'(x, 2t-1) continuous on B via reparametrization + agreement at t=1/2.\<close>
+  proof (rule top1_continuous_map_on_agree'[OF hFB])
+    show "\<forall>p\<in>?B. F' (fst p, 2 * snd p - 1) = ?G p"
+    proof
+      fix p assume hp: "p \<in> ?B"
+      show "F' (fst p, 2 * snd p - 1) = ?G p"
+      proof (cases "snd p > 1/2")
+        case True thus ?thesis by simp
+      next
+        case False hence "snd p = 1/2" using hp by auto
+        hence "2 * snd p = 1" "2 * snd p - 1 = 0" by simp_all
+        thus ?thesis using hmatch hp by auto
+      qed
+    qed
+  qed
   show ?thesis
     by (rule pasting_lemma_two_closed[OF hTXI hTY hA_closed hB_closed hcover hG_range hGA hGB])
 qed
