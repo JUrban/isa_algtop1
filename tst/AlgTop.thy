@@ -465,7 +465,32 @@ proof -
   have reparam_full: "\<And>\<phi>. top1_continuous_map_on I_set I_top I_set I_top \<phi> \<Longrightarrow>
     top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
       (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, \<phi> (snd p)))"
-    sorry \<comment> \<open>Per-point basis argument. Statement processes fast; proof hangs on set comprehension.\<close>
+  proof -
+    fix \<phi> assume h\<phi>: "top1_continuous_map_on I_set I_top I_set I_top \<phi>"
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+      by (rule product_topology_on_is_topology_on[OF hTX hTI])
+    have hpi1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX pi1"
+      by (rule top1_continuous_pi1[OF hTX hTI])
+    have hpi2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top pi2"
+      by (rule top1_continuous_pi2[OF hTX hTI])
+    have hphi_pi2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (\<phi> \<circ> pi2)"
+      by (rule top1_continuous_map_on_comp[OF hpi2 h\<phi>])
+    have hp1_eq: "pi1 \<circ> (\<lambda>p. (fst p, \<phi> (snd p))) = pi1"
+      unfolding pi1_def by (rule ext) auto
+    have hp2_eq: "pi2 \<circ> (\<lambda>p. (fst p, \<phi> (snd p))) = \<phi> \<circ> pi2"
+      unfolding pi2_def comp_def by (rule ext) auto
+    have hp1_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+        (pi1 \<circ> (\<lambda>p. (fst p, \<phi> (snd p))))"
+      unfolding hp1_eq by (rule hpi1)
+    have hp2_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top
+        (pi2 \<circ> (\<lambda>p. (fst p, \<phi> (snd p))))"
+      unfolding hp2_eq by (rule hphi_pi2)
+    show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+      (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, \<phi> (snd p)))"
+      using iffD2[OF Theorem_18_4[OF hTP hTX hTI, of "\<lambda>p. (fst p, \<phi> (snd p))"]]
+      hp1_cont hp2_cont by blast
+  qed
   have reparam_snd: "\<And>S \<phi>. \<lbrakk>S \<subseteq> I_set;
     top1_continuous_map_on I_set I_top I_set I_top \<phi>\<rbrakk> \<Longrightarrow>
     top1_continuous_map_on (X \<times> S) (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> S))
