@@ -900,13 +900,199 @@ qed
 (** from \<S>51 Theorem 51.2: groupoid properties of * **)
 lemma Theorem_51_2_associativity:
   assumes hTX: "is_topology_on X TX"
-      and "top1_is_path_on X TX x0 x1 f"
-      and "top1_is_path_on X TX x1 x2 g"
-      and "top1_is_path_on X TX x2 x3 h"
+      and hf: "top1_is_path_on X TX x0 x1 f"
+      and hg: "top1_is_path_on X TX x1 x2 g"
+      and hh: "top1_is_path_on X TX x2 x3 h"
   shows "top1_path_homotopic_on X TX x0 x3
     (top1_path_product f (top1_path_product g h))
     (top1_path_product (top1_path_product f g) h)"
-  sorry \<comment> \<open>Reparametrization homotopy interpolating breakpoints (1/4,1/2) to (1/2,3/4).\<close>
+proof -
+  have hfc: "top1_continuous_map_on I_set I_top X TX f" and hf0: "f 0 = x0" and hf1: "f 1 = x1"
+    using hf unfolding top1_is_path_on_def by blast+
+  have hgc: "top1_continuous_map_on I_set I_top X TX g" and hg0: "g 0 = x1" and hg1: "g 1 = x2"
+    using hg unfolding top1_is_path_on_def by blast+
+  have hhc: "top1_continuous_map_on I_set I_top X TX h" and hh0: "h 0 = x2" and hh1: "h 1 = x3"
+    using hh unfolding top1_is_path_on_def by blast+
+  have hfr: "\<forall>s\<in>I_set. f s \<in> X" using hfc unfolding top1_continuous_map_on_def by blast
+  have hgr: "\<forall>s\<in>I_set. g s \<in> X" using hgc unfolding top1_continuous_map_on_def by blast
+  have hhr: "\<forall>s\<in>I_set. h s \<in> X" using hhc unfolding top1_continuous_map_on_def by blast
+  \<comment> \<open>Homotopy: F(s,t) with piecewise linear reparametrization.
+     f on [0, (1+t)/4], g on [(1+t)/4, (2+t)/4], h on [(2+t)/4, 1].
+     F(s,t) = f(4s/(1+t)) if 4s \<le> 1+t;
+              g(4s - 1 - t) if 1+t < 4s \<le> 2+t;
+              h((4s - 2 - t)/(2 - t)) if 4s > 2+t.\<close>
+  let ?F = "\<lambda>(s::real, t::real).
+    if 4*s \<le> 1+t then f (4*s / (1+t))
+    else if 4*s \<le> 2+t then g (4*s - 1 - t)
+    else h ((4*s - 2 - t) / (2 - t))"
+  have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
+  proof
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    obtain s t where hst: "p = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+      using hp by auto
+    have hs0: "s \<ge> 0" and hs1: "s \<le> 1" and ht0: "t \<ge> 0" and ht1: "t \<le> 1"
+      using hs ht unfolding top1_unit_interval_def by auto
+    show "?F p \<in> X"
+    proof (cases "4*s \<le> 1+t")
+      case True
+      have h1t_pos: "1+t > 0" using ht0 by simp
+      hence "4*s / (1+t) \<ge> 0" using hs0 by simp
+      moreover have "4*s / (1+t) \<le> 1" using True h1t_pos
+        by (simp add: divide_le_eq)
+      ultimately have "4*s / (1+t) \<in> I_set" unfolding top1_unit_interval_def by simp
+      thus ?thesis using hst True hfr by simp
+    next
+      case False note not1 = this
+      show ?thesis
+      proof (cases "4*s \<le> 2+t")
+        case True
+        have "4*s - 1 - t \<ge> 0" using not1 by simp
+        moreover have "4*s - 1 - t \<le> 1" using True by simp
+        ultimately have "4*s - 1 - t \<in> I_set" unfolding top1_unit_interval_def by simp
+        thus ?thesis using hst not1 True hgr by simp
+      next
+        case False
+        have "2 - t > 0" using ht1 by simp
+        have "4*s - 2 - t \<ge> 0" using False by simp
+        moreover have "4*s - 2 - t \<le> 2 - t" using hs1 by simp
+        ultimately have "(4*s - 2 - t) / (2 - t) \<ge> 0" using \<open>2 - t > 0\<close> by simp
+        moreover have "(4*s - 2 - t) / (2 - t) \<le> 1"
+          using \<open>4*s - 2 - t \<le> 2 - t\<close> \<open>2 - t > 0\<close>
+          by (simp add: divide_le_eq_1_pos)
+        ultimately have "(4*s - 2 - t) / (2 - t) \<in> I_set" unfolding top1_unit_interval_def by simp
+        thus ?thesis using hst not1 False hhr by simp
+      qed
+    qed
+  qed
+  have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
+    sorry \<comment> \<open>Piecewise linear reparametrization — three-piece pasting lemma.\<close>
+  have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product (top1_path_product f g) h s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have hs0: "s \<ge> 0" and hs1: "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+    show "?F (s, 0) = top1_path_product (top1_path_product f g) h s"
+    proof (cases "s \<le> 1/2")
+      case True \<comment> \<open>(f*g)*h maps to (f*g)(2s)\<close>
+      show ?thesis
+      proof (cases "s \<le> 1/4")
+        case True2: True \<comment> \<open>(f*g)(2s) = f(4s) since 2s \<le> 1/2\<close>
+        have "4*s \<le> 1+0" using True2 by simp
+        hence lhs: "?F (s, 0) = f (4*s / 1)" by simp
+        have "top1_path_product (top1_path_product f g) h s
+            = top1_path_product f g (2*s)" using True unfolding top1_path_product_def by simp
+        also have "... = f (2*(2*s))" using True2 unfolding top1_path_product_def by simp
+        also have "... = f (4*s)" by simp
+        finally show ?thesis using lhs by simp
+      next
+        case False2: False \<comment> \<open>(f*g)(2s) = g(4s-1) since 2s > 1/2\<close>
+        hence "s > 1/4" by simp
+        hence "4*s > 1" by simp
+        moreover have "4*s \<le> 2" using True by simp
+        ultimately have lhs: "?F (s, 0) = g (4*s - 1 - 0)" by simp
+        have "top1_path_product (top1_path_product f g) h s
+            = top1_path_product f g (2*s)" using True unfolding top1_path_product_def by simp
+        also have "... = g (2*(2*s) - 1)" using False2 unfolding top1_path_product_def by auto
+        also have "... = g (4*s - 1)" by simp
+        finally show ?thesis using lhs by simp
+      qed
+    next
+      case False \<comment> \<open>(f*g)*h maps to h(2s-1)\<close>
+      hence "s > 1/2" by simp
+      hence "4*s > 2" by simp
+      hence h4s_gt: "\<not> (4*s \<le> 1 + (0::real))" and h4s_gt2: "\<not> (4*s \<le> 2 + (0::real))" by auto
+      have harith: "(4*s - 2) / (2::real) = 2*s - 1" by auto
+      have "?F (s, 0) = h ((4*s - 2) / 2)"
+        using h4s_gt h4s_gt2 by simp
+      hence lhs: "?F (s, 0) = h (2*s - 1)" using harith by presburger
+      have "top1_path_product (top1_path_product f g) h s = h (2*s - 1)"
+        using False unfolding top1_path_product_def by auto
+      thus ?thesis using lhs by simp
+    qed
+  qed
+  have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = top1_path_product f (top1_path_product g h) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have hs0: "s \<ge> 0" and hs1: "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+    show "?F (s, 1) = top1_path_product f (top1_path_product g h) s"
+    proof (cases "s \<le> 1/2")
+      case True
+      have "4*s \<le> 1 + (1::real)" using True by simp
+      hence lhs: "?F (s, 1) = f (4*s / (1+1))" by simp
+      have "top1_path_product f (top1_path_product g h) s = f (2*s)"
+        using True unfolding top1_path_product_def by simp
+      moreover have "4*s / 2 = 2*s" by simp
+      ultimately show ?thesis using lhs by simp
+    next
+      case False
+      hence "s > 1/2" by simp
+      show ?thesis
+      proof (cases "s \<le> 3/4")
+        case True2: True
+        have "4*s > 2" using \<open>s > 1/2\<close> by simp
+        moreover have "4*s \<le> 2 + (1::real)" using True2 by simp
+        ultimately have lhs: "?F (s, 1) = g (4*s - 1 - 1)" by simp
+        have "top1_path_product f (top1_path_product g h) s
+            = top1_path_product g h (2*s - 1)"
+          using False unfolding top1_path_product_def by auto
+        also have "... = g (2*(2*s - 1))" using True2 \<open>s > 1/2\<close>
+          unfolding top1_path_product_def by auto
+        also have "... = g (4*s - 2)" by simp
+        finally show ?thesis using lhs by simp
+      next
+        case False2: False
+        hence "s > 3/4" by simp
+        have "4*s > 3" using \<open>s > 3/4\<close> by simp
+        hence lhs: "?F (s, 1) = h ((4*s - 2 - 1) / (2 - 1))" by simp
+        have "top1_path_product f (top1_path_product g h) s
+            = top1_path_product g h (2*s - 1)"
+          using False unfolding top1_path_product_def by auto
+        also have "... = h (2*(2*s - 1) - 1)" using False2
+          unfolding top1_path_product_def by auto
+        also have "... = h (4*s - 3)" by simp
+        finally have rhs: "top1_path_product f (top1_path_product g h) s = h (4*s - 3)" .
+        have "(4*s - 3) / 1 = 4*s - 3" by simp
+        thus ?thesis using lhs rhs by simp
+      qed
+    qed
+  qed
+  have hF_0t: "\<forall>t\<in>I_set. ?F (0, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "4*(0::real) \<le> 1+t" using ht unfolding top1_unit_interval_def by simp
+    hence "?F (0, t) = f (0 / (1+t))" by simp
+    thus "?F (0, t) = x0" using hf0 by simp
+  qed
+  have hF_1t: "\<forall>t\<in>I_set. ?F (1, t) = x3"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+    have "4*(1::real) = 4" by simp
+    moreover have "2 + t \<le> 3" using ht1 by simp
+    hence "4 > 2 + t" by simp
+    ultimately have lhs: "?F (1, t) = h ((4 - 2 - t) / (2 - t))" by simp
+    have "2 - t > 0" using ht1 by simp
+    hence "(2 - t) / (2 - t) = 1" by simp
+    thus "?F (1, t) = x3" using lhs hh1 by simp
+  qed
+  have hgh: "top1_is_path_on X TX x1 x3 (top1_path_product g h)"
+    by (rule top1_path_product_is_path[OF hTX hg hh])
+  have hfg: "top1_is_path_on X TX x0 x2 (top1_path_product f g)"
+    by (rule top1_path_product_is_path[OF hTX hf hg])
+  have hpath_lhs: "top1_is_path_on X TX x0 x3
+    (top1_path_product f (top1_path_product g h))"
+    by (rule top1_path_product_is_path[OF hTX hf hgh])
+  have hpath_rhs: "top1_is_path_on X TX x0 x3
+    (top1_path_product (top1_path_product f g) h)"
+    by (rule top1_path_product_is_path[OF hTX hfg hh])
+  \<comment> \<open>Our F goes from (f*g)*h to f*(g*h), but the goal is the reverse.
+      Use symmetry of path homotopy.\<close>
+  have hrev: "top1_path_homotopic_on X TX x0 x3
+    (top1_path_product (top1_path_product f g) h)
+    (top1_path_product f (top1_path_product g h))"
+    unfolding top1_path_homotopic_on_def
+    using hpath_rhs hpath_lhs hF_cont hF_s0 hF_s1 hF_0t hF_1t by blast
+  show ?thesis by (rule Lemma_51_1_path_homotopic_sym[OF hrev])
+qed
 
 lemma Theorem_51_2_left_identity:
   assumes hTX: "is_topology_on X TX"
