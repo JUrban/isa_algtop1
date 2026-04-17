@@ -7608,6 +7608,33 @@ proof -
     using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
 qed
 
+text \<open>Helper: a path in a subspace is a path in the ambient space.\<close>
+lemma path_in_subspace_is_path_in_ambient:
+  assumes hTX: "is_topology_on X TX" and hWX: "W \<subseteq> X"
+      and hg: "top1_is_path_on W (subspace_topology X TX W) a b g"
+  shows "top1_is_path_on X TX a b g"
+  unfolding top1_is_path_on_def
+proof (intro conjI)
+  have hg_cont: "top1_continuous_map_on I_set I_top W (subspace_topology X TX W) g"
+    using hg unfolding top1_is_path_on_def by (by100 blast)
+  show "top1_continuous_map_on I_set I_top X TX g"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix s assume "s \<in> I_set"
+    thus "g s \<in> X" using hg_cont hWX unfolding top1_continuous_map_on_def by (by100 blast)
+  next
+    fix V assume hV: "V \<in> TX"
+    have hVW: "W \<inter> V \<in> subspace_topology X TX W"
+      unfolding subspace_topology_def using hV by (by100 blast)
+    have "{s \<in> I_set. g s \<in> V} = {s \<in> I_set. g s \<in> W \<inter> V}"
+      using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    also have "\<dots> \<in> I_top" using hg_cont hVW unfolding top1_continuous_map_on_def by (by100 blast)
+    finally show "{s \<in> I_set. g s \<in> V} \<in> I_top" .
+  qed
+  show "g 0 = a" using hg unfolding top1_is_path_on_def by (by100 blast)
+  show "g 1 = b" using hg unfolding top1_is_path_on_def by (by100 blast)
+qed
+
 text \<open>Helper: union of path-connected open sets with nonempty path-connected intersection
   is path-connected.\<close>
 lemma path_connected_union:
@@ -7665,7 +7692,48 @@ next
     \<comment> \<open>For any a \<in> U and b \<in> V, there's a path a\<rightarrow>z in U and z\<rightarrow>b in V in X.\<close>
     \<comment> \<open>Full proof requires path extraction from each subspace + transfer + concatenation.
        Follows the same pattern as the True case above.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Helper: get path in X between points in a path-connected subspace W.\<close>
+    have hzU: "z \<in> U" and hzV: "z \<in> V" using hz by (by100 blast)+
+    \<comment> \<open>x is in U or V; get path x\<rightarrow>z in X.\<close>
+    obtain g1 where hg1: "top1_is_path_on X TX x z g1"
+    proof -
+      have "\<exists>g. top1_is_path_on X TX x z g"
+      proof (cases "x \<in> U")
+        case True
+        obtain g where "top1_is_path_on U (subspace_topology X TX U) x z g"
+          using hU_pc True hzU unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis using path_in_subspace_is_path_in_ambient[OF hTX hUsub] by (by100 blast)
+      next
+        case FalseU: False
+        hence "x \<in> V" using hx_mem by (by100 blast)
+        obtain g where "top1_is_path_on V (subspace_topology X TX V) x z g"
+          using hV_pc \<open>x \<in> V\<close> hzV unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis using path_in_subspace_is_path_in_ambient[OF hTX hVsub] by (by100 blast)
+      qed
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>y is in U or V; get path z\<rightarrow>y in X.\<close>
+    obtain g2 where hg2: "top1_is_path_on X TX z y g2"
+    proof -
+      have "\<exists>g. top1_is_path_on X TX z y g"
+      proof (cases "y \<in> U")
+        case True
+        obtain g where "top1_is_path_on U (subspace_topology X TX U) z y g"
+          using hU_pc hzU True unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis using path_in_subspace_is_path_in_ambient[OF hTX hUsub] by (by100 blast)
+      next
+        case FalseU: False
+        hence "y \<in> V" using hy_mem by (by100 blast)
+        obtain g where "top1_is_path_on V (subspace_topology X TX V) z y g"
+          using hV_pc hzV \<open>y \<in> V\<close> unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis using path_in_subspace_is_path_in_ambient[OF hTX hVsub] by (by100 blast)
+      qed
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>Concatenate: x \<rightarrow> z \<rightarrow> y.\<close>
+    have "top1_is_path_on X TX x y (top1_path_product g1 g2)"
+      by (rule top1_path_product_is_path[OF hTX hg1 hg2])
+    thus ?thesis by (by100 blast)
   qed
 qed
 
