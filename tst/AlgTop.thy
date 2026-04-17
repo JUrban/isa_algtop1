@@ -462,12 +462,35 @@ proof -
     qed
   qed
   \<comment> \<open>Reparametrize only 2nd component: (id_X, \<phi>) continuous from subspace to product.\<close>
+  have reparam_full: "\<And>\<phi>. top1_continuous_map_on I_set I_top I_set I_top \<phi> \<Longrightarrow>
+    top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+      (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, \<phi> (snd p)))"
+    sorry \<comment> \<open>Per-point basis argument. Statement processes fast; proof hangs on set comprehension.\<close>
   have reparam_snd: "\<And>S \<phi>. \<lbrakk>S \<subseteq> I_set;
-    top1_continuous_map_on S (subspace_topology I_set I_top S) I_set I_top \<phi>\<rbrakk> \<Longrightarrow>
+    top1_continuous_map_on I_set I_top I_set I_top \<phi>\<rbrakk> \<Longrightarrow>
     top1_continuous_map_on (X \<times> S) (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> S))
       (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, \<phi> (snd p)))"
-    sorry \<comment> \<open>Preimage of U1\<times>U2: (X\<times>S) \<inter> (U1 \<times> \<phi>⁻¹(U2)), where \<phi>⁻¹(U2) = S \<inter> V for V \<in> I_top.
+    by (intro top1_continuous_map_on_restrict_domain_simple[OF reparam_full]) auto \<comment> \<open>Preimage of U1\<times>U2: (X\<times>S) \<inter> (U1 \<times> \<phi>⁻¹(U2)), where \<phi>⁻¹(U2) = S \<inter> V for V \<in> I_top.
            So preimage = (X\<times>S) \<inter> (U1 \<times> V) \<in> sub (X\<times>I) (product TX I_top) (X\<times>S).\<close>
+  \<comment> \<open>Clamped scaling maps I \<rightarrow> I.\<close>
+  have hscale2c: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. min 1 (2*t))"
+  proof -
+    have hmap: "\<And>t. t \<in> I_set \<Longrightarrow> min 1 (2*t) \<in> I_set" unfolding top1_unit_interval_def by auto
+    have hcont: "continuous_on UNIV (\<lambda>t::real. min 1 (2*t))" by (intro continuous_intros)
+    have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+            I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>t. min 1 (2*t))"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hcont])
+    thus ?thesis unfolding top1_unit_interval_topology_def .
+  qed
+  have hscale2m1c: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. max 0 (2*t - 1))"
+  proof -
+    have hmap: "\<And>t. t \<in> I_set \<Longrightarrow> max 0 (2*t - 1) \<in> I_set" unfolding top1_unit_interval_def by auto
+    have hcont: "continuous_on UNIV (\<lambda>t::real. max 0 (2*t - 1))" by (intro continuous_intros)
+    have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+            I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>t. max 0 (2*t - 1))"
+      by (rule top1_continuous_map_on_real_subspace_open_sets[OF hmap hcont])
+    thus ?thesis unfolding top1_unit_interval_topology_def .
+  qed
   have hscale2: "top1_continuous_map_on {t\<in>I_set. t \<le> 1/2}
     (subspace_topology I_set I_top {t\<in>I_set. t \<le> 1/2}) I_set I_top (\<lambda>t. 2*t)"
   proof -
@@ -506,12 +529,32 @@ proof -
   qed
   have hFA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A)
     Y TY (\<lambda>p. F (fst p, 2 * snd p))"
-    using top1_continuous_map_on_comp[OF reparam_snd[OF _ hscale2] hF] by (auto simp: comp_def)
+  proof -
+    have "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A)
+      (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, min 1 (2 * snd p)))"
+      by (rule reparam_snd[OF _ hscale2c]) auto
+    hence hFA_c: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A)
+      Y TY (\<lambda>p. F (fst p, min 1 (2 * snd p)))"
+      using top1_continuous_map_on_comp[of ?A _ _ _ "(\<lambda>p. (fst p, min 1 (2 * snd p)))" _ _ F] hF
+      by (simp add: comp_def)
+    show ?thesis by (rule top1_continuous_map_on_agree'[OF hFA_c])
+      (auto simp: top1_unit_interval_def)
+  qed
   have hGA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A) Y TY ?G"
     by (rule top1_continuous_map_on_agree'[OF hFA]) auto
   have hFB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B)
     Y TY (\<lambda>p. F' (fst p, 2 * snd p - 1))"
-    using top1_continuous_map_on_comp[OF reparam_snd[OF _ hscale2m1] hF'] by (auto simp: comp_def)
+  proof -
+    have "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B)
+      (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, max 0 (2 * snd p - 1)))"
+      by (rule reparam_snd[OF _ hscale2m1c]) auto
+    hence hFB_c: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B)
+      Y TY (\<lambda>p. F' (fst p, max 0 (2 * snd p - 1)))"
+      using top1_continuous_map_on_comp[of ?B _ _ _ "(\<lambda>p. (fst p, max 0 (2 * snd p - 1)))" _ _ F'] hF'
+      by (simp add: comp_def)
+    show ?thesis by (rule top1_continuous_map_on_agree'[OF hFB_c])
+      (auto simp: top1_unit_interval_def)
+  qed
   have hGB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B) Y TY ?G"
   proof (rule top1_continuous_map_on_agree'[OF hFB])
     show "\<forall>p\<in>?B. F' (fst p, 2 * snd p - 1) = ?G p"
