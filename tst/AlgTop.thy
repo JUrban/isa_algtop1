@@ -2160,8 +2160,60 @@ lemma path_homotopic_product_left:
       and hfg: "top1_path_homotopic_on X TX x0 x1 f g"
       and hh: "top1_is_path_on X TX x1 x2 h"
   shows "top1_path_homotopic_on X TX x0 x2 (top1_path_product f h) (top1_path_product g h)"
-  sorry \<comment> \<open>Spatial pasting: G(s,t) = F(2s,t) for s\<le>1/2, h(2s-1) for s\<ge>1/2.
-         Needs (2\<cdot>fst, snd) reparametrization continuity (swap of proven (fst, 2\<cdot>snd)).\<close>
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hFs0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hFs1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hF0: "\<forall>t\<in>I_set. F (0, t) = x0" and hF1: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hh0: "h 0 = x1" and hh1: "h 1 = x2"
+    using hh unfolding top1_is_path_on_def by blast+
+  have hhcont: "top1_continuous_map_on I_set I_top X TX h"
+    using hh unfolding top1_is_path_on_def by blast
+  \<comment> \<open>Define G(s,t) = if s \<le> 1/2 then F(2s, t) else h(2s-1).\<close>
+  let ?G = "\<lambda>(s::real, t::real). if s \<le> 1/2 then F (2*s, t) else h (2*s - 1)"
+  have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+    sorry \<comment> \<open>Spatial pasting at s=1/2: F(2s,t) on left, h(2s-1) on right.
+           Uses pasting_lemma_two_closed + (2\<cdot>fst, snd) reparametrization.\<close>
+  have hfpath: "top1_is_path_on X TX x0 x1 f"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hgpath: "top1_is_path_on X TX x0 x1 g"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hfh: "top1_is_path_on X TX x0 x2 (top1_path_product f h)"
+    by (rule top1_path_product_is_path[OF hTX hfpath hh])
+  have hgh: "top1_is_path_on X TX x0 x2 (top1_path_product g h)"
+    by (rule top1_path_product_is_path[OF hTX hgpath hh])
+  have hGs0: "\<forall>s\<in>I_set. ?G (s, 0) = top1_path_product f h s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?G (s, 0) = top1_path_product f h s"
+    proof (cases "s \<le> 1/2")
+      case True
+      have "2*s \<in> I_set" using hs True unfolding top1_unit_interval_def by simp
+      hence "F (2*s, 0) = f (2*s)" using hFs0 by blast
+      thus ?thesis using True unfolding top1_path_product_def by simp
+    next
+      case False thus ?thesis unfolding top1_path_product_def by simp
+    qed
+  qed
+  have hGs1: "\<forall>s\<in>I_set. ?G (s, 1) = top1_path_product g h s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?G (s, 1) = top1_path_product g h s"
+    proof (cases "s \<le> 1/2")
+      case True
+      have "2*s \<in> I_set" using hs True unfolding top1_unit_interval_def by simp
+      hence "F (2*s, 1) = g (2*s)" using hFs1 by blast
+      thus ?thesis using True unfolding top1_path_product_def by simp
+    next
+      case False thus ?thesis unfolding top1_path_product_def by simp
+    qed
+  qed
+  have hG0: "\<forall>t\<in>I_set. ?G (0, t) = x0" using hF0 by simp
+  have hG1: "\<forall>t\<in>I_set. ?G (1, t) = x2" using hh1 by simp
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hfh hgh hGcont hGs0 hGs1 hG0 hG1 by blast
+qed
 
 lemma path_homotopic_product_right:
   assumes hTX: "is_topology_on X TX"
