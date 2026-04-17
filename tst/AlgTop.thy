@@ -3216,7 +3216,63 @@ proof -
   \<comment> \<open>Surjectivity: for any class at x1, there's a preimage class at x0.\<close>
   have hphi_surj: "?\<phi> ` (top1_fundamental_group_carrier X TX x0)
       = top1_fundamental_group_carrier X TX x1"
-    sorry
+  proof (intro set_eqI iffI)
+    fix d assume "d \<in> ?\<phi> ` top1_fundamental_group_carrier X TX x0"
+    then obtain c where hc: "c \<in> top1_fundamental_group_carrier X TX x0" and hd: "d = ?\<phi> c"
+      by blast
+    show "d \<in> top1_fundamental_group_carrier X TX x1"
+      using hphi_range hc hd by blast
+  next
+    fix d assume hd: "d \<in> top1_fundamental_group_carrier X TX x1"
+    obtain h where hh: "top1_is_loop_on X TX x1 h"
+        and hd_eq: "d = {g. top1_loop_equiv_on X TX x1 h g}"
+      using hd unfolding top1_fundamental_group_carrier_def by blast
+    have hra: "top1_is_path_on X TX x1 x0 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
+    let ?g = "?hat_inv h"
+    have hg_loop: "top1_is_loop_on X TX x0 ?g"
+      by (rule top1_basepoint_change_is_loop[OF hTX hra hh])
+    have hg_class: "{f. top1_loop_equiv_on X TX x0 ?g f} \<in>
+        top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hg_loop by blast
+    \<comment> \<open>\<phi>(class \<beta>-hat h) = class(\<alpha>-hat(\<beta>-hat h)).\<close>
+    have hphi_g: "?\<phi> {f. top1_loop_equiv_on X TX x0 ?g f}
+        = {g. top1_loop_equiv_on X TX x1 (?hat ?g) g}"
+      by (rule hphi_class[OF hg_loop])
+    \<comment> \<open>Reverse roundtrip: h \<simeq> \<alpha>-hat(\<beta>-hat h).\<close>
+    have hrev_rt: "top1_path_homotopic_on X TX x1 x1 h (?hat (?hat_inv h))"
+    proof -
+      have hrev_alpha_rev: "top1_path_reverse ?ra = alpha"
+        by (simp add: top1_path_reverse_twice)
+      have "top1_path_homotopic_on X TX x1 x1 h
+          (top1_basepoint_change_on X TX x0 x1 (top1_path_reverse ?ra)
+            (top1_basepoint_change_on X TX x1 x0 ?ra h))"
+        by (rule top1_basepoint_change_roundtrip[OF hTX hra hh])
+      thus ?thesis unfolding hrev_alpha_rev .
+    qed
+    \<comment> \<open>So class(\<alpha>-hat(\<beta>-hat h)) = class(h) = d.\<close>
+    have hequiv: "top1_loop_equiv_on X TX x1 h (?hat ?g)"
+      unfolding top1_loop_equiv_on_def
+      using hh top1_basepoint_change_is_loop[OF hTX halpha hg_loop] hrev_rt by blast
+    have "\<And>g. top1_loop_equiv_on X TX x1 (?hat ?g) g \<longleftrightarrow>
+              top1_loop_equiv_on X TX x1 h g"
+    proof
+      fix g' assume h1: "top1_loop_equiv_on X TX x1 (?hat ?g) g'"
+      show "top1_loop_equiv_on X TX x1 h g'"
+        by (rule top1_loop_equiv_on_trans[OF hTX hequiv h1])
+    next
+      fix g' assume h1: "top1_loop_equiv_on X TX x1 h g'"
+      have "top1_loop_equiv_on X TX x1 (?hat ?g) h"
+        by (rule top1_loop_equiv_on_sym[OF hequiv])
+      thus "top1_loop_equiv_on X TX x1 (?hat ?g) g'"
+        by (rule top1_loop_equiv_on_trans[OF hTX _ h1])
+    qed
+    hence hclass_eq: "{g. top1_loop_equiv_on X TX x1 (?hat ?g) g}
+        = {g. top1_loop_equiv_on X TX x1 h g}" by auto
+    have "?\<phi> {f. top1_loop_equiv_on X TX x0 ?g f} = d"
+      unfolding hphi_g hclass_eq hd_eq ..
+    thus "d \<in> ?\<phi> ` top1_fundamental_group_carrier X TX x0"
+      using hg_class by blast
+  qed
   \<comment> \<open>Homomorphism: \<phi> preserves multiplication.\<close>
   have hphi_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
     \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
