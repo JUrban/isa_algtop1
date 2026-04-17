@@ -6183,7 +6183,7 @@ proof -
     unfolding top1_S1_topology_def
     by (rule subspace_topology_trans[of top1_S1 "UNIV - {(0, 0)}", symmetric])
        (auto simp: top1_S1_def)
-  show ?thesis sorry \<comment> \<open>Theorem_58_3[OF hdef hTR2_0 h10] + topology rewriting.\<close>
+  show ?thesis sorry \<comment> \<open>Deformation retract + Theorem_58_3 or Theorem_58_7 (topology rewriting issue).\<close>
 qed
 
 corollary Theorem_58_7_strict:
