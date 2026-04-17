@@ -4066,7 +4066,24 @@ lemma Lemma_54_1_path_lifting:
      Step 2: Define ftilde step by step. Set ftilde(0) = e₀. For each [sᵢ,sᵢ₊₁],
      ftilde(sᵢ) lies in some slice V₀. Define ftilde(s) = (p|V₀)\<inverse>(f(s)).
      Step 3: Pasting lemma \<Rightarrow> continuous. p \<circ> ftilde = f by construction.\<close>
-  sorry
+proof -
+  \<comment> \<open>Step 1: Lebesgue subdivision.\<close>
+  obtain n :: nat and sub :: "nat \<Rightarrow> real" where
+      hn: "n \<ge> 1" and hsub0: "sub 0 = 0" and hsubn: "sub n = 1"
+      and hsub_inc: "\<forall>i<n. sub i < sub (Suc i)"
+      and hcovered: "\<forall>i<n. \<exists>U. openin_on B TB U
+          \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U"
+    sorry
+  \<comment> \<open>Step 2: Lift interval by interval. At each step, ftilde(s_i) determines
+     the sheet, and ftilde on [s_i, s_{i+1}] = (p|_sheet)\<inverse> \<circ> f.\<close>
+  have "\<exists>ftilde. (\<forall>s\<in>I_set. ftilde s \<in> E)
+      \<and> ftilde 0 = e0
+      \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
+      \<and> top1_continuous_map_on I_set I_top E TE ftilde" sorry
+  \<comment> \<open>Assemble into path.\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Helper: s \<mapsto> (s, c) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
 lemma pair_s_const_continuous:
@@ -6892,7 +6909,24 @@ lemma inclusion_retraction_iso:
            (top1_fundamental_group_mul A TA x0)
            (top1_fundamental_group_carrier X TX x0)
            (top1_fundamental_group_mul X TX x0)"
-  sorry
+proof -
+  \<comment> \<open>The inclusion j: A \<hookrightarrow> X induces j_*: \<pi>_1(A) \<rightarrow> \<pi>_1(X).
+     Step 1 (Injectivity): If j_*[f] = [const] in \<pi>_1(X), then f \<simeq> const in X.
+     Apply r: r\<circ>f \<simeq> r\<circ>const = const in A. But r\<circ>f = f (since f \<subseteq> A and r|A = id).
+     So f \<simeq> const in A. Hence j_* is injective.
+     Step 2 (Surjectivity): For any loop f in X, hjr gives f \<simeq> r\<circ>f in X.
+     r\<circ>f is a loop in A, so [f] = j_*[r\<circ>f]. Hence j_* is surjective.
+     Step 3 (Homomorphism): j_* preserves products by functoriality.\<close>
+  let ?j_star = "top1_fundamental_group_induced_on A TA x0 X TX x0 id"
+  have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier A TA x0)" sorry
+  have hj_surj: "?j_star ` (top1_fundamental_group_carrier A TA x0)
+      = top1_fundamental_group_carrier X TX x0" sorry
+  have hj_hom: "\<forall>c\<in>top1_fundamental_group_carrier A TA x0.
+      \<forall>d\<in>top1_fundamental_group_carrier A TA x0.
+      ?j_star (top1_fundamental_group_mul A TA x0 c d)
+      = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)" sorry
+  show ?thesis sorry
+qed
 
 theorem Theorem_58_3:
   assumes hdef: "top1_deformation_retract_of_on X TX A"
@@ -7470,10 +7504,18 @@ lemma Lemma_61_1_components_correspond:
       and "U \<subseteq> top1_S2 - C"
   shows "(b \<notin> U \<longrightarrow> (\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M))
        \<and> (b \<in> U \<longrightarrow> (\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M))"
-  \<comment> \<open>Munkres 61.1: h maps components of S^2-C to components of R^2-h(C). The component
-     containing b maps to the unbounded component; others map to bounded components.
-     Uses compactness of C to show h(C) is compact hence bounded in R^2.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 61.1: h maps components of S^2-C to components of R^2-h(C).
+     Step 1: h(C) is compact (continuous image of compact), hence bounded in R^2.
+     Step 2: Components of S^2-C not containing b map to bounded components of R^2-h(C)
+     (since h|_{S^2-b} is a homeomorphism, connected components correspond).
+     Step 3: The component containing b maps to the complement of a bounded set,
+     which is unbounded.\<close>
+  have hC_compact: "top1_compact_on (h ` (C - {b}))
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` (C - {b})))" sorry
+  have hC_bounded: "\<exists>M. \<forall>p \<in> h ` (C - {b}). fst p ^ 2 + snd p ^ 2 \<le> M" sorry
+  show ?thesis sorry
+qed
 
 (** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
     space A into S^2 - b whose image factors through an arc is nulhomotopic. **)
@@ -7492,10 +7534,20 @@ lemma Lemma_61_2_nulhomotopy:
              \<comment> \<open>f factors through an arc D\<close>
   shows "top1_nulhomotopic_on A TA
            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
-  \<comment> \<open>Munkres 61.2: f factors through an arc D \<subseteq> S^2-{b}. An arc is homeomorphic to [0,1],
-     which is convex, so any map into an arc is nulhomotopic. Since S^2-{b} \<cong> R^2,
-     the composition is nulhomotopic in S^2-{b}.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 61.2: f factors through an arc D \<subseteq> S^2-{b}.
+     Step 1: An arc D is homeomorphic to [0,1], which is convex.
+     Step 2: Any map into a convex set is nulhomotopic (straight-line homotopy).
+     Step 3: S^2-{b} \<cong> R^2 (stereographic projection), so the nulhomotopy transfers.\<close>
+  obtain D where hD: "D \<subseteq> top1_S2 - {b}" and hfD: "f ` A \<subseteq> D"
+      and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
+    using assms(5) sorry
+  \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
+  have hD_contractible: "top1_simply_connected_on D
+      (subspace_topology top1_S2 top1_S2_topology D)" sorry
+  \<comment> \<open>f is nulhomotopic in D, hence in S^2-{b}.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
 
@@ -7586,10 +7638,16 @@ theorem Theorem_62_3_invgariance_of_domain:
              UNIV (product_topology_on top1_open_sets top1_open_sets) f"
       and "inj_on f U"
   shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
-  \<comment> \<open>Munkres 62.3: For x\<in>U, show f(x)\<in>Int(f(U)). Take small ball B\<ni>x with B\<subseteq>U.
-     f|B is injective continuous on compact B. By separation theorems (61.3),
-     f(Bd B) separates R^2, f(x) is in bounded component, which is open and \<subseteq> f(U).\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 62.3: For x\<in>U, show f(x)\<in>Int(f(U)).
+     Step 1: Take a closed ball B centered at x with B \<subseteq> U.
+     Step 2: f|B is injective continuous on compact B; f(Bd B) is a simple closed
+     curve in R^2 (since Bd B \<cong> S^1 and f is injective on it).
+     Step 3: By the Jordan Separation Theorem (61.3), f(Bd B) separates R^2.
+     Step 4: f(x) is in the bounded component W of R^2 - f(Bd B).
+     Step 5: W \<subseteq> f(Int B) \<subseteq> f(U), so f(x) \<in> Int(f(U)).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
@@ -7771,8 +7829,18 @@ theorem Theorem_63_5_two_closed_connected:
         (subspace_topology top1_S2 top1_S2_topology U)
     \<and> top1_connected_on V
         (subspace_topology top1_S2 top1_S2_topology V)"
-  \<comment> \<open>Exactly two components (U and V), not just 'not connected'.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 63.5: By Theorem 61.4, C1\<union>C2 separates S^2 (\<ge>2 components).
+     To show exactly 2: use Theorem 63.1. If there were 3+ components,
+     one could construct two independent nontrivial elements in \<pi>_1(S^2-{p,q})
+     (where C1\<inter>C2 = {p,q}), but \<pi>_1(S^2-{p,q}) \<cong> Z has only one generator.
+     So exactly 2 components.\<close>
+  have hsep: "top1_separates_on top1_S2 top1_S2_topology (C1 \<union> C2)"
+    using Theorem_61_4_general_separation[OF assms(1) _ _ assms(2,3,4,5,6)] sorry
+  \<comment> \<open>At least two components from separation.\<close>
+  \<comment> \<open>At most two: \<pi>_1(S^2-{a,b}) \<cong> Z can distinguish at most 2 components via Theorem 63.1.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
 
@@ -7830,7 +7898,14 @@ lemma Lemma_65_1_K4_subgraph:
   shows "\<not> top1_path_homotopic_on (top1_S2 - {p} - {q})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q}))
            x0 x0 f (top1_constant_path x0)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 65.1: The loop f traverses the 4-cycle a1-a2-a3-a4-a1 in S^2-{p,q}.
+     p lies in the interior of e13 and q in e24.
+     By Theorem 63.1 applied to X = S^2-{p,q}, U = S^2-e13, V = S^2-e24:
+     U \<inter> V = S^2-(e13\<union>e24) has exactly two components (by Jordan Curve-like argument),
+     and the loop f alternates between U and V, creating a nontrivial element.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
 theorem Theorem_65_2:
@@ -7848,8 +7923,16 @@ theorem Theorem_65_2:
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
     (top1_fundamental_group_mul (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
-  \<comment> \<open>Uses Lemma 65.1 + Jordan Curve Theorem.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 65.2: The inclusion C \<hookrightarrow> S^2 - {p,q} induces an isomorphism on \<pi>_1.
+     Step 1 (Surjectivity): Every loop in S^2-{p,q} is homotopic to a loop on C
+     (use the K4-graph structure and the nulhomotopy of loops avoiding C).
+     Step 2 (Injectivity): A loop on C that's nulhomotopic in S^2-{p,q}
+     would give a nulhomotopy disjoint from both p and q, but by Lemma 65.1
+     the standard loop on C is nontrivial.
+     Combines Lemma 65.1 with Theorem 63.1.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
 
@@ -8716,10 +8799,15 @@ theorem Theorem_67_8_rank_unique:
   assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
       and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
   shows "\<exists>f. bij_betw f S1 S2"
+proof -
   \<comment> \<open>Munkres 67.8: Tensor with Z/2Z: G/2G is a vector space over Z/2Z of dimension
-     equal to the rank. The dimension of a vector space is unique, hence the rank is unique.
-     Alternatively: the rank equals the minimal number of generators, which is invariant.\<close>
-  sorry
+     equal to the rank. Dimension of a vector space is unique.
+     Step 1: G \<cong> Z^S1 (free abelian on S1) and G \<cong> Z^S2 (free abelian on S2).
+     Step 2: G/2G \<cong> (Z/2Z)^S1 \<cong> (Z/2Z)^S2.
+     Step 3: Vector space dimension: |S1| = dim (Z/2Z)^S1 = dim (Z/2Z)^S2 = |S2|.
+     Step 4: Hence |S1| = |S2|, i.e. there exists a bijection.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>68 Free Products of Groups\<close>
 
@@ -8800,7 +8888,12 @@ theorem Theorem_68_7_quotient_free_product:
                    (\<iota>fam12 0 ` N1 \<union> \<iota>fam12 1 ` N2)))
              (top1_quotient_group_mul_on mulFP)
              FPQ mulFPQ"
-  sorry
+proof -
+  \<comment> \<open>Munkres 68.7: The natural map \<pi>: G1*G2 \<rightarrow> (G1/N1)*(G2/N2) is a surjective
+     homomorphism. Its kernel is exactly the normal closure of \<iota>1(N1) \<union> \<iota>2(N2).
+     By the first isomorphism theorem, (G1*G2)/ker \<cong> (G1/N1)*(G2/N2).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>69 Free Groups\<close>
 
@@ -8830,7 +8923,13 @@ theorem Theorem_69_2:
          \<and> top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
          \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s))
          \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 69.2: G1 * G2 has reduced words alternating between G1 and G2 elements.
+     Since G1 = free on S1 and G2 = free on S2, reduced words in G1*G2 are exactly
+     reduced words in S1 \<union> S2 (with S1 \<inter> S2 = {}). So G1*G2 is free on S1\<union>S2.
+     The injection \<iota>S12 maps s\<in>S1 to \<iota>fam12(0)(\<iota>1(s)) and s\<in>S2 to \<iota>fam12(1)(\<iota>2(s)).\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
@@ -8846,7 +8945,17 @@ theorem Theorem_69_4:
            top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
          \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
          \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 69.4: G is free on S, so G/[G,G] is the abelianization.
+     The images \<phi>(\<iota>(s)) for s \<in> S freely generate G/[G,G] as an abelian group:
+     Step 1: \<phi>(\<iota>(S)) generates H (since \<iota>(S) generates G and \<phi> is surjective).
+     Step 2: No nontrivial integer combination of \<phi>(\<iota>(s))'s equals eH.
+     Proof: if \<Sigma> n_s \<phi>(\<iota>(s)) = eH, then \<Sigma> n_s \<iota>(s) \<in> [G,G].
+     But [G,G] consists of products of commutators, and a free group element
+     that's a product of commutators has zero exponent sum in each generator.
+     So all n_s = 0.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
 
