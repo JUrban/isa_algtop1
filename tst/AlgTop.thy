@@ -7626,7 +7626,10 @@ proof -
              (rule openin_on_sub[OF assms(3)])
       qed
     qed
-    \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.\<close>
+    \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.
+       Proof by induction: each gi \<simeq> const, so gi * rest \<simeq> const * rest \<simeq> rest \<simeq> const
+       via path_homotopic_product_left + Theorem_51_2_left_identity + transitivity.\<close>
+    have hTX_weak: "is_topology_on X TX" by (rule is_topology_on_strict_imp[OF assms(1)])
     have "top1_path_homotopic_on X TX x0 x0
         (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
       using hgi_nul hlen sorry
