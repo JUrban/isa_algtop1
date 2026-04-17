@@ -97,6 +97,9 @@ next
     using hW_eq by simp
 qed
 
+lemmas product_topology_on_open_sets_real2 =
+  product_topology_on_open_sets[where ?'a = real and ?'b = real]
+
 text \<open>Continuity transfer: continuous_on on ℝ² implies top1_continuous_map_on
   on subspace topologies.\<close>
 lemma top1_continuous_map_on_real2_subspace:
@@ -116,7 +119,7 @@ next
   have hU_open: "open U"
   proof -
     have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
-      using hU product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+      using hU product_topology_on_open_sets_real2 by metis
     thus ?thesis unfolding top1_open_sets_def by blast
   qed
   have hfU_open: "open (f -` U)" by (rule open_vimage[OF hU_open hcont])
@@ -129,7 +132,7 @@ next
   proof -
     have "f -` U \<in> (top1_open_sets :: (real \<times> real) set set)"
       using hfU_open unfolding top1_open_sets_def by blast
-    thus ?thesis using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+    thus ?thesis using product_topology_on_open_sets_real2 by metis
   qed
   ultimately show "{p \<in> S. f p \<in> V} \<in>
     subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
@@ -159,12 +162,12 @@ proof -
     have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
       using hU unfolding top1_open_sets_def by blast
     hence "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-      using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+      using product_topology_on_open_sets_real2 by metis
     \<comment> \<open>(I\<times>I) \<inter> U \<in> II_topology (subspace of R^2 on I\<times>I).\<close>
     hence hU_II: "(I_set \<times> I_set) \<inter> U \<in> product_topology_on I_top I_top"
     proof -
       have "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-        using \<open>U \<in> top1_open_sets\<close> product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+        using \<open>U \<in> top1_open_sets\<close> product_topology_on_open_sets_real2 by metis
       moreover have hIeq: "product_topology_on I_top I_top
         = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
       proof -
@@ -1246,7 +1249,7 @@ proof -
           unfolding top1_open_sets_def by blast
         hence "{p :: real \<times> real. 4 * fst p - snd p > 2}
                \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+          using product_topology_on_open_sets_real2 by metis
         thus ?thesis
           unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
       qed
@@ -1267,7 +1270,7 @@ proof -
           unfolding top1_open_sets_def by blast
         hence "{p :: real \<times> real. 4 * fst p - snd p < 2}
                \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+          using product_topology_on_open_sets_real2 by metis
         thus ?thesis
           unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
       qed
@@ -1372,7 +1375,7 @@ proof -
             unfolding top1_open_sets_def by blast
           hence "{p :: real \<times> real. 4 * fst p - snd p > 1}
                  \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+            using product_topology_on_open_sets_real2 by metis
           hence "(I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p > 1} \<in> II_topology"
             unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
           moreover have "{(s,t) \<in> I_set \<times> I_set. 4*s > 1+t} = (I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p > 1}"
@@ -1395,7 +1398,7 @@ proof -
             unfolding top1_open_sets_def by blast
           hence "{p :: real \<times> real. 4 * fst p - snd p < 1}
                  \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+            using product_topology_on_open_sets_real2 by metis
           hence "(I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p < 1} \<in> II_topology"
             unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
           moreover have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} = (I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p < 1}"
@@ -2929,7 +2932,7 @@ proof -
     have hFV: "open (F -` V)" by (rule open_vimage[OF hVo assms])
     hence "F -` V \<in> (top1_open_sets :: (real\<times>real) set set)" unfolding top1_open_sets_def by blast
     hence "F -` V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-      using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+      using product_topology_on_open_sets_real2 by metis
     hence "(I_set \<times> I_set) \<inter> (F -` V) \<in> product_topology_on I_top I_top"
       unfolding II_topology_eq_subspace subspace_topology_def by blast
     moreover have "{p \<in> I_set \<times> I_set. F p \<in> V} = (I_set \<times> I_set) \<inter> (F -` V)" by auto
