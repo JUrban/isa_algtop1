@@ -7447,9 +7447,12 @@ proof -
       using hgi_nul hlen sorry
     \<comment> \<open>Transitivity: f \<simeq> product \<simeq> const.\<close>
     thus "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
-      using hprod sorry
+      by (rule Lemma_51_1_path_homotopic_trans[OF is_topology_on_strict_imp[OF assms(1)] hprod])
   qed
-  show ?thesis using hpc hnul
+  \<comment> \<open>Assemble: path-connected + all loops at x0 nulhomotopic \<Rightarrow> simply connected.
+     For path-connected spaces, nulhomotopy at one basepoint implies at all basepoints
+     (via basepoint change conjugation). Full proof requires basepoint change infrastructure.\<close>
+  show ?thesis unfolding top1_simply_connected_on_def using hpc hnul hx0
     sorry
 qed
 
@@ -7534,7 +7537,7 @@ proof -
   have hT_strict: "is_topology_on_strict ?Sn ?TSn" sorry
   \<comment> \<open>Apply Corollary 59.2.\<close>
   show ?thesis
-    using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by blast
+    using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
 
 corollary Theorem_59_3_path_connected:
