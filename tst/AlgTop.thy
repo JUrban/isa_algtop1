@@ -3045,11 +3045,29 @@ theorem Theorem_52_1_iso:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier X TX x1)
            (top1_fundamental_group_mul X TX x1)"
-  \<comment> \<open>Proof: pick path \<alpha>: x_0 \<rightarrow> x_1 (from path-connectedness). Define \<phi> on
-     equivalence classes: \<phi>([f]) = [\<alpha>^{-1} * f * \<alpha>]. By congruence, \<phi> is well-defined.
-     By Theorem 52.1, it's a homomorphism. By the roundtrip lemma (composing with
-     the reverse map), it's bijective. Assumes the group iso definitions from \<S>67.\<close>
-  sorry
+proof -
+  have hTX: "is_topology_on X TX" using hstrict by (rule is_topology_on_strict_imp)
+  obtain alpha where halpha: "top1_is_path_on X TX x0 x1 alpha"
+    using hpc hx0 hx1 unfolding top1_path_connected_on_def by blast
+  let ?hat = "\<lambda>f. top1_basepoint_change_on X TX x0 x1 alpha f"
+  \<comment> \<open>Define \<phi> on equivalence classes: \<phi>(class f) = class(\<alpha>-hat f).\<close>
+  let ?\<phi> = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x1 (?hat f) g}"
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+  proof (intro exI conjI)
+    \<comment> \<open>Homomorphism: \<phi> preserves multiplication.\<close>
+    show "top1_group_hom_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_fundamental_group_carrier X TX x1)
+           (top1_fundamental_group_mul X TX x1) ?\<phi>"
+      sorry
+    \<comment> \<open>Bijectivity: \<phi> is a bijection between carriers.\<close>
+    show "bij_betw ?\<phi> (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_carrier X TX x1)"
+      sorry
+  qed
+qed
 
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
 (** from \<S>52 Theorem 52.4 **)
