@@ -3273,12 +3273,85 @@ proof -
     thus "d \<in> ?\<phi> ` top1_fundamental_group_carrier X TX x0"
       using hg_class by blast
   qed
+  \<comment> \<open>Helper: mul(class f, class g) = class(f*g) for loops f, g at the same basepoint.\<close>
+  have hmul_class: "\<And>Y TY y0 f g.
+    \<lbrakk>is_topology_on Y TY; top1_is_loop_on Y TY y0 f; top1_is_loop_on Y TY y0 g\<rbrakk> \<Longrightarrow>
+    top1_fundamental_group_mul Y TY y0
+      {h. top1_loop_equiv_on Y TY y0 f h}
+      {h. top1_loop_equiv_on Y TY y0 g h}
+    = {h. top1_loop_equiv_on Y TY y0 (top1_path_product f g) h}"
+    sorry
   \<comment> \<open>Homomorphism: \<phi> preserves multiplication.\<close>
   have hphi_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
     \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
     ?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2) =
     top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)"
-    sorry
+  proof (intro ballI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+    obtain f1 where hf1: "top1_is_loop_on X TX x0 f1"
+        and hc1_eq: "c1 = {g. top1_loop_equiv_on X TX x0 f1 g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by blast
+    obtain f2 where hf2: "top1_is_loop_on X TX x0 f2"
+        and hc2_eq: "c2 = {g. top1_loop_equiv_on X TX x0 f2 g}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by blast
+    \<comment> \<open>mul(c1, c2) = class(f1 * f2).\<close>
+    have hf1f2: "top1_is_loop_on X TX x0 (top1_path_product f1 f2)"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX])
+         (use hf1 hf2 in \<open>auto simp: top1_is_loop_on_def\<close>)
+    have hmul_eq: "top1_fundamental_group_mul X TX x0 c1 c2
+        = {h. top1_loop_equiv_on X TX x0 (top1_path_product f1 f2) h}"
+      unfolding hc1_eq hc2_eq by (rule hmul_class[OF hTX hf1 hf2])
+    \<comment> \<open>\<phi>(mul) = class(\<alpha>-hat(f1*f2)).\<close>
+    have hphi_mul: "?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2)
+        = {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product f1 f2)) g}"
+      unfolding hmul_eq by (rule hphi_class[OF hf1f2])
+    \<comment> \<open>mul(\<phi> c1, \<phi> c2) = class(\<alpha>-hat(f1) * \<alpha>-hat(f2)).\<close>
+    have hhat_f1: "top1_is_loop_on X TX x1 (?hat f1)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf1])
+    have hhat_f2: "top1_is_loop_on X TX x1 (?hat f2)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf2])
+    have hphi_c1: "?\<phi> c1 = {g. top1_loop_equiv_on X TX x1 (?hat f1) g}"
+      unfolding hc1_eq by (rule hphi_class[OF hf1])
+    have hphi_c2: "?\<phi> c2 = {g. top1_loop_equiv_on X TX x1 (?hat f2) g}"
+      unfolding hc2_eq by (rule hphi_class[OF hf2])
+    have hmul_phi: "top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)
+        = {h. top1_loop_equiv_on X TX x1 (top1_path_product (?hat f1) (?hat f2)) h}"
+      unfolding hphi_c1 hphi_c2 by (rule hmul_class[OF hTX hhat_f1 hhat_f2])
+    \<comment> \<open>By Theorem 52.1: \<alpha>-hat(f1*f2) \<simeq> \<alpha>-hat(f1) * \<alpha>-hat(f2).\<close>
+    have hThm: "top1_path_homotopic_on X TX x1 x1
+        (?hat (top1_path_product f1 f2))
+        (top1_path_product (?hat f1) (?hat f2))"
+      by (rule Theorem_52_1[OF hTX halpha hf1 hf2])
+    \<comment> \<open>Hence the classes are equal.\<close>
+    have hhat_f1f2: "top1_is_loop_on X TX x1 (?hat (top1_path_product f1 f2))"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf1f2])
+    have hprod_loop: "top1_is_loop_on X TX x1 (top1_path_product (?hat f1) (?hat f2))"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX])
+         (use hhat_f1 hhat_f2 in \<open>auto simp: top1_is_loop_on_def\<close>)
+    have hequiv: "top1_loop_equiv_on X TX x1
+        (?hat (top1_path_product f1 f2)) (top1_path_product (?hat f1) (?hat f2))"
+      unfolding top1_loop_equiv_on_def using hhat_f1f2 hprod_loop hThm by blast
+    have hclass_eq: "{g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product f1 f2)) g}
+        = {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat f1) (?hat f2)) g}"
+    proof (intro set_eqI iffI)
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product f1 f2)) g}"
+      hence "top1_loop_equiv_on X TX x1 (?hat (top1_path_product f1 f2)) g" by simp
+      thus "g \<in> {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat f1) (?hat f2)) g}"
+        using top1_loop_equiv_on_trans[OF hTX top1_loop_equiv_on_sym[OF hequiv]] by simp
+    next
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat f1) (?hat f2)) g}"
+      hence "top1_loop_equiv_on X TX x1 (top1_path_product (?hat f1) (?hat f2)) g" by simp
+      thus "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product f1 f2)) g}"
+        using top1_loop_equiv_on_trans[OF hTX hequiv] by simp
+    qed
+    show "?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2) =
+          top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)"
+      unfolding hphi_mul hmul_phi hclass_eq ..
+  qed
   have hiso: "top1_group_iso_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0)
