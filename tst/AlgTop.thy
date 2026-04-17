@@ -3429,7 +3429,7 @@ definition top1_is_direct_sum_of_on ::
     The direct sum (finitely-supported coordinate-wise functions) is an abelian group,
     equipped with natural injections \<iota>fam_\<alpha> : G_\<alpha> \<hookrightarrow> \<oplus>_\<alpha> G_\<alpha>. **)
 theorem Theorem_67_4_direct_sum_exists:
-  assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_abelian_group_on (G \<alpha>::'g set) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
+  assumes hG: "\<forall>\<alpha>\<in>(J::'i set). top1_is_abelian_group_on (G \<alpha>::'g set) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
   shows "\<exists>\<iota>fam.
            top1_is_abelian_group_on
              (top1_direct_sum_carrier J G e)
@@ -3443,7 +3443,102 @@ theorem Theorem_67_4_direct_sum_exists:
          \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>))
          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. \<iota>fam \<alpha> x \<alpha> = x \<and>
               (\<forall>\<beta>. \<beta> \<noteq> \<alpha> \<longrightarrow> \<iota>fam \<alpha> x \<beta> = e \<beta>))"
-  sorry
+proof -
+  \<comment> \<open>Natural axis injection: \<iota>_\<alpha>(x) is the function with value x at \<alpha> and e(\<beta>) elsewhere.\<close>
+  let ?\<iota> = "\<lambda>\<alpha> x. \<lambda>\<beta>. if \<beta> = \<alpha> then x else e \<beta>"
+  have habel: "top1_is_abelian_group_on (top1_direct_sum_carrier J G e)
+               (\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>)
+               e (\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>)"
+    sorry \<comment> \<open>Group axioms: closure, assoc, identity, inverse, commutativity — each coordinatewise.\<close>
+  have hhom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>)
+               (top1_direct_sum_carrier J G e)
+               (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>)
+               (?\<iota> \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+    show "top1_group_hom_on (G \<alpha>) (mul \<alpha>) (top1_direct_sum_carrier J G e)
+           (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>) (?\<iota> \<alpha>)"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix x assume hx: "x \<in> G \<alpha>"
+      show "?\<iota> \<alpha> x \<in> top1_direct_sum_carrier J G e"
+        unfolding top1_direct_sum_carrier_def
+      proof (intro CollectI conjI)
+        show "\<forall>i\<in>J. (?\<iota> \<alpha> x) i \<in> G i"
+        proof
+          fix i assume "i \<in> J"
+          show "(?\<iota> \<alpha> x) i \<in> G i"
+          proof (cases "i = \<alpha>")
+            case True thus ?thesis using hx by simp
+          next
+            case False
+            have "e i \<in> G i" using \<open>i \<in> J\<close> hG
+              unfolding top1_is_abelian_group_on_def top1_is_group_on_def by blast
+            moreover have "(?\<iota> \<alpha> x) i = e i" using False by simp
+            ultimately show ?thesis by simp
+          qed
+        qed
+        show "\<forall>i. i \<notin> J \<longrightarrow> (?\<iota> \<alpha> x) i = e i"
+        proof (intro allI impI)
+          fix i assume "i \<notin> J"
+          hence "i \<noteq> \<alpha>" using h\<alpha> by blast
+          thus "(?\<iota> \<alpha> x) i = e i" by simp
+        qed
+        show "finite {i \<in> J. (?\<iota> \<alpha> x) i \<noteq> e i}"
+        proof -
+          have "{i \<in> J. (?\<iota> \<alpha> x) i \<noteq> e i} \<subseteq> {\<alpha>}" by auto
+          thus ?thesis using finite_subset by blast
+        qed
+      qed
+    next
+      fix x y assume hx: "x \<in> G \<alpha>" and hy: "y \<in> G \<alpha>"
+      show "?\<iota> \<alpha> (mul \<alpha> x y) = (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>) (?\<iota> \<alpha> x) (?\<iota> \<alpha> y)"
+      proof (rule ext)
+        fix \<beta>
+        show "?\<iota> \<alpha> (mul \<alpha> x y) \<beta> = (\<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> ((?\<iota> \<alpha> x) \<beta>) ((?\<iota> \<alpha> y) \<beta>) else e \<beta>) \<beta>"
+        proof (cases "\<beta> = \<alpha>")
+          case True thus ?thesis using h\<alpha> by simp
+        next
+          case False
+          hence lhs: "?\<iota> \<alpha> (mul \<alpha> x y) \<beta> = e \<beta>" by simp
+          have "(?\<iota> \<alpha> x) \<beta> = e \<beta>" "(?\<iota> \<alpha> y) \<beta> = e \<beta>" using False by simp_all
+          hence rhs: "(\<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> ((?\<iota> \<alpha> x) \<beta>) ((?\<iota> \<alpha> y) \<beta>) else e \<beta>) \<beta>
+                     = (if \<beta> \<in> J then mul \<beta> (e \<beta>) (e \<beta>) else e \<beta>)" by simp
+          show ?thesis
+          proof (cases "\<beta> \<in> J")
+            case True
+            hence "mul \<beta> (e \<beta>) (e \<beta>) = e \<beta>"
+              using hG unfolding top1_is_abelian_group_on_def top1_is_group_on_def by blast
+            thus ?thesis using lhs rhs True by simp
+          next
+            case False thus ?thesis using lhs rhs by simp
+          qed
+        qed
+      qed
+    qed
+  qed
+  have hinj: "\<forall>\<alpha>\<in>J. inj_on (?\<iota> \<alpha>) (G \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+    show "inj_on (?\<iota> \<alpha>) (G \<alpha>)"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> G \<alpha>" "y \<in> G \<alpha>" "?\<iota> \<alpha> x = ?\<iota> \<alpha> y"
+      hence "(\<lambda>\<beta>. if \<beta> = \<alpha> then x else e \<beta>) = (\<lambda>\<beta>. if \<beta> = \<alpha> then y else e \<beta>)" by simp
+      hence "(\<lambda>\<beta>. if \<beta> = \<alpha> then x else e \<beta>) \<alpha> = (\<lambda>\<beta>. if \<beta> = \<alpha> then y else e \<beta>) \<alpha>"
+        by (rule fun_cong)
+      thus "x = y" by simp
+    qed
+  qed
+  have haxis: "\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. ?\<iota> \<alpha> x \<alpha> = x \<and> (\<forall>\<beta>. \<beta> \<noteq> \<alpha> \<longrightarrow> ?\<iota> \<alpha> x \<beta> = e \<beta>)"
+    by simp
+  show ?thesis
+    apply (intro exI[where x = ?\<iota>] conjI)
+       apply (rule habel)
+      using hhom apply blast
+     using hinj apply blast
+    using haxis apply blast
+    done
+qed
 
 (** from \<S>67 Theorem 67.6: uniqueness of external direct sum.
     If (H_1, \<iota>_1) and (H_2, \<iota>_2) are both direct sums of a family {G_\<alpha>}_{\<alpha>\<in>J} of
