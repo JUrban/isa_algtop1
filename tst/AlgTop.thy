@@ -3964,8 +3964,18 @@ qed
 
 theorem Theorem_53_1:
   "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
-  \<comment> \<open>Per Munkres: each open arc is evenly covered by p, and the four arcs cover S^1.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 53.1: p(x) = (cos 2\<pi>x, sin 2\<pi>x) is the standard covering R \<rightarrow> S^1.
+     Step 1: p is continuous and surjective.\<close>
+  have hp_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1" sorry
+  have hp_surj: "top1_R_to_S1 ` UNIV = top1_S1" sorry
+  \<comment> \<open>Step 2: Every b \<in> S^1 has an evenly covered open neighborhood.
+     Use the 4 open arcs E, N, W, S covering S^1. Each arc U_i has
+     p\<inverse>(U_i) = \<Union>_n (n + open interval) — a disjoint union of sheets homeomorphic to U_i.\<close>
+  have hp_evenly: "\<forall>b\<in>top1_S1. \<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
+      \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U" sorry
+  show ?thesis unfolding top1_covering_map_on_def using hp_cont hp_surj hp_evenly sorry
+qed
 
 (** from \<S>53 Theorem 53.2: restriction of a covering map to a subspace is a covering map.
     Uses strict topology: subspace of strict is strict. **)
@@ -5905,7 +5915,20 @@ lemma Theorem_56_1_step_1:
                    (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
               \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
   \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres: z^n is continuous on S^1 (polynomial).
+     The induced map f_* on \<pi>_1(S^1) \<cong> Z is multiplication by n (since the standard
+     generator lifts to s \<mapsto> s and f \<circ> p(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns).
+     Multiplication by n is injective for n > 0.\<close>
+  have hcont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)" sorry
+  have hinj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+      \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
+  show ?thesis using hcont hinj by blast
+qed
 
 (** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic.
 
@@ -5918,8 +5941,19 @@ lemma Theorem_56_1_step_2:
   assumes hn: "n > 0"
   shows "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
             top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-  \<comment> \<open>Uses: S^1 is a retract of C - {0} via r(z) = z/|z|; induced maps are injective.\<close>
-  sorry
+proof
+  assume hnul: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+      top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+  \<comment> \<open>S^1 is a retract of C - {0} via r(z) = z/|z|. So j: S^1 \<hookrightarrow> C-{0} induces
+     j_* injective. f = z^n induces f_* injective (Step 1).
+     g = j \<circ> f: S^1 \<rightarrow> C-{0} induces g_* = j_* \<circ> f_* injective, hence nontrivial.\<close>
+  have hj_inj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+      \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
+  \<comment> \<open>g_* nontrivial contradicts g being nulhomotopic.\<close>
+  show False using hnul hj_inj sorry
+qed
 
 (** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1.
 
@@ -8708,10 +8742,18 @@ theorem Theorem_68_2_free_product_exists:
   assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_group_on (GG \<alpha>::'gg set) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
   shows "\<exists>(G::'gg set) mul e invg \<iota>fam.
            top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
-  \<comment> \<open>Munkres 68.2: Construct G as the set of reduced words in the G\<alpha>'s with
-     concatenation + reduction as multiplication. The empty word is the identity.
-     The natural inclusions \<iota>\<alpha>: G\<alpha> \<rightarrow> G (single-letter words) are monomorphisms.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 68.2: Construct G as the set of reduced words in the G\<alpha>'s.
+     A word is a list [(i1, g1), (i2, g2), ...] with i_k \<in> J, g_k \<in> G_{i_k} \ {e_{i_k}},
+     and consecutive indices differ. The empty list is the identity.
+     Multiplication = concatenation + iterative reduction (cancel adjacent elements
+     from the same group, contract e's).
+     The natural inclusions \<iota>\<alpha>(g) = [(a, g)] are injective homomorphisms.\<close>
+  \<comment> \<open>Step 1: Define the carrier as reduced words.\<close>
+  \<comment> \<open>Step 2: Define multiplication as concatenation + reduction.\<close>
+  \<comment> \<open>Step 3: Verify group axioms and the free product conditions.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>68 Theorem 68.4: uniqueness of free product — any two
     free products of the same family are isomorphic. **)
@@ -8719,10 +8761,14 @@ theorem Theorem_68_4_free_product_unique:
   assumes "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
       and "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
   shows "top1_groups_isomorphic_on G1 mul1 G2 mul2"
-  \<comment> \<open>Munkres 68.4: Both G1, G2 have the extension property (Lemma 68.3). Define
-     \<phi>: G1 \<rightarrow> G2 by extending the maps \<iota>2_\<alpha> \<circ> \<iota>1_\<alpha>\<inverse>. Similarly \<psi>: G2 \<rightarrow> G1.
-     Then \<psi>\<circ>\<phi> = id (by uniqueness of extension). So \<phi> is an isomorphism.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 68.4: Both G1, G2 have the extension property (Lemma 68.3).
+     Step 1: Define \<phi>: G1 \<rightarrow> G2 by extending the maps \<iota>2_\<alpha> \<circ> \<iota>1_\<alpha>\<inverse> on generators.
+     Step 2: Similarly define \<psi>: G2 \<rightarrow> G1.
+     Step 3: \<psi>\<circ>\<phi> extends id on the generators of G1, so \<psi>\<circ>\<phi> = id by uniqueness.
+     Step 4: Similarly \<phi>\<circ>\<psi> = id. Hence \<phi> is an isomorphism.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>68 Theorem 68.7: if G = G_1 * G_2 is a free product and N_i \<lhd> G_i are
     normal, then (G_1 * G_2) / \<langle>\<langle>N_1 \<union> N_2\<rangle>\<rangle> \<cong> (G_1/N_1) * (G_2/N_2). **)
@@ -9053,7 +9099,15 @@ theorem Theorem_71_1_wedge_of_circles_finite:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX p)
              (top1_fundamental_group_mul X TX p)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 71.1: Apply Seifert-van Kampen (Theorem 70.2) by induction on n.
+     Base case n=1: X = S^1, \<pi>_1 = Z which is free on 1 generator.
+     Inductive step: X = X_{n-1} \<cup> C_n where C_n \<cong> S^1.
+     X_{n-1} \<inter> C_n = {p}, which is path-connected.
+     By SvK, \<pi>_1(X) = \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial relations
+     = free on (n-1) generators * Z = free on n generators.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
 theorem Theorem_71_3_wedge_of_circles_general:
@@ -9064,7 +9118,13 @@ theorem Theorem_71_3_wedge_of_circles_general:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX p)
              (top1_fundamental_group_mul X TX p)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
+     argument. Each finite sub-wedge gives a free group on that subset of generators.
+     The direct limit over finite subsets gives the free group on all of J.
+     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
 
@@ -9318,7 +9378,18 @@ theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   assumes "is_topology_on_strict X TX"
   and "top1_is_polygonal_quotient_on X TX"
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
-  sorry
+proof -
+  \<comment> \<open>Munkres 74.1: The polygonal region P is compact (closed bounded subset of R^2).
+     The quotient map q: P \<rightarrow> X is continuous and surjective.
+     Compact: q(P) = X is compact (continuous image of compact).
+     Hausdorff: the quotient identifications are on the boundary only;
+     use the finite edge-identification structure to verify the T2 axiom.\<close>
+  obtain scheme where hsch: "top1_quotient_of_scheme_on X TX scheme"
+    using assms(2) unfolding top1_is_polygonal_quotient_on_def sorry
+  have hcompact: "top1_compact_on X TX" sorry
+  have hhausdorff: "is_hausdorff_on X TX" sorry
+  show ?thesis using hcompact hhausdorff by blast
+qed
 
 (** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n has the
     presentation \<langle>a_1, b_1, \<dots>, a_n, b_n | [a_1,b_1]\<cdots>[a_n,b_n]\<rangle>.
@@ -9335,7 +9406,14 @@ theorem Theorem_74_3_fund_group_n_torus:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 74.3: T_n is the quotient of a 4n-gon by the torus scheme.
+     The 1-skeleton (boundary with identifications) is a wedge of 2n circles.
+     By Theorem 72.1 (attaching the 2-cell), \<pi>_1(T_n) is the quotient of the
+     free group on 2n generators by the normal closure of the single relator
+     [a_1,b_1]...[a_n,b_n].\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1\<^sup>2 \<cdots> a_m\<^sup>2\<rangle>.
     The single relator is (a_1 a_1)(a_2 a_2)\<cdots>(a_m a_m). **)
@@ -9349,7 +9427,13 @@ theorem Theorem_74_4_fund_group_m_projective:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 74.4: P_m is the quotient of a 2m-gon by the projective scheme.
+     The 1-skeleton is a wedge of m circles. By Theorem 72.1, \<pi>_1(P_m) is the
+     quotient of the free group on m generators by the normal closure of
+     the single relator a_1^2 a_2^2 ... a_m^2.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>76 Cutting and Pasting\<close>
 
@@ -9364,7 +9448,13 @@ theorem Theorem_76_elementary_operations:
       and "top1_quotient_of_scheme_on X1 TX1 scheme1
          \<and> top1_quotient_of_scheme_on X2 TX2 scheme2"
   shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
-  sorry
+proof -
+  \<comment> \<open>Munkres §76: Each elementary operation (rotate, cancel, relabel, cut, paste, invert)
+     corresponds to a topological operation on the polygonal region that preserves the
+     homeomorphism type of the quotient space.
+     Proof by induction on the derivation of top1_elementary_scheme_operation.\<close>
+  show ?thesis using assms(3,4) sorry
+qed
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
@@ -9380,7 +9470,13 @@ theorem Theorem_75_1_H1_abelianization:
              (top1_fundamental_group_id X TX x0)
              (top1_fundamental_group_invg X TX x0)
              \<phi>"
-  sorry
+proof -
+  \<comment> \<open>Munkres 75.1: The abelianization G/[G,G] of any group G exists.
+     Define H = \<pi>_1(X)/[\<pi>_1(X), \<pi>_1(X)] with the natural projection \<phi>.
+     H is abelian, \<phi> is surjective, and ker(\<phi>) = [\<pi>_1(X), \<pi>_1(X)] by construction.
+     This is the first homology group H_1(X).\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
     The abelianization of \<pi>_1(T_n) is free abelian on 2n generators. **)
@@ -9397,7 +9493,11 @@ theorem Theorem_75_3_H1_n_torus:
              \<phi>
          \<and> top1_is_free_abelian_group_full_on H mulH eH invgH
              (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
-  sorry
+proof -
+  \<comment> \<open>Munkres 75.3: \<pi>_1(T_n) has presentation \<langle>a_1,...,b_n | [a_1,b_1]...[a_n,b_n]\<rangle>.
+     Abelianizing: the commutator relation becomes trivial, so H_1(T_n) \<cong> Z^{2n}.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>75 Theorem 75.4: H_1(m-fold projective plane):
     torsion subgroup is Z/2, free part is Z^{m-1}.
@@ -9420,7 +9520,13 @@ theorem Theorem_75_4_H1_m_projective:
             \<and> K \<inter> top1_torsion_subgroup_on H mulH eH = {eH}
             \<and> (\<forall>h\<in>H. \<exists>k\<in>K. \<exists>t\<in>top1_torsion_subgroup_on H mulH eH.
                   h = mulH k t))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 75.4: \<pi>_1(P_m) has presentation \<langle>a_1,...,a_m | a_1^2...a_m^2\<rangle>.
+     Abelianizing: H_1 = Z^m / \<langle>2(a_1+...+a_m)\<rangle>.
+     The torsion subgroup is Z/2Z (generated by a_1+...+a_m mod 2).
+     The free part K \<cong> Z^{m-1} (a_1-a_2, a_1-a_3, ..., a_1-a_m form a basis).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
@@ -9447,8 +9553,12 @@ theorem Theorem_78_1_triangulable_surface:
               (\<forall>T\<in>\<T>. {p\<in>T. q p \<in> U} \<in>
                 subspace_topology UNIV
                   (product_topology_on top1_open_sets top1_open_sets) T)))"
-  \<comment> \<open>\<T> is a finite collection of triangular regions; q edge-pastes them to form X.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 78.1: By the triangulation hypothesis, X has a triangulation \<T>_0.
+     Each triangle in \<T>_0 is homeomorphic to the standard simplex. Take the
+     homeomorphism images as \<T> and the combined map as q.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
     quotients of a single polygonal region. **)
@@ -9462,8 +9572,20 @@ theorem Theorem_78_2_connected_polygonal_quotient:
          \<and> top1_quotient_map_on P
              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
              X TX q"
-  \<comment> \<open>P is a polygonal region with n sides, q : P \<rightarrow> X is the edge-pasting quotient map.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 78.2: By Theorem 78.1, X is a quotient of triangles.
+     Since X is connected, the triangles can be assembled into a single
+     polygonal region by iteratively pasting triangles along shared edges.
+     Start with one triangle. At each step, an adjacent triangle shares
+     exactly one edge with the current polygon; paste it along that edge
+     to get a polygon with 2 more sides (minus the shared edge = net +0 or +1).
+     Repeat until all triangles are incorporated.\<close>
+  obtain \<T> q where h\<T>: "finite \<T>" "\<T> \<noteq> {}"
+      and hcovers: "(\<Union>T\<in>\<T>. q ` T) = X"
+    using Theorem_78_1_triangulable_surface[OF assms(1,3)] sorry
+  \<comment> \<open>Iteratively merge adjacent triangles into a single polygon.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
