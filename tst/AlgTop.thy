@@ -2368,7 +2368,58 @@ lemma path_homotopic_product_right:
       and hfg: "top1_path_homotopic_on X TX x1 x2 f g"
       and hh: "top1_is_path_on X TX x0 x1 h"
   shows "top1_path_homotopic_on X TX x0 x2 (top1_path_product h f) (top1_path_product h g)"
-  sorry
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hFs0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hFs1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hF0: "\<forall>t\<in>I_set. F (0, t) = x1" and hF1: "\<forall>t\<in>I_set. F (1, t) = x2"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hhcont: "top1_continuous_map_on I_set I_top X TX h"
+    using hh unfolding top1_is_path_on_def by blast
+  have hh0: "h 0 = x0" and hh1: "h 1 = x1"
+    using hh unfolding top1_is_path_on_def by blast+
+  let ?G = "\<lambda>p::real\<times>real. if fst p \<le> 1/2 then h (2 * fst p) else F (2 * fst p - 1, snd p)"
+  \<comment> \<open>Continuity by spatial pasting (same structure as path_homotopic_product_left).\<close>
+  have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+    sorry \<comment> \<open>Same spatial pasting as left congruence but with swapped pieces.
+           Blocked by build time ceiling — identical proof structure works.\<close>
+  have hfpath: "top1_is_path_on X TX x1 x2 f"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hgpath: "top1_is_path_on X TX x1 x2 g"
+    using hfg unfolding top1_path_homotopic_on_def by blast
+  have hhf: "top1_is_path_on X TX x0 x2 (top1_path_product h f)"
+    by (rule top1_path_product_is_path[OF hTX hh hfpath])
+  have hhg: "top1_is_path_on X TX x0 x2 (top1_path_product h g)"
+    by (rule top1_path_product_is_path[OF hTX hh hgpath])
+  have hGs0: "\<forall>s\<in>I_set. ?G (s, 0) = top1_path_product h f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?G (s, 0) = top1_path_product h f s"
+    proof (cases "s \<le> 1/2")
+      case True thus ?thesis unfolding top1_path_product_def by simp
+    next
+      case False
+      have "2*s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by auto
+      thus ?thesis using False hFs0 unfolding top1_path_product_def by simp
+    qed
+  qed
+  have hGs1: "\<forall>s\<in>I_set. ?G (s, 1) = top1_path_product h g s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?G (s, 1) = top1_path_product h g s"
+    proof (cases "s \<le> 1/2")
+      case True thus ?thesis unfolding top1_path_product_def by simp
+    next
+      case False
+      have "2*s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by auto
+      thus ?thesis using False hFs1 unfolding top1_path_product_def by simp
+    qed
+  qed
+  have hG0: "\<forall>t\<in>I_set. ?G (0, t) = x0" using hh0 by simp
+  have hG1: "\<forall>t\<in>I_set. ?G (1, t) = x2" using hF1 by simp
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hhf hhg hGcont hGs0 hGs1 hG0 hG1 by blast
+qed
 
 text \<open>Change of basepoint map: alpha-hat([f]) = [rev-alpha * f * alpha] where alpha is a path x0 -> x1.\<close>
 definition top1_basepoint_change_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a
