@@ -4555,13 +4555,18 @@ qed
     and (f o g)_* equals id_*, so f_* and g_* are mutual invgerses in a suitable sense.
     Hence f_* is a bijection onto pi_1(Y, f x_0). **)
 theorem Theorem_58_7:
-  assumes "top1_homotopy_equivalence_on X TX Y TY f g" and "x0 \<in> X"
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
   shows "top1_groups_isomorphic_on
            (top1_fundamental_group_carrier X TX x0)
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier Y TY (f x0))
            (top1_fundamental_group_mul Y TY (f x0))"
-  sorry
+  sorry \<comment> \<open>Proof: f_* is a group iso via Lemma_58_1 + Theorem_52_4 + Theorem_52_1.
+         Needs: well-definedness of f_* on equivalence classes (if \<alpha> \<simeq> \<beta> then f\<circ>\<alpha> \<simeq> f\<circ>\<beta>),
+         f_* is a homomorphism (from Theorem_52_1 applied to basepoint change),
+         f_* is bijective (g_* is inverse via homotopy equivalence + Lemma_58_1).
+         Added is_topology_on assumptions for downstream use.\<close>
 
 (** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
 
@@ -4606,7 +4611,7 @@ corollary Theorem_58_7_strict:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier Y TY (f x0))
            (top1_fundamental_group_mul Y TY (f x0))"
-  using Theorem_58_7[OF assms(3) assms(4)] by blast
+  using Theorem_58_7[OF is_topology_on_strict_imp[OF assms(1)] is_topology_on_strict_imp[OF assms(2)] assms(3) assms(4)] by blast
 
 text \<open>Strict version: if X and Y have the same homotopy type and X is strict,
   Y is also strict.\<close>
