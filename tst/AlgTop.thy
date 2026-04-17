@@ -4012,9 +4012,34 @@ theorem Theorem_53_3:
       and "is_topology_on_strict E' TE'" and "is_topology_on_strict B' TB'"
   shows "top1_covering_map_on (E \<times> E') (product_topology_on TE TE')
     (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))"
-  \<comment> \<open>Munkres 53.3: Take U, U' evenly covered by p, p'. Then U\<times>U' is evenly covered
-     by p\<times>p': the slices are V\<alpha>\<times>V'\<beta>, disjoint open, each homeomorphic to U\<times>U'.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 53.3: product of covering maps.\<close>
+  have hpxp_cont: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE')
+      (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))" sorry
+  have hpxp_surj: "(\<lambda>(x, y). (p x, p' y)) ` (E \<times> E') = B \<times> B'" sorry
+  have hpxp_evenly: "\<forall>bb\<in>B \<times> B'. \<exists>W. bb \<in> W \<and>
+      top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
+        (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W"
+  proof
+    fix bb assume hbb: "bb \<in> B \<times> B'"
+    obtain b b' where hb: "b \<in> B" and hb': "b' \<in> B'" and hbb_eq: "bb = (b, b')"
+      using hbb sorry
+    \<comment> \<open>Take U, U' evenly covered by p, p' respectively.\<close>
+    obtain U where hbU: "b \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+      sorry
+    obtain U' where hbU': "b' \<in> U'" and hU'ec: "top1_evenly_covered_on E' TE' B' TB' p' U'"
+      sorry
+    \<comment> \<open>U \<times> U' is evenly covered: slices are V\<alpha> \<times> V'\<beta>.\<close>
+    have "bb \<in> U \<times> U' \<and>
+        top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
+          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) (U \<times> U')" sorry
+    thus "\<exists>W. bb \<in> W \<and>
+        top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
+          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W" sorry
+  qed
+  show ?thesis unfolding top1_covering_map_on_def
+    using hpxp_cont hpxp_surj hpxp_evenly sorry
+qed
 
 section \<open>\<S>54 The Fundamental Group of the Circle\<close>
 
