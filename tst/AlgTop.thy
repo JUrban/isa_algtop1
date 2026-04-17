@@ -5844,9 +5844,70 @@ theorem Theorem_58_7:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier Y TY (f x0))
            (top1_fundamental_group_mul Y TY (f x0))"
-  sorry \<comment> \<open>Proof uses: top1_continuous_preserves_path_homotopy for well-definedness,
-         pointwise equality f \<circ> (l*l') = (f\<circ>l)*(f\<circ>l') for homomorphism,
-         Theorem_52_1_iso (g_* \<circ> f_* is basepoint change iso) for bijectivity.\<close>
+proof -
+  have hf: "top1_continuous_map_on X TX Y TY f"
+    using heq unfolding top1_homotopy_equivalence_on_def by blast
+  have hg: "top1_continuous_map_on Y TY X TX g"
+    using heq unfolding top1_homotopy_equivalence_on_def by blast
+  \<comment> \<open>Define f_* on equivalence classes.\<close>
+  let ?f_star = "\<lambda>c. {h. \<exists>l\<in>c. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+  \<comment> \<open>f_* maps carrier to carrier (well-definedness).\<close>
+  have hfstar_class: "\<And>l. top1_is_loop_on X TX x0 l \<Longrightarrow>
+    ?f_star {h. top1_loop_equiv_on X TX x0 l h} =
+    {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+  proof (intro set_eqI iffI)
+    fix l h assume hl: "top1_is_loop_on X TX x0 l"
+    assume "h \<in> ?f_star {h. top1_loop_equiv_on X TX x0 l h}"
+    then obtain l' where hl': "top1_loop_equiv_on X TX x0 l l'"
+        and hh: "top1_loop_equiv_on Y TY (f x0) (f \<circ> l') h" by blast
+    have hl'_loop: "top1_is_loop_on X TX x0 l'" using hl' unfolding top1_loop_equiv_on_def by blast
+    have hfl_equiv: "top1_loop_equiv_on Y TY (f x0) (f \<circ> l) (f \<circ> l')"
+      by (rule top1_induced_preserves_loop_equiv[OF hTX hf hl hl'_loop hl'])
+    show "h \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+      using top1_loop_equiv_on_trans[OF hTY hfl_equiv hh] by simp
+  next
+    fix l h assume hl: "top1_is_loop_on X TX x0 l"
+    assume "h \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+    hence hh: "top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h" by simp
+    have "l \<in> {h. top1_loop_equiv_on X TX x0 l h}"
+      using top1_loop_equiv_on_refl[OF hl] by simp
+    thus "h \<in> ?f_star {h. top1_loop_equiv_on X TX x0 l h}"
+      using hh by blast
+  qed
+  have hfstar_range: "\<forall>c\<in>top1_fundamental_group_carrier X TX x0.
+      ?f_star c \<in> top1_fundamental_group_carrier Y TY (f x0)"
+  proof
+    fix c assume "c \<in> top1_fundamental_group_carrier X TX x0"
+    then obtain l where hl: "top1_is_loop_on X TX x0 l"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 l h}"
+      unfolding top1_fundamental_group_carrier_def by blast
+    have "?f_star c = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+      unfolding hc by (rule hfstar_class[OF hl])
+    moreover have "top1_is_loop_on Y TY (f x0) (f \<circ> l)"
+      by (rule top1_continuous_map_loop[OF hf hl])
+    ultimately show "?f_star c \<in> top1_fundamental_group_carrier Y TY (f x0)"
+      unfolding top1_fundamental_group_carrier_def by blast
+  qed
+  \<comment> \<open>f_* is a homomorphism.\<close>
+  have hfstar_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
+    \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
+    ?f_star (top1_fundamental_group_mul X TX x0 c1 c2) =
+    top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)"
+    sorry
+  \<comment> \<open>f_* is bijective (uses homotopy equivalence).\<close>
+  have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_carrier Y TY (f x0))"
+    sorry
+  have hiso: "top1_group_iso_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_carrier Y TY (f x0))
+      (top1_fundamental_group_mul Y TY (f x0)) ?f_star"
+    unfolding top1_group_iso_on_def top1_group_hom_on_def bij_betw_def
+    using hfstar_range hfstar_hom hfstar_bij unfolding bij_betw_def by blast
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def using hiso by blast
+qed
 
 (** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
 
