@@ -3988,7 +3988,7 @@ theorem Theorem_53_2:
     B0 (subspace_topology B TB B0) p"
 proof -
   \<comment> \<open>Munkres 53.2: restrict covering to subspace.\<close>
-  have hE0sub: "E0 \<subseteq> E" using assms(5) sorry
+  have hE0sub: "E0 \<subseteq> E" using assms(5) by blast
   have hp_cont: "top1_continuous_map_on E0 (subspace_topology E TE E0)
       B0 (subspace_topology B TB B0) p" sorry
   have hp_surj: "p ` E0 = B0" sorry
@@ -3997,20 +3997,20 @@ proof -
   proof
     fix b0 assume hb0: "b0 \<in> B0"
     \<comment> \<open>b0 \<in> B, so there exists evenly covered U \<ni> b0 in B.\<close>
-    have hb0B: "b0 \<in> B" using hb0 assms(4) sorry
+    have hb0B: "b0 \<in> B" using hb0 assms(4) by blast
     obtain U where hU: "b0 \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
-      using top1_covering_map_on_evenly_covered[OF assms(1) hb0B] sorry
+      using top1_covering_map_on_evenly_covered[OF assms(1) hb0B] by blast
     \<comment> \<open>U0 = U \<inter> B0 is open in B0. The slices V\<alpha> \<inter> E0 partition p\<inverse>(U0) \<inter> E0.\<close>
     let ?U0 = "U \<inter> B0"
-    have "b0 \<in> ?U0" using hU hb0 sorry
+    have "b0 \<in> ?U0" using hU hb0 by blast
     moreover have "top1_evenly_covered_on E0 (subspace_topology E TE E0)
         B0 (subspace_topology B TB B0) p ?U0" sorry
     ultimately show "\<exists>U0. b0 \<in> U0 \<and>
         top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p U0"
-      sorry
+      by blast
   qed
   show ?thesis unfolding top1_covering_map_on_def
-    using hp_cont hp_surj hp_evenly sorry
+    using hp_cont hp_surj hp_evenly by blast
 qed
 
 (** from \<S>53 Theorem 53.3: product of covering maps is a covering map.
@@ -4033,7 +4033,7 @@ proof -
   proof
     fix bb assume hbb: "bb \<in> B \<times> B'"
     obtain b b' where hb: "b \<in> B" and hb': "b' \<in> B'" and hbb_eq: "bb = (b, b')"
-      using hbb sorry
+      using hbb by blast
     \<comment> \<open>Take U, U' evenly covered by p, p' respectively.\<close>
     obtain U where hbU: "b \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
       sorry
@@ -4048,7 +4048,7 @@ proof -
           (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W" sorry
   qed
   show ?thesis unfolding top1_covering_map_on_def
-    using hpxp_cont hpxp_surj hpxp_evenly sorry
+    using hpxp_cont hpxp_surj hpxp_evenly by blast
 qed
 
 section \<open>\<S>54 The Fundamental Group of the Circle\<close>
@@ -4150,17 +4150,32 @@ lemma Lemma_54_1_uniqueness:
 proof -
   \<comment> \<open>Munkres 54.1 uniqueness: open-closed argument on the agreement set.\<close>
   let ?S = "{s \<in> I_set. ftilde_1 s = ftilde_2 s}"
-  have hS_nonempty: "0 \<in> ?S" sorry
+  have hS_nonempty: "0 \<in> ?S"
+  proof -
+    have "ftilde_1 0 = e0" using hft1 unfolding top1_is_path_on_def by simp
+    moreover have "ftilde_2 0 = e0" using hft2 unfolding top1_is_path_on_def by simp
+    moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    ultimately show ?thesis by simp
+  qed
   have hS_open: "openin_on I_set I_top ?S" sorry
     \<comment> \<open>For s \<in> S: f(s) \<in> some evenly covered U. ftilde_1(s) = ftilde_2(s) \<in> some slice V0.
        Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
   have hS_closed: "closedin_on I_set I_top ?S" sorry
     \<comment> \<open>Complement is open by same argument: if ftilde_1(s) \<noteq> ftilde_2(s), they're in
        different slices, and by continuity they stay in different slices nearby.\<close>
-  have hI_connected: "top1_connected_on I_set I_top" sorry
-  have "?S = I_set" sorry
-    \<comment> \<open>S is nonempty, open, and closed in connected I. So S = I.\<close>
-  thus ?thesis sorry
+  have hI_connected: "top1_connected_on I_set I_top"
+    by (rule top1_unit_interval_connected)
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have "?S = I_set"
+  proof -
+    have hS_in_TX: "?S \<in> I_top" using hS_open unfolding openin_on_def by blast
+    have hS_sub: "?S \<subseteq> I_set" by blast
+    have "?S = {} \<or> ?S = I_set"
+      using connected_iff_clopen[OF hTI] hI_connected hS_in_TX hS_closed by blast
+    moreover have "?S \<noteq> {}" using hS_nonempty by blast
+    ultimately show ?thesis by blast
+  qed
+  thus ?thesis by blast
 qed
 
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
