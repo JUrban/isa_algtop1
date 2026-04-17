@@ -3045,29 +3045,11 @@ theorem Theorem_52_1_iso:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier X TX x1)
            (top1_fundamental_group_mul X TX x1)"
-proof -
-  have hTX: "is_topology_on X TX" using hstrict by (rule is_topology_on_strict_imp)
-  obtain alpha where halpha: "top1_is_path_on X TX x0 x1 alpha"
-    using hpc hx0 hx1 unfolding top1_path_connected_on_def by blast
-  let ?hat = "\<lambda>f. top1_basepoint_change_on X TX x0 x1 alpha f"
-  \<comment> \<open>Define \<phi> on equivalence classes: \<phi>(class f) = class(\<alpha>-hat f).\<close>
-  let ?\<phi> = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x1 (?hat f) g}"
-  show ?thesis
-    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-  proof (intro exI conjI)
-    \<comment> \<open>Homomorphism: \<phi> preserves multiplication.\<close>
-    show "top1_group_hom_on
-           (top1_fundamental_group_carrier X TX x0)
-           (top1_fundamental_group_mul X TX x0)
-           (top1_fundamental_group_carrier X TX x1)
-           (top1_fundamental_group_mul X TX x1) ?\<phi>"
-      sorry
-    \<comment> \<open>Bijectivity: \<phi> is a bijection between carriers.\<close>
-    show "bij_betw ?\<phi> (top1_fundamental_group_carrier X TX x0)
-           (top1_fundamental_group_carrier X TX x1)"
-      sorry
-  qed
-qed
+  \<comment> \<open>Proof: pick path \<alpha>: x_0 \<rightarrow> x_1 (from path-connectedness). Define \<phi> on
+     equivalence classes: \<phi>([f]) = [\<alpha>^{-1} * f * \<alpha>]. By congruence (proved above),
+     \<phi> is well-defined. By Theorem 52.1, it's a homomorphism. By the roundtrip
+     lemma (proved above), it's bijective.\<close>
+  sorry
 
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
 (** from \<S>52 Theorem 52.4 **)
@@ -3817,6 +3799,75 @@ proof -
   have hret: "top1_is_retraction_on X TX X id"
     unfolding top1_is_retraction_on_def using hid by simp
   thus ?thesis unfolding top1_retract_of_on_def by blast
+qed
+
+text \<open>Helper: fst is continuous from any subspace of R^2 to R.\<close>
+lemma top1_fst_continuous_R2_subspace:
+  fixes S :: "(real \<times> real) set"
+  shows "top1_continuous_map_on S
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+    (UNIV::real set) top1_open_sets fst"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix p assume "p \<in> S" thus "fst p \<in> (UNIV::real set)" by simp
+next
+  fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+  have hVo: "open V" using hV unfolding top1_open_sets_def by blast
+  have hBxU_open: "open (V \<times> (UNIV::real set))" by (rule open_Times[OF hVo open_UNIV])
+  have hBxU_prod: "V \<times> (UNIV::real set) \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+    have "V \<times> (UNIV::real set) \<in> (top1_open_sets :: (real\<times>real) set set)"
+      using hBxU_open unfolding top1_open_sets_def by blast
+    thus ?thesis using product_topology_on_open_sets_real2 by metis
+  qed
+  have "{p \<in> S. fst p \<in> V} = S \<inter> (V \<times> UNIV)" by (auto simp: mem_Times_iff prod.collapse[symmetric])
+  thus "{p \<in> S. fst p \<in> V} \<in>
+    subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+    unfolding subspace_topology_def using hBxU_prod by blast
+qed
+
+lemma top1_snd_continuous_R2_subspace:
+  fixes S :: "(real \<times> real) set"
+  shows "top1_continuous_map_on S
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+    (UNIV::real set) top1_open_sets snd"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix p assume "p \<in> S" thus "snd p \<in> (UNIV::real set)" by simp
+next
+  fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+  have hVo: "open V" using hV unfolding top1_open_sets_def by blast
+  have hUxB_open: "open ((UNIV::real set) \<times> V)" by (rule open_Times[OF open_UNIV hVo])
+  have hUxB_prod: "(UNIV::real set) \<times> V \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+    have "(UNIV::real set) \<times> V \<in> (top1_open_sets :: (real\<times>real) set set)"
+      using hUxB_open unfolding top1_open_sets_def by blast
+    thus ?thesis using product_topology_on_open_sets_real2 by metis
+  qed
+  have "{p \<in> S. snd p \<in> V} = S \<inter> (UNIV \<times> V)" by (auto simp: mem_Times_iff prod.collapse[symmetric])
+  thus "{p \<in> S. snd p \<in> V} \<in>
+    subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+    unfolding subspace_topology_def using hUxB_prod by blast
+qed
+
+text \<open>Helper: restriction of continuous map to subspace domain.\<close>
+lemma top1_continuous_map_on_subspace_restrict:
+  assumes hcont: "top1_continuous_map_on X TX Y TY f"
+      and hAX: "A \<subseteq> X"
+  shows "top1_continuous_map_on A (subspace_topology X TX A) Y TY f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix a assume "a \<in> A"
+  hence "a \<in> X" using hAX by blast
+  thus "f a \<in> Y" using hcont unfolding top1_continuous_map_on_def by blast
+next
+  fix V assume hV: "V \<in> TY"
+  have "{a \<in> X. f a \<in> V} \<in> TX"
+    using hcont hV unfolding top1_continuous_map_on_def by blast
+  moreover have "{a \<in> A. f a \<in> V} = A \<inter> {a \<in> X. f a \<in> V}"
+    using hAX by auto
+  ultimately show "{a \<in> A. f a \<in> V} \<in> subspace_topology X TX A"
+    unfolding subspace_topology_def by blast
 qed
 
 text \<open>The closed disc B^2 and unit sphere S^1 as subspaces of R^2.\<close>
