@@ -3195,10 +3195,8 @@ proof (intro set_eqI iffI)
   assume hx: "x \<in> {x. top1_R_to_S1 x \<in> top1_S1_arc_E}"
   hence hcos: "cos (2 * pi * x) > 0"
     unfolding top1_R_to_S1_def top1_S1_arc_E_def by auto
-  \<comment> \<open>cos(2\<pi>x) > 0 implies x \<in> (n - 1/4, n + 1/4) for some integer n.
-     Let n = round(x). Then |x - n| < 1/2, and we need |x - n| < 1/4.
-     Proof: cos(2\<pi>(x-n)) = cos(2\<pi>x) > 0 by periodicity.
-     If |x-n| \<ge> 1/4, then |2\<pi>(x-n)| \<ge> \<pi>/2, so cos \<le> 0. Contradiction.\<close>
+  \<comment> \<open>cos(2\<pi>x) > 0 implies x \<in> (n - 1/4, n + 1/4) for n = round(x).
+     Uses cos\_monotone\_0\_pi: cos strictly decreasing on [0, \<pi>].\<close>
   show "x \<in> (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
   proof -
     let ?n = "\<lfloor>x + 1/2\<rfloor>"
@@ -3206,7 +3204,7 @@ proof (intro set_eqI iffI)
     have hfloor_ub: "x + 1/2 < of_int ?n + 1" using floor_correct[of "x + 1/2"] by linarith
     hence hdiff_lb: "of_int ?n - 1/2 \<le> x" and hdiff_ub: "x < of_int ?n + 1/2"
       by linarith+
-    \<comment> \<open>We have |x - n| < 1/2. Now show |x - n| < 1/4.\<close>
+    \<comment> \<open>Shift by periodicity: cos(2\<pi>(x-n)) = cos(2\<pi>x) > 0.\<close>
     have hcos_shift: "cos (2 * pi * (x - of_int ?n)) > 0"
     proof -
       let ?\<theta> = "2 * pi * (x - of_int ?n)"
@@ -3217,33 +3215,67 @@ proof (intro set_eqI iffI)
       also have "\<dots> = cos ?\<theta>" by (simp add: cos_int_2pin sin_int_2pin)
       finally show ?thesis using hcos by simp
     qed
-    \<comment> \<open>If x - n \<ge> 1/4, then 2\<pi>(x-n) \<ge> \<pi>/2, so cos \<le> 0.\<close>
+    let ?\<theta> = "2 * pi * (x - of_int ?n)"
+    have hpi: "0 < pi" by (rule pi_gt_zero)
+    have h2pi: "0 < 2 * pi" using hpi by linarith
+    have hdiff_lb_strict: "x - of_int ?n > -(1/2)"
+    proof (rule ccontr)
+      assume "\<not> x - of_int ?n > -(1/2)"
+      hence "x - of_int ?n \<le> -(1/2)" by simp
+      hence "x - of_int ?n = -(1/2)" using hdiff_lb by linarith
+      hence "?\<theta> = -pi" using hpi by (simp add: field_simps)
+      hence "cos ?\<theta> = -1" by simp
+      thus False using hcos_shift by linarith
+    qed
+    have h\<theta>_lb: "?\<theta> > -pi"
+    proof -
+      have "-(pi) = 2 * pi * (-(1/2))" by (simp add: field_simps)
+      also have "\<dots> < 2 * pi * (x - of_int ?n)"
+        using hdiff_lb_strict h2pi by (intro mult_strict_left_mono) auto
+      finally show ?thesis .
+    qed
+    have h\<theta>_ub: "?\<theta> < pi"
+    proof -
+      have "2 * pi * (x - of_int ?n) < 2 * pi * (1/2)"
+        using hdiff_ub h2pi by (intro mult_strict_left_mono) linarith+
+      also have "\<dots> = pi" by (simp add: field_simps)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>If \<theta> \<ge> \<pi>/2: cos(\<theta>) \<le> cos(\<pi>/2) = 0 by monotonicity. Contradiction.\<close>
     have hdiff_lt: "x - of_int ?n < 1/4"
     proof (rule ccontr)
       assume "\<not> x - of_int ?n < 1/4"
       hence hge: "x - of_int ?n \<ge> 1/4" by simp
-      hence "2 * pi * (x - of_int ?n) \<ge> 2 * pi * (1/4)"
-        using pi_gt_zero by (intro mult_left_mono) auto
-      hence "2 * pi * (x - of_int ?n) \<ge> pi / 2" by (simp add: field_simps)
-      moreover have "2 * pi * (x - of_int ?n) < 2 * pi * (1/2)"
-        using hdiff_ub pi_gt_zero by (intro mult_strict_left_mono) auto
-      hence "2 * pi * (x - of_int ?n) < pi" by (simp add: field_simps)
-      ultimately have "cos (2 * pi * (x - of_int ?n)) \<le> 0"
-        by (intro cos_le_zero) auto
+      hence "?\<theta> \<ge> pi / 2"
+      proof -
+        have "pi / 2 = 2 * pi * (1/4)" by (simp add: field_simps)
+        also have "\<dots> \<le> 2 * pi * (x - of_int ?n)"
+          using hge h2pi by (intro mult_left_mono) auto
+        finally show ?thesis .
+      qed
+      hence "cos ?\<theta> \<le> cos (pi / 2)"
+        using h\<theta>_ub by (intro cos_monotone_0_pi_le[of "pi/2" ?\<theta>]) (auto simp: pi_ge_zero)
+      hence "cos ?\<theta> \<le> 0" by simp
       thus False using hcos_shift by linarith
     qed
-    have hdiff_gt: "x - of_int ?n > - (1/4)"
+    \<comment> \<open>If \<theta> \<le> -\<pi>/2: cos(\<theta>) = cos(-\<theta>) \<le> 0. Contradiction.\<close>
+    have hdiff_gt: "x - of_int ?n > -(1/4)"
     proof (rule ccontr)
-      assume "\<not> x - of_int ?n > - (1/4)"
-      hence hle: "x - of_int ?n \<le> - (1/4)" by simp
-      hence "2 * pi * (x - of_int ?n) \<le> 2 * pi * (-(1/4))"
-        using pi_gt_zero by (intro mult_left_mono) auto
-      hence "2 * pi * (x - of_int ?n) \<le> -(pi / 2)" by (simp add: field_simps)
-      moreover have "2 * pi * (x - of_int ?n) > 2 * pi * (-(1/2))"
-        using hdiff_lb pi_gt_zero by (intro mult_strict_left_mono) auto
-      hence "2 * pi * (x - of_int ?n) > -pi" by (simp add: field_simps)
-      ultimately have "cos (2 * pi * (x - of_int ?n)) \<le> 0"
-        by (intro cos_le_zero) auto
+      assume "\<not> x - of_int ?n > -(1/4)"
+      hence hle: "x - of_int ?n \<le> -(1/4)" by simp
+      hence "?\<theta> \<le> -(pi / 2)"
+      proof -
+        have "2 * pi * (x - of_int ?n) \<le> 2 * pi * (-(1/4))"
+          using hle h2pi by (intro mult_left_mono) auto
+        also have "\<dots> = -(pi / 2)" by (simp add: field_simps)
+        finally show ?thesis .
+      qed
+      hence "-?\<theta> \<ge> pi / 2" by linarith
+      moreover have "-?\<theta> \<le> pi" using h\<theta>_lb by linarith
+      ultimately have "cos (-?\<theta>) \<le> cos (pi/2)"
+        by (intro cos_monotone_0_pi_le[of "pi/2" "-?\<theta>"]) (auto simp: pi_ge_zero)
+      hence "cos (-?\<theta>) \<le> 0" by simp
+      hence "cos ?\<theta> \<le> 0" by simp
       thus False using hcos_shift by linarith
     qed
     have "of_int ?n - 1/4 < x" using hdiff_gt by linarith
