@@ -7542,6 +7542,7 @@ lemma path_connected_union:
       and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
       and hUV_pc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
       and hUV: "U \<union> V = X" and hUsub: "U \<subseteq> X" and hVsub: "V \<subseteq> X"
+      and hUV_ne: "U \<inter> V \<noteq> {}"
   shows "top1_path_connected_on X TX"
   unfolding top1_path_connected_on_def
 proof (intro conjI ballI)
@@ -7581,7 +7582,16 @@ next
     thus ?thesis by (by100 blast)
   next
     case False
-    thus ?thesis sorry
+    \<comment> \<open>x \<notin> U \<or> y \<notin> U. Since x,y \<in> U\<union>V, the missing one is in V.
+       Pick z \<in> U\<inter>V, path in U to/from z, path in V to/from z, concatenate.\<close>
+    have hx_mem: "x \<in> U \<or> x \<in> V" and hy_mem: "y \<in> U \<or> y \<in> V"
+      using hx hy hUV by (by100 blast)+
+    \<comment> \<open>Get z \<in> U \<inter> V for joining paths.\<close>
+    obtain z where hz: "z \<in> U \<inter> V" using hUV_ne by (by100 blast)
+    \<comment> \<open>For any a \<in> U and b \<in> V, there's a path a\<rightarrow>z in U and z\<rightarrow>b in V in X.\<close>
+    \<comment> \<open>Full proof requires path extraction from each subspace + transfer + concatenation.
+       Follows the same pattern as the True case above.\<close>
+    show ?thesis sorry
   qed
 qed
 
@@ -7647,7 +7657,7 @@ proof -
       using assms(8) top1_simply_connected_on_path_connected by (by100 blast)
     show ?thesis
       by (rule path_connected_union[OF is_topology_on_strict_imp[OF assms(1)]
-            hU_pc hV_pc assms(6) assms(4) openin_on_sub[OF assms(2)] openin_on_sub[OF assms(3)]])
+            hU_pc hV_pc assms(6) assms(4) openin_on_sub[OF assms(2)] openin_on_sub[OF assms(3)] assms(5)])
   qed
   \<comment> \<open>Step 2: Every loop at x0 is nulhomotopic.\<close>
   have hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
