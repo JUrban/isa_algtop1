@@ -5796,6 +5796,18 @@ proof (rule ccontr)
 qed
 
 
+text \<open>Key: homotopy from h to k + loop l at x₀ implies h\<circ>l loop-equiv to basepoint-change of k\<circ>l.\<close>
+lemma homotopy_induced_basepoint_change:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hHcont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H"
+      and hH0: "\<forall>x\<in>X. H (x, 0) = h x" and hH1: "\<forall>x\<in>X. H (x, 1) = k x"
+      and hl: "top1_is_loop_on X TX x0 l" and hx0: "x0 \<in> X"
+  shows "top1_loop_equiv_on Y TY (h x0) (h \<circ> l)
+    (top1_basepoint_change_on Y TY (k x0) (h x0) (top1_path_reverse (\<lambda>t. H (x0, t))) (k \<circ> l))"
+  sorry \<comment> \<open>3-piece pasting: F(s,t) = \<alpha>(3s) if 3s\<le>t, H(l((3s-t)/(3-2t)),t) if t\<le>3s\<le>3-t,
+         \<alpha>(3(1-s)) if 3-t\<le>3s. Boundary: F(s,0)=h(l(s)), F(s,1)=\<alpha>*(k\<circ>l)*\<alpha>\<inverse>, F(0,t)=F(1,t)=h(x₀).
+         Combined with reparametrization to standard 1/2-split basepoint change.\<close>
+
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
 text \<open>A is a deformation retract of X: the identity map of X is homotopic
@@ -6192,9 +6204,123 @@ proof -
     using heq unfolding top1_homotopy_equivalence_on_def id_def[symmetric] by blast
   have hfog: "top1_homotopic_on Y TY Y TY (f \<circ> g) (\<lambda>y. y)"
     using heq unfolding top1_homotopy_equivalence_on_def id_def[symmetric] by blast
+  \<comment> \<open>Injectivity of f_*: g_*\<circ>f_* = basepoint change (iso), so f_* injective.\<close>
+  obtain H1 where hH1cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H1"
+      and hH10: "\<forall>x\<in>X. H1 (x, 0) = (g \<circ> f) x" and hH11: "\<forall>x\<in>X. H1 (x, 1) = x"
+    using hgof unfolding top1_homotopic_on_def id_def by blast
+  let ?\<alpha>1 = "\<lambda>t. H1 (x0, t)"
+  have hfstar_inj: "inj_on ?f_star (top1_fundamental_group_carrier X TX x0)"
+  proof (rule inj_onI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+       and heq_fs: "?f_star c1 = ?f_star c2"
+    obtain l1 where hl1: "top1_is_loop_on X TX x0 l1"
+        and hc1_eq: "c1 = {g. top1_loop_equiv_on X TX x0 l1 g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by blast
+    obtain l2 where hl2: "top1_is_loop_on X TX x0 l2"
+        and hc2_eq: "c2 = {g. top1_loop_equiv_on X TX x0 l2 g}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by blast
+    \<comment> \<open>f_*(c1)=f_*(c2) \<Rightarrow> f\<circ>l1 \<simeq> f\<circ>l2 at f(x0).\<close>
+    have hfl_equiv: "top1_loop_equiv_on Y TY (f x0) (f \<circ> l1) (f \<circ> l2)"
+    proof -
+      have "{h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l1) h}
+          = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l2) h}"
+        using heq_fs
+        unfolding hc1_eq hc2_eq hfstar_class[OF hl1] hfstar_class[OF hl2] .
+      moreover have "f \<circ> l1 \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l1) h}"
+        using top1_loop_equiv_on_refl[OF top1_continuous_map_loop[OF hf hl1]] by simp
+      ultimately have "f \<circ> l1 \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l2) h}" by simp
+      hence "top1_loop_equiv_on Y TY (f x0) (f \<circ> l2) (f \<circ> l1)" by simp
+      thus ?thesis by (rule top1_loop_equiv_on_sym)
+    qed
+    \<comment> \<open>Apply g: g\<circ>f\<circ>l1 \<simeq> g\<circ>f\<circ>l2 at g(f(x0)).\<close>
+    have hgfl_equiv: "top1_loop_equiv_on X TX (g (f x0)) (g \<circ> f \<circ> l1) (g \<circ> f \<circ> l2)"
+    proof -
+      have "top1_loop_equiv_on X TX (g (f x0)) (g \<circ> (f \<circ> l1)) (g \<circ> (f \<circ> l2))"
+        by (rule top1_induced_preserves_loop_equiv[OF hTY hg
+            top1_continuous_map_loop[OF hf hl1]
+            top1_continuous_map_loop[OF hf hl2] hfl_equiv])
+      thus ?thesis by (simp add: comp_assoc)
+    qed
+    \<comment> \<open>By homotopy_induced_basepoint_change: g\<circ>f\<circ>li \<simeq> bc(li) at g(f(x0)).\<close>
+    let ?bc = "\<lambda>l. top1_basepoint_change_on X TX x0 ((g \<circ> f) x0)
+                     (top1_path_reverse ?\<alpha>1) l"
+    have hH11id: "\<forall>x\<in>X. H1 (x, 1) = id x" using hH11 by simp
+    note hbc_raw1 = homotopy_induced_basepoint_change[OF hTX hTX hH1cont hH10 hH11id hl1 hx0]
+    have hbc1: "top1_loop_equiv_on X TX ((g \<circ> f) x0) ((g \<circ> f) \<circ> l1) (?bc l1)"
+    proof -
+      have "top1_loop_equiv_on X TX ((g \<circ> f) x0) ((g \<circ> f) \<circ> l1)
+        (top1_basepoint_change_on X TX (id x0) ((g \<circ> f) x0)
+           (top1_path_reverse ?\<alpha>1) (id \<circ> l1))"
+        by (rule hbc_raw1)
+      thus ?thesis by simp
+    qed
+    note hbc_raw2 = homotopy_induced_basepoint_change[OF hTX hTX hH1cont hH10 hH11id hl2 hx0]
+    have hbc2: "top1_loop_equiv_on X TX ((g \<circ> f) x0) ((g \<circ> f) \<circ> l2) (?bc l2)"
+    proof -
+      have "top1_loop_equiv_on X TX ((g \<circ> f) x0) ((g \<circ> f) \<circ> l2)
+        (top1_basepoint_change_on X TX (id x0) ((g \<circ> f) x0)
+           (top1_path_reverse ?\<alpha>1) (id \<circ> l2))"
+        by (rule hbc_raw2)
+      thus ?thesis by simp
+    qed
+    \<comment> \<open>Chain: bc(l1) \<simeq> g\<circ>f\<circ>l1 \<simeq> g\<circ>f\<circ>l2 \<simeq> bc(l2) at g(f(x0)).\<close>
+    have hgfx0: "(g \<circ> f) x0 = g (f x0)" by simp
+    have hbc_equiv: "top1_loop_equiv_on X TX ((g \<circ> f) x0) (?bc l1) (?bc l2)"
+    proof -
+      have hgfl1': "top1_loop_equiv_on X TX ((g \<circ> f) x0) ((g \<circ> f) \<circ> l1) ((g \<circ> f) \<circ> l2)"
+        using hgfl_equiv by (simp add: comp_def)
+      show ?thesis by (rule top1_loop_equiv_on_trans[OF hTX
+          top1_loop_equiv_on_trans[OF hTX
+            top1_loop_equiv_on_sym[OF hbc1] hgfl1'] hbc2])
+    qed
+    \<comment> \<open>bc is injective by basepoint_change_iso_via_path + roundtrip.\<close>
+    have hra1: "top1_is_path_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1" sorry
+    have hrev_a1: "top1_is_path_on X TX x0 ((g \<circ> f) x0) (top1_path_reverse ?\<alpha>1)"
+      by (rule top1_path_reverse_is_path[OF hra1])
+    \<comment> \<open>Roundtrip: li \<simeq> inv_bc(bc(li)). So bc(l1)\<simeq>bc(l2) \<Rightarrow> l1\<simeq>l2.\<close>
+    have hrt1: "top1_loop_equiv_on X TX x0 l1
+        (top1_basepoint_change_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1 (?bc l1))"
+      unfolding top1_loop_equiv_on_def
+      using hl1 top1_basepoint_change_is_loop[OF hTX hra1
+              top1_basepoint_change_is_loop[OF hTX hrev_a1 hl1]]
+            top1_basepoint_change_roundtrip[OF hTX hrev_a1 hl1,
+              unfolded top1_path_reverse_twice] by blast
+    have hrt2: "top1_loop_equiv_on X TX x0 l2
+        (top1_basepoint_change_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1 (?bc l2))"
+      unfolding top1_loop_equiv_on_def
+      using hl2 top1_basepoint_change_is_loop[OF hTX hra1
+              top1_basepoint_change_is_loop[OF hTX hrev_a1 hl2]]
+            top1_basepoint_change_roundtrip[OF hTX hrev_a1 hl2,
+              unfolded top1_path_reverse_twice] by blast
+    have hbc_cong: "top1_loop_equiv_on X TX x0
+        (top1_basepoint_change_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1 (?bc l1))
+        (top1_basepoint_change_on X TX ((g \<circ> f) x0) x0 ?\<alpha>1 (?bc l2))"
+      by (rule top1_basepoint_change_loop_equiv[OF hTX hra1
+            top1_basepoint_change_is_loop[OF hTX hrev_a1 hl1]
+            top1_basepoint_change_is_loop[OF hTX hrev_a1 hl2]
+            hbc_equiv])
+    have hl1l2: "top1_loop_equiv_on X TX x0 l1 l2"
+      by (rule top1_loop_equiv_on_trans[OF hTX
+          top1_loop_equiv_on_trans[OF hTX hrt1 hbc_cong]
+          top1_loop_equiv_on_sym[OF hrt2]])
+    show "c1 = c2"
+    proof -
+      have "\<And>g. top1_loop_equiv_on X TX x0 l1 g \<longleftrightarrow> top1_loop_equiv_on X TX x0 l2 g"
+        using hl1l2 top1_loop_equiv_on_trans[OF hTX]
+              top1_loop_equiv_on_trans[OF hTX top1_loop_equiv_on_sym[OF hl1l2]]
+        by blast
+      thus ?thesis unfolding hc1_eq hc2_eq by auto
+    qed
+  qed
+  \<comment> \<open>Surjectivity: similar argument using f\<circ>g \<simeq> id.\<close>
+  have hfstar_surj: "?f_star ` (top1_fundamental_group_carrier X TX x0)
+      = top1_fundamental_group_carrier Y TY (f x0)"
+    sorry
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
-    sorry \<comment> \<open>Uses basepoint_change_iso_via_path for the homotopy-derived paths.\<close>
+    unfolding bij_betw_def using hfstar_inj hfstar_surj by blast
   have hiso: "top1_group_iso_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0)
