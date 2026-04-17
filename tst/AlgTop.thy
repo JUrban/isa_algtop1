@@ -4308,7 +4308,8 @@ proof -
           (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) (U \<times> U')" sorry
     thus "\<exists>W. bb \<in> W \<and>
         top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
-          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W" sorry
+          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W"
+      by (rule exI)
   qed
   show ?thesis unfolding top1_covering_map_on_def
     using hpxp_cont hpxp_surj hpxp_evenly by blast
