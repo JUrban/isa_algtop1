@@ -307,7 +307,8 @@ text \<open>Helper: concatenation of path homotopies.
   F(fst p, 2\<cdot>snd p) is continuous on A; F'(fst p, 2\<cdot>snd p - 1) is
   continuous on B; they agree on A \<inter> B (where snd p = 1/2) by hmatch.\<close>
 lemma path_homotopy_concat_continuous:
-  assumes hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+  assumes hTX: "is_topology_on X TX"
+      and hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
       and hF': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F'"
       and hmatch: "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)"
   shows "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX
@@ -401,7 +402,8 @@ proof -
 qed
 
 lemma Lemma_51_1_path_homotopic_trans:
-  assumes h1: "top1_path_homotopic_on X TX x0 x1 f f'"
+  assumes hTX: "is_topology_on X TX"
+      and h1: "top1_path_homotopic_on X TX x0 x1 f f'"
       and h2: "top1_path_homotopic_on X TX x0 x1 f' f''"
   shows "top1_path_homotopic_on X TX x0 x1 f f''"
 proof -
@@ -416,7 +418,7 @@ proof -
   have hmatch: "\<forall>s\<in>I_set. F (s, 1) = F' (s, 0)" using hF1 hF'0 by simp
   let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
   have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
-    by (rule path_homotopy_concat_continuous[OF hF hF' hmatch])
+    by (rule path_homotopy_concat_continuous[OF hTX hF hF' hmatch])
   have hG0: "\<forall>s\<in>I_set. ?G (s, 0) = f s" using hF0 by simp
   have hG1: "\<forall>s\<in>I_set. ?G (s, 1) = f'' s" using hF'1 by simp
   have hGleft: "\<forall>t\<in>I_set. ?G (0, t) = x0"
@@ -841,10 +843,11 @@ lemma top1_loop_equiv_on_sym:
   unfolding top1_loop_equiv_on_def by blast
 
 lemma top1_loop_equiv_on_trans:
-  assumes "top1_loop_equiv_on X TX x0 f g"
+  assumes hTX: "is_topology_on X TX"
+      and "top1_loop_equiv_on X TX x0 f g"
       and "top1_loop_equiv_on X TX x0 g h"
   shows "top1_loop_equiv_on X TX x0 f h"
-  using assms Lemma_51_1_path_homotopic_trans[of X TX x0 x0 f g h]
+  using assms Lemma_51_1_path_homotopic_trans[OF hTX, of x0 x0 f g h]
   unfolding top1_loop_equiv_on_def by blast
 
 text \<open>The set of loops at x0 modulo path homotopy — the carrier of pi_1(X, x0).
@@ -1761,6 +1764,19 @@ proof -
   obtain g where hg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
       and hc2_eq: "c2 = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h}"
     using hc2 unfolding top1_fundamental_group_carrier_def by blast
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2': "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+                  (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hTR hTR])
+    have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using hTR2' unfolding hUU .
+    show ?thesis unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR2], simp)
+  qed
   \<comment> \<open>Since c1 \<ne> c2, f and g are not loop-equivalent, i.e., not path-homotopic.\<close>
   have hne_eq: "\<not> top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f g"
   proof (rule ccontr)
@@ -1773,7 +1789,7 @@ proof -
       have hgf: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g f"
         by (rule top1_loop_equiv_on_sym[OF heq])
       have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h"
-        by (rule top1_loop_equiv_on_trans[OF hgf hfh])
+        by (rule top1_loop_equiv_on_trans[OF hTS1 hgf hfh])
       thus "h \<in> c2" using hc2_eq by blast
     qed
     moreover have "c2 \<subseteq> c1"
@@ -1781,7 +1797,7 @@ proof -
       fix h assume "h \<in> c2"
       hence hgh: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g h" using hc2_eq by blast
       have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f h"
-        by (rule top1_loop_equiv_on_trans[OF heq hgh])
+        by (rule top1_loop_equiv_on_trans[OF hTS1 heq hgh])
       thus "h \<in> c1" using hc1_eq by blast
     qed
     ultimately have "c1 = c2" by blast
@@ -1857,8 +1873,21 @@ proof
   have hg_const_sym: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0)
                                               (top1_constant_path (1, 0)) g"
     by (rule Lemma_51_1_path_homotopic_sym[OF hg_const_B2])
+  have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2': "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+                  (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hTR hTR])
+    have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using hTR2' unfolding hUU .
+    show ?thesis unfolding top1_B2_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR2], simp)
+  qed
   have hfg_B2: "top1_path_homotopic_on top1_B2 top1_B2_topology (1, 0) (1, 0) f g"
-    by (rule Lemma_51_1_path_homotopic_trans[OF hf_const_B2 hg_const_sym])
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTB2 hf_const_B2 hg_const_sym])
   \<comment> \<open>Step 4: Apply Lemma 55.1 to transfer path-homotopy back to S^1.\<close>
   \<comment> \<open>Identify subspace_topology top1_B2 top1_B2_topology top1_S1 with top1_S1_topology.\<close>
   have htop_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
