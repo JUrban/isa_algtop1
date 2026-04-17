@@ -8285,9 +8285,9 @@ theorem Theorem_67_8_rank_unique:
   assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
       and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
   shows "\<exists>f. bij_betw f S1 S2"
-  \<comment> \<open>S1 and S2 have the same cardinality (as sets): there's a bijection S1 \<rightarrow> S2.
-     Note: we cannot use 'card S1 = card S2' because Isabelle's card returns 0 for
-     infinite sets, making the statement trivial for infinite-rank free abelian groups.\<close>
+  \<comment> \<open>Munkres 67.8: Tensor with Z/2Z: G/2G is a vector space over Z/2Z of dimension
+     equal to the rank. The dimension of a vector space is unique, hence the rank is unique.
+     Alternatively: the rank equals the minimal number of generators, which is invariant.\<close>
   sorry
 
 section \<open>\<S>68 Free Products of Groups\<close>
@@ -8311,6 +8311,9 @@ theorem Theorem_68_2_free_product_exists:
   assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_group_on (GG \<alpha>::'gg set) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
   shows "\<exists>(G::'gg set) mul e invg \<iota>fam.
            top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
+  \<comment> \<open>Munkres 68.2: Construct G as the set of reduced words in the G\<alpha>'s with
+     concatenation + reduction as multiplication. The empty word is the identity.
+     The natural inclusions \<iota>\<alpha>: G\<alpha> \<rightarrow> G (single-letter words) are monomorphisms.\<close>
   sorry
 
 (** from \<S>68 Theorem 68.4: uniqueness of free product — any two
@@ -8319,6 +8322,9 @@ theorem Theorem_68_4_free_product_unique:
   assumes "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
       and "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
   shows "top1_groups_isomorphic_on G1 mul1 G2 mul2"
+  \<comment> \<open>Munkres 68.4: Both G1, G2 have the extension property (Lemma 68.3). Define
+     \<phi>: G1 \<rightarrow> G2 by extending the maps \<iota>2_\<alpha> \<circ> \<iota>1_\<alpha>\<inverse>. Similarly \<psi>: G2 \<rightarrow> G1.
+     Then \<psi>\<circ>\<phi> = id (by uniqueness of extension). So \<phi> is an isomorphism.\<close>
   sorry
 
 (** from \<S>68 Theorem 68.7: if G = G_1 * G_2 is a free product and N_i \<lhd> G_i are
