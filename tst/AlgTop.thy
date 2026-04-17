@@ -2856,6 +2856,45 @@ proof -
   show ?thesis unfolding top1_basepoint_change_on_def using result .
 qed
 
+subsection \<open>Lightweight group-theoretic machinery (needed for \<S>52 onwards)\<close>
+
+text \<open>A group is a 4-tuple (G, mul, e, invg) satisfying associativity,
+  left/right identity, and left/right invgerse.
+  Definitions placed here (before \<S>52) so Theorem\_52\_1\_iso can unfold them.\<close>
+definition top1_is_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
+  "top1_is_group_on G mul e invg \<longleftrightarrow>
+     e \<in> G \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G) \<and>
+     (\<forall>x\<in>G. invg x \<in> G) \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)) \<and>
+     (\<forall>x\<in>G. mul e x = x \<and> mul x e = x) \<and>
+     (\<forall>x\<in>G. mul (invg x) x = e \<and> mul x (invg x) = e)"
+
+text \<open>An abelian group additionally satisfies commutativity.\<close>
+definition top1_is_abelian_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
+  "top1_is_abelian_group_on G mul e invg \<longleftrightarrow>
+     top1_is_group_on G mul e invg \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y = mul y x)"
+
+text \<open>Group homomorphism: f preserves multiplication (and hence identity and invgerse).\<close>
+definition top1_group_hom_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_group_hom_on G mulG H mulH f \<longleftrightarrow>
+     (\<forall>x\<in>G. f x \<in> H) \<and>
+     (\<forall>x\<in>G. \<forall>y\<in>G. f (mulG x y) = mulH (f x) (f y))"
+
+text \<open>Group isomorphism: bijective homomorphism.\<close>
+definition top1_group_iso_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_group_iso_on G mulG H mulH f \<longleftrightarrow>
+     top1_group_hom_on G mulG H mulH f \<and>
+     bij_betw f G H"
+
+definition top1_groups_isomorphic_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> bool" where
+  "top1_groups_isomorphic_on G mulG H mulH \<longleftrightarrow>
+     (\<exists>f. top1_group_iso_on G mulG H mulH f)"
+
 text \<open>Helper: basepoint change preserves path homotopy (congruence).\<close>
 lemma top1_basepoint_change_congruence:
   assumes hTX: "is_topology_on X TX"
@@ -3006,6 +3045,10 @@ theorem Theorem_52_1_iso:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier X TX x1)
            (top1_fundamental_group_mul X TX x1)"
+  \<comment> \<open>Proof: pick path \<alpha>: x_0 \<rightarrow> x_1 (from path-connectedness). Define \<phi> on
+     equivalence classes: \<phi>([f]) = [\<alpha>^{-1} * f * \<alpha>]. By congruence, \<phi> is well-defined.
+     By Theorem 52.1, it's a homomorphism. By the roundtrip lemma (composing with
+     the reverse map), it's bijective. Assumes the group iso definitions from \<S>67.\<close>
   sorry
 
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
@@ -5518,43 +5561,7 @@ theorem Theorem_65_2:
 
 section \<open>Chapter 11: The Seifert-van Kampen Theorem\<close>
 
-subsection \<open>Lightweight group-theoretic machinery\<close>
-
-text \<open>A group is a 4-tuple (G, mul, e, invg) satisfying associativity,
-  left/right identity, and left/right invgerse.\<close>
-definition top1_is_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
-  "top1_is_group_on G mul e invg \<longleftrightarrow>
-     e \<in> G \<and>
-     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G) \<and>
-     (\<forall>x\<in>G. invg x \<in> G) \<and>
-     (\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)) \<and>
-     (\<forall>x\<in>G. mul e x = x \<and> mul x e = x) \<and>
-     (\<forall>x\<in>G. mul (invg x) x = e \<and> mul x (invg x) = e)"
-
-text \<open>An abelian group additionally satisfies commutativity.\<close>
-definition top1_is_abelian_group_on :: "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> bool" where
-  "top1_is_abelian_group_on G mul e invg \<longleftrightarrow>
-     top1_is_group_on G mul e invg \<and>
-     (\<forall>x\<in>G. \<forall>y\<in>G. mul x y = mul y x)"
-
-text \<open>Group homomorphism: f preserves multiplication (and hence identity & invgerse).\<close>
-definition top1_group_hom_on ::
-  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
-  "top1_group_hom_on G mulG H mulH f \<longleftrightarrow>
-     (\<forall>x\<in>G. f x \<in> H) \<and>
-     (\<forall>x\<in>G. \<forall>y\<in>G. f (mulG x y) = mulH (f x) (f y))"
-
-text \<open>Group isomorphism: bijective homomorphism.\<close>
-definition top1_group_iso_on ::
-  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> ('g \<Rightarrow> 'h) \<Rightarrow> bool" where
-  "top1_group_iso_on G mulG H mulH f \<longleftrightarrow>
-     top1_group_hom_on G mulG H mulH f \<and>
-     bij_betw f G H"
-
-definition top1_groups_isomorphic_on ::
-  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> bool" where
-  "top1_groups_isomorphic_on G mulG H mulH \<longleftrightarrow>
-     (\<exists>f. top1_group_iso_on G mulG H mulH f)"
+text \<open>Group-theoretic definitions are now in the earlier subsection before \<S>52.\<close>
 
 lemma top1_groups_isomorphic_on_refl:
   assumes "top1_is_group_on G mul e invg"
