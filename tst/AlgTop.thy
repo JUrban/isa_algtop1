@@ -7491,7 +7491,22 @@ proof -
       hence "i \<noteq> 1" using assms by linarith
       thus "?r i = 0" by simp
     next
-      show "(\<Sum>i\<le>n. (?r i)\<^sup>2) = 1" sorry
+      have h1n: "(1::nat) \<le> n" using assms by linarith
+      have "(\<Sum>i\<le>n. (?r i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 1 then 1 else (0::real)))"
+      proof (rule sum.cong)
+        fix i assume "i \<in> {..n}"
+        show "(?r i)\<^sup>2 = (if i = 1 then 1 else 0)" by simp
+      qed simp
+      also have "\<dots> = 1"
+      proof -
+        have hfin: "finite ({..n}::nat set)" by simp
+        have "(\<Sum>i\<le>n. (if i = (1::nat) then (1::real) else 0))
+            = (if (1::nat) \<in> {..n} then 1 else 0)"
+          using sum.delta'[OF hfin, of 1 "\<lambda>_. 1::real"] by simp
+        also have "\<dots> = 1" using h1n by simp
+        finally show ?thesis .
+      qed
+      finally show "(\<Sum>i\<le>n. (?r i)\<^sup>2) = 1" .
     qed
     have hr_ne_p: "?r \<noteq> ?p"
     proof -
