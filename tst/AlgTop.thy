@@ -4468,6 +4468,42 @@ definition top1_is_direct_sum_of_on ::
             H mulH \<Phi>
           \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. \<Phi> (\<lambda>\<beta>. if \<beta> = \<alpha> then x else eG \<beta>) = \<iota>fam \<alpha> x))"
 
+lemma top1_direct_sum_carrier_mul_closed:
+  assumes "\<forall>\<alpha>\<in>J. top1_is_abelian_group_on (G \<alpha>) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
+      and "f \<in> top1_direct_sum_carrier J G e" and "g \<in> top1_direct_sum_carrier J G e"
+  shows "(\<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>) \<in> top1_direct_sum_carrier J G e"
+proof -
+  have hfm: "\<forall>\<alpha>\<in>J. f \<alpha> \<in> G \<alpha>" and hgm: "\<forall>\<alpha>\<in>J. g \<alpha> \<in> G \<alpha>"
+    using assms(2,3) unfolding top1_direct_sum_carrier_def by blast+
+  have hff: "finite {i \<in> J. f i \<noteq> e i}" and hgf: "finite {i \<in> J. g i \<noteq> e i}"
+    using assms(2,3) unfolding top1_direct_sum_carrier_def by auto
+  let ?h = "\<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>"
+  show ?thesis unfolding top1_direct_sum_carrier_def
+  proof (intro CollectI conjI)
+    show "\<forall>i\<in>J. ?h i \<in> G i"
+      using hfm hgm assms(1) unfolding top1_is_abelian_group_on_def top1_is_group_on_def by simp
+    show "\<forall>i. i \<notin> J \<longrightarrow> ?h i = e i" by simp
+    show "finite {i \<in> J. ?h i \<noteq> e i}"
+    proof -
+      have "{i \<in> J. ?h i \<noteq> e i} \<subseteq> {i \<in> J. f i \<noteq> e i} \<union> {i \<in> J. g i \<noteq> e i}"
+      proof
+        fix i assume "i \<in> {i \<in> J. ?h i \<noteq> e i}"
+        hence hi: "i \<in> J" and hne: "mul i (f i) (g i) \<noteq> e i" by auto
+        show "i \<in> {i \<in> J. f i \<noteq> e i} \<union> {i \<in> J. g i \<noteq> e i}"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          hence "f i = e i" "g i = e i" using hi by auto
+          hence "mul i (f i) (g i) = mul i (e i) (e i)" by simp
+          also have "... = e i"
+            using assms(1) hi unfolding top1_is_abelian_group_on_def top1_is_group_on_def by blast
+          finally show False using hne by contradiction
+        qed
+      qed
+      thus ?thesis using finite_subset hff hgf by blast
+    qed
+  qed
+qed
+
 (** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups.
     The direct sum (finitely-supported coordinate-wise functions) is an abelian group,
     equipped with natural injections \<iota>fam_\<alpha> : G_\<alpha> \<hookrightarrow> \<oplus>_\<alpha> G_\<alpha>. **)
@@ -4781,20 +4817,21 @@ qed
 theorem Theorem_67_6_direct_sum_unique:
   fixes J :: "'i set"
     and G :: "'i \<Rightarrow> 'g set" and mul :: "'i \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and eG :: "'i \<Rightarrow> 'g"
+    and eG :: "'i \<Rightarrow> 'g" and invgG :: "'i \<Rightarrow> 'g \<Rightarrow> 'g"
     and H1 H2 :: "'h set" and mulH1 mulH2 :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
     and eH1 eH2 :: 'h and invgH1 invgH2 :: "'h \<Rightarrow> 'h"
     and \<iota>fam1 \<iota>fam2 :: "'i \<Rightarrow> 'g \<Rightarrow> 'h"
-  assumes "top1_is_direct_sum_of_on H1 mulH1 eH1 invgH1 J G mul eG \<iota>fam1"
+  assumes hG: "\<forall>\<alpha>\<in>J. top1_is_abelian_group_on (G \<alpha>) (mul \<alpha>) (eG \<alpha>) (invgG \<alpha>)"
+      and "top1_is_direct_sum_of_on H1 mulH1 eH1 invgH1 J G mul eG \<iota>fam1"
       and "top1_is_direct_sum_of_on H2 mulH2 eH2 invgH2 J G mul eG \<iota>fam2"
   shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
 proof -
   let ?DS = "top1_direct_sum_carrier J G eG"
   let ?mulDS = "\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else eG \<alpha>"
   obtain \<Phi>1 where h\<Phi>1: "top1_group_iso_on ?DS ?mulDS H1 mulH1 \<Phi>1"
-    using assms(1) unfolding top1_is_direct_sum_of_on_def by blast
-  obtain \<Phi>2 where h\<Phi>2: "top1_group_iso_on ?DS ?mulDS H2 mulH2 \<Phi>2"
     using assms(2) unfolding top1_is_direct_sum_of_on_def by blast
+  obtain \<Phi>2 where h\<Phi>2: "top1_group_iso_on ?DS ?mulDS H2 mulH2 \<Phi>2"
+    using assms(3) unfolding top1_is_direct_sum_of_on_def by blast
   have hiso1: "top1_groups_isomorphic_on ?DS ?mulDS H1 mulH1"
     unfolding top1_groups_isomorphic_on_def using h\<Phi>1 by blast
   have hiso2: "top1_groups_isomorphic_on ?DS ?mulDS H2 mulH2"
@@ -4802,9 +4839,9 @@ proof -
   \<comment> \<open>H1 \<cong> DS \<cong> H2 by transitivity and symmetry.\<close>
   \<comment> \<open>Both Φ₁, Φ₂ are bijective homs DS → H_i. Construct Φ₂ ∘ Φ₁⁻¹ : H₁ → H₂.\<close>
   have hH1_group: "top1_is_group_on H1 mulH1 eH1 invgH1"
-    using assms(1) unfolding top1_is_direct_sum_of_on_def top1_is_abelian_group_on_def by blast
-  have hH2_group: "top1_is_group_on H2 mulH2 eH2 invgH2"
     using assms(2) unfolding top1_is_direct_sum_of_on_def top1_is_abelian_group_on_def by blast
+  have hH2_group: "top1_is_group_on H2 mulH2 eH2 invgH2"
+    using assms(3) unfolding top1_is_direct_sum_of_on_def top1_is_abelian_group_on_def by blast
   have hbij1: "bij_betw \<Phi>1 ?DS H1" and hhom1: "top1_group_hom_on ?DS ?mulDS H1 mulH1 \<Phi>1"
     using h\<Phi>1 unfolding top1_group_iso_on_def by blast+
   have hbij2: "bij_betw \<Phi>2 ?DS H2" and hhom2: "top1_group_hom_on ?DS ?mulDS H2 mulH2 \<Phi>2"
@@ -4848,7 +4885,7 @@ proof -
     qed
     \<comment> \<open>So the_inv_into(x*y) = inv(x) * inv(y).\<close>
     have hmul_cl: "?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y) \<in> ?DS"
-      sorry \<comment> \<open>Closure of mulDS on DS — needs DS group structure.\<close>
+      by (rule top1_direct_sum_carrier_mul_closed[OF hG hxDS hyDS])
     have "the_inv_into ?DS \<Phi>1 (mulH1 x y) = ?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y)"
       using the_inv_into_f_f[OF hinj1 hmul_cl] hprod by simp
     hence "?\<Psi> (mulH1 x y) = \<Phi>2 (?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y))"
