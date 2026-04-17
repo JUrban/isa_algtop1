@@ -6148,7 +6148,38 @@ theorem Theorem_57_1:
   assumes "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
       and "top1_antipode_preserving_S1 h"
   shows "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
-  sorry
+proof
+  assume hnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
+  \<comment> \<open>Step 1: q(z)=z^2 is a covering map. h(-z)=-h(z) \<Rightarrow> q\<circ>h = k\<circ>q for some k.\<close>
+  let ?q = "\<lambda>(x, y). (x^2 - y^2, 2*x*y)"
+  have hq_cover: "top1_covering_map_on top1_S1 top1_S1_topology
+      top1_S1 top1_S1_topology ?q" sorry
+  obtain k where hk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+      top1_S1 top1_S1_topology k"
+      and hk_eq: "\<forall>z\<in>top1_S1. k (?q z) = ?q (h z)"
+    sorry
+  \<comment> \<open>Step 2: k_* is nontrivial. A path from b0 to -b0 in S^1 lifts to a nontrivial loop under q,
+     and k maps this to another nontrivial element.\<close>
+  have hk_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (k \<circ> f) (top1_constant_path (1, 0)))" sorry
+  \<comment> \<open>Step 3: q_* is multiplication by 2, hence injective. k_*\<circ>q_* injective.
+     q_*\<circ>h_* = k_*\<circ>q_* \<Rightarrow> h_* injective \<Rightarrow> nontrivial \<Rightarrow> h not nulhomotopic.\<close>
+  have hq_star_inj: "\<forall>f g. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g
+      \<and> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+           (?q \<circ> f) (?q \<circ> g)
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
+  have hh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (h \<circ> f) (top1_constant_path (1, 0)))" sorry
+  \<comment> \<open>But h nulhomotopic \<Rightarrow> h_* trivial. Contradiction.\<close>
+  have hh_star_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (h \<circ> f) (top1_constant_path (h (1, 0)))"
+    using hnul sorry
+  show False using hh_star_nontrivial hh_star_trivial sorry
+qed
 
 (** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
     Munkres' proof: if g: S^2 \<rightarrow> S^1 is antipode-preserving, then h = g|S^1
@@ -6176,9 +6207,33 @@ theorem Theorem_57_3_BorsukUlam:
 proof (rule ccontr)
   assume hno: "\<not> (\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
     \<and> f x = f (- fst x, - fst (snd x), - snd (snd x)))"
+  \<comment> \<open>By assumption, f(x) \<noteq> f(-x) for all x \<in> S^2.\<close>
+  let ?S2 = "{p::real\<times>real\<times>real. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}"
+  let ?neg = "\<lambda>x::real\<times>real\<times>real. (- fst x, - fst (snd x), - snd (snd x))"
+  have hfne: "\<forall>x\<in>?S2. f x \<noteq> f (?neg x)" using hno by blast
   \<comment> \<open>Define g: S^2 \<rightarrow> S^1 by g(x) = (f(x) - f(-x)) / ||f(x) - f(-x)||.\<close>
-  \<comment> \<open>Then g is continuous and antipode-preserving, contradicting Theorem 57.2.\<close>
-  show False sorry
+  let ?diff = "\<lambda>x. (fst (f x) - fst (f (?neg x)), snd (f x) - snd (f (?neg x)))"
+  let ?norm = "\<lambda>x. sqrt ((fst (?diff x))^2 + (snd (?diff x))^2)"
+  let ?g = "\<lambda>x. (fst (?diff x) / ?norm x, snd (?diff x) / ?norm x)"
+  \<comment> \<open>g is continuous (rational functions with nonzero denominator).\<close>
+  have hg_cont: "top1_continuous_map_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  \<comment> \<open>g is antipode-preserving: g(-x) = -g(x).\<close>
+  have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))" sorry
+  \<comment> \<open>Restrict g to the equator S^1: h = g|_{S^1}. h is antipode-preserving S^1 \<rightarrow> S^1.\<close>
+  \<comment> \<open>By Theorem 57.1, h is not nulhomotopic. But g extends h over the upper hemisphere
+     which is homeomorphic to B^2, so h is nulhomotopic. Contradiction.\<close>
+  have hg_not_nulhomo: "\<not> top1_nulhomotopic_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  have hg_nulhomo: "top1_nulhomotopic_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  show False using hg_not_nulhomo hg_nulhomo by contradiction
 qed
 
 
@@ -7174,7 +7229,32 @@ theorem Theorem_59_1:
      in U or V and f(ai) in U\<inter>V. Step 2: Choose paths \<alpha>i in U\<inter>V from x0 to f(ai).
      Set gi = (\<alpha>_{i-1} * fi) * \<alpha>i_bar. Each gi is a loop in U or V at x0, and
      [g1]*...*[gn] = [f1]*...*[fn] = [f].\<close>
-  sorry
+proof (intro allI impI)
+  fix f assume hf: "top1_is_loop_on X TX x0 f"
+  \<comment> \<open>Step 1: Lebesgue subdivision. Find a0<...<an with f([ai,ai+1]) in U or V.\<close>
+  obtain m :: nat and subdivision :: "nat \<Rightarrow> real" where
+    hm: "m \<ge> 1" and hsub0: "subdivision 0 = 0" and hsubm: "subdivision m = 1"
+    and hsub_mono: "\<forall>i<m. subdivision i < subdivision (Suc i)"
+    and hsub_UV: "\<forall>i<m. f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> U
+                       \<or> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> V"
+    and hsub_int: "\<forall>i\<le>m. f (subdivision i) \<in> U \<inter> V"
+    sorry
+  \<comment> \<open>Step 2: For each subinterval, define fi = f restricted + reparametrized.
+     Choose paths \<alpha>i in U\<inter>V from x0 to f(ai). Set gi = (\<alpha>_{i-1} * fi) * rev \<alpha>i.\<close>
+  obtain gs :: "(real \<Rightarrow> 'a) list" where
+    hgs_len: "length gs = m" and
+    hgs_loops: "\<forall>i<m. top1_is_loop_on X TX x0 (gs!i)
+        \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)" and
+    hgs_product: "top1_path_homotopic_on X TX x0 x0 f
+        (foldr top1_path_product gs (top1_constant_path x0))"
+    sorry
+  show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
+       (\<forall>i<n. top1_is_loop_on X TX x0 (gs ! i) \<and>
+              (gs ! i ` I_set \<subseteq> U \<or> gs ! i ` I_set \<subseteq> V)) \<and>
+       top1_path_homotopic_on X TX x0 x0 f
+        (foldr top1_path_product gs (top1_constant_path x0))"
+    using hm hgs_len hgs_loops hgs_product sorry
+qed
 
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
     and nonempty \<Longrightarrow> X = U \<union> V is simply connected. **)
@@ -7186,9 +7266,44 @@ corollary Corollary_59_2:
       and "top1_simply_connected_on U (subspace_topology X TX U)"
       and "top1_simply_connected_on V (subspace_topology X TX V)"
   shows "top1_simply_connected_on X TX"
+proof -
   \<comment> \<open>Munkres 59.2: By Thm 59.1, every loop decomposes into loops in U or V.
-     U, V simply connected \<Rightarrow> each piece null-homotopic \<Rightarrow> whole loop null-homotopic.\<close>
-  sorry
+     U, V simply connected \<Rightarrow> each piece nulhomotopic \<Rightarrow> whole loop nulhomotopic.\<close>
+  obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by blast
+  \<comment> \<open>Step 1: X is path-connected (U, V path-connected via simply connected, joined via U\<inter>V).\<close>
+  have hpc: "top1_path_connected_on X TX" sorry
+  \<comment> \<open>Step 2: Every loop at x0 is nulhomotopic.\<close>
+  have hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+      top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on X TX x0 f"
+    \<comment> \<open>By Theorem 59.1, f decomposes into loops in U or V.\<close>
+    obtain n gs where hn: "n \<ge> 1" and hlen: "length gs = n"
+        and hgs: "\<forall>i<n. top1_is_loop_on X TX x0 (gs!i)
+                      \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
+        and hprod: "top1_path_homotopic_on X TX x0 x0 f
+            (foldr top1_path_product gs (top1_constant_path x0))"
+      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf sorry
+    \<comment> \<open>Each gi lies in U or V, hence is nulhomotopic there (simply connected).\<close>
+    have hgi_nul: "\<forall>i<n. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
+    proof (intro allI impI)
+      fix i assume hi: "i < n"
+      have hgi_loop: "top1_is_loop_on X TX x0 (gs!i)" using hgs hi by blast
+      have "gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V" using hgs hi by blast
+      \<comment> \<open>If in U: simply connected U \<Rightarrow> nulhomotopic in U \<Rightarrow> nulhomotopic in X.
+         If in V: simply connected V \<Rightarrow> nulhomotopic in V \<Rightarrow> nulhomotopic in X.\<close>
+      thus "top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)" sorry
+    qed
+    \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.\<close>
+    have "top1_path_homotopic_on X TX x0 x0
+        (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
+      using hgi_nul hlen sorry
+    \<comment> \<open>Transitivity: f \<simeq> product \<simeq> const.\<close>
+    thus "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+      using hprod sorry
+  qed
+  show ?thesis using hpc hnul sorry
+qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
@@ -7202,11 +7317,29 @@ theorem Theorem_59_3:
       (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
       (top1_Sn n))"
 proof -
-  \<comment> \<open>Munkres 59.3: Let p = north pole, q = south pole. U = S^n - {p}, V = S^n - {q}.
-     Step 1: S^n - {p} \<cong> R^n via stereographic projection (simply connected for n\<ge>2).
-     Step 2: U \<inter> V = S^n - {p,q} \<cong> R^n - {0} which is path-connected for n\<ge>2.
-     Apply Corollary 59.2: U,V open simply connected, U\<inter>V path-connected \<Rightarrow> S^n simply connected.\<close>
-  show ?thesis sorry
+  let ?Sn = "top1_Sn n"
+  let ?TSn = "subspace_topology UNIV
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?Sn"
+  \<comment> \<open>Munkres 59.3: north pole p, south pole q.\<close>
+  let ?p = "\<lambda>i::nat. if i = 0 then (1::real) else 0"
+  let ?q = "\<lambda>i::nat. if i = 0 then (-1::real) else 0"
+  let ?U = "?Sn - {?p}" and ?V = "?Sn - {?q}"
+  \<comment> \<open>Step 1: U = S^n - {p} \<cong> R^n via stereographic projection, hence simply connected.\<close>
+  have hU_sc: "top1_simply_connected_on ?U (subspace_topology ?Sn ?TSn ?U)" sorry
+  have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)" sorry
+  \<comment> \<open>Step 2: U, V are open in S^n.\<close>
+  have hU_open: "openin_on ?Sn ?TSn ?U" sorry
+  have hV_open: "openin_on ?Sn ?TSn ?V" sorry
+  \<comment> \<open>U \<union> V = S^n (every point of S^n differs from p or q).\<close>
+  have hUV: "?U \<union> ?V = ?Sn" sorry
+  \<comment> \<open>U \<inter> V = S^n - {p, q} is path-connected for n \<ge> 2.\<close>
+  have hUV_ne: "?U \<inter> ?V \<noteq> {}" sorry
+  have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
+      (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" sorry
+  have hT_strict: "is_topology_on_strict ?Sn ?TSn" sorry
+  \<comment> \<open>Apply Corollary 59.2.\<close>
+  show ?thesis
+    using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by blast
 qed
 
 corollary Theorem_59_3_path_connected:
@@ -7232,11 +7365,28 @@ theorem Theorem_60_1_product:
            (\<lambda>(c1, c2) (d1, d2).
               (top1_fundamental_group_mul X TX x0 c1 d1,
                top1_fundamental_group_mul Y TY y0 c2 d2))"
-  \<comment> \<open>Munkres 60.1: \<Phi>([f]) = (p_*([f]), q_*([f])) = ([p\<circ>f], [q\<circ>f]) where p,q are projections.
-     \<Phi> is a homomorphism (projections preserve products). Injective: if p\<circ>f \<simeq> const and
-     q\<circ>f \<simeq> const, then f \<simeq> const (homotopy is componentwise). Surjective: given loops
-     g in X and h in Y, the product loop f(s)=(g(s),h(s)) satisfies \<Phi>([f])=([g],[h]).\<close>
-  sorry
+  \<comment> \<open>Munkres 60.1: \<Phi>([f]) = (p_*([f]), q_*([f])) = ([p\<circ>f], [q\<circ>f]) where p,q are projections.\<close>
+proof -
+  let ?TXY = "product_topology_on TX TY"
+  let ?\<Phi> = "\<lambda>c. (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c,
+                  top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c)"
+  \<comment> \<open>Step 1: \<Phi> is well-defined and a homomorphism.\<close>
+  have hfst_cont: "top1_continuous_map_on (X \<times> Y) ?TXY X TX fst" sorry
+  have hsnd_cont: "top1_continuous_map_on (X \<times> Y) ?TXY Y TY snd" sorry
+  have h\<Phi>_hom: "\<forall>c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
+      \<forall>d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
+      ?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
+      = (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
+           top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)" sorry
+  \<comment> \<open>Step 2: Injectivity. If p\<circ>f \<simeq> const and q\<circ>f \<simeq> const, combine homotopies componentwise.\<close>
+  have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))" sorry
+  \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
+  have h\<Phi>_surj: "?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
+      = (top1_fundamental_group_carrier X TX x0) \<times>
+        (top1_fundamental_group_carrier Y TY y0)" sorry
+  \<comment> \<open>Assemble: \<Phi> is a group isomorphism.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 
@@ -7333,9 +7483,33 @@ proof (rule ccontr)
   have hS2_C_connected: "top1_connected_on (top1_S2 - C)
                            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
     using hnot unfolding top1_separates_on_def by blast
-  \<comment> \<open>Decompose C = A_1 \<union> A_2 with endpoints a, b; apply §59.1 + Lemma 61.2.\<close>
-  \<comment> \<open>Then \<pi>_1(S^2 - a - b) would be trivial, contradicting \<pi>_1(R^2 - 0) nontrivial.\<close>
-  show False sorry
+  \<comment> \<open>Decompose C = A_1 \<union> A_2 (two arcs) with common endpoints a, b.\<close>
+  obtain A1 A2 a b where hC_decomp: "C = A1 \<union> A2"
+      and hab: "A1 \<inter> A2 = {a, b}" and hab_ne: "a \<noteq> b"
+      and hA1_arc: "top1_is_arc_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+      and hA2_arc: "top1_is_arc_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+    using hC sorry
+  \<comment> \<open>Let X = S^2 - {a, b}, U = S^2 - A_1, V = S^2 - A_2.\<close>
+  let ?X = "top1_S2 - {a, b}" and ?U = "top1_S2 - A1" and ?V = "top1_S2 - A2"
+  \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - C (path-connected by hypothesis).\<close>
+  have hX_UV: "?U \<union> ?V = ?X" using hC_decomp hab sorry
+  have hUV_eq: "?U \<inter> ?V = top1_S2 - C" using hC_decomp hab sorry
+  \<comment> \<open>U, V are open in X.\<close>
+  have hU_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U" sorry
+  have hV_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?V" sorry
+  \<comment> \<open>U \<inter> V = S^2 - C is path-connected (connected + locally path-connected).\<close>
+  have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
+      (subspace_topology ?X (subspace_topology top1_S2 top1_S2_topology ?X) (?U \<inter> ?V))" sorry
+  obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V" sorry
+  \<comment> \<open>By Theorem 59.1, \<pi>_1(X, x_0) is generated by images of i_*, j_*.\<close>
+  \<comment> \<open>By Lemma 61.2 (nulhomotopy), every loop in U factors through A2 (an arc),
+     hence is nulhomotopic. Similarly for V. So i_*, j_* are trivial.\<close>
+  have h_pi1_X_trivial: "top1_simply_connected_on ?X
+      (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
+  \<comment> \<open>But X = S^2 - {a, b} \<cong> R^2 - {0} which has nontrivial \<pi>_1.\<close>
+  have h_pi1_X_nontrivial: "\<not> top1_simply_connected_on ?X
+      (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
+  show False using h_pi1_X_trivial h_pi1_X_nontrivial by contradiction
 qed
 
 (** from \<S>61 Theorem 61.4: general separation theorem for S^2 **)
@@ -7348,11 +7522,21 @@ theorem Theorem_61_4_general_separation:
   and "top1_connected_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
   and "card (A1 \<inter> A2) = 2"
   shows "top1_separates_on top1_S2 top1_S2_topology (A1 \<union> A2)"
-  \<comment> \<open>Munkres 61.4: Same argument as 61.3. Write C=A1\<union>A2 with A1\<inter>A2={a,b}.
-     X = S^2-{a,b} \<cong> R^2-{0}, U = S^2-A1, V = S^2-A2. X=U\<union>V.
-     If S^2-C connected then U\<inter>V path connected. By 59.1 + 61.2 (nulhomotopy),
-     \<pi>_1(X) trivial. But \<pi>_1(R^2-{0}) nontrivial. Contradiction.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 61.4: Write C=A1\<union>A2 with A1\<inter>A2={a,b}.
+     X = S^2-{a,b} \<cong> R^2-{0}, U = S^2-A1, V = S^2-A2. X=U\<union>V.\<close>
+  obtain a b where hab: "A1 \<inter> A2 = {a, b}" and hab_ne: "a \<noteq> b"
+    using assms(8) sorry
+  let ?X = "top1_S2 - {a, b}" and ?U = "top1_S2 - A1" and ?V = "top1_S2 - A2"
+  \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - (A1 \<union> A2).\<close>
+  have hX_UV: "?U \<union> ?V = ?X" using hab sorry
+  have hUV_eq: "?U \<inter> ?V = top1_S2 - (A1 \<union> A2)" sorry
+  \<comment> \<open>If S^2 - (A1\<union>A2) were connected, then U\<inter>V would be path-connected.\<close>
+  \<comment> \<open>By Lemma 61.2, loops in U and V are nulhomotopic (they factor through arcs).\<close>
+  \<comment> \<open>So \<pi>_1(X) would be trivial. But X \<cong> R^2-{0} has nontrivial \<pi>_1. Contradiction.\<close>
+  \<comment> \<open>Hence S^2 - (A1 \<union> A2) is NOT connected.\<close>
+  show ?thesis unfolding top1_separates_on_def sorry
+qed
 
 section \<open>*\<S>62 Invariance of Domain\<close>
 
@@ -7397,10 +7581,31 @@ theorem Theorem_63_1_loop_nontrivial:
       and "top1_is_path_on V (subspace_topology X TX V) b a beta"
   shows "\<not> top1_path_homotopic_on X TX a a
            (top1_path_product alpha beta) (top1_constant_path a)"
-  \<comment> \<open>Munkres 63.1: Construct covering space p: E \<rightarrow> X as infinite helix. The loop
-     f = \<alpha>*\<beta> lifts to a path that doesn't close, hence f is nontrivial in \<pi>_1(X,a).
-     More precisely: define E using copies of U and V glued along A and B alternately.\<close>
-  sorry
+proof
+  assume hnul: "top1_path_homotopic_on X TX a a
+      (top1_path_product alpha beta) (top1_constant_path a)"
+  \<comment> \<open>Munkres 63.1: Construct covering space p: E \<rightarrow> X as infinite helix.
+     E = ... \<sqcup> U_0 \<sqcup> V_0 \<sqcup> U_1 \<sqcup> V_1 \<sqcup> ... with A-sheets and B-sheets glued alternately.
+     Concretely: E = Z \<times> (U \<sqcup> V), identifying (n, A-point in V_n) with (n, A-point in U_n)
+     and (n, B-point in U_n) with (n+1, B-point in V_n).\<close>
+  \<comment> \<open>Step 1: Build the covering space E and covering map p: E \<rightarrow> X.\<close>
+  have "\<exists>(E::'a set) TE (p0::'a \<Rightarrow> 'a).
+      top1_covering_map_on E TE X TX p0
+    \<and> (\<exists>e0\<in>E. p0 e0 = a)" sorry
+  \<comment> \<open>Step 2: Lift f = \<alpha>*\<beta> starting at e0 in the covering. The lift of \<alpha> goes from
+     sheet n to the same sheet; the lift of \<beta> shifts from sheet n to sheet n+1.
+     So the lifted path ends at a point in a DIFFERENT sheet than it started.\<close>
+  have "\<exists>(E::'a set) TE (p0::'a \<Rightarrow> 'a) e0 e1.
+      top1_covering_map_on E TE X TX p0
+    \<and> e0 \<in> E \<and> p0 e0 = a
+    \<and> e1 \<in> E \<and> p0 e1 = a
+    \<and> e0 \<noteq> e1
+    \<and> (\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
+        \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))" sorry
+  \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
+     But we showed the lift has different endpoints. Contradiction.\<close>
+  show False sorry
+qed
 
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
     Munkres' proof: by contradiction + Theorem 63.1; use that \<pi>_1(S^2) is trivial. **)
@@ -7409,10 +7614,27 @@ theorem Theorem_63_2_arc_no_separation:
   and "D \<subseteq> top1_S2"
   and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
-  \<comment> \<open>Munkres 63.2: Suppose D separates S^2. Split D=D1\<union>D2 at midpoint d.
-     X=S^2-{d}, U=S^2-D1, V=S^2-D2. Apply Theorem 63.1 to get nontrivial
-     element of \<pi>_1(X). But X=S^2-{d}\<cong>R^2 has trivial \<pi>_1. Contradiction.\<close>
-  sorry
+proof (rule ccontr)
+  assume hnot: "\<not> \<not> top1_separates_on top1_S2 top1_S2_topology D"
+  hence hsep: "top1_separates_on top1_S2 top1_S2_topology D" by blast
+  \<comment> \<open>Munkres 63.2: Split D=D1\<union>D2 at midpoint d.\<close>
+  obtain d D1 D2 where hd: "d \<in> D" and hD: "D = D1 \<union> D2" and "D1 \<inter> D2 = {d}"
+      and "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+      and "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+    sorry
+  \<comment> \<open>Since D separates S^2, take a\<in>A, b\<in>B in different components of S^2-D.\<close>
+  obtain a b where hab: "a \<in> top1_S2 - D" "b \<in> top1_S2 - D"
+      and hab_sep: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a b f)"
+    using hsep sorry
+  \<comment> \<open>X=S^2-{d}, U=S^2-D1, V=S^2-D2. Apply Theorem 63.1.\<close>
+  \<comment> \<open>Get nontrivial element of \<pi>_1(X). But X\<cong>R^2 has trivial \<pi>_1. Contradiction.\<close>
+  have h_pi1_trivial: "top1_simply_connected_on (top1_S2 - {d})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))" sorry
+  have h_pi1_nontrivial: "\<not> top1_simply_connected_on (top1_S2 - {d})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))" sorry
+  show False using h_pi1_trivial h_pi1_nontrivial by contradiction
+qed
 
 (** from \<S>63 Theorem 63.3: general non-separation theorem. **)
 theorem Theorem_63_3_general_nonseparation:
@@ -7424,11 +7646,31 @@ theorem Theorem_63_3_general_nonseparation:
   and "\<not> top1_separates_on top1_S2 top1_S2_topology D1"
   and "\<not> top1_separates_on top1_S2 top1_S2_topology D2"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)"
-  \<comment> \<open>Munkres 63.3: If D1\<union>D2 separates, take components A,B of S^2-(D1\<union>D2).
-     Since neither Di separates, can join a\<in>A to b\<in>B avoiding D1 and avoiding D2.
-     Theorem 63.1 gives nontrivial element of \<pi>_1(S^2-(D1\<inter>D2)). But this space
-     is simply connected by assumption. Contradiction.\<close>
-  sorry
+proof (rule ccontr)
+  assume hnot: "\<not> \<not> top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)"
+  hence hsep: "top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)" by blast
+  \<comment> \<open>Munkres 63.3: Take a\<in>A, b\<in>B in different components of S^2-(D1\<union>D2).\<close>
+  obtain a b where "a \<in> top1_S2 - (D1 \<union> D2)" "b \<in> top1_S2 - (D1 \<union> D2)"
+      and hab_sep: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - (D1 \<union> D2))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<union> D2))) a b f)"
+    using hsep sorry
+  \<comment> \<open>Since D1 doesn't separate, join a to b in S^2-D1: path \<alpha>.\<close>
+  obtain \<alpha> where "top1_is_path_on (top1_S2 - D1)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D1)) a b \<alpha>"
+    using assms(5) sorry
+  \<comment> \<open>Since D2 doesn't separate, join b to a in S^2-D2: path \<beta>.\<close>
+  obtain \<beta> where "top1_is_path_on (top1_S2 - D2)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) b a \<beta>"
+    using assms(6) sorry
+  \<comment> \<open>The loop f = \<alpha>*\<beta> lies in X=S^2-(D1\<inter>D2). By Theorem 63.1, [f] is nontrivial.\<close>
+  have hf_nontrivial: "\<exists>f. top1_is_loop_on (top1_S2 - (D1 \<inter> D2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a f
+      \<and> \<not> top1_path_homotopic_on (top1_S2 - (D1 \<inter> D2))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a a f
+          (top1_constant_path a)" sorry
+  \<comment> \<open>But S^2-(D1\<inter>D2) is simply connected by assumption. Contradiction.\<close>
+  show False using hf_nontrivial assms(4) sorry
+qed
 
 (** from \<S>63 Theorem 63.4: Jordan Curve Theorem.
 
@@ -7453,7 +7695,31 @@ theorem Theorem_63_4_JordanCurve:
     \<comment> \<open>Both components have C as boundary.\<close>
     \<and> closure U = U \<union> C
     \<and> closure V = V \<union> C"
-  sorry
+proof -
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+  \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
+     to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
+  have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))" sorry
+  \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
+     By Theorem 63.5 (applied via 63.2 + 63.3), exactly two components.\<close>
+  obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
+      and hUV_cover: "U \<union> V = UNIV - C"
+      and hU_conn: "top1_connected_on U (subspace_topology UNIV ?TR2 U)"
+      and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
+    sorry
+  \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
+  have hU_pc: "top1_path_connected_on U (subspace_topology UNIV ?TR2 U)" sorry
+  have hV_pc: "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)" sorry
+  \<comment> \<open>Step 4 (Bounded/unbounded): Under stereographic projection, one component maps to
+     the bounded component and the other to the unbounded one (Lemma 61.1).\<close>
+  have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
+  have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" sorry
+  \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
+  have hU_bdy: "closure U = U \<union> C" sorry
+  have hV_bdy: "closure V = V \<union> C" sorry
+  show ?thesis using hUV_ne hUV_disj hUV_cover hU_pc hV_pc hU_bdd hV_unbdd hU_bdy hV_bdy
+    by blast
+qed
 
 (** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into exactly two components. **)
 theorem Theorem_63_5_two_closed_connected:
@@ -8849,9 +9115,36 @@ theorem Theorem_72_1_attaching_two_cell:
                                (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
                 (top1_quotient_group_mul_on
                    (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
-  \<comment> \<open>\<iota> is k = h|S^1. \<pi>_1(X, a) \<cong> \<pi>_1(A, a) / \<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> with coset product,
-      where p is the standard S^1 loop and k\<circ>p is a loop in A.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 72.1: \<iota> = h restricted to S^1.\<close>
+  let ?\<iota> = "\<lambda>z. h z"
+  have h\<iota>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A
+       (subspace_topology X TX A) ?\<iota>" sorry
+  have h\<iota>_eq: "\<forall>z\<in>top1_S1. ?\<iota> z = h z" by simp
+  \<comment> \<open>Step 1: \<pi>_1(X, a) is generated by \<pi>_1(A, a) (since X-A is contractible via h).\<close>
+  \<comment> \<open>Step 2: The surjection \<pi>_1(A, a) \<rightarrow> \<pi>_1(X, a) has kernel = normal closure of [k\<circ>p],
+     where p is the standard loop and k = h|S^1 = \<iota>.\<close>
+  \<comment> \<open>This uses Seifert-van Kampen (Theorem 70.2) applied to a neighborhood of A in X
+     and X-A, or equivalently, the pushout of \<pi>_1 along the attaching map.\<close>
+  have hiso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX a)
+        (top1_fundamental_group_mul X TX a)
+        (top1_quotient_group_carrier_on
+           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+           (top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+              (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+              (top1_fundamental_group_id A (subspace_topology X TX A) a)
+              (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                 A (subspace_topology X TX A) a ?\<iota>
+                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                       (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+        (top1_quotient_group_mul_on
+           (top1_fundamental_group_mul A (subspace_topology X TX A) a))" sorry
+  show ?thesis using h\<iota>_cont h\<iota>_eq hiso by blast
+qed
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
@@ -8866,7 +9159,21 @@ theorem Theorem_73_1_torus_presentation:
            (top1_fundamental_group_mul T_torus TT x0)
            (UNIV::(int \<times> int) set)
            (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
+     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
+     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
+     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
+  \<comment> \<open>Step 1: T is quotient of square \<Rightarrow> space A is wedge of 2 circles (1-skeleton).\<close>
+  have hA_wedge: "\<exists>(A :: 'a set) TA p.
+      top1_is_wedge_of_circles_on A TA {0::nat, 1} p \<and> A \<subseteq> T_torus" sorry
+  \<comment> \<open>Step 2: \<pi>_1(A) is free on 2 generators \<alpha>, \<beta> (Theorem 71.1).\<close>
+  have hpi1_A_free: "\<exists>(F::'g set) mulF eF invgF \<iota>.
+      top1_is_free_group_full_on F mulF eF invgF \<iota> {0::nat, 1}" sorry
+  \<comment> \<open>Step 3: Attaching the 2-cell kills the commutator \<alpha>\<beta>\<alpha>\<inverse>\<beta>\<inverse>.
+     So \<pi>_1(T) \<cong> F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle> \<cong> Z\<times>Z.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
 theorem Theorem_73_4_dunce_cap:
@@ -8879,7 +9186,20 @@ theorem Theorem_73_4_dunce_cap:
            (top1_fundamental_group_mul X TX x0)
            (top1_Zn_group n)
            (top1_Zn_mul n)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 73.4: X is the dunce cap = quotient of B^2 by n-fold rotation on S^1.
+     The 1-skeleton is a single circle A, and \<pi>_1(A) \<cong> Z generated by the loop a.
+     The 2-cell is attached by a^n. By Theorem 72.1:
+     \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  have hA_circle: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A TA x0)
+        (top1_fundamental_group_mul A TA x0)
+        top1_Z_group top1_Z_mul" sorry
+  \<comment> \<open>The attaching map wraps S^1 n times around the circle A.\<close>
+  \<comment> \<open>By Theorem 72.1: \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
     with U, V, U \<inter> V open and path-connected, then \<pi>_1(X, x_0) is isomorphic to
@@ -8917,9 +9237,44 @@ theorem Theorem_70_2_SvK:
                     | c. c \<in> top1_fundamental_group_carrier
                            (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 }))
              (top1_quotient_group_mul_on mulFP)"
+proof -
   \<comment> \<open>Seifert-van Kampen: \<pi>_1(X, x_0) \<cong> (\<pi>_1(U) \<star> \<pi>_1(V)) / \<langle>\<langle>{i_1(\<gamma>) \<cdot> i_2(\<gamma>)\<inverse> |
       \<gamma> \<in> \<pi>_1(U\<inter>V)}\<rangle>\<rangle>: the amalgamated free product over \<pi>_1(U\<inter>V).\<close>
-  sorry
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU x0"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV x0"
+  let ?\<pi>X = "top1_fundamental_group_carrier X TX x0"
+  \<comment> \<open>Step 1: Construct the free product FP = \<pi>_1(U) \<star> \<pi>_1(V) (exists by Theorem 68.2).\<close>
+  obtain FP mulFP eFP invgFP \<iota>fam where
+      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+             (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)
+             (\<lambda>i. if i = 0 then top1_fundamental_group_mul U ?TU x0
+                  else top1_fundamental_group_mul V ?TV x0)
+             \<iota>fam {0, 1}"
+    sorry
+  \<comment> \<open>Step 2: Define the natural map j: FP \<rightarrow> \<pi>_1(X) induced by the inclusions U, V \<hookrightarrow> X.\<close>
+  \<comment> \<open>Step 3 (Surjectivity): By Theorem 59.1, every loop in X decomposes into loops in U or V.
+     Hence j is surjective onto \<pi>_1(X).\<close>
+  have hj_surj: "\<exists>j. top1_group_hom_on FP mulFP ?\<pi>X (top1_fundamental_group_mul X TX x0) j
+      \<and> j ` FP = ?\<pi>X" sorry
+  \<comment> \<open>Step 4 (Kernel): The kernel of j is the normal subgroup N generated by
+     {i_1(\<gamma>) \<cdot> i_2(\<gamma>)\<inverse> | \<gamma> \<in> \<pi>_1(U\<inter>V)}.
+     These elements are clearly in ker(j) since the two inclusions U\<inter>V \<hookrightarrow> U and U\<inter>V \<hookrightarrow> V
+     agree when composed with the inclusions U, V \<hookrightarrow> X.
+     Conversely, any element of ker(j) can be reduced to a product of such relators
+     by the same Lebesgue-number subdivision argument as in Theorem 59.1.\<close>
+  have hker: "\<exists>j. top1_group_hom_on FP mulFP ?\<pi>X (top1_fundamental_group_mul X TX x0) j
+      \<and> top1_group_kernel_on FP (top1_fundamental_group_id X TX x0) j
+        = top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+           { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on
+                (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c))
+                    (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on
+                      (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+              | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }" sorry
+  \<comment> \<open>Step 5 (First isomorphism theorem): j induces FP/N \<cong> \<pi>_1(X).\<close>
+  show ?thesis using hFP hj_surj hker sorry
+qed
 
 section \<open>Chapter 12: Classification of Surfaces\<close>
 
@@ -9128,7 +9483,28 @@ theorem Theorem_77_5_classification:
        \<or> (\<exists>m > 0. \<exists>(P_m::'a set) TP h.
              top1_is_m_fold_projective_on P_m TP m
            \<and> top1_homeomorphism_on X TX P_m TP h)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 77.5: By Theorem 78.2, X is a quotient of a single polygonal region by
+     an edge scheme w. Apply elementary operations (Theorem 76) to reduce w to one of:
+     (i) the empty scheme (giving S^2),
+     (ii) a_1 b_1 a_1\<inverse> b_1\<inverse> \<cdots> a_n b_n a_n\<inverse> b_n\<inverse> (giving the n-fold torus T_n), or
+     (iii) a_1 a_1 \<cdots> a_m a_m (giving the m-fold projective plane P_m).
+     The reduction proceeds in steps:
+     Step 1: bring all vertices to one equivalence class;
+     Step 2: collect all pairs aa into adjacent positions;
+     Step 3: pair off remaining letters into commutator blocks aba\<inverse>b\<inverse>.\<close>
+  obtain P n q where hP: "top1_is_polygonal_region_on P n"
+      and hq: "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    using Theorem_78_2_connected_polygonal_quotient[OF assms(1) _ assms(2)] assms(1)
+    unfolding top1_is_surface_on_def sorry
+  \<comment> \<open>Reduce the scheme via elementary operations to standard form.\<close>
+  have "\<exists>scheme. top1_quotient_of_scheme_on X TX scheme
+      \<and> (scheme = [] \<or>
+         (\<exists>n>0. scheme = top1_n_torus_scheme n) \<or>
+         (\<exists>m>0. scheme = top1_m_projective_scheme m))" sorry
+  show ?thesis sorry
+qed
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
@@ -9153,7 +9529,23 @@ theorem Theorem_79_2:
              \<and> h e0 = e0') \<longleftrightarrow>
          top1_fundamental_group_image_hom E TE e0 B TB b0 p
            = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
-  sorry
+proof
+  \<comment> \<open>Forward: if h : (E, e0) \<rightarrow> (E', e0') is a covering equivalence, then
+     p_*(\<pi>_1(E, e0)) = p'_*(\<pi>_1(E', e0')) because h_* is an iso and p = p' \<circ> h.\<close>
+  assume "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'"
+  then obtain h where hh: "top1_homeomorphism_on E TE E' TE' h"
+      and hp: "\<forall>e\<in>E. p' (h e) = p e" and he: "h e0 = e0'" by blast
+  \<comment> \<open>h_* : \<pi>_1(E, e0) \<cong> \<pi>_1(E', e0'), and p' \<circ> h = p, so p_* = p'_* \<circ> h_*.\<close>
+  show "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'" sorry
+next
+  \<comment> \<open>Backward: if subgroup images equal, use path-lifting to construct h.\<close>
+  assume hH_eq: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
+  \<comment> \<open>For e \<in> E, choose path \<alpha> in E from e0 to e. Define h(e) = lift of p\<circ>\<alpha> in E' starting at e0'.
+     Equal subgroups guarantee the lift exists and is well-defined.\<close>
+  show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'" sorry
+qed
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. **)
@@ -9171,8 +9563,28 @@ theorem Theorem_79_4:
                 ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                           (top1_fundamental_group_invg B TB b0 c)) ` H))
                 (top1_fundamental_group_image_hom E TE e0 B TB b0 p))"
+proof
   \<comment> \<open>p_*(\<pi>_1(E, e_0)) and p'_*(\<pi>_1(E', e_0')) are conjugate subgroups of \<pi>_1(B, b_0).\<close>
-  sorry
+  \<comment> \<open>Forward: if h: E \<cong> E' with p'\<circ>h=p, pick e1' = h(e0) and path \<gamma> in E' from e0' to e1'.
+     Then p_*(E,e0) = p'_*(E',e1') = [p'\<circ>\<gamma>] \<cdot> p'_*(E',e0') \<cdot> [p'\<circ>\<gamma>]\<inverse> (basepoint change).\<close>
+  assume "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+  show "\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
+      top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                    (top1_fundamental_group_invg B TB b0 c)) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)" sorry
+next
+  \<comment> \<open>Backward: conjugacy means subgroups differ by a basepoint change in E'.
+     Theorem 79.2 applies after adjusting basepoints.\<close>
+  assume "\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
+      top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                    (top1_fundamental_group_invg B TB b0 c)) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+  show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)" sorry
+qed
 
 section \<open>\<S>79 Equivalence of Covering Spaces\<close>
 
@@ -9197,9 +9609,22 @@ theorem Theorem_80_1_universal_unique:
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
       and "p e0 = b0" and "p' e0' = b0"
   shows "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+proof -
   \<comment> \<open>By Theorem 79.4: simply connected E gives trivial subgroup p_*(\<pi>_1 E) = {1};
       same for E'; and {1} is conjugate to itself.\<close>
-  sorry
+  have hE_sc: "top1_simply_connected_on E TE"
+    using assms(2) unfolding top1_is_universal_covering_on_def by blast
+  have hE'_sc: "top1_simply_connected_on E' TE'"
+    using assms(3) unfolding top1_is_universal_covering_on_def by blast
+  \<comment> \<open>p_*(\<pi>_1(E, e0)) = {[const]} (trivial) since E is simply connected.\<close>
+  have hH_trivial: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = {top1_fundamental_group_id B TB b0}" sorry
+  \<comment> \<open>Similarly p'_*(\<pi>_1(E', e0')) = {[const]}.\<close>
+  have hH'_trivial: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+      = {top1_fundamental_group_id B TB b0}" sorry
+  \<comment> \<open>{1} is conjugate to {1} (take c = identity). Apply Theorem 79.4.\<close>
+  show ?thesis using Theorem_79_4[OF assms(4,1,5)] assms hH_trivial hH'_trivial sorry
+qed
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
@@ -9209,7 +9634,20 @@ theorem Theorem_80_3_universal:
       and "top1_simply_connected_on E TE"
       and "top1_covering_map_on Y TY B TB r"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 80.3: Define q: E \<rightarrow> Y by path-lifting. For e \<in> E, choose path \<alpha> in E
+     from e0 to e. Lift r\<inverse> \<circ> p \<circ> \<alpha> to Y starting at y0 (where r(y0)=b0).
+     The lift's endpoint is q(e). Well-defined because E is simply connected.\<close>
+  obtain e0 where he0: "e0 \<in> E" sorry
+  let ?b0 = "p e0"
+  obtain y0 where hy0: "y0 \<in> Y" and hry0: "r y0 = ?b0" sorry
+  \<comment> \<open>For each e \<in> E, pick path \<alpha> from e0 to e. Lift p\<circ>\<alpha> to Y starting at y0.
+     Simple connectivity ensures uniqueness (different \<alpha>'s give same endpoint).\<close>
+  have "\<exists>q. (\<forall>e\<in>E. q e \<in> Y) \<and> (\<forall>e\<in>E. r (q e) = p e)
+      \<and> top1_continuous_map_on E TE Y TY q" sorry
+  \<comment> \<open>q is a covering map: evenly covered because p and r both are.\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Strict version of Theorem_80_3 — same statement but with simply_connected_strict.\<close>
 corollary Theorem_80_3_universal_strict:
@@ -9258,7 +9696,36 @@ theorem Theorem_81_2_covering_group_iso:
                 (top1_fundamental_group_mul B TB b0)
                 (top1_fundamental_group_image_hom E TE e0 B TB b0 p))
              (top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0))"
-  sorry
+proof -
+  \<comment> \<open>Munkres 81.2: Define the map \<Phi>: Cov(p) \<rightarrow> N(H)/H as follows.
+     Given a covering transformation h, it maps e0 to some e1 in the fiber p\<inverse>(b0).
+     Choose a path \<alpha> from e0 to e1 in E. Then p\<circ>\<alpha> is a loop in B at b0, giving [p\<circ>\<alpha>] \<in> \<pi>_1(B).
+     This class lies in N(H) and is well-defined modulo H. So \<Phi>(h) = [p\<circ>\<alpha>]H.\<close>
+  let ?H = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
+  \<comment> \<open>Step 1: Cov(p) is a group under composition.\<close>
+  have hCov_group: "\<exists>eC invgC. top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC" sorry
+  \<comment> \<open>Step 2: Define \<Phi> and show it's a well-defined homomorphism into N(H)/H.\<close>
+  have h\<Phi>_hom: "\<exists>\<Phi>. top1_group_hom_on ?Cov (\<lambda>h k e. h (k e))
+      (top1_quotient_group_carrier_on
+         (top1_normalizer_on
+            (top1_fundamental_group_carrier B TB b0)
+            (top1_fundamental_group_mul B TB b0)
+            (top1_fundamental_group_invg B TB b0) ?H)
+         (top1_fundamental_group_mul B TB b0) ?H)
+      (top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0)) \<Phi>" sorry
+  \<comment> \<open>Step 3: \<Phi> is injective (if h(e0)=e0 then h=id by unique lifting) and surjective
+     (for [c] \<in> N(H)/H, lift c starting at e0 to get e1; the unique covering
+     transformation mapping e0 to e1 is the preimage).\<close>
+  have h\<Phi>_bij: "\<exists>\<Phi>. bij_betw \<Phi> ?Cov
+      (top1_quotient_group_carrier_on
+         (top1_normalizer_on
+            (top1_fundamental_group_carrier B TB b0)
+            (top1_fundamental_group_mul B TB b0)
+            (top1_fundamental_group_invg B TB b0) ?H)
+         (top1_fundamental_group_mul B TB b0) ?H)" sorry
+  show ?thesis using hCov_group h\<Phi>_hom h\<Phi>_bij sorry
+qed
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
 
@@ -9292,7 +9759,17 @@ theorem Theorem_82_1_covering_existence:
     \<and> top1_locally_path_connected_on E TE
     \<and> e0 \<in> E \<and> p e0 = b0
     \<and> top1_fundamental_group_image_hom E TE e0 B TB b0 p = H"
-  sorry
+proof -
+  \<comment> \<open>Munkres 82.1: Construct E as the space of path-homotopy classes of paths in B
+     starting at b0, modulo the right-coset relation induced by H.
+     E = { [\<alpha>]H | \<alpha> is a path from b0 to some b \<in> B }.
+     The projection p: E \<rightarrow> B sends the coset [\<alpha>]H to the endpoint \<alpha>(1).
+     Step 1: Define E, TE, p, e0 via the coset construction.
+     Step 2: Semilocal simple connectivity ensures p is a covering map.
+     Step 3: E is path-connected and locally path-connected (inherits from B).
+     Step 4: p_*(\<pi>_1(E, e0)) = H by construction.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
 
@@ -9335,7 +9812,26 @@ theorem Theorem_83_2_covering_of_graph_is_graph:
   assumes "top1_is_graph_on B TB"
       and "top1_covering_map_on E TE B TB p"
   shows "top1_is_graph_on E TE"
-  sorry
+proof -
+  \<comment> \<open>Munkres 83.2: Each arc A in B lifts to arcs in E (sheets over A).
+     The covering map p is a local homeomorphism, so lifts of arcs are arcs.
+     The intersection condition and weak topology lift from B to E.\<close>
+  obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
+      and hcover: "(\<Union>\<A>B) = B"
+    using assms(1) unfolding top1_is_graph_on_def sorry
+  \<comment> \<open>Step 1: Lift each arc A to its sheets in E.\<close>
+  have "\<exists>\<A>E. (\<forall>A\<in>\<A>E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A))
+      \<and> (\<Union>\<A>E) = E
+      \<and> (\<forall>A\<in>\<A>E. \<forall>C\<in>\<A>E. A \<noteq> C \<longrightarrow>
+           A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+         \<and> finite (A \<inter> C) \<and> card (A \<inter> C) \<le> 2)
+      \<and> (\<forall>D. D \<subseteq> E \<longrightarrow>
+           (closedin_on E TE D \<longleftrightarrow>
+            (\<forall>A\<in>\<A>E. closedin_on A (subspace_topology E TE A) (A \<inter> D))))" sorry
+  \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
+  have "is_hausdorff_on E TE" sorry
+  show ?thesis unfolding top1_is_graph_on_def sorry
+qed
 
 section \<open>\<S>84 The Fundamental Group of a Graph\<close>
 
@@ -9359,7 +9855,23 @@ theorem Theorem_84_7_fund_group_graph_is_free:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-  sorry
+proof -
+  \<comment> \<open>Munkres 84.7: Choose a maximal tree T in X.
+     Step 1: T is simply connected (a tree).
+     Step 2: X/T is a wedge of circles (one per edge not in T).
+     Step 3: The quotient map X \<rightarrow> X/T is a homotopy equivalence.
+     Step 4: \<pi>_1(X/T) is free by Theorem 71.1 (wedge of circles).
+     Step 5: By Theorem 58.7, \<pi>_1(X) \<cong> \<pi>_1(X/T) which is free.\<close>
+  \<comment> \<open>Step 1: Choose maximal tree T.\<close>
+  obtain T where hT: "T \<subseteq> X" and hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
+    sorry
+  \<comment> \<open>Step 2: Collapsing T gives a wedge of circles.\<close>
+  have "\<exists>W TW J p. top1_is_wedge_of_circles_on W TW J p
+      \<and> top1_homotopy_equivalence_on X TX W TW
+           (\<lambda>x. SOME w. True) (\<lambda>w. SOME x. True)" sorry
+  \<comment> \<open>Step 3: Free group from wedge of circles (Theorem 71.3).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
 
@@ -9375,7 +9887,20 @@ theorem Theorem_85_1_Nielsen_Schreier:
       and "H \<subseteq> G"
   shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
            top1_is_free_group_full_on H mul e invg \<iota>H SH"
-  sorry
+proof -
+  \<comment> \<open>Munkres 85.1 (topological proof): G = \<pi>_1(X, x0) for some graph X (wedge of
+     |S| circles). H corresponds to a covering space E of X with p_*(\<pi>_1(E)) = H.
+     By Theorem 83.2, E is a graph. By Theorem 84.7, \<pi>_1(E) is free.
+     Since p_*(\<pi>_1(E)) = H and p_* is injective (covering), H is free.\<close>
+  \<comment> \<open>Step 1: Realize G as \<pi>_1 of a wedge of circles X.\<close>
+  have "\<exists>(X::'a set) TX x0. top1_is_graph_on X TX \<and> top1_connected_on X TX \<and> x0 \<in> X
+      \<and> top1_groups_isomorphic_on G mul
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)" sorry
+  \<comment> \<open>Step 2: H \<le> G \<cong> \<pi>_1(X) gives a covering space E of X with p_*(\<pi>_1(E)) \<cong> H.\<close>
+  \<comment> \<open>Step 3: E is a graph (Theorem 83.2). \<pi>_1(E) is free (Theorem 84.7). H \<cong> \<pi>_1(E) is free.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
     If F is free on n+1 generators and H \<le> F has finite index k in F, then H
@@ -9394,6 +9919,22 @@ theorem Theorem_85_3_Schreier_index:
   shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
            top1_is_free_group_full_on H mul e invg \<iota>H SH
          \<and> card SH = k * n + 1"
-  sorry
+proof -
+  \<comment> \<open>Munkres 85.3: F = \<pi>_1(X) for a wedge of n+1 circles. H corresponds to a
+     k-sheeted covering space E. By Theorem 83.2, E is a graph.
+     The Euler characteristic satisfies: \<chi>(E) = k \<cdot> \<chi>(X).
+     X has 1 vertex and n+1 edges, so \<chi>(X) = 1 - (n+1) = -n.
+     Hence \<chi>(E) = -kn. E has k vertices (fiber over the wedge point) and
+     k(n+1) edges. So 1 - rank(\<pi>_1(E)) = \<chi>(E) = k - k(n+1) = -kn.
+     Hence rank(\<pi>_1(E)) = kn + 1.\<close>
+  \<comment> \<open>Step 1: Realize F as \<pi>_1 of wedge X of n+1 circles. Build k-sheeted covering E.\<close>
+  have "\<exists>(X::'a set) TX x0 E TE p.
+      top1_is_graph_on X TX \<and> top1_connected_on X TX
+    \<and> top1_covering_map_on E TE X TX p
+    \<and> top1_is_graph_on E TE \<and> top1_connected_on E TE" sorry
+  \<comment> \<open>Step 2: Euler characteristic computation gives rank kn+1.\<close>
+  \<comment> \<open>Step 3: H \<cong> \<pi>_1(E) is free on kn+1 generators.\<close>
+  show ?thesis sorry
+qed
 
 end
