@@ -5575,7 +5575,10 @@ lemma Lemma_55_3_nulhomotopic_characterization:
       \<longleftrightarrow> (\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k
                \<and> (\<forall>x\<in>top1_S1. k x = h x))"
 proof (intro iffI)
-  \<comment> \<open>Forward: nulhomotopic \<Rightarrow> extension to B^2 (cone construction).\<close>
+  \<comment> \<open>Forward (1)\<Rightarrow>(2): nulhomotopic \<Rightarrow> extension to B^2.
+     Munkres: Let H: S^1\<times>I \<rightarrow> X be homotopy from h to const. The quotient map
+     \<pi>(x,t) = (1-t)x collapses S^1\<times>{1} to 0 and is otherwise injective.
+     Since H is constant on S^1\<times>{1}, it factors through \<pi>, giving k: B^2 \<rightarrow> X.\<close>
   assume "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
   thus "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
     sorry
@@ -5595,6 +5598,8 @@ corollary Corollary_55_4_inclusion_not_nulhomotopic:
            (UNIV - {(0, 0)})
            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
            (\<lambda>x. x)"
+  \<comment> \<open>Munkres Corollary 55.4: r(x) = x/|x| retracts R^2-0 onto S^1, so j_* is
+     injective (Lemma 55.1) hence nontrivial, hence j is not nulhomotopic.\<close>
   sorry
 
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
@@ -5606,7 +5611,13 @@ theorem Theorem_55_5_vector_field:
       and "\<forall>x\<in>top1_B2. v x \<noteq> (0, 0)"
   shows "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)"
     and "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))"
-  sorry  \<comment> \<open>Munkres proof via Lemma 55.3 and Corollary 55.4\<close>
+  \<comment> \<open>Munkres Theorem 55.5: Suppose v doesn't point inward at any x\<in>S^1.
+     Let w = v|S^1. Then w extends to B^2 \<rightarrow> R^2-0, so w is nulhomotopic.
+     But F(x,t) = tx + (1-t)w(x) is a homotopy from w to inclusion j: S^1 \<rightarrow> R^2-0
+     (F(x,t)\<noteq>0 because if tx+(1-t)w(x)=0 then w(x) = -t/(1-t) \<cdot> x points inward).
+     So j is nulhomotopic, contradicting Corollary 55.4.
+     For outward: apply to the vector field (x, -v(x)).\<close>
+  sorry
 
 (** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc.
     Munkres' proof: by contradiction. If f has no fixed point, v(x) = f(x) - x
