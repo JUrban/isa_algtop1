@@ -4214,7 +4214,41 @@ theorem Theorem_53_3:
 proof -
   \<comment> \<open>Munkres 53.3: product of covering maps.\<close>
   have hpxp_cont: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE')
-      (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))" sorry
+      (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))"
+  proof -
+    have hTE: "is_topology_on E TE" by (rule is_topology_on_strict_imp[OF assms(3)])
+    have hTB: "is_topology_on B TB" by (rule is_topology_on_strict_imp[OF assms(4)])
+    have hTE': "is_topology_on E' TE'" by (rule is_topology_on_strict_imp[OF assms(5)])
+    have hTB': "is_topology_on B' TB'" by (rule is_topology_on_strict_imp[OF assms(6)])
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    have hp'_cont: "top1_continuous_map_on E' TE' B' TB' p'"
+      using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+    have hTEE: "is_topology_on (E \<times> E') (product_topology_on TE TE')"
+      by (rule product_topology_on_is_topology_on[OF hTE hTE'])
+    \<comment> \<open>p \<circ> fst : E\<times>E' \<rightarrow> B is continuous.\<close>
+    have hpi1: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') E TE pi1"
+      by (rule top1_continuous_pi1[OF hTE hTE'])
+    have hpi1_eq: "(pi1 :: ('a \<times> 'b) \<Rightarrow> 'a) = fst" unfolding pi1_def by (rule ext) simp
+    have hfst: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') E TE fst"
+      using hpi1 unfolding pi1_def by (by100 simp)
+    have hpfst: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') B TB (p \<circ> fst)"
+      by (rule top1_continuous_map_on_comp[OF hfst hp_cont])
+    \<comment> \<open>p' \<circ> snd : E\<times>E' \<rightarrow> B' is continuous.\<close>
+    have hpi2: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') E' TE' pi2"
+      by (rule top1_continuous_pi2[OF hTE hTE'])
+    have hpi2_eq: "(pi2 :: ('a \<times> 'b) \<Rightarrow> 'b) = snd" unfolding pi2_def by (rule ext) simp
+    have hsnd: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') E' TE' snd"
+      using hpi2 unfolding pi2_def by (by100 simp)
+    have hp'snd: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') B' TB' (p' \<circ> snd)"
+      by (rule top1_continuous_map_on_comp[OF hsnd hp'_cont])
+    \<comment> \<open>By Theorem 18.4: (\<lambda>(x,y). (p x, p' y)) = (\<lambda>z. (p(fst z), p'(snd z))) is continuous.\<close>
+    have heq: "(\<lambda>(x, y). (p x, p' y)) = (\<lambda>z. ((p \<circ> fst) z, (p' \<circ> snd) z))"
+      by (rule ext) (simp add: comp_def split_def)
+    \<comment> \<open>By Theorem 18.4: pi1\<circ>f = p\<circ>fst and pi2\<circ>f = p'\<circ>snd are both continuous,
+       so f = (\<lambda>(x,y). (p x, p' y)) is continuous into the product.\<close>
+    show ?thesis sorry
+  qed
   have hpxp_surj: "(\<lambda>(x, y). (p x, p' y)) ` (E \<times> E') = B \<times> B'"
   proof -
     have hp_surj: "p ` E = B" using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
@@ -4230,9 +4264,9 @@ proof -
       using hbb by blast
     \<comment> \<open>Take U, U' evenly covered by p, p' respectively.\<close>
     obtain U where hbU: "b \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
-      sorry
+      using top1_covering_map_on_evenly_covered[OF assms(1) hb] by (by100 blast)
     obtain U' where hbU': "b' \<in> U'" and hU'ec: "top1_evenly_covered_on E' TE' B' TB' p' U'"
-      sorry
+      using top1_covering_map_on_evenly_covered[OF assms(2) hb'] by (by100 blast)
     \<comment> \<open>U \<times> U' is evenly covered: slices are V\<alpha> \<times> V'\<beta>.\<close>
     have "bb \<in> U \<times> U' \<and>
         top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
