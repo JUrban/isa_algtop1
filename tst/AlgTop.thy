@@ -397,8 +397,104 @@ proof -
     show "F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
       using h2t h2tm1 hmatch[rule_format, OF hs] by simp
   qed
-  \<comment> \<open>Apply pasting lemma (Theorem 18.3).\<close>
-  show ?thesis sorry
+  \<comment> \<open>Apply pasting lemma.\<close>
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
+  have hF_range: "\<forall>p\<in>I_set \<times> I_set. F p \<in> X"
+    using hF unfolding top1_continuous_map_on_def by blast
+  have hF'_range: "\<forall>p\<in>I_set \<times> I_set. F' p \<in> X"
+    using hF' unfolding top1_continuous_map_on_def by blast
+  have hG_range: "\<forall>p\<in>I_set \<times> I_set. ?G p \<in> X"
+  proof (intro ballI)
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    show "?G p \<in> X"
+    proof (cases "snd p \<le> 1/2")
+      case True
+      have hmem: "(fst p, 2 * snd p) \<in> I_set \<times> I_set"
+        using hp True unfolding top1_unit_interval_def by auto
+      have "?G p = F (fst p, 2 * snd p)" using True by simp
+      moreover have "F (fst p, 2 * snd p) \<in> X" by (rule bspec[OF hF_range hmem])
+      ultimately show ?thesis by simp
+    next
+      case False
+      have hmem: "(fst p, 2 * snd p - 1) \<in> I_set \<times> I_set"
+        using hp False unfolding top1_unit_interval_def by auto
+      have "?G p = F' (fst p, 2 * snd p - 1)" using False by simp
+      moreover have "F' (fst p, 2 * snd p - 1) \<in> X" by (rule bspec[OF hF'_range hmem])
+      ultimately show ?thesis by simp
+    qed
+  qed
+  have hGA: "\<forall>p\<in>?A. ?G p = F (fst p, 2 * snd p)" by auto
+  have hGB: "\<forall>p\<in>?B. ?G p = F' (fst p, 2 * snd p - 1)"
+  proof
+    fix p assume hp: "p \<in> ?B"
+    hence hge: "snd p \<ge> 1/2" by auto
+    show "?G p = F' (fst p, 2 * snd p - 1)"
+    proof (cases "snd p > 1/2")
+      case True thus ?thesis by simp
+    next
+      case False
+      hence "snd p = 1/2" using hge by simp
+      hence h2t: "2 * snd p = 1" and h2tm1: "2 * snd p - 1 = 0" by simp_all
+      have hs: "fst p \<in> I_set" using hp by auto
+      show ?thesis using h2t h2tm1 hmatch[rule_format, OF hs] by simp
+    qed
+  qed
+  have hgA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A) X TX ?G"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>?A. ?G x \<in> X"
+    proof
+      fix x assume "x \<in> ?A"
+      hence "x \<in> I_set \<times> I_set" by auto
+      thus "?G x \<in> X" using hG_range by blast
+    qed
+  next
+    show "\<forall>V\<in>TX. {x \<in> ?A. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?A"
+    proof
+      fix V assume hV: "V \<in> TX"
+      have "{x \<in> ?A. ?G x \<in> V} = {x \<in> ?A. F (fst x, 2 * snd x) \<in> V}"
+        using hGA by auto
+      also have "\<dots> \<in> subspace_topology (I_set \<times> I_set) II_topology ?A"
+        using hfA hV unfolding top1_continuous_map_on_def by blast
+      finally show "{x \<in> ?A. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?A" .
+    qed
+  qed
+  have hgB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B) X TX ?G"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>x\<in>?B. ?G x \<in> X"
+    proof
+      fix x assume "x \<in> ?B"
+      hence "x \<in> I_set \<times> I_set" by auto
+      thus "?G x \<in> X" using hG_range by blast
+    qed
+  next
+    show "\<forall>V\<in>TX. {x \<in> ?B. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B"
+    proof
+      fix V assume hV: "V \<in> TX"
+      have "{x \<in> ?B. ?G x \<in> V} = {x \<in> ?B. F' (fst x, 2 * snd x - 1) \<in> V}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> ?B. ?G x \<in> V}"
+        hence hxB: "x \<in> ?B" and hGV: "?G x \<in> V" by auto
+        have "?G x = F' (fst x, 2 * snd x - 1)" using hGB hxB by blast
+        hence "F' (fst x, 2 * snd x - 1) \<in> V" using hGV by simp
+        thus "x \<in> {x \<in> ?B. F' (fst x, 2 * snd x - 1) \<in> V}" using hxB by blast
+      next
+        fix x assume "x \<in> {x \<in> ?B. F' (fst x, 2 * snd x - 1) \<in> V}"
+        hence hxB: "x \<in> ?B" and hFV: "F' (fst x, 2 * snd x - 1) \<in> V" by auto
+        have "?G x = F' (fst x, 2 * snd x - 1)" using hGB hxB by blast
+        hence "?G x \<in> V" using hFV by simp
+        thus "x \<in> {x \<in> ?B. ?G x \<in> V}" using hxB by blast
+      qed
+      also have "\<dots> \<in> subspace_topology (I_set \<times> I_set) II_topology ?B"
+        using hfB hV unfolding top1_continuous_map_on_def by blast
+      finally show "{x \<in> ?B. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B" .
+    qed
+  qed
+  show ?thesis sorry \<comment> \<open>pasting_lemma_two_closed[OF hTII hTX hA_closed hB_closed hcover hG_range hgA hgB]
+    — unification issue prevents direct application; all 8 ingredients are proved.\<close>
 qed
 
 lemma Lemma_51_1_path_homotopic_trans:
