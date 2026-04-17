@@ -5380,6 +5380,125 @@ proof -
     hpi1_v hpi2_v unfolding hUU by blast
 qed
 
+text \<open>Backward direction of Lemma 55.3: extension to B^2 implies nulhomotopic.\<close>
+lemma Lemma_55_3_backward:
+  fixes h :: "real \<times> real \<Rightarrow> 'a"
+  assumes hh: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+      and hTX: "is_topology_on X TX"
+      and hk: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k"
+      and hext: "\<forall>x\<in>top1_S1. k x = h x"
+  shows "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
+proof -
+  let ?c = "k (1::real, 0::real)"
+  have hc_X: "?c \<in> X"
+  proof -
+    have "(1::real, 0::real) \<in> top1_B2" unfolding top1_B2_def by simp
+    thus ?thesis using hk unfolding top1_continuous_map_on_def by blast
+  qed
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    show ?thesis unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+  qed
+  have hconst: "top1_continuous_map_on top1_S1 top1_S1_topology X TX (\<lambda>_. ?c)"
+    by (rule top1_continuous_map_on_const[OF hTS1 hTX hc_X])
+  \<comment> \<open>The homotopy F(x,t) = k((1-t)*fst x + t, (1-t)*snd x) shrinks S^1 to (1,0).\<close>
+  let ?F = "\<lambda>(x::real\<times>real, t::real). k ((1-t) * fst x + t, (1-t) * snd x)"
+  have hS1_in_B2: "top1_S1 \<subseteq> top1_B2"
+    unfolding top1_S1_def top1_B2_def by auto
+  have h10_B2: "(1::real, 0::real) \<in> top1_B2" unfolding top1_B2_def by simp
+  have hF_in_B2: "\<And>x t. x \<in> top1_S1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+    ((1-t) * fst x + t, (1-t) * snd x) \<in> top1_B2"
+  proof -
+    fix x :: "real \<times> real" and t :: real
+    assume hx: "x \<in> top1_S1" and ht: "t \<in> I_set"
+    have hxB2: "x \<in> top1_B2" using hx hS1_in_B2 by blast
+    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+    show "((1-t) * fst x + t, (1-t) * snd x) \<in> top1_B2"
+    proof -
+      have "((1-t) * fst x + t * fst (1::real, 0::real),
+             (1-t) * snd x + t * snd (1::real, 0::real)) \<in> top1_B2"
+        by (rule top1_B2_convex[OF hxB2 h10_B2 ht0 ht1])
+      thus ?thesis by simp
+    qed
+  qed
+  \<comment> \<open>Continuity of F: composition of polynomial \<phi> and k.\<close>
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+      (product_topology_on top1_S1_topology I_top) X TX ?F"
+  proof -
+    let ?\<phi> = "\<lambda>(x::real\<times>real, t::real). ((1-t) * fst x + t, (1-t) * snd x)"
+    \<comment> \<open>\<phi> is continuous S^1\<times>I \<rightarrow> B^2 (polynomial in components).\<close>
+    have h\<phi>_cont_on: "continuous_on UNIV (\<lambda>p::((real\<times>real)\<times>real). ((1 - snd p) * fst (fst p) + snd p,
+                                                                    (1 - snd p) * snd (fst p)))"
+      by (intro continuous_intros)
+    \<comment> \<open>Transfer to custom topology via the bridge lemmas.\<close>
+    have hTP: "is_topology_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)"
+      by (rule product_topology_on_is_topology_on[OF hTS1 hTI])
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+      unfolding top1_B2_topology_def
+      by (rule subspace_topology_is_topology_on)
+         (use product_topology_on_is_topology_on[OF hTR hTR] in simp_all)
+    \<comment> \<open>\<phi> maps S^1\<times>I into B^2.\<close>
+    have h\<phi>_range: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> ?\<phi> p \<in> top1_B2"
+      using hF_in_B2 by auto
+    \<comment> \<open>\<phi> continuous via Theorem 18.4 + fst/snd projections.\<close>
+    \<comment> \<open>Each component of \<phi> is continuous to R (polynomial in coordinates).\<close>
+    have hfst_\<phi>: "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) (UNIV::real set) top1_open_sets
+        (\<lambda>p. (1 - snd p) * fst (fst p) + snd p)"
+      sorry \<comment> \<open>Polynomial in projections: (1-t)*a + t where a=fst(fst p), t=snd p.\<close>
+    have hsnd_\<phi>: "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) (UNIV::real set) top1_open_sets
+        (\<lambda>p. (1 - snd p) * snd (fst p))"
+      sorry \<comment> \<open>Polynomial: (1-t)*b where b=snd(fst p), t=snd p.\<close>
+    \<comment> \<open>Combine into pair by Theorem 18.4.\<close>
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    have hpi1_eq: "pi1 \<circ> ?\<phi> = (\<lambda>p. (1 - snd p) * fst (fst p) + snd p)"
+      unfolding pi1_def comp_def by (rule ext) auto
+    have hpi2_eq: "pi2 \<circ> ?\<phi> = (\<lambda>p. (1 - snd p) * snd (fst p))"
+      unfolding pi2_def comp_def by (rule ext) auto
+    have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+    have h\<phi>_R2: "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets) ?\<phi>"
+      using iffD2[OF Theorem_18_4[OF hTP hTR hTR, of ?\<phi>]]
+            hfst_\<phi>[folded hpi1_eq] hsnd_\<phi>[folded hpi2_eq] unfolding hUU by blast
+    have h\<phi>_img: "?\<phi> ` (top1_S1 \<times> I_set) \<subseteq> top1_B2"
+      using h\<phi>_range by auto
+    have h\<phi>_cont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) top1_B2 top1_B2_topology ?\<phi>"
+      using top1_continuous_map_on_codomain_shrink[OF h\<phi>_R2 h\<phi>_img]
+      unfolding top1_B2_topology_def by simp
+    \<comment> \<open>F = k \<circ> \<phi>.\<close>
+    have hF_eq: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> ?F p = (k \<circ> ?\<phi>) p"
+      by (auto simp: comp_def case_prod_beta)
+    have "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) X TX (k \<circ> ?\<phi>)"
+      by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hk])
+    thus ?thesis
+      using hF_eq unfolding top1_continuous_map_on_def comp_def
+      by (auto simp: case_prod_beta)
+  qed
+  have hF0: "\<forall>x\<in>top1_S1. ?F (x, 0) = h x"
+  proof
+    fix x assume hx: "x \<in> top1_S1"
+    have "?F (x, 0) = k (fst x, snd x)" by simp
+    also have "\<dots> = k x" by simp
+    also have "\<dots> = h x" using hext hx by blast
+    finally show "?F (x, 0) = h x" .
+  qed
+  have hF1: "\<forall>x\<in>top1_S1. ?F (x, 1) = ?c" by simp
+  show ?thesis
+    unfolding top1_nulhomotopic_on_def top1_homotopic_on_def
+    using hc_X hh hconst hF_cont hF0 hF1 by blast
+qed
+
 (** from \<S>55 Lemma 55.3: nulhomotopic characterization **)
 lemma Lemma_55_3_nulhomotopic_characterization:
   fixes h :: "real \<times> real \<Rightarrow> 'a"
