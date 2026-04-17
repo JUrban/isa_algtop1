@@ -4120,11 +4120,21 @@ lemma Lemma_54_1_uniqueness:
       and hft2: "top1_is_path_on E TE e0 e1' ftilde_2"
       and hft2p: "(\<forall>s\<in>I_set. p (ftilde_2 s) = f s)"
   shows "\<forall>s\<in>I_set. ftilde_1 s = ftilde_2 s"
-  \<comment> \<open>Textbook proof (Munkres Lemma 54.1, uniqueness):
-     Let S = {s \<in> I | ftilde_1(s) = ftilde_2(s)}. S is nonempty (0 \<in> S).
-     S is open and closed in I (evenly covered \<Rightarrow> discrete fibers \<Rightarrow> connected
-     preimage must stay in same slice). Since I is connected, S = I.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 54.1 uniqueness: open-closed argument on the agreement set.\<close>
+  let ?S = "{s \<in> I_set. ftilde_1 s = ftilde_2 s}"
+  have hS_nonempty: "0 \<in> ?S" sorry
+  have hS_open: "openin_on I_set I_top ?S" sorry
+    \<comment> \<open>For s \<in> S: f(s) \<in> some evenly covered U. ftilde_1(s) = ftilde_2(s) \<in> some slice V0.
+       Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
+  have hS_closed: "closedin_on I_set I_top ?S" sorry
+    \<comment> \<open>Complement is open by same argument: if ftilde_1(s) \<noteq> ftilde_2(s), they're in
+       different slices, and by continuity they stay in different slices nearby.\<close>
+  have hI_connected: "top1_connected_on I_set I_top" sorry
+  have "?S = I_set" sorry
+    \<comment> \<open>S is nonempty, open, and closed in connected I. So S = I.\<close>
+  thus ?thesis sorry
+qed
 
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
@@ -4135,11 +4145,19 @@ lemma Lemma_54_2_homotopy_lifting:
   shows "\<exists>Ftilde. top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde
     \<and> (\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t))
     \<and> Ftilde (0, 0) = e0"
-  \<comment> \<open>Munkres 54.2: Subdivide I\<times>I into rectangles Ii\<times>Jj each mapping into an evenly
-     covered set (Lebesgue number). Lift step-by-step: extend from bottom+left edges
-     to each rectangle via the homeomorphism p0: V0 \<rightarrow> U. If F is a path homotopy,
-     the fiber p\<inverse>(b0) is discrete, so Ftilde(0\<times>I) and Ftilde(1\<times>I) are constant.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 54.2: Lift F: I\<times>I \<rightarrow> B to Ftilde: I\<times>I \<rightarrow> E.\<close>
+  \<comment> \<open>Step 1: Subdivide I\<times>I into rectangles mapping into evenly covered sets (Lebesgue).\<close>
+  have "\<exists>m n. m > 0 \<and> n > 0 \<and>
+    (\<forall>i<m. \<forall>j<n. \<exists>U. top1_evenly_covered_on E TE B TB p U \<and>
+       F ` ({s\<in>I_set. real i/real m \<le> s \<and> s \<le> real(Suc i)/real m} \<times>
+             {t\<in>I_set. real j/real n \<le> t \<and> t \<le> real(Suc j)/real n}) \<subseteq> U)" sorry
+  \<comment> \<open>Step 2: Lift bottom edge using Lemma 54.1, then extend rectangle by rectangle.\<close>
+  \<comment> \<open>At each rectangle: Ftilde already defined on left+bottom edges (connected).
+     Image lies in one slice V0. Extend via p0\<inverse> \<circ> F on the rectangle.\<close>
+  \<comment> \<open>Step 3: Pasting lemma gives continuity. p \<circ> Ftilde = F by construction.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
