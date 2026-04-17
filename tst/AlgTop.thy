@@ -2389,43 +2389,6 @@ lemma top1_simply_connected_on_path_connected:
   "top1_simply_connected_on X TX \<Longrightarrow> top1_path_connected_on X TX"
   unfolding top1_simply_connected_on_def by blast
 
-text \<open>Helper: for path-connected spaces, nulhomotopy at one basepoint implies
-  simple connectivity (nulhomotopy at all basepoints via basepoint change).\<close>
-lemma top1_simply_connected_from_one_point:
-  assumes hTX: "is_topology_on X TX"
-      and hpc: "top1_path_connected_on X TX"
-      and hx0: "x0 \<in> X"
-      and hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
-          top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
-  shows "top1_simply_connected_on X TX"
-  unfolding top1_simply_connected_on_def
-proof (intro conjI ballI allI impI)
-  show "top1_path_connected_on X TX" by (rule hpc)
-next
-  fix x1 f
-  assume hx1: "x1 \<in> X" and hf1: "top1_is_loop_on X TX x1 f"
-  \<comment> \<open>Choose path \<alpha> from x0 to x1 (path-connected). Conjugate: \<alpha>\<inverse> * f * \<alpha> is loop at x0.
-     By hypothesis, \<alpha>\<inverse> * f * \<alpha> is nulhomotopic. Hence f is nulhomotopic at x1.\<close>
-  obtain \<alpha> where h\<alpha>: "top1_is_path_on X TX x0 x1 \<alpha>"
-    using hpc hx0 hx1 unfolding top1_path_connected_on_def by (by100 blast)
-  \<comment> \<open>Conjugate loop \<alpha>\<inverse> * f * \<alpha> at x0 is nulhomotopic.\<close>
-  \<comment> \<open>Conjugate: \<alpha> * f * \<alpha>\<inverse> is a loop at x0.\<close>
-  let ?conj = "top1_path_product (top1_path_product \<alpha> f) (top1_path_reverse \<alpha>)"
-  have h\<alpha>_rev: "top1_is_path_on X TX x1 x0 (top1_path_reverse \<alpha>)"
-    by (rule top1_path_reverse_is_path[OF h\<alpha>])
-  have hf_path: "top1_is_path_on X TX x1 x1 f"
-    using hf1 unfolding top1_is_loop_on_def .
-  have h\<alpha>f: "top1_is_path_on X TX x0 x1 (top1_path_product \<alpha> f)"
-    by (rule top1_path_product_is_path[OF hTX h\<alpha> hf_path])
-  have hconj_path: "top1_is_path_on X TX x0 x0 ?conj"
-    by (rule top1_path_product_is_path[OF hTX h\<alpha>f h\<alpha>_rev])
-  have hconj_loop: "top1_is_loop_on X TX x0 ?conj"
-    unfolding top1_is_loop_on_def using hconj_path by (by100 simp)
-  have hconj_nul: "top1_path_homotopic_on X TX x0 x0 ?conj (top1_constant_path x0)"
-    using hnul hconj_loop by (by100 blast)
-  \<comment> \<open>From conjugate nulhomotopic, extract f nulhomotopic at x1.\<close>
-  show "top1_path_homotopic_on X TX x1 x1 f (top1_constant_path x1)" sorry
-qed
 
 text \<open>The fundamental group operation: [f]*[g] = [f*g] on equivalence classes.
   Well-defined by Theorem 51.2.\<close>
@@ -2803,6 +2766,117 @@ proof -
   show ?thesis
     unfolding top1_path_homotopic_on_def
     using hhf hhg hGcont hGs0 hGs1 hG0 hG1 by blast
+qed
+
+text \<open>Helper: for path-connected spaces, nulhomotopy at one basepoint implies
+  simple connectivity (nulhomotopy at all basepoints via basepoint change).\<close>
+lemma top1_simply_connected_from_one_point:
+  assumes hTX: "is_topology_on X TX"
+      and hpc: "top1_path_connected_on X TX"
+      and hx0: "x0 \<in> X"
+      and hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+          top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+  shows "top1_simply_connected_on X TX"
+  unfolding top1_simply_connected_on_def
+proof (intro conjI ballI allI impI)
+  show "top1_path_connected_on X TX" by (rule hpc)
+next
+  fix x1 f
+  assume hx1: "x1 \<in> X" and hf1: "top1_is_loop_on X TX x1 f"
+  \<comment> \<open>Choose path \<alpha> from x0 to x1 (path-connected). Conjugate: \<alpha>\<inverse> * f * \<alpha> is loop at x0.
+     By hypothesis, \<alpha>\<inverse> * f * \<alpha> is nulhomotopic. Hence f is nulhomotopic at x1.\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on X TX x0 x1 \<alpha>"
+    using hpc hx0 hx1 unfolding top1_path_connected_on_def by (by100 blast)
+  \<comment> \<open>Conjugate loop \<alpha>\<inverse> * f * \<alpha> at x0 is nulhomotopic.\<close>
+  \<comment> \<open>Conjugate: \<alpha> * f * \<alpha>\<inverse> is a loop at x0.\<close>
+  let ?conj = "top1_path_product (top1_path_product \<alpha> f) (top1_path_reverse \<alpha>)"
+  have h\<alpha>_rev: "top1_is_path_on X TX x1 x0 (top1_path_reverse \<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>])
+  have hf_path: "top1_is_path_on X TX x1 x1 f"
+    using hf1 unfolding top1_is_loop_on_def .
+  have h\<alpha>f: "top1_is_path_on X TX x0 x1 (top1_path_product \<alpha> f)"
+    by (rule top1_path_product_is_path[OF hTX h\<alpha> hf_path])
+  have hconj_path: "top1_is_path_on X TX x0 x0 ?conj"
+    by (rule top1_path_product_is_path[OF hTX h\<alpha>f h\<alpha>_rev])
+  have hconj_loop: "top1_is_loop_on X TX x0 ?conj"
+    unfolding top1_is_loop_on_def using hconj_path by (by100 simp)
+  have hconj_nul: "top1_path_homotopic_on X TX x0 x0 ?conj (top1_constant_path x0)"
+    using hnul hconj_loop by (by100 blast)
+  \<comment> \<open>From conjugate nulhomotopic, extract f nulhomotopic at x1.
+     Proof uses path algebra: ?conj*\<alpha> \<simeq> const*\<alpha> \<simeq> \<alpha> and ?conj*\<alpha> \<simeq> (\<alpha>*f)*const \<simeq> \<alpha>*f,
+     so \<alpha>*f \<simeq> \<alpha>, then \<alpha>\<inverse>*(\<alpha>*f) \<simeq> \<alpha>\<inverse>*\<alpha> \<simeq> const and \<alpha>\<inverse>*(\<alpha>*f) \<simeq> f, hence f \<simeq> const.
+     Requires: path_homotopic_product_left/right, associativity, identity, inverse.\<close>
+  show "top1_path_homotopic_on X TX x1 x1 f (top1_constant_path x1)"
+  proof -
+    let ?\<alpha>f = "top1_path_product \<alpha> f"
+    \<comment> \<open>?conj * \<alpha> \<simeq> const * \<alpha> \<simeq> \<alpha>\<close>
+    have s1: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?conj \<alpha>)
+        (top1_path_product (top1_constant_path x0) \<alpha>)"
+      by (rule path_homotopic_product_left[OF hTX hconj_nul h\<alpha>])
+    have s2: "top1_path_homotopic_on X TX x0 x1
+        (top1_path_product (top1_constant_path x0) \<alpha>) \<alpha>"
+      by (rule Theorem_51_2_left_identity[OF hTX h\<alpha>])
+    have s12: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?conj \<alpha>) \<alpha>"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX s1 s2])
+    \<comment> \<open>?conj * \<alpha> \<simeq> \<alpha>*f by associativity + inverse + right identity\<close>
+    have s3: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?conj \<alpha>)
+        (top1_path_product ?\<alpha>f (top1_path_product (top1_path_reverse \<alpha>) \<alpha>))"
+      by (rule Lemma_51_1_path_homotopic_sym[OF
+            Theorem_51_2_associativity[OF hTX h\<alpha>f h\<alpha>_rev h\<alpha>]])
+    have s4: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_reverse \<alpha>) \<alpha>) (top1_constant_path x1)"
+      by (rule Theorem_51_2_invgerse_right[OF hTX h\<alpha>])
+    have s5: "top1_path_homotopic_on X TX x0 x1
+        (top1_path_product ?\<alpha>f (top1_path_product (top1_path_reverse \<alpha>) \<alpha>))
+        (top1_path_product ?\<alpha>f (top1_constant_path x1))"
+      by (rule path_homotopic_product_right[OF hTX s4 h\<alpha>f])
+    have s6: "top1_path_homotopic_on X TX x0 x1
+        (top1_path_product ?\<alpha>f (top1_constant_path x1)) ?\<alpha>f"
+      by (rule Theorem_51_2_right_identity[OF hTX h\<alpha>f])
+    have s35: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?conj \<alpha>) ?\<alpha>f"
+    proof (rule Lemma_51_1_path_homotopic_trans[OF hTX s3])
+      show "top1_path_homotopic_on X TX x0 x1
+          (top1_path_product ?\<alpha>f (top1_path_product (top1_path_reverse \<alpha>) \<alpha>)) ?\<alpha>f"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTX s5 s6])
+    qed
+    \<comment> \<open>\<alpha>*f \<simeq> \<alpha>\<close>
+    have s35_sym: "top1_path_homotopic_on X TX x0 x1 ?\<alpha>f (top1_path_product ?conj \<alpha>)"
+      by (rule Lemma_51_1_path_homotopic_sym[OF s35])
+    have h\<alpha>f_\<alpha>: "top1_path_homotopic_on X TX x0 x1 ?\<alpha>f \<alpha>"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX s35_sym s12])
+    \<comment> \<open>\<alpha>\<inverse>*(\<alpha>*f) \<simeq> \<alpha>\<inverse>*\<alpha> \<simeq> const_x1\<close>
+    have s7: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_reverse \<alpha>) ?\<alpha>f)
+        (top1_path_product (top1_path_reverse \<alpha>) \<alpha>)"
+      by (rule path_homotopic_product_right[OF hTX h\<alpha>f_\<alpha> h\<alpha>_rev])
+    have s78: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_reverse \<alpha>) ?\<alpha>f) (top1_constant_path x1)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX s7 s4])
+    \<comment> \<open>\<alpha>\<inverse>*(\<alpha>*f) \<simeq> (\<alpha>\<inverse>*\<alpha>)*f \<simeq> const*f \<simeq> f\<close>
+    have s8a: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_reverse \<alpha>) ?\<alpha>f)
+        (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) \<alpha>) f)"
+      by (rule Theorem_51_2_associativity[OF hTX h\<alpha>_rev h\<alpha> hf_path])
+    have s8b: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) \<alpha>) f)
+        (top1_path_product (top1_constant_path x1) f)"
+      by (rule path_homotopic_product_left[OF hTX s4 hf_path])
+    have s8c: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_constant_path x1) f) f"
+      by (rule Theorem_51_2_left_identity[OF hTX hf_path])
+    have s8: "top1_path_homotopic_on X TX x1 x1
+        (top1_path_product (top1_path_reverse \<alpha>) ?\<alpha>f) f"
+    proof (rule Lemma_51_1_path_homotopic_trans[OF hTX s8a])
+      show "top1_path_homotopic_on X TX x1 x1
+          (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) \<alpha>) f) f"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTX s8b s8c])
+    qed
+    have s8_sym: "top1_path_homotopic_on X TX x1 x1 f
+        (top1_path_product (top1_path_reverse \<alpha>) ?\<alpha>f)"
+      by (rule Lemma_51_1_path_homotopic_sym[OF s8])
+    show ?thesis
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX s8_sym s78])
+  qed
 qed
 
 text \<open>Change of basepoint map: alpha-hat([f]) = [rev-alpha * f * alpha] where alpha is a path x0 -> x1.\<close>
