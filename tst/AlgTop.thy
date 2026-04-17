@@ -7574,7 +7574,35 @@ proof -
       = (top1_fundamental_group_carrier X TX x0) \<times>
         (top1_fundamental_group_carrier Y TY y0)" sorry
   \<comment> \<open>Assemble: \<Phi> is a group isomorphism.\<close>
-  show ?thesis sorry
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+  proof (intro exI conjI)
+    show "top1_group_hom_on
+        (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
+        (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0))
+        (top1_fundamental_group_carrier X TX x0 \<times> top1_fundamental_group_carrier Y TY y0)
+        (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
+             top1_fundamental_group_mul Y TY y0 c2 d2))
+        ?\<Phi>"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+      show "?\<Phi> c \<in> top1_fundamental_group_carrier X TX x0 \<times>
+            top1_fundamental_group_carrier Y TY y0"
+        using h\<Phi>_surj hc by (by100 blast)
+    next
+      fix c d assume hc: "c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+          and hd: "d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+      show "?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d) =
+          (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
+             top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)"
+        using h\<Phi>_hom hc hd by (by100 blast)
+    qed
+    show "bij_betw ?\<Phi>
+        (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
+        (top1_fundamental_group_carrier X TX x0 \<times> top1_fundamental_group_carrier Y TY y0)"
+      unfolding bij_betw_def using h\<Phi>_inj h\<Phi>_surj by (by100 blast)
+  qed
 qed
 
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
