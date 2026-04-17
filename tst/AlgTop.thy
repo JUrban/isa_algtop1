@@ -3190,8 +3190,109 @@ qed
 
 lemma top1_S1_arc_E_preimage:
   "{x. top1_R_to_S1 x \<in> top1_S1_arc_E} = (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
-  \<comment> \<open>Proof: top1_R_to_S1 x \<in> arc_E iff cos(2\<pi>x) > 0 iff x \<in> (n - 1/4, n + 1/4) for some n.\<close>
-  sorry
+proof (intro set_eqI iffI)
+  fix x :: real
+  assume hx: "x \<in> {x. top1_R_to_S1 x \<in> top1_S1_arc_E}"
+  hence hcos: "cos (2 * pi * x) > 0"
+    unfolding top1_R_to_S1_def top1_S1_arc_E_def by auto
+  \<comment> \<open>cos(2\<pi>x) > 0 implies x \<in> (n - 1/4, n + 1/4) for some integer n.
+     Let n = round(x). Then |x - n| < 1/2, and we need |x - n| < 1/4.
+     Proof: cos(2\<pi>(x-n)) = cos(2\<pi>x) > 0 by periodicity.
+     If |x-n| \<ge> 1/4, then |2\<pi>(x-n)| \<ge> \<pi>/2, so cos \<le> 0. Contradiction.\<close>
+  show "x \<in> (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
+  proof -
+    let ?n = "\<lfloor>x + 1/2\<rfloor>"
+    have hfloor: "of_int ?n \<le> x + 1/2" by (rule of_int_floor_le)
+    have hfloor_ub: "x + 1/2 < of_int ?n + 1" using floor_correct[of "x + 1/2"] by linarith
+    hence hdiff_lb: "of_int ?n - 1/2 \<le> x" and hdiff_ub: "x < of_int ?n + 1/2"
+      by linarith+
+    \<comment> \<open>We have |x - n| < 1/2. Now show |x - n| < 1/4.\<close>
+    have hcos_shift: "cos (2 * pi * (x - of_int ?n)) > 0"
+    proof -
+      let ?\<theta> = "2 * pi * (x - of_int ?n)"
+      let ?k = "(2 * pi) * of_int ?n"
+      have "2 * pi * x = ?\<theta> + ?k" by (simp add: algebra_simps)
+      hence "cos (2 * pi * x) = cos (?\<theta> + ?k)" by simp
+      also have "\<dots> = cos ?\<theta> * cos ?k - sin ?\<theta> * sin ?k" by (rule cos_add)
+      also have "\<dots> = cos ?\<theta>" by (simp add: cos_int_2pin sin_int_2pin)
+      finally show ?thesis using hcos by simp
+    qed
+    \<comment> \<open>If x - n \<ge> 1/4, then 2\<pi>(x-n) \<ge> \<pi>/2, so cos \<le> 0.\<close>
+    have hdiff_lt: "x - of_int ?n < 1/4"
+    proof (rule ccontr)
+      assume "\<not> x - of_int ?n < 1/4"
+      hence hge: "x - of_int ?n \<ge> 1/4" by simp
+      hence "2 * pi * (x - of_int ?n) \<ge> 2 * pi * (1/4)"
+        using pi_gt_zero by (intro mult_left_mono) auto
+      hence "2 * pi * (x - of_int ?n) \<ge> pi / 2" by (simp add: field_simps)
+      moreover have "2 * pi * (x - of_int ?n) < 2 * pi * (1/2)"
+        using hdiff_ub pi_gt_zero by (intro mult_strict_left_mono) auto
+      hence "2 * pi * (x - of_int ?n) < pi" by (simp add: field_simps)
+      ultimately have "cos (2 * pi * (x - of_int ?n)) \<le> 0"
+        by (intro cos_le_zero) auto
+      thus False using hcos_shift by linarith
+    qed
+    have hdiff_gt: "x - of_int ?n > - (1/4)"
+    proof (rule ccontr)
+      assume "\<not> x - of_int ?n > - (1/4)"
+      hence hle: "x - of_int ?n \<le> - (1/4)" by simp
+      hence "2 * pi * (x - of_int ?n) \<le> 2 * pi * (-(1/4))"
+        using pi_gt_zero by (intro mult_left_mono) auto
+      hence "2 * pi * (x - of_int ?n) \<le> -(pi / 2)" by (simp add: field_simps)
+      moreover have "2 * pi * (x - of_int ?n) > 2 * pi * (-(1/2))"
+        using hdiff_lb pi_gt_zero by (intro mult_strict_left_mono) auto
+      hence "2 * pi * (x - of_int ?n) > -pi" by (simp add: field_simps)
+      ultimately have "cos (2 * pi * (x - of_int ?n)) \<le> 0"
+        by (intro cos_le_zero) auto
+      thus False using hcos_shift by linarith
+    qed
+    have "of_int ?n - 1/4 < x" using hdiff_gt by linarith
+    moreover have "x < of_int ?n + 1/4" using hdiff_lt by linarith
+    ultimately show ?thesis by auto
+  qed
+next
+  fix x :: real
+  assume hx: "x \<in> (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
+  then obtain n :: int where hn: "of_int n - 1/4 < x" "x < of_int n + 1/4" by auto
+  \<comment> \<open>x \<in> (n - 1/4, n + 1/4) implies cos(2\<pi>x) > 0.\<close>
+  have hcos: "cos (2 * pi * x) > 0"
+  proof -
+    have hdiff_lb: "- (1/4) < x - of_int n" using hn(1) by linarith
+    have hdiff_ub: "x - of_int n < 1/4" using hn(2) by linarith
+    have hpi_pos: "(0::real) < 2 * pi" using pi_gt_zero by linarith
+    have hd: "- (pi / 2) < 2 * pi * (x - of_int n)"
+    proof -
+      have "-(pi/2) = 2 * pi * (-(1/4))" by (simp add: field_simps)
+      also have "\<dots> < 2 * pi * (x - of_int n)"
+        using hdiff_lb hpi_pos by (intro mult_strict_left_mono) auto
+      finally show ?thesis .
+    qed
+    have hu: "2 * pi * (x - of_int n) < pi / 2"
+    proof -
+      have "2 * pi * (x - of_int n) < 2 * pi * (1/4)"
+        using hdiff_ub hpi_pos by (intro mult_strict_left_mono) auto
+      also have "\<dots> = pi/2" by (simp add: field_simps)
+      finally show ?thesis .
+    qed
+    have "cos (2 * pi * (x - of_int n)) > 0"
+      by (rule cos_gt_zero_pi[OF hd hu])
+    moreover have "cos (2 * pi * x) = cos (2 * pi * (x - of_int n))"
+    proof -
+      let ?\<theta> = "2 * pi * (x - of_int n)"
+      let ?k = "(2 * pi) * of_int n"
+      have h1: "2 * pi * x = ?\<theta> + ?k" by (simp add: algebra_simps)
+      have h2: "cos (?\<theta> + ?k) = cos ?\<theta> * cos ?k - sin ?\<theta> * sin ?k"
+        by (rule cos_add)
+      have h3: "cos ?k = 1" by (rule cos_int_2pin)
+      have h4: "sin ?k = 0" by (rule sin_int_2pin)
+      show ?thesis unfolding h1 h2 h3 h4 by simp
+    qed
+    ultimately show ?thesis by simp
+  qed
+  have hcirc: "cos (2 * pi * x)^2 + sin (2 * pi * x)^2 = 1" by (simp add: sin_squared_eq)
+  show "x \<in> {x. top1_R_to_S1 x \<in> top1_S1_arc_E}"
+    unfolding top1_R_to_S1_def top1_S1_arc_E_def using hcos hcirc by auto
+qed
 
 theorem Theorem_53_1:
   "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
