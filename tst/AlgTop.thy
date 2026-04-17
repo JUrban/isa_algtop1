@@ -2472,6 +2472,45 @@ proof -
   show ?thesis unfolding top1_path_connected_on_def using hTop hpath by simp
 qed
 
+definition top1_slh_ext :: "(real \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<times> real \<Rightarrow> real" where
+  "top1_slh_ext f x0 p = (1 - snd p) * f (max 0 (min 1 (fst p))) + snd p * x0"
+
+lemma top1_slh_ext_continuous:
+  assumes "continuous_on I_set f"
+  shows "continuous_on UNIV (top1_slh_ext f x0)"
+proof -
+  have h2: "continuous_on UNIV (\<lambda>x::real. f (max 0 (min 1 x)))"
+    by (rule continuous_on_compose2[OF assms]) (intro continuous_intros, auto simp: top1_unit_interval_def)
+  show ?thesis unfolding top1_slh_ext_def
+    by (intro continuous_intros continuous_on_compose2[OF h2 continuous_on_fst]) auto
+qed
+
+lemma top1_slh_ext_agrees:
+  "p \<in> I_set \<times> I_set \<Longrightarrow>
+   top1_slh_ext f x0 p = (1 - snd p) * f (fst p) + snd p * x0"
+  unfolding top1_slh_ext_def top1_unit_interval_def by auto
+
+lemma top1_continuous_map_on_II_to_UNIV:
+  fixes F :: "real \<times> real \<Rightarrow> real"
+  assumes "continuous_on UNIV F"
+  shows "top1_continuous_map_on (I_set \<times> I_set) II_topology (UNIV::real set) top1_open_sets F"
+proof -
+  have "\<forall>V\<in>(top1_open_sets :: real set set). {p \<in> I_set \<times> I_set. F p \<in> V} \<in> II_topology"
+  proof
+    fix V :: "real set" assume "V \<in> (top1_open_sets :: real set set)"
+    hence hVo: "open V" unfolding top1_open_sets_def by blast
+    have hFV: "open (F -` V)" by (rule open_vimage[OF hVo assms])
+    hence "F -` V \<in> (top1_open_sets :: (real\<times>real) set set)" unfolding top1_open_sets_def by blast
+    hence "F -` V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+      using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+    hence "(I_set \<times> I_set) \<inter> (F -` V) \<in> product_topology_on I_top I_top"
+      unfolding II_topology_eq_subspace subspace_topology_def by blast
+    moreover have "{p \<in> I_set \<times> I_set. F p \<in> V} = (I_set \<times> I_set) \<inter> (F -` V)" by auto
+    ultimately show "{p \<in> I_set \<times> I_set. F p \<in> V} \<in> II_topology" unfolding II_topology_def by simp
+  qed
+  thus ?thesis unfolding top1_continuous_map_on_def by simp
+qed
+
 text \<open>Helper: R is simply connected — any loop f is homotopic to constant via
   F(s, t) = (1 - t) * f(s) + t * x0 (straight-line homotopy to the basepoint).\<close>
 lemma top1_R_simply_connected':
@@ -2487,25 +2526,63 @@ proof -
       using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by blast
     have hf0: "f 0 = x0" and hf1: "f 1 = x0"
       using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
-    \<comment> \<open>Straight-line homotopy: F(s,t) = (1-t)*f(s) + t*x0.\<close>
-    let ?F = "\<lambda>p::real\<times>real. (1 - snd p) * f (fst p) + snd p * x0"
-    \<comment> \<open>Continuity of F on I\<times>I.\<close>
-    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology UNIV top1_open_sets ?F"
-      sorry \<comment> \<open>Needs II_to_UNIV transfer (continuous_on_open_invariant times out).\<close>
+    \<comment> \<open>Use top1_slh_ext as the homotopy (agrees with (1-t)*f(s)+t*x0 on I\<times>I).\<close>
+    have hf_cont_I: "continuous_on I_set f"
+      unfolding continuous_on_open_invariant
+    proof (intro allI impI)
+      fix B :: "real set" assume hBo: "open B"
+      have "B \<in> top1_open_sets" using hBo unfolding top1_open_sets_def by blast
+      hence hpre: "{s \<in> I_set. f s \<in> B} \<in> I_top"
+        using hfcont unfolding top1_continuous_map_on_def by blast
+      hence "{s \<in> I_set. f s \<in> B} \<in> subspace_topology UNIV top1_open_sets I_set"
+        unfolding top1_unit_interval_topology_def .
+      then obtain W where hW: "W \<in> top1_open_sets" and heq: "{s \<in> I_set. f s \<in> B} = I_set \<inter> W"
+        unfolding subspace_topology_def by blast
+      have "open W" using hW unfolding top1_open_sets_def by blast
+      moreover have "W \<inter> I_set = f -` B \<inter> I_set" using heq by auto
+      ultimately show "\<exists>A. open A \<and> A \<inter> I_set = f -` B \<inter> I_set" by blast
+    qed
+    have hext_cont: "continuous_on UNIV (top1_slh_ext f x0)"
+      by (rule top1_slh_ext_continuous[OF hf_cont_I])
+    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology UNIV top1_open_sets (top1_slh_ext f x0)"
+      by (rule top1_continuous_map_on_II_to_UNIV[OF hext_cont])
     have hfpath: "top1_is_path_on UNIV top1_open_sets x0 x0 f"
       using hloop unfolding top1_is_loop_on_def .
     have hTR: "is_topology_on (UNIV :: real set) top1_open_sets"
       by (rule top1_open_sets_is_topology_on_UNIV)
     have hcpath: "top1_is_path_on UNIV top1_open_sets x0 x0 (top1_constant_path x0)"
       by (rule top1_constant_path_is_path[OF hTR]) simp
-    have hFs0: "\<forall>s\<in>I_set. ?F (s, 0) = f s" by simp
-    have hFs1: "\<forall>s\<in>I_set. ?F (s, 1) = x0" by simp
-    have hF0t: "\<forall>t\<in>I_set. ?F (0, t) = x0" using hf0 by (simp add: algebra_simps)
-    have hF1t: "\<forall>t\<in>I_set. ?F (1, t) = x0" using hf1 by (simp add: algebra_simps)
-    have hFs1': "\<forall>s\<in>I_set. ?F (s, 1) = (\<lambda>_. x0) s" using hFs1 by simp
+    have hFs0: "\<forall>s\<in>I_set. top1_slh_ext f x0 (s, 0) = f s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "top1_slh_ext f x0 (s, 0) = (1 - 0) * f s + 0 * x0"
+        using top1_slh_ext_agrees[of "(s, 0)"] hs unfolding top1_unit_interval_def by auto
+      thus "top1_slh_ext f x0 (s, 0) = f s" by simp
+    qed
+    have hFs1: "\<forall>s\<in>I_set. top1_slh_ext f x0 (s, 1) = (\<lambda>_. x0) s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "top1_slh_ext f x0 (s, 1) = (1 - 1) * f s + 1 * x0"
+        using top1_slh_ext_agrees[of "(s, 1)"] hs unfolding top1_unit_interval_def by auto
+      thus "top1_slh_ext f x0 (s, 1) = x0" by simp
+    qed
+    have hF0t: "\<forall>t\<in>I_set. top1_slh_ext f x0 (0, t) = x0"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      have "top1_slh_ext f x0 (0, t) = (1 - t) * f 0 + t * x0"
+        using top1_slh_ext_agrees[of "(0, t)"] ht unfolding top1_unit_interval_def by auto
+      thus "top1_slh_ext f x0 (0, t) = x0" using hf0 by (simp add: algebra_simps)
+    qed
+    have hF1t: "\<forall>t\<in>I_set. top1_slh_ext f x0 (1, t) = x0"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      have "top1_slh_ext f x0 (1, t) = (1 - t) * f 1 + t * x0"
+        using top1_slh_ext_agrees[of "(1, t)"] ht unfolding top1_unit_interval_def by auto
+      thus "top1_slh_ext f x0 (1, t) = x0" using hf1 by (simp add: algebra_simps)
+    qed
     show "top1_path_homotopic_on UNIV top1_open_sets x0 x0 f (top1_constant_path x0)"
       unfolding top1_path_homotopic_on_def top1_constant_path_def
-      using hfpath hcpath hF_cont hFs0 hFs1' hF0t hF1t
+      using hfpath hcpath hF_cont hFs0 hFs1 hF0t hF1t
       unfolding top1_is_path_on_def top1_constant_path_def by blast
   qed
   show ?thesis
