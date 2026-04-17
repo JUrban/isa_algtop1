@@ -1623,7 +1623,27 @@ proof -
     thus "?F p \<in> X" using hfrange by blast
   qed
   have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
-    sorry \<comment> \<open>f composed with continuous max/min of linear functions.\<close>
+  proof -
+    have hg_cont: "continuous_on (I_set \<times> I_set) ?g"
+    proof -
+      have h2s: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 2 * fst p)" by (intro continuous_intros)
+      have h22s: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 2 - 2 * fst p)" by (intro continuous_intros)
+      have h1t: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 1 - snd p)" by (intro continuous_intros)
+      have hmin1: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. min (2 - 2 * fst p) (1 - snd p))"
+        by (intro continuous_on_min h22s h1t)
+      have hmin2: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. min (2 * fst p) (min (2 - 2 * fst p) (1 - snd p)))"
+        by (intro continuous_on_min h2s hmin1)
+      have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. max 0 (min (2 * fst p) (min (2 - 2 * fst p) (1 - snd p))))"
+        by (intro continuous_on_max continuous_on_const hmin2)
+      thus ?thesis by (simp add: case_prod_unfold)
+    qed
+    have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
+      by (rule top1_continuous_map_on_II_to_I) (use hg_range in auto, rule hg_cont)
+    have "f \<circ> ?g = ?F" by (rule ext) (simp add: comp_def case_prod_unfold)
+    hence hcomp: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX ?F"
+      using top1_continuous_map_on_comp[OF hg_top1 hfcont] by simp
+    show ?thesis unfolding II_topology_def using hcomp .
+  qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
   proof
     fix s assume hs: "s \<in> I_set"
