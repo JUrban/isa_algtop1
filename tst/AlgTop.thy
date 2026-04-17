@@ -1277,7 +1277,87 @@ proof -
     \<comment> \<open>Continuity of F on Cfg (inner pasting of f and g).\<close>
     have hFcfg: "top1_continuous_map_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg)
                   X TX ?F"
-      sorry \<comment> \<open>Paste f(4s/(1+t)) on {4s \<le> 1+t} with g(4s-1-t) on {1+t \<le> 4s \<le> 2+t}.\<close>
+    proof -
+      \<comment> \<open>Two clamped reparametrizations.\<close>
+      let ?\<rho>f = "\<lambda>p::real\<times>real. max 0 (min 1 (4 * fst p / max 1 (1 + snd p)))"
+      let ?\<rho>g = "\<lambda>p::real\<times>real. max 0 (min 1 (4 * fst p - 1 - snd p))"
+      have h\<rho>f_cont: "continuous_on (I_set \<times> I_set) ?\<rho>f"
+        by (intro continuous_intros continuous_on_divide) auto
+      have h\<rho>f_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?\<rho>f p \<in> I_set"
+        unfolding top1_unit_interval_def by auto
+      have hf_comp: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> ?\<rho>f)"
+        unfolding II_topology_def
+        by (rule top1_continuous_map_on_comp[OF top1_continuous_map_on_II_to_I[OF h\<rho>f_map h\<rho>f_cont] hfc])
+      have h\<rho>g_cont: "continuous_on (I_set \<times> I_set) ?\<rho>g" by (intro continuous_intros)
+      have h\<rho>g_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?\<rho>g p \<in> I_set"
+        unfolding top1_unit_interval_def by auto
+      have hg_comp: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (g \<circ> ?\<rho>g)"
+        unfolding II_topology_def
+        by (rule top1_continuous_map_on_comp[OF top1_continuous_map_on_II_to_I[OF h\<rho>g_map h\<rho>g_cont] hgc])
+      \<comment> \<open>Restrict + transfer.\<close>
+      let ?Cf = "{(s,t) \<in> I_set \<times> I_set. 4*s \<le> 1+t}"
+      let ?Cg = "{(s,t) \<in> I_set \<times> I_set. 4*s \<ge> 1+t \<and> 4*s \<le> 2+t}"
+      have hCf_sub: "?Cf \<subseteq> I_set \<times> I_set" by auto
+      have hCg_sub: "?Cg \<subseteq> I_set \<times> I_set" by auto
+      have hf_agree: "\<forall>p\<in>?Cf. (f \<circ> ?\<rho>f) p = ?F p"
+      proof
+        fix p assume hp: "p \<in> ?Cf"
+        obtain s t where hst: "p = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+            and h4s: "4*s \<le> 1+t" using hp by auto
+        have ht0: "t \<ge> 0" using ht unfolding top1_unit_interval_def by simp
+        have hs0: "s \<ge> 0" using hs unfolding top1_unit_interval_def by simp
+        have "max (1::real) (1 + t) = 1 + t" using ht0 by simp
+        moreover have "4*s / (1+t) \<ge> 0" using hs0 ht0 by simp
+        moreover have "4*s / (1+t) \<le> 1" using h4s ht0 by (simp add: divide_le_eq)
+        ultimately have "?\<rho>f p = 4*s / (1+t)" using hst by auto
+        hence "(f \<circ> ?\<rho>f) p = f (4*s / (1+t))" by (simp add: comp_def)
+        moreover have "?F p = f (4*s / (1+t))" using hst h4s by simp
+        ultimately show "(f \<circ> ?\<rho>f) p = ?F p" by simp
+      qed
+      have hg_agree: "\<forall>p\<in>?Cg. (g \<circ> ?\<rho>g) p = ?F p"
+      proof
+        fix p assume hp: "p \<in> ?Cg"
+        obtain s t where hst: "p = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+            and h4s_ge: "4*s \<ge> 1+t" and h4s_le: "4*s \<le> 2+t" using hp by auto
+        have "4*s - 1 - t \<ge> 0" using h4s_ge by simp
+        moreover have "4*s - 1 - t \<le> 1" using h4s_le by simp
+        ultimately have "?\<rho>g p = 4*s - 1 - t" using hst by auto
+        hence "(g \<circ> ?\<rho>g) p = g (4*s - 1 - t)" by (simp add: comp_def)
+        moreover have "?F p = g (4*s - 1 - t)"
+        proof (cases "4*s = 1+t")
+          case True
+          \<comment> \<open>Boundary: both branches give x1.\<close>
+          hence "?F p = f (4*s / (1+t))" using hst by simp
+          also have "... = f 1"
+          proof -
+            have "1 + t \<noteq> 0" using ht unfolding top1_unit_interval_def by simp
+            thus ?thesis using True by (simp add: divide_simps)
+          qed
+          also have "... = x1" using hf1 .
+          finally have l: "?F p = x1" .
+          have "g (4*s - 1 - t) = g 0" using True by simp
+          also have "... = x1" using hg0 .
+          finally show ?thesis using l by simp
+        next
+          case False
+          hence "4*s > 1+t" using h4s_ge by simp
+          hence "\<not>(4*s \<le> 1+t)" by simp
+          moreover have "4*s \<le> 2+t" using h4s_le .
+          ultimately show ?thesis using hst by simp
+        qed
+        ultimately show "(g \<circ> ?\<rho>g) p = ?F p" by simp
+      qed
+      have hF_Cf: "top1_continuous_map_on ?Cf (subspace_topology (I_set \<times> I_set) II_topology ?Cf) X TX ?F"
+        by (rule top1_continuous_map_on_agree[OF
+             top1_continuous_map_on_restrict_domain_simple[OF hf_comp hCf_sub] hf_agree])
+      have hF_Cg: "top1_continuous_map_on ?Cg (subspace_topology (I_set \<times> I_set) II_topology ?Cg) X TX ?F"
+        by (rule top1_continuous_map_on_agree[OF
+             top1_continuous_map_on_restrict_domain_simple[OF hg_comp hCg_sub] hg_agree])
+      \<comment> \<open>Paste Cf and Cg to get Cfg.\<close>
+      have "?Cf \<union> ?Cg = ?Cfg" by auto
+      \<comment> \<open>Need closedness of Cf, Cg in Cfg subspace, plus the pasting lemma on Cfg.\<close>
+      show ?thesis sorry \<comment> \<open>Inner pasting assembly — same technique as outer pasting.\<close>
+    qed
     \<comment> \<open>Continuity of F on Ch: h((4s-2-t)/(2-t)).\<close>
     have hFch: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
                  X TX ?F"
