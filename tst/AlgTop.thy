@@ -2389,6 +2389,34 @@ lemma top1_simply_connected_on_path_connected:
   "top1_simply_connected_on X TX \<Longrightarrow> top1_path_connected_on X TX"
   unfolding top1_simply_connected_on_def by blast
 
+text \<open>Helper: for path-connected spaces, nulhomotopy at one basepoint implies
+  simple connectivity (nulhomotopy at all basepoints via basepoint change).\<close>
+lemma top1_simply_connected_from_one_point:
+  assumes hTX: "is_topology_on X TX"
+      and hpc: "top1_path_connected_on X TX"
+      and hx0: "x0 \<in> X"
+      and hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+          top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+  shows "top1_simply_connected_on X TX"
+  unfolding top1_simply_connected_on_def
+proof (intro conjI ballI allI impI)
+  show "top1_path_connected_on X TX" by (rule hpc)
+next
+  fix x1 f
+  assume hx1: "x1 \<in> X" and hf1: "top1_is_loop_on X TX x1 f"
+  \<comment> \<open>Choose path \<alpha> from x0 to x1 (path-connected). Conjugate: \<alpha>\<inverse> * f * \<alpha> is loop at x0.
+     By hypothesis, \<alpha>\<inverse> * f * \<alpha> is nulhomotopic. Hence f is nulhomotopic at x1.\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on X TX x0 x1 \<alpha>"
+    using hpc hx0 hx1 sorry
+  \<comment> \<open>Conjugate loop \<alpha>\<inverse> * f * \<alpha> at x0 is nulhomotopic.\<close>
+  let ?conj = "top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>"
+  have hconj_loop: "top1_is_loop_on X TX x0 ?conj" sorry
+  have hconj_nul: "top1_path_homotopic_on X TX x0 x0 ?conj (top1_constant_path x0)"
+    using hnul hconj_loop by (by100 blast)
+  \<comment> \<open>From conjugate nulhomotopic, extract f nulhomotopic at x1.\<close>
+  show "top1_path_homotopic_on X TX x1 x1 f (top1_constant_path x1)" sorry
+qed
+
 text \<open>The fundamental group operation: [f]*[g] = [f*g] on equivalence classes.
   Well-defined by Theorem 51.2.\<close>
 
@@ -7591,11 +7619,11 @@ proof -
     thus "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
       by (rule Lemma_51_1_path_homotopic_trans[OF is_topology_on_strict_imp[OF assms(1)] hprod])
   qed
-  \<comment> \<open>Assemble: path-connected + all loops at x0 nulhomotopic \<Rightarrow> simply connected.
-     For path-connected spaces, nulhomotopy at one basepoint implies at all basepoints
-     (via basepoint change conjugation). Full proof requires basepoint change infrastructure.\<close>
-  show ?thesis unfolding top1_simply_connected_on_def using hpc hnul hx0
-    sorry
+  \<comment> \<open>Assemble: path-connected + all loops at x0 nulhomotopic \<Rightarrow> simply connected.\<close>
+  have hx0X: "x0 \<in> X" using hx0 assms(4) by (by100 blast)
+  show ?thesis
+    by (rule top1_simply_connected_from_one_point[OF
+          is_topology_on_strict_imp[OF assms(1)] hpc hx0X hnul])
 qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
@@ -7711,8 +7739,14 @@ proof -
   let ?\<Phi> = "\<lambda>c. (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c,
                   top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c)"
   \<comment> \<open>Step 1: \<Phi> is well-defined and a homomorphism.\<close>
-  have hfst_cont: "top1_continuous_map_on (X \<times> Y) ?TXY X TX fst" sorry
-  have hsnd_cont: "top1_continuous_map_on (X \<times> Y) ?TXY Y TY snd" sorry
+  have hTX: "is_topology_on X TX" by (rule is_topology_on_strict_imp[OF assms(1)])
+  have hTY: "is_topology_on Y TY" by (rule is_topology_on_strict_imp[OF assms(2)])
+  have hpi1_eq: "(pi1 :: ('a \<times> 'b) \<Rightarrow> 'a) = fst" unfolding pi1_def by (rule ext) simp
+  have hpi2_eq: "(pi2 :: ('a \<times> 'b) \<Rightarrow> 'b) = snd" unfolding pi2_def by (rule ext) simp
+  have hfst_cont: "top1_continuous_map_on (X \<times> Y) ?TXY X TX fst"
+    using top1_continuous_pi1[OF hTX hTY] unfolding hpi1_eq .
+  have hsnd_cont: "top1_continuous_map_on (X \<times> Y) ?TXY Y TY snd"
+    using top1_continuous_pi2[OF hTX hTY] unfolding hpi2_eq .
   have h\<Phi>_hom: "\<forall>c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       \<forall>d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       ?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
