@@ -2441,8 +2441,39 @@ theorem Theorem_52_1:
     (top1_path_product
       (top1_basepoint_change_on X TX x0 x1 alpha f)
       (top1_basepoint_change_on X TX x0 x1 alpha g))"
-  sorry \<comment> \<open>Proof: rearrange (α⁻¹*(fg*α)) ≃ (α⁻¹*(f*α))*(α⁻¹*(g*α)) via assoc/inv/id.
-         Now fully unblocked by Theorem_51_2 groupoid properties.\<close>
+proof -
+  let ?aR = "top1_path_reverse alpha"
+  have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  have hgp: "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
+  have haR: "top1_is_path_on X TX x1 x0 ?aR" by (rule top1_path_reverse_is_path[OF halpha])
+  have hfg: "top1_is_path_on X TX x0 x0 (top1_path_product f g)"
+    by (rule top1_path_product_is_path[OF hTX hfp hgp])
+  have hfa: "top1_is_path_on X TX x0 x1 (top1_path_product f alpha)"
+    by (rule top1_path_product_is_path[OF hTX hfp halpha])
+  have hga: "top1_is_path_on X TX x0 x1 (top1_path_product g alpha)"
+    by (rule top1_path_product_is_path[OF hTX hgp halpha])
+  have hfga: "top1_is_path_on X TX x0 x1 (top1_path_product (top1_path_product f g) alpha)"
+    by (rule top1_path_product_is_path[OF hTX hfg halpha])
+  have haR_fa: "top1_is_path_on X TX x1 x1 (top1_path_product ?aR (top1_path_product f alpha))"
+    by (rule top1_path_product_is_path[OF hTX haR hfa])
+  have haR_ga: "top1_is_path_on X TX x1 x1 (top1_path_product ?aR (top1_path_product g alpha))"
+    by (rule top1_path_product_is_path[OF hTX haR hga])
+  \<comment> \<open>Step 1: (α⁻¹*(f*α)) * (α⁻¹*(g*α)) ≃ α⁻¹ * ((f*α) * (α⁻¹*(g*α))) by assoc.\<close>
+  have step1: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha))
+                       (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product (top1_path_product f alpha)
+                                               (top1_path_product ?aR (top1_path_product g alpha))))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+         Theorem_51_2_associativity[OF hTX haR hfa haR_ga]])
+  \<comment> \<open>Steps 2-6 require right congruence (h*f ≃ h*g when f ≃ g) to manipulate
+     inside the α⁻¹ * (...) context. Right congruence spatial pasting is blocked
+     by build time ceiling. Each step uses assoc/inv/id applied inside.\<close>
+  show ?thesis
+    unfolding top1_basepoint_change_on_def
+    sorry \<comment> \<open>Chain: step1 then 5 more steps using right congruence + assoc/inv/id.
+           Blocked by path_homotopic_product_right build time ceiling.\<close>
+qed
 
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
