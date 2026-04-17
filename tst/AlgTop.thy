@@ -6940,7 +6940,8 @@ proof -
       \<forall>d\<in>top1_fundamental_group_carrier A TA x0.
       ?j_star (top1_fundamental_group_mul A TA x0 c d)
       = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)" sorry
-  show ?thesis sorry
+  show ?thesis
+    sorry
 qed
 
 theorem Theorem_58_3:
@@ -7336,7 +7337,7 @@ proof (intro allI impI)
               (gs ! i ` I_set \<subseteq> U \<or> gs ! i ` I_set \<subseteq> V)) \<and>
        top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs (top1_constant_path x0))"
-    using hm hgs_len hgs_loops hgs_product sorry
+    using hm hgs_len hgs_loops hgs_product by auto
 qed
 
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
@@ -7385,7 +7386,8 @@ proof -
     thus "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
       using hprod sorry
   qed
-  show ?thesis using hpc hnul sorry
+  show ?thesis using hpc hnul
+    sorry
 qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
