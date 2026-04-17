@@ -7534,6 +7534,45 @@ proof -
     using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
 qed
 
+text \<open>Helper: if each loop in a list is nulhomotopic, their foldr product is nulhomotopic.\<close>
+lemma foldr_path_product_nulhomotopic:
+  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
+      and hnul: "\<forall>i < length gs. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
+  shows "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
+  using hnul
+proof (induction gs)
+  case Nil
+  have "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0])
+  thus ?case by (simp, rule Lemma_51_1_path_homotopic_refl)
+next
+  case (Cons g gs')
+  have hg_nul: "top1_path_homotopic_on X TX x0 x0 g (top1_constant_path x0)"
+    using Cons.prems by force
+  have hgs'_nul: "\<forall>i < length gs'. top1_path_homotopic_on X TX x0 x0 (gs'!i) (top1_constant_path x0)"
+    using Cons.prems by force
+  have hrest_nul: "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product gs' (top1_constant_path x0)) (top1_constant_path x0)"
+    by (rule Cons.IH[OF hgs'_nul])
+  have hrest_path: "top1_is_path_on X TX x0 x0 (foldr top1_path_product gs' (top1_constant_path x0))"
+    using hrest_nul unfolding top1_path_homotopic_on_def by (by100 blast)
+  have step1: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product g (foldr top1_path_product gs' (top1_constant_path x0)))
+      (top1_path_product (top1_constant_path x0) (foldr top1_path_product gs' (top1_constant_path x0)))"
+    by (rule path_homotopic_product_left[OF hTX hg_nul hrest_path])
+  have step2: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_constant_path x0) (foldr top1_path_product gs' (top1_constant_path x0)))
+      (foldr top1_path_product gs' (top1_constant_path x0))"
+    by (rule Theorem_51_2_left_identity[OF hTX hrest_path])
+  have step12: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product g (foldr top1_path_product gs' (top1_constant_path x0)))
+      (foldr top1_path_product gs' (top1_constant_path x0))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX step1 step2])
+  show ?case
+    by (simp, rule Lemma_51_1_path_homotopic_trans[OF hTX step12 hrest_nul])
+qed
+
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
     and nonempty \<Longrightarrow> X = U \<union> V is simply connected. **)
 corollary Corollary_59_2:
@@ -7626,22 +7665,25 @@ proof -
              (rule openin_on_sub[OF assms(3)])
       qed
     qed
-    \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.
-       Proof by induction: each gi \<simeq> const, so gi * rest \<simeq> const * rest \<simeq> rest \<simeq> const
-       via path_homotopic_product_left + Theorem_51_2_left_identity + transitivity.\<close>
+    \<comment> \<open>Product of nulhomotopic loops is nulhomotopic.\<close>
+    have hx0X: "x0 \<in> X" using hx0 assms(4) by (by100 blast)
     have hTX_weak: "is_topology_on X TX" by (rule is_topology_on_strict_imp[OF assms(1)])
     have "top1_path_homotopic_on X TX x0 x0
         (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
-      using hgi_nul hlen sorry
+    proof -
+      have "\<forall>i < length gs. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
+        using hgi_nul hlen by (by100 simp)
+      thus ?thesis by (rule foldr_path_product_nulhomotopic[OF hTX_weak hx0X])
+    qed
     \<comment> \<open>Transitivity: f \<simeq> product \<simeq> const.\<close>
     thus "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
       by (rule Lemma_51_1_path_homotopic_trans[OF is_topology_on_strict_imp[OF assms(1)] hprod])
   qed
   \<comment> \<open>Assemble: path-connected + all loops at x0 nulhomotopic \<Rightarrow> simply connected.\<close>
-  have hx0X: "x0 \<in> X" using hx0 assms(4) by (by100 blast)
+  have hx0X_outer: "x0 \<in> X" using hx0 assms(4) by (by100 blast)
   show ?thesis
     by (rule top1_simply_connected_from_one_point[OF
-          is_topology_on_strict_imp[OF assms(1)] hpc hx0X hnul])
+          is_topology_on_strict_imp[OF assms(1)] hpc hx0X_outer hnul])
 qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
