@@ -6801,7 +6801,59 @@ proof -
     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
        (UNIV - {(0::real, 0::real)}))
     top1_S1"
-    sorry
+  proof -
+    let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+    let ?TR = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+    let ?norm = "\<lambda>x::real\<times>real. sqrt (fst x ^ 2 + snd x ^ 2)"
+    let ?H = "\<lambda>(x::real\<times>real, t::real). ((1-t)*fst x + t*fst x/?norm x, (1-t)*snd x + t*snd x/?norm x)"
+    have hS1sub: "top1_S1 \<subseteq> ?R2_0" unfolding top1_S1_def by auto
+    have hH0: "\<forall>x\<in>?R2_0. ?H (x, 0) = x" by simp
+    have hH1: "\<forall>x\<in>?R2_0. ?H (x, 1) \<in> top1_S1"
+    proof
+      fix x :: "real \<times> real" assume hx: "x \<in> ?R2_0"
+      hence hne: "x \<noteq> (0, 0)" by simp
+      hence hnorm_pos: "?norm x > 0"
+      proof -
+        have "fst x \<noteq> 0 \<or> snd x \<noteq> 0" using hne by (auto simp: prod_eq_iff)
+        hence "fst x ^ 2 + snd x ^ 2 > 0" by (auto simp: sum_power2_gt_zero_iff)
+        thus ?thesis by simp
+      qed
+      have "?H (x, 1) = (fst x / ?norm x, snd x / ?norm x)" by simp
+      moreover have "(fst x / ?norm x) ^ 2 + (snd x / ?norm x) ^ 2 = 1"
+      proof -
+        have hns: "?norm x ^ 2 = fst x ^ 2 + snd x ^ 2"
+          using hnorm_pos by (simp add: real_sqrt_pow2)
+        have h1: "(fst x / ?norm x) ^ 2 = fst x ^ 2 / (fst x ^ 2 + snd x ^ 2)"
+          unfolding power_divide hns ..
+        have h2: "(snd x / ?norm x) ^ 2 = snd x ^ 2 / (fst x ^ 2 + snd x ^ 2)"
+          unfolding power_divide hns ..
+        have hdn: "fst x ^ 2 + snd x ^ 2 \<noteq> 0"
+        proof -
+          have "fst x \<noteq> 0 \<or> snd x \<noteq> 0" using hne by (auto simp: prod_eq_iff)
+          hence "fst x ^ 2 + snd x ^ 2 > 0" by (auto simp: sum_power2_gt_zero_iff)
+          thus ?thesis by linarith
+        qed
+        let ?d = "fst x ^ 2 + snd x ^ 2"
+        have "fst x ^ 2 / ?d + snd x ^ 2 / ?d = ?d / ?d"
+          by (metis add_divide_distrib)
+        also have "?d / ?d = 1" using hdn by simp
+        finally show ?thesis unfolding h1 h2 .
+      qed
+      ultimately show "?H (x, 1) \<in> top1_S1" unfolding top1_S1_def by simp
+    qed
+    have hHA: "\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. ?H (a, t) = a"
+    proof (intro ballI)
+      fix a :: "real \<times> real" and t :: real
+      assume ha: "a \<in> top1_S1" and ht: "t \<in> I_set"
+      have heq: "fst a ^ 2 + snd a ^ 2 = 1" using ha unfolding top1_S1_def by simp
+      hence hnorm: "?norm a = 1" by (simp add: real_sqrt_eq_1_iff)
+      show "?H (a, t) = a" using hnorm by (simp add: prod_eq_iff algebra_simps)
+    qed
+    have hHcont: "top1_continuous_map_on (?R2_0 \<times> I_set) (product_topology_on ?TR I_top) ?R2_0 ?TR ?H"
+      sorry \<comment> \<open>Continuity: H is a rational function with denominator |x|>0 on R^2-{0}.\<close>
+    show ?thesis unfolding top1_deformation_retract_of_on_def
+      using hS1sub hHcont hH0 hH1 hHA by blast
+  qed
   have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
     by (rule top1_open_sets_is_topology_on_UNIV)
   have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
