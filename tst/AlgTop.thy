@@ -3034,6 +3034,51 @@ proof -
   show ?thesis using chain1234567 unfolding htarget_eq .
 qed
 
+text \<open>Helper: basepoint change sends loops to loops.\<close>
+lemma top1_basepoint_change_is_loop:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 alpha f)"
+proof -
+  have hra: "top1_is_path_on X TX x1 x0 (top1_path_reverse alpha)"
+    by (rule top1_path_reverse_is_path[OF halpha])
+  have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  have hfa: "top1_is_path_on X TX x0 x1 (top1_path_product f alpha)"
+    by (rule top1_path_product_is_path[OF hTX hfp halpha])
+  have hresult: "top1_is_path_on X TX x1 x1
+      (top1_path_product (top1_path_reverse alpha) (top1_path_product f alpha))"
+    by (rule top1_path_product_is_path[OF hTX hra hfa])
+  show ?thesis unfolding top1_is_loop_on_def top1_basepoint_change_on_def
+    using hresult .
+qed
+
+text \<open>Helper: basepoint change preserves loop equivalence.\<close>
+lemma top1_basepoint_change_loop_equiv:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+      and hf: "top1_is_loop_on X TX x0 f"
+      and hg: "top1_is_loop_on X TX x0 g"
+      and hfg: "top1_loop_equiv_on X TX x0 f g"
+  shows "top1_loop_equiv_on X TX x1
+    (top1_basepoint_change_on X TX x0 x1 alpha f)
+    (top1_basepoint_change_on X TX x0 x1 alpha g)"
+proof -
+  have hhat_f: "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 alpha f)"
+    by (rule top1_basepoint_change_is_loop[OF hTX halpha hf])
+  have hhat_g: "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 alpha g)"
+    by (rule top1_basepoint_change_is_loop[OF hTX halpha hg])
+  have hhom: "top1_path_homotopic_on X TX x1 x1
+    (top1_basepoint_change_on X TX x0 x1 alpha f)
+    (top1_basepoint_change_on X TX x0 x1 alpha g)"
+  proof -
+    have hff': "top1_path_homotopic_on X TX x0 x0 f g"
+      using hfg unfolding top1_loop_equiv_on_def by blast
+    show ?thesis by (rule top1_basepoint_change_congruence[OF hTX halpha hf hg hff'])
+  qed
+  show ?thesis unfolding top1_loop_equiv_on_def using hhat_f hhat_g hhom by blast
+qed
+
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
 theorem Theorem_52_1_iso:
@@ -3055,6 +3100,45 @@ proof -
   \<comment> \<open>Define \<phi> on equivalence classes.\<close>
   let ?\<phi> = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x1 (?hat f) g}"
   \<comment> \<open>\<phi> maps carrier(x0) to carrier(x1), is a homomorphism, and is bijective.\<close>
+  \<comment> \<open>Key fact: \<phi>(class f) = class(\<alpha>-hat f) for any f in class f.\<close>
+  have hphi_class: "\<And>f. top1_is_loop_on X TX x0 f \<Longrightarrow>
+    ?\<phi> {g. top1_loop_equiv_on X TX x0 f g} =
+    {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+  proof (intro set_eqI iffI)
+    fix f g assume hf: "top1_is_loop_on X TX x0 f"
+    assume "g \<in> ?\<phi> {h. top1_loop_equiv_on X TX x0 f h}"
+    then obtain f' where hf'_eq: "top1_loop_equiv_on X TX x0 f f'"
+        and hg_eq: "top1_loop_equiv_on X TX x1 (?hat f') g" by auto
+    have hf': "top1_is_loop_on X TX x0 f'" using hf'_eq unfolding top1_loop_equiv_on_def by blast
+    have hhat_equiv: "top1_loop_equiv_on X TX x1 (?hat f) (?hat f')"
+      by (rule top1_basepoint_change_loop_equiv[OF hTX halpha hf hf' hf'_eq])
+    show "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+      using top1_loop_equiv_on_trans[OF hTX hhat_equiv hg_eq] by simp
+  next
+    fix f g assume hf: "top1_is_loop_on X TX x0 f"
+    assume "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+    hence hg: "top1_loop_equiv_on X TX x1 (?hat f) g" by simp
+    \<comment> \<open>f itself is in its own class.\<close>
+    have "f \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+      using top1_loop_equiv_on_refl[OF hf] by simp
+    moreover have "top1_loop_equiv_on X TX x1 (?hat f) g" by (rule hg)
+    ultimately show "g \<in> ?\<phi> {h. top1_loop_equiv_on X TX x0 f h}" by blast
+  qed
+  \<comment> \<open>\<phi> maps carrier(x0) into carrier(x1).\<close>
+  have hphi_range: "\<forall>c\<in>top1_fundamental_group_carrier X TX x0.
+      ?\<phi> c \<in> top1_fundamental_group_carrier X TX x1"
+  proof
+    fix c assume "c \<in> top1_fundamental_group_carrier X TX x0"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {g. top1_loop_equiv_on X TX x0 f g}"
+      unfolding top1_fundamental_group_carrier_def by blast
+    have "?\<phi> c = {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+      unfolding hc by (rule hphi_class[OF hf])
+    moreover have "top1_is_loop_on X TX x1 (?hat f)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf])
+    ultimately show "?\<phi> c \<in> top1_fundamental_group_carrier X TX x1"
+      unfolding top1_fundamental_group_carrier_def by blast
+  qed
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def top1_group_hom_on_def
     sorry
