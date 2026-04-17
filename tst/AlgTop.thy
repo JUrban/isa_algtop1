@@ -3434,6 +3434,19 @@ proof -
     unfolding top1_groups_isomorphic_on_def using hiso by blast
 qed
 
+text \<open>Path-specific version: given a specific path, the basepoint change is an iso.
+  Follows from Theorem\_52\_1\_iso since a path between two points implies
+  they are in a common path-component.\<close>
+corollary basepoint_change_iso_via_path:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_fundamental_group_carrier X TX x1)
+           (top1_fundamental_group_mul X TX x1)"
+  using Theorem_52_1_iso[OF hTX _ _ _] sorry
+
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
 (** from \<S>52 Theorem 52.4 **)
 theorem Theorem_52_4_composition:
@@ -5960,12 +5973,16 @@ proof -
           top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)"
       unfolding hLHS' hRHS ..
   qed
-  \<comment> \<open>f_* is bijective (uses homotopy equivalence).
-     Key: g_* \<circ> f_* = basepoint change iso (from g\<circ>f \<simeq> id).
-     This makes f_* injective. Surjectivity from f\<circ>g \<simeq> id similarly.\<close>
+  \<comment> \<open>f_* is bijective.
+     Injectivity: g_* \<circ> f_* is related to basepoint change (iso).
+     Surjectivity: f_* \<circ> g_* is related to basepoint change (iso).\<close>
+  have hgof: "top1_homotopic_on X TX X TX (g \<circ> f) (\<lambda>x. x)"
+    using heq unfolding top1_homotopy_equivalence_on_def id_def[symmetric] by blast
+  have hfog: "top1_homotopic_on Y TY Y TY (f \<circ> g) (\<lambda>y. y)"
+    using heq unfolding top1_homotopy_equivalence_on_def id_def[symmetric] by blast
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
-    sorry
+    sorry \<comment> \<open>Uses basepoint_change_iso_via_path for the homotopy-derived paths.\<close>
   have hiso: "top1_group_iso_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0)
