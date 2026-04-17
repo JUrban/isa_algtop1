@@ -5448,14 +5448,71 @@ proof -
       using hF_in_B2 by auto
     \<comment> \<open>\<phi> continuous via Theorem 18.4 + fst/snd projections.\<close>
     \<comment> \<open>Each component of \<phi> is continuous to R (polynomial in coordinates).\<close>
+    \<comment> \<open>General helper: if f: R^3 \<rightarrow> R is continuous_on UNIV and maps S1\<times>I to R,
+       then f is continuous from product_topology to top1_open_sets.\<close>
+    have poly_cont: "\<And>f. continuous_on UNIV (f :: (real\<times>real)\<times>real \<Rightarrow> real) \<Longrightarrow>
+        top1_continuous_map_on (top1_S1 \<times> I_set)
+          (product_topology_on top1_S1_topology I_top) (UNIV::real set) top1_open_sets f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI allI impI)
+      fix f :: "(real\<times>real)\<times>real \<Rightarrow> real" and p V
+      assume hcont: "continuous_on UNIV f"
+      show "f p \<in> (UNIV::real set)" by simp
+    next
+      fix f :: "(real\<times>real)\<times>real \<Rightarrow> real" and V :: "real set"
+      assume hcont: "continuous_on UNIV f" and hV: "V \<in> top1_open_sets"
+      have hVo: "open V" using hV unfolding top1_open_sets_def by blast
+      have "open (f -` V)" by (rule open_vimage[OF hVo hcont])
+      hence hfV: "f -` V \<in> (top1_open_sets :: ((real\<times>real)\<times>real) set set)"
+        unfolding top1_open_sets_def by blast
+      \<comment> \<open>f\<inverse>(V) is open in R^3. Its intersection with S1\<times>I is open in S1\<times>I.\<close>
+      have hfV_prod: "f -` V \<in> product_topology_on
+          (product_topology_on top1_open_sets top1_open_sets) top1_open_sets"
+      proof -
+        have heq: "product_topology_on (product_topology_on (top1_open_sets::real set set)
+            (top1_open_sets::real set set)) (top1_open_sets::real set set)
+          = (top1_open_sets :: ((real\<times>real)\<times>real) set set)"
+          using product_topology_on_open_sets_real2
+                product_topology_on_open_sets[where ?'a = "real \<times> real" and ?'b = real]
+          by metis
+        show ?thesis unfolding heq by (rule hfV)
+      qed
+      have "{p \<in> top1_S1 \<times> I_set. f p \<in> V} = (top1_S1 \<times> I_set) \<inter> (f -` V)" by auto
+      also have "\<dots> \<in> product_topology_on top1_S1_topology I_top"
+      proof -
+        have "product_topology_on top1_S1_topology I_top =
+              subspace_topology ((UNIV::(real\<times>real) set) \<times> (UNIV::real set))
+                (product_topology_on (product_topology_on top1_open_sets top1_open_sets) top1_open_sets)
+                (top1_S1 \<times> I_set)"
+        proof -
+          have "product_topology_on top1_S1_topology I_top =
+                product_topology_on
+                  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1)
+                  (subspace_topology UNIV top1_open_sets I_set)"
+            unfolding top1_S1_topology_def top1_unit_interval_topology_def by simp
+          also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+                (product_topology_on (product_topology_on top1_open_sets top1_open_sets) top1_open_sets)
+                (top1_S1 \<times> I_set)"
+          proof -
+            have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+              using product_topology_on_is_topology_on[OF hTR hTR] by simp
+            show ?thesis by (rule Theorem_16_3[OF hTR2 hTR])
+          qed
+          finally show ?thesis by simp
+        qed
+        thus ?thesis using hfV_prod unfolding subspace_topology_def by blast
+      qed
+      finally show "{p \<in> top1_S1 \<times> I_set. f p \<in> V} \<in>
+          product_topology_on top1_S1_topology I_top" .
+    qed
     have hfst_\<phi>: "top1_continuous_map_on (top1_S1 \<times> I_set)
         (product_topology_on top1_S1_topology I_top) (UNIV::real set) top1_open_sets
         (\<lambda>p. (1 - snd p) * fst (fst p) + snd p)"
-      sorry \<comment> \<open>Polynomial in projections: (1-t)*a + t where a=fst(fst p), t=snd p.\<close>
+      by (rule poly_cont) (intro continuous_intros)
     have hsnd_\<phi>: "top1_continuous_map_on (top1_S1 \<times> I_set)
         (product_topology_on top1_S1_topology I_top) (UNIV::real set) top1_open_sets
         (\<lambda>p. (1 - snd p) * snd (fst p))"
-      sorry \<comment> \<open>Polynomial: (1-t)*b where b=snd(fst p), t=snd p.\<close>
+      by (rule poly_cont) (intro continuous_intros)
     \<comment> \<open>Combine into pair by Theorem 18.4.\<close>
     have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
       using product_topology_on_is_topology_on[OF hTR hTR] by simp
