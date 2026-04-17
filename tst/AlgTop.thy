@@ -5737,9 +5737,21 @@ corollary Corollary_55_4_inclusion_not_nulhomotopic:
            (UNIV - {(0, 0)})
            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
            (\<lambda>x. x)"
-  \<comment> \<open>Munkres Corollary 55.4: r(x) = x/|x| retracts R^2-0 onto S^1, so j_* is
-     injective (Lemma 55.1) hence nontrivial, hence j is not nulhomotopic.\<close>
-  sorry
+proof
+  assume hnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+      (\<lambda>x. x)"
+  \<comment> \<open>Munkres 55.4: The retraction r(x) = x/|x| makes j_* injective (Lemma 55.1).
+     Since \<pi>_1(S^1) is nontrivial, j_* is nontrivial, so j is not nulhomotopic.\<close>
+  \<comment> \<open>Step 1: r(x) = x/|x| is a retraction R^2-0 \<rightarrow> S^1.\<close>
+  have hret: "top1_retract_of_on (UNIV - {(0::real, 0::real)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+      top1_S1" sorry
+  \<comment> \<open>Step 2: j_* is injective (Lemma 55.1) hence nontrivial.\<close>
+  \<comment> \<open>Step 3: nulhomotopic \<Rightarrow> j_* trivial (Lemma 55.3 (3)\<Rightarrow>(1)), contradicting nontrivial.\<close>
+  show False sorry
+qed
 
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
@@ -5756,7 +5768,32 @@ theorem Theorem_55_5_vector_field:
      (F(x,t)\<noteq>0 because if tx+(1-t)w(x)=0 then w(x) = -t/(1-t) \<cdot> x points inward).
      So j is nulhomotopic, contradicting Corollary 55.4.
      For outward: apply to the vector field (x, -v(x)).\<close>
-  sorry
+proof -
+  \<comment> \<open>Inward: suppose v never points inward at any x \<in> S^1.\<close>
+  have hinward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)"
+  proof (rule ccontr)
+    assume hnot: "\<not> (\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x))"
+    \<comment> \<open>w = v|S^1 extends to B^2 \<rightarrow> R^2-0 (via v itself), so w is nulhomotopic.\<close>
+    have hw_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+        (UNIV - {(0, 0)})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+           (UNIV - {(0, 0)}))
+        (\<lambda>x. v x)" sorry
+    \<comment> \<open>F(x,t) = tx + (1-t)v(x) is a homotopy from v|S^1 to inclusion j.
+       F \<noteq> 0 because "no inward pointing" prevents cancellation.\<close>
+    have hj_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+        (UNIV - {(0, 0)})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+           (UNIV - {(0, 0)}))
+        (\<lambda>x. x)" sorry
+    \<comment> \<open>But j is not nulhomotopic (Corollary 55.4). Contradiction.\<close>
+    show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by blast
+  qed
+  \<comment> \<open>Outward: apply the inward result to -v.\<close>
+  have houtward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))" sorry
+  show "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)" by (rule hinward)
+  show "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))" by (rule houtward)
+qed
 
 (** from \<S>55 Theorem 55.6: Brouwer fixed-point theorem for the disc.
     Munkres' proof: by contradiction. If f has no fixed point, v(x) = f(x) - x
