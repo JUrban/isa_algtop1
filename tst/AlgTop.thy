@@ -1356,7 +1356,32 @@ proof -
       \<comment> \<open>Paste Cf and Cg to get Cfg.\<close>
       have "?Cf \<union> ?Cg = ?Cfg" by auto
       \<comment> \<open>Need closedness of Cf, Cg in Cfg subspace, plus the pasting lemma on Cfg.\<close>
-      show ?thesis sorry \<comment> \<open>Inner pasting assembly — same technique as outer pasting.\<close>
+      \<comment> \<open>Inner pasting: Cf \<union> Cg = Cfg, closedness in Cfg subspace.\<close>
+      have hTcfg: "is_topology_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg)"
+        by (rule subspace_topology_is_topology_on[OF hTII]) auto
+      have hCf_closed_cfg: "closedin_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cf"
+        sorry \<comment> \<open>{4s \<le> 1+t} closed in Cfg subspace.\<close>
+      have hCg_closed_cfg: "closedin_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cg"
+        sorry \<comment> \<open>{1+t \<le> 4s \<le> 2+t} closed in Cfg subspace.\<close>
+      have hCfCg_cover: "?Cf \<union> ?Cg = ?Cfg" by auto
+      have hF_range_cfg: "\<forall>p\<in>?Cfg. ?F p \<in> X" using hF_range by auto
+      \<comment> \<open>Need continuity of ?F on subspace of Cfg from Cf and Cg subspaces.\<close>
+      have hCf_sub_Cfg: "?Cf \<subseteq> ?Cfg" by auto
+      have hCg_sub_Cfg: "?Cg \<subseteq> ?Cfg" by auto
+      have htrans_Cf: "subspace_topology ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cf
+                      = subspace_topology (I_set \<times> I_set) II_topology ?Cf"
+        by (rule subspace_topology_trans[OF hCf_sub_Cfg])
+      have htrans_Cg: "subspace_topology ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cg
+                      = subspace_topology (I_set \<times> I_set) II_topology ?Cg"
+        by (rule subspace_topology_trans[OF hCg_sub_Cfg])
+      have hF_Cf_cfg: "top1_continuous_map_on ?Cf (subspace_topology ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cf)
+                        X TX ?F"
+        using hF_Cf unfolding htrans_Cf .
+      have hF_Cg_cfg: "top1_continuous_map_on ?Cg (subspace_topology ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cg)
+                        X TX ?F"
+        using hF_Cg unfolding htrans_Cg .
+      show ?thesis
+        by (rule pasting_lemma_two_closed[OF hTcfg hTX hCf_closed_cfg hCg_closed_cfg hCfCg_cover hF_range_cfg hF_Cf_cfg hF_Cg_cfg])
     qed
     \<comment> \<open>Continuity of F on Ch: h((4s-2-t)/(2-t)).\<close>
     have hFch: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
