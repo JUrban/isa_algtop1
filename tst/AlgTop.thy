@@ -5795,22 +5795,6 @@ proof (rule ccontr)
   show False sorry
 qed
 
-text \<open>Key lemma: if H is a homotopy from h to k (maps X \<rightarrow> Y) and l is a loop at x₀,
-  then h\<circ>l is path-homotopic to \<alpha> * (k\<circ>l) * \<alpha>\<inverse> where \<alpha>(t) = H(x₀, t).\<close>
-lemma homotopy_induced_basepoint_change:
-  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
-      and hHcont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY H"
-      and hH0: "\<forall>x\<in>X. H (x, 0) = h x"
-      and hH1: "\<forall>x\<in>X. H (x, 1) = k x"
-      and hl: "top1_is_loop_on X TX x0 l"
-      and hx0: "x0 \<in> X"
-  shows "top1_path_homotopic_on Y TY (h x0) (h x0)
-    (h \<circ> l)
-    (top1_basepoint_change_on Y TY (k x0) (h x0)
-       (top1_path_reverse (\<lambda>t. H (x0, t))) (k \<circ> l))"
-  sorry \<comment> \<open>Proof: G(s,t) = H(l(s), t) is a homotopy from h\<circ>l to k\<circ>l
-         with boundary G(0,t) = G(1,t) = \<alpha>(t) = H(x₀,t). This moving-boundary
-         homotopy implies h\<circ>l \<simeq> \<alpha>\<inverse> * (k\<circ>l) * \<alpha> via the pasting lemma.\<close>
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
