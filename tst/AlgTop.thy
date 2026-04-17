@@ -3968,7 +3968,23 @@ proof -
   \<comment> \<open>Munkres 53.1: p(x) = (cos 2\<pi>x, sin 2\<pi>x) is the standard covering R \<rightarrow> S^1.
      Step 1: p is continuous and surjective.\<close>
   have hp_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1" sorry
-  have hp_surj: "top1_R_to_S1 ` UNIV = top1_S1" sorry
+  have hp_surj: "top1_R_to_S1 ` UNIV = top1_S1"
+  proof (rule set_eqI, rule iffI)
+    fix p assume "p \<in> top1_R_to_S1 ` UNIV"
+    then obtain x where hp: "p = top1_R_to_S1 x" by (by100 blast)
+    show "p \<in> top1_S1" unfolding hp top1_R_to_S1_def top1_S1_def
+      by (simp add: sin_squared_eq)
+  next
+    fix p assume hp: "p \<in> top1_S1"
+    hence heq: "fst p ^ 2 + snd p ^ 2 = 1" unfolding top1_S1_def by (by100 simp)
+    obtain \<theta> where hcos: "fst p = cos \<theta>" and hsin: "snd p = sin \<theta>"
+      using sincos_total_2pi[of "fst p" "snd p"] heq by (by100 metis)
+    let ?x = "\<theta> / (2 * pi)"
+    have "top1_R_to_S1 ?x = (cos \<theta>, sin \<theta>)"
+      unfolding top1_R_to_S1_def by (by100 simp)
+    hence "top1_R_to_S1 ?x = p" using hcos hsin by (simp add: prod_eq_iff)
+    thus "p \<in> top1_R_to_S1 ` UNIV" by (by100 blast)
+  qed
   \<comment> \<open>Step 2: Every b \<in> S^1 has an evenly covered open neighborhood.
      Use the 4 open arcs E, N, W, S covering S^1. Each arc U_i has
      p\<inverse>(U_i) = \<Union>_n (n + open interval) — a disjoint union of sheets homeomorphic to U_i.\<close>
@@ -3985,10 +4001,10 @@ proof -
       fix b assume "b \<in> top1_S1"
       then obtain U where "openin_on top1_S1 top1_S1_topology U" "b \<in> U"
           "top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
-        using hp_evenly by blast
+        using hp_evenly by (by100 blast)
       thus "\<exists>U. b \<in> U \<and>
           top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
-        by blast
+        by (by100 blast)
     qed
   qed
 qed
@@ -4004,7 +4020,7 @@ theorem Theorem_53_2:
     B0 (subspace_topology B TB B0) p"
 proof -
   \<comment> \<open>Munkres 53.2: restrict covering to subspace.\<close>
-  have hE0sub: "E0 \<subseteq> E" using assms(5) by blast
+  have hE0sub: "E0 \<subseteq> E" using assms(5) by (by100 blast)
   have hp_cont: "top1_continuous_map_on E0 (subspace_topology E TE E0)
       B0 (subspace_topology B TB B0) p" sorry
   have hp_surj: "p ` E0 = B0" sorry
@@ -4013,20 +4029,23 @@ proof -
   proof
     fix b0 assume hb0: "b0 \<in> B0"
     \<comment> \<open>b0 \<in> B, so there exists evenly covered U \<ni> b0 in B.\<close>
-    have hb0B: "b0 \<in> B" using hb0 assms(4) by blast
+    have hb0B: "b0 \<in> B" using hb0 assms(4) by (by100 blast)
     obtain U where hU: "b0 \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
-      using top1_covering_map_on_evenly_covered[OF assms(1) hb0B] by blast
+      using top1_covering_map_on_evenly_covered[OF assms(1) hb0B] by (by100 blast)
     \<comment> \<open>U0 = U \<inter> B0 is open in B0. The slices V\<alpha> \<inter> E0 partition p\<inverse>(U0) \<inter> E0.\<close>
     let ?U0 = "U \<inter> B0"
-    have "b0 \<in> ?U0" using hU hb0 by blast
+    have "b0 \<in> ?U0" using hU hb0 by (by100 blast)
     moreover have "top1_evenly_covered_on E0 (subspace_topology E TE E0)
         B0 (subspace_topology B TB B0) p ?U0" sorry
-    ultimately show "\<exists>U0. b0 \<in> U0 \<and>
+    ultimately have "b0 \<in> ?U0 \<and>
+        top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p ?U0"
+      by (by100 simp)
+    thus "\<exists>U0. b0 \<in> U0 \<and>
         top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p U0"
-      by blast
+      by (rule exI)
   qed
   show ?thesis unfolding top1_covering_map_on_def
-    using hp_cont hp_surj hp_evenly by blast
+    using hp_cont hp_surj hp_evenly by (by100 blast)
 qed
 
 (** from \<S>53 Theorem 53.3: product of covering maps is a covering map.
@@ -4149,7 +4168,7 @@ proof -
     using hid unfolding hpi2_eq .
   show ?thesis
     unfolding II_topology_def
-    using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hpi1_cont hpi2_cont by blast
+    using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hpi1_cont hpi2_cont by (by100 blast)
 qed
 
 (** Uniqueness part of Lemma 54.1 (implicit in Munkres): given a path f in B with
@@ -4435,7 +4454,7 @@ proof -
   \<comment> \<open>Munkres 54.4 bijectivity: surjectivity from path-connectedness (which follows
      from simple connectivity), injectivity from simple connectivity of E.\<close>
   have hpc: "top1_path_connected_on E TE"
-    using assms(4) top1_simply_connected_on_path_connected by blast
+    using assms(4) top1_simply_connected_on_path_connected by (by100 blast)
   \<comment> \<open>Injectivity: if \<phi>([f])=\<phi>([g]) then lifts end at same point. E simply connected
      gives path homotopy Ftilde between lifts; p\<circ>Ftilde homotopizes f to g.\<close>
   have hinj: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g \<and>
@@ -6958,7 +6977,28 @@ proof -
       ?j_star (top1_fundamental_group_mul A TA x0 c d)
       = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)" sorry
   show ?thesis
-    sorry
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+  proof (intro exI conjI)
+    show "top1_group_hom_on (top1_fundamental_group_carrier A TA x0)
+        (top1_fundamental_group_mul A TA x0)
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0) ?j_star"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier A TA x0"
+      show "?j_star c \<in> top1_fundamental_group_carrier X TX x0"
+        using hj_surj hc by (by100 blast)
+    next
+      fix c d assume hc: "c \<in> top1_fundamental_group_carrier A TA x0"
+          and hd: "d \<in> top1_fundamental_group_carrier A TA x0"
+      show "?j_star (top1_fundamental_group_mul A TA x0 c d)
+          = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)"
+        using hj_hom hc hd by (by100 blast)
+    qed
+    show "bij_betw ?j_star (top1_fundamental_group_carrier A TA x0)
+        (top1_fundamental_group_carrier X TX x0)"
+      unfolding bij_betw_def using hj_inj hj_surj by (by100 blast)
+  qed
 qed
 
 theorem Theorem_58_3:
@@ -7354,7 +7394,7 @@ proof (intro allI impI)
               (gs ! i ` I_set \<subseteq> U \<or> gs ! i ` I_set \<subseteq> V)) \<and>
        top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs (top1_constant_path x0))"
-    using hm hgs_len hgs_loops hgs_product by auto
+    using hm hgs_len hgs_loops hgs_product by (by100 auto)
 qed
 
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
@@ -7370,7 +7410,7 @@ corollary Corollary_59_2:
 proof -
   \<comment> \<open>Munkres 59.2: By Thm 59.1, every loop decomposes into loops in U or V.
      U, V simply connected \<Rightarrow> each piece nulhomotopic \<Rightarrow> whole loop nulhomotopic.\<close>
-  obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by blast
+  obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by (by100 blast)
   \<comment> \<open>Step 1: X is path-connected (U, V path-connected via simply connected, joined via U\<inter>V).\<close>
   have hpc: "top1_path_connected_on X TX" sorry
   \<comment> \<open>Step 2: Every loop at x0 is nulhomotopic.\<close>
@@ -7384,13 +7424,13 @@ proof -
                       \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
         and hprod: "top1_path_homotopic_on X TX x0 x0 f
             (foldr top1_path_product gs (top1_constant_path x0))"
-      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf by auto
+      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf by (by100 auto)
     \<comment> \<open>Each gi lies in U or V, hence is nulhomotopic there (simply connected).\<close>
     have hgi_nul: "\<forall>i<n. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
     proof (intro allI impI)
       fix i assume hi: "i < n"
-      have hgi_loop: "top1_is_loop_on X TX x0 (gs!i)" using hgs hi by blast
-      have "gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V" using hgs hi by blast
+      have hgi_loop: "top1_is_loop_on X TX x0 (gs!i)" using hgs hi by (by100 blast)
+      have "gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V" using hgs hi by (by100 blast)
       \<comment> \<open>If in U: simply connected U \<Rightarrow> nulhomotopic in U \<Rightarrow> nulhomotopic in X.
          If in V: simply connected V \<Rightarrow> nulhomotopic in V \<Rightarrow> nulhomotopic in X.\<close>
       thus "top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)" sorry
@@ -7516,7 +7556,7 @@ lemma top1_separates_on_def_expand:
 lemma top1_separates_onI:
   "\<not> top1_connected_on (X - C) (subspace_topology X TX (X - C)) \<Longrightarrow>
     top1_separates_on X TX C"
-  unfolding top1_separates_on_def by blast
+  unfolding top1_separates_on_def by (by100 blast)
 
 (** from \<S>61 Lemma 61.1: unbounded/bounded components of R^2-h(C) correspond to
     S^2-b components under a homeomorphism h: S^2-b \<rightarrow> R^2.
@@ -7575,7 +7615,7 @@ proof -
      Step 3: S^2-{b} \<cong> R^2 (stereographic projection), so the nulhomotopy transfers.\<close>
   obtain D where hD: "D \<subseteq> top1_S2 - {b}" and hfD: "f ` A \<subseteq> D"
       and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
-    using assms(5) by auto
+    using assms(5) by (by100 auto)
   \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
   have hD_contractible: "top1_simply_connected_on D
       (subspace_topology top1_S2 top1_S2_topology D)" sorry
@@ -7646,11 +7686,11 @@ proof -
   \<comment> \<open>Munkres 61.4: Write C=A1\<union>A2 with A1\<inter>A2={a,b}.
      X = S^2-{a,b} \<cong> R^2-{0}, U = S^2-A1, V = S^2-A2. X=U\<union>V.\<close>
   obtain a b where hab: "A1 \<inter> A2 = {a, b}" and hab_ne: "a \<noteq> b"
-    using assms(8) card_2_iff by metis
+    using assms(8) card_2_iff by (by100 metis)
   let ?X = "top1_S2 - {a, b}" and ?U = "top1_S2 - A1" and ?V = "top1_S2 - A2"
   \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - (A1 \<union> A2).\<close>
-  have hX_UV: "?U \<union> ?V = ?X" using hab by blast
-  have hUV_eq: "?U \<inter> ?V = top1_S2 - (A1 \<union> A2)" by blast
+  have hX_UV: "?U \<union> ?V = ?X" using hab by (by100 blast)
+  have hUV_eq: "?U \<inter> ?V = top1_S2 - (A1 \<union> A2)" by (by100 blast)
   \<comment> \<open>If S^2 - (A1\<union>A2) were connected, then U\<inter>V would be path-connected.\<close>
   \<comment> \<open>By Lemma 61.2, loops in U and V are nulhomotopic (they factor through arcs).\<close>
   \<comment> \<open>So \<pi>_1(X) would be trivial. But X \<cong> R^2-{0} has nontrivial \<pi>_1. Contradiction.\<close>
@@ -9351,7 +9391,7 @@ proof -
                        (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
         (top1_quotient_group_mul_on
            (top1_fundamental_group_mul A (subspace_topology X TX A) a))" sorry
-  show ?thesis using h\<iota>_cont h\<iota>_eq hiso by blast
+  show ?thesis using h\<iota>_cont h\<iota>_eq hiso by (by100 blast)
 qed
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
@@ -9536,7 +9576,7 @@ proof -
     using assms(2) unfolding top1_is_polygonal_quotient_on_def sorry
   have hcompact: "top1_compact_on X TX" sorry
   have hhausdorff: "is_hausdorff_on X TX" sorry
-  show ?thesis using hcompact hhausdorff by blast
+  show ?thesis using hcompact hhausdorff by (by100 blast)
 qed
 
 (** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n has the
@@ -9804,7 +9844,7 @@ proof
      p_*(\<pi>_1(E, e0)) = p'_*(\<pi>_1(E', e0')) because h_* is an iso and p = p' \<circ> h.\<close>
   assume "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'"
   then obtain h where hh: "top1_homeomorphism_on E TE E' TE' h"
-      and hp: "\<forall>e\<in>E. p' (h e) = p e" and he: "h e0 = e0'" by blast
+      and hp: "\<forall>e\<in>E. p' (h e) = p e" and he: "h e0 = e0'" by (by100 blast)
   \<comment> \<open>h_* : \<pi>_1(E, e0) \<cong> \<pi>_1(E', e0'), and p' \<circ> h = p, so p_* = p'_* \<circ> h_*.\<close>
   show "top1_fundamental_group_image_hom E TE e0 B TB b0 p
       = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'" sorry
@@ -9883,9 +9923,9 @@ proof -
   \<comment> \<open>By Theorem 79.4: simply connected E gives trivial subgroup p_*(\<pi>_1 E) = {1};
       same for E'; and {1} is conjugate to itself.\<close>
   have hE_sc: "top1_simply_connected_on E TE"
-    using assms(2) unfolding top1_is_universal_covering_on_def by blast
+    using assms(2) unfolding top1_is_universal_covering_on_def by (by100 blast)
   have hE'_sc: "top1_simply_connected_on E' TE'"
-    using assms(3) unfolding top1_is_universal_covering_on_def by blast
+    using assms(3) unfolding top1_is_universal_covering_on_def by (by100 blast)
   \<comment> \<open>p_*(\<pi>_1(E, e0)) = {[const]} (trivial) since E is simply connected.\<close>
   have hH_trivial: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
       = {top1_fundamental_group_id B TB b0}" sorry
@@ -9930,7 +9970,7 @@ corollary Theorem_80_3_universal_strict:
   using Theorem_80_3_universal[of E TE B TB Y TY p r]
     top1_simply_connected_strict_imp[OF assms(1)]
     top1_simply_connected_strict_is_topology_strict[OF assms(1)]
-    assms(2-5) by blast
+    assms(2-5) by (by100 blast)
 
 section \<open>*\<S>81 Covering Transformations\<close>
 
@@ -10088,7 +10128,7 @@ proof -
      The intersection condition and weak topology lift from B to E.\<close>
   obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
       and hcover: "(\<Union>\<A>B) = B"
-    using assms(1) unfolding top1_is_graph_on_def by auto
+    using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
   \<comment> \<open>Step 1: Lift each arc A to its sheets in E.\<close>
   have "\<exists>\<A>E. (\<forall>A\<in>\<A>E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A))
       \<and> (\<Union>\<A>E) = E
