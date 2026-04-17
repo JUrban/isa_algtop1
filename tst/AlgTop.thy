@@ -2481,8 +2481,33 @@ proof -
     by (rule top1_R_path_connected')
   have hloops: "\<forall>x0\<in>(UNIV::real set). \<forall>f. top1_is_loop_on UNIV top1_open_sets x0 f \<longrightarrow>
         top1_path_homotopic_on UNIV top1_open_sets x0 x0 f (top1_constant_path x0)"
-    \<comment> \<open>Straight-line homotopy F(s,t) = (1-t)*f(s) + t*x0. Continuity requires more infrastructure.\<close>
-    sorry
+  proof (intro ballI allI impI)
+    fix x0 :: real and f assume hloop: "top1_is_loop_on UNIV top1_open_sets x0 f"
+    have hfcont: "top1_continuous_map_on I_set I_top UNIV top1_open_sets f"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+    have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+    \<comment> \<open>Straight-line homotopy: F(s,t) = (1-t)*f(s) + t*x0.\<close>
+    let ?F = "\<lambda>p::real\<times>real. (1 - snd p) * f (fst p) + snd p * x0"
+    \<comment> \<open>Continuity of F on I\<times>I.\<close>
+    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology UNIV top1_open_sets ?F"
+      sorry \<comment> \<open>Needs II_to_UNIV transfer (continuous_on_open_invariant times out).\<close>
+    have hfpath: "top1_is_path_on UNIV top1_open_sets x0 x0 f"
+      using hloop unfolding top1_is_loop_on_def .
+    have hTR: "is_topology_on (UNIV :: real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hcpath: "top1_is_path_on UNIV top1_open_sets x0 x0 (top1_constant_path x0)"
+      by (rule top1_constant_path_is_path[OF hTR]) simp
+    have hFs0: "\<forall>s\<in>I_set. ?F (s, 0) = f s" by simp
+    have hFs1: "\<forall>s\<in>I_set. ?F (s, 1) = x0" by simp
+    have hF0t: "\<forall>t\<in>I_set. ?F (0, t) = x0" using hf0 by (simp add: algebra_simps)
+    have hF1t: "\<forall>t\<in>I_set. ?F (1, t) = x0" using hf1 by (simp add: algebra_simps)
+    have hFs1': "\<forall>s\<in>I_set. ?F (s, 1) = (\<lambda>_. x0) s" using hFs1 by simp
+    show "top1_path_homotopic_on UNIV top1_open_sets x0 x0 f (top1_constant_path x0)"
+      unfolding top1_path_homotopic_on_def top1_constant_path_def
+      using hfpath hcpath hF_cont hFs0 hFs1' hF0t hF1t
+      unfolding top1_is_path_on_def top1_constant_path_def by blast
+  qed
   show ?thesis
     unfolding top1_simply_connected_on_def using hpc hloops by blast
 qed
