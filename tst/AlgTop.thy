@@ -1360,9 +1360,51 @@ proof -
       have hTcfg: "is_topology_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg)"
         by (rule subspace_topology_is_topology_on[OF hTII]) auto
       have hCf_closed_cfg: "closedin_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cf"
-        sorry \<comment> \<open>{4s \<le> 1+t} closed in Cfg subspace.\<close>
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?Cf \<subseteq> ?Cfg" by auto
+        have "?Cfg - ?Cf = ?Cfg \<inter> {(s,t) \<in> I_set \<times> I_set. 4*s > 1+t}" by auto
+        also have "\<dots> \<in> subspace_topology (I_set \<times> I_set) II_topology ?Cfg"
+        proof -
+          have "open {p :: real \<times> real. 4 * fst p - snd p > 1}"
+            by (intro open_Collect_less continuous_intros)
+          hence "{p :: real \<times> real. 4 * fst p - snd p > 1} \<in> (top1_open_sets :: (real\<times>real) set set)"
+            unfolding top1_open_sets_def by blast
+          hence "{p :: real \<times> real. 4 * fst p - snd p > 1}
+                 \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+          hence "(I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p > 1} \<in> II_topology"
+            unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
+          moreover have "{(s,t) \<in> I_set \<times> I_set. 4*s > 1+t} = (I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p > 1}"
+            by auto
+          ultimately have "{(s,t) \<in> I_set \<times> I_set. 4*s > 1+t} \<in> II_topology" by simp
+          thus ?thesis unfolding subspace_topology_def by blast
+        qed
+        finally show "?Cfg - ?Cf \<in> subspace_topology (I_set \<times> I_set) II_topology ?Cfg" .
+      qed
       have hCg_closed_cfg: "closedin_on ?Cfg (subspace_topology (I_set \<times> I_set) II_topology ?Cfg) ?Cg"
-        sorry \<comment> \<open>{1+t \<le> 4s \<le> 2+t} closed in Cfg subspace.\<close>
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?Cg \<subseteq> ?Cfg" by auto
+        have "?Cfg - ?Cg = {(s,t) \<in> I_set \<times> I_set. 4*s < 1+t}" by auto
+        also have "\<dots> \<in> subspace_topology (I_set \<times> I_set) II_topology ?Cfg"
+        proof -
+          have "open {p :: real \<times> real. 4 * fst p - snd p < 1}"
+            by (intro open_Collect_less continuous_intros)
+          hence "{p :: real \<times> real. 4 * fst p - snd p < 1} \<in> (top1_open_sets :: (real\<times>real) set set)"
+            unfolding top1_open_sets_def by blast
+          hence "{p :: real \<times> real. 4 * fst p - snd p < 1}
+                 \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+          hence "(I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p < 1} \<in> II_topology"
+            unfolding II_topology_def II_topology_eq_subspace subspace_topology_def by blast
+          moreover have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} = (I_set \<times> I_set) \<inter> {p. 4 * fst p - snd p < 1}"
+            by auto
+          ultimately have "{(s,t) \<in> I_set \<times> I_set. 4*s < 1+t} \<in> II_topology" by simp
+          thus ?thesis unfolding subspace_topology_def by blast
+        qed
+        finally show "?Cfg - ?Cg \<in> subspace_topology (I_set \<times> I_set) II_topology ?Cfg" .
+      qed
       have hCfCg_cover: "?Cf \<union> ?Cg = ?Cfg" by auto
       have hF_range_cfg: "\<forall>p\<in>?Cfg. ?F p \<in> X" using hF_range by auto
       \<comment> \<open>Need continuity of ?F on subspace of Cfg from Cf and Cg subspaces.\<close>
