@@ -2170,7 +2170,7 @@ proof -
   have hhcont: "top1_continuous_map_on I_set I_top X TX h"
     using hh unfolding top1_is_path_on_def by blast
   \<comment> \<open>Define G(s,t) = if s \<le> 1/2 then F(2s, t) else h(2s-1).\<close>
-  let ?G = "\<lambda>(s::real, t::real). if s \<le> 1/2 then F (2*s, t) else h (2*s - 1)"
+  let ?G = "\<lambda>p::real\<times>real. if fst p \<le> 1/2 then F (2 * fst p, snd p) else h (2 * fst p - 1)"
   have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
     sorry \<comment> \<open>Spatial pasting at s=1/2: F(2s,t) on left, h(2s-1) on right.
            Uses pasting_lemma_two_closed + (2\<cdot>fst, snd) reparametrization.\<close>
