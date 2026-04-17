@@ -4354,18 +4354,40 @@ theorem Theorem_54_4_lifting_correspondence:
   shows "\<exists>\<phi>. (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
                 \<phi> c \<in> {e\<in>E. p e = b0})
            \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
-  \<comment> \<open>Munkres 54.4 surjectivity: For e1 \<in> p\<inverse>(b0), path-connectedness of E gives
-     path f_tilde from e0 to e1. Then f = p\<circ>f_tilde is a loop at b0, and \<phi>([f]) = e1.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 54.4: Define \<phi>([f]) = ftilde(1) where ftilde lifts f starting at e0.\<close>
+  \<comment> \<open>Well-defined: by Theorem 54.3, path-homotopic loops lift to same endpoint.\<close>
+  have hphi_wd: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g
+      \<and> top1_path_homotopic_on B TB b0 b0 f g
+      \<longrightarrow> (\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)
+          \<and> top1_is_path_on E TE e0 (gt 1) gt \<and> (\<forall>s\<in>I_set. p (gt s) = g s)
+          \<longrightarrow> ft 1 = gt 1)" sorry
+  \<comment> \<open>Surjectivity: for e1 \<in> p\<inverse>(b0), path f_tilde from e0 to e1 projects to loop at b0.\<close>
+  have hphi_surj: "\<forall>e1\<in>{e\<in>E. p e = b0}. \<exists>f. top1_is_loop_on B TB b0 f \<and>
+      (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))" sorry
+  show ?thesis sorry
+qed
 
 theorem Theorem_54_4_bijective_simply_connected:
   assumes "top1_covering_map_on E TE B TB p"
       and "e0 \<in> E" and "p e0 = b0"
       and "top1_simply_connected_on E TE"
   shows "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier B TB b0) {e\<in>E. p e = b0}"
-  \<comment> \<open>Munkres 54.4 bijectivity: If \<phi>([f])=\<phi>([g]) then lifts f_tilde, g_tilde end at same point.
-     Simply connected E gives path homotopy F_tilde between them; p\<circ>F_tilde homotopizes f to g.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 54.4 bijectivity: surjectivity from path-connectedness (which follows
+     from simple connectivity), injectivity from simple connectivity of E.\<close>
+  have hpc: "top1_path_connected_on E TE" sorry
+  \<comment> \<open>Injectivity: if \<phi>([f])=\<phi>([g]) then lifts end at same point. E simply connected
+     gives path homotopy Ftilde between lifts; p\<circ>Ftilde homotopizes f to g.\<close>
+  have hinj: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g \<and>
+      (\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)) \<and>
+      (\<exists>gt. top1_is_path_on E TE e0 (gt 1) gt \<and> (\<forall>s\<in>I_set. p (gt s) = g s)) \<and>
+      (\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<longrightarrow> (\<forall>s\<in>I_set. p (ft s) = f s) \<longrightarrow>
+               top1_is_path_on E TE e0 (gt 1) gt \<longrightarrow> (\<forall>s\<in>I_set. p (gt s) = g s) \<longrightarrow>
+               ft 1 = gt 1)
+      \<longrightarrow> top1_path_homotopic_on B TB b0 b0 f g" sorry
+  show ?thesis sorry
+qed
 
 text \<open>Helper: subspace of UNIV with top1_open_sets is top1_open_sets itself.\<close>
 lemma subspace_topology_UNIV_self:
@@ -4601,10 +4623,17 @@ theorem Theorem_54_5_iso:
      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
      top1_Z_group
      top1_Z_mul"
-  \<comment> \<open>Munkres 54.5: p: R \<rightarrow> S^1 covering, R simply connected \<Rightarrow> \<phi> bijective (Thm 54.4).
-     Homomorphism: for lifts f_tilde(1)=n, g_tilde(1)=m, define g'(s)=n+g_tilde(s).
-     Then f_tilde * g' lifts f*g starting at 0, ending at n+m. So \<phi>([f]*[g])=n+m.\<close>
-  sorry
+proof -
+  \<comment> \<open>Munkres 54.5: Use covering p: R \<rightarrow> S^1, with R simply connected.\<close>
+  \<comment> \<open>Step 1: \<phi> is bijective (from Theorem 54.4 + R simply connected).\<close>
+  have hbij: "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (UNIV::int set)" sorry
+  \<comment> \<open>Step 2: \<phi> is a homomorphism.
+     For lifts ftilde(1) = n, gtilde(1) = m, define g'(s) = n + gtilde(s).
+     Since p(n + x) = p(x), g' lifts g starting at n. So ftilde * g' lifts f * g,
+     ending at n + m. Hence \<phi>([f]*[g]) = n + m = \<phi>([f]) + \<phi>([g]).\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
 
