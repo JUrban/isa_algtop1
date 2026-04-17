@@ -2154,6 +2154,22 @@ definition top1_induced_homomorphism_on :: "'a set \<Rightarrow> 'a set set \<Ri
   \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'b)" where
   "top1_induced_homomorphism_on X TX Y TY h f = h \<circ> f"
 
+text \<open>Congruence: path homotopy is compatible with path product (left and right).\<close>
+lemma path_homotopic_product_left:
+  assumes hTX: "is_topology_on X TX"
+      and hfg: "top1_path_homotopic_on X TX x0 x1 f g"
+      and hh: "top1_is_path_on X TX x1 x2 h"
+  shows "top1_path_homotopic_on X TX x0 x2 (top1_path_product f h) (top1_path_product g h)"
+  sorry \<comment> \<open>Spatial pasting: G(s,t) = F(2s,t) for s\<le>1/2, h(2s-1) for s\<ge>1/2.
+         Needs (2\<cdot>fst, snd) reparametrization continuity (swap of proven (fst, 2\<cdot>snd)).\<close>
+
+lemma path_homotopic_product_right:
+  assumes hTX: "is_topology_on X TX"
+      and hfg: "top1_path_homotopic_on X TX x1 x2 f g"
+      and hh: "top1_is_path_on X TX x0 x1 h"
+  shows "top1_path_homotopic_on X TX x0 x2 (top1_path_product h f) (top1_path_product h g)"
+  sorry
+
 text \<open>Change of basepoint map: alpha-hat([f]) = [rev-alpha * f * alpha] where alpha is a path x0 -> x1.\<close>
 definition top1_basepoint_change_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a \<Rightarrow> 'a
   \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a)" where
