@@ -6108,7 +6108,27 @@ proof -
     \<comment> \<open>Apply the inward result to -v: -v is continuous B^2 \<rightarrow> R^2 and nonvanishing.\<close>
     let ?neg_v = "\<lambda>x. (- fst (v x), - snd (v x))"
     have hnv_cont: "top1_continuous_map_on top1_B2 top1_B2_topology UNIV
-        (product_topology_on top1_open_sets top1_open_sets) ?neg_v" sorry
+        (product_topology_on top1_open_sets top1_open_sets) ?neg_v"
+    proof -
+      \<comment> \<open>Negation (x,y) \<mapsto> (-x,-y) is continuous R^2 \<rightarrow> R^2.\<close>
+      let ?neg = "\<lambda>p::real\<times>real. (- fst p, - snd p)"
+      have hneg_cont: "continuous_on UNIV ?neg"
+        by (intro continuous_on_Pair continuous_intros)
+      have hneg_sub: "top1_continuous_map_on (UNIV :: (real\<times>real) set)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+          (UNIV :: (real\<times>real) set)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV) ?neg"
+        by (rule top1_continuous_map_on_real2_subspace) (simp_all add: hneg_cont)
+      have hneg_map: "top1_continuous_map_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+          UNIV (product_topology_on top1_open_sets top1_open_sets) ?neg"
+        using hneg_sub unfolding subspace_topology_UNIV_self .
+      \<comment> \<open>-v = neg \<circ> v.\<close>
+      have heq: "?neg_v = ?neg \<circ> v" by (rule ext) (simp add: comp_def)
+      have hv_full: "top1_continuous_map_on top1_B2 top1_B2_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) v" using assms(1) .
+      show ?thesis unfolding heq
+        by (rule top1_continuous_map_on_comp[OF hv_full hneg_map])
+    qed
     have hnv_nz: "\<forall>x\<in>top1_B2. ?neg_v x \<noteq> (0, 0)"
     proof (intro ballI)
       fix x assume "x \<in> top1_B2"
