@@ -129,6 +129,37 @@ qed
 lemmas product_topology_on_open_sets_real2 =
   product_topology_on_open_sets[where ?'a = real and ?'b = real]
 
+text \<open>Continuity transfer: continuous_on UNIV for R \<rightarrow> subspace of R².\<close>
+lemma top1_continuous_map_on_R_to_R2_subspace:
+  fixes T :: "(real \<times> real) set"
+  assumes hmap: "\<And>x::real. f x \<in> T"
+      and hcont: "continuous_on UNIV f"
+  shows "top1_continuous_map_on (UNIV::real set) top1_open_sets T
+           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix x :: real show "f x \<in> T" by (rule hmap)
+next
+  fix V assume hV: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T"
+  obtain U where hU: "U \<in> product_topology_on top1_open_sets top1_open_sets" and hVeq: "V = T \<inter> U"
+    using hV unfolding subspace_topology_def by (by100 blast)
+  have hU_open: "open U"
+  proof -
+    have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hU product_topology_on_open_sets_real2 by metis
+    thus ?thesis unfolding top1_open_sets_def by blast
+  qed
+  have hfU_open: "open (f -` U)" by (rule open_vimage[OF hU_open hcont])
+  have "{x. f x \<in> V} = f -` U"
+  proof (rule set_eqI)
+    fix x show "(x \<in> {x. f x \<in> V}) = (x \<in> f -` U)"
+      using hVeq hmap[of x] by (by100 blast)
+  qed
+  hence "open {x. f x \<in> V}" using hfU_open by simp
+  hence "{x. f x \<in> V} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+  thus "{x \<in> UNIV. f x \<in> V} \<in> top1_open_sets" by simp
+qed
+
 text \<open>Continuity transfer: continuous_on on ℝ² implies top1_continuous_map_on
   on subspace topologies.\<close>
 lemma top1_continuous_map_on_real2_subspace:
@@ -4079,7 +4110,18 @@ theorem Theorem_53_1:
 proof -
   \<comment> \<open>Munkres 53.1: p(x) = (cos 2\<pi>x, sin 2\<pi>x) is the standard covering R \<rightarrow> S^1.
      Step 1: p is continuous and surjective.\<close>
-  have hp_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1" sorry
+  have hp_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+  proof -
+    have hmap: "\<And>x::real. top1_R_to_S1 x \<in> top1_S1"
+      unfolding top1_R_to_S1_def top1_S1_def by (simp add: sin_squared_eq)
+    have hcont: "continuous_on UNIV top1_R_to_S1"
+      unfolding top1_R_to_S1_def
+      by (intro continuous_on_Pair continuous_on_compose2[OF continuous_on_cos]
+              continuous_on_compose2[OF continuous_on_sin]
+              continuous_on_mult continuous_on_const continuous_on_id) auto
+    show ?thesis unfolding top1_S1_topology_def
+      by (rule top1_continuous_map_on_R_to_R2_subspace[OF hmap hcont])
+  qed
   have hp_surj: "top1_R_to_S1 ` UNIV = top1_S1"
   proof (rule set_eqI, rule iffI)
     fix p assume "p \<in> top1_R_to_S1 ` UNIV"
@@ -10994,3 +11036,4 @@ proof -
 qed
 
 end
+ 
