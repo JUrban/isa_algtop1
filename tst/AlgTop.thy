@@ -1500,7 +1500,29 @@ proof -
     thus "?F p \<in> X" using hfrange by blast
   qed
   have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
-    sorry \<comment> \<open>Same technique as left identity: composition of f with continuous real function.\<close>
+  proof -
+    have hg_cont: "continuous_on (I_set \<times> I_set) ?g"
+    proof -
+      have hnum: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 2 * fst p)"
+        by (intro continuous_intros)
+      have hden: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 1 + snd p)"
+        by (intro continuous_intros)
+      have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. (2 * fst p) / (1 + snd p))"
+        by (rule continuous_on_divide[OF hnum hden])
+           (auto simp: top1_unit_interval_def)
+      hence "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. max 0 (2 * fst p / (1 + snd p)))"
+        by (intro continuous_on_max continuous_on_const)
+      hence "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. min 1 (max 0 (2 * fst p / (1 + snd p))))"
+        by (intro continuous_on_min continuous_on_const)
+      thus ?thesis by (simp add: case_prod_unfold)
+    qed
+    have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
+      by (rule top1_continuous_map_on_II_to_I) (use hg_range in auto, rule hg_cont)
+    have "f \<circ> ?g = ?F" by (rule ext) (simp add: comp_def case_prod_unfold)
+    hence hcomp: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX ?F"
+      using top1_continuous_map_on_comp[OF hg_top1 hfcont] by simp
+    show ?thesis unfolding II_topology_def using hcomp .
+  qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_constant_path x1) s"
   proof
     fix s assume hs: "s \<in> I_set"
