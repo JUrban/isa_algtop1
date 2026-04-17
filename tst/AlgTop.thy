@@ -5808,7 +5808,9 @@ lemma homotopy_induced_basepoint_change:
     (h \<circ> l)
     (top1_basepoint_change_on Y TY (k x0) (h x0)
        (top1_path_reverse (\<lambda>t. H (x0, t))) (k \<circ> l))"
-  sorry
+  sorry \<comment> \<open>Proof: G(s,t) = H(l(s), t) is a homotopy from h\<circ>l to k\<circ>l
+         with boundary G(0,t) = G(1,t) = \<alpha>(t) = H(x₀,t). This moving-boundary
+         homotopy implies h\<circ>l \<simeq> \<alpha>\<inverse> * (k\<circ>l) * \<alpha> via the pasting lemma.\<close>
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
