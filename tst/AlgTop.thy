@@ -7276,6 +7276,9 @@ theorem Theorem_63_1_loop_nontrivial:
       and "top1_is_path_on V (subspace_topology X TX V) b a beta"
   shows "\<not> top1_path_homotopic_on X TX a a
            (top1_path_product alpha beta) (top1_constant_path a)"
+  \<comment> \<open>Munkres 63.1: Construct covering space p: E \<rightarrow> X as infinite helix. The loop
+     f = \<alpha>*\<beta> lifts to a path that doesn't close, hence f is nontrivial in \<pi>_1(X,a).
+     More precisely: define E using copies of U and V glued along A and B alternately.\<close>
   sorry
 
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
@@ -7285,6 +7288,9 @@ theorem Theorem_63_2_arc_no_separation:
   and "D \<subseteq> top1_S2"
   and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
+  \<comment> \<open>Munkres 63.2: Suppose D separates S^2. Split D=D1\<union>D2 at midpoint d.
+     X=S^2-{d}, U=S^2-D1, V=S^2-D2. Apply Theorem 63.1 to get nontrivial
+     element of \<pi>_1(X). But X=S^2-{d}\<cong>R^2 has trivial \<pi>_1. Contradiction.\<close>
   sorry
 
 (** from \<S>63 Theorem 63.3: general non-separation theorem. **)
@@ -7297,6 +7303,10 @@ theorem Theorem_63_3_general_nonseparation:
   and "\<not> top1_separates_on top1_S2 top1_S2_topology D1"
   and "\<not> top1_separates_on top1_S2 top1_S2_topology D2"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)"
+  \<comment> \<open>Munkres 63.3: If D1\<union>D2 separates, take components A,B of S^2-(D1\<union>D2).
+     Since neither Di separates, can join a\<in>A to b\<in>B avoiding D1 and avoiding D2.
+     Theorem 63.1 gives nontrivial element of \<pi>_1(S^2-(D1\<inter>D2)). But this space
+     is simply connected by assumption. Contradiction.\<close>
   sorry
 
 (** from \<S>63 Theorem 63.4: Jordan Curve Theorem.
