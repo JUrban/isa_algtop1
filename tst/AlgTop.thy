@@ -4247,7 +4247,22 @@ proof -
       by (rule ext) (simp add: comp_def split_def)
     \<comment> \<open>By Theorem 18.4: pi1\<circ>f = p\<circ>fst and pi2\<circ>f = p'\<circ>snd are both continuous,
        so f = (\<lambda>(x,y). (p x, p' y)) is continuous into the product.\<close>
-    show ?thesis sorry
+    have hpi1_comp: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') B TB
+        (pi1 \<circ> (\<lambda>(x, y). (p x, p' y)))"
+    proof -
+      have "pi1 \<circ> (\<lambda>(x, y). (p x, p' y)) = p \<circ> fst"
+        unfolding pi1_def comp_def by (rule ext) (simp add: split_def)
+      thus ?thesis using hpfst by simp
+    qed
+    have hpi2_comp: "top1_continuous_map_on (E \<times> E') (product_topology_on TE TE') B' TB'
+        (pi2 \<circ> (\<lambda>(x, y). (p x, p' y)))"
+    proof -
+      have "pi2 \<circ> (\<lambda>(x, y). (p x, p' y)) = p' \<circ> snd"
+        unfolding pi2_def comp_def by (rule ext) (simp add: split_def)
+      thus ?thesis using hp'snd by simp
+    qed
+    show ?thesis
+      using iffD2[OF Theorem_18_4[OF hTEE hTB hTB']] hpi1_comp hpi2_comp by (by100 simp)
   qed
   have hpxp_surj: "(\<lambda>(x, y). (p x, p' y)) ` (E \<times> E') = B \<times> B'"
   proof -
