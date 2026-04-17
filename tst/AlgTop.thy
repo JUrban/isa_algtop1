@@ -7554,9 +7554,30 @@ next
     case True
     \<comment> \<open>Path in U, transfer to X via subspace inclusion.\<close>
     obtain f where hf: "top1_is_path_on U (subspace_topology X TX U) x y f"
-      using hU_pc True unfolding top1_path_connected_on_def sorry
+      using hU_pc True unfolding top1_path_connected_on_def by (by100 auto)
     have "top1_is_path_on X TX x y f"
-      using hf hUsub sorry
+      unfolding top1_is_path_on_def
+    proof (intro conjI)
+      have hf_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+        using hf unfolding top1_is_path_on_def by (by100 blast)
+      show "top1_continuous_map_on I_set I_top X TX f"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume "s \<in> I_set"
+        thus "f s \<in> X" using hf_cont_U hUsub unfolding top1_continuous_map_on_def by (by100 blast)
+      next
+        fix V assume hV: "V \<in> TX"
+        have hVU: "U \<inter> V \<in> subspace_topology X TX U"
+          unfolding subspace_topology_def using hV by (by100 blast)
+        have "{s \<in> I_set. f s \<in> V} = {s \<in> I_set. f s \<in> U \<inter> V}"
+          using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+        also have "\<dots> \<in> I_top"
+          using hf_cont_U hVU unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{s \<in> I_set. f s \<in> V} \<in> I_top" .
+      qed
+      show "f 0 = x" using hf unfolding top1_is_path_on_def by (by100 blast)
+      show "f 1 = y" using hf unfolding top1_is_path_on_def by (by100 blast)
+    qed
     thus ?thesis by (by100 blast)
   next
     case False
