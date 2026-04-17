@@ -3154,7 +3154,7 @@ qed
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
 theorem Theorem_52_1_iso:
-  assumes hstrict: "is_topology_on_strict X TX"
+  assumes hTX: "is_topology_on X TX"
       and hpc: "top1_path_connected_on X TX"
       and hx0: "x0 \<in> X" and hx1: "x1 \<in> X"
   shows "top1_groups_isomorphic_on
@@ -3163,7 +3163,6 @@ theorem Theorem_52_1_iso:
            (top1_fundamental_group_carrier X TX x1)
            (top1_fundamental_group_mul X TX x1)"
 proof -
-  have hTX: "is_topology_on X TX" using hstrict by (rule is_topology_on_strict_imp)
   obtain alpha where halpha: "top1_is_path_on X TX x0 x1 alpha"
     using hpc hx0 hx1 unfolding top1_path_connected_on_def by blast
   let ?hat = "\<lambda>f. top1_basepoint_change_on X TX x0 x1 alpha f"
