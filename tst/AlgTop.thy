@@ -6799,7 +6799,76 @@ proof -
   \<comment> \<open>j_*\<circ>r_* = id on \<pi>_1(X): for any loop f at x0 in X, (j\<circ>r)\<circ>f \<simeq> f by hjr_fixed.\<close>
   \<comment> \<open>r_*\<circ>j_* = id on \<pi>_1(A): r\<circ>id\<circ>f = r\<circ>f, and for f loop in A, r(f(s)) = H(f(s),1) = f(s).\<close>
   \<comment> \<open>So j_* is bijective with inverse r_*.\<close>
-  show ?thesis sorry \<comment> \<open>Assembly: j_* bijective homomorphism \<pi>_1(A) \<rightarrow> \<pi>_1(X).\<close>
+  \<comment> \<open>Following Munkres: j_* sends [f]_A to [f]_X (since j=id).
+     r_* sends [g]_X to [r\<circ>g]_A.
+     r_*\<circ>j_*([f]_A) = [r\<circ>f]_A = [f]_A (since r\<circ>f = f for f in A).
+     j_*\<circ>r_*([g]_X) = [r\<circ>g]_X = [g]_X (by hjr_fixed: r\<circ>g \<simeq> g).
+     So j_* is bijective. j_* is a hom since j=id: j\<circ>(f*g) = f*g = (j\<circ>f)*(j\<circ>g).\<close>
+  \<comment> \<open>Define j_* on equivalence classes. Since j=id, j_*([f]_A) = [f]_X.\<close>
+  let ?j_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 f g}"
+  \<comment> \<open>j_* maps carrier(A) to carrier(X).\<close>
+  have hj_range: "\<forall>c\<in>top1_fundamental_group_carrier A ?TA x0.
+      ?j_star c \<in> top1_fundamental_group_carrier X TX x0"
+  proof
+    fix c assume "c \<in> top1_fundamental_group_carrier A ?TA x0"
+    then obtain fl where hfl: "top1_is_loop_on A ?TA x0 fl"
+        and hc: "c = {g. top1_loop_equiv_on A ?TA x0 fl g}"
+      unfolding top1_fundamental_group_carrier_def by blast
+    have hflX: "top1_is_loop_on X TX x0 fl"
+    proof -
+      note h = top1_continuous_map_loop[OF hj_cont hfl]
+      show ?thesis using h by (simp add: id_def comp_def
+        top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def)
+    qed
+    have "?j_star c \<subseteq> {g. top1_loop_equiv_on X TX x0 fl g}"
+    proof
+      fix g assume "g \<in> ?j_star c"
+      then obtain fl' where hfl': "fl' \<in> c" and hg: "top1_loop_equiv_on X TX x0 fl' g" by auto
+      have hfl'A: "top1_loop_equiv_on A ?TA x0 fl fl'" using hfl' hc by simp
+      have hfl'X: "top1_loop_equiv_on X TX x0 fl fl'"
+      proof -
+        note h = top1_induced_preserves_loop_equiv[OF hTA hj_cont hfl _ hfl'A]
+        have "top1_is_loop_on A ?TA x0 fl'" using hfl'A unfolding top1_loop_equiv_on_def by blast
+        thus ?thesis using h by (simp add: id_def comp_def
+          top1_loop_equiv_on_def top1_is_loop_on_def top1_is_path_on_def
+          top1_path_homotopic_on_def top1_continuous_map_on_def)
+      qed
+      show "g \<in> {g. top1_loop_equiv_on X TX x0 fl g}"
+        using top1_loop_equiv_on_trans[OF hTX hfl'X hg] by simp
+    qed
+    moreover have "{g. top1_loop_equiv_on X TX x0 fl g} \<subseteq> ?j_star c"
+    proof
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x0 fl g}"
+      moreover have "fl \<in> c" using top1_loop_equiv_on_refl[OF hfl] hc by simp
+      ultimately show "g \<in> ?j_star c" by blast
+    qed
+    ultimately have "?j_star c = {g. top1_loop_equiv_on X TX x0 fl g}" by blast
+    thus "?j_star c \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hflX by blast
+  qed
+  \<comment> \<open>j_* is a homomorphism (trivial since j=id).\<close>
+  have hj_hom: "\<forall>c1\<in>top1_fundamental_group_carrier A ?TA x0.
+    \<forall>c2\<in>top1_fundamental_group_carrier A ?TA x0.
+    ?j_star (top1_fundamental_group_mul A ?TA x0 c1 c2) =
+    top1_fundamental_group_mul X TX x0 (?j_star c1) (?j_star c2)"
+    sorry \<comment> \<open>j\<circ>(f*g) = (j\<circ>f)*(j\<circ>g) trivially since j=id.\<close>
+  \<comment> \<open>j_* is injective: r_*\<circ>j_* = id because r\<circ>f = f for loops f in A.\<close>
+  have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier A ?TA x0)"
+    sorry \<comment> \<open>If j_*(c1)=j_*(c2), then [f1]_X=[f2]_X, hence r\<circ>f1 \<simeq> r\<circ>f2 in A.
+           But r\<circ>fi = fi for loops fi in A. So [f1]_A = [f2]_A, i.e. c1=c2.\<close>
+  \<comment> \<open>j_* is surjective: for [g]_X, j_*([r\<circ>g]_A) = [r\<circ>g]_X = [g]_X by hjr_fixed.\<close>
+  have hj_surj: "?j_star ` (top1_fundamental_group_carrier A ?TA x0) =
+      top1_fundamental_group_carrier X TX x0"
+    sorry \<comment> \<open>For class_X(g): r\<circ>g is loop in A, j_*(class_A(r\<circ>g)) = class_X(r\<circ>g) = class_X(g).\<close>
+  have hiso: "top1_group_iso_on
+      (top1_fundamental_group_carrier A ?TA x0)
+      (top1_fundamental_group_mul A ?TA x0)
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0) ?j_star"
+    unfolding top1_group_iso_on_def top1_group_hom_on_def bij_betw_def
+    using hj_range hj_hom hj_inj hj_surj by blast
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def using hiso by blast
 qed
 
 (** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
