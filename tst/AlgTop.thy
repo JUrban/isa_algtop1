@@ -6697,11 +6697,88 @@ proof -
         using hF1 by simp
     qed
   qed
-  have heq: "top1_homotopy_equivalence_on A ?TA X TX id ?r"
-    unfolding top1_homotopy_equivalence_on_def id_def[symmetric]
-    using hj_cont hr_cont hrj_hom hjr_hom by blast
-  show ?thesis
-    using Theorem_58_7[OF hTA hTX heq hx0] by simp
+  \<comment> \<open>Following Munkres' textbook proof: use Lemma 58.1 (basepoint FIXED) directly.
+     Key: H fixes x₀ ∈ A, so the basepoint-fixed version applies.\<close>
+  have hx0X: "x0 \<in> X" using hx0 hAsub by blast
+  \<comment> \<open>Lemma 58.1 applied: j\<circ>r \<simeq> id with x₀ fixed \<Rightarrow> (j\<circ>r)\<circ>f \<simeq> f for any loop f at x₀.\<close>
+  have hjr_fixed: "\<And>f. top1_is_loop_on X TX x0 f \<Longrightarrow>
+    top1_path_homotopic_on X TX x0 x0 ((\<lambda>x. ?r x) \<circ> f) f"
+  proof -
+    fix fl assume hfl: "top1_is_loop_on X TX x0 fl"
+    \<comment> \<open>Homotopy from j\<circ>r to id that fixes x₀: use H with H(x₀,t) = x₀.\<close>
+    have hH_base_fixed: "\<forall>t\<in>I_set. H (x0, t) = x0"
+      using hHA hx0 by blast
+    have hH_for_58_1: "\<exists>G. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX G
+        \<and> (\<forall>x\<in>X. G (x, 0) = (\<lambda>x. ?r x) x) \<and> (\<forall>x\<in>X. G (x, 1) = id x)
+        \<and> (\<forall>t\<in>I_set. G (x0, t) = x0)"
+    proof (intro exI conjI)
+      let ?G = "\<lambda>p. H (fst p, 1 - snd p)"
+      show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX ?G"
+      proof -
+        let ?flip = "\<lambda>(x::'a, t::real). (x, 1 - t)"
+        have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+          by (rule product_topology_on_is_topology_on[OF hTX hTI])
+        have hflip_pi1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (pi1 \<circ> ?flip)"
+        proof -
+          have "(pi1 \<circ> ?flip) = pi1" unfolding pi1_def by (rule ext) auto
+          thus ?thesis using top1_continuous_pi1[OF hTX hTI] by simp
+        qed
+        have hflip_pi2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (pi2 \<circ> ?flip)"
+        proof -
+          have heq: "(pi2 \<circ> ?flip) = (\<lambda>p. 1 - pi2 p)" unfolding pi2_def by (rule ext) auto
+          have hrev: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+          proof -
+            have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set) I_set
+                (subspace_topology UNIV top1_open_sets I_set) (\<lambda>t. 1 - t)"
+              by (rule top1_continuous_map_on_real_subspace_open_sets)
+                 (auto simp: top1_unit_interval_def intro: continuous_intros)
+            thus ?thesis unfolding top1_unit_interval_topology_def .
+          qed
+          have hcomp: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top ((\<lambda>t. 1 - t) \<circ> pi2)"
+            by (rule top1_continuous_map_on_comp[OF top1_continuous_pi2[OF hTX hTI] hrev])
+          show ?thesis unfolding heq using hcomp by (simp add: comp_def)
+        qed
+        have hflip_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+            (X \<times> I_set) (product_topology_on TX I_top) ?flip"
+          using iffD2[OF Theorem_18_4[OF hTP hTX hTI, of ?flip]] hflip_pi1 hflip_pi2 by blast
+        show ?thesis
+          using top1_continuous_map_on_comp[OF hflip_cont hH] by (simp add: comp_def case_prod_beta)
+      qed
+      show "\<forall>x\<in>X. ?G (x, 0) = ?r x" by simp
+      show "\<forall>x\<in>X. ?G (x, 1) = id x" using hH0 by simp
+      show "\<forall>t\<in>I_set. ?G (x0, t) = x0"
+      proof
+        fix t assume "t \<in> I_set"
+        hence "1 - t \<in> I_set" unfolding top1_unit_interval_def by auto
+        thus "?G (x0, t) = x0" using hH_base_fixed by simp
+      qed
+    qed
+    have hhx0: "(\<lambda>x. ?r x) x0 = x0"
+      using hHA hx0 h1_I by auto
+    have "top1_path_homotopic_on X TX x0 x0
+        (top1_induced_homomorphism_on X TX X TX (\<lambda>x. ?r x) fl)
+        (top1_induced_homomorphism_on X TX X TX id fl)"
+      by (rule Lemma_58_1_basepoint_fixed[OF hTX
+            hr_cont_X top1_continuous_map_on_id[OF hTX]
+            hhx0 _ hH_for_58_1 hfl]) simp
+    hence "top1_path_homotopic_on X TX x0 x0 ((\<lambda>x. ?r x) \<circ> fl) ((\<lambda>x. x) \<circ> fl)"
+      unfolding top1_induced_homomorphism_on_def id_def by simp
+    thus "top1_path_homotopic_on X TX x0 x0 ((\<lambda>x. ?r x) \<circ> fl) fl"
+      by (simp add: comp_def)
+  qed
+  \<comment> \<open>Now: r_*\<circ>j_* = id on \<pi>_1(A) because r\<circ>j = id_A pointwise.
+     And j_*\<circ>r_* = id on \<pi>_1(X) because j\<circ>r \<simeq> id with basepoint fixed (Lemma 58.1).
+     So j_* is bijective (with inverse r_*), hence a group isomorphism.\<close>
+  \<comment> \<open>j_* on equivalence classes: class(f) \<mapsto> class(id\<circ>f) = class(f) in \<pi>_1(X).\<close>
+  let ?j_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 (id \<circ> f) g}"
+  \<comment> \<open>r_* on equivalence classes: class(f) \<mapsto> class(r\<circ>f) in \<pi>_1(A).\<close>
+  let ?r_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on A ?TA x0 (?r \<circ> f) g}"
+  \<comment> \<open>j_* maps \<pi>_1(A) into \<pi>_1(X): inclusion of loops.\<close>
+  \<comment> \<open>Since id \<circ> f = f, j_star(class_A(f)) = class_X(f).\<close>
+  \<comment> \<open>j_*\<circ>r_* = id on \<pi>_1(X): for any loop f at x0 in X, (j\<circ>r)\<circ>f \<simeq> f by hjr_fixed.\<close>
+  \<comment> \<open>r_*\<circ>j_* = id on \<pi>_1(A): r\<circ>id\<circ>f = r\<circ>f, and for f loop in A, r(f(s)) = H(f(s),1) = f(s).\<close>
+  \<comment> \<open>So j_* is bijective with inverse r_*.\<close>
+  show ?thesis sorry \<comment> \<open>Assembly: j_* bijective homomorphism \<pi>_1(A) \<rightarrow> \<pi>_1(X).\<close>
 qed
 
 (** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
