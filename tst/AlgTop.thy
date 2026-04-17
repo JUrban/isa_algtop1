@@ -3446,10 +3446,12 @@ theorem Theorem_67_4_direct_sum_exists:
 proof -
   \<comment> \<open>Natural axis injection: \<iota>_\<alpha>(x) is the function with value x at \<alpha> and e(\<beta>) elsewhere.\<close>
   let ?\<iota> = "\<lambda>\<alpha> x. \<lambda>\<beta>. if \<beta> = \<alpha> then x else e \<beta>"
-  have habel: "top1_is_abelian_group_on (top1_direct_sum_carrier J G e)
-               (\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>)
-               e (\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>)"
-    sorry \<comment> \<open>Group axioms: closure, assoc, identity, inverse, commutativity — each coordinatewise.\<close>
+  let ?DS = "top1_direct_sum_carrier J G e"
+  let ?mulDS = "\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>"
+  let ?invDS = "\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>"
+  have habel: "top1_is_abelian_group_on ?DS ?mulDS e ?invDS"
+    unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+    sorry \<comment> \<open>6 group axioms + abelianness, each coordinatewise from G_\<alpha> axioms.\<close>
   have hhom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>)
                (top1_direct_sum_carrier J G e)
                (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>)
