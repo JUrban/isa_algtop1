@@ -4176,8 +4176,28 @@ proof -
   \<comment> \<open>Munkres 53.2: restrict covering to subspace.\<close>
   have hE0sub: "E0 \<subseteq> E" using assms(5) by (by100 blast)
   have hp_cont: "top1_continuous_map_on E0 (subspace_topology E TE E0)
-      B0 (subspace_topology B TB B0) p" sorry
-  have hp_surj: "p ` E0 = B0" sorry
+      B0 (subspace_topology B TB B0) p"
+  proof -
+    have hp_E_B: "top1_continuous_map_on E TE B TB p"
+      using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    have hp_E0_B: "top1_continuous_map_on E0 (subspace_topology E TE E0) B TB p"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF hp_E_B hE0sub])
+    have himg: "p ` E0 \<subseteq> B0" using assms(5) by (by100 blast)
+    show ?thesis
+      by (rule top1_continuous_map_on_codomain_shrink[OF hp_E0_B himg assms(4)])
+  qed
+  have hp_surj: "p ` E0 = B0"
+  proof (rule set_eqI, rule iffI)
+    fix b assume "b \<in> p ` E0"
+    thus "b \<in> B0" using assms(5) by (by100 blast)
+  next
+    fix b assume hb: "b \<in> B0"
+    have "p ` E = B" using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    hence "\<exists>e\<in>E. p e = b" using hb assms(4) by (by100 blast)
+    then obtain e where he: "e \<in> E" "p e = b" by (by100 blast)
+    have "e \<in> E0" using he hb assms(5) by (by100 blast)
+    thus "b \<in> p ` E0" using he by (by100 blast)
+  qed
   have hp_evenly: "\<forall>b0\<in>B0. \<exists>U0. b0 \<in> U0 \<and>
       top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p U0"
   proof
