@@ -1264,9 +1264,75 @@ proof -
                   X TX ?F"
       sorry \<comment> \<open>Paste f(4s/(1+t)) on {4s \<le> 1+t} with g(4s-1-t) on {1+t \<le> 4s \<le> 2+t}.\<close>
     \<comment> \<open>Continuity of F on Ch: h((4s-2-t)/(2-t)).\<close>
+    \<comment> \<open>Helper: if f, g agree on S, and f is continuous on S (subspace), then so is g.\<close>
+    have agree_transfer: "\<And>S TS Y TY f g. \<lbrakk>
+      top1_continuous_map_on S TS Y TY f;
+      \<forall>x\<in>S. f x = g x\<rbrakk> \<Longrightarrow> top1_continuous_map_on S TS Y TY g"
+    proof -
+      fix S TS Y TY and f g :: "'z \<Rightarrow> 'w"
+      assume hf: "top1_continuous_map_on S TS Y TY f" and hagr: "\<forall>x\<in>S. f x = g x"
+      have "\<forall>x\<in>S. g x \<in> Y" using hf hagr unfolding top1_continuous_map_on_def by auto
+      moreover have "\<forall>V\<in>TY. {x \<in> S. g x \<in> V} \<in> TS"
+      proof (intro ballI)
+        fix V assume "V \<in> TY"
+        have "{x \<in> S. g x \<in> V} = {x \<in> S. f x \<in> V}" using hagr by auto
+        thus "{x \<in> S. g x \<in> V} \<in> TS"
+          using hf \<open>V \<in> TY\<close> unfolding top1_continuous_map_on_def by simp
+      qed
+      ultimately show "top1_continuous_map_on S TS Y TY g"
+        unfolding top1_continuous_map_on_def by blast
+    qed
     have hFch: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
                  X TX ?F"
-      sorry \<comment> \<open>h composed with (4s-2-t)/(2-t), continuous by continuous_on_divide.\<close>
+    proof -
+      let ?\<rho> = "\<lambda>p::real\<times>real. max 0 (min 1 ((4 * fst p - 2 - snd p) / (2 - snd p)))"
+      have h\<rho>_cont: "continuous_on (I_set \<times> I_set) ?\<rho>"
+        by (intro continuous_intros continuous_on_divide) (auto simp: top1_unit_interval_def)
+      have h\<rho>_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?\<rho> p \<in> I_set"
+        unfolding top1_unit_interval_def by auto
+      have hcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (h \<circ> ?\<rho>)"
+        unfolding II_topology_def
+        by (rule top1_continuous_map_on_comp[OF top1_continuous_map_on_II_to_I[OF h\<rho>_map h\<rho>_cont] hhc])
+      \<comment> \<open>Restrict to Ch.\<close>
+      have hCh_sub: "?Ch \<subseteq> I_set \<times> I_set" by auto
+      have hcomp_restrict: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
+                             X TX (h \<circ> ?\<rho>)"
+        using top1_continuous_map_on_restrict_domain_simple[OF hcomp hCh_sub] .
+      \<comment> \<open>h \<circ> \<rho> agrees with ?F on Ch.\<close>
+      have hagree: "\<forall>p\<in>?Ch. (h \<circ> ?\<rho>) p = ?F p"
+      proof
+        fix p assume hp: "p \<in> ?Ch"
+        obtain s t where hst: "p = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+            and h4s: "4*s \<ge> 2+t" using hp by auto
+        have hs1: "s \<le> 1" using hs unfolding top1_unit_interval_def by simp
+        have ht0: "t \<ge> 0" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+        have h2t: "2 - t > 0" using ht1 by simp
+        have hnn: "(4*s - 2 - t) \<ge> 0" using h4s by simp
+        have hle: "(4*s - 2 - t) \<le> 2 - t" using hs1 by linarith
+        hence hrho_val: "?\<rho> p = (4*s - 2 - t) / (2 - t)" using hst hnn hle h2t
+          by (simp add: divide_le_eq)
+        show "(h \<circ> ?\<rho>) p = ?F p"
+        proof (cases "4*s = 2+t")
+          case True
+          hence "?\<rho> p = 0" using hst by simp
+          hence lhs: "(h \<circ> ?\<rho>) p = h 0" by (simp add: comp_def)
+          have "4*s > 1+t" using h4s ht0 by linarith
+          hence "\<not>(4*s \<le> 1+t)" by simp
+          hence "?F p = g (4*s - 1 - t)" using hst True by simp
+          also have "... = g 1" using True by simp
+          also have "... = x2" using hg1 .
+          finally have rhs: "?F p = x2" .
+          show ?thesis using lhs rhs hh0 by simp
+        next
+          case False
+          hence h4s_gt: "4*s > 2+t" using h4s by simp
+          hence "\<not>(4*s \<le> 1+t)" and "\<not>(4*s \<le> 2+t)" by auto
+          hence "?F p = h ((4*s - 2 - t) / (2 - t))" using hst by simp
+          thus ?thesis using hrho_val hst by (simp add: comp_def)
+        qed
+      qed
+      show ?thesis by (rule agree_transfer[OF hcomp_restrict hagree])
+    qed
     show ?thesis
       by (rule pasting_lemma_two_closed[OF hTII hTX hCfg_closed hCh_closed hcover hF_range hFcfg hFch])
   qed
