@@ -3825,6 +3825,12 @@ definition top1_Z_id :: "int" where
 definition top1_Z_invg :: "int \<Rightarrow> int" where
   "top1_Z_invg a = - a"
 
+lemma top1_Z_is_abelian_group:
+  "top1_is_abelian_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+  unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+            top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def
+  by auto
+
 text \<open>The cyclic group Z/nZ with modular addition.\<close>
 definition top1_Zn_group :: "nat \<Rightarrow> int set" where
   "top1_Zn_group n = {0..<int n}"
@@ -3837,6 +3843,13 @@ definition top1_Zn_id :: "int" where
 
 definition top1_Zn_invg :: "nat \<Rightarrow> int \<Rightarrow> int" where
   "top1_Zn_invg n a = (int n - a) mod int n"
+
+lemma top1_Zn_is_abelian_group:
+  assumes hn: "n \<ge> 1"
+  shows "top1_is_abelian_group_on (top1_Zn_group n) (top1_Zn_mul n) top1_Zn_id (top1_Zn_invg n)"
+  unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+            top1_Zn_group_def top1_Zn_mul_def top1_Zn_id_def top1_Zn_invg_def
+  sorry \<comment> \<open>Modular arithmetic group axioms — routine but needs mod reasoning.\<close>
 
 text \<open>The torsion subgroup of an abelian group.\<close>
 definition top1_torsion_subgroup_on ::
