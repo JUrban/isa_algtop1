@@ -136,6 +136,63 @@ next
     unfolding subspace_topology_def by blast
 qed
 
+text \<open>Transfer from continuous_on on I\<times>I to top1_continuous_map_on with II_topology.
+  Uses openin + subspace topology equivalence.\<close>
+lemma top1_continuous_map_on_II_to_I:
+  assumes hmap: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> f p \<in> I_set"
+      and hcont: "continuous_on (I_set \<times> I_set) f"
+  shows "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top f"
+proof -
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix p assume "p \<in> I_set \<times> I_set" thus "f p \<in> I_set" by (rule hmap)
+  next
+    fix V assume hV: "V \<in> I_top"
+    \<comment> \<open>V = I \<inter> W for some open W.\<close>
+    obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
+      using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                        top1_open_sets_def by auto
+    \<comment> \<open>By continuous_on_open_invariant, there exists open U with U \<inter> (I\<times>I) = f^{-1}(W) \<inter> (I\<times>I).\<close>
+    obtain U where hU: "open U" and hfW: "U \<inter> (I_set \<times> I_set) = f -` W \<inter> (I_set \<times> I_set)"
+      using hcont hW unfolding continuous_on_open_invariant by blast
+    \<comment> \<open>U is open in R^2, so U \<in> product_topology_on top1_open_sets top1_open_sets.\<close>
+    have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hU unfolding top1_open_sets_def by blast
+    hence "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+      using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+    \<comment> \<open>(I\<times>I) \<inter> U \<in> II_topology (subspace of R^2 on I\<times>I).\<close>
+    hence hU_II: "(I_set \<times> I_set) \<inter> U \<in> product_topology_on I_top I_top"
+    proof -
+      have "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        using \<open>U \<in> top1_open_sets\<close> product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+      moreover have hIeq: "product_topology_on I_top I_top
+        = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+      proof -
+        have hTR: "is_topology_on (UNIV :: real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+        have "product_topology_on (subspace_topology UNIV top1_open_sets I_set)
+                (subspace_topology UNIV top1_open_sets I_set)
+              = subspace_topology (UNIV \<times> UNIV) (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+          by (rule Theorem_16_3[OF hTR hTR])
+        moreover have "(UNIV :: real set) \<times> (UNIV :: real set) = (UNIV :: (real\<times>real) set)" by simp
+        moreover have "I_top = subspace_topology UNIV top1_open_sets I_set"
+          unfolding top1_unit_interval_topology_def by rule
+        ultimately show ?thesis by simp
+      qed
+      ultimately show ?thesis unfolding hIeq subspace_topology_def by blast
+    qed
+    have "{p \<in> I_set \<times> I_set. f p \<in> V} = (I_set \<times> I_set) \<inter> U"
+    proof -
+      have "{p \<in> I_set \<times> I_set. f p \<in> V} = {p \<in> I_set \<times> I_set. f p \<in> I_set \<and> f p \<in> W}"
+        unfolding hVW by auto
+      also have "... = f -` W \<inter> (I_set \<times> I_set)" using hmap by auto
+      also have "... = U \<inter> (I_set \<times> I_set)" using hfW by simp
+      also have "... = (I_set \<times> I_set) \<inter> U" by (rule Int_commute)
+      finally show ?thesis .
+    qed
+    thus "{p \<in> I_set \<times> I_set. f p \<in> V} \<in> product_topology_on I_top I_top" using hU_II by simp
+  qed
+qed
+
 text \<open>II_topology equals the subspace of R^2 on I × I.\<close>
 lemma II_topology_eq_subspace:
   "product_topology_on I_top I_top =
@@ -1306,9 +1363,38 @@ proof -
     thus "?F p \<in> X" using hfrange by blast
   qed
   have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
-    sorry \<comment> \<open>Composition of f (continuous on I) with g (continuous on I\<times>I).
-           g is max(0, min(1, ...)) of continuous real arithmetic — continuous by
-           continuous_on_max, continuous_on_min, continuous_intros.\<close>
+  proof -
+    have hg_cont: "continuous_on (I_set \<times> I_set) ?g"
+    proof -
+      have h1t_pos: "\<And>s t. (s, t) \<in> I_set \<times> I_set \<Longrightarrow> 1 + t > 0"
+        unfolding top1_unit_interval_def by auto
+      have hnum: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 2 * fst p - 1 + snd p)"
+        by (intro continuous_intros)
+      have hden: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. 1 + snd p)"
+        by (intro continuous_intros)
+      have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. (2 * fst p - 1 + snd p) / (1 + snd p))"
+        by (rule continuous_on_divide[OF hnum hden])
+           (auto simp: top1_unit_interval_def)
+      hence "continuous_on (I_set \<times> I_set) (\<lambda>(s, t). (2*s - 1 + t) / (1 + t))"
+        by (simp add: case_prod_unfold)
+      hence hmin: "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. min 1 ((2 * fst p - 1 + snd p) / (1 + snd p)))"
+        by (intro continuous_on_min continuous_on_const) (simp add: case_prod_unfold)
+      have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. max 0 (min 1 ((2 * fst p - 1 + snd p) / (1 + snd p))))"
+        by (intro continuous_on_max continuous_on_const hmin)
+      thus ?thesis by (simp add: case_prod_unfold)
+    qed
+    have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
+    proof -
+      have hmap: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set" using hg_range by auto
+      show ?thesis by (rule top1_continuous_map_on_II_to_I[OF hmap hg_cont])
+    qed
+    have hcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> ?g)"
+      unfolding II_topology_def by (rule top1_continuous_map_on_comp[OF hg_top1 hfcont])
+    moreover have "\<forall>p\<in>I_set \<times> I_set. (f \<circ> ?g) p = ?F p" by (auto simp: comp_def)
+    ultimately show ?thesis
+      unfolding top1_continuous_map_on_def II_topology_def
+      using hF_range by auto
+  qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product (top1_constant_path x0) f s"
   proof
     fix s assume hs: "s \<in> I_set"
