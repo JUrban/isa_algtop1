@@ -5352,7 +5352,9 @@ theorem Theorem_58_7:
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
 theorem Theorem_58_3:
-  assumes hdef: "top1_deformation_retract_of_on X TX A" and hx0: "x0 \<in> A"
+  assumes hdef: "top1_deformation_retract_of_on X TX A"
+      and hTX: "is_topology_on X TX"
+      and hx0: "x0 \<in> A"
   shows "top1_groups_isomorphic_on
            (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
            (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
@@ -5364,10 +5366,15 @@ proof -
       and hH0: "\<forall>x\<in>X. H (x, 0) = x" and hH1: "\<forall>x\<in>X. H (x, 1) \<in> A"
       and hHA: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a"
     using hdef unfolding top1_deformation_retract_of_on_def by blast
-  \<comment> \<open>r = H(\<cdot>, 1): X \<rightarrow> A is the retraction. j: A \<hookrightarrow> X is inclusion.\<close>
-  \<comment> \<open>j \<circ> r ≃ id_X via H, and r \<circ> j = id_A (since H(a,1) = a for a \<in> A).\<close>
-  \<comment> \<open>So j and r are homotopy inverses. By Theorem_58_7, j_* is an iso.\<close>
-  show ?thesis sorry \<comment> \<open>Needs Theorem_58_7 (which is sorry'd) + homotopy equivalence construction.\<close>
+  let ?TA = "subspace_topology X TX A"
+  have hTA: "is_topology_on A ?TA"
+    by (rule subspace_topology_is_topology_on[OF hTX hAsub])
+  \<comment> \<open>j = id (inclusion) and r = H(\<cdot>,1) (retraction) form a homotopy equivalence.
+     By Theorem 58.7, this gives the isomorphism.\<close>
+  have heq: "top1_homotopy_equivalence_on A ?TA X TX id (\<lambda>x. H (x, 1))"
+    sorry
+  show ?thesis
+    using Theorem_58_7[OF hTA hTX heq hx0] by simp
 qed
 
 (** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
