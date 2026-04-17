@@ -5371,8 +5371,142 @@ proof -
     by (rule subspace_topology_is_topology_on[OF hTX hAsub])
   \<comment> \<open>j = id (inclusion) and r = H(\<cdot>,1) (retraction) form a homotopy equivalence.
      By Theorem 58.7, this gives the isomorphism.\<close>
-  have heq: "top1_homotopy_equivalence_on A ?TA X TX id (\<lambda>x. H (x, 1))"
-    sorry
+  let ?r = "\<lambda>x. H (x, 1::real)"
+  \<comment> \<open>1. Inclusion id: A \<rightarrow> X is continuous.\<close>
+  have hj_cont: "top1_continuous_map_on A ?TA X TX id"
+    by (rule top1_continuous_map_on_subspace_restrict[OF top1_continuous_map_on_id[OF hTX] hAsub])
+  \<comment> \<open>2. Retraction r: X \<rightarrow> A is continuous.\<close>
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hpair1: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
+                  (\<lambda>x. (x, 1::real))"
+  proof -
+    have hc1: "top1_continuous_map_on X TX I_set I_top (\<lambda>_. 1::real)"
+      by (rule top1_continuous_map_on_const[OF hTX hTI h1_I])
+    have hp1_eq: "pi1 \<circ> (\<lambda>x. (x, 1::real)) = id" unfolding pi1_def by (rule ext) simp
+    have hp1: "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+      unfolding hp1_eq by (rule top1_continuous_map_on_id[OF hTX])
+    have hp2_eq: "pi2 \<circ> (\<lambda>x. (x, 1::real)) = (\<lambda>_. 1::real)" unfolding pi2_def by (rule ext) simp
+    have hp2: "top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, 1::real)))"
+      unfolding hp2_eq by (rule hc1)
+    show ?thesis
+      using iffD2[OF Theorem_18_4[OF hTX hTX hTI, of "\<lambda>x. (x, 1::real)"]]
+      hp1 hp2 by blast
+  qed
+  have hr_cont_X: "top1_continuous_map_on X TX X TX ?r"
+    using top1_continuous_map_on_comp[OF hpair1 hH] by (simp add: comp_def)
+  have hr_img: "?r ` X \<subseteq> A" using hH1 by auto
+  have hr_cont: "top1_continuous_map_on X TX A ?TA ?r"
+    by (rule top1_continuous_map_on_codomain_shrink[OF hr_cont_X hr_img hAsub])
+  \<comment> \<open>3. r \<circ> id ≃ id_A: since H(a,1)=a for a\<in>A, r\<circ>id = id on A. Trivial homotopy.\<close>
+  have hrj_eq: "\<forall>a\<in>A. ?r (id a) = id a"
+    using hHA h1_I by auto
+  have hrj_hom: "top1_homotopic_on A ?TA A ?TA (?r \<circ> id) id"
+  proof -
+    have hrj_fun_eq: "\<And>a. a \<in> A \<Longrightarrow> (?r \<circ> id) a = id a"
+      using hrj_eq by simp
+    \<comment> \<open>Constant homotopy: F(a,t) = a for all t.\<close>
+    have hconst_hom: "top1_continuous_map_on (A \<times> I_set) (product_topology_on ?TA I_top)
+                        A ?TA (\<lambda>p. fst p)"
+    proof -
+      have hTP: "is_topology_on (A \<times> I_set) (product_topology_on ?TA I_top)"
+        by (rule product_topology_on_is_topology_on[OF hTA hTI])
+      have "top1_continuous_map_on (A \<times> I_set) (product_topology_on ?TA I_top) A ?TA (pi1 \<circ> id)"
+      proof -
+        have "top1_continuous_map_on (A \<times> I_set) (product_topology_on ?TA I_top) A ?TA pi1"
+          by (rule top1_continuous_pi1[OF hTA hTI])
+        thus ?thesis by simp
+      qed
+      thus ?thesis unfolding pi1_def comp_def by simp
+    qed
+    have hcont_rj: "top1_continuous_map_on A ?TA A ?TA (?r \<circ> id)"
+      using top1_continuous_map_on_comp[OF hj_cont hr_cont] by simp
+    show ?thesis
+      unfolding top1_homotopic_on_def
+    proof (intro conjI exI)
+      show "top1_continuous_map_on A ?TA A ?TA (?r \<circ> id)" by (rule hcont_rj)
+      show "top1_continuous_map_on A ?TA A ?TA id" by (rule top1_continuous_map_on_id[OF hTA])
+      show "top1_continuous_map_on (A \<times> I_set) (product_topology_on ?TA I_top) A ?TA (\<lambda>p. fst p)"
+        by (rule hconst_hom)
+      show "\<forall>x\<in>A. fst (x, 0::real) = (?r \<circ> id) x" using hrj_fun_eq by auto
+      show "\<forall>x\<in>A. fst (x, 1::real) = id x" by simp
+    qed
+  qed
+  \<comment> \<open>4. id \<circ> r ≃ id_X: via H(x, 1-t). H(x,0)=x=id(x), H(x,1)=(id\<circ>r)(x).\<close>
+  have hjr_hom: "top1_homotopic_on X TX X TX (id \<circ> ?r) id"
+  proof -
+    \<comment> \<open>Homotopy F(x,t) = H(x, 1-t). F(x,0) = H(x,1) = r(x), F(x,1) = H(x,0) = x.\<close>
+    let ?flip = "\<lambda>(x::'a, t::real). (x, 1 - t)"
+    \<comment> \<open>flip is continuous X\<times>I \<rightarrow> X\<times>I via Theorem 18.4.\<close>
+    have hTP: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+      by (rule product_topology_on_is_topology_on[OF hTX hTI])
+    have hflip_pi1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        X TX (pi1 \<circ> ?flip)"
+    proof -
+      have "(pi1 \<circ> ?flip) = pi1" unfolding pi1_def by (rule ext) auto
+      thus ?thesis using top1_continuous_pi1[OF hTX hTI] by simp
+    qed
+    have hflip_pi2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        I_set I_top (pi2 \<circ> ?flip)"
+    proof -
+      have hpi2_flip_eq: "(pi2 \<circ> ?flip) = (\<lambda>p. 1 - pi2 p)"
+        unfolding pi2_def by (rule ext) auto
+      \<comment> \<open>(\<lambda>t. 1-t) is continuous I \<rightarrow> I.\<close>
+      have hrev_map: "\<And>t. t \<in> I_set \<Longrightarrow> 1 - t \<in> I_set"
+        unfolding top1_unit_interval_def by auto
+      have hrev_cont: "continuous_on UNIV (\<lambda>t::real. 1 - t)" by (intro continuous_intros)
+      have hrev_I: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+      proof -
+        have "top1_continuous_map_on I_set
+          (subspace_topology UNIV top1_open_sets I_set) I_set
+          (subspace_topology UNIV top1_open_sets I_set) (\<lambda>t. 1 - t)"
+          by (rule top1_continuous_map_on_real_subspace_open_sets[OF hrev_map hrev_cont])
+        thus ?thesis unfolding top1_unit_interval_topology_def .
+      qed
+      have hpi2_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top pi2"
+        by (rule top1_continuous_pi2[OF hTX hTI])
+      have hcomp: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top
+          ((\<lambda>t. 1 - t) \<circ> pi2)"
+        by (rule top1_continuous_map_on_comp[OF hpi2_cont hrev_I])
+      have hcomp_eq: "((\<lambda>t. 1 - t) \<circ> pi2) = (\<lambda>p. 1 - pi2 p)" by (rule ext) (simp add: comp_def)
+      show ?thesis unfolding hpi2_flip_eq hcomp_eq[symmetric] by (rule hcomp)
+    qed
+    have hflip_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        (X \<times> I_set) (product_topology_on TX I_top) ?flip"
+      using iffD2[OF Theorem_18_4[OF hTP hTX hTI, of ?flip]]
+      hflip_pi1 hflip_pi2 by blast
+    have hF_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        X TX (\<lambda>p. H (?flip p))"
+      using top1_continuous_map_on_comp[OF hflip_cont hH] by (simp add: comp_def)
+    have hF_eq: "\<And>p. ?flip p = (fst p, 1 - snd p)" by auto
+    have hF0: "\<forall>x\<in>X. H (x, 1 - (0::real)) = (id \<circ> ?r) x" by simp
+    have hF1: "\<forall>x\<in>X. H (x, 1 - (1::real)) = id x"
+    proof
+      fix x assume "x \<in> X"
+      thus "H (x, 1 - 1) = id x" using hH0 by simp
+    qed
+    show ?thesis
+      unfolding top1_homotopic_on_def id_def[symmetric]
+    proof (intro conjI exI)
+      show "top1_continuous_map_on X TX X TX (id \<circ> ?r)"
+      proof -
+        have "(id \<circ> ?r) = ?r" by (rule ext) (simp add: id_def)
+        thus ?thesis using hr_cont_X by simp
+      qed
+      show "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTX])
+      show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+              (\<lambda>p. H (fst p, 1 - snd p))"
+        using hF_cont by (simp add: case_prod_beta)
+      show "\<forall>x\<in>X. H (fst (x, 0::real), 1 - snd (x, 0::real)) = (id \<circ> ?r) x"
+        using hF0 by simp
+      show "\<forall>x\<in>X. H (fst (x, 1::real), 1 - snd (x, 1::real)) = id x"
+        using hF1 by simp
+    qed
+  qed
+  have heq: "top1_homotopy_equivalence_on A ?TA X TX id ?r"
+    unfolding top1_homotopy_equivalence_on_def id_def[symmetric]
+    using hj_cont hr_cont hrj_hom hjr_hom by blast
   show ?thesis
     using Theorem_58_7[OF hTA hTX heq hx0] by simp
 qed
