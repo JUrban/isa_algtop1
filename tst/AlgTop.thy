@@ -4418,7 +4418,8 @@ theorem Theorem_54_4_bijective_simply_connected:
 proof -
   \<comment> \<open>Munkres 54.4 bijectivity: surjectivity from path-connectedness (which follows
      from simple connectivity), injectivity from simple connectivity of E.\<close>
-  have hpc: "top1_path_connected_on E TE" sorry
+  have hpc: "top1_path_connected_on E TE"
+    using assms(4) top1_simply_connected_on_path_connected by blast
   \<comment> \<open>Injectivity: if \<phi>([f])=\<phi>([g]) then lifts end at same point. E simply connected
      gives path homotopy Ftilde between lifts; p\<circ>Ftilde homotopizes f to g.\<close>
   have hinj: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g \<and>
@@ -7595,8 +7596,8 @@ proof (rule ccontr)
   \<comment> \<open>Let X = S^2 - {a, b}, U = S^2 - A_1, V = S^2 - A_2.\<close>
   let ?X = "top1_S2 - {a, b}" and ?U = "top1_S2 - A1" and ?V = "top1_S2 - A2"
   \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - C (path-connected by hypothesis).\<close>
-  have hX_UV: "?U \<union> ?V = ?X" using hC_decomp hab sorry
-  have hUV_eq: "?U \<inter> ?V = top1_S2 - C" using hC_decomp hab sorry
+  have hX_UV: "?U \<union> ?V = ?X" using hC_decomp hab by blast
+  have hUV_eq: "?U \<inter> ?V = top1_S2 - C" using hC_decomp hab by blast
   \<comment> \<open>U, V are open in X.\<close>
   have hU_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U" sorry
   have hV_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?V" sorry
@@ -7629,11 +7630,11 @@ proof -
   \<comment> \<open>Munkres 61.4: Write C=A1\<union>A2 with A1\<inter>A2={a,b}.
      X = S^2-{a,b} \<cong> R^2-{0}, U = S^2-A1, V = S^2-A2. X=U\<union>V.\<close>
   obtain a b where hab: "A1 \<inter> A2 = {a, b}" and hab_ne: "a \<noteq> b"
-    using assms(8) sorry
+    using assms(8) card_2_iff by metis
   let ?X = "top1_S2 - {a, b}" and ?U = "top1_S2 - A1" and ?V = "top1_S2 - A2"
   \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - (A1 \<union> A2).\<close>
-  have hX_UV: "?U \<union> ?V = ?X" using hab sorry
-  have hUV_eq: "?U \<inter> ?V = top1_S2 - (A1 \<union> A2)" sorry
+  have hX_UV: "?U \<union> ?V = ?X" using hab by blast
+  have hUV_eq: "?U \<inter> ?V = top1_S2 - (A1 \<union> A2)" by blast
   \<comment> \<open>If S^2 - (A1\<union>A2) were connected, then U\<inter>V would be path-connected.\<close>
   \<comment> \<open>By Lemma 61.2, loops in U and V are nulhomotopic (they factor through arcs).\<close>
   \<comment> \<open>So \<pi>_1(X) would be trivial. But X \<cong> R^2-{0} has nontrivial \<pi>_1. Contradiction.\<close>
