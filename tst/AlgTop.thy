@@ -24,6 +24,118 @@ text \<open>I = [0,1] is top1_unit_interval (defined in Top1_Ch3).
 abbreviation (input) "I_top \<equiv> top1_unit_interval_topology"
 abbreviation (input) "I_set \<equiv> top1_unit_interval"
 
+text \<open>The product of euclidean open sets is the euclidean open sets on the product.\<close>
+lemma product_topology_on_open_sets:
+  "product_topology_on (top1_open_sets :: 'a::topological_space set set)
+                       (top1_open_sets :: 'b::topological_space set set)
+   = (top1_open_sets :: ('a \<times> 'b) set set)"
+proof (rule set_eqI, rule iffI)
+  fix W :: "('a \<times> 'b) set"
+  assume hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+  have hTX: "is_topology_on (UNIV :: 'a set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTY: "is_topology_on (UNIV :: 'b set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+  have hUU: "(UNIV :: 'a set) \<times> (UNIV :: 'b set) = (UNIV :: ('a \<times> 'b) set)" by simp
+  have hTP: "is_topology_on (UNIV :: ('a \<times> 'b) set) (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF hTX hTY] unfolding hUU .
+  have "open W"
+  proof (rule open_prod_intro)
+    fix x assume hx: "x \<in> W"
+    \<comment> \<open>W is in a product topology, so it contains a basis element around x.\<close>
+    have "W \<subseteq> UNIV" by simp
+    obtain U V where hU: "U \<in> top1_open_sets" and hV: "V \<in> top1_open_sets"
+        and hxUV: "x \<in> U \<times> V" and hUVW: "U \<times> V \<subseteq> W"
+    proof -
+      have "W \<in> topology_generated_by_basis UNIV (product_basis top1_open_sets top1_open_sets)"
+        using hW unfolding product_topology_on_def .
+      hence "\<exists>b\<in>product_basis top1_open_sets top1_open_sets. x \<in> b \<and> b \<subseteq> W"
+        using hx unfolding topology_generated_by_basis_def by blast
+      then obtain b where hb: "b \<in> product_basis top1_open_sets top1_open_sets"
+          and hxb: "x \<in> b" and hbW: "b \<subseteq> W" by blast
+      obtain U' V' where hUV: "b = U' \<times> V'" and hU': "U' \<in> top1_open_sets" and hV': "V' \<in> top1_open_sets"
+        using hb unfolding product_basis_def by blast
+      show ?thesis using that[of U' V'] hU' hV' hxb hbW hUV by blast
+    qed
+    have "open U" using hU unfolding top1_open_sets_def by blast
+    moreover have "open V" using hV unfolding top1_open_sets_def by blast
+    ultimately show "\<exists>A B. open A \<and> open B \<and> x \<in> A \<times> B \<and> A \<times> B \<subseteq> W"
+      using hxUV hUVW by blast
+  qed
+  thus "W \<in> top1_open_sets" unfolding top1_open_sets_def by blast
+next
+  fix W :: "('a \<times> 'b) set"
+  assume hW: "W \<in> top1_open_sets"
+  hence "open W" unfolding top1_open_sets_def by blast
+  have hTX: "is_topology_on (UNIV :: 'a set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTY: "is_topology_on (UNIV :: 'b set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+  have hUU: "(UNIV :: 'a set) \<times> (UNIV :: 'b set) = (UNIV :: ('a \<times> 'b) set)" by simp
+  have hTP: "is_topology_on (UNIV :: ('a \<times> 'b) set) (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF hTX hTY] unfolding hUU .
+  \<comment> \<open>W = \<Union>{A \<times> B | A B. open A \<and> open B \<and> A \<times> B \<subseteq> W}.\<close>
+  let ?cover = "{R. \<exists>A B. R = A \<times> B \<and> open A \<and> open B \<and> R \<subseteq> W}"
+  have hW_eq: "W = \<Union>?cover"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> W"
+    then obtain A B where "open A" "open B" "x \<in> A \<times> B" "A \<times> B \<subseteq> W"
+      using \<open>open W\<close> open_prod_elim by blast
+    thus "x \<in> \<Union>?cover" by blast
+  next
+    fix x assume "x \<in> \<Union>?cover" thus "x \<in> W" by auto
+  qed
+  \<comment> \<open>Each A \<times> B \<in> ?cover is in product_topology_on.\<close>
+  have "\<forall>R\<in>?cover. R \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof
+    fix R assume "R \<in> ?cover"
+    then obtain A B where "R = A \<times> B" "open A" "open B" by blast
+    hence "A \<in> top1_open_sets" "B \<in> top1_open_sets" unfolding top1_open_sets_def by blast+
+    thus "R \<in> product_topology_on top1_open_sets top1_open_sets"
+      using \<open>R = A \<times> B\<close> product_rect_open by blast
+  qed
+  \<comment> \<open>Union of topology members is in the topology.\<close>
+  hence "\<Union>?cover \<in> product_topology_on top1_open_sets top1_open_sets"
+    using hTP unfolding is_topology_on_def by blast
+  thus "W \<in> product_topology_on top1_open_sets top1_open_sets"
+    using hW_eq by simp
+qed
+
+text \<open>Continuity transfer: continuous_on on ℝ² implies top1_continuous_map_on
+  on subspace topologies.\<close>
+lemma top1_continuous_map_on_real2_subspace:
+  fixes S :: "(real \<times> real) set" and T :: "(real \<times> real) set"
+  assumes hmap: "\<And>p. p \<in> S \<Longrightarrow> f p \<in> T"
+      and hcont: "continuous_on UNIV f"
+  shows "top1_continuous_map_on S
+           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+           T (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix p assume "p \<in> S" thus "f p \<in> T" by (rule hmap)
+next
+  fix V assume hV: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T"
+  obtain U where hU: "U \<in> product_topology_on top1_open_sets top1_open_sets" and hVeq: "V = T \<inter> U"
+    using hV unfolding subspace_topology_def by blast
+  have hU_open: "open U"
+  proof -
+    have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hU product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+    thus ?thesis unfolding top1_open_sets_def by blast
+  qed
+  have hfU_open: "open (f -` U)" by (rule open_vimage[OF hU_open hcont])
+  have "{p \<in> S. f p \<in> V} = S \<inter> (f -` U \<inter> f -` T)"
+    unfolding hVeq by auto
+  also have "... = S \<inter> (f -` U)"
+    using hmap by auto
+  finally have "{p \<in> S. f p \<in> V} = S \<inter> (f -` U)" .
+  moreover have "f -` U \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+    have "f -` U \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hfU_open unfolding top1_open_sets_def by blast
+    thus ?thesis using product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+  qed
+  ultimately show "{p \<in> S. f p \<in> V} \<in>
+    subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+    unfolding subspace_topology_def by blast
+qed
+
 text \<open>The product space I \<times> I with the product topology.\<close>
 definition II_topology :: "(real \<times> real) set set" where
   "II_topology = product_topology_on I_top I_top"
