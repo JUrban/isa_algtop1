@@ -1918,10 +1918,11 @@ proof -
     have hg_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set" using hg_range by auto
     have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
       by (rule top1_continuous_map_on_II_to_I[OF hg_map hg_cont])
-    have "f \<circ> ?g = ?F" by (rule ext) (simp add: comp_def case_prod_unfold)
-    hence hcomp: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX ?F"
-      using top1_continuous_map_on_comp[OF hg_top1 hfcont] by simp
-    show ?thesis unfolding II_topology_def using hcomp .
+    have hcomp_raw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (f \<circ> ?g)"
+      by (rule top1_continuous_map_on_comp[OF hg_top1 hfcont])
+    show ?thesis unfolding II_topology_def
+      by (rule top1_continuous_map_on_agree[OF hcomp_raw])
+         (auto simp: comp_def case_prod_unfold)
   qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
   proof
