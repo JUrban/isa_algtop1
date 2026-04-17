@@ -1140,6 +1140,21 @@ proof -
     unfolding top1_is_path_on_def using hcont hstart hend by blast
 qed
 
+text \<open>If two functions agree on S, and one is continuous on S, so is the other.\<close>
+lemma top1_continuous_map_on_agree:
+  assumes "top1_continuous_map_on S TS Y TY f" and "\<forall>x\<in>S. f x = g x"
+  shows "top1_continuous_map_on S TS Y TY g"
+proof -
+  have "\<forall>x\<in>S. g x \<in> Y" using assms unfolding top1_continuous_map_on_def by auto
+  moreover have "\<forall>V\<in>TY. {x \<in> S. g x \<in> V} \<in> TS"
+  proof (intro ballI)
+    fix V assume "V \<in> TY"
+    have "{x \<in> S. g x \<in> V} = {x \<in> S. f x \<in> V}" using assms(2) by auto
+    thus "{x \<in> S. g x \<in> V} \<in> TS" using assms(1) \<open>V \<in> TY\<close> unfolding top1_continuous_map_on_def by simp
+  qed
+  ultimately show ?thesis unfolding top1_continuous_map_on_def by blast
+qed
+
 (** from \<S>51 Theorem 51.2: groupoid properties of * **)
 lemma Theorem_51_2_associativity:
   assumes hTX: "is_topology_on X TX"
@@ -1264,24 +1279,6 @@ proof -
                   X TX ?F"
       sorry \<comment> \<open>Paste f(4s/(1+t)) on {4s \<le> 1+t} with g(4s-1-t) on {1+t \<le> 4s \<le> 2+t}.\<close>
     \<comment> \<open>Continuity of F on Ch: h((4s-2-t)/(2-t)).\<close>
-    \<comment> \<open>Helper: if f, g agree on S, and f is continuous on S (subspace), then so is g.\<close>
-    have agree_transfer: "\<And>S TS Y TY f g. \<lbrakk>
-      top1_continuous_map_on S TS Y TY f;
-      \<forall>x\<in>S. f x = g x\<rbrakk> \<Longrightarrow> top1_continuous_map_on S TS Y TY g"
-    proof -
-      fix S TS Y TY and f g :: "'z \<Rightarrow> 'w"
-      assume hf: "top1_continuous_map_on S TS Y TY f" and hagr: "\<forall>x\<in>S. f x = g x"
-      have "\<forall>x\<in>S. g x \<in> Y" using hf hagr unfolding top1_continuous_map_on_def by auto
-      moreover have "\<forall>V\<in>TY. {x \<in> S. g x \<in> V} \<in> TS"
-      proof (intro ballI)
-        fix V assume "V \<in> TY"
-        have "{x \<in> S. g x \<in> V} = {x \<in> S. f x \<in> V}" using hagr by auto
-        thus "{x \<in> S. g x \<in> V} \<in> TS"
-          using hf \<open>V \<in> TY\<close> unfolding top1_continuous_map_on_def by simp
-      qed
-      ultimately show "top1_continuous_map_on S TS Y TY g"
-        unfolding top1_continuous_map_on_def by blast
-    qed
     have hFch: "top1_continuous_map_on ?Ch (subspace_topology (I_set \<times> I_set) II_topology ?Ch)
                  X TX ?F"
     proof -
@@ -1331,7 +1328,7 @@ proof -
           thus ?thesis using hrho_val hst by (simp add: comp_def)
         qed
       qed
-      show ?thesis by (rule agree_transfer[OF hcomp_restrict hagree])
+      show ?thesis by (rule top1_continuous_map_on_agree[OF hcomp_restrict hagree])
     qed
     show ?thesis
       by (rule pasting_lemma_two_closed[OF hTII hTX hCfg_closed hCh_closed hcover hF_range hFcfg hFch])
