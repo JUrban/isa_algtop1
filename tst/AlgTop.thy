@@ -446,8 +446,11 @@ proof -
       thus ?thesis using False hF'_range by simp
     qed
   qed
-  have hGA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A) Y TY ?G" sorry
-  have hGB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B) Y TY ?G" sorry
+  \<comment> \<open>Piece continuity via direct open-set argument (avoids topology equation).\<close>
+  have hGA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A) Y TY ?G"
+    sorry \<comment> \<open>F(x, 2t) continuous on A via reparametrization.\<close>
+  have hGB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B) Y TY ?G"
+    sorry \<comment> \<open>F'(x, 2t-1) continuous on B via reparametrization + agreement at t=1/2.\<close>
   show ?thesis
     by (rule pasting_lemma_two_closed[OF hTXI hTY hA_closed hB_closed hcover hG_range hGA hGB])
 qed
