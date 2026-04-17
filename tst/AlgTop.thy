@@ -5888,12 +5888,54 @@ proof -
     ultimately show "?f_star c \<in> top1_fundamental_group_carrier Y TY (f x0)"
       unfolding top1_fundamental_group_carrier_def by blast
   qed
+  \<comment> \<open>Pointwise: f \<circ> (l1 * l2) = (f \<circ> l1) * (f \<circ> l2).\<close>
+  have hf_comp_product: "\<And>l1 l2. f \<circ> top1_path_product l1 l2 = top1_path_product (f \<circ> l1) (f \<circ> l2)"
+    unfolding top1_path_product_def comp_def by (rule ext) auto
   \<comment> \<open>f_* is a homomorphism.\<close>
   have hfstar_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
     \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
     ?f_star (top1_fundamental_group_mul X TX x0 c1 c2) =
     top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)"
-    sorry
+  proof (intro ballI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+    obtain l1 where hl1: "top1_is_loop_on X TX x0 l1"
+        and hc1_eq: "c1 = {h. top1_loop_equiv_on X TX x0 l1 h}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by blast
+    obtain l2 where hl2: "top1_is_loop_on X TX x0 l2"
+        and hc2_eq: "c2 = {h. top1_loop_equiv_on X TX x0 l2 h}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by blast
+    have hl12: "top1_is_loop_on X TX x0 (top1_path_product l1 l2)"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX])
+         (use hl1 hl2 in \<open>auto simp: top1_is_loop_on_def\<close>)
+    \<comment> \<open>LHS: f_*(mul c1 c2) = f_*(class(l1*l2)) = class(f\<circ>(l1*l2)) = class((f\<circ>l1)*(f\<circ>l2)).\<close>
+    have hmul_eq: "top1_fundamental_group_mul X TX x0 c1 c2
+        = {h. top1_loop_equiv_on X TX x0 (top1_path_product l1 l2) h}"
+      unfolding hc1_eq hc2_eq by (rule top1_fundamental_group_mul_class[OF hTX hl1 hl2])
+    have hLHS: "?f_star (top1_fundamental_group_mul X TX x0 c1 c2)
+        = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> top1_path_product l1 l2) h}"
+      unfolding hmul_eq by (rule hfstar_class[OF hl12])
+    have hLHS': "?f_star (top1_fundamental_group_mul X TX x0 c1 c2)
+        = {h. top1_loop_equiv_on Y TY (f x0) (top1_path_product (f \<circ> l1) (f \<circ> l2)) h}"
+      unfolding hLHS hf_comp_product ..
+    \<comment> \<open>RHS: mul(f_*(c1), f_*(c2)) = mul(class(f\<circ>l1), class(f\<circ>l2)) = class((f\<circ>l1)*(f\<circ>l2)).\<close>
+    have hfc1: "?f_star c1 = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l1) h}"
+      unfolding hc1_eq by (rule hfstar_class[OF hl1])
+    have hfc2: "?f_star c2 = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> l2) h}"
+      unfolding hc2_eq by (rule hfstar_class[OF hl2])
+    have hfl1: "top1_is_loop_on Y TY (f x0) (f \<circ> l1)"
+      by (rule top1_continuous_map_loop[OF hf hl1])
+    have hfl2: "top1_is_loop_on Y TY (f x0) (f \<circ> l2)"
+      by (rule top1_continuous_map_loop[OF hf hl2])
+    have hRHS: "top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)
+        = {h. top1_loop_equiv_on Y TY (f x0) (top1_path_product (f \<circ> l1) (f \<circ> l2)) h}"
+      unfolding hfc1 hfc2 by (rule top1_fundamental_group_mul_class[OF hTY hfl1 hfl2])
+    show "?f_star (top1_fundamental_group_mul X TX x0 c1 c2) =
+          top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)"
+      unfolding hLHS' hRHS ..
+  qed
   \<comment> \<open>f_* is bijective (uses homotopy equivalence).\<close>
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
