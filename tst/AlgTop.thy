@@ -8239,6 +8239,16 @@ proof -
      By Theorem 63.1 applied to X = S^2-{p,q}, U = S^2-e13, V = S^2-e24:
      U \<inter> V = S^2-(e13\<union>e24) has exactly two components (by Jordan Curve-like argument),
      and the loop f alternates between U and V, creating a nontrivial element.\<close>
+  let ?X = "top1_S2 - {p} - {q}" and ?TX = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})"
+  let ?U = "top1_S2 - e13" and ?V = "top1_S2 - e24"
+  \<comment> \<open>Step 1: X = U \<union> V and U \<inter> V has two components A, B.\<close>
+  have hUV: "?U \<union> ?V = ?X" sorry
+  have hUV_components: "\<exists>A B. A \<inter> B = {} \<and> A \<union> B = ?U \<inter> ?V \<and> A \<noteq> {} \<and> B \<noteq> {}" sorry
+  \<comment> \<open>Step 2: The path \<alpha> (a1→a2 via e12) lies in U, the path \<beta> (a2→a3 via e23) lies in V.
+     By Theorem 63.1, the loop \<alpha>*\<beta> is nontrivial in X.\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U (subspace_topology top1_S2 top1_S2_topology ?U) x0 x0 \<alpha>"
+    sorry
+  \<comment> \<open>Step 3: f is homotopic to such a loop, hence nontrivial.\<close>
   show ?thesis sorry
 qed
 
@@ -9158,6 +9168,11 @@ proof -
      Step 2: G/2G \<cong> (Z/2Z)^S1 \<cong> (Z/2Z)^S2.
      Step 3: Vector space dimension: |S1| = dim (Z/2Z)^S1 = dim (Z/2Z)^S2 = |S2|.
      Step 4: Hence |S1| = |S2|, i.e. there exists a bijection.\<close>
+  \<comment> \<open>Step 1: Form quotient G/2G. G/2G is a vector space over Z/2Z with dimension = rank.\<close>
+  let ?twoG = "{mul g g | g. g \<in> G}"
+  have h_dim_S1: "\<exists>f. bij_betw f S1 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
+  have h_dim_S2: "\<exists>f. bij_betw f S2 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
+  \<comment> \<open>Step 2: Bijections S1 \<cong> G/2G \<cong> S2 compose to S1 \<cong> S2.\<close>
   show ?thesis sorry
 qed
 
@@ -9259,6 +9274,14 @@ proof -
   \<comment> \<open>Munkres 68.7: The natural map \<pi>: G1*G2 \<rightarrow> (G1/N1)*(G2/N2) is a surjective
      homomorphism. Its kernel is exactly the normal closure of \<iota>1(N1) \<union> \<iota>2(N2).
      By the first isomorphism theorem, (G1*G2)/ker \<cong> (G1/N1)*(G2/N2).\<close>
+  \<comment> \<open>Step 1: Build free products FP = G1*G2 and FPQ = (G1/N1)*(G2/N2).\<close>
+  obtain FP mulFP eFP invgFP \<iota>fam12 where
+      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+        (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
+    sorry
+  \<comment> \<open>Step 2: Natural surjection \<pi>: FP \<rightarrow> FPQ with kernel = normal closure of \<iota>1(N1)\<union>\<iota>2(N2).\<close>
+  have h_surj: "\<exists>\<pi>. top1_group_hom_on FP mulFP FP mulFP \<pi> \<and> \<pi> ` FP = FP" sorry
+  \<comment> \<open>Step 3: First isomorphism theorem gives the result.\<close>
   show ?thesis sorry
 qed
 
@@ -9295,6 +9318,15 @@ proof -
      Since G1 = free on S1 and G2 = free on S2, reduced words in G1*G2 are exactly
      reduced words in S1 \<union> S2 (with S1 \<inter> S2 = {}). So G1*G2 is free on S1\<union>S2.
      The injection \<iota>S12 maps s\<in>S1 to \<iota>fam12(0)(\<iota>1(s)) and s\<in>S2 to \<iota>fam12(1)(\<iota>2(s)).\<close>
+  \<comment> \<open>Step 1: Build the free product FP = G1 * G2 (Theorem 68.2).\<close>
+  obtain FP mulFP eFP invgFP \<iota>fam12 where
+      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+        (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
+    sorry
+  \<comment> \<open>Step 2: Since G1, G2 are free on S1, S2, reduced words in FP correspond to
+     reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
+  have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
+    \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
   show ?thesis sorry
 qed
 
@@ -9321,6 +9353,15 @@ proof -
      But [G,G] consists of products of commutators, and a free group element
      that's a product of commutators has zero exponent sum in each generator.
      So all n_s = 0.\<close>
+  \<comment> \<open>Step 1: Form the abelianization H = G/[G,G] via natural projection \<phi>.\<close>
+  have h_abel: "\<exists>(H::'h set) mulH eH invgH \<phi>.
+      top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>" sorry
+  \<comment> \<open>Step 2: \<phi>(\<iota>(S)) generates H and satisfies no nontrivial integer relations
+     (exponent sum argument in the free group).\<close>
+  have h_free_abel: "\<exists>(H::'h set) mulH eH invgH \<phi> \<iota>H.
+      top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
+    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
+    \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))" sorry
   show ?thesis sorry
 qed
 
@@ -10084,6 +10125,16 @@ proof -
      Abelianizing: H_1 = Z^m / \<langle>2(a_1+...+a_m)\<rangle>.
      The torsion subgroup is Z/2Z (generated by a_1+...+a_m mod 2).
      The free part K \<cong> Z^{m-1} (a_1-a_2, a_1-a_3, ..., a_1-a_m form a basis).\<close>
+  \<comment> \<open>Step 1: By Theorem 74.4, \<pi>_1(P_m) has presentation with relator a_1^2...a_m^2.\<close>
+  have h_presentation: "\<exists>(G::'g set) mul0 e0 invg0.
+      top1_group_presented_by_on G mul0 e0 invg0 ({..<m}::nat set)
+        { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
+    using Theorem_74_4_fund_group_m_projective[OF assms] sorry
+  \<comment> \<open>Step 2: Abelianize: H = Z^m / \<langle>2(a_1+...+a_m)\<rangle>.
+     Torsion = Z/2Z, free part = Z^{m-1}.\<close>
+  have h_decomp: "\<exists>(H::'h set) mulH eH invgH. card (top1_torsion_subgroup_on H mulH eH) = 2
+      \<and> (\<exists>(K::'h set). K \<subseteq> H
+          \<and> top1_is_free_abelian_group_full_on K mulH eH invgH (\<lambda>i. undefined) {..<m-1})" sorry
   show ?thesis sorry
 qed
 
@@ -10116,6 +10167,16 @@ proof -
   \<comment> \<open>Munkres 78.1: By the triangulation hypothesis, X has a triangulation \<T>_0.
      Each triangle in \<T>_0 is homeomorphic to the standard simplex. Take the
      homeomorphism images as \<T> and the combined map as q.\<close>
+  \<comment> \<open>Step 1: From the triangulation, extract the finite collection \<T> of triangles.\<close>
+  obtain \<T>0 h0 where h\<T>0: "finite \<T>0" "\<Union>\<T>0 = X"
+      "\<forall>T\<in>\<T>0. T \<subseteq> X \<and> closedin_on X TX T
+          \<and> top1_homeomorphism_on top1_standard_simplex top1_standard_simplex_topology
+               T (subspace_topology X TX T) (h0 T)"
+    using assms(2) unfolding top1_is_triangulable_on_def sorry
+  \<comment> \<open>Step 2: Each homeomorphism h0(T) maps the standard simplex to T.
+     The simplex is a polygonal region with 3 sides.\<close>
+  have h_simplex_poly: "top1_is_polygonal_region_on top1_standard_simplex 3" sorry
+  \<comment> \<open>Step 3: Assemble with quotient map q = identity on interior, edge-pasting on boundary.\<close>
   show ?thesis sorry
 qed
 
@@ -10249,7 +10310,18 @@ proof
   \<comment> \<open>p_*(\<pi>_1(E, e_0)) and p'_*(\<pi>_1(E', e_0')) are conjugate subgroups of \<pi>_1(B, b_0).\<close>
   \<comment> \<open>Forward: if h: E \<cong> E' with p'\<circ>h=p, pick e1' = h(e0) and path \<gamma> in E' from e0' to e1'.
      Then p_*(E,e0) = p'_*(E',e1') = [p'\<circ>\<gamma>] \<cdot> p'_*(E',e0') \<cdot> [p'\<circ>\<gamma>]\<inverse> (basepoint change).\<close>
-  assume "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+  assume hfwd: "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+  then obtain h where hh: "top1_homeomorphism_on E TE E' TE' h" and hp: "\<forall>e\<in>E. p' (h e) = p e"
+    by (by100 blast)
+  \<comment> \<open>Let e1' = h(e0). Choose path \<gamma> in E' from e0' to e1'. Set c = [p'\<circ>\<gamma>].\<close>
+  let ?e1' = "h e0"
+  have h_path_exists: "\<exists>\<gamma>. top1_is_path_on E' TE' e0' ?e1' \<gamma>" sorry
+  have h_conjugacy: "\<exists>c\<in>top1_fundamental_group_carrier B TB b0.
+      top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                    (top1_fundamental_group_invg B TB b0 c)) ` H))
+          (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')" sorry
   show "\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
       top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
       = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
@@ -10265,6 +10337,11 @@ next
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     (top1_fundamental_group_invg B TB b0 c)) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+  \<comment> \<open>Conjugate subgroups \<Rightarrow> there exists e1' with p'(e1')=b0 s.t. the subgroups
+     become equal after basepoint change. Then Theorem 79.2 gives the equivalence.\<close>
+  have "\<exists>e1'. e1' \<in> E' \<and> p' e1' = b0 \<and>
+      top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = top1_fundamental_group_image_hom E' TE' e1' B TB b0 p'" sorry
   show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)" sorry
 qed
 
@@ -10450,6 +10527,16 @@ proof -
      Step 2: Semilocal simple connectivity ensures p is a covering map.
      Step 3: E is path-connected and locally path-connected (inherits from B).
      Step 4: p_*(\<pi>_1(E, e0)) = H by construction.\<close>
+  \<comment> \<open>Step 1: Define E as the set of right cosets [\<alpha>]H.\<close>
+  have hE_def: "\<exists>E p. (\<forall>e\<in>E. p e \<in> B) \<and> p ` E = B" sorry
+  \<comment> \<open>Step 2: Define TE using basis sets B(U, [\<alpha>]) for path-connected open U in B.\<close>
+  have hTE_basis: "\<exists>E TE. is_topology_on_strict E TE" sorry
+  \<comment> \<open>Step 3: p is a covering map (evenly covered neighborhoods from semilocal simple connectivity).\<close>
+  have hp_covering: "\<exists>E TE p. top1_covering_map_on E TE B TB p" sorry
+  \<comment> \<open>Step 4: E is path-connected and locally path-connected.\<close>
+  have hE_conn: "\<exists>E TE. top1_path_connected_on E TE \<and> top1_locally_path_connected_on E TE" sorry
+  \<comment> \<open>Step 5: p_*(\<pi>_1(E, e0)) = H.\<close>
+  have hH_match: "\<exists>E TE p e0. top1_fundamental_group_image_hom E TE e0 B TB b0 p = H" sorry
   show ?thesis sorry
 qed
 
