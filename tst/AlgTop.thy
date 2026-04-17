@@ -899,13 +899,14 @@ qed
 
 (** from \<S>51 Theorem 51.2: groupoid properties of * **)
 lemma Theorem_51_2_associativity:
-  assumes "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and "top1_is_path_on X TX x0 x1 f"
       and "top1_is_path_on X TX x1 x2 g"
       and "top1_is_path_on X TX x2 x3 h"
   shows "top1_path_homotopic_on X TX x0 x3
     (top1_path_product f (top1_path_product g h))
     (top1_path_product (top1_path_product f g) h)"
-  sorry
+  sorry \<comment> \<open>Reparametrization homotopy interpolating breakpoints (1/4,1/2) to (1/2,3/4).\<close>
 
 lemma Theorem_51_2_left_identity:
   assumes hTX: "is_topology_on X TX"
