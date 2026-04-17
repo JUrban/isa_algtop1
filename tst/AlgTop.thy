@@ -9890,11 +9890,12 @@ proof -
      Step 1: bring all vertices to one equivalence class;
      Step 2: collect all pairs aa into adjacent positions;
      Step 3: pair off remaining letters into commutator blocks aba\<inverse>b\<inverse>.\<close>
+  have hconn: "top1_connected_on X TX"
+    using assms(1) unfolding top1_is_surface_on_def by (by100 blast)
   obtain P n q where hP: "top1_is_polygonal_region_on P n"
       and hq: "top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-    using Theorem_78_2_connected_polygonal_quotient[OF assms(1) _ assms(2)] assms(1)
-    unfolding top1_is_surface_on_def sorry
+    using Theorem_78_2_connected_polygonal_quotient[OF assms(1) hconn assms(2)] by (by100 blast)
   \<comment> \<open>Reduce the scheme via elementary operations to standard form.\<close>
   have "\<exists>scheme. top1_quotient_of_scheme_on X TX scheme
       \<and> (scheme = [] \<or>
