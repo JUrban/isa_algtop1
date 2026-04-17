@@ -4788,7 +4788,79 @@ theorem Theorem_67_6_direct_sum_unique:
   assumes "top1_is_direct_sum_of_on H1 mulH1 eH1 invgH1 J G mul eG \<iota>fam1"
       and "top1_is_direct_sum_of_on H2 mulH2 eH2 invgH2 J G mul eG \<iota>fam2"
   shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
-  sorry
+proof -
+  let ?DS = "top1_direct_sum_carrier J G eG"
+  let ?mulDS = "\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else eG \<alpha>"
+  obtain \<Phi>1 where h\<Phi>1: "top1_group_iso_on ?DS ?mulDS H1 mulH1 \<Phi>1"
+    using assms(1) unfolding top1_is_direct_sum_of_on_def by blast
+  obtain \<Phi>2 where h\<Phi>2: "top1_group_iso_on ?DS ?mulDS H2 mulH2 \<Phi>2"
+    using assms(2) unfolding top1_is_direct_sum_of_on_def by blast
+  have hiso1: "top1_groups_isomorphic_on ?DS ?mulDS H1 mulH1"
+    unfolding top1_groups_isomorphic_on_def using h\<Phi>1 by blast
+  have hiso2: "top1_groups_isomorphic_on ?DS ?mulDS H2 mulH2"
+    unfolding top1_groups_isomorphic_on_def using h\<Phi>2 by blast
+  \<comment> \<open>H1 \<cong> DS \<cong> H2 by transitivity and symmetry.\<close>
+  \<comment> \<open>Both Φ₁, Φ₂ are bijective homs DS → H_i. Construct Φ₂ ∘ Φ₁⁻¹ : H₁ → H₂.\<close>
+  have hH1_group: "top1_is_group_on H1 mulH1 eH1 invgH1"
+    using assms(1) unfolding top1_is_direct_sum_of_on_def top1_is_abelian_group_on_def by blast
+  have hH2_group: "top1_is_group_on H2 mulH2 eH2 invgH2"
+    using assms(2) unfolding top1_is_direct_sum_of_on_def top1_is_abelian_group_on_def by blast
+  have hbij1: "bij_betw \<Phi>1 ?DS H1" and hhom1: "top1_group_hom_on ?DS ?mulDS H1 mulH1 \<Phi>1"
+    using h\<Phi>1 unfolding top1_group_iso_on_def by blast+
+  have hbij2: "bij_betw \<Phi>2 ?DS H2" and hhom2: "top1_group_hom_on ?DS ?mulDS H2 mulH2 \<Phi>2"
+    using h\<Phi>2 unfolding top1_group_iso_on_def by blast+
+  \<comment> \<open>Φ₁ inverse.\<close>
+  have hinj1: "inj_on \<Phi>1 ?DS" using hbij1 unfolding bij_betw_def by blast
+  let ?\<Psi> = "\<lambda>h. \<Phi>2 (the_inv_into ?DS \<Phi>1 h)"
+  have hbij_inv1: "bij_betw (the_inv_into ?DS \<Phi>1) H1 ?DS"
+    by (rule bij_betw_the_inv_into[OF hbij1])
+  have hbij_comp: "bij_betw (\<Phi>2 \<circ> the_inv_into ?DS \<Phi>1) H1 H2"
+    by (rule bij_betw_trans[OF hbij_inv1 hbij2])
+  have hpsi_eq: "?\<Psi> = \<Phi>2 \<circ> the_inv_into ?DS \<Phi>1" by (rule ext) (simp add: comp_def)
+  have hbij_psi: "bij_betw ?\<Psi> H1 H2"
+    using hbij_comp unfolding hpsi_eq[symmetric] .
+  have hhom_psi: "top1_group_hom_on H1 mulH1 H2 mulH2 ?\<Psi>"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume hx: "x \<in> H1"
+    have "the_inv_into ?DS \<Phi>1 x \<in> ?DS"
+      using the_inv_into_into[OF hinj1] hbij1 hx unfolding bij_betw_def by blast
+    thus "?\<Psi> x \<in> H2"
+      using hhom2 unfolding top1_group_hom_on_def by blast
+  next
+    fix x y assume hx: "x \<in> H1" and hy: "y \<in> H1"
+    have hxDS: "the_inv_into ?DS \<Phi>1 x \<in> ?DS"
+      using the_inv_into_into[OF hinj1] hbij1 hx unfolding bij_betw_def by blast
+    have hyDS: "the_inv_into ?DS \<Phi>1 y \<in> ?DS"
+      using the_inv_into_into[OF hinj1] hbij1 hy unfolding bij_betw_def by blast
+    have hsurj1: "\<Phi>1 ` ?DS = H1" using hbij1 unfolding bij_betw_def by blast
+    \<comment> \<open>\<Phi>₁(inv(x) * inv(y)) = \<Phi>₁(inv(x)) * \<Phi>₁(inv(y)) = x * y.\<close>
+    have hprod: "\<Phi>1 (?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y)) = mulH1 x y"
+    proof -
+      have "\<Phi>1 (?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y))
+            = mulH1 (\<Phi>1 (the_inv_into ?DS \<Phi>1 x)) (\<Phi>1 (the_inv_into ?DS \<Phi>1 y))"
+        using hhom1 hxDS hyDS unfolding top1_group_hom_on_def by blast
+      also have "\<Phi>1 (the_inv_into ?DS \<Phi>1 x) = x"
+        using f_the_inv_into_f[OF hinj1] hx hsurj1 by blast
+      also have "\<Phi>1 (the_inv_into ?DS \<Phi>1 y) = y"
+        using f_the_inv_into_f[OF hinj1] hy hsurj1 by blast
+      finally show ?thesis .
+    qed
+    \<comment> \<open>So the_inv_into(x*y) = inv(x) * inv(y).\<close>
+    have hmul_cl: "?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y) \<in> ?DS"
+      sorry \<comment> \<open>Closure of mulDS on DS — needs DS group structure.\<close>
+    have "the_inv_into ?DS \<Phi>1 (mulH1 x y) = ?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y)"
+      using the_inv_into_f_f[OF hinj1 hmul_cl] hprod by simp
+    hence "?\<Psi> (mulH1 x y) = \<Phi>2 (?mulDS (the_inv_into ?DS \<Phi>1 x) (the_inv_into ?DS \<Phi>1 y))"
+      by simp
+    also have "... = mulH2 (\<Phi>2 (the_inv_into ?DS \<Phi>1 x)) (\<Phi>2 (the_inv_into ?DS \<Phi>1 y))"
+      using hhom2 hxDS hyDS unfolding top1_group_hom_on_def by blast
+    finally show "?\<Psi> (mulH1 x y) = mulH2 (?\<Psi> x) (?\<Psi> y)" by simp
+  qed
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using hhom_psi hbij_psi by blast
+qed
 
 (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
     Any two bases of a free abelian group have the same cardinality. **)
