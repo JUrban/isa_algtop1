@@ -3964,11 +3964,17 @@ section \<open>\<S>54 The Fundamental Group of the Circle\<close>
 
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
 lemma Lemma_54_1_path_lifting:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "e0 \<in> E" and "p e0 = b0"
-      and "top1_is_path_on B TB b0 b1 f"
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
+      and hf: "top1_is_path_on B TB b0 b1 f"
   shows "\<exists>ftilde. top1_is_path_on E TE e0 (ftilde 1) ftilde
     \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
+  \<comment> \<open>Textbook proof (Munkres Lemma 54.1):
+     Step 1: Cover B by evenly covered open sets U. By the Lebesgue number lemma,
+     find a subdivision 0 = s₀ < ... < sₙ = 1 s.t. each f([sᵢ,sᵢ₊₁]) \<subseteq> some Uᵢ.
+     Step 2: Define ftilde step by step. Set ftilde(0) = e₀. For each [sᵢ,sᵢ₊₁],
+     ftilde(sᵢ) lies in some slice V₀. Define ftilde(s) = (p|V₀)\<inverse>(f(s)).
+     Step 3: Pasting lemma \<Rightarrow> continuous. p \<circ> ftilde = f by construction.\<close>
   sorry
 
 text \<open>Helper: s \<mapsto> (s, c) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
@@ -4025,14 +4031,18 @@ qed
 (** Uniqueness part of Lemma 54.1 (implicit in Munkres): given a path f in B with
     two lifts ftilde_1, ftilde_2 in E both starting at e_0, they are equal. **)
 lemma Lemma_54_1_uniqueness:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "e0 \<in> E" and "p e0 = b0"
-      and "top1_is_path_on B TB b0 b1 f"
-      and "top1_is_path_on E TE e0 e1 ftilde_1"
-      and "(\<forall>s\<in>I_set. p (ftilde_1 s) = f s)"
-      and "top1_is_path_on E TE e0 e1' ftilde_2"
-      and "(\<forall>s\<in>I_set. p (ftilde_2 s) = f s)"
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
+      and hf: "top1_is_path_on B TB b0 b1 f"
+      and hft1: "top1_is_path_on E TE e0 e1 ftilde_1"
+      and hft1p: "(\<forall>s\<in>I_set. p (ftilde_1 s) = f s)"
+      and hft2: "top1_is_path_on E TE e0 e1' ftilde_2"
+      and hft2p: "(\<forall>s\<in>I_set. p (ftilde_2 s) = f s)"
   shows "\<forall>s\<in>I_set. ftilde_1 s = ftilde_2 s"
+  \<comment> \<open>Textbook proof (Munkres Lemma 54.1, uniqueness):
+     Let S = {s \<in> I | ftilde_1(s) = ftilde_2(s)}. S is nonempty (0 \<in> S).
+     S is open and closed in I (evenly covered \<Rightarrow> discrete fibers \<Rightarrow> connected
+     preimage must stay in same slice). Since I is connected, S = I.\<close>
   sorry
 
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
