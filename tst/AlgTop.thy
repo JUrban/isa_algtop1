@@ -3648,6 +3648,121 @@ definition top1_groups_isomorphic_on ::
   "top1_groups_isomorphic_on G mulG H mulH \<longleftrightarrow>
      (\<exists>f. top1_group_iso_on G mulG H mulH f)"
 
+lemma top1_groups_isomorphic_on_refl:
+  assumes "top1_is_group_on G mul e invg"
+  shows "top1_groups_isomorphic_on G mul G mul"
+  unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+proof (intro exI conjI)
+  show "top1_group_hom_on G mul G mul id"
+    unfolding top1_group_hom_on_def by simp
+  show "bij_betw id G G" by simp
+qed
+
+lemma top1_groups_isomorphic_on_sym:
+  assumes hiso: "top1_groups_isomorphic_on G mulG H mulH"
+      and hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+  shows "top1_groups_isomorphic_on H mulH G mulG"
+proof -
+  obtain f where hf_hom: "top1_group_hom_on G mulG H mulH f" and hf_bij: "bij_betw f G H"
+    using hiso unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  have hinj: "inj_on f G" using hf_bij unfolding bij_betw_def by blast
+  have hsurj: "f ` G = H" using hf_bij unfolding bij_betw_def by blast
+  let ?g = "the_inv_into G f"
+  have hg_mem: "\<forall>y\<in>H. ?g y \<in> G"
+    using the_inv_into_into[OF hinj] hsurj by blast
+  have hfg_id: "\<forall>y\<in>H. f (?g y) = y"
+    using f_the_inv_into_f[OF hinj] hsurj by blast
+  have hgf_id: "\<forall>x\<in>G. ?g (f x) = x"
+    using the_inv_into_f_f[OF hinj] by blast
+  have hg_bij: "bij_betw ?g H G"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on ?g H"
+    proof (rule inj_onI)
+      fix y1 y2 assume "y1 \<in> H" "y2 \<in> H" "?g y1 = ?g y2"
+      hence "f (?g y1) = f (?g y2)" by simp
+      thus "y1 = y2" using hfg_id \<open>y1 \<in> H\<close> \<open>y2 \<in> H\<close> by simp
+    qed
+    show "?g ` H = G"
+    proof
+      show "?g ` H \<subseteq> G" using hg_mem by blast
+      show "G \<subseteq> ?g ` H"
+      proof
+        fix x assume hx: "x \<in> G"
+        have hfx: "f x \<in> H" using hsurj hx by blast
+        have "?g (f x) = x" using hgf_id hx by blast
+        thus "x \<in> ?g ` H" using hfx by force
+      qed
+    qed
+  qed
+  have hmul_cl: "\<forall>y1\<in>H. \<forall>y2\<in>H. mulH y1 y2 \<in> H"
+    using hH unfolding top1_is_group_on_def by blast
+  have hmulG_cl: "\<forall>x1\<in>G. \<forall>x2\<in>G. mulG x1 x2 \<in> G"
+    using hG unfolding top1_is_group_on_def by blast
+  have hg_hom: "top1_group_hom_on H mulH G mulG ?g"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix y assume "y \<in> H" thus "?g y \<in> G" using hg_mem by blast
+  next
+    fix y1 y2 assume hy1: "y1 \<in> H" and hy2: "y2 \<in> H"
+    have hgy1: "?g y1 \<in> G" and hgy2: "?g y2 \<in> G" using hg_mem hy1 hy2 by blast+
+    have hmul_H: "mulH y1 y2 \<in> H" using hmul_cl hy1 hy2 by blast
+    have "f (?g (mulH y1 y2)) = mulH y1 y2" using hfg_id hmul_H by blast
+    also have "... = mulH (f (?g y1)) (f (?g y2))" using hfg_id hy1 hy2 by simp
+    also have "... = f (mulG (?g y1) (?g y2))"
+    proof -
+      have "f (mulG (?g y1) (?g y2)) = mulH (f (?g y1)) (f (?g y2))"
+        using hf_hom hgy1 hgy2 unfolding top1_group_hom_on_def by blast
+      thus ?thesis by (rule sym)
+    qed
+    finally have "f (?g (mulH y1 y2)) = f (mulG (?g y1) (?g y2))" .
+    moreover have "?g (mulH y1 y2) \<in> G" using hg_mem hmul_H by blast
+    moreover have "mulG (?g y1) (?g y2) \<in> G" using hmulG_cl hgy1 hgy2 by blast
+    ultimately show "?g (mulH y1 y2) = mulG (?g y1) (?g y2)"
+      using hinj by (meson inj_on_eq_iff)
+  qed
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using hg_hom hg_bij by blast
+qed
+
+lemma top1_groups_isomorphic_on_trans:
+  assumes hGH: "top1_groups_isomorphic_on G mulG H mulH"
+      and hHK: "top1_groups_isomorphic_on H mulH K mulK"
+  shows "top1_groups_isomorphic_on G mulG K mulK"
+proof -
+  obtain f where hf_hom: "top1_group_hom_on G mulG H mulH f" and hf_bij: "bij_betw f G H"
+    using hGH unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  obtain g where hg_hom: "top1_group_hom_on H mulH K mulK g" and hg_bij: "bij_betw g H K"
+    using hHK unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  have hgf_hom: "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume hx: "x \<in> G"
+    have "f x \<in> H" using hf_hom hx unfolding top1_group_hom_on_def by blast
+    thus "(g \<circ> f) x \<in> K" using hg_hom unfolding top1_group_hom_on_def comp_def by blast
+  next
+    fix x y assume hx: "x \<in> G" and hy: "y \<in> G"
+    have "f x \<in> H" "f y \<in> H" using hf_hom hx hy unfolding top1_group_hom_on_def by blast+
+    have "(g \<circ> f) (mulG x y) = g (f (mulG x y))" by simp
+    also have "... = g (mulH (f x) (f y))"
+    proof -
+      have "f (mulG x y) = mulH (f x) (f y)"
+        using hf_hom hx hy unfolding top1_group_hom_on_def by blast
+      thus ?thesis by simp
+    qed
+    also have "... = mulK (g (f x)) (g (f y))"
+      using hg_hom \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by blast
+    also have "... = mulK ((g \<circ> f) x) ((g \<circ> f) y)" by simp
+    finally show "(g \<circ> f) (mulG x y) = mulK ((g \<circ> f) x) ((g \<circ> f) y)" .
+  qed
+  have hgf_bij: "bij_betw (g \<circ> f) G K" by (rule bij_betw_trans[OF hf_bij hg_bij])
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using hgf_hom hgf_bij by blast
+qed
+
 text \<open>Normal subgroup: N \<subseteq> G is a subgroup closed under conjugation.\<close>
 definition top1_normal_subgroup_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> bool" where
