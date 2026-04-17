@@ -2381,8 +2381,114 @@ proof -
   let ?G = "\<lambda>p::real\<times>real. if fst p \<le> 1/2 then h (2 * fst p) else F (2 * fst p - 1, snd p)"
   \<comment> \<open>Continuity by spatial pasting (same structure as path_homotopic_product_left).\<close>
   have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
-    sorry \<comment> \<open>Same spatial pasting as left congruence but with swapped pieces.
-           Blocked by build time ceiling — identical proof structure works.\<close>
+  proof -
+    let ?As = "{s\<in>I_set. s \<le> 1/2} \<times> I_set"
+    let ?Bs = "{s\<in>I_set. s \<ge> 1/2} \<times> I_set"
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    have hHAs: "top1_continuous_map_on ?As (subspace_topology (I_set \<times> I_set) II_topology ?As) X TX (\<lambda>p. h (2 * fst p))"
+    proof -
+      let ?\<rho> = "\<lambda>p::real\<times>real. max 0 (min 1 (2 * fst p))"
+      have h\<rho>_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?\<rho> p \<in> I_set" unfolding top1_unit_interval_def by auto
+      have h\<rho>_cont: "continuous_on (I_set \<times> I_set) ?\<rho>" by (intro continuous_intros)
+      have hcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (h \<circ> ?\<rho>)"
+        unfolding II_topology_def
+        by (rule top1_continuous_map_on_comp[OF top1_continuous_map_on_II_to_I[OF h\<rho>_map h\<rho>_cont] hhcont])
+      hence hrestr: "top1_continuous_map_on ?As (subspace_topology (I_set \<times> I_set) II_topology ?As) X TX (h \<circ> ?\<rho>)"
+        by (rule top1_continuous_map_on_restrict_domain_simple) auto
+      show ?thesis by (rule top1_continuous_map_on_agree[OF hrestr]) (auto simp: comp_def top1_unit_interval_def)
+    qed
+    have hFBs: "top1_continuous_map_on ?Bs (subspace_topology (I_set \<times> I_set) II_topology ?Bs) X TX (\<lambda>p. F (2 * fst p - 1, snd p))"
+    proof -
+      have hmap: "\<And>p. p \<in> ?Bs \<Longrightarrow> (2 * fst p - 1, snd p) \<in> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+      have hcont: "continuous_on UNIV (\<lambda>p::real\<times>real. (2 * fst p - 1, snd p))" by (intro continuous_intros)
+      have hBs_sub: "?Bs \<subseteq> I_set \<times> I_set" by auto
+      have hraw: "top1_continuous_map_on ?Bs (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Bs)
+                   (I_set \<times> I_set) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)) (\<lambda>p. (2 * fst p - 1, snd p))"
+        by (rule top1_continuous_map_on_real2_subspace[OF hmap hcont])
+      have hdom: "subspace_topology (I_set \<times> I_set) II_topology ?Bs = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Bs"
+        unfolding II_topology_def using subspace_topology_trans[OF hBs_sub] II_topology_eq_subspace by simp
+      have hcod: "II_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+        unfolding II_topology_def by (rule II_topology_eq_subspace)
+      have h\<phi>: "top1_continuous_map_on ?Bs (subspace_topology (I_set \<times> I_set) II_topology ?Bs) (I_set \<times> I_set) II_topology (\<lambda>p. (2 * fst p - 1, snd p))"
+        using hraw hdom hcod by simp
+      show ?thesis using top1_continuous_map_on_comp[OF h\<phi> hF] by (simp add: comp_def)
+    qed
+    have hG_As: "top1_continuous_map_on ?As (subspace_topology (I_set \<times> I_set) II_topology ?As) X TX ?G"
+      by (rule top1_continuous_map_on_agree[OF hHAs]) auto
+    have hG_Bs: "top1_continuous_map_on ?Bs (subspace_topology (I_set \<times> I_set) II_topology ?Bs) X TX ?G"
+    proof (rule top1_continuous_map_on_agree[OF hFBs])
+      show "\<forall>p\<in>?Bs. F (2 * fst p - 1, snd p) = ?G p"
+      proof
+        fix p assume hp: "p \<in> ?Bs"
+        show "F (2 * fst p - 1, snd p) = ?G p"
+        proof (cases "fst p = 1/2")
+          case True
+          have h2m1: "2 * fst p - 1 = (0::real)" using True by simp
+          have h2fst: "2 * fst p = (1::real)" using True by simp
+          have lhs: "F (2 * fst p - 1, snd p) = x1" using h2m1 hF0 hp by auto
+          have rhs: "?G p = x1" using True h2fst hh1 by simp
+          show ?thesis using lhs rhs by simp
+        next
+          case False hence "\<not>(fst p \<le> 1/2)" using hp by auto
+          thus ?thesis by simp
+        qed
+      qed
+    qed
+    have hI_open: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by blast
+    have hAs_closed: "closedin_on (I_set \<times> I_set) II_topology ?As"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?As \<subseteq> I_set \<times> I_set" by auto
+      have "I_set \<times> I_set - ?As = {s\<in>I_set. s > 1/2} \<times> I_set" unfolding top1_unit_interval_def by auto
+      also have "\<dots> \<in> II_topology"
+      proof -
+        have "open {s :: real. s > 1/2}" by (rule open_Collect_less[OF continuous_on_const continuous_on_id])
+        hence "{s :: real. s > 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by blast
+        hence "I_set \<inter> {s. s > 1/2} \<in> I_top"
+          unfolding top1_unit_interval_topology_def subspace_topology_def by blast
+        moreover have "{s\<in>I_set. s > 1/2} = I_set \<inter> {s. s > 1/2}" by auto
+        ultimately have "{s\<in>I_set. s > 1/2} \<in> I_top" by simp
+        thus ?thesis unfolding II_topology_def by (rule product_rect_open[OF _ hI_open])
+      qed
+      finally show "I_set \<times> I_set - ?As \<in> II_topology" .
+    qed
+    have hBs_closed: "closedin_on (I_set \<times> I_set) II_topology ?Bs"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?Bs \<subseteq> I_set \<times> I_set" by auto
+      have "I_set \<times> I_set - ?Bs = {s\<in>I_set. s < 1/2} \<times> I_set" unfolding top1_unit_interval_def by auto
+      also have "\<dots> \<in> II_topology"
+      proof -
+        have "open {s :: real. s < 1/2}" by (rule open_Collect_less[OF continuous_on_id continuous_on_const])
+        hence "{s :: real. s < 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by blast
+        hence "I_set \<inter> {s. s < 1/2} \<in> I_top"
+          unfolding top1_unit_interval_topology_def subspace_topology_def by blast
+        moreover have "{s\<in>I_set. s < 1/2} = I_set \<inter> {s. s < 1/2}" by auto
+        ultimately have "{s\<in>I_set. s < 1/2} \<in> I_top" by simp
+        thus ?thesis unfolding II_topology_def by (rule product_rect_open[OF _ hI_open])
+      qed
+      finally show "I_set \<times> I_set - ?Bs \<in> II_topology" .
+    qed
+    have hcover: "?As \<union> ?Bs = I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+    have hG_range: "\<forall>p\<in>I_set \<times> I_set. ?G p \<in> X"
+    proof
+      fix p assume hp: "p \<in> I_set \<times> I_set"
+      show "?G p \<in> X"
+      proof (cases "fst p \<le> 1/2")
+        case True
+        have "2 * fst p \<in> I_set" using hp True unfolding top1_unit_interval_def by auto
+        thus ?thesis using True hhcont unfolding top1_continuous_map_on_def by simp
+      next
+        case False
+        have "(2 * fst p - 1, snd p) \<in> I_set \<times> I_set" using hp False unfolding top1_unit_interval_def by auto
+        thus ?thesis using False hF unfolding top1_continuous_map_on_def by simp
+      qed
+    qed
+    show ?thesis
+      by (rule pasting_lemma_two_closed[OF hTII hTX hAs_closed hBs_closed hcover hG_range hG_As hG_Bs])
+  qed
   have hfpath: "top1_is_path_on X TX x1 x2 f"
     using hfg unfolding top1_path_homotopic_on_def by blast
   have hgpath: "top1_is_path_on X TX x1 x2 g"
