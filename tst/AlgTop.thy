@@ -493,9 +493,21 @@ proof -
       finally show "{x \<in> ?B. ?G x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B" .
     qed
   qed
-  show ?thesis sorry \<comment> \<open>All 8 premises for pasting_lemma_two_closed proved:
-    hTII, hTX, hA_closed, hB_closed, hcover, hG_range, hgA, hgB.
-    Isar unification prevents direct rule application (let-binding mismatch).\<close>
+  show ?thesis
+  proof (rule pasting_lemma_two_closed[where
+      X = "I_set \<times> I_set" and TX = II_topology and Y = X and TY = TX
+      and A = ?A and B = ?B and f = ?G])
+    show "is_topology_on (I_set \<times> I_set) II_topology" by (rule hTII)
+    show "is_topology_on X TX" by (rule hTX)
+    show "closedin_on (I_set \<times> I_set) II_topology ?A" by (rule hA_closed)
+    show "closedin_on (I_set \<times> I_set) II_topology ?B" by (rule hB_closed)
+    show "?A \<union> ?B = I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+    show "\<forall>x\<in>I_set \<times> I_set. ?G x \<in> X" by (rule hG_range)
+    show "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A) X TX ?G"
+      by (rule hgA)
+    show "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B) X TX ?G"
+      by (rule hgB)
+  qed
 qed
 
 lemma Lemma_51_1_path_homotopic_trans:
