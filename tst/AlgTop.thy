@@ -5993,9 +5993,9 @@ lemma homotopy_induced_basepoint_change:
       and hl: "top1_is_loop_on X TX x0 l" and hx0: "x0 \<in> X"
   shows "top1_loop_equiv_on Y TY (h x0) (h \<circ> l)
     (top1_basepoint_change_on Y TY (k x0) (h x0) (top1_path_reverse (\<lambda>t. H (x0, t))) (k \<circ> l))"
-  sorry \<comment> \<open>3-piece pasting: F(s,t) = \<alpha>(3s) if 3s\<le>t, H(l((3s-t)/(3-2t)),t) if t\<le>3s\<le>3-t,
-         \<alpha>(3(1-s)) if 3-t\<le>3s. Boundary: F(s,0)=h(l(s)), F(s,1)=\<alpha>*(k\<circ>l)*\<alpha>\<inverse>, F(0,t)=F(1,t)=h(x₀).
-         Combined with reparametrization to standard 1/2-split basepoint change.\<close>
+  sorry \<comment> \<open>Textbook proof (Munkres Lemma 58.4): F(s,t) = (l(s), t) maps I\<times>I \<rightarrow> X\<times>I.
+         The broken-line paths \<beta>₀*\<gamma>₁ and \<gamma>₀*\<beta>₁ in I\<times>I are path-homotopic (convexity).
+         Applying H\<circ>F gives: (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l). Hence h\<circ>l \<simeq> \<alpha>*(k\<circ>l)*\<alpha>\<inverse>.\<close>
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
