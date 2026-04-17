@@ -5771,6 +5771,71 @@ qed
     Given f and g as homotopy invgerses, Lemma 58.1 gives that (g o f)_* equals id_*
     and (f o g)_* equals id_*, so f_* and g_* are mutual invgerses in a suitable sense.
     Hence f_* is a bijection onto pi_1(Y, f x_0). **)
+text \<open>Helper: continuous f: X \<rightarrow> Y preserves path homotopy.\<close>
+lemma top1_continuous_preserves_path_homotopy:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_continuous_map_on X TX Y TY f"
+      and hl: "top1_is_loop_on X TX x0 l"
+      and hl': "top1_is_loop_on X TX x0 l'"
+      and hll': "top1_path_homotopic_on X TX x0 x0 l l'"
+  shows "top1_path_homotopic_on Y TY (f x0) (f x0) (f \<circ> l) (f \<circ> l')"
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hFs0: "\<forall>s\<in>I_set. F (s, 0) = l s" and hFs1: "\<forall>s\<in>I_set. F (s, 1) = l' s"
+      and hF0: "\<forall>t\<in>I_set. F (0, t) = x0" and hF1: "\<forall>t\<in>I_set. F (1, t) = x0"
+    using hll' unfolding top1_path_homotopic_on_def by blast
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  let ?G = "f \<circ> F"
+  have hGcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY ?G"
+    by (rule top1_continuous_map_on_comp[OF hF hf])
+  have hl0: "l 0 = x0" and hl1: "l 1 = x0"
+    using hl unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have hl'0: "l' 0 = x0" and hl'1: "l' 1 = x0"
+    using hl' unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have hfl_path: "top1_is_path_on Y TY (f x0) (f x0) (f \<circ> l)"
+    unfolding top1_is_path_on_def
+    using top1_continuous_map_on_comp[OF top1_is_loop_on_continuous[OF hl] hf]
+    by (simp add: comp_def hl0 hl1)
+  have hfl'_path: "top1_is_path_on Y TY (f x0) (f x0) (f \<circ> l')"
+    unfolding top1_is_path_on_def
+    using top1_continuous_map_on_comp[OF top1_is_loop_on_continuous[OF hl'] hf]
+    by (simp add: comp_def hl'0 hl'1)
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hfl_path hfl'_path hGcont hFs0 hFs1 hF0 hF1
+    by (auto simp: comp_def)
+qed
+
+text \<open>Helper: continuous f sends loops to loops.\<close>
+lemma top1_continuous_map_loop:
+  assumes "top1_continuous_map_on X TX Y TY f"
+      and "top1_is_loop_on X TX x0 l"
+  shows "top1_is_loop_on Y TY (f x0) (f \<circ> l)"
+proof -
+  have hl0: "l 0 = x0" and hl1: "l 1 = x0"
+    using assms(2) unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  show ?thesis
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using top1_continuous_map_on_comp[OF top1_is_loop_on_continuous[OF assms(2)] assms(1)]
+    by (simp add: comp_def hl0 hl1)
+qed
+
+text \<open>Helper: f_* sends loops at x0 to loops at f(x0), preserving loop equiv.\<close>
+lemma top1_induced_preserves_loop_equiv:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_continuous_map_on X TX Y TY f"
+      and hl: "top1_is_loop_on X TX x0 l"
+      and hl': "top1_is_loop_on X TX x0 l'"
+      and hll': "top1_loop_equiv_on X TX x0 l l'"
+  shows "top1_loop_equiv_on Y TY (f x0) (f \<circ> l) (f \<circ> l')"
+  unfolding top1_loop_equiv_on_def
+  using top1_continuous_map_loop[OF hf hl] top1_continuous_map_loop[OF hf hl']
+        top1_continuous_preserves_path_homotopy[OF hTX hf hl hl']
+  using hll' unfolding top1_loop_equiv_on_def by blast
+
 theorem Theorem_58_7:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
       and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
@@ -5779,11 +5844,9 @@ theorem Theorem_58_7:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier Y TY (f x0))
            (top1_fundamental_group_mul Y TY (f x0))"
-  sorry \<comment> \<open>Proof: f_* is a group iso via Lemma_58_1 + Theorem_52_4 + Theorem_52_1.
-         Needs: well-definedness of f_* on equivalence classes (if \<alpha> \<simeq> \<beta> then f\<circ>\<alpha> \<simeq> f\<circ>\<beta>),
-         f_* is a homomorphism (from Theorem_52_1 applied to basepoint change),
-         f_* is bijective (g_* is inverse via homotopy equivalence + Lemma_58_1).
-         Added is_topology_on assumptions for downstream use.\<close>
+  sorry \<comment> \<open>Proof uses: top1_continuous_preserves_path_homotopy for well-definedness,
+         pointwise equality f \<circ> (l*l') = (f\<circ>l)*(f\<circ>l') for homomorphism,
+         Theorem_52_1_iso (g_* \<circ> f_* is basepoint change iso) for bijectivity.\<close>
 
 (** from \<S>58 Theorem 58.3: deformation retract induces isomorphism of fundamental groups.
 
