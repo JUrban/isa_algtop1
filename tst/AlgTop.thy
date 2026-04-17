@@ -3947,6 +3947,8 @@ theorem Theorem_53_2:
       and "E0 = {e\<in>E. p e \<in> B0}"
   shows "top1_covering_map_on E0 (subspace_topology E TE E0)
     B0 (subspace_topology B TB B0) p"
+  \<comment> \<open>Munkres 53.2: Given b0\<in>B0, take evenly covered U\<ni>b0. Then U\<inter>B0 is open in B0,
+     and {V\<alpha>\<inter>E0} partitions p\<inverse>(U\<inter>B0) into slices, each homeomorphic to U\<inter>B0.\<close>
   sorry
 
 (** from \<S>53 Theorem 53.3: product of covering maps is a covering map.
@@ -6565,6 +6567,24 @@ qed
     Munkres' proof: if A is a deformation retract of X via H, then the
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
+text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
+  a group isomorphism when the inclusion has a retraction homotopic to id.\<close>
+lemma inclusion_retraction_iso:
+  assumes hTX: "is_topology_on X TX" and hTA: "is_topology_on A TA"
+      and hAsub: "A \<subseteq> X" and hTA_eq: "TA = subspace_topology X TX A"
+      and hj: "top1_continuous_map_on A TA X TX id"
+      and hr: "top1_continuous_map_on X TX A TA r"
+      and hrj: "\<forall>a\<in>A. r a = a"
+      and hjr: "\<And>f. top1_is_loop_on X TX x0 f \<Longrightarrow>
+          top1_path_homotopic_on X TX x0 x0 (r \<circ> f) f"
+      and hx0: "x0 \<in> A"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier A TA x0)
+           (top1_fundamental_group_mul A TA x0)
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)"
+  sorry
+
 theorem Theorem_58_3:
   assumes hdef: "top1_deformation_retract_of_on X TX A"
       and hTX: "is_topology_on X TX"
@@ -6790,85 +6810,10 @@ proof -
   \<comment> \<open>Now: r_*\<circ>j_* = id on \<pi>_1(A) because r\<circ>j = id_A pointwise.
      And j_*\<circ>r_* = id on \<pi>_1(X) because j\<circ>r \<simeq> id with basepoint fixed (Lemma 58.1).
      So j_* is bijective (with inverse r_*), hence a group isomorphism.\<close>
-  \<comment> \<open>j_* on equivalence classes: class(f) \<mapsto> class(id\<circ>f) = class(f) in \<pi>_1(X).\<close>
-  let ?j_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 (id \<circ> f) g}"
-  \<comment> \<open>r_* on equivalence classes: class(f) \<mapsto> class(r\<circ>f) in \<pi>_1(A).\<close>
-  let ?r_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on A ?TA x0 (?r \<circ> f) g}"
-  \<comment> \<open>j_* maps \<pi>_1(A) into \<pi>_1(X): inclusion of loops.\<close>
-  \<comment> \<open>Since id \<circ> f = f, j_star(class_A(f)) = class_X(f).\<close>
-  \<comment> \<open>j_*\<circ>r_* = id on \<pi>_1(X): for any loop f at x0 in X, (j\<circ>r)\<circ>f \<simeq> f by hjr_fixed.\<close>
-  \<comment> \<open>r_*\<circ>j_* = id on \<pi>_1(A): r\<circ>id\<circ>f = r\<circ>f, and for f loop in A, r(f(s)) = H(f(s),1) = f(s).\<close>
-  \<comment> \<open>So j_* is bijective with inverse r_*.\<close>
-  \<comment> \<open>Following Munkres: j_* sends [f]_A to [f]_X (since j=id).
-     r_* sends [g]_X to [r\<circ>g]_A.
-     r_*\<circ>j_*([f]_A) = [r\<circ>f]_A = [f]_A (since r\<circ>f = f for f in A).
-     j_*\<circ>r_*([g]_X) = [r\<circ>g]_X = [g]_X (by hjr_fixed: r\<circ>g \<simeq> g).
-     So j_* is bijective. j_* is a hom since j=id: j\<circ>(f*g) = f*g = (j\<circ>f)*(j\<circ>g).\<close>
-  \<comment> \<open>Define j_* on equivalence classes. Since j=id, j_*([f]_A) = [f]_X.\<close>
-  let ?j_star = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x0 f g}"
-  \<comment> \<open>j_* maps carrier(A) to carrier(X).\<close>
-  have hj_range: "\<forall>c\<in>top1_fundamental_group_carrier A ?TA x0.
-      ?j_star c \<in> top1_fundamental_group_carrier X TX x0"
-  proof
-    fix c assume "c \<in> top1_fundamental_group_carrier A ?TA x0"
-    then obtain fl where hfl: "top1_is_loop_on A ?TA x0 fl"
-        and hc: "c = {g. top1_loop_equiv_on A ?TA x0 fl g}"
-      unfolding top1_fundamental_group_carrier_def by blast
-    have hflX: "top1_is_loop_on X TX x0 fl"
-    proof -
-      note h = top1_continuous_map_loop[OF hj_cont hfl]
-      show ?thesis using h by (simp add: id_def comp_def
-        top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def)
-    qed
-    have "?j_star c \<subseteq> {g. top1_loop_equiv_on X TX x0 fl g}"
-    proof
-      fix g assume "g \<in> ?j_star c"
-      then obtain fl' where hfl': "fl' \<in> c" and hg: "top1_loop_equiv_on X TX x0 fl' g" by auto
-      have hfl'A: "top1_loop_equiv_on A ?TA x0 fl fl'" using hfl' hc by simp
-      have hfl'X: "top1_loop_equiv_on X TX x0 fl fl'"
-      proof -
-        note h = top1_induced_preserves_loop_equiv[OF hTA hj_cont hfl _ hfl'A]
-        have "top1_is_loop_on A ?TA x0 fl'" using hfl'A unfolding top1_loop_equiv_on_def by blast
-        thus ?thesis using h by (simp add: id_def comp_def
-          top1_loop_equiv_on_def top1_is_loop_on_def top1_is_path_on_def
-          top1_path_homotopic_on_def top1_continuous_map_on_def)
-      qed
-      show "g \<in> {g. top1_loop_equiv_on X TX x0 fl g}"
-        using top1_loop_equiv_on_trans[OF hTX hfl'X hg] by simp
-    qed
-    moreover have "{g. top1_loop_equiv_on X TX x0 fl g} \<subseteq> ?j_star c"
-    proof
-      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x0 fl g}"
-      moreover have "fl \<in> c" using top1_loop_equiv_on_refl[OF hfl] hc by simp
-      ultimately show "g \<in> ?j_star c" by blast
-    qed
-    ultimately have "?j_star c = {g. top1_loop_equiv_on X TX x0 fl g}" by blast
-    thus "?j_star c \<in> top1_fundamental_group_carrier X TX x0"
-      unfolding top1_fundamental_group_carrier_def using hflX by blast
-  qed
-  \<comment> \<open>j_* is a homomorphism (trivial since j=id).\<close>
-  have hj_hom: "\<forall>c1\<in>top1_fundamental_group_carrier A ?TA x0.
-    \<forall>c2\<in>top1_fundamental_group_carrier A ?TA x0.
-    ?j_star (top1_fundamental_group_mul A ?TA x0 c1 c2) =
-    top1_fundamental_group_mul X TX x0 (?j_star c1) (?j_star c2)"
-    sorry \<comment> \<open>j\<circ>(f*g) = (j\<circ>f)*(j\<circ>g) trivially since j=id.\<close>
-  \<comment> \<open>j_* is injective: r_*\<circ>j_* = id because r\<circ>f = f for loops f in A.\<close>
-  have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier A ?TA x0)"
-    sorry \<comment> \<open>If j_*(c1)=j_*(c2), then [f1]_X=[f2]_X, hence r\<circ>f1 \<simeq> r\<circ>f2 in A.
-           But r\<circ>fi = fi for loops fi in A. So [f1]_A = [f2]_A, i.e. c1=c2.\<close>
-  \<comment> \<open>j_* is surjective: for [g]_X, j_*([r\<circ>g]_A) = [r\<circ>g]_X = [g]_X by hjr_fixed.\<close>
-  have hj_surj: "?j_star ` (top1_fundamental_group_carrier A ?TA x0) =
-      top1_fundamental_group_carrier X TX x0"
-    sorry \<comment> \<open>For class_X(g): r\<circ>g is loop in A, j_*(class_A(r\<circ>g)) = class_X(r\<circ>g) = class_X(g).\<close>
-  have hiso: "top1_group_iso_on
-      (top1_fundamental_group_carrier A ?TA x0)
-      (top1_fundamental_group_mul A ?TA x0)
-      (top1_fundamental_group_carrier X TX x0)
-      (top1_fundamental_group_mul X TX x0) ?j_star"
-    unfolding top1_group_iso_on_def top1_group_hom_on_def bij_betw_def
-    using hj_range hj_hom hj_inj hj_surj by blast
+  \<comment> \<open>Apply the inclusion-retraction lemma with j=id, r=H(\<cdot>,1).\<close>
+  have hrj_pointwise: "\<forall>a\<in>A. ?r a = a" using hHA h1_I by auto
   show ?thesis
-    unfolding top1_groups_isomorphic_on_def using hiso by blast
+    by (rule inclusion_retraction_iso[OF hTX hTA hAsub refl hj_cont hr_cont hrj_pointwise hjr_fixed hx0])
 qed
 
 (** from \<S>58 Theorem 58.2: inclusion S^1 \<rightarrow> R^2-0 induces isomorphism of fundamental groups.
