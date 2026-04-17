@@ -387,8 +387,70 @@ lemma homotopy_concat_continuous:
       and hmatch: "\<forall>x\<in>X. F (x, 1) = F' (x, 0)"
   shows "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
     (\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1))"
-  \<comment> \<open>Same structure as path_homotopy_concat_continuous but for X \<times> I \<rightarrow> Y.\<close>
-  sorry
+proof -
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hTXI: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX hTI])
+  let ?A = "X \<times> {t\<in>I_set. t \<le> 1/2}"
+  let ?B = "X \<times> {t\<in>I_set. t \<ge> 1/2}"
+  have hX_open: "X \<in> TX" using hTX unfolding is_topology_on_def by blast
+  have hA_closed: "closedin_on (X \<times> I_set) (product_topology_on TX I_top) ?A"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?A \<subseteq> X \<times> I_set" by auto
+    have "X \<times> I_set - ?A = X \<times> {t\<in>I_set. t > 1/2}" unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> product_topology_on TX I_top"
+    proof -
+      have "open {t :: real. t > 1/2}" by (rule open_Collect_less[OF continuous_on_const continuous_on_id])
+      hence "{t :: real. t > 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by blast
+      hence "I_set \<inter> {t. t > 1/2} \<in> I_top"
+        unfolding top1_unit_interval_topology_def subspace_topology_def by blast
+      moreover have "{t\<in>I_set. t > 1/2} = I_set \<inter> {t. t > 1/2}" by auto
+      ultimately have "{t\<in>I_set. t > 1/2} \<in> I_top" by simp
+      thus ?thesis by (rule product_rect_open[OF hX_open])
+    qed
+    finally show "X \<times> I_set - ?A \<in> product_topology_on TX I_top" .
+  qed
+  have hB_closed: "closedin_on (X \<times> I_set) (product_topology_on TX I_top) ?B"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?B \<subseteq> X \<times> I_set" by auto
+    have "X \<times> I_set - ?B = X \<times> {t\<in>I_set. t < 1/2}" unfolding top1_unit_interval_def by auto
+    also have "\<dots> \<in> product_topology_on TX I_top"
+    proof -
+      have "open {t :: real. t < 1/2}" by (rule open_Collect_less[OF continuous_on_id continuous_on_const])
+      hence "{t :: real. t < 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by blast
+      hence "I_set \<inter> {t. t < 1/2} \<in> I_top"
+        unfolding top1_unit_interval_topology_def subspace_topology_def by blast
+      moreover have "{t\<in>I_set. t < 1/2} = I_set \<inter> {t. t < 1/2}" by auto
+      ultimately have "{t\<in>I_set. t < 1/2} \<in> I_top" by simp
+      thus ?thesis by (rule product_rect_open[OF hX_open])
+    qed
+    finally show "X \<times> I_set - ?B \<in> product_topology_on TX I_top" .
+  qed
+  have hcover: "?A \<union> ?B = X \<times> I_set" unfolding top1_unit_interval_def by auto
+  let ?G = "\<lambda>p. if snd p \<le> 1/2 then F (fst p, 2 * snd p) else F' (fst p, 2 * snd p - 1)"
+  have hF_range: "\<forall>p\<in>X \<times> I_set. F p \<in> Y" using hF unfolding top1_continuous_map_on_def by blast
+  have hF'_range: "\<forall>p\<in>X \<times> I_set. F' p \<in> Y" using hF' unfolding top1_continuous_map_on_def by blast
+  have hG_range: "\<forall>p\<in>X \<times> I_set. ?G p \<in> Y"
+  proof
+    fix p assume hp: "p \<in> X \<times> I_set"
+    show "?G p \<in> Y"
+    proof (cases "snd p \<le> 1/2")
+      case True
+      have "(fst p, 2 * snd p) \<in> X \<times> I_set" using hp True unfolding top1_unit_interval_def by auto
+      thus ?thesis using True hF_range by simp
+    next
+      case False
+      have "(fst p, 2 * snd p - 1) \<in> X \<times> I_set" using hp False unfolding top1_unit_interval_def by auto
+      thus ?thesis using False hF'_range by simp
+    qed
+  qed
+  have hGA: "top1_continuous_map_on ?A (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?A) Y TY ?G" sorry
+  have hGB: "top1_continuous_map_on ?B (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?B) Y TY ?G" sorry
+  show ?thesis
+    by (rule pasting_lemma_two_closed[OF hTXI hTY hA_closed hB_closed hcover hG_range hGA hGB])
+qed
 
 lemma Lemma_51_1_homotopic_trans:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
