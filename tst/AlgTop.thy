@@ -7534,6 +7534,36 @@ proof -
     using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
 qed
 
+text \<open>Helper: union of path-connected open sets with nonempty path-connected intersection
+  is path-connected.\<close>
+lemma path_connected_union:
+  assumes hTX: "is_topology_on X TX"
+      and hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hUV_pc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hUV: "U \<union> V = X" and hUsub: "U \<subseteq> X" and hVsub: "V \<subseteq> X"
+  shows "top1_path_connected_on X TX"
+  unfolding top1_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on X TX" by (rule hTX)
+next
+  fix x y assume hx: "x \<in> X" and hy: "y \<in> X"
+  \<comment> \<open>Case analysis: both in U, both in V, or one in each (join via U\<inter>V).\<close>
+  show "\<exists>f. top1_is_path_on X TX x y f"
+  proof (cases "x \<in> U \<and> y \<in> U")
+    case True
+    \<comment> \<open>Path in U, transfer to X via subspace inclusion.\<close>
+    obtain f where hf: "top1_is_path_on U (subspace_topology X TX U) x y f"
+      using hU_pc True unfolding top1_path_connected_on_def sorry
+    have "top1_is_path_on X TX x y f"
+      using hf hUsub sorry
+    thus ?thesis by (by100 blast)
+  next
+    case False
+    thus ?thesis sorry
+  qed
+qed
+
 text \<open>Helper: if each loop in a list is nulhomotopic, their foldr product is nulhomotopic.\<close>
 lemma foldr_path_product_nulhomotopic:
   assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
@@ -7588,7 +7618,16 @@ proof -
      U, V simply connected \<Rightarrow> each piece nulhomotopic \<Rightarrow> whole loop nulhomotopic.\<close>
   obtain x0 where hx0: "x0 \<in> U \<inter> V" using assms(5) by (by100 blast)
   \<comment> \<open>Step 1: X is path-connected (U, V path-connected via simply connected, joined via U\<inter>V).\<close>
-  have hpc: "top1_path_connected_on X TX" sorry
+  have hpc: "top1_path_connected_on X TX"
+  proof -
+    have hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+      using assms(7) top1_simply_connected_on_path_connected by (by100 blast)
+    have hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+      using assms(8) top1_simply_connected_on_path_connected by (by100 blast)
+    show ?thesis
+      by (rule path_connected_union[OF is_topology_on_strict_imp[OF assms(1)]
+            hU_pc hV_pc assms(6) assms(4) openin_on_sub[OF assms(2)] openin_on_sub[OF assms(3)]])
+  qed
   \<comment> \<open>Step 2: Every loop at x0 is nulhomotopic.\<close>
   have hnul: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
       top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
