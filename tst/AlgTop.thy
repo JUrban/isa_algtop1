@@ -9970,8 +9970,10 @@ proof -
      Compact: q(P) = X is compact (continuous image of compact).
      Hausdorff: the quotient identifications are on the boundary only;
      use the finite edge-identification structure to verify the T2 axiom.\<close>
-  obtain scheme where hsch: "top1_quotient_of_scheme_on X TX scheme"
-    using assms(2) unfolding top1_is_polygonal_quotient_on_def sorry
+  have "\<exists>scheme :: (nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
+    using assms(2) unfolding top1_is_polygonal_quotient_on_def by (by100 blast)
+  then obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
+    by (by100 auto)
   have hcompact: "top1_compact_on X TX" sorry
   have hhausdorff: "is_hausdorff_on X TX" sorry
   show ?thesis using hcompact hhausdorff by (by100 blast)
