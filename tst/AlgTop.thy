@@ -7882,7 +7882,10 @@ proof (rule ccontr)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a a f
           (top1_constant_path a)" sorry
   \<comment> \<open>But S^2-(D1\<inter>D2) is simply connected by assumption. Contradiction.\<close>
-  show False using hf_nontrivial assms(4) sorry
+  have ha_mem: "a \<in> top1_S2 - (D1 \<inter> D2)"
+    using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
+  show False using hf_nontrivial assms(4) ha_mem
+    unfolding top1_simply_connected_on_def by (by100 blast)
 qed
 
 (** from \<S>63 Theorem 63.4: Jordan Curve Theorem.
