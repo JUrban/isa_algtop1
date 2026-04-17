@@ -5043,6 +5043,95 @@ proof
   show False using hne hfg_S1 by blast
 qed
 
+text \<open>Helper for Brouwer: v = f - id is continuous B^2 \<rightarrow> R^2.\<close>
+lemma top1_B2_diff_continuous:
+  assumes hf: "top1_continuous_map_on top1_B2 top1_B2_topology top1_B2 top1_B2_topology f"
+  shows "top1_continuous_map_on top1_B2 top1_B2_topology
+    (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)
+    (\<lambda>x. (fst (f x) - fst x, snd (f x) - snd x))"
+proof -
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+    unfolding top1_B2_topology_def
+    by (rule subspace_topology_is_topology_on) (use product_topology_on_is_topology_on[OF hTR hTR] in simp_all)
+  have hfst: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets fst"
+    using top1_fst_continuous_R2_subspace[of top1_B2] unfolding top1_B2_topology_def .
+  have hsnd: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets snd"
+    using top1_snd_continuous_R2_subspace[of top1_B2] unfolding top1_B2_topology_def .
+  have hfstf: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (fst \<circ> f)"
+    by (rule top1_continuous_map_on_comp[OF hf hfst])
+  have hsndf: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (snd \<circ> f)"
+    by (rule top1_continuous_map_on_comp[OF hf hsnd])
+  let ?v = "\<lambda>x::real\<times>real. (fst (f x) - fst x, snd (f x) - snd x)"
+  \<comment> \<open>Each component via composition with pairing + subtraction.\<close>
+  have hcomp_cont: "\<And>g h. \<lbrakk>top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets g;
+      top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets h\<rbrakk> \<Longrightarrow>
+    top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (\<lambda>x. g x - h x)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI allI impI)
+    fix g h :: "real \<times> real \<Rightarrow> real" and x V
+    assume hg: "(\<forall>x\<in>top1_B2. g x \<in> UNIV) \<and> (\<forall>V\<in>top1_open_sets. {x \<in> top1_B2. g x \<in> V} \<in> top1_B2_topology)"
+    and hh: "(\<forall>x\<in>top1_B2. h x \<in> UNIV) \<and> (\<forall>V\<in>top1_open_sets. {x \<in> top1_B2. h x \<in> V} \<in> top1_B2_topology)"
+    show "g x - h x \<in> UNIV" by simp
+  next
+    fix g h :: "real \<times> real \<Rightarrow> real" and V :: "real set"
+    assume hg: "(\<forall>x\<in>top1_B2. g x \<in> UNIV) \<and> (\<forall>V\<in>top1_open_sets. {x \<in> top1_B2. g x \<in> V} \<in> top1_B2_topology)"
+    and hh: "(\<forall>x\<in>top1_B2. h x \<in> UNIV) \<and> (\<forall>V\<in>top1_open_sets. {x \<in> top1_B2. h x \<in> V} \<in> top1_B2_topology)"
+    and hV: "V \<in> top1_open_sets"
+    \<comment> \<open>Preimage via (g, h) and subtraction.\<close>
+    have hVo: "open V" using hV unfolding top1_open_sets_def by blast
+    have "open ((\<lambda>p::real\<times>real. fst p - snd p) -` V)"
+    proof (rule open_vimage[OF hVo])
+      show "continuous_on UNIV (\<lambda>p::real\<times>real. fst p - snd p)" by (intro continuous_intros)
+    qed
+    hence hW: "(\<lambda>p::real\<times>real. fst p - snd p) -` V \<in> product_topology_on top1_open_sets top1_open_sets"
+    proof -
+      assume "open ((\<lambda>p::real\<times>real. fst p - snd p) -` V)"
+      hence "(\<lambda>p::real\<times>real. fst p - snd p) -` V \<in> (top1_open_sets :: (real\<times>real) set set)"
+        unfolding top1_open_sets_def by blast
+      thus ?thesis using product_topology_on_open_sets_real2 by metis
+    qed
+    have hpair: "top1_continuous_map_on top1_B2 top1_B2_topology
+        (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)
+        (\<lambda>x. (g x, h x))"
+    proof -
+      have hp1: "pi1 \<circ> (\<lambda>x. (g x, h x)) = g" unfolding pi1_def by (rule ext) simp
+      have hp2: "pi2 \<circ> (\<lambda>x. (g x, h x)) = h" unfolding pi2_def by (rule ext) simp
+      have hg_cont: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (pi1 \<circ> (\<lambda>x. (g x, h x)))"
+        using hg unfolding hp1 top1_continuous_map_on_def by blast
+      have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (pi2 \<circ> (\<lambda>x. (g x, h x)))"
+        using hh unfolding hp2 top1_continuous_map_on_def by blast
+      have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+      show ?thesis using iffD2[OF Theorem_18_4[OF hTB2 hTR hTR, of "\<lambda>x. (g x, h x)"]]
+        hg_cont hh_cont unfolding hUU by blast
+    qed
+    have heq: "{x \<in> top1_B2. g x - h x \<in> V}
+        = {x \<in> top1_B2. (\<lambda>x. (g x, h x)) x \<in> (\<lambda>p. fst p - snd p) -` V}"
+      by auto
+    show "{x \<in> top1_B2. g x - h x \<in> V} \<in> top1_B2_topology"
+      unfolding heq using hpair hW unfolding top1_continuous_map_on_def by blast
+  qed
+  have hv1: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets
+      (\<lambda>x. fst (f x) - fst x)"
+    using hcomp_cont[OF hfstf hfst] by (simp add: comp_def)
+  have hv2: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets
+      (\<lambda>x. snd (f x) - snd x)"
+    using hcomp_cont[OF hsndf hsnd] by (simp add: comp_def)
+  have hpi1_v: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (pi1 \<circ> ?v)"
+  proof -
+    have "pi1 \<circ> ?v = (\<lambda>x. fst (f x) - fst x)" unfolding pi1_def comp_def by auto
+    thus ?thesis using hv1 by simp
+  qed
+  have hpi2_v: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV::real set) top1_open_sets (pi2 \<circ> ?v)"
+  proof -
+    have "pi2 \<circ> ?v = (\<lambda>x. snd (f x) - snd x)" unfolding pi2_def comp_def by auto
+    thus ?thesis using hv2 by simp
+  qed
+  have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+  show ?thesis using iffD2[OF Theorem_18_4[OF hTB2 hTR hTR, of ?v]]
+    hpi1_v hpi2_v unfolding hUU by blast
+qed
+
 (** from \<S>55 Lemma 55.3: nulhomotopic characterization **)
 lemma Lemma_55_3_nulhomotopic_characterization:
   fixes h :: "real \<times> real \<Rightarrow> 'a"
@@ -5087,7 +5176,7 @@ proof (rule ccontr)
   \<comment> \<open>Step 2: v is continuous B^2 \<rightarrow> R^2.\<close>
   have hv_cont: "top1_continuous_map_on top1_B2 top1_B2_topology
                   UNIV (product_topology_on top1_open_sets top1_open_sets) ?v"
-    sorry
+    by (rule top1_B2_diff_continuous[OF hf])
   \<comment> \<open>Step 3: v is nonvanishing (from hnofix).\<close>
   have hv_nonzero: "\<forall>x\<in>top1_B2. ?v x \<noteq> (0, 0)"
   proof (intro ballI)
