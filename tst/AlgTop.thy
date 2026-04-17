@@ -3445,7 +3445,218 @@ corollary basepoint_change_iso_via_path:
            (top1_fundamental_group_mul X TX x0)
            (top1_fundamental_group_carrier X TX x1)
            (top1_fundamental_group_mul X TX x1)"
-  using Theorem_52_1_iso[OF hTX _ _ _] sorry
+proof -
+  \<comment> \<open>Same proof as Theorem\_52\_1\_iso but starting from a given path.\<close>
+  let ?hat = "\<lambda>f. top1_basepoint_change_on X TX x0 x1 alpha f"
+  let ?ra = "top1_path_reverse alpha"
+  let ?hat_inv = "\<lambda>g. top1_basepoint_change_on X TX x1 x0 ?ra g"
+  let ?\<phi> = "\<lambda>c. {g. \<exists>f\<in>c. top1_loop_equiv_on X TX x1 (?hat f) g}"
+  have hphi_class: "\<And>f. top1_is_loop_on X TX x0 f \<Longrightarrow>
+    ?\<phi> {g. top1_loop_equiv_on X TX x0 f g} =
+    {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+  proof (intro set_eqI iffI)
+    fix f g assume hf: "top1_is_loop_on X TX x0 f"
+    assume "g \<in> ?\<phi> {h. top1_loop_equiv_on X TX x0 f h}"
+    then obtain f' where hf'_eq: "top1_loop_equiv_on X TX x0 f f'"
+        and hg_eq: "top1_loop_equiv_on X TX x1 (?hat f') g" by auto
+    have hf': "top1_is_loop_on X TX x0 f'" using hf'_eq unfolding top1_loop_equiv_on_def by blast
+    show "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+      using top1_loop_equiv_on_trans[OF hTX
+        top1_basepoint_change_loop_equiv[OF hTX halpha hf hf' hf'_eq] hg_eq] by simp
+  next
+    fix f g assume hf: "top1_is_loop_on X TX x0 f"
+    assume "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat f) g}"
+    thus "g \<in> ?\<phi> {h. top1_loop_equiv_on X TX x0 f h}"
+      using top1_loop_equiv_on_refl[OF hf] by blast
+  qed
+  have hphi_range: "\<forall>c\<in>top1_fundamental_group_carrier X TX x0.
+      ?\<phi> c \<in> top1_fundamental_group_carrier X TX x1"
+  proof
+    fix c assume "c \<in> top1_fundamental_group_carrier X TX x0"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {g. top1_loop_equiv_on X TX x0 f g}"
+      unfolding top1_fundamental_group_carrier_def by blast
+    show "?\<phi> c \<in> top1_fundamental_group_carrier X TX x1"
+      unfolding hc hphi_class[OF hf] top1_fundamental_group_carrier_def
+      using top1_basepoint_change_is_loop[OF hTX halpha hf] by blast
+  qed
+  have hphi_inj: "inj_on ?\<phi> (top1_fundamental_group_carrier X TX x0)"
+  proof (rule inj_onI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+       and heq: "?\<phi> c1 = ?\<phi> c2"
+    obtain f1 where hf1: "top1_is_loop_on X TX x0 f1"
+        and hc1_eq: "c1 = {g. top1_loop_equiv_on X TX x0 f1 g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by blast
+    obtain f2 where hf2: "top1_is_loop_on X TX x0 f2"
+        and hc2_eq: "c2 = {g. top1_loop_equiv_on X TX x0 f2 g}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by blast
+    have hclass_eq: "{g. top1_loop_equiv_on X TX x1 (?hat f1) g}
+        = {g. top1_loop_equiv_on X TX x1 (?hat f2) g}"
+      using heq unfolding hc1_eq hc2_eq hphi_class[OF hf1] hphi_class[OF hf2] .
+    have hhat_f1_loop: "top1_is_loop_on X TX x1 (?hat f1)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf1])
+    have "?hat f1 \<in> {g. top1_loop_equiv_on X TX x1 (?hat f1) g}"
+      using top1_loop_equiv_on_refl[OF hhat_f1_loop] by simp
+    hence "?hat f1 \<in> {g. top1_loop_equiv_on X TX x1 (?hat f2) g}"
+      using hclass_eq by simp
+    hence hhat_equiv: "top1_loop_equiv_on X TX x1 (?hat f2) (?hat f1)" by simp
+    have hra: "top1_is_path_on X TX x1 x0 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
+    have hhat_f2_loop: "top1_is_loop_on X TX x1 (?hat f2)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hf2])
+    have hbeta_equiv: "top1_loop_equiv_on X TX x0 (?hat_inv (?hat f2)) (?hat_inv (?hat f1))"
+      by (rule top1_basepoint_change_loop_equiv[OF hTX hra hhat_f2_loop hhat_f1_loop hhat_equiv])
+    have f1_equiv: "top1_loop_equiv_on X TX x0 f1 (?hat_inv (?hat f1))"
+      unfolding top1_loop_equiv_on_def using hf1
+        top1_basepoint_change_roundtrip[OF hTX halpha hf1]
+        top1_basepoint_change_is_loop[OF hTX hra hhat_f1_loop] by blast
+    have f1_to_f2: "top1_loop_equiv_on X TX x0 f1 (?hat_inv (?hat f2))"
+      using top1_loop_equiv_on_trans[OF hTX f1_equiv
+        top1_loop_equiv_on_sym[OF hbeta_equiv]] .
+    have f2_equiv_sym: "top1_loop_equiv_on X TX x0 (?hat_inv (?hat f2)) f2"
+      by (rule top1_loop_equiv_on_sym)
+         (unfold top1_loop_equiv_on_def, use hf2
+           top1_basepoint_change_roundtrip[OF hTX halpha hf2]
+           top1_basepoint_change_is_loop[OF hTX hra hhat_f2_loop] in blast)
+    have f1f2_equiv: "top1_loop_equiv_on X TX x0 f1 f2"
+      using top1_loop_equiv_on_trans[OF hTX f1_to_f2 f2_equiv_sym] .
+    show "c1 = c2"
+    proof -
+      have "\<And>g. top1_loop_equiv_on X TX x0 f1 g \<longleftrightarrow> top1_loop_equiv_on X TX x0 f2 g"
+      proof
+        fix g assume "top1_loop_equiv_on X TX x0 f1 g"
+        thus "top1_loop_equiv_on X TX x0 f2 g"
+          using top1_loop_equiv_on_trans[OF hTX top1_loop_equiv_on_sym[OF f1f2_equiv]] by blast
+      next
+        fix g assume "top1_loop_equiv_on X TX x0 f2 g"
+        thus "top1_loop_equiv_on X TX x0 f1 g"
+          using top1_loop_equiv_on_trans[OF hTX f1f2_equiv] by blast
+      qed
+      thus ?thesis unfolding hc1_eq hc2_eq by auto
+    qed
+  qed
+  have hphi_surj: "?\<phi> ` (top1_fundamental_group_carrier X TX x0)
+      = top1_fundamental_group_carrier X TX x1"
+  proof (intro set_eqI iffI)
+    fix d assume "d \<in> ?\<phi> ` top1_fundamental_group_carrier X TX x0"
+    thus "d \<in> top1_fundamental_group_carrier X TX x1"
+      using hphi_range by blast
+  next
+    fix d assume hd: "d \<in> top1_fundamental_group_carrier X TX x1"
+    obtain h where hh: "top1_is_loop_on X TX x1 h"
+        and hd_eq: "d = {g. top1_loop_equiv_on X TX x1 h g}"
+      using hd unfolding top1_fundamental_group_carrier_def by blast
+    have hra: "top1_is_path_on X TX x1 x0 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
+    let ?g = "?hat_inv h"
+    have hg_loop: "top1_is_loop_on X TX x0 ?g"
+      by (rule top1_basepoint_change_is_loop[OF hTX hra hh])
+    have hphi_g: "?\<phi> {f. top1_loop_equiv_on X TX x0 ?g f}
+        = {g. top1_loop_equiv_on X TX x1 (?hat ?g) g}"
+      by (rule hphi_class[OF hg_loop])
+    have hrev_rt: "top1_path_homotopic_on X TX x1 x1 h (?hat (?hat_inv h))"
+      using top1_basepoint_change_roundtrip[OF hTX hra hh]
+      unfolding top1_path_reverse_twice .
+    have hequiv: "top1_loop_equiv_on X TX x1 h (?hat ?g)"
+      unfolding top1_loop_equiv_on_def
+      using hh top1_basepoint_change_is_loop[OF hTX halpha hg_loop] hrev_rt by blast
+    have hclass_eq: "{g. top1_loop_equiv_on X TX x1 (?hat ?g) g}
+        = {g. top1_loop_equiv_on X TX x1 h g}"
+    proof (intro set_eqI iffI)
+      fix g' assume "g' \<in> {g. top1_loop_equiv_on X TX x1 (?hat ?g) g}"
+      thus "g' \<in> {g. top1_loop_equiv_on X TX x1 h g}"
+        using top1_loop_equiv_on_trans[OF hTX hequiv] by simp
+    next
+      fix g' assume "g' \<in> {g. top1_loop_equiv_on X TX x1 h g}"
+      hence "top1_loop_equiv_on X TX x1 h g'" by simp
+      thus "g' \<in> {g. top1_loop_equiv_on X TX x1 (?hat ?g) g}"
+        using top1_loop_equiv_on_trans[OF hTX top1_loop_equiv_on_sym[OF hequiv]] by simp
+    qed
+    have "?\<phi> {f. top1_loop_equiv_on X TX x0 ?g f} = d"
+      unfolding hphi_g hclass_eq hd_eq ..
+    moreover have "{f. top1_loop_equiv_on X TX x0 ?g f} \<in>
+        top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hg_loop by blast
+    ultimately show "d \<in> ?\<phi> ` top1_fundamental_group_carrier X TX x0" by blast
+  qed
+  have hmul_class: "\<And>Y TY y0 f g.
+    \<lbrakk>is_topology_on Y TY; top1_is_loop_on Y TY y0 f; top1_is_loop_on Y TY y0 g\<rbrakk> \<Longrightarrow>
+    top1_fundamental_group_mul Y TY y0
+      {h. top1_loop_equiv_on Y TY y0 f h} {h. top1_loop_equiv_on Y TY y0 g h}
+    = {h. top1_loop_equiv_on Y TY y0 (top1_path_product f g) h}"
+    by (rule top1_fundamental_group_mul_class)
+  have hphi_hom: "\<forall>c1\<in>top1_fundamental_group_carrier X TX x0.
+    \<forall>c2\<in>top1_fundamental_group_carrier X TX x0.
+    ?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2) =
+    top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)"
+  proof (intro ballI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+    obtain l1 where hl1: "top1_is_loop_on X TX x0 l1"
+        and hc1_eq: "c1 = {g. top1_loop_equiv_on X TX x0 l1 g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by blast
+    obtain l2 where hl2: "top1_is_loop_on X TX x0 l2"
+        and hc2_eq: "c2 = {g. top1_loop_equiv_on X TX x0 l2 g}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by blast
+    have hl12: "top1_is_loop_on X TX x0 (top1_path_product l1 l2)"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX])
+         (use hl1 hl2 in \<open>auto simp: top1_is_loop_on_def\<close>)
+    have hmul_eq: "top1_fundamental_group_mul X TX x0 c1 c2
+        = {h. top1_loop_equiv_on X TX x0 (top1_path_product l1 l2) h}"
+      unfolding hc1_eq hc2_eq by (rule hmul_class[OF hTX hl1 hl2])
+    have hLHS: "?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2)
+        = {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product l1 l2)) g}"
+      unfolding hmul_eq by (rule hphi_class[OF hl12])
+    have hhat_l1: "top1_is_loop_on X TX x1 (?hat l1)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hl1])
+    have hhat_l2: "top1_is_loop_on X TX x1 (?hat l2)"
+      by (rule top1_basepoint_change_is_loop[OF hTX halpha hl2])
+    have hphi_c1: "?\<phi> c1 = {g. top1_loop_equiv_on X TX x1 (?hat l1) g}"
+      unfolding hc1_eq by (rule hphi_class[OF hl1])
+    have hphi_c2: "?\<phi> c2 = {g. top1_loop_equiv_on X TX x1 (?hat l2) g}"
+      unfolding hc2_eq by (rule hphi_class[OF hl2])
+    have hRHS: "top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)
+        = {h. top1_loop_equiv_on X TX x1 (top1_path_product (?hat l1) (?hat l2)) h}"
+      unfolding hphi_c1 hphi_c2 by (rule hmul_class[OF hTX hhat_l1 hhat_l2])
+    have hThm: "top1_path_homotopic_on X TX x1 x1
+        (?hat (top1_path_product l1 l2))
+        (top1_path_product (?hat l1) (?hat l2))"
+      by (rule Theorem_52_1[OF hTX halpha hl1 hl2])
+    have hprod_loop: "top1_is_loop_on X TX x1 (top1_path_product (?hat l1) (?hat l2))"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX])
+         (use hhat_l1 hhat_l2 in \<open>auto simp: top1_is_loop_on_def\<close>)
+    have hequiv': "top1_loop_equiv_on X TX x1
+        (?hat (top1_path_product l1 l2)) (top1_path_product (?hat l1) (?hat l2))"
+      unfolding top1_loop_equiv_on_def
+      using top1_basepoint_change_is_loop[OF hTX halpha hl12] hprod_loop hThm by blast
+    have hclass_eq': "{g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product l1 l2)) g}
+        = {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat l1) (?hat l2)) g}"
+    proof (intro set_eqI iffI)
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product l1 l2)) g}"
+      thus "g \<in> {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat l1) (?hat l2)) g}"
+        using top1_loop_equiv_on_trans[OF hTX top1_loop_equiv_on_sym[OF hequiv']] by simp
+    next
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x1 (top1_path_product (?hat l1) (?hat l2)) g}"
+      thus "g \<in> {g. top1_loop_equiv_on X TX x1 (?hat (top1_path_product l1 l2)) g}"
+        using top1_loop_equiv_on_trans[OF hTX hequiv'] by simp
+    qed
+    show "?\<phi> (top1_fundamental_group_mul X TX x0 c1 c2) =
+          top1_fundamental_group_mul X TX x1 (?\<phi> c1) (?\<phi> c2)"
+      unfolding hLHS hRHS hclass_eq' ..
+  qed
+  have hiso: "top1_group_iso_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_carrier X TX x1)
+      (top1_fundamental_group_mul X TX x1) ?\<phi>"
+    unfolding top1_group_iso_on_def top1_group_hom_on_def bij_betw_def
+    using hphi_range hphi_hom hphi_inj hphi_surj by blast
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def using hiso by blast
+qed
 
 text \<open>Functoriality of fundamental group: (k o h)_* = k_* o h_*.\<close>
 (** from \<S>52 Theorem 52.4 **)
