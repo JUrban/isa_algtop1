@@ -2165,15 +2165,17 @@ definition top1_basepoint_change_on :: "'a set \<Rightarrow> 'a set set \<Righta
     Combined with bijectivity this gives a group isomorphism of \<pi>_1(X, x_0)
     with \<pi>_1(X, x_1). **)
 theorem Theorem_52_1:
-  assumes "top1_is_path_on X TX x0 x1 alpha"
-      and "top1_is_loop_on X TX x0 f"
-      and "top1_is_loop_on X TX x0 g"
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x0 x1 alpha"
+      and hf: "top1_is_loop_on X TX x0 f"
+      and hg: "top1_is_loop_on X TX x0 g"
   shows "top1_path_homotopic_on X TX x1 x1
     (top1_basepoint_change_on X TX x0 x1 alpha (top1_path_product f g))
     (top1_path_product
       (top1_basepoint_change_on X TX x0 x1 alpha f)
       (top1_basepoint_change_on X TX x0 x1 alpha g))"
-  sorry
+  sorry \<comment> \<open>Proof: rearrange (α⁻¹*(fg*α)) ≃ (α⁻¹*(f*α))*(α⁻¹*(g*α)) via assoc/inv/id.
+         Now fully unblocked by Theorem_51_2 groupoid properties.\<close>
 
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
     \<pi>_1(X, x_0) \<cong> \<pi>_1(X, x_1) for any two basepoints x_0, x_1 \<in> X. **)
