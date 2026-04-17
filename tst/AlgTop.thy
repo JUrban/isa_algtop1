@@ -2,6 +2,35 @@ theory AlgTop
   imports "Top0.Top1_Ch5_8"
 begin
 
+ML \<open>
+  fun method_evaluate text ctxt facts =
+    NO_CONTEXT_TACTIC ctxt (Method.evaluate_runtime text ctxt facts)
+
+  fun timed_seq name limit seq =
+    Seq.make (fn () =>
+      (case
+         (Timeout.apply limit (fn () => Seq.pull seq) ()
+           handle Timeout.TIMEOUT _ =>
+             error (name ^ ": timeout after " ^
+               string_of_int (Time.toMilliseconds limit) ^ " ms"))
+       of
+         NONE => NONE
+       | SOME (st, seq') => SOME (st, timed_seq name limit seq')))
+\<close>
+
+method_setup by100 =
+  \<open>
+    Method.text_closure >> (fn text => fn ctxt => fn facts =>
+      let
+        val limit = Time.fromMilliseconds 100
+        fun tac st = timed_seq "by100" limit (method_evaluate text ctxt facts st)
+      in
+        SIMPLE_METHOD tac facts
+      end)
+  \<close>
+  "apply a proof method with 100ms timeout per result step"
+
+
 text \<open>
   Formalization of algebraic topology from Munkres (algtop.tex), Chapters 9-14.
 
@@ -4058,6 +4087,10 @@ lemma Lemma_54_2_homotopy_lifting:
   shows "\<exists>Ftilde. top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde
     \<and> (\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t))
     \<and> Ftilde (0, 0) = e0"
+  \<comment> \<open>Munkres 54.2: Subdivide I\<times>I into rectangles Ii\<times>Jj each mapping into an evenly
+     covered set (Lebesgue number). Lift step-by-step: extend from bottom+left edges
+     to each rectangle via the homeomorphism p0: V0 \<rightarrow> U. If F is a path homotopy,
+     the fiber p\<inverse>(b0) is discrete, so Ftilde(0\<times>I) and Ftilde(1\<times>I) are constant.\<close>
   sorry
 
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
@@ -4255,6 +4288,8 @@ theorem Theorem_54_4_lifting_correspondence:
   shows "\<exists>\<phi>. (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
                 \<phi> c \<in> {e\<in>E. p e = b0})
            \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+  \<comment> \<open>Munkres 54.4 surjectivity: For e1 \<in> p\<inverse>(b0), path-connectedness of E gives
+     path f_tilde from e0 to e1. Then f = p\<circ>f_tilde is a loop at b0, and \<phi>([f]) = e1.\<close>
   sorry
 
 theorem Theorem_54_4_bijective_simply_connected:
@@ -4262,6 +4297,8 @@ theorem Theorem_54_4_bijective_simply_connected:
       and "e0 \<in> E" and "p e0 = b0"
       and "top1_simply_connected_on E TE"
   shows "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier B TB b0) {e\<in>E. p e = b0}"
+  \<comment> \<open>Munkres 54.4 bijectivity: If \<phi>([f])=\<phi>([g]) then lifts f_tilde, g_tilde end at same point.
+     Simply connected E gives path homotopy F_tilde between them; p\<circ>F_tilde homotopizes f to g.\<close>
   sorry
 
 text \<open>Helper: subspace of UNIV with top1_open_sets is top1_open_sets itself.\<close>
@@ -4498,6 +4535,9 @@ theorem Theorem_54_5_iso:
      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
      top1_Z_group
      top1_Z_mul"
+  \<comment> \<open>Munkres 54.5: p: R \<rightarrow> S^1 covering, R simply connected \<Rightarrow> \<phi> bijective (Thm 54.4).
+     Homomorphism: for lifts f_tilde(1)=n, g_tilde(1)=m, define g'(s)=n+g_tilde(s).
+     Then f_tilde * g' lifts f*g starting at 0, ending at n+m. So \<phi>([f]*[g])=n+m.\<close>
   sorry
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
@@ -6998,6 +7038,10 @@ theorem Theorem_59_1:
             \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V))
        \<and> top1_path_homotopic_on X TX x0 x0 f
            (foldr (top1_path_product) gs (top1_constant_path x0)))"
+  \<comment> \<open>Munkres 59.1: Step 1: Lebesgue number gives subdivision a0<...<an with f([ai,ai+1])
+     in U or V and f(ai) in U\<inter>V. Step 2: Choose paths \<alpha>i in U\<inter>V from x0 to f(ai).
+     Set gi = (\<alpha>_{i-1} * fi) * \<alpha>i_bar. Each gi is a loop in U or V at x0, and
+     [g1]*...*[gn] = [f1]*...*[fn] = [f].\<close>
   sorry
 
 (** from \<S>59 Corollary 59.2: U, V open, simply connected, U \<inter> V path-connected
