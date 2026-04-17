@@ -6710,17 +6710,13 @@ qed
     H(x, t) = (1-t)x + t(x/||x||). By Theorem 58.3, the inclusion induces
     an isomorphism of fundamental groups. **)
 theorem Theorem_58_2_inclusion_iso:
-  "top1_groups_isomorphic_on
-    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-    (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
-    (top1_fundamental_group_carrier
-       (UNIV - {(0, 0)})
-       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
-       (1, 0))
-    (top1_fundamental_group_mul
-       (UNIV - {(0, 0)})
-       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
-       (1, 0))"
+  fixes TR2_0 :: "(real \<times> real) set set"
+  defines "TR2_0 \<equiv> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0::real, 0::real)})"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier top1_S1 (subspace_topology (UNIV - {(0::real, 0::real)}) TR2_0 top1_S1) (1, 0))
+    (top1_fundamental_group_mul top1_S1 (subspace_topology (UNIV - {(0::real, 0::real)}) TR2_0 top1_S1) (1, 0))
+    (top1_fundamental_group_carrier (UNIV - {(0, 0)}) TR2_0 (1, 0))
+    (top1_fundamental_group_mul (UNIV - {(0, 0)}) TR2_0 (1, 0))"
 proof -
   \<comment> \<open>S^1 is a deformation retract of R^2 - {0} via H(x,t) = (1-t)x + t(x/|x|).\<close>
   have hdef: "top1_deformation_retract_of_on
@@ -6744,7 +6740,13 @@ proof -
     unfolding top1_S1_topology_def
     by (rule subspace_topology_trans[of top1_S1 "UNIV - {(0, 0)}", symmetric])
        (auto simp: top1_S1_def)
-  show ?thesis sorry \<comment> \<open>Deformation retract + Theorem_58_3 or Theorem_58_7 (topology rewriting issue).\<close>
+  have hdef': "top1_deformation_retract_of_on (UNIV - {(0::real, 0::real)}) TR2_0 top1_S1"
+    unfolding TR2_0_def by (rule hdef)
+  have hTR2_0': "is_topology_on (UNIV - {(0::real, 0::real)}) TR2_0"
+    unfolding TR2_0_def by (rule hTR2_0)
+  show ?thesis
+    unfolding TR2_0_def[symmetric]
+    by (rule Theorem_58_3[OF hdef' hTR2_0' h10])
 qed
 
 corollary Theorem_58_7_strict:
