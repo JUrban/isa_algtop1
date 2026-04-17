@@ -908,16 +908,212 @@ lemma Theorem_51_2_associativity:
   sorry
 
 lemma Theorem_51_2_left_identity:
-  assumes "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x0 x1
     (top1_path_product (top1_constant_path x0) f) f"
-  sorry
+proof -
+  have hfcont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by blast
+  have hfrange: "\<forall>s\<in>I_set. f s \<in> X" using hfcont unfolding top1_continuous_map_on_def by blast
+  have hf0: "f 0 = x0" using hf unfolding top1_is_path_on_def by blast
+  have hf1: "f 1 = x1" using hf unfolding top1_is_path_on_def by blast
+  \<comment> \<open>Homotopy: F(s,t) = f(max(0, (2s - 1 + t)/(1 + t))).
+     At t=0: s \<le> 1/2 gives max(0, (2s-1)/1) = max(0, 2s-1) = 0, so F=f(0)=x0.
+             s \<ge> 1/2 gives f(2s-1) = (e * f)(s). So F(\<cdot>,0) = e * f.
+     At t=1: max(0, (2s)/2) = max(0, s) = s for s\<ge>0. So F(\<cdot>,1) = f.
+     At s=0: max(0, (-1+t)/(1+t)). For t\<in>[0,1], -1+t \<le> 0, so max=0, F=f(0)=x0.
+     At s=1: max(0, (1+t)/(1+t)) = max(0, 1) = 1, so F=f(1)=x1.\<close>
+  let ?g = "\<lambda>(s::real, t::real). max 0 (min 1 ((2*s - 1 + t) / (1 + t)))"
+  let ?F = "\<lambda>p. f (?g p)"
+  have hg_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. ?g (s, t) \<in> I_set"
+    unfolding top1_unit_interval_def by auto
+  have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
+  proof
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    have "?g p \<in> I_set" using hp hg_range by auto
+    thus "?F p \<in> X" using hfrange by blast
+  qed
+  have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
+    sorry \<comment> \<open>Composition of f (continuous on I) with g (continuous on I\<times>I).
+           g is max(0, min(1, ...)) of continuous real arithmetic — continuous by
+           continuous_on_max, continuous_on_min, continuous_intros.\<close>
+  have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product (top1_constant_path x0) f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?F (s, 0) = top1_path_product (top1_constant_path x0) f s"
+    proof (cases "s \<le> 1/2")
+      case True
+      hence "2*s - 1 + 0 = 2*s - 1" by simp
+      hence "(2*s - 1) / (1 + 0) = 2*s - 1" by simp
+      moreover have "2*s - 1 \<le> 0" using True by simp
+      ultimately have "?g (s, 0) = 0"
+        using hs unfolding top1_unit_interval_def by auto
+      hence "?F (s, 0) = f 0" by simp
+      also have "... = x0" using hf0 by simp
+      finally have lhs: "?F (s, 0) = x0" .
+      have "top1_path_product (top1_constant_path x0) f s = top1_constant_path x0 (2 * s)"
+        using True unfolding top1_path_product_def by simp
+      also have "... = x0" unfolding top1_constant_path_def by simp
+      finally have rhs: "top1_path_product (top1_constant_path x0) f s = x0" .
+      show ?thesis using lhs rhs by simp
+    next
+      case False
+      hence hge: "s > 1/2" by simp
+      hence "2*s - 1 > 0" by simp
+      hence "(2*s - 1) / 1 = 2*s - 1" by simp
+      moreover have "2*s - 1 \<ge> 0" using hge by simp
+      moreover have "2*s - 1 \<le> 1" using hs unfolding top1_unit_interval_def by auto
+      ultimately have "?g (s, 0) = 2*s - 1" using hs unfolding top1_unit_interval_def by auto
+      hence h_Fs0: "?F (s, 0) = f (2*s - 1)" by simp
+      have "top1_path_product (top1_constant_path x0) f s = f (2*s - 1)"
+        using hge unfolding top1_path_product_def top1_constant_path_def by auto
+      thus ?thesis using h_Fs0 by simp
+    qed
+  qed
+  have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "(2*s - 1 + 1) / (1 + 1) = s" by auto
+    moreover have "s \<ge> 0" using hs unfolding top1_unit_interval_def by simp
+    moreover have "s \<le> 1" using hs unfolding top1_unit_interval_def by simp
+    ultimately have "?g (s, 1) = s" by auto
+    thus "?F (s, 1) = f s" by simp
+  qed
+  have hF_0t: "\<forall>t\<in>I_set. ?F (0, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "(2*0 - 1 + t) / (1 + t) = (t - 1) / (1 + t)" by simp
+    moreover have "t - 1 \<le> 0" using ht unfolding top1_unit_interval_def by simp
+    moreover have "1 + t > 0" using ht unfolding top1_unit_interval_def by simp
+    ultimately have "(t - 1) / (1 + t) \<le> 0" by (simp add: divide_nonpos_nonneg)
+    hence "?g (0, t) = 0" by auto
+    hence "?F (0, t) = f 0" by simp
+    thus "?F (0, t) = x0" using hf0 by simp
+  qed
+  have hF_1t: "\<forall>t\<in>I_set. ?F (1, t) = x1"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "(2*1 - 1 + t) / (1 + t) = (1 + t) / (1 + t)" by simp
+    moreover have "1 + t > 0" using ht unfolding top1_unit_interval_def by simp
+    ultimately have "(1 + t) / (1 + t) = 1" by simp
+    hence "?g (1, t) = 1" by auto
+    hence "?F (1, t) = f 1" by simp
+    thus "?F (1, t) = x1" using hf1 by simp
+  qed
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hx0X: "x0 \<in> X" using hfrange h0I hf0 by force
+  have hconst: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0X])
+  have hpath_ef: "top1_is_path_on X TX x0 x1 (top1_path_product (top1_constant_path x0) f)"
+    by (rule top1_path_product_is_path[OF hTX hconst hf])
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hpath_ef hf hF_cont hF_s0 hF_s1 hF_0t hF_1t by blast
+qed
 
 lemma Theorem_51_2_right_identity:
-  assumes "top1_is_path_on X TX x0 x1 f"
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
   shows "top1_path_homotopic_on X TX x0 x1
     (top1_path_product f (top1_constant_path x1)) f"
-  sorry
+proof -
+  have hfcont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by blast
+  have hfrange: "\<forall>s\<in>I_set. f s \<in> X" using hfcont unfolding top1_continuous_map_on_def by blast
+  have hf0: "f 0 = x0" using hf unfolding top1_is_path_on_def by blast
+  have hf1: "f 1 = x1" using hf unfolding top1_is_path_on_def by blast
+  \<comment> \<open>Homotopy: F(s,t) = f(min(1, 2s/(2-t))).
+     At t=0: s < 1/2 gives f(2s/2) = f(s); s = 1/2 gives f(1); s > 1/2 gives f(min(1, 2s/2)).
+     Wait — use F(s,t) = f(min(1, (2s)/(1+t))).
+     At t=0: min(1, 2s) — for s \<le> 1/2, f(2s); for s \<ge> 1/2, f(1) = x1.
+             So F(\<cdot>, 0) = f * e_{x1}.
+     At t=1: min(1, s) = s (for s \<in> [0,1]). So F(\<cdot>, 1) = f.
+     At s=0: min(1, 0) = 0. F(0,t) = f(0) = x0.
+     At s=1: min(1, 2/(1+t)). Since 1+t \<ge> 1, 2/(1+t) \<le> 2. Also 1+t \<le> 2, so 2/(1+t) \<ge> 1.
+             So min(1, 2/(1+t)) = 1. F(1,t) = f(1) = x1.\<close>
+  let ?g = "\<lambda>(s::real, t::real). min 1 (max 0 ((2*s) / (1 + t)))"
+  let ?F = "\<lambda>p. f (?g p)"
+  have hg_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. ?g (s, t) \<in> I_set"
+    unfolding top1_unit_interval_def by auto
+  have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
+  proof
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    have "?g p \<in> I_set" using hp hg_range by auto
+    thus "?F p \<in> X" using hfrange by blast
+  qed
+  have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?F"
+    sorry \<comment> \<open>Same technique as left identity: composition of f with continuous real function.\<close>
+  have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_constant_path x1) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "?F (s, 0) = top1_path_product f (top1_constant_path x1) s"
+    proof (cases "s \<le> 1/2")
+      case True
+      have hs_nn: "s \<ge> 0" using hs unfolding top1_unit_interval_def by simp
+      have "2*s / (1 + 0) = 2*s" by simp
+      moreover have "2*s \<ge> 0" using hs_nn by simp
+      moreover have "2*s \<le> 1" using True by simp
+      ultimately have "?g (s, 0) = 2*s" by auto
+      hence lhs: "?F (s, 0) = f (2*s)" by simp
+      have "top1_path_product f (top1_constant_path x1) s = f (2*s)"
+        using True unfolding top1_path_product_def by simp
+      thus ?thesis using lhs by simp
+    next
+      case False
+      hence hge: "s > 1/2" by simp
+      have "2*s > 1" using hge by simp
+      hence "2*s / 1 > 1" by simp
+      hence "?g (s, 0) = 1" by auto
+      hence lhs: "?F (s, 0) = f 1" by simp
+      have "top1_path_product f (top1_constant_path x1) s = top1_constant_path x1 (2*s - 1)"
+        using hge unfolding top1_path_product_def by auto
+      also have "... = x1" unfolding top1_constant_path_def by simp
+      also have "... = f 1" using hf1 by simp
+      finally show ?thesis using lhs by simp
+    qed
+  qed
+  have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have hs_nn: "s \<ge> 0" using hs unfolding top1_unit_interval_def by simp
+    have hs_le1: "s \<le> 1" using hs unfolding top1_unit_interval_def by simp
+    have "(2*s) / (1 + 1) = s" by auto
+    moreover have "s \<le> 1" using hs_le1 .
+    moreover have "s \<ge> 0" using hs_nn .
+    ultimately have "?g (s, 1) = s" by auto
+    thus "?F (s, 1) = f s" by simp
+  qed
+  have hF_0t: "\<forall>t\<in>I_set. ?F (0, t) = x0"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have "(2*0) / (1 + t) = 0" by simp
+    hence "?g (0, t) = 0" by simp
+    hence "?F (0, t) = f 0" by simp
+    thus "?F (0, t) = x0" using hf0 by simp
+  qed
+  have hF_1t: "\<forall>t\<in>I_set. ?F (1, t) = x1"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have ht_nn: "t \<ge> 0" using ht unfolding top1_unit_interval_def by simp
+    have "1 + t > 0" using ht_nn by simp
+    moreover have "2 / (1 + t) \<ge> 1" using ht unfolding top1_unit_interval_def
+      by (simp add: le_divide_eq)
+    ultimately have "?g (1, t) = 1" by auto
+    hence "?F (1, t) = f 1" by simp
+    thus "?F (1, t) = x1" using hf1 by simp
+  qed
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hx1X: "x1 \<in> X" using hfrange h1I hf1 by force
+  have hconst: "top1_is_path_on X TX x1 x1 (top1_constant_path x1)"
+    by (rule top1_constant_path_is_path[OF hTX hx1X])
+  have hpath_fe: "top1_is_path_on X TX x0 x1 (top1_path_product f (top1_constant_path x1))"
+    by (rule top1_path_product_is_path[OF hTX hf hconst])
+  show ?thesis
+    unfolding top1_path_homotopic_on_def
+    using hpath_fe hf hF_cont hF_s0 hF_s1 hF_0t hF_1t by blast
+qed
 
 lemma Theorem_51_2_invgerse_left:
   assumes "top1_is_path_on X TX x0 x1 f"
