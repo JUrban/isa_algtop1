@@ -3960,6 +3960,8 @@ theorem Theorem_53_3:
       and "is_topology_on_strict E' TE'" and "is_topology_on_strict B' TB'"
   shows "top1_covering_map_on (E \<times> E') (product_topology_on TE TE')
     (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y))"
+  \<comment> \<open>Munkres 53.3: Take U, U' evenly covered by p, p'. Then U\<times>U' is evenly covered
+     by p\<times>p': the slices are V\<alpha>\<times>V'\<beta>, disjoint open, each homeomorphic to U\<times>U'.\<close>
   sorry
 
 section \<open>\<S>54 The Fundamental Group of the Circle\<close>
@@ -6567,6 +6569,52 @@ qed
     Munkres' proof: if A is a deformation retract of X via H, then the
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
+text \<open>Helper: if two functions agree on I\_set, they give the same loop.\<close>
+lemma loop_agree_on_I:
+  assumes hf: "top1_is_loop_on X TX x0 f"
+      and hagree: "\<forall>s\<in>I_set. g s = f s"
+  shows "top1_is_loop_on X TX x0 g \<and> top1_path_homotopic_on X TX x0 x0 f g"
+proof -
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+  have hagree': "\<forall>s\<in>I_set. f s = g s" using hagree by simp
+  have hg_cont: "top1_continuous_map_on I_set I_top X TX g"
+    by (rule top1_continuous_map_on_agree'[OF hf_cont hagree'])
+  have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have h0I: "(0::real) \<in> I_set" and h1I: "(1::real) \<in> I_set"
+    unfolding top1_unit_interval_def by auto
+  have hg0: "g 0 = x0" using hagree h0I hf0 by simp
+  have hg1: "g 1 = x0" using hagree h1I hf1 by simp
+  have hg_loop: "top1_is_loop_on X TX x0 g"
+    unfolding top1_is_loop_on_def top1_is_path_on_def using hg_cont hg0 hg1 by simp
+  have hfg_eq: "\<forall>s\<in>I_set. f s = g s" using hagree by simp
+  have "top1_path_homotopic_on X TX x0 x0 f g"
+    unfolding top1_path_homotopic_on_def
+  proof -
+    have hf_path: "top1_is_path_on X TX x0 x0 f"
+      using hf unfolding top1_is_loop_on_def .
+    have hg_path: "top1_is_path_on X TX x0 x0 g"
+      using hg_loop unfolding top1_is_loop_on_def .
+    \<comment> \<open>Constant homotopy works since f=g on I_set. Use F(s,t) = f(s) = g(s).\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> pi1)"
+      by (rule top1_continuous_map_on_comp[OF hpi1 hf_cont])
+    have hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
+      using hF_cont unfolding pi1_def comp_def by simp
+    show "top1_is_path_on X TX x0 x0 f \<and> top1_is_path_on X TX x0 x0 g \<and>
+      (\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
+           (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s) \<and>
+           (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0))"
+      using hf_path hg_path hF hfg_eq hf0 hf1 by auto
+  qed
+  thus ?thesis using hg_loop by blast
+qed
+
 text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
   a group isomorphism when the inclusion has a retraction homotopic to id.\<close>
 lemma inclusion_retraction_iso:
