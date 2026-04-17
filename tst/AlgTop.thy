@@ -5936,7 +5936,9 @@ proof -
           top1_fundamental_group_mul Y TY (f x0) (?f_star c1) (?f_star c2)"
       unfolding hLHS' hRHS ..
   qed
-  \<comment> \<open>f_* is bijective (uses homotopy equivalence).\<close>
+  \<comment> \<open>f_* is bijective (uses homotopy equivalence).
+     Key: g_* \<circ> f_* = basepoint change iso (from g\<circ>f \<simeq> id).
+     This makes f_* injective. Surjectivity from f\<circ>g \<simeq> id similarly.\<close>
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
     sorry
