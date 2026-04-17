@@ -382,10 +382,14 @@ proof -
     unfolding top1_unit_interval_def by auto
   \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
   have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
-                                   X TX (\<lambda>p. F (fst p, 2 * snd p))" sorry
+                                   X TX (\<lambda>p. F (fst p, 2 * snd p))"
+    \<comment> \<open>F \<circ> (id \<times> (2\<cdot>)). Needs pair continuity via Theorem_18_4 + scaling on subspace.\<close>
+    sorry
   \<comment> \<open>On B, (s,t) \<mapsto> F'(s, 2t-1) is continuous.\<close>
   have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
-                                   X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))" sorry
+                                   X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))"
+    \<comment> \<open>F' \<circ> (id \<times> (2\<cdot>-1)). Same pattern as hfA.\<close>
+    sorry
   \<comment> \<open>Agreement on A \<inter> B (where snd p = 1/2).\<close>
   have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
   proof (intro ballI)
