@@ -5968,29 +5968,29 @@ theorem Theorem_58_2_inclusion_iso:
        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
        (1, 0))"
 proof -
-  let ?R2_0 = "UNIV - {(0::real, 0::real)}"
-  let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
   \<comment> \<open>S^1 is a deformation retract of R^2 - {0} via H(x,t) = (1-t)x + t(x/|x|).\<close>
-  have hdef: "top1_deformation_retract_of_on ?R2_0 ?TR2_0 top1_S1"
+  have hdef: "top1_deformation_retract_of_on
+    (UNIV - {(0::real, 0::real)})
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+       (UNIV - {(0::real, 0::real)}))
+    top1_S1"
     sorry
-  have hTR2_0: "is_topology_on ?R2_0 ?TR2_0"
-  proof -
-    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
-      by (rule top1_open_sets_is_topology_on_UNIV)
-    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
-      using product_topology_on_is_topology_on[OF hTR hTR] by simp
-    show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2]) simp
-  qed
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  have hTR2_0: "is_topology_on (UNIV - {(0::real, 0::real)})
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
+    by (rule subspace_topology_is_topology_on[OF hTR2]) simp
   have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
-  have hS1_eq: "top1_S1_topology = subspace_topology ?R2_0 ?TR2_0 top1_S1"
-  proof -
-    have hS1sub: "top1_S1 \<subseteq> ?R2_0"
-      unfolding top1_S1_def by auto
-    show ?thesis
-      unfolding top1_S1_topology_def
-      by (rule subspace_topology_trans[OF hS1sub, symmetric])
-  qed
-  show ?thesis sorry \<comment> \<open>Topology rewriting: need top1_S1_topology = subspace of R2-0 restricted to S1.\<close>
+  have hS1_eq: "top1_S1_topology = subspace_topology
+    (UNIV - {(0::real, 0::real)})
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+    top1_S1"
+    unfolding top1_S1_topology_def
+    by (rule subspace_topology_trans[of top1_S1 "UNIV - {(0, 0)}", symmetric])
+       (auto simp: top1_S1_def)
+  show ?thesis sorry \<comment> \<open>Theorem_58_3[OF hdef hTR2_0 h10] + topology rewriting.\<close>
 qed
 
 corollary Theorem_58_7_strict:
