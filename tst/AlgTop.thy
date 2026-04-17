@@ -407,36 +407,32 @@ proof -
   qed
   have hcover: "I_set \<times> I_set = ?A \<union> ?B"
     unfolding top1_unit_interval_def by auto
-  \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous.\<close>
+  \<comment> \<open>On A, (s,t) \<mapsto> F(s, 2t) is continuous via composition with reparametrization.\<close>
+  have h\<phi>A: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
+               (I_set \<times> I_set) II_topology (\<lambda>p. (fst p, 2 * snd (p::real\<times>real)))"
+    sorry \<comment> \<open>Via Theorem_16_3 + Theorem_18_4: fst continuous, (2\<cdot>) \<circ> snd continuous.\<close>
   have hfA: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
                                    X TX (\<lambda>p. F (fst p, 2 * snd p))"
-    unfolding top1_continuous_map_on_def
-  proof (intro conjI)
-    show "\<forall>p\<in>?A. F (fst p, 2 * snd p) \<in> X"
-    proof
-      fix p assume hp: "p \<in> ?A"
-      hence "(fst p, 2 * snd p) \<in> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
-      thus "F (fst p, 2 * snd p) \<in> X"
-        using hF unfolding top1_continuous_map_on_def by blast
-    qed
-  next
-    show "\<forall>V\<in>TX. {p \<in> ?A. F (fst p, 2 * snd p) \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?A"
-      sorry \<comment> \<open>Preimage condition for piece A — needs inner map (id \<times> 2\<cdot>) continuity.\<close>
+  proof -
+    have hcomp: "top1_continuous_map_on ?A (subspace_topology (I_set \<times> I_set) II_topology ?A)
+            X TX (F \<circ> (\<lambda>p. (fst p, 2 * snd p)))"
+      by (rule top1_continuous_map_on_comp[OF h\<phi>A hF])
+    moreover have "F \<circ> (\<lambda>p. (fst p, 2 * snd p)) = (\<lambda>p. F (fst p, 2 * snd p))"
+      by (rule ext) simp
+    ultimately show ?thesis by simp
   qed
+  have h\<phi>B: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
+               (I_set \<times> I_set) II_topology (\<lambda>p. (fst p, 2 * snd (p::real\<times>real) - 1))"
+    sorry \<comment> \<open>Via Theorem_16_3 + Theorem_18_4: fst continuous, (2\<cdot>-1) \<circ> snd continuous.\<close>
   have hfB: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
                                    X TX (\<lambda>p. F' (fst p, 2 * snd p - 1))"
-    unfolding top1_continuous_map_on_def
-  proof (intro conjI)
-    show "\<forall>p\<in>?B. F' (fst p, 2 * snd p - 1) \<in> X"
-    proof
-      fix p assume hp: "p \<in> ?B"
-      hence "(fst p, 2 * snd p - 1) \<in> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
-      thus "F' (fst p, 2 * snd p - 1) \<in> X"
-        using hF' unfolding top1_continuous_map_on_def by blast
-    qed
-  next
-    show "\<forall>V\<in>TX. {p \<in> ?B. F' (fst p, 2 * snd p - 1) \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology ?B"
-      sorry \<comment> \<open>Preimage condition for piece B — needs inner map (id \<times> (2\<cdot>-1)) continuity.\<close>
+  proof -
+    have hcomp: "top1_continuous_map_on ?B (subspace_topology (I_set \<times> I_set) II_topology ?B)
+            X TX (F' \<circ> (\<lambda>p. (fst p, 2 * snd p - 1)))"
+      by (rule top1_continuous_map_on_comp[OF h\<phi>B hF'])
+    moreover have "F' \<circ> (\<lambda>p. (fst p, 2 * snd p - 1)) = (\<lambda>p. F' (fst p, 2 * snd p - 1))"
+      by (rule ext) simp
+    ultimately show ?thesis by simp
   qed
   \<comment> \<open>Agreement on A \<inter> B (where snd p = 1/2).\<close>
   have hagree: "\<forall>p\<in>?A \<inter> ?B. F (fst p, 2 * snd p) = F' (fst p, 2 * snd p - 1)"
