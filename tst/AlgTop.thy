@@ -306,6 +306,33 @@ text \<open>Helper: concatenation of path homotopies.
   A = I \<times> [0, 1/2] and B = I \<times> [1/2, 1] are closed in I \<times> I;
   F(fst p, 2\<cdot>snd p) is continuous on A; F'(fst p, 2\<cdot>snd p - 1) is
   continuous on B; they agree on A \<inter> B (where snd p = 1/2) by hmatch.\<close>
+
+lemma top1_continuous_map_on_codomain_shrink:
+  assumes hcont: "top1_continuous_map_on X TX Y TY f"
+      and himg: "f ` X \<subseteq> W" and hWY: "W \<subseteq> Y"
+  shows "top1_continuous_map_on X TX W (subspace_topology Y TY W) f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI)
+  show "\<forall>x\<in>X. f x \<in> W" using himg by blast
+next
+  show "\<forall>V\<in>subspace_topology Y TY W. {x \<in> X. f x \<in> V} \<in> TX"
+  proof
+    fix V assume "V \<in> subspace_topology Y TY W"
+    then obtain U where hU: "U \<in> TY" and hVeq: "V = W \<inter> U"
+      unfolding subspace_topology_def by blast
+    have "{x \<in> X. f x \<in> V} = {x \<in> X. f x \<in> U}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> X. f x \<in> V}" thus "x \<in> {x \<in> X. f x \<in> U}" using hVeq by blast
+    next
+      fix x assume hx: "x \<in> {x \<in> X. f x \<in> U}"
+      hence "f x \<in> W" using himg by blast
+      thus "x \<in> {x \<in> X. f x \<in> V}" using hx hVeq by blast
+    qed
+    also have "\<dots> \<in> TX" using hcont hU unfolding top1_continuous_map_on_def by blast
+    finally show "{x \<in> X. f x \<in> V} \<in> TX" .
+  qed
+qed
+
 lemma path_homotopy_concat_continuous:
   assumes hTX: "is_topology_on X TX"
       and hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
