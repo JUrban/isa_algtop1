@@ -3449,9 +3449,198 @@ proof -
   let ?DS = "top1_direct_sum_carrier J G e"
   let ?mulDS = "\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>"
   let ?invDS = "\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>"
+  have hGprops: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> e \<alpha> \<in> G \<alpha>"
+               "\<And>\<alpha> x y. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>; y \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> x y \<in> G \<alpha>"
+               "\<And>\<alpha> x. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>\<rbrakk> \<Longrightarrow> invg \<alpha> x \<in> G \<alpha>"
+               "\<And>\<alpha> x y z. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>; y \<in> G \<alpha>; z \<in> G \<alpha>\<rbrakk>
+                  \<Longrightarrow> mul \<alpha> (mul \<alpha> x y) z = mul \<alpha> x (mul \<alpha> y z)"
+               "\<And>\<alpha> x. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> (e \<alpha>) x = x"
+               "\<And>\<alpha> x. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> x (e \<alpha>) = x"
+               "\<And>\<alpha> x. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> (invg \<alpha> x) x = e \<alpha>"
+               "\<And>\<alpha> x. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> x (invg \<alpha> x) = e \<alpha>"
+               "\<And>\<alpha> x y. \<lbrakk>\<alpha> \<in> J; x \<in> G \<alpha>; y \<in> G \<alpha>\<rbrakk> \<Longrightarrow> mul \<alpha> x y = mul \<alpha> y x"
+    using hG unfolding top1_is_abelian_group_on_def top1_is_group_on_def by blast+
+  have hDS_mem: "\<And>f. f \<in> ?DS \<Longrightarrow> (\<forall>\<alpha>\<in>J. f \<alpha> \<in> G \<alpha>)"
+    unfolding top1_direct_sum_carrier_def by blast
+  have hDS_out: "\<And>f. f \<in> ?DS \<Longrightarrow> (\<forall>\<alpha>. \<alpha> \<notin> J \<longrightarrow> f \<alpha> = e \<alpha>)"
+    unfolding top1_direct_sum_carrier_def by blast
+  have he_DS: "e \<in> ?DS"
+    unfolding top1_direct_sum_carrier_def
+  proof (intro CollectI conjI)
+    show "\<forall>i\<in>J. e i \<in> G i" using hGprops(1) by blast
+    show "\<forall>i. i \<notin> J \<longrightarrow> e i = e i" by simp
+    show "finite {i \<in> J. e i \<noteq> e i}" by simp
+  qed
+  have hmul_cl: "\<forall>x\<in>?DS. \<forall>y\<in>?DS. ?mulDS x y \<in> ?DS"
+  proof (intro ballI)
+    fix f g assume hf: "f \<in> ?DS" and hg: "g \<in> ?DS"
+    show "?mulDS f g \<in> ?DS"
+      unfolding top1_direct_sum_carrier_def
+    proof (intro CollectI conjI)
+      show "\<forall>i\<in>J. (\<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>) i \<in> G i"
+        using hDS_mem[OF hf] hDS_mem[OF hg] hGprops(2) by simp
+      show "\<forall>i. i \<notin> J \<longrightarrow> (\<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>) i = e i"
+        by simp
+      show "finite {i \<in> J. (\<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>) i \<noteq> e i}"
+      proof -
+        have "{i \<in> J. mul i (f i) (g i) \<noteq> e i} \<subseteq> {i \<in> J. f i \<noteq> e i} \<union> {i \<in> J. g i \<noteq> e i}"
+        proof
+          fix i assume "i \<in> {i \<in> J. mul i (f i) (g i) \<noteq> e i}"
+          hence hi: "i \<in> J" and hne: "mul i (f i) (g i) \<noteq> e i" by auto
+          show "i \<in> {i \<in> J. f i \<noteq> e i} \<union> {i \<in> J. g i \<noteq> e i}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "f i = e i" "g i = e i" using hi by auto
+            hence "mul i (f i) (g i) = mul i (e i) (e i)" by simp
+            also have "... = e i" using hGprops(5) hi hGprops(1) by blast
+            finally show False using hne by contradiction
+          qed
+        qed
+        moreover have "finite ({i \<in> J. f i \<noteq> e i} \<union> {i \<in> J. g i \<noteq> e i})"
+          using hf hg unfolding top1_direct_sum_carrier_def by auto
+        ultimately have hfin: "finite {i \<in> J. mul i (f i) (g i) \<noteq> e i}"
+          using finite_subset by blast
+        have "{i. (i \<in> J \<longrightarrow> mul i (f i) (g i) \<noteq> e i) \<and> i \<in> J}
+              = {i \<in> J. mul i (f i) (g i) \<noteq> e i}" by auto
+        then show ?thesis using hfin by simp
+      qed
+    qed
+  qed
+  have hinvg_e: "\<And>i. i \<in> J \<Longrightarrow> invg i (e i) = e i"
+  proof -
+    fix i assume hi: "i \<in> J"
+    have "mul i (invg i (e i)) (e i) = e i" using hGprops(7) hi hGprops(1) by blast
+    moreover have "mul i (e i) (e i) = e i" using hGprops(5) hi hGprops(1) by blast
+    moreover have "invg i (e i) \<in> G i" using hGprops(3) hi hGprops(1) by blast
+    moreover have "e i \<in> G i" using hGprops(1) hi by blast
+    ultimately show "invg i (e i) = e i"
+      using hGprops(6) hi by force
+  qed
+  have hinv_cl: "\<forall>x\<in>?DS. ?invDS x \<in> ?DS"
+  proof (intro ballI)
+    fix f assume hf: "f \<in> ?DS"
+    show "?invDS f \<in> ?DS"
+      unfolding top1_direct_sum_carrier_def
+    proof (intro CollectI conjI)
+      show "\<forall>i\<in>J. (\<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>) i \<in> G i"
+        using hDS_mem[OF hf] hGprops(3) by simp
+      show "\<forall>i. i \<notin> J \<longrightarrow> (\<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>) i = e i"
+        by simp
+      show "finite {i \<in> J. (\<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>) i \<noteq> e i}"
+      proof -
+        have "{i \<in> J. invg i (f i) \<noteq> e i} \<subseteq> {i \<in> J. f i \<noteq> e i}"
+        proof
+          fix i assume "i \<in> {i \<in> J. invg i (f i) \<noteq> e i}"
+          hence hi: "i \<in> J" and hne: "invg i (f i) \<noteq> e i" by auto
+          show "i \<in> {i \<in> J. f i \<noteq> e i}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "f i = e i" using hi by simp
+            hence "invg i (f i) = invg i (e i)" by simp
+            also have "... = e i" using hinvg_e hi by blast
+            finally show False using hne by contradiction
+          qed
+        qed
+        moreover have "finite {i \<in> J. f i \<noteq> e i}"
+          using hf unfolding top1_direct_sum_carrier_def by auto
+        ultimately have hfin: "finite {i \<in> J. invg i (f i) \<noteq> e i}"
+          using finite_subset by blast
+        have "{i. (i \<in> J \<longrightarrow> invg i (f i) \<noteq> e i) \<and> i \<in> J}
+              = {i \<in> J. invg i (f i) \<noteq> e i}" by auto
+        then show ?thesis using hfin by simp
+      qed
+    qed
+  qed
+  have hassoc: "\<forall>x\<in>?DS. \<forall>y\<in>?DS. \<forall>z\<in>?DS.
+    ?mulDS (?mulDS x y) z = ?mulDS x (?mulDS y z)"
+  proof (intro ballI)
+    fix f g h assume hf: "f \<in> ?DS" and hg: "g \<in> ?DS" and hh: "h \<in> ?DS"
+    show "?mulDS (?mulDS f g) h = ?mulDS f (?mulDS g h)"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS (?mulDS f g) h \<alpha> = ?mulDS f (?mulDS g h) \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        hence "?mulDS (?mulDS f g) h \<alpha> = mul \<alpha> (mul \<alpha> (f \<alpha>) (g \<alpha>)) (h \<alpha>)" by simp
+        also have "... = mul \<alpha> (f \<alpha>) (mul \<alpha> (g \<alpha>) (h \<alpha>))"
+          using hGprops(4) True hDS_mem[OF hf] hDS_mem[OF hg] hDS_mem[OF hh] by blast
+        also have "... = ?mulDS f (?mulDS g h) \<alpha>" using True by simp
+        finally show ?thesis .
+      next
+        case False thus ?thesis by simp
+      qed
+    qed
+  qed
+  have hid: "\<forall>x\<in>?DS. ?mulDS e x = x \<and> ?mulDS x e = x"
+  proof (intro ballI conjI)
+    fix f assume hf: "f \<in> ?DS"
+    show "?mulDS e f = f"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS e f \<alpha> = f \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        thus ?thesis using hGprops(5) hDS_mem[OF hf] by simp
+      next
+        case False thus ?thesis using hDS_out[OF hf] by simp
+      qed
+    qed
+    show "?mulDS f e = f"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS f e \<alpha> = f \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        thus ?thesis using hGprops(6) hDS_mem[OF hf] by simp
+      next
+        case False thus ?thesis using hDS_out[OF hf] by simp
+      qed
+    qed
+  qed
+  have hinv_ax: "\<forall>x\<in>?DS. ?mulDS (?invDS x) x = e \<and> ?mulDS x (?invDS x) = e"
+  proof (intro ballI conjI)
+    fix f assume hf: "f \<in> ?DS"
+    show "?mulDS (?invDS f) f = e"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS (?invDS f) f \<alpha> = e \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        thus ?thesis using hGprops(7) hDS_mem[OF hf] by simp
+      next
+        case False thus ?thesis by simp
+      qed
+    qed
+    show "?mulDS f (?invDS f) = e"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS f (?invDS f) \<alpha> = e \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        thus ?thesis using hGprops(8) hDS_mem[OF hf] by simp
+      next
+        case False thus ?thesis by simp
+      qed
+    qed
+  qed
+  have hcomm: "\<forall>x\<in>?DS. \<forall>y\<in>?DS. ?mulDS x y = ?mulDS y x"
+  proof (intro ballI)
+    fix f g assume hf: "f \<in> ?DS" and hg: "g \<in> ?DS"
+    show "?mulDS f g = ?mulDS g f"
+    proof (rule ext)
+      fix \<alpha>
+      show "?mulDS f g \<alpha> = ?mulDS g f \<alpha>"
+      proof (cases "\<alpha> \<in> J")
+        case True
+        thus ?thesis using hGprops(9) hDS_mem[OF hf] hDS_mem[OF hg] by simp
+      next
+        case False thus ?thesis by simp
+      qed
+    qed
+  qed
   have habel: "top1_is_abelian_group_on ?DS ?mulDS e ?invDS"
     unfolding top1_is_abelian_group_on_def top1_is_group_on_def
-    sorry \<comment> \<open>6 group axioms + abelianness, each coordinatewise from G_\<alpha> axioms.\<close>
+    using he_DS hmul_cl hinv_cl hassoc hid hinv_ax hcomm by argo
   have hhom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>)
                (top1_direct_sum_carrier J G e)
                (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>)
