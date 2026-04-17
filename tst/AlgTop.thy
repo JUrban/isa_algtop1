@@ -4117,7 +4117,13 @@ proof -
       \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
       \<and> top1_continuous_map_on I_set I_top E TE ftilde" sorry
   \<comment> \<open>Assemble into path.\<close>
-  show ?thesis sorry
+  then obtain ftilde where hft_mem: "\<forall>s\<in>I_set. ftilde s \<in> E"
+      and hft0: "ftilde 0 = e0"
+      and hftp: "\<forall>s\<in>I_set. p (ftilde s) = f s"
+      and hft_cont: "top1_continuous_map_on I_set I_top E TE ftilde" by (by100 blast)
+  have "top1_is_path_on E TE e0 (ftilde 1) ftilde"
+    unfolding top1_is_path_on_def using hft_cont hft0 by (by100 simp)
+  thus ?thesis using hftp by (by100 blast)
 qed
 
 text \<open>Helper: s \<mapsto> (s, c) is continuous I \<rightarrow> I \<times> I when c \<in> I.\<close>
