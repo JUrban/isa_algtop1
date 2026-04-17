@@ -6103,7 +6103,27 @@ proof -
     show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by blast
   qed
   \<comment> \<open>Outward: apply the inward result to -v.\<close>
-  have houtward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))" sorry
+  have houtward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))"
+  proof -
+    \<comment> \<open>Apply the inward result to -v: -v is continuous B^2 \<rightarrow> R^2 and nonvanishing.\<close>
+    let ?neg_v = "\<lambda>x. (- fst (v x), - snd (v x))"
+    have hnv_cont: "top1_continuous_map_on top1_B2 top1_B2_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) ?neg_v" sorry
+    have hnv_nz: "\<forall>x\<in>top1_B2. ?neg_v x \<noteq> (0, 0)"
+    proof (intro ballI)
+      fix x assume "x \<in> top1_B2"
+      hence "v x \<noteq> (0, 0)" using assms(2) by (by100 blast)
+      thus "?neg_v x \<noteq> (0, 0)" by (simp add: prod_eq_iff)
+    qed
+    \<comment> \<open>The inward argument for -v gives: \<exists>x\<in>S^1. \<exists>a>0. -v(x) = a*x.\<close>
+    have "\<exists>x\<in>top1_S1. \<exists>a>0. ?neg_v x = (a * fst x, a * snd x)" sorry
+    then obtain x a where hx: "x \<in> top1_S1" and ha: "a > 0"
+        and hva: "?neg_v x = (a * fst x, a * snd x)" by (by100 blast)
+    \<comment> \<open>-v(x) = a*x means v(x) = -a*x.\<close>
+    have "v x = (-(a * fst x), -(a * snd x))"
+      using hva by (simp add: prod_eq_iff)
+    thus ?thesis using hx ha by (by100 blast)
+  qed
   show "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)" by (rule hinward)
   show "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))" by (rule houtward)
 qed
