@@ -2576,10 +2576,99 @@ proof -
   \<comment> \<open>Steps 2-6 require right congruence (h*f ≃ h*g when f ≃ g) to manipulate
      inside the α⁻¹ * (...) context. Right congruence spatial pasting is blocked
      by build time ceiling. Each step uses assoc/inv/id applied inside.\<close>
-  show ?thesis
-    unfolding top1_basepoint_change_on_def
-    sorry \<comment> \<open>Chain: step1 then 5 more steps using right congruence + assoc/inv/id.
-           Blocked by path_homotopic_product_right build time ceiling.\<close>
+  \<comment> \<open>Step 2: α⁻¹ * ((f*α) * (α⁻¹*(g*α))) ≃ α⁻¹ * (f * (α * (α⁻¹*(g*α)))) by right cong + assoc.\<close>
+  have haR_ga_path: "top1_is_path_on X TX x1 x1 (top1_path_product ?aR (top1_path_product g alpha))"
+    by (rule top1_path_product_is_path[OF hTX haR hga])
+  have step2_inner: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product (top1_path_product f alpha) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product f (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha))))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_associativity[OF hTX hfp halpha haR_ga_path]])
+  have step2: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product (top1_path_product f alpha) (top1_path_product ?aR (top1_path_product g alpha))))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha)))))"
+    by (rule path_homotopic_product_right[OF hTX step2_inner haR])
+  \<comment> \<open>Step 3: α * (α⁻¹*(g*α)) ≃ (α*α⁻¹) * (g*α) by assoc.\<close>
+  have step3_inner: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha))"
+    by (rule Theorem_51_2_associativity[OF hTX halpha haR hga])
+  have step3_mid: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product f (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha))))
+    (top1_path_product f (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha)))"
+    by (rule path_homotopic_product_right[OF hTX step3_inner hfp])
+  have step3: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product f (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha)))))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha))))"
+    by (rule path_homotopic_product_right[OF hTX step3_mid haR])
+  \<comment> \<open>Step 4: (α*α⁻¹) ≃ e by inverse.\<close>
+  have step4_inv: "top1_path_homotopic_on X TX x0 x0
+    (top1_path_product alpha ?aR) (top1_constant_path x0)"
+    by (rule Theorem_51_2_invgerse_left[OF hTX halpha])
+  have step4_inner: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha))
+    (top1_path_product (top1_constant_path x0) (top1_path_product g alpha))"
+    by (rule path_homotopic_product_left[OF hTX step4_inv hga])
+  have step4_mid: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product f (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha)))
+    (top1_path_product f (top1_path_product (top1_constant_path x0) (top1_path_product g alpha)))"
+    by (rule path_homotopic_product_right[OF hTX step4_inner hfp])
+  have step4: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha))))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_constant_path x0) (top1_path_product g alpha))))"
+    by (rule path_homotopic_product_right[OF hTX step4_mid haR])
+  \<comment> \<open>Step 5: e * (g*α) ≃ (g*α) by left identity.\<close>
+  have step5_id: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product (top1_constant_path x0) (top1_path_product g alpha)) (top1_path_product g alpha)"
+    by (rule Theorem_51_2_left_identity[OF hTX hga])
+  have step5_mid: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product f (top1_path_product (top1_constant_path x0) (top1_path_product g alpha)))
+    (top1_path_product f (top1_path_product g alpha))"
+    by (rule path_homotopic_product_right[OF hTX step5_id hfp])
+  have step5: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_constant_path x0) (top1_path_product g alpha))))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product g alpha)))"
+    by (rule path_homotopic_product_right[OF hTX step5_mid haR])
+  \<comment> \<open>Step 6: f * (g*α) ≃ (f*g) * α by assoc.\<close>
+  have step6_inner: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product f (top1_path_product g alpha))
+    (top1_path_product (top1_path_product f g) alpha)"
+    by (rule Theorem_51_2_associativity[OF hTX hfp hgp halpha])
+  have step6_mid: "top1_path_homotopic_on X TX x0 x1
+    (top1_path_product f (top1_path_product g alpha))
+    (top1_path_product (top1_path_product f g) alpha)"
+    using step6_inner .
+  have step6: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product f (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product (top1_path_product f g) alpha))"
+    by (rule path_homotopic_product_right[OF hTX step6_mid haR])
+  \<comment> \<open>Chain: RHS ≃ step1 ≃ step2 ≃ step3 ≃ step4 ≃ step5 ≃ step6 = LHS.\<close>
+  \<comment> \<open>Chain all 6 steps via transitivity.\<close>
+  have chain12: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product alpha (top1_path_product ?aR (top1_path_product g alpha)))))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX step1 step2])
+  have chain123: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_path_product alpha ?aR) (top1_path_product g alpha))))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain12 step3])
+  have chain1234: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product (top1_constant_path x0) (top1_path_product g alpha))))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain123 step4])
+  have chain12345: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product f (top1_path_product g alpha)))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain1234 step5])
+  have chain123456: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))
+    (top1_path_product ?aR (top1_path_product (top1_path_product f g) alpha))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX chain12345 step6])
+  \<comment> \<open>The chain goes from RHS to LHS. Symmetry gives LHS ≃ RHS.\<close>
+  have result: "top1_path_homotopic_on X TX x1 x1
+    (top1_path_product ?aR (top1_path_product (top1_path_product f g) alpha))
+    (top1_path_product (top1_path_product ?aR (top1_path_product f alpha)) (top1_path_product ?aR (top1_path_product g alpha)))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF chain123456])
+  show ?thesis unfolding top1_basepoint_change_on_def using result .
 qed
 
 (** Full Theorem 52.1 (group isomorphism): if X is path-connected, then
