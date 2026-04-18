@@ -8094,9 +8094,25 @@ proof (rule ccontr)
       by (simp add: case_prod_beta)
     have hF1: "\<forall>z\<in>top1_S1_complex. ?F (z, 1) = ?h z"
       by (simp add: case_prod_beta)
-    \<comment> \<open>F gives g ≃ h, h nulhomotopic, hence g nulhomotopic by transitivity.\<close>
+    \<comment> \<open>z^n is continuous S^1 \<rightarrow> C-{0} (polynomial, nonvanishing on S^1).\<close>
+    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)" sorry
+    \<comment> \<open>h is continuous (from nulhomotopic).\<close>
+    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h"
+      using hh_nulhomo unfolding top1_nulhomotopic_on_def top1_homotopic_on_def by (by100 blast)
+    \<comment> \<open>F gives homotopy from z^n to h.\<close>
+    have hhom_g_h: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n) ?h"
+      unfolding top1_homotopic_on_def
+      using hg_cont hh_cont hF_cont hF0 hF1 by (by100 blast)
+    \<comment> \<open>Symmetry: h ≃ z^n.\<close>
+    have hhom_h_g: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>z. z^n)"
+      by (rule Lemma_51_1_homotopic_sym[OF hhom_g_h hTS1c])
+    \<comment> \<open>Transitivity: h nulhomotopic + h ≃ z^n \<Rightarrow> z^n nulhomotopic.\<close>
     show ?thesis
-      using hh_nulhomo hF_cont hF0 hF1 sorry
+      by (rule nulhomotopic_homotopic_trans[OF hTS1c hTC0 hh_nulhomo hhom_h_g])
   qed
   show False using hg_notnull hg_nulhomo by blast
 qed
