@@ -6471,7 +6471,27 @@ proof -
         (UNIV - {(0, 0)})
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
            (UNIV - {(0, 0)}))
-        (\<lambda>x. v x)" sorry
+        (\<lambda>x. v x)"
+    proof -
+      let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+      let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+      \<comment> \<open>v: S¹ → R²-{0} continuous (restriction of v: B² → R², v nonvanishing, S¹ ⊆ B²).\<close>
+      have hv_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+        sorry
+      \<comment> \<open>v: B² → R²-{0} continuous (v: B² → R² continuous + nonvanishing).\<close>
+      have hv_B2: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+        sorry
+      have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hTR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        by (rule product_topology_on_is_topology_on[OF hTR hTR])
+      have hTR2': "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using hTR2 by simp
+      have hTR2_0: "is_topology_on ?R2_0 ?TR2_0"
+        by (rule subspace_topology_is_topology_on[OF hTR2']) simp
+      have hext: "\<forall>x\<in>top1_S1. v x = v x" by simp
+      show ?thesis by (rule Lemma_55_3_backward[OF hv_S1 hTR2_0 hv_B2 hext])
+    qed
     \<comment> \<open>F(x,t) = tx + (1-t)v(x) is a homotopy from v|S^1 to inclusion j.
        F \<noteq> 0 because "no inward pointing" prevents cancellation.\<close>
     have hj_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
