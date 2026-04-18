@@ -7880,6 +7880,23 @@ next
   qed
 qed
 
+text \<open>Helper: closed set has open complement.\<close>
+lemma closedin_complement_openin:
+  assumes "closedin_on X TX A"
+  shows "openin_on X TX (X - A)"
+  using assms unfolding closedin_on_def openin_on_def by (by100 blast)
+
+text \<open>Helper: open set has closed complement.\<close>
+lemma openin_complement_closedin:
+  assumes "openin_on X TX A"
+  shows "closedin_on X TX (X - A)"
+proof -
+  have hA: "A \<in> TX" and hAsub: "A \<subseteq> X"
+    using assms unfolding openin_on_def by (by100 blast)+
+  have "X - (X - A) = A" using hAsub by (by100 blast)
+  thus ?thesis unfolding closedin_on_def using hA by (by100 simp)
+qed
+
 text \<open>Helper: if each loop in a list is nulhomotopic, their foldr product is nulhomotopic.\<close>
 lemma foldr_path_product_nulhomotopic:
   assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
