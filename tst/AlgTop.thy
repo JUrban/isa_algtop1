@@ -4753,6 +4753,62 @@ proof -
   thus ?thesis using hg_loop by blast
 qed
 
+text \<open>Helper: in a simply connected space, any two paths with the same endpoints
+  are path-homotopic. Uses: gt*ft⁻¹ is a loop, simply connected → nulhomotopic,
+  then path algebra gives ft ≃ gt.\<close>
+lemma simply_connected_paths_homotopic:
+  assumes hsc: "top1_simply_connected_on X TX"
+      and hf: "top1_is_path_on X TX x0 x1 f"
+      and hg: "top1_is_path_on X TX x0 x1 g"
+      and hx0: "x0 \<in> X"
+  shows "top1_path_homotopic_on X TX x0 x1 f g"
+proof -
+  have hTE: "is_topology_on X TX"
+    using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+  let ?loop = "top1_path_product g (top1_path_reverse f)"
+  have hrev: "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+    by (rule top1_path_reverse_is_path[OF hf])
+  have hloop_path: "top1_is_path_on X TX x0 x0 ?loop"
+    by (rule top1_path_product_is_path[OF hTE hg hrev])
+  have hloop: "top1_is_loop_on X TX x0 ?loop"
+    unfolding top1_is_loop_on_def using hloop_path by (by100 simp)
+  have hloop_nul: "top1_path_homotopic_on X TX x0 x0 ?loop (top1_constant_path x0)"
+    using hsc hx0 hloop unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>(g*f⁻¹)*f ≃ const*f ≃ f and (g*f⁻¹)*f ≃ g*(f⁻¹*f) ≃ g*const ≃ g. So f ≃ g.\<close>
+  have s1: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product ?loop f) (top1_path_product (top1_constant_path x0) f)"
+    by (rule path_homotopic_product_left[OF hTE hloop_nul hf])
+  have s2: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product (top1_constant_path x0) f) f"
+    by (rule Theorem_51_2_left_identity[OF hTE hf])
+  have s12: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?loop f) f"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTE s1 s2])
+  have s3: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product ?loop f)
+      (top1_path_product g (top1_path_product (top1_path_reverse f) f))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+          Theorem_51_2_associativity[OF hTE hg hrev hf]])
+  have s4: "top1_path_homotopic_on X TX x1 x1
+      (top1_path_product (top1_path_reverse f) f) (top1_constant_path x1)"
+    by (rule Theorem_51_2_invgerse_right[OF hTE hf])
+  have s5: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product g (top1_path_product (top1_path_reverse f) f))
+      (top1_path_product g (top1_constant_path x1))"
+    by (rule path_homotopic_product_right[OF hTE s4 hg])
+  have s6: "top1_path_homotopic_on X TX x0 x1
+      (top1_path_product g (top1_constant_path x1)) g"
+    by (rule Theorem_51_2_right_identity[OF hTE hg])
+  have s_chain: "top1_path_homotopic_on X TX x0 x1 (top1_path_product ?loop f) g"
+  proof (rule Lemma_51_1_path_homotopic_trans[OF hTE s3])
+    show "top1_path_homotopic_on X TX x0 x1
+        (top1_path_product g (top1_path_product (top1_path_reverse f) f)) g"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTE s5 s6])
+  qed
+  have s12_sym: "top1_path_homotopic_on X TX x0 x1 f (top1_path_product ?loop f)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF s12])
+  show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTE s12_sym s_chain])
+qed
+
 (** from \<S>54 Theorem 54.4: lifting correspondence.
     Given a covering p : (E, e_0) \<to> (B, b_0) and E path-connected, the map
     \<Phi> : \<pi>_1(B, b_0) \<to> p\<inverse>(b_0) sending [f] to \<tilde>f(1) (where \<tilde>f is the lift
@@ -4866,54 +4922,7 @@ proof -
     have hft': "top1_is_path_on E TE e0 (ft 1) ft" using hft .
     have hgt': "top1_is_path_on E TE e0 (ft 1) gt" using hgt hend_eq by simp
     have "top1_path_homotopic_on E TE e0 (ft 1) ft gt"
-    proof -
-      \<comment> \<open>ft⁻¹ * gt is a loop at e0. Simply connected → nulhomotopic.\<close>
-      let ?loop = "top1_path_product gt (top1_path_reverse ft)"
-      have hrev: "top1_is_path_on E TE (ft 1) e0 (top1_path_reverse ft)"
-        by (rule top1_path_reverse_is_path[OF hft'])
-      have hloop_path: "top1_is_path_on E TE e0 e0 ?loop"
-        by (rule top1_path_product_is_path[OF hTE hgt' hrev])
-      have hloop: "top1_is_loop_on E TE e0 ?loop"
-        unfolding top1_is_loop_on_def using hloop_path by (by100 simp)
-      \<comment> \<open>Simply connected: loop \<simeq> const.\<close>
-      have "top1_path_homotopic_on E TE e0 e0 ?loop (top1_constant_path e0)"
-        using assms(4) assms(2) hloop unfolding top1_simply_connected_on_def by (by100 blast)
-      \<comment> \<open>gt * ft⁻¹ \<simeq> const. Multiply by ft: (gt*ft⁻¹)*ft \<simeq> const*ft \<simeq> ft.
-         Also (gt*ft⁻¹)*ft \<simeq> gt*(ft⁻¹*ft) \<simeq> gt*const \<simeq> gt. So ft \<simeq> gt.\<close>
-      hence hloop_nul: "top1_path_homotopic_on E TE e0 e0 ?loop (top1_constant_path e0)" .
-      have s1: "top1_path_homotopic_on E TE e0 (ft 1)
-          (top1_path_product ?loop ft) (top1_path_product (top1_constant_path e0) ft)"
-        by (rule path_homotopic_product_left[OF hTE hloop_nul hft'])
-      have s2: "top1_path_homotopic_on E TE e0 (ft 1)
-          (top1_path_product (top1_constant_path e0) ft) ft"
-        by (rule Theorem_51_2_left_identity[OF hTE hft'])
-      have s12: "top1_path_homotopic_on E TE e0 (ft 1) (top1_path_product ?loop ft) ft"
-        by (rule Lemma_51_1_path_homotopic_trans[OF hTE s1 s2])
-      have s3: "top1_path_homotopic_on E TE e0 (ft 1)
-          (top1_path_product ?loop ft)
-          (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft))"
-        by (rule Lemma_51_1_path_homotopic_sym[OF
-              Theorem_51_2_associativity[OF hTE hgt' hrev hft']])
-      have s4: "top1_path_homotopic_on E TE (ft 1) (ft 1)
-          (top1_path_product (top1_path_reverse ft) ft) (top1_constant_path (ft 1))"
-        by (rule Theorem_51_2_invgerse_right[OF hTE hft'])
-      have s5: "top1_path_homotopic_on E TE e0 (ft 1)
-          (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft))
-          (top1_path_product gt (top1_constant_path (ft 1)))"
-        by (rule path_homotopic_product_right[OF hTE s4 hgt'])
-      have s6: "top1_path_homotopic_on E TE e0 (ft 1)
-          (top1_path_product gt (top1_constant_path (ft 1))) gt"
-        by (rule Theorem_51_2_right_identity[OF hTE hgt'])
-      have s_chain: "top1_path_homotopic_on E TE e0 (ft 1) (top1_path_product ?loop ft) gt"
-      proof (rule Lemma_51_1_path_homotopic_trans[OF hTE s3])
-        show "top1_path_homotopic_on E TE e0 (ft 1)
-            (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft)) gt"
-          by (rule Lemma_51_1_path_homotopic_trans[OF hTE s5 s6])
-      qed
-      have s12_sym: "top1_path_homotopic_on E TE e0 (ft 1) ft (top1_path_product ?loop ft)"
-        by (rule Lemma_51_1_path_homotopic_sym[OF s12])
-      show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTE s12_sym s_chain])
-    qed
+      by (rule simply_connected_paths_homotopic[OF assms(4) hft' hgt' assms(2)])
     \<comment> \<open>Apply p: p\<circ>ft \<simeq> p\<circ>gt.\<close>
     have hp_cont: "top1_continuous_map_on E TE B TB p"
       using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
