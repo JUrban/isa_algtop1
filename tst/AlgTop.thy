@@ -8443,7 +8443,59 @@ proof -
         assume hx: "x \<in> I_set \<times> I_set" and hy: "y \<in> I_set \<times> I_set"
         let ?\<gamma> = "\<lambda>t::real. ((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y)"
         have hg_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?\<gamma>"
-          sorry \<comment> \<open>Affine map I → I×I continuous via Theorem_18_4 + convexity of [0,1].\<close>
+        proof -
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          have hc1_cont: "continuous_on UNIV (\<lambda>t::real. (1-t) * fst x + t * fst y)"
+            by (intro continuous_intros)
+          have hc2_cont: "continuous_on UNIV (\<lambda>t::real. (1-t) * snd x + t * snd y)"
+            by (intro continuous_intros)
+          have hc1_range: "\<And>t. t \<in> I_set \<Longrightarrow> (1-t) * fst x + t * fst y \<in> I_set"
+          proof -
+            fix t assume ht: "t \<in> I_set"
+            have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+            have ha: "0 \<le> fst x" "fst x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 auto)+
+            have hb: "0 \<le> fst y" "fst y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 auto)+
+            have h0t: "0 \<le> 1 - t" using ht' by (by100 linarith)
+            have h1: "0 \<le> (1-t) * fst x + t * fst y"
+              using mult_nonneg_nonneg[OF h0t ha(1)] mult_nonneg_nonneg[OF ht'(1) hb(1)]
+              by (by100 linarith)
+            have h2: "(1-t) * fst x + t * fst y \<le> 1"
+              by (rule convex_bound_le[OF ha(2) hb(2) h0t ht'(1)]) (by100 simp)
+            show "(1-t) * fst x + t * fst y \<in> I_set"
+              unfolding top1_unit_interval_def using h1 h2 by (by100 auto)
+          qed
+          have hc2_range: "\<And>t. t \<in> I_set \<Longrightarrow> (1-t) * snd x + t * snd y \<in> I_set"
+          proof -
+            fix t assume ht: "t \<in> I_set"
+            have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+            have ha: "0 \<le> snd x" "snd x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 auto)+
+            have hb: "0 \<le> snd y" "snd y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 auto)+
+            have h0t: "0 \<le> 1 - t" using ht' by (by100 linarith)
+            have h1: "0 \<le> (1-t) * snd x + t * snd y"
+              using mult_nonneg_nonneg[OF h0t ha(1)] mult_nonneg_nonneg[OF ht'(1) hb(1)]
+              by (by100 linarith)
+            have h2: "(1-t) * snd x + t * snd y \<le> 1"
+              by (rule convex_bound_le[OF ha(2) hb(2) h0t ht'(1)]) (by100 simp)
+            show "(1-t) * snd x + t * snd y \<in> I_set"
+              unfolding top1_unit_interval_def using h1 h2 by (by100 auto)
+          qed
+          have hc1: "top1_continuous_map_on I_set I_top I_set I_top
+              (\<lambda>t. (1-t) * fst x + t * fst y)"
+            unfolding top1_unit_interval_topology_def
+            by (rule top1_continuous_map_on_real_subspace_open_sets[OF hc1_range hc1_cont])
+          have hc2: "top1_continuous_map_on I_set I_top I_set I_top
+              (\<lambda>t. (1-t) * snd x + t * snd y)"
+            unfolding top1_unit_interval_topology_def
+            by (rule top1_continuous_map_on_real_subspace_open_sets[OF hc2_range hc2_cont])
+          have hpi1_eq: "pi1 \<circ> ?\<gamma> = (\<lambda>t. (1-t) * fst x + t * fst y)"
+            unfolding pi1_def comp_def by (rule ext) simp
+          have hpi2_eq: "pi2 \<circ> ?\<gamma> = (\<lambda>t. (1-t) * snd x + t * snd y)"
+            unfolding pi2_def comp_def by (rule ext) simp
+          show ?thesis unfolding II_topology_def
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+                  hc1[unfolded hpi1_eq[symmetric]] hc2[unfolded hpi2_eq[symmetric]]
+            by (by100 blast)
+        qed
         have hg0: "?\<gamma> 0 = x" by (simp add: prod_eq_iff)
         have hg1: "?\<gamma> 1 = y" by (simp add: prod_eq_iff)
         show "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f"
@@ -8452,7 +8504,38 @@ proof -
     next
       show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
           top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
-        sorry
+      proof (intro ballI allI impI)
+        fix x0 :: "real \<times> real" and f :: "real \<Rightarrow> real \<times> real"
+        assume hx0: "x0 \<in> I_set \<times> I_set" and hf: "top1_is_loop_on (I_set \<times> I_set) II_topology x0 f"
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hTII': "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+        \<comment> \<open>Straight-line homotopy: F(s,t) = (1-t)*f(s) + t*x0.\<close>
+        let ?F = "\<lambda>(s::real, t::real). ((1-t) * fst (f s) + t * fst x0,
+                                        (1-t) * snd (f s) + t * snd x0)"
+        have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+            (I_set \<times> I_set) II_topology ?F"
+          sorry
+        have hF0: "\<forall>s\<in>I_set. ?F (s, 0) = f s"
+          by (auto simp: prod_eq_iff)
+        have hF1: "\<forall>s\<in>I_set. ?F (s, 1) = x0"
+          by (auto simp: prod_eq_iff)
+        have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hFl: "\<forall>t\<in>I_set. ?F (0, t) = x0"
+          using hf0 by (auto simp: prod_eq_iff algebra_simps)
+        have hFr: "\<forall>t\<in>I_set. ?F (1, t) = x0"
+          using hf1 by (auto simp: prod_eq_iff algebra_simps)
+        have hf_path: "top1_is_path_on (I_set \<times> I_set) II_topology x0 x0 f"
+          using hf unfolding top1_is_loop_on_def by (by100 blast)
+        have hconst_path: "top1_is_path_on (I_set \<times> I_set) II_topology x0 x0 (top1_constant_path x0)"
+          by (rule top1_constant_path_is_path[OF hTII' hx0])
+        have hF1': "\<forall>s\<in>I_set. ?F (s, 1) = top1_constant_path x0 s"
+          using hF1 by (simp add: top1_constant_path_value)
+        show "top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
+          unfolding top1_path_homotopic_on_def
+          using hf_path hconst_path hF_cont hF0 hF1' hFl hFr by (by100 blast)
+      qed
     qed
     have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
       unfolding top1_unit_interval_def by (by100 simp)
@@ -8564,7 +8647,114 @@ proof -
     qed
   qed
   \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha>.\<close>
-  show ?thesis sorry
+  have h0I': "(0::real) \<in> I_set" and h1I': "(1::real) \<in> I_set"
+    unfolding top1_unit_interval_def by (by100 simp)+
+  \<comment> \<open>First establish \<alpha> is a path h(x0) \<rightarrow> k(x0), using G restricted to s=0.\<close>
+  have h\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY ?\<alpha>"
+  proof -
+    have "top1_continuous_map_on I_set I_top Y TY (?G \<circ> (\<lambda>t. (0::real, t)))"
+      by (rule top1_continuous_map_on_comp[OF pair_const_t_continuous[OF h0I'] hG_cont])
+    moreover have "\<forall>t\<in>I_set. (?G \<circ> (\<lambda>t. (0, t))) t = ?\<alpha> t"
+      using hG_left by (by100 auto)
+    ultimately show ?thesis by (rule top1_continuous_map_on_agree')
+  qed
+  have h\<alpha>_path: "top1_is_path_on Y TY (h x0) (k x0) ?\<alpha>"
+    unfolding top1_is_path_on_def using h\<alpha>_cont hH0 hH1 hx0 by (by100 auto)
+  have hrev\<alpha>_path: "top1_is_path_on Y TY (k x0) (h x0) (top1_path_reverse ?\<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+  \<comment> \<open>h\<circ>l is a loop at h(x0): via G restricted to t=0.\<close>
+  have hhl_cont: "top1_continuous_map_on I_set I_top Y TY (h \<circ> l)"
+  proof -
+    have "top1_continuous_map_on I_set I_top Y TY (?G \<circ> (\<lambda>s. (s, 0::real)))"
+      by (rule top1_continuous_map_on_comp[OF pair_s_const_continuous[OF h0I'] hG_cont])
+    moreover have "\<forall>s\<in>I_set. (?G \<circ> (\<lambda>s. (s, 0))) s = (h \<circ> l) s"
+      using hG_bot by (by100 auto)
+    ultimately show ?thesis by (rule top1_continuous_map_on_agree')
+  qed
+  have hhl_loop: "top1_is_loop_on Y TY (h x0) (h \<circ> l)"
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using hhl_cont hl0 hl1 by (by100 auto)
+  have hhl_path: "top1_is_path_on Y TY (h x0) (h x0) (h \<circ> l)"
+    using hhl_loop unfolding top1_is_loop_on_def by blast
+  \<comment> \<open>k\<circ>l is a loop at k(x0): via G restricted to t=1.\<close>
+  have hkl_cont: "top1_continuous_map_on I_set I_top Y TY (k \<circ> l)"
+  proof -
+    have "top1_continuous_map_on I_set I_top Y TY (?G \<circ> (\<lambda>s. (s, 1::real)))"
+      by (rule top1_continuous_map_on_comp[OF pair_s_const_continuous[OF h1I'] hG_cont])
+    moreover have "\<forall>s\<in>I_set. (?G \<circ> (\<lambda>s. (s, 1))) s = (k \<circ> l) s"
+      using hG_top by (by100 auto)
+    ultimately show ?thesis by (rule top1_continuous_map_on_agree')
+  qed
+  have hkl_loop: "top1_is_loop_on Y TY (k x0) (k \<circ> l)"
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using hkl_cont hl0 hl1 by (by100 auto)
+  have hkl_path: "top1_is_path_on Y TY (k x0) (k x0) (k \<circ> l)"
+    using hkl_loop unfolding top1_is_loop_on_def by blast
+  \<comment> \<open>Path algebra chain: h\<circ>l \<simeq> \<alpha>*((k\<circ>l)*(rev \<alpha>)).\<close>
+  \<comment> \<open>(1) Right-compose hprod_hom with rev \<alpha>.\<close>
+  have pa1: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product (top1_path_product (h \<circ> l) ?\<alpha>) (top1_path_reverse ?\<alpha>))
+    (top1_path_product (top1_path_product ?\<alpha> (k \<circ> l)) (top1_path_reverse ?\<alpha>))"
+    by (rule path_homotopic_product_left[OF hTY hprod_hom hrev\<alpha>_path])
+  \<comment> \<open>(2) Associativity: (h\<circ>l)*(\<alpha>*(rev\<alpha>)) \<simeq> ((h\<circ>l)*\<alpha>)*(rev\<alpha>).\<close>
+  have pa2: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product (h \<circ> l) (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)))
+    (top1_path_product (top1_path_product (h \<circ> l) ?\<alpha>) (top1_path_reverse ?\<alpha>))"
+    by (rule Theorem_51_2_associativity[OF hTY hhl_path h\<alpha>_path hrev\<alpha>_path])
+  \<comment> \<open>(3) \<alpha>*(rev\<alpha>) \<simeq> const_{h(x0)}.\<close>
+  have pa3: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)) (top1_constant_path (h x0))"
+    by (rule Theorem_51_2_invgerse_left[OF hTY h\<alpha>_path])
+  \<comment> \<open>(4) (h\<circ>l)*(\<alpha>*(rev\<alpha>)) \<simeq> (h\<circ>l)*const (right product).\<close>
+  have pa4: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product (h \<circ> l) (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)))
+    (top1_path_product (h \<circ> l) (top1_constant_path (h x0)))"
+    by (rule path_homotopic_product_right[OF hTY pa3 hhl_path])
+  \<comment> \<open>(5) (h\<circ>l)*const \<simeq> h\<circ>l (right identity).\<close>
+  have pa5: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product (h \<circ> l) (top1_constant_path (h x0))) (h \<circ> l)"
+    by (rule Theorem_51_2_right_identity[OF hTY hhl_path])
+  \<comment> \<open>(6) Associativity on right: \<alpha>*((k\<circ>l)*(rev\<alpha>)) \<simeq> (\<alpha>*(k\<circ>l))*(rev\<alpha>).\<close>
+  have pa6: "top1_path_homotopic_on Y TY (h x0) (h x0)
+    (top1_path_product ?\<alpha> (top1_path_product (k \<circ> l) (top1_path_reverse ?\<alpha>)))
+    (top1_path_product (top1_path_product ?\<alpha> (k \<circ> l)) (top1_path_reverse ?\<alpha>))"
+    by (rule Theorem_51_2_associativity[OF hTY h\<alpha>_path hkl_path hrev\<alpha>_path])
+  \<comment> \<open>Chain by transitivity: h\<circ>l \<simeq> (h\<circ>l)*const (pa5 sym)
+     \<simeq> (h\<circ>l)*(\<alpha>*(rev\<alpha>)) (pa4 sym) \<simeq> ((h\<circ>l)*\<alpha>)*(rev\<alpha>) (pa2)
+     \<simeq> (\<alpha>*(k\<circ>l))*(rev\<alpha>) (pa1) \<simeq> \<alpha>*((k\<circ>l)*(rev\<alpha>)) (pa6 sym).\<close>
+  have c1: "top1_path_homotopic_on Y TY (h x0) (h x0) (h \<circ> l)
+    (top1_path_product (h \<circ> l) (top1_constant_path (h x0)))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF pa5])
+  have c2: "top1_path_homotopic_on Y TY (h x0) (h x0) (h \<circ> l)
+    (top1_path_product (h \<circ> l) (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTY c1
+          Lemma_51_1_path_homotopic_sym[OF pa4]])
+  have c3: "top1_path_homotopic_on Y TY (h x0) (h x0) (h \<circ> l)
+    (top1_path_product (top1_path_product (h \<circ> l) ?\<alpha>) (top1_path_reverse ?\<alpha>))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTY c2 pa2])
+  have c4: "top1_path_homotopic_on Y TY (h x0) (h x0) (h \<circ> l)
+    (top1_path_product (top1_path_product ?\<alpha> (k \<circ> l)) (top1_path_reverse ?\<alpha>))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTY c3 pa1])
+  have c5: "top1_path_homotopic_on Y TY (h x0) (h x0) (h \<circ> l)
+    (top1_path_product ?\<alpha> (top1_path_product (k \<circ> l) (top1_path_reverse ?\<alpha>)))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTY c4
+          Lemma_51_1_path_homotopic_sym[OF pa6]])
+  \<comment> \<open>rev(rev \<alpha>) = \<alpha>, so target = \<alpha>*((k\<circ>l)*(rev \<alpha>)).\<close>
+  have htarget_eq: "top1_basepoint_change_on Y TY (k x0) (h x0) (top1_path_reverse ?\<alpha>) (k \<circ> l)
+    = top1_path_product ?\<alpha> (top1_path_product (k \<circ> l) (top1_path_reverse ?\<alpha>))"
+    unfolding top1_basepoint_change_on_def top1_path_reverse_twice by (rule refl)
+  \<comment> \<open>The target is a loop (path from h(x0) to h(x0)).\<close>
+  have hkl_rev\<alpha>_path: "top1_is_path_on Y TY (k x0) (h x0)
+    (top1_path_product (k \<circ> l) (top1_path_reverse ?\<alpha>))"
+    by (rule top1_path_product_is_path[OF hTY hkl_path hrev\<alpha>_path])
+  have htarget_path: "top1_is_path_on Y TY (h x0) (h x0)
+    (top1_path_product ?\<alpha> (top1_path_product (k \<circ> l) (top1_path_reverse ?\<alpha>)))"
+    by (rule top1_path_product_is_path[OF hTY h\<alpha>_path hkl_rev\<alpha>_path])
+  have htarget_loop: "top1_is_loop_on Y TY (h x0)
+    (top1_basepoint_change_on Y TY (k x0) (h x0) (top1_path_reverse ?\<alpha>) (k \<circ> l))"
+    unfolding top1_is_loop_on_def htarget_eq using htarget_path by blast
+  show ?thesis unfolding top1_loop_equiv_on_def
+    using hhl_loop htarget_loop c5[unfolded htarget_eq[symmetric]] by blast
 qed
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
@@ -13619,6 +13809,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
