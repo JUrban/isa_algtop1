@@ -9425,7 +9425,71 @@ proof -
         using hH_std unfolding hH_eq .
       \<comment> \<open>Step 2: H maps into R²-{0}.\<close>
       have hH_range: "\<And>p. p \<in> ?R2_0 \<times> I_set \<Longrightarrow> (\<lambda>p. ?H (fst p, snd p)) p \<in> ?R2_0"
-        sorry
+      proof -
+        fix p :: "(real \<times> real) \<times> real"
+        assume hp: "p \<in> ?R2_0 \<times> I_set"
+        have hxR2: "fst p \<in> ?R2_0" using hp by (simp add: mem_Times_iff)
+        hence hxnz: "fst p \<noteq> (0, 0)" by (by100 simp)
+        have htI: "snd p \<in> I_set" using hp by (simp add: mem_Times_iff)
+        have hnp: "?norm (fst p) > 0"
+          using hxnz by (cases "fst p") (auto simp: sum_power2_gt_zero_iff real_sqrt_gt_zero)
+        \<comment> \<open>H(x,t) \<noteq> 0: if it were, both components = 0 ⟹ x = 0, contradiction.\<close>
+        have "?H (fst p, snd p) \<noteq> (0, 0)"
+        proof
+          assume habs: "?H (fst p, snd p) = (0, 0)"
+          \<comment> \<open>Component 1: (1-t)*a + t*a/|x| = 0 means a*((1-t) + t/|x|) = 0.\<close>
+          have h1: "(1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p) = 0"
+            using habs by (simp add: prod_eq_iff case_prod_beta)
+          have h2: "(1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p) = 0"
+            using habs by (simp add: prod_eq_iff case_prod_beta)
+          \<comment> \<open>Multiply by |x| > 0: (1-t)*a*|x| + t*a = 0 and similarly for b.\<close>
+          have h1': "(1 - snd p) * fst (fst p) * ?norm (fst p) + snd p * fst (fst p) = 0"
+          proof -
+            from h1 have "((1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p))
+                * ?norm (fst p) = 0" by (by100 simp)
+            hence "(1 - snd p) * fst (fst p) * ?norm (fst p) +
+                snd p * fst (fst p) / ?norm (fst p) * ?norm (fst p) = 0"
+              by (simp add: algebra_simps)
+            moreover have "snd p * fst (fst p) / ?norm (fst p) * ?norm (fst p)
+                = snd p * fst (fst p)"
+              using hnp by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          have h2': "(1 - snd p) * snd (fst p) * ?norm (fst p) + snd p * snd (fst p) = 0"
+          proof -
+            from h2 have "((1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p))
+                * ?norm (fst p) = 0" by (by100 simp)
+            hence "(1 - snd p) * snd (fst p) * ?norm (fst p) +
+                snd p * snd (fst p) / ?norm (fst p) * ?norm (fst p) = 0"
+              by (simp add: algebra_simps)
+            moreover have "snd p * snd (fst p) / ?norm (fst p) * ?norm (fst p)
+                = snd p * snd (fst p)"
+              using hnp by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          \<comment> \<open>Factor: a * ((1-t)*|x| + t) = 0 and b * ((1-t)*|x| + t) = 0.\<close>
+          have hfact1: "fst (fst p) * ((1 - snd p) * ?norm (fst p) + snd p) = 0"
+            using h1' by (simp add: algebra_simps)
+          have hfact2: "snd (fst p) * ((1 - snd p) * ?norm (fst p) + snd p) = 0"
+            using h2' by (simp add: algebra_simps)
+          \<comment> \<open>(1-t)*|x| + t > 0 since |x| > 0 and t \<ge> 0, 1-t \<ge> 0.\<close>
+          have hc_pos: "(1 - snd p) * ?norm (fst p) + snd p > 0"
+          proof (cases "snd p = 0")
+            case True thus ?thesis using hnp by (by100 simp)
+          next
+            case False
+            have "snd p > 0" using False htI unfolding top1_unit_interval_def by (by100 simp)
+            moreover have "(1 - snd p) * ?norm (fst p) \<ge> 0"
+              using htI hnp unfolding top1_unit_interval_def by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          have "fst (fst p) = 0" using hfact1 hc_pos by (by100 simp)
+          moreover have "snd (fst p) = 0" using hfact2 hc_pos by (by100 simp)
+          ultimately show False using hxnz by (simp add: prod_eq_iff)
+        qed
+        thus "(\<lambda>p. ?H (fst p, snd p)) p \<in> ?R2_0"
+          by (simp add: case_prod_beta)
+      qed
       \<comment> \<open>Step 3: Transfer.\<close>
       have "top1_continuous_map_on (?R2_0 \<times> I_set) (product_topology_on ?TR I_top)
           ?R2_0 ?TR (\<lambda>p. ?H (fst p, snd p))"
@@ -13222,6 +13286,11 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
  
  
  
