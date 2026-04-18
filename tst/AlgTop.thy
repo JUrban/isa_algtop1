@@ -6949,7 +6949,20 @@ proof -
       \<comment> \<open>F(x,t) \<noteq> 0: if F(x,t) = 0 then v(x) = -t/(1-t) * x which means v points inward.\<close>
       have hF_nz: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?F (x, t) \<noteq> (0, 0)" sorry
       have hv_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x)"
-        sorry \<comment> \<open>Same as hv_S1 but out of scope — needs reconstruct.\<close>
+      proof -
+        have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0'" using assms(2) by (by100 auto)
+        have hv_B2: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0' ?TR2_0' (\<lambda>x. v x)"
+          by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg]) simp
+        have hrestr: "top1_continuous_map_on top1_S1
+            (subspace_topology top1_B2 top1_B2_topology top1_S1) ?R2_0' ?TR2_0' (\<lambda>x. v x)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hv_B2 hS1_B2])
+        have hS1_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+          unfolding top1_B2_topology_def top1_S1_topology_def
+          using subspace_topology_trans[OF hS1_B2, of UNIV "product_topology_on top1_open_sets top1_open_sets"]
+          by simp
+        show ?thesis using hrestr unfolding hS1_eq .
+      qed
       have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. x)"
       proof -
         have hS1_sub: "top1_S1 \<subseteq> ?R2_0'" unfolding top1_S1_def by (by100 auto)
@@ -12459,6 +12472,7 @@ proof -
 qed
 
 end
+ 
  
  
  
