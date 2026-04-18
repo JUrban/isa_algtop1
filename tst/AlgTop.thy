@@ -8024,6 +8024,57 @@ proof -
   thus ?thesis unfolding closedin_on_def using hA by (by100 simp)
 qed
 
+text \<open>Helper: continuous maps preserve path homotopy.
+  If f ≃ g in X and h: X → Y is continuous, then h∘f ≃ h∘g in Y.\<close>
+lemma continuous_preserves_path_homotopic:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hhom: "top1_path_homotopic_on X TX x0 x1 f g"
+  shows "top1_path_homotopic_on Y TY (h x0) (h x1) (h \<circ> f) (h \<circ> g)"
+proof -
+  have hf: "top1_is_path_on X TX x0 x1 f"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+  have hg: "top1_is_path_on X TX x0 x1 g"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFl: "\<forall>t\<in>I_set. F (0, t) = x0" and hFr: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using hhom unfolding top1_path_homotopic_on_def by (by100 auto)
+  \<comment> \<open>h \<circ> F is a path homotopy from h\<circ>f to h\<circ>g in Y.\<close>
+  have hhF: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY (h \<circ> F)"
+    by (rule top1_continuous_map_on_comp[OF hF hh])
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by (by100 blast)
+  have hg_cont: "top1_continuous_map_on I_set I_top X TX g"
+    using hg unfolding top1_is_path_on_def by (by100 blast)
+  have hhf_path: "top1_is_path_on Y TY (h x0) (h x1) (h \<circ> f)"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top Y TY (h \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hf_cont hh])
+    show "(h \<circ> f) 0 = h x0" using hf unfolding top1_is_path_on_def by simp
+    show "(h \<circ> f) 1 = h x1" using hf unfolding top1_is_path_on_def by simp
+  qed
+  have hhg_path: "top1_is_path_on Y TY (h x0) (h x1) (h \<circ> g)"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top Y TY (h \<circ> g)"
+      by (rule top1_continuous_map_on_comp[OF hg_cont hh])
+    show "(h \<circ> g) 0 = h x0" using hg unfolding top1_is_path_on_def by simp
+    show "(h \<circ> g) 1 = h x1" using hg unfolding top1_is_path_on_def by simp
+  qed
+  show ?thesis unfolding top1_path_homotopic_on_def
+  proof (intro conjI exI)
+    show "top1_is_path_on Y TY (h x0) (h x1) (h \<circ> f)" by (rule hhf_path)
+    show "top1_is_path_on Y TY (h x0) (h x1) (h \<circ> g)" by (rule hhg_path)
+    show "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY (h \<circ> F)" by (rule hhF)
+    show "\<forall>s\<in>I_set. (h \<circ> F) (s, 0) = (h \<circ> f) s" using hF0 by simp
+    show "\<forall>s\<in>I_set. (h \<circ> F) (s, 1) = (h \<circ> g) s" using hF1 by simp
+    show "\<forall>t\<in>I_set. (h \<circ> F) (0, t) = h x0" using hFl by simp
+    show "\<forall>t\<in>I_set. (h \<circ> F) (1, t) = h x1" using hFr by simp
+  qed
+qed
+
 text \<open>Helper: if each loop in a list is nulhomotopic, their foldr product is nulhomotopic.\<close>
 lemma foldr_path_product_nulhomotopic:
   assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
