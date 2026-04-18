@@ -8430,7 +8430,25 @@ proof -
     have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology"
       unfolding top1_simply_connected_on_def
     proof (intro conjI)
-      show "top1_path_connected_on (I_set \<times> I_set) II_topology" sorry
+      show "top1_path_connected_on (I_set \<times> I_set) II_topology"
+        unfolding top1_path_connected_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def
+          by (rule product_topology_on_is_topology_on[OF
+                top1_unit_interval_topology_is_topology_on
+                top1_unit_interval_topology_is_topology_on])
+      next
+        fix x y :: "real \<times> real"
+        assume hx: "x \<in> I_set \<times> I_set" and hy: "y \<in> I_set \<times> I_set"
+        let ?\<gamma> = "\<lambda>t::real. ((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y)"
+        have hg_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?\<gamma>"
+          sorry \<comment> \<open>Affine map I → I×I continuous via Theorem_18_4 + convexity of [0,1].\<close>
+        have hg0: "?\<gamma> 0 = x" by (simp add: prod_eq_iff)
+        have hg1: "?\<gamma> 1 = y" by (simp add: prod_eq_iff)
+        show "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f"
+          unfolding top1_is_path_on_def using hg_cont hg0 hg1 by (by100 blast)
+      qed
     next
       show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
           top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
@@ -13601,6 +13619,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
