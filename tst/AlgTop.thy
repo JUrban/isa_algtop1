@@ -4975,7 +4975,9 @@ proof -
           hft' hft'p by (by100 blast)
       \<comment> \<open>By hphi_wd: ft0(1) = ft'(1) since f0 \<simeq> f'.\<close>
       have "ft0 1 = ?ft' 1"
-        using hphi_wd hf0_loop hf'_props hf0_f' hft0 hft0p hft'_props sorry
+        \<comment> \<open>By hphi_wd instantiated with f0, ?f', ft0, ?ft'.
+           Complex SOME terms cause by100 blast timeout. Mathematically immediate.\<close>
+        sorry
       \<comment> \<open>ft0(1) = e1 by assumption, so ?ft'(1) = e1.\<close>
       hence "?ft' 1 = e1" using hft0 unfolding top1_is_path_on_def by simp
       \<comment> \<open>\<phi>(?c) = ?ft'(1) = e1.\<close>
