@@ -7356,7 +7356,24 @@ proof -
           thus "?R (x, t) \<in> ?R2_0'" unfolding top1_S1_def by (by100 auto)
         qed
         have hR_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
-            ?R2_0' ?TR2_0' ?R" sorry
+            ?R2_0' ?TR2_0' ?R"
+        proof -
+          let ?Rf = "\<lambda>p::(real\<times>real)\<times>real.
+              (cos (pi * (1 - snd p)) * fst (fst p) - sin (pi * (1 - snd p)) * snd (fst p),
+               sin (pi * (1 - snd p)) * fst (fst p) + cos (pi * (1 - snd p)) * snd (fst p))"
+          have hRf_eq: "?Rf = (\<lambda>p. ?R (fst p, snd p))"
+            by (rule ext) (simp add: case_prod_beta)
+          have hR_std: "continuous_on UNIV ?Rf"
+            by (intro continuous_on_Pair continuous_intros)
+          have hR_map: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> ?Rf p \<in> UNIV - {(0, 0)}"
+            using hR_R2 unfolding hRf_eq by (by100 auto)
+          have "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+              ?R2_0' ?TR2_0' ?Rf"
+            by (rule S1_I_to_R2_minus_0_continuous[OF hR_std hR_map])
+          moreover have "?Rf = ?R" unfolding hRf_eq
+            by (rule ext) (simp add: case_prod_beta)
+          ultimately show ?thesis by simp
+        qed
         show ?thesis unfolding top1_homotopic_on_def
           using hneg_cont hid_cont hR_cont hR0 hR1 by (by100 blast)
       qed
@@ -12862,6 +12879,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
