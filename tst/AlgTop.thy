@@ -9394,7 +9394,51 @@ proof -
   \<comment> \<open>Surjectivity: similar argument using f\<circ>g \<simeq> id.\<close>
   have hfstar_surj: "?f_star ` (top1_fundamental_group_carrier X TX x0)
       = top1_fundamental_group_carrier Y TY (f x0)"
-    sorry
+  proof (intro set_eqI iffI)
+    fix d assume "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
+    thus "d \<in> top1_fundamental_group_carrier Y TY (f x0)"
+      using hfstar_range by (by100 blast)
+  next
+    fix d assume hd: "d \<in> top1_fundamental_group_carrier Y TY (f x0)"
+    \<comment> \<open>d = [m] for some loop m at f(x0) in Y.\<close>
+    obtain m where hm: "top1_is_loop_on Y TY (f x0) m"
+        and hd_eq: "d = {h. top1_loop_equiv_on Y TY (f x0) m h}"
+      using hd unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>g\<circ>m is a loop at g(f(x0)) in X.\<close>
+    have hgm: "top1_is_loop_on X TX (g (f x0)) (g \<circ> m)"
+      by (rule top1_continuous_map_loop[OF hg hm])
+    \<comment> \<open>Basepoint-change to x0: bc(\<alpha>1, g\<circ>m) is a loop at x0.\<close>
+    have hra1: "top1_is_path_on X TX (g (f x0)) x0 ?\<alpha>1"
+    proof -
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hconst: "top1_continuous_map_on I_set I_top X TX (\<lambda>_. x0)"
+        by (rule top1_continuous_map_on_const[OF hTI hTX hx0])
+      have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+        by (rule top1_continuous_map_on_id[OF hTI])
+      have hp1: "(pi1 \<circ> (\<lambda>t. (x0, t))) = (\<lambda>_. x0)" unfolding pi1_def by (rule ext) simp
+      have hp2: "(pi2 \<circ> (\<lambda>t. (x0, t))) = id" unfolding pi2_def by (rule ext) simp
+      have hpair: "top1_continuous_map_on I_set I_top (X \<times> I_set) (product_topology_on TX I_top)
+                     (\<lambda>t. (x0, t))"
+        using iffD2[OF Theorem_18_4[OF hTI hTX hTI]]
+              hconst[folded hp1] hid_I[folded hp2] by (by100 blast)
+      have hcomp: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. H1 (x0, t))"
+        using top1_continuous_map_on_comp[OF hpair hH1cont] by (simp add: comp_def)
+      have "?\<alpha>1 0 = (g \<circ> f) x0" using hH10 hx0 by (by100 auto)
+      moreover have "?\<alpha>1 1 = x0" using hH11 hx0 by (by100 auto)
+      ultimately show ?thesis unfolding top1_is_path_on_def using hcomp by (by100 auto)
+    qed
+    let ?bc_gm = "top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m)"
+    have hbc_loop: "top1_is_loop_on X TX x0 ?bc_gm"
+      by (rule top1_basepoint_change_is_loop[OF hTX hra1 hgm])
+    \<comment> \<open>c = [bc(\<alpha>1, g\<circ>m)] \<in> carrier(X, x0).\<close>
+    let ?c = "{h. top1_loop_equiv_on X TX x0 ?bc_gm h}"
+    have hc_mem: "?c \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hbc_loop by (by100 blast)
+    \<comment> \<open>f_*(c) = d: need f \<circ> bc(\<alpha>1, g\<circ>m) \<simeq> m at f(x0).\<close>
+    have "?f_star ?c = d" sorry
+    thus "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
+      using hc_mem by (by100 blast)
+  qed
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
     unfolding bij_betw_def using hfstar_inj hfstar_surj by blast
