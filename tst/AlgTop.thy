@@ -9434,7 +9434,38 @@ proof -
     let ?c = "{h. top1_loop_equiv_on X TX x0 ?bc_gm h}"
     have hc_mem: "?c \<in> top1_fundamental_group_carrier X TX x0"
       unfolding top1_fundamental_group_carrier_def using hbc_loop by (by100 blast)
-    \<comment> \<open>f_*(c) = d: need f \<circ> bc(\<alpha>1, g\<circ>m) \<simeq> m at f(x0).\<close>
+    \<comment> \<open>f_*(c) = d: use f\<circ>g \<simeq> id to relate f\<circ>bc(\<alpha>1, g\<circ>m) to a basepoint change of m.\<close>
+    obtain H2 where hH2cont: "top1_continuous_map_on (Y \<times> I_set) (product_topology_on TY I_top) Y TY H2"
+        and hH20: "\<forall>y\<in>Y. H2 (y, 0) = (f \<circ> g) y" and hH21: "\<forall>y\<in>Y. H2 (y, 1) = y"
+      using hfog unfolding top1_homotopic_on_def id_def by (by100 blast)
+    let ?\<alpha>2 = "\<lambda>t. H2 (f x0, t)"
+    \<comment> \<open>By homotopy_induced_basepoint_change: (f\<circ>g)\<circ>m \<simeq> bc(rev \<alpha>2, m).\<close>
+    have hfx0Y: "f x0 \<in> Y" using hf hx0 unfolding top1_continuous_map_on_def by (by100 blast)
+    have hH21': "\<forall>y\<in>Y. H2 (y, 1) = id y" using hH21 by (by100 simp)
+    note hbc2 = homotopy_induced_basepoint_change[OF hTY hTY hH2cont hH20 hH21' hm hfx0Y]
+    \<comment> \<open>hbc2: loop_equiv ((f\<circ>g)(f x0)) ((f\<circ>g)\<circ>m) (bc(rev \<alpha>2, id\<circ>m)).\<close>
+    have hbc2': "top1_loop_equiv_on Y TY (f (g (f x0))) (f \<circ> g \<circ> m)
+        (top1_basepoint_change_on Y TY (f x0) (f (g (f x0)))
+           (top1_path_reverse ?\<alpha>2) m)"
+    proof -
+      have "(\<lambda>y. f (g y)) \<circ> m = f \<circ> g \<circ> m" by (simp add: comp_def)
+      moreover have "(\<lambda>y. y) \<circ> m = m" by (simp add: comp_def)
+      ultimately show ?thesis using hbc2 by simp
+    qed
+    \<comment> \<open>f preserves path products: f \<circ> (p * q) = (f\<circ>p) * (f\<circ>q).\<close>
+    have hf_comp_product: "\<And>p q. f \<circ> top1_path_product p q = top1_path_product (f \<circ> p) (f \<circ> q)"
+      unfolding top1_path_product_def comp_def by (rule ext) (by100 auto)
+    have hf_comp_rev: "\<And>p. f \<circ> top1_path_reverse p = top1_path_reverse (f \<circ> p)"
+      unfolding top1_path_reverse_def comp_def by (rule ext) (by100 auto)
+    \<comment> \<open>f \<circ> bc(\<alpha>1, g\<circ>m) = bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m) since f preserves products.\<close>
+    have hfbc_eq: "f \<circ> ?bc_gm = top1_basepoint_change_on Y TY (f (g (f x0))) (f x0)
+        (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m)"
+      unfolding top1_basepoint_change_on_def hf_comp_product hf_comp_rev
+      by (simp add: comp_assoc)
+    \<comment> \<open>From hbc2': f\<circ>g\<circ>m \<simeq> bc(rev \<alpha>2, m) at f(g(f(x0))).
+       So bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m) \<simeq> bc(f\<circ>\<alpha>1, bc(rev \<alpha>2, m)) at f(x0).
+       This is a double basepoint change, equivalent to single bc by some loop \<gamma> at f(x0).
+       By Theorem 52.1, this gives a bijection of \<pi>_1(Y, f(x0)).\<close>
     have "?f_star ?c = d" sorry
     thus "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
       using hc_mem by (by100 blast)
