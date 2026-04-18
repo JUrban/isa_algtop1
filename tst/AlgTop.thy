@@ -7263,7 +7263,15 @@ proof -
       thus "x \<in> {p \<in> S \<times> I_set. f p \<in> V}" by (by100 simp)
     qed
     also have "\<dots> \<in> product_topology_on ?TS I_top"
-      unfolding hTP_eq subspace_topology_def sorry
+    proof -
+      have "S \<times> I_set \<subseteq> (UNIV::(real\<times>real) set) \<times> (UNIV::real set)" by (by100 simp)
+      hence hmem: "(S \<times> I_set) \<inter> W \<in> subspace_topology
+          ((UNIV::(real\<times>real) set) \<times> (UNIV::real set))
+          (product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+            (top1_open_sets::real set set)) (S \<times> I_set)"
+        using hW_R3 unfolding subspace_topology_def by (by100 auto)
+      show ?thesis using hmem unfolding hTP_eq by simp
+    qed
     finally show "{p \<in> S \<times> I_set. f p \<in> V} \<in> product_topology_on ?TS I_top" .
   qed
   have himg: "f ` (S \<times> I_set) \<subseteq> T"
@@ -13164,6 +13172,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
