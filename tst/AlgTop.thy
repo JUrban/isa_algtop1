@@ -8304,7 +8304,24 @@ proof (rule ccontr)
         (product_topology_on top1_open_sets top1_open_sets)) ?S2)
       top1_S1 top1_S1_topology ?g" sorry
   \<comment> \<open>g is antipode-preserving: g(-x) = -g(x).\<close>
-  have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))" sorry
+  have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))"
+  proof (intro ballI)
+    fix x :: "real \<times> real \<times> real" assume hx: "x \<in> ?S2"
+    have hnegneg: "?neg (?neg x) = x" by (simp add: prod_eq_iff)
+    have h1: "fst (?diff (?neg x)) = - fst (?diff x)" by (simp add: hnegneg)
+    have h2: "snd (?diff (?neg x)) = - snd (?diff x)" by (simp add: hnegneg)
+    have hpc1: "(fst (f (?neg x)) - fst (f x))\<^sup>2 = (fst (f x) - fst (f (?neg x)))\<^sup>2"
+      by (rule power2_commute)
+    have hpc2: "(snd (f (?neg x)) - snd (f x))\<^sup>2 = (snd (f x) - snd (f (?neg x)))\<^sup>2"
+      by (rule power2_commute)
+    have h3: "?norm (?neg x) = ?norm x" by (simp add: hnegneg hpc1 hpc2)
+    have hd1: "fst (f (?neg x)) - fst (f x) = - (fst (f x) - fst (f (?neg x)))"
+      by (by100 linarith)
+    have hd2: "snd (f (?neg x)) - snd (f x) = - (snd (f x) - snd (f (?neg x)))"
+      by (by100 linarith)
+    show "?g (?neg x) = (- fst (?g x), - snd (?g x))"
+      by (simp del: minus_diff_eq add: prod_eq_iff hnegneg h3 hd1 hd2)
+  qed
   \<comment> \<open>Restrict g to the equator S^1: h = g|_{S^1}. h is antipode-preserving S^1 \<rightarrow> S^1.\<close>
   \<comment> \<open>By Theorem 57.1, h is not nulhomotopic. But g extends h over the upper hemisphere
      which is homeomorphic to B^2, so h is nulhomotopic. Contradiction.\<close>
