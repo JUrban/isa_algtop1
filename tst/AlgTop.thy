@@ -9564,19 +9564,163 @@ proof -
         (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m)"
       unfolding top1_basepoint_change_on_def hf_comp_product hf_comp_rev
       by (simp add: comp_assoc)
-    \<comment> \<open>The composition f_* \<circ> \<beta>_hat \<circ> g_* equals conjugation by \<gamma> = rev(f\<circ>\<alpha>1) * \<alpha>2.
-       Conjugation is surjective (bijection). Hence image(f_*) = \<pi>_1(Y).\<close>
-    \<comment> \<open>Step A: For any loop m' at f(x0), bc(\<alpha>1, g\<circ>m') is a loop at x0, in carrier.\<close>
-    \<comment> \<open>Step B: f_*([bc(\<alpha>1, g\<circ>m')]) = [f\<circ>bc(\<alpha>1, g\<circ>m')] = [bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m')].
-       By hbc2': f\<circ>g\<circ>m' \<simeq> bc(rev \<alpha>2, m'). So [\<dots>] = [bc(f\<circ>\<alpha>1, bc(rev \<alpha>2, m'))].
-       By double_bc: = [bc(rev(\<alpha>2) * f\<circ>\<alpha>1, m')] = conjugation by \<gamma>.\<close>
-    \<comment> \<open>Step C: Conjugation by \<gamma> is bijective (Theorem 52.1). So surjective.\<close>
-    \<comment> \<open>Step D: For any d=[m], choose m' = bc(rev \<gamma>, m). Then conjugation(\<gamma>)(m') = m = d.\<close>
-    \<comment> \<open>Step E: c = [bc(\<alpha>1, g\<circ>m')] \<in> carrier_X and f_*(c) = d.\<close>
-    \<comment> \<open>We omit the explicit computation and use the abstract argument.\<close>
-    have "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)" sorry
+    \<comment> \<open>Define \<gamma> = rev(\<alpha>2) * (f\<circ>\<alpha>1), a loop at f(x0).\<close>
+    have hfa1: "top1_is_path_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1)"
+    proof -
+      have ha1_cont: "top1_continuous_map_on I_set I_top X TX ?\<alpha>1"
+        using hra1 unfolding top1_is_path_on_def by (by100 blast)
+      have "top1_continuous_map_on I_set I_top Y TY (f \<circ> ?\<alpha>1)"
+        using top1_continuous_map_on_comp[OF ha1_cont hf] by (simp add: comp_assoc)
+      moreover have "(f \<circ> ?\<alpha>1) 0 = f (g (f x0))" using hH10 hx0 by (by100 auto)
+      moreover have "(f \<circ> ?\<alpha>1) 1 = f x0" using hH11 hx0 by (by100 auto)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have ha2: "top1_is_path_on Y TY (f (g (f x0))) (f x0) ?\<alpha>2"
+    proof -
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hconst_fx0: "top1_continuous_map_on I_set I_top Y TY (\<lambda>_. f x0)"
+        by (rule top1_continuous_map_on_const[OF hTI hTY hfx0Y])
+      have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+        by (rule top1_continuous_map_on_id[OF hTI])
+      have hp1: "(pi1 \<circ> (\<lambda>t. (f x0, t))) = (\<lambda>_. f x0)" unfolding pi1_def by (rule ext) simp
+      have hp2: "(pi2 \<circ> (\<lambda>t. (f x0, t))) = id" unfolding pi2_def by (rule ext) simp
+      have hpair: "top1_continuous_map_on I_set I_top (Y \<times> I_set) (product_topology_on TY I_top)
+                     (\<lambda>t. (f x0, t))"
+        using iffD2[OF Theorem_18_4[OF hTI hTY hTI]]
+              hconst_fx0[folded hp1] hid_I[folded hp2] by (by100 blast)
+      have hcomp: "top1_continuous_map_on I_set I_top Y TY (\<lambda>t. H2 (f x0, t))"
+        using top1_continuous_map_on_comp[OF hpair hH2cont] by (simp add: comp_def)
+      have "?\<alpha>2 0 = f (g (f x0))" using hH20 hfx0Y by (by100 auto)
+      moreover have "?\<alpha>2 1 = f x0" using hH21 hfx0Y by (by100 auto)
+      ultimately show ?thesis unfolding top1_is_path_on_def using hcomp by (by100 auto)
+    qed
+    have hra2: "top1_is_path_on Y TY (f x0) (f (g (f x0))) (top1_path_reverse ?\<alpha>2)"
+      by (rule top1_path_reverse_is_path[OF ha2])
+    let ?\<gamma> = "top1_path_product (top1_path_reverse ?\<alpha>2) (f \<circ> ?\<alpha>1)"
+    have h\<gamma>_path: "top1_is_path_on Y TY (f x0) (f x0) ?\<gamma>"
+      by (rule top1_path_product_is_path[OF hTY hra2 hfa1])
+    \<comment> \<open>For ANY loop m' at f(x0): f \<circ> bc(\<alpha>1, g\<circ>m') \<simeq> bc(\<gamma>, m').\<close>
+    have hcomp_is_bc: "\<And>m'. top1_is_loop_on Y TY (f x0) m' \<Longrightarrow>
+        top1_loop_equiv_on Y TY (f x0) (f \<circ> top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m'))
+            (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> m')"
+    proof -
+      fix m' assume hm': "top1_is_loop_on Y TY (f x0) m'"
+      \<comment> \<open>f\<circ>bc(\<alpha>1, g\<circ>m') = bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m') (f preserves products).\<close>
+      have hfbc': "f \<circ> top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m') =
+          top1_basepoint_change_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m')"
+        unfolding top1_basepoint_change_on_def hf_comp_product hf_comp_rev
+        by (simp add: comp_assoc)
+      \<comment> \<open>f\<circ>g\<circ>m' \<simeq> bc(rev \<alpha>2, m') by homotopy_induced_basepoint_change.\<close>
+      have hbc2_m': "top1_loop_equiv_on Y TY (f (g (f x0))) (f \<circ> g \<circ> m')
+          (top1_basepoint_change_on Y TY (f x0) (f (g (f x0)))
+             (top1_path_reverse ?\<alpha>2) m')"
+      proof -
+        note hbc2_raw = homotopy_induced_basepoint_change[OF hTY hTY hH2cont hH20 hH21' hm' hfx0Y]
+        have "(\<lambda>y. f (g y)) \<circ> m' = f \<circ> g \<circ> m'" by (simp add: comp_def)
+        moreover have "(\<lambda>y. y) \<circ> m' = m'" by (simp add: comp_def)
+        ultimately show ?thesis using hbc2_raw by simp
+      qed
+      \<comment> \<open>bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m') \<simeq> bc(f\<circ>\<alpha>1, bc(rev\<alpha>2, m')) by bc_loop_equiv.\<close>
+      have hfgm'_loop: "top1_is_loop_on Y TY (f (g (f x0))) (f \<circ> g \<circ> m')"
+        using hbc2_m' unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hbc_ra2_m': "top1_is_loop_on Y TY (f (g (f x0)))
+          (top1_basepoint_change_on Y TY (f x0) (f (g (f x0))) (top1_path_reverse ?\<alpha>2) m')"
+        by (rule top1_basepoint_change_is_loop[OF hTY hra2 hm'])
+      have hstep2: "top1_loop_equiv_on Y TY (f x0)
+          (top1_basepoint_change_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m'))
+          (top1_basepoint_change_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1)
+             (top1_basepoint_change_on Y TY (f x0) (f (g (f x0))) (top1_path_reverse ?\<alpha>2) m'))"
+        by (rule top1_basepoint_change_loop_equiv[OF hTY hfa1 hfgm'_loop hbc_ra2_m' hbc2_m'])
+      \<comment> \<open>bc(f\<circ>\<alpha>1, bc(rev\<alpha>2, m')) \<simeq> bc(\<gamma>, m') by double_bc.\<close>
+      have hstep3: "top1_loop_equiv_on Y TY (f x0)
+          (top1_basepoint_change_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1)
+             (top1_basepoint_change_on Y TY (f x0) (f (g (f x0))) (top1_path_reverse ?\<alpha>2) m'))
+          (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> m')"
+        by (rule double_basepoint_change_equiv[OF hTY hfa1 hra2 hm'])
+      \<comment> \<open>Chain: f\<circ>bc = bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m') \<simeq> bc(f\<circ>\<alpha>1, bc(rev\<alpha>2, m')) \<simeq> bc(\<gamma>, m').\<close>
+      have hchain: "top1_loop_equiv_on Y TY (f x0)
+          (top1_basepoint_change_on Y TY (f (g (f x0))) (f x0) (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m'))
+          (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> m')"
+        by (rule top1_loop_equiv_on_trans[OF hTY hstep2 hstep3])
+      show "top1_loop_equiv_on Y TY (f x0)
+          (f \<circ> top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m'))
+          (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> m')"
+        using hchain unfolding hfbc' .
+    qed
+    \<comment> \<open>Take m' = bc(rev(\<gamma>), m). By roundtrip: m \<simeq> bc(\<gamma>, m').\<close>
+    let ?r\<gamma> = "top1_path_reverse ?\<gamma>"
+    have hr\<gamma>: "top1_is_path_on Y TY (f x0) (f x0) ?r\<gamma>"
+      by (rule top1_path_reverse_is_path[OF h\<gamma>_path])
+    let ?m' = "top1_basepoint_change_on Y TY (f x0) (f x0) ?r\<gamma> m"
+    have hm'_loop: "top1_is_loop_on Y TY (f x0) ?m'"
+      by (rule top1_basepoint_change_is_loop[OF hTY hr\<gamma> hm])
+    have hroundtrip: "top1_loop_equiv_on Y TY (f x0) m
+        (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+    proof -
+      have "top1_path_homotopic_on Y TY (f x0) (f x0) m
+          (top1_basepoint_change_on Y TY (f x0) (f x0) (top1_path_reverse ?r\<gamma>)
+            (top1_basepoint_change_on Y TY (f x0) (f x0) ?r\<gamma> m))"
+        by (rule top1_basepoint_change_roundtrip[OF hTY hr\<gamma> hm])
+      hence hrt: "top1_path_homotopic_on Y TY (f x0) (f x0) m
+          (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+        by (simp add: top1_path_reverse_twice)
+      have hbc_gm'_loop: "top1_is_loop_on Y TY (f x0)
+          (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+        by (rule top1_basepoint_change_is_loop[OF hTY h\<gamma>_path hm'_loop])
+      show ?thesis
+        unfolding top1_loop_equiv_on_def
+        using hm hbc_gm'_loop hrt by (by100 blast)
+    qed
+    \<comment> \<open>Construct preimage: c' = [bc(\<alpha>1, g\<circ>m')].\<close>
+    have hgm': "top1_is_loop_on X TX (g (f x0)) (g \<circ> ?m')"
+      by (rule top1_continuous_map_loop[OF hg hm'_loop])
+    let ?c_pre = "top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> ?m')"
+    have hcpre_loop: "top1_is_loop_on X TX x0 ?c_pre"
+      by (rule top1_basepoint_change_is_loop[OF hTX hra1 hgm'])
+    have hcpre_mem: "{h. top1_loop_equiv_on X TX x0 ?c_pre h}
+        \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hcpre_loop by (by100 blast)
+    \<comment> \<open>f_*([c']) = [f\<circ>c'] = [bc(\<gamma>, m')] by hcomp_is_bc.\<close>
+    have hfcpre_equiv: "top1_loop_equiv_on Y TY (f x0)
+        (f \<circ> ?c_pre) (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+      by (rule hcomp_is_bc[OF hm'_loop])
+    \<comment> \<open>bc(\<gamma>, m') \<simeq> m by roundtrip (sym).\<close>
+    have hbc_gm'_loop_Y: "top1_is_loop_on Y TY (f x0)
+        (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+      by (rule top1_basepoint_change_is_loop[OF hTY h\<gamma>_path hm'_loop])
+    have hrt_ph: "top1_path_homotopic_on Y TY (f x0) (f x0) m
+        (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m')"
+      using hroundtrip unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hbcgm_equiv_m: "top1_loop_equiv_on Y TY (f x0)
+        (top1_basepoint_change_on Y TY (f x0) (f x0) ?\<gamma> ?m') m"
+      unfolding top1_loop_equiv_on_def
+      using hbc_gm'_loop_Y hm Lemma_51_1_path_homotopic_sym[OF hrt_ph]
+      by (by100 blast)
+    \<comment> \<open>f\<circ>c' \<simeq> m.\<close>
+    have hfcpre_m: "top1_loop_equiv_on Y TY (f x0) (f \<circ> ?c_pre) m"
+      by (rule top1_loop_equiv_on_trans[OF hTY hfcpre_equiv hbcgm_equiv_m])
+    \<comment> \<open>f_*([c']) = [m] = d.\<close>
+    have hfstar_cpre: "?f_star {h. top1_loop_equiv_on X TX x0 ?c_pre h} = d"
+    proof -
+      have "?f_star {h. top1_loop_equiv_on X TX x0 ?c_pre h}
+          = {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> ?c_pre) h}"
+        by (rule hfstar_class[OF hcpre_loop])
+      also have "\<dots> = {h. top1_loop_equiv_on Y TY (f x0) m h}"
+      proof (intro equalityI subsetI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> ?c_pre) h}"
+        thus "h \<in> {h. top1_loop_equiv_on Y TY (f x0) m h}"
+          using top1_loop_equiv_on_trans[OF hTY
+                  top1_loop_equiv_on_sym[OF hfcpre_m]] by (by100 simp)
+      next
+        fix h assume "h \<in> {h. top1_loop_equiv_on Y TY (f x0) m h}"
+        thus "h \<in> {h. top1_loop_equiv_on Y TY (f x0) (f \<circ> ?c_pre) h}"
+          using top1_loop_equiv_on_trans[OF hTY hfcpre_m] by (by100 simp)
+      qed
+      also have "\<dots> = d" using hd_eq by simp
+      finally show ?thesis .
+    qed
     thus "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
-      using hc_mem by (by100 blast)
+      using hcpre_mem by (by100 blast)
   qed
   have hfstar_bij: "bij_betw ?f_star (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
