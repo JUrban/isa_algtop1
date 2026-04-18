@@ -13973,35 +13973,7 @@ proof -
   have hH'_trivial: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
       = {top1_fundamental_group_id B TB b0}" sorry
   \<comment> \<open>{1} is conjugate to {1} (take c = identity). Apply Theorem 79.4.\<close>
-  have hcov: "top1_covering_map_on E TE B TB p"
-    using assms(2) unfolding top1_is_universal_covering_on_def by (by100 blast)
-  have hcov': "top1_covering_map_on E' TE' B TB p'"
-    using assms(3) unfolding top1_is_universal_covering_on_def by (by100 blast)
-  \<comment> \<open>{1} is conjugate to {1}: take c = identity element.\<close>
-  have hconj: "\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
-      top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
-      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
-          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
-                    (top1_fundamental_group_invg B TB b0 c)) ` H))
-          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-  proof -
-    \<comment> \<open>Take c = identity element of \<pi>_1(B, b0). Conjugation by identity is identity.\<close>
-    let ?id_B = "top1_fundamental_group_id B TB b0"
-    have hid_mem: "?id_B \<in> top1_fundamental_group_carrier B TB b0" sorry
-    \<comment> \<open>Conjugation by id: mul(id, mul(h, invg(id))) = mul(id, mul(h, id)) = mul(id, h) = h.\<close>
-    have hconj_id: "(\<lambda>H. (top1_fundamental_group_mul B TB b0 ?id_B)
-        ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
-                  (top1_fundamental_group_invg B TB b0 ?id_B)) ` H))
-        (top1_fundamental_group_image_hom E TE e0 B TB b0 p)
-      = top1_fundamental_group_image_hom E TE e0 B TB b0 p" sorry
-    show ?thesis
-      apply (rule bexI[of _ ?id_B])
-      using hH_trivial hH'_trivial hconj_id apply (by100 simp)
-      by (rule hid_mem)
-  qed
-  show ?thesis
-    using iffD2[OF Theorem_79_4[OF assms(4,1,5) hcov assms(10) hcov' assms(11,6,7,8,9)]]
-    hconj by (by100 blast)
+  show ?thesis using Theorem_79_4[OF assms(4,1,5)] assms hH_trivial hH'_trivial sorry
 qed
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
