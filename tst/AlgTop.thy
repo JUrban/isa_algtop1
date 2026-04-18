@@ -8130,8 +8130,54 @@ proof -
   \<comment> \<open>Step 2: U, V are open in S^n.\<close>
   \<comment> \<open>U = S^n - {p} and V = S^n - {q} are open because {p}, {q} are closed in S^n
      (Hausdorff + singleton closed).\<close>
-  have hU_open: "openin_on ?Sn ?TSn ?U" sorry
-  have hV_open: "openin_on ?Sn ?TSn ?V" sorry
+  \<comment> \<open>S^n is Hausdorff (subspace of Hausdorff product). Singletons are closed, so complements are open.\<close>
+  have hProd_haus: "is_hausdorff_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+    by (rule Theorem_19_4_product) (simp add: top1_R_is_hausdorff)
+  have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+    unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+  have hProd_haus_UNIV: "is_hausdorff_on (UNIV :: (nat \<Rightarrow> real) set)
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+    using hProd_haus unfolding hPiE_eq .
+  have hSn_sub_UNIV: "?Sn \<subseteq> (UNIV :: (nat \<Rightarrow> real) set)" by simp
+  have hSn_haus: "is_hausdorff_on ?Sn ?TSn"
+    using conjunct2[OF conjunct2[OF Theorem_17_11]] hProd_haus_UNIV hSn_sub_UNIV by (by100 blast)
+  have hp_in_Sn: "?p \<in> ?Sn" unfolding top1_Sn_def
+  proof (intro CollectI conjI allI impI)
+    fix i :: nat assume "i \<ge> Suc n" thus "?p i = 0" using assms by simp
+  next
+    have "(\<Sum>i\<le>n. (?p i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 0 then 1 else (0::real)))"
+      by (rule sum.cong) simp_all
+    also have "\<dots> = 1"
+    proof -
+      have hfin: "finite ({..n}::nat set)" by simp
+      have h0n: "(0::nat) \<in> {..n}" using assms by simp
+      show ?thesis using sum.delta'[OF hfin, of 0 "\<lambda>_. 1::real"] h0n by simp
+    qed
+    finally show "(\<Sum>i\<le>n. (?p i)\<^sup>2) = 1" .
+  qed
+  have hq_in_Sn: "?q \<in> ?Sn" unfolding top1_Sn_def
+  proof (intro CollectI conjI allI impI)
+    fix i :: nat assume "i \<ge> Suc n" thus "?q i = 0" using assms by simp
+  next
+    have "(\<Sum>i\<le>n. (?q i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 0 then 1 else (0::real)))"
+      by (rule sum.cong) (simp_all add: power2_eq_square)
+    also have "\<dots> = 1"
+    proof -
+      have hfin: "finite ({..n}::nat set)" by simp
+      have h0n: "(0::nat) \<in> {..n}" using assms by simp
+      show ?thesis using sum.delta'[OF hfin, of 0 "\<lambda>_. 1::real"] h0n by simp
+    qed
+    finally show "(\<Sum>i\<le>n. (?q i)\<^sup>2) = 1" .
+  qed
+  have hp_closed: "closedin_on ?Sn ?TSn {?p}"
+    by (rule singleton_closed_in_hausdorff[OF hSn_haus hp_in_Sn])
+  have hq_closed: "closedin_on ?Sn ?TSn {?q}"
+    by (rule singleton_closed_in_hausdorff[OF hSn_haus hq_in_Sn])
+  have hU_open: "openin_on ?Sn ?TSn ?U"
+    by (rule closedin_complement_openin[OF hp_closed])
+  have hV_open: "openin_on ?Sn ?TSn ?V"
+    by (rule closedin_complement_openin[OF hq_closed])
   \<comment> \<open>U \<union> V = S^n (every point of S^n differs from p or q).\<close>
   have hpq_ne: "?p \<noteq> ?q"
   proof -
