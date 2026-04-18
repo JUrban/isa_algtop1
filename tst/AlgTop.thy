@@ -7189,6 +7189,16 @@ proof -
   qed
 qed
 
+text \<open>Variant with continuous_on on the domain (for functions that are NOT continuous on UNIV).\<close>
+lemma S1_I_to_R2_minus_0_continuous_on:
+  fixes f :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
+  assumes hcont: "continuous_on (top1_S1 \<times> I_set) f"
+      and hmap: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> f p \<in> UNIV - {(0::real, 0)}"
+  shows "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)})) f"
+  sorry
+
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
 text \<open>Helper: a nonvanishing vector field on B² that doesn't point inward at any
@@ -7348,7 +7358,46 @@ proof -
         show ?thesis using hid_restr unfolding hS1_eq hid_eq[symmetric] by simp
       qed
       have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
-          ?R2_0' ?TR2_0' ?F" sorry
+          ?R2_0' ?TR2_0' ?F"
+      proof -
+        \<comment> \<open>v is continuous_on B² (reverse transfer), hence on S¹.\<close>
+        have hv_B2_std: "continuous_on top1_B2 v"
+          using assms(1) unfolding top1_B2_topology_def
+          by (rule top1_continuous_map_on_to_continuous_on_R2)
+        have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+          unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have hv_S1_std: "continuous_on top1_S1 v"
+          by (rule continuous_on_subset[OF hv_B2_std hS1_B2])
+        \<comment> \<open>F(x,t) = ((1-t)*v₁(x)-t*x₁, (1-t)*v₂(x)-t*x₂) continuous on S¹×I.\<close>
+        have hv_fst_cont: "continuous_on (top1_S1 \<times> I_set) (v \<circ> fst)"
+          by (intro continuous_on_compose continuous_on_fst
+              continuous_on_subset[OF hv_S1_std]) (by100 auto)
+        have hfst_v: "continuous_on (top1_S1 \<times> I_set) (\<lambda>p. fst (v (fst p)))"
+          by (intro continuous_on_fst[OF hv_fst_cont[unfolded comp_def]])
+        have hsnd_v: "continuous_on (top1_S1 \<times> I_set) (\<lambda>p. snd (v (fst p)))"
+          by (intro continuous_on_snd[OF hv_fst_cont[unfolded comp_def]])
+        have hF_std: "continuous_on (top1_S1 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+            ((1 - snd p) * fst (v (fst p)) - snd p * fst (fst p),
+             (1 - snd p) * snd (v (fst p)) - snd p * snd (fst p)))"
+          by (intro continuous_on_Pair continuous_on_diff continuous_on_mult
+              continuous_on_snd hfst_v hsnd_v continuous_intros)
+        have hF_eq: "(\<lambda>p::(real\<times>real)\<times>real.
+            ((1 - snd p) * fst (v (fst p)) - snd p * fst (fst p),
+             (1 - snd p) * snd (v (fst p)) - snd p * snd (fst p)))
+          = (\<lambda>p. ?F (fst p, snd p))" by (rule ext) (simp add: case_prod_beta)
+        have hF_map: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> ?F p \<in> ?R2_0'"
+          using hF_nz by (by100 auto)
+        have hF_map': "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> (\<lambda>p. ?F (fst p, snd p)) p \<in> ?R2_0'"
+          using hF_map by (simp add: case_prod_beta)
+        have hF_std': "continuous_on (top1_S1 \<times> I_set) (\<lambda>p. ?F (fst p, snd p))"
+          using hF_std unfolding hF_eq .
+        have "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+            ?R2_0' ?TR2_0' (\<lambda>p. ?F (fst p, snd p))"
+          by (rule S1_I_to_R2_minus_0_continuous_on[OF hF_std' hF_map'])
+        moreover have "(\<lambda>p::(real\<times>real)\<times>real. ?F (fst p, snd p)) = ?F"
+          by (rule ext) (simp add: case_prod_beta)
+        ultimately show ?thesis by simp
+      qed
       \<comment> \<open>F gives v ≃ -id. Need -id ≃ id (rotation). Then v ≃ id by transitivity.\<close>
       let ?neg = "\<lambda>x::real\<times>real. (- fst x, - snd x)"
       have hneg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg"
@@ -12927,6 +12976,10 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
  
  
  
