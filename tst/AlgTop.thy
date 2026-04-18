@@ -6742,7 +6742,9 @@ proof
         (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
       using product_topology_on_is_topology_on[OF
             top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by simp
-    have hTR: "is_topology_on (UNIV - {(0::real, 0)}) ?TR" sorry
+    have hTR: "is_topology_on (UNIV - {(0::real, 0)}) ?TR"
+      by (simp add: product_topology_on_open_sets
+        subspace_topology_is_topology_on top1_open_sets_is_topology_on_UNIV)
     have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (UNIV - {(0, 0)}) ?TR (\<lambda>x. x)"
     proof -
       have hS1_sub: "top1_S1 \<subseteq> UNIV - {(0::real, 0)}" unfolding top1_S1_def by (by100 auto)
@@ -12409,6 +12411,7 @@ proof -
 qed
 
 end
+ 
  
  
  
