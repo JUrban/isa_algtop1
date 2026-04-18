@@ -4488,7 +4488,27 @@ proof -
     \<comment> \<open>For s \<in> S: f(s) \<in> some evenly covered U. ftilde_1(s) = ftilde_2(s) \<in> some slice V0.
        Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
     sorry
-  have hS_closed: "closedin_on I_set I_top ?S" sorry
+  have hS_closed: "closedin_on I_set I_top ?S"
+    unfolding closedin_on_def
+  proof (intro conjI)
+    show "?S \<subseteq> I_set" by (by100 blast)
+  next
+    \<comment> \<open>I_set - S = {s\<in>I_set. ftilde_1 s \<noteq> ftilde_2 s} is open.\<close>
+    show "I_set - ?S \<in> I_top"
+    proof -
+      have hft1_cont: "top1_continuous_map_on I_set I_top E TE ftilde_1"
+        using hft1 unfolding top1_is_path_on_def by (by100 blast)
+      have hft2_cont: "top1_continuous_map_on I_set I_top E TE ftilde_2"
+        using hft2 unfolding top1_is_path_on_def by (by100 blast)
+      have hTI: "is_topology_on I_set I_top"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      \<comment> \<open>For each s₀ in I_set - S, get evenly covered U for f(s₀),
+         find the disjoint slices containing ftilde_1(s₀) and ftilde_2(s₀),
+         preimages of these slices under ftilde_1 and ftilde_2 give open neighborhood of s₀
+         on which ftilde_1 and ftilde_2 disagree.\<close>
+      show ?thesis sorry
+    qed
+  qed
   have hI_connected: "top1_connected_on I_set I_top"
     by (rule top1_unit_interval_connected)
   have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
@@ -7061,7 +7081,44 @@ proof -
           using hv_cont hneg_cont hF_cont hF0 hF1' by (by100 blast)
       qed
       have hneg_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg (\<lambda>x. x)"
-        sorry \<comment> \<open>Rotation: R(x,t) = (cos(\<pi>t) fst x - sin(\<pi>t) snd x, sin(\<pi>t) fst x + cos(\<pi>t) snd x)\<close>
+      proof -
+        \<comment> \<open>Rotation R(x,t) = (cos(\<pi>(1-t)) a - sin(\<pi>(1-t)) b, sin(\<pi>(1-t)) a + cos(\<pi>(1-t)) b)
+           R(x,0) = (-a,-b) = -x, R(x,1) = (a,b) = x. R maps into S¹ ⊂ R²-{0}.\<close>
+        let ?R = "\<lambda>(x::real\<times>real, t::real).
+            (cos (pi * (1 - t)) * fst x - sin (pi * (1 - t)) * snd x,
+             sin (pi * (1 - t)) * fst x + cos (pi * (1 - t)) * snd x)"
+        have hR0: "\<forall>x\<in>top1_S1. ?R (x, 0) = ?neg x" by (by100 simp)
+        have hR1: "\<forall>x\<in>top1_S1. ?R (x, 1) = x" by (by100 simp)
+        have hR_S1: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?R (x, t) \<in> top1_S1"
+        proof (intro ballI)
+          fix x :: "real \<times> real" and t :: real
+          assume hx: "x \<in> top1_S1" and ht: "t \<in> I_set"
+          have hsum: "fst x ^ 2 + snd x ^ 2 = 1" using hx unfolding top1_S1_def by (by100 simp)
+          let ?c = "cos (pi * (1 - t))" and ?s = "sin (pi * (1 - t))"
+          have "fst (?R (x, t)) ^ 2 + snd (?R (x, t)) ^ 2 = 1"
+          proof -
+            have "fst (?R (x, t)) ^ 2 + snd (?R (x, t)) ^ 2 =
+                (?c * fst x - ?s * snd x) ^ 2 + (?s * fst x + ?c * snd x) ^ 2"
+              by simp
+            also have "\<dots> = (fst x ^ 2 + snd x ^ 2) * (?c ^ 2 + ?s ^ 2)"
+              sorry \<comment> \<open>Expand (ca-sb)^2+(sa+cb)^2 = (a^2+b^2)(c^2+s^2) by algebra.\<close>
+            also have "\<dots> = 1" using hsum by simp
+            finally show ?thesis .
+          qed
+          thus "?R (x, t) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+        qed
+        have hR_R2: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?R (x, t) \<in> ?R2_0'"
+        proof (intro ballI)
+          fix x :: "real \<times> real" and t :: real
+          assume "x \<in> top1_S1" and "t \<in> I_set"
+          hence "?R (x, t) \<in> top1_S1" using hR_S1 by (by100 blast)
+          thus "?R (x, t) \<in> ?R2_0'" unfolding top1_S1_def by (by100 auto)
+        qed
+        have hR_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+            ?R2_0' ?TR2_0' ?R" sorry
+        show ?thesis unfolding top1_homotopic_on_def
+          using hneg_cont hid_cont hR_cont hR0 hR1 by (by100 blast)
+      qed
       have hTR2_0': "is_topology_on ?R2_0' ?TR2_0'"
         by (simp add: product_topology_on_open_sets subspace_topology_is_topology_on
             top1_open_sets_is_topology_on_UNIV)
@@ -12564,6 +12621,19 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
