@@ -7189,6 +7189,93 @@ proof -
   qed
 qed
 
+text \<open>General variant: continuous_on (S×I) for any S ⊆ R².\<close>
+lemma R2_subspace_I_continuous_on_transfer:
+  fixes S :: "(real \<times> real) set" and T :: "(real \<times> real) set"
+    and f :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
+  assumes hcont: "continuous_on (S \<times> I_set) f"
+      and hmap: "\<And>p. p \<in> S \<times> I_set \<Longrightarrow> f p \<in> T"
+  shows "top1_continuous_map_on (S \<times> I_set)
+      (product_topology_on
+        (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) S)
+        I_top)
+      T (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) T) f"
+proof -
+  have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+      (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+    using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  let ?TS = "subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) S"
+  have hf_R2: "top1_continuous_map_on (S \<times> I_set) (product_topology_on ?TS I_top)
+      (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets) f"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix p show "f p \<in> (UNIV::(real\<times>real) set)" by simp
+  next
+    fix V assume hV: "V \<in> product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)"
+    have hV': "V \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets" using hV .
+    have hVo: "open V"
+      using hV'[unfolded product_topology_on_open_sets_real2] unfolding top1_open_sets_def
+      by (by100 simp)
+    have hcont': "\<forall>B. open B \<longrightarrow> (\<exists>A. open A \<and> A \<inter> (S \<times> I_set) = f -` B \<inter> (S \<times> I_set))"
+      using hcont unfolding continuous_on_open_invariant .
+    obtain W where hWo: "open W" and hWeq: "W \<inter> (S \<times> I_set) = f -` V \<inter> (S \<times> I_set)"
+      using hcont'[rule_format, OF hVo] by (by100 blast)
+    have hW_R3: "W \<in> product_topology_on
+        (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+        (top1_open_sets::real set set)"
+    proof -
+      have "W \<in> (top1_open_sets :: ((real\<times>real)\<times>real) set set)"
+        using hWo unfolding top1_open_sets_def by (by100 blast)
+      thus ?thesis
+        using product_topology_on_open_sets[where ?'a = "real \<times> real" and ?'b = real]
+              product_topology_on_open_sets_real2 by (by100 metis)
+    qed
+    have hTP_eq: "product_topology_on ?TS I_top =
+        subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+            (top1_open_sets::real set set))
+          (S \<times> I_set)"
+    proof -
+      have "product_topology_on ?TS I_top =
+            product_topology_on
+              (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) S)
+              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+        unfolding top1_unit_interval_topology_def ..
+      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+            (top1_open_sets::real set set))
+          (S \<times> I_set)"
+        by (rule Theorem_16_3[OF hTR2 hTR])
+      finally show ?thesis .
+    qed
+    have "{p \<in> S \<times> I_set. f p \<in> V} = (S \<times> I_set) \<inter> W"
+    proof (intro set_eqI iffI)
+      fix x assume "x \<in> {p \<in> S \<times> I_set. f p \<in> V}"
+      hence "x \<in> S \<times> I_set" "f x \<in> V" by (by100 simp)+
+      hence "x \<in> f -` V \<inter> (S \<times> I_set)" by (by100 simp)
+      thus "x \<in> (S \<times> I_set) \<inter> W" using hWeq by (by100 blast)
+    next
+      fix x assume "x \<in> (S \<times> I_set) \<inter> W"
+      hence "x \<in> W \<inter> (S \<times> I_set)" by (by100 blast)
+      hence "x \<in> f -` V \<inter> (S \<times> I_set)" using hWeq by (by100 blast)
+      thus "x \<in> {p \<in> S \<times> I_set. f p \<in> V}" by (by100 simp)
+    qed
+    also have "\<dots> \<in> product_topology_on ?TS I_top"
+      unfolding hTP_eq subspace_topology_def sorry
+    finally show "{p \<in> S \<times> I_set. f p \<in> V} \<in> product_topology_on ?TS I_top" .
+  qed
+  have himg: "f ` (S \<times> I_set) \<subseteq> T"
+  proof (intro subsetI)
+    fix y assume "y \<in> f ` (S \<times> I_set)"
+    then obtain p where hp: "p \<in> S \<times> I_set" and hy: "y = f p" by (by100 blast)
+    show "y \<in> T" using hmap[OF hp] hy by (by100 simp)
+  qed
+  show ?thesis
+    by (rule top1_continuous_map_on_codomain_shrink[OF hf_R2 himg]) simp
+qed
+
 text \<open>Variant with continuous_on on the domain (for functions that are NOT continuous on UNIV).\<close>
 lemma S1_I_to_R2_minus_0_continuous_on:
   fixes f :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
@@ -9265,7 +9352,30 @@ proof -
       show "?H (a, t) = a" using hnorm by (simp add: prod_eq_iff algebra_simps)
     qed
     have hHcont: "top1_continuous_map_on (?R2_0 \<times> I_set) (product_topology_on ?TR I_top) ?R2_0 ?TR ?H"
-      sorry \<comment> \<open>Continuity: H is a rational function with denominator |x|>0 on R^2-{0}.\<close>
+    proof -
+      \<comment> \<open>Step 1: continuous_on (R²-{0})×I H.\<close>
+      have hH_std: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+          ((1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p),
+           (1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p)))"
+        sorry \<comment> \<open>From continuous_on_divide, continuous_on_sqrt, continuous_intros.\<close>
+      have hH_eq: "(\<lambda>p::(real\<times>real)\<times>real.
+          ((1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p),
+           (1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p)))
+        = (\<lambda>p. ?H (fst p, snd p))"
+        by (rule ext) (simp add: case_prod_beta)
+      have hH_std': "continuous_on (?R2_0 \<times> I_set) (\<lambda>p. ?H (fst p, snd p))"
+        using hH_std unfolding hH_eq .
+      \<comment> \<open>Step 2: H maps into R²-{0}.\<close>
+      have hH_range: "\<And>p. p \<in> ?R2_0 \<times> I_set \<Longrightarrow> (\<lambda>p. ?H (fst p, snd p)) p \<in> ?R2_0"
+        sorry
+      \<comment> \<open>Step 3: Transfer.\<close>
+      have "top1_continuous_map_on (?R2_0 \<times> I_set) (product_topology_on ?TR I_top)
+          ?R2_0 ?TR (\<lambda>p. ?H (fst p, snd p))"
+        by (rule R2_subspace_I_continuous_on_transfer[OF hH_std' hH_range])
+      moreover have "(\<lambda>p::(real\<times>real)\<times>real. ?H (fst p, snd p)) = ?H"
+        by (rule ext) (simp add: case_prod_beta)
+      ultimately show ?thesis by simp
+    qed
     show ?thesis unfolding top1_deformation_retract_of_on_def
       using hS1sub hHcont hH0 hH1 hHA by blast
   qed
@@ -13054,6 +13164,12 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
