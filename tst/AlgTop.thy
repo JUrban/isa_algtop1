@@ -4944,7 +4944,43 @@ proof -
       unfolding top1_fundamental_group_carrier_def using hf0_loop by (by100 blast)
     \<comment> \<open>\<phi>(?c) = e1 by well-definedness: \<phi> picks a representative and lifts it,
        and by hphi_wd, all lifts of equivalent loops end at the same point.\<close>
-    have "?\<phi> ?c = e1" sorry \<comment> \<open>Needs SOME reasoning + hphi_wd.\<close>
+    have "?\<phi> ?c = e1"
+    proof -
+      \<comment> \<open>SOME picks f' \<in> ?c with f' a loop. f0 is such, so f' exists.\<close>
+      have hf0_in_c: "f0 \<in> ?c"
+      proof -
+        have "top1_is_path_on B TB b0 b0 f0" using hf0_loop unfolding top1_is_loop_on_def .
+        hence "top1_path_homotopic_on B TB b0 b0 f0 f0" by (rule Lemma_51_1_path_homotopic_refl)
+        thus ?thesis unfolding top1_loop_equiv_on_def using hf0_loop by (by100 simp)
+      qed
+      let ?f' = "SOME f. f \<in> ?c \<and> top1_is_loop_on B TB b0 f"
+      have hf'_props: "?f' \<in> ?c \<and> top1_is_loop_on B TB b0 ?f'"
+        using someI_ex[of "\<lambda>f. f \<in> ?c \<and> top1_is_loop_on B TB b0 f"] hf0_in_c hf0_loop
+        by (by100 blast)
+      \<comment> \<open>f' is loop-equivalent to f0.\<close>
+      have hf'_equiv: "top1_loop_equiv_on B TB b0 f0 ?f'"
+        using hf'_props by simp
+      hence hf0_f': "top1_path_homotopic_on B TB b0 b0 f0 ?f'"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      \<comment> \<open>Lift ?f' from e0.\<close>
+      have hf'_path: "top1_is_path_on B TB b0 b0 ?f'"
+        using hf'_props unfolding top1_is_loop_on_def by (by100 blast)
+      obtain ft' where hft': "top1_is_path_on E TE e0 (ft' 1) ft'"
+          and hft'p: "\<forall>s\<in>I_set. p (ft' s) = ?f' s"
+        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf'_path] by (by100 auto)
+      \<comment> \<open>SOME picks a lift of ?f'.\<close>
+      let ?ft' = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f' s)"
+      have hft'_props: "top1_is_path_on E TE e0 (?ft' 1) ?ft' \<and> (\<forall>s\<in>I_set. p (?ft' s) = ?f' s)"
+        using someI_ex[of "\<lambda>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f' s)"]
+          hft' hft'p by (by100 blast)
+      \<comment> \<open>By hphi_wd: ft0(1) = ft'(1) since f0 \<simeq> f'.\<close>
+      have "ft0 1 = ?ft' 1"
+        using hphi_wd hf0_loop hf'_props hf0_f' hft0 hft0p hft'_props sorry
+      \<comment> \<open>ft0(1) = e1 by assumption, so ?ft'(1) = e1.\<close>
+      hence "?ft' 1 = e1" using hft0 unfolding top1_is_path_on_def by simp
+      \<comment> \<open>\<phi>(?c) = ?ft'(1) = e1.\<close>
+      thus ?thesis by (simp add: Let_def)
+    qed
     thus "e1 \<in> ?\<phi> ` (top1_fundamental_group_carrier B TB b0)"
       using hc_carrier by (by100 blast)
   qed
