@@ -7995,7 +7995,10 @@ proof -
      generator lifts to s \<mapsto> s and f \<circ> p(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns).
      Multiplication by n is injective for n > 0.\<close>
   have hcont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)" sorry
+      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+    unfolding top1_S1_complex_topology_def
+    by (rule top1_continuous_map_on_subspace_open_sets)
+       (auto simp: top1_S1_complex_def norm_power intro: continuous_intros)
   have hinj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
       \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
