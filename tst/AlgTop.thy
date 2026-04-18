@@ -4695,7 +4695,30 @@ proof -
   qed
   \<comment> \<open>Surjectivity: for e1 \<in> p\<inverse>(b0), path f_tilde from e0 to e1 projects to loop at b0.\<close>
   have hphi_surj: "\<forall>e1\<in>{e\<in>E. p e = b0}. \<exists>f. top1_is_loop_on B TB b0 f \<and>
-      (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))" sorry
+      (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
+  proof
+    fix e1 assume he1: "e1 \<in> {e\<in>E. p e = b0}"
+    hence he1E: "e1 \<in> E" and hpe1: "p e1 = b0" by (by100 blast)+
+    \<comment> \<open>Path \<alpha> from e0 to e1 in E (path-connected).\<close>
+    obtain \<alpha> where h\<alpha>: "top1_is_path_on E TE e0 e1 \<alpha>"
+      using assms(4) he0 he1E unfolding top1_path_connected_on_def by (by100 auto)
+    \<comment> \<open>f = p \<circ> \<alpha> is a loop at b0: f(0) = p(e0) = b0, f(1) = p(e1) = b0.\<close>
+    let ?f = "p \<circ> \<alpha>"
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      using assms(3) unfolding top1_covering_map_on_def by (by100 blast)
+    have h\<alpha>_cont: "top1_continuous_map_on I_set I_top E TE \<alpha>"
+      using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+    have hf_cont: "top1_continuous_map_on I_set I_top B TB ?f"
+      by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont hp_cont])
+    have hf0: "?f 0 = b0" using h\<alpha> hpe0 unfolding top1_is_path_on_def by simp
+    have hf1: "?f 1 = b0" using h\<alpha> hpe1 unfolding top1_is_path_on_def by simp
+    have hf_loop: "top1_is_loop_on B TB b0 ?f"
+      unfolding top1_is_loop_on_def top1_is_path_on_def using hf_cont hf0 hf1 by simp
+    have hft_lift: "\<forall>s\<in>I_set. p (\<alpha> s) = ?f s" by simp
+    show "\<exists>f. top1_is_loop_on B TB b0 f \<and>
+        (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
+      using hf_loop h\<alpha> hft_lift by (by100 blast)
+  qed
   \<comment> \<open>Define \<phi>(c): pick any representative loop f from class c, lift it, take endpoint.\<close>
   let ?\<phi> = "\<lambda>c. let f = SOME f. f \<in> c \<and> top1_is_loop_on B TB b0 f in
                let ft = SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)
