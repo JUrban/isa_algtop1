@@ -4711,7 +4711,14 @@ proof -
                top1_is_path_on E TE e0 (gt 1) gt \<longrightarrow> (\<forall>s\<in>I_set. p (gt s) = g s) \<longrightarrow>
                ft 1 = gt 1)
       \<longrightarrow> top1_path_homotopic_on B TB b0 b0 f g" sorry
-  show ?thesis sorry
+  \<comment> \<open>From Theorem 54.4 (lifting correspondence), get surjective \<phi>.\<close>
+  obtain \<phi> where h\<phi>_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+        \<phi> c \<in> {e\<in>E. p e = b0}"
+      and h\<phi>_surj: "\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+    using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc] by (by100 auto)
+  \<comment> \<open>Injectivity from hinj: if \<phi>([f]) = \<phi>([g]) then [f] = [g].\<close>
+  have h\<phi>_inj: "inj_on \<phi> (top1_fundamental_group_carrier B TB b0)" sorry
+  show ?thesis unfolding bij_betw_def using h\<phi>_inj h\<phi>_surj by (by100 blast)
 qed
 
 text \<open>Helper: subspace of UNIV with top1_open_sets is top1_open_sets itself.\<close>
