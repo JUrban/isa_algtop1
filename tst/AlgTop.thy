@@ -4186,8 +4186,46 @@ proof -
   \<comment> \<open>Step 2: Every b \<in> S^1 has an evenly covered open neighborhood.
      Use the 4 open arcs E, N, W, S covering S^1. Each arc U_i has
      p\<inverse>(U_i) = \<Union>_n (n + open interval) — a disjoint union of sheets homeomorphic to U_i.\<close>
+  \<comment> \<open>Each of the 4 arcs E,N,W,S is evenly covered. We prove arc_E; others are symmetric.\<close>
+  have harc_E_ec: "top1_evenly_covered_on UNIV top1_open_sets
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_E"
+    sorry
+  have harc_N_ec: "top1_evenly_covered_on UNIV top1_open_sets
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_N" sorry
+  have harc_W_ec: "top1_evenly_covered_on UNIV top1_open_sets
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_W" sorry
+  have harc_S_ec: "top1_evenly_covered_on UNIV top1_open_sets
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_S" sorry
   have hp_evenly: "\<forall>b\<in>top1_S1. \<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
-      \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U" sorry
+      \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
+  proof
+    fix b assume hb: "b \<in> top1_S1"
+    have "b \<in> top1_S1_arc_E \<or> b \<in> top1_S1_arc_W \<or> b \<in> top1_S1_arc_N \<or> b \<in> top1_S1_arc_S"
+      using top1_S1_arcs_cover hb by (by100 blast)
+    thus "\<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
+        \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
+    proof (elim disjE)
+      assume hb': "b \<in> top1_S1_arc_E"
+      have "openin_on top1_S1 top1_S1_topology top1_S1_arc_E"
+        using harc_E_ec unfolding top1_evenly_covered_on_def by (by100 blast)
+      thus ?thesis using hb' harc_E_ec by (by100 blast)
+    next
+      assume hb': "b \<in> top1_S1_arc_W"
+      have "openin_on top1_S1 top1_S1_topology top1_S1_arc_W"
+        using harc_W_ec unfolding top1_evenly_covered_on_def by (by100 blast)
+      thus ?thesis using hb' harc_W_ec by (by100 blast)
+    next
+      assume hb': "b \<in> top1_S1_arc_N"
+      have "openin_on top1_S1 top1_S1_topology top1_S1_arc_N"
+        using harc_N_ec unfolding top1_evenly_covered_on_def by (by100 blast)
+      thus ?thesis using hb' harc_N_ec by (by100 blast)
+    next
+      assume hb': "b \<in> top1_S1_arc_S"
+      have "openin_on top1_S1 top1_S1_topology top1_S1_arc_S"
+        using harc_S_ec unfolding top1_evenly_covered_on_def by (by100 blast)
+      thus ?thesis using hb' harc_S_ec by (by100 blast)
+    qed
+  qed
   show ?thesis unfolding top1_covering_map_on_def
   proof (intro conjI)
     show "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
