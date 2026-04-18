@@ -8427,7 +8427,15 @@ proof -
     let ?\<beta>2 = "top1_path_product ?left' ?top'"
     \<comment> \<open>β₁ and β₂ both go from (0,0) to (1,1) in I×I.
        They're path-homotopic in I×I because I×I is convex (simply connected).\<close>
-    have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology" sorry
+    have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology"
+      unfolding top1_simply_connected_on_def
+    proof (intro conjI)
+      show "top1_path_connected_on (I_set \<times> I_set) II_topology" sorry
+    next
+      show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
+          top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
+        sorry
+    qed
     have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
       unfolding top1_unit_interval_def by (by100 simp)
     have h0I: "(0::real) \<in> I_set" and h1I: "(1::real) \<in> I_set"
@@ -13593,6 +13601,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
