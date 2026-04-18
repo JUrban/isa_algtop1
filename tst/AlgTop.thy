@@ -8120,6 +8120,8 @@ proof -
   have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
       (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" sorry
   have hT_strict: "is_topology_on_strict ?Sn ?TSn" sorry
+    \<comment> \<open>Proof: product topology on (nat \<Rightarrow> real) is strict (product_topology_is_strict),
+       subspace of strict is strict (subspace_topology_is_strict), S^n \<subseteq> UNIV.\<close>
   \<comment> \<open>Apply Corollary 59.2.\<close>
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
