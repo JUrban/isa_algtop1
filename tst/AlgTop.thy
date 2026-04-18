@@ -8515,7 +8515,84 @@ proof -
                                         (1-t) * snd (f s) + t * snd x0)"
         have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
             (I_set \<times> I_set) II_topology ?F"
-          sorry
+        proof -
+          \<comment> \<open>Bridge: extract continuous_on from f's custom continuity.\<close>
+          have hfc: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology f"
+            using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have hfr: "\<forall>s\<in>I_set. f s \<in> I_set \<times> I_set"
+            using hfc unfolding top1_continuous_map_on_def by (by100 blast)
+          have hf_cont_on: "continuous_on I_set f"
+          proof (unfold continuous_on_open_invariant, intro allI impI)
+            fix U :: "(real \<times> real) set" assume hUo: "open U"
+            have hU_top: "(I_set \<times> I_set) \<inter> U \<in> II_topology"
+            proof -
+              have "U \<in> (top1_open_sets :: (real\<times>real) set set)"
+                using hUo unfolding top1_open_sets_def by (by100 blast)
+              hence "U \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                using product_topology_on_open_sets_real2 by (by100 metis)
+              thus ?thesis unfolding II_topology_def II_topology_eq_subspace
+                subspace_topology_def by (by100 blast)
+            qed
+            have hpre_II: "{x \<in> I_set. f x \<in> (I_set \<times> I_set) \<inter> U} \<in> I_top"
+              using hfc hU_top unfolding top1_continuous_map_on_def by (by100 blast)
+            have hpre_eq: "{x \<in> I_set. f x \<in> U} = {x \<in> I_set. f x \<in> (I_set \<times> I_set) \<inter> U}"
+              using hfr by (by100 auto)
+            have hmem: "{x \<in> I_set. f x \<in> U} \<in> I_top" using hpre_II hpre_eq by (by100 simp)
+            then obtain W where hWo: "open W" and hWeq: "{x \<in> I_set. f x \<in> U} = I_set \<inter> W"
+              unfolding top1_unit_interval_topology_def subspace_topology_def
+                        top1_open_sets_def by (by100 auto)
+            have "W \<inter> I_set = f -` U \<inter> I_set" using hWeq by (by100 blast)
+            hence "open W \<and> W \<inter> I_set = f -` U \<inter> I_set" using hWo by (by100 blast)
+            thus "\<exists>A. open A \<and> A \<inter> I_set = f -` U \<inter> I_set" by (by100 blast)
+          qed
+          \<comment> \<open>continuous_on components.\<close>
+          have hfst_cont: "continuous_on I_set (\<lambda>s. fst (f s))"
+            using continuous_on_fst[OF hf_cont_on] unfolding comp_def .
+          have hsnd_cont: "continuous_on I_set (\<lambda>s. snd (f s))"
+            using continuous_on_snd[OF hf_cont_on] unfolding comp_def .
+          \<comment> \<open>F is continuous_on (work with explicit fst/snd form, then match case_prod).\<close>
+          let ?F' = "\<lambda>p::real\<times>real. ((1 - snd p) * fst (f (fst p)) + snd p * fst x0,
+                                      (1 - snd p) * snd (f (fst p)) + snd p * snd x0)"
+          have hf_fst_co: "continuous_on (I_set \<times> I_set) (\<lambda>p. f (fst p))"
+            by (rule continuous_on_compose2[OF hf_cont_on continuous_on_fst]) (by100 auto)
+          have hF'_co: "continuous_on (I_set \<times> I_set) ?F'"
+            by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+                   continuous_on_diff continuous_on_const continuous_on_fst continuous_on_snd
+                   continuous_on_id hf_fst_co)
+          have hF_eq: "?F' = ?F" by (rule ext) (simp add: case_prod_beta)
+          have hF_co: "continuous_on (I_set \<times> I_set) ?F" using hF'_co unfolding hF_eq .
+          \<comment> \<open>Range in I_set \<times> I_set (convexity).\<close>
+          have hF_range: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?F p \<in> I_set \<times> I_set"
+          proof -
+            fix p :: "real \<times> real" assume hp: "p \<in> I_set \<times> I_set"
+            have ht': "0 \<le> snd p" "snd p \<le> 1" using hp unfolding top1_unit_interval_def by (by100 auto)+
+            have h0t: "0 \<le> 1 - snd p" using ht' by (by100 linarith)
+            have hfs: "f (fst p) \<in> I_set \<times> I_set" using hfr hp by (by100 auto)
+            have hfa: "0 \<le> fst (f (fst p))" "fst (f (fst p)) \<le> 1" using hfs unfolding top1_unit_interval_def by (by100 auto)+
+            have hfb: "0 \<le> snd (f (fst p))" "snd (f (fst p)) \<le> 1" using hfs unfolding top1_unit_interval_def by (by100 auto)+
+            have hxa: "0 \<le> fst x0" "fst x0 \<le> 1" using hx0 unfolding top1_unit_interval_def by (by100 auto)+
+            have hxb: "0 \<le> snd x0" "snd x0 \<le> 1" using hx0 unfolding top1_unit_interval_def by (by100 auto)+
+            have "0 \<le> (1 - snd p) * fst (f (fst p)) + snd p * fst x0"
+              using mult_nonneg_nonneg[OF h0t hfa(1)] mult_nonneg_nonneg[OF ht'(1) hxa(1)]
+              by (by100 linarith)
+            moreover have "(1 - snd p) * fst (f (fst p)) + snd p * fst x0 \<le> 1"
+              by (rule convex_bound_le[OF hfa(2) hxa(2) h0t ht'(1)]) (by100 simp)
+            moreover have "0 \<le> (1 - snd p) * snd (f (fst p)) + snd p * snd x0"
+              using mult_nonneg_nonneg[OF h0t hfb(1)] mult_nonneg_nonneg[OF ht'(1) hxb(1)]
+              by (by100 linarith)
+            moreover have "(1 - snd p) * snd (f (fst p)) + snd p * snd x0 \<le> 1"
+              by (rule convex_bound_le[OF hfb(2) hxb(2) h0t ht'(1)]) (by100 simp)
+            ultimately show "?F p \<in> I_set \<times> I_set"
+              unfolding top1_unit_interval_def by (simp add: case_prod_beta)
+          qed
+          \<comment> \<open>Transfer via subspace topology bridge.\<close>
+          have "top1_continuous_map_on (I_set \<times> I_set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set))
+            (I_set \<times> I_set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)) ?F"
+            by (rule top1_continuous_map_on_real2_subspace_general[OF hF_range hF_co])
+          thus ?thesis unfolding II_topology_def II_topology_eq_subspace .
+        qed
         have hF0: "\<forall>s\<in>I_set. ?F (s, 0) = f s"
           by (auto simp: prod_eq_iff)
         have hF1: "\<forall>s\<in>I_set. ?F (s, 1) = x0"
