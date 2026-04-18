@@ -6477,10 +6477,35 @@ proof -
       let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
       \<comment> \<open>v: S¹ → R²-{0} continuous (restriction of v: B² → R², v nonvanishing, S¹ ⊆ B²).\<close>
       have hv_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-        sorry
+      proof -
+        have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have hv_B2_temp: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+        proof -
+          have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0" using assms(2) by (by100 auto)
+          show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg]) simp
+        qed
+        show ?thesis
+        proof -
+          have hrestr: "top1_continuous_map_on top1_S1
+              (subspace_topology top1_B2 top1_B2_topology top1_S1) ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hv_B2_temp hS1_B2])
+          \<comment> \<open>subspace of subspace = subspace of ambient.\<close>
+          have hS1_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+            unfolding top1_B2_topology_def top1_S1_topology_def
+            using subspace_topology_trans[OF hS1_B2, of UNIV "product_topology_on top1_open_sets top1_open_sets"]
+            by simp
+          show ?thesis using hrestr unfolding hS1_eq .
+        qed
+      qed
       \<comment> \<open>v: B² → R²-{0} continuous (v: B² → R² continuous + nonvanishing).\<close>
       have hv_B2: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-        sorry
+      proof -
+        have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0"
+          using assms(2) by (by100 auto)
+        have hR2_sub: "?R2_0 \<subseteq> (UNIV :: (real\<times>real) set)" by simp
+        show ?thesis
+          by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg hR2_sub])
+      qed
       have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
         by (rule top1_open_sets_is_topology_on_UNIV)
       have hTR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
