@@ -6742,16 +6742,57 @@ proof
         (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
       using product_topology_on_is_topology_on[OF
             top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by simp
-    have hTR: "is_topology_on (UNIV - {(0::real, 0)}) ?TR"
-      sorry
+    have hTR: "is_topology_on (UNIV - {(0::real, 0)}) ?TR" sorry
     have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (UNIV - {(0, 0)}) ?TR (\<lambda>x. x)"
-      sorry
+    proof -
+      have hS1_sub: "top1_S1 \<subseteq> UNIV - {(0::real, 0)}" unfolding top1_S1_def by (by100 auto)
+      have hid_full: "top1_continuous_map_on (UNIV - {(0::real, 0)}) ?TR (UNIV - {(0, 0)}) ?TR id"
+        by (rule top1_continuous_map_on_id[OF hTR])
+      have hid_restr: "top1_continuous_map_on top1_S1
+          (subspace_topology (UNIV - {(0, 0)}) ?TR top1_S1) (UNIV - {(0, 0)}) ?TR id"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF hid_full hS1_sub])
+      have hS1_eq: "subspace_topology (UNIV - {(0, 0)}) ?TR top1_S1 = top1_S1_topology"
+        unfolding top1_S1_topology_def
+        using subspace_topology_trans[OF hS1_sub] by simp
+      have hid_eq: "(\<lambda>x::real\<times>real. x) = id" by (rule ext) simp
+      show ?thesis using hid_restr unfolding hS1_eq hid_eq[symmetric] by simp
+    qed
     \<comment> \<open>nulhomotopic ⟹ extends to B².\<close>
     obtain k where hk: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV - {(0, 0)}) ?TR k"
         and hkS1: "\<forall>x\<in>top1_S1. k x = x"
       using iffD1[OF Lemma_55_3_nulhomotopic_characterization[OF hid_cont hTR] hnul] by (by100 blast)
     \<comment> \<open>r∘k: B² → S¹ is a retraction (r∘k|S¹ = r|S¹ = id), contradicting no-retraction.\<close>
-    have "top1_retract_of_on top1_B2 top1_B2_topology top1_S1" sorry
+    have "top1_retract_of_on top1_B2 top1_B2_topology top1_S1"
+    proof -
+      \<comment> \<open>From hret, get retraction r': R²-{0} → S¹.\<close>
+      obtain r' where hr'_sub: "top1_S1 \<subseteq> UNIV - {(0::real, 0)}"
+          and hr'_cont: "top1_continuous_map_on (UNIV - {(0, 0)}) ?TR top1_S1
+              (subspace_topology (UNIV - {(0, 0)}) ?TR top1_S1) r'"
+          and hr'_fix: "\<forall>a\<in>top1_S1. r' a = a"
+        using hret unfolding top1_retract_of_on_def top1_is_retraction_on_def by (by100 blast)
+      \<comment> \<open>r'∘k: B² → S¹ continuous (composition).\<close>
+      have hrk_comp: "top1_continuous_map_on top1_B2 top1_B2_topology top1_S1
+          (subspace_topology (UNIV - {(0, 0)}) ?TR top1_S1) (r' \<circ> k)"
+        by (rule top1_continuous_map_on_comp[OF hk hr'_cont])
+      \<comment> \<open>Subspace topology equalities.\<close>
+      have hTS1_eq: "subspace_topology (UNIV - {(0, 0)}) ?TR top1_S1 = top1_S1_topology"
+        unfolding top1_S1_topology_def using subspace_topology_trans[OF hr'_sub] by simp
+      have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+      have hTS1_B2: "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
+        unfolding top1_S1_topology_def top1_B2_topology_def
+        using subspace_topology_trans[OF hS1_B2] by simp
+      have hrk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology top1_S1
+          (subspace_topology top1_B2 top1_B2_topology top1_S1) (r' \<circ> k)"
+        using hrk_comp unfolding hTS1_eq hTS1_B2 .
+      \<comment> \<open>r'∘k fixes S¹: k(x) = x and r'(x) = x for x \<in> S¹.\<close>
+      have hrk_fix: "\<forall>a\<in>top1_S1. (r' \<circ> k) a = a"
+      proof (intro ballI)
+        fix a assume ha: "a \<in> top1_S1"
+        show "(r' \<circ> k) a = a" using hkS1 hr'_fix ha by (simp add: comp_def)
+      qed
+      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+        using hS1_B2 hrk_cont hrk_fix by (by100 blast)
+    qed
     thus False using Theorem_55_2_no_retraction by (by100 metis)
   qed
 qed
@@ -12368,5 +12409,17 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
