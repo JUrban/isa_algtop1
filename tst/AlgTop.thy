@@ -160,8 +160,52 @@ next
   thus "{x \<in> UNIV. f x \<in> V} \<in> top1_open_sets" by simp
 qed
 
-text \<open>Continuity transfer: continuous_on on ℝ² implies top1_continuous_map_on
-  on subspace topologies.\<close>
+text \<open>Continuity transfer: continuous_on S on ℝ² implies top1_continuous_map_on
+  on subspace topologies. Works for any S (not just UNIV).\<close>
+lemma top1_continuous_map_on_real2_subspace_general:
+  fixes S :: "(real \<times> real) set" and T :: "(real \<times> real) set"
+  assumes hmap: "\<And>p. p \<in> S \<Longrightarrow> f p \<in> T"
+      and hcont: "continuous_on S f"
+  shows "top1_continuous_map_on S
+           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+           T (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) f"
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix p assume "p \<in> S" thus "f p \<in> T" by (rule hmap)
+next
+  fix V assume hV: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T"
+  obtain U where hU: "U \<in> product_topology_on top1_open_sets top1_open_sets" and hVeq: "V = T \<inter> U"
+    using hV unfolding subspace_topology_def by (by100 auto)
+  have hU_open: "open U"
+  proof -
+    have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hU product_topology_on_open_sets_real2 by (by100 metis)
+    thus ?thesis unfolding top1_open_sets_def by (by100 simp)
+  qed
+  \<comment> \<open>continuous_on S f + open U gives open W with f\<inverse>(U) \<inter> S = W \<inter> S.\<close>
+  obtain W where hW_open: "open W" and hfW: "W \<inter> S = f -` U \<inter> S"
+    using hcont hU_open unfolding continuous_on_open_invariant by blast
+  have "{p \<in> S. f p \<in> V} = S \<inter> W"
+  proof -
+    have "{p \<in> S. f p \<in> V} = S \<inter> (f -` U \<inter> f -` T)" unfolding hVeq by (by100 auto)
+    also have "\<dots> = S \<inter> (f -` U)" using hmap by (by100 auto)
+    also have "\<dots> = W \<inter> S" using hfW by (by100 blast)
+    also have "\<dots> = S \<inter> W" by (by100 blast)
+    finally show ?thesis .
+  qed
+  moreover have "W \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+    have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+      using hW_open unfolding top1_open_sets_def by (by100 blast)
+    thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+  qed
+  ultimately show "{p \<in> S. f p \<in> V} \<in>
+    subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+    unfolding subspace_topology_def by (by100 blast)
+qed
+
+text \<open>Continuity transfer: continuous_on UNIV on ℝ² implies top1_continuous_map_on
+  on subspace topologies (special case of the general version).\<close>
 lemma top1_continuous_map_on_real2_subspace:
   fixes S :: "(real \<times> real) set" and T :: "(real \<times> real) set"
   assumes hmap: "\<And>p. p \<in> S \<Longrightarrow> f p \<in> T"
