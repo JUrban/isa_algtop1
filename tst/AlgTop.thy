@@ -4427,9 +4427,10 @@ proof -
     moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
     ultimately show ?thesis by simp
   qed
-  have hS_open: "openin_on I_set I_top ?S" sorry
+  have hS_open: "openin_on I_set I_top ?S"
     \<comment> \<open>For s \<in> S: f(s) \<in> some evenly covered U. ftilde_1(s) = ftilde_2(s) \<in> some slice V0.
        Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
+    sorry
   have hS_closed: "closedin_on I_set I_top ?S" sorry
     \<comment> \<open>Complement is open by same argument: if ftilde_1(s) \<noteq> ftilde_2(s), they're in
        different slices, and by continuity they stay in different slices nearby.\<close>
@@ -6568,6 +6569,8 @@ proof
             (h \<circ> f) (top1_constant_path (h (1, 0)))"
     using hnul sorry
   show False using hh_star_nontrivial hh_star_trivial sorry
+    \<comment> \<open>Note: nontrivial uses const(1,0) while trivial uses const(h(1,0)).
+       Contradiction requires h(1,0)=(1,0) (WLOG from Munkres) or basepoint change.\<close>
 qed
 
 (** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
