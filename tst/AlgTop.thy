@@ -8427,8 +8427,13 @@ proof -
     let ?\<beta>2 = "top1_path_product ?left' ?top'"
     \<comment> \<open>β₁ and β₂ both go from (0,0) to (1,1) in I×I.
        They're path-homotopic in I×I because I×I is convex (simply connected).\<close>
+    have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology" sorry
+    have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)
+    have h\<beta>1_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1" sorry
+    have h\<beta>2_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>2" sorry
     have h\<beta>_hom: "top1_path_homotopic_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1 ?\<beta>2"
-      sorry
+      by (rule simply_connected_paths_homotopic[OF hII_sc h\<beta>1_path h\<beta>2_path h00])
     \<comment> \<open>G∘β₁ = (h∘l)*α and G∘β₂ = α*(k∘l).\<close>
     have hG\<beta>1: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s"
     proof (intro ballI)
@@ -13564,6 +13569,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
