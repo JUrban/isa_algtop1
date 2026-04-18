@@ -4189,7 +4189,65 @@ proof -
   \<comment> \<open>Each of the 4 arcs E,N,W,S is evenly covered. We prove arc_E; others are symmetric.\<close>
   have harc_E_ec: "top1_evenly_covered_on UNIV top1_open_sets
       top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_E"
-    sorry
+  proof -
+    \<comment> \<open>arc_E is open in S^1: arc_E = S^1 \<inter> {(x,y). x > 0}.\<close>
+    have harc_E_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_E"
+    proof -
+      have heq: "top1_S1_arc_E = top1_S1 \<inter> {p::real\<times>real. fst p > 0}"
+        unfolding top1_S1_arc_E_def top1_S1_def by (by100 auto)
+      have hopen: "open {p::real\<times>real. fst p > 0}"
+        by (rule open_Collect_less) (auto intro: continuous_intros)
+      have "{p::real\<times>real. fst p > 0} \<in> (top1_open_sets::(real\<times>real) set set)"
+        using hopen unfolding top1_open_sets_def by (by100 blast)
+      hence "{p::real\<times>real. fst p > 0} \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 blast)
+      thus ?thesis unfolding openin_on_def top1_S1_topology_def subspace_topology_def heq
+        by (by100 blast)
+    qed
+    \<comment> \<open>Slices: V_n = (n - 1/4, n + 1/4) for each n \<in> Z.\<close>
+    define \<V> where "\<V> = (\<lambda>n::int. {of_int n - 1/4 <..< of_int n + (1/4::real)}) ` UNIV"
+    \<comment> \<open>Each slice is open.\<close>
+    have hV_open: "\<forall>V\<in>\<V>. openin_on UNIV (top1_open_sets::real set set) V"
+      unfolding \<V>_def openin_on_def top1_open_sets_def by (by100 auto)
+    \<comment> \<open>Slices pairwise disjoint.\<close>
+    have hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+    proof (intro ballI impI)
+      fix V V' assume "V \<in> \<V>" "V' \<in> \<V>" "V \<noteq> V'"
+      then obtain n m :: int where hV: "V = {of_int n - 1/4 <..< of_int n + 1/4}"
+          and hV': "V' = {of_int m - 1/4 <..< of_int m + 1/4}" and hnm: "n \<noteq> m"
+        unfolding \<V>_def by blast
+      have "of_int n - of_int m \<ge> (1::real) \<or> of_int m - of_int n \<ge> (1::real)"
+        using hnm by linarith
+      hence hgap: "of_int m + 1/4 \<le> of_int n - (1/4::real) \<or> of_int n + 1/4 \<le> of_int m - (1/4::real)"
+      proof
+        assume h: "of_int n - of_int m \<ge> (1::real)"
+        hence "of_int m + 1/4 \<le> of_int n - (1/4::real)" by (by100 linarith)
+        thus ?thesis by (by100 blast)
+      next
+        assume h: "of_int m - of_int n \<ge> (1::real)"
+        hence "of_int n + 1/4 \<le> of_int m - (1/4::real)" by (by100 linarith)
+        thus ?thesis by (by100 blast)
+      qed
+      show "V \<inter> V' = {}"
+      proof (rule ccontr)
+        assume "V \<inter> V' \<noteq> {}"
+        then obtain x where "x \<in> V" "x \<in> V'" by (by100 blast)
+        hence "of_int n - 1/4 < x" "x < of_int n + 1/4"
+              "of_int m - 1/4 < x" "x < of_int m + 1/4"
+          unfolding hV hV' by (by100 auto)+
+        thus False using hgap by (by100 linarith)
+      qed
+    qed
+    \<comment> \<open>Union = preimage.\<close>
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_E} = \<Union>\<V>"
+      unfolding \<V>_def using top1_S1_arc_E_preimage by (by100 auto)
+    \<comment> \<open>p homeomorphism on each slice.\<close>
+    have hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+        top1_S1_arc_E (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E) top1_R_to_S1"
+      sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+      using harc_E_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
+  qed
   have harc_N_ec: "top1_evenly_covered_on UNIV top1_open_sets
       top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_N" sorry
   have harc_W_ec: "top1_evenly_covered_on UNIV top1_open_sets
