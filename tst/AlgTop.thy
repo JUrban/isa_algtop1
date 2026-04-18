@@ -6732,7 +6732,28 @@ proof
   qed
   \<comment> \<open>Step 2: j_* is injective (Lemma 55.1) hence nontrivial.\<close>
   \<comment> \<open>Step 3: nulhomotopic \<Rightarrow> j_* trivial (Lemma 55.3 (3)\<Rightarrow>(1)), contradicting nontrivial.\<close>
-  show False sorry
+  \<comment> \<open>By retraction + Theorem 55.2 (no retract of B² to S¹) argument:
+     j nulhomotopic ⟹ j extends to k: B² → R²-{0} with k|S¹ = j.
+     Composing r∘k: B² → S¹ gives a retraction, contradicting Theorem 55.2.\<close>
+  show False
+  proof -
+    let ?TR = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)})"
+    have hTR2_full: "is_topology_on (UNIV::(real\<times>real) set)
+        (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+            top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by simp
+    have hTR: "is_topology_on (UNIV - {(0::real, 0)}) ?TR"
+      sorry
+    have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (UNIV - {(0, 0)}) ?TR (\<lambda>x. x)"
+      sorry
+    \<comment> \<open>nulhomotopic ⟹ extends to B².\<close>
+    obtain k where hk: "top1_continuous_map_on top1_B2 top1_B2_topology (UNIV - {(0, 0)}) ?TR k"
+        and hkS1: "\<forall>x\<in>top1_S1. k x = x"
+      using iffD1[OF Lemma_55_3_nulhomotopic_characterization[OF hid_cont hTR] hnul] by (by100 blast)
+    \<comment> \<open>r∘k: B² → S¹ is a retraction (r∘k|S¹ = r|S¹ = id), contradicting no-retraction.\<close>
+    have "top1_retract_of_on top1_B2 top1_B2_topology top1_S1" sorry
+    thus False using Theorem_55_2_no_retraction by (by100 metis)
+  qed
 qed
 
 text \<open>Helper: if f is nulhomotopic and f \<simeq> g, then g is nulhomotopic.
@@ -12347,4 +12368,5 @@ proof -
 qed
 
 end
+ 
  
