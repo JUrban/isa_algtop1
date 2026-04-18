@@ -4360,24 +4360,9 @@ proof -
           show "top1_homeomorphism_on V0 (subspace_topology E0 (subspace_topology E TE E0) V0)
               ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
             unfolding hTV0 hTU0 hTV0' hTU0'
-            \<comment> \<open>Restrict homeomorphism p|V: V → U to V0 → U0.\<close>
-            unfolding top1_homeomorphism_on_def
-          proof (intro conjI)
-            show "is_topology_on V0 (subspace_topology V (subspace_topology E TE V) V0)"
-              by (metis is_topology_on_strict_imp assms(2) hV0_sub_V hV0_sub_E
-                  subspace_topology_is_strict subspace_topology_trans)
-            show "is_topology_on ?U0 (subspace_topology U (subspace_topology B TB U) ?U0)"
-              by (metis hTU0' hTU0 assms(4) assms(3) hU0_sub_B0
-                  subspace_topology_is_topology_on is_topology_on_strict_imp)
-            show "bij_betw p V0 ?U0"
-              sorry
-            show "top1_continuous_map_on V0 (subspace_topology V (subspace_topology E TE V) V0)
-                ?U0 (subspace_topology U (subspace_topology B TB U) ?U0) p"
-              sorry
-            show "top1_continuous_map_on ?U0 (subspace_topology U (subspace_topology B TB U) ?U0)
-                V0 (subspace_topology V (subspace_topology E TE V) V0) (inv_into V0 p)"
-              sorry
-          qed
+            \<comment> \<open>Now need: homeomorphism V0 (subspace V (sub E TE V) V0) U0 (subspace U (sub B TB U) U0) p.
+               This is the restriction of the homeomorphism p|V: V → U to V0 → U0.\<close>
+            sorry
         qed
       qed
     qed
@@ -13405,7 +13390,6 @@ proof -
 qed
 
 end
- 
  
  
  
