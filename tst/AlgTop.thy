@@ -4817,6 +4817,7 @@ theorem Theorem_54_4_lifting_correspondence:
   assumes he0: "e0 \<in> E" and hpe0: "p e0 = b0"
       and "top1_covering_map_on E TE B TB p"
       and "top1_path_connected_on E TE"
+      and "is_topology_on B TB"
   shows "\<exists>\<phi>. (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
                 \<phi> c \<in> {e\<in>E. p e = b0})
            \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
@@ -4825,8 +4826,7 @@ proof -
   \<comment> \<open>Well-defined: by Theorem 54.3, path-homotopic loops lift to same endpoint.\<close>
   have hTE: "is_topology_on E TE"
     using assms(4) unfolding top1_path_connected_on_def by (by100 blast)
-  have hTB: "is_topology_on B TB"
-    sorry \<comment> \<open>Needs extraction from covering map; B has topology since p is continuous to B.\<close>
+  have hTB: "is_topology_on B TB" by (rule assms(5))
   have hphi_wd: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g
       \<and> top1_path_homotopic_on B TB b0 b0 f g
       \<longrightarrow> (\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)
@@ -4896,6 +4896,7 @@ proof -
      from simple connectivity), injectivity from simple connectivity of E.\<close>
   have hpc: "top1_path_connected_on E TE"
     using assms(4) top1_simply_connected_on_path_connected by (by100 blast)
+  have hTB_outer: "is_topology_on B TB" sorry
   \<comment> \<open>Injectivity: if \<phi>([f])=\<phi>([g]) then lifts end at same point. E simply connected
      gives path homotopy Ftilde between lifts; p\<circ>Ftilde homotopizes f to g.\<close>
   have hinj: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g \<and>
@@ -4926,7 +4927,7 @@ proof -
     \<comment> \<open>Apply p: p\<circ>ft \<simeq> p\<circ>gt.\<close>
     have hp_cont: "top1_continuous_map_on E TE B TB p"
       using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
-    have hTB: "is_topology_on B TB" sorry
+    have hTB: "is_topology_on B TB" by (rule hTB_outer)
     have hpft_pgt: "top1_path_homotopic_on B TB (p e0) (p (ft 1)) (p \<circ> ft) (p \<circ> gt)"
       by (rule continuous_preserves_path_homotopic[OF hTE hTB hp_cont
             \<open>top1_path_homotopic_on E TE e0 (ft 1) ft gt\<close>])
@@ -4968,7 +4969,7 @@ proof -
   obtain \<phi> where h\<phi>_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
         \<phi> c \<in> {e\<in>E. p e = b0}"
       and h\<phi>_surj: "\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
-    using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc] by (by100 auto)
+    using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc hTB_outer] by (by100 auto)
   \<comment> \<open>Injectivity from hinj: if \<phi>([f]) = \<phi>([g]) then [f] = [g].\<close>
   have h\<phi>_inj: "inj_on \<phi> (top1_fundamental_group_carrier B TB b0)" sorry
   show ?thesis unfolding bij_betw_def using h\<phi>_inj h\<phi>_surj by (by100 blast)
