@@ -6949,9 +6949,23 @@ proof -
       \<comment> \<open>F(x,t) \<noteq> 0: if F(x,t) = 0 then v(x) = -t/(1-t) * x which means v points inward.\<close>
       have hF_nz: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?F (x, t) \<noteq> (0, 0)" sorry
       have hv_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x)"
-        sorry
+        sorry \<comment> \<open>Same as hv_S1 but out of scope — needs reconstruct.\<close>
       have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. x)"
-        sorry
+      proof -
+        have hS1_sub: "top1_S1 \<subseteq> ?R2_0'" unfolding top1_S1_def by (by100 auto)
+        have hTR2_0_full: "is_topology_on ?R2_0' ?TR2_0'"
+          by (simp add: product_topology_on_open_sets subspace_topology_is_topology_on
+              top1_open_sets_is_topology_on_UNIV)
+        have hid_full: "top1_continuous_map_on ?R2_0' ?TR2_0' ?R2_0' ?TR2_0' id"
+          by (rule top1_continuous_map_on_id[OF hTR2_0_full])
+        have hid_restr: "top1_continuous_map_on top1_S1
+            (subspace_topology ?R2_0' ?TR2_0' top1_S1) ?R2_0' ?TR2_0' id"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hid_full hS1_sub])
+        have hS1_eq: "subspace_topology ?R2_0' ?TR2_0' top1_S1 = top1_S1_topology"
+          unfolding top1_S1_topology_def using subspace_topology_trans[OF hS1_sub] by simp
+        have hid_eq: "(\<lambda>x::real\<times>real. x) = id" by (rule ext) simp
+        show ?thesis using hid_restr unfolding hS1_eq hid_eq[symmetric] by simp
+      qed
       have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
           ?R2_0' ?TR2_0' ?F" sorry
       show ?thesis unfolding top1_homotopic_on_def
@@ -12445,6 +12459,9 @@ proof -
 qed
 
 end
+ 
+ 
+ 
  
  
  
