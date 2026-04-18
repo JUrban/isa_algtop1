@@ -8398,147 +8398,8 @@ proof -
   thus ?thesis using hroot_monic assms(2) by fastforce
 qed
 
-section \<open>\<S>57 The Borsuk-Ulam Theorem\<close>
 
-text \<open>Antipode-preserving map on the plane: h(-x) = -h(x) pointwise.\<close>
-definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> real \<times> real) \<Rightarrow> bool" where
-  "top1_antipode_preserving_S1 h \<longleftrightarrow>
-     (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
-
-(** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 is NOT nulhomotopic.
-
-    Munkres' proof:
-    Step 1: WLOG h(b_0) = b_0 (rotate). Let q: S^1 \<rightarrow> S^1 be q(z) = z^2 (quotient
-            map). q is a covering map and its fibers are antipodal pairs {z, -z}.
-            Since h(-z) = -h(z), we have q(h(-z)) = q(h(z)), so q\<circ>h factors as
-            k\<circ>q for some continuous k: S^1 \<rightarrow> S^1.
-    Step 2: k_* is nontrivial. If \<tilde>f is any path in S^1 from b_0 to -b_0, the
-            loop f = q\<circ>\<tilde>f represents a nontrivial element of \<pi>_1(S^1). For \<tilde>f is
-            a lifting of f, starting at b_0 but not ending at b_0.
-            Hence k_*[f] = [k\<circ>(q\<circ>\<tilde>f)] = [q\<circ>(h\<circ>\<tilde>f)] is also nontrivial.
-    Step 3: k_* injective; q_* injective (multiplication by 2 in Z). So k_*\<circ>q_*
-            is injective. Since q_*\<circ>h_* = k_*\<circ>q_*, h_* is injective, hence
-            nontrivial, hence h is not nulhomotopic. **)
-theorem Theorem_57_1:
-  assumes "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
-      and "top1_antipode_preserving_S1 h"
-  shows "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
-proof
-  assume hnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
-  \<comment> \<open>Step 1: q(z)=z^2 is a covering map. h(-z)=-h(z) \<Rightarrow> q\<circ>h = k\<circ>q for some k.\<close>
-  let ?q = "\<lambda>(x, y). (x^2 - y^2, 2*x*y)"
-  have hq_cover: "top1_covering_map_on top1_S1 top1_S1_topology
-      top1_S1 top1_S1_topology ?q" sorry
-  obtain k where hk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
-      top1_S1 top1_S1_topology k"
-      and hk_eq: "\<forall>z\<in>top1_S1. k (?q z) = ?q (h z)"
-    sorry
-  \<comment> \<open>Step 2: k_* is nontrivial. A path from b0 to -b0 in S^1 lifts to a nontrivial loop under q,
-     and k maps this to another nontrivial element.\<close>
-  have hk_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
-      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
-            (k \<circ> f) (top1_constant_path (1, 0)))" sorry
-  \<comment> \<open>Step 3: q_* is multiplication by 2, hence injective. k_*\<circ>q_* injective.
-     q_*\<circ>h_* = k_*\<circ>q_* \<Rightarrow> h_* injective \<Rightarrow> nontrivial \<Rightarrow> h not nulhomotopic.\<close>
-  have hq_star_inj: "\<forall>f g. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
-      \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g
-      \<and> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
-           (?q \<circ> f) (?q \<circ> g)
-      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
-  \<comment> \<open>WLOG: reduce to h(1,0) = (1,0) by rotation. Munkres: let \<rho> rotate h(b0) to b0.\<close>
-  \<comment> \<open>Case 1: h(1,0) = (1,0). Then h_* at (1,0) is nontrivial (from covering theory),
-     but nulhomotopic \<Rightarrow> h_* trivial. Contradiction.\<close>
-  \<comment> \<open>Case 2: h(1,0) \<noteq> (1,0). Rotate to reduce to Case 1.\<close>
-  have hh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
-      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
-            (h \<circ> f) (top1_constant_path (1, 0)))" sorry
-  \<comment> \<open>h nulhomotopic \<Rightarrow> h_* trivial. By homotopy_induced_basepoint_change:
-     h\<circ>f \<simeq> const_{h(1,0)} at h(1,0). For path_hom at (1,0), need h(1,0) = (1,0).
-     The metis step below extracts this from is_path_on conditions.
-     TODO: handle h(1,0) \<noteq> (1,0) via rotation WLOG.\<close>
-  have hh_star_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
-      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
-            (h \<circ> f) (top1_constant_path (h (1, 0)))"
-    using hnul sorry
-  show False using hh_star_nontrivial hh_star_trivial
-    by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
-      top1_is_path_on_def top1_path_homotopic_on_def)
-    \<comment> \<open>The metis proof extracts h(1,0) = (1,0) from hh_star_trivial's
-       is_path_on conditions, then derives the direct contradiction.
-       TODO: properly handle h(1,0) \<noteq> (1,0) via rotation (WLOG).\<close>
-qed
-
-(** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
-    Munkres' proof: if g: S^2 \<rightarrow> S^1 is antipode-preserving, then h = g|S^1
-    (equator) is antipode-preserving S^1 \<rightarrow> S^1, not nulhomotopic by 57.1.
-    But g extends h over the upper hemisphere \<cong> B^2, so h IS nulhomotopic.
-    Contradiction.
-
-    (Stated as part of Theorem 57.3 below using an inline S^2 set, since
-     top1_S2 is defined later in the file.) **)
-
-(** from *\<S>57 Theorem 57.3: Borsuk-Ulam theorem for S^2.
-    Munkres' proof: by contradiction. If f(x) \<ne> f(-x) for all x \<in> S^2, then
-    g(x) = (f(x) - f(-x))/||f(x) - f(-x)|| is continuous antipode-preserving
-    S^2 \<rightarrow> S^1, contradicting Theorem 57.2. **)
-theorem Theorem_57_3_BorsukUlam:
-  fixes f :: "real \<times> real \<times> real \<Rightarrow> real \<times> real"
-  assumes hf: "top1_continuous_map_on {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}
-    (subspace_topology UNIV
-      (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets))
-      {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1})
-    UNIV (product_topology_on top1_open_sets top1_open_sets) f"
-  shows "\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
-    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x))"
-proof (rule ccontr)
-  assume hno: "\<not> (\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
-    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x)))"
-  \<comment> \<open>By assumption, f(x) \<noteq> f(-x) for all x \<in> S^2.\<close>
-  let ?S2 = "{p::real\<times>real\<times>real. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}"
-  let ?neg = "\<lambda>x::real\<times>real\<times>real. (- fst x, - fst (snd x), - snd (snd x))"
-  have hfne: "\<forall>x\<in>?S2. f x \<noteq> f (?neg x)" using hno by blast
-  \<comment> \<open>Define g: S^2 \<rightarrow> S^1 by g(x) = (f(x) - f(-x)) / ||f(x) - f(-x)||.\<close>
-  let ?diff = "\<lambda>x. (fst (f x) - fst (f (?neg x)), snd (f x) - snd (f (?neg x)))"
-  let ?norm = "\<lambda>x. sqrt ((fst (?diff x))^2 + (snd (?diff x))^2)"
-  let ?g = "\<lambda>x. (fst (?diff x) / ?norm x, snd (?diff x) / ?norm x)"
-  \<comment> \<open>g is continuous (rational functions with nonzero denominator).\<close>
-  have hg_cont: "top1_continuous_map_on ?S2
-      (subspace_topology UNIV (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
-      top1_S1 top1_S1_topology ?g" sorry
-  \<comment> \<open>g is antipode-preserving: g(-x) = -g(x).\<close>
-  have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))"
-  proof (intro ballI)
-    fix x :: "real \<times> real \<times> real" assume hx: "x \<in> ?S2"
-    have hnegneg: "?neg (?neg x) = x" by (simp add: prod_eq_iff)
-    have h1: "fst (?diff (?neg x)) = - fst (?diff x)" by (simp add: hnegneg)
-    have h2: "snd (?diff (?neg x)) = - snd (?diff x)" by (simp add: hnegneg)
-    have hpc1: "(fst (f (?neg x)) - fst (f x))\<^sup>2 = (fst (f x) - fst (f (?neg x)))\<^sup>2"
-      by (rule power2_commute)
-    have hpc2: "(snd (f (?neg x)) - snd (f x))\<^sup>2 = (snd (f x) - snd (f (?neg x)))\<^sup>2"
-      by (rule power2_commute)
-    have h3: "?norm (?neg x) = ?norm x" by (simp add: hnegneg hpc1 hpc2)
-    have hd1: "fst (f (?neg x)) - fst (f x) = - (fst (f x) - fst (f (?neg x)))"
-      by (by100 linarith)
-    have hd2: "snd (f (?neg x)) - snd (f x) = - (snd (f x) - snd (f (?neg x)))"
-      by (by100 linarith)
-    show "?g (?neg x) = (- fst (?g x), - snd (?g x))"
-      by (simp del: minus_diff_eq add: prod_eq_iff hnegneg h3 hd1 hd2)
-  qed
-  \<comment> \<open>Restrict g to the equator S^1: h = g|_{S^1}. h is antipode-preserving S^1 \<rightarrow> S^1.\<close>
-  \<comment> \<open>By Theorem 57.1, h is not nulhomotopic. But g extends h over the upper hemisphere
-     which is homeomorphic to B^2, so h is nulhomotopic. Contradiction.\<close>
-  have hg_not_nulhomo: "\<not> top1_nulhomotopic_on ?S2
-      (subspace_topology UNIV (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
-      top1_S1 top1_S1_topology ?g" sorry
-  have hg_nulhomo: "top1_nulhomotopic_on ?S2
-      (subspace_topology UNIV (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
-      top1_S1 top1_S1_topology ?g" sorry
-  show False using hg_not_nulhomo hg_nulhomo by contradiction
-qed
+subsection \<open>General homotopy tools (needed for \<S>57 and \<S>58)\<close>
 
 
 text \<open>Key: homotopy from h to k + loop l at x₀ implies h\<circ>l loop-equiv to basepoint-change of k\<circ>l.\<close>
@@ -9055,6 +8916,252 @@ proof -
     using hhl_loop htarget_loop c5[unfolded htarget_eq[symmetric]] by blast
 qed
 
+
+text \<open>Double basepoint change = single basepoint change along composed path.\<close>
+lemma double_basepoint_change_equiv:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x1 x2 alpha"
+      and hbeta: "top1_is_path_on X TX x0 x1 beta"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_loop_equiv_on X TX x2
+    (top1_basepoint_change_on X TX x1 x2 alpha
+      (top1_basepoint_change_on X TX x0 x1 beta f))
+    (top1_basepoint_change_on X TX x0 x2
+      (top1_path_product beta alpha) f)"
+proof -
+  let ?ra = "top1_path_reverse alpha" and ?rb = "top1_path_reverse beta"
+  let ?ba = "top1_path_product beta alpha"
+  let ?fp = "top1_is_path_on X TX"
+  have hfp: "?fp x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  have hra: "?fp x2 x1 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
+  have hrb: "?fp x1 x0 ?rb" by (rule top1_path_reverse_is_path[OF hbeta])
+  have hba: "?fp x0 x2 ?ba" by (rule top1_path_product_is_path[OF hTX hbeta halpha])
+  \<comment> \<open>rev(\<beta>*\<alpha>) = rev(\<alpha>) * rev(\<beta>) (definitional equality).\<close>
+  have ha0: "alpha 0 = x1" and ha1: "alpha 1 = x2"
+    using halpha unfolding top1_is_path_on_def by (by100 blast)+
+  have hb0: "beta 0 = x0" and hb1: "beta 1 = x1"
+    using hbeta unfolding top1_is_path_on_def by (by100 blast)+
+  have hrev_prod: "top1_path_reverse ?ba = top1_path_product ?ra ?rb"
+  proof (rule ext)
+    fix s :: real
+    show "top1_path_reverse ?ba s = top1_path_product ?ra ?rb s"
+      unfolding top1_path_reverse_def top1_path_product_def
+      using ha0 hb1 by (simp add: field_simps)
+  qed
+  \<comment> \<open>Unfold basepoint_change_on_def.\<close>
+  have hlhs_eq: "top1_basepoint_change_on X TX x1 x2 alpha
+      (top1_basepoint_change_on X TX x0 x1 beta f)
+    = top1_path_product ?ra (top1_path_product
+        (top1_path_product ?rb (top1_path_product f beta)) alpha)"
+    unfolding top1_basepoint_change_on_def by (rule refl)
+  have hrhs_eq: "top1_basepoint_change_on X TX x0 x2 ?ba f
+    = top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba)"
+    unfolding top1_basepoint_change_on_def hrev_prod by (rule refl)
+  \<comment> \<open>Both sides are path-homotopic via repeated associativity:
+     ra * ((rb * (f * \<beta>)) * \<alpha>) \<simeq> (ra * rb) * (f * (\<beta> * \<alpha>)).\<close>
+  \<comment> \<open>Path facts for associativity.\<close>
+  have hfb: "?fp x0 x1 (top1_path_product f beta)"
+    by (rule top1_path_product_is_path[OF hTX hfp hbeta])
+  have hfba: "?fp x0 x2 (top1_path_product f ?ba)"
+    by (rule top1_path_product_is_path[OF hTX hfp hba])
+  have hrb_fba: "?fp x1 x2 (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule top1_path_product_is_path[OF hTX hrb hfba])
+  \<comment> \<open>Step 1: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*((f*\<beta>)*\<alpha>) [sym of assoc].\<close>
+  have s1: "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
+    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+          Theorem_51_2_associativity[OF hTX hrb hfb halpha]])
+  \<comment> \<open>Step 2: (f*\<beta>)*\<alpha> \<simeq> f*(\<beta>*\<alpha>) [sym of assoc].\<close>
+  have s2: "top1_path_homotopic_on X TX x0 x2
+    (top1_path_product (top1_path_product f beta) alpha)
+    (top1_path_product f ?ba)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+          Theorem_51_2_associativity[OF hTX hfp hbeta halpha]])
+  \<comment> \<open>Lift step 2 through rb: rb*((f*\<beta>)*\<alpha>) \<simeq> rb*(f*(\<beta>*\<alpha>)).\<close>
+  have s2': "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))
+    (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule path_homotopic_product_right[OF hTX s2 hrb])
+  \<comment> \<open>Combine steps 1+2: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*(f*ba).\<close>
+  have s12: "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
+    (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s1 s2'])
+  \<comment> \<open>Lift s12 through ra: ra*((rb*(f*\<beta>))*\<alpha>) \<simeq> ra*(rb*(f*ba)).\<close>
+  have s12': "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
+    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))"
+    by (rule path_homotopic_product_right[OF hTX s12 hra])
+  \<comment> \<open>Step 3: ra*(rb*(f*ba)) \<simeq> (ra*rb)*(f*ba) [assoc].\<close>
+  have s3: "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))
+    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
+    by (rule Theorem_51_2_associativity[OF hTX hra hrb hfba])
+  \<comment> \<open>Full chain: LHS \<simeq> RHS.\<close>
+  have hchain: "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
+    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s12' s3])
+  have hbc_bf: "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 beta f)"
+    by (rule top1_basepoint_change_is_loop[OF hTX hbeta hf])
+  have hlhs_loop: "top1_is_loop_on X TX x2
+    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))"
+    by (rule top1_basepoint_change_is_loop[OF hTX halpha hbc_bf])
+  have hrhs_loop: "top1_is_loop_on X TX x2
+    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
+    by (rule top1_basepoint_change_is_loop[OF hTX hba hf])
+  have hchain': "top1_path_homotopic_on X TX x2 x2
+    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))
+    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
+    using hchain unfolding hlhs_eq hrhs_eq .
+  show ?thesis unfolding top1_loop_equiv_on_def
+    using hlhs_loop hrhs_loop hchain' by (by100 blast)
+qed
+
+section \<open>\<S>57 The Borsuk-Ulam Theorem\<close>
+
+text \<open>Antipode-preserving map on the plane: h(-x) = -h(x) pointwise.\<close>
+definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> real \<times> real) \<Rightarrow> bool" where
+  "top1_antipode_preserving_S1 h \<longleftrightarrow>
+     (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
+
+(** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 is NOT nulhomotopic.
+
+    Munkres' proof:
+    Step 1: WLOG h(b_0) = b_0 (rotate). Let q: S^1 \<rightarrow> S^1 be q(z) = z^2 (quotient
+            map). q is a covering map and its fibers are antipodal pairs {z, -z}.
+            Since h(-z) = -h(z), we have q(h(-z)) = q(h(z)), so q\<circ>h factors as
+            k\<circ>q for some continuous k: S^1 \<rightarrow> S^1.
+    Step 2: k_* is nontrivial. If \<tilde>f is any path in S^1 from b_0 to -b_0, the
+            loop f = q\<circ>\<tilde>f represents a nontrivial element of \<pi>_1(S^1). For \<tilde>f is
+            a lifting of f, starting at b_0 but not ending at b_0.
+            Hence k_*[f] = [k\<circ>(q\<circ>\<tilde>f)] = [q\<circ>(h\<circ>\<tilde>f)] is also nontrivial.
+    Step 3: k_* injective; q_* injective (multiplication by 2 in Z). So k_*\<circ>q_*
+            is injective. Since q_*\<circ>h_* = k_*\<circ>q_*, h_* is injective, hence
+            nontrivial, hence h is not nulhomotopic. **)
+theorem Theorem_57_1:
+  assumes "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
+      and "top1_antipode_preserving_S1 h"
+  shows "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
+proof
+  assume hnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h"
+  \<comment> \<open>Step 1: q(z)=z^2 is a covering map. h(-z)=-h(z) \<Rightarrow> q\<circ>h = k\<circ>q for some k.\<close>
+  let ?q = "\<lambda>(x, y). (x^2 - y^2, 2*x*y)"
+  have hq_cover: "top1_covering_map_on top1_S1 top1_S1_topology
+      top1_S1 top1_S1_topology ?q" sorry
+  obtain k where hk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+      top1_S1 top1_S1_topology k"
+      and hk_eq: "\<forall>z\<in>top1_S1. k (?q z) = ?q (h z)"
+    sorry
+  \<comment> \<open>Step 2: k_* is nontrivial. A path from b0 to -b0 in S^1 lifts to a nontrivial loop under q,
+     and k maps this to another nontrivial element.\<close>
+  have hk_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (k \<circ> f) (top1_constant_path (1, 0)))" sorry
+  \<comment> \<open>Step 3: q_* is multiplication by 2, hence injective. k_*\<circ>q_* injective.
+     q_*\<circ>h_* = k_*\<circ>q_* \<Rightarrow> h_* injective \<Rightarrow> nontrivial \<Rightarrow> h not nulhomotopic.\<close>
+  have hq_star_inj: "\<forall>f g. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g
+      \<and> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+           (?q \<circ> f) (?q \<circ> g)
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
+  \<comment> \<open>WLOG: reduce to h(1,0) = (1,0) by rotation. Munkres: let \<rho> rotate h(b0) to b0.\<close>
+  \<comment> \<open>Case 1: h(1,0) = (1,0). Then h_* at (1,0) is nontrivial (from covering theory),
+     but nulhomotopic \<Rightarrow> h_* trivial. Contradiction.\<close>
+  \<comment> \<open>Case 2: h(1,0) \<noteq> (1,0). Rotate to reduce to Case 1.\<close>
+  have hh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (h \<circ> f) (top1_constant_path (1, 0)))" sorry
+  \<comment> \<open>h nulhomotopic \<Rightarrow> h_* trivial. By homotopy_induced_basepoint_change:
+     h\<circ>f \<simeq> const_{h(1,0)} at h(1,0). For path_hom at (1,0), need h(1,0) = (1,0).
+     The metis step below extracts this from is_path_on conditions.
+     TODO: handle h(1,0) \<noteq> (1,0) via rotation WLOG.\<close>
+  have hh_star_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (h \<circ> f) (top1_constant_path (h (1, 0)))"
+    using hnul sorry
+  show False using hh_star_nontrivial hh_star_trivial
+    by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
+      top1_is_path_on_def top1_path_homotopic_on_def)
+    \<comment> \<open>The metis proof extracts h(1,0) = (1,0) from hh_star_trivial's
+       is_path_on conditions, then derives the direct contradiction.
+       TODO: properly handle h(1,0) \<noteq> (1,0) via rotation (WLOG).\<close>
+qed
+
+(** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
+    Munkres' proof: if g: S^2 \<rightarrow> S^1 is antipode-preserving, then h = g|S^1
+    (equator) is antipode-preserving S^1 \<rightarrow> S^1, not nulhomotopic by 57.1.
+    But g extends h over the upper hemisphere \<cong> B^2, so h IS nulhomotopic.
+    Contradiction.
+
+    (Stated as part of Theorem 57.3 below using an inline S^2 set, since
+     top1_S2 is defined later in the file.) **)
+
+(** from *\<S>57 Theorem 57.3: Borsuk-Ulam theorem for S^2.
+    Munkres' proof: by contradiction. If f(x) \<ne> f(-x) for all x \<in> S^2, then
+    g(x) = (f(x) - f(-x))/||f(x) - f(-x)|| is continuous antipode-preserving
+    S^2 \<rightarrow> S^1, contradicting Theorem 57.2. **)
+theorem Theorem_57_3_BorsukUlam:
+  fixes f :: "real \<times> real \<times> real \<Rightarrow> real \<times> real"
+  assumes hf: "top1_continuous_map_on {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}
+    (subspace_topology UNIV
+      (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets))
+      {p. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1})
+    UNIV (product_topology_on top1_open_sets top1_open_sets) f"
+  shows "\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
+    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x))"
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>x::real\<times>real\<times>real. fst x ^ 2 + fst (snd x) ^ 2 + snd (snd x) ^ 2 = 1
+    \<and> f x = f (- fst x, - fst (snd x), - snd (snd x)))"
+  \<comment> \<open>By assumption, f(x) \<noteq> f(-x) for all x \<in> S^2.\<close>
+  let ?S2 = "{p::real\<times>real\<times>real. fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1}"
+  let ?neg = "\<lambda>x::real\<times>real\<times>real. (- fst x, - fst (snd x), - snd (snd x))"
+  have hfne: "\<forall>x\<in>?S2. f x \<noteq> f (?neg x)" using hno by blast
+  \<comment> \<open>Define g: S^2 \<rightarrow> S^1 by g(x) = (f(x) - f(-x)) / ||f(x) - f(-x)||.\<close>
+  let ?diff = "\<lambda>x. (fst (f x) - fst (f (?neg x)), snd (f x) - snd (f (?neg x)))"
+  let ?norm = "\<lambda>x. sqrt ((fst (?diff x))^2 + (snd (?diff x))^2)"
+  let ?g = "\<lambda>x. (fst (?diff x) / ?norm x, snd (?diff x) / ?norm x)"
+  \<comment> \<open>g is continuous (rational functions with nonzero denominator).\<close>
+  have hg_cont: "top1_continuous_map_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  \<comment> \<open>g is antipode-preserving: g(-x) = -g(x).\<close>
+  have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))"
+  proof (intro ballI)
+    fix x :: "real \<times> real \<times> real" assume hx: "x \<in> ?S2"
+    have hnegneg: "?neg (?neg x) = x" by (simp add: prod_eq_iff)
+    have h1: "fst (?diff (?neg x)) = - fst (?diff x)" by (simp add: hnegneg)
+    have h2: "snd (?diff (?neg x)) = - snd (?diff x)" by (simp add: hnegneg)
+    have hpc1: "(fst (f (?neg x)) - fst (f x))\<^sup>2 = (fst (f x) - fst (f (?neg x)))\<^sup>2"
+      by (rule power2_commute)
+    have hpc2: "(snd (f (?neg x)) - snd (f x))\<^sup>2 = (snd (f x) - snd (f (?neg x)))\<^sup>2"
+      by (rule power2_commute)
+    have h3: "?norm (?neg x) = ?norm x" by (simp add: hnegneg hpc1 hpc2)
+    have hd1: "fst (f (?neg x)) - fst (f x) = - (fst (f x) - fst (f (?neg x)))"
+      by (by100 linarith)
+    have hd2: "snd (f (?neg x)) - snd (f x) = - (snd (f x) - snd (f (?neg x)))"
+      by (by100 linarith)
+    show "?g (?neg x) = (- fst (?g x), - snd (?g x))"
+      by (simp del: minus_diff_eq add: prod_eq_iff hnegneg h3 hd1 hd2)
+  qed
+  \<comment> \<open>Restrict g to the equator S^1: h = g|_{S^1}. h is antipode-preserving S^1 \<rightarrow> S^1.\<close>
+  \<comment> \<open>By Theorem 57.1, h is not nulhomotopic. But g extends h over the upper hemisphere
+     which is homeomorphic to B^2, so h is nulhomotopic. Contradiction.\<close>
+  have hg_not_nulhomo: "\<not> top1_nulhomotopic_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  have hg_nulhomo: "top1_nulhomotopic_on ?S2
+      (subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
+      top1_S1 top1_S1_topology ?g" sorry
+  show False using hg_not_nulhomo hg_nulhomo by contradiction
+qed
+
+
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
 text \<open>A is a deformation retract of X: the identity map of X is homotopic
@@ -9315,108 +9422,6 @@ proof -
     unfolding top1_path_homotopic_on_def
     using hfl_path hfl'_path hGcont hFs0 hFs1 hF0 hF1
     by (auto simp: comp_def)
-qed
-
-text \<open>Double basepoint change = single basepoint change along composed path.\<close>
-lemma double_basepoint_change_equiv:
-  assumes hTX: "is_topology_on X TX"
-      and halpha: "top1_is_path_on X TX x1 x2 alpha"
-      and hbeta: "top1_is_path_on X TX x0 x1 beta"
-      and hf: "top1_is_loop_on X TX x0 f"
-  shows "top1_loop_equiv_on X TX x2
-    (top1_basepoint_change_on X TX x1 x2 alpha
-      (top1_basepoint_change_on X TX x0 x1 beta f))
-    (top1_basepoint_change_on X TX x0 x2
-      (top1_path_product beta alpha) f)"
-proof -
-  let ?ra = "top1_path_reverse alpha" and ?rb = "top1_path_reverse beta"
-  let ?ba = "top1_path_product beta alpha"
-  let ?fp = "top1_is_path_on X TX"
-  have hfp: "?fp x0 x0 f" using hf unfolding top1_is_loop_on_def .
-  have hra: "?fp x2 x1 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
-  have hrb: "?fp x1 x0 ?rb" by (rule top1_path_reverse_is_path[OF hbeta])
-  have hba: "?fp x0 x2 ?ba" by (rule top1_path_product_is_path[OF hTX hbeta halpha])
-  \<comment> \<open>rev(\<beta>*\<alpha>) = rev(\<alpha>) * rev(\<beta>) (definitional equality).\<close>
-  have ha0: "alpha 0 = x1" and ha1: "alpha 1 = x2"
-    using halpha unfolding top1_is_path_on_def by (by100 blast)+
-  have hb0: "beta 0 = x0" and hb1: "beta 1 = x1"
-    using hbeta unfolding top1_is_path_on_def by (by100 blast)+
-  have hrev_prod: "top1_path_reverse ?ba = top1_path_product ?ra ?rb"
-  proof (rule ext)
-    fix s :: real
-    show "top1_path_reverse ?ba s = top1_path_product ?ra ?rb s"
-      unfolding top1_path_reverse_def top1_path_product_def
-      using ha0 hb1 by (simp add: field_simps)
-  qed
-  \<comment> \<open>Unfold basepoint_change_on_def.\<close>
-  have hlhs_eq: "top1_basepoint_change_on X TX x1 x2 alpha
-      (top1_basepoint_change_on X TX x0 x1 beta f)
-    = top1_path_product ?ra (top1_path_product
-        (top1_path_product ?rb (top1_path_product f beta)) alpha)"
-    unfolding top1_basepoint_change_on_def by (rule refl)
-  have hrhs_eq: "top1_basepoint_change_on X TX x0 x2 ?ba f
-    = top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba)"
-    unfolding top1_basepoint_change_on_def hrev_prod by (rule refl)
-  \<comment> \<open>Both sides are path-homotopic via repeated associativity:
-     ra * ((rb * (f * \<beta>)) * \<alpha>) \<simeq> (ra * rb) * (f * (\<beta> * \<alpha>)).\<close>
-  \<comment> \<open>Path facts for associativity.\<close>
-  have hfb: "?fp x0 x1 (top1_path_product f beta)"
-    by (rule top1_path_product_is_path[OF hTX hfp hbeta])
-  have hfba: "?fp x0 x2 (top1_path_product f ?ba)"
-    by (rule top1_path_product_is_path[OF hTX hfp hba])
-  have hrb_fba: "?fp x1 x2 (top1_path_product ?rb (top1_path_product f ?ba))"
-    by (rule top1_path_product_is_path[OF hTX hrb hfba])
-  \<comment> \<open>Step 1: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*((f*\<beta>)*\<alpha>) [sym of assoc].\<close>
-  have s1: "top1_path_homotopic_on X TX x1 x2
-    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
-    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))"
-    by (rule Lemma_51_1_path_homotopic_sym[OF
-          Theorem_51_2_associativity[OF hTX hrb hfb halpha]])
-  \<comment> \<open>Step 2: (f*\<beta>)*\<alpha> \<simeq> f*(\<beta>*\<alpha>) [sym of assoc].\<close>
-  have s2: "top1_path_homotopic_on X TX x0 x2
-    (top1_path_product (top1_path_product f beta) alpha)
-    (top1_path_product f ?ba)"
-    by (rule Lemma_51_1_path_homotopic_sym[OF
-          Theorem_51_2_associativity[OF hTX hfp hbeta halpha]])
-  \<comment> \<open>Lift step 2 through rb: rb*((f*\<beta>)*\<alpha>) \<simeq> rb*(f*(\<beta>*\<alpha>)).\<close>
-  have s2': "top1_path_homotopic_on X TX x1 x2
-    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))
-    (top1_path_product ?rb (top1_path_product f ?ba))"
-    by (rule path_homotopic_product_right[OF hTX s2 hrb])
-  \<comment> \<open>Combine steps 1+2: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*(f*ba).\<close>
-  have s12: "top1_path_homotopic_on X TX x1 x2
-    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
-    (top1_path_product ?rb (top1_path_product f ?ba))"
-    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s1 s2'])
-  \<comment> \<open>Lift s12 through ra: ra*((rb*(f*\<beta>))*\<alpha>) \<simeq> ra*(rb*(f*ba)).\<close>
-  have s12': "top1_path_homotopic_on X TX x2 x2
-    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
-    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))"
-    by (rule path_homotopic_product_right[OF hTX s12 hra])
-  \<comment> \<open>Step 3: ra*(rb*(f*ba)) \<simeq> (ra*rb)*(f*ba) [assoc].\<close>
-  have s3: "top1_path_homotopic_on X TX x2 x2
-    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))
-    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
-    by (rule Theorem_51_2_associativity[OF hTX hra hrb hfba])
-  \<comment> \<open>Full chain: LHS \<simeq> RHS.\<close>
-  have hchain: "top1_path_homotopic_on X TX x2 x2
-    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
-    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
-    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s12' s3])
-  have hbc_bf: "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 beta f)"
-    by (rule top1_basepoint_change_is_loop[OF hTX hbeta hf])
-  have hlhs_loop: "top1_is_loop_on X TX x2
-    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))"
-    by (rule top1_basepoint_change_is_loop[OF hTX halpha hbc_bf])
-  have hrhs_loop: "top1_is_loop_on X TX x2
-    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
-    by (rule top1_basepoint_change_is_loop[OF hTX hba hf])
-  have hchain': "top1_path_homotopic_on X TX x2 x2
-    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))
-    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
-    using hchain unfolding hlhs_eq hrhs_eq .
-  show ?thesis unfolding top1_loop_equiv_on_def
-    using hlhs_loop hrhs_loop hchain' by (by100 blast)
 qed
 
 text \<open>Helper: continuous f sends loops to loops.\<close>
