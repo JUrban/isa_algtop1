@@ -4487,7 +4487,94 @@ proof -
   have hS_open: "openin_on I_set I_top ?S"
     \<comment> \<open>For s \<in> S: f(s) \<in> some evenly covered U. ftilde_1(s) = ftilde_2(s) \<in> some slice V0.
        Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
-    sorry
+    unfolding openin_on_def
+  proof (intro conjI)
+    show "?S \<in> I_top"
+    proof -
+      have hft1_cont: "top1_continuous_map_on I_set I_top E TE ftilde_1"
+        using hft1 unfolding top1_is_path_on_def by (by100 blast)
+      have hft2_cont: "top1_continuous_map_on I_set I_top E TE ftilde_2"
+        using hft2 unfolding top1_is_path_on_def by (by100 blast)
+      have hf_cont: "top1_continuous_map_on I_set I_top B TB f"
+        using hf unfolding top1_is_path_on_def by (by100 blast)
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      \<comment> \<open>For each s₀ ∈ S, find an open neighborhood of s₀ contained in S.
+         Strategy: for s₀ ∈ S, get evenly covered U for f(s₀).
+         The point ftilde_1(s₀) = ftilde_2(s₀) ∈ some slice V₀.
+         Preimage of V₀ under both lifts contains a neighborhood of s₀.
+         On this neighborhood, both lifts lie in V₀ and project to the same f(s),
+         so by injectivity of p|V₀, they agree.\<close>
+      \<comment> \<open>It suffices to show: for each s₀ ∈ S, there exists N ∈ I_top with s₀ ∈ N ∧ N ⊆ S.\<close>
+      have "\<forall>s0\<in>?S. \<exists>N\<in>I_top. s0 \<in> N \<and> N \<subseteq> ?S"
+      proof (intro ballI)
+        fix s0 assume hs0: "s0 \<in> ?S"
+        hence hs0I: "s0 \<in> I_set" and hagree: "ftilde_1 s0 = ftilde_2 s0" by (by100 blast)+
+        \<comment> \<open>f(s₀) ∈ B; get evenly covered U.\<close>
+        have hfs0: "f s0 \<in> B" using hf_cont hs0I unfolding top1_continuous_map_on_def by (by100 blast)
+        obtain U where hbU: "f s0 \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+          using top1_covering_map_on_evenly_covered[OF hcov hfs0] by (by100 blast)
+        \<comment> \<open>Get slices.\<close>
+        obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+            and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+            and hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+            and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+                U (subspace_topology B TB U) p"
+          using hUec unfolding top1_evenly_covered_on_def by auto
+        \<comment> \<open>ftilde_1(s₀) ∈ p⁻¹(U) since p(ftilde_1(s₀)) = f(s₀) ∈ U.\<close>
+        have hft1_E: "ftilde_1 s0 \<in> E"
+          using hft1_cont hs0I unfolding top1_continuous_map_on_def by (by100 blast)
+        have hp_ft1: "p (ftilde_1 s0) \<in> U" using hft1p hs0I hbU by (by100 simp)
+        have hft1_mem: "ftilde_1 s0 \<in> {x\<in>E. p x \<in> U}"
+          using hft1_E hp_ft1 by (by100 blast)
+        \<comment> \<open>Find slice V₀ containing ftilde_1(s₀) = ftilde_2(s₀).\<close>
+        obtain V0 where hV0: "V0 \<in> \<V>" and hft1_V0: "ftilde_1 s0 \<in> V0"
+          using hft1_mem hV_union by (by100 blast)
+        have hft2_V0: "ftilde_2 s0 \<in> V0" using hft1_V0 hagree by simp
+        \<comment> \<open>V₀ is open in E.\<close>
+        have hV0_open: "V0 \<in> TE" using hV0 hV_open unfolding openin_on_def by (by100 blast)
+        \<comment> \<open>Preimages of V₀ under ftilde_1 and ftilde_2 are open in I.\<close>
+        have hpre1: "{s\<in>I_set. ftilde_1 s \<in> V0} \<in> I_top"
+          using hft1_cont hV0_open unfolding top1_continuous_map_on_def by (by100 blast)
+        have hpre2: "{s\<in>I_set. ftilde_2 s \<in> V0} \<in> I_top"
+          using hft2_cont hV0_open unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>Intersection N = {s∈I. ftilde_1(s) ∈ V₀ ∧ ftilde_2(s) ∈ V₀} is open.\<close>
+        let ?N = "{s\<in>I_set. ftilde_1 s \<in> V0} \<inter> {s\<in>I_set. ftilde_2 s \<in> V0}"
+        have hN_open: "?N \<in> I_top"
+          by (rule topology_inter2[OF hTI hpre1 hpre2])
+        have hs0_N: "s0 \<in> ?N" using hs0I hft1_V0 hft2_V0 by (by100 blast)
+        \<comment> \<open>On N, both lifts lie in V₀ and project to the same f(s).
+           p|V₀ is a homeomorphism, hence injective. So ftilde_1(s) = ftilde_2(s).\<close>
+        have hN_sub_S: "?N \<subseteq> ?S"
+        proof (intro subsetI)
+          fix s assume hs: "s \<in> ?N"
+          hence hsI: "s \<in> I_set" and hft1s_V0: "ftilde_1 s \<in> V0" and hft2s_V0: "ftilde_2 s \<in> V0"
+            by (by100 blast)+
+          have hp_eq: "p (ftilde_1 s) = p (ftilde_2 s)"
+          proof -
+            have "p (ftilde_1 s) = f s" using hft1p hsI by (by100 blast)
+            also have "\<dots> = p (ftilde_2 s)" using hft2p hsI by (by100 simp)
+            finally show ?thesis .
+          qed
+          \<comment> \<open>p|V₀ is injective (from homeomorphism).\<close>
+          have hp_inj: "inj_on p V0"
+            using hV0 hV_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "ftilde_1 s = ftilde_2 s"
+            using hp_inj hft1s_V0 hft2s_V0 hp_eq unfolding inj_on_def by (by100 blast)
+          thus "s \<in> ?S" using hsI by (by100 blast)
+        qed
+        show "\<exists>N\<in>I_top. s0 \<in> N \<and> N \<subseteq> ?S"
+          by (metis (no_types, lifting) hN_open hN_sub_S hs0_N)
+      qed
+      \<comment> \<open>S is a union of open sets from I_top, hence open.\<close>
+      hence hSeq: "?S = \<Union>{N \<in> I_top. N \<subseteq> ?S}" by (by100 blast)
+      have "{N \<in> I_top. N \<subseteq> ?S} \<subseteq> I_top" by (by100 blast)
+      hence "\<Union>{N \<in> I_top. N \<subseteq> ?S} \<in> I_top"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hTI[unfolded is_topology_on_def]]]]
+        by (by100 blast)
+      thus "?S \<in> I_top" using hSeq by simp
+    qed
+    show "?S \<subseteq> I_set" by (by100 blast)
+  qed
   have hS_closed: "closedin_on I_set I_top ?S"
     unfolding closedin_on_def
   proof (intro conjI)
@@ -12621,6 +12708,25 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
