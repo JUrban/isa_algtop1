@@ -4878,7 +4878,56 @@ proof -
                in ft 1"
   \<comment> \<open>Well-definedness from hphi_wd + existence from path-lifting.\<close>
   have hphi_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
-      ?\<phi> c \<in> {e\<in>E. p e = b0}" sorry
+      ?\<phi> c \<in> {e\<in>E. p e = b0}"
+  proof
+    fix c assume hc: "c \<in> top1_fundamental_group_carrier B TB b0"
+    \<comment> \<open>c is an equivalence class {g. loop_equiv f g} for some loop f.\<close>
+    obtain f0 where hf0_loop: "top1_is_loop_on B TB b0 f0"
+        and hc_eq: "c = {g. top1_loop_equiv_on B TB b0 f0 g}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    have hf0_in: "f0 \<in> c"
+    proof -
+      have "top1_is_path_on B TB b0 b0 f0" using hf0_loop unfolding top1_is_loop_on_def .
+      hence "top1_path_homotopic_on B TB b0 b0 f0 f0"
+        by (rule Lemma_51_1_path_homotopic_refl)
+      hence "top1_loop_equiv_on B TB b0 f0 f0"
+        unfolding top1_loop_equiv_on_def using hf0_loop by (by100 simp)
+      thus ?thesis unfolding hc_eq by (by100 simp)
+    qed
+    \<comment> \<open>SOME picks a representative from c.\<close>
+    let ?f = "SOME f. f \<in> c \<and> top1_is_loop_on B TB b0 f"
+    have hf_props: "?f \<in> c \<and> top1_is_loop_on B TB b0 ?f"
+      using someI_ex[of "\<lambda>f. f \<in> c \<and> top1_is_loop_on B TB b0 f"] hf0_in hf0_loop by (by100 blast)
+    \<comment> \<open>Path-lift ?f to get ft.\<close>
+    have hf_path: "top1_is_path_on B TB b0 b0 ?f"
+      using hf_props unfolding top1_is_loop_on_def by (by100 blast)
+    obtain ft0 where hft0: "top1_is_path_on E TE e0 (ft0 1) ft0"
+        and hft0p: "\<forall>s\<in>I_set. p (ft0 s) = ?f s"
+      using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path] by (by100 auto)
+    \<comment> \<open>SOME picks a lift.\<close>
+    let ?ft = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"
+    have hft_props: "top1_is_path_on E TE e0 (?ft 1) ?ft \<and> (\<forall>s\<in>I_set. p (?ft s) = ?f s)"
+      using someI_ex[of "\<lambda>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"]
+        hft0 hft0p by (by100 blast)
+    \<comment> \<open>ft(1) \<in> E and p(ft(1)) = f(1) = b0.\<close>
+    have "?ft 1 \<in> E"
+    proof -
+      have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      have "top1_continuous_map_on I_set I_top E TE ?ft"
+        using hft_props unfolding top1_is_path_on_def by (by100 blast)
+      hence "\<forall>s\<in>I_set. ?ft s \<in> E" unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "?ft 1 \<in> E" using h1I by (by100 blast)
+    qed
+    moreover have "p (?ft 1) = b0"
+    proof -
+      have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      have "p (?ft 1) = ?f 1" using hft_props h1I by (by100 blast)
+      also have "?f 1 = b0" using hf_props unfolding top1_is_loop_on_def top1_is_path_on_def
+        by (by100 blast)
+      finally show ?thesis .
+    qed
+    ultimately show "?\<phi> c \<in> {e\<in>E. p e = b0}" by (simp add: Let_def)
+  qed
   have hphi_surj_full: "?\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
     using hphi_surj hphi_mem sorry
   show ?thesis
