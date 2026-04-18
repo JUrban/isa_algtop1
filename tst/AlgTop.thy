@@ -6687,7 +6687,46 @@ proof
       show "?r x = x" using hnorm by (simp add: prod_eq_iff)
     qed
     have hr_cont: "top1_continuous_map_on ?R2_0 ?TR top1_S1
-        (subspace_topology ?R2_0 ?TR top1_S1) ?r" sorry
+        (subspace_topology ?R2_0 ?TR top1_S1) ?r"
+    proof -
+      \<comment> \<open>Step 1: r is continuous_on R²-{0} using standard library.\<close>
+      have hr_std: "continuous_on ?R2_0 ?r"
+      proof (rule continuous_on_Pair)
+        have hnorm_cont: "continuous_on ?R2_0 ?norm"
+          by (intro continuous_on_compose2[OF continuous_on_real_sqrt]
+              continuous_on_add continuous_on_power
+              continuous_on_fst continuous_on_snd) auto
+        have hnorm_nz: "\<forall>x\<in>?R2_0. ?norm x \<noteq> 0"
+        proof (intro ballI)
+          fix x :: "real \<times> real" assume "x \<in> ?R2_0"
+          hence "x \<noteq> (0, 0)" by (by100 blast)
+          hence "fst x ^ 2 + snd x ^ 2 > 0"
+            by (cases x) (auto simp: sum_power2_gt_zero_iff)
+          hence "?norm x > 0" by (rule real_sqrt_gt_zero)
+          thus "?norm x \<noteq> 0" by (by100 linarith)
+        qed
+        have hfst_cont: "continuous_on ?R2_0 fst"
+          by (intro continuous_intros)
+        have hsnd_cont: "continuous_on ?R2_0 snd"
+          by (intro continuous_intros)
+        show "continuous_on ?R2_0 (\<lambda>x. fst x / ?norm x)"
+          by (rule continuous_on_divide[OF hfst_cont hnorm_cont hnorm_nz])
+        show "continuous_on ?R2_0 (\<lambda>x. snd x / ?norm x)"
+          by (rule continuous_on_divide[OF hsnd_cont hnorm_cont hnorm_nz])
+      qed
+      \<comment> \<open>Step 2: Transfer to top1_continuous_map_on via general subspace lemma.\<close>
+      have hr_R2: "top1_continuous_map_on ?R2_0
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0)
+          top1_S1
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1) ?r"
+        by (rule top1_continuous_map_on_real2_subspace_general[OF _ hr_std])
+           (use hr_map in blast)
+      \<comment> \<open>Step 3: Codomain topology: subspace of R²-{0} restricted to S¹ = subspace of R² restricted to S¹.\<close>
+      have hTR_eq: "subspace_topology ?R2_0 ?TR top1_S1 =
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+        using subspace_topology_trans[OF hS1sub] by simp
+      show ?thesis using hr_R2 unfolding hTR_eq[symmetric] .
+    qed
     show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
       using hS1sub hr_cont hr_fix by (by100 blast)
   qed
