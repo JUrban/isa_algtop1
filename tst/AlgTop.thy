@@ -7893,8 +7893,39 @@ qed
 text \<open>Helper: R with top1\_open\_sets is Hausdorff.\<close>
 lemma top1_R_is_hausdorff:
   "is_hausdorff_on (UNIV :: real set) top1_open_sets"
-  sorry \<comment> \<open>Standard: separate x \<noteq> y by half-planes at midpoint (x+y)/2.
-     Proof correct but causes Isabelle performance issues with neighborhood_of.\<close>
+proof -
+  have hT: "is_topology_on (UNIV :: real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hH: "\<forall>x\<in>(UNIV::real set). \<forall>y\<in>(UNIV::real set). x \<noteq> y \<longrightarrow>
+      (\<exists>U V. neighborhood_of x UNIV top1_open_sets U \<and>
+             neighborhood_of y UNIV top1_open_sets V \<and> U \<inter> V = {})"
+  proof (intro ballI impI)
+    fix x y :: real assume "x \<in> UNIV" "y \<in> UNIV" "x \<noteq> y"
+    show "\<exists>U V. neighborhood_of x UNIV top1_open_sets U \<and>
+                neighborhood_of y UNIV top1_open_sets V \<and> U \<inter> V = {}"
+    proof (cases "x < y")
+      case True
+      let ?m = "(x + y) / 2"
+      have "{..<(?m::real)} \<in> {U. open U} \<and> x \<in> {..<(?m::real)}"
+        using True by simp
+      moreover have "{?m<..} \<in> {U. open U} \<and> y \<in> {?m<..}"
+        using True by simp
+      moreover have "{..<(?m::real)} \<inter> {?m<..} = {}" by auto
+      ultimately show ?thesis unfolding neighborhood_of_def top1_open_sets_def by blast
+    next
+      case False
+      hence "x > y" using \<open>x \<noteq> y\<close> by simp
+      let ?m = "(x + y) / 2"
+      have "{?m<..} \<in> {U. open U} \<and> x \<in> {?m<..}"
+        using \<open>x > y\<close> by simp
+      moreover have "{..<(?m::real)} \<in> {U. open U} \<and> y \<in> {..<(?m::real)}"
+        using \<open>x > y\<close> by simp
+      moreover have "{?m<..} \<inter> {..<(?m::real)} = {}" by auto
+      ultimately show ?thesis unfolding neighborhood_of_def top1_open_sets_def by blast
+    qed
+  qed
+  show ?thesis unfolding is_hausdorff_on_def using hT hH by (by100 blast)
+qed
 
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
