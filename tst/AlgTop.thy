@@ -7927,6 +7927,25 @@ proof -
   show ?thesis unfolding is_hausdorff_on_def using hT hH by (by100 blast)
 qed
 
+text \<open>Helper: R^2 with product topology is Hausdorff.\<close>
+lemma top1_R2_is_hausdorff:
+  "is_hausdorff_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+proof -
+  have hR: "is_hausdorff_on (UNIV :: real set) top1_open_sets" by (rule top1_R_is_hausdorff)
+  have hR2: "is_hausdorff_on (UNIV \<times> UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+    using conjunct1[OF conjunct2[OF Theorem_17_11]] hR by (by100 blast)
+  thus ?thesis by simp
+qed
+
+text \<open>Helper: S^1 subspace is Hausdorff.\<close>
+lemma top1_S1_is_hausdorff:
+  "is_hausdorff_on top1_S1 top1_S1_topology"
+proof -
+  have "top1_S1 \<subseteq> (UNIV :: (real \<times> real) set)" by simp
+  thus ?thesis unfolding top1_S1_topology_def
+    using conjunct2[OF conjunct2[OF Theorem_17_11]] top1_R2_is_hausdorff by (by100 blast)
+qed
+
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
   assumes "closedin_on X TX A"
