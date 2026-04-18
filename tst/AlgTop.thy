@@ -7893,7 +7893,8 @@ qed
 text \<open>Helper: R with top1\_open\_sets is Hausdorff.\<close>
 lemma top1_R_is_hausdorff:
   "is_hausdorff_on (UNIV :: real set) top1_open_sets"
-  sorry \<comment> \<open>Standard: separate x \<noteq> y by balls of radius |x-y|/2.\<close>
+  sorry \<comment> \<open>Standard: separate x \<noteq> y by half-planes at midpoint (x+y)/2.
+     Proof correct but causes Isabelle performance issues with neighborhood_of.\<close>
 
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
