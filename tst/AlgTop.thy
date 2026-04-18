@@ -9080,7 +9080,109 @@ proof
   have hh_star_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
             (h \<circ> f) (top1_constant_path (h (1, 0)))"
-    using hnul sorry
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on top1_S1 top1_S1_topology (1::real, 0::real) f"
+    obtain c where hcS1: "c \<in> top1_S1"
+        and hhom: "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h (\<lambda>_. c)"
+      using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+    obtain H where hHcont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+            (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology H"
+        and hH0: "\<forall>x\<in>top1_S1. H (x, 0) = h x"
+        and hH1: "\<forall>x\<in>top1_S1. H (x, 1) = c"
+      using hhom unfolding top1_homotopic_on_def by (by100 blast)
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+              simplified]]) simp
+    have h10S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    have hH1': "\<forall>x\<in>top1_S1. H (x, 1) = (\<lambda>_. c) x" using hH1 by (by100 simp)
+    note hbc = homotopy_induced_basepoint_change[OF hTS1 hTS1 hHcont hH0 hH1' hf h10S1]
+    \<comment> \<open>hbc: loop_equiv h(1,0) (h\<circ>f) (bc(rev \<alpha>, const_c\<circ>f)) where \<alpha>(t) = H((1,0),t).\<close>
+    have hbc': "top1_loop_equiv_on top1_S1 top1_S1_topology (h (1, 0)) (h \<circ> f)
+        (top1_basepoint_change_on top1_S1 top1_S1_topology c (h (1, 0))
+           (top1_path_reverse (\<lambda>t. H ((1, 0), t))) (top1_constant_path c))"
+    proof -
+      have "(\<lambda>_. c) \<circ> f = top1_constant_path c"
+        by (rule ext) (simp add: top1_constant_path_def comp_def)
+      thus ?thesis using hbc by simp
+    qed
+    \<comment> \<open>bc(rev \<alpha>, const_c) \<simeq> const_{h(1,0)}: by path algebra
+       bc = \<alpha> * (const_c * rev \<alpha>) \<simeq> \<alpha> * rev \<alpha> \<simeq> const_{h(1,0)}.\<close>
+    have hbc_is_const: "top1_loop_equiv_on top1_S1 top1_S1_topology (h (1, 0))
+        (top1_basepoint_change_on top1_S1 top1_S1_topology c (h (1, 0))
+           (top1_path_reverse (\<lambda>t. H ((1, 0), t))) (top1_constant_path c))
+        (top1_constant_path (h (1, 0)))"
+    proof -
+      let ?\<alpha> = "\<lambda>t. H ((1::real, 0::real), t)"
+      have h\<alpha>_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?\<alpha>"
+      proof -
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hconst10: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology (\<lambda>_. (1::real, 0::real))"
+          by (rule top1_continuous_map_on_const[OF hTI hTS1 h10S1])
+        have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+          by (rule top1_continuous_map_on_id[OF hTI])
+        have hp1: "(pi1 \<circ> (\<lambda>t. ((1::real, 0::real), t))) = (\<lambda>_. (1::real, 0::real))"
+          unfolding pi1_def by (rule ext) simp
+        have hp2: "(pi2 \<circ> (\<lambda>t. ((1::real, 0::real), t))) = id"
+          unfolding pi2_def by (rule ext) simp
+        have hpair: "top1_continuous_map_on I_set I_top (top1_S1 \<times> I_set)
+                       (product_topology_on top1_S1_topology I_top) (\<lambda>t. ((1::real, 0::real), t))"
+          using iffD2[OF Theorem_18_4[OF hTI hTS1 hTI]]
+                hconst10[folded hp1] hid_I[folded hp2] by (by100 blast)
+        show ?thesis using top1_continuous_map_on_comp[OF hpair hHcont] by (simp add: comp_def)
+      qed
+      have h\<alpha>0: "?\<alpha> 0 = h (1, 0)" using hH0 h10S1 by (by100 auto)
+      have h\<alpha>1: "?\<alpha> 1 = c" using hH1 h10S1 by (by100 auto)
+      have h\<alpha>_path: "top1_is_path_on top1_S1 top1_S1_topology (h (1, 0)) c ?\<alpha>"
+        unfolding top1_is_path_on_def using h\<alpha>_cont h\<alpha>0 h\<alpha>1 by (by100 blast)
+      have hra: "top1_is_path_on top1_S1 top1_S1_topology c (h (1, 0)) (top1_path_reverse ?\<alpha>)"
+        by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+      have hconst_c: "top1_is_loop_on top1_S1 top1_S1_topology c (top1_constant_path c)"
+        by (rule top1_constant_path_is_loop[OF hTS1 hcS1])
+      \<comment> \<open>bc(rev \<alpha>, const_c) = rev(rev \<alpha>) * (const_c * rev \<alpha>)
+         = \<alpha> * (const_c * rev \<alpha>) \<simeq> \<alpha> * rev \<alpha> \<simeq> const_{h(1,0)}.\<close>
+      have hconst_rev: "top1_path_homotopic_on top1_S1 top1_S1_topology c (h (1, 0))
+          (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))
+          (top1_path_reverse ?\<alpha>)"
+        by (rule Theorem_51_2_left_identity[OF hTS1 hra])
+      have hbc_def: "top1_basepoint_change_on top1_S1 top1_S1_topology c (h (1, 0))
+          (top1_path_reverse ?\<alpha>) (top1_constant_path c)
+        = top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))"
+        unfolding top1_basepoint_change_on_def top1_path_reverse_twice by (rule refl)
+      have hbc_simp: "top1_path_homotopic_on top1_S1 top1_S1_topology (h (1, 0)) (h (1, 0))
+          (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+        by (rule path_homotopic_product_right[OF hTS1 hconst_rev h\<alpha>_path])
+      have hinv: "top1_path_homotopic_on top1_S1 top1_S1_topology (h (1, 0)) (h (1, 0))
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)) (top1_constant_path (h (1, 0)))"
+        by (rule Theorem_51_2_invgerse_left[OF hTS1 h\<alpha>_path])
+      have hchain: "top1_path_homotopic_on top1_S1 top1_S1_topology (h (1, 0)) (h (1, 0))
+          (top1_basepoint_change_on top1_S1 top1_S1_topology c (h (1, 0))
+             (top1_path_reverse ?\<alpha>) (top1_constant_path c))
+          (top1_constant_path (h (1, 0)))"
+        using Lemma_51_1_path_homotopic_trans[OF hTS1 hbc_simp[unfolded hbc_def[symmetric]] hinv] .
+      have hlhs_loop: "top1_is_loop_on top1_S1 top1_S1_topology (h (1, 0))
+          (top1_basepoint_change_on top1_S1 top1_S1_topology c (h (1, 0))
+             (top1_path_reverse ?\<alpha>) (top1_constant_path c))"
+        by (rule top1_basepoint_change_is_loop[OF hTS1 hra hconst_c])
+      have hh10S1: "h (1, 0) \<in> top1_S1"
+        using assms(1) h10S1 unfolding top1_continuous_map_on_def by (by100 blast)
+      have hconst_loop: "top1_is_loop_on top1_S1 top1_S1_topology (h (1, 0))
+          (top1_constant_path (h (1, 0)))"
+        by (rule top1_constant_path_is_loop[OF hTS1 hh10S1])
+      show ?thesis unfolding top1_loop_equiv_on_def
+        using hlhs_loop hconst_loop hchain by (by100 blast)
+    qed
+    have hresult: "top1_loop_equiv_on top1_S1 top1_S1_topology (h (1, 0)) (h \<circ> f)
+        (top1_constant_path (h (1, 0)))"
+      by (rule top1_loop_equiv_on_trans[OF hTS1 hbc' hbc_is_const])
+    \<comment> \<open>path_hom at h(1,0). For (1,0) basepoint: the metis step forces h(1,0) = (1,0).\<close>
+    show "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        (h \<circ> f) (top1_constant_path (h (1, 0)))"
+      using hresult unfolding top1_loop_equiv_on_def sorry
+  qed
   show False using hh_star_nontrivial hh_star_trivial
     by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
       top1_is_path_on_def top1_path_homotopic_on_def)
