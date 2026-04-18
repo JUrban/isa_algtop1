@@ -9171,7 +9171,64 @@ proof -
     unfolding top1_basepoint_change_on_def hrev_prod by (rule refl)
   \<comment> \<open>Both sides are path-homotopic via repeated associativity:
      ra * ((rb * (f * \<beta>)) * \<alpha>) \<simeq> (ra * rb) * (f * (\<beta> * \<alpha>)).\<close>
-  show ?thesis unfolding top1_loop_equiv_on_def hlhs_eq hrhs_eq sorry
+  \<comment> \<open>Path facts for associativity.\<close>
+  have hfb: "?fp x0 x1 (top1_path_product f beta)"
+    by (rule top1_path_product_is_path[OF hTX hfp hbeta])
+  have hfba: "?fp x0 x2 (top1_path_product f ?ba)"
+    by (rule top1_path_product_is_path[OF hTX hfp hba])
+  have hrb_fba: "?fp x1 x2 (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule top1_path_product_is_path[OF hTX hrb hfba])
+  \<comment> \<open>Step 1: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*((f*\<beta>)*\<alpha>) [sym of assoc].\<close>
+  have s1: "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
+    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+          Theorem_51_2_associativity[OF hTX hrb hfb halpha]])
+  \<comment> \<open>Step 2: (f*\<beta>)*\<alpha> \<simeq> f*(\<beta>*\<alpha>) [sym of assoc].\<close>
+  have s2: "top1_path_homotopic_on X TX x0 x2
+    (top1_path_product (top1_path_product f beta) alpha)
+    (top1_path_product f ?ba)"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+          Theorem_51_2_associativity[OF hTX hfp hbeta halpha]])
+  \<comment> \<open>Lift step 2 through rb: rb*((f*\<beta>)*\<alpha>) \<simeq> rb*(f*(\<beta>*\<alpha>)).\<close>
+  have s2': "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product ?rb (top1_path_product (top1_path_product f beta) alpha))
+    (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule path_homotopic_product_right[OF hTX s2 hrb])
+  \<comment> \<open>Combine steps 1+2: (rb*(f*\<beta>))*\<alpha> \<simeq> rb*(f*ba).\<close>
+  have s12: "top1_path_homotopic_on X TX x1 x2
+    (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha)
+    (top1_path_product ?rb (top1_path_product f ?ba))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s1 s2'])
+  \<comment> \<open>Lift s12 through ra: ra*((rb*(f*\<beta>))*\<alpha>) \<simeq> ra*(rb*(f*ba)).\<close>
+  have s12': "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
+    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))"
+    by (rule path_homotopic_product_right[OF hTX s12 hra])
+  \<comment> \<open>Step 3: ra*(rb*(f*ba)) \<simeq> (ra*rb)*(f*ba) [assoc].\<close>
+  have s3: "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product ?rb (top1_path_product f ?ba)))
+    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
+    by (rule Theorem_51_2_associativity[OF hTX hra hrb hfba])
+  \<comment> \<open>Full chain: LHS \<simeq> RHS.\<close>
+  have hchain: "top1_path_homotopic_on X TX x2 x2
+    (top1_path_product ?ra (top1_path_product (top1_path_product ?rb (top1_path_product f beta)) alpha))
+    (top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX s12' s3])
+  have hbc_bf: "top1_is_loop_on X TX x1 (top1_basepoint_change_on X TX x0 x1 beta f)"
+    by (rule top1_basepoint_change_is_loop[OF hTX hbeta hf])
+  have hlhs_loop: "top1_is_loop_on X TX x2
+    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))"
+    by (rule top1_basepoint_change_is_loop[OF hTX halpha hbc_bf])
+  have hrhs_loop: "top1_is_loop_on X TX x2
+    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
+    by (rule top1_basepoint_change_is_loop[OF hTX hba hf])
+  have hchain': "top1_path_homotopic_on X TX x2 x2
+    (top1_basepoint_change_on X TX x1 x2 alpha (top1_basepoint_change_on X TX x0 x1 beta f))
+    (top1_basepoint_change_on X TX x0 x2 ?ba f)"
+    using hchain unfolding hlhs_eq hrhs_eq .
+  show ?thesis unfolding top1_loop_equiv_on_def
+    using hlhs_loop hrhs_loop hchain' by (by100 blast)
 qed
 
 text \<open>Helper: continuous f sends loops to loops.\<close>
