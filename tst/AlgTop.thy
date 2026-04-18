@@ -7101,7 +7101,7 @@ proof -
                 (?c * fst x - ?s * snd x) ^ 2 + (?s * fst x + ?c * snd x) ^ 2"
               by simp
             also have "\<dots> = (fst x ^ 2 + snd x ^ 2) * (?c ^ 2 + ?s ^ 2)"
-              sorry \<comment> \<open>Expand (ca-sb)^2+(sa+cb)^2 = (a^2+b^2)(c^2+s^2) by algebra.\<close>
+              by algebra
             also have "\<dots> = 1" using hsum by simp
             finally show ?thesis .
           qed
@@ -12621,6 +12621,7 @@ proof -
 qed
 
 end
+ 
  
  
  
