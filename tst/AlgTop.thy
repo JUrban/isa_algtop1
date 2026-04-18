@@ -7890,6 +7890,12 @@ next
   qed
 qed
 
+text \<open>Helper: R with top1\_open\_sets is Hausdorff (standard separation by d/2 balls).\<close>
+lemma top1_R_is_hausdorff:
+  "is_hausdorff_on (UNIV :: real set) top1_open_sets"
+  sorry \<comment> \<open>Proof: for x \<noteq> y, take U = ball(x, |x-y|/2), V = ball(y, |x-y|/2).
+     Both open in top1_open_sets, disjoint by triangle inequality.\<close>
+
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
   assumes "closedin_on X TX A"
