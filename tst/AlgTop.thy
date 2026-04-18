@@ -8064,6 +8064,8 @@ proof -
   have hU_sc: "top1_simply_connected_on ?U (subspace_topology ?Sn ?TSn ?U)" sorry
   have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)" sorry
   \<comment> \<open>Step 2: U, V are open in S^n.\<close>
+  \<comment> \<open>U = S^n - {p} and V = S^n - {q} are open because {p}, {q} are closed in S^n
+     (Hausdorff + singleton closed).\<close>
   have hU_open: "openin_on ?Sn ?TSn ?U" sorry
   have hV_open: "openin_on ?Sn ?TSn ?V" sorry
   \<comment> \<open>U \<union> V = S^n (every point of S^n differs from p or q).\<close>
