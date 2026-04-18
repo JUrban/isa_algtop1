@@ -4951,7 +4951,8 @@ proof -
   \<comment> \<open>Munkres 54.5: Use covering p: R \<rightarrow> S^1, with R simply connected.\<close>
   \<comment> \<open>Step 1: \<phi> is bijective (from Theorem 54.4 + R simply connected).\<close>
   have hbij: "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-      (UNIV::int set)" sorry
+      (UNIV::int set)"
+    using Theorem_54_5 by (by100 blast)
   \<comment> \<open>Step 2: \<phi> is a homomorphism.
      For lifts ftilde(1) = n, gtilde(1) = m, define g'(s) = n + gtilde(s).
      Since p(n + x) = p(x), g' lifts g starting at n. So ftilde * g' lifts f * g,
