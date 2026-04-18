@@ -8080,8 +8080,24 @@ proof (rule ccontr)
     using Theorem_56_1_step_2[OF hn] .
   have hg_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
                        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-    \<comment> \<open>F homotopies g to h; hh_nulhomo gives h to const; transitivity gives g nulhomotopic.\<close>
-    sorry
+  proof -
+    have hTR_c: "is_topology_on (UNIV::complex set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+      unfolding top1_S1_complex_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
+    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
+      unfolding top1_C_minus_0_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
+    \<comment> \<open>F(z,0) = z^n, F(z,1) = h(z).\<close>
+    have hF0: "\<forall>z\<in>top1_S1_complex. ?F (z, 0) = z^n"
+      by (simp add: case_prod_beta)
+    have hF1: "\<forall>z\<in>top1_S1_complex. ?F (z, 1) = ?h z"
+      by (simp add: case_prod_beta)
+    \<comment> \<open>F gives g ≃ h, h nulhomotopic, hence g nulhomotopic by transitivity.\<close>
+    show ?thesis
+      using hh_nulhomo hF_cont hF0 hF1 sorry
+  qed
   show False using hg_notnull hg_nulhomo by blast
 qed
 
