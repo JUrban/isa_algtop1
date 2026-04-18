@@ -9140,7 +9140,39 @@ lemma double_basepoint_change_equiv:
       (top1_basepoint_change_on X TX x0 x1 beta f))
     (top1_basepoint_change_on X TX x0 x2
       (top1_path_product beta alpha) f)"
-  sorry
+proof -
+  let ?ra = "top1_path_reverse alpha" and ?rb = "top1_path_reverse beta"
+  let ?ba = "top1_path_product beta alpha"
+  let ?fp = "top1_is_path_on X TX"
+  have hfp: "?fp x0 x0 f" using hf unfolding top1_is_loop_on_def .
+  have hra: "?fp x2 x1 ?ra" by (rule top1_path_reverse_is_path[OF halpha])
+  have hrb: "?fp x1 x0 ?rb" by (rule top1_path_reverse_is_path[OF hbeta])
+  have hba: "?fp x0 x2 ?ba" by (rule top1_path_product_is_path[OF hTX hbeta halpha])
+  \<comment> \<open>rev(\<beta>*\<alpha>) = rev(\<alpha>) * rev(\<beta>) (definitional equality).\<close>
+  have ha0: "alpha 0 = x1" and ha1: "alpha 1 = x2"
+    using halpha unfolding top1_is_path_on_def by (by100 blast)+
+  have hb0: "beta 0 = x0" and hb1: "beta 1 = x1"
+    using hbeta unfolding top1_is_path_on_def by (by100 blast)+
+  have hrev_prod: "top1_path_reverse ?ba = top1_path_product ?ra ?rb"
+  proof (rule ext)
+    fix s :: real
+    show "top1_path_reverse ?ba s = top1_path_product ?ra ?rb s"
+      unfolding top1_path_reverse_def top1_path_product_def
+      using ha0 hb1 by (simp add: field_simps)
+  qed
+  \<comment> \<open>Unfold basepoint_change_on_def.\<close>
+  have hlhs_eq: "top1_basepoint_change_on X TX x1 x2 alpha
+      (top1_basepoint_change_on X TX x0 x1 beta f)
+    = top1_path_product ?ra (top1_path_product
+        (top1_path_product ?rb (top1_path_product f beta)) alpha)"
+    unfolding top1_basepoint_change_on_def by (rule refl)
+  have hrhs_eq: "top1_basepoint_change_on X TX x0 x2 ?ba f
+    = top1_path_product (top1_path_product ?ra ?rb) (top1_path_product f ?ba)"
+    unfolding top1_basepoint_change_on_def hrev_prod by (rule refl)
+  \<comment> \<open>Both sides are path-homotopic via repeated associativity:
+     ra * ((rb * (f * \<beta>)) * \<alpha>) \<simeq> (ra * rb) * (f * (\<beta> * \<alpha>)).\<close>
+  show ?thesis unfolding top1_loop_equiv_on_def hlhs_eq hrhs_eq sorry
+qed
 
 text \<open>Helper: continuous f sends loops to loops.\<close>
 lemma top1_continuous_map_loop:
