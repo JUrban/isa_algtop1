@@ -8412,8 +8412,42 @@ proof -
      The convexity of I×I gives a homotopy between the two broken-line paths.\<close>
   have hprod_hom: "top1_path_homotopic_on Y TY (h x0) (k x0)
       (top1_path_product (h \<circ> l) ?\<alpha>)
-      (top1_path_product ?\<alpha> (k \<circ> l))" sorry
-  \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha> using path algebra.\<close>
+      (top1_path_product ?\<alpha> (k \<circ> l))"
+  proof -
+    \<comment> \<open>Broken-line paths in I×I: β₁ = bottom*right, β₂ = left*top.
+       G∘β₁ = (h∘l)*α, G∘β₂ = α*(k∘l).
+       β₁ ≃ β₂ in I×I (convexity). Apply G.\<close>
+    \<comment> \<open>Define β₁, β₂ as path products in I×I.\<close>
+    let ?bottom = "\<lambda>s::real. (s, 0::real)"
+    let ?right = "\<lambda>t::real. (1::real, t)"
+    let ?left' = "\<lambda>t::real. (0::real, t)"
+    let ?top' = "\<lambda>s::real. (s, 1::real)"
+    \<comment> \<open>β₁ = bottom * right, β₂ = left * top.\<close>
+    let ?\<beta>1 = "top1_path_product ?bottom ?right"
+    let ?\<beta>2 = "top1_path_product ?left' ?top'"
+    \<comment> \<open>β₁ and β₂ both go from (0,0) to (1,1) in I×I.
+       They're path-homotopic in I×I because I×I is convex (simply connected).\<close>
+    have h\<beta>_hom: "top1_path_homotopic_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1 ?\<beta>2"
+      sorry
+    \<comment> \<open>G∘β₁ = (h∘l)*α and G∘β₂ = α*(k∘l).\<close>
+    have hG\<beta>1: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s" sorry
+    have hG\<beta>2: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s" sorry
+    \<comment> \<open>G preserves homotopy: G∘β₁ ≃ G∘β₂.\<close>
+    have "top1_path_homotopic_on Y TY (?G (0, 0)) (?G (1, 1))
+        (?G \<circ> ?\<beta>1) (?G \<circ> ?\<beta>2)"
+      by (rule continuous_preserves_path_homotopic[OF
+            product_topology_on_is_topology_on[OF
+              top1_unit_interval_topology_is_topology_on
+              top1_unit_interval_topology_is_topology_on,
+              unfolded II_topology_def[symmetric]]
+            hTY hG_cont h\<beta>_hom])
+    \<comment> \<open>?G(0,0) = H(x₀,0) = h(x₀), ?G(1,1) = H(x₀,1) = k(x₀).\<close>
+    hence hGhom: "top1_path_homotopic_on Y TY (h x0) (k x0) (?G \<circ> ?\<beta>1) (?G \<circ> ?\<beta>2)"
+      using hH0 hH1 hx0 hl0 hl1 by (by100 simp)
+    \<comment> \<open>Transfer via agreement on I: G∘β₁ agrees with (h∘l)*α, etc.\<close>
+    show ?thesis sorry
+  qed
+  \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha>.\<close>
   show ?thesis sorry
 qed
 
@@ -13469,6 +13503,7 @@ proof -
 qed
 
 end
+ 
  
  
  
