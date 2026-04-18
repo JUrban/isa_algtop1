@@ -8430,8 +8430,32 @@ proof -
     have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology" sorry
     have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
       unfolding top1_unit_interval_def by (by100 simp)
-    have h\<beta>1_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1" sorry
-    have h\<beta>2_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>2" sorry
+    have h0I: "(0::real) \<in> I_set" and h1I: "(1::real) \<in> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)+
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def
+      by (rule product_topology_on_is_topology_on[OF
+            top1_unit_interval_topology_is_topology_on top1_unit_interval_topology_is_topology_on])
+    have hbot_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?bottom"
+      by (rule pair_s_const_continuous[OF h0I])
+    have hright_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?right"
+      by (rule pair_const_t_continuous[OF h1I])
+    have hleft_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?left'"
+      by (rule pair_const_t_continuous[OF h0I])
+    have htop_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?top'"
+      by (rule pair_s_const_continuous[OF h1I])
+    have hbot_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 0) ?bottom"
+      unfolding top1_is_path_on_def using hbot_cont by (by100 simp)
+    have hright_path: "top1_is_path_on (I_set \<times> I_set) II_topology (1, 0) (1, 1) ?right"
+      unfolding top1_is_path_on_def using hright_cont by (by100 simp)
+    have hleft_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (0, 1) ?left'"
+      unfolding top1_is_path_on_def using hleft_cont by (by100 simp)
+    have htop_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 1) (1, 1) ?top'"
+      unfolding top1_is_path_on_def using htop_cont by (by100 simp)
+    have h\<beta>1_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1"
+      by (rule top1_path_product_is_path[OF hTII hbot_path hright_path])
+    have h\<beta>2_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>2"
+      by (rule top1_path_product_is_path[OF hTII hleft_path htop_path])
     have h\<beta>_hom: "top1_path_homotopic_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1 ?\<beta>2"
       by (rule simply_connected_paths_homotopic[OF hII_sc h\<beta>1_path h\<beta>2_path h00])
     \<comment> \<open>G∘β₁ = (h∘l)*α and G∘β₂ = α*(k∘l).\<close>
@@ -13569,6 +13593,7 @@ proof -
 qed
 
 end
+ 
  
  
  
