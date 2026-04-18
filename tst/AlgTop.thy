@@ -4975,10 +4975,30 @@ proof -
           hft' hft'p by (by100 blast)
       \<comment> \<open>By hphi_wd: ft0(1) = ft'(1) since f0 \<simeq> f'.\<close>
       have "ft0 1 = ?ft' 1"
-        \<comment> \<open>By hphi_wd: all lifts of homotopic loops end at the same point.
-           Instantiate with f0, ?f', ft0, ?ft'. Mathematically immediate
-           but SOME term complexity causes automation timeout.\<close>
-        sorry
+      proof -
+        have hf'_loop: "top1_is_loop_on B TB b0 ?f'" using hf'_props by (by100 blast)
+        have h_ft0_1: "ft0 1 = e1" using hft0 unfolding top1_is_path_on_def by simp
+        have h_ft0': "top1_is_path_on E TE e0 (ft0 1) ft0"
+          using hft0 h_ft0_1 by simp
+        have h_ft'_path: "top1_is_path_on E TE e0 (?ft' 1) ?ft'"
+          using hft'_props by (by100 blast)
+        have h_ft'p: "\<forall>s\<in>I_set. p (?ft' s) = ?f' s"
+          using hft'_props by (by100 blast)
+        \<comment> \<open>Apply hphi_wd with f = f0, g = ?f', ft = ft0, gt = ?ft'.\<close>
+        have hwd: "top1_is_loop_on B TB b0 f0 \<and> top1_is_loop_on B TB b0 ?f'
+            \<and> top1_path_homotopic_on B TB b0 b0 f0 ?f'
+            \<longrightarrow> (\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f0 s)
+                \<and> top1_is_path_on E TE e0 (gt 1) gt \<and> (\<forall>s\<in>I_set. p (gt s) = ?f' s)
+                \<longrightarrow> ft 1 = gt 1)"
+          using hphi_wd by blast
+        have hpremise: "top1_is_loop_on B TB b0 f0 \<and> top1_is_loop_on B TB b0 ?f'
+            \<and> top1_path_homotopic_on B TB b0 b0 f0 ?f'"
+          using hf0_loop hf'_loop hf0_f' by (by100 blast)
+        have hlifts: "top1_is_path_on E TE e0 (ft0 1) ft0 \<and> (\<forall>s\<in>I_set. p (ft0 s) = f0 s)
+            \<and> top1_is_path_on E TE e0 (?ft' 1) ?ft' \<and> (\<forall>s\<in>I_set. p (?ft' s) = ?f' s)"
+          using h_ft0' hft0p h_ft'_path h_ft'p by (by100 blast)
+        show ?thesis using hwd hpremise hlifts by blast
+      qed
       \<comment> \<open>ft0(1) = e1 by assumption, so ?ft'(1) = e1.\<close>
       hence "?ft' 1 = e1" using hft0 unfolding top1_is_path_on_def by simp
       \<comment> \<open>\<phi>(?c) = ?ft'(1) = e1.\<close>
