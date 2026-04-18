@@ -4996,13 +4996,14 @@ theorem Theorem_54_4_bijective_simply_connected:
   assumes "top1_covering_map_on E TE B TB p"
       and "e0 \<in> E" and "p e0 = b0"
       and "top1_simply_connected_on E TE"
+      and "is_topology_on B TB"
   shows "\<exists>\<phi>. bij_betw \<phi> (top1_fundamental_group_carrier B TB b0) {e\<in>E. p e = b0}"
 proof -
   \<comment> \<open>Munkres 54.4 bijectivity: surjectivity from path-connectedness (which follows
      from simple connectivity), injectivity from simple connectivity of E.\<close>
   have hpc: "top1_path_connected_on E TE"
     using assms(4) top1_simply_connected_on_path_connected by (by100 blast)
-  have hTB_outer: "is_topology_on B TB" sorry
+  have hTB_outer: "is_topology_on B TB" by (rule assms(5))
   \<comment> \<open>Injectivity: if \<phi>([f])=\<phi>([g]) then lifts end at same point. E simply connected
      gives path homotopy Ftilde between lifts; p\<circ>Ftilde homotopizes f to g.\<close>
   have hinj: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g \<and>
@@ -5075,7 +5076,7 @@ proof -
   obtain \<phi> where h\<phi>_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
         \<phi> c \<in> {e\<in>E. p e = b0}"
       and h\<phi>_surj: "\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
-    using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc hTB_outer] by (by100 auto)
+    using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc assms(5)] by (by100 auto)
   \<comment> \<open>Injectivity from hinj: if \<phi>([f]) = \<phi>([g]) then [f] = [g].\<close>
   have h\<phi>_inj: "inj_on \<phi> (top1_fundamental_group_carrier B TB b0)" sorry
   show ?thesis unfolding bij_betw_def using h\<phi>_inj h\<phi>_surj by (by100 blast)
@@ -5273,10 +5274,19 @@ proof -
     unfolding top1_R_to_S1_def by simp
   have hRsc: "top1_simply_connected_on (UNIV::real set) top1_open_sets"
     by (rule top1_R_simply_connected')
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    show ?thesis unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+  qed
   obtain \<phi>' where hbij: "bij_betw \<phi>'
       (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
       {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)}"
-    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0 hRsc] by blast
+    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0 hRsc hTS1] by blast
   have hfiber_Z: "\<exists>\<psi>. bij_betw \<psi> {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
   proof -
     have hfib_eq: "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n | n::int. True}"
@@ -6448,6 +6458,80 @@ qed
 
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
+text \<open>Helper: a nonvanishing vector field on B² that doesn't point inward at any
+  point of S¹ leads to a contradiction (because the inclusion S¹ → R²-{0} would be nulhomotopic).\<close>
+lemma vector_field_must_point_inward:
+  assumes "top1_continuous_map_on top1_B2 top1_B2_topology
+             (UNIV::(real \<times> real) set)
+             (product_topology_on top1_open_sets top1_open_sets) v"
+      and "\<forall>x\<in>top1_B2. v x \<noteq> (0, 0)"
+      and "\<not> (\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x))"
+  shows False
+proof -
+  \<comment> \<open>w = v|S^1 extends to B^2 \<rightarrow> R^2-0 (via v itself), so w is nulhomotopic.\<close>
+  have hw_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+         (UNIV - {(0, 0)}))
+      (\<lambda>x. v x)"
+  proof -
+    let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+    let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+    have hv_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+    proof -
+      have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+      have hv_B2_temp: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+      proof -
+        have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0" using assms(2) by (by100 auto)
+        show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg]) simp
+      qed
+      show ?thesis
+      proof -
+        have hrestr: "top1_continuous_map_on top1_S1
+            (subspace_topology top1_B2 top1_B2_topology top1_S1) ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hv_B2_temp hS1_B2])
+        have hS1_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+          unfolding top1_B2_topology_def top1_S1_topology_def
+          using subspace_topology_trans[OF hS1_B2, of UNIV "product_topology_on top1_open_sets top1_open_sets"]
+          by simp
+        show ?thesis using hrestr unfolding hS1_eq .
+      qed
+    qed
+    have hv_B2: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
+    proof -
+      have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0"
+        using assms(2) by (by100 auto)
+      have hR2_sub: "?R2_0 \<subseteq> (UNIV :: (real\<times>real) set)" by simp
+      show ?thesis
+        by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg hR2_sub])
+    qed
+    have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hTR hTR])
+    have hTR2': "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+      using hTR2 by simp
+    have hTR2_0: "is_topology_on ?R2_0 ?TR2_0"
+      by (rule subspace_topology_is_topology_on[OF hTR2']) simp
+    have hext: "\<forall>x\<in>top1_S1. v x = v x" by simp
+    show ?thesis by (rule Lemma_55_3_backward[OF hv_S1 hTR2_0 hv_B2 hext])
+  qed
+  \<comment> \<open>F(x,t) = tx + (1-t)v(x) is a homotopy from v|S^1 to inclusion j.
+     F \<noteq> 0 because "no inward pointing" prevents cancellation.\<close>
+  have hj_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+         (UNIV - {(0, 0)}))
+      (\<lambda>x. x)"
+  proof -
+    let ?R2_0' = "UNIV - {(0::real, 0::real)}"
+    let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
+    have "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
+    thus ?thesis using hw_nul sorry
+  qed
+  show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by (by100 blast)
+qed
+
 theorem Theorem_55_5_vector_field:
   assumes "top1_continuous_map_on top1_B2 top1_B2_topology
              (UNIV::(real \<times> real) set)
@@ -6466,76 +6550,7 @@ proof -
   have hinward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)"
   proof (rule ccontr)
     assume hnot: "\<not> (\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x))"
-    \<comment> \<open>w = v|S^1 extends to B^2 \<rightarrow> R^2-0 (via v itself), so w is nulhomotopic.\<close>
-    have hw_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
-        (UNIV - {(0, 0)})
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
-           (UNIV - {(0, 0)}))
-        (\<lambda>x. v x)"
-    proof -
-      let ?R2_0 = "UNIV - {(0::real, 0::real)}"
-      let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
-      \<comment> \<open>v: S¹ → R²-{0} continuous (restriction of v: B² → R², v nonvanishing, S¹ ⊆ B²).\<close>
-      have hv_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-      proof -
-        have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
-        have hv_B2_temp: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-        proof -
-          have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0" using assms(2) by (by100 auto)
-          show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg]) simp
-        qed
-        show ?thesis
-        proof -
-          have hrestr: "top1_continuous_map_on top1_S1
-              (subspace_topology top1_B2 top1_B2_topology top1_S1) ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-            by (rule top1_continuous_map_on_restrict_domain_simple[OF hv_B2_temp hS1_B2])
-          \<comment> \<open>subspace of subspace = subspace of ambient.\<close>
-          have hS1_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
-            unfolding top1_B2_topology_def top1_S1_topology_def
-            using subspace_topology_trans[OF hS1_B2, of UNIV "product_topology_on top1_open_sets top1_open_sets"]
-            by simp
-          show ?thesis using hrestr unfolding hS1_eq .
-        qed
-      qed
-      \<comment> \<open>v: B² → R²-{0} continuous (v: B² → R² continuous + nonvanishing).\<close>
-      have hv_B2: "top1_continuous_map_on top1_B2 top1_B2_topology ?R2_0 ?TR2_0 (\<lambda>x. v x)"
-      proof -
-        have himg: "(\<lambda>x. v x) ` top1_B2 \<subseteq> ?R2_0"
-          using assms(2) by (by100 auto)
-        have hR2_sub: "?R2_0 \<subseteq> (UNIV :: (real\<times>real) set)" by simp
-        show ?thesis
-          by (rule top1_continuous_map_on_codomain_shrink[OF assms(1) himg hR2_sub])
-      qed
-      have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
-        by (rule top1_open_sets_is_topology_on_UNIV)
-      have hTR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
-        by (rule product_topology_on_is_topology_on[OF hTR hTR])
-      have hTR2': "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
-        using hTR2 by simp
-      have hTR2_0: "is_topology_on ?R2_0 ?TR2_0"
-        by (rule subspace_topology_is_topology_on[OF hTR2']) simp
-      have hext: "\<forall>x\<in>top1_S1. v x = v x" by simp
-      show ?thesis by (rule Lemma_55_3_backward[OF hv_S1 hTR2_0 hv_B2 hext])
-    qed
-    \<comment> \<open>F(x,t) = tx + (1-t)v(x) is a homotopy from v|S^1 to inclusion j.
-       F \<noteq> 0 because "no inward pointing" prevents cancellation.\<close>
-    have hj_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
-        (UNIV - {(0, 0)})
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
-           (UNIV - {(0, 0)}))
-        (\<lambda>x. x)"
-    proof -
-      \<comment> \<open>F(x,t) = t\<cdot>x + (1-t)\<cdot>v(x) is a homotopy from v|S¹ (t=0) to j (t=1) in R²-{0}.\<close>
-      \<comment> \<open>v|S¹ is nulhomotopic (hw_nul). Homotopic to nulhomotopic \<Rightarrow> nulhomotopic.\<close>
-      \<comment> \<open>F nonvanishing: if F(x,t)=0 then v(x) = -t/(1-t)\<cdot>x points inward, contradicting hnot.\<close>
-      let ?R2_0' = "UNIV - {(0::real, 0::real)}"
-      let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
-      have "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
-      \<comment> \<open>Homotopic + v|S¹ nulhomotopic \<Rightarrow> j nulhomotopic (transitivity of nulhomotopy).\<close>
-      thus ?thesis using hw_nul sorry
-    qed
-    \<comment> \<open>But j is not nulhomotopic (Corollary 55.4). Contradiction.\<close>
-    show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by blast
+    show False by (rule vector_field_must_point_inward[OF assms hnot])
   qed
   \<comment> \<open>Outward: apply the inward result to -v.\<close>
   have houtward: "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (-(a * fst x), -(a * snd x))"
@@ -6571,7 +6586,11 @@ proof -
       thus "?neg_v x \<noteq> (0, 0)" by (simp add: prod_eq_iff)
     qed
     \<comment> \<open>The inward argument for -v gives: \<exists>x\<in>S^1. \<exists>a>0. -v(x) = a*x.\<close>
-    have "\<exists>x\<in>top1_S1. \<exists>a>0. ?neg_v x = (a * fst x, a * snd x)" sorry
+    have "\<exists>x\<in>top1_S1. \<exists>a>0. ?neg_v x = (a * fst x, a * snd x)"
+    proof (rule ccontr)
+      assume "\<not> (\<exists>x\<in>top1_S1. \<exists>a>0. ?neg_v x = (a * fst x, a * snd x))"
+      thus False by (rule vector_field_must_point_inward[OF hnv_cont hnv_nz])
+    qed
     then obtain x a where hx: "x \<in> top1_S1" and ha: "a > 0"
         and hva: "?neg_v x = (a * fst x, a * snd x)" by (by100 blast)
     \<comment> \<open>-v(x) = a*x means v(x) = -a*x.\<close>
@@ -6990,9 +7009,11 @@ proof
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
             (h \<circ> f) (top1_constant_path (h (1, 0)))"
     using hnul sorry
-  show False using hh_star_nontrivial hh_star_trivial sorry
+  show False using hh_star_nontrivial hh_star_trivial
+    by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
+      top1_is_path_on_def top1_path_homotopic_on_def)
     \<comment> \<open>Note: nontrivial uses const(1,0) while trivial uses const(h(1,0)).
-       Contradiction requires h(1,0)=(1,0) (WLOG from Munkres) or basepoint change.\<close>
+       The metis proof resolves via endpoint matching in path_homotopic_on.\<close>
 qed
 
 (** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
@@ -7611,6 +7632,43 @@ qed
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
 
+text \<open>Helper: the inclusion-induced map takes A-equivalence classes to X-equivalence classes.\<close>
+lemma inclusion_induced_class:
+  assumes hTX: "is_topology_on X TX" and hTA: "is_topology_on A TA"
+      and hAsub: "A \<subseteq> X" and hTA_eq: "TA = subspace_topology X TX A"
+      and hj: "top1_continuous_map_on A TA X TX id"
+      and hf: "top1_is_loop_on A TA x0 f"
+  shows "top1_fundamental_group_induced_on A TA x0 X TX x0 id
+      {g. top1_loop_equiv_on A TA x0 f g}
+    = {k. top1_loop_equiv_on X TX x0 f k}"
+proof (intro set_eqI iffI)
+  fix k assume "k \<in> top1_fundamental_group_induced_on A TA x0 X TX x0 id
+      {g. top1_loop_equiv_on A TA x0 f g}"
+  then obtain g where hfg: "top1_loop_equiv_on A TA x0 f g"
+      and hgk: "top1_loop_equiv_on X TX x0 (id \<circ> g) k"
+    unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+  have hg_loop: "top1_is_loop_on A TA x0 g"
+    using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+  have hfg_X: "top1_loop_equiv_on X TX x0 f g"
+    using top1_induced_preserves_loop_equiv[OF hTA hj hf hg_loop hfg]
+    by (simp add: comp_def)
+  have hgk': "top1_loop_equiv_on X TX x0 g k"
+    using hgk by (simp add: comp_def)
+  show "k \<in> {k. top1_loop_equiv_on X TX x0 f k}"
+    using top1_loop_equiv_on_trans[OF hTX hfg_X hgk'] by simp
+next
+  fix k assume hk: "k \<in> {k. top1_loop_equiv_on X TX x0 f k}"
+  hence hfk: "top1_loop_equiv_on X TX x0 f k" by simp
+  have hff: "top1_loop_equiv_on A TA x0 f f"
+    by (rule top1_loop_equiv_on_refl[OF hf])
+  have hfk': "top1_loop_equiv_on X TX x0 (id \<circ> f) k"
+    using hfk by (simp add: comp_def)
+  show "k \<in> top1_fundamental_group_induced_on A TA x0 X TX x0 id
+      {g. top1_loop_equiv_on A TA x0 f g}"
+    unfolding top1_fundamental_group_induced_on_def
+    using hff hfk' by (by100 blast)
+qed
+
 text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
   a group isomorphism when the inclusion has a retraction homotopic to id.\<close>
 lemma inclusion_retraction_iso:
@@ -7636,13 +7694,197 @@ proof -
      r\<circ>f is a loop in A, so [f] = j_*[r\<circ>f]. Hence j_* is surjective.
      Step 3 (Homomorphism): j_* preserves products by functoriality.\<close>
   let ?j_star = "top1_fundamental_group_induced_on A TA x0 X TX x0 id"
-  have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier A TA x0)" sorry
+  have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier A TA x0)"
+  proof (rule inj_onI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier A TA x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier A TA x0"
+       and heq: "?j_star c1 = ?j_star c2"
+    obtain f where hf: "top1_is_loop_on A TA x0 f"
+        and hc1_eq: "c1 = {g. top1_loop_equiv_on A TA x0 f g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    obtain g where hg: "top1_is_loop_on A TA x0 g"
+        and hc2_eq: "c2 = {h. top1_loop_equiv_on A TA x0 g h}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>j_*(c1) = [f]_X, j_*(c2) = [g]_X.\<close>
+    have hjc1: "?j_star c1 = {k. top1_loop_equiv_on X TX x0 f k}"
+      unfolding hc1_eq by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hf])
+    have hjc2: "?j_star c2 = {k. top1_loop_equiv_on X TX x0 g k}"
+      unfolding hc2_eq by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hg])
+    \<comment> \<open>[f]_X = [g]_X, so f \<simeq>_X g.\<close>
+    have hfg_X: "top1_loop_equiv_on X TX x0 f g"
+    proof -
+      have hf_X: "top1_is_loop_on X TX x0 f"
+        using top1_continuous_map_loop[OF hj hf] by (simp add: comp_def)
+      have hclass_eq: "{k. top1_loop_equiv_on X TX x0 f k}
+          = {k. top1_loop_equiv_on X TX x0 g k}"
+        using heq hjc1 hjc2 by simp
+      have "top1_loop_equiv_on X TX x0 f f"
+        by (rule top1_loop_equiv_on_refl[OF hf_X])
+      hence "f \<in> {k. top1_loop_equiv_on X TX x0 f k}" by simp
+      hence "f \<in> {k. top1_loop_equiv_on X TX x0 g k}"
+        using hclass_eq by simp
+      hence "top1_loop_equiv_on X TX x0 g f" by simp
+      thus ?thesis by (rule top1_loop_equiv_on_sym)
+    qed
+    \<comment> \<open>Apply r: r\<circ>f \<simeq>_A r\<circ>g.\<close>
+    have hfg_hom_X: "top1_path_homotopic_on X TX x0 x0 f g"
+      using hfg_X unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hrf_rg_A: "top1_path_homotopic_on A TA (r x0) (r x0) (r \<circ> f) (r \<circ> g)"
+      by (rule continuous_preserves_path_homotopic[OF hTX hTA hr hfg_hom_X])
+    have hrx0: "r x0 = x0" using hrj hx0 by (by100 blast)
+    have hrf_rg_A': "top1_path_homotopic_on A TA x0 x0 (r \<circ> f) (r \<circ> g)"
+      using hrf_rg_A unfolding hrx0 .
+    \<comment> \<open>r\<circ>f = f and r\<circ>g = g (since f, g map into A and r|A = id).\<close>
+    have hf_mem: "\<forall>s\<in>I_set. f s \<in> A"
+      using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    have hg_mem: "\<forall>s\<in>I_set. g s \<in> A"
+      using hg unfolding top1_is_loop_on_def top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    have hrf_eq_f: "\<forall>s\<in>I_set. (r \<circ> f) s = f s"
+    proof (intro ballI)
+      fix s assume "s \<in> I_set"
+      have "f s \<in> A" using hf_mem \<open>s \<in> I_set\<close> by (by100 blast)
+      thus "(r \<circ> f) s = f s" using hrj by (simp add: comp_def)
+    qed
+    have hrg_eq_g: "\<forall>s\<in>I_set. (r \<circ> g) s = g s"
+    proof (intro ballI)
+      fix s assume "s \<in> I_set"
+      have "g s \<in> A" using hg_mem \<open>s \<in> I_set\<close> by (by100 blast)
+      thus "(r \<circ> g) s = g s" using hrj by (simp add: comp_def)
+    qed
+    \<comment> \<open>Transfer: f \<simeq>_A r\<circ>f and g \<simeq>_A r\<circ>g (by loop_agree_on_I).\<close>
+    have hf_rf: "top1_path_homotopic_on A TA x0 x0 f (r \<circ> f)"
+      using conjunct2[OF loop_agree_on_I[OF hf hrf_eq_f]] .
+    have hg_rg: "top1_path_homotopic_on A TA x0 x0 g (r \<circ> g)"
+      using conjunct2[OF loop_agree_on_I[OF hg hrg_eq_g]] .
+    \<comment> \<open>Chain: f \<simeq>_A r\<circ>f \<simeq>_A r\<circ>g \<simeq>_A g.\<close>
+    have hf_rg: "top1_path_homotopic_on A TA x0 x0 f (r \<circ> g)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTA hf_rf hrf_rg_A'])
+    have hrg_g: "top1_path_homotopic_on A TA x0 x0 (r \<circ> g) g"
+      by (rule Lemma_51_1_path_homotopic_sym[OF hg_rg])
+    have hfg_A: "top1_path_homotopic_on A TA x0 x0 f g"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTA hf_rg hrg_g])
+    have hfg_equiv: "top1_loop_equiv_on A TA x0 f g"
+      unfolding top1_loop_equiv_on_def using hf hg hfg_A by (by100 blast)
+    show "c1 = c2"
+    proof -
+      have "\<And>h. top1_loop_equiv_on A TA x0 f h \<longleftrightarrow> top1_loop_equiv_on A TA x0 g h"
+        using hfg_equiv top1_loop_equiv_on_trans[OF hTA]
+              top1_loop_equiv_on_trans[OF hTA top1_loop_equiv_on_sym[OF hfg_equiv]]
+        by (by100 blast)
+      thus ?thesis unfolding hc1_eq hc2_eq by auto
+    qed
+  qed
   have hj_surj: "?j_star ` (top1_fundamental_group_carrier A TA x0)
-      = top1_fundamental_group_carrier X TX x0" sorry
+      = top1_fundamental_group_carrier X TX x0"
+  proof (intro set_eqI iffI)
+    fix c assume "c \<in> ?j_star ` (top1_fundamental_group_carrier A TA x0)"
+    then obtain c_A where hcA: "c_A \<in> top1_fundamental_group_carrier A TA x0"
+        and hc_eq: "c = ?j_star c_A" by (by100 blast)
+    obtain f where hf: "top1_is_loop_on A TA x0 f"
+        and hcA_eq: "c_A = {g. top1_loop_equiv_on A TA x0 f g}"
+      using hcA unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hjc: "c = {k. top1_loop_equiv_on X TX x0 f k}"
+      unfolding hc_eq hcA_eq
+      by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hf])
+    have hf_X: "top1_is_loop_on X TX x0 f"
+      using top1_continuous_map_loop[OF hj hf] by (simp add: comp_def)
+    show "c \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def hjc
+      using hf_X by (by100 blast)
+  next
+    fix c assume hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+    obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc_eq: "c = {g. top1_loop_equiv_on X TX x0 f g}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>r\<circ>f is a loop in A.\<close>
+    have hrf_loop: "top1_is_loop_on A TA x0 (r \<circ> f)"
+    proof -
+      have hrf: "top1_is_loop_on A TA (r x0) (r \<circ> f)"
+        by (rule top1_continuous_map_loop[OF hr hf])
+      have hrx0: "r x0 = x0" using hrj hx0 by (by100 blast)
+      show ?thesis using hrf unfolding hrx0 .
+    qed
+    \<comment> \<open>j_*([r\<circ>f]_A) = [r\<circ>f]_X.\<close>
+    let ?c_A = "{g. top1_loop_equiv_on A TA x0 (r \<circ> f) g}"
+    have hcA_mem: "?c_A \<in> top1_fundamental_group_carrier A TA x0"
+      unfolding top1_fundamental_group_carrier_def using hrf_loop by (by100 blast)
+    have hjcA: "?j_star ?c_A = {k. top1_loop_equiv_on X TX x0 (r \<circ> f) k}"
+      by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hrf_loop])
+    \<comment> \<open>r\<circ>f \<simeq> f in X (by hjr), so [r\<circ>f]_X = [f]_X.\<close>
+    have hrf_f: "top1_path_homotopic_on X TX x0 x0 (r \<circ> f) f"
+      by (rule hjr[OF hf])
+    have hrf_equiv_f: "top1_loop_equiv_on X TX x0 (r \<circ> f) f"
+      unfolding top1_loop_equiv_on_def using hrf_f
+      using top1_continuous_map_loop[OF hj hrf_loop] hf
+      by (simp add: comp_def top1_is_loop_on_def)
+    have hclass_eq: "{k. top1_loop_equiv_on X TX x0 (r \<circ> f) k}
+        = {k. top1_loop_equiv_on X TX x0 f k}"
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (r \<circ> f) k}"
+      hence hk: "top1_loop_equiv_on X TX x0 (r \<circ> f) k" by simp
+      have "top1_loop_equiv_on X TX x0 f (r \<circ> f)"
+        by (rule top1_loop_equiv_on_sym[OF hrf_equiv_f])
+      thus "k \<in> {k. top1_loop_equiv_on X TX x0 f k}"
+        using top1_loop_equiv_on_trans[OF hTX _ hk] by simp
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 f k}"
+      hence hk: "top1_loop_equiv_on X TX x0 f k" by simp
+      thus "k \<in> {k. top1_loop_equiv_on X TX x0 (r \<circ> f) k}"
+        using top1_loop_equiv_on_trans[OF hTX hrf_equiv_f] by simp
+    qed
+    show "c \<in> ?j_star ` (top1_fundamental_group_carrier A TA x0)"
+      using hcA_mem unfolding hc_eq hjcA[symmetric] hclass_eq[symmetric] by (by100 blast)
+  qed
   have hj_hom: "\<forall>c\<in>top1_fundamental_group_carrier A TA x0.
       \<forall>d\<in>top1_fundamental_group_carrier A TA x0.
       ?j_star (top1_fundamental_group_mul A TA x0 c d)
-      = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)" sorry
+      = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)"
+  proof (intro ballI)
+    fix c d assume hc: "c \<in> top1_fundamental_group_carrier A TA x0"
+        and hd: "d \<in> top1_fundamental_group_carrier A TA x0"
+    obtain f where hf: "top1_is_loop_on A TA x0 f"
+        and hc_eq: "c = {g. top1_loop_equiv_on A TA x0 f g}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    obtain g where hg: "top1_is_loop_on A TA x0 g"
+        and hd_eq: "d = {h. top1_loop_equiv_on A TA x0 g h}"
+      using hd unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>c \<cdot> d = [f*g]_A by mul_class.\<close>
+    have hcd: "top1_fundamental_group_mul A TA x0 c d
+        = {h. top1_loop_equiv_on A TA x0 (top1_path_product f g) h}"
+      unfolding hc_eq hd_eq
+      by (rule top1_fundamental_group_mul_class[OF hTA hf hg])
+    \<comment> \<open>f*g is a loop in A.\<close>
+    have hfg_loop: "top1_is_loop_on A TA x0 (top1_path_product f g)"
+      by (rule top1_path_product_is_loop[OF hTA hf hg])
+    \<comment> \<open>j_*(c\<cdot>d) = j_*([f*g]_A) = [f*g]_X.\<close>
+    have hjcd: "?j_star (top1_fundamental_group_mul A TA x0 c d)
+        = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
+      unfolding hcd
+      by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hfg_loop])
+    \<comment> \<open>j_*(c) = [f]_X, j_*(d) = [g]_X.\<close>
+    have hjc: "?j_star c = {k. top1_loop_equiv_on X TX x0 f k}"
+      unfolding hc_eq
+      by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hf])
+    have hjd: "?j_star d = {k. top1_loop_equiv_on X TX x0 g k}"
+      unfolding hd_eq
+      by (rule inclusion_induced_class[OF hTX hTA hAsub hTA_eq hj hg])
+    \<comment> \<open>f, g are loops in X (since A \<subseteq> X and inclusion is continuous).\<close>
+    have hf_X: "top1_is_loop_on X TX x0 f"
+      using top1_continuous_map_loop[OF hj hf] by (simp add: comp_def)
+    have hg_X: "top1_is_loop_on X TX x0 g"
+      using top1_continuous_map_loop[OF hj hg] by (simp add: comp_def)
+    \<comment> \<open>[f]_X \<cdot> [g]_X = [f*g]_X by mul_class.\<close>
+    have hjcd': "top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)
+        = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
+      unfolding hjc hjd
+      by (rule top1_fundamental_group_mul_class[OF hTX hf_X hg_X])
+    show "?j_star (top1_fundamental_group_mul A TA x0 c d)
+        = top1_fundamental_group_mul X TX x0 (?j_star c) (?j_star d)"
+      unfolding hjcd hjcd' ..
+  qed
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
   proof (intro exI conjI)
