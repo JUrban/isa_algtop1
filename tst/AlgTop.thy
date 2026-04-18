@@ -5535,7 +5535,22 @@ proof -
      For lifts ftilde(1) = n, gtilde(1) = m, define g'(s) = n + gtilde(s).
      Since p(n + x) = p(x), g' lifts g starting at n. So ftilde * g' lifts f * g,
      ending at n + m. Hence \<phi>([f]*[g]) = n + m = \<phi>([f]) + \<phi>([g]).\<close>
-  show ?thesis sorry
+  \<comment> \<open>The bijection maps endpoints of lifts to integers.
+     Homomorphism: endpoints add because translated lifts concatenate.\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>Use Theorem 58.2 (inclusion iso) to get π₁(S¹) ≅ π₁(R²-{0}),
+       combined with the known bijection to Z.\<close>
+    \<comment> \<open>Alternative: directly construct the isomorphism from the covering.\<close>
+    obtain \<phi> where h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (UNIV::int set)" using hbij by blast
+    \<comment> \<open>Need to show \<phi> is a homomorphism (or construct one that is).\<close>
+    \<comment> \<open>For the covering R → S¹: \<phi>([f]) = n where lift of f from 0 ends at n.
+       Lift of f*g: concatenate lift of f (ending at n) with translated lift of g
+       starting at n. Translated lift of g(s) = n + gtilde(s) (since p(n+x) = p(x)).
+       So lift of f*g ends at n + gtilde(1) = n + m = \<phi>([f]) + \<phi>([g]).\<close>
+    show ?thesis sorry
+  qed
 qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
@@ -6922,7 +6937,26 @@ proof -
   proof -
     let ?R2_0' = "UNIV - {(0::real, 0::real)}"
     let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
-    have hhom_v_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
+    have hhom_v_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)"
+    proof -
+      \<comment> \<open>F(x,t) = t*x + (1-t)*v(x) is a homotopy from v to id in R²-{0}.\<close>
+      let ?F = "\<lambda>(x::real\<times>real, t::real). (t * fst x + (1-t) * fst (v x),
+                                          t * snd x + (1-t) * snd (v x))"
+      have hF0: "\<forall>x\<in>top1_S1. ?F (x, 0) = v x"
+        by (by100 simp)
+      have hF1: "\<forall>x\<in>top1_S1. ?F (x, 1) = x"
+        by (by100 simp)
+      \<comment> \<open>F(x,t) \<noteq> 0: if F(x,t) = 0 then v(x) = -t/(1-t) * x which means v points inward.\<close>
+      have hF_nz: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?F (x, t) \<noteq> (0, 0)" sorry
+      have hv_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x)"
+        sorry
+      have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. x)"
+        sorry
+      have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+          ?R2_0' ?TR2_0' ?F" sorry
+      show ?thesis unfolding top1_homotopic_on_def
+        using hv_cont hid_cont hF_cont hF0 hF1 by (by100 blast)
+    qed
     have hTS1: "is_topology_on top1_S1 top1_S1_topology"
     proof -
       have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
@@ -12411,6 +12445,12 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
