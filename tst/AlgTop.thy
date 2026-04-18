@@ -8479,7 +8479,33 @@ proof -
               \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s)
               \<and> (\<forall>t\<in>I_set. F (0, t) = h x0)
               \<and> (\<forall>t\<in>I_set. F (1, t) = k x0))"
-        using hF hF0' hF1' hFl hFr sorry
+      proof (intro conjI)
+        \<comment> \<open>is_path_on for path products: follows from G∘β being paths + pointwise agreement.\<close>
+        have hGb1_path: "top1_is_path_on Y TY (h x0) (k x0) (?G \<circ> ?\<beta>1)"
+          using hGhom unfolding top1_path_homotopic_on_def by (by100 blast)
+        have hGb2_path: "top1_is_path_on Y TY (h x0) (k x0) (?G \<circ> ?\<beta>2)"
+          using hGhom unfolding top1_path_homotopic_on_def by (by100 blast)
+        have hGb1_cont: "top1_continuous_map_on I_set I_top Y TY (?G \<circ> ?\<beta>1)"
+          using hGb1_path unfolding top1_is_path_on_def by (by100 blast)
+        have hGb2_cont: "top1_continuous_map_on I_set I_top Y TY (?G \<circ> ?\<beta>2)"
+          using hGb2_path unfolding top1_is_path_on_def by (by100 blast)
+        have hprod1_cont: "top1_continuous_map_on I_set I_top Y TY (top1_path_product (h \<circ> l) ?\<alpha>)"
+          by (rule top1_continuous_map_on_agree'[OF hGb1_cont hG\<beta>1])
+        have hprod2_cont: "top1_continuous_map_on I_set I_top Y TY (top1_path_product ?\<alpha> (k \<circ> l))"
+          by (rule top1_continuous_map_on_agree'[OF hGb2_cont hG\<beta>2])
+        show "top1_is_path_on Y TY (h x0) (k x0) (top1_path_product (h \<circ> l) ?\<alpha>)"
+          using hGb1_path hG\<beta>1 hprod1_cont unfolding top1_is_path_on_def
+          by (simp add: hl0 hl1 top1_path_product_at_end top1_path_product_at_start)
+        show "top1_is_path_on Y TY (h x0) (k x0) (top1_path_product ?\<alpha> (k \<circ> l))"
+          using hGb2_path hG\<beta>2 hprod2_cont unfolding top1_is_path_on_def
+          by (simp add: hH0 hl1 hx0 top1_path_product_at_end top1_path_product_at_start)
+        show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F
+            \<and> (\<forall>s\<in>I_set. F (s, 0) = top1_path_product (h \<circ> l) ?\<alpha> s)
+            \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s)
+            \<and> (\<forall>t\<in>I_set. F (0, t) = h x0)
+            \<and> (\<forall>t\<in>I_set. F (1, t) = k x0)"
+          using hF hF0' hF1' hFl hFr by (by100 blast)
+      qed
     qed
   qed
   \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha>.\<close>
@@ -13538,6 +13564,9 @@ proof -
 qed
 
 end
+ 
+ 
+ 
  
  
  
