@@ -8353,7 +8353,35 @@ proof -
     have heq: "(\<lambda>p. (l (pi1 p), pi2 p)) = (\<lambda>(s, t). (l s, t))"
       unfolding pi1_def pi2_def by (rule ext) (simp add: case_prod_beta)
     have hlid: "top1_continuous_map_on (I_set \<times> I_set) II_topology (X \<times> I_set)
-        (product_topology_on TX I_top) (\<lambda>(s, t). (l s, t))" sorry
+        (product_topology_on TX I_top) (\<lambda>(s, t). (l s, t))"
+    proof -
+      have hT18: "\<And>f. (\<forall>c\<in>(I_set \<times> I_set). f c \<in> X \<times> I_set) \<and>
+          top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (pi1 \<circ> f) \<and>
+          top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top (pi2 \<circ> f)
+          \<longrightarrow> top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+              (X \<times> I_set) (product_topology_on TX I_top) f"
+        using Theorem_18_4[OF hTII[unfolded II_topology_def] hTX hTI] by (by100 blast)
+      have hcomp1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX
+          (pi1 \<circ> (\<lambda>(s, t). (l s, t)))"
+      proof -
+        have "pi1 \<circ> (\<lambda>(s, t). (l s, t)) = l \<circ> pi1"
+          unfolding pi1_def comp_def by (rule ext) (simp add: case_prod_beta)
+        show ?thesis using hlfst unfolding \<open>pi1 \<circ> (\<lambda>(s, t). (l s, t)) = l \<circ> pi1\<close> II_topology_def .
+      qed
+      have hcomp2: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top
+          (pi2 \<circ> (\<lambda>(s, t). (l s, t)))"
+      proof -
+        have "pi2 \<circ> (\<lambda>(s, t). (l s, t)) = pi2"
+          unfolding pi2_def comp_def by (rule ext) (simp add: case_prod_beta)
+        show ?thesis using hpi2 unfolding \<open>pi2 \<circ> (\<lambda>(s, t). (l s, t)) = pi2\<close> II_topology_def .
+      qed
+      have hrange: "\<forall>c\<in>(I_set \<times> I_set). (\<lambda>(s, t). (l s, t)) c \<in> X \<times> I_set"
+        using hl_cont unfolding top1_continuous_map_on_def by (by100 auto)
+      have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+          (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>(s, t). (l s, t))"
+        using hT18 hcomp1 hcomp2 hrange by (by100 blast)
+      thus ?thesis unfolding II_topology_def .
+    qed
     have "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY (H \<circ> (\<lambda>(s, t). (l s, t)))"
       by (rule top1_continuous_map_on_comp[OF hlid hHcont])
     moreover have "(H \<circ> (\<lambda>(s, t). (l s, t))) = ?G"
@@ -13441,6 +13469,11 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
  
  
  
