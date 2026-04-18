@@ -4846,9 +4846,35 @@ proof -
     have hpft_f: "\<forall>s\<in>I_set. (p \<circ> ft) s = f s" using hftp by simp
     have hpgt_g: "\<forall>s\<in>I_set. (p \<circ> gt) s = g s" using hgtp by simp
     have hpe0: "p e0 = b0" using assms(3) .
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hpft1: "p (ft 1) = b0"
+      using hftp h1I hfl unfolding top1_is_loop_on_def top1_is_path_on_def by simp
     have "top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) (p \<circ> gt)"
-      using hpft_pgt hpe0 sorry
-    thus "top1_path_homotopic_on B TB b0 b0 f g" sorry
+      using hpft_pgt hpe0 hpft1 by simp
+    \<comment> \<open>p\<circ>ft agrees with f on I_set, p\<circ>gt agrees with g. Transfer homotopy.\<close>
+    have hpft_loop: "top1_is_loop_on B TB b0 (p \<circ> ft)"
+      using \<open>top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) (p \<circ> gt)\<close>
+      unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hf_loop_agree: "\<forall>s\<in>I_set. (p \<circ> ft) s = f s" using hftp by simp
+    have hg_loop_agree: "\<forall>s\<in>I_set. (p \<circ> gt) s = g s" using hgtp by simp
+    have hf_equiv_pft: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> ft)"
+      sorry \<comment> \<open>f agrees with p\<circ>ft on I_set \<Rightarrow> f \<simeq> p\<circ>ft (via loop_agree_on_I, defined later).\<close>
+    have hpgt_loop: "top1_is_loop_on B TB b0 (p \<circ> gt)"
+      using \<open>top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) (p \<circ> gt)\<close>
+      unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hg_equiv_pgt: "top1_path_homotopic_on B TB b0 b0 g (p \<circ> gt)"
+      sorry \<comment> \<open>g agrees with p\<circ>gt on I_set \<Rightarrow> g \<simeq> p\<circ>gt.\<close>
+    \<comment> \<open>Chain: f \<simeq> p\<circ>ft \<simeq> p\<circ>gt \<simeq> g.\<close>
+    have hf_pft: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> ft)"
+      by (rule hf_equiv_pft)
+    have hpft_pgt': "top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) (p \<circ> gt)"
+      using hpft_pgt hpe0 hpft1 by simp
+    have hpgt_g': "top1_path_homotopic_on B TB b0 b0 (p \<circ> gt) g"
+      by (rule Lemma_51_1_path_homotopic_sym[OF hg_equiv_pgt])
+    have hf_pgt: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> gt)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTB hf_pft hpft_pgt'])
+    thus "top1_path_homotopic_on B TB b0 b0 f g"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTB _ hpgt_g'])
   qed
   \<comment> \<open>From Theorem 54.4 (lifting correspondence), get surjective \<phi>.\<close>
   obtain \<phi> where h\<phi>_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
