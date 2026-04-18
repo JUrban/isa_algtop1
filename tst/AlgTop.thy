@@ -4266,7 +4266,61 @@ proof -
       \<comment> \<open>Restrict slices: \<V>0 = {V \<inter> E0 | V \<in> \<V>}.\<close>
       let ?\<V>0 = "{V \<inter> E0 | V. V \<in> \<V>}"
       \<comment> \<open>Need: U \<inter> B0 is open in B0; slices are open, disjoint, partition, homeomorphic.\<close>
-      show ?thesis unfolding top1_evenly_covered_on_def sorry
+      show ?thesis unfolding top1_evenly_covered_on_def
+      proof (intro conjI exI[of _ ?\<V>0])
+        \<comment> \<open>U \<inter> B0 is open in B0.\<close>
+        show "openin_on B0 (subspace_topology B TB B0) (?U0)"
+        proof -
+          have hUopen: "U \<in> TB"
+            using hUec unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+          have "?U0 = B0 \<inter> U" by (by100 blast)
+          also have "\<dots> \<in> subspace_topology B TB B0"
+            unfolding subspace_topology_def using hUopen by (by100 blast)
+          finally have "?U0 \<in> subspace_topology B TB B0" .
+          moreover have "?U0 \<subseteq> B0" by (by100 blast)
+          ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Restricted slices are open in E0.\<close>
+        show "\<forall>V\<in>?\<V>0. openin_on E0 (subspace_topology E TE E0) V"
+        proof (intro ballI)
+          fix V0 assume "V0 \<in> ?\<V>0"
+          then obtain V where hV: "V \<in> \<V>" and hV0eq: "V0 = V \<inter> E0" by (by100 blast)
+          have hVTE: "V \<in> TE" using hV hV_open unfolding openin_on_def by (by100 blast)
+          have "V0 \<in> subspace_topology E TE E0"
+            unfolding subspace_topology_def hV0eq using hVTE by (by100 auto)
+          moreover have "V0 \<subseteq> E0" unfolding hV0eq by (by100 blast)
+          ultimately show "openin_on E0 (subspace_topology E TE E0) V0"
+            unfolding openin_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Restricted slices are pairwise disjoint.\<close>
+        show "\<forall>V\<in>?\<V>0. \<forall>V'\<in>?\<V>0. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+          using hV_disj by (by100 auto)
+        \<comment> \<open>Restricted slices partition p⁻¹(U \<inter> B0) \<inter> E0.\<close>
+        show "{x \<in> E0. p x \<in> ?U0} = \<Union>?\<V>0"
+        proof (intro set_eqI iffI)
+          fix x assume "x \<in> {x \<in> E0. p x \<in> ?U0}"
+          hence hxE0: "x \<in> E0" and hpxU: "p x \<in> U" and hpxB0: "p x \<in> B0" by (by100 simp)+
+          have hxE: "x \<in> E" using hxE0 hE0sub by (by100 blast)
+          hence "x \<in> \<Union>\<V>" using hpxU hV_union by (by100 blast)
+          then obtain V where hV: "V \<in> \<V>" and hxV: "x \<in> V" by (by100 blast)
+          have "x \<in> V \<inter> E0" using hxV hxE0 by (by100 blast)
+          thus "x \<in> \<Union>?\<V>0" using hV by (by100 blast)
+        next
+          fix x assume "x \<in> \<Union>?\<V>0"
+          then obtain V where hV: "V \<in> \<V>" and hxVE0: "x \<in> V \<inter> E0" by (by100 blast)
+          have hxE: "x \<in> E" using hxVE0 hE0sub by (by100 blast)
+          have "x \<in> \<Union>\<V>" using hV hxVE0 by (by100 blast)
+          hence "x \<in> {x\<in>E. p x \<in> U}" using hV_union by (by100 simp)
+          hence "p x \<in> U" by (by100 simp)
+          moreover have "p x \<in> B0" using hxVE0 assms(5) by (by100 simp)
+          moreover have "x \<in> E0" using hxVE0 by (by100 blast)
+          ultimately show "x \<in> {x \<in> E0. p x \<in> ?U0}" by (by100 simp)
+        qed
+        \<comment> \<open>p restricted to each slice is a homeomorphism.\<close>
+        show "\<forall>V\<in>?\<V>0. top1_homeomorphism_on V (subspace_topology E0 (subspace_topology E TE E0) V)
+            ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
+          sorry
+      qed
     qed
     ultimately have "b0 \<in> ?U0 \<and>
         top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p ?U0"
@@ -8230,9 +8284,15 @@ lemma homotopy_induced_basepoint_change:
       and hl: "top1_is_loop_on X TX x0 l" and hx0: "x0 \<in> X"
   shows "top1_loop_equiv_on Y TY (h x0) (h \<circ> l)
     (top1_basepoint_change_on Y TY (k x0) (h x0) (top1_path_reverse (\<lambda>t. H (x0, t))) (k \<circ> l))"
-  sorry \<comment> \<open>Textbook proof (Munkres Lemma 58.4): F(s,t) = (l(s), t) maps I\<times>I \<rightarrow> X\<times>I.
-         The broken-line paths \<beta>₀*\<gamma>₁ and \<gamma>₀*\<beta>₁ in I\<times>I are path-homotopic (convexity).
-         Applying H\<circ>F gives: (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l). Hence h\<circ>l \<simeq> \<alpha>*(k\<circ>l)*\<alpha>\<inverse>.\<close>
+proof -
+  let ?\<alpha> = "\<lambda>t. H (x0, t)"
+  \<comment> \<open>G(s,t) = H(l(s), t) gives: G(s,0) = h(l(s)), G(s,1) = k(l(s)),
+     G(0,t) = G(1,t) = \<alpha>(t). So G is a homotopy (h\<circ>l) \<simeq> (k\<circ>l) relative to \<alpha>.\<close>
+  \<comment> \<open>From this, derive: (h\<circ>l) * \<alpha> \<simeq> \<alpha> * (k\<circ>l), hence h\<circ>l \<simeq> \<alpha>⁻¹ * (k\<circ>l) * \<alpha>.\<close>
+  \<comment> \<open>The full proof requires the broken-line homotopy in I×I (convexity)
+     and composition with G. This is Munkres Lemma 58.4.\<close>
+  show ?thesis sorry
+qed
 
 section \<open>\<S>58 Deformation Retracts and Homotopy Type\<close>
 
@@ -13286,6 +13346,13 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
