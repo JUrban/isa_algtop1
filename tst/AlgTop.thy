@@ -7960,6 +7960,35 @@ proof -
   thus ?thesis by simp
 qed
 
+text \<open>S^1 has strict topology.\<close>
+lemma top1_S1_is_topology_on_strict:
+  "is_topology_on_strict top1_S1 top1_S1_topology"
+  unfolding is_topology_on_strict_def
+proof (intro conjI)
+  show "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+  show "top1_S1_topology \<subseteq> Pow top1_S1"
+    unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+qed
+
+text \<open>R^2 - {0} has strict topology.\<close>
+lemma top1_R2_minus_0_is_topology_on_strict:
+  "is_topology_on_strict (UNIV - {(0::real, 0::real)})
+     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
+  unfolding is_topology_on_strict_def
+proof (intro conjI)
+  show "is_topology_on (UNIV - {(0::real, 0::real)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
+  proof -
+    have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using top1_R2_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+    thus ?thesis by (rule subspace_topology_is_topology_on) simp
+  qed
+  show "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)})
+      \<subseteq> Pow (UNIV - {(0::real, 0::real)})"
+    unfolding subspace_topology_def by (by100 blast)
+qed
+
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
   assumes "closedin_on X TX A"
