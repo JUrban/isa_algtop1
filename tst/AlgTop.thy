@@ -9365,7 +9365,57 @@ proof -
       have hH_std: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
           ((1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p),
            (1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p)))"
-        sorry \<comment> \<open>From continuous_on_divide, continuous_on_sqrt, continuous_intros.\<close>
+      proof -
+        \<comment> \<open>Norm and division continuous on R²-{0}.\<close>
+        have hnorm_cont: "continuous_on ?R2_0 ?norm"
+          by (intro continuous_on_compose2[OF continuous_on_real_sqrt]
+              continuous_on_add continuous_on_power continuous_intros) auto
+        have hnorm_nz: "\<forall>x\<in>?R2_0. ?norm x \<noteq> 0"
+        proof (intro ballI)
+          fix x :: "real \<times> real" assume "x \<in> ?R2_0"
+          hence "fst x ^ 2 + snd x ^ 2 > 0"
+            by (cases x) (auto simp: sum_power2_gt_zero_iff)
+          thus "?norm x \<noteq> 0" by (metis less_imp_neq not_sym real_sqrt_gt_zero)
+        qed
+        have hfst_div: "continuous_on ?R2_0 (\<lambda>x. fst x / ?norm x)"
+          by (rule continuous_on_divide) (intro continuous_intros, rule hnorm_cont, rule hnorm_nz)
+        have hsnd_div: "continuous_on ?R2_0 (\<lambda>x. snd x / ?norm x)"
+          by (rule continuous_on_divide) (intro continuous_intros, rule hnorm_cont, rule hnorm_nz)
+        \<comment> \<open>Lift to (R²-{0})×I via composition with fst.\<close>
+        have hfst_R2: "continuous_on (?R2_0 \<times> I_set) (fst::(real\<times>real)\<times>real \<Rightarrow> real\<times>real)"
+          by (intro continuous_intros)
+        have hfst_img: "fst ` (?R2_0 \<times> I_set) \<subseteq> ?R2_0" by (by100 auto)
+        have hfdiv': "continuous_on (?R2_0 \<times> I_set) (\<lambda>p. fst (fst p) / ?norm (fst p))"
+          using continuous_on_compose[OF hfst_R2 continuous_on_subset[OF hfst_div hfst_img]]
+          by (simp add: comp_def)
+        have hsdiv': "continuous_on (?R2_0 \<times> I_set) (\<lambda>p. snd (fst p) / ?norm (fst p))"
+          using continuous_on_compose[OF hfst_R2 continuous_on_subset[OF hsnd_div hfst_img]]
+          by (simp add: comp_def)
+        have hid: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real. p)"
+          by (rule continuous_on_id)
+        have h1mt: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real. 1 - snd p)"
+          by (intro continuous_on_diff continuous_on_const continuous_on_snd[OF hid])
+        have hff: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real. fst (fst p))"
+          by (intro continuous_on_fst[OF continuous_on_fst[OF hid]])
+        have hsf: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real. snd (fst p))"
+          by (intro continuous_on_snd[OF continuous_on_fst[OF hid]])
+        have ht: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real. snd p)"
+          by (intro continuous_on_snd[OF hid])
+        have htfd: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+            snd p * (fst (fst p) / ?norm (fst p)))"
+          by (rule continuous_on_mult[OF ht hfdiv'])
+        have htsd: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+            snd p * (snd (fst p) / ?norm (fst p)))"
+          by (rule continuous_on_mult[OF ht hsdiv'])
+        have hcomp1: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+            (1 - snd p) * fst (fst p) + snd p * (fst (fst p) / ?norm (fst p)))"
+          by (intro continuous_on_add continuous_on_mult h1mt hff ht hfdiv')
+        have hcomp2: "continuous_on (?R2_0 \<times> I_set) (\<lambda>p::(real\<times>real)\<times>real.
+            (1 - snd p) * snd (fst p) + snd p * (snd (fst p) / ?norm (fst p)))"
+          by (intro continuous_on_add continuous_on_mult h1mt hsf ht hsdiv')
+        show ?thesis
+          using continuous_on_Pair[OF hcomp1 hcomp2] by simp
+      qed
       have hH_eq: "(\<lambda>p::(real\<times>real)\<times>real.
           ((1 - snd p) * fst (fst p) + snd p * fst (fst p) / ?norm (fst p),
            (1 - snd p) * snd (fst p) + snd p * snd (fst p) / ?norm (fst p)))
@@ -13172,6 +13222,15 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
