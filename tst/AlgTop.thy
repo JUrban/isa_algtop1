@@ -8096,7 +8096,44 @@ proof (rule ccontr)
       by (simp add: case_prod_beta)
     \<comment> \<open>z^n is continuous S^1 \<rightarrow> C-{0} (polynomial, nonvanishing on S^1).\<close>
     have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)" sorry
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+    proof -
+      have hmap: "\<And>z. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_C_minus_0"
+        unfolding top1_S1_complex_def top1_C_minus_0_def using hn
+        by (auto simp: norm_power)
+      have hcont: "continuous_on UNIV (\<lambda>z::complex. z^n)"
+        by (intro continuous_intros)
+      show ?thesis
+        unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+        top1_continuous_map_on_def
+      proof (intro conjI)
+        show "\<forall>x\<in>top1_S1_complex. x ^ n \<in> top1_C_minus_0"
+          using hmap by (by100 blast)
+        show "\<forall>V\<in>subspace_topology UNIV top1_open_sets top1_C_minus_0.
+            {x \<in> top1_S1_complex. x ^ n \<in> V} \<in>
+            subspace_topology UNIV top1_open_sets top1_S1_complex"
+        proof
+          fix V assume "V \<in> subspace_topology UNIV (top1_open_sets::complex set set) top1_C_minus_0"
+          then obtain U where hUos: "U \<in> (top1_open_sets::complex set set)"
+              and hVeq: "V = top1_C_minus_0 \<inter> U"
+            unfolding subspace_topology_def by (by100 auto)
+          have hUo: "open U" using hUos unfolding top1_open_sets_def by (by100 blast)
+          have hWo: "open ((\<lambda>z::complex. z^n) -` U)"
+          proof -
+            have "open ((\<lambda>z::complex. z^n) -` U \<inter> UNIV)"
+              using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hUo by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          have "{x \<in> top1_S1_complex. x^n \<in> V} = top1_S1_complex \<inter> ((\<lambda>z. z^n) -` U)"
+            unfolding hVeq using hmap by (by100 auto)
+          moreover have "((\<lambda>z::complex. z^n) -` U) \<in> (top1_open_sets::complex set set)"
+            using hWo unfolding top1_open_sets_def by (by100 blast)
+          ultimately show "{x \<in> top1_S1_complex. x^n \<in> V} \<in>
+              subspace_topology UNIV top1_open_sets top1_S1_complex"
+            unfolding subspace_topology_def by (by100 blast)
+        qed
+      qed
+    qed
     \<comment> \<open>h is continuous (from nulhomotopic).\<close>
     have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
         top1_C_minus_0 top1_C_minus_0_topology ?h"
