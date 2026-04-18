@@ -9462,11 +9462,37 @@ proof -
         (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m)"
       unfolding top1_basepoint_change_on_def hf_comp_product hf_comp_rev
       by (simp add: comp_assoc)
-    \<comment> \<open>From hbc2': f\<circ>g\<circ>m \<simeq> bc(rev \<alpha>2, m) at f(g(f(x0))).
-       So bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m) \<simeq> bc(f\<circ>\<alpha>1, bc(rev \<alpha>2, m)) at f(x0).
-       This is a double basepoint change, equivalent to single bc by some loop \<gamma> at f(x0).
-       By Theorem 52.1, this gives a bijection of \<pi>_1(Y, f(x0)).\<close>
-    have "?f_star ?c = d" sorry
+    \<comment> \<open>The map d \<mapsto> f_*(\<beta>_hat(g_*(d))) sends \<pi>_1(Y) into image(f_*).
+       This map is an automorphism (conjugation by \<gamma>) hence surjective.
+       So image(f_*) \<supseteq> \<pi>_1(Y). Hence d \<in> image(f_*).\<close>
+    \<comment> \<open>For ANY loop m' at f(x0), f_*([bc(\<alpha>1, g\<circ>m')]) \<in> image(f_*).\<close>
+    have hany_in_image: "\<And>m'. top1_is_loop_on Y TY (f x0) m' \<Longrightarrow>
+        ?f_star {h. top1_loop_equiv_on X TX x0
+          (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
+        \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
+    proof -
+      fix m' assume hm': "top1_is_loop_on Y TY (f x0) m'"
+      have "top1_is_loop_on X TX (g (f x0)) (g \<circ> m')"
+        by (rule top1_continuous_map_loop[OF hg hm'])
+      hence "top1_is_loop_on X TX x0
+        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m'))"
+        by (rule top1_basepoint_change_is_loop[OF hTX hra1])
+      hence "{h. top1_loop_equiv_on X TX x0
+        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
+        \<in> top1_fundamental_group_carrier X TX x0"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      thus "?f_star {h. top1_loop_equiv_on X TX x0
+        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
+        \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
+        by (by100 blast)
+    qed
+    \<comment> \<open>In particular for m: f_*(c) \<in> image(f_*).\<close>
+    have "?f_star ?c \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
+      using hany_in_image[OF hm] .
+    \<comment> \<open>The map [m'] \<mapsto> f_*([bc(\<alpha>1, g\<circ>m')]) = [\<gamma>*m'*rev(\<gamma>)] is surjective on \<pi>_1(Y).
+       For surjectivity of f_*, we need d in image. Since the map sends every [m']
+       to image(f_*), and the map is surjective (conjugation auto), d \<in> image(f_*).\<close>
+    have "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)" sorry
     thus "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
       using hc_mem by (by100 blast)
   qed
