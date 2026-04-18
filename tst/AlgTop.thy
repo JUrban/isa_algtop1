@@ -7029,7 +7029,18 @@ proof -
           ?R2_0' ?TR2_0' ?F" sorry
       \<comment> \<open>F gives v ≃ -id. Need -id ≃ id (rotation). Then v ≃ id by transitivity.\<close>
       let ?neg = "\<lambda>x::real\<times>real. (- fst x, - snd x)"
-      have hneg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg" sorry
+      have hneg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg"
+      proof -
+        have hneg_std: "continuous_on UNIV ?neg"
+          by (intro continuous_on_Pair continuous_intros)
+        have hneg_map: "\<And>x. x \<in> top1_S1 \<Longrightarrow> ?neg x \<in> ?R2_0'"
+          unfolding top1_S1_def by (by100 auto)
+        have hneg_R2: "top1_continuous_map_on top1_S1
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1)
+            ?R2_0' ?TR2_0' ?neg"
+          by (rule top1_continuous_map_on_real2_subspace[OF hneg_map hneg_std])
+        thus ?thesis unfolding top1_S1_topology_def .
+      qed
       have hv_neg: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) ?neg"
       proof -
         have hF1': "\<forall>x\<in>top1_S1. ?F (x, 1) = ?neg x" by (by100 simp)
@@ -12540,6 +12551,7 @@ proof -
 qed
 
 end
+ 
  
  
  
