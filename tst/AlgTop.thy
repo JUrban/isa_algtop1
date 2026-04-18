@@ -4331,8 +4331,37 @@ proof -
           have hV_sub_E: "V \<subseteq> E"
             using hV hV_open unfolding openin_on_def by (by100 blast)
           \<comment> \<open>The homeomorphism restricted to V\<inter>E0 → U\<inter>B0.\<close>
+          \<comment> \<open>Subspace of subspace = subspace of ambient.\<close>
+          have hTV0: "subspace_topology E0 (subspace_topology E TE E0) V0
+              = subspace_topology E TE V0"
+            using subspace_topology_trans[OF hV0_sub_E0] by simp
+          have hU0_sub_B0: "?U0 \<subseteq> B0" by (by100 blast)
+          have hTU0: "subspace_topology B0 (subspace_topology B TB B0) ?U0
+              = subspace_topology B TB ?U0"
+            using subspace_topology_trans[OF hU0_sub_B0] by simp
+          have hV0_sub_E: "V0 \<subseteq> E" using hV0_sub_V hV_sub_E by (by100 blast)
+          \<comment> \<open>V0 = V \<inter> E0 = V \<inter> p⁻¹(B0), and p|V is bijective V → U.
+             So p maps V0 to U ∩ B0 bijectively.\<close>
+          have hV0_pU0: "\<forall>x\<in>V0. p x \<in> ?U0"
+          proof (intro ballI)
+            fix x assume "x \<in> V0"
+            hence "x \<in> V" and "x \<in> E0" using hV0eq by (by100 blast)+
+            have "p x \<in> U" using \<open>x \<in> V\<close> hVhomeo unfolding top1_homeomorphism_on_def bij_betw_def
+              by (by100 blast)
+            moreover have "p x \<in> B0" using \<open>x \<in> E0\<close> assms(5) by (by100 simp)
+            ultimately show "p x \<in> ?U0" by (by100 blast)
+          qed
+          \<comment> \<open>V0 = V \<inter> E0 and U0 = U \<inter> B0. Subspace topologies simplify.\<close>
+          have hTV0': "subspace_topology E TE V0 = subspace_topology V (subspace_topology E TE V) V0"
+            using subspace_topology_trans[OF hV0_sub_V] by simp
+          have hU0_sub_U: "?U0 \<subseteq> U" by (by100 blast)
+          have hTU0': "subspace_topology B TB ?U0 = subspace_topology U (subspace_topology B TB U) ?U0"
+            using subspace_topology_trans[OF hU0_sub_U] by simp
           show "top1_homeomorphism_on V0 (subspace_topology E0 (subspace_topology E TE E0) V0)
               ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
+            unfolding hTV0 hTU0 hTV0' hTU0'
+            \<comment> \<open>Now need: homeomorphism V0 (subspace V (sub E TE V) V0) U0 (subspace U (sub B TB U) U0) p.
+               This is the restriction of the homeomorphism p|V: V → U to V0 → U0.\<close>
             sorry
         qed
       qed
@@ -13361,6 +13390,11 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
  
  
  
