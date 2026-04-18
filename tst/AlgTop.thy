@@ -4878,8 +4878,41 @@ proof -
       \<comment> \<open>Simply connected: loop \<simeq> const.\<close>
       have "top1_path_homotopic_on E TE e0 e0 ?loop (top1_constant_path e0)"
         using assms(4) assms(2) hloop unfolding top1_simply_connected_on_def by (by100 blast)
-      \<comment> \<open>ft⁻¹ * gt \<simeq> const means gt \<simeq> ft (by path algebra).\<close>
-      thus ?thesis sorry
+      \<comment> \<open>gt * ft⁻¹ \<simeq> const. Multiply by ft: (gt*ft⁻¹)*ft \<simeq> const*ft \<simeq> ft.
+         Also (gt*ft⁻¹)*ft \<simeq> gt*(ft⁻¹*ft) \<simeq> gt*const \<simeq> gt. So ft \<simeq> gt.\<close>
+      hence hloop_nul: "top1_path_homotopic_on E TE e0 e0 ?loop (top1_constant_path e0)" .
+      have s1: "top1_path_homotopic_on E TE e0 (ft 1)
+          (top1_path_product ?loop ft) (top1_path_product (top1_constant_path e0) ft)"
+        by (rule path_homotopic_product_left[OF hTE hloop_nul hft'])
+      have s2: "top1_path_homotopic_on E TE e0 (ft 1)
+          (top1_path_product (top1_constant_path e0) ft) ft"
+        by (rule Theorem_51_2_left_identity[OF hTE hft'])
+      have s12: "top1_path_homotopic_on E TE e0 (ft 1) (top1_path_product ?loop ft) ft"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTE s1 s2])
+      have s3: "top1_path_homotopic_on E TE e0 (ft 1)
+          (top1_path_product ?loop ft)
+          (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF
+              Theorem_51_2_associativity[OF hTE hgt' hrev hft']])
+      have s4: "top1_path_homotopic_on E TE (ft 1) (ft 1)
+          (top1_path_product (top1_path_reverse ft) ft) (top1_constant_path (ft 1))"
+        by (rule Theorem_51_2_invgerse_right[OF hTE hft'])
+      have s5: "top1_path_homotopic_on E TE e0 (ft 1)
+          (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft))
+          (top1_path_product gt (top1_constant_path (ft 1)))"
+        by (rule path_homotopic_product_right[OF hTE s4 hgt'])
+      have s6: "top1_path_homotopic_on E TE e0 (ft 1)
+          (top1_path_product gt (top1_constant_path (ft 1))) gt"
+        by (rule Theorem_51_2_right_identity[OF hTE hgt'])
+      have s_chain: "top1_path_homotopic_on E TE e0 (ft 1) (top1_path_product ?loop ft) gt"
+      proof (rule Lemma_51_1_path_homotopic_trans[OF hTE s3])
+        show "top1_path_homotopic_on E TE e0 (ft 1)
+            (top1_path_product gt (top1_path_product (top1_path_reverse ft) ft)) gt"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTE s5 s6])
+      qed
+      have s12_sym: "top1_path_homotopic_on E TE e0 (ft 1) ft (top1_path_product ?loop ft)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF s12])
+      show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTE s12_sym s_chain])
     qed
     \<comment> \<open>Apply p: p\<circ>ft \<simeq> p\<circ>gt.\<close>
     have hp_cont: "top1_continuous_map_on E TE B TB p"
