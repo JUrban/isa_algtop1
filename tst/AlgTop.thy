@@ -4975,8 +4975,9 @@ proof -
           hft' hft'p by (by100 blast)
       \<comment> \<open>By hphi_wd: ft0(1) = ft'(1) since f0 \<simeq> f'.\<close>
       have "ft0 1 = ?ft' 1"
-        \<comment> \<open>By hphi_wd instantiated with f0, ?f', ft0, ?ft'.
-           Complex SOME terms cause by100 blast timeout. Mathematically immediate.\<close>
+        \<comment> \<open>By hphi_wd: all lifts of homotopic loops end at the same point.
+           Instantiate with f0, ?f', ft0, ?ft'. Mathematically immediate
+           but SOME term complexity causes automation timeout.\<close>
         sorry
       \<comment> \<open>ft0(1) = e1 by assumption, so ?ft'(1) = e1.\<close>
       hence "?ft' 1 = e1" using hft0 unfolding top1_is_path_on_def by simp
