@@ -8053,7 +8053,96 @@ proof (rule ccontr)
   let ?h = "\<lambda>z::complex. ?k z"
   \<comment> \<open>h is nulhomotopic in C-{0} because it extends to B^2 \<rightarrow> C-{0}.\<close>
   have hh_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-                       top1_C_minus_0 top1_C_minus_0_topology ?h" sorry
+                       top1_C_minus_0 top1_C_minus_0_topology ?h"
+  proof -
+    \<comment> \<open>Homotopy H(z,t) = k((1-t)*z) contracts S^1 to the point k(0).\<close>
+    let ?H = "\<lambda>(z::complex, t::real). ?k ((1 - complex_of_real t) * z)"
+    have hk0_nz: "?k 0 \<noteq> 0" using hk_nonzero[of 0] by simp
+    have hk0_C: "?k 0 \<in> top1_C_minus_0" using hk0_nz unfolding top1_C_minus_0_def by (by100 blast)
+    \<comment> \<open>H(z,0) = k(z) = h(z), H(z,1) = k(0).\<close>
+    have hH0: "\<forall>z\<in>top1_S1_complex. ?H (z, 0) = ?h z" by (simp add: case_prod_beta)
+    have hH1: "\<forall>z\<in>top1_S1_complex. ?H (z, 1) = ?k 0" by (simp add: case_prod_beta)
+    \<comment> \<open>H maps S^1 \<times> I to C-{0}: (1-t)*z \<in> B^2 when z \<in> S^1, t \<in> I.\<close>
+    have hH_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?H p \<in> top1_C_minus_0"
+    proof -
+      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
+      have hz: "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
+      have ht: "snd p \<in> I_set" using hp by (by100 auto)
+      have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
+        using ht unfolding top1_unit_interval_def by (by100 auto)+
+      have "cmod ((1 - complex_of_real (snd p)) * fst p) = cmod (1 - complex_of_real (snd p))"
+        using hz by (simp add: norm_mult)
+      also have "\<dots> = \<bar>1 - snd p\<bar>"
+        by (metis norm_of_real of_real_1 of_real_diff)
+      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) = \<bar>1 - snd p\<bar>" .
+      also have "\<dots> = 1 - snd p" using ht0 ht1 by (by100 auto)
+      also have "\<dots> \<le> 1" using ht0 by (by100 linarith)
+      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) \<le> 1" .
+      hence "?k ((1 - complex_of_real (snd p)) * fst p) \<noteq> 0"
+        by (rule hk_nonzero)
+      thus "?H p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def
+        by (simp add: case_prod_beta)
+    qed
+    \<comment> \<open>H is continuous (polynomial composed with affine map).\<close>
+    have hH_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. ?k ((1 - complex_of_real (snd p)) * fst p))"
+      by (intro continuous_intros)
+    have hH_cont_univ: "continuous_on UNIV ?H"
+      using hH_std by (simp add: case_prod_beta)
+    \<comment> \<open>Transfer to custom topologies.\<close>
+    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
+        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+            (top1_S1_complex \<times> I_set)"
+    proof -
+      have "product_topology_on top1_S1_complex_topology I_top
+          = product_topology_on
+              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
+              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
+      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
+          (top1_S1_complex \<times> I_set)"
+        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
+      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+          (top1_S1_complex \<times> I_set)"
+        by (simp add: product_topology_on_open_sets)
+      finally show ?thesis .
+    qed
+    have hH_top: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+        (product_topology_on top1_S1_complex_topology I_top)
+        top1_C_minus_0 top1_C_minus_0_topology ?H"
+    proof -
+      have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+          (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
+          top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?H"
+        by (rule top1_continuous_map_on_subspace_open_sets[OF hH_range hH_cont_univ])
+      thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
+    qed
+    \<comment> \<open>h is continuous (polynomial on S^1 to C-{0}).\<close>
+    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h"
+      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+    proof (rule top1_continuous_map_on_subspace_open_sets)
+      fix z assume "z \<in> top1_S1_complex"
+      hence "cmod z = 1" unfolding top1_S1_complex_def by (by100 simp)
+      hence "cmod z \<le> 1" by (by100 simp)
+      hence "?k z \<noteq> 0" by (rule hk_nonzero)
+      thus "?h z \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
+    next
+      show "continuous_on UNIV ?h" by (intro continuous_intros)
+    qed
+    \<comment> \<open>const_{k(0)} is continuous.\<close>
+    have hconst_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>_. ?k 0)"
+      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+      by (rule top1_continuous_map_on_subspace_open_sets)
+         (use hk0_C in \<open>auto simp: top1_C_minus_0_def intro: continuous_intros\<close>)
+    \<comment> \<open>Assembly: homotopic h const → nulhomotopic.\<close>
+    have "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>_. ?k 0)"
+      unfolding top1_homotopic_on_def using hh_cont hconst_cont hH_top hH0 hH1
+      by (by100 blast)
+    thus ?thesis unfolding top1_nulhomotopic_on_def using hk0_C by (by100 blast)
+  qed
   \<comment> \<open>Homotopy F(z,t) = z^n + t*\<Sum>a_j z^j from g=z^n to h, all in C-{0}.\<close>
   let ?F = "\<lambda>(z::complex, t::real). z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)"
   have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
