@@ -9178,10 +9178,16 @@ proof
     have hresult: "top1_loop_equiv_on top1_S1 top1_S1_topology (h (1, 0)) (h \<circ> f)
         (top1_constant_path (h (1, 0)))"
       by (rule top1_loop_equiv_on_trans[OF hTS1 hbc' hbc_is_const])
-    \<comment> \<open>path_hom at h(1,0). For (1,0) basepoint: the metis step forces h(1,0) = (1,0).\<close>
+    \<comment> \<open>path_hom at h(1,0). For (1,0) basepoint: need h(1,0) = (1,0).\<close>
+    \<comment> \<open>The metis step in show False extracts h(1,0)=(1,0) from is_path_on.
+       For the h(1,0)\<noteq>(1,0) case, a WLOG rotation argument is needed.\<close>
+    have hph: "top1_path_homotopic_on top1_S1 top1_S1_topology (h (1, 0)) (h (1, 0))
+        (h \<circ> f) (top1_constant_path (h (1, 0)))"
+      using hresult unfolding top1_loop_equiv_on_def by (by100 blast)
     show "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
         (h \<circ> f) (top1_constant_path (h (1, 0)))"
-      using hresult unfolding top1_loop_equiv_on_def sorry
+      \<comment> \<open>Requires h(1,0) = (1,0) to change basepoint. TODO: WLOG rotation.\<close>
+      sorry
   qed
   show False using hh_star_nontrivial hh_star_trivial
     by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
