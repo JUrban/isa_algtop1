@@ -4360,9 +4360,105 @@ proof -
           show "top1_homeomorphism_on V0 (subspace_topology E0 (subspace_topology E TE E0) V0)
               ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
             unfolding hTV0 hTU0 hTV0' hTU0'
-            \<comment> \<open>Now need: homeomorphism V0 (subspace V (sub E TE V) V0) U0 (subspace U (sub B TB U) U0) p.
-               This is the restriction of the homeomorphism p|V: V → U to V0 → U0.\<close>
-            sorry
+          proof -
+            let ?TV = "subspace_topology E TE V" and ?TU = "subspace_topology B TB U"
+            have hTV_top: "is_topology_on V ?TV"
+              using hVhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hTU_top: "is_topology_on U ?TU"
+              using hVhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hbij: "bij_betw p V U"
+              using hVhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hp_cont: "top1_continuous_map_on V ?TV U ?TU p"
+              using hVhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hinv_cont: "top1_continuous_map_on U ?TU V ?TV (inv_into V p)"
+              using hVhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>p maps V0 onto U0.\<close>
+            have hpV0: "p ` V0 = ?U0"
+            proof (intro equalityI subsetI)
+              fix y assume "y \<in> p ` V0"
+              then obtain x where hx: "x \<in> V0" and hpx: "y = p x" by (by100 blast)
+              show "y \<in> ?U0" using hV0_pU0 hx hpx by (by100 blast)
+            next
+              fix y assume hy: "y \<in> ?U0"
+              have "y \<in> U" using hy by (by100 blast)
+              then obtain x where hx: "x \<in> V" and hpx: "p x = y"
+                using hbij unfolding bij_betw_def by (by100 auto)
+              have "x \<in> E" using hx hV_sub_E by (by100 blast)
+              have "p x \<in> B0" using hy hpx by (by100 blast)
+              hence "x \<in> E0" using \<open>x \<in> E\<close> assms(5) by (by100 simp)
+              hence "x \<in> V0" using hx hV0eq by (by100 blast)
+              thus "y \<in> p ` V0" using hpx by (by100 blast)
+            qed
+            have hbij0: "bij_betw p V0 ?U0"
+              using bij_betw_subset[OF hbij hV0_sub_V hpV0] .
+            \<comment> \<open>Continuity of restriction.\<close>
+            have hp_cont_V0: "top1_continuous_map_on V0 (subspace_topology V ?TV V0) ?U0
+                (subspace_topology U ?TU ?U0) p"
+              by (rule top1_continuous_map_on_codomain_shrink[OF
+                    top1_continuous_map_on_restrict_domain_simple[OF hp_cont hV0_sub_V]])
+                 (use hV0_pU0 in \<open>by100 auto\<close>)
+            \<comment> \<open>Inverse maps U0 to V0.\<close>
+            have hinv_V0: "\<forall>y\<in>?U0. inv_into V p y \<in> V0"
+            proof
+              fix y assume hy: "y \<in> ?U0"
+              have "y \<in> U" using hy by (by100 blast)
+              have hxV: "inv_into V p y \<in> V"
+                using \<open>y \<in> U\<close> hbij unfolding bij_betw_def by (by100 auto)
+              have hpx: "p (inv_into V p y) = y"
+                using \<open>y \<in> U\<close> hbij unfolding bij_betw_def by (by100 auto)
+              have "inv_into V p y \<in> E" using hxV hV_sub_E by (by100 blast)
+              moreover have "p (inv_into V p y) \<in> B0" using hpx hy by (by100 auto)
+              ultimately have "inv_into V p y \<in> E0" using assms(5) by (by100 simp)
+              thus "inv_into V p y \<in> V0" using hxV hV0eq by (by100 blast)
+            qed
+            \<comment> \<open>inv_into V0 p = inv_into V p on U0.\<close>
+            have hinv_eq: "\<forall>y\<in>?U0. inv_into V0 p y = inv_into V p y"
+            proof
+              fix y assume hy: "y \<in> ?U0"
+              have "inv_into V p y \<in> V0" using hinv_V0 hy by (by100 blast)
+              moreover have "p (inv_into V p y) = y"
+                using hy hbij unfolding bij_betw_def by (by100 auto)
+              moreover have "p (inv_into V0 p y) = y"
+                using hy hbij0 unfolding bij_betw_def
+                by (metis f_inv_into_f IntI imageI)
+              moreover have "inv_into V0 p y \<in> V0"
+                using hy hbij0 unfolding bij_betw_def
+                by (metis IntI inv_into_into imageI)
+              ultimately show "inv_into V0 p y = inv_into V p y"
+              proof -
+                assume hxV0: "inv_into V p y \<in> V0"
+                   and hpVy: "p (inv_into V p y) = y"
+                   and hpV0y: "p (inv_into V0 p y) = y"
+                   and hx0V0: "inv_into V0 p y \<in> V0"
+                have "p (inv_into V0 p y) = p (inv_into V p y)" using hpVy hpV0y by simp
+                moreover have "inv_into V0 p y \<in> V" using hx0V0 hV0_sub_V by (by100 blast)
+                moreover have "inv_into V p y \<in> V" using hxV0 hV0_sub_V by (by100 blast)
+                ultimately show ?thesis
+                  using hbij unfolding bij_betw_def inj_on_def by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>Continuity of inverse restriction.\<close>
+            have hinv_cont_U0: "top1_continuous_map_on ?U0 (subspace_topology U ?TU ?U0) V0
+                (subspace_topology V ?TV V0) (inv_into V0 p)"
+            proof -
+              have h1: "top1_continuous_map_on ?U0 (subspace_topology U ?TU ?U0) V ?TV (inv_into V p)"
+                by (rule top1_continuous_map_on_restrict_domain_simple[OF hinv_cont hU0_sub_U])
+              have h2: "(inv_into V p) ` ?U0 \<subseteq> V0"
+                using hinv_V0 by (by100 auto)
+              have h3: "top1_continuous_map_on ?U0 (subspace_topology U ?TU ?U0) V0
+                  (subspace_topology V ?TV V0) (inv_into V p)"
+                by (rule top1_continuous_map_on_codomain_shrink[OF h1 h2 hV0_sub_V])
+              have h4: "\<forall>y\<in>?U0. inv_into V p y = inv_into V0 p y"
+                using hinv_eq by (by100 auto)
+              show ?thesis by (rule top1_continuous_map_on_agree'[OF h3 h4])
+            qed
+            show "top1_homeomorphism_on V0 (subspace_topology V ?TV V0)
+                ?U0 (subspace_topology U ?TU ?U0) p"
+              unfolding top1_homeomorphism_on_def
+              using subspace_topology_is_topology_on[OF hTV_top hV0_sub_V]
+                    subspace_topology_is_topology_on[OF hTU_top hU0_sub_U]
+                    hbij0 hp_cont_V0 hinv_cont_U0 by (by100 blast)
+          qed
         qed
       qed
     qed
