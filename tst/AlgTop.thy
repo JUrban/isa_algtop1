@@ -8445,10 +8445,17 @@ proof
       \<and> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
            (?q \<circ> f) (?q \<circ> g)
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f g" sorry
+  \<comment> \<open>WLOG: reduce to h(1,0) = (1,0) by rotation. Munkres: let \<rho> rotate h(b0) to b0.\<close>
+  \<comment> \<open>Case 1: h(1,0) = (1,0). Then h_* at (1,0) is nontrivial (from covering theory),
+     but nulhomotopic \<Rightarrow> h_* trivial. Contradiction.\<close>
+  \<comment> \<open>Case 2: h(1,0) \<noteq> (1,0). Rotate to reduce to Case 1.\<close>
   have hh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
             (h \<circ> f) (top1_constant_path (1, 0)))" sorry
-  \<comment> \<open>But h nulhomotopic \<Rightarrow> h_* trivial. Contradiction.\<close>
+  \<comment> \<open>h nulhomotopic \<Rightarrow> h_* trivial. By homotopy_induced_basepoint_change:
+     h\<circ>f \<simeq> const_{h(1,0)} at h(1,0). For path_hom at (1,0), need h(1,0) = (1,0).
+     The metis step below extracts this from is_path_on conditions.
+     TODO: handle h(1,0) \<noteq> (1,0) via rotation WLOG.\<close>
   have hh_star_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
             (h \<circ> f) (top1_constant_path (h (1, 0)))"
@@ -8456,8 +8463,9 @@ proof
   show False using hh_star_nontrivial hh_star_trivial
     by (metis (mono_tags, lifting) comp_apply top1_is_loop_on_start
       top1_is_path_on_def top1_path_homotopic_on_def)
-    \<comment> \<open>Note: nontrivial uses const(1,0) while trivial uses const(h(1,0)).
-       The metis proof resolves via endpoint matching in path_homotopic_on.\<close>
+    \<comment> \<open>The metis proof extracts h(1,0) = (1,0) from hh_star_trivial's
+       is_path_on conditions, then derives the direct contradiction.
+       TODO: properly handle h(1,0) \<noteq> (1,0) via rotation (WLOG).\<close>
 qed
 
 (** from *\<S>57 Theorem 57.2: no continuous antipode-preserving S^2 \<rightarrow> S^1.
@@ -11121,7 +11129,7 @@ proof -
                       \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
         and hprod: "top1_path_homotopic_on X TX x0 x0 f
             (foldr top1_path_product gs (top1_constant_path x0))"
-      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf by (by100 auto)
+      using Theorem_59_1[OF assms(1,2,3,4,6) hx0] hf by blast
     \<comment> \<open>Each gi lies in U or V, hence is nulhomotopic there (simply connected).\<close>
     have hgi_nul: "\<forall>i<n. top1_path_homotopic_on X TX x0 x0 (gs!i) (top1_constant_path x0)"
     proof (intro allI impI)
@@ -14086,6 +14094,7 @@ theorem Theorem_80_1_universal_unique:
       and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
       and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
       and "p e0 = b0" and "p' e0' = b0"
+      and "e0 \<in> E" and "e0' \<in> E'"
   shows "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
 proof -
   \<comment> \<open>By Theorem 79.4: simply connected E gives trivial subgroup p_*(\<pi>_1 E) = {1};
