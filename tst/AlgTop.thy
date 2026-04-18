@@ -11876,7 +11876,7 @@ proof -
       "\<forall>T\<in>\<T>0. T \<subseteq> X \<and> closedin_on X TX T
           \<and> top1_homeomorphism_on top1_standard_simplex top1_standard_simplex_topology
                T (subspace_topology X TX T) (h0 T)"
-    using assms(2) unfolding top1_is_triangulable_on_def sorry
+    using assms(2) unfolding top1_is_triangulable_on_def by auto
   \<comment> \<open>Step 2: Each homeomorphism h0(T) maps the standard simplex to T.
      The simplex is a polygonal region with 3 sides.\<close>
   have h_simplex_poly: "top1_is_polygonal_region_on top1_standard_simplex 3" sorry
@@ -12411,6 +12411,12 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
