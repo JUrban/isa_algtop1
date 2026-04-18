@@ -4593,7 +4593,78 @@ proof -
          find the disjoint slices containing ftilde_1(s₀) and ftilde_2(s₀),
          preimages of these slices under ftilde_1 and ftilde_2 give open neighborhood of s₀
          on which ftilde_1 and ftilde_2 disagree.\<close>
-      show ?thesis sorry
+      have hf_cont: "top1_continuous_map_on I_set I_top B TB f"
+        using hf unfolding top1_is_path_on_def by (by100 blast)
+      have "\<forall>s0\<in>I_set - ?S. \<exists>N\<in>I_top. s0 \<in> N \<and> N \<subseteq> I_set - ?S"
+      proof (intro ballI)
+        fix s0 assume hs0: "s0 \<in> I_set - ?S"
+        hence hs0I: "s0 \<in> I_set" and hdisagree: "ftilde_1 s0 \<noteq> ftilde_2 s0" by (by100 blast)+
+        have hfs0: "f s0 \<in> B" using hf_cont hs0I unfolding top1_continuous_map_on_def by (by100 blast)
+        obtain U where hbU: "f s0 \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+          using top1_covering_map_on_evenly_covered[OF hcov hfs0] by (by100 blast)
+        obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+            and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+            and hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+            and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+                U (subspace_topology B TB U) p"
+          using hUec unfolding top1_evenly_covered_on_def by auto
+        have hft1_E: "ftilde_1 s0 \<in> E"
+          using hft1_cont hs0I unfolding top1_continuous_map_on_def by (by100 blast)
+        have hp_ft1: "p (ftilde_1 s0) \<in> U" using hft1p hs0I hbU by (by100 simp)
+        have hft1_pU: "ftilde_1 s0 \<in> {x\<in>E. p x \<in> U}" using hft1_E hp_ft1 by (by100 blast)
+        have hft2_E: "ftilde_2 s0 \<in> E"
+          using hft2_cont hs0I unfolding top1_continuous_map_on_def by (by100 blast)
+        have hp_ft2: "p (ftilde_2 s0) \<in> U" using hft2p hs0I hbU by (by100 simp)
+        have hft2_pU: "ftilde_2 s0 \<in> {x\<in>E. p x \<in> U}" using hft2_E hp_ft2 by (by100 blast)
+        obtain V1 where hV1: "V1 \<in> \<V>" and hft1_V1: "ftilde_1 s0 \<in> V1"
+          using hft1_pU hV_union by (by100 blast)
+        obtain V2 where hV2: "V2 \<in> \<V>" and hft2_V2: "ftilde_2 s0 \<in> V2"
+          using hft2_pU hV_union by (by100 blast)
+        \<comment> \<open>V1 \<noteq> V2 since ftilde_1(s0) \<noteq> ftilde_2(s0) and slices disjoint.\<close>
+        have hV12_ne: "V1 \<noteq> V2"
+        proof
+          assume "V1 = V2"
+          hence "ftilde_1 s0 \<in> V1 \<and> ftilde_2 s0 \<in> V1" using hft1_V1 hft2_V2 by simp
+          hence "p (ftilde_1 s0) = p (ftilde_2 s0) \<longrightarrow> ftilde_1 s0 = ftilde_2 s0"
+            using hV1 hV_homeo unfolding top1_homeomorphism_on_def bij_betw_def inj_on_def
+            by (by100 blast)
+          moreover have "p (ftilde_1 s0) = p (ftilde_2 s0)"
+            using hft1p hft2p hs0I by (by100 simp)
+          ultimately show False using hdisagree by (by100 blast)
+        qed
+        have hV1V2_disj: "V1 \<inter> V2 = {}" using hV_disj hV1 hV2 hV12_ne by (by100 blast)
+        have hV1_open: "V1 \<in> TE" using hV1 hV_open unfolding openin_on_def by (by100 blast)
+        have hV2_open: "V2 \<in> TE" using hV2 hV_open unfolding openin_on_def by (by100 blast)
+        have hpre1: "{s\<in>I_set. ftilde_1 s \<in> V1} \<in> I_top"
+          using hft1_cont hV1_open unfolding top1_continuous_map_on_def by (by100 blast)
+        have hpre2: "{s\<in>I_set. ftilde_2 s \<in> V2} \<in> I_top"
+          using hft2_cont hV2_open unfolding top1_continuous_map_on_def by (by100 blast)
+        let ?N = "{s\<in>I_set. ftilde_1 s \<in> V1} \<inter> {s\<in>I_set. ftilde_2 s \<in> V2}"
+        have hN_open: "?N \<in> I_top" by (rule topology_inter2[OF hTI hpre1 hpre2])
+        have hs0_N: "s0 \<in> ?N" using hs0I hft1_V1 hft2_V2 by (by100 blast)
+        have hN_sub: "?N \<subseteq> I_set - ?S"
+        proof (intro subsetI)
+          fix s assume hs: "s \<in> ?N"
+          hence hsI: "s \<in> I_set" and hft1s: "ftilde_1 s \<in> V1" and hft2s: "ftilde_2 s \<in> V2"
+            by (by100 blast)+
+          have "ftilde_1 s \<noteq> ftilde_2 s"
+          proof
+            assume heq: "ftilde_1 s = ftilde_2 s"
+            have "ftilde_2 s \<in> V1" using hft1s heq by simp
+            hence "ftilde_2 s \<in> V1 \<inter> V2" using hft2s by (by100 blast)
+            thus False using hV1V2_disj by (by100 blast)
+          qed
+          thus "s \<in> I_set - ?S" using hsI by (by100 blast)
+        qed
+        show "\<exists>N\<in>I_top. s0 \<in> N \<and> N \<subseteq> I_set - ?S"
+          by (metis (no_types, lifting) hN_open hN_sub hs0_N)
+      qed
+      hence "I_set - ?S = \<Union>{N \<in> I_top. N \<subseteq> I_set - ?S}" by (by100 blast)
+      moreover have "{N \<in> I_top. N \<subseteq> I_set - ?S} \<subseteq> I_top" by (by100 blast)
+      moreover hence "\<Union>{N \<in> I_top. N \<subseteq> I_set - ?S} \<in> I_top"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hTI[unfolded is_topology_on_def]]]]
+        by (by100 blast)
+      ultimately show ?thesis by simp
     qed
   qed
   have hI_connected: "top1_connected_on I_set I_top"
@@ -12708,6 +12779,9 @@ proof -
 qed
 
 end
+ 
+ 
+ 
  
  
  
