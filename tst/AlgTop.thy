@@ -4319,7 +4319,22 @@ proof -
         \<comment> \<open>p restricted to each slice is a homeomorphism.\<close>
         show "\<forall>V\<in>?\<V>0. top1_homeomorphism_on V (subspace_topology E0 (subspace_topology E TE E0) V)
             ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
-          sorry
+        proof (intro ballI)
+          fix V0 assume hV0: "V0 \<in> ?\<V>0"
+          then obtain V where hV: "V \<in> \<V>" and hV0eq: "V0 = V \<inter> E0" by (by100 blast)
+          have hVhomeo: "top1_homeomorphism_on V (subspace_topology E TE V) U
+                (subspace_topology B TB U) p"
+            using hV hV_homeo by (by100 blast)
+          \<comment> \<open>Subspace topology: subspace of subspace = subspace of ambient.\<close>
+          have hV0_sub_V: "V0 \<subseteq> V" using hV0eq by (by100 blast)
+          have hV0_sub_E0: "V0 \<subseteq> E0" using hV0eq by (by100 blast)
+          have hV_sub_E: "V \<subseteq> E"
+            using hV hV_open unfolding openin_on_def by (by100 blast)
+          \<comment> \<open>The homeomorphism restricted to V\<inter>E0 → U\<inter>B0.\<close>
+          show "top1_homeomorphism_on V0 (subspace_topology E0 (subspace_topology E TE E0) V0)
+              ?U0 (subspace_topology B0 (subspace_topology B TB B0) ?U0) p"
+            sorry
+        qed
       qed
     qed
     ultimately have "b0 \<in> ?U0 \<and>
@@ -13346,6 +13361,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
