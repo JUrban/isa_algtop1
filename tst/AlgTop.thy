@@ -6523,7 +6523,17 @@ proof -
         (UNIV - {(0, 0)})
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
            (UNIV - {(0, 0)}))
-        (\<lambda>x. x)" sorry
+        (\<lambda>x. x)"
+    proof -
+      \<comment> \<open>F(x,t) = t\<cdot>x + (1-t)\<cdot>v(x) is a homotopy from v|S¹ (t=0) to j (t=1) in R²-{0}.\<close>
+      \<comment> \<open>v|S¹ is nulhomotopic (hw_nul). Homotopic to nulhomotopic \<Rightarrow> nulhomotopic.\<close>
+      \<comment> \<open>F nonvanishing: if F(x,t)=0 then v(x) = -t/(1-t)\<cdot>x points inward, contradicting hnot.\<close>
+      let ?R2_0' = "UNIV - {(0::real, 0::real)}"
+      let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
+      have "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
+      \<comment> \<open>Homotopic + v|S¹ nulhomotopic \<Rightarrow> j nulhomotopic (transitivity of nulhomotopy).\<close>
+      thus ?thesis using hw_nul sorry
+    qed
     \<comment> \<open>But j is not nulhomotopic (Corollary 55.4). Contradiction.\<close>
     show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by blast
   qed
