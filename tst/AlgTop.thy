@@ -10544,7 +10544,7 @@ proof -
       top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
         { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                               (2*i, False), (2*i+1, False)]) [0..<n]) }"
-    using Theorem_74_3_fund_group_n_torus[OF assms] sorry
+    using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 auto)
   \<comment> \<open>Step 2: Abelianizing kills all commutators, making the relator trivial.
      So H_1(T_n) = Z^{2n} (free abelian on 2n generators).\<close>
   show ?thesis sorry
@@ -10580,7 +10580,7 @@ proof -
   have h_presentation: "\<exists>(G::'g set) mul0 e0 invg0.
       top1_group_presented_by_on G mul0 e0 invg0 ({..<m}::nat set)
         { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
-    using Theorem_74_4_fund_group_m_projective[OF assms] sorry
+    using Theorem_74_4_fund_group_m_projective[OF assms] by (by100 auto)
   \<comment> \<open>Step 2: Abelianize: H = Z^m / \<langle>2(a_1+...+a_m)\<rangle>.
      Torsion = Z/2Z, free part = Z^{m-1}.\<close>
   have h_decomp: "\<exists>(H::'h set) mulH eH invgH. card (top1_torsion_subgroup_on H mulH eH) = 2
