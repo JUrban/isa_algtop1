@@ -4254,7 +4254,20 @@ proof -
     let ?U0 = "U \<inter> B0"
     have "b0 \<in> ?U0" using hU hb0 by (by100 blast)
     moreover have "top1_evenly_covered_on E0 (subspace_topology E TE E0)
-        B0 (subspace_topology B TB B0) p ?U0" sorry
+        B0 (subspace_topology B TB B0) p ?U0"
+    proof -
+      \<comment> \<open>From hUec: U is evenly covered by slices \<V> in E.\<close>
+      obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+          and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+          and hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+          and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                           (subspace_topology B TB U) p"
+        using hUec unfolding top1_evenly_covered_on_def by auto
+      \<comment> \<open>Restrict slices: \<V>0 = {V \<inter> E0 | V \<in> \<V>}.\<close>
+      let ?\<V>0 = "{V \<inter> E0 | V. V \<in> \<V>}"
+      \<comment> \<open>Need: U \<inter> B0 is open in B0; slices are open, disjoint, partition, homeomorphic.\<close>
+      show ?thesis unfolding top1_evenly_covered_on_def sorry
+    qed
     ultimately have "b0 \<in> ?U0 \<and>
         top1_evenly_covered_on E0 (subspace_topology E TE E0) B0 (subspace_topology B TB B0) p ?U0"
       by (by100 simp)
@@ -12551,6 +12564,9 @@ proof -
 qed
 
 end
+ 
+ 
+ 
  
  
  
