@@ -7141,6 +7141,54 @@ proof -
     by (rule top1_continuous_map_on_codomain_shrink[OF hf_R2 himg]) simp
 qed
 
+text \<open>Reverse transfer: top1_continuous_map_on on R² subspaces implies continuous_on.\<close>
+lemma top1_continuous_map_on_to_continuous_on_R2:
+  fixes f :: "real \<times> real \<Rightarrow> real \<times> real"
+  assumes hf: "top1_continuous_map_on S
+      (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) S)
+      UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) f"
+  shows "continuous_on S f"
+proof -
+  {
+    fix U :: "(real \<times> real) set"
+    assume hUo: "open U"
+    have hU_os: "U \<in> (top1_open_sets :: (real\<times>real) set set)"
+      using hUo unfolding top1_open_sets_def by (by100 blast)
+    have hU_prod: "U \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+      using hU_os product_topology_on_open_sets_real2 by (by100 metis)
+    have hpre: "{x \<in> S. f x \<in> U} \<in> subspace_topology UNIV
+        (product_topology_on (top1_open_sets::real set set) top1_open_sets) S"
+      using hf hU_prod unfolding top1_continuous_map_on_def by (by100 blast)
+    then obtain W where hW_prod: "W \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        and hpre_eq: "{x \<in> S. f x \<in> U} = S \<inter> W"
+      unfolding subspace_topology_def by (by100 auto)
+    have hW_os: "W \<in> (top1_open_sets :: (real\<times>real) set set)"
+      using hW_prod product_topology_on_open_sets_real2 by (by100 metis)
+    have hWo: "open W" using hW_os unfolding top1_open_sets_def by (by100 simp)
+    have "\<exists>A. open A \<and> A \<inter> S = f -` U \<inter> S"
+    proof (intro exI[of _ W] conjI)
+      show "open W" by (rule hWo)
+      show "W \<inter> S = f -` U \<inter> S"
+      proof (intro set_eqI iffI)
+        fix x assume "x \<in> W \<inter> S"
+        hence "x \<in> S \<inter> W" by (by100 blast)
+        hence "x \<in> {x \<in> S. f x \<in> U}" using hpre_eq by (by100 simp)
+        thus "x \<in> f -` U \<inter> S" by (by100 simp)
+      next
+        fix x assume "x \<in> f -` U \<inter> S"
+        hence "x \<in> S" "f x \<in> U" by (by100 simp)+
+        hence "x \<in> {x \<in> S. f x \<in> U}" by (by100 simp)
+        thus "x \<in> W \<inter> S" using hpre_eq by (by100 simp)
+      qed
+    qed
+  } note hstep = this
+  show ?thesis unfolding continuous_on_open_invariant
+  proof (intro allI impI)
+    fix B :: "(real \<times> real) set" assume "open B"
+    thus "\<exists>A. open A \<and> A \<inter> S = f -` B \<inter> S" by (rule hstep)
+  qed
+qed
+
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
 text \<open>Helper: a nonvanishing vector field on B² that doesn't point inward at any
@@ -12879,6 +12927,11 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
  
  
  
