@@ -7067,7 +7067,79 @@ lemma S1_I_to_R2_minus_0_continuous:
   shows "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
       (UNIV - {(0, 0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)})) f"
-  sorry
+proof -
+  have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+      (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+    using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  \<comment> \<open>Step 1: f maps S¹×I into R² continuously (via product topology transfer).\<close>
+  have hf_R2: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+      (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets) f"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix p show "f p \<in> (UNIV::(real\<times>real) set)" by simp
+  next
+    fix V assume hV: "V \<in> product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)"
+    \<comment> \<open>V is open in R².\<close>
+    have hVo: "open V"
+    proof -
+      have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+        using hV product_topology_on_open_sets_real2 by metis
+      thus ?thesis unfolding top1_open_sets_def by simp
+    qed
+    have hfV_open: "open (f -` V)" by (rule open_vimage[OF hVo hcont])
+    \<comment> \<open>f⁻¹(V) is open in R³ = (R²)×R.\<close>
+    have hfV_R3: "f -` V \<in> product_topology_on
+        (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+        (top1_open_sets::real set set)"
+    proof -
+      have "f -` V \<in> (top1_open_sets :: ((real\<times>real)\<times>real) set set)"
+        using hfV_open unfolding top1_open_sets_def by (by100 blast)
+      thus ?thesis
+        using product_topology_on_open_sets[where ?'a = "real \<times> real" and ?'b = real]
+              product_topology_on_open_sets_real2 by (by100 metis)
+    qed
+    \<comment> \<open>(S¹×I) ∩ f⁻¹(V) is open in the product subspace topology.\<close>
+    have "{p \<in> top1_S1 \<times> I_set. f p \<in> V} = (top1_S1 \<times> I_set) \<inter> (f -` V)" by auto
+    also have "\<dots> \<in> product_topology_on top1_S1_topology I_top"
+    proof -
+      have hTP_eq: "product_topology_on top1_S1_topology I_top =
+          subspace_topology (UNIV \<times> UNIV)
+            (product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+              (top1_open_sets::real set set))
+            (top1_S1 \<times> I_set)"
+      proof -
+        have "product_topology_on top1_S1_topology I_top =
+              product_topology_on
+                (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_S1)
+                (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+          unfolding top1_S1_topology_def top1_unit_interval_topology_def ..
+        also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+            (product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+              (top1_open_sets::real set set))
+            (top1_S1 \<times> I_set)"
+          by (rule Theorem_16_3[OF hTR2 hTR])
+        finally show ?thesis .
+      qed
+      show ?thesis unfolding hTP_eq subspace_topology_def
+        using hfV_R3 by (by100 blast)
+    qed
+    finally show "{p \<in> top1_S1 \<times> I_set. f p \<in> V} \<in> product_topology_on top1_S1_topology I_top" .
+  qed
+  \<comment> \<open>Step 2: Codomain shrink to R²-{0}.\<close>
+  have himg: "f ` (top1_S1 \<times> I_set) \<subseteq> UNIV - {(0, 0)}"
+  proof (intro subsetI)
+    fix y assume "y \<in> f ` (top1_S1 \<times> I_set)"
+    then obtain p where hp: "p \<in> top1_S1 \<times> I_set" and hy: "y = f p" by (by100 blast)
+    show "y \<in> UNIV - {(0, 0)}" using hmap[OF hp] hy by (by100 simp)
+  qed
+  show ?thesis
+    by (rule top1_continuous_map_on_codomain_shrink[OF hf_R2 himg]) simp
+qed
 
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
@@ -12790,6 +12862,26 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
