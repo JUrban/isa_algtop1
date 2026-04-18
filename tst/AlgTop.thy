@@ -4820,7 +4820,11 @@ theorem Theorem_54_4_lifting_correspondence:
       and "is_topology_on B TB"
   shows "\<exists>\<phi>. (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
                 \<phi> c \<in> {e\<in>E. p e = b0})
-           \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+           \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}
+           \<and> (\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+                \<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+                  \<and> top1_is_path_on E TE e0 (\<phi> c) ft
+                  \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
 proof -
   \<comment> \<open>Munkres 54.4: Define \<phi>([f]) = ftilde(1) where ftilde lifts f starting at e0.\<close>
   \<comment> \<open>Well-defined: by Theorem 54.3, path-homotopic loops lift to same endpoint.\<close>
@@ -5007,9 +5011,43 @@ proof -
     thus "e1 \<in> ?\<phi> ` (top1_fundamental_group_carrier B TB b0)"
       using hc_carrier by (by100 blast)
   qed
+  \<comment> \<open>Lift characterization: \<phi>(c) is the endpoint of a lift of a representative.\<close>
+  have hphi_lift: "\<forall>c\<in>top1_fundamental_group_carrier B TB b0.
+      \<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+        \<and> top1_is_path_on E TE e0 (?\<phi> c) ft
+        \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
+  proof
+    fix c assume hc: "c \<in> top1_fundamental_group_carrier B TB b0"
+    obtain f0 where hf0_loop: "top1_is_loop_on B TB b0 f0"
+        and hc_eq: "c = {g. top1_loop_equiv_on B TB b0 f0 g}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    let ?f = "SOME f. f \<in> c \<and> top1_is_loop_on B TB b0 f"
+    have hf_props: "?f \<in> c \<and> top1_is_loop_on B TB b0 ?f"
+    proof -
+      have "f0 \<in> c" unfolding hc_eq
+        using top1_loop_equiv_on_refl[OF hf0_loop] by simp
+      thus ?thesis using someI_ex[of "\<lambda>f. f \<in> c \<and> top1_is_loop_on B TB b0 f"] hf0_loop
+        by (by100 blast)
+    qed
+    let ?ft = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"
+    have hft_props: "top1_is_path_on E TE e0 (?ft 1) ?ft \<and> (\<forall>s\<in>I_set. p (?ft s) = ?f s)"
+    proof -
+      have hf_path: "top1_is_path_on B TB b0 b0 ?f"
+        using hf_props unfolding top1_is_loop_on_def by (by100 blast)
+      obtain ft0 where "top1_is_path_on E TE e0 (ft0 1) ft0"
+          "(\<forall>s\<in>I_set. p (ft0 s) = ?f s)"
+        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path] by (by100 auto)
+      thus ?thesis using someI_ex[of "\<lambda>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"]
+        by (by100 blast)
+    qed
+    show "\<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+        \<and> top1_is_path_on E TE e0 (?\<phi> c) ft
+        \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
+      using hf_props hft_props by (simp add: Let_def) blast
+  qed
   show ?thesis
     apply (rule exI[of _ ?\<phi>])
-    using hphi_mem hphi_surj_full by (by100 simp)
+    using hphi_mem hphi_surj_full hphi_lift by (by100 simp)
 qed
 
 theorem Theorem_54_4_bijective_simply_connected:
@@ -5096,9 +5134,109 @@ proof -
   obtain \<phi> where h\<phi>_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
         \<phi> c \<in> {e\<in>E. p e = b0}"
       and h\<phi>_surj: "\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+      and h\<phi>_lift: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+        \<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+          \<and> top1_is_path_on E TE e0 (\<phi> c) ft
+          \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
     using Theorem_54_4_lifting_correspondence[OF assms(2,3,1) hpc assms(5)] by (by100 auto)
-  \<comment> \<open>Injectivity from hinj: if \<phi>([f]) = \<phi>([g]) then [f] = [g].\<close>
-  have h\<phi>_inj: "inj_on \<phi> (top1_fundamental_group_carrier B TB b0)" sorry
+  \<comment> \<open>Injectivity from hinj + lift characterization.\<close>
+  have h\<phi>_inj: "inj_on \<phi> (top1_fundamental_group_carrier B TB b0)"
+  proof (rule inj_onI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier B TB b0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier B TB b0"
+       and heq: "\<phi> c1 = \<phi> c2"
+    \<comment> \<open>Extract representatives and lifts from \<phi>'s characterization.\<close>
+    obtain f1 ft1 where hf1_in: "f1 \<in> c1" and hf1_loop: "top1_is_loop_on B TB b0 f1"
+        and hft1: "top1_is_path_on E TE e0 (\<phi> c1) ft1"
+        and hft1p: "\<forall>s\<in>I_set. p (ft1 s) = f1 s"
+      using h\<phi>_lift[rule_format, OF hc1] by (by100 blast)
+    obtain f2 ft2 where hf2_in: "f2 \<in> c2" and hf2_loop: "top1_is_loop_on B TB b0 f2"
+        and hft2: "top1_is_path_on E TE e0 (\<phi> c2) ft2"
+        and hft2p: "\<forall>s\<in>I_set. p (ft2 s) = f2 s"
+      using h\<phi>_lift[rule_format, OF hc2] by (by100 blast)
+    \<comment> \<open>Lifts end at same point since \<phi>(c1) = \<phi>(c2).\<close>
+    have hft1_end: "top1_is_path_on E TE e0 (\<phi> c1) ft1" using hft1 .
+    have hft2_end: "top1_is_path_on E TE e0 (\<phi> c1) ft2" using hft2 heq by simp
+    \<comment> \<open>Apply hinj: lifts of f1, f2 end at same point \<Rightarrow> f1 \<simeq> f2.\<close>
+    have "top1_path_homotopic_on B TB b0 b0 f1 f2"
+    proof -
+      \<comment> \<open>Lifts ft1, ft2 end at \<phi>(c1) = \<phi>(c2), so same point.\<close>
+      have hft1_1: "ft1 1 = \<phi> c1" using hft1 unfolding top1_is_path_on_def by simp
+      have hft2_1: "ft2 1 = \<phi> c2" using hft2 unfolding top1_is_path_on_def by simp
+      have hend_eq: "ft1 1 = ft2 1" using hft1_1 hft2_1 heq by simp
+      have hft1': "top1_is_path_on E TE e0 (ft1 1) ft1"
+        using hft1 hft1_1 by simp
+      have hft2': "top1_is_path_on E TE e0 (ft2 1) ft2"
+        using hft2 hft2_1 by simp
+      \<comment> \<open>Assemble for hinj.\<close>
+      have hexists_ft: "\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f1 s)"
+        using hft1' hft1p by (by100 blast)
+      have hexists_gt: "\<exists>gt. top1_is_path_on E TE e0 (gt 1) gt \<and> (\<forall>s\<in>I_set. p (gt s) = f2 s)"
+        using hft2' hft2p by (by100 blast)
+      have hf1_path: "top1_is_path_on B TB b0 b0 f1"
+        using hf1_loop unfolding top1_is_loop_on_def .
+      have hf2_path: "top1_is_path_on B TB b0 b0 f2"
+        using hf2_loop unfolding top1_is_loop_on_def .
+      have hcov: "top1_covering_map_on E TE B TB p"
+        using assms(1) .
+      have he0: "e0 \<in> E" using assms(2) .
+      have hpe0: "p e0 = b0" using assms(3) .
+      have hall_eq: "\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<longrightarrow> (\<forall>s\<in>I_set. p (ft s) = f1 s) \<longrightarrow>
+               top1_is_path_on E TE e0 (gt 1) gt \<longrightarrow> (\<forall>s\<in>I_set. p (gt s) = f2 s) \<longrightarrow>
+               ft 1 = gt 1"
+      proof (intro allI impI)
+        fix ft gt
+        assume hft: "top1_is_path_on E TE e0 (ft 1) ft" and hftp: "\<forall>s\<in>I_set. p (ft s) = f1 s"
+           and hgt: "top1_is_path_on E TE e0 (gt 1) gt" and hgtp: "\<forall>s\<in>I_set. p (gt s) = f2 s"
+        \<comment> \<open>ft lifts f1 from e0, ft1 also lifts f1 from e0 \<Rightarrow> ft(1) = ft1(1).\<close>
+        have "ft 1 = ft1 1"
+        proof -
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+          have "\<forall>s\<in>I_set. ft s = ft1 s"
+            by (rule Lemma_54_1_uniqueness[OF hcov he0 hpe0 hf1_path hft hftp hft1' hft1p])
+          thus ?thesis using h1I by (by100 blast)
+        qed
+        \<comment> \<open>gt lifts f2 from e0, ft2 also lifts f2 from e0 \<Rightarrow> gt(1) = ft2(1).\<close>
+        moreover have "gt 1 = ft2 1"
+        proof -
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+          have "\<forall>s\<in>I_set. gt s = ft2 s"
+            by (rule Lemma_54_1_uniqueness[OF hcov he0 hpe0 hf2_path hgt hgtp hft2' hft2p])
+          thus ?thesis using h1I by (by100 blast)
+        qed
+        ultimately show "ft 1 = gt 1" using hend_eq by simp
+      qed
+      show ?thesis using hinj hf1_loop hf2_loop hexists_ft hexists_gt hall_eq by blast
+    qed
+    \<comment> \<open>f1 \<simeq> f2 + f1 \<in> c1, f2 \<in> c2 \<Rightarrow> c1 = c2.\<close>
+    obtain l1 where hl1: "top1_is_loop_on B TB b0 l1"
+        and hc1_eq: "c1 = {h. top1_loop_equiv_on B TB b0 l1 h}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    obtain l2 where hl2: "top1_is_loop_on B TB b0 l2"
+        and hc2_eq: "c2 = {h. top1_loop_equiv_on B TB b0 l2 h}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hf1_equiv_l1: "top1_loop_equiv_on B TB b0 l1 f1"
+      using hf1_in unfolding hc1_eq by simp
+    have hf2_equiv_l2: "top1_loop_equiv_on B TB b0 l2 f2"
+      using hf2_in unfolding hc2_eq by simp
+    have hf1_f2: "top1_loop_equiv_on B TB b0 f1 f2"
+      unfolding top1_loop_equiv_on_def
+      using hf1_loop hf2_loop \<open>top1_path_homotopic_on B TB b0 b0 f1 f2\<close>
+      by (by100 blast)
+    have hl1_l2: "top1_loop_equiv_on B TB b0 l1 l2"
+      by (rule top1_loop_equiv_on_trans[OF hTB_outer
+            top1_loop_equiv_on_trans[OF hTB_outer hf1_equiv_l1 hf1_f2]
+            top1_loop_equiv_on_sym[OF hf2_equiv_l2]])
+    show "c1 = c2"
+    proof -
+      have "\<And>h. top1_loop_equiv_on B TB b0 l1 h \<longleftrightarrow> top1_loop_equiv_on B TB b0 l2 h"
+        using hl1_l2 top1_loop_equiv_on_trans[OF hTB_outer]
+              top1_loop_equiv_on_trans[OF hTB_outer top1_loop_equiv_on_sym[OF hl1_l2]]
+        by (by100 blast)
+      thus ?thesis unfolding hc1_eq hc2_eq by auto
+    qed
+  qed
   show ?thesis unfolding bij_betw_def using h\<phi>_inj h\<phi>_surj by (by100 blast)
 qed
 
