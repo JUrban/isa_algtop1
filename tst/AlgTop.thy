@@ -8335,6 +8335,57 @@ proof -
   \<comment> \<open>From this, derive: (h\<circ>l) * \<alpha> \<simeq> \<alpha> * (k\<circ>l), hence h\<circ>l \<simeq> \<alpha>⁻¹ * (k\<circ>l) * \<alpha>.\<close>
   \<comment> \<open>The full proof requires the broken-line homotopy in I×I (convexity)
      and composition with G. This is Munkres Lemma 58.4.\<close>
+  \<comment> \<open>Step 1: G(s,t) = H(l(s),t) is continuous I×I → Y.\<close>
+  let ?G = "\<lambda>(s::real, t::real). H (l s, t)"
+  have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY ?G"
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hl_cont: "top1_continuous_map_on I_set I_top X TX l"
+      using hl unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+    have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
+      unfolding II_topology_def by (rule top1_continuous_pi2[OF hTI hTI])
+    have hlfst: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (l \<circ> pi1)"
+      by (rule top1_continuous_map_on_comp[OF hpi1 hl_cont])
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    have heq: "(\<lambda>p. (l (pi1 p), pi2 p)) = (\<lambda>(s, t). (l s, t))"
+      unfolding pi1_def pi2_def by (rule ext) (simp add: case_prod_beta)
+    have hlid: "top1_continuous_map_on (I_set \<times> I_set) II_topology (X \<times> I_set)
+        (product_topology_on TX I_top) (\<lambda>(s, t). (l s, t))" sorry
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY (H \<circ> (\<lambda>(s, t). (l s, t)))"
+      by (rule top1_continuous_map_on_comp[OF hlid hHcont])
+    moreover have "(H \<circ> (\<lambda>(s, t). (l s, t))) = ?G"
+      by (rule ext) (simp add: comp_def case_prod_beta)
+    ultimately show ?thesis by simp
+  qed
+  have hl0: "l 0 = x0" using hl unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hl1: "l 1 = x0" using hl unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hG_bot: "\<forall>s\<in>I_set. ?G (s, 0) = (h \<circ> l) s"
+  proof (intro ballI)
+    fix s assume "s \<in> I_set"
+    have "l s \<in> X" using hl \<open>s \<in> I_set\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    thus "?G (s, 0) = (h \<circ> l) s" using hH0 by (by100 simp)
+  qed
+  have hG_top: "\<forall>s\<in>I_set. ?G (s, 1) = (k \<circ> l) s"
+  proof (intro ballI)
+    fix s assume "s \<in> I_set"
+    have "l s \<in> X" using hl \<open>s \<in> I_set\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    thus "?G (s, 1) = (k \<circ> l) s" using hH1 by (by100 simp)
+  qed
+  have hG_left: "\<forall>t\<in>I_set. ?G (0, t) = ?\<alpha> t"
+    using hl0 by (by100 simp)
+  have hG_right: "\<forall>t\<in>I_set. ?G (1, t) = ?\<alpha> t"
+    using hl1 by (by100 simp)
+  \<comment> \<open>Step 2: (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l) via broken-line homotopy in I×I.
+     The convexity of I×I gives a homotopy between the two broken-line paths.\<close>
+  have hprod_hom: "top1_path_homotopic_on Y TY (h x0) (k x0)
+      (top1_path_product (h \<circ> l) ?\<alpha>)
+      (top1_path_product ?\<alpha> (k \<circ> l))" sorry
+  \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha> using path algebra.\<close>
   show ?thesis sorry
 qed
 
@@ -13390,6 +13441,14 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
