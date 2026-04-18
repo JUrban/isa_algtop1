@@ -7946,6 +7946,20 @@ proof -
     using conjunct2[OF conjunct2[OF Theorem_17_11]] top1_R2_is_hausdorff by (by100 blast)
 qed
 
+text \<open>Helper: R^3 = R \<times> (R \<times> R) is Hausdorff.\<close>
+lemma top1_R3_is_hausdorff:
+  "is_hausdorff_on (UNIV :: (real \<times> real \<times> real) set)
+     (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets))"
+proof -
+  have hR: "is_hausdorff_on (UNIV :: real set) top1_open_sets" by (rule top1_R_is_hausdorff)
+  have hR2: "is_hausdorff_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+    by (rule top1_R2_is_hausdorff)
+  have "is_hausdorff_on (UNIV \<times> UNIV :: (real \<times> (real \<times> real)) set)
+      (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets))"
+    using conjunct1[OF conjunct2[OF Theorem_17_11]] hR hR2 by (by100 blast)
+  thus ?thesis by simp
+qed
+
 text \<open>Helper: closed set has open complement.\<close>
 lemma closedin_complement_openin:
   assumes "closedin_on X TX A"
@@ -8365,6 +8379,15 @@ definition top1_S2_topology :: "(real \<times> real \<times> real) set set" wher
   "top1_S2_topology = subspace_topology UNIV
      (product_topology_on top1_open_sets
        (product_topology_on top1_open_sets top1_open_sets)) top1_S2"
+
+text \<open>S^2 is Hausdorff (subspace of Hausdorff R^3).\<close>
+lemma top1_S2_is_hausdorff:
+  "is_hausdorff_on top1_S2 top1_S2_topology"
+proof -
+  have "top1_S2 \<subseteq> (UNIV :: (real \<times> real \<times> real) set)" by simp
+  thus ?thesis unfolding top1_S2_topology_def
+    using conjunct2[OF conjunct2[OF Theorem_17_11]] top1_R3_is_hausdorff by (by100 blast)
+qed
 
 text \<open>A set C separates a space X if X - C has more than one component.\<close>
 definition top1_separates_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
