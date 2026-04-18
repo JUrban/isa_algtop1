@@ -8430,8 +8430,22 @@ proof -
     have h\<beta>_hom: "top1_path_homotopic_on (I_set \<times> I_set) II_topology (0, 0) (1, 1) ?\<beta>1 ?\<beta>2"
       sorry
     \<comment> \<open>G∘β₁ = (h∘l)*α and G∘β₂ = α*(k∘l).\<close>
-    have hG\<beta>1: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s" sorry
-    have hG\<beta>2: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s" sorry
+    have hG\<beta>1: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s"
+    proof (intro ballI)
+      fix s :: real assume hs: "s \<in> I_set"
+      show "(?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s"
+        unfolding comp_def top1_path_product_def case_prod_beta
+        using hG_bot hG_right hs hl1
+        unfolding top1_unit_interval_def by (by100 auto)
+    qed
+    have hG\<beta>2: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s"
+    proof (intro ballI)
+      fix s :: real assume hs: "s \<in> I_set"
+      show "(?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s"
+        unfolding comp_def top1_path_product_def case_prod_beta
+        using hG_left hG_top hs hl0
+        unfolding top1_unit_interval_def by (by100 auto)
+    qed
     \<comment> \<open>G preserves homotopy: G∘β₁ ≃ G∘β₂.\<close>
     have "top1_path_homotopic_on Y TY (?G (0, 0)) (?G (1, 1))
         (?G \<circ> ?\<beta>1) (?G \<circ> ?\<beta>2)"
@@ -13503,6 +13517,7 @@ proof -
 qed
 
 end
+ 
  
  
  
