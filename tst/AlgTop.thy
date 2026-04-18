@@ -8389,6 +8389,23 @@ proof -
     using conjunct2[OF conjunct2[OF Theorem_17_11]] top1_R3_is_hausdorff by (by100 blast)
 qed
 
+text \<open>S^2 has strict topology.\<close>
+lemma top1_S2_is_topology_on_strict:
+  "is_topology_on_strict top1_S2 top1_S2_topology"
+  unfolding is_topology_on_strict_def
+proof (intro conjI)
+  show "is_topology_on top1_S2 top1_S2_topology"
+  proof -
+    have hR3: "is_topology_on (UNIV :: (real \<times> real \<times> real) set)
+        (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets))"
+      using top1_R3_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+    show ?thesis unfolding top1_S2_topology_def
+      by (rule subspace_topology_is_topology_on[OF hR3]) simp
+  qed
+  show "top1_S2_topology \<subseteq> Pow top1_S2"
+    unfolding top1_S2_topology_def subspace_topology_def by (by100 blast)
+qed
+
 text \<open>A set C separates a space X if X - C has more than one component.\<close>
 definition top1_separates_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
   "top1_separates_on X TX C \<longleftrightarrow>
