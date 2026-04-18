@@ -4677,7 +4677,18 @@ proof -
   \<comment> \<open>Surjectivity: for e1 \<in> p\<inverse>(b0), path f_tilde from e0 to e1 projects to loop at b0.\<close>
   have hphi_surj: "\<forall>e1\<in>{e\<in>E. p e = b0}. \<exists>f. top1_is_loop_on B TB b0 f \<and>
       (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))" sorry
-  show ?thesis sorry
+  \<comment> \<open>Define \<phi>(c): pick any representative loop f from class c, lift it, take endpoint.\<close>
+  let ?\<phi> = "\<lambda>c. let f = SOME f. f \<in> c \<and> top1_is_loop_on B TB b0 f in
+               let ft = SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)
+               in ft 1"
+  \<comment> \<open>Well-definedness from hphi_wd + existence from path-lifting.\<close>
+  have hphi_mem: "\<forall>c \<in> top1_fundamental_group_carrier B TB b0.
+      ?\<phi> c \<in> {e\<in>E. p e = b0}" sorry
+  have hphi_surj_full: "?\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
+    using hphi_surj hphi_mem sorry
+  show ?thesis
+    apply (rule exI[of _ ?\<phi>])
+    using hphi_mem hphi_surj_full by (by100 simp)
 qed
 
 theorem Theorem_54_4_bijective_simply_connected:
