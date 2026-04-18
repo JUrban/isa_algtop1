@@ -5378,7 +5378,7 @@ proof -
   qed
   show ?thesis
     apply (rule exI[of _ ?\<phi>])
-    using hphi_mem hphi_surj_full hphi_lift by (by100 simp)
+    using hphi_mem hphi_surj_full hphi_lift by (by100 blast)
 qed
 
 theorem Theorem_54_4_bijective_simply_connected:
@@ -8056,9 +8056,6 @@ proof (rule ccontr)
                        top1_C_minus_0 top1_C_minus_0_topology ?h" sorry
   \<comment> \<open>Homotopy F(z,t) = z^n + t*\<Sum>a_j z^j from g=z^n to h, all in C-{0}.\<close>
   let ?F = "\<lambda>(z::complex, t::real). z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)"
-  have hF_cont: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
-                   (product_topology_on top1_S1_complex_topology I_top)
-                   top1_C_minus_0 top1_C_minus_0_topology ?F" sorry
   have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
      z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0"
     \<comment> \<open>Munkres inequality: |F| \<ge> 1 - t(\<Sum>|a_k|) > 0 since t \<le> 1 and \<Sum>|a_k| < 1.\<close>
@@ -8105,6 +8102,48 @@ proof (rule ccontr)
     have "1 - t * (\<Sum>j<n. cmod (a j)) > 0" using ht_sum by simp
     hence "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)) > 0" using hF_abs by linarith
     thus "z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" by auto
+  qed
+  have hF_cont: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+                   (product_topology_on top1_S1_complex_topology I_top)
+                   top1_C_minus_0 top1_C_minus_0_topology ?F"
+  proof -
+    have hF_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. fst p^n +
+        complex_of_real (snd p) * (\<Sum>j<n. a j * fst p^j))"
+      by (intro continuous_intros)
+    have hF_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?F p \<in> top1_C_minus_0"
+    proof -
+      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
+      have "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
+      have "snd p \<in> I_set" using hp by (by100 auto)
+      have "?F p \<noteq> 0" using hF_nonzero[OF \<open>cmod (fst p) = 1\<close> \<open>snd p \<in> I_set\<close>]
+        by (simp add: case_prod_beta)
+      thus "?F p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
+    qed
+    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
+        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+            (top1_S1_complex \<times> I_set)"
+    proof -
+      have "product_topology_on top1_S1_complex_topology I_top
+          = product_topology_on
+              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
+              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
+      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
+          (top1_S1_complex \<times> I_set)"
+        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
+      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+          (top1_S1_complex \<times> I_set)"
+        by (simp add: product_topology_on_open_sets)
+      finally show ?thesis .
+    qed
+    have hF_cont_univ: "continuous_on UNIV ?F"
+      using hF_std by (simp add: case_prod_beta comp_def)
+    have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+        (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
+        top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?F"
+      by (rule top1_continuous_map_on_subspace_open_sets[OF hF_range hF_cont_univ])
+    thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
   qed
   \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
   have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
