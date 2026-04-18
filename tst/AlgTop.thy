@@ -4432,8 +4432,6 @@ proof -
        Near s, both lifts stay in V0 (continuity). In V0, p is injective, so they agree.\<close>
     sorry
   have hS_closed: "closedin_on I_set I_top ?S" sorry
-    \<comment> \<open>Complement is open by same argument: if ftilde_1(s) \<noteq> ftilde_2(s), they're in
-       different slices, and by continuity they stay in different slices nearby.\<close>
   have hI_connected: "top1_connected_on I_set I_top"
     by (rule top1_unit_interval_connected)
   have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
@@ -6614,6 +6612,52 @@ proof
   show False sorry
 qed
 
+text \<open>Helper: if f is nulhomotopic and f \<simeq> g, then g is nulhomotopic.
+  Proof: f \<simeq> const and g \<simeq> f (symmetry), compose homotopies (concatenation).\<close>
+lemma nulhomotopic_homotopic_trans:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hnul: "top1_nulhomotopic_on X TX Y TY f"
+      and hhom: "top1_homotopic_on X TX Y TY f g"
+  shows "top1_nulhomotopic_on X TX Y TY g"
+proof -
+  obtain c where hcY: "c \<in> Y" and hfc: "top1_homotopic_on X TX Y TY f (\<lambda>_. c)"
+    using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain F1 where hF1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F1"
+      and hF1_0: "\<forall>x\<in>X. F1 (x, 0) = f x" and hF1_1: "\<forall>x\<in>X. F1 (x, 1) = c"
+    using hfc unfolding top1_homotopic_on_def by (by100 blast)
+  \<comment> \<open>Symmetry: from f \<simeq> g, get homotopy G(x,t) = F(x,1-t) from g to f.\<close>
+  obtain F2 where hF2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F2"
+      and hF2_0: "\<forall>x\<in>X. F2 (x, 0) = g x" and hF2_1: "\<forall>x\<in>X. F2 (x, 1) = f x"
+  proof -
+    obtain F0 where hF0: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY F0"
+        and hF0_0: "\<forall>x\<in>X. F0 (x, 0) = f x" and hF0_1: "\<forall>x\<in>X. F0 (x, 1) = g x"
+      using hhom unfolding top1_homotopic_on_def by (by100 blast)
+    let ?F2 = "\<lambda>(x, t). F0 (x, 1 - t)"
+    have hF2_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?F2"
+      sorry \<comment> \<open>Continuity of t \<mapsto> 1-t reparametrization.\<close>
+    have "\<forall>x\<in>X. ?F2 (x, 0) = g x" using hF0_1 by (by100 simp)
+    moreover have "\<forall>x\<in>X. ?F2 (x, 1) = f x" using hF0_0 by (by100 simp)
+    ultimately show ?thesis using hF2_cont that by (by100 blast)
+  qed
+  \<comment> \<open>Concatenate F2 and F1: G(x,t) = F2(x,2t) for t\<le>1/2, F1(x,2t-1) for t>1/2.\<close>
+  have hmatch: "\<forall>x\<in>X. F2 (x, 1) = F1 (x, 0)"
+    using hF2_1 hF1_0 by (by100 simp)
+  let ?G = "\<lambda>p. if snd p \<le> 1/2 then F2 (fst p, 2 * snd p) else F1 (fst p, 2 * snd p - 1)"
+  have hG_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?G"
+    by (rule homotopy_concat_continuous[OF hTX hTY hF2 hF1 hmatch])
+  have hG_0: "\<forall>x\<in>X. ?G (x, 0) = g x"
+    using hF2_0 by (by100 simp)
+  have hG_1: "\<forall>x\<in>X. ?G (x, 1) = c"
+    using hF1_1 by (by100 simp)
+  have hg_cont: "top1_continuous_map_on X TX Y TY g"
+    using hhom unfolding top1_homotopic_on_def by (by100 blast)
+  have hconst: "top1_continuous_map_on X TX Y TY (\<lambda>_. c)"
+    by (rule top1_continuous_map_on_const[OF hTX hTY hcY])
+  show ?thesis
+    unfolding top1_nulhomotopic_on_def top1_homotopic_on_def
+    using hcY hg_cont hconst hG_cont hG_0 hG_1 by (by100 blast)
+qed
+
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
 text \<open>Helper: a nonvanishing vector field on B² that doesn't point inward at any
@@ -6684,8 +6728,24 @@ proof -
   proof -
     let ?R2_0' = "UNIV - {(0::real, 0::real)}"
     let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
-    have "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
-    thus ?thesis using hw_nul sorry
+    have hhom_v_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)" sorry
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF hTR hTR] by simp
+      show ?thesis unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+    qed
+    have hTR2_0': "is_topology_on ?R2_0' ?TR2_0'"
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF hTR hTR] by simp
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+    qed
+    show ?thesis
+      by (rule nulhomotopic_homotopic_trans[OF hTS1 hTR2_0' hw_nul hhom_v_id])
   qed
   show False using Corollary_55_4_inclusion_not_nulhomotopic hj_nul by (by100 blast)
 qed
