@@ -10049,7 +10049,18 @@ proof -
   have h_dim_S1: "\<exists>f. bij_betw f S1 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
   have h_dim_S2: "\<exists>f. bij_betw f S2 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
   \<comment> \<open>Step 2: Bijections S1 \<cong> G/2G \<cong> S2 compose to S1 \<cong> S2.\<close>
-  show ?thesis sorry
+  show ?thesis
+  proof -
+    obtain f1 where hf1: "bij_betw f1 S1 (top1_quotient_group_carrier_on G mul ?twoG)"
+      using h_dim_S1 by (by100 blast)
+    obtain f2 where hf2: "bij_betw f2 S2 (top1_quotient_group_carrier_on G mul ?twoG)"
+      using h_dim_S2 by (by100 blast)
+    have hf2_inv: "bij_betw (the_inv_into S2 f2) (top1_quotient_group_carrier_on G mul ?twoG) S2"
+      by (rule bij_betw_the_inv_into[OF hf2])
+    have "bij_betw (the_inv_into S2 f2 \<circ> f1) S1 S2"
+      by (rule bij_betw_trans[OF hf1 hf2_inv])
+    thus ?thesis by (by100 blast)
+  qed
 qed
 
 section \<open>\<S>68 Free Products of Groups\<close>
