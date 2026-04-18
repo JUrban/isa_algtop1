@@ -4670,11 +4670,29 @@ theorem Theorem_54_4_lifting_correspondence:
 proof -
   \<comment> \<open>Munkres 54.4: Define \<phi>([f]) = ftilde(1) where ftilde lifts f starting at e0.\<close>
   \<comment> \<open>Well-defined: by Theorem 54.3, path-homotopic loops lift to same endpoint.\<close>
+  have hTE: "is_topology_on E TE"
+    using assms(4) unfolding top1_path_connected_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB"
+    sorry \<comment> \<open>Needs extraction from covering map; B has topology since p is continuous to B.\<close>
   have hphi_wd: "\<forall>f g. top1_is_loop_on B TB b0 f \<and> top1_is_loop_on B TB b0 g
       \<and> top1_path_homotopic_on B TB b0 b0 f g
       \<longrightarrow> (\<forall>ft gt. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)
           \<and> top1_is_path_on E TE e0 (gt 1) gt \<and> (\<forall>s\<in>I_set. p (gt s) = g s)
-          \<longrightarrow> ft 1 = gt 1)" sorry
+          \<longrightarrow> ft 1 = gt 1)"
+  proof (intro allI impI, elim conjE)
+    fix f g ft gt
+    assume hfl: "top1_is_loop_on B TB b0 f" and hgl: "top1_is_loop_on B TB b0 g"
+        and hfg: "top1_path_homotopic_on B TB b0 b0 f g"
+        and hft: "top1_is_path_on E TE e0 (ft 1) ft" and hftp: "\<forall>s\<in>I_set. p (ft s) = f s"
+        and hgt: "top1_is_path_on E TE e0 (gt 1) gt" and hgtp: "\<forall>s\<in>I_set. p (gt s) = g s"
+    have hf_path: "top1_is_path_on B TB b0 b0 f"
+      using hfl unfolding top1_is_loop_on_def .
+    have hg_path: "top1_is_path_on B TB b0 b0 g"
+      using hgl unfolding top1_is_loop_on_def .
+    show "ft 1 = gt 1"
+      using conjunct1[OF Theorem_54_3[OF assms(3) hTE hTB he0 hpe0 hf_path hg_path hfg hft hftp hgt hgtp]]
+      .
+  qed
   \<comment> \<open>Surjectivity: for e1 \<in> p\<inverse>(b0), path f_tilde from e0 to e1 projects to loop at b0.\<close>
   have hphi_surj: "\<forall>e1\<in>{e\<in>E. p e = b0}. \<exists>f. top1_is_loop_on B TB b0 f \<and>
       (\<exists>ft. top1_is_path_on E TE e0 e1 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))" sorry
