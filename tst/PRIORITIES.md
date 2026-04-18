@@ -80,9 +80,10 @@ and "e0 ∈ E" and "e0' ∈ E'"
 
 ## D. Recommended Work Order
 
-1. **Fix A1** (Theorem_80_1 assumptions) — 5 min, unblocks Ch. 13
-2. **Fix A2** (Theorem_57_1 WLOG) — 30 min, unblocks Borsuk-Ulam chain
-3. **Prove B4** (hh_star_trivial) — 1 hour, uses existing infrastructure
+1. ~~**Fix A1** (Theorem_80_1 assumptions)~~ — **DONE**
+2. ~~**Fix A2** (Theorem_57_1 WLOG)~~ — **DONE** (case split restructured; h(1,0)=(1,0) case fully proved; rotation sorry remains)
+3. ~~**Prove B4** (hh_star_trivial)~~ — **DONE** for h(1,0)=(1,0) case (path algebra complete)
 4. **Prove B3** (R→S¹ covering) — 2-3 hours, foundational
 5. **Prove B2** (path lifting) — 2-3 hours, foundational
 6. **Prove B1** (π₁(S¹) homomorphism) — 3-4 hours, the key domino
+7. **Prove Theorem_53_2 homeomorphism restriction** — **DONE**
