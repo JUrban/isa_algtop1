@@ -4929,7 +4929,25 @@ proof -
     ultimately show "?\<phi> c \<in> {e\<in>E. p e = b0}" by (simp add: Let_def)
   qed
   have hphi_surj_full: "?\<phi> ` (top1_fundamental_group_carrier B TB b0) = {e\<in>E. p e = b0}"
-    using hphi_surj hphi_mem sorry
+  proof (rule set_eqI, rule iffI)
+    fix e assume "e \<in> ?\<phi> ` (top1_fundamental_group_carrier B TB b0)"
+    thus "e \<in> {e\<in>E. p e = b0}" using hphi_mem by (by100 blast)
+  next
+    fix e1 assume he1: "e1 \<in> {e\<in>E. p e = b0}"
+    \<comment> \<open>By hphi_surj, \<exists>f loop whose lift reaches e1.\<close>
+    obtain f0 ft0 where hf0_loop: "top1_is_loop_on B TB b0 f0"
+        and hft0: "top1_is_path_on E TE e0 e1 ft0" and hft0p: "\<forall>s\<in>I_set. p (ft0 s) = f0 s"
+      using hphi_surj he1 by (by100 auto)
+    \<comment> \<open>The equivalence class of f0 is in the carrier.\<close>
+    let ?c = "{g. top1_loop_equiv_on B TB b0 f0 g}"
+    have hc_carrier: "?c \<in> top1_fundamental_group_carrier B TB b0"
+      unfolding top1_fundamental_group_carrier_def using hf0_loop by (by100 blast)
+    \<comment> \<open>\<phi>(?c) = e1 by well-definedness: \<phi> picks a representative and lifts it,
+       and by hphi_wd, all lifts of equivalent loops end at the same point.\<close>
+    have "?\<phi> ?c = e1" sorry \<comment> \<open>Needs SOME reasoning + hphi_wd.\<close>
+    thus "e1 \<in> ?\<phi> ` (top1_fundamental_group_carrier B TB b0)"
+      using hc_carrier by (by100 blast)
+  qed
   show ?thesis
     apply (rule exI[of _ ?\<phi>])
     using hphi_mem hphi_surj_full by (by100 simp)
