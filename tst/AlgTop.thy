@@ -6939,15 +6939,61 @@ proof -
     let ?TR2_0' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0'"
     have hhom_v_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) (\<lambda>x. x)"
     proof -
-      \<comment> \<open>F(x,t) = t*x + (1-t)*v(x) is a homotopy from v to id in R²-{0}.\<close>
-      let ?F = "\<lambda>(x::real\<times>real, t::real). (t * fst x + (1-t) * fst (v x),
-                                          t * snd x + (1-t) * snd (v x))"
+      \<comment> \<open>F(x,t) = (1-t)*v(x) - t*x is a homotopy from v to -id in R²-{0}.
+         F = 0 ⟹ v(x) = t/(1-t) · x with a = t/(1-t) > 0, contradicting assms(3).\<close>
+      let ?F = "\<lambda>(x::real\<times>real, t::real). ((1-t) * fst (v x) - t * fst x,
+                                          (1-t) * snd (v x) - t * snd x)"
       have hF0: "\<forall>x\<in>top1_S1. ?F (x, 0) = v x"
         by (by100 simp)
-      have hF1: "\<forall>x\<in>top1_S1. ?F (x, 1) = x"
+      have hF1: "\<forall>x\<in>top1_S1. ?F (x, 1) = (- fst x, - snd x)"
         by (by100 simp)
-      \<comment> \<open>F(x,t) \<noteq> 0: if F(x,t) = 0 then v(x) = -t/(1-t) * x which means v points inward.\<close>
-      have hF_nz: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?F (x, t) \<noteq> (0, 0)" sorry
+      have hF_nz: "\<forall>x\<in>top1_S1. \<forall>t\<in>I_set. ?F (x, t) \<noteq> (0, 0)"
+      proof (intro ballI)
+        fix x :: "real \<times> real" and t :: real
+        assume hx: "x \<in> top1_S1" and ht: "t \<in> I_set"
+        show "?F (x, t) \<noteq> (0, 0)"
+        proof (cases "t = 0")
+          case True
+          \<comment> \<open>F(x,0) = v(x) \<noteq> 0 since v nonvanishing on B² \<supseteq> S¹.\<close>
+          have "x \<in> top1_B2" using hx unfolding top1_S1_def top1_B2_def by (by100 auto)
+          hence "v x \<noteq> (0, 0)" using assms(2) by (by100 blast)
+          thus ?thesis using True by (by100 simp)
+        next
+          case False
+          hence ht_pos: "t > 0" using ht unfolding top1_unit_interval_def by (by100 simp)
+          show ?thesis
+          proof (cases "t = 1")
+            case True
+            have "fst x ^ 2 + snd x ^ 2 = 1" using hx unfolding top1_S1_def by (by100 simp)
+            hence hxnz: "x \<noteq> (0, 0)" by (cases x) (auto simp: sum_power2_gt_zero_iff)
+            show ?thesis using hxnz True by (simp add: prod_eq_iff)
+          next
+            case False2: False
+            hence h1mt_pos: "1 - t > 0" using ht unfolding top1_unit_interval_def by (by100 simp)
+            show ?thesis
+            proof
+              assume habs: "?F (x, t) = (0, 0)"
+              \<comment> \<open>From (1-t)*v_i(x) - t*x_i = 0, get v_i(x) = t/(1-t) * x_i.\<close>
+              have habs1: "(1 - t) * fst (v x) = t * fst x"
+                using habs by (simp add: prod_eq_iff)
+              have habs2: "(1 - t) * snd (v x) = t * snd x"
+                using habs by (simp add: prod_eq_iff)
+              have hv1: "fst (v x) = t / (1 - t) * fst x"
+                using habs1 h1mt_pos by (simp add: field_simps)
+              have hv2: "snd (v x) = t / (1 - t) * snd x"
+                using habs2 h1mt_pos by (simp add: field_simps)
+              have ha_pos: "t / (1 - t) > 0" using ht_pos h1mt_pos by (by100 simp)
+              have "v x = (t / (1 - t) * fst x, t / (1 - t) * snd x)"
+                using hv1 hv2 by (simp add: prod_eq_iff)
+              hence "\<exists>a>0. v x = (a * fst x, a * snd x)"
+                using ha_pos by (by100 blast)
+              hence "\<exists>x\<in>top1_S1. \<exists>a>0. v x = (a * fst x, a * snd x)"
+                using hx by (by100 blast)
+              thus False using assms(3) by (by100 blast)
+            qed
+          qed
+        qed
+      qed
       have hv_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x)"
       proof -
         have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
@@ -6981,8 +7027,30 @@ proof -
       qed
       have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
           ?R2_0' ?TR2_0' ?F" sorry
-      show ?thesis unfolding top1_homotopic_on_def
-        using hv_cont hid_cont hF_cont hF0 hF1 by (by100 blast)
+      \<comment> \<open>F gives v ≃ -id. Need -id ≃ id (rotation). Then v ≃ id by transitivity.\<close>
+      let ?neg = "\<lambda>x::real\<times>real. (- fst x, - snd x)"
+      have hneg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg" sorry
+      have hv_neg: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' (\<lambda>x. v x) ?neg"
+      proof -
+        have hF1': "\<forall>x\<in>top1_S1. ?F (x, 1) = ?neg x" by (by100 simp)
+        show ?thesis unfolding top1_homotopic_on_def
+          using hv_cont hneg_cont hF_cont hF0 hF1' by (by100 blast)
+      qed
+      have hneg_id: "top1_homotopic_on top1_S1 top1_S1_topology ?R2_0' ?TR2_0' ?neg (\<lambda>x. x)"
+        sorry \<comment> \<open>Rotation: R(x,t) = (cos(\<pi>t) fst x - sin(\<pi>t) snd x, sin(\<pi>t) fst x + cos(\<pi>t) snd x)\<close>
+      have hTR2_0': "is_topology_on ?R2_0' ?TR2_0'"
+        by (simp add: product_topology_on_open_sets subspace_topology_is_topology_on
+            top1_open_sets_is_topology_on_UNIV)
+      have hTS1': "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF hTR hTR] by simp
+        show ?thesis unfolding top1_S1_topology_def
+          by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+      qed
+      show ?thesis
+        by (rule Lemma_51_1_homotopic_trans[OF hTS1' hTR2_0' hv_neg hneg_id])
     qed
     have hTS1: "is_topology_on top1_S1 top1_S1_topology"
     proof -
@@ -12472,6 +12540,15 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
