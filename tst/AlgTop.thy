@@ -7058,6 +7058,17 @@ proof -
     using hcY hg_cont hconst hG_cont hG_0 hG_1 by (by100 blast)
 qed
 
+text \<open>Continuity transfer: continuous_on UNIV for R³ → R² gives
+  top1_continuous_map_on on S¹×I → R²-{0} when the image avoids (0,0).\<close>
+lemma S1_I_to_R2_minus_0_continuous:
+  fixes f :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
+  assumes hcont: "continuous_on UNIV f"
+      and hmap: "\<And>p. p \<in> top1_S1 \<times> I_set \<Longrightarrow> f p \<in> UNIV - {(0::real, 0)}"
+  shows "top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)})) f"
+  sorry
+
 (** from \<S>55 Theorem 55.5: nonvanishing vector field on B^2 points outward at
     some point of S^1 (and inward at some point). **)
 text \<open>Helper: a nonvanishing vector field on B² that doesn't point inward at any
@@ -12779,6 +12790,10 @@ proof -
 qed
 
 end
+ 
+ 
+ 
+ 
  
  
  
