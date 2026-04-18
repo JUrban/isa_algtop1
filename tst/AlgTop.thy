@@ -6634,7 +6634,14 @@ proof -
       using hhom unfolding top1_homotopic_on_def by (by100 blast)
     let ?F2 = "\<lambda>(x, t). F0 (x, 1 - t)"
     have hF2_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY ?F2"
-      sorry \<comment> \<open>Continuity of t \<mapsto> 1-t reparametrization.\<close>
+    proof -
+      have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y TY
+        (\<lambda>p. F0 (fst p, 1 - snd p))"
+        by (rule homotopy_reverse_continuous[OF hF0 hTX])
+      moreover have "(\<lambda>p. F0 (fst p, 1 - snd p)) = ?F2"
+        by (rule ext) (simp add: case_prod_beta)
+      ultimately show ?thesis by simp
+    qed
     have "\<forall>x\<in>X. ?F2 (x, 0) = g x" using hF0_1 by (by100 simp)
     moreover have "\<forall>x\<in>X. ?F2 (x, 1) = f x" using hF0_0 by (by100 simp)
     ultimately show ?thesis using hF2_cont that by (by100 blast)
