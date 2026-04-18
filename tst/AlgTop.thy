@@ -6650,7 +6650,47 @@ proof
   \<comment> \<open>Step 1: r(x) = x/|x| is a retraction R^2-0 \<rightarrow> S^1.\<close>
   have hret: "top1_retract_of_on (UNIV - {(0::real, 0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
-      top1_S1" sorry
+      top1_S1"
+  proof -
+    let ?R2_0 = "UNIV - {(0::real, 0::real)}"
+    let ?TR = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?R2_0"
+    let ?norm = "\<lambda>x::real\<times>real. sqrt (fst x ^ 2 + snd x ^ 2)"
+    let ?r = "\<lambda>x::real\<times>real. (fst x / ?norm x, snd x / ?norm x)"
+    have hS1sub: "top1_S1 \<subseteq> ?R2_0" unfolding top1_S1_def by (by100 auto)
+    have hr_map: "\<forall>x\<in>?R2_0. ?r x \<in> top1_S1"
+    proof (intro ballI)
+      fix x :: "real \<times> real" assume hx: "x \<in> ?R2_0"
+      hence hne: "x \<noteq> (0, 0)" by (by100 blast)
+      hence hpos: "fst x ^ 2 + snd x ^ 2 > 0"
+        by (cases x) (auto simp: sum_power2_gt_zero_iff)
+      hence hnorm_pos: "?norm x > 0" by (simp add: real_sqrt_gt_zero)
+      have "fst (?r x) ^ 2 + snd (?r x) ^ 2 = 1"
+      proof -
+        let ?d = "fst x ^ 2 + snd x ^ 2"
+        have "fst x ^ 2 / ?d + snd x ^ 2 / ?d = ?d / ?d"
+          by (metis add_divide_distrib)
+        also have "?d / ?d = 1" using hpos by auto
+        finally have hadd: "fst x ^ 2 / ?d + snd x ^ 2 / ?d = 1" .
+        have h1: "fst (?r x) = fst x / ?norm x" by simp
+        have h2: "snd (?r x) = snd x / ?norm x" by simp
+        have hnorm_sq: "(?norm x) ^ 2 = ?d"
+          using hpos by (simp add: real_sqrt_pow2)
+        show ?thesis unfolding h1 h2 power_divide hnorm_sq using hadd by simp
+      qed
+      thus "?r x \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    qed
+    have hr_fix: "\<forall>x\<in>top1_S1. ?r x = x"
+    proof (intro ballI)
+      fix x :: "real \<times> real" assume hx: "x \<in> top1_S1"
+      have heq: "fst x ^ 2 + snd x ^ 2 = 1" using hx unfolding top1_S1_def by (by100 simp)
+      hence hnorm: "?norm x = 1" by (simp add: real_sqrt_eq_1_iff)
+      show "?r x = x" using hnorm by (simp add: prod_eq_iff)
+    qed
+    have hr_cont: "top1_continuous_map_on ?R2_0 ?TR top1_S1
+        (subspace_topology ?R2_0 ?TR top1_S1) ?r" sorry
+    show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+      using hS1sub hr_cont hr_fix by (by100 blast)
+  qed
   \<comment> \<open>Step 2: j_* is injective (Lemma 55.1) hence nontrivial.\<close>
   \<comment> \<open>Step 3: nulhomotopic \<Rightarrow> j_* trivial (Lemma 55.3 (3)\<Rightarrow>(1)), contradicting nontrivial.\<close>
   show False sorry
