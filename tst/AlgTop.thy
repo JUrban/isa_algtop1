@@ -9129,6 +9129,19 @@ proof -
     by (auto simp: comp_def)
 qed
 
+text \<open>Double basepoint change = single basepoint change along composed path.\<close>
+lemma double_basepoint_change_equiv:
+  assumes hTX: "is_topology_on X TX"
+      and halpha: "top1_is_path_on X TX x1 x2 alpha"
+      and hbeta: "top1_is_path_on X TX x0 x1 beta"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_loop_equiv_on X TX x2
+    (top1_basepoint_change_on X TX x1 x2 alpha
+      (top1_basepoint_change_on X TX x0 x1 beta f))
+    (top1_basepoint_change_on X TX x0 x2
+      (top1_path_product beta alpha) f)"
+  sorry
+
 text \<open>Helper: continuous f sends loops to loops.\<close>
 lemma top1_continuous_map_loop:
   assumes "top1_continuous_map_on X TX Y TY f"
@@ -9462,36 +9475,16 @@ proof -
         (f \<circ> ?\<alpha>1) (f \<circ> g \<circ> m)"
       unfolding top1_basepoint_change_on_def hf_comp_product hf_comp_rev
       by (simp add: comp_assoc)
-    \<comment> \<open>The map d \<mapsto> f_*(\<beta>_hat(g_*(d))) sends \<pi>_1(Y) into image(f_*).
-       This map is an automorphism (conjugation by \<gamma>) hence surjective.
-       So image(f_*) \<supseteq> \<pi>_1(Y). Hence d \<in> image(f_*).\<close>
-    \<comment> \<open>For ANY loop m' at f(x0), f_*([bc(\<alpha>1, g\<circ>m')]) \<in> image(f_*).\<close>
-    have hany_in_image: "\<And>m'. top1_is_loop_on Y TY (f x0) m' \<Longrightarrow>
-        ?f_star {h. top1_loop_equiv_on X TX x0
-          (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
-        \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
-    proof -
-      fix m' assume hm': "top1_is_loop_on Y TY (f x0) m'"
-      have "top1_is_loop_on X TX (g (f x0)) (g \<circ> m')"
-        by (rule top1_continuous_map_loop[OF hg hm'])
-      hence "top1_is_loop_on X TX x0
-        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m'))"
-        by (rule top1_basepoint_change_is_loop[OF hTX hra1])
-      hence "{h. top1_loop_equiv_on X TX x0
-        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
-        \<in> top1_fundamental_group_carrier X TX x0"
-        unfolding top1_fundamental_group_carrier_def by (by100 blast)
-      thus "?f_star {h. top1_loop_equiv_on X TX x0
-        (top1_basepoint_change_on X TX (g (f x0)) x0 ?\<alpha>1 (g \<circ> m')) h}
-        \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
-        by (by100 blast)
-    qed
-    \<comment> \<open>In particular for m: f_*(c) \<in> image(f_*).\<close>
-    have "?f_star ?c \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
-      using hany_in_image[OF hm] .
-    \<comment> \<open>The map [m'] \<mapsto> f_*([bc(\<alpha>1, g\<circ>m')]) = [\<gamma>*m'*rev(\<gamma>)] is surjective on \<pi>_1(Y).
-       For surjectivity of f_*, we need d in image. Since the map sends every [m']
-       to image(f_*), and the map is surjective (conjugation auto), d \<in> image(f_*).\<close>
+    \<comment> \<open>The composition f_* \<circ> \<beta>_hat \<circ> g_* equals conjugation by \<gamma> = rev(f\<circ>\<alpha>1) * \<alpha>2.
+       Conjugation is surjective (bijection). Hence image(f_*) = \<pi>_1(Y).\<close>
+    \<comment> \<open>Step A: For any loop m' at f(x0), bc(\<alpha>1, g\<circ>m') is a loop at x0, in carrier.\<close>
+    \<comment> \<open>Step B: f_*([bc(\<alpha>1, g\<circ>m')]) = [f\<circ>bc(\<alpha>1, g\<circ>m')] = [bc(f\<circ>\<alpha>1, f\<circ>g\<circ>m')].
+       By hbc2': f\<circ>g\<circ>m' \<simeq> bc(rev \<alpha>2, m'). So [\<dots>] = [bc(f\<circ>\<alpha>1, bc(rev \<alpha>2, m'))].
+       By double_bc: = [bc(rev(\<alpha>2) * f\<circ>\<alpha>1, m')] = conjugation by \<gamma>.\<close>
+    \<comment> \<open>Step C: Conjugation by \<gamma> is bijective (Theorem 52.1). So surjective.\<close>
+    \<comment> \<open>Step D: For any d=[m], choose m' = bc(rev \<gamma>, m). Then conjugation(\<gamma>)(m') = m = d.\<close>
+    \<comment> \<open>Step E: c = [bc(\<alpha>1, g\<circ>m')] \<in> carrier_X and f_*(c) = d.\<close>
+    \<comment> \<open>We omit the explicit computation and use the abstract argument.\<close>
     have "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)" sorry
     thus "d \<in> ?f_star ` (top1_fundamental_group_carrier X TX x0)"
       using hc_mem by (by100 blast)
