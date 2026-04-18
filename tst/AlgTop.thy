@@ -4707,6 +4707,52 @@ proof -
   qed
 qed
 
+text \<open>Helper: if two functions agree on I\_set, they give the same loop.\<close>
+lemma loop_agree_on_I:
+  assumes hf: "top1_is_loop_on X TX x0 f"
+      and hagree: "\<forall>s\<in>I_set. g s = f s"
+  shows "top1_is_loop_on X TX x0 g \<and> top1_path_homotopic_on X TX x0 x0 f g"
+proof -
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast
+  have hagree': "\<forall>s\<in>I_set. f s = g s" using hagree by simp
+  have hg_cont: "top1_continuous_map_on I_set I_top X TX g"
+    by (rule top1_continuous_map_on_agree'[OF hf_cont hagree'])
+  have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  have h0I: "(0::real) \<in> I_set" and h1I: "(1::real) \<in> I_set"
+    unfolding top1_unit_interval_def by auto
+  have hg0: "g 0 = x0" using hagree h0I hf0 by simp
+  have hg1: "g 1 = x0" using hagree h1I hf1 by simp
+  have hg_loop: "top1_is_loop_on X TX x0 g"
+    unfolding top1_is_loop_on_def top1_is_path_on_def using hg_cont hg0 hg1 by simp
+  have hfg_eq: "\<forall>s\<in>I_set. f s = g s" using hagree by simp
+  have "top1_path_homotopic_on X TX x0 x0 f g"
+    unfolding top1_path_homotopic_on_def
+  proof -
+    have hf_path: "top1_is_path_on X TX x0 x0 f"
+      using hf unfolding top1_is_loop_on_def .
+    have hg_path: "top1_is_path_on X TX x0 x0 g"
+      using hg_loop unfolding top1_is_loop_on_def .
+    \<comment> \<open>Constant homotopy works since f=g on I_set. Use F(s,t) = f(s) = g(s).\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> pi1)"
+      by (rule top1_continuous_map_on_comp[OF hpi1 hf_cont])
+    have hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
+      using hF_cont unfolding pi1_def comp_def by simp
+    show "top1_is_path_on X TX x0 x0 f \<and> top1_is_path_on X TX x0 x0 g \<and>
+      (\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
+           (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s) \<and>
+           (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0))"
+      using hf_path hg_path hF hfg_eq hf0 hf1 by auto
+  qed
+  thus ?thesis using hg_loop by blast
+qed
+
 (** from \<S>54 Theorem 54.4: lifting correspondence.
     Given a covering p : (E, e_0) \<to> (B, b_0) and E path-connected, the map
     \<Phi> : \<pi>_1(B, b_0) \<to> p\<inverse>(b_0) sending [f] to \<tilde>f(1) (where \<tilde>f is the lift
@@ -4858,12 +4904,12 @@ proof -
     have hf_loop_agree: "\<forall>s\<in>I_set. (p \<circ> ft) s = f s" using hftp by simp
     have hg_loop_agree: "\<forall>s\<in>I_set. (p \<circ> gt) s = g s" using hgtp by simp
     have hf_equiv_pft: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> ft)"
-      sorry \<comment> \<open>f agrees with p\<circ>ft on I_set \<Rightarrow> f \<simeq> p\<circ>ft (via loop_agree_on_I, defined later).\<close>
+      using conjunct2[OF loop_agree_on_I[OF hfl hf_loop_agree]] .
     have hpgt_loop: "top1_is_loop_on B TB b0 (p \<circ> gt)"
       using \<open>top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) (p \<circ> gt)\<close>
       unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
     have hg_equiv_pgt: "top1_path_homotopic_on B TB b0 b0 g (p \<circ> gt)"
-      sorry \<comment> \<open>g agrees with p\<circ>gt on I_set \<Rightarrow> g \<simeq> p\<circ>gt.\<close>
+      using conjunct2[OF loop_agree_on_I[OF hgl hg_loop_agree]] .
     \<comment> \<open>Chain: f \<simeq> p\<circ>ft \<simeq> p\<circ>gt \<simeq> g.\<close>
     have hf_pft: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> ft)"
       by (rule hf_equiv_pft)
@@ -7360,51 +7406,6 @@ qed
     Munkres' proof: if A is a deformation retract of X via H, then the
     inclusion j: A \<hookrightarrow> X and the retraction r: X \<rightarrow> A = H(\<cdot>, 1) are homotopy
     invgerses. By Theorem 58.7, any homotopy equivalence induces an iso on \<pi>_1. **)
-text \<open>Helper: if two functions agree on I\_set, they give the same loop.\<close>
-lemma loop_agree_on_I:
-  assumes hf: "top1_is_loop_on X TX x0 f"
-      and hagree: "\<forall>s\<in>I_set. g s = f s"
-  shows "top1_is_loop_on X TX x0 g \<and> top1_path_homotopic_on X TX x0 x0 f g"
-proof -
-  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
-    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast
-  have hagree': "\<forall>s\<in>I_set. f s = g s" using hagree by simp
-  have hg_cont: "top1_continuous_map_on I_set I_top X TX g"
-    by (rule top1_continuous_map_on_agree'[OF hf_cont hagree'])
-  have hf0: "f 0 = x0" and hf1: "f 1 = x0"
-    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
-  have h0I: "(0::real) \<in> I_set" and h1I: "(1::real) \<in> I_set"
-    unfolding top1_unit_interval_def by auto
-  have hg0: "g 0 = x0" using hagree h0I hf0 by simp
-  have hg1: "g 1 = x0" using hagree h1I hf1 by simp
-  have hg_loop: "top1_is_loop_on X TX x0 g"
-    unfolding top1_is_loop_on_def top1_is_path_on_def using hg_cont hg0 hg1 by simp
-  have hfg_eq: "\<forall>s\<in>I_set. f s = g s" using hagree by simp
-  have "top1_path_homotopic_on X TX x0 x0 f g"
-    unfolding top1_path_homotopic_on_def
-  proof -
-    have hf_path: "top1_is_path_on X TX x0 x0 f"
-      using hf unfolding top1_is_loop_on_def .
-    have hg_path: "top1_is_path_on X TX x0 x0 g"
-      using hg_loop unfolding top1_is_loop_on_def .
-    \<comment> \<open>Constant homotopy works since f=g on I_set. Use F(s,t) = f(s) = g(s).\<close>
-    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
-      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
-    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
-      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
-    have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (f \<circ> pi1)"
-      by (rule top1_continuous_map_on_comp[OF hpi1 hf_cont])
-    have hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (\<lambda>p. f (fst p))"
-      using hF_cont unfolding pi1_def comp_def by simp
-    show "top1_is_path_on X TX x0 x0 f \<and> top1_is_path_on X TX x0 x0 g \<and>
-      (\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
-           (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s) \<and>
-           (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0))"
-      using hf_path hg_path hF hfg_eq hf0 hf1 by auto
-  qed
-  thus ?thesis using hg_loop by blast
-qed
 
 text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
   a group isomorphism when the inclusion has a retraction homotopic to id.\<close>
