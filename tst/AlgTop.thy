@@ -8459,7 +8459,28 @@ proof -
     hence hGhom: "top1_path_homotopic_on Y TY (h x0) (k x0) (?G \<circ> ?\<beta>1) (?G \<circ> ?\<beta>2)"
       using hH0 hH1 hx0 hl0 hl1 by (by100 simp)
     \<comment> \<open>Transfer via agreement on I: G∘β₁ agrees with (h∘l)*α, etc.\<close>
-    show ?thesis sorry
+    show ?thesis unfolding top1_path_homotopic_on_def
+    proof -
+      from hGhom obtain F where
+          hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F"
+          and hF0: "\<forall>s\<in>I_set. F (s, 0) = (?G \<circ> ?\<beta>1) s"
+          and hF1: "\<forall>s\<in>I_set. F (s, 1) = (?G \<circ> ?\<beta>2) s"
+          and hFl: "\<forall>t\<in>I_set. F (0, t) = h x0"
+          and hFr: "\<forall>t\<in>I_set. F (1, t) = k x0"
+        using hGhom unfolding top1_path_homotopic_on_def by (by100 auto)
+      have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (h \<circ> l) ?\<alpha> s"
+        using hF0 hG\<beta>1 by (by100 simp)
+      have hF1': "\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s"
+        using hF1 hG\<beta>2 by (by100 simp)
+      show "top1_is_path_on Y TY (h x0) (k x0) (top1_path_product (h \<circ> l) ?\<alpha>)
+          \<and> top1_is_path_on Y TY (h x0) (k x0) (top1_path_product ?\<alpha> (k \<circ> l))
+          \<and> (\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F
+              \<and> (\<forall>s\<in>I_set. F (s, 0) = top1_path_product (h \<circ> l) ?\<alpha> s)
+              \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s)
+              \<and> (\<forall>t\<in>I_set. F (0, t) = h x0)
+              \<and> (\<forall>t\<in>I_set. F (1, t) = k x0))"
+        using hF hF0' hF1' hFl hFr sorry
+    qed
   qed
   \<comment> \<open>Step 3: From (h\<circ>l)*\<alpha> \<simeq> \<alpha>*(k\<circ>l), derive h\<circ>l \<simeq> \<alpha>⁻¹*(k\<circ>l)*\<alpha>.\<close>
   show ?thesis sorry
@@ -13517,6 +13538,8 @@ proof -
 qed
 
 end
+ 
+ 
  
  
  
