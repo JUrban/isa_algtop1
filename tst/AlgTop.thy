@@ -4679,7 +4679,57 @@ proof -
         have hinv_range: "\<And>p. p \<in> top1_S1_arc_N \<Longrightarrow> inv_fn p \<in> V"
           sorry \<comment> \<open>arccos(x) \<in> (0,\<pi>) when y > 0 (since x \<in> (-1,1)), so arccos(x)/(2\<pi>) \<in> (0,1/2).\<close>
         have hinv_agree: "\<forall>p\<in>top1_S1_arc_N. inv_into V top1_R_to_S1 p = inv_fn p"
-          sorry \<comment> \<open>p(inv_fn(p)) = p by cos(arccos(x))=x and sin(arccos(x))=y, uniqueness.\<close>
+        proof
+          fix p assume hp: "p \<in> top1_S1_arc_N"
+          hence hy_pos: "snd p > 0" and hcirc: "fst p ^ 2 + snd p ^ 2 = 1"
+            unfolding top1_S1_arc_N_def by (by100 auto)+
+          have hinV: "inv_fn p \<in> V" using hinv_range[OF hp] .
+          \<comment> \<open>Show top1_R_to_S1(inv_fn p) = p.\<close>
+          have hx_bdd: "-1 \<le> fst p" "fst p \<le> 1"
+          proof -
+            have "0 \<le> snd p ^ 2" by simp
+            hence "fst p ^ 2 \<le> 1" using hcirc by (by100 linarith)
+            show "-1 \<le> fst p"
+            proof (rule ccontr)
+              assume "\<not> -1 \<le> fst p"
+              hence "- fst p > 1" by (by100 linarith)
+              hence "(- fst p) * (- fst p) > 1 * 1"
+                by (intro mult_strict_mono') (by100 linarith)+
+              hence "fst p ^ 2 > 1" unfolding power2_eq_square by (by100 simp)
+              thus False using \<open>fst p ^ 2 \<le> 1\<close> by (by100 linarith)
+            qed
+            show "fst p \<le> 1"
+            proof (rule ccontr)
+              assume "\<not> fst p \<le> 1"
+              hence "fst p > 1" by (by100 linarith)
+              hence "fst p * fst p > 1 * 1"
+                by (intro mult_strict_mono') (by100 linarith)+
+              hence "fst p ^ 2 > 1" unfolding power2_eq_square by (by100 simp)
+              thus False using \<open>fst p ^ 2 \<le> 1\<close> by (by100 linarith)
+            qed
+          qed
+          have hcos: "cos (arccos (fst p)) = fst p"
+            by (rule cos_arccos[OF hx_bdd])
+          have hsin: "sin (arccos (fst p)) = sqrt (1 - (fst p)^2)"
+            by (rule sin_arccos[OF hx_bdd])
+          have hsqrt_y: "sqrt (1 - (fst p)^2) = snd p"
+          proof -
+            have "1 - (fst p)^2 = (snd p)^2" using hcirc by (by100 linarith)
+            hence "sqrt (1 - (fst p)^2) = sqrt ((snd p)^2)" by simp
+            also have "\<dots> = \<bar>snd p\<bar>" by (rule real_sqrt_abs)
+            also have "\<dots> = snd p" using hy_pos by (by100 simp)
+            finally show ?thesis .
+          qed
+          have "top1_R_to_S1 (inv_fn p) = (cos (arccos (fst p)), sin (arccos (fst p)))"
+            unfolding top1_R_to_S1_def inv_fn_def
+            using cos_int_2pin[of nn] sin_int_2pin[of nn]
+            by (simp add: distrib_left cos_add sin_add prod_eq_iff)
+          also have "\<dots> = (fst p, snd p)" using hcos hsin hsqrt_y by simp
+          also have "\<dots> = p" by simp
+          finally have "top1_R_to_S1 (inv_fn p) = p" .
+          thus "inv_into V top1_R_to_S1 p = inv_fn p"
+            using inv_into_f_eq[OF hpV_inj hinV] by (by100 simp)
+        qed
         \<comment> \<open>Transfer.\<close>
         have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N
             = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_N"
