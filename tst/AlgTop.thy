@@ -8140,7 +8140,33 @@ proof -
         using hgt unfolding top1_is_path_on_def by (by100 blast)
       \<comment> \<open>tgt = (\<lambda>s. ?n + gt s) = (\<lambda>s. ?n) + gt. Translation by constant is continuous.\<close>
       \<comment> \<open>(\<lambda>s. ?n + gt s): continuous since gt is continuous and + const is continuous.\<close>
-      show ?thesis unfolding tgt_def sorry
+      show ?thesis unfolding tgt_def top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s :: real assume "s \<in> I_set" show "\<phi>' c + gt s \<in> (UNIV::real set)" by simp
+      next
+        fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+        have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+        \<comment> \<open>{s. n + gt(s) \<in> V} = {s. gt(s) \<in> (\<lambda>x. x - n) ` V}.\<close>
+        let ?W = "(\<lambda>x::real. x - \<phi>' c) ` V"
+        have hWo: "open ?W"
+        proof -
+          have hcont: "continuous_on UNIV (\<lambda>x::real. x + \<phi>' c)" by (intro continuous_intros)
+          have "open ((\<lambda>x::real. x + \<phi>' c) -` V)"
+          proof -
+            have "open ((\<lambda>x::real. x + \<phi>' c) -` V \<inter> UNIV)"
+              using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hVo by (by100 blast)
+            thus ?thesis by simp
+          qed
+          moreover have "(\<lambda>x::real. x + \<phi>' c) -` V = ?W" by (by100 force)
+          ultimately show ?thesis by simp
+        qed
+        have hW_os: "?W \<in> top1_open_sets" using hWo unfolding top1_open_sets_def by (by100 blast)
+        have heq: "{s \<in> I_set. \<phi>' c + gt s \<in> V} = {s \<in> I_set. gt s \<in> ?W}"
+          by (by100 force)
+        have "{s \<in> I_set. gt s \<in> ?W} \<in> I_top"
+          using hgt_cont unfolding top1_continuous_map_on_def using hW_os by (by100 blast)
+        thus "{s \<in> I_set. \<phi>' c + gt s \<in> V} \<in> I_top" using heq by simp
+      qed
     qed
     have htgt_path: "top1_is_path_on (UNIV::real set) top1_open_sets ?n (?n + ?m) tgt"
       unfolding top1_is_path_on_def using htgt_cont htgt0 htgt1 by simp
