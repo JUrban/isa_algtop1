@@ -14869,7 +14869,66 @@ proof -
     using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
   \<comment> \<open>Step 1: carrier of π₁(E, e0) = {id}.\<close>
   have hcarrier: "top1_fundamental_group_carrier E TE e0 = {top1_fundamental_group_id E TE e0}"
-    sorry \<comment> \<open>From simply_connected: every loop ≃ const ⟹ one equivalence class.\<close>
+  proof (rule set_eqI)
+    fix c show "c \<in> top1_fundamental_group_carrier E TE e0 \<longleftrightarrow>
+        c \<in> {top1_fundamental_group_id E TE e0}"
+    proof
+      assume hc: "c \<in> top1_fundamental_group_carrier E TE e0"
+      then obtain f where hf: "top1_is_loop_on E TE e0 f"
+          and hc_eq: "c = {g. top1_loop_equiv_on E TE e0 f g}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>f ≃ const (simply connected).\<close>
+      have hf_nul: "top1_path_homotopic_on E TE e0 e0 f (top1_constant_path e0)"
+        using hsc he0 hf unfolding top1_simply_connected_on_def by (by100 blast)
+      \<comment> \<open>So {g. loop_equiv f g} = {g. loop_equiv const g}.\<close>
+      have "c = {g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}"
+      proof (rule set_eqI)
+        fix g show "g \<in> c \<longleftrightarrow> g \<in> {g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}"
+        proof
+          assume "g \<in> c"
+          hence "top1_loop_equiv_on E TE e0 f g" using hc_eq by (by100 blast)
+          hence "top1_path_homotopic_on E TE e0 e0 f g"
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          have "top1_path_homotopic_on E TE e0 e0 (top1_constant_path e0) g"
+            by (rule Lemma_51_1_path_homotopic_trans[OF hTE
+                  Lemma_51_1_path_homotopic_sym[OF hf_nul]
+                  \<open>top1_path_homotopic_on E TE e0 e0 f g\<close>])
+          have hg_loop: "top1_is_loop_on E TE e0 g"
+            using \<open>g \<in> c\<close> hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hconst_loop: "top1_is_loop_on E TE e0 (top1_constant_path e0)"
+            by (rule top1_constant_path_is_loop[OF hTE he0])
+          thus "g \<in> {g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}"
+            unfolding top1_loop_equiv_on_def
+            using \<open>top1_path_homotopic_on E TE e0 e0 (top1_constant_path e0) g\<close>
+                  hconst_loop hg_loop by (by100 blast)
+        next
+          assume "g \<in> {g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}"
+          hence "top1_loop_equiv_on E TE e0 (top1_constant_path e0) g" by (by100 blast)
+          hence "top1_path_homotopic_on E TE e0 e0 (top1_constant_path e0) g"
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          have "top1_path_homotopic_on E TE e0 e0 f g"
+            by (rule Lemma_51_1_path_homotopic_trans[OF hTE hf_nul
+                  \<open>top1_path_homotopic_on E TE e0 e0 (top1_constant_path e0) g\<close>])
+          have hg_loop: "top1_is_loop_on E TE e0 g"
+            using \<open>top1_loop_equiv_on E TE e0 (top1_constant_path e0) g\<close>
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          thus "g \<in> c" using hc_eq hf hg_loop
+            \<open>top1_path_homotopic_on E TE e0 e0 f g\<close>
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+        qed
+      qed
+      thus "c \<in> {top1_fundamental_group_id E TE e0}"
+        unfolding top1_fundamental_group_id_def by (by100 blast)
+    next
+      assume "c \<in> {top1_fundamental_group_id E TE e0}"
+      hence hc_id: "c = top1_fundamental_group_id E TE e0" by (by100 blast)
+      have "top1_is_loop_on E TE e0 (top1_constant_path e0)"
+        by (rule top1_constant_path_is_loop[OF hTE he0])
+      thus "c \<in> top1_fundamental_group_carrier E TE e0"
+        unfolding hc_id top1_fundamental_group_id_def top1_fundamental_group_carrier_def
+        by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 2: p_*(id_E) = id_B.\<close>
   have hind_id: "top1_fundamental_group_induced_on E TE e0 B TB b0 p
       (top1_fundamental_group_id E TE e0)
