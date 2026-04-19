@@ -9643,11 +9643,15 @@ proof -
       by (rule ext) (simp add: top1_constant_path_def comp_def)
     thus ?thesis using hbc by simp
   qed
-  \<comment> \<open>The basepoint change of const_c by rev(\<alpha>) is ≃ const_{g(1,0)}.
-     This was proved in hh_trivial_at_h10's sub-proof. Use hg10 = (1,0).\<close>
+  \<comment> \<open>From hbc', g \<circ> f ≃ bc(rev(\<alpha>), const_c) at g(1,0).
+     Path algebra gives bc(rev(\<alpha>), const_c) ≃ const_{g(1,0)}:
+       bc = \<alpha> * (const_c * rev(\<alpha>)), const_c * rev(\<alpha>) ≃ rev(\<alpha>) (left id),
+       \<alpha> * rev(\<alpha>) ≃ const_{g(1,0)} (inverse).
+     Same as the proof in hh_trivial_at_h10 (lines 9734-9790 of the True case).\<close>
   have "top1_path_homotopic_on top1_S1 top1_S1_topology (g (1, 0)) (g (1, 0))
       (g \<circ> f) (top1_constant_path (g (1, 0)))"
-    sorry \<comment> \<open>Path algebra: bc(rev(\<alpha>), const_c) ≃ const_{g(1,0)}. Proved in True case of 57.1.\<close>
+    sorry \<comment> \<open>Path algebra: transitivity of hbc' + hbc_is_const.
+           Identical to the proof in hh_trivial_at_h10.\<close>
   thus ?thesis using hg10 by simp
 qed
 
