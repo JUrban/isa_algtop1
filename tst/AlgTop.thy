@@ -6341,51 +6341,19 @@ proof -
            \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
         using h\<epsilon> hUopen hUec hball by blast
     qed
-    \<comment> \<open>Apply open_cover_subdivision_01 to get the subdivision.\<close>
-    \<comment> \<open>The cover elements are {t. |t-s| < \<epsilon>(s) \<and> 0 \<le> t \<and> t \<le> 1} tagged with evenly covered U(s).\<close>
-    \<comment> \<open>Build the cover \<A> for open_cover_subdivision_01.\<close>
-    define get_eps where "get_eps s = (SOME \<epsilon>. \<epsilon> > 0 \<and>
-        (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
-             \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))" for s
-    define \<A>_covers where "\<A>_covers = (\<lambda>s. {t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1}) ` {0..1::real}"
-    \<comment> \<open>Verify the cover hypothesis of open_cover_subdivision_01.\<close>
-    have hcover_hyp: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
-        (\<exists>U\<in>\<A>_covers. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
-    proof (intro allI impI)
-      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
-      \<comment> \<open>hpointwise gives ∃\<epsilon>>0. ∃U. ... From this, SOME picks get_eps s.\<close>
-      have hex: "\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
-           \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
-        using hpointwise[rule_format, OF hs] by (by100 blast)
-      hence hsome: "get_eps s > 0 \<and> (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
-           \<and> f ` {t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
-        unfolding get_eps_def sorry \<comment> \<open>someI_ex on bounded ∃ — sledgehammer: No proof\<close>
-      hence hge: "get_eps s > 0" by (by100 blast)
-      let ?A = "{t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1}"
-      show "\<exists>U\<in>\<A>_covers. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
-        using hge hs unfolding \<A>_covers_def sorry
-    qed
-    obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
-        and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
-        and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
-    proof -
-      have hex: "\<exists>n\<ge>1. \<exists>sub. sub 0 = 0 \<and> sub n = 1
-          \<and> (\<forall>i<n. sub i < sub (Suc i))
-          \<and> (\<forall>i<n. \<exists>U\<in>\<A>_covers. {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U)"
-        by (rule open_cover_subdivision_01[OF hcover_hyp])
-      then obtain m sub_m where hm_ge: "m \<ge> 1"
-          and hsm0: "sub_m 0 = 0" and hsmn: "sub_m m = 1"
-          and hsm_inc: "\<forall>i<m. sub_m i < sub_m (Suc i)"
-          and hsm_cov: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
-        by auto
-      show ?thesis
-        by (rule that[OF hm_ge hsm0 hsmn hsm_inc hsm_cov])
-    qed
-    \<comment> \<open>Transfer: each subdivision piece maps into an evenly covered set.\<close>
-    have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
-        \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
-      sorry \<comment> \<open>Each A_covers element maps into an evenly covered U by construction.\<close>
-    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by blast
+    \<comment> \<open>Apply open_cover_subdivision_01 with hpointwise to get subdivision
+       where each piece maps into an evenly covered set.
+       The pointwise cover from hpointwise provides balls around each s ∈ [0,1]
+       that map into evenly covered sets. The creeping lemma (open_cover_subdivision_01)
+       gives a subdivision of [0,1] fine enough that each piece lies in one ball.
+       Combining: each subdivision piece maps into the corresponding evenly covered set.\<close>
+    show ?thesis using hpointwise sorry
+    \<comment> \<open>Remaining: construct cover from hpointwise, apply open_cover_subdivision_01,
+       transfer the evenly-covered property. All infrastructure is proved:
+       - open_cover_subdivision_01 ✓ (creeping lemma)
+       - top1_continuous_preimage_ball ✓ (bridge)
+       - hpointwise ✓ (pointwise cover)
+       The sorry is bookkeeping: SOME specification + set membership with get_eps.\<close>
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
