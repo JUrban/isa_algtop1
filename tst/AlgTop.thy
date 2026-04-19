@@ -9553,10 +9553,44 @@ proof
     thus False using hh_star_nontrivial by blast
   next
     case False
-    \<comment> \<open>h(1,0) \<noteq> (1,0): WLOG rotation. Let \<rho> rotate h(1,0) to (1,0).
-       Then \<rho>\<circ>h is antipode-preserving, continuous, with (\<rho>\<circ>h)(1,0) = (1,0).
-       \<rho>\<circ>h nulhomotopic iff h nulhomotopic. Apply the True case to \<rho>\<circ>h.\<close>
-    thus False sorry
+    \<comment> \<open>h(1,0) \<noteq> (1,0): WLOG rotation. Let \<rho> rotate h(1,0) to (1,0).\<close>
+    \<comment> \<open>h(1,0) \<in> S^1, so h(1,0) = (cos \<theta>, sin \<theta>) for some \<theta>.
+       Rotation by -\<theta>: \<rho>(x,y) = (x cos\<theta> + y sin\<theta>, -x sin\<theta> + y cos\<theta>).
+       Then \<rho>(h(1,0)) = (cos^2\<theta> + sin^2\<theta>, 0) = (1,0).\<close>
+    have h10_S1: "(1::real,0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    have hh10: "h (1,0) \<in> top1_S1"
+      using assms(1) h10_S1 unfolding top1_continuous_map_on_def by (by100 blast)
+    let ?a = "fst (h (1, 0))" and ?b = "snd (h (1, 0))"
+    have hab_S1: "?a^2 + ?b^2 = 1" using hh10 unfolding top1_S1_def by (by100 auto)
+    \<comment> \<open>Define rotation \<rho>(x,y) = (ax+by, -bx+ay).\<close>
+    let ?\<rho> = "\<lambda>(x::real,y::real). (?a*x + ?b*y, -?b*x + ?a*y)"
+    have hrho_10: "?\<rho> (h (1,0)) = (1, 0)"
+      using hab_S1 by (simp add: prod_eq_iff case_prod_beta power2_eq_square algebra_simps)
+    \<comment> \<open>\<rho> commutes with negation: \<rho>(-x,-y) = -\<rho>(x,y).\<close>
+    have hrho_neg: "\<And>x y. ?\<rho> (-x,-y) = (- fst (?\<rho> (x,y)), - snd (?\<rho> (x,y)))"
+      by (by100 simp)
+    \<comment> \<open>\<rho>\<circ>h is continuous, antipode-preserving, nulhomotopic.\<close>
+    have "?\<rho> \<circ> h = (\<lambda>z. ?\<rho> (h z))" by (rule ext) (by100 simp)
+    have hrh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
+      sorry
+    have hrh_anti: "top1_antipode_preserving_S1 (?\<rho> \<circ> h)"
+      unfolding top1_antipode_preserving_S1_def
+    proof (intro allI)
+      fix x y
+      have "h (-x, -y) = (- fst (h (x,y)), - snd (h (x,y)))"
+        using assms(2) unfolding top1_antipode_preserving_S1_def by (by100 blast)
+      thus "(?\<rho> \<circ> h) (-x, -y) = (- fst ((?\<rho> \<circ> h) (x, y)), - snd ((?\<rho> \<circ> h) (x, y)))"
+        by (simp add: comp_def case_prod_beta algebra_simps)
+    qed
+    have hrh_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
+      sorry
+    have hrh_10: "(?\<rho> \<circ> h) (1, 0) = (1, 0)"
+      using hrho_10 by (by100 simp)
+    \<comment> \<open>Apply the True case to \<rho>\<circ>h: since (\<rho>\<circ>h)(1,0) = (1,0),
+       the hh_trivial_at_h10 argument gives (\<rho>\<circ>h)\<circ>f \<simeq> const for all loops f.
+       Then hh_star_nontrivial applied to \<rho>\<circ>h gives contradiction.\<close>
+    \<comment> \<open>TODO: need to re-derive hh_trivial_at_h10 for \<rho>\<circ>h using its nulhomotopy.\<close>
+    thus False using hrh_cont hrh_anti hrh_nul hrh_10 hh_star_nontrivial sorry
   qed
 qed
 
