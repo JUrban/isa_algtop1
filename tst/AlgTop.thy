@@ -8226,7 +8226,29 @@ proof -
       \<comment> \<open>c\<cdot>d contains the loop f*g, so it's the equivalence class of f*g.\<close>
       have "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
           = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) (top1_path_product f g) h}"
-        sorry
+      proof -
+        \<comment> \<open>c = {g'. equiv f g'} for some canonical representative. f \<in> c, so this class = {g'. equiv f g'}.\<close>
+        \<comment> \<open>Similarly d = {g'. equiv g g'}.\<close>
+        \<comment> \<open>mul c d = {h | \<exists>f'\<in>c, g'\<in>d. equiv (f'*g') h}.\<close>
+        \<comment> \<open>Since f' \<in> c implies f' \<simeq> f, and g' \<in> d implies g' \<simeq> g,
+           f'*g' \<simeq> f*g by product-homotopy. So equiv (f'*g') h iff equiv (f*g) h.\<close>
+        have hf_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) f"
+          using hfl unfolding top1_is_loop_on_def .
+        have hg_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) g"
+          using hgl unfolding top1_is_loop_on_def .
+        \<comment> \<open>Get equivalence class characterizations for c and d.\<close>
+        obtain f0 where hc_eq: "c = {g'. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f0 g'}"
+          using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+        obtain g0 where hd_eq: "d = {g'. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g0 g'}"
+          using hd unfolding top1_fundamental_group_carrier_def by (by100 auto)
+        have hf0_f: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f0 f"
+          using hf_in_c hc_eq by simp
+        have hg0_g: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g0 g"
+          using hg_in_d hd_eq by simp
+        show ?thesis
+          unfolding top1_fundamental_group_mul_def
+          sorry
+      qed
       moreover have "\<dots> \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
         unfolding top1_fundamental_group_carrier_def using hfg_loop by (by100 blast)
       ultimately show ?thesis by simp
