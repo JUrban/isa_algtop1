@@ -4504,7 +4504,71 @@ proof -
       hence hsin: "sin (2 * pi * x) > 0"
         unfolding top1_R_to_S1_def top1_S1_arc_N_def by (by100 auto)
       \<comment> \<open>sin(2\<pi>x) > 0 iff 2\<pi>x \<in> (2k\<pi>, (2k+1)\<pi>) iff x \<in> (k, k + 1/2) for some integer k.\<close>
-      show "x \<in> \<Union>?\<V>" sorry
+      \<comment> \<open>Let n = floor(x). Then x - n \<in> [0,1) and sin(2\<pi>(x-n)) = sin(2\<pi>x) > 0.
+         On [0,1), sin(2\<pi>t) > 0 iff t \<in> (0, 1/2). So x \<in> (n, n+1/2).\<close>
+      define n where "n = \<lfloor>x\<rfloor>"
+      have hn_le: "of_int n \<le> x" and hx_lt: "x < of_int n + 1"
+        unfolding n_def by linarith+
+      have hfrac: "x - of_int n \<ge> 0" "x - of_int n < 1" using hn_le hx_lt by linarith+
+      \<comment> \<open>sin(2\<pi>(x-n)) = sin(2\<pi>x) by periodicity.\<close>
+      have hshift: "sin (2 * pi * (x - of_int n)) = sin (2 * pi * x)"
+      proof -
+        have "top1_R_to_S1 x = top1_R_to_S1 (x - of_int n)"
+          using top1_R_to_S1_int_shift_early[of "x - of_int n" n] by simp
+        hence "snd (top1_R_to_S1 x) = snd (top1_R_to_S1 (x - of_int n))" by simp
+        thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+      qed
+      \<comment> \<open>sin(2\<pi>(x-n)) > 0 with x-n \<in> [0,1). On [0,1): sin(2\<pi>t) > 0 iff t \<in> (0, 1/2).
+         sin(2\<pi>t) = 0 at t=0 and t=1/2; sin(2\<pi>t) > 0 on (0, 1/2); sin(2\<pi>t) < 0 on (1/2, 1).\<close>
+      have hfrac_pos: "sin (2 * pi * (x - of_int n)) > 0" using hsin hshift by (by100 linarith)
+      have hfrac_gt: "x - of_int n > 0"
+      proof (rule ccontr)
+        assume "\<not> x - of_int n > 0"
+        hence "x - of_int n = 0" using hfrac by (by100 linarith)
+        hence "sin (2 * pi * (x - of_int n)) = 0" by simp
+        thus False using hfrac_pos by (by100 linarith)
+      qed
+      have hfrac_lt: "x - of_int n < 1/2"
+      proof (rule ccontr)
+        assume "\<not> x - of_int n < 1/2"
+        hence hge: "x - of_int n \<ge> 1/2" by (by100 linarith)
+        show False
+        proof (cases "x - of_int n = 1/2")
+          case True
+          have "x - of_int n = 1/2" using True .
+          hence h12: "x - of_int n = 1/2" .
+          have "2 * pi * (x - of_int n) = 2 * pi * (1/2::real)" using h12 by simp
+          hence "sin (2 * pi * (x - of_int n)) = sin (pi * (2 * (1/2)))" by (simp add: algebra_simps)
+          also have "pi * (2 * (1/2::real)) = pi" by simp
+          also have "sin pi = 0" by simp
+          finally have "sin (2 * pi * (x - of_int n)) = 0" .
+          thus False using hfrac_pos by (by100 linarith)
+        next
+          case False
+          hence hgt: "x - of_int n > 1/2" using hge by (by100 linarith)
+          \<comment> \<open>On (1/2, 1), sin(2\<pi>t) < 0.\<close>
+          have hpi_lt: "pi < 2 * pi * (x - of_int n)"
+          proof -
+            have "pi = pi * (2 * (1/2::real))" by simp
+            also have "\<dots> = 2 * pi * (1/2::real)" by (simp add: algebra_simps)
+            also have "\<dots> < 2 * pi * (x - of_int n)"
+              using hgt pi_gt_zero by (by100 simp)
+            finally show ?thesis .
+          qed
+          have h2pi_gt: "2 * pi * (x - of_int n) < 2 * pi"
+          proof -
+            have "2 * pi * (x - of_int n) < 2 * pi * 1"
+              using hfrac pi_gt_zero by (by100 simp)
+            thus ?thesis by simp
+          qed
+          have "sin (2 * pi * (x - of_int n)) < 0"
+            by (rule sin_lt_zero[OF hpi_lt h2pi_gt])
+          thus False using hfrac_pos by (by100 linarith)
+        qed
+      qed
+      have "x \<in> {x::real. of_int n < x \<and> x < of_int n + 1/2}"
+        using hfrac_gt hfrac_lt by (by100 simp)
+      thus "x \<in> \<Union>?\<V>" by (by100 blast)
     next
       fix x :: real
       assume "x \<in> \<Union>?\<V>"
@@ -4522,7 +4586,16 @@ proof -
       ultimately have hsin: "sin (2 * pi * x - 2 * of_int n * pi) > 0"
         by (intro sin_gt_zero) (simp add: algebra_simps)+
       \<comment> \<open>sin(2\<pi>x) = sin(2\<pi>(x-n)) > 0 from hsin and periodicity.\<close>
-      have "sin (2 * pi * x) > 0" using hsin sorry
+      have hshift: "top1_R_to_S1 x = top1_R_to_S1 (x - of_int n)"
+        using top1_R_to_S1_int_shift_early[of "x - of_int n" n] by simp
+      have "sin (2 * pi * x) = sin (2 * pi * (x - of_int n))"
+      proof -
+        have "snd (top1_R_to_S1 x) = snd (top1_R_to_S1 (x - of_int n))" using hshift by simp
+        thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+      qed
+      also have "\<dots> = sin (2 * pi * x - 2 * of_int n * pi)"
+        by (simp add: algebra_simps)
+      finally have "sin (2 * pi * x) > 0" using hsin by (by100 linarith)
       moreover have "cos (2 * pi * x) ^ 2 + sin (2 * pi * x) ^ 2 = 1" by (rule sin_cos_squared_add2)
       ultimately show "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N}"
         unfolding top1_R_to_S1_def top1_S1_arc_N_def by (by100 auto)
