@@ -6366,7 +6366,34 @@ proof -
     \<comment> \<open>Induction on k: at each step, extend the lift by one interval.\<close>
     have "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
         \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
-      sorry \<comment> \<open>Induction: base k=0 trivial, step uses evenly-covered inverse.\<close>
+    proof (intro allI impI)
+      fix k show "k \<le> n \<Longrightarrow> \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
+          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
+      proof (induction k)
+        case 0
+        \<comment> \<open>Base: sub 0 = 0. Only s = 0 satisfies s \<le> 0, and ftk 0 = e0.\<close>
+        show ?case
+          apply (intro exI[of _ "\<lambda>_. e0"] conjI)
+          using he0 hpe0 hsub0
+          sorry
+      next
+        case (Suc k)
+        \<comment> \<open>IH: \<exists>ftk on [0, sub k]. Extend to [0, sub(Suc k)].\<close>
+        have hk_le: "k \<le> n" using Suc.prems by simp
+        obtain ftk where hftk0: "ftk 0 = e0"
+            and hftk_E: "\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E"
+            and hftkp: "\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s"
+          using Suc.IH[OF hk_le] by (by100 blast)
+        \<comment> \<open>f maps [sub k, sub(Suc k)] into some evenly covered U.\<close>
+        have hSk_lt: "k < n" using Suc.prems by simp
+        obtain U where hUo: "openin_on B TB U"
+            and hUec: "top1_evenly_covered_on E TE B TB p U"
+            and hfU: "f ` {s\<in>I_set. sub k \<le> s \<and> s \<le> sub (Suc k)} \<subseteq> U"
+          using hcovered[rule_format, OF hSk_lt] by (by100 blast)
+        \<comment> \<open>Extend ftk using the inverse of p on the appropriate slice.\<close>
+        show ?case sorry
+      qed
+    qed
     hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
         \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
     proof -
