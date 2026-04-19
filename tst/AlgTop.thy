@@ -7824,7 +7824,56 @@ lemma fundamental_group_mul_eq_class:
       and hfl: "top1_is_loop_on X TX x0 f" and hgl: "top1_is_loop_on X TX x0 g"
   shows "top1_fundamental_group_mul X TX x0 c d
       = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
-  sorry
+proof -
+  have hf_path: "top1_is_path_on X TX x0 x0 f" using hfl unfolding top1_is_loop_on_def .
+  have hg_path: "top1_is_path_on X TX x0 x0 g" using hgl unfolding top1_is_loop_on_def .
+  have hfg_loop: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+    unfolding top1_is_loop_on_def by (rule top1_path_product_is_path[OF hTX hf_path hg_path])
+  \<comment> \<open>(\<subseteq>): if h \<in> mul c d, then \<exists>f'\<in>c, g'\<in>d with equiv(f'*g') h.
+     f'≃f and g'≃g, so f'*g'≃f*g, hence equiv(f*g) h.\<close>
+  have hsub1: "top1_fundamental_group_mul X TX x0 c d
+      \<subseteq> {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+  proof
+    fix h assume hh: "h \<in> top1_fundamental_group_mul X TX x0 c d"
+    then obtain f' g' where hf': "f' \<in> c" and hg': "g' \<in> d"
+        and hfg'h: "top1_loop_equiv_on X TX x0 (top1_path_product f' g') h"
+      unfolding top1_fundamental_group_mul_def by (by100 blast)
+    have hf'_f: "top1_loop_equiv_on X TX x0 f' f"
+      by (rule fundamental_group_class_members_equiv[OF hTX hc hf' hf])
+    have hg'_g: "top1_loop_equiv_on X TX x0 g' g"
+      by (rule fundamental_group_class_members_equiv[OF hTX hd hg' hg])
+    have hf'_f_hom: "top1_path_homotopic_on X TX x0 x0 f' f"
+      using hf'_f unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hg'_g_hom: "top1_path_homotopic_on X TX x0 x0 g' g"
+      using hg'_g unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hf'_path: "top1_is_path_on X TX x0 x0 f'"
+      using hf'_f unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+    have hg'_path: "top1_is_path_on X TX x0 x0 g'"
+      using hg'_g unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+    have hf'g'_fg: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product f' g') (top1_path_product f g)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX
+          path_homotopic_product_left[OF hTX hf'_f_hom hg'_path]
+          path_homotopic_product_right[OF hTX hg'_g_hom hf_path]])
+    have hf'g'_loop: "top1_is_loop_on X TX x0 (top1_path_product f' g')"
+      unfolding top1_is_loop_on_def by (rule top1_path_product_is_path[OF hTX hf'_path hg'_path])
+    have hfg_f'g': "top1_loop_equiv_on X TX x0 (top1_path_product f g) (top1_path_product f' g')"
+      unfolding top1_loop_equiv_on_def using hfg_loop hf'g'_loop
+        Lemma_51_1_path_homotopic_sym[OF hf'g'_fg] by (by100 blast)
+    show "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+      using top1_loop_equiv_on_trans[OF hTX hfg_f'g' hfg'h] by simp
+  qed
+  \<comment> \<open>(\<supseteq>): if equiv(f*g) h, take f'=f, g'=g.\<close>
+  have hsub2: "{h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}
+      \<subseteq> top1_fundamental_group_mul X TX x0 c d"
+  proof
+    fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+    hence hh: "top1_loop_equiv_on X TX x0 (top1_path_product f g) h" by simp
+    show "h \<in> top1_fundamental_group_mul X TX x0 c d"
+      unfolding top1_fundamental_group_mul_def using hh hf hg by (by100 blast)
+  qed
+  show ?thesis using hsub1 hsub2 by (by100 blast)
+qed
 
 (** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z.
     Munkres' proof: use covering p: R \<rightarrow> S^1 (Theorem 53.1). Since R is simply
