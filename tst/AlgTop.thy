@@ -15472,8 +15472,11 @@ proof (rule ccontr)
   have h_pi1_X_trivial: "top1_simply_connected_on ?X
       (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
   \<comment> \<open>But X = S^2 - {a, b} \<cong> R^2 - {0} which has nontrivial \<pi>_1.\<close>
-  have ha_S2: "a \<in> top1_S2" sorry
-  have hb_S2: "b \<in> top1_S2" sorry
+  have hC_sub: "C \<subseteq> top1_S2" using hC sorry
+  have ha_S2: "a \<in> top1_S2"
+    using hab hC_decomp hC_sub by (by100 blast)
+  have hb_S2: "b \<in> top1_S2"
+    using hab hC_decomp hC_sub by (by100 blast)
   have h_pi1_X_nontrivial: "\<not> top1_simply_connected_on ?X
       (subspace_topology top1_S2 top1_S2_topology ?X)"
     by (rule S2_minus_two_points_not_simply_connected[OF ha_S2 hb_S2 hab_ne])
