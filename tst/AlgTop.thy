@@ -11516,7 +11516,51 @@ proof
       using hnul_S1' hp0_loop by (by100 blast)
     \<comment> \<open>This contradicts the nontriviality of the n-fold winding on S^1.\<close>
     \<comment> \<open>Using the covering map R \<rightarrow> S^1: lift of n-fold winding ends at n \<noteq> 0.\<close>
-    show False sorry
+    \<comment> \<open>Transfer to real S^1 via (Re,Im): the n-fold winding on real S^1 is
+       w_n(s) = top1_R_to_S1(ns) = (cos 2\<pi>ns, sin 2\<pi>ns).
+       If cis(2\<pi>ns) \<simeq> const on S^1_complex, then w_n \<simeq> const on S^1.
+       But lift of w_n via covering R \<rightarrow> S^1 is s \<mapsto> ns, ending at n.
+       Lift of const is s \<mapsto> 0, ending at 0. By Theorem 54.3, n = 0. Contradiction.\<close>
+    \<comment> \<open>The n-fold winding on real S^1.\<close>
+    let ?wn = "\<lambda>s. top1_R_to_S1 (real n * s)"
+    \<comment> \<open>w_n is a loop at (1,0) on S^1.\<close>
+    have hwn_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?wn"
+      sorry
+    \<comment> \<open>If cis(2\<pi>ns) \<simeq> const_1 on S^1_complex, transfer to: w_n \<simeq> const on S^1.\<close>
+    have hwn_const: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        ?wn (top1_constant_path (1, 0))"
+      sorry
+    \<comment> \<open>Lift of w_n from 0: s \<mapsto> n*s, a path in R from 0 to n.\<close>
+    have hft_wn: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (real n) (\<lambda>s. real n * s)"
+      sorry
+    have hft_wn_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (real n * s) = ?wn s" by simp
+    \<comment> \<open>Lift of const from 0: s \<mapsto> 0, a path in R from 0 to 0.\<close>
+    have hft_const: "top1_is_path_on (UNIV::real set) top1_open_sets 0 0 (\<lambda>_. 0::real)"
+      sorry
+    have hft_const_lift: "\<forall>s\<in>I_set. top1_R_to_S1 ((\<lambda>_. 0::real) s) = top1_constant_path (1, 0) s"
+      unfolding top1_constant_path_def top1_R_to_S1_def by simp
+    \<comment> \<open>By Theorem 54.3: lifts of homotopic paths from same start have same endpoint.\<close>
+    have hTS1': "is_topology_on top1_S1 top1_S1_topology"
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+              simplified]]) simp
+    have hcov': "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      by (rule Theorem_53_1)
+    have hp0': "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+    have h0R': "(0::real) \<in> (UNIV::real set)" by simp
+    have h10S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    have hwn_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?wn"
+      using hwn_loop unfolding top1_is_loop_on_def .
+    have hconst_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0))"
+      using top1_constant_path_is_loop[OF hTS1' h10S1] unfolding top1_is_loop_on_def .
+    have "real n = (0::real)"
+      using conjunct1[OF Theorem_54_3[OF hcov'
+        top1_open_sets_is_topology_on_UNIV hTS1' h0R' hp0'
+        hwn_path hconst_path hwn_const
+        hft_wn hft_wn_lift hft_const hft_const_lift]] .
+    thus False using hn by simp
   qed
   show False using hnul_S1 hnontrivial by (by100 blast)
 qed
