@@ -6286,13 +6286,34 @@ proof -
        that map into evenly covered sets. The creeping lemma (open_cover_subdivision_01)
        gives a subdivision of [0,1] fine enough that each piece lies in one ball.
        Combining: each subdivision piece maps into the corresponding evenly covered set.\<close>
-    show ?thesis using hpointwise sorry
-    \<comment> \<open>Remaining: construct cover from hpointwise, apply open_cover_subdivision_01,
-       transfer the evenly-covered property. All infrastructure is proved:
-       - open_cover_subdivision_01 ✓ (creeping lemma)
-       - top1_continuous_preimage_ball ✓ (bridge)
-       - hpointwise ✓ (pointwise cover)
-       The sorry is bookkeeping: SOME specification + set membership with get_eps.\<close>
+    \<comment> \<open>Use SOME to pick \<epsilon>(s) for each s, then build cover.\<close>
+    define eps_fn where "eps_fn s = (SOME \<epsilon>. \<epsilon> > 0 \<and>
+        (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+             \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))" for s
+    have heps_spec: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> eps_fn s > 0 \<and>
+        (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+             \<and> f ` {t. \<bar>t - s\<bar> < eps_fn s \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+    proof (intro allI impI)
+      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+      have "\<exists>\<epsilon>. \<epsilon> > 0 \<and> (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+           \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+        using hpointwise[rule_format, OF hs] by (by100 blast)
+      thus "eps_fn s > 0 \<and> (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+           \<and> f ` {t. \<bar>t - s\<bar> < eps_fn s \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+        unfolding eps_fn_def by (rule someI_ex)
+    qed
+    define \<A>c where "\<A>c = (\<lambda>s. {t. \<bar>t - s\<bar> < eps_fn s \<and> 0 \<le> t \<and> t \<le> 1}) ` {0..1::real}"
+    have hcov_hyp: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
+        (\<exists>U\<in>\<A>c. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
+      sorry
+    obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
+        and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
+        and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>c. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
+      using open_cover_subdivision_01[OF hcov_hyp] by auto
+    have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
+      sorry
+    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by (by100 blast)
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
