@@ -15437,7 +15437,7 @@ proof -
     have hmul_id: "top1_fundamental_group_mul B TB b0
         (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)
         = top1_fundamental_group_id B TB b0"
-      sorry \<comment> \<open>Product of identity class with itself = identity class.\<close>
+      sorry \<comment> \<open>const*const ≃ const (left identity). Needs Theorem_51_2_left_identity.\<close>
     show ?thesis using hinvg_id hmul_id by simp
   qed
   have hRHS: "\<exists>c\<in>top1_fundamental_group_carrier B TB b0.

@@ -1,10 +1,10 @@
 # Priorities and Issues for AlgTop Formalization
 
-## A. Statement/Definitional Fixes Needed
+## A. Statement/Definitional Fixes — ALL DONE
 
 ### A1. Theorem_80_1_universal_unique: Missing basepoint membership — **DONE**
-### A2. Theorem_57_1 (Borsuk-Ulam): WLOG rotation — **DONE** (case split + rotation)
-### A3. `top1_separates_on` definition: No C ⊆ X condition (COSMETIC, low priority)
+### A2. Theorem_57_1 (Borsuk-Ulam): WLOG rotation — **DONE**
+### A3. `top1_separates_on`: No C ⊆ X condition (COSMETIC, low priority)
 
 ---
 
@@ -12,61 +12,60 @@
 
 ### B1. π₁(S¹) ≅ ℤ as a group isomorphism (HIGHEST PRIORITY)
 
-**Status:** Bijection proved (φ = floor ∘ lifting correspondence). Homomorphism sorry remains.
-**Recent progress:**
-- Proved `top1_R_to_S1_int_shift`: p(x + n) = p(x) for integer n
-- Proved φ bijective via `bij_betw_trans` (floor on Z is bijective)
-- Proved assembly (exists iso with bij + hom)
-- Added translated-lift helper lemmas
+**Status:** Bijection proved. Assembly proved. Homomorphism sorry remains.
 **What's still needed:**
 - Homomorphism: φ(c·d) = φ(c) + φ(d) via translated-lift concatenation
+- Key helper available: `top1_R_to_S1_int_shift` (periodicity)
 
 ### B2. Covering space path lifting (Lemma 54.1)
 
-**Status:** Proof sketch expanded with Lebesgue subdivision comments.
-**What's needed:** Lebesgue number argument + interval-by-interval lift construction.
+**Status:** Proof sketch expanded. Lebesgue subdivision + lift construction sorry'd.
 
 ### B3. R → S¹ is a covering map (Theorem 53.1)
 
-**Status:** arc_E fully proved (220 lines). 3 symmetric arcs (N, W, S) remain sorry'd.
-**What's needed:** Replicate arc_E proof with adapted coordinates.
+**Status:**
+- arc_E: FULLY PROVED (220 lines)
+- arc_N: openness ✓, V_open ✓, V_disj ✓, V_union ✓, V_homeo sorry
+- arc_W: openness ✓, V_open ✓, V_disj ✓, V_union sorry, V_homeo sorry
+- arc_S: openness ✓, V_open ✓, V_disj ✓, V_union sorry, V_homeo sorry
 
-### B4. `hh_star_trivial` from nulhomotopy (Theorem 57.1) — **DONE** for h(1,0)=(1,0) case
+### B4. `hh_star_trivial` / `nulhomotopic_trivializes_loops` — **FULLY PROVED**
 
 ### B5. Lemma_55_3 forward (nulhomotopic → B² extension)
 
-**Status:** Construction k(y) = H(y/|y|, 1-|y|) defined. k extends h proved.
-**What's needed:** k is continuous (composition on B²-{0}, limit at 0).
+**Status:** k extends h proved. k continuous sorry.
 
-### B6. Simply connected covering image = trivial (§80)
+### B6. Simply connected covering image = trivial — **FULLY PROVED**
 
-**Status:** carrier = {id} proved. p_*(id_E) = id_B forward direction needs
-  continuous_preserves + transitivity. Backward direction done.
-**Used by:** Theorem_80_1_universal_unique (hH_trivial, hH'_trivial now proved via this lemma).
+### B7. Theorem_80_1 universal uniqueness
 
----
-
-## C. Verified Correct (No Fixes Needed)
-
-- All definitions match Munkres.
-- FTA Steps 3-4, Theorem_58_7: Fully proved.
-- Type separation (complex vs real×real): Deliberate design choice.
-- Z group definitions moved before §54 (resolved forward reference).
+**Status:** hH_trivial/hH'_trivial ✓ (via B6). Assembly ✓.
+Two algebraic sorries remain: invg(id) = id and mul(id,id) = id.
 
 ---
 
-## D. Recommended Work Order
+## C. Fully Proved Lemmas (no sorries)
 
-1. ~~Fix A1~~ — **DONE**
-2. ~~Fix A2~~ — **DONE**
-3. ~~Prove B4~~ — **DONE**
-4. ~~Prove Theorem_53_2~~ — **DONE**
-5. ~~Prove φ bijective in Theorem_54_5_iso~~ — **DONE**
-6. ~~Prove k extends h in Lemma_55_3~~ — **DONE**
-7. ~~Prove π₁ carrier singleton (simply_connected_trivial_image)~~ — **DONE**
-8. **Prove B3 arcs** (N, W, S) — symmetric to arc_E
-9. **Prove B2** (path lifting) — Lebesgue number argument
-10. **Prove B1 homomorphism** — translated-lift concatenation
-11. **Close B6 forward direction** — continuous_preserves_path_homotopic application
+- `top1_R_to_S1_int_shift` / `_int_shift'` / `_translate_lift`
+- `nulhomotopic_trivializes_loops`
+- `simply_connected_trivial_image`
+- `top1_S1_fundamental_group_nontrivial`
+- `Theorem_54_5` (bijection)
+- `Lemma_54_1_uniqueness`
+- `Theorem_54_3` (path-homotopic paths lift to path-homotopic)
+- `continuous_preserves_path_homotopic`
+- `Corollary_59_2`
+- `top1_Z_is_abelian_group`
+- All FTA Steps 3-4, Theorem_58_7
 
-**Current sorry count: 163**
+---
+
+## D. Work Order
+
+1-7: DONE (see above)
+8. **Close arc_W/S V_union** — same trig analysis as arc_N
+9. **Close arc V_homeo** — needs inverse construction per arc
+10. **Close B1 homomorphism** — translated-lift concatenation
+11. **Close B2 (path lifting)** — Lebesgue number argument
+
+**Current sorry count: 164**
