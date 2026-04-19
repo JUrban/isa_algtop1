@@ -6393,7 +6393,23 @@ proof -
         \<comment> \<open>Extend ftk using the inverse of p on the appropriate slice.\<close>
         \<comment> \<open>ftk(sub k) \<in> E, p(ftk(sub k)) = f(sub k) \<in> U.\<close>
         have hsub_mono: "\<And>i j. i \<le> j \<Longrightarrow> j \<le> n \<Longrightarrow> sub i \<le> sub j"
-          sorry \<comment> \<open>Standard: strict increasing \<Rightarrow> monotone (induction on j-i).\<close>
+        proof -
+          fix i j :: nat assume hij: "i \<le> j" and hjn: "j \<le> n"
+          show "sub i \<le> sub j" using hij hjn
+          proof (induction "j - i" arbitrary: j)
+            case 0 thus ?case by simp
+          next
+            case (Suc d)
+            hence hj_pos: "j > 0" by simp
+            obtain j' where hj': "j = Suc j'" using hj_pos by (cases j) auto
+            have "i \<le> j'" using Suc.hyps hj' by simp
+            have "j' \<le> n" using Suc.prems hj' by simp
+            have "d = j' - i" using Suc.hyps hj' by simp
+            have "sub i \<le> sub j'" using Suc.hyps(1)[OF \<open>d = j' - i\<close> \<open>i \<le> j'\<close> \<open>j' \<le> n\<close>] .
+            also have "sub j' < sub (Suc j')" using hsub_inc \<open>j' \<le> n\<close> Suc.prems hj' by auto
+            finally show ?case using hj' by simp
+          qed
+        qed
         have hsubk_I: "sub k \<in> I_set"
         proof -
           have "0 \<le> sub k" using hsub_mono[of 0 k] hk_le hsub0 by simp
