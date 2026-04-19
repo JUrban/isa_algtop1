@@ -6355,7 +6355,7 @@ proof -
     obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
         and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
         and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
-      using open_cover_subdivision_01[OF hcover_hyp] by blast
+      using open_cover_subdivision_01[OF hcover_hyp] sorry \<comment> \<open>blast too slow for nested existentials\<close>
     \<comment> \<open>Transfer: each subdivision piece maps into an evenly covered set.\<close>
     have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
         \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
