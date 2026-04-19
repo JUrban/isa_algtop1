@@ -9766,9 +9766,13 @@ proof
   proof (intro allI impI)
     fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
     have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
-      sorry \<comment> \<open>Subspace topology is topology.\<close>
+      unfolding top1_S1_complex_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+         (simp add: top1_S1_complex_def)
     have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
-      sorry
+      unfolding top1_C_minus_0_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+         (simp add: top1_C_minus_0_def)
     have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
         top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
       sorry \<comment> \<open>z^n maps S^1 to S^1 \<subseteq> C-{0}, continuous.\<close>
