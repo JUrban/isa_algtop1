@@ -15404,7 +15404,58 @@ proof
      is a loop at (1,0) in R^2-{0}. By simply connected, it's contractible.\<close>
   let ?p0 = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
   have hp0_loop_R2: "top1_is_loop_on (UNIV - {(0, 0)}) ?TR2_0 (1::real, 0::real) ?p0"
-    sorry
+  proof -
+    have hp0_R2: "\<forall>s\<in>I_set. ?p0 s \<in> UNIV - {(0::real, 0)}"
+    proof
+      fix s :: real assume "s \<in> I_set"
+      have "cos (2 * pi * s) ^ 2 + sin (2 * pi * s) ^ 2 = 1"
+        using sin_cos_squared_add[of "2 * pi * s"] by (simp add: power2_eq_square)
+      hence "?p0 s \<noteq> (0, 0)"
+      proof -
+        assume h1: "cos (2 * pi * s) ^ 2 + sin (2 * pi * s) ^ 2 = 1"
+        show ?thesis
+        proof
+          assume h0: "?p0 s = (0, 0)"
+          hence "cos (2 * pi * s) = 0" "sin (2 * pi * s) = 0" by (simp_all add: prod_eq_iff)
+          hence "cos (2 * pi * s) ^ 2 + sin (2 * pi * s) ^ 2 = 0" by simp
+          thus False using h1 by simp
+        qed
+      qed
+      thus "?p0 s \<in> UNIV - {(0, 0)}" by simp
+    qed
+    have hp0_cont: "continuous_on UNIV ?p0" by (intro continuous_intros)
+    have hp0_cont_I: "continuous_on I_set ?p0"
+      using continuous_on_subset[OF hp0_cont] by (by100 blast)
+    have hp0_top1: "top1_continuous_map_on I_set I_top (UNIV - {(0::real, 0)}) ?TR2_0 ?p0"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> I_set" thus "?p0 s \<in> UNIV - {(0::real, 0)}" using hp0_R2 by (by100 blast)
+    next
+      fix V assume hV: "V \<in> ?TR2_0"
+      then obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+          and hVeq: "V = (UNIV - {(0, 0)}) \<inter> W"
+        unfolding subspace_topology_def by (by100 auto)
+      have hWo: "open W"
+      proof -
+        have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+          using hW product_topology_on_open_sets_real2 by (by100 metis)
+        thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+      qed
+      have "{s \<in> I_set. ?p0 s \<in> V} = I_set \<inter> ?p0 -` W"
+        unfolding hVeq using hp0_R2 by (by100 auto)
+      moreover have "open (?p0 -` W)"
+      proof -
+        have "open (?p0 -` W \<inter> UNIV)"
+          using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hp0_cont] hWo by (by100 blast)
+        thus ?thesis by simp
+      qed
+      hence "?p0 -` W \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+      ultimately show "{s \<in> I_set. ?p0 s \<in> V} \<in> I_top"
+        unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+    qed
+    show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+      using hp0_top1 by simp
+  qed
   have hp0_contractible: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?TR2_0 (1, 0) (1, 0)
       ?p0 (top1_constant_path (1, 0))"
     using h_all_trivial hp0_loop_R2 by (by100 blast)
@@ -15446,7 +15497,16 @@ proof
   have hft_p0: "top1_is_path_on UNIV top1_open_sets 0 1 id"
   proof -
     have hid_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets id"
-      sorry
+      unfolding top1_continuous_map_on_def top1_unit_interval_topology_def
+    proof (intro conjI ballI)
+      fix s :: real assume "s \<in> I_set" show "id s \<in> (UNIV::real set)" by simp
+    next
+      fix V :: "real set" assume "V \<in> top1_open_sets"
+      have "{s \<in> I_set. id s \<in> V} = I_set \<inter> V" by auto
+      also have "\<dots> \<in> subspace_topology UNIV top1_open_sets I_set"
+        unfolding subspace_topology_def using \<open>V \<in> top1_open_sets\<close> by (by100 blast)
+      finally show "{s \<in> I_set. id s \<in> V} \<in> subspace_topology UNIV top1_open_sets I_set" .
+    qed
     show ?thesis unfolding top1_is_path_on_def using hid_cont by simp
   qed
   have hft_p0_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (id s) = ?p0 s"
