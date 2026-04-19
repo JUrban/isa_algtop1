@@ -6101,7 +6101,33 @@ proof -
   have hM_A: "M \<in> A" sorry \<comment> \<open>Closed step: approach from below.\<close>
   \<comment> \<open>M = 1 (open step): if M < 1, M is in some open U, so M + \<epsilon> \<in> A for small \<epsilon> > 0.
      But M = sup A, contradiction.\<close>
-  have hM_1: "M = 1" sorry \<comment> \<open>Open step: extend beyond M.\<close>
+  have hM_1: "M = 1"
+  proof (rule ccontr)
+    assume "M \<noteq> 1" hence hM_lt1: "M < 1" using hM_le1 by linarith
+    \<comment> \<open>M \<in> [0,1), so M is in some open U with Ball(M, \<epsilon>) \<subseteq> U.\<close>
+    obtain UM epsM where hUM: "UM \<in> \<A>" and hepsM: "epsM > 0"
+        and hballM: "{t. \<bar>t - M\<bar> < epsM \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> UM"
+      using assms[rule_format, of M] hM_ge0 hM_lt1 by auto
+    \<comment> \<open>Since M \<in> A, extend the subdivision to M + epsM/2.\<close>
+    define M' where "M' = min (M + epsM / 2) 1"
+    have hM'_gt_M: "M' > M" unfolding M'_def using hepsM hM_lt1 by linarith
+    have hM'_le1: "M' \<le> 1" unfolding M'_def by linarith
+    have hM'_ge0: "M' \<ge> 0" using hM_ge0 hM'_gt_M by linarith
+    \<comment> \<open>[M, M'] \<subseteq> UM.\<close>
+    have hMM': "{t. M \<le> t \<and> t \<le> M' \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> UM"
+    proof
+      fix t assume "t \<in> {t. M \<le> t \<and> t \<le> M' \<and> 0 \<le> t \<and> t \<le> 1}"
+      hence "M \<le> t" "t \<le> M'" "0 \<le> t" "t \<le> 1" by auto
+      hence "\<bar>t - M\<bar> < epsM" unfolding M'_def using hepsM by auto
+      thus "t \<in> UM" using hballM \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by auto
+    qed
+    \<comment> \<open>M' \<in> A by extending the subdivision of [0,M] with [M, M'].\<close>
+    have "M' \<in> A" using hM_A hUM hMM' hM'_gt_M hM'_le1 hM'_ge0
+      sorry \<comment> \<open>Extend subdivision: append [M, M'] to existing subdiv of [0,M].\<close>
+    \<comment> \<open>But M' > M = Sup A, contradicting M' \<in> A.\<close>
+    hence "M' \<le> M" unfolding M_def using hbdd by (intro cSup_upper) auto
+    thus False using hM'_gt_M by linarith
+  qed
   \<comment> \<open>From M = 1 and M \<in> A, extract the subdivision.\<close>
   show ?thesis using hM_A hM_1 unfolding A_def sorry
 qed
