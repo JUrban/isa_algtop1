@@ -6242,6 +6242,35 @@ proof -
   show ?thesis using hn hsub0 hsubn hinc hcov_sub by blast
 qed
 
+text \<open>Bridge: if f: [0,1] → B is continuous (in top1 sense) and V ∈ TB is open,
+  then for each s with f(s) ∈ V, there exists ε > 0 with f(Ball(s,ε) ∩ [0,1]) ⊆ V.\<close>
+lemma top1_continuous_preimage_ball:
+  assumes hf: "top1_continuous_map_on I_set I_top B TB f"
+      and hV: "V \<in> TB" and hs: "s \<in> I_set" and hfs: "f s \<in> V"
+  shows "\<exists>\<epsilon>>0. f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+proof -
+  have hpre: "{s \<in> I_set. f s \<in> V} \<in> I_top"
+    using hf hV unfolding top1_continuous_map_on_def by (by100 blast)
+  \<comment> \<open>I_top = subspace_topology UNIV top1_open_sets I_set.\<close>
+  obtain W where hW: "W \<in> (top1_open_sets :: real set set)" and hpre_eq: "{s \<in> I_set. f s \<in> V} = I_set \<inter> W"
+    using hpre unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+  have hW_open: "open W" using hW unfolding top1_open_sets_def by (by100 blast)
+  have hs_W: "s \<in> W" using hs hfs hpre_eq by (by100 blast)
+  obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hball: "\<forall>y. dist y s < \<epsilon> \<longrightarrow> y \<in> W"
+    using hW_open hs_W open_dist[of W] by blast
+  have "f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+  proof
+    fix y assume "y \<in> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1}"
+    then obtain t where ht: "\<bar>t - s\<bar> < \<epsilon>" "0 \<le> t" "t \<le> 1" and hy: "y = f t" by blast
+    have "dist t s < \<epsilon>" using ht unfolding dist_real_def by simp
+    hence "t \<in> W" using hball by blast
+    hence "t \<in> I_set \<inter> W" using ht unfolding top1_unit_interval_def by auto
+    hence "t \<in> {s \<in> I_set. f s \<in> V}" using hpre_eq by simp
+    thus "y \<in> V" using hy by simp
+  qed
+  thus ?thesis using h\<epsilon> by blast
+qed
+
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
 lemma Lemma_54_1_path_lifting:
   assumes hcov: "top1_covering_map_on E TE B TB p"
@@ -6286,7 +6315,16 @@ proof -
        f\<inverse>(W_s) is open in {0..1} (by continuous_on + open_invariant).
        By compact {0..1}, finite subcover. Lebesgue number of finite cover gives \<delta>.
        Take n = \<lceil>1/\<delta>\<rceil>, sub(i) = i/n.\<close>
-    show ?thesis sorry \<comment> \<open>Lebesgue subdivision: requires compact_Icc + continuous_on bridge.\<close>
+    \<comment> \<open>Use open_cover_subdivision_01: for each s, get ball in the preimage of an evenly covered U.\<close>
+    have hf_cont: "top1_continuous_map_on I_set I_top B TB f"
+      using hf unfolding top1_is_path_on_def by (by100 blast)
+    have hf_B: "\<forall>s\<in>I_set. f s \<in> B" using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    \<comment> \<open>The cover: for each s, f\<inverse>(evenly covered U) gives a ball around s.
+       The bridge from top1_continuous_map_on to open balls uses:
+       I_top = subspace_topology UNIV top1_open_sets I_set,
+       top1_open_sets = {U. open U}, open_dist.\<close>
+    show ?thesis sorry \<comment> \<open>Apply open_cover_subdivision_01 with the bridge.
+       Remaining: the top1_continuous_map_on → open ball bridge.\<close>
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
