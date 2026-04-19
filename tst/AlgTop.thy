@@ -9775,7 +9775,21 @@ proof
          (simp add: top1_C_minus_0_def)
     have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
         top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-      sorry \<comment> \<open>z^n maps S^1 to S^1 \<subseteq> C-{0}, continuous.\<close>
+    proof -
+      \<comment> \<open>z^n: S^1 \<rightarrow> S^1 continuous (from Step 1). S^1 \<subseteq> C-{0} since norm = 1 \<noteq> 0.\<close>
+      have hS1_sub_C0: "top1_S1_complex \<subseteq> top1_C_minus_0"
+        unfolding top1_S1_complex_def top1_C_minus_0_def by (by100 auto)
+      have hzn_S1: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_S1_complex"
+        unfolding top1_S1_complex_def using assms by (simp add: norm_power)
+      have hzn_C0: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_C_minus_0"
+        using hzn_S1 hS1_sub_C0 by (by100 blast)
+      \<comment> \<open>z^n continuous UNIV \<rightarrow> UNIV, restrict to S^1 \<rightarrow> C-{0}.\<close>
+      have hzn_cont_univ: "continuous_on UNIV (\<lambda>z::complex. z^n)"
+        by (intro continuous_intros)
+      show ?thesis
+        unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+        by (rule top1_continuous_map_on_subspace_open_sets[OF hzn_C0 hzn_cont_univ])
+    qed
     have h1_S1: "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
     have hg1: "(\<lambda>z::complex. z^n) 1 = (1::complex)" using assms by simp
     show "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
