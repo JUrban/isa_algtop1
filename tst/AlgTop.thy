@@ -9571,50 +9571,38 @@ proof
       by (by100 simp)
     \<comment> \<open>\<rho>\<circ>h is continuous, antipode-preserving, nulhomotopic.\<close>
     have "?\<rho> \<circ> h = (\<lambda>z. ?\<rho> (h z))" by (rule ext) (by100 simp)
-    have hrh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
+    \<comment> \<open>\<rho> maps S^1 to S^1 and is continuous.\<close>
+    have hrho_S1: "\<And>p. p \<in> top1_S1 \<Longrightarrow> ?\<rho> p \<in> top1_S1"
     proof -
-      \<comment> \<open>\<rho> maps S^1 to S^1 (rotation preserves unit circle).\<close>
-      have hrho_S1: "\<And>p. p \<in> top1_S1 \<Longrightarrow> ?\<rho> p \<in> top1_S1"
-      proof -
-        fix p assume hp: "p \<in> top1_S1"
-        have hxy: "(fst p)^2 + (snd p)^2 = 1" using hp unfolding top1_S1_def by (by100 auto)
-        have "(?a * fst p + ?b * snd p)^2 + (-?b * fst p + ?a * snd p)^2
-            = (?a^2 + ?b^2) * ((fst p)^2 + (snd p)^2)"
-          by (simp add: power2_eq_square algebra_simps)
-        also have "\<dots> = 1" using hab_S1 hxy by (by100 simp)
-        finally show "?\<rho> p \<in> top1_S1" unfolding top1_S1_def
-          by (simp add: case_prod_beta)
-      qed
-      have hrho_cont: "continuous_on UNIV (\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p))"
-        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
-            continuous_on_minus continuous_on_const continuous_on_fst continuous_on_snd
-            continuous_on_id)
-      have hrho_eq: "\<And>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p) = ?\<rho> p"
-        by (simp add: case_prod_beta)
-      have hrho_cont': "continuous_on UNIV ?\<rho>"
-      proof -
-        have "\<And>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p) = ?\<rho> p"
-          by (simp add: case_prod_beta)
-        hence "(\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p)) = ?\<rho>"
-          by (rule ext)
-        thus ?thesis using hrho_cont by (by100 metis)
-      qed
-      have hrho_top1': "top1_continuous_map_on top1_S1
-          (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_S1)
-          top1_S1
-          (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_S1)
-          ?\<rho>"
-      proof -
-        have "product_topology_on (top1_open_sets::real set set) top1_open_sets
-            = (top1_open_sets :: (real\<times>real) set set)"
-          by (rule product_topology_on_open_sets)
-        thus ?thesis
-          using top1_continuous_map_on_subspace_open_sets[OF hrho_S1 hrho_cont'] by (by100 simp)
-      qed
-      have hrho_top1: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?\<rho>"
-        using hrho_top1' unfolding top1_S1_topology_def .
-      show ?thesis by (rule top1_continuous_map_on_comp[OF assms(1) hrho_top1])
+      fix p assume hp: "p \<in> top1_S1"
+      have hxy: "(fst p)^2 + (snd p)^2 = 1" using hp unfolding top1_S1_def by (by100 auto)
+      have "(?a * fst p + ?b * snd p)^2 + (-?b * fst p + ?a * snd p)^2
+          = (?a^2 + ?b^2) * ((fst p)^2 + (snd p)^2)"
+        by (simp add: power2_eq_square algebra_simps)
+      also have "\<dots> = 1" using hab_S1 hxy by (by100 simp)
+      finally show "?\<rho> p \<in> top1_S1" unfolding top1_S1_def by (simp add: case_prod_beta)
     qed
+    have hrho_cont_univ: "continuous_on UNIV ?\<rho>"
+    proof -
+      have "continuous_on UNIV (\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p))"
+        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+            continuous_on_minus continuous_on_const continuous_on_fst continuous_on_snd continuous_on_id)
+      moreover have "(\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p)) = ?\<rho>"
+        by (rule ext) (simp add: case_prod_beta)
+      ultimately show ?thesis by (by100 metis)
+    qed
+    have hrho_top1: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?\<rho>"
+    proof -
+      have "top1_continuous_map_on top1_S1
+          (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1)
+          top1_S1 (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1) ?\<rho>"
+        using top1_continuous_map_on_subspace_open_sets[OF hrho_S1 hrho_cont_univ]
+        by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+      thus ?thesis unfolding top1_S1_topology_def
+        by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+    qed
+    have hrh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
+      by (rule top1_continuous_map_on_comp[OF assms(1) hrho_top1])
     have hrh_anti: "top1_antipode_preserving_S1 (?\<rho> \<circ> h)"
       unfolding top1_antipode_preserving_S1_def
     proof (intro allI)
@@ -9629,30 +9617,61 @@ proof
       obtain c where hc: "c \<in> top1_S1"
           and hhom: "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h (\<lambda>_. c)"
         using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
-      have "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
-          (?\<rho> \<circ> h) (?\<rho> \<circ> (\<lambda>_. c))"
-        sorry \<comment> \<open>Composition with continuous \<rho> preserves homotopy\<close>
-      have hrhc_eq: "?\<rho> \<circ> (\<lambda>_. c) = (\<lambda>_. ?\<rho> c)" by (rule ext) (by100 simp)
       have hrhc_S1: "?\<rho> c \<in> top1_S1"
-      proof -
-        have hcc: "(fst c)^2 + (snd c)^2 = 1" using hc unfolding top1_S1_def by (by100 auto)
-        have "(?a * fst c + ?b * snd c)^2 + (-?b * fst c + ?a * snd c)^2
-            = (?a^2 + ?b^2) * ((fst c)^2 + (snd c)^2)"
-          by (simp add: power2_eq_square algebra_simps)
-        thus ?thesis using hab_S1 hcc unfolding top1_S1_def by (simp add: case_prod_beta)
-      qed
+        using hrho_S1[OF hc] by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF
+              product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+                simplified]]) simp
+      \<comment> \<open>Extract homotopy H from hhom, compose with \<rho>.\<close>
+      obtain H where hHcont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+            (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology H"
+          and hH0: "\<forall>x\<in>top1_S1. H (x, 0) = h x"
+          and hH1: "\<forall>x\<in>top1_S1. H (x, 1) = c"
+        using hhom unfolding top1_homotopic_on_def by (by100 blast)
+      have hrH_cont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+          (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology (?\<rho> \<circ> H)"
+        by (rule top1_continuous_map_on_comp[OF hHcont hrho_top1])
+      have hconst_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>_. ?\<rho> c)"
+        by (rule top1_continuous_map_on_const[OF hTS1 hTS1 hrhc_S1])
+      have hrhH0: "\<forall>x\<in>top1_S1. (?\<rho> \<circ> H) (x, 0) = (?\<rho> \<circ> h) x"
+        using hH0 by (by100 simp)
+      have hrhH1: "\<forall>x\<in>top1_S1. (?\<rho> \<circ> H) (x, 1) = ?\<rho> c"
+        using hH1 by (by100 simp)
       have "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
           (?\<rho> \<circ> h) (\<lambda>_. ?\<rho> c)"
-        sorry \<comment> \<open>Composition with continuous \<rho> preserves homotopy\<close>
+        unfolding top1_homotopic_on_def
+        apply (intro conjI exI[of _ "?\<rho> \<circ> H"])
+        apply (rule hrh_cont)
+        apply (rule hconst_cont)
+        apply (rule hrH_cont)
+        using hrhH0 apply (by100 simp)
+        using hrhH1 apply (by100 simp)
+        done
       thus ?thesis unfolding top1_nulhomotopic_on_def using hrhc_S1 by (by100 blast)
     qed
     have hrh_10: "(?\<rho> \<circ> h) (1, 0) = (1, 0)"
       using hrho_10 by (by100 simp)
-    \<comment> \<open>Apply the True case to \<rho>\<circ>h: since (\<rho>\<circ>h)(1,0) = (1,0),
-       the hh_trivial_at_h10 argument gives (\<rho>\<circ>h)\<circ>f \<simeq> const for all loops f.
-       Then hh_star_nontrivial applied to \<rho>\<circ>h gives contradiction.\<close>
-    \<comment> \<open>TODO: need to re-derive hh_trivial_at_h10 for \<rho>\<circ>h using its nulhomotopy.\<close>
-    thus False using hrh_cont hrh_anti hrh_nul hrh_10 hh_star_nontrivial sorry
+    \<comment> \<open>Apply the same argument as the True case to \<rho>\<circ>h.\<close>
+    \<comment> \<open>Step 1: (\<rho>\<circ>h)\<circ>f \<simeq> const for all loops f at (1,0) — from nulhomotopy + basepoint change.\<close>
+    have hrh_trivial: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+        \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+              ((?\<rho> \<circ> h) \<circ> f) (top1_constant_path (1, 0))"
+    proof (intro allI impI)
+      fix f assume hf: "top1_is_loop_on top1_S1 top1_S1_topology (1::real, 0::real) f"
+      \<comment> \<open>Same argument as hh_trivial_at_h10: nulhomotopy \<Rightarrow> basepoint change \<Rightarrow> loop equiv to const.\<close>
+      show "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+          ((?\<rho> \<circ> h) \<circ> f) (top1_constant_path (1, 0))"
+        using hrh_nul hrh_cont hrh_10 hf sorry
+    qed
+    \<comment> \<open>Step 2: (\<rho>\<circ>h)_* is nontrivial (covering theory: antipode-preserving \<Rightarrow> induced map \<times>2).\<close>
+    have hrh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+        \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+              ((?\<rho> \<circ> h) \<circ> f) (top1_constant_path (1, 0)))"
+      using hrh_cont hrh_anti hrh_10 sorry
+    show False using hrh_trivial hrh_star_nontrivial by (by100 blast)
   qed
 qed
 
