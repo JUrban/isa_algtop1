@@ -10969,7 +10969,13 @@ proof -
           and hF1: "\<forall>s\<in>I_set. F (s, 1) = (?G \<circ> ?\<beta>2) s"
           and hFl: "\<forall>t\<in>I_set. F (0, t) = h x0"
           and hFr: "\<forall>t\<in>I_set. F (1, t) = k x0"
-        using hGhom unfolding top1_path_homotopic_on_def sorry \<comment> \<open>Pre-existing auto timed out\<close>
+      proof -
+        obtain F' where hF': "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F'"
+            "\<forall>s\<in>I_set. F' (s, 0) = (?G \<circ> ?\<beta>1) s" "\<forall>s\<in>I_set. F' (s, 1) = (?G \<circ> ?\<beta>2) s"
+            "\<forall>t\<in>I_set. F' (0, t) = h x0" "\<forall>t\<in>I_set. F' (1, t) = k x0"
+          using hGhom unfolding top1_path_homotopic_on_def by auto
+        show ?thesis by (rule that[OF hF'(1) hF'(2) hF'(3) hF'(4) hF'(5)])
+      qed
       have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (h \<circ> l) ?\<alpha> s"
         using hF0 hG\<beta>1 by (by100 simp)
       have hF1': "\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s"
