@@ -6514,15 +6514,62 @@ proof -
           let ?TXk1 = "subspace_topology I_set I_top ?Xk1"
           let ?A = "{s\<in>I_set. s \<le> sub k}"
           let ?B = "{s\<in>I_set. sub k \<le> s \<and> s \<le> sub (Suc k)}"
-          have hTXk1: "is_topology_on ?Xk1 ?TXk1" sorry
-          have hTE': "is_topology_on E TE" sorry
-          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A" sorry
-          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B" sorry
-          have hAB: "?A \<union> ?B = ?Xk1" sorry
-          have hrange: "\<forall>s\<in>?Xk1. ftk' s \<in> E" using hftk'_E sorry
+          have hXk1_sub: "?Xk1 \<subseteq> I_set" by (by100 blast)
+          have hTI: "is_topology_on I_set I_top"
+            by (rule top1_unit_interval_topology_is_topology_on)
+          have hTXk1: "is_topology_on ?Xk1 ?TXk1"
+            by (rule subspace_topology_is_topology_on[OF hTI hXk1_sub])
+          have hTE': "is_topology_on E TE" sorry \<comment> \<open>From covering map structure.\<close>
+          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A"
+          proof -
+            \<comment> \<open>?Xk1 - ?A = {s\<in>I_set. sub k < s \<and> s \<le> sub(Suc k)}, which is open.\<close>
+            have hcomp: "?Xk1 - ?A = {s\<in>I_set. sub k < s \<and> s \<le> sub (Suc k)}" by auto
+            show ?thesis unfolding closedin_on_def sorry
+          qed
+          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B"
+          proof -
+            have hcomp: "?Xk1 - ?B = {s\<in>I_set. s < sub k \<and> s \<le> sub (Suc k)}"
+            proof -
+              have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
+              thus ?thesis by auto
+            qed
+            show ?thesis unfolding closedin_on_def sorry
+          qed
+          have hAB: "?A \<union> ?B = ?Xk1"
+          proof -
+            have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
+            thus ?thesis by auto
+          qed
+          have hrange: "\<forall>s\<in>?Xk1. ftk' s \<in> E"
+          proof
+            fix s assume "s \<in> ?Xk1"
+            hence "s \<in> I_set" and "s \<le> sub (Suc k)" by auto
+            thus "ftk' s \<in> E" using hftk'_E by (by100 blast)
+          qed
           \<comment> \<open>ftk' continuous on A: equals ftk which is continuous by IH.\<close>
           have hcont_A: "top1_continuous_map_on ?A (subspace_topology ?Xk1 ?TXk1 ?A) E TE ftk'"
-            sorry
+          proof -
+            have hAsub: "?A \<subseteq> ?Xk1" using hAB by (by100 blast)
+            have hTsub: "subspace_topology ?Xk1 ?TXk1 ?A = subspace_topology I_set I_top ?A"
+              by (rule subspace_topology_trans[OF hAsub])
+            \<comment> \<open>ftk' = ftk on ?A, and ftk is continuous on ?A by IH.\<close>
+            have hftk'_eq: "\<forall>s\<in>?A. ftk' s = ftk s"
+              unfolding ftk'_def by simp
+            show ?thesis unfolding hTsub
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix s assume "s \<in> ?A"
+              thus "ftk' s \<in> E" using hftk'_eq hftk_E by auto
+            next
+              fix V assume "V \<in> TE"
+              have "{s \<in> ?A. ftk' s \<in> V} = {s \<in> ?A. ftk s \<in> V}"
+                using hftk'_eq by auto
+              also have "\<dots> \<in> subspace_topology I_set I_top ?A"
+                using hftk_cont \<open>V \<in> TE\<close> unfolding top1_continuous_map_on_def
+                by (by100 blast)
+              finally show "{s \<in> ?A. ftk' s \<in> V} \<in> subspace_topology I_set I_top ?A" .
+            qed
+          qed
           \<comment> \<open>ftk' continuous on B: equals inv_into V0 p \<circ> f (homeomorphism inverse \<circ> continuous).\<close>
           have hcont_B: "top1_continuous_map_on ?B (subspace_topology ?Xk1 ?TXk1 ?B) E TE ftk'"
             sorry
