@@ -6228,6 +6228,25 @@ proof -
   thus ?thesis by blast
 qed
 
+text \<open>The integers Z as an additive abelian group (moved here to support Theorem_54_5_iso).\<close>
+definition top1_Z_group :: "int set" where
+  "top1_Z_group = UNIV"
+
+definition top1_Z_mul :: "int \<Rightarrow> int \<Rightarrow> int" where
+  "top1_Z_mul a b = a + b"
+
+definition top1_Z_id :: "int" where
+  "top1_Z_id = 0"
+
+definition top1_Z_invg :: "int \<Rightarrow> int" where
+  "top1_Z_invg a = - a"
+
+lemma top1_Z_is_abelian_group:
+  "top1_is_abelian_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+  unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+            top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def
+  by auto
+
 (** Strengthened version: \<pi>_1(S^1, (1,0)) is isomorphic to Z as groups (not just bijective). **)
 theorem Theorem_54_5_iso:
   "top1_groups_isomorphic_on
@@ -6325,7 +6344,12 @@ proof -
              and top1_R_to_S1_int_shift for the translation.\<close>
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-    sorry
+      top1_group_hom_on_def top1_Z_group_def top1_Z_mul_def
+    apply (intro exI[of _ \<phi>] conjI)
+    using h\<phi>_bij unfolding bij_betw_def apply (by100 blast)
+    using h\<phi>_hom apply (by100 blast)
+    using h\<phi>_bij apply (by100 blast)
+    done
 qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
@@ -13010,25 +13034,6 @@ definition top1_is_free_product_on ::
                           \<and> \<iota>fam (indices!i) (word!i) \<noteq> e) \<longrightarrow>
         (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
         foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e)"
-
-text \<open>The integers Z as an additive abelian group.\<close>
-definition top1_Z_group :: "int set" where
-  "top1_Z_group = UNIV"
-
-definition top1_Z_mul :: "int \<Rightarrow> int \<Rightarrow> int" where
-  "top1_Z_mul a b = a + b"
-
-definition top1_Z_id :: "int" where
-  "top1_Z_id = 0"
-
-definition top1_Z_invg :: "int \<Rightarrow> int" where
-  "top1_Z_invg a = - a"
-
-lemma top1_Z_is_abelian_group:
-  "top1_is_abelian_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
-  unfolding top1_is_abelian_group_on_def top1_is_group_on_def
-            top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def
-  by auto
 
 text \<open>The cyclic group Z/nZ with modular addition.\<close>
 definition top1_Zn_group :: "nat \<Rightarrow> int set" where
