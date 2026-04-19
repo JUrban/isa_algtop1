@@ -8195,10 +8195,15 @@ proof -
     \<comment> \<open>c\<cdot>d is in the carrier, and \<phi>'(c\<cdot>d) is its lift endpoint.\<close>
     have hcd_carrier: "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
         \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
-      unfolding top1_fundamental_group_carrier_def
-      using hfg_loop hfg_in_cd
-      unfolding top1_fundamental_group_mul_def
-      sorry
+    proof -
+      \<comment> \<open>c\<cdot>d contains the loop f*g, so it's the equivalence class of f*g.\<close>
+      have "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
+          = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) (top1_path_product f g) h}"
+        sorry
+      moreover have "\<dots> \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+        unfolding top1_fundamental_group_carrier_def using hfg_loop by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>The lift of f*g from 0 ends at n+m. By Theorem 54.3 well-definedness,
        \<phi>'(c\<cdot>d) = n+m.\<close>
     have h\<phi>'_cd: "\<phi>' (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d) = ?n + ?m"
@@ -8209,10 +8214,16 @@ proof -
           and hfg_l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) fg"
           and hft_fg: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' ?cd) ft_fg"
           and hft_fgp: "\<forall>s\<in>I_set. top1_R_to_S1 (ft_fg s) = fg s"
-        using h\<phi>'_lift[rule_format, OF hcd_carrier] sorry
+        using h\<phi>'_lift[rule_format, OF hcd_carrier] by (by100 auto)
       \<comment> \<open>fg and f*g are both in c\<cdot>d, hence path-homotopic.\<close>
       have hfg_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) fg (top1_path_product f g)"
-        sorry
+      proof -
+        \<comment> \<open>fg and f*g are both in c\<cdot>d. In the fundamental group, c\<cdot>d is an equivalence class,
+           so any two elements are loop-equivalent, hence path-homotopic.\<close>
+        have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) fg (top1_path_product f g)"
+          sorry
+        thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+      qed
       \<comment> \<open>By Theorem 54.3: lifts of path-homotopic loops from same point have same endpoint.\<close>
       have hTE: "is_topology_on (UNIV::real set) top1_open_sets"
         by (rule top1_open_sets_is_topology_on_UNIV)
