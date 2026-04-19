@@ -7062,17 +7062,30 @@ proof -
       and hVu: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
       and hVh: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
               U (subspace_topology B TB U) p"
-    using hUec unfolding top1_evenly_covered_on_def sorry
+    using hUec unfolding top1_evenly_covered_on_def by (by100 auto)
   \<comment> \<open>Ftilde_A maps A\<inter>R into p\<inverse>(U): for x \<in> A\<inter>R, p(Ftilde_A(x)) = F(x) \<in> U.\<close>
   have hFtA_pU: "\<forall>x\<in>A \<inter> R. Ftilde_A x \<in> {x\<in>E. p x \<in> U}"
-    sorry
+  proof
+    fix x assume hx: "x \<in> A \<inter> R"
+    have "p (Ftilde_A x) = F x" using hFt_A_lift hx by (by100 blast)
+    moreover have "F x \<in> U" using hF_R hx by (by100 blast)
+    moreover have "Ftilde_A x \<in> E"
+      using hFt_A hx unfolding top1_continuous_map_on_def by (by100 blast)
+    ultimately show "Ftilde_A x \<in> {x\<in>E. p x \<in> U}" by simp
+  qed
   \<comment> \<open>Ftilde_A(A\<inter>R) is connected (continuous image of connected set).\<close>
   have hFtA_conn: "top1_connected_on (Ftilde_A ` (A \<inter> R)) (subspace_topology E TE (Ftilde_A ` (A \<inter> R)))"
-    sorry
+  proof -
+    have hFtA_AR: "top1_continuous_map_on (A \<inter> R)
+        (subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R)) E TE Ftilde_A"
+      sorry
+    show ?thesis sorry
+  qed
   \<comment> \<open>Ftilde_A(A\<inter>R) \<subseteq> \<Union>\<V>, connected, so in one slice V0.\<close>
   have "Ftilde_A ` (A \<inter> R) \<subseteq> \<Union>\<V>"
     using hFtA_pU hVu by (by100 blast)
   then obtain V0 where hV0: "V0 \<in> \<V>" and hFtA_V0: "Ftilde_A ` (A \<inter> R) \<subseteq> V0"
+    \<comment> \<open>Connected subset of disjoint union of open sets lies in one component.\<close>
     sorry
   \<comment> \<open>p|V0 is a homeomorphism V0 \<rightarrow> U, hence bijective.\<close>
   have hbij: "bij_betw p V0 U"
