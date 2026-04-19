@@ -6458,8 +6458,9 @@ proof -
             hence "ftk' s = inv_into V0 p (f s)" unfolding ftk'_def by simp
             moreover have "f s \<in> U"
               using hfU hs False hle unfolding top1_unit_interval_def by auto
-            hence "inv_into V0 p (f s) \<in> V0"
-              sorry
+            have "p ` V0 = U" using hbij unfolding bij_betw_def by (by100 blast)
+            hence "f s \<in> p ` V0" using \<open>f s \<in> U\<close> by simp
+            hence "inv_into V0 p (f s) \<in> V0" by (rule inv_into_into)
             ultimately show ?thesis using hV0_E by auto
           qed
         qed
