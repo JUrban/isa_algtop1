@@ -11508,7 +11508,21 @@ proof
     \<comment> \<open>The standard loop p_0(s) = cis(2\<pi>s) is a loop on S^1_complex at 1.\<close>
     let ?p0 = "\<lambda>s::real. cis (2 * pi * s)"
     have hp0_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ?p0"
-      sorry
+    proof -
+      have hp0_S1: "\<And>s. cmod (cis (2 * pi * s)) = 1" by simp
+      have hp0_mem: "\<forall>s\<in>I_set. ?p0 s \<in> top1_S1_complex"
+        unfolding top1_S1_complex_def using hp0_S1 by simp
+      have hp0_cont_univ: "continuous_on UNIV (\<lambda>s::real. cis (2 * pi * s))"
+        by (intro continuous_intros)
+      have hp0_cont: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology ?p0"
+        unfolding top1_S1_complex_topology_def
+        apply (simp add: hp0_cont_univ hp0_mem
+          top1_continuous_map_on_subspace_open_sets
+          top1_unit_interval_topology_def)
+        done
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hp0_cont by simp
+    qed
     \<comment> \<open>z^n \<circ> p_0(s) = cis(2\<pi>ns). If \<simeq> const, then its real covering lift ends at 0.
        But the lift of cis(2\<pi>ns) from 0 is s \<mapsto> ns, ending at n \<neq> 0. Contradiction.\<close>
     have hzp0_const: "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
@@ -11525,7 +11539,51 @@ proof
     let ?wn = "\<lambda>s. top1_R_to_S1 (real n * s)"
     \<comment> \<open>w_n is a loop at (1,0) on S^1.\<close>
     have hwn_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?wn"
-      sorry
+    proof -
+      have hwn0: "?wn 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+      have hwn1: "?wn 1 = (1, 0)"
+      proof -
+        have "top1_R_to_S1 (real n * 1) = top1_R_to_S1 (0 + of_int (int n))"
+          by simp
+        also have "\<dots> = top1_R_to_S1 0" by (rule top1_R_to_S1_int_shift_early)
+        also have "\<dots> = (1, 0)" unfolding top1_R_to_S1_def by simp
+        finally show ?thesis by simp
+      qed
+      have hwn_S1: "\<And>s. ?wn s \<in> top1_S1"
+        unfolding top1_R_to_S1_def top1_S1_def by (by100 auto)
+      have hwn_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?wn"
+      proof -
+        \<comment> \<open>?wn = R_to_S1 \<circ> (\<lambda>s. n*s). Both are continuous.\<close>
+        have heq: "?wn = top1_R_to_S1 \<circ> (\<lambda>s. real n * s)" by (rule ext) simp
+        have hlin_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>s. real n * s)"
+        proof -
+          have hcont: "continuous_on UNIV (\<lambda>s::real. real n * s)" by (intro continuous_intros)
+          show ?thesis unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix s :: real assume "s \<in> I_set" show "real n * s \<in> (UNIV::real set)" by simp
+          next
+            fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+            have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+            have "open ((\<lambda>s::real. real n * s) -` V)"
+            proof -
+              have "open ((\<lambda>s::real. real n * s) -` V \<inter> UNIV)"
+                using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hVo by (by100 blast)
+              thus ?thesis by simp
+            qed
+            hence "(\<lambda>s::real. real n * s) -` V \<in> top1_open_sets"
+              unfolding top1_open_sets_def by (by100 blast)
+            thus "{s \<in> I_set. real n * s \<in> V} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          qed
+        qed
+        have hp_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        show ?thesis unfolding heq
+          by (rule top1_continuous_map_on_comp[OF hlin_cont hp_cont])
+      qed
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hwn_cont hwn0 hwn1 by simp
+    qed
     \<comment> \<open>If cis(2\<pi>ns) \<simeq> const_1 on S^1_complex, transfer to: w_n \<simeq> const on S^1.\<close>
     have hwn_const: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
         ?wn (top1_constant_path (1, 0))"
@@ -11535,7 +11593,26 @@ proof
       unfolding top1_is_path_on_def
     proof (intro conjI)
       show "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>s. real n * s)"
-        sorry
+      proof -
+        have hcont: "continuous_on UNIV (\<lambda>s::real. real n * s)" by (intro continuous_intros)
+        show ?thesis
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s :: real assume "s \<in> I_set" show "real n * s \<in> (UNIV::real set)" by simp
+        next
+          fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+          have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+          have "open ((\<lambda>s::real. real n * s) -` V \<inter> UNIV)"
+            using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hVo by (by100 blast)
+          hence hpre: "open ((\<lambda>s::real. real n * s) -` V)" by simp
+          have hpre_os: "(\<lambda>s::real. real n * s) -` V \<in> top1_open_sets"
+            using hpre unfolding top1_open_sets_def by (by100 blast)
+          have "{s \<in> I_set. real n * s \<in> V} = I_set \<inter> ((\<lambda>s. real n * s) -` V)" by (by100 auto)
+          thus "{s \<in> I_set. real n * s \<in> V} \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def
+            using hpre_os by (by100 blast)
+        qed
+      qed
       show "(\<lambda>s::real. real n * s) 0 = 0" by simp
       show "(\<lambda>s::real. real n * s) 1 = real n" by simp
     qed
