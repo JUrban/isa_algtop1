@@ -11532,11 +11532,20 @@ proof
       sorry
     \<comment> \<open>Lift of w_n from 0: s \<mapsto> n*s, a path in R from 0 to n.\<close>
     have hft_wn: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (real n) (\<lambda>s. real n * s)"
-      sorry
+      unfolding top1_is_path_on_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>s. real n * s)"
+        sorry
+      show "(\<lambda>s::real. real n * s) 0 = 0" by simp
+      show "(\<lambda>s::real. real n * s) 1 = real n" by simp
+    qed
     have hft_wn_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (real n * s) = ?wn s" by simp
     \<comment> \<open>Lift of const from 0: s \<mapsto> 0, a path in R from 0 to 0.\<close>
     have hft_const: "top1_is_path_on (UNIV::real set) top1_open_sets 0 0 (\<lambda>_. 0::real)"
-      sorry
+      unfolding top1_is_path_on_def
+      using top1_continuous_map_on_const[OF
+        top1_unit_interval_topology_is_topology_on
+        top1_open_sets_is_topology_on_UNIV UNIV_I] by simp
     have hft_const_lift: "\<forall>s\<in>I_set. top1_R_to_S1 ((\<lambda>_. 0::real) s) = top1_constant_path (1, 0) s"
       unfolding top1_constant_path_def top1_R_to_S1_def by simp
     \<comment> \<open>By Theorem 54.3: lifts of homotopic paths from same start have same endpoint.\<close>
@@ -17982,7 +17991,6 @@ proof -
 qed
 
 end
- 
  
  
  
