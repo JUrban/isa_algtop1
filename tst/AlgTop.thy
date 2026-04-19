@@ -7035,6 +7035,86 @@ proof -
   thus ?thesis by blast
 qed
 
+text \<open>Helper for Lemma 54.2: extend a continuous lift from a closed region A to A \<union> R,
+  where R is a closed rectangle mapping into an evenly covered U, and A \<inter> R is connected.\<close>
+lemma homotopy_lifting_rectangle_step:
+  fixes A R :: "(real \<times> real) set"
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      and hTE: "is_topology_on E TE"
+      and hA_closed: "closedin_on (I_set \<times> I_set) II_topology A"
+      and hR_closed: "closedin_on (I_set \<times> I_set) II_topology R"
+      and hAR_sub: "A \<union> R \<subseteq> I_set \<times> I_set"
+      and hFt_A: "top1_continuous_map_on A (subspace_topology (I_set \<times> I_set) II_topology A) E TE Ftilde_A"
+      and hFt_A_lift: "\<forall>x\<in>A. p (Ftilde_A x) = F x"
+      and hF_R: "F ` R \<subseteq> U"
+      and hUec: "top1_evenly_covered_on E TE B TB p U"
+      and hC_conn: "top1_connected_on (A \<inter> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R))"
+      and hC_ne: "A \<inter> R \<noteq> {}"
+  shows "\<exists>Ftilde. top1_continuous_map_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) E TE Ftilde
+      \<and> (\<forall>x\<in>A \<union> R. p (Ftilde x) = F x) \<and> (\<forall>x\<in>A. Ftilde x = Ftilde_A x)"
+proof -
+  \<comment> \<open>Textbook: Ftilde_A(A\<inter>R) is connected, lies in p\<inverse>(U) = \<Union>slices.
+     Connected \<Rightarrow> in one slice V0. Define Ftilde = (p|V0)\<inverse>\<circ>F on R.
+     Agrees on A\<inter>R. Pasting gives continuity on A\<union>R.\<close>
+  obtain \<V> where hVo: "\<forall>V\<in>\<V>. openin_on E TE V"
+      and hVd: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+      and hVu: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+      and hVh: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+              U (subspace_topology B TB U) p"
+    using hUec unfolding top1_evenly_covered_on_def sorry
+  \<comment> \<open>Ftilde_A maps A\<inter>R into p\<inverse>(U): for x \<in> A\<inter>R, p(Ftilde_A(x)) = F(x) \<in> U.\<close>
+  have hFtA_pU: "\<forall>x\<in>A \<inter> R. Ftilde_A x \<in> {x\<in>E. p x \<in> U}"
+    sorry
+  \<comment> \<open>Ftilde_A(A\<inter>R) is connected (continuous image of connected set).\<close>
+  have hFtA_conn: "top1_connected_on (Ftilde_A ` (A \<inter> R)) (subspace_topology E TE (Ftilde_A ` (A \<inter> R)))"
+    sorry
+  \<comment> \<open>Ftilde_A(A\<inter>R) \<subseteq> \<Union>\<V>, connected, so in one slice V0.\<close>
+  have "Ftilde_A ` (A \<inter> R) \<subseteq> \<Union>\<V>"
+    using hFtA_pU hVu by (by100 blast)
+  then obtain V0 where hV0: "V0 \<in> \<V>" and hFtA_V0: "Ftilde_A ` (A \<inter> R) \<subseteq> V0"
+    sorry
+  \<comment> \<open>p|V0 is a homeomorphism V0 \<rightarrow> U, hence bijective.\<close>
+  have hbij: "bij_betw p V0 U"
+    using hVh hV0 unfolding top1_homeomorphism_on_def by (by100 blast)
+  \<comment> \<open>Define extension: Ftilde(x) = Ftilde_A(x) for x \<in> A, inv_into V0 p (F x) for x \<in> R.\<close>
+  define Ftilde where "Ftilde x = (if x \<in> A then Ftilde_A x else inv_into V0 p (F x))" for x
+  \<comment> \<open>On A\<inter>R: Ftilde_A(x) = inv_into V0 p (F(x)) since Ftilde_A(x) \<in> V0 and p(Ftilde_A(x)) = F(x).\<close>
+  have hagree: "\<forall>x\<in>A \<inter> R. Ftilde_A x = inv_into V0 p (F x)"
+  proof
+    fix x assume hx: "x \<in> A \<inter> R"
+    have "Ftilde_A x \<in> V0" using hFtA_V0 hx by (by100 blast)
+    moreover have "p (Ftilde_A x) = F x" using hFt_A_lift hx by (by100 blast)
+    moreover have "inj_on p V0" using hbij unfolding bij_betw_def by (by100 blast)
+    ultimately show "Ftilde_A x = inv_into V0 p (F x)"
+      by (metis inv_into_f_f)
+  qed
+  \<comment> \<open>Ftilde lifts F on A\<union>R.\<close>
+  have hFt_lift: "\<forall>x\<in>A \<union> R. p (Ftilde x) = F x"
+  proof
+    fix x assume hx: "x \<in> A \<union> R"
+    show "p (Ftilde x) = F x"
+    proof (cases "x \<in> A")
+      case True thus ?thesis unfolding Ftilde_def using hFt_A_lift by simp
+    next
+      case False
+      hence "x \<in> R" using hx by simp
+      hence "F x \<in> U" using hF_R by (by100 blast)
+      hence "F x \<in> p ` V0" using hbij unfolding bij_betw_def by (by100 blast)
+      thus ?thesis unfolding Ftilde_def using False
+        by (simp add: f_inv_into_f)
+    qed
+  qed
+  \<comment> \<open>Ftilde agrees with Ftilde_A on A.\<close>
+  have hFt_agree: "\<forall>x\<in>A. Ftilde x = Ftilde_A x" unfolding Ftilde_def by simp
+  \<comment> \<open>Continuity by pasting: Ftilde = Ftilde_A on A (continuous), Ftilde = inv_into V0 p \<circ> F on R (continuous).
+     They agree on A\<inter>R. A, R closed. Pasting gives continuity on A\<union>R.\<close>
+  have hFt_cont: "top1_continuous_map_on (A \<union> R)
+      (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) E TE Ftilde"
+    sorry
+  show ?thesis using hFt_cont hFt_lift hFt_agree by (by100 blast)
+qed
+
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
   assumes "top1_covering_map_on E TE B TB p"
