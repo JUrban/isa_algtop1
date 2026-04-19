@@ -15686,9 +15686,15 @@ lemma R2_minus_point_not_simply_connected:
   "p \<in> (UNIV :: (real \<times> real) set) \<Longrightarrow>
    \<not> top1_simply_connected_on (UNIV - {p})
      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))"
-  \<comment> \<open>By translation: R^2 - {p} \<cong> R^2 - {0} via x \<mapsto> x - p. Homeomorphism preserves
-     simply connected. Since R^2 - {0} is not simply connected, neither is R^2 - {p}.\<close>
-  sorry
+proof -
+  assume "p \<in> (UNIV :: (real \<times> real) set)"
+  \<comment> \<open>Translation \<tau>(x) = x - p is a homeomorphism R^2-{p} \<rightarrow> R^2-{0}.
+     Simply connected is a homotopy invariant.
+     R^2-{0} is not simply connected (proved above).\<close>
+  \<comment> \<open>The translation \<tau> and its inverse \<tau>^{-1}(x) = x + p are both continuous
+     (as polynomial maps on R^2) and bijective UNIV-{p} \<leftrightarrow> UNIV-{0}.\<close>
+  show ?thesis sorry
+qed
 
 lemma S2_minus_two_points_not_simply_connected:
   assumes "a \<in> top1_S2" and "b \<in> top1_S2" and "a \<noteq> b"
