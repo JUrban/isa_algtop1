@@ -6264,7 +6264,42 @@ proof -
   have h\<phi>_bij: "bij_betw \<phi>
       (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
       (UNIV::int set)"
-    sorry \<comment> \<open>Follows from h\<phi>'_bij and floor being bijective on Z \<subseteq> R.\<close>
+  proof -
+    have hfib: "{x::real. top1_R_to_S1 x = (1, 0)} = {of_int n |n::int. True}"
+      using top1_R_to_S1_fiber_is_Z' .
+    have hfloor_inj: "inj_on floor {x::real. top1_R_to_S1 x = (1, 0)}"
+    proof (rule inj_onI)
+      fix a b :: real
+      assume "a \<in> {x. top1_R_to_S1 x = (1, 0)}" "b \<in> {x. top1_R_to_S1 x = (1, 0)}"
+      hence "a \<in> {of_int n |n::int. True}" "b \<in> {of_int n |n::int. True}"
+        using hfib by (by100 blast)+
+      then obtain na nb :: int where hna: "a = of_int na" and hnb: "b = of_int nb"
+        by (by100 auto)
+      assume "\<lfloor>a\<rfloor> = \<lfloor>b\<rfloor>"
+      thus "a = b" using hna hnb by (by100 simp)
+    qed
+    have hfloor_surj: "floor ` {x::real. top1_R_to_S1 x = (1, 0)} = (UNIV::int set)"
+    proof
+      show "floor ` {x::real. top1_R_to_S1 x = (1, 0)} \<subseteq> UNIV" by (by100 simp)
+    next
+      show "UNIV \<subseteq> floor ` {x::real. top1_R_to_S1 x = (1, 0)}"
+      proof
+        fix n :: int
+        have "of_int n \<in> {x::real. top1_R_to_S1 x = (1, 0)}" using hfib by (by100 auto)
+        moreover have "\<lfloor>of_int n :: real\<rfloor> = n" by simp
+        ultimately show "n \<in> floor ` {x::real. top1_R_to_S1 x = (1, 0)}" by (by100 force)
+      qed
+    qed
+    have hfloor_bij: "bij_betw floor {x::real. top1_R_to_S1 x = (1, 0)} (UNIV::int set)"
+      unfolding bij_betw_def using hfloor_inj hfloor_surj by (by100 blast)
+    have heq: "{x \<in> (UNIV::real set). top1_R_to_S1 x = (1, 0)} = {x::real. top1_R_to_S1 x = (1, 0)}"
+      by (by100 simp)
+    have hcomp: "bij_betw (floor \<circ> \<phi>')
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (UNIV::int set)"
+      by (rule bij_betw_trans[OF h\<phi>'_bij[unfolded heq] hfloor_bij])
+    have "\<phi> = floor \<circ> \<phi>'" unfolding \<phi>_def comp_def by (rule refl)
+    show ?thesis using hcomp unfolding \<open>\<phi> = floor \<circ> \<phi>'\<close> .
+  qed
   \<comment> \<open>Step 3: \<phi> is a homomorphism.
      Key: if lift of f from 0 ends at n and lift of g from 0 ends at m,
      then lift of f*g from 0 ends at n+m.\<close>
