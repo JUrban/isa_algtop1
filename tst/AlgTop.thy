@@ -6363,10 +6363,18 @@ proof -
     \<comment> \<open>Induction: for each k \<le> n, there exists ftk on [0, sub(k)] lifting f.
        Base: ftk = const e0 at k=0. Inductive step: extend via (p|V_0)^{-1} ∘ f.
        At k = n, sub(n) = 1, giving ftilde on [0,1] = I_set.\<close>
-    show ?thesis sorry \<comment> \<open>Lift construction by induction on k.
-       Each step: get evenly covered U ⊇ f([sub(k), sub(k+1)]),
-       find slice V_0 ∋ ftk(sub(k)), define ext(s) = (p|V_0)^{-1}(f(s)),
-       paste ftk and ext to get ft_{k+1}.\<close>
+    \<comment> \<open>Induction on k: at each step, extend the lift by one interval.\<close>
+    have "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
+        \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
+      sorry \<comment> \<open>Induction: base k=0 trivial, step uses evenly-covered inverse.\<close>
+    hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
+        \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
+      using hsubn sorry
+    hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
+        \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
+        \<and> top1_continuous_map_on I_set I_top E TE ftilde"
+      sorry \<comment> \<open>Continuity: pasting lemma on the finitely many intervals.\<close>
+    thus ?thesis by (by100 blast)
   qed
   \<comment> \<open>Assemble into path.\<close>
   then obtain ftilde where hft_mem: "\<forall>s\<in>I_set. ftilde s \<in> E"
