@@ -15432,7 +15432,40 @@ proof -
     \<comment> \<open>invg([const]) = [reverse(const)] = [const] (constant path reversed is still constant).\<close>
     have hinvg_id: "top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0)
         = top1_fundamental_group_id B TB b0"
-      sorry \<comment> \<open>Inverse of identity class = identity class (reverse of const ≃ const).\<close>
+    proof (rule set_eqI)
+      fix h
+      show "h \<in> top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0)
+          \<longleftrightarrow> h \<in> top1_fundamental_group_id B TB b0"
+      proof
+        assume "h \<in> top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0)"
+        then obtain f where hf: "f \<in> top1_fundamental_group_id B TB b0"
+            and hrev: "top1_loop_equiv_on B TB b0 (top1_path_reverse f) h"
+          unfolding top1_fundamental_group_invg_def by (by100 blast)
+        have hf_equiv: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) f"
+          using hf unfolding top1_fundamental_group_id_def by (by100 blast)
+        \<comment> \<open>const ≃ f ⟹ reverse(const) ≃ reverse(f) ⟹ const ≃ reverse(f) ≃ h.\<close>
+        have hconst_rev: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) (top1_path_reverse f)"
+          sorry \<comment> \<open>reverse preserves homotopy class + reverse(const) = const.\<close>
+        have "top1_loop_equiv_on B TB b0 (top1_constant_path b0) h"
+          sorry \<comment> \<open>Transitivity: const ≃ reverse(f) ≃ h.\<close>
+        thus "h \<in> top1_fundamental_group_id B TB b0"
+          unfolding top1_fundamental_group_id_def by (by100 blast)
+      next
+        assume "h \<in> top1_fundamental_group_id B TB b0"
+        hence hh: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) h"
+          unfolding top1_fundamental_group_id_def by (by100 blast)
+        \<comment> \<open>Take f = const. reverse(const) ≃ const ≃ h.\<close>
+        have hconst_in_id: "top1_constant_path b0 \<in> top1_fundamental_group_id B TB b0"
+          unfolding top1_fundamental_group_id_def
+          using top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTB hb0_B]] by (by100 blast)
+        have "top1_path_reverse (top1_constant_path b0) = top1_constant_path b0"
+          unfolding top1_path_reverse_def top1_constant_path_def by (rule ext) simp
+        hence "top1_loop_equiv_on B TB b0 (top1_path_reverse (top1_constant_path b0)) h"
+          using hh by simp
+        thus "h \<in> top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0)"
+          unfolding top1_fundamental_group_invg_def using hconst_in_id by (by100 blast)
+      qed
+    qed
     \<comment> \<open>mul(id, id) = id (left identity in fundamental group).\<close>
     have hmul_id: "top1_fundamental_group_mul B TB b0
         (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)
