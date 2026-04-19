@@ -4350,8 +4350,43 @@ proof -
               continuous_on_divide[OF _ continuous_on_const]
               continuous_on_compose2[OF continuous_on_arctan _ subset_UNIV]
               continuous_on_divide continuous_on_snd continuous_on_fst) (by100 auto)+
-        have hinv_range: "\<And>p. p \<in> top1_S1_arc_E \<Longrightarrow> inv_fn p \<in> V" sorry
-        have hinv_agree: "\<forall>p\<in>top1_S1_arc_E. inv_into V top1_R_to_S1 p = inv_fn p" sorry
+        have hinv_range: "\<And>p. p \<in> top1_S1_arc_E \<Longrightarrow> inv_fn p \<in> V"
+        proof -
+          fix p assume hp: "p \<in> top1_S1_arc_E"
+          hence hx_pos: "fst p > 0" unfolding top1_S1_arc_E_def by (by100 auto)
+          have "arctan (snd p / fst p) \<in> {-pi/2 <..< pi/2}"
+            using arctan_bounded[of "snd p / fst p"] by (by100 simp)
+          hence "arctan (snd p / fst p) / (2*pi) \<in> {-1/4 <..< 1/4}"
+            using pi_gt_zero by (simp add: field_simps)
+          thus "inv_fn p \<in> V" unfolding inv_fn_def hVeq by (by100 auto)
+        qed
+        have hinv_agree: "\<forall>p\<in>top1_S1_arc_E. inv_into V top1_R_to_S1 p = inv_fn p"
+        proof
+          fix p assume hp: "p \<in> top1_S1_arc_E"
+          have hx_pos: "fst p > 0" using hp unfolding top1_S1_arc_E_def by (by100 auto)
+          have hcirc: "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_arc_E_def by (by100 auto)
+          have hinV: "inv_fn p \<in> V" using hinv_range[OF hp] .
+          \<comment> \<open>Show p(inv_fn p) = p: cos(arctan(y/x)) = x and sin(arctan(y/x)) = y for x>0, x^2+y^2=1.\<close>
+          have hsqrt: "sqrt (1 + (snd p / fst p)\<^sup>2) = 1 / fst p"
+          proof -
+            have "1 + (snd p / fst p)^2 = ((fst p)^2 + (snd p)^2) / (fst p)^2"
+              using hx_pos by (simp add: field_simps power2_eq_square)
+            also have "\<dots> = 1 / (fst p)^2" using hcirc by (by100 simp)
+            finally have "sqrt (1 + (snd p / fst p)^2) = sqrt (1 / (fst p)^2)" by (by100 simp)
+            also have "\<dots> = 1 / fst p" using hx_pos by (simp add: real_sqrt_divide)
+            finally show ?thesis .
+          qed
+          have hcos: "cos (arctan (snd p / fst p)) = fst p"
+            using cos_arctan[of "snd p / fst p"] hsqrt hx_pos by (by100 simp)
+          have hsin: "sin (arctan (snd p / fst p)) = snd p"
+            using sin_arctan[of "snd p / fst p"] hsqrt hx_pos by (by100 simp)
+          have "top1_R_to_S1 (inv_fn p) = p"
+            unfolding top1_R_to_S1_def inv_fn_def
+            using hcos hsin by (simp add: distrib_left cos_add sin_add cos_int_2pin sin_int_2pin
+                                          prod_eq_iff)
+          thus "inv_into V top1_R_to_S1 p = inv_fn p"
+            using inv_into_f_eq[OF hpV_inj hinV] by (by100 simp)
+        qed
         have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E
             = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_E"
           unfolding top1_S1_topology_def
