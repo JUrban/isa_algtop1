@@ -6323,8 +6323,44 @@ proof -
        The bridge from top1_continuous_map_on to open balls uses:
        I_top = subspace_topology UNIV top1_open_sets I_set,
        top1_open_sets = {U. open U}, open_dist.\<close>
-    show ?thesis sorry \<comment> \<open>Apply open_cover_subdivision_01 with the bridge.
-       Remaining: the top1_continuous_map_on → open ball bridge.\<close>
+    \<comment> \<open>Build the cover: for each s, get ball and evenly covered U.\<close>
+    have hpointwise: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
+        (\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+             \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+    proof (intro allI impI)
+      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+      have hs_I: "s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+      have hfs: "f s \<in> B" using hf_B hs_I by blast
+      obtain U where hbU: "f s \<in> U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+        using top1_covering_map_on_evenly_covered[OF hcov hfs] by (by100 blast)
+      have hUopen: "openin_on B TB U" using hUec unfolding top1_evenly_covered_on_def by (by100 blast)
+      hence hU_TB: "U \<in> TB" using hUopen unfolding openin_on_def by (by100 blast)
+      obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hball: "f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using top1_continuous_preimage_ball[OF hf_cont hU_TB hs_I hbU] by blast
+      show "\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+           \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using h\<epsilon> hUopen hUec hball by blast
+    qed
+    \<comment> \<open>Apply open_cover_subdivision_01 to get the subdivision.\<close>
+    \<comment> \<open>The cover elements are {t. |t-s| < \<epsilon>(s) \<and> 0 \<le> t \<and> t \<le> 1} tagged with evenly covered U(s).\<close>
+    \<comment> \<open>Build the cover \<A> for open_cover_subdivision_01.\<close>
+    define get_eps where "get_eps s = (SOME \<epsilon>. \<epsilon> > 0 \<and>
+        (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+             \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))" for s
+    define \<A>_covers where "\<A>_covers = (\<lambda>s. {t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1}) ` {0..1::real}"
+    \<comment> \<open>Verify the cover hypothesis of open_cover_subdivision_01.\<close>
+    have hcover_hyp: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
+        (\<exists>U\<in>\<A>_covers. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
+      sorry \<comment> \<open>From hpointwise + SOME specification.\<close>
+    obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
+        and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
+        and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
+      using open_cover_subdivision_01[OF hcover_hyp] by blast
+    \<comment> \<open>Transfer: each subdivision piece maps into an evenly covered set.\<close>
+    have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
+      sorry \<comment> \<open>Each A_covers element maps into an evenly covered U by construction.\<close>
+    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by blast
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
