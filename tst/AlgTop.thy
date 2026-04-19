@@ -6373,17 +6373,24 @@ proof -
        At k = n, sub(n) = 1, giving ftilde on [0,1] = I_set.\<close>
     \<comment> \<open>Induction on k: at each step, extend the lift by one interval.\<close>
     have "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
-        \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
+        \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)
+        \<and> top1_continuous_map_on {s\<in>I_set. s \<le> sub k}
+            (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub k}) E TE ftk"
     proof (intro allI impI)
       fix k show "k \<le> n \<Longrightarrow> \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
-          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
+          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)
+          \<and> top1_continuous_map_on {s\<in>I_set. s \<le> sub k}
+              (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub k}) E TE ftk"
       proof (induction k)
         case 0
         \<comment> \<open>Base: sub 0 = 0. Only s = 0 satisfies s \<le> 0, and ftk 0 = e0.\<close>
         have hf0_eq: "f 0 = p e0" using hpe0 hf unfolding top1_is_path_on_def by simp
+        have hcont0: "top1_continuous_map_on {s\<in>I_set. s \<le> sub 0}
+            (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub 0}) E TE (\<lambda>_. e0)"
+          sorry
         show ?case
           apply (intro exI[of _ "\<lambda>_. e0"] conjI allI ballI impI)
-          using he0 hf0_eq hsub0 unfolding top1_unit_interval_def by auto
+          using he0 hf0_eq hsub0 hcont0 unfolding top1_unit_interval_def by auto
       next
         case (Suc k)
         \<comment> \<open>IH: \<exists>ftk on [0, sub k]. Extend to [0, sub(Suc k)].\<close>
@@ -6391,6 +6398,8 @@ proof -
         obtain ftk where hftk0: "ftk 0 = e0"
             and hftk_E: "\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E"
             and hftkp: "\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s"
+            and hftk_cont: "top1_continuous_map_on {s\<in>I_set. s \<le> sub k}
+                (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub k}) E TE ftk"
           using Suc.IH[OF hk_le] by (by100 blast)
         \<comment> \<open>f maps [sub k, sub(Suc k)] into some evenly covered U.\<close>
         have hSk_lt: "k < n" using Suc.prems by simp
@@ -6488,23 +6497,35 @@ proof -
             ultimately show ?thesis by simp
           qed
         qed
-        show ?case using hftk'0 hftk'_E hftk'p by (by100 blast)
+        \<comment> \<open>Continuity of ftk' on [0, sub(Suc k)] by pasting lemma.\<close>
+        have hftk'_cont: "top1_continuous_map_on {s\<in>I_set. s \<le> sub (Suc k)}
+            (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub (Suc k)}) E TE ftk'"
+          sorry
+        show ?case using hftk'0 hftk'_E hftk'p hftk'_cont by (by100 blast)
       qed
-    qed
-    hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
-        \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
-    proof -
-      assume h: "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
-          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
-      obtain ftilde where hft: "ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> ftilde s \<in> E)
-          \<and> (\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> p (ftilde s) = f s)"
-        using h[rule_format, of n] by auto
-      show ?thesis using hft hsubn unfolding top1_unit_interval_def by auto
     qed
     hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
         \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
         \<and> top1_continuous_map_on I_set I_top E TE ftilde"
-      sorry \<comment> \<open>Continuity: pasting lemma on the finitely many intervals.\<close>
+    proof -
+      assume h: "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
+          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)
+          \<and> top1_continuous_map_on {s\<in>I_set. s \<le> sub k}
+              (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub k}) E TE ftk"
+      obtain ftilde where hft0: "ftilde 0 = e0"
+          and hftE: "\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> ftilde s \<in> E"
+          and hftp: "\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> p (ftilde s) = f s"
+          and hcont: "top1_continuous_map_on {s\<in>I_set. s \<le> sub n}
+              (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub n}) E TE ftilde"
+        using h[rule_format, of n] by auto
+      \<comment> \<open>Since sub n = 1, {s\<in>I_set. s \<le> sub n} = I_set.\<close>
+      have hI_eq: "{s\<in>I_set. s \<le> sub n} = I_set"
+        using hsubn unfolding top1_unit_interval_def by auto
+      have hft_cont: "top1_continuous_map_on I_set I_top E TE ftilde"
+        sorry
+      show ?thesis using hft0 hftE hftp hft_cont hsubn
+        unfolding top1_unit_interval_def by auto
+    qed
     thus ?thesis by (by100 blast)
   qed
   \<comment> \<open>Assemble into path.\<close>
