@@ -7559,8 +7559,14 @@ proof -
         thus ?thesis using hprev_00 by simp
       qed
       show ?case
-        apply (rule exI[of _ Ft_next])
-        using hnext_cont hnext_lift \<open>Ft_next (0, 0) = e0\<close> hA_Suc sorry
+      proof (intro exI conjI)
+        show "top1_continuous_map_on (?A (Suc k))
+            (subspace_topology (I_set \<times> I_set) II_topology (?A (Suc k))) E TE Ft_next"
+          using hnext_cont hA_Suc by simp
+        show "\<forall>x\<in>?A (Suc k). p (Ft_next x) = F x"
+          using hnext_lift hA_Suc by simp
+        show "Ft_next (0, 0) = e0" using \<open>Ft_next (0, 0) = e0\<close> .
+      qed
     qed
   qed
   \<comment> \<open>At k = m*n: A_{m*n} = I\<times>I.\<close>
