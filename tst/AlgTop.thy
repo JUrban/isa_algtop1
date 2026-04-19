@@ -6619,11 +6619,37 @@ proof -
               using hV_homeo hV0 unfolding top1_homeomorphism_on_def by (by100 blast)
             \<comment> \<open>f restricted to B is continuous B \<rightarrow> U.\<close>
             have hf_B_cont: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B) U (subspace_topology B TB U) f"
-              sorry
+            proof -
+              \<comment> \<open>f maps ?B into U (from hfU).\<close>
+              have hfBU: "\<forall>s\<in>?B. f s \<in> U"
+                using hfU unfolding top1_unit_interval_def by auto
+              \<comment> \<open>For V \<in> subspace_topology B TB U, V = U \<inter> W for some W \<in> TB.
+                 {s\<in>B. f s \<in> V} = {s\<in>B. f s \<in> W} \<inter> {s\<in>B. f s \<in> U} = {s\<in>B. f s \<in> W}.\<close>
+              show ?thesis unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix s assume "s \<in> ?B" thus "f s \<in> U" using hfBU by (by100 blast)
+              next
+                fix V assume hV: "V \<in> subspace_topology B TB U"
+                then obtain W where hW: "W \<in> TB" and hVeq: "V = U \<inter> W"
+                  unfolding subspace_topology_def by (by100 auto)
+                have "{s \<in> ?B. f s \<in> V} = {s \<in> ?B. f s \<in> W}"
+                  using hVeq hfBU by (by100 auto)
+                also have "\<dots> = ?B \<inter> {s \<in> I_set. f s \<in> W}" by auto
+                also have "{s \<in> I_set. f s \<in> W} \<in> I_top"
+                  using hf_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+                hence "?B \<inter> {s \<in> I_set. f s \<in> W} \<in> subspace_topology I_set I_top ?B"
+                  unfolding subspace_topology_def by (by100 blast)
+                finally show "{s \<in> ?B. f s \<in> V} \<in> subspace_topology I_set I_top ?B" .
+              qed
+            qed
             \<comment> \<open>Compose: inv_into V0 p \<circ> f continuous B \<rightarrow> V0 \<subseteq> E.\<close>
             have hcomp_cont: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B)
                 V0 (subspace_topology E TE V0) (\<lambda>s. inv_into V0 p (f s))"
-              sorry
+            proof -
+              have heq: "(\<lambda>s. inv_into V0 p (f s)) = (inv_into V0 p) \<circ> f" by (rule ext) simp
+              show ?thesis unfolding heq
+                by (rule top1_continuous_map_on_comp[OF hf_B_cont hinv_cont])
+            qed
             \<comment> \<open>Lift from V0-topology to E-topology.\<close>
             show ?thesis unfolding hTBsub
               unfolding top1_continuous_map_on_def
@@ -6632,9 +6658,30 @@ proof -
               hence "s \<in> I_set" and "s \<le> sub (Suc k)" by auto
               thus "ftk' s \<in> E" using hftk'_E by (by100 blast)
             next
-              fix V assume "V \<in> TE"
-              show "{s \<in> ?B. ftk' s \<in> V} \<in> subspace_topology I_set I_top ?B"
-                sorry
+              fix V assume hV_TE: "V \<in> TE"
+              \<comment> \<open>V \<inter> V0 \<in> subspace_topology E TE V0.\<close>
+              have hVV0: "V \<inter> V0 \<in> subspace_topology E TE V0"
+                unfolding subspace_topology_def using hV_TE by (by100 blast)
+              \<comment> \<open>{s\<in>B. ftk' s \<in> V} = {s\<in>B. inv_into V0 p (f s) \<in> V \<inter> V0}
+                 since inv_into V0 p (f s) \<in> V0 for s \<in> B.\<close>
+              have hpreq: "{s \<in> ?B. ftk' s \<in> V} = {s \<in> ?B. inv_into V0 p (f s) \<in> V \<inter> V0}"
+              proof -
+                have "\<And>s. s \<in> ?B \<Longrightarrow> ftk' s = inv_into V0 p (f s)"
+                  using hftk'_eq_inv by (by100 blast)
+                moreover have "\<And>s. s \<in> ?B \<Longrightarrow> inv_into V0 p (f s) \<in> V0"
+                proof -
+                  fix s assume hs: "s \<in> ?B"
+                  have "f s \<in> U" using hfU hs unfolding top1_unit_interval_def by auto
+                  have "p ` V0 = U" using hbij unfolding bij_betw_def by (by100 blast)
+                  hence "f s \<in> p ` V0" using \<open>f s \<in> U\<close> by simp
+                  thus "inv_into V0 p (f s) \<in> V0" by (rule inv_into_into)
+                qed
+                ultimately show ?thesis by auto
+              qed
+              have "{s \<in> ?B. inv_into V0 p (f s) \<in> V \<inter> V0} \<in> subspace_topology I_set I_top ?B"
+                using hcomp_cont hVV0 unfolding top1_continuous_map_on_def by (by100 blast)
+              thus "{s \<in> ?B. ftk' s \<in> V} \<in> subspace_topology I_set I_top ?B"
+                using hpreq by simp
             qed
           qed
           show ?thesis
