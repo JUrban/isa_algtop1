@@ -4341,7 +4341,34 @@ proof -
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_E
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
-        sorry
+      proof -
+        define inv_fn :: "real \<times> real \<Rightarrow> real"
+          where "inv_fn \<equiv> \<lambda>p. arctan (snd p / fst p) / (2 * pi) + of_int n"
+        have hinv_co: "continuous_on top1_S1_arc_E inv_fn"
+          unfolding inv_fn_def top1_S1_arc_E_def
+          by (intro continuous_on_add continuous_on_const
+              continuous_on_divide[OF _ continuous_on_const]
+              continuous_on_compose2[OF continuous_on_arctan _ subset_UNIV]
+              continuous_on_divide continuous_on_snd continuous_on_fst) (by100 auto)+
+        have hinv_range: "\<And>p. p \<in> top1_S1_arc_E \<Longrightarrow> inv_fn p \<in> V" sorry
+        have hinv_agree: "\<forall>p\<in>top1_S1_arc_E. inv_into V top1_R_to_S1 p = inv_fn p" sorry
+        have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_E"
+          unfolding top1_S1_topology_def
+          using subspace_topology_trans[OF harc_sub]
+          by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+        have "top1_continuous_map_on top1_S1_arc_E
+            (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_E)
+            V (subspace_topology UNIV (top1_open_sets :: real set set) V) inv_fn"
+          by (rule top1_continuous_map_on_subspace_open_sets_on[OF hinv_range hinv_co])
+        hence hinv_fn_cont: "top1_continuous_map_on top1_S1_arc_E
+            (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)
+            V (subspace_topology UNIV top1_open_sets V) inv_fn"
+          unfolding harc_eq .
+        have "\<forall>p\<in>top1_S1_arc_E. inv_fn p = inv_into V top1_R_to_S1 p"
+          using hinv_agree by (by100 auto)
+        thus ?thesis by (rule top1_continuous_map_on_agree'[OF hinv_fn_cont])
+      qed
       have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_E"
         unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
       have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
