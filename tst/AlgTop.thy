@@ -4283,7 +4283,36 @@ proof -
         hence "top1_R_to_S1 ?t' = y" using hpt by (by100 simp)
         thus "y \<in> top1_R_to_S1 ` V" using ht'V by (by100 blast)
       qed
-      have hpV_inj: "inj_on top1_R_to_S1 V" sorry
+      have hpV_inj: "inj_on top1_R_to_S1 V"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
+            and heq: "top1_R_to_S1 x = top1_R_to_S1 y"
+        \<comment> \<open>x, y \<in> (n-1/4, n+1/4), so 2\<pi>x, 2\<pi>y \<in> (2\<pi>n-\<pi>/2, 2\<pi>n+\<pi>/2).
+           sin injective on this interval \<Rightarrow> 2\<pi>x = 2\<pi>y \<Rightarrow> x = y.\<close>
+        have "sin (2 * pi * x) = sin (2 * pi * y)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)
+        moreover have "cos (2 * pi * x) = cos (2 * pi * y)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)
+        moreover have "cos (2 * pi * x) > 0"
+        proof -
+          have "x \<in> {of_int n - 1/4 <..< of_int n + 1/4}" using hx hVeq by (by100 blast)
+          hence "top1_R_to_S1 x \<in> top1_S1_arc_E" using hpV hx by (by100 blast)
+          thus ?thesis unfolding top1_R_to_S1_def top1_S1_arc_E_def by (by100 simp)
+        qed
+        \<comment> \<open>sin \<theta>1 = sin \<theta>2 \<and> cos \<theta>1 = cos \<theta>2 \<Rightarrow> \<exists>k. \<theta>1 = \<theta>2 + 2k\<pi>.\<close>
+        ultimately obtain k :: int where "2*pi*x = 2*pi*y + 2*pi*of_int k"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        hence "2*pi*x - 2*pi*y = 2*pi * of_int k" by (by100 linarith)
+        hence "2*pi * (x - y) = 2*pi * of_int k" by (simp add: algebra_simps)
+        hence "x - y = of_int k" using pi_gt_zero by (by100 simp)
+        \<comment> \<open>x, y \<in> (n-1/4, n+1/4), so |x-y| < 1/2 < 1. Hence k = 0.\<close>
+        moreover have "of_int n - 1/4 < x" "x < of_int n + 1/4"
+            "of_int n - 1/4 < y" "y < of_int n + 1/4"
+          using hx hy unfolding hVeq by (by100 auto)+
+        hence "\<bar>x - y\<bar> < 1/2" by (by100 linarith)
+        hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
+        ultimately show "x = y" by (by100 linarith)
+      qed
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_E
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
