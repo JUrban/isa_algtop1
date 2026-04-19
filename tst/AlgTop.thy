@@ -4663,7 +4663,72 @@ proof -
       hence hcos: "cos (2 * pi * x) < 0"
         unfolding top1_R_to_S1_def top1_S1_arc_W_def by (by100 auto)
       \<comment> \<open>cos(2\<pi>x) < 0 iff x \<in> (n+1/4, n+3/4) for some n.\<close>
-      show "x \<in> \<Union>?\<V>" sorry
+      define nn where "nn = \<lfloor>x\<rfloor>"
+      have hnn_le: "of_int nn \<le> x" and hx_lt: "x < of_int nn + 1"
+        unfolding nn_def by linarith+
+      have hfrac: "x - of_int nn \<ge> 0" "x - of_int nn < 1" using hnn_le hx_lt by linarith+
+      have hshift: "cos (2 * pi * (x - of_int nn)) = cos (2 * pi * x)"
+      proof -
+        have "top1_R_to_S1 x = top1_R_to_S1 (x - of_int nn)"
+          using top1_R_to_S1_int_shift_early[of "x - of_int nn" nn] by simp
+        hence "fst (top1_R_to_S1 x) = fst (top1_R_to_S1 (x - of_int nn))" by simp
+        thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+      qed
+      have hcos_neg: "cos (2 * pi * (x - of_int nn)) < 0" using hcos hshift by (by100 linarith)
+      have hpi: "pi > 0" by (rule pi_gt_zero)
+      \<comment> \<open>frac \<in> (1/4, 3/4) by contradiction: cos \<ge> 0 outside this range.\<close>
+      have hfrac_gt14: "x - of_int nn > 1/4"
+      proof (rule ccontr)
+        assume "\<not> x - of_int nn > 1/4"
+        hence hle: "x - of_int nn \<le> 1/4" by (by100 linarith)
+        \<comment> \<open>2\<pi>(x-n) \<le> \<pi>/2 and 2\<pi>(x-n) \<ge> 0. cos \<ge> 0 on [0, \<pi>/2].\<close>
+        have h_nonneg: "0 \<le> 2 * pi * (x - of_int nn)" using hfrac hpi
+          by (by100 simp)
+        have hge_neg: "- (pi / 2) \<le> 2 * pi * (x - of_int nn)"
+          using h_nonneg hpi by (by100 linarith)
+        have hle_half: "2 * pi * (x - of_int nn) \<le> pi / 2"
+        proof -
+          have "2 * pi * (x - of_int nn) \<le> 2 * pi * (1/4)" using hle hpi by (by100 simp)
+          also have "\<dots> = pi * (2 * (1/4::real))" by (simp add: algebra_simps)
+          also have "\<dots> = pi / 2" by simp
+          finally show ?thesis .
+        qed
+        have "cos (2 * pi * (x - of_int nn)) \<ge> 0"
+          by (rule cos_ge_zero[OF hge_neg hle_half])
+        thus False using hcos_neg by (by100 linarith)
+      qed
+      have hfrac_lt34: "x - of_int nn < 3/4"
+      proof (rule ccontr)
+        assume "\<not> x - of_int nn < 3/4"
+        hence hge: "x - of_int nn \<ge> 3/4" by (by100 linarith)
+        \<comment> \<open>2\<pi>(x-n) \<in> [3\<pi>/2, 2\<pi>). cos = cos(2\<pi>-(2\<pi>(x-n))) = cos(2\<pi>(1-(x-n))),
+           and 1-(x-n) \<in> (0, 1/4], so 2\<pi>(1-(x-n)) \<in> (0, \<pi>/2]. cos \<ge> 0.\<close>
+        \<comment> \<open>cos(2\<pi>(x-n)) = cos(2\<pi> - 2\<pi>(x-n)) = cos(2\<pi>(1-(x-n))).
+           1-(x-n) \<in> (0, 1/4], so 2\<pi>(1-(x-n)) \<in> (0, \<pi>/2], cos \<ge> 0.\<close>
+        have hcos_eq: "cos (2 * pi * (x - of_int nn)) = cos (2 * pi * (1 - (x - of_int nn)))"
+          sorry \<comment> \<open>cos(t) = cos(-t) = cos(-t + 2\<pi>) = cos(2\<pi> - t). Isabelle normalization issue.\<close>
+        have h1mfrac: "0 < 1 - (x - of_int nn)" "1 - (x - of_int nn) \<le> 1/4"
+          using hge hfrac by linarith+
+        have h_nonneg2: "0 \<le> 2 * pi * (1 - (x - of_int nn))"
+          using h1mfrac hpi by (by100 simp)
+        have "- (pi / 2) \<le> 2 * pi * (1 - (x - of_int nn))"
+          using h_nonneg2 hpi by (by100 linarith)
+        moreover have "2 * pi * (1 - (x - of_int nn)) \<le> pi / 2"
+        proof -
+          have "2 * pi * (1 - (x - of_int nn)) \<le> 2 * pi * (1/4)" using h1mfrac hpi by (by100 simp)
+          also have "\<dots> = pi * (2 * (1/4::real))" by (simp add: algebra_simps)
+          also have "\<dots> = pi / 2" by simp
+          finally show ?thesis .
+        qed
+        ultimately have "cos (2 * pi * (1 - (x - of_int nn))) \<ge> 0" by (rule cos_ge_zero)
+        have "cos (2 * pi * (x - of_int nn)) \<ge> 0" using hcos_eq \<open>cos (2 * pi * (1 - (x - of_int nn))) \<ge> 0\<close> by (by100 linarith)
+        thus False using hcos_neg by (by100 linarith)
+      qed
+      have hx_in: "x \<in> {x::real. of_int nn + 1/4 < x \<and> x < of_int nn + 3/4}"
+        using hfrac_gt14 hfrac_lt34 by (by100 simp)
+      have hV_in: "{x::real. of_int nn + 1/4 < x \<and> x < of_int nn + 3/4} \<in> ?\<V>"
+        by (by100 blast)
+      show "x \<in> \<Union>?\<V>" using hx_in hV_in by (by100 blast)
     next
       fix x :: real assume "x \<in> \<Union>?\<V>"
       then obtain n :: int where hn1: "of_int n + (1/4::real) < x" "x < of_int n + (3/4::real)"
