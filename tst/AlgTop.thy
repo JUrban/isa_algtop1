@@ -2226,16 +2226,22 @@ proof -
         by (intro continuous_on_min h2s hmin1)
       have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. max 0 (min (2 * fst p) (min (2 - 2 * fst p) (1 - snd p))))"
         by (intro continuous_on_max continuous_on_const hmin2)
-      thus ?thesis by (simp add: case_prod_unfold)
+      thus ?thesis by (simp only: case_prod_unfold fst_conv snd_conv)
     qed
-    have hg_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set" using hg_range by auto
+    have hg_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set"
+    proof -
+      fix p assume hp: "p \<in> I_set \<times> I_set"
+      then obtain s t where hst: "p = (s, t)" by (cases p) blast
+      have "s \<in> I_set" "t \<in> I_set" using hp hst by (by100 blast)+
+      thus "?g p \<in> I_set" using hg_range hst by simp
+    qed
     have hg_top1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top ?g"
       by (rule top1_continuous_map_on_II_to_I[OF hg_map hg_cont])
     have hcomp_raw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (f \<circ> ?g)"
       by (rule top1_continuous_map_on_comp[OF hg_top1 hfcont])
     show ?thesis unfolding II_topology_def
       by (rule top1_continuous_map_on_agree[OF hcomp_raw])
-         (auto simp: comp_def case_prod_unfold)
+         (simp only: comp_def case_prod_unfold fst_conv snd_conv, simp)
   qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
   proof
@@ -2244,8 +2250,9 @@ proof -
     show "?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
     proof (cases "s \<le> 1/2")
       case True
-      have "min (2*s) (min (2 - 2*s) (1 - 0)) = 2*s" using True hs_nn by auto
-      hence "?g (s, 0) = 2*s" using hs_nn by auto
+      have hmin: "min (2*s) (min (2 - 2*s) (1 - 0)) = 2*s" using True hs_nn by linarith
+      have "?g (s, 0) = max 0 (2*s)" using hmin by simp
+      hence "?g (s, 0) = 2*s" using hs_nn by simp
       hence lhs: "?F (s, 0) = f (2*s)" by simp
       have "top1_path_product f (top1_path_reverse f) s = f (2*s)"
         using True unfolding top1_path_product_def by simp
@@ -2253,12 +2260,13 @@ proof -
     next
       case False
       hence hge: "s > 1/2" by simp
-      have "min (2*s) (min (2 - 2*s) 1) = 2 - 2*s" using hge hs_le1 by auto
-      moreover have "2 - 2*s \<ge> 0" using hs_le1 by simp
-      ultimately have "?g (s, 0) = 2 - 2*s" by auto
+      have hmin: "min (2*s) (min (2 - 2*s) 1) = 2 - 2*s" using hge hs_le1 by linarith
+      have h2s_nn: "2 - 2*s \<ge> 0" using hs_le1 by linarith
+      have "?g (s, 0) = max 0 (2 - 2*s)" using hmin by simp
+      hence "?g (s, 0) = 2 - 2*s" using h2s_nn by simp
       hence lhs: "?F (s, 0) = f (2 - 2*s)" by simp
       have "top1_path_product f (top1_path_reverse f) s = top1_path_reverse f (2*s - 1)"
-        using hge unfolding top1_path_product_def by auto
+        using hge unfolding top1_path_product_def by simp
       also have "... = f (1 - (2*s - 1))" unfolding top1_path_reverse_def by simp
       also have "... = f (2 - 2*s)" by simp
       finally show ?thesis using lhs by simp
@@ -2268,8 +2276,8 @@ proof -
   proof
     fix s assume hs: "s \<in> I_set"
     have "min (2*s) (min (2 - 2*s) (1 - 1)) = 0"
-      using hs unfolding top1_unit_interval_def by auto
-    hence "?g (s, 1) = 0" by auto
+      using hs unfolding top1_unit_interval_def by simp
+    hence "?g (s, 1) = 0" by simp
     hence "?F (s, 1) = f 0" by simp
     thus "?F (s, 1) = top1_constant_path x0 s" using hf0 unfolding top1_constant_path_def by simp
   qed
@@ -4270,9 +4278,11 @@ proof -
       proof (rule ccontr)
         assume "V \<inter> V' \<noteq> {}"
         then obtain x where "x \<in> V" "x \<in> V'" by (by100 blast)
-        hence "of_int n - 1/4 < x" "x < of_int n + 1/4"
+        hence hxn: "x \<in> {of_int n - 1/4 <..< of_int n + (1/4::real)}" using hV by blast
+        have hxm: "x \<in> {of_int m - 1/4 <..< of_int m + (1/4::real)}" using \<open>x \<in> V'\<close> hV' by blast
+        have "of_int n - 1/4 < x" "x < of_int n + 1/4"
               "of_int m - 1/4 < x" "x < of_int m + 1/4"
-          unfolding hV hV' by (by100 auto)+
+          using hxn hxm by simp_all
         thus False using hgap by (by100 linarith)
       qed
     qed
@@ -10569,9 +10579,31 @@ proof -
     proof (intro ballI)
       fix s :: real assume hs: "s \<in> I_set"
       show "(?G \<circ> ?\<beta>1) s = top1_path_product (h \<circ> l) ?\<alpha> s"
-        unfolding comp_def top1_path_product_def case_prod_beta
-        using hG_bot hG_right hs hl1
-        unfolding top1_unit_interval_def by (by100 auto)
+      proof (cases "s \<le> 1/2")
+        case True
+        have "(?G \<circ> ?\<beta>1) s = ?G (2*s, 0)"
+          unfolding comp_def top1_path_product_def top1_unit_interval_def using True hs by auto
+        also have "\<dots> = H (l (2*s), 0)" by simp
+        also have "\<dots> = h (l (2*s))"
+        proof -
+          have "2*s \<in> I_set" using hs True unfolding top1_unit_interval_def by auto
+          thus ?thesis using hG_bot by simp
+        qed
+        also have "\<dots> = (h \<circ> l) (2*s)" by simp
+        also have "\<dots> = top1_path_product (h \<circ> l) ?\<alpha> s"
+          unfolding top1_path_product_def using True by simp
+        finally show ?thesis .
+      next
+        case False
+        have hs_ge: "s > 1/2" using False by linarith
+        have h2s1_I: "2 * s - 1 \<in> I_set"
+          using hs hs_ge unfolding top1_unit_interval_def by auto
+        have hLHS: "(?G \<circ> ?\<beta>1) s = H (x0, 2*s - 1)"
+          unfolding comp_def top1_path_product_def top1_unit_interval_def using hs_ge hs hl1 by auto
+        have hRHS: "top1_path_product (h \<circ> l) ?\<alpha> s = H (x0, 2*s - 1)"
+          unfolding top1_path_product_def using hs_ge by simp
+        show ?thesis using hLHS hRHS by simp
+      qed
     qed
     have hG\<beta>2: "\<forall>s\<in>I_set. (?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s"
     proof (intro ballI)
