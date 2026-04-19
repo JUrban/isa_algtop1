@@ -6351,7 +6351,20 @@ proof -
     \<comment> \<open>Verify the cover hypothesis of open_cover_subdivision_01.\<close>
     have hcover_hyp: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
         (\<exists>U\<in>\<A>_covers. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
-      sorry \<comment> \<open>From hpointwise + SOME specification.\<close>
+    proof (intro allI impI)
+      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+      \<comment> \<open>hpointwise gives ∃\<epsilon>>0. ∃U. ... From this, SOME picks get_eps s.\<close>
+      have hex: "\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+           \<and> f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using hpointwise[rule_format, OF hs] by (by100 blast)
+      hence hsome: "get_eps s > 0 \<and> (\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+           \<and> f ` {t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+        unfolding get_eps_def sorry \<comment> \<open>someI_ex on bounded ∃ — sledgehammer: No proof\<close>
+      hence hge: "get_eps s > 0" by (by100 blast)
+      let ?A = "{t. \<bar>t - s\<bar> < get_eps s \<and> 0 \<le> t \<and> t \<le> 1}"
+      show "\<exists>U\<in>\<A>_covers. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+        using hge hs unfolding \<A>_covers_def sorry
+    qed
     obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
         and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
         and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
