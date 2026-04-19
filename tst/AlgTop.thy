@@ -4244,7 +4244,47 @@ proof -
     \<comment> \<open>p homeomorphism on each slice.\<close>
     have hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
         top1_S1_arc_E (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E) top1_R_to_S1"
-      sorry
+    proof
+      fix V assume hVmem: "V \<in> \<V>"
+      then obtain n :: int where hVeq: "V = {of_int n - 1/4 <..< of_int n + (1/4::real)}"
+        unfolding \<V>_def by (by100 blast)
+      have hpV: "\<forall>x\<in>V. top1_R_to_S1 x \<in> top1_S1_arc_E"
+        using hV_union hVmem by (by100 blast)
+      have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
+      have harc_sub: "top1_S1_arc_E \<subseteq> top1_S1"
+        unfolding top1_S1_arc_E_def top1_S1_def by (by100 auto)
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_E" sorry
+      have hpV_inj: "inj_on top1_R_to_S1 V" sorry
+      have hinv_cont: "top1_continuous_map_on top1_S1_arc_E
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)
+          V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
+        sorry
+      have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_E"
+        unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hTarc: "is_topology_on top1_S1_arc_E
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use harc_sub in \<open>by100 blast\<close>)
+      have hp_V_img: "top1_R_to_S1 ` V \<subseteq> top1_S1_arc_E"
+        using hpV by (by100 blast)
+      have hp_V_arc: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_E (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E) top1_R_to_S1"
+        by (rule top1_continuous_map_on_codomain_shrink[OF
+              top1_continuous_map_on_restrict_domain_simple[OF hp_cont hV_sub]
+              hp_V_img harc_sub])
+      show "top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_E (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E) top1_R_to_S1"
+        unfolding top1_homeomorphism_on_def
+        using hTV hTarc hbij hp_V_arc hinv_cont by (by100 blast)
+    qed
     show ?thesis unfolding top1_evenly_covered_on_def
       using harc_E_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
   qed
