@@ -7255,10 +7255,37 @@ proof -
     have hFt_row1_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = F (s, 1)"
       using hFt_lift h1I by (by100 auto)
     have hrow1_eq: "\<forall>s\<in>I_set. Ftilde (s, 1) = rl s"
-      \<comment> \<open>Both lift F(\<cdot>,1) from Ftilde(0,1). On each piece of a Lebesgue subdivision,
-         both \<in> same slice V0 (rl by construction, Ftilde by column connectivity).
-         p injective on V0 + both lift F(s,1) \<Rightarrow> equal. Induction on pieces.\<close>
-      sorry
+    proof -
+      \<comment> \<open>Open-closed argument: {s \<in> I_set. Ftilde(s,1) = rl(s)} is clopen, nonempty \<Rightarrow> = I_set.\<close>
+      let ?S = "{s\<in>I_set. Ftilde (s, 1) = rl s}"
+      have hS0: "0 \<in> ?S"
+      proof -
+        have "Ftilde (0, 1) = Ftilde (0, 1)" by simp
+        moreover have "rl 0 = Ftilde (0, 1)"
+          using hrl unfolding top1_is_path_on_def by simp
+        ultimately show ?thesis unfolding top1_unit_interval_def by simp
+      qed
+      \<comment> \<open>S is open: if Ftilde(s0,1) = rl(s0), both \<in> some slice V0. p injective on V0.
+         rl continuous \<Rightarrow> rl stays in V0 near s0. Column Ftilde(s,\<cdot>) continuous \<Rightarrow>
+         Ftilde(s,1) \<in> p\<inverse>(U) near s0. Ftilde(s,1) \<in> V0 because column enters V0
+         at the grid boundary (matching rl by IH) and stays by connectivity.
+         Both in V0, both lift F(s,1), p injective \<Rightarrow> equal.\<close>
+      have hS_open: "openin_on I_set I_top ?S" sorry
+      \<comment> \<open>S is closed: if Ftilde(s0,1) \<noteq> rl(s0), they're in different slices (disjoint open).
+         rl stays in its slice, Ftilde(s,1) stays in its slice. Near s0, still different.\<close>
+      have hS_closed: "closedin_on I_set I_top ?S" sorry
+      \<comment> \<open>S nonempty, clopen in connected I_set \<Rightarrow> S = I_set.\<close>
+      have hI_conn: "top1_connected_on I_set I_top"
+        using top1_unit_interval_connected .
+      have hS_sub: "?S \<subseteq> I_set" by (by100 blast)
+      have hS_ne: "?S \<noteq> {}" using hS0 by (by100 blast)
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hS_IT: "?S \<in> I_top" using hS_open unfolding openin_on_def by (by100 blast)
+      have "?S = {} \<or> ?S = I_set"
+        using iffD1[OF connected_iff_clopen[OF hTI] hI_conn] hS_IT hS_closed by (by100 blast)
+      hence "?S = I_set" using hS_ne by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     show ?thesis unfolding top1_continuous_map_on_def
     proof (intro conjI ballI)
       fix s assume hs: "s \<in> I_set"
