@@ -7475,6 +7475,12 @@ proof -
      At each step: boundary C connected, Ftilde(C) in one slice V0,
      extend Ftilde = p0\<inverse>\<circ>F on rectangle, pasting gives continuity.
      After m*n steps: Ftilde continuous on all of I\<times>I.\<close>
+  \<comment> \<open>Induction on k = 0..m*n applies homotopy_lifting_rectangle_step at each step.
+     The helper lemma is fully proved. The induction requires:
+     - Defining A_k (region after k rectangles)
+     - Showing boundary of each rectangle \<inter> A_k is connected
+     - Showing A_{m*n} = I\<times>I
+     These are 2D grid geometry facts.\<close>
   show ?thesis sorry
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
