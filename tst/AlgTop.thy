@@ -7354,6 +7354,64 @@ proof -
   show ?thesis using hFt_cont hFt_lift hFt_agree by (by100 blast)
 qed
 
+\<comment> \<open>Helper: a closed sub-interval of I is closed in the subspace topology.\<close>
+lemma closedin_I_sub_interval:
+  fixes a b :: real
+  assumes "a \<le> b"
+  shows "closedin_on I_set I_top {s\<in>I_set. a \<le> s \<and> s \<le> b}"
+  unfolding closedin_on_def
+proof (intro conjI)
+  show "{s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> I_set" by (by100 blast)
+  have heq: "I_set - {s\<in>I_set. a \<le> s \<and> s \<le> b} = I_set \<inter> ({s :: real. s < a} \<union> {s. s > b})"
+    by (by100 auto)
+  have hopen: "open ({s :: real. s < a} \<union> {s. s > b})"
+  proof -
+    have "open {s :: real. s < a}" using open_lessThan[of a] unfolding lessThan_def by simp
+    moreover have "open {s :: real. s > b}" using open_greaterThan[of b] unfolding greaterThan_def by simp
+    ultimately show ?thesis by (rule open_Un)
+  qed
+  show "I_set - {s\<in>I_set. a \<le> s \<and> s \<le> b} \<in> I_top"
+    unfolding heq top1_unit_interval_topology_def subspace_topology_def
+    using hopen unfolding top1_open_sets_def by (by100 blast)
+qed
+
+\<comment> \<open>Helper: a closed rectangle is closed in II_topology.\<close>
+lemma closedin_II_rectangle:
+  fixes a b c d :: real
+  assumes hab: "a \<le> b" and hcd: "c \<le> d"
+  shows "closedin_on (I_set \<times> I_set) II_topology
+    ({s\<in>I_set. a \<le> s \<and> s \<le> b} \<times> {t\<in>I_set. c \<le> t \<and> t \<le> d})"
+  unfolding closedin_on_def
+proof (intro conjI)
+  let ?S = "{s\<in>I_set. a \<le> s \<and> s \<le> b}" and ?T = "{t\<in>I_set. c \<le> t \<and> t \<le> d}"
+  show "?S \<times> ?T \<subseteq> I_set \<times> I_set" by (by100 blast)
+  have hS_cl: "closedin_on I_set I_top ?S" by (rule closedin_I_sub_interval[OF hab])
+  have hT_cl: "closedin_on I_set I_top ?T" by (rule closedin_I_sub_interval[OF hcd])
+  have hS_open: "I_set - ?S \<in> I_top" using hS_cl unfolding closedin_on_def by (by100 blast)
+  have hT_open: "I_set - ?T \<in> I_top" using hT_cl unfolding closedin_on_def by (by100 blast)
+  have hI_open: "I_set \<in> I_top"
+    using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+  have heq: "I_set \<times> I_set - ?S \<times> ?T = ((I_set - ?S) \<times> I_set) \<union> (I_set \<times> (I_set - ?T))"
+    by (by100 blast)
+  have h1: "(I_set - ?S) \<times> I_set \<in> II_topology"
+    unfolding II_topology_def by (rule product_rect_open[OF hS_open hI_open])
+  have h2: "I_set \<times> (I_set - ?T) \<in> II_topology"
+    unfolding II_topology_def by (rule product_rect_open[OF hI_open hT_open])
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def
+    by (rule product_topology_on_is_topology_on[OF
+        top1_unit_interval_topology_is_topology_on
+        top1_unit_interval_topology_is_topology_on])
+  have hunion: "\<forall>F\<subseteq>II_topology. \<Union>F \<in> II_topology"
+    using hTII unfolding is_topology_on_def by (by100 blast)
+  have "{(I_set - ?S) \<times> I_set, I_set \<times> (I_set - ?T)} \<subseteq> II_topology"
+    using h1 h2 by (by100 blast)
+  hence "(I_set - ?S) \<times> I_set \<union> (I_set \<times> (I_set - ?T)) \<in> II_topology"
+    using hunion[rule_format, of "{(I_set - ?S) \<times> I_set, I_set \<times> (I_set - ?T)}"]
+    by simp
+  thus "I_set \<times> I_set - ?S \<times> ?T \<in> II_topology" unfolding heq .
+qed
+
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
   assumes "top1_covering_map_on E TE B TB p"
@@ -7483,6 +7541,66 @@ proof -
   let ?edges = "?left_edge \<union> ?bot_edge"
   \<comment> \<open>A_k = edges \<union> first k rectangles (row by row, left to right).\<close>
   let ?A = "\<lambda>k. ?edges \<union> (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+  \<comment> \<open>Grid point values are in I_set (by monotonicity between 0 and 1).\<close>
+  \<comment> \<open>Key fact: sub_s i is monotone and in I_set.\<close>
+  have hsub_s_le_Suc: "\<forall>i<m. sub_s i \<le> sub_s (Suc i)"
+    using hs_inc by (by100 auto)
+  have hsub_s_mono: "\<forall>i. \<forall>j. i \<le> j \<and> j \<le> m \<longrightarrow> sub_s i \<le> sub_s j"
+  proof (intro allI impI)
+    fix i j :: nat assume h: "i \<le> j \<and> j \<le> m"
+    hence hij: "i \<le> j" and hjm: "j \<le> m" by auto
+    show "sub_s i \<le> sub_s j" using hij hjm
+    proof (induction "j - i" arbitrary: j)
+      case 0 thus ?case by simp
+    next
+      case (Suc d)
+      hence "j > 0" by simp
+      then obtain j' where hj': "j = Suc j'" using not0_implies_Suc by (by100 blast)
+      have "i \<le> j'" using Suc.hyps(2) hj' by simp
+      have "j' \<le> m" using Suc.prems(2) hj' by simp
+      have "d = j' - i" using Suc.hyps(2) hj' by simp
+      have h1: "sub_s i \<le> sub_s j'" using Suc.hyps(1)[OF \<open>d = j' - i\<close> \<open>i \<le> j'\<close> \<open>j' \<le> m\<close>] .
+      have "j' < m" using \<open>j' \<le> m\<close> hj' Suc.prems(2) by simp
+      have h2: "sub_s j' \<le> sub_s (Suc j')" using hsub_s_le_Suc \<open>j' < m\<close> by (by100 blast)
+      show ?case using h1 h2 hj' by simp
+    qed
+  qed
+  have hsub_s_I: "\<forall>i\<le>m. sub_s i \<in> I_set"
+  proof (intro allI impI)
+    fix i assume hi2: "i \<le> m"
+    have "0 \<le> sub_s i" using hsub_s_mono[rule_format, of 0 i] hs0 hi2 by simp
+    moreover have "sub_s i \<le> 1" using hsub_s_mono[rule_format, of i m] hi2 hsm by simp
+    ultimately show "sub_s i \<in> I_set" unfolding top1_unit_interval_def by simp
+  qed
+  have hsub_t_le_Suc: "\<forall>j<n. sub_t j \<le> sub_t (Suc j)"
+    using ht_inc by (by100 auto)
+  have hsub_t_mono: "\<forall>i. \<forall>j. i \<le> j \<and> j \<le> n \<longrightarrow> sub_t i \<le> sub_t j"
+  proof (intro allI impI)
+    fix i j :: nat assume h: "i \<le> j \<and> j \<le> n"
+    hence hij: "i \<le> j" and hjn: "j \<le> n" by auto
+    show "sub_t i \<le> sub_t j" using hij hjn
+    proof (induction "j - i" arbitrary: j)
+      case 0 thus ?case by simp
+    next
+      case (Suc d)
+      hence "j > 0" by simp
+      then obtain j' where hj': "j = Suc j'" using not0_implies_Suc by (by100 blast)
+      have "i \<le> j'" using Suc.hyps(2) hj' by simp
+      have "j' \<le> n" using Suc.prems(2) hj' by simp
+      have "d = j' - i" using Suc.hyps(2) hj' by simp
+      have h1: "sub_t i \<le> sub_t j'" using Suc.hyps(1)[OF \<open>d = j' - i\<close> \<open>i \<le> j'\<close> \<open>j' \<le> n\<close>] .
+      have "j' < n" using \<open>j' \<le> n\<close> hj' Suc.prems(2) by simp
+      have h2: "sub_t j' \<le> sub_t (Suc j')" using hsub_t_le_Suc \<open>j' < n\<close> by (by100 blast)
+      show ?case using h1 h2 hj' by simp
+    qed
+  qed
+  have hsub_t_I: "\<forall>j\<le>n. sub_t j \<in> I_set"
+  proof (intro allI impI)
+    fix j assume hj2: "j \<le> n"
+    have "0 \<le> sub_t j" using hsub_t_mono[rule_format, of 0 j] ht0 hj2 by simp
+    moreover have "sub_t j \<le> 1" using hsub_t_mono[rule_format, of j n] hj2 htn by simp
+    ultimately show "sub_t j \<in> I_set" unfolding top1_unit_interval_def by simp
+  qed
   \<comment> \<open>Induction: \<forall>k \<le> m*n. \<exists>Ft. continuous on A_k, lifts F on A_k, Ft(0,0) = e0.\<close>
   have "\<forall>k \<le> m*n. \<exists>Ft. top1_continuous_map_on (?A k)
       (subspace_topology (I_set \<times> I_set) II_topology (?A k)) E TE Ft
@@ -7520,12 +7638,94 @@ proof -
         using hgrid[rule_format, OF hi hj] by (by100 auto)
       \<comment> \<open>A_k and R are closed in I\<times>I. A_k \<inter> R connected. A_k \<inter> R nonempty.\<close>
       have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
-      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry \<comment> \<open>Closed rectangle.\<close>
+      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)"
+        using closedin_II_rectangle[of "sub_s ?i" "sub_s (Suc ?i)" "sub_t ?j" "sub_t (Suc ?j)"]
+              hs_inc[rule_format, OF hi] ht_inc[rule_format, OF hj] by (by100 linarith)
       have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set"
-        sorry
+      proof -
+        have "{0::real} \<times> I_set \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+        moreover have "I_set \<times> {0::real} \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+        moreover have "\<forall>k'. ?R (k' mod m) (k' div m) \<subseteq> I_set \<times> I_set" by (by100 blast)
+        moreover have "?R ?i ?j \<subseteq> I_set \<times> I_set" by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
       have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
           (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))" sorry
-      have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}" sorry
+      have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}"
+      proof -
+        \<comment> \<open>The corner point (sub_s i, sub_t j) is in both A_k and R.\<close>
+        have hsi_I: "sub_s ?i \<in> I_set" using hsub_s_I[rule_format, of "?i"] hi by simp
+        have htj_I: "sub_t ?j \<in> I_set" using hsub_t_I[rule_format, of "?j"] hj by simp
+        have hsi_lt: "sub_s ?i < sub_s (Suc ?i)" using hs_inc[rule_format, OF hi] .
+        have hsi_le: "sub_s ?i \<le> sub_s (Suc ?i)" using hsi_lt by simp
+        have htj_lt: "sub_t ?j < sub_t (Suc ?j)" using ht_inc[rule_format, OF hj] .
+        have htj_le: "sub_t ?j \<le> sub_t (Suc ?j)" using htj_lt by simp
+        have hcorner_R: "(sub_s ?i, sub_t ?j) \<in> ?R ?i ?j"
+          using hsi_I htj_I hsi_le htj_le by (by100 blast)
+        have hcorner_A: "(sub_s ?i, sub_t ?j) \<in> ?A k"
+        proof (cases "?i = 0")
+          case True
+          hence "sub_s ?i = 0" using hs0 by simp
+          hence "(sub_s ?i, sub_t ?j) \<in> {0::real} \<times> I_set" using htj_I by (by100 blast)
+          thus ?thesis by (by100 blast)
+        next
+          case False
+          hence hi_pos: "?i > 0" by simp
+          \<comment> \<open>The rectangle at (i-1, j) is previous (index k-1 < k).\<close>
+          let ?k' = "k - 1"
+          have hk_pos: "k > 0" using hi_pos by (cases k) simp_all
+          have "?k' < k" using hk_pos by simp
+          have hk_eq: "k = ?j * m + ?i" by simp
+          have hk'_eq: "?k' = ?j * m + (?i - 1)" using hi_pos hk_eq by simp
+          have hi_1_lt: "?i - 1 < m" using hi by simp
+          have hk'_mod: "?k' mod m = ?i - 1"
+          proof -
+            have "(?j * m + (?i - 1)) mod m = (?i - 1) mod m"
+              by (rule mod_mult_self3)
+            also have "\<dots> = ?i - 1" using hi_1_lt by simp
+            finally show ?thesis using hk'_eq by simp
+          qed
+          have hk'_div: "?k' div m = ?j"
+          proof -
+            have hm0: "m \<noteq> 0" using hm by simp
+            have "(?j * m + (?i - 1)) div m = ?j + (?i - 1) div m"
+              using hm0 by (rule div_mult_self3)
+            also have "(?i - 1) div m = 0" using hi_1_lt by simp
+            finally show ?thesis using hk'_eq by simp
+          qed
+          \<comment> \<open>Corner is in R(i-1, j) because sub_s(i-1) \<le> sub_s(i) \<le> sub_s(i).\<close>
+          have "sub_s (?i - 1) \<le> sub_s ?i"
+          proof -
+            have "?i - 1 < m" using hi by simp
+            have "sub_s (?i - 1) < sub_s (Suc (?i - 1))"
+              using hs_inc[rule_format, OF \<open>?i - 1 < m\<close>] .
+            also have "Suc (?i - 1) = ?i" using hi_pos by simp
+            finally show ?thesis by simp
+          qed
+          have hSuc_i: "Suc (?i - 1) = ?i" using hi_pos by simp
+          have "sub_s ?i \<le> sub_s (Suc (?i - 1))" using hSuc_i by simp
+          have "(sub_s ?i, sub_t ?j) \<in> ?R (?i - 1) ?j"
+          proof -
+            have "sub_s ?i \<in> {s\<in>I_set. sub_s (?i - 1) \<le> s \<and> s \<le> sub_s (Suc (?i - 1))}"
+              using hsi_I \<open>sub_s (?i - 1) \<le> sub_s ?i\<close> \<open>sub_s ?i \<le> sub_s (Suc (?i - 1))\<close> by simp
+            moreover have "sub_t ?j \<in> {t\<in>I_set. sub_t ?j \<le> t \<and> t \<le> sub_t (Suc ?j)}"
+              using htj_I htj_le by simp
+            ultimately show ?thesis by (by100 blast)
+          qed
+          hence "(sub_s ?i, sub_t ?j) \<in> ?R (?k' mod m) (?k' div m)"
+            using hk'_mod hk'_div by simp
+          hence "(sub_s ?i, sub_t ?j) \<in> (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+            using \<open>?k' < k\<close> by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have hcorner_both: "(sub_s ?i, sub_t ?j) \<in> ?A k \<inter> ?R ?i ?j"
+          using hcorner_A hcorner_R by (by100 blast)
+        show ?thesis
+        proof (rule ccontr)
+          assume "\<not> ?thesis" hence "?A k \<inter> ?R ?i ?j = {}" by simp
+          thus False using hcorner_both by simp
+        qed
+      qed
       have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
         unfolding II_topology_def
         by (rule product_topology_on_is_topology_on[OF
@@ -7585,8 +7785,51 @@ proof -
         (subspace_topology (I_set \<times> I_set) II_topology (?A (m*n))) E TE Ft"
         and hFt_l: "\<forall>x\<in>?A (m*n). p (Ft x) = F x" and hFt_0: "Ft (0, 0) = e0"
       by (by100 blast)
+    have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def
+      by (rule product_topology_on_is_topology_on[OF
+          top1_unit_interval_topology_is_topology_on
+          top1_unit_interval_topology_is_topology_on])
+    have hsubs: "\<forall>W\<in>II_topology. W \<subseteq> I_set \<times> I_set"
+    proof (intro ballI subsetI)
+      fix W x assume hW: "W \<in> II_topology" and hx: "x \<in> W"
+      have hW2: "W \<in> topology_generated_by_basis UNIV (product_basis I_top I_top)"
+        using hW unfolding II_topology_def product_topology_on_def by simp
+      then obtain b where hb: "b \<in> product_basis I_top I_top" and hxb: "x \<in> b"
+        unfolding topology_generated_by_basis_def using hx by (by100 blast)
+      obtain U V where hU: "U \<in> I_top" and hV: "V \<in> I_top" and hbeq: "b = U \<times> V"
+        using hb unfolding product_basis_def by (by100 blast)
+      have "U \<subseteq> I_set"
+      proof -
+        obtain W where "U = I_set \<inter> W"
+          using hU unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      moreover have "V \<subseteq> I_set"
+      proof -
+        obtain W where "V = I_set \<inter> W"
+          using hV unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      ultimately show "x \<in> I_set \<times> I_set" using hxb hbeq by (by100 blast)
+    qed
     have "subspace_topology (I_set \<times> I_set) II_topology (I_set \<times> I_set) = II_topology"
-      unfolding subspace_topology_def sorry
+    proof (rule set_eqI)
+      fix W
+      show "(W \<in> subspace_topology (I_set \<times> I_set) II_topology (I_set \<times> I_set)) = (W \<in> II_topology)"
+      proof
+        assume "W \<in> subspace_topology (I_set \<times> I_set) II_topology (I_set \<times> I_set)"
+        then obtain U where hU: "U \<in> II_topology" and hW: "W = (I_set \<times> I_set) \<inter> U"
+          unfolding subspace_topology_def by (by100 blast)
+        hence "W = U" using hsubs hU by (by100 blast)
+        thus "W \<in> II_topology" using hU by simp
+      next
+        assume hW: "W \<in> II_topology"
+        have "W = (I_set \<times> I_set) \<inter> W" using hsubs hW by (by100 blast)
+        thus "W \<in> subspace_topology (I_set \<times> I_set) II_topology (I_set \<times> I_set)"
+          unfolding subspace_topology_def using hW by (by100 blast)
+      qed
+    qed
     hence "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ft"
       using hFt_c hAmn by simp
     moreover have "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ft (s, t)) = F (s, t)"
