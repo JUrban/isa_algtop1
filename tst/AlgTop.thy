@@ -4011,6 +4011,19 @@ proof (intro subsetI)
     using hne heq hpxy by auto
 qed
 
+text \<open>Periodicity of the covering map: p(x + n) = p(x) for integer n.
+  (Proved from cos_add/sin_add + cos_int_2pin/sin_int_2pin.)\<close>
+lemma top1_R_to_S1_int_shift_early:
+  "top1_R_to_S1 (x + of_int n) = top1_R_to_S1 x"
+proof -
+  have hc: "cos ((2 * pi) * of_int n) = 1" by (rule cos_int_2pin)
+  have hs: "sin ((2 * pi) * of_int n) = 0" by (rule sin_int_2pin)
+  have hexp: "2 * pi * (x + of_int n) = 2 * pi * x + (2 * pi) * of_int n"
+    by (simp add: algebra_simps)
+  show ?thesis unfolding top1_R_to_S1_def
+    by (simp add: hexp cos_add sin_add hc hs)
+qed
+
 lemma top1_S1_arc_E_preimage:
   "{x. top1_R_to_S1 x \<in> top1_S1_arc_E} = (\<Union>n::int. {of_int n - 1/4 <..< of_int n + 1/4})"
 proof (intro set_eqI iffI)
@@ -4508,8 +4521,8 @@ proof -
       qed
       ultimately have hsin: "sin (2 * pi * x - 2 * of_int n * pi) > 0"
         by (intro sin_gt_zero) (simp add: algebra_simps)+
-      have "sin (2 * pi * x) > 0"
-        using hsin sorry \<comment> \<open>sin(2\<pi>x) = sin(2\<pi>(x-n)) by periodicity; 0 < 2\<pi>(x-n) < \<pi> gives sin > 0.\<close>
+      \<comment> \<open>sin(2\<pi>x) = sin(2\<pi>(x-n)) > 0 from hsin and periodicity.\<close>
+      have "sin (2 * pi * x) > 0" using hsin sorry
       moreover have "cos (2 * pi * x) ^ 2 + sin (2 * pi * x) ^ 2 = 1" by (rule sin_cos_squared_add2)
       ultimately show "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N}"
         unfolding top1_R_to_S1_def top1_S1_arc_N_def by (by100 auto)
