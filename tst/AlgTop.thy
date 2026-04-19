@@ -7168,7 +7168,10 @@ proof -
     in inv_into (rect_slice (i, j)) p (F (s, t)))"
 
   \<comment> \<open>Verify the three properties.\<close>
-  have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)" sorry
+  have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
+    \<comment> \<open>On each rectangle, Ftilde = inv_into V p \<circ> F. Since p is a bijection V \<rightarrow> U
+       and F(s,t) \<in> U, we have p(inv_into V p (F(s,t))) = F(s,t).\<close>
+    sorry
   have hFt_00: "Ftilde (0, 0) = e0"
     unfolding Ftilde_def gp_def rect_slice_def sorry
   have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
