@@ -7564,7 +7564,33 @@ proof -
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                 \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-    sorry
+  proof -
+    \<comment> \<open>Instantiate from N-based grid: m = n = N, sub_s i = i/N, sub_t j = j/N.\<close>
+    define sub_s where "sub_s = (\<lambda>i. real i / real N)"
+    define sub_t where "sub_t = (\<lambda>j. real j / real N)"
+    have hs0: "sub_s 0 = 0" unfolding sub_s_def by simp
+    have hsN: "sub_s N = 1" unfolding sub_s_def using hN by simp
+    have ht0: "sub_t 0 = 0" unfolding sub_t_def by simp
+    have htN: "sub_t N = 1" unfolding sub_t_def using hN by simp
+    have hs_inc: "\<forall>i<N. sub_s i < sub_s (Suc i)"
+      unfolding sub_s_def using hN by (intro allI impI) (simp add: divide_strict_right_mono)
+    have ht_inc: "\<forall>j<N. sub_t j < sub_t (Suc j)"
+      unfolding sub_t_def using hN by (intro allI impI) (simp add: divide_strict_right_mono)
+    have heq_s: "\<forall>i<N. {s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+        = {s\<in>I_set. real i / real N \<le> s \<and> s \<le> real (Suc i) / real N}"
+      unfolding sub_s_def by simp
+    have heq_t: "\<forall>j<N. {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}
+        = {t\<in>I_set. real j / real N \<le> t \<and> t \<le> real (Suc j) / real N}"
+      unfolding sub_t_def by simp
+    have hgrid': "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
+        \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+              \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+      using hNgrid heq_s heq_t by simp
+    show ?thesis
+      using hN
+      by (intro that[of N N sub_s sub_t]) (simp_all add: hs0 hsN ht0 htN hs_inc ht_inc hgrid')
+  qed
   \<comment> \<open>Step 4: Rectangle-by-rectangle construction (textbook Munkres 54.2).
      Induction on linearized index k = j*m + i over rectangles.
      Invariant: Ftilde continuous on A_k, lifts F, starts at e0.
@@ -7694,7 +7720,40 @@ proof -
       \<comment> \<open>Ft0 is continuous on A_0. Use pasting lemma: left_lift on left edge, bot_lift on bottom.\<close>
       have hFt0_cont: "top1_continuous_map_on (?A 0)
           (subspace_topology (I_set \<times> I_set) II_topology (?A 0)) E TE Ft0"
-        sorry
+      proof -
+        let ?TA = "subspace_topology (I_set \<times> I_set) II_topology (?A 0)"
+        \<comment> \<open>On left edge, Ft0 = left_lift \<circ> snd. On bot edge, Ft0 = bot_lift \<circ> fst.\<close>
+        have hFt0_left: "\<forall>x\<in>?left_edge. Ft0 x = left_lift (snd x)"
+          unfolding Ft0_def by (by100 auto)
+        have hFt0_bot: "\<forall>x\<in>?bot_edge. Ft0 x = bot_lift (fst x)"
+        proof (intro ballI)
+          fix x assume "x \<in> ?bot_edge"
+          then obtain s where hs: "s \<in> I_set" and hx: "x = (s, 0 :: real)" by (by100 blast)
+          show "Ft0 x = bot_lift (fst x)"
+          proof (cases "s = 0")
+            case True
+            hence "Ft0 x = left_lift 0" unfolding Ft0_def hx by simp
+            also have "\<dots> = e0" using hll unfolding top1_is_path_on_def by simp
+            also have "\<dots> = bot_lift 0" using hbl_00 by simp
+            finally show ?thesis using hx True by simp
+          next
+            case False
+            thus ?thesis unfolding Ft0_def hx by simp
+          qed
+        qed
+        \<comment> \<open>They agree on the intersection (0,0).\<close>
+        have hFt0_agree: "\<forall>x\<in>?left_edge \<inter> ?bot_edge. left_lift (snd x) = bot_lift (fst x)"
+        proof (intro ballI)
+          fix x assume "x \<in> ?left_edge \<inter> ?bot_edge"
+          hence "x = (0 :: real, 0 :: real)" by (by100 auto)
+          thus "left_lift (snd x) = bot_lift (fst x)"
+            using hll hbl_00 unfolding top1_is_path_on_def by simp
+        qed
+        \<comment> \<open>Continuity on each piece + pasting lemma = continuity on union.\<close>
+        \<comment> \<open>This requires proving left_lift \<circ> snd and bot_lift \<circ> fst are continuous
+           on their respective domains in the subspace topology. Sorry for now.\<close>
+        show ?thesis sorry
+      qed
       show ?case
       proof (intro exI conjI)
         show "top1_continuous_map_on (?A 0)
