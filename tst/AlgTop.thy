@@ -14855,6 +14855,31 @@ definition top1_is_universal_covering_on :: "'e set \<Rightarrow> 'e set set \<R
      top1_covering_map_on E TE B TB p \<and>
      top1_simply_connected_on E TE"
 
+text \<open>If E is simply connected, then p_*(π₁(E, e0)) = {id} in π₁(B, b0).\<close>
+lemma simply_connected_trivial_image:
+  assumes hsc: "top1_simply_connected_on E TE"
+      and hcov: "top1_covering_map_on E TE B TB p"
+      and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
+  shows "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = {top1_fundamental_group_id B TB b0}"
+proof -
+  \<comment> \<open>Simply connected means every loop is homotopic to const. So π₁(E, e0) = {id}.
+     p_*(id) = [p ∘ const_{e0}] = [const_{b0}] = id in π₁(B, b0).\<close>
+  have hTE: "is_topology_on E TE"
+    using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+  \<comment> \<open>Step 1: carrier of π₁(E, e0) = {id}.\<close>
+  have hcarrier: "top1_fundamental_group_carrier E TE e0 = {top1_fundamental_group_id E TE e0}"
+    sorry \<comment> \<open>From simply_connected: every loop ≃ const ⟹ one equivalence class.\<close>
+  \<comment> \<open>Step 2: p_*(id_E) = id_B.\<close>
+  have hind_id: "top1_fundamental_group_induced_on E TE e0 B TB b0 p
+      (top1_fundamental_group_id E TE e0)
+      = top1_fundamental_group_id B TB b0"
+    sorry \<comment> \<open>p ∘ const_{e0} = const_{p(e0)} = const_{b0}, so [p ∘ const] = [const].\<close>
+  show ?thesis
+    unfolding top1_fundamental_group_image_hom_def hcarrier
+    using hind_id by (by100 simp)
+qed
+
 (** from \<S>80: any two universal covering spaces are equivalent (via Theorem 79.4). **)
 theorem Theorem_80_1_universal_unique:
   assumes "is_topology_on_strict B TB"
@@ -14874,11 +14899,16 @@ proof -
   have hE'_sc: "top1_simply_connected_on E' TE'"
     using assms(3) unfolding top1_is_universal_covering_on_def by (by100 blast)
   \<comment> \<open>p_*(\<pi>_1(E, e0)) = {[const]} (trivial) since E is simply connected.\<close>
+  have hcovE: "top1_covering_map_on E TE B TB p"
+    using assms(2) unfolding top1_is_universal_covering_on_def by (by100 blast)
+  have hcovE': "top1_covering_map_on E' TE' B TB p'"
+    using assms(3) unfolding top1_is_universal_covering_on_def by (by100 blast)
   have hH_trivial: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
-      = {top1_fundamental_group_id B TB b0}" sorry
-  \<comment> \<open>Similarly p'_*(\<pi>_1(E', e0')) = {[const]}.\<close>
+      = {top1_fundamental_group_id B TB b0}"
+    by (rule simply_connected_trivial_image[OF hE_sc hcovE assms(12) assms(10)])
   have hH'_trivial: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
-      = {top1_fundamental_group_id B TB b0}" sorry
+      = {top1_fundamental_group_id B TB b0}"
+    by (rule simply_connected_trivial_image[OF hE'_sc hcovE' assms(13) assms(11)])
   \<comment> \<open>{1} is conjugate to {1} (take c = identity). Apply Theorem 79.4.\<close>
   show ?thesis using Theorem_79_4[OF assms(4,1,5)] assms hH_trivial hH'_trivial sorry
 qed
