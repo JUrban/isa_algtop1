@@ -3935,14 +3935,6 @@ lemma top1_covering_map_on_evenly_covered:
     \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U"
   unfolding top1_covering_map_on_def by blast
 
-text \<open>Helper: extract is_topology_on from covering map (via homeomorphism in evenly covered).\<close>
-lemma top1_covering_map_on_topology:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "is_topology_on B TB"
-      and "B \<noteq> {}"
-  shows "is_topology_on E TE"
-  sorry
-
 text \<open>Helper: evenly-covered U is open (by definition).\<close>
 lemma top1_evenly_covered_on_openin_on:
   assumes "top1_evenly_covered_on E TE B TB p U"
