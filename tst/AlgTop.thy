@@ -9572,7 +9572,29 @@ proof
     \<comment> \<open>\<rho>\<circ>h is continuous, antipode-preserving, nulhomotopic.\<close>
     have "?\<rho> \<circ> h = (\<lambda>z. ?\<rho> (h z))" by (rule ext) (by100 simp)
     have hrh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
-      sorry
+    proof -
+      \<comment> \<open>\<rho> maps S^1 to S^1 (rotation preserves unit circle).\<close>
+      have hrho_S1: "\<And>p. p \<in> top1_S1 \<Longrightarrow> ?\<rho> p \<in> top1_S1"
+      proof -
+        fix p assume hp: "p \<in> top1_S1"
+        have hxy: "(fst p)^2 + (snd p)^2 = 1" using hp unfolding top1_S1_def by (by100 auto)
+        have "(?a * fst p + ?b * snd p)^2 + (-?b * fst p + ?a * snd p)^2
+            = (?a^2 + ?b^2) * ((fst p)^2 + (snd p)^2)"
+          by (simp add: power2_eq_square algebra_simps)
+        also have "\<dots> = 1" using hab_S1 hxy by (by100 simp)
+        finally show "?\<rho> p \<in> top1_S1" unfolding top1_S1_def
+          by (simp add: case_prod_beta)
+      qed
+      have hrho_cont: "continuous_on UNIV (\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p))"
+        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+            continuous_on_minus continuous_on_const continuous_on_fst continuous_on_snd
+            continuous_on_id)
+      have hrho_eq: "\<And>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p) = ?\<rho> p"
+        by (simp add: case_prod_beta)
+      have hrho_top1: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?\<rho>"
+        sorry \<comment> \<open>rotation continuous; case_prod matching issue with subspace helper\<close>
+      show ?thesis by (rule top1_continuous_map_on_comp[OF assms(1) hrho_top1])
+    qed
     have hrh_anti: "top1_antipode_preserving_S1 (?\<rho> \<circ> h)"
       unfolding top1_antipode_preserving_S1_def
     proof (intro allI)
