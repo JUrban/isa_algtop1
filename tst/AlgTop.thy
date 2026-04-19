@@ -7227,10 +7227,17 @@ proof -
      of lift endpoints on starting points. This follows from uniqueness of lifts
      applied to nearby columns (same argument as Lemma 54.1 pasting).\<close>
   have hrow1: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
-    \<comment> \<open>Munkres 54.2: On each rectangle of a Lebesgue grid, Ftilde = p0\<inverse> \<circ> F
-       (column lift agrees with p0\<inverse> \<circ> F by injectivity of p on the slice).
-       The composition is jointly continuous; restriction to t=1 is continuous in s
-       on each piece; pasting gives global continuity.\<close>
+  \<comment> \<open>Munkres 54.2 grid argument: on each piece of a subdivision, Ftilde(\<cdot>,1) equals
+     (p|V0)\<inverse> \<circ> F(\<cdot>,1) (by column continuity + connectedness + injectivity of p on V0).
+     Each piece is continuous (composition). Pasting gives global continuity.\<close>
+  \<comment> \<open>Step 1: For each s0, F(s0,1) \<in> evenly covered U. Ftilde(s0,1) \<in> slice V0 of p\<inverse>(U).
+     Column continuity: Ftilde(s0,t) \<in> V0 for t in some neighborhood of 1.
+     F continuity: F(s,1) \<in> U for s near s0.
+     For s near s0: column Ftilde(s,\<cdot>) is continuous, maps interval near 1 into p\<inverse>(U),
+     connected image starting in V0 (at the boundary with previous rectangle) stays in V0.
+     So Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)), continuous in s.\<close>
+  \<comment> \<open>Step 2: The 1D pasting lemma (or open_cover_subdivision_01 + pasting_lemma_two_closed)
+     gives global continuity of Ftilde(\<cdot>,1) from continuity on each piece.\<close>
     sorry
   show ?thesis using hcol_cont hFt_lift hFt_00 hrow0 hrow1 by (by100 blast)
 qed
