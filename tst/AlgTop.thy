@@ -9114,7 +9114,24 @@ proof
      By hj_inj: homotopic in C-{0} \<Rightarrow> homotopic in S^1.
      Specifically, for any f with z^n \<circ> f ≃ const in C-{0}, by j_inj get in S^1.
      But this needs more structure than just the two facts.\<close>
-  show False using hnul hj_inj sorry
+  \<comment> \<open>Step-by-step: nulhomotopy gives h ≃ const in C-{0} for all loops;
+     j_inj transfers to S^1; contradicts Step 1 (z^n nontrivial on π₁(S¹)).\<close>
+  \<comment> \<open>From hnul: z^n nulhomotopic, so for all loops f at 1, (z^n) \<circ> f ≃ const in C-{0}.\<close>
+  have hnul_all: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+    sorry \<comment> \<open>From nulhomotopy + basepoint change (same as nulhomotopic_trivializes_loops).\<close>
+  \<comment> \<open>By hj_inj: transfer to S^1.\<close>
+  have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+    sorry \<comment> \<open>From hnul_all + hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
+  \<comment> \<open>But Step 1 says z^n_* is injective on π₁(S^1), so z^n is not nulhomotopic in S^1.\<close>
+  have hnontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1))"
+    sorry \<comment> \<open>From π₁(S^1) ≅ ℤ and z^n corresponding to multiplication by n.\<close>
+  show False using hnul_S1 hnontrivial by (by100 blast)
 qed
 
 (** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1.
