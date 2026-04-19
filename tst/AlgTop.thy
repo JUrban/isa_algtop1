@@ -8888,6 +8888,14 @@ proof
       \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
       \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
   \<comment> \<open>g_* nontrivial contradicts g being nulhomotopic.\<close>
+  \<comment> \<open>z^n nulhomotopic in C-{0} \<Rightarrow> for all loops f at 1, z^n \<circ> f ≃ const in C-{0}.
+     By j_inj, z^n \<circ> f ≃ const in S^1. But z^n not nulhomotopic in S^1 (Step 1).\<close>
+  \<comment> \<open>Actually: hnul says z^n (as S^1 \<rightarrow> C-{0}) is nulhomotopic.
+     Since z^n: S^1 \<rightarrow> S^1 \<subseteq> C-{0}, nulhomotopic in C-{0} means
+     (\<lambda>z. z^n) ≃ const in C-{0}.
+     By hj_inj: homotopic in C-{0} \<Rightarrow> homotopic in S^1.
+     Specifically, for any f with z^n \<circ> f ≃ const in C-{0}, by j_inj get in S^1.
+     But this needs more structure than just the two facts.\<close>
   show False using hnul hj_inj sorry
 qed
 
