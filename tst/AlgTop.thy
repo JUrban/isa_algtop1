@@ -4440,10 +4440,50 @@ proof -
     \<comment> \<open>Arc N = {(x,y) \<in> S^1 | y > 0}. Preimage under p: those x with sin(2\<pi>x) > 0,
        i.e., x \<in> (n, n+1/2) for each integer n. Each slice maps homeomorphically to arc_N.
        Inverse: given (a,b) with b > 0, x = arcsin(b)/(2\<pi>) + n (or arctan-based).\<close>
-    have harc_N_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_N" sorry
+    have harc_N_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_N"
+    proof -
+      have heq: "top1_S1_arc_N = top1_S1 \<inter> {p::real\<times>real. snd p > 0}"
+        unfolding top1_S1_arc_N_def top1_S1_def by (by100 auto)
+      have hopen: "open {p::real\<times>real. snd p > 0}"
+        by (rule open_Collect_less) (auto intro: continuous_intros)
+      have "{p::real\<times>real. snd p > 0} \<in> (top1_open_sets::(real\<times>real) set set)"
+        using hopen unfolding top1_open_sets_def by (by100 blast)
+      hence "{p::real\<times>real. snd p > 0} \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 blast)
+      thus ?thesis unfolding openin_on_def top1_S1_topology_def subspace_topology_def heq
+        by (by100 blast)
+    qed
     let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n < x \<and> x < of_int n + 1/2}}"
-    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
-    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V"
+    proof
+      fix V assume "V \<in> ?\<V>"
+      then obtain n :: int where hV: "V = {x::real. of_int n < x \<and> x < of_int n + 1/2}"
+        by (by100 blast)
+      have "V = {of_int n <..< of_int n + 1/2}" using hV by (by100 auto)
+      moreover have "open {of_int n <..< of_int n + (1/2::real)}" by (by100 simp)
+      ultimately show "openin_on UNIV top1_open_sets V"
+        unfolding openin_on_def top1_open_sets_def by (by100 blast)
+    qed
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+    proof (intro ballI impI)
+      fix V V' assume "V \<in> ?\<V>" "V' \<in> ?\<V>" "V \<noteq> V'"
+      then obtain n where hV: "V = {x::real. of_int n < x \<and> x < of_int n + 1/2}"
+        using \<open>V \<in> ?\<V>\<close> by auto
+      obtain m where hV': "V' = {x::real. of_int m < x \<and> x < of_int m + 1/2}"
+        using \<open>V' \<in> ?\<V>\<close> by (by100 blast)
+      have hnm: "n \<noteq> m" using \<open>V \<noteq> V'\<close> hV hV' by (by100 force)
+      show "V \<inter> V' = {}"
+      proof (rule ccontr)
+        assume "V \<inter> V' \<noteq> {}"
+        then obtain x where "x \<in> V" "x \<in> V'" by (by100 blast)
+        hence hx1: "of_int n < x" and hx2: "x < of_int n + (1/2::real)"
+            and hx3: "of_int m < x" and hx4: "x < of_int m + (1/2::real)"
+          using hV hV' by (by100 blast)+
+        hence "\<bar>of_int n - of_int m\<bar> < (1::real)" by (by100 linarith)
+        hence "n = m" by (by100 linarith)
+        thus False using hnm by (by100 blast)
+      qed
+    qed
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N} = \<Union>?\<V>" sorry
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
@@ -4457,9 +4497,30 @@ proof -
   proof -
     \<comment> \<open>Arc W = {(x,y) \<in> S^1 | x < 0}. Preimage: cos(2\<pi>x) < 0, i.e., x \<in> (n+1/4, n+3/4).
        Each slice maps homeomorphically to arc_W.\<close>
-    have harc_W_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_W" sorry
+    have harc_W_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_W"
+    proof -
+      have heq: "top1_S1_arc_W = top1_S1 \<inter> {p::real\<times>real. fst p < 0}"
+        unfolding top1_S1_arc_W_def top1_S1_def by (by100 auto)
+      have hopen: "open {p::real\<times>real. fst p < 0}"
+        by (rule open_Collect_less) (auto intro: continuous_intros)
+      have "{p::real\<times>real. fst p < 0} \<in> (top1_open_sets::(real\<times>real) set set)"
+        using hopen unfolding top1_open_sets_def by (by100 blast)
+      hence "{p::real\<times>real. fst p < 0} \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 blast)
+      thus ?thesis unfolding openin_on_def top1_S1_topology_def subspace_topology_def heq
+        by (by100 blast)
+    qed
     let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n + 1/4 < x \<and> x < of_int n + 3/4}}"
-    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V"
+    proof
+      fix V assume "V \<in> ?\<V>"
+      then obtain n :: int where hV: "V = {x::real. of_int n + 1/4 < x \<and> x < of_int n + 3/4}"
+        by (by100 blast)
+      have "V = {of_int n + 1/4 <..< of_int n + 3/4}" using hV by (by100 auto)
+      moreover have "open {of_int n + 1/4 <..< of_int n + (3/4::real)}" by (by100 simp)
+      ultimately show "openin_on UNIV top1_open_sets V"
+        unfolding openin_on_def top1_open_sets_def by (by100 blast)
+    qed
     have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>" sorry
     have hV_homeo: "\<forall>V\<in>?\<V>.
@@ -4474,9 +4535,30 @@ proof -
   proof -
     \<comment> \<open>Arc S = {(x,y) \<in> S^1 | y < 0}. Preimage: sin(2\<pi>x) < 0, i.e., x \<in> (n+1/2, n+1).
        Each slice maps homeomorphically to arc_S.\<close>
-    have harc_S_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_S" sorry
+    have harc_S_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_S"
+    proof -
+      have heq: "top1_S1_arc_S = top1_S1 \<inter> {p::real\<times>real. snd p < 0}"
+        unfolding top1_S1_arc_S_def top1_S1_def by (by100 auto)
+      have hopen: "open {p::real\<times>real. snd p < 0}"
+        by (rule open_Collect_less) (auto intro: continuous_intros)
+      have "{p::real\<times>real. snd p < 0} \<in> (top1_open_sets::(real\<times>real) set set)"
+        using hopen unfolding top1_open_sets_def by (by100 blast)
+      hence "{p::real\<times>real. snd p < 0} \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 blast)
+      thus ?thesis unfolding openin_on_def top1_S1_topology_def subspace_topology_def heq
+        by (by100 blast)
+    qed
     let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n + 1/2 < x \<and> x < of_int n + 1}}"
-    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V"
+    proof
+      fix V assume "V \<in> ?\<V>"
+      then obtain n :: int where hV: "V = {x::real. of_int n + 1/2 < x \<and> x < of_int n + 1}"
+        by (by100 blast)
+      have "V = {of_int n + 1/2 <..< of_int n + 1}" using hV by (by100 auto)
+      moreover have "open {of_int n + 1/2 <..< of_int n + (1::real)}" by (by100 simp)
+      ultimately show "openin_on UNIV top1_open_sets V"
+        unfolding openin_on_def top1_open_sets_def by (by100 blast)
+    qed
     have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S} = \<Union>?\<V>" sorry
     have hV_homeo: "\<forall>V\<in>?\<V>.
