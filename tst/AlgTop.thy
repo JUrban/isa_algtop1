@@ -6572,7 +6572,42 @@ proof -
           qed
           \<comment> \<open>ftk' continuous on B: equals inv_into V0 p \<circ> f (homeomorphism inverse \<circ> continuous).\<close>
           have hcont_B: "top1_continuous_map_on ?B (subspace_topology ?Xk1 ?TXk1 ?B) E TE ftk'"
-            sorry
+          proof -
+            have hBsub: "?B \<subseteq> ?Xk1" by (by100 blast)
+            have hTBsub: "subspace_topology ?Xk1 ?TXk1 ?B = subspace_topology I_set I_top ?B"
+              by (rule subspace_topology_trans[OF hBsub])
+            \<comment> \<open>On B, ftk'(s) = inv_into V0 p (f s) for all s (including s = sub k,
+               since ftk(sub k) = inv_into V0 p (f(sub k)) by construction).\<close>
+            have hftk'_eq_inv: "\<forall>s\<in>?B. ftk' s = inv_into V0 p (f s)"
+            proof
+              fix s assume hs: "s \<in> ?B"
+              show "ftk' s = inv_into V0 p (f s)"
+              proof (cases "s \<le> sub k")
+                case True
+                hence "s = sub k" using hs by auto
+                \<comment> \<open>ftk'(sub k) = ftk(sub k). And inv_into V0 p (f(sub k)) = ftk(sub k)
+                   since ftk(sub k) \<in> V0 and p is bijective on V0.\<close>
+                have "ftk' s = ftk s" unfolding ftk'_def using True by simp
+                also have "\<dots> = ftk (sub k)" using \<open>s = sub k\<close> by simp
+                also have "\<dots> = inv_into V0 p (f (sub k))"
+                proof -
+                  have "ftk (sub k) \<in> V0" using hftk_V0 .
+                  have "p (ftk (sub k)) = f (sub k)" using hpftk .
+                  have "inj_on p V0" using hbij unfolding bij_betw_def by (by100 blast)
+                  show ?thesis using inv_into_f_f[OF \<open>inj_on p V0\<close> \<open>ftk (sub k) \<in> V0\<close>]
+                      \<open>p (ftk (sub k)) = f (sub k)\<close> by simp
+                qed
+                finally show ?thesis using \<open>s = sub k\<close> by simp
+              next
+                case False
+                thus ?thesis unfolding ftk'_def by simp
+              qed
+            qed
+            \<comment> \<open>inv_into V0 p \<circ> f is continuous on B: composition of continuous functions.\<close>
+            show ?thesis unfolding hTBsub
+              unfolding top1_continuous_map_on_def
+              sorry
+          qed
           show ?thesis
             by (rule pasting_lemma_two_closed[OF hTXk1 hTE' hA_closed hB_closed hAB hrange hcont_A hcont_B])
         qed
