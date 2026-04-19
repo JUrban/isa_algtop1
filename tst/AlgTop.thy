@@ -14961,6 +14961,13 @@ lemma S2_minus_point_simply_connected:
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
   sorry
 
+text \<open>S^2 minus two distinct points is not simply connected (homeomorphic to R^2 - {0}).\<close>
+lemma S2_minus_two_points_not_simply_connected:
+  assumes "a \<in> top1_S2" and "b \<in> top1_S2" and "a \<noteq> b"
+  shows "\<not> top1_simply_connected_on (top1_S2 - {a, b})
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))"
+  sorry
+
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
     and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
@@ -15065,8 +15072,11 @@ proof (rule ccontr)
   have h_pi1_X_trivial: "top1_simply_connected_on ?X
       (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
   \<comment> \<open>But X = S^2 - {a, b} \<cong> R^2 - {0} which has nontrivial \<pi>_1.\<close>
+  have ha_S2: "a \<in> top1_S2" sorry
+  have hb_S2: "b \<in> top1_S2" sorry
   have h_pi1_X_nontrivial: "\<not> top1_simply_connected_on ?X
-      (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
+      (subspace_topology top1_S2 top1_S2_topology ?X)"
+    by (rule S2_minus_two_points_not_simply_connected[OF ha_S2 hb_S2 hab_ne])
   show False using h_pi1_X_trivial h_pi1_X_nontrivial by contradiction
 qed
 
