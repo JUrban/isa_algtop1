@@ -2205,6 +2205,8 @@ proof -
      At s=1: max(0, min(2, min(0, 1-t))) = 0, F = f(0) = x0.\<close>
   let ?g = "\<lambda>(s::real, t::real). max 0 (min (2*s) (min (2 - 2*s) (1 - t)))"
   let ?F = "\<lambda>p. f (?g p)"
+  have hg_beta: "\<And>s t. ?g (s, t) = max 0 (min (2*s) (min (2-2*s) (1-t)))"
+    by (simp add: case_prod_beta)
   have hg_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. ?g (s, t) \<in> I_set"
     unfolding top1_unit_interval_def by auto
   have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
@@ -2251,10 +2253,9 @@ proof -
     proof (cases "s \<le> 1/2")
       case True
       have hmin: "min (2*s) (min (2 - 2*s) (1 - 0)) = 2*s" using True hs_nn by linarith
-      have hg_eval: "?g (s, 0) = max 0 (min (2*s) (min (2-2*s) (1-0)))" by (simp add: case_prod_beta)
-      hence "?g (s, 0) = max 0 (2*s)" using hmin by simp
-      hence "?g (s, 0) = 2*s" using hs_nn by simp
-      hence lhs: "?F (s, 0) = f (2*s)" by simp
+      have hg_s0: "?g (s, 0) = 2*s"
+        using hg_beta[of s 0] hmin hs_nn by simp
+      have lhs: "?F (s, 0) = f (2*s)" using hg_s0 by simp
       have "top1_path_product f (top1_path_reverse f) s = f (2*s)"
         using True unfolding top1_path_product_def by simp
       thus ?thesis using lhs by simp
@@ -2263,10 +2264,9 @@ proof -
       hence hge: "s > 1/2" by simp
       have hmin: "min (2*s) (min (2 - 2*s) 1) = 2 - 2*s" using hge hs_le1 by linarith
       have h2s_nn: "2 - 2*s \<ge> 0" using hs_le1 by linarith
-      have hg_eval: "?g (s, 0) = max 0 (min (2*s) (min (2-2*s) 1))" by (simp add: case_prod_beta)
-      hence "?g (s, 0) = max 0 (2 - 2*s)" using hmin by simp
-      hence "?g (s, 0) = 2 - 2*s" using h2s_nn by simp
-      hence lhs: "?F (s, 0) = f (2 - 2*s)" by simp
+      have hg_s0: "?g (s, 0) = 2 - 2*s"
+        using hg_beta[of s 0] hmin h2s_nn by simp
+      have lhs: "?F (s, 0) = f (2 - 2*s)" using hg_s0 by simp
       have "top1_path_product f (top1_path_reverse f) s = top1_path_reverse f (2*s - 1)"
         using hge unfolding top1_path_product_def by simp
       also have "... = f (1 - (2*s - 1))" unfolding top1_path_reverse_def by simp
@@ -2277,26 +2277,23 @@ proof -
   have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = top1_constant_path x0 s"
   proof
     fix s assume hs: "s \<in> I_set"
-    have hg_eval: "?g (s, 1) = max 0 (min (2*s) (min (2-2*s) 0))" by (simp add: case_prod_beta)
     have "min (2*s) (min (2 - 2*s) (0::real)) = 0"
       using hs unfolding top1_unit_interval_def by simp
-    hence "?g (s, 1) = 0" using hg_eval by simp
+    hence "?g (s, 1) = 0" using hg_beta[of s 1] by simp
     hence "?F (s, 1) = f 0" by simp
     thus "?F (s, 1) = top1_constant_path x0 s" using hf0 unfolding top1_constant_path_def by simp
   qed
   have hF_0t: "\<forall>t\<in>I_set. ?F (0, t) = x0"
   proof
     fix t assume ht: "t \<in> I_set"
-    have "?g (0, t) = 0" by simp
+    have "?g (0, t) = 0" using hg_beta[of 0 t] by simp
     hence "?F (0, t) = f 0" by simp
     thus "?F (0, t) = x0" using hf0 by simp
   qed
   have hF_1t: "\<forall>t\<in>I_set. ?F (1, t) = x0"
   proof
     fix t assume ht: "t \<in> I_set"
-    have "min (2*1) (min (2 - 2*1) (1 - t)) = 0"
-      using ht unfolding top1_unit_interval_def by auto
-    hence "?g (1, t) = 0" by auto
+    have "?g (1, t) = 0" using hg_beta[of 1 t] ht unfolding top1_unit_interval_def by auto
     hence "?F (1, t) = f 0" by simp
     thus "?F (1, t) = x0" using hf0 by simp
   qed
