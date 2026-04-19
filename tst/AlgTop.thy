@@ -14933,7 +14933,42 @@ proof -
   have hind_id: "top1_fundamental_group_induced_on E TE e0 B TB b0 p
       (top1_fundamental_group_id E TE e0)
       = top1_fundamental_group_id B TB b0"
-    sorry \<comment> \<open>p ∘ const_{e0} = const_{p(e0)} = const_{b0}, so [p ∘ const] = [const].\<close>
+  proof -
+    \<comment> \<open>p ∘ const_{e0} = const_{b0}.\<close>
+    have hpc: "p \<circ> top1_constant_path e0 = top1_constant_path b0"
+      by (rule ext) (simp add: top1_constant_path_def hpe0 comp_def)
+    \<comment> \<open>induced([const_E]) = {g. ∃f∈[const_E]. loop_equiv(p∘f, g)}
+       = {g. loop_equiv(const_B, g)} = [const_B]\<close>
+    show ?thesis
+      unfolding top1_fundamental_group_induced_on_def top1_fundamental_group_id_def
+    proof (rule set_eqI)
+      fix g
+      show "g \<in> {g. \<exists>f\<in>{g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}.
+                  top1_loop_equiv_on B TB b0 (p \<circ> f) g}
+          \<longleftrightarrow> g \<in> {g. top1_loop_equiv_on B TB b0 (top1_constant_path b0) g}"
+      proof
+        assume "g \<in> {g. \<exists>f\<in>{g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}.
+                    top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+        then obtain f where hf_equiv: "top1_loop_equiv_on E TE e0 (top1_constant_path e0) f"
+            and hpf_equiv: "top1_loop_equiv_on B TB b0 (p \<circ> f) g" by (by100 blast)
+        \<comment> \<open>f ≃ const_E ⟹ p∘f ≃ const_B (continuous map preserves homotopy + hpc).
+           Then const_B ≃ p∘f ≃ g by transitivity.\<close>
+        show "g \<in> {g. top1_loop_equiv_on B TB b0 (top1_constant_path b0) g}"
+          using hf_equiv hpf_equiv hpc sorry
+      next
+        assume hg: "g \<in> {g. top1_loop_equiv_on B TB b0 (top1_constant_path b0) g}"
+        \<comment> \<open>Take f = const_E. Then p∘f = const_B ≃ g, and f ∈ [const_E].\<close>
+        have hconst_equiv: "top1_loop_equiv_on E TE e0 (top1_constant_path e0) (top1_constant_path e0)"
+          by (rule top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTE he0]])
+        have "p \<circ> top1_constant_path e0 = top1_constant_path b0" by (rule hpc)
+        hence "top1_loop_equiv_on B TB b0 (p \<circ> top1_constant_path e0) g"
+          using hg by (by100 simp)
+        thus "g \<in> {g. \<exists>f\<in>{g. top1_loop_equiv_on E TE e0 (top1_constant_path e0) g}.
+                    top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+          using hconst_equiv by (by100 blast)
+      qed
+    qed
+  qed
   show ?thesis
     unfolding top1_fundamental_group_image_hom_def hcarrier
     using hind_id by (by100 simp)
