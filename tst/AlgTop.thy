@@ -9763,7 +9763,22 @@ proof
   have hnul_all: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<longrightarrow> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
             ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-    sorry \<comment> \<open>From nulhomotopy + basepoint change (same as nulhomotopic_trivializes_loops).\<close>
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+      sorry \<comment> \<open>Subspace topology is topology.\<close>
+    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
+      sorry
+    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+      sorry \<comment> \<open>z^n maps S^1 to S^1 \<subseteq> C-{0}, continuous.\<close>
+    have h1_S1: "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
+    have hg1: "(\<lambda>z::complex. z^n) 1 = (1::complex)" using assms by simp
+    show "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      using hTS1c hTC0 hg_cont hnul hg1 h1_S1 hf sorry
+      \<comment> \<open>By nulhomotopic_trivializes_loops_general (defined later in file).\<close>
+  qed
   \<comment> \<open>By hj_inj: transfer to S^1.\<close>
   have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
@@ -10787,8 +10802,42 @@ definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> rea
   "top1_antipode_preserving_S1 h \<longleftrightarrow>
      (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
 
-text \<open>General lemma: if g: S^1 \<rightarrow> S^1 is continuous, nulhomotopic, and g(1,0) = (1,0),
-  then g \<circ> f \<simeq> const for every loop f at (1,0).\<close>
+text \<open>General version: if g: X \<rightarrow> Y is continuous, nulhomotopic, g(x0) = y0,
+  and f is a loop at x0 in X, then g \<circ> f \<simeq> const_{y0} in Y.\<close>
+lemma nulhomotopic_trivializes_loops_general:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hg: "top1_continuous_map_on X TX Y TY g"
+      and hgnul: "top1_nulhomotopic_on X TX Y TY g"
+      and hgx0: "g x0 = y0" and hx0: "x0 \<in> X"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "top1_path_homotopic_on Y TY y0 y0 (g \<circ> f) (top1_constant_path y0)"
+proof -
+  obtain c where hcY: "c \<in> Y"
+      and hhom: "top1_homotopic_on X TX Y TY g (\<lambda>_. c)"
+    using hgnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain H where hHcont: "top1_continuous_map_on (X \<times> I_set)
+          (product_topology_on TX I_top) Y TY H"
+      and hH0: "\<forall>x\<in>X. H (x, 0) = g x"
+      and hH1: "\<forall>x\<in>X. H (x, 1) = c"
+    using hhom unfolding top1_homotopic_on_def by (by100 blast)
+  have hH1': "\<forall>x\<in>X. H (x, 1) = (\<lambda>_. c) x" using hH1 by (by100 simp)
+  note hbc = homotopy_induced_basepoint_change[OF hTX hTY hHcont hH0 hH1' hf hx0]
+  have hbc': "top1_loop_equiv_on Y TY (g x0) (g \<circ> f)
+      (top1_basepoint_change_on Y TY c (g x0)
+         (top1_path_reverse (\<lambda>t. H (x0, t))) (top1_constant_path c))"
+  proof -
+    have "(\<lambda>_. c) \<circ> f = top1_constant_path c"
+      by (rule ext) (simp add: top1_constant_path_def comp_def)
+    thus ?thesis using hbc by simp
+  qed
+  \<comment> \<open>Path algebra: bc(rev(\<alpha>), const_c) \<simeq> const_{g(x0)}. Same as nulhomotopic_trivializes_loops.\<close>
+  have "top1_path_homotopic_on Y TY (g x0) (g x0)
+      (g \<circ> f) (top1_constant_path (g x0))"
+    sorry \<comment> \<open>Path algebra: \<alpha> continuity + basepoint change + left identity + inverse.\<close>
+  thus ?thesis using hgx0 by simp
+qed
+
+text \<open>Specialized version for S^1 \<rightarrow> S^1.\<close>
 lemma nulhomotopic_trivializes_loops:
   assumes hg: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology g"
       and hgnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology g"
