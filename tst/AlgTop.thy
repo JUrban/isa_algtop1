@@ -7799,6 +7799,33 @@ text \<open>The translated lift ends at n + gtilde(1).\<close>
 lemma top1_R_to_S1_translated_lift_end:
   "(of_int n + gtilde 1) = of_int n + gtilde 1" by simp
 
+text \<open>Helper: two elements in the same fundamental group class are loop-equivalent.\<close>
+lemma fundamental_group_class_members_equiv:
+  assumes hTX: "is_topology_on X TX"
+      and hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+      and hf: "f \<in> c" and hg: "g \<in> c"
+  shows "top1_loop_equiv_on X TX x0 f g"
+proof -
+  obtain f0 where hc_eq: "c = {h. top1_loop_equiv_on X TX x0 f0 h}"
+    using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+  have hf0_f: "top1_loop_equiv_on X TX x0 f0 f" using hf hc_eq by simp
+  have hf0_g: "top1_loop_equiv_on X TX x0 f0 g" using hg hc_eq by simp
+  have hf_f0: "top1_loop_equiv_on X TX x0 f f0"
+    by (rule top1_loop_equiv_on_sym[OF hf0_f])
+  show ?thesis by (rule top1_loop_equiv_on_trans[OF hTX hf_f0 hf0_g])
+qed
+
+text \<open>Helper: fundamental group mul equals equivalence class of f*g when f \<in> c, g \<in> d.\<close>
+lemma fundamental_group_mul_eq_class:
+  assumes hTX: "is_topology_on X TX"
+      and hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+      and hd: "d \<in> top1_fundamental_group_carrier X TX x0"
+      and hf: "f \<in> c" and hg: "g \<in> d"
+      and hfl: "top1_is_loop_on X TX x0 f" and hgl: "top1_is_loop_on X TX x0 g"
+  shows "top1_fundamental_group_mul X TX x0 c d
+      = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+  sorry
+
 (** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z.
     Munkres' proof: use covering p: R \<rightarrow> S^1 (Theorem 53.1). Since R is simply
     connected, the lifting correspondence (Theorem 54.4) is bijective onto
@@ -8226,29 +8253,7 @@ proof -
       \<comment> \<open>c\<cdot>d contains the loop f*g, so it's the equivalence class of f*g.\<close>
       have "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
           = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) (top1_path_product f g) h}"
-      proof -
-        \<comment> \<open>c = {g'. equiv f g'} for some canonical representative. f \<in> c, so this class = {g'. equiv f g'}.\<close>
-        \<comment> \<open>Similarly d = {g'. equiv g g'}.\<close>
-        \<comment> \<open>mul c d = {h | \<exists>f'\<in>c, g'\<in>d. equiv (f'*g') h}.\<close>
-        \<comment> \<open>Since f' \<in> c implies f' \<simeq> f, and g' \<in> d implies g' \<simeq> g,
-           f'*g' \<simeq> f*g by product-homotopy. So equiv (f'*g') h iff equiv (f*g) h.\<close>
-        have hf_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) f"
-          using hfl unfolding top1_is_loop_on_def .
-        have hg_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) g"
-          using hgl unfolding top1_is_loop_on_def .
-        \<comment> \<open>Get equivalence class characterizations for c and d.\<close>
-        obtain f0 where hc_eq: "c = {g'. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f0 g'}"
-          using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
-        obtain g0 where hd_eq: "d = {g'. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g0 g'}"
-          using hd unfolding top1_fundamental_group_carrier_def by (by100 auto)
-        have hf0_f: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f0 f"
-          using hf_in_c hc_eq by simp
-        have hg0_g: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) g0 g"
-          using hg_in_d hd_eq by simp
-        show ?thesis
-          unfolding top1_fundamental_group_mul_def
-          sorry
-      qed
+        by (rule fundamental_group_mul_eq_class[OF hTS1 hc hd hf_in_c hg_in_d hfl hgl])
       moreover have "\<dots> \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
         unfolding top1_fundamental_group_carrier_def using hfg_loop by (by100 blast)
       ultimately show ?thesis by simp
@@ -8270,7 +8275,7 @@ proof -
         \<comment> \<open>fg and f*g are both in c\<cdot>d. In the fundamental group, c\<cdot>d is an equivalence class,
            so any two elements are loop-equivalent, hence path-homotopic.\<close>
         have "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) fg (top1_path_product f g)"
-          sorry
+          by (rule fundamental_group_class_members_equiv[OF hTS1 hcd_carrier hfg_in hfg_in_cd])
         thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
       qed
       \<comment> \<open>By Theorem 54.3: lifts of path-homotopic loops from same point have same endpoint.\<close>
