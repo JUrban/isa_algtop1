@@ -7362,9 +7362,31 @@ proof (intro iffI)
      Munkres: Let H: S^1\<times>I \<rightarrow> X be homotopy from h to const. The quotient map
      \<pi>(x,t) = (1-t)x collapses S^1\<times>{1} to 0 and is otherwise injective.
      Since H is constant on S^1\<times>{1}, it factors through \<pi>, giving k: B^2 \<rightarrow> X.\<close>
-  assume "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
-  thus "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
-    sorry
+  assume hnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX h"
+  \<comment> \<open>Munkres' proof: H: S^1 \<times> I \<rightarrow> X is homotopy from h to const c.
+     Define \<pi>: S^1 \<times> I \<rightarrow> B^2 by \<pi>(x,t) = (1-t)x. This maps S^1 \<times> {0} to S^1 (homeomorphically)
+     and collapses S^1 \<times> {1} to {0}. Since H is constant on S^1 \<times> {1},
+     H factors through \<pi>: k(\<pi>(x,t)) = H(x,t), i.e., k((1-t)x) = H(x,t).\<close>
+  obtain c where hc: "c \<in> X"
+      and hhom: "top1_homotopic_on top1_S1 top1_S1_topology X TX h (\<lambda>_. c)"
+    using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain H where hH_cont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+        (product_topology_on top1_S1_topology I_top) X TX H"
+      and hH0: "\<forall>x\<in>top1_S1. H (x, 0) = h x"
+      and hH1: "\<forall>x\<in>top1_S1. H (x, 1) = c"
+    using hhom unfolding top1_homotopic_on_def by (by100 blast)
+  \<comment> \<open>Define k: B^2 \<rightarrow> X. For y \<in> B^2, write y = (1-t) \<cdot> (y/|y|) for t = 1-|y|,
+     so k(y) = H(y/|y|, 1-|y|) for y \<ne> 0, and k(0) = c.\<close>
+  define k where "k = (\<lambda>y. if y = (0::real, 0::real) then c
+      else H ((fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+               snd y / sqrt (fst y ^ 2 + snd y ^ 2)),
+              1 - sqrt (fst y ^ 2 + snd y ^ 2)))"
+  \<comment> \<open>k extends h: for x \<in> S^1, |x| = 1, so k(x) = H(x, 0) = h(x).\<close>
+  have hext: "\<forall>x\<in>top1_S1. k x = h x" sorry
+  \<comment> \<open>k is continuous: on B^2 - {0}, continuous by composition; at 0, use H(x,1) = c.\<close>
+  have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k" sorry
+  show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
+    using hk_cont hext by (by100 blast)
 next
   \<comment> \<open>Backward: extension to B^2 \<Rightarrow> nulhomotopic (Lemma_55_3_backward).\<close>
   assume "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
