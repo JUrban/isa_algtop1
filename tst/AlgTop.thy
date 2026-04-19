@@ -6327,7 +6327,27 @@ proof -
       using open_cover_subdivision_01[OF hcov_hyp] by auto
     have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
         \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
-      sorry
+    proof (intro allI impI)
+      fix i assume hi: "i < m"
+      obtain A where hA: "A \<in> \<A>c" and hsub: "{s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> A"
+        using hcov_m hi by (by100 blast)
+      \<comment> \<open>A = {t. |t-s0| < eps_fn s0 ...} for some s0 ∈ [0,1].\<close>
+      obtain s0 where hs0: "s0 \<in> {0..1::real}" and hA_eq: "A = {t. \<bar>t - s0\<bar> < eps_fn s0 \<and> 0 \<le> t \<and> t \<le> 1}"
+        using hA unfolding \<A>c_def by (by100 blast)
+      have hs0_01: "0 \<le> s0 \<and> s0 \<le> 1" using hs0 by simp
+      obtain V where hV: "openin_on B TB V \<and> top1_evenly_covered_on E TE B TB p V
+          \<and> f ` {t. \<bar>t - s0\<bar> < eps_fn s0 \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+        using heps_spec[rule_format, OF hs0_01] by (by100 blast)
+      have hpiece_sub: "{s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> A"
+        using hsub unfolding top1_unit_interval_def by auto
+      have "f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> f ` A"
+        using hpiece_sub by (by100 blast)
+      also have "\<dots> = f ` {t. \<bar>t - s0\<bar> < eps_fn s0 \<and> 0 \<le> t \<and> t \<le> 1}" using hA_eq by simp
+      also have "\<dots> \<subseteq> V" using hV by (by100 blast)
+      finally show "\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
+        using hV by (by100 blast)
+    qed
     thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by (by100 blast)
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
