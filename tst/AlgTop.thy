@@ -7485,7 +7485,24 @@ proof (intro iffI)
                snd y / sqrt (fst y ^ 2 + snd y ^ 2)),
               1 - sqrt (fst y ^ 2 + snd y ^ 2)))"
   \<comment> \<open>k extends h: for x \<in> S^1, |x| = 1, so k(x) = H(x, 0) = h(x).\<close>
-  have hext: "\<forall>x\<in>top1_S1. k x = h x" sorry
+  have hext: "\<forall>x\<in>top1_S1. k x = h x"
+  proof
+    fix x assume hx: "x \<in> top1_S1"
+    have hx_eq: "fst x ^ 2 + snd x ^ 2 = 1" using hx unfolding top1_S1_def by (by100 auto)
+    have hx_ne: "x \<noteq> (0, 0)"
+    proof
+      assume "x = (0, 0)"
+      hence "fst x ^ 2 + snd x ^ 2 = 0" by simp
+      thus False using hx_eq by simp
+    qed
+    have hsqrt: "sqrt (fst x ^ 2 + snd x ^ 2) = 1"
+      using hx_eq by simp
+    have "k x = H ((fst x / 1, snd x / 1), 1 - 1)"
+      unfolding k_def using hx_ne hsqrt by simp
+    also have "\<dots> = H (x, 0)" by simp
+    also have "\<dots> = h x" using hH0 hx by (by100 blast)
+    finally show "k x = h x" .
+  qed
   \<comment> \<open>k is continuous: on B^2 - {0}, continuous by composition; at 0, use H(x,1) = c.\<close>
   have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k" sorry
   show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
