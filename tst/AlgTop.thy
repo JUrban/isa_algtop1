@@ -6040,7 +6040,70 @@ proof -
   qed
   \<comment> \<open>By compactness, the infimum of the \<epsilon>_s values is achieved and positive.
      This is the Lebesgue number \<delta>. Take n = \<lceil>1/\<delta>\<rceil>+1.\<close>
-  show ?thesis sorry \<comment> \<open>Remaining: extract uniform \<delta> from pointwise \<epsilon>_s using compactness.\<close>
+  \<comment> \<open>From pointwise \<epsilon> to subdivision: define A = {s \<in> [0,1]. [0,s] has a valid subdivision}.
+     A contains 0. A is open in [0,1] (extend by \<epsilon>). If A \<ne> [0,1], sup(A) leads to contradiction.
+     This is the "creeping lemma" or "bisection" style argument.\<close>
+  \<comment> \<open>Alternatively: use the finite cover + pointwise \<epsilon> to get a non-uniform subdivision,
+     then refine to uniform. The key fact: since C is FINITE, we can take
+     \<delta> = min{\<epsilon>(s,V) : V \<in> C, s is a boundary point of V \<inter> [0,1]}.
+     Finitely many boundary points + finitely many V \<Rightarrow> \<delta> > 0.\<close>
+  show ?thesis sorry \<comment> \<open>Uniform \<delta> from finite cover: creeping lemma or boundary-based argument.\<close>
+qed
+
+text \<open>Non-uniform subdivision from open cover of [0,1] (easier than Lebesgue number).
+  Proof by the "creeping lemma": advance step-by-step using pointwise radii.\<close>
+lemma open_cover_subdivision_01:
+  assumes "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> (\<exists>U\<in>\<A>. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
+  shows "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub::nat \<Rightarrow> real. sub 0 = 0 \<and> sub n = 1
+      \<and> (\<forall>i<n. sub i < sub (Suc i))
+      \<and> (\<forall>i<n. \<exists>U\<in>\<A>. {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U))"
+proof -
+  \<comment> \<open>Define A = {s \<in> [0,1]. [0,s] has a valid subdivision}.
+     Show: 0 \<in> A. A is open in [0,1]. sup A \<in> A. sup A = 1.\<close>
+  define A where "A = {s. 0 \<le> s \<and> s \<le> 1 \<and>
+      (\<exists>n\<ge>1. \<exists>sub. sub 0 = 0 \<and> sub n = s
+        \<and> (\<forall>i<n. sub i < sub (Suc i))
+        \<and> (\<forall>i<n. \<exists>U\<in>\<A>. {t. sub i \<le> t \<and> t \<le> sub (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))}"
+  \<comment> \<open>0 \<in> A: trivial subdivision.\<close>
+  \<comment> \<open>Some small positive s₁ is in A: use the cover at 0.\<close>
+  obtain U0 eps0 where hU0: "U0 \<in> \<A>" and heps0: "eps0 > 0"
+      and hball0: "{t. \<bar>t\<bar> < eps0 \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U0"
+    using assms[rule_format, of 0] by auto
+  define s1 where "s1 = min (eps0 / 2) 1"
+  have hs1_pos: "s1 > 0" unfolding s1_def using heps0 by simp
+  have hs1_le1: "s1 \<le> 1" unfolding s1_def by simp
+  have hs1_A: "s1 \<in> A"
+  proof -
+    have hsub: "{t. 0 \<le> t \<and> t \<le> s1 \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U0"
+    proof
+      fix t assume ht: "t \<in> {t. 0 \<le> t \<and> t \<le> s1 \<and> 0 \<le> t \<and> t \<le> 1}"
+      hence "0 \<le> t" "t \<le> s1" "t \<le> 1" by auto
+      hence "\<bar>t\<bar> < eps0" unfolding s1_def using heps0 by auto
+      thus "t \<in> U0" using hball0 \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by auto
+    qed
+    show ?thesis unfolding A_def
+      using hU0 hs1_pos hs1_le1 hsub
+      by (intro CollectI conjI exI[of _ 1] exI[of _ "\<lambda>i. if i = 0 then 0 else s1"]) auto
+  qed
+  have hne: "A \<noteq> {}" using hs1_A by blast
+  \<comment> \<open>A bounded above by 1.\<close>
+  have hbdd: "\<forall>s\<in>A. s \<le> 1" unfolding A_def by (by100 blast)
+  \<comment> \<open>Let M = Sup A.\<close>
+  define M where "M = Sup A"
+  have hM_le1: "M \<le> 1" unfolding M_def using hbdd hne by (intro cSup_le_iff[THEN iffD2]) auto
+  have hM_ge0: "M \<ge> 0"
+  proof -
+    have "s1 \<le> M" unfolding M_def using hs1_A hbdd by (intro cSup_upper) auto
+    thus ?thesis using hs1_pos by linarith
+  qed
+  \<comment> \<open>M \<in> A (closed step): M is a limit of points in A, each covered by some U.
+     M itself is in some U (open), so the subdivision can be extended to M.\<close>
+  have hM_A: "M \<in> A" sorry \<comment> \<open>Closed step: approach from below.\<close>
+  \<comment> \<open>M = 1 (open step): if M < 1, M is in some open U, so M + \<epsilon> \<in> A for small \<epsilon> > 0.
+     But M = sup A, contradiction.\<close>
+  have hM_1: "M = 1" sorry \<comment> \<open>Open step: extend beyond M.\<close>
+  \<comment> \<open>From M = 1 and M \<in> A, extract the subdivision.\<close>
+  show ?thesis using hM_A hM_1 unfolding A_def sorry
 qed
 
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
