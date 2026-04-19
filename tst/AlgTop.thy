@@ -7522,7 +7522,7 @@ proof -
       have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
       have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry
       have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set"
-        unfolding top1_unit_interval_def by (by100 auto)
+        sorry
       have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
           (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))" sorry
       have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}" sorry
@@ -7542,7 +7542,16 @@ proof -
       \<comment> \<open>A_{Suc k} = A_k \<union> R_{i,j}.\<close>
       have hA_Suc: "?A (Suc k) = ?A k \<union> ?R ?i ?j"
         sorry
-      show ?case using hnext_cont hnext_lift hnext_agree hprev_00 hA_Suc sorry
+      have "Ft_next (0, 0) = e0"
+      proof -
+        have "(0::real, 0::real) \<in> ?A k"
+          unfolding top1_unit_interval_def by (by100 auto)
+        hence "Ft_next (0, 0) = Ft_prev (0, 0)" using hnext_agree by (by100 blast)
+        thus ?thesis using hprev_00 by simp
+      qed
+      show ?case
+        apply (rule exI[of _ Ft_next])
+        using hnext_cont hnext_lift \<open>Ft_next (0, 0) = e0\<close> hA_Suc sorry
     qed
   qed
   \<comment> \<open>At k = m*n: A_{m*n} = I\<times>I.\<close>
@@ -7551,7 +7560,25 @@ proof -
       \<and> (\<forall>x\<in>?A (m*n). p (Ft x) = F x) \<and> Ft (0, 0) = e0"
     by simp
   moreover have "?A (m*n) = I_set \<times> I_set" sorry
-  ultimately show ?thesis sorry
+  ultimately show ?thesis
+  proof -
+    assume hAmn: "?A (m*n) = I_set \<times> I_set"
+    assume "\<exists>Ft. top1_continuous_map_on (?A (m*n))
+        (subspace_topology (I_set \<times> I_set) II_topology (?A (m*n))) E TE Ft
+        \<and> (\<forall>x\<in>?A (m*n). p (Ft x) = F x) \<and> Ft (0, 0) = e0"
+    then obtain Ft where hFt_c: "top1_continuous_map_on (?A (m*n))
+        (subspace_topology (I_set \<times> I_set) II_topology (?A (m*n))) E TE Ft"
+        and hFt_l: "\<forall>x\<in>?A (m*n). p (Ft x) = F x" and hFt_0: "Ft (0, 0) = e0"
+      by (by100 blast)
+    have "subspace_topology (I_set \<times> I_set) II_topology (I_set \<times> I_set) = II_topology"
+      unfolding subspace_topology_def sorry
+    hence "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ft"
+      using hFt_c hAmn by simp
+    moreover have "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ft (s, t)) = F (s, t)"
+      using hFt_l hAmn by (by100 auto)
+    moreover have "Ft (0, 0) = e0" using hFt_0 .
+    ultimately show ?thesis by (by100 blast)
+  qed
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
