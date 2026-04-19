@@ -7853,12 +7853,116 @@ proof -
           by (rule product_topology_on_is_topology_on[OF
               top1_unit_interval_topology_is_topology_on
               top1_unit_interval_topology_is_topology_on])
-        \<comment> \<open>Left edge is connected (vertical interval).\<close>
+        \<comment> \<open>Left edge is connected (vertical interval): {sub_s i} \<times> [sub_t j, sub_t (j+1)].\<close>
+        have hITop: "is_topology_on I_set I_top"
+          by (rule top1_unit_interval_topology_is_topology_on)
         have hleft_conn: "top1_connected_on ?left_R
-            (subspace_topology (I_set \<times> I_set) II_topology ?left_R)" sorry
-        \<comment> \<open>Bottom edge is connected (horizontal interval).\<close>
+            (subspace_topology (I_set \<times> I_set) II_topology ?left_R)"
+        proof -
+          let ?S1 = "{sub_s ?i}" and ?S2 = "{t\<in>I_set. sub_t ?j \<le> t \<and> t \<le> sub_t (Suc ?j)}"
+          have hS1_conn: "top1_connected_on ?S1 (subspace_topology I_set I_top ?S1)"
+            by (rule top1_connected_on_singleton[OF hITop hsi_I'])
+          have hS2_eq: "?S2 = {sub_t ?j .. sub_t (Suc ?j)}"
+          proof (rule set_eqI)
+            fix t show "(t \<in> ?S2) = (t \<in> {sub_t ?j .. sub_t (Suc ?j)})"
+            proof
+              assume "t \<in> ?S2" thus "t \<in> {sub_t ?j .. sub_t (Suc ?j)}" by simp
+            next
+              assume ht_cc: "t \<in> {sub_t ?j .. sub_t (Suc ?j)}"
+              hence "sub_t ?j \<le> t" "t \<le> sub_t (Suc ?j)" by simp_all
+              moreover have "t \<in> I_set"
+              proof -
+                have "0 \<le> sub_t ?j" using htj_I' unfolding top1_unit_interval_def by simp
+                have "sub_t (Suc ?j) \<le> 1" using htj1_I unfolding top1_unit_interval_def by simp
+                show ?thesis unfolding top1_unit_interval_def
+                  using \<open>sub_t ?j \<le> t\<close> \<open>t \<le> sub_t (Suc ?j)\<close> \<open>0 \<le> sub_t ?j\<close> \<open>sub_t (Suc ?j) \<le> 1\<close>
+                  by simp
+              qed
+              ultimately show "t \<in> ?S2" by (by100 blast)
+            qed
+          qed
+          have hS2_conn: "top1_connected_on ?S2 (subspace_topology I_set I_top ?S2)"
+          proof -
+            have "connected ?S2" unfolding hS2_eq by (rule connected_Icc)
+            hence "top1_connected_on ?S2 (subspace_topology UNIV top1_open_sets ?S2)"
+              by (rule top1_connected_on_subspace_openI)
+            moreover have "subspace_topology I_set I_top ?S2 = subspace_topology UNIV top1_open_sets ?S2"
+            proof -
+              have "?S2 \<subseteq> I_set" by (by100 blast)
+              hence "subspace_topology I_set (subspace_topology UNIV top1_open_sets I_set) ?S2
+                  = subspace_topology UNIV top1_open_sets ?S2"
+                by (rule subspace_topology_trans)
+              thus ?thesis unfolding top1_unit_interval_topology_def by simp
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have "top1_connected_on (?S1 \<times> ?S2)
+              (product_topology_on (subspace_topology I_set I_top ?S1) (subspace_topology I_set I_top ?S2))"
+            by (rule Theorem_23_6[OF
+                subspace_topology_is_topology_on[OF hITop] subspace_topology_is_topology_on[OF hITop]
+                hS1_conn hS2_conn])
+              (simp_all add: hsi_I' htj_I' htj_le')
+          moreover have "product_topology_on (subspace_topology I_set I_top ?S1) (subspace_topology I_set I_top ?S2)
+              = subspace_topology (I_set \<times> I_set) (product_topology_on I_top I_top) (?S1 \<times> ?S2)"
+            by (rule Theorem_16_3[OF hITop hITop])
+          moreover have "product_topology_on I_top I_top = II_topology"
+            unfolding II_topology_def by simp
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>Bottom edge is connected (horizontal interval): [sub_s i, sub_s (i+1)] \<times> {sub_t j}.\<close>
         have hbot_conn: "top1_connected_on ?bot_R
-            (subspace_topology (I_set \<times> I_set) II_topology ?bot_R)" sorry
+            (subspace_topology (I_set \<times> I_set) II_topology ?bot_R)"
+        proof -
+          let ?S1 = "{s\<in>I_set. sub_s ?i \<le> s \<and> s \<le> sub_s (Suc ?i)}" and ?S2 = "{sub_t ?j}"
+          have hS1_eq: "?S1 = {sub_s ?i .. sub_s (Suc ?i)}"
+          proof (rule set_eqI)
+            fix s show "(s \<in> ?S1) = (s \<in> {sub_s ?i .. sub_s (Suc ?i)})"
+            proof
+              assume "s \<in> ?S1" thus "s \<in> {sub_s ?i .. sub_s (Suc ?i)}" by simp
+            next
+              assume "s \<in> {sub_s ?i .. sub_s (Suc ?i)}"
+              hence "sub_s ?i \<le> s" "s \<le> sub_s (Suc ?i)" by simp_all
+              moreover have "s \<in> I_set"
+              proof -
+                have "0 \<le> sub_s ?i" using hsi_I' unfolding top1_unit_interval_def by simp
+                have "sub_s (Suc ?i) \<le> 1" using hsi1_I unfolding top1_unit_interval_def by simp
+                show ?thesis unfolding top1_unit_interval_def
+                  using \<open>sub_s ?i \<le> s\<close> \<open>s \<le> sub_s (Suc ?i)\<close> \<open>0 \<le> sub_s ?i\<close> \<open>sub_s (Suc ?i) \<le> 1\<close>
+                  by simp
+              qed
+              ultimately show "s \<in> ?S1" by (by100 blast)
+            qed
+          qed
+          have hS1_conn: "top1_connected_on ?S1 (subspace_topology I_set I_top ?S1)"
+          proof -
+            have "connected ?S1" unfolding hS1_eq by (rule connected_Icc)
+            hence "top1_connected_on ?S1 (subspace_topology UNIV top1_open_sets ?S1)"
+              by (rule top1_connected_on_subspace_openI)
+            moreover have "subspace_topology I_set I_top ?S1 = subspace_topology UNIV top1_open_sets ?S1"
+            proof -
+              have "?S1 \<subseteq> I_set" by (by100 blast)
+              hence "subspace_topology I_set (subspace_topology UNIV top1_open_sets I_set) ?S1
+                  = subspace_topology UNIV top1_open_sets ?S1"
+                by (rule subspace_topology_trans)
+              thus ?thesis unfolding top1_unit_interval_topology_def by simp
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have hS2_conn: "top1_connected_on ?S2 (subspace_topology I_set I_top ?S2)"
+            by (rule top1_connected_on_singleton[OF hITop htj_I'])
+          have "top1_connected_on (?S1 \<times> ?S2)
+              (product_topology_on (subspace_topology I_set I_top ?S1) (subspace_topology I_set I_top ?S2))"
+            by (rule Theorem_23_6[OF
+                subspace_topology_is_topology_on[OF hITop] subspace_topology_is_topology_on[OF hITop]
+                hS1_conn hS2_conn])
+              (simp_all add: htj_I' hsi_I' hsi_le')
+          moreover have "product_topology_on (subspace_topology I_set I_top ?S1) (subspace_topology I_set I_top ?S2)
+              = subspace_topology (I_set \<times> I_set) (product_topology_on I_top I_top) (?S1 \<times> ?S2)"
+            by (rule Theorem_16_3[OF hITop hITop])
+          moreover have "product_topology_on I_top I_top = II_topology"
+            unfolding II_topology_def by simp
+          ultimately show ?thesis by simp
+        qed
         \<comment> \<open>They share the corner point.\<close>
         have hcorner_left: "(sub_s ?i, sub_t ?j) \<in> ?left_R"
           using hsi_I' htj_I' htj_le' by (by100 blast)
