@@ -4669,11 +4669,38 @@ proof -
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_N
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
-        sorry \<comment> \<open>Inverse via arccos(fst p)/(2\<pi>) + nn is continuous.
-               Proof sketch: arccos continuous on [-1,1] (continuous_on_arccos),
-               fst p \<in> [-1,1] from x^2+y^2=1. Division by 2\<pi> and addition of nn.
-               inv_fn range in V since arccos(x) \<in> (0,\<pi>) when y > 0.
-               inv_fn agrees with inv_into by injectivity + cos(arccos(x))=x.\<close>
+      proof -
+        define inv_fn :: "real \<times> real \<Rightarrow> real"
+          where "inv_fn \<equiv> \<lambda>p. arccos (fst p) / (2 * pi) + of_int nn"
+        \<comment> \<open>Continuity: arccos(fst p) continuous on arc_N since fst p \<in> [-1,1].\<close>
+        have hinv_co: "continuous_on top1_S1_arc_N inv_fn"
+          unfolding inv_fn_def top1_S1_arc_N_def
+          sorry \<comment> \<open>continuous_on_arccos + continuous_on_fst + bounds from x^2+y^2=1.\<close>
+        \<comment> \<open>Range: arccos(x) \<in> (0,\<pi>) when y > 0, so arccos(x)/(2\<pi>) \<in> (0, 1/2).\<close>
+        have hinv_range: "\<And>p. p \<in> top1_S1_arc_N \<Longrightarrow> inv_fn p \<in> V"
+          sorry \<comment> \<open>arccos(x) \<in> (0,\<pi>) when y > 0 (since x \<in> (-1,1)), so arccos(x)/(2\<pi>) \<in> (0,1/2).\<close>
+        \<comment> \<open>Agreement: p(inv_fn(p)) = p. cos(arccos(x)) = x.
+           sin(arccos(x)) = y since sin(arccos(x)) = sqrt(1-x^2) = y (y > 0).\<close>
+        have hinv_agree: "\<forall>p\<in>top1_S1_arc_N. inv_into V top1_R_to_S1 p = inv_fn p"
+          sorry
+        \<comment> \<open>Transfer.\<close>
+        have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_N"
+          unfolding top1_S1_topology_def
+          using subspace_topology_trans[OF harc_sub]
+          by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+        have "top1_continuous_map_on top1_S1_arc_N
+            (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_N)
+            V (subspace_topology UNIV (top1_open_sets :: real set set) V) inv_fn"
+          by (rule top1_continuous_map_on_subspace_open_sets_on[OF hinv_range hinv_co])
+        hence hinv_fn_cont: "top1_continuous_map_on top1_S1_arc_N
+            (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)
+            V (subspace_topology UNIV top1_open_sets V) inv_fn"
+          unfolding harc_eq .
+        have "\<forall>p\<in>top1_S1_arc_N. inv_fn p = inv_into V top1_R_to_S1 p"
+          using hinv_agree by (by100 auto)
+        thus ?thesis by (rule top1_continuous_map_on_agree'[OF hinv_fn_cont])
+      qed
       \<comment> \<open>Assembly.\<close>
       have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
