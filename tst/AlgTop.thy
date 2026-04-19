@@ -5995,9 +5995,32 @@ lemma lebesgue_subdivision_01:
   assumes hcov: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> (\<exists>U\<in>\<A>. s \<in> U)"
       and hopen: "\<forall>U\<in>\<A>. \<exists>V. open V \<and> U = {0..1} \<inter> V"
   shows "\<exists>n::nat. n \<ge> 1 \<and> (\<forall>i<n. \<exists>U\<in>\<A>. {s. real i/real n \<le> s \<and> s \<le> real(Suc i)/real n \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U)"
-  sorry \<comment> \<open>Standard: compact_Icc gives finite subcover, Lebesgue number gives uniform mesh.
-         The proof needs: open in R ∩ [0,1] = open in subspace topology;
-         compact {0..1::real}; distance-to-complement function; its minimum on compact set.\<close>
+proof -
+  \<comment> \<open>Convert to HOL open sets: each U \<in> \<A> is {0..1} \<inter> V for some open V.\<close>
+  define \<B> where "\<B> = {V. open V \<and> (\<exists>U\<in>\<A>. U = {0..1} \<inter> V)}"
+  have hB_open: "\<forall>V\<in>\<B>. open V" unfolding \<B>_def by (by100 blast)
+  have hB_cover: "{0..1::real} \<subseteq> \<Union>\<B>"
+  proof
+    fix s :: real assume hs: "s \<in> {0..1}"
+    obtain U where hU: "U \<in> \<A>" and hs_U: "s \<in> U" using hcov hs by auto
+    obtain V where hV: "open V" and hUV: "U = {0..1} \<inter> V" using hopen hU by auto
+    have "V \<in> \<B>" unfolding \<B>_def using hV hU hUV by (by100 blast)
+    moreover have "s \<in> V" using hs_U hUV by (by100 blast)
+    ultimately show "s \<in> \<Union>\<B>" by (by100 blast)
+  qed
+  \<comment> \<open>Compact {0..1} + open cover \<B> \<Rightarrow> finite subcover.\<close>
+  obtain \<C> where hC_sub: "\<C> \<subseteq> \<B>" and hC_fin: "finite \<C>" and hC_cover: "{0..1::real} \<subseteq> \<Union>\<C>"
+  proof -
+    have "compact {0..1::real}" by (rule compact_Icc)
+    from compactE[OF this hB_cover] hB_open
+    obtain \<C>' where "\<C>' \<subseteq> \<B>" "finite \<C>'" "{0..1::real} \<subseteq> \<Union>\<C>'" by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>Lebesgue number: for finite open cover of compact [0,1], ∃ \<delta> > 0.\<close>
+  \<comment> \<open>For each s \<in> [0,1], s is in some V \<in> \<C>. Since V is open, ∃ \<epsilon> > 0 with (s-\<epsilon>, s+\<epsilon>) \<subseteq> V.
+     Take \<delta> = min over all s of the max such \<epsilon>. Finite cover \<Rightarrow> \<delta> > 0.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
 lemma Lemma_54_1_path_lifting:
