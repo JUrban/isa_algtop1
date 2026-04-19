@@ -2,35 +2,9 @@
 
 ## A. Statement/Definitional Fixes Needed
 
-### A1. Theorem_80_1_universal_unique: Missing basepoint membership (BLOCKING)
-
-**Location:** Line 14081  
-**Issue:** The theorem assumes `p e0 = b0` and `p' e0' = b0` but does NOT assume `e0 ∈ E` or `e0' ∈ E'`. Since functions in HOL are total, `p e0 = b0` alone doesn't guarantee `e0 ∈ E`. This makes `b0 ∈ B` underivable, blocking the fundamental group image computation.
-
-**Fix:** Add assumptions:
-```isabelle
-and "e0 ∈ E" and "e0' ∈ E'"
-```
-
-**Impact:** Unblocks the trivial-subgroup computation and the Theorem_79_4 application.
-
-### A2. Theorem_57_1 (Borsuk-Ulam): Missing WLOG h(b₀) = b₀ (IMPORTANT)
-
-**Location:** Line 8422  
-**Issue:** Munkres' proof says "WLOG h(b₀) = b₀" by rotation. The formalization skips this step. The `hh_star_trivial` fact (line 8452) uses `const (h (1,0))` as the target, but `path_homotopic_on` at basepoint `(1,0)` requires `h(1,0) = (1,0)` for the `is_path_on` conditions to hold. Without this, `hh_star_trivial` is unprovable.
-
-**Fix (option 1):** Add WLOG reduction. Before the main proof, show that if Theorem_57_1 fails, there exists an antipode-preserving h' with h'(1,0) = (1,0) that is also nulhomotopic, and derive contradiction for h'.
-
-**Fix (option 2):** Add assumption `h (1,0) = (1,0)` and adjust the overall Borsuk-Ulam argument to rotate first.
-
-**Impact:** Unblocks the 6 sorries in Theorem_57_1.
-
-### A3. `top1_separates_on` definition: No C ⊆ X condition (COSMETIC)
-
-**Location:** Line ~11479  
-**Current:** `¬ connected(X - C)` without requiring `C ⊆ X`.  
-**Munkres:** Separates requires C ⊆ X.  
-**Impact:** The definition works correctly (if C ⊄ X, the result is still well-defined), but some proofs may need `C ⊆ X` explicitly. Currently handled ad-hoc. Low priority.
+### A1. Theorem_80_1_universal_unique: Missing basepoint membership — **DONE**
+### A2. Theorem_57_1 (Borsuk-Ulam): WLOG rotation — **DONE** (case split + rotation)
+### A3. `top1_separates_on` definition: No C ⊆ X condition (COSMETIC, low priority)
 
 ---
 
@@ -38,52 +12,61 @@ and "e0 ∈ E" and "e0' ∈ E'"
 
 ### B1. π₁(S¹) ≅ ℤ as a group isomorphism (HIGHEST PRIORITY)
 
-**Location:** Line 5841  
-**Status:** Bijection exists (Theorem_54_5). Homomorphism property needed.  
-**What's needed:**
-- Formalize that the lift of f*g equals the concatenation of lift(f) with translated-lift(g)
-- Specifically: if lift(f,0) ends at n and lift(g,0) ends at m, then lift(f*g,0) ends at n+m
-- This requires a lemma about `p(n + x) = p(x)` for the covering map p: ℝ → S¹
-
-**Unblocks:** FTA Steps 1-2 (3 sorries), Theorem 57.1 chain (6+ sorries), total ~10 sorries.
+**Status:** Bijection proved (φ = floor ∘ lifting correspondence). Homomorphism sorry remains.
+**Recent progress:**
+- Proved `top1_R_to_S1_int_shift`: p(x + n) = p(x) for integer n
+- Proved φ bijective via `bij_betw_trans` (floor on Z is bijective)
+- Proved assembly (exists iso with bij + hom)
+- Added translated-lift helper lemmas
+**What's still needed:**
+- Homomorphism: φ(c·d) = φ(c) + φ(d) via translated-lift concatenation
 
 ### B2. Covering space path lifting (Lemma 54.1)
 
-**Location:** Lines 4496, 4502  
-**What's needed:** Lebesgue number argument for subdividing [0,1] so each subinterval maps into an evenly covered set, then lift interval-by-interval.  
-**Unblocks:** Path lifting uniqueness, homotopy lifting, π₁(S¹) computation.
+**Status:** Proof sketch expanded with Lebesgue subdivision comments.
+**What's needed:** Lebesgue number argument + interval-by-interval lift construction.
 
 ### B3. R → S¹ is a covering map (Theorem 53.1)
 
-**Location:** Line 4190  
-**What's needed:** Show every point of S¹ has an evenly covered neighborhood under p(t) = (cos 2πt, sin 2πt). Requires constructing the 4 standard open arcs.  
-**Unblocks:** All covering space applications for S¹.
+**Status:** arc_E fully proved (220 lines). 3 symmetric arcs (N, W, S) remain sorry'd.
+**What's needed:** Replicate arc_E proof with adapted coordinates.
 
-### B4. `hh_star_trivial` from nulhomotopy (Theorem 57.1)
+### B4. `hh_star_trivial` from nulhomotopy (Theorem 57.1) — **DONE** for h(1,0)=(1,0) case
 
-**Location:** Line 8455  
-**Status:** Nearly provable using `homotopy_induced_basepoint_change` + path algebra.  
-**Prerequisite:** Fix A2 (WLOG h(b₀)=b₀) first.  
-**Unblocks:** Theorem 57.1, which unblocks Borsuk-Ulam (57.3) and its applications.
+### B5. Lemma_55_3 forward (nulhomotopic → B² extension)
+
+**Status:** Construction k(y) = H(y/|y|, 1-|y|) defined. k extends h proved.
+**What's needed:** k is continuous (composition on B²-{0}, limit at 0).
+
+### B6. Simply connected covering image = trivial (§80)
+
+**Status:** carrier = {id} proved. p_*(id_E) = id_B forward direction needs
+  continuous_preserves + transitivity. Backward direction done.
+**Used by:** Theorem_80_1_universal_unique (hH_trivial, hH'_trivial now proved via this lemma).
 
 ---
 
 ## C. Verified Correct (No Fixes Needed)
 
-- **`hj_inj` statement (line 8027):** CORRECT. j_* injective means "homotopic in C-{0} ⟹ homotopic in S¹" (not reversed).
-- **All definitions** (`nulhomotopic_on`, `homotopic_on`, `separates_on`, `simple_closed_curve_on`, `universal_covering_on`): Match Munkres.
-- **FTA Step 3-4:** Fully proved, no issues.
-- **Theorem_58_7:** Fully proved, no issues.
-- **Type separation** (complex vs real×real for S¹): Deliberate design choice, not a bug. Creates duplicate work but is structurally sound.
+- All definitions match Munkres.
+- FTA Steps 3-4, Theorem_58_7: Fully proved.
+- Type separation (complex vs real×real): Deliberate design choice.
+- Z group definitions moved before §54 (resolved forward reference).
 
 ---
 
 ## D. Recommended Work Order
 
-1. ~~**Fix A1** (Theorem_80_1 assumptions)~~ — **DONE**
-2. ~~**Fix A2** (Theorem_57_1 WLOG)~~ — **DONE** (case split restructured; h(1,0)=(1,0) case fully proved; rotation sorry remains)
-3. ~~**Prove B4** (hh_star_trivial)~~ — **DONE** for h(1,0)=(1,0) case (path algebra complete)
-4. **Prove B3** (R→S¹ covering) — 2-3 hours, foundational
-5. **Prove B2** (path lifting) — 2-3 hours, foundational
-6. **Prove B1** (π₁(S¹) homomorphism) — 3-4 hours, the key domino
-7. **Prove Theorem_53_2 homeomorphism restriction** — **DONE**
+1. ~~Fix A1~~ — **DONE**
+2. ~~Fix A2~~ — **DONE**
+3. ~~Prove B4~~ — **DONE**
+4. ~~Prove Theorem_53_2~~ — **DONE**
+5. ~~Prove φ bijective in Theorem_54_5_iso~~ — **DONE**
+6. ~~Prove k extends h in Lemma_55_3~~ — **DONE**
+7. ~~Prove π₁ carrier singleton (simply_connected_trivial_image)~~ — **DONE**
+8. **Prove B3 arcs** (N, W, S) — symmetric to arc_E
+9. **Prove B2** (path lifting) — Lebesgue number argument
+10. **Prove B1 homomorphism** — translated-lift concatenation
+11. **Close B6 forward direction** — continuous_preserves_path_homotopic application
+
+**Current sorry count: 163**
