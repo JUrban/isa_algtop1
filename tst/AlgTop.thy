@@ -7076,17 +7076,90 @@ proof -
   \<comment> \<open>Ftilde_A(A\<inter>R) is connected (continuous image of connected set).\<close>
   have hFtA_conn: "top1_connected_on (Ftilde_A ` (A \<inter> R)) (subspace_topology E TE (Ftilde_A ` (A \<inter> R)))"
   proof -
+    have hAR_sub_A: "A \<inter> R \<subseteq> A" by (by100 blast)
     have hFtA_AR: "top1_continuous_map_on (A \<inter> R)
         (subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R)) E TE Ftilde_A"
-      sorry
-    show ?thesis sorry
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> A \<inter> R"
+      thus "Ftilde_A x \<in> E" using hFt_A hAR_sub_A unfolding top1_continuous_map_on_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> TE"
+      have "{x \<in> A \<inter> R. Ftilde_A x \<in> V} = (A \<inter> R) \<inter> {x \<in> A. Ftilde_A x \<in> V}" by (by100 auto)
+      moreover have "{x \<in> A. Ftilde_A x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology A"
+        using hFt_A hV unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{x \<in> A \<inter> R. Ftilde_A x \<in> V} \<in>
+          subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R)"
+      proof -
+        assume h1: "{x \<in> A \<inter> R. Ftilde_A x \<in> V} = (A \<inter> R) \<inter> {x \<in> A. Ftilde_A x \<in> V}"
+        assume h2: "{x \<in> A. Ftilde_A x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology A"
+        then obtain W where hW: "W \<in> II_topology" and heq: "{x \<in> A. Ftilde_A x \<in> V} = A \<inter> W"
+          unfolding subspace_topology_def by (by100 auto)
+        have "{x \<in> A \<inter> R. Ftilde_A x \<in> V} = (A \<inter> R) \<inter> W" using h1 heq by (by100 auto)
+        thus ?thesis unfolding subspace_topology_def using hW by (by100 blast)
+      qed
+    qed
+    have hAR_II: "A \<inter> R \<subseteq> I_set \<times> I_set" using hAR_sub by (by100 blast)
+    have hTAR: "is_topology_on (A \<inter> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R))"
+      by (rule subspace_topology_is_topology_on[OF hTII hAR_II])
+    show ?thesis using Theorem_23_5[OF hTAR hTE hC_conn hFtA_AR] .
   qed
   \<comment> \<open>Ftilde_A(A\<inter>R) \<subseteq> \<Union>\<V>, connected, so in one slice V0.\<close>
   have "Ftilde_A ` (A \<inter> R) \<subseteq> \<Union>\<V>"
     using hFtA_pU hVu by (by100 blast)
   then obtain V0 where hV0: "V0 \<in> \<V>" and hFtA_V0: "Ftilde_A ` (A \<inter> R) \<subseteq> V0"
-    \<comment> \<open>Connected subset of disjoint union of open sets lies in one component.\<close>
-    sorry
+  proof -
+    assume hsub: "Ftilde_A ` (A \<inter> R) \<subseteq> \<Union>\<V>"
+    obtain x0 where hx0: "x0 \<in> A \<inter> R" using hC_ne by (by100 blast)
+    have "Ftilde_A x0 \<in> \<Union>\<V>" using hsub hx0 by (by100 blast)
+    then obtain V0 where hV0: "V0 \<in> \<V>" and hx0V0: "Ftilde_A x0 \<in> V0" by (by100 blast)
+    have "Ftilde_A ` (A \<inter> R) \<subseteq> V0"
+    proof (rule ccontr)
+      assume "\<not> Ftilde_A ` (A \<inter> R) \<subseteq> V0"
+      then obtain y where hy: "y \<in> A \<inter> R" and hyV0: "Ftilde_A y \<notin> V0" by (by100 blast)
+      \<comment> \<open>Ftilde_A y \<in> some other slice V1 \<noteq> V0. Then Ftilde_A(A\<inter>R) meets both V0 and (\<Union>\<V>-V0).
+         Both are open in E. V0 \<inter> (\<Union>\<V>-V0) = \<emptyset> (disjoint slices). Ftilde_A(A\<inter>R) connected.
+         Connected set meeting two nonempty disjoint open sets covering it \<Rightarrow> contradiction.\<close>
+      have "Ftilde_A y \<in> \<Union>\<V>" using hsub hy by (by100 blast)
+      have hS_V0: "Ftilde_A ` (A \<inter> R) \<inter> V0 \<noteq> {}" using hx0 hx0V0 by (by100 blast)
+      have hS_rest: "Ftilde_A ` (A \<inter> R) \<inter> (\<Union>\<V> - V0) \<noteq> {}"
+        using hy hyV0 \<open>Ftilde_A y \<in> \<Union>\<V>\<close> by (by100 blast)
+      \<comment> \<open>V0 and (\<Union>\<V> - V0) are open in E (V0 open; complement = \<Union>other slices, open).
+         Their intersection is empty (disjoint slices). This contradicts connectivity.\<close>
+      have "V0 \<in> TE" using hVo hV0 unfolding openin_on_def by (by100 blast)
+      have hrest_open: "\<Union>(\<V> - {V0}) \<in> TE"
+      proof -
+        have "\<forall>V\<in>\<V> - {V0}. V \<in> TE" using hVo unfolding openin_on_def by (by100 blast)
+        hence "\<V> - {V0} \<subseteq> TE" by (by100 blast)
+        thus ?thesis using hTE unfolding is_topology_on_def by (by100 blast)
+      qed
+      have "\<Union>(\<V> - {V0}) = \<Union>\<V> - V0"
+        using hVd hV0 by (by100 blast)
+      hence hcompl_open: "\<Union>\<V> - V0 \<in> TE" using hrest_open by simp
+      have "V0 \<inter> (\<Union>\<V> - V0) = {}" by (by100 blast)
+      \<comment> \<open>Ftilde_A(A\<inter>R) \<subseteq> V0 \<union> (\<Union>\<V>-V0) = \<Union>\<V>, meets both, connected \<Rightarrow> contradiction.\<close>
+      \<comment> \<open>Ftilde_A(A\<inter>R) is connected, contained in V0 \<union> (\<Union>\<V>-V0), meets both. Contradiction.\<close>
+      have himg_sub: "Ftilde_A ` (A \<inter> R) \<subseteq> V0 \<union> (\<Union>\<V> - V0)" using hsub by (by100 blast)
+      have himg_E: "Ftilde_A ` (A \<inter> R) \<subseteq> E"
+        using hFtA_pU by (by100 blast)
+      have himg_top: "is_topology_on (Ftilde_A ` (A \<inter> R))
+          (subspace_topology E TE (Ftilde_A ` (A \<inter> R)))"
+        by (rule subspace_topology_is_topology_on[OF hTE himg_E])
+      \<comment> \<open>V0 \<inter> img and (\<Union>\<V>-V0) \<inter> img are both open in img, nonempty, disjoint, cover img.
+         This contradicts connectivity of img.\<close>
+      have hV0_img: "V0 \<inter> Ftilde_A ` (A \<inter> R) \<in> subspace_topology E TE (Ftilde_A ` (A \<inter> R))"
+        using \<open>V0 \<in> TE\<close> unfolding subspace_topology_def by (by100 blast)
+      have hcomp_img: "(\<Union>\<V> - V0) \<inter> Ftilde_A ` (A \<inter> R) \<in> subspace_topology E TE (Ftilde_A ` (A \<inter> R))"
+        using hcompl_open unfolding subspace_topology_def by (by100 blast)
+      have hdisj: "V0 \<inter> Ftilde_A ` (A \<inter> R) \<inter> ((\<Union>\<V> - V0) \<inter> Ftilde_A ` (A \<inter> R)) = {}"
+        by (by100 blast)
+      have hcover: "V0 \<inter> Ftilde_A ` (A \<inter> R) \<union> ((\<Union>\<V> - V0) \<inter> Ftilde_A ` (A \<inter> R))
+          = Ftilde_A ` (A \<inter> R)" using himg_sub by (by100 blast)
+      thus False using hFtA_conn hS_V0 hS_rest hV0_img hcomp_img hdisj hcover
+        unfolding top1_connected_on_def by (by100 blast)
+    qed
+    thus ?thesis using hV0 that by (by100 blast)
+  qed
   \<comment> \<open>p|V0 is a homeomorphism V0 \<rightarrow> U, hence bijective.\<close>
   have hbij: "bij_betw p V0 U"
     using hVh hV0 unfolding top1_homeomorphism_on_def by (by100 blast)
@@ -7124,7 +7197,67 @@ proof -
      They agree on A\<inter>R. A, R closed. Pasting gives continuity on A\<union>R.\<close>
   have hFt_cont: "top1_continuous_map_on (A \<union> R)
       (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) E TE Ftilde"
-    sorry
+  proof -
+    have hTAR_: "is_topology_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R))"
+      by (rule subspace_topology_is_topology_on[OF hTII hAR_sub])
+    have hA_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A"
+      sorry
+    have hR_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) R"
+      sorry
+    have hAR_union: "A \<union> R = A \<union> R" by simp
+    have hrange: "\<forall>x\<in>A \<union> R. Ftilde x \<in> E"
+    proof
+      fix x assume "x \<in> A \<union> R"
+      thus "Ftilde x \<in> E" using hFt_lift sorry
+    qed
+    have hFt_on_A: "top1_continuous_map_on A
+        (subspace_topology (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A) E TE Ftilde"
+    proof -
+      have heq: "\<forall>x\<in>A. Ftilde x = Ftilde_A x" using hFt_agree .
+      have hTsub: "subspace_topology (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A
+          = subspace_topology (I_set \<times> I_set) II_topology A"
+        by (rule subspace_topology_trans) (by100 blast)
+      show ?thesis unfolding hTsub top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume hx: "x \<in> A"
+        have "Ftilde x = Ftilde_A x" using heq hx by (by100 blast)
+        moreover have "Ftilde_A x \<in> E" using hFt_A hx unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "Ftilde x \<in> E" by simp
+      next
+        fix V assume hV: "V \<in> TE"
+        have "{x\<in>A. Ftilde x \<in> V} = {x\<in>A. Ftilde_A x \<in> V}" using heq by auto
+        also have "\<dots> \<in> subspace_topology (I_set \<times> I_set) II_topology A"
+          using hFt_A hV unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{x\<in>A. Ftilde x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology A" .
+      qed
+    qed
+    have hFt_on_R: "top1_continuous_map_on R
+        (subspace_topology (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) R) E TE Ftilde"
+    proof -
+      \<comment> \<open>On R: Ftilde(x) = if x\<in>A then Ftilde_A x else inv_into V0 p (F x).
+         But on R-A: Ftilde = inv_into V0 p \<circ> F. On A\<inter>R: also = inv_into V0 p \<circ> F (by hagree).
+         So on all of R: Ftilde = inv_into V0 p \<circ> F. This is continuous.\<close>
+      have hR_eq: "\<forall>x\<in>R. Ftilde x = inv_into V0 p (F x)"
+      proof
+        fix x assume hx: "x \<in> R"
+        show "Ftilde x = inv_into V0 p (F x)"
+        proof (cases "x \<in> A")
+          case True thus ?thesis unfolding Ftilde_def using hagree True hx by simp
+        next
+          case False thus ?thesis unfolding Ftilde_def by simp
+        qed
+      qed
+      have hTsub: "subspace_topology (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) R
+          = subspace_topology (I_set \<times> I_set) II_topology R"
+        by (rule subspace_topology_trans) (by100 blast)
+      \<comment> \<open>inv_into V0 p \<circ> F is continuous on R: composition of continuous functions.\<close>
+      show ?thesis unfolding hTsub top1_continuous_map_on_def
+        sorry
+    qed
+    show ?thesis
+      by (rule pasting_lemma_two_closed[OF hTAR_ hTE hA_cl_AR hR_cl_AR hAR_union hrange
+          hFt_on_A hFt_on_R])
+  qed
   show ?thesis using hFt_cont hFt_lift hFt_agree by (by100 blast)
 qed
 
