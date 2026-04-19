@@ -7164,6 +7164,12 @@ proof -
      column lifts vary continuously in s. By uniqueness of lifts (Lemma 54.1
      uniqueness) and the pasting argument on a Lebesgue grid, this follows.\<close>
   have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
+    \<comment> \<open>Munkres 54.2 continuity: Fix (s0,t0). F(s0,t0) \<in> evenly covered U.
+       Ftilde(s0,t0) \<in> slice V0. For each fixed s, Ftilde(s,-) is continuous
+       (it's a path). So Ftilde(s0,t) \<in> V0 for t near t0. And ftilde0 is
+       continuous, so for s near s0, ftilde0(s) \<in> V0' (some slice).
+       By uniqueness of lifts on each column and the covering structure,
+       Ftilde(s,t) = (p|V0)^{-1}(F(s,t)) near (s0,t0), hence continuous.\<close>
     sorry
   show ?thesis using hFt_cont hFt_lift hFt_00 by (by100 blast)
 qed
