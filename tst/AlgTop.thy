@@ -4484,7 +4484,36 @@ proof -
         thus False using hnm by (by100 blast)
       qed
     qed
-    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N} = \<Union>?\<V>" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N} = \<Union>?\<V>"
+    proof (intro set_eqI iffI)
+      fix x :: real
+      assume hx: "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N}"
+      hence hsin: "sin (2 * pi * x) > 0"
+        unfolding top1_R_to_S1_def top1_S1_arc_N_def by (by100 auto)
+      \<comment> \<open>sin(2\<pi>x) > 0 iff 2\<pi>x \<in> (2k\<pi>, (2k+1)\<pi>) iff x \<in> (k, k + 1/2) for some integer k.\<close>
+      show "x \<in> \<Union>?\<V>" sorry
+    next
+      fix x :: real
+      assume "x \<in> \<Union>?\<V>"
+      then obtain n :: int where "of_int n < x" "x < of_int n + (1/2::real)" by (by100 auto)
+      have hpi: "pi > 0" by (rule pi_gt_zero)
+      hence "0 < 2 * pi * x - 2 * pi * of_int n"
+        using \<open>of_int n < x\<close> by (by100 simp)
+      moreover have "2 * pi * x - 2 * pi * of_int n < pi"
+      proof -
+        have "2 * pi * x < 2 * pi * (of_int n + 1/2)"
+          using \<open>x < of_int n + (1/2::real)\<close> hpi by (by100 simp)
+        also have "\<dots> = 2 * pi * of_int n + pi" by (simp add: algebra_simps)
+        finally show ?thesis by (by100 linarith)
+      qed
+      ultimately have hsin: "sin (2 * pi * x - 2 * of_int n * pi) > 0"
+        by (intro sin_gt_zero) (simp add: algebra_simps)+
+      have "sin (2 * pi * x) > 0"
+        using hsin sorry \<comment> \<open>sin(2\<pi>x) = sin(2\<pi>(x-n)) by periodicity; 0 < 2\<pi>(x-n) < \<pi> gives sin > 0.\<close>
+      moreover have "cos (2 * pi * x) ^ 2 + sin (2 * pi * x) ^ 2 = 1" by (rule sin_cos_squared_add2)
+      ultimately show "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N}"
+        unfolding top1_R_to_S1_def top1_S1_arc_N_def by (by100 auto)
+    qed
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
