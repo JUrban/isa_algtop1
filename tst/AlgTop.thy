@@ -6509,7 +6509,26 @@ proof -
         \<comment> \<open>Continuity of ftk' on [0, sub(Suc k)] by pasting lemma.\<close>
         have hftk'_cont: "top1_continuous_map_on {s\<in>I_set. s \<le> sub (Suc k)}
             (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub (Suc k)}) E TE ftk'"
-          sorry
+        proof -
+          let ?Xk1 = "{s\<in>I_set. s \<le> sub (Suc k)}"
+          let ?TXk1 = "subspace_topology I_set I_top ?Xk1"
+          let ?A = "{s\<in>I_set. s \<le> sub k}"
+          let ?B = "{s\<in>I_set. sub k \<le> s \<and> s \<le> sub (Suc k)}"
+          have hTXk1: "is_topology_on ?Xk1 ?TXk1" sorry
+          have hTE': "is_topology_on E TE" sorry
+          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A" sorry
+          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B" sorry
+          have hAB: "?A \<union> ?B = ?Xk1" sorry
+          have hrange: "\<forall>s\<in>?Xk1. ftk' s \<in> E" using hftk'_E sorry
+          \<comment> \<open>ftk' continuous on A: equals ftk which is continuous by IH.\<close>
+          have hcont_A: "top1_continuous_map_on ?A (subspace_topology ?Xk1 ?TXk1 ?A) E TE ftk'"
+            sorry
+          \<comment> \<open>ftk' continuous on B: equals inv_into V0 p \<circ> f (homeomorphism inverse \<circ> continuous).\<close>
+          have hcont_B: "top1_continuous_map_on ?B (subspace_topology ?Xk1 ?TXk1 ?B) E TE ftk'"
+            sorry
+          show ?thesis
+            by (rule pasting_lemma_two_closed[OF hTXk1 hTE' hA_closed hB_closed hAB hrange hcont_A hcont_B])
+        qed
         show ?case using hftk'0 hftk'_E hftk'p hftk'_cont by (by100 blast)
       qed
     qed
