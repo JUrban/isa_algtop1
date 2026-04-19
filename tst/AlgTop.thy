@@ -14968,6 +14968,15 @@ lemma S2_minus_two_points_not_simply_connected:
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))"
   sorry
 
+text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is contractible).\<close>
+lemma map_into_S2_minus_point_nulhomotopic:
+  assumes "b \<in> top1_S2"
+      and "top1_continuous_map_on A TA
+             (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+  shows "top1_nulhomotopic_on A TA
+           (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+  sorry
+
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
     and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
@@ -15022,10 +15031,8 @@ proof -
       and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
     using assms(5) by (by100 auto)
   \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
-  have hD_contractible: "top1_simply_connected_on D
-      (subspace_topology top1_S2 top1_S2_topology D)" sorry
-  \<comment> \<open>f is nulhomotopic in D, hence in S^2-{b}.\<close>
-  show ?thesis sorry
+  \<comment> \<open>S^2-{b} is contractible (homeomorphic to R^2), so any map into it is nulhomotopic.\<close>
+  show ?thesis by (rule map_into_S2_minus_point_nulhomotopic[OF assms(3) assms(4)])
 qed
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
