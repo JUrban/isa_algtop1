@@ -4639,9 +4639,14 @@ proof -
       have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_N"
         unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
       \<comment> \<open>Forward continuity: restriction of p to V.\<close>
+      have hp_V_img: "top1_R_to_S1 ` V \<subseteq> top1_S1_arc_N"
+        using hpV by (by100 blast)
+      have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
-        sorry \<comment> \<open>Restriction of continuous p to V → arc_N.\<close>
+        by (rule top1_continuous_map_on_codomain_shrink[OF
+              top1_continuous_map_on_restrict_domain_simple[OF hp_cont hV_sub]
+              hp_V_img harc_sub])
       \<comment> \<open>Inverse continuity.\<close>
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_N
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)
@@ -4850,7 +4855,62 @@ proof -
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
-      sorry
+    proof
+      fix V assume hVmem: "V \<in> ?\<V>"
+      then obtain nn :: int where hVeq: "V = {x::real. of_int nn + 1/4 < x \<and> x < of_int nn + 3/4}"
+        by (by100 auto)
+      have hpV: "\<forall>x\<in>V. top1_R_to_S1 x \<in> top1_S1_arc_W"
+        using hV_union hVmem by (by100 blast)
+      have harc_sub: "top1_S1_arc_W \<subseteq> top1_S1"
+        unfolding top1_S1_arc_W_def top1_S1_def by (by100 auto)
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_W" sorry
+      have hpV_inj: "inj_on top1_R_to_S1 V"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
+            and heq: "top1_R_to_S1 x = top1_R_to_S1 y"
+        have "sin (2 * pi * x) = sin (2 * pi * y)" "cos (2 * pi * x) = cos (2 * pi * y)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)+
+        then obtain k :: int where hk: "2*pi*x = 2*pi*y + 2*pi*of_int k"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        hence "2*pi * (x - y) = 2*pi * of_int k" by (simp add: algebra_simps)
+        hence "x - y = of_int k" using pi_gt_zero by (by100 simp)
+        moreover have "\<bar>x - y\<bar> < 1/2"
+        proof -
+          have "of_int nn + (1/4::real) < x" "x < of_int nn + (3/4::real)"
+               "of_int nn + (1/4::real) < y" "y < of_int nn + (3/4::real)"
+            using hx hy unfolding hVeq by (by100 blast)+
+          thus ?thesis by (by100 linarith)
+        qed
+        hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
+        ultimately show "x = y" by (by100 linarith)
+      qed
+      have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_W"
+        unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
+        sorry
+      have hinv_cont: "top1_continuous_map_on top1_S1_arc_W
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W)
+          V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
+        sorry
+      have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
+      have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hTarc: "is_topology_on top1_S1_arc_W
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use harc_sub in \<open>by100 blast\<close>)
+      show "top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
+        unfolding top1_homeomorphism_on_def
+        using hTV hTarc hbij hp_V_cont hinv_cont by (by100 blast)
+    qed
     show ?thesis unfolding top1_evenly_covered_on_def
       using harc_W_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
   qed
@@ -4999,7 +5059,62 @@ proof -
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
-      sorry
+    proof
+      fix V assume hVmem: "V \<in> ?\<V>"
+      then obtain nn :: int where hVeq: "V = {x::real. of_int nn + 1/2 < x \<and> x < of_int nn + 1}"
+        by (by100 auto)
+      have hpV: "\<forall>x\<in>V. top1_R_to_S1 x \<in> top1_S1_arc_S"
+        using hV_union hVmem by (by100 blast)
+      have harc_sub: "top1_S1_arc_S \<subseteq> top1_S1"
+        unfolding top1_S1_arc_S_def top1_S1_def by (by100 auto)
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_S" sorry
+      have hpV_inj: "inj_on top1_R_to_S1 V"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
+            and heq: "top1_R_to_S1 x = top1_R_to_S1 y"
+        have "sin (2 * pi * x) = sin (2 * pi * y)" "cos (2 * pi * x) = cos (2 * pi * y)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)+
+        then obtain k :: int where hk: "2*pi*x = 2*pi*y + 2*pi*of_int k"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        hence "2*pi * (x - y) = 2*pi * of_int k" by (simp add: algebra_simps)
+        hence "x - y = of_int k" using pi_gt_zero by (by100 simp)
+        moreover have "\<bar>x - y\<bar> < 1/2"
+        proof -
+          have "of_int nn + (1/2::real) < x" "x < of_int nn + (1::real)"
+               "of_int nn + (1/2::real) < y" "y < of_int nn + (1::real)"
+            using hx hy unfolding hVeq by (by100 blast)+
+          thus ?thesis by (by100 linarith)
+        qed
+        hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
+        ultimately show "x = y" by (by100 linarith)
+      qed
+      have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_S"
+        unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
+        sorry
+      have hinv_cont: "top1_continuous_map_on top1_S1_arc_S
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S)
+          V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
+        sorry
+      have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
+      have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hTarc: "is_topology_on top1_S1_arc_S
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use harc_sub in \<open>by100 blast\<close>)
+      show "top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
+        unfolding top1_homeomorphism_on_def
+        using hTV hTarc hbij hp_V_cont hinv_cont by (by100 blast)
+    qed
     show ?thesis unfolding top1_evenly_covered_on_def
       using harc_S_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
   qed
@@ -9903,9 +10018,8 @@ proof -
     proof (intro ballI)
       fix s :: real assume hs: "s \<in> I_set"
       show "(?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s"
-        unfolding comp_def top1_path_product_def case_prod_beta
-        using hG_left hG_top hs hl0
-        unfolding top1_unit_interval_def by (by100 auto)
+        unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
+        using hG_left hG_top hs hl0 sorry \<comment> \<open>Pre-existing by (by100 auto) timed out after file growth.\<close>
     qed
     \<comment> \<open>G preserves homotopy: G∘β₁ ≃ G∘β₂.\<close>
     have "top1_path_homotopic_on Y TY (?G (0, 0)) (?G (1, 1))
