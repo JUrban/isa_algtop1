@@ -7249,16 +7249,16 @@ proof -
         and hrl_lift: "\<forall>s\<in>I_set. p (rl s) = F (s, 1)"
       using Lemma_54_1_path_lifting[OF assms(1) hFt01_E hFt01_p hrow_path assms(6,7)]
       by (by100 auto)
-    \<comment> \<open>Both Ftilde(\<cdot>,1) and rl lift s \<mapsto> F(s,1) from Ftilde(0,1).
-       Show Ftilde(\<cdot>,1) is a path (continuous), then uniqueness gives equality.
-       Ftilde(\<cdot>,1) is a path because on each sub-interval it equals (p|V0)\<inverse> \<circ> F(\<cdot>,1).\<close>
-    have hFt_is_path: "top1_is_path_on E TE (Ftilde (0, 1)) (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))"
-      sorry
+    \<comment> \<open>Show Ftilde(s,1) = rl(s) directly by p-injectivity on slices.
+       Both lift F(s,1). Both lie in the same slice V0 (by connectivity of the
+       column/row through the covering structure). p injective on V0 \<Rightarrow> equal.\<close>
     have hFt_row1_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = F (s, 1)"
       using hFt_lift h1I by (by100 auto)
     have hrow1_eq: "\<forall>s\<in>I_set. Ftilde (s, 1) = rl s"
-      using Lemma_54_1_uniqueness[OF assms(1) hFt01_E hFt01_p hrow_path
-          hFt_is_path hFt_row1_lift hrl hrl_lift] .
+      \<comment> \<open>Both lift F(\<cdot>,1) from Ftilde(0,1). On each piece of a Lebesgue subdivision,
+         both \<in> same slice V0 (rl by construction, Ftilde by column connectivity).
+         p injective on V0 + both lift F(s,1) \<Rightarrow> equal. Induction on pieces.\<close>
+      sorry
     show ?thesis unfolding top1_continuous_map_on_def
     proof (intro conjI ballI)
       fix s assume hs: "s \<in> I_set"
