@@ -7831,7 +7831,62 @@ proof -
         ultimately show ?thesis by (by100 blast)
       qed
       have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
-          (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))" sorry
+          (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))"
+      proof -
+        \<comment> \<open>The boundary C = A_k \<inter> R is the left \<union> bottom edges of the rectangle.
+           Textbook (Munkres p.340): "this set is the union of the left and bottom
+           edges of the rectangle I_{i_0} \<times> J_{j_0}, so it is connected."\<close>
+        let ?left_R = "{sub_s ?i} \<times> {t\<in>I_set. sub_t ?j \<le> t \<and> t \<le> sub_t (Suc ?j)}"
+        let ?bot_R = "{s\<in>I_set. sub_s ?i \<le> s \<and> s \<le> sub_s (Suc ?i)} \<times> {sub_t ?j}"
+        let ?L_shape = "?left_R \<union> ?bot_R"
+        \<comment> \<open>The L-shape equals A_k \<inter> R (sorry: requires grid non-overlap argument).\<close>
+        have hC_eq: "?A k \<inter> ?R ?i ?j = ?L_shape" sorry
+        \<comment> \<open>The L-shape is connected: two intervals sharing the corner point (Theorem 23.3).\<close>
+        have hsi_I': "sub_s ?i \<in> I_set" using hsub_s_I[rule_format, of "?i"] hi by simp
+        have htj_I': "sub_t ?j \<in> I_set" using hsub_t_I[rule_format, of "?j"] hj by simp
+        have hsi1_I: "sub_s (Suc ?i) \<in> I_set" using hsub_s_I[rule_format, of "Suc ?i"] hi by simp
+        have htj1_I: "sub_t (Suc ?j) \<in> I_set" using hsub_t_I[rule_format, of "Suc ?j"] hj by simp
+        have hsi_le': "sub_s ?i \<le> sub_s (Suc ?i)" using hs_inc[rule_format, OF hi] by simp
+        have htj_le': "sub_t ?j \<le> sub_t (Suc ?j)" using ht_inc[rule_format, OF hj] by simp
+        have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def
+          by (rule product_topology_on_is_topology_on[OF
+              top1_unit_interval_topology_is_topology_on
+              top1_unit_interval_topology_is_topology_on])
+        \<comment> \<open>Left edge is connected (vertical interval).\<close>
+        have hleft_conn: "top1_connected_on ?left_R
+            (subspace_topology (I_set \<times> I_set) II_topology ?left_R)" sorry
+        \<comment> \<open>Bottom edge is connected (horizontal interval).\<close>
+        have hbot_conn: "top1_connected_on ?bot_R
+            (subspace_topology (I_set \<times> I_set) II_topology ?bot_R)" sorry
+        \<comment> \<open>They share the corner point.\<close>
+        have hcorner_left: "(sub_s ?i, sub_t ?j) \<in> ?left_R"
+          using hsi_I' htj_I' htj_le' by (by100 blast)
+        have hcorner_bot: "(sub_s ?i, sub_t ?j) \<in> ?bot_R"
+          using hsi_I' htj_I' hsi_le' by (by100 blast)
+        have hcorner_inter: "(sub_s ?i, sub_t ?j) \<in> ?left_R \<inter> ?bot_R"
+          using hcorner_left hcorner_bot by (by100 blast)
+        \<comment> \<open>Both edges are subsets of I\<times>I.\<close>
+        have hleft_sub: "?left_R \<subseteq> I_set \<times> I_set" using hsi_I' by (by100 blast)
+        have hbot_sub: "?bot_R \<subseteq> I_set \<times> I_set" using htj_I' by (by100 blast)
+        \<comment> \<open>Apply Theorem 23.3 with I = {0, 1}, A 0 = left_R, A 1 = bot_R.\<close>
+        define A where "A = (\<lambda>i::nat. if i = 0 then ?left_R else ?bot_R)"
+        have hA_sub: "\<forall>i\<in>{0::nat, 1}. A i \<subseteq> I_set \<times> I_set"
+          unfolding A_def using hleft_sub hbot_sub by (by100 auto)
+        have hA_conn: "\<forall>i\<in>{0::nat, 1}. top1_connected_on (A i)
+            (subspace_topology (I_set \<times> I_set) II_topology (A i))"
+          unfolding A_def using hleft_conn hbot_conn by (by100 auto)
+        have hA_inter: "(sub_s ?i, sub_t ?j) \<in> \<Inter>(A ` {0::nat, 1})"
+          unfolding A_def using hcorner_left hcorner_bot by (by100 auto)
+        have "top1_connected_on (\<Union>i\<in>{0::nat, 1}. A i)
+            (subspace_topology (I_set \<times> I_set) II_topology (\<Union>i\<in>{0::nat, 1}. A i))"
+          by (rule Theorem_23_3[OF hTII_loc _ hA_sub hA_conn hA_inter]) simp
+        moreover have "(\<Union>i\<in>{0::nat, 1}. A i) = ?L_shape"
+          unfolding A_def by (by100 auto)
+        ultimately have hL_conn: "top1_connected_on ?L_shape
+            (subspace_topology (I_set \<times> I_set) II_topology ?L_shape)" by simp
+        show ?thesis using hC_eq hL_conn by simp
+      qed
       have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}"
       proof -
         \<comment> \<open>The corner point (sub_s i, sub_t j) is in both A_k and R.\<close>
