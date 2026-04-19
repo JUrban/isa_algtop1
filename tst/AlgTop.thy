@@ -15686,6 +15686,8 @@ lemma R2_minus_point_not_simply_connected:
   "p \<in> (UNIV :: (real \<times> real) set) \<Longrightarrow>
    \<not> top1_simply_connected_on (UNIV - {p})
      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))"
+  \<comment> \<open>By translation: R^2 - {p} \<cong> R^2 - {0} via x \<mapsto> x - p. Homeomorphism preserves
+     simply connected. Since R^2 - {0} is not simply connected, neither is R^2 - {p}.\<close>
   sorry
 
 lemma S2_minus_two_points_not_simply_connected:
