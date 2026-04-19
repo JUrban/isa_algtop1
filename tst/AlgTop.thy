@@ -7064,13 +7064,35 @@ proof -
      (pasting on each column strip).\<close>
   \<comment> \<open>Step 1: Lift the bottom edge F(s, 0) = F_0(s) using Lemma 54.1.\<close>
   have hF0_path: "top1_is_path_on B TB b0 (F (1, 0)) (\<lambda>s. F (s, 0))"
-    sorry
+  proof -
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hpair_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 0))"
+      by (rule pair_s_const_continuous[OF h0I])
+    have hcomp: "top1_continuous_map_on I_set I_top B TB (\<lambda>s. F (s, 0))"
+    proof -
+      have heq: "(\<lambda>s. F (s, 0)) = F \<circ> (\<lambda>s. (s, 0))" by (rule ext) simp
+      show ?thesis unfolding heq
+        by (rule top1_continuous_map_on_comp[OF hpair_cont assms(4)])
+    qed
+    have hstart: "F (0, 0) = b0" using assms(5) .
+    show ?thesis unfolding top1_is_path_on_def using hcomp hstart by simp
+  qed
   obtain ftilde0 where hft0_path: "top1_is_path_on E TE e0 (ftilde0 1) ftilde0"
       and hft0_lift: "\<forall>s\<in>I_set. p (ftilde0 s) = F (s, 0)"
     using Lemma_54_1_path_lifting[OF assms(1,2,3) hF0_path assms(6,7)] by (by100 auto)
-  \<comment> \<open>Step 2: For each (s, t), define Ftilde(s, t) as the lift of the column path
-     t \<mapsto> F(s, t) starting from ftilde0(s). This is well-defined by Lemma 54.1
-     for each fixed s. The resulting Ftilde is continuous by the pasting argument.\<close>
+  \<comment> \<open>Step 2: For each s, lift the column t \<mapsto> F(s,t) from ftilde0(s) using Lemma 54.1.\<close>
+  \<comment> \<open>For each s \<in> I_set, the column F_s(t) = F(s,t) is a path in B
+     from F(s,0) = p(ftilde0(s)) to F(s,1).\<close>
+  \<comment> \<open>By Lemma 54.1, there exists a lift \<tilde>F_s starting at ftilde0(s).\<close>
+  \<comment> \<open>Define Ftilde(s,t) = \<tilde>F_s(t). Then:
+     - p(Ftilde(s,t)) = F(s,t) by construction
+     - Ftilde(0,0) = \<tilde>F_0(0) = ftilde0(0) = e0
+     - Ftilde is continuous: this is the hard part, requiring uniform
+       continuity + Lebesgue number argument on the product I\<times>I.\<close>
+  \<comment> \<open>The standard proof uses a finer argument with a Lebesgue subdivision
+     of I\<times>I into small rectangles, but the column-by-column approach
+     also works with the right continuity argument.\<close>
   show ?thesis sorry
 qed
 
