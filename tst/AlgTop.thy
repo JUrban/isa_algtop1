@@ -2203,12 +2203,13 @@ proof -
      At t=1: max(0, min(2s, min(2-2s, 0))) = max(0, 0) = 0, F = f(0) = x0.
      At s=0: max(0, min(0, min(2, 1-t))) = 0, F = f(0) = x0.
      At s=1: max(0, min(2, min(0, 1-t))) = 0, F = f(0) = x0.\<close>
-  let ?g = "\<lambda>(s::real, t::real). max 0 (min (2*s) (min (2 - 2*s) (1 - t)))"
+  define g51 where "g51 \<equiv> \<lambda>(s::real, t::real). max 0 (min (2*s) (min (2 - 2*s) (1 - t)))"
+  let ?g = g51
   let ?F = "\<lambda>p. f (?g p)"
   have hg_beta: "\<And>s t. ?g (s, t) = max 0 (min (2*s) (min (2-2*s) (1-t)))"
-    by (simp add: case_prod_beta)
+    unfolding g51_def by simp
   have hg_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. ?g (s, t) \<in> I_set"
-    unfolding top1_unit_interval_def by auto
+    unfolding top1_unit_interval_def unfolding g51_def by auto
   have hF_range: "\<forall>p\<in>I_set \<times> I_set. ?F p \<in> X"
   proof
     fix p assume hp: "p \<in> I_set \<times> I_set"
@@ -2228,7 +2229,7 @@ proof -
         by (intro continuous_on_min h2s hmin1)
       have "continuous_on (I_set \<times> I_set) (\<lambda>p::real\<times>real. max 0 (min (2 * fst p) (min (2 - 2 * fst p) (1 - snd p))))"
         by (intro continuous_on_max continuous_on_const hmin2)
-      thus ?thesis by (simp only: case_prod_unfold fst_conv snd_conv)
+      thus ?thesis unfolding g51_def by (simp only: case_prod_unfold fst_conv snd_conv)
     qed
     have hg_map: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?g p \<in> I_set"
     proof -
@@ -2243,7 +2244,7 @@ proof -
       by (rule top1_continuous_map_on_comp[OF hg_top1 hfcont])
     show ?thesis unfolding II_topology_def
       by (rule top1_continuous_map_on_agree[OF hcomp_raw])
-         (simp only: comp_def case_prod_unfold fst_conv snd_conv, simp)
+         (simp only: comp_def g51_def case_prod_unfold fst_conv snd_conv, simp)
   qed
   have hF_s0: "\<forall>s\<in>I_set. ?F (s, 0) = top1_path_product f (top1_path_reverse f) s"
   proof
