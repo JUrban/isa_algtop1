@@ -10883,9 +10883,52 @@ proof -
     thus ?thesis using hbc by simp
   qed
   \<comment> \<open>Path algebra: bc(rev(\<alpha>), const_c) \<simeq> const_{g(x0)}. Same as nulhomotopic_trivializes_loops.\<close>
+  \<comment> \<open>Path algebra: show bc(rev(\<alpha>), const_c) \<simeq> const_{g(x0)}.\<close>
+  let ?\<alpha> = "\<lambda>t. H (x0, t)"
+  have h\<alpha>_path: "top1_is_path_on Y TY (g x0) c ?\<alpha>"
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hp1: "pi1 \<circ> (\<lambda>t. (x0, t)) = (\<lambda>_. x0)" unfolding pi1_def by (rule ext) simp
+    have hp2: "pi2 \<circ> (\<lambda>t. (x0, t)) = id" unfolding pi2_def by (rule ext) simp
+    have hpair: "top1_continuous_map_on I_set I_top (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>t. (x0, t))"
+      using iffD2[OF Theorem_18_4[OF hTI hTX hTI]]
+            top1_continuous_map_on_const[OF hTI hTX hx0, folded hp1]
+            top1_continuous_map_on_id[OF hTI, folded hp2] by (by100 blast)
+    have h\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY ?\<alpha>"
+      using top1_continuous_map_on_comp[OF hpair hHcont] by (simp add: comp_def)
+    show ?thesis unfolding top1_is_path_on_def using h\<alpha>_cont
+      by (auto simp: hH0[rule_format, OF hx0] hH1[rule_format, OF hx0])
+  qed
+  have hra: "top1_is_path_on Y TY c (g x0) (top1_path_reverse ?\<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+  have hconst_c: "top1_is_loop_on Y TY c (top1_constant_path c)"
+    by (rule top1_constant_path_is_loop[OF hTY hcY])
+  have hbc_def: "top1_basepoint_change_on Y TY c (g x0)
+      (top1_path_reverse ?\<alpha>) (top1_constant_path c)
+    = top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))"
+    unfolding top1_basepoint_change_on_def top1_path_reverse_twice by (rule refl)
+  have hchain: "top1_path_homotopic_on Y TY (g x0) (g x0)
+      (top1_basepoint_change_on Y TY c (g x0)
+         (top1_path_reverse ?\<alpha>) (top1_constant_path c))
+      (top1_constant_path (g x0))"
+    using Lemma_51_1_path_homotopic_trans[OF hTY
+        path_homotopic_product_right[OF hTY Theorem_51_2_left_identity[OF hTY hra] h\<alpha>_path,
+          unfolded hbc_def[symmetric]]
+        Theorem_51_2_invgerse_left[OF hTY h\<alpha>_path]] .
+  have hgx0_Y: "g x0 \<in> Y" using hg hx0 unfolding top1_continuous_map_on_def by (by100 blast)
+  have hbc_is_const: "top1_loop_equiv_on Y TY (g x0)
+      (top1_basepoint_change_on Y TY c (g x0) (top1_path_reverse ?\<alpha>) (top1_constant_path c))
+      (top1_constant_path (g x0))"
+    unfolding top1_loop_equiv_on_def
+    using top1_basepoint_change_is_loop[OF hTY hra hconst_c]
+          top1_constant_path_is_loop[OF hTY hgx0_Y]
+          hchain by (by100 blast)
+  have hresult: "top1_loop_equiv_on Y TY (g x0) (g \<circ> f)
+      (top1_constant_path (g x0))"
+    by (rule top1_loop_equiv_on_trans[OF hTY hbc' hbc_is_const])
   have "top1_path_homotopic_on Y TY (g x0) (g x0)
       (g \<circ> f) (top1_constant_path (g x0))"
-    sorry \<comment> \<open>Path algebra: \<alpha> continuity + basepoint change + left identity + inverse.\<close>
+    using hresult unfolding top1_loop_equiv_on_def by (by100 blast)
   thus ?thesis using hgx0 by simp
 qed
 
