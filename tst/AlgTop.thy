@@ -4603,7 +4603,69 @@ proof -
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
-      sorry
+    proof
+      fix V assume hVmem: "V \<in> ?\<V>"
+      then obtain nn :: int where hVeq: "V = {x::real. of_int nn < x \<and> x < of_int nn + 1/2}"
+        by (by100 auto)
+      have hpV: "\<forall>x\<in>V. top1_R_to_S1 x \<in> top1_S1_arc_N"
+        using hV_union hVmem by (by100 blast)
+      have harc_sub: "top1_S1_arc_N \<subseteq> top1_S1"
+        unfolding top1_S1_arc_N_def top1_S1_def by (by100 auto)
+      \<comment> \<open>Surjectivity: p maps V onto arc_N (periodicity shift).\<close>
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_N"
+        sorry \<comment> \<open>Same as arc_E: shift by periodicity to land in V.\<close>
+      \<comment> \<open>Injectivity: sin_cos_eq_iff + interval width 1/2 < 1.\<close>
+      have hpV_inj: "inj_on top1_R_to_S1 V"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
+            and heq: "top1_R_to_S1 x = top1_R_to_S1 y"
+        have "sin (2 * pi * x) = sin (2 * pi * y)" "cos (2 * pi * x) = cos (2 * pi * y)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)+
+        then obtain k :: int where hk: "2*pi*x = 2*pi*y + 2*pi*of_int k"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        hence "2*pi * (x - y) = 2*pi * of_int k" by (simp add: algebra_simps)
+        hence "x - y = of_int k" using pi_gt_zero by (by100 simp)
+        moreover have "\<bar>x - y\<bar> < 1/2"
+        proof -
+          have "of_int nn < x" "x < of_int nn + (1/2::real)"
+               "of_int nn < y" "y < of_int nn + (1/2::real)"
+            using hx hy unfolding hVeq by (by100 blast)+
+          thus ?thesis by (by100 linarith)
+        qed
+        hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
+        ultimately show "x = y" by (by100 linarith)
+      qed
+      \<comment> \<open>Bijection.\<close>
+      have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_N"
+        unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      \<comment> \<open>Forward continuity: restriction of p to V.\<close>
+      have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
+        sorry \<comment> \<open>Restriction of continuous p to V → arc_N.\<close>
+      \<comment> \<open>Inverse continuity.\<close>
+      have hinv_cont: "top1_continuous_map_on top1_S1_arc_N
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)
+          V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
+        sorry \<comment> \<open>Inverse via arccos(x)/(2\<pi>) + n is continuous.\<close>
+      \<comment> \<open>Assembly.\<close>
+      have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
+      have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hTarc: "is_topology_on top1_S1_arc_N
+          (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use harc_sub in \<open>by100 blast\<close>)
+      show "top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
+        unfolding top1_homeomorphism_on_def
+        using hTV hTarc hbij hp_V_cont hinv_cont by (by100 blast)
+    qed
     show ?thesis unfolding top1_evenly_covered_on_def
       using harc_N_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
   qed
