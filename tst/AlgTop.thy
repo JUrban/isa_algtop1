@@ -7155,13 +7155,43 @@ proof -
   \<comment> \<open>Step 5: Continuity of Ftilde. This is the key step, requiring that the
      column lifts vary continuously in s. By uniqueness of lifts (Lemma 54.1
      uniqueness) and the pasting argument on a Lebesgue grid, this follows.\<close>
+  \<comment> \<open>Each column lift is a path (continuous in t for fixed s).\<close>
+  have hcol_cont: "\<forall>s\<in>I_set.
+      top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t))"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "top1_is_path_on E TE (ftilde0 s) ((SOME Fs_tilde.
+        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
+        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) 1) (SOME Fs_tilde.
+        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
+        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
+      using hSOME[rule_format, OF hs] unfolding Let_def by (by100 blast)
+    hence "top1_continuous_map_on I_set I_top E TE (SOME Fs_tilde.
+        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
+        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
+      unfolding top1_is_path_on_def by (by100 blast)
+    moreover have "(\<lambda>t. Ftilde (s, t)) = (SOME Fs_tilde.
+        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
+        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
+      unfolding Ftilde_def by (rule ext) simp
+    ultimately show "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t))" by simp
+  qed
+  \<comment> \<open>Ftilde maps into E.\<close>
+  have hFt_E: "\<forall>st\<in>I_set \<times> I_set. Ftilde st \<in> E"
+  proof
+    fix st assume hst: "st \<in> I_set \<times> I_set"
+    obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+      using hst by auto
+    show "Ftilde st \<in> E"
+      using hcol_cont[rule_format, OF hs] ht
+      unfolding hst_eq top1_continuous_map_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Full continuity: Ftilde is jointly continuous on I\<times>I.
+     This follows from: locally, Ftilde = (p|V0)^{-1} \<circ> F (continuous composition).
+     At each (s0,t0), F(s0,t0) \<in> evenly covered U, Ftilde(s0,t0) \<in> slice V0.
+     By column continuity + openness of V0, nearby columns also map to V0.
+     On V0, Ftilde = inv_into V0 p \<circ> F, which is continuous.\<close>
   have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
-    \<comment> \<open>Munkres 54.2 continuity: Fix (s0,t0). F(s0,t0) \<in> evenly covered U.
-       Ftilde(s0,t0) \<in> slice V0. For each fixed s, Ftilde(s,-) is continuous
-       (it's a path). So Ftilde(s0,t) \<in> V0 for t near t0. And ftilde0 is
-       continuous, so for s near s0, ftilde0(s) \<in> V0' (some slice).
-       By uniqueness of lifts on each column and the covering structure,
-       Ftilde(s,t) = (p|V0)^{-1}(F(s,t)) near (s0,t0), hence continuous.\<close>
     sorry
   show ?thesis using hFt_cont hFt_lift hFt_00 by (by100 blast)
 qed
