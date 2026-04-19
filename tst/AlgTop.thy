@@ -2251,7 +2251,8 @@ proof -
     proof (cases "s \<le> 1/2")
       case True
       have hmin: "min (2*s) (min (2 - 2*s) (1 - 0)) = 2*s" using True hs_nn by linarith
-      have "?g (s, 0) = max 0 (2*s)" using hmin by simp
+      have hg_eval: "?g (s, 0) = max 0 (min (2*s) (min (2-2*s) (1-0)))" by (simp add: case_prod_beta)
+      hence "?g (s, 0) = max 0 (2*s)" using hmin by simp
       hence "?g (s, 0) = 2*s" using hs_nn by simp
       hence lhs: "?F (s, 0) = f (2*s)" by simp
       have "top1_path_product f (top1_path_reverse f) s = f (2*s)"
@@ -2262,7 +2263,8 @@ proof -
       hence hge: "s > 1/2" by simp
       have hmin: "min (2*s) (min (2 - 2*s) 1) = 2 - 2*s" using hge hs_le1 by linarith
       have h2s_nn: "2 - 2*s \<ge> 0" using hs_le1 by linarith
-      have "?g (s, 0) = max 0 (2 - 2*s)" using hmin by simp
+      have hg_eval: "?g (s, 0) = max 0 (min (2*s) (min (2-2*s) 1))" by (simp add: case_prod_beta)
+      hence "?g (s, 0) = max 0 (2 - 2*s)" using hmin by simp
       hence "?g (s, 0) = 2 - 2*s" using h2s_nn by simp
       hence lhs: "?F (s, 0) = f (2 - 2*s)" by simp
       have "top1_path_product f (top1_path_reverse f) s = top1_path_reverse f (2*s - 1)"
@@ -2275,9 +2277,10 @@ proof -
   have hF_s1: "\<forall>s\<in>I_set. ?F (s, 1) = top1_constant_path x0 s"
   proof
     fix s assume hs: "s \<in> I_set"
-    have "min (2*s) (min (2 - 2*s) (1 - 1)) = 0"
+    have hg_eval: "?g (s, 1) = max 0 (min (2*s) (min (2-2*s) 0))" by (simp add: case_prod_beta)
+    have "min (2*s) (min (2 - 2*s) (0::real)) = 0"
       using hs unfolding top1_unit_interval_def by simp
-    hence "?g (s, 1) = 0" by simp
+    hence "?g (s, 1) = 0" using hg_eval by simp
     hence "?F (s, 1) = f 0" by simp
     thus "?F (s, 1) = top1_constant_path x0 s" using hf0 unfolding top1_constant_path_def by simp
   qed
