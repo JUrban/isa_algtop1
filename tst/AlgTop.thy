@@ -7915,11 +7915,50 @@ proof -
   \<comment> \<open>Step 1: Define \<phi> via lifting correspondence (already have bijection).\<close>
   \<comment> \<open>The lifting correspondence sends [f] to the endpoint of the unique lift
      starting at 0. This endpoint lies in p^{-1}(1,0) = Z.\<close>
-  obtain \<phi>' where h\<phi>'_bij: "bij_betw \<phi>'
+  have hpc: "top1_path_connected_on (UNIV::real set) top1_open_sets"
+    using top1_R_simply_connected' top1_simply_connected_on_path_connected by (by100 blast)
+  obtain \<phi>' where h\<phi>'_mem: "\<forall>c\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
+        \<phi>' c \<in> {e\<in>(UNIV::real set). top1_R_to_S1 e = (1, 0)}"
+      and h\<phi>'_surj: "\<phi>' ` (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        = {e\<in>(UNIV::real set). top1_R_to_S1 e = (1, 0)}"
+      and h\<phi>'_lift: "\<forall>c\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
+        \<exists>f ft. f \<in> c \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+          \<and> top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c) ft
+          \<and> (\<forall>s\<in>I_set. top1_R_to_S1 (ft s) = f s)"
+    using Theorem_54_4_lifting_correspondence[OF h0R hp0 hcov hpc hTS1] by (by100 auto)
+  have h\<phi>'_bij: "bij_betw \<phi>'
       (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
       {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)}"
-    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0
-          top1_R_simply_connected' hTS1] by blast
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on \<phi>' (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))"
+    proof (rule inj_onI)
+      fix c1 c2
+      assume hc1: "c1 \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+         and hc2: "c2 \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+         and heq: "\<phi>' c1 = \<phi>' c2"
+      obtain f1 ft1 where "f1 \<in> c1" and hf1l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f1"
+          and hft1: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c1) ft1"
+          and hft1p: "\<forall>s\<in>I_set. top1_R_to_S1 (ft1 s) = f1 s"
+        using h\<phi>'_lift[rule_format, OF hc1] sorry
+      obtain f2 ft2 where "f2 \<in> c2" and hf2l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f2"
+          and hft2: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c2) ft2"
+          and hft2p: "\<forall>s\<in>I_set. top1_R_to_S1 (ft2 s) = f2 s"
+        using h\<phi>'_lift[rule_format, OF hc2] sorry
+      \<comment> \<open>Since \<phi>'(c1) = \<phi>'(c2) and lifts end at same point, by Thm 54.3 f1 \<simeq> f2.\<close>
+      have hft2': "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c1) ft2"
+        using hft2 heq by simp
+      have hTE: "is_topology_on (UNIV::real set) top1_open_sets"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hf1_eq_f2: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f1 f2"
+        sorry
+      show "c1 = c2" sorry
+    qed
+  next
+    show "\<phi>' ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)
+        = {x \<in> UNIV. top1_R_to_S1 x = (1, 0)}"
+      using h\<phi>'_surj by simp
+  qed
   \<comment> \<open>\<phi>'([f]) is the endpoint of the lift of f. Since the endpoint is an integer,
      define \<phi>([f]) = floor(\<phi>'([f])).\<close>
   define \<phi> where "\<phi> = (\<lambda>c. \<lfloor>\<phi>' c\<rfloor>)"
@@ -7980,9 +8019,85 @@ proof -
        Concatenation of ftilde with translated-gtilde covers f*g from 0 to n+m.
        By uniqueness of lifts, the lift of f*g from 0 ends at n+m.
        \<phi>(c*d) = floor(n+m) = floor(n) + floor(m) = \<phi>(c) + \<phi>(d).\<close>
+    \<comment> \<open>Extract lifts for c and d.\<close>
+    obtain f ft where hf_in_c: "f \<in> c" and hfl: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+        and hft: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c) ft"
+        and hftp: "\<forall>s\<in>I_set. top1_R_to_S1 (ft s) = f s"
+      using h\<phi>'_lift[rule_format, OF hc] sorry
+    obtain g gt where hg_in_d: "g \<in> d" and hgl: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
+        and hgt: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' d) gt"
+        and hgtp: "\<forall>s\<in>I_set. top1_R_to_S1 (gt s) = g s"
+      using h\<phi>'_lift[rule_format, OF hd] sorry
+    \<comment> \<open>n = \<phi>'(c) is an integer (in the fiber). Similarly m = \<phi>'(d).\<close>
+    let ?n = "\<phi>' c" and ?m = "\<phi>' d"
+    have hn_int: "\<exists>k::int. ?n = of_int k"
+      using h\<phi>'_mem[rule_format, OF hc] top1_R_to_S1_fiber_is_Z' sorry
+    have hm_int: "\<exists>k::int. ?m = of_int k"
+      using h\<phi>'_mem[rule_format, OF hd] top1_R_to_S1_fiber_is_Z' sorry
+    \<comment> \<open>Translated lift: s \<mapsto> n + gt(s) lifts g starting at n.
+       p(n + gt(s)) = p(gt(s)) = g(s) by periodicity of R_to_S1.\<close>
+    define tgt where "tgt s = ?n + gt s" for s
+    have htgt0: "tgt 0 = ?n" unfolding tgt_def using hgt unfolding top1_is_path_on_def by simp
+    have htgt1: "tgt 1 = ?n + ?m" unfolding tgt_def using hgt unfolding top1_is_path_on_def by simp
+    have htgt_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (tgt s) = g s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "top1_R_to_S1 (tgt s) = top1_R_to_S1 (?n + gt s)" unfolding tgt_def by simp
+      also have "\<dots> = top1_R_to_S1 (gt s + ?n)" by (simp add: add.commute)
+      also obtain k :: int where hk: "?n = of_int k" using hn_int by auto
+      have "top1_R_to_S1 (gt s + ?n) = top1_R_to_S1 (gt s + of_int k)" using hk by simp
+      also have "\<dots> = top1_R_to_S1 (gt s)" by (rule top1_R_to_S1_int_shift_early)
+      also have "\<dots> = g s" using hgtp hs by simp
+      finally show "top1_R_to_S1 (tgt s) = g s" .
+    qed
+    \<comment> \<open>tgt is continuous (translation of continuous gt).\<close>
+    have htgt_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets tgt"
+      sorry
+    have htgt_path: "top1_is_path_on (UNIV::real set) top1_open_sets ?n (?n + ?m) tgt"
+      unfolding top1_is_path_on_def using htgt_cont htgt0 htgt1 by simp
+    \<comment> \<open>Concatenate: h = ft * tgt lifts f*g from 0 to n+m.\<close>
+    let ?h = "top1_path_product ft tgt"
+    have hh_path: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (?n + ?m) ?h"
+      sorry
+    have hh_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (?h s) = top1_path_product f g s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      show "top1_R_to_S1 (?h s) = top1_path_product f g s"
+      proof (cases "s \<le> 1/2")
+        case True
+        hence "?h s = ft (2 * s)" unfolding top1_path_product_def by simp
+        moreover have "top1_path_product f g s = f (2 * s)" unfolding top1_path_product_def using True by simp
+        moreover have "2 * s \<in> I_set" using hs True unfolding top1_unit_interval_def by auto
+        ultimately show ?thesis using hftp by simp
+      next
+        case False
+        hence "?h s = tgt (2 * s - 1)" unfolding top1_path_product_def by simp
+        moreover have "top1_path_product f g s = g (2 * s - 1)" unfolding top1_path_product_def using False by simp
+        moreover have "2 * s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by auto
+        ultimately show ?thesis using htgt_lift by simp
+      qed
+    qed
+    \<comment> \<open>f*g \<in> c\<cdot>d (the product class).\<close>
+    have hfg_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (top1_path_product f g)"
+      sorry
+    have hfg_in_cd: "top1_path_product f g \<in>
+        top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d"
+      sorry
+    \<comment> \<open>c\<cdot>d is in the carrier, and \<phi>'(c\<cdot>d) is its lift endpoint.\<close>
+    have hcd_carrier: "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
+        \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      sorry
+    \<comment> \<open>The lift of f*g from 0 ends at n+m. By Theorem 54.3 well-definedness,
+       \<phi>'(c\<cdot>d) = n+m.\<close>
+    have h\<phi>'_cd: "\<phi>' (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d) = ?n + ?m"
+      sorry
+    \<comment> \<open>Since n, m are integers: floor(n+m) = floor(n) + floor(m).\<close>
+    obtain kn :: int where hkn: "?n = of_int kn" using hn_int by auto
+    obtain km :: int where hkm: "?m = of_int km" using hm_int by auto
+    have hfloor_add: "\<lfloor>?n + ?m\<rfloor> = \<lfloor>?n\<rfloor> + \<lfloor>?m\<rfloor>"
+      using hkn hkm by simp
     show "\<phi> (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d)
-        = \<phi> c + \<phi> d"
-      sorry \<comment> \<open>Translated lift concatenation + uniqueness.\<close>
+        = \<phi> c + \<phi> d" unfolding \<phi>_def using h\<phi>'_cd hfloor_add by simp
   qed
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
