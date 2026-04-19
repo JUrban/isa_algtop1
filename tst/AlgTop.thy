@@ -7077,40 +7077,9 @@ proof -
   obtain bot_lift where hbl: "top1_is_path_on E TE e0 (bot_lift 1) bot_lift"
       and hbl_lift: "\<forall>s\<in>I_set. p (bot_lift s) = F (s, 0)"
     using Lemma_54_1_path_lifting[OF assms(1,2,3) hF_bot_path assms(6,7)] by (by100 auto)
-  \<comment> \<open>Step 3: Lebesgue grid. For each (s,t), F(s,t) has evenly covered nbhd U.
-     F\<inverse>(U) is open in I\<times>I. By compactness of I\<times>I + Lebesgue number lemma,
-     \<exists>N>0 s.t. each rectangle [i/N,(i+1)/N]\<times>[j/N,(j+1)/N] maps into some U_{ij}.\<close>
-  have "\<exists>N::nat. N > 0 \<and> (\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
-      \<and> top1_evenly_covered_on E TE B TB p U
-      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
-            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
-    sorry
-  then obtain N :: nat where hN: "N > 0" and hgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
-      \<and> top1_evenly_covered_on E TE B TB p U
-      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
-            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U"
-    by auto
-  \<comment> \<open>Step 4: Rectangle-by-rectangle construction. Define Ftilde on left+bottom edges
-     using left_lift and bot_lift. Then for each rectangle (row by row, left to right),
-     define Ftilde = (p|V0)\<inverse> \<circ> F where V0 is determined by the connected boundary.
-     Pasting at each step gives continuity.
-
-     The formal construction: define Ftilde(s,t) = (p|V(s,t))\<inverse>(F(s,t)) where V(s,t)
-     is the unique slice containing the lift at the grid point closest to (s,t) from
-     the "lower-left" direction. This is well-defined by the Lebesgue grid property
-     and the connectivity of the rectangle boundary.
-
-     For the formalization, we define Ftilde directly using inv_into for each rectangle
-     and verify the three required properties (continuity, lifting, start).\<close>
-  \<comment> \<open>For each rectangle (i,j), get evenly covered U_{ij} and slices.\<close>
-  \<comment> \<open>Define Ftilde by nat induction on linearized index k = j*N + i.\<close>
-  \<comment> \<open>The inductive invariant: Ftilde defined and continuous on
-     \<Union>{R_{i',j'} | j'*N+i' < k} \<union> (left edge) \<union> (bottom edge),
-     and lifts F, and starts at e0.\<close>
-  \<comment> \<open>At step k: extend to rectangle R_{i,j} where k = j*N + i.
-     Boundary C = (left \<union> bottom edges of R_{i,j}) \<inter> previous region.
-     C connected. Ftilde(C) in one slice V0. Ftilde = (p|V0)\<inverse> \<circ> F on R_{i,j}.
-     Pasting gives continuity.\<close>
+  \<comment> \<open>Step 3+4: The textbook constructs Ftilde rectangle-by-rectangle.
+     Each rectangle maps into evenly covered U. Boundary connected \<Rightarrow> one slice V0.
+     Ftilde = (p|V0)\<inverse> \<circ> F. Pasting gives continuity. We sorry this construction.\<close>
   show ?thesis sorry
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
