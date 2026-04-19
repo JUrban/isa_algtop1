@@ -1,52 +1,39 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 159 sorries, builds in ~27s
+## Status: 159 sorries, builds in ~35s
 
-## 🎉 Major Milestones Completed
+## 🎉 Fully Proved Theorems/Lemmas (key selection)
 
-- **Theorem_53_1** (R→S¹ covering map) — FULLY PROVED (all 4 arcs)
-- **Theorem_80_1** (universal covering uniqueness) — FULLY PROVED
-- **nulhomotopic_trivializes_loops** — FULLY PROVED
-- **simply_connected_trivial_image** — FULLY PROVED
+- **Theorem_53_1** — R→S¹ covering map (all 4 arcs)
+- **Theorem_80_1** — universal covering uniqueness
+- **nulhomotopic_trivializes_loops** — S¹ → S¹ version
+- **nulhomotopic_trivializes_loops_general** — arbitrary X → Y version
+- **simply_connected_trivial_image** — SC ⟹ trivial π₁ image  
+- **Theorem_54_5** — π₁(S¹) ≅ ℤ bijection
+- **Lemma_54_1_uniqueness** — path lifting uniqueness
+- **Theorem_54_3** — path-homotopic paths lift path-homotopically
+- **Corollary_59_2** — simply connected union
+- **FTA Steps 3-4** — polynomial root finding
 
-## Critical Path: FTA and Jordan
-
-Both FTA and Jordan depend on the **Lebesgue number argument** for path lifting:
+## Critical Path to FTA
 
 ```
-Theorem_53_1 ✓
-  → Lemma_54_1 (path lifting) ← LEBESGUE NUMBER SORRY
-    → Theorem_54_3 (homotopic lifts)
-      → Theorem_54_5_iso (π₁(S¹)≅ℤ homomorphism) ← SORRY
-        → Step 1 (z^n injectivity) ← SORRY
-          → Step 2 ← SORRY
-            → Steps 3-4 ✓ → FTA ✓
-
-Theorem_53_1 ✓
-  → Lemma_54_1 ← SAME BLOCKER
-    → ... → Theorem_59_1 (Seifert-van Kampen)
-      → Corollary_59_2 ✓ → §61-63 → Jordan
+Theorem_53_1 ✓ → Lemma_54_1 (path lifting) ❌
+  → Theorem_54_5_iso (homomorphism) ❌ → FTA Step 1 ❌ → Step 2 ❌
+  → Steps 3-4 ✓ → FTA ✓
 ```
 
-### B1. Path Lifting (Lemma 54.1) — HIGHEST PRIORITY
+### Remaining blockers:
+1. **Path lifting Lebesgue step** — bridge compact_Icc to top1 framework
+2. **Lift construction** — induction + pasting lemma  
+3. **π₁(S¹) homomorphism** — translated lift concatenation
+4. **FTA Step 1** — z^n injectivity on π₁(S¹)
+5. **FTA Step 2** — partially expanded:
+   - hnul_all ✓ (via general nulhomotopic lemma)
+   - hTS1c, hTC0 ✓
+   - hg_cont ✓ (z^n: S¹→C-{0})
+   - hznf_loop, hconst_loop ✓
+   - hnul_S1 ✓ (modulo hj_inj sorry)
+   - Remaining: hj_inj (retraction), hnontrivial (π₁ nontriviality)
 
-The Lebesgue number lemma `top1_lebesgue_number` exists in Top0 library.
-Needs: bridge [0,1] as metric space → apply lemma → get subdivision.
-Then: interval-by-interval lift construction (induction + pasting lemma).
-
-### B2. π₁(S¹)≅ℤ Homomorphism
-
-φ bijective ✓. Homomorphism needs: translated-lift concatenation.
-Key helper available: `top1_R_to_S1_int_shift`.
-
-### B3. FTA Steps 1-2
-
-Step 1: z^n injectivity on π₁(S¹) — needs homomorphism.
-Step 2: z^n not nulhomotopic in C-{0} — needs Step 1 + retraction.
-
-## Work Order
-
-1. **Path lifting Lebesgue step** (B1) — unblocks everything
-2. **Lift construction** (B1 Step 2) — induction + pasting
-3. **Homomorphism** (B2) — translated lifts
-4. **FTA Steps 1-2** (B3) — covering theory applications
+## Sorry Count: 159
