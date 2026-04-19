@@ -7192,7 +7192,28 @@ proof -
      By column continuity + openness of V0, nearby columns also map to V0.
      On V0, Ftilde = inv_into V0 p \<circ> F, which is continuous.\<close>
   have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
-    sorry
+  proof -
+    \<comment> \<open>For each (s0,t0), Ftilde equals (p|V0)^{-1} \<circ> F on a neighborhood.
+       This makes Ftilde locally a composition of continuous functions.\<close>
+    \<comment> \<open>At each (s0,t0): F(s0,t0) \<in> B, get evenly covered U with F(s0,t0) \<in> U.
+       Ftilde(s0,t0) \<in> p^{-1}(U) = \<Union>\<V>. Pick slice V0 containing Ftilde(s0,t0).
+       V0 is open in E. p|V0: V0 \<rightarrow> U is a homeomorphism.
+       By column continuity: Ftilde(s0,t) \<in> V0 for t near t0.
+       By ftilde0 continuity: ftilde0(s) \<in> V0 for s near s0.
+       For such s: column lift from ftilde0(s) starts in V0 and
+       p(Ftilde(s,t)) = F(s,t) \<in> U. Since p|V0 is injective on V0
+       and Ftilde(s,t) is in p^{-1}(U), and the column starts in V0
+       (which is a connected component of p^{-1}(U)), Ftilde(s,t) \<in> V0.
+       Hence Ftilde(s,t) = (p|V0)^{-1}(F(s,t)) on the neighborhood.
+       This composition is continuous.\<close>
+    have "\<forall>st\<in>I_set \<times> I_set. \<exists>W\<in>II_topology. st \<in> W \<and> W \<subseteq> I_set \<times> I_set
+        \<and> (\<exists>V0. openin_on E TE V0
+            \<and> (\<forall>st'\<in>W. Ftilde st' \<in> V0)
+            \<and> (\<forall>st'\<in>W. Ftilde st' = inv_into V0 p (F (fst st', snd st'))))"
+      sorry
+    \<comment> \<open>From local agreement: Ftilde is locally continuous, hence continuous.\<close>
+    thus ?thesis sorry
+  qed
   show ?thesis using hFt_cont hFt_lift hFt_00 by (by100 blast)
 qed
 
