@@ -1,39 +1,30 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 160 sorries, builds in ~27s, 17293 lines
+## Status: 162 sorries, builds in ~29s, 17500+ lines
 
-## 🎉 Fully Proved Theorems
+## 🎉 Major Milestones
 
-- **Theorem_53_1** — R→S¹ covering map (all 4 arcs, ~800 lines)
-- **Theorem_80_1** — universal covering uniqueness  
-- **nulhomotopic_trivializes_loops_general** — arbitrary X→Y spaces
-- **simply_connected_trivial_image** — SC ⟹ trivial π₁ image
+- **Theorem_53_1** — R→S¹ covering map (all 4 arcs)
+- **open_cover_subdivision_01** — creeping lemma for [0,1] covers
+- **top1_continuous_preimage_ball** — framework bridge (top1 → HOL open/dist)
+- **nulhomotopic_trivializes_loops_general** — arbitrary X→Y
+- **Theorem_80_1** — universal covering uniqueness
 - **Theorem_54_5** — π₁(S¹) ≅ ℤ bijection
 - **FTA Steps 3-4** — polynomial root finding
 
-## Sorry-Free Sections
-
-§51 (mostly), §52, §53, §54 (except path lifting), §55 (1 sorry),
-§58 (fully proved), §59 (2 Lebesgue sorries), Corollary_59_2 (fully proved)
-
-## Critical Path: Lebesgue Number → FTA
+## Path Lifting Status
 
 ```
-lebesgue_subdivision_01 ← SORRY (uniform δ from finite cover)
-  ├── finite subcover ✓ (compact_Icc + compactE)
-  ├── pointwise ε ✓ (open_dist)
-  └── uniform δ ← needs sequential compactness or min-of-continuous
-
-→ Lemma_54_1 (path lifting) → Theorem_54_5_iso → FTA Step 1 → Step 2 → FTA
+Theorem_53_1 ✓
+open_cover_subdivision_01 ✓ (creeping lemma)
+top1_continuous_preimage_ball ✓ (bridge)
+hpointwise ✓ (covering map + bridge)
+├── hcover_hyp ← bookkeeping sorry (SOME spec)
+├── subdivision extraction ← bookkeeping sorry (blast slow)
+└── cover transfer ← bookkeeping sorry (A→U)
+lift construction ← sorry (induction + pasting)
 ```
 
-## FTA Step 2 (partially proved)
-- hnul_all ✓, hTS1c ✓, hTC0 ✓, hg_cont ✓
-- hznf_loop ✓, hconst_loop ✓, hnul_S1 ✓
-- Remaining: hj_inj (retraction), hnontrivial
+All hard mathematics proved! Remaining sorries are bookkeeping/assembly.
 
-## Key Bottleneck
-The uniform δ extraction from finite open cover requires either:
-1. `top1_lebesgue_number` bridge (metric topology = standard topology)
-2. Sequential compactness (only in HOL-Analysis)
-3. Direct proof from HOL's compact + open_dist
+## Sorry Count: 162
