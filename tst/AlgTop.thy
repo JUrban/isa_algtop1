@@ -4657,7 +4657,58 @@ proof -
       qed
     qed
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>"
-      sorry \<comment> \<open>cos(2\<pi>x) < 0 iff x \<in> (n+1/4, n+3/4): same analysis as arc_N with cos.\<close>
+    proof (intro set_eqI iffI)
+      fix x :: real
+      assume "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W}"
+      hence hcos: "cos (2 * pi * x) < 0"
+        unfolding top1_R_to_S1_def top1_S1_arc_W_def by (by100 auto)
+      \<comment> \<open>cos(2\<pi>x) < 0 iff x \<in> (n+1/4, n+3/4) for some n.\<close>
+      show "x \<in> \<Union>?\<V>" sorry
+    next
+      fix x :: real assume "x \<in> \<Union>?\<V>"
+      then obtain n :: int where hn1: "of_int n + (1/4::real) < x" "x < of_int n + (3/4::real)"
+        by (by100 auto)
+      \<comment> \<open>2\<pi>(x-n) \<in> (\<pi>/2, 3\<pi>/2), so cos < 0.\<close>
+      have hcos_neg: "cos (2 * pi * (x - of_int n)) < 0"
+      proof -
+        have hpi: "pi > 0" by (rule pi_gt_zero)
+        have harg_gt: "pi / 2 < 2 * pi * (x - of_int n)"
+        proof -
+          have "pi / 2 = pi * (2 * (1/4::real))" by simp
+          also have "\<dots> = 2 * pi * (1/4::real)" by (simp add: algebra_simps)
+          also have "\<dots> < 2 * pi * (x - of_int n)" using hn1 hpi by (by100 simp)
+          finally show ?thesis .
+        qed
+        have harg_lt: "2 * pi * (x - of_int n) < 3 * pi / 2"
+        proof -
+          have "2 * pi * (x - of_int n) < 2 * pi * (3/4::real)" using hn1 hpi by (by100 simp)
+          also have "\<dots> = pi * (2 * (3/4::real))" by (simp add: algebra_simps)
+          also have "\<dots> = pi * (3/2)" by simp
+          also have "\<dots> = 3 * pi / 2" by (by100 linarith)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>cos(t) < 0 for t \<in> (\<pi>/2, 3\<pi>/2): use cos(t) = -cos(t - \<pi>) and cos_gt_zero_pi.\<close>
+        have hcmp: "cos (2 * pi * (x - of_int n) - pi) = - cos (2 * pi * (x - of_int n))"
+          using cos_minus_pi[of "2 * pi * (x - of_int n)"] by (by100 linarith)
+        have hlo: "- (pi/2) < 2 * pi * (x - of_int n) - pi" using harg_gt by (by100 linarith)
+        have hhi: "2 * pi * (x - of_int n) - pi < pi/2" using harg_lt by (by100 linarith)
+        have "cos (2 * pi * (x - of_int n) - pi) > 0"
+          by (rule cos_gt_zero_pi[OF hlo hhi])
+        thus ?thesis using hcmp by (by100 linarith)
+      qed
+      have hshift: "cos (2 * pi * x) = cos (2 * pi * (x - of_int n))"
+      proof -
+        have "top1_R_to_S1 x = top1_R_to_S1 (x - of_int n)"
+          using top1_R_to_S1_int_shift_early[of "x - of_int n" n] by simp
+        hence "fst (top1_R_to_S1 x) = fst (top1_R_to_S1 (x - of_int n))" by simp
+        thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+      qed
+      have "cos (2 * pi * x) < 0" using hcos_neg hshift by (by100 linarith)
+      moreover have "cos (2 * pi * x) ^ 2 + sin (2 * pi * x) ^ 2 = 1"
+        by (rule sin_cos_squared_add2)
+      ultimately show "x \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W}"
+        unfolding top1_R_to_S1_def top1_S1_arc_W_def by (by100 auto)
+    qed
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
