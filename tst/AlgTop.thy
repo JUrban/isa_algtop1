@@ -6169,6 +6169,24 @@ lemma top1_R_to_S1_translate_lift:
   "top1_R_to_S1 \<circ> (\<lambda>s. of_int n + f s) = top1_R_to_S1 \<circ> f"
   by (rule ext) (simp add: top1_R_to_S1_int_shift')
 
+text \<open>If gtilde is a lift of g (loop at b0) starting at 0, then
+  (\<lambda>s. of_int n + gtilde s) is a lift of g starting at n, by periodicity.\<close>
+lemma top1_R_to_S1_translated_lift_is_lift:
+  assumes hgt: "top1_is_path_on UNIV top1_open_sets (0::real) (gtilde 1) gtilde"
+      and hgtp: "\<forall>s\<in>I_set. top1_R_to_S1 (gtilde s) = g s"
+  shows "\<forall>s\<in>I_set. top1_R_to_S1 (of_int n + gtilde s) = g s"
+  using hgtp by (simp add: top1_R_to_S1_int_shift')
+
+text \<open>The translated lift starts at n (when gtilde starts at 0).\<close>
+lemma top1_R_to_S1_translated_lift_start:
+  assumes "gtilde 0 = (0::real)"
+  shows "(of_int n + gtilde 0) = of_int n"
+  using assms by simp
+
+text \<open>The translated lift ends at n + gtilde(1).\<close>
+lemma top1_R_to_S1_translated_lift_end:
+  "(of_int n + gtilde 1) = of_int n + gtilde 1" by simp
+
 (** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z.
     Munkres' proof: use covering p: R \<rightarrow> S^1 (Theorem 53.1). Since R is simply
     connected, the lifting correspondence (Theorem 54.4) is bijective onto
@@ -6340,8 +6358,20 @@ proof -
       \<forall>d\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
       \<phi> (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d)
       = \<phi> c + \<phi> d"
-    sorry \<comment> \<open>Requires: concatenation of lift(f) with translated-lift(g) = lift(f*g),
-             and top1_R_to_S1_int_shift for the translation.\<close>
+  proof (intro ballI)
+    fix c d
+    assume hc: "c \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+       and hd: "d \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+    \<comment> \<open>Let f, g be representative loops. ftilde, gtilde their lifts from 0.
+       n = ftilde(1) (integer), m = gtilde(1) (integer).
+       Translated lift: s \<mapsto> n + gtilde(s) covers g starting at n.
+       Concatenation of ftilde with translated-gtilde covers f*g from 0 to n+m.
+       By uniqueness of lifts, the lift of f*g from 0 ends at n+m.
+       \<phi>(c*d) = floor(n+m) = floor(n) + floor(m) = \<phi>(c) + \<phi>(d).\<close>
+    show "\<phi> (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d)
+        = \<phi> c + \<phi> d"
+      sorry \<comment> \<open>Translated lift concatenation + uniqueness.\<close>
+  qed
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
       top1_group_hom_on_def top1_Z_group_def top1_Z_mul_def
