@@ -7412,6 +7412,44 @@ proof (intro conjI)
   thus "I_set \<times> I_set - ?S \<times> ?T \<in> II_topology" unfolding heq .
 qed
 
+\<comment> \<open>Interval pigeonhole: a point in [f(0), f(m)] lies in some [f(i), f(i+1)].\<close>
+lemma increasing_interval_cover:
+  fixes f :: "nat \<Rightarrow> real" and x :: real and m :: nat
+  assumes hm: "m \<ge> 1"
+      and hf0: "f 0 \<le> x" and hfm: "x \<le> f m"
+      and hinc: "\<forall>i<m. f i < f (Suc i)"
+  shows "\<exists>i<m. f i \<le> x \<and> x \<le> f (Suc i)"
+  using hm hfm hinc
+proof (induction m)
+  case 0 thus ?case by simp
+next
+  case (Suc m')
+  \<comment> \<open>Suc.prems: (1) Suc m' \<ge> 1, (2) x \<le> f (Suc m'), (3) \<forall>i<Suc m'. f i < f (Suc i).\<close>
+  have hinc': "\<forall>i<Suc m'. f i < f (Suc i)" using Suc.prems(3) .
+  show ?case
+  proof (cases "x \<le> f m'")
+    case True
+    show ?thesis
+    proof (cases "m' = 0")
+      case True
+      have "f 0 < f (Suc 0)" using hinc' by (by100 auto)
+      thus ?thesis using hf0 \<open>x \<le> f m'\<close> True by (by100 auto)
+    next
+      case False
+      hence "m' \<ge> 1" by simp
+      moreover have "\<forall>i<m'. f i < f (Suc i)" using hinc' by (by100 auto)
+      ultimately obtain i where "i < m'" "f i \<le> x" "x \<le> f (Suc i)"
+        using Suc.IH hf0 True by (by100 blast)
+      hence "i < Suc m'" by simp
+      thus ?thesis using \<open>f i \<le> x\<close> \<open>x \<le> f (Suc i)\<close> by (by100 blast)
+    qed
+  next
+    case False
+    hence "f m' \<le> x" by simp
+    thus ?thesis using Suc.prems(2) by (by100 auto)
+  qed
+qed
+
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
   assumes "top1_covering_map_on E TE B TB p"
@@ -7613,7 +7651,58 @@ proof -
       case 0
       \<comment> \<open>A_0 = edges. Ft on edges: left_lift on left edge, bot_lift on bottom.\<close>
       define Ft0 where "Ft0 = (\<lambda>(s::real, t::real). if s = 0 then left_lift t else bot_lift s)"
-      show ?case sorry
+      \<comment> \<open>Ft0(0,0) = left_lift 0 = e0.\<close>
+      have hFt0_00: "Ft0 (0, 0) = e0"
+      proof -
+        have "Ft0 (0, 0) = left_lift 0" unfolding Ft0_def by simp
+        also have "\<dots> = e0" using hll unfolding top1_is_path_on_def by simp
+        finally show ?thesis .
+      qed
+      \<comment> \<open>Ft0 lifts F on A_0.\<close>
+      have hbl_00: "bot_lift 0 = e0"
+        using hbl unfolding top1_is_path_on_def by simp
+      have hFt0_lift: "\<forall>x\<in>?A 0. p (Ft0 x) = F x"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> ?A 0"
+        obtain s t where hst: "x = (s, t)" by (cases x) simp
+        have "x \<in> ?left_edge \<or> x \<in> ?bot_edge" using hx by simp
+        thus "p (Ft0 x) = F x"
+        proof (elim disjE)
+          assume "x \<in> ?left_edge"
+          hence hs0: "s = 0" and ht_I: "t \<in> I_set" using hst by (by100 auto)+
+          have "Ft0 x = left_lift t" unfolding Ft0_def hst hs0 by simp
+          thus ?thesis using hll_lift ht_I hst hs0 by simp
+        next
+          assume "x \<in> ?bot_edge"
+          hence hs_I: "s \<in> I_set" and ht0: "t = 0" using hst by (by100 auto)+
+          show ?thesis
+          proof (cases "s = 0")
+            case True
+            have "Ft0 x = left_lift 0" unfolding Ft0_def hst True ht0 by simp
+            also have "\<dots> = e0" using hll unfolding top1_is_path_on_def by simp
+            finally have "Ft0 x = e0" .
+            moreover have "F x = b0" using assms(5) hst True ht0 by simp
+            moreover have "p e0 = b0" using assms(3) .
+            ultimately show ?thesis by simp
+          next
+            case False
+            have "Ft0 x = bot_lift s" unfolding Ft0_def hst ht0 using False by simp
+            thus ?thesis using hbl_lift hs_I hst ht0 by simp
+          qed
+        qed
+      qed
+      \<comment> \<open>Ft0 is continuous on A_0. Use pasting lemma: left_lift on left edge, bot_lift on bottom.\<close>
+      have hFt0_cont: "top1_continuous_map_on (?A 0)
+          (subspace_topology (I_set \<times> I_set) II_topology (?A 0)) E TE Ft0"
+        sorry
+      show ?case
+      proof (intro exI conjI)
+        show "top1_continuous_map_on (?A 0)
+            (subspace_topology (I_set \<times> I_set) II_topology (?A 0)) E TE Ft0"
+          by (rule hFt0_cont)
+        show "\<forall>x\<in>?A 0. p (Ft0 x) = F x" by (rule hFt0_lift)
+        show "Ft0 (0, 0) = e0" by (rule hFt0_00)
+      qed
     next
       case (Suc k)
       \<comment> \<open>IH: \<exists>Ft on A_k. Extend to A_{Suc k} = A_k \<union> R_{k mod m, k div m}.\<close>
@@ -7869,10 +7958,64 @@ proof -
   moreover have "?A (m*n) = I_set \<times> I_set"
   proof (rule equalityI)
     \<comment> \<open>Forward: A(m*n) \<subseteq> I\<times>I.\<close>
-    show "?A (m*n) \<subseteq> I_set \<times> I_set" sorry
+    show "?A (m*n) \<subseteq> I_set \<times> I_set"
+    proof (rule subsetI)
+      fix x assume "x \<in> ?A (m*n)"
+      hence "x \<in> ?edges \<or> x \<in> (\<Union>k'<m*n. {s\<in>I_set. sub_s (k' mod m) \<le> s \<and> s \<le> sub_s (Suc (k' mod m))}
+                \<times> {t\<in>I_set. sub_t (k' div m) \<le> t \<and> t \<le> sub_t (Suc (k' div m))})"
+        by (by100 auto)
+      thus "x \<in> I_set \<times> I_set"
+      proof (elim disjE)
+        assume "x \<in> ?edges"
+        hence "x \<in> ?left_edge \<or> x \<in> ?bot_edge" by (by100 auto)
+        thus ?thesis using h0I by (by100 blast)
+      next
+        assume "x \<in> (\<Union>k'<m*n. {s\<in>I_set. sub_s (k' mod m) \<le> s \<and> s \<le> sub_s (Suc (k' mod m))}
+                \<times> {t\<in>I_set. sub_t (k' div m) \<le> t \<and> t \<le> sub_t (Suc (k' div m))})"
+        thus ?thesis by (by100 blast)
+      qed
+    qed
   next
     \<comment> \<open>Backward: I\<times>I \<subseteq> A(m*n). Each (s,t) is in some rectangle.\<close>
-    show "I_set \<times> I_set \<subseteq> ?A (m*n)" sorry
+    show "I_set \<times> I_set \<subseteq> ?A (m*n)"
+    proof (rule subsetI)
+      fix x assume hx: "x \<in> I_set \<times> I_set"
+      obtain s t where hst: "x = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+        using hx by (by100 blast)
+      have hs_ge: "sub_s 0 \<le> s" using hs hs0 unfolding top1_unit_interval_def by simp
+      have hs_le: "s \<le> sub_s m" using hs hsm unfolding top1_unit_interval_def by simp
+      have ht_ge: "sub_t 0 \<le> t" using ht ht0 unfolding top1_unit_interval_def by simp
+      have ht_le: "t \<le> sub_t n" using ht htn unfolding top1_unit_interval_def by simp
+      obtain i where hi: "i < m" and hsi: "sub_s i \<le> s \<and> s \<le> sub_s (Suc i)"
+        using increasing_interval_cover[OF hm hs_ge hs_le hs_inc] by (by100 blast)
+      obtain j where hj_: "j < n" and htj: "sub_t j \<le> t \<and> t \<le> sub_t (Suc j)"
+        using increasing_interval_cover[OF hn ht_ge ht_le ht_inc] by (by100 blast)
+      \<comment> \<open>Linearized index k' = j*m + i < m*n.\<close>
+      have hk': "j * m + i < m * n"
+      proof -
+        have "j * m + i < j * m + m" using hi by simp
+        also have "\<dots> = (j + 1) * m" by (simp add: algebra_simps)
+        also have "\<dots> \<le> n * m"
+        proof -
+          have "Suc j \<le> n" using hj_ by simp
+          hence "Suc j * m \<le> n * m" by (rule Nat.mult_le_mono1)
+          thus ?thesis by simp
+        qed
+        finally show ?thesis by (simp add: mult.commute)
+      qed
+      have hmod: "(j * m + i) mod m = i" using hi by simp
+      have hdiv: "(j * m + i) div m = j" using hi by simp
+      have "(s, t) \<in> {s'\<in>I_set. sub_s i \<le> s' \<and> s' \<le> sub_s (Suc i)}
+          \<times> {t'\<in>I_set. sub_t j \<le> t' \<and> t' \<le> sub_t (Suc j)}"
+        using hs ht hsi htj by (by100 blast)
+      hence "(s, t) \<in> {s'\<in>I_set. sub_s ((j*m+i) mod m) \<le> s' \<and> s' \<le> sub_s (Suc ((j*m+i) mod m))}
+          \<times> {t'\<in>I_set. sub_t ((j*m+i) div m) \<le> t' \<and> t' \<le> sub_t (Suc ((j*m+i) div m))}"
+        using hmod hdiv by simp
+      hence "(s, t) \<in> (\<Union>k'<m*n. {s'\<in>I_set. sub_s (k' mod m) \<le> s' \<and> s' \<le> sub_s (Suc (k' mod m))}
+          \<times> {t'\<in>I_set. sub_t (k' div m) \<le> t' \<and> t' \<le> sub_t (Suc (k' div m))})"
+        using hk' by (by100 blast)
+      thus "x \<in> ?A (m*n)" using hst by (by100 blast)
+    qed
   qed
   ultimately show ?thesis
   proof -
