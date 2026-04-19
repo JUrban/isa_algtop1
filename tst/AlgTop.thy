@@ -7201,14 +7201,27 @@ proof -
     have hTAR_: "is_topology_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R))"
       by (rule subspace_topology_is_topology_on[OF hTII hAR_sub])
     have hA_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A"
-      sorry
+      using hA_closed unfolding closedin_on_def subspace_topology_def sorry
     have hR_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) R"
-      sorry
+      using hR_closed unfolding closedin_on_def subspace_topology_def sorry
     have hAR_union: "A \<union> R = A \<union> R" by simp
     have hrange: "\<forall>x\<in>A \<union> R. Ftilde x \<in> E"
     proof
       fix x assume "x \<in> A \<union> R"
-      thus "Ftilde x \<in> E" using hFt_lift sorry
+      show "Ftilde x \<in> E"
+      proof (cases "x \<in> A")
+        case True
+        have "Ftilde x = Ftilde_A x" unfolding Ftilde_def using True by simp
+        moreover have "Ftilde_A x \<in> E" using hFt_A True unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show ?thesis by simp
+      next
+        case False hence "x \<in> R" using \<open>x \<in> A \<union> R\<close> by simp
+        hence "F x \<in> U" using hF_R by (by100 blast)
+        hence "F x \<in> p ` V0" using hbij unfolding bij_betw_def by (by100 blast)
+        hence "inv_into V0 p (F x) \<in> V0" by (rule inv_into_into)
+        moreover have "V0 \<subseteq> E" using hVo hV0 unfolding openin_on_def by (by100 blast)
+        ultimately show ?thesis unfolding Ftilde_def using False by (by100 auto)
+      qed
     qed
     have hFt_on_A: "top1_continuous_map_on A
         (subspace_topology (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A) E TE Ftilde"
