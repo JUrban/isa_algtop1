@@ -6604,9 +6604,31 @@ proof -
               qed
             qed
             \<comment> \<open>inv_into V0 p \<circ> f is continuous on B: composition of continuous functions.\<close>
+            \<comment> \<open>The composition inv_into V0 p \<circ> f is continuous on B.
+               We use: f continuous I_set \<rightarrow> B, inv_into V0 p continuous U \<rightarrow> V0 \<subseteq> E,
+               f(B) \<subseteq> U, and composition preserves continuity.\<close>
+            have hinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) V0 (subspace_topology E TE V0)
+                (inv_into V0 p)"
+              using hV_homeo hV0 unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>f restricted to B is continuous B \<rightarrow> U.\<close>
+            have hf_B_cont: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B) U (subspace_topology B TB U) f"
+              sorry
+            \<comment> \<open>Compose: inv_into V0 p \<circ> f continuous B \<rightarrow> V0 \<subseteq> E.\<close>
+            have hcomp_cont: "top1_continuous_map_on ?B (subspace_topology I_set I_top ?B)
+                V0 (subspace_topology E TE V0) (\<lambda>s. inv_into V0 p (f s))"
+              sorry
+            \<comment> \<open>Lift from V0-topology to E-topology.\<close>
             show ?thesis unfolding hTBsub
               unfolding top1_continuous_map_on_def
-              sorry
+            proof (intro conjI ballI)
+              fix s assume hs: "s \<in> ?B"
+              hence "s \<in> I_set" and "s \<le> sub (Suc k)" by auto
+              thus "ftk' s \<in> E" using hftk'_E by (by100 blast)
+            next
+              fix V assume "V \<in> TE"
+              show "{s \<in> ?B. ftk' s \<in> V} \<in> subspace_topology I_set I_top ?B"
+                sorry
+            qed
           qed
           show ?thesis
             by (rule pasting_lemma_two_closed[OF hTXk1 hTE' hA_closed hB_closed hAB hrange hcont_A hcont_B])
