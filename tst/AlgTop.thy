@@ -9826,9 +9826,33 @@ proof
       using hnul_all hf by (by100 blast)
     \<comment> \<open>By hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
     have hznf_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ((\<lambda>z. z^n) \<circ> f)"
-      sorry \<comment> \<open>z^n \<circ> f is a loop in S^1 (composition of loop with z^n).\<close>
+    proof -
+      have hf_path: "top1_is_path_on top1_S1_complex top1_S1_complex_topology 1 1 f"
+        using hf unfolding top1_is_loop_on_def by (by100 blast)
+      have hf_cont: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology f"
+        using hf_path unfolding top1_is_path_on_def by (by100 blast)
+      have hcont_step1: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+          top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+        using conjunct1[OF Theorem_56_1_step_1[OF hn]] .
+      have hcomp: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology
+          ((\<lambda>z. z^n) \<circ> f)"
+        by (rule top1_continuous_map_on_comp[OF hf_cont hcont_step1])
+      have h0: "((\<lambda>z::complex. z^n) \<circ> f) 0 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hn by simp
+      have h1: "((\<lambda>z::complex. z^n) \<circ> f) 1 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hn by simp
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hcomp h0 h1 by (by100 simp)
+    qed
     have hconst_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (top1_constant_path 1)"
-      sorry
+    proof -
+      have hTS1c': "is_topology_on top1_S1_complex top1_S1_complex_topology"
+        unfolding top1_S1_complex_topology_def
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+           (simp add: top1_S1_complex_def)
+      have h1_S1': "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
+      show ?thesis by (rule top1_constant_path_is_loop[OF hTS1c' h1_S1'])
+    qed
     show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
         ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
       using hj_inj hznf_loop hconst_loop
