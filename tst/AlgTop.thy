@@ -5430,8 +5430,58 @@ proof -
             unfolding inv_fn_def hVeq by (by100 auto)
         qed
         have hinv_agree: "\<forall>p\<in>top1_S1_arc_S. inv_into V top1_R_to_S1 p = inv_fn p"
-          sorry \<comment> \<open>cos(2\<pi> - arccos(x)) = cos(arccos(x)) = x.
-                   sin(2\<pi> - arccos(x)) = -sin(arccos(x)) = -sqrt(1-x^2) = y (since y < 0).\<close>
+        proof
+          fix p assume hp: "p \<in> top1_S1_arc_S"
+          hence hy_neg: "snd p < 0" and hcirc: "fst p ^ 2 + snd p ^ 2 = 1"
+            unfolding top1_S1_arc_S_def by (by100 auto)+
+          have hinV: "inv_fn p \<in> V" using hinv_range[OF hp] .
+          have hx_bdd: "-1 \<le> fst p" "fst p \<le> 1" using hfst_bdd hp by (by100 blast)+
+          \<comment> \<open>cos(2\<pi> \<cdot> inv_fn) = cos(2\<pi> - arccos(x) + 2\<pi>nn) = cos(2\<pi> - arccos(x)) = cos(arccos(x)) = x.\<close>
+          have hcos: "cos (2 * pi * inv_fn p) = fst p"
+          proof -
+            have "2 * pi * inv_fn p = (2 * pi - arccos (fst p)) + (2 * pi) * of_int nn"
+              unfolding inv_fn_def by (simp add: algebra_simps)
+            hence "cos (2 * pi * inv_fn p) = cos ((2 * pi - arccos (fst p)) + (2 * pi) * of_int nn)"
+              by simp
+            also have "\<dots> = cos (2 * pi - arccos (fst p))"
+              by (simp add: cos_add cos_int_2pin sin_int_2pin)
+            also have "\<dots> = cos (- arccos (fst p) + 2 * pi)" by (simp add: algebra_simps)
+            also have "\<dots> = cos (- arccos (fst p))"
+              using cos_periodic[of "- arccos (fst p)"] by (simp add: algebra_simps)
+            also have "\<dots> = cos (arccos (fst p))" by (rule cos_minus)
+            also have "\<dots> = fst p" by (rule cos_arccos[OF hx_bdd])
+            finally show ?thesis .
+          qed
+          \<comment> \<open>sin(2\<pi> \<cdot> inv_fn) = sin(2\<pi> - arccos(x)) = -sin(arccos(x)) = -sqrt(1-x^2) = y.\<close>
+          have hsin: "sin (2 * pi * inv_fn p) = snd p"
+          proof -
+            have "2 * pi * inv_fn p = (2 * pi - arccos (fst p)) + (2 * pi) * of_int nn"
+              unfolding inv_fn_def by (simp add: algebra_simps)
+            hence "sin (2 * pi * inv_fn p) = sin ((2 * pi - arccos (fst p)) + (2 * pi) * of_int nn)"
+              by simp
+            also have "\<dots> = sin (2 * pi - arccos (fst p))"
+              by (simp add: sin_add cos_int_2pin sin_int_2pin)
+            also have "\<dots> = sin (- arccos (fst p) + 2 * pi)" by (simp add: algebra_simps)
+            also have "\<dots> = sin (- arccos (fst p))"
+              using sin_periodic[of "- arccos (fst p)"] by (simp add: algebra_simps)
+            also have "\<dots> = - sin (arccos (fst p))" by simp
+            also have "\<dots> = - sqrt (1 - (fst p)^2)" by (simp add: sin_arccos[OF hx_bdd])
+            also have "\<dots> = snd p"
+            proof -
+              have "1 - (fst p)^2 = (snd p)^2" using hcirc by (by100 linarith)
+              hence "sqrt (1 - (fst p)^2) = sqrt ((snd p)^2)" by simp
+              also have "\<dots> = \<bar>snd p\<bar>" by (rule real_sqrt_abs)
+              also have "\<dots> = - snd p" using hy_neg by (by100 simp)
+              finally show "- sqrt (1 - (fst p)^2) = snd p" by (by100 linarith)
+            qed
+            finally show ?thesis .
+          qed
+          have "top1_R_to_S1 (inv_fn p) = (fst p, snd p)"
+            unfolding top1_R_to_S1_def using hcos hsin by (by100 simp)
+          hence "top1_R_to_S1 (inv_fn p) = p" by simp
+          thus "inv_into V top1_R_to_S1 p = inv_fn p"
+            using inv_into_f_eq[OF hpV_inj hinV] by (by100 simp)
+        qed
         have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S
             = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_S"
           unfolding top1_S1_topology_def
