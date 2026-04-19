@@ -15475,8 +15475,25 @@ proof
     have hr_fix: "\<And>x. x \<in> top1_S1 \<Longrightarrow> ?r x = x"
       unfolding top1_S1_def by auto
     \<comment> \<open>r maps R^2-{0} to S^1.\<close>
-    have hr_S1: "\<And>x. x \<in> UNIV - {(0, 0)} \<Longrightarrow> ?r x \<in> top1_S1"
-      sorry
+    have hr_S1: "\<And>x. x \<in> UNIV - {(0::real, 0)} \<Longrightarrow> ?r x \<in> top1_S1"
+    proof -
+      fix x :: "real \<times> real" assume hx: "x \<in> UNIV - {(0, 0)}"
+      hence hx_ne: "fst x \<noteq> 0 \<or> snd x \<noteq> 0" by (auto simp: prod_eq_iff)
+      hence hsum_pos: "fst x ^ 2 + snd x ^ 2 > 0"
+        using sum_power2_gt_zero_iff[of "fst x" "snd x"] by blast
+      hence hnorm_pos: "?norm x > 0" by simp
+      have hns: "(?norm x) ^ 2 = fst x ^ 2 + snd x ^ 2"
+      proof -
+        have "(?norm x) ^ 2 = ?norm x * ?norm x" by (simp add: power2_eq_square)
+        also have "\<dots> = \<bar>fst x ^ 2 + snd x ^ 2\<bar>" by (simp add: power2_eq_square real_sqrt_mult_self)
+        also have "\<dots> = fst x ^ 2 + snd x ^ 2" using hsum_pos by simp
+        finally show ?thesis .
+      qed
+      have hnorm_ne: "?norm x \<noteq> 0" using hnorm_pos by (by100 linarith)
+      have "(fst x / ?norm x) ^ 2 + (snd x / ?norm x) ^ 2 = 1"
+        sorry
+      thus "?r x \<in> top1_S1" unfolding top1_S1_def by simp
+    qed
     \<comment> \<open>r is continuous R^2-{0} \<rightarrow> S^1.\<close>
     have hr_cont: "top1_continuous_map_on (UNIV - {(0, 0)}) ?TR2_0
         top1_S1 top1_S1_topology ?r"
