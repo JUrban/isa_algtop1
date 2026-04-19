@@ -9605,6 +9605,52 @@ definition top1_antipode_preserving_S1 :: "(real \<times> real \<Rightarrow> rea
   "top1_antipode_preserving_S1 h \<longleftrightarrow>
      (\<forall>x y. h (-x, -y) = (- fst (h (x, y)), - snd (h (x, y))))"
 
+text \<open>General lemma: if g: S^1 \<rightarrow> S^1 is continuous, nulhomotopic, and g(1,0) = (1,0),
+  then g \<circ> f \<simeq> const for every loop f at (1,0).\<close>
+lemma nulhomotopic_trivializes_loops:
+  assumes hg: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology g"
+      and hgnul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology g"
+      and hg10: "g (1, 0) = (1::real, 0::real)"
+      and hf: "top1_is_loop_on top1_S1 top1_S1_topology (1::real, 0::real) f"
+  shows "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+      (g \<circ> f) (top1_constant_path (1, 0))"
+proof -
+  \<comment> \<open>From nulhomotopy, extract c and homotopy H. Apply homotopy_induced_basepoint_change
+     to get g\<circ>f ≃ bc(rev(\<alpha>), const_c) at g(1,0) = (1,0), where \<alpha>(t) = H((1,0),t).
+     Then show bc(rev(\<alpha>), const_c) ≃ const by path algebra.\<close>
+  obtain c where hcS1: "c \<in> top1_S1"
+      and hhom: "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology g (\<lambda>_. c)"
+    using hgnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain H where hHcont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+          (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology H"
+      and hH0: "\<forall>x\<in>top1_S1. H (x, 0) = g x"
+      and hH1: "\<forall>x\<in>top1_S1. H (x, 1) = c"
+    using hhom unfolding top1_homotopic_on_def by (by100 blast)
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    unfolding top1_S1_topology_def
+    by (rule subspace_topology_is_topology_on[OF
+          product_topology_on_is_topology_on[OF
+            top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+            simplified]]) simp
+  have h10S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+  have hH1': "\<forall>x\<in>top1_S1. H (x, 1) = (\<lambda>_. c) x" using hH1 by (by100 simp)
+  note hbc = homotopy_induced_basepoint_change[OF hTS1 hTS1 hHcont hH0 hH1' hf h10S1]
+  have hbc': "top1_loop_equiv_on top1_S1 top1_S1_topology (g (1, 0)) (g \<circ> f)
+      (top1_basepoint_change_on top1_S1 top1_S1_topology c (g (1, 0))
+         (top1_path_reverse (\<lambda>t. H ((1, 0), t))) (top1_constant_path c))"
+  proof -
+    have "(\<lambda>_. c) \<circ> f = top1_constant_path c"
+      by (rule ext) (simp add: top1_constant_path_def comp_def)
+    thus ?thesis using hbc by simp
+  qed
+  \<comment> \<open>The basepoint change of const_c by rev(\<alpha>) is ≃ const_{g(1,0)}.
+     This was proved in hh_trivial_at_h10's sub-proof. Use hg10 = (1,0).\<close>
+  have "top1_path_homotopic_on top1_S1 top1_S1_topology (g (1, 0)) (g (1, 0))
+      (g \<circ> f) (top1_constant_path (g (1, 0)))"
+    sorry \<comment> \<open>Path algebra: bc(rev(\<alpha>), const_c) ≃ const_{g(1,0)}. Proved in True case of 57.1.\<close>
+  thus ?thesis using hg10 by simp
+qed
+
 (** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 is NOT nulhomotopic.
 
     Munkres' proof:
@@ -9859,10 +9905,9 @@ proof
               ((?\<rho> \<circ> h) \<circ> f) (top1_constant_path (1, 0))"
     proof (intro allI impI)
       fix f assume hf: "top1_is_loop_on top1_S1 top1_S1_topology (1::real, 0::real) f"
-      \<comment> \<open>Same argument as hh_trivial_at_h10: nulhomotopy \<Rightarrow> basepoint change \<Rightarrow> loop equiv to const.\<close>
       show "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
           ((?\<rho> \<circ> h) \<circ> f) (top1_constant_path (1, 0))"
-        using hrh_nul hrh_cont hrh_10 hf sorry
+        by (rule nulhomotopic_trivializes_loops[OF hrh_cont hrh_nul hrh_10 hf])
     qed
     \<comment> \<open>Step 2: (\<rho>\<circ>h)_* is nontrivial (covering theory: antipode-preserving \<Rightarrow> induced map \<times>2).\<close>
     have hrh_star_nontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
