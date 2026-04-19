@@ -6387,7 +6387,16 @@ proof -
         have hf0_eq: "f 0 = p e0" using hpe0 hf unfolding top1_is_path_on_def by simp
         have hcont0: "top1_continuous_map_on {s\<in>I_set. s \<le> sub 0}
             (subspace_topology I_set I_top {s\<in>I_set. s \<le> sub 0}) E TE (\<lambda>_. e0)"
-          sorry
+        proof -
+          have hdom: "{s\<in>I_set. s \<le> sub 0} = {0}" using hsub0 unfolding top1_unit_interval_def by auto
+          have hTsub: "is_topology_on {0::real} (subspace_topology I_set I_top {0})"
+            by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on])
+               (simp add: top1_unit_interval_def)
+          have hTE: "is_topology_on E TE"
+            using hcov unfolding top1_covering_map_on_def top1_evenly_covered_on_def sorry
+          show ?thesis unfolding hdom
+            by (rule top1_continuous_map_on_const[OF hTsub hTE he0])
+        qed
         show ?case
           apply (intro exI[of _ "\<lambda>_. e0"] conjI allI ballI impI)
           using he0 hf0_eq hsub0 hcont0 unfolding top1_unit_interval_def by auto
