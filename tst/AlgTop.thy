@@ -10108,594 +10108,8 @@ proof (rule ccontr)
   ultimately show False by linarith
 qed
 
-\<comment> \<open>Forward-reference lemma nulhomotopic_trivializes_loops_general' removed.
-   The real version (nulhomotopic_trivializes_loops_general) is fully proved in §58.\<close>
-
-section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
-
-text \<open>Following Munkres' proof in 4 steps via the fundamental group of S^1:
-  Step 1: f(z) = z^n on S^1 induces the "multiplication by n" homomorphism
-          on pi_1(S^1), which is injective for n > 0.
-  Step 2: g(z) = z^n as map S^1 -> R^2 - {0} is not nulhomotopic.
-  Step 3: If |a_{n-1}| + ... + |a_0| < 1, the monic polynomial has a root in B^2.
-  Step 4: General case by substitution x = cy with c large enough.\<close>
-
-text \<open>Polymorphic subspace continuity transfer: if f is continuous_on UNIV
-  and maps S to T, then f is top1_continuous_map_on with subspace topologies.\<close>
-lemma top1_continuous_map_on_subspace_open_sets:
-  assumes hmap: "\<And>x. x \<in> S \<Longrightarrow> f x \<in> T"
-      and hcont: "continuous_on UNIV f"
-  shows "top1_continuous_map_on S (subspace_topology UNIV top1_open_sets S)
-                               T (subspace_topology UNIV top1_open_sets T) f"
-proof -
-  have h1: "\<forall>x\<in>S. f x \<in> T" using hmap by (by100 blast)
-  have h2: "\<forall>V\<in>subspace_topology UNIV top1_open_sets T.
-      {x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
-  proof
-    fix V assume "V \<in> subspace_topology UNIV top1_open_sets T"
-    then obtain U where hUos: "U \<in> top1_open_sets" and hVeq: "V = T \<inter> U"
-      unfolding subspace_topology_def by (by100 auto)
-    have hUo: "open U" using hUos unfolding top1_open_sets_def by (by100 blast)
-    have "open (f -` U \<inter> UNIV)"
-      using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hUo by (by100 blast)
-    hence hWo: "open (f -` U)" by (by100 simp)
-    have "{x \<in> S. f x \<in> V} = S \<inter> (f -` U)"
-      unfolding hVeq using hmap by (by100 auto)
-    moreover have "(f -` U) \<in> top1_open_sets"
-      using hWo unfolding top1_open_sets_def by (by100 blast)
-    ultimately show "{x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
-      unfolding subspace_topology_def by (by100 blast)
-  qed
-  show ?thesis unfolding top1_continuous_map_on_def using h1 h2 by (by100 blast)
-qed
-
-text \<open>The complex unit circle.\<close>
-definition top1_S1_complex :: "complex set" where
-  "top1_S1_complex = {z. cmod z = 1}"
-
-definition top1_S1_complex_topology :: "complex set set" where
-  "top1_S1_complex_topology = subspace_topology UNIV top1_open_sets top1_S1_complex"
-
-text \<open>The punctured complex plane C - {0}, same topology as ambient.\<close>
-definition top1_C_minus_0 :: "complex set" where
-  "top1_C_minus_0 = UNIV - {0}"
-
-definition top1_C_minus_0_topology :: "complex set set" where
-  "top1_C_minus_0_topology = subspace_topology UNIV top1_open_sets top1_C_minus_0"
-
-(** Step 1: induced homomorphism of f(z) = z^n on S^1 is multiplication by n.
-
-    Munkres' proof: the standard loop p_0(s) = e^{2\<pi>is} corresponds to 1 \<in> Z.
-    Its image f \<circ> p_0(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns, which corresponds to n.
-    So f_* is multiplication by n on \<pi>_1(S^1, b_0) \<cong> Z, hence injective for n > 0.
-
-    Here we only record the essential injectivity consequence: if two loops
-    become path-homotopic after composition with z^n, then they were already
-    path-homotopic. **)
-lemma Theorem_56_1_step_1:
-  fixes n :: nat
-  assumes hn: "n > 0"
-  shows "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-                               top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)
-       \<and> (\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-              \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
-              \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-                   (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
-              \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
-  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
-proof -
-  \<comment> \<open>Munkres: z^n is continuous on S^1 (polynomial).
-     The induced map f_* on \<pi>_1(S^1) \<cong> Z is multiplication by n (since the standard
-     generator lifts to s \<mapsto> s and f \<circ> p(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns).
-     Multiplication by n is injective for n > 0.\<close>
-  have hcont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
-    unfolding top1_S1_complex_topology_def
-    by (rule top1_continuous_map_on_subspace_open_sets)
-       (auto simp: top1_S1_complex_def norm_power intro: continuous_intros)
-  have hinj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
-      \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
-  show ?thesis using hcont hinj by blast
-qed
-
-(** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic.
-
-    Munkres' proof: g = j \<circ> f where j: S^1 \<hookrightarrow> C-{0} is inclusion and f = z^n.
-    Since S^1 is a retract of C-{0} (retraction r(z) = z/|z|), j_* is injective.
-    By Step 1, f_* is injective. So g_* = j_* \<circ> f_* is injective, hence nontrivial,
-    hence g is not nulhomotopic. **)
-lemma Theorem_56_1_step_2:
-  fixes n :: nat
-  assumes hn: "n > 0"
-  shows "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-            top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-proof
-  assume hnul: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-      top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-  \<comment> \<open>S^1 is a retract of C - {0} via r(z) = z/|z|. So j: S^1 \<hookrightarrow> C-{0} induces
-     j_* injective. f = z^n induces f_* injective (Step 1).
-     g = j \<circ> f: S^1 \<rightarrow> C-{0} induces g_* = j_* \<circ> f_* injective, hence nontrivial.\<close>
-  \<comment> \<open>j_* injective: retraction r(z)=z/|z| of C-{0} onto S^1.\<close>
-  have hj_inj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
-      \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-    sorry \<comment> \<open>Retraction r(z)=z/|z|: r continuous C-{0}\<rightarrow>S^1, r|S^1=id.
-           f ≃ g in C-{0} \<Rightarrow> r\<circ>f ≃ r\<circ>g in S^1 (cont preserves hom).
-           r\<circ>f = f, r\<circ>g = g since |f(s)|=|g(s)|=1 on S^1.
-           Needs: r continuous (division by norm), loop_agree_on_I.\<close>
-  \<comment> \<open>g_* nontrivial contradicts g being nulhomotopic.\<close>
-  \<comment> \<open>z^n nulhomotopic in C-{0} \<Rightarrow> for all loops f at 1, z^n \<circ> f ≃ const in C-{0}.
-     By j_inj, z^n \<circ> f ≃ const in S^1. But z^n not nulhomotopic in S^1 (Step 1).\<close>
-  \<comment> \<open>Actually: hnul says z^n (as S^1 \<rightarrow> C-{0}) is nulhomotopic.
-     Since z^n: S^1 \<rightarrow> S^1 \<subseteq> C-{0}, nulhomotopic in C-{0} means
-     (\<lambda>z. z^n) ≃ const in C-{0}.
-     By hj_inj: homotopic in C-{0} \<Rightarrow> homotopic in S^1.
-     Specifically, for any f with z^n \<circ> f ≃ const in C-{0}, by j_inj get in S^1.
-     But this needs more structure than just the two facts.\<close>
-  \<comment> \<open>Step-by-step: nulhomotopy gives h ≃ const in C-{0} for all loops;
-     j_inj transfers to S^1; contradicts Step 1 (z^n nontrivial on π₁(S¹)).\<close>
-  \<comment> \<open>From hnul: z^n nulhomotopic, so for all loops f at 1, (z^n) \<circ> f ≃ const in C-{0}.\<close>
-  have hnul_all: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<longrightarrow> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
-            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-  proof (intro allI impI)
-    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
-    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
-      unfolding top1_S1_complex_topology_def
-      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
-         (simp add: top1_S1_complex_def)
-    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
-      unfolding top1_C_minus_0_topology_def
-      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
-         (simp add: top1_C_minus_0_def)
-    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-    proof -
-      \<comment> \<open>z^n: S^1 \<rightarrow> S^1 continuous (from Step 1). S^1 \<subseteq> C-{0} since norm = 1 \<noteq> 0.\<close>
-      have hS1_sub_C0: "top1_S1_complex \<subseteq> top1_C_minus_0"
-        unfolding top1_S1_complex_def top1_C_minus_0_def by (by100 auto)
-      have hzn_S1: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_S1_complex"
-        unfolding top1_S1_complex_def using assms by (simp add: norm_power)
-      have hzn_C0: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_C_minus_0"
-        using hzn_S1 hS1_sub_C0 by (by100 blast)
-      \<comment> \<open>z^n continuous UNIV \<rightarrow> UNIV, restrict to S^1 \<rightarrow> C-{0}.\<close>
-      have hzn_cont_univ: "continuous_on UNIV (\<lambda>z::complex. z^n)"
-        by (intro continuous_intros)
-      show ?thesis
-        unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
-        by (rule top1_continuous_map_on_subspace_open_sets[OF hzn_C0 hzn_cont_univ])
-    qed
-    have h1_S1: "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
-    have hg1: "(\<lambda>z::complex. z^n) 1 = (1::complex)" using assms by simp
-    show "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
-        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-      using hTS1c hTC0 hg_cont hnul hg1 h1_S1 hf sorry
-      \<comment> \<open>By nulhomotopic_trivializes_loops_general (proved in §58, after this point).\<close>
-  qed
-  \<comment> \<open>By hj_inj: transfer to S^1.\<close>
-  have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-  proof (intro allI impI)
-    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
-    \<comment> \<open>z^n \<circ> f is a loop in S^1 (since z^n maps S^1 to S^1) and in C-{0} (since S^1 \<subseteq> C-{0}).\<close>
-    have "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
-        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-      using hnul_all hf by (by100 blast)
-    \<comment> \<open>By hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
-    have hznf_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ((\<lambda>z. z^n) \<circ> f)"
-    proof -
-      have hf_path: "top1_is_path_on top1_S1_complex top1_S1_complex_topology 1 1 f"
-        using hf unfolding top1_is_loop_on_def by (by100 blast)
-      have hf_cont: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology f"
-        using hf_path unfolding top1_is_path_on_def by (by100 blast)
-      have hcont_step1: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-          top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
-        using conjunct1[OF Theorem_56_1_step_1[OF hn]] .
-      have hcomp: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology
-          ((\<lambda>z. z^n) \<circ> f)"
-        by (rule top1_continuous_map_on_comp[OF hf_cont hcont_step1])
-      have h0: "((\<lambda>z::complex. z^n) \<circ> f) 0 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
-        using hn by simp
-      have h1: "((\<lambda>z::complex. z^n) \<circ> f) 1 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
-        using hn by simp
-      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
-        using hcomp h0 h1 by (by100 simp)
-    qed
-    have hconst_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (top1_constant_path 1)"
-    proof -
-      have hTS1c': "is_topology_on top1_S1_complex top1_S1_complex_topology"
-        unfolding top1_S1_complex_topology_def
-        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
-           (simp add: top1_S1_complex_def)
-      have h1_S1': "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
-      show ?thesis by (rule top1_constant_path_is_loop[OF hTS1c' h1_S1'])
-    qed
-    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-      using hj_inj hznf_loop hconst_loop
-            \<open>top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
-                ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)\<close>
-      by (by100 blast)
-  qed
-  \<comment> \<open>But Step 1 says z^n_* is injective on π₁(S^1), so z^n is not nulhomotopic in S^1.\<close>
-  have hnontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1))"
-    sorry \<comment> \<open>From π₁(S^1) ≅ ℤ and z^n corresponding to multiplication by n.\<close>
-  show False using hnul_S1 hnontrivial by (by100 blast)
-qed
-
-(** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1.
-
-    Munkres' proof: by contradiction. If there is no root in B^2, define
-    k: B^2 \<rightarrow> C - {0} by k(z) = z^n + \<Sum> a_k z^k. Let h = k|_{S^1}. Since
-    h extends over B^2, h is nulhomotopic. But F(z,t) = z^n + t*(\<Sum> a_k z^k)
-    is a homotopy from g = z^n (Step 2: NOT nulhomotopic) to h in C - {0};
-    F(z,t) \<ne> 0 because |F| \<ge> 1 - t*(\<Sum>|a_k|) > 0. Contradiction. **)
-lemma Theorem_56_1_step_3:
-  fixes a :: "nat \<Rightarrow> complex" and n :: nat
-  assumes hn: "n > 0"
-  and hbound: "(\<Sum>k<n. cmod (a k)) < 1"
-  shows "\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0"
-proof (rule ccontr)
-  assume hno: "\<not> (\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0)"
-  \<comment> \<open>Define k: B^2 \<rightarrow> C-{0} by k(z) = z^n + \<Sum> a_j z^j.\<close>
-  let ?k = "\<lambda>z::complex. z^n + (\<Sum>j<n. a j * z^j)"
-  have hk_nonzero: "\<And>z. cmod z \<le> 1 \<Longrightarrow> ?k z \<noteq> 0" using hno by blast
-  \<comment> \<open>Let h be k restricted to S^1.\<close>
-  let ?h = "\<lambda>z::complex. ?k z"
-  \<comment> \<open>h is nulhomotopic in C-{0} because it extends to B^2 \<rightarrow> C-{0}.\<close>
-  have hh_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-                       top1_C_minus_0 top1_C_minus_0_topology ?h"
-  proof -
-    \<comment> \<open>Homotopy H(z,t) = k((1-t)*z) contracts S^1 to the point k(0).\<close>
-    let ?H = "\<lambda>(z::complex, t::real). ?k ((1 - complex_of_real t) * z)"
-    have hk0_nz: "?k 0 \<noteq> 0" using hk_nonzero[of 0] by simp
-    have hk0_C: "?k 0 \<in> top1_C_minus_0" using hk0_nz unfolding top1_C_minus_0_def by (by100 blast)
-    \<comment> \<open>H(z,0) = k(z) = h(z), H(z,1) = k(0).\<close>
-    have hH0: "\<forall>z\<in>top1_S1_complex. ?H (z, 0) = ?h z" by (simp add: case_prod_beta)
-    have hH1: "\<forall>z\<in>top1_S1_complex. ?H (z, 1) = ?k 0" by (simp add: case_prod_beta)
-    \<comment> \<open>H maps S^1 \<times> I to C-{0}: (1-t)*z \<in> B^2 when z \<in> S^1, t \<in> I.\<close>
-    have hH_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?H p \<in> top1_C_minus_0"
-    proof -
-      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
-      have hz: "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
-      have ht: "snd p \<in> I_set" using hp by (by100 auto)
-      have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
-        using ht unfolding top1_unit_interval_def by (by100 auto)+
-      have "cmod ((1 - complex_of_real (snd p)) * fst p) = cmod (1 - complex_of_real (snd p))"
-        using hz by (simp add: norm_mult)
-      also have "\<dots> = \<bar>1 - snd p\<bar>"
-        by (metis norm_of_real of_real_1 of_real_diff)
-      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) = \<bar>1 - snd p\<bar>" .
-      also have "\<dots> = 1 - snd p" using ht0 ht1 by (by100 auto)
-      also have "\<dots> \<le> 1" using ht0 by (by100 linarith)
-      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) \<le> 1" .
-      hence "?k ((1 - complex_of_real (snd p)) * fst p) \<noteq> 0"
-        by (rule hk_nonzero)
-      thus "?H p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def
-        by (simp add: case_prod_beta)
-    qed
-    \<comment> \<open>H is continuous (polynomial composed with affine map).\<close>
-    have hH_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. ?k ((1 - complex_of_real (snd p)) * fst p))"
-      by (intro continuous_intros)
-    have hH_cont_univ: "continuous_on UNIV ?H"
-      using hH_std by (simp add: case_prod_beta)
-    \<comment> \<open>Transfer to custom topologies.\<close>
-    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
-        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
-            (top1_S1_complex \<times> I_set)"
-    proof -
-      have "product_topology_on top1_S1_complex_topology I_top
-          = product_topology_on
-              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
-              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
-        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
-      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
-          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
-          (top1_S1_complex \<times> I_set)"
-        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
-      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
-          (top1_S1_complex \<times> I_set)"
-        by (simp add: product_topology_on_open_sets)
-      finally show ?thesis .
-    qed
-    have hH_top: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
-        (product_topology_on top1_S1_complex_topology I_top)
-        top1_C_minus_0 top1_C_minus_0_topology ?H"
-    proof -
-      have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
-          (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
-          top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?H"
-        by (rule top1_continuous_map_on_subspace_open_sets[OF hH_range hH_cont_univ])
-      thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
-    qed
-    \<comment> \<open>h is continuous (polynomial on S^1 to C-{0}).\<close>
-    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology ?h"
-      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
-    proof (rule top1_continuous_map_on_subspace_open_sets)
-      fix z assume "z \<in> top1_S1_complex"
-      hence "cmod z = 1" unfolding top1_S1_complex_def by (by100 simp)
-      hence "cmod z \<le> 1" by (by100 simp)
-      hence "?k z \<noteq> 0" by (rule hk_nonzero)
-      thus "?h z \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
-    next
-      show "continuous_on UNIV ?h" by (intro continuous_intros)
-    qed
-    \<comment> \<open>const_{k(0)} is continuous.\<close>
-    have hconst_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>_. ?k 0)"
-      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
-      by (rule top1_continuous_map_on_subspace_open_sets)
-         (use hk0_C in \<open>auto simp: top1_C_minus_0_def intro: continuous_intros\<close>)
-    \<comment> \<open>Assembly: homotopic h const → nulhomotopic.\<close>
-    have "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>_. ?k 0)"
-      unfolding top1_homotopic_on_def using hh_cont hconst_cont hH_top hH0 hH1
-      by (by100 blast)
-    thus ?thesis unfolding top1_nulhomotopic_on_def using hk0_C by (by100 blast)
-  qed
-  \<comment> \<open>Homotopy F(z,t) = z^n + t*\<Sum>a_j z^j from g=z^n to h, all in C-{0}.\<close>
-  let ?F = "\<lambda>(z::complex, t::real). z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)"
-  have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
-     z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0"
-    \<comment> \<open>Munkres inequality: |F| \<ge> 1 - t(\<Sum>|a_k|) > 0 since t \<le> 1 and \<Sum>|a_k| < 1.\<close>
-  proof -
-    fix z :: complex and t :: real
-    assume hz: "cmod z = 1" and ht: "t \<in> I_set"
-    have ht0: "t \<ge> 0" using ht unfolding top1_unit_interval_def by simp
-    have ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
-    have hzn: "cmod (z^n) = 1" using hz by (simp add: norm_power)
-    have h_sum_bound: "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j))"
-    proof -
-      have "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j * z^j))"
-        by (rule norm_sum)
-      also have "\<dots> = (\<Sum>j<n. cmod (a j) * (cmod z)^j)"
-        by (simp add: norm_mult norm_power)
-      also have "\<dots> = (\<Sum>j<n. cmod (a j))" using hz by simp
-      finally show ?thesis .
-    qed
-    have ht_sum: "t * (\<Sum>j<n. cmod (a j)) < 1"
-    proof (cases "(\<Sum>j<n. cmod (a j)) = 0")
-      case True thus ?thesis by simp
-    next
-      case False
-      have hpos: "(\<Sum>j<n. cmod (a j)) > 0"
-        using False sum_nonneg[of "{..<n}" "\<lambda>j. cmod (a j)"] by simp
-      have "t * (\<Sum>j<n. cmod (a j)) \<le> 1 * (\<Sum>j<n. cmod (a j))"
-        using ht1 hpos by (simp add: mult_right_mono)
-      also have "\<dots> < 1" using hbound by simp
-      finally show ?thesis .
-    qed
-    have hF_abs: "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j))
-                \<ge> 1 - t * (\<Sum>j<n. cmod (a j))"
-    proof -
-      let ?A = "z^n"
-      let ?B = "complex_of_real t * (\<Sum>j<n. a j * z^j)"
-      have htri: "cmod ?A \<le> cmod (?A + ?B) + cmod ?B"
-        using norm_triangle_ineq4[of "?A + ?B" ?B] by (simp add: norm_minus_commute)
-      have hnormB: "cmod ?B = t * cmod (\<Sum>j<n. a j * z^j)"
-        by (simp add: norm_mult ht0)
-      have hB_le: "cmod ?B \<le> t * (\<Sum>j<n. cmod (a j))"
-        using hnormB h_sum_bound ht0 by (simp add: mult_left_mono)
-      show ?thesis using htri hzn hB_le by linarith
-    qed
-    have "1 - t * (\<Sum>j<n. cmod (a j)) > 0" using ht_sum by simp
-    hence "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)) > 0" using hF_abs by linarith
-    thus "z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" by auto
-  qed
-  have hF_cont: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
-                   (product_topology_on top1_S1_complex_topology I_top)
-                   top1_C_minus_0 top1_C_minus_0_topology ?F"
-  proof -
-    have hF_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. fst p^n +
-        complex_of_real (snd p) * (\<Sum>j<n. a j * fst p^j))"
-      by (intro continuous_intros)
-    have hF_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?F p \<in> top1_C_minus_0"
-    proof -
-      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
-      have "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
-      have "snd p \<in> I_set" using hp by (by100 auto)
-      have "?F p \<noteq> 0" using hF_nonzero[OF \<open>cmod (fst p) = 1\<close> \<open>snd p \<in> I_set\<close>]
-        by (simp add: case_prod_beta)
-      thus "?F p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
-    qed
-    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
-        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
-            (top1_S1_complex \<times> I_set)"
-    proof -
-      have "product_topology_on top1_S1_complex_topology I_top
-          = product_topology_on
-              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
-              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
-        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
-      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
-          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
-          (top1_S1_complex \<times> I_set)"
-        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
-      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
-          (top1_S1_complex \<times> I_set)"
-        by (simp add: product_topology_on_open_sets)
-      finally show ?thesis .
-    qed
-    have hF_cont_univ: "continuous_on UNIV ?F"
-      using hF_std by (simp add: case_prod_beta comp_def)
-    have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
-        (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
-        top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?F"
-      by (rule top1_continuous_map_on_subspace_open_sets[OF hF_range hF_cont_univ])
-    thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
-  qed
-  \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
-  have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-    using Theorem_56_1_step_2[OF hn] .
-  have hg_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
-                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-  proof -
-    have hTR_c: "is_topology_on (UNIV::complex set) top1_open_sets"
-      by (rule top1_open_sets_is_topology_on_UNIV)
-    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
-      unfolding top1_S1_complex_topology_def
-      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
-    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
-      unfolding top1_C_minus_0_topology_def
-      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
-    \<comment> \<open>F(z,0) = z^n, F(z,1) = h(z).\<close>
-    have hF0: "\<forall>z\<in>top1_S1_complex. ?F (z, 0) = z^n"
-      by (simp add: case_prod_beta)
-    have hF1: "\<forall>z\<in>top1_S1_complex. ?F (z, 1) = ?h z"
-      by (simp add: case_prod_beta)
-    \<comment> \<open>z^n is continuous S^1 \<rightarrow> C-{0} (polynomial, nonvanishing on S^1).\<close>
-    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
-      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
-      by (rule top1_continuous_map_on_subspace_open_sets)
-         (auto simp: top1_S1_complex_def top1_C_minus_0_def norm_power hn
-               intro: continuous_intros)
-    \<comment> \<open>h is continuous (from nulhomotopic).\<close>
-    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology ?h"
-      using hh_nulhomo unfolding top1_nulhomotopic_on_def top1_homotopic_on_def by (by100 blast)
-    \<comment> \<open>F gives homotopy from z^n to h.\<close>
-    have hhom_g_h: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n) ?h"
-      unfolding top1_homotopic_on_def
-      using hg_cont hh_cont hF_cont hF0 hF1 by (by100 blast)
-    \<comment> \<open>Symmetry: h ≃ z^n.\<close>
-    have hhom_h_g: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
-        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>z. z^n)"
-      by (rule Lemma_51_1_homotopic_sym[OF hhom_g_h hTS1c])
-    \<comment> \<open>Transitivity: h nulhomotopic + h ≃ z^n \<Rightarrow> z^n nulhomotopic.\<close>
-    show ?thesis
-      by (rule nulhomotopic_homotopic_trans[OF hTS1c hTC0 hh_nulhomo hhom_h_g])
-  qed
-  show False using hg_notnull hg_nulhomo by blast
-qed
-
-(** Step 4: FTA general case: any monic polynomial has a root.
-    Reduction: substitute x = cy for large c to reduce to Step 3.
-    This is the statement of Theorem_56_1 proper in Munkres. **)
-theorem Theorem_56_1_FTA:
-  fixes a :: "nat \<Rightarrow> complex" and n :: nat
-  assumes "n > 0"
-  shows "\<exists>z. z^n + (\<Sum>k<n. a k * z^k) = 0"
-proof -
-  \<comment> \<open>Munkres Step 4: Choose c large so that \<Sum> |a_k/c^{n-k}| < 1.\<close>
-  \<comment> \<open>Substitute x = cy: equation becomes y^n + \<Sum> (a_k / c^{n-k}) y^k = 0.\<close>
-  \<comment> \<open>By Step 3, there's a root y_0 with |y_0| \<le> 1; then x_0 = c y_0 is a root.\<close>
-  \<comment> \<open>Pick c = max 1 (1 + 2 * n * \<Sum> cmod (a k)). Then c \<ge> 1 and c > 2 n M where
-      M = \<Sum> cmod (a k), so each term cmod(a k)/c^(n-k) \<le> cmod(a k)/c < M/(2nM) = 1/(2n)
-      when M > 0, giving sum < 1/2 < 1. When M = 0 each cmod(a k) = 0, sum = 0 < 1.\<close>
-  define M where "M = (\<Sum>k<n. cmod (a k))"
-  define c where "c = M + 1"
-  have hM: "M \<ge> 0" unfolding M_def by (simp add: sum_nonneg)
-  have hc: "c > 0" unfolding c_def using hM by simp
-  have hc_ge1: "c \<ge> 1" unfolding c_def using hM by simp
-  have hc_pow_ge: "\<forall>k<n. c ^ (n - k) \<ge> c"
-  proof (intro allI impI)
-    fix k assume hk: "k < n"
-    have hge1: "n - k \<ge> 1" using hk by simp
-    have "c ^ 1 \<le> c ^ (n - k)"
-      by (rule power_increasing[OF hge1 hc_ge1])
-    thus "c ^ (n - k) \<ge> c" by simp
-  qed
-  have hsum_small: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1"
-  proof -
-    have h_each: "\<forall>k<n. cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
-    proof (intro allI impI)
-      fix k assume hk: "k < n"
-      have hcpos: "c ^ (n - k) > 0" using hc by (simp add: zero_less_power)
-      have hcpow_ge_c: "c ^ (n - k) \<ge> c" using hc_pow_ge hk by blast
-      have hak: "cmod (a k) \<ge> 0" by simp
-      show "cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
-        using hc hcpos hcpow_ge_c hak by (simp add: frac_le)
-    qed
-    have h_sum_le: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) \<le> (\<Sum>k<n. cmod (a k) / c)"
-      by (rule sum_mono, simp add: h_each)
-    also have "(\<Sum>k<n. cmod (a k) / c) = M / c"
-      unfolding M_def by (simp add: sum_divide_distrib)
-    also have "\<dots> < 1"
-    proof -
-      have "M / c < 1 \<longleftrightarrow> M < c" using hc by (simp add: divide_less_eq)
-      moreover have "M < c" unfolding c_def by simp
-      ultimately show ?thesis by blast
-    qed
-    finally show "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1" .
-  qed
-  \<comment> \<open>New coefficients a'_k = a_k / c^{n-k}.\<close>
-  let ?a' = "\<lambda>k. a k / complex_of_real (c ^ (n - k))"
-  have h_cmod_eq: "\<forall>k<n. cmod (?a' k) = cmod (a k) / c ^ (n - k)"
-    using hc by (simp add: norm_divide norm_power)
-  have hbound': "(\<Sum>k<n. cmod (?a' k)) < 1"
-    using h_cmod_eq hsum_small by simp
-  obtain y where hy: "cmod y \<le> 1" and hroot': "y^n + (\<Sum>k<n. ?a' k * y^k) = 0"
-    using Theorem_56_1_step_3[OF assms hbound'] by blast
-  let ?x = "complex_of_real c * y"
-  let ?cc = "complex_of_real c"
-  have hcc_nz: "?cc \<noteq> 0" using hc by simp
-  \<comment> \<open>Term-wise identity: c^n * (a k / c^(n-k) * y^k) = a k * (c*y)^k when k<n.\<close>
-  have h_term: "\<And>k. k < n \<Longrightarrow> ?cc^n * (?a' k * y^k) = a k * ?x^k"
-  proof -
-    fix k :: nat assume hk: "k < n"
-    have hpow_split: "?cc^n = ?cc^(n-k) * ?cc^k"
-      using hk by (simp add: power_add[symmetric])
-    have hpow_eq: "?cc^(n-k) = complex_of_real (c^(n-k))" by simp
-    have "?cc^n * (?a' k * y^k) = ?cc^(n-k) * ?cc^k * (a k / complex_of_real (c^(n-k)) * y^k)"
-      using hpow_split by simp
-    also have "\<dots> = ?cc^k * (a k * y^k)"
-      using hpow_eq hcc_nz by (simp add: field_simps power_not_zero)
-    also have "\<dots> = a k * ?x^k"
-      by (simp add: power_mult_distrib mult.commute mult.left_commute)
-    finally show "?cc^n * (?a' k * y^k) = a k * ?x^k" .
-  qed
-  have h_cn_sum: "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. a k * ?x^k)"
-  proof -
-    have "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. ?cc^n * (?a' k * y^k))"
-      by (simp add: sum_distrib_left)
-    also have "\<dots> = (\<Sum>k<n. a k * ?x^k)"
-      by (rule sum.cong, simp, rule h_term, simp)
-    finally show ?thesis .
-  qed
-  have hxn_eq: "?x^n = ?cc^n * y^n" by (simp add: power_mult_distrib)
-  \<comment> \<open>Multiply root equation by c^n to get x-root equation.\<close>
-  have "?cc^n * (y^n + (\<Sum>k<n. ?a' k * y^k)) = 0" using hroot' by simp
-  hence "?cc^n * y^n + ?cc^n * (\<Sum>k<n. ?a' k * y^k) = 0"
-    by (simp add: distrib_left)
-  hence "?x^n + (\<Sum>k<n. a k * ?x^k) = 0"
-    using hxn_eq h_cn_sum by simp
-  thus ?thesis by blast
-qed
-
-text \<open>Original form (FTA for arbitrary polynomials with nonzero leading coefficient).\<close>
-corollary Theorem_56_1_FTA_leading:
-  fixes a :: "nat \<Rightarrow> complex" and n :: nat
-  assumes "n > 0" and "a n \<noteq> 0"
-  shows "\<exists>z. (\<Sum>k\<le>n. a k * z^k) = 0"
-proof -
-  \<comment> \<open>Divide by a n to get monic form.\<close>
-  let ?b = "\<lambda>k. a k / a n"
-  have hbn: "?b n = 1" using assms(2) by simp
-  have "\<exists>z. z^n + (\<Sum>k<n. ?b k * z^k) = 0"
-    by (rule Theorem_56_1_FTA[OF assms(1)])
-  then obtain z where hroot_monic: "z^n + (\<Sum>k<n. ?b k * z^k) = 0"
-    by blast
-  \<comment> \<open>This z is a root of the original polynomial too.\<close>
-  have h_split: "(\<Sum>k\<le>n. a k * z^k) = (\<Sum>k<n. a k * z^k) + a n * z^n"
-    by (simp add: lessThan_Suc_atMost[symmetric] sum.lessThan_Suc)
-  have h_factor: "(\<Sum>k<n. a k * z^k) = a n * (\<Sum>k<n. ?b k * z^k)"
-    by (simp add: sum_distrib_left assms(2) field_simps)
-  have "(\<Sum>k\<le>n. a k * z^k) = a n * (z^n + (\<Sum>k<n. ?b k * z^k))"
-    using h_split h_factor by (simp add: distrib_left mult.commute)
-  thus ?thesis using hroot_monic assms(2) by fastforce
-qed
-
+\<comment> \<open>General homotopy tools (homotopy_induced_basepoint_change,
+   nulhomotopic_trivializes_loops_general) moved before §56.\<close>
 
 subsection \<open>General homotopy tools (needed for \<S>57 and \<S>58)\<close>
 
@@ -11445,6 +10859,710 @@ proof -
     using hresult unfolding top1_loop_equiv_on_def by (by100 blast)
   thus ?thesis using hgx0 by simp
 qed
+section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
+
+text \<open>Following Munkres' proof in 4 steps via the fundamental group of S^1:
+  Step 1: f(z) = z^n on S^1 induces the "multiplication by n" homomorphism
+          on pi_1(S^1), which is injective for n > 0.
+  Step 2: g(z) = z^n as map S^1 -> R^2 - {0} is not nulhomotopic.
+  Step 3: If |a_{n-1}| + ... + |a_0| < 1, the monic polynomial has a root in B^2.
+  Step 4: General case by substitution x = cy with c large enough.\<close>
+
+text \<open>Polymorphic subspace continuity transfer: if f is continuous_on UNIV
+  and maps S to T, then f is top1_continuous_map_on with subspace topologies.\<close>
+lemma top1_continuous_map_on_subspace_open_sets:
+  assumes hmap: "\<And>x. x \<in> S \<Longrightarrow> f x \<in> T"
+      and hcont: "continuous_on UNIV f"
+  shows "top1_continuous_map_on S (subspace_topology UNIV top1_open_sets S)
+                               T (subspace_topology UNIV top1_open_sets T) f"
+proof -
+  have h1: "\<forall>x\<in>S. f x \<in> T" using hmap by (by100 blast)
+  have h2: "\<forall>V\<in>subspace_topology UNIV top1_open_sets T.
+      {x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
+  proof
+    fix V assume "V \<in> subspace_topology UNIV top1_open_sets T"
+    then obtain U where hUos: "U \<in> top1_open_sets" and hVeq: "V = T \<inter> U"
+      unfolding subspace_topology_def by (by100 auto)
+    have hUo: "open U" using hUos unfolding top1_open_sets_def by (by100 blast)
+    have "open (f -` U \<inter> UNIV)"
+      using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hcont] hUo by (by100 blast)
+    hence hWo: "open (f -` U)" by (by100 simp)
+    have "{x \<in> S. f x \<in> V} = S \<inter> (f -` U)"
+      unfolding hVeq using hmap by (by100 auto)
+    moreover have "(f -` U) \<in> top1_open_sets"
+      using hWo unfolding top1_open_sets_def by (by100 blast)
+    ultimately show "{x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
+      unfolding subspace_topology_def by (by100 blast)
+  qed
+  show ?thesis unfolding top1_continuous_map_on_def using h1 h2 by (by100 blast)
+qed
+
+text \<open>The complex unit circle.\<close>
+definition top1_S1_complex :: "complex set" where
+  "top1_S1_complex = {z. cmod z = 1}"
+
+definition top1_S1_complex_topology :: "complex set set" where
+  "top1_S1_complex_topology = subspace_topology UNIV top1_open_sets top1_S1_complex"
+
+text \<open>The punctured complex plane C - {0}, same topology as ambient.\<close>
+definition top1_C_minus_0 :: "complex set" where
+  "top1_C_minus_0 = UNIV - {0}"
+
+definition top1_C_minus_0_topology :: "complex set set" where
+  "top1_C_minus_0_topology = subspace_topology UNIV top1_open_sets top1_C_minus_0"
+
+(** Step 1: induced homomorphism of f(z) = z^n on S^1 is multiplication by n.
+
+    Munkres' proof: the standard loop p_0(s) = e^{2\<pi>is} corresponds to 1 \<in> Z.
+    Its image f \<circ> p_0(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns, which corresponds to n.
+    So f_* is multiplication by n on \<pi>_1(S^1, b_0) \<cong> Z, hence injective for n > 0.
+
+    Here we only record the essential injectivity consequence: if two loops
+    become path-homotopic after composition with z^n, then they were already
+    path-homotopic. **)
+lemma Theorem_56_1_step_1:
+  fixes n :: nat
+  assumes hn: "n > 0"
+  shows "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+                               top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)
+       \<and> (\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+              \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+              \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+                   (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
+              \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
+  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
+proof -
+  \<comment> \<open>Munkres: z^n is continuous on S^1 (polynomial).
+     The induced map f_* on \<pi>_1(S^1) \<cong> Z is multiplication by n (since the standard
+     generator lifts to s \<mapsto> s and f \<circ> p(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns).
+     Multiplication by n is injective for n > 0.\<close>
+  have hcont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+    unfolding top1_S1_complex_topology_def
+    by (rule top1_continuous_map_on_subspace_open_sets)
+       (auto simp: top1_S1_complex_def norm_power intro: continuous_intros)
+  have hinj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+      \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
+  show ?thesis using hcont hinj by blast
+qed
+
+(** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic.
+
+    Munkres' proof: g = j \<circ> f where j: S^1 \<hookrightarrow> C-{0} is inclusion and f = z^n.
+    Since S^1 is a retract of C-{0} (retraction r(z) = z/|z|), j_* is injective.
+    By Step 1, f_* is injective. So g_* = j_* \<circ> f_* is injective, hence nontrivial,
+    hence g is not nulhomotopic. **)
+lemma Theorem_56_1_step_2:
+  fixes n :: nat
+  assumes hn: "n > 0"
+  shows "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+            top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+proof
+  assume hnul: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+      top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+  \<comment> \<open>S^1 is a retract of C - {0} via r(z) = z/|z|. So j: S^1 \<hookrightarrow> C-{0} induces
+     j_* injective. f = z^n induces f_* injective (Step 1).
+     g = j \<circ> f: S^1 \<rightarrow> C-{0} induces g_* = j_* \<circ> f_* injective, hence nontrivial.\<close>
+  \<comment> \<open>j_* injective: retraction r(z)=z/|z| of C-{0} onto S^1.\<close>
+  have hj_inj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+      \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+  proof (intro allI impI)
+    fix f g
+    assume hfg: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+        \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+        \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g"
+    have hf_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+      using hfg by (by100 blast)
+    have hg_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g"
+      using hfg by (by100 blast)
+    have hhom: "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g"
+      using hfg by (by100 blast)
+    \<comment> \<open>Extract the homotopy H in C-{0}.\<close>
+    have hhom_unf: "top1_is_path_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f
+        \<and> top1_is_path_on top1_C_minus_0 top1_C_minus_0_topology 1 1 g
+        \<and> (\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology top1_C_minus_0 top1_C_minus_0_topology F
+            \<and> (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s)
+            \<and> (\<forall>t\<in>I_set. F (0, t) = 1) \<and> (\<forall>t\<in>I_set. F (1, t) = 1))"
+      using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+    obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        top1_C_minus_0 top1_C_minus_0_topology H"
+      and hH0: "\<forall>s\<in>I_set. H (s, 0) = f s"
+      and hH1: "\<forall>s\<in>I_set. H (s, 1) = g s"
+      and hH_left: "\<forall>t\<in>I_set. H (0, t) = (1::complex)"
+      and hH_right: "\<forall>t\<in>I_set. H (1, t) = (1::complex)"
+      using conjunct2[OF conjunct2[OF hhom_unf]] by (by100 auto)
+    \<comment> \<open>Retraction r(z) = sgn z = z/|z|.\<close>
+    \<comment> \<open>sgn fixes S^1: |z|=1 implies sgn z = z/1 = z.\<close>
+    have hr_fix: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> sgn z = z"
+    proof -
+      fix z :: complex assume hz: "z \<in> top1_S1_complex"
+      have "norm z = 1" using hz unfolding top1_S1_complex_def by (by100 simp)
+      hence "z \<noteq> 0" by (by100 auto)
+      show "sgn z = z" using \<open>norm z = 1\<close>
+        by (simp add: sgn_div_norm)
+    qed
+    \<comment> \<open>sgn maps C-{0} to S^1: |sgn z| = 1 for z \<noteq> 0.\<close>
+    have hr_S1: "\<And>z::complex. z \<in> top1_C_minus_0 \<Longrightarrow> sgn z \<in> top1_S1_complex"
+    proof -
+      fix z :: complex assume hz: "z \<in> top1_C_minus_0"
+      hence "z \<noteq> 0" unfolding top1_C_minus_0_def by (by100 blast)
+      hence "norm (sgn z) = 1" by (simp add: norm_sgn)
+      thus "sgn z \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
+    qed
+    \<comment> \<open>sgn is continuous C-{0} \<rightarrow> S^1 (as top1_continuous_map_on).\<close>
+    have hr_cont: "top1_continuous_map_on top1_C_minus_0 top1_C_minus_0_topology
+        top1_S1_complex top1_S1_complex_topology (sgn :: complex \<Rightarrow> complex)"
+    proof -
+      have hsgn_cont: "continuous_on (UNIV - {0::complex}) sgn"
+        by (intro continuous_on_sgn continuous_on_id) (by100 simp)
+      have hmaps: "\<forall>x\<in>top1_C_minus_0. sgn x \<in> top1_S1_complex"
+        using hr_S1 by simp
+      have hpreimg: "\<forall>V\<in>top1_S1_complex_topology.
+          {x \<in> top1_C_minus_0. sgn x \<in> V} \<in> top1_C_minus_0_topology"
+      proof
+        fix V assume hV: "V \<in> top1_S1_complex_topology"
+        obtain W where hWo: "W \<in> top1_open_sets" and hVeq: "V = top1_S1_complex \<inter> W"
+          using hV unfolding top1_S1_complex_topology_def subspace_topology_def by (by100 auto)
+        have hWopen: "open W" using hWo unfolding top1_open_sets_def by (by100 blast)
+        \<comment> \<open>sgn\<inverse>(W) \<inter> (UNIV-{0}) is open since sgn continuous on UNIV-{0}.\<close>
+        have hC0_open: "open (UNIV - {0::complex})" by (by100 auto)
+        have hpreW: "open (sgn -` W \<inter> (UNIV - {0::complex}))"
+          using iffD1[OF continuous_on_open_vimage[OF hC0_open] hsgn_cont, rule_format, OF hWopen] .
+        have heq: "{x \<in> top1_C_minus_0. sgn x \<in> V} = top1_C_minus_0 \<inter> (sgn -` W \<inter> (UNIV - {0::complex}))"
+        proof -
+          have "\<And>x. x \<in> top1_C_minus_0 \<Longrightarrow> sgn x \<in> top1_S1_complex"
+            using hmaps by (by100 blast)
+          thus ?thesis unfolding hVeq top1_C_minus_0_def by (by100 auto)
+        qed
+        have "sgn -` W \<inter> (UNIV - {0::complex}) \<in> top1_open_sets"
+          using hpreW unfolding top1_open_sets_def by (by100 blast)
+        thus "{x \<in> top1_C_minus_0. sgn x \<in> V} \<in> top1_C_minus_0_topology"
+          unfolding heq top1_C_minus_0_topology_def subspace_topology_def by (by100 blast)
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+        using hmaps hpreimg by (by100 blast)
+    qed
+    \<comment> \<open>sgn \<circ> H is continuous I \<times> I \<rightarrow> S^1, by composition.\<close>
+    have hrH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        top1_S1_complex top1_S1_complex_topology (sgn \<circ> H)"
+      by (rule top1_continuous_map_on_comp[OF hH_cont hr_cont])
+    \<comment> \<open>f(s) \<in> S^1, so sgn(f(s)) = f(s); similarly for g. sgn(1) = 1.\<close>
+    have hf_S1: "\<And>s. s \<in> I_set \<Longrightarrow> f s \<in> top1_S1_complex"
+      using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      by (by100 blast)
+    have hg_S1: "\<And>s. s \<in> I_set \<Longrightarrow> g s \<in> top1_S1_complex"
+      using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      by (by100 blast)
+    have hrH0: "\<forall>s\<in>I_set. (sgn \<circ> H) (s, 0) = f s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "(sgn \<circ> H) (s, 0) = sgn (H (s, 0))" by simp
+      also have "\<dots> = sgn (f s)" using hH0 hs by simp
+      also have "\<dots> = f s" using hr_fix hf_S1[OF hs] by simp
+      finally show "(sgn \<circ> H) (s, 0) = f s" .
+    qed
+    have hrH1: "\<forall>s\<in>I_set. (sgn \<circ> H) (s, 1) = g s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "(sgn \<circ> H) (s, 1) = sgn (g s)" using hH1 hs by simp
+      also have "\<dots> = g s" using hr_fix hg_S1[OF hs] by simp
+      finally show "(sgn \<circ> H) (s, 1) = g s" .
+    qed
+    have hsgn1: "sgn (1::complex) = 1"
+      by (simp add: sgn_div_norm)
+    have hrH_left: "\<forall>t\<in>I_set. (sgn \<circ> H) (0, t) = (1::complex)"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "(sgn \<circ> H) (0, t) = 1" using hH_left ht hsgn1 by simp
+    qed
+    have hrH_right: "\<forall>t\<in>I_set. (sgn \<circ> H) (1, t) = (1::complex)"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "(sgn \<circ> H) (1, t) = 1" using hH_right ht hsgn1 by simp
+    qed
+    \<comment> \<open>Assemble the path homotopy in S^1.\<close>
+    have hf_path: "top1_is_path_on top1_S1_complex top1_S1_complex_topology 1 1 f"
+      using hf_loop unfolding top1_is_loop_on_def by simp
+    have hg_path: "top1_is_path_on top1_S1_complex top1_S1_complex_topology 1 1 g"
+      using hg_loop unfolding top1_is_loop_on_def by simp
+    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+      unfolding top1_path_homotopic_on_def
+      using hf_path hg_path hrH_cont hrH0 hrH1 hrH_left hrH_right by (by100 blast)
+  qed
+  \<comment> \<open>g_* nontrivial contradicts g being nulhomotopic.\<close>
+  \<comment> \<open>z^n nulhomotopic in C-{0} \<Rightarrow> for all loops f at 1, z^n \<circ> f ≃ const in C-{0}.
+     By j_inj, z^n \<circ> f ≃ const in S^1. But z^n not nulhomotopic in S^1 (Step 1).\<close>
+  \<comment> \<open>Actually: hnul says z^n (as S^1 \<rightarrow> C-{0}) is nulhomotopic.
+     Since z^n: S^1 \<rightarrow> S^1 \<subseteq> C-{0}, nulhomotopic in C-{0} means
+     (\<lambda>z. z^n) ≃ const in C-{0}.
+     By hj_inj: homotopic in C-{0} \<Rightarrow> homotopic in S^1.
+     Specifically, for any f with z^n \<circ> f ≃ const in C-{0}, by j_inj get in S^1.
+     But this needs more structure than just the two facts.\<close>
+  \<comment> \<open>Step-by-step: nulhomotopy gives h ≃ const in C-{0} for all loops;
+     j_inj transfers to S^1; contradicts Step 1 (z^n nontrivial on π₁(S¹)).\<close>
+  \<comment> \<open>From hnul: z^n nulhomotopic, so for all loops f at 1, (z^n) \<circ> f ≃ const in C-{0}.\<close>
+  have hnul_all: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+      unfolding top1_S1_complex_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+         (simp add: top1_S1_complex_def)
+    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
+      unfolding top1_C_minus_0_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+         (simp add: top1_C_minus_0_def)
+    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+    proof -
+      \<comment> \<open>z^n: S^1 \<rightarrow> S^1 continuous (from Step 1). S^1 \<subseteq> C-{0} since norm = 1 \<noteq> 0.\<close>
+      have hS1_sub_C0: "top1_S1_complex \<subseteq> top1_C_minus_0"
+        unfolding top1_S1_complex_def top1_C_minus_0_def by (by100 auto)
+      have hzn_S1: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_S1_complex"
+        unfolding top1_S1_complex_def using assms by (simp add: norm_power)
+      have hzn_C0: "\<And>z::complex. z \<in> top1_S1_complex \<Longrightarrow> z^n \<in> top1_C_minus_0"
+        using hzn_S1 hS1_sub_C0 by (by100 blast)
+      \<comment> \<open>z^n continuous UNIV \<rightarrow> UNIV, restrict to S^1 \<rightarrow> C-{0}.\<close>
+      have hzn_cont_univ: "continuous_on UNIV (\<lambda>z::complex. z^n)"
+        by (intro continuous_intros)
+      show ?thesis
+        unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+        by (rule top1_continuous_map_on_subspace_open_sets[OF hzn_C0 hzn_cont_univ])
+    qed
+    have h1_S1: "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
+    have hg1: "(\<lambda>z::complex. z^n) 1 = (1::complex)" using assms by simp
+    show "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      by (rule nulhomotopic_trivializes_loops_general[OF hTS1c hTC0 hg_cont hnul hg1 h1_S1 hf])
+  qed
+  \<comment> \<open>By hj_inj: transfer to S^1.\<close>
+  have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+    \<comment> \<open>z^n \<circ> f is a loop in S^1 (since z^n maps S^1 to S^1) and in C-{0} (since S^1 \<subseteq> C-{0}).\<close>
+    have "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      using hnul_all hf by (by100 blast)
+    \<comment> \<open>By hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
+    have hznf_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ((\<lambda>z. z^n) \<circ> f)"
+    proof -
+      have hf_path: "top1_is_path_on top1_S1_complex top1_S1_complex_topology 1 1 f"
+        using hf unfolding top1_is_loop_on_def by (by100 blast)
+      have hf_cont: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology f"
+        using hf_path unfolding top1_is_path_on_def by (by100 blast)
+      have hcont_step1: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+          top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+        using conjunct1[OF Theorem_56_1_step_1[OF hn]] .
+      have hcomp: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology
+          ((\<lambda>z. z^n) \<circ> f)"
+        by (rule top1_continuous_map_on_comp[OF hf_cont hcont_step1])
+      have h0: "((\<lambda>z::complex. z^n) \<circ> f) 0 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hn by simp
+      have h1: "((\<lambda>z::complex. z^n) \<circ> f) 1 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hn by simp
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hcomp h0 h1 by (by100 simp)
+    qed
+    have hconst_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (top1_constant_path 1)"
+    proof -
+      have hTS1c': "is_topology_on top1_S1_complex top1_S1_complex_topology"
+        unfolding top1_S1_complex_topology_def
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+           (simp add: top1_S1_complex_def)
+      have h1_S1': "(1::complex) \<in> top1_S1_complex" unfolding top1_S1_complex_def by simp
+      show ?thesis by (rule top1_constant_path_is_loop[OF hTS1c' h1_S1'])
+    qed
+    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      using hj_inj hznf_loop hconst_loop
+            \<open>top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+                ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)\<close>
+      by (by100 blast)
+  qed
+  \<comment> \<open>But Step 1 says z^n_* is injective on π₁(S^1), so z^n is not nulhomotopic in S^1.\<close>
+  have hnontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+            ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1))"
+    sorry \<comment> \<open>From π₁(S^1) ≅ ℤ and z^n corresponding to multiplication by n.\<close>
+  show False using hnul_S1 hnontrivial by (by100 blast)
+qed
+
+(** Step 3: FTA for polynomials with |a_{n-1}| + ... + |a_0| < 1.
+
+    Munkres' proof: by contradiction. If there is no root in B^2, define
+    k: B^2 \<rightarrow> C - {0} by k(z) = z^n + \<Sum> a_k z^k. Let h = k|_{S^1}. Since
+    h extends over B^2, h is nulhomotopic. But F(z,t) = z^n + t*(\<Sum> a_k z^k)
+    is a homotopy from g = z^n (Step 2: NOT nulhomotopic) to h in C - {0};
+    F(z,t) \<ne> 0 because |F| \<ge> 1 - t*(\<Sum>|a_k|) > 0. Contradiction. **)
+lemma Theorem_56_1_step_3:
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
+  assumes hn: "n > 0"
+  and hbound: "(\<Sum>k<n. cmod (a k)) < 1"
+  shows "\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0"
+proof (rule ccontr)
+  assume hno: "\<not> (\<exists>z. cmod z \<le> 1 \<and> z^n + (\<Sum>k<n. a k * z^k) = 0)"
+  \<comment> \<open>Define k: B^2 \<rightarrow> C-{0} by k(z) = z^n + \<Sum> a_j z^j.\<close>
+  let ?k = "\<lambda>z::complex. z^n + (\<Sum>j<n. a j * z^j)"
+  have hk_nonzero: "\<And>z. cmod z \<le> 1 \<Longrightarrow> ?k z \<noteq> 0" using hno by blast
+  \<comment> \<open>Let h be k restricted to S^1.\<close>
+  let ?h = "\<lambda>z::complex. ?k z"
+  \<comment> \<open>h is nulhomotopic in C-{0} because it extends to B^2 \<rightarrow> C-{0}.\<close>
+  have hh_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology ?h"
+  proof -
+    \<comment> \<open>Homotopy H(z,t) = k((1-t)*z) contracts S^1 to the point k(0).\<close>
+    let ?H = "\<lambda>(z::complex, t::real). ?k ((1 - complex_of_real t) * z)"
+    have hk0_nz: "?k 0 \<noteq> 0" using hk_nonzero[of 0] by simp
+    have hk0_C: "?k 0 \<in> top1_C_minus_0" using hk0_nz unfolding top1_C_minus_0_def by (by100 blast)
+    \<comment> \<open>H(z,0) = k(z) = h(z), H(z,1) = k(0).\<close>
+    have hH0: "\<forall>z\<in>top1_S1_complex. ?H (z, 0) = ?h z" by (simp add: case_prod_beta)
+    have hH1: "\<forall>z\<in>top1_S1_complex. ?H (z, 1) = ?k 0" by (simp add: case_prod_beta)
+    \<comment> \<open>H maps S^1 \<times> I to C-{0}: (1-t)*z \<in> B^2 when z \<in> S^1, t \<in> I.\<close>
+    have hH_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?H p \<in> top1_C_minus_0"
+    proof -
+      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
+      have hz: "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
+      have ht: "snd p \<in> I_set" using hp by (by100 auto)
+      have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
+        using ht unfolding top1_unit_interval_def by (by100 auto)+
+      have "cmod ((1 - complex_of_real (snd p)) * fst p) = cmod (1 - complex_of_real (snd p))"
+        using hz by (simp add: norm_mult)
+      also have "\<dots> = \<bar>1 - snd p\<bar>"
+        by (metis norm_of_real of_real_1 of_real_diff)
+      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) = \<bar>1 - snd p\<bar>" .
+      also have "\<dots> = 1 - snd p" using ht0 ht1 by (by100 auto)
+      also have "\<dots> \<le> 1" using ht0 by (by100 linarith)
+      finally have "cmod ((1 - complex_of_real (snd p)) * fst p) \<le> 1" .
+      hence "?k ((1 - complex_of_real (snd p)) * fst p) \<noteq> 0"
+        by (rule hk_nonzero)
+      thus "?H p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def
+        by (simp add: case_prod_beta)
+    qed
+    \<comment> \<open>H is continuous (polynomial composed with affine map).\<close>
+    have hH_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. ?k ((1 - complex_of_real (snd p)) * fst p))"
+      by (intro continuous_intros)
+    have hH_cont_univ: "continuous_on UNIV ?H"
+      using hH_std by (simp add: case_prod_beta)
+    \<comment> \<open>Transfer to custom topologies.\<close>
+    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
+        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+            (top1_S1_complex \<times> I_set)"
+    proof -
+      have "product_topology_on top1_S1_complex_topology I_top
+          = product_topology_on
+              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
+              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
+      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
+          (top1_S1_complex \<times> I_set)"
+        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
+      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+          (top1_S1_complex \<times> I_set)"
+        by (simp add: product_topology_on_open_sets)
+      finally show ?thesis .
+    qed
+    have hH_top: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+        (product_topology_on top1_S1_complex_topology I_top)
+        top1_C_minus_0 top1_C_minus_0_topology ?H"
+    proof -
+      have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+          (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
+          top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?H"
+        by (rule top1_continuous_map_on_subspace_open_sets[OF hH_range hH_cont_univ])
+      thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
+    qed
+    \<comment> \<open>h is continuous (polynomial on S^1 to C-{0}).\<close>
+    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h"
+      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+    proof (rule top1_continuous_map_on_subspace_open_sets)
+      fix z assume "z \<in> top1_S1_complex"
+      hence "cmod z = 1" unfolding top1_S1_complex_def by (by100 simp)
+      hence "cmod z \<le> 1" by (by100 simp)
+      hence "?k z \<noteq> 0" by (rule hk_nonzero)
+      thus "?h z \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
+    next
+      show "continuous_on UNIV ?h" by (intro continuous_intros)
+    qed
+    \<comment> \<open>const_{k(0)} is continuous.\<close>
+    have hconst_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>_. ?k 0)"
+      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+      by (rule top1_continuous_map_on_subspace_open_sets)
+         (use hk0_C in \<open>auto simp: top1_C_minus_0_def intro: continuous_intros\<close>)
+    \<comment> \<open>Assembly: homotopic h const → nulhomotopic.\<close>
+    have "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>_. ?k 0)"
+      unfolding top1_homotopic_on_def using hh_cont hconst_cont hH_top hH0 hH1
+      by (by100 blast)
+    thus ?thesis unfolding top1_nulhomotopic_on_def using hk0_C by (by100 blast)
+  qed
+  \<comment> \<open>Homotopy F(z,t) = z^n + t*\<Sum>a_j z^j from g=z^n to h, all in C-{0}.\<close>
+  let ?F = "\<lambda>(z::complex, t::real). z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)"
+  have hF_nonzero: "\<And>z t. cmod z = 1 \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+     z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0"
+    \<comment> \<open>Munkres inequality: |F| \<ge> 1 - t(\<Sum>|a_k|) > 0 since t \<le> 1 and \<Sum>|a_k| < 1.\<close>
+  proof -
+    fix z :: complex and t :: real
+    assume hz: "cmod z = 1" and ht: "t \<in> I_set"
+    have ht0: "t \<ge> 0" using ht unfolding top1_unit_interval_def by simp
+    have ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+    have hzn: "cmod (z^n) = 1" using hz by (simp add: norm_power)
+    have h_sum_bound: "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j))"
+    proof -
+      have "cmod (\<Sum>j<n. a j * z^j) \<le> (\<Sum>j<n. cmod (a j * z^j))"
+        by (rule norm_sum)
+      also have "\<dots> = (\<Sum>j<n. cmod (a j) * (cmod z)^j)"
+        by (simp add: norm_mult norm_power)
+      also have "\<dots> = (\<Sum>j<n. cmod (a j))" using hz by simp
+      finally show ?thesis .
+    qed
+    have ht_sum: "t * (\<Sum>j<n. cmod (a j)) < 1"
+    proof (cases "(\<Sum>j<n. cmod (a j)) = 0")
+      case True thus ?thesis by simp
+    next
+      case False
+      have hpos: "(\<Sum>j<n. cmod (a j)) > 0"
+        using False sum_nonneg[of "{..<n}" "\<lambda>j. cmod (a j)"] by simp
+      have "t * (\<Sum>j<n. cmod (a j)) \<le> 1 * (\<Sum>j<n. cmod (a j))"
+        using ht1 hpos by (simp add: mult_right_mono)
+      also have "\<dots> < 1" using hbound by simp
+      finally show ?thesis .
+    qed
+    have hF_abs: "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j))
+                \<ge> 1 - t * (\<Sum>j<n. cmod (a j))"
+    proof -
+      let ?A = "z^n"
+      let ?B = "complex_of_real t * (\<Sum>j<n. a j * z^j)"
+      have htri: "cmod ?A \<le> cmod (?A + ?B) + cmod ?B"
+        using norm_triangle_ineq4[of "?A + ?B" ?B] by (simp add: norm_minus_commute)
+      have hnormB: "cmod ?B = t * cmod (\<Sum>j<n. a j * z^j)"
+        by (simp add: norm_mult ht0)
+      have hB_le: "cmod ?B \<le> t * (\<Sum>j<n. cmod (a j))"
+        using hnormB h_sum_bound ht0 by (simp add: mult_left_mono)
+      show ?thesis using htri hzn hB_le by linarith
+    qed
+    have "1 - t * (\<Sum>j<n. cmod (a j)) > 0" using ht_sum by simp
+    hence "cmod (z^n + complex_of_real t * (\<Sum>j<n. a j * z^j)) > 0" using hF_abs by linarith
+    thus "z^n + complex_of_real t * (\<Sum>j<n. a j * z^j) \<noteq> 0" by auto
+  qed
+  have hF_cont: "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+                   (product_topology_on top1_S1_complex_topology I_top)
+                   top1_C_minus_0 top1_C_minus_0_topology ?F"
+  proof -
+    have hF_std: "continuous_on UNIV (\<lambda>p::complex\<times>real. fst p^n +
+        complex_of_real (snd p) * (\<Sum>j<n. a j * fst p^j))"
+      by (intro continuous_intros)
+    have hF_range: "\<And>p. p \<in> top1_S1_complex \<times> I_set \<Longrightarrow> ?F p \<in> top1_C_minus_0"
+    proof -
+      fix p assume hp: "p \<in> top1_S1_complex \<times> I_set"
+      have "cmod (fst p) = 1" using hp unfolding top1_S1_complex_def by (by100 auto)
+      have "snd p \<in> I_set" using hp by (by100 auto)
+      have "?F p \<noteq> 0" using hF_nonzero[OF \<open>cmod (fst p) = 1\<close> \<open>snd p \<in> I_set\<close>]
+        by (simp add: case_prod_beta)
+      thus "?F p \<in> top1_C_minus_0" unfolding top1_C_minus_0_def by (by100 blast)
+    qed
+    have hdom_eq: "product_topology_on top1_S1_complex_topology I_top
+        = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+            (top1_S1_complex \<times> I_set)"
+    proof -
+      have "product_topology_on top1_S1_complex_topology I_top
+          = product_topology_on
+              (subspace_topology UNIV (top1_open_sets::complex set set) top1_S1_complex)
+              (subspace_topology UNIV (top1_open_sets::real set set) I_set)"
+        unfolding top1_S1_complex_topology_def top1_unit_interval_topology_def by (rule refl)
+      also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+          (product_topology_on (top1_open_sets::complex set set) (top1_open_sets::real set set))
+          (top1_S1_complex \<times> I_set)"
+        by (rule Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
+      also have "\<dots> = subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set)
+          (top1_S1_complex \<times> I_set)"
+        by (simp add: product_topology_on_open_sets)
+      finally show ?thesis .
+    qed
+    have hF_cont_univ: "continuous_on UNIV ?F"
+      using hF_std by (simp add: case_prod_beta comp_def)
+    have "top1_continuous_map_on (top1_S1_complex \<times> I_set)
+        (subspace_topology UNIV (top1_open_sets :: (complex \<times> real) set set) (top1_S1_complex \<times> I_set))
+        top1_C_minus_0 (subspace_topology UNIV (top1_open_sets :: complex set set) top1_C_minus_0) ?F"
+      by (rule top1_continuous_map_on_subspace_open_sets[OF hF_range hF_cont_univ])
+    thus ?thesis unfolding hdom_eq top1_C_minus_0_topology_def .
+  qed
+  \<comment> \<open>g(z) = z^n is NOT nulhomotopic by Step 2, but would be nulhomotopic via F.\<close>
+  have hg_notnull: "\<not> top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+    using Theorem_56_1_step_2[OF hn] .
+  have hg_nulhomo: "top1_nulhomotopic_on top1_S1_complex top1_S1_complex_topology
+                       top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+  proof -
+    have hTR_c: "is_topology_on (UNIV::complex set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+      unfolding top1_S1_complex_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
+    have hTC0: "is_topology_on top1_C_minus_0 top1_C_minus_0_topology"
+      unfolding top1_C_minus_0_topology_def
+      by (rule subspace_topology_is_topology_on[OF hTR_c]) simp
+    \<comment> \<open>F(z,0) = z^n, F(z,1) = h(z).\<close>
+    have hF0: "\<forall>z\<in>top1_S1_complex. ?F (z, 0) = z^n"
+      by (simp add: case_prod_beta)
+    have hF1: "\<forall>z\<in>top1_S1_complex. ?F (z, 1) = ?h z"
+      by (simp add: case_prod_beta)
+    \<comment> \<open>z^n is continuous S^1 \<rightarrow> C-{0} (polynomial, nonvanishing on S^1).\<close>
+    have hg_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n)"
+      unfolding top1_S1_complex_topology_def top1_C_minus_0_topology_def
+      by (rule top1_continuous_map_on_subspace_open_sets)
+         (auto simp: top1_S1_complex_def top1_C_minus_0_def norm_power hn
+               intro: continuous_intros)
+    \<comment> \<open>h is continuous (from nulhomotopic).\<close>
+    have hh_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h"
+      using hh_nulhomo unfolding top1_nulhomotopic_on_def top1_homotopic_on_def by (by100 blast)
+    \<comment> \<open>F gives homotopy from z^n to h.\<close>
+    have hhom_g_h: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology (\<lambda>z. z^n) ?h"
+      unfolding top1_homotopic_on_def
+      using hg_cont hh_cont hF_cont hF0 hF1 by (by100 blast)
+    \<comment> \<open>Symmetry: h ≃ z^n.\<close>
+    have hhom_h_g: "top1_homotopic_on top1_S1_complex top1_S1_complex_topology
+        top1_C_minus_0 top1_C_minus_0_topology ?h (\<lambda>z. z^n)"
+      by (rule Lemma_51_1_homotopic_sym[OF hhom_g_h hTS1c])
+    \<comment> \<open>Transitivity: h nulhomotopic + h ≃ z^n \<Rightarrow> z^n nulhomotopic.\<close>
+    show ?thesis
+      by (rule nulhomotopic_homotopic_trans[OF hTS1c hTC0 hh_nulhomo hhom_h_g])
+  qed
+  show False using hg_notnull hg_nulhomo by blast
+qed
+
+(** Step 4: FTA general case: any monic polynomial has a root.
+    Reduction: substitute x = cy for large c to reduce to Step 3.
+    This is the statement of Theorem_56_1 proper in Munkres. **)
+theorem Theorem_56_1_FTA:
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
+  assumes "n > 0"
+  shows "\<exists>z. z^n + (\<Sum>k<n. a k * z^k) = 0"
+proof -
+  \<comment> \<open>Munkres Step 4: Choose c large so that \<Sum> |a_k/c^{n-k}| < 1.\<close>
+  \<comment> \<open>Substitute x = cy: equation becomes y^n + \<Sum> (a_k / c^{n-k}) y^k = 0.\<close>
+  \<comment> \<open>By Step 3, there's a root y_0 with |y_0| \<le> 1; then x_0 = c y_0 is a root.\<close>
+  \<comment> \<open>Pick c = max 1 (1 + 2 * n * \<Sum> cmod (a k)). Then c \<ge> 1 and c > 2 n M where
+      M = \<Sum> cmod (a k), so each term cmod(a k)/c^(n-k) \<le> cmod(a k)/c < M/(2nM) = 1/(2n)
+      when M > 0, giving sum < 1/2 < 1. When M = 0 each cmod(a k) = 0, sum = 0 < 1.\<close>
+  define M where "M = (\<Sum>k<n. cmod (a k))"
+  define c where "c = M + 1"
+  have hM: "M \<ge> 0" unfolding M_def by (simp add: sum_nonneg)
+  have hc: "c > 0" unfolding c_def using hM by simp
+  have hc_ge1: "c \<ge> 1" unfolding c_def using hM by simp
+  have hc_pow_ge: "\<forall>k<n. c ^ (n - k) \<ge> c"
+  proof (intro allI impI)
+    fix k assume hk: "k < n"
+    have hge1: "n - k \<ge> 1" using hk by simp
+    have "c ^ 1 \<le> c ^ (n - k)"
+      by (rule power_increasing[OF hge1 hc_ge1])
+    thus "c ^ (n - k) \<ge> c" by simp
+  qed
+  have hsum_small: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1"
+  proof -
+    have h_each: "\<forall>k<n. cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
+    proof (intro allI impI)
+      fix k assume hk: "k < n"
+      have hcpos: "c ^ (n - k) > 0" using hc by (simp add: zero_less_power)
+      have hcpow_ge_c: "c ^ (n - k) \<ge> c" using hc_pow_ge hk by blast
+      have hak: "cmod (a k) \<ge> 0" by simp
+      show "cmod (a k) / c ^ (n - k) \<le> cmod (a k) / c"
+        using hc hcpos hcpow_ge_c hak by (simp add: frac_le)
+    qed
+    have h_sum_le: "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) \<le> (\<Sum>k<n. cmod (a k) / c)"
+      by (rule sum_mono, simp add: h_each)
+    also have "(\<Sum>k<n. cmod (a k) / c) = M / c"
+      unfolding M_def by (simp add: sum_divide_distrib)
+    also have "\<dots> < 1"
+    proof -
+      have "M / c < 1 \<longleftrightarrow> M < c" using hc by (simp add: divide_less_eq)
+      moreover have "M < c" unfolding c_def by simp
+      ultimately show ?thesis by blast
+    qed
+    finally show "(\<Sum>k<n. cmod (a k) / c ^ (n - k)) < 1" .
+  qed
+  \<comment> \<open>New coefficients a'_k = a_k / c^{n-k}.\<close>
+  let ?a' = "\<lambda>k. a k / complex_of_real (c ^ (n - k))"
+  have h_cmod_eq: "\<forall>k<n. cmod (?a' k) = cmod (a k) / c ^ (n - k)"
+    using hc by (simp add: norm_divide norm_power)
+  have hbound': "(\<Sum>k<n. cmod (?a' k)) < 1"
+    using h_cmod_eq hsum_small by simp
+  obtain y where hy: "cmod y \<le> 1" and hroot': "y^n + (\<Sum>k<n. ?a' k * y^k) = 0"
+    using Theorem_56_1_step_3[OF assms hbound'] by blast
+  let ?x = "complex_of_real c * y"
+  let ?cc = "complex_of_real c"
+  have hcc_nz: "?cc \<noteq> 0" using hc by simp
+  \<comment> \<open>Term-wise identity: c^n * (a k / c^(n-k) * y^k) = a k * (c*y)^k when k<n.\<close>
+  have h_term: "\<And>k. k < n \<Longrightarrow> ?cc^n * (?a' k * y^k) = a k * ?x^k"
+  proof -
+    fix k :: nat assume hk: "k < n"
+    have hpow_split: "?cc^n = ?cc^(n-k) * ?cc^k"
+      using hk by (simp add: power_add[symmetric])
+    have hpow_eq: "?cc^(n-k) = complex_of_real (c^(n-k))" by simp
+    have "?cc^n * (?a' k * y^k) = ?cc^(n-k) * ?cc^k * (a k / complex_of_real (c^(n-k)) * y^k)"
+      using hpow_split by simp
+    also have "\<dots> = ?cc^k * (a k * y^k)"
+      using hpow_eq hcc_nz by (simp add: field_simps power_not_zero)
+    also have "\<dots> = a k * ?x^k"
+      by (simp add: power_mult_distrib mult.commute mult.left_commute)
+    finally show "?cc^n * (?a' k * y^k) = a k * ?x^k" .
+  qed
+  have h_cn_sum: "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. a k * ?x^k)"
+  proof -
+    have "?cc^n * (\<Sum>k<n. ?a' k * y^k) = (\<Sum>k<n. ?cc^n * (?a' k * y^k))"
+      by (simp add: sum_distrib_left)
+    also have "\<dots> = (\<Sum>k<n. a k * ?x^k)"
+      by (rule sum.cong, simp, rule h_term, simp)
+    finally show ?thesis .
+  qed
+  have hxn_eq: "?x^n = ?cc^n * y^n" by (simp add: power_mult_distrib)
+  \<comment> \<open>Multiply root equation by c^n to get x-root equation.\<close>
+  have "?cc^n * (y^n + (\<Sum>k<n. ?a' k * y^k)) = 0" using hroot' by simp
+  hence "?cc^n * y^n + ?cc^n * (\<Sum>k<n. ?a' k * y^k) = 0"
+    by (simp add: distrib_left)
+  hence "?x^n + (\<Sum>k<n. a k * ?x^k) = 0"
+    using hxn_eq h_cn_sum by simp
+  thus ?thesis by blast
+qed
+
+text \<open>Original form (FTA for arbitrary polynomials with nonzero leading coefficient).\<close>
+corollary Theorem_56_1_FTA_leading:
+  fixes a :: "nat \<Rightarrow> complex" and n :: nat
+  assumes "n > 0" and "a n \<noteq> 0"
+  shows "\<exists>z. (\<Sum>k\<le>n. a k * z^k) = 0"
+proof -
+  \<comment> \<open>Divide by a n to get monic form.\<close>
+  let ?b = "\<lambda>k. a k / a n"
+  have hbn: "?b n = 1" using assms(2) by simp
+  have "\<exists>z. z^n + (\<Sum>k<n. ?b k * z^k) = 0"
+    by (rule Theorem_56_1_FTA[OF assms(1)])
+  then obtain z where hroot_monic: "z^n + (\<Sum>k<n. ?b k * z^k) = 0"
+    by blast
+  \<comment> \<open>This z is a root of the original polynomial too.\<close>
+  have h_split: "(\<Sum>k\<le>n. a k * z^k) = (\<Sum>k<n. a k * z^k) + a n * z^n"
+    by (simp add: lessThan_Suc_atMost[symmetric] sum.lessThan_Suc)
+  have h_factor: "(\<Sum>k<n. a k * z^k) = a n * (\<Sum>k<n. ?b k * z^k)"
+    by (simp add: sum_distrib_left assms(2) field_simps)
+  have "(\<Sum>k\<le>n. a k * z^k) = a n * (z^n + (\<Sum>k<n. ?b k * z^k))"
+    using h_split h_factor by (simp add: distrib_left mult.commute)
+  thus ?thesis using hroot_monic assms(2) by fastforce
+qed
+
+
 
 text \<open>Specialized version for S^1 \<rightarrow> S^1.\<close>
 lemma nulhomotopic_trivializes_loops:
