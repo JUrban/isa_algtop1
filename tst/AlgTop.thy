@@ -9772,12 +9772,15 @@ proof
   \<comment> \<open>S^1 is a retract of C - {0} via r(z) = z/|z|. So j: S^1 \<hookrightarrow> C-{0} induces
      j_* injective. f = z^n induces f_* injective (Step 1).
      g = j \<circ> f: S^1 \<rightarrow> C-{0} induces g_* = j_* \<circ> f_* injective, hence nontrivial.\<close>
-  \<comment> \<open>j_* injective: retraction r(z)=z/|z| of C-{0} onto S^1 gives:
-     f ≃ g in C-{0} \<Rightarrow> r\<circ>f ≃ r\<circ>g in S^1, and r|S^1 = id.\<close>
+  \<comment> \<open>j_* injective: retraction r(z)=z/|z| of C-{0} onto S^1.\<close>
   have hj_inj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
       \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+    sorry \<comment> \<open>Retraction r(z)=z/|z|: r continuous C-{0}\<rightarrow>S^1, r|S^1=id.
+           f ≃ g in C-{0} \<Rightarrow> r\<circ>f ≃ r\<circ>g in S^1 (cont preserves hom).
+           r\<circ>f = f, r\<circ>g = g since |f(s)|=|g(s)|=1 on S^1.
+           Needs: r continuous (division by norm), loop_agree_on_I.\<close>
   \<comment> \<open>g_* nontrivial contradicts g being nulhomotopic.\<close>
   \<comment> \<open>z^n nulhomotopic in C-{0} \<Rightarrow> for all loops f at 1, z^n \<circ> f ≃ const in C-{0}.
      By j_inj, z^n \<circ> f ≃ const in S^1. But z^n not nulhomotopic in S^1 (Step 1).\<close>
