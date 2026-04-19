@@ -14955,13 +14955,25 @@ lemma stereographic_proj_homeomorphism:
   sorry
 
 text \<open>Key consequence: S^2 minus any point is homeomorphic to R^2, hence simply connected.\<close>
+lemma R2_simply_connected:
+  "top1_simply_connected_on (UNIV :: (real \<times> real) set)
+     (product_topology_on top1_open_sets top1_open_sets)"
+  sorry
+
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
+  \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic projection. R^2 is simply connected (convex).\<close>
   sorry
 
 text \<open>S^2 minus two distinct points is not simply connected (homeomorphic to R^2 - {0}).\<close>
+lemma R2_minus_point_not_simply_connected:
+  "p \<in> (UNIV :: (real \<times> real) set) \<Longrightarrow>
+   \<not> top1_simply_connected_on (UNIV - {p})
+     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))"
+  sorry
+
 lemma S2_minus_two_points_not_simply_connected:
   assumes "a \<in> top1_S2" and "b \<in> top1_S2" and "a \<noteq> b"
   shows "\<not> top1_simply_connected_on (top1_S2 - {a, b})
