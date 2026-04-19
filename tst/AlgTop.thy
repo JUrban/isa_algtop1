@@ -15394,23 +15394,78 @@ lemma R2_minus_origin_not_simply_connected:
 proof
   assume hsc: "top1_simply_connected_on (UNIV - {(0::real, 0::real)})
      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
-  \<comment> \<open>If R^2-{0} were simply connected, the inclusion S^1 \<hookrightarrow> R^2-{0} would be nulhomotopic.
-     (Since S^1 \<subseteq> R^2-{0} and the inclusion is continuous, and in a simply connected space
-     all loops are trivial, hence the inclusion trivializes all loops, hence is nulhomotopic.)\<close>
-  \<comment> \<open>Actually: simply connected means all loops at any basepoint are trivial.
-     The inclusion j: S^1 \<rightarrow> R^2-{0} is nulhomotopic if and only if j_* is trivial.
-     j_* trivial means: for all loops f at (1,0) in S^1, j\<circ>f is contractible in R^2-{0}.
-     Since j is the inclusion, j\<circ>f = f as a loop in R^2-{0}.
-     If R^2-{0} is simply connected, all loops in it are contractible, so j_* is trivial.\<close>
-  \<comment> \<open>To make j nulhomotopic (as a map, not just loop-wise):
-     We need a homotopy H: S^1 \<times> I \<rightarrow> R^2-{0} with H(-,0)=j, H(-,1)=const.
-     This follows from the simply connected space having contractible path components.\<close>
-  have "top1_nulhomotopic_on top1_S1 top1_S1_topology
-      (UNIV - {(0, 0)})
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
-      (\<lambda>x. x)"
+  let ?TR2_0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0::real, 0::real)})"
+  \<comment> \<open>Simply connected means all loops at (1,0) are contractible in R^2-{0}.\<close>
+  have h10_R2: "(1::real, 0::real) \<in> UNIV - {(0, 0)}" by simp
+  have h_all_trivial: "\<forall>f. top1_is_loop_on (UNIV - {(0::real, 0)}) ?TR2_0 (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on (UNIV - {(0, 0)}) ?TR2_0 (1, 0) (1, 0) f (top1_constant_path (1, 0))"
+    using hsc h10_R2 unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>In particular, the standard loop p0(s) = (cos 2\<pi>s, sin 2\<pi>s) on S^1 \<subseteq> R^2-{0}
+     is a loop at (1,0) in R^2-{0}. By simply connected, it's contractible.\<close>
+  let ?p0 = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
+  have hp0_loop_R2: "top1_is_loop_on (UNIV - {(0, 0)}) ?TR2_0 (1::real, 0::real) ?p0"
     sorry
-  thus False using Corollary_55_4_inclusion_not_nulhomotopic by (by100 blast)
+  have hp0_contractible: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?TR2_0 (1, 0) (1, 0)
+      ?p0 (top1_constant_path (1, 0))"
+    using h_all_trivial hp0_loop_R2 by (by100 blast)
+  \<comment> \<open>But p0 is also a loop on S^1 (since cos^2 + sin^2 = 1). Under the inclusion S^1 \<hookrightarrow> R^2-{0},
+     p0 contractible in R^2-{0} implies p0 contractible in S^1 (by retraction r(x)=x/|x|).\<close>
+  \<comment> \<open>Then π₁(S¹) would be trivial. But π₁(S¹) ≅ ℤ (Theorem_54_5). Contradiction.\<close>
+  \<comment> \<open>Actually: use the retraction r(x) = x/|x| to transfer the homotopy to S^1.\<close>
+  have hp0_contractible_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+      ?p0 (top1_constant_path (1, 0))"
+    sorry
+  \<comment> \<open>p0 is the standard generator of π₁(S¹). Its contractibility gives π₁(S¹) = 0.\<close>
+  \<comment> \<open>But π₁(S¹) ≅ ℤ ≠ 0 (Theorem 54.5). Actually we can derive False more directly:
+     the n-fold winding (p0 for n=1) being contractible contradicts the covering theory
+     argument from FTA Step 2 (hnontrivial).\<close>
+  \<comment> \<open>Use Theorem_54_3: lift of p0 from 0 ends at 1. Lift of const ends at 0.
+     If they're homotopic, endpoints equal by Thm 54.3. So 1=0. Contradiction.\<close>
+  \<comment> \<open>Transfer p0 contractibility from S^1 to the covering R \<rightarrow> S^1.
+     Lift of p0: s \<mapsto> s, ending at 1.
+     Lift of const: s \<mapsto> 0, ending at 0.
+     By Thm 54.3, if p0 ≃ const then 1 = 0. Contradiction.\<close>
+  have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    by (rule Theorem_53_1)
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    unfolding top1_S1_topology_def
+    by (rule subspace_topology_is_topology_on[OF
+          product_topology_on_is_topology_on[OF
+            top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+            simplified]]) simp
+  have hp0: "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+  have h0R: "(0::real) \<in> (UNIV::real set)" by simp
+  have h10S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+  \<comment> \<open>p0 as a loop on S^1: ?p0(s) = (cos 2\<pi>s, sin 2\<pi>s) = top1_R_to_S1(s).\<close>
+  have hp0_eq: "\<And>s. ?p0 s = top1_R_to_S1 s"
+    unfolding top1_R_to_S1_def by simp
+  \<comment> \<open>p0 = R_to_S1 \<circ> id. Lift of p0 from 0 is id: s \<mapsto> s, ending at 1.\<close>
+  have hp0_loop_S1: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?p0"
+    sorry
+  \<comment> \<open>If p0 ≃ const on S^1, then by Thm 54.3, lift endpoints agree: 1 = 0.\<close>
+  have hft_p0: "top1_is_path_on UNIV top1_open_sets 0 1 id"
+  proof -
+    have hid_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets id"
+      sorry
+    show ?thesis unfolding top1_is_path_on_def using hid_cont by simp
+  qed
+  have hft_p0_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (id s) = ?p0 s"
+    using hp0_eq by simp
+  have hft_const: "top1_is_path_on UNIV top1_open_sets 0 0 (\<lambda>_. 0::real)"
+    unfolding top1_is_path_on_def
+    using top1_continuous_map_on_const[OF top1_unit_interval_topology_is_topology_on
+      top1_open_sets_is_topology_on_UNIV UNIV_I] by simp
+  have hft_const_lift: "\<forall>s\<in>I_set. top1_R_to_S1 ((\<lambda>_. 0::real) s) = top1_constant_path (1, 0) s"
+    unfolding top1_constant_path_def top1_R_to_S1_def by simp
+  have hconst_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0))"
+    using top1_constant_path_is_loop[OF hTS1 h10S1] unfolding top1_is_loop_on_def .
+  have hp0_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?p0"
+    using hp0_loop_S1 unfolding top1_is_loop_on_def .
+  have "1 = (0::real)"
+    using conjunct1[OF Theorem_54_3[OF hcov top1_open_sets_is_topology_on_UNIV hTS1
+      h0R hp0 hp0_path hconst_path hp0_contractible_S1
+      hft_p0 hft_p0_lift hft_const hft_const_lift]] .
+  thus False by simp
 qed
 
 lemma R2_minus_point_not_simply_connected:
