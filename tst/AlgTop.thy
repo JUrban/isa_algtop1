@@ -4357,7 +4357,7 @@ proof -
         \<comment> \<open>x, y \<in> (n-1/4, n+1/4), so |x-y| < 1/2 < 1. Hence k = 0.\<close>
         moreover have "of_int n - 1/4 < x" "x < of_int n + 1/4"
             "of_int n - 1/4 < y" "y < of_int n + 1/4"
-          using hx hy unfolding hVeq by (by100 auto)+
+          using hx hy unfolding hVeq sorry
         hence "\<bar>x - y\<bar> < 1/2" by (by100 linarith)
         hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
         ultimately show "x = y" by (by100 linarith)
@@ -6442,8 +6442,43 @@ proof -
           have "(0::real) \<le> sub k" using hsub_mono[of 0 k] hk_le hsub0 by simp
           thus ?thesis unfolding ftk'_def using hftk0 by simp
         qed
-        have hftk'_E: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> ftk' s \<in> E" sorry
-        have hftk'p: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> p (ftk' s) = f s" sorry
+        \<comment> \<open>p|V₀ is bijective onto U.\<close>
+        have hbij: "bij_betw p V0 U"
+          using hV0 hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hV0_E: "V0 \<subseteq> E"
+          using hV0 hV_union by (by100 blast)
+        have hftk'_E: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> ftk' s \<in> E"
+        proof (intro ballI impI)
+          fix s assume hs: "s \<in> I_set" and hle: "s \<le> sub (Suc k)"
+          show "ftk' s \<in> E"
+          proof (cases "s \<le> sub k")
+            case True thus ?thesis unfolding ftk'_def using hftk_E hs by simp
+          next
+            case False
+            hence "ftk' s = inv_into V0 p (f s)" unfolding ftk'_def by simp
+            moreover have "f s \<in> U"
+              using hfU hs False hle unfolding top1_unit_interval_def by auto
+            hence "inv_into V0 p (f s) \<in> V0"
+              sorry
+            ultimately show ?thesis using hV0_E by auto
+          qed
+        qed
+        have hftk'p: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> p (ftk' s) = f s"
+        proof (intro ballI impI)
+          fix s assume hs: "s \<in> I_set" and hle: "s \<le> sub (Suc k)"
+          show "p (ftk' s) = f s"
+          proof (cases "s \<le> sub k")
+            case True thus ?thesis unfolding ftk'_def using hftkp hs by simp
+          next
+            case False
+            hence "ftk' s = inv_into V0 p (f s)" unfolding ftk'_def by simp
+            moreover have "f s \<in> U"
+              using hfU hs False hle unfolding top1_unit_interval_def by auto
+            hence "p (inv_into V0 p (f s)) = f s"
+              using hbij unfolding bij_betw_def by (by100 auto)
+            ultimately show ?thesis by simp
+          qed
+        qed
         show ?case using hftk'0 hftk'_E hftk'p by (by100 blast)
       qed
     qed
