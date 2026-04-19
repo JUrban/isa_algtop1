@@ -5375,7 +5375,7 @@ proof -
         hence "t \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S}" using hy by (by100 simp)
         hence "t \<in> \<Union>?\<V>" using hV_union by (by100 blast)
         then obtain m :: int where htm: "of_int m + (1/2::real) < t" "t < of_int m + (1::real)"
-          by (by100 auto)
+          by auto
         let ?t' = "t + of_int (nn - m)"
         have "of_int nn + (1/2::real) < ?t'" "?t' < of_int nn + (1::real)"
           using htm by (by100 linarith)+
@@ -10671,7 +10671,7 @@ proof -
             have ht': "0 \<le> snd p" "snd p \<le> 1" using hp unfolding top1_unit_interval_def by (by100 auto)+
             have h0t: "0 \<le> 1 - snd p" using ht' by (by100 linarith)
             have hfs: "f (fst p) \<in> I_set \<times> I_set" using hfr hp by (by100 auto)
-            have hfa: "0 \<le> fst (f (fst p))" "fst (f (fst p)) \<le> 1" using hfs unfolding top1_unit_interval_def by (by100 auto)+
+            have hfa: "0 \<le> fst (f (fst p))" "fst (f (fst p)) \<le> 1" using hfs unfolding top1_unit_interval_def by auto+
             have hfb: "0 \<le> snd (f (fst p))" "snd (f (fst p)) \<le> 1" using hfs unfolding top1_unit_interval_def by (by100 auto)+
             have hxa: "0 \<le> fst x0" "fst x0 \<le> 1" using hx0 unfolding top1_unit_interval_def by (by100 auto)+
             have hxb: "0 \<le> snd x0" "snd x0 \<le> 1" using hx0 unfolding top1_unit_interval_def by (by100 auto)+
@@ -11587,7 +11587,80 @@ proof
     \<comment> \<open>If cis(2\<pi>ns) \<simeq> const_1 on S^1_complex, transfer to: w_n \<simeq> const on S^1.\<close>
     have hwn_const: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
         ?wn (top1_constant_path (1, 0))"
-      sorry
+    proof -
+      \<comment> \<open>The map \<psi>(z) = (Re z, Im z) is a homeomorphism S^1_complex \<rightarrow> S^1.
+         cis(2\<pi>ns) = \<psi>\<inverse>(w_n(s)), so w_n = \<psi> \<circ> cis(2\<pi>ns).
+         hzp0_const gives cis(2\<pi>ns) \<simeq> const_1 in S^1_complex.
+         Applying \<psi>: w_n \<simeq> \<psi>(const_1) = const_{(1,0)} in S^1.\<close>
+      let ?\<psi> = "\<lambda>z::complex. (Re z, Im z)"
+      \<comment> \<open>w_n = \<psi> \<circ> (\<lambda>s. z^n \<circ> p0 s) since R_to_S1(ns) = (cos 2\<pi>ns, sin 2\<pi>ns) = (Re(cis(2\<pi>ns)), Im(cis(2\<pi>ns))).\<close>
+      have hwn_eq: "\<And>s. ?wn s = ?\<psi> (((\<lambda>z. z^n) \<circ> ?p0) s)"
+        unfolding top1_R_to_S1_def comp_def
+        by (simp add: DeMoivre algebra_simps)
+      have hconst_eq: "\<And>s. top1_constant_path (1::real, 0::real) s = ?\<psi> (top1_constant_path (1::complex) s)"
+        unfolding top1_constant_path_def by simp
+      \<comment> \<open>\<psi> is continuous S^1_complex \<rightarrow> S^1.\<close>
+      have h\<psi>_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+          top1_S1 top1_S1_topology ?\<psi>"
+      proof -
+        have h\<psi>_map: "\<And>z. z \<in> top1_S1_complex \<Longrightarrow> ?\<psi> z \<in> top1_S1"
+          unfolding top1_S1_complex_def top1_S1_def
+          by (auto simp: cmod_def)
+        have h\<psi>_cont_univ: "continuous_on UNIV (\<lambda>z::complex. (Re z, Im z))"
+          by (intro continuous_intros)
+        \<comment> \<open>For open V in top1_S1_topology, preimage under \<psi> is open in top1_S1_complex_topology.\<close>
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix z assume "z \<in> top1_S1_complex" thus "?\<psi> z \<in> top1_S1" by (rule h\<psi>_map)
+        next
+          fix V assume hV: "V \<in> top1_S1_topology"
+          then obtain W where hWo: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+              and hVeq: "V = top1_S1 \<inter> W"
+            using hV unfolding top1_S1_topology_def subspace_topology_def by (by100 auto)
+          \<comment> \<open>W is open in R^2. ?\<psi>\<inverse>(W) is open in C (by continuity of Re, Im).\<close>
+          have hWopen: "open W"
+          proof -
+            have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+              using hWo product_topology_on_open_sets_real2 by (by100 metis)
+            thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+          qed
+          have hpre_open: "open (?\<psi> -` W)"
+          proof -
+            have "open (?\<psi> -` W \<inter> UNIV)"
+              using iffD1[OF continuous_on_open_vimage[OF open_UNIV] h\<psi>_cont_univ] hWopen by (by100 blast)
+            thus ?thesis by simp
+          qed
+          have hpre_os: "?\<psi> -` W \<in> top1_open_sets"
+            using hpre_open unfolding top1_open_sets_def by (by100 blast)
+          have "{z \<in> top1_S1_complex. ?\<psi> z \<in> V} = top1_S1_complex \<inter> (?\<psi> -` W)"
+            unfolding hVeq using h\<psi>_map by (by100 auto)
+          thus "{z \<in> top1_S1_complex. ?\<psi> z \<in> V} \<in> top1_S1_complex_topology"
+            unfolding top1_S1_complex_topology_def subspace_topology_def
+            using hpre_os by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Apply \<psi> to the homotopy: \<psi>\<circ>(z^n \<circ> p0) \<simeq> \<psi>\<circ>const_1 in S^1.\<close>
+      have hTS1_loc: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF
+              product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+                simplified]]) simp
+      have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+        unfolding top1_S1_complex_topology_def
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+           (simp add: top1_S1_complex_def)
+      have hpsi_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology
+          (?\<psi> 1) (?\<psi> 1) (?\<psi> \<circ> ((\<lambda>z. z^n) \<circ> ?p0)) (?\<psi> \<circ> top1_constant_path 1)"
+        by (rule continuous_preserves_path_homotopic[OF hTS1c hTS1_loc h\<psi>_cont hzp0_const])
+      \<comment> \<open>Simplify: \<psi>(1) = (1,0), \<psi>\<circ>(z^n\<circ>p0) = wn, \<psi>\<circ>const_1 = const_{(1,0)}.\<close>
+      have h\<psi>1: "?\<psi> (1::complex) = (1::real, 0::real)" by simp
+      have hwn_psi: "?\<psi> \<circ> ((\<lambda>z. z^n) \<circ> ?p0) = ?wn"
+        by (rule ext) (simp add: hwn_eq)
+      have hconst_psi: "?\<psi> \<circ> top1_constant_path (1::complex) = top1_constant_path (1::real, 0::real)"
+        by (rule ext) (simp add: top1_constant_path_def)
+      show ?thesis using hpsi_hom unfolding h\<psi>1 hwn_psi hconst_psi .
+    qed
     \<comment> \<open>Lift of w_n from 0: s \<mapsto> n*s, a path in R from 0 to n.\<close>
     have hft_wn: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (real n) (\<lambda>s. real n * s)"
       unfolding top1_is_path_on_def
