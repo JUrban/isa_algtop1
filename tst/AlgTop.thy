@@ -4521,7 +4521,26 @@ proof -
       ultimately show "openin_on UNIV top1_open_sets V"
         unfolding openin_on_def top1_open_sets_def by (by100 blast)
     qed
-    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+    proof (intro ballI impI)
+      fix V V' assume "V \<in> ?\<V>" "V' \<in> ?\<V>" "V \<noteq> V'"
+      obtain n where hV: "V = {x::real. of_int n + 1/4 < x \<and> x < of_int n + 3/4}"
+        using \<open>V \<in> ?\<V>\<close> by auto
+      obtain m where hV': "V' = {x::real. of_int m + 1/4 < x \<and> x < of_int m + 3/4}"
+        using \<open>V' \<in> ?\<V>\<close> by auto
+      have hnm: "n \<noteq> m" using \<open>V \<noteq> V'\<close> hV hV' by (by100 force)
+      show "V \<inter> V' = {}"
+      proof (rule ccontr)
+        assume "V \<inter> V' \<noteq> {}"
+        then obtain x where "x \<in> V" "x \<in> V'" by (by100 blast)
+        hence "of_int n + (1/4::real) < x" "x < of_int n + (3/4::real)"
+            "of_int m + (1/4::real) < x" "x < of_int m + (3/4::real)"
+          using hV hV' by (by100 blast)+
+        hence "\<bar>of_int n - of_int m\<bar> < (1::real)" by (by100 linarith)
+        hence "n = m" by (by100 linarith)
+        thus False using hnm by (by100 blast)
+      qed
+    qed
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>" sorry
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
@@ -4559,7 +4578,26 @@ proof -
       ultimately show "openin_on UNIV top1_open_sets V"
         unfolding openin_on_def top1_open_sets_def by (by100 blast)
     qed
-    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+    proof (intro ballI impI)
+      fix V V' assume "V \<in> ?\<V>" "V' \<in> ?\<V>" "V \<noteq> V'"
+      obtain n where hV: "V = {x::real. of_int n + 1/2 < x \<and> x < of_int n + 1}"
+        using \<open>V \<in> ?\<V>\<close> by auto
+      obtain m where hV': "V' = {x::real. of_int m + 1/2 < x \<and> x < of_int m + 1}"
+        using \<open>V' \<in> ?\<V>\<close> by auto
+      have hnm: "n \<noteq> m" using \<open>V \<noteq> V'\<close> hV hV' by (by100 force)
+      show "V \<inter> V' = {}"
+      proof (rule ccontr)
+        assume "V \<inter> V' \<noteq> {}"
+        then obtain x where "x \<in> V" "x \<in> V'" by (by100 blast)
+        hence "of_int n + (1/2::real) < x" "x < of_int n + (1::real)"
+            "of_int m + (1/2::real) < x" "x < of_int m + (1::real)"
+          using hV hV' by (by100 blast)+
+        hence "\<bar>of_int n - of_int m\<bar> < (1::real)" by (by100 linarith)
+        hence "n = m" by (by100 linarith)
+        thus False using hnm by (by100 blast)
+      qed
+    qed
     have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S} = \<Union>?\<V>" sorry
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
