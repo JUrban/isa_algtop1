@@ -7051,6 +7051,7 @@ lemma homotopy_lifting_rectangle_step:
       and hUec: "top1_evenly_covered_on E TE B TB p U"
       and hC_conn: "top1_connected_on (A \<inter> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<inter> R))"
       and hC_ne: "A \<inter> R \<noteq> {}"
+      and hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
   shows "\<exists>Ftilde. top1_continuous_map_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) E TE Ftilde
       \<and> (\<forall>x\<in>A \<union> R. p (Ftilde x) = F x) \<and> (\<forall>x\<in>A. Ftilde x = Ftilde_A x)"
 proof -
@@ -7201,9 +7202,30 @@ proof -
     have hTAR_: "is_topology_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R))"
       by (rule subspace_topology_is_topology_on[OF hTII hAR_sub])
     have hA_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) A"
-      using hA_closed unfolding closedin_on_def subspace_topology_def sorry
+    proof -
+      have hAsub: "A \<subseteq> A \<union> R" by (by100 blast)
+      have hcomp: "(A \<union> R) - A = R - A" by (by100 blast)
+      have "(I_set \<times> I_set) - A \<in> II_topology"
+        using hA_closed unfolding closedin_on_def by (by100 blast)
+      hence "(A \<union> R) \<inter> ((I_set \<times> I_set) - A) \<in> subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)"
+        unfolding subspace_topology_def by (by100 blast)
+      moreover have "(A \<union> R) \<inter> ((I_set \<times> I_set) - A) = (A \<union> R) - A"
+        using hAR_sub by (by100 blast)
+      ultimately have "(A \<union> R) - A \<in> subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)" by simp
+      thus ?thesis unfolding closedin_on_def using hAsub by (by100 blast)
+    qed
     have hR_cl_AR: "closedin_on (A \<union> R) (subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)) R"
-      using hR_closed unfolding closedin_on_def subspace_topology_def sorry
+    proof -
+      have hRsub: "R \<subseteq> A \<union> R" by (by100 blast)
+      have "(I_set \<times> I_set) - R \<in> II_topology"
+        using hR_closed unfolding closedin_on_def by (by100 blast)
+      hence "(A \<union> R) \<inter> ((I_set \<times> I_set) - R) \<in> subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)"
+        unfolding subspace_topology_def by (by100 blast)
+      moreover have "(A \<union> R) \<inter> ((I_set \<times> I_set) - R) = (A \<union> R) - R"
+        using hAR_sub by (by100 blast)
+      ultimately have "(A \<union> R) - R \<in> subspace_topology (I_set \<times> I_set) II_topology (A \<union> R)" by simp
+      thus ?thesis unfolding closedin_on_def using hRsub by (by100 blast)
+    qed
     have hAR_union: "A \<union> R = A \<union> R" by simp
     have hrange: "\<forall>x\<in>A \<union> R. Ftilde x \<in> E"
     proof
@@ -7264,8 +7286,66 @@ proof -
           = subspace_topology (I_set \<times> I_set) II_topology R"
         by (rule subspace_topology_trans) (by100 blast)
       \<comment> \<open>inv_into V0 p \<circ> F is continuous on R: composition of continuous functions.\<close>
+      \<comment> \<open>inv_into V0 p continuous U \<rightarrow> V0 (from homeomorphism).\<close>
+      have hinv_cont: "top1_continuous_map_on U (subspace_topology B TB U)
+          V0 (subspace_topology E TE V0) (inv_into V0 p)"
+        using hVh hV0 unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>F restricted to R is continuous R \<rightarrow> U.\<close>
+      have hF_R_cont: "top1_continuous_map_on R (subspace_topology (I_set \<times> I_set) II_topology R)
+          U (subspace_topology B TB U) F"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> R" thus "F x \<in> U" using hF_R by (by100 blast)
+      next
+        fix V assume "V \<in> subspace_topology B TB U"
+        then obtain W where hW: "W \<in> TB" and hVeq: "V = U \<inter> W"
+          unfolding subspace_topology_def by (by100 auto)
+        have hR_II: "R \<subseteq> I_set \<times> I_set" using hAR_sub by (by100 blast)
+        have "{x\<in>R. F x \<in> V} = R \<inter> {x\<in>I_set \<times> I_set. F x \<in> W}"
+        proof -
+          have "\<And>x. x \<in> R \<Longrightarrow> F x \<in> U" using hF_R by (by100 blast)
+          thus ?thesis unfolding hVeq using hR_II by auto
+        qed
+        moreover have "{x\<in>I_set \<times> I_set. F x \<in> W} \<in> II_topology"
+          using hF_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{x\<in>R. F x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology R"
+          unfolding subspace_topology_def by (by100 blast)
+      qed
+      \<comment> \<open>Compose: inv_into V0 p \<circ> F continuous R \<rightarrow> V0 \<subseteq> E.\<close>
+      have hcomp: "top1_continuous_map_on R (subspace_topology (I_set \<times> I_set) II_topology R)
+          V0 (subspace_topology E TE V0) (inv_into V0 p \<circ> F)"
+        by (rule top1_continuous_map_on_comp[OF hF_R_cont hinv_cont])
+      \<comment> \<open>Lift from V0-topology to E-topology.\<close>
+      have hV0_E: "V0 \<subseteq> E" using hVo hV0 unfolding openin_on_def by (by100 blast)
       show ?thesis unfolding hTsub top1_continuous_map_on_def
-        sorry
+      proof (intro conjI ballI)
+        fix x assume "x \<in> R"
+        have "Ftilde x = inv_into V0 p (F x)" using hR_eq \<open>x \<in> R\<close> by (by100 blast)
+        moreover have "(inv_into V0 p \<circ> F) x \<in> V0"
+          using hcomp \<open>x \<in> R\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "Ftilde x \<in> E" using hV0_E by (by100 auto)
+      next
+        fix V assume hV: "V \<in> TE"
+        have hVV0: "V \<inter> V0 \<in> subspace_topology E TE V0"
+          unfolding subspace_topology_def using hV by (by100 blast)
+        have heq: "{x\<in>R. Ftilde x \<in> V} = {x\<in>R. (inv_into V0 p \<circ> F) x \<in> V \<inter> V0}"
+        proof (rule set_eqI, simp add: comp_def)
+          fix x show "(x \<in> R \<and> Ftilde x \<in> V) = (x \<in> R \<and> inv_into V0 p (F x) \<in> V \<and> inv_into V0 p (F x) \<in> V0)"
+          proof (cases "x \<in> R")
+            case False thus ?thesis by simp
+          next
+            case True
+            have "Ftilde x = inv_into V0 p (F x)" using hR_eq True by (by100 blast)
+            moreover have "inv_into V0 p (F x) \<in> V0"
+              using hcomp True unfolding top1_continuous_map_on_def comp_def by (by100 blast)
+            ultimately show ?thesis by simp
+          qed
+        qed
+        have "{x\<in>R. (inv_into V0 p \<circ> F) x \<in> V \<inter> V0} \<in> subspace_topology (I_set \<times> I_set) II_topology R"
+          using hcomp hVV0 unfolding top1_continuous_map_on_def by (by100 blast)
+        thus "{x\<in>R. Ftilde x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology R"
+          using heq by simp
+      qed
     qed
     show ?thesis
       by (rule pasting_lemma_two_closed[OF hTAR_ hTE hA_cl_AR hR_cl_AR hAR_union hrange
