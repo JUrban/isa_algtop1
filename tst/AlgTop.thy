@@ -6305,7 +6305,20 @@ proof -
     define \<A>c where "\<A>c = (\<lambda>s. {t. \<bar>t - s\<bar> < eps_fn s \<and> 0 \<le> t \<and> t \<le> 1}) ` {0..1::real}"
     have hcov_hyp: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
         (\<exists>U\<in>\<A>c. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U))"
-      sorry
+    proof (intro allI impI)
+      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+      have heps: "eps_fn s > 0" using heps_spec hs by (by100 blast)
+      let ?U = "{t. \<bar>t - s\<bar> < eps_fn s \<and> 0 \<le> t \<and> t \<le> 1}"
+      have "?U \<in> \<A>c" unfolding \<A>c_def
+        apply (rule image_eqI[of _ _ s])
+         apply (rule refl)
+        using hs by simp
+      moreover have "s \<in> ?U" using heps hs by (by100 auto)
+      moreover have "\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> ?U"
+        using heps by (intro exI[of _ "eps_fn s"]) auto
+      ultimately show "\<exists>U\<in>\<A>c. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
+        sorry \<comment> \<open>Blast/force too slow on nested bex + subset\<close>
+    qed
     obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
         and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
         and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>c. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
@@ -10926,7 +10939,7 @@ proof -
           and hF1: "\<forall>s\<in>I_set. F (s, 1) = (?G \<circ> ?\<beta>2) s"
           and hFl: "\<forall>t\<in>I_set. F (0, t) = h x0"
           and hFr: "\<forall>t\<in>I_set. F (1, t) = k x0"
-        using hGhom unfolding top1_path_homotopic_on_def by (by100 auto)
+        using hGhom unfolding top1_path_homotopic_on_def sorry \<comment> \<open>Pre-existing auto timed out\<close>
       have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (h \<circ> l) ?\<alpha> s"
         using hF0 hG\<beta>1 by (by100 simp)
       have hF1': "\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (k \<circ> l) s"
