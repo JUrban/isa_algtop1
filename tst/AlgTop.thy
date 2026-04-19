@@ -6098,7 +6098,77 @@ proof -
   qed
   \<comment> \<open>M \<in> A (closed step): M is a limit of points in A, each covered by some U.
      M itself is in some U (open), so the subdivision can be extended to M.\<close>
-  have hM_A: "M \<in> A" sorry \<comment> \<open>Closed step: approach from below.\<close>
+  have hM_A: "M \<in> A"
+  proof -
+    \<comment> \<open>M \<in> [0,1], so M is in some open cover element UM with Ball(M, \<epsilon>M) \<subseteq> UM.\<close>
+    obtain UM epsM where hUM: "UM \<in> \<A>" and hepsM: "epsM > 0"
+        and hballM: "{t. \<bar>t - M\<bar> < epsM \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> UM"
+      using assms[rule_format, of M] hM_ge0 hM_le1 by auto
+    \<comment> \<open>There exists s \<in> A with s > M - epsM (since M = Sup A).\<close>
+    have "\<exists>s\<in>A. s > M - epsM"
+    proof (rule ccontr)
+      assume "\<not> (\<exists>s\<in>A. M - epsM < s)"
+      hence hle: "\<forall>s\<in>A. s \<le> M - epsM" by (simp add: not_less)
+      hence "M \<le> M - epsM" unfolding M_def
+        by (intro cSup_least[OF hne]) blast
+      thus False using hepsM by linarith
+    qed
+    then obtain s where hsA: "s \<in> A" and hs_gt: "s > M - epsM" by blast
+    have hs_le_M: "s \<le> M" unfolding M_def using hsA hbdd by (intro cSup_upper) auto
+    \<comment> \<open>If s = M, we're done.\<close>
+    show "M \<in> A"
+    proof (cases "s = M")
+      case True thus ?thesis using hsA by simp
+    next
+      case False hence hs_lt_M: "s < M" using hs_le_M by linarith
+      \<comment> \<open>s \<in> A and [s, M] \<subseteq> UM (since |t - M| < epsM for t \<in> [s, M]).\<close>
+      have hsM_sub: "{t. s \<le> t \<and> t \<le> M \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> UM"
+      proof
+        fix t assume "t \<in> {t. s \<le> t \<and> t \<le> M \<and> 0 \<le> t \<and> t \<le> 1}"
+        hence "s \<le> t" "t \<le> M" "0 \<le> t" "t \<le> 1" by auto
+        hence "\<bar>t - M\<bar> < epsM" using hs_gt by auto
+        thus "t \<in> UM" using hballM \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by auto
+      qed
+      \<comment> \<open>Extend subdivision of [0,s] with [s, M] to get subdivision of [0,M].\<close>
+      obtain n sub where hn: "n \<ge> 1" and hsub0: "sub 0 = (0::real)" and hsubn: "sub n = s"
+          and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+          and hcov_sub: "\<forall>i<n. \<exists>U\<in>\<A>. {t. sub i \<le> t \<and> t \<le> sub (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using hsA unfolding A_def by blast
+      define sub' where "sub' = (\<lambda>i. if i \<le> n then sub i else M)"
+      define sub' where "sub' = (\<lambda>i. if i \<le> n then sub i else M)"
+      have hsub'0: "sub' 0 = 0" unfolding sub'_def using hsub0 by simp
+      have hsub'n1: "sub' (Suc n) = M" unfolding sub'_def by simp
+      have hinc': "\<forall>i < Suc n. sub' i < sub' (Suc i)"
+      proof (intro allI impI)
+        fix i assume "i < Suc n"
+        show "sub' i < sub' (Suc i)"
+        proof (cases "i < n")
+          case True thus ?thesis unfolding sub'_def using hinc by simp
+        next
+          case False hence "i = n" using \<open>i < Suc n\<close> by simp
+          thus ?thesis unfolding sub'_def using hsubn hs_lt_M by simp
+        qed
+      qed
+      have hcov': "\<forall>i < Suc n. \<exists>U\<in>\<A>. {t. sub' i \<le> t \<and> t \<le> sub' (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+      proof (intro allI impI)
+        fix i assume "i < Suc n"
+        show "\<exists>U\<in>\<A>. {t. sub' i \<le> t \<and> t \<le> sub' (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        proof (cases "i < n")
+          case True
+          hence "sub' i = sub i" "sub' (Suc i) = sub (Suc i)" unfolding sub'_def by simp+
+          thus ?thesis using hcov_sub True by simp
+        next
+          case False hence "i = n" using \<open>i < Suc n\<close> by simp
+          hence "sub' i = s" "sub' (Suc i) = M" unfolding sub'_def using hsubn by simp+
+          thus ?thesis using hUM hsM_sub by auto
+        qed
+      qed
+      have "M \<in> A" unfolding A_def
+        using hsub'0 hsub'n1 hinc' hcov' hM_ge0 hM_le1
+        by (intro CollectI conjI exI[of _ "Suc n"] exI[of _ sub']) auto
+      thus ?thesis .
+    qed
+  qed
   \<comment> \<open>M = 1 (open step): if M < 1, M is in some open U, so M + \<epsilon> \<in> A for small \<epsilon> > 0.
      But M = sup A, contradiction.\<close>
   have hM_1: "M = 1"
@@ -6164,7 +6234,12 @@ proof -
     thus False using hM'_gt_M by linarith
   qed
   \<comment> \<open>From M = 1 and M \<in> A, extract the subdivision.\<close>
-  show ?thesis using hM_A hM_1 unfolding A_def sorry
+  have "1 \<in> A" using hM_A hM_1 by simp
+  then obtain n sub where hn: "n \<ge> 1" and hsub0: "sub 0 = (0::real)" and hsubn: "sub n = 1"
+      and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+      and hcov_sub: "\<forall>i<n. \<exists>U\<in>\<A>. {t. sub i \<le> t \<and> t \<le> sub (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+    unfolding A_def by blast
+  show ?thesis using hn hsub0 hsubn hinc hcov_sub by blast
 qed
 
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
