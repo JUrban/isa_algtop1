@@ -1,36 +1,52 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 162 sorries, builds in ~26s
+## Status: 159 sorries, builds in ~27s
 
-## Fully Proved Theorems/Lemmas (selection)
+## 🎉 Major Milestones Completed
 
-- `Theorem_80_1_universal_unique` — universal covering uniqueness (full proof!)
-- `nulhomotopic_trivializes_loops` — key lemma for Borsuk-Ulam
-- `simply_connected_trivial_image` — SC ⟹ trivial π₁ image
-- `top1_R_to_S1_int_shift` — periodicity of covering map
-- `top1_Z_is_abelian_group` — ℤ is abelian group
-- `Theorem_54_5` — π₁(S¹) ≅ ℤ bijection
-- `Lemma_54_1_uniqueness` — path lifting uniqueness
-- `Theorem_54_3` — path-homotopic paths lift path-homotopically
-- `Corollary_59_2` — simply connected union
-- All FTA Steps 3-4
+- **Theorem_53_1** (R→S¹ covering map) — FULLY PROVED (all 4 arcs)
+- **Theorem_80_1** (universal covering uniqueness) — FULLY PROVED
+- **nulhomotopic_trivializes_loops** — FULLY PROVED
+- **simply_connected_trivial_image** — FULLY PROVED
 
-## B. Current Work Priorities
+## Critical Path: FTA and Jordan
 
-### B1. π₁(S¹) ≅ ℤ homomorphism
-- Bijection ✓, assembly ✓. Homomorphism sorry remains (translated-lift concatenation).
+Both FTA and Jordan depend on the **Lebesgue number argument** for path lifting:
 
-### B3. R → S¹ covering (Theorem_53_1)
-- arc_E: FULLY PROVED
-- arc_N: openness ✓, V_open ✓, V_disj ✓, V_union ✓, **V_homeo sorry**
-- arc_W: openness ✓, V_open ✓, V_disj ✓, V_union ✓, **V_homeo sorry**
-- arc_S: openness ✓, V_open ✓, V_disj ✓, V_union ✓, **V_homeo sorry**
+```
+Theorem_53_1 ✓
+  → Lemma_54_1 (path lifting) ← LEBESGUE NUMBER SORRY
+    → Theorem_54_3 (homotopic lifts)
+      → Theorem_54_5_iso (π₁(S¹)≅ℤ homomorphism) ← SORRY
+        → Step 1 (z^n injectivity) ← SORRY
+          → Step 2 ← SORRY
+            → Steps 3-4 ✓ → FTA ✓
 
-### B2. Path lifting (Lemma 54.1)
-- Lebesgue subdivision + lift construction sorry'd
+Theorem_53_1 ✓
+  → Lemma_54_1 ← SAME BLOCKER
+    → ... → Theorem_59_1 (Seifert-van Kampen)
+      → Corollary_59_2 ✓ → §61-63 → Jordan
+```
 
-### B5. Lemma_55_3 forward
-- k extends h ✓. k continuous sorry.
+### B1. Path Lifting (Lemma 54.1) — HIGHEST PRIORITY
 
-### FTA
-- Steps 3-4 ✓. Step 1 (z^n injectivity) sorry. Step 2 expanded with 3 substeps.
+The Lebesgue number lemma `top1_lebesgue_number` exists in Top0 library.
+Needs: bridge [0,1] as metric space → apply lemma → get subdivision.
+Then: interval-by-interval lift construction (induction + pasting lemma).
+
+### B2. π₁(S¹)≅ℤ Homomorphism
+
+φ bijective ✓. Homomorphism needs: translated-lift concatenation.
+Key helper available: `top1_R_to_S1_int_shift`.
+
+### B3. FTA Steps 1-2
+
+Step 1: z^n injectivity on π₁(S¹) — needs homomorphism.
+Step 2: z^n not nulhomotopic in C-{0} — needs Step 1 + retraction.
+
+## Work Order
+
+1. **Path lifting Lebesgue step** (B1) — unblocks everything
+2. **Lift construction** (B1 Step 2) — induction + pasting
+3. **Homomorphism** (B2) — translated lifts
+4. **FTA Steps 1-2** (B3) — covering theory applications
