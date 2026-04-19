@@ -6708,7 +6708,12 @@ proof -
       have hI_eq: "{s\<in>I_set. s \<le> sub n} = I_set"
         using hsubn unfolding top1_unit_interval_def by auto
       have hft_cont: "top1_continuous_map_on I_set I_top E TE ftilde"
-        sorry
+      proof -
+        have "subspace_topology I_set I_top I_set = I_top"
+          unfolding top1_unit_interval_topology_def
+          by (rule subspace_topology_trans) simp
+        thus ?thesis using hcont hI_eq by simp
+      qed
       show ?thesis using hft0 hftE hftp hft_cont hsubn
         unfolding top1_unit_interval_def by auto
     qed
