@@ -10018,8 +10018,15 @@ proof -
     proof (intro ballI)
       fix s :: real assume hs: "s \<in> I_set"
       show "(?G \<circ> ?\<beta>2) s = top1_path_product ?\<alpha> (k \<circ> l) s"
-        unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
-        using hG_left hG_top hs hl0 sorry \<comment> \<open>Pre-existing by (by100 auto) timed out after file growth.\<close>
+      proof (cases "s \<le> 1/2")
+        case True
+        thus ?thesis unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
+          using hG_left hs hl0 by (by100 auto)
+      next
+        case False
+        thus ?thesis unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
+          using hG_top hs hl0 sorry
+      qed
     qed
     \<comment> \<open>G preserves homotopy: G∘β₁ ≃ G∘β₂.\<close>
     have "top1_path_homotopic_on Y TY (?G (0, 0)) (?G (1, 1))
