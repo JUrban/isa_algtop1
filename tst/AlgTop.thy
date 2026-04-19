@@ -14968,6 +14968,31 @@ lemma S2_minus_point_simply_connected:
   sorry
 
 text \<open>S^2 minus two distinct points is not simply connected (homeomorphic to R^2 - {0}).\<close>
+lemma R2_minus_origin_not_simply_connected:
+  "\<not> top1_simply_connected_on (UNIV - {(0::real, 0::real)})
+     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
+proof
+  assume hsc: "top1_simply_connected_on (UNIV - {(0::real, 0::real)})
+     (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))"
+  \<comment> \<open>If R^2-{0} were simply connected, the inclusion S^1 \<hookrightarrow> R^2-{0} would be nulhomotopic.
+     (Since S^1 \<subseteq> R^2-{0} and the inclusion is continuous, and in a simply connected space
+     all loops are trivial, hence the inclusion trivializes all loops, hence is nulhomotopic.)\<close>
+  \<comment> \<open>Actually: simply connected means all loops at any basepoint are trivial.
+     The inclusion j: S^1 \<rightarrow> R^2-{0} is nulhomotopic if and only if j_* is trivial.
+     j_* trivial means: for all loops f at (1,0) in S^1, j\<circ>f is contractible in R^2-{0}.
+     Since j is the inclusion, j\<circ>f = f as a loop in R^2-{0}.
+     If R^2-{0} is simply connected, all loops in it are contractible, so j_* is trivial.\<close>
+  \<comment> \<open>To make j nulhomotopic (as a map, not just loop-wise):
+     We need a homotopy H: S^1 \<times> I \<rightarrow> R^2-{0} with H(-,0)=j, H(-,1)=const.
+     This follows from the simply connected space having contractible path components.\<close>
+  have "top1_nulhomotopic_on top1_S1 top1_S1_topology
+      (UNIV - {(0, 0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0, 0)}))
+      (\<lambda>x. x)"
+    sorry
+  thus False using Corollary_55_4_inclusion_not_nulhomotopic by (by100 blast)
+qed
+
 lemma R2_minus_point_not_simply_connected:
   "p \<in> (UNIV :: (real \<times> real) set) \<Longrightarrow>
    \<not> top1_simply_connected_on (UNIV - {p})
