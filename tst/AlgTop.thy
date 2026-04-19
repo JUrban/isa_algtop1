@@ -5993,10 +5993,9 @@ lemma Lemma_54_1_path_lifting:
      Step 3: Pasting lemma \<Rightarrow> continuous. p \<circ> ftilde = f by construction.\<close>
 proof -
   \<comment> \<open>Step 1: Lebesgue subdivision.
-     Proof sketch: every b \<in> B has an evenly covered neighborhood U_b. The preimages
-     f^{-1}(U_b) cover [0,1]. Since [0,1] is compact, extract a finite subcover.
-     Use the Lebesgue number \<delta> > 0 of this cover: any set of diameter < \<delta> lies in
-     one element. Take n = ceil(1/\<delta>) and uniform subdivision sub(i) = i/n.\<close>
+     Strategy: for each s \<in> [0,1], f(s) has an evenly covered neighborhood.
+     The f-preimages form an open cover of [0,1]. By compactness, finite subcover.
+     The Lebesgue number of this cover gives a uniform subdivision.\<close>
   obtain n :: nat and sub :: "nat \<Rightarrow> real" where
       hn: "n \<ge> 1" and hsub0: "sub 0 = 0" and hsubn: "sub n = 1"
       and hsub_inc: "\<forall>i<n. sub i < sub (Suc i)"
@@ -6004,16 +6003,21 @@ proof -
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U"
   proof -
-    \<comment> \<open>Alternative to Lebesgue number: use compactness of [0,1] directly.
-       For each s \<in> [0,1], f(s) \<in> B has an evenly covered neighborhood U_s.
-       f\<inverse>(U_s) is open in [0,1] (f continuous), contains s.
-       The collection {f\<inverse>(U_s)} covers [0,1]. By compactness, finite subcover.
-       Each element of the subcover is a union of open intervals.
-       Take a common refinement to get a subdivision.\<close>
-    \<comment> \<open>For simplicity, use uniform subdivision: take n large enough that 1/n < min diameter
-       of the finitely many preimage sets. This works because [0,1] is a compact metric space.\<close>
+    \<comment> \<open>Step 1a: f continuous means f-preimages of open sets are open.
+       Step 1b: For each s, f(s) has evenly covered neighborhood U_s open in B.
+       Step 1c: f\<inverse>(U_s) open in [0,1] (by continuous_on + open_invariant).
+       Step 1d: {f\<inverse>(U_s)} covers [0,1]. By compact_Icc, finite subcover.
+       Step 1e: Lebesgue number \<delta> > 0. Take n = \<lceil>1/\<delta>\<rceil>+1, sub(i) = i/n.\<close>
+    \<comment> \<open>The proof requires bridging between the abstract top1 topology framework and
+       HOL's concrete topological space on reals. The key steps are:
+       1. f continuous as continuous_on (from top1_continuous_map_on + subspace bridge)
+       2. For each s, f(s) has evenly covered U (from covering map)
+       3. f\<inverse>(U) open in [0,1] (continuous preimage of open)
+       4. Finite subcover by compact_Icc
+       5. Lebesgue number for the finite cover
+       6. Uniform subdivision with mesh < Lebesgue number\<close>
     show ?thesis sorry
-  qed \<comment> \<open>Lebesgue subdivision.\<close>
+  qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
      f([sub(i), sub(i+1)]) \<subseteq> U for some evenly covered U. ftilde(sub(i)) \<in> some slice V_0.
