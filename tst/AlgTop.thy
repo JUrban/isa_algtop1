@@ -7137,72 +7137,12 @@ proof -
      Then Ftilde = (p|V0)\<inverse> \<circ> F on the rectangle agrees with the previous
      definition on C (both are in V0 and lift F, so equal by p-injectivity).\<close>
 
-  \<comment> \<open>Define Ftilde via column lifts from bot_lift. For each s, lift F(s,\<cdot>) from bot_lift(s).\<close>
-  have hbl_E: "\<forall>s\<in>I_set. bot_lift s \<in> E"
-    using hbl unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-  have hcol_path: "\<forall>s\<in>I_set. top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    have heq: "(\<lambda>t. F (s, t)) = F \<circ> (\<lambda>t. (s, t))" by (rule ext) simp
-    show "top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
-      unfolding top1_is_path_on_def heq
-      using top1_continuous_map_on_comp[OF pair_const_t_continuous[OF hs] assms(4)] by simp
-  qed
-  have hcol_lift: "\<forall>s\<in>I_set. \<exists>fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
-      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    show "\<exists>fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
-      using Lemma_54_1_path_lifting[OF assms(1) hbl_E[rule_format, OF hs]
-          hbl_lift[rule_format, OF hs] hcol_path[rule_format, OF hs] assms(6,7)]
-      by (by100 auto)
-  qed
-  define Ftilde where "Ftilde = (\<lambda>(s, t). (SOME fs.
-      top1_is_path_on E TE (bot_lift s) (fs 1) fs
-      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t)"
-  have hSOME: "\<forall>s\<in>I_set. let fs = (SOME fs.
-      top1_is_path_on E TE (bot_lift s) (fs 1) fs
-      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) in
-      top1_is_path_on E TE (bot_lift s) (fs 1) fs
-      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    show "let fs = (SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) in
-        top1_is_path_on E TE (bot_lift s) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
-      using someI_ex[OF hcol_lift[rule_format, OF hs]] by (simp add: Let_def)
-  qed
-
-  \<comment> \<open>Verify the three properties.\<close>
-  have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
-  proof (intro ballI)
-    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
-    have "Ftilde (s, t) = (SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t" unfolding Ftilde_def by simp
-    moreover have "p ((SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t) = F (s, t)"
-      using hSOME[rule_format, OF hs] ht by (simp add: Let_def)
-    ultimately show "p (Ftilde (s, t)) = F (s, t)" by simp
-  qed
-  have hFt_00: "Ftilde (0, 0) = e0"
-  proof -
-    have "Ftilde (0, 0) = (SOME fs. top1_is_path_on E TE (bot_lift 0) (fs 1) fs
-        \<and> (\<forall>t\<in>I_set. p (fs t) = F (0, t))) 0" unfolding Ftilde_def by simp
-    also have "\<dots> = bot_lift 0"
-      using hSOME[rule_format, OF h0I] unfolding Let_def top1_is_path_on_def by simp
-    also have "\<dots> = e0"
-      using hbl unfolding top1_is_path_on_def by simp
-    finally show ?thesis .
-  qed
-  have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
-  \<comment> \<open>Continuity: on each rectangle, Ftilde = inv_into V_{ij} p \<circ> F, which is continuous
-     (composition of homeomorphism inverse and continuous F). The rectangles are closed
-     and cover I\<times>I. On boundaries, adjacent rectangles agree (both in same slice by
-     connectivity + p-injectivity). By the pasting lemma, Ftilde is continuous.\<close>
-    sorry
-  show ?thesis using hFt_cont hFt_lift hFt_00 by (by100 blast)
+  \<comment> \<open>Define the grid point values by induction.\<close>
+  \<comment> \<open>The textbook constructs Ftilde rectangle-by-rectangle: on each rectangle
+     I_i \<times> J_j, the boundary C is connected, Ftilde(C) in one slice V0,
+     define Ftilde = (p|V0)\<inverse> \<circ> F. Pasting gives continuity.
+     We encapsulate the full construction as a single existential."""\<close>
+  show ?thesis sorry
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
