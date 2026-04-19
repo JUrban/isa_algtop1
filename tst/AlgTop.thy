@@ -4253,7 +4253,36 @@ proof -
       have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have harc_sub: "top1_S1_arc_E \<subseteq> top1_S1"
         unfolding top1_S1_arc_E_def top1_S1_def by (by100 auto)
-      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_E" sorry
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_E"
+      proof (intro equalityI subsetI)
+        fix y assume "y \<in> top1_R_to_S1 ` V"
+        thus "y \<in> top1_S1_arc_E" using hpV by (by100 blast)
+      next
+        fix y assume hy: "y \<in> top1_S1_arc_E"
+        \<comment> \<open>y is in the preimage of arc_E, so y = p(t) for some t \<in> (m-1/4, m+1/4).\<close>
+        have "y \<in> top1_S1" using hy harc_sub by (by100 blast)
+        hence "y \<in> top1_R_to_S1 ` UNIV" using hp_surj by (by100 blast)
+        then obtain t where hpt: "top1_R_to_S1 t = y" by (by100 blast)
+        hence "t \<in> {x. top1_R_to_S1 x \<in> top1_S1_arc_E}" using hy by (by100 simp)
+        hence "t \<in> (\<Union>m::int. {of_int m - 1/4 <..< of_int m + 1/4})"
+          using top1_S1_arc_E_preimage by (by100 blast)
+        then obtain m :: int where "t \<in> {of_int m - 1/4 <..< of_int m + 1/4}" by (by100 blast)
+        \<comment> \<open>Shift by periodicity: t' = t + (n - m) is in V_n and p(t') = p(t) = y.\<close>
+        let ?t' = "t + of_int (n - m)"
+        have htm_lb: "of_int m - 1/4 < t" and htm_ub: "t < of_int m + 1/4"
+          using \<open>t \<in> {of_int m - 1/4 <..< of_int m + 1/4}\<close> by (by100 simp)+
+        hence "of_int n - 1/4 < t + of_int (n - m)" "t + of_int (n - m) < of_int n + 1/4"
+          by (by100 linarith)+
+        hence ht'V: "?t' \<in> V" unfolding hVeq by (by100 auto)
+        have "top1_R_to_S1 ?t' = top1_R_to_S1 t"
+        proof -
+          show ?thesis unfolding top1_R_to_S1_def
+            using cos_int_2pin[of "n - m"] sin_int_2pin[of "n - m"]
+            by (simp add: distrib_left cos_add sin_add)
+        qed
+        hence "top1_R_to_S1 ?t' = y" using hpt by (by100 simp)
+        thus "y \<in> top1_R_to_S1 ` V" using ht'V by (by100 blast)
+      qed
       have hpV_inj: "inj_on top1_R_to_S1 V" sorry
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_E
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_E)
