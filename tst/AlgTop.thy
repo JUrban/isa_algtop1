@@ -4886,9 +4886,14 @@ proof -
       qed
       have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_W"
         unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      have hp_V_img: "top1_R_to_S1 ` V \<subseteq> top1_S1_arc_W"
+        using hpV by (by100 blast)
+      have hV_sub_W: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
-        sorry
+        by (rule top1_continuous_map_on_codomain_shrink[OF
+              top1_continuous_map_on_restrict_domain_simple[OF hp_cont hV_sub_W]
+              hp_V_img harc_sub])
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_W
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
@@ -5090,9 +5095,14 @@ proof -
       qed
       have hbij: "bij_betw top1_R_to_S1 V top1_S1_arc_S"
         unfolding bij_betw_def using hpV_inj hpV_surj by (by100 blast)
+      have hp_V_img: "top1_R_to_S1 ` V \<subseteq> top1_S1_arc_S"
+        using hpV by (by100 blast)
+      have hV_sub_S: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hp_V_cont: "top1_continuous_map_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
-        sorry
+        by (rule top1_continuous_map_on_codomain_shrink[OF
+              top1_continuous_map_on_restrict_domain_simple[OF hp_cont hV_sub_S]
+              hp_V_img harc_sub])
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_S
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
