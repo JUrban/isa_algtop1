@@ -6369,7 +6369,14 @@ proof -
       sorry \<comment> \<open>Induction: base k=0 trivial, step uses evenly-covered inverse.\<close>
     hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
         \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
-      using hsubn sorry
+    proof -
+      assume h: "\<forall>k\<le>n. \<exists>ftk. ftk 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> ftk s \<in> E)
+          \<and> (\<forall>s\<in>I_set. s \<le> sub k \<longrightarrow> p (ftk s) = f s)"
+      obtain ftilde where hft: "ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> ftilde s \<in> E)
+          \<and> (\<forall>s\<in>I_set. s \<le> sub n \<longrightarrow> p (ftilde s) = f s)"
+        using h[rule_format, of n] by auto
+      show ?thesis using hft hsubn unfolding top1_unit_interval_def by auto
+    qed
     hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
         \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
         \<and> top1_continuous_map_on I_set I_top E TE ftilde"
