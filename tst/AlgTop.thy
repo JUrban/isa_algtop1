@@ -4433,12 +4433,16 @@ proof -
     show ?thesis unfolding top1_evenly_covered_on_def
       using harc_E_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
   qed
+  \<comment> \<open>Arcs N, W, S: symmetric to arc_E with adapted coordinates.\<close>
   have harc_N_ec: "top1_evenly_covered_on UNIV top1_open_sets
-      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_N" sorry
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_N"
+    sorry \<comment> \<open>Symmetric to arc_E: y > 0, slices (n, n+1/2), inverse via arctan(x/y)\<close>
   have harc_W_ec: "top1_evenly_covered_on UNIV top1_open_sets
-      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_W" sorry
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_W"
+    sorry \<comment> \<open>Symmetric to arc_E: x < 0, slices (n+1/4, n+3/4), inverse via arctan(y/x)+1/2\<close>
   have harc_S_ec: "top1_evenly_covered_on UNIV top1_open_sets
-      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_S" sorry
+      top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_S"
+    sorry \<comment> \<open>Symmetric to arc_E: y < 0, slices (n-1/2, n), inverse via arctan(x/y)-1/4\<close>
   have hp_evenly: "\<forall>b\<in>top1_S1. \<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
       \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
   proof
