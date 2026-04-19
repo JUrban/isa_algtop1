@@ -5988,6 +5988,17 @@ qed
 
 section \<open>\<S>54 The Fundamental Group of the Circle\<close>
 
+text \<open>Lebesgue number for open covers of [0,1]: if open sets cover [0,1],
+  then there exists n ≥ 1 such that each subinterval [i/n, (i+1)/n] lies in some cover element.
+  Uses compact_Icc from HOL.\<close>
+lemma lebesgue_subdivision_01:
+  assumes hcov: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> (\<exists>U\<in>\<A>. s \<in> U)"
+      and hopen: "\<forall>U\<in>\<A>. \<exists>V. open V \<and> U = {0..1} \<inter> V"
+  shows "\<exists>n::nat. n \<ge> 1 \<and> (\<forall>i<n. \<exists>U\<in>\<A>. {s. real i/real n \<le> s \<and> s \<le> real(Suc i)/real n \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U)"
+  sorry \<comment> \<open>Standard: compact_Icc gives finite subcover, Lebesgue number gives uniform mesh.
+         The proof needs: open in R ∩ [0,1] = open in subspace topology;
+         compact {0..1::real}; distance-to-complement function; its minimum on compact set.\<close>
+
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
 lemma Lemma_54_1_path_lifting:
   assumes hcov: "top1_covering_map_on E TE B TB p"
