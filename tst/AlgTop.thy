@@ -4706,7 +4706,18 @@ proof -
         \<comment> \<open>cos(2\<pi>(x-n)) = cos(2\<pi> - 2\<pi>(x-n)) = cos(2\<pi>(1-(x-n))).
            1-(x-n) \<in> (0, 1/4], so 2\<pi>(1-(x-n)) \<in> (0, \<pi>/2], cos \<ge> 0.\<close>
         have hcos_eq: "cos (2 * pi * (x - of_int nn)) = cos (2 * pi * (1 - (x - of_int nn)))"
-          sorry \<comment> \<open>cos(t) = cos(-t) = cos(-t + 2\<pi>) = cos(2\<pi> - t). Isabelle normalization issue.\<close>
+        proof -
+          \<comment> \<open>cos(t) = cos(2\<pi> - t) by periodicity + evenness.
+             cos(2\<pi>*(1-f)) = cos(2\<pi> - 2\<pi>f) = cos(-(2\<pi>f - 2\<pi>)) = cos(2\<pi>f - 2\<pi>)
+             = cos(2\<pi>f - 2\<pi> + 2\<pi>) = cos(2\<pi>f).\<close>
+          let ?t = "2 * pi * (x - of_int nn)"
+          let ?s = "2 * pi * (1 - (x - of_int nn))"
+          have "?s = - ?t + 2 * pi" by (simp add: algebra_simps)
+          hence "cos ?s = cos (- ?t + 2 * pi)" by simp
+          also have "\<dots> = cos (- ?t)" using cos_periodic[of "- ?t"] by (simp add: algebra_simps)
+          also have "\<dots> = cos ?t" by (rule cos_minus)
+          finally show ?thesis by simp
+        qed
         have h1mfrac: "0 < 1 - (x - of_int nn)" "1 - (x - of_int nn) \<le> 1/4"
           using hge hfrac by linarith+
         have h_nonneg2: "0 \<le> 2 * pi * (1 - (x - of_int nn))"
