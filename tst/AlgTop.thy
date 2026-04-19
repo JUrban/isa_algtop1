@@ -14936,6 +14936,31 @@ lemma top1_separates_onI:
     If U is a component of S^2 - C not containing b, then h(U) is a BOUNDED
     component of R^2 - h(C). If U contains b, then h(U - {b}) is the UNBOUNDED
     component of R^2 - h(C). **)
+text \<open>Stereographic projection: homeomorphism S^2 - {north pole} \<cong> R^2.\<close>
+definition stereographic_proj :: "real \<times> real \<times> real \<Rightarrow> real \<times> real" where
+  "stereographic_proj p = (fst p / (1 - snd (snd p)), fst (snd p) / (1 - snd (snd p)))"
+
+definition north_pole :: "real \<times> real \<times> real" where
+  "north_pole = (0, 0, 1)"
+
+lemma north_pole_in_S2: "north_pole \<in> top1_S2"
+  unfolding north_pole_def top1_S2_def by simp
+
+lemma stereographic_proj_homeomorphism:
+  "top1_homeomorphism_on (top1_S2 - {north_pole})
+     (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+     (UNIV :: (real \<times> real) set)
+     (product_topology_on top1_open_sets top1_open_sets)
+     stereographic_proj"
+  sorry
+
+text \<open>Key consequence: S^2 minus any point is homeomorphic to R^2, hence simply connected.\<close>
+lemma S2_minus_point_simply_connected:
+  assumes "b \<in> top1_S2"
+  shows "top1_simply_connected_on (top1_S2 - {b})
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
+  sorry
+
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
     and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
@@ -15195,8 +15220,10 @@ proof (rule ccontr)
     using hsep sorry
   \<comment> \<open>X=S^2-{d}, U=S^2-D1, V=S^2-D2. Apply Theorem 63.1.\<close>
   \<comment> \<open>Get nontrivial element of \<pi>_1(X). But X\<cong>R^2 has trivial \<pi>_1. Contradiction.\<close>
+  have hd_S2: "d \<in> top1_S2" using hd assms(2) by (by100 blast)
   have h_pi1_trivial: "top1_simply_connected_on (top1_S2 - {d})
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))" sorry
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))"
+    by (rule S2_minus_point_simply_connected[OF hd_S2])
   have h_pi1_nontrivial: "\<not> top1_simply_connected_on (top1_S2 - {d})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))" sorry
   show False using h_pi1_trivial h_pi1_nontrivial by contradiction
