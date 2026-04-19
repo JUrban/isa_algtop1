@@ -6391,7 +6391,44 @@ proof -
             and hfU: "f ` {s\<in>I_set. sub k \<le> s \<and> s \<le> sub (Suc k)} \<subseteq> U"
           using hcovered[rule_format, OF hSk_lt] by (by100 blast)
         \<comment> \<open>Extend ftk using the inverse of p on the appropriate slice.\<close>
-        show ?case sorry
+        \<comment> \<open>ftk(sub k) \<in> E, p(ftk(sub k)) = f(sub k) \<in> U.\<close>
+        have hsub_mono: "\<And>i j. i \<le> j \<Longrightarrow> j \<le> n \<Longrightarrow> sub i \<le> sub j"
+          sorry \<comment> \<open>Standard: strict increasing \<Rightarrow> monotone (induction on j-i).\<close>
+        have hsubk_I: "sub k \<in> I_set"
+        proof -
+          have "0 \<le> sub k" using hsub_mono[of 0 k] hk_le hsub0 by simp
+          moreover have "sub k \<le> 1" using hsub_mono[of k n] hk_le hsubn by simp
+          ultimately show ?thesis unfolding top1_unit_interval_def by auto
+        qed
+        have hftk_subk: "ftk (sub k) \<in> E" using hftk_E hsubk_I by (by100 blast)
+        have hpftk: "p (ftk (sub k)) = f (sub k)" using hftkp hsubk_I by (by100 blast)
+        have hfsk_U: "f (sub k) \<in> U"
+        proof -
+          have "sub k \<in> {s\<in>I_set. sub k \<le> s \<and> s \<le> sub (Suc k)}" using hsubk_I hsub_inc hSk_lt by auto
+          thus ?thesis using hfU by (by100 blast)
+        qed
+        \<comment> \<open>ftk(sub k) is in the preimage p\<inverse>(U), hence in some slice V₀.\<close>
+        obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+            and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+            and hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+            and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+                U (subspace_topology B TB U) p"
+          using hUec unfolding top1_evenly_covered_on_def by auto
+        have hftk_pU: "ftk (sub k) \<in> {x\<in>E. p x \<in> U}"
+          using hftk_subk hpftk hfsk_U by simp
+        obtain V0 where hV0: "V0 \<in> \<V>" and hftk_V0: "ftk (sub k) \<in> V0"
+          using hftk_pU hV_union by (by100 blast)
+        \<comment> \<open>p|V₀ is a homeomorphism V₀ \<rightarrow> U. Its inverse maps f(s) to a lift.\<close>
+        \<comment> \<open>Define ft_{k+1}(s) = ftk(s) for s \<le> sub k, (p|V₀)\<inverse>(f(s)) for s \<in> [sub k, sub(Suc k)].\<close>
+        define ftk' where "ftk' s = (if s \<le> sub k then ftk s else inv_into V0 p (f s))" for s
+        have hftk'0: "ftk' 0 = e0"
+        proof -
+          have "(0::real) \<le> sub k" using hsub_mono[of 0 k] hk_le hsub0 by simp
+          thus ?thesis unfolding ftk'_def using hftk0 by simp
+        qed
+        have hftk'_E: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> ftk' s \<in> E" sorry
+        have hftk'p: "\<forall>s\<in>I_set. s \<le> sub (Suc k) \<longrightarrow> p (ftk' s) = f s" sorry
+        show ?case using hftk'0 hftk'_E hftk'p by (by100 blast)
       qed
     qed
     hence "\<exists>ftilde. ftilde 0 = e0 \<and> (\<forall>s\<in>I_set. ftilde s \<in> E)
