@@ -7077,10 +7077,107 @@ proof -
   obtain bot_lift where hbl: "top1_is_path_on E TE e0 (bot_lift 1) bot_lift"
       and hbl_lift: "\<forall>s\<in>I_set. p (bot_lift s) = F (s, 0)"
     using Lemma_54_1_path_lifting[OF assms(1,2,3) hF_bot_path assms(6,7)] by (by100 auto)
-  \<comment> \<open>Step 3+4: The textbook constructs Ftilde rectangle-by-rectangle.
-     Each rectangle maps into evenly covered U. Boundary connected \<Rightarrow> one slice V0.
-     Ftilde = (p|V0)\<inverse> \<circ> F. Pasting gives continuity. We sorry this construction.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 3: For each (s,t) \<in> I\<times>I, get evenly covered U containing F(s,t).
+     F\<inverse>(U) open in I\<times>I. Use bridge lemma to get \<epsilon>-ball in preimage.
+     Cover I\<times>I by these balls. Apply open_cover_subdivision_01 to each coord.\<close>
+  have hpointwise: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. \<exists>U. openin_on B TB U
+      \<and> top1_evenly_covered_on E TE B TB p U \<and> F (s, t) \<in> U"
+  proof (intro ballI)
+    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+    have "F (s, t) \<in> B" using assms(4) hs ht
+      unfolding top1_continuous_map_on_def by (by100 blast)
+    then obtain U where "F (s, t) \<in> U" "top1_evenly_covered_on E TE B TB p U"
+      using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    moreover have "openin_on B TB U"
+      using \<open>top1_evenly_covered_on E TE B TB p U\<close>
+      unfolding top1_evenly_covered_on_def by (by100 blast)
+    ultimately show "\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U \<and> F (s, t) \<in> U"
+      by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: Get s-subdivision and t-subdivision using open_cover_subdivision_01.
+     For the s-coordinate: for each s, the set of t with F(s,t) in some evenly covered U
+     gives an open cover. The s-subdivision ensures each vertical strip maps into a
+     manageable cover. Similarly for t.
+     For simplicity, we get a single subdivision for each coordinate by taking
+     the common refinement of all pointwise covers.\<close>
+  \<comment> \<open>Actually, the textbook just says "choose subdivisions fine enough". We use
+     the Lebesgue number approach: each (s,t) has \<epsilon>(s,t) > 0 with F(B((s,t),\<epsilon>)\<inter>I\<times>I) \<subseteq> U.
+     By compactness of I\<times>I, finite subcover. Lebesgue number \<delta> > 0. Take N > \<surd>2/\<delta>.
+     Each 1/N-rectangle has diameter \<surd>2/N < \<delta>, so maps into some U.\<close>
+  \<comment> \<open>This requires the metric Lebesgue number lemma for I\<times>I. We sorry this step.\<close>
+  have hgrid: "\<exists>N::nat. N > 0 \<and> (\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
+      \<and> top1_evenly_covered_on E TE B TB p U
+      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
+            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
+    sorry
+  then obtain N :: nat where hN: "N > 0" and hNgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
+      \<and> top1_evenly_covered_on E TE B TB p U
+      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
+            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U"
+    by auto
+  \<comment> \<open>Step 5: Rectangle-by-rectangle construction.
+     Textbook (Munkres 54.2): Define Ftilde on each rectangle I_i \<times> J_j by
+     Ftilde(x) = (p|V0)\<inverse>(F(x)), where V0 is the slice containing Ftilde on the
+     boundary C = A \<inter> (I_i \<times> J_j), with A = previous region.
+
+     We define Ftilde as a single function: on each rectangle, it equals
+     (p|V_{ij})\<inverse> \<circ> F for the appropriate slice V_{ij}. The slice V_{ij} is
+     determined by the value of Ftilde at the lower-left corner of the rectangle,
+     which is a grid point already computed from previous rectangles.
+
+     For the lower-left corner (s_i, t_j):
+     - (0, 0): Ftilde = e0 (given)
+     - (s_i, 0): Ftilde = bot_lift(s_i) (from bottom edge lift)
+     - (0, t_j): Ftilde = left_lift(t_j) (from left edge lift)
+     - (s_i, t_j) for i,j>0: Ftilde = value from previous rectangle
+
+     The key property: on the boundary C of each rectangle, the previously
+     defined Ftilde is connected and lies in p\<inverse>(U_{ij}). Since C is connected
+     and the slices are disjoint open, Ftilde(C) lies in one slice V0.
+     Then Ftilde = (p|V0)\<inverse> \<circ> F on the rectangle agrees with the previous
+     definition on C (both are in V0 and lift F, so equal by p-injectivity).\<close>
+
+  \<comment> \<open>Define the grid point values by induction.\<close>
+  define gp where "gp = (\<lambda>(i::nat, j::nat).
+    if i = 0 \<and> j = 0 then e0
+    else if i = 0 then left_lift (real j / real N)
+    else if j = 0 then bot_lift (real i / real N)
+    else sorry)" for i j \<comment> \<open>Interior grid points from previous rectangle.\<close>
+
+  \<comment> \<open>For each rectangle (i,j), get the slice V_{ij} containing gp(i,j).\<close>
+  \<comment> \<open>Define Ftilde(s,t) for (s,t) in rectangle (i,j) as inv_into V_{ij} p (F(s,t)).\<close>
+  \<comment> \<open>The full construction requires managing N\<times>N rectangles with grid-point values
+     feeding into slice selection. This is a double induction.\<close>
+
+  \<comment> \<open>For the formalization: define Ftilde directly. On each rectangle [i/N,(i+1)/N]\<times>[j/N,(j+1)/N],
+     F maps into evenly covered U_{ij}. The grid point gp(i,j) determines slice V_{ij}.
+     Ftilde(s,t) = inv_into V_{ij} p (F(s,t)) when (s,t) is in rectangle (i,j).\<close>
+
+  define rect_slice where "rect_slice = (\<lambda>(i::nat, j::nat).
+    let U = (SOME U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
+              \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U);
+        \<V> = (SOME \<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
+            \<and> {x\<in>E. p x \<in> U} = \<Union>\<V>
+            \<and> (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U (subspace_topology B TB U) p))
+    in (SOME V0. V0 \<in> \<V> \<and> gp (i, j) \<in> V0))" for i j
+
+  define Ftilde where "Ftilde = (\<lambda>(s::real, t::real).
+    let i = (SOME i::nat. i < N \<and> real i/real N \<le> s \<and> s \<le> real(Suc i)/real N);
+        j = (SOME j::nat. j < N \<and> real j/real N \<le> t \<and> t \<le> real(Suc j)/real N)
+    in inv_into (rect_slice (i, j)) p (F (s, t)))"
+
+  \<comment> \<open>Verify the three properties.\<close>
+  have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)" sorry
+  have hFt_00: "Ftilde (0, 0) = e0"
+    unfolding Ftilde_def gp_def rect_slice_def sorry
+  have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
+  \<comment> \<open>Continuity: on each rectangle, Ftilde = inv_into V_{ij} p \<circ> F, which is continuous
+     (composition of homeomorphism inverse and continuous F). The rectangles are closed
+     and cover I\<times>I. On boundaries, adjacent rectangles agree (both in same slice by
+     connectivity + p-injectivity). By the pasting lemma, Ftilde is continuous.\<close>
+    sorry
+  show ?thesis using hFt_cont hFt_lift hFt_00 by (by100 blast)
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
