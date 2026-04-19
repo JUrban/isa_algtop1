@@ -5988,68 +5988,6 @@ qed
 
 section \<open>\<S>54 The Fundamental Group of the Circle\<close>
 
-text \<open>Lebesgue number for open covers of [0,1]: if open sets cover [0,1],
-  then there exists n ≥ 1 such that each subinterval [i/n, (i+1)/n] lies in some cover element.
-  Uses compact_Icc from HOL.\<close>
-lemma lebesgue_subdivision_01:
-  assumes hcov: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> (\<exists>U\<in>\<A>. s \<in> U)"
-      and hopen: "\<forall>U\<in>\<A>. \<exists>V. open V \<and> U = {0..1} \<inter> V"
-  shows "\<exists>n::nat. n \<ge> 1 \<and> (\<forall>i<n. \<exists>U\<in>\<A>. {s. real i/real n \<le> s \<and> s \<le> real(Suc i)/real n \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U)"
-proof -
-  \<comment> \<open>Convert to HOL open sets: each U \<in> \<A> is {0..1} \<inter> V for some open V.\<close>
-  define \<B> where "\<B> = {V. open V \<and> (\<exists>U\<in>\<A>. U = {0..1} \<inter> V)}"
-  have hB_open: "\<forall>V\<in>\<B>. open V" unfolding \<B>_def by (by100 blast)
-  have hB_cover: "{0..1::real} \<subseteq> \<Union>\<B>"
-  proof
-    fix s :: real assume hs: "s \<in> {0..1}"
-    obtain U where hU: "U \<in> \<A>" and hs_U: "s \<in> U" using hcov hs by auto
-    obtain V where hV: "open V" and hUV: "U = {0..1} \<inter> V" using hopen hU by auto
-    have "V \<in> \<B>" unfolding \<B>_def using hV hU hUV by (by100 blast)
-    moreover have "s \<in> V" using hs_U hUV by (by100 blast)
-    ultimately show "s \<in> \<Union>\<B>" by (by100 blast)
-  qed
-  \<comment> \<open>Compact {0..1} + open cover \<B> \<Rightarrow> finite subcover.\<close>
-  obtain \<C> where hC_sub: "\<C> \<subseteq> \<B>" and hC_fin: "finite \<C>" and hC_cover: "{0..1::real} \<subseteq> \<Union>\<C>"
-  proof -
-    have "compact {0..1::real}" by (rule compact_Icc)
-    from compactE[OF this hB_cover] hB_open
-    obtain \<C>' where "\<C>' \<subseteq> \<B>" "finite \<C>'" "{0..1::real} \<subseteq> \<Union>\<C>'" by (by100 blast)
-    thus ?thesis using that by (by100 blast)
-  qed
-  \<comment> \<open>Lebesgue number: for each s \<in> [0,1], s \<in> some V \<in> \<C> (open). Since V is open,
-     Ball(s, \<epsilon>_s) \<subseteq> V. Define \<epsilon>: [0,1] \<rightarrow> R>0 as the max such \<epsilon>. On compact [0,1],
-     the continuous function s \<mapsto> \<epsilon>_s achieves a positive minimum \<delta> > 0.
-     Then n = \<lceil>1/\<delta>\<rceil>+1 works.\<close>
-  \<comment> \<open>For each s, get the cover element and the ball radius.\<close>
-  have heps: "\<forall>s\<in>{0..1::real}. \<exists>\<epsilon>>0. \<exists>V\<in>\<C>. {t. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V"
-  proof
-    fix s :: real assume hs: "s \<in> {0..1}"
-    obtain V where hV: "V \<in> \<C>" and hsV: "s \<in> V" using hC_cover hs by (by100 blast)
-    have "open V" using hC_sub hV unfolding \<B>_def by (by100 blast)
-    have "\<exists>e>0. \<forall>y. dist y s < e \<longrightarrow> y \<in> V"
-      using \<open>open V\<close> \<open>s \<in> V\<close> open_dist[of V] by blast
-    then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hball: "\<forall>y. dist y s < \<epsilon> \<longrightarrow> y \<in> V"
-      by blast
-    have "{t::real. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V"
-    proof
-      fix t :: real assume "t \<in> {t. \<bar>t - s\<bar> < \<epsilon>}"
-      hence "dist t s < \<epsilon>" unfolding dist_real_def by simp
-      thus "t \<in> V" using hball by blast
-    qed
-    thus "\<exists>\<epsilon>>0. \<exists>V\<in>\<C>. {t. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V" using h\<epsilon> hV by (by100 blast)
-  qed
-  \<comment> \<open>By compactness, the infimum of the \<epsilon>_s values is achieved and positive.
-     This is the Lebesgue number \<delta>. Take n = \<lceil>1/\<delta>\<rceil>+1.\<close>
-  \<comment> \<open>From pointwise \<epsilon> to subdivision: define A = {s \<in> [0,1]. [0,s] has a valid subdivision}.
-     A contains 0. A is open in [0,1] (extend by \<epsilon>). If A \<ne> [0,1], sup(A) leads to contradiction.
-     This is the "creeping lemma" or "bisection" style argument.\<close>
-  \<comment> \<open>Alternatively: use the finite cover + pointwise \<epsilon> to get a non-uniform subdivision,
-     then refine to uniform. The key fact: since C is FINITE, we can take
-     \<delta> = min{\<epsilon>(s,V) : V \<in> C, s is a boundary point of V \<inter> [0,1]}.
-     Finitely many boundary points + finitely many V \<Rightarrow> \<delta> > 0.\<close>
-  show ?thesis sorry \<comment> \<open>Uniform \<delta> from finite cover: creeping lemma or boundary-based argument.\<close>
-qed
-
 text \<open>Non-uniform subdivision from open cover of [0,1] (easier than Lebesgue number).
   Proof by the "creeping lemma": advance step-by-step using pointwise radii.\<close>
 lemma open_cover_subdivision_01:
