@@ -7227,7 +7227,66 @@ proof -
      of lift endpoints on starting points. This follows from uniqueness of lifts
      applied to nearby columns (same argument as Lemma 54.1 pasting).\<close>
   have hrow1: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
-    sorry
+  proof -
+    \<comment> \<open>For each s0, Ftilde(s0,1) \<in> some slice V0 of an evenly covered U containing F(s0,1).
+       Near s0, F(s,1) \<in> U, so Ftilde(s,1) \<in> p\<inverse>(U). The column Ftilde(s,\<cdot>) is continuous
+       and starts at ftilde0(s) \<in> E. By the same argument as Lemma 54.1 (connectedness
+       of column image within the disjoint slices), Ftilde(s,1) \<in> V0 for s near s0.
+       Hence Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)) near s0, which is continuous.\<close>
+    \<comment> \<open>Use the 1D creeping lemma on s with the cover: for each s, F(s,1) has an evenly
+       covered neighborhood U_s. The preimage gives an open cover of I_set in the s-variable.\<close>
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    \<comment> \<open>The row path s \<mapsto> F(s,1) is continuous.\<close>
+    have hrow_F: "top1_continuous_map_on I_set I_top B TB (\<lambda>s. F (s, 1))"
+    proof -
+      have heq: "(\<lambda>s. F (s, 1)) = F \<circ> (\<lambda>s. (s, 1))" by (rule ext) simp
+      show ?thesis unfolding heq
+        by (rule top1_continuous_map_on_comp[OF pair_s_const_continuous[OF h1I] assms(4)])
+    qed
+    \<comment> \<open>This is a path in B. Lift it from Ftilde(0,1) using Lemma 54.1.\<close>
+    have hrow_path: "top1_is_path_on B TB (F (0, 1)) (F (1, 1)) (\<lambda>s. F (s, 1))"
+      unfolding top1_is_path_on_def using hrow_F by simp
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hFt01_E: "Ftilde (0, 1) \<in> E"
+      using hFt_E h0I h1I by (by100 blast)
+    have hFt01_p: "p (Ftilde (0, 1)) = F (0, 1)"
+      using hFt_lift h0I h1I by (by100 blast)
+    obtain row_lift where hrl_path: "top1_is_path_on E TE (Ftilde (0, 1)) (row_lift 1) row_lift"
+        and hrl_lift: "\<forall>s\<in>I_set. p (row_lift s) = F (s, 1)"
+      using Lemma_54_1_path_lifting[OF assms(1) hFt01_E hFt01_p hrow_path assms(6,7)]
+      by (by100 auto)
+    \<comment> \<open>By uniqueness: row_lift and (\<lambda>s. Ftilde(s,1)) are both lifts of s \<mapsto> F(s,1)
+       starting at Ftilde(0,1). They agree by Lemma_54_1_uniqueness.\<close>
+    have hFt_row1_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = F (s, 1)"
+      using hFt_lift h1I by auto
+    \<comment> \<open>But (\<lambda>s. Ftilde(s,1)) must also be a path (continuous) for uniqueness to apply.
+       This is the circular part. Instead, use that both are determined by their values
+       and the covering structure. Since row_lift is the UNIQUE lift (by Lemma 54.1),
+       and Ftilde(s,1) satisfies the same lifting property, they must agree.\<close>
+    \<comment> \<open>Actually: Ftilde(s,1) = row_lift(s) follows from the fact that for each s,
+       the column lift at s and the row lift give the same value at t=1.
+       Both lift the same point F(s,1) from the same starting configuration.
+       By uniqueness of lifts on connected domains, they agree.\<close>
+    have hFt_eq_rl: "\<forall>s\<in>I_set. Ftilde (s, 1) = row_lift s"
+      sorry
+    show ?thesis
+    proof -
+      have hrl_cont: "top1_continuous_map_on I_set I_top E TE row_lift"
+        using hrl_path unfolding top1_is_path_on_def by (by100 blast)
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume hs: "s \<in> I_set"
+        show "Ftilde (s, 1) \<in> E" using hFt_E hs h1I by (by100 blast)
+      next
+        fix V assume hV: "V \<in> TE"
+        have "{s\<in>I_set. Ftilde (s, 1) \<in> V} = {s\<in>I_set. row_lift s \<in> V}"
+          using hFt_eq_rl by auto
+        also have "\<dots> \<in> I_top"
+          using hrl_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{s\<in>I_set. Ftilde (s, 1) \<in> V} \<in> I_top" .
+      qed
+    qed
+  qed
   show ?thesis using hcol_cont hFt_lift hFt_00 hrow0 hrow1 by (by100 blast)
 qed
 
