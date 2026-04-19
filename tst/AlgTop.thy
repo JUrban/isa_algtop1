@@ -6355,7 +6355,19 @@ proof -
     obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
         and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
         and hcov_m: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
-      using open_cover_subdivision_01[OF hcover_hyp] sorry \<comment> \<open>blast too slow for nested existentials\<close>
+    proof -
+      have hex: "\<exists>n\<ge>1. \<exists>sub. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. \<exists>U\<in>\<A>_covers. {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U)"
+        by (rule open_cover_subdivision_01[OF hcover_hyp])
+      then obtain m sub_m where hm_ge: "m \<ge> 1"
+          and hsm0: "sub_m 0 = 0" and hsmn: "sub_m m = 1"
+          and hsm_inc: "\<forall>i<m. sub_m i < sub_m (Suc i)"
+          and hsm_cov: "\<forall>i<m. \<exists>U\<in>\<A>_covers. {s. sub_m i \<le> s \<and> s \<le> sub_m (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> U"
+        by auto
+      show ?thesis
+        by (rule that[OF hm_ge hsm0 hsmn hsm_inc hsm_cov])
+    qed
     \<comment> \<open>Transfer: each subdivision piece maps into an evenly covered set.\<close>
     have "\<forall>i<m. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
         \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
