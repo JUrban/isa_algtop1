@@ -9762,6 +9762,8 @@ proof
   \<comment> \<open>S^1 is a retract of C - {0} via r(z) = z/|z|. So j: S^1 \<hookrightarrow> C-{0} induces
      j_* injective. f = z^n induces f_* injective (Step 1).
      g = j \<circ> f: S^1 \<rightarrow> C-{0} induces g_* = j_* \<circ> f_* injective, hence nontrivial.\<close>
+  \<comment> \<open>j_* injective: retraction r(z)=z/|z| of C-{0} onto S^1 gives:
+     f ≃ g in C-{0} \<Rightarrow> r\<circ>f ≃ r\<circ>g in S^1, and r|S^1 = id.\<close>
   have hj_inj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
       \<and> top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1 f g
