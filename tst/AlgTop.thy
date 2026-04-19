@@ -7138,10 +7138,24 @@ proof -
      definition on C (both are in V0 and lift F, so equal by p-injectivity).\<close>
 
   \<comment> \<open>Define the grid point values by induction.\<close>
-  \<comment> \<open>The textbook constructs Ftilde rectangle-by-rectangle: on each rectangle
-     I_i \<times> J_j, the boundary C is connected, Ftilde(C) in one slice V0,
-     define Ftilde = (p|V0)\<inverse> \<circ> F. Pasting gives continuity.
-     We encapsulate the full construction as a single existential."""\<close>
+  \<comment> \<open>Step 3: Lebesgue grid. Compactness of I\<times>I gives fine enough subdivisions.\<close>
+  obtain m n sub_s sub_t where
+      hm: "m \<ge> 1" and hn: "n \<ge> 1"
+      and hs0: "sub_s 0 = 0" and hsm: "sub_s m = 1"
+      and ht0: "sub_t 0 = 0" and htn: "sub_t n = 1"
+      and hs_inc: "\<forall>i<m. sub_s i < sub_s (Suc i)"
+      and ht_inc: "\<forall>j<n. sub_t j < sub_t (Suc j)"
+      and hgrid: "\<forall>i<m. \<forall>j<n. \<exists>U. openin_on B TB U
+          \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+    sorry
+  \<comment> \<open>Step 4: Rectangle-by-rectangle construction (textbook Munkres 54.2).
+     Induction on linearized index k = j*m + i over rectangles.
+     Invariant: Ftilde continuous on A_k, lifts F, starts at e0.
+     At each step: boundary C connected, Ftilde(C) in one slice V0,
+     extend Ftilde = p0\<inverse>\<circ>F on rectangle, pasting gives continuity.
+     After m*n steps: Ftilde continuous on all of I\<times>I.\<close>
   show ?thesis sorry
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
