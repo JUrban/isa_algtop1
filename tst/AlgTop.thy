@@ -8245,6 +8245,42 @@ proof -
   show ?thesis unfolding top1_continuous_map_on_def using h1 h2 by (by100 blast)
 qed
 
+text \<open>Version with continuous_on S (not UNIV). Works for partial functions.\<close>
+lemma top1_continuous_map_on_subspace_open_sets_on:
+  assumes hmap: "\<And>x. x \<in> S \<Longrightarrow> f x \<in> T"
+      and hcont: "continuous_on S f"
+  shows "top1_continuous_map_on S (subspace_topology UNIV top1_open_sets S)
+                               T (subspace_topology UNIV top1_open_sets T) f"
+proof -
+  have h1: "\<forall>x\<in>S. f x \<in> T" using hmap by (by100 blast)
+  have h2: "\<forall>V\<in>subspace_topology UNIV top1_open_sets T.
+      {x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
+  proof
+    fix V assume "V \<in> subspace_topology UNIV top1_open_sets T"
+    then obtain U where hUos: "U \<in> top1_open_sets" and hVeq: "V = T \<inter> U"
+      unfolding subspace_topology_def by (by100 auto)
+    have hUo: "open U" using hUos unfolding top1_open_sets_def by (by100 blast)
+    have hcoi: "\<forall>B. open B \<longrightarrow> (\<exists>A. open A \<and> A \<inter> S = f -` B \<inter> S)"
+      using iffD1[OF continuous_on_open_invariant] hcont by (by100 blast)
+    have "\<exists>W. open W \<and> W \<inter> S = f -` U \<inter> S"
+      using spec[OF hcoi, of U] hUo by (by100 blast)
+    then obtain W where hWo: "open W" and hWeq: "f -` U \<inter> S = W \<inter> S" by (by100 blast)
+    then obtain W where hWo: "open W" and hWeq: "f -` U \<inter> S = W \<inter> S" by (by100 blast)
+    have "{x \<in> S. f x \<in> V} = S \<inter> W"
+    proof -
+      have "{x \<in> S. f x \<in> V} = {x \<in> S. f x \<in> U}" unfolding hVeq using hmap by (by100 auto)
+      also have "\<dots> = f -` U \<inter> S" by (by100 auto)
+      also have "\<dots> = W \<inter> S" using hWeq by (by100 blast)
+      also have "\<dots> = S \<inter> W" by (by100 blast)
+      finally show ?thesis .
+    qed
+    moreover have "W \<in> top1_open_sets" using hWo unfolding top1_open_sets_def by (by100 blast)
+    ultimately show "{x \<in> S. f x \<in> V} \<in> subspace_topology UNIV top1_open_sets S"
+      unfolding subspace_topology_def by (by100 blast)
+  qed
+  show ?thesis unfolding top1_continuous_map_on_def using h1 h2 by (by100 blast)
+qed
+
 text \<open>The complex unit circle.\<close>
 definition top1_S1_complex :: "complex set" where
   "top1_S1_complex = {z. cmod z = 1}"
