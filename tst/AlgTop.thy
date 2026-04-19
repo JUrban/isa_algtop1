@@ -6540,8 +6540,51 @@ proof -
           have hTXk1: "is_topology_on ?Xk1 ?TXk1"
             by (rule subspace_topology_is_topology_on[OF hTI hXk1_sub])
           have hTE': "is_topology_on E TE" using hTE_top .
-          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A" sorry
-          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B" sorry
+          have hsk_le_sk1: "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
+          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A"
+          proof -
+            have hAsub: "?A \<subseteq> ?Xk1" using hsk_le_sk1 by auto
+            have hcomp: "?Xk1 - ?A = ?Xk1 \<inter> {s\<in>I_set. sub k < s}" by auto
+            have "open {s::real. sub k < s}"
+              using open_greaterThan[of "sub k"] unfolding greaterThan_def by simp
+            hence "{s::real. sub k < s} \<in> top1_open_sets"
+              unfolding top1_open_sets_def by (by100 blast)
+            hence hgr_os: "{s::real. sub k < s} \<in> top1_open_sets" .
+            have hgr_I: "I_set \<inter> {s. sub k < s} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def
+              using hgr_os by (by100 blast)
+            have "I_set \<inter> {s. sub k < s} = {s\<in>I_set. sub k < s}" by auto
+            hence "{s\<in>I_set. sub k < s} \<in> I_top" using hgr_I by simp
+            hence "?Xk1 \<inter> {s\<in>I_set. sub k < s} \<in> ?TXk1"
+              unfolding subspace_topology_def by (by100 blast)
+            hence "?Xk1 - ?A \<in> ?TXk1" using hcomp by simp
+            moreover have "?A \<subseteq> ?Xk1" using hAsub .
+            ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+          qed
+          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B"
+          proof -
+            have hBsub: "?B \<subseteq> ?Xk1" by (by100 blast)
+            have hcomp: "?Xk1 - ?B = ?Xk1 \<inter> {s\<in>I_set. s < sub k}"
+            proof -
+              have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
+              thus ?thesis by auto
+            qed
+            have "open {s::real. s < sub k}"
+              using open_lessThan[of "sub k"] unfolding lessThan_def by simp
+            hence "{s::real. s < sub k} \<in> top1_open_sets"
+              unfolding top1_open_sets_def by (by100 blast)
+            hence hlt_os: "{s::real. s < sub k} \<in> top1_open_sets" .
+            have hlt_I: "I_set \<inter> {s. s < sub k} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def
+              using hlt_os by (by100 blast)
+            have "I_set \<inter> {s. s < sub k} = {s\<in>I_set. s < sub k}" by auto
+            hence "{s\<in>I_set. s < sub k} \<in> I_top" using hlt_I by simp
+            hence "?Xk1 \<inter> {s\<in>I_set. s < sub k} \<in> ?TXk1"
+              unfolding subspace_topology_def by (by100 blast)
+            hence "?Xk1 - ?B \<in> ?TXk1" using hcomp by simp
+            moreover have "?B \<subseteq> ?Xk1" using hBsub .
+            ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+          qed
           have hAB: "?A \<union> ?B = ?Xk1"
           proof -
             have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
@@ -6556,7 +6599,7 @@ proof -
           \<comment> \<open>ftk' continuous on A: equals ftk which is continuous by IH.\<close>
           have hcont_A: "top1_continuous_map_on ?A (subspace_topology ?Xk1 ?TXk1 ?A) E TE ftk'"
           proof -
-            have hAsub: "?A \<subseteq> ?Xk1" using hAB by (by100 blast)
+            have hAsub: "?A \<subseteq> ?Xk1" using hsk_le_sk1 by auto
             have hTsub: "subspace_topology ?Xk1 ?TXk1 ?A = subspace_topology I_set I_top ?A"
               by (rule subspace_topology_trans[OF hAsub])
             \<comment> \<open>ftk' = ftk on ?A, and ftk is continuous on ?A by IH.\<close>
