@@ -15491,13 +15491,61 @@ proof
       qed
       have hnorm_ne: "?norm x \<noteq> 0" using hnorm_pos by (by100 linarith)
       have "(fst x / ?norm x) ^ 2 + (snd x / ?norm x) ^ 2 = 1"
-        sorry
+      proof -
+        have hne: "fst x ^ 2 + snd x ^ 2 \<noteq> 0" using hsum_pos by (by100 linarith)
+        have "fst x ^ 2 / (fst x ^ 2 + snd x ^ 2) + snd x ^ 2 / (fst x ^ 2 + snd x ^ 2) = 1"
+          using hne by (simp add: add_divide_distrib[symmetric])
+        thus ?thesis using hns by (simp add: power_divide)
+      qed
       thus "?r x \<in> top1_S1" unfolding top1_S1_def by simp
     qed
     \<comment> \<open>r is continuous R^2-{0} \<rightarrow> S^1.\<close>
     have hr_cont: "top1_continuous_map_on (UNIV - {(0, 0)}) ?TR2_0
         top1_S1 top1_S1_topology ?r"
-      sorry
+    proof -
+      \<comment> \<open>r is continuous_on (UNIV - {(0,0)}) as a composition of continuous functions.\<close>
+      have hr_cont_on: "continuous_on (UNIV - {(0::real, 0)}) ?r"
+      proof (intro continuous_on_Pair)
+        show "continuous_on (UNIV - {(0::real, 0)}) (\<lambda>x. fst x / ?norm x)"
+          by (intro continuous_intros) (auto simp: sum_power2_eq_zero_iff prod_eq_iff)
+        show "continuous_on (UNIV - {(0::real, 0)}) (\<lambda>x. snd x / ?norm x)"
+          by (intro continuous_intros) (auto simp: sum_power2_eq_zero_iff prod_eq_iff)
+      qed
+      \<comment> \<open>Transfer to top1_continuous_map_on via open_vimage.\<close>
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x :: "real \<times> real" assume hx: "x \<in> UNIV - {(0, 0)}"
+        show "?r x \<in> top1_S1" using hr_S1[OF hx] .
+      next
+        fix V assume hV: "V \<in> top1_S1_topology"
+        then obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+            and hVeq: "V = top1_S1 \<inter> W"
+          unfolding top1_S1_topology_def subspace_topology_def by (by100 auto)
+        have hWo: "open W"
+        proof -
+          have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+            using hW product_topology_on_open_sets_real2 by (by100 metis)
+          thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+        qed
+        have hR2_open: "open (UNIV - {(0::real, 0::real)})"
+          by (intro open_Diff open_UNIV finite_imp_closed) simp
+        have hpre: "open (?r -` W \<inter> (UNIV - {(0, 0)}))"
+          using iffD1[OF continuous_on_open_vimage[OF hR2_open] hr_cont_on] hWo by (by100 blast)
+        have "{x \<in> UNIV - {(0, 0)}. ?r x \<in> V} = (UNIV - {(0, 0)}) \<inter> (?r -` W)"
+          unfolding hVeq using hr_S1 by (by100 auto)
+        also have "\<dots> = ?r -` W \<inter> (UNIV - {(0, 0)})" by (by100 blast)
+        finally have "{x \<in> UNIV - {(0, 0)}. ?r x \<in> V} = ?r -` W \<inter> (UNIV - {(0, 0)})" .
+        hence hopen: "open {x \<in> UNIV - {(0, 0)}. ?r x \<in> V}" using hpre by simp
+        hence hopen_os: "{x \<in> UNIV - {(0, 0)}. ?r x \<in> V} \<in> top1_open_sets"
+          unfolding top1_open_sets_def by (by100 blast)
+        have hsub: "{x \<in> UNIV - {(0, 0)}. ?r x \<in> V} \<subseteq> UNIV - {(0, 0)}" by (by100 blast)
+        have hprod: "(product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)
+            = top1_open_sets" using product_topology_on_open_sets_real2 by simp
+        show "{x \<in> UNIV - {(0, 0)}. ?r x \<in> V} \<in> ?TR2_0"
+          unfolding subspace_topology_def hprod
+          using hopen_os hsub by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Apply r to the homotopy: r∘p0 ≃ r∘const.\<close>
     have hpsi_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology
         (?r (1, 0)) (?r (1, 0)) (?r \<circ> ?p0) (?r \<circ> top1_constant_path (1, 0))"
