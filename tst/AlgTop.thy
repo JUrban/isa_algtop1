@@ -7137,43 +7137,65 @@ proof -
      Then Ftilde = (p|V0)\<inverse> \<circ> F on the rectangle agrees with the previous
      definition on C (both are in V0 and lift F, so equal by p-injectivity).\<close>
 
-  \<comment> \<open>Define the grid point values by induction.\<close>
-  define gp where "gp = (\<lambda>(i::nat, j::nat).
-    if i = 0 \<and> j = 0 then e0
-    else if i = 0 then left_lift (real j / real N)
-    else if j = 0 then bot_lift (real i / real N)
-    else sorry)" for i j \<comment> \<open>Interior grid points from previous rectangle.\<close>
-
-  \<comment> \<open>For each rectangle (i,j), get the slice V_{ij} containing gp(i,j).\<close>
-  \<comment> \<open>Define Ftilde(s,t) for (s,t) in rectangle (i,j) as inv_into V_{ij} p (F(s,t)).\<close>
-  \<comment> \<open>The full construction requires managing N\<times>N rectangles with grid-point values
-     feeding into slice selection. This is a double induction.\<close>
-
-  \<comment> \<open>For the formalization: define Ftilde directly. On each rectangle [i/N,(i+1)/N]\<times>[j/N,(j+1)/N],
-     F maps into evenly covered U_{ij}. The grid point gp(i,j) determines slice V_{ij}.
-     Ftilde(s,t) = inv_into V_{ij} p (F(s,t)) when (s,t) is in rectangle (i,j).\<close>
-
-  define rect_slice where "rect_slice = (\<lambda>(i::nat, j::nat).
-    let U = (SOME U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
-        \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
-              \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U);
-        \<V> = (SOME \<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
-            \<and> {x\<in>E. p x \<in> U} = \<Union>\<V>
-            \<and> (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U (subspace_topology B TB U) p))
-    in (SOME V0. V0 \<in> \<V> \<and> gp (i, j) \<in> V0))" for i j
-
-  define Ftilde where "Ftilde = (\<lambda>(s::real, t::real).
-    let i = (SOME i::nat. i < N \<and> real i/real N \<le> s \<and> s \<le> real(Suc i)/real N);
-        j = (SOME j::nat. j < N \<and> real j/real N \<le> t \<and> t \<le> real(Suc j)/real N)
-    in inv_into (rect_slice (i, j)) p (F (s, t)))"
+  \<comment> \<open>Define Ftilde via column lifts from bot_lift. For each s, lift F(s,\<cdot>) from bot_lift(s).\<close>
+  have hbl_E: "\<forall>s\<in>I_set. bot_lift s \<in> E"
+    using hbl unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+  have hcol_path: "\<forall>s\<in>I_set. top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have heq: "(\<lambda>t. F (s, t)) = F \<circ> (\<lambda>t. (s, t))" by (rule ext) simp
+    show "top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
+      unfolding top1_is_path_on_def heq
+      using top1_continuous_map_on_comp[OF pair_const_t_continuous[OF hs] assms(4)] by simp
+  qed
+  have hcol_lift: "\<forall>s\<in>I_set. \<exists>fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
+      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "\<exists>fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
+      using Lemma_54_1_path_lifting[OF assms(1) hbl_E[rule_format, OF hs]
+          hbl_lift[rule_format, OF hs] hcol_path[rule_format, OF hs] assms(6,7)]
+      by (by100 auto)
+  qed
+  define Ftilde where "Ftilde = (\<lambda>(s, t). (SOME fs.
+      top1_is_path_on E TE (bot_lift s) (fs 1) fs
+      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t)"
+  have hSOME: "\<forall>s\<in>I_set. let fs = (SOME fs.
+      top1_is_path_on E TE (bot_lift s) (fs 1) fs
+      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) in
+      top1_is_path_on E TE (bot_lift s) (fs 1) fs
+      \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "let fs = (SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) in
+        top1_is_path_on E TE (bot_lift s) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))"
+      using someI_ex[OF hcol_lift[rule_format, OF hs]] by (simp add: Let_def)
+  qed
 
   \<comment> \<open>Verify the three properties.\<close>
   have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
-    \<comment> \<open>On each rectangle, Ftilde = inv_into V p \<circ> F. Since p is a bijection V \<rightarrow> U
-       and F(s,t) \<in> U, we have p(inv_into V p (F(s,t))) = F(s,t).\<close>
-    sorry
+  proof (intro ballI)
+    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+    have "Ftilde (s, t) = (SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t" unfolding Ftilde_def by simp
+    moreover have "p ((SOME fs. top1_is_path_on E TE (bot_lift s) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (s, t))) t) = F (s, t)"
+      using hSOME[rule_format, OF hs] ht by (simp add: Let_def)
+    ultimately show "p (Ftilde (s, t)) = F (s, t)" by simp
+  qed
   have hFt_00: "Ftilde (0, 0) = e0"
-    unfolding Ftilde_def gp_def rect_slice_def sorry
+  proof -
+    have "Ftilde (0, 0) = (SOME fs. top1_is_path_on E TE (bot_lift 0) (fs 1) fs
+        \<and> (\<forall>t\<in>I_set. p (fs t) = F (0, t))) 0" unfolding Ftilde_def by simp
+    also have "\<dots> = bot_lift 0"
+      using hSOME[rule_format, OF h0I] unfolding Let_def top1_is_path_on_def by simp
+    also have "\<dots> = e0"
+      using hbl unfolding top1_is_path_on_def by simp
+    finally show ?thesis .
+  qed
   have hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
   \<comment> \<open>Continuity: on each rectangle, Ftilde = inv_into V_{ij} p \<circ> F, which is continuous
      (composition of homeomorphism inverse and continuous F). The rectangles are closed
