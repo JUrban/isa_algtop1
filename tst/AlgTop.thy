@@ -4357,7 +4357,15 @@ proof -
         \<comment> \<open>x, y \<in> (n-1/4, n+1/4), so |x-y| < 1/2 < 1. Hence k = 0.\<close>
         moreover have "of_int n - 1/4 < x" "x < of_int n + 1/4"
             "of_int n - 1/4 < y" "y < of_int n + 1/4"
-          using hx hy unfolding hVeq sorry
+        proof -
+          have "x \<in> {of_int n - 1/4 <..< of_int n + (1/4::real)}" using hx hVeq by simp
+          hence "of_int n - 1/4 < x" "x < of_int n + 1/4" by simp_all
+          have "y \<in> {of_int n - 1/4 <..< of_int n + (1/4::real)}" using hy hVeq by simp
+          hence "of_int n - 1/4 < y" "y < of_int n + 1/4" by simp_all
+          show "of_int n - 1/4 < x" "x < of_int n + 1/4"
+               "of_int n - 1/4 < y" "y < of_int n + 1/4"
+            by fact+
+        qed
         hence "\<bar>x - y\<bar> < 1/2" by (by100 linarith)
         hence "k = 0" using \<open>x - y = of_int k\<close> by (by100 linarith)
         ultimately show "x = y" by (by100 linarith)
