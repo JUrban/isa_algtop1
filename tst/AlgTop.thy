@@ -7637,7 +7637,99 @@ proof -
           and hFR: "F ` ?R ?i ?j \<subseteq> U"
         using hgrid[rule_format, OF hi hj] by (by100 auto)
       \<comment> \<open>A_k and R are closed in I\<times>I. A_k \<inter> R connected. A_k \<inter> R nonempty.\<close>
-      have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
+      have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)"
+      proof -
+        have hTII_here: "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def
+          by (rule product_topology_on_is_topology_on[OF
+              top1_unit_interval_topology_is_topology_on
+              top1_unit_interval_topology_is_topology_on])
+        have hI_open: "I_set \<in> I_top"
+          using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+        \<comment> \<open>Left edge {0} \<times> I_set is closed.\<close>
+        have hle_closed: "closedin_on (I_set \<times> I_set) II_topology ({0::real} \<times> I_set)"
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "{0::real} \<times> I_set \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+          have heq: "I_set \<times> I_set - {0::real} \<times> I_set = {s\<in>I_set. s > 0} \<times> I_set"
+            unfolding top1_unit_interval_def by (by100 auto)
+          have "{s\<in>I_set. s > 0} = I_set \<inter> {s :: real. 0 < s}" by (by100 auto)
+          also have "\<dots> \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def
+            using open_greaterThan[of "0::real"] unfolding top1_open_sets_def greaterThan_def by (by100 blast)
+          finally have "{s\<in>I_set. s > 0} \<in> I_top" .
+          thus "I_set \<times> I_set - {0::real} \<times> I_set \<in> II_topology"
+            unfolding heq II_topology_def by (rule product_rect_open[OF _ hI_open])
+        qed
+        \<comment> \<open>Bottom edge I_set \<times> {0} is closed.\<close>
+        have hbe_closed: "closedin_on (I_set \<times> I_set) II_topology (I_set \<times> {0::real})"
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "I_set \<times> {0::real} \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+          have heq: "I_set \<times> I_set - I_set \<times> {0::real} = I_set \<times> {t\<in>I_set. t > 0}"
+            unfolding top1_unit_interval_def by (by100 auto)
+          have "{t\<in>I_set. t > 0} = I_set \<inter> {t :: real. 0 < t}" by (by100 auto)
+          also have "\<dots> \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def
+            using open_greaterThan[of "0::real"] unfolding top1_open_sets_def greaterThan_def by (by100 blast)
+          finally have "{t\<in>I_set. t > 0} \<in> I_top" .
+          thus "I_set \<times> I_set - I_set \<times> {0::real} \<in> II_topology"
+            unfolding heq II_topology_def by (rule product_rect_open[OF hI_open])
+        qed
+        \<comment> \<open>Edges are closed.\<close>
+        have hedge_closed: "closedin_on (I_set \<times> I_set) II_topology ?edges"
+        proof -
+          have "\<forall>A\<in>{?left_edge, ?bot_edge}. closedin_on (I_set \<times> I_set) II_topology A"
+            using hle_closed hbe_closed by (by100 blast)
+          hence "closedin_on (I_set \<times> I_set) II_topology (\<Union>{?left_edge, ?bot_edge})"
+            by (rule closedin_on_finite_Union[OF hTII_here _ finite.insertI[OF finite.insertI[OF finite.emptyI]]])
+          thus ?thesis by simp
+        qed
+        \<comment> \<open>Each rectangle is closed.\<close>
+        have hrect_closed: "\<forall>k'<k. closedin_on (I_set \<times> I_set) II_topology (?R (k' mod m) (k' div m))"
+        proof (intro allI impI)
+          fix k' assume hk'_lt: "k' < k"
+          have hk'_lt_mn: "k' < m * n" using hk'_lt hk by simp
+          have "k' mod m < m" using hm by simp
+          have "k' div m < n"
+          proof -
+            have "m > 0" using hm by simp
+            hence "k' div m < n \<longleftrightarrow> k' < n * m"
+              using div_less_iff_less_mult[of m k' n] by simp
+            thus ?thesis using hk'_lt_mn by (simp add: mult.commute)
+          qed
+          have "sub_s (k' mod m) \<le> sub_s (Suc (k' mod m))"
+            using hs_inc[rule_format, OF \<open>k' mod m < m\<close>] by simp
+          moreover have "sub_t (k' div m) \<le> sub_t (Suc (k' div m))"
+            using ht_inc[rule_format, OF \<open>k' div m < n\<close>] by simp
+          ultimately show "closedin_on (I_set \<times> I_set) II_topology (?R (k' mod m) (k' div m))"
+            using closedin_II_rectangle by simp
+        qed
+        \<comment> \<open>Finite union of rectangles is closed.\<close>
+        have "finite {k'. k' < k}" by simp
+        have hrects_closed: "closedin_on (I_set \<times> I_set) II_topology (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+        proof -
+          let ?F = "{?R (k' mod m) (k' div m) | k'. k' < k}"
+          have hfin: "finite ?F" by simp
+          have hcl: "\<forall>A\<in>?F. closedin_on (I_set \<times> I_set) II_topology A"
+          proof (intro ballI)
+            fix A assume "A \<in> ?F"
+            then obtain k' where hk': "k' < k" and hAeq: "A = ?R (k' mod m) (k' div m)" by (by100 blast)
+            show "closedin_on (I_set \<times> I_set) II_topology A"
+              using hrect_closed[rule_format, OF hk'] hAeq by simp
+          qed
+          have "closedin_on (I_set \<times> I_set) II_topology (\<Union>?F)"
+            by (rule closedin_on_finite_Union[OF hTII_here hcl hfin])
+          moreover have "\<Union>?F = (\<Union>k'<k. ?R (k' mod m) (k' div m))" by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>A_k = edges \<union> rectangles.\<close>
+        have "\<forall>A\<in>{?edges, \<Union>k'<k. ?R (k' mod m) (k' div m)}. closedin_on (I_set \<times> I_set) II_topology A"
+          using hedge_closed hrects_closed by (by100 blast)
+        hence "closedin_on (I_set \<times> I_set) II_topology (\<Union>{?edges, \<Union>k'<k. ?R (k' mod m) (k' div m)})"
+          by (rule closedin_on_finite_Union[OF hTII_here _ finite.insertI[OF finite.insertI[OF finite.emptyI]]])
+        thus ?thesis by simp
+      qed
       have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)"
         using closedin_II_rectangle[of "sub_s ?i" "sub_s (Suc ?i)" "sub_t ?j" "sub_t (Suc ?j)"]
               hs_inc[rule_format, OF hi] ht_inc[rule_format, OF hj] by (by100 linarith)
@@ -7774,7 +7866,14 @@ proof -
       (subspace_topology (I_set \<times> I_set) II_topology (?A (m*n))) E TE Ft
       \<and> (\<forall>x\<in>?A (m*n). p (Ft x) = F x) \<and> Ft (0, 0) = e0"
     by simp
-  moreover have "?A (m*n) = I_set \<times> I_set" sorry
+  moreover have "?A (m*n) = I_set \<times> I_set"
+  proof (rule equalityI)
+    \<comment> \<open>Forward: A(m*n) \<subseteq> I\<times>I.\<close>
+    show "?A (m*n) \<subseteq> I_set \<times> I_set" sorry
+  next
+    \<comment> \<open>Backward: I\<times>I \<subseteq> A(m*n). Each (s,t) is in some rectangle.\<close>
+    show "I_set \<times> I_set \<subseteq> ?A (m*n)" sorry
+  qed
   ultimately show ?thesis
   proof -
     assume hAmn: "?A (m*n) = I_set \<times> I_set"
