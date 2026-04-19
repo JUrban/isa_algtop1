@@ -7940,19 +7940,96 @@ proof -
       obtain f1 ft1 where "f1 \<in> c1" and hf1l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f1"
           and hft1: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c1) ft1"
           and hft1p: "\<forall>s\<in>I_set. top1_R_to_S1 (ft1 s) = f1 s"
-        using h\<phi>'_lift[rule_format, OF hc1] sorry
+        using h\<phi>'_lift[rule_format, OF hc1] by (by100 auto)
       obtain f2 ft2 where "f2 \<in> c2" and hf2l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f2"
           and hft2: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c2) ft2"
           and hft2p: "\<forall>s\<in>I_set. top1_R_to_S1 (ft2 s) = f2 s"
-        using h\<phi>'_lift[rule_format, OF hc2] sorry
+        using h\<phi>'_lift[rule_format, OF hc2] by (by100 auto)
       \<comment> \<open>Since \<phi>'(c1) = \<phi>'(c2) and lifts end at same point, by Thm 54.3 f1 \<simeq> f2.\<close>
       have hft2': "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c1) ft2"
         using hft2 heq by simp
       have hTE: "is_topology_on (UNIV::real set) top1_open_sets"
         by (rule top1_open_sets_is_topology_on_UNIV)
       have hf1_eq_f2: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f1 f2"
-        sorry
-      show "c1 = c2" sorry
+      proof -
+        \<comment> \<open>Lifts ft1, ft2 start at 0 and end at same point (\<phi>'(c1) = \<phi>'(c2)).
+           E = R is simply connected. So ft1 \<simeq> ft2 in R.
+           Project: p \<circ> ft1 \<simeq> p \<circ> ft2 in S^1, i.e., f1 \<simeq> f2.\<close>
+        have hft_hom: "top1_path_homotopic_on (UNIV::real set) top1_open_sets 0 (\<phi>' c1) ft1 ft2"
+          by (rule simply_connected_paths_homotopic[OF top1_R_simply_connected' hft1 hft2' h0R])
+        have hp_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+          using hcov unfolding top1_covering_map_on_def by (by100 blast)
+        have hpft: "top1_path_homotopic_on top1_S1 top1_S1_topology (top1_R_to_S1 0) (top1_R_to_S1 (\<phi>' c1))
+            (top1_R_to_S1 \<circ> ft1) (top1_R_to_S1 \<circ> ft2)"
+          by (rule continuous_preserves_path_homotopic[OF hTE hTS1 hp_cont hft_hom])
+        have hpft_simp: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (top1_R_to_S1 \<circ> ft1) (top1_R_to_S1 \<circ> ft2)"
+        proof -
+          have "top1_R_to_S1 0 = (1, 0)" using hp0 .
+          moreover have "top1_R_to_S1 (\<phi>' c1) = (1, 0)"
+            using h\<phi>'_mem[rule_format, OF hc1] by simp
+          ultimately show ?thesis using hpft by simp
+        qed
+        \<comment> \<open>p \<circ> ft1 = f1 on I_set, p \<circ> ft2 = f2 on I_set. Transfer homotopy.\<close>
+        have hpft1_f1: "\<forall>s\<in>I_set. (top1_R_to_S1 \<circ> ft1) s = f1 s" using hft1p by simp
+        have hpft2_f2: "\<forall>s\<in>I_set. (top1_R_to_S1 \<circ> ft2) s = f2 s" using hft2p by simp
+        have hpft1_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (top1_R_to_S1 \<circ> ft1)"
+          using hpft_simp unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+        have hpft2_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (top1_R_to_S1 \<circ> ft2)"
+          using hpft_simp unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+        have hf1_pft1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f1 (top1_R_to_S1 \<circ> ft1)"
+          using conjunct2[OF loop_agree_on_I[OF hf1l hpft1_f1]] .
+        have hf2_pft2: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f2 (top1_R_to_S1 \<circ> ft2)"
+          using conjunct2[OF loop_agree_on_I[OF hf2l hpft2_f2]] .
+        show ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTS1
+              hf1_pft1
+              Lemma_51_1_path_homotopic_trans[OF hTS1
+                hpft_simp
+                Lemma_51_1_path_homotopic_sym[OF hf2_pft2]]])
+      qed
+      show "c1 = c2"
+      proof -
+        \<comment> \<open>c1 \<in> carrier means c1 = {g. equiv f' g} for some f'. f1 \<in> c1 implies equiv f' f1.
+           By transitivity, c1 = {g. equiv f1 g}. Similarly c2 = {g. equiv f2 g}.
+           f1 \<simeq> f2 gives class equality.\<close>
+        obtain f1' where hc1_eq: "c1 = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1' g}"
+            and hf1'_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f1'"
+          using hc1 unfolding top1_fundamental_group_carrier_def by (by100 auto)
+        have hf1'_f1: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1' f1"
+          using \<open>f1 \<in> c1\<close> hc1_eq by simp
+        have hf1_f1': "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1 f1'"
+          by (rule top1_loop_equiv_on_sym[OF hf1'_f1])
+        have hc1_f1: "c1 = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1 g}"
+          apply (rule set_eqI)
+          unfolding hc1_eq mem_Collect_eq
+          using top1_loop_equiv_on_trans[OF hTS1 hf1_f1'] top1_loop_equiv_on_trans[OF hTS1 hf1'_f1]
+          by (by100 blast)
+        obtain f2' where hc2_eq: "c2 = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2' g}"
+          using hc2 unfolding top1_fundamental_group_carrier_def by (by100 auto)
+        have hf2'_f2: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2' f2"
+          using \<open>f2 \<in> c2\<close> hc2_eq by simp
+        have hf2_f2': "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2 f2'"
+          by (rule top1_loop_equiv_on_sym[OF hf2'_f2])
+        have hc2_f2: "c2 = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2 g}"
+          apply (rule set_eqI)
+          unfolding hc2_eq mem_Collect_eq
+          using top1_loop_equiv_on_trans[OF hTS1 hf2_f2'] top1_loop_equiv_on_trans[OF hTS1 hf2'_f2]
+          by (by100 blast)
+        \<comment> \<open>f1 \<simeq> f2 implies {g. equiv f1 g} = {g. equiv f2 g}.\<close>
+        have hf1_f2_equiv: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1 f2"
+          unfolding top1_loop_equiv_on_def using hf1l hf2l hf1_eq_f2 by (by100 blast)
+        have hf2_f1_equiv: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2 f1"
+          by (rule top1_loop_equiv_on_sym[OF hf1_f2_equiv])
+        have hclass_eq: "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f1 g}
+            = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) f2 g}"
+          apply (rule set_eqI)
+          apply (rule iffI)
+          using top1_loop_equiv_on_trans[OF hTS1 hf2_f1_equiv] apply (by100 blast)
+          using top1_loop_equiv_on_trans[OF hTS1 hf1_f2_equiv] apply (by100 blast)
+          done
+        show ?thesis using hc1_f1 hc2_f2 hclass_eq by simp
+      qed
     qed
   next
     show "\<phi>' ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)
@@ -8023,17 +8100,23 @@ proof -
     obtain f ft where hf_in_c: "f \<in> c" and hfl: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
         and hft: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' c) ft"
         and hftp: "\<forall>s\<in>I_set. top1_R_to_S1 (ft s) = f s"
-      using h\<phi>'_lift[rule_format, OF hc] sorry
+      using h\<phi>'_lift[rule_format, OF hc] by (by100 auto)
     obtain g gt where hg_in_d: "g \<in> d" and hgl: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g"
         and hgt: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' d) gt"
         and hgtp: "\<forall>s\<in>I_set. top1_R_to_S1 (gt s) = g s"
-      using h\<phi>'_lift[rule_format, OF hd] sorry
+      using h\<phi>'_lift[rule_format, OF hd] by (by100 auto)
     \<comment> \<open>n = \<phi>'(c) is an integer (in the fiber). Similarly m = \<phi>'(d).\<close>
     let ?n = "\<phi>' c" and ?m = "\<phi>' d"
     have hn_int: "\<exists>k::int. ?n = of_int k"
-      using h\<phi>'_mem[rule_format, OF hc] top1_R_to_S1_fiber_is_Z' sorry
+    proof -
+      have "?n \<in> {x. top1_R_to_S1 x = (1, 0)}" using h\<phi>'_mem[rule_format, OF hc] by simp
+      thus ?thesis using top1_R_to_S1_fiber_is_Z' by (by100 auto)
+    qed
     have hm_int: "\<exists>k::int. ?m = of_int k"
-      using h\<phi>'_mem[rule_format, OF hd] top1_R_to_S1_fiber_is_Z' sorry
+    proof -
+      have "?m \<in> {x. top1_R_to_S1 x = (1, 0)}" using h\<phi>'_mem[rule_format, OF hd] by simp
+      thus ?thesis using top1_R_to_S1_fiber_is_Z' by (by100 auto)
+    qed
     \<comment> \<open>Translated lift: s \<mapsto> n + gt(s) lifts g starting at n.
        p(n + gt(s)) = p(gt(s)) = g(s) by periodicity of R_to_S1.\<close>
     define tgt where "tgt s = ?n + gt s" for s
@@ -8052,13 +8135,23 @@ proof -
     qed
     \<comment> \<open>tgt is continuous (translation of continuous gt).\<close>
     have htgt_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets tgt"
-      sorry
+    proof -
+      have hgt_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets gt"
+        using hgt unfolding top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>tgt = (\<lambda>s. ?n + gt s) = (\<lambda>s. ?n) + gt. Translation by constant is continuous.\<close>
+      show ?thesis unfolding tgt_def sorry
+    qed
     have htgt_path: "top1_is_path_on (UNIV::real set) top1_open_sets ?n (?n + ?m) tgt"
       unfolding top1_is_path_on_def using htgt_cont htgt0 htgt1 by simp
     \<comment> \<open>Concatenate: h = ft * tgt lifts f*g from 0 to n+m.\<close>
     let ?h = "top1_path_product ft tgt"
     have hh_path: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (?n + ?m) ?h"
-      sorry
+    proof -
+      have hft_path: "top1_is_path_on (UNIV::real set) top1_open_sets 0 ?n ft" using hft .
+      show ?thesis
+        by (rule top1_path_product_is_path[OF
+            top1_open_sets_is_topology_on_UNIV hft_path htgt_path])
+    qed
     have hh_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (?h s) = top1_path_product f g s"
     proof
       fix s assume hs: "s \<in> I_set"
@@ -8079,18 +8172,59 @@ proof -
     qed
     \<comment> \<open>f*g \<in> c\<cdot>d (the product class).\<close>
     have hfg_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (top1_path_product f g)"
-      sorry
+    proof -
+      have hf_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) f"
+        using hfl unfolding top1_is_loop_on_def .
+      have hg_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) g"
+        using hgl unfolding top1_is_loop_on_def .
+      show ?thesis unfolding top1_is_loop_on_def
+        by (rule top1_path_product_is_path[OF hTS1 hf_path hg_path])
+    qed
     have hfg_in_cd: "top1_path_product f g \<in>
         top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d"
-      sorry
+    proof -
+      \<comment> \<open>f*g ≃ f*g (reflexivity), and f \<in> c, g \<in> d.\<close>
+      have hrefl: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+          (top1_path_product f g) (top1_path_product f g)"
+        unfolding top1_loop_equiv_on_def
+        using hfg_loop Lemma_51_1_path_homotopic_refl[OF
+          hfg_loop[unfolded top1_is_loop_on_def]] by (by100 blast)
+      show ?thesis unfolding top1_fundamental_group_mul_def
+        using hf_in_c hg_in_d hrefl by (by100 blast)
+    qed
     \<comment> \<open>c\<cdot>d is in the carrier, and \<phi>'(c\<cdot>d) is its lift endpoint.\<close>
     have hcd_carrier: "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d
         \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      unfolding top1_fundamental_group_carrier_def
+      using hfg_loop hfg_in_cd
+      unfolding top1_fundamental_group_mul_def
       sorry
     \<comment> \<open>The lift of f*g from 0 ends at n+m. By Theorem 54.3 well-definedness,
        \<phi>'(c\<cdot>d) = n+m.\<close>
     have h\<phi>'_cd: "\<phi>' (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d) = ?n + ?m"
-      sorry
+    proof -
+      let ?cd = "top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d"
+      \<comment> \<open>From h\<phi>'_lift: get a representative fg and its lift ft_fg.\<close>
+      obtain fg ft_fg where hfg_in: "fg \<in> ?cd"
+          and hfg_l: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) fg"
+          and hft_fg: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<phi>' ?cd) ft_fg"
+          and hft_fgp: "\<forall>s\<in>I_set. top1_R_to_S1 (ft_fg s) = fg s"
+        using h\<phi>'_lift[rule_format, OF hcd_carrier] sorry
+      \<comment> \<open>fg and f*g are both in c\<cdot>d, hence path-homotopic.\<close>
+      have hfg_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) fg (top1_path_product f g)"
+        sorry
+      \<comment> \<open>By Theorem 54.3: lifts of path-homotopic loops from same point have same endpoint.\<close>
+      have hTE: "is_topology_on (UNIV::real set) top1_open_sets"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hfg_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) fg"
+        using hfg_l unfolding top1_is_loop_on_def .
+      have hfg'_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_path_product f g)"
+        using hfg_loop unfolding top1_is_loop_on_def .
+      have "\<phi>' ?cd = ?n + ?m"
+        using conjunct1[OF Theorem_54_3[OF hcov hTE hTS1 h0R hp0
+          hfg_path hfg'_path hfg_hom hft_fg hft_fgp hh_path hh_lift]] .
+      thus ?thesis .
+    qed
     \<comment> \<open>Since n, m are integers: floor(n+m) = floor(n) + floor(m).\<close>
     obtain kn :: int where hkn: "?n = of_int kn" using hn_int by auto
     obtain km :: int where hkm: "?m = of_int km" using hm_int by auto
