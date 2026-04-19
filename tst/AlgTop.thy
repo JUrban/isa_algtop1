@@ -15504,7 +15504,94 @@ proof -
     have hmul_id: "top1_fundamental_group_mul B TB b0
         (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)
         = top1_fundamental_group_id B TB b0"
-      sorry \<comment> \<open>const*const ≃ const (left identity). Needs Theorem_51_2_left_identity.\<close>
+    proof (rule set_eqI)
+      fix h
+      show "h \<in> top1_fundamental_group_mul B TB b0
+              (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)
+          \<longleftrightarrow> h \<in> top1_fundamental_group_id B TB b0"
+      proof
+        assume "h \<in> top1_fundamental_group_mul B TB b0
+            (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)"
+        then obtain f g where hf: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) f"
+            and hg: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) g"
+            and hfg: "top1_loop_equiv_on B TB b0 (top1_path_product f g) h"
+          unfolding top1_fundamental_group_mul_def top1_fundamental_group_id_def
+          by (by100 blast)
+        \<comment> \<open>const ≃ f and const ≃ g. So f*g ≃ const*const ≃ const.\<close>
+        have hf_path: "top1_is_path_on B TB b0 b0 f"
+          using hf unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+        have hg_path: "top1_is_path_on B TB b0 b0 g"
+          using hg unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+        have hconst_f: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) f"
+          using hf unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hconst_g: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) g"
+          using hg unfolding top1_loop_equiv_on_def by (by100 blast)
+        \<comment> \<open>const*g ≃ f*g (product_left: const ≃ f).\<close>
+        have step1: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_constant_path b0) g) (top1_path_product f g)"
+          by (rule path_homotopic_product_left[OF hTB hconst_f hg_path])
+        \<comment> \<open>const*g ≃ g (left identity).\<close>
+        have step2: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_constant_path b0) g) g"
+          by (rule Theorem_51_2_left_identity[OF hTB hg_path])
+        \<comment> \<open>g ≃ f*g (sym of step1 + step2).\<close>
+        have step3: "top1_path_homotopic_on B TB b0 b0 g (top1_path_product f g)"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB
+                Lemma_51_1_path_homotopic_sym[OF step2] step1])
+        \<comment> \<open>const ≃ g ≃ f*g ≃ h.\<close>
+        have step4: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) (top1_path_product f g)"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB hconst_g step3])
+        have hfg_hom: "top1_path_homotopic_on B TB b0 b0 (top1_path_product f g) h"
+          using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) h"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB step4 hfg_hom])
+        have h_loop: "top1_is_loop_on B TB b0 h"
+          using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+        show "h \<in> top1_fundamental_group_id B TB b0"
+          unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
+          using \<open>top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) h\<close>
+                h_loop top1_constant_path_is_loop[OF hTB hb0_B] by (by100 blast)
+      next
+        assume "h \<in> top1_fundamental_group_id B TB b0"
+        hence hh: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) h"
+          unfolding top1_fundamental_group_id_def by (by100 blast)
+        \<comment> \<open>Take f = g = const. const*const ≃ const (left identity) ≃ h.\<close>
+        have hconst_loop: "top1_is_loop_on B TB b0 (top1_constant_path b0)"
+          by (rule top1_constant_path_is_loop[OF hTB hb0_B])
+        have hconst_path: "top1_is_path_on B TB b0 b0 (top1_constant_path b0)"
+          using hconst_loop unfolding top1_is_loop_on_def .
+        have hcc_const: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_constant_path b0) (top1_constant_path b0))
+            (top1_constant_path b0)"
+          by (rule Theorem_51_2_left_identity[OF hTB hconst_path])
+        have hconst_h: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) h"
+          using hh unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_constant_path b0) (top1_constant_path b0)) h"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB hcc_const hconst_h])
+        have h_loop: "top1_is_loop_on B TB b0 h"
+          using hh unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hcc_loop: "top1_is_loop_on B TB b0
+            (top1_path_product (top1_constant_path b0) (top1_constant_path b0))"
+          by (rule top1_path_product_is_loop[OF hTB hconst_loop hconst_loop])
+        have "top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_constant_path b0) (top1_constant_path b0)) h"
+          unfolding top1_loop_equiv_on_def
+          using hcc_loop h_loop
+                \<open>top1_path_homotopic_on B TB b0 b0
+                  (top1_path_product (top1_constant_path b0) (top1_constant_path b0)) h\<close>
+          by (by100 blast)
+        have hconst_in: "top1_constant_path b0 \<in> top1_fundamental_group_id B TB b0"
+          unfolding top1_fundamental_group_id_def
+          using top1_loop_equiv_on_refl[OF hconst_loop] by (by100 blast)
+        show "h \<in> top1_fundamental_group_mul B TB b0
+            (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)"
+          unfolding top1_fundamental_group_mul_def
+          using hconst_in \<open>top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_constant_path b0) (top1_constant_path b0)) h\<close>
+          by (by100 blast)
+      qed
+    qed
     show ?thesis using hinvg_id hmul_id by simp
   qed
   have hRHS: "\<exists>c\<in>top1_fundamental_group_carrier B TB b0.
