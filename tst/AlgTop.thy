@@ -7538,7 +7538,7 @@ proof -
           and hnext_agree: "\<forall>x\<in>?A k. Ft_next x = Ft_prev x"
         using homotopy_lifting_rectangle_step[OF assms(1) hTII assms(7)
             hA_closed hR_closed hAR_sub hprev_cont hprev_lift hFR hUec
-            hC_conn hC_ne assms(4)] sorry
+            hC_conn hC_ne assms(4)] by auto
       \<comment> \<open>A_{Suc k} = A_k \<union> R_{i,j}.\<close>
       have hA_Suc: "?A (Suc k) = ?A k \<union> ?R ?i ?j"
       proof -
