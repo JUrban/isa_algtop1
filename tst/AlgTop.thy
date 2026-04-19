@@ -9625,7 +9625,27 @@ proof
         by (simp add: comp_def case_prod_beta algebra_simps)
     qed
     have hrh_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?\<rho> \<circ> h)"
-      sorry
+    proof -
+      obtain c where hc: "c \<in> top1_S1"
+          and hhom: "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology h (\<lambda>_. c)"
+        using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+      have "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
+          (?\<rho> \<circ> h) (?\<rho> \<circ> (\<lambda>_. c))"
+        sorry \<comment> \<open>Composition with continuous \<rho> preserves homotopy\<close>
+      have hrhc_eq: "?\<rho> \<circ> (\<lambda>_. c) = (\<lambda>_. ?\<rho> c)" by (rule ext) (by100 simp)
+      have hrhc_S1: "?\<rho> c \<in> top1_S1"
+      proof -
+        have hcc: "(fst c)^2 + (snd c)^2 = 1" using hc unfolding top1_S1_def by (by100 auto)
+        have "(?a * fst c + ?b * snd c)^2 + (-?b * fst c + ?a * snd c)^2
+            = (?a^2 + ?b^2) * ((fst c)^2 + (snd c)^2)"
+          by (simp add: power2_eq_square algebra_simps)
+        thus ?thesis using hab_S1 hcc unfolding top1_S1_def by (simp add: case_prod_beta)
+      qed
+      have "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
+          (?\<rho> \<circ> h) (\<lambda>_. ?\<rho> c)"
+        sorry \<comment> \<open>Composition with continuous \<rho> preserves homotopy\<close>
+      thus ?thesis unfolding top1_nulhomotopic_on_def using hrhc_S1 by (by100 blast)
+    qed
     have hrh_10: "(?\<rho> \<circ> h) (1, 0) = (1, 0)"
       using hrho_10 by (by100 simp)
     \<comment> \<open>Apply the True case to \<rho>\<circ>h: since (\<rho>\<circ>h)(1,0) = (1,0),
