@@ -10096,8 +10096,18 @@ proof -
           using hG_left hs hl0 by (by100 auto)
       next
         case False
-        thus ?thesis unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
-          using hG_top hs hl0 sorry
+        have hs_ge: "s > 1/2" using False by (by100 linarith)
+        have h2s1_I: "2 * s - 1 \<in> I_set"
+          using hs hs_ge unfolding top1_unit_interval_def by (by100 auto)
+        have "(?G \<circ> ?\<beta>2) s = ?G (2*s - 1, 1)"
+          unfolding comp_def top1_path_product_def case_prod_beta top1_unit_interval_def
+          using hs_ge hs by (by100 auto)
+        also have "\<dots> = (k \<circ> l) (2*s - 1)"
+          using hG_top h2s1_I by (by100 simp)
+        also have "\<dots> = top1_path_product ?\<alpha> (k \<circ> l) s"
+          unfolding top1_path_product_def top1_unit_interval_def comp_def
+          using hs_ge by simp
+        finally show ?thesis .
       qed
     qed
     \<comment> \<open>G preserves homotopy: G∘β₁ ≃ G∘β₂.\<close>
