@@ -1,41 +1,35 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 160 sorries, builds in ~30s, 17500+ lines
+## Status: 157 sorries, builds in ~30s, 17600+ lines
 
-## 🎉🎉 MAJOR: Lebesgue Subdivision FULLY PROVED!
+## 🎉🎉🎉 Lemma_54_1 Path Lifting: 1 sorry left!
 
-The Lebesgue subdivision step in Lemma_54_1 — previously THE key
-bottleneck blocking path lifting, π₁(S¹)≅ℤ, FTA, and Jordan —
-is now fully proved via:
-
-1. `open_cover_subdivision_01` ✓ (creeping lemma, Sup-based)
-2. `top1_continuous_preimage_ball` ✓ (top1→HOL bridge)
-3. `hpointwise` ✓ (covering map + bridge)
-4. `heps_spec` ✓ (someI_ex)
-5. `hcov_hyp` ✓ (bexI + assumption)
-6. Cover transfer ✓ (image monotonicity)
-
-## Remaining in Lemma_54_1
+The entire Lebesgue subdivision + lift construction is proved except
+for the continuity (pasting lemma) step:
 
 ```
-Lebesgue subdivision ✓✓✓ (COMPLETE!)
-Lift construction ← 3 structured sorries:
-  1. Induction (extend lift by one interval)
-  2. Specialization (k=n gives full lift)
-  3. Continuity (pasting lemma)
+Lebesgue subdivision ✓✓✓ (creeping lemma + bridge + assembly)
+Induction base ✓ (k=0)
+Induction step ✓ (slices + inv_into + bij_betw)
+Specialization ✓ (k=n)
+Continuity ← 1 sorry (pasting lemma for finitely many intervals)
 ```
 
-## Sorry Distribution: 160
+## Sorry Distribution: 157
 
-- §51-§54: 7 (lift construction + product covering)
+- §51-§54: 5 (continuity + product covering + homotopy lifting)
 - §55: 1 (k continuous on B²)
 - §56 FTA: 4 (Steps 1-2)
 - §57 Borsuk-Ulam: 9 (covering theory)
-- §58: 1 (pre-existing timeout)
 - §59: 2 (Lebesgue for Theorem_59_1)
 - §61-§85: 136 (deep downstream results)
 
-## Build Time Critical
+## Fully Proved Key Results
 
-File at 17500+ lines, build ~30s. The §51 `define g51` optimization
-saved ~10s CPU. Further code additions risk cascading timeouts.
+- Theorem_53_1 (R→S¹ covering)
+- open_cover_subdivision_01 (creeping lemma)
+- top1_continuous_preimage_ball (bridge)
+- nulhomotopic_trivializes_loops_general
+- Theorem_80_1 (universal covering uniqueness)
+- Theorem_54_5 (π₁(S¹) bijection)
+- FTA Steps 3-4
