@@ -6016,7 +6016,13 @@ proof -
        4. Finite subcover by compact_Icc
        5. Lebesgue number for the finite cover
        6. Uniform subdivision with mesh < Lebesgue number\<close>
-    show ?thesis sorry
+    \<comment> \<open>Direct approach using HOL's compact {0..1}.
+       For each s \<in> {0..1}, f(s) \<in> B, get evenly covered U_s with f(s) \<in> U_s.
+       The covering gives: for each U_s, there exists open W_s in B with f(s) \<in> W_s \<subseteq> U_s.
+       f\<inverse>(W_s) is open in {0..1} (by continuous_on + open_invariant).
+       By compact {0..1}, finite subcover. Lebesgue number of finite cover gives \<delta>.
+       Take n = \<lceil>1/\<delta>\<rceil>, sub(i) = i/n.\<close>
+    show ?thesis sorry \<comment> \<open>Lebesgue subdivision: requires compact_Icc + continuous_on bridge.\<close>
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
@@ -12129,7 +12135,12 @@ next
   show "k \<in> top1_fundamental_group_induced_on A TA x0 X TX x0 id
       {g. top1_loop_equiv_on A TA x0 f g}"
     unfolding top1_fundamental_group_induced_on_def
-    using hff hfk' sorry \<comment> \<open>Pre-existing blast timed out after file growth.\<close>
+    apply (rule CollectI)
+    apply (rule bexI[of _ f])
+    apply (rule hfk')
+    apply (rule CollectI)
+    apply (rule hff)
+    done
 qed
 
 text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
