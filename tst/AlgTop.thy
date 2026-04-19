@@ -7991,7 +7991,119 @@ proof -
           \<comment> \<open>A_k \<inter> R \<subseteq> L-shape: interior of R is not in any previous region.
              A point (s,t) with sub_s i < s and sub_t j < t cannot be on edges or
              in any previous rectangle.\<close>
-          show "?A k \<inter> ?R ?i ?j \<subseteq> ?L_shape" sorry
+          show "?A k \<inter> ?R ?i ?j \<subseteq> ?L_shape"
+          proof (rule subsetI)
+            fix x assume hx: "x \<in> ?A k \<inter> ?R ?i ?j"
+            obtain s t where hst: "x = (s, t)" by (cases x) simp
+            have hx_R: "x \<in> ?R ?i ?j" using hx by (by100 blast)
+            have hs_I: "s \<in> I_set" using hx_R hst by simp
+            have hsi_le_s: "sub_s ?i \<le> s" using hx_R hst by simp
+            have hs_le_si1: "s \<le> sub_s (Suc ?i)" using hx_R hst by simp
+            have ht_I: "t \<in> I_set" using hx_R hst by simp
+            have htj_le_t: "sub_t ?j \<le> t" using hx_R hst by simp
+            have ht_le_tj1: "t \<le> sub_t (Suc ?j)" using hx_R hst by simp
+            have hx_A: "x \<in> ?A k" using hx by (by100 blast)
+            \<comment> \<open>If s = sub_s i, then x is on the left edge of R.\<close>
+            \<comment> \<open>If t = sub_t j, then x is on the bottom edge of R.\<close>
+            \<comment> \<open>If s > sub_s i AND t > sub_t j, then x is in the interior of R.\<close>
+            show "x \<in> ?L_shape"
+            proof (cases "s = sub_s ?i")
+              case True thus ?thesis using ht_I htj_le_t ht_le_tj1 hst by (by100 blast)
+            next
+              case False
+              hence hs_gt: "s > sub_s ?i" using hsi_le_s by simp
+              show ?thesis
+              proof (cases "t = sub_t ?j")
+                case True thus ?thesis using hs_I hsi_le_s hs_le_si1 hst by (by100 blast)
+              next
+                case False
+                hence ht_gt: "t > sub_t ?j" using htj_le_t by simp
+                \<comment> \<open>Contradiction: (s,t) with s > sub_s i, t > sub_t j cannot be in A_k.\<close>
+                have "\<not> (x \<in> ?left_edge)" using hs_gt hst hs0
+                proof -
+                  have "s > 0" using hs_gt hsub_s_mono[rule_format, of 0 "?i"] hs0 hi by simp
+                  thus ?thesis using hst by (by100 auto)
+                qed
+                have "\<not> (x \<in> ?bot_edge)" using ht_gt hst ht0
+                proof -
+                  have "t > 0" using ht_gt hsub_t_mono[rule_format, of 0 "?j"] ht0 hj by simp
+                  thus ?thesis using hst by (by100 auto)
+                qed
+                have "\<not> (\<exists>k'<k. x \<in> ?R (k' mod m) (k' div m))"
+                proof (rule notI)
+                  assume "\<exists>k'<k. x \<in> ?R (k' mod m) (k' div m)"
+                  then obtain k' where hk'_lt: "k' < k"
+                      and hx_R': "x \<in> ?R (k' mod m) (k' div m)" by (by100 blast)
+                  let ?i' = "k' mod m" and ?j' = "k' div m"
+                  have hi': "?i' < m" using hm by simp
+                  have "s \<le> sub_s (Suc ?i')" using hx_R' hst by (by100 auto)
+                  have "t \<le> sub_t (Suc ?j')" using hx_R' hst by (by100 auto)
+                  have "sub_s ?i' \<le> s" using hx_R' hst by (by100 auto)
+                  have "sub_t ?j' \<le> t" using hx_R' hst by (by100 auto)
+                  \<comment> \<open>k' < k = j*m + i. Either j' < j, or j' = j and i' < i.\<close>
+                  have "?j' < ?j \<or> (?j' = ?j \<and> ?i' < ?i)"
+                  proof -
+                    have "k' = ?j' * m + ?i'" by simp
+                    have "k = ?j * m + ?i" by simp
+                    show ?thesis
+                    proof (cases "?j' < ?j")
+                      case True thus ?thesis by simp
+                    next
+                      case False
+                      have "?j' \<le> ?j"
+                      proof -
+                        have "?j' * m \<le> k'" by simp
+                        also have "k' < k" using hk'_lt .
+                        also have "k = ?j * m + ?i" by simp
+                        also have "?j * m + ?i < ?j * m + m" using hi by (by100 linarith)
+                        also have "?j * m + m = (?j + 1) * m" by (simp add: algebra_simps)
+                        finally have "?j' * m < (?j + 1) * m" .
+                        thus ?thesis
+                        proof -
+                          assume "?j' * m < (?j + 1) * m"
+                          hence "?j' < ?j + 1"
+                          proof -
+                            assume h: "?j' * m < (?j + 1) * m"
+                            have "m > 0" using hm by simp
+                            thus ?thesis using h by (metis mult_less_cancel2)
+                          qed
+                          thus ?thesis by simp
+                        qed
+                      qed
+                      hence "?j' = ?j" using False by simp
+                      moreover have "?i' < ?i"
+                      proof -
+                        have "k' = ?j' * m + ?i'" by simp
+                        hence hk'_eq: "k' = ?j * m + ?i'" using \<open>?j' = ?j\<close> by simp
+                        have hk_eq2: "k = ?j * m + ?i" by simp
+                        show ?thesis using hk'_lt hk'_eq hk_eq2 by (by100 linarith)
+                      qed
+                      ultimately show ?thesis by simp
+                    qed
+                  qed
+                  thus False
+                  proof (elim disjE conjE)
+                    assume hj'_lt: "?j' < ?j"
+                    \<comment> \<open>Then sub_t (Suc j') \<le> sub_t j < t, contradicting t \<le> sub_t (Suc j').\<close>
+                    have "sub_t (Suc ?j') \<le> sub_t ?j"
+                      using hsub_t_mono[rule_format, of "Suc ?j'" "?j"] hj'_lt hj by simp
+                    hence "t \<le> sub_t ?j" using \<open>t \<le> sub_t (Suc ?j')\<close> by simp
+                    thus False using ht_gt by simp
+                  next
+                    assume "?j' = ?j" and hi'_lt: "?i' < ?i"
+                    \<comment> \<open>Then sub_s (Suc i') \<le> sub_s i < s, contradicting s \<le> sub_s (Suc i').\<close>
+                    have "sub_s (Suc ?i') \<le> sub_s ?i"
+                      using hsub_s_mono[rule_format, of "Suc ?i'" "?i"] hi'_lt hi by simp
+                    hence "s \<le> sub_s ?i" using \<open>s \<le> sub_s (Suc ?i')\<close> by simp
+                    thus False using hs_gt by simp
+                  qed
+                qed
+                hence "x \<notin> ?A k" using \<open>\<not> (x \<in> ?left_edge)\<close> \<open>\<not> (x \<in> ?bot_edge)\<close>
+                  by (by100 blast)
+                thus ?thesis using hx_A by contradiction
+              qed
+            qed
+          qed
         qed
         \<comment> \<open>The L-shape is connected: two intervals sharing the corner point (Theorem 23.3).\<close>
         have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
