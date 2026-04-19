@@ -7475,13 +7475,77 @@ proof -
      At each step: boundary C connected, Ftilde(C) in one slice V0,
      extend Ftilde = p0\<inverse>\<circ>F on rectangle, pasting gives continuity.
      After m*n steps: Ftilde continuous on all of I\<times>I.\<close>
-  \<comment> \<open>Induction on k = 0..m*n applies homotopy_lifting_rectangle_step at each step.
-     The helper lemma is fully proved. The induction requires:
-     - Defining A_k (region after k rectangles)
-     - Showing boundary of each rectangle \<inter> A_k is connected
-     - Showing A_{m*n} = I\<times>I
-     These are 2D grid geometry facts.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Define rectangles and regions.\<close>
+  let ?R = "\<lambda>i j. {s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} \<times>
+                  {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}"
+  let ?left_edge = "{0::real} \<times> I_set"
+  let ?bot_edge = "I_set \<times> {0::real}"
+  let ?edges = "?left_edge \<union> ?bot_edge"
+  \<comment> \<open>A_k = edges \<union> first k rectangles (row by row, left to right).\<close>
+  let ?A = "\<lambda>k. ?edges \<union> (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+  \<comment> \<open>Induction: \<forall>k \<le> m*n. \<exists>Ft. continuous on A_k, lifts F on A_k, Ft(0,0) = e0.\<close>
+  have "\<forall>k \<le> m*n. \<exists>Ft. top1_continuous_map_on (?A k)
+      (subspace_topology (I_set \<times> I_set) II_topology (?A k)) E TE Ft
+      \<and> (\<forall>x\<in>?A k. p (Ft x) = F x) \<and> Ft (0, 0) = e0"
+  proof (intro allI impI)
+    fix k show "k \<le> m*n \<Longrightarrow> \<exists>Ft. top1_continuous_map_on (?A k)
+        (subspace_topology (I_set \<times> I_set) II_topology (?A k)) E TE Ft
+        \<and> (\<forall>x\<in>?A k. p (Ft x) = F x) \<and> Ft (0, 0) = e0"
+    proof (induction k)
+      case 0
+      \<comment> \<open>A_0 = edges. Ft on edges: left_lift on left edge, bot_lift on bottom.\<close>
+      define Ft0 where "Ft0 = (\<lambda>(s::real, t::real). if s = 0 then left_lift t else bot_lift s)"
+      show ?case sorry
+    next
+      case (Suc k)
+      \<comment> \<open>IH: \<exists>Ft on A_k. Extend to A_{Suc k} = A_k \<union> R_{k mod m, k div m}.\<close>
+      have hk: "k < m * n" using Suc.prems by simp
+      let ?i = "k mod m" and ?j = "k div m"
+      have hi: "?i < m" using hm by simp
+      have hj: "?j < n" using hk hm sorry
+      obtain Ft_prev where hprev_cont: "top1_continuous_map_on (?A k)
+          (subspace_topology (I_set \<times> I_set) II_topology (?A k)) E TE Ft_prev"
+          and hprev_lift: "\<forall>x\<in>?A k. p (Ft_prev x) = F x"
+          and hprev_00: "Ft_prev (0, 0) = e0"
+        using Suc.IH Suc.prems sorry
+      \<comment> \<open>Get evenly covered U for rectangle (i,j).\<close>
+      obtain U where hUo: "openin_on B TB U"
+          and hUec: "top1_evenly_covered_on E TE B TB p U"
+          and hFR: "F ` ?R ?i ?j \<subseteq> U"
+        using hgrid[rule_format, OF hi hj] sorry
+      \<comment> \<open>A_k and R are closed in I\<times>I. A_k \<inter> R connected. A_k \<inter> R nonempty.\<close>
+      have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
+      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry
+      have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set" sorry
+      have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
+          (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))" sorry
+      have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}" sorry
+      have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+        unfolding II_topology_def
+        by (rule product_topology_on_is_topology_on[OF
+            top1_unit_interval_topology_is_topology_on
+            top1_unit_interval_topology_is_topology_on])
+      \<comment> \<open>Apply homotopy_lifting_rectangle_step.\<close>
+      obtain Ft_next where hnext_cont: "top1_continuous_map_on (?A k \<union> ?R ?i ?j)
+          (subspace_topology (I_set \<times> I_set) II_topology (?A k \<union> ?R ?i ?j)) E TE Ft_next"
+          and hnext_lift: "\<forall>x\<in>?A k \<union> ?R ?i ?j. p (Ft_next x) = F x"
+          and hnext_agree: "\<forall>x\<in>?A k. Ft_next x = Ft_prev x"
+        using homotopy_lifting_rectangle_step[OF assms(1) hTII assms(7)
+            hA_closed hR_closed hAR_sub hprev_cont hprev_lift hFR hUec
+            hC_conn hC_ne assms(4)] sorry
+      \<comment> \<open>A_{Suc k} = A_k \<union> R_{i,j}.\<close>
+      have hA_Suc: "?A (Suc k) = ?A k \<union> ?R ?i ?j"
+        sorry
+      show ?case using hnext_cont hnext_lift hnext_agree hprev_00 hA_Suc sorry
+    qed
+  qed
+  \<comment> \<open>At k = m*n: A_{m*n} = I\<times>I.\<close>
+  hence "\<exists>Ft. top1_continuous_map_on (?A (m*n))
+      (subspace_topology (I_set \<times> I_set) II_topology (?A (m*n))) E TE Ft
+      \<and> (\<forall>x\<in>?A (m*n). p (Ft x) = F x) \<and> Ft (0, 0) = e0"
+    by simp
+  moreover have "?A (m*n) = I_set \<times> I_set" sorry
+  ultimately show ?thesis sorry
 qed
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
