@@ -5081,7 +5081,48 @@ proof -
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_W
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
-        sorry
+      proof -
+        \<comment> \<open>Inverse: inv_fn(x,y) = arctan(y/x)/(2\<pi>) + 1/2 + nn.
+           For x < 0, arctan(y/x) \<in> (-\<pi>/2, \<pi>/2), so arctan(y/x)/(2\<pi>) \<in> (-1/4, 1/4),
+           giving inv_fn \<in> (nn+1/4, nn+3/4) = V.\<close>
+        define inv_fn :: "real \<times> real \<Rightarrow> real"
+          where "inv_fn \<equiv> \<lambda>p. arctan (snd p / fst p) / (2 * pi) + 1/2 + of_int nn"
+        have hinv_co: "continuous_on top1_S1_arc_W inv_fn"
+          unfolding inv_fn_def top1_S1_arc_W_def
+          by (intro continuous_on_add continuous_on_const
+              continuous_on_divide[OF _ continuous_on_const]
+              continuous_on_compose2[OF continuous_on_arctan _ subset_UNIV]
+              continuous_on_divide continuous_on_snd continuous_on_fst) (by100 auto)+
+        have hinv_range: "\<And>p. p \<in> top1_S1_arc_W \<Longrightarrow> inv_fn p \<in> V"
+        proof -
+          fix p assume hp: "p \<in> top1_S1_arc_W"
+          hence hx_neg: "fst p < 0" unfolding top1_S1_arc_W_def by (by100 auto)
+          have "arctan (snd p / fst p) \<in> {-pi/2 <..< pi/2}"
+            using arctan_bounded[of "snd p / fst p"] by (by100 simp)
+          hence "arctan (snd p / fst p) / (2*pi) \<in> {-1/4 <..< 1/4}"
+            using pi_gt_zero by (simp add: field_simps)
+          thus "inv_fn p \<in> V" unfolding inv_fn_def hVeq by (by100 auto)
+        qed
+        have hinv_agree: "\<forall>p\<in>top1_S1_arc_W. inv_into V top1_R_to_S1 p = inv_fn p"
+          sorry \<comment> \<open>cos(\<pi> + arctan(y/x)) = -cos(arctan(y/x)) = -1/sqrt(1+(y/x)^2) = x (since x < 0).
+                   sin(\<pi> + arctan(y/x)) = -sin(arctan(y/x)) = -(y/x)/sqrt(1+(y/x)^2) = y.\<close>
+        have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_W"
+          unfolding top1_S1_topology_def
+          using subspace_topology_trans[OF harc_sub]
+          by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+        have "top1_continuous_map_on top1_S1_arc_W
+            (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_W)
+            V (subspace_topology UNIV (top1_open_sets :: real set set) V) inv_fn"
+          by (rule top1_continuous_map_on_subspace_open_sets_on[OF hinv_range hinv_co])
+        hence hinv_fn_cont: "top1_continuous_map_on top1_S1_arc_W
+            (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W)
+            V (subspace_topology UNIV top1_open_sets V) inv_fn"
+          unfolding harc_eq .
+        have "\<forall>p\<in>top1_S1_arc_W. inv_fn p = inv_into V top1_R_to_S1 p"
+          using hinv_agree by (by100 auto)
+        thus ?thesis by (rule top1_continuous_map_on_agree'[OF hinv_fn_cont])
+      qed
       have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
         by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
