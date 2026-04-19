@@ -3935,6 +3935,14 @@ lemma top1_covering_map_on_evenly_covered:
     \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U"
   unfolding top1_covering_map_on_def by blast
 
+text \<open>Helper: extract is_topology_on from covering map (via homeomorphism in evenly covered).\<close>
+lemma top1_covering_map_on_topology:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on B TB"
+      and "B \<noteq> {}"
+  shows "is_topology_on E TE"
+  sorry
+
 text \<open>Helper: evenly-covered U is open (by definition).\<close>
 lemma top1_evenly_covered_on_openin_on:
   assumes "top1_evenly_covered_on E TE B TB p U"
@@ -6232,6 +6240,19 @@ lemma Lemma_54_1_path_lifting:
      ftilde(sᵢ) lies in some slice V₀. Define ftilde(s) = (p|V₀)\<inverse>(f(s)).
      Step 3: Pasting lemma \<Rightarrow> continuous. p \<circ> ftilde = f by construction.\<close>
 proof -
+  have hf_cont: "top1_continuous_map_on I_set I_top B TB f"
+    using hf unfolding top1_is_path_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB" sorry \<comment> \<open>From the path's codomain topology.\<close>
+  have hB_ne: "B \<noteq> {}"
+  proof -
+    have "f 0 = b0" using hf unfolding top1_is_path_on_def by simp
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have "f 0 \<in> B" using hf_cont h0I unfolding top1_continuous_map_on_def by (by100 blast)
+    hence "b0 \<in> B" using hf unfolding top1_is_path_on_def by simp
+    thus ?thesis by (by100 blast)
+  qed
+  have hTE_top: "is_topology_on E TE"
+    by (rule top1_covering_map_on_topology[OF hcov hTB hB_ne])
   \<comment> \<open>Step 1: Lebesgue subdivision.
      Strategy: for each s \<in> [0,1], f(s) has an evenly covered neighborhood.
      The f-preimages form an open cover of [0,1]. By compactness, finite subcover.
@@ -6392,8 +6413,7 @@ proof -
           have hTsub: "is_topology_on {0::real} (subspace_topology I_set I_top {0})"
             by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on])
                (simp add: top1_unit_interval_def)
-          have hTE: "is_topology_on E TE"
-            using hcov unfolding top1_covering_map_on_def top1_evenly_covered_on_def sorry
+          have hTE: "is_topology_on E TE" using hTE_top .
           show ?thesis unfolding hdom
             by (rule top1_continuous_map_on_const[OF hTsub hTE he0])
         qed
@@ -6519,22 +6539,9 @@ proof -
             by (rule top1_unit_interval_topology_is_topology_on)
           have hTXk1: "is_topology_on ?Xk1 ?TXk1"
             by (rule subspace_topology_is_topology_on[OF hTI hXk1_sub])
-          have hTE': "is_topology_on E TE" sorry \<comment> \<open>From covering map structure.\<close>
-          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A"
-          proof -
-            \<comment> \<open>?Xk1 - ?A = {s\<in>I_set. sub k < s \<and> s \<le> sub(Suc k)}, which is open.\<close>
-            have hcomp: "?Xk1 - ?A = {s\<in>I_set. sub k < s \<and> s \<le> sub (Suc k)}" by auto
-            show ?thesis unfolding closedin_on_def sorry
-          qed
-          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B"
-          proof -
-            have hcomp: "?Xk1 - ?B = {s\<in>I_set. s < sub k \<and> s \<le> sub (Suc k)}"
-            proof -
-              have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
-              thus ?thesis by auto
-            qed
-            show ?thesis unfolding closedin_on_def sorry
-          qed
+          have hTE': "is_topology_on E TE" using hTE_top .
+          have hA_closed: "closedin_on ?Xk1 ?TXk1 ?A" sorry
+          have hB_closed: "closedin_on ?Xk1 ?TXk1 ?B" sorry
           have hAB: "?A \<union> ?B = ?Xk1"
           proof -
             have "sub k \<le> sub (Suc k)" using hsub_inc hSk_lt by auto
