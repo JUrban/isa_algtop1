@@ -4867,20 +4867,34 @@ lemma Lemma_54_1_path_lifting:
      ftilde(sᵢ) lies in some slice V₀. Define ftilde(s) = (p|V₀)\<inverse>(f(s)).
      Step 3: Pasting lemma \<Rightarrow> continuous. p \<circ> ftilde = f by construction.\<close>
 proof -
-  \<comment> \<open>Step 1: Lebesgue subdivision.\<close>
+  \<comment> \<open>Step 1: Lebesgue subdivision.
+     Proof sketch: every b \<in> B has an evenly covered neighborhood U_b. The preimages
+     f^{-1}(U_b) cover [0,1]. Since [0,1] is compact, extract a finite subcover.
+     Use the Lebesgue number \<delta> > 0 of this cover: any set of diameter < \<delta> lies in
+     one element. Take n = ceil(1/\<delta>) and uniform subdivision sub(i) = i/n.\<close>
   obtain n :: nat and sub :: "nat \<Rightarrow> real" where
       hn: "n \<ge> 1" and hsub0: "sub 0 = 0" and hsubn: "sub n = 1"
       and hsub_inc: "\<forall>i<n. sub i < sub (Suc i)"
       and hcovered: "\<forall>i<n. \<exists>U. openin_on B TB U
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U"
-    sorry
-  \<comment> \<open>Step 2: Lift interval by interval. At each step, ftilde(s_i) determines
-     the sheet, and ftilde on [s_i, s_{i+1}] = (p|_sheet)\<inverse> \<circ> f.\<close>
+    sorry \<comment> \<open>Lebesgue number lemma on [0,1] (compact metric) with
+           open cover = preimages of evenly-covered neighborhoods.\<close>
+  \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
+     Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
+     f([sub(i), sub(i+1)]) \<subseteq> U for some evenly covered U. ftilde(sub(i)) \<in> some slice V_0.
+     Define ftilde(s) = (p|V_0)^{-1}(f(s)) for s \<in> [sub(i), sub(i+1)].
+     Continuity by the pasting lemma.\<close>
   have "\<exists>ftilde. (\<forall>s\<in>I_set. ftilde s \<in> E)
       \<and> ftilde 0 = e0
       \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
-      \<and> top1_continuous_map_on I_set I_top E TE ftilde" sorry
+      \<and> top1_continuous_map_on I_set I_top E TE ftilde"
+  proof -
+    \<comment> \<open>Induction on k \<le> n gives ftilde on [0, sub(k)] at each step.
+       At k = n, sub(n) = 1, giving ftilde on [0,1] = I_set.
+       Each step uses the evenly covered neighborhood and the inverse of p|V_0.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Assemble into path.\<close>
   then obtain ftilde where hft_mem: "\<forall>s\<in>I_set. ftilde s \<in> E"
       and hft0: "ftilde 0 = e0"
