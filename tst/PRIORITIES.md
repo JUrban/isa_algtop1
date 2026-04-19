@@ -1,6 +1,6 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 156 sorries, builds in ~31s, 18900+ lines
+## Status: 155 sorries, builds in ~30s, 19500+ lines
 
 ## FTA — 2 RECURSIVE SORRIES FROM COMPLETE
 
@@ -8,7 +8,8 @@
 | Component | Sorries | Status |
 |-----------|---------|--------|
 | Lemma_54_1 (path lifting) | **0** | ✅ COMPLETE |
-| Lemma_54_2 (homotopy lifting) | **2** | local agreement + local→global |
+| Lemma_54_2 (homotopy lifting) | **2** | Lebesgue grid + base continuity |
+| homotopy_lifting_rectangle_step | **0** | ✅ COMPLETE |
 | Theorem_54_3 (homotopic lifts) | 0 | ✅ |
 | Theorem_54_5 (π₁(S¹) ≅ ℤ) | 0 | ✅ |
 | FTA Step 2 | 0 | ✅ |
@@ -16,8 +17,22 @@
 | FTA (main theorem) | 0 | ✅ |
 
 ### The 2 remaining Lemma_54_2 sorries:
-1. Local agreement: Ftilde = inv_into V₀ p ∘ F on neighborhoods
-2. Local→global: locally continuous ⟹ continuous
+1. **Lebesgue grid existence**: N>0 with each 1/N-rectangle mapping into evenly covered U
+   (requires Lebesgue number lemma for compact metric space I×I)
+2. **Base case continuity** (hFt0_cont): Ft0 continuous on L-shape (edges)
+   (needs pasting_lemma_two_closed on left_lift∘snd and bot_lift∘fst)
+
+### Recently proved in Lemma_54_2:
+- ✅ hsubs (II_topology elements ⊆ I×I)
+- ✅ hAR_sub (A_k ∪ R ⊆ I×I)  
+- ✅ hR_closed (rectangle closed via closedin_II_rectangle helper)
+- ✅ hA_closed (A_k closed via finite union of closed)
+- ✅ hC_ne (boundary nonempty via corner point)
+- ✅ hC_eq (A_k ∩ R = L-shape via grid non-overlap)
+- ✅ hC_conn (L-shape connected via Theorem_23_3 + edge connectedness)
+- ✅ A(m*n) = I×I (via increasing_interval_cover pigeonhole helper)
+- ✅ subspace_topology self-equality
+- ✅ Grid derivation (subdivision from N-based grid)
 
 ## Jordan Chain — Infrastructure + R²-{0} Progress
 
@@ -34,7 +49,13 @@
 
 ## Fully Proved Key Results:
 - **Lemma_54_1** (path lifting): ZERO SORRIES ✓✓✓
+- **homotopy_lifting_rectangle_step**: ZERO SORRIES ✓✓✓
 - **Theorem_54_5** (π₁(S¹) ≅ ℤ): ZERO SORRIES ✓
 - **FTA** Steps 2, 3, 4: ZERO SORRIES ✓
 - **Theorem_53_1** (R→S¹ covering): ZERO SORRIES ✓
 - Corollary_55_4, nulhomotopic_trivializes: ZERO SORRIES ✓
+
+## Helper lemmas added:
+- closedin_I_sub_interval: closed sub-intervals of I are closed in I_top
+- closedin_II_rectangle: closed rectangles are closed in II_topology
+- increasing_interval_cover: pigeonhole for monotone subdivisions
