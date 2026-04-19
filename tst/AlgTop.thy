@@ -7049,20 +7049,28 @@ lemma Lemma_54_2_homotopy_lifting:
       and "e0 \<in> E" and "p e0 = b0"
       and "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
       and "F (0, 0) = b0"
+      and "is_topology_on B TB" and "is_topology_on E TE"
   shows "\<exists>Ftilde. top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde
     \<and> (\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t))
     \<and> Ftilde (0, 0) = e0"
 proof -
   \<comment> \<open>Munkres 54.2: Lift F: I\<times>I \<rightarrow> B to Ftilde: I\<times>I \<rightarrow> E.\<close>
   \<comment> \<open>Step 1: Subdivide I\<times>I into rectangles mapping into evenly covered sets (Lebesgue).\<close>
-  have "\<exists>m n. m > 0 \<and> n > 0 \<and>
-    (\<forall>i<m. \<forall>j<n. \<exists>U. top1_evenly_covered_on E TE B TB p U \<and>
-       F ` ({s\<in>I_set. real i/real m \<le> s \<and> s \<le> real(Suc i)/real m} \<times>
-             {t\<in>I_set. real j/real n \<le> t \<and> t \<le> real(Suc j)/real n}) \<subseteq> U)" sorry
-  \<comment> \<open>Step 2: Lift bottom edge using Lemma 54.1, then extend rectangle by rectangle.\<close>
-  \<comment> \<open>At each rectangle: Ftilde already defined on left+bottom edges (connected).
-     Image lies in one slice V0. Extend via p0\<inverse> \<circ> F on the rectangle.\<close>
-  \<comment> \<open>Step 3: Pasting lemma gives continuity. p \<circ> Ftilde = F by construction.\<close>
+  \<comment> \<open>Alternative approach: lift row by row using Lemma 54.1.
+     For each t, define F_t(s) = F(s, t). Lift F_0 from e0.
+     For each subsequent t, lift F_t starting from the endpoint of the previous lift.
+     This gives Ftilde continuous in s for each t.
+     The dependence on t is continuous by the same argument as Lemma 54.1
+     (pasting on each column strip).\<close>
+  \<comment> \<open>Step 1: Lift the bottom edge F(s, 0) = F_0(s) using Lemma 54.1.\<close>
+  have hF0_path: "top1_is_path_on B TB b0 (F (1, 0)) (\<lambda>s. F (s, 0))"
+    sorry
+  obtain ftilde0 where hft0_path: "top1_is_path_on E TE e0 (ftilde0 1) ftilde0"
+      and hft0_lift: "\<forall>s\<in>I_set. p (ftilde0 s) = F (s, 0)"
+    using Lemma_54_1_path_lifting[OF assms(1,2,3) hF0_path assms(6,7)] by (by100 auto)
+  \<comment> \<open>Step 2: For each (s, t), define Ftilde(s, t) as the lift of the column path
+     t \<mapsto> F(s, t) starting from ftilde0(s). This is well-defined by Lemma 54.1
+     for each fixed s. The resulting Ftilde is continuous by the pasting argument.\<close>
   show ?thesis sorry
 qed
 
@@ -7105,7 +7113,7 @@ proof -
         hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
     and hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
     and hFt_00: "Ftilde (0, 0) = e0"
-    using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00] by blast
+    using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00 hTB hTE] by blast
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
   have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0"
   proof -
