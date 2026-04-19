@@ -4656,7 +4656,8 @@ proof -
         thus False using hnm by (by100 blast)
       qed
     qed
-    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>"
+      sorry \<comment> \<open>cos(2\<pi>x) < 0 iff x \<in> (n+1/4, n+3/4): same analysis as arc_N with cos.\<close>
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
@@ -4713,7 +4714,8 @@ proof -
         thus False using hnm by (by100 blast)
       qed
     qed
-    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S} = \<Union>?\<V>" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S} = \<Union>?\<V>"
+      sorry \<comment> \<open>sin(2\<pi>x) < 0 iff x \<in> (n+1/2, n+1): same analysis as arc_N with sin < 0.\<close>
     have hV_homeo: "\<forall>V\<in>?\<V>.
         top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
           top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
@@ -15406,7 +15408,50 @@ proof -
     by (rule simply_connected_trivial_image[OF hE'_sc hcovE' assms(13) assms(11)
           is_topology_on_strict_imp[OF assms(1)]])
   \<comment> \<open>{1} is conjugate to {1} (take c = identity). Apply Theorem 79.4.\<close>
-  show ?thesis using Theorem_79_4[OF assms(4,1,5)] assms hH_trivial hH'_trivial sorry
+  \<comment> \<open>Take c = id. Conjugation of {id} by id gives {id}.\<close>
+  have hb0_B: "b0 \<in> B"
+    using hcovE assms(12) assms(10)
+    unfolding top1_covering_map_on_def top1_continuous_map_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB" by (rule is_topology_on_strict_imp[OF assms(1)])
+  have hid_mem: "top1_fundamental_group_id B TB b0
+      \<in> top1_fundamental_group_carrier B TB b0"
+  proof -
+    have "top1_is_loop_on B TB b0 (top1_constant_path b0)"
+      by (rule top1_constant_path_is_loop[OF hTB hb0_B])
+    thus ?thesis
+      unfolding top1_fundamental_group_id_def top1_fundamental_group_carrier_def
+      by (by100 blast)
+  qed
+  \<comment> \<open>Conjugation of {id} by id: mul(id, mul(id, invg(id))) = mul(id, mul(id, id)) = id.\<close>
+  have hconj: "(\<lambda>H. (top1_fundamental_group_mul B TB b0 (top1_fundamental_group_id B TB b0))
+      ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                (top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0))) ` H))
+      {top1_fundamental_group_id B TB b0}
+      = {top1_fundamental_group_id B TB b0}"
+  proof -
+    \<comment> \<open>invg([const]) = [reverse(const)] = [const] (constant path reversed is still constant).\<close>
+    have hinvg_id: "top1_fundamental_group_invg B TB b0 (top1_fundamental_group_id B TB b0)
+        = top1_fundamental_group_id B TB b0"
+      sorry \<comment> \<open>Inverse of identity class = identity class (reverse of const ≃ const).\<close>
+    \<comment> \<open>mul(id, id) = id (left identity in fundamental group).\<close>
+    have hmul_id: "top1_fundamental_group_mul B TB b0
+        (top1_fundamental_group_id B TB b0) (top1_fundamental_group_id B TB b0)
+        = top1_fundamental_group_id B TB b0"
+      sorry \<comment> \<open>Product of identity class with itself = identity class.\<close>
+    show ?thesis using hinvg_id hmul_id by simp
+  qed
+  have hRHS: "\<exists>c\<in>top1_fundamental_group_carrier B TB b0.
+      top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                    (top1_fundamental_group_invg B TB b0 c)) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+    apply (rule bexI[of _ "top1_fundamental_group_id B TB b0"])
+    using hconj hH_trivial hH'_trivial apply (by100 simp)
+    using hid_mem apply (by100 blast)
+    done
+  show ?thesis using iffD2[OF Theorem_79_4[OF assms(4,1,5)
+        hcovE assms(10) hcovE' assms(11) assms(6,7,8,9)]] hRHS by (by100 blast)
 qed
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
