@@ -1,31 +1,41 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 159 sorries, builds in ~29s, 17489 lines
+## Status: 160 sorries, builds in ~30s, 17500+ lines
 
-## 🎉 Major Fully Proved Results
+## 🎉🎉 MAJOR: Lebesgue Subdivision FULLY PROVED!
 
-- **Theorem_53_1** — R→S¹ covering map (all 4 arcs)
-- **open_cover_subdivision_01** — creeping lemma for [0,1]
-- **top1_continuous_preimage_ball** — framework bridge (top1 → HOL open/dist)
-- **nulhomotopic_trivializes_loops_general** — arbitrary X→Y
-- **Theorem_80_1** — universal covering uniqueness
-- **Theorem_54_5** — π₁(S¹) ≅ ℤ bijection
-- **FTA Steps 3-4** — polynomial root finding
+The Lebesgue subdivision step in Lemma_54_1 — previously THE key
+bottleneck blocking path lifting, π₁(S¹)≅ℤ, FTA, and Jordan —
+is now fully proved via:
 
-## Sorry Distribution
+1. `open_cover_subdivision_01` ✓ (creeping lemma, Sup-based)
+2. `top1_continuous_preimage_ball` ✓ (top1→HOL bridge)
+3. `hpointwise` ✓ (covering map + bridge)
+4. `heps_spec` ✓ (someI_ex)
+5. `hcov_hyp` ✓ (bexI + assumption)
+6. Cover transfer ✓ (image monotonicity)
 
-- §51-§54: 7 sorries (path lifting + product covering)
-- §55: 1 sorry (k continuous on B²)
-- §56 FTA: 4 sorries (Steps 1-2 + bridge)
-- §57 Borsuk-Ulam: 9 sorries (covering theory)
-- §58-§60: 2 sorries (Lebesgue for Theorem_59_1)
-- §61-§85: 136 sorries (deep results)
-
-## Path Lifting Critical Path
+## Remaining in Lemma_54_1
 
 ```
-open_cover_subdivision_01 ✓ → top1_continuous_preimage_ball ✓ → hpointwise ✓
-  → assembly sorry (1) → lift construction sorry (1) → Lemma_54_1
+Lebesgue subdivision ✓✓✓ (COMPLETE!)
+Lift construction ← 3 structured sorries:
+  1. Induction (extend lift by one interval)
+  2. Specialization (k=n gives full lift)
+  3. Continuity (pasting lemma)
 ```
 
-## Current sorry count: 159
+## Sorry Distribution: 160
+
+- §51-§54: 7 (lift construction + product covering)
+- §55: 1 (k continuous on B²)
+- §56 FTA: 4 (Steps 1-2)
+- §57 Borsuk-Ulam: 9 (covering theory)
+- §58: 1 (pre-existing timeout)
+- §59: 2 (Lebesgue for Theorem_59_1)
+- §61-§85: 136 (deep downstream results)
+
+## Build Time Critical
+
+File at 17500+ lines, build ~30s. The §51 `define g51` optimization
+saved ~10s CPU. Further code additions risk cascading timeouts.
