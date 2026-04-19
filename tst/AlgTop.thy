@@ -6372,10 +6372,10 @@ proof -
       proof (induction k)
         case 0
         \<comment> \<open>Base: sub 0 = 0. Only s = 0 satisfies s \<le> 0, and ftk 0 = e0.\<close>
+        have hf0_eq: "f 0 = p e0" using hpe0 hf unfolding top1_is_path_on_def by simp
         show ?case
-          apply (intro exI[of _ "\<lambda>_. e0"] conjI)
-          using he0 hpe0 hsub0
-          sorry
+          apply (intro exI[of _ "\<lambda>_. e0"] conjI allI ballI impI)
+          using he0 hf0_eq hsub0 unfolding top1_unit_interval_def by auto
       next
         case (Suc k)
         \<comment> \<open>IH: \<exists>ftk on [0, sub k]. Extend to [0, sub(Suc k)].\<close>
