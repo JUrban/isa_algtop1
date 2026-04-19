@@ -4676,13 +4676,10 @@ proof -
         have hinv_co: "continuous_on top1_S1_arc_N inv_fn"
           unfolding inv_fn_def top1_S1_arc_N_def
           sorry \<comment> \<open>continuous_on_arccos + continuous_on_fst + bounds from x^2+y^2=1.\<close>
-        \<comment> \<open>Range: arccos(x) \<in> (0,\<pi>) when y > 0, so arccos(x)/(2\<pi>) \<in> (0, 1/2).\<close>
         have hinv_range: "\<And>p. p \<in> top1_S1_arc_N \<Longrightarrow> inv_fn p \<in> V"
           sorry \<comment> \<open>arccos(x) \<in> (0,\<pi>) when y > 0 (since x \<in> (-1,1)), so arccos(x)/(2\<pi>) \<in> (0,1/2).\<close>
-        \<comment> \<open>Agreement: p(inv_fn(p)) = p. cos(arccos(x)) = x.
-           sin(arccos(x)) = y since sin(arccos(x)) = sqrt(1-x^2) = y (y > 0).\<close>
         have hinv_agree: "\<forall>p\<in>top1_S1_arc_N. inv_into V top1_R_to_S1 p = inv_fn p"
-          sorry
+          sorry \<comment> \<open>p(inv_fn(p)) = p by cos(arccos(x))=x and sin(arccos(x))=y, uniqueness.\<close>
         \<comment> \<open>Transfer.\<close>
         have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N
             = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_N"
