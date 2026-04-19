@@ -6003,8 +6003,17 @@ proof -
       and hcovered: "\<forall>i<n. \<exists>U. openin_on B TB U
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U"
-    sorry \<comment> \<open>Lebesgue number lemma on [0,1] (compact metric) with
-           open cover = preimages of evenly-covered neighborhoods.\<close>
+  proof -
+    \<comment> \<open>Alternative to Lebesgue number: use compactness of [0,1] directly.
+       For each s \<in> [0,1], f(s) \<in> B has an evenly covered neighborhood U_s.
+       f\<inverse>(U_s) is open in [0,1] (f continuous), contains s.
+       The collection {f\<inverse>(U_s)} covers [0,1]. By compactness, finite subcover.
+       Each element of the subcover is a union of open intervals.
+       Take a common refinement to get a subdivision.\<close>
+    \<comment> \<open>For simplicity, use uniform subdivision: take n large enough that 1/n < min diameter
+       of the finitely many preimage sets. This works because [0,1] is a compact metric space.\<close>
+    show ?thesis sorry
+  qed \<comment> \<open>Lebesgue subdivision.\<close>
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
      f([sub(i), sub(i+1)]) \<subseteq> U for some evenly covered U. ftilde(sub(i)) \<in> some slice V_0.
@@ -6015,10 +6024,13 @@ proof -
       \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)
       \<and> top1_continuous_map_on I_set I_top E TE ftilde"
   proof -
-    \<comment> \<open>Induction on k \<le> n gives ftilde on [0, sub(k)] at each step.
-       At k = n, sub(n) = 1, giving ftilde on [0,1] = I_set.
-       Each step uses the evenly covered neighborhood and the inverse of p|V_0.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Induction: for each k \<le> n, there exists ftk on [0, sub(k)] lifting f.
+       Base: ftk = const e0 at k=0. Inductive step: extend via (p|V_0)^{-1} ∘ f.
+       At k = n, sub(n) = 1, giving ftilde on [0,1] = I_set.\<close>
+    show ?thesis sorry \<comment> \<open>Lift construction by induction on k.
+       Each step: get evenly covered U ⊇ f([sub(k), sub(k+1)]),
+       find slice V_0 ∋ ftk(sub(k)), define ext(s) = (p|V_0)^{-1}(f(s)),
+       paste ftk and ext to get ft_{k+1}.\<close>
   qed
   \<comment> \<open>Assemble into path.\<close>
   then obtain ftilde where hft_mem: "\<forall>s\<in>I_set. ftilde s \<in> E"
