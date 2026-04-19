@@ -7233,27 +7233,42 @@ proof -
        Near s0: Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)). Proof: column Ftilde(s,\<cdot>) is continuous,
        enters p\<inverse>(U) near t=1, connected image in disjoint slices stays in V0,
        so Ftilde(s,1) \<in> V0 and p|V0 injective gives equality.\<close>
-    have hlocal: "\<forall>s0\<in>I_set. \<exists>\<epsilon>>0. \<exists>V0 \<V>. openin_on E TE V0 \<and> V0 \<in> \<V>
-        \<and> (\<forall>V\<in>\<V>. openin_on E TE V) \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
-        \<and> (\<forall>s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon> \<longrightarrow> Ftilde (s, 1) \<in> V0
-            \<and> Ftilde (s, 1) = inv_into V0 p (F (s, 1)))"
+    \<comment> \<open>Lift the row s \<mapsto> F(s,1) from Ftilde(0,1) via Lemma 54.1.
+       Then show Ftilde(s,1) = row_lift(s) using uniqueness.\<close>
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hFt01_E: "Ftilde (0, 1) \<in> E" using hFt_E h0I h1I by (by100 blast)
+    have hFt01_p: "p (Ftilde (0, 1)) = F (0, 1)"
+      using hFt_lift h0I h1I by (by100 blast)
+    have hrow_path: "top1_is_path_on B TB (F (0, 1)) (F (1, 1)) (\<lambda>s. F (s, 1))"
+    proof -
+      have heq: "(\<lambda>s. F (s, 1)) = F \<circ> (\<lambda>s. (s, 1))" by (rule ext) simp
+      show ?thesis unfolding top1_is_path_on_def heq
+        using top1_continuous_map_on_comp[OF pair_s_const_continuous[OF h1I] assms(4)] by simp
+    qed
+    obtain rl where hrl: "top1_is_path_on E TE (Ftilde (0, 1)) (rl 1) rl"
+        and hrl_lift: "\<forall>s\<in>I_set. p (rl s) = F (s, 1)"
+      using Lemma_54_1_path_lifting[OF assms(1) hFt01_E hFt01_p hrow_path assms(6,7)]
+      by (by100 auto)
+    \<comment> \<open>Both Ftilde(\<cdot>,1) and rl lift s \<mapsto> F(s,1) from Ftilde(0,1).
+       Show Ftilde(\<cdot>,1) is a path (continuous), then uniqueness gives equality.
+       Ftilde(\<cdot>,1) is a path because on each sub-interval it equals (p|V0)\<inverse> \<circ> F(\<cdot>,1).\<close>
+    have hFt_is_path: "top1_is_path_on E TE (Ftilde (0, 1)) (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))"
       sorry
-    \<comment> \<open>From hlocal: Ftilde(\<cdot>,1) is locally (p|V0)\<inverse> \<circ> F(\<cdot>,1), hence locally continuous.
-       Locally continuous on I_set \<Rightarrow> continuous on I_set.\<close>
+    have hFt_row1_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = F (s, 1)"
+      using hFt_lift h1I by (by100 auto)
+    have hrow1_eq: "\<forall>s\<in>I_set. Ftilde (s, 1) = rl s"
+      using Lemma_54_1_uniqueness[OF assms(1) hFt01_E hFt01_p hrow_path
+          hFt_is_path hFt_row1_lift hrl hrl_lift] .
     show ?thesis unfolding top1_continuous_map_on_def
     proof (intro conjI ballI)
       fix s assume hs: "s \<in> I_set"
       show "Ftilde (s, 1) \<in> E" using hFt_E hs h1I by (by100 blast)
     next
       fix V assume hV: "V \<in> TE"
-      \<comment> \<open>Show preimage is open: each s0 in preimage has \<epsilon>-neighborhood in preimage.\<close>
-      \<comment> \<open>Show: {s\<in>I_set. Ftilde(s,1) \<in> V} is open in I_top.
-       For each s0 in this set, hlocal gives \<epsilon> and V0 with Ftilde(s,1) = inv_into V0 p (F(s,1))
-       for |s-s0|<\<epsilon>. So locally, preimage of V = preimage of V under inv_into V0 p \<circ> F(\<cdot>,1).
-       Since this composition is continuous (inv_into V0 p continuous on U, F(\<cdot>,1) continuous),
-       the local preimage is open. Union of open = open.\<close>
-    show "{s\<in>I_set. Ftilde (s, 1) \<in> V} \<in> I_top"
-      sorry
+      have "{s\<in>I_set. Ftilde (s, 1) \<in> V} = {s\<in>I_set. rl s \<in> V}" using hrow1_eq by (by100 auto)
+      also have "\<dots> \<in> I_top"
+        using hrl hV unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      finally show "{s\<in>I_set. Ftilde (s, 1) \<in> V} \<in> I_top" .
     qed
   qed
   show ?thesis using hcol_cont hFt_lift hFt_00 hrow0 hrow1 by (by100 blast)
