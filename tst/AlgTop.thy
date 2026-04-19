@@ -6016,10 +6016,31 @@ proof -
     obtain \<C>' where "\<C>' \<subseteq> \<B>" "finite \<C>'" "{0..1::real} \<subseteq> \<Union>\<C>'" by (by100 blast)
     thus ?thesis using that by (by100 blast)
   qed
-  \<comment> \<open>Lebesgue number: for finite open cover of compact [0,1], ∃ \<delta> > 0.\<close>
-  \<comment> \<open>For each s \<in> [0,1], s is in some V \<in> \<C>. Since V is open, ∃ \<epsilon> > 0 with (s-\<epsilon>, s+\<epsilon>) \<subseteq> V.
-     Take \<delta> = min over all s of the max such \<epsilon>. Finite cover \<Rightarrow> \<delta> > 0.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Lebesgue number: for each s \<in> [0,1], s \<in> some V \<in> \<C> (open). Since V is open,
+     Ball(s, \<epsilon>_s) \<subseteq> V. Define \<epsilon>: [0,1] \<rightarrow> R>0 as the max such \<epsilon>. On compact [0,1],
+     the continuous function s \<mapsto> \<epsilon>_s achieves a positive minimum \<delta> > 0.
+     Then n = \<lceil>1/\<delta>\<rceil>+1 works.\<close>
+  \<comment> \<open>For each s, get the cover element and the ball radius.\<close>
+  have heps: "\<forall>s\<in>{0..1::real}. \<exists>\<epsilon>>0. \<exists>V\<in>\<C>. {t. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V"
+  proof
+    fix s :: real assume hs: "s \<in> {0..1}"
+    obtain V where hV: "V \<in> \<C>" and hsV: "s \<in> V" using hC_cover hs by (by100 blast)
+    have "open V" using hC_sub hV unfolding \<B>_def by (by100 blast)
+    have "\<exists>e>0. \<forall>y. dist y s < e \<longrightarrow> y \<in> V"
+      using \<open>open V\<close> \<open>s \<in> V\<close> open_dist[of V] by blast
+    then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hball: "\<forall>y. dist y s < \<epsilon> \<longrightarrow> y \<in> V"
+      by blast
+    have "{t::real. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V"
+    proof
+      fix t :: real assume "t \<in> {t. \<bar>t - s\<bar> < \<epsilon>}"
+      hence "dist t s < \<epsilon>" unfolding dist_real_def by simp
+      thus "t \<in> V" using hball by blast
+    qed
+    thus "\<exists>\<epsilon>>0. \<exists>V\<in>\<C>. {t. \<bar>t - s\<bar> < \<epsilon>} \<subseteq> V" using h\<epsilon> hV by (by100 blast)
+  qed
+  \<comment> \<open>By compactness, the infimum of the \<epsilon>_s values is achieved and positive.
+     This is the Lebesgue number \<delta>. Take n = \<lceil>1/\<delta>\<rceil>+1.\<close>
+  show ?thesis sorry \<comment> \<open>Remaining: extract uniform \<delta> from pointwise \<epsilon>_s using compactness.\<close>
 qed
 
 (** from \<S>54 Lemma 54.1: path-lifting lemma **)
