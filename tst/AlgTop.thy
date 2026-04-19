@@ -6231,6 +6231,8 @@ lemma Lemma_54_1_path_lifting:
   assumes hcov: "top1_covering_map_on E TE B TB p"
       and he0: "e0 \<in> E" and hpe0: "p e0 = b0"
       and hf: "top1_is_path_on B TB b0 b1 f"
+      and hTB_assm: "is_topology_on B TB"
+      and hTE_assm: "is_topology_on E TE"
   shows "\<exists>ftilde. top1_is_path_on E TE e0 (ftilde 1) ftilde
     \<and> (\<forall>s\<in>I_set. p (ftilde s) = f s)"
   \<comment> \<open>Textbook proof (Munkres Lemma 54.1):
@@ -6242,7 +6244,7 @@ lemma Lemma_54_1_path_lifting:
 proof -
   have hf_cont: "top1_continuous_map_on I_set I_top B TB f"
     using hf unfolding top1_is_path_on_def by (by100 blast)
-  have hTB: "is_topology_on B TB" sorry \<comment> \<open>From the path's codomain topology.\<close>
+  have hTB: "is_topology_on B TB" using hTB_assm .
   have hB_ne: "B \<noteq> {}"
   proof -
     have "f 0 = b0" using hf unfolding top1_is_path_on_def by simp
@@ -6251,8 +6253,7 @@ proof -
     hence "b0 \<in> B" using hf unfolding top1_is_path_on_def by simp
     thus ?thesis by (by100 blast)
   qed
-  have hTE_top: "is_topology_on E TE"
-    by (rule top1_covering_map_on_topology[OF hcov hTB hB_ne])
+  have hTE_top: "is_topology_on E TE" using hTE_assm .
   \<comment> \<open>Step 1: Lebesgue subdivision.
      Strategy: for each s \<in> [0,1], f(s) has an evenly covered neighborhood.
      The f-preimages form an open cover of [0,1]. By compactness, finite subcover.
@@ -7500,7 +7501,7 @@ proof -
       using hf_props unfolding top1_is_loop_on_def by (by100 blast)
     obtain ft0 where hft0: "top1_is_path_on E TE e0 (ft0 1) ft0"
         and hft0p: "\<forall>s\<in>I_set. p (ft0 s) = ?f s"
-      using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path] by (by100 auto)
+      using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path assms(5) hTE] by (by100 auto)
     \<comment> \<open>SOME picks a lift.\<close>
     let ?ft = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"
     have hft_props: "top1_is_path_on E TE e0 (?ft 1) ?ft \<and> (\<forall>s\<in>I_set. p (?ft s) = ?f s)"
@@ -7564,7 +7565,7 @@ proof -
         using hf'_props unfolding top1_is_loop_on_def by (by100 blast)
       obtain ft' where hft': "top1_is_path_on E TE e0 (ft' 1) ft'"
           and hft'p: "\<forall>s\<in>I_set. p (ft' s) = ?f' s"
-        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf'_path] by (by100 auto)
+        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf'_path assms(5) hTE] by (by100 auto)
       \<comment> \<open>SOME picks a lift of ?f'.\<close>
       let ?ft' = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f' s)"
       have hft'_props: "top1_is_path_on E TE e0 (?ft' 1) ?ft' \<and> (\<forall>s\<in>I_set. p (?ft' s) = ?f' s)"
@@ -7629,7 +7630,7 @@ proof -
         using hf_props unfolding top1_is_loop_on_def by (by100 blast)
       obtain ft0 where "top1_is_path_on E TE e0 (ft0 1) ft0"
           "(\<forall>s\<in>I_set. p (ft0 s) = ?f s)"
-        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path] by (by100 auto)
+        using Lemma_54_1_path_lifting[OF assms(3) he0 hpe0 hf_path assms(5) hTE] by (by100 auto)
       thus ?thesis using someI_ex[of "\<lambda>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = ?f s)"]
         by (by100 blast)
     qed
