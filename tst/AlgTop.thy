@@ -7502,21 +7502,27 @@ proof -
       have hk: "k < m * n" using Suc.prems by simp
       let ?i = "k mod m" and ?j = "k div m"
       have hi: "?i < m" using hm by simp
-      have hj: "?j < n" using hk hm sorry
+      have hj: "?j < n"
+      proof -
+        have "k div m * m \<le> k" by simp
+        hence "k div m * m < m * n" using hk by (by100 linarith)
+        thus ?thesis using hm by (by100 simp)
+      qed
       obtain Ft_prev where hprev_cont: "top1_continuous_map_on (?A k)
           (subspace_topology (I_set \<times> I_set) II_topology (?A k)) E TE Ft_prev"
           and hprev_lift: "\<forall>x\<in>?A k. p (Ft_prev x) = F x"
           and hprev_00: "Ft_prev (0, 0) = e0"
-        using Suc.IH Suc.prems sorry
+        using Suc.IH Suc.prems by auto
       \<comment> \<open>Get evenly covered U for rectangle (i,j).\<close>
       obtain U where hUo: "openin_on B TB U"
           and hUec: "top1_evenly_covered_on E TE B TB p U"
           and hFR: "F ` ?R ?i ?j \<subseteq> U"
-        using hgrid[rule_format, OF hi hj] sorry
+        using hgrid[rule_format, OF hi hj] by (by100 auto)
       \<comment> \<open>A_k and R are closed in I\<times>I. A_k \<inter> R connected. A_k \<inter> R nonempty.\<close>
       have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
       have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry
-      have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set" sorry
+      have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set"
+        unfolding top1_unit_interval_def by (by100 auto)
       have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
           (subspace_topology (I_set \<times> I_set) II_topology (?A k \<inter> ?R ?i ?j))" sorry
       have hC_ne: "?A k \<inter> ?R ?i ?j \<noteq> {}" sorry
