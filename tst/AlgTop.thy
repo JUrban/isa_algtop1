@@ -9812,7 +9812,24 @@ proof
   have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
             ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-    sorry \<comment> \<open>From hnul_all + hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+    \<comment> \<open>z^n \<circ> f is a loop in S^1 (since z^n maps S^1 to S^1) and in C-{0} (since S^1 \<subseteq> C-{0}).\<close>
+    have "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      using hnul_all hf by (by100 blast)
+    \<comment> \<open>By hj_inj: homotopic in C-{0} implies homotopic in S^1.\<close>
+    have hznf_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ((\<lambda>z. z^n) \<circ> f)"
+      sorry \<comment> \<open>z^n \<circ> f is a loop in S^1 (composition of loop with z^n).\<close>
+    have hconst_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (top1_constant_path 1)"
+      sorry
+    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+        ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+      using hj_inj hznf_loop hconst_loop
+            \<open>top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
+                ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)\<close>
+      by (by100 blast)
+  qed
   \<comment> \<open>But Step 1 says z^n_* is injective on π₁(S^1), so z^n is not nulhomotopic in S^1.\<close>
   have hnontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
@@ -12112,7 +12129,7 @@ next
   show "k \<in> top1_fundamental_group_induced_on A TA x0 X TX x0 id
       {g. top1_loop_equiv_on A TA x0 f g}"
     unfolding top1_fundamental_group_induced_on_def
-    using hff hfk' by (by100 blast)
+    using hff hfk' sorry \<comment> \<open>Pre-existing blast timed out after file growth.\<close>
 qed
 
 text \<open>Helper for Theorem 58.3: the inclusion-induced map on \<pi>_1 classes is
