@@ -5351,7 +5351,104 @@ proof -
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_S
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
-        sorry
+      proof -
+        \<comment> \<open>Inverse: inv_fn(x,y) = 1 - arccos(x)/(2\<pi>) + nn.
+           For y < 0, the angle is 2\<pi> - arccos(x), so t = (2\<pi> - arccos(x))/(2\<pi>) + nn.\<close>
+        define inv_fn :: "real \<times> real \<Rightarrow> real"
+          where "inv_fn \<equiv> \<lambda>p. 1 - arccos (fst p) / (2 * pi) + of_int nn"
+        have hfst_bdd: "\<forall>p\<in>top1_S1_arc_S. -1 \<le> fst p \<and> fst p \<le> 1"
+        proof (intro ballI conjI)
+          fix p assume hp: "p \<in> top1_S1_arc_S"
+          have hy_neg: "snd p < 0" and hcirc: "fst p ^ 2 + snd p ^ 2 = 1"
+            using hp unfolding top1_S1_arc_S_def by (by100 auto)+
+          have "0 \<le> snd p ^ 2" by simp
+          hence "fst p ^ 2 \<le> 1" using hcirc by (by100 linarith)
+          show "-1 \<le> fst p"
+          proof (rule ccontr)
+            assume "\<not> -1 \<le> fst p"
+            hence "- fst p > 1" by (by100 linarith)
+            hence "(- fst p) * (- fst p) > 1 * 1"
+              by (intro mult_strict_mono') (by100 linarith)+
+            hence "fst p ^ 2 > 1" unfolding power2_eq_square by (by100 simp)
+            thus False using \<open>fst p ^ 2 \<le> 1\<close> by (by100 linarith)
+          qed
+          show "fst p \<le> 1"
+          proof (rule ccontr)
+            assume "\<not> fst p \<le> 1"
+            hence "fst p > 1" by (by100 linarith)
+            hence "fst p * fst p > 1 * 1"
+              by (intro mult_strict_mono') (by100 linarith)+
+            hence "fst p ^ 2 > 1" unfolding power2_eq_square by (by100 simp)
+            thus False using \<open>fst p ^ 2 \<le> 1\<close> by (by100 linarith)
+          qed
+        qed
+        have hinv_co: "continuous_on top1_S1_arc_S inv_fn"
+          unfolding inv_fn_def
+          by (intro continuous_on_add continuous_on_diff continuous_on_const
+              continuous_on_divide[OF _ continuous_on_const]
+              continuous_on_arccos continuous_on_fst)
+             (use hfst_bdd pi_gt_zero in \<open>by100 auto\<close>)+
+        have hinv_range: "\<And>p. p \<in> top1_S1_arc_S \<Longrightarrow> inv_fn p \<in> V"
+        proof -
+          fix p assume hp: "p \<in> top1_S1_arc_S"
+          hence hy_neg: "snd p < 0" and hcirc: "fst p ^ 2 + snd p ^ 2 = 1"
+            unfolding top1_S1_arc_S_def by (by100 auto)+
+          have hx_strict: "-1 < fst p" "fst p < 1"
+          proof -
+            show "-1 < fst p"
+            proof (rule ccontr)
+              assume "\<not> -1 < fst p" hence "fst p \<le> -1" by (by100 linarith)
+              hence "(- fst p) * (- fst p) \<ge> 1 * 1"
+                by (intro mult_mono') (by100 linarith)+
+              hence "snd p ^ 2 \<le> 0" using hcirc unfolding power2_eq_square by (by100 linarith)
+              moreover have "snd p ^ 2 > 0" using hy_neg unfolding power2_eq_square
+                by (intro mult_neg_neg) (by100 linarith)+
+              ultimately show False by (by100 linarith)
+            qed
+            show "fst p < 1"
+            proof (rule ccontr)
+              assume "\<not> fst p < 1" hence "fst p \<ge> 1" by (by100 linarith)
+              hence "fst p * fst p \<ge> 1 * 1"
+                by (intro mult_mono') (by100 linarith)+
+              hence "snd p ^ 2 \<le> 0" using hcirc unfolding power2_eq_square by (by100 linarith)
+              moreover have "snd p ^ 2 > 0" using hy_neg unfolding power2_eq_square
+                by (intro mult_neg_neg) (by100 linarith)+
+              ultimately show False by (by100 linarith)
+            qed
+          qed
+          have hbdd: "0 < arccos (fst p) \<and> arccos (fst p) < pi"
+            by (rule arccos_lt_bounded[OF hx_strict])
+          have hpi: "pi > 0" by (rule pi_gt_zero)
+          have "1/2 < 1 - arccos (fst p) / (2 * pi)"
+          proof -
+            have "arccos (fst p) / (2 * pi) < 1/2" using hbdd hpi by (by100 simp)
+            thus ?thesis by (by100 linarith)
+          qed
+          moreover have "1 - arccos (fst p) / (2 * pi) < 1"
+            using hbdd hpi by (by100 simp)
+          ultimately show "inv_fn p \<in> V"
+            unfolding inv_fn_def hVeq by (by100 auto)
+        qed
+        have hinv_agree: "\<forall>p\<in>top1_S1_arc_S. inv_into V top1_R_to_S1 p = inv_fn p"
+          sorry \<comment> \<open>cos(2\<pi> - arccos(x)) = cos(arccos(x)) = x.
+                   sin(2\<pi> - arccos(x)) = -sin(arccos(x)) = -sqrt(1-x^2) = y (since y < 0).\<close>
+        have harc_eq: "subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_S"
+          unfolding top1_S1_topology_def
+          using subspace_topology_trans[OF harc_sub]
+          by (simp add: product_topology_on_open_sets[where ?'a=real and ?'b=real])
+        have "top1_continuous_map_on top1_S1_arc_S
+            (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1_arc_S)
+            V (subspace_topology UNIV (top1_open_sets :: real set set) V) inv_fn"
+          by (rule top1_continuous_map_on_subspace_open_sets_on[OF hinv_range hinv_co])
+        hence hinv_fn_cont: "top1_continuous_map_on top1_S1_arc_S
+            (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S)
+            V (subspace_topology UNIV top1_open_sets V) inv_fn"
+          unfolding harc_eq .
+        have "\<forall>p\<in>top1_S1_arc_S. inv_fn p = inv_into V top1_R_to_S1 p"
+          using hinv_agree by (by100 auto)
+        thus ?thesis by (rule top1_continuous_map_on_agree'[OF hinv_fn_cont])
+      qed
       have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
         by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV hV_sub])
