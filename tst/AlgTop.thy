@@ -9591,8 +9591,28 @@ proof
             continuous_on_id)
       have hrho_eq: "\<And>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p) = ?\<rho> p"
         by (simp add: case_prod_beta)
+      have hrho_cont': "continuous_on UNIV ?\<rho>"
+      proof -
+        have "\<And>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p) = ?\<rho> p"
+          by (simp add: case_prod_beta)
+        hence "(\<lambda>p::real\<times>real. (?a * fst p + ?b * snd p, -?b * fst p + ?a * snd p)) = ?\<rho>"
+          by (rule ext)
+        thus ?thesis using hrho_cont by (by100 metis)
+      qed
+      have hrho_top1': "top1_continuous_map_on top1_S1
+          (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_S1)
+          top1_S1
+          (subspace_topology UNIV (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_S1)
+          ?\<rho>"
+      proof -
+        have "product_topology_on (top1_open_sets::real set set) top1_open_sets
+            = (top1_open_sets :: (real\<times>real) set set)"
+          by (rule product_topology_on_open_sets)
+        thus ?thesis
+          using top1_continuous_map_on_subspace_open_sets[OF hrho_S1 hrho_cont'] by (by100 simp)
+      qed
       have hrho_top1: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?\<rho>"
-        sorry \<comment> \<open>rotation continuous; case_prod matching issue with subspace helper\<close>
+        using hrho_top1' unfolding top1_S1_topology_def .
       show ?thesis by (rule top1_continuous_map_on_comp[OF assms(1) hrho_top1])
     qed
     have hrh_anti: "top1_antipode_preserving_S1 (?\<rho> \<circ> h)"
