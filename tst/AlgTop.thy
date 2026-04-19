@@ -11453,7 +11453,23 @@ proof
   have hnontrivial: "\<not> (\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
       \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
             ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1))"
-    sorry \<comment> \<open>From π₁(S^1) ≅ ℤ and z^n corresponding to multiplication by n.\<close>
+  proof
+    assume hnul_S1': "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+        \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+              ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
+    \<comment> \<open>The standard loop p_0(s) = cis(2\<pi>s) is a loop on S^1_complex at 1.\<close>
+    let ?p0 = "\<lambda>s::real. cis (2 * pi * s)"
+    have hp0_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 ?p0"
+      sorry
+    \<comment> \<open>z^n \<circ> p_0(s) = cis(2\<pi>ns). If \<simeq> const, then its real covering lift ends at 0.
+       But the lift of cis(2\<pi>ns) from 0 is s \<mapsto> ns, ending at n \<neq> 0. Contradiction.\<close>
+    have hzp0_const: "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+        ((\<lambda>z. z^n) \<circ> ?p0) (top1_constant_path 1)"
+      using hnul_S1' hp0_loop by (by100 blast)
+    \<comment> \<open>This contradicts the nontriviality of the n-fold winding on S^1.\<close>
+    \<comment> \<open>Using the covering map R \<rightarrow> S^1: lift of n-fold winding ends at n \<noteq> 0.\<close>
+    show False sorry
+  qed
   show False using hnul_S1 hnontrivial by (by100 blast)
 qed
 
