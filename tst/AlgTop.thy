@@ -15465,7 +15465,56 @@ proof
   \<comment> \<open>Actually: use the retraction r(x) = x/|x| to transfer the homotopy to S^1.\<close>
   have hp0_contractible_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
       ?p0 (top1_constant_path (1, 0))"
-    sorry
+  proof -
+    \<comment> \<open>Use retraction r(x) = x/|x| from R^2-{0} to S^1. r continuous, r|S^1 = id.
+       hp0_contractible gives p0 ≃ const in R^2-{0}.
+       Apply r: r∘p0 ≃ r∘const in S^1. r∘p0 = p0 (on S^1), r∘const = const.\<close>
+    let ?norm = "\<lambda>x::real\<times>real. sqrt (fst x ^ 2 + snd x ^ 2)"
+    let ?r = "\<lambda>x::real\<times>real. (fst x / ?norm x, snd x / ?norm x)"
+    \<comment> \<open>r fixes S^1.\<close>
+    have hr_fix: "\<And>x. x \<in> top1_S1 \<Longrightarrow> ?r x = x"
+      unfolding top1_S1_def by auto
+    \<comment> \<open>r maps R^2-{0} to S^1.\<close>
+    have hr_S1: "\<And>x. x \<in> UNIV - {(0, 0)} \<Longrightarrow> ?r x \<in> top1_S1"
+      sorry
+    \<comment> \<open>r is continuous R^2-{0} \<rightarrow> S^1.\<close>
+    have hr_cont: "top1_continuous_map_on (UNIV - {(0, 0)}) ?TR2_0
+        top1_S1 top1_S1_topology ?r"
+      sorry
+    \<comment> \<open>Apply r to the homotopy: r∘p0 ≃ r∘const.\<close>
+    have hpsi_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology
+        (?r (1, 0)) (?r (1, 0)) (?r \<circ> ?p0) (?r \<circ> top1_constant_path (1, 0))"
+    proof -
+      have hTR2_0: "is_topology_on (UNIV - {(0::real, 0)}) ?TR2_0"
+        by (rule subspace_topology_is_topology_on[OF
+              product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV, simplified]]) simp
+      have hTS1_local: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF
+              product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+                simplified]]) simp
+      show ?thesis
+        by (rule continuous_preserves_path_homotopic[OF hTR2_0 hTS1_local hr_cont hp0_contractible])
+    qed
+    \<comment> \<open>r(1,0) = (1,0), r∘p0 = p0 (on S^1), r∘const = const.\<close>
+    have hr10: "?r (1, 0) = (1, 0)" by simp
+    have hr_p0: "?r \<circ> ?p0 = ?p0"
+    proof (rule ext)
+      fix s :: real
+      show "(?r \<circ> ?p0) s = ?p0 s"
+      proof -
+        have "cos (2 * pi * s) ^ 2 + sin (2 * pi * s) ^ 2 = 1"
+          using sin_cos_squared_add[of "2 * pi * s"] by (simp add: power2_eq_square)
+        hence "?p0 s \<in> top1_S1" unfolding top1_S1_def by simp
+        thus ?thesis using hr_fix by (simp add: comp_def)
+      qed
+    qed
+    have hr_const: "?r \<circ> top1_constant_path (1, 0) = top1_constant_path (1, 0)"
+      by (rule ext) (simp add: top1_constant_path_def comp_def)
+    show ?thesis using hpsi_hom unfolding hr10 hr_p0 hr_const .
+  qed
   \<comment> \<open>p0 is the standard generator of π₁(S¹). Its contractibility gives π₁(S¹) = 0.\<close>
   \<comment> \<open>But π₁(S¹) ≅ ℤ ≠ 0 (Theorem 54.5). Actually we can derive False more directly:
      the n-fold winding (p0 for n=1) being contractible contradicts the covering theory
@@ -15492,7 +15541,47 @@ proof
     unfolding top1_R_to_S1_def by simp
   \<comment> \<open>p0 = R_to_S1 \<circ> id. Lift of p0 from 0 is id: s \<mapsto> s, ending at 1.\<close>
   have hp0_loop_S1: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?p0"
-    sorry
+  proof -
+    \<comment> \<open>?p0 maps into S^1 and is continuous. Same proof as hp0_loop_R2 but for S^1 codomain.\<close>
+    have hp0_S1: "\<forall>s\<in>I_set. ?p0 s \<in> top1_S1"
+      unfolding top1_S1_def
+    proof
+      fix s :: real assume "s \<in> I_set"
+      have "cos (2 * pi * s) ^ 2 + sin (2 * pi * s) ^ 2 = 1"
+        using sin_cos_squared_add[of "2 * pi * s"] by (simp add: power2_eq_square)
+      thus "?p0 s \<in> {p. fst p ^ 2 + snd p ^ 2 = 1}" by simp
+    qed
+    have hp0_cont: "continuous_on UNIV ?p0" by (intro continuous_intros)
+    have hp0_top1: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?p0"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> I_set" thus "?p0 s \<in> top1_S1" using hp0_S1 by (by100 blast)
+    next
+      fix V assume hV: "V \<in> top1_S1_topology"
+      then obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+          and hVeq: "V = top1_S1 \<inter> W"
+        using hV unfolding top1_S1_topology_def subspace_topology_def by (by100 auto)
+      have hWo: "open W"
+      proof -
+        have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+          using hW product_topology_on_open_sets_real2 by (by100 metis)
+        thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+      qed
+      have "{s \<in> I_set. ?p0 s \<in> V} = I_set \<inter> ?p0 -` W"
+        unfolding hVeq using hp0_S1 by (by100 auto)
+      moreover have "open (?p0 -` W)"
+      proof -
+        have "open (?p0 -` W \<inter> UNIV)"
+          using iffD1[OF continuous_on_open_vimage[OF open_UNIV] hp0_cont] hWo by (by100 blast)
+        thus ?thesis by simp
+      qed
+      hence "?p0 -` W \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+      ultimately show "{s \<in> I_set. ?p0 s \<in> V} \<in> I_top"
+        unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+    qed
+    show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+      using hp0_top1 by simp
+  qed
   \<comment> \<open>If p0 ≃ const on S^1, then by Thm 54.3, lift endpoints agree: 1 = 0.\<close>
   have hft_p0: "top1_is_path_on UNIV top1_open_sets 0 1 id"
   proof -
