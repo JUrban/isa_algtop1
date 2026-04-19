@@ -9926,10 +9926,60 @@ proof -
        bc = \<alpha> * (const_c * rev(\<alpha>)), const_c * rev(\<alpha>) ≃ rev(\<alpha>) (left id),
        \<alpha> * rev(\<alpha>) ≃ const_{g(1,0)} (inverse).
      Same as the proof in hh_trivial_at_h10 (lines 9734-9790 of the True case).\<close>
+  \<comment> \<open>Path algebra: show bc(rev(\<alpha>), const_c) ≃ const_{g(1,0)}, then chain with hbc'.\<close>
+  let ?\<alpha> = "\<lambda>t. H ((1::real, 0::real), t)"
+  have h\<alpha>_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?\<alpha>"
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hp1: "pi1 \<circ> (\<lambda>t. ((1::real,0::real),t)) = (\<lambda>_. (1::real,0::real))"
+      unfolding pi1_def by (rule ext) simp
+    have hp2: "pi2 \<circ> (\<lambda>t. ((1::real,0::real),t)) = id"
+      unfolding pi2_def by (rule ext) simp
+    have hpair: "top1_continuous_map_on I_set I_top (top1_S1 \<times> I_set)
+                   (product_topology_on top1_S1_topology I_top) (\<lambda>t. ((1::real, 0::real), t))"
+      using iffD2[OF Theorem_18_4[OF hTI hTS1 hTI]]
+            top1_continuous_map_on_const[OF hTI hTS1 h10S1, folded hp1]
+            top1_continuous_map_on_id[OF hTI, folded hp2]
+      by (by100 blast)
+    show ?thesis using top1_continuous_map_on_comp[OF hpair hHcont] by (simp add: comp_def)
+  qed
+  have h\<alpha>_path: "top1_is_path_on top1_S1 top1_S1_topology (g (1, 0)) c ?\<alpha>"
+    unfolding top1_is_path_on_def using h\<alpha>_cont
+    by (auto simp: hH0[rule_format, OF h10S1] hH1[rule_format, OF h10S1])
+  have hra: "top1_is_path_on top1_S1 top1_S1_topology c (g (1, 0)) (top1_path_reverse ?\<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+  have hconst_c: "top1_is_loop_on top1_S1 top1_S1_topology c (top1_constant_path c)"
+    by (rule top1_constant_path_is_loop[OF hTS1 hcS1])
+  have hbc_def: "top1_basepoint_change_on top1_S1 top1_S1_topology c (g (1, 0))
+      (top1_path_reverse ?\<alpha>) (top1_constant_path c)
+    = top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))"
+    unfolding top1_basepoint_change_on_def top1_path_reverse_twice by (rule refl)
+  have hchain: "top1_path_homotopic_on top1_S1 top1_S1_topology (g (1, 0)) (g (1, 0))
+      (top1_basepoint_change_on top1_S1 top1_S1_topology c (g (1, 0))
+         (top1_path_reverse ?\<alpha>) (top1_constant_path c))
+      (top1_constant_path (g (1, 0)))"
+    using Lemma_51_1_path_homotopic_trans[OF hTS1
+        path_homotopic_product_right[OF hTS1 Theorem_51_2_left_identity[OF hTS1 hra] h\<alpha>_path,
+          unfolded hbc_def[symmetric]]
+        Theorem_51_2_invgerse_left[OF hTS1 h\<alpha>_path]] .
+  have hbc_is_const: "top1_loop_equiv_on top1_S1 top1_S1_topology (g (1, 0))
+      (top1_basepoint_change_on top1_S1 top1_S1_topology c (g (1, 0))
+         (top1_path_reverse ?\<alpha>) (top1_constant_path c))
+      (top1_constant_path (g (1, 0)))"
+  proof -
+    have hg10_S1: "g (1, 0) \<in> top1_S1"
+      using hg h10S1 unfolding top1_continuous_map_on_def by (by100 blast)
+    show ?thesis unfolding top1_loop_equiv_on_def
+      using top1_basepoint_change_is_loop[OF hTS1 hra hconst_c]
+            top1_constant_path_is_loop[OF hTS1 hg10_S1]
+            hchain by (by100 blast)
+  qed
+  have hresult: "top1_loop_equiv_on top1_S1 top1_S1_topology (g (1, 0)) (g \<circ> f)
+      (top1_constant_path (g (1, 0)))"
+    by (rule top1_loop_equiv_on_trans[OF hTS1 hbc' hbc_is_const])
   have "top1_path_homotopic_on top1_S1 top1_S1_topology (g (1, 0)) (g (1, 0))
       (g \<circ> f) (top1_constant_path (g (1, 0)))"
-    sorry \<comment> \<open>Path algebra: transitivity of hbc' + hbc_is_const.
-           Identical to the proof in hh_trivial_at_h10.\<close>
+    using hresult unfolding top1_loop_equiv_on_def by (by100 blast)
   thus ?thesis using hg10 by simp
 qed
 
