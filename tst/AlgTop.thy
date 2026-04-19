@@ -6356,7 +6356,7 @@ proof -
           \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
         using hV by (by100 blast)
     qed
-    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that sorry
+    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by blast
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
