@@ -7227,18 +7227,35 @@ proof -
      of lift endpoints on starting points. This follows from uniqueness of lifts
      applied to nearby columns (same argument as Lemma 54.1 pasting).\<close>
   have hrow1: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
-  \<comment> \<open>Munkres 54.2 grid argument: on each piece of a subdivision, Ftilde(\<cdot>,1) equals
-     (p|V0)\<inverse> \<circ> F(\<cdot>,1) (by column continuity + connectedness + injectivity of p on V0).
-     Each piece is continuous (composition). Pasting gives global continuity.\<close>
-  \<comment> \<open>Step 1: For each s0, F(s0,1) \<in> evenly covered U. Ftilde(s0,1) \<in> slice V0 of p\<inverse>(U).
-     Column continuity: Ftilde(s0,t) \<in> V0 for t in some neighborhood of 1.
-     F continuity: F(s,1) \<in> U for s near s0.
-     For s near s0: column Ftilde(s,\<cdot>) is continuous, maps interval near 1 into p\<inverse>(U),
-     connected image starting in V0 (at the boundary with previous rectangle) stays in V0.
-     So Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)), continuous in s.\<close>
-  \<comment> \<open>Step 2: The 1D pasting lemma (or open_cover_subdivision_01 + pasting_lemma_two_closed)
-     gives global continuity of Ftilde(\<cdot>,1) from continuity on each piece.\<close>
-    sorry
+  proof -
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    \<comment> \<open>For each s0, Ftilde(s0,1) \<in> slice V0 of evenly covered U \<ni> F(s0,1).
+       Near s0: Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)). Proof: column Ftilde(s,\<cdot>) is continuous,
+       enters p\<inverse>(U) near t=1, connected image in disjoint slices stays in V0,
+       so Ftilde(s,1) \<in> V0 and p|V0 injective gives equality.\<close>
+    have hlocal: "\<forall>s0\<in>I_set. \<exists>\<epsilon>>0. \<exists>V0 \<V>. openin_on E TE V0 \<and> V0 \<in> \<V>
+        \<and> (\<forall>V\<in>\<V>. openin_on E TE V) \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
+        \<and> (\<forall>s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon> \<longrightarrow> Ftilde (s, 1) \<in> V0
+            \<and> Ftilde (s, 1) = inv_into V0 p (F (s, 1)))"
+      sorry
+    \<comment> \<open>From hlocal: Ftilde(\<cdot>,1) is locally (p|V0)\<inverse> \<circ> F(\<cdot>,1), hence locally continuous.
+       Locally continuous on I_set \<Rightarrow> continuous on I_set.\<close>
+    show ?thesis unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume hs: "s \<in> I_set"
+      show "Ftilde (s, 1) \<in> E" using hFt_E hs h1I by (by100 blast)
+    next
+      fix V assume hV: "V \<in> TE"
+      \<comment> \<open>Show preimage is open: each s0 in preimage has \<epsilon>-neighborhood in preimage.\<close>
+      \<comment> \<open>Show: {s\<in>I_set. Ftilde(s,1) \<in> V} is open in I_top.
+       For each s0 in this set, hlocal gives \<epsilon> and V0 with Ftilde(s,1) = inv_into V0 p (F(s,1))
+       for |s-s0|<\<epsilon>. So locally, preimage of V = preimage of V under inv_into V0 p \<circ> F(\<cdot>,1).
+       Since this composition is continuous (inv_into V0 p continuous on U, F(\<cdot>,1) continuous),
+       the local preimage is open. Union of open = open.\<close>
+    show "{s\<in>I_set. Ftilde (s, 1) \<in> V} \<in> I_top"
+      sorry
+    qed
+  qed
   show ?thesis using hcol_cont hFt_lift hFt_00 hrow0 hrow1 by (by100 blast)
 qed
 
