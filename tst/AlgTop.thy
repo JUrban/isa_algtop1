@@ -15445,9 +15445,43 @@ proof -
           using hf unfolding top1_fundamental_group_id_def by (by100 blast)
         \<comment> \<open>const ≃ f ⟹ reverse(const) ≃ reverse(f) ⟹ const ≃ reverse(f) ≃ h.\<close>
         have hconst_rev: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) (top1_path_reverse f)"
-          sorry \<comment> \<open>reverse preserves homotopy class + reverse(const) = const.\<close>
+        proof -
+          have hf_path: "top1_is_path_on B TB b0 b0 f"
+            using hf_equiv unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+          have hrevf: "top1_is_path_on B TB b0 b0 (top1_path_reverse f)"
+            by (rule top1_path_reverse_is_path[OF hf_path])
+          have hconst_f: "top1_path_homotopic_on B TB b0 b0 (top1_constant_path b0) f"
+            using hf_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+          \<comment> \<open>const * rev(f) ≃ f * rev(f) (product_left with const ≃ f).\<close>
+          have step1: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product (top1_constant_path b0) (top1_path_reverse f))
+              (top1_path_product f (top1_path_reverse f))"
+            by (rule path_homotopic_product_left[OF hTB hconst_f hrevf])
+          \<comment> \<open>f * rev(f) ≃ const (inverse_left).\<close>
+          have step2: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product f (top1_path_reverse f))
+              (top1_constant_path b0)"
+            by (rule Theorem_51_2_invgerse_left[OF hTB hf_path])
+          \<comment> \<open>const * rev(f) ≃ const (transitivity of step1 + step2).\<close>
+          have step12: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product (top1_constant_path b0) (top1_path_reverse f))
+              (top1_constant_path b0)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF hTB step1 step2])
+          \<comment> \<open>rev(f) ≃ const * rev(f) (left identity, reversed).\<close>
+          have step3: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_reverse f)
+              (top1_path_product (top1_constant_path b0) (top1_path_reverse f))"
+            by (rule Lemma_51_1_path_homotopic_sym[OF
+                  Theorem_51_2_left_identity[OF hTB hrevf]])
+          \<comment> \<open>rev(f) ≃ const (transitivity).\<close>
+          have step123: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_reverse f) (top1_constant_path b0)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF hTB step3 step12])
+          show ?thesis by (rule Lemma_51_1_path_homotopic_sym[OF step123])
+        qed
         have "top1_loop_equiv_on B TB b0 (top1_constant_path b0) h"
-          sorry \<comment> \<open>Transitivity: const ≃ reverse(f) ≃ h.\<close>
+          by (meson Lemma_51_1_path_homotopic_trans hTB hconst_rev hf_equiv hrev
+              top1_loop_equiv_on_def)
         thus "h \<in> top1_fundamental_group_id B TB b0"
           unfolding top1_fundamental_group_id_def by (by100 blast)
       next
