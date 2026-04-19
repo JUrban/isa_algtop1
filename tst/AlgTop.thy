@@ -9637,6 +9637,18 @@ proof (rule ccontr)
   ultimately show False by linarith
 qed
 
+text \<open>General version: nulhomotopic g with g(x0) = y0 implies g \<circ> f \<simeq> const for all loops f.
+  This is proved later (nulhomotopic_trivializes_loops_general in §58) using
+  homotopy_induced_basepoint_change. Stated here as sorry for forward reference.\<close>
+lemma nulhomotopic_trivializes_loops_general':
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+      and "top1_continuous_map_on X TX Y TY g"
+      and "top1_nulhomotopic_on X TX Y TY g"
+      and "g x0 = y0" and "x0 \<in> X"
+      and "top1_is_loop_on X TX x0 f"
+  shows "top1_path_homotopic_on Y TY y0 y0 (g \<circ> f) (top1_constant_path y0)"
+  sorry \<comment> \<open>Proved later as nulhomotopic_trivializes_loops_general.\<close>
+
 section \<open>\<S>56 The Fundamental Theorem of Algebra\<close>
 
 text \<open>Following Munkres' proof in 4 steps via the fundamental group of S^1:
@@ -9794,8 +9806,7 @@ proof
     have hg1: "(\<lambda>z::complex. z^n) 1 = (1::complex)" using assms by simp
     show "top1_path_homotopic_on top1_C_minus_0 top1_C_minus_0_topology 1 1
         ((\<lambda>z. z^n) \<circ> f) (top1_constant_path 1)"
-      using hTS1c hTC0 hg_cont hnul hg1 h1_S1 hf sorry
-      \<comment> \<open>By nulhomotopic_trivializes_loops_general (defined later in file).\<close>
+      by (rule nulhomotopic_trivializes_loops_general'[OF hTS1c hTC0 hg_cont hnul hg1 h1_S1 hf])
   qed
   \<comment> \<open>By hj_inj: transfer to S^1.\<close>
   have hnul_S1: "\<forall>f. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
