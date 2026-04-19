@@ -4613,7 +4613,25 @@ proof -
         unfolding top1_S1_arc_N_def top1_S1_def by (by100 auto)
       \<comment> \<open>Surjectivity: p maps V onto arc_N (periodicity shift).\<close>
       have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_N"
-        sorry \<comment> \<open>Same as arc_E: shift by periodicity to land in V.\<close>
+      proof (intro equalityI subsetI)
+        fix y assume "y \<in> top1_R_to_S1 ` V" thus "y \<in> top1_S1_arc_N" using hpV by (by100 blast)
+      next
+        fix y assume hy: "y \<in> top1_S1_arc_N"
+        have "y \<in> top1_S1" using hy harc_sub by (by100 blast)
+        hence "y \<in> top1_R_to_S1 ` UNIV" using hp_surj by (by100 blast)
+        then obtain t where hpt: "top1_R_to_S1 t = y" by (by100 blast)
+        hence "t \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N}" using hy by (by100 simp)
+        hence "t \<in> \<Union>?\<V>" using hV_union by (by100 blast)
+        then obtain m :: int where htm: "of_int m < t" "t < of_int m + (1/2::real)"
+          by (by100 auto)
+        let ?t' = "t + of_int (nn - m)"
+        have "of_int nn < ?t'" "?t' < of_int nn + (1/2::real)" using htm by (by100 linarith)+
+        hence ht'V: "?t' \<in> V" unfolding hVeq by (by100 blast)
+        have "top1_R_to_S1 ?t' = top1_R_to_S1 t"
+          using top1_R_to_S1_int_shift_early[of t "nn - m"] by simp
+        hence "top1_R_to_S1 ?t' = y" using hpt by (by100 simp)
+        thus "y \<in> top1_R_to_S1 ` V" using ht'V by (by100 blast)
+      qed
       \<comment> \<open>Injectivity: sin_cos_eq_iff + interval width 1/2 < 1.\<close>
       have hpV_inj: "inj_on top1_R_to_S1 V"
       proof (rule inj_onI)
@@ -4863,7 +4881,27 @@ proof -
         using hV_union hVmem by (by100 blast)
       have harc_sub: "top1_S1_arc_W \<subseteq> top1_S1"
         unfolding top1_S1_arc_W_def top1_S1_def by (by100 auto)
-      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_W" sorry
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_W"
+      proof (intro equalityI subsetI)
+        fix y assume "y \<in> top1_R_to_S1 ` V" thus "y \<in> top1_S1_arc_W" using hpV by (by100 blast)
+      next
+        fix y assume hy: "y \<in> top1_S1_arc_W"
+        have "y \<in> top1_S1" using hy harc_sub by (by100 blast)
+        hence "y \<in> top1_R_to_S1 ` UNIV" using hp_surj by (by100 blast)
+        then obtain t where hpt: "top1_R_to_S1 t = y" by (by100 blast)
+        hence "t \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W}" using hy by (by100 simp)
+        hence "t \<in> \<Union>?\<V>" using hV_union by (by100 blast)
+        then obtain m :: int where htm: "of_int m + (1/4::real) < t" "t < of_int m + (3/4::real)"
+          by (by100 auto)
+        let ?t' = "t + of_int (nn - m)"
+        have "of_int nn + (1/4::real) < ?t'" "?t' < of_int nn + (3/4::real)"
+          using htm by (by100 linarith)+
+        hence ht'V: "?t' \<in> V" unfolding hVeq by (by100 blast)
+        have "top1_R_to_S1 ?t' = top1_R_to_S1 t"
+          using top1_R_to_S1_int_shift_early[of t "nn - m"] by simp
+        hence "top1_R_to_S1 ?t' = y" using hpt by (by100 simp)
+        thus "y \<in> top1_R_to_S1 ` V" using ht'V by (by100 blast)
+      qed
       have hpV_inj: "inj_on top1_R_to_S1 V"
       proof (rule inj_onI)
         fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
@@ -5072,7 +5110,27 @@ proof -
         using hV_union hVmem by (by100 blast)
       have harc_sub: "top1_S1_arc_S \<subseteq> top1_S1"
         unfolding top1_S1_arc_S_def top1_S1_def by (by100 auto)
-      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_S" sorry
+      have hpV_surj: "top1_R_to_S1 ` V = top1_S1_arc_S"
+      proof (intro equalityI subsetI)
+        fix y assume "y \<in> top1_R_to_S1 ` V" thus "y \<in> top1_S1_arc_S" using hpV by (by100 blast)
+      next
+        fix y assume hy: "y \<in> top1_S1_arc_S"
+        have "y \<in> top1_S1" using hy harc_sub by (by100 blast)
+        hence "y \<in> top1_R_to_S1 ` UNIV" using hp_surj by (by100 blast)
+        then obtain t where hpt: "top1_R_to_S1 t = y" by (by100 blast)
+        hence "t \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S}" using hy by (by100 simp)
+        hence "t \<in> \<Union>?\<V>" using hV_union by (by100 blast)
+        then obtain m :: int where htm: "of_int m + (1/2::real) < t" "t < of_int m + (1::real)"
+          by (by100 auto)
+        let ?t' = "t + of_int (nn - m)"
+        have "of_int nn + (1/2::real) < ?t'" "?t' < of_int nn + (1::real)"
+          using htm by (by100 linarith)+
+        hence ht'V: "?t' \<in> V" unfolding hVeq by (by100 blast)
+        have "top1_R_to_S1 ?t' = top1_R_to_S1 t"
+          using top1_R_to_S1_int_shift_early[of t "nn - m"] by simp
+        hence "top1_R_to_S1 ?t' = y" using hpt by (by100 simp)
+        thus "y \<in> top1_R_to_S1 ` V" using ht'V by (by100 blast)
+      qed
       have hpV_inj: "inj_on top1_R_to_S1 V"
       proof (rule inj_onI)
         fix x y assume hx: "x \<in> V" and hy: "y \<in> V"
