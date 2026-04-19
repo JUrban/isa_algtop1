@@ -7520,7 +7520,7 @@ proof -
         using hgrid[rule_format, OF hi hj] by (by100 auto)
       \<comment> \<open>A_k and R are closed in I\<times>I. A_k \<inter> R connected. A_k \<inter> R nonempty.\<close>
       have hA_closed: "closedin_on (I_set \<times> I_set) II_topology (?A k)" sorry
-      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry
+      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology (?R ?i ?j)" sorry \<comment> \<open>Closed rectangle.\<close>
       have hAR_sub: "?A k \<union> ?R ?i ?j \<subseteq> I_set \<times> I_set"
         sorry
       have hC_conn: "top1_connected_on (?A k \<inter> ?R ?i ?j)
