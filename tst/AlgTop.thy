@@ -6129,6 +6129,32 @@ next
     unfolding top1_R_to_S1_def using hn by simp
 qed
 
+text \<open>Periodicity of the covering map: p(x + n) = p(x) for integer n.
+  This is the key property enabling the homomorphism proof for \<pi>_1(S^1) \<cong> Z.\<close>
+lemma top1_R_to_S1_int_shift:
+  "top1_R_to_S1 (x + of_int n) = top1_R_to_S1 x"
+proof -
+  have hexp: "2 * pi * (x + of_int n) = 2 * pi * x + (2 * pi) * of_int n"
+    by (simp add: algebra_simps)
+  have hc: "cos ((2 * pi) * of_int n) = 1" by (rule cos_int_2pin)
+  have hs: "sin ((2 * pi) * of_int n) = 0" by (rule sin_int_2pin)
+  have hcos: "cos (2 * pi * (x + of_int n)) = cos (2 * pi * x)"
+    by (simp add: hexp cos_add hc hs)
+  have hsin: "sin (2 * pi * (x + of_int n)) = sin (2 * pi * x)"
+    by (simp add: hexp sin_add hc hs)
+  show ?thesis unfolding top1_R_to_S1_def using hcos hsin by (by100 simp)
+qed
+
+lemma top1_R_to_S1_int_shift':
+  "top1_R_to_S1 (of_int n + x) = top1_R_to_S1 x"
+  using top1_R_to_S1_int_shift[of x n] by (simp add: add.commute)
+
+text \<open>Key property: the translated lift f'(s) = n + f(s) covers the same base path as f.
+  p(n + f(s)) = p(f(s)) by periodicity.\<close>
+lemma top1_R_to_S1_translate_lift:
+  "top1_R_to_S1 \<circ> (\<lambda>s. of_int n + f s) = top1_R_to_S1 \<circ> f"
+  by (rule ext) (simp add: top1_R_to_S1_int_shift')
+
 (** from \<S>54 Theorem 54.5: fundamental group of S^1 is isomorphic to Z.
     Munkres' proof: use covering p: R \<rightarrow> S^1 (Theorem 53.1). Since R is simply
     connected, the lifting correspondence (Theorem 54.4) is bijective onto
@@ -6207,20 +6233,50 @@ proof -
      ending at n + m. Hence \<phi>([f]*[g]) = n + m = \<phi>([f]) + \<phi>([g]).\<close>
   \<comment> \<open>The bijection maps endpoints of lifts to integers.
      Homomorphism: endpoints add because translated lifts concatenate.\<close>
+  \<comment> \<open>We construct \<phi> from the covering map: \<phi>([f]) = lift endpoint.
+     Homomorphism follows from the key lemma: translated lifts concatenate.
+     Specifically: if ftilde lifts f from 0 to n, and gtilde lifts g from 0 to m,
+     then (\<lambda>s. n + gtilde s) lifts g from n to n+m (using p(n+x) = p(x)),
+     and ftilde * (\<lambda>s. n + gtilde s) lifts f*g from 0 to n+m.\<close>
+  have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    by (rule Theorem_53_1)
+  have hp0: "top1_R_to_S1 0 = (1, 0)"
+    unfolding top1_R_to_S1_def by simp
+  have h0R: "(0::real) \<in> (UNIV::real set)" by simp
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    unfolding top1_S1_topology_def
+    by (rule subspace_topology_is_topology_on[OF
+          product_topology_on_is_topology_on[OF
+            top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+            simplified]]) simp
+  \<comment> \<open>Step 1: Define \<phi> via lifting correspondence (already have bijection).\<close>
+  \<comment> \<open>The lifting correspondence sends [f] to the endpoint of the unique lift
+     starting at 0. This endpoint lies in p^{-1}(1,0) = Z.\<close>
+  obtain \<phi>' where h\<phi>'_bij: "bij_betw \<phi>'
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      {x\<in>(UNIV::real set). top1_R_to_S1 x = (1, 0)}"
+    using Theorem_54_4_bijective_simply_connected[OF hcov h0R hp0
+          top1_R_simply_connected' hTS1] by blast
+  \<comment> \<open>\<phi>'([f]) is the endpoint of the lift of f. Since the endpoint is an integer,
+     define \<phi>([f]) = floor(\<phi>'([f])).\<close>
+  define \<phi> where "\<phi> = (\<lambda>c. \<lfloor>\<phi>' c\<rfloor>)"
+  \<comment> \<open>Step 2: \<phi> is bijective (composition of bijections).\<close>
+  have h\<phi>_bij: "bij_betw \<phi>
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (UNIV::int set)"
+    sorry \<comment> \<open>Follows from h\<phi>'_bij and floor being bijective on Z \<subseteq> R.\<close>
+  \<comment> \<open>Step 3: \<phi> is a homomorphism.
+     Key: if lift of f from 0 ends at n and lift of g from 0 ends at m,
+     then lift of f*g from 0 ends at n+m.\<close>
+  have h\<phi>_hom: "\<forall>c\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
+      \<forall>d\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
+      \<phi> (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0) c d)
+      = \<phi> c + \<phi> d"
+    sorry \<comment> \<open>Requires: concatenation of lift(f) with translated-lift(g) = lift(f*g),
+             and top1_R_to_S1_int_shift for the translation.\<close>
   show ?thesis
-  proof -
-    \<comment> \<open>Use Theorem 58.2 (inclusion iso) to get π₁(S¹) ≅ π₁(R²-{0}),
-       combined with the known bijection to Z.\<close>
-    \<comment> \<open>Alternative: directly construct the isomorphism from the covering.\<close>
-    obtain \<phi> where h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-        (UNIV::int set)" using hbij by blast
-    \<comment> \<open>Need to show \<phi> is a homomorphism (or construct one that is).\<close>
-    \<comment> \<open>For the covering R → S¹: \<phi>([f]) = n where lift of f from 0 ends at n.
-       Lift of f*g: concatenate lift of f (ending at n) with translated lift of g
-       starting at n. Translated lift of g(s) = n + gtilde(s) (since p(n+x) = p(x)).
-       So lift of f*g ends at n + gtilde(1) = n + m = \<phi>([f]) + \<phi>([g]).\<close>
-    show ?thesis sorry
-  qed
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    sorry
 qed
 
 section \<open>\<S>55 Retractions and Fixed Points\<close>
