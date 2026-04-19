@@ -15374,6 +15374,19 @@ lemma S2_minus_point_simply_connected:
   \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic projection. R^2 is simply connected (convex).\<close>
   sorry
 
+text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
+  (Moved before \<S>61 to avoid forward reference.)\<close>
+definition top1_simple_closed_curve_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_simple_closed_curve_on X TX C \<longleftrightarrow>
+     (\<exists>f. top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<and> inj_on f top1_S1
+          \<and> f ` top1_S1 = C)"
+
+lemma simple_closed_curve_subset:
+  "top1_simple_closed_curve_on X TX C \<Longrightarrow> C \<subseteq> X"
+  unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+  by (by100 blast)
+
 text \<open>S^2 minus two distinct points is not simply connected (homeomorphic to R^2 - {0}).\<close>
 lemma R2_minus_origin_not_simply_connected:
   "\<not> top1_simply_connected_on (UNIV - {(0::real, 0::real)})
@@ -15523,7 +15536,7 @@ proof (rule ccontr)
   have h_pi1_X_trivial: "top1_simply_connected_on ?X
       (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
   \<comment> \<open>But X = S^2 - {a, b} \<cong> R^2 - {0} which has nontrivial \<pi>_1.\<close>
-  have hC_sub: "C \<subseteq> top1_S2" using hC sorry
+  have hC_sub: "C \<subseteq> top1_S2" by (rule simple_closed_curve_subset[OF hC])
   have ha_S2: "a \<in> top1_S2"
     using hab hC_decomp hC_sub by (by100 blast)
   have hb_S2: "b \<in> top1_S2"
@@ -15614,12 +15627,7 @@ qed
 
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
-text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.\<close>
-definition top1_simple_closed_curve_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> bool" where
-  "top1_simple_closed_curve_on X TX C \<longleftrightarrow>
-     (\<exists>f. top1_continuous_map_on top1_S1 top1_S1_topology X TX f
-          \<and> inj_on f top1_S1
-          \<and> f ` top1_S1 = C)"
+\<comment> \<open>top1_simple_closed_curve_on defined earlier (before \<S>61).\<close>
 
 (** from \<S>63 Theorem 63.1: if X = U \<union> V with U \<inter> V = A \<union> B (disjoint open),
     and alpha: a to b in U, beta: b to a in V, then the loop f = alpha * beta is
