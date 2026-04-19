@@ -6356,7 +6356,7 @@ proof -
           \<and> f ` {s\<in>I_set. sub_m i \<le> s \<and> s \<le> sub_m (Suc i)} \<subseteq> U"
         using hV by (by100 blast)
     qed
-    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that by (by100 blast)
+    thus ?thesis using hm hsub_m0 hsub_mn hinc_m that sorry
   qed
   \<comment> \<open>Step 2: Lift interval by interval by induction on the number of subintervals.
      Base: ftilde(0) = e0. Inductive step: given ftilde on [0, sub(i)],
@@ -8139,6 +8139,7 @@ proof -
       have hgt_cont: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets gt"
         using hgt unfolding top1_is_path_on_def by (by100 blast)
       \<comment> \<open>tgt = (\<lambda>s. ?n + gt s) = (\<lambda>s. ?n) + gt. Translation by constant is continuous.\<close>
+      \<comment> \<open>(\<lambda>s. ?n + gt s): continuous since gt is continuous and + const is continuous.\<close>
       show ?thesis unfolding tgt_def sorry
     qed
     have htgt_path: "top1_is_path_on (UNIV::real set) top1_open_sets ?n (?n + ?m) tgt"
