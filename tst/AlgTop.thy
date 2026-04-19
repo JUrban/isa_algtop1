@@ -4669,7 +4669,11 @@ proof -
       have hinv_cont: "top1_continuous_map_on top1_S1_arc_N
           (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N)
           V (subspace_topology UNIV top1_open_sets V) (inv_into V top1_R_to_S1)"
-        sorry \<comment> \<open>Inverse via arccos(x)/(2\<pi>) + n is continuous.\<close>
+        sorry \<comment> \<open>Inverse via arccos(fst p)/(2\<pi>) + nn is continuous.
+               Proof sketch: arccos continuous on [-1,1] (continuous_on_arccos),
+               fst p \<in> [-1,1] from x^2+y^2=1. Division by 2\<pi> and addition of nn.
+               inv_fn range in V since arccos(x) \<in> (0,\<pi>) when y > 0.
+               inv_fn agrees with inv_into by injectivity + cos(arccos(x))=x.\<close>
       \<comment> \<open>Assembly.\<close>
       have hV_sub: "V \<subseteq> (UNIV::real set)" by (by100 blast)
       have hTV: "is_topology_on V (subspace_topology UNIV top1_open_sets V)"
