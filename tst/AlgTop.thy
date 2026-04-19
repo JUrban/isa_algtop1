@@ -7839,15 +7839,161 @@ proof -
         let ?left_R = "{sub_s ?i} \<times> {t\<in>I_set. sub_t ?j \<le> t \<and> t \<le> sub_t (Suc ?j)}"
         let ?bot_R = "{s\<in>I_set. sub_s ?i \<le> s \<and> s \<le> sub_s (Suc ?i)} \<times> {sub_t ?j}"
         let ?L_shape = "?left_R \<union> ?bot_R"
-        \<comment> \<open>The L-shape equals A_k \<inter> R (sorry: requires grid non-overlap argument).\<close>
-        have hC_eq: "?A k \<inter> ?R ?i ?j = ?L_shape" sorry
-        \<comment> \<open>The L-shape is connected: two intervals sharing the corner point (Theorem 23.3).\<close>
         have hsi_I': "sub_s ?i \<in> I_set" using hsub_s_I[rule_format, of "?i"] hi by simp
         have htj_I': "sub_t ?j \<in> I_set" using hsub_t_I[rule_format, of "?j"] hj by simp
         have hsi1_I: "sub_s (Suc ?i) \<in> I_set" using hsub_s_I[rule_format, of "Suc ?i"] hi by simp
         have htj1_I: "sub_t (Suc ?j) \<in> I_set" using hsub_t_I[rule_format, of "Suc ?j"] hj by simp
         have hsi_le': "sub_s ?i \<le> sub_s (Suc ?i)" using hs_inc[rule_format, OF hi] by simp
         have htj_le': "sub_t ?j \<le> sub_t (Suc ?j)" using ht_inc[rule_format, OF hj] by simp
+        \<comment> \<open>The L-shape equals A_k \<inter> R.\<close>
+        have hC_eq: "?A k \<inter> ?R ?i ?j = ?L_shape"
+        proof (rule equalityI)
+          \<comment> \<open>L-shape \<subseteq> A_k \<inter> R: both edges are in R by definition; left edge is in A_k
+             (either via left edge {0}\<times>I if i=0, or via previous rectangle R(i-1,j));
+             bottom edge is in A_k (either via bottom edge I\<times>{0} if j=0, or via R(i,j-1)).\<close>
+          show "?L_shape \<subseteq> ?A k \<inter> ?R ?i ?j"
+          proof (rule subsetI)
+            fix x assume "x \<in> ?L_shape"
+            hence "x \<in> ?left_R \<or> x \<in> ?bot_R" by (by100 blast)
+            thus "x \<in> ?A k \<inter> ?R ?i ?j"
+            proof (elim disjE)
+              assume hx_left: "x \<in> ?left_R"
+              \<comment> \<open>x is on left edge of R, so x \<in> R.\<close>
+              have "x \<in> ?R ?i ?j"
+                using hx_left hsi_I' hsi_le' by (by100 blast)
+              moreover have "x \<in> ?A k"
+              proof (cases "?i = 0")
+                case True
+                hence "sub_s ?i = 0" using hs0 by simp
+                hence "x \<in> ?left_edge" using hx_left by (by100 auto)
+                thus ?thesis by (by100 blast)
+              next
+                case False
+                hence hi_pos: "?i > 0" by simp
+                \<comment> \<open>x is in R(i-1, j) (previous rectangle in same row).\<close>
+                have hSuc_i: "Suc (?i - 1) = ?i" using hi_pos by simp
+                have "k - 1 < k" using hi_pos by (cases k) simp_all
+                have hk'_mod: "(k - 1) mod m = ?i - 1"
+                proof -
+                  have hk'_eq: "k - 1 = ?j * m + (?i - 1)" using hi_pos by simp
+                  have "?i - 1 < m" using hi by simp
+                  thus ?thesis using hk'_eq by (metis mod_less mod_mult_self3)
+                qed
+                have hk'_div: "(k - 1) div m = ?j"
+                proof -
+                  have hk'_eq: "k - 1 = ?j * m + (?i - 1)" using hi_pos by simp
+                  have "?i - 1 < m" using hi by simp
+                  have hm0: "m \<noteq> 0" using hm by simp
+                  have "(?j * m + (?i - 1)) div m = ?j + (?i - 1) div m"
+                    using hm0 by (rule div_mult_self3)
+                  also have "(?i - 1) div m = 0" using \<open>?i - 1 < m\<close> by simp
+                  finally show ?thesis using hk'_eq by simp
+                qed
+                have "x \<in> ?R (?i - 1) ?j"
+                proof -
+                  obtain s t where hst: "x = (s, t)" by (cases x) simp
+                  have "s = sub_s ?i" using hx_left hst by (by100 auto)
+                  have "t \<in> I_set" "sub_t ?j \<le> t" "t \<le> sub_t (Suc ?j)"
+                    using hx_left hst by (by100 auto)+
+                  have "sub_s (?i - 1) \<le> sub_s ?i"
+                  proof -
+                    have "sub_s (?i - 1) < sub_s (Suc (?i - 1))"
+                      using hs_inc[rule_format, of "?i - 1"] hi by simp
+                    thus ?thesis using hSuc_i by simp
+                  qed
+                  have "sub_s ?i \<le> sub_s (Suc (?i - 1))" using hSuc_i by simp
+                  have "sub_s ?i \<in> I_set" using hsi_I' .
+                  have "s \<in> {s'\<in>I_set. sub_s (?i - 1) \<le> s' \<and> s' \<le> sub_s (Suc (?i - 1))}"
+                    using \<open>s = sub_s ?i\<close> \<open>sub_s ?i \<in> I_set\<close>
+                        \<open>sub_s (?i - 1) \<le> sub_s ?i\<close> \<open>sub_s ?i \<le> sub_s (Suc (?i - 1))\<close>
+                    by simp
+                  moreover have "t \<in> {t'\<in>I_set. sub_t ?j \<le> t' \<and> t' \<le> sub_t (Suc ?j)}"
+                    using \<open>t \<in> I_set\<close> \<open>sub_t ?j \<le> t\<close> \<open>t \<le> sub_t (Suc ?j)\<close> by simp
+                  ultimately show ?thesis using hst by (by100 blast)
+                qed
+                hence "x \<in> ?R ((k-1) mod m) ((k-1) div m)"
+                  using hk'_mod hk'_div by simp
+                hence "x \<in> (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+                  using \<open>k - 1 < k\<close> by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              ultimately show ?thesis by (by100 blast)
+            next
+              assume hx_bot: "x \<in> ?bot_R"
+              have "x \<in> ?R ?i ?j"
+                using hx_bot htj_I' htj_le' by (by100 blast)
+              moreover have "x \<in> ?A k"
+              proof (cases "?j = 0")
+                case True
+                hence "sub_t ?j = 0" using ht0 by simp
+                hence "x \<in> ?bot_edge" using hx_bot by (by100 auto)
+                thus ?thesis by (by100 blast)
+              next
+                case False
+                hence hj_pos: "?j > 0" by simp
+                \<comment> \<open>x is in R(i, j-1) (rectangle in row below).\<close>
+                have hSuc_j: "Suc (?j - 1) = ?j" using hj_pos by simp
+                \<comment> \<open>Linearized index of (i, j-1) is (j-1)*m + i = k - m.\<close>
+                have hk'_val: "k - m = (?j - 1) * m + ?i" using hj_pos by (simp add: diff_mult_distrib)
+                have "k \<ge> m"
+                proof -
+                  have "m \<le> 1 * m" by simp
+                  also have "1 * m \<le> ?j * m" using hj_pos by simp
+                  also have "?j * m \<le> ?j * m + ?i" by simp
+                  also have "?j * m + ?i = k" by simp
+                  finally show ?thesis .
+                qed
+                have hk'_lt: "k - m < k" using hm \<open>k \<ge> m\<close> by simp
+                have hk'_mod: "(k - m) mod m = ?i"
+                proof -
+                  have "?i < m" using hi .
+                  thus ?thesis using hk'_val by (metis mod_less mod_mult_self3)
+                qed
+                have hk'_div: "(k - m) div m = ?j - 1"
+                proof -
+                  have "?i < m" using hi .
+                  have hm0: "m \<noteq> 0" using hm by simp
+                  have "((?j - 1) * m + ?i) div m = (?j - 1) + ?i div m"
+                    using hm0 by (rule div_mult_self3)
+                  also have "?i div m = 0" using \<open>?i < m\<close> by simp
+                  finally show ?thesis using hk'_val by simp
+                qed
+                have "x \<in> ?R ?i (?j - 1)"
+                proof -
+                  obtain s t where hst: "x = (s, t)" by (cases x) simp
+                  have "t = sub_t ?j" using hx_bot hst by (by100 auto)
+                  have "s \<in> I_set" "sub_s ?i \<le> s" "s \<le> sub_s (Suc ?i)"
+                    using hx_bot hst by (by100 auto)+
+                  have "sub_t (?j - 1) \<le> sub_t ?j"
+                  proof -
+                    have "sub_t (?j - 1) < sub_t (Suc (?j - 1))"
+                      using ht_inc[rule_format, of "?j - 1"] hj by simp
+                    thus ?thesis using hSuc_j by simp
+                  qed
+                  have "sub_t ?j \<le> sub_t (Suc (?j - 1))" using hSuc_j by simp
+                  have "s \<in> {s'\<in>I_set. sub_s ?i \<le> s' \<and> s' \<le> sub_s (Suc ?i)}"
+                    using \<open>s \<in> I_set\<close> \<open>sub_s ?i \<le> s\<close> \<open>s \<le> sub_s (Suc ?i)\<close> by simp
+                  moreover have "t \<in> {t'\<in>I_set. sub_t (?j - 1) \<le> t' \<and> t' \<le> sub_t (Suc (?j - 1))}"
+                    using \<open>t = sub_t ?j\<close> htj_I' \<open>sub_t (?j - 1) \<le> sub_t ?j\<close>
+                        \<open>sub_t ?j \<le> sub_t (Suc (?j - 1))\<close> by simp
+                  ultimately show ?thesis using hst by (by100 blast)
+                qed
+                hence "x \<in> ?R ((k - m) mod m) ((k - m) div m)"
+                  using hk'_mod hk'_div by simp
+                hence "x \<in> (\<Union>k'<k. ?R (k' mod m) (k' div m))"
+                  using hk'_lt by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              ultimately show ?thesis by (by100 blast)
+            qed
+          qed
+        next
+          \<comment> \<open>A_k \<inter> R \<subseteq> L-shape: interior of R is not in any previous region.
+             A point (s,t) with sub_s i < s and sub_t j < t cannot be on edges or
+             in any previous rectangle.\<close>
+          show "?A k \<inter> ?R ?i ?j \<subseteq> ?L_shape" sorry
+        qed
+        \<comment> \<open>The L-shape is connected: two intervals sharing the corner point (Theorem 23.3).\<close>
         have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
           unfolding II_topology_def
           by (rule product_topology_on_is_topology_on[OF
