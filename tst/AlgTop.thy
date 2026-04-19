@@ -4436,13 +4436,56 @@ proof -
   \<comment> \<open>Arcs N, W, S: symmetric to arc_E with adapted coordinates.\<close>
   have harc_N_ec: "top1_evenly_covered_on UNIV top1_open_sets
       top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_N"
-    sorry \<comment> \<open>Symmetric to arc_E: y > 0, slices (n, n+1/2), inverse via arctan(x/y)\<close>
+  proof -
+    \<comment> \<open>Arc N = {(x,y) \<in> S^1 | y > 0}. Preimage under p: those x with sin(2\<pi>x) > 0,
+       i.e., x \<in> (n, n+1/2) for each integer n. Each slice maps homeomorphically to arc_N.
+       Inverse: given (a,b) with b > 0, x = arcsin(b)/(2\<pi>) + n (or arctan-based).\<close>
+    have harc_N_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_N" sorry
+    let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n < x \<and> x < of_int n + 1/2}}"
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_N} = \<Union>?\<V>" sorry
+    have hV_homeo: "\<forall>V\<in>?\<V>.
+        top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_N (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_N) top1_R_to_S1"
+      sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+      using harc_N_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
+  qed
   have harc_W_ec: "top1_evenly_covered_on UNIV top1_open_sets
       top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_W"
-    sorry \<comment> \<open>Symmetric to arc_E: x < 0, slices (n+1/4, n+3/4), inverse via arctan(y/x)+1/2\<close>
+  proof -
+    \<comment> \<open>Arc W = {(x,y) \<in> S^1 | x < 0}. Preimage: cos(2\<pi>x) < 0, i.e., x \<in> (n+1/4, n+3/4).
+       Each slice maps homeomorphically to arc_W.\<close>
+    have harc_W_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_W" sorry
+    let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n + 1/4 < x \<and> x < of_int n + 3/4}}"
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_W} = \<Union>?\<V>" sorry
+    have hV_homeo: "\<forall>V\<in>?\<V>.
+        top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_W (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_W) top1_R_to_S1"
+      sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+      using harc_W_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
+  qed
   have harc_S_ec: "top1_evenly_covered_on UNIV top1_open_sets
       top1_S1 top1_S1_topology top1_R_to_S1 top1_S1_arc_S"
-    sorry \<comment> \<open>Symmetric to arc_E: y < 0, slices (n-1/2, n), inverse via arctan(x/y)-1/4\<close>
+  proof -
+    \<comment> \<open>Arc S = {(x,y) \<in> S^1 | y < 0}. Preimage: sin(2\<pi>x) < 0, i.e., x \<in> (n+1/2, n+1).
+       Each slice maps homeomorphically to arc_S.\<close>
+    have harc_S_open: "openin_on top1_S1 top1_S1_topology top1_S1_arc_S" sorry
+    let ?\<V> = "{V. \<exists>n::int. V = {x::real. of_int n + 1/2 < x \<and> x < of_int n + 1}}"
+    have hV_open: "\<forall>V\<in>?\<V>. openin_on (UNIV::real set) top1_open_sets V" sorry
+    have hV_disj: "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" sorry
+    have hV_union: "{x \<in> UNIV. top1_R_to_S1 x \<in> top1_S1_arc_S} = \<Union>?\<V>" sorry
+    have hV_homeo: "\<forall>V\<in>?\<V>.
+        top1_homeomorphism_on V (subspace_topology UNIV top1_open_sets V)
+          top1_S1_arc_S (subspace_topology top1_S1 top1_S1_topology top1_S1_arc_S) top1_R_to_S1"
+      sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+      using harc_S_open hV_open hV_disj hV_union hV_homeo by (by100 blast)
+  qed
   have hp_evenly: "\<forall>b\<in>top1_S1. \<exists>U. openin_on top1_S1 top1_S1_topology U \<and> b \<in> U
       \<and> top1_evenly_covered_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1 U"
   proof
