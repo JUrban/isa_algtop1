@@ -6317,7 +6317,9 @@ proof -
       moreover have "\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> ?U"
         using heps by (intro exI[of _ "eps_fn s"]) auto
       ultimately show "\<exists>U\<in>\<A>c. s \<in> U \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U)"
-        sorry \<comment> \<open>Blast/force too slow on nested bex + subset\<close>
+        apply (intro bexI conjI)
+          apply assumption+
+        done
     qed
     obtain m sub_m where hm: "m \<ge> 1" and hsub_m0: "sub_m 0 = 0" and hsub_mn: "sub_m m = 1"
         and hinc_m: "\<forall>i<m. sub_m i < sub_m (Suc i)"
