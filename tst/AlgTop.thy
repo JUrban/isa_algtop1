@@ -6122,8 +6122,43 @@ proof -
       thus "t \<in> UM" using hballM \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by auto
     qed
     \<comment> \<open>M' \<in> A by extending the subdivision of [0,M] with [M, M'].\<close>
-    have "M' \<in> A" using hM_A hUM hMM' hM'_gt_M hM'_le1 hM'_ge0
-      sorry \<comment> \<open>Extend subdivision: append [M, M'] to existing subdiv of [0,M].\<close>
+    have "M' \<in> A"
+    proof -
+      obtain n sub where hn: "n \<ge> 1" and hsub0: "sub 0 = (0::real)" and hsubn: "sub n = M"
+          and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+          and hcov_sub: "\<forall>i<n. \<exists>U\<in>\<A>. {t. sub i \<le> t \<and> t \<le> sub (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using hM_A unfolding A_def by blast
+      define sub' where "sub' = (\<lambda>i. if i \<le> n then sub i else M')"
+      have "sub' 0 = 0" unfolding sub'_def using hsub0 by simp
+      moreover have "sub' (Suc n) = M'" unfolding sub'_def by simp
+      moreover have "\<forall>i < Suc n. sub' i < sub' (Suc i)"
+      proof (intro allI impI)
+        fix i assume "i < Suc n"
+        show "sub' i < sub' (Suc i)"
+        proof (cases "i < n")
+          case True thus ?thesis unfolding sub'_def using hinc by simp
+        next
+          case False hence "i = n" using \<open>i < Suc n\<close> by simp
+          thus ?thesis unfolding sub'_def using hsubn hM'_gt_M by simp
+        qed
+      qed
+      moreover have "\<forall>i < Suc n. \<exists>U\<in>\<A>. {t. sub' i \<le> t \<and> t \<le> sub' (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+      proof (intro allI impI)
+        fix i assume "i < Suc n"
+        show "\<exists>U\<in>\<A>. {t. sub' i \<le> t \<and> t \<le> sub' (Suc i) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        proof (cases "i < n")
+          case True
+          hence "sub' i = sub i" "sub' (Suc i) = sub (Suc i)" unfolding sub'_def by simp+
+          thus ?thesis using hcov_sub True by simp
+        next
+          case False hence "i = n" using \<open>i < Suc n\<close> by simp
+          hence "sub' i = M" "sub' (Suc i) = M'" unfolding sub'_def using hsubn by simp+
+          thus ?thesis using hUM hMM' by auto
+        qed
+      qed
+      moreover have "Suc n \<ge> 1" by simp
+      ultimately show ?thesis unfolding A_def using hM'_ge0 hM'_le1 by blast
+    qed
     \<comment> \<open>But M' > M = Sup A, contradicting M' \<in> A.\<close>
     hence "M' \<le> M" unfolding M_def using hbdd by (intro cSup_upper) auto
     thus False using hM'_gt_M by linarith
