@@ -7541,7 +7541,16 @@ proof -
             hC_conn hC_ne assms(4)] sorry
       \<comment> \<open>A_{Suc k} = A_k \<union> R_{i,j}.\<close>
       have hA_Suc: "?A (Suc k) = ?A k \<union> ?R ?i ?j"
-        sorry
+      proof -
+        have "(\<Union>k'<Suc k. ?R (k' mod m) (k' div m))
+            = (\<Union>k'<k. ?R (k' mod m) (k' div m)) \<union> ?R (k mod m) (k div m)"
+        proof (rule set_eqI)
+          fix x show "(x \<in> (\<Union>k'<Suc k. ?R (k' mod m) (k' div m)))
+              = (x \<in> (\<Union>k'<k. ?R (k' mod m) (k' div m)) \<union> ?R (k mod m) (k div m))"
+            using less_Suc_eq by blast
+        qed
+        thus ?thesis by (simp add: Un_assoc)
+      qed
       have "Ft_next (0, 0) = e0"
       proof -
         have "(0::real, 0::real) \<in> ?A k"
