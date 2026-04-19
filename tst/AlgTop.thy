@@ -7042,265 +7042,19 @@ lemma Lemma_54_2_homotopy_lifting:
       and "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
       and "F (0, 0) = b0"
       and "is_topology_on B TB" and "is_topology_on E TE"
-  shows "\<exists>Ftilde. (\<forall>s\<in>I_set. top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t)))
+  shows "\<exists>Ftilde. top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde
     \<and> (\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t))
-    \<and> Ftilde (0, 0) = e0
-    \<and> top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 0))
-    \<and> top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
+    \<and> Ftilde (0, 0) = e0"
 proof -
-  \<comment> \<open>Munkres 54.2: Lift F: I\<times>I \<rightarrow> B to Ftilde: I\<times>I \<rightarrow> E.\<close>
-  \<comment> \<open>Step 1: Subdivide I\<times>I into rectangles mapping into evenly covered sets (Lebesgue).\<close>
-  \<comment> \<open>Alternative approach: lift row by row using Lemma 54.1.
-     For each t, define F_t(s) = F(s, t). Lift F_0 from e0.
-     For each subsequent t, lift F_t starting from the endpoint of the previous lift.
-     This gives Ftilde continuous in s for each t.
-     The dependence on t is continuous by the same argument as Lemma 54.1
-     (pasting on each column strip).\<close>
-  \<comment> \<open>Step 1: Lift the bottom edge F(s, 0) = F_0(s) using Lemma 54.1.\<close>
-  have hF0_path: "top1_is_path_on B TB b0 (F (1, 0)) (\<lambda>s. F (s, 0))"
-  proof -
-    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    have hpair_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 0))"
-      by (rule pair_s_const_continuous[OF h0I])
-    have hcomp: "top1_continuous_map_on I_set I_top B TB (\<lambda>s. F (s, 0))"
-    proof -
-      have heq: "(\<lambda>s. F (s, 0)) = F \<circ> (\<lambda>s. (s, 0))" by (rule ext) simp
-      show ?thesis unfolding heq
-        by (rule top1_continuous_map_on_comp[OF hpair_cont assms(4)])
-    qed
-    have hstart: "F (0, 0) = b0" using assms(5) .
-    show ?thesis unfolding top1_is_path_on_def using hcomp hstart by simp
-  qed
-  obtain ftilde0 where hft0_path: "top1_is_path_on E TE e0 (ftilde0 1) ftilde0"
-      and hft0_lift: "\<forall>s\<in>I_set. p (ftilde0 s) = F (s, 0)"
-    using Lemma_54_1_path_lifting[OF assms(1,2,3) hF0_path assms(6,7)] by (by100 auto)
-  \<comment> \<open>Step 2: For each s \<in> I_set, lift the column t \<mapsto> F(s,t) from ftilde0(s).\<close>
-  have hft0_E: "\<forall>s\<in>I_set. ftilde0 s \<in> E"
-    using hft0_path unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-  have hft0_p: "\<forall>s\<in>I_set. p (ftilde0 s) = F (s, 0)" using hft0_lift .
-  \<comment> \<open>For each s, the column F(s,-) is a path from F(s,0) to F(s,1).\<close>
-  have hcol_path: "\<forall>s\<in>I_set. top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    have hpair_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (s, t))"
-      by (rule pair_const_t_continuous[OF hs])
-    have hcomp: "top1_continuous_map_on I_set I_top B TB (\<lambda>t. F (s, t))"
-    proof -
-      have heq: "(\<lambda>t. F (s, t)) = F \<circ> (\<lambda>t. (s, t))" by (rule ext) simp
-      show ?thesis unfolding heq
-        by (rule top1_continuous_map_on_comp[OF hpair_cont assms(4)])
-    qed
-    show "top1_is_path_on B TB (F (s, 0)) (F (s, 1)) (\<lambda>t. F (s, t))"
-      unfolding top1_is_path_on_def using hcomp by simp
-  qed
-  \<comment> \<open>By Lemma 54.1, for each s, lift the column from ftilde0(s).\<close>
-  have hcol_lift: "\<forall>s\<in>I_set. \<exists>Fs_tilde.
-      top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-      \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    have "p (ftilde0 s) = F (s, 0)" using hft0_p hs by simp
-    have hs_E: "ftilde0 s \<in> E" using hft0_E hs by (by100 blast)
-    obtain Fs_t where "top1_is_path_on E TE (ftilde0 s) (Fs_t 1) Fs_t"
-        "\<forall>t\<in>I_set. p (Fs_t t) = F (s, t)"
-      using Lemma_54_1_path_lifting[OF assms(1) hs_E \<open>p (ftilde0 s) = F (s, 0)\<close>
-            hcol_path[rule_format, OF hs] assms(6,7)] by (by100 auto)
-    thus "\<exists>Fs_tilde. top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))"
-      by (by100 blast)
-  qed
-  \<comment> \<open>Step 3: Define Ftilde(s,t) via Hilbert choice of the column lift.\<close>
-  define Ftilde where "Ftilde = (\<lambda>(s, t). (SOME Fs_tilde.
-      top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-      \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) t)"
-  \<comment> \<open>Step 4: Show p \<circ> Ftilde = F and Ftilde(0,0) = e0.\<close>
-  \<comment> \<open>The SOME choice satisfies the lift properties.\<close>
-  have hSOME: "\<forall>s\<in>I_set. let Fs = (SOME Fs_tilde.
-      top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-      \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) in
-      top1_is_path_on E TE (ftilde0 s) (Fs 1) Fs
-      \<and> (\<forall>t\<in>I_set. p (Fs t) = F (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    show "let Fs = (SOME Fs_tilde.
-        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) in
-        top1_is_path_on E TE (ftilde0 s) (Fs 1) Fs
-        \<and> (\<forall>t\<in>I_set. p (Fs t) = F (s, t))"
-      using someI_ex[OF hcol_lift[rule_format, OF hs]] by (simp add: Let_def)
-  qed
-  have hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
-  proof (intro ballI)
-    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
-    have "Ftilde (s, t) = (SOME Fs_tilde. top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) t"
-      unfolding Ftilde_def by simp
-    moreover have "p ((SOME Fs_tilde. top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) t) = F (s, t)"
-      using hSOME[rule_format, OF hs] ht by (simp add: Let_def)
-    ultimately show "p (Ftilde (s, t)) = F (s, t)" by simp
-  qed
-  have hFt_00: "Ftilde (0, 0) = e0"
-  proof -
-    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    have "Ftilde (0, 0) = (SOME Fs_tilde. top1_is_path_on E TE (ftilde0 0) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (0, t))) 0"
-      unfolding Ftilde_def by simp
-    have hft00: "ftilde0 0 = e0"
-      using hft0_path unfolding top1_is_path_on_def by simp
-    have hsome_start: "(SOME Fs_tilde. top1_is_path_on E TE (ftilde0 0) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (0, t))) 0 = ftilde0 0"
-      using hSOME[rule_format, OF h0I] unfolding Let_def top1_is_path_on_def by simp
-    show ?thesis unfolding Ftilde_def using hsome_start hft00 by simp
-  qed
-  \<comment> \<open>Step 5: Continuity of Ftilde. This is the key step, requiring that the
-     column lifts vary continuously in s. By uniqueness of lifts (Lemma 54.1
-     uniqueness) and the pasting argument on a Lebesgue grid, this follows.\<close>
-  \<comment> \<open>Each column lift is a path (continuous in t for fixed s).\<close>
-  have hcol_cont: "\<forall>s\<in>I_set.
-      top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t))"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    have "top1_is_path_on E TE (ftilde0 s) ((SOME Fs_tilde.
-        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) 1) (SOME Fs_tilde.
-        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
-      using hSOME[rule_format, OF hs] unfolding Let_def by (by100 blast)
-    hence "top1_continuous_map_on I_set I_top E TE (SOME Fs_tilde.
-        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
-      unfolding top1_is_path_on_def by (by100 blast)
-    moreover have "(\<lambda>t. Ftilde (s, t)) = (SOME Fs_tilde.
-        top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-        \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t)))"
-      unfolding Ftilde_def by (rule ext) simp
-    ultimately show "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t))" by simp
-  qed
-  \<comment> \<open>Ftilde maps into E.\<close>
-  have hFt_E: "\<forall>st\<in>I_set \<times> I_set. Ftilde st \<in> E"
-  proof
-    fix st assume hst: "st \<in> I_set \<times> I_set"
-    obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
-      using hst by auto
-    show "Ftilde st \<in> E"
-      using hcol_cont[rule_format, OF hs] ht
-      unfolding hst_eq top1_continuous_map_on_def by (by100 blast)
-  qed
-  \<comment> \<open>Full continuity: Ftilde is jointly continuous on I\<times>I.
-     This follows from: locally, Ftilde = (p|V0)^{-1} \<circ> F (continuous composition).
-     At each (s0,t0), F(s0,t0) \<in> evenly covered U, Ftilde(s0,t0) \<in> slice V0.
-     By column continuity + openness of V0, nearby columns also map to V0.
-     On V0, Ftilde = inv_into V0 p \<circ> F, which is continuous.\<close>
-  \<comment> \<open>Row t=0: Ftilde(s,0) = ftilde0(s), continuous as a path.\<close>
-  have hrow0: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 0))"
-  proof -
-    have "\<And>s. s \<in> I_set \<Longrightarrow> Ftilde (s, 0) = ftilde0 s"
-    proof -
-      fix s assume hs: "s \<in> I_set"
-      have "Ftilde (s, 0) = (SOME Fs_tilde. top1_is_path_on E TE (ftilde0 s) (Fs_tilde 1) Fs_tilde
-          \<and> (\<forall>t\<in>I_set. p (Fs_tilde t) = F (s, t))) 0"
-        unfolding Ftilde_def by simp
-      also have "\<dots> = ftilde0 s"
-        using hSOME[rule_format, OF hs] unfolding Let_def top1_is_path_on_def by simp
-      finally show "Ftilde (s, 0) = ftilde0 s" .
-    qed
-    note hrow0_eq = this
-    have "top1_continuous_map_on I_set I_top E TE ftilde0"
-      using hft0_path unfolding top1_is_path_on_def by blast
-    thus ?thesis unfolding top1_continuous_map_on_def
-    proof (intro conjI ballI)
-      fix s assume hs: "s \<in> I_set"
-      show "Ftilde (s, 0) \<in> E" using hrow0_eq hs hft0_E by auto
-    next
-      fix V assume "V \<in> TE"
-      have "{s\<in>I_set. Ftilde (s, 0) \<in> V} = {s\<in>I_set. ftilde0 s \<in> V}"
-        using hrow0_eq by auto
-      also have "\<dots> \<in> I_top"
-        using \<open>top1_continuous_map_on I_set I_top E TE ftilde0\<close> \<open>V \<in> TE\<close>
-        unfolding top1_continuous_map_on_def by (by100 blast)
-      finally show "{s\<in>I_set. Ftilde (s, 0) \<in> V} \<in> I_top" .
-    qed
-  qed
-  \<comment> \<open>Row t=1: endpoint of column lift. Continuity requires continuous dependence
-     of lift endpoints on starting points. This follows from uniqueness of lifts
-     applied to nearby columns (same argument as Lemma 54.1 pasting).\<close>
-  have hrow1: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
-  proof -
-    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    \<comment> \<open>For each s0, Ftilde(s0,1) \<in> slice V0 of evenly covered U \<ni> F(s0,1).
-       Near s0: Ftilde(s,1) = (p|V0)\<inverse>(F(s,1)). Proof: column Ftilde(s,\<cdot>) is continuous,
-       enters p\<inverse>(U) near t=1, connected image in disjoint slices stays in V0,
-       so Ftilde(s,1) \<in> V0 and p|V0 injective gives equality.\<close>
-    \<comment> \<open>Lift the row s \<mapsto> F(s,1) from Ftilde(0,1) via Lemma 54.1.
-       Then show Ftilde(s,1) = row_lift(s) using uniqueness.\<close>
-    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    have hFt01_E: "Ftilde (0, 1) \<in> E" using hFt_E h0I h1I by (by100 blast)
-    have hFt01_p: "p (Ftilde (0, 1)) = F (0, 1)"
-      using hFt_lift h0I h1I by (by100 blast)
-    have hrow_path: "top1_is_path_on B TB (F (0, 1)) (F (1, 1)) (\<lambda>s. F (s, 1))"
-    proof -
-      have heq: "(\<lambda>s. F (s, 1)) = F \<circ> (\<lambda>s. (s, 1))" by (rule ext) simp
-      show ?thesis unfolding top1_is_path_on_def heq
-        using top1_continuous_map_on_comp[OF pair_s_const_continuous[OF h1I] assms(4)] by simp
-    qed
-    obtain rl where hrl: "top1_is_path_on E TE (Ftilde (0, 1)) (rl 1) rl"
-        and hrl_lift: "\<forall>s\<in>I_set. p (rl s) = F (s, 1)"
-      using Lemma_54_1_path_lifting[OF assms(1) hFt01_E hFt01_p hrow_path assms(6,7)]
-      by (by100 auto)
-    \<comment> \<open>Show Ftilde(s,1) = rl(s) directly by p-injectivity on slices.
-       Both lift F(s,1). Both lie in the same slice V0 (by connectivity of the
-       column/row through the covering structure). p injective on V0 \<Rightarrow> equal.\<close>
-    have hFt_row1_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = F (s, 1)"
-      using hFt_lift h1I by (by100 auto)
-    have hrow1_eq: "\<forall>s\<in>I_set. Ftilde (s, 1) = rl s"
-    proof -
-      \<comment> \<open>Open-closed argument: {s \<in> I_set. Ftilde(s,1) = rl(s)} is clopen, nonempty \<Rightarrow> = I_set.\<close>
-      let ?S = "{s\<in>I_set. Ftilde (s, 1) = rl s}"
-      have hS0: "0 \<in> ?S"
-      proof -
-        have "Ftilde (0, 1) = Ftilde (0, 1)" by simp
-        moreover have "rl 0 = Ftilde (0, 1)"
-          using hrl unfolding top1_is_path_on_def by simp
-        ultimately show ?thesis unfolding top1_unit_interval_def by simp
-      qed
-      \<comment> \<open>S is open: if Ftilde(s0,1) = rl(s0), both \<in> some slice V0. p injective on V0.
-         rl continuous \<Rightarrow> rl stays in V0 near s0. Column Ftilde(s,\<cdot>) continuous \<Rightarrow>
-         Ftilde(s,1) \<in> p\<inverse>(U) near s0. Ftilde(s,1) \<in> V0 because column enters V0
-         at the grid boundary (matching rl by IH) and stays by connectivity.
-         Both in V0, both lift F(s,1), p injective \<Rightarrow> equal.\<close>
-      have hS_open: "openin_on I_set I_top ?S" sorry
-      \<comment> \<open>S is closed: if Ftilde(s0,1) \<noteq> rl(s0), they're in different slices (disjoint open).
-         rl stays in its slice, Ftilde(s,1) stays in its slice. Near s0, still different.\<close>
-      have hS_closed: "closedin_on I_set I_top ?S" sorry
-      \<comment> \<open>S nonempty, clopen in connected I_set \<Rightarrow> S = I_set.\<close>
-      have hI_conn: "top1_connected_on I_set I_top"
-        using top1_unit_interval_connected .
-      have hS_sub: "?S \<subseteq> I_set" by (by100 blast)
-      have hS_ne: "?S \<noteq> {}" using hS0 by (by100 blast)
-      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-      have hS_IT: "?S \<in> I_top" using hS_open unfolding openin_on_def by (by100 blast)
-      have "?S = {} \<or> ?S = I_set"
-        using iffD1[OF connected_iff_clopen[OF hTI] hI_conn] hS_IT hS_closed by (by100 blast)
-      hence "?S = I_set" using hS_ne by (by100 blast)
-      thus ?thesis by (by100 blast)
-    qed
-    show ?thesis unfolding top1_continuous_map_on_def
-    proof (intro conjI ballI)
-      fix s assume hs: "s \<in> I_set"
-      show "Ftilde (s, 1) \<in> E" using hFt_E hs h1I by (by100 blast)
-    next
-      fix V assume hV: "V \<in> TE"
-      have "{s\<in>I_set. Ftilde (s, 1) \<in> V} = {s\<in>I_set. rl s \<in> V}" using hrow1_eq by (by100 auto)
-      also have "\<dots> \<in> I_top"
-        using hrl hV unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-      finally show "{s\<in>I_set. Ftilde (s, 1) \<in> V} \<in> I_top" .
-    qed
-  qed
-  show ?thesis using hcol_cont hFt_lift hFt_00 hrow0 hrow1 by (by100 blast)
+  \<comment> \<open>Munkres 54.2: Rectangle-by-rectangle construction.
+     Step 1: Lebesgue grid on I\<times>I. Each rectangle maps by F into evenly covered U.
+     Step 2: Lift left edge and bottom edge via Lemma 54.1.
+     Step 3: For each rectangle (row by row, left to right): boundary C = left\<union>bottom
+       edge of rectangle, connected. Ftilde(C) in one slice V0. Define Ftilde = p0\<inverse>\<circ>F.
+       Pasting lemma gives continuity.
+     This directly gives joint continuity of Ftilde on I\<times>I.\<close>
+  show ?thesis sorry
 qed
-
 (** from \<S>54 Theorem 54.3: path-homotopic paths lift to path-homotopic paths.
 
     Munkres' proof:
@@ -7337,18 +7091,22 @@ proof -
   have hF_00: "F (0, 0) = b0"
     using hF_f[rule_format, OF h0I] hf unfolding top1_is_path_on_def by simp
   obtain Ftilde where
-        hFt_col_cont: "\<forall>s\<in>I_set. top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (s, t))"
+        hFt_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE Ftilde"
     and hFt_lift: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. p (Ftilde (s, t)) = F (s, t)"
     and hFt_00: "Ftilde (0, 0) = e0"
-    and hFt_row0: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 0))"
-    and hFt_row1: "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
     using Lemma_54_2_homotopy_lifting[OF hcov he0 hpe0 hF_cont hF_00 hTB hTE] by blast
   \<comment> \<open>Step 3: Ftilde(0,t) is constant e0; Ftilde(1,t) is constant, so e1 = e1'\<close>
   have hFt_left: "\<forall>t\<in>I_set. Ftilde (0, t) = e0"
   proof -
     have h0I0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
     have hcont_left: "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (0, t))"
-      using hFt_col_cont h0I0 by (by100 blast)
+    proof -
+      have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (0, t))"
+        by (rule pair_const_t_continuous[OF h0I0])
+      hence "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>t. (0, t)))"
+        by (rule top1_continuous_map_on_comp[OF _ hFt_cont])
+      thus ?thesis by (simp add: comp_def)
+    qed
     have hleft_lift: "\<forall>t\<in>I_set. p (Ftilde (0, t)) = b0"
       using hFt_lift hF_b0 h0I0 by auto
     have hpath_left: "top1_is_path_on E TE e0 (Ftilde (0, 1)) (\<lambda>t. Ftilde (0, t))"
@@ -7376,7 +7134,13 @@ proof -
     have h0I_: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
     have h1I_: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
     have hcont_right: "top1_continuous_map_on I_set I_top E TE (\<lambda>t. Ftilde (1, t))"
-      using hFt_col_cont h1I_ by (by100 blast)
+    proof -
+      have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>t. (1, t))"
+        by (rule pair_const_t_continuous[OF h1I_])
+      hence "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>t. (1, t)))"
+        by (rule top1_continuous_map_on_comp[OF _ hFt_cont])
+      thus ?thesis by (simp add: comp_def)
+    qed
     have hright_lift: "\<forall>t\<in>I_set. p (Ftilde (1, t)) = b1"
       using hFt_lift hF_b1 h1I_ by auto
     have he1_in_E: "?e1loc \<in> E"
@@ -7406,7 +7170,15 @@ proof -
   have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
   \<comment> \<open>Ftilde(·, 0) is a path in E lifting f, starting at e0.\<close>
   have hFt_bot_path: "top1_is_path_on E TE e0 (Ftilde (1, 0)) (\<lambda>s. Ftilde (s, 0))"
-    unfolding top1_is_path_on_def using hFt_row0 hFt_00 by simp
+  proof -
+    have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 0))"
+      by (rule pair_s_const_continuous[OF h0I])
+    hence "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>s. (s, 0)))"
+      by (rule top1_continuous_map_on_comp[OF _ hFt_cont])
+    hence "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 0))"
+      by (simp add: comp_def)
+    thus ?thesis unfolding top1_is_path_on_def using hFt_00 by simp
+  qed
   have hFt_bot_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 0)) = f s"
     using hFt_lift hF_f h0I by auto
   have hFt_bot: "\<forall>s\<in>I_set. Ftilde (s, 0) = ftilde s"
@@ -7416,7 +7188,16 @@ proof -
   have hFt_top_start: "Ftilde (0, 1) = e0"
     using hFt_left h1I0 by blast
   have hFt_top_path: "top1_is_path_on E TE e0 (Ftilde (1, 1)) (\<lambda>s. Ftilde (s, 1))"
-    unfolding top1_is_path_on_def using hFt_row1 hFt_top_start by simp
+  proof -
+    have h1I0: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, 1))"
+      by (rule pair_s_const_continuous[OF h1I0])
+    hence "top1_continuous_map_on I_set I_top E TE (Ftilde \<circ> (\<lambda>s. (s, 1)))"
+      by (rule top1_continuous_map_on_comp[OF _ hFt_cont])
+    hence "top1_continuous_map_on I_set I_top E TE (\<lambda>s. Ftilde (s, 1))"
+      by (simp add: comp_def)
+    thus ?thesis unfolding top1_is_path_on_def using hFt_top_start by simp
+  qed
   have hFt_top_lift: "\<forall>s\<in>I_set. p (Ftilde (s, 1)) = g s"
     using hFt_lift hF_g unfolding top1_unit_interval_def by auto
   have hFt_top: "\<forall>s\<in>I_set. Ftilde (s, 1) = gtilde s"
@@ -7456,7 +7237,7 @@ proof -
     qed
     show ?thesis
       unfolding top1_path_homotopic_on_def
-      using hft hgt' hFt_b0 hFt_b1 hFt_l0 hFt_r1 sorry
+      using hft hgt' hFt_cont hFt_b0 hFt_b1 hFt_l0 hFt_r1 by (by100 blast)
   qed
   show ?thesis using heq hhomo by blast
 qed
