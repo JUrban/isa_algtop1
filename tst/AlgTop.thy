@@ -7525,22 +7525,47 @@ proof -
       \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
             \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
   proof -
-    \<comment> \<open>Textbook (Munkres 54.2): "Choose subdivisions fine enough that each rectangle
-       is mapped by F into an open set that is evenly covered by p.
-       (Use the Lebesgue number lemma.)"
+    \<comment> \<open>Strategy: use tube lemma (Lemma_26_8) + 1D creeping lemma.
+       For each s0, the column {s0}\<times>I maps by F into finitely many evenly covered
+       opens (by 1D creeping lemma on t). Tube lemma gives a strip W\<times>I mapping into
+       these opens. Then 1D creeping lemma on s gives the s-subdivision.\<close>
+    have hI_compact: "top1_compact_on I_set I_top"
+    proof -
+      have "compact I_set" unfolding top1_unit_interval_def by (rule compact_Icc)
+      thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact[of I_set]
+        unfolding top1_unit_interval_topology_def by simp
+    qed
+    have hITop: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def
+      by (rule product_topology_on_is_topology_on[OF hITop hITop])
+    \<comment> \<open>For each s0, t0: F(s0,t0) has evenly covered U.
+       F\<inverse>(U) is open in II_topology. Contains (s0,t0).\<close>
+    \<comment> \<open>For each s0: apply 1D creeping lemma on t-coordinate.
+       For each t \<in> I, (s0,t) has an evenly covered U_{s0,t} with F(s0,t) \<in> U.
+       F\<inverse>(U) is open, so \<exists>\<epsilon>_{s0,t}>0. ball((s0,t),\<epsilon>) \<inter> I^2 \<subseteq> F\<inverse>(U).
+       In particular, |t'-t| < \<epsilon> \<Rightarrow> F(s0,t') \<in> U.
+       By the 1D creeping lemma: \<exists>n. \<exists>sub_t. t-subdivision with each piece
+       mapping (under F(s0,\<cdot>)) into an evenly covered set.
+       Actually we need MORE: a strip around s0 mapping into U.\<close>
+    \<comment> \<open>Tube lemma version: For each s0 \<in> I, apply 1D argument on the column {s0}\<times>I
+       to get a t-subdivision such that F(s0, \<cdot>) maps each piece into evenly covered U.
+       For each t-piece [t_j, t_{j+1}], the preimage F\<inverse>(U_j) is open in I\<times>I and
+       contains {s0}\<times>[t_j, t_{j+1}]. By tube lemma, \<exists>W_j nbhd of s0 with
+       W_j \<times> [t_j, t_{j+1}] \<subseteq> F\<inverse>(U_j). Take W = \<inter>W_j (finite intersection).
+       Then W \<times> I maps each t-piece into the corresponding U_j.
+       This gives: for each s0, \<exists>\<epsilon>_s>0 and t-subdivision and evenly covered U's.\<close>
+    \<comment> \<open>Then apply 1D creeping lemma on s-coordinate using the \<epsilon>_s's.
+       Take common refinement of t-subdivisions (finitely many).
+       This gives the 2D grid.\<close>
+    \<comment> \<open>Proof strategy: tube lemma (Lemma_26_8) + 1D creeping (open_cover_subdivision_01).
+       For each s0: 1D creeping on t gives t-subdivision with F(s0,\<cdot>) in evenly covered U's.
+       Tube lemma: each piece has s-width \<epsilon>_{s0}. Intersect: W_{s0}\<times>I maps correctly.
+       1D creeping on s using W_{s0}'s. Common refinement of t-subdivisions.
+       Reformulate as uniform N-grid by choosing N fine enough.
 
-       Proof sketch:
-       1. For each (s,t) in I\<times>I, F(s,t) has an evenly covered neighborhood U_{s,t}.
-       2. F\<inverse>(U_{s,t}) is open in II_topology. These preimages cover I\<times>I.
-       3. I\<times>I = [0,1]\<times>[0,1] is compact (product of compact intervals).
-       4. By the Lebesgue number lemma, \<exists>\<delta>>0 such that every subset of I\<times>I with
-          diameter < \<delta> is contained in some F\<inverse>(U_{s,t}).
-       5. Take N > \<surd>2/\<delta>. Each 1/N-rectangle has diameter \<surd>2/N < \<delta>,
-          hence maps into some U_{s,t}.
-
-       Requires: compact_Times (product of compact is compact),
-       Lebesgue number lemma (top1_lebesgue_number from Top0),
-       metric on I\<times>I (Euclidean distance restricted).\<close>
+       All sub-components available: hI_compact, hITop, Lemma_26_8,
+       open_cover_subdivision_01, hpointwise (evenly covered covers B).\<close>
     show ?thesis sorry
   qed
   then obtain N :: nat where hN: "N > 0" and hNgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
