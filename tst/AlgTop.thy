@@ -7525,16 +7525,35 @@ proof -
       \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
             \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
   proof -
-    \<comment> \<open>Proof strategy: tube lemma + 1D creeping lemma, applied twice.
-       Step 1: For each s0 \<in> I, apply 1D creeping on t to get t-subdivision.
-       Step 2: Tube lemma on each piece gives s-width \<epsilon>_{s0}.
-       Step 3: 1D creeping on s using \<epsilon>_{s0}'s.
-       Step 4: Common refinement of t-subdivisions \<rightarrow> uniform N-grid.
-       All sub-components available: Lemma_26_8, open_cover_subdivision_01,
-       pair_const_t_continuous, top1_compact_on_subspace_UNIV_iff_compact.
-       This is a standard textbook argument (Munkres p.340) that we sorry pending
-       full assembly of the tube lemma infrastructure.\<close>
-    show ?thesis sorry
+    \<comment> \<open>For each (s0,t0) \<in> I\<times>I, get \<epsilon>>0 and evenly covered U with
+       F(ball((s0,t0),\<epsilon>) \<inter> I\<times>I) \<subseteq> U. Bridge from II_topology to \<epsilon>-balls.\<close>
+    have hpointball: "\<forall>s0\<in>I_set. \<forall>t0\<in>I_set. \<exists>\<epsilon>>0. \<exists>U. openin_on B TB U
+        \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U"
+      sorry \<comment> \<open>Continuity of F + openness of preimage in II_topology + bridge to \<epsilon>-ball.\<close>
+    \<comment> \<open>For each s0: 1D creeping on t-coordinate. For each t0, the ball from hpointball
+       gives a t-interval. Apply open_cover_subdivision_01 to column.\<close>
+    have hstrip: "\<forall>s0\<in>I_set. \<exists>\<epsilon>s>0. \<exists>nt\<ge>(1::nat). \<exists>sub_t :: nat \<Rightarrow> real.
+        sub_t 0 = 0 \<and> sub_t nt = 1
+        \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+        \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+            \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                  \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+      sorry \<comment> \<open>Tube lemma + 1D creeping on t-coordinate.\<close>
+    \<comment> \<open>1D creeping on s-coordinate using \<epsilon>s from hstrip.\<close>
+    obtain ns sub_s where hns: "ns \<ge> 1" and hs_0: "sub_s (0::nat) = (0::real)"
+        and hs_n: "sub_s ns = 1"
+        and hs_inc: "\<forall>i<ns. sub_s i < sub_s (Suc i)"
+        and hs_strip: "\<forall>i<ns. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real.
+            sub_t 0 = 0 \<and> sub_t nt = 1
+            \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+            \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                      \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+      sorry \<comment> \<open>From open_cover_subdivision_01 on s + hstrip.\<close>
+    \<comment> \<open>For each s-piece i, get t-subdivision. Take common refinement and convert to N-grid.\<close>
+    show ?thesis
+      sorry \<comment> \<open>From hs_strip: take N = ns * max(nt_i), each 1/N-rect fits in some (i,j)-piece.\<close>
   qed
   then obtain N :: nat where hN: "N > 0" and hNgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
       \<and> top1_evenly_covered_on E TE B TB p U
