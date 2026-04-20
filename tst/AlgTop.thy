@@ -7467,8 +7467,138 @@ lemma grid_from_per_piece_subdivisions:
       \<and> (\<forall>j<n. sub_t' j < sub_t' (Suc j))
       \<and> (\<forall>i<ns. \<forall>j<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                               {t. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)})"
-  sorry
-(*
+proof -
+  \<comment> \<open>Extract per-s-piece t-subdivisions via choice.\<close>
+  obtain nt_f sub_t_f where
+      hnt_f: "\<forall>i<ns. nt_f i \<ge> 1"
+      and ht0_f: "\<forall>i<ns. sub_t_f i 0 = (0::real)"
+      and htn_f: "\<forall>i<ns. sub_t_f i (nt_f i) = 1"
+      and htinc_f: "\<forall>i<ns. \<forall>j<nt_f i. sub_t_f i j < sub_t_f i (Suc j)"
+      and hcov_f: "\<forall>i<ns. \<forall>j<nt_f i. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+    sorry \<comment> \<open>Choice from hstrip — proved in the commented-out proof below.\<close>
+  \<comment> \<open>Collect all t-boundary points.\<close>
+  define T_pts where "T_pts = (\<Union>i\<in>{0..<ns}. sub_t_f i ` {0..nt_f i})"
+  have hT_fin: "finite T_pts" unfolding T_pts_def by simp
+  have h0_T: "0 \<in> T_pts"
+  proof -
+    have "0 < ns" using hns by simp
+    have "sub_t_f 0 0 \<in> T_pts"
+      unfolding T_pts_def using \<open>0 < ns\<close> by force
+    thus ?thesis using ht0_f[rule_format, OF \<open>0 < ns\<close>] by simp
+  qed
+  have h1_T: "1 \<in> T_pts"
+  proof -
+    have "0 < ns" using hns by simp
+    have "sub_t_f 0 (nt_f 0) \<in> T_pts"
+      unfolding T_pts_def using \<open>0 < ns\<close> by force
+    thus ?thesis using htn_f[rule_format, OF \<open>0 < ns\<close>] by simp
+  qed
+  \<comment> \<open>Sort T_pts into a list.\<close>
+  define tlist where "tlist = sorted_list_of_set T_pts"
+  define n where "n = length tlist - 1"
+  define sub_t' where "sub_t' j = (if j < length tlist then tlist ! j else 1)" for j
+  \<comment> \<open>Properties of sorted_list_of_set.\<close>
+  have hset: "set tlist = T_pts" unfolding tlist_def using hT_fin
+    by (rule sorted_list_of_set(1))
+  have hsort: "sorted tlist" unfolding tlist_def
+    by (rule sorted_list_of_set(2))
+  have hdist: "distinct tlist" unfolding tlist_def
+    by (rule sorted_list_of_set(3))
+  have hne: "tlist \<noteq> []" using h0_T hset by (by100 auto)
+  have hlen: "length tlist \<ge> 2"
+  proof -
+    have "0 \<noteq> (1::real)" by simp
+    hence "card {0::real, 1} = 2" by simp
+    have "{0::real, 1} \<subseteq> T_pts" using h0_T h1_T by (by100 blast)
+    hence "card T_pts \<ge> 2" using \<open>card {0::real, 1} = 2\<close> hT_fin
+      by (metis card_mono)
+    thus ?thesis using hset hdist
+      by (metis distinct_card)
+  qed
+  have hn_pos: "n \<ge> 1" using hlen unfolding n_def by simp
+  \<comment> \<open>First element is 0, last is 1.\<close>
+  have hT_01: "\<forall>t\<in>T_pts. 0 \<le> t \<and> t \<le> 1"
+    sorry \<comment> \<open>All boundary points are in [0,1] (from sub_t_f monotonicity between 0 and 1).\<close>
+  have hsub0: "sub_t' 0 = 0"
+  proof -
+    have "hd tlist \<in> set tlist" using hne by (rule hd_in_set)
+    hence "hd tlist \<in> T_pts" using hset by simp
+    hence "hd tlist \<ge> 0" using hT_01 by (by100 blast)
+    moreover have "hd tlist \<le> 0"
+    proof -
+      have "0 \<in> set tlist" using h0_T hset by simp
+      then obtain idx where "idx < length tlist" "tlist ! idx = 0" by (metis in_set_conv_nth)
+      have "tlist ! 0 \<le> tlist ! idx"
+        using sorted_nth_mono[OF hsort, of 0 idx] \<open>idx < length tlist\<close> by simp
+      thus ?thesis using \<open>tlist ! idx = 0\<close> hne by (simp add: hd_conv_nth)
+    qed
+    ultimately have "hd tlist = 0" by simp
+    thus ?thesis unfolding sub_t'_def using hne by (simp add: hd_conv_nth)
+  qed
+  have hsubn: "sub_t' n = 1"
+  proof -
+    have "last tlist \<in> set tlist" using hne by (rule last_in_set)
+    hence "last tlist \<in> T_pts" using hset by simp
+    hence "last tlist \<le> 1" using hT_01 by (by100 blast)
+    moreover have "last tlist \<ge> 1"
+    proof -
+      have "1 \<in> set tlist" using h1_T hset by simp
+      then obtain idx where "idx < length tlist" "tlist ! idx = 1" by (metis in_set_conv_nth)
+      have "tlist ! idx \<le> tlist ! (length tlist - 1)"
+        using sorted_nth_mono[OF hsort, of idx "length tlist - 1"] \<open>idx < length tlist\<close> by simp
+      thus ?thesis using \<open>tlist ! idx = 1\<close> hne by (simp add: last_conv_nth)
+    qed
+    ultimately have "last tlist = 1" by simp
+    thus ?thesis unfolding sub_t'_def n_def
+      using hne by (simp add: last_conv_nth)
+  qed
+  \<comment> \<open>Strictly increasing.\<close>
+  have hsinc: "\<forall>j<n. sub_t' j < sub_t' (Suc j)"
+  proof (intro allI impI)
+    fix j assume hj: "j < n"
+    have hj_len: "j < length tlist - 1" using hj unfolding n_def .
+    hence hj1_len: "Suc j < length tlist" by simp
+    have hj_len2: "j < length tlist" using hj_len hlen by simp
+    have "sub_t' j = tlist ! j" unfolding sub_t'_def using hj_len2 by simp
+    moreover have "sub_t' (Suc j) = tlist ! Suc j" unfolding sub_t'_def using hj1_len by simp
+    moreover have "tlist ! j < tlist ! Suc j"
+    proof -
+      have "tlist ! j \<le> tlist ! Suc j"
+        using sorted_nth_mono[OF hsort, of j "Suc j"] hj1_len by simp
+      moreover have "tlist ! j \<noteq> tlist ! Suc j"
+        using nth_eq_iff_index_eq[OF hdist] hj_len hj1_len by (by100 auto)
+      ultimately show ?thesis by simp
+    qed
+    ultimately show "sub_t' j < sub_t' (Suc j)" by simp
+  qed
+  \<comment> \<open>Each piece [sub_t' k, sub_t'(k+1)] is contained in some piece of every subdivision.\<close>
+  have hrefines: "\<forall>i<ns. \<forall>k<n. \<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+      \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+    sorry \<comment> \<open>sub_t' k and sub_t'(k+1) are consecutive in the sorted list.
+           No boundary point of subdivision i lies strictly between them
+           (all such points are in T_pts, hence in the sorted list).
+           So both sub_t' k and sub_t'(k+1) lie in the same piece of subdivision i.\<close>
+  \<comment> \<open>By P-monotonicity, conclude.\<close>
+  have "\<forall>i<ns. \<forall>k<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                            {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
+  proof (intro allI impI)
+    fix i k assume hi: "i < ns" and hk: "k < n"
+    from hrefines[rule_format, OF hi hk] obtain j where hj: "j < nt_f i"
+        and hsub: "{t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+            \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}" by (by100 blast)
+    from hcov_f[rule_format, OF hi hj]
+    show "P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
+      using hP_mono hsub by (by100 blast)
+  qed
+  thus ?thesis using hn_pos hsub0 hsubn hsinc by (by100 blast)
+qed
+(* Proof requires common refinement of finitely many subdivisions.
+   The sorted union of all boundary points gives a refinement where each piece
+   fits in a piece of every original subdivision. This is a purely combinatorial
+   fact about finite sorted sequences on [0,1].
+   The UNIFORM grid approach (1/N) does NOT work: intervals can straddle boundaries
+   even when all pieces are wider than 1/N, because the boundary points don't align.
 proof -
   \<comment> \<open>Extract t-subdivisions for each s-piece via choice.\<close>
   obtain nt_f sub_t_f where
@@ -7579,57 +7709,52 @@ proof -
       \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
   proof (intro allI impI)
     fix i k assume hi: "i < ns" and hk: "k < N"
-    \<comment> \<open>sub_t' k = k/N \<in> [0,1] = [sub_t_f i 0, sub_t_f i (nt_f i)].\<close>
-    have hk_ge: "sub_t_f i 0 \<le> sub_t' k"
+    \<comment> \<open>Use the RIGHT endpoint (k+1)/N for increasing_interval_cover.
+       (k+1)/N \<in> [0,1] since Suc k \<le> N.\<close>
+    have hSk_ge: "sub_t_f i 0 \<le> sub_t' (Suc k)"
       using ht0_f[rule_format, OF hi] hk hN unfolding sub_t'_def by simp
-    have hk_le: "sub_t' k \<le> sub_t_f i (nt_f i)"
-      using htn_f[rule_format, OF hi] hk hN unfolding sub_t'_def
-      by (simp add: divide_le_eq_1)
-    \<comment> \<open>Find j containing sub_t' k via increasing_interval_cover.\<close>
+    have hSk_le: "sub_t' (Suc k) \<le> sub_t_f i (nt_f i)"
+      using htn_f[rule_format, OF hi] hk hN unfolding sub_t'_def by simp
     have hnt: "nt_f i \<ge> 1" using hnt_f[rule_format, OF hi] .
     have hinc: "\<forall>j'<nt_f i. sub_t_f i j' < sub_t_f i (Suc j')"
       using htinc_f hi by (by100 auto)
+    \<comment> \<open>Find j containing (k+1)/N.\<close>
     obtain j where hj: "j < nt_f i"
-        and hj_le: "sub_t_f i j \<le> sub_t' k"
-        and hj_ge: "sub_t' k \<le> sub_t_f i (Suc j)"
-      using increasing_interval_cover[OF hnt hk_ge hk_le hinc] by (by100 blast)
+        and hj_le: "sub_t_f i j \<le> sub_t' (Suc k)"
+        and hj_ge: "sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
+      using increasing_interval_cover[OF hnt hSk_ge hSk_le hinc] by (by100 blast)
     \<comment> \<open>Width of piece j \<ge> min_w > 1/N.\<close>
     have hwidth: "sub_t_f i (Suc j) - sub_t_f i j \<ge> min_w"
     proof -
       let ?S = "{sub_t_f i' (Suc j') - sub_t_f i' j' | i' j'. i' < ns \<and> j' < nt_f i'}"
-      have hfin: "finite ?S"
-      proof -
-        have "?S \<subseteq> (\<lambda>(i',j'). sub_t_f i' (Suc j') - sub_t_f i' j') ` (SIGMA i':{0..<ns}. {0..<nt_f i'})"
-          by auto
-        thus ?thesis by (rule finite_subset) simp
-      qed
+      have "?S \<subseteq> (\<lambda>(i',j'). sub_t_f i' (Suc j') - sub_t_f i' j') ` (SIGMA i':{0..<ns}. {0..<nt_f i'})"
+        by auto
+      hence hfin: "finite ?S" by (rule finite_subset) simp
       have hmem: "sub_t_f i (Suc j) - sub_t_f i j \<in> ?S"
         using hi hj by (by100 blast)
       show ?thesis unfolding min_w_def using Min_le[OF hfin hmem] .
     qed
-    \<comment> \<open>Key fact: width \<ge> min_w > 1/N, and k/N in piece j. Need (k+1)/N in same piece.
-       Proof by contradiction: if (k+1)/N > sub_t_f i (j+1), then sub_t_f i (j+1) lies
-       strictly between k/N and (k+1)/N. The PREVIOUS boundary sub_t_f i j \<le> k/N.
-       So sub_t_f i (j+1) - sub_t_f i j \<le> (k+1)/N - k/N = 1/N < min_w.
-       But width \<ge> min_w. Contradiction!\<close>
-    have "sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
+    \<comment> \<open>Key: k/N \<ge> sub_t_f i j. Proof by contradiction using width > 1/N.
+       If sub_t_f i j > k/N, then sub_t_f i j > (k+1)/N - 1/N.
+       Width = sub_t_f i (j+1) - sub_t_f i j \<le> (k+1)/N - sub_t_f i j < 1/N.
+       But width \<ge> min_w > 1/N. Contradiction!\<close>
+    have "sub_t' k \<ge> sub_t_f i j"
     proof (rule ccontr)
-      assume "\<not> sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
-      hence "sub_t_f i (Suc j) < sub_t' (Suc k)" by simp
-      \<comment> \<open>sub_t_f i (j+1) < (k+1)/N = k/N + 1/N.\<close>
-      have "sub_t_f i (Suc j) < sub_t' k + 1 / real N"
-        using \<open>sub_t_f i (Suc j) < sub_t' (Suc k)\<close>
-        unfolding sub_t'_def using hN by (simp add: field_simps)
-      \<comment> \<open>sub_t_f i j \<le> k/N = sub_t' k.\<close>
-      \<comment> \<open>So width = sub_t_f i (j+1) - sub_t_f i j < sub_t' k + 1/N - sub_t_f i j \<le> 1/N.\<close>
-      have "sub_t_f i (Suc j) - sub_t_f i j < 1 / real N"
-        using \<open>sub_t_f i (Suc j) < sub_t' k + 1 / real N\<close> hj_le by simp
-      \<comment> \<open>But width \<ge> min_w > 1/N.\<close>
+      assume "\<not> sub_t' k \<ge> sub_t_f i j"
+      hence "sub_t_f i j > sub_t' k" by simp
+      have hN_pos: "real N > 0" using hN by simp
+      have "sub_t' (Suc k) = sub_t' k + 1 / real N"
+        unfolding sub_t'_def using hN_pos by (simp add: field_simps)
+      hence "sub_t_f i j > sub_t' (Suc k) - 1 / real N" using \<open>sub_t_f i j > sub_t' k\<close> by simp
+      hence "sub_t_f i (Suc j) - sub_t_f i j < sub_t_f i (Suc j) - (sub_t' (Suc k) - 1 / real N)"
+        by simp
+      also have "\<dots> \<le> 1 / real N" using hj_ge by simp
+      finally have "sub_t_f i (Suc j) - sub_t_f i j < 1 / real N" .
       thus False using hwidth hN_fine by simp
     qed
     show "\<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
         \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-      using hj hj_le \<open>sub_t' (Suc k) \<le> sub_t_f i (Suc j)\<close> by (intro exI[of _ j]) auto
+      using hj \<open>sub_t' k \<ge> sub_t_f i j\<close> hj_ge by (intro exI[of _ j]) auto
   qed
   \<comment> \<open>By P-monotonicity, each 1/N \<times> s-piece satisfies P.\<close>
   have "\<forall>i<ns. \<forall>k<N. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
