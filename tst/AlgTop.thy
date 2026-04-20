@@ -7467,12 +7467,9 @@ lemma grid_from_per_piece_subdivisions:
       \<and> (\<forall>j<n. sub_t' j < sub_t' (Suc j))
       \<and> (\<forall>i<ns. \<forall>j<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                               {t. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)})"
+  sorry
+(*
 proof -
-  \<comment> \<open>Proof by induction on ns. At each step, merge current common refinement
-     with the next s-piece's t-subdivision.\<close>
-  \<comment> \<open>Key fact: if sub_t refines sub_t_i (i.e., each [sub_t j, sub_t(j+1)] is contained
-     in some [sub_t_i k, sub_t_i(k+1)]), then by P-monotonicity, P i S [sub_t j, sub_t(j+1)]
-     holds. This is because [sub_t j, sub_t(j+1)] \<subseteq> [sub_t_i k, sub_t_i(k+1)] and P monotone.\<close>
   \<comment> \<open>Extract t-subdivisions for each s-piece via choice.\<close>
   obtain nt_f sub_t_f where
       hnt_f: "\<forall>i<ns. nt_f i \<ge> 1"
@@ -7580,9 +7577,60 @@ proof -
   \<comment> \<open>Each 1/N-interval fits inside some piece of every t-subdivision.\<close>
   have hfits: "\<forall>i<ns. \<forall>k<N. \<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
       \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-    sorry \<comment> \<open>Key step: k/N lies in some piece [sub_t_f i j, sub_t_f i (j+1)].
-           Since 1/N < min_w \<le> width of that piece, (k+1)/N \<le> sub_t_f i (j+1).
-           So [k/N, (k+1)/N] \<subseteq> [sub_t_f i j, sub_t_f i (j+1)].\<close>
+  proof (intro allI impI)
+    fix i k assume hi: "i < ns" and hk: "k < N"
+    \<comment> \<open>sub_t' k = k/N \<in> [0,1] = [sub_t_f i 0, sub_t_f i (nt_f i)].\<close>
+    have hk_ge: "sub_t_f i 0 \<le> sub_t' k"
+      using ht0_f[rule_format, OF hi] hk hN unfolding sub_t'_def by simp
+    have hk_le: "sub_t' k \<le> sub_t_f i (nt_f i)"
+      using htn_f[rule_format, OF hi] hk hN unfolding sub_t'_def
+      by (simp add: divide_le_eq_1)
+    \<comment> \<open>Find j containing sub_t' k via increasing_interval_cover.\<close>
+    have hnt: "nt_f i \<ge> 1" using hnt_f[rule_format, OF hi] .
+    have hinc: "\<forall>j'<nt_f i. sub_t_f i j' < sub_t_f i (Suc j')"
+      using htinc_f hi by (by100 auto)
+    obtain j where hj: "j < nt_f i"
+        and hj_le: "sub_t_f i j \<le> sub_t' k"
+        and hj_ge: "sub_t' k \<le> sub_t_f i (Suc j)"
+      using increasing_interval_cover[OF hnt hk_ge hk_le hinc] by (by100 blast)
+    \<comment> \<open>Width of piece j \<ge> min_w > 1/N.\<close>
+    have hwidth: "sub_t_f i (Suc j) - sub_t_f i j \<ge> min_w"
+    proof -
+      let ?S = "{sub_t_f i' (Suc j') - sub_t_f i' j' | i' j'. i' < ns \<and> j' < nt_f i'}"
+      have hfin: "finite ?S"
+      proof -
+        have "?S \<subseteq> (\<lambda>(i',j'). sub_t_f i' (Suc j') - sub_t_f i' j') ` (SIGMA i':{0..<ns}. {0..<nt_f i'})"
+          by auto
+        thus ?thesis by (rule finite_subset) simp
+      qed
+      have hmem: "sub_t_f i (Suc j) - sub_t_f i j \<in> ?S"
+        using hi hj by (by100 blast)
+      show ?thesis unfolding min_w_def using Min_le[OF hfin hmem] .
+    qed
+    \<comment> \<open>Key fact: width \<ge> min_w > 1/N, and k/N in piece j. Need (k+1)/N in same piece.
+       Proof by contradiction: if (k+1)/N > sub_t_f i (j+1), then sub_t_f i (j+1) lies
+       strictly between k/N and (k+1)/N. The PREVIOUS boundary sub_t_f i j \<le> k/N.
+       So sub_t_f i (j+1) - sub_t_f i j \<le> (k+1)/N - k/N = 1/N < min_w.
+       But width \<ge> min_w. Contradiction!\<close>
+    have "sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
+    proof (rule ccontr)
+      assume "\<not> sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
+      hence "sub_t_f i (Suc j) < sub_t' (Suc k)" by simp
+      \<comment> \<open>sub_t_f i (j+1) < (k+1)/N = k/N + 1/N.\<close>
+      have "sub_t_f i (Suc j) < sub_t' k + 1 / real N"
+        using \<open>sub_t_f i (Suc j) < sub_t' (Suc k)\<close>
+        unfolding sub_t'_def using hN by (simp add: field_simps)
+      \<comment> \<open>sub_t_f i j \<le> k/N = sub_t' k.\<close>
+      \<comment> \<open>So width = sub_t_f i (j+1) - sub_t_f i j < sub_t' k + 1/N - sub_t_f i j \<le> 1/N.\<close>
+      have "sub_t_f i (Suc j) - sub_t_f i j < 1 / real N"
+        using \<open>sub_t_f i (Suc j) < sub_t' k + 1 / real N\<close> hj_le by simp
+      \<comment> \<open>But width \<ge> min_w > 1/N.\<close>
+      thus False using hwidth hN_fine by simp
+    qed
+    show "\<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+        \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+      using hj hj_le \<open>sub_t' (Suc k) \<le> sub_t_f i (Suc j)\<close> by (intro exI[of _ j]) auto
+  qed
   \<comment> \<open>By P-monotonicity, each 1/N \<times> s-piece satisfies P.\<close>
   have "\<forall>i<ns. \<forall>k<N. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                               {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
@@ -7597,7 +7645,7 @@ proof -
       using hP_mono hsub by (by100 blast)
   qed
   thus ?thesis using hN ht0' htN' htinc' by (by100 blast)
-qed
+qed *)
 
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
