@@ -1,14 +1,14 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 155 sorries, builds in ~30s, 19500+ lines
+## Status: 154 sorries, builds in ~34s, 19800+ lines
 
-## FTA — 2 RECURSIVE SORRIES FROM COMPLETE
+## FTA — 1 RECURSIVE SORRY FROM COMPLETE
 
 ### FTA Recursive Dependency Chain:
 | Component | Sorries | Status |
 |-----------|---------|--------|
 | Lemma_54_1 (path lifting) | **0** | ✅ COMPLETE |
-| Lemma_54_2 (homotopy lifting) | **2** | Lebesgue grid + base continuity |
+| Lemma_54_2 (homotopy lifting) | **1** | Lebesgue grid only |
 | homotopy_lifting_rectangle_step | **0** | ✅ COMPLETE |
 | Theorem_54_3 (homotopic lifts) | 0 | ✅ |
 | Theorem_54_5 (π₁(S¹) ≅ ℤ) | 0 | ✅ |
@@ -16,36 +16,27 @@
 | FTA Step 3 | 0 | ✅ |
 | FTA (main theorem) | 0 | ✅ |
 
-### The 2 remaining Lemma_54_2 sorries:
-1. **Lebesgue grid existence**: N>0 with each 1/N-rectangle mapping into evenly covered U
-   (requires Lebesgue number lemma for compact metric space I×I)
-2. **Base case continuity** (hFt0_cont): Ft0 continuous on L-shape (edges)
-   (needs pasting_lemma_two_closed on left_lift∘snd and bot_lift∘fst)
+### The 1 remaining Lemma_54_2 sorry:
+1. **Lebesgue grid existence** (line ~7527): ∃N>0 with each 1/N-rectangle
+   mapping into an evenly covered U.
+   Requires: Lebesgue number lemma (top1_lebesgue_number) + metric on I×I +
+   compactness of I×I + preimage openness from F continuity.
+   All sub-components exist in Top0 but need assembly.
 
-### Recently proved in Lemma_54_2:
-- ✅ hsubs (II_topology elements ⊆ I×I)
-- ✅ hAR_sub (A_k ∪ R ⊆ I×I)  
-- ✅ hR_closed (rectangle closed via closedin_II_rectangle helper)
-- ✅ hA_closed (A_k closed via finite union of closed)
-- ✅ hC_ne (boundary nonempty via corner point)
-- ✅ hC_eq (A_k ∩ R = L-shape via grid non-overlap)
-- ✅ hC_conn (L-shape connected via Theorem_23_3 + edge connectedness)
-- ✅ A(m*n) = I×I (via increasing_interval_cover pigeonhole helper)
-- ✅ subspace_topology self-equality
+### Fully proved in Lemma_54_2:
+- ✅ Edge lifts (left_lift, bot_lift) via Lemma_54_1
+- ✅ Base case k=0: Ft0 lifting + continuity (pasting lemma)
 - ✅ Grid derivation (subdivision from N-based grid)
-
-## Jordan Chain — Infrastructure + R²-{0} Progress
-
-### R2_minus_origin_not_simply_connected (nearly done):
-- Standard loop on S¹ and R²-{0}: PROVED ✓
-- Covering lift argument (1=0 contradiction): PROVED ✓
-- Retraction transfer via r(x)=x/|x|: structured, 2 sorries (norm algebra + continuity)
-
-### Infrastructure:
-- S2_minus_point_simply_connected (sorry)
-- stereographic_proj_homeomorphism (sorry)
-- simple_closed_curve_subset: PROVED ✓
-- Lemma_61_2 (nulhomotopy via arc): PROVED ✓
+- ✅ Rectangle closed (closedin_II_rectangle helper)
+- ✅ A_k closed (finite union of closed edges + rectangles)
+- ✅ A_k ∪ R ⊆ I×I
+- ✅ A_k ∩ R = L-shape (grid non-overlap argument)
+- ✅ L-shape connected (Theorem_23_3 + edge connectedness)
+- ✅ A_k ∩ R nonempty (corner point)
+- ✅ Inductive step (via homotopy_lifting_rectangle_step)
+- ✅ A_{m×n} = I×I (increasing_interval_cover pigeonhole)
+- ✅ Subspace topology self-equality
+- ✅ II_topology elements ⊆ I×I
 
 ## Fully Proved Key Results:
 - **Lemma_54_1** (path lifting): ZERO SORRIES ✓✓✓
