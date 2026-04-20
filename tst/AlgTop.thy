@@ -7790,7 +7790,34 @@ proof -
             \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
                 \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                       \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
-      sorry \<comment> \<open>From open_cover_subdivision_01 on s + hstrip.\<close>
+    proof -
+      \<comment> \<open>Build s-cover from hstrip: for each s0 \<in> I, the ball {s:|s-s0|<\<epsilon>s} is the covering set.\<close>
+      define \<B> where "\<B> = (\<lambda>(s0, \<epsilon>s, nt, sub_t). {s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s})
+          ` {(s0, \<epsilon>s, nt, sub_t). s0 \<in> I_set \<and> \<epsilon>s > 0 \<and> (nt::nat) \<ge> 1
+              \<and> sub_t 0 = (0::real) \<and> sub_t nt = 1
+              \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+              \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                  \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                        \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)}"
+      have hs_cov: "\<forall>s0. 0 \<le> s0 \<and> s0 \<le> 1 \<longrightarrow>
+          (\<exists>V\<in>\<B>. s0 \<in> V \<and> (\<exists>\<epsilon>>0. {s'. \<bar>s' - s0\<bar> < \<epsilon> \<and> 0 \<le> s' \<and> s' \<le> 1} \<subseteq> V))"
+        sorry \<comment> \<open>From hstrip + definition of \<B>.\<close>
+      obtain ns sub_s' where hns': "ns \<ge> 1" and hs0': "sub_s' (0::nat) = (0::real)"
+          and hsn': "sub_s' ns = 1"
+          and hs_inc': "\<forall>i<ns. sub_s' i < sub_s' (Suc i)"
+          and hs_cov2: "\<forall>i<ns. \<exists>V\<in>\<B>. {s. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> V"
+        using open_cover_subdivision_01[OF hs_cov] by auto
+      \<comment> \<open>For each s-piece i, extract the strip property.\<close>
+      have hs_strip': "\<forall>i<ns. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real.
+            sub_t 0 = 0 \<and> sub_t nt = 1
+            \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+            \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
+                      \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+        sorry \<comment> \<open>From hs_cov2 + \<B> definition: extract strip and use [sub_s' i, sub_s'(i+1)] \<subseteq> \<epsilon>s-ball.\<close>
+      show ?thesis
+        by (rule that[OF hns' hs0' hsn' hs_inc' hs_strip'])
+    qed
     \<comment> \<open>For each s-piece i, get t-subdivision. Take common refinement and convert to N-grid.\<close>
     show ?thesis
       sorry \<comment> \<open>From hs_strip: take N = ns * max(nt_i), each 1/N-rect fits in some (i,j)-piece.\<close>
