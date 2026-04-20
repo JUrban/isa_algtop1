@@ -7450,6 +7450,25 @@ next
   qed
 qed
 
+\<comment> \<open>Helper: given per-s-piece t-subdivisions, derive a single m \<times> n grid.
+   The t-subdivision is the common refinement (sorted union of all t-boundary points).\<close>
+lemma grid_from_per_piece_subdivisions:
+  fixes P :: "nat \<Rightarrow> (real set) \<Rightarrow> (real set) \<Rightarrow> bool"
+  assumes hns: "ns \<ge> 1"
+      and hs0: "sub_s 0 = (0::real)" and hsn: "sub_s ns = 1"
+      and hsinc: "\<forall>i<ns. sub_s i < sub_s (Suc i)"
+      and hstrip: "\<forall>i<ns. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real. sub_t 0 = 0 \<and> sub_t nt = 1
+          \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+          \<and> (\<forall>j<nt. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})"
+      and hP_mono: "\<forall>i S T T'. T' \<subseteq> T \<longrightarrow> P i S T \<longrightarrow> P i S T'"
+  shows "\<exists>n\<ge>1. \<exists>sub_t' :: nat \<Rightarrow> real.
+      sub_t' 0 = 0 \<and> sub_t' n = 1
+      \<and> (\<forall>j<n. sub_t' j < sub_t' (Suc j))
+      \<and> (\<forall>i<ns. \<forall>j<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                              {t. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)})"
+  sorry
+
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
   assumes "top1_covering_map_on E TE B TB p"
@@ -7908,11 +7927,67 @@ proof -
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                 \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-    using hgrid_gen sorry
-    \<comment> \<open>Common refinement: from hgrid_gen (per-s-piece t-subdivisions),
-       merge all t-boundary points into sorted list → single n.
-       Each rectangle in the common m\<times>n grid fits in some original rectangle.
-       Pure combinatorial step; all topology/covering arguments DONE.\<close>
+  proof -
+    from hgrid_gen obtain ns0 sub_s0 where hns0: "ns0 \<ge> 1"
+        and hs00: "sub_s0 0 = (0::real)" and hsn0: "sub_s0 ns0 = 1"
+        and hsinc0: "\<forall>i<ns0. sub_s0 i < sub_s0 (Suc i)"
+        and hstrip0: "\<forall>i<ns0. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real. sub_t 0 = 0 \<and> sub_t nt = 1
+            \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+            \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                      \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+      by auto
+    \<comment> \<open>Apply grid_from_per_piece_subdivisions with
+       P i S T = (\<exists>U. openin_on B TB U \<and> evenly_covered U \<and> F ` (S\<inter>I \<times> T\<inter>I) \<subseteq> U).\<close>
+    define P where "P = (\<lambda>(i::nat) (S::real set) (T::real set). \<exists>U. openin_on B TB U
+        \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> F ` ({s\<in>I_set. s \<in> S} \<times> {t\<in>I_set. t \<in> T}) \<subseteq> U)"
+    have hstrip_P: "\<forall>i<ns0. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real. sub_t 0 = 0 \<and> sub_t nt = 1
+        \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+        \<and> (\<forall>j<nt. P i {s. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                        {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})"
+    proof (intro allI impI)
+      fix i assume hi: "i < ns0"
+      from hstrip0[rule_format, OF hi] obtain nt sub_t where
+          "nt \<ge> 1" "sub_t 0 = (0::real)" "sub_t nt = 1"
+          "\<forall>j<nt. sub_t j < sub_t (Suc j)"
+          "\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+        by auto
+      moreover have "\<forall>j<nt. P i {s. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                                {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}"
+        unfolding P_def using \<open>\<forall>j<nt. \<exists>U. _\<close> by auto
+      ultimately show "\<exists>nt\<ge>1. \<exists>sub_t. sub_t 0 = (0::real) \<and> sub_t nt = 1
+          \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+          \<and> (\<forall>j<nt. P i {s. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                          {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})"
+        by blast
+    qed
+    have hP_mono: "\<forall>i S T T'. T' \<subseteq> T \<longrightarrow> P i S T \<longrightarrow> P i S T'"
+      unfolding P_def by blast
+    from grid_from_per_piece_subdivisions[OF hns0 hs00 hsn0 hsinc0 hstrip_P hP_mono]
+    obtain n sub_t' where hn_: "n \<ge> 1" and ht0_: "sub_t' 0 = (0::real)" and htn_: "sub_t' n = 1"
+        and htinc_: "\<forall>j<n. sub_t' j < sub_t' (Suc j)"
+        and hgrid_: "\<forall>i<ns0. \<forall>j<n. P i {s. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                                        {t. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)}"
+      by auto
+    \<comment> \<open>Convert P back to the original form.\<close>
+    have hgrid_orig: "\<forall>i<ns0. \<forall>j<n. \<exists>U. openin_on B TB U
+        \<and> top1_evenly_covered_on E TE B TB p U
+        \<and> F ` ({s\<in>I_set. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+              \<times> {t\<in>I_set. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)}) \<subseteq> U"
+    proof (intro allI impI)
+      fix i j assume hi: "i < ns0" and hj: "j < n"
+      from hgrid_[rule_format, OF hi hj] show "\<exists>U. openin_on B TB U
+          \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> F ` ({s\<in>I_set. sub_s0 i \<le> s \<and> s \<le> sub_s0 (Suc i)}
+                \<times> {t\<in>I_set. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)}) \<subseteq> U"
+        unfolding P_def by auto
+    qed
+    show ?thesis
+      by (rule that[OF hns0 hn_ hs00 hsn0 ht0_ htn_ hsinc0 htinc_ hgrid_orig])
+  qed
   \<comment> \<open>Step 4: Rectangle-by-rectangle construction (textbook Munkres 54.2).
      Induction on linearized index k = j*m + i over rectangles.
      Invariant: Ftilde continuous on A_k, lifts F, starts at e0.
