@@ -14021,6 +14021,29 @@ definition top1_C_minus_0_topology :: "complex set set" where
     Here we only record the essential injectivity consequence: if two loops
     become path-homotopic after composition with z^n, then they were already
     path-homotopic. **)
+\<comment> \<open>Step 1a: z^n is continuous on S^1 (polynomial, sorry-free).\<close>
+lemma Theorem_56_1_step_1_cont:
+  fixes n :: nat
+  assumes hn: "n > 0"
+  shows "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+                               top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+  unfolding top1_S1_complex_topology_def
+  by (rule top1_continuous_map_on_subspace_open_sets)
+     (auto simp: top1_S1_complex_def norm_power intro: continuous_intros)
+
+\<comment> \<open>Step 1b: z^n induces injective map on \<pi>_1(S^1) (requires \<pi>_1(S^1) \<cong> Z).\<close>
+lemma Theorem_56_1_step_1_inj:
+  fixes n :: nat
+  assumes hn: "n > 0"
+  shows "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
+              \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
+              \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+                   (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
+              \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
+  sorry
+
+\<comment> \<open>Combined (for backward compatibility).\<close>
 lemma Theorem_56_1_step_1:
   fixes n :: nat
   assumes hn: "n > 0"
@@ -14031,38 +14054,7 @@ lemma Theorem_56_1_step_1:
               \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
                    (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
               \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g)"
-  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
-proof -
-  \<comment> \<open>Munkres: z^n is continuous on S^1 (polynomial).
-     The induced map f_* on \<pi>_1(S^1) \<cong> Z is multiplication by n (since the standard
-     generator lifts to s \<mapsto> s and f \<circ> p(s) = e^{2\<pi>ins} lifts to s \<mapsto> ns).
-     Multiplication by n is injective for n > 0.\<close>
-  have hcont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
-      top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
-    unfolding top1_S1_complex_topology_def
-    by (rule top1_continuous_map_on_subspace_open_sets)
-       (auto simp: top1_S1_complex_def norm_power intro: continuous_intros)
-  have hinj: "\<forall>f g. top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f
-      \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
-      \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-  proof (intro allI impI, elim conjE)
-    fix f g
-    assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
-    assume hg: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g"
-    assume hfg: "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
-           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)"
-    \<comment> \<open>By Theorem 54.5, \<pi>_1(S^1, (1,0)) \<cong> Z via bijection \<phi>.
-       Under \<phi>: [f] \<mapsto> k, [g] \<mapsto> l. Then [(f)^n] \<mapsto> nk, [(g)^n] \<mapsto> nl.
-       hfg says nk = nl, so k = l (n > 0), so [f] = [g], i.e., f ~ g.
-       This requires: (1) the S^1 complex topology equals the S^1 pair topology,
-       (2) the z^n map corresponds to multiplication by n on Z.\<close>
-    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-      sorry
-  qed
-  show ?thesis using hcont hinj by blast
-qed
+  using Theorem_56_1_step_1_cont[OF hn] Theorem_56_1_step_1_inj[OF hn] by blast
 
 (** Step 2: z^n as S^1 \<rightarrow> C - {0} is not nulhomotopic.
 
@@ -14276,7 +14268,7 @@ proof
         using hf_path unfolding top1_is_path_on_def by (by100 blast)
       have hcont_step1: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
           top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
-        using conjunct1[OF Theorem_56_1_step_1[OF hn]] .
+        using Theorem_56_1_step_1_cont[OF hn] .
       have hcomp: "top1_continuous_map_on I_set I_top top1_S1_complex top1_S1_complex_topology
           ((\<lambda>z. z^n) \<circ> f)"
         by (rule top1_continuous_map_on_comp[OF hf_cont hcont_step1])
@@ -14872,8 +14864,6 @@ proof -
     using hxn_eq h_cn_sum by simp
   thus ?thesis by blast
 qed
-
-thm_oracles Theorem_56_1_FTA
 
 text \<open>Original form (FTA for arbitrary polynomials with nonzero leading coefficient).\<close>
 corollary Theorem_56_1_FTA_leading:
