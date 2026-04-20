@@ -7749,10 +7749,137 @@ proof -
           thus "left_lift (snd x) = bot_lift (fst x)"
             using hll hbl_00 unfolding top1_is_path_on_def by simp
         qed
-        \<comment> \<open>Continuity on each piece + pasting lemma = continuity on union.\<close>
-        \<comment> \<open>This requires proving left_lift \<circ> snd and bot_lift \<circ> fst are continuous
-           on their respective domains in the subspace topology. Sorry for now.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Continuity via pasting lemma on two closed sets.\<close>
+        have hITop: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hTII2: "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def
+          by (rule product_topology_on_is_topology_on[OF hITop hITop])
+        have hA0_sub: "?A 0 \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+        have hTA: "is_topology_on (?A 0) ?TA"
+          by (rule subspace_topology_is_topology_on[OF hTII2 hA0_sub])
+        \<comment> \<open>Both edges are closed in A_0.\<close>
+        have hle_cl_II: "closedin_on (I_set \<times> I_set) II_topology ?left_edge"
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "?left_edge \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+          have "I_set \<times> I_set - ?left_edge = {s\<in>I_set. s > 0} \<times> I_set"
+            unfolding top1_unit_interval_def by (by100 auto)
+          also have "\<dots> \<in> II_topology"
+          proof -
+            have hI_open2: "I_set \<in> I_top"
+              using hITop unfolding is_topology_on_def by (by100 blast)
+            have "{s\<in>I_set. s > 0} = I_set \<inter> {s :: real. 0 < s}" by (by100 auto)
+            also have "\<dots> \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def
+              using open_greaterThan[of "0::real"] unfolding top1_open_sets_def greaterThan_def by (by100 blast)
+            finally have "{s\<in>I_set. s > 0} \<in> I_top" .
+            thus ?thesis unfolding II_topology_def by (rule product_rect_open[OF _ hI_open2])
+          qed
+          finally show "I_set \<times> I_set - ?left_edge \<in> II_topology" .
+        qed
+        have hbe_cl_II: "closedin_on (I_set \<times> I_set) II_topology ?bot_edge"
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "?bot_edge \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+          have "I_set \<times> I_set - ?bot_edge = I_set \<times> {t\<in>I_set. t > 0}"
+            unfolding top1_unit_interval_def by (by100 auto)
+          also have "\<dots> \<in> II_topology"
+          proof -
+            have hI_open2: "I_set \<in> I_top"
+              using hITop unfolding is_topology_on_def by (by100 blast)
+            have "{t\<in>I_set. t > 0} = I_set \<inter> {t :: real. 0 < t}" by (by100 auto)
+            also have "\<dots> \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def
+              using open_greaterThan[of "0::real"] unfolding top1_open_sets_def greaterThan_def by (by100 blast)
+            finally have "{t\<in>I_set. t > 0} \<in> I_top" .
+            thus ?thesis unfolding II_topology_def by (rule product_rect_open[OF hI_open2])
+          qed
+          finally show "I_set \<times> I_set - ?bot_edge \<in> II_topology" .
+        qed
+        have hle_cl_A: "closedin_on (?A 0) ?TA ?left_edge"
+        proof -
+          have heq: "?left_edge = ?left_edge \<inter> ?A 0" by (by100 blast)
+          have "\<exists>C. closedin_on (I_set \<times> I_set) II_topology C \<and> ?left_edge = C \<inter> ?A 0"
+            using hle_cl_II heq by (by100 blast)
+          thus ?thesis using Theorem_17_2[OF hTII2 hA0_sub] by simp
+        qed
+        have hbe_cl_A: "closedin_on (?A 0) ?TA ?bot_edge"
+        proof -
+          have heq: "?bot_edge = ?bot_edge \<inter> ?A 0" by (by100 blast)
+          have "\<exists>C. closedin_on (I_set \<times> I_set) II_topology C \<and> ?bot_edge = C \<inter> ?A 0"
+            using hbe_cl_II heq by (by100 blast)
+          thus ?thesis using Theorem_17_2[OF hTII2 hA0_sub] by simp
+        qed
+        \<comment> \<open>pi2 continuous from I\<times>I to I.\<close>
+        have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top snd"
+          unfolding II_topology_def
+          by (rule top1_continuous_pi2[OF hITop hITop, unfolded pi2_def])
+        have hleft_lift_cont: "top1_continuous_map_on I_set I_top E TE left_lift"
+          using hll unfolding top1_is_path_on_def by simp
+        have hleft_comp: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE (left_lift \<circ> snd)"
+          by (rule top1_continuous_map_on_comp[OF hpi2 hleft_lift_cont])
+        \<comment> \<open>Restrict to left edge.\<close>
+        have hleft_edge_sub: "?left_edge \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+        have hleft_comp_le: "top1_continuous_map_on ?left_edge
+            (subspace_topology (I_set \<times> I_set) II_topology ?left_edge) E TE (left_lift \<circ> snd)"
+          using Theorem_18_2(4)[OF hTII2 assms(7) assms(7), rule_format]
+            hleft_comp hleft_edge_sub by (by100 blast)
+        have hle_sub_A: "?left_edge \<subseteq> ?A 0" by (by100 blast)
+        have hleft_sub_eq: "subspace_topology (?A 0) ?TA ?left_edge
+            = subspace_topology (I_set \<times> I_set) II_topology ?left_edge"
+          using subspace_topology_trans[OF hle_sub_A] by simp
+        have hleft_Ft0: "top1_continuous_map_on ?left_edge
+            (subspace_topology (?A 0) ?TA ?left_edge) E TE Ft0"
+          using top1_continuous_map_on_cong[OF hFt0_left] hleft_comp_le
+          unfolding hleft_sub_eq comp_def by (by100 blast)
+        \<comment> \<open>Similarly for bot edge.\<close>
+        have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top fst"
+          unfolding II_topology_def
+          by (rule top1_continuous_pi1[OF hITop hITop, unfolded pi1_def])
+        have hbot_lift_cont: "top1_continuous_map_on I_set I_top E TE bot_lift"
+          using hbl unfolding top1_is_path_on_def by simp
+        have hbot_comp: "top1_continuous_map_on (I_set \<times> I_set) II_topology E TE (bot_lift \<circ> fst)"
+          by (rule top1_continuous_map_on_comp[OF hpi1 hbot_lift_cont])
+        have hbot_edge_sub: "?bot_edge \<subseteq> I_set \<times> I_set" using h0I by (by100 blast)
+        have hbot_comp_be: "top1_continuous_map_on ?bot_edge
+            (subspace_topology (I_set \<times> I_set) II_topology ?bot_edge) E TE (bot_lift \<circ> fst)"
+          using Theorem_18_2(4)[OF hTII2 assms(7) assms(7), rule_format]
+            hbot_comp hbot_edge_sub by (by100 blast)
+        have hbe_sub_A: "?bot_edge \<subseteq> ?A 0" by (by100 blast)
+        have hbot_sub_eq: "subspace_topology (?A 0) ?TA ?bot_edge
+            = subspace_topology (I_set \<times> I_set) II_topology ?bot_edge"
+          using subspace_topology_trans[OF hbe_sub_A] by simp
+        have hbot_Ft0: "top1_continuous_map_on ?bot_edge
+            (subspace_topology (?A 0) ?TA ?bot_edge) E TE Ft0"
+          using top1_continuous_map_on_cong[OF hFt0_bot] hbot_comp_be
+          unfolding hbot_sub_eq comp_def by (by100 blast)
+        \<comment> \<open>Ft0 ranges into E.\<close>
+        have hFt0_range: "\<forall>x\<in>?A 0. Ft0 x \<in> E"
+        proof (intro ballI)
+          fix x assume "x \<in> ?A 0"
+          hence "x \<in> ?left_edge \<or> x \<in> ?bot_edge" by simp
+          thus "Ft0 x \<in> E"
+          proof (elim disjE)
+            assume "x \<in> ?left_edge"
+            hence "Ft0 x = left_lift (snd x)" using hFt0_left by (by100 blast)
+            moreover have "snd x \<in> I_set" using \<open>x \<in> ?left_edge\<close> by (by100 auto)
+            moreover have "\<forall>t\<in>I_set. left_lift t \<in> E"
+              using hll unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+            ultimately show ?thesis by simp
+          next
+            assume "x \<in> ?bot_edge"
+            hence "Ft0 x = bot_lift (fst x)" using hFt0_bot by (by100 blast)
+            moreover have "fst x \<in> I_set" using \<open>x \<in> ?bot_edge\<close> by (by100 auto)
+            moreover have "\<forall>s\<in>I_set. bot_lift s \<in> E"
+              using hbl unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+            ultimately show ?thesis by simp
+          qed
+        qed
+        \<comment> \<open>Apply pasting lemma.\<close>
+        have hA0_union: "?left_edge \<union> ?bot_edge = ?A 0" by simp
+        show ?thesis
+          by (rule pasting_lemma_two_closed[OF hTA assms(7)
+              hle_cl_A hbe_cl_A hA0_union hFt0_range hleft_Ft0 hbot_Ft0])
       qed
       show ?case
       proof (intro exI conjI)
