@@ -7467,7 +7467,111 @@ lemma grid_from_per_piece_subdivisions:
       \<and> (\<forall>j<n. sub_t' j < sub_t' (Suc j))
       \<and> (\<forall>i<ns. \<forall>j<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                               {t. sub_t' j \<le> t \<and> t \<le> sub_t' (Suc j)})"
-  sorry
+proof -
+  \<comment> \<open>Proof by induction on ns. At each step, merge current common refinement
+     with the next s-piece's t-subdivision.\<close>
+  \<comment> \<open>Key fact: if sub_t refines sub_t_i (i.e., each [sub_t j, sub_t(j+1)] is contained
+     in some [sub_t_i k, sub_t_i(k+1)]), then by P-monotonicity, P i S [sub_t j, sub_t(j+1)]
+     holds. This is because [sub_t j, sub_t(j+1)] \<subseteq> [sub_t_i k, sub_t_i(k+1)] and P monotone.\<close>
+  \<comment> \<open>Extract t-subdivisions for each s-piece via choice.\<close>
+  obtain nt_f sub_t_f where
+      hnt_f: "\<forall>i<ns. nt_f i \<ge> 1"
+      and ht0_f: "\<forall>i<ns. sub_t_f i 0 = (0::real)"
+      and htn_f: "\<forall>i<ns. sub_t_f i (nt_f i) = 1"
+      and htinc_f: "\<forall>i<ns. \<forall>j<nt_f i. sub_t_f i j < sub_t_f i (Suc j)"
+      and hcov_f: "\<forall>i<ns. \<forall>j<nt_f i. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+  proof -
+    \<comment> \<open>Use Hilbert choice to extract functions.\<close>
+    define pick where "pick i = (SOME p :: nat \<times> (nat \<Rightarrow> real).
+        fst p \<ge> 1 \<and> snd p 0 = 0 \<and> snd p (fst p) = 1
+        \<and> (\<forall>j<fst p. snd p j < snd p (Suc j))
+        \<and> (\<forall>j<fst p. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. snd p j \<le> t \<and> t \<le> snd p (Suc j)}))" for i
+    have hpick: "\<forall>i<ns. fst (pick i) \<ge> 1 \<and> snd (pick i) 0 = 0
+        \<and> snd (pick i) (fst (pick i)) = 1
+        \<and> (\<forall>j<fst (pick i). snd (pick i) j < snd (pick i) (Suc j))
+        \<and> (\<forall>j<fst (pick i). P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                                  {t. snd (pick i) j \<le> t \<and> t \<le> snd (pick i) (Suc j)})"
+    proof (intro allI impI)
+      fix i assume hi: "i < ns"
+      from hstrip[rule_format, OF hi] obtain nt sub_t where
+          "nt \<ge> 1" "sub_t 0 = (0::real)" "sub_t nt = 1"
+          "\<forall>j<nt. sub_t j < sub_t (Suc j)"
+          "\<forall>j<nt. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}"
+        by auto
+      hence "\<exists>p :: nat \<times> (nat \<Rightarrow> real). fst p \<ge> 1 \<and> snd p 0 = 0 \<and> snd p (fst p) = 1
+          \<and> (\<forall>j<fst p. snd p j < snd p (Suc j))
+          \<and> (\<forall>j<fst p. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                              {t. snd p j \<le> t \<and> t \<le> snd p (Suc j)})"
+        by (intro exI[of _ "(nt, sub_t)"]) simp
+      thus "fst (pick i) \<ge> 1 \<and> snd (pick i) 0 = 0
+          \<and> snd (pick i) (fst (pick i)) = 1
+          \<and> (\<forall>j<fst (pick i). snd (pick i) j < snd (pick i) (Suc j))
+          \<and> (\<forall>j<fst (pick i). P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                                      {t. snd (pick i) j \<le> t \<and> t \<le> snd (pick i) (Suc j)})"
+        unfolding pick_def by (rule someI_ex)
+    qed
+    define nt_f where "nt_f i = fst (pick i)" for i
+    define sub_t_f where "sub_t_f i = snd (pick i)" for i
+    have "\<forall>i<ns. nt_f i \<ge> 1" using hpick unfolding nt_f_def by auto
+    moreover have "\<forall>i<ns. sub_t_f i 0 = (0::real)" using hpick unfolding sub_t_f_def by auto
+    moreover have "\<forall>i<ns. sub_t_f i (nt_f i) = 1" using hpick unfolding nt_f_def sub_t_f_def by auto
+    moreover have "\<forall>i<ns. \<forall>j<nt_f i. sub_t_f i j < sub_t_f i (Suc j)"
+      using hpick unfolding nt_f_def sub_t_f_def by auto
+    moreover have "\<forall>i<ns. \<forall>j<nt_f i. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+      using hpick unfolding nt_f_def sub_t_f_def by auto
+    ultimately show ?thesis using that by blast
+  qed
+  \<comment> \<open>Minimum t-piece width over all s-pieces.\<close>
+  define min_w where "min_w = Min {sub_t_f i (Suc j) - sub_t_f i j | i j. i < ns \<and> j < nt_f i}"
+  have hmin_pos: "min_w > 0"
+    sorry \<comment> \<open>Each width is positive (strict monotonicity). Finite set, so Min > 0.\<close>
+  \<comment> \<open>Take N large enough that 1/N < min_w.\<close>
+  obtain N :: nat where hN: "N \<ge> 1" and hN_fine: "1 / real N < min_w"
+  proof -
+    from hmin_pos obtain N' :: nat where "real N' > 1 / min_w"
+      using reals_Archimedean2 by (by100 blast)
+    define N where "N = max N' 1"
+    have "N \<ge> 1" unfolding N_def by simp
+    moreover have "1 / real N < min_w"
+    proof -
+      have "real N \<ge> real N'" unfolding N_def by simp
+      hence "real N > 1 / min_w" using \<open>real N' > 1 / min_w\<close> by simp
+      hence "1 / real N < min_w" using hmin_pos \<open>N \<ge> 1\<close>
+        by (simp add: field_simps pos_less_divide_eq)
+      thus ?thesis .
+    qed
+    ultimately show ?thesis using that by blast
+  qed
+  \<comment> \<open>Define uniform t-grid: sub_t'(j) = j/N.\<close>
+  define sub_t' where "sub_t' j = real j / real N" for j
+  have ht0': "sub_t' 0 = 0" unfolding sub_t'_def by simp
+  have htN': "sub_t' N = 1" unfolding sub_t'_def using hN by simp
+  have htinc': "\<forall>j<N. sub_t' j < sub_t' (Suc j)"
+    unfolding sub_t'_def using hN by (intro allI impI) (simp add: divide_strict_right_mono)
+  \<comment> \<open>Each 1/N-interval fits inside some piece of every t-subdivision.\<close>
+  have hfits: "\<forall>i<ns. \<forall>k<N. \<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+      \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+    sorry \<comment> \<open>Key step: k/N lies in some piece [sub_t_f i j, sub_t_f i (j+1)].
+           Since 1/N < min_w \<le> width of that piece, (k+1)/N \<le> sub_t_f i (j+1).
+           So [k/N, (k+1)/N] \<subseteq> [sub_t_f i j, sub_t_f i (j+1)].\<close>
+  \<comment> \<open>By P-monotonicity, each 1/N \<times> s-piece satisfies P.\<close>
+  have "\<forall>i<ns. \<forall>k<N. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                              {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
+  proof (intro allI impI)
+    fix i k assume hi: "i < ns" and hk: "k < N"
+    from hfits[rule_format, OF hi hk] obtain j where hj: "j < nt_f i"
+        and hsub: "{t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+            \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}" by (by100 blast)
+    from hcov_f[rule_format, OF hi hj]
+    have "P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}" .
+    thus "P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
+      using hP_mono hsub by (by100 blast)
+  qed
+  thus ?thesis using hN ht0' htN' htinc' by (by100 blast)
+qed
 
 (** from \<S>54 Lemma 54.2: homotopy-lifting lemma **)
 lemma Lemma_54_2_homotopy_lifting:
