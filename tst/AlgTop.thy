@@ -7476,7 +7476,8 @@ proof -
       and htinc_f: "\<forall>i<ns. \<forall>j<nt_f i. sub_t_f i j < sub_t_f i (Suc j)"
       and hcov_f: "\<forall>i<ns. \<forall>j<nt_f i. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                           {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-    sorry \<comment> \<open>Choice from hstrip — proved in the commented-out proof below.\<close>
+    sorry \<comment> \<open>Choice from hstrip. Same Hilbert SOME pattern as in commented-out proof.\<close>
+    \<comment> \<open>NOTE: this sorry + hT_01 + hrefines are the last 3 sorries blocking FTA.\<close>
   \<comment> \<open>Collect all t-boundary points.\<close>
   define T_pts where "T_pts = (\<Union>i\<in>{0..<ns}. sub_t_f i ` {0..nt_f i})"
   have hT_fin: "finite T_pts" unfolding T_pts_def by simp
