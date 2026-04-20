@@ -7527,7 +7527,33 @@ proof -
   \<comment> \<open>Minimum t-piece width over all s-pieces.\<close>
   define min_w where "min_w = Min {sub_t_f i (Suc j) - sub_t_f i j | i j. i < ns \<and> j < nt_f i}"
   have hmin_pos: "min_w > 0"
-    sorry \<comment> \<open>Each width is positive (strict monotonicity). Finite set, so Min > 0.\<close>
+  proof -
+    let ?S = "{sub_t_f i (Suc j) - sub_t_f i j | i j. i < ns \<and> j < nt_f i}"
+    have hfin: "finite ?S"
+    proof -
+      have "?S \<subseteq> (\<lambda>(i,j). sub_t_f i (Suc j) - sub_t_f i j) ` (SIGMA i:{0..<ns}. {0..<nt_f i})"
+        by auto
+      moreover have "finite \<dots>" by simp
+      ultimately show ?thesis by (rule finite_subset)
+    qed
+    have hne: "?S \<noteq> {}"
+    proof -
+      have "0 < ns" using hns by simp
+      have "0 < nt_f 0" using hnt_f[rule_format, OF \<open>0 < ns\<close>] by simp
+      hence "sub_t_f 0 (Suc 0) - sub_t_f 0 0 \<in> ?S" using \<open>0 < ns\<close> by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    have hpos: "\<forall>w\<in>?S. w > 0"
+    proof (intro ballI)
+      fix w assume "w \<in> ?S"
+      then obtain i j where hw: "w = sub_t_f i (Suc j) - sub_t_f i j"
+          and hi: "i < ns" and hj: "j < nt_f i" by (by100 blast)
+      have "sub_t_f i j < sub_t_f i (Suc j)" using htinc_f[rule_format, OF hi hj] .
+      thus "w > 0" using hw by simp
+    qed
+    show ?thesis unfolding min_w_def
+      using Min_gr_iff[OF hfin hne] hpos by (by100 auto)
+  qed
   \<comment> \<open>Take N large enough that 1/N < min_w.\<close>
   obtain N :: nat where hN: "N \<ge> 1" and hN_fine: "1 / real N < min_w"
   proof -
