@@ -7658,13 +7658,60 @@ proof -
       have ht_eps: "\<forall>j<nt. \<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
           \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>}
                 \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-        sorry \<comment> \<open>From ht_cov2 + \<A> definition: extract \<epsilon>, U, and use monotonicity.\<close>
+      proof (intro allI impI)
+        fix j assume hj: "j < nt"
+        obtain V where hVA: "V \<in> \<A>"
+            and hVsub: "{t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+          using ht_cov2[rule_format, OF hj] by (by100 blast)
+        \<comment> \<open>V \<in> \<A>: extract t0, \<epsilon>, U.\<close>
+        obtain t0_j \<epsilon>_j U_j where ht0j: "t0_j \<in> I_set" and h\<epsilon>j: "\<epsilon>_j > 0"
+            and hUo_j: "openin_on B TB U_j" and hUec_j: "top1_evenly_covered_on E TE B TB p U_j"
+            and hVeq: "V = {t\<in>I_set. \<bar>t - t0_j\<bar> < \<epsilon>_j}"
+            and hFsub_j: "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>_j} \<times> {t\<in>I_set. \<bar>t - t0_j\<bar> < \<epsilon>_j}) \<subseteq> U_j"
+        proof -
+          from hVA obtain x where hxS: "x \<in> {(t0, \<epsilon>, U). t0 \<in> I_set \<and> \<epsilon> > 0 \<and> openin_on B TB U
+              \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U}"
+              and hVx: "V = (\<lambda>(t0, \<epsilon>, U). {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) x"
+            unfolding \<A>_def by auto
+          obtain t0' \<epsilon>' U' where hx_eq: "x = (t0', \<epsilon>', U')" by (cases x) auto
+          have "t0' \<in> I_set" "\<epsilon>' > 0" "openin_on B TB U'"
+              "top1_evenly_covered_on E TE B TB p U'"
+              "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0'\<bar> < \<epsilon>'}) \<subseteq> U'"
+            using hxS hx_eq by auto+
+          moreover have "V = {t\<in>I_set. \<bar>t - t0'\<bar> < \<epsilon>'}" using hVx hx_eq by simp
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        \<comment> \<open>[t_j, t_{j+1}] \<subseteq> V = {t\<in>I. |t-t0_j| < \<epsilon>_j}.\<close>
+        have hpiece_sub: "{t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)} \<subseteq> V"
+        proof -
+          have "{t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}
+              \<subseteq> {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0 \<le> t \<and> t \<le> 1}"
+            unfolding top1_unit_interval_def by (by100 auto)
+          thus ?thesis using hVsub by (by100 blast)
+        qed
+        \<comment> \<open>F({s:|s-s0|<\<epsilon>_j} \<times> [t_j,t_{j+1}]) \<subseteq> F({s:|s-s0|<\<epsilon>_j} \<times> V) \<subseteq> U_j.\<close>
+        have "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>_j} \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})
+            \<subseteq> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>_j} \<times> V)"
+          using hpiece_sub by (by100 blast)
+        also have "\<dots> \<subseteq> U_j" using hFsub_j hVeq by simp
+        finally show "\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+            \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+          using h\<epsilon>j hUo_j hUec_j by (by100 blast)
+      qed
       \<comment> \<open>Extract \<epsilon>s = min over j of \<epsilon>_j.\<close>
-      then obtain eps_j U_j where heps_j: "\<forall>j<nt. eps_j j > 0"
+      then obtain eU_j where heU: "\<forall>j<nt. fst (eU_j j) > 0
+          \<and> openin_on B TB (snd (eU_j j)) \<and> top1_evenly_covered_on E TE B TB p (snd (eU_j j))
+          \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < fst (eU_j j)}
+                \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> snd (eU_j j)"
+        sorry \<comment> \<open>Choice on pairs.\<close>
+      define eps_j where "eps_j j = fst (eU_j j)" for j
+      define U_j where "U_j j = snd (eU_j j)" for j
+      have heps_j: "\<forall>j<nt. eps_j j > 0"
           and hU_j: "\<forall>j<nt. openin_on B TB (U_j j) \<and> top1_evenly_covered_on E TE B TB p (U_j j)
               \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < eps_j j}
                     \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U_j j"
-        sorry \<comment> \<open>Choice.\<close>
+        unfolding eps_j_def U_j_def using heU by auto+
       define \<epsilon>s where "\<epsilon>s = Min (eps_j ` {0..<nt})"
       have h\<epsilon>s_pos: "\<epsilon>s > 0"
       proof -
