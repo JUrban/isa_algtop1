@@ -7524,7 +7524,25 @@ proof -
       \<and> top1_evenly_covered_on E TE B TB p U
       \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
             \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
-    sorry
+  proof -
+    \<comment> \<open>Textbook (Munkres 54.2): "Choose subdivisions fine enough that each rectangle
+       is mapped by F into an open set that is evenly covered by p.
+       (Use the Lebesgue number lemma.)"
+
+       Proof sketch:
+       1. For each (s,t) in I\<times>I, F(s,t) has an evenly covered neighborhood U_{s,t}.
+       2. F\<inverse>(U_{s,t}) is open in II_topology. These preimages cover I\<times>I.
+       3. I\<times>I = [0,1]\<times>[0,1] is compact (product of compact intervals).
+       4. By the Lebesgue number lemma, \<exists>\<delta>>0 such that every subset of I\<times>I with
+          diameter < \<delta> is contained in some F\<inverse>(U_{s,t}).
+       5. Take N > \<surd>2/\<delta>. Each 1/N-rectangle has diameter \<surd>2/N < \<delta>,
+          hence maps into some U_{s,t}.
+
+       Requires: compact_Times (product of compact is compact),
+       Lebesgue number lemma (top1_lebesgue_number from Top0),
+       metric on I\<times>I (Euclidean distance restricted).\<close>
+    show ?thesis sorry
+  qed
   then obtain N :: nat where hN: "N > 0" and hNgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
       \<and> top1_evenly_covered_on E TE B TB p U
       \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
