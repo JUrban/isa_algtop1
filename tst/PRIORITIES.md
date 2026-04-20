@@ -1,6 +1,6 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 154 sorries, builds in ~31s, 20000+ lines
+## Status: 155 sorries, builds in ~32s, 20000+ lines
 
 ## FTA — 1 RECURSIVE SORRY FROM COMPLETE
 
@@ -8,7 +8,7 @@
 | Component | Sorries | Status |
 |-----------|---------|--------|
 | Lemma_54_1 (path lifting) | **0** | ✅ COMPLETE |
-| Lemma_54_2 (homotopy lifting) | **1** | N-grid conversion only |
+| Lemma_54_2 (homotopy lifting) | **1** | common refinement only |
 | homotopy_lifting_rectangle_step | **0** | ✅ COMPLETE |
 | Theorem_54_3 (homotopic lifts) | 0 | ✅ |
 | Theorem_54_5 (π₁(S¹) ≅ ℤ) | 0 | ✅ |
@@ -17,15 +17,22 @@
 | FTA (main theorem) | 0 | ✅ |
 
 ### The 1 remaining Lemma_54_2 sorry:
-1. **N-grid conversion** (line ~7887): Convert non-uniform subdivision
-   (ns s-pieces × per-piece nt_i t-pieces) to uniform N-grid.
-   Take N > 1/min_width. Each 1/N-rectangle fits in some piece.
-   All covering/subdivision infrastructure PROVEN:
-   - hpointball (ε-ball from continuity) ✅
-   - 1D creeping on t (open_cover_subdivision_01) ✅
-   - min-ε over t-pieces (Hilbert SOME + Min) ✅
-   - 1D creeping on s (open_cover_subdivision_01) ✅
-   - strip property extraction from coverings ✅
+**Common refinement** (line ~7911): Convert per-s-piece t-subdivisions
+(from hgrid_gen) into a single m×n grid via common refinement of
+finitely many sorted sequences. Pure combinatorial step — NO topology
+or covering space theory needed.
+
+### ALL topology in the grid proof is PROVED:
+- hpointball: ε-ball preimage from F-continuity + covering map ✅
+- ht_cov: covering reformulation for open_cover_subdivision_01 ✅
+- 1D creeping on t-coordinate per s-piece ✅
+- ht_eps: extraction from covering membership ✅
+- Choice extraction via Hilbert SOME ✅
+- Min(ε_j): positive minimum of finitely many ε's ✅
+- hs_cov: s-covering reformulation ✅
+- 1D creeping on s-coordinate ✅
+- hs_strip': s-piece extraction from covering ✅
+- hgrid_gen: per-s-piece grid existence ✅
 
 ## Fully Proved Key Results:
 - **Lemma_54_1** (path lifting): ZERO SORRIES ✓✓✓
