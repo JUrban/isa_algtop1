@@ -7520,10 +7520,15 @@ proof -
      By compactness of I\<times>I, finite subcover. Lebesgue number \<delta> > 0. Take N > \<surd>2/\<delta>.
      Each 1/N-rectangle has diameter \<surd>2/N < \<delta>, so maps into some U.\<close>
   \<comment> \<open>This requires the metric Lebesgue number lemma for I\<times>I. We sorry this step.\<close>
-  have hgrid: "\<exists>N::nat. N > 0 \<and> (\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
-      \<and> top1_evenly_covered_on E TE B TB p U
-      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
-            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U)"
+  \<comment> \<open>The grid existence proof. We build an s-subdivision with per-s-piece t-subdivisions,
+     then derive a single m \<times> n grid via common refinement.\<close>
+  have hgrid_gen: "\<exists>ns\<ge>1. \<exists>sub_s :: nat \<Rightarrow> real. sub_s 0 = 0 \<and> sub_s ns = 1
+      \<and> (\<forall>i<ns. sub_s i < sub_s (Suc i))
+      \<and> (\<forall>i<ns. \<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real. sub_t 0 = 0 \<and> sub_t nt = 1
+          \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+          \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U))"
   proof -
     \<comment> \<open>For each (s0,t0) \<in> I\<times>I, get \<epsilon>>0 and evenly covered U with
        F(ball((s0,t0),\<epsilon>) \<inter> I\<times>I) \<subseteq> U. Bridge from II_topology to \<epsilon>-balls.\<close>
@@ -7882,39 +7887,17 @@ proof -
       show ?thesis
         by (rule that[OF hns' hs0' hsn' hs_inc' hs_strip'])
     qed
-    \<comment> \<open>For each s-piece i, get t-subdivision. Take common refinement and convert to N-grid.\<close>
-    show ?thesis
-      sorry \<comment> \<open>From hs_strip: take N = ns * max(nt_i), each 1/N-rect fits in some (i,j)-piece.\<close>
+    \<comment> \<open>For each s-piece i, get t-subdivision. Use the FIRST t-subdivision (for i=0)
+       as a common subdivision. Actually, hs_strip already gives per-s-piece t-subdivisions.
+       We use hs_strip directly to satisfy the general grid form.\<close>
+    \<comment> \<open>We need a SINGLE t-subdivision for all s-pieces. Take common refinement.
+       For simplicity, we sorry this final combinatorial step and proceed with
+       the non-uniform grid directly.\<close>
+    show ?thesis using hns hs_0 hs_n hs_inc hs_strip by (by100 blast)
   qed
-  then obtain N :: nat where hN: "N > 0" and hNgrid: "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
-      \<and> top1_evenly_covered_on E TE B TB p U
-      \<and> F ` ({s\<in>I_set. real i/real N \<le> s \<and> s \<le> real(Suc i)/real N}
-            \<times> {t\<in>I_set. real j/real N \<le> t \<and> t \<le> real(Suc j)/real N}) \<subseteq> U"
-    by auto
-  \<comment> \<open>Step 5: Rectangle-by-rectangle construction.
-     Textbook (Munkres 54.2): Define Ftilde on each rectangle I_i \<times> J_j by
-     Ftilde(x) = (p|V0)\<inverse>(F(x)), where V0 is the slice containing Ftilde on the
-     boundary C = A \<inter> (I_i \<times> J_j), with A = previous region.
 
-     We define Ftilde as a single function: on each rectangle, it equals
-     (p|V_{ij})\<inverse> \<circ> F for the appropriate slice V_{ij}. The slice V_{ij} is
-     determined by the value of Ftilde at the lower-left corner of the rectangle,
-     which is a grid point already computed from previous rectangles.
-
-     For the lower-left corner (s_i, t_j):
-     - (0, 0): Ftilde = e0 (given)
-     - (s_i, 0): Ftilde = bot_lift(s_i) (from bottom edge lift)
-     - (0, t_j): Ftilde = left_lift(t_j) (from left edge lift)
-     - (s_i, t_j) for i,j>0: Ftilde = value from previous rectangle
-
-     The key property: on the boundary C of each rectangle, the previously
-     defined Ftilde is connected and lies in p\<inverse>(U_{ij}). Since C is connected
-     and the slices are disjoint open, Ftilde(C) lies in one slice V0.
-     Then Ftilde = (p|V0)\<inverse> \<circ> F on the rectangle agrees with the previous
-     definition on C (both are in V0 and lift F, so equal by p-injectivity).\<close>
-
-  \<comment> \<open>Define the grid point values by induction.\<close>
-  \<comment> \<open>Step 3: Lebesgue grid. Compactness of I\<times>I gives fine enough subdivisions.\<close>
+  \<comment> \<open>Step 5: Derive a single m \<times> n grid from hgrid_gen by taking the common
+     refinement of the per-s-piece t-subdivisions.\<close>
   obtain m n sub_s sub_t where
       hm: "m \<ge> 1" and hn: "n \<ge> 1"
       and hs0: "sub_s 0 = 0" and hsm: "sub_s m = 1"
@@ -7925,33 +7908,12 @@ proof -
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                 \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-  proof -
-    \<comment> \<open>Instantiate from N-based grid: m = n = N, sub_s i = i/N, sub_t j = j/N.\<close>
-    define sub_s where "sub_s = (\<lambda>i. real i / real N)"
-    define sub_t where "sub_t = (\<lambda>j. real j / real N)"
-    have hs0: "sub_s 0 = 0" unfolding sub_s_def by simp
-    have hsN: "sub_s N = 1" unfolding sub_s_def using hN by simp
-    have ht0: "sub_t 0 = 0" unfolding sub_t_def by simp
-    have htN: "sub_t N = 1" unfolding sub_t_def using hN by simp
-    have hs_inc: "\<forall>i<N. sub_s i < sub_s (Suc i)"
-      unfolding sub_s_def using hN by (intro allI impI) (simp add: divide_strict_right_mono)
-    have ht_inc: "\<forall>j<N. sub_t j < sub_t (Suc j)"
-      unfolding sub_t_def using hN by (intro allI impI) (simp add: divide_strict_right_mono)
-    have heq_s: "\<forall>i<N. {s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
-        = {s\<in>I_set. real i / real N \<le> s \<and> s \<le> real (Suc i) / real N}"
-      unfolding sub_s_def by simp
-    have heq_t: "\<forall>j<N. {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}
-        = {t\<in>I_set. real j / real N \<le> t \<and> t \<le> real (Suc j) / real N}"
-      unfolding sub_t_def by simp
-    have hgrid': "\<forall>i<N. \<forall>j<N. \<exists>U. openin_on B TB U
-        \<and> top1_evenly_covered_on E TE B TB p U
-        \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
-              \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-      using hNgrid heq_s heq_t by simp
-    show ?thesis
-      using hN
-      by (intro that[of N N sub_s sub_t]) (simp_all add: hs0 hsN ht0 htN hs_inc ht_inc hgrid')
-  qed
+    sorry \<comment> \<open>From hgrid_gen: merge per-s-piece t-subdivisions into common refinement.
+          Each s-piece has its own t-subdivision. The common refinement of all
+          t-subdivisions (finitely many, by finite union of subdivision points)
+          gives a single t-subdivision that refines all. Each sub-rectangle of
+          the common refinement is contained in some original rectangle, hence
+          maps into the corresponding evenly covered U.\<close>
   \<comment> \<open>Step 4: Rectangle-by-rectangle construction (textbook Munkres 54.2).
      Induction on linearized index k = j*m + i over rectangles.
      Invariant: Ftilde continuous on A_k, lifts F, starts at e0.
