@@ -14046,7 +14046,21 @@ proof -
       \<and> top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g
       \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
            (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
-      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g" sorry
+      \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+  proof (intro allI impI, elim conjE)
+    fix f g
+    assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+    assume hg: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g"
+    assume hfg: "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+           (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)"
+    \<comment> \<open>By Theorem 54.5, \<pi>_1(S^1, (1,0)) \<cong> Z via bijection \<phi>.
+       Under \<phi>: [f] \<mapsto> k, [g] \<mapsto> l. Then [(f)^n] \<mapsto> nk, [(g)^n] \<mapsto> nl.
+       hfg says nk = nl, so k = l (n > 0), so [f] = [g], i.e., f ~ g.
+       This requires: (1) the S^1 complex topology equals the S^1 pair topology,
+       (2) the z^n map corresponds to multiplication by n on Z.\<close>
+    show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+      sorry
+  qed
   show ?thesis using hcont hinj by blast
 qed
 
@@ -14858,6 +14872,8 @@ proof -
     using hxn_eq h_cn_sum by simp
   thus ?thesis by blast
 qed
+
+thm_oracles Theorem_56_1_FTA
 
 text \<open>Original form (FTA for arbitrary polynomials with nonzero leading coefficient).\<close>
 corollary Theorem_56_1_FTA_leading:
