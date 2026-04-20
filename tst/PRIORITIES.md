@@ -1,43 +1,36 @@
 # Priorities and Issues for AlgTop Formalization
 
-## Status: 155 sorries, builds in ~32s, 20000+ lines
+## Status: 18 sorry statements, builds in ~33s, 21000+ lines
 
-## FTA — 1 RECURSIVE SORRY FROM COMPLETE
+## FTA — COMPLETE! ZERO SORRIES!
 
-### FTA Recursive Dependency Chain:
-| Component | Sorries | Status |
-|-----------|---------|--------|
-| Lemma_54_1 (path lifting) | **0** | ✅ COMPLETE |
-| Lemma_54_2 (homotopy lifting) | **1** | common refinement only |
-| homotopy_lifting_rectangle_step | **0** | ✅ COMPLETE |
-| Theorem_54_3 (homotopic lifts) | 0 | ✅ |
-| Theorem_54_5 (π₁(S¹) ≅ ℤ) | 0 | ✅ |
-| FTA Step 2 | 0 | ✅ |
-| FTA Step 3 | 0 | ✅ |
-| FTA (main theorem) | 0 | ✅ |
+### FTA Proof Chain (all ZERO sorries):
+| Component | Line | Status |
+|-----------|------|--------|
+| Lemma_54_1 (path lifting) | 6222 | ✅ ZERO SORRY |
+| homotopy_lifting_rectangle_step | 7040 | ✅ ZERO SORRY |
+| grid_from_per_piece_subdivisions | 7455 | ✅ ZERO SORRY |
+| Lemma_54_2 (homotopy lifting) | 7938 | ✅ ZERO SORRY |
+| Theorem_54_3 (homotopic lifts) | 9559 | ✅ ZERO SORRY |
+| Theorem_54_5 (π₁(S¹) ≅ ℤ) | 10620 | ✅ ZERO SORRY |
+| **Theorem_56_1_FTA** | **14771** | **✅ ZERO SORRY** |
 
-### The 1 remaining Lemma_54_2 sorry:
-**Common refinement** (line ~7911): Convert per-s-piece t-subdivisions
-(from hgrid_gen) into a single m×n grid via common refinement of
-finitely many sorted sequences. Pure combinatorial step — NO topology
-or covering space theory needed.
+## Remaining 18 sorries (all independent of FTA):
 
-### ALL topology in the grid proof is PROVED:
-- hpointball: ε-ball preimage from F-continuity + covering map ✅
-- ht_cov: covering reformulation for open_cover_subdivision_01 ✅
-- 1D creeping on t-coordinate per s-piece ✅
-- ht_eps: extraction from covering membership ✅
-- Choice extraction via Hilbert SOME ✅
-- Min(ε_j): positive minimum of finitely many ε's ✅
-- hs_cov: s-covering reformulation ✅
-- 1D creeping on s-coordinate ✅
-- hs_strip': s-piece extraction from covering ✅
-- hgrid_gen: per-s-piece grid existence ✅
-
-## Fully Proved Key Results:
-- **Lemma_54_1** (path lifting): ZERO SORRIES ✓✓✓
-- **homotopy_lifting_rectangle_step**: ZERO SORRIES ✓✓✓
-- **Theorem_54_5** (π₁(S¹) ≅ ℤ): ZERO SORRIES ✓
-- **FTA** Steps 2, 3, 4: ZERO SORRIES ✓
-- **Theorem_53_1** (R→S¹ covering): ZERO SORRIES ✓
-- Corollary_55_4, nulhomotopic_trivializes: ZERO SORRIES ✓
+| Line | Theorem | Chapter |
+|------|---------|---------|
+| 15013 | Theorem_57_1 (Borsuk-Ulam) | §57 |
+| 16897,16906 | Theorem_59_1 (loop decomposition) | §59 |
+| 17693 | stereographic_proj_homeomorphism | §60 |
+| 17699 | R2_simply_connected | §60 |
+| 17706 | S2_minus_point_simply_connected | §60 |
+| 18034 | S2_minus_two_points_not_sc | §61 |
+| 18043 | map_into_S2_minus_point_nulhomotopic | §61 |
+| 18217,18225,18231 | Theorem_62_3 (invariance of domain) | §62 |
+| 18295 | Theorem_63_2 (arc no separation) | §63 |
+| 18385 | Theorem_63_4 (Jordan Curve) | §63 |
+| 18504 | Lemma_65_1 (K4 subgraph) | §65 |
+| 19527 | Theorem_68_7 (quotient free product) | §68 |
+| 19571 | Theorem_69_2 | §69 |
+| 20098 | Theorem_70_2 (Seifert-van Kampen) | §70 |
+| 21231 | Theorem_84_7 (fund group of graph) | §84 |
