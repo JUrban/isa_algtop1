@@ -7476,8 +7476,42 @@ proof -
       and htinc_f: "\<forall>i<ns. \<forall>j<nt_f i. sub_t_f i j < sub_t_f i (Suc j)"
       and hcov_f: "\<forall>i<ns. \<forall>j<nt_f i. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                           {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-    sorry \<comment> \<open>Choice from hstrip. Same Hilbert SOME pattern as in commented-out proof.\<close>
-    \<comment> \<open>NOTE: this sorry + hT_01 + hrefines are the last 3 sorries blocking FTA.\<close>
+  proof -
+    define pick where "pick i = (SOME p :: nat \<times> (nat \<Rightarrow> real).
+        fst p \<ge> 1 \<and> snd p 0 = 0 \<and> snd p (fst p) = 1
+        \<and> (\<forall>j<fst p. snd p j < snd p (Suc j))
+        \<and> (\<forall>j<fst p. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                          {t. snd p j \<le> t \<and> t \<le> snd p (Suc j)}))" for i
+    have hpick: "\<forall>i<ns. fst (pick i) \<ge> 1 \<and> snd (pick i) 0 = 0
+        \<and> snd (pick i) (fst (pick i)) = 1
+        \<and> (\<forall>j<fst (pick i). snd (pick i) j < snd (pick i) (Suc j))
+        \<and> (\<forall>j<fst (pick i). P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                                  {t. snd (pick i) j \<le> t \<and> t \<le> snd (pick i) (Suc j)})"
+    proof (intro allI impI)
+      fix i assume hi: "i < ns"
+      from hstrip[rule_format, OF hi] obtain nt st where
+          "nt \<ge> 1" "st 0 = (0::real)" "st nt = 1"
+          "\<forall>j<nt. st j < st (Suc j)"
+          "\<forall>j<nt. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)} {t. st j \<le> t \<and> t \<le> st (Suc j)}"
+        by auto
+      hence "\<exists>p :: nat \<times> (nat \<Rightarrow> real). fst p \<ge> 1 \<and> snd p 0 = 0 \<and> snd p (fst p) = 1
+          \<and> (\<forall>j<fst p. snd p j < snd p (Suc j))
+          \<and> (\<forall>j<fst p. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                              {t. snd p j \<le> t \<and> t \<le> snd p (Suc j)})"
+        by (intro exI[of _ "(nt, st)"]) simp
+      thus "fst (pick i) \<ge> 1 \<and> snd (pick i) 0 = 0
+          \<and> snd (pick i) (fst (pick i)) = 1
+          \<and> (\<forall>j<fst (pick i). snd (pick i) j < snd (pick i) (Suc j))
+          \<and> (\<forall>j<fst (pick i). P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
+                                      {t. snd (pick i) j \<le> t \<and> t \<le> snd (pick i) (Suc j)})"
+        unfolding pick_def by (rule someI_ex)
+    qed
+    define nt_f where "nt_f i = fst (pick i)" for i
+    define sub_t_f where "sub_t_f i = snd (pick i)" for i
+    show ?thesis
+      using hpick unfolding nt_f_def sub_t_f_def
+      by (intro that[where nt_f=nt_f and sub_t_f=sub_t_f]) (auto simp: nt_f_def sub_t_f_def)
+  qed
   \<comment> \<open>Collect all t-boundary points.\<close>
   define T_pts where "T_pts = (\<Union>i\<in>{0..<ns}. sub_t_f i ` {0..nt_f i})"
   have hT_fin: "finite T_pts" unfolding T_pts_def by simp
@@ -7525,7 +7559,27 @@ proof -
     then obtain i j where hi: "i < ns" and hj: "j \<le> nt_f i" and heq: "t = sub_t_f i j"
       unfolding T_pts_def by force
     have hfj_mono: "\<forall>a b. a \<le> b \<and> b \<le> nt_f i \<longrightarrow> sub_t_f i a \<le> sub_t_f i b"
-      sorry \<comment> \<open>Monotonicity of sub_t_f i, from htinc_f. Same as hsub_s_mono pattern.\<close>
+    proof (intro allI impI)
+      fix a b :: nat assume hab: "a \<le> b \<and> b \<le> nt_f i"
+      show "sub_t_f i a \<le> sub_t_f i b" using hab
+      proof (induction "b - a" arbitrary: b)
+        case 0 thus ?case by simp
+      next
+        case (Suc d)
+        hence "b > 0" by simp
+        then obtain b' where hb': "b = Suc b'" using gr0_implies_Suc by (by100 blast)
+        have "a \<le> b'" using Suc.hyps(2) hb' by simp
+        have "b' \<le> nt_f i" using Suc.prems hb' by simp
+        have "d = b' - a" using Suc.hyps(2) hb' by simp
+        have "sub_t_f i a \<le> sub_t_f i b'"
+          using Suc.hyps(1)[OF \<open>d = b' - a\<close>] \<open>a \<le> b'\<close> \<open>b' \<le> nt_f i\<close> by simp
+        have "b' < nt_f i" using \<open>b' \<le> nt_f i\<close> hb' Suc.prems by simp
+        have "sub_t_f i b' \<le> sub_t_f i (Suc b')"
+          using htinc_f[rule_format, OF hi \<open>b' < nt_f i\<close>] by simp
+        show ?case using \<open>sub_t_f i a \<le> sub_t_f i b'\<close> \<open>sub_t_f i b' \<le> sub_t_f i (Suc b')\<close>
+          hb' by simp
+      qed
+    qed
     show "0 \<le> t" using hfj_mono[rule_format, of 0 j] hj ht0_f[rule_format, OF hi] heq by simp
     show "t \<le> 1" using hfj_mono[rule_format, of j "nt_f i"] hj htn_f[rule_format, OF hi] heq by simp
   qed
