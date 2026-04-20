@@ -7908,12 +7908,11 @@ proof -
           \<and> top1_evenly_covered_on E TE B TB p U
           \<and> F ` ({s\<in>I_set. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                 \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
-    sorry \<comment> \<open>From hgrid_gen: merge per-s-piece t-subdivisions into common refinement.
-          Each s-piece has its own t-subdivision. The common refinement of all
-          t-subdivisions (finitely many, by finite union of subdivision points)
-          gives a single t-subdivision that refines all. Each sub-rectangle of
-          the common refinement is contained in some original rectangle, hence
-          maps into the corresponding evenly covered U.\<close>
+    using hgrid_gen sorry
+    \<comment> \<open>Common refinement: from hgrid_gen (per-s-piece t-subdivisions),
+       merge all t-boundary points into sorted list → single n.
+       Each rectangle in the common m\<times>n grid fits in some original rectangle.
+       Pure combinatorial step; all topology/covering arguments DONE.\<close>
   \<comment> \<open>Step 4: Rectangle-by-rectangle construction (textbook Munkres 54.2).
      Induction on linearized index k = j*m + i over rectangles.
      Invariant: Ftilde continuous on A_k, lifts F, starts at e0.
