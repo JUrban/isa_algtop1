@@ -7801,7 +7801,25 @@ proof -
                         \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)}"
       have hs_cov: "\<forall>s0. 0 \<le> s0 \<and> s0 \<le> 1 \<longrightarrow>
           (\<exists>V\<in>\<B>. s0 \<in> V \<and> (\<exists>\<epsilon>>0. {s'. \<bar>s' - s0\<bar> < \<epsilon> \<and> 0 \<le> s' \<and> s' \<le> 1} \<subseteq> V))"
-        sorry \<comment> \<open>From hstrip + definition of \<B>.\<close>
+      proof (intro allI impI)
+        fix s0 :: real assume hs0': "0 \<le> s0 \<and> s0 \<le> 1"
+        have hs0_I: "s0 \<in> I_set" using hs0' unfolding top1_unit_interval_def by simp
+        obtain \<epsilon>s nt sub_t where h\<epsilon>s: "\<epsilon>s > 0" and hnt: "nt \<ge> 1"
+            and hsub0: "sub_t (0::nat) = (0::real)" and hsubn: "sub_t nt = 1"
+            and ht_inc: "\<forall>j<nt. sub_t j < sub_t (Suc j)"
+            and hcov': "\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                      \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+          using hstrip[rule_format, OF hs0_I] by auto
+        define V where "V = {s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}"
+        have "V \<in> \<B>"
+          unfolding \<B>_def V_def using hs0_I h\<epsilon>s hnt hsub0 hsubn ht_inc hcov' by auto
+        moreover have "s0 \<in> V" unfolding V_def using hs0_I h\<epsilon>s by simp
+        moreover have "\<exists>\<epsilon>>0. {s'. \<bar>s' - s0\<bar> < \<epsilon> \<and> 0 \<le> s' \<and> s' \<le> 1} \<subseteq> V"
+          using h\<epsilon>s unfolding V_def top1_unit_interval_def by (intro exI[of _ \<epsilon>s]) auto
+        ultimately show "\<exists>V\<in>\<B>. s0 \<in> V \<and> (\<exists>\<epsilon>>0. {s'. \<bar>s' - s0\<bar> < \<epsilon> \<and> 0 \<le> s' \<and> s' \<le> 1} \<subseteq> V)"
+          by blast
+      qed
       obtain ns sub_s' where hns': "ns \<ge> 1" and hs0': "sub_s' (0::nat) = (0::real)"
           and hsn': "sub_s' ns = 1"
           and hs_inc': "\<forall>i<ns. sub_s' i < sub_s' (Suc i)"
@@ -7814,7 +7832,53 @@ proof -
             \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
                 \<and> F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
                       \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
-        sorry \<comment> \<open>From hs_cov2 + \<B> definition: extract strip and use [sub_s' i, sub_s'(i+1)] \<subseteq> \<epsilon>s-ball.\<close>
+      proof (intro allI impI)
+        fix i assume hi: "i < ns"
+        obtain V where hVB: "V \<in> \<B>"
+            and hVsub: "{s. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> V"
+          using hs_cov2[rule_format, OF hi] by blast
+        \<comment> \<open>Extract from V \<in> \<B>.\<close>
+        obtain s0_i \<epsilon>s_i nt_i sub_t_i where
+            hs0i: "s0_i \<in> I_set" and h\<epsilon>si: "\<epsilon>s_i > 0" and hnti: "nt_i \<ge> 1"
+            and ht0i: "sub_t_i 0 = (0::real)" and htni: "sub_t_i nt_i = 1"
+            and htinci: "\<forall>j<nt_i. sub_t_i j < sub_t_i (Suc j)"
+            and hcovi: "\<forall>j<nt_i. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. \<bar>s - s0_i\<bar> < \<epsilon>s_i}
+                      \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)}) \<subseteq> U"
+            and hVeq: "V = {s\<in>I_set. \<bar>s - s0_i\<bar> < \<epsilon>s_i}"
+          using hVB unfolding \<B>_def by auto
+        \<comment> \<open>[sub_s' i, sub_s'(i+1)] \<subseteq> V = {s\<in>I. |s-s0_i| < \<epsilon>s_i}.\<close>
+        have hpiece_sub: "{s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)} \<subseteq> V"
+          using hVsub unfolding top1_unit_interval_def by auto
+        \<comment> \<open>Strip property with [sub_s' i, sub_s'(i+1)] instead of \<epsilon>s-ball.\<close>
+        have "\<forall>j<nt_i. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+            \<and> F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
+                  \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)}) \<subseteq> U"
+        proof (intro allI impI)
+          fix j assume hj: "j < nt_i"
+          obtain Uj where hUjo: "openin_on B TB Uj" and hUjec: "top1_evenly_covered_on E TE B TB p Uj"
+              and hFsub: "F ` ({s\<in>I_set. \<bar>s - s0_i\<bar> < \<epsilon>s_i}
+                    \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)}) \<subseteq> Uj"
+            using hcovi[rule_format, OF hj] by blast
+          have "F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
+                \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)})
+              \<subseteq> F ` ({s\<in>I_set. \<bar>s - s0_i\<bar> < \<epsilon>s_i}
+                    \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)})"
+            using hpiece_sub hVeq by auto
+          also have "\<dots> \<subseteq> Uj" by (rule hFsub)
+          finally show "\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
+                    \<times> {t\<in>I_set. sub_t_i j \<le> t \<and> t \<le> sub_t_i (Suc j)}) \<subseteq> U"
+            using hUjo hUjec by blast
+        qed
+        thus "\<exists>nt\<ge>1. \<exists>sub_t :: nat \<Rightarrow> real.
+            sub_t 0 = 0 \<and> sub_t nt = 1
+            \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+            \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+                \<and> F ` ({s\<in>I_set. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)}
+                      \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+          using hnti ht0i htni htinci by blast
+      qed
       show ?thesis
         by (rule that[OF hns' hs0' hsn' hs_inc' hs_strip'])
     qed
