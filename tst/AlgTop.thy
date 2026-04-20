@@ -7629,7 +7629,22 @@ proof -
               \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U}"
       have ht_cov: "\<forall>t0. 0 \<le> t0 \<and> t0 \<le> 1 \<longrightarrow>
           (\<exists>V\<in>\<A>. t0 \<in> V \<and> (\<exists>\<epsilon>>0. {t'. \<bar>t' - t0\<bar> < \<epsilon> \<and> 0 \<le> t' \<and> t' \<le> 1} \<subseteq> V))"
-        sorry \<comment> \<open>From hpointball + definition of \<A>.\<close>
+      proof (intro allI impI)
+        fix t0 :: real assume ht0: "0 \<le> t0 \<and> t0 \<le> 1"
+        have ht0_I: "t0 \<in> I_set" using ht0 unfolding top1_unit_interval_def by simp
+        obtain \<epsilon> Uc where h\<epsilon>: "\<epsilon> > 0" and hUo: "openin_on B TB Uc"
+            and hUec: "top1_evenly_covered_on E TE B TB p Uc"
+            and hFsub: "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> Uc"
+          using hpointball[rule_format, OF hs0 ht0_I] by (by100 blast)
+        define V where "V = {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}"
+        have "V \<in> \<A>"
+          unfolding \<A>_def V_def using ht0_I h\<epsilon> hUo hUec hFsub by (by100 blast)
+        moreover have "t0 \<in> V" unfolding V_def using ht0_I h\<epsilon> by simp
+        moreover have "\<exists>\<epsilon>'>0. {t'. \<bar>t' - t0\<bar> < \<epsilon>' \<and> 0 \<le> t' \<and> t' \<le> 1} \<subseteq> V"
+          using h\<epsilon> unfolding V_def top1_unit_interval_def by (intro exI[of _ \<epsilon>]) (by100 auto)
+        ultimately show "\<exists>V\<in>\<A>. t0 \<in> V \<and> (\<exists>\<epsilon>>0. {t'. \<bar>t' - t0\<bar> < \<epsilon> \<and> 0 \<le> t' \<and> t' \<le> 1} \<subseteq> V)"
+          by (by100 blast)
+      qed
       \<comment> \<open>Step 2: Apply open_cover_subdivision_01.\<close>
       obtain nt sub_t where hnt: "nt \<ge> 1" and ht0': "sub_t (0::nat) = (0::real)"
           and htn: "sub_t nt = 1"
