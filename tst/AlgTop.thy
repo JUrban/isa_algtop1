@@ -7638,10 +7638,109 @@ proof -
   \<comment> \<open>Each piece [sub_t' k, sub_t'(k+1)] is contained in some piece of every subdivision.\<close>
   have hrefines: "\<forall>i<ns. \<forall>k<n. \<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
       \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-    sorry \<comment> \<open>Core refinement property: sub_t' k and sub_t'(k+1) are consecutive in sorted list.
-       No boundary of subdivision i lies strictly between them (all in T_pts = set tlist).
-       So both lie in the same piece of subdivision i.
-       Formal proof uses sorted_nth_mono + in_set_conv_nth.\<close>
+  proof (intro allI impI)
+    fix i k assume hi: "i < ns" and hk: "k < n"
+    have hk_len: "k < length tlist" using hk hlen unfolding n_def by simp
+    have hSk_len: "Suc k < length tlist" using hk unfolding n_def by simp
+    have hk2: "k < length tlist - 1" using hk unfolding n_def .
+    \<comment> \<open>sub_t' k \<in> [0,1].\<close>
+    have hsk_T: "sub_t' k \<in> T_pts"
+    proof -
+      have "sub_t' k = tlist ! k" unfolding sub_t'_def using hk_len by simp
+      hence "sub_t' k \<in> set tlist" using hk_len by simp
+      thus ?thesis using hset by simp
+    qed
+    have hsk_01: "0 \<le> sub_t' k \<and> sub_t' k \<le> 1" using hT_01 hsk_T by (by100 blast)
+    \<comment> \<open>Find piece j of subdivision i containing sub_t' k.\<close>
+    have hnt: "nt_f i \<ge> 1" using hnt_f[rule_format, OF hi] .
+    have hinc_i: "\<forall>j'<nt_f i. sub_t_f i j' < sub_t_f i (Suc j')"
+      using htinc_f hi by auto
+    have h1: "sub_t_f i 0 \<le> sub_t' k" using ht0_f[rule_format, OF hi] hsk_01 by simp
+    have h2: "sub_t' k \<le> sub_t_f i (nt_f i)" using htn_f[rule_format, OF hi] hsk_01 by simp
+    obtain j where hj: "j < nt_f i"
+        and hj_le: "sub_t_f i j \<le> sub_t' k"
+        and hj_ge: "sub_t' k \<le> sub_t_f i (Suc j)"
+    proof -
+      from increasing_interval_cover[OF hnt h1 h2 hinc_i]
+      obtain j' where "j' < nt_f i" "sub_t_f i j' \<le> sub_t' k" "sub_t' k \<le> sub_t_f i (Suc j')"
+        by blast
+      thus ?thesis using that by blast
+    qed
+    \<comment> \<open>Show: \<exists>j' with [sub_t' k, sub_t'(k+1)] \<subseteq> [sub_t_f i j', sub_t_f i (j'+1)].
+       Case 1: sub_t' k < sub_t_f i (j+1). Use j' = j.
+       Case 2: sub_t' k = sub_t_f i (j+1). Use j' = j+1 (if it exists).\<close>
+    show "\<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
+        \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
+    proof (cases "sub_t' k < sub_t_f i (Suc j)")
+      case True
+      \<comment> \<open>sub_t_f i (j+1) > sub_t' k = tlist!k. So its position m > k, i.e., m \<ge> k+1.\<close>
+      have hSj_T: "sub_t_f i (Suc j) \<in> T_pts"
+        unfolding T_pts_def using hi hj by force
+      hence "sub_t_f i (Suc j) \<in> set tlist" using hset by simp
+      then obtain m where hm_len: "m < length tlist"
+          and hm_eq: "tlist ! m = sub_t_f i (Suc j)" by (metis in_set_conv_nth)
+      have "m > k"
+      proof (rule ccontr)
+        assume "\<not> m > k" hence "m \<le> k" by simp
+        have "tlist ! m \<le> tlist ! k"
+          using sorted_nth_mono[OF hsort, of m k] \<open>m \<le> k\<close> hk_len by simp
+        hence "sub_t_f i (Suc j) \<le> sub_t' k"
+          using hm_eq unfolding sub_t'_def using hk_len by simp
+        thus False using True by simp
+      qed
+      hence "m \<ge> Suc k" by simp
+      hence "tlist ! (Suc k) \<le> tlist ! m"
+        using sorted_nth_mono[OF hsort, of "Suc k" m] hm_len by simp
+      hence "sub_t' (Suc k) \<le> sub_t_f i (Suc j)"
+        using hm_eq unfolding sub_t'_def using hSk_len by simp
+      thus ?thesis using hj hj_le by (intro exI[of _ j]) auto
+    next
+      case False
+      hence heq: "sub_t' k = sub_t_f i (Suc j)" using hj_ge by simp
+      \<comment> \<open>sub_t' k = sub_t_f i (j+1). If j+1 = nt_f i, then sub_t' k = 1, contradiction.\<close>
+      have "Suc j < nt_f i"
+      proof (rule ccontr)
+        assume "\<not> Suc j < nt_f i"
+        hence "Suc j = nt_f i" using hj by simp
+        hence "sub_t' k = 1" using heq htn_f[rule_format, OF hi] by simp
+        have "sub_t' k < sub_t' (Suc k)" using hsinc hk by (by100 blast)
+        hence "1 < sub_t' (Suc k)" using \<open>sub_t' k = 1\<close> by simp
+        have "sub_t' (Suc k) \<in> T_pts"
+        proof -
+          have "sub_t' (Suc k) = tlist ! (Suc k)" unfolding sub_t'_def using hSk_len by simp
+          hence "sub_t' (Suc k) \<in> set tlist" using hSk_len by simp
+          thus ?thesis using hset by simp
+        qed
+        hence "sub_t' (Suc k) \<le> 1" using hT_01 by (by100 blast)
+        thus False using \<open>1 < sub_t' (Suc k)\<close> by simp
+      qed
+      \<comment> \<open>Use piece j+1. Left: sub_t_f i (j+1) = sub_t' k. Right: need sub_t'(k+1) \<le> sub_t_f i (j+2).\<close>
+      have hSj_lt: "Suc j < nt_f i" by (rule \<open>Suc j < nt_f i\<close>)
+      have hSSj_T: "sub_t_f i (Suc (Suc j)) \<in> T_pts"
+        unfolding T_pts_def using hi hSj_lt by force
+      hence "sub_t_f i (Suc (Suc j)) \<in> set tlist" using hset by simp
+      then obtain m2 where hm2_len: "m2 < length tlist"
+          and hm2_eq: "tlist ! m2 = sub_t_f i (Suc (Suc j))" by (metis in_set_conv_nth)
+      have "sub_t_f i (Suc (Suc j)) > sub_t_f i (Suc j)"
+        using htinc_f[rule_format, OF hi hSj_lt] .
+      hence "sub_t_f i (Suc (Suc j)) > sub_t' k" using heq by simp
+      hence htm2_gt: "tlist ! m2 > tlist ! k"
+        using hm2_eq unfolding sub_t'_def using hk_len by simp
+      have "m2 > k"
+      proof (rule ccontr)
+        assume "\<not> m2 > k" hence "m2 \<le> k" by simp
+        have "tlist ! m2 \<le> tlist ! k"
+          using sorted_nth_mono[OF hsort, of m2 k] \<open>m2 \<le> k\<close> hk_len by simp
+        thus False using htm2_gt by simp
+      qed
+      hence "m2 \<ge> Suc k" by simp
+      hence "tlist ! (Suc k) \<le> tlist ! m2"
+        using sorted_nth_mono[OF hsort, of "Suc k" m2] hm2_len by simp
+      hence "sub_t' (Suc k) \<le> sub_t_f i (Suc (Suc j))"
+        using hm2_eq unfolding sub_t'_def using hSk_len by simp
+      thus ?thesis using hSj_lt heq by (intro exI[of _ "Suc j"]) auto
+    qed
+  qed
   \<comment> \<open>By P-monotonicity, conclude.\<close>
   have "\<forall>i<ns. \<forall>k<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                             {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
