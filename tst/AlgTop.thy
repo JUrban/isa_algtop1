@@ -7616,7 +7616,81 @@ proof -
         \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
             \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
                   \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
-      sorry \<comment> \<open>Tube lemma + 1D creeping on t-coordinate.\<close>
+    proof (intro ballI)
+      fix s0 assume hs0: "s0 \<in> I_set"
+      \<comment> \<open>For each t0 \<in> I: hpointball gives \<epsilon>>0, U with F(\<epsilon>-square at (s0,t0)) \<subseteq> U.
+         The t-balls cover I. Apply open_cover_subdivision_01 on t.
+         Get t-subdivision. For each piece j, the \<epsilon> gives s-width.
+         Take min \<epsilon> over all pieces = \<epsilon>s.\<close>
+      \<comment> \<open>Step 1: Build cover for open_cover_subdivision_01.\<close>
+      define \<A> where "\<A> = (\<lambda>(t0, \<epsilon>, U). {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>})
+          ` {(t0, \<epsilon>, U). t0 \<in> I_set \<and> \<epsilon> > 0 \<and> openin_on B TB U
+              \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U}"
+      have ht_cov: "\<forall>t0. 0 \<le> t0 \<and> t0 \<le> 1 \<longrightarrow>
+          (\<exists>V\<in>\<A>. t0 \<in> V \<and> (\<exists>\<epsilon>>0. {t'. \<bar>t' - t0\<bar> < \<epsilon> \<and> 0 \<le> t' \<and> t' \<le> 1} \<subseteq> V))"
+        sorry \<comment> \<open>From hpointball + definition of \<A>.\<close>
+      \<comment> \<open>Step 2: Apply open_cover_subdivision_01.\<close>
+      obtain nt sub_t where hnt: "nt \<ge> 1" and ht0': "sub_t (0::nat) = (0::real)"
+          and htn: "sub_t nt = 1"
+          and ht_inc: "\<forall>j<nt. sub_t j < sub_t (Suc j)"
+          and ht_cov2: "\<forall>j<nt. \<exists>V\<in>\<A>. {t. sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+        using open_cover_subdivision_01[OF ht_cov] by (by100 auto)
+      \<comment> \<open>Step 3: For each j, the covering set V_j \<in> \<A> gives \<epsilon>_j with
+         F({s:|s-s0|<\<epsilon>_j} \<times> V_j) \<subseteq> U_j and [t_j,t_{j+1}] \<subseteq> V_j.
+         So F({s:|s-s0|<\<epsilon>_j} \<times> [t_j,t_{j+1}]) \<subseteq> U_j.
+         Take \<epsilon>s = min of \<epsilon>_j's.\<close>
+      have ht_eps: "\<forall>j<nt. \<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>}
+                \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+        sorry \<comment> \<open>From ht_cov2 + \<A> definition: extract \<epsilon>, U, and use monotonicity.\<close>
+      \<comment> \<open>Extract \<epsilon>s = min over j of \<epsilon>_j.\<close>
+      then obtain eps_j U_j where heps_j: "\<forall>j<nt. eps_j j > 0"
+          and hU_j: "\<forall>j<nt. openin_on B TB (U_j j) \<and> top1_evenly_covered_on E TE B TB p (U_j j)
+              \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < eps_j j}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U_j j"
+        sorry \<comment> \<open>Choice.\<close>
+      define \<epsilon>s where "\<epsilon>s = Min (eps_j ` {0..<nt})"
+      have h\<epsilon>s_pos: "\<epsilon>s > 0"
+      proof -
+        have "finite (eps_j ` {0..<nt})" by simp
+        moreover have "eps_j ` {0..<nt} \<noteq> {}" using hnt by (by100 auto)
+        moreover have "\<forall>e\<in>eps_j ` {0..<nt}. e > 0" using heps_j by (by100 auto)
+        ultimately show ?thesis unfolding \<epsilon>s_def
+          by (metis Min_gr_iff)
+      qed
+      have h\<epsilon>s_le: "\<forall>j<nt. \<epsilon>s \<le> eps_j j"
+        unfolding \<epsilon>s_def by (by100 auto)
+      show "\<exists>\<epsilon>s>0. \<exists>nt\<ge>1. \<exists>sub_t.
+          sub_t 0 = 0 \<and> sub_t nt = 1
+          \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+          \<and> (\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U)"
+      proof (intro exI conjI)
+        show "\<epsilon>s > 0" by (rule h\<epsilon>s_pos)
+        show "nt \<ge> (1::nat)" by (rule hnt)
+        show "sub_t 0 = (0::real)" by (rule ht0')
+        show "sub_t nt = (1::real)" by (rule htn)
+        show "\<forall>j<nt. sub_t j < sub_t (Suc j)" by (rule ht_inc)
+        show "\<forall>j<nt. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+            \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                  \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+        proof (intro allI impI)
+          fix j assume hj: "j < nt"
+          have "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})
+              \<subseteq> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < eps_j j}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)})"
+            using h\<epsilon>s_le[rule_format, OF hj] by (by100 auto)
+          also have "\<dots> \<subseteq> U_j j" using hU_j hj by (by100 blast)
+          finally show "\<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+              \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>s}
+                    \<times> {t\<in>I_set. sub_t j \<le> t \<and> t \<le> sub_t (Suc j)}) \<subseteq> U"
+            using hU_j hj by (by100 blast)
+        qed
+      qed
+    qed
     \<comment> \<open>1D creeping on s-coordinate using \<epsilon>s from hstrip.\<close>
     obtain ns sub_s where hns: "ns \<ge> 1" and hs_0: "sub_s (0::nat) = (0::real)"
         and hs_n: "sub_s ns = 1"
