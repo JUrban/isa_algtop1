@@ -17696,7 +17696,27 @@ text \<open>Key consequence: S^2 minus any point is homeomorphic to R^2, hence s
 lemma R2_simply_connected:
   "top1_simply_connected_on (UNIV :: (real \<times> real) set)
      (product_topology_on top1_open_sets top1_open_sets)"
-  sorry
+  unfolding top1_simply_connected_on_def
+proof (intro conjI allI impI ballI)
+  \<comment> \<open>Part 1: R2 is path-connected. Straight line between any two points.\<close>
+  show "top1_path_connected_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)"
+    sorry
+next
+  \<comment> \<open>Part 2: Every loop is nulhomotopic. Straight-line contraction H(s,t) = (1-t)*f(s) + t*x0.\<close>
+  fix x0 :: "real \<times> real" and f
+  assume hx0: "x0 \<in> (UNIV :: (real \<times> real) set)"
+  assume hf: "top1_is_loop_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) x0 f"
+  \<comment> \<open>Define the straight-line homotopy.\<close>
+  define H where "H = (\<lambda>(s::real, t::real). ((1-t) * fst (f s) + t * fst x0,
+                                               (1-t) * snd (f s) + t * snd x0))"
+  \<comment> \<open>H(s,0) = f(s), H(s,1) = x0, H(0,t) = (1-t)*f(0)+t*x0 = (1-t)*x0+t*x0 = x0,
+     H(1,t) = (1-t)*f(1)+t*x0 = (1-t)*x0+t*x0 = x0 (since f is a loop).\<close>
+  show "top1_path_homotopic_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) x0 x0 f (top1_constant_path x0)"
+    sorry
+qed
 
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
