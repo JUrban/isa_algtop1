@@ -7519,7 +7519,15 @@ proof -
   have hn_pos: "n \<ge> 1" using hlen unfolding n_def by simp
   \<comment> \<open>First element is 0, last is 1.\<close>
   have hT_01: "\<forall>t\<in>T_pts. 0 \<le> t \<and> t \<le> 1"
-    sorry \<comment> \<open>All boundary points are in [0,1] (from sub_t_f monotonicity between 0 and 1).\<close>
+  proof (intro ballI conjI)
+    fix t assume ht: "t \<in> T_pts"
+    then obtain i j where hi: "i < ns" and hj: "j \<le> nt_f i" and heq: "t = sub_t_f i j"
+      unfolding T_pts_def by force
+    have hfj_mono: "\<forall>a b. a \<le> b \<and> b \<le> nt_f i \<longrightarrow> sub_t_f i a \<le> sub_t_f i b"
+      sorry \<comment> \<open>Monotonicity of sub_t_f i, from htinc_f. Same as hsub_s_mono pattern.\<close>
+    show "0 \<le> t" using hfj_mono[rule_format, of 0 j] hj ht0_f[rule_format, OF hi] heq by simp
+    show "t \<le> 1" using hfj_mono[rule_format, of j "nt_f i"] hj htn_f[rule_format, OF hi] heq by simp
+  qed
   have hsub0: "sub_t' 0 = 0"
   proof -
     have "hd tlist \<in> set tlist" using hne by (rule hd_in_set)
@@ -7575,10 +7583,10 @@ proof -
   \<comment> \<open>Each piece [sub_t' k, sub_t'(k+1)] is contained in some piece of every subdivision.\<close>
   have hrefines: "\<forall>i<ns. \<forall>k<n. \<exists>j<nt_f i. {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}
       \<subseteq> {t. sub_t_f i j \<le> t \<and> t \<le> sub_t_f i (Suc j)}"
-    sorry \<comment> \<open>sub_t' k and sub_t'(k+1) are consecutive in the sorted list.
-           No boundary point of subdivision i lies strictly between them
-           (all such points are in T_pts, hence in the sorted list).
-           So both sub_t' k and sub_t'(k+1) lie in the same piece of subdivision i.\<close>
+    sorry \<comment> \<open>Core refinement property: sub_t' k and sub_t'(k+1) are consecutive in sorted list.
+       No boundary of subdivision i lies strictly between them (all in T_pts = set tlist).
+       So both lie in the same piece of subdivision i.
+       Formal proof uses sorted_nth_mono + in_set_conv_nth.\<close>
   \<comment> \<open>By P-monotonicity, conclude.\<close>
   have "\<forall>i<ns. \<forall>k<n. P i {s. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)}
                             {t. sub_t' k \<le> t \<and> t \<le> sub_t' (Suc k)}"
