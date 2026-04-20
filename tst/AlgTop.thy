@@ -7530,7 +7530,84 @@ proof -
     have hpointball: "\<forall>s0\<in>I_set. \<forall>t0\<in>I_set. \<exists>\<epsilon>>0. \<exists>U. openin_on B TB U
         \<and> top1_evenly_covered_on E TE B TB p U
         \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U"
-      sorry \<comment> \<open>Continuity of F + openness of preimage in II_topology + bridge to \<epsilon>-ball.\<close>
+    proof (intro ballI)
+      fix s0 t0 assume hs0: "s0 \<in> I_set" and ht0: "t0 \<in> I_set"
+      \<comment> \<open>F(s0,t0) has evenly covered neighborhood U.\<close>
+      obtain U where hUo: "openin_on B TB U" and hUec: "top1_evenly_covered_on E TE B TB p U"
+          and hFst: "F (s0, t0) \<in> U"
+        using hpointwise hs0 ht0 by (by100 blast)
+      \<comment> \<open>U \<in> TB, so F\<inverse>(U) = {x \<in> I\<times>I. F x \<in> U} is open in II_topology.\<close>
+      have hpreU: "{x \<in> I_set \<times> I_set. F x \<in> U} \<in> II_topology"
+        using assms(4) hUo unfolding II_topology_def top1_continuous_map_on_def openin_on_def
+        by (by100 blast)
+      \<comment> \<open>(s0,t0) \<in> F\<inverse>(U).\<close>
+      have hst_pre: "(s0, t0) \<in> {x \<in> I_set \<times> I_set. F x \<in> U}"
+        using hs0 ht0 hFst by (by100 blast)
+      \<comment> \<open>F\<inverse>(U) open in II_topology = subspace of std R\<times>R topology on I\<times>I.
+         So \<exists>W open in R\<times>R. F\<inverse>(U) = (I\<times>I) \<inter> W.\<close>
+      obtain W where hWo: "open W" and hpre_eq: "{x \<in> I_set \<times> I_set. F x \<in> U} = (I_set \<times> I_set) \<inter> W"
+      proof -
+        have "{x \<in> I_set \<times> I_set. F x \<in> U} \<in> II_topology" by (rule hpreU)
+        hence "{x \<in> I_set \<times> I_set. F x \<in> U}
+            \<in> subspace_topology UNIV (product_topology_on (top1_open_sets :: real set set) top1_open_sets)
+                (I_set \<times> I_set)"
+          unfolding II_topology_def by (rule II_topology_eq_subspace[THEN equalityD1, THEN subsetD])
+        then obtain W' where hW': "W' \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+            and heq: "{x \<in> I_set \<times> I_set. F x \<in> U} = (I_set \<times> I_set) \<inter> W'"
+          unfolding subspace_topology_def by (by100 blast)
+        have "W' \<in> (top1_open_sets :: (real \<times> real) set set)"
+          using hW' product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 blast)
+        hence "open W'" unfolding top1_open_sets_def by (by100 blast)
+        thus ?thesis using heq that by (by100 blast)
+      qed
+      \<comment> \<open>W is open in R\<times>R and contains (s0,t0). Get product neighborhood.\<close>
+      have "(s0, t0) \<in> W" using hst_pre hpre_eq hs0 ht0 by (by100 blast)
+      then obtain Ws Wt where hWso: "open Ws" and hWto: "open Wt"
+          and hst_WW: "(s0, t0) \<in> Ws \<times> Wt" and hWWW: "Ws \<times> Wt \<subseteq> W"
+        using open_prod_elim[OF hWo \<open>(s0, t0) \<in> W\<close>] by (by100 blast)
+      have hs0Ws: "s0 \<in> Ws" and ht0Wt: "t0 \<in> Wt" using hst_WW by (by100 auto)+
+      obtain \<epsilon>_s where h\<epsilon>s: "\<epsilon>_s > 0" and hWss: "\<forall>s. \<bar>s - s0\<bar> < \<epsilon>_s \<longrightarrow> s \<in> Ws"
+      proof -
+        from hWso hs0Ws obtain e where "e > 0" "\<forall>y. dist y s0 < e \<longrightarrow> y \<in> Ws"
+          unfolding open_dist by (by100 blast)
+        thus ?thesis using that unfolding dist_real_def by (by100 blast)
+      qed
+      obtain \<epsilon>_t where h\<epsilon>t: "\<epsilon>_t > 0" and hWtt: "\<forall>t. \<bar>t - t0\<bar> < \<epsilon>_t \<longrightarrow> t \<in> Wt"
+      proof -
+        from hWto ht0Wt obtain e where "e > 0" "\<forall>y. dist y t0 < e \<longrightarrow> y \<in> Wt"
+          unfolding open_dist by (by100 blast)
+        thus ?thesis using that unfolding dist_real_def by (by100 blast)
+      qed
+      define \<epsilon>' where "\<epsilon>' = min \<epsilon>_s \<epsilon>_t"
+      have h\<epsilon>': "\<epsilon>' > 0" using h\<epsilon>s h\<epsilon>t unfolding \<epsilon>'_def by simp
+      have hsquare_ball: "{s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>'} \<subseteq> W"
+      proof (rule subsetI)
+        fix x assume "x \<in> {s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>'}"
+        then obtain s t where hx: "x = (s, t)" and hsd: "\<bar>s - s0\<bar> < \<epsilon>'" and htd: "\<bar>t - t0\<bar> < \<epsilon>'"
+          by (by100 blast)
+        have "s \<in> Ws" using hWss hsd unfolding \<epsilon>'_def by simp
+        moreover have "t \<in> Wt" using hWtt htd unfolding \<epsilon>'_def by simp
+        ultimately have "(s, t) \<in> Ws \<times> Wt" by (by100 blast)
+        thus "x \<in> W" using hWWW hx by (by100 blast)
+      qed
+      have "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>'}) \<subseteq> U"
+      proof (rule image_subsetI)
+        fix x assume hx_sq: "x \<in> {s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>'}"
+        hence "x \<in> W" using hsquare_ball by (by100 blast)
+        moreover have "x \<in> I_set \<times> I_set" using hx_sq by (by100 blast)
+        ultimately have "x \<in> {x \<in> I_set \<times> I_set. F x \<in> U}" using hpre_eq by (by100 blast)
+        thus "F x \<in> U" by (by100 blast)
+      qed
+      show "\<exists>\<epsilon>>0. \<exists>U. openin_on B TB U \<and> top1_evenly_covered_on E TE B TB p U
+          \<and> F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>}) \<subseteq> U"
+      proof (intro exI conjI)
+        show "\<epsilon>' > 0" by (rule h\<epsilon>')
+        show "openin_on B TB U" by (rule hUo)
+        show "top1_evenly_covered_on E TE B TB p U" by (rule hUec)
+        show "F ` ({s\<in>I_set. \<bar>s - s0\<bar> < \<epsilon>'} \<times> {t\<in>I_set. \<bar>t - t0\<bar> < \<epsilon>'}) \<subseteq> U"
+          by (rule \<open>F ` _ \<subseteq> U\<close>)
+      qed
+    qed
     \<comment> \<open>For each s0: 1D creeping on t-coordinate. For each t0, the ball from hpointball
        gives a t-interval. Apply open_cover_subdivision_01 to column.\<close>
     have hstrip: "\<forall>s0\<in>I_set. \<exists>\<epsilon>s>0. \<exists>nt\<ge>(1::nat). \<exists>sub_t :: nat \<Rightarrow> real.
