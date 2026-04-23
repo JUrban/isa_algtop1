@@ -19618,9 +19618,181 @@ proof -
     qed
     \<comment> \<open>\<tau>\<circ>\<gamma>(s) = (cos 2\<pi>s, sin 2\<pi>s) = p0.\<close>
     have h\<tau>\<gamma>_eq: "\<And>s. ?\<tau> (?\<gamma> s) = (cos (2 * pi * s), sin (2 * pi * s))" by simp
-    \<comment> \<open>\<tau> is continuous UNIV-{p} \<rightarrow> UNIV-{0}. Simply connected transfers via \<tau>.
-       This contradicts R2_minus_origin_not_simply_connected.\<close>
-    show False sorry
+    \<comment> \<open>\<tau> is continuous UNIV-{p} \<rightarrow> UNIV-{0}.\<close>
+    let ?Tp = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p})"
+    let ?T0 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0::real, 0::real)})"
+    have h\<tau>_cont: "top1_continuous_map_on (UNIV - {p}) ?Tp (UNIV - {(0::real, 0)}) ?T0 ?\<tau>"
+    proof -
+      have h\<tau>_map: "\<And>x. x \<in> UNIV - {p} \<Longrightarrow> ?\<tau> x \<in> UNIV - {(0, 0)}"
+        by (cases p) auto
+      have h\<tau>_cont_univ: "continuous_on (UNIV - {p}) ?\<tau>"
+        by (intro continuous_intros continuous_on_subset[OF _ subset_UNIV])
+      show ?thesis
+        by (rule top1_continuous_map_on_real2_subspace_general[OF h\<tau>_map h\<tau>_cont_univ])
+    qed
+    \<comment> \<open>\<gamma> is a loop at ?b in UNIV-{p}.\<close>
+    have h\<gamma>_loop: "top1_is_loop_on (UNIV - {p}) ?Tp ?b ?\<gamma>"
+    proof -
+      have h\<gamma>_cont_univ: "continuous_on UNIV ?\<gamma>" by (intro continuous_intros)
+      have h\<gamma>_cont_I: "continuous_on I_set ?\<gamma>"
+        using continuous_on_subset[OF h\<gamma>_cont_univ] by (by100 blast)
+      have h\<gamma>_cont_top1: "top1_continuous_map_on I_set I_top (UNIV - {p}) ?Tp ?\<gamma>"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume hs: "s \<in> I_set" thus "?\<gamma> s \<in> UNIV - {p}" using h\<gamma>_in by simp
+      next
+        fix V assume hV: "V \<in> ?Tp"
+        then obtain W where hWo: "W \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+            and hVeq: "V = (UNIV - {p}) \<inter> W"
+          unfolding subspace_topology_def by (by100 blast)
+        have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+          using hWo product_topology_on_open_sets_real2 by metis
+        hence hWopen: "open W" unfolding top1_open_sets_def by (by100 blast)
+        have hpre: "open (?\<gamma> -` W)"
+          by (rule open_vimage[OF hWopen h\<gamma>_cont_univ])
+        have hpre_os: "?\<gamma> -` W \<in> (top1_open_sets :: real set set)"
+          using hpre unfolding top1_open_sets_def by (by100 blast)
+        have "{s \<in> I_set. ?\<gamma> s \<in> V} = I_set \<inter> (?\<gamma> -` W)"
+          unfolding hVeq using h\<gamma>_in by (by100 blast)
+        thus "{s \<in> I_set. ?\<gamma> s \<in> V} \<in> I_top"
+          unfolding top1_unit_interval_topology_def subspace_topology_def
+          using hpre_os by (by100 blast)
+      qed
+      have h0: "?\<gamma> 0 = ?b" by simp
+      have h1: "?\<gamma> 1 = ?b" by simp
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using h\<gamma>_cont_top1 h0 h1 by (by100 blast)
+    qed
+    \<comment> \<open>Simply connected \<Rightarrow> \<gamma> is contractible.\<close>
+    have h\<gamma>_contract: "top1_path_homotopic_on (UNIV - {p}) ?Tp ?b ?b ?\<gamma> (top1_constant_path ?b)"
+      using hsc hb h\<gamma>_loop unfolding top1_simply_connected_on_def by (by100 blast)
+    \<comment> \<open>Apply \<tau>: \<tau>\<circ>\<gamma> contractible in UNIV-{0}.\<close>
+    have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+        (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    qed
+    have hTp: "is_topology_on (UNIV - {p}) ?Tp"
+      by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+    have hT0: "is_topology_on (UNIV - {(0::real, 0)}) ?T0"
+      by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+    have h\<tau>\<gamma>_contract: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?T0
+        (?\<tau> ?b) (?\<tau> ?b) (?\<tau> \<circ> ?\<gamma>) (top1_constant_path (?\<tau> ?b))"
+    proof -
+      have hstep: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?T0
+          (?\<tau> ?b) (?\<tau> ?b) (?\<tau> \<circ> ?\<gamma>) (?\<tau> \<circ> top1_constant_path ?b)"
+        by (rule continuous_preserves_path_homotopic[OF hTp hT0 h\<tau>_cont h\<gamma>_contract])
+      have "?\<tau> \<circ> top1_constant_path ?b = top1_constant_path (?\<tau> ?b)"
+        unfolding top1_constant_path_def by (rule ext) simp
+      thus ?thesis using hstep by simp
+    qed
+    \<comment> \<open>\<tau> ?b = (1, 0) and \<tau>\<circ>\<gamma> = p0.\<close>
+    have h\<tau>b: "?\<tau> ?b = (1::real, 0::real)" by simp
+    have h\<tau>\<gamma>_p0: "?\<tau> \<circ> ?\<gamma> = (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))"
+      by (rule ext) simp
+    \<comment> \<open>So p0 is contractible in UNIV-{0} at (1,0).\<close>
+    have hp0_contract: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?T0
+        (1, 0) (1, 0) (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) (top1_constant_path (1, 0))"
+      using h\<tau>\<gamma>_contract h\<tau>b h\<tau>\<gamma>_p0 by simp
+    \<comment> \<open>But R^2-{0} is not simply connected: p0 is NOT contractible.\<close>
+    \<comment> \<open>Transfer: UNIV-{p} simply connected \<Rightarrow> UNIV-{0} simply connected (via \<tau> and \<tau>^{-1}).\<close>
+    have hsc0: "top1_simply_connected_on (UNIV - {(0::real, 0)}) ?T0"
+    proof -
+      let ?\<tau>inv = "\<lambda>x::real\<times>real. (fst x + fst p, snd x + snd p)"
+      have h\<tau>inv_cont: "top1_continuous_map_on (UNIV - {(0, 0)}) ?T0 (UNIV - {p}) ?Tp ?\<tau>inv"
+      proof -
+        have hmap: "\<And>x. x \<in> UNIV - {(0::real, 0)} \<Longrightarrow> ?\<tau>inv x \<in> UNIV - {p}"
+          by (cases p) auto
+        have hcont: "continuous_on (UNIV - {(0::real, 0)}) ?\<tau>inv"
+          by (intro continuous_intros continuous_on_subset[OF _ subset_UNIV])
+        show ?thesis
+          by (rule top1_continuous_map_on_real2_subspace_general[OF hmap hcont])
+      qed
+      show ?thesis unfolding top1_simply_connected_on_def
+      proof (intro conjI allI impI ballI)
+        \<comment> \<open>Path-connected: for y1, y2 in UNIV-{0}, translate to UNIV-{p},
+           find path there (path-connected), translate back.\<close>
+        show "top1_path_connected_on (UNIV - {(0::real, 0)}) ?T0"
+          unfolding top1_path_connected_on_def
+        proof (intro conjI ballI)
+          show "is_topology_on (UNIV - {(0::real, 0::real)}) ?T0" by (rule hT0)
+        next
+          fix y1 y2 :: "real \<times> real"
+          assume hy1: "y1 \<in> UNIV - {(0, 0)}" and hy2: "y2 \<in> UNIV - {(0, 0)}"
+          \<comment> \<open>Translate to UNIV-{p}, find path, translate back.\<close>
+          have "?\<tau>inv y1 \<in> UNIV - {p}" "?\<tau>inv y2 \<in> UNIV - {p}"
+          proof -
+            { fix y :: "real \<times> real" assume hy: "y \<in> UNIV - {(0::real, 0)}"
+              have "?\<tau>inv y \<noteq> p"
+              proof
+                assume "?\<tau>inv y = p"
+                hence "y = (0::real, 0)" by (cases y, cases p) simp
+                thus False using hy by simp
+              qed
+              hence "?\<tau>inv y \<in> UNIV - {p}" by simp }
+            thus "?\<tau>inv y1 \<in> UNIV - {p}" "?\<tau>inv y2 \<in> UNIV - {p}"
+              using hy1 hy2 by auto
+          qed
+          then obtain \<alpha> where h\<alpha>: "top1_is_path_on (UNIV - {p}) ?Tp (?\<tau>inv y1) (?\<tau>inv y2) \<alpha>"
+            using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+          have h\<tau>\<alpha>: "top1_is_path_on (UNIV - {(0, 0)}) ?T0 (?\<tau> (?\<tau>inv y1)) (?\<tau> (?\<tau>inv y2)) (?\<tau> \<circ> \<alpha>)"
+          proof -
+            have h\<alpha>_cont: "top1_continuous_map_on I_set I_top (UNIV - {p}) ?Tp \<alpha>"
+              using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+            have h\<tau>\<alpha>_cont: "top1_continuous_map_on I_set I_top (UNIV - {(0, 0)}) ?T0 (?\<tau> \<circ> \<alpha>)"
+              by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont h\<tau>_cont])
+            have "(\<alpha> 0) = ?\<tau>inv y1" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+            hence h0: "(?\<tau> \<circ> \<alpha>) 0 = ?\<tau> (?\<tau>inv y1)" by simp
+            have "(\<alpha> 1) = ?\<tau>inv y2" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+            hence h1: "(?\<tau> \<circ> \<alpha>) 1 = ?\<tau> (?\<tau>inv y2)" by simp
+            show ?thesis unfolding top1_is_path_on_def
+              using h\<tau>\<alpha>_cont h0 h1 by (by100 blast)
+          qed
+          have "?\<tau> (?\<tau>inv y1) = y1" "?\<tau> (?\<tau>inv y2) = y2" by simp_all
+          thus "\<exists>f. top1_is_path_on (UNIV - {(0, 0)}) ?T0 y1 y2 f"
+            using h\<tau>\<alpha> by (intro exI[of _ "?\<tau> \<circ> \<alpha>"]) simp
+        qed
+      next
+        \<comment> \<open>All loops contractible: loop in UNIV-{0}, translate to UNIV-{p},
+           contract (simply connected), translate back.\<close>
+        fix y0 :: "real \<times> real" and g
+        assume hy0: "y0 \<in> UNIV - {(0::real, 0)}"
+        assume hg: "top1_is_loop_on (UNIV - {(0, 0)}) ?T0 y0 g"
+        \<comment> \<open>Translate: \<tau>inv\<circ>g is a loop at \<tau>inv(y0) in UNIV-{p}.\<close>
+        have h\<tau>inv_y0: "?\<tau>inv y0 \<in> UNIV - {p}"
+        proof -
+          have "?\<tau>inv y0 \<noteq> p"
+          proof
+            assume heq: "?\<tau>inv y0 = p"
+            have h1: "fst y0 = 0" using heq by (cases p, cases y0) simp
+            have h2: "snd y0 = 0" using heq by (cases p, cases y0) simp
+            have "y0 = (0::real, 0::real)" using h1 h2 by (cases y0) simp
+            thus False using hy0 by simp
+          qed
+          thus ?thesis by simp
+        qed
+        have h\<tau>inv_g: "top1_is_loop_on (UNIV - {p}) ?Tp (?\<tau>inv y0) (?\<tau>inv \<circ> g)"
+          using top1_continuous_map_loop_early[OF h\<tau>inv_cont hg] by simp
+        \<comment> \<open>Contract in UNIV-{p}.\<close>
+        have hg_contract: "top1_path_homotopic_on (UNIV - {p}) ?Tp
+            (?\<tau>inv y0) (?\<tau>inv y0) (?\<tau>inv \<circ> g) (top1_constant_path (?\<tau>inv y0))"
+          using hsc h\<tau>inv_y0 h\<tau>inv_g unfolding top1_simply_connected_on_def by (by100 blast)
+        \<comment> \<open>Translate back via \<tau>.\<close>
+        have h\<tau>_contract: "top1_path_homotopic_on (UNIV - {(0, 0)}) ?T0
+            (?\<tau> (?\<tau>inv y0)) (?\<tau> (?\<tau>inv y0))
+            (?\<tau> \<circ> (?\<tau>inv \<circ> g)) (?\<tau> \<circ> top1_constant_path (?\<tau>inv y0))"
+          by (rule continuous_preserves_path_homotopic[OF hTp hT0 h\<tau>_cont hg_contract])
+        have h\<tau>\<tau>inv_y0: "?\<tau> (?\<tau>inv y0) = y0" by simp
+        have h\<tau>\<tau>inv_g: "?\<tau> \<circ> (?\<tau>inv \<circ> g) = g" by (rule ext) simp
+        have h\<tau>_const: "?\<tau> \<circ> top1_constant_path (?\<tau>inv y0) = top1_constant_path y0"
+          unfolding top1_constant_path_def by (rule ext) simp
+        show "top1_path_homotopic_on (UNIV - {(0, 0)}) ?T0 y0 y0 g (top1_constant_path y0)"
+          using h\<tau>_contract h\<tau>\<tau>inv_y0 h\<tau>\<tau>inv_g h\<tau>_const by simp
+      qed
+    qed
+    show False using R2_minus_origin_not_simply_connected hsc0 by (by100 blast)
   qed
 qed
 
@@ -23092,6 +23264,17 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
+
 
 
 
