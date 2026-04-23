@@ -3723,13 +3723,214 @@ next
     thus ?thesis using hR_eq by simp
   qed
   \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hR_bij: "bij_betw R top1_S2 top1_S2"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on R top1_S2"
+      by (rule inj_onI) (metis hR_inv)
+    show "R ` top1_S2 = top1_S2"
+    proof (rule set_eqI, rule iffI)
+      fix q assume "q \<in> R ` top1_S2"
+      then obtain p where "p \<in> top1_S2" "q = R p" by blast
+      thus "q \<in> top1_S2" using hR_S2 by simp
+    next
+      fix q assume hq: "q \<in> top1_S2"
+      hence "R q \<in> top1_S2" by (rule hR_S2)
+      moreover have "R (R q) = q" by (rule hR_inv)
+      ultimately show "q \<in> R ` top1_S2" by (metis image_eqI)
+    qed
+  qed
+  have hR_inv_eq: "\<And>p. p \<in> top1_S2 \<Longrightarrow> inv_into top1_S2 R p = R p"
+  proof -
+    fix p assume hp: "p \<in> top1_S2"
+    have "R p \<in> top1_S2" by (rule hR_S2[OF hp])
+    moreover have "R (R p) = p" by (rule hR_inv)
+    ultimately show "inv_into top1_S2 R p = R p"
+      using hR_bij unfolding bij_betw_def by (intro inv_into_f_eq) auto
+  qed
+  \<comment> \<open>Bridge: continuous_on UNIV R \<Rightarrow> top1_continuous_map_on S^2 TS2 S^2 TS2 R.\<close>
+  have hR_top1_cont: "top1_continuous_map_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
+  proof -
+    have hR_cont_S2: "continuous_on top1_S2 R"
+      using continuous_on_subset[OF hR_cont] by (by100 blast)
+    show ?thesis unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix p assume "p \<in> top1_S2" thus "R p \<in> top1_S2" by (rule hR_S2)
+    next
+      fix V assume hV: "V \<in> top1_S2_topology"
+      then obtain W where hW: "W \<in> product_topology_on top1_open_sets
+            (product_topology_on top1_open_sets top1_open_sets)"
+          and hVeq: "V = top1_S2 \<inter> W"
+        unfolding top1_S2_topology_def subspace_topology_def by (by100 blast)
+      have "W \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using hW product_topology_on_open_sets by metis
+      hence hWopen: "open W" unfolding top1_open_sets_def by (by100 blast)
+      obtain U where hUopen: "open U" and hUeq: "U \<inter> top1_S2 = R -` W \<inter> top1_S2"
+        using iffD1[OF continuous_on_open_invariant hR_cont_S2] hWopen by auto
+      have "{p \<in> top1_S2. R p \<in> V} = {p \<in> top1_S2. R p \<in> W}"
+        unfolding hVeq using hR_S2 by (by100 auto)
+      also have "\<dots> = R -` W \<inter> top1_S2" by (by100 auto)
+      also have "\<dots> = U \<inter> top1_S2" using hUeq by simp
+      finally have heq: "{p \<in> top1_S2. R p \<in> V} = top1_S2 \<inter> U" by (by100 blast)
+      have "U \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using hUopen unfolding top1_open_sets_def by (by100 blast)
+      hence "U \<in> product_topology_on top1_open_sets
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_open_sets by metis
+      hence "top1_S2 \<inter> U \<in> top1_S2_topology"
+        unfolding top1_S2_topology_def subspace_topology_def by (by100 blast)
+      thus "{p \<in> top1_S2. R p \<in> V} \<in> top1_S2_topology" using heq by simp
+    qed
+  qed
   have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
-    sorry \<comment> \<open>Uses: bij_betw (from hR_S2+hR_inv), continuous (hR_cont), inv=R (hR_inv).\<close>
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on top1_S2 top1_S2_topology" by (rule hTS2)
+    show "is_topology_on top1_S2 top1_S2_topology" by (rule hTS2)
+    show "bij_betw R top1_S2 top1_S2" by (rule hR_bij)
+    show "top1_continuous_map_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
+      by (rule hR_top1_cont)
+    show "top1_continuous_map_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology (inv_into top1_S2 R)"
+    proof -
+      have "\<And>p. p \<in> top1_S2 \<Longrightarrow> inv_into top1_S2 R p = R p" by (rule hR_inv_eq)
+      hence "\<And>V. V \<in> top1_S2_topology \<Longrightarrow>
+          {p \<in> top1_S2. inv_into top1_S2 R p \<in> V} = {p \<in> top1_S2. R p \<in> V}"
+        by auto
+      thus ?thesis using hR_top1_cont hR_S2 hR_inv_eq
+        unfolding top1_continuous_map_on_def by auto
+    qed
+  qed
   have hR_homeo_minus: "top1_homeomorphism_on (top1_S2 - {b})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
       (top1_S2 - {north_pole})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) R"
-    sorry \<comment> \<open>Restricts hR_homeo to S^2-{b} using hR_b_N.\<close>
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) simp
+    show "is_topology_on (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) simp
+    show hbij: "bij_betw R (top1_S2 - {b}) (top1_S2 - {north_pole})"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on R (top1_S2 - {b})"
+        by (rule inj_onI) (metis hR_inv)
+      show "R ` (top1_S2 - {b}) = top1_S2 - {north_pole}"
+      proof (rule set_eqI, rule iffI)
+        fix q assume "q \<in> R ` (top1_S2 - {b})"
+        then obtain p where hp: "p \<in> top1_S2 - {b}" "q = R p" by blast
+        have "q \<in> top1_S2" using hp hR_S2 by (by100 blast)
+        moreover have "q \<noteq> north_pole"
+        proof
+          assume "q = north_pole"
+          hence "R p = north_pole" using hp by simp
+          hence "R (R p) = R north_pole" by simp
+          hence "p = R north_pole" using hR_inv by simp
+          hence "R p = R (R north_pole)" by simp
+          hence "R p = north_pole" using hR_inv by simp
+          hence "p = b" using hR_b_N hR_inv
+            by (metis \<open>R p = north_pole\<close>)
+          thus False using hp by simp
+        qed
+        ultimately show "q \<in> top1_S2 - {north_pole}" by simp
+      next
+        fix q assume hq: "q \<in> top1_S2 - {north_pole}"
+        have "R q \<in> top1_S2" using hq hR_S2 by (by100 blast)
+        moreover have "R q \<noteq> b"
+        proof
+          assume "R q = b"
+          hence "R (R q) = R b" by simp
+          hence "q = north_pole" using hR_inv hR_b_N by simp
+          thus False using hq by simp
+        qed
+        ultimately have "R q \<in> top1_S2 - {b}" by simp
+        moreover have "R (R q) = q" by (rule hR_inv)
+        ultimately show "q \<in> R ` (top1_S2 - {b})" by (metis image_eqI)
+      qed
+    qed
+    have hR_not_N: "\<And>p. p \<in> top1_S2 - {b} \<Longrightarrow> R p \<noteq> north_pole"
+    proof -
+      fix p assume hp: "p \<in> top1_S2 - {b}"
+      show "R p \<noteq> north_pole"
+      proof
+        assume "R p = north_pole"
+        hence "R p = R b" using hR_b_N by simp
+        hence "p = b" by (metis hR_inv)
+        thus False using hp by simp
+      qed
+    qed
+    \<comment> \<open>Continuity: restrict hR_top1_cont to subspaces.\<close>
+    show "top1_continuous_map_on (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+        (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) R"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix p assume hp: "p \<in> top1_S2 - {b}"
+      thus "R p \<in> top1_S2 - {north_pole}" using hbij unfolding bij_betw_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      then obtain W where hW: "W \<in> top1_S2_topology" and hVeq: "V = (top1_S2 - {north_pole}) \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "{p \<in> top1_S2 - {b}. R p \<in> V} = (top1_S2 - {b}) \<inter> {p \<in> top1_S2. R p \<in> W}"
+        unfolding hVeq using hR_S2 hR_not_N by (by100 auto)
+      moreover have "{p \<in> top1_S2. R p \<in> W} \<in> top1_S2_topology"
+        using hR_top1_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{p \<in> top1_S2 - {b}. R p \<in> V} \<in>
+          subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+        unfolding subspace_topology_def by (by100 blast)
+    qed
+    \<comment> \<open>Inverse continuity: inv_into = R (involution), same as forward.\<close>
+    show "top1_continuous_map_on (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+        (inv_into (top1_S2 - {b}) R)"
+    proof -
+      have hR_not_b: "\<And>p. p \<in> top1_S2 - {north_pole} \<Longrightarrow> R p \<noteq> b"
+        by (metis DiffD2 hR_b_N hR_inv singletonI)
+      have hinv_R: "\<And>p. p \<in> top1_S2 - {north_pole} \<Longrightarrow>
+          inv_into (top1_S2 - {b}) R p = R p"
+      proof -
+        fix p assume hp: "p \<in> top1_S2 - {north_pole}"
+        have "R p \<in> top1_S2 - {b}"
+        proof -
+          have "R p \<in> top1_S2" using hp hR_S2 by (by100 blast)
+          moreover have "R p \<noteq> b"
+          proof
+            assume "R p = b"
+            hence "R (R p) = R b" by simp
+            hence "p = north_pole" using hR_inv hR_b_N by simp
+            thus False using hp by simp
+          qed
+          ultimately show ?thesis by simp
+        qed
+        moreover have "R (R p) = p" by (rule hR_inv)
+        ultimately show "inv_into (top1_S2 - {b}) R p = R p"
+          using hbij unfolding bij_betw_def by (intro inv_into_f_eq) auto
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume hp: "p \<in> top1_S2 - {north_pole}"
+        show "inv_into (top1_S2 - {b}) R p \<in> top1_S2 - {b}"
+          using hinv_R[OF hp] hp hR_S2 hR_not_b[OF hp] by auto
+      next
+        fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+        then obtain W where hW: "W \<in> top1_S2_topology" and hVeq: "V = (top1_S2 - {b}) \<inter> W"
+          unfolding subspace_topology_def by (by100 blast)
+        have "{p \<in> top1_S2 - {north_pole}. inv_into (top1_S2 - {b}) R p \<in> V}
+            = (top1_S2 - {north_pole}) \<inter> {p \<in> top1_S2. R p \<in> W}"
+          unfolding hVeq using hinv_R hR_S2 hR_not_b by auto
+        moreover have "{p \<in> top1_S2. R p \<in> W} \<in> top1_S2_topology"
+          using hR_top1_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{p \<in> top1_S2 - {north_pole}. inv_into (top1_S2 - {b}) R p \<in> V} \<in>
+            subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+          unfolding subspace_topology_def by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>S^2-{N} \<cong> R^2 is simply connected.\<close>
   \<comment> \<open>Transfer: S^2-{b} simply connected.\<close>
   have "top1_simply_connected_on (top1_S2 - {north_pole})
@@ -7730,6 +7931,13 @@ end
  
  
  
+
+
+
+
+
+
+
 
 
 
