@@ -3587,7 +3587,12 @@ lemma householder_S2_homeo:
       (top1_S2 - {north_pole})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
       (householder_S2 b)"
-  sorry \<comment> \<open>Proved inline in S2_minus_point_sc for the local R. TODO: refactor.\<close>
+proof (cases "b = north_pole")
+  case True show ?thesis using True sorry
+next
+  case False
+  show ?thesis sorry \<comment> \<open>Same proof as inside S2_minus_point_sc case False.\<close>
+qed
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
@@ -8252,6 +8257,11 @@ end
  
  
  
+
+
+
+
+
 
 
 
