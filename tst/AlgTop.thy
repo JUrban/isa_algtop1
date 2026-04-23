@@ -14887,7 +14887,24 @@ proof (intro allI impI, elim conjE)
       unfolding top1_R_to_S1_def hfn_cis by simp
   qed
   have hgt_n_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (n * gtilde s) = ?\<psi> ((g s)^n)"
-    sorry
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have hgs_S1: "g s \<in> top1_S1_complex"
+      using hg unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      using hs by (by100 blast)
+    have hgs_norm: "cmod (g s) = 1" using hgs_S1 unfolding top1_S1_complex_def by simp
+    have hRs: "top1_R_to_S1 (gtilde s) = (Re (g s), Im (g s))"
+      using hgt_lift hs by simp
+    hence hcos: "cos (2 * pi * gtilde s) = Re (g s)"
+      and hsin: "sin (2 * pi * gtilde s) = Im (g s)"
+      unfolding top1_R_to_S1_def by auto
+    have "g s = cis (2 * pi * gtilde s)"
+      by (rule complex_eqI) (simp_all add: hcos hsin)
+    hence "(g s)^n = cis (2 * pi * (n * gtilde s))"
+      by (simp add: DeMoivre algebra_simps)
+    thus "top1_R_to_S1 (n * gtilde s) = ?\<psi> ((g s)^n)"
+      unfolding top1_R_to_S1_def by simp
+  qed
   \<comment> \<open>f^n ~ g^n \<Rightarrow> \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n) in S^1.
      Their lifts (n*ftilde and n*gtilde) have the same endpoint.
      n*ftilde(1) = n*gtilde(1), i.e., n*k = n*l. Since n > 0: k = l.\<close>
