@@ -3565,11 +3565,18 @@ next
   qed auto
 qed
 
+lemma S2_minus_north_pole_simply_connected:
+  "top1_simply_connected_on (top1_S2 - {north_pole})
+     (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+  by (rule homeomorphism_preserves_simply_connected[OF
+      stereographic_proj_homeomorphism R2_simply_connected])
+
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
-  \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic projection (after rotation to north pole).\<close>
+  \<comment> \<open>For b = north_pole: follows from stereographic + R2_simply_connected.
+     For general b: needs rotation sending b to N. We sorry the rotation.\<close>
   sorry
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
@@ -7562,6 +7569,7 @@ end
  
  
  
+
 
 
 
