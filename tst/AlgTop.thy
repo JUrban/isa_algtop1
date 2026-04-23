@@ -4463,6 +4463,62 @@ proof -
   qed
 qed
 
+lemma S2_minus_point_homeo_R2:
+  assumes "a \<in> top1_S2"
+  shows "\<exists>h. top1_homeomorphism_on (top1_S2 - {a})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+      (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) h"
+  sorry \<comment> \<open>Composition of Householder (a\<rightarrow>N) + stereographic projection.\<close>
+
+lemma homeomorphism_inverse:
+  assumes "top1_homeomorphism_on X TX Y TY h"
+  shows "top1_homeomorphism_on Y TY X TX (inv_into X h)"
+proof -
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hbij: "bij_betw h X Y"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hgbij: "bij_betw (inv_into X h) Y X" using hbij by (rule bij_betw_inv_into)
+  have hinv_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into Y (inv_into X h) x = h x"
+  proof -
+    fix x assume hx: "x \<in> X"
+    have "h x \<in> Y" using hx hbij unfolding bij_betw_def by auto
+    moreover have "inv_into X h (h x) = x"
+      using hx hbij unfolding bij_betw_def by (simp add: inv_into_f_f)
+    ultimately show "inv_into Y (inv_into X h) x = h x"
+      by (intro inv_into_f_eq[OF bij_betw_imp_inj_on[OF hgbij]]) auto
+  qed
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on Y TY" by (rule hTY)
+    show "is_topology_on X TX" by (rule hTX)
+    show "bij_betw (inv_into X h) Y X" by (rule hgbij)
+    show "top1_continuous_map_on Y TY X TX (inv_into X h)" by (rule hg)
+    show "top1_continuous_map_on X TX Y TY (inv_into Y (inv_into X h))"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume hx: "x \<in> X"
+      show "inv_into Y (inv_into X h) x \<in> Y" using hinv_inv[OF hx] hx hbij
+        unfolding bij_betw_def by auto
+    next
+      fix V assume hV: "V \<in> TY"
+      have "{x \<in> X. h x \<in> V} \<in> TX"
+        using hh hV unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{x \<in> X. inv_into Y (inv_into X h) x \<in> V} = {x \<in> X. h x \<in> V}"
+        sorry
+      ultimately show "{x \<in> X. inv_into Y (inv_into X h) x \<in> V} \<in> TX" by simp
+    qed
+  qed
+qed
+
+lemma homeomorphism_preserves_simply_connected_forward:
+  assumes "top1_homeomorphism_on X TX Y TY h"
+      and "top1_simply_connected_on X TX"
+  shows "top1_simply_connected_on Y TY"
+  by (rule homeomorphism_preserves_simply_connected[OF homeomorphism_inverse[OF assms(1)] assms(2)])
+
 lemma homeomorphism_reflects_simply_connected:
   assumes "top1_homeomorphism_on X TX Y TY h"
       and "\<not> top1_simply_connected_on X TX"
@@ -4609,7 +4665,7 @@ proof
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
       (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) h"
-    sorry \<comment> \<open>Existence of homeomorphism S^2-{a} \<rightarrow> R^2 (from Householder+stereographic).\<close>
+    using S2_minus_point_homeo_R2[OF assms(1)] by blast
   have hb_mem: "b \<in> top1_S2 - {a}" using assms by simp
   have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a} - {b})
       (subspace_topology (top1_S2 - {a}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
@@ -4620,12 +4676,16 @@ proof
   have hab_eq: "top1_S2 - {a} - {b} = top1_S2 - {a, b}" by (by100 blast)
   have hsub_eq: "subspace_topology (top1_S2 - {a}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
       (top1_S2 - {a, b}) = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
-    sorry \<comment> \<open>Transitivity of subspace topology.\<close>
+    by (rule subspace_topology_trans) blast
+  have hh_restrict': "top1_homeomorphism_on (top1_S2 - {a, b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
+      (UNIV - {h b})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {h b})) h"
+    using hh_restrict hab_eq hsub_eq by simp
+  \<comment> \<open>Transfer: S^2-{a,b} sc \<Rightarrow> R^2-{h(b)} sc. Need h^{-1} homeomorphism direction.\<close>
   have hsc_R2: "top1_simply_connected_on (UNIV - {h b})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {h b}))"
-    using homeomorphism_preserves_simply_connected[OF _ hsc]
-          hh_restrict hab_eq hsub_eq
-    sorry
+    by (rule homeomorphism_preserves_simply_connected_forward[OF hh_restrict' hsc])
   have "h b \<in> (UNIV :: (real \<times> real) set)" by simp
   show False using R2_minus_point_not_simply_connected[OF \<open>h b \<in> UNIV\<close>] hsc_R2 by (by100 blast)
 qed
@@ -8092,6 +8152,18 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
