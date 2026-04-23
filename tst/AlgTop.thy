@@ -4859,6 +4859,7 @@ text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is 
 lemma map_into_R2_nulhomotopic:
   assumes hf: "top1_continuous_map_on A TA
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
+      and hTA: "is_topology_on A TA"
   shows "top1_nulhomotopic_on A TA
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
   \<comment> \<open>R^2 is contractible: straight-line homotopy F(x,t) = (1-t)*f(x).\<close>
@@ -4868,8 +4869,14 @@ proof (intro bexI[of _ "(0::real, 0)"])
   let ?c = "(0::real, 0)"
   \<comment> \<open>Define F(x,t) = (1-t)*f(x) = ((1-t)*fst(f x), (1-t)*snd(f x)).\<close>
   define F where "F = (\<lambda>(x::'a, t::real). ((1-t)*fst(f x), (1-t)*snd(f x)))"
+  have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  qed
   have hconst: "top1_continuous_map_on A TA (UNIV :: (real \<times> real) set) ?TR2 (\<lambda>_. ?c)"
-    sorry \<comment> \<open>Constant map continuous (needs is_topology_on A TA).\<close>
+    by (rule top1_continuous_map_on_const[OF hTA hTR2]) simp
   show "top1_homotopic_on A TA (UNIV :: (real \<times> real) set) ?TR2 f (\<lambda>_. ?c)"
     unfolding top1_homotopic_on_def
     using hf hconst
@@ -4927,6 +4934,7 @@ lemma map_into_S2_minus_point_nulhomotopic:
   assumes "b \<in> top1_S2"
       and "top1_continuous_map_on A TA
              (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+      and "is_topology_on A TA"
   shows "top1_nulhomotopic_on A TA
            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
 proof -
@@ -4943,9 +4951,9 @@ proof -
   qed
   \<comment> \<open>h \<circ> f is nulhomotopic in R^2 (R^2 contractible).\<close>
   have "top1_nulhomotopic_on A TA (UNIV :: (real \<times> real) set) ?TR2 (h \<circ> f)"
-    by (rule map_into_R2_nulhomotopic[OF hhf])
+    by (rule map_into_R2_nulhomotopic[OF hhf assms(3)])
   \<comment> \<open>Transfer back: f is nulhomotopic in S^2-{b}.\<close>
-  thus ?thesis sorry \<comment> \<open>Needs is_topology_on A TA for nulhomotopic_transfer.\<close>
+  thus ?thesis by (rule nulhomotopic_transfer[OF hh _ assms(2) assms(3)])
 qed
 
 lemma Lemma_61_1_components_correspond:
@@ -5003,7 +5011,8 @@ proof -
     using assms(5) by (by100 auto)
   \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
   \<comment> \<open>S^2-{b} is contractible (homeomorphic to R^2), so any map into it is nulhomotopic.\<close>
-  show ?thesis by (rule map_into_S2_minus_point_nulhomotopic[OF assms(3) assms(4)])
+  show ?thesis by (rule map_into_S2_minus_point_nulhomotopic[OF assms(3) assms(4)
+      compact_is_topology[OF assms(2)]])
 qed
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
@@ -8401,6 +8410,8 @@ end
  
  
  
+
+
 
 
 
