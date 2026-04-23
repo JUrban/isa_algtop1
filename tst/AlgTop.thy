@@ -3027,7 +3027,27 @@ proof -
   \<comment> \<open>Third component: (u^2+v^2-1)/d.\<close>
   have h3: "(?u^2 + ?v^2 - 1) / (?u^2 + ?v^2 + 1) = z"
   proof -
-    show ?thesis using hd hp_S2 h1mz_ne hd_ne sorry
+    have huvm1: "?u^2 + ?v^2 - 1 = 2/(1-z) - 2" using hd by linarith
+    \<comment> \<open>Goal: (2/(1-z) - 2) / (2/(1-z)) = z. Multiply both sides by 2/(1-z).\<close>
+    have h2dz: "2/(1-z) \<noteq> (0::real)" using h1mz_ne by simp
+    have key: "(2/(1-z) - 2) = z * (2/(1-z))"
+    proof -
+      have "2*(1-z)/(1-z) = (2::real)"
+        using h1mz_ne nonzero_mult_div_cancel_right by (by100 blast)
+      hence "2 = 2*(1-z)/(1-z)" by simp
+      hence "2/(1-z) - 2 = 2/(1-z) - 2*(1-z)/(1-z)" by simp
+      also have "\<dots> = (2 - 2*(1-z))/(1-z)" by (rule diff_divide_distrib[symmetric])
+      also have "(2::real) - 2*(1-z) = 2*z"
+        by (simp add: left_diff_distrib)
+      finally have "2/(1-z) - 2 = 2*z/(1-z)" .
+      also have "2*z/(1-z) = z * (2/(1-z))" by simp
+      finally show ?thesis .
+    qed
+    have "(?u^2 + ?v^2 - 1) / (?u^2 + ?v^2 + 1) = (2/(1-z) - 2) / (2/(1-z))"
+      using huvm1 hd by simp
+    also have "\<dots> = z * (2/(1-z)) / (2/(1-z))" using key by simp
+    also have "\<dots> = z" using h2dz by simp
+    finally show ?thesis .
   qed
   show ?thesis unfolding hproj stereographic_inv_def Let_def
     using h1 h2 h3 hxyz by simp
@@ -7313,6 +7333,16 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
 
 
 
