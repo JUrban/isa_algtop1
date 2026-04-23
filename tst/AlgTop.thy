@@ -12828,10 +12828,8 @@ proof (intro iffI)
              g is continuous at y0 (composition of continuous on R^2-{0}).
              H is continuous. So k is continuous at y0.
              Since k(y0) \<in> V (open), there's \<epsilon>>0 with ball(y0,\<epsilon>) \<inter> B^2 \<subseteq> k^{-1}(V).\<close>
-          \<comment> \<open>g: y \<mapsto> (y/|y|, 1-|y|) is continuous on B^2-{0} (standard analysis).\<close>
-          \<comment> \<open>k = H \<circ> g, H continuous, so k continuous at y0. k(y0) \<in> V, V open \<Rightarrow> neighborhood.\<close>
-          \<comment> \<open>We work in the standard topology and then transfer to top1_*.\<close>
-          show ?thesis sorry
+          show ?thesis sorry \<comment> \<open>k = H \<circ> g on B^2-{0}. g continuous (norm, division).
+             H\<inverse>(V) open in S^1\<times>I. g\<inverse>(H\<inverse>(V)) open in B^2-{0}. Standard topology.\<close>
         qed
       qed
       \<comment> \<open>Union of these neighborhoods gives the open set.\<close>
