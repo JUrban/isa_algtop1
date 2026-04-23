@@ -3604,9 +3604,28 @@ next
         c = 2*vdp/(2 - 2*b3)
     in (x - c*(-b1), y - c*(-b2), z - c*(1-b3)))"
   \<comment> \<open>R maps S^2 to S^2 (isometry), R(b) = N, R is its own inverse.\<close>
+  have hb12: "b1*b1 + b2*b2 = 1 - b3*b3"
+    using hb_S2 by (simp add: power2_eq_square algebra_simps)
   have hR_b_N: "R b = north_pole"
-    unfolding R_def hb_eq north_pole_def Let_def using hb_S2 hvv_ne hb3_ne1
-    sorry \<comment> \<open>Polynomial identity after clearing (2-2*b3) denominator.\<close>
+  proof -
+    let ?vdp = "-b1*b1 + (-b2)*b2 + (1-b3)*b3"
+    have hvdp_val: "?vdp = b3 - 1" using hb_S2
+      by (simp add: power2_eq_square algebra_simps)
+    have hc_m1: "2*(b3-1)/(2-2*b3) = -(1::real)"
+      apply (subst divide_eq_eq)
+      apply (simp add: hvv_ne algebra_simps)
+      apply (rule hb3_ne1)
+      done
+    let ?c = "2*?vdp/(2-2*b3)"
+    have hc_val: "?c = -(1::real)"
+      using hvdp_val hc_m1 by simp
+    have "R b = (b1 - ?c*(-b1), b2 - ?c*(-b2), b3 - ?c*(1-b3))"
+      unfolding R_def hb_eq Let_def by simp
+    also have "\<dots> = (b1 - (-1)*(-b1), b2 - (-1)*(-b2), b3 - (-1)*(1-b3))"
+      using hc_val by simp
+    also have "\<dots> = (0::real, 0, 1)" by simp
+    finally show ?thesis unfolding north_pole_def .
+  qed
   have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2" sorry
   have hR_inv: "\<And>p. R (R p) = p" sorry
   have hR_cont: "continuous_on UNIV R"
@@ -7620,6 +7639,25 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
