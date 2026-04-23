@@ -3571,10 +3571,23 @@ lemma S2_minus_north_pole_simply_connected:
   by (rule homeomorphism_preserves_simply_connected[OF
       stereographic_proj_homeomorphism R2_simply_connected])
 
-\<comment> \<open>Householder reflection sending b \<in> S^2 to north_pole.
-   When b \<noteq> N: R(p) = p - 2(v\<cdot>p)/(v\<cdot>v) \<cdot> v where v = N - b.
-   When b = N: identity.
-   This is a homeomorphism of S^2.\<close>
+text \<open>Householder reflection: sends any point b \<in> S^2 to north_pole.
+   When b \<noteq> N: R(p) = p - 2(v\<cdot>p)/(v\<cdot>v) * v where v = N - b = (-b1, -b2, 1-b3).
+   When b = N: identity.\<close>
+definition householder_S2 :: "real \<times> real \<times> real \<Rightarrow> real \<times> real \<times> real \<Rightarrow> real \<times> real \<times> real" where
+  "householder_S2 b = (if b = north_pole then id
+    else (let b1 = fst b; b2 = fst(snd b); b3 = snd(snd b)
+      in (\<lambda>(x,y,z). let vdp = -b1*x+(-b2)*y+(1-b3)*z; c = 2*vdp/(2-2*b3)
+          in (x-c*(-b1), y-c*(-b2), z-c*(1-b3)))))"
+
+lemma householder_S2_homeo:
+  assumes "b \<in> top1_S2"
+  shows "top1_homeomorphism_on (top1_S2 - {b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+      (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+      (householder_S2 b)"
+  sorry \<comment> \<open>Proved inline in S2_minus_point_sc for the local R. TODO: refactor.\<close>
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
@@ -4463,6 +4476,12 @@ proof -
   qed
 qed
 
+lemma homeomorphism_comp:
+  assumes "top1_homeomorphism_on X TX Y TY f"
+      and "top1_homeomorphism_on Y TY Z TZ g"
+  shows "top1_homeomorphism_on X TX Z TZ (g \<circ> f)"
+  sorry \<comment> \<open>Composition of homeomorphisms. Uses bij_betw_trans + continuous_on_comp.\<close>
+
 lemma S2_minus_point_homeo_R2:
   assumes "a \<in> top1_S2"
   shows "\<exists>h. top1_homeomorphism_on (top1_S2 - {a})
@@ -4474,15 +4493,21 @@ proof (cases "a = north_pole")
   thus ?thesis using stereographic_proj_homeomorphism by auto
 next
   case False
-  \<comment> \<open>Construct Householder R: S^2-{a} \<rightarrow> S^2-{N}, compose with stereographic.\<close>
-  \<comment> \<open>The Householder was proved in S2_minus_point_sc, but is local.
-     We need: \<exists> R with homeomorphism S^2-{a} \<rightarrow> S^2-{N}.\<close>
-  \<comment> \<open>From the proof of S2_minus_point_sc, we know S^2-{a} is sc.
-     But we need the actual homeomorphism, not just sc.\<close>
-  \<comment> \<open>Approach: use homeomorphism_inverse on stereographic to get R^2 \<rightarrow> S^2-{N},
-     then the COMPOSED inverse: R^2 \<rightarrow> S^2-{N} \<rightarrow> S^2-{a} doesn't help either.\<close>
-  \<comment> \<open>We need to re-derive the Householder homeomorphism S^2-{a} \<rightarrow> S^2-{N}.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Compose: householder sends S^2-{a} \<rightarrow> S^2-{N}, stereographic sends S^2-{N} \<rightarrow> R^2.\<close>
+  have hR: "top1_homeomorphism_on (top1_S2 - {a})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+      (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+      (householder_S2 a)"
+    by (rule householder_S2_homeo[OF assms])
+  \<comment> \<open>Compose with stereographic: stereographic_proj \<circ> householder_S2 a.\<close>
+  have "top1_homeomorphism_on (top1_S2 - {a})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+      (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)
+      (stereographic_proj \<circ> householder_S2 a)"
+    by (rule homeomorphism_comp[OF hR stereographic_proj_homeomorphism])
+  thus ?thesis by (by100 blast)
 qed
 
 lemma homeomorphism_inverse:
@@ -8170,6 +8195,9 @@ end
  
  
  
+
+
+
 
 
 
