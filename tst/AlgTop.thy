@@ -6094,9 +6094,111 @@ proof -
             (subspace_topology (E \<times> E') (product_topology_on TE TE') W)
             (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
             (\<lambda>(x, y). (p x, p' y))"
-          sorry \<comment> \<open>Product of homeomorphisms (p|V \<times> p'|V') is homeomorphism.
-                 Requires: Theorem_16_3 (product of subspace = subspace of product)
-                 + product of continuous bijections with continuous inverse.\<close>
+        proof (intro ballI)
+          fix W assume "W \<in> \<W>"
+          then obtain V V' where hV: "V \<in> \<V>" and hV': "V' \<in> \<V>'" and hWeq: "W = V \<times> V'"
+            unfolding \<W>_def by (by100 blast)
+          have hVh: "top1_homeomorphism_on V (subspace_topology E TE V) U
+                       (subspace_topology B TB U) p"
+            using hV_homeo hV by (by100 blast)
+          have hV'h: "top1_homeomorphism_on V' (subspace_topology E' TE' V') U'
+                       (subspace_topology B' TB' U') p'"
+            using hV'_homeo hV' by (by100 blast)
+          \<comment> \<open>Product of homeomorphisms is a homeomorphism.
+             Uses Theorem_16_3: product of subspace = subspace of product.\<close>
+          show "top1_homeomorphism_on W
+              (subspace_topology (E \<times> E') (product_topology_on TE TE') W)
+              (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
+              (\<lambda>(x, y). (p x, p' y))"
+            unfolding hWeq top1_homeomorphism_on_def
+          proof (intro conjI)
+            have hTE: "is_topology_on E TE" by (rule is_topology_on_strict_imp[OF assms(3)])
+            have hTB: "is_topology_on B TB" by (rule is_topology_on_strict_imp[OF assms(4)])
+            have hTE': "is_topology_on E' TE'" by (rule is_topology_on_strict_imp[OF assms(5)])
+            have hTB': "is_topology_on B' TB'" by (rule is_topology_on_strict_imp[OF assms(6)])
+            have hVE: "V \<subseteq> E" using hV_open[rule_format, OF hV] unfolding openin_on_def by (by100 blast)
+            have hV'E: "V' \<subseteq> E'" using hV'_open[rule_format, OF hV'] unfolding openin_on_def by (by100 blast)
+            have hUB: "U \<subseteq> B"
+            proof -
+              have "openin_on B TB U" using hUec unfolding top1_evenly_covered_on_def by (by100 blast)
+              thus ?thesis unfolding openin_on_def by (by100 blast)
+            qed
+            have hU'B: "U' \<subseteq> B'"
+            proof -
+              have "openin_on B' TB' U'" using hU'ec unfolding top1_evenly_covered_on_def by (by100 blast)
+              thus ?thesis unfolding openin_on_def by (by100 blast)
+            qed
+            \<comment> \<open>Subspace topologies via Theorem_16_3.\<close>
+            have hVV_eq: "subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V')
+                = product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V')"
+              using Theorem_16_3[OF hTE hTE'] by simp
+            have hUU_eq: "subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U')
+                = product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U')"
+              using Theorem_16_3[OF hTB hTB'] by simp
+            \<comment> \<open>Topology on V \<times> V'.\<close>
+            show "is_topology_on (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))"
+              unfolding hVV_eq by (rule product_topology_on_is_topology_on[OF
+                  subspace_topology_is_topology_on[OF hTE hVE]
+                  subspace_topology_is_topology_on[OF hTE' hV'E]])
+            \<comment> \<open>Topology on U \<times> U'.\<close>
+            show "is_topology_on (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))"
+              unfolding hUU_eq by (rule product_topology_on_is_topology_on[OF
+                  subspace_topology_is_topology_on[OF hTB hUB]
+                  subspace_topology_is_topology_on[OF hTB' hU'B]])
+            \<comment> \<open>Bijection.\<close>
+            have hbij_p: "bij_betw p V U"
+              using hVh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hbij_p': "bij_betw p' V' U'"
+              using hV'h unfolding top1_homeomorphism_on_def by (by100 blast)
+            show "bij_betw (\<lambda>(x, y). (p x, p' y)) (V \<times> V') (U \<times> U')"
+            proof -
+              have hinj: "inj_on (\<lambda>(x, y). (p x, p' y)) (V \<times> V')"
+              proof (rule inj_onI)
+                fix a b assume ha: "a \<in> V \<times> V'" and hb: "b \<in> V \<times> V'"
+                    and heq: "(case a of (x, y) \<Rightarrow> (p x, p' y)) = (case b of (x, y) \<Rightarrow> (p x, p' y))"
+                obtain a1 a2 where ha12: "a = (a1, a2)" by (cases a)
+                obtain b1 b2 where hb12: "b = (b1, b2)" by (cases b)
+                have "p a1 = p b1" "p' a2 = p' b2" using heq ha12 hb12 by auto
+                have "a1 \<in> V" "b1 \<in> V" using ha hb ha12 hb12 by auto
+                have "a2 \<in> V'" "b2 \<in> V'" using ha hb ha12 hb12 by auto
+                have "a1 = b1" using inj_onD[OF bij_betw_imp_inj_on[OF hbij_p]
+                  \<open>p a1 = p b1\<close> \<open>a1 \<in> V\<close> \<open>b1 \<in> V\<close>] .
+                moreover have "a2 = b2" using inj_onD[OF bij_betw_imp_inj_on[OF hbij_p']
+                  \<open>p' a2 = p' b2\<close> \<open>a2 \<in> V'\<close> \<open>b2 \<in> V'\<close>] .
+                ultimately show "a = b" using ha12 hb12 by simp
+              qed
+              have himg: "(\<lambda>(x, y). (p x, p' y)) ` (V \<times> V') = U \<times> U'"
+                using bij_betw_imp_surj_on[OF hbij_p] bij_betw_imp_surj_on[OF hbij_p'] by force
+              show ?thesis unfolding bij_betw_def using hinj himg by simp
+            qed
+            \<comment> \<open>Forward continuity.\<close>
+            \<comment> \<open>Forward and inverse continuity: both use Theorem_18_4 + component continuity.\<close>
+            have hp_cont_V: "top1_continuous_map_on V (subspace_topology E TE V)
+                U (subspace_topology B TB U) p"
+              using hVh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hp'_cont_V': "top1_continuous_map_on V' (subspace_topology E' TE' V')
+                U' (subspace_topology B' TB' U') p'"
+              using hV'h unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hp_inv_cont: "top1_continuous_map_on U (subspace_topology B TB U)
+                V (subspace_topology E TE V) (inv_into V p)"
+              using hVh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hp'_inv_cont: "top1_continuous_map_on U' (subspace_topology B' TB' U')
+                V' (subspace_topology E' TE' V') (inv_into V' p')"
+              using hV'h unfolding top1_homeomorphism_on_def by (by100 blast)
+            show "top1_continuous_map_on (V \<times> V')
+                (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
+                (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
+                (\<lambda>(x, y). (p x, p' y))"
+              unfolding hVV_eq hUU_eq
+              sorry \<comment> \<open>Product of continuous maps via Theorem_18_4.\<close>
+            show "top1_continuous_map_on (U \<times> U')
+                (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
+                (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
+                (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
+              unfolding hVV_eq hUU_eq
+              sorry \<comment> \<open>Product of continuous inverse maps.\<close>
+          qed
+        qed
       qed
     qed
     thus "\<exists>W. bb \<in> W \<and>
