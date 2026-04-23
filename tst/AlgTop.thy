@@ -4469,7 +4469,21 @@ lemma S2_minus_point_homeo_R2:
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
       (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) h"
-  sorry \<comment> \<open>Composition of Householder (a\<rightarrow>N) + stereographic projection.\<close>
+proof (cases "a = north_pole")
+  case True
+  thus ?thesis using stereographic_proj_homeomorphism by auto
+next
+  case False
+  \<comment> \<open>Construct Householder R: S^2-{a} \<rightarrow> S^2-{N}, compose with stereographic.\<close>
+  \<comment> \<open>The Householder was proved in S2_minus_point_sc, but is local.
+     We need: \<exists> R with homeomorphism S^2-{a} \<rightarrow> S^2-{N}.\<close>
+  \<comment> \<open>From the proof of S2_minus_point_sc, we know S^2-{a} is sc.
+     But we need the actual homeomorphism, not just sc.\<close>
+  \<comment> \<open>Approach: use homeomorphism_inverse on stereographic to get R^2 \<rightarrow> S^2-{N},
+     then the COMPOSED inverse: R^2 \<rightarrow> S^2-{N} \<rightarrow> S^2-{a} doesn't help either.\<close>
+  \<comment> \<open>We need to re-derive the Householder homeomorphism S^2-{a} \<rightarrow> S^2-{N}.\<close>
+  show ?thesis sorry
+qed
 
 lemma homeomorphism_inverse:
   assumes "top1_homeomorphism_on X TX Y TY h"
@@ -4507,7 +4521,11 @@ proof -
       have "{x \<in> X. h x \<in> V} \<in> TX"
         using hh hV unfolding top1_continuous_map_on_def by (by100 blast)
       moreover have "{x \<in> X. inv_into Y (inv_into X h) x \<in> V} = {x \<in> X. h x \<in> V}"
-        sorry
+        (is "?L = ?R")
+      proof
+        show "?L \<subseteq> ?R" using hinv_inv by auto
+        show "?R \<subseteq> ?L" using hinv_inv by auto
+      qed
       ultimately show "{x \<in> X. inv_into Y (inv_into X h) x \<in> V} \<in> TX" by simp
     qed
   qed
@@ -8152,6 +8170,9 @@ end
  
  
  
+
+
+
 
 
 
