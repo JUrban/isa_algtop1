@@ -12549,8 +12549,54 @@ proof (intro iffI)
   qed
   \<comment> \<open>k is continuous: on B^2 - {0}, continuous by composition; at 0, use H(x,1) = c.\<close>
   have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k"
-    sorry \<comment> \<open>Textbook: \<pi>(x,t)=(1-t)x is quotient map, H factors through \<pi>.
-       Direct: k continuous on B^2-{0} (composition); at 0 by tube lemma.\<close>
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>Part 1: k maps B^2 to X.\<close>
+    fix y assume hy: "y \<in> top1_B2"
+    show "k y \<in> X"
+    proof (cases "y = (0, 0)")
+      case True thus ?thesis unfolding k_def using hc by simp
+    next
+      case False
+      \<comment> \<open>y \<noteq> 0: k(y) = H(y/|y|, 1-|y|). Need y/|y| \<in> S^1 and 1-|y| \<in> I.\<close>
+      have hy_ne: "y \<noteq> (0::real, 0::real)" by (rule False)
+      have hnorm_pos: "sqrt (fst y ^ 2 + snd y ^ 2) > 0"
+      proof -
+        have "fst y ^ 2 + snd y ^ 2 > 0"
+        proof -
+          obtain a b where hab: "y = (a, b)" by (cases y)
+          have "a \<noteq> 0 \<or> b \<noteq> 0" using hy_ne hab by auto
+          hence "a ^ 2 > 0 \<or> b ^ 2 > 0" by auto
+          hence "a ^ 2 + b ^ 2 > 0"
+            by (metis zero_less_power2 add_pos_nonneg add_nonneg_pos zero_le_power2)
+          thus ?thesis using hab by simp
+        qed
+        thus ?thesis by simp
+      qed
+      have hnorm_le1: "sqrt (fst y ^ 2 + snd y ^ 2) \<le> 1"
+        using hy unfolding top1_B2_def by (simp add: real_le_rsqrt)
+      have hunit: "(fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+                    snd y / sqrt (fst y ^ 2 + snd y ^ 2)) \<in> top1_S1"
+        using hnorm_pos sorry \<comment> \<open>y/|y| \<in> S^1: standard norm computation.\<close>
+      have ht_I: "1 - sqrt (fst y ^ 2 + snd y ^ 2) \<in> I_set"
+        unfolding top1_unit_interval_def using hnorm_pos hnorm_le1 by simp
+      have "k y = H ((fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+                      snd y / sqrt (fst y ^ 2 + snd y ^ 2)),
+                     1 - sqrt (fst y ^ 2 + snd y ^ 2))"
+        unfolding k_def using hy_ne by simp
+      moreover have "H ((fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+                         snd y / sqrt (fst y ^ 2 + snd y ^ 2)),
+                        1 - sqrt (fst y ^ 2 + snd y ^ 2)) \<in> X"
+        using hH_cont hunit ht_I unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
+  next
+    \<comment> \<open>Part 2: preimage of open is open.\<close>
+    fix V assume hV: "V \<in> TX"
+    show "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
+      sorry \<comment> \<open>Split: on B^2-{0}, k = H \<circ> (normalize, 1-norm), continuous composition.
+             At 0: tube lemma on S^1 compact gives \<epsilon>-neighborhood.\<close>
+  qed
   show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
     using hk_cont hext by (by100 blast)
 next
