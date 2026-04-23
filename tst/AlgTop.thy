@@ -12595,8 +12595,17 @@ proof (intro iffI)
     \<comment> \<open>Part 2: preimage of open is open.\<close>
     fix V assume hV: "V \<in> TX"
     show "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
-      sorry \<comment> \<open>Split: on B^2-{0}, k = H \<circ> (normalize, 1-norm), continuous composition.
-             At 0: tube lemma on S^1 compact gives \<epsilon>-neighborhood.\<close>
+    proof -
+      \<comment> \<open>B^2_topology is a subspace of R^2. Need {y \<in> B^2. k y \<in> V} = B^2 \<inter> W for open W.
+         For each y \<in> B^2 with k y \<in> V, find open W_y with y \<in> W_y and W_y \<inter> B^2 \<subseteq> k^{-1}(V).
+         Case y \<noteq> 0: k = H \<circ> g where g(y) = (y/|y|, 1-|y|).
+           H continuous, g continuous on B^2-{0}, so k^{-1}(V) is open in B^2-{0}.
+         Case y = 0: k(0) = c \<in> V. H^{-1}(V) open in S^1\<times>I, contains S^1\<times>{1}.
+           By tube lemma (S^1 compact): S^1\<times>(1-\<epsilon>,1] \<subseteq> H^{-1}(V).
+           Then |y| < \<epsilon> implies k(y) \<in> V.\<close>
+      show "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
+        sorry
+    qed
   qed
   show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
     using hk_cont hext by (by100 blast)
