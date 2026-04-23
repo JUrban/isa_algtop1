@@ -12596,15 +12596,58 @@ proof (intro iffI)
     fix V assume hV: "V \<in> TX"
     show "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
     proof -
-      \<comment> \<open>B^2_topology is a subspace of R^2. Need {y \<in> B^2. k y \<in> V} = B^2 \<inter> W for open W.
-         For each y \<in> B^2 with k y \<in> V, find open W_y with y \<in> W_y and W_y \<inter> B^2 \<subseteq> k^{-1}(V).
-         Case y \<noteq> 0: k = H \<circ> g where g(y) = (y/|y|, 1-|y|).
-           H continuous, g continuous on B^2-{0}, so k^{-1}(V) is open in B^2-{0}.
-         Case y = 0: k(0) = c \<in> V. H^{-1}(V) open in S^1\<times>I, contains S^1\<times>{1}.
-           By tube lemma (S^1 compact): S^1\<times>(1-\<epsilon>,1] \<subseteq> H^{-1}(V).
-           Then |y| < \<epsilon> implies k(y) \<in> V.\<close>
-      show "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
-        sorry
+      \<comment> \<open>H\<inverse>(V) is open in S^1\<times>I: from H continuous.\<close>
+      have hHV: "{p \<in> top1_S1 \<times> I_set. H p \<in> V} \<in> product_topology_on top1_S1_topology I_top"
+        using hH_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Pointwise openness: for each y0 \<in> B^2 with k(y0) \<in> V, find open nbhd.\<close>
+      have hpointwise: "\<forall>y0\<in>top1_B2. k y0 \<in> V \<longrightarrow>
+          (\<exists>W. open W \<and> y0 \<in> W \<and> (\<forall>y\<in>top1_B2. y \<in> W \<longrightarrow> k y \<in> V))"
+      proof (intro ballI impI)
+        fix y0 assume hy0: "y0 \<in> top1_B2" and hky0: "k y0 \<in> V"
+        show "\<exists>W. open W \<and> y0 \<in> W \<and> (\<forall>y\<in>top1_B2. y \<in> W \<longrightarrow> k y \<in> V)"
+        proof (cases "y0 = (0, 0)")
+          case True
+          \<comment> \<open>Case y0 = 0: k(0) = c \<in> V. H^{-1}(V) contains S^1\<times>{1}, open.
+             Tube lemma (S^1 compact): \<exists>\<epsilon>>0. S^1\<times>(1-\<epsilon>,1] \<subseteq> H^{-1}(V).
+             Then ball(0,\<epsilon>) \<inter> B^2 maps into V under k.\<close>
+          show ?thesis sorry
+        next
+          case False
+          \<comment> \<open>Case y0 \<noteq> 0: k = H \<circ> g where g(y) = (y/|y|, 1-|y|).
+             g is continuous at y0 (composition of continuous on R^2-{0}).
+             H is continuous. So k is continuous at y0.
+             Since k(y0) \<in> V (open), there's \<epsilon>>0 with ball(y0,\<epsilon>) \<inter> B^2 \<subseteq> k^{-1}(V).\<close>
+          show ?thesis sorry
+        qed
+      qed
+      \<comment> \<open>Union of these neighborhoods gives the open set.\<close>
+      define W where "W = \<Union>{Wy. \<exists>y0\<in>top1_B2. k y0 \<in> V \<and> open Wy \<and> y0 \<in> Wy
+          \<and> (\<forall>y\<in>top1_B2. y \<in> Wy \<longrightarrow> k y \<in> V)}"
+      have hWo: "open W" unfolding W_def by auto
+      have heq: "{y \<in> top1_B2. k y \<in> V} = top1_B2 \<inter> W"
+      proof (rule set_eqI)
+        fix y show "(y \<in> {y \<in> top1_B2. k y \<in> V}) = (y \<in> top1_B2 \<inter> W)"
+        proof
+          assume "y \<in> {y \<in> top1_B2. k y \<in> V}"
+          hence hy: "y \<in> top1_B2" and hky: "k y \<in> V" by auto
+          from hpointwise[rule_format, OF hy hky]
+          obtain Wy where "open Wy" "y \<in> Wy" "\<forall>z\<in>top1_B2. z \<in> Wy \<longrightarrow> k z \<in> V" by blast
+          hence "y \<in> W" unfolding W_def using hy hky by (by100 blast)
+          thus "y \<in> top1_B2 \<inter> W" using hy by (by100 blast)
+        next
+          assume "y \<in> top1_B2 \<inter> W"
+          hence hy: "y \<in> top1_B2" and "y \<in> W" by auto
+          from \<open>y \<in> W\<close> obtain Wy where "y \<in> Wy" "\<forall>z\<in>top1_B2. z \<in> Wy \<longrightarrow> k z \<in> V"
+            unfolding W_def by (by100 blast)
+          thus "y \<in> {y \<in> top1_B2. k y \<in> V}" using hy by (by100 blast)
+        qed
+      qed
+      have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+        using hWo unfolding top1_open_sets_def by (by100 blast)
+      hence "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        using product_topology_on_open_sets_real2 by (by100 metis)
+      thus "{y \<in> top1_B2. k y \<in> V} \<in> top1_B2_topology"
+        unfolding heq top1_B2_topology_def subspace_topology_def by (by100 blast)
     qed
   qed
   show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
