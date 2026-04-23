@@ -14976,12 +14976,31 @@ proof (intro allI impI, elim conjE)
       using continuous_preserves_path_homotopic[OF hTS1c hTS1 h\<psi>_cont hfgn] h\<psi>_1 by simp
     \<comment> \<open>n*ftilde lifts \<psi>\<circ>(f^n), n*gtilde lifts \<psi>\<circ>(g^n).\<close>
     \<comment> \<open>By Theorem_54_3: path-homotopic lifts starting at same point have same endpoint.\<close>
+    have hscale: "top1_continuous_map_on UNIV top1_open_sets UNIV top1_open_sets (\<lambda>x::real. real n * x)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x :: real show "real n * x \<in> UNIV" by simp
+      next
+        fix V :: "real set" assume "V \<in> top1_open_sets"
+        hence "open V" unfolding top1_open_sets_def by (by100 blast)
+        have "continuous_on UNIV (\<lambda>x::real. real n * x)" by (intro continuous_intros)
+        from iffD1[OF continuous_on_open_vimage[OF open_UNIV] this, rule_format, OF \<open>open V\<close>]
+        have "open ((\<lambda>x::real. real n * x) -` V \<inter> UNIV)" .
+        hence "open ((\<lambda>x::real. real n * x) -` V)" by simp
+        hence "open {x::real. real n * x \<in> V}" by (simp add: vimage_def)
+        thus "{x \<in> UNIV. real n * x \<in> V} \<in> top1_open_sets"
+          unfolding top1_open_sets_def by simp
+      qed
     have hft_n_path: "top1_is_path_on UNIV top1_open_sets (0::real) (real n * ftilde 1) (\<lambda>s. real n * ftilde s)"
     proof -
       have "top1_continuous_map_on I_set I_top UNIV top1_open_sets ftilde"
         using hft_path unfolding top1_is_path_on_def by simp
       hence "top1_continuous_map_on I_set I_top UNIV top1_open_sets (\<lambda>s. real n * ftilde s)"
-        sorry \<comment> \<open>Scalar multiple of continuous is continuous.\<close>
+      proof -
+        have "(\<lambda>s. real n * ftilde s) = (\<lambda>x. real n * x) \<circ> ftilde" by (rule ext) simp
+        thus ?thesis using top1_continuous_map_on_comp[OF
+            \<open>top1_continuous_map_on I_set I_top UNIV top1_open_sets ftilde\<close> hscale] by simp
+      qed
       moreover have "ftilde 0 = 0" using hft_path unfolding top1_is_path_on_def by simp
       ultimately show ?thesis unfolding top1_is_path_on_def by simp
     qed
@@ -14990,7 +15009,11 @@ proof (intro allI impI, elim conjE)
       have "top1_continuous_map_on I_set I_top UNIV top1_open_sets gtilde"
         using hgt_path unfolding top1_is_path_on_def by simp
       hence "top1_continuous_map_on I_set I_top UNIV top1_open_sets (\<lambda>s. real n * gtilde s)"
-        sorry
+      proof -
+        have "(\<lambda>s. real n * gtilde s) = (\<lambda>x. real n * x) \<circ> gtilde" by (rule ext) simp
+        thus ?thesis using top1_continuous_map_on_comp[OF
+            \<open>top1_continuous_map_on I_set I_top UNIV top1_open_sets gtilde\<close> hscale] by simp
+      qed
       moreover have "gtilde 0 = 0" using hgt_path unfolding top1_is_path_on_def by simp
       ultimately show ?thesis unfolding top1_is_path_on_def by simp
     qed
