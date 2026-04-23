@@ -12698,8 +12698,28 @@ proof (intro iffI)
             using Lemma_26_8[OF hS1_top1_compact hITop hS1Top hN_open h1I hslice] by (by100 blast)
           \<comment> \<open>W_I is a neighborhood of 1 in I_top, so \<exists>\<epsilon>>0 with (1-\<epsilon>,1] \<subseteq> W_I.\<close>
           obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and h\<epsilon>_W: "\<forall>t\<in>I_set. 1 - \<epsilon> < t \<longrightarrow> t \<in> W_I"
-            sorry \<comment> \<open>From neighborhood_of: W_I \<in> I_top, 1 \<in> W_I. I_top = subspace of R.
-                   So W_I = I \<inter> U for some open U with 1 \<in> U. By open_dist, \<exists>\<epsilon>.\<close>
+          proof -
+            have "W_I \<in> I_top" and "1 \<in> W_I"
+              using hWI_nbhd unfolding neighborhood_of_def by auto
+            obtain U where hUo: "open U" and hWI_eq: "W_I = I_set \<inter> U"
+              using \<open>W_I \<in> I_top\<close> unfolding top1_unit_interval_topology_def subspace_topology_def
+                    top1_open_sets_def by auto
+            have "1 \<in> U" using \<open>1 \<in> W_I\<close> hWI_eq by simp
+            obtain e where "e > 0" "\<forall>y. dist y 1 < e \<longrightarrow> y \<in> U"
+              using hUo \<open>1 \<in> U\<close> unfolding open_dist by (by100 blast)
+            show ?thesis
+            proof (rule that[of e])
+              show "e > 0" by (rule \<open>e > 0\<close>)
+              show "\<forall>t\<in>I_set. 1 - e < t \<longrightarrow> t \<in> W_I"
+              proof (intro ballI impI)
+                fix t assume "t \<in> I_set" "1 - e < t"
+                have "t \<le> 1" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by simp
+                hence "dist t 1 < e" using \<open>1 - e < t\<close> unfolding dist_real_def by simp
+                hence "t \<in> U" using \<open>\<forall>y. dist y 1 < e \<longrightarrow> y \<in> U\<close> by simp
+                thus "t \<in> W_I" using \<open>t \<in> I_set\<close> hWI_eq by simp
+              qed
+            qed
+          qed
           \<comment> \<open>Step 5: For |y| < \<epsilon>, y \<in> B^2: k(y) \<in> V.\<close>
           \<comment> \<open>If y = 0: k(0) = c \<in> V. If y \<noteq> 0: 1-|y| > 1-\<epsilon>, y/|y| \<in> S^1,
              so (1-|y|, y/|y|) \<in> W_I \<times> S^1 \<subseteq> N, i.e., H(y/|y|, 1-|y|) \<in> V, i.e., k(y) \<in> V.\<close>
