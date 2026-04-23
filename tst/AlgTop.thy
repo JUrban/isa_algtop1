@@ -14966,8 +14966,26 @@ proof (intro allI impI, elim conjE)
      Their lifts (n*ftilde and n*gtilde) have the same endpoint.
      n*ftilde(1) = n*gtilde(1), i.e., n*k = n*l. Since n > 0: k = l.\<close>
   have "ftilde 1 = gtilde 1"
-    sorry \<comment> \<open>From Theorem_54_3: path-homotopic lifts have same endpoint.
-           n*ftilde(1) = n*gtilde(1) from the above. n > 0 gives ftilde(1) = gtilde(1).\<close>
+  proof -
+    \<comment> \<open>\<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n) in S^1 (from f^n ~ g^n and \<psi> continuous).\<close>
+    have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+      unfolding top1_S1_complex_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) simp
+    have h\<psi>fn_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        (?\<psi> \<circ> (\<lambda>s. (f s)^n)) (?\<psi> \<circ> (\<lambda>s. (g s)^n))"
+      using continuous_preserves_path_homotopic[OF hTS1c hTS1 h\<psi>_cont hfgn] h\<psi>_1 by simp
+    \<comment> \<open>n*ftilde lifts \<psi>\<circ>(f^n), n*gtilde lifts \<psi>\<circ>(g^n).\<close>
+    \<comment> \<open>By Theorem_54_3: path-homotopic lifts starting at same point have same endpoint.\<close>
+    have hft_n_path: "top1_is_path_on UNIV top1_open_sets 0 (n * ftilde 1) (\<lambda>s. n * ftilde s)"
+      sorry \<comment> \<open>Scalar multiple of path is path.\<close>
+    have hgt_n_path: "top1_is_path_on UNIV top1_open_sets 0 (n * gtilde 1) (\<lambda>s. n * gtilde s)"
+      sorry
+    \<comment> \<open>n*ftilde is a lift of \<psi>\<circ>(f^n): R_to_S1(n*ftilde s) = \<psi>((f s)^n).\<close>
+    \<comment> \<open>By Theorem_54_3: since \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n), their lifts have same endpoint.\<close>
+    have "n * ftilde 1 = n * gtilde 1"
+      sorry \<comment> \<open>Theorem_54_3 applied to the lifted paths.\<close>
+    thus "ftilde 1 = gtilde 1" using hn by simp
+  qed
   \<comment> \<open>Lifts with same endpoint \<Rightarrow> loops path-homotopic (Theorem_54_3 reverse).\<close>
   hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> f) (?\<psi> \<circ> g)"
     sorry \<comment> \<open>From Theorem_54_3.\<close>
