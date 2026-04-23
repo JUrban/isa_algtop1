@@ -3654,11 +3654,7 @@ proof (cases "b = north_pole")
     qed
   qed
 next
-  case False
-  \<comment> \<open>Same construction as S2_minus_point_sc case False: R = householder_S2 b,
-     hR_homeo_minus gives the homeomorphism. Since the proof is long and
-     already done there (with R = householder_S2 b = define R), we sorry.\<close>
-  show ?thesis sorry
+  case False show ?thesis using assms False sorry
 qed
 
 lemma S2_minus_point_simply_connected:
@@ -8325,6 +8321,8 @@ end
  
  
  
+
+
 
 
 
