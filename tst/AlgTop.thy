@@ -3608,7 +3608,8 @@ next
     sorry \<comment> \<open>Algebra: vdp=b3-1, c=-1, so R(b)=(0,0,1)=N.\<close>
   have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2" sorry
   have hR_inv: "\<And>p. R (R p) = p" sorry
-  have hR_cont: "continuous_on UNIV R" sorry
+  have hR_cont: "continuous_on UNIV R"
+    sorry \<comment> \<open>R is a polynomial/rational map with constant denominator 2-2*b3.\<close>
   \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
   have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
     sorry
@@ -7618,6 +7619,8 @@ end
  
  
  
+
+
 
 
 
