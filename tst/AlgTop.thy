@@ -14785,6 +14785,54 @@ definition top1_C_minus_0_topology :: "complex set set" where
     Here we only record the essential injectivity consequence: if two loops
     become path-homotopic after composition with z^n, then they were already
     path-homotopic. **)
+\<comment> \<open>Helper: \<psi> = (Re, Im) is continuous S^1_complex \<rightarrow> S^1.\<close>
+lemma psi_continuous_S1:
+  "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+      top1_S1 top1_S1_topology (\<lambda>z. (Re z, Im z))"
+proof -
+  have h\<psi>_map: "\<And>z. z \<in> top1_S1_complex \<Longrightarrow> (Re z, Im z) \<in> top1_S1"
+    unfolding top1_S1_complex_def top1_S1_def by (auto simp: cmod_def)
+  have h\<psi>_cont_univ: "continuous_on UNIV (\<lambda>z::complex. (Re z, Im z))"
+    by (intro continuous_intros)
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix z assume "z \<in> top1_S1_complex" thus "(Re z, Im z) \<in> top1_S1" by (rule h\<psi>_map)
+  next
+    fix V assume hV: "V \<in> top1_S1_topology"
+    then obtain W where hWo: "W \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+        and hVeq: "V = top1_S1 \<inter> W"
+      unfolding top1_S1_topology_def subspace_topology_def by auto
+    have hWopen: "open W"
+      using hWo product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 blast)
+    have hpre_open: "open ((\<lambda>z::complex. (Re z, Im z)) -` W)"
+    proof -
+      have "open ((\<lambda>z::complex. (Re z, Im z)) -` W \<inter> UNIV)"
+        using iffD1[OF continuous_on_open_vimage[OF open_UNIV] h\<psi>_cont_univ] hWopen by (by100 blast)
+      thus ?thesis by simp
+    qed
+    have "{z \<in> top1_S1_complex. (Re z, Im z) \<in> V} =
+        top1_S1_complex \<inter> ((\<lambda>z. (Re z, Im z)) -` W)"
+      unfolding hVeq using h\<psi>_map by auto
+    thus "{z \<in> top1_S1_complex. (Re z, Im z) \<in> V} \<in> top1_S1_complex_topology"
+      unfolding top1_S1_complex_topology_def subspace_topology_def
+      using hpre_open unfolding top1_open_sets_def by (by100 blast)
+  qed
+qed
+
+\<comment> \<open>Helper: continuous map preserves loops.\<close>
+lemma top1_continuous_map_loop_early:
+  assumes "top1_continuous_map_on X TX Y TY f"
+      and "top1_is_loop_on X TX x0 l"
+  shows "top1_is_loop_on Y TY (f x0) (f \<circ> l)"
+proof -
+  have hl0: "l 0 = x0" and hl1: "l 1 = x0"
+    using assms(2) unfolding top1_is_loop_on_def top1_is_path_on_def by blast+
+  show ?thesis
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+    using top1_continuous_map_on_comp[OF top1_is_loop_on_continuous[OF assms(2)] assms(1)]
+    by (simp add: comp_def hl0 hl1)
+qed
+
 \<comment> \<open>Step 1a: z^n is continuous on S^1 (polynomial, sorry-free).\<close>
 lemma Theorem_56_1_step_1_cont:
   fixes n :: nat
@@ -14845,20 +14893,25 @@ proof (intro allI impI, elim conjE)
   \<comment> \<open>Transfer loops via \<psi> to S^1 (pair topology).\<close>
   have h\<psi>_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
       top1_S1 top1_S1_topology ?\<psi>"
-    sorry \<comment> \<open>\<psi> = (Re, Im) continuous. Proved at line 15277 in step_2.\<close>
+    by (rule psi_continuous_S1)
   have h\<psi>_1: "?\<psi> 1 = (1::real, 0::real)" by simp
   have h\<psi>f_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> f)"
-    sorry \<comment> \<open>\<psi> continuous + f loop + \<psi>(1)=(1,0). top1_continuous_map_loop is below.\<close>
+    using top1_continuous_map_loop_early[OF h\<psi>_cont hf] h\<psi>_1 by simp
   have h\<psi>g_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> g)"
-    sorry
+    using top1_continuous_map_loop_early[OF h\<psi>_cont hg] h\<psi>_1 by simp
   \<comment> \<open>Lift \<psi>\<circ>f to R. Get ftilde with R_to_S1(ftilde(s)) = \<psi>(f(s)), ftilde(0)=0.\<close>
+  have hTE: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have h\<psi>f_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> f)"
+    using h\<psi>f_loop unfolding top1_is_loop_on_def by simp
   obtain ftilde where hft_path: "top1_is_path_on UNIV top1_open_sets 0 (ftilde 1) ftilde"
-      and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s) = ?\<psi> (f s)"
-    using Lemma_54_1_path_lifting[OF hcov h0R hp0 _ hTS1]
-    sorry
+      and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s) = (?\<psi> \<circ> f) s"
+    using Lemma_54_1_path_lifting[OF hcov h0R hp0 h\<psi>f_path hTS1 hTE] by (by100 blast)
+  have h\<psi>g_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> g)"
+    using h\<psi>g_loop unfolding top1_is_loop_on_def by simp
   obtain gtilde where hgt_path: "top1_is_path_on UNIV top1_open_sets 0 (gtilde 1) gtilde"
-      and hgt_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (gtilde s) = ?\<psi> (g s)"
-    sorry
+      and hgt_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (gtilde s) = (?\<psi> \<circ> g) s"
+    using Lemma_54_1_path_lifting[OF hcov h0R hp0 h\<psi>g_path hTS1 hTE] by (by100 blast)
   \<comment> \<open>Key: n*ftilde lifts \<psi>\<circ>(f^n). By DeMoivre: cis(\<theta>)^n = cis(n\<theta>),
      so R_to_S1(n*ftilde(s)) = \<psi>((f s)^n).\<close>
   have hft_n_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (n * ftilde s) = ?\<psi> ((f s)^n)"
