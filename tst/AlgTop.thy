@@ -6225,9 +6225,10 @@ proof -
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Same Theorem_18_4 pattern as forward. g = (inv V p, inv V' p') is continuous
-                     by Theorem_18_4; agrees with inv_into (V\<times>V') (p\<times>p') on U\<times>U' by inv_into_f_eq.
-                     Transfer via top1_continuous_map_on_cong.\<close>
+              sorry \<comment> \<open>Product inverse continuity. Same Theorem_18_4 pattern.
+                     Proved above: inv_into decomposes into component inverses (by inv_into_f_eq).
+                     Component inverses continuous (from component homeomorphisms).
+                     Product of continuous = continuous (Theorem_18_4).\<close>
           qed
         qed
       qed
