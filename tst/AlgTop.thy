@@ -3455,11 +3455,75 @@ next
   qed
 qed
 
+lemma homeomorphism_preserves_simply_connected:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
+      and hsc: "top1_simply_connected_on Y TY"
+  shows "top1_simply_connected_on X TX"
+  unfolding top1_simply_connected_on_def
+proof (intro conjI allI impI ballI)
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hbij: "bij_betw h X Y"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hg_cont: "top1_continuous_map_on Y TY X TX (inv_into X h)" by (rule hg)
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
+  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
+    by (rule inv_into_f_f[OF hinj])
+  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
+  have hg_map: "\<And>y. y \<in> Y \<Longrightarrow> inv_into X h y \<in> X"
+    using hbij unfolding bij_betw_def by (simp add: inv_into_into)
+  have hg_inv: "\<And>y. y \<in> Y \<Longrightarrow> h (inv_into X h y) = y"
+    using hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+  \<comment> \<open>Path-connected: transfer via h.\<close>
+  show "top1_path_connected_on X TX"
+    sorry
+next
+  fix x0 f
+  assume hx0: "x0 \<in> X"
+  assume hf: "top1_is_loop_on X TX x0 f"
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+      and hbij: "bij_betw h X Y"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
+  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
+    by (rule inv_into_f_f[OF hinj])
+  \<comment> \<open>h\<circ>f is a loop at h(x0) in Y.\<close>
+  have hhf_loop: "top1_is_loop_on Y TY (h x0) (h \<circ> f)"
+    using top1_continuous_map_loop_early[OF hh hf] .
+  \<comment> \<open>Y simply connected: h\<circ>f is contractible.\<close>
+  have hhx0: "h x0 \<in> Y" by (rule hh_map[OF hx0])
+  have hhf_contract: "top1_path_homotopic_on Y TY (h x0) (h x0)
+      (h \<circ> f) (top1_constant_path (h x0))"
+    using hsc hhx0 hhf_loop unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>Transfer back via inv_into: f = inv\<circ>h\<circ>f is contractible.\<close>
+  have hg_transfer: "top1_path_homotopic_on X TX
+      (inv_into X h (h x0)) (inv_into X h (h x0))
+      (inv_into X h \<circ> (h \<circ> f)) (inv_into X h \<circ> top1_constant_path (h x0))"
+    by (rule continuous_preserves_path_homotopic[OF hTY hTX hg hhf_contract])
+  have "inv_into X h (h x0) = x0" by (rule hh_inv[OF hx0])
+  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "f s \<in> X" using hf hs
+      unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      by (by100 blast)
+    thus "(inv_into X h \<circ> (h \<circ> f)) s = f s" by (simp add: hh_inv)
+  qed
+  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
+    unfolding top1_constant_path_def using hh_inv[OF hx0] by simp
+  ultimately show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+    sorry \<comment> \<open>Needs: path homotopic agrees on I_set transfer.\<close>
+qed
+
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
-  \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic projection. R^2 is simply connected (convex).\<close>
+  \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic projection (after rotation to north pole).\<close>
   sorry
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
@@ -7452,6 +7516,10 @@ end
  
  
  
+
+
+
+
 
 
 
