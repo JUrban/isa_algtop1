@@ -14821,8 +14821,85 @@ proof (intro allI impI, elim conjE)
      hfgn says m*k = m*l. Need m \<noteq> 0.
      If m = 0: z^n trivial on \<pi>_1 \<Rightarrow> z^n nulhomotopic \<Rightarrow> z^n:S^1\<rightarrow>C-{0} nulhomotopic.
      But Step 2: NOT nulhomotopic. Contradiction. So m \<noteq> 0, k = l, f ~ g.\<close>
-  show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+  \<comment> \<open>Transfer via \<psi>(z) = (Re z, Im z) to S^1 (pair topology).\<close>
+  let ?\<psi> = "\<lambda>z::complex. (Re z, Im z)"
+  \<comment> \<open>Lift \<psi> \<circ> f to R via covering map R_to_S1. Let endpoint = k (integer).\<close>
+  \<comment> \<open>Then \<psi>((f s)^n) = R_to_S1(n * ftilde(s)), so lift of \<psi> \<circ> f^n ends at n*k.\<close>
+  \<comment> \<open>Similarly for g: lift ends at l, lift of g^n ends at n*l.\<close>
+  \<comment> \<open>f^n ~ g^n \<Rightarrow> lifts have same endpoint: n*k = n*l.\<close>
+  \<comment> \<open>n > 0 \<Rightarrow> k = l \<Rightarrow> f ~ g.\<close>
+  \<comment> \<open>Setup: covering map R \<rightarrow> S^1, \<psi> bridge.\<close>
+  have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    by (rule Theorem_53_1)
+  have h0R: "(0::real) \<in> (UNIV::real set)" by simp
+  have hp0: "top1_R_to_S1 0 = (1::real, 0::real)"
+    unfolding top1_R_to_S1_def by simp
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hTR_: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+      using product_topology_on_is_topology_on[OF hTR_ hTR_] by simp
+    thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+  qed
+  \<comment> \<open>Transfer loops via \<psi> to S^1 (pair topology).\<close>
+  have h\<psi>f_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> f)"
+    sorry \<comment> \<open>\<psi> continuous, f loop at 1, \<psi>(1) = (1,0).\<close>
+  have h\<psi>g_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> g)"
     sorry
+  \<comment> \<open>Lift \<psi>\<circ>f to R. Get ftilde with R_to_S1(ftilde(s)) = \<psi>(f(s)), ftilde(0)=0.\<close>
+  obtain ftilde where hft_path: "top1_is_path_on UNIV top1_open_sets 0 (ftilde 1) ftilde"
+      and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s) = ?\<psi> (f s)"
+    using Lemma_54_1_path_lifting[OF hcov h0R hp0 _ hTS1]
+    sorry
+  obtain gtilde where hgt_path: "top1_is_path_on UNIV top1_open_sets 0 (gtilde 1) gtilde"
+      and hgt_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (gtilde s) = ?\<psi> (g s)"
+    sorry
+  \<comment> \<open>Key: n*ftilde lifts \<psi>\<circ>(f^n). By DeMoivre: cis(\<theta>)^n = cis(n\<theta>),
+     so R_to_S1(n*ftilde(s)) = \<psi>((f s)^n).\<close>
+  have hft_n_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (n * ftilde s) = ?\<psi> ((f s)^n)"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    \<comment> \<open>f(s) = cis(2\<pi> * ftilde(s)) since R_to_S1(ftilde s) = \<psi>(f s) and |f s| = 1.\<close>
+    have hfs_S1: "f s \<in> top1_S1_complex"
+      using hf unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      using hs by (by100 blast)
+    have hfs_norm: "cmod (f s) = 1" using hfs_S1 unfolding top1_S1_complex_def by simp
+    have hRs: "top1_R_to_S1 (ftilde s) = (Re (f s), Im (f s))"
+      using hft_lift hs by simp
+    hence hcos: "cos (2 * pi * ftilde s) = Re (f s)"
+      and hsin: "sin (2 * pi * ftilde s) = Im (f s)"
+      unfolding top1_R_to_S1_def by auto
+    \<comment> \<open>f(s) = cis(2\<pi> * ftilde s).\<close>
+    have hfs_cis: "f s = cis (2 * pi * ftilde s)"
+    proof (rule complex_eqI)
+      show "Re (f s) = Re (cis (2 * pi * ftilde s))" using hcos by simp
+      show "Im (f s) = Im (cis (2 * pi * ftilde s))" using hsin by simp
+    qed
+    \<comment> \<open>(f s)^n = cis(2\<pi> * n * ftilde s) by DeMoivre.\<close>
+    have "(f s)^n = cis (2 * pi * ftilde s) ^ n" using hfs_cis by simp
+    also have "\<dots> = cis (n * (2 * pi * ftilde s))" by (rule DeMoivre)
+    also have "n * (2 * pi * ftilde s) = 2 * pi * (n * ftilde s)"
+      by (simp add: algebra_simps)
+    finally have hfn_cis: "(f s)^n = cis (2 * pi * (n * ftilde s))" .
+    \<comment> \<open>\<psi>((f s)^n) = (cos(2\<pi>*n*ftilde s), sin(2\<pi>*n*ftilde s)) = R_to_S1(n*ftilde s).\<close>
+    show "top1_R_to_S1 (n * ftilde s) = ?\<psi> ((f s)^n)"
+      unfolding top1_R_to_S1_def hfn_cis by simp
+  qed
+  have hgt_n_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (n * gtilde s) = ?\<psi> ((g s)^n)"
+    sorry
+  \<comment> \<open>f^n ~ g^n \<Rightarrow> \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n) in S^1.
+     Their lifts (n*ftilde and n*gtilde) have the same endpoint.
+     n*ftilde(1) = n*gtilde(1), i.e., n*k = n*l. Since n > 0: k = l.\<close>
+  have "ftilde 1 = gtilde 1"
+    sorry \<comment> \<open>From Theorem_54_3: path-homotopic lifts have same endpoint.
+           n*ftilde(1) = n*gtilde(1) from the above. n > 0 gives ftilde(1) = gtilde(1).\<close>
+  \<comment> \<open>Lifts with same endpoint \<Rightarrow> loops path-homotopic (Theorem_54_3 reverse).\<close>
+  hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> f) (?\<psi> \<circ> g)"
+    sorry \<comment> \<open>From Theorem_54_3.\<close>
+  \<comment> \<open>Transfer back: \<psi> is homeomorphism, so path-homotopy transfers.\<close>
+  show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+    sorry \<comment> \<open>Transfer from S^1 pair back to S^1 complex via \<psi>^{-1}.\<close>
 qed
 
 \<comment> \<open>Combined (for backward compatibility).\<close>
