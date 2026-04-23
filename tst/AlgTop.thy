@@ -12828,8 +12828,128 @@ proof (intro iffI)
              g is continuous at y0 (composition of continuous on R^2-{0}).
              H is continuous. So k is continuous at y0.
              Since k(y0) \<in> V (open), there's \<epsilon>>0 with ball(y0,\<epsilon>) \<inter> B^2 \<subseteq> k^{-1}(V).\<close>
-          show ?thesis sorry \<comment> \<open>k = H \<circ> g on B^2-{0}. g continuous (norm, division).
-             H\<inverse>(V) open in S^1\<times>I. g\<inverse>(H\<inverse>(V)) open in B^2-{0}. Standard topology.\<close>
+          \<comment> \<open>Step 1: H\<inverse>(V) = (S^1\<times>I) \<inter> W0 for open W0 in R^2\<times>R.\<close>
+          have hHV_sub: "{p \<in> top1_S1 \<times> I_set. H p \<in> V}
+              \<in> subspace_topology (UNIV :: ((real\<times>real)\<times>real) set)
+                    (product_topology_on (product_topology_on top1_open_sets top1_open_sets) top1_open_sets)
+                    (top1_S1 \<times> I_set)"
+          proof -
+            have "product_topology_on top1_S1_topology I_top =
+                subspace_topology (UNIV :: ((real\<times>real)\<times>real) set)
+                  (product_topology_on (product_topology_on top1_open_sets top1_open_sets) top1_open_sets)
+                  (top1_S1 \<times> I_set)"
+            proof -
+              have hTR_: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+                by (rule top1_open_sets_is_topology_on_UNIV)
+              have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+                using product_topology_on_is_topology_on[OF hTR_ hTR_] by simp
+              have "product_topology_on top1_S1_topology I_top =
+                  product_topology_on
+                    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1)
+                    (subspace_topology UNIV top1_open_sets I_set)"
+                unfolding top1_S1_topology_def top1_unit_interval_topology_def by simp
+              also have "\<dots> = subspace_topology (UNIV \<times> UNIV)
+                  (product_topology_on (product_topology_on top1_open_sets top1_open_sets) top1_open_sets)
+                  (top1_S1 \<times> I_set)"
+                by (rule Theorem_16_3[OF hTR2 hTR_])
+              finally show ?thesis by simp
+            qed
+            thus ?thesis using hHV by simp
+          qed
+          then obtain W0 :: "((real\<times>real)\<times>real) set" where
+              hW0_prod: "W0 \<in> product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets) top1_open_sets"
+              and hHV_eq: "{p \<in> top1_S1 \<times> I_set. H p \<in> V} = (top1_S1 \<times> I_set) \<inter> W0"
+            unfolding subspace_topology_def by (by100 blast)
+          have hW0_open: "open W0"
+          proof -
+            have "product_topology_on (product_topology_on (top1_open_sets::real set set) top1_open_sets)
+                (top1_open_sets::real set set) = (top1_open_sets :: ((real\<times>real)\<times>real) set set)"
+              using product_topology_on_open_sets[where ?'a = "real \<times> real" and ?'b = real]
+                    product_topology_on_open_sets[where ?'a = real and ?'b = real] by metis
+            thus ?thesis using hW0_prod unfolding top1_open_sets_def by (by100 blast)
+          qed
+          \<comment> \<open>Step 2: g(y) = ((fst y/r, snd y/r), 1-r) where r = sqrt(...).
+             g continuous on R^2-{0}. g\<inverse>(W0) open in R^2-{0}.\<close>
+          define g where "g = (\<lambda>y::real\<times>real.
+              ((fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+                snd y / sqrt (fst y ^ 2 + snd y ^ 2)),
+               1 - sqrt (fst y ^ 2 + snd y ^ 2)))"
+          have hg_cont: "continuous_on (UNIV - {(0::real, 0::real)}) g"
+            unfolding g_def by (intro continuous_intros) auto
+          have hg_y0_W0: "g y0 \<in> W0"
+          proof -
+            have "g y0 \<in> top1_S1 \<times> I_set"
+            proof -
+              have hr_pos: "sqrt (fst y0 ^ 2 + snd y0 ^ 2) > 0"
+              proof -
+                obtain a b where hab: "y0 = (a, b)" by (cases y0)
+                have "a \<noteq> 0 \<or> b \<noteq> 0" using False hab by auto
+                hence "a ^ 2 + b ^ 2 > 0"
+                  by (metis zero_less_power2 add_pos_nonneg add_nonneg_pos zero_le_power2)
+                thus ?thesis using hab by simp
+              qed
+              have hr_le1: "sqrt (fst y0 ^ 2 + snd y0 ^ 2) \<le> 1"
+                using hy0 unfolding top1_B2_def by (simp add: real_le_rsqrt)
+              have "(fst y0 / sqrt (fst y0 ^ 2 + snd y0 ^ 2),
+                     snd y0 / sqrt (fst y0 ^ 2 + snd y0 ^ 2)) \<in> top1_S1"
+                using hr_pos unfolding top1_S1_def
+                by (auto simp: power_divide add_divide_distrib[symmetric] real_sqrt_gt_zero)
+              moreover have "1 - sqrt (fst y0 ^ 2 + snd y0 ^ 2) \<in> I_set"
+                unfolding top1_unit_interval_def using hr_pos hr_le1 by simp
+              ultimately show ?thesis unfolding g_def by simp
+            qed
+            moreover have "H (g y0) \<in> V"
+            proof -
+              have "k y0 = H ((fst y0 / sqrt (fst y0 ^ 2 + snd y0 ^ 2),
+                              snd y0 / sqrt (fst y0 ^ 2 + snd y0 ^ 2)),
+                             1 - sqrt (fst y0 ^ 2 + snd y0 ^ 2))"
+                unfolding k_def using False by simp
+              also have "\<dots> = H (g y0)" unfolding g_def by simp
+              finally show ?thesis using hky0 by simp
+            qed
+            ultimately have "g y0 \<in> {p \<in> top1_S1 \<times> I_set. H p \<in> V}" by simp
+            hence "g y0 \<in> (top1_S1 \<times> I_set) \<inter> W0" using hHV_eq by simp
+            thus ?thesis by (by100 blast)
+          qed
+          \<comment> \<open>Step 3: g\<inverse>(W0) is open (g continuous, W0 open) and contains y0.\<close>
+          have "open (g -` W0 \<inter> (UNIV - {(0, 0)}))"
+            using continuous_on_open_vimage[OF open_Diff[OF open_UNIV closed_insert[OF closed_empty]]]
+                  hg_cont hW0_open by blast
+          moreover have "y0 \<in> g -` W0 \<inter> (UNIV - {(0, 0)})"
+            using hg_y0_W0 False by simp
+          moreover have "\<forall>y\<in>top1_B2. y \<in> g -` W0 \<inter> (UNIV - {(0, 0)}) \<longrightarrow> k y \<in> V"
+          proof (intro ballI impI)
+            fix y assume "y \<in> top1_B2" "y \<in> g -` W0 \<inter> (UNIV - {(0, 0)})"
+            hence "y \<noteq> (0, 0)" and "g y \<in> W0" by auto
+            have "g y \<in> top1_S1 \<times> I_set"
+            proof -
+              have hr_pos: "sqrt (fst y ^ 2 + snd y ^ 2) > 0"
+              proof -
+                obtain a b where hab: "y = (a, b)" by (cases y)
+                have "a \<noteq> 0 \<or> b \<noteq> 0" using \<open>y \<noteq> (0, 0)\<close> hab by auto
+                hence "a ^ 2 + b ^ 2 > 0"
+                  by (metis zero_less_power2 add_pos_nonneg add_nonneg_pos zero_le_power2)
+                thus ?thesis using hab by simp
+              qed
+              have hr_le1: "sqrt (fst y ^ 2 + snd y ^ 2) \<le> 1"
+                using \<open>y \<in> top1_B2\<close> unfolding top1_B2_def by (simp add: real_le_rsqrt)
+              have "(fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+                     snd y / sqrt (fst y ^ 2 + snd y ^ 2)) \<in> top1_S1"
+                using hr_pos unfolding top1_S1_def
+                by (auto simp: power_divide add_divide_distrib[symmetric] real_sqrt_gt_zero)
+              moreover have "1 - sqrt (fst y ^ 2 + snd y ^ 2) \<in> I_set"
+                unfolding top1_unit_interval_def using hr_pos hr_le1 by simp
+              ultimately show ?thesis unfolding g_def by simp
+            qed
+            hence "g y \<in> {p \<in> top1_S1 \<times> I_set. H p \<in> V}"
+            proof -
+              have "g y \<in> (top1_S1 \<times> I_set) \<inter> W0" using \<open>g y \<in> top1_S1 \<times> I_set\<close> \<open>g y \<in> W0\<close> by simp
+              thus ?thesis using hHV_eq by simp
+            qed
+            hence "H (g y) \<in> V" by simp
+            thus "k y \<in> V" unfolding k_def g_def using \<open>y \<noteq> (0, 0)\<close> by simp
+          qed
+          ultimately show ?thesis by (by100 blast)
         qed
       qed
       \<comment> \<open>Union of these neighborhoods gives the open set.\<close>
