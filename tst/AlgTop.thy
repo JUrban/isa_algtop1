@@ -4861,8 +4861,27 @@ lemma map_into_R2_nulhomotopic:
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
   shows "top1_nulhomotopic_on A TA
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
-  \<comment> \<open>R^2 is contractible: straight-line homotopy F(x,t) = (1-t)*f(x) + t*(0,0).\<close>
-  sorry
+  \<comment> \<open>R^2 is contractible: straight-line homotopy F(x,t) = (1-t)*f(x).\<close>
+  unfolding top1_nulhomotopic_on_def
+proof (intro bexI[of _ "(0::real, 0)"])
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  let ?c = "(0::real, 0)"
+  \<comment> \<open>Define F(x,t) = (1-t)*f(x) = ((1-t)*fst(f x), (1-t)*snd(f x)).\<close>
+  define F where "F = (\<lambda>(x::'a, t::real). ((1-t)*fst(f x), (1-t)*snd(f x)))"
+  have hconst: "top1_continuous_map_on A TA (UNIV :: (real \<times> real) set) ?TR2 (\<lambda>_. ?c)"
+    sorry \<comment> \<open>Constant map continuous (needs is_topology_on A TA).\<close>
+  show "top1_homotopic_on A TA (UNIV :: (real \<times> real) set) ?TR2 f (\<lambda>_. ?c)"
+    unfolding top1_homotopic_on_def
+    using hf hconst
+  proof (intro conjI exI[of _ F])
+    show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+        (UNIV :: (real \<times> real) set) ?TR2 F"
+      sorry \<comment> \<open>F is continuous: polynomial in t and f(x).\<close>
+    show "\<forall>x\<in>A. F (x, 0) = f x" unfolding F_def by simp
+    show "\<forall>x\<in>A. F (x, 1) = ?c" unfolding F_def by simp
+  qed auto
+  show "?c \<in> UNIV" by simp
+qed
 
 lemma nulhomotopic_transfer:
   assumes hhom: "top1_homeomorphism_on X TX Y TY h"
@@ -8382,6 +8401,7 @@ end
  
  
  
+
 
 
 
