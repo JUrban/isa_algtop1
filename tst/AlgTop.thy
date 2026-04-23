@@ -12577,7 +12577,8 @@ proof (intro iffI)
         using hy unfolding top1_B2_def by (simp add: real_le_rsqrt)
       have hunit: "(fst y / sqrt (fst y ^ 2 + snd y ^ 2),
                     snd y / sqrt (fst y ^ 2 + snd y ^ 2)) \<in> top1_S1"
-        using hnorm_pos sorry \<comment> \<open>y/|y| \<in> S^1: standard norm computation.\<close>
+        using hnorm_pos unfolding top1_S1_def
+        by (auto simp: power_divide add_divide_distrib[symmetric] real_sqrt_gt_zero)
       have ht_I: "1 - sqrt (fst y ^ 2 + snd y ^ 2) \<in> I_set"
         unfolding top1_unit_interval_def using hnorm_pos hnorm_le1 by simp
       have "k y = H ((fst y / sqrt (fst y ^ 2 + snd y ^ 2),
