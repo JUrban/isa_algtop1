@@ -12548,7 +12548,9 @@ proof (intro iffI)
     finally show "k x = h x" .
   qed
   \<comment> \<open>k is continuous: on B^2 - {0}, continuous by composition; at 0, use H(x,1) = c.\<close>
-  have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k" sorry
+  have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX k"
+    sorry \<comment> \<open>Textbook: \<pi>(x,t)=(1-t)x is quotient map, H factors through \<pi>.
+       Direct: k continuous on B^2-{0} (composition); at 0 by tube lemma.\<close>
   show "\<exists>k. top1_continuous_map_on top1_B2 top1_B2_topology X TX k \<and> (\<forall>x\<in>top1_S1. k x = h x)"
     using hk_cont hext by (by100 blast)
 next
