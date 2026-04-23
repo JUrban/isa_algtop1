@@ -3475,9 +3475,33 @@ proof (intro conjI allI impI ballI)
     using hbij unfolding bij_betw_def by (simp add: inv_into_into)
   have hg_inv: "\<And>y. y \<in> Y \<Longrightarrow> h (inv_into X h y) = y"
     using hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
-  \<comment> \<open>Path-connected: transfer via h.\<close>
+  \<comment> \<open>Path-connected: transfer via h and inv.\<close>
   show "top1_path_connected_on X TX"
-    sorry
+    unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on X TX" by (rule hTX)
+  next
+    fix x1 x2 assume hx1: "x1 \<in> X" and hx2: "x2 \<in> X"
+    have "h x1 \<in> Y" by (rule hh_map[OF hx1])
+    moreover have "h x2 \<in> Y" by (rule hh_map[OF hx2])
+    ultimately obtain \<alpha> where h\<alpha>: "top1_is_path_on Y TY (h x1) (h x2) \<alpha>"
+      using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+    have "top1_is_path_on X TX (inv_into X h (h x1)) (inv_into X h (h x2)) (inv_into X h \<circ> \<alpha>)"
+    proof -
+      have h\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY \<alpha>"
+        using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      have hinv_\<alpha>_cont: "top1_continuous_map_on I_set I_top X TX (inv_into X h \<circ> \<alpha>)"
+        by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont hg])
+      have "(\<alpha> 0) = h x1" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      hence h0: "(inv_into X h \<circ> \<alpha>) 0 = inv_into X h (h x1)" by simp
+      have "(\<alpha> 1) = h x2" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      hence h1: "(inv_into X h \<circ> \<alpha>) 1 = inv_into X h (h x2)" by simp
+      show ?thesis unfolding top1_is_path_on_def using hinv_\<alpha>_cont h0 h1 by (by100 blast)
+    qed
+    hence "top1_is_path_on X TX x1 x2 (inv_into X h \<circ> \<alpha>)"
+      using hh_inv[OF hx1] hh_inv[OF hx2] by simp
+    thus "\<exists>f. top1_is_path_on X TX x1 x2 f" by (by100 blast)
+  qed
 next
   fix x0 f
   assume hx0: "x0 \<in> X"
@@ -3515,8 +3539,30 @@ next
   qed
   moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
     unfolding top1_constant_path_def using hh_inv[OF hx0] by simp
-  ultimately show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
-    sorry \<comment> \<open>Needs: path homotopic agrees on I_set transfer.\<close>
+  ultimately have hinv_x0: "inv_into X h (h x0) = x0"
+      and hinv_f: "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
+      and hinv_c: "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
+    by auto
+  \<comment> \<open>Extract homotopy from hg_transfer, rebuild with I_set agreement.\<close>
+  obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
+      and hH0: "\<forall>s\<in>I_set. H (s, 0) = (inv_into X h \<circ> (h \<circ> f)) s"
+      and hH1: "\<forall>s\<in>I_set. H (s, 1) = (inv_into X h \<circ> top1_constant_path (h x0)) s"
+      and hHL: "\<forall>t\<in>I_set. H (0, t) = inv_into X h (h x0)"
+      and hHR: "\<forall>t\<in>I_set. H (1, t) = inv_into X h (h x0)"
+    using hg_transfer hinv_x0 unfolding top1_path_homotopic_on_def by auto
+  have hfpath: "top1_is_path_on X TX x0 x0 f"
+    using hf unfolding top1_is_loop_on_def .
+  have hcpath: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0])
+  show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+    unfolding top1_path_homotopic_on_def
+    using hfpath hcpath hH_cont
+  proof (intro conjI exI[of _ H])
+    show "\<forall>s\<in>I_set. H (s, 0) = f s" using hH0 hinv_f by simp
+    show "\<forall>s\<in>I_set. H (s, 1) = top1_constant_path x0 s" using hH1 hinv_c by simp
+    show "\<forall>t\<in>I_set. H (0, t) = x0" using hHL hinv_x0 by simp
+    show "\<forall>t\<in>I_set. H (1, t) = x0" using hHR hinv_x0 by simp
+  qed auto
 qed
 
 lemma S2_minus_point_simply_connected:
@@ -7516,6 +7562,7 @@ end
  
  
  
+
 
 
 
