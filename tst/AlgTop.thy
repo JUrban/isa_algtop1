@@ -3178,11 +3178,25 @@ proof (intro conjI)
       have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
       \<comment> \<open>Preimage: {p \<in> S | proj(p) \<in> V} = S \<inter> proj\<inverse>(V).\<close>
       \<comment> \<open>proj\<inverse>(V) is open in S since proj is continuous_on S.\<close>
-      have hpre: "openin_on ?S ?TS (stereographic_proj -` V \<inter> ?S)"
-        using iffD1[OF continuous_on_open_invariant hproj_cont] hVo
+      \<comment> \<open>By continuous_on_open_invariant: \<exists>U open. proj\<inverse>(V) \<inter> S = U \<inter> S.\<close>
+      obtain W where hWo: "open W" and hWeq: "stereographic_proj -` V \<inter> ?S = W \<inter> ?S"
         sorry
-      have "{p \<in> ?S. stereographic_proj p \<in> V} = stereographic_proj -` V \<inter> ?S" by (by100 auto)
-      thus "{p \<in> ?S. stereographic_proj p \<in> V} \<in> ?TS" using hpre unfolding openin_on_def by simp
+      have "{p \<in> ?S. stereographic_proj p \<in> V} = W \<inter> ?S" using hWeq by (by100 auto)
+      moreover have "W \<inter> ?S \<in> ?TS"
+      proof -
+        have "W \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+          using hWo unfolding top1_open_sets_def by (by100 blast)
+        hence hW_R3: "W \<in> product_topology_on top1_open_sets
+            (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_open_sets by metis
+        have "top1_S2 \<inter> W \<in> top1_S2_topology"
+          unfolding top1_S2_topology_def subspace_topology_def using hW_R3 by (by100 blast)
+        hence "?S \<inter> (top1_S2 \<inter> W) \<in> ?TS"
+          unfolding subspace_topology_def by (by100 blast)
+        moreover have "?S \<inter> (top1_S2 \<inter> W) = W \<inter> ?S" by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      ultimately show "{p \<in> ?S. stereographic_proj p \<in> V} \<in> ?TS" by simp
     qed
   qed
   show "top1_continuous_map_on UNIV ?TR2 ?S ?TS (inv_into ?S stereographic_proj)"
@@ -7396,6 +7410,9 @@ end
  
  
  
+
+
+
 
 
 
