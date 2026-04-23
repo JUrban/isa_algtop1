@@ -12673,7 +12673,15 @@ proof (intro iffI)
           \<comment> \<open>Step 4: Apply tube lemma to swapped product I \<times> S^1.\<close>
           have hITop: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
           have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-          have hS1Top: "is_topology_on top1_S1 top1_S1_topology" sorry
+          have hS1Top: "is_topology_on top1_S1 top1_S1_topology"
+          proof -
+            have hTR_: "is_topology_on (UNIV::real set) top1_open_sets"
+              by (rule top1_open_sets_is_topology_on_UNIV)
+            have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+              using product_topology_on_is_topology_on[OF hTR_ hTR_] by simp
+            thus ?thesis unfolding top1_S1_topology_def
+              by (rule subspace_topology_is_topology_on) simp
+          qed
           \<comment> \<open>Swapped preimage: N = {(t,x) | H(x,t) \<in> V} open in I \<times> S^1.\<close>
           define N where "N = (\<lambda>(t,x). (x,t)) -` {p \<in> top1_S1 \<times> I_set. H p \<in> V} \<inter> (I_set \<times> top1_S1)"
           have hN_eq: "N = {(t,x). x \<in> top1_S1 \<and> t \<in> I_set \<and> H(x,t) \<in> V}" unfolding N_def by auto
@@ -12701,7 +12709,16 @@ proof (intro iffI)
             sorry \<comment> \<open>Case y=0: k(0)=c\<in>V. Case y\<noteq>0: use h\<epsilon>_W + hWI_tube.\<close>
           \<comment> \<open>ball(0, \<epsilon>') is open in R^2 and intersects B^2 correctly.\<close>
           have "open {y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'}"
-            sorry \<comment> \<open>Open ball in R^2.\<close>
+          proof -
+            have hcont: "continuous_on UNIV (\<lambda>y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2))"
+              by (intro continuous_intros)
+            have "{y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'} =
+                (\<lambda>y. sqrt (fst y ^ 2 + snd y ^ 2)) -` {..<\<epsilon>'}"
+              by auto
+            moreover have "open ((\<lambda>y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2)) -` {..<\<epsilon>'})"
+              using open_vimage[OF open_lessThan hcont] by simp
+            ultimately show ?thesis by simp
+          qed
           moreover have "(0::real,0::real) \<in> {y. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'}"
             using h\<epsilon>' by simp
           moreover have "\<forall>y\<in>top1_B2. y \<in> {y. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'} \<longrightarrow> k y \<in> V"
