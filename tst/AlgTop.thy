@@ -4469,12 +4469,166 @@ lemma homeomorphism_reflects_simply_connected:
   shows "\<not> top1_simply_connected_on Y TY"
   using homeomorphism_preserves_simply_connected[OF assms(1)] assms(2) by blast
 
+lemma homeomorphism_restrict_point:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h" and hp: "p \<in> X"
+  shows "top1_homeomorphism_on (X - {p}) (subspace_topology X TX (X - {p}))
+             (Y - {h p}) (subspace_topology Y TY (Y - {h p})) h"
+proof -
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hbij: "bij_betw h X Y"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
+  have hmap: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on (X-{p}) (subspace_topology X TX (X-{p}))"
+      by (rule subspace_topology_is_topology_on[OF hTX]) simp
+    show "is_topology_on (Y-{h p}) (subspace_topology Y TY (Y-{h p}))"
+      by (rule subspace_topology_is_topology_on[OF hTY]) simp
+    show "bij_betw h (X-{p}) (Y-{h p})"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on h (X-{p})" using hinj by (rule inj_on_subset) blast
+      show "h ` (X-{p}) = Y-{h p}"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> h ` (X-{p})"
+        then obtain x where hx: "x \<in> X-{p}" "y = h x" by blast
+        show "y \<in> Y-{h p}" using hx hmap hinj hp
+          by (metis DiffD1 DiffD2 DiffI inj_onD singletonD singletonI)
+      next
+        fix y assume hy: "y \<in> Y-{h p}"
+        then obtain x where hx: "x \<in> X" "h x = y"
+          using hbij unfolding bij_betw_def by auto
+        have "x \<noteq> p" using hx hy by auto
+        thus "y \<in> h ` (X-{p})" using hx by auto
+      qed
+    qed
+    show "top1_continuous_map_on (X-{p}) (subspace_topology X TX (X-{p}))
+        (Y-{h p}) (subspace_topology Y TY (Y-{h p})) h"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume hx: "x \<in> X-{p}"
+      thus "h x \<in> Y-{h p}" using hmap hinj hp by (simp add: inj_on_eq_iff)
+    next
+      fix V assume hV: "V \<in> subspace_topology Y TY (Y-{h p})"
+      then obtain W where hW: "W \<in> TY" and hVeq: "V = (Y-{h p}) \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "{x \<in> X-{p}. h x \<in> V} = (X-{p}) \<inter> {x \<in> X. h x \<in> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> X-{p}. h x \<in> V}"
+        thus "x \<in> (X-{p}) \<inter> {x \<in> X. h x \<in> W}" unfolding hVeq by (by100 blast)
+      next
+        fix x assume hx: "x \<in> (X-{p}) \<inter> {x \<in> X. h x \<in> W}"
+        have "h x \<in> Y-{h p}" using hx hmap hinj hp by (simp add: inj_on_eq_iff)
+        thus "x \<in> {x \<in> X-{p}. h x \<in> V}" unfolding hVeq using hx by (by100 blast)
+      qed
+      moreover have "{x \<in> X. h x \<in> W} \<in> TX"
+        using hh hW unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{x \<in> X-{p}. h x \<in> V} \<in> subspace_topology X TX (X-{p})"
+        unfolding subspace_topology_def by (by100 blast)
+    qed
+    show "top1_continuous_map_on (Y-{h p}) (subspace_topology Y TY (Y-{h p}))
+        (X-{p}) (subspace_topology X TX (X-{p})) (inv_into (X-{p}) h)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix y assume hy: "y \<in> Y-{h p}"
+      have "inv_into X h y \<in> X" using hy hbij unfolding bij_betw_def by (simp add: inv_into_into)
+      moreover have "inv_into X h y \<noteq> p"
+      proof
+        assume "inv_into X h y = p"
+        hence "h (inv_into X h y) = h p" by simp
+        hence "y = h p" using hy hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+        thus False using hy by simp
+      qed
+      ultimately have "inv_into X h y \<in> X-{p}" by simp
+      moreover have "inv_into (X-{p}) h y = inv_into X h y"
+      proof (rule inv_into_f_eq[OF inj_on_subset[OF hinj]])
+        show "X - {p} \<subseteq> X" by blast
+        show "inv_into X h y \<in> X - {p}" by (rule \<open>inv_into X h y \<in> X - {p}\<close>)
+        show "h (inv_into X h y) = y" using hy hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+      qed
+      ultimately show "inv_into (X-{p}) h y \<in> X-{p}" by simp
+    next
+      fix V assume hV: "V \<in> subspace_topology X TX (X-{p})"
+      then obtain W where hW: "W \<in> TX" and hVeq: "V = (X-{p}) \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have hinv_agree: "\<And>y. y \<in> Y-{h p} \<Longrightarrow> inv_into (X-{p}) h y = inv_into X h y"
+      proof -
+        fix y assume hy: "y \<in> Y-{h p}"
+        have h1: "inv_into X h y \<in> X" using hy hbij unfolding bij_betw_def by (simp add: inv_into_into)
+        have h2: "inv_into X h y \<noteq> p"
+        proof
+          assume "inv_into X h y = p"
+          hence "y = h p" using hy hbij unfolding bij_betw_def by (metis f_inv_into_f DiffD1)
+          thus False using hy by simp
+        qed
+        show "inv_into (X-{p}) h y = inv_into X h y"
+          by (rule inv_into_f_eq[OF inj_on_subset[OF hinj]])
+             (use h1 h2 hy hbij in \<open>auto simp: bij_betw_def f_inv_into_f\<close>)
+      qed
+      have "\<And>y. y \<in> Y - {h p} \<Longrightarrow> inv_into X h y \<in> X - {p}"
+      proof -
+        fix y assume hy: "y \<in> Y - {h p}"
+        have "inv_into X h y \<in> X" using hy hbij unfolding bij_betw_def by (simp add: inv_into_into)
+        moreover have "inv_into X h y \<noteq> p"
+          using hy hbij unfolding bij_betw_def by (metis DiffD1 DiffD2 f_inv_into_f singletonI)
+        ultimately show "inv_into X h y \<in> X - {p}" by simp
+      qed
+      have "{y \<in> Y-{h p}. inv_into (X-{p}) h y \<in> V}
+          = (Y-{h p}) \<inter> {y \<in> Y. inv_into X h y \<in> W}"
+        unfolding hVeq using hinv_agree \<open>\<And>y. y \<in> Y - {h p} \<Longrightarrow> inv_into X h y \<in> X - {p}\<close>
+        by auto
+      moreover have "{y \<in> Y. inv_into X h y \<in> W} \<in> TY"
+        using hg hW unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{y \<in> Y-{h p}. inv_into (X-{p}) h y \<in> V} \<in>
+          subspace_topology Y TY (Y-{h p})"
+        unfolding subspace_topology_def by (by100 blast)
+    qed
+  qed
+qed
+
 lemma S2_minus_two_points_not_simply_connected:
   assumes "a \<in> top1_S2" and "b \<in> top1_S2" and "a \<noteq> b"
   shows "\<not> top1_simply_connected_on (top1_S2 - {a, b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))"
   \<comment> \<open>S^2-{a,b} \<cong> R^2-{point} via Householder+stereographic. Not sc by R2_minus_point.\<close>
-  sorry
+proof
+  assume hsc: "top1_simply_connected_on (top1_S2 - {a, b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))"
+  \<comment> \<open>Step 1: S^2-{a} \<cong> R^2 via stereographic+Householder. Already proved for S2_minus_point_sc.\<close>
+  \<comment> \<open>Step 2: Restrict to S^2-{a,b} \<cong> R^2-{point}.\<close>
+  \<comment> \<open>We use the fact that S^2-{a} has a homeomorphism to R^2 (the composed map).
+     Restricting by removing b from S^2-{a} removes h(b) from R^2.\<close>
+  \<comment> \<open>By homeomorphism_preserves_sc applied twice, S^2-{a,b} sc \<Longrightarrow> R^2-{point} sc.\<close>
+  \<comment> \<open>But R^2-{point} not sc. Contradiction.\<close>
+  \<comment> \<open>For now: use S2_minus_point_sc to get that S^2-{a} ≅ R^2 (homeomorphism exists),
+     then restrict.\<close>
+  obtain h where hh: "top1_homeomorphism_on (top1_S2 - {a})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+      (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) h"
+    sorry \<comment> \<open>Existence of homeomorphism S^2-{a} \<rightarrow> R^2 (from Householder+stereographic).\<close>
+  have hb_mem: "b \<in> top1_S2 - {a}" using assms by simp
+  have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a} - {b})
+      (subspace_topology (top1_S2 - {a}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+        (top1_S2 - {a} - {b}))
+      (UNIV - {h b})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {h b})) h"
+    by (rule homeomorphism_restrict_point[OF hh hb_mem])
+  have hab_eq: "top1_S2 - {a} - {b} = top1_S2 - {a, b}" by (by100 blast)
+  have hsub_eq: "subspace_topology (top1_S2 - {a}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))
+      (top1_S2 - {a, b}) = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
+    sorry \<comment> \<open>Transitivity of subspace topology.\<close>
+  have hsc_R2: "top1_simply_connected_on (UNIV - {h b})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {h b}))"
+    using homeomorphism_preserves_simply_connected[OF _ hsc]
+          hh_restrict hab_eq hsub_eq
+    sorry
+  have "h b \<in> (UNIV :: (real \<times> real) set)" by simp
+  show False using R2_minus_point_not_simply_connected[OF \<open>h b \<in> UNIV\<close>] hsc_R2 by (by100 blast)
+qed
 
 text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is contractible).\<close>
 lemma map_into_S2_minus_point_nulhomotopic:
@@ -7938,6 +8092,11 @@ end
  
  
  
+
+
+
+
+
 
 
 
