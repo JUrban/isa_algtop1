@@ -3179,8 +3179,10 @@ proof (intro conjI)
       \<comment> \<open>Preimage: {p \<in> S | proj(p) \<in> V} = S \<inter> proj\<inverse>(V).\<close>
       \<comment> \<open>proj\<inverse>(V) is open in S since proj is continuous_on S.\<close>
       \<comment> \<open>By continuous_on_open_invariant: \<exists>U open. proj\<inverse>(V) \<inter> S = U \<inter> S.\<close>
-      obtain W where hWo: "open W" and hWeq: "stereographic_proj -` V \<inter> ?S = W \<inter> ?S"
-        sorry
+      have "\<exists>A. open A \<and> A \<inter> ?S = stereographic_proj -` V \<inter> ?S"
+        using iffD1[OF continuous_on_open_invariant hproj_cont] hVo by (by100 blast)
+      then obtain W where hWo: "open W" and hWeq: "W \<inter> ?S = stereographic_proj -` V \<inter> ?S"
+        by auto
       have "{p \<in> ?S. stereographic_proj p \<in> V} = W \<inter> ?S" using hWeq by (by100 auto)
       moreover have "W \<inter> ?S \<in> ?TS"
       proof -
@@ -3220,7 +3222,47 @@ proof (intro conjI)
       unfolding stereographic_inv_def Let_def
       by (intro continuous_intros continuous_on_divide)
          (simp_all add: stereo_denom_ne)
-    show ?thesis sorry \<comment> \<open>Bridge + hinv_eq.\<close>
+    \<comment> \<open>Bridge: since inv_into = stereographic_inv on UNIV,
+       and stereographic_inv is continuous_on UNIV with range in ?S,
+       show top1_continuous_map_on.\<close>
+    have hinv_map: "\<And>q. stereographic_inv q \<in> ?S"
+      using stereographic_inv_in_S2 stereographic_inv_not_north by simp
+    show ?thesis unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix q :: "real \<times> real" assume "q \<in> UNIV"
+      show "inv_into ?S stereographic_proj q \<in> ?S"
+        using hinv_eq hinv_map by simp
+    next
+      fix V assume hV: "V \<in> ?TS"
+      then obtain W where hWS2: "W \<in> top1_S2_topology" and hVeq: "V = ?S \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      then obtain W' where hW'R3: "W' \<in> product_topology_on top1_open_sets
+            (product_topology_on top1_open_sets top1_open_sets)"
+          and hWeq: "W = top1_S2 \<inter> W'"
+        unfolding top1_S2_topology_def subspace_topology_def by (by100 blast)
+      have "W' \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using hW'R3 product_topology_on_open_sets by metis
+      hence hW'open: "open W'" unfolding top1_open_sets_def by (by100 blast)
+      have hVeq': "V = ?S \<inter> W'" using hVeq hWeq by (by100 blast)
+      \<comment> \<open>Preimage under inv_into = preimage under stereographic_inv.\<close>
+      have hpre_eq: "{q \<in> UNIV. inv_into ?S stereographic_proj q \<in> V}
+          = stereographic_inv -` V"
+        using hinv_eq by auto
+      have "stereographic_inv -` V = stereographic_inv -` (?S \<inter> W')"
+        using hVeq' by simp
+      also have "\<dots> = stereographic_inv -` W'"
+        using hinv_map by auto
+      finally have hpre: "{q \<in> UNIV. inv_into ?S stereographic_proj q \<in> V}
+          = stereographic_inv -` W'" using hpre_eq by simp
+      have "open (stereographic_inv -` W')"
+        by (rule open_vimage[OF hW'open hinv_cont])
+      hence "stereographic_inv -` W' \<in> (top1_open_sets :: (real \<times> real) set set)"
+        unfolding top1_open_sets_def by (by100 blast)
+      hence "stereographic_inv -` W' \<in> ?TR2"
+        using product_topology_on_open_sets_real2 by metis
+      thus "{q \<in> UNIV. inv_into ?S stereographic_proj q \<in> V} \<in> ?TR2"
+        using hpre by simp
+    qed
   qed
 qed
 
@@ -7410,6 +7452,10 @@ end
  
  
  
+
+
+
+
 
 
 
