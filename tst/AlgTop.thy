@@ -14810,9 +14810,20 @@ lemma Theorem_56_1_step_1_inj:
      Then z^n : S^1 \<rightarrow> C-{0} (via inclusion) is also nulhomotopic.
      But Step 2 says z^n : S^1 \<rightarrow> C-{0} is NOT nulhomotopic. Contradiction.
      So m \<noteq> 0, hence ×m is injective on Z, hence (z^n)_* is injective.\<close>
-  sorry \<comment> \<open>Needs: (1) \<pi>_1(S^1) \<cong> Z (Theorem_54_5_iso), (2) z^n endomorphism,
-         (3) trivial endo \<Rightarrow> nulhomotopic, (4) Step 2 contradiction,
-         (5) nonzero endo of Z is injective, (6) S^1_complex \<leftrightarrow> S^1 bridge.\<close>
+proof (intro allI impI, elim conjE)
+  fix f g
+  assume hf: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 f"
+  assume hg: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 g"
+  assume hfgn: "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
+       (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)"
+  \<comment> \<open>Under \<pi>_1(S^1_complex) \<cong> Z: [f] = k, [g] = l.
+     [(f)^n] = (z^n)_*(k) = m*k, [(g)^n] = m*l.
+     hfgn says m*k = m*l. Need m \<noteq> 0.
+     If m = 0: z^n trivial on \<pi>_1 \<Rightarrow> z^n nulhomotopic \<Rightarrow> z^n:S^1\<rightarrow>C-{0} nulhomotopic.
+     But Step 2: NOT nulhomotopic. Contradiction. So m \<noteq> 0, k = l, f ~ g.\<close>
+  show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
+    sorry
+qed
 
 \<comment> \<open>Combined (for backward compatibility).\<close>
 lemma Theorem_56_1_step_1:
