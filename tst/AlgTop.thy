@@ -3626,19 +3626,54 @@ next
     also have "\<dots> = (0::real, 0, 1)" by simp
     finally show ?thesis unfolding north_pole_def .
   qed
-  have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2" sorry
+  have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2"
+  proof -
+    fix p assume hp: "p \<in> top1_S2"
+    obtain x y z :: real where hxyz: "p = (x, y, z)" by (cases p, cases "snd p") auto
+    have hp_S2: "x^2 + y^2 + z^2 = 1" using hp unfolding hxyz top1_S2_def by simp
+    define vdp where "vdp = -b1*x + (-b2)*y + (1-b3)*z"
+    define d where "d = (2-2*b3::real)"
+    define c where "c = 2*vdp/d"
+    have hd_ne: "d \<noteq> 0" unfolding d_def using hb3_ne1 by linarith
+    have hvv_d: "b1^2+b2^2+(1-b3)^2 = d" unfolding d_def
+      using hb_S2 by (simp add: power2_eq_square algebra_simps)
+    have hcd: "c * d = 2*vdp" unfolding c_def using hd_ne by simp
+    have hcancel: "c^2*d = 2*c*vdp"
+    proof -
+      have "c * (c * d) = c * (2*vdp)" using hcd by simp
+      thus ?thesis by (simp add: power2_eq_square algebra_simps)
+    qed
+    have h_expand: "(x - c*(-b1))^2 + (y - c*(-b2))^2 + (z - c*(1-b3))^2
+        = (x^2 + y^2 + z^2) + c^2*(b1^2+b2^2+(1-b3)^2) + 2*c*(b1*x+b2*y-(1-b3)*z)"
+      by (simp add: power2_eq_square algebra_simps)
+    have hvdp_neg: "b1*x+b2*y-(1-b3)*z = -vdp" unfolding vdp_def by (simp add: algebra_simps)
+    have "(x - c*(-b1))^2 + (y - c*(-b2))^2 + (z - c*(1-b3))^2
+        = (x^2+y^2+z^2) + c^2*d - 2*c*vdp" using h_expand hvv_d hvdp_neg by simp
+    hence hiso: "(x - c*(-b1))^2 + (y - c*(-b2))^2 + (z - c*(1-b3))^2
+        = (x^2+y^2+z^2)" using hcancel by linarith
+    have hRp_eq: "R p = (x - c*(-b1), y - c*(-b2), z - c*(1-b3))"
+    proof -
+      have "R (x,y,z) = (let vdp' = -b1*x+(-b2)*y+(1-b3)*z; c' = 2*vdp'/(2-2*b3)
+                         in (x-c'*(-b1), y-c'*(-b2), z-c'*(1-b3)))"
+        unfolding R_def by simp
+      also have "\<dots> = (x - (2*vdp/d)*(-b1), y - (2*vdp/d)*(-b2), z - (2*vdp/d)*(1-b3))"
+        unfolding Let_def vdp_def d_def by simp
+      finally show ?thesis unfolding hxyz c_def .
+    qed
+    hence "fst (R p)^2 + fst(snd(R p))^2 + snd(snd(R p))^2 = 1"
+      using hiso hp_S2 by simp
+    thus "R p \<in> top1_S2" unfolding top1_S2_def by (cases "R p", cases "snd(R p)") auto
+  qed
   have hR_inv: "\<And>p. R (R p) = p" sorry
-  have hR_cont: "continuous_on UNIV R"
-    sorry
+  have hR_cont: "continuous_on UNIV R" sorry
   \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
   have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
-    sorry
-  \<comment> \<open>R sends S^2-{b} to S^2-{N} (since R(b)=N and R is bijective on S^2).\<close>
+    sorry \<comment> \<open>Uses: bij_betw (from hR_S2+hR_inv), continuous (hR_cont), inv=R (hR_inv).\<close>
   have hR_homeo_minus: "top1_homeomorphism_on (top1_S2 - {b})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
       (top1_S2 - {north_pole})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) R"
-    sorry
+    sorry \<comment> \<open>Restricts hR_homeo to S^2-{b} using hR_b_N.\<close>
   \<comment> \<open>S^2-{N} \<cong> R^2 is simply connected.\<close>
   \<comment> \<open>Transfer: S^2-{b} simply connected.\<close>
   have "top1_simply_connected_on (top1_S2 - {north_pole})
@@ -7639,6 +7674,12 @@ end
  
  
  
+
+
+
+
+
+
 
 
 
