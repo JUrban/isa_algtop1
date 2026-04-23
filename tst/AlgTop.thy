@@ -3571,13 +3571,23 @@ lemma S2_minus_north_pole_simply_connected:
   by (rule homeomorphism_preserves_simply_connected[OF
       stereographic_proj_homeomorphism R2_simply_connected])
 
+\<comment> \<open>Householder reflection sending b \<in> S^2 to north_pole.
+   When b \<noteq> N: R(p) = p - 2(v\<cdot>p)/(v\<cdot>v) \<cdot> v where v = N - b.
+   When b = N: identity.
+   This is a homeomorphism of S^2.\<close>
 lemma S2_minus_point_simply_connected:
   assumes "b \<in> top1_S2"
   shows "top1_simply_connected_on (top1_S2 - {b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
-  \<comment> \<open>For b = north_pole: follows from stereographic + R2_simply_connected.
-     For general b: needs rotation sending b to N. We sorry the rotation.\<close>
-  sorry
+proof (cases "b = north_pole")
+  case True thus ?thesis using S2_minus_north_pole_simply_connected by simp
+next
+  case False
+  \<comment> \<open>Construct Householder reflection sending b to north_pole.\<close>
+  \<comment> \<open>v = N - b, R(p) = p - 2(v\<cdot>p)/(v\<cdot>v)*v.\<close>
+  \<comment> \<open>R is a homeomorphism S^2 \<rightarrow> S^2 with R(b)=N, hence S^2-{b} \<cong> S^2-{N} \<cong> R^2.\<close>
+  show ?thesis sorry
+qed
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
   (Moved before \<S>61 to avoid forward reference.)\<close>
@@ -7569,6 +7579,7 @@ end
  
  
  
+
 
 
 
