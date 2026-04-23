@@ -12670,13 +12670,12 @@ proof (intro iffI)
               using product_topology_on_open_sets_real2 by (by100 metis)
             ultimately show ?thesis unfolding top1_S1_topology_def by simp
           qed
-          \<comment> \<open>Step 4: Apply tube lemma to swapped product.
-             I_set \<times> S^1 with N = {(t,x) | H(x,t) \<in> V}.
-             x0 = 1 \<in> I_set. {1} \<times> S^1 \<subseteq> N (from H(x,1)=c\<in>V).
-             Tube lemma (S^1 compact): \<exists>W nbhd of 1 in I_top. W \<times> S^1 \<subseteq> N.
-             Then S^1 \<times> W \<subseteq> H^{-1}(V).\<close>
-          \<comment> \<open>Step 5: W = (1-\<epsilon>, 1] for some \<epsilon> > 0 (from the neighborhood).
-             For y \<in> B^2 with |y| < \<epsilon>: 1-|y| \<in> W, so k(y) = H(y/|y|, 1-|y|) \<in> V.\<close>
+          \<comment> \<open>Step 4: Apply tube lemma (inlined). For each x \<in> S^1, (x,1) \<in> H^{-1}(V) open
+             in S^1\<times>I. By product topology: \<exists>U_x \<in> S^1_top, W_x \<in> I_top with
+             (x,1) \<in> U_x \<times> W_x \<subseteq> H^{-1}(V). The U_x's cover S^1.
+             S^1 compact: finite subcover. Take \<epsilon> = min distance from 1 to boundary of W_{x_i}'s.
+             Then S^1 \<times> (1-\<epsilon>,1] \<subseteq> H^{-1}(V). For |y| < \<epsilon>: k(y) \<in> V.\<close>
+          \<comment> \<open>Step 5: Conclude with W = ball(0, \<epsilon>).\<close>
           show ?thesis sorry
         next
           case False
