@@ -12607,9 +12607,39 @@ proof (intro iffI)
         show "\<exists>W. open W \<and> y0 \<in> W \<and> (\<forall>y\<in>top1_B2. y \<in> W \<longrightarrow> k y \<in> V)"
         proof (cases "y0 = (0, 0)")
           case True
-          \<comment> \<open>Case y0 = 0: k(0) = c \<in> V. H^{-1}(V) contains S^1\<times>{1}, open.
-             Tube lemma (S^1 compact): \<exists>\<epsilon>>0. S^1\<times>(1-\<epsilon>,1] \<subseteq> H^{-1}(V).
-             Then ball(0,\<epsilon>) \<inter> B^2 maps into V under k.\<close>
+          \<comment> \<open>Case y0 = 0: k(0) = c \<in> V.\<close>
+          \<comment> \<open>Step 1: S^1\<times>{1} \<subseteq> H^{-1}(V).\<close>
+          have hS1_1_in_HV: "\<forall>x\<in>top1_S1. H (x, 1) \<in> V"
+            using hH1 hky0 True unfolding k_def by simp
+          \<comment> \<open>Step 2: S^1 is compact (image of compact [0,1] under continuous R_to_S1).\<close>
+          have hS1_compact: "compact top1_S1"
+          proof -
+            have "top1_R_to_S1 ` {0..1::real} = top1_S1"
+              sorry \<comment> \<open>Surjectivity: for (cos\<theta>,sin\<theta>), take t=\<theta>/(2\<pi>).\<close>
+            moreover have "compact (top1_R_to_S1 ` {0..1::real})"
+            proof -
+              have "continuous_on {0..1::real} top1_R_to_S1"
+                unfolding top1_R_to_S1_def by (intro continuous_intros)
+              thus ?thesis by (rule compact_continuous_image[OF _ compact_Icc])
+            qed
+            ultimately show ?thesis by simp
+          qed
+          \<comment> \<open>Step 3: top1_compact_on S^1 S^1_topology.\<close>
+          have hS1_top1_compact: "top1_compact_on top1_S1 top1_S1_topology"
+          proof -
+            show ?thesis using hS1_compact
+              top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
+              unfolding top1_S1_topology_def
+              sorry \<comment> \<open>Bridge: compact S1 \<longleftrightarrow> top1_compact_on S1 (subspace UNIV open_sets S1).
+                     Needs product_topology_on_open_sets to bridge S1_topology.\<close>
+          qed
+          \<comment> \<open>Step 4: Apply tube lemma to swapped product.
+             I_set \<times> S^1 with N = {(t,x) | H(x,t) \<in> V}.
+             x0 = 1 \<in> I_set. {1} \<times> S^1 \<subseteq> N (from H(x,1)=c\<in>V).
+             Tube lemma (S^1 compact): \<exists>W nbhd of 1 in I_top. W \<times> S^1 \<subseteq> N.
+             Then S^1 \<times> W \<subseteq> H^{-1}(V).\<close>
+          \<comment> \<open>Step 5: W = (1-\<epsilon>, 1] for some \<epsilon> > 0 (from the neighborhood).
+             For y \<in> B^2 with |y| < \<epsilon>: 1-|y| \<in> W, so k(y) = H(y/|y|, 1-|y|) \<in> V.\<close>
           show ?thesis sorry
         next
           case False
