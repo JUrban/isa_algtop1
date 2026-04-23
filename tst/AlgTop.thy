@@ -12686,7 +12686,52 @@ proof (intro iffI)
           define N where "N = (\<lambda>(t,x). (x,t)) -` {p \<in> top1_S1 \<times> I_set. H p \<in> V} \<inter> (I_set \<times> top1_S1)"
           have hN_eq: "N = {(t,x). x \<in> top1_S1 \<and> t \<in> I_set \<and> H(x,t) \<in> V}" unfolding N_def by auto
           have hN_open: "N \<in> product_topology_on I_top top1_S1_topology"
-            sorry \<comment> \<open>Swap of open set is open in swapped product.\<close>
+          proof -
+            \<comment> \<open>N is open in I \<times> S^1: for each (t,x) \<in> N, find basis rect.\<close>
+            have "\<forall>p\<in>N. \<exists>b\<in>product_basis I_top top1_S1_topology. p \<in> b \<and> b \<subseteq> N"
+            proof
+              fix p assume "p \<in> N"
+              obtain t x where hpair: "p = (t, x)" and hx: "x \<in> top1_S1" and ht: "t \<in> I_set"
+                  and hHxt: "H (x, t) \<in> V" using \<open>p \<in> N\<close> unfolding hN_eq by auto
+              have "(x, t) \<in> {p \<in> top1_S1 \<times> I_set. H p \<in> V}" using hx ht hHxt by simp
+              \<comment> \<open>hHV: H\<inverse>(V) open in S^1\<times>I. Get basis rect containing (x,t).\<close>
+              have "product_topology_on top1_S1_topology I_top =
+                  topology_generated_by_basis UNIV (product_basis top1_S1_topology I_top)"
+                unfolding product_topology_on_def by simp
+              hence "{p \<in> top1_S1 \<times> I_set. H p \<in> V} \<in>
+                  topology_generated_by_basis UNIV (product_basis top1_S1_topology I_top)"
+                using hHV by simp
+              hence hbasis_prop: "\<forall>q\<in>{p \<in> top1_S1 \<times> I_set. H p \<in> V}.
+                  \<exists>b\<in>product_basis top1_S1_topology I_top. q \<in> b \<and> b \<subseteq> {p \<in> top1_S1 \<times> I_set. H p \<in> V}"
+                unfolding topology_generated_by_basis_def by (by100 blast)
+              from hbasis_prop[rule_format, OF \<open>(x, t) \<in> {p \<in> top1_S1 \<times> I_set. H p \<in> V}\<close>]
+              obtain bxt where hbxt: "bxt \<in> product_basis top1_S1_topology I_top"
+                  and hxt_in: "(x, t) \<in> bxt" and hbxt_sub: "bxt \<subseteq> {p \<in> top1_S1 \<times> I_set. H p \<in> V}"
+                by (by100 blast)
+              obtain Ux Ut where hUx: "Ux \<in> top1_S1_topology" and hUt: "Ut \<in> I_top"
+                  and hbxt_eq: "bxt = Ux \<times> Ut"
+                using hbxt unfolding product_basis_def by (by100 blast)
+              \<comment> \<open>Swap: Ut \<times> Ux is a basis element of I \<times> S^1.\<close>
+              have "Ut \<times> Ux \<in> product_basis I_top top1_S1_topology"
+                unfolding product_basis_def using hUt hUx by (by100 blast)
+              moreover have "p \<in> Ut \<times> Ux" using hxt_in hbxt_eq hpair by (by100 auto)
+              moreover have "Ut \<times> Ux \<subseteq> N"
+              proof
+                fix q assume "q \<in> Ut \<times> Ux"
+                obtain t' x' where hq: "q = (t', x')" and ht': "t' \<in> Ut" and hx': "x' \<in> Ux"
+                  using \<open>q \<in> Ut \<times> Ux\<close> by (by100 blast)
+                have "(x', t') \<in> Ux \<times> Ut" using hx' ht' by simp
+                hence "(x', t') \<in> bxt" using hbxt_eq by simp
+                hence "(x', t') \<in> {p \<in> top1_S1 \<times> I_set. H p \<in> V}" using hbxt_sub by (by100 blast)
+                thus "q \<in> N" unfolding hN_eq hq by simp
+              qed
+              ultimately show "\<exists>b\<in>product_basis I_top top1_S1_topology. p \<in> b \<and> b \<subseteq> N"
+                by (intro bexI[of _ "Ut \<times> Ux"] conjI) auto
+            qed
+            moreover have "N \<subseteq> UNIV" by simp
+            ultimately show ?thesis
+              unfolding product_topology_on_def topology_generated_by_basis_def by (by100 blast)
+          qed
           have hslice: "{1::real} \<times> top1_S1 \<subseteq> N"
           proof -
             have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
@@ -12783,6 +12828,9 @@ proof (intro iffI)
              g is continuous at y0 (composition of continuous on R^2-{0}).
              H is continuous. So k is continuous at y0.
              Since k(y0) \<in> V (open), there's \<epsilon>>0 with ball(y0,\<epsilon>) \<inter> B^2 \<subseteq> k^{-1}(V).\<close>
+          \<comment> \<open>g: y \<mapsto> (y/|y|, 1-|y|) is continuous on B^2-{0} (standard analysis).\<close>
+          \<comment> \<open>k = H \<circ> g, H continuous, so k continuous at y0. k(y0) \<in> V, V open \<Rightarrow> neighborhood.\<close>
+          \<comment> \<open>We work in the standard topology and then transfer to top1_*.\<close>
           show ?thesis sorry
         qed
       qed
