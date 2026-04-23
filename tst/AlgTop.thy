@@ -15078,7 +15078,60 @@ proof (intro allI impI, elim conjE)
      R_to_S1 \<circ> ftilde = \<psi> \<circ> f on I_set, so \<psi> \<circ> f ~ \<psi> \<circ> g.
      Transfer back via \<psi>^{-1}: f ~ g in S^1_complex.\<close>
   show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-    sorry \<comment> \<open>R simply connected \<Rightarrow> ftilde ~ gtilde. Transfer via R_to_S1 then \<psi>^{-1}.\<close>
+  proof -
+    \<comment> \<open>Step 1: R simply connected \<Rightarrow> ftilde ~ gtilde.\<close>
+    have hgt_path': "top1_is_path_on UNIV top1_open_sets 0 (ftilde 1) gtilde"
+      using hgt_path \<open>ftilde 1 = gtilde 1\<close> by simp
+    have hft_gt_hom: "top1_path_homotopic_on UNIV top1_open_sets 0 (ftilde 1) ftilde gtilde"
+      by (rule simply_connected_paths_homotopic[OF top1_R_simply_connected' hft_path hgt_path' h0R])
+    \<comment> \<open>Step 2: R_to_S1 continuous \<Rightarrow> R_to_S1\<circ>ftilde ~ R_to_S1\<circ>gtilde in S^1.\<close>
+    have hp_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      using hcov unfolding top1_covering_map_on_def by (by100 blast)
+    have "top1_path_homotopic_on top1_S1 top1_S1_topology
+        (top1_R_to_S1 0) (top1_R_to_S1 (ftilde 1))
+        (top1_R_to_S1 \<circ> ftilde) (top1_R_to_S1 \<circ> gtilde)"
+      by (rule continuous_preserves_path_homotopic[OF hTE hTS1 hp_cont hft_gt_hom])
+    \<comment> \<open>Simplify: R_to_S1(0) = (1,0). R_to_S1(ftilde 1) = \<psi>(f 1) = \<psi>(1) = (1,0).\<close>
+    moreover have "top1_R_to_S1 0 = (1::real, 0::real)" by (rule hp0)
+    moreover have "top1_R_to_S1 (ftilde 1) = (1::real, 0::real)"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      have "top1_R_to_S1 (ftilde 1) = (?\<psi> \<circ> f) 1"
+        using hft_lift \<open>(1::real) \<in> I_set\<close> by (by100 blast)
+      moreover have "f 1 = 1" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
+    ultimately have h\<psi>fg_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        (top1_R_to_S1 \<circ> ftilde) (top1_R_to_S1 \<circ> gtilde)" by simp
+    \<comment> \<open>Step 3: R_to_S1 \<circ> ftilde = \<psi> \<circ> f on I_set, similarly for g.
+       Path homotopy depends only on values on I_set, so \<psi> \<circ> f ~ \<psi> \<circ> g.\<close>
+    \<comment> \<open>Step 3: R_to_S1\<circ>ftilde agrees with \<psi>\<circ>f on I_set (from hft_lift).
+       Similarly for g. The homotopy H between R_to_S1\<circ>ftilde and R_to_S1\<circ>gtilde
+       also works for \<psi>\<circ>f and \<psi>\<circ>g since they agree on I_set.\<close>
+    have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> f) (?\<psi> \<circ> g)"
+    proof -
+      have hRft_eq: "\<forall>s\<in>I_set. (top1_R_to_S1 \<circ> ftilde) s = (?\<psi> \<circ> f) s"
+        using hft_lift by (simp add: comp_def)
+      have hRgt_eq: "\<forall>s\<in>I_set. (top1_R_to_S1 \<circ> gtilde) s = (?\<psi> \<circ> g) s"
+        using hgt_lift by (simp add: comp_def)
+      \<comment> \<open>Extract homotopy H from h\<psi>fg_hom (R_to_S1 versions).\<close>
+      obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+              top1_S1 top1_S1_topology H"
+          and hH0: "\<forall>s\<in>I_set. H (s, 0) = (top1_R_to_S1 \<circ> ftilde) s"
+          and hH1: "\<forall>s\<in>I_set. H (s, 1) = (top1_R_to_S1 \<circ> gtilde) s"
+          and hH_left: "\<forall>t\<in>I_set. H (0, t) = (1, 0)"
+          and hH_right: "\<forall>t\<in>I_set. H (1, t) = (1, 0)"
+        using h\<psi>fg_hom unfolding top1_path_homotopic_on_def by auto
+      \<comment> \<open>H(s,0) = R_to_S1(ftilde s) = \<psi>(f s) on I_set. Same for H(s,1) and g.\<close>
+      have "\<forall>s\<in>I_set. H (s, 0) = (?\<psi> \<circ> f) s" using hH0 hRft_eq by simp
+      moreover have "\<forall>s\<in>I_set. H (s, 1) = (?\<psi> \<circ> g) s" using hH1 hRgt_eq by simp
+      \<comment> \<open>So H is a homotopy from \<psi>\<circ>f to \<psi>\<circ>g.\<close>
+      ultimately show ?thesis sorry
+    qed
+    \<comment> \<open>Step 4: Transfer back from S^1 to S^1_complex via \<psi>^{-1}.\<close>
+    \<comment> \<open>\<psi>^{-1}(a,b) = Complex a b. Continuous S^1 \<rightarrow> S^1_complex.\<close>
+    thus ?thesis sorry \<comment> \<open>\<psi>^{-1} continuous + continuous_preserves_path_homotopic.\<close>
+  qed
 qed
 
 \<comment> \<open>Combined (for backward compatibility).\<close>
