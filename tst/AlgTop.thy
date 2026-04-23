@@ -12726,7 +12726,40 @@ proof (intro iffI)
           define \<epsilon>' where "\<epsilon>' = min \<epsilon> 1"
           have h\<epsilon>': "\<epsilon>' > 0" using h\<epsilon> unfolding \<epsilon>'_def by simp
           have hball: "\<forall>y\<in>top1_B2. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>' \<longrightarrow> k y \<in> V"
-            sorry \<comment> \<open>Case y=0: k(0)=c\<in>V. Case y\<noteq>0: use h\<epsilon>_W + hWI_tube.\<close>
+          proof (intro ballI impI)
+            fix y assume hy: "y \<in> top1_B2" and hnorm: "sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'"
+            show "k y \<in> V"
+            proof (cases "y = (0, 0)")
+              case True
+              \<comment> \<open>y = (0,0), so k y = c. Need c \<in> V. From y0 = (0,0) and k y0 \<in> V.\<close>
+              have "c \<in> V" using hky0 \<open>y0 = (0,0)\<close> unfolding k_def by simp
+              thus ?thesis unfolding k_def using True by simp
+            next
+              case False
+              let ?r = "sqrt (fst y ^ 2 + snd y ^ 2)"
+              have hr_pos: "?r > 0"
+              proof -
+                obtain a b where hab: "y = (a, b)" by (cases y)
+                have "a \<noteq> 0 \<or> b \<noteq> 0" using False hab by auto
+                hence "a ^ 2 + b ^ 2 > 0"
+                  by (metis zero_less_power2 add_pos_nonneg add_nonneg_pos zero_le_power2)
+                thus ?thesis using hab by simp
+              qed
+              have hr_le1: "?r \<le> 1" using hy unfolding top1_B2_def by (simp add: real_le_rsqrt)
+              have h1mr_I: "1 - ?r \<in> I_set" unfolding top1_unit_interval_def using hr_pos hr_le1 by simp
+              have h1mr_W: "1 - ?r \<in> W_I"
+                using h\<epsilon>_W[rule_format, OF h1mr_I] hnorm unfolding \<epsilon>'_def by simp
+              have hunit: "(fst y / ?r, snd y / ?r) \<in> top1_S1"
+                using hr_pos unfolding top1_S1_def
+                by (auto simp: power_divide add_divide_distrib[symmetric] real_sqrt_gt_zero)
+              have "(1 - ?r, (fst y / ?r, snd y / ?r)) \<in> W_I \<times> top1_S1"
+                using h1mr_W hunit by simp
+              hence "(1 - ?r, (fst y / ?r, snd y / ?r)) \<in> N" using hWI_tube by (by100 blast)
+              hence "H ((fst y / ?r, snd y / ?r), 1 - ?r) \<in> V"
+                unfolding hN_eq by simp
+              thus "k y \<in> V" unfolding k_def using False by simp
+            qed
+          qed
           \<comment> \<open>ball(0, \<epsilon>') is open in R^2 and intersects B^2 correctly.\<close>
           have "open {y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'}"
           proof -
