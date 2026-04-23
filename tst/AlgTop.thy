@@ -14804,8 +14804,15 @@ lemma Theorem_56_1_step_1_inj:
               \<and> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1
                    (\<lambda>s. (f s)^n) (\<lambda>s. (g s)^n)
               \<longrightarrow> top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-  \<comment> \<open>Uses Theorem 54.5: \<pi>_1(S^1) \<cong> Z; f_* corresponds to multiplication by n.\<close>
-  sorry
+  \<comment> \<open>Proof: \<pi>_1(S^1) \<cong> Z. The z^n map induces an endomorphism of Z.
+     Any endomorphism of Z is ×m for some m. If m = 0, then z^n induces
+     the trivial homomorphism, so z^n is nulhomotopic as S^1 \<rightarrow> S^1.
+     Then z^n : S^1 \<rightarrow> C-{0} (via inclusion) is also nulhomotopic.
+     But Step 2 says z^n : S^1 \<rightarrow> C-{0} is NOT nulhomotopic. Contradiction.
+     So m \<noteq> 0, hence ×m is injective on Z, hence (z^n)_* is injective.\<close>
+  sorry \<comment> \<open>Needs: (1) \<pi>_1(S^1) \<cong> Z (Theorem_54_5_iso), (2) z^n endomorphism,
+         (3) trivial endo \<Rightarrow> nulhomotopic, (4) Step 2 contradiction,
+         (5) nonzero endo of Z is injective, (6) S^1_complex \<leftrightarrow> S^1 bridge.\<close>
 
 \<comment> \<open>Combined (for backward compatibility).\<close>
 lemma Theorem_56_1_step_1:
