@@ -5,6 +5,7 @@ session Top0 in i = HOL +
     Top1_Ch3
     Top1_Ch4
     Top1_Ch5_8
+    Top1_Ch9_13
 
 session AlgTop = Top0 +
   options [quick_and_dirty, timeout = 120]
