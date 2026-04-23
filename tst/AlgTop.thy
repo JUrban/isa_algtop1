@@ -4862,6 +4862,9 @@ lemma map_into_S2_minus_point_nulhomotopic:
              (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
   shows "top1_nulhomotopic_on A TA
            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+  \<comment> \<open>S^2-{b} \<cong> R^2 (contractible). Any map into a contractible space is nulhomotopic.
+     Proof: compose f with homeomorphism h: S^2-{b} \<rightarrow> R^2, contract in R^2 via
+     straight-line homotopy, compose back with h^{-1}.\<close>
   sorry
 
 lemma Lemma_61_1_components_correspond:
