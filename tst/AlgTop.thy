@@ -3664,7 +3664,48 @@ next
       using hiso hp_S2 by simp
     thus "R p \<in> top1_S2" unfolding top1_S2_def by (cases "R p", cases "snd(R p)") auto
   qed
-  have hR_inv: "\<And>p. R (R p) = p" sorry
+  have hR_inv: "\<And>p. R (R p) = p"
+  proof -
+    fix p obtain x y z :: real where hxyz: "p = (x, y, z)" by (cases p, cases "snd p") auto
+    define vdp where "vdp = -b1*x + (-b2)*y + (1-b3)*z"
+    define d where "d = (2-2*b3::real)"
+    define c where "c = 2*vdp/d"
+    have hd_ne: "d \<noteq> 0" unfolding d_def using hb3_ne1 by linarith
+    have hvv_d: "b1^2+b2^2+(1-b3)^2 = d" unfolding d_def
+      using hb_S2 by (simp add: power2_eq_square algebra_simps)
+    have hcd: "c * d = 2*vdp" unfolding c_def using hd_ne by simp
+    let ?x' = "x-c*(-b1)" and ?y' = "y-c*(-b2)" and ?z' = "z-c*(1-b3)"
+    have hRp_eq: "R p = (?x', ?y', ?z')"
+    proof -
+      have "R (x,y,z) = (let v = -b1*x+(-b2)*y+(1-b3)*z; cc = 2*v/(2-2*b3)
+                         in (x-cc*(-b1), y-cc*(-b2), z-cc*(1-b3)))"
+        unfolding R_def by simp
+      also have "\<dots> = (x-(2*vdp/d)*(-b1), y-(2*vdp/d)*(-b2), z-(2*vdp/d)*(1-b3))"
+        unfolding Let_def vdp_def d_def by simp
+      finally show ?thesis unfolding hxyz c_def .
+    qed
+    define vdp' where "vdp' = -b1*?x' + (-b2)*?y' + (1-b3)*?z'"
+    have "vdp' = vdp - c*(b1^2+b2^2+(1-b3)^2)"
+      unfolding vdp'_def vdp_def by (simp add: power2_eq_square algebra_simps)
+    hence "vdp' = vdp - c*d" using hvv_d by simp
+    hence hvdp'_val: "vdp' = -vdp" using hcd by linarith
+    define c' where "c' = 2*vdp'/d"
+    have hc'_val: "c' = -c"
+      unfolding c'_def c_def using hvdp'_val by simp
+    have "R (R p) = (?x'-c'*(-b1), ?y'-c'*(-b2), ?z'-c'*(1-b3))"
+    proof -
+      have "R (?x', ?y', ?z') = (let v = -b1*?x'+(-b2)*?y'+(1-b3)*?z'; cc = 2*v/(2-2*b3)
+                                 in (?x'-cc*(-b1), ?y'-cc*(-b2), ?z'-cc*(1-b3)))"
+        unfolding R_def by simp
+      also have "\<dots> = (?x'-(2*vdp'/d)*(-b1), ?y'-(2*vdp'/d)*(-b2), ?z'-(2*vdp'/d)*(1-b3))"
+        unfolding Let_def vdp'_def d_def by simp
+      also have "\<dots> = (?x'-c'*(-b1), ?y'-c'*(-b2), ?z'-c'*(1-b3))"
+        unfolding c'_def by simp
+      finally show ?thesis using hRp_eq by simp
+    qed
+    also have "\<dots> = (x, y, z)" using hc'_val by simp
+    finally show "R (R p) = p" unfolding hxyz .
+  qed
   have hR_cont: "continuous_on UNIV R" sorry
   \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
   have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
@@ -7674,6 +7715,7 @@ end
  
  
  
+
 
 
 
