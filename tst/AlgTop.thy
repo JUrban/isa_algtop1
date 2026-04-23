@@ -3583,10 +3583,49 @@ proof (cases "b = north_pole")
   case True thus ?thesis using S2_minus_north_pole_simply_connected by simp
 next
   case False
-  \<comment> \<open>Construct Householder reflection sending b to north_pole.\<close>
-  \<comment> \<open>v = N - b, R(p) = p - 2(v\<cdot>p)/(v\<cdot>v)*v.\<close>
-  \<comment> \<open>R is a homeomorphism S^2 \<rightarrow> S^2 with R(b)=N, hence S^2-{b} \<cong> S^2-{N} \<cong> R^2.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Householder reflection: v = N - b, R(p) = p - 2(v\<cdot>p)/(v\<cdot>v)*v.\<close>
+  obtain b1 b2 b3 where hb_eq: "b = (b1, b2, b3)" by (cases b, cases "snd b") auto
+  have hb_S2: "b1^2 + b2^2 + b3^2 = 1" using assms unfolding hb_eq top1_S2_def by simp
+  have hb3_ne1: "b3 \<noteq> 1"
+  proof
+    assume "b3 = 1"
+    hence "b1^2 + b2^2 = 0" using hb_S2 by simp
+    hence "b1 = 0" "b2 = 0" by (simp_all add: sum_power2_eq_zero_iff)
+    hence "b = north_pole" unfolding hb_eq north_pole_def using \<open>b3 = 1\<close> by simp
+    thus False using False by simp
+  qed
+  \<comment> \<open>v\<cdot>v = 2 - 2*b3, which is > 0 since b3 < 1.\<close>
+  have hvv: "b1^2 + b2^2 + (1-b3)^2 = 2 - 2*b3"
+    using hb_S2 by (simp add: power2_eq_square algebra_simps)
+  have hvv_ne: "2 - 2*b3 \<noteq> (0::real)" using hb3_ne1 by linarith
+  \<comment> \<open>Define R on R^3. R is linear, hence continuous.\<close>
+  define R where "R = (\<lambda>(x::real,y::real,z::real).
+    let vdp = -b1*x + (-b2)*y + (1-b3)*z;
+        c = 2*vdp/(2 - 2*b3)
+    in (x - c*(-b1), y - c*(-b2), z - c*(1-b3)))"
+  \<comment> \<open>R maps S^2 to S^2 (isometry), R(b) = N, R is its own inverse.\<close>
+  have hR_b_N: "R b = north_pole"
+    sorry \<comment> \<open>Algebra: vdp=b3-1, c=-1, so R(b)=(0,0,1)=N.\<close>
+  have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2" sorry
+  have hR_inv: "\<And>p. R (R p) = p" sorry
+  have hR_cont: "continuous_on UNIV R" sorry
+  \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
+  have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
+    sorry
+  \<comment> \<open>R sends S^2-{b} to S^2-{N} (since R(b)=N and R is bijective on S^2).\<close>
+  have hR_homeo_minus: "top1_homeomorphism_on (top1_S2 - {b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+      (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) R"
+    sorry
+  \<comment> \<open>S^2-{N} \<cong> R^2 is simply connected.\<close>
+  \<comment> \<open>Transfer: S^2-{b} simply connected.\<close>
+  have "top1_simply_connected_on (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+    by (rule S2_minus_north_pole_simply_connected)
+  show ?thesis
+    by (rule homeomorphism_preserves_simply_connected[OF hR_homeo_minus
+        S2_minus_north_pole_simply_connected])
 qed
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
@@ -7579,6 +7618,25 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
