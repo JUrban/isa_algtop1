@@ -3605,7 +3605,8 @@ next
     in (x - c*(-b1), y - c*(-b2), z - c*(1-b3)))"
   \<comment> \<open>R maps S^2 to S^2 (isometry), R(b) = N, R is its own inverse.\<close>
   have hR_b_N: "R b = north_pole"
-    sorry \<comment> \<open>Algebra: vdp=b3-1, c=-1, so R(b)=(0,0,1)=N.\<close>
+    unfolding R_def hb_eq north_pole_def Let_def using hb_S2 hvv_ne hb3_ne1
+    sorry \<comment> \<open>Polynomial identity after clearing (2-2*b3) denominator.\<close>
   have hR_S2: "\<And>p. p \<in> top1_S2 \<Longrightarrow> R p \<in> top1_S2" sorry
   have hR_inv: "\<And>p. R (R p) = p" sorry
   have hR_cont: "continuous_on UNIV R"
@@ -7619,6 +7620,12 @@ end
  
  
  
+
+
+
+
+
+
 
 
 
