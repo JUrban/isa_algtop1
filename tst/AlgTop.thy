@@ -6185,18 +6185,49 @@ proof -
             have hp'_inv_cont: "top1_continuous_map_on U' (subspace_topology B' TB' U')
                 V' (subspace_topology E' TE' V') (inv_into V' p')"
               using hV'h unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hTV: "is_topology_on V (subspace_topology E TE V)"
+              by (rule subspace_topology_is_topology_on[OF hTE hVE])
+            have hTV': "is_topology_on V' (subspace_topology E' TE' V')"
+              by (rule subspace_topology_is_topology_on[OF hTE' hV'E])
+            have hTU: "is_topology_on U (subspace_topology B TB U)"
+              by (rule subspace_topology_is_topology_on[OF hTB hUB])
+            have hTU': "is_topology_on U' (subspace_topology B' TB' U')"
+              by (rule subspace_topology_is_topology_on[OF hTB' hU'B])
+            have hTVV: "is_topology_on (V \<times> V') (product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V'))"
+              by (rule product_topology_on_is_topology_on[OF hTV hTV'])
             show "top1_continuous_map_on (V \<times> V')
                 (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
                 (\<lambda>(x, y). (p x, p' y))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Product of continuous maps via Theorem_18_4.\<close>
+            proof (rule iffD2[OF Theorem_18_4[OF hTVV hTU hTU']], intro conjI)
+              have "pi1 \<circ> (\<lambda>(x, y). (p x, p' y)) = p \<circ> pi1"
+                unfolding pi1_def by (rule ext) (simp add: split_def)
+              thus "top1_continuous_map_on (V \<times> V')
+                  (product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V'))
+                  U (subspace_topology B TB U) (pi1 \<circ> (\<lambda>(x, y). (p x, p' y)))"
+                using top1_continuous_map_on_comp[OF
+                    top1_continuous_pi1[OF hTV hTV', unfolded pi1_def] hp_cont_V]
+                unfolding pi1_def by simp
+            next
+              have "pi2 \<circ> (\<lambda>(x, y). (p x, p' y)) = p' \<circ> pi2"
+                unfolding pi2_def by (rule ext) (simp add: split_def)
+              thus "top1_continuous_map_on (V \<times> V')
+                  (product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V'))
+                  U' (subspace_topology B' TB' U') (pi2 \<circ> (\<lambda>(x, y). (p x, p' y)))"
+                using top1_continuous_map_on_comp[OF
+                    top1_continuous_pi2[OF hTV hTV', unfolded pi2_def] hp'_cont_V']
+                unfolding pi2_def by simp
+            qed
+            \<comment> \<open>Inverse continuity: inv_into (V\<times>V') (p\<times>p') = (inv_into V p) \<times> (inv_into V' p').\<close>
             show "top1_continuous_map_on (U \<times> U')
                 (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Product of continuous inverse maps.\<close>
+              sorry \<comment> \<open>Same Theorem_18_4 pattern as forward direction, with inv_into.
+                     Requires showing inv_into (V\<times>V') (p\<times>p') = (inv V p, inv V' p') on U\<times>U'
+                     + product of continuous inverses = continuous.\<close>
           qed
         qed
       qed
