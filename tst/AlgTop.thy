@@ -12670,13 +12670,43 @@ proof (intro iffI)
               using product_topology_on_open_sets_real2 by (by100 metis)
             ultimately show ?thesis unfolding top1_S1_topology_def by simp
           qed
-          \<comment> \<open>Step 4: Apply tube lemma (inlined). For each x \<in> S^1, (x,1) \<in> H^{-1}(V) open
-             in S^1\<times>I. By product topology: \<exists>U_x \<in> S^1_top, W_x \<in> I_top with
-             (x,1) \<in> U_x \<times> W_x \<subseteq> H^{-1}(V). The U_x's cover S^1.
-             S^1 compact: finite subcover. Take \<epsilon> = min distance from 1 to boundary of W_{x_i}'s.
-             Then S^1 \<times> (1-\<epsilon>,1] \<subseteq> H^{-1}(V). For |y| < \<epsilon>: k(y) \<in> V.\<close>
-          \<comment> \<open>Step 5: Conclude with W = ball(0, \<epsilon>).\<close>
-          show ?thesis sorry
+          \<comment> \<open>Step 4: Apply tube lemma to swapped product I \<times> S^1.\<close>
+          have hITop: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+          have hS1Top: "is_topology_on top1_S1 top1_S1_topology" sorry
+          \<comment> \<open>Swapped preimage: N = {(t,x) | H(x,t) \<in> V} open in I \<times> S^1.\<close>
+          define N where "N = (\<lambda>(t,x). (x,t)) -` {p \<in> top1_S1 \<times> I_set. H p \<in> V} \<inter> (I_set \<times> top1_S1)"
+          have hN_eq: "N = {(t,x). x \<in> top1_S1 \<and> t \<in> I_set \<and> H(x,t) \<in> V}" unfolding N_def by auto
+          have hN_open: "N \<in> product_topology_on I_top top1_S1_topology"
+            sorry \<comment> \<open>Swap of open set is open in swapped product.\<close>
+          have hslice: "{1::real} \<times> top1_S1 \<subseteq> N"
+          proof -
+            have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+            thus ?thesis unfolding hN_eq using hS1_1_in_HV by auto
+          qed
+          \<comment> \<open>Tube lemma: S^1 compact, N open in I \<times> S^1, {1} \<times> S^1 \<subseteq> N.\<close>
+          obtain W_I where hWI_nbhd: "neighborhood_of (1::real) I_set I_top W_I"
+              and hWI_tube: "W_I \<times> top1_S1 \<subseteq> N"
+            using Lemma_26_8[OF hS1_top1_compact hITop hS1Top hN_open h1I hslice] by (by100 blast)
+          \<comment> \<open>W_I is a neighborhood of 1 in I_top, so \<exists>\<epsilon>>0 with (1-\<epsilon>,1] \<subseteq> W_I.\<close>
+          obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and h\<epsilon>_W: "\<forall>t\<in>I_set. 1 - \<epsilon> < t \<longrightarrow> t \<in> W_I"
+            sorry \<comment> \<open>From neighborhood_of: W_I \<in> I_top, 1 \<in> W_I. I_top = subspace of R.
+                   So W_I = I \<inter> U for some open U with 1 \<in> U. By open_dist, \<exists>\<epsilon>.\<close>
+          \<comment> \<open>Step 5: For |y| < \<epsilon>, y \<in> B^2: k(y) \<in> V.\<close>
+          \<comment> \<open>If y = 0: k(0) = c \<in> V. If y \<noteq> 0: 1-|y| > 1-\<epsilon>, y/|y| \<in> S^1,
+             so (1-|y|, y/|y|) \<in> W_I \<times> S^1 \<subseteq> N, i.e., H(y/|y|, 1-|y|) \<in> V, i.e., k(y) \<in> V.\<close>
+          define \<epsilon>' where "\<epsilon>' = min \<epsilon> 1"
+          have h\<epsilon>': "\<epsilon>' > 0" using h\<epsilon> unfolding \<epsilon>'_def by simp
+          have hball: "\<forall>y\<in>top1_B2. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>' \<longrightarrow> k y \<in> V"
+            sorry \<comment> \<open>Case y=0: k(0)=c\<in>V. Case y\<noteq>0: use h\<epsilon>_W + hWI_tube.\<close>
+          \<comment> \<open>ball(0, \<epsilon>') is open in R^2 and intersects B^2 correctly.\<close>
+          have "open {y::real\<times>real. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'}"
+            sorry \<comment> \<open>Open ball in R^2.\<close>
+          moreover have "(0::real,0::real) \<in> {y. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'}"
+            using h\<epsilon>' by simp
+          moreover have "\<forall>y\<in>top1_B2. y \<in> {y. sqrt (fst y ^ 2 + snd y ^ 2) < \<epsilon>'} \<longrightarrow> k y \<in> V"
+            using hball by simp
+          ultimately show ?thesis using True by (by100 blast)
         next
           case False
           \<comment> \<open>Case y0 \<noteq> 0: k = H \<circ> g where g(y) = (y/|y|, 1-|y|).
