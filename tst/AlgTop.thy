@@ -14843,8 +14843,12 @@ proof (intro allI impI, elim conjE)
     thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
   qed
   \<comment> \<open>Transfer loops via \<psi> to S^1 (pair topology).\<close>
+  have h\<psi>_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+      top1_S1 top1_S1_topology ?\<psi>"
+    sorry \<comment> \<open>\<psi> = (Re, Im) continuous. Proved at line 15277 in step_2.\<close>
+  have h\<psi>_1: "?\<psi> 1 = (1::real, 0::real)" by simp
   have h\<psi>f_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> f)"
-    sorry \<comment> \<open>\<psi> continuous, f loop at 1, \<psi>(1) = (1,0).\<close>
+    sorry \<comment> \<open>\<psi> continuous + f loop + \<psi>(1)=(1,0). top1_continuous_map_loop is below.\<close>
   have h\<psi>g_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> g)"
     sorry
   \<comment> \<open>Lift \<psi>\<circ>f to R. Get ftilde with R_to_S1(ftilde(s)) = \<psi>(f(s)), ftilde(0)=0.\<close>
