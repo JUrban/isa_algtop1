@@ -4467,7 +4467,10 @@ lemma S2_minus_two_points_not_simply_connected:
   assumes "a \<in> top1_S2" and "b \<in> top1_S2" and "a \<noteq> b"
   shows "\<not> top1_simply_connected_on (top1_S2 - {a, b})
            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))"
-  sorry
+  \<comment> \<open>Proof: S^2-{a} \<cong> R^2 via stereographic from a. Under this homeomorphism,
+     S^2-{a,b} maps to R^2-{h(b)}. R^2-{h(b)} is not simply connected.
+     Homeomorphism preserves simply connected (contra-positive). \<close>
+  sorry \<comment> \<open>Needs restriction of stereographic homeomorphism to subspace minus point.\<close>
 
 text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is contractible).\<close>
 lemma map_into_S2_minus_point_nulhomotopic:
@@ -7931,6 +7934,7 @@ end
  
  
  
+
 
 
 
