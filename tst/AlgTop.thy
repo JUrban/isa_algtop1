@@ -2933,13 +2933,199 @@ definition north_pole :: "real \<times> real \<times> real" where
 lemma north_pole_in_S2: "north_pole \<in> top1_S2"
   unfolding north_pole_def top1_S2_def by simp
 
+definition stereographic_inv :: "real \<times> real \<Rightarrow> real \<times> real \<times> real" where
+  "stereographic_inv q = (let u = fst q; v = snd q; d = u^2 + v^2 + 1
+     in (2*u/d, 2*v/d, (u^2 + v^2 - 1)/d))"
+
+lemma stereo_denom_pos: "(fst q)^2 + (snd q)^2 + 1 > (0::real)"
+  by (smt (verit) power2_less_0 zero_less_one)
+
+lemma stereo_denom_ne: "(fst q)^2 + (snd q)^2 + 1 \<noteq> (0::real)"
+  using stereo_denom_pos[of q] by linarith
+
+lemma stereographic_inv_in_S2:
+  "stereographic_inv q \<in> top1_S2"
+proof -
+  let ?u = "fst q" and ?v = "snd q"
+  let ?d = "?u^2 + ?v^2 + 1"
+  have hd_ne: "?d \<noteq> 0" by (rule stereo_denom_ne)
+  have "stereographic_inv q = (2*?u/?d, 2*?v/?d, (?u^2 + ?v^2 - 1)/?d)"
+    unfolding stereographic_inv_def Let_def by simp
+  moreover have "(2*?u/?d)^2 + (2*?v/?d)^2 + ((?u^2 + ?v^2 - 1)/?d)^2 = 1"
+  proof -
+    have "(2*?u/?d)^2 + (2*?v/?d)^2 + ((?u^2 + ?v^2 - 1)/?d)^2
+        = (4*?u^2 + 4*?v^2 + (?u^2 + ?v^2 - 1)^2) / ?d^2"
+      by (simp add: power_divide add_divide_distrib[symmetric])
+    also have "4*?u^2 + 4*?v^2 + (?u^2 + ?v^2 - 1)^2 = ?d^2"
+      by (simp add: power2_eq_square algebra_simps)
+    also have "?d^2 / ?d^2 = 1" using hd_ne by simp
+    finally show ?thesis .
+  qed
+  ultimately show ?thesis unfolding top1_S2_def by simp
+qed
+
+lemma stereographic_inv_not_north:
+  "stereographic_inv q \<noteq> north_pole"
+proof
+  let ?u = "fst q" and ?v = "snd q"
+  let ?d = "?u^2 + ?v^2 + 1"
+  assume heq: "stereographic_inv q = north_pole"
+  have hinv: "stereographic_inv q = (2*?u/?d, 2*?v/?d, (?u^2+?v^2-1)/?d)"
+    unfolding stereographic_inv_def Let_def by simp
+  have hz: "(?u^2+?v^2-1)/?d = 1"
+    using heq hinv unfolding north_pole_def by simp
+  have hd_ne: "?d \<noteq> 0" by (rule stereo_denom_ne)
+  have "?u^2+?v^2-1 = ?d" using hz hd_ne by (simp add: field_simps)
+  hence "?u^2+?v^2-1 = ?u^2+?v^2+1" by simp
+  thus False by linarith
+qed
+
+lemma stereographic_proj_inv:
+  assumes "p \<in> top1_S2 - {north_pole}"
+  shows "stereographic_inv (stereographic_proj p) = p"
+proof -
+  obtain x y z where hxyz: "p = (x, y, z)" by (cases p, cases "snd p") auto
+  have hp_S2: "x^2 + y^2 + z^2 = 1"
+    using assms unfolding hxyz top1_S2_def by simp
+  have hz_ne: "z \<noteq> 1"
+  proof
+    assume "z = 1"
+    hence "x^2 + y^2 = 0" using hp_S2 by simp
+    hence "x = 0" "y = 0" by (simp_all add: sum_power2_eq_zero_iff)
+    hence "p = north_pole" unfolding hxyz north_pole_def using \<open>z = 1\<close> by simp
+    thus False using assms by simp
+  qed
+  hence h1mz_ne: "1 - z \<noteq> 0" by simp
+  let ?u = "x / (1-z)" and ?v = "y / (1-z)"
+  have hproj: "stereographic_proj p = (?u, ?v)"
+    unfolding stereographic_proj_def hxyz by simp
+  have hd: "?u^2 + ?v^2 + 1 = 2/(1-z)"
+  proof -
+    have "?u^2 + ?v^2 = (x^2 + y^2) / (1-z)^2"
+      by (simp add: power_divide add_divide_distrib[symmetric])
+    also have "x^2 + y^2 = 1 - z^2" using hp_S2 by linarith
+    also have "1 - z^2 = (1-z)*(1+z)" by (simp add: power2_eq_square algebra_simps)
+    also have "(1-z)*(1+z) / (1-z)^2 = (1+z)/(1-z)"
+      using h1mz_ne by (simp add: power2_eq_square nonzero_mult_div_cancel_left)
+    finally have huv_eq: "?u^2 + ?v^2 = (1+z)/(1-z)" .
+    have h_rhs: "(1-z)/(1-z) = (1::real)" using h1mz_ne by simp
+    have "?u^2 + ?v^2 + 1 = (1+z)/(1-z) + (1-z)/(1-z)" using huv_eq h_rhs by simp
+    also have "(1+z)/(1-z) + (1-z)/(1-z) = ((1+z) + (1-z)) / (1-z)"
+      by (rule add_divide_distrib[symmetric])
+    also have "(1+z) + (1-z) = (2::real)" by simp
+    finally show ?thesis .
+  qed
+  have hd_ne: "?u^2 + ?v^2 + 1 \<noteq> 0"
+    using hd h1mz_ne by simp
+  have hd_val: "2/(1-z) \<noteq> 0" using h1mz_ne by simp
+  \<comment> \<open>First component: 2*u/d = 2*(x/(1-z)) / (2/(1-z)) = x.\<close>
+  have h1: "2*?u / (?u^2 + ?v^2 + 1) = x"
+    unfolding hd using h1mz_ne by (simp add: field_simps)
+  \<comment> \<open>Second component: 2*v/d = y.\<close>
+  have h2: "2*?v / (?u^2 + ?v^2 + 1) = y"
+    unfolding hd using h1mz_ne by (simp add: field_simps)
+  \<comment> \<open>Third component: (u^2+v^2-1)/d.\<close>
+  have h3: "(?u^2 + ?v^2 - 1) / (?u^2 + ?v^2 + 1) = z"
+  proof -
+    show ?thesis using hd hp_S2 h1mz_ne hd_ne sorry
+  qed
+  show ?thesis unfolding hproj stereographic_inv_def Let_def
+    using h1 h2 h3 hxyz by simp
+qed
+
+lemma stereographic_inv_proj:
+  "stereographic_proj (stereographic_inv q) = q"
+proof -
+  let ?u = "fst q" and ?v = "snd q"
+  let ?d = "?u^2 + ?v^2 + 1"
+  have hd_ne: "?d \<noteq> 0" by (rule stereo_denom_ne)
+  have hd_pos: "?d > 0" by (rule stereo_denom_pos)
+  have hinv: "stereographic_inv q = (2*?u/?d, 2*?v/?d, (?u^2+?v^2-1)/?d)"
+    unfolding stereographic_inv_def Let_def by simp
+  have hz: "snd (snd (stereographic_inv q)) = (?u^2+?v^2-1)/?d"
+    using hinv by simp
+  have h1mz: "1 - (?u^2+?v^2-1)/?d = 2/?d"
+    using hd_ne by (simp add: field_simps)
+  have h2d_ne: "2/?d \<noteq> (0::real)" using hd_ne by simp
+  have hx: "fst (stereographic_inv q) = 2*?u/?d"
+    using hinv by simp
+  have hy: "fst (snd (stereographic_inv q)) = 2*?v/?d"
+    using hinv by simp
+  have hfst: "fst (stereographic_proj (stereographic_inv q)) = ?u"
+  proof -
+    have "fst (stereographic_proj (stereographic_inv q))
+        = fst (stereographic_inv q) / (1 - snd (snd (stereographic_inv q)))"
+      unfolding stereographic_proj_def by simp
+    also have "\<dots> = (2*?u/?d) / (2/?d)" using hx hz h1mz by simp
+    also have "\<dots> = ?u" using hd_ne by (simp add: field_simps)
+    finally show ?thesis .
+  qed
+  have hsnd: "snd (stereographic_proj (stereographic_inv q)) = ?v"
+  proof -
+    have "snd (stereographic_proj (stereographic_inv q))
+        = fst (snd (stereographic_inv q)) / (1 - snd (snd (stereographic_inv q)))"
+      unfolding stereographic_proj_def by simp
+    also have "\<dots> = (2*?v/?d) / (2/?d)" using hy hz h1mz by simp
+    also have "\<dots> = ?v" using hd_ne by (simp add: field_simps)
+    finally show ?thesis .
+  qed
+  show ?thesis by (rule prod_eqI) (simp_all add: hfst hsnd)
+qed
+
 lemma stereographic_proj_homeomorphism:
   "top1_homeomorphism_on (top1_S2 - {north_pole})
      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
      (UNIV :: (real \<times> real) set)
      (product_topology_on top1_open_sets top1_open_sets)
      stereographic_proj"
-  sorry
+  unfolding top1_homeomorphism_on_def
+proof (intro conjI)
+  let ?S = "top1_S2 - {north_pole}"
+  let ?TS = "subspace_topology top1_S2 top1_S2_topology ?S"
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  show "is_topology_on ?S ?TS"
+  proof -
+    have "is_topology_on top1_S2 top1_S2_topology"
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    thus ?thesis by (rule subspace_topology_is_topology_on) simp
+  qed
+  show "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  qed
+  show "bij_betw stereographic_proj ?S (UNIV :: (real \<times> real) set)"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on stereographic_proj ?S"
+    proof (rule inj_onI)
+      fix a b assume "a \<in> ?S" "b \<in> ?S" "stereographic_proj a = stereographic_proj b"
+      hence "stereographic_inv (stereographic_proj a) = stereographic_inv (stereographic_proj b)"
+        by simp
+      thus "a = b" using stereographic_proj_inv[of a] stereographic_proj_inv[of b]
+          \<open>a \<in> ?S\<close> \<open>b \<in> ?S\<close> by simp
+    qed
+  next
+    show "stereographic_proj ` ?S = UNIV"
+    proof (rule set_eqI, rule iffI)
+      fix q :: "real \<times> real"
+      assume "q \<in> stereographic_proj ` ?S" thus "q \<in> UNIV" by simp
+    next
+      fix q :: "real \<times> real" assume "q \<in> UNIV"
+      have hinvS: "stereographic_inv q \<in> ?S"
+        using stereographic_inv_in_S2 stereographic_inv_not_north by simp
+      have "stereographic_proj (stereographic_inv q) = q"
+        by (rule stereographic_inv_proj)
+      hence "q = stereographic_proj (stereographic_inv q)" by simp
+      thus "q \<in> stereographic_proj ` ?S" using hinvS by (by100 blast)
+    qed
+  qed
+  show "top1_continuous_map_on ?S ?TS UNIV ?TR2 stereographic_proj"
+    sorry
+  show "top1_continuous_map_on UNIV ?TR2 ?S ?TS (inv_into ?S stereographic_proj)"
+    sorry
+qed
 
 text \<open>Key consequence: S^2 minus any point is homeomorphic to R^2, hence simply connected.\<close>
 lemma R2_simply_connected:
@@ -7127,6 +7313,35 @@ end
  
  
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
