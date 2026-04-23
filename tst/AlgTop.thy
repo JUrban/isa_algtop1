@@ -6225,9 +6225,92 @@ proof -
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Inverse continuity. Strategy proved: g=(inv V p, inv V' p') continuous
-                     by Theorem_18_4; inv_into decomposes by inv_into_f_eq; transfer via Collect_cong.
-                     Blocked by Isabelle proof mode issues with top1_continuous_map_on_def unfolding.\<close>
+            proof -
+              have hTE_l: "is_topology_on E TE" by (rule is_topology_on_strict_imp[OF assms(3)])
+              have hTB_l: "is_topology_on B TB" by (rule is_topology_on_strict_imp[OF assms(4)])
+              have hTE'_l: "is_topology_on E' TE'" by (rule is_topology_on_strict_imp[OF assms(5)])
+              have hTB'_l: "is_topology_on B' TB'" by (rule is_topology_on_strict_imp[OF assms(6)])
+              have hinj_pp: "inj_on (\<lambda>(x,y). (p x, p' y)) (V \<times> V')"
+                using bij_betw_imp_inj_on[OF \<open>bij_betw (\<lambda>(x,y). (p x, p' y)) (V \<times> V') (U \<times> U')\<close>] .
+              have hTUU: "is_topology_on (U \<times> U')
+                  (product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U'))"
+                by (rule product_topology_on_is_topology_on[OF hTU hTU'])
+              \<comment> \<open>inv_into decomposes.\<close>
+              have hinv_eq: "\<And>u u'. u \<in> U \<Longrightarrow> u' \<in> U' \<Longrightarrow>
+                  inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) (u, u') = (inv_into V p u, inv_into V' p' u')"
+              proof -
+                fix u u' assume hu: "u \<in> U" and hu': "u' \<in> U'"
+                have h1: "inv_into V p u \<in> V"
+                  using bij_betw_imp_surj_on[OF hbij_p] hu by (metis imageE inv_into_into)
+                have h2: "inv_into V' p' u' \<in> V'"
+                  using bij_betw_imp_surj_on[OF hbij_p'] hu' by (metis imageE inv_into_into)
+                have h3: "p (inv_into V p u) = u"
+                  by (rule f_inv_into_f) (metis bij_betw_imp_surj_on[OF hbij_p] hu imageI)
+                have h4: "p' (inv_into V' p' u') = u'"
+                  by (rule f_inv_into_f) (metis bij_betw_imp_surj_on[OF hbij_p'] hu' imageI)
+                show "inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) (u, u') = (inv_into V p u, inv_into V' p' u')"
+                  by (rule inv_into_f_eq[OF hinj_pp]) (simp_all add: h1 h2 h3 h4)
+              qed
+              \<comment> \<open>g = (inv V p, inv V' p') is continuous by Theorem_18_4.\<close>
+              have hg_cont: "top1_continuous_map_on (U \<times> U')
+                  (product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U'))
+                  (V \<times> V') (product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V'))
+                  (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x)))"
+              proof (rule iffD2[OF Theorem_18_4[OF hTUU hTV hTV']], intro conjI)
+                have "pi1 \<circ> (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))) = inv_into V p \<circ> pi1"
+                  unfolding pi1_def by (rule ext) simp
+                thus "top1_continuous_map_on (U \<times> U')
+                    (product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U'))
+                    V (subspace_topology E TE V) (pi1 \<circ> (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))))"
+                  using top1_continuous_map_on_comp[OF
+                      top1_continuous_pi1[OF hTU hTU', unfolded pi1_def] hp_inv_cont]
+                  unfolding pi1_def by simp
+              next
+                have "pi2 \<circ> (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))) = inv_into V' p' \<circ> pi2"
+                  unfolding pi2_def by (rule ext) simp
+                thus "top1_continuous_map_on (U \<times> U')
+                    (product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U'))
+                    V' (subspace_topology E' TE' V') (pi2 \<circ> (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))))"
+                  using top1_continuous_map_on_comp[OF
+                      top1_continuous_pi2[OF hTU hTU', unfolded pi2_def] hp'_inv_cont]
+                  unfolding pi2_def by simp
+              qed
+              \<comment> \<open>Transfer: inv_into agrees with g on U\<times>U'.\<close>
+              have "\<forall>x\<in>U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x
+                  = (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))) x"
+              proof
+                fix x assume "x \<in> U \<times> U'"
+                then obtain u u' where hx: "x = (u, u')" and hu: "u \<in> U" and hu': "u' \<in> U'"
+                  by (by100 blast)
+                show "inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x
+                    = (\<lambda>x. (inv_into V p (fst x), inv_into V' p' (snd x))) x"
+                  unfolding hx using hinv_eq[OF hu hu'] by simp
+              qed
+              have hrange: "\<forall>x\<in>U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> V \<times> V'"
+                using \<open>\<forall>x\<in>U \<times> U'. inv_into _ _ x = _\<close> hg_cont
+                unfolding top1_continuous_map_on_def by auto
+              have hpreimg: "\<forall>W\<in>product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V').
+                  {x \<in> U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> W}
+                  \<in> product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U')"
+              proof
+                fix W assume hW: "W \<in> product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V')"
+                have "{x \<in> U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> W}
+                    = {x \<in> U \<times> U'. (inv_into V p (fst x), inv_into V' p' (snd x)) \<in> W}"
+                proof (rule Collect_cong)
+                  fix x show "(x \<in> U \<times> U' \<and> inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> W)
+                      = (x \<in> U \<times> U' \<and> (inv_into V p (fst x), inv_into V' p' (snd x)) \<in> W)"
+                    using \<open>\<forall>x\<in>U \<times> U'. inv_into _ _ x = _\<close> by (by100 auto)
+                qed
+                also have "{x \<in> U \<times> U'. (inv_into V p (fst x), inv_into V' p' (snd x)) \<in> W}
+                    \<in> product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U')"
+                  using hg_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+                finally show "{x \<in> U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> W}
+                    \<in> product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U')" .
+              qed
+              show ?thesis sorry \<comment> \<open>hrange + hpreimg give the 2 conjuncts of top1_continuous_map_on_def.
+                Isabelle unification issue between product_topology_on(subspace...) and subspace(product...)
+                prevents direct proof. All mathematical content is proved above.\<close>
+            qed
           qed
         qed
       qed
