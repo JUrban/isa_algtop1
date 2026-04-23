@@ -3142,9 +3142,72 @@ proof (intro conjI)
     qed
   qed
   show "top1_continuous_map_on ?S ?TS UNIV ?TR2 stereographic_proj"
-    sorry
+  proof -
+    \<comment> \<open>stereographic_proj is continuous on S^2-{north_pole} as a rational function
+       (defined wherever z \<noteq> 1, which holds on S^2-{N}).\<close>
+    have hproj_cont: "continuous_on ?S stereographic_proj"
+    proof -
+      have "\<And>p. p \<in> ?S \<Longrightarrow> 1 - snd (snd p) \<noteq> 0"
+      proof -
+        fix p assume hp: "p \<in> ?S"
+        show "1 - snd (snd p) \<noteq> 0"
+        proof
+          assume h0: "1 - snd (snd p) = 0"
+          hence hz1: "snd (snd p) = 1" by simp
+          have hp_S2: "p \<in> top1_S2" using hp by simp
+          hence "fst p ^ 2 + fst (snd p) ^ 2 + snd (snd p) ^ 2 = 1"
+            unfolding top1_S2_def by simp
+          hence "fst p ^ 2 + fst (snd p) ^ 2 = 0" using hz1 by simp
+          hence "fst p = 0" "fst (snd p) = 0"
+            by (simp_all add: sum_power2_eq_zero_iff)
+          hence "p = (0, 0, 1)" using hz1
+            by (cases p, cases "snd p") simp
+          hence "p = north_pole" unfolding north_pole_def by simp
+          thus False using hp by simp
+        qed
+      qed
+      thus ?thesis unfolding stereographic_proj_def
+        by (intro continuous_intros continuous_on_divide) auto
+    qed
+    show ?thesis unfolding top1_continuous_map_on_def product_topology_on_open_sets
+    proof (intro conjI ballI)
+      fix p assume "p \<in> ?S" thus "stereographic_proj p \<in> UNIV" by simp
+    next
+      fix V :: "(real \<times> real) set"
+      assume hV: "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+      have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+      \<comment> \<open>Preimage: {p \<in> S | proj(p) \<in> V} = S \<inter> proj\<inverse>(V).\<close>
+      \<comment> \<open>proj\<inverse>(V) is open in S since proj is continuous_on S.\<close>
+      have hpre: "openin_on ?S ?TS (stereographic_proj -` V \<inter> ?S)"
+        using iffD1[OF continuous_on_open_invariant hproj_cont] hVo
+        sorry
+      have "{p \<in> ?S. stereographic_proj p \<in> V} = stereographic_proj -` V \<inter> ?S" by (by100 auto)
+      thus "{p \<in> ?S. stereographic_proj p \<in> V} \<in> ?TS" using hpre unfolding openin_on_def by simp
+    qed
+  qed
   show "top1_continuous_map_on UNIV ?TR2 ?S ?TS (inv_into ?S stereographic_proj)"
-    sorry
+  proof -
+    \<comment> \<open>inv_into agrees with stereographic_inv on UNIV.\<close>
+    have hinv_eq: "\<And>q. inv_into ?S stereographic_proj q = stereographic_inv q"
+    proof -
+      fix q :: "real \<times> real"
+      have "stereographic_inv q \<in> ?S"
+        using stereographic_inv_in_S2 stereographic_inv_not_north by simp
+      moreover have "stereographic_proj (stereographic_inv q) = q"
+        by (rule stereographic_inv_proj)
+      ultimately show "inv_into ?S stereographic_proj q = stereographic_inv q"
+      proof (intro inv_into_f_eq)
+        show "inj_on stereographic_proj ?S"
+          by (rule inj_onI) (metis stereographic_proj_inv)
+      qed
+    qed
+    \<comment> \<open>stereographic_inv is continuous on UNIV.\<close>
+    have hinv_cont: "continuous_on UNIV stereographic_inv"
+      unfolding stereographic_inv_def Let_def
+      by (intro continuous_intros continuous_on_divide)
+         (simp_all add: stereo_denom_ne)
+    show ?thesis sorry \<comment> \<open>Bridge + hinv_eq.\<close>
+  qed
 qed
 
 text \<open>Key consequence: S^2 minus any point is homeomorphic to R^2, hence simply connected.\<close>
@@ -7333,6 +7396,10 @@ end
  
  
  
+
+
+
+
 
 
 
