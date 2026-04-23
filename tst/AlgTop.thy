@@ -12615,7 +12615,42 @@ proof (intro iffI)
           have hS1_compact: "compact top1_S1"
           proof -
             have "top1_R_to_S1 ` {0..1::real} = top1_S1"
-              sorry \<comment> \<open>Surjectivity: for (cos\<theta>,sin\<theta>), take t=\<theta>/(2\<pi>).\<close>
+            proof (rule set_eqI)
+              fix p show "(p \<in> top1_R_to_S1 ` {0..1}) = (p \<in> top1_S1)"
+              proof
+                assume "p \<in> top1_R_to_S1 ` {0..1}"
+                then obtain t where ht: "t \<in> {0..1}" and hp: "p = top1_R_to_S1 t" by (by100 blast)
+                show "p \<in> top1_S1" unfolding hp top1_R_to_S1_def top1_S1_def
+                  by (auto simp: power2_eq_square[symmetric] sin_cos_squared_add2)
+              next
+                assume "p \<in> top1_S1"
+                hence "fst p ^ 2 + snd p ^ 2 = 1" unfolding top1_S1_def by (by100 auto)
+                \<comment> \<open>Find t with cos(2\<pi>t) = fst p, sin(2\<pi>t) = snd p, 0 \<le> t \<le> 1.\<close>
+                \<comment> \<open>From surjectivity: p \<in> S^1 = R_to_S1 ` UNIV. Get t \<in> UNIV.
+                   Then t' = t - floor t \<in> [0,1) and R_to_S1(t') = R_to_S1(t) = p.\<close>
+                have "p \<in> top1_R_to_S1 ` UNIV"
+                proof -
+                  have "top1_R_to_S1 ` UNIV = top1_S1"
+                    using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+                  thus ?thesis using \<open>p \<in> top1_S1\<close> by simp
+                qed
+                then obtain t where hp_eq: "p = top1_R_to_S1 t" by (by100 blast)
+                define t' where "t' = t - of_int (floor t)"
+                have ht'_01: "t' \<ge> 0 \<and> t' < 1"
+                proof -
+                  have "t' = frac t" unfolding t'_def frac_def by simp
+                  thus ?thesis using frac_lt_1[of t] frac_ge_0[of t] by simp
+                qed
+                have "top1_R_to_S1 t' = top1_R_to_S1 t"
+                proof -
+                  have "t = t' + of_int (floor t)" unfolding t'_def by simp
+                  thus ?thesis using top1_R_to_S1_int_shift_early[of t' "floor t"] by simp
+                qed
+                hence "p = top1_R_to_S1 t'" using hp_eq by simp
+                moreover have "t' \<in> {0..1}" using ht'_01 by simp
+                ultimately show "p \<in> top1_R_to_S1 ` {0..1}" by (by100 blast)
+              qed
+            qed
             moreover have "compact (top1_R_to_S1 ` {0..1::real})"
             proof -
               have "continuous_on {0..1::real} top1_R_to_S1"
