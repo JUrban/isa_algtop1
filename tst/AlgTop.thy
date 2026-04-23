@@ -4480,7 +4480,61 @@ lemma homeomorphism_comp:
   assumes "top1_homeomorphism_on X TX Y TY f"
       and "top1_homeomorphism_on Y TY Z TZ g"
   shows "top1_homeomorphism_on X TX Z TZ (g \<circ> f)"
-  sorry \<comment> \<open>Composition of homeomorphisms. Uses bij_betw_trans + continuous_on_comp.\<close>
+proof -
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY" and hTZ: "is_topology_on Z TZ"
+      and hfbij: "bij_betw f X Y" and hgbij: "bij_betw g Y Z"
+      and hf: "top1_continuous_map_on X TX Y TY f"
+      and hfinv: "top1_continuous_map_on Y TY X TX (inv_into X f)"
+      and hg: "top1_continuous_map_on Y TY Z TZ g"
+      and hginv: "top1_continuous_map_on Z TZ Y TY (inv_into Y g)"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hgfbij: "bij_betw (g \<circ> f) X Z" using hfbij hgbij by (rule bij_betw_trans)
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on X TX" by (rule hTX)
+    show "is_topology_on Z TZ" by (rule hTZ)
+    show "bij_betw (g \<circ> f) X Z" by (rule hgfbij)
+    show "top1_continuous_map_on X TX Z TZ (g \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hf hg])
+    show "top1_continuous_map_on Z TZ X TX (inv_into X (g \<circ> f))"
+    proof -
+      have hinv_comp: "\<And>z. z \<in> Z \<Longrightarrow> inv_into X (g \<circ> f) z = (inv_into X f \<circ> inv_into Y g) z"
+      proof -
+        fix z assume hz: "z \<in> Z"
+        have hgy: "inv_into Y g z \<in> Y"
+          using hz hgbij unfolding bij_betw_def by (simp add: inv_into_into)
+        have hfx: "inv_into X f (inv_into Y g z) \<in> X"
+          using hgy hfbij unfolding bij_betw_def by (simp add: inv_into_into)
+        have "g (f (inv_into X f (inv_into Y g z))) = g (inv_into Y g z)"
+          using hgy hfbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+        also have "\<dots> = z"
+          using hz hgbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+        finally have "(g \<circ> f) (inv_into X f (inv_into Y g z)) = z" by simp
+        thus "inv_into X (g \<circ> f) z = (inv_into X f \<circ> inv_into Y g) z"
+          using hfx hgfbij unfolding bij_betw_def
+          by (intro inv_into_f_eq[OF bij_betw_imp_inj_on[OF hgfbij]]) auto
+      qed
+      have hinv_cont: "top1_continuous_map_on Z TZ X TX (inv_into X f \<circ> inv_into Y g)"
+        by (rule top1_continuous_map_on_comp[OF hginv hfinv])
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix z assume hz: "z \<in> Z"
+        show "inv_into X (g \<circ> f) z \<in> X"
+          using hinv_comp[OF hz] hinv_cont hz
+          unfolding top1_continuous_map_on_def by (by100 auto)
+      next
+        fix V assume hV: "V \<in> TX"
+        have "{z \<in> Z. inv_into X (g \<circ> f) z \<in> V} = {z \<in> Z. (inv_into X f \<circ> inv_into Y g) z \<in> V}"
+        proof (rule Collect_cong)
+          fix z show "(z \<in> Z \<and> inv_into X (g \<circ> f) z \<in> V) = (z \<in> Z \<and> (inv_into X f \<circ> inv_into Y g) z \<in> V)"
+            using hinv_comp by (cases "z \<in> Z") simp_all
+        qed
+        also have "\<dots> \<in> TZ" using hinv_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{z \<in> Z. inv_into X (g \<circ> f) z \<in> V} \<in> TZ" .
+      qed
+    qed
+  qed
+qed
 
 lemma S2_minus_point_homeo_R2:
   assumes "a \<in> top1_S2"
@@ -8195,6 +8249,7 @@ end
  
  
  
+
 
 
 
