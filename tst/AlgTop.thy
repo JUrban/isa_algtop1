@@ -19593,7 +19593,35 @@ proof -
      R^2-{0} is not simply connected (proved above).\<close>
   \<comment> \<open>The translation \<tau> and its inverse \<tau>^{-1}(x) = x + p are both continuous
      (as polynomial maps on R^2) and bijective UNIV-{p} \<leftrightarrow> UNIV-{0}.\<close>
-  show ?thesis sorry
+  show ?thesis
+  proof
+    assume hsc: "top1_simply_connected_on (UNIV - {p})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))"
+    \<comment> \<open>Translate loop around p to loop around origin.\<close>
+    let ?\<tau> = "\<lambda>x::real\<times>real. (fst x - fst p, snd x - snd p)"
+    \<comment> \<open>The standard loop p0 around origin, shifted to go around p.\<close>
+    let ?\<gamma> = "\<lambda>s::real. (fst p + cos (2 * pi * s), snd p + sin (2 * pi * s))"
+    let ?b = "(fst p + 1, snd p)"
+    have hb: "?b \<in> UNIV - {p}" by (cases p) auto
+    \<comment> \<open>\<gamma> maps I_set into UNIV-{p}.\<close>
+    have h\<gamma>_in: "\<forall>s\<in>I_set. ?\<gamma> s \<in> UNIV - {p}"
+    proof
+      fix s :: real assume "s \<in> I_set"
+      have "?\<gamma> s \<noteq> p"
+      proof
+        assume h0: "?\<gamma> s = p"
+        have hc: "cos (2 * pi * s) = 0" using h0 by (cases p) auto
+        have hs: "sin (2 * pi * s) = 0" using h0 by (cases p) auto
+        show False using sin_cos_squared_add3[of "2 * pi * s"] hc hs by simp
+      qed
+      thus "?\<gamma> s \<in> UNIV - {p}" by simp
+    qed
+    \<comment> \<open>\<tau>\<circ>\<gamma>(s) = (cos 2\<pi>s, sin 2\<pi>s) = p0.\<close>
+    have h\<tau>\<gamma>_eq: "\<And>s. ?\<tau> (?\<gamma> s) = (cos (2 * pi * s), sin (2 * pi * s))" by simp
+    \<comment> \<open>\<tau> is continuous UNIV-{p} \<rightarrow> UNIV-{0}. Simply connected transfers via \<tau>.
+       This contradicts R2_minus_origin_not_simply_connected.\<close>
+    show False sorry
+  qed
 qed
 
 lemma S2_minus_two_points_not_simply_connected:
@@ -23064,6 +23092,11 @@ end
  
  
  
+
+
+
+
+
 
 
 
