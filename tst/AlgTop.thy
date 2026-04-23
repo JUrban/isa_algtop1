@@ -6225,9 +6225,9 @@ proof -
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Same Theorem_18_4 pattern as forward direction, with inv_into.
-                     Requires showing inv_into (V\<times>V') (p\<times>p') = (inv V p, inv V' p') on U\<times>U'
-                     + product of continuous inverses = continuous.\<close>
+              sorry \<comment> \<open>Same Theorem_18_4 pattern as forward. g = (inv V p, inv V' p') is continuous
+                     by Theorem_18_4; agrees with inv_into (V\<times>V') (p\<times>p') on U\<times>U' by inv_into_f_eq.
+                     Transfer via top1_continuous_map_on_cong.\<close>
           qed
         qed
       qed
