@@ -12662,11 +12662,13 @@ proof (intro iffI)
           \<comment> \<open>Step 3: top1_compact_on S^1 S^1_topology.\<close>
           have hS1_top1_compact: "top1_compact_on top1_S1 top1_S1_topology"
           proof -
-            show ?thesis using hS1_compact
-              top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
-              unfolding top1_S1_topology_def
-              sorry \<comment> \<open>Bridge: compact S1 \<longleftrightarrow> top1_compact_on S1 (subspace UNIV open_sets S1).
-                     Needs product_topology_on_open_sets to bridge S1_topology.\<close>
+            have "top1_compact_on top1_S1
+                (subspace_topology (UNIV::(real\<times>real) set) (top1_open_sets::(real\<times>real) set set) top1_S1)"
+              using top1_compact_on_subspace_UNIV_iff_compact[of top1_S1] hS1_compact by simp
+            moreover have "(top1_open_sets::(real\<times>real) set set)
+                = product_topology_on (top1_open_sets::real set set) top1_open_sets"
+              using product_topology_on_open_sets_real2 by (by100 metis)
+            ultimately show ?thesis unfolding top1_S1_topology_def by simp
           qed
           \<comment> \<open>Step 4: Apply tube lemma to swapped product.
              I_set \<times> S^1 with N = {(t,x) | H(x,t) \<in> V}.
