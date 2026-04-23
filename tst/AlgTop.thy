@@ -15066,11 +15066,19 @@ proof (intro allI impI, elim conjE)
     thus "ftilde 1 = gtilde 1" using hn by simp
   qed
   \<comment> \<open>Lifts with same endpoint \<Rightarrow> loops path-homotopic (Theorem_54_3 reverse).\<close>
-  hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> f) (?\<psi> \<circ> g)"
-    sorry \<comment> \<open>From Theorem_54_3.\<close>
-  \<comment> \<open>Transfer back: \<psi> is homeomorphism, so path-homotopy transfers.\<close>
+  \<comment> \<open>Lifts ftilde, gtilde have same endpoint. By Theorem_54_3 (uniqueness part):
+     if two paths lift the same loop and start at the same point and end at the same point,
+     they are path-homotopic, hence the original loops are path-homotopic.
+     Actually, we need the CONVERSE direction: same lift endpoints \<Rightarrow> homotopic.
+     This uses: R simply connected, so ftilde ~ gtilde (in R), hence p\<circ>ftilde ~ p\<circ>gtilde,
+     i.e., \<psi>\<circ>f ~ \<psi>\<circ>g.\<close>
+  \<comment> \<open>From ftilde(1) = gtilde(1) and R simply connected:
+     ftilde ~ gtilde in R (all paths with same endpoints are homotopic).
+     Then R_to_S1 \<circ> ftilde ~ R_to_S1 \<circ> gtilde in S^1.
+     R_to_S1 \<circ> ftilde = \<psi> \<circ> f on I_set, so \<psi> \<circ> f ~ \<psi> \<circ> g.
+     Transfer back via \<psi>^{-1}: f ~ g in S^1_complex.\<close>
   show "top1_path_homotopic_on top1_S1_complex top1_S1_complex_topology 1 1 f g"
-    sorry \<comment> \<open>Transfer from S^1 pair back to S^1 complex via \<psi>^{-1}.\<close>
+    sorry \<comment> \<open>R simply connected \<Rightarrow> ftilde ~ gtilde. Transfer via R_to_S1 then \<psi>^{-1}.\<close>
 qed
 
 \<comment> \<open>Combined (for backward compatibility).\<close>
