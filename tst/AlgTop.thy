@@ -15020,8 +15020,49 @@ proof (intro allI impI, elim conjE)
     \<comment> \<open>n*ftilde is a lift of \<psi>\<circ>(f^n): R_to_S1(n*ftilde s) = \<psi>((f s)^n).\<close>
     \<comment> \<open>By Theorem_54_3: since \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n), their lifts have same endpoint.\<close>
     have "n * ftilde 1 = n * gtilde 1"
-      sorry \<comment> \<open>By Theorem_54_3: \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n), lifts n*ftilde and n*gtilde,
-             so their endpoints are equal: n*ftilde(1) = n*gtilde(1).\<close>
+    proof -
+      have hTS1c: "is_topology_on top1_S1_complex top1_S1_complex_topology"
+        unfolding top1_S1_complex_topology_def
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) simp
+      \<comment> \<open>\<psi>\<circ>(f^n) and \<psi>\<circ>(g^n) are loops at (1,0) in S^1.\<close>
+      have hzn_cont: "top1_continuous_map_on top1_S1_complex top1_S1_complex_topology
+          top1_S1_complex top1_S1_complex_topology (\<lambda>z. z^n)"
+        by (rule Theorem_56_1_step_1_cont[OF hn])
+      have hfn_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (\<lambda>s. (f s)^n)"
+      proof -
+        have "(\<lambda>s. (f s)^n) = (\<lambda>z. z^n) \<circ> f" by (rule ext) simp
+        thus ?thesis using top1_continuous_map_loop_early[OF hzn_cont hf]
+          by simp
+      qed
+      have hgn_loop: "top1_is_loop_on top1_S1_complex top1_S1_complex_topology 1 (\<lambda>s. (g s)^n)"
+      proof -
+        have "(\<lambda>s. (g s)^n) = (\<lambda>z. z^n) \<circ> g" by (rule ext) simp
+        thus ?thesis using top1_continuous_map_loop_early[OF hzn_cont hg]
+          by simp
+      qed
+      have h\<psi>fn_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> (\<lambda>s. (f s)^n))"
+        using top1_continuous_map_loop_early[OF h\<psi>_cont hfn_loop] h\<psi>_1 by simp
+      have h\<psi>gn_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) (?\<psi> \<circ> (\<lambda>s. (g s)^n))"
+        using top1_continuous_map_loop_early[OF h\<psi>_cont hgn_loop] h\<psi>_1 by simp
+      have h\<psi>fn_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> (\<lambda>s. (f s)^n))"
+        using h\<psi>fn_loop unfolding top1_is_loop_on_def by simp
+      have h\<psi>gn_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (?\<psi> \<circ> (\<lambda>s. (g s)^n))"
+        using h\<psi>gn_loop unfolding top1_is_loop_on_def by simp
+      \<comment> \<open>\<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n) from f^n ~ g^n and \<psi> continuous.\<close>
+      have h\<psi>fn_hom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+          (?\<psi> \<circ> (\<lambda>s. (f s)^n)) (?\<psi> \<circ> (\<lambda>s. (g s)^n))"
+        using continuous_preserves_path_homotopic[OF hTS1c hTS1 h\<psi>_cont hfgn] h\<psi>_1 by simp
+      \<comment> \<open>Lift conditions.\<close>
+      have hft_n_lift': "\<forall>s\<in>I_set. top1_R_to_S1 (real n * ftilde s) = (?\<psi> \<circ> (\<lambda>s. (f s)^n)) s"
+        using hft_n_lift by (simp add: comp_def)
+      have hgt_n_lift': "\<forall>s\<in>I_set. top1_R_to_S1 (real n * gtilde s) = (?\<psi> \<circ> (\<lambda>s. (g s)^n)) s"
+        using hgt_n_lift by (simp add: comp_def)
+      \<comment> \<open>Apply Theorem_54_3.\<close>
+      from Theorem_54_3[OF hcov hTE hTS1 h0R hp0
+          h\<psi>fn_path h\<psi>gn_path h\<psi>fn_hom
+          hft_n_path hft_n_lift' hgt_n_path hgt_n_lift']
+      show ?thesis by simp
+    qed
     thus "ftilde 1 = gtilde 1" using hn by simp
   qed
   \<comment> \<open>Lifts with same endpoint \<Rightarrow> loops path-homotopic (Theorem_54_3 reverse).\<close>
