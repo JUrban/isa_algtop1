@@ -14976,14 +14976,29 @@ proof (intro allI impI, elim conjE)
       using continuous_preserves_path_homotopic[OF hTS1c hTS1 h\<psi>_cont hfgn] h\<psi>_1 by simp
     \<comment> \<open>n*ftilde lifts \<psi>\<circ>(f^n), n*gtilde lifts \<psi>\<circ>(g^n).\<close>
     \<comment> \<open>By Theorem_54_3: path-homotopic lifts starting at same point have same endpoint.\<close>
-    have hft_n_path: "top1_is_path_on UNIV top1_open_sets 0 (n * ftilde 1) (\<lambda>s. n * ftilde s)"
-      sorry \<comment> \<open>Scalar multiple of path is path.\<close>
-    have hgt_n_path: "top1_is_path_on UNIV top1_open_sets 0 (n * gtilde 1) (\<lambda>s. n * gtilde s)"
-      sorry
+    have hft_n_path: "top1_is_path_on UNIV top1_open_sets (0::real) (real n * ftilde 1) (\<lambda>s. real n * ftilde s)"
+    proof -
+      have "top1_continuous_map_on I_set I_top UNIV top1_open_sets ftilde"
+        using hft_path unfolding top1_is_path_on_def by simp
+      hence "top1_continuous_map_on I_set I_top UNIV top1_open_sets (\<lambda>s. real n * ftilde s)"
+        sorry \<comment> \<open>Scalar multiple of continuous is continuous.\<close>
+      moreover have "ftilde 0 = 0" using hft_path unfolding top1_is_path_on_def by simp
+      ultimately show ?thesis unfolding top1_is_path_on_def by simp
+    qed
+    have hgt_n_path: "top1_is_path_on UNIV top1_open_sets (0::real) (real n * gtilde 1) (\<lambda>s. real n * gtilde s)"
+    proof -
+      have "top1_continuous_map_on I_set I_top UNIV top1_open_sets gtilde"
+        using hgt_path unfolding top1_is_path_on_def by simp
+      hence "top1_continuous_map_on I_set I_top UNIV top1_open_sets (\<lambda>s. real n * gtilde s)"
+        sorry
+      moreover have "gtilde 0 = 0" using hgt_path unfolding top1_is_path_on_def by simp
+      ultimately show ?thesis unfolding top1_is_path_on_def by simp
+    qed
     \<comment> \<open>n*ftilde is a lift of \<psi>\<circ>(f^n): R_to_S1(n*ftilde s) = \<psi>((f s)^n).\<close>
     \<comment> \<open>By Theorem_54_3: since \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n), their lifts have same endpoint.\<close>
     have "n * ftilde 1 = n * gtilde 1"
-      sorry \<comment> \<open>Theorem_54_3 applied to the lifted paths.\<close>
+      sorry \<comment> \<open>By Theorem_54_3: \<psi>\<circ>(f^n) ~ \<psi>\<circ>(g^n), lifts n*ftilde and n*gtilde,
+             so their endpoints are equal: n*ftilde(1) = n*gtilde(1).\<close>
     thus "ftilde 1 = gtilde 1" using hn by simp
   qed
   \<comment> \<open>Lifts with same endpoint \<Rightarrow> loops path-homotopic (Theorem_54_3 reverse).\<close>
