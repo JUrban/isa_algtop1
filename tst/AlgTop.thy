@@ -3706,7 +3706,22 @@ next
     also have "\<dots> = (x, y, z)" using hc'_val by simp
     finally show "R (R p) = p" unfolding hxyz .
   qed
-  have hR_cont: "continuous_on UNIV R" sorry
+  have hR_cont: "continuous_on UNIV R"
+  proof -
+    define vf :: "real \<times> real \<times> real \<Rightarrow> real" where
+      "vf = (\<lambda>p. -b1*fst p + (-b2)*fst(snd p) + (1-b3)*snd(snd p))"
+    define d where "d = (2-2*b3::real)"
+    have hd_ne: "d \<noteq> 0" unfolding d_def using hb3_ne1 by linarith
+    have hvf_cont: "continuous_on UNIV vf" unfolding vf_def by (intro continuous_intros)
+    define R' :: "real \<times> real \<times> real \<Rightarrow> real \<times> real \<times> real" where
+      "R' = (\<lambda>p. (fst p + 2*vf p/d*b1, fst(snd p) + 2*vf p/d*b2,
+                  snd(snd p) - 2*vf p/d*(1-b3)))"
+    have hR_eq: "R = R'" unfolding R_def R'_def vf_def d_def Let_def
+      by (rule ext) (simp add: case_prod_unfold)
+    have "continuous_on UNIV R'" unfolding R'_def
+      by (intro continuous_intros hvf_cont) (simp_all add: hd_ne)
+    thus ?thesis using hR_eq by simp
+  qed
   \<comment> \<open>R restricts to homeomorphism S^2 \<rightarrow> S^2.\<close>
   have hR_homeo: "top1_homeomorphism_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology R"
     sorry \<comment> \<open>Uses: bij_betw (from hR_S2+hR_inv), continuous (hR_cont), inv=R (hR_inv).\<close>
@@ -7715,6 +7730,10 @@ end
  
  
  
+
+
+
+
 
 
 
