@@ -3588,7 +3588,71 @@ lemma householder_S2_homeo:
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
       (householder_S2 b)"
 proof (cases "b = north_pole")
-  case True show ?thesis using True sorry
+  case True
+  have "householder_S2 north_pole = id" unfolding householder_S2_def by simp
+  hence hid: "\<And>x. householder_S2 b x = x" using True by simp
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  show ?thesis unfolding True top1_homeomorphism_on_def
+    using hid
+  proof (intro conjI)
+    show "is_topology_on (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) simp
+    show "is_topology_on (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) simp
+    show "bij_betw (householder_S2 north_pole) (top1_S2 - {north_pole}) (top1_S2 - {north_pole})"
+      using hid True by (simp add: bij_betw_def inj_on_def)
+    show "top1_continuous_map_on (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) (householder_S2 north_pole)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> top1_S2 - {north_pole}" thus "householder_S2 north_pole x \<in> top1_S2 - {north_pole}"
+        using hid True by simp
+    next
+      fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      have "{x \<in> top1_S2 - {north_pole}. householder_S2 north_pole x \<in> V} = V \<inter> (top1_S2 - {north_pole})"
+        using hid True by auto
+      also have "\<dots> = V"
+        using hV unfolding subspace_topology_def by (by100 blast)
+      finally show "{x \<in> top1_S2 - {north_pole}. householder_S2 north_pole x \<in> V} \<in>
+          subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+        using hV by simp
+    qed
+    show "top1_continuous_map_on (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole))"
+    proof -
+      have hinj: "inj_on (householder_S2 north_pole) (top1_S2 - {north_pole})"
+      proof (rule inj_onI)
+        fix x y assume "x \<in> top1_S2 - {north_pole}" "y \<in> top1_S2 - {north_pole}"
+            "householder_S2 north_pole x = householder_S2 north_pole y"
+        thus "x = y" using hid True by simp
+      qed
+      have hinv_eq: "\<And>x. x \<in> top1_S2 - {north_pole} \<Longrightarrow>
+          inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole) x = x"
+      proof -
+        fix x assume hx: "x \<in> top1_S2 - {north_pole}"
+        have "householder_S2 north_pole x = x" using hid True by simp
+        thus "inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole) x = x"
+          using hx hinj by (intro inv_into_f_eq) auto
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume hx: "x \<in> top1_S2 - {north_pole}"
+        show "inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole) x \<in> top1_S2 - {north_pole}"
+          using hinv_eq[OF hx] hx by simp
+      next
+        fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+        have "{x \<in> top1_S2 - {north_pole}. inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole) x \<in> V}
+            = V \<inter> (top1_S2 - {north_pole})"
+          using hinv_eq by auto
+        also have "\<dots> = V" using hV unfolding subspace_topology_def by (by100 blast)
+        finally show "{x \<in> top1_S2 - {north_pole}. inv_into (top1_S2 - {north_pole}) (householder_S2 north_pole) x \<in> V}
+            \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+          using hV by simp
+      qed
+    qed
+  qed
 next
   case False
   show ?thesis sorry \<comment> \<open>Same proof as inside S2_minus_point_sc case False.\<close>
@@ -8257,6 +8321,12 @@ end
  
  
  
+
+
+
+
+
+
 
 
 
