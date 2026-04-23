@@ -4856,16 +4856,78 @@ proof
 qed
 
 text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is contractible).\<close>
+lemma map_into_R2_nulhomotopic:
+  assumes hf: "top1_continuous_map_on A TA
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
+  shows "top1_nulhomotopic_on A TA
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
+  \<comment> \<open>R^2 is contractible: straight-line homotopy F(x,t) = (1-t)*f(x) + t*(0,0).\<close>
+  sorry
+
+lemma nulhomotopic_transfer:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
+      and hnul: "top1_nulhomotopic_on A TA Y TY (h \<circ> f)"
+      and hf: "top1_continuous_map_on A TA X TX f"
+      and hTA: "is_topology_on A TA"
+  shows "top1_nulhomotopic_on A TA X TX f"
+proof -
+  have hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinj: "inj_on h X" using hhom unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  obtain c where hcY: "c \<in> Y"
+      and hhf_hom: "top1_homotopic_on A TA Y TY (h \<circ> f) (\<lambda>_. c)"
+    using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain F where hF: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) Y TY F"
+      and hF0: "\<forall>x\<in>A. F (x, 0) = (h \<circ> f) x" and hF1: "\<forall>x\<in>A. F (x, 1) = c"
+    using hhf_hom unfolding top1_homotopic_on_def by (by100 blast)
+  define G where "G = inv_into X h \<circ> F"
+  have hG: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) X TX G"
+    unfolding G_def by (rule top1_continuous_map_on_comp[OF hF hg])
+  have hgc: "inv_into X h c \<in> X"
+    using hcY hhom unfolding top1_homeomorphism_on_def bij_betw_def by (simp add: inv_into_into)
+  have hG0: "\<forall>x\<in>A. G (x, 0) = f x"
+  proof
+    fix x assume hx: "x \<in> A"
+    have hfx: "f x \<in> X" using hf hx unfolding top1_continuous_map_on_def by (by100 blast)
+    show "G (x, 0) = f x" unfolding G_def comp_def using hF0 hx
+      by (simp add: inv_into_f_f[OF hinj hfx])
+  qed
+  have hG1: "\<forall>x\<in>A. G (x, 1) = inv_into X h c"
+    unfolding G_def comp_def using hF1 by simp
+  have hTX: "is_topology_on X TX"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTA': "is_topology_on A TA" by (rule hTA)
+  have hconst: "top1_continuous_map_on A TA X TX (\<lambda>_. inv_into X h c)"
+    by (rule top1_continuous_map_on_const[OF hTA hTX hgc])
+  show ?thesis unfolding top1_nulhomotopic_on_def top1_homotopic_on_def
+    using hgc hf hconst hG hG0 hG1
+    by (intro bexI[of _ "inv_into X h c"] conjI exI[of _ G]) auto
+qed
+
 lemma map_into_S2_minus_point_nulhomotopic:
   assumes "b \<in> top1_S2"
       and "top1_continuous_map_on A TA
              (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
   shows "top1_nulhomotopic_on A TA
            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
-  \<comment> \<open>S^2-{b} \<cong> R^2 (contractible). Any map into a contractible space is nulhomotopic.
-     Proof: compose f with homeomorphism h: S^2-{b} \<rightarrow> R^2, contract in R^2 via
-     straight-line homotopy, compose back with h^{-1}.\<close>
-  sorry
+proof -
+  let ?S = "top1_S2 - {b}" and ?TS = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  obtain h where hh: "top1_homeomorphism_on ?S ?TS (UNIV :: (real \<times> real) set) ?TR2 h"
+    using S2_minus_point_homeo_R2[OF assms(1)] by blast
+  \<comment> \<open>h \<circ> f: A \<rightarrow> R^2 is continuous.\<close>
+  have hhf: "top1_continuous_map_on A TA (UNIV :: (real \<times> real) set) ?TR2 (h \<circ> f)"
+  proof -
+    have "top1_continuous_map_on ?S ?TS (UNIV :: (real \<times> real) set) ?TR2 h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    thus ?thesis by (rule top1_continuous_map_on_comp[OF assms(2)])
+  qed
+  \<comment> \<open>h \<circ> f is nulhomotopic in R^2 (R^2 contractible).\<close>
+  have "top1_nulhomotopic_on A TA (UNIV :: (real \<times> real) set) ?TR2 (h \<circ> f)"
+    by (rule map_into_R2_nulhomotopic[OF hhf])
+  \<comment> \<open>Transfer back: f is nulhomotopic in S^2-{b}.\<close>
+  thus ?thesis sorry \<comment> \<open>Needs is_topology_on A TA for nulhomotopic_transfer.\<close>
+qed
 
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
@@ -8320,6 +8382,10 @@ end
  
  
  
+
+
+
+
 
 
 
