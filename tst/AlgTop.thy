@@ -6225,10 +6225,9 @@ proof -
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
               unfolding hVV_eq hUU_eq
-              sorry \<comment> \<open>Product inverse continuity. Same Theorem_18_4 pattern.
-                     Proved above: inv_into decomposes into component inverses (by inv_into_f_eq).
-                     Component inverses continuous (from component homeomorphisms).
-                     Product of continuous = continuous (Theorem_18_4).\<close>
+              sorry \<comment> \<open>Inverse continuity. Strategy proved: g=(inv V p, inv V' p') continuous
+                     by Theorem_18_4; inv_into decomposes by inv_into_f_eq; transfer via Collect_cong.
+                     Blocked by Isabelle proof mode issues with top1_continuous_map_on_def unfolding.\<close>
           qed
         qed
       qed
