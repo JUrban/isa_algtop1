@@ -5985,7 +5985,120 @@ proof -
     \<comment> \<open>U \<times> U' is evenly covered: slices are V\<alpha> \<times> V'\<beta>.\<close>
     have "bb \<in> U \<times> U' \<and>
         top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
-          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) (U \<times> U')" sorry
+          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) (U \<times> U')"
+    proof (intro conjI)
+      show "bb \<in> U \<times> U'" using hbb_eq hbU hbU' by (by100 blast)
+      \<comment> \<open>Extract slices for p and p'.\<close>
+      obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+          and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+          and hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+          and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                             (subspace_topology B TB U) p"
+        using hUec unfolding top1_evenly_covered_on_def by auto
+      obtain \<V>' where hV'_open: "\<forall>V'\<in>\<V>'. openin_on E' TE' V'"
+          and hV'_disj: "\<forall>V'\<in>\<V>'. \<forall>W'\<in>\<V>'. V' \<noteq> W' \<longrightarrow> V' \<inter> W' = {}"
+          and hV'_union: "{x\<in>E'. p' x \<in> U'} = \<Union>\<V>'"
+          and hV'_homeo: "\<forall>V'\<in>\<V>'. top1_homeomorphism_on V' (subspace_topology E' TE' V') U'
+                             (subspace_topology B' TB' U') p'"
+        using hU'ec unfolding top1_evenly_covered_on_def by auto
+      \<comment> \<open>Product slices: {V \<times> V' | V \<in> \<V>, V' \<in> \<V>'}.\<close>
+      define \<W> where "\<W> = {V \<times> V' | V V'. V \<in> \<V> \<and> V' \<in> \<V>'}"
+      show "top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
+          (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) (U \<times> U')"
+        unfolding top1_evenly_covered_on_def
+      proof (intro conjI exI[of _ \<W>])
+        \<comment> \<open>U \<times> U' is open in B \<times> B'.\<close>
+        have hUo: "openin_on B TB U" using hUec unfolding top1_evenly_covered_on_def by (by100 blast)
+        have hU'o: "openin_on B' TB' U'" using hU'ec unfolding top1_evenly_covered_on_def by (by100 blast)
+        have hUT: "U \<in> TB" using hUo unfolding openin_on_def by (by100 blast)
+        have hU'T: "U' \<in> TB'" using hU'o unfolding openin_on_def by (by100 blast)
+        have "U \<times> U' \<in> product_topology_on TB TB'"
+          by (rule product_rect_open[OF hUT hU'T])
+        moreover have "U \<times> U' \<subseteq> B \<times> B'"
+          using hUo hU'o unfolding openin_on_def by (by100 blast)
+        ultimately show "openin_on (B \<times> B') (product_topology_on TB TB') (U \<times> U')"
+          unfolding openin_on_def by (by100 blast)
+        \<comment> \<open>Each W \<in> \<W> is open in E \<times> E'.\<close>
+        show "\<forall>W\<in>\<W>. openin_on (E \<times> E') (product_topology_on TE TE') W"
+        proof (intro ballI)
+          fix W assume "W \<in> \<W>"
+          then obtain V V' where hV: "V \<in> \<V>" and hV': "V' \<in> \<V>'" and hWeq: "W = V \<times> V'"
+            unfolding \<W>_def by (by100 blast)
+          have hVT: "V \<in> TE" using hV_open[rule_format, OF hV] unfolding openin_on_def by (by100 blast)
+          have hV'T: "V' \<in> TE'" using hV'_open[rule_format, OF hV'] unfolding openin_on_def by (by100 blast)
+          have "V \<times> V' \<in> product_topology_on TE TE'" by (rule product_rect_open[OF hVT hV'T])
+          moreover have "V \<times> V' \<subseteq> E \<times> E'"
+            using hV_open[rule_format, OF hV] hV'_open[rule_format, OF hV'] unfolding openin_on_def
+            by (by100 blast)
+          ultimately show "openin_on (E \<times> E') (product_topology_on TE TE') W"
+            unfolding openin_on_def hWeq by (by100 blast)
+        qed
+        \<comment> \<open>Pairwise disjoint.\<close>
+        show "\<forall>W\<in>\<W>. \<forall>W2\<in>\<W>. W \<noteq> W2 \<longrightarrow> W \<inter> W2 = {}"
+        proof (intro ballI impI)
+          fix W1 W2 assume "W1 \<in> \<W>" "W2 \<in> \<W>" "W1 \<noteq> W2"
+          obtain V1 V1' where hV1: "V1 \<in> \<V>" and hV1': "V1' \<in> \<V>'" and hW1: "W1 = V1 \<times> V1'"
+            using \<open>W1 \<in> \<W>\<close> unfolding \<W>_def by (by100 blast)
+          obtain V2 V2' where hV2: "V2 \<in> \<V>" and hV2': "V2' \<in> \<V>'" and hW2: "W2 = V2 \<times> V2'"
+            using \<open>W2 \<in> \<W>\<close> unfolding \<W>_def by (by100 blast)
+          have "V1 \<noteq> V2 \<or> V1' \<noteq> V2'" using \<open>W1 \<noteq> W2\<close> hW1 hW2 by (by100 blast)
+          thus "W1 \<inter> W2 = {}"
+          proof (elim disjE)
+            assume "V1 \<noteq> V2"
+            hence "V1 \<inter> V2 = {}" using hV_disj hV1 hV2 by (by100 blast)
+            thus ?thesis unfolding hW1 hW2 by (by100 blast)
+          next
+            assume "V1' \<noteq> V2'"
+            hence "V1' \<inter> V2' = {}" using hV'_disj hV1' hV2' by (by100 blast)
+            thus ?thesis unfolding hW1 hW2 by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Union = preimage.\<close>
+        show "{x \<in> E \<times> E'. (\<lambda>(x, y). (p x, p' y)) x \<in> U \<times> U'} = \<Union>\<W>"
+        proof (rule set_eqI)
+          fix x show "(x \<in> {x \<in> E \<times> E'. (\<lambda>(x, y). (p x, p' y)) x \<in> U \<times> U'}) = (x \<in> \<Union>\<W>)"
+          proof
+            assume hx: "x \<in> {x \<in> E \<times> E'. (\<lambda>(x, y). (p x, p' y)) x \<in> U \<times> U'}"
+            obtain a b where hab: "x = (a, b)" and ha: "a \<in> E" and hb: "b \<in> E'"
+                and hpa: "p a \<in> U" and hpb: "p' b \<in> U'"
+              using hx by (by100 auto)
+            have "a \<in> {x\<in>E. p x \<in> U}" using ha hpa by simp
+            hence "a \<in> \<Union>\<V>" using hV_union by simp
+            then obtain V where hV: "V \<in> \<V>" and haV: "a \<in> V" by (by100 blast)
+            have "b \<in> {x\<in>E'. p' x \<in> U'}" using hb hpb by simp
+            hence "b \<in> \<Union>\<V>'" using hV'_union by simp
+            then obtain V' where hV': "V' \<in> \<V>'" and hbV': "b \<in> V'" by (by100 blast)
+            have "V \<times> V' \<in> \<W>" unfolding \<W>_def using hV hV' by (by100 blast)
+            moreover have "x \<in> V \<times> V'" using hab haV hbV' by (by100 blast)
+            ultimately show "x \<in> \<Union>\<W>" by (by100 blast)
+          next
+            assume "x \<in> \<Union>\<W>"
+            then obtain W where "W \<in> \<W>" and "x \<in> W" by (by100 blast)
+            then obtain V V' where hV: "V \<in> \<V>" and hV': "V' \<in> \<V>'" and "x \<in> V \<times> V'"
+              unfolding \<W>_def by (by100 blast)
+            obtain a b where hab: "x = (a, b)" and haV: "a \<in> V" and hbV': "b \<in> V'"
+              using \<open>x \<in> V \<times> V'\<close> by (by100 blast)
+            have "a \<in> \<Union>\<V>" using haV hV by (by100 blast)
+            hence "a \<in> {x\<in>E. p x \<in> U}" using hV_union by simp
+            hence ha: "a \<in> E" and hpa: "p a \<in> U" by simp_all
+            have "b \<in> \<Union>\<V>'" using hbV' hV' by (by100 blast)
+            hence "b \<in> {x\<in>E'. p' x \<in> U'}" using hV'_union by simp
+            hence hb: "b \<in> E'" and hpb: "p' b \<in> U'" by simp_all
+            show "x \<in> {x \<in> E \<times> E'. (\<lambda>(x, y). (p x, p' y)) x \<in> U \<times> U'}"
+              using hab ha hb hpa hpb by (by100 auto)
+          qed
+        qed
+        \<comment> \<open>Each slice homeomorphic to U \<times> U'.
+           Product of homeomorphisms is a homeomorphism.\<close>
+        show "\<forall>W\<in>\<W>. top1_homeomorphism_on W
+            (subspace_topology (E \<times> E') (product_topology_on TE TE') W)
+            (U \<times> U') (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
+            (\<lambda>(x, y). (p x, p' y))"
+          sorry \<comment> \<open>Product of homeomorphisms (p|V \<times> p'|V') is homeomorphism.
+                 Requires: Theorem_16_3 (product of subspace = subspace of product)
+                 + product of continuous bijections with continuous inverse.\<close>
+      qed
+    qed
     thus "\<exists>W. bb \<in> W \<and>
         top1_evenly_covered_on (E \<times> E') (product_topology_on TE TE')
           (B \<times> B') (product_topology_on TB TB') (\<lambda>(x, y). (p x, p' y)) W"
