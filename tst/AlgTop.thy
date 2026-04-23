@@ -3612,10 +3612,13 @@ next
     using hb_S2 by (simp add: power2_eq_square algebra_simps)
   have hvv_ne: "2 - 2*b3 \<noteq> (0::real)" using hb3_ne1 by linarith
   \<comment> \<open>Define R on R^3. R is linear, hence continuous.\<close>
-  define R where "R = (\<lambda>(x::real,y::real,z::real).
+  define R where "R = householder_S2 b"
+  have R_expand: "R = (\<lambda>(x::real,y::real,z::real).
     let vdp = -b1*x + (-b2)*y + (1-b3)*z;
         c = 2*vdp/(2 - 2*b3)
     in (x - c*(-b1), y - c*(-b2), z - c*(1-b3)))"
+    unfolding R_def householder_S2_def hb_eq using False
+    unfolding north_pole_def by simp
   \<comment> \<open>R maps S^2 to S^2 (isometry), R(b) = N, R is its own inverse.\<close>
   have hb12: "b1*b1 + b2*b2 = 1 - b3*b3"
     using hb_S2 by (simp add: power2_eq_square algebra_simps)
@@ -3633,7 +3636,7 @@ next
     have hc_val: "?c = -(1::real)"
       using hvdp_val hc_m1 by simp
     have "R b = (b1 - ?c*(-b1), b2 - ?c*(-b2), b3 - ?c*(1-b3))"
-      unfolding R_def hb_eq Let_def by simp
+      unfolding R_expand hb_eq Let_def by simp
     also have "\<dots> = (b1 - (-1)*(-b1), b2 - (-1)*(-b2), b3 - (-1)*(1-b3))"
       using hc_val by simp
     also have "\<dots> = (0::real, 0, 1)" by simp
@@ -3668,7 +3671,7 @@ next
     proof -
       have "R (x,y,z) = (let vdp' = -b1*x+(-b2)*y+(1-b3)*z; c' = 2*vdp'/(2-2*b3)
                          in (x-c'*(-b1), y-c'*(-b2), z-c'*(1-b3)))"
-        unfolding R_def by simp
+        unfolding R_expand by simp
       also have "\<dots> = (x - (2*vdp/d)*(-b1), y - (2*vdp/d)*(-b2), z - (2*vdp/d)*(1-b3))"
         unfolding Let_def vdp_def d_def by simp
       finally show ?thesis unfolding hxyz c_def .
@@ -3692,7 +3695,7 @@ next
     proof -
       have "R (x,y,z) = (let v = -b1*x+(-b2)*y+(1-b3)*z; cc = 2*v/(2-2*b3)
                          in (x-cc*(-b1), y-cc*(-b2), z-cc*(1-b3)))"
-        unfolding R_def by simp
+        unfolding R_expand by simp
       also have "\<dots> = (x-(2*vdp/d)*(-b1), y-(2*vdp/d)*(-b2), z-(2*vdp/d)*(1-b3))"
         unfolding Let_def vdp_def d_def by simp
       finally show ?thesis unfolding hxyz c_def .
@@ -3709,7 +3712,7 @@ next
     proof -
       have "R (?x', ?y', ?z') = (let v = -b1*?x'+(-b2)*?y'+(1-b3)*?z'; cc = 2*v/(2-2*b3)
                                  in (?x'-cc*(-b1), ?y'-cc*(-b2), ?z'-cc*(1-b3)))"
-        unfolding R_def by simp
+        unfolding R_expand by simp
       also have "\<dots> = (?x'-(2*vdp'/d)*(-b1), ?y'-(2*vdp'/d)*(-b2), ?z'-(2*vdp'/d)*(1-b3))"
         unfolding Let_def vdp'_def d_def by simp
       also have "\<dots> = (?x'-c'*(-b1), ?y'-c'*(-b2), ?z'-c'*(1-b3))"
@@ -3729,7 +3732,7 @@ next
     define R' :: "real \<times> real \<times> real \<Rightarrow> real \<times> real \<times> real" where
       "R' = (\<lambda>p. (fst p + 2*vf p/d*b1, fst(snd p) + 2*vf p/d*b2,
                   snd(snd p) - 2*vf p/d*(1-b3)))"
-    have hR_eq: "R = R'" unfolding R_def R'_def vf_def d_def Let_def
+    have hR_eq: "R = R'" unfolding R_expand R'_def vf_def d_def Let_def
       by (rule ext) (simp add: case_prod_unfold)
     have "continuous_on UNIV R'" unfolding R'_def
       by (intro continuous_intros hvf_cont) (simp_all add: hd_ne)
@@ -8249,6 +8252,7 @@ end
  
  
  
+
 
 
 
