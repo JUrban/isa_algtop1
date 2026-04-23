@@ -6224,7 +6224,6 @@ proof -
                 (subspace_topology (B \<times> B') (product_topology_on TB TB') (U \<times> U'))
                 (V \<times> V') (subspace_topology (E \<times> E') (product_topology_on TE TE') (V \<times> V'))
                 (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
-              unfolding hVV_eq hUU_eq
             proof -
               have hTE_l: "is_topology_on E TE" by (rule is_topology_on_strict_imp[OF assms(3)])
               have hTB_l: "is_topology_on B TB" by (rule is_topology_on_strict_imp[OF assms(4)])
@@ -6307,9 +6306,12 @@ proof -
                 finally show "{x \<in> U \<times> U'. inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)) x \<in> W}
                     \<in> product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U')" .
               qed
-              show ?thesis sorry \<comment> \<open>hrange + hpreimg give the 2 conjuncts of top1_continuous_map_on_def.
-                Isabelle unification issue between product_topology_on(subspace...) and subspace(product...)
-                prevents direct proof. All mathematical content is proved above.\<close>
+              have hresult: "top1_continuous_map_on (U \<times> U')
+                  (product_topology_on (subspace_topology B TB U) (subspace_topology B' TB' U'))
+                  (V \<times> V') (product_topology_on (subspace_topology E TE V) (subspace_topology E' TE' V'))
+                  (inv_into (V \<times> V') (\<lambda>(x, y). (p x, p' y)))"
+                using hrange hpreimg unfolding top1_continuous_map_on_def by (by100 blast)
+              show ?thesis using hresult unfolding hVV_eq[symmetric] hUU_eq[symmetric] .
             qed
           qed
         qed
