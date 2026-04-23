@@ -3654,16 +3654,6 @@ proof (cases "b = north_pole")
     qed
   qed
 next
-  case False show ?thesis using assms False sorry
-qed
-
-lemma S2_minus_point_simply_connected:
-  assumes "b \<in> top1_S2"
-  shows "top1_simply_connected_on (top1_S2 - {b})
-           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
-proof (cases "b = north_pole")
-  case True thus ?thesis using S2_minus_north_pole_simply_connected by simp
-next
   case False
   \<comment> \<open>Householder reflection: v = N - b, R(p) = p - 2(v\<cdot>p)/(v\<cdot>v)*v.\<close>
   obtain b1 b2 b3 where hb_eq: "b = (b1, b2, b3)" by (cases b, cases "snd b") auto
@@ -4016,14 +4006,20 @@ next
       qed
     qed
   qed
-  \<comment> \<open>S^2-{N} \<cong> R^2 is simply connected.\<close>
-  \<comment> \<open>Transfer: S^2-{b} simply connected.\<close>
-  have "top1_simply_connected_on (top1_S2 - {north_pole})
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
-    by (rule S2_minus_north_pole_simply_connected)
+  show ?thesis using hR_homeo_minus unfolding R_def .
+qed
+
+lemma S2_minus_point_simply_connected:
+  assumes "b \<in> top1_S2"
+  shows "top1_simply_connected_on (top1_S2 - {b})
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
+proof (cases "b = north_pole")
+  case True thus ?thesis using S2_minus_north_pole_simply_connected by simp
+next
+  case False
   show ?thesis
-    by (rule homeomorphism_preserves_simply_connected[OF hR_homeo_minus
-        S2_minus_north_pole_simply_connected])
+    by (rule homeomorphism_preserves_simply_connected[OF
+        householder_S2_homeo[OF assms] S2_minus_north_pole_simply_connected])
 qed
 
 text \<open>A simple closed curve in X: image of a continuous injective map S^1 \<rightarrow> X.
@@ -8321,6 +8317,8 @@ end
  
  
  
+
+
 
 
 
