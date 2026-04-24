@@ -6692,8 +6692,16 @@ proof -
     fix p assume hp: "p \<in> top1_S2"
     obtain x y z where hp_eq: "p = (x, y, z)" by (cases p, auto)
     have hxyz: "x^2 + y^2 + z^2 = 1" using hp hp_eq unfolding top1_S2_def by simp
+    have hz_sq: "z^2 \<le> 1"
+    proof -
+      have "x^2 \<ge> 0" "y^2 \<ge> 0" by (simp_all add: power2_eq_square)
+      thus ?thesis using hxyz by linarith
+    qed
     have hz_range: "-1 \<le> z" "z \<le> 1"
-      sorry \<comment> \<open>x^2+y^2+z^2=1 \<Rightarrow> z^2 \<le> 1 \<Rightarrow> |z| \<le> 1.\<close>
+    proof -
+      have "\<bar>z\<bar> \<le> 1" using hz_sq abs_le_square_iff[of z 1] by simp
+      thus "-1 \<le> z" "z \<le> 1" by linarith+
+    qed
     define s where "s = arccos z / pi"
     have hs_range: "0 \<le> s" "s \<le> 1" unfolding s_def
       using arccos_bounded[OF hz_range] pi_gt_zero by auto
