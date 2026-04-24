@@ -6689,8 +6689,22 @@ proof -
     show "p \<in> top1_S2" unfolding hst(3) \<psi>_def top1_S2_def
       by (simp add: sin_squared_eq[symmetric] power2_eq_square algebra_simps distrib_left[symmetric])
   next
-    fix p assume "p \<in> top1_S2"
-    show "p \<in> \<psi> ` (I_set \<times> I_set)" sorry \<comment> \<open>Surjectivity: arccos + sincos_total_2pi.\<close>
+    fix p assume hp: "p \<in> top1_S2"
+    obtain x y z where hp_eq: "p = (x, y, z)" by (cases p, auto)
+    have hxyz: "x^2 + y^2 + z^2 = 1" using hp hp_eq unfolding top1_S2_def by simp
+    have hz_range: "-1 \<le> z" "z \<le> 1"
+      sorry \<comment> \<open>x^2+y^2+z^2=1 \<Rightarrow> z^2 \<le> 1 \<Rightarrow> |z| \<le> 1.\<close>
+    define s where "s = arccos z / pi"
+    have hs_range: "0 \<le> s" "s \<le> 1" unfolding s_def
+      using arccos_bounded[OF hz_range] pi_gt_zero by auto
+    hence hs_I: "s \<in> I_set" unfolding top1_unit_interval_def by simp
+    have hcos_s: "cos (pi * s) = z" unfolding s_def using pi_gt_zero hz_range by simp
+    have hsin_s: "sin (pi * s) \<ge> 0" using hs_range pi_gt_zero
+      by (intro sin_ge_zero) (by100 simp)+
+    have hsin_s_sq: "sin (pi * s) ^ 2 = x^2 + y^2"
+      using sin_squared_eq[of "pi * s"] hcos_s hxyz by (simp add: power2_eq_square algebra_simps)
+    show "p \<in> \<psi> ` (I_set \<times> I_set)"
+      sorry \<comment> \<open>Choose t via sincos_total_2pi on (x/sin(\<pi>s), y/sin(\<pi>s)) if sin>0, else t=0.\<close>
   qed
   have "compact (I_set \<times> I_set)"
   proof -
