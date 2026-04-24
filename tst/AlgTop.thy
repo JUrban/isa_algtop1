@@ -2591,10 +2591,45 @@ proof -
       \<comment> \<open>G agrees on the overlap s=1/2: \<alpha>(t\<cdot>1) = H(0,t) = \<alpha>(t). \<checkmark>\<close>
       \<comment> \<open>G restricted to L is continuous (composition: (s,t) \<mapsto> t\<cdot>2s \<mapsto> \<alpha>).\<close>
       have hG_L: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L) X TX G"
-        sorry \<comment> \<open>G = \<alpha> \<circ> (\<lambda>(s,t). t*2s) on L. Both factors continuous.\<close>
+      proof -
+        \<comment> \<open>On L, G(s,t) = \<alpha>(t*2s). This is \<alpha> composed with \<mu>(s,t) = t*2s.
+           \<mu> is continuous L \<rightarrow> I_set, and \<alpha> is continuous I_set \<rightarrow> X.\<close>
+        have h\<alpha>_cont: "top1_continuous_map_on I_set I_top X TX ?\<alpha>"
+          using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+        \<comment> \<open>The multiplication map \<mu>(s,t) = t*2s is continuous from L to I_set.\<close>
+        have h\<mu>_cont: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
+            I_set I_top (\<lambda>(s,t). t * (2*s))"
+          sorry \<comment> \<open>Continuous: t*2s on L. Multiplication continuous, range in [0,1].\<close>
+        \<comment> \<open>On L, G = \<alpha> \<circ> \<mu>.\<close>
+        have hG_eq: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
+          unfolding G_def comp_def by auto
+        show ?thesis sorry \<comment> \<open>Continuity follows from composition + agreement on L.\<close>
+      qed
       \<comment> \<open>G restricted to R is continuous (pasting of H and \<beta> pieces).\<close>
       have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) X TX G"
-        sorry \<comment> \<open>Further split R into M and R'. Paste H and \<beta> pieces.\<close>
+      proof -
+        \<comment> \<open>Split R into M = {1/2 \<le> s \<le> 3/4} and R' = {3/4 \<le> s \<le> 1}.
+           On M: G(s,t) = H(4s-2, t). On R': G(s,t) = \<beta>(t*(4-4s)).
+           Paste using pasting_lemma_two_closed again.\<close>
+        let ?M = "{(s::real,t::real). 1/2 \<le> s \<and> s \<le> 3/4 \<and> 0 \<le> t \<and> t \<le> 1}"
+        let ?R' = "{(s::real,t::real). 3/4 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
+        have hMR_cover: "?M \<union> ?R' = ?R" by auto
+        have hM_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M"
+          sorry
+        have hR'_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R'"
+          sorry
+        have hTR: "is_topology_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R)"
+          sorry
+        \<comment> \<open>G on M = H \<circ> (\<lambda>(s,t). (4s-2, t)). Continuous.\<close>
+        have hG_M: "top1_continuous_map_on ?M (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M) X TX G"
+          sorry
+        \<comment> \<open>G on R' = \<beta> \<circ> (\<lambda>(s,t). t*(4-4s)). Continuous.\<close>
+        have hG_R': "top1_continuous_map_on ?R' (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R') X TX G"
+          sorry
+        have hG_R_range: "\<forall>x\<in>?R. G x \<in> X"
+          sorry \<comment> \<open>Subset of hG_range (proved below). Reorder if needed.\<close>
+        show ?thesis by (rule pasting_lemma_two_closed[OF hTR hTX hM_closed hR'_closed hMR_cover hG_R_range hG_M hG_R'])
+      qed
       \<comment> \<open>G maps I\<times>I into X.\<close>
       have hG_range: "\<forall>x\<in>I_set \<times> I_set. G x \<in> X"
       proof
