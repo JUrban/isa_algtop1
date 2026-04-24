@@ -5559,7 +5559,14 @@ proof -
         using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
       thus ?thesis unfolding top1_unit_interval_topology_def by simp
     qed
-    have hA1_haus: "is_hausdorff_on ?A1 (subspace_topology X TX ?A1)" sorry
+    have hA1_sub: "?A1 \<subseteq> X"
+    proof -
+      have "\<forall>x \<in> top1_S1. f x \<in> X" using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "?upper \<subseteq> top1_S1" by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hA1_haus: "is_hausdorff_on ?A1 (subspace_topology X TX ?A1)"
+      by (rule hausdorff_subspace[OF hH hA1_sub])
     have hfg_bij: "bij_betw (f \<circ> g) I_set ?A1"
       unfolding bij_betw_def using hfg_inj hfg_img by (by100 blast)
     have hI_top: "is_topology_on I_set I_top"
@@ -5568,12 +5575,6 @@ proof -
       sorry \<comment> \<open>Restrict range of hfg_cont using Theorem_18_2(5).\<close>
     have hfg_homeo: "top1_homeomorphism_on I_set I_top ?A1 (subspace_topology X TX ?A1) (f \<circ> g)"
       by (rule Theorem_26_6[OF hI_top hTA1 hI_compact hA1_haus hfg_cont_A1 hfg_bij])
-    have hA1_sub: "?A1 \<subseteq> X"
-    proof -
-      have "\<forall>x \<in> top1_S1. f x \<in> X" using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
-      moreover have "?upper \<subseteq> top1_S1" by (by100 blast)
-      ultimately show ?thesis by (by100 blast)
-    qed
     have hA1_strict: "is_topology_on_strict ?A1 (subspace_topology X TX ?A1)"
       by (rule subspace_topology_is_strict[OF hT hA1_sub])
     show ?thesis unfolding top1_is_arc_on_def using hA1_strict hfg_homeo by (by100 blast)
