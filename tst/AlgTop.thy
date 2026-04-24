@@ -6316,10 +6316,39 @@ proof -
   have hsame_comp_R2: "\<exists>C. C \<in> top1_components_on (UNIV - (h \<circ> f) ` A)
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
       \<and> ?ha \<in> C \<and> p \<in> C" sorry
-  \<comment> \<open>Step 6: Path \<alpha> from h(a) to p in R^2-g(A) (same component, locally path-connected).
-     Then G(x,t) = g(x) - \<alpha>(t) and H(x,t) = t*g(x) - p give nulhomotopy in R^2-{h(a)}.\<close>
-  \<comment> \<open>Step 7: Transfer nulhomotopy from R^2-{ha} back to S^2-{a,b} via h^{-1}.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 6: h(a) and p in same component \<Rightarrow> path \<alpha> from h(a) to p in R^2-g(A).\<close>
+  have hinj': "inj_on h (top1_S2 - {b})"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have ha_S2b': "a \<in> top1_S2 - {b}" using ha hab by (by100 blast)
+  have hha_not_gA: "?ha \<notin> (h \<circ> f) ` A"
+  proof
+    assume "?ha \<in> (h \<circ> f) ` A"
+    then obtain x where hx: "x \<in> A" and hhx: "h (f x) = ?ha" by auto
+    have hfx: "f x \<in> top1_S2 - {a,b}" using hf hx unfolding top1_continuous_map_on_def by (by100 blast)
+    hence "f x \<in> top1_S2 - {b}" by (by100 blast)
+    hence "f x = a" using hinj' ha_S2b' hhx unfolding inj_on_def by (by100 blast)
+    hence "f x \<in> {a,b}" by simp
+    thus False using hfx by (by100 blast)
+  qed
+  have hha_in_comp: "?ha \<in> UNIV - (h \<circ> f) ` A" using hha_not_gA by simp
+  have hp_in_comp: "p \<in> UNIV - (h \<circ> f) ` A" using hp_not_in_gA by simp
+  \<comment> \<open>Step 6a: The map g(\<cdot>)-p is nulhomotopic in R^2-{0}.
+     Straight-line: H(x,t) = (1-t)\<cdot>g(x) - p. At t=0: g(x)-p. At t=1: -p.
+     Since |g(x)| \<le> M and |p| > M, g(x)-p \<noteq> 0 and (1-t)\<cdot>g(x)-p \<noteq> 0 for t \<in> [0,1].\<close>
+  \<comment> \<open>Step 6a-6c: Combined nulhomotopy argument.
+     g(\<cdot>)-p nulhomotopic in R^2-{0} by straight-line.
+     g(\<cdot>)-h(a) homotopic to g(\<cdot>)-p via path \<alpha> in R^2-g(A).
+     Translation gives g nulhomotopic in R^2-{h(a)}.\<close>
+  have hg_nul_R2: "top1_nulhomotopic_on A TA
+      (UNIV - {?ha})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+        (UNIV - {?ha}))
+      (h \<circ> f)"
+    sorry \<comment> \<open>Straight-line + path deformation + translation nulhomotopy.\<close>
+  \<comment> \<open>Step 8: Transfer nulhomotopy back via h^{-1}: S^2-{b} \<cong> R^2.
+     h^{-1} restricted to R^2-{h(a)} gives homeomorphism to S^2-{a,b}.\<close>
+  show ?thesis
+    sorry \<comment> \<open>nulhomotopic_transfer through h^{-1} homeomorphism.\<close>
 qed
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
