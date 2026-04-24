@@ -2511,9 +2511,177 @@ proof -
     "top1_path_homotopic_on X TX x0 x0
       (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
       (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)))"
-    sorry \<comment> \<open>3-strip homotopy G(s,t):
-       [0,1/2]: \<alpha>(t\<cdot>2s), [1/2,3/4]: H(4s-2,t), [3/4,1]: \<beta>(t\<cdot>(4-4s)).
-       Continuity by pasting lemma on 3 closed strips.\<close>
+  proof -
+    \<comment> \<open>Define G: I\<times>I \<rightarrow> X as 3-strip homotopy.
+       Strip 1: s \<in> [0,1/2]:    G(s,t) = \<alpha>(t\<cdot>2s)
+       Strip 2: s \<in> [1/2,3/4]:  G(s,t) = H(4s-2, t)
+       Strip 3: s \<in> [3/4,1]:    G(s,t) = \<beta>(t\<cdot>(4-4s))
+
+       At t=0: \<alpha>(0)=x0, H(4s-2,0)=f(4s-2), \<beta>(0)=x0 = const*f*const
+       At t=1: \<alpha>(2s), H(4s-2,1)=c, \<beta>(4-4s) = \<alpha>*const_c*rev(\<beta>)
+       At s=0: \<alpha>(0)=x0. At s=1: \<beta>(0)=x0.
+       At s=1/2 boundary: \<alpha>(t)=H(0,t) \<checkmark>. At s=3/4: H(1,t)=\<beta>(t) \<checkmark>.\<close>
+    define G :: "real \<times> real \<Rightarrow> 'a" where
+      "G = (\<lambda>(s, t).
+         if s \<le> 1/2 then ?\<alpha> (t * (2*s))
+         else if s \<le> 3/4 then H (4*s - 2, t)
+         else ?\<beta> (t * (4 - 4*s)))"
+    \<comment> \<open>G is continuous on I\<times>I (pasting lemma on 3 closed strips).\<close>
+    have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
+      sorry
+    \<comment> \<open>Boundary: G(s,0) = const*f*const(s) and G(s,1) = \<alpha>*const_c*rev(\<beta>)(s).\<close>
+    have hG_bottom: "\<forall>s\<in>I_set. G (s, 0) =
+        top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s"
+    proof
+      fix s :: real assume hs: "s \<in> I_set"
+      show "G (s, 0) = top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s"
+      proof (cases "s \<le> 1/2")
+        case True
+        hence "G (s, 0) = ?\<alpha> (0 * (2*s))" unfolding G_def by simp
+        also have "... = ?\<alpha> 0" by simp
+        also have "... = x0" by (rule h\<alpha>0)
+        finally have hGs: "G (s, 0) = x0" .
+        have "top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s
+            = top1_constant_path x0 (2*s)"
+          using True unfolding top1_path_product_def by simp
+        also have "... = x0" unfolding top1_constant_path_def by simp
+        finally show ?thesis using hGs by simp
+      next
+        case False hence hs_gt: "s > 1/2" by simp
+        show ?thesis
+        proof (cases "s \<le> 3/4")
+          case True
+          hence "G (s, 0) = H (4*s - 2, 0)" unfolding G_def using hs_gt by simp
+          also have "... = f (4*s - 2)"
+          proof -
+            have h42_ge: "4*s - 2 \<ge> 0" using hs_gt by simp
+            have h42_le: "4*s - 2 \<le> 1" using True by simp
+            have h42_I: "(4*s - 2) \<in> I_set" unfolding top1_unit_interval_def
+              using h42_ge h42_le by simp
+            thus ?thesis using hH0 h42_I by simp
+          qed
+          finally have hGs: "G (s, 0) = f (4*s - 2)" .
+          have "top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s
+              = top1_path_product f (top1_constant_path x0) (2*s - 1)"
+            using hs_gt unfolding top1_path_product_def by simp
+          also have "... = f (2*(2*s-1))"
+          proof -
+            have "2*s - 1 \<le> 1/2" using True by simp
+            thus ?thesis unfolding top1_path_product_def by simp
+          qed
+          also have "... = f (4*s - 2)" by (simp add: algebra_simps)
+          finally show ?thesis using hGs by simp
+        next
+          case False hence hs_gt2: "s > 3/4" by simp
+          hence "G (s, 0) = ?\<beta> (0 * (4 - 4*s))" unfolding G_def using hs_gt by simp
+          also have "... = ?\<beta> 0" by simp
+          also have "... = x0" by (rule h\<beta>0)
+          finally have hGs: "G (s, 0) = x0" .
+          have "top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s
+              = top1_path_product f (top1_constant_path x0) (2*s - 1)"
+            using hs_gt unfolding top1_path_product_def by simp
+          also have "... = top1_constant_path x0 (2*(2*s-1) - 1)"
+          proof -
+            have "2*s - 1 > 1/2" using hs_gt2 by simp
+            thus ?thesis unfolding top1_path_product_def by simp
+          qed
+          also have "... = x0" unfolding top1_constant_path_def by simp
+          finally show ?thesis using hGs by simp
+        qed
+      qed
+    qed
+    have hG_top: "\<forall>s\<in>I_set. G (s, 1) =
+        top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s"
+    proof
+      fix s :: real assume hs: "s \<in> I_set"
+      show "G (s, 1) = top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s"
+      proof (cases "s \<le> 1/2")
+        case True
+        hence "G (s, 1) = ?\<alpha> (1 * (2*s))" unfolding G_def by simp
+        also have "... = ?\<alpha> (2*s)" by simp
+        finally have hGs: "G (s, 1) = ?\<alpha> (2*s)" .
+        have "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s
+            = ?\<alpha> (2*s)"
+          using True unfolding top1_path_product_def by simp
+        thus ?thesis using hGs by simp
+      next
+        case False hence hs_gt: "s > 1/2" by simp
+        show ?thesis
+        proof (cases "s \<le> 3/4")
+          case True
+          hence "G (s, 1) = H (4*s - 2, 1)" unfolding G_def using hs_gt by simp
+          also have "... = c"
+          proof -
+            have h42_I: "(4*s - 2) \<in> I_set" unfolding top1_unit_interval_def
+              using hs_gt True by simp
+            thus ?thesis using hH1 by simp
+          qed
+          finally have hGs: "G (s, 1) = c" .
+          have "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s
+              = top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>) (2*s - 1)"
+            using hs_gt unfolding top1_path_product_def by simp
+          also have "... = top1_constant_path c (2*(2*s-1))"
+          proof -
+            have "2*s - 1 \<le> 1/2" using True by simp
+            thus ?thesis unfolding top1_path_product_def by simp
+          qed
+          also have "... = c" unfolding top1_constant_path_def by simp
+          finally show ?thesis using hGs by simp
+        next
+          case False hence hs_gt2: "s > 3/4" by simp
+          hence "G (s, 1) = ?\<beta> (1 * (4 - 4*s))" unfolding G_def using hs_gt by simp
+          also have "... = ?\<beta> (4 - 4*s)" by simp
+          finally have hGs: "G (s, 1) = ?\<beta> (4 - 4*s)" .
+          have "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s
+              = top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>) (2*s - 1)"
+            using hs_gt unfolding top1_path_product_def by simp
+          also have "... = top1_path_reverse ?\<beta> (2*(2*s-1) - 1)"
+          proof -
+            have "2*s - 1 > 1/2" using hs_gt2 by simp
+            thus ?thesis unfolding top1_path_product_def by simp
+          qed
+          also have "... = ?\<beta> (1 - (4*s - 3))" unfolding top1_path_reverse_def by simp
+          also have "... = ?\<beta> (4 - 4*s)" by (simp add: algebra_simps)
+          finally show ?thesis using hGs by simp
+        qed
+      qed
+    qed
+    \<comment> \<open>Left and right boundaries fixed at x0.\<close>
+    have hG_left: "\<forall>t\<in>I_set. G (0, t) = x0"
+      unfolding G_def using h\<alpha>0 by simp
+    have hG_right: "\<forall>t\<in>I_set. G (1, t) = x0"
+      unfolding G_def using h\<beta>0 by simp
+    \<comment> \<open>The source and target are paths.\<close>
+    have hconst_x0_path: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+      by (rule top1_constant_path_is_path[OF hTX hx0_X])
+    have hf_const: "top1_is_path_on X TX x0 x0 (top1_path_product f (top1_constant_path x0))"
+      by (rule top1_path_product_is_path[OF hTX hf_path hconst_x0_path])
+    have hbottom_path: "top1_is_path_on X TX x0 x0
+        (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+      by (rule top1_path_product_is_path[OF hTX hconst_x0_path hf_const])
+    have hconst_c_path: "top1_is_path_on X TX c c (top1_constant_path c)"
+      by (rule top1_constant_path_is_path[OF hTX hcX])
+    have hrev\<beta>': "top1_is_path_on X TX c x0 (top1_path_reverse ?\<beta>)"
+      by (rule top1_path_reverse_is_path[OF h\<beta>_path])
+    have hconst_c_revb: "top1_is_path_on X TX c x0 (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>))"
+      by (rule top1_path_product_is_path[OF hTX hconst_c_path hrev\<beta>'])
+    have htop_path: "top1_is_path_on X TX x0 x0
+        (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)))"
+      by (rule top1_path_product_is_path[OF hTX h\<alpha>_path hconst_c_revb])
+    show ?thesis unfolding top1_path_homotopic_on_def
+      using hbottom_path htop_path
+    proof (intro conjI)
+      show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
+           (\<forall>s\<in>I_set. F (s, 0) = top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s) \<and>
+           (\<forall>s\<in>I_set. F (s, 1) = top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)) s) \<and>
+           (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0)"
+        apply (rule exI[of _ G])
+        using hG_cont hG_bottom hG_top hG_left hG_right
+        apply (intro conjI)
+        apply assumption+
+        done
+    qed
+  qed
   \<comment> \<open>Step 3: Path algebra chain to show f \<simeq> const_{x0}.\<close>
   \<comment> \<open>f \<simeq> const * f * const (left+right identity)\<close>
   have hstep1: "top1_path_homotopic_on X TX x0 x0 f
