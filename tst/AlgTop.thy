@@ -2330,6 +2330,15 @@ proof (intro allI impI)
        Telescoping: f \<simeq> f1*f2*...*fm (reparametrization of f)
                       \<simeq> (rev(\<alpha>0)*f1*\<alpha>1) * (rev(\<alpha>1)*f2*\<alpha>2) * ... * (rev(\<alpha>_{m-1})*fm*\<alpha>_m)
                       (by inserting \<alpha>i*rev(\<alpha>i) \<simeq> const between consecutive pieces).\<close>
+    \<comment> \<open>Choose connecting paths via choice on the \<forall>\<exists> fact.\<close>
+    have "\<forall>i\<le>m. \<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
+    proof (intro allI impI)
+      fix i assume "i \<le> m"
+      thus "\<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
+        using hUV_pc hsub_int hx0 unfolding top1_path_connected_on_def by (by100 blast)
+    qed
+    \<comment> \<open>For each i<m, define fi(t) = f(sub(i) + t*(sub(i+1)-sub(i))), the reparametrization.
+       Define gi = rev(\<alpha>i) * fi * \<alpha>(i+1). gs = map gi [0..<m].\<close>
     show ?thesis sorry
   qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
