@@ -5397,7 +5397,7 @@ proof -
     qed
     have "top1_compact_on (h ` C) (subspace_topology UNIV
         (product_topology_on top1_open_sets top1_open_sets) (h ` C))"
-      sorry \<comment> \<open>h continuous on C (restriction), C compact, hence h(C) compact.\<close>
+      sorry \<comment> \<open>h continuous on C (restriction from S^2-{b}), C compact, so h(C) compact.\<close>
     thus ?thesis using hCb_eq by simp
   qed
   have hC_bounded: "\<exists>M. \<forall>p \<in> h ` (C - {b}). fst p ^ 2 + snd p ^ 2 \<le> M"
