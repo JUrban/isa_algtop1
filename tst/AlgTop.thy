@@ -2618,8 +2618,11 @@ proof -
           sorry
         have hR'_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R'"
           sorry
+        have hTII_: "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+        have hR_sub: "?R \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
         have hTR: "is_topology_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R)"
-          sorry
+          by (rule subspace_topology_is_topology_on[OF hTII_ hR_sub])
         \<comment> \<open>G on M = H \<circ> (\<lambda>(s,t). (4s-2, t)). Continuous.\<close>
         have hG_M: "top1_continuous_map_on ?M (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M) X TX G"
           sorry
