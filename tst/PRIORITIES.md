@@ -1,6 +1,8 @@
 # Priorities for AlgTop Jordan Curve Theorem
 
-## Status: 144 sorries, builds in ~15s, 10K lines
+## Status: 148 sorries, builds in ~15s, 10K lines
+## Note: sorry count increased from 144 due to proof sketch expansions;
+##   many sorries are now more targeted/concrete than before
 
 ## COMPLETE Infrastructure (Zero Sorry):
 

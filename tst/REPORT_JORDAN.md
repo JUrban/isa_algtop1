@@ -1,6 +1,6 @@
 # Jordan Curve Theorem Formalization Progress Report
 
-## Overall: 144 sorries (10K lines, structural expansions with concrete proofs)
+## Overall: 148 sorries (10K lines, proof sketches faithful to Munkres)
 
 ## Build: 14s (16K lines cached in Top0 session)
 
