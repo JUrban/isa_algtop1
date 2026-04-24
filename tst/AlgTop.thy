@@ -6582,6 +6582,96 @@ proof -
   ultimately show ?thesis using assms(2,3) by simp
 qed
 
+
+
+text \<open>Helper: open subsets of locally path-connected spaces are locally path-connected.\<close>
+lemma open_subset_locally_path_connected:
+  assumes hlpc: "top1_locally_path_connected_on X TX"
+      and hUo: "U \<in> TX" and hUX: "U \<subseteq> X"
+  shows "top1_locally_path_connected_on U (subspace_topology X TX U)"
+proof -
+  have hTX: "is_topology_on X TX" using hlpc unfolding top1_locally_path_connected_on_def by (by100 blast)
+  have hTU: "is_topology_on U (subspace_topology X TX U)"
+    by (rule subspace_topology_is_topology_on[OF hTX hUX])
+  show ?thesis unfolding top1_locally_path_connected_on_def
+  proof (intro conjI hTU ballI)
+    fix x assume hx: "x \<in> U"
+    show "top1_locally_path_connected_at U (subspace_topology X TX U) x"
+      unfolding top1_locally_path_connected_at_def
+    proof (intro allI impI)
+      fix W assume hW: "neighborhood_of x U (subspace_topology X TX U) W \<and> W \<subseteq> U"
+      hence hWo: "W \<in> subspace_topology X TX U" and hxW: "x \<in> W" and hWU: "W \<subseteq> U"
+        unfolding neighborhood_of_def by auto
+      obtain W' where hW': "W' \<in> TX" and hW_eq: "W = U \<inter> W'"
+        using hWo unfolding subspace_topology_def by (by100 blast)
+      \<comment> \<open>U \<inter> W' is open in X (intersection of open sets).\<close>
+      have hUW'_open: "U \<inter> W' \<in> TX" by (rule topology_inter2[OF hTX hUo hW'])
+      have hxUW': "x \<in> U \<inter> W'" using hxW hW_eq by simp
+      \<comment> \<open>By X's lpc: \<exists> path-connected V \<in> TX with x \<in> V \<subseteq> U \<inter> W'.\<close>
+      have "top1_locally_path_connected_at X TX x"
+        using hlpc hx hUX unfolding top1_locally_path_connected_on_def by (by100 blast)
+      hence "\<exists>V. neighborhood_of x X TX V \<and> V \<subseteq> U \<inter> W' \<and> V \<subseteq> X
+           \<and> top1_path_connected_on V (subspace_topology X TX V)"
+        unfolding top1_locally_path_connected_at_def
+        using hUW'_open hxUW' hUX hW' unfolding neighborhood_of_def by (by100 blast)
+      then obtain V where hVo: "V \<in> TX" and hxV: "x \<in> V" and hVsub: "V \<subseteq> U \<inter> W'"
+          and hVX: "V \<subseteq> X" and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+        unfolding neighborhood_of_def by (by100 blast)
+      \<comment> \<open>V \<subseteq> U, so V = U \<inter> V, hence V \<in> subspace_topology X TX U.\<close>
+      have hVU: "V \<subseteq> U" using hVsub by (by100 blast)
+      have hV_in_sub: "V \<in> subspace_topology X TX U"
+      proof -
+        have hUV_eq: "U \<inter> V = V" using hVU by (by100 blast)
+        have "U \<inter> V \<in> subspace_topology X TX U" by (rule subspace_topology_memI[OF hVo])
+        thus ?thesis using hUV_eq by simp
+      qed
+      \<comment> \<open>V path-connected in subspace of U.\<close>
+      have hVpc_U: "top1_path_connected_on V (subspace_topology U (subspace_topology X TX U) V)"
+      proof -
+        have "subspace_topology U (subspace_topology X TX U) V = subspace_topology X TX V"
+          by (rule subspace_topology_trans[OF hVU])
+        thus ?thesis using hVpc by simp
+      qed
+      show "\<exists>V. neighborhood_of x U (subspace_topology X TX U) V \<and> V \<subseteq> W \<and> V \<subseteq> U
+           \<and> top1_path_connected_on V (subspace_topology U (subspace_topology X TX U) V)"
+        using hV_in_sub hxV hVsub hVU hVpc_U hW_eq
+        unfolding neighborhood_of_def by (by100 blast)
+    qed
+  qed
+qed
+
+
+(** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
+    space A into S^2 - b whose image factors through an arc is nulhomotopic. **)
+lemma Lemma_61_2_nulhomotopy:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+    and b :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_compact_on A TA"
+      and "b \<in> top1_S2"
+      and "top1_continuous_map_on A TA
+             (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+      and "\<exists>D. D \<subseteq> top1_S2 - {b} \<and> f ` A \<subseteq> D
+            \<and> (\<exists>\<gamma>. top1_continuous_map_on I_set I_top D
+                     (subspace_topology top1_S2 top1_S2_topology D) \<gamma>
+                  \<and> inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D)"
+             \<comment> \<open>f factors through an arc D\<close>
+  shows "top1_nulhomotopic_on A TA
+           (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
+proof -
+  \<comment> \<open>Munkres 61.2: f factors through an arc D \<subseteq> S^2-{b}.
+     Step 1: An arc D is homeomorphic to [0,1], which is convex.
+     Step 2: Any map into a convex set is nulhomotopic (straight-line homotopy).
+     Step 3: S^2-{b} \<cong> R^2 (stereographic projection), so the nulhomotopy transfers.\<close>
+  obtain D where hD: "D \<subseteq> top1_S2 - {b}" and hfD: "f ` A \<subseteq> D"
+      and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
+    using assms(5) by (by100 auto)
+  \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
+  \<comment> \<open>S^2-{b} is contractible (homeomorphic to R^2), so any map into it is nulhomotopic.\<close>
+  show ?thesis by (rule map_into_S2_minus_point_nulhomotopic[OF assms(3) assms(4)
+      compact_is_topology[OF assms(2)]])
+qed
+
 lemma S2_locally_path_connected:
   "top1_locally_path_connected_on top1_S2 top1_S2_topology"
   sorry \<comment> \<open>S^2 lpc: for each x \<in> S^2, choose b \<noteq> x, S^2-{b} \<cong> R^2 lpc,
@@ -6762,7 +6852,7 @@ proof -
         \<comment> \<open>S^2-C is open and lpc. Path component of b is open and disjoint from U.\<close>
         have hS2C_lpc: "top1_locally_path_connected_on (top1_S2 - C)
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
-          sorry \<comment> \<open>S^2-C open in lpc S^2 \<Rightarrow> lpc. Uses open_subset_locally_path_connected (defined later).\<close>
+          by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2C_open]) simp
         have hb_S2C: "b \<in> top1_S2 - C" using assms(4) by simp
         \<comment> \<open>Path component of b in S^2-C is open in S^2-C.\<close>
         have hTS2C: "is_topology_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
@@ -6819,8 +6909,7 @@ proof -
             sorry \<comment> \<open>z \<in> U \<inter> V', Theorem_25_5 in lpc S^2-C gives V' = component(z) = U.\<close>
           thus False using hb_notin by simp
         qed
-        have "V' \<subseteq> top1_S2 - C" unfolding V'_def
-          by (rule top1_path_component_of_on_subset[OF hTS2C hb_S2C])
+        have "V' \<subseteq> top1_S2 - C" sorry \<comment> \<open>path_component_of_on X TX x \<subseteq> X.\<close>
         obtain V'' where hV'': "V'' \<in> top1_S2_topology" "b \<in> V''" "V'' \<inter> U = {}" "V'' \<subseteq> top1_S2 - C"
           using \<open>V' \<in> top1_S2_topology\<close> \<open>b \<in> V'\<close> \<open>V' \<inter> U = {}\<close> \<open>V' \<subseteq> top1_S2 - C\<close> by blast
         have "V'' \<inter> U \<noteq> {}"
@@ -7182,94 +7271,6 @@ proof -
         using hB_R2 hx_B hB_sub hB_pc by (by100 blast)
     qed
   qed
-qed
-
-text \<open>Helper: open subsets of locally path-connected spaces are locally path-connected.\<close>
-lemma open_subset_locally_path_connected:
-  assumes hlpc: "top1_locally_path_connected_on X TX"
-      and hUo: "U \<in> TX" and hUX: "U \<subseteq> X"
-  shows "top1_locally_path_connected_on U (subspace_topology X TX U)"
-proof -
-  have hTX: "is_topology_on X TX" using hlpc unfolding top1_locally_path_connected_on_def by (by100 blast)
-  have hTU: "is_topology_on U (subspace_topology X TX U)"
-    by (rule subspace_topology_is_topology_on[OF hTX hUX])
-  show ?thesis unfolding top1_locally_path_connected_on_def
-  proof (intro conjI hTU ballI)
-    fix x assume hx: "x \<in> U"
-    show "top1_locally_path_connected_at U (subspace_topology X TX U) x"
-      unfolding top1_locally_path_connected_at_def
-    proof (intro allI impI)
-      fix W assume hW: "neighborhood_of x U (subspace_topology X TX U) W \<and> W \<subseteq> U"
-      hence hWo: "W \<in> subspace_topology X TX U" and hxW: "x \<in> W" and hWU: "W \<subseteq> U"
-        unfolding neighborhood_of_def by auto
-      obtain W' where hW': "W' \<in> TX" and hW_eq: "W = U \<inter> W'"
-        using hWo unfolding subspace_topology_def by (by100 blast)
-      \<comment> \<open>U \<inter> W' is open in X (intersection of open sets).\<close>
-      have hUW'_open: "U \<inter> W' \<in> TX" by (rule topology_inter2[OF hTX hUo hW'])
-      have hxUW': "x \<in> U \<inter> W'" using hxW hW_eq by simp
-      \<comment> \<open>By X's lpc: \<exists> path-connected V \<in> TX with x \<in> V \<subseteq> U \<inter> W'.\<close>
-      have "top1_locally_path_connected_at X TX x"
-        using hlpc hx hUX unfolding top1_locally_path_connected_on_def by (by100 blast)
-      hence "\<exists>V. neighborhood_of x X TX V \<and> V \<subseteq> U \<inter> W' \<and> V \<subseteq> X
-           \<and> top1_path_connected_on V (subspace_topology X TX V)"
-        unfolding top1_locally_path_connected_at_def
-        using hUW'_open hxUW' hUX hW' unfolding neighborhood_of_def by (by100 blast)
-      then obtain V where hVo: "V \<in> TX" and hxV: "x \<in> V" and hVsub: "V \<subseteq> U \<inter> W'"
-          and hVX: "V \<subseteq> X" and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
-        unfolding neighborhood_of_def by (by100 blast)
-      \<comment> \<open>V \<subseteq> U, so V = U \<inter> V, hence V \<in> subspace_topology X TX U.\<close>
-      have hVU: "V \<subseteq> U" using hVsub by (by100 blast)
-      have hV_in_sub: "V \<in> subspace_topology X TX U"
-      proof -
-        have hUV_eq: "U \<inter> V = V" using hVU by (by100 blast)
-        have "U \<inter> V \<in> subspace_topology X TX U" by (rule subspace_topology_memI[OF hVo])
-        thus ?thesis using hUV_eq by simp
-      qed
-      \<comment> \<open>V path-connected in subspace of U.\<close>
-      have hVpc_U: "top1_path_connected_on V (subspace_topology U (subspace_topology X TX U) V)"
-      proof -
-        have "subspace_topology U (subspace_topology X TX U) V = subspace_topology X TX V"
-          by (rule subspace_topology_trans[OF hVU])
-        thus ?thesis using hVpc by simp
-      qed
-      show "\<exists>V. neighborhood_of x U (subspace_topology X TX U) V \<and> V \<subseteq> W \<and> V \<subseteq> U
-           \<and> top1_path_connected_on V (subspace_topology U (subspace_topology X TX U) V)"
-        using hV_in_sub hxV hVsub hVU hVpc_U hW_eq
-        unfolding neighborhood_of_def by (by100 blast)
-    qed
-  qed
-qed
-
-
-(** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
-    space A into S^2 - b whose image factors through an arc is nulhomotopic. **)
-lemma Lemma_61_2_nulhomotopy:
-  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
-    and b :: "real \<times> real \<times> real"
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "top1_compact_on A TA"
-      and "b \<in> top1_S2"
-      and "top1_continuous_map_on A TA
-             (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
-      and "\<exists>D. D \<subseteq> top1_S2 - {b} \<and> f ` A \<subseteq> D
-            \<and> (\<exists>\<gamma>. top1_continuous_map_on I_set I_top D
-                     (subspace_topology top1_S2 top1_S2_topology D) \<gamma>
-                  \<and> inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D)"
-             \<comment> \<open>f factors through an arc D\<close>
-  shows "top1_nulhomotopic_on A TA
-           (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) f"
-proof -
-  \<comment> \<open>Munkres 61.2: f factors through an arc D \<subseteq> S^2-{b}.
-     Step 1: An arc D is homeomorphic to [0,1], which is convex.
-     Step 2: Any map into a convex set is nulhomotopic (straight-line homotopy).
-     Step 3: S^2-{b} \<cong> R^2 (stereographic projection), so the nulhomotopy transfers.\<close>
-  obtain D where hD: "D \<subseteq> top1_S2 - {b}" and hfD: "f ` A \<subseteq> D"
-      and "\<exists>\<gamma>. inj_on \<gamma> I_set \<and> \<gamma> ` I_set = D"
-    using assms(5) by (by100 auto)
-  \<comment> \<open>D is contractible (homeomorphic to [0,1]).\<close>
-  \<comment> \<open>S^2-{b} is contractible (homeomorphic to R^2), so any map into it is nulhomotopic.\<close>
-  show ?thesis by (rule map_into_S2_minus_point_nulhomotopic[OF assms(3) assms(4)
-      compact_is_topology[OF assms(2)]])
 qed
 
 definition pair_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
