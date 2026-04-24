@@ -9074,8 +9074,62 @@ proof
     \<and> e0 \<noteq> e1
     \<and> (\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
         \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))"
-    sorry \<comment> \<open>Covering space E = Z \<times> (U \<sqcup> V) / ~. Type: 'a \<times> int.
-       Lift of \<alpha>*\<beta> shifts sheet: e0 in sheet 0, e1 in sheet 1, so e0 \<noteq> e1.\<close>
+  proof -
+    \<comment> \<open>Define E as quotient of Y = \<Union>n. U\<times>{2n} \<union> V\<times>{2n+1}.
+       Identification: (x,2n) ~ (x,2n-1) for x \<in> A, and (x,2n) ~ (x,2n+1) for x \<in> B.
+       After identification: E = {(x,n) | if even n then x \<in> U, if odd n then x \<in> V}
+       modulo: (x, 2n) = (x, 2n-1) for x \<in> A and (x, 2n) = (x, 2n+1) for x \<in> B.
+
+       Simpler encoding: a point of E is represented by (x, n) where
+       x \<in> U (if n even) or x \<in> V (if n odd). Two points are equal if they
+       are identified: (x, 2n) = (x, 2n-1) when x \<in> A, (x, 2n) = (x, 2n+1) when x \<in> B.
+
+       The canonical representative: for each equivalence class, pick the lexicographically
+       smallest representative. But this is complex.
+
+       Alternative: define E directly as a set of equivalence classes, represented by
+       choosing specific representatives. Each x \<in> U-B gives a unique element (x,2n) in sheet 2n.
+       Each x \<in> V-A gives a unique element (x,2n+1) in sheet 2n+1.
+       Each x \<in> A gives (x,2n) = (x,2n-1), so use (x,2n).
+       Each x \<in> B gives (x,2n) = (x,2n+1), so use (x,2n).
+
+       The covering map p: (x,n) \<mapsto> x.
+
+       For the lift: \<alpha>-tilde_n(s) = (\<alpha>(s), 2n) for \<alpha> in U.
+       \<beta>-tilde_n(s) = (\<beta>(s), 2n+1) for \<beta> in V.
+       \<alpha>-tilde starts at (a, 2n), ends at (b, 2n).
+       Since b \<in> B: (b, 2n) = (b, 2n+1).
+       \<beta>-tilde starts at (b, 2n+1), ends at (a, 2n+1).
+       Since a \<in> A: (a, 2n+1) = (a, 2n+2) = (a, 2(n+1)).
+       So ftilde_n = \<alpha>-tilde * \<beta>-tilde goes from (a,2n) to (a,2(n+1)).
+       Hence e0 = (a,0) and e1 = (a,2), and e0 \<noteq> e1.\<close>
+    \<comment> \<open>Define the space and covering map.\<close>
+    define E :: "('a \<times> int) set" where
+      "E = (\<Union>n::int. {(x, 2*n) | x. x \<in> U} \<union> {(x, 2*n+1) | x. x \<in> V})"
+    define p0 :: "('a \<times> int) \<Rightarrow> 'a" where "p0 = fst"
+    define e0 :: "'a \<times> int" where "e0 = (a, 0)"
+    define e1 :: "'a \<times> int" where "e1 = (a, 2)"
+    have ha_U: "a \<in> U" using assms(2,5,9) unfolding openin_on_def by (by100 blast)
+    have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_U by auto
+    have he1_E: "e1 \<in> E" unfolding e1_def E_def using ha_U by auto
+    have hp0e0: "p0 e0 = a" unfolding p0_def e0_def by simp
+    have hp0e1: "p0 e1 = a" unfolding p0_def e1_def by simp
+    have hne: "e0 \<noteq> e1" unfolding e0_def e1_def by simp
+    \<comment> \<open>Need: covering map, topology on E, and lift.\<close>
+    have hcov: "top1_covering_map_on E (sorry :: ('a \<times> int) set set) X TX p0"
+      sorry \<comment> \<open>Main covering space construction: topology on E, p0 covering map.\<close>
+    have hTE: "is_topology_on E (sorry :: ('a \<times> int) set set)" sorry
+    have hft: "\<exists>ftilde. top1_is_path_on E (sorry :: ('a \<times> int) set set) e0 e1 ftilde
+        \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s)"
+      sorry \<comment> \<open>Lift: \<alpha>-tilde * \<beta>-tilde goes (a,0) \<rightarrow> (b,0) \<rightarrow> (a,2).\<close>
+    obtain TE where hcov': "top1_covering_map_on E TE X TX p0"
+        and hTE': "is_topology_on E TE"
+        and hft': "\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
+            \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s)"
+      sorry \<comment> \<open>Package: the topology TE exists making everything work.\<close>
+    show ?thesis
+      using hcov' hTE' he0_E he1_E hp0e0 hp0e1 hne hft' by (by100 blast)
+  qed
   \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
      But we showed the lift has different endpoints. Contradiction.\<close>
   \<comment> \<open>From step 2, obtain covering E, map p0, points e0 \<noteq> e1, and lift ftilde.\<close>
