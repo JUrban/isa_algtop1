@@ -6569,6 +6569,11 @@ proof -
   thus ?thesis by (rule nulhomotopic_transfer[OF hh _ assms(2) assms(3)])
 qed
 
+lemma S2_locally_path_connected:
+  "top1_locally_path_connected_on top1_S2 top1_S2_topology"
+  sorry \<comment> \<open>S^2 lpc: for each x \<in> S^2, choose b \<noteq> x, S^2-{b} \<cong> R^2 lpc,
+     S^2-{b} open in S^2, hence lpc at x. Full proof in Theorem 63.2 body (line ~10133).\<close>
+
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
     and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
@@ -6741,11 +6746,31 @@ proof -
         \<comment> \<open>The component of b in S^2-C is open (lpc space, open set).\<close>
         \<comment> \<open>Since S^2-C is open and lpc, the path component of b in S^2-C is open in S^2.
            It's disjoint from U (different components).\<close>
-        obtain V' where hV': "V' \<in> top1_S2_topology" "b \<in> V'" "V' \<inter> U = {}" "V' \<subseteq> top1_S2 - C"
-          sorry \<comment> \<open>Path component of b in S^2-C is open (S^2-C open in lpc S^2) and disjoint from U.\<close>
-        have "V' \<inter> U \<noteq> {}"
-          by (rule closure_meets_open[OF hTS2 hU_sub_S2 hb_clU hV'(1) hV'(2)])
-        thus False using hV'(3) by simp
+        \<comment> \<open>S^2-C is open and lpc. Path component of b is open and disjoint from U.\<close>
+        have hS2C_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+          sorry \<comment> \<open>S^2-C open in lpc S^2 \<Rightarrow> lpc. Uses open_subset_locally_path_connected (defined later).\<close>
+        have hb_S2C: "b \<in> top1_S2 - C" using assms(4) by simp
+        \<comment> \<open>Path component of b in S^2-C is open in S^2-C.\<close>
+        have hTS2C: "is_topology_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+          by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+        define V' where "V' = top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) b"
+        have hV'_open_S2C: "V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+          unfolding V'_def
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2C hS2C_lpc hb_S2C])
+        \<comment> \<open>V' open in S^2-C \<Rightarrow> V' = (S^2-C) \<inter> W for some W \<in> top1_S2_topology. Hence V' \<in> top1_S2_topology.\<close>
+        have "V' \<in> top1_S2_topology"
+          sorry \<comment> \<open>Open in subspace of open = open in ambient.\<close>
+        have "b \<in> V'" unfolding V'_def using hb_S2C hTS2C hS2C_lpc
+          sorry \<comment> \<open>b in its own path component.\<close>
+        have "V' \<inter> U = {}" sorry \<comment> \<open>Different path components disjoint.\<close>
+        have "V' \<subseteq> top1_S2 - C" sorry \<comment> \<open>path_component_of_on X TX x \<subseteq> X.\<close>
+        obtain V'' where hV'': "V'' \<in> top1_S2_topology" "b \<in> V''" "V'' \<inter> U = {}" "V'' \<subseteq> top1_S2 - C"
+          using \<open>V' \<in> top1_S2_topology\<close> \<open>b \<in> V'\<close> \<open>V' \<inter> U = {}\<close> \<open>V' \<subseteq> top1_S2 - C\<close> by blast
+        have "V'' \<inter> U \<noteq> {}"
+          by (rule closure_meets_open[OF hTS2 hU_sub_S2 hb_clU hV''(1) hV''(2)])
+        thus False using hV''(3) by simp
       qed
       hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
       \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
