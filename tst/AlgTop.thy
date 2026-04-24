@@ -6726,8 +6726,10 @@ proof -
       have "b \<notin> ?clU" sorry \<comment> \<open>Components of open set are separated from each other.\<close>
       hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
       \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
+      have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
+        sorry \<comment> \<open>S^2 compact: closed bounded subset of R^3, or image of compact S^1 \<times> [-1,1].\<close>
       have hclU_compact: "top1_compact_on ?clU (subspace_topology top1_S2 top1_S2_topology ?clU)"
-        sorry \<comment> \<open>Closed subset of compact Hausdorff space is compact.\<close>
+        by (rule Theorem_26_2[OF hS2_compact hclU_closed])
       \<comment> \<open>h(closure_on(U)) is compact in R^2, hence bounded.\<close>
       \<comment> \<open>h continuous on S^2-{b} \<supseteq> closure_on(U), so h(closure_on(U)) compact.\<close>
       have "compact (h ` ?clU)" sorry \<comment> \<open>Bridge: top1_compact_on \<rightarrow> compact via homeomorphism h.\<close>
