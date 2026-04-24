@@ -8520,6 +8520,17 @@ proof -
   qed
 qed
 
+text \<open>Helper: a loop f: I \<rightarrow> X at x0 factors through S^1 via the standard covering map.
+  There exists h: S^1 \<rightarrow> X continuous with h(1,0) = x0 and f = h \<circ> top1_R_to_S1 on I.\<close>
+lemma loop_factors_through_S1:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_loop_on X TX x0 f"
+  shows "\<exists>h. top1_continuous_map_on top1_S1 top1_S1_topology X TX h
+           \<and> h (1, 0) = x0
+           \<and> (\<forall>s\<in>I_set. f s = h (top1_R_to_S1 s))"
+  sorry \<comment> \<open>Loop f identifies 0\<sim>1, quotient map top1_R_to_S1 identifies 0\<sim>1,
+     so f factors through the quotient S^1 = I/\<partial>I.\<close>
+
 theorem Theorem_61_3_JordanSeparation_S2:
   assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
   and hC: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -8911,7 +8922,7 @@ proof (rule ccontr)
       obtain h_S1 where hh_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?X ?TX h_S1"
           and hh_S1_10: "h_S1 (1, 0) = x0"
           and hg_factor: "\<forall>s\<in>I_set. g s = h_S1 (top1_R_to_S1 s)"
-        sorry \<comment> \<open>Loop g factors through S^1 via the quotient map top1_R_to_S1.\<close>
+        using loop_factors_through_S1[OF hTX_ hg_loop] by (by100 blast)
       \<comment> \<open>Step 2: h_S1(S^1) \<subseteq> U (since g(I) \<subseteq> U and g = h_S1 \<circ> p, p surjective).\<close>
       have hh_S1_U: "h_S1 ` top1_S1 \<subseteq> ?U"
         sorry \<comment> \<open>h_S1 image = g image \<subseteq> U.\<close>
@@ -9085,7 +9096,7 @@ proof (rule ccontr)
       obtain h_S1' where hh_S1': "top1_continuous_map_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
           and hh_S1_10': "h_S1' (1, 0) = x0"
           and hg_factor': "\<forall>s\<in>I_set. g s = h_S1' (top1_R_to_S1 s)"
-        sorry \<comment> \<open>Loop g factors through S^1.\<close>
+        using loop_factors_through_S1[OF hTX_' hg_loop'] by (by100 blast)
       have hh_S1_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
         sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1.\<close>
       have hTS1': "is_topology_on top1_S1 top1_S1_topology"
