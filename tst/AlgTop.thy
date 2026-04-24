@@ -9130,7 +9130,12 @@ proof
     define ftilde :: "real \<Rightarrow> ('a \<times> int)" where
       "ftilde = top1_path_product (\<lambda>s. (alpha s, 0)) (\<lambda>s. (beta s, 1))"
     have hft_path: "top1_is_path_on E TE e0 e1 ftilde" sorry
-    have hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s" sorry
+    have hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      show "p0 (ftilde s) = top1_path_product alpha beta s"
+        unfolding p0_def ftilde_def top1_path_product_def by simp
+    qed
     show ?thesis
       using hcov' hTE' he0_E he1_E hp0e0 hp0e1 hne hft_path hft_lift
       by (intro exI[of _ E] exI[of _ TE] exI[of _ p0] exI[of _ e0] exI[of _ e1])
