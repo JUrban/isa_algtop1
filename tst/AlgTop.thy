@@ -6909,7 +6909,8 @@ proof -
             sorry \<comment> \<open>z \<in> U \<inter> V', Theorem_25_5 in lpc S^2-C gives V' = component(z) = U.\<close>
           thus False using hb_notin by simp
         qed
-        have "V' \<subseteq> top1_S2 - C" sorry \<comment> \<open>path_component_of_on X TX x \<subseteq> X.\<close>
+        have "V' \<subseteq> top1_S2 - C" unfolding V'_def
+          by (rule top1_path_component_of_on_subset[OF hTS2C hb_S2C])
         obtain V'' where hV'': "V'' \<in> top1_S2_topology" "b \<in> V''" "V'' \<inter> U = {}" "V'' \<subseteq> top1_S2 - C"
           using \<open>V' \<in> top1_S2_topology\<close> \<open>b \<in> V'\<close> \<open>V' \<inter> U = {}\<close> \<open>V' \<subseteq> top1_S2 - C\<close> by blast
         have "V'' \<inter> U \<noteq> {}"
