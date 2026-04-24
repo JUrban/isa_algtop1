@@ -8987,14 +8987,26 @@ proof (rule ccontr)
         using hg unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       have ha_S2_': "a \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
       have hb_S2_': "b \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
-      have hg_nul: "top1_nulhomotopic_on I_set I_top ?X ?TX g"
-        by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict hI_compact'
-              ha_S2_' hb_S2_' hab_ne hg_cont' hsame_comp2])
+      \<comment> \<open>Same textbook S^1-factorization approach as U-side.\<close>
       have hTX_': "is_topology_on ?X ?TX"
         using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
       have hg_loop': "top1_is_loop_on ?X ?TX x0 g" using hg by (by100 blast)
-      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
-        by (rule nulhomotopic_loop_path_homotopic_constant[OF hTX_' hg_loop' hg_nul])
+      obtain h_S1' where hh_S1': "top1_continuous_map_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
+          and hh_S1_10': "h_S1' (1, 0) = x0"
+          and hg_factor': "\<forall>s\<in>I_set. g s = h_S1' (top1_R_to_S1 s)"
+        sorry \<comment> \<open>Loop g factors through S^1.\<close>
+      have hh_S1_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
+        sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1.\<close>
+      have hTS1': "is_topology_on top1_S1 top1_S1_topology" sorry
+      have hstd_loop': "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)" sorry
+      have h10_S1': "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+      have "top1_path_homotopic_on ?X ?TX x0 x0 (h_S1' \<circ> top1_R_to_S1) (top1_constant_path x0)"
+        by (rule nulhomotopic_trivializes_loops_general[OF hTS1' hTX_' hh_S1' hh_S1_nul' hh_S1_10'
+              h10_S1' hstd_loop'])
+      moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1' \<circ> top1_R_to_S1)"
+        sorry \<comment> \<open>g = h_S1' \<circ> top1_R_to_S1 on I_set.\<close>
+      ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
+        using Lemma_51_1_path_homotopic_trans[OF hTX_'] by (by100 blast)
     qed
     \<comment> \<open>By Theorem 59.1 + nulhomotopy of U/V loops, \<pi>_1(X, x0) is trivial.\<close>
     show ?thesis unfolding top1_simply_connected_on_def
