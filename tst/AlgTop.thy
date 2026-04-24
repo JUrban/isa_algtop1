@@ -4856,6 +4856,29 @@ proof
 qed
 
 text \<open>Any continuous map into S^2 - {b} is nulhomotopic (since S^2-{b} is contractible).\<close>
+lemma top1_mult_continuous_R2:
+  "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+    (product_topology_on top1_open_sets top1_open_sets)
+    (UNIV :: real set) top1_open_sets (\<lambda>(u,v). u * v)"
+  unfolding top1_continuous_map_on_def product_topology_on_open_sets
+proof (intro conjI ballI)
+  fix p :: "real \<times> real" assume "p \<in> UNIV" thus "(\<lambda>(u,v). u*v) p \<in> UNIV" by simp
+next
+  fix V :: "real set" assume hV: "V \<in> (top1_open_sets :: real set set)"
+  have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+  have hcont_mult: "continuous_on UNIV (\<lambda>p::real\<times>real. fst p * snd p)"
+    by (intro continuous_intros)
+  have "open ((\<lambda>(u,v::real). u*v) -` V)"
+  proof -
+    have "(\<lambda>(u,v::real). u*v) = (\<lambda>p. fst p * snd p)" by (rule ext) (simp add: case_prod_unfold)
+    thus ?thesis using open_vimage[OF hVo hcont_mult] by simp
+  qed
+  hence "(\<lambda>(u,v::real). u*v) -` V \<in> (top1_open_sets :: (real \<times> real) set set)"
+    unfolding top1_open_sets_def by (by100 blast)
+  thus "{p \<in> UNIV. (\<lambda>(u,v). u*v) p \<in> V} \<in> (top1_open_sets :: (real \<times> real) set set)"
+    unfolding top1_open_sets_def by (simp add: vimage_def Collect_mono_iff)
+qed
+
 lemma map_into_R2_nulhomotopic:
   assumes hf: "top1_continuous_map_on A TA
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
@@ -8558,6 +8581,10 @@ end
  
  
  
+
+
+
+
 
 
 
