@@ -6906,9 +6906,12 @@ proof -
              U \<subseteq> V' = component(z). But U itself is a component, so U = component(z) = V'.
              Hence b \<in> V' = U. Contradiction.\<close>
           \<comment> \<open>path_comp(z) = path_comp(b) = V' (z \<in> V' = path_comp(b)).\<close>
+          have hz_in_pcb: "z \<in> top1_path_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) b"
+            using hz(1) V'_def by simp
           have hpz_eq: "top1_path_component_of_on (top1_S2 - C)
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z = V'"
-            sorry \<comment> \<open>z \<in> V' = path_comp(b) \<Rightarrow> path_comp(z) = path_comp(b) = V' (eq_of_mem).\<close>
+            using top1_path_component_of_on_eq_of_mem[OF hTS2C hz_in_pcb] V'_def by simp
           \<comment> \<open>In lpc S^2-C, path_comp(z) = component(z).\<close>
           have "top1_path_component_of_on (top1_S2 - C)
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z
