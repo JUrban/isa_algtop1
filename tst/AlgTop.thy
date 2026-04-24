@@ -2782,7 +2782,20 @@ proof -
           \<comment> \<open>\<phi>(s,t) = (4s-2,t) continuous M \<rightarrow> I\<times>I, then H continuous I\<times>I \<rightarrow> X.\<close>
           have h\<phi>_cont: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
               (I_set \<times> I_set) II_topology (\<lambda>(s,t). (4*s-2, t))"
-            sorry \<comment> \<open>Affine map (4s-2, t) continuous, maps M to I\<times>I.\<close>
+          proof -
+            have h\<phi>_std: "continuous_on UNIV (\<lambda>(s::real,t::real). (4*s-2, t))"
+              by (auto intro!: continuous_intros simp: case_prod_beta)
+            have h\<phi>_range: "\<forall>st\<in>?M. (\<lambda>(s,t). (4*s-2, t)) st \<in> I_set \<times> I_set"
+            proof
+              fix st assume "st \<in> ?M"
+              then obtain s t where hst: "st = (s,t)" "1/2 \<le> s" "s \<le> 3/4" "0 \<le> t" "t \<le> 1" by auto
+              have "4*s - 2 \<ge> 0" using hst by simp
+              moreover have "4*s - 2 \<le> 1" using hst by simp
+              ultimately show "(\<lambda>(s,t). (4*s-2, t)) st \<in> I_set \<times> I_set"
+                unfolding hst top1_unit_interval_def using hst by simp
+            qed
+            show ?thesis sorry \<comment> \<open>Standard-to-custom bridge.\<close>
+          qed
           have hHcont': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
             using hHcont unfolding II_topology_def by simp
           have hH_comp: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
@@ -2832,7 +2845,26 @@ proof -
             using h\<beta>_path unfolding top1_is_path_on_def by (by100 blast)
           have h\<nu>_cont: "top1_continuous_map_on ?R' (subspace_topology (I_set \<times> I_set) II_topology ?R')
               I_set I_top (\<lambda>(s,t). t * (4 - 4*s))"
-            sorry \<comment> \<open>Continuous: t*(4-4s) on R'. Multiplication continuous, range in [0,1].\<close>
+          proof -
+            have h\<nu>_std: "continuous_on UNIV (\<lambda>(s::real,t::real). t * (4 - 4*s))"
+              by (auto intro!: continuous_intros simp: case_prod_beta)
+            have h\<nu>_range: "\<forall>st\<in>?R'. (\<lambda>(s,t). t*(4-4*s)) st \<in> I_set"
+            proof
+              fix st assume "st \<in> ?R'"
+              then obtain s t where hst: "st = (s,t)" "3/4 \<le> s" "s \<le> 1" "0 \<le> t" "t \<le> 1" by auto
+              have "t * (4 - 4*s) \<ge> 0" using hst by simp
+              moreover have "t * (4 - 4*s) \<le> 1"
+              proof -
+                have "4 - 4*s \<le> 1" using hst by simp
+                moreover have "4 - 4*s \<ge> 0" using hst by simp
+                ultimately have "t * (4-4*s) \<le> 1*1" using hst by (intro mult_mono) simp_all
+                thus ?thesis by simp
+              qed
+              ultimately show "(\<lambda>(s,t). t*(4-4*s)) st \<in> I_set"
+                unfolding hst top1_unit_interval_def by simp
+            qed
+            show ?thesis sorry \<comment> \<open>Standard-to-custom bridge.\<close>
+          qed
           have hG_R'_eq: "\<forall>st\<in>?R'. G st = (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
           proof
             fix st assume hst: "st \<in> ?R'"
