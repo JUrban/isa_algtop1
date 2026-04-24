@@ -2535,8 +2535,57 @@ proof -
       let ?L = "{(s::real,t::real). 0 \<le> s \<and> s \<le> 1/2 \<and> 0 \<le> t \<and> t \<le> 1}"
       let ?R = "{(s::real,t::real). 1/2 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
       \<comment> \<open>Both are closed in I\<times>I and cover I\<times>I.\<close>
-      have hL_closed: "closedin_on (I_set \<times> I_set) II_topology ?L" sorry
-      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology ?R" sorry
+      have hL_closed: "closedin_on (I_set \<times> I_set) II_topology ?L"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?L \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+        \<comment> \<open>Complement = {(s,t) \<in> I\<times>I | s > 1/2} is open in II_topology.\<close>
+        have "(I_set \<times> I_set) - ?L = {(s,t). 1/2 < s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
+          unfolding top1_unit_interval_def by auto
+        also have "... = {s \<in> I_set. s > 1/2} \<times> I_set"
+          unfolding top1_unit_interval_def by auto
+        finally have hcomp_eq: "(I_set \<times> I_set) - ?L = {s \<in> I_set. s > 1/2} \<times> I_set" .
+        have "{s \<in> I_set. s > 1/2} \<in> I_top"
+        proof -
+          have "open {s::real. s > 1/2}" using open_greaterThan[of "1/2::real"]
+            by (simp add: greaterThan_def)
+          hence "{s::real. s > 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+          hence "I_set \<inter> {s::real. s > 1/2} \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          moreover have "I_set \<inter> {s::real. s > 1/2} = {s \<in> I_set. s > 1/2}" by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        moreover have "I_set \<in> I_top"
+          using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+        ultimately have "{s \<in> I_set. s > 1/2} \<times> I_set \<in> II_topology"
+          unfolding II_topology_def by (rule product_rect_open)
+        thus "(I_set \<times> I_set) - ?L \<in> II_topology" using hcomp_eq by simp
+      qed
+      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology ?R"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?R \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+        have "(I_set \<times> I_set) - ?R = {(s,t). 0 \<le> s \<and> s < 1/2 \<and> 0 \<le> t \<and> t \<le> 1}"
+          unfolding top1_unit_interval_def by auto
+        also have "... = {s \<in> I_set. s < 1/2} \<times> I_set"
+          unfolding top1_unit_interval_def by auto
+        finally have hcomp_eq: "(I_set \<times> I_set) - ?R = {s \<in> I_set. s < 1/2} \<times> I_set" .
+        have "{s \<in> I_set. s < 1/2} \<in> I_top"
+        proof -
+          have "open {s::real. s < 1/2}" using open_lessThan[of "1/2::real"]
+            by (simp add: greaterThan_def lessThan_def)
+          hence "{s::real. s < 1/2} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+          hence "I_set \<inter> {s::real. s < 1/2} \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          moreover have "I_set \<inter> {s::real. s < 1/2} = {s \<in> I_set. s < 1/2}" by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        moreover have "I_set \<in> I_top"
+          using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+        ultimately have "{s \<in> I_set. s < 1/2} \<times> I_set \<in> II_topology"
+          unfolding II_topology_def by (rule product_rect_open)
+        thus "(I_set \<times> I_set) - ?R \<in> II_topology" using hcomp_eq by simp
+      qed
       have hLR_cover: "?L \<union> ?R = I_set \<times> I_set"
         unfolding top1_unit_interval_def by auto
       \<comment> \<open>G agrees on the overlap s=1/2: \<alpha>(t\<cdot>1) = H(0,t) = \<alpha>(t). \<checkmark>\<close>
