@@ -5256,7 +5256,8 @@ section \<open>\<S>63 The Jordan Curve Theorem\<close>
     are nonconjugate when the components are different). Used in Munkres' proof of
     the Jordan Curve Theorem. **)
 theorem Theorem_63_1_loop_nontrivial:
-  assumes "openin_on X TX U" and "openin_on X TX V"
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
       and "U \<union> V = X"
       and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
       and "openin_on X TX A" and "openin_on X TX B"
@@ -5309,7 +5310,7 @@ proof
   have hca_path: "top1_is_path_on X TX a a (top1_constant_path a)"
     using hnul unfolding top1_path_homotopic_on_def by (by100 blast)
   have hTE: "is_topology_on E TE" sorry
-  have hTX: "is_topology_on X TX" sorry
+  have hTX: "is_topology_on X TX" by (rule assms(1))
   have hconst_lift: "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
     by (rule top1_constant_path_is_path[OF hTE he0])
   have hconst_lifts: "\<forall>s\<in>I_set. p0 (top1_constant_path e0 s) = top1_constant_path a s"
@@ -8534,6 +8535,7 @@ end
  
  
  
+
 
 
 
