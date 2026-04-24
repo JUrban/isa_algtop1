@@ -6345,10 +6345,43 @@ proof -
         (UNIV - {?ha}))
       (h \<circ> f)"
     sorry \<comment> \<open>Straight-line + path deformation + translation nulhomotopy.\<close>
-  \<comment> \<open>Step 8: Transfer nulhomotopy back via h^{-1}: S^2-{b} \<cong> R^2.
-     h^{-1} restricted to R^2-{h(a)} gives homeomorphism to S^2-{a,b}.\<close>
+  \<comment> \<open>Step 8: Transfer via h restricted to S^2-{a,b} \<cong> R^2-{h(a)}.
+     Use homeomorphism_restrict_point to get h: S^2-{a,b} \<rightarrow> R^2-{h(a)}.\<close>
+  have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a, b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
+      (UNIV - {?ha})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {?ha}))
+      h"
+  proof -
+    have ha_in: "a \<in> top1_S2 - {b}" using ha hab by (by100 blast)
+    have hhr: "top1_homeomorphism_on ((top1_S2 - {b}) - {a})
+        (subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+          ((top1_S2 - {b}) - {a}))
+        (UNIV - {h a})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {h a}))
+        h"
+      by (rule homeomorphism_restrict_point[OF hh ha_in])
+    moreover have "(top1_S2 - {b}) - {a} = top1_S2 - {a, b}" by (by100 blast)
+    moreover have "subspace_topology (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+        ((top1_S2 - {b}) - {a})
+      = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
+    proof -
+      have hsub: "top1_S2 - {a, b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+      have "subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+          (top1_S2 - {a, b})
+        = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
+        by (rule subspace_topology_trans[OF hsub])
+      moreover have "(top1_S2 - {b}) - {a} = top1_S2 - {a, b}" by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
+    ultimately show ?thesis by simp
+  qed
+  have hTA_: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
   show ?thesis
-    sorry \<comment> \<open>nulhomotopic_transfer through h^{-1} homeomorphism.\<close>
+    by (rule nulhomotopic_transfer[OF hh_restrict hg_nul_R2 hf hTA_])
 qed
 
 (** from \<S>61 Theorem 61.3: Jordan separation theorem for S^2.
