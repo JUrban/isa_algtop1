@@ -2615,9 +2615,57 @@ proof -
         let ?R' = "{(s::real,t::real). 3/4 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
         have hMR_cover: "?M \<union> ?R' = ?R" by auto
         have hM_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M"
-          sorry
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "?M \<subseteq> ?R" by auto
+          have "?R - ?M = {(s::real,t::real). 3/4 < s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}" by auto
+          also have "... = ({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R"
+            unfolding top1_unit_interval_def by auto
+          finally have hcomp_eq: "?R - ?M = ({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R" .
+          have "{s \<in> I_set. s > 3/4} \<times> I_set \<in> II_topology"
+          proof -
+            have "open {s::real. s > 3/4}" using open_greaterThan[of "3/4::real"]
+              by (simp add: greaterThan_def)
+            hence "{s::real. s > 3/4} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+            hence "I_set \<inter> {s::real. s > 3/4} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+            moreover have "I_set \<inter> {s::real. s > 3/4} = {s \<in> I_set. s > 3/4}" by (by100 blast)
+            ultimately have "{s \<in> I_set. s > 3/4} \<in> I_top" by simp
+            moreover have "I_set \<in> I_top"
+              using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+            ultimately show ?thesis unfolding II_topology_def by (rule product_rect_open)
+          qed
+          hence "({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+            unfolding subspace_topology_def by (by100 blast)
+          thus "?R - ?M \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+            using hcomp_eq by simp
+        qed
         have hR'_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R'"
-          sorry
+          unfolding closedin_on_def
+        proof (intro conjI)
+          show "?R' \<subseteq> ?R" by auto
+          have "?R - ?R' = {(s::real,t::real). 1/2 \<le> s \<and> s < 3/4 \<and> 0 \<le> t \<and> t \<le> 1}" by auto
+          also have "... = ({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R"
+            unfolding top1_unit_interval_def by auto
+          finally have hcomp_eq: "?R - ?R' = ({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R" .
+          have "{s \<in> I_set. s < 3/4} \<times> I_set \<in> II_topology"
+          proof -
+            have "open {s::real. s < 3/4}" using open_lessThan[of "3/4::real"]
+              by (simp add: greaterThan_def lessThan_def)
+            hence "{s::real. s < 3/4} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+            hence "I_set \<inter> {s::real. s < 3/4} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+            moreover have "I_set \<inter> {s::real. s < 3/4} = {s \<in> I_set. s < 3/4}" by (by100 blast)
+            ultimately have "{s \<in> I_set. s < 3/4} \<in> I_top" by simp
+            moreover have "I_set \<in> I_top"
+              using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+            ultimately show ?thesis unfolding II_topology_def by (rule product_rect_open)
+          qed
+          hence "({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+            unfolding subspace_topology_def by (by100 blast)
+          thus "?R - ?R' \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+            using hcomp_eq by simp
+        qed
         have hTII_: "is_topology_on (I_set \<times> I_set) II_topology"
           unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
         have hR_sub: "?R \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
