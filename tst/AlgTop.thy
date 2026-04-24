@@ -6976,13 +6976,32 @@ proof -
      Homotopy F(x,t) = g(x)-\<alpha>(t) shows g(\<cdot>)-h(a) homotopic to g(\<cdot>)-p in R^2-{0}.
      Combined: g(\<cdot>)-h(a) nulhomotopic in R^2-{0}.\<close>
   \<comment> \<open>Step 6c: Translation by h(a): g nulhomotopic in R^2-{h(a)}.\<close>
+  \<comment> \<open>Following textbook Lemma 61.2 proof exactly:
+     Step 6a: Choose path \<alpha> from h(a) to p in R^2-g(A) (both in same component).
+     Step 6b: G(x,t) = g(x) - \<alpha>(t) homotopy g to g(\<cdot>)-p in R^2-{0}.
+     Step 6c: H(x,t) = t\<cdot>g(x) - p homotopy g(\<cdot>)-p to -p in R^2-{0}.
+     Step 6d: Compose: g nulhomotopic in R^2-{0}.
+     Step 6e: Translate: g nulhomotopic in R^2-{h(a)}.
+     Component-wise: define sub(a,b) = (fst a - fst b, snd a - snd b),
+                            scl(t,a) = (t * fst a, t * snd a).\<close>
+  define vec_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
+    "vec_sub a' b' = (fst a' - fst b', snd a' - snd b')"
+  define vec_scl :: "real \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
+    "vec_scl t' a' = (t' * fst a', t' * snd a')"
+  \<comment> \<open>Step 6a: path \<alpha> from h(a) to p in R^2-g(A).\<close>
+  obtain \<alpha>R where h\<alpha>R: "top1_is_path_on (UNIV - (h \<circ> f) ` A)
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+      ?ha p \<alpha>R"
+    using hsame_comp_R2 sorry \<comment> \<open>Same component + lpc \<Rightarrow> path exists.\<close>
+  \<comment> \<open>Step 6b: G(x,t) = g(x) - \<alpha>(t). Homotopy g(\<cdot>)-h(a) to g(\<cdot>)-p in R^2-{0}.\<close>
+  \<comment> \<open>Step 6c: H(x,t) = t\<cdot>g(x) - p. Homotopy g(\<cdot>)-p to -p in R^2-{0}.\<close>
+  \<comment> \<open>Step 6d+6e: Compose and translate.\<close>
   have hg_nul_R2: "top1_nulhomotopic_on A TA
       (UNIV - {?ha})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
         (UNIV - {?ha}))
       (h \<circ> f)"
-    sorry \<comment> \<open>Steps 6a-6c: straight-line for g-p, path deformation \<alpha> for g-h(a),
-       translation homeomorphism. Requires hsame_comp_R2 for the path \<alpha>.\<close>
+    sorry \<comment> \<open>G + H composed give g nulhomotopic in R^2-{0}, translate to R^2-{h(a)}.\<close>
   \<comment> \<open>Step 8: Transfer via h restricted to S^2-{a,b} \<cong> R^2-{h(a)}.
      Use homeomorphism_restrict_point to get h: S^2-{a,b} \<rightarrow> R^2-{h(a)}.\<close>
   have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a, b})
@@ -8843,14 +8862,40 @@ proof (rule ccontr)
         using hg unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       have ha_S2_: "a \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
       have hb_S2_: "b \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
-      have hg_nul: "top1_nulhomotopic_on I_set I_top ?X ?TX g"
-        by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict hI_compact
-              ha_S2_ hb_S2_ hab_ne hg_cont hsame_comp])
+      \<comment> \<open>Textbook approach: factor g = h \<circ> p through S^1.
+         h: S^1 \<rightarrow> U continuous with h(1,0)=x0. p = top1_R_to_S1 restricted to I.
+         i \<circ> h: S^1 \<rightarrow> X nulhomotopic by Lemma 61.2 (S^1 compact, A1 connected).
+         By nulhomotopic_trivializes_loops_general: (i\<circ>h)\<circ>p = g path-hom to const.\<close>
       have hTX_: "is_topology_on ?X ?TX"
         using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
       have hg_loop: "top1_is_loop_on ?X ?TX x0 g" using hg by (by100 blast)
-      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
-        by (rule nulhomotopic_loop_path_homotopic_constant[OF hTX_ hg_loop hg_nul])
+      \<comment> \<open>Step 1: Factor g through S^1. Define h: S^1 \<rightarrow> X by h = g \<circ> (S1_to_I map).\<close>
+      obtain h_S1 where hh_S1: "top1_continuous_map_on top1_S1 top1_S1_topology ?X ?TX h_S1"
+          and hh_S1_10: "h_S1 (1, 0) = x0"
+          and hg_factor: "\<forall>s\<in>I_set. g s = h_S1 (top1_R_to_S1 s)"
+        sorry \<comment> \<open>Loop g factors through S^1 via the quotient map top1_R_to_S1.\<close>
+      \<comment> \<open>Step 2: h_S1(S^1) \<subseteq> U (since g(I) \<subseteq> U and g = h_S1 \<circ> p, p surjective).\<close>
+      have hh_S1_U: "h_S1 ` top1_S1 \<subseteq> ?U"
+        sorry \<comment> \<open>h_S1 image = g image \<subseteq> U.\<close>
+      \<comment> \<open>Step 3: h_S1: S^1 \<rightarrow> X is nulhomotopic (by Lemma 61.2, S^1 compact).\<close>
+      have hh_S1_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1"
+        sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1, f = h_S1.\<close>
+      \<comment> \<open>Step 4: By nulhomotopic_trivializes_loops_general with g = h_S1,
+         f = top1_R_to_S1 restricted to I (standard loop in S^1),
+         get h_S1 \<circ> (top1_R_to_S1|_I) path-homotopic to constant.\<close>
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        sorry \<comment> \<open>Standard fact.\<close>
+      have hstd_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)"
+        sorry \<comment> \<open>Standard loop in S^1.\<close>
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+      have "top1_path_homotopic_on ?X ?TX x0 x0 (h_S1 \<circ> top1_R_to_S1) (top1_constant_path x0)"
+        by (rule nulhomotopic_trivializes_loops_general[OF hTS1 hTX_ hh_S1 hh_S1_nul hh_S1_10
+              h10_S1 hstd_loop])
+      \<comment> \<open>Step 5: h_S1 \<circ> top1_R_to_S1 = g on I_set.\<close>
+      moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1 \<circ> top1_R_to_S1)"
+        sorry \<comment> \<open>g = h_S1 \<circ> top1_R_to_S1 on I_set, hence path-homotopic.\<close>
+      ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
+        using Lemma_51_1_path_homotopic_trans[OF hTX_] by (by100 blast)
     qed
     have hV_nul: "\<forall>g. top1_is_loop_on ?X ?TX x0 g \<and> g ` I_set \<subseteq> ?V \<longrightarrow>
         top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
