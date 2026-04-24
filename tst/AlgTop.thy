@@ -4922,11 +4922,116 @@ proof (intro bexI[of _ "(0::real, 0)"])
         \<comment> \<open>fst \<circ> F (x,t) = (1-t)*fst(f x).\<close>
         show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
             (UNIV::real set) top1_open_sets (fst \<circ> F)"
-          sorry
+        proof -
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          \<comment> \<open>fst \<circ> F (x,t) = fst(f x) * (1-t). Factor: mult \<circ> (fst\<circ>f\<circ>\<pi>1, (1-)\<circ>\<pi>2).\<close>
+          \<comment> \<open>Step 1: fst\<circ>f: A \<rightarrow> R continuous.\<close>
+          have hfst_f: "top1_continuous_map_on A TA (UNIV::real set) top1_open_sets (fst \<circ> f)"
+          proof -
+            have hfst: "top1_continuous_map_on (UNIV::(real\<times>real) set)
+                (product_topology_on top1_open_sets top1_open_sets)
+                (UNIV::real set) top1_open_sets pi1"
+            proof -
+              have "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+                  (product_topology_on top1_open_sets top1_open_sets) (UNIV::real set) top1_open_sets pi1"
+                by (rule top1_continuous_pi1[OF hTR hTR])
+              thus ?thesis by simp
+            qed
+            have "top1_continuous_map_on A TA (UNIV::real set) top1_open_sets (pi1 \<circ> f)"
+              by (rule top1_continuous_map_on_comp[OF hf hfst])
+            thus ?thesis unfolding hpi1_eq .
+          qed
+          \<comment> \<open>Step 2: fst\<circ>f\<circ>\<pi>1: A\<times>I \<rightarrow> R continuous.\<close>
+          have hcomp1: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+              (UNIV::real set) top1_open_sets (fst \<circ> f \<circ> pi1)"
+          proof -
+            have hpi: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) A TA pi1"
+              by (rule top1_continuous_pi1[OF hTA hTI])
+            show ?thesis by (rule top1_continuous_map_on_comp[OF hpi hfst_f])
+          qed
+          \<comment> \<open>Step 3: (1-)\<circ>\<pi>2: A\<times>I \<rightarrow> R continuous.\<close>
+          have h1mt: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>t. 1-t)"
+          proof -
+            have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+                (UNIV::real set) (subspace_topology UNIV top1_open_sets UNIV) (\<lambda>t::real. 1-t)"
+              by (rule top1_continuous_map_on_real_subspace_open_sets) (auto intro: continuous_intros)
+            thus ?thesis unfolding top1_unit_interval_topology_def
+              by (simp add: subspace_topology_UNIV_self)
+          qed
+          have hcomp2: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+              (UNIV::real set) top1_open_sets ((\<lambda>t. 1 - t) \<circ> pi2)"
+          proof -
+            have hpi: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) I_set I_top pi2"
+              by (rule top1_continuous_pi2[OF hTA hTI])
+            show ?thesis by (rule top1_continuous_map_on_comp[OF hpi h1mt])
+          qed
+          \<comment> \<open>Step 4: pair (fst\<circ>f\<circ>\<pi>1, (1-)\<circ>\<pi>2): A\<times>I \<rightarrow> R\<times>R by Theorem_18_4.\<close>
+          define g where "g = (\<lambda>p. (fst (f (pi1 p)), (1::real) - pi2 p))"
+          have hg_cont: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+              ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on top1_open_sets top1_open_sets) g"
+            unfolding Theorem_18_4[OF hTAI hTR hTR] hpi1_eq hpi2_eq g_def
+            using hcomp1 hcomp2 unfolding hpi1_eq hpi2_eq comp_def by auto
+          \<comment> \<open>Step 5: fst \<circ> F = mult \<circ> g.\<close>
+          have hfst_F_eq: "fst \<circ> F = (\<lambda>(u,v). u*v) \<circ> g"
+            unfolding F_def g_def pi1_def pi2_def
+            by (rule ext) (simp add: case_prod_unfold mult.commute)
+          \<comment> \<open>Step 6: compose g with mult.\<close>
+          have hmult: "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+              (product_topology_on top1_open_sets top1_open_sets)
+              (UNIV::real set) top1_open_sets (\<lambda>(u,v). u*v)"
+            using top1_mult_continuous_R2
+            unfolding product_topology_on_open_sets_real2 by simp
+          show ?thesis unfolding hfst_F_eq hUU
+            by (rule top1_continuous_map_on_comp[OF hg_cont hmult])
+        qed
         \<comment> \<open>snd \<circ> F (x,t) = (1-t)*snd(f x).\<close>
         show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
             (UNIV::real set) top1_open_sets (snd \<circ> F)"
-          sorry
+        proof -
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          have hsnd_f: "top1_continuous_map_on A TA (UNIV::real set) top1_open_sets (snd \<circ> f)"
+          proof -
+            have "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+                (product_topology_on top1_open_sets top1_open_sets) (UNIV::real set) top1_open_sets pi2"
+              by (rule top1_continuous_pi2[OF hTR hTR])
+            hence hsnd: "top1_continuous_map_on (UNIV::(real\<times>real) set)
+                (product_topology_on top1_open_sets top1_open_sets) (UNIV::real set) top1_open_sets pi2"
+              by simp
+            have "top1_continuous_map_on A TA (UNIV::real set) top1_open_sets (pi2 \<circ> f)"
+              by (rule top1_continuous_map_on_comp[OF hf hsnd])
+            thus ?thesis unfolding hpi2_eq .
+          qed
+          have hcomp1s: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+              (UNIV::real set) top1_open_sets (snd \<circ> f \<circ> pi1)"
+            by (rule top1_continuous_map_on_comp[OF top1_continuous_pi1[OF hTA hTI] hsnd_f])
+          define g2 where "g2 = (\<lambda>p. (snd (f (pi1 p)), (1::real) - pi2 p))"
+          have hg2: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+              ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on top1_open_sets top1_open_sets) g2"
+          proof -
+            have h1mt': "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>t. 1-t)"
+            proof -
+              have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+                  (UNIV::real set) (subspace_topology UNIV top1_open_sets UNIV) (\<lambda>t::real. 1-t)"
+                by (rule top1_continuous_map_on_real_subspace_open_sets) (auto intro: continuous_intros)
+              thus ?thesis unfolding top1_unit_interval_topology_def by (simp add: subspace_topology_UNIV_self)
+            qed
+            have hcomp2s: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+                (UNIV::real set) top1_open_sets ((\<lambda>t. 1 - t) \<circ> pi2)"
+              by (rule top1_continuous_map_on_comp[OF top1_continuous_pi2[OF hTA hTI] h1mt'])
+            show ?thesis unfolding Theorem_18_4[OF hTAI hTR hTR] hpi1_eq hpi2_eq g2_def
+              using hcomp1s hcomp2s unfolding hpi1_eq hpi2_eq comp_def by auto
+          qed
+          have hsnd_F_eq: "snd \<circ> F = (\<lambda>(u,v). u*v) \<circ> g2"
+            unfolding F_def g2_def pi1_def pi2_def
+            by (rule ext) (simp add: case_prod_unfold mult.commute)
+          have hmult': "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+              (product_topology_on top1_open_sets top1_open_sets)
+              (UNIV::real set) top1_open_sets (\<lambda>(u,v). u*v)"
+            using top1_mult_continuous_R2
+            unfolding product_topology_on_open_sets_real2 by simp
+          show ?thesis unfolding hsnd_F_eq hUU
+            by (rule top1_continuous_map_on_comp[OF hg2 hmult'])
+        qed
       qed
     qed
     show "\<forall>x\<in>A. F (x, 0) = f x" unfolding F_def by simp
@@ -8581,6 +8686,14 @@ end
  
  
  
+
+
+
+
+
+
+
+
 
 
 
