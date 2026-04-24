@@ -2144,132 +2144,129 @@ proof (intro allI impI)
                        \<or> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> V"
     and hsub_int: "\<forall>i\<le>m. f (subdivision i) \<in> U \<inter> V"
   proof -
-    \<comment> \<open>f continuous on [0,1] into X = U \<union> V. U, V open in X.
-       f^{-1}(U) and f^{-1}(V) are open in [0,1] and cover [0,1].
-       By compactness of [0,1], there exists \<delta> > 0 (Lebesgue number) such that
-       any subinterval of length < \<delta> maps into U or V.\<close>
+    \<comment> \<open>Use open_cover_subdivision_01 from Top0 to get subdivision directly.\<close>
     have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
       by (rule top1_is_loop_on_continuous[OF hf])
     have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
     have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-    \<comment> \<open>Step 1a: Get Lebesgue number \<delta> > 0.\<close>
-    obtain \<delta> :: real where h\<delta>: "\<delta> > 0"
-        and hLeb: "\<forall>a b. 0 \<le> a \<and> a \<le> b \<and> b \<le> 1 \<and> b - a < \<delta> \<longrightarrow>
-            f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> U \<or> f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> V"
+    have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+    have hUo: "U \<in> TX" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hVo: "V \<in> TX" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hpreU: "{t \<in> I_set. f t \<in> U} \<in> I_top"
+      using hf_cont hUo unfolding top1_continuous_map_on_def by (by100 blast)
+    have hpreV: "{t \<in> I_set. f t \<in> V} \<in> I_top"
+      using hf_cont hVo unfolding top1_continuous_map_on_def by (by100 blast)
+    \<comment> \<open>Standard topology bridge: get open W_U, W_V from preimages.\<close>
+    obtain W_U where hWU: "open W_U" and hpreU_eq: "{t \<in> I_set. f t \<in> U} = I_set \<inter> W_U"
     proof -
-      \<comment> \<open>f^{-1}(U) and f^{-1}(V) are open in [0,1] and cover [0,1].\<close>
-      have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
-      have hUo: "U \<in> TX" using assms(2) unfolding openin_on_def by (by100 blast)
-      have hVo: "V \<in> TX" using assms(3) unfolding openin_on_def by (by100 blast)
-      have hpreU: "{t \<in> I_set. f t \<in> U} \<in> I_top"
-        using hf_cont hUo unfolding top1_continuous_map_on_def by (by100 blast)
-      have hpreV: "{t \<in> I_set. f t \<in> V} \<in> I_top"
-        using hf_cont hVo unfolding top1_continuous_map_on_def by (by100 blast)
-      have hcover: "{t \<in> I_set. f t \<in> U} \<union> {t \<in> I_set. f t \<in> V} = I_set"
-      proof -
-        have "\<forall>t \<in> I_set. f t \<in> X" using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
-        thus ?thesis using hUV by (by100 blast)
-      qed
-      \<comment> \<open>These are open in [0,1] subspace = open in standard topology intersected with [0,1].
-         By compactness of [0,1] (standard), there is a Lebesgue number.\<close>
-      \<comment> \<open>Standard topology bridge: I_top = subspace UNIV top1_open_sets I_set.
-         {t \<in> I. f t \<in> U} = I \<inter> W_U for some open W_U. Similarly for V.\<close>
-      obtain W_U where hWU: "open W_U" and hpreU_eq: "{t \<in> I_set. f t \<in> U} = I_set \<inter> W_U"
-      proof -
-        have "{t \<in> I_set. f t \<in> U} \<in> {I_set \<inter> W | W. W \<in> top1_open_sets}"
-          using hpreU unfolding top1_unit_interval_topology_def subspace_topology_def by simp
-        then obtain W where "W \<in> top1_open_sets" "{t \<in> I_set. f t \<in> U} = I_set \<inter> W"
-          by (by100 blast)
-        thus ?thesis using that unfolding top1_open_sets_def by (by100 blast)
-      qed
-      obtain W_V where hWV: "open W_V" and hpreV_eq: "{t \<in> I_set. f t \<in> V} = I_set \<inter> W_V"
-      proof -
-        have "{t \<in> I_set. f t \<in> V} \<in> {I_set \<inter> W | W. W \<in> top1_open_sets}"
-          using hpreV unfolding top1_unit_interval_topology_def subspace_topology_def by simp
-        then obtain W where "W \<in> top1_open_sets" "{t \<in> I_set. f t \<in> V} = I_set \<inter> W"
-          by (by100 blast)
-        thus ?thesis using that unfolding top1_open_sets_def by (by100 blast)
-      qed
-      \<comment> \<open>W_U \<union> W_V covers [0,1] (since their intersections with I_set cover I_set).\<close>
-      have hWcover: "I_set \<subseteq> W_U \<union> W_V" using hcover hpreU_eq hpreV_eq by (by100 blast)
-      \<comment> \<open>By Lebesgue number for standard compact [0,1]:
-         \<exists>\<delta>>0 such that \<forall>[a,b] \<subseteq> [0,1] with b-a < \<delta>, [a,b] \<subseteq> W_U or [a,b] \<subseteq> W_V.\<close>
-      have "\<exists>\<delta>>0. \<forall>a b :: real. 0 \<le> a \<and> a \<le> b \<and> b \<le> 1 \<and> b - a < \<delta> \<longrightarrow>
-          {s. a \<le> s \<and> s \<le> b} \<subseteq> W_U \<or> {s. a \<le> s \<and> s \<le> b} \<subseteq> W_V"
-        sorry \<comment> \<open>Lebesgue number: [0,1] compact, W_U \<union> W_V covers [0,1],
-           both open. Standard compactness argument: extract finite subcover of
-           balls, take \<delta> = min radius / 2.\<close>
-      then obtain \<delta> where h\<delta>': "\<delta> > 0" and hLeb': "\<forall>a b :: real. 0 \<le> a \<and> a \<le> b \<and> b \<le> 1 \<and> b - a < \<delta> \<longrightarrow>
-          {s. a \<le> s \<and> s \<le> b} \<subseteq> W_U \<or> {s. a \<le> s \<and> s \<le> b} \<subseteq> W_V" by blast
-      \<comment> \<open>Transfer: if [a,b] \<subseteq> W_U then f([a,b] \<inter> I) \<subseteq> U (similarly for V).\<close>
-      have "\<forall>a b. 0 \<le> a \<and> a \<le> b \<and> b \<le> 1 \<and> b - a < \<delta> \<longrightarrow>
-          f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> U \<or> f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> V"
-      proof (intro allI impI)
-        fix a b :: real assume hab: "0 \<le> a \<and> a \<le> b \<and> b \<le> 1 \<and> b - a < \<delta>"
-        hence "{s. a \<le> s \<and> s \<le> b} \<subseteq> W_U \<or> {s. a \<le> s \<and> s \<le> b} \<subseteq> W_V" using hLeb' by blast
-        thus "f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> U \<or> f ` {s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> V"
-        proof
-          assume "{s. a \<le> s \<and> s \<le> b} \<subseteq> W_U"
-          hence "{s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> I_set \<inter> W_U" by (by100 blast)
-          hence "{s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> {t \<in> I_set. f t \<in> U}" using hpreU_eq by simp
-          thus ?thesis by (by100 blast)
-        next
-          assume "{s. a \<le> s \<and> s \<le> b} \<subseteq> W_V"
-          hence "{s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> I_set \<inter> W_V" by (by100 blast)
-          hence "{s\<in>I_set. a \<le> s \<and> s \<le> b} \<subseteq> {t \<in> I_set. f t \<in> V}" using hpreV_eq by simp
-          thus ?thesis by (by100 blast)
-        qed
-      qed
-      thus ?thesis using that h\<delta>' by blast
+      have "{t \<in> I_set. f t \<in> U} \<in> {I_set \<inter> W | W. W \<in> top1_open_sets}"
+        using hpreU unfolding top1_unit_interval_topology_def subspace_topology_def by simp
+      then obtain W where "W \<in> top1_open_sets" "{t \<in> I_set. f t \<in> U} = I_set \<inter> W"
+        by (by100 blast)
+      thus ?thesis using that unfolding top1_open_sets_def by (by100 blast)
     qed
-    \<comment> \<open>Step 1b: Choose m with 1/m < \<delta>. Take uniform subdivision i/m.\<close>
-    obtain m_nat :: nat where hm_nat: "m_nat \<ge> 1" and hmesh: "1 / real m_nat < \<delta>"
+    obtain W_V where hWV: "open W_V" and hpreV_eq: "{t \<in> I_set. f t \<in> V} = I_set \<inter> W_V"
     proof -
-      obtain n :: nat where "real n > 1 / \<delta>" using reals_Archimedean2 by blast
-      have "n \<ge> 1"
-      proof (rule ccontr)
-        assume "\<not> n \<ge> 1" hence "n = 0" by simp
-        hence "real n = 0" by simp
-        thus False using \<open>real n > 1 / \<delta>\<close> h\<delta> by simp
-      qed
-      moreover have "1 / real n < \<delta>" using \<open>real n > 1 / \<delta>\<close> h\<delta> \<open>n \<ge> 1\<close>
-        by (simp add: field_simps)
-      ultimately show ?thesis using that by blast
+      have "{t \<in> I_set. f t \<in> V} \<in> {I_set \<inter> W | W. W \<in> top1_open_sets}"
+        using hpreV unfolding top1_unit_interval_topology_def subspace_topology_def by simp
+      then obtain W where "W \<in> top1_open_sets" "{t \<in> I_set. f t \<in> V} = I_set \<inter> W"
+        by (by100 blast)
+      thus ?thesis using that unfolding top1_open_sets_def by (by100 blast)
     qed
-    define sub where "sub = (\<lambda>i. real i / real m_nat)"
-    have hsub0': "sub 0 = 0" unfolding sub_def by simp
-    have hsubm': "sub m_nat = 1" unfolding sub_def using hm_nat by simp
-    have hsub_mono': "\<forall>i<m_nat. sub i < sub (Suc i)"
-      unfolding sub_def using hm_nat by (auto simp: field_simps)
-    have hsub_range: "\<forall>i\<le>m_nat. 0 \<le> sub i \<and> sub i \<le> 1"
-      unfolding sub_def using hm_nat by (auto simp: field_simps)
-    have hmesh': "\<forall>i<m_nat. sub (Suc i) - sub i = 1 / real m_nat"
-      unfolding sub_def using hm_nat by (auto simp: field_simps)
-    \<comment> \<open>Each subinterval has length 1/m < \<delta>, so maps into U or V.\<close>
-    have hsub_UV': "\<forall>i<m_nat. f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U
-                         \<or> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> V"
+    have hcover: "{t \<in> I_set. f t \<in> U} \<union> {t \<in> I_set. f t \<in> V} = I_set"
+    proof -
+      have "\<forall>t \<in> I_set. f t \<in> X" using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      thus ?thesis using hUV by (by100 blast)
+    qed
+    have hWcover: "I_set \<subseteq> W_U \<union> W_V" using hcover hpreU_eq hpreV_eq by (by100 blast)
+    \<comment> \<open>Apply open_cover_subdivision_01 with A = {W_U, W_V}.
+       Need: each s in [0,1] is in W_U or W_V (open), so has an \<epsilon>-ball inside it.\<close>
+    have hpointwise: "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow>
+        (\<exists>W\<in>{W_U, W_V}. s \<in> W \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W))"
     proof (intro allI impI)
-      fix i assume hi: "i < m_nat"
-      have "sub (Suc i) - sub i < \<delta>" using hmesh' hi hmesh by simp
-      moreover have "0 \<le> sub i" using hsub_range hi by auto
-      moreover have "sub (Suc i) \<le> 1" using hsub_range hi by auto
-      moreover have "sub i \<le> sub (Suc i)" using hsub_mono' hi by auto
-      ultimately show "f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> U
-                     \<or> f ` {s\<in>I_set. sub i \<le> s \<and> s \<le> sub (Suc i)} \<subseteq> V"
-        using hLeb by blast
+      fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+      hence "s \<in> I_set" unfolding top1_unit_interval_def by simp
+      hence "s \<in> W_U \<or> s \<in> W_V" using hWcover by (by100 blast)
+      thus "\<exists>W\<in>{W_U, W_V}. s \<in> W \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W)"
+      proof
+        assume hsWU: "s \<in> W_U"
+        have "\<exists>e>0. \<forall>y. dist y s < e \<longrightarrow> y \<in> W_U"
+          using hWU hsWU unfolding open_dist by (by100 blast)
+        then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" "\<forall>y. dist y s < \<epsilon> \<longrightarrow> y \<in> W_U" by blast
+        have "{t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W_U"
+        proof
+          fix t assume "t \<in> {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1}"
+          hence "\<bar>t - s\<bar> < \<epsilon>" by simp
+          hence "dist t s < \<epsilon>" by (simp add: dist_real_def)
+          thus "t \<in> W_U" using h\<epsilon>(2) by (by100 blast)
+        qed
+        thus ?thesis using hsWU h\<epsilon>(1) by (by100 blast)
+      next
+        assume hsWV: "s \<in> W_V"
+        have "\<exists>e>0. \<forall>y. dist y s < e \<longrightarrow> y \<in> W_V"
+          using hWV hsWV unfolding open_dist by (by100 blast)
+        then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" "\<forall>y. dist y s < \<epsilon> \<longrightarrow> y \<in> W_V" by blast
+        have "{t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W_V"
+        proof
+          fix t assume "t \<in> {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1}"
+          hence "\<bar>t - s\<bar> < \<epsilon>" by simp
+          hence "dist t s < \<epsilon>" by (simp add: dist_real_def)
+          thus "t \<in> W_V" using h\<epsilon>(2) by (by100 blast)
+        qed
+        thus ?thesis using hsWV h\<epsilon>(1) by (by100 blast)
+      qed
     qed
-    \<comment> \<open>Step 1c: Endpoints f(i/m) \<in> U\<inter>V. Subdivision point is in both the i-th and (i+1)-th
-       subinterval, so in both U (or V) and U (or V). If consecutive intervals map to
-       different sets, the endpoint is in both. If same set, trivially in U\<inter>V
-       since x0 \<in> U\<inter>V and the loop starts/ends there.\<close>
-    \<comment> \<open>Actually, we need to potentially refine: merge consecutive intervals mapping to
-       the same set, so transition points are in U\<inter>V. The textbook does this.\<close>
-    have hsub_int': "\<forall>i\<le>m_nat. f (sub i) \<in> U \<inter> V"
-      sorry \<comment> \<open>Refine subdivision so transition points are in U\<inter>V.
-         After Lebesgue: each subinterval in U or V. Merge consecutive same-set intervals.
-         Then each transition point is in both U and V (endpoint of intervals
-         mapping to different sets).\<close>
-    show ?thesis using that[OF hm_nat hsub0' hsubm' hsub_mono' hsub_UV' hsub_int'] .
+    obtain n_sub :: nat and sub0 :: "nat \<Rightarrow> real" where
+      hn_sub: "n_sub \<ge> 1" and hsub0_0: "sub0 0 = 0" and hsub0_n: "sub0 n_sub = 1"
+      and hsub0_mono: "\<forall>i<n_sub. sub0 i < sub0 (Suc i)"
+      and hsub0_cover: "\<forall>i<n_sub. \<exists>W\<in>{W_U, W_V}.
+          {s. sub0 i \<le> s \<and> s \<le> sub0 (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W"
+      using open_cover_subdivision_01[OF hpointwise] by blast
+    \<comment> \<open>Transfer: each piece maps into U or V.\<close>
+    have hsub0_UV: "\<forall>i<n_sub. f ` {s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> U
+                         \<or> f ` {s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> V"
+    proof (intro allI impI)
+      fix i assume hi: "i < n_sub"
+      obtain W where hW: "W \<in> {W_U, W_V}"
+          and hWsub: "{s. sub0 i \<le> s \<and> s \<le> sub0 (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W"
+        using hsub0_cover hi by blast
+      have hpiece_sub_W: "{s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> W"
+      proof
+        fix x assume "x \<in> {s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)}"
+        hence "x \<in> I_set" "sub0 i \<le> x" "x \<le> sub0 (Suc i)" by auto
+        hence "0 \<le> x" "x \<le> 1" unfolding top1_unit_interval_def by auto
+        hence "x \<in> {s. sub0 i \<le> s \<and> s \<le> sub0 (Suc i) \<and> 0 \<le> s \<and> s \<le> 1}"
+          using \<open>sub0 i \<le> x\<close> \<open>x \<le> sub0 (Suc i)\<close> by simp
+        thus "x \<in> W" using hWsub by (by100 blast)
+      qed
+      show "f ` {s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> U
+          \<or> f ` {s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> V"
+      proof (cases "W = W_U")
+        case True
+        hence "{s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> I_set \<inter> W_U"
+          using hpiece_sub_W by (by100 blast)
+        hence "{s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> {t \<in> I_set. f t \<in> U}"
+          using hpreU_eq by simp
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        hence "W = W_V" using hW by (by100 blast)
+        hence "{s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> I_set \<inter> W_V"
+          using hpiece_sub_W by (by100 blast)
+        hence "{s\<in>I_set. sub0 i \<le> s \<and> s \<le> sub0 (Suc i)} \<subseteq> {t \<in> I_set. f t \<in> V}"
+          using hpreV_eq by simp
+        thus ?thesis by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Endpoints: each sub0 i is in [0,1], and is in both adjacent pieces.
+       If adjacent pieces map to different sets, f(sub0 i) \<in> U \<inter> V.
+       After merging consecutive same-set pieces, all internal endpoints are transitions.
+       f(0) = x0 \<in> U\<inter>V, f(1) = x0 \<in> U\<inter>V.\<close>
+    have hsub0_int: "\<forall>i\<le>n_sub. f (sub0 i) \<in> U \<inter> V"
+      sorry \<comment> \<open>Merge consecutive same-set intervals so every internal transition
+         point separates a U-piece from a V-piece, hence f(point) \<in> U \<inter> V.
+         Endpoints f(0) = f(1) = x0 \<in> U \<inter> V by assumption.\<close>
+    show ?thesis using that[OF hn_sub hsub0_0 hsub0_n hsub0_mono hsub0_UV hsub0_int] .
   qed
   \<comment> \<open>Step 2: For each subinterval, define fi = f restricted + reparametrized.
      Choose paths \<alpha>i in U\<inter>V from x0 to f(ai). Set gi = (\<alpha>_{i-1} * fi) * rev \<alpha>i.\<close>
@@ -2391,6 +2388,17 @@ proof -
   show ?thesis unfolding top1_path_homotopic_on_def
     using hf_path_X hg_path_X hF_cont_X hF0 hF1 hFl hFr by (by100 blast)
 qed
+
+text \<open>Key fact: a nulhomotopic loop is path-homotopic to the constant loop.
+  If f: I \<rightarrow> X is a loop at x0 and is nulhomotopic (homotopic to a constant map),
+  then f is path-homotopic to constant_{x0}. Uses basepoint change via the path
+  \<alpha>(t) = H(0,t) from x0 to c.\<close>
+lemma nulhomotopic_loop_path_homotopic_constant:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_loop_on X TX x0 f"
+      and hnul: "top1_nulhomotopic_on I_set I_top X TX f"
+  shows "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+  sorry
 
 text \<open>Helper: a path in a subspace is a path in the ambient space.\<close>
 lemma path_in_subspace_is_path_in_ambient:
@@ -5871,9 +5879,86 @@ proof -
     qed
   qed
   \<comment> \<open>Step 3: g(A) = (h\<circ>f)(A) is compact, hence bounded.\<close>
-  have hgA_compact: "compact ((h \<circ> f) ` A)" sorry \<comment> \<open>Continuous image of compact.\<close>
+  have hgA_compact: "compact ((h \<circ> f) ` A)"
+  proof -
+    let ?R2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+    have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) ?R2"
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+      show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+    qed
+    \<comment> \<open>h \<circ> f continuous into UNIV (expand range from UNIV-{ha} to UNIV).\<close>
+    have hgf_cont_UNIV: "top1_continuous_map_on A TA UNIV ?R2 (h \<circ> f)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> A" thus "(h \<circ> f) x \<in> UNIV" by simp
+    next
+      fix V :: "(real \<times> real) set" assume hV: "V \<in> ?R2"
+      have "(UNIV - {?ha}) \<inter> V \<in> subspace_topology UNIV ?R2 (UNIV - {?ha})"
+        by (rule subspace_topology_memI[OF hV])
+      hence "V \<inter> (UNIV - {?ha}) \<in> subspace_topology UNIV ?R2 (UNIV - {?ha})"
+        by (simp add: Int_commute)
+      hence "{x \<in> A. (h \<circ> f) x \<in> V \<inter> (UNIV - {?ha})} \<in> TA"
+        using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{x \<in> A. (h \<circ> f) x \<in> V} = {x \<in> A. (h \<circ> f) x \<in> V \<inter> (UNIV - {?ha})}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}"
+        hence "x \<in> A" and "(h \<circ> f) x \<in> V" by auto
+        moreover have "(h \<circ> f) x \<in> UNIV - {?ha}"
+          using hg_cont \<open>x \<in> A\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "x \<in> {x \<in> A. (h \<circ> f) x \<in> V \<inter> (UNIV - {?ha})}" by (by100 blast)
+      next
+        fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> V \<inter> (UNIV - {?ha})}"
+        thus "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}" by (by100 blast)
+      qed
+      ultimately show "{x \<in> A. (h \<circ> f) x \<in> V} \<in> TA" by simp
+    qed
+    have "top1_compact_on ((h \<circ> f) ` A) (subspace_topology UNIV ?R2 ((h \<circ> f) ` A))"
+      by (rule top1_compact_on_continuous_image[OF hcomp hTR2 hgf_cont_UNIV])
+    moreover have "?R2 = (top1_open_sets :: (real \<times> real) set set)"
+      using product_topology_on_open_sets_real2 by (by100 metis)
+    ultimately have "top1_compact_on ((h \<circ> f) ` A) (subspace_topology UNIV (top1_open_sets :: (real \<times> real) set set) ((h \<circ> f) ` A))"
+      by simp
+    thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact[of "(h \<circ> f) ` A"] by simp
+  qed
   then obtain M where hM: "M > 0" and hgA_bdd: "\<forall>p \<in> (h \<circ> f) ` A. fst p ^ 2 + snd p ^ 2 \<le> M ^ 2"
-    sorry \<comment> \<open>Compact subset of R^2 is bounded.\<close>
+  proof -
+    \<comment> \<open>Use compact_attains_sup on the squared-norm function, same pattern as hC_bounded.\<close>
+    have hcont_sqnorm: "continuous_on ((h \<circ> f) ` A) (\<lambda>p. fst p ^ 2 + snd p ^ 2)"
+      by (intro continuous_intros)
+    define img where "img = (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) ` ((h \<circ> f) ` A)"
+    have himg_compact: "compact img" unfolding img_def
+      by (rule compact_continuous_image[OF hcont_sqnorm hgA_compact])
+    show ?thesis
+    proof (cases "(h \<circ> f) ` A = {}")
+      case True
+      hence "\<forall>p \<in> (h \<circ> f) ` A. fst p ^ 2 + snd p ^ 2 \<le> 1" by (by100 blast)
+      thus ?thesis using that[of 1] by (by100 simp)
+    next
+      case False
+      hence "img \<noteq> {}" unfolding img_def by simp
+      then obtain B where hB: "B \<in> img" "\<forall>t\<in>img. t \<le> B"
+        using compact_attains_sup[OF himg_compact] by (by100 blast)
+      have hB_nn: "B \<ge> 0" using hB(1) unfolding img_def by (by100 auto)
+      define M where "M = sqrt B + 1"
+      have hM_pos: "M > 0" unfolding M_def
+      proof -
+        have "sqrt B \<ge> 0" using hB_nn by simp
+        thus "0 < sqrt B + 1" by (by100 linarith)
+      qed
+      have "\<forall>p \<in> (h \<circ> f) ` A. fst p ^ 2 + snd p ^ 2 \<le> M ^ 2"
+      proof
+        fix p assume hp: "p \<in> (h \<circ> f) ` A"
+        have "fst p ^ 2 + snd p ^ 2 \<in> img" unfolding img_def using hp by (by100 blast)
+        hence "fst p ^ 2 + snd p ^ 2 \<le> B" using hB(2) by (by100 blast)
+        also have "B \<le> (sqrt B) ^ 2" using hB_nn by (by100 simp)
+        also have "... \<le> M ^ 2" unfolding M_def
+          using hB_nn by (simp add: power2_eq_square algebra_simps)
+        finally show "fst p ^ 2 + snd p ^ 2 \<le> M ^ 2" .
+      qed
+      thus ?thesis using hM_pos that by blast
+    qed
+  qed
   \<comment> \<open>Step 4: a, b in same component of S^2-f(A) \<Rightarrow> h(a) in same component as \<infinity>
      (unbounded component) of R^2-(h\<circ>f)(A). Choose p far outside ball(0,M).\<close>
   define p :: "real \<times> real" where "p = (2*M + 1, 0)"
@@ -7715,11 +7800,29 @@ proof (rule ccontr)
         moreover have "b \<in> CC" using hA1_CC hb_in_A1 by (by100 blast)
         ultimately show ?thesis using hCC by (by100 blast)
       qed
-      \<comment> \<open>g: I \<rightarrow> X = S^2-{a,b} is compact (I compact), continuous.\<close>
-      have hg_nul: "top1_nulhomotopic_on I_set I_top
-          ?X ?TX g" sorry
-      \<comment> \<open>Nulhomotopic loop at x0 is path-homotopic to constant.\<close>
-      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)" sorry
+      \<comment> \<open>g: I \<rightarrow> X = S^2-{a,b}. I compact, a,b in same component of S^2-g(I).\<close>
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have "compact {0..1::real}" by (rule compact_Icc)
+        have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "compact I_set" using \<open>compact {0..1::real}\<close> hI01 by simp
+        have "top1_compact_on I_set (subspace_topology (UNIV::real set) top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+        thus ?thesis unfolding top1_unit_interval_topology_def by simp
+      qed
+      have hg_cont: "top1_continuous_map_on I_set I_top ?X ?TX g"
+        using hg unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have ha_S2_: "a \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
+      have hb_S2_: "b \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
+      have hg_nul: "top1_nulhomotopic_on I_set I_top ?X ?TX g"
+        by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict hI_compact
+              ha_S2_ hb_S2_ hab_ne hg_cont hsame_comp])
+      have hTX_: "is_topology_on ?X ?TX"
+        using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hg_loop: "top1_is_loop_on ?X ?TX x0 g" using hg by (by100 blast)
+      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
+        by (rule nulhomotopic_loop_path_homotopic_constant[OF hTX_ hg_loop hg_nul])
     qed
     have hV_nul: "\<forall>g. top1_is_loop_on ?X ?TX x0 g \<and> g ` I_set \<subseteq> ?V \<longrightarrow>
         top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
@@ -7797,8 +7900,28 @@ proof (rule ccontr)
         moreover have "b \<in> CC" using hA2_CC hb_in_A2 by (by100 blast)
         ultimately show ?thesis using hCC by (by100 blast)
       qed
-      have hg_nul: "top1_nulhomotopic_on I_set I_top ?X ?TX g" sorry
-      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)" sorry
+      have hI_compact': "top1_compact_on I_set I_top"
+      proof -
+        have "compact {0..1::real}" by (rule compact_Icc)
+        have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "compact I_set" using \<open>compact {0..1::real}\<close> hI01 by simp
+        have "top1_compact_on I_set (subspace_topology (UNIV::real set) top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+        thus ?thesis unfolding top1_unit_interval_topology_def by simp
+      qed
+      have hg_cont': "top1_continuous_map_on I_set I_top ?X ?TX g"
+        using hg unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have ha_S2_': "a \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
+      have hb_S2_': "b \<in> top1_S2" using hab hC_decomp hC_sub by (by100 blast)
+      have hg_nul: "top1_nulhomotopic_on I_set I_top ?X ?TX g"
+        by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict hI_compact'
+              ha_S2_' hb_S2_' hab_ne hg_cont' hsame_comp2])
+      have hTX_': "is_topology_on ?X ?TX"
+        using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hg_loop': "top1_is_loop_on ?X ?TX x0 g" using hg by (by100 blast)
+      show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
+        by (rule nulhomotopic_loop_path_homotopic_constant[OF hTX_' hg_loop' hg_nul])
     qed
     \<comment> \<open>By Theorem 59.1 + nulhomotopy of U/V loops, \<pi>_1(X, x0) is trivial.\<close>
     show ?thesis unfolding top1_simply_connected_on_def
@@ -11920,6 +12043,7 @@ end
  
  
  
+
 
 
 
