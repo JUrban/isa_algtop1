@@ -6997,7 +6997,15 @@ proof -
        Same component + lpc \<Rightarrow> path-connected component \<Rightarrow> path exists.\<close>
     have hgA_closed: "closedin_on (UNIV::(real\<times>real) set)
         (product_topology_on top1_open_sets top1_open_sets) ((h \<circ> f) ` A)"
-      sorry \<comment> \<open>g(A) compact (continuous image of compact) hence closed in Hausdorff R^2.\<close>
+    proof -
+      have "closed ((h \<circ> f) ` A)" by (rule compact_imp_closed[OF hgA_compact])
+      hence "open (- (h \<circ> f) ` A)" by (rule open_Compl)
+      hence "open (UNIV - (h \<circ> f) ` A)" by (simp add: Compl_eq_Diff_UNIV)
+      hence "(UNIV - (h \<circ> f) ` A) \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+      hence "(UNIV - (h \<circ> f) ` A) \<in> product_topology_on top1_open_sets top1_open_sets"
+        using product_topology_on_open_sets_real2 by (by100 metis)
+      thus ?thesis unfolding closedin_on_def by simp
+    qed
     have hR2gA_open: "(UNIV - (h \<circ> f) ` A) \<in> product_topology_on top1_open_sets top1_open_sets"
       using hgA_closed unfolding closedin_on_def by (by100 blast)
     have hR2gA_lpc: "top1_locally_path_connected_on (UNIV - (h \<circ> f) ` A)
