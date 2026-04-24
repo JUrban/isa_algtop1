@@ -1,6 +1,6 @@
 # Priorities for AlgTop Jordan Curve Theorem
 
-## Status: 146 sorries, builds in ~15s
+## Status: 144 sorries, builds in ~15s, 10K lines
 
 ## COMPLETE Infrastructure (Zero Sorry):
 

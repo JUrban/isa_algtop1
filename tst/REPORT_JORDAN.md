@@ -1,6 +1,6 @@
 # Jordan Curve Theorem Formalization Progress Report
 
-## Overall: 146 sorries (structural expansions offset concrete closures)
+## Overall: 144 sorries (10K lines, structural expansions with concrete proofs)
 
 ## Build: 14s (16K lines cached in Top0 session)
 
