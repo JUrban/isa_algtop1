@@ -8761,6 +8761,44 @@ proof (rule ccontr)
       show ?thesis
         by (rule homeomorphism_preserves_path_connected[OF homeomorphism_inverse[OF hh2] hR2_pc])
     qed
+    \<comment> \<open>Shared fact: A1 and A2 are connected (arcs = homeomorphic to [0,1]).\<close>
+    have hA1_conn_S2: "top1_connected_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+    proof -
+      obtain hA where "top1_homeomorphism_on I_set I_top A1
+          (subspace_topology top1_S2 top1_S2_topology A1) hA"
+        using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hI_conn: "top1_connected_on I_set I_top"
+      proof -
+        have "connected {0..1::real}" by (rule connected_Icc)
+        have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "connected I_set" using \<open>connected {0..1::real}\<close> hI01 by simp
+        have "top1_connected_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using \<open>connected I_set\<close> top1_connected_on_subspace_openI by (by100 blast)
+        thus ?thesis unfolding top1_unit_interval_topology_def by simp
+      qed
+      have hI_top: "is_topology_on I_set I_top"
+        using hI_conn unfolding top1_connected_on_def by (by100 blast)
+      have hTA1: "is_topology_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+        using \<open>top1_homeomorphism_on I_set I_top A1 _ hA\<close>
+          unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hcont: "top1_continuous_map_on I_set I_top A1
+          (subspace_topology top1_S2 top1_S2_topology A1) hA"
+        using \<open>top1_homeomorphism_on I_set I_top A1 _ hA\<close>
+          unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "hA ` I_set = A1"
+        using \<open>top1_homeomorphism_on I_set I_top A1 _ hA\<close>
+          unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "top1_connected_on (hA ` I_set) (subspace_topology A1
+          (subspace_topology top1_S2 top1_S2_topology A1) (hA ` I_set))"
+        by (rule Theorem_23_5[OF hI_top hTA1 hI_conn hcont])
+      hence "top1_connected_on A1 (subspace_topology A1
+          (subspace_topology top1_S2 top1_S2_topology A1) A1)" using himg by simp
+      moreover have "subspace_topology A1 (subspace_topology top1_S2 top1_S2_topology A1) A1
+          = subspace_topology top1_S2 top1_S2_topology A1"
+        by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>By Theorem 59.1, every loop at x0 decomposes into loops in U or V.\<close>
     \<comment> \<open>By Lemma 61.2 (textbook), every loop in U is nulhomotopic in X:
        A loop g in U = S^2 - A1 misses A1. Since A1 is connected and contains
@@ -8903,8 +8941,7 @@ proof (rule ccontr)
                 = subspace_topology top1_S2 top1_S2_topology A1"
               by (rule subspace_topology_trans[OF hA1_disj])
             moreover have "top1_connected_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
-              sorry \<comment> \<open>A1 connected: arc hence homeomorphic to [0,1] hence connected.
-                 Same as existing proof in hsame_comp block above.\<close>
+              by (rule hA1_conn_S2)
             ultimately show ?thesis by simp
           qed
           have hA1_ne: "A1 \<noteq> {}" using ha_in_A1 by (by100 blast)
