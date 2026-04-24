@@ -1,35 +1,47 @@
-# Priorities and Issues for AlgTop Formalization
+# Priorities for AlgTop Jordan Curve Theorem
 
-## Status: 146 sorry statements, builds in ~12s, ~7500 lines
+## Status: 141 sorries, builds in ~14s
 
-## Session 2026-04-23 Progress:
-- **stereographic_proj_homeomorphism: ZERO SORRY** (key Jordan blocker removed)
-- **homeomorphism_preserves_simply_connected: ZERO SORRY** (general transfer lemma)
-- **S2_minus_north_pole_simply_connected: ZERO SORRY** (direct from stereographic + R2_sc)
-- Also proved: step_1_inj ψ⁻¹ transfer, R2_simply_connected, hq_star_inj, R2_minus_point_not_sc
-- Cached: 16K lines of sorry-free proofs moved to Top0 (AlgTop builds in 12s)
+## COMPLETE Infrastructure (Zero Sorry):
 
-## KEY BLOCKER: S² Rotation
-- `S2_minus_point_simply_connected` (general b) needs rotation of S² sending b → north_pole
-- This blocks: S2_minus_two_points_not_sc, map_into_S2_minus_point_nulhomotopic
-- These block: Theorem_61_3, Theorem_63_2, and ultimately Jordan Curve Theorem
-- **Solution needed**: either general rotation matrix on S², or generalized stereographic projection
+### S² Topology
+- stereographic_proj_homeomorphism (S²-{N} ≅ R²)
+- householder_S2_homeo (Householder homeo S²-{b} → S²-{N})
+- S2_minus_point_simply_connected (all b ∈ S²)
+- S2_minus_point_homeo_R2 (S²-{b} ≅ R²)
+- S2_minus_two_points_not_simply_connected
+- R2_simply_connected, R2_minus_point_not_sc
 
-## Jordan Chain Status:
-| Theorem | Sorries | Status |
-|---------|---------|--------|
-| stereographic_proj_homeomorphism | 0 | ✅ DONE |
-| R2_simply_connected | 0 | ✅ DONE |
-| homeomorphism_preserves_sc | 0 | ✅ DONE |
-| S2_minus_north_pole_sc | 0 | ✅ DONE |
-| S2_minus_point_sc (general) | 1 | **BLOCKED by rotation** |
-| S2_minus_two_points_not_sc | 1 | BLOCKED by general sc |
-| map_into_S2_minus_point_nulhomo | 1 | BLOCKED by general sc |
-| Theorem_57_1 (antipode not nulhomo) | 4 | hq_cover + other |
-| Theorem_61_3 (Jordan separation) | 6 | BLOCKED |
-| Theorem_63_1 (loop nontrivial) | 3 | covering space construction |
-| Theorem_63_2 (arc no separation) | 3 | BLOCKED |
-| Theorem_63_4 (Jordan Curve) | 8 | BLOCKED |
+### Homeomorphism Infrastructure
+- homeomorphism_{inverse, comp, restrict_point}
+- homeomorphism_{preserves, reflects}_simply_connected
+
+### Nulhomotopy Infrastructure
+- map_into_S2_minus_point_nulhomotopic
+- nulhomotopic_transfer
+- Lemma_61_2_nulhomotopy (uses above)
+
+### Theorem 61.3 Partial
+- hA1_closed, hA2_closed (arcs closed in Hausdorff S²)
+- hU_open, hV_open (complements of closed arcs open)
+- hC_sub (simple closed curve subset)
+
+## Remaining Jordan Chain Sorries:
+
+### Shallow (topology infrastructure):
+- map_into_R2_nulhomotopic: F jointly continuous (1 sorry)
+- Arc decomposition of simple closed curve (S¹ → 2 arcs)
+- S²-C nonempty when C is simple closed curve
+- ¬separates → path-connected complement (connected + locally path-connected)
+- "arc is compact" pattern already proved; can be reused
+
+### Deep (fundamental group theory):
+- **Theorem 59.1** (loop decomposition via Lebesgue number): 2 sorries
+- **Theorem 63.1** (loop nontrivial via covering space): 3 sorries
+- **Theorem 61.3** π₁(X) trivial: uses 59.1 + 61.2
+- **Theorem 63.2** arc no separation: uses 63.1
+- **Theorem 63.3** general non-separation: uses 63.1
+- **Theorem 63.4** Jordan Curve Theorem: uses 61.3 + 63.2 + 63.5
 
 ## FTA — COMPLETE! ZERO SORRIES!
 All FTA chain verified by thm_oracles, cached in Top0.
