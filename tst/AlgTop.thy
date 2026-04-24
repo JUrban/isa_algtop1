@@ -6339,12 +6339,19 @@ proof -
      g(\<cdot>)-p nulhomotopic in R^2-{0} by straight-line.
      g(\<cdot>)-h(a) homotopic to g(\<cdot>)-p via path \<alpha> in R^2-g(A).
      Translation gives g nulhomotopic in R^2-{h(a)}.\<close>
+  \<comment> \<open>Step 6a: g(\<cdot>)-p nulhomotopic in R^2-{0}. Straight-line (1-t)\<cdot>g(x)-p \<rightarrow> -p.
+     Works because |(1-t)\<cdot>g(x)| \<le> M < 2M+1 = |p|, so (1-t)\<cdot>g(x) \<noteq> p.\<close>
+  \<comment> \<open>Step 6b: path \<alpha> from h(a) to p in R^2-g(A). g(x)-\<alpha>(t) \<noteq> 0 since \<alpha>(t) \<notin> g(A).
+     Homotopy F(x,t) = g(x)-\<alpha>(t) shows g(\<cdot>)-h(a) homotopic to g(\<cdot>)-p in R^2-{0}.
+     Combined: g(\<cdot>)-h(a) nulhomotopic in R^2-{0}.\<close>
+  \<comment> \<open>Step 6c: Translation by h(a): g nulhomotopic in R^2-{h(a)}.\<close>
   have hg_nul_R2: "top1_nulhomotopic_on A TA
       (UNIV - {?ha})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
         (UNIV - {?ha}))
       (h \<circ> f)"
-    sorry \<comment> \<open>Straight-line + path deformation + translation nulhomotopy.\<close>
+    sorry \<comment> \<open>Steps 6a-6c: straight-line for g-p, path deformation \<alpha> for g-h(a),
+       translation homeomorphism. Requires hsame_comp_R2 for the path \<alpha>.\<close>
   \<comment> \<open>Step 8: Transfer via h restricted to S^2-{a,b} \<cong> R^2-{h(a)}.
      Use homeomorphism_restrict_point to get h: S^2-{a,b} \<rightarrow> R^2-{h(a)}.\<close>
   have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a, b})
@@ -9407,7 +9414,27 @@ proof -
       have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
         by (rule hUNIV_C_lpc_global)
       \<comment> \<open>U is open in UNIV-C (component of lpc open space).\<close>
-      have hU_open_in_UC: "U \<in> subspace_topology UNIV ?TR2 (UNIV - C)" sorry
+      have hU_open_in_UC: "U \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+      proof -
+        \<comment> \<open>U is a connected component of UNIV-C (lpc space). Components of lpc = open.\<close>
+        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        proof -
+          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+          thus ?thesis by (rule subspace_topology_is_topology_on) simp
+        qed
+        obtain u where hu: "u \<in> U" using hUV_ne(1) by (by100 blast)
+        have hu_UC: "u \<in> UNIV - C" using hu hUV_cover by (by100 blast)
+        \<comment> \<open>The path component of u in UNIV-C equals U.
+           By Theorem 25.5, in lpc space path component = component.\<close>
+        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
+          sorry \<comment> \<open>U connected, U \<subseteq> UNIV-C, path comp = comp in lpc space.\<close>
+        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
+            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc hu_UC])
+        ultimately show ?thesis by simp
+      qed
       have hU_sub_UC: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
       have "top1_locally_path_connected_on U
           (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
@@ -9428,7 +9455,24 @@ proof -
       have hUNIV_C_open: "UNIV - C \<in> ?TR2" by (rule hUNIV_C_open_global)
       have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
         by (rule hUNIV_C_lpc_global)
-      have hV_open_in_UC: "V \<in> subspace_topology UNIV ?TR2 (UNIV - C)" sorry
+      have hV_open_in_UC: "V \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+      proof -
+        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        proof -
+          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+          thus ?thesis by (rule subspace_topology_is_topology_on) simp
+        qed
+        obtain v where hv: "v \<in> V" using hUV_ne(2) by (by100 blast)
+        have hv_UC: "v \<in> UNIV - C" using hv hUV_cover by (by100 blast)
+        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v = V"
+          sorry \<comment> \<open>V connected, V \<subseteq> UNIV-C, path comp = comp in lpc space.\<close>
+        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v
+            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc_global hv_UC])
+        ultimately show ?thesis by simp
+      qed
       have hV_sub_UC: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
       have "top1_locally_path_connected_on V
           (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V)"
