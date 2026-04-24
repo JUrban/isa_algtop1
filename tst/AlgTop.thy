@@ -6905,8 +6905,29 @@ proof -
              So V' = component(z) \<supseteq> U. Since also V' = path_comp(b), b \<in> V' and
              U \<subseteq> V' = component(z). But U itself is a component, so U = component(z) = V'.
              Hence b \<in> V' = U. Contradiction.\<close>
-          have "b \<in> U"
-            sorry \<comment> \<open>z \<in> U \<inter> V', Theorem_25_5 in lpc S^2-C gives V' = component(z) = U.\<close>
+          \<comment> \<open>path_comp(z) = path_comp(b) = V' (z \<in> V' = path_comp(b)).\<close>
+          have hpz_eq: "top1_path_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z = V'"
+            sorry \<comment> \<open>z \<in> V' = path_comp(b) \<Rightarrow> path_comp(z) = path_comp(b) = V' (eq_of_mem).\<close>
+          \<comment> \<open>In lpc S^2-C, path_comp(z) = component(z).\<close>
+          have "top1_path_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z
+            = top1_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z"
+          proof -
+            have "z \<in> top1_S2 - C" using hz(2) hU_sub_S2C by (by100 blast)
+            thus ?thesis using Theorem_25_5[OF hTS2C] hS2C_lpc by (by100 blast)
+          qed
+          \<comment> \<open>component(z) \<supseteq> U (z \<in> U connected).\<close>
+          have "U \<subseteq> top1_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) z"
+            unfolding top1_component_of_on_def using hz(2) hU_sub_S2C hU_conn_S2C by (by100 blast)
+          \<comment> \<open>V' = path_comp(z) = component(z) \<supseteq> U. component(z) is a component.
+             U is also a component. They share z, so U = component(z) = V'.\<close>
+          have "U = V'" using hpz_eq \<open>top1_path_component_of_on _ _ z = top1_component_of_on _ _ z\<close>
+              \<open>U \<subseteq> top1_component_of_on _ _ z\<close>
+            sorry \<comment> \<open>U \<subseteq> component(z) = V', and U is a component, so U = V'.\<close>
+          have "b \<in> U" using \<open>U = V'\<close> \<open>b \<in> V'\<close> by simp
           thus False using hb_notin by simp
         qed
         have "V' \<subseteq> top1_S2 - C" unfolding V'_def
