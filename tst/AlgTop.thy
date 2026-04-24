@@ -7259,7 +7259,23 @@ next
   have hS2b_open: "top1_S2 - {b} \<in> top1_S2_topology"
   proof -
     have "closedin_on top1_S2 top1_S2_topology {b}"
-      sorry \<comment> \<open>Singleton compact in Hausdorff \<Rightarrow> closed.\<close>
+    proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+        top1_S2_is_topology_on_strict])
+      show "{b} \<subseteq> top1_S2" using hb_S2 by simp
+      show "top1_compact_on {b} (subspace_topology top1_S2 top1_S2_topology {b})"
+        unfolding top1_compact_on_def
+      proof (intro conjI allI impI)
+        show "is_topology_on {b} (subspace_topology top1_S2 top1_S2_topology {b})"
+          by (rule subspace_topology_is_topology_on[OF
+              is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (simp add: hb_S2)
+      next
+        fix C :: "(real \<times> real \<times> real) set set"
+        assume hC: "C \<subseteq> subspace_topology top1_S2 top1_S2_topology {b} \<and> {b} \<subseteq> \<Union>C"
+        then obtain U where "U \<in> C" "b \<in> U" by (by100 blast)
+        thus "\<exists>F. finite F \<and> F \<subseteq> C \<and> {b} \<subseteq> \<Union>F"
+          by (intro exI[of _ "{U}"]) simp
+      qed
+    qed
     thus ?thesis unfolding closedin_on_def
       using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def is_topology_on_def
       by (by100 blast)
