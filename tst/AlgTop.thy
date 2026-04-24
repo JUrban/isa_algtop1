@@ -8604,8 +8604,23 @@ proof -
   qed
   \<comment> \<open>Quotient map property: top1_R_to_S1 is a quotient map I \<rightarrow> S^1.\<close>
   have hp_quot: "top1_quotient_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
-    sorry \<comment> \<open>Compact \<rightarrow> Hausdorff continuous surjection is quotient map.
-       I_set compact (compact_Icc), S^1 Hausdorff (subspace of R^2).\<close>
+    unfolding top1_quotient_map_on_def
+  proof (intro conjI)
+    show "is_topology_on I_set I_top" by (rule hTI)
+    show "is_topology_on top1_S1 top1_S1_topology"
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF
+          product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+            top1_open_sets_is_topology_on_UNIV, simplified]]) simp
+    show "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1" by (rule hp_cont)
+    show "top1_R_to_S1 ` I_set = top1_S1" by (rule hp_surj)
+    \<comment> \<open>Quotient condition: V \<subseteq> S^1 with p^{-1}(V) open in I \<Rightarrow> V open in S^1.
+       Equivalently by complement: A closed in I \<Rightarrow> p(A) closed in S^1.
+       I compact, S^1 Hausdorff, p continuous \<Rightarrow> p is a closed map.\<close>
+    show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow> ({x \<in> I_set. top1_R_to_S1 x \<in> V} \<in> I_top \<longrightarrow> V \<in> top1_S1_topology)"
+      sorry \<comment> \<open>Quotient condition. Follows from compact_hausdorff_continuous_closed_map:
+         I compact, S^1 Hausdorff \<Rightarrow> p closed map \<Rightarrow> quotient condition.\<close>
+  qed
   \<comment> \<open>f is constant on fibers: the only non-trivial fiber is {0,1} \<mapsto> (1,0),
      and f(0) = f(1) = x0.\<close>
   have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
