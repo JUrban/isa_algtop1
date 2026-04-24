@@ -10171,7 +10171,8 @@ proof -
                 by (rule top1_component_of_on_connected[OF hTUC hu_UC])
               \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
               have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-                sorry \<comment> \<open>comp(u) ∪ V connected (share v), comp(u) ∪ V ⊇ U ∪ V = UNIV-C.\<close>
+                sorry \<comment> \<open>comp(u) and V connected, share v, union = UNIV-C.
+                   By Theorem_23_3 (union of connected sets with common point is connected).\<close>
               show False using hC_sep hcomp_V_conn by simp
             qed
             show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
