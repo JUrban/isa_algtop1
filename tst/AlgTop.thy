@@ -2263,9 +2263,26 @@ proof (intro allI impI)
        After merging consecutive same-set pieces, all internal endpoints are transitions.
        f(0) = x0 \<in> U\<inter>V, f(1) = x0 \<in> U\<inter>V.\<close>
     have hsub0_int: "\<forall>i\<le>n_sub. f (sub0 i) \<in> U \<inter> V"
-      sorry \<comment> \<open>Merge consecutive same-set intervals so every internal transition
-         point separates a U-piece from a V-piece, hence f(point) \<in> U \<inter> V.
-         Endpoints f(0) = f(1) = x0 \<in> U \<inter> V by assumption.\<close>
+    proof (intro allI impI)
+      fix i assume hi: "i \<le> n_sub"
+      show "f (sub0 i) \<in> U \<inter> V"
+      proof (cases "i = 0")
+        case True thus ?thesis using hsub0_0 hf0 hx0 by simp
+      next
+        case False hence hi_pos: "i > 0" by simp
+        show ?thesis
+        proof (cases "i = n_sub")
+          case True thus ?thesis using hsub0_n hf1 hx0 by simp
+        next
+          case False hence hi_lt: "i < n_sub" using hi by simp
+          \<comment> \<open>Internal point: 0 < i < n_sub. Need merge argument or direct proof.
+             sub0(i) is endpoint of both piece (i-1) and piece i.
+             If they map to different W's (one W_U, one W_V), then f(sub0(i)) \<in> U \<inter> V.
+             If same W, need to merge consecutive same-type pieces first.\<close>
+          show ?thesis sorry
+        qed
+      qed
+    qed
     show ?thesis using that[OF hn_sub hsub0_0 hsub0_n hsub0_mono hsub0_UV hsub0_int] .
   qed
   \<comment> \<open>Step 2: For each subinterval, define fi = f restricted + reparametrized.
