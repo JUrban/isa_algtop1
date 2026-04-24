@@ -2398,7 +2398,147 @@ lemma nulhomotopic_loop_path_homotopic_constant:
       and hf: "top1_is_loop_on X TX x0 f"
       and hnul: "top1_nulhomotopic_on I_set I_top X TX f"
   shows "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
-  sorry
+proof -
+  \<comment> \<open>From nulhomotopy: \<exists>c \<in> X. H: I\<times>I \<rightarrow> X with H(s,0) = f(s), H(s,1) = c.\<close>
+  obtain c where hcX: "c \<in> X"
+      and hhom: "top1_homotopic_on I_set I_top X TX f (\<lambda>_. c)"
+    using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain H where hHcont: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX H"
+      and hH0: "\<forall>s\<in>I_set. H (s, 0) = f s"
+      and hH1: "\<forall>s\<in>I_set. H (s, 1) = c"
+    using hhom unfolding top1_homotopic_on_def by (by100 blast)
+  have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hx0_X: "x0 \<in> X"
+    using hf_cont h0I hf0 unfolding top1_continuous_map_on_def by (by100 force)
+  \<comment> \<open>Proof (Hatcher Prop 1.6): 3-strip construction.
+     Define \<alpha>(t) = H(0,t) path x0 \<rightarrow> c, \<beta>(t) = H(1,t) path x0 \<rightarrow> c.
+
+     For each fixed t, define G_t: I \<rightarrow> X as the concatenation
+       rev(\<alpha>)|_{[0,t]} * H(\<cdot>,t) * \<beta>|_{[0,t]}
+     reparametrized into three strips [0,1/3], [1/3,2/3], [2/3,1]:
+
+     G(s,t) = \<alpha>(t(1-3s))     if 0 \<le> s \<le> 1/3    [rev(\<alpha>) from \<alpha>(t) to x0 = \<alpha>(0)]
+     G(s,t) = H(3s-1, t)      if 1/3 \<le> s \<le> 2/3  [H reparametrized]
+     G(s,t) = \<beta>(t(3s-2))     if 2/3 \<le> s \<le> 1    [\<beta> from x0 = \<beta>(0) to \<beta>(t)]
+
+     Wait: this gives at t=0: G(s,0) = \<alpha>(0) = x0, H(3s-1,0) = f(3s-1), \<beta>(0) = x0.
+     So G(\<cdot>,0) = const_{x0} * f_{compressed} * const_{x0}, NOT f itself.
+
+     Chain: f \<simeq> const_{x0} * f * const_{x0} (by left+right identity, already proved)
+            const_{x0} * f * const_{x0} = G(\<cdot>,0) \<simeq> G(\<cdot>,1) = \<alpha> * const_c * rev(\<alpha>)
+            \<alpha> * const_c * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) (by left identity)
+            \<alpha> * rev(\<alpha>) \<simeq> const_{x0} (by inverse law)
+
+     Each step uses existing path algebra lemmas. The key new content is the homotopy G.\<close>
+  let ?\<alpha> = "\<lambda>t. H (0, t)"  \<comment> \<open>path x0 \<rightarrow> c\<close>
+  let ?\<beta> = "\<lambda>t. H (1, t)"  \<comment> \<open>path x0 \<rightarrow> c\<close>
+  have h\<alpha>0: "?\<alpha> 0 = x0" using hH0 h0I hf0 by simp
+  have h\<alpha>1: "?\<alpha> 1 = c" using hH1 h0I by simp
+  have h\<beta>0: "?\<beta> 0 = x0" using hH0 h1I hf1 by simp
+  have h\<beta>1: "?\<beta> 1 = c" using hH1 h1I by simp
+  \<comment> \<open>\<alpha> and \<beta> are paths in X from x0 to c. Proved by composing H with t \<mapsto> (0,t) resp (1,t).\<close>
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have h\<alpha>_path: "top1_is_path_on X TX x0 c ?\<alpha>"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    have hpair0: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) (product_topology_on I_top I_top)
+        (\<lambda>t. (0, t))"
+    proof -
+      have hp1: "pi1 \<circ> (\<lambda>t. (0::real, t)) = (\<lambda>_. 0)" unfolding pi1_def by (rule ext) simp
+      have hp2: "pi2 \<circ> (\<lambda>t. (0::real, t)) = id" unfolding pi2_def by (rule ext) simp
+      have hc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. 0)"
+        using top1_continuous_map_on_const[OF hTI hTI h0I] by simp
+      have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
+        by (rule top1_continuous_map_on_id[OF hTI])
+      show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hc[folded hp1] hid[folded hp2]
+        by (by100 blast)
+    qed
+    show "top1_continuous_map_on I_set I_top X TX ?\<alpha>"
+      using top1_continuous_map_on_comp[OF hpair0 hHcont] by (simp add: comp_def)
+    show "?\<alpha> 0 = x0" by (rule h\<alpha>0)
+    show "?\<alpha> 1 = c" by (rule h\<alpha>1)
+  qed
+  have h\<beta>_path: "top1_is_path_on X TX x0 c ?\<beta>"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    have hpair1: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) (product_topology_on I_top I_top)
+        (\<lambda>t. (1, t))"
+    proof -
+      have hp1: "pi1 \<circ> (\<lambda>t. (1::real, t)) = (\<lambda>_. 1)" unfolding pi1_def by (rule ext) simp
+      have hp2: "pi2 \<circ> (\<lambda>t. (1::real, t)) = id" unfolding pi2_def by (rule ext) simp
+      have hc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. 1)"
+        using top1_continuous_map_on_const[OF hTI hTI h1I] by simp
+      have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
+        by (rule top1_continuous_map_on_id[OF hTI])
+      show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hc[folded hp1] hid[folded hp2]
+        by (by100 blast)
+    qed
+    show "top1_continuous_map_on I_set I_top X TX ?\<beta>"
+      using top1_continuous_map_on_comp[OF hpair1 hHcont] by (simp add: comp_def)
+    show "?\<beta> 0 = x0" by (rule h\<beta>0)
+    show "?\<beta> 1 = c" by (rule h\<beta>1)
+  qed
+  \<comment> \<open>Step 1: f \<simeq> const_{x0} * f * const_{x0} (left and right identity).\<close>
+  have hf_path: "top1_is_path_on X TX x0 x0 f"
+    using hf unfolding top1_is_loop_on_def by (by100 blast)
+  have hconst_x0_loop: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_loop[OF hTX hx0_X])
+  \<comment> \<open>Step 2: The 3-strip homotopy G gives:
+     const_{x0} * f * const_{x0} \<simeq> \<alpha> * const_c * rev(\<alpha>) as loops at x0.
+     This is a path homotopy (fixes endpoints x0).\<close>
+  have hstrip_homotopy:
+    "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))"
+    sorry \<comment> \<open>3-strip homotopy G. Continuity by pasting lemma on 3 closed strips.\<close>
+  \<comment> \<open>Step 3: Path algebra chain to show f \<simeq> const_{x0}.\<close>
+  \<comment> \<open>f \<simeq> const * f * const (left+right identity)\<close>
+  have hstep1: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+  proof -
+    have hri: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f (top1_constant_path x0))"
+      by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTX hf_path]])
+    have hf_const: "top1_is_path_on X TX x0 x0 (top1_path_product f (top1_constant_path x0))"
+      using hri unfolding top1_path_homotopic_on_def by (by100 blast)
+    have hli: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product f (top1_constant_path x0))
+        (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+      by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTX hf_const]])
+    show ?thesis
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX hri hli])
+  qed
+  \<comment> \<open>\<alpha> * const_c * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) (left identity on const_c * rev(\<alpha>))\<close>
+  have hrev\<alpha>: "top1_is_path_on X TX c x0 (top1_path_reverse ?\<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+  have hstep3a: "top1_path_homotopic_on X TX c x0
+      (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))
+      (top1_path_reverse ?\<alpha>)"
+    by (rule Theorem_51_2_left_identity[OF hTX hrev\<alpha>])
+  \<comment> \<open>Need the direction: \<alpha>*(const_c*rev(\<alpha>)) \<simeq> \<alpha>*rev(\<alpha>), i.e. replace const_c*rev(\<alpha>) by rev(\<alpha>).\<close>
+  have hstep3b: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+    by (rule path_homotopic_product_right[OF hTX hstep3a h\<alpha>_path])
+  \<comment> \<open>\<alpha> * rev(\<alpha>) \<simeq> const_{x0}\<close>
+  have hstep4: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))
+      (top1_constant_path x0)"
+    by (rule Theorem_51_2_invgerse_left[OF hTX h\<alpha>_path])
+  \<comment> \<open>Chain: f \<simeq> const*f*const \<simeq> \<alpha>*const_c*rev(\<alpha>) \<simeq> \<alpha>*rev(\<alpha>) \<simeq> const_{x0}\<close>
+  have hchain1: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX hstep1 hstrip_homotopy])
+  have hchain2: "top1_path_homotopic_on X TX x0 x0 f
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX hchain1 hstep3b])
+  show ?thesis
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX hchain2 hstep4])
+qed
 
 text \<open>Helper: a path in a subspace is a path in the ambient space.\<close>
 lemma path_in_subspace_is_path_in_ambient:
