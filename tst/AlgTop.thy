@@ -8618,8 +8618,58 @@ proof -
        Equivalently by complement: A closed in I \<Rightarrow> p(A) closed in S^1.
        I compact, S^1 Hausdorff, p continuous \<Rightarrow> p is a closed map.\<close>
     show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow> ({x \<in> I_set. top1_R_to_S1 x \<in> V} \<in> I_top \<longrightarrow> V \<in> top1_S1_topology)"
-      sorry \<comment> \<open>Quotient condition. Follows from compact_hausdorff_continuous_closed_map:
-         I compact, S^1 Hausdorff \<Rightarrow> p closed map \<Rightarrow> quotient condition.\<close>
+    proof (intro allI impI)
+      fix V assume hVsub: "V \<subseteq> top1_S1" and hpreV: "{x \<in> I_set. top1_R_to_S1 x \<in> V} \<in> I_top"
+      \<comment> \<open>Want: V open in S^1. Equivalently: S^1-V closed in S^1.
+         Since p is a closed map: p(I-p^{-1}(V)) = S^1-V is closed.\<close>
+      have hI_comp: "top1_compact_on I_set I_top"
+      proof -
+        have "compact {0..1::real}" by (rule compact_Icc)
+        have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "compact I_set" using \<open>compact {0..1::real}\<close> \<open>I_set = _\<close> by simp
+        have "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+        thus ?thesis unfolding top1_unit_interval_topology_def by simp
+      qed
+      have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
+        by (rule top1_S1_is_hausdorff)
+      \<comment> \<open>I - p^{-1}(V) is closed in I (complement of open set).\<close>
+      have hA_closed: "closedin_on I_set I_top (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V})"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V} \<subseteq> I_set" by (by100 blast)
+        have "I_set - (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V}) = {x \<in> I_set. top1_R_to_S1 x \<in> V}"
+          by (by100 blast)
+        thus "I_set - (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V}) \<in> I_top" using hpreV by simp
+      qed
+      \<comment> \<open>p(A) is closed in S^1 (closed map property).\<close>
+      have "closedin_on top1_S1 top1_S1_topology
+          (top1_R_to_S1 ` (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V}))"
+        by (rule compact_hausdorff_continuous_closed_map[OF hI_comp hS1_haus hp_cont hA_closed])
+      \<comment> \<open>p(A) = S^1 - V.\<close>
+      moreover have "top1_R_to_S1 ` (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V}) = top1_S1 - V"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> top1_R_to_S1 ` (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V})"
+        then obtain x where hx: "x \<in> I_set" "top1_R_to_S1 x \<notin> V" "y = top1_R_to_S1 x" by (by100 blast)
+        have "y \<in> top1_S1" using hx(1,3) hp_surj by (by100 blast)
+        moreover have "y \<notin> V" using hx(2,3) by simp
+        ultimately show "y \<in> top1_S1 - V" by (by100 blast)
+      next
+        fix y assume "y \<in> top1_S1 - V"
+        hence "y \<in> top1_S1" "y \<notin> V" by auto
+        hence "y \<in> top1_R_to_S1 ` I_set" using hp_surj by simp
+        then obtain x where "x \<in> I_set" "top1_R_to_S1 x = y" by (by100 blast)
+        thus "y \<in> top1_R_to_S1 ` (I_set - {x \<in> I_set. top1_R_to_S1 x \<in> V})"
+          using \<open>y \<notin> V\<close> by (by100 blast)
+      qed
+      ultimately have "closedin_on top1_S1 top1_S1_topology (top1_S1 - V)" by simp
+      \<comment> \<open>S^1 - V closed \<Rightarrow> V open.\<close>
+      hence "top1_S1 - (top1_S1 - V) \<in> top1_S1_topology"
+        unfolding closedin_on_def by (by100 blast)
+      moreover have "top1_S1 - (top1_S1 - V) = V" using hVsub by (by100 blast)
+      ultimately show "V \<in> top1_S1_topology" by simp
+    qed
   qed
   \<comment> \<open>f is constant on fibers: the only non-trivial fiber is {0,1} \<mapsto> (1,0),
      and f(0) = f(1) = x0.\<close>
