@@ -2537,7 +2537,8 @@ proof -
       \<comment> \<open>Both are closed in I\<times>I and cover I\<times>I.\<close>
       have hL_closed: "closedin_on (I_set \<times> I_set) II_topology ?L" sorry
       have hR_closed: "closedin_on (I_set \<times> I_set) II_topology ?R" sorry
-      have hLR_cover: "?L \<union> ?R = I_set \<times> I_set" sorry
+      have hLR_cover: "?L \<union> ?R = I_set \<times> I_set"
+        unfolding top1_unit_interval_def by auto
       \<comment> \<open>G agrees on the overlap s=1/2: \<alpha>(t\<cdot>1) = H(0,t) = \<alpha>(t). \<checkmark>\<close>
       \<comment> \<open>G restricted to L is continuous (composition: (s,t) \<mapsto> t\<cdot>2s \<mapsto> \<alpha>).\<close>
       have hG_L: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L) X TX G"
