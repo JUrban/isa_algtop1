@@ -6569,6 +6569,19 @@ proof -
   thus ?thesis by (rule nulhomotopic_transfer[OF hh _ assms(2) assms(3)])
 qed
 
+lemma topology_inter_open:
+  assumes "is_topology_on X T" "U \<in> T" "V \<in> T"
+  shows "U \<inter> V \<in> T"
+proof -
+  have "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> T \<longrightarrow> \<Inter>F \<in> T"
+    using assms(1) unfolding is_topology_on_def by (by100 blast)
+  hence "finite {U, V} \<and> {U, V} \<noteq> {} \<and> {U, V} \<subseteq> T \<longrightarrow> \<Inter>{U, V} \<in> T"
+    by (rule spec[of _ "{U, V}"])
+  hence "{U, V} \<subseteq> T \<longrightarrow> \<Inter>{U, V} \<in> T" by simp
+  moreover have "\<Inter>{U, V} = U \<inter> V" by simp
+  ultimately show ?thesis using assms(2,3) by simp
+qed
+
 lemma S2_locally_path_connected:
   "top1_locally_path_connected_on top1_S2 top1_S2_topology"
   sorry \<comment> \<open>S^2 lpc: for each x \<in> S^2, choose b \<noteq> x, S^2-{b} \<cong> R^2 lpc,
@@ -6764,7 +6777,8 @@ proof -
         proof -
           obtain W where hW: "W \<in> top1_S2_topology" and hV'_eq: "V' = (top1_S2 - C) \<inter> W"
             using hV'_open_S2C unfolding subspace_topology_def by (by100 blast)
-          have "(top1_S2 - C) \<inter> W \<in> top1_S2_topology" sorry \<comment> \<open>Intersection of open sets.\<close>
+          have "(top1_S2 - C) \<inter> W \<in> top1_S2_topology"
+            by (rule topology_inter_open[OF hTS2 hS2C_open hW])
           thus ?thesis using hV'_eq by simp
         qed
         have "b \<in> V'" unfolding V'_def
