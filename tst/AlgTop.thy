@@ -9105,22 +9105,24 @@ proof
        Hence e0 = (a,0) and e1 = (a,2), and e0 \<noteq> e1.\<close>
     \<comment> \<open>Define the space and covering map.\<close>
     define E :: "('a \<times> int) set" where
-      "E = (\<Union>n::int. {(x, 2*n) | x. x \<in> U} \<union> {(x, 2*n+1) | x. x \<in> V})"
+      "E = X \<times> (UNIV :: int set)"
     define p0 :: "('a \<times> int) \<Rightarrow> 'a" where "p0 = fst"
     define e0 :: "'a \<times> int" where "e0 = (a, 0)"
-    define e1 :: "'a \<times> int" where "e1 = (a, 2)"
-    have ha_U: "a \<in> U" using assms(2,5,9) unfolding openin_on_def by (by100 blast)
-    have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_U by auto
-    have he1_E: "e1 \<in> E" unfolding e1_def E_def using ha_U by auto
+    define e1 :: "'a \<times> int" where "e1 = (a, 1)"
+    have ha_X: "a \<in> X" using assms(4,5,9) by (by100 blast)
+    have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_X by simp
+    have he1_E: "e1 \<in> E" unfolding e1_def E_def using ha_X by simp
     have hp0e0: "p0 e0 = a" unfolding p0_def e0_def by simp
     have hp0e1: "p0 e1 = a" unfolding p0_def e1_def by simp
     have hne: "e0 \<noteq> e1" unfolding e0_def e1_def by simp
     \<comment> \<open>Need: covering map, topology on E, and lift.\<close>
     \<comment> \<open>Define topology on E: a set W \<subseteq> E is open iff for each sheet (even/odd),
        the slice is open in the corresponding U or V subspace topology.\<close>
+    \<comment> \<open>Topology on E = X \<times> Z: open sets are those where each horizontal slice
+       {x | (x,n) \<in> W} is open in TX, but with the "covering" identification:
+       U-sheets (even) and V-sheets (odd) are glued at A and B.\<close>
     define TE :: "('a \<times> int) set set" where
-      "TE = {W. W \<subseteq> E \<and> (\<forall>n::int. {x. (x, n) \<in> W} \<in>
-        (if even n then subspace_topology X TX U else subspace_topology X TX V))}"
+      "TE = {W. W \<subseteq> E \<and> (\<forall>n::int. {x. (x, n) \<in> W} \<in> TX)}"
     have hTE': "is_topology_on E TE" sorry
     have hcov': "top1_covering_map_on E TE X TX p0" sorry
     \<comment> \<open>Lift: \<alpha>-tilde(s) = (\<alpha>(s), 0), \<beta>-tilde(s) = (\<beta>(s), 1).
