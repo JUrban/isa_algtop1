@@ -6761,7 +6761,12 @@ proof -
           by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2C hS2C_lpc hb_S2C])
         \<comment> \<open>V' open in S^2-C \<Rightarrow> V' = (S^2-C) \<inter> W for some W \<in> top1_S2_topology. Hence V' \<in> top1_S2_topology.\<close>
         have "V' \<in> top1_S2_topology"
-          sorry \<comment> \<open>Open in subspace of open = open in ambient.\<close>
+        proof -
+          obtain W where hW: "W \<in> top1_S2_topology" and hV'_eq: "V' = (top1_S2 - C) \<inter> W"
+            using hV'_open_S2C unfolding subspace_topology_def by (by100 blast)
+          have "(top1_S2 - C) \<inter> W \<in> top1_S2_topology" sorry \<comment> \<open>Intersection of open sets.\<close>
+          thus ?thesis using hV'_eq by simp
+        qed
         have "b \<in> V'" unfolding V'_def
           by (rule top1_path_component_of_on_self_mem[OF hTS2C hb_S2C])
         have "V' \<inter> U = {}"
