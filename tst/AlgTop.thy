@@ -8623,7 +8623,43 @@ proof -
       case False
       \<comment> \<open>top1_R_to_S1 injective on (0,1), so s,t \<in> {0,1}.\<close>
       have "s \<in> {0, 1} \<and> t \<in> {0, 1}"
-        sorry \<comment> \<open>R_to_S1 injective on [0,1) so non-equal preimages must include 0 and 1.\<close>
+      proof -
+        \<comment> \<open>R_to_S1(s) = R_to_S1(t) means (cos(2\<pi>s), sin(2\<pi>s)) = (cos(2\<pi>t), sin(2\<pi>t)).
+           So 2\<pi>s \<equiv> 2\<pi>t (mod 2\<pi>), i.e., s - t is an integer.
+           For s,t \<in> [0,1] with s \<noteq> t: s-t \<in> (-1,1)\{0}, only integer is \<plusminus>1... no, 0 excluded.
+           Wait: s,t \<in> [0,1], s-t \<in> [-1,1]. Integer values: -1, 0, 1. Since s\<noteq>t, not 0.
+           If s-t = 1: s=1, t=0. If s-t = -1: s=0, t=1.\<close>
+        have "cos (2*pi*s) = cos (2*pi*t)" and "sin (2*pi*s) = sin (2*pi*t)"
+          using heq unfolding top1_R_to_S1_def by auto
+        have "sin (2*pi*s) = sin (2*pi*t) \<and> cos (2*pi*s) = cos (2*pi*t)"
+          using \<open>cos (2*pi*s) = cos (2*pi*t)\<close> \<open>sin (2*pi*s) = sin (2*pi*t)\<close> by simp
+        hence "\<exists>k::int. 2*pi*s = 2*pi*t + 2*pi * of_int k"
+          unfolding sin_cos_eq_iff by simp
+        hence "\<exists>k::int. s - t = of_int k"
+        proof
+          fix k :: int assume "2*pi*s = 2*pi*t + 2*pi * of_int k"
+          hence "2*pi * (s - t) = 2*pi * of_int k" by (simp add: algebra_simps)
+          hence "s - t = of_int k" using pi_gt_zero by simp
+          thus "\<exists>k::int. s - t = of_int k" by blast
+        qed
+        then obtain k :: int where hk: "s - t = of_int k" by blast
+        have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+        have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+        have "of_int k \<ge> (-1::real)" "of_int k \<le> (1::real)" using hk hs01 ht01 by linarith+
+        hence "k \<ge> -1" "k \<le> 1" by linarith+
+        hence "k \<in> {-1, 0, 1}" by auto
+        hence "k = 1 \<or> k = -1" using False hk by auto
+        thus ?thesis
+        proof
+          assume "k = 1" hence "s = t + 1" using hk by simp
+          hence "s = 1" "t = 0" using hs01 ht01 by linarith+
+          thus ?thesis by simp
+        next
+          assume "k = -1" hence "s = t - 1" using hk by simp
+          hence "s = 0" "t = 1" using hs01 ht01 by linarith+
+          thus ?thesis by simp
+        qed
+      qed
       thus ?thesis using hf0 hf1 by auto
     qed
   qed
