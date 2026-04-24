@@ -6992,7 +6992,21 @@ proof -
   obtain \<alpha>R where h\<alpha>R: "top1_is_path_on (UNIV - (h \<circ> f) ` A)
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
       ?ha p \<alpha>R"
-    using hsame_comp_R2 sorry \<comment> \<open>Same component + lpc \<Rightarrow> path exists.\<close>
+  proof -
+    \<comment> \<open>R^2-g(A) is open (g(A) compact hence closed). Open in R^2 \<Rightarrow> lpc.
+       Same component + lpc \<Rightarrow> path-connected component \<Rightarrow> path exists.\<close>
+    have hgA_closed: "closedin_on (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets) ((h \<circ> f) ` A)"
+      sorry \<comment> \<open>g(A) compact (continuous image of compact) hence closed in Hausdorff R^2.\<close>
+    have hR2gA_open: "(UNIV - (h \<circ> f) ` A) \<in> product_topology_on top1_open_sets top1_open_sets"
+      using hgA_closed unfolding closedin_on_def by (by100 blast)
+    have hR2gA_lpc: "top1_locally_path_connected_on (UNIV - (h \<circ> f) ` A)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))"
+      sorry \<comment> \<open>R^2-g(A) open in R^2 \<Rightarrow> lpc (open_subset_locally_path_connected, defined later).\<close>
+    \<comment> \<open>In lpc space, components = path components. h(a) and p in same component \<Rightarrow> path exists.\<close>
+    show ?thesis using hsame_comp_R2 hR2gA_lpc that
+      sorry \<comment> \<open>Same component + lpc \<Rightarrow> same path component \<Rightarrow> path exists.\<close>
+  qed
   \<comment> \<open>Step 6b: G(x,t) = g(x) - \<alpha>(t). Homotopy g(\<cdot>)-h(a) to g(\<cdot>)-p in R^2-{0}.\<close>
   \<comment> \<open>Step 6c: H(x,t) = t\<cdot>g(x) - p. Homotopy g(\<cdot>)-p to -p in R^2-{0}.\<close>
   \<comment> \<open>Step 6d+6e: Compose and translate.\<close>
