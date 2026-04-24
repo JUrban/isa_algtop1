@@ -2275,11 +2275,11 @@ proof (intro allI impI)
           case True thus ?thesis using hsub0_n hf1 hx0 by simp
         next
           case False hence hi_lt: "i < n_sub" using hi by simp
-          \<comment> \<open>Internal point: 0 < i < n_sub. Need merge argument or direct proof.
-             sub0(i) is endpoint of both piece (i-1) and piece i.
-             If they map to different W's (one W_U, one W_V), then f(sub0(i)) \<in> U \<inter> V.
-             If same W, need to merge consecutive same-type pieces first.\<close>
-          show ?thesis sorry
+          \<comment> \<open>sub0(i) is in piece i-1 and piece i. If they are in different W's
+             (one W_U, one W_V), sub0(i) \<in> W_U \<inter> W_V hence f(sub0(i)) \<in> U \<inter> V.
+             After merging consecutive same-type intervals, all internal points
+             are transitions between U and V. Sorry for the merge argument.\<close>
+          show ?thesis sorry \<comment> \<open>Needs subdivision merge (combinatorial).\<close>
         qed
       qed
     qed
@@ -2330,15 +2330,6 @@ proof (intro allI impI)
        Telescoping: f \<simeq> f1*f2*...*fm (reparametrization of f)
                       \<simeq> (rev(\<alpha>0)*f1*\<alpha>1) * (rev(\<alpha>1)*f2*\<alpha>2) * ... * (rev(\<alpha>_{m-1})*fm*\<alpha>_m)
                       (by inserting \<alpha>i*rev(\<alpha>i) \<simeq> const between consecutive pieces).\<close>
-    \<comment> \<open>Choose connecting paths via choice on the \<forall>\<exists> fact.\<close>
-    have "\<forall>i\<le>m. \<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
-    proof (intro allI impI)
-      fix i assume "i \<le> m"
-      thus "\<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
-        using hUV_pc hsub_int hx0 unfolding top1_path_connected_on_def by (by100 blast)
-    qed
-    \<comment> \<open>For each i<m, define fi(t) = f(sub(i) + t*(sub(i+1)-sub(i))), the reparametrization.
-       Define gi = rev(\<alpha>i) * fi * \<alpha>(i+1). gs = map gi [0..<m].\<close>
     show ?thesis sorry
   qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
@@ -7500,8 +7491,8 @@ proof -
   have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       (\<lambda>x. pair_sub ((h \<circ> f) x) p) (\<lambda>_. pair_sub (0, 0) p)"
-    sorry \<comment> \<open>Textbook H homotopy: F(x,t) = pair_sub (pair_scl (1-t) (g x)) p.
-       F(x,0) = g(x)-p, F(x,1) = 0-p = -p. Stays in R^2-{0} since |(1-t)g(x)|\<le>M<|p|.\<close>
+    unfolding top1_homotopic_on_def
+    sorry \<comment> \<open>Textbook H homotopy: pair_sub (pair_scl (1-t) (g x)) p stays in R^2-{0}.\<close>
   \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
@@ -9814,18 +9805,9 @@ proof -
          Loops in U nulhomotopic (factor through S^1 + Lemma 61.2, A1 connected).
          Loops in V nulhomotopic (same with A2).
          Theorem 59.1 \<Rightarrow> \<pi>_1(X) trivial.\<close>
-      \<comment> \<open>The proof of Theorem 61.3 body applies verbatim here.
-         Key: A1,A2 closed (assms 4,5) \<Rightarrow> U,V open in X.
-         A1,A2 connected (assms 6,7) \<Rightarrow> a,b same component of S^2-h_S1(S^1).
-         S^2-(A1\<union>A2) connected \<Rightarrow> path-connected (lpc).
-         Each loop in U or V: factor through S^1 (loop_factors_through_S1),
-         apply Lemma_61_2_nulhomotopy_textbook (S^1 compact), use
-         nulhomotopic_trivializes_loops_general. Theorem_59_1 gives decomposition.
-         Conclude \<pi>_1(X) trivial. But X \<cong> R^2-{0} nontrivial.\<close>
-      show ?thesis sorry \<comment> \<open>Same as Theorem 61.3 body. All lemmas available:
-         loop_factors_through_S1, Lemma_61_2_nulhomotopy_textbook, S1_compact,
-         nulhomotopic_trivializes_loops_general, Theorem_59_1,
-         connected_locally_path_connected_imp_path_connected.\<close>
+      show ?thesis sorry \<comment> \<open>Identical proof structure as Theorem 61.3 body.
+         All ingredients available: A1,A2 closed (assms 4,5), connected (assms 6,7),
+         |A1\<inter>A2|=2 (assms 8), S^2-(A1\<union>A2) connected (hconn).\<close>
     qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
         (subspace_topology top1_S2 top1_S2_topology ?X)"
