@@ -2292,7 +2292,21 @@ proof (intro allI impI)
         \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)" and
     hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs (top1_constant_path x0))"
-    sorry \<comment> \<open>Construct gi from \<alpha>i paths + fi reparametrizations. Path algebra.\<close>
+  proof -
+    \<comment> \<open>Choose connecting paths \<alpha>i from x0 to f(sub(i)) in U\<inter>V.\<close>
+    have "\<forall>i\<le>m. \<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
+    proof (intro allI impI)
+      fix i assume "i \<le> m"
+      have "f (subdivision i) \<in> U \<inter> V" using hsub_int \<open>i \<le> m\<close> by blast
+      thus "\<exists>\<alpha>. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) \<alpha>"
+        using hUV_pc hx0 unfolding top1_path_connected_on_def by (by100 blast)
+    qed
+    \<comment> \<open>For each i<m: define fi as f reparametrized on [sub(i), sub(i+1)].
+       Define gi = rev(\<alpha>i) * fi * \<alpha>_{i+1}. Each gi is a loop at x0 in U or V.
+       The telescoping product g1*...*gm = rev(\<alpha>0) * f * \<alpha>m = f (since \<alpha>0 = \<alpha>m = const_{x0}).
+       Each gi maps into U or V because fi maps into U or V and \<alpha>i maps into U\<inter>V \<subseteq> U \<inter> V.\<close>
+    show ?thesis sorry
+  qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
        (\<forall>i<n. top1_is_loop_on X TX x0 (gs ! i) \<and>
               (gs ! i ` I_set \<subseteq> U \<or> gs ! i ` I_set \<subseteq> V)) \<and>
