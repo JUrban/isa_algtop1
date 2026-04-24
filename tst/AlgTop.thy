@@ -8073,7 +8073,9 @@ proof -
       p because |p| > M so p outside the bounded set g(A).)\<close>
   have hsame_comp_R2: "\<exists>C. C \<in> top1_components_on (UNIV - (h \<circ> f) ` A)
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
-      \<and> ?ha \<in> C \<and> p \<in> C" sorry
+      \<and> ?ha \<in> C \<and> p \<in> C"
+    sorry \<comment> \<open>h(a), p in same component of R^2-g(A): both in unique unbounded component.
+       Needs bounded/connected_component type class instances not available for real \<times> real.\<close>
   \<comment> \<open>Step 6: h(a) and p in same component \<Rightarrow> path \<alpha> from h(a) to p in R^2-g(A).\<close>
   have hinj': "inj_on h (top1_S2 - {b})"
     using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
