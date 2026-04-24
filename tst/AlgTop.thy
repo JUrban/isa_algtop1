@@ -10171,8 +10171,47 @@ proof -
                 by (rule top1_component_of_on_connected[OF hTUC hu_UC])
               \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
               have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-                sorry \<comment> \<open>comp(u) and V connected, share v, union = UNIV-C.
-                   By Theorem_23_3 (union of connected sets with common point is connected).\<close>
+              proof -
+                let ?comp = "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+                define A :: "nat \<Rightarrow> (real \<times> real) set" where "A = (\<lambda>i. if i = 0 then ?comp else V)"
+                have hI: "{0::nat, 1} \<noteq> {}" by simp
+                have hV_sub: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+                have hcomp_sub: "?comp \<subseteq> UNIV - C" unfolding top1_component_of_on_def by (by100 blast)
+                have hAsub: "\<forall>i\<in>{0::nat,1}. A i \<subseteq> UNIV - C"
+                  unfolding A_def using hV_sub hcomp_sub by auto
+                have hAconn: "\<forall>i\<in>{0::nat,1}. top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
+                proof
+                  fix i :: nat assume "i \<in> {0, 1}"
+                  show "top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
+                  proof (cases "i = 0")
+                    case True thus ?thesis unfolding A_def using hcomp_conn by simp
+                  next
+                    case False
+                    have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
+                        = subspace_topology UNIV ?TR2 V"
+                      by (rule subspace_topology_trans[OF hV_sub])
+                    thus ?thesis using False unfolding A_def using hV_conn by simp
+                  qed
+                qed
+                have hv_inter: "v \<in> \<Inter>(A ` {0::nat, 1})"
+                  unfolding A_def using hv_comp \<open>v \<in> V\<close> by simp
+                have hY_eq: "(\<Union>i\<in>{0::nat,1}. A i) = UNIV - C"
+                proof -
+                  have "?comp \<union> V \<supseteq> U \<union> V" using hU_sub_comp by (by100 blast)
+                  hence "?comp \<union> V = UNIV - C" using hUV_cover
+                    unfolding top1_component_of_on_def by (by100 blast)
+                  moreover have "(\<Union>i\<in>{0::nat,1}. A i) = ?comp \<union> V" unfolding A_def by auto
+                  ultimately show ?thesis by simp
+                qed
+                have "top1_connected_on (\<Union>i\<in>{0::nat,1}. A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (\<Union>i\<in>{0::nat,1}. A i))"
+                  by (rule Theorem_23_3[OF hTUC hI hAsub hAconn hv_inter])
+                hence "top1_connected_on (UNIV - C) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C))"
+                  using hY_eq by simp
+                moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C)
+                    = subspace_topology UNIV ?TR2 (UNIV - C)"
+                  by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+                ultimately show ?thesis by simp
+              qed
               show False using hC_sep hcomp_V_conn by simp
             qed
             show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
