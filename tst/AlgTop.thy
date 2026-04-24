@@ -7293,7 +7293,8 @@ next
   qed
   \<comment> \<open>x \<in> S^2-{b} which is open and lpc. So x is lpc at in S^2.\<close>
   show "top1_locally_path_connected_at top1_S2 top1_S2_topology x"
-    sorry \<comment> \<open>x \<in> S^2-{b} open lpc subset \<Rightarrow> x is lpc at in S^2.\<close>
+    sorry \<comment> \<open>x \<in> S^2-{b} (open, lpc) \<Rightarrow> for any nbhd U of x in S^2,
+       U \<inter> (S^2-{b}) is nbhd of x in S^2-{b}, get path-connected W there, W nbhd in S^2.\<close>
 qed
 
 lemma Lemma_61_1_components_correspond:
