@@ -1,15 +1,15 @@
 # Jordan Curve Theorem Formalization Progress Report
 
-## Overall: 144 sorries (10.5K lines, proof sketches faithful to Munkres)
+## Overall: 143 sorries (10.8K lines, proof sketches faithful to Munkres)
 
-### Session Achievements (latest)
+### Seven Zero-Sorry Key Lemmas
+- `R2_minus_point_path_connected` — ZERO SORRY (perpendicular detour + collinearity case split)
 - `R2_straight_line_path` — ZERO SORRY (straight-line path in custom topology)
 - `homeomorphism_preserves_path_connected` — ZERO SORRY
-- `simple_closed_curve_arc_decomposition` — ZERO SORRY
-- `simple_closed_curve_proper_subset` — ZERO SORRY (in lemma body)
-- S²-{a,b} path-connected in Theorem 61.3 — PROVED via homeomorphism chain
-- S²-{f(1,0),f(-1,0)} path-connected — PROVED
-- A1, A2 same-component via connected arc + Theorem_25_1 — PROVED
+- `top1_path_connected_imp_connected` — ZERO SORRY
+- `simple_closed_curve_arc_decomposition` — ZERO SORRY (both semicircle parametrizations)
+- `simple_closed_curve_proper_subset` — ZERO SORRY
+- `S1_not_simply_connected` — ZERO SORRY (carrier singleton + cardinal contradiction)
 
 ## Build: 14s (16K lines cached in Top0 session)
 
