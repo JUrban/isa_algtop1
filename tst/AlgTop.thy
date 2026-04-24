@@ -8930,7 +8930,18 @@ proof (rule ccontr)
         then obtain q where hq: "q \<in> top1_S1" "y = h_S1 q" by (by100 blast)
         \<comment> \<open>q \<in> S^1 = top1_R_to_S1(R). Find t \<in> I with top1_R_to_S1(t) = q.\<close>
         have "\<exists>t\<in>I_set. top1_R_to_S1 t = q"
-          sorry \<comment> \<open>top1_R_to_S1 surjective on I_set \<rightarrow> S^1.\<close>
+        proof -
+          obtain x y where hq_eq: "q = (x, y)" by (cases q)
+          have hcirc: "x^2 + y^2 = 1" using hq hq_eq unfolding top1_S1_def by simp
+          obtain t where ht: "0 \<le> t" "t < 2 * pi" "x = cos t" "y = sin t"
+            using sincos_total_2pi[OF hcirc] by blast
+          define t' where "t' = t / (2 * pi)"
+          have ht'_range: "0 \<le> t'" "t' < 1" unfolding t'_def using ht(1,2) pi_gt_zero by auto
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by simp
+          moreover have "top1_R_to_S1 t' = q"
+            unfolding top1_R_to_S1_def t'_def hq_eq using ht(3,4) pi_gt_zero by simp
+          ultimately show ?thesis by (by100 blast)
+        qed
         then obtain t where ht: "t \<in> I_set" "top1_R_to_S1 t = q" by blast
         have "y = g t" using hg_factor ht hq(2) by simp
         moreover have "g t \<in> ?U" using hg ht(1) by (by100 blast)
