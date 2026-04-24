@@ -6682,8 +6682,16 @@ proof -
   have hcont: "continuous_on UNIV \<psi>"
     unfolding \<psi>_def by (auto intro!: continuous_intros simp: case_prod_beta)
   have himg: "\<psi> ` (I_set \<times> I_set) = top1_S2"
-    sorry \<comment> \<open>Surjective: for any (x,y,z) with x^2+y^2+z^2=1, choose s=arccos(z)/\<pi> \<in> [0,1],
-       t from atan2. Image \<subseteq> S^2: sin^2+cos^2=1 gives norm 1.\<close>
+  proof (rule set_eqI, rule iffI)
+    \<comment> \<open>Image \<subseteq> S^2: sin^2(\<pi>s)\<cdot>cos^2(2\<pi>t) + sin^2(\<pi>s)\<cdot>sin^2(2\<pi>t) + cos^2(\<pi>s) = sin^2+cos^2 = 1.\<close>
+    fix p assume "p \<in> \<psi> ` (I_set \<times> I_set)"
+    then obtain s t where hst: "s \<in> I_set" "t \<in> I_set" "p = \<psi> (s, t)" by (by100 blast)
+    show "p \<in> top1_S2" unfolding hst(3) \<psi>_def top1_S2_def
+      by (simp add: sin_squared_eq[symmetric] power2_eq_square algebra_simps distrib_left[symmetric])
+  next
+    fix p assume "p \<in> top1_S2"
+    show "p \<in> \<psi> ` (I_set \<times> I_set)" sorry \<comment> \<open>Surjectivity: arccos + sincos_total_2pi.\<close>
+  qed
   have "compact (I_set \<times> I_set)"
   proof -
     have hI_comp: "top1_compact_on I_set I_top"
