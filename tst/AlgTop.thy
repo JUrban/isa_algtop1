@@ -6734,7 +6734,18 @@ proof -
       \<comment> \<open>h continuous on S^2-{b} \<supseteq> closure_on(U), so h(closure_on(U)) compact.\<close>
       have "compact (h ` ?clU)" sorry \<comment> \<open>Bridge: top1_compact_on \<rightarrow> compact via homeomorphism h.\<close>
       then obtain M where hM: "\<forall>p \<in> h ` ?clU. fst p ^ 2 + snd p ^ 2 \<le> M"
-        sorry \<comment> \<open>Compact in R^2 bounded (same as hC_bounded).\<close>
+      proof (cases "?clU = {}")
+        case True thus ?thesis using that by simp
+      next
+        case False hence "h ` ?clU \<noteq> {}" by simp
+        define img where "img = (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) ` (h ` ?clU)"
+        have himg_compact: "compact img" unfolding img_def
+          by (rule compact_continuous_image) (intro continuous_intros, rule \<open>compact (h ` ?clU)\<close>)
+        have "img \<noteq> {}" unfolding img_def using \<open>h ` ?clU \<noteq> {}\<close> by simp
+        then obtain M where "M \<in> img" "\<forall>t\<in>img. t \<le> M"
+          using compact_attains_sup[OF himg_compact] by (by100 blast)
+        thus ?thesis using that unfolding img_def by (by100 blast)
+      qed
       have "h ` U \<subseteq> h ` ?clU" using hU_sub_clU by (by100 blast)
       thus ?thesis using hM by (by100 blast)
     qed
