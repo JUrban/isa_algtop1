@@ -10168,7 +10168,7 @@ proof -
               have hcomp_conn: "top1_connected_on (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u)
                   (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
                     (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u))"
-                sorry \<comment> \<open>Component is connected (basic topology fact).\<close>
+                by (rule top1_component_of_on_connected[OF hTUC hu_UC])
               \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
               have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
                 sorry \<comment> \<open>comp(u) ∪ V connected (share v), comp(u) ∪ V ⊇ U ∪ V = UNIV-C.\<close>
