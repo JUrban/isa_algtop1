@@ -6739,11 +6739,13 @@ proof -
           thus ?thesis unfolding closedin_on_def using hTS2 unfolding is_topology_on_def by (by100 blast)
         qed
         \<comment> \<open>The component of b in S^2-C is open (lpc space, open set).\<close>
-        obtain V where hV: "V \<in> top1_S2_topology" "b \<in> V" "V \<inter> U = {}" "V \<subseteq> top1_S2 - C"
-          sorry \<comment> \<open>V = path component of b in S^2-C. Open in S^2 (lpc). Disjoint from U.\<close>
-        have "V \<inter> U \<noteq> {}"
-          by (rule closure_meets_open[OF hTS2 hU_sub_S2 hb_clU hV(1) hV(2)])
-        thus False using hV(3) by simp
+        \<comment> \<open>Since S^2-C is open and lpc, the path component of b in S^2-C is open in S^2.
+           It's disjoint from U (different components).\<close>
+        obtain V' where hV': "V' \<in> top1_S2_topology" "b \<in> V'" "V' \<inter> U = {}" "V' \<subseteq> top1_S2 - C"
+          sorry \<comment> \<open>Path component of b in S^2-C is open (S^2-C open in lpc S^2) and disjoint from U.\<close>
+        have "V' \<inter> U \<noteq> {}"
+          by (rule closure_meets_open[OF hTS2 hU_sub_S2 hb_clU hV'(1) hV'(2)])
+        thus False using hV'(3) by simp
       qed
       hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
       \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
