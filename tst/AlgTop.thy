@@ -2143,6 +2143,10 @@ proof (intro allI impI)
     and hsub_UV: "\<forall>i<m. f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> U
                        \<or> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> V"
     and hsub_int: "\<forall>i\<le>m. f (subdivision i) \<in> U \<inter> V"
+    \<comment> \<open>Lebesgue number lemma: [0,1] compact metric, {f^{-1}(U), f^{-1}(V)} open cover.
+       Get \<delta> > 0 with each \<delta>-small subset in one of U or V.
+       Take m = \<lceil>1/\<delta>\<rceil> + 1, subdivision i = i/m. Mesh = 1/m < \<delta>.
+       Each subinterval maps into U or V. Endpoints in U\<inter>V (by path connectivity).\<close>
     sorry
   \<comment> \<open>Step 2: For each subinterval, define fi = f restricted + reparametrized.
      Choose paths \<alpha>i in U\<inter>V from x0 to f(ai). Set gi = (\<alpha>_{i-1} * fi) * rev \<alpha>i.\<close>
@@ -8686,6 +8690,7 @@ end
  
  
  
+
 
 
 
