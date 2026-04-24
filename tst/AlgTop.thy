@@ -8889,7 +8889,31 @@ proof (rule ccontr)
         have hsame_S1: "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1 ` top1_S1)
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))
             \<and> a \<in> CC \<and> b \<in> CC"
-          sorry \<comment> \<open>Same argument as hsame_comp: A1 connected + Theorem_25_1.\<close>
+        proof -
+          have hTS2hS1: "is_topology_on (top1_S2 - h_S1 ` top1_S1)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))"
+            by (rule subspace_topology_is_topology_on[OF
+                is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+          have hA1_conn_sub: "top1_connected_on A1
+              (subspace_topology (top1_S2 - h_S1 ` top1_S1)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1)) A1)"
+          proof -
+            have "subspace_topology (top1_S2 - h_S1 ` top1_S1)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1)) A1
+                = subspace_topology top1_S2 top1_S2_topology A1"
+              by (rule subspace_topology_trans[OF hA1_disj])
+            moreover have "top1_connected_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+              sorry \<comment> \<open>A1 connected: arc hence homeomorphic to [0,1] hence connected.
+                 Same as existing proof in hsame_comp block above.\<close>
+            ultimately show ?thesis by simp
+          qed
+          have hA1_ne: "A1 \<noteq> {}" using ha_in_A1 by (by100 blast)
+          obtain CC where hCC: "CC \<in> top1_components_on (top1_S2 - h_S1 ` top1_S1)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))"
+              and hA1_CC: "A1 \<subseteq> CC"
+            using Theorem_25_1(4)[OF hTS2hS1 hA1_disj hA1_conn_sub hA1_ne] by (by100 blast)
+          show ?thesis using hCC hA1_CC ha_in_A1 hb_in_A1 by (by100 blast)
+        qed
         show ?thesis
           by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
                 S1_compact ha_S2_ hb_S2_ hab_ne hh_S1 hsame_S1])
