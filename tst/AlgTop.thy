@@ -7882,7 +7882,138 @@ lemma translation_homeo_R2:
       (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       T"
-  sorry
+  unfolding top1_homeomorphism_on_def
+proof (intro conjI)
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  have hTR2eq: "?TR2 = (top1_open_sets :: (real \<times> real) set set)"
+    using product_topology_on_open_sets_real2 by (by100 metis)
+  let ?X = "UNIV - {c}" and ?Y = "UNIV - {(0::real,0::real)}"
+  let ?TX = "subspace_topology UNIV ?TR2 ?X" and ?TY = "subspace_topology UNIV ?TR2 ?Y"
+  have hTR2': "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+        top1_open_sets_is_topology_on_UNIV] by simp
+  show hTX: "is_topology_on ?X ?TX" by (rule subspace_topology_is_topology_on[OF hTR2']) simp
+  show hTY: "is_topology_on ?Y ?TY" by (rule subspace_topology_is_topology_on[OF hTR2']) simp
+  \<comment> \<open>T bijective.\<close>
+  show "bij_betw T ?X ?Y" unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on T ?X" unfolding T_def inj_on_def by auto
+    show "T ` ?X = ?Y"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> T ` ?X"
+      then obtain x where hx: "x \<noteq> c" and hy: "y = T x" by (by100 blast)
+      have "T x \<noteq> (0, 0)" using hx unfolding T_def
+        by (cases x, cases c) simp
+      thus "y \<in> ?Y" using hy by simp
+    next
+      fix y assume "y \<in> ?Y"
+      hence "y \<noteq> (0, 0)" by simp
+      define x where "x = (fst y + fst c, snd y + snd c)"
+      have "x \<noteq> c" using \<open>y \<noteq> (0,0)\<close> unfolding x_def
+        by (cases y, cases c) simp
+      moreover have "T x = y" unfolding T_def x_def by simp
+      ultimately show "y \<in> T ` ?X" by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>T continuous: standard subtraction is continuous, bridge to custom framework.\<close>
+  show "top1_continuous_map_on ?X ?TX ?Y ?TY T"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> ?X"
+    thus "T x \<in> ?Y" unfolding T_def by (cases x, cases c) simp
+  next
+    fix V assume hV: "V \<in> ?TY"
+    obtain W where hW: "W \<in> ?TR2" and hV_eq: "V = ?Y \<inter> W"
+      using hV unfolding subspace_topology_def by (by100 blast)
+    \<comment> \<open>W is open in R^2 (standard). T^{-1}(W) is open (standard continuous).\<close>
+    have hW_open: "open W" using hW hTR2eq unfolding top1_open_sets_def by (by100 blast)
+    have hTinv_open: "open {x. T x \<in> W}"
+    proof -
+      have "continuous_on UNIV T" unfolding T_def by (intro continuous_intros)
+      hence "open (T -` W)" using hW_open
+        by (simp add: continuous_on_open_vimage[OF open_UNIV])
+      moreover have "{x. T x \<in> W} = T -` W" by auto
+      ultimately show ?thesis by simp
+    qed
+    have "{x. T x \<in> W} \<in> top1_open_sets" using hTinv_open unfolding top1_open_sets_def by simp
+    hence "{x. T x \<in> W} \<in> ?TR2" using hTR2eq by simp
+    have "{x \<in> ?X. T x \<in> V} = ?X \<inter> {x. T x \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> ?X. T x \<in> V}"
+      hence "x \<in> ?X" and "T x \<in> V" by auto
+      hence "T x \<in> W" using hV_eq by (by100 blast)
+      thus "x \<in> ?X \<inter> {x. T x \<in> W}" using \<open>x \<in> ?X\<close> by (by100 blast)
+    next
+      fix x assume "x \<in> ?X \<inter> {x. T x \<in> W}"
+      hence "x \<in> ?X" and "T x \<in> W" by auto
+      have "T x \<in> ?Y" unfolding T_def using \<open>x \<in> ?X\<close>
+        by (cases x, cases c) simp
+      hence "T x \<in> V" using \<open>T x \<in> W\<close> hV_eq by (by100 blast)
+      thus "x \<in> {x \<in> ?X. T x \<in> V}" using \<open>x \<in> ?X\<close> by (by100 blast)
+    qed
+    also have "... \<in> ?TX" by (rule subspace_topology_memI[OF \<open>{x. T x \<in> W} \<in> ?TR2\<close>])
+    finally show "{x \<in> ?X. T x \<in> V} \<in> ?TX" .
+  qed
+  \<comment> \<open>T^{-1} continuous.\<close>
+  define Tinv where "Tinv = (\<lambda>y :: real \<times> real. (fst y + fst c, snd y + snd c))"
+  show "top1_continuous_map_on ?Y ?TY ?X ?TX (inv_into ?X T)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix y assume "y \<in> ?Y"
+    hence "y \<noteq> (0,0)" by simp
+    define x where "x = Tinv y"
+    have "x \<in> ?X" unfolding x_def Tinv_def using \<open>y \<noteq> (0,0)\<close>
+      by (cases y, cases c) simp
+    moreover have "T x = y" unfolding T_def x_def Tinv_def by simp
+    ultimately have "inv_into ?X T y = x"
+      by (intro inv_into_f_eq) (auto simp: T_def inj_on_def)
+    thus "inv_into ?X T y \<in> ?X" using \<open>x \<in> ?X\<close> by simp
+  next
+    fix U0 assume hU0: "U0 \<in> ?TX"
+    obtain W where hW: "W \<in> ?TR2" and hU0_eq: "U0 = ?X \<inter> W"
+      using hU0 unfolding subspace_topology_def by (by100 blast)
+    have hW_open: "open W" using hW hTR2eq unfolding top1_open_sets_def by (by100 blast)
+    \<comment> \<open>inv_into ?X T = Tinv on ?Y.\<close>
+    have hinv_eq: "\<And>y. y \<in> ?Y \<Longrightarrow> inv_into ?X T y = Tinv y"
+    proof -
+      fix y assume "y \<in> ?Y"
+      hence "y \<noteq> (0,0)" by simp
+      have "Tinv y \<in> ?X" unfolding Tinv_def using \<open>y \<noteq> (0,0)\<close>
+        by (cases y, cases c) simp
+      moreover have "T (Tinv y) = y" unfolding T_def Tinv_def by simp
+      ultimately show "inv_into ?X T y = Tinv y"
+        by (intro inv_into_f_eq) (auto simp: T_def inj_on_def)
+    qed
+    have hTinv_pre_open: "open {y. Tinv y \<in> W}"
+    proof -
+      have "continuous_on UNIV Tinv" unfolding Tinv_def by (intro continuous_intros)
+      hence "open (Tinv -` W)" using hW_open
+        by (simp add: continuous_on_open_vimage[OF open_UNIV])
+      moreover have "{y. Tinv y \<in> W} = Tinv -` W" by auto
+      ultimately show ?thesis by simp
+    qed
+    have "{y. Tinv y \<in> W} \<in> top1_open_sets" using hTinv_pre_open unfolding top1_open_sets_def by simp
+    hence "{y. Tinv y \<in> W} \<in> ?TR2" using hTR2eq by simp
+    have "{y \<in> ?Y. inv_into ?X T y \<in> U0} = ?Y \<inter> {y. Tinv y \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> {y \<in> ?Y. inv_into ?X T y \<in> U0}"
+      hence hy: "y \<in> ?Y" and "inv_into ?X T y \<in> U0" by auto
+      hence "Tinv y \<in> U0" using hinv_eq by simp
+      hence "Tinv y \<in> ?X \<inter> W" using hU0_eq by simp
+      thus "y \<in> ?Y \<inter> {y. Tinv y \<in> W}" using hy by (by100 blast)
+    next
+      fix y assume "y \<in> ?Y \<inter> {y. Tinv y \<in> W}"
+      hence hy: "y \<in> ?Y" and "Tinv y \<in> W" by auto
+      have "Tinv y \<in> ?X" unfolding Tinv_def using hy
+        by (cases y, cases c) simp
+      hence "Tinv y \<in> U0" using \<open>Tinv y \<in> W\<close> hU0_eq by simp
+      hence "inv_into ?X T y \<in> U0" using hinv_eq hy by simp
+      thus "y \<in> {y \<in> ?Y. inv_into ?X T y \<in> U0}" using hy by simp
+    qed
+    also have "... \<in> ?TY" by (rule subspace_topology_memI[OF \<open>{y. Tinv y \<in> W} \<in> ?TR2\<close>])
+    finally show "{y \<in> ?Y. inv_into ?X T y \<in> U0} \<in> ?TY" .
+  qed
+qed
 
 definition pair_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
   "pair_sub a b = (fst a - fst b, snd a - snd b)"
