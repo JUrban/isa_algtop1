@@ -6784,8 +6784,36 @@ qed
 
 lemma S2_locally_path_connected:
   "top1_locally_path_connected_on top1_S2 top1_S2_topology"
-  sorry \<comment> \<open>S^2 lpc: for each x \<in> S^2, choose b \<noteq> x, S^2-{b} \<cong> R^2 lpc,
-     S^2-{b} open in S^2, hence lpc at x. Full proof in Theorem 63.2 body (line ~10133).\<close>
+  unfolding top1_locally_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+next
+  fix x assume hx: "x \<in> top1_S2"
+  define south where "south = (0::real, 0::real, -1::real)"
+  have hs_S2: "south \<in> top1_S2" unfolding south_def top1_S2_def by simp
+  have hn_S2: "north_pole \<in> top1_S2" unfolding north_pole_def top1_S2_def by simp
+  have hns: "north_pole \<noteq> south" unfolding north_pole_def south_def by simp
+  define b where "b = (if x \<noteq> north_pole then north_pole else south)"
+  have hb_S2: "b \<in> top1_S2" unfolding b_def using hn_S2 hs_S2 by auto
+  have hxb: "x \<noteq> b" unfolding b_def using hns by auto
+  have hx_in: "x \<in> top1_S2 - {b}" using hx hxb by (by100 blast)
+  \<comment> \<open>S^2-{b} open in S^2 and lpc (homeomorphic to R^2).\<close>
+  have hS2b_open: "top1_S2 - {b} \<in> top1_S2_topology"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology {b}"
+      sorry \<comment> \<open>Singleton compact in Hausdorff \<Rightarrow> closed.\<close>
+    thus ?thesis unfolding closedin_on_def
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def is_topology_on_def
+      by (by100 blast)
+  qed
+  have hS2b_lpc: "top1_locally_path_connected_on (top1_S2 - {b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
+    sorry \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic. R^2 lpc. Homeomorphism preserves lpc.\<close>
+  \<comment> \<open>x \<in> S^2-{b} which is open and lpc. So x is lpc at in S^2.\<close>
+  show "top1_locally_path_connected_at top1_S2 top1_S2_topology x"
+    sorry \<comment> \<open>x \<in> S^2-{b} open lpc subset \<Rightarrow> x is lpc at in S^2.\<close>
+qed
 
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
