@@ -7054,7 +7054,16 @@ proof -
       hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
       \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
       have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
-        sorry \<comment> \<open>S^2 compact: closed bounded subset of R^3, or image of compact S^1 \<times> [-1,1].\<close>
+      proof -
+        have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+          unfolding top1_S2_topology_def
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        hence "top1_compact_on top1_S2 top1_S2_topology
+            = compact top1_S2"
+          using top1_compact_on_subspace_UNIV_iff_compact[of top1_S2] by simp
+        thus ?thesis using S2_compact_standard by simp
+      qed
       have hclU_compact: "top1_compact_on ?clU (subspace_topology top1_S2 top1_S2_topology ?clU)"
         by (rule Theorem_26_2[OF hS2_compact hclU_closed])
       \<comment> \<open>h(closure_on(U)) is compact in R^2, hence bounded.\<close>
