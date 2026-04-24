@@ -10157,8 +10157,23 @@ proof -
             \<comment> \<open>component_of(u) \<subseteq> U: any connected C with u \<in> C \<subseteq> UNIV-C lies in U.
                (If C intersected V, C = (C\<inter>U) \<union> (C\<inter>V) with both open in C, contradicting connected.)\<close>
             have hcomp_sub_U: "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u \<subseteq> U"
-              sorry \<comment> \<open>Any connected set in UNIV-C containing u is \<subseteq> U.
-                 Uses: U \<union> V = UNIV-C, U \<inter> V = {}, both open in UNIV-C (from lpc).\<close>
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              then obtain v where hv_comp: "v \<in> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+                  and hv_notU: "v \<notin> U" by (by100 blast)
+              have hv_UC: "v \<in> UNIV - C"
+                using hv_comp unfolding top1_component_of_on_def by (by100 blast)
+              hence "v \<in> V" using hv_notU hUV_cover by (by100 blast)
+              \<comment> \<open>component_of(u) is connected. V is connected. They share v.\<close>
+              have hcomp_conn: "top1_connected_on (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u)
+                  (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
+                    (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u))"
+                sorry \<comment> \<open>Component is connected (basic topology fact).\<close>
+              \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
+              have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+                sorry \<comment> \<open>comp(u) ∪ V connected (share v), comp(u) ∪ V ⊇ U ∪ V = UNIV-C.\<close>
+              show False using hC_sep hcomp_V_conn by simp
+            qed
             show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
           qed
           moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
