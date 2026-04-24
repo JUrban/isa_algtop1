@@ -5288,7 +5288,37 @@ proof
         \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))" sorry
   \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
      But we showed the lift has different endpoints. Contradiction.\<close>
-  show False sorry
+  \<comment> \<open>From step 2, obtain covering E, map p0, points e0 \<noteq> e1, and lift ftilde.\<close>
+  from this obtain E :: "'a set" and TE :: "'a set set" and p0 :: "'a \<Rightarrow> 'a"
+      and e0 :: 'a and e1 :: 'a and ftilde :: "real \<Rightarrow> 'a" where
+      hcov: "top1_covering_map_on E TE X TX p0"
+      and he0: "e0 \<in> E" and hp0e0: "p0 e0 = a"
+      and he1: "e1 \<in> E" and hp0e1: "p0 e1 = a"
+      and hne: "e0 \<noteq> e1"
+      and hft: "top1_is_path_on E TE e0 e1 ftilde"
+      and hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s"
+    by (by100 blast)
+  \<comment> \<open>hnul gives a homotopy from \<alpha>*\<beta> to const_a. Lift it via Lemma_54_2.\<close>
+  \<comment> \<open>The lifted homotopy starts from lift of \<alpha>*\<beta> = ftilde (starts at e0),
+     and ends at lift of const_a (starts at e0) = const_{e0}.
+     By Theorem_54_3 (unique endpoints), ftilde(1) = const_{e0}(1) = e0.
+     But ftilde(1) = e1 \<noteq> e0. Contradiction.\<close>
+  \<comment> \<open>By Theorem_54_3: path-homotopic loops with same start lift to paths with same endpoint.\<close>
+  have hfab_path: "top1_is_path_on X TX a a (top1_path_product alpha beta)"
+    using hnul unfolding top1_path_homotopic_on_def by (by100 blast)
+  have hca_path: "top1_is_path_on X TX a a (top1_constant_path a)"
+    using hnul unfolding top1_path_homotopic_on_def by (by100 blast)
+  have hTE: "is_topology_on E TE" sorry
+  have hTX: "is_topology_on X TX" sorry
+  have hconst_lift: "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
+    by (rule top1_constant_path_is_path[OF hTE he0])
+  have hconst_lifts: "\<forall>s\<in>I_set. p0 (top1_constant_path e0 s) = top1_constant_path a s"
+    unfolding top1_constant_path_def using hp0e0 by simp
+  have "e1 = e0"
+    using conjunct1[OF Theorem_54_3[OF hcov hTE hTX he0 hp0e0
+        hfab_path hca_path hnul hft hft_lift hconst_lift hconst_lifts]]
+    by simp
+  thus False using hne by simp
 qed
 
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
@@ -8504,6 +8534,14 @@ end
  
  
  
+
+
+
+
+
+
+
+
 
 
 
