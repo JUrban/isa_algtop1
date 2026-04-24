@@ -6710,7 +6710,25 @@ proof -
        The bounded components of R^2-h(C) are those contained in the ball of radius M.
        Since h(U) is connected and doesn't contain "infinity" (b \<notin> U), it must be bounded.\<close>
     show "\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M"
-      sorry \<comment> \<open>U bounded: h(U) is connected component of R^2-h(C) not containing \<infinity>.\<close>
+    proof -
+      \<comment> \<open>cl(U) \<subseteq> S^2-{b}: since b is in a different component of S^2-C,
+         and components of open sets are open in lpc S^2, cl(U) \<inter> {b} = {}.\<close>
+      have hU_sub: "U \<subseteq> top1_S2 - {b}" using assms(7) hb_notin assms(4) by (by100 blast)
+      \<comment> \<open>cl(U) \<subseteq> S^2-{b}: b \<notin> cl(U) because U is a component, b in different component.\<close>
+      have "closure U \<subseteq> top1_S2"
+        sorry \<comment> \<open>U \<subseteq> S^2, closure of subset of compact = subset of compact.\<close>
+      have "b \<notin> closure U"
+        sorry \<comment> \<open>b in different component of S^2-C, components separated.\<close>
+      hence hclU_sub: "closure U \<subseteq> top1_S2 - {b}" using \<open>closure U \<subseteq> top1_S2\<close> by (by100 blast)
+      \<comment> \<open>h(cl(U)) is compact (continuous image of compact cl(U) in S^2-{b}).\<close>
+      have "compact (closure U)" sorry \<comment> \<open>Closed subset of compact S^2.\<close>
+      hence "compact (h ` (closure U))" sorry \<comment> \<open>Continuous image of compact.\<close>
+      \<comment> \<open>Compact in R^2 \<Rightarrow> bounded.\<close>
+      then obtain M where "\<forall>p \<in> h ` (closure U). fst p ^ 2 + snd p ^ 2 \<le> M"
+        sorry \<comment> \<open>Compact \<Rightarrow> bounded (same argument as hC_bounded).\<close>
+      moreover have "h ` U \<subseteq> h ` (closure U)" sorry \<comment> \<open>U \<subseteq> closure U.\<close>
+      ultimately show ?thesis by (by100 blast)
+    qed
   next
     assume hb_in: "b \<in> U"
     \<comment> \<open>U contains b. h(U-{b}) is connected in R^2-h(C) and "goes to infinity".
