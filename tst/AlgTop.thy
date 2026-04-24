@@ -7873,6 +7873,17 @@ proof -
   qed
 qed
 
+\<comment> \<open>Translation homeomorphism: T(x) = pair_sub x c maps R^2-{c} \<cong> R^2-{0}.\<close>
+lemma translation_homeo_R2:
+  fixes c :: "real \<times> real"
+  defines "T \<equiv> \<lambda>x. (fst x - fst c, snd x - snd c)"
+  shows "top1_homeomorphism_on (UNIV - {c})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {c}))
+      (UNIV - {(0,0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+      T"
+  sorry
+
 definition pair_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
   "pair_sub a b = (fst a - fst b, snd a - snd b)"
 
@@ -8299,7 +8310,27 @@ proof -
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
         (UNIV - {?ha}))
       (h \<circ> f)"
-    sorry \<comment> \<open>Translation homeomorphism R^2-{0} \<cong> R^2-{ha} transfers nulhomotopy.\<close>
+  proof -
+    \<comment> \<open>T(x) = pair_sub x ha maps R^2-{ha} to R^2-{0} homeomorphically.\<close>
+    let ?T = "\<lambda>x :: real \<times> real. (fst x - fst ?ha, snd x - snd ?ha)"
+    have hT_eq: "?T = (\<lambda>x. (fst x - fst (h a), snd x - snd (h a)))" by simp
+    have hT_homeo: "top1_homeomorphism_on (UNIV - {?ha})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {?ha}))
+        (UNIV - {(0,0)})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+        ?T"
+      by (rule translation_homeo_R2[of ?ha])
+    \<comment> \<open>T \<circ> (h\<circ>f) = \<lambda>x. pair_sub ((h\<circ>f)x) ha.\<close>
+    have hcomp_eq: "?T \<circ> (h \<circ> f) = (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha)"
+      unfolding pair_sub_def comp_def by simp
+    have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+    show ?thesis
+      using nulhomotopic_transfer[OF hT_homeo _ hg_cont hTA]
+        \<open>top1_nulhomotopic_on A TA (UNIV - {(0,0)})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+            (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha)\<close>
+        hcomp_eq by simp
+  qed
   \<comment> \<open>Step 8: Transfer via h restricted to S^2-{a,b} \<cong> R^2-{h(a)}.
      Use homeomorphism_restrict_point to get h: S^2-{a,b} \<rightarrow> R^2-{h(a)}.\<close>
   have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a, b})
