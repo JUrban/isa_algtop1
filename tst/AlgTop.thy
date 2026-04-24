@@ -9805,9 +9805,18 @@ proof -
          Loops in U nulhomotopic (factor through S^1 + Lemma 61.2, A1 connected).
          Loops in V nulhomotopic (same with A2).
          Theorem 59.1 \<Rightarrow> \<pi>_1(X) trivial.\<close>
-      show ?thesis sorry \<comment> \<open>Identical proof structure as Theorem 61.3 body.
-         All ingredients available: A1,A2 closed (assms 4,5), connected (assms 6,7),
-         |A1\<inter>A2|=2 (assms 8), S^2-(A1\<union>A2) connected (hconn).\<close>
+      \<comment> \<open>The proof of Theorem 61.3 body applies verbatim here.
+         Key: A1,A2 closed (assms 4,5) \<Rightarrow> U,V open in X.
+         A1,A2 connected (assms 6,7) \<Rightarrow> a,b same component of S^2-h_S1(S^1).
+         S^2-(A1\<union>A2) connected \<Rightarrow> path-connected (lpc).
+         Each loop in U or V: factor through S^1 (loop_factors_through_S1),
+         apply Lemma_61_2_nulhomotopy_textbook (S^1 compact), use
+         nulhomotopic_trivializes_loops_general. Theorem_59_1 gives decomposition.
+         Conclude \<pi>_1(X) trivial. But X \<cong> R^2-{0} nontrivial.\<close>
+      show ?thesis sorry \<comment> \<open>Same as Theorem 61.3 body. All lemmas available:
+         loop_factors_through_S1, Lemma_61_2_nulhomotopy_textbook, S1_compact,
+         nulhomotopic_trivializes_loops_general, Theorem_59_1,
+         connected_locally_path_connected_imp_path_connected.\<close>
     qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
         (subspace_topology top1_S2 top1_S2_topology ?X)"
