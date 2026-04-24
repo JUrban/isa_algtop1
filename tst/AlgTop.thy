@@ -6726,7 +6726,11 @@ proof -
       \<comment> \<open>Compact in R^2 \<Rightarrow> bounded.\<close>
       then obtain M where "\<forall>p \<in> h ` (closure U). fst p ^ 2 + snd p ^ 2 \<le> M"
         sorry \<comment> \<open>Compact \<Rightarrow> bounded (same argument as hC_bounded).\<close>
-      moreover have "h ` U \<subseteq> h ` (closure U)" sorry \<comment> \<open>U \<subseteq> closure U.\<close>
+      moreover have "h ` U \<subseteq> h ` (closure U)"
+      proof -
+        have "U \<subseteq> closure U" sorry \<comment> \<open>Standard: every set \<subseteq> its closure.\<close>
+        thus ?thesis by (by100 blast)
+      qed
       ultimately show ?thesis by (by100 blast)
     qed
   next
