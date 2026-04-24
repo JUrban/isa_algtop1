@@ -7475,12 +7475,32 @@ proof -
   \<comment> \<open>Step 6b: G(x,t) = g(x) - \<alpha>(t). Homotopy g(\<cdot>)-h(a) to g(\<cdot>)-p in R^2-{0}.\<close>
   \<comment> \<open>Step 6c: H(x,t) = t\<cdot>g(x) - p. Homotopy g(\<cdot>)-p to -p in R^2-{0}.\<close>
   \<comment> \<open>Step 6d+6e: Compose and translate.\<close>
+  \<comment> \<open>Textbook Lemma 61.2 proof: two homotopies.
+     G(x,t) = g(x) - \<alpha>(t): homotopy from g(\<cdot>)-ha to g(\<cdot>)-p in R^2-{0}.
+     H(x,t) = t\<cdot>g(x) - p: homotopy from g(\<cdot>)-p to -p in R^2-{0}.
+     Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}. Translate: g nulhomotopic in R^2-{ha}.\<close>
+  \<comment> \<open>Step 6b: G homotopy. g(x)-\<alpha>(t) \<in> R^2-{0} since \<alpha>(t) \<notin> g(A) but g(x) \<in> g(A).\<close>
+  have hG_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+      (\<lambda>x. vec_sub ((h \<circ> f) x) ?ha) (\<lambda>x. vec_sub ((h \<circ> f) x) p)"
+    sorry \<comment> \<open>Homotopy via G(x,t) = g(x) - \<alpha>R(t). Continuous, stays in R^2-{0}.\<close>
+  \<comment> \<open>Step 6c: H homotopy. t\<cdot>g(x)-p \<in> R^2-{0} since |t\<cdot>g(x)| \<le> M < |p|.\<close>
+  have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+      (\<lambda>x. vec_sub ((h \<circ> f) x) p) (\<lambda>_. vec_sub (0, 0) p)"
+    sorry \<comment> \<open>Homotopy via H(x,t) = t\<cdot>g(x) - p. At t=0: g(x)-p. At t=1: 0-p = -p.\<close>
+  \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
+  have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
+      (\<lambda>x. vec_sub ((h \<circ> f) x) ?ha)"
+    sorry \<comment> \<open>Compose G and H homotopies + nulhomotopic definition.\<close>
+  \<comment> \<open>Translate: vec_sub (g x) ha = 0 iff g x = ha. So R^2-{0} via translation \<cong> R^2-{ha}.\<close>
   have hg_nul_R2: "top1_nulhomotopic_on A TA
       (UNIV - {?ha})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
         (UNIV - {?ha}))
       (h \<circ> f)"
-    sorry \<comment> \<open>G + H composed give g nulhomotopic in R^2-{0}, translate to R^2-{h(a)}.\<close>
+    sorry \<comment> \<open>Translation homeomorphism R^2-{0} \<cong> R^2-{ha} transfers nulhomotopy.\<close>
   \<comment> \<open>Step 8: Transfer via h restricted to S^2-{a,b} \<cong> R^2-{h(a)}.
      Use homeomorphism_restrict_point to get h: S^2-{a,b} \<rightarrow> R^2-{h(a)}.\<close>
   have hh_restrict: "top1_homeomorphism_on (top1_S2 - {a, b})
