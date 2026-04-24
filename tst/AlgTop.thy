@@ -7106,6 +7106,12 @@ proof -
       compact_is_topology[OF assms(2)]])
 qed
 
+definition pair_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
+  "pair_sub a b = (fst a - fst b, snd a - snd b)"
+
+definition pair_scl :: "real \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
+  "pair_scl t a = (t * fst a, t * snd a)"
+
 text \<open>Textbook version of Lemma 61.2: if a, b lie in the same component
   of S^2 - f(A), then f: A \<rightarrow> S^2 - {a,b} is nulhomotopic.\<close>
 lemma Lemma_61_2_nulhomotopy_textbook:
@@ -7338,10 +7344,7 @@ proof -
      Step 6e: Translate: g nulhomotopic in R^2-{h(a)}.
      Component-wise: define sub(a,b) = (fst a - fst b, snd a - snd b),
                             scl(t,a) = (t * fst a, t * snd a).\<close>
-  define vec_sub :: "(real \<times> real) \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
-    "vec_sub a' b' = (fst a' - fst b', snd a' - snd b')"
-  define vec_scl :: "real \<Rightarrow> (real \<times> real) \<Rightarrow> (real \<times> real)" where
-    "vec_scl t' a' = (t' * fst a', t' * snd a')"
+  \<comment> \<open>Using global pair_sub and pair_scl for R^2 arithmetic.\<close>
   \<comment> \<open>Step 6a: path \<alpha> from h(a) to p in R^2-g(A).\<close>
   obtain \<alpha>R where h\<alpha>R: "top1_is_path_on (UNIV - (h \<circ> f) ` A)
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
@@ -7482,19 +7485,20 @@ proof -
   \<comment> \<open>Step 6b: G homotopy. g(x)-\<alpha>(t) \<in> R^2-{0} since \<alpha>(t) \<notin> g(A) but g(x) \<in> g(A).\<close>
   have hG_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
-      (\<lambda>x. vec_sub ((h \<circ> f) x) ?ha) (\<lambda>x. vec_sub ((h \<circ> f) x) p)"
+      (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha) (\<lambda>x. pair_sub ((h \<circ> f) x) p)"
     sorry \<comment> \<open>Homotopy via G(x,t) = g(x) - \<alpha>R(t). Continuous, stays in R^2-{0}.\<close>
   \<comment> \<open>Step 6c: H homotopy. t\<cdot>g(x)-p \<in> R^2-{0} since |t\<cdot>g(x)| \<le> M < |p|.\<close>
   have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
-      (\<lambda>x. vec_sub ((h \<circ> f) x) p) (\<lambda>_. vec_sub (0, 0) p)"
-    sorry \<comment> \<open>Textbook H(x,t) = (1-t)\<cdot>g(x) - p. Stays in R^2-{0} since |(1-t)\<cdot>g(x)| \<le> M < |p|.\<close>
+      (\<lambda>x. pair_sub ((h \<circ> f) x) p) (\<lambda>_. pair_sub (0, 0) p)"
+    unfolding top1_homotopic_on_def
+    sorry \<comment> \<open>Textbook H homotopy: pair_sub (pair_scl (1-t) (g x)) p stays in R^2-{0}.\<close>
   \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
-      (\<lambda>x. vec_sub ((h \<circ> f) x) ?ha)"
+      (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha)"
     sorry \<comment> \<open>Compose G and H homotopies + nulhomotopic definition.\<close>
-  \<comment> \<open>Translate: vec_sub (g x) ha = 0 iff g x = ha. So R^2-{0} via translation \<cong> R^2-{ha}.\<close>
+  \<comment> \<open>Translate: pair_sub (g x) ha = 0 iff g x = ha. So R^2-{0} via translation \<cong> R^2-{ha}.\<close>
   have hg_nul_R2: "top1_nulhomotopic_on A TA
       (UNIV - {?ha})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
