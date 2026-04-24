@@ -9005,7 +9005,7 @@ proof (rule ccontr)
               h10_S1 hstd_loop])
       \<comment> \<open>Step 5: h_S1 \<circ> top1_R_to_S1 = g on I_set.\<close>
       moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1 \<circ> top1_R_to_S1)"
-        sorry \<comment> \<open>g = h_S1 \<circ> top1_R_to_S1 on I_set, hence path-homotopic.\<close>
+        sorry \<comment> \<open>g = h_S1 \<circ> p on I_set (by hg_factor), identity homotopy F(s,t)=g(s).\<close>
       ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
         using Lemma_51_1_path_homotopic_trans[OF hTX_] by (by100 blast)
     qed
@@ -9129,7 +9129,11 @@ proof (rule ccontr)
         by (rule nulhomotopic_trivializes_loops_general[OF hTS1' hTX_' hh_S1' hh_S1_nul' hh_S1_10'
               h10_S1' hstd_loop'])
       moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1' \<circ> top1_R_to_S1)"
-        sorry \<comment> \<open>g = h_S1' \<circ> top1_R_to_S1 on I_set.\<close>
+      proof -
+        have "\<forall>s\<in>I_set. g s = (h_S1' \<circ> top1_R_to_S1) s"
+          using hg_factor' unfolding comp_def by simp
+        show ?thesis sorry \<comment> \<open>Equal on I_set → path-homotopic.\<close>
+      qed
       ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
         using Lemma_51_1_path_homotopic_trans[OF hTX_'] by (by100 blast)
     qed
