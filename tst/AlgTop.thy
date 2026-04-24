@@ -6723,7 +6723,28 @@ proof -
       have hclU_sub_S2: "?clU \<subseteq> top1_S2"
         using hclU_closed unfolding closedin_on_def by (by100 blast)
       \<comment> \<open>b \<notin> closure_on(U): U open component of S^2-C, b in different component.\<close>
-      have "b \<notin> ?clU" sorry \<comment> \<open>Components of open set are separated from each other.\<close>
+      have "b \<notin> ?clU"
+      proof
+        assume hb_clU: "b \<in> ?clU"
+        \<comment> \<open>b \<in> S^2-C (given: assms(4)). b is in some component V of S^2-C.
+           V is open in S^2 (component of open set in lpc space).
+           V \<inter> U = {} (different components). But closure_meets_open says
+           b \<in> closure(U), V open, b \<in> V \<Rightarrow> V \<inter> U \<noteq> {}. Contradiction.\<close>
+        have hS2C_open: "top1_S2 - C \<in> top1_S2_topology"
+        proof -
+          have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (by100 blast)
+          have "closedin_on top1_S2 top1_S2_topology C"
+            by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+                top1_S2_is_topology_on_strict hC_sub_S2 assms(3)])
+          thus ?thesis unfolding closedin_on_def using hTS2 unfolding is_topology_on_def by (by100 blast)
+        qed
+        \<comment> \<open>The component of b in S^2-C is open (lpc space, open set).\<close>
+        obtain V where hV: "V \<in> top1_S2_topology" "b \<in> V" "V \<inter> U = {}" "V \<subseteq> top1_S2 - C"
+          sorry \<comment> \<open>V = path component of b in S^2-C. Open in S^2 (lpc). Disjoint from U.\<close>
+        have "V \<inter> U \<noteq> {}"
+          by (rule closure_meets_open[OF hTS2 hU_sub_S2 hb_clU hV(1) hV(2)])
+        thus False using hV(3) by simp
+      qed
       hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
       \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
       have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
