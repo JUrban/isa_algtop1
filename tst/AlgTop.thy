@@ -8884,7 +8884,10 @@ proof (rule ccontr)
          f = top1_R_to_S1 restricted to I (standard loop in S^1),
          get h_S1 \<circ> (top1_R_to_S1|_I) path-homotopic to constant.\<close>
       have hTS1: "is_topology_on top1_S1 top1_S1_topology"
-        sorry \<comment> \<open>Standard fact.\<close>
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV, simplified]]) simp
       have hstd_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)"
         sorry \<comment> \<open>Standard loop in S^1.\<close>
       have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
@@ -8997,7 +9000,11 @@ proof (rule ccontr)
         sorry \<comment> \<open>Loop g factors through S^1.\<close>
       have hh_S1_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
         sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1.\<close>
-      have hTS1': "is_topology_on top1_S1 top1_S1_topology" sorry
+      have hTS1': "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV, simplified]]) simp
       have hstd_loop': "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)" sorry
       have h10_S1': "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
       have "top1_path_homotopic_on ?X ?TX x0 x0 (h_S1' \<circ> top1_R_to_S1) (top1_constant_path x0)"
