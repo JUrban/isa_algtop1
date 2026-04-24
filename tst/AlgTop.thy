@@ -7374,12 +7374,45 @@ proof -
     have hTR2gA: "is_topology_on (UNIV - (h \<circ> f) ` A)
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))"
       using hR2gA_lpc unfolding top1_locally_path_connected_on_def by (by100 blast)
-    \<comment> \<open>CC is a connected component, hence (in lpc space) = path component.\<close>
+    \<comment> \<open>CC = component_of(ha) (CC is a component and ha \<in> CC).\<close>
+    have hha_comp: "?ha \<in> UNIV - (h \<circ> f) ` A" using hha_in_comp by simp
+    have hCC_eq_comp: "CC = top1_component_of_on (UNIV - (h \<circ> f) ` A)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+          (UNIV - (h \<circ> f) ` A)) ?ha"
+    proof -
+      have "CC \<in> {top1_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) x | x. x \<in> UNIV - (h \<circ> f) ` A}"
+        using hCC unfolding top1_components_on_def by simp
+      then obtain x where hx: "x \<in> UNIV - (h \<circ> f) ` A"
+          and hCC_x: "CC = top1_component_of_on (UNIV - (h \<circ> f) ` A)
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+                (UNIV - (h \<circ> f) ` A)) x" by blast
+      have "?ha \<in> CC" by (rule hha_CC)
+      hence "?ha \<in> top1_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) x" using hCC_x by simp
+      \<comment> \<open>CC = component_of(x) and ha \<in> CC, so CC = component_of(ha) by as_component.\<close>
+      have "CC \<in> top1_components_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A))" by (rule hCC)
+      hence "CC = top1_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) ?ha"
+        by (rule top1_component_of_on_as_component[OF hTR2gA _ hha_CC])
+      thus ?thesis using hCC_x by simp
+    qed
     have hCC_conn: "top1_connected_on CC
         (subspace_topology (UNIV - (h \<circ> f) ` A)
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
             (UNIV - (h \<circ> f) ` A)) CC)"
-      sorry \<comment> \<open>Component is connected.\<close>
+    proof -
+      have hCC_eq: "CC = top1_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) ?ha" by (rule hCC_eq_comp)
+      show ?thesis unfolding hCC_eq
+        by (rule top1_component_of_on_connected[OF hTR2gA \<open>?ha \<in> UNIV - (h \<circ> f) ` A\<close>])
+    qed
     have hCC_sub: "CC \<subseteq> UNIV - (h \<circ> f) ` A"
       using hCC unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
     have hCC_ne: "CC \<noteq> {}" using hha_CC by (by100 blast)
@@ -7397,7 +7430,15 @@ proof -
       moreover have "top1_path_component_of_on (UNIV - (h \<circ> f) ` A)
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
           ?ha = CC"
-        sorry \<comment> \<open>path_component = component in lpc space (Theorem_25_5) = CC.\<close>
+      proof -
+        have "top1_path_component_of_on (UNIV - (h \<circ> f) ` A)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+            ?ha = top1_component_of_on (UNIV - (h \<circ> f) ` A)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+            ?ha"
+          using Theorem_25_5[OF hTR2gA] hR2gA_lpc hha_comp by (by100 blast)
+        thus ?thesis using hCC_eq_comp by simp
+      qed
       ultimately show ?thesis by simp
     qed
     \<comment> \<open>CC lpc (open subset of lpc space) + connected \<Rightarrow> path-connected.\<close>
