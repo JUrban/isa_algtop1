@@ -6732,7 +6732,32 @@ proof -
         by (rule Theorem_26_2[OF hS2_compact hclU_closed])
       \<comment> \<open>h(closure_on(U)) is compact in R^2, hence bounded.\<close>
       \<comment> \<open>h continuous on S^2-{b} \<supseteq> closure_on(U), so h(closure_on(U)) compact.\<close>
-      have "compact (h ` ?clU)" sorry \<comment> \<open>Bridge: top1_compact_on \<rightarrow> compact via homeomorphism h.\<close>
+      have "compact (h ` ?clU)"
+      proof -
+        \<comment> \<open>h continuous on S^2-{b} restricted to clU.\<close>
+        have hh_cont_clU: "top1_continuous_map_on ?clU (subspace_topology top1_S2 top1_S2_topology ?clU)
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+        proof -
+          have hh_S2b: "top1_continuous_map_on (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            using assms(5) unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "top1_continuous_map_on ?clU (subspace_topology (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) ?clU)
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_S2b hclU_sub_S2b])
+          thus ?thesis by (simp add: subspace_topology_trans[OF hclU_sub_S2b])
+        qed
+        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        have "top1_compact_on (h ` ?clU) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` ?clU))"
+          by (rule top1_compact_on_continuous_image[OF hclU_compact hTR2 hh_cont_clU])
+        hence "top1_compact_on (h ` ?clU) (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) (h ` ?clU))"
+          using product_topology_on_open_sets_real2 by simp
+        thus "compact (h ` ?clU)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of "h ` ?clU"] by simp
+      qed
       then obtain M where hM: "\<forall>p \<in> h ` ?clU. fst p ^ 2 + snd p ^ 2 \<le> M"
       proof (cases "?clU = {}")
         case True thus ?thesis using that by simp
