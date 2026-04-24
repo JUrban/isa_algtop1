@@ -6517,7 +6517,32 @@ proof -
       thus ?thesis by (by100 blast)
     qed
   qed
-  show ?thesis sorry
+  \<comment> \<open>h restricted to (S^2-C)-{b} = S^2-C-{b} is a homeomorphism onto R^2-h(C).
+     (Since h: S^2-{b} \<rightarrow> R^2 homeo and C \<subseteq> S^2-{b}, restricting to complement of C
+     gives homeo (S^2-{b})-C \<rightarrow> R^2-h(C), and (S^2-{b})-C = S^2-C-{b} = (S^2-C)-{b}.)
+     If b \<notin> U: U \<subseteq> (S^2-C)-{b}, h(U) is a connected subset of R^2-h(C),
+     and R^2-h(C) has h(C) bounded, so bounded components are bounded.
+     If b \<in> U: h(U-{b}) is connected in R^2-h(C) and "contains infinity"
+     (h is stereographic from b), so it's in the unbounded component.\<close>
+  show ?thesis
+  proof (intro conjI impI)
+    assume hb_notin: "b \<notin> U"
+    \<comment> \<open>U \<subseteq> S^2-C, b \<notin> U, so U \<subseteq> S^2-C-{b} \<subseteq> S^2-{b}.
+       h(U) is a connected subset of R^2-h(C). h(U) is bounded because
+       U is compact... no, U is a component, not necessarily compact.
+       But h(U) \<subseteq> R^2-h(C), and h(C) is compact hence bounded by M.
+       The bounded components of R^2-h(C) are those contained in the ball of radius M.
+       Since h(U) is connected and doesn't contain "infinity" (b \<notin> U), it must be bounded.\<close>
+    show "\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M"
+      sorry \<comment> \<open>U bounded: h(U) is connected component of R^2-h(C) not containing \<infinity>.\<close>
+  next
+    assume hb_in: "b \<in> U"
+    \<comment> \<open>U contains b. h(U-{b}) is connected in R^2-h(C) and "goes to infinity".
+       For any M, the set {x | |h(x)| > M} \<inter> (U-{b}) is nonempty because
+       h(b) = \<infinity> and U is open around b.\<close>
+    show "\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M"
+      sorry \<comment> \<open>U unbounded: h maps neighborhood of b to far-from-origin points.\<close>
+  qed
 qed
 
 (** from \<S>61 Lemma 61.2 (Nulhomotopy lemma): any continuous map from a compact
