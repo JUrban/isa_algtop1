@@ -6762,9 +6762,44 @@ proof -
         \<comment> \<open>V' open in S^2-C \<Rightarrow> V' = (S^2-C) \<inter> W for some W \<in> top1_S2_topology. Hence V' \<in> top1_S2_topology.\<close>
         have "V' \<in> top1_S2_topology"
           sorry \<comment> \<open>Open in subspace of open = open in ambient.\<close>
-        have "b \<in> V'" unfolding V'_def using hb_S2C hTS2C hS2C_lpc
-          sorry \<comment> \<open>b in its own path component.\<close>
-        have "V' \<inter> U = {}" sorry \<comment> \<open>Different path components disjoint.\<close>
+        have "b \<in> V'" unfolding V'_def
+          by (rule top1_path_component_of_on_self_mem[OF hTS2C hb_S2C])
+        have "V' \<inter> U = {}"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          then obtain z where hz: "z \<in> V'" "z \<in> U" by (by100 blast)
+          \<comment> \<open>z \<in> path_comp(b) and z \<in> U. Then path_comp(z) = path_comp(b) = V'.
+             But z \<in> U connected subset of S^2-C, so z's path component contains U.
+             Hence U \<subseteq> V', so b \<in> V' \<supseteq> U... but b \<notin> U. Actually V' = path_comp(b),
+             and z \<in> V' means path_comp(z) = path_comp(b). Since z \<in> U and U connected,
+             U \<subseteq> path_comp(z) = V'. Hence b \<in> U (b \<in> V' and... no, V' might be bigger than U).\<close>
+          \<comment> \<open>z \<in> V' = path_comp(b). z \<in> U \<subseteq> S^2-C. U connected.
+             U \<subseteq> path_comp(z) = path_comp(b) = V' (since z \<in> V' and path comps equal if share a point).
+             But also b \<in> V'. If U \<subseteq> V', and b \<in> V', this doesn't give b \<in> U directly.
+             The issue: V' might contain both U and b's original component.
+             But V' is a PATH component, so it IS a component. U is also a component.
+             If they share z, they must be equal: U = V'. But b \<in> V' and b \<notin> U. Contradiction.\<close>
+          have hU_sub_S2C: "U \<subseteq> top1_S2 - C" using assms(7) by (by100 blast)
+          have hU_conn_S2C: "top1_connected_on U (subspace_topology (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) U)"
+          proof -
+            have "subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) U
+                = subspace_topology top1_S2 top1_S2_topology U"
+              by (rule subspace_topology_trans[OF hU_sub_S2C])
+            thus ?thesis using assms(6) by simp
+          qed
+          \<comment> \<open>z \<in> U (component) and z \<in> V' (path component of b).
+             By Theorem_25_5: in lpc S^2-C, path component = component.
+             path_comp(z) = path_comp(b) = V' (since z \<in> V').
+             component(z) contains U (z \<in> U connected \<subseteq> S^2-C).
+             path_comp(z) = component(z) (Theorem_25_5 in lpc S^2-C).
+             So V' = component(z) \<supseteq> U. Since also V' = path_comp(b), b \<in> V' and
+             U \<subseteq> V' = component(z). But U itself is a component, so U = component(z) = V'.
+             Hence b \<in> V' = U. Contradiction.\<close>
+          have "b \<in> U"
+            sorry \<comment> \<open>z \<in> U \<inter> V', Theorem_25_5 in lpc S^2-C gives V' = component(z) = U.\<close>
+          thus False using hb_notin by simp
+        qed
         have "V' \<subseteq> top1_S2 - C" sorry \<comment> \<open>path_component_of_on X TX x \<subseteq> X.\<close>
         obtain V'' where hV'': "V'' \<in> top1_S2_topology" "b \<in> V''" "V'' \<inter> U = {}" "V'' \<subseteq> top1_S2 - C"
           using \<open>V' \<in> top1_S2_topology\<close> \<open>b \<in> V'\<close> \<open>V' \<inter> U = {}\<close> \<open>V' \<subseteq> top1_S2 - C\<close> by blast
