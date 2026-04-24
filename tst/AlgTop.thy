@@ -7488,7 +7488,7 @@ proof -
   have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       (\<lambda>x. vec_sub ((h \<circ> f) x) p) (\<lambda>_. vec_sub (0, 0) p)"
-    sorry \<comment> \<open>Homotopy via H(x,t) = t\<cdot>g(x) - p. At t=0: g(x)-p. At t=1: 0-p = -p.\<close>
+    sorry \<comment> \<open>Textbook H(x,t) = (1-t)\<cdot>g(x) - p. Stays in R^2-{0} since |(1-t)\<cdot>g(x)| \<le> M < |p|.\<close>
   \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
