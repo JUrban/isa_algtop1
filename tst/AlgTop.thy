@@ -8810,6 +8810,43 @@ proof (rule ccontr)
         by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
       ultimately show ?thesis by simp
     qed
+    have hA2_conn_S2: "top1_connected_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+    proof -
+      obtain hA2 where "top1_homeomorphism_on I_set I_top A2
+          (subspace_topology top1_S2 top1_S2_topology A2) hA2"
+        using hA2_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hI_conn2: "top1_connected_on I_set I_top"
+      proof -
+        have "connected {0..1::real}" by (rule connected_Icc)
+        have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "connected I_set" using \<open>connected {0..1::real}\<close> hI01 by simp
+        have "top1_connected_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using \<open>connected I_set\<close> top1_connected_on_subspace_openI by (by100 blast)
+        thus ?thesis unfolding top1_unit_interval_topology_def by simp
+      qed
+      have hI_top2: "is_topology_on I_set I_top"
+        using hI_conn2 unfolding top1_connected_on_def by (by100 blast)
+      have hTA2: "is_topology_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+        using \<open>top1_homeomorphism_on I_set I_top A2 _ hA2\<close>
+          unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hcont2: "top1_continuous_map_on I_set I_top A2
+          (subspace_topology top1_S2 top1_S2_topology A2) hA2"
+        using \<open>top1_homeomorphism_on I_set I_top A2 _ hA2\<close>
+          unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg2: "hA2 ` I_set = A2"
+        using \<open>top1_homeomorphism_on I_set I_top A2 _ hA2\<close>
+          unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "top1_connected_on (hA2 ` I_set) (subspace_topology A2
+          (subspace_topology top1_S2 top1_S2_topology A2) (hA2 ` I_set))"
+        by (rule Theorem_23_5[OF hI_top2 hTA2 hI_conn2 hcont2])
+      hence "top1_connected_on A2 (subspace_topology A2
+          (subspace_topology top1_S2 top1_S2_topology A2) A2)" using himg2 by simp
+      moreover have "subspace_topology A2 (subspace_topology top1_S2 top1_S2_topology A2) A2
+          = subspace_topology top1_S2 top1_S2_topology A2"
+        by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>By Theorem 59.1, every loop at x0 decomposes into loops in U or V.\<close>
     \<comment> \<open>By Lemma 61.2 (textbook), every loop in U is nulhomotopic in X:
        A loop g in U = S^2 - A1 misses A1. Since A1 is connected and contains
@@ -9121,14 +9158,58 @@ proof (rule ccontr)
       have hh_S1_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
       proof -
         have hA2_sub_S2: "A2 \<subseteq> top1_S2" using hC_sub hC_decomp by (by100 blast)
-        have "h_S1' ` top1_S1 \<inter> A2 = {}"
-          sorry \<comment> \<open>h_S1'(S1) = g(I) \<subseteq> V = S^2-A2, hence disjoint from A2.\<close>
+        have "h_S1' ` top1_S1 \<subseteq> ?V"
+        proof
+          fix y assume "y \<in> h_S1' ` top1_S1"
+          then obtain q where hq': "q \<in> top1_S1" "y = h_S1' q" by (by100 blast)
+          obtain t where ht': "t \<in> I_set" "top1_R_to_S1 t = q"
+          proof -
+            obtain x' y' where hq_eq: "q = (x', y')" by (cases q)
+            have hcirc: "x'^2 + y'^2 = 1" using hq' hq_eq unfolding top1_S1_def by simp
+            obtain t where "0 \<le> t" "t < 2 * pi" "x' = cos t" "y' = sin t"
+              using sincos_total_2pi[OF hcirc] by blast
+            define t' where "t' = t / (2 * pi)"
+            have "0 \<le> t'" "t' < 1" unfolding t'_def using \<open>0 \<le> t\<close> \<open>t < 2*pi\<close> pi_gt_zero by auto
+            hence "t' \<in> I_set" unfolding top1_unit_interval_def by simp
+            moreover have "top1_R_to_S1 t' = q"
+              unfolding top1_R_to_S1_def t'_def hq_eq using \<open>x' = cos t\<close> \<open>y' = sin t\<close> pi_gt_zero by simp
+            ultimately show ?thesis using that by (by100 blast)
+          qed
+          have "y = g t" using hg_factor' ht' hq'(2) by simp
+          moreover have "g t \<in> ?V" using hg ht'(1) by (by100 blast)
+          ultimately show "y \<in> ?V" by simp
+        qed
+        hence "h_S1' ` top1_S1 \<inter> A2 = {}" by (by100 blast)
         hence hA2_disj: "A2 \<subseteq> top1_S2 - h_S1' ` top1_S1"
           using hA2_sub_S2 by (by100 blast)
         have hsame_S1': "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1' ` top1_S1)
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))
             \<and> a \<in> CC \<and> b \<in> CC"
-          sorry \<comment> \<open>A2 connected, A2 \<subseteq> S^2-h_S1'(S^1), a,b \<in> A2, Theorem_25_1.\<close>
+        proof -
+          have hTS2hS1': "is_topology_on (top1_S2 - h_S1' ` top1_S1)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))"
+            by (rule subspace_topology_is_topology_on[OF
+                is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+          \<comment> \<open>A2 connected: same proof structure as A1 (arc \<rightarrow> I \<rightarrow> connected).\<close>
+          have hA2_conn_S2': "top1_connected_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+            by (rule hA2_conn_S2)
+          have hA2_conn_sub: "top1_connected_on A2
+              (subspace_topology (top1_S2 - h_S1' ` top1_S1)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1)) A2)"
+          proof -
+            have "subspace_topology (top1_S2 - h_S1' ` top1_S1)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1)) A2
+                = subspace_topology top1_S2 top1_S2_topology A2"
+              by (rule subspace_topology_trans[OF hA2_disj])
+            thus ?thesis using hA2_conn_S2' by simp
+          qed
+          have hA2_ne: "A2 \<noteq> {}" using ha_in_A2 by (by100 blast)
+          obtain CC where hCC: "CC \<in> top1_components_on (top1_S2 - h_S1' ` top1_S1)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))"
+              and hA2_CC: "A2 \<subseteq> CC"
+            using Theorem_25_1(4)[OF hTS2hS1' hA2_disj hA2_conn_sub hA2_ne] by (by100 blast)
+          show ?thesis using hCC hA2_CC ha_in_A2 hb_in_A2 by (by100 blast)
+        qed
         show ?thesis
           by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
                 S1_compact ha_S2_' hb_S2_' hab_ne hh_S1' hsame_S1'])
