@@ -2528,7 +2528,30 @@ proof -
          else ?\<beta> (t * (4 - 4*s)))"
     \<comment> \<open>G is continuous on I\<times>I (pasting lemma on 3 closed strips).\<close>
     have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
-      sorry
+    proof -
+      \<comment> \<open>Split I\<times>I into left half L = {(s,t) | s \<le> 1/2} and right half R = {(s,t) | s \<ge> 1/2}.
+         On L, G = \<alpha>(t\<cdot>2s). On R, split further into M = {s \<le> 3/4} and R' = {s \<ge> 3/4}.
+         Paste L and R using pasting_lemma_two_closed, then paste M and R' similarly.\<close>
+      let ?L = "{(s::real,t::real). 0 \<le> s \<and> s \<le> 1/2 \<and> 0 \<le> t \<and> t \<le> 1}"
+      let ?R = "{(s::real,t::real). 1/2 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
+      \<comment> \<open>Both are closed in I\<times>I and cover I\<times>I.\<close>
+      have hL_closed: "closedin_on (I_set \<times> I_set) II_topology ?L" sorry
+      have hR_closed: "closedin_on (I_set \<times> I_set) II_topology ?R" sorry
+      have hLR_cover: "?L \<union> ?R = I_set \<times> I_set" sorry
+      \<comment> \<open>G agrees on the overlap s=1/2: \<alpha>(t\<cdot>1) = H(0,t) = \<alpha>(t). \<checkmark>\<close>
+      \<comment> \<open>G restricted to L is continuous (composition: (s,t) \<mapsto> t\<cdot>2s \<mapsto> \<alpha>).\<close>
+      have hG_L: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L) X TX G"
+        sorry \<comment> \<open>G = \<alpha> \<circ> (\<lambda>(s,t). t*2s) on L. Both factors continuous.\<close>
+      \<comment> \<open>G restricted to R is continuous (pasting of H and \<beta> pieces).\<close>
+      have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) X TX G"
+        sorry \<comment> \<open>Further split R into M and R'. Paste H and \<beta> pieces.\<close>
+      \<comment> \<open>G maps I\<times>I into X.\<close>
+      have hG_range: "\<forall>x\<in>I_set \<times> I_set. G x \<in> X" sorry
+      have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+        unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+      show ?thesis by (rule pasting_lemma_two_closed[OF
+          hTII hTX hL_closed hR_closed hLR_cover hG_range hG_L hG_R])
+    qed
     \<comment> \<open>Boundary: G(s,0) = const*f*const(s) and G(s,1) = \<alpha>*const_c*rev(\<beta>)(s).\<close>
     have hG_bottom: "\<forall>s\<in>I_set. G (s, 0) =
         top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s"
