@@ -2491,11 +2491,15 @@ proof -
   \<comment> \<open>Step 2: The 3-strip homotopy G gives:
      const_{x0} * f * const_{x0} \<simeq> \<alpha> * const_c * rev(\<alpha>) as loops at x0.
      This is a path homotopy (fixes endpoints x0).\<close>
+  \<comment> \<open>The 3-strip homotopy gives const*f*const \<simeq> \<alpha>*const_c*rev(\<beta>) (not rev(\<alpha>)!)
+     because the right boundary of H is \<beta>, not \<alpha>.\<close>
   have hstrip_homotopy:
     "top1_path_homotopic_on X TX x0 x0
       (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
-      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))"
-    sorry \<comment> \<open>3-strip homotopy G. Continuity by pasting lemma on 3 closed strips.\<close>
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)))"
+    sorry \<comment> \<open>3-strip homotopy G(s,t):
+       [0,1/2]: \<alpha>(t\<cdot>2s), [1/2,3/4]: H(4s-2,t), [3/4,1]: \<beta>(t\<cdot>(4-4s)).
+       Continuity by pasting lemma on 3 closed strips.\<close>
   \<comment> \<open>Step 3: Path algebra chain to show f \<simeq> const_{x0}.\<close>
   \<comment> \<open>f \<simeq> const * f * const (left+right identity)\<close>
   have hstep1: "top1_path_homotopic_on X TX x0 x0 f
@@ -2512,29 +2516,31 @@ proof -
     show ?thesis
       by (rule Lemma_51_1_path_homotopic_trans[OF hTX hri hli])
   qed
-  \<comment> \<open>\<alpha> * const_c * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) (left identity on const_c * rev(\<alpha>))\<close>
-  have hrev\<alpha>: "top1_is_path_on X TX c x0 (top1_path_reverse ?\<alpha>)"
-    by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+  \<comment> \<open>\<alpha> * const_c * rev(\<beta>) \<simeq> \<alpha> * rev(\<beta>) (left identity on const_c * rev(\<beta>))\<close>
+  have hrev\<beta>: "top1_is_path_on X TX c x0 (top1_path_reverse ?\<beta>)"
+    by (rule top1_path_reverse_is_path[OF h\<beta>_path])
   have hstep3a: "top1_path_homotopic_on X TX c x0
-      (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>))
-      (top1_path_reverse ?\<alpha>)"
-    by (rule Theorem_51_2_left_identity[OF hTX hrev\<alpha>])
-  \<comment> \<open>Need the direction: \<alpha>*(const_c*rev(\<alpha>)) \<simeq> \<alpha>*rev(\<alpha>), i.e. replace const_c*rev(\<alpha>) by rev(\<alpha>).\<close>
+      (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>))
+      (top1_path_reverse ?\<beta>)"
+    by (rule Theorem_51_2_left_identity[OF hTX hrev\<beta>])
   have hstep3b: "top1_path_homotopic_on X TX x0 x0
-      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))
-      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)))
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<beta>))"
     by (rule path_homotopic_product_right[OF hTX hstep3a h\<alpha>_path])
-  \<comment> \<open>\<alpha> * rev(\<alpha>) \<simeq> const_{x0}\<close>
+  \<comment> \<open>\<alpha> * rev(\<beta>) \<simeq> const_{x0}. This requires \<alpha> path-homotopic to \<beta> (both paths x0\<rightarrow>c).
+     Follows from H: the map s \<mapsto> H(s,\<cdot>) gives a homotopy from \<alpha> to \<beta> with
+     bottom boundary f (a loop at x0). This gives \<alpha> \<simeq> \<beta> as paths x0\<rightarrow>c,
+     hence \<alpha>*rev(\<beta>) \<simeq> const_{x0}.\<close>
   have hstep4: "top1_path_homotopic_on X TX x0 x0
-      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<beta>))
       (top1_constant_path x0)"
-    by (rule Theorem_51_2_invgerse_left[OF hTX h\<alpha>_path])
-  \<comment> \<open>Chain: f \<simeq> const*f*const \<simeq> \<alpha>*const_c*rev(\<alpha>) \<simeq> \<alpha>*rev(\<alpha>) \<simeq> const_{x0}\<close>
+    sorry \<comment> \<open>\<alpha>*rev(\<beta>) loop at x0 is trivial. Uses H to show \<alpha> \<simeq> \<beta>.\<close>
+  \<comment> \<open>Chain: f \<simeq> const*f*const \<simeq> \<alpha>*const_c*rev(\<beta>) \<simeq> \<alpha>*rev(\<beta>) \<simeq> const_{x0}\<close>
   have hchain1: "top1_path_homotopic_on X TX x0 x0 f
-      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<alpha>)))"
+      (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path c) (top1_path_reverse ?\<beta>)))"
     by (rule Lemma_51_1_path_homotopic_trans[OF hTX hstep1 hstrip_homotopy])
   have hchain2: "top1_path_homotopic_on X TX x0 x0 f
-      (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+      (top1_path_product ?\<alpha> (top1_path_reverse ?\<beta>))"
     by (rule Lemma_51_1_path_homotopic_trans[OF hTX hchain1 hstep3b])
   show ?thesis
     by (rule Lemma_51_1_path_homotopic_trans[OF hTX hchain2 hstep4])
