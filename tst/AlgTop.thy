@@ -7415,7 +7415,9 @@ qed
 lemma R2_locally_path_connected:
   "top1_locally_path_connected_on (UNIV :: (real \<times> real) set)
      (product_topology_on top1_open_sets top1_open_sets)"
-  sorry
+  sorry \<comment> \<open>Proof: for any x, open U with x \<in> U, take open ball B(x,\<epsilon>) \<subseteq> U.
+     B(x,\<epsilon>) is path-connected by R2_open_ball_path_connected.
+     Technical gap: bridging ball_def with custom B_def.\<close>
 
 text \<open>Helper: open subsets of locally path-connected spaces are locally path-connected.\<close>
 lemma open_subset_locally_path_connected:
