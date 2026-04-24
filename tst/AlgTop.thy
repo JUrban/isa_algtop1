@@ -7349,8 +7349,18 @@ next
       thus ?thesis using hW_pc by simp
     qed
     have hW_sub_S2: "W \<subseteq> top1_S2" using hW_sub_S2b by (by100 blast)
+    have hW_open_S2: "W \<in> top1_S2_topology"
+    proof -
+      \<comment> \<open>W is a neighborhood in S^2-{b}, so W open in S^2-{b}.\<close>
+      have "W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+        using hW_nbhd unfolding neighborhood_of_def by simp
+      then obtain Wo where hWo: "Wo \<in> top1_S2_topology" "W = (top1_S2 - {b}) \<inter> Wo"
+        unfolding subspace_topology_def by (by100 blast)
+      show ?thesis using topology_inter_open[OF hTS2' hS2b_open hWo(1)] hWo(2) by simp
+    qed
+    have hxW: "x \<in> W" using hW_nbhd unfolding neighborhood_of_def by simp
     have hW_nbhd_S2: "neighborhood_of x top1_S2 top1_S2_topology W"
-      sorry \<comment> \<open>W' open in S^2, x \<in> W' \<subseteq> W. Trivial but blast times out on neighborhood_of_def.\<close>
+      unfolding neighborhood_of_def using hW_open_S2 hxW by simp
     show "\<exists>V. neighborhood_of x top1_S2 top1_S2_topology V \<and> V \<subseteq> U \<and> V \<subseteq> top1_S2 \<and>
         top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
       using hW_nbhd_S2 hW_sub_U hW_sub_S2 hW_pc_S2 by (by100 blast)
@@ -7370,6 +7380,7 @@ lemma Lemma_61_1_components_correspond:
              (product_topology_on top1_open_sets top1_open_sets) h"
       and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
       and "U \<subseteq> top1_S2 - C"
+      and "U \<in> top1_components_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
   shows "(b \<notin> U \<longrightarrow> (\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M))
        \<and> (b \<in> U \<longrightarrow> (\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M))"
 proof -
@@ -7607,9 +7618,23 @@ proof -
             unfolding top1_component_of_on_def using hz(2) hU_sub_S2C hU_conn_S2C by (by100 blast)
           \<comment> \<open>V' = path_comp(z) = component(z) \<supseteq> U. component(z) is a component.
              U is also a component. They share z, so U = component(z) = V'.\<close>
-          have "U = V'" using hpz_eq \<open>top1_path_component_of_on _ _ z = top1_component_of_on _ _ z\<close>
-              \<open>U \<subseteq> top1_component_of_on _ _ z\<close>
-            sorry \<comment> \<open>U \<subseteq> component(z) = V', and U is a component, so U = V'.\<close>
+          \<comment> \<open>V' = path_comp(b) = component(b) in lpc S^2-C.\<close>
+          have hV'_eq_comp_b: "V' = top1_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) b"
+          proof -
+            have "top1_path_component_of_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) b
+              = top1_component_of_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) b"
+              using Theorem_25_5[OF hTS2C] hS2C_lpc hb_S2C by (by100 blast)
+            thus ?thesis unfolding V'_def by simp
+          qed
+          have hV'_comp: "V' \<in> top1_components_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+            unfolding hV'_eq_comp_b top1_components_on_def using hb_S2C by (by100 blast)
+          have hUV'_inter: "U \<inter> V' \<noteq> {}" using hz by (by100 blast)
+          have "U = V'"
+            using Theorem_25_1(2)[OF hTS2C assms(8) hV'_comp hUV'_inter] by simp
           have "b \<in> U" using \<open>U = V'\<close> \<open>b \<in> V'\<close> by simp
           thus False using hb_notin by simp
         qed
@@ -7686,7 +7711,165 @@ proof -
        For any M, the set {x | |h(x)| > M} \<inter> (U-{b}) is nonempty because
        h(b) = \<infinity> and U is open around b.\<close>
     show "\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M"
-      sorry \<comment> \<open>U unbounded: h maps neighborhood of b to far-from-origin points.\<close>
+    proof
+      fix M :: real
+      have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>U is open in S^2: component of open S^2-C in lpc S^2.\<close>
+      have hS2C_open: "top1_S2 - C \<in> top1_S2_topology"
+      proof -
+        have "closedin_on top1_S2 top1_S2_topology C"
+          by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+              top1_S2_is_topology_on_strict assms(2) assms(3)])
+        thus ?thesis unfolding closedin_on_def using hTS2 unfolding is_topology_on_def by (by100 blast)
+      qed
+      have hTS2C: "is_topology_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+      have hS2C_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2C_open]) simp
+      \<comment> \<open>U = component(x) for some x. In lpc space, component = path_component.
+         Path components are open in the subspace, hence open in S^2.\<close>
+      have hU_open_S2: "U \<in> top1_S2_topology"
+      proof -
+        obtain x where hx: "x \<in> top1_S2 - C"
+            and hU_eq: "U = top1_component_of_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x"
+          using assms(8) unfolding top1_components_on_def by (by100 blast)
+        have "top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x
+          = top1_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x"
+          using Theorem_25_5[OF hTS2C] hS2C_lpc hx by (by100 blast)
+        hence hU_eq_pc: "U = top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x"
+          using hU_eq by simp
+        have "top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x
+          \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2C hS2C_lpc hx])
+        then obtain W where hW: "W \<in> top1_S2_topology" and hpc_eq: "U = (top1_S2 - C) \<inter> W"
+          using hU_eq_pc unfolding subspace_topology_def by (by100 blast)
+        hence "U \<in> top1_S2_topology"
+          by (simp add: topology_inter_open[OF hTS2 hS2C_open hW])
+        thus ?thesis .
+      qed
+      \<comment> \<open>K = S^2 \\ U is closed in S^2, hence compact.\<close>
+      define K where "K = top1_S2 - U"
+      have hU_sub_S2: "U \<subseteq> top1_S2" using assms(7) by (by100 blast)
+      have hK_closed: "closedin_on top1_S2 top1_S2_topology K"
+        unfolding K_def closedin_on_def
+      proof (intro conjI)
+        show "top1_S2 - U \<subseteq> top1_S2" by (by100 blast)
+        have "top1_S2 - (top1_S2 - U) = U" using hU_sub_S2 by (by100 blast)
+        thus "top1_S2 - (top1_S2 - U) \<in> top1_S2_topology" using hU_open_S2 by simp
+      qed
+      have hK_sub_S2b: "K \<subseteq> top1_S2 - {b}" unfolding K_def using hb_in by (by100 blast)
+      have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
+      proof -
+        have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+          unfolding top1_S2_topology_def
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        hence "top1_compact_on top1_S2 top1_S2_topology = compact top1_S2"
+          using top1_compact_on_subspace_UNIV_iff_compact[of top1_S2] by simp
+        thus ?thesis using S2_compact_standard by simp
+      qed
+      have hK_compact: "top1_compact_on K (subspace_topology top1_S2 top1_S2_topology K)"
+        by (rule Theorem_26_2[OF hS2_compact hK_closed])
+      \<comment> \<open>h(K) compact in R^2.\<close>
+      have "compact (h ` K)"
+      proof -
+        have hh_cont_K: "top1_continuous_map_on K (subspace_topology top1_S2 top1_S2_topology K)
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+        proof -
+          have hh_S2b: "top1_continuous_map_on (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            using assms(5) unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hh_K: "top1_continuous_map_on K (subspace_topology (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) K)
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_S2b hK_sub_S2b])
+          thus ?thesis by (simp add: subspace_topology_trans[OF hK_sub_S2b])
+        qed
+        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        have "top1_compact_on (h ` K) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` K))"
+          by (rule top1_compact_on_continuous_image[OF hK_compact hTR2 hh_cont_K])
+        hence "top1_compact_on (h ` K) (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) (h ` K))"
+          using product_topology_on_open_sets_real2 by simp
+        thus "compact (h ` K)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of "h ` K"] by simp
+      qed
+      \<comment> \<open>h(K) bounded.\<close>
+      then obtain N where hN: "\<forall>p \<in> h ` K. fst p ^ 2 + snd p ^ 2 \<le> N"
+      proof (cases "K = {}")
+        case True thus ?thesis using that by simp
+      next
+        case False hence "h ` K \<noteq> {}" by simp
+        define img where "img = (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) ` (h ` K)"
+        have himg_compact: "compact img" unfolding img_def
+          by (rule compact_continuous_image) (intro continuous_intros, rule \<open>compact (h ` K)\<close>)
+        have "img \<noteq> {}" unfolding img_def using \<open>h ` K \<noteq> {}\<close> by simp
+        then obtain N' where "N' \<in> img" "\<forall>t\<in>img. t \<le> N'"
+          using compact_attains_sup[OF himg_compact] by (by100 blast)
+        thus ?thesis using that unfolding img_def by (by100 blast)
+      qed
+      \<comment> \<open>h bijective on S^2-{b}, so h(U-{b}) \<union> h(K) = R^2 and h(U-{b}) \<inter> h(K) = {}.\<close>
+      have hinj: "inj_on h (top1_S2 - {b})"
+        using assms(5) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hsurj: "h ` (top1_S2 - {b}) = UNIV"
+        using assms(5) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hUb_K_partition: "U - {b} \<union> K = top1_S2 - {b}"
+        unfolding K_def using assms(7) hb_in by (by100 blast)
+      have hUb_K_disjoint: "(U - {b}) \<inter> K = {}"
+        unfolding K_def by (by100 blast)
+      have hUb_sub: "U - {b} \<subseteq> top1_S2 - {b}" using assms(7) by (by100 blast)
+      \<comment> \<open>For any M, find x \<in> U-{b} with |h(x)|^2 > M.\<close>
+      define R where "R = max (max M N) 0 + 1"
+      define p :: "real \<times> real" where "p = (R + 1, 0)"
+      have hR_pos: "R > 0" unfolding R_def by (by100 linarith)
+      have hR_ge_M: "R > M" unfolding R_def by (by100 linarith)
+      have hR_ge_N: "R > N" unfolding R_def by (by100 linarith)
+      have hp_big: "fst p ^ 2 + snd p ^ 2 > max M N"
+      proof -
+        have hfst: "fst p = R + 1" and hsnd: "snd p = 0" unfolding p_def by auto
+        have heq: "fst p ^ 2 + snd p ^ 2 = (R + 1) ^ 2"
+          using hfst hsnd by (simp add: power2_eq_square)
+        have hR1_ge_1: "R + 1 \<ge> 1" using hR_pos by (by100 linarith)
+        have hR1_nn: "0 \<le> R + 1" using hR_pos by (by100 linarith)
+        have "(R + 1) * (R + 1) \<ge> 1 * (R + 1)"
+          by (rule mult_right_mono[OF hR1_ge_1 hR1_nn])
+        hence "(R + 1) ^ 2 \<ge> R + 1" by (simp add: power2_eq_square)
+        hence "(R + 1) ^ 2 > R" by (by100 linarith)
+        thus ?thesis using heq hR_ge_M hR_ge_N by (by100 linarith)
+      qed
+      have hp_not_hK: "p \<notin> h ` K"
+      proof
+        assume "p \<in> h ` K"
+        hence "fst p ^ 2 + snd p ^ 2 \<le> N" using hN by (by100 blast)
+        thus False using hp_big by (by100 linarith)
+      qed
+      have "h ` (U - {b}) \<union> h ` K = h ` ((U - {b}) \<union> K)"
+        by (rule image_Un[symmetric])
+      also have "... = h ` (top1_S2 - {b})" using hUb_K_partition by simp
+      finally have "h ` (U - {b}) \<union> h ` K = h ` (top1_S2 - {b})" .
+      hence "h ` (U - {b}) \<union> h ` K = UNIV" using hsurj by simp
+      have "p \<in> h ` (U - {b}) \<union> h ` K"
+        using \<open>h ` (U - {b}) \<union> h ` K = UNIV\<close> by simp
+      hence "p \<in> h ` (U - {b})" using hp_not_hK by (by100 blast)
+      then obtain x where hx: "x \<in> U - {b}" and hhx: "h x = p" by (by100 blast)
+      have "fst (h x) ^ 2 + snd (h x) ^ 2 > M"
+      proof -
+        have "fst (h x) ^ 2 + snd (h x) ^ 2 = fst p ^ 2 + snd p ^ 2" using hhx by simp
+        thus ?thesis using hp_big by (by100 linarith)
+      qed
+      thus "\<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M"
+        using hx by (by100 blast)
+    qed
   qed
 qed
 
