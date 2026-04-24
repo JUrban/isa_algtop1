@@ -2305,6 +2305,14 @@ proof (intro allI impI)
        Define gi = rev(\<alpha>i) * fi * \<alpha>_{i+1}. Each gi is a loop at x0 in U or V.
        The telescoping product g1*...*gm = rev(\<alpha>0) * f * \<alpha>m = f (since \<alpha>0 = \<alpha>m = const_{x0}).
        Each gi maps into U or V because fi maps into U or V and \<alpha>i maps into U\<inter>V \<subseteq> U \<inter> V.\<close>
+    \<comment> \<open>For each i<m, define:
+       fi(t) = f(sub(i) + t*(sub(i+1)-sub(i))): reparametrization of f on [sub(i),sub(i+1)].
+       gi = top1_path_product (top1_path_reverse (\<alpha>i)) (top1_path_product fi (\<alpha>(i+1))):
+         loop at x0 via rev(\<alpha>i) from x0 to f(sub(i)), then fi to f(sub(i+1)), then \<alpha>(i+1) to x0.
+       Each gi maps into U or V (fi maps into U or V, \<alpha>i maps into U\<inter>V \<subseteq> U,V).
+       Telescoping: f \<simeq> f1*f2*...*fm (reparametrization of f)
+                      \<simeq> (rev(\<alpha>0)*f1*\<alpha>1) * (rev(\<alpha>1)*f2*\<alpha>2) * ... * (rev(\<alpha>_{m-1})*fm*\<alpha>_m)
+                      (by inserting \<alpha>i*rev(\<alpha>i) \<simeq> const between consecutive pieces).\<close>
     show ?thesis sorry
   qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
