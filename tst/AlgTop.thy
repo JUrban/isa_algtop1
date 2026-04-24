@@ -10128,7 +10128,24 @@ proof -
         \<comment> \<open>The path component of u in UNIV-C equals U.
            By Theorem 25.5, in lpc space path component = component.\<close>
         have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
-          sorry \<comment> \<open>U connected, U \<subseteq> UNIV-C, path comp = comp in lpc space.\<close>
+        proof -
+          \<comment> \<open>U is a connected component: U connected, U \<subseteq> UNIV-C, U maximal.
+             In lpc space, path component = component (Theorem 25.5).\<close>
+          have "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
+          proof -
+            \<comment> \<open>U is a component of UNIV-C: it's connected, and any connected set containing u
+               that is bigger than U would have to intersect V, but U \<inter> V = {} and both open.\<close>
+            have "U \<in> top1_components_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+              sorry \<comment> \<open>U is a component: connected, non-empty, maximal.\<close>
+            moreover have "u \<in> U" using hu by simp
+            ultimately show ?thesis
+              sorry \<comment> \<open>component_of(u) = the unique component containing u.\<close>
+          qed
+          moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
+              = top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+            using Theorem_25_5[OF hTUC] hUNIV_C_lpc_global hu_UC by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
         moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
             \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
           by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc hu_UC])
