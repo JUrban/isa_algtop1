@@ -2583,7 +2583,42 @@ proof -
     "\<And>S f. S \<subseteq> I_set \<times> I_set \<Longrightarrow> continuous_on S f \<Longrightarrow> (\<forall>x\<in>S. f x \<in> I_set \<times> I_set) \<Longrightarrow>
        top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S)
          (I_set \<times> I_set) II_topology f"
-    sorry \<comment> \<open>Same bridge but target is I\<times>I with II_topology.\<close>
+  proof -
+    fix S :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
+    assume hSsub: "S \<subseteq> I_set \<times> I_set" and hcont: "continuous_on S f"
+        and hrange: "\<forall>x\<in>S. f x \<in> I_set \<times> I_set"
+    have hII_eq: "II_topology = subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+      unfolding II_topology_def by (rule II_topology_eq_subspace)
+    show "top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S)
+        (I_set \<times> I_set) II_topology f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> S" thus "f x \<in> I_set \<times> I_set" using hrange by (by100 blast)
+    next
+      fix V assume hV: "V \<in> II_topology"
+      obtain W where hW: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          and hV_eq: "V = (I_set \<times> I_set) \<inter> W"
+        using hV hII_eq unfolding subspace_topology_def by auto
+      have hWo: "open W" using hW product_topology_on_open_sets_real2
+        unfolding top1_open_sets_def by (by100 simp)
+      obtain U where hU: "open U" and hfW: "U \<inter> S = f -` W \<inter> S"
+        using hcont hWo unfolding continuous_on_open_invariant by blast
+      have hpreV: "{x \<in> S. f x \<in> V} = U \<inter> S"
+        using hfW hV_eq hrange by (by100 blast)
+      have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+        using hU unfolding top1_open_sets_def by simp
+      hence "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        using product_topology_on_open_sets_real2 by (by100 metis)
+      hence "(I_set \<times> I_set) \<inter> U \<in> II_topology"
+        using hII_eq unfolding subspace_topology_def by (by100 blast)
+      hence "S \<inter> ((I_set \<times> I_set) \<inter> U) \<in> subspace_topology (I_set \<times> I_set) II_topology S"
+        unfolding subspace_topology_def by (by100 blast)
+      moreover have "S \<inter> ((I_set \<times> I_set) \<inter> U) = U \<inter> S" using hSsub by (by100 blast)
+      ultimately show "{x \<in> S. f x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology S"
+        using hpreV by simp
+    qed
+  qed
   \<comment> \<open>The 3-strip homotopy gives const*f*const \<simeq> \<alpha>*const_c*rev(\<beta>) (not rev(\<alpha>)!)
      because the right boundary of H is \<beta>, not \<alpha>.\<close>
   have hstrip_homotopy:
