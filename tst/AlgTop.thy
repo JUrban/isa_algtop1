@@ -2535,9 +2535,49 @@ proof -
   have bridge_subspace_cont:
     "\<And>S f. S \<subseteq> I_set \<times> I_set \<Longrightarrow> continuous_on S f \<Longrightarrow> (\<forall>x\<in>S. f x \<in> I_set) \<Longrightarrow>
        top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S) I_set I_top f"
-    sorry \<comment> \<open>Standard-to-custom topology bridge for subspace of I\<times>I to I.
-       Uses: II_topology = subspace of R^2 topology on I\<times>I,
-       I_top = subspace of R topology on I. continuous_on gives openness of preimages.\<close>
+  proof -
+    fix S :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real"
+    assume hSsub: "S \<subseteq> I_set \<times> I_set" and hcont: "continuous_on S f"
+        and hrange: "\<forall>x\<in>S. f x \<in> I_set"
+    show "top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S) I_set I_top f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> S" thus "f x \<in> I_set" using hrange by (by100 blast)
+    next
+      fix V assume hV: "V \<in> I_top"
+      \<comment> \<open>V = I \<inter> W for some open W in R.\<close>
+      obtain W where hW: "open W" and hV_eq: "V = I_set \<inter> W"
+        using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                          top1_open_sets_def by auto
+      \<comment> \<open>{x \<in> S. f x \<in> V} = {x \<in> S. f x \<in> W} (since f maps into I_set).\<close>
+      have hpreV: "{x \<in> S. f x \<in> V} = {x \<in> S. f x \<in> W}"
+        using hrange hV_eq by (by100 blast)
+      \<comment> \<open>By continuous_on_open_invariant, \<exists> open U with U \<inter> S = f^{-1}(W) \<inter> S.\<close>
+      obtain U where hU: "open U" and hfW: "U \<inter> S = f -` W \<inter> S"
+        using hcont hW unfolding continuous_on_open_invariant by blast
+      have hpreW: "{x \<in> S. f x \<in> W} = U \<inter> S"
+        using hfW by (by100 blast)
+      \<comment> \<open>U is open in R^2, hence in product_topology_on top1_open_sets.\<close>
+      have "U \<in> (top1_open_sets :: (real \<times> real) set set)"
+        using hU unfolding top1_open_sets_def by simp
+      hence "U \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        using product_topology_on_open_sets_real2 by (by100 metis)
+      \<comment> \<open>(I\<times>I) \<inter> U \<in> II_topology.\<close>
+      have "II_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+          (I_set \<times> I_set)" unfolding II_topology_def by (rule II_topology_eq_subspace)
+      hence "(I_set \<times> I_set) \<inter> U \<in> II_topology"
+        using \<open>U \<in> product_topology_on _ _\<close>
+        unfolding subspace_topology_def by (by100 blast)
+      \<comment> \<open>S \<inter> ((I\<times>I) \<inter> U) = S \<inter> U = {x \<in> S. f x \<in> W} is in subspace of II on S.\<close>
+      have "S \<inter> ((I_set \<times> I_set) \<inter> U) \<in> subspace_topology (I_set \<times> I_set) II_topology S"
+        unfolding subspace_topology_def using \<open>(I_set \<times> I_set) \<inter> U \<in> II_topology\<close>
+        by (by100 blast)
+      moreover have "S \<inter> ((I_set \<times> I_set) \<inter> U) = U \<inter> S" using hSsub by (by100 blast)
+      ultimately have "U \<inter> S \<in> subspace_topology (I_set \<times> I_set) II_topology S" by simp
+      thus "{x \<in> S. f x \<in> V} \<in> subspace_topology (I_set \<times> I_set) II_topology S"
+        using hpreV hpreW by simp
+    qed
+  qed
   \<comment> \<open>Similarly for maps into I\<times>I:\<close>
   have bridge_subspace_cont_II:
     "\<And>S f. S \<subseteq> I_set \<times> I_set \<Longrightarrow> continuous_on S f \<Longrightarrow> (\<forall>x\<in>S. f x \<in> I_set \<times> I_set) \<Longrightarrow>
