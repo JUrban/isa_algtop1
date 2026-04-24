@@ -2530,6 +2530,20 @@ proof -
   \<comment> \<open>Step 2: The 3-strip homotopy G gives:
      const_{x0} * f * const_{x0} \<simeq> \<alpha> * const_c * rev(\<alpha>) as loops at x0.
      This is a path homotopy (fixes endpoints x0).\<close>
+  \<comment> \<open>Bridge lemma: continuous_on on a subset of I\<times>I with range in I gives top1_continuous_map_on
+     from the subset (with subspace of II_topology) to I_set (with I_top).\<close>
+  have bridge_subspace_cont:
+    "\<And>S f. S \<subseteq> I_set \<times> I_set \<Longrightarrow> continuous_on S f \<Longrightarrow> (\<forall>x\<in>S. f x \<in> I_set) \<Longrightarrow>
+       top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S) I_set I_top f"
+    sorry \<comment> \<open>Standard-to-custom topology bridge for subspace of I\<times>I to I.
+       Uses: II_topology = subspace of R^2 topology on I\<times>I,
+       I_top = subspace of R topology on I. continuous_on gives openness of preimages.\<close>
+  \<comment> \<open>Similarly for maps into I\<times>I:\<close>
+  have bridge_subspace_cont_II:
+    "\<And>S f. S \<subseteq> I_set \<times> I_set \<Longrightarrow> continuous_on S f \<Longrightarrow> (\<forall>x\<in>S. f x \<in> I_set \<times> I_set) \<Longrightarrow>
+       top1_continuous_map_on S (subspace_topology (I_set \<times> I_set) II_topology S)
+         (I_set \<times> I_set) II_topology f"
+    sorry \<comment> \<open>Same bridge but target is I\<times>I with II_topology.\<close>
   \<comment> \<open>The 3-strip homotopy gives const*f*const \<simeq> \<alpha>*const_c*rev(\<beta>) (not rev(\<alpha>)!)
      because the right boundary of H is \<beta>, not \<alpha>.\<close>
   have hstrip_homotopy:
@@ -2644,7 +2658,10 @@ proof -
           \<comment> \<open>Bridge: continuous_on on L (closed in R^2) + range in I \<Rightarrow> top1_continuous_map_on.
              L = subspace of I\<times>I. The subspace topology on L from II_topology equals
              the standard subspace topology on L from R^2 topology restricted to I\<times>I.\<close>
-          show ?thesis sorry \<comment> \<open>Standard-to-custom topology bridge for subspace.\<close>
+          have hL_sub': "?L \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+          show ?thesis
+            by (rule bridge_subspace_cont[OF hL_sub'
+                continuous_on_subset[OF h\<mu>_std subset_UNIV] h\<mu>_range])
         qed
         \<comment> \<open>On L, G = \<alpha> \<circ> \<mu>.\<close>
         have hG_eq: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
@@ -2794,7 +2811,10 @@ proof -
               ultimately show "(\<lambda>(s,t). (4*s-2, t)) st \<in> I_set \<times> I_set"
                 unfolding hst top1_unit_interval_def using hst by simp
             qed
-            show ?thesis sorry \<comment> \<open>Standard-to-custom bridge.\<close>
+            have hM_sub': "?M \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+            show ?thesis
+              by (rule bridge_subspace_cont_II[OF hM_sub'
+                  continuous_on_subset[OF h\<phi>_std subset_UNIV] h\<phi>_range])
           qed
           have hHcont': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
             using hHcont unfolding II_topology_def by simp
@@ -2863,7 +2883,10 @@ proof -
               ultimately show "(\<lambda>(s,t). t*(4-4*s)) st \<in> I_set"
                 unfolding hst top1_unit_interval_def by simp
             qed
-            show ?thesis sorry \<comment> \<open>Standard-to-custom bridge.\<close>
+            have hR'_sub': "?R' \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+            show ?thesis
+              by (rule bridge_subspace_cont[OF hR'_sub'
+                  continuous_on_subset[OF h\<nu>_std subset_UNIV] h\<nu>_range])
           qed
           have hG_R'_eq: "\<forall>st\<in>?R'. G st = (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
           proof
