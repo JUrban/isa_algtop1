@@ -2596,7 +2596,66 @@ proof -
       have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) X TX G"
         sorry \<comment> \<open>Further split R into M and R'. Paste H and \<beta> pieces.\<close>
       \<comment> \<open>G maps I\<times>I into X.\<close>
-      have hG_range: "\<forall>x\<in>I_set \<times> I_set. G x \<in> X" sorry
+      have hG_range: "\<forall>x\<in>I_set \<times> I_set. G x \<in> X"
+      proof
+        fix st assume hst: "st \<in> I_set \<times> I_set"
+        obtain s t where hst_eq: "st = (s, t)" by (cases st)
+        have hs: "s \<in> I_set" and ht: "t \<in> I_set" using hst hst_eq by auto
+        have hs01: "0 \<le> s" "s \<le> 1" and ht01: "0 \<le> t" "t \<le> 1"
+          using hs ht unfolding top1_unit_interval_def by auto
+        show "G st \<in> X"
+        proof (cases "s \<le> 1/2")
+          case True
+          hence "G st = ?\<alpha> (t * (2*s))" unfolding G_def hst_eq by simp
+          moreover have "t * (2*s) \<ge> 0" using ht01 hs01 by simp
+          moreover have "t * (2*s) \<le> 1" using ht01(2) True hs01(1) by (simp add: mult_le_one)
+          moreover have "?\<alpha> (t*(2*s)) \<in> X"
+          proof -
+            have "(t*(2*s)) \<in> I_set" using \<open>t*(2*s) \<ge> 0\<close> \<open>t*(2*s) \<le> 1\<close>
+              unfolding top1_unit_interval_def by simp
+            thus ?thesis using h\<alpha>_path unfolding top1_is_path_on_def top1_continuous_map_on_def
+              by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        next
+          case False hence hs_gt: "s > 1/2" by simp
+          show ?thesis
+          proof (cases "s \<le> 3/4")
+            case True
+            hence "G st = H (4*s - 2, t)" unfolding G_def hst_eq using hs_gt by simp
+            moreover have "(4*s-2, t) \<in> I_set \<times> I_set"
+            proof -
+              have "4*s - 2 \<ge> 0" using hs_gt by simp
+              moreover have "4*s - 2 \<le> 1" using True by simp
+              ultimately show ?thesis using ht unfolding top1_unit_interval_def by simp
+            qed
+            moreover have "H (4*s-2, t) \<in> X"
+              using hHcont \<open>(4*s-2,t) \<in> I_set \<times> I_set\<close>
+              unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show ?thesis by simp
+          next
+            case False hence hs_gt2: "s > 3/4" by simp
+            hence "G st = ?\<beta> (t * (4 - 4*s))" unfolding G_def hst_eq using hs_gt by simp
+            moreover have "t * (4 - 4*s) \<ge> 0" using ht01 hs01 by simp
+            moreover have "t * (4 - 4*s) \<le> 1"
+            proof -
+              have "4 - 4*s \<le> 1" using hs_gt2 by simp
+              moreover have "4 - 4*s \<ge> 0" using hs01(2) by simp
+              ultimately have "t * (4 - 4*s) \<le> 1 * 1"
+                using ht01 by (intro mult_mono) simp_all
+              thus ?thesis by simp
+            qed
+            moreover have "?\<beta> (t*(4-4*s)) \<in> X"
+            proof -
+              have "(t*(4-4*s)) \<in> I_set" using \<open>t*(4-4*s) \<ge> 0\<close> \<open>t*(4-4*s) \<le> 1\<close>
+                unfolding top1_unit_interval_def by simp
+              thus ?thesis using h\<beta>_path unfolding top1_is_path_on_def top1_continuous_map_on_def
+                by (by100 blast)
+            qed
+            ultimately show ?thesis by simp
+          qed
+        qed
+      qed
       have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
         unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
       show ?thesis by (rule pasting_lemma_two_closed[OF
