@@ -5877,7 +5877,20 @@ proof -
   \<comment> \<open>Step 4: a, b in same component of S^2-f(A) \<Rightarrow> h(a) in same component as \<infinity>
      (unbounded component) of R^2-(h\<circ>f)(A). Choose p far outside ball(0,M).\<close>
   define p :: "real \<times> real" where "p = (2*M + 1, 0)"
-  have hp_far: "fst p ^ 2 + snd p ^ 2 > M ^ 2" unfolding p_def sorry
+  have hp_far: "fst p ^ 2 + snd p ^ 2 > M ^ 2"
+  proof -
+    have "fst p = 2*M + 1" and "snd p = 0" unfolding p_def by auto
+    hence "fst p ^ 2 + snd p ^ 2 = (2*M+1)^2"
+      by (simp add: power2_eq_square)
+    also have "... = 4*M^2 + 4*M + 1" by (simp add: power2_eq_square algebra_simps)
+    also have "... > M^2"
+    proof -
+      have "3*M^2 \<ge> 0" using hM by simp
+      moreover have "4*M > 0" using hM by simp
+      ultimately show ?thesis by (by100 linarith)
+    qed
+    finally show ?thesis .
+  qed
   have hp_not_in_gA: "p \<notin> (h \<circ> f) ` A"
   proof
     assume "p \<in> (h \<circ> f) ` A"
