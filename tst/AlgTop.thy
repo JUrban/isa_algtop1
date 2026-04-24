@@ -8072,9 +8072,121 @@ proof (rule ccontr)
           top1_path_homotopic_on ?X ?TX x0a x0a f (top1_constant_path x0a)"
       proof (intro ballI allI impI)
         fix x1 fa assume hx1: "x1 \<in> ?X" and hfa: "top1_is_loop_on ?X ?TX x1 fa"
-        \<comment> \<open>By Theorem 59.1, fa decomposes into product of loops in U or V.
-           Each is nulhomotopic by hU_nul or hV_nul. Product of nulhomotopic = nulhomotopic.\<close>
-        show "top1_path_homotopic_on ?X ?TX x1 x1 fa (top1_constant_path x1)" sorry
+        \<comment> \<open>If x1 = x0, use Theorem 59.1 + hU_nul + hV_nul + foldr directly.
+           If x1 \<noteq> x0, conjugate by a path x0 \<rightarrow> x1 to reduce to x0 case.\<close>
+        have hTX_weak: "is_topology_on ?X ?TX"
+          using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>Since X is path-connected, connect x0 to x1.\<close>
+        have hx0X: "x0 \<in> ?X"
+        proof -
+          have "x0 \<in> top1_S2 - C" using hx0 hUV_eq by (by100 blast)
+          moreover have "{a,b} \<subseteq> C" using hab hC_decomp by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        obtain \<gamma> where h\<gamma>: "top1_is_path_on ?X ?TX x0 x1 \<gamma>"
+          using hX_pc hx0X hx1 unfolding top1_path_connected_on_def by (by100 blast)
+        \<comment> \<open>Conjugate: \<gamma> * fa * rev(\<gamma>) is a loop at x0.\<close>
+        have hrev\<gamma>: "top1_is_path_on ?X ?TX x1 x0 (top1_path_reverse \<gamma>)"
+          by (rule top1_path_reverse_is_path[OF h\<gamma>])
+        have hfa_path: "top1_is_path_on ?X ?TX x1 x1 fa"
+          using hfa unfolding top1_is_loop_on_def by (by100 blast)
+        have hfa_rev\<gamma>: "top1_is_path_on ?X ?TX x1 x0 (top1_path_product fa (top1_path_reverse \<gamma>))"
+          by (rule top1_path_product_is_path[OF hTX_weak hfa_path hrev\<gamma>])
+        let ?conj = "top1_path_product \<gamma> (top1_path_product fa (top1_path_reverse \<gamma>))"
+        have hconj_path: "top1_is_path_on ?X ?TX x0 x0 ?conj"
+          by (rule top1_path_product_is_path[OF hTX_weak h\<gamma> hfa_rev\<gamma>])
+        have hconj_loop: "top1_is_loop_on ?X ?TX x0 ?conj"
+          unfolding top1_is_loop_on_def using hconj_path by (by100 blast)
+        \<comment> \<open>By Theorem 59.1, ?conj decomposes into loops in U or V at x0.\<close>
+        obtain n gs where hn: "n \<ge> 1" and hgs_len: "length gs = n"
+            and hgs_UV: "\<forall>i<n. top1_is_loop_on ?X ?TX x0 (gs!i)
+                \<and> (gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V)"
+            and hgs_prod: "top1_path_homotopic_on ?X ?TX x0 x0 ?conj
+                (foldr top1_path_product gs (top1_constant_path x0))"
+        proof -
+          have hT59: "\<forall>f. top1_is_loop_on ?X ?TX x0 f \<longrightarrow>
+              (\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
+                (\<forall>i<n. top1_is_loop_on ?X ?TX x0 (gs ! i) \<and>
+                       (gs ! i ` I_set \<subseteq> ?U \<or> gs ! i ` I_set \<subseteq> ?V)) \<and>
+                top1_path_homotopic_on ?X ?TX x0 x0 f
+                  (foldr top1_path_product gs (top1_constant_path x0)))"
+            by (rule Theorem_59_1[OF hTX_strict hU_open hV_open hX_UV hUV_pc hx0])
+          hence "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
+                (\<forall>i<n. top1_is_loop_on ?X ?TX x0 (gs ! i) \<and>
+                       (gs ! i ` I_set \<subseteq> ?U \<or> gs ! i ` I_set \<subseteq> ?V)) \<and>
+                top1_path_homotopic_on ?X ?TX x0 x0 ?conj
+                  (foldr top1_path_product gs (top1_constant_path x0))"
+            using hconj_loop by blast
+          thus ?thesis using that by blast
+        qed
+        \<comment> \<open>Each gi is trivial by hU_nul or hV_nul.\<close>
+        have hgi_nul: "\<forall>i<n. top1_path_homotopic_on ?X ?TX x0 x0 (gs!i) (top1_constant_path x0)"
+        proof (intro allI impI)
+          fix i assume hi: "i < n"
+          have hgi: "top1_is_loop_on ?X ?TX x0 (gs!i) \<and>
+              (gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V)"
+            using hgs_UV hi by blast
+          show "top1_path_homotopic_on ?X ?TX x0 x0 (gs!i) (top1_constant_path x0)"
+            using hgi hU_nul hV_nul by (by100 blast)
+        qed
+        \<comment> \<open>Product of trivial loops is trivial.\<close>
+        have hgi_nul': "\<forall>i < length gs. top1_path_homotopic_on ?X ?TX x0 x0 (gs!i) (top1_constant_path x0)"
+          using hgi_nul hgs_len by simp
+        have hprod_nul: "top1_path_homotopic_on ?X ?TX x0 x0
+            (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
+          by (rule foldr_path_product_nulhomotopic[OF hTX_weak hx0X hgi_nul'])
+        \<comment> \<open>So conj = rev(\<gamma>) * fa * \<gamma> \<simeq> const_{x0}.\<close>
+        have hconj_trivial: "top1_path_homotopic_on ?X ?TX x0 x0 ?conj (top1_constant_path x0)"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX_weak hgs_prod hprod_nul])
+        \<comment> \<open>Unconjugate: fa \<simeq> bc(\<gamma>, bc(rev(\<gamma>), fa)) \<simeq> bc(\<gamma>, const_{x0}) \<simeq> const_{x1}.\<close>
+        \<comment> \<open>?conj = bc(rev(\<gamma>), fa) = \<gamma> * fa * rev(\<gamma>).\<close>
+        \<comment> \<open>Step a: fa \<simeq> bc(\<gamma>, ?conj) by roundtrip.\<close>
+        have hfa_roundtrip: "top1_path_homotopic_on ?X ?TX x1 x1 fa
+            (top1_basepoint_change_on ?X ?TX x0 x1 (top1_path_reverse (top1_path_reverse \<gamma>))
+              (top1_basepoint_change_on ?X ?TX x1 x0 (top1_path_reverse \<gamma>) fa))"
+          by (rule top1_basepoint_change_roundtrip[OF hTX_weak hrev\<gamma> hfa])
+        hence hfa_roundtrip': "top1_path_homotopic_on ?X ?TX x1 x1 fa
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma>
+              (top1_basepoint_change_on ?X ?TX x1 x0 (top1_path_reverse \<gamma>) fa))"
+          unfolding top1_path_reverse_twice .
+        \<comment> \<open>Note: bc(rev(\<gamma>), fa) = ?conj.\<close>
+        have hbc_eq: "top1_basepoint_change_on ?X ?TX x1 x0 (top1_path_reverse \<gamma>) fa = ?conj"
+          unfolding top1_basepoint_change_on_def top1_path_reverse_twice by (rule refl)
+        \<comment> \<open>Step b: bc(\<gamma>, ?conj) \<simeq> bc(\<gamma>, const_{x0}) by congruence + ?conj \<simeq> const.\<close>
+        have hconst_loop: "top1_is_loop_on ?X ?TX x0 (top1_constant_path x0)"
+          by (rule top1_constant_path_is_loop[OF hTX_weak hx0X])
+        have hbc_cong: "top1_path_homotopic_on ?X ?TX x1 x1
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> ?conj)
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> (top1_constant_path x0))"
+          by (rule top1_basepoint_change_congruence[OF hTX_weak h\<gamma> hconj_loop hconst_loop hconj_trivial])
+        \<comment> \<open>Step c: bc(\<gamma>, const_{x0}) = rev(\<gamma>) * const_{x0} * \<gamma> \<simeq> rev(\<gamma>) * \<gamma> \<simeq> const_{x1}.\<close>
+        have hbc_const: "top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> (top1_constant_path x0)
+            = top1_path_product (top1_path_reverse \<gamma>) (top1_path_product (top1_constant_path x0) \<gamma>)"
+          unfolding top1_basepoint_change_on_def by (rule refl)
+        have hconst_\<gamma>: "top1_path_homotopic_on ?X ?TX x0 x1
+            (top1_path_product (top1_constant_path x0) \<gamma>) \<gamma>"
+          by (rule Theorem_51_2_left_identity[OF hTX_weak h\<gamma>])
+        have hrev_const_\<gamma>: "top1_path_homotopic_on ?X ?TX x1 x1
+            (top1_path_product (top1_path_reverse \<gamma>) (top1_path_product (top1_constant_path x0) \<gamma>))
+            (top1_path_product (top1_path_reverse \<gamma>) \<gamma>)"
+          by (rule path_homotopic_product_right[OF hTX_weak hconst_\<gamma> hrev\<gamma>])
+        have hrev_\<gamma>_cancel: "top1_path_homotopic_on ?X ?TX x1 x1
+            (top1_path_product (top1_path_reverse \<gamma>) \<gamma>) (top1_constant_path x1)"
+          by (rule Theorem_51_2_invgerse_right[OF hTX_weak h\<gamma>])
+        have hbc_const_trivial: "top1_path_homotopic_on ?X ?TX x1 x1
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> (top1_constant_path x0))
+            (top1_constant_path x1)"
+          unfolding hbc_const
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX_weak hrev_const_\<gamma> hrev_\<gamma>_cancel])
+        \<comment> \<open>Chain: fa \<simeq> bc(\<gamma>, ?conj) \<simeq> bc(\<gamma>, const) \<simeq> const_{x1}.\<close>
+        have hstepA: "top1_path_homotopic_on ?X ?TX x1 x1 fa
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> ?conj)"
+          using hfa_roundtrip' hbc_eq by simp
+        have hstepB: "top1_path_homotopic_on ?X ?TX x1 x1 fa
+            (top1_basepoint_change_on ?X ?TX x0 x1 \<gamma> (top1_constant_path x0))"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX_weak hstepA hbc_cong])
+        show "top1_path_homotopic_on ?X ?TX x1 x1 fa (top1_constant_path x1)"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX_weak hstepB hbc_const_trivial])
       qed
     qed
   qed
