@@ -6672,6 +6672,54 @@ proof -
       compact_is_topology[OF assms(2)]])
 qed
 
+lemma S2_compact_standard: "compact top1_S2"
+proof -
+  \<comment> \<open>S^2 = image of [0,1]^2 under \<psi>(s,t) = (sin(\<pi>s)cos(2\<pi>t), sin(\<pi>s)sin(2\<pi>t), cos(\<pi>s)).\<close>
+  define \<psi> :: "real \<times> real \<Rightarrow> real \<times> real \<times> real" where
+    "\<psi> = (\<lambda>(s, t). (sin (pi * s) * cos (2 * pi * t),
+                     sin (pi * s) * sin (2 * pi * t),
+                     cos (pi * s)))"
+  have hcont: "continuous_on UNIV \<psi>"
+    unfolding \<psi>_def by (auto intro!: continuous_intros simp: case_prod_beta)
+  have himg: "\<psi> ` (I_set \<times> I_set) = top1_S2"
+    sorry \<comment> \<open>Surjective: for any (x,y,z) with x^2+y^2+z^2=1, choose s=arccos(z)/\<pi> \<in> [0,1],
+       t from atan2. Image \<subseteq> S^2: sin^2+cos^2=1 gives norm 1.\<close>
+  have "compact (I_set \<times> I_set)"
+  proof -
+    have hI_comp: "top1_compact_on I_set I_top"
+    proof -
+      have "compact {0..1::real}" by (rule compact_Icc)
+      have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+        by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+      have "compact I_set" using \<open>compact {0..1::real}\<close> \<open>I_set = _\<close> by simp
+      have "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+        using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+      thus ?thesis unfolding top1_unit_interval_topology_def by simp
+    qed
+    have h1: "top1_compact_on (I_set \<times> I_set) (product_topology_on I_top I_top)"
+      by (rule Theorem_26_7[OF hI_comp hI_comp])
+    have h2: "product_topology_on I_top I_top = II_topology" unfolding II_topology_def by simp
+    have h3: "II_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+        (I_set \<times> I_set)" unfolding II_topology_def by (rule II_topology_eq_subspace)
+    have h4: "product_topology_on (top1_open_sets :: real set set) top1_open_sets
+        = (top1_open_sets :: (real \<times> real) set set)"
+      using product_topology_on_open_sets_real2 by (by100 metis)
+    have "top1_compact_on (I_set \<times> I_set) II_topology"
+      using h1 unfolding h2[symmetric] .
+    hence "top1_compact_on (I_set \<times> I_set) (subspace_topology UNIV
+        (product_topology_on (top1_open_sets :: real set set) top1_open_sets) (I_set \<times> I_set))"
+      using h3 by simp
+    hence "top1_compact_on (I_set \<times> I_set) (subspace_topology UNIV
+        (top1_open_sets :: (real \<times> real) set set) (I_set \<times> I_set))"
+      using h4 by simp
+    thus ?thesis
+      using top1_compact_on_subspace_UNIV_iff_compact[of "I_set \<times> I_set"] by simp
+  qed
+  hence "compact (\<psi> ` (I_set \<times> I_set))"
+    by (rule compact_continuous_image[OF continuous_on_subset[OF hcont subset_UNIV]])
+  thus ?thesis using himg by simp
+qed
+
 lemma S2_locally_path_connected:
   "top1_locally_path_connected_on top1_S2 top1_S2_topology"
   sorry \<comment> \<open>S^2 lpc: for each x \<in> S^2, choose b \<noteq> x, S^2-{b} \<cong> R^2 lpc,
