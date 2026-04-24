@@ -9065,26 +9065,24 @@ proof
      E = ... \<sqcup> U_0 \<sqcup> V_0 \<sqcup> U_1 \<sqcup> V_1 \<sqcup> ... with A-sheets and B-sheets glued alternately.
      Concretely: E = Z \<times> (U \<sqcup> V), identifying (n, A-point in V_n) with (n, A-point in U_n)
      and (n, B-point in U_n) with (n+1, B-point in V_n).\<close>
-  \<comment> \<open>Step 1: Build the covering space E and covering map p: E \<rightarrow> X.\<close>
-  have "\<exists>(E::'a set) TE (p0::'a \<Rightarrow> 'a).
-      top1_covering_map_on E TE X TX p0
-    \<and> (\<exists>e0\<in>E. p0 e0 = a)" sorry
-  \<comment> \<open>Step 2: Lift f = \<alpha>*\<beta> starting at e0 in the covering. The lift of \<alpha> goes from
-     sheet n to the same sheet; the lift of \<beta> shifts from sheet n to sheet n+1.
-     So the lifted path ends at a point in a DIFFERENT sheet than it started.\<close>
-  have "\<exists>(E::'a set) TE (p0::'a \<Rightarrow> 'a) e0 e1.
+  \<comment> \<open>Step 1+2: Build covering space E (type 'a \<times> int) and lift f to get different endpoints.\<close>
+  have "\<exists>(E::('a \<times> int) set) TE (p0::('a \<times> int) \<Rightarrow> 'a) e0 e1.
       top1_covering_map_on E TE X TX p0
     \<and> is_topology_on E TE
     \<and> e0 \<in> E \<and> p0 e0 = a
     \<and> e1 \<in> E \<and> p0 e1 = a
     \<and> e0 \<noteq> e1
     \<and> (\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
-        \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))" sorry
+        \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))"
+    sorry \<comment> \<open>Covering space E = Z \<times> (U \<sqcup> V) / ~. Type: 'a \<times> int.
+       Lift of \<alpha>*\<beta> shifts sheet: e0 in sheet 0, e1 in sheet 1, so e0 \<noteq> e1.\<close>
   \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
      But we showed the lift has different endpoints. Contradiction.\<close>
   \<comment> \<open>From step 2, obtain covering E, map p0, points e0 \<noteq> e1, and lift ftilde.\<close>
-  from this obtain E :: "'a set" and TE :: "'a set set" and p0 :: "'a \<Rightarrow> 'a"
-      and e0 :: 'a and e1 :: 'a and ftilde :: "real \<Rightarrow> 'a" where
+  from this obtain E :: "('a \<times> int) set" and TE :: "('a \<times> int) set set"
+      and p0 :: "('a \<times> int) \<Rightarrow> 'a"
+      and e0 :: "'a \<times> int" and e1 :: "'a \<times> int"
+      and ftilde :: "real \<Rightarrow> ('a \<times> int)" where
       hcov: "top1_covering_map_on E TE X TX p0"
       and hTE: "is_topology_on E TE"
       and he0: "e0 \<in> E" and hp0e0: "p0 e0 = a"
@@ -9831,7 +9829,10 @@ proof -
   let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
   \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
      to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
-  have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))" sorry
+  have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+    \<comment> \<open>Transfer C to S^2 via stereographic inverse. By Theorem 61.3, S^2-C' not connected.
+       Via homeomorphism S^2-{b} \<cong> R^2, components correspond. Hence R^2-C not connected.\<close>
+    sorry
   \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
      By Theorem 63.5 (applied via 63.2 + 63.3), exactly two components.\<close>
   obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
