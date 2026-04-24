@@ -7366,8 +7366,70 @@ proof -
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))"
       by (rule open_subset_locally_path_connected[OF R2_locally_path_connected hR2gA_open]) simp
     \<comment> \<open>In lpc space, components = path components. h(a) and p in same component \<Rightarrow> path exists.\<close>
-    show ?thesis using hsame_comp_R2 hR2gA_lpc that
-      sorry \<comment> \<open>Same component + lpc \<Rightarrow> same path component \<Rightarrow> path exists.\<close>
+    \<comment> \<open>Extract component CC, show it's path-connected (lpc + connected).\<close>
+    obtain CC where hCC: "CC \<in> top1_components_on (UNIV - (h \<circ> f) ` A)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))"
+        and hha_CC: "?ha \<in> CC" and hp_CC: "p \<in> CC"
+      using hsame_comp_R2 by blast
+    have hTR2gA: "is_topology_on (UNIV - (h \<circ> f) ` A)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))"
+      using hR2gA_lpc unfolding top1_locally_path_connected_on_def by (by100 blast)
+    \<comment> \<open>CC is a connected component, hence (in lpc space) = path component.\<close>
+    have hCC_conn: "top1_connected_on CC
+        (subspace_topology (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) CC)"
+      sorry \<comment> \<open>Component is connected.\<close>
+    have hCC_sub: "CC \<subseteq> UNIV - (h \<circ> f) ` A"
+      using hCC unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+    have hCC_ne: "CC \<noteq> {}" using hha_CC by (by100 blast)
+    \<comment> \<open>CC is open (component of lpc space).\<close>
+    have hCC_open: "CC \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+        (UNIV - (h \<circ> f) ` A)"
+    proof -
+      have "?ha \<in> UNIV - (h \<circ> f) ` A" using hha_CC hCC_sub by (by100 blast)
+      have "top1_path_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+          ?ha \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)"
+        by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTR2gA hR2gA_lpc
+              \<open>?ha \<in> UNIV - (h \<circ> f) ` A\<close>])
+      moreover have "top1_path_component_of_on (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+          ?ha = CC"
+        sorry \<comment> \<open>path_component = component in lpc space (Theorem_25_5) = CC.\<close>
+      ultimately show ?thesis by simp
+    qed
+    \<comment> \<open>CC lpc (open subset of lpc space) + connected \<Rightarrow> path-connected.\<close>
+    have hCC_lpc: "top1_locally_path_connected_on CC
+        (subspace_topology (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) CC)"
+      by (rule open_subset_locally_path_connected[OF hR2gA_lpc hCC_open hCC_sub])
+    have hCC_pc: "top1_path_connected_on CC
+        (subspace_topology (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) CC)"
+    proof -
+      have hTCC: "is_topology_on CC (subspace_topology (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) CC)"
+        using hCC_conn unfolding top1_connected_on_def by (by100 blast)
+      show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+            hTCC hCC_conn hCC_lpc hCC_ne])
+    qed
+    \<comment> \<open>Path from ha to p in CC.\<close>
+    obtain \<alpha>0 where h\<alpha>0: "top1_is_path_on CC
+        (subspace_topology (UNIV - (h \<circ> f) ` A)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - (h \<circ> f) ` A)) CC) ?ha p \<alpha>0"
+      using hCC_pc hha_CC hp_CC unfolding top1_path_connected_on_def by (by100 blast)
+    \<comment> \<open>Path in CC is a path in R^2-g(A) (subspace inclusion).\<close>
+    have "top1_is_path_on (UNIV - (h \<circ> f) ` A)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
+        ?ha p \<alpha>0"
+      by (rule path_in_subspace_is_path_in_ambient[OF hTR2gA hCC_sub h\<alpha>0])
+    thus ?thesis using that by blast
   qed
   \<comment> \<open>Step 6b: G(x,t) = g(x) - \<alpha>(t). Homotopy g(\<cdot>)-h(a) to g(\<cdot>)-p in R^2-{0}.\<close>
   \<comment> \<open>Step 6c: H(x,t) = t\<cdot>g(x) - p. Homotopy g(\<cdot>)-p to -p in R^2-{0}.\<close>
