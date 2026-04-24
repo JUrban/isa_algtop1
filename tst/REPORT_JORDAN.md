@@ -1,6 +1,6 @@
 # Jordan Curve Theorem Formalization Progress Report
 
-## Overall: 141 sorries (10.9K lines, proof sketches faithful to Munkres)
+## Overall: 135 sorries (12K+ lines, proof sketches faithful to Munkres)
 
 ### Seven Zero-Sorry Key Lemmas
 - `R2_minus_point_path_connected` — ZERO SORRY (perpendicular detour + collinearity case split)
