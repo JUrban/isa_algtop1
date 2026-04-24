@@ -8925,7 +8925,17 @@ proof (rule ccontr)
         using loop_factors_through_S1[OF hTX_ hg_loop] by (by100 blast)
       \<comment> \<open>Step 2: h_S1(S^1) \<subseteq> U (since g(I) \<subseteq> U and g = h_S1 \<circ> p, p surjective).\<close>
       have hh_S1_U: "h_S1 ` top1_S1 \<subseteq> ?U"
-        sorry \<comment> \<open>h_S1 image = g image \<subseteq> U.\<close>
+      proof
+        fix y assume "y \<in> h_S1 ` top1_S1"
+        then obtain q where hq: "q \<in> top1_S1" "y = h_S1 q" by (by100 blast)
+        \<comment> \<open>q \<in> S^1 = top1_R_to_S1(R). Find t \<in> I with top1_R_to_S1(t) = q.\<close>
+        have "\<exists>t\<in>I_set. top1_R_to_S1 t = q"
+          sorry \<comment> \<open>top1_R_to_S1 surjective on I_set \<rightarrow> S^1.\<close>
+        then obtain t where ht: "t \<in> I_set" "top1_R_to_S1 t = q" by blast
+        have "y = g t" using hg_factor ht hq(2) by simp
+        moreover have "g t \<in> ?U" using hg ht(1) by (by100 blast)
+        ultimately show "y \<in> ?U" by simp
+      qed
       \<comment> \<open>Step 3: h_S1: S^1 \<rightarrow> X is nulhomotopic (by Lemma 61.2, S^1 compact).\<close>
       have hh_S1_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1"
       proof -
