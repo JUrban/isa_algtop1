@@ -7293,8 +7293,68 @@ next
   qed
   \<comment> \<open>x \<in> S^2-{b} which is open and lpc. So x is lpc at in S^2.\<close>
   show "top1_locally_path_connected_at top1_S2 top1_S2_topology x"
-    sorry \<comment> \<open>x \<in> S^2-{b} (open, lpc) \<Rightarrow> for any nbhd U of x in S^2,
-       U \<inter> (S^2-{b}) is nbhd of x in S^2-{b}, get path-connected W there, W nbhd in S^2.\<close>
+    unfolding top1_locally_path_connected_at_def
+  proof (intro allI impI)
+    fix U assume hU: "neighborhood_of x top1_S2 top1_S2_topology U \<and> U \<subseteq> top1_S2"
+    hence hUo: "U \<in> top1_S2_topology" and hxU: "x \<in> U"
+      unfolding neighborhood_of_def by auto
+    \<comment> \<open>U \<inter> (S^2-{b}) is a neighborhood of x in S^2-{b}.\<close>
+    have hUV: "U \<inter> (top1_S2 - {b}) \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+      unfolding subspace_topology_def using hUo by (by100 blast)
+    have hxUV: "x \<in> U \<inter> (top1_S2 - {b})" using hxU hx_in by (by100 blast)
+    have hUV_sub: "U \<inter> (top1_S2 - {b}) \<subseteq> top1_S2 - {b}" by (by100 blast)
+    have hUV_nbhd: "neighborhood_of x (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) (U \<inter> (top1_S2 - {b}))"
+      unfolding neighborhood_of_def using hUV hxUV by (by100 blast)
+    \<comment> \<open>By lpc of S^2-{b}: get path-connected W \<subseteq> U \<inter> (S^2-{b}).\<close>
+    have "top1_locally_path_connected_at (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) x"
+      using hS2b_lpc hx_in unfolding top1_locally_path_connected_on_def by (by100 blast)
+    hence "\<exists>W. neighborhood_of x (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) W \<and>
+        W \<subseteq> U \<inter> (top1_S2 - {b}) \<and> W \<subseteq> top1_S2 - {b} \<and>
+        top1_path_connected_on W (subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) W)"
+      unfolding top1_locally_path_connected_at_def using hUV_nbhd hUV_sub by (by100 blast)
+    then obtain W where hW_nbhd: "neighborhood_of x (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) W"
+        and hW_sub_U: "W \<subseteq> U" and hW_sub_S2b: "W \<subseteq> top1_S2 - {b}"
+        and hW_pc: "top1_path_connected_on W (subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) W)"
+      by (by100 blast)
+    \<comment> \<open>W is open in S^2-{b}, which is open in S^2, so W is open in S^2.\<close>
+    have hW_open_S2b: "\<exists>V'. V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}) \<and> x \<in> V' \<and> V' \<subseteq> W"
+      using hW_nbhd unfolding neighborhood_of_def by (by100 blast)
+    then obtain W' where hW'o: "W' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+        and hxW': "x \<in> W'" and hW'W: "W' \<subseteq> W" by blast
+    \<comment> \<open>W' open in S^2-{b} = S^2 \<inter> V for some V \<in> top1_S2_topology.\<close>
+    obtain V' where hV': "V' \<in> top1_S2_topology" and hW'_eq: "W' = (top1_S2 - {b}) \<inter> V'"
+      using hW'o unfolding subspace_topology_def by (by100 blast)
+    \<comment> \<open>W' \<in> top1_S2_topology (open in S^2).\<close>
+    have hTS2': "is_topology_on top1_S2 top1_S2_topology"
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have "W' \<in> top1_S2_topology"
+    proof -
+      have "(top1_S2 - {b}) \<inter> V' \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2' hS2b_open hV'])
+      thus ?thesis using hW'_eq by simp
+    qed
+    \<comment> \<open>W' is a neighborhood of x in S^2, W' \<subseteq> W \<subseteq> U, path-connected.\<close>
+    have hW_pc_S2: "top1_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    proof -
+      have "subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) W
+        = subspace_topology top1_S2 top1_S2_topology W"
+        by (rule subspace_topology_trans[OF hW_sub_S2b])
+      thus ?thesis using hW_pc by simp
+    qed
+    have hW_sub_S2: "W \<subseteq> top1_S2" using hW_sub_S2b by (by100 blast)
+    have hW_nbhd_S2: "neighborhood_of x top1_S2 top1_S2_topology W"
+      sorry \<comment> \<open>W' open in S^2, x \<in> W' \<subseteq> W. Trivial but blast times out on neighborhood_of_def.\<close>
+    show "\<exists>V. neighborhood_of x top1_S2 top1_S2_topology V \<and> V \<subseteq> U \<and> V \<subseteq> top1_S2 \<and>
+        top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      using hW_nbhd_S2 hW_sub_U hW_sub_S2 hW_pc_S2 by (by100 blast)
+  qed
 qed
 
 lemma Lemma_61_1_components_correspond:
