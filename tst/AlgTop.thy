@@ -8572,8 +8572,81 @@ lemma loop_factors_through_S1:
   shows "\<exists>h. top1_continuous_map_on top1_S1 top1_S1_topology X TX h
            \<and> h (1, 0) = x0
            \<and> (\<forall>s\<in>I_set. f s = h (top1_R_to_S1 s))"
-  sorry \<comment> \<open>Loop f identifies 0\<sim>1, quotient map top1_R_to_S1 identifies 0\<sim>1,
-     so f factors through the quotient S^1 = I/\<partial>I.\<close>
+proof -
+  \<comment> \<open>top1_R_to_S1 restricted to I is a quotient map I \<rightarrow> S^1.
+     (Compact \<rightarrow> Hausdorff continuous surjection is closed map, hence quotient map.)\<close>
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hp_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+  proof -
+    have "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+    hence "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set) top1_S1 top1_S1_topology top1_R_to_S1"
+      by (rule top1_continuous_map_on_restrict_domain_simple) simp
+    thus ?thesis unfolding top1_unit_interval_topology_def .
+  qed
+  have hp_surj: "top1_R_to_S1 ` I_set = top1_S1"
+  proof (rule set_eqI, rule iffI)
+    fix q assume "q \<in> top1_R_to_S1 ` I_set"
+    then obtain t where "t \<in> I_set" "q = top1_R_to_S1 t" by blast
+    thus "q \<in> top1_S1" using hp_cont unfolding top1_continuous_map_on_def by (by100 blast)
+  next
+    fix q assume "q \<in> top1_S1"
+    obtain x y where hq_eq: "q = (x, y)" by (cases q)
+    have hcirc: "x^2 + y^2 = 1" using \<open>q \<in> top1_S1\<close> hq_eq unfolding top1_S1_def by simp
+    obtain t where "0 \<le> t" "t < 2*pi" "x = cos t" "y = sin t"
+      using sincos_total_2pi[OF hcirc] by blast
+    define t' where "t' = t / (2*pi)"
+    have "0 \<le> t'" "t' < 1" unfolding t'_def using \<open>0 \<le> t\<close> \<open>t < 2*pi\<close> pi_gt_zero by auto
+    hence "t' \<in> I_set" unfolding top1_unit_interval_def by simp
+    moreover have "top1_R_to_S1 t' = q"
+      unfolding top1_R_to_S1_def t'_def hq_eq using \<open>x = cos t\<close> \<open>y = sin t\<close> pi_gt_zero by simp
+    ultimately show "q \<in> top1_R_to_S1 ` I_set" by (by100 blast)
+  qed
+  \<comment> \<open>Quotient map property: top1_R_to_S1 is a quotient map I \<rightarrow> S^1.\<close>
+  have hp_quot: "top1_quotient_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+    sorry \<comment> \<open>Compact \<rightarrow> Hausdorff continuous surjection is quotient map.
+       I_set compact (compact_Icc), S^1 Hausdorff (subspace of R^2).\<close>
+  \<comment> \<open>f is constant on fibers: the only non-trivial fiber is {0,1} \<mapsto> (1,0),
+     and f(0) = f(1) = x0.\<close>
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hf_fiber: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> f s = f t"
+  proof (intro ballI impI)
+    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "top1_R_to_S1 s = top1_R_to_S1 t"
+    \<comment> \<open>If s = t, trivial. Otherwise s,t \<in> {0,1} (the only non-trivial fiber).\<close>
+    show "f s = f t"
+    proof (cases "s = t")
+      case True thus ?thesis by simp
+    next
+      case False
+      \<comment> \<open>top1_R_to_S1 injective on (0,1), so s,t \<in> {0,1}.\<close>
+      have "s \<in> {0, 1} \<and> t \<in> {0, 1}"
+        sorry \<comment> \<open>R_to_S1 injective on [0,1) so non-equal preimages must include 0 and 1.\<close>
+      thus ?thesis using hf0 hf1 by auto
+    qed
+  qed
+  have hf_range: "\<forall>s\<in>I_set. f s \<in> X"
+    using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+  \<comment> \<open>Apply Theorem_22_2: quotient universal property.\<close>
+  obtain h where hh_range: "\<forall>y\<in>top1_S1. h y \<in> X"
+      and hh_factor: "\<forall>s\<in>I_set. h (top1_R_to_S1 s) = f s"
+      and hh_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h
+          \<longleftrightarrow> top1_continuous_map_on I_set I_top X TX f"
+    using Theorem_22_2[OF hp_quot hf_range hf_fiber] by blast
+  have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+    using hh_cont_iff hf_cont by simp
+  have hh10: "h (1, 0) = x0"
+  proof -
+    have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    hence "h (top1_R_to_S1 0) = f 0" using hh_factor by blast
+    also have "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+    finally show ?thesis using hf0 by simp
+  qed
+  have hfactor: "\<forall>s\<in>I_set. f s = h (top1_R_to_S1 s)" using hh_factor by simp
+  show ?thesis using hh_cont hh10 hfactor by blast
+qed
 
 theorem Theorem_61_3_JordanSeparation_S2:
   assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
