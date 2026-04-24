@@ -8520,6 +8520,50 @@ proof -
   qed
 qed
 
+text \<open>Helper: paths that agree on I are path-homotopic (identity homotopy).\<close>
+lemma paths_agree_on_I_path_homotopic:
+  assumes hTX: "is_topology_on X TX"
+      and hf: "top1_is_path_on X TX a b f"
+      and heq: "\<forall>s\<in>I_set. f s = g s"
+  shows "top1_path_homotopic_on X TX a b f g"
+proof -
+  have hg_path: "top1_is_path_on X TX a b g"
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top X TX g"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> I_set"
+      thus "g s \<in> X" using heq hf unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+    next
+      fix V assume "V \<in> TX"
+      have "{s \<in> I_set. g s \<in> V} = {s \<in> I_set. f s \<in> V}" using heq by (by100 force)
+      thus "{s \<in> I_set. g s \<in> V} \<in> I_top"
+        using hf \<open>V \<in> TX\<close> unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+    qed
+    have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+    show "g 0 = a" using heq h0 hf unfolding top1_is_path_on_def by simp
+    show "g 1 = b" using heq h1 hf unfolding top1_is_path_on_def by simp
+  qed
+  \<comment> \<open>Identity homotopy F(s,t) = f(s) = g(s). Trivially continuous (constant in t).\<close>
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = f s"
+      and hFl: "\<forall>t\<in>I_set. F (0, t) = a" and hFr: "\<forall>t\<in>I_set. F (1, t) = b"
+    using Lemma_51_1_path_homotopic_refl[OF hf]
+    unfolding top1_path_homotopic_on_def by blast
+  have "\<forall>s\<in>I_set. F (s, 1) = g s" using hF1 heq by simp
+  show ?thesis unfolding top1_path_homotopic_on_def
+    apply (intro conjI)
+    apply (rule hf)
+    apply (rule hg_path)
+    apply (rule exI[of _ F])
+    using hF hF0 \<open>\<forall>s\<in>I_set. F (s, 1) = g s\<close> hFl hFr
+    apply (intro conjI)
+    apply assumption+
+    done
+qed
+
 text \<open>Helper: a loop f: I \<rightarrow> X at x0 factors through S^1 via the standard covering map.
   There exists h: S^1 \<rightarrow> X continuous with h(1,0) = x0 and f = h \<circ> top1_R_to_S1 on I.\<close>
 lemma loop_factors_through_S1:
@@ -9053,7 +9097,13 @@ proof (rule ccontr)
               h10_S1 hstd_loop])
       \<comment> \<open>Step 5: h_S1 \<circ> top1_R_to_S1 = g on I_set.\<close>
       moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1 \<circ> top1_R_to_S1)"
-        sorry \<comment> \<open>g = h_S1 \<circ> p on I_set (by hg_factor), identity homotopy F(s,t)=g(s).\<close>
+      proof -
+        have hg_path_: "top1_is_path_on ?X ?TX x0 x0 g"
+          using hg_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have "\<forall>s\<in>I_set. g s = (h_S1 \<circ> top1_R_to_S1) s"
+          using hg_factor unfolding comp_def by simp
+        thus ?thesis by (rule paths_agree_on_I_path_homotopic[OF hTX_ hg_path_])
+      qed
       ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
         using Lemma_51_1_path_homotopic_trans[OF hTX_] by (by100 blast)
     qed
@@ -9235,9 +9285,11 @@ proof (rule ccontr)
               h10_S1' hstd_loop'])
       moreover have "top1_path_homotopic_on ?X ?TX x0 x0 g (h_S1' \<circ> top1_R_to_S1)"
       proof -
+        have hg_path_': "top1_is_path_on ?X ?TX x0 x0 g"
+          using hg_loop' unfolding top1_is_loop_on_def by (by100 blast)
         have "\<forall>s\<in>I_set. g s = (h_S1' \<circ> top1_R_to_S1) s"
           using hg_factor' unfolding comp_def by simp
-        show ?thesis sorry \<comment> \<open>Equal on I_set → path-homotopic.\<close>
+        thus ?thesis by (rule paths_agree_on_I_path_homotopic[OF hTX_' hg_path_'])
       qed
       ultimately show "top1_path_homotopic_on ?X ?TX x0 x0 g (top1_constant_path x0)"
         using Lemma_51_1_path_homotopic_trans[OF hTX_'] by (by100 blast)
