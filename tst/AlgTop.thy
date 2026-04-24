@@ -6782,6 +6782,463 @@ proof -
   thus ?thesis using himg by simp
 qed
 
+
+
+text \<open>Helper: homeomorphism preserves locally path-connected.\<close>
+lemma homeomorphism_preserves_lpc:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
+      and hlpc: "top1_locally_path_connected_on X TX"
+  shows "top1_locally_path_connected_on Y TY"
+proof -
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hcont: "top1_continuous_map_on X TX Y TY h"
+      and hbij: "bij_betw h X Y"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hinv: "top1_homeomorphism_on Y TY X TX (inv_into X h)"
+    by (rule homeomorphism_inverse[OF hhom])
+  have hinv_cont: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using hinv unfolding top1_homeomorphism_on_def by (by100 blast)
+  show ?thesis unfolding top1_locally_path_connected_on_def
+  proof (intro conjI hTY ballI)
+    fix y assume hy: "y \<in> Y"
+    show "top1_locally_path_connected_at Y TY y"
+      unfolding top1_locally_path_connected_at_def
+    proof (intro allI impI)
+      fix U assume hU: "neighborhood_of y Y TY U \<and> U \<subseteq> Y"
+      hence hUo: "U \<in> TY" and hyU: "y \<in> U" and hUY: "U \<subseteq> Y" unfolding neighborhood_of_def by auto
+      define x where "x = inv_into X h y"
+      have hinj: "inj_on h X" using hbij unfolding bij_betw_def by (by100 blast)
+      have hsurj: "h ` X = Y" using hbij unfolding bij_betw_def by (by100 blast)
+      have "y \<in> h ` X" using hy hsurj by simp
+      hence hx: "x \<in> X" unfolding x_def by (rule inv_into_into)
+      have hhx: "h x = y" unfolding x_def using bij_betw_inv_into_right[OF hbij hy] by simp
+      \<comment> \<open>h^{-1}(U) is open in X.\<close>
+      have hpreU: "{z \<in> X. h z \<in> U} \<in> TX"
+        using hcont hUo unfolding top1_continuous_map_on_def by (by100 blast)
+      have hx_preU: "x \<in> {z \<in> X. h z \<in> U}" using hx hhx hyU by (by100 blast)
+      \<comment> \<open>By X lpc: \<exists> path-connected W with x \<in> W \<subseteq> h^{-1}(U).\<close>
+      have "top1_locally_path_connected_at X TX x"
+        using hlpc hx unfolding top1_locally_path_connected_on_def by (by100 blast)
+      hence "\<exists>W. neighborhood_of x X TX W \<and> W \<subseteq> {z \<in> X. h z \<in> U} \<and> W \<subseteq> X
+           \<and> top1_path_connected_on W (subspace_topology X TX W)"
+        unfolding top1_locally_path_connected_at_def
+        using hpreU hx_preU hx unfolding neighborhood_of_def by (by100 blast)
+      then obtain W where hWo: "W \<in> TX" and hxW: "x \<in> W" and hWsub: "W \<subseteq> {z \<in> X. h z \<in> U}"
+          and hWX: "W \<subseteq> X" and hWpc: "top1_path_connected_on W (subspace_topology X TX W)"
+        unfolding neighborhood_of_def by (by100 blast)
+      \<comment> \<open>h(W) is the desired neighborhood. It's open, contains y, contained in U, path-connected.\<close>
+      define V where "V = h ` W"
+      have hyV: "y \<in> V" unfolding V_def using hxW hhx by (by100 blast)
+      have hVU: "V \<subseteq> U" unfolding V_def using hWsub by (by100 blast)
+      have hVY: "V \<subseteq> Y" unfolding V_def using hWX hbij unfolding bij_betw_def by (by100 blast)
+      \<comment> \<open>V is open in Y (h maps open sets to open sets since it's a homeomorphism).\<close>
+      have hVo: "V \<in> TY"
+      proof -
+        \<comment> \<open>h^{-1} preimage of W = {y \<in> Y. inv_into X h y \<in> W}. This is open because h^{-1} continuous.\<close>
+        have "{y \<in> Y. inv_into X h y \<in> W} \<in> TY"
+          using hinv_cont hWo unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{y \<in> Y. inv_into X h y \<in> W} = h ` W"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> {y \<in> Y. inv_into X h y \<in> W}"
+          hence hyY: "y \<in> Y" and "inv_into X h y \<in> W" by auto
+          hence "h (inv_into X h y) = y" using bij_betw_inv_into_right[OF hbij hyY] by simp
+          hence "y = h (inv_into X h y)" by simp
+          thus "y \<in> h ` W" using \<open>inv_into X h y \<in> W\<close>
+            apply (rule_tac x="inv_into X h y" in image_eqI) by auto
+        next
+          fix y assume "y \<in> h ` W"
+          then obtain w where hw: "w \<in> W" "y = h w" by (by100 blast)
+          have "w \<in> X" using hw(1) hWX by (by100 blast)
+          hence "inv_into X h y = w" unfolding hw(2) using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] by simp
+          moreover have "y \<in> Y" using hw(2) \<open>w \<in> X\<close> hsurj by (by100 blast)
+          ultimately show "y \<in> {y \<in> Y. inv_into X h y \<in> W}" using hw(1) by (by100 blast)
+        qed
+        ultimately show ?thesis unfolding V_def by simp
+      qed
+      \<comment> \<open>V is path-connected (h restricted to W is a homeomorphism W \<rightarrow> V).\<close>
+      have hVpc: "top1_path_connected_on V (subspace_topology Y TY V)"
+      proof -
+        \<comment> \<open>h restricted to W is a homeomorphism W \<rightarrow> V. W pc \<Rightarrow> V pc.\<close>
+        \<comment> \<open>Key: inv_into W h = inv_into X h on V, since W \<subseteq> X and h injective.\<close>
+        have hinv_eq: "\<And>v. v \<in> V \<Longrightarrow> inv_into W h v = inv_into X h v"
+        proof -
+          fix v assume "v \<in> V"
+          then obtain w where hw: "w \<in> W" "h w = v" unfolding V_def by (by100 blast)
+          have "w \<in> X" using hw(1) hWX by (by100 blast)
+          have "inv_into W h v = w"
+            using inv_into_f_f[OF inj_on_subset[OF hinj hWX] hw(1)] hw(2) by simp
+          moreover have "inv_into X h v = w"
+            using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] hw(2) by simp
+          ultimately show "inv_into W h v = inv_into X h v" by simp
+        qed
+        have hh_restrict: "top1_homeomorphism_on W (subspace_topology X TX W) V (subspace_topology Y TY V) h"
+          unfolding top1_homeomorphism_on_def
+        proof (intro conjI)
+          show "is_topology_on W (subspace_topology X TX W)"
+            by (rule subspace_topology_is_topology_on[OF hTX hWX])
+          show "is_topology_on V (subspace_topology Y TY V)"
+            by (rule subspace_topology_is_topology_on[OF hTY hVY])
+          show "bij_betw h W V" unfolding V_def bij_betw_def
+            using inj_on_subset[OF hinj hWX] by (by100 blast)
+          show "top1_continuous_map_on W (subspace_topology X TX W) V (subspace_topology Y TY V) h"
+            unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix w assume "w \<in> W" thus "h w \<in> V" unfolding V_def by (by100 blast)
+          next
+            fix S assume hS: "S \<in> subspace_topology Y TY V"
+            obtain S' where hS': "S' \<in> TY" and hS_eq: "S = V \<inter> S'"
+              using hS unfolding subspace_topology_def by (by100 blast)
+            have "{w \<in> W. h w \<in> S} = W \<inter> {w \<in> X. h w \<in> S'}"
+              unfolding hS_eq V_def using hWX by (by100 blast)
+            moreover have "{w \<in> X. h w \<in> S'} \<in> TX"
+              using hcont hS' unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "{w \<in> W. h w \<in> S} \<in> subspace_topology X TX W"
+              using subspace_topology_memI by simp
+          qed
+          show "top1_continuous_map_on V (subspace_topology Y TY V) W (subspace_topology X TX W) (inv_into W h)"
+            unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix v assume hv: "v \<in> V"
+            then obtain w where "w \<in> W" "v = h w" unfolding V_def by (by100 blast)
+            have "inv_into W h v = w"
+              using inv_into_f_f[OF inj_on_subset[OF hinj hWX] \<open>w \<in> W\<close>] \<open>v = h w\<close> by simp
+            thus "inv_into W h v \<in> W" using \<open>w \<in> W\<close> by simp
+          next
+            fix S assume hS: "S \<in> subspace_topology X TX W"
+            obtain S' where hS': "S' \<in> TX" and hS_eq: "S = W \<inter> S'"
+              using hS unfolding subspace_topology_def by (by100 blast)
+            have "{v \<in> V. inv_into W h v \<in> S} = {v \<in> V. inv_into X h v \<in> S}"
+              using hinv_eq by auto
+            also have "... = V \<inter> {y \<in> Y. inv_into X h y \<in> S'}"
+            proof (rule set_eqI, rule iffI)
+              fix v assume "v \<in> {v \<in> V. inv_into X h v \<in> S}"
+              hence "v \<in> V" and "inv_into X h v \<in> W \<inter> S'" using hS_eq by auto
+              thus "v \<in> V \<inter> {y \<in> Y. inv_into X h y \<in> S'}" using hVY by (by100 blast)
+            next
+              fix v assume "v \<in> V \<inter> {y \<in> Y. inv_into X h y \<in> S'}"
+              hence hv: "v \<in> V" and "inv_into X h v \<in> S'" by auto
+              obtain w where "w \<in> W" "v = h w" using hv unfolding V_def by (by100 blast)
+              have "w \<in> X" using \<open>w \<in> W\<close> hWX by (by100 blast)
+              have "inv_into X h v = w" using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] \<open>v = h w\<close> by simp
+              hence "inv_into X h v \<in> W" using \<open>w \<in> W\<close> by simp
+              thus "v \<in> {v \<in> V. inv_into X h v \<in> S}" using hv \<open>inv_into X h v \<in> S'\<close>
+                hS_eq by (by100 blast)
+            qed
+            finally have "{v \<in> V. inv_into W h v \<in> S} = V \<inter> {y \<in> Y. inv_into X h y \<in> S'}" .
+            moreover have "{y \<in> Y. inv_into X h y \<in> S'} \<in> TY"
+              using hinv_cont hS' unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "{v \<in> V. inv_into W h v \<in> S} \<in> subspace_topology Y TY V"
+              using subspace_topology_memI by simp
+          qed
+        qed
+        show ?thesis by (rule homeomorphism_preserves_path_connected[OF hh_restrict hWpc])
+      qed
+      show "\<exists>V. neighborhood_of y Y TY V \<and> V \<subseteq> U \<and> V \<subseteq> Y
+           \<and> top1_path_connected_on V (subspace_topology Y TY V)"
+        using hVo hyV hVU hVY hVpc unfolding neighborhood_of_def by (by100 blast)
+    qed
+  qed
+qed
+
+
+
+
+lemma R2_open_ball_path_connected:
+  fixes c :: "real \<times> real" and r :: real
+  assumes hr: "r > 0"
+  defines "B \<equiv> {p. (fst p - fst c)^2 + (snd p - snd c)^2 < r^2}"
+  shows "top1_path_connected_on B (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B)"
+proof -
+  have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  qed
+  show ?thesis unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+  show "is_topology_on B (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B)"
+    by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+next
+  fix a b assume ha: "a \<in> B" and hb: "b \<in> B"
+  \<comment> \<open>The straight-line path from a to b stays in B (convexity of ball).\<close>
+  define \<gamma> where "\<gamma> = (\<lambda>t::real. ((1-t) * fst a + t * fst b, (1-t) * snd a + t * snd b))"
+  have h\<gamma>_path: "top1_is_path_on UNIV (product_topology_on top1_open_sets top1_open_sets) a b \<gamma>"
+    unfolding \<gamma>_def by (rule R2_straight_line_path)
+  \<comment> \<open>Show \<gamma>(t) \<in> B for all t \<in> [0,1] by convexity.\<close>
+  have h\<gamma>_in_B: "\<forall>t\<in>I_set. \<gamma> t \<in> B"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have htr: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+    \<comment> \<open>dist(c, \<gamma>(t))^2 = ((1-t)*(fst a - fst c) + t*(fst b - fst c))^2
+         + ((1-t)*(snd a - snd c) + t*(snd b - snd c))^2.\<close>
+    define da1 da2 db1 db2 where "da1 = fst a - fst c" and "da2 = snd a - snd c"
+        and "db1 = fst b - fst c" and "db2 = snd b - snd c"
+    have hda: "da1^2 + da2^2 < r^2" using ha unfolding B_def da1_def da2_def by simp
+    have hdb: "db1^2 + db2^2 < r^2" using hb unfolding B_def db1_def db2_def by simp
+    have hfst_eq: "fst (\<gamma> t) - fst c = (1-t)*da1 + t*db1"
+      unfolding \<gamma>_def da1_def db1_def by (simp add: algebra_simps)
+    have hsnd_eq: "snd (\<gamma> t) - snd c = (1-t)*da2 + t*db2"
+      unfolding \<gamma>_def da2_def db2_def by (simp add: algebra_simps)
+    \<comment> \<open>By convexity of x^2: ((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2.\<close>
+    have hconv_sq: "\<And>u v. ((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2"
+    proof -
+      fix u v :: real
+      have "((1-t)*u + t*v)^2 = (1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2"
+        by (simp add: power2_eq_square algebra_simps)
+      also have "... \<le> (1-t)*u^2 + t*v^2"
+      proof -
+        \<comment> \<open>(1-t)*u^2 + t*v^2 - ((1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2)
+           = (1-t)*t*u^2 - 2*(1-t)*t*u*v + (1-t)*t*v^2 = (1-t)*t*(u-v)^2 \<ge> 0.\<close>
+        have "(1-t)*u^2 + t*v^2 - ((1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2)
+            = (1-t)*t*(u-v)^2"
+          by (simp add: power2_eq_square algebra_simps)
+        moreover have "(1-t)*t*(u-v)^2 \<ge> 0" using htr by (auto intro: mult_nonneg_nonneg)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      finally show "((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2" .
+    qed
+    have "(fst (\<gamma> t) - fst c)^2 + (snd (\<gamma> t) - snd c)^2
+        = ((1-t)*da1 + t*db1)^2 + ((1-t)*da2 + t*db2)^2"
+      using hfst_eq hsnd_eq by simp
+    also have "... \<le> ((1-t)*da1^2 + t*db1^2) + ((1-t)*da2^2 + t*db2^2)"
+      using hconv_sq[of da1 db1] hconv_sq[of da2 db2] by (by100 linarith)
+    also have "... = (1-t)*(da1^2 + da2^2) + t*(db1^2 + db2^2)"
+      by (simp add: algebra_simps)
+    also have "... < (1-t)*r^2 + t*r^2"
+    proof -
+      have "(1-t) \<ge> 0" and "t \<ge> 0" using htr by auto
+      \<comment> \<open>At least one of (1-t), t is > 0 (since t \<in> [0,1]).\<close>
+      have "(1-t)*(da1^2+da2^2) \<le> (1-t)*r^2"
+        using mult_left_mono[OF less_imp_le[OF hda] \<open>(1-t) \<ge> 0\<close>] by (by100 linarith)
+      moreover have "t*(db1^2+db2^2) \<le> t*r^2"
+        using mult_left_mono[OF less_imp_le[OF hdb] \<open>t \<ge> 0\<close>] by (by100 linarith)
+      moreover have "(1-t)*(da1^2+da2^2) < (1-t)*r^2 \<or> t*(db1^2+db2^2) < t*r^2"
+      proof (cases "t = 0")
+        case True thus ?thesis using hda by simp
+      next
+        case False hence "t > 0" using htr by simp
+        hence "t*(db1^2+db2^2) < t*r^2" using hdb by simp
+        thus ?thesis by simp
+      qed
+      ultimately show ?thesis by (by100 linarith)
+    qed
+    also have "... = r^2" by (simp add: algebra_simps)
+    finally show "\<gamma> t \<in> B" unfolding B_def by simp
+  qed
+  \<comment> \<open>Restrict path to B.\<close>
+  have h\<gamma>_cont: "top1_continuous_map_on I_set I_top UNIV
+      (product_topology_on top1_open_sets top1_open_sets) \<gamma>"
+    using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+  have h\<gamma>_img: "\<gamma> ` I_set \<subseteq> B" using h\<gamma>_in_B by (by100 blast)
+  have hTI: "is_topology_on I_set I_top"
+    unfolding top1_unit_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 simp)
+  have h\<gamma>_cont_B: "top1_continuous_map_on I_set I_top B
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) \<gamma>"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume "t \<in> I_set" thus "\<gamma> t \<in> B" using h\<gamma>_in_B by (by100 blast)
+  next
+    fix V :: "(real \<times> real) set"
+    assume hV: "V \<in> subspace_topology UNIV (product_topology_on (top1_open_sets :: real set set) top1_open_sets) B"
+    obtain W where hW: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        and hV_eq: "V = B \<inter> W" using hV unfolding subspace_topology_def by (by100 blast)
+    have "{t \<in> I_set. \<gamma> t \<in> V} = {t \<in> I_set. \<gamma> t \<in> W} \<inter> {t \<in> I_set. \<gamma> t \<in> B}"
+      unfolding hV_eq by (by100 blast)
+    also have "... = {t \<in> I_set. \<gamma> t \<in> W}" using h\<gamma>_in_B by (by100 blast)
+    finally have heq: "{t \<in> I_set. \<gamma> t \<in> V} = {t \<in> I_set. \<gamma> t \<in> W}" .
+    have "{t \<in> I_set. \<gamma> t \<in> W} \<in> I_top"
+      using h\<gamma>_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+    thus "{t \<in> I_set. \<gamma> t \<in> V} \<in> I_top" using heq by simp
+  qed
+  have "\<gamma> 0 = a" unfolding \<gamma>_def by simp
+  moreover have "\<gamma> 1 = b" unfolding \<gamma>_def by simp
+  ultimately have "top1_is_path_on B
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) a b \<gamma>"
+    unfolding top1_is_path_on_def using h\<gamma>_cont_B by (by100 blast)
+  thus "\<exists>f. top1_is_path_on B
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) a b f"
+    by (by100 blast)
+  qed
+qed
+
+lemma R2_locally_path_connected:
+  "top1_locally_path_connected_on (UNIV :: (real \<times> real) set)
+     (product_topology_on top1_open_sets top1_open_sets)"
+proof -
+  let ?R2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) ?R2"
+  proof -
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
+  qed
+  show ?thesis unfolding top1_locally_path_connected_on_def
+  proof (intro conjI hTR2 ballI)
+    fix x :: "real \<times> real" assume "x \<in> UNIV"
+    show "top1_locally_path_connected_at UNIV ?R2 x"
+      unfolding top1_locally_path_connected_at_def
+    proof (intro allI impI)
+      fix U assume hU: "neighborhood_of x UNIV ?R2 U \<and> U \<subseteq> UNIV"
+      hence hUo: "U \<in> ?R2" and hxU: "x \<in> U" unfolding neighborhood_of_def by auto
+      have hUo_std: "open U"
+        using hUo product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+      \<comment> \<open>Get \<epsilon> > 0 with the custom "ball" B(x,\<epsilon>) \<subseteq> U.\<close>
+      define Beps where "Beps = (\<lambda>\<epsilon>. {p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2 < \<epsilon>^2})"
+      \<comment> \<open>Every open set in R^2 contains a custom ball around each point.\<close>
+      have "\<exists>\<epsilon>>0. Beps \<epsilon> \<subseteq> U"
+      proof -
+        \<comment> \<open>open U, x \<in> U \<Rightarrow> \<exists> open rectangle (a,b)\<times>(c,d) with x \<in> rect \<subseteq> U.\<close>
+        obtain a1 b1 a2 b2 where hab: "a1 < fst x" "fst x < b1" "a2 < snd x" "snd x < b2"
+            and hrect_sub: "{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U"
+
+        proof -
+          \<comment> \<open>open U, x \<in> U. By definition of product topology, \<exists> open U1, U2 with x \<in> U1\<times>U2 \<subseteq> U.\<close>
+          obtain U1 U2 where hU1o: "open U1" and hU2o: "open U2"
+              and hxUU: "x \<in> U1 \<times> U2" and hprod_sub: "U1 \<times> U2 \<subseteq> U"
+            using open_prod_elim[OF hUo_std hxU] by blast
+          have hx1: "fst x \<in> U1" and hx2: "snd x \<in> U2" using hxUU by auto
+          obtain e1 where he1: "e1 > 0" and he1_sub: "\<forall>y. dist y (fst x) < e1 \<longrightarrow> y \<in> U1"
+            using open_dist[THEN iffD1, OF hU1o, rule_format, OF hx1] by blast
+          define a1 b1 where "a1 = fst x - e1" and "b1 = fst x + e1"
+          have ha1: "a1 < fst x" and hb1: "fst x < b1" unfolding a1_def b1_def using he1 by auto
+          have hab1: "{a1<..<b1} \<subseteq> U1"
+          proof
+            fix y assume "y \<in> {a1<..<b1}"
+            hence "\<bar>y - fst x\<bar> < e1" unfolding a1_def b1_def by auto
+            hence "dist y (fst x) < e1" unfolding dist_real_def by simp
+            thus "y \<in> U1" using he1_sub by (by100 blast)
+          qed
+          obtain e2 where he2: "e2 > 0" and he2_sub: "\<forall>y. dist y (snd x) < e2 \<longrightarrow> y \<in> U2"
+            using open_dist[THEN iffD1, OF hU2o, rule_format, OF hx2] by blast
+          define a2 b2 where "a2 = snd x - e2" and "b2 = snd x + e2"
+          have ha2: "a2 < snd x" and hb2: "snd x < b2" unfolding a2_def b2_def using he2 by auto
+          have hab2: "{a2<..<b2} \<subseteq> U2"
+          proof
+            fix y assume "y \<in> {a2<..<b2}"
+            hence "\<bar>y - snd x\<bar> < e2" unfolding a2_def b2_def by auto
+            hence "dist y (snd x) < e2" unfolding dist_real_def by simp
+            thus "y \<in> U2" using he2_sub by (by100 blast)
+          qed
+          have "{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U"
+          proof
+            fix p :: "real \<times> real"
+            assume "p \<in> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
+            hence "fst p \<in> {a1<..<b1}" and "snd p \<in> {a2<..<b2}" by auto
+            hence "fst p \<in> U1" and "snd p \<in> U2" using hab1 hab2 by (by100 blast)+
+            hence "p \<in> U1 \<times> U2" by (cases p) auto
+            thus "p \<in> U" using hprod_sub by (by100 blast)
+          qed
+          show ?thesis
+            using that[OF ha1 hb1 ha2 hb2
+              \<open>{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U\<close>]
+            by simp
+        qed
+        define \<epsilon> where "\<epsilon> = min (min (fst x - a1) (b1 - fst x)) (min (snd x - a2) (b2 - snd x))"
+        have h\<epsilon>: "\<epsilon> > 0" unfolding \<epsilon>_def using hab by auto
+        have "Beps \<epsilon> \<subseteq> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
+        proof
+          fix p assume "p \<in> Beps \<epsilon>"
+          hence hdist: "(fst p - fst x)^2 + (snd p - snd x)^2 < \<epsilon>^2" unfolding Beps_def by simp
+          have hfst: "(fst p - fst x)^2 < \<epsilon>^2"
+          proof -
+            have "(snd p - snd x)^2 \<ge> 0" by simp
+            thus ?thesis using hdist by (by100 linarith)
+          qed
+          have hsnd: "(snd p - snd x)^2 < \<epsilon>^2"
+          proof -
+            have "(fst p - fst x)^2 \<ge> 0" by simp
+            thus ?thesis using hdist by (by100 linarith)
+          qed
+          have hfst_abs: "fst x - \<epsilon> < fst p \<and> fst p < fst x + \<epsilon>"
+          proof -
+            have "fst p - fst x < \<epsilon> \<and> fst x - fst p < \<epsilon>"
+            proof (intro conjI)
+              show "fst p - fst x < \<epsilon>"
+              proof (rule ccontr)
+                assume "\<not> fst p - fst x < \<epsilon>"
+                hence "fst p - fst x \<ge> \<epsilon>" by simp
+                hence "(fst p - fst x)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
+                  using mult_mono'[of \<epsilon> "fst p - fst x" \<epsilon> "fst p - fst x"] h\<epsilon> by (by100 linarith)
+                thus False using hfst by (by100 linarith)
+              qed
+              show "fst x - fst p < \<epsilon>"
+              proof (rule ccontr)
+                assume "\<not> fst x - fst p < \<epsilon>"
+                hence "fst x - fst p \<ge> \<epsilon>" by simp
+                hence "(fst x - fst p)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
+                  using mult_mono'[of \<epsilon> "fst x - fst p" \<epsilon> "fst x - fst p"] h\<epsilon> by (by100 linarith)
+                moreover have "(fst x - fst p)^2 = (fst p - fst x)^2"
+                  unfolding power2_eq_square by (simp add: algebra_simps)
+                ultimately show False using hfst by (by100 linarith)
+              qed
+            qed
+            thus ?thesis by (by100 linarith)
+          qed
+          have hsnd_abs: "snd x - \<epsilon> < snd p \<and> snd p < snd x + \<epsilon>"
+          proof -
+            have "snd p - snd x < \<epsilon> \<and> snd x - snd p < \<epsilon>"
+            proof (intro conjI)
+              show "snd p - snd x < \<epsilon>"
+              proof (rule ccontr)
+                assume "\<not> snd p - snd x < \<epsilon>"
+                hence "snd p - snd x \<ge> \<epsilon>" by simp
+                hence "(snd p - snd x)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
+                  using mult_mono'[of \<epsilon> "snd p - snd x" \<epsilon> "snd p - snd x"] h\<epsilon> by (by100 linarith)
+                thus False using hsnd by (by100 linarith)
+              qed
+              show "snd x - snd p < \<epsilon>"
+              proof (rule ccontr)
+                assume "\<not> snd x - snd p < \<epsilon>"
+                hence "snd x - snd p \<ge> \<epsilon>" by simp
+                hence "(snd x - snd p)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
+                  using mult_mono'[of \<epsilon> "snd x - snd p" \<epsilon> "snd x - snd p"] h\<epsilon> by (by100 linarith)
+                moreover have "(snd x - snd p)^2 = (snd p - snd x)^2"
+                  unfolding power2_eq_square by (simp add: algebra_simps)
+                ultimately show False using hsnd by (by100 linarith)
+              qed
+            qed
+            thus ?thesis by (by100 linarith)
+          qed
+          have "a1 < fst p" using hfst_abs unfolding \<epsilon>_def by (by100 linarith)
+          moreover have "fst p < b1" using hfst_abs unfolding \<epsilon>_def by (by100 linarith)
+          moreover have "a2 < snd p" using hsnd_abs unfolding \<epsilon>_def by (by100 linarith)
+          moreover have "snd p < b2" using hsnd_abs unfolding \<epsilon>_def by (by100 linarith)
+          ultimately show "p \<in> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
+            by (by100 blast)
+        qed
+        hence "Beps \<epsilon> \<subseteq> U" using hrect_sub by (by100 blast)
+        thus ?thesis using h\<epsilon> by (by100 blast)
+      qed
+      then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hB_sub: "Beps \<epsilon> \<subseteq> U" by blast
+      \<comment> \<open>Beps \<epsilon> is open in R^2.\<close>
+      have hB_open: "open (Beps \<epsilon>)"
+      proof -
+        have "Beps \<epsilon> = (\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2) -` {..< \<epsilon>^2}"
+          unfolding Beps_def by auto
+        moreover have "continuous_on UNIV (\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2)"
+          by (intro continuous_intros)
+        hence "open ((\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2) -` {..< \<epsilon>^2})"
+          by (simp add: continuous_on_open_vimage[OF open_UNIV] open_lessThan)
+        ultimately show ?thesis by simp
+      qed
+      have hB_R2: "Beps \<epsilon> \<in> ?R2"
+        using hB_open product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+      \<comment> \<open>x \<in> Beps \<epsilon>.\<close>
+      have hx_B: "x \<in> Beps \<epsilon>" unfolding Beps_def using h\<epsilon> by simp
+      \<comment> \<open>Beps \<epsilon> is path-connected.\<close>
+      have hB_pc: "top1_path_connected_on (Beps \<epsilon>)
+          (subspace_topology UNIV ?R2 (Beps \<epsilon>))"
+        unfolding Beps_def by (rule R2_open_ball_path_connected[OF h\<epsilon>])
+      show "\<exists>V. neighborhood_of x UNIV ?R2 V \<and> V \<subseteq> U \<and> V \<subseteq> UNIV
+           \<and> top1_path_connected_on V (subspace_topology UNIV ?R2 V)"
+        apply (rule exI[of _ "Beps \<epsilon>"])
+        unfolding neighborhood_of_def
+        using hB_R2 hx_B hB_sub hB_pc by (by100 blast)
+    qed
+  qed
+qed
+
+
 lemma S2_locally_path_connected:
   "top1_locally_path_connected_on top1_S2 top1_S2_topology"
   unfolding top1_locally_path_connected_on_def
@@ -6809,7 +7266,15 @@ next
   qed
   have hS2b_lpc: "top1_locally_path_connected_on (top1_S2 - {b})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))"
-    sorry \<comment> \<open>S^2-{b} \<cong> R^2 via stereographic. R^2 lpc. Homeomorphism preserves lpc.\<close>
+  proof -
+    obtain hh where hh: "top1_homeomorphism_on (top1_S2 - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+        (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) hh"
+      using S2_minus_point_homeo_R2[OF hb_S2] by blast
+    show ?thesis
+      by (rule homeomorphism_preserves_lpc[OF homeomorphism_inverse[OF hh] R2_locally_path_connected])
+  qed
   \<comment> \<open>x \<in> S^2-{b} which is open and lpc. So x is lpc at in S^2.\<close>
   show "top1_locally_path_connected_at top1_S2 top1_S2_topology x"
     sorry \<comment> \<open>x \<in> S^2-{b} open lpc subset \<Rightarrow> x is lpc at in S^2.\<close>
@@ -7145,303 +7610,6 @@ proof -
        h(b) = \<infinity> and U is open around b.\<close>
     show "\<forall>M. \<exists>x\<in>U - {b}. fst (h x) ^ 2 + snd (h x) ^ 2 > M"
       sorry \<comment> \<open>U unbounded: h maps neighborhood of b to far-from-origin points.\<close>
-  qed
-qed
-
-
-
-lemma R2_open_ball_path_connected:
-  fixes c :: "real \<times> real" and r :: real
-  assumes hr: "r > 0"
-  defines "B \<equiv> {p. (fst p - fst c)^2 + (snd p - snd c)^2 < r^2}"
-  shows "top1_path_connected_on B (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B)"
-proof -
-  have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
-  proof -
-    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
-    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
-  qed
-  show ?thesis unfolding top1_path_connected_on_def
-  proof (intro conjI ballI)
-  show "is_topology_on B (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B)"
-    by (rule subspace_topology_is_topology_on[OF hTR2]) simp
-next
-  fix a b assume ha: "a \<in> B" and hb: "b \<in> B"
-  \<comment> \<open>The straight-line path from a to b stays in B (convexity of ball).\<close>
-  define \<gamma> where "\<gamma> = (\<lambda>t::real. ((1-t) * fst a + t * fst b, (1-t) * snd a + t * snd b))"
-  have h\<gamma>_path: "top1_is_path_on UNIV (product_topology_on top1_open_sets top1_open_sets) a b \<gamma>"
-    unfolding \<gamma>_def by (rule R2_straight_line_path)
-  \<comment> \<open>Show \<gamma>(t) \<in> B for all t \<in> [0,1] by convexity.\<close>
-  have h\<gamma>_in_B: "\<forall>t\<in>I_set. \<gamma> t \<in> B"
-  proof
-    fix t assume ht: "t \<in> I_set"
-    have htr: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
-    \<comment> \<open>dist(c, \<gamma>(t))^2 = ((1-t)*(fst a - fst c) + t*(fst b - fst c))^2
-         + ((1-t)*(snd a - snd c) + t*(snd b - snd c))^2.\<close>
-    define da1 da2 db1 db2 where "da1 = fst a - fst c" and "da2 = snd a - snd c"
-        and "db1 = fst b - fst c" and "db2 = snd b - snd c"
-    have hda: "da1^2 + da2^2 < r^2" using ha unfolding B_def da1_def da2_def by simp
-    have hdb: "db1^2 + db2^2 < r^2" using hb unfolding B_def db1_def db2_def by simp
-    have hfst_eq: "fst (\<gamma> t) - fst c = (1-t)*da1 + t*db1"
-      unfolding \<gamma>_def da1_def db1_def by (simp add: algebra_simps)
-    have hsnd_eq: "snd (\<gamma> t) - snd c = (1-t)*da2 + t*db2"
-      unfolding \<gamma>_def da2_def db2_def by (simp add: algebra_simps)
-    \<comment> \<open>By convexity of x^2: ((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2.\<close>
-    have hconv_sq: "\<And>u v. ((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2"
-    proof -
-      fix u v :: real
-      have "((1-t)*u + t*v)^2 = (1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2"
-        by (simp add: power2_eq_square algebra_simps)
-      also have "... \<le> (1-t)*u^2 + t*v^2"
-      proof -
-        \<comment> \<open>(1-t)*u^2 + t*v^2 - ((1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2)
-           = (1-t)*t*u^2 - 2*(1-t)*t*u*v + (1-t)*t*v^2 = (1-t)*t*(u-v)^2 \<ge> 0.\<close>
-        have "(1-t)*u^2 + t*v^2 - ((1-t)^2*u^2 + 2*(1-t)*t*u*v + t^2*v^2)
-            = (1-t)*t*(u-v)^2"
-          by (simp add: power2_eq_square algebra_simps)
-        moreover have "(1-t)*t*(u-v)^2 \<ge> 0" using htr by (auto intro: mult_nonneg_nonneg)
-        ultimately show ?thesis by (by100 linarith)
-      qed
-      finally show "((1-t)*u + t*v)^2 \<le> (1-t)*u^2 + t*v^2" .
-    qed
-    have "(fst (\<gamma> t) - fst c)^2 + (snd (\<gamma> t) - snd c)^2
-        = ((1-t)*da1 + t*db1)^2 + ((1-t)*da2 + t*db2)^2"
-      using hfst_eq hsnd_eq by simp
-    also have "... \<le> ((1-t)*da1^2 + t*db1^2) + ((1-t)*da2^2 + t*db2^2)"
-      using hconv_sq[of da1 db1] hconv_sq[of da2 db2] by (by100 linarith)
-    also have "... = (1-t)*(da1^2 + da2^2) + t*(db1^2 + db2^2)"
-      by (simp add: algebra_simps)
-    also have "... < (1-t)*r^2 + t*r^2"
-    proof -
-      have "(1-t) \<ge> 0" and "t \<ge> 0" using htr by auto
-      \<comment> \<open>At least one of (1-t), t is > 0 (since t \<in> [0,1]).\<close>
-      have "(1-t)*(da1^2+da2^2) \<le> (1-t)*r^2"
-        using mult_left_mono[OF less_imp_le[OF hda] \<open>(1-t) \<ge> 0\<close>] by (by100 linarith)
-      moreover have "t*(db1^2+db2^2) \<le> t*r^2"
-        using mult_left_mono[OF less_imp_le[OF hdb] \<open>t \<ge> 0\<close>] by (by100 linarith)
-      moreover have "(1-t)*(da1^2+da2^2) < (1-t)*r^2 \<or> t*(db1^2+db2^2) < t*r^2"
-      proof (cases "t = 0")
-        case True thus ?thesis using hda by simp
-      next
-        case False hence "t > 0" using htr by simp
-        hence "t*(db1^2+db2^2) < t*r^2" using hdb by simp
-        thus ?thesis by simp
-      qed
-      ultimately show ?thesis by (by100 linarith)
-    qed
-    also have "... = r^2" by (simp add: algebra_simps)
-    finally show "\<gamma> t \<in> B" unfolding B_def by simp
-  qed
-  \<comment> \<open>Restrict path to B.\<close>
-  have h\<gamma>_cont: "top1_continuous_map_on I_set I_top UNIV
-      (product_topology_on top1_open_sets top1_open_sets) \<gamma>"
-    using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
-  have h\<gamma>_img: "\<gamma> ` I_set \<subseteq> B" using h\<gamma>_in_B by (by100 blast)
-  have hTI: "is_topology_on I_set I_top"
-    unfolding top1_unit_interval_topology_def
-    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 simp)
-  have h\<gamma>_cont_B: "top1_continuous_map_on I_set I_top B
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) \<gamma>"
-    unfolding top1_continuous_map_on_def
-  proof (intro conjI ballI)
-    fix t assume "t \<in> I_set" thus "\<gamma> t \<in> B" using h\<gamma>_in_B by (by100 blast)
-  next
-    fix V :: "(real \<times> real) set"
-    assume hV: "V \<in> subspace_topology UNIV (product_topology_on (top1_open_sets :: real set set) top1_open_sets) B"
-    obtain W where hW: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-        and hV_eq: "V = B \<inter> W" using hV unfolding subspace_topology_def by (by100 blast)
-    have "{t \<in> I_set. \<gamma> t \<in> V} = {t \<in> I_set. \<gamma> t \<in> W} \<inter> {t \<in> I_set. \<gamma> t \<in> B}"
-      unfolding hV_eq by (by100 blast)
-    also have "... = {t \<in> I_set. \<gamma> t \<in> W}" using h\<gamma>_in_B by (by100 blast)
-    finally have heq: "{t \<in> I_set. \<gamma> t \<in> V} = {t \<in> I_set. \<gamma> t \<in> W}" .
-    have "{t \<in> I_set. \<gamma> t \<in> W} \<in> I_top"
-      using h\<gamma>_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
-    thus "{t \<in> I_set. \<gamma> t \<in> V} \<in> I_top" using heq by simp
-  qed
-  have "\<gamma> 0 = a" unfolding \<gamma>_def by simp
-  moreover have "\<gamma> 1 = b" unfolding \<gamma>_def by simp
-  ultimately have "top1_is_path_on B
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) a b \<gamma>"
-    unfolding top1_is_path_on_def using h\<gamma>_cont_B by (by100 blast)
-  thus "\<exists>f. top1_is_path_on B
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B) a b f"
-    by (by100 blast)
-  qed
-qed
-
-lemma R2_locally_path_connected:
-  "top1_locally_path_connected_on (UNIV :: (real \<times> real) set)
-     (product_topology_on top1_open_sets top1_open_sets)"
-proof -
-  let ?R2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-  have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) ?R2"
-  proof -
-    have hTR: "is_topology_on (UNIV::real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
-    show ?thesis using product_topology_on_is_topology_on[OF hTR hTR] by simp
-  qed
-  show ?thesis unfolding top1_locally_path_connected_on_def
-  proof (intro conjI hTR2 ballI)
-    fix x :: "real \<times> real" assume "x \<in> UNIV"
-    show "top1_locally_path_connected_at UNIV ?R2 x"
-      unfolding top1_locally_path_connected_at_def
-    proof (intro allI impI)
-      fix U assume hU: "neighborhood_of x UNIV ?R2 U \<and> U \<subseteq> UNIV"
-      hence hUo: "U \<in> ?R2" and hxU: "x \<in> U" unfolding neighborhood_of_def by auto
-      have hUo_std: "open U"
-        using hUo product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
-      \<comment> \<open>Get \<epsilon> > 0 with the custom "ball" B(x,\<epsilon>) \<subseteq> U.\<close>
-      define Beps where "Beps = (\<lambda>\<epsilon>. {p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2 < \<epsilon>^2})"
-      \<comment> \<open>Every open set in R^2 contains a custom ball around each point.\<close>
-      have "\<exists>\<epsilon>>0. Beps \<epsilon> \<subseteq> U"
-      proof -
-        \<comment> \<open>open U, x \<in> U \<Rightarrow> \<exists> open rectangle (a,b)\<times>(c,d) with x \<in> rect \<subseteq> U.\<close>
-        obtain a1 b1 a2 b2 where hab: "a1 < fst x" "fst x < b1" "a2 < snd x" "snd x < b2"
-            and hrect_sub: "{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U"
-
-        proof -
-          \<comment> \<open>open U, x \<in> U. By definition of product topology, \<exists> open U1, U2 with x \<in> U1\<times>U2 \<subseteq> U.\<close>
-          obtain U1 U2 where hU1o: "open U1" and hU2o: "open U2"
-              and hxUU: "x \<in> U1 \<times> U2" and hprod_sub: "U1 \<times> U2 \<subseteq> U"
-            using open_prod_elim[OF hUo_std hxU] by blast
-          have hx1: "fst x \<in> U1" and hx2: "snd x \<in> U2" using hxUU by auto
-          obtain e1 where he1: "e1 > 0" and he1_sub: "\<forall>y. dist y (fst x) < e1 \<longrightarrow> y \<in> U1"
-            using open_dist[THEN iffD1, OF hU1o, rule_format, OF hx1] by blast
-          define a1 b1 where "a1 = fst x - e1" and "b1 = fst x + e1"
-          have ha1: "a1 < fst x" and hb1: "fst x < b1" unfolding a1_def b1_def using he1 by auto
-          have hab1: "{a1<..<b1} \<subseteq> U1"
-          proof
-            fix y assume "y \<in> {a1<..<b1}"
-            hence "\<bar>y - fst x\<bar> < e1" unfolding a1_def b1_def by auto
-            hence "dist y (fst x) < e1" unfolding dist_real_def by simp
-            thus "y \<in> U1" using he1_sub by (by100 blast)
-          qed
-          obtain e2 where he2: "e2 > 0" and he2_sub: "\<forall>y. dist y (snd x) < e2 \<longrightarrow> y \<in> U2"
-            using open_dist[THEN iffD1, OF hU2o, rule_format, OF hx2] by blast
-          define a2 b2 where "a2 = snd x - e2" and "b2 = snd x + e2"
-          have ha2: "a2 < snd x" and hb2: "snd x < b2" unfolding a2_def b2_def using he2 by auto
-          have hab2: "{a2<..<b2} \<subseteq> U2"
-          proof
-            fix y assume "y \<in> {a2<..<b2}"
-            hence "\<bar>y - snd x\<bar> < e2" unfolding a2_def b2_def by auto
-            hence "dist y (snd x) < e2" unfolding dist_real_def by simp
-            thus "y \<in> U2" using he2_sub by (by100 blast)
-          qed
-          have "{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U"
-          proof
-            fix p :: "real \<times> real"
-            assume "p \<in> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
-            hence "fst p \<in> {a1<..<b1}" and "snd p \<in> {a2<..<b2}" by auto
-            hence "fst p \<in> U1" and "snd p \<in> U2" using hab1 hab2 by (by100 blast)+
-            hence "p \<in> U1 \<times> U2" by (cases p) auto
-            thus "p \<in> U" using hprod_sub by (by100 blast)
-          qed
-          show ?thesis
-            using that[OF ha1 hb1 ha2 hb2
-              \<open>{p :: real \<times> real. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2} \<subseteq> U\<close>]
-            by simp
-        qed
-        define \<epsilon> where "\<epsilon> = min (min (fst x - a1) (b1 - fst x)) (min (snd x - a2) (b2 - snd x))"
-        have h\<epsilon>: "\<epsilon> > 0" unfolding \<epsilon>_def using hab by auto
-        have "Beps \<epsilon> \<subseteq> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
-        proof
-          fix p assume "p \<in> Beps \<epsilon>"
-          hence hdist: "(fst p - fst x)^2 + (snd p - snd x)^2 < \<epsilon>^2" unfolding Beps_def by simp
-          have hfst: "(fst p - fst x)^2 < \<epsilon>^2"
-          proof -
-            have "(snd p - snd x)^2 \<ge> 0" by simp
-            thus ?thesis using hdist by (by100 linarith)
-          qed
-          have hsnd: "(snd p - snd x)^2 < \<epsilon>^2"
-          proof -
-            have "(fst p - fst x)^2 \<ge> 0" by simp
-            thus ?thesis using hdist by (by100 linarith)
-          qed
-          have hfst_abs: "fst x - \<epsilon> < fst p \<and> fst p < fst x + \<epsilon>"
-          proof -
-            have "fst p - fst x < \<epsilon> \<and> fst x - fst p < \<epsilon>"
-            proof (intro conjI)
-              show "fst p - fst x < \<epsilon>"
-              proof (rule ccontr)
-                assume "\<not> fst p - fst x < \<epsilon>"
-                hence "fst p - fst x \<ge> \<epsilon>" by simp
-                hence "(fst p - fst x)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
-                  using mult_mono'[of \<epsilon> "fst p - fst x" \<epsilon> "fst p - fst x"] h\<epsilon> by (by100 linarith)
-                thus False using hfst by (by100 linarith)
-              qed
-              show "fst x - fst p < \<epsilon>"
-              proof (rule ccontr)
-                assume "\<not> fst x - fst p < \<epsilon>"
-                hence "fst x - fst p \<ge> \<epsilon>" by simp
-                hence "(fst x - fst p)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
-                  using mult_mono'[of \<epsilon> "fst x - fst p" \<epsilon> "fst x - fst p"] h\<epsilon> by (by100 linarith)
-                moreover have "(fst x - fst p)^2 = (fst p - fst x)^2"
-                  unfolding power2_eq_square by (simp add: algebra_simps)
-                ultimately show False using hfst by (by100 linarith)
-              qed
-            qed
-            thus ?thesis by (by100 linarith)
-          qed
-          have hsnd_abs: "snd x - \<epsilon> < snd p \<and> snd p < snd x + \<epsilon>"
-          proof -
-            have "snd p - snd x < \<epsilon> \<and> snd x - snd p < \<epsilon>"
-            proof (intro conjI)
-              show "snd p - snd x < \<epsilon>"
-              proof (rule ccontr)
-                assume "\<not> snd p - snd x < \<epsilon>"
-                hence "snd p - snd x \<ge> \<epsilon>" by simp
-                hence "(snd p - snd x)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
-                  using mult_mono'[of \<epsilon> "snd p - snd x" \<epsilon> "snd p - snd x"] h\<epsilon> by (by100 linarith)
-                thus False using hsnd by (by100 linarith)
-              qed
-              show "snd x - snd p < \<epsilon>"
-              proof (rule ccontr)
-                assume "\<not> snd x - snd p < \<epsilon>"
-                hence "snd x - snd p \<ge> \<epsilon>" by simp
-                hence "(snd x - snd p)^2 \<ge> \<epsilon>^2" unfolding power2_eq_square
-                  using mult_mono'[of \<epsilon> "snd x - snd p" \<epsilon> "snd x - snd p"] h\<epsilon> by (by100 linarith)
-                moreover have "(snd x - snd p)^2 = (snd p - snd x)^2"
-                  unfolding power2_eq_square by (simp add: algebra_simps)
-                ultimately show False using hsnd by (by100 linarith)
-              qed
-            qed
-            thus ?thesis by (by100 linarith)
-          qed
-          have "a1 < fst p" using hfst_abs unfolding \<epsilon>_def by (by100 linarith)
-          moreover have "fst p < b1" using hfst_abs unfolding \<epsilon>_def by (by100 linarith)
-          moreover have "a2 < snd p" using hsnd_abs unfolding \<epsilon>_def by (by100 linarith)
-          moreover have "snd p < b2" using hsnd_abs unfolding \<epsilon>_def by (by100 linarith)
-          ultimately show "p \<in> {p. a1 < fst p \<and> fst p < b1 \<and> a2 < snd p \<and> snd p < b2}"
-            by (by100 blast)
-        qed
-        hence "Beps \<epsilon> \<subseteq> U" using hrect_sub by (by100 blast)
-        thus ?thesis using h\<epsilon> by (by100 blast)
-      qed
-      then obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" and hB_sub: "Beps \<epsilon> \<subseteq> U" by blast
-      \<comment> \<open>Beps \<epsilon> is open in R^2.\<close>
-      have hB_open: "open (Beps \<epsilon>)"
-      proof -
-        have "Beps \<epsilon> = (\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2) -` {..< \<epsilon>^2}"
-          unfolding Beps_def by auto
-        moreover have "continuous_on UNIV (\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2)"
-          by (intro continuous_intros)
-        hence "open ((\<lambda>p :: real \<times> real. (fst p - fst x)^2 + (snd p - snd x)^2) -` {..< \<epsilon>^2})"
-          by (simp add: continuous_on_open_vimage[OF open_UNIV] open_lessThan)
-        ultimately show ?thesis by simp
-      qed
-      have hB_R2: "Beps \<epsilon> \<in> ?R2"
-        using hB_open product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
-      \<comment> \<open>x \<in> Beps \<epsilon>.\<close>
-      have hx_B: "x \<in> Beps \<epsilon>" unfolding Beps_def using h\<epsilon> by simp
-      \<comment> \<open>Beps \<epsilon> is path-connected.\<close>
-      have hB_pc: "top1_path_connected_on (Beps \<epsilon>)
-          (subspace_topology UNIV ?R2 (Beps \<epsilon>))"
-        unfolding Beps_def by (rule R2_open_ball_path_connected[OF h\<epsilon>])
-      show "\<exists>V. neighborhood_of x UNIV ?R2 V \<and> V \<subseteq> U \<and> V \<subseteq> UNIV
-           \<and> top1_path_connected_on V (subspace_topology UNIV ?R2 V)"
-        apply (rule exI[of _ "Beps \<epsilon>"])
-        unfolding neighborhood_of_def
-        using hB_R2 hx_B hB_sub hB_pc by (by100 blast)
-    qed
   qed
 qed
 
@@ -8852,162 +9020,6 @@ proof
     thus ?thesis using himg_eq by simp
   qed
   show False using hS1_2pts_not_conn hS1_2_conn by contradiction
-qed
-
-text \<open>Helper: homeomorphism preserves locally path-connected.\<close>
-lemma homeomorphism_preserves_lpc:
-  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
-      and hlpc: "top1_locally_path_connected_on X TX"
-  shows "top1_locally_path_connected_on Y TY"
-proof -
-  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
-      and hcont: "top1_continuous_map_on X TX Y TY h"
-      and hbij: "bij_betw h X Y"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
-  have hinv: "top1_homeomorphism_on Y TY X TX (inv_into X h)"
-    by (rule homeomorphism_inverse[OF hhom])
-  have hinv_cont: "top1_continuous_map_on Y TY X TX (inv_into X h)"
-    using hinv unfolding top1_homeomorphism_on_def by (by100 blast)
-  show ?thesis unfolding top1_locally_path_connected_on_def
-  proof (intro conjI hTY ballI)
-    fix y assume hy: "y \<in> Y"
-    show "top1_locally_path_connected_at Y TY y"
-      unfolding top1_locally_path_connected_at_def
-    proof (intro allI impI)
-      fix U assume hU: "neighborhood_of y Y TY U \<and> U \<subseteq> Y"
-      hence hUo: "U \<in> TY" and hyU: "y \<in> U" and hUY: "U \<subseteq> Y" unfolding neighborhood_of_def by auto
-      define x where "x = inv_into X h y"
-      have hinj: "inj_on h X" using hbij unfolding bij_betw_def by (by100 blast)
-      have hsurj: "h ` X = Y" using hbij unfolding bij_betw_def by (by100 blast)
-      have "y \<in> h ` X" using hy hsurj by simp
-      hence hx: "x \<in> X" unfolding x_def by (rule inv_into_into)
-      have hhx: "h x = y" unfolding x_def using bij_betw_inv_into_right[OF hbij hy] by simp
-      \<comment> \<open>h^{-1}(U) is open in X.\<close>
-      have hpreU: "{z \<in> X. h z \<in> U} \<in> TX"
-        using hcont hUo unfolding top1_continuous_map_on_def by (by100 blast)
-      have hx_preU: "x \<in> {z \<in> X. h z \<in> U}" using hx hhx hyU by (by100 blast)
-      \<comment> \<open>By X lpc: \<exists> path-connected W with x \<in> W \<subseteq> h^{-1}(U).\<close>
-      have "top1_locally_path_connected_at X TX x"
-        using hlpc hx unfolding top1_locally_path_connected_on_def by (by100 blast)
-      hence "\<exists>W. neighborhood_of x X TX W \<and> W \<subseteq> {z \<in> X. h z \<in> U} \<and> W \<subseteq> X
-           \<and> top1_path_connected_on W (subspace_topology X TX W)"
-        unfolding top1_locally_path_connected_at_def
-        using hpreU hx_preU hx unfolding neighborhood_of_def by (by100 blast)
-      then obtain W where hWo: "W \<in> TX" and hxW: "x \<in> W" and hWsub: "W \<subseteq> {z \<in> X. h z \<in> U}"
-          and hWX: "W \<subseteq> X" and hWpc: "top1_path_connected_on W (subspace_topology X TX W)"
-        unfolding neighborhood_of_def by (by100 blast)
-      \<comment> \<open>h(W) is the desired neighborhood. It's open, contains y, contained in U, path-connected.\<close>
-      define V where "V = h ` W"
-      have hyV: "y \<in> V" unfolding V_def using hxW hhx by (by100 blast)
-      have hVU: "V \<subseteq> U" unfolding V_def using hWsub by (by100 blast)
-      have hVY: "V \<subseteq> Y" unfolding V_def using hWX hbij unfolding bij_betw_def by (by100 blast)
-      \<comment> \<open>V is open in Y (h maps open sets to open sets since it's a homeomorphism).\<close>
-      have hVo: "V \<in> TY"
-      proof -
-        \<comment> \<open>h^{-1} preimage of W = {y \<in> Y. inv_into X h y \<in> W}. This is open because h^{-1} continuous.\<close>
-        have "{y \<in> Y. inv_into X h y \<in> W} \<in> TY"
-          using hinv_cont hWo unfolding top1_continuous_map_on_def by (by100 blast)
-        moreover have "{y \<in> Y. inv_into X h y \<in> W} = h ` W"
-        proof (rule set_eqI, rule iffI)
-          fix y assume "y \<in> {y \<in> Y. inv_into X h y \<in> W}"
-          hence hyY: "y \<in> Y" and "inv_into X h y \<in> W" by auto
-          hence "h (inv_into X h y) = y" using bij_betw_inv_into_right[OF hbij hyY] by simp
-          hence "y = h (inv_into X h y)" by simp
-          thus "y \<in> h ` W" using \<open>inv_into X h y \<in> W\<close>
-            apply (rule_tac x="inv_into X h y" in image_eqI) by auto
-        next
-          fix y assume "y \<in> h ` W"
-          then obtain w where hw: "w \<in> W" "y = h w" by (by100 blast)
-          have "w \<in> X" using hw(1) hWX by (by100 blast)
-          hence "inv_into X h y = w" unfolding hw(2) using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] by simp
-          moreover have "y \<in> Y" using hw(2) \<open>w \<in> X\<close> hsurj by (by100 blast)
-          ultimately show "y \<in> {y \<in> Y. inv_into X h y \<in> W}" using hw(1) by (by100 blast)
-        qed
-        ultimately show ?thesis unfolding V_def by simp
-      qed
-      \<comment> \<open>V is path-connected (h restricted to W is a homeomorphism W \<rightarrow> V).\<close>
-      have hVpc: "top1_path_connected_on V (subspace_topology Y TY V)"
-      proof -
-        \<comment> \<open>h restricted to W is a homeomorphism W \<rightarrow> V. W pc \<Rightarrow> V pc.\<close>
-        \<comment> \<open>Key: inv_into W h = inv_into X h on V, since W \<subseteq> X and h injective.\<close>
-        have hinv_eq: "\<And>v. v \<in> V \<Longrightarrow> inv_into W h v = inv_into X h v"
-        proof -
-          fix v assume "v \<in> V"
-          then obtain w where hw: "w \<in> W" "h w = v" unfolding V_def by (by100 blast)
-          have "w \<in> X" using hw(1) hWX by (by100 blast)
-          have "inv_into W h v = w"
-            using inv_into_f_f[OF inj_on_subset[OF hinj hWX] hw(1)] hw(2) by simp
-          moreover have "inv_into X h v = w"
-            using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] hw(2) by simp
-          ultimately show "inv_into W h v = inv_into X h v" by simp
-        qed
-        have hh_restrict: "top1_homeomorphism_on W (subspace_topology X TX W) V (subspace_topology Y TY V) h"
-          unfolding top1_homeomorphism_on_def
-        proof (intro conjI)
-          show "is_topology_on W (subspace_topology X TX W)"
-            by (rule subspace_topology_is_topology_on[OF hTX hWX])
-          show "is_topology_on V (subspace_topology Y TY V)"
-            by (rule subspace_topology_is_topology_on[OF hTY hVY])
-          show "bij_betw h W V" unfolding V_def bij_betw_def
-            using inj_on_subset[OF hinj hWX] by (by100 blast)
-          show "top1_continuous_map_on W (subspace_topology X TX W) V (subspace_topology Y TY V) h"
-            unfolding top1_continuous_map_on_def
-          proof (intro conjI ballI)
-            fix w assume "w \<in> W" thus "h w \<in> V" unfolding V_def by (by100 blast)
-          next
-            fix S assume hS: "S \<in> subspace_topology Y TY V"
-            obtain S' where hS': "S' \<in> TY" and hS_eq: "S = V \<inter> S'"
-              using hS unfolding subspace_topology_def by (by100 blast)
-            have "{w \<in> W. h w \<in> S} = W \<inter> {w \<in> X. h w \<in> S'}"
-              unfolding hS_eq V_def using hWX by (by100 blast)
-            moreover have "{w \<in> X. h w \<in> S'} \<in> TX"
-              using hcont hS' unfolding top1_continuous_map_on_def by (by100 blast)
-            ultimately show "{w \<in> W. h w \<in> S} \<in> subspace_topology X TX W"
-              using subspace_topology_memI by simp
-          qed
-          show "top1_continuous_map_on V (subspace_topology Y TY V) W (subspace_topology X TX W) (inv_into W h)"
-            unfolding top1_continuous_map_on_def
-          proof (intro conjI ballI)
-            fix v assume hv: "v \<in> V"
-            then obtain w where "w \<in> W" "v = h w" unfolding V_def by (by100 blast)
-            have "inv_into W h v = w"
-              using inv_into_f_f[OF inj_on_subset[OF hinj hWX] \<open>w \<in> W\<close>] \<open>v = h w\<close> by simp
-            thus "inv_into W h v \<in> W" using \<open>w \<in> W\<close> by simp
-          next
-            fix S assume hS: "S \<in> subspace_topology X TX W"
-            obtain S' where hS': "S' \<in> TX" and hS_eq: "S = W \<inter> S'"
-              using hS unfolding subspace_topology_def by (by100 blast)
-            have "{v \<in> V. inv_into W h v \<in> S} = {v \<in> V. inv_into X h v \<in> S}"
-              using hinv_eq by auto
-            also have "... = V \<inter> {y \<in> Y. inv_into X h y \<in> S'}"
-            proof (rule set_eqI, rule iffI)
-              fix v assume "v \<in> {v \<in> V. inv_into X h v \<in> S}"
-              hence "v \<in> V" and "inv_into X h v \<in> W \<inter> S'" using hS_eq by auto
-              thus "v \<in> V \<inter> {y \<in> Y. inv_into X h y \<in> S'}" using hVY by (by100 blast)
-            next
-              fix v assume "v \<in> V \<inter> {y \<in> Y. inv_into X h y \<in> S'}"
-              hence hv: "v \<in> V" and "inv_into X h v \<in> S'" by auto
-              obtain w where "w \<in> W" "v = h w" using hv unfolding V_def by (by100 blast)
-              have "w \<in> X" using \<open>w \<in> W\<close> hWX by (by100 blast)
-              have "inv_into X h v = w" using inv_into_f_f[OF hinj \<open>w \<in> X\<close>] \<open>v = h w\<close> by simp
-              hence "inv_into X h v \<in> W" using \<open>w \<in> W\<close> by simp
-              thus "v \<in> {v \<in> V. inv_into X h v \<in> S}" using hv \<open>inv_into X h v \<in> S'\<close>
-                hS_eq by (by100 blast)
-            qed
-            finally have "{v \<in> V. inv_into W h v \<in> S} = V \<inter> {y \<in> Y. inv_into X h y \<in> S'}" .
-            moreover have "{y \<in> Y. inv_into X h y \<in> S'} \<in> TY"
-              using hinv_cont hS' unfolding top1_continuous_map_on_def by (by100 blast)
-            ultimately show "{v \<in> V. inv_into W h v \<in> S} \<in> subspace_topology Y TY V"
-              using subspace_topology_memI by simp
-          qed
-        qed
-        show ?thesis by (rule homeomorphism_preserves_path_connected[OF hh_restrict hWpc])
-      qed
-      show "\<exists>V. neighborhood_of y Y TY V \<and> V \<subseteq> U \<and> V \<subseteq> Y
-           \<and> top1_path_connected_on V (subspace_topology Y TY V)"
-        using hVo hyV hVU hVY hVpc unfolding neighborhood_of_def by (by100 blast)
-    qed
-  qed
 qed
 
 text \<open>Helper: paths that agree on I are path-homotopic (identity homotopy).\<close>
