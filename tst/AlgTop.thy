@@ -8889,7 +8889,20 @@ proof (rule ccontr)
             product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
               top1_open_sets_is_topology_on_UNIV, simplified]]) simp
       have hstd_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)"
-        sorry \<comment> \<open>Standard loop in S^1.\<close>
+      proof -
+        have hp_cont_R: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+          by (rule top1_open_sets_is_topology_on_UNIV)
+        have hI_sub: "I_set \<subseteq> (UNIV::real set)" by simp
+        have hp_cont_I: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+          using top1_continuous_map_on_restrict_domain_simple[OF hp_cont_R hI_sub]
+          unfolding top1_unit_interval_topology_def by simp
+        have hp0: "top1_R_to_S1 0 = (1::real, 0::real)" unfolding top1_R_to_S1_def by simp
+        have hp1: "top1_R_to_S1 1 = (1::real, 0::real)" unfolding top1_R_to_S1_def by simp
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hp_cont_I hp0 hp1 by (by100 blast)
+      qed
       have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
       have "top1_path_homotopic_on ?X ?TX x0 x0 (h_S1 \<circ> top1_R_to_S1) (top1_constant_path x0)"
         by (rule nulhomotopic_trivializes_loops_general[OF hTS1 hTX_ hh_S1 hh_S1_nul hh_S1_10
@@ -9005,7 +9018,16 @@ proof (rule ccontr)
         by (rule subspace_topology_is_topology_on[OF
             product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
               top1_open_sets_is_topology_on_UNIV, simplified]]) simp
-      have hstd_loop': "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)" sorry
+      have hstd_loop': "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_R_to_S1)"
+      proof -
+        have hp_cont_R': "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        have hp_cont_I': "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+          using top1_continuous_map_on_restrict_domain_simple[OF hp_cont_R']
+          unfolding top1_unit_interval_topology_def by simp
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hp_cont_I' by (simp add: top1_R_to_S1_def)
+      qed
       have h10_S1': "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
       have "top1_path_homotopic_on ?X ?TX x0 x0 (h_S1' \<circ> top1_R_to_S1) (top1_constant_path x0)"
         by (rule nulhomotopic_trivializes_loops_general[OF hTS1' hTX_' hh_S1' hh_S1_nul' hh_S1_10'
