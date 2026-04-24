@@ -6712,7 +6712,39 @@ proof -
     have hsin_s_sq: "sin (pi * s) ^ 2 = x^2 + y^2"
       using sin_squared_eq[of "pi * s"] hcos_s hxyz by (simp add: power2_eq_square algebra_simps)
     show "p \<in> \<psi> ` (I_set \<times> I_set)"
-      sorry \<comment> \<open>Choose t via sincos_total_2pi on (x/sin(\<pi>s), y/sin(\<pi>s)) if sin>0, else t=0.\<close>
+    proof (cases "sin (pi * s) = 0")
+      case True
+      \<comment> \<open>sin(\<pi>s)=0 \<Rightarrow> x^2+y^2=0 \<Rightarrow> x=0, y=0. \<psi>(s,0) = (0,0,cos(\<pi>s)) = (0,0,z) = p.\<close>
+      have "x = 0 \<and> y = 0" using hsin_s_sq True by simp
+      have "\<psi> (s, 0) = p" unfolding \<psi>_def hp_eq using hcos_s \<open>x = 0 \<and> y = 0\<close> True by simp
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      thus ?thesis using \<open>\<psi> (s, 0) = p\<close> hs_I \<open>0 \<in> I_set\<close> by (by100 blast)
+    next
+      case False hence hsin_pos: "sin (pi * s) > 0" using hsin_s by linarith
+      \<comment> \<open>(x/sin(\<pi>s))^2 + (y/sin(\<pi>s))^2 = (x^2+y^2)/sin^2(\<pi>s) = 1.\<close>
+      have hnorm: "(x / sin (pi * s))^2 + (y / sin (pi * s))^2 = 1"
+      proof -
+        have "(x / sin (pi * s))^2 + (y / sin (pi * s))^2
+            = (x^2 + y^2) / (sin (pi * s))^2"
+          by (simp add: power_divide add_divide_distrib)
+        also have "... = (sin (pi * s))^2 / (sin (pi * s))^2" using hsin_s_sq by simp
+        also have "... = 1" using hsin_pos by simp
+        finally show ?thesis .
+      qed
+      obtain t0 where ht0: "0 \<le> t0" "t0 < 2*pi"
+          "x / sin (pi * s) = cos t0" "y / sin (pi * s) = sin t0"
+        using sincos_total_2pi[OF hnorm] by blast
+      define t where "t = t0 / (2 * pi)"
+      have ht_range: "0 \<le> t" "t < 1" unfolding t_def using ht0(1,2) pi_gt_zero by auto
+      hence ht_I: "t \<in> I_set" unfolding top1_unit_interval_def by simp
+      have hcos_t: "cos (2 * pi * t) = x / sin (pi * s)"
+        unfolding t_def using pi_gt_zero ht0(3) by simp
+      have hsin_t: "sin (2 * pi * t) = y / sin (pi * s)"
+        unfolding t_def using pi_gt_zero ht0(4) by simp
+      have "\<psi> (s, t) = p" unfolding \<psi>_def hp_eq
+        using hcos_s hcos_t hsin_t hsin_pos by simp
+      thus ?thesis using hs_I ht_I by (by100 blast)
+    qed
   qed
   have "compact (I_set \<times> I_set)"
   proof -
