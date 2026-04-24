@@ -2603,7 +2603,28 @@ proof -
         \<comment> \<open>On L, G = \<alpha> \<circ> \<mu>.\<close>
         have hG_eq: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
           unfolding G_def comp_def by auto
-        show ?thesis sorry \<comment> \<open>Continuity follows from composition + agreement on L.\<close>
+        \<comment> \<open>Compose: \<alpha> \<circ> \<mu> continuous on L.\<close>
+        have hcomp_cont: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
+            X TX (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s)))"
+          by (rule top1_continuous_map_on_comp[OF h\<mu>_cont h\<alpha>_cont])
+        \<comment> \<open>G agrees with \<alpha> \<circ> \<mu> on L, so G is continuous on L.\<close>
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix st assume hst: "st \<in> ?L"
+          have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st" using hG_eq hst by (by100 blast)
+          moreover have "(?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> X"
+            using hcomp_cont hst unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "G st \<in> X" by simp
+        next
+          fix V assume hV: "V \<in> TX"
+          have "{st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}
+              \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
+            using hcomp_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+          moreover have "{st \<in> ?L. G st \<in> V} = {st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}"
+            using hG_eq by (by100 force)
+          ultimately show "{st \<in> ?L. G st \<in> V}
+              \<in> subspace_topology (I_set \<times> I_set) II_topology ?L" by simp
+        qed
       qed
       \<comment> \<open>G restricted to R is continuous (pasting of H and \<beta> pieces).\<close>
       have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) X TX G"
@@ -2673,10 +2694,144 @@ proof -
           by (rule subspace_topology_is_topology_on[OF hTII_ hR_sub])
         \<comment> \<open>G on M = H \<circ> (\<lambda>(s,t). (4s-2, t)). Continuous.\<close>
         have hG_M: "top1_continuous_map_on ?M (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M) X TX G"
-          sorry
+        proof -
+          \<comment> \<open>On M, G = H \<circ> \<phi> where \<phi>(s,t) = (4s-2, t).\<close>
+          have hM_sub_R: "?M \<subseteq> ?R" by auto
+          have "subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M
+              = subspace_topology (I_set \<times> I_set) II_topology ?M"
+            by (rule subspace_topology_trans[OF hM_sub_R])
+          \<comment> \<open>On M with s > 1/2: G(s,t) = H(4s-2,t).\<close>
+          have hG_M_eq: "\<forall>st\<in>?M. G st = H (4 * fst st - 2, snd st)"
+          proof
+            fix st assume hst: "st \<in> ?M"
+            obtain s t where hst_eq: "st = (s,t)" by (cases st)
+            have hs: "1/2 \<le> s" "s \<le> 3/4" and ht: "0 \<le> t" "t \<le> 1"
+              using hst hst_eq by auto
+            show "G st = H (4 * fst st - 2, snd st)"
+            proof (cases "s > 1/2")
+              case True
+              hence "G st = H (4*s - 2, t)" unfolding G_def hst_eq using hs(2) by simp
+              thus ?thesis using hst_eq by simp
+            next
+              case False hence "s = 1/2" using hs(1) by simp
+              have "4 * fst st - 2 = 0" using hst_eq \<open>s = 1/2\<close> by simp
+              have "snd st = t" using hst_eq by simp
+              have h42: "fst st = 1/2" using hst_eq \<open>s = 1/2\<close> by simp
+              have rhs: "H (4 * fst st - 2, snd st) = H (0, t)"
+                unfolding h42 \<open>snd st = t\<close> by simp
+              have "G st = H (0, t)"
+              proof -
+                have "G st = ?\<alpha> (t * (2 * s))" unfolding G_def hst_eq
+                  using \<open>s = 1/2\<close> by simp
+                also have "... = ?\<alpha> t"
+                proof -
+                  have "2 * s = (1::real)" using \<open>s = 1/2\<close> by simp
+                  thus ?thesis by simp
+                qed
+                finally show ?thesis by simp
+              qed
+              thus ?thesis using rhs by simp
+            qed
+          qed
+          \<comment> \<open>\<phi>(s,t) = (4s-2,t) continuous M \<rightarrow> I\<times>I, then H continuous I\<times>I \<rightarrow> X.\<close>
+          have h\<phi>_cont: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+              (I_set \<times> I_set) II_topology (\<lambda>(s,t). (4*s-2, t))"
+            sorry \<comment> \<open>Affine map (4s-2, t) continuous, maps M to I\<times>I.\<close>
+          have hHcont': "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
+            using hHcont unfolding II_topology_def by simp
+          have hH_comp: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+              X TX (H \<circ> (\<lambda>(s,t). (4*s-2, t)))"
+            by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hHcont'])
+          show ?thesis unfolding \<open>subspace_topology ?R _ ?M = _\<close> top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix st assume hst: "st \<in> ?M"
+            have "G st = H (4 * fst st - 2, snd st)" using hG_M_eq hst by (by100 blast)
+            also have "... = (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st" unfolding comp_def
+              by (cases st) simp
+            finally have "G st = (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st" .
+            moreover have "(H \<circ> (\<lambda>(s, t). (4 * s - 2, t))) st \<in> X"
+              using hH_comp hst unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "G st \<in> X" by simp
+          next
+            fix V assume hV: "V \<in> TX"
+            have "{st \<in> ?M. (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st \<in> V}
+                \<in> subspace_topology (I_set \<times> I_set) II_topology ?M"
+              using hH_comp hV unfolding top1_continuous_map_on_def by (by100 blast)
+            moreover have "{st \<in> ?M. G st \<in> V} = {st \<in> ?M. (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st \<in> V}"
+            proof (rule set_eqI, rule iffI)
+              fix st assume "st \<in> {st \<in> ?M. G st \<in> V}"
+              hence hst: "st \<in> ?M" "G st \<in> V" by auto
+              have "G st = (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st"
+                using hG_M_eq hst(1) unfolding comp_def by (cases st) auto
+              thus "st \<in> {st \<in> ?M. (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st \<in> V}" using hst by simp
+            next
+              fix st assume "st \<in> {st \<in> ?M. (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st \<in> V}"
+              hence hst: "st \<in> ?M" "(H \<circ> (\<lambda>(s,t). (4*s-2, t))) st \<in> V" by auto
+              have "G st = (H \<circ> (\<lambda>(s,t). (4*s-2, t))) st"
+                using hG_M_eq hst(1) unfolding comp_def by (cases st) auto
+              thus "st \<in> {st \<in> ?M. G st \<in> V}" using hst by simp
+            qed
+            ultimately show "{st \<in> ?M. G st \<in> V}
+                \<in> subspace_topology (I_set \<times> I_set) II_topology ?M" by simp
+          qed
+        qed
         \<comment> \<open>G on R' = \<beta> \<circ> (\<lambda>(s,t). t*(4-4s)). Continuous.\<close>
         have hG_R': "top1_continuous_map_on ?R' (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R') X TX G"
-          sorry
+        proof -
+          have hR'_sub_R: "?R' \<subseteq> ?R" by auto
+          have "subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?R'
+              = subspace_topology (I_set \<times> I_set) II_topology ?R'"
+            by (rule subspace_topology_trans[OF hR'_sub_R])
+          have h\<beta>_cont: "top1_continuous_map_on I_set I_top X TX ?\<beta>"
+            using h\<beta>_path unfolding top1_is_path_on_def by (by100 blast)
+          have h\<nu>_cont: "top1_continuous_map_on ?R' (subspace_topology (I_set \<times> I_set) II_topology ?R')
+              I_set I_top (\<lambda>(s,t). t * (4 - 4*s))"
+            sorry \<comment> \<open>Continuous: t*(4-4s) on R'. Multiplication continuous, range in [0,1].\<close>
+          have hG_R'_eq: "\<forall>st\<in>?R'. G st = (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
+          proof
+            fix st assume hst: "st \<in> ?R'"
+            obtain s t where hst_eq: "st = (s,t)" by (cases st)
+            have hs: "3/4 \<le> s" "s \<le> 1" and ht: "0 \<le> t" "t \<le> 1" using hst hst_eq by auto
+            show "G st = (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
+            proof (cases "s > 3/4")
+              case True
+              hence "\<not> s \<le> 1/2" and "\<not> s \<le> 3/4" by simp_all
+              hence "G st = ?\<beta> (t * (4 - 4*s))" unfolding G_def hst_eq by simp
+              thus ?thesis unfolding comp_def hst_eq by simp
+            next
+              case False hence "s = 3/4" using hs(1) by simp
+              \<comment> \<open>At s=3/4: G goes to H(4\<cdot>3/4-2, t) = H(1,t) = \<beta>(t). Target: \<beta>(t\<cdot>1) = \<beta>(t).\<close>
+              have "4 * s - 2 = (1::real)" using \<open>s = 3/4\<close> by simp
+              have "4 - 4 * s = (1::real)" using \<open>s = 3/4\<close> by simp
+              have "G st = H (1, t)" unfolding G_def hst_eq \<open>s = 3/4\<close> by simp
+              moreover have "(?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st = ?\<beta> (t * 1)"
+                unfolding comp_def hst_eq \<open>s = 3/4\<close> using \<open>4 - 4 * s = 1\<close> by simp
+              moreover have "?\<beta> (t * 1) = ?\<beta> t" by simp
+              moreover have "?\<beta> t = H (1, t)" by simp
+              ultimately show ?thesis by simp
+            qed
+          qed
+          have hcomp_cont': "top1_continuous_map_on ?R' (subspace_topology (I_set \<times> I_set) II_topology ?R')
+              X TX (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s)))"
+            by (rule top1_continuous_map_on_comp[OF h\<nu>_cont h\<beta>_cont])
+          show ?thesis unfolding \<open>subspace_topology ?R _ ?R' = _\<close> top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix st assume hst: "st \<in> ?R'"
+            have hGeq: "G st = (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st" using hG_R'_eq hst by (by100 blast)
+            have "(?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> X"
+              using hcomp_cont' hst unfolding top1_continuous_map_on_def by (by100 blast)
+            thus "G st \<in> X" using hGeq by simp
+          next
+            fix V assume hV: "V \<in> TX"
+            have "{st \<in> ?R'. (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}
+                \<in> subspace_topology (I_set \<times> I_set) II_topology ?R'"
+              using hcomp_cont' hV unfolding top1_continuous_map_on_def by (by100 blast)
+            moreover have "{st \<in> ?R'. G st \<in> V} = {st \<in> ?R'. (?\<beta> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}"
+              using hG_R'_eq by (by100 force)
+            ultimately show "{st \<in> ?R'. G st \<in> V}
+                \<in> subspace_topology (I_set \<times> I_set) II_topology ?R'" by simp
+          qed
+        qed
         have hG_R_range: "\<forall>x\<in>?R. G x \<in> X"
         proof
           fix st assume "st \<in> ?R"
