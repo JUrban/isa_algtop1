@@ -4883,7 +4883,18 @@ proof (intro bexI[of _ "(0::real, 0)"])
   proof (intro conjI exI[of _ F])
     show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
         (UNIV :: (real \<times> real) set) ?TR2 F"
-      sorry \<comment> \<open>F is continuous: polynomial in t and f(x).\<close>
+      unfolding top1_continuous_map_on_def product_topology_on_open_sets
+    proof (intro conjI ballI)
+      fix p assume "p \<in> A \<times> I_set" thus "F p \<in> UNIV" by simp
+    next
+      fix V :: "(real \<times> real) set"
+      assume hV: "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+      have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+      \<comment> \<open>Need: {p \<in> A\<times>I. F p \<in> V} \<in> product_topology_on TA I_top.
+         F = (fst\<circ>f \<times> snd\<circ>f) scaled by (1-t). This is continuous jointly.\<close>
+      show "{p \<in> A \<times> I_set. F p \<in> V} \<in> product_topology_on TA I_top"
+        sorry
+    qed
     show "\<forall>x\<in>A. F (x, 0) = f x" unfolding F_def by simp
     show "\<forall>x\<in>A. F (x, 1) = ?c" unfolding F_def by simp
   qed auto
@@ -5047,8 +5058,30 @@ proof (rule ccontr)
   have hX_UV: "?U \<union> ?V = ?X" using hC_decomp hab by blast
   have hUV_eq: "?U \<inter> ?V = top1_S2 - C" using hC_decomp hab by blast
   \<comment> \<open>U, V are open in X.\<close>
-  have hU_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U" sorry
-  have hV_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?V" sorry
+  \<comment> \<open>A1, A2 are arcs (images of [0,1]), hence compact, hence closed in Hausdorff S^2.\<close>
+  have hA1_closed: "closedin_on top1_S2 top1_S2_topology A1" sorry
+  have hA2_closed: "closedin_on top1_S2 top1_S2_topology A2" sorry
+  have hU_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U"
+  proof -
+    have hC_sub: "C \<subseteq> top1_S2" by (rule simple_closed_curve_subset[OF hC])
+    have "top1_S2 - A1 \<in> top1_S2_topology"
+      using closedin_complement_openin[OF hA1_closed] unfolding openin_on_def by simp
+    moreover have "?U = ?X \<inter> (top1_S2 - A1)" using hC_decomp hab by (by100 blast)
+    ultimately have "?U \<in> subspace_topology top1_S2 top1_S2_topology ?X"
+      unfolding subspace_topology_def by (by100 blast)
+    moreover have "?U \<subseteq> ?X" using hab by (by100 blast)
+    ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+  qed
+  have hV_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?V"
+  proof -
+    have "top1_S2 - A2 \<in> top1_S2_topology"
+      using closedin_complement_openin[OF hA2_closed] unfolding openin_on_def by simp
+    moreover have "?V = ?X \<inter> (top1_S2 - A2)" using hC_decomp hab by (by100 blast)
+    ultimately have "?V \<in> subspace_topology top1_S2 top1_S2_topology ?X"
+      unfolding subspace_topology_def by (by100 blast)
+    moreover have "?V \<subseteq> ?X" using hab by (by100 blast)
+    ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+  qed
   \<comment> \<open>U \<inter> V = S^2 - C is path-connected (connected + locally path-connected).\<close>
   have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
       (subspace_topology ?X (subspace_topology top1_S2 top1_S2_topology ?X) (?U \<inter> ?V))" sorry
@@ -8410,6 +8443,12 @@ end
  
  
  
+
+
+
+
+
+
 
 
 
