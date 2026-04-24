@@ -9646,7 +9646,18 @@ proof -
       using hnot unfolding top1_separates_on_def by (by100 blast)
     \<comment> \<open>By the same argument as Theorem 61.3, \<pi>_1(S^2-{a,b}) is trivial.\<close>
     have h_trivial: "top1_simply_connected_on ?X
-        (subspace_topology top1_S2 top1_S2_topology ?X)" sorry
+        (subspace_topology top1_S2 top1_S2_topology ?X)"
+    proof -
+      \<comment> \<open>Same argument as Theorem 61.3, using closed+connected instead of arcs.
+         U = S^2-A1, V = S^2-A2. X = U\<union>V. U\<inter>V = S^2-(A1\<union>A2) connected (assumption).
+         A1 closed \<Rightarrow> U open. A2 closed \<Rightarrow> V open. U\<inter>V lpc \<Rightarrow> path-connected.
+         Loops in U nulhomotopic (factor through S^1 + Lemma 61.2, A1 connected).
+         Loops in V nulhomotopic (same with A2).
+         Theorem 59.1 \<Rightarrow> \<pi>_1(X) trivial.\<close>
+      show ?thesis sorry \<comment> \<open>Identical proof structure as Theorem 61.3 body.
+         All ingredients available: A1,A2 closed (assms 4,5), connected (assms 6,7),
+         |A1\<inter>A2|=2 (assms 8), S^2-(A1\<union>A2) connected (hconn).\<close>
+    qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
         (subspace_topology top1_S2 top1_S2_topology ?X)"
       by (rule S2_minus_two_points_not_simply_connected[OF ha_S2 hb_S2 hab_ne])
