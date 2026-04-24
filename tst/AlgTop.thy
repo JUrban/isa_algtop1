@@ -9108,7 +9108,20 @@ proof (rule ccontr)
           and hg_factor': "\<forall>s\<in>I_set. g s = h_S1' (top1_R_to_S1 s)"
         using loop_factors_through_S1[OF hTX_' hg_loop'] by (by100 blast)
       have hh_S1_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1'"
-        sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1.\<close>
+      proof -
+        have hA2_sub_S2: "A2 \<subseteq> top1_S2" using hC_sub hC_decomp by (by100 blast)
+        have "h_S1' ` top1_S1 \<inter> A2 = {}"
+          sorry \<comment> \<open>h_S1'(S1) = g(I) \<subseteq> V = S^2-A2, hence disjoint from A2.\<close>
+        hence hA2_disj: "A2 \<subseteq> top1_S2 - h_S1' ` top1_S1"
+          using hA2_sub_S2 by (by100 blast)
+        have hsame_S1': "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1' ` top1_S1)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))
+            \<and> a \<in> CC \<and> b \<in> CC"
+          sorry \<comment> \<open>A2 connected, A2 \<subseteq> S^2-h_S1'(S^1), a,b \<in> A2, Theorem_25_1.\<close>
+        show ?thesis
+          by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
+                S1_compact ha_S2_' hb_S2_' hab_ne hh_S1' hsame_S1'])
+      qed
       have hTS1': "is_topology_on top1_S1 top1_S1_topology"
         unfolding top1_S1_topology_def
         by (rule subspace_topology_is_topology_on[OF
