@@ -8879,7 +8879,21 @@ proof (rule ccontr)
         sorry \<comment> \<open>h_S1 image = g image \<subseteq> U.\<close>
       \<comment> \<open>Step 3: h_S1: S^1 \<rightarrow> X is nulhomotopic (by Lemma 61.2, S^1 compact).\<close>
       have hh_S1_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology ?X ?TX h_S1"
-        sorry \<comment> \<open>Lemma_61_2_nulhomotopy_textbook with A = S^1, f = h_S1.\<close>
+      proof -
+        \<comment> \<open>A1 \<subseteq> S^2-h_S1(S^1) (since h_S1(S^1) \<subseteq> U = S^2-A1).\<close>
+        have hA1_sub_S2: "A1 \<subseteq> top1_S2" using hC_sub hC_decomp by (by100 blast)
+        have "h_S1 ` top1_S1 \<inter> A1 = {}" using hh_S1_U by (by100 blast)
+        hence hA1_disj: "A1 \<subseteq> top1_S2 - h_S1 ` top1_S1"
+          using hA1_sub_S2 by (by100 blast)
+        \<comment> \<open>A1 connected, contains a and b, so a,b same component of S^2-h_S1(S^1).\<close>
+        have hsame_S1: "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1 ` top1_S1)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))
+            \<and> a \<in> CC \<and> b \<in> CC"
+          sorry \<comment> \<open>Same argument as hsame_comp: A1 connected + Theorem_25_1.\<close>
+        show ?thesis
+          by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
+                S1_compact ha_S2_ hb_S2_ hab_ne hh_S1 hsame_S1])
+      qed
       \<comment> \<open>Step 4: By nulhomotopic_trivializes_loops_general with g = h_S1,
          f = top1_R_to_S1 restricted to I (standard loop in S^1),
          get h_S1 \<circ> (top1_R_to_S1|_I) path-homotopic to constant.\<close>
