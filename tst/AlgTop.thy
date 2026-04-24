@@ -6711,27 +6711,30 @@ proof -
        Since h(U) is connected and doesn't contain "infinity" (b \<notin> U), it must be bounded.\<close>
     show "\<exists>M. \<forall>x\<in>U. fst (h x) ^ 2 + snd (h x) ^ 2 \<le> M"
     proof -
-      \<comment> \<open>cl(U) \<subseteq> S^2-{b}: since b is in a different component of S^2-C,
-         and components of open sets are open in lpc S^2, cl(U) \<inter> {b} = {}.\<close>
-      have hU_sub: "U \<subseteq> top1_S2 - {b}" using assms(7) hb_notin assms(4) by (by100 blast)
-      \<comment> \<open>cl(U) \<subseteq> S^2-{b}: b \<notin> cl(U) because U is a component, b in different component.\<close>
-      have "closure U \<subseteq> top1_S2"
-        sorry \<comment> \<open>U \<subseteq> S^2, closure of subset of compact = subset of compact.\<close>
-      have "b \<notin> closure U"
-        sorry \<comment> \<open>b in different component of S^2-C, components separated.\<close>
-      hence hclU_sub: "closure U \<subseteq> top1_S2 - {b}" using \<open>closure U \<subseteq> top1_S2\<close> by (by100 blast)
-      \<comment> \<open>h(cl(U)) is compact (continuous image of compact cl(U) in S^2-{b}).\<close>
-      have "compact (closure U)" sorry \<comment> \<open>Closed subset of compact S^2.\<close>
-      hence "compact (h ` (closure U))" sorry \<comment> \<open>Continuous image of compact.\<close>
-      \<comment> \<open>Compact in R^2 \<Rightarrow> bounded.\<close>
-      then obtain M where "\<forall>p \<in> h ` (closure U). fst p ^ 2 + snd p ^ 2 \<le> M"
-        sorry \<comment> \<open>Compact \<Rightarrow> bounded (same argument as hC_bounded).\<close>
-      moreover have "h ` U \<subseteq> h ` (closure U)"
-      proof -
-        have "U \<subseteq> closure U" sorry \<comment> \<open>Standard: every set \<subseteq> its closure.\<close>
-        thus ?thesis by (by100 blast)
-      qed
-      ultimately show ?thesis by (by100 blast)
+      \<comment> \<open>Use closure_on from our custom topology framework.\<close>
+      have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      have hU_sub_S2: "U \<subseteq> top1_S2" using assms(7) by (by100 blast)
+      \<comment> \<open>closure_on of U in S^2 contains U and is closed in S^2.\<close>
+      let ?clU = "closure_on top1_S2 top1_S2_topology U"
+      have hU_sub_clU: "U \<subseteq> ?clU" by (rule subset_closure_on)
+      have hclU_closed: "closedin_on top1_S2 top1_S2_topology ?clU"
+        by (rule closure_on_closed[OF hTS2 hU_sub_S2])
+      have hclU_sub_S2: "?clU \<subseteq> top1_S2"
+        using hclU_closed unfolding closedin_on_def by (by100 blast)
+      \<comment> \<open>b \<notin> closure_on(U): U open component of S^2-C, b in different component.\<close>
+      have "b \<notin> ?clU" sorry \<comment> \<open>Components of open set are separated from each other.\<close>
+      hence hclU_sub_S2b: "?clU \<subseteq> top1_S2 - {b}" using hclU_sub_S2 by (by100 blast)
+      \<comment> \<open>closure_on(U) is compact (closed in compact S^2).\<close>
+      have hclU_compact: "top1_compact_on ?clU (subspace_topology top1_S2 top1_S2_topology ?clU)"
+        sorry \<comment> \<open>Closed subset of compact Hausdorff space is compact.\<close>
+      \<comment> \<open>h(closure_on(U)) is compact in R^2, hence bounded.\<close>
+      \<comment> \<open>h continuous on S^2-{b} \<supseteq> closure_on(U), so h(closure_on(U)) compact.\<close>
+      have "compact (h ` ?clU)" sorry \<comment> \<open>Bridge: top1_compact_on \<rightarrow> compact via homeomorphism h.\<close>
+      then obtain M where hM: "\<forall>p \<in> h ` ?clU. fst p ^ 2 + snd p ^ 2 \<le> M"
+        sorry \<comment> \<open>Compact in R^2 bounded (same as hC_bounded).\<close>
+      have "h ` U \<subseteq> h ` ?clU" using hU_sub_clU by (by100 blast)
+      thus ?thesis using hM by (by100 blast)
     qed
   next
     assume hb_in: "b \<in> U"
