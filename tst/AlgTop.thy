@@ -4883,8 +4883,29 @@ proof (intro bexI[of _ "(0::real, 0)"])
   proof (intro conjI exI[of _ F])
     show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
         (UNIV :: (real \<times> real) set) ?TR2 F"
-      sorry \<comment> \<open>F jointly continuous: use Theorem_18_4 to reduce to components,
-         then each component (1-t)*fst(f(x)) is a product of continuous functions.\<close>
+    proof -
+      have hTAI: "is_topology_on (A \<times> I_set) (product_topology_on TA I_top)"
+        using product_topology_on_is_topology_on[OF hTA
+            top1_unit_interval_topology_is_topology_on] by simp
+      have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hpi1_eq: "(pi1 :: real \<times> real \<Rightarrow> real) = fst" unfolding pi1_def by (rule ext) simp
+      have hpi2_eq: "(pi2 :: real \<times> real \<Rightarrow> real) = snd" unfolding pi2_def by (rule ext) simp
+      \<comment> \<open>By Theorem 18.4: F continuous \<longleftrightarrow> fst\<circ>F and snd\<circ>F continuous.\<close>
+      have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by simp
+      show ?thesis unfolding hUU[symmetric]
+        unfolding Theorem_18_4[OF hTAI hTR hTR] hpi1_eq hpi2_eq
+      proof (intro conjI)
+        \<comment> \<open>fst \<circ> F (x,t) = (1-t)*fst(f x).\<close>
+        show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+            (UNIV::real set) top1_open_sets (fst \<circ> F)"
+          sorry
+        \<comment> \<open>snd \<circ> F (x,t) = (1-t)*snd(f x).\<close>
+        show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top)
+            (UNIV::real set) top1_open_sets (snd \<circ> F)"
+          sorry
+      qed
+    qed
     show "\<forall>x\<in>A. F (x, 0) = f x" unfolding F_def by simp
     show "\<forall>x\<in>A. F (x, 1) = ?c" unfolding F_def by simp
   qed auto
@@ -8537,6 +8558,8 @@ end
  
  
  
+
+
 
 
 
