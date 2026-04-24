@@ -10135,11 +10135,31 @@ proof -
           proof -
             \<comment> \<open>U is a component of UNIV-C: it's connected, and any connected set containing u
                that is bigger than U would have to intersect V, but U \<inter> V = {} and both open.\<close>
-            have "U \<in> top1_components_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-              sorry \<comment> \<open>U is a component: connected, non-empty, maximal.\<close>
-            moreover have "u \<in> U" using hu by simp
-            ultimately show ?thesis
-              sorry \<comment> \<open>component_of(u) = the unique component containing u.\<close>
+            \<comment> \<open>component_of(u) = \<Union>{C \<subseteq> UNIV-C. u \<in> C \<and> connected C}.\<close>
+            \<comment> \<open>U \<subseteq> component_of(u): U is connected and u \<in> U.\<close>
+            have hU_sub_comp: "U \<subseteq> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+              unfolding top1_component_of_on_def
+            proof
+              fix x assume hxU: "x \<in> U"
+              have hUsub: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+              moreover have "u \<in> U" using hu by simp
+              moreover have "top1_connected_on U (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
+              proof -
+                have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
+                    = subspace_topology UNIV ?TR2 U"
+                  by (rule subspace_topology_trans[OF hUsub])
+                thus ?thesis using hU_conn by simp
+              qed
+              ultimately show "x \<in> \<Union>{Ca. Ca \<subseteq> UNIV - C \<and> u \<in> Ca \<and>
+                  top1_connected_on Ca (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) Ca)}"
+                using hxU hUsub by (by100 blast)
+            qed
+            \<comment> \<open>component_of(u) \<subseteq> U: any connected C with u \<in> C \<subseteq> UNIV-C lies in U.
+               (If C intersected V, C = (C\<inter>U) \<union> (C\<inter>V) with both open in C, contradicting connected.)\<close>
+            have hcomp_sub_U: "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u \<subseteq> U"
+              sorry \<comment> \<open>Any connected set in UNIV-C containing u is \<subseteq> U.
+                 Uses: U \<union> V = UNIV-C, U \<inter> V = {}, both open in UNIV-C (from lpc).\<close>
+            show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
           qed
           moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
               = top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
