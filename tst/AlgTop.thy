@@ -5282,6 +5282,7 @@ proof
      So the lifted path ends at a point in a DIFFERENT sheet than it started.\<close>
   have "\<exists>(E::'a set) TE (p0::'a \<Rightarrow> 'a) e0 e1.
       top1_covering_map_on E TE X TX p0
+    \<and> is_topology_on E TE
     \<and> e0 \<in> E \<and> p0 e0 = a
     \<and> e1 \<in> E \<and> p0 e1 = a
     \<and> e0 \<noteq> e1
@@ -5293,6 +5294,7 @@ proof
   from this obtain E :: "'a set" and TE :: "'a set set" and p0 :: "'a \<Rightarrow> 'a"
       and e0 :: 'a and e1 :: 'a and ftilde :: "real \<Rightarrow> 'a" where
       hcov: "top1_covering_map_on E TE X TX p0"
+      and hTE: "is_topology_on E TE"
       and he0: "e0 \<in> E" and hp0e0: "p0 e0 = a"
       and he1: "e1 \<in> E" and hp0e1: "p0 e1 = a"
       and hne: "e0 \<noteq> e1"
@@ -5309,7 +5311,7 @@ proof
     using hnul unfolding top1_path_homotopic_on_def by (by100 blast)
   have hca_path: "top1_is_path_on X TX a a (top1_constant_path a)"
     using hnul unfolding top1_path_homotopic_on_def by (by100 blast)
-  have hTE: "is_topology_on E TE" sorry
+  \<comment> \<open>hTE already obtained from step 2.\<close>
   have hTX: "is_topology_on X TX" by (rule assms(1))
   have hconst_lift: "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
     by (rule top1_constant_path_is_path[OF hTE he0])
@@ -8535,6 +8537,7 @@ end
  
  
  
+
 
 
 
