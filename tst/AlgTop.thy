@@ -8264,7 +8264,33 @@ proof -
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha)"
-    sorry \<comment> \<open>Compose G and H homotopies + nulhomotopic definition.\<close>
+  proof -
+    let ?Y = "UNIV - {(0::real,0::real)}"
+    let ?TY = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y"
+    have hTY: "is_topology_on ?Y ?TY"
+    proof -
+      have "is_topology_on (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+            top1_open_sets_is_topology_on_UNIV] by simp
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+    qed
+    have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+    \<comment> \<open>Compose G and H by transitivity.\<close>
+    have hGH: "top1_homotopic_on A TA ?Y ?TY
+        (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha) (\<lambda>_. pair_sub (0, 0) p)"
+      by (rule Lemma_51_1_homotopic_trans[OF hTA hTY hG_hom hH_hom])
+    \<comment> \<open>pair_sub (0,0) p is a constant in Y.\<close>
+    have hconst_in_Y: "pair_sub (0, 0) p \<in> ?Y"
+    proof -
+      have "pair_sub (0, 0) p = (- fst p, - snd p)" unfolding pair_sub_def by simp
+      also have "... = (-(2*M+1), 0)" unfolding p_def by simp
+      finally have "pair_sub (0, 0) p = (-(2*M+1), 0)" .
+      moreover have "(-(2*M+1), (0::real)) \<noteq> (0, 0)" using hM by simp
+      ultimately show ?thesis by simp
+    qed
+    show ?thesis unfolding top1_nulhomotopic_on_def
+      using hGH hconst_in_Y by (by100 blast)
+  qed
   \<comment> \<open>Translate: pair_sub (g x) ha = 0 iff g x = ha. So R^2-{0} via translation \<cong> R^2-{ha}.\<close>
   have hg_nul_R2: "top1_nulhomotopic_on A TA
       (UNIV - {?ha})
@@ -10564,7 +10590,67 @@ proof
        U-sheets (even) and V-sheets (odd) are glued at A and B.\<close>
     define TE :: "('a \<times> int) set set" where
       "TE = {W. W \<subseteq> E \<and> (\<forall>n::int. {x. (x, n) \<in> W} \<in> TX)}"
-    have hTE': "is_topology_on E TE" sorry
+    have hTE': "is_topology_on E TE"
+      unfolding is_topology_on_def
+    proof (intro conjI allI impI)
+      \<comment> \<open>{} \<in> TE.\<close>
+      show "{} \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "{} \<subseteq> E" by simp
+        fix n :: int show "{x. (x, n) \<in> {}} \<in> TX"
+        proof -
+          have "{x. (x, n) \<in> {}} = {}" by simp
+          thus ?thesis using assms(1) unfolding is_topology_on_def by simp
+        qed
+      qed
+    next
+      \<comment> \<open>E \<in> TE.\<close>
+      show "E \<in> TE" unfolding TE_def E_def
+      proof (intro CollectI conjI allI)
+        show "X \<times> UNIV \<subseteq> X \<times> UNIV" by simp
+        fix n :: int show "{x. (x, n) \<in> X \<times> UNIV} \<in> TX"
+        proof -
+          have "{x. (x, n) \<in> X \<times> UNIV} = X" by simp
+          thus ?thesis using assms(1) unfolding is_topology_on_def by simp
+        qed
+      qed
+    next
+      \<comment> \<open>Arbitrary union.\<close>
+      fix U0 :: "('a \<times> int) set set" assume hU0: "U0 \<subseteq> TE"
+      show "\<Union>U0 \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Union>U0 \<subseteq> E" using hU0 unfolding TE_def by (by100 blast)
+        fix n :: int
+        have "{x. (x, n) \<in> \<Union>U0} = \<Union>{{x. (x, n) \<in> W} | W. W \<in> U0}" by (by100 blast)
+        moreover have "\<Union>{{x. (x, n) \<in> W} | W. W \<in> U0} \<in> TX"
+        proof -
+          have "{{x. (x, n) \<in> W} | W. W \<in> U0} \<subseteq> TX"
+            using hU0 unfolding TE_def by (by100 blast)
+          thus ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+        qed
+        ultimately show "{x. (x, n) \<in> \<Union>U0} \<in> TX" by simp
+      qed
+    next
+      \<comment> \<open>Finite intersection.\<close>
+      fix F :: "('a \<times> int) set set"
+      assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TE"
+      show "\<Inter>F \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Inter>F \<subseteq> E" using hF unfolding TE_def by (by100 blast)
+        fix n :: int
+        have "{x. (x, n) \<in> \<Inter>F} = \<Inter>{{x. (x, n) \<in> W} | W. W \<in> F}" using hF by (by100 blast)
+        moreover have "\<Inter>{{x. (x, n) \<in> W} | W. W \<in> F} \<in> TX"
+        proof -
+          have hfin: "finite {{x. (x, n) \<in> W} | W. W \<in> F}"
+            using hF by simp
+          have hne: "{{x. (x, n) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+          have hsub: "{{x. (x, n) \<in> W} | W. W \<in> F} \<subseteq> TX"
+            using hF unfolding TE_def by (by100 blast)
+          show ?thesis using assms(1) hfin hne hsub unfolding is_topology_on_def by (by100 blast)
+        qed
+        ultimately show "{x. (x, n) \<in> \<Inter>F} \<in> TX" by simp
+      qed
+    qed
     have hcov': "top1_covering_map_on E TE X TX p0" sorry
     \<comment> \<open>Lift: \<alpha>-tilde(s) = (\<alpha>(s), 0), \<beta>-tilde(s) = (\<beta>(s), 1).
        \<alpha>-tilde: (a,0) \<rightarrow> (b,0). Since b \<in> B, (b,0) ~ (b,1) in the identification.
