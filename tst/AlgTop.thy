@@ -5057,13 +5057,26 @@ proof (rule ccontr)
   \<comment> \<open>X = U \<union> V and U \<inter> V = S^2 - C (path-connected by hypothesis).\<close>
   have hX_UV: "?U \<union> ?V = ?X" using hC_decomp hab by blast
   have hUV_eq: "?U \<inter> ?V = top1_S2 - C" using hC_decomp hab by blast
+  have hC_sub: "C \<subseteq> top1_S2" by (rule simple_closed_curve_subset[OF hC])
   \<comment> \<open>U, V are open in X.\<close>
   \<comment> \<open>A1, A2 are arcs (images of [0,1]), hence compact, hence closed in Hausdorff S^2.\<close>
-  have hA1_closed: "closedin_on top1_S2 top1_S2_topology A1" sorry
-  have hA2_closed: "closedin_on top1_S2 top1_S2_topology A2" sorry
+  have hA1_closed: "closedin_on top1_S2 top1_S2_topology A1"
+  proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+      top1_S2_is_topology_on_strict])
+    show "A1 \<subseteq> top1_S2" using hC_sub hC_decomp by (by100 blast)
+    \<comment> \<open>A1 is compact: homeomorphic to [0,1] (arc), and [0,1] is compact.\<close>
+    show "top1_compact_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+      sorry \<comment> \<open>Arc is compact (homeomorphic to compact [0,1]).\<close>
+  qed
+  have hA2_closed: "closedin_on top1_S2 top1_S2_topology A2"
+  proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+      top1_S2_is_topology_on_strict])
+    show "A2 \<subseteq> top1_S2" using hC_sub hC_decomp by (by100 blast)
+    show "top1_compact_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+      sorry \<comment> \<open>Arc is compact.\<close>
+  qed
   have hU_open: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U"
   proof -
-    have hC_sub: "C \<subseteq> top1_S2" by (rule simple_closed_curve_subset[OF hC])
     have "top1_S2 - A1 \<in> top1_S2_topology"
       using closedin_complement_openin[OF hA1_closed] unfolding openin_on_def by simp
     moreover have "?U = ?X \<inter> (top1_S2 - A1)" using hC_decomp hab by (by100 blast)
@@ -8443,6 +8456,8 @@ end
  
  
  
+
+
 
 
 
