@@ -7491,8 +7491,8 @@ proof -
   have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       (\<lambda>x. pair_sub ((h \<circ> f) x) p) (\<lambda>_. pair_sub (0, 0) p)"
-    unfolding top1_homotopic_on_def
-    sorry \<comment> \<open>Textbook H homotopy: pair_sub (pair_scl (1-t) (g x)) p stays in R^2-{0}.\<close>
+    sorry \<comment> \<open>Textbook H homotopy: F(x,t) = pair_sub (pair_scl (1-t) (g x)) p.
+       F(x,0) = g(x)-p, F(x,1) = 0-p = -p. Stays in R^2-{0} since |(1-t)g(x)|\<le>M<|p|.\<close>
   \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
