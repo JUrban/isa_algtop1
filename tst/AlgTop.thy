@@ -2624,7 +2624,28 @@ proof -
         \<comment> \<open>The multiplication map \<mu>(s,t) = t*2s is continuous from L to I_set.\<close>
         have h\<mu>_cont: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
             I_set I_top (\<lambda>(s,t). t * (2*s))"
-          sorry \<comment> \<open>Continuous: t*2s on L. Multiplication continuous, range in [0,1].\<close>
+        proof -
+          \<comment> \<open>The map \<mu>(s,t) = t*2s is continuous_on UNIV (polynomial).
+             Restricted to L \<subseteq> I\<times>I, it maps into I_set (0 \<le> t*2s \<le> 1 when s \<le> 1/2, t \<le> 1).
+             Bridge: continuous_on + maps into I \<Rightarrow> top1_continuous_map_on.\<close>
+          have h\<mu>_std: "continuous_on UNIV (\<lambda>(s::real,t::real). t * (2*s))"
+            by (auto intro!: continuous_intros simp: case_prod_beta)
+          have h\<mu>_std_L: "continuous_on ?L (\<lambda>(s::real,t::real). t * (2*s))"
+            using continuous_on_subset[OF h\<mu>_std] by (by100 blast)
+          \<comment> \<open>\<mu> maps L into I_set.\<close>
+          have h\<mu>_range: "\<forall>st\<in>?L. (\<lambda>(s,t). t * (2*s)) st \<in> I_set"
+          proof
+            fix st assume "st \<in> ?L"
+            then obtain s t where hst: "st = (s,t)" "0 \<le> s" "s \<le> 1/2" "0 \<le> t" "t \<le> 1" by auto
+            have "t * (2*s) \<ge> 0" using hst by simp
+            moreover have "t * (2*s) \<le> 1" using hst by (simp add: mult_le_one)
+            ultimately show "(\<lambda>(s,t). t * (2*s)) st \<in> I_set" unfolding hst top1_unit_interval_def by simp
+          qed
+          \<comment> \<open>Bridge: continuous_on on L (closed in R^2) + range in I \<Rightarrow> top1_continuous_map_on.
+             L = subspace of I\<times>I. The subspace topology on L from II_topology equals
+             the standard subspace topology on L from R^2 topology restricted to I\<times>I.\<close>
+          show ?thesis sorry \<comment> \<open>Standard-to-custom topology bridge for subspace.\<close>
+        qed
         \<comment> \<open>On L, G = \<alpha> \<circ> \<mu>.\<close>
         have hG_eq: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
           unfolding G_def comp_def by auto
