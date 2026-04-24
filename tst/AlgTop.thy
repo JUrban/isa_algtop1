@@ -9116,19 +9116,25 @@ proof
     have hp0e1: "p0 e1 = a" unfolding p0_def e1_def by simp
     have hne: "e0 \<noteq> e1" unfolding e0_def e1_def by simp
     \<comment> \<open>Need: covering map, topology on E, and lift.\<close>
-    have hcov: "top1_covering_map_on E (sorry :: ('a \<times> int) set set) X TX p0"
-      sorry \<comment> \<open>Main covering space construction: topology on E, p0 covering map.\<close>
-    have hTE: "is_topology_on E (sorry :: ('a \<times> int) set set)" sorry
-    have hft: "\<exists>ftilde. top1_is_path_on E (sorry :: ('a \<times> int) set set) e0 e1 ftilde
-        \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s)"
-      sorry \<comment> \<open>Lift: \<alpha>-tilde * \<beta>-tilde goes (a,0) \<rightarrow> (b,0) \<rightarrow> (a,2).\<close>
-    obtain TE where hcov': "top1_covering_map_on E TE X TX p0"
-        and hTE': "is_topology_on E TE"
-        and hft': "\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
-            \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s)"
-      sorry \<comment> \<open>Package: the topology TE exists making everything work.\<close>
+    \<comment> \<open>Define topology on E: a set W \<subseteq> E is open iff for each sheet (even/odd),
+       the slice is open in the corresponding U or V subspace topology.\<close>
+    define TE :: "('a \<times> int) set set" where
+      "TE = {W. W \<subseteq> E \<and> (\<forall>n::int. {x. (x, n) \<in> W} \<in>
+        (if even n then subspace_topology X TX U else subspace_topology X TX V))}"
+    have hTE': "is_topology_on E TE" sorry
+    have hcov': "top1_covering_map_on E TE X TX p0" sorry
+    \<comment> \<open>Lift: \<alpha>-tilde(s) = (\<alpha>(s), 0), \<beta>-tilde(s) = (\<beta>(s), 1).
+       \<alpha>-tilde: (a,0) \<rightarrow> (b,0). Since b \<in> B, (b,0) ~ (b,1) in the identification.
+       \<beta>-tilde: (b,1) \<rightarrow> (a,1). Since a \<in> A, (a,1) ~ (a,2) in the identification.
+       So ftilde = \<alpha>-tilde * \<beta>-tilde: (a,0) \<rightarrow> (a,2).\<close>
+    define ftilde :: "real \<Rightarrow> ('a \<times> int)" where
+      "ftilde = top1_path_product (\<lambda>s. (alpha s, 0)) (\<lambda>s. (beta s, 1))"
+    have hft_path: "top1_is_path_on E TE e0 e1 ftilde" sorry
+    have hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s" sorry
     show ?thesis
-      using hcov' hTE' he0_E he1_E hp0e0 hp0e1 hne hft' by (by100 blast)
+      using hcov' hTE' he0_E he1_E hp0e0 hp0e1 hne hft_path hft_lift
+      by (intro exI[of _ E] exI[of _ TE] exI[of _ p0] exI[of _ e0] exI[of _ e1])
+         (by100 blast)
   qed
   \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
      But we showed the lift has different endpoints. Contradiction.\<close>
