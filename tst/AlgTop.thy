@@ -12928,6 +12928,14 @@ proof -
               hTX_is hX_conn hX_lpc \<open>?X \<noteq> {}\<close>])
         qed
         \<comment> \<open>All loops nulhomotopic: by Theorem 59.1 + Lemma 61.2.\<close>
+        have hTX_weak: "is_topology_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+          using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hx0X: "x0 \<in> ?X" using hx0 hX_UV by (by100 blast)
+        \<comment> \<open>Core: all loops at x0 are nulhomotopic (59.1 decomposition + 61.2).\<close>
+        have hx0_all_nul: "\<And>g. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g \<Longrightarrow>
+            top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+              g (top1_constant_path x0)"
+          sorry \<comment> \<open>Same as True case body below (~280 lines). Could be refactored.\<close>
         show "\<forall>x0\<in>?X. \<forall>f. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 f \<longrightarrow>
             top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
               f (top1_constant_path x0)"
@@ -13236,9 +13244,46 @@ proof -
                Hence f nulhomotopic at y0.\<close>
             \<comment> \<open>Conjugation: get \<gamma>: x0 \<rightarrow> y0. bc(\<gamma>, f) = \<gamma> * f * rev(\<gamma>) is loop at x0.
                Nulhomotopic by True case. Unconjugate via bc roundtrip.\<close>
-            show ?thesis sorry \<comment> \<open>Conjugation: ~80 lines (same as 61.3).
-               Uses top1_basepoint_change_roundtrip, congruence, path algebra.
-               All infrastructure available, just verbose.\<close>
+            \<comment> \<open>Get path \<gamma>: x0 \<rightarrow> y0 (X path-connected).\<close>
+            obtain \<gamma> where h\<gamma>: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma>"
+            proof -
+              have "top1_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+                sorry \<comment> \<open>Proved as first conjunct.\<close>
+              thus ?thesis using that hx0X hy0 unfolding top1_path_connected_on_def by blast
+            qed
+            have hrev\<gamma>: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 x0 (top1_path_reverse \<gamma>)"
+              by (rule top1_path_reverse_is_path[OF h\<gamma>])
+            \<comment> \<open>Conjugate: bc(rev(\<gamma>), f) = \<gamma> * f * rev(\<gamma>) is loop at x0.\<close>
+            let ?conj = "top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 x0 (top1_path_reverse \<gamma>) f"
+            have hconj_loop: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 ?conj"
+              sorry \<comment> \<open>basepoint_change_on is a loop (path product of paths).\<close>
+            \<comment> \<open>Conjugated loop nulhomotopic by hx0_all_nul.\<close>
+            have hconj_triv: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                ?conj (top1_constant_path x0)"
+              by (rule hx0_all_nul[OF hconj_loop])
+            \<comment> \<open>Unconjugate: f \<simeq> bc(\<gamma>, conj) by roundtrip, then congruence + constant.\<close>
+            have hf_conj: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0 f
+                (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma> ?conj)"
+            proof -
+              have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0 f
+                  (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0
+                    (top1_path_reverse (top1_path_reverse \<gamma>)) ?conj)"
+                by (rule top1_basepoint_change_roundtrip[OF hTX_weak hrev\<gamma> hf])
+              thus ?thesis by (simp add: top1_path_reverse_twice)
+            qed
+            have hconst_loop: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (top1_constant_path x0)"
+              by (rule top1_constant_path_is_loop[OF hTX_weak hx0X])
+            have hbc_cong: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
+                (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma> ?conj)
+                (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma> (top1_constant_path x0))"
+              by (rule top1_basepoint_change_congruence[OF hTX_weak h\<gamma> hconj_loop hconst_loop hconj_triv])
+            have hbc_const: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
+                (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma> (top1_constant_path x0))
+                (top1_constant_path y0)"
+              sorry \<comment> \<open>bc(\<gamma>, const_x0) = rev(\<gamma>) * const * \<gamma> \<simeq> rev(\<gamma>) * \<gamma> \<simeq> const_y0.
+                 Path algebra (inverse cancellation).\<close>
+            show ?thesis using hf_conj hbc_cong hbc_const
+              Lemma_51_1_path_homotopic_trans[OF hTX_weak] by (by100 blast)
           qed
         qed
       qed
