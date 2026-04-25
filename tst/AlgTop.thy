@@ -14656,9 +14656,20 @@ proof (rule ccontr)
   qed
   have hnontrivial: "\<not> top1_path_homotopic_on ?X ?TX a a
       (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
-    sorry \<comment> \<open>By Theorem_63_1_loop_nontrivial with X=S^2-{d}, U=S^2-D1, V=S^2-D2,
-       A=PC_a, B=Rest, paths \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V.
-       All premises verified above (some with sorry).\<close>
+  proof (rule Theorem_63_1_loop_nontrivial)
+    show "is_topology_on ?X ?TX" by (rule hX_TX)
+    show "openin_on ?X ?TX ?U" by (rule hU_open_X)
+    show "openin_on ?X ?TX ?V" by (rule hV_open_X)
+    show "?U \<union> ?V = ?X" by (rule hUV)
+    show "?U \<inter> ?V = PC_a \<union> Rest" using hPCR_cover by simp
+    show "PC_a \<inter> Rest = {}" by (rule hPCR_disj)
+    show "openin_on ?X ?TX PC_a" by (rule hPC_open)
+    show "openin_on ?X ?TX Rest" by (rule hRest_open)
+    show "a \<in> PC_a" by (rule ha_PC)
+    show "b \<in> Rest" by (rule hb_Rest)
+    show "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b \<alpha>" by (rule h\<alpha>)
+    show "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a \<beta>" by (rule h\<beta>)
+  qed
   \<comment> \<open>Step 4: But X = S^2-{d} simply connected.\<close>
   have hsc: "top1_simply_connected_on ?X ?TX"
     by (rule S2_minus_point_simply_connected[OF hd_S2])
