@@ -12598,8 +12598,70 @@ proof -
                S^2\{a,b} connected. So one must be empty.
                But A1 connected with \<ge>3 points means A1\{a,b} \<noteq> {}.
                Similarly A2\{a,b} \<noteq> {}. Contradiction.\<close>
-            have "A1 - {a, b} \<noteq> {}" sorry \<comment> \<open>A1 connected, |A1\<inter>A2|=2, a\<noteq>b \<Rightarrow> |A1| \<ge> 3.\<close>
-            have "A2 - {a, b} \<noteq> {}" sorry
+            have "A1 - {a, b} \<noteq> {}"
+            proof -
+              \<comment> \<open>If A1 = {a,b}, then {a,b} connected. But {a,b} with a\<noteq>b is discrete
+                 (singletons open in Hausdorff subspace), hence disconnected. Contradiction.\<close>
+              have "A1 \<noteq> {a, b}"
+              proof
+                assume "A1 = {a, b}"
+                have "{a} \<in> subspace_topology top1_S2 top1_S2_topology {a, b}"
+                proof -
+                  have "top1_S2 - {b} \<in> top1_S2_topology"
+                    using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hb_S2]
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  moreover have "{a} = {a, b} \<inter> (top1_S2 - {b})"
+                    using hab_ne ha_S2 by auto
+                  ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+                qed
+                have "{b} \<in> subspace_topology top1_S2 top1_S2_topology {a, b}"
+                proof -
+                  have "top1_S2 - {a} \<in> top1_S2_topology"
+                    using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2]
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  moreover have "{b} = {a, b} \<inter> (top1_S2 - {a})"
+                    using hab_ne hb_S2 by auto
+                  ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+                qed
+                have "\<not> top1_connected_on {a, b} (subspace_topology top1_S2 top1_S2_topology {a, b})"
+                  unfolding top1_connected_on_def
+                  using \<open>{a} \<in> _\<close> \<open>{b} \<in> _\<close> hab_ne by (by100 blast)
+                thus False using assms(6) \<open>A1 = {a, b}\<close> by simp
+              qed
+              moreover have "{a, b} \<subseteq> A1" using hab assms(2) by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            have "A2 - {a, b} \<noteq> {}"
+            proof -
+              have "A2 \<noteq> {a, b}"
+              proof
+                assume "A2 = {a, b}"
+                have "{a} \<in> subspace_topology top1_S2 top1_S2_topology {a, b}"
+                proof -
+                  have "top1_S2 - {b} \<in> top1_S2_topology"
+                    using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hb_S2]
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  moreover have "{a} = {a, b} \<inter> (top1_S2 - {b})"
+                    using hab_ne ha_S2 by auto
+                  ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+                qed
+                have "{b} \<in> subspace_topology top1_S2 top1_S2_topology {a, b}"
+                proof -
+                  have "top1_S2 - {a} \<in> top1_S2_topology"
+                    using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2]
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  moreover have "{b} = {a, b} \<inter> (top1_S2 - {a})"
+                    using hab_ne hb_S2 by auto
+                  ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+                qed
+                have "\<not> top1_connected_on {a, b} (subspace_topology top1_S2 top1_S2_topology {a, b})"
+                  unfolding top1_connected_on_def
+                  using \<open>{a} \<in> _\<close> \<open>{b} \<in> _\<close> hab_ne by (by100 blast)
+                thus False using assms(7) \<open>A2 = {a, b}\<close> by simp
+              qed
+              moreover have "{a, b} \<subseteq> A2" using hab assms(3) by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
             \<comment> \<open>(A1\{a,b}) \<union> (A2\{a,b}) = S^2\{a,b} and disjoint. Both closed. Both nonempty.
                S^2\{a,b} disconnected. But S^2\{a,b} IS connected. Contradiction.\<close>
             have "connected (top1_S2 - {a, b})"
