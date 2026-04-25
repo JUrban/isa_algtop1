@@ -12961,12 +12961,19 @@ proof (rule ccontr)
   obtain \<beta> where "top1_is_path_on (top1_S2 - D2)
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) b a \<beta>"
     using S2_nonsep_path_exists[OF assms(1) assms(3) assms(6) hb_D2 ha_D2] by (by100 blast)
-  \<comment> \<open>The loop f = \<alpha>*\<beta> lies in X=S^2-(D1\<inter>D2). By Theorem 63.1, [f] is nontrivial.\<close>
+  \<comment> \<open>The loop f = \<alpha>*\<beta> lies in X=S^2-(D1\<inter>D2). By Theorem 63.1, [f] is nontrivial.
+     Setup: X = S^2\(D1\<inter>D2), U = S^2\D1, V = S^2\D2.
+     U \<union> V = X, U \<inter> V = S^2\(D1\<union>D2).
+     A = path component of a in U\<inter>V, B = rest. Both open (lpc).
+     \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V. Theorem 63.1: \<alpha>*\<beta> nontrivial in \<pi>_1(X,a).\<close>
   have hf_nontrivial: "\<exists>f. top1_is_loop_on (top1_S2 - (D1 \<inter> D2))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a f
       \<and> \<not> top1_path_homotopic_on (top1_S2 - (D1 \<inter> D2))
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a a f
-          (top1_constant_path a)" sorry
+          (top1_constant_path a)"
+    sorry \<comment> \<open>Apply Theorem 63.1 to X=S^2\(D1\<inter>D2), U=S^2\D1, V=S^2\D2,
+       with U\<inter>V decomposed into path component A of a and rest B.
+       \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V. Result: \<alpha>*\<beta> nontrivial.\<close>
   \<comment> \<open>But S^2-(D1\<inter>D2) is simply connected by assumption. Contradiction.\<close>
   have ha_mem: "a \<in> top1_S2 - (D1 \<inter> D2)"
     using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
