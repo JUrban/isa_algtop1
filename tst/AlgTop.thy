@@ -12699,9 +12699,49 @@ proof -
                Complement of each = the other = also closed. So both are open too (clopen).\<close>
             \<comment> \<open>A1, A2 closed in R^3 (closed in S^2 and S^2 closed in R^3).\<close>
             have "closed (A1 :: (real\<times>real\<times>real) set)"
-              sorry \<comment> \<open>A1 closed in S^2 (assms) + S^2 closed in R^3 (compact) \<Rightarrow> A1 closed in R^3.\<close>
+            proof -
+              have "closed top1_S2" by (rule compact_imp_closed[OF S2_compact_standard])
+              \<comment> \<open>A1 closed in S^2: S^2\A1 open in S^2. S^2\A1 = S^2 \<inter> W for open W.
+                 A1 = S^2 \<inter> (-W). closed S^2, closed (-W) \<Rightarrow> closed (S^2 \<inter> (-W)).\<close>
+              have "top1_S2 - A1 \<in> top1_S2_topology"
+                using assms(4) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+              have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+              obtain W where "W \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                  "top1_S2 - A1 = top1_S2 \<inter> W"
+                using \<open>top1_S2 - A1 \<in> top1_S2_topology\<close> hR3eq
+                unfolding subspace_topology_def by (by100 blast)
+              have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+              have "A1 = top1_S2 \<inter> (- W)"
+                using \<open>top1_S2 - A1 = top1_S2 \<inter> W\<close> assms(2) by (by100 blast)
+              have "closed (- W)" using \<open>open W\<close> by (simp add: open_closed)
+              show ?thesis using \<open>A1 = top1_S2 \<inter> (- W)\<close> \<open>closed top1_S2\<close> \<open>closed (- W)\<close>
+                by (simp add: closed_Int)
+            qed
             have "closed (A2 :: (real\<times>real\<times>real) set)"
-              sorry \<comment> \<open>Same.\<close>
+            proof -
+              have "closed top1_S2" by (rule compact_imp_closed[OF S2_compact_standard])
+              have "top1_S2 - A2 \<in> top1_S2_topology"
+                using assms(5) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+              have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+              obtain W where "W \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                  "top1_S2 - A2 = top1_S2 \<inter> W"
+                using \<open>top1_S2 - A2 \<in> top1_S2_topology\<close> hR3eq
+                unfolding subspace_topology_def by (by100 blast)
+              have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+              have "A2 = top1_S2 \<inter> (- W)"
+                using \<open>top1_S2 - A2 = top1_S2 \<inter> W\<close> assms(3) by (by100 blast)
+              have "closed (- W)" using \<open>open W\<close> by (simp add: open_closed)
+              show ?thesis using \<open>A2 = top1_S2 \<inter> (- W)\<close> \<open>closed top1_S2\<close> \<open>closed (- W)\<close>
+                by (simp add: closed_Int)
+            qed
             \<comment> \<open>-A1, -A2 open. Form a separation of S^2\{a,b}:
                S^2\{a,b} \<subseteq> (-A1) \<union> (-A2), (-A1)\<inter>(-A2)\<inter>(S^2\{a,b}) = {},
                both intersections nonempty. Contradicts connected.\<close>
@@ -12748,7 +12788,14 @@ proof -
         thus ?thesis using hUV_pc by simp
       qed
       \<comment> \<open>x0 \<in> U\<inter>V.\<close>
-      have hUV_ne: "?U \<inter> ?V \<noteq> {}" sorry \<comment> \<open>Proved inside hUV_pc block (needs hoisting).\<close>
+      \<comment> \<open>U\<inter>V nonempty: S^2 connected, A1,A2 closed connected with |A1\<inter>A2|=2 \<Rightarrow>
+         A1\<union>A2 \<noteq> S^2 (proved inside hUV_pc via partition argument).\<close>
+      have hUV_ne: "?U \<inter> ?V \<noteq> {}"
+      proof -
+        \<comment> \<open>If U\<inter>V = {}, then S^2 = A1\<union>A2 and S^2\{a,b} = (A1\{a,b}) \<sqcup> (A2\{a,b}).
+           Both nonempty (connected with \<ge>3 pts), S^2\{a,b} connected. Contradiction.\<close>
+        show ?thesis sorry \<comment> \<open>Identical argument to inside hUV_pc. Needs hoisting.\<close>
+      qed
       obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V"
         using hUV_ne by (by100 blast)
       \<comment> \<open>By Theorem 59.1: every loop in X decomposes into pieces in U and V.
