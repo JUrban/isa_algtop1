@@ -8830,9 +8830,66 @@ proof -
       qed
       moreover have "compact (h ` (top1_S2 - C0))"
       proof -
-        have "compact (top1_S2 - C0)" sorry \<comment> \<open>Closed subset of compact S^2.\<close>
+        have "compact (top1_S2 - C0)"
+        proof -
+          \<comment> \<open>C0 open in S^2 subspace \<Rightarrow> \<exists>U open in R^3. C0 = S^2 \<inter> U.\<close>
+          \<comment> \<open>S^2\C0 = S^2 \<inter> (R^3\U), intersection of two closed sets, closed.\<close>
+          \<comment> \<open>Closed subset of compact S^2 \<Rightarrow> compact.\<close>
+          have "closed top1_S2" by (rule compact_imp_closed[OF S2_compact_standard])
+          have "closed (top1_S2 - C0)"
+            sorry \<comment> \<open>S^2\C0 closed: C0 open in S^2 subspace \<Rightarrow> S^2\C0 closed in R^3.\<close>
+          have "compact (top1_S2 \<inter> (top1_S2 - C0))"
+            by (rule compact_Int_closed[OF S2_compact_standard \<open>closed (top1_S2 - C0)\<close>])
+          moreover have "top1_S2 \<inter> (top1_S2 - C0) = top1_S2 - C0" by blast
+          ultimately show ?thesis by simp
+        qed
         have "continuous_on (top1_S2 - {b}) h"
-          sorry \<comment> \<open>h continuous on S^2-{b} in standard topology (bridge from custom).\<close>
+        proof -
+          have hh_cont_S2b: "top1_continuous_map_on (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          \<comment> \<open>Bridge subspace to standard R^3 topology.\<close>
+          have hS2b_sub: "top1_S2 - {b} \<subseteq> top1_S2" by blast
+          have hR3eq: "product_topology_on (top1_open_sets :: real set set)
+              (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set))
+              = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+            using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                  product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+          have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+            unfolding top1_S2_topology_def using hR3eq by simp
+          have "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})
+              = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) (top1_S2 - {b})"
+          proof -
+            have "subspace_topology top1_S2 (subspace_topology UNIV
+                (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2) (top1_S2 - {b})
+                = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) (top1_S2 - {b})"
+              by (rule subspace_topology_trans[OF hS2b_sub])
+            thus ?thesis using \<open>top1_S2_topology = _\<close> by simp
+          qed
+          hence hh_R3: "top1_continuous_map_on (top1_S2 - {b})
+              (subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) (top1_S2 - {b}))
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            using hh_cont_S2b by simp
+          show ?thesis unfolding continuous_on_open_invariant
+          proof (intro allI impI)
+            fix V :: "(real \<times> real) set" assume hV_open: "open V"
+            have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+              using hV_open unfolding top1_open_sets_def by simp
+            hence "V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+              using product_topology_on_open_sets_real2 by (by100 metis)
+            hence "{x \<in> top1_S2 - {b}. h x \<in> V} \<in> subspace_topology UNIV
+                (top1_open_sets :: (real \<times> real \<times> real) set set) (top1_S2 - {b})"
+              using hh_R3 unfolding top1_continuous_map_on_def by (by100 blast)
+            then obtain W where "W \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+                and "{x \<in> top1_S2 - {b}. h x \<in> V} = (top1_S2 - {b}) \<inter> W"
+              unfolding subspace_topology_def by (by100 blast)
+            have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+            moreover have "W \<inter> (top1_S2 - {b}) = h -` V \<inter> (top1_S2 - {b})"
+              using \<open>{x \<in> top1_S2 - {b}. h x \<in> V} = (top1_S2 - {b}) \<inter> W\<close> by (by100 blast)
+            ultimately show "\<exists>T. open T \<and> T \<inter> (top1_S2 - {b}) = h -` V \<inter> (top1_S2 - {b})" by (by100 blast)
+          qed
+        qed
         have "top1_S2 - C0 \<subseteq> top1_S2 - {b}" using True by (by100 blast)
         have "continuous_on (top1_S2 - C0) h"
           by (rule continuous_on_subset[OF \<open>continuous_on (top1_S2 - {b}) h\<close> \<open>top1_S2 - C0 \<subseteq> top1_S2 - {b}\<close>])
