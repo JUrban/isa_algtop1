@@ -8412,7 +8412,55 @@ proof -
     \<comment> \<open>h(C0-{b}) connected: C0 open connected in S^2, C0-{b} homeomorphic to open connected in R^2,
        connected_open_delete_R2 gives R^2 image connected.\<close>
     have himg_conn: "connected (h ` (C0 - {b}))"
-      sorry \<comment> \<open>h(C0-{b}) connected: needs connected_open_delete for R^2/R^3.\<close>
+    proof (cases "b \<in> C0")
+      case False
+      hence "C0 - {b} = C0" by (by100 blast)
+      moreover have "connected C0"
+      proof -
+        have "top1_connected_on C0 (subspace_topology UNIV
+            (top1_open_sets :: (real \<times> real \<times> real) set set) C0)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology C0 = subspace_topology UNIV
+              (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+          proof -
+            have hC0_sub_S2: "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
+            have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+              unfolding top1_S2_topology_def
+              using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                    product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+            have "subspace_topology top1_S2 (subspace_topology UNIV
+                (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2) C0
+                = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+              by (rule subspace_topology_trans[OF hC0_sub_S2])
+            thus ?thesis
+              using \<open>top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2\<close> by simp
+          qed
+          hence heq: "subspace_topology top1_S2 top1_S2_topology C0 = subspace_topology UNIV
+              (top1_open_sets :: (real \<times> real \<times> real) set set) C0" .
+          \<comment> \<open>hC0_conn_custom defined later; re-prove here.\<close>
+          have "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
+          proof -
+            have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+              using hT unfolding is_topology_on_strict_def by (by100 blast)
+            have hTS2fA: "is_topology_on (top1_S2 - f ` A)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+              by (rule subspace_topology_is_topology_on[OF hTS2_loc]) (by100 blast)
+            have "top1_connected_on C0 (subspace_topology (top1_S2 - f ` A)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) C0)"
+              by (rule Theorem_25_1(3)[OF hTS2fA hC0])
+            thus ?thesis by (simp add: subspace_topology_trans[OF hC0_sub])
+          qed
+          thus ?thesis using heq by simp
+        qed
+        thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+      qed
+      moreover have "continuous_on C0 h" sorry \<comment> \<open>h continuous on S^2-{b} \<supseteq> C0.\<close>
+      ultimately show ?thesis
+        using connected_continuous_image by simp
+    next
+      case True show ?thesis sorry \<comment> \<open>b \<in> C0: needs connected_open_delete.\<close>
+    qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
     proof
