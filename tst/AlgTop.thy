@@ -8052,45 +8052,8 @@ proof (rule connectedI)
   ultimately show False by auto
 qed
 
-lemma open_rectangle_delete_connected_R2:
-  fixes U1 U2 :: "real set" and p1 p2 :: real
-  assumes "open U1" "open U2" "p1 \<in> U1" "p2 \<in> U2"
-  shows "connected (U1 \<times> U2 - {(p1, p2)})"
-proof -
-  \<comment> \<open>Get intervals around p1 and p2.\<close>
-  obtain e1 where "e1 > 0" "\<forall>y. dist p1 y < e1 \<longrightarrow> y \<in> U1"
-  proof -
-    have "\<forall>x\<in>U1. \<exists>e>0. \<forall>y. dist y x < e \<longrightarrow> y \<in> U1"
-      using assms(1) unfolding open_dist by simp
-    hence "\<exists>e>0. \<forall>y. dist y p1 < e \<longrightarrow> y \<in> U1" using assms(3) by simp
-    thus ?thesis using that by (simp add: dist_commute) blast
-  qed
-  obtain e2 where "e2 > 0" "\<forall>y. dist p2 y < e2 \<longrightarrow> y \<in> U2"
-  proof -
-    have "\<forall>x\<in>U2. \<exists>e>0. \<forall>y. dist y x < e \<longrightarrow> y \<in> U2"
-      using assms(2) unfolding open_dist by simp
-    hence "\<exists>e>0. \<forall>y. dist y p2 < e \<longrightarrow> y \<in> U2" using assms(4) by simp
-    thus ?thesis using that by (simp add: dist_commute) blast
-  qed
-  \<comment> \<open>{p1-e1<..<p1+e1} \<subseteq> U1 and {p2-e2<..<p2+e2} \<subseteq> U2.\<close>
-  have hI1_sub: "{p1-e1<..<p1+e1} \<subseteq> U1"
-    using \<open>\<forall>y. dist p1 y < e1 \<longrightarrow> y \<in> U1\<close> by (auto simp: dist_real_def)
-  have hI2_sub: "{p2-e2<..<p2+e2} \<subseteq> U2"
-    using \<open>\<forall>y. dist p2 y < e2 \<longrightarrow> y \<in> U2\<close> by (auto simp: dist_real_def)
-  have hp1: "p1-e1 < p1" "p1 < p1+e1" using \<open>e1 > 0\<close> by auto
-  have hp2: "p2-e2 < p2" "p2 < p2+e2" using \<open>e2 > 0\<close> by auto
-  \<comment> \<open>The small rectangle minus p is connected.\<close>
-  have hR_conn: "connected ({p1-e1<..<p1+e1} \<times> {p2-e2<..<p2+e2} - {(p1,p2)})"
-    by (rule interval_delete_connected_R2[OF hp1(1) hp1(2) hp2(1) hp2(2)])
-  \<comment> \<open>It's a connected subset of U1\<times>U2-{p}.\<close>
-  have hR_sub: "{p1-e1<..<p1+e1} \<times> {p2-e2<..<p2+e2} - {(p1,p2)} \<subseteq> U1 \<times> U2 - {(p1,p2)}"
-    using hI1_sub hI2_sub by (by100 blast)
-  \<comment> \<open>U1\<times>U2 connected (product of connected? No, U1,U2 might not be connected).\<close>
-  \<comment> \<open>For the general case, U1\<times>U2-{p} might not be connected if U1 or U2 are disconnected.
-     But the small rectangle IS connected. The full proof needs connected_open_delete_R2
-     which uses this rectangle to show any separation of U-{p} is impossible.\<close>
-  show ?thesis sorry \<comment> \<open>Needs: U1\<times>U2 connected. But U1,U2 might not be connected.\<close>
-qed
+\<comment> \<open>open_rectangle_delete_connected_R2 removed (unused, unprovable for general U1,U2).
+   Use connected_open_delete_R2 for the general case instead.\<close>
 
 lemma connected_open_delete_R2:
   fixes U :: "(real \<times> real) set" and p :: "real \<times> real"
