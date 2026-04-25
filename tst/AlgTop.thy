@@ -8192,10 +8192,40 @@ proof -
     using top1_S2_is_topology_on_strict assms(1)
     unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
   have hC0_sub_S2c: "C0 \<subseteq> top1_S2 - {c}" using hC0_sub_S2 hc(2) by (by100 blast)
-  \<comment> \<open>\<sigma>(C0) open in R^2.\<close>
-  have h\<sigma>C0_open: "open (\<sigma> ` C0)" sorry
-  \<comment> \<open>\<sigma>(C0) connected in R^2.\<close>
-  have h\<sigma>C0_conn: "connected (\<sigma> ` C0)" sorry
+  \<comment> \<open>\<sigma>(C0) open in R^2: C0 open in S^2\{c} (subspace), \<sigma> homeomorphism (open map).\<close>
+  have h\<sigma>C0_open: "open (\<sigma> ` C0)"
+    sorry \<comment> \<open>C0 open in S^2, C0 \<subseteq> S^2\{c} \<Rightarrow> C0 open in S^2\{c}. \<sigma> open map.\<close>
+  \<comment> \<open>\<sigma>(C0) connected: C0 connected (custom), bridge to standard, \<sigma> continuous.\<close>
+  have h\<sigma>C0_conn: "connected (\<sigma> ` C0)"
+  proof -
+    \<comment> \<open>Bridge: C0 connected in custom top \<Rightarrow> connected in standard.\<close>
+    have "connected C0"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology C0
+          = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) C0"
+      proof -
+        have hR3eq: "(product_topology_on (top1_open_sets :: real set set)
+            (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)))
+            = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        have hTS2_sub: "top1_S2_topology = subspace_topology UNIV
+            (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+          unfolding top1_S2_topology_def using hR3eq by simp
+        have "subspace_topology top1_S2 (subspace_topology UNIV
+            (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) C0
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) C0"
+          by (rule subspace_topology_trans[OF hC0_sub_S2])
+        thus ?thesis using hTS2_sub by simp
+      qed
+      hence "top1_connected_on C0 (subspace_topology UNIV
+          (top1_open_sets :: (real\<times>real\<times>real) set set) C0)"
+        using assms(2) by simp
+      thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+    qed
+    have h\<sigma>_cont_C0: "continuous_on C0 \<sigma>" sorry
+    show ?thesis using connected_continuous_image[OF h\<sigma>_cont_C0 \<open>connected C0\<close>] by simp
+  qed
   \<comment> \<open>\<sigma>(C0)\{\<sigma>(b)} connected by connected_open_delete_R2.\<close>
   have "connected (\<sigma> ` C0 - {\<sigma> b})" by (rule connected_open_delete_R2[OF h\<sigma>C0_open h\<sigma>C0_conn])
   \<comment> \<open>\<sigma>(C0\{b}) = \<sigma>(C0)\{\<sigma>(b)} by injectivity.\<close>
