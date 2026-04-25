@@ -7545,7 +7545,45 @@ proof -
               thus ?thesis unfolding p_def using h\<epsilon>1(2) by simp
             qed
             have "snd (snd p) \<in> U3"
-              sorry \<comment> \<open>|sqrt(1-t^2) - 1| < \<epsilon>2 for small t. Needs 1-sqrt(1-t^2) \<le> t^2 \<le> \<epsilon>2.\<close>
+            proof -
+              have "t^2 \<le> (1/2)^2" using ht(2) ht(1) by (intro power_mono) simp_all
+              hence ht2_le: "t^2 \<le> 1/4" by (simp add: power2_eq_square)
+              hence h_nneg: "1 - t^2 \<ge> 0" by simp
+              have hsqrt_le: "sqrt (1 - t^2) \<le> 1" using real_sqrt_le_mono[of "1-t^2" 1] h_nneg by simp
+              have hsqrt_ge: "sqrt (1 - t^2) \<ge> 0" using h_nneg by simp
+              \<comment> \<open>dist (sqrt(1-t^2)) 1 = 1 - sqrt(1-t^2).\<close>
+              have hdist_eq: "dist (sqrt (1 - t^2)) 1 = 1 - sqrt (1 - t^2)"
+                using hsqrt_le by (simp add: dist_real_def)
+              \<comment> \<open>1 - sqrt(1-t^2) = t^2 / (1 + sqrt(1-t^2)) < t^2.\<close>
+              \<comment> \<open>Key: 1 - sqrt(1-t^2) = t^2/(1+sqrt(1-t^2)) < t^2 \<le> \<epsilon>2.\<close>
+              have "t \<le> sqrt \<epsilon>2" unfolding t_def by simp
+              hence "t^2 \<le> (sqrt \<epsilon>2)^2" using ht(1) h\<epsilon>2(1)
+                by (intro power_mono) simp_all
+              hence ht2_eps: "t^2 \<le> \<epsilon>2" using h\<epsilon>2(1) by simp
+              have "dist (sqrt (1 - t^2)) 1 < \<epsilon>2"
+              proof -
+                have "(1 - sqrt (1 - t^2)) * (1 + sqrt (1 - t^2)) = t^2"
+                  using real_sqrt_pow2[OF h_nneg] by (simp add: algebra_simps power2_eq_square)
+                have "1 - t^2 > 0" using ht2_le by simp
+                hence "sqrt (1 - t^2) > 0" by simp
+                hence "1 + sqrt (1 - t^2) > 1" by simp
+                have h_a_nneg: "1 - sqrt (1 - t^2) \<ge> 0" using hsqrt_le by simp
+                have "t^2 = (1 - sqrt (1 - t^2)) * (1 + sqrt (1 - t^2))"
+                  using \<open>(1 - sqrt (1 - t^2)) * (1 + sqrt (1 - t^2)) = t^2\<close> by simp
+                also have "... > (1 - sqrt (1 - t^2)) * 1"
+                proof (rule mult_strict_left_mono)
+                  show "(1::real) < 1 + sqrt (1 - t^2)" using \<open>1 + sqrt (1 - t^2) > 1\<close> .
+                  show "0 < 1 - sqrt (1 - t^2)"
+                  proof -
+                    have "sqrt (1 - t^2) < sqrt 1" by (rule real_sqrt_less_mono) (use \<open>1 - t^2 > 0\<close> ht(1) in simp_all)
+                    thus ?thesis by simp
+                  qed
+                qed
+                finally have "1 - sqrt (1 - t^2) < t^2" by simp
+                thus ?thesis using ht2_eps hdist_eq by simp
+              qed
+              thus ?thesis unfolding p_def using h\<epsilon>2(2) by simp
+            qed
             have "snd p \<in> U2 \<times> U3" using \<open>fst (snd p) \<in> U2\<close> \<open>snd (snd p) \<in> U3\<close>
               unfolding p_def by simp
             hence "snd p \<in> U23" using \<open>U2 \<times> U3 \<subseteq> U23\<close> by auto
