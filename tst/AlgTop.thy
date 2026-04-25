@@ -13203,6 +13203,43 @@ proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
   ultimately show "top1_compact_on D (subspace_topology top1_S2 top1_S2_topology D)" by simp
 qed
 
+lemma arc_connected:
+  assumes "top1_is_arc_on D TD"
+  shows "top1_connected_on D TD"
+proof -
+  obtain h where hh: "top1_homeomorphism_on I_set I_top D TD h"
+    using assms unfolding top1_is_arc_on_def by (by100 blast)
+  have hI_conn: "top1_connected_on I_set I_top"
+  proof -
+    have "connected {0..1::real}" by (rule connected_Icc)
+    have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+      by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+    have "connected I_set" using \<open>connected {0..1::real}\<close> hI01 by simp
+    have "top1_connected_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+      using \<open>connected I_set\<close> top1_connected_on_subspace_openI by (by100 blast)
+    thus ?thesis unfolding top1_unit_interval_topology_def by simp
+  qed
+  have hI_top: "is_topology_on I_set I_top"
+    using hI_conn unfolding top1_connected_on_def by (by100 blast)
+  have hTD: "is_topology_on D TD"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hcont: "top1_continuous_map_on I_set I_top D TD h"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have himg: "h ` I_set = D"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have "top1_connected_on (h ` I_set) (subspace_topology D TD (h ` I_set))"
+    by (rule Theorem_23_5[OF hI_top hTD hI_conn hcont])
+  hence "top1_connected_on D (subspace_topology D TD D)" using himg by simp
+  moreover have "subspace_topology D TD D = TD"
+  proof -
+    have hTD_strict: "is_topology_on_strict D TD"
+      using assms unfolding top1_is_arc_on_def by (by100 blast)
+    show ?thesis by (rule subspace_topology_self_carrier)
+       (use hTD_strict in \<open>unfold is_topology_on_strict_def, by100 blast\<close>)
+  qed
+  ultimately show ?thesis by simp
+qed
+
 lemma arc_split_at_midpoint:
   assumes hT: "is_topology_on_strict X TX"
       and hH: "is_hausdorff_on X TX"
