@@ -12685,7 +12685,30 @@ proof -
               moreover have "(top1_S2 - {a}) - {b} = top1_S2 - {a, b}" by (by100 blast)
               ultimately show ?thesis by simp
             qed
-            show False sorry \<comment> \<open>S^2\{a,b} connected + partition into 2 nonempty closed \<Rightarrow> disconnected.\<close>
+            \<comment> \<open>A1\{a,b} and A2\{a,b} are both clopen in S^2\{a,b} (standard topology).
+               Both nonempty. Their union = S^2\{a,b}. So S^2\{a,b} disconnected.
+               But connected (S^2\{a,b}). Contradiction.\<close>
+            have hpart: "(A1 - {a, b}) \<union> (A2 - {a, b}) = top1_S2 - {a, b}"
+              using hAA_S2' hab by (by100 blast)
+            have hdisj_part: "(A1 - {a, b}) \<inter> (A2 - {a, b}) = {}"
+              using hab by (by100 blast)
+            \<comment> \<open>A1 closed in S^2 \<Rightarrow> A1\{a,b} closed in S^2\{a,b} (standard).
+               Complement A2\{a,b} = (S^2\A1) \<inter> (S^2\{a,b}) open in S^2\{a,b} (standard).
+               So A1\{a,b} also open (complement of closed in closed = open... no, complement of open).\<close>
+            \<comment> \<open>Actually: both A1\{a,b} and A2\{a,b} are closed in standard S^2\{a,b}.
+               Complement of each = the other = also closed. So both are open too (clopen).\<close>
+            \<comment> \<open>A1, A2 closed in R^3 (closed in S^2 and S^2 closed in R^3).\<close>
+            have "closed (A1 :: (real\<times>real\<times>real) set)" sorry
+            have "closed (A2 :: (real\<times>real\<times>real) set)" sorry
+            \<comment> \<open>-A1, -A2 open. Form a separation of S^2\{a,b}:
+               S^2\{a,b} \<subseteq> (-A1) \<union> (-A2), (-A1)\<inter>(-A2)\<inter>(S^2\{a,b}) = {},
+               both intersections nonempty. Contradicts connected.\<close>
+            have "open (- A1)" using \<open>closed A1\<close> by (rule open_Compl)
+            have "open (- A2)" using \<open>closed A2\<close> by (rule open_Compl)
+            have "\<not> connected (top1_S2 - {a, b})"
+              unfolding connected_def sorry
+            show False using \<open>connected (top1_S2 - {a, b})\<close> \<open>\<not> connected (top1_S2 - {a, b})\<close>
+              by contradiction
           qed
         qed
         show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
