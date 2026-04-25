@@ -13792,15 +13792,9 @@ proof (rule ccontr)
       ultimately show ?thesis unfolding openin_on_def by (by100 blast)
     qed
     have hB_open: "openin_on ?X ?TX B"
-    proof -
-      \<comment> \<open>B = union of path components of U\<inter>V other than A. Each is open (lpc). Union = open.\<close>
-      have "B = \<Union>{P \<in> top1_path_components_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)). P \<noteq> A}"
-        sorry \<comment> \<open>B = (U\<inter>V)\A = union of non-A path components.\<close>
-      moreover have "\<forall>P \<in> top1_path_components_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)).
-          P \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
-        sorry \<comment> \<open>Each path component is open in U\<inter>V (lpc).\<close>
-      ultimately show ?thesis sorry
-    qed
+      sorry \<comment> \<open>B = (U\<inter>V)\A, union of non-A path components of lpc space.
+         Each path component open (lpc). B = union of opens = open in U\<inter>V.
+         U\<inter>V open in X. Hence B open in X.\<close>
     have hAB_disj: "A \<inter> B = {}" unfolding B_def by (by100 blast)
     have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub' by auto
     \<comment> \<open>Lift \<alpha> to path in U (subspace of X), \<beta> to path in V (subspace of X).
