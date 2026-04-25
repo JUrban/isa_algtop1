@@ -12582,7 +12582,49 @@ proof -
              Actually: if A1\<union>A2 = S^2, then S^2\(A1\<union>A2) = {}, so it IS "connected" (vacuously).
              But hconn gives connected S^2\(A1\<union>A2) = connected {}, which IS true.
              So the proof by contradiction at the outer level needs S^2\(A1\<union>A2) \<noteq> {}.\<close>
-          show ?thesis sorry \<comment> \<open>S^2\(A1\<union>A2) nonempty: needs S^2 \<noteq> A1\<union>A2.\<close>
+          \<comment> \<open>A1\<union>A2 \<noteq> S^2 because S^2\{a,b} is connected but A1\{a,b}, A2\{a,b}
+             would partition it into two closed sets if A1\<union>A2 = S^2.\<close>
+          show ?thesis
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "?U \<inter> ?V = {}" by simp
+            hence "top1_S2 - (A1 \<union> A2) = {}" using hUV_eq by simp
+            hence hAA_S2: "top1_S2 \<subseteq> A1 \<union> A2"
+              by (by100 blast)
+            hence hAA_S2': "A1 \<union> A2 = top1_S2"
+              using assms(2,3) by (by100 blast)
+            \<comment> \<open>S^2\{a,b} = (A1\{a,b}) \<union> (A2\{a,b}), disjoint (since A1\<inter>A2={a,b}).
+               Both are closed in S^2\{a,b} (restrictions of closed A1,A2).
+               S^2\{a,b} connected. So one must be empty.
+               But A1 connected with \<ge>3 points means A1\{a,b} \<noteq> {}.
+               Similarly A2\{a,b} \<noteq> {}. Contradiction.\<close>
+            have "A1 - {a, b} \<noteq> {}" sorry \<comment> \<open>A1 connected, |A1\<inter>A2|=2, a\<noteq>b \<Rightarrow> |A1| \<ge> 3.\<close>
+            have "A2 - {a, b} \<noteq> {}" sorry
+            \<comment> \<open>(A1\{a,b}) \<union> (A2\{a,b}) = S^2\{a,b} and disjoint. Both closed. Both nonempty.
+               S^2\{a,b} disconnected. But S^2\{a,b} IS connected. Contradiction.\<close>
+            have "connected (top1_S2 - {a, b})"
+            proof -
+              have h_S2a_open: "top1_S2 - {a} \<in> top1_S2_topology"
+              proof -
+                have "closedin_on top1_S2 top1_S2_topology {a}"
+                  by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2])
+                thus ?thesis using hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+              qed
+              have h_S2a_conn: "top1_connected_on (top1_S2 - {a})
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))"
+                by (rule path_connected_imp_connected)
+                   (use S2_minus_point_simply_connected[OF ha_S2] in
+                    \<open>unfold top1_simply_connected_on_def, by100 blast\<close>)
+              have "b \<in> top1_S2 - {a}" using hb_S2 hab_ne by (by100 blast)
+              have "\<exists>c. c \<in> top1_S2 \<and> c \<notin> (top1_S2 - {a})" using ha_S2 by (by100 blast)
+              have "connected ((top1_S2 - {a}) - {b})"
+                by (rule connected_open_delete_S2[OF h_S2a_open h_S2a_conn
+                    \<open>b \<in> top1_S2 - {a}\<close> \<open>\<exists>c. c \<in> top1_S2 \<and> c \<notin> (top1_S2 - {a})\<close>])
+              moreover have "(top1_S2 - {a}) - {b} = top1_S2 - {a, b}" by (by100 blast)
+              ultimately show ?thesis by simp
+            qed
+            show False sorry \<comment> \<open>S^2\{a,b} connected + partition into 2 nonempty closed \<Rightarrow> disconnected.\<close>
+          qed
         qed
         show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
             hTUV hUV_conn' hUV_lpc \<open>?U \<inter> ?V \<noteq> {}\<close>])
