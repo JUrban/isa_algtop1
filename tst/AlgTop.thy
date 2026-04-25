@@ -13131,10 +13131,41 @@ proof -
       \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
       have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
         sorry \<comment> \<open>C bounded \<Rightarrow> R^2\C unbounded \<Rightarrow> \<sigma>^{-1} of far points \<rightarrow> N.\<close>
-      \<comment> \<open>Connected set \<union> limit point = connected.\<close>
+      \<comment> \<open>Connected set \<union> limit point = connected. Use Theorem 23.4.\<close>
       have "top1_connected_on (top1_S2 - C') (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
-        sorry \<comment> \<open>Use Theorem 23.4: closure of connected is connected, applied with
-           A = \<sigma>^{-1}(R^2\C), B = S^2\C' \<subseteq> closure(A). A connected \<Rightarrow> B connected.\<close>
+      proof -
+        have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hA_sub_S2: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2"
+        proof -
+          have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
+          proof -
+            have h\<sigma>inv_img_sub: "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
+            proof -
+              have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+                using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+                unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
+              thus ?thesis unfolding bij_betw_def by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+          thus ?thesis by (by100 blast)
+        qed
+        have hB_sub_S2: "top1_S2 - C' \<subseteq> top1_S2" by (by100 blast)
+        have hA_sub_B: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - C'"
+          using hS2C'_eq by (by100 blast)
+        have hB_sub_cl: "top1_S2 - C' \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+        proof -
+          have hA_sub_cl: "\<sigma>inv ` (UNIV - C) \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+            by (rule subset_closure_on)
+          have hN_in_cl: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+            by (rule hN_closure)
+          show ?thesis using hS2C'_eq hA_sub_cl hN_in_cl by (by100 blast)
+        qed
+        show ?thesis
+          by (rule Theorem_23_4[OF hTS2_loc hA_sub_S2 hB_sub_S2 hA_sub_B hB_sub_cl h\<sigma>inv_R2C_conn])
+      qed
       thus False using hS2_C'_sep unfolding top1_separates_on_def by (by100 blast)
     qed
   qed
