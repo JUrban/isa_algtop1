@@ -7501,24 +7501,31 @@ proof -
               and "north_pole \<in> U1 \<times> U23" and "U1 \<times> U23 \<subseteq> W"
             using open_prod_elim[OF \<open>open W\<close> \<open>north_pole \<in> W\<close>] by (by100 blast)
           hence h0_U1: "(0::real) \<in> U1" unfolding north_pole_def by simp
+          \<comment> \<open>U23 open, (0,1) \<in> U23. Get \<epsilon>>0 s.t. points near (0,1) in U23.\<close>
+          have "(0::real, 1::real) \<in> U23" using \<open>north_pole \<in> U1 \<times> U23\<close> unfolding north_pole_def by simp
           obtain U2 U3 where hU2: "open U2" and hU3: "open U3"
-              and "((0::real), 1::real) \<in> U2 \<times> U3" and "U2 \<times> U3 \<subseteq> U23"
-            using open_prod_elim[OF hU23] sorry
-          hence h0_U2: "(0::real) \<in> U2" and h1_U3: "(1::real) \<in> U3" by auto
-          \<comment> \<open>U2 open and 0 \<in> U2 \<Rightarrow> \<exists>\<delta>>0 with (-\<delta>,\<delta>) \<subseteq> U2.\<close>
-          obtain \<delta> where h\<delta>: "\<delta> > 0" "\<delta>/2 \<in> U2"
+              and h01_U23: "(0::real) \<in> U2" "(1::real) \<in> U3" and "U2 \<times> U3 \<subseteq> U23"
+          proof -
+            from open_prod_elim[OF hU23 \<open>(0::real, 1::real) \<in> U23\<close>]
+            obtain A B where "open A" "open B" "(0::real, 1::real) \<in> A \<times> B" "A \<times> B \<subseteq> U23" by blast
+            thus ?thesis using that by auto
+          qed
+          \<comment> \<open>Get \<epsilon>1 > 0 s.t. |y| < \<epsilon>1 \<Rightarrow> y \<in> U2, and \<epsilon>2 > 0 s.t. |y-1| < \<epsilon>2 \<Rightarrow> y \<in> U3.\<close>
+          obtain \<epsilon>1 where h\<epsilon>1: "\<epsilon>1 > 0" "\<forall>y::real. dist y 0 < \<epsilon>1 \<longrightarrow> y \<in> U2"
           proof -
             have "\<exists>e>0. \<forall>y. dist y (0::real) < e \<longrightarrow> y \<in> U2"
-              using hU2 h0_U2 unfolding open_dist by (by100 blast)
-            then obtain e where he: "e > 0" "\<forall>y. dist y (0::real) < e \<longrightarrow> y \<in> U2" by blast
-            have "e/2 > 0" using he(1) by simp
-            have "dist (e/2) (0::real) < e" using he(1) by (simp add: dist_real_def)
-            hence "e/2 \<in> U2" using he(2) by simp
-            thus ?thesis using that[of e] he(1) by simp
+              using hU2 h01_U23(1) unfolding open_dist by (by100 blast)
+            thus ?thesis using that by blast
           qed
-          \<comment> \<open>Witness: p = (0, \<delta>/2, sqrt(1-(\<delta>/2)^2)) \<in> S^2 \<inter> W, p \<noteq> N.\<close>
-          define t where "t = min (\<delta>/2) (1/2)"
-          have ht: "t > 0" "t \<le> 1/2" unfolding t_def using h\<delta>(1) by auto
+          obtain \<epsilon>2 where h\<epsilon>2: "\<epsilon>2 > 0" "\<forall>y::real. dist y 1 < \<epsilon>2 \<longrightarrow> y \<in> U3"
+          proof -
+            have "\<exists>e>0. \<forall>y. dist y (1::real) < e \<longrightarrow> y \<in> U3"
+              using hU3 h01_U23(2) unfolding open_dist by (by100 blast)
+            thus ?thesis using that by blast
+          qed
+          \<comment> \<open>Choose t small enough for both U2 and U3.\<close>
+          define t where "t = min (min (\<epsilon>1/2) (1/2)) (sqrt \<epsilon>2)"
+          have ht: "t > 0" "t \<le> 1/2" "t < \<epsilon>1" unfolding t_def using h\<epsilon>1(1) h\<epsilon>2(1) by auto
           define p where "p = (0::real, t, sqrt (1 - t^2))"
           have hp_S2: "p \<in> top1_S2" unfolding p_def top1_S2_def
           proof simp
@@ -7529,7 +7536,23 @@ proof -
               using real_sqrt_pow2[OF h_nneg] by simp
           qed
           have hp_ne_N: "p \<noteq> north_pole" unfolding p_def north_pole_def using ht(1) by auto
-          have "p \<in> W" sorry \<comment> \<open>p \<in> U1 \<times> (U2 \<times> U3) \<subseteq> U1 \<times> U23 \<subseteq> W.\<close>
+          have "p \<in> W"
+          proof -
+            have "fst p \<in> U1" unfolding p_def using h0_U1 by simp
+            have "fst (snd p) \<in> U2"
+            proof -
+              have "\<bar>t\<bar> < \<epsilon>1" using ht(3) ht(1) by simp
+              thus ?thesis unfolding p_def using h\<epsilon>1(2) by simp
+            qed
+            have "snd (snd p) \<in> U3"
+              sorry \<comment> \<open>|sqrt(1-t^2) - 1| < \<epsilon>2 for small t. Needs 1-sqrt(1-t^2) \<le> t^2 \<le> \<epsilon>2.\<close>
+            have "snd p \<in> U2 \<times> U3" using \<open>fst (snd p) \<in> U2\<close> \<open>snd (snd p) \<in> U3\<close>
+              unfolding p_def by simp
+            hence "snd p \<in> U23" using \<open>U2 \<times> U3 \<subseteq> U23\<close> by auto
+            hence "p \<in> U1 \<times> U23" using \<open>fst p \<in> U1\<close>
+              unfolding mem_Times_iff by simp
+            thus ?thesis using \<open>U1 \<times> U23 \<subseteq> W\<close> by auto
+          qed
           have "p \<in> top1_S2 \<inter> W" using hp_S2 \<open>p \<in> W\<close> by (by100 blast)
           hence "p \<in> {north_pole}" using \<open>{north_pole} = top1_S2 \<inter> W\<close> by simp
           thus False using hp_ne_N by simp
