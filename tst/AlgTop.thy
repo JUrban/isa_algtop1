@@ -8801,7 +8801,7 @@ proof -
         moreover have "h ` (C0 - {b}) \<inter> h ` (top1_S2 - C0) = {}" by fact
         ultimately show ?thesis by (by100 blast)
       qed
-      moreover have "compact (h ` (top1_S2 - C0))"
+      have hK_compact: "compact (h ` (top1_S2 - C0))"
       proof -
         have "compact (top1_S2 - C0)"
         proof -
@@ -8939,11 +8939,10 @@ proof -
         show ?thesis
           by (rule compact_continuous_image[OF \<open>continuous_on (top1_S2 - C0) h\<close> \<open>compact (top1_S2 - C0)\<close>])
       qed
-      ultimately show ?thesis
-        sorry \<comment> \<open>Need: UNIV - K connected for THIS specific compact K = h(S^2\C0).
-           True because h(C0\{b}) \<cong> C0\{b} (homeomorphism h) and C0\{b} is connected
-           (C0 open connected in S^2, removing point in dim \<ge> 2 preserves connectivity).
-           Requires connected_open_delete for S^2 (via h: S^2\{b} \<cong> R^2).\<close>
+      show ?thesis
+        sorry \<comment> \<open>Need: h(C0\{b}) connected. Follows from C0\{b} connected (open connected
+           S^2-subset minus a point, dim 2 preserves connectivity) + h continuous.
+           Requires connected_open_delete for S^2 manifold.\<close>
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
