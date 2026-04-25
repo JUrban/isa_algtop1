@@ -7894,7 +7894,26 @@ proof -
     \<comment> \<open>fst p + 1 or fst p - 1 might not be in U1 but {fst p - 1 <..< fst p + 1} is a nhd.\<close>
     \<comment> \<open>Use: open U1 means it's a union of open intervals. fst p \<in> some interval.\<close>
     have "\<exists>a b. a < fst p \<and> fst p < b \<and> {a<..<b} \<subseteq> U1"
-      sorry \<comment> \<open>Standard: open real set contains interval around each point.\<close>
+    proof -
+      \<comment> \<open>U1 is open and contains fst p. Use: open sets in R contain intervals.\<close>
+      \<comment> \<open>From open_real_def + uniformity: \<exists>e>0. ball(fst p, e) \<subseteq> U1.\<close>
+      have "\<exists>e>0. \<forall>y::real. \<bar>y - fst p\<bar> < e \<longrightarrow> y \<in> U1"
+      proof -
+        have "\<exists>e>0. \<forall>y. dist y (fst p) < e \<longrightarrow> y \<in> U1"
+          using \<open>open U1\<close> \<open>fst p \<in> U1\<close> unfolding open_dist by (by100 blast)
+        thus ?thesis unfolding dist_real_def by simp
+      qed
+      then obtain e :: real where "e > 0" and he: "\<forall>y. \<bar>y - fst p\<bar> < e \<longrightarrow> y \<in> U1" by blast
+      have hsub: "{fst p - e <..< fst p + e} \<subseteq> U1"
+      proof
+        fix y assume "y \<in> {fst p - e <..< fst p + e}"
+        hence "\<bar>y - fst p\<bar> < e" by auto
+        thus "y \<in> U1" using he by simp
+      qed
+      have "fst p - e < fst p" using \<open>e > 0\<close> by simp
+      moreover have "fst p < fst p + e" using \<open>e > 0\<close> by simp
+      ultimately show ?thesis using hsub by (by100 blast)
+    qed
     then obtain a b where "a < fst p" "fst p < b" "{a<..<b} \<subseteq> U1" by blast
     have "(fst p + b) / 2 \<in> {a<..<b}" using \<open>a < fst p\<close> \<open>fst p < b\<close> by simp
     moreover have "(fst p + b) / 2 \<noteq> fst p" using \<open>fst p < b\<close> by simp
