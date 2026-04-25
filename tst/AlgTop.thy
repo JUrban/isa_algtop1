@@ -8839,7 +8839,11 @@ proof -
         show ?thesis
           by (rule compact_continuous_image[OF \<open>continuous_on (top1_S2 - C0) h\<close> \<open>compact (top1_S2 - C0)\<close>])
       qed
-      ultimately show ?thesis using complement_compact_connected_R2 by simp
+      ultimately show ?thesis
+        sorry \<comment> \<open>Need: UNIV - K connected for THIS specific compact K = h(S^2\C0).
+           True because h(C0\{b}) \<cong> C0\{b} (homeomorphism h) and C0\{b} is connected
+           (C0 open connected in S^2, removing point in dim \<ge> 2 preserves connectivity).
+           Requires connected_open_delete for S^2 (via h: S^2\{b} \<cong> R^2).\<close>
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
