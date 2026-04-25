@@ -13579,8 +13579,55 @@ proof -
               hD_injective hf_nul]
           by simp
       qed
-      \<comment> \<open>All points in same component \<Rightarrow> connected. Contradicts hnsep.\<close>
-      show ?thesis sorry \<comment> \<open>Derive contradiction from all-same-component + hnsep.\<close>
+      \<comment> \<open>Derive contradiction: hnsep gives separation U,V of S^2\D.
+         Pick a \<in> U, b \<in> V. a \<noteq> b. hall_same_comp gives component C with a,b \<in> C.
+         C connected, C \<subseteq> U \<union> V, C \<inter> U \<noteq> {}, C \<inter> V \<noteq> {}. Contradicts C connected.\<close>
+      have hTS2D: "is_topology_on (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+        by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+      have "\<exists>U' V'. U' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
+          V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
+          U' \<noteq> {} \<and> V' \<noteq> {} \<and> U' \<inter> V' = {} \<and> U' \<union> V' = top1_S2 - D"
+      proof -
+        have "is_topology_on (top1_S2 - D)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) \<and>
+          \<not> (\<nexists>U V. U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
+              V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
+              U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = top1_S2 - D)"
+          using hnsep hTS2D unfolding top1_connected_on_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      then obtain U' V' where hU': "U' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)"
+          and hV': "V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)"
+          and hU'ne: "U' \<noteq> {}" and hV'ne: "V' \<noteq> {}"
+          and hU'V'disj: "U' \<inter> V' = {}" and hU'V'cover: "U' \<union> V' = top1_S2 - D"
+        by blast
+      obtain a where ha': "a \<in> U'" using hU'ne by (by100 blast)
+      obtain b where hb': "b \<in> V'" using hV'ne by (by100 blast)
+      have hab': "a \<noteq> b" using ha' hb' hU'V'disj by (by100 blast)
+      have ha_S2D: "a \<in> top1_S2 - D" using ha' hU'V'cover by (by100 blast)
+      have hb_S2D: "b \<in> top1_S2 - D" using hb' hU'V'cover by (by100 blast)
+      obtain C where hC: "C \<in> top1_components_on (top1_S2 - D)
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+           and haC: "a \<in> C" and hbC: "b \<in> C"
+        using hall_same_comp ha_S2D hb_S2D hab' by blast
+      have hC_conn: "top1_connected_on C (subspace_topology (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C)"
+        by (rule Theorem_25_1(3)[OF hTS2D hC])
+      have hC_sub: "C \<subseteq> top1_S2 - D" using hC unfolding top1_components_on_def
+        top1_component_of_on_def by (by100 blast)
+      \<comment> \<open>U' \<inter> C and V' \<inter> C separate C.\<close>
+      have "U' \<inter> C \<in> subspace_topology (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C"
+        using hU' unfolding subspace_topology_def by (by100 blast)
+      moreover have "V' \<inter> C \<in> subspace_topology (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C"
+        using hV' unfolding subspace_topology_def by (by100 blast)
+      moreover have "U' \<inter> C \<noteq> {}" using haC ha' by (by100 blast)
+      moreover have "V' \<inter> C \<noteq> {}" using hbC hb' by (by100 blast)
+      moreover have "(U' \<inter> C) \<inter> (V' \<inter> C) = {}" using hU'V'disj by (by100 blast)
+      moreover have "(U' \<inter> C) \<union> (V' \<inter> C) = C" using hC_sub hU'V'cover by (by100 blast)
+      ultimately show ?thesis using hC_conn unfolding top1_connected_on_def by (by100 blast)
     qed
   qed
 qed
