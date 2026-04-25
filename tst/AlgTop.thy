@@ -8839,7 +8839,47 @@ proof -
           have "closed (top1_S2 - C0)"
           proof -
             have hC0_open_S2: "C0 \<in> top1_S2_topology"
-              sorry \<comment> \<open>C0 is open in S^2 (component of open set in lpc space).\<close>
+            proof -
+              have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+                using hT unfolding is_topology_on_strict_def by (by100 blast)
+              have hfA_sub_loc: "f ` A \<subseteq> top1_S2"
+              proof fix x assume "x \<in> f ` A" then obtain y where "y \<in> A" "x = f y" by blast
+                thus "x \<in> top1_S2" using hf unfolding top1_continuous_map_on_def by (by100 blast) qed
+              have hfA_compact_loc: "top1_compact_on (f ` A) (subspace_topology top1_S2 top1_S2_topology (f ` A))"
+                sorry \<comment> \<open>f(A) compact: same proof as hfA_compact below.\<close>
+              have hS2fA_open: "top1_S2 - f ` A \<in> top1_S2_topology"
+              proof -
+                have "closedin_on top1_S2 top1_S2_topology (f ` A)"
+                  by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+                      top1_S2_is_topology_on_strict hfA_sub_loc hfA_compact_loc])
+                thus ?thesis unfolding closedin_on_def using hTS2 unfolding is_topology_on_def by (by100 blast)
+              qed
+              have hTS2fA: "is_topology_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+                by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+              have hS2fA_lpc: "top1_locally_path_connected_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+                by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2fA_open]) simp
+              obtain x where hx: "x \<in> top1_S2 - f ` A"
+                  and hC0_eq: "C0 = top1_component_of_on (top1_S2 - f ` A)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x"
+                using hC0 unfolding top1_components_on_def by (by100 blast)
+              have "top1_path_component_of_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x
+                = top1_component_of_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x"
+                using Theorem_25_5[OF hTS2fA] hS2fA_lpc hx by (by100 blast)
+              hence hC0_eq_pc: "C0 = top1_path_component_of_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x"
+                using hC0_eq by simp
+              have "top1_path_component_of_on (top1_S2 - f ` A)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x
+                \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)"
+                by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2fA hS2fA_lpc hx])
+              then obtain W where hW: "W \<in> top1_S2_topology" and hpc_eq: "C0 = (top1_S2 - f ` A) \<inter> W"
+                using hC0_eq_pc unfolding subspace_topology_def by (by100 blast)
+              thus ?thesis by (simp add: topology_inter_open[OF hTS2 hS2fA_open hW])
+            qed
             have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
               unfolding top1_S2_topology_def
               using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
