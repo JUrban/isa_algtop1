@@ -12807,11 +12807,7 @@ proof -
       \<comment> \<open>U\<inter>V nonempty: S^2 connected, A1,A2 closed connected with |A1\<inter>A2|=2 \<Rightarrow>
          A1\<union>A2 \<noteq> S^2 (proved inside hUV_pc via partition argument).\<close>
       have hUV_ne: "?U \<inter> ?V \<noteq> {}"
-      proof -
-        \<comment> \<open>If U\<inter>V = {}, then S^2 = A1\<union>A2 and S^2\{a,b} = (A1\{a,b}) \<sqcup> (A2\{a,b}).
-           Both nonempty (connected with \<ge>3 pts), S^2\{a,b} connected. Contradiction.\<close>
-        show ?thesis sorry \<comment> \<open>Identical argument to inside hUV_pc. Needs hoisting.\<close>
-      qed
+        sorry \<comment> \<open>Same argument as inside hUV_pc (fully proved there). Needs hoisting.\<close>
       obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V"
         using hUV_ne by (by100 blast)
       \<comment> \<open>By Theorem 59.1: every loop in X decomposes into pieces in U and V.
