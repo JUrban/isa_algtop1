@@ -8846,7 +8846,22 @@ proof -
               proof fix x assume "x \<in> f ` A" then obtain y where "y \<in> A" "x = f y" by blast
                 thus "x \<in> top1_S2" using hf unfolding top1_continuous_map_on_def by (by100 blast) qed
               have hfA_compact_loc: "top1_compact_on (f ` A) (subspace_topology top1_S2 top1_S2_topology (f ` A))"
-                sorry \<comment> \<open>f(A) compact: same proof as hfA_compact below.\<close>
+              proof -
+                have hTS2_: "is_topology_on top1_S2 top1_S2_topology"
+                  using hT unfolding is_topology_on_strict_def by (by100 blast)
+                have hf_S2: "top1_continuous_map_on A TA top1_S2 top1_S2_topology f"
+                  unfolding top1_continuous_map_on_def proof (intro conjI ballI)
+                  fix x assume "x \<in> A" thus "f x \<in> top1_S2" using hfA_sub_loc by (by100 blast) next
+                  fix V assume hV: "V \<in> top1_S2_topology"
+                  have "(top1_S2 - {a,b}) \<inter> V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a,b})"
+                    by (rule subspace_topology_memI[OF hV])
+                  hence "{x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V} \<in> TA"
+                    using hf unfolding top1_continuous_map_on_def by (by100 blast)
+                  moreover have "{x \<in> A. f x \<in> V} = {x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V}"
+                    using hf unfolding top1_continuous_map_on_def by (by100 blast)
+                  ultimately show "{x \<in> A. f x \<in> V} \<in> TA" by simp qed
+                show ?thesis by (rule top1_compact_on_continuous_image[OF hcomp hTS2_ hf_S2])
+              qed
               have hS2fA_open: "top1_S2 - f ` A \<in> top1_S2_topology"
               proof -
                 have "closedin_on top1_S2 top1_S2_topology (f ` A)"
