@@ -14025,13 +14025,10 @@ proof
                 \<comment> \<open>Continuous: same as U case — preimage of TX-open matches TE slices.\<close>
                 have hcont: "top1_continuous_map_on Sn (subspace_topology E TE Sn) V
                     (subspace_topology X TX V) p0"
-                  sorry
-                \<comment> \<open>Inverse continuous: for W \<in> subspace_topology E TE Sn,
-                   p0(W) corresponds to the odd-slice condition of TE,
-                   which gives TX-open sets.\<close>
+                  sorry \<comment> \<open>Same as U case: preimage of TX-open set is TE-open slice.\<close>
                 have hinv_cont: "top1_continuous_map_on V (subspace_topology X TX V) Sn
                     (subspace_topology E TE Sn) (inv_into Sn p0)"
-                  sorry
+                  sorry \<comment> \<open>TE odd-slice at level k gives TX-open set = p0-image.\<close>
                 show "top1_homeomorphism_on Sn (subspace_topology E TE Sn) V
                     (subspace_topology X TX V) p0"
                   unfolding top1_homeomorphism_on_def
