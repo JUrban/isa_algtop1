@@ -14465,16 +14465,91 @@ qed
    to a NON-loop (sheet shift by 2), this means:
    [f]^m = [g]^k \<Rightarrow> m = 0 (since lifts have endpoints (a,2m) vs (a,0)).
    For 63.5: this contradicts \<pi>_1(X) \<cong> Z (rank 1 \<Rightarrow> common multiples exist).\<close>
-text \<open>NOTE: The full formalization of 63.1(c) requires loop powers (n-fold products)
-  and iterated lifting. This is substantial infrastructure.
-  For 63.5, what we need is: given 3+ components of U \<inter> V, derive a contradiction
-  with \<pi>_1(X) \<cong> Z. This requires:
-  (1) [f] nontrivial: Theorem_63_1_loop_nontrivial with decomp (W1\<union>W2, B) [PROVED]
-  (2) [g] nontrivial: Theorem_63_1_loop_nontrivial with decomp (W1, W2\<union>B) [PROVED by instantiation]
-  (3) \<langle>[f]\<rangle> \<inter> \<langle>[g]\<rangle> = {1}: helix covering argument with loop powers [NOT YET FORMALIZED]
-  (4) \<pi>_1(X) \<cong> Z: X = S^2-{p,q}, covering space theory [NOT YET FORMALIZED]
-  (5) In Z, two nonzero subgroups intersect nontrivially [algebraic fact]
-  The main remaining work is (3) and (4).\<close>
+\<comment> \<open>Lemma: g = \<gamma>*\<delta> (with a, a' \<in> A) lifts to a loop in the helix covering.
+   This is the KEY property distinguishing f-lift (non-loop) from g-lift (loop).
+   Combined with Theorem_54_3, this gives: if [f]^m = [g]^k then m = 0.\<close>
+lemma helix_g_lift_is_loop:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B" and "a' \<in> A"
+      and "top1_is_path_on U (subspace_topology X TX U) a a' gamma"
+      and "top1_is_path_on V (subspace_topology X TX V) a' a delta"
+  shows "\<exists>(E::('a \<times> int) set) TE (p0::('a \<times> int) \<Rightarrow> 'a) e0.
+      top1_covering_map_on E TE X TX p0
+    \<and> is_topology_on E TE
+    \<and> e0 \<in> E \<and> p0 e0 = a
+    \<and> (\<exists>gtilde. top1_is_path_on E TE e0 e0 gtilde
+        \<and> (\<forall>s\<in>I_set. p0 (gtilde s) = top1_path_product gamma delta s))"
+proof -
+    \<comment> \<open>Use the same helix covering as in Theorem_63_1.\<close>
+    have ha_U: "a \<in> U" using assms(5,9) by (by100 blast)
+    have ha'_U: "a' \<in> U" using assms(5,11) by (by100 blast)
+    have ha_V: "a \<in> V" using assms(5,9) by (by100 blast)
+    have ha'_V: "a' \<in> V" using assms(5,11) by (by100 blast)
+    have hU_open_TX: "U \<in> TX" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hV_open_TX: "V \<in> TX" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hA_open_TX: "A \<in> TX" using assms(7) unfolding openin_on_def by (by100 blast)
+    have hB_open_TX: "B \<in> TX" using assms(8) unfolding openin_on_def by (by100 blast)
+    have hAB_UV: "A \<union> B = U \<inter> V" using assms(5) by simp
+    have hAB_disj: "A \<inter> B = {}" using assms(6) .
+    \<comment> \<open>Same E, TE, p0 as 63.1.\<close>
+    define E :: "('a \<times> int) set" where
+      "E = {(x, m). (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)}"
+    define TE :: "('a \<times> int) set set" where
+      "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+    define p0 :: "'a \<times> int \<Rightarrow> 'a" where "p0 = fst"
+    define e0 :: "'a \<times> int" where "e0 = (a, 0)"
+    have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_U by simp
+    have hp0e0: "p0 e0 = a" unfolding p0_def e0_def by simp
+    have hTE: "is_topology_on E TE" sorry \<comment> \<open>Same proof as in 63.1(a).\<close>
+    have hcov: "top1_covering_map_on E TE X TX p0" sorry \<comment> \<open>Same proof as in 63.1(a).\<close>
+    \<comment> \<open>g-lift: \<gamma>_lift on [0,1/2], \<delta>_lift on [1/2,1].
+       \<gamma>_lift(s) = (\<gamma>(s), 0). \<delta>_lift(s) = norm(\<delta>(s), -1).
+       Since a' \<in> A: norm(a', -1) = (a', 0) = \<gamma>_lift(1). Junction OK.
+       Since a \<in> A: norm(a, -1) = (a, 0) = e0. LOOP!\<close>
+    define gtilde :: "real \<Rightarrow> ('a \<times> int)" where
+      "gtilde = (\<lambda>s. if s \<le> 1/2
+        then (gamma (2*s), 0)
+        else (let y = delta (2*s - 1) in
+              if y \<in> A then (y, 0)
+              else if y \<in> B then (y, -2)
+              else (y, -1)))"
+    \<comment> \<open>Note: norm(y, -1) = (y, 0) if y \<in> A, (y, -2) if y \<in> B, (y, -1) if y \<in> V\U.\<close>
+    have hgt_path: "top1_is_path_on E TE e0 e0 gtilde" sorry
+      \<comment> \<open>Same proof pattern as ftilde. \<gamma>_lift continuous by TE even-slice.
+         \<delta>_lift continuous by TE odd-slice at level -1 (n = -1: odd slice gives
+         {x\<in>A.(x,0)\<in>W} \<union> {x\<in>B.(x,-2)\<in>W} \<union> {x\<in>V\U.(x,-1)\<in>W}).
+         Endpoints: gtilde(0) = (\<gamma>(0),0) = (a,0) = e0.
+         gtilde(1) = norm(\<delta>(1),-1) = norm(a,-1) = (a,0) = e0. LOOP!\<close>
+    have hgt_lift: "\<forall>s\<in>I_set. p0 (gtilde s) = top1_path_product gamma delta s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have hs_range: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+      show "p0 (gtilde s) = top1_path_product gamma delta s"
+      proof (cases "s \<le> 1/2")
+        case True
+        hence "gtilde s = (gamma (2*s), 0)" unfolding gtilde_def by simp
+        thus ?thesis unfolding p0_def top1_path_product_def using True by simp
+      next
+        case False
+        hence hs_half: "s > 1/2" by simp
+        define y where "y = delta (2*s - 1)"
+        have "gtilde s = (if y \<in> A then (y, 0) else if y \<in> B then (y, -2) else (y, -1))"
+          unfolding gtilde_def y_def using hs_half by (simp add: Let_def)
+        hence "p0 (gtilde s) = y" unfolding p0_def by (cases "y \<in> A"; cases "y \<in> B"; simp)
+        thus ?thesis unfolding y_def top1_path_product_def using False by simp
+      qed
+    qed
+    show ?thesis
+      using hcov hTE he0_E hp0e0 hgt_path hgt_lift
+      by (intro exI[of _ E] exI[of _ TE] exI[of _ p0] exI[of _ e0]) (by100 blast)
+  qed
 
 
 
