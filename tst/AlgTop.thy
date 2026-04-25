@@ -14756,7 +14756,11 @@ proof -
       and hUV_cover: "U \<union> V = UNIV - C"
       and hU_conn: "top1_connected_on U (subspace_topology UNIV ?TR2 U)"
       and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
-    sorry \<comment> \<open>Exactly 2 components: transfer to S^2, apply 63.5 (uses 63.2, 63.3, 63.1), transfer back.\<close>
+      and hU_bdd_raw: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
+      and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
+    sorry \<comment> \<open>Exactly 2 components with bounded/unbounded labeling.
+       Transfer to S^2, apply 63.5 (uses 63.2, 63.3, 63.1), transfer back.
+       Label V = component containing exterior ball (unbounded).\<close>
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
   have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
@@ -15040,8 +15044,8 @@ proof -
   qed
   \<comment> \<open>Step 4 (Bounded/unbounded): Under stereographic projection, one component maps to
      the bounded component and the other to the unbounded one (Lemma 61.1).\<close>
-  have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
-  have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" sorry
+  have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" by (rule hU_bdd_raw)
+  have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" by (rule hV_unbdd_raw)
   \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
   have hU_bdy: "closure U = U \<union> C" sorry
   have hV_bdy: "closure V = V \<union> C" sorry
