@@ -12748,8 +12748,9 @@ proof -
         thus ?thesis using hUV_pc by simp
       qed
       \<comment> \<open>x0 \<in> U\<inter>V.\<close>
+      have hUV_ne: "?U \<inter> ?V \<noteq> {}" sorry \<comment> \<open>Proved inside hUV_pc block (needs hoisting).\<close>
       obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V"
-        sorry \<comment> \<open>U\<inter>V nonempty.\<close>
+        using hUV_ne by (by100 blast)
       \<comment> \<open>By Theorem 59.1: every loop in X decomposes into pieces in U and V.
          Each piece in U is nulhomotopic (via Lemma 61.2 + A1 connected).
          Each piece in V is nulhomotopic (via Lemma 61.2 + A2 connected).
