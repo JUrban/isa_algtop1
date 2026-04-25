@@ -12887,10 +12887,23 @@ proof -
         have hb_S2: "b \<in> top1_S2" using hb by (by100 blast)
         have ha_notin_D: "a \<notin> D" using ha by (by100 blast)
         have hb_notin_D: "b \<notin> D" using hb by (by100 blast)
+        have hD_sub_S2ab: "D \<subseteq> top1_S2 - {a, b}"
+          using assms(2) ha_notin_D hb_notin_D by (by100 blast)
         have hf_cont: "top1_continuous_map_on D (subspace_topology top1_S2 top1_S2_topology D)
             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
             (\<lambda>x. x)"
-          sorry \<comment> \<open>Inclusion D \<hookrightarrow> S^2-{a,b} continuous: D \<subseteq> S^2-{a,b} since a,b \<notin> D.\<close>
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> D" thus "x \<in> top1_S2 - {a, b}" using hD_sub_S2ab by (by100 blast)
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
+          then obtain W where hW: "W \<in> top1_S2_topology" "V = (top1_S2 - {a, b}) \<inter> W"
+            unfolding subspace_topology_def by (by100 blast)
+          have "{x \<in> D. x \<in> V} = D \<inter> W" using hW(2) hD_sub_S2ab by (by100 blast)
+          also have "... \<in> subspace_topology top1_S2 top1_S2_topology D"
+            using hW(1) unfolding subspace_topology_def by (by100 blast)
+          finally show "{x \<in> D. x \<in> V} \<in> subspace_topology top1_S2 top1_S2_topology D" .
+        qed
         have hf_nul: "top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
             (\<lambda>x. x)"
