@@ -12959,10 +12959,71 @@ proof -
                 \<Longrightarrow> g ` I_set \<subseteq> ?U \<Longrightarrow>
                 top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                   g (top1_constant_path x0)"
-              sorry \<comment> \<open>Factor g through S^1 (loop_factors_through_S1).
-                 h: S^1 \<rightarrow> U. A1 \<subseteq> S^2\h(S^1). A1 connected, {a,b}\<subseteq>A1.
-                 By Lemma_61_2: h nulhomotopic.
-                 By nulhomotopic_trivializes_loops_general: g \<simeq> const.\<close>
+            proof -
+              fix g assume hg_loop: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g"
+                  and hg_U: "g ` I_set \<subseteq> ?U"
+              \<comment> \<open>Step 1: Factor g through S^1.\<close>
+              obtain h_S1 where hh: "top1_continuous_map_on top1_S1 top1_S1_topology ?X
+                  (subspace_topology top1_S2 top1_S2_topology ?X) h_S1"
+                  and hh10: "h_S1 (1, 0) = x0"
+                  and hg_factor: "\<forall>s\<in>I_set. g s = h_S1 (top1_R_to_S1 s)"
+                using loop_factors_through_S1[OF hTX_weak hg_loop] by (by100 blast)
+              \<comment> \<open>Step 2: h_S1(S^1) \<subseteq> S^2\A1. So A1 \<subseteq> S^2\h_S1(S^1).\<close>
+              have hh_U: "h_S1 ` top1_S1 \<subseteq> ?U" sorry \<comment> \<open>From g(I) \<subseteq> U, g = h\<circ>p, p surjective.\<close>
+              have hA1_disj: "A1 \<subseteq> top1_S2 - h_S1 ` top1_S1"
+                using hh_U assms(2) by (by100 blast)
+              \<comment> \<open>Step 3: a,b in same component of S^2\h_S1(S^1) (A1 connected, {a,b}\<subseteq>A1).\<close>
+              have hsame: "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1 ` top1_S1)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))
+                  \<and> a \<in> CC \<and> b \<in> CC"
+              proof -
+                have hTS2hS1: "is_topology_on (top1_S2 - h_S1 ` top1_S1)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))"
+                  by (rule subspace_topology_is_topology_on[OF
+                      is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+                \<comment> \<open>A1 connected in subspace of S^2\h(S^1).\<close>
+                have hA1_conn_sub: "top1_connected_on A1
+                    (subspace_topology (top1_S2 - h_S1 ` top1_S1)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1)) A1)"
+                proof -
+                  have "subspace_topology (top1_S2 - h_S1 ` top1_S1)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1)) A1
+                      = subspace_topology top1_S2 top1_S2_topology A1"
+                    by (rule subspace_topology_trans[OF hA1_disj])
+                  thus ?thesis using assms(6) by simp
+                qed
+                have "A1 \<noteq> {}" using hab by (by100 blast)
+                have ha_A1: "a \<in> A1" using hab by (by100 blast)
+                have hb_A1: "b \<in> A1" using hab by (by100 blast)
+                obtain CC where "CC \<in> top1_components_on (top1_S2 - h_S1 ` top1_S1)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1 ` top1_S1))"
+                    "A1 \<subseteq> CC"
+                  using Theorem_25_1(4)[OF hTS2hS1 hA1_disj hA1_conn_sub \<open>A1 \<noteq> {}\<close>] by (by100 blast)
+                thus ?thesis using ha_A1 hb_A1 by (by100 blast)
+              qed
+              \<comment> \<open>Step 4: h_S1 nulhomotopic (Lemma 61.2).\<close>
+              have hh_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology
+                  (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) h_S1"
+                by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
+                    S1_compact ha_S2 hb_S2 hab_ne])
+                   (use hh hX_UV in auto, use hsame in auto)
+              \<comment> \<open>Step 5: g = h_S1 \<circ> p nulhomotopic.\<close>
+              have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  (h_S1 \<circ> top1_R_to_S1) (top1_constant_path x0)"
+                sorry \<comment> \<open>nulhomotopic_trivializes_loops_general + topology bridge.\<close>
+              moreover have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (h_S1 \<circ> top1_R_to_S1)"
+              proof -
+                have hg_path: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0 g"
+                  using hg_loop unfolding top1_is_loop_on_def by (by100 blast)
+                have "\<forall>s\<in>I_set. g s = (h_S1 \<circ> top1_R_to_S1) s"
+                  using hg_factor unfolding comp_def by simp
+                thus ?thesis by (rule paths_agree_on_I_path_homotopic[OF hTX_weak hg_path])
+              qed
+              ultimately show "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (top1_constant_path x0)"
+                using Lemma_51_1_path_homotopic_trans[OF hTX_weak] by (by100 blast)
+            qed
             have hV_nul: "\<And>g. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g
                 \<Longrightarrow> g ` I_set \<subseteq> ?V \<Longrightarrow>
                 top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
