@@ -12835,13 +12835,107 @@ proof -
          Each piece in U is nulhomotopic (via Lemma 61.2 + A1 connected).
          Each piece in V is nulhomotopic (via Lemma 61.2 + A2 connected).
          Hence every loop in X is nulhomotopic: X simply connected.\<close>
-      show ?thesis sorry \<comment> \<open>Apply Theorem 59.1 decomposition + Lemma 61.2 nulhomotopy.
-         This is the core ~200 lines of the 61.3 proof, which uses:
-         - loop_factors_through_S1: loops factor through S^1
-         - Lemma_61_2_nulhomotopy_textbook: a,b same component \<Rightarrow> nulhomotopic
-         - A1 connected + {a,b} \<subseteq> A1 \<Rightarrow> a,b same component of S^2\g(S^1) for g in U
-         - Theorem_59_1: loop decomposition into U/V pieces
-         - nulhomotopic_trivializes_loops_general: nulhomotopic pieces \<Rightarrow> trivial loop\<close>
+      \<comment> \<open>Core argument: every loop in X at x0 is nulhomotopic.
+         Step A: decompose loop via Theorem 59.1.
+         Step B: each piece gᵢ in U or V is nulhomotopic.
+         Step C: product of nulhomotopic = nulhomotopic.\<close>
+      show ?thesis unfolding top1_simply_connected_on_def
+      proof (intro conjI)
+        \<comment> \<open>Path-connected: X = U \<union> V, U,V open, U\<inter>V path-connected.\<close>
+        show "top1_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+        proof -
+          \<comment> \<open>X = S^2\{a,b} open in S^2. S^2 lpc. Open subset of lpc = lpc.
+             X connected (proved in hUV_ne_inner). Connected + lpc = path-connected.\<close>
+          have hX_open: "?X \<in> top1_S2_topology"
+          proof -
+            have "{a,b} \<subseteq> top1_S2" using ha_S2 hb_S2 by (by100 blast)
+            have "closedin_on top1_S2 top1_S2_topology {a,b}"
+            proof -
+              have "closedin_on top1_S2 top1_S2_topology {a}"
+                by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2])
+              have "closedin_on top1_S2 top1_S2_topology {b}"
+                by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hb_S2])
+              show ?thesis unfolding closedin_on_def
+              proof (intro conjI)
+                show "{a,b} \<subseteq> top1_S2" using ha_S2 hb_S2 by (by100 blast)
+                show "top1_S2 - {a,b} \<in> top1_S2_topology"
+                proof -
+                  have "top1_S2 - {a} \<in> top1_S2_topology"
+                    using \<open>closedin_on top1_S2 top1_S2_topology {a}\<close>
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  have "top1_S2 - {b} \<in> top1_S2_topology"
+                    using \<open>closedin_on top1_S2 top1_S2_topology {b}\<close>
+                    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                  have "top1_S2 - {a,b} = (top1_S2 - {a}) \<inter> (top1_S2 - {b})" by (by100 blast)
+                  thus ?thesis using topology_inter_open[OF hTS2
+                      \<open>top1_S2 - {a} \<in> top1_S2_topology\<close> \<open>top1_S2 - {b} \<in> top1_S2_topology\<close>]
+                    by simp
+                qed
+              qed
+            qed
+            thus ?thesis using hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          qed
+          have hX_lpc: "top1_locally_path_connected_on ?X
+              (subspace_topology top1_S2 top1_S2_topology ?X)"
+          proof -
+            have "?X \<subseteq> top1_S2" by (by100 blast)
+            show ?thesis by (rule open_subset_locally_path_connected[OF
+                S2_locally_path_connected hX_open \<open>?X \<subseteq> top1_S2\<close>])
+          qed
+          have hTX_is: "is_topology_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+            by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+          have hX_conn: "top1_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+          proof -
+            have "connected (top1_S2 - {a, b})"
+            proof -
+              have h_S2a_open: "top1_S2 - {a} \<in> top1_S2_topology"
+                using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2]
+                hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+              have h_S2a_conn: "top1_connected_on (top1_S2 - {a})
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))"
+                by (rule path_connected_imp_connected)
+                   (use S2_minus_point_simply_connected[OF ha_S2] in
+                    \<open>unfold top1_simply_connected_on_def, by100 blast\<close>)
+              have "b \<in> top1_S2 - {a}" using hb_S2 hab_ne by (by100 blast)
+              have "\<exists>c. c \<in> top1_S2 \<and> c \<notin> (top1_S2 - {a})" using ha_S2 by (by100 blast)
+              have "connected ((top1_S2 - {a}) - {b})"
+                by (rule connected_open_delete_S2[OF h_S2a_open h_S2a_conn
+                    \<open>b \<in> top1_S2 - {a}\<close> \<open>\<exists>c. c \<in> top1_S2 \<and> c \<notin> (top1_S2 - {a})\<close>])
+              moreover have "(top1_S2 - {a}) - {b} = top1_S2 - {a, b}" by (by100 blast)
+              ultimately show ?thesis by simp
+            qed
+            hence "top1_connected_on (top1_S2 - {a, b})
+                (subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b}))"
+              using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+            moreover have "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})
+                = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b})"
+            proof -
+              have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+              have "subspace_topology top1_S2 (subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {a, b})
+                  = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b})"
+                by (rule subspace_topology_trans) blast
+              thus ?thesis using hR3eq by simp
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have "?X \<noteq> {}" using hUV_ne hX_UV by (by100 blast)
+          show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+              hTX_is hX_conn hX_lpc \<open>?X \<noteq> {}\<close>])
+        qed
+        \<comment> \<open>All loops nulhomotopic: by Theorem 59.1 + Lemma 61.2.\<close>
+        show "\<forall>x0\<in>?X. \<forall>f. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 f \<longrightarrow>
+            top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+              f (top1_constant_path x0)"
+          sorry \<comment> \<open>The core SVK+61.2 argument (~200 lines in 61.3).
+             Uses: Theorem_59_1, loop_factors_through_S1,
+             Lemma_61_2_nulhomotopy_textbook (a,b same component via A1/A2 connected),
+             nulhomotopic_trivializes_loops_general.\<close>
+      qed
     qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
         (subspace_topology top1_S2 top1_S2_topology ?X)"
