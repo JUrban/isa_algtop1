@@ -14755,56 +14755,68 @@ proof -
       qed
       thus False using hsep hD by simp
     qed
-    \<comment> \<open>Bisection: at least one of D1, D2 separates. D is an arc, D1,D2 are sub-arcs.
-       The separating sub-arc is still an arc.
-       Repeat: get sequence of nested arcs, each separating a from b.
-       By Theorem 63.3 at each step, at least one sub-half separates.
+    \<comment> \<open>BY JOINING LEMMA CONTRAPOSITIVE: at least one of D1, D2 separates a' from b'.
+       The joining lemma says: if a' joinable to b' in S^2-D1 AND S^2-D2, then in S^2-D.
+       Contrapositive: if NOT joinable in S^2-D, then NOT joinable in S^2-D1 OR S^2-D2.\<close>
 
-       The key insight: every arc that separates a from b contains a sub-arc
-       that separates a from b with half the parametric length. By induction,
-       we get arcs of parametric length (1/2)^n, all separating.
-
-       The nested intervals theorem gives a limit point x. S^2\{x} \<cong> R^2
-       is path-connected. A path from a to b in S^2\{x} avoids x, hence
-       avoids a small neighborhood, hence avoids the sub-arc for large n.\<close>
-
-    \<comment> \<open>Obtain the homeomorphism h: [0,1] \<rightarrow> D.\<close>
-    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top D
-        (subspace_topology top1_S2 top1_S2_topology D) h0"
-      using assms(3) unfolding top1_is_arc_on_def by (by100 blast)
-
-    \<comment> \<open>From the separation of D and the split D = D1 \<union> D2:
-       at least one half separates. That half is also an arc.
-       Since both halves are arcs (from arc_split_at_midpoint),
-       we can iterate. By a compactness/limit argument, get contradiction.\<close>
-
-    \<comment> \<open>Get a,b that D separates.\<close>
-    have hTS2D: "is_topology_on (top1_S2 - D)
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-      by (rule subspace_topology_is_topology_on[OF
-          is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
+    \<comment> \<open>Get specific a', b' that D separates.\<close>
     obtain a' b' where ha': "a' \<in> top1_S2 - D" and hb': "b' \<in> top1_S2 - D"
         and hab'_sep: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - D)
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a' b' f)"
     proof -
+      have hTS2D: "is_topology_on (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+        by (rule subspace_topology_is_topology_on[OF
+            is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
       have "\<exists>a b. a \<in> top1_S2 - D \<and> b \<in> top1_S2 - D \<and> \<not> (\<exists>f. top1_is_path_on
           (top1_S2 - D) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a b f)"
         by (rule not_connected_imp_no_path[OF hTS2D hsep[unfolded top1_separates_on_def]])
       thus ?thesis using that by (by100 blast)
     qed
+    have ha'_S2: "a' \<in> top1_S2" using ha' by (by100 blast)
+    have hb'_S2: "b' \<in> top1_S2" using hb' by (by100 blast)
 
-    \<comment> \<open>At least one of D1, D2 separates a' from b'.
-       That sub-arc is still an arc. Repeat forever.
-       The limit argument (nested intervals + compactness) gives contradiction.\<close>
+    \<comment> \<open>Contrapositive of joining lemma: at least one half separates a' from b'.\<close>
+    have hab'_D: "a' \<in> top1_S2 - (D1 \<union> D2)" "b' \<in> top1_S2 - (D1 \<union> D2)"
+      using ha' hb' hD by auto
+    have "\<not> (\<exists>f. top1_is_path_on (top1_S2 - D1)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D1)) a' b' f)
+        \<or> \<not> (\<exists>f. top1_is_path_on (top1_S2 - D2)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) a' b' f)"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      hence hab_D1: "\<exists>f. top1_is_path_on (top1_S2 - D1)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D1)) a' b' f"
+        and hab_D2: "\<exists>f. top1_is_path_on (top1_S2 - D2)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) a' b' f" by auto
+      have "\<exists>f. top1_is_path_on (top1_S2 - (D1 \<union> D2))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<union> D2))) a' b' f"
+        by (rule arc_joining_lemma[OF assms(1) hD1_sub hD2_sub hD1_closed hD2_closed
+            hD12 hd_S2 hab'_D hab_D1 hab_D2])
+      hence "\<exists>f. top1_is_path_on (top1_S2 - D)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a' b' f"
+        using hD by simp
+      thus False using hab'_sep by contradiction
+    qed
+
+    \<comment> \<open>BISECTION ITERATION + LIMIT ARGUMENT:
+       At each step, pick the half that separates a' from b'. Both halves are arcs
+       (from arc_split_at_midpoint). Repeat to get nested arcs D \<supset> D^1 \<supset> D^2 \<supset> ...,
+       each separating a' from b', with parametric length \<rightarrow> 0.
+       The homeomorphism h0: [0,1] \<rightarrow> D maps nested sub-intervals to nested sub-arcs.
+       By Cantor's intersection theorem: the intervals converge to a single point x.
+       S^2-{h0(x)} is path-connected (simply connected). Path \<gamma>: a'\<rightarrow>b' in S^2-{h0(x)}.
+       \<gamma>(I) compact, disjoint from {h0(x)} \<Rightarrow> dist(\<gamma>(I), h0(x)) > 0.
+       h0 uniformly continuous on compact [0,1] \<Rightarrow> h0(sub-interval_n) \<subseteq> B(h0(x), \<epsilon>) for large n.
+       So \<gamma> is a path from a' to b' in S^2 - D^n (since \<gamma>(I) \<inter> D^n = {}).
+       But a', b' \<in> S^2 - D \<subseteq> S^2 - D^n. Contradiction with D^n separating a' from b'.\<close>
     show False
-      sorry \<comment> \<open>Full bisection+compactness argument:
-         (1) Iterate: at each step, one half-arc separates a' from b'
-         (2) Nested compact intervals in [0,1]: intersection = single point x
-         (3) S^2-{h0(x)} path-connected (S2_minus_point_simply_connected)
-         (4) Path \<alpha> from a' to b' in S^2-{h0(x)}
-         (5) \<alpha>(I) compact, disjoint from {h0(x)} \<Rightarrow> dist(\<alpha>(I), h0(x)) > 0
-         (6) h0 uniformly continuous \<Rightarrow> h0(I_n) \<subseteq> B(h0(x), \<epsilon>) for large n
-         (7) \<alpha> is a path in S^2-h0(I_n), contradicting separation.\<close>
+      sorry \<comment> \<open>Bisection+compactness limit argument. Key ingredients:
+         (1) arc_split_at_midpoint + arc_joining_lemma contrapositive (iterated)
+         (2) Cantor's intersection theorem: \<Inter>_n [a_n, b_n] = {x} for nested intervals
+         (3) S2_minus_point_simply_connected \<Rightarrow> path-connected
+         (4) compact_continuous_image + dist_compact_closed for \<gamma>(I) avoids h0(x)
+         (5) uniform_continuous_on + small sub-intervals for h0(sub-interval) small\<close>
   qed
 qed
 
