@@ -13928,12 +13928,16 @@ proof -
     qed
   qed
   \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
-     By Theorem 63.5 (applied via 63.2 + 63.3), exactly two components.\<close>
+     Transfer to S^2, apply Theorem 63.5 (via 63.2 + 63.3), transfer back.\<close>
+  \<comment> \<open>Step 2a: Decompose C into two arcs.\<close>
+  \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1}. Get SCC and two arcs on S^2.\<close>
+  \<comment> \<open>Step 2c: By 63.2, arcs don't separate S^2. By 63.5, exactly 2 components on S^2.\<close>
+  \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
   obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
       and hUV_cover: "U \<union> V = UNIV - C"
       and hU_conn: "top1_connected_on U (subspace_topology UNIV ?TR2 U)"
       and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
-    sorry
+    sorry \<comment> \<open>Exactly 2 components: transfer to S^2, apply 63.5 (uses 63.2, 63.3, 63.1), transfer back.\<close>
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
   have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
