@@ -14538,9 +14538,38 @@ proof -
              \<sigma>inv continuous from R^2 to S^2\{N}. C' = \<sigma>inv(C) compact.\<close>
           have "C \<subseteq> UNIV" by simp
           have hC_compact_std: "compact C"
-            sorry \<comment> \<open>C = image of compact S^1 under continuous f. Standard.\<close>
+          proof -
+            obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f" "f ` top1_S1 = C"
+              using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+            have "compact top1_S1" using S1_compact
+              top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
+              product_topology_on_open_sets_real2
+              unfolding top1_S1_topology_def by (by100 simp)
+            have "compact (f ` top1_S1)"
+            proof (rule compact_continuous_image)
+              show "continuous_on top1_S1 f"
+                unfolding continuous_on_open_invariant
+              proof (intro allI impI)
+                fix B :: "(real \<times> real) set" assume "open B"
+                have "B \<in> ?TR2" using \<open>open B\<close> product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+                hence "{x \<in> top1_S1. f x \<in> B} \<in> top1_S1_topology"
+                  using \<open>top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f\<close>
+                  unfolding top1_continuous_map_on_def by (by100 blast)
+                then obtain W where "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+                    and "{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W"
+                  unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+                have "open W" using \<open>W \<in> _\<close> product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+                thus "\<exists>A. open A \<and> A \<inter> top1_S1 = f -` B \<inter> top1_S1"
+                  using \<open>{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W\<close> by (by100 blast)
+              qed
+              show "compact top1_S1" by (rule \<open>compact top1_S1\<close>)
+            qed
+            thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
+          qed
           have hC'_compact_std: "compact C'"
-            sorry \<comment> \<open>C' = continuous image of compact C. Needs \<sigma>inv continuous (standard).\<close>
+            sorry \<comment> \<open>C' = \<sigma>inv(C). \<sigma>inv continuous (standard) on compact C \<Rightarrow> C' compact.\<close>
           have "closed C'" using compact_imp_closed[OF hC'_compact_std] .
           \<comment> \<open>closed in R^3 + C' \<subseteq> S^2 \<Rightarrow> closed in S^2 (subspace).\<close>
           show ?thesis unfolding closedin_on_def
