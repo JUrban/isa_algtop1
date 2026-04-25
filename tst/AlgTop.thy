@@ -13816,7 +13816,47 @@ proof -
               unfolding top1_evenly_covered_on_def
             proof (intro conjI exI[of _ ?\<V>V])
               show "openin_on X TX V" by (rule assms(3))
-              show hVsheets_open: "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+              show hVsheets_open: "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn"
+              proof
+                fix Sn assume "Sn \<in> ?\<V>V"
+                then obtain k where hSn: "Sn = vsheet k" by (by100 blast)
+                show "openin_on E TE Sn" unfolding openin_on_def
+                proof (intro conjI)
+                  show "Sn \<subseteq> E" unfolding hSn vsheet_def by (by100 blast)
+                  show "Sn \<in> TE" unfolding TE_def hSn
+                  proof (intro CollectI conjI allI)
+                    show "vsheet k \<subseteq> E" unfolding vsheet_def by (by100 blast)
+                    fix m :: int
+                    \<comment> \<open>Even slice: {x \<in> U. (x,2m) \<in> vsheet k} = A if m=k+1, B if m=k, else {}.\<close>
+                    have heven: "{x \<in> U. (x, 2*m) \<in> vsheet k} =
+                        (if m = k+1 then A else if m = k then B else {})"
+                      unfolding vsheet_def E_def using hAB assms(6) by auto
+                    show "{x \<in> U. (x, 2*m) \<in> vsheet k} \<in> TX"
+                    proof -
+                      have "(if m=k+1 then A else if m=k then B else {}) \<in> TX"
+                        using hA_TX hB_TX hTX_empty by simp
+                      thus ?thesis using heven by simp
+                    qed
+                    \<comment> \<open>Odd slice: at m=k gives V, else {}.\<close>
+                    have hodd_A: "{x \<in> A. (x, 2*m+2) \<in> vsheet k} = (if m=k then A else {})"
+                      unfolding vsheet_def E_def using hAB assms(6) by auto
+                    have hodd_B: "{x \<in> B. (x, 2*m) \<in> vsheet k} = (if m=k then B else {})"
+                      unfolding vsheet_def E_def using hAB assms(6) by auto
+                    have hodd_VU: "{x \<in> V-U. (x, 2*m+1) \<in> vsheet k} = (if m=k then V-U else {})"
+                      unfolding vsheet_def E_def by auto
+                    have hodd_eq: "(if m=k then A else {}) \<union> (if m=k then B else {}) \<union>
+                        (if m=k then V-U else {}) = (if m=k then V else {})"
+                      using hAB by auto
+                    show "{x \<in> A. (x, 2*m+2) \<in> vsheet k} \<union>
+                        {x \<in> B. (x, 2*m) \<in> vsheet k} \<union>
+                        {x \<in> V-U. (x, 2*m+1) \<in> vsheet k} \<in> TX"
+                    proof -
+                      have "(if m=k then V else {}) \<in> TX" using hV_TX hTX_empty by simp
+                      thus ?thesis using hodd_A hodd_B hodd_VU hodd_eq by presburger
+                    qed
+                  qed
+                qed
+              qed
               show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
               proof (intro ballI impI)
                 fix S1 S2 assume "S1 \<in> ?\<V>V" "S2 \<in> ?\<V>V" "S1 \<noteq> S2"
