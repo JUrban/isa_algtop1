@@ -7467,51 +7467,6 @@ proof -
   qed
 qed
 
-lemma singleton_not_open_in_S2:
-  assumes "x \<in> top1_S2"
-  shows "{x} \<notin> top1_S2_topology"
-proof
-  assume "{x} \<in> top1_S2_topology"
-  have hR3eq: "(product_topology_on (top1_open_sets :: real set set)
-      (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)))
-      = (top1_open_sets :: (real \<times> real \<times> real) set set)"
-    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
-          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
-  have "top1_S2_topology = subspace_topology UNIV
-      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
-    unfolding top1_S2_topology_def using hR3eq by simp
-  then obtain W where "W \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
-      "{x} = top1_S2 \<inter> W"
-    using \<open>{x} \<in> top1_S2_topology\<close> unfolding subspace_topology_def
-    by (by100 blast)
-  have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
-  have "x \<in> W" using \<open>{x} = top1_S2 \<inter> W\<close> assms by (by100 blast)
-  obtain U1 U23 where hU1: "open U1" and hU23: "open U23"
-      and "x \<in> U1 \<times> U23" and "U1 \<times> U23 \<subseteq> W"
-    using open_prod_elim[OF \<open>open W\<close> \<open>x \<in> W\<close>] by (by100 blast)
-  have "snd x \<in> U23" using \<open>x \<in> U1 \<times> U23\<close> unfolding mem_Times_iff by simp
-  obtain U2 U3 where hU2: "open U2" and hU3: "open U3"
-      and h_U23: "fst (snd x) \<in> U2" "snd (snd x) \<in> U3" and "U2 \<times> U3 \<subseteq> U23"
-  proof -
-    from open_prod_elim[OF hU23 \<open>snd x \<in> U23\<close>]
-    obtain A B where "open A" "open B" "snd x \<in> A \<times> B" "A \<times> B \<subseteq> U23" by blast
-    thus ?thesis using that by auto
-  qed
-  \<comment> \<open>Get intervals and construct nearby S^2 point, as in S2_connected proof.\<close>
-  obtain \<epsilon>1 where h\<epsilon>1: "\<epsilon>1 > 0" "\<forall>y::real. dist y (fst (snd x)) < \<epsilon>1 \<longrightarrow> y \<in> U2"
-  proof -
-    have "\<exists>e>0. \<forall>y. dist y (fst (snd x)) < e \<longrightarrow> y \<in> U2"
-      using hU2 h_U23(1) unfolding open_dist by (by100 blast)
-    thus ?thesis using that by blast
-  qed
-  \<comment> \<open>Construct a point p \<in> S^2 \<inter> W, p \<noteq> x. This contradicts {x} = S^2 \<inter> W.\<close>
-  \<comment> \<open>The same argument as S2_connected: find \<epsilon>2>0 with ball around snd(snd x),
-     construct nearby S^2 point via (fst x, fst(snd x)+t, adjusted_z) with small t.\<close>
-  show False sorry \<comment> \<open>Concrete R^3 witness construction. Same technique as
-     S2_connected proof (lines 7560-7630): get \<epsilon>-intervals around each
-     coordinate, construct p=(fst x, fst(snd x)+t, sqrt(1-(fst x)^2-(fst(snd x)+t)^2))
-     for small t, show p \<in> S^2 \<inter> W and p \<noteq> x.\<close>
-qed
 
 lemma S2_connected: "top1_connected_on top1_S2 top1_S2_topology"
 proof -
@@ -7693,6 +7648,29 @@ proof -
     thus ?thesis by (rule subspace_topology_self_carrier)
   qed
   ultimately show ?thesis by simp
+qed
+
+lemma singleton_not_open_in_S2:
+  assumes "x \<in> top1_S2"
+  shows "{x} \<notin> top1_S2_topology"
+proof
+  assume hopen: "{x} \<in> top1_S2_topology"
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2x_open: "top1_S2 - {x} \<in> top1_S2_topology"
+    using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff assms]
+    hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have "top1_S2 - {x} \<noteq> {}"
+  proof -
+    define y where "y = (if x = north_pole then (0::real, 0::real, -1::real) else north_pole)"
+    have "y \<in> top1_S2" unfolding y_def north_pole_def top1_S2_def by auto
+    have "y \<noteq> x" unfolding y_def north_pole_def by auto
+    thus ?thesis using \<open>y \<in> top1_S2\<close> \<open>y \<noteq> x\<close> by (by100 blast)
+  qed
+  have "\<not> top1_connected_on top1_S2 top1_S2_topology"
+    unfolding top1_connected_on_def
+    using hTS2 hopen hS2x_open assms \<open>top1_S2 - {x} \<noteq> {}\<close> by (by100 blast)
+  thus False using S2_connected by simp
 qed
 
 lemma Lemma_61_1_components_correspond:
