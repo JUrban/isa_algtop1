@@ -13038,7 +13038,14 @@ proof -
                 have "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
                 have "top1_R_to_S1 1 = (1, 0)" unfolding top1_R_to_S1_def by simp
                 have hR_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
-                  sorry \<comment> \<open>R_to_S1 continuous on I. From imported Theorem_53_1.\<close>
+                proof -
+                  have "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+                    by (rule top1_covering_map_on_continuous[OF Theorem_53_1])
+                  hence "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+                      top1_S1 top1_S1_topology top1_R_to_S1"
+                    by (rule top1_continuous_map_on_restrict_domain_simple) simp
+                  thus ?thesis unfolding top1_unit_interval_topology_def by simp
+                qed
                 show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
                   using hR_cont \<open>top1_R_to_S1 0 = (1, 0)\<close> \<open>top1_R_to_S1 1 = (1, 0)\<close>
                   by (by100 blast)
