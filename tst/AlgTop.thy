@@ -13827,9 +13827,9 @@ proof (rule ccontr)
     proof -
       \<comment> \<open>\<alpha> path in U (\<subseteq> X) \<Rightarrow> \<alpha> path in X. \<beta> path in V (\<subseteq> X) \<Rightarrow> \<beta> path in X.\<close>
       have h\<alpha>_X: "top1_is_path_on ?X ?TX a b \<alpha>"
-        sorry \<comment> \<open>Path in subspace U \<Rightarrow> path in ambient X.\<close>
+        sorry \<comment> \<open>Path in subspace U \<Rightarrow> path in ambient X (codomain_enlarge + self_carrier).\<close>
       have h\<beta>_X: "top1_is_path_on ?X ?TX b a \<beta>"
-        sorry \<comment> \<open>Path in subspace V \<Rightarrow> path in ambient X.\<close>
+        sorry \<comment> \<open>Path in subspace V \<Rightarrow> path in ambient X (codomain_enlarge + self_carrier).\<close>
       have "top1_is_path_on ?X ?TX a a (top1_path_product \<alpha> \<beta>)"
         by (rule top1_path_product_is_path[OF hTX h\<alpha>_X h\<beta>_X])
       thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
