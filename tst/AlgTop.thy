@@ -13673,11 +13673,58 @@ proof
     next
       \<comment> \<open>Evenly covered.\<close>
       show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
-        sorry \<comment> \<open>U and V are evenly covered neighborhoods.
-           For b \<in> U: take Ub = U. p\<inverse>(U) = \<Union>n {(x,2n)|x\<in>U}, disjoint sheets.
-           For b \<in> V\U: take Ub = V. p\<inverse>(V) = \<Union>n (V-sheet n), disjoint.
-           Each sheet maps homeomorphically to U (or V) via p0.
-           This requires showing sheet homeomorphisms (similar to the old proof).\<close>
+      proof
+        fix b assume "b \<in> X"
+        hence "b \<in> U \<or> b \<in> V" using assms(4) by (by100 blast)
+        thus "\<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
+        proof
+          assume hbU: "b \<in> U"
+          \<comment> \<open>U is evenly covered. Sheets = {(x, 2n) | x \<in> U} for each n.\<close>
+          let ?\<V> = "(\<lambda>n::int. {(x, 2*n) | x. x \<in> U}) ` UNIV"
+          show ?thesis
+          proof (intro exI[of _ U] conjI)
+            show "b \<in> U" by (rule hbU)
+            show "top1_evenly_covered_on E TE X TX p0 U"
+              unfolding top1_evenly_covered_on_def
+            proof (intro conjI exI[of _ ?\<V>])
+              show "openin_on X TX U" by (rule assms(2))
+              show "\<forall>V\<in>?\<V>. openin_on E TE V"
+                sorry \<comment> \<open>Each U-sheet {(x,2n)|x\<in>U} is open in TE: even slice = U \<in> TX,
+                   odd slices = A or B or {} \<in> TX, all other slices = {} \<in> TX.\<close>
+              show "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+                by force \<comment> \<open>Different n gives different 2nd components.\<close>
+              show "{x \<in> E. p0 x \<in> U} = \<Union>?\<V>"
+              proof (rule set_eqI, rule iffI)
+                fix e assume "e \<in> {x \<in> E. p0 x \<in> U}"
+                hence "e \<in> E" "fst e \<in> U" unfolding p0_def by auto
+                then obtain x m where he: "e = (x, m)" "x \<in> U" "(even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
+                  unfolding E_def by auto
+                hence "even m" using \<open>x \<in> U\<close> by auto
+                then obtain k where "m = 2 * k" using evenE by auto
+                hence "e \<in> {(x, 2*k)|x. x \<in> U}" using he by auto
+                thus "e \<in> \<Union>?\<V>" by (by100 blast)
+              next
+                fix e assume "e \<in> \<Union>?\<V>"
+                then obtain n where "e \<in> {(x, 2*n)|x. x \<in> U}" by (by100 blast)
+                then obtain x where "e = (x, 2*n)" "x \<in> U" by (by100 blast)
+                hence "e \<in> E" unfolding E_def by auto
+                moreover have "p0 e \<in> U" unfolding p0_def using \<open>e = (x, 2*n)\<close> \<open>x \<in> U\<close> by simp
+                ultimately show "e \<in> {x \<in> E. p0 x \<in> U}" by simp
+              qed
+              show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                  (subspace_topology X TX U) p0"
+                sorry \<comment> \<open>Each U-sheet {(x,2n)|x\<in>U} homeo to U via fst.
+                   Bij: fst injective (same 2nd component), surjective onto U.
+                   Continuous: subspace_topology E TE {(x,2n)|x\<in>U} has open sets
+                   matching TX restricted to U, since TE slices at 2n give TX-open sets.
+                   Inverse cont: same argument backwards.\<close>
+            qed
+          qed
+        next
+          assume hbV: "b \<in> V"
+          show ?thesis sorry \<comment> \<open>V evenly covered: V-sheets more complex but same pattern.\<close>
+        qed
+      qed
     qed
     \<comment> \<open>Define the lift: \<alpha>-tilde on [0,1/2] maps to (alpha(2s), 0).
        \<beta>-tilde on [1/2,1] maps to norm(\<beta>(2s-1), 1).\<close>
