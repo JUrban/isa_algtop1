@@ -8452,7 +8452,67 @@ proof -
       sorry \<comment> \<open>F is polynomial in t and continuous in g(x); needs boilerplate for custom framework.\<close>
     \<comment> \<open>f0 = \<lambda>x. pair_sub (g(x)) p is continuous from A to ?Y.\<close>
     have hf0_cont: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>x. pair_sub (?g x) p)"
-      sorry \<comment> \<open>Follows from hg_cont + pair_sub continuous; or from hF_cont at t=0.\<close>
+    proof -
+      \<comment> \<open>h\<circ>f maps A into UNIV-{p} (range avoids p since p \<notin> g(A)).\<close>
+      let ?T = "\<lambda>x :: real \<times> real. (fst x - fst p, snd x - snd p)"
+      have hT_homeo: "top1_homeomorphism_on (UNIV - {p})
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))
+          ?Y (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y) ?T"
+        by (rule translation_homeo_R2[of p])
+      have hgf_into_minus_p: "top1_continuous_map_on A TA (UNIV - {p})
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p})) ?g"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> A"
+        hence "?g x \<in> UNIV - {?ha}" using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "?g x \<noteq> p"
+        proof
+          assume "?g x = p"
+          hence "p \<in> ?g ` A" using \<open>x \<in> A\<close> by (by100 blast)
+          thus False using hp_not_in_gA by simp
+        qed
+        ultimately show "?g x \<in> UNIV - {p}" by simp
+      next
+        fix V assume hV: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p})"
+        obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+            and hV_eq: "V = (UNIV - {p}) \<inter> W" using hV unfolding subspace_topology_def by (by100 blast)
+        \<comment> \<open>(UNIV-{ha}) \<inter> W \<in> subspace_topology ... (UNIV-{ha})\<close>
+        have "(UNIV - {?ha}) \<inter> W \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {?ha})"
+          by (rule subspace_topology_memI[OF hW])
+        hence "{x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> W} \<in> TA"
+          using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{x \<in> A. ?g x \<in> V} = {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> W}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> A. ?g x \<in> V}"
+          hence "x \<in> A" and "?g x \<in> V" by auto
+          hence "?g x \<in> W" using hV_eq by (by100 blast)
+          moreover have "?g x \<in> UNIV - {?ha}" using hg_cont \<open>x \<in> A\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "x \<in> {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> W}" using \<open>x \<in> A\<close> by (by100 blast)
+        next
+          fix x assume "x \<in> {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> W}"
+          hence "x \<in> A" and "?g x \<in> W" and "?g x \<in> UNIV - {?ha}" by auto
+          have "?g x \<noteq> p" using hp_not_in_gA \<open>x \<in> A\<close> by (by100 blast)
+          hence "?g x \<in> UNIV - {p}" by simp
+          thus "x \<in> {x \<in> A. ?g x \<in> V}" using \<open>x \<in> A\<close> \<open>?g x \<in> W\<close> hV_eq by (by100 blast)
+        qed
+        ultimately show "{x \<in> A. ?g x \<in> V} \<in> TA" by simp
+      qed
+      \<comment> \<open>Compose: T \<circ> g = \<lambda>x. pair_sub (g(x)) p.\<close>
+      have hcomp_eq: "\<And>x. ?T (?g x) = pair_sub (?g x) p" unfolding pair_sub_def by simp
+      have "top1_continuous_map_on A TA ?Y
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y)
+          (?T \<circ> ?g)"
+      proof -
+        have hT_cont: "top1_continuous_map_on (UNIV - {p})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))
+            ?Y (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y) ?T"
+          using hT_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        show ?thesis by (rule top1_continuous_map_on_comp[OF hgf_into_minus_p hT_cont])
+      qed
+      moreover have "?T \<circ> ?g = (\<lambda>x. pair_sub (?g x) p)"
+        unfolding pair_sub_def comp_def by (rule ext) simp
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>f1 = constant pair_sub(0,0)(p) is continuous.\<close>
     have hf1_cont: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. pair_sub (0,0) p)"
     proof -
