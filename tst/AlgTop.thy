@@ -8188,7 +8188,10 @@ proof -
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
     using S2_minus_point_homeo_R2[OF hc(1)] by (by100 blast)
-  have hC0_sub_S2c: "C0 \<subseteq> top1_S2 - {c}" using assms(1) hc(2) sorry
+  have hC0_sub_S2: "C0 \<subseteq> top1_S2"
+    using top1_S2_is_topology_on_strict assms(1)
+    unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+  have hC0_sub_S2c: "C0 \<subseteq> top1_S2 - {c}" using hC0_sub_S2 hc(2) by (by100 blast)
   \<comment> \<open>\<sigma>(C0) open in R^2.\<close>
   have h\<sigma>C0_open: "open (\<sigma> ` C0)" sorry
   \<comment> \<open>\<sigma>(C0) connected in R^2.\<close>
