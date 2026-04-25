@@ -13047,11 +13047,20 @@ proof -
       define g where "g = \<sigma>inv \<circ> f"
       have hg_cont_S2N: "top1_continuous_map_on top1_S1 top1_S1_topology
           (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) g"
-        sorry \<comment> \<open>Composition of continuous maps: f then \<sigma>^{-1}.\<close>
+        unfolding g_def by (rule top1_continuous_map_on_comp[OF hf h\<sigma>inv_cont])
       \<comment> \<open>Lift to S^2: inclusion S^2\{N} \<hookrightarrow> S^2 is continuous.\<close>
       have hg_cont_S2: "top1_continuous_map_on top1_S1 top1_S1_topology
           top1_S2 top1_S2_topology g"
-        sorry \<comment> \<open>Compose g: S^1 \<rightarrow> S^2\{N} with inclusion S^2\{N} \<hookrightarrow> S^2.\<close>
+      proof -
+        have "top1_continuous_map_on top1_S1 top1_S1_topology
+            top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2) g"
+          by (rule top1_continuous_map_on_codomain_enlarge[OF hg_cont_S2N]) blast+
+        moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+          by (rule subspace_topology_self_carrier)
+             (use top1_S2_is_topology_on_strict[unfolded is_topology_on_strict_def]
+              in \<open>auto simp: is_topology_on_def\<close>)
+        ultimately show ?thesis by simp
+      qed
       have hg_inj: "inj_on g top1_S1"
         unfolding g_def comp_def
       proof (rule inj_onI)
