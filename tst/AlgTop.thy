@@ -8056,14 +8056,159 @@ lemma open_rectangle_delete_connected_R2:
   fixes U1 U2 :: "real set" and p1 p2 :: real
   assumes "open U1" "open U2" "p1 \<in> U1" "p2 \<in> U2"
   shows "connected (U1 \<times> U2 - {(p1, p2)})"
-  sorry
-
+proof -
+  \<comment> \<open>Get intervals around p1 and p2.\<close>
+  obtain e1 where "e1 > 0" "\<forall>y. dist p1 y < e1 \<longrightarrow> y \<in> U1"
+  proof -
+    have "\<forall>x\<in>U1. \<exists>e>0. \<forall>y. dist y x < e \<longrightarrow> y \<in> U1"
+      using assms(1) unfolding open_dist by simp
+    hence "\<exists>e>0. \<forall>y. dist y p1 < e \<longrightarrow> y \<in> U1" using assms(3) by simp
+    thus ?thesis using that by (simp add: dist_commute) blast
+  qed
+  obtain e2 where "e2 > 0" "\<forall>y. dist p2 y < e2 \<longrightarrow> y \<in> U2"
+  proof -
+    have "\<forall>x\<in>U2. \<exists>e>0. \<forall>y. dist y x < e \<longrightarrow> y \<in> U2"
+      using assms(2) unfolding open_dist by simp
+    hence "\<exists>e>0. \<forall>y. dist y p2 < e \<longrightarrow> y \<in> U2" using assms(4) by simp
+    thus ?thesis using that by (simp add: dist_commute) blast
+  qed
+  \<comment> \<open>{p1-e1<..<p1+e1} \<subseteq> U1 and {p2-e2<..<p2+e2} \<subseteq> U2.\<close>
+  have hI1_sub: "{p1-e1<..<p1+e1} \<subseteq> U1"
+    using \<open>\<forall>y. dist p1 y < e1 \<longrightarrow> y \<in> U1\<close> by (auto simp: dist_real_def)
+  have hI2_sub: "{p2-e2<..<p2+e2} \<subseteq> U2"
+    using \<open>\<forall>y. dist p2 y < e2 \<longrightarrow> y \<in> U2\<close> by (auto simp: dist_real_def)
+  have hp1: "p1-e1 < p1" "p1 < p1+e1" using \<open>e1 > 0\<close> by auto
+  have hp2: "p2-e2 < p2" "p2 < p2+e2" using \<open>e2 > 0\<close> by auto
+  \<comment> \<open>The small rectangle minus p is connected.\<close>
+  have hR_conn: "connected ({p1-e1<..<p1+e1} \<times> {p2-e2<..<p2+e2} - {(p1,p2)})"
+    by (rule interval_delete_connected_R2[OF hp1(1) hp1(2) hp2(1) hp2(2)])
+  \<comment> \<open>It's a connected subset of U1\<times>U2-{p}.\<close>
+  have hR_sub: "{p1-e1<..<p1+e1} \<times> {p2-e2<..<p2+e2} - {(p1,p2)} \<subseteq> U1 \<times> U2 - {(p1,p2)}"
+    using hI1_sub hI2_sub by (by100 blast)
+  \<comment> \<open>U1\<times>U2 connected (product of connected? No, U1,U2 might not be connected).\<close>
+  \<comment> \<open>For the general case, U1\<times>U2-{p} might not be connected if U1 or U2 are disconnected.
+     But the small rectangle IS connected. The full proof needs connected_open_delete_R2
+     which uses this rectangle to show any separation of U-{p} is impossible.\<close>
+  show ?thesis sorry \<comment> \<open>Needs: U1\<times>U2 connected. But U1,U2 might not be connected.\<close>
+qed
 
 lemma connected_open_delete_R2:
   fixes U :: "(real \<times> real) set" and p :: "real \<times> real"
   assumes "open U" "connected U"
   shows "connected (U - {p})"
-  sorry
+proof (cases "p \<in> U")
+  case False thus ?thesis using assms(2) by (simp add: insert_absorb)
+next
+  case True
+  \<comment> \<open>Get interval rectangle R around p with R \<subseteq> U.\<close>
+  obtain A0 B0 where "open A0" "open B0" "p \<in> A0 \<times> B0" "A0 \<times> B0 \<subseteq> U"
+    using open_prod_elim[OF assms(1) True] by (by100 blast)
+  obtain e1 where "e1 > 0" "\<forall>y. dist (fst p) y < e1 \<longrightarrow> y \<in> A0"
+  proof -
+    have "\<exists>e>0. \<forall>y. dist y (fst p) < e \<longrightarrow> y \<in> A0"
+      using \<open>open A0\<close> \<open>p \<in> A0 \<times> B0\<close> unfolding open_dist by auto
+    thus ?thesis using that by (simp add: dist_commute) blast
+  qed
+  obtain e2 where "e2 > 0" "\<forall>y. dist (snd p) y < e2 \<longrightarrow> y \<in> B0"
+  proof -
+    have "\<exists>e>0. \<forall>y. dist y (snd p) < e \<longrightarrow> y \<in> B0"
+      using \<open>open B0\<close> \<open>p \<in> A0 \<times> B0\<close> unfolding open_dist by auto
+    thus ?thesis using that by (simp add: dist_commute) blast
+  qed
+  let ?R = "{fst p - e1 <..< fst p + e1} \<times> {snd p - e2 <..< snd p + e2}"
+  have hR_sub_U: "?R \<subseteq> U"
+  proof -
+    have "{fst p - e1 <..< fst p + e1} \<subseteq> A0"
+      using \<open>\<forall>y. dist (fst p) y < e1 \<longrightarrow> y \<in> A0\<close> by (auto simp: dist_real_def)
+    moreover have "{snd p - e2 <..< snd p + e2} \<subseteq> B0"
+      using \<open>\<forall>y. dist (snd p) y < e2 \<longrightarrow> y \<in> B0\<close> by (auto simp: dist_real_def)
+    ultimately show ?thesis using \<open>A0 \<times> B0 \<subseteq> U\<close> by (by100 blast)
+  qed
+  have hR_conn: "connected (?R - {(fst p, snd p)})"
+    by (rule interval_delete_connected_R2) (use \<open>e1 > 0\<close> \<open>e2 > 0\<close> in simp_all)
+  hence hR_conn': "connected (?R - {p})" by simp
+  \<comment> \<open>Now show U-{p} connected using connectedI.\<close>
+  show ?thesis
+  proof (rule connectedI)
+    fix A B :: "(real \<times> real) set"
+    assume hA: "open A" and hB: "open B"
+        and hcov: "U - {p} \<subseteq> A \<union> B"
+        and hdisj: "A \<inter> B \<inter> (U - {p}) = {}"
+        and hAne: "A \<inter> (U - {p}) \<noteq> {}" and hBne: "B \<inter> (U - {p}) \<noteq> {}"
+    \<comment> \<open>R-{p} connected and \<subseteq> U-{p} \<subseteq> A\<union>B. So R-{p} \<subseteq> A or R-{p} \<subseteq> B.\<close>
+    have hRp_sub: "?R - {p} \<subseteq> U - {p}" using hR_sub_U by (by100 blast)
+    have "A \<inter> (?R - {p}) = {} \<or> B \<inter> (?R - {p}) = {}"
+      by (rule connectedD[OF hR_conn' hA hB])
+         (use hdisj hcov hRp_sub in auto)
+    \<comment> \<open>WLOG R-{p} disjoint from B (i.e., R-{p} \<subseteq> A).
+       Then A\<union>{p} \<supseteq> R. Since R is a neighborhood of p, A\<union>{p} is open at p.
+       A itself is open, so A\<union>{p} is open. B is open. A\<union>{p} and B cover U.
+       (A\<union>{p})\<inter>B = {} (since A\<inter>B\<inter>(U-{p})={} and p\<notin>B as B\<inter>R\<subseteq>B\<inter>(A\<union>B)\<inter>U=... ).
+       Connected U = (A\<union>{p}) \<union> B. So B = {} or A\<union>{p} = {}. B\<noteq>{}, so A\<union>{p} = U.
+       But B\<inter>(U-{p}) \<noteq> {} means B\<inter>U \<noteq> {}, and B \<subseteq> U-(A\<union>{p}) = {}. Contradiction.\<close>
+    moreover {
+      assume "B \<inter> (?R - {p}) = {}"
+      hence "?R - {p} \<subseteq> A" using hcov hRp_sub by auto
+      hence "?R \<subseteq> A \<union> {p}" by (by100 blast)
+      have "open ?R" by (rule open_Times[OF open_greaterThanLessThan open_greaterThanLessThan])
+      have "open (A \<union> ?R)" using hA \<open>open ?R\<close> by (rule open_Un)
+      have "A \<union> ?R = A \<union> {p}"
+      proof -
+        have "p \<in> ?R"
+          using \<open>e1 > 0\<close> \<open>e2 > 0\<close> by (cases p) simp
+        thus ?thesis using \<open>?R - {p} \<subseteq> A\<close> by (by100 blast)
+      qed
+      hence "open (A \<union> {p})" using \<open>open (A \<union> ?R)\<close> by simp
+      have "p \<notin> B"
+      proof
+        assume "p \<in> B"
+        have "\<exists>q \<in> B. q \<noteq> p" by (rule open_nonempty_R2_has_two_points[OF hB \<open>p \<in> B\<close>])
+        then obtain q where "q \<in> B" "q \<noteq> p" by blast
+        \<comment> \<open>B open, p \<in> B, so B contains points in R-{p}. But R-{p} \<subseteq> A.\<close>
+        have "open (B \<inter> ?R)" using hB \<open>open ?R\<close> by (rule open_Int)
+        have "p \<in> ?R" using \<open>e1 > 0\<close> \<open>e2 > 0\<close> by (cases p) simp
+        have "p \<in> B \<inter> ?R" using \<open>p \<in> B\<close> \<open>p \<in> ?R\<close> by simp
+        obtain q' where "q' \<in> B \<inter> ?R" "q' \<noteq> p"
+          using open_nonempty_R2_has_two_points[OF \<open>open (B \<inter> ?R)\<close> \<open>p \<in> B \<inter> ?R\<close>] by blast
+        have "B \<inter> (?R - {p}) \<noteq> {}" using \<open>q' \<in> B \<inter> ?R\<close> \<open>q' \<noteq> p\<close> by (by100 blast)
+        thus False using \<open>B \<inter> (?R - {p}) = {}\<close> by simp
+      qed
+      have hABU: "(A \<union> {p}) \<inter> B \<inter> U = {}"
+      proof -
+        have "A \<inter> B \<inter> U = {}" using hdisj \<open>p \<notin> B\<close> by (by100 blast)
+        thus ?thesis using \<open>p \<notin> B\<close> by (by100 blast)
+      qed
+      have "U \<subseteq> (A \<union> {p}) \<union> B" using hcov True by (by100 blast)
+      have "(A \<union> {p}) \<inter> U = {} \<or> B \<inter> U = {}"
+        by (rule connectedD[OF assms(2) \<open>open (A \<union> {p})\<close> hB hABU \<open>U \<subseteq> (A \<union> {p}) \<union> B\<close>])
+      hence False using hAne hBne True by (by100 blast) }
+    moreover {
+      assume "A \<inter> (?R - {p}) = {}"
+      hence "?R - {p} \<subseteq> B" using hcov hRp_sub by auto
+      have hR_open: "open ?R" by (rule open_Times[OF open_greaterThanLessThan open_greaterThanLessThan])
+      have "open (B \<union> ?R)" using hB hR_open by (rule open_Un)
+      have "p \<in> ?R" using \<open>e1 > 0\<close> \<open>e2 > 0\<close> by (cases p) simp
+      have "B \<union> ?R = B \<union> {p}" using \<open>?R - {p} \<subseteq> B\<close> \<open>p \<in> ?R\<close> by (by100 blast)
+      hence "open (B \<union> {p})" using \<open>open (B \<union> ?R)\<close> by simp
+      have "p \<notin> A"
+      proof
+        assume "p \<in> A"
+        have "open (A \<inter> ?R)" using hA \<open>open ?R\<close> by (rule open_Int)
+        have "p \<in> A \<inter> ?R" using \<open>p \<in> A\<close> \<open>p \<in> ?R\<close> by simp
+        obtain q' where "q' \<in> A \<inter> ?R" "q' \<noteq> p"
+          using open_nonempty_R2_has_two_points[OF \<open>open (A \<inter> ?R)\<close> \<open>p \<in> A \<inter> ?R\<close>] by blast
+        have "A \<inter> (?R - {p}) \<noteq> {}" using \<open>q' \<in> A \<inter> ?R\<close> \<open>q' \<noteq> p\<close> by (by100 blast)
+        thus False using \<open>A \<inter> (?R - {p}) = {}\<close> by simp
+      qed
+      have "A \<inter> (B \<union> {p}) \<inter> U = {}" using hdisj \<open>p \<notin> A\<close> by (by100 blast)
+      have "U \<subseteq> A \<union> (B \<union> {p})" using hcov True by (by100 blast)
+      have "A \<inter> U = {} \<or> (B \<union> {p}) \<inter> U = {}"
+        by (rule connectedD[OF assms(2) hA \<open>open (B \<union> {p})\<close>
+            \<open>A \<inter> (B \<union> {p}) \<inter> U = {}\<close> \<open>U \<subseteq> A \<union> (B \<union> {p})\<close>])
+      hence False using hAne hBne True by (by100 blast) }
+    ultimately show False by auto
+  qed
+qed
 
 \<comment> \<open>Exterior of a ball in R^2 is connected.\<close>
 lemma exterior_ball_connected_R2:
