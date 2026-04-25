@@ -14852,8 +14852,6 @@ proof (rule ccontr)
         top1_in_same_path_component_on_def by (by100 blast)
     thus ?thesis unfolding Rest_def using hb_UV by (by100 blast)
   qed
-  have hPC_open: "openin_on ?X ?TX PC_a" sorry \<comment> \<open>Path components of lpc open set are open.\<close>
-  have hRest_open: "openin_on ?X ?TX Rest" sorry \<comment> \<open>Union of other path components is open.\<close>
   have hPC_sub: "PC_a \<subseteq> ?U \<inter> ?V"
   proof
     fix y assume "y \<in> PC_a"
@@ -14866,8 +14864,69 @@ proof (rule ccontr)
     hence "f 1 = y" "f 1 \<in> ?U \<inter> ?V"
       unfolding top1_is_path_on_def top1_continuous_map_on_def
         top1_unit_interval_def by auto
-    hence "y \<in> ?U \<inter> ?V" by simp
-    thus "y \<in> ?U \<inter> ?V" .
+    thus "y \<in> ?U \<inter> ?V" by simp
+  qed
+  have hPC_open_UV: "PC_a \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+    unfolding PC_a_def
+    by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hT_UV hlpc ha_UV])
+  have hUV_open_X: "openin_on ?X ?TX (?U \<inter> ?V)"
+  proof -
+    have "?U \<inter> ?V \<subseteq> ?X" using hD_inter by (by100 blast)
+    have "?U \<inter> ?V = ?X \<inter> (?U \<inter> ?V)" using hD_inter by (by100 blast)
+    hence "?U \<inter> ?V \<in> ?TX" using hUV_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis using \<open>?U \<inter> ?V \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+  qed
+  have hPC_open: "openin_on ?X ?TX PC_a"
+  proof -
+    \<comment> \<open>PC_a open in U\<inter>V. U\<inter>V open in X. Open-in-open = open.\<close>
+    have hPC_open_in_UV: "openin_on (?U \<inter> ?V) (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) PC_a"
+      using hPC_open_UV hPC_sub unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>Transfer: subspace of S^2 restricted to U\<inter>V = subspace of X restricted to U\<inter>V.\<close>
+    have hUV_sub_X: "?U \<inter> ?V \<subseteq> ?X" using hD_inter by (by100 blast)
+    \<comment> \<open>PC_a open in U\<inter>V (S^2-sub). Transfer to X.\<close>
+    have "PC_a \<in> ?TX"
+    proof -
+      obtain W where "W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+          and "PC_a = (?U \<inter> ?V) \<inter> W"
+        using hPC_open_UV hPC_sub unfolding subspace_topology_def by (by100 blast)
+      obtain W0 where "W0 \<in> top1_S2_topology" and hW0: "W = (?U \<inter> ?V) \<inter> W0"
+        using \<open>W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)\<close>
+        unfolding subspace_topology_def by (by100 blast)
+      have "PC_a = (?U \<inter> ?V) \<inter> W0" using \<open>PC_a = (?U \<inter> ?V) \<inter> W\<close> hW0 hPC_sub by (by100 blast)
+      have "(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2 hUV_open \<open>W0 \<in> top1_S2_topology\<close>])
+      have "PC_a = ?X \<inter> ((?U \<inter> ?V) \<inter> W0)"
+        using \<open>PC_a = (?U \<inter> ?V) \<inter> W0\<close> hPC_sub hUV_sub_X by (by100 blast)
+      thus ?thesis using \<open>(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology\<close>
+        unfolding subspace_topology_def by (by100 blast)
+    qed
+    thus ?thesis using hPC_sub hUV_sub_X unfolding openin_on_def by (by100 blast)
+  qed
+  have hRest_open: "openin_on ?X ?TX Rest"
+  proof -
+    have hRest_sub: "Rest \<subseteq> ?U \<inter> ?V" unfolding Rest_def by (by100 blast)
+    have hUV_sub_X: "?U \<inter> ?V \<subseteq> ?X" using hD_inter by (by100 blast)
+    have hRest_open_UV: "Rest \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+    proof -
+      have "(?U \<inter> ?V) - PC_a \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+        unfolding PC_a_def
+        by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF hT_UV hlpc ha_UV])
+      thus ?thesis unfolding Rest_def by simp
+    qed
+    obtain W where "W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+        and "Rest = (?U \<inter> ?V) \<inter> W"
+      using hRest_open_UV hRest_sub unfolding subspace_topology_def by (by100 blast)
+    obtain W0 where "W0 \<in> top1_S2_topology" and hW0: "W = (?U \<inter> ?V) \<inter> W0"
+      using \<open>W \<in> _\<close> unfolding subspace_topology_def by (by100 blast)
+    have "Rest = (?U \<inter> ?V) \<inter> W0"
+      using \<open>Rest = (?U \<inter> ?V) \<inter> W\<close> hW0 hRest_sub by (by100 blast)
+    have "(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology"
+      by (rule topology_inter_open[OF hTS2 hUV_open \<open>W0 \<in> top1_S2_topology\<close>])
+    have "Rest = ?X \<inter> ((?U \<inter> ?V) \<inter> W0)"
+      using \<open>Rest = (?U \<inter> ?V) \<inter> W0\<close> hRest_sub hUV_sub_X by (by100 blast)
+    hence "Rest \<in> ?TX" using \<open>(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology\<close>
+      unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis using hRest_sub hUV_sub_X unfolding openin_on_def by (by100 blast)
   qed
   have hPCR_cover: "PC_a \<union> Rest = ?U \<inter> ?V"
     unfolding Rest_def using hPC_sub by (by100 blast)
