@@ -8497,7 +8497,25 @@ proof -
             UNIV (product_topology_on top1_open_sets top1_open_sets) h"
           using hh_cont_C0 by simp
         \<comment> \<open>Bridge: custom cont on C0 (subspace of R^3) to UNIV (R^2) \<Rightarrow> standard continuous_on.\<close>
-        show ?thesis sorry \<comment> \<open>Bridge custom continuous to standard continuous_on.\<close>
+        show ?thesis unfolding continuous_on_open_invariant
+        proof (intro allI impI)
+          fix V :: "(real \<times> real) set" assume hV_open: "open V"
+          have "V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          proof -
+            have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+              using hV_open unfolding top1_open_sets_def by simp
+            thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+          qed
+          hence "{x \<in> C0. h x \<in> V} \<in> subspace_topology UNIV
+              (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+            using hh_cont_C0' unfolding top1_continuous_map_on_def by (by100 blast)
+          then obtain W where "W \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+              and hW_eq: "{x \<in> C0. h x \<in> V} = C0 \<inter> W"
+            unfolding subspace_topology_def by (by100 blast)
+          have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+          moreover have "W \<inter> C0 = h -` V \<inter> C0" using hW_eq by (by100 blast)
+          ultimately show "\<exists>T. open T \<and> T \<inter> C0 = h -` V \<inter> C0" by (by100 blast)
+        qed
       qed
       ultimately show ?thesis
         using connected_continuous_image by simp
