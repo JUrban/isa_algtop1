@@ -13815,6 +13815,7 @@ proof
   thus False using hne by simp
 qed
 
+
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
     Munkres' proof: by contradiction + Theorem 63.1; use that \<pi>_1(S^2) is trivial. **)
 text \<open>Helper: R^2 is locally path-connected (every open set has path-connected neighborhoods).\<close>
@@ -15673,9 +15674,43 @@ proof -
     show ?thesis
       by (rule Theorem_61_4_general_separation[OF assms(1) hC1sub hC2sub assms(2,3,4,5,6)])
   qed
-  \<comment> \<open>At least two components from separation.\<close>
-  \<comment> \<open>At most two: \<pi>_1(S^2-{a,b}) \<cong> Z can distinguish at most 2 components via Theorem 63.1.\<close>
-  show ?thesis sorry
+  \<comment> \<open>At least two components: hsep gives S^2-(C1\<union>C2) disconnected.\<close>
+  have hC1sub: "C1 \<subseteq> top1_S2" using assms(2) unfolding closedin_on_def by blast
+  have hC2sub: "C2 \<subseteq> top1_S2" using assms(3) unfolding closedin_on_def by blast
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC_closed: "closedin_on top1_S2 top1_S2_topology (C1 \<union> C2)"
+  proof -
+    have "C1 \<union> C2 \<subseteq> top1_S2" using hC1sub hC2sub by (by100 blast)
+    have "top1_S2 - C1 \<in> top1_S2_topology"
+      using assms(2) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+    have "top1_S2 - C2 \<in> top1_S2_topology"
+      using assms(3) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+    have "top1_S2 - (C1 \<union> C2) = (top1_S2 - C1) \<inter> (top1_S2 - C2)" by (by100 blast)
+    hence "top1_S2 - (C1 \<union> C2) \<in> top1_S2_topology"
+      using topology_inter_open[OF hTS2 \<open>top1_S2 - C1 \<in> _\<close> \<open>top1_S2 - C2 \<in> _\<close>] by simp
+    thus ?thesis using \<open>C1 \<union> C2 \<subseteq> top1_S2\<close> unfolding closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>S^2-(C1\<union>C2) open in S^2, hence locally path-connected. Components = path components.\<close>
+  have hopen: "top1_S2 - (C1 \<union> C2) \<in> top1_S2_topology"
+    using hC_closed hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have hlpc: "top1_locally_path_connected_on (top1_S2 - (C1 \<union> C2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (C1 \<union> C2)))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hopen]) (by100 blast)
+  \<comment> \<open>Get at least 2 components.\<close>
+  \<comment> \<open>Get exactly 2 components: \<ge>2 from separation + \<le>2 from 63.1(c) argument.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Structure: hsep gives \<ge>2 components. For \<le>2, assume 3+ and derive contradiction.
+       Pick a \<in> W1, a' \<in> W2, b \<in> B (three components of S^2-(C1\<union>C2)).
+       C1, C2 don't separate \<Rightarrow> paths in S^2-C1 and S^2-C2 between any points.
+       Let X = S^2-{p,q} where C1\<inter>C2 = {p,q}. U = S^2-C1, V = S^2-C2.
+       X = U\<union>V, U\<inter>V = S^2-(C1\<union>C2) with components W1, W2, B.
+       By Theorem 63.1(a): f = \<alpha>*\<beta> nontrivial (a\<rightarrow>b in U, b\<rightarrow>a in V).
+       By Theorem 63.1(a): g = \<gamma>*\<delta> nontrivial (a\<rightarrow>a' in U, a'\<rightarrow>a in V).
+       By Theorem 63.1(c): \<langle>[f]\<rangle> \<inter> \<langle>[g]\<rangle> = {1}.
+       But \<pi>_1(X) \<cong> Z (S^2 minus 2 points). In Z, any two nonzero subgroups
+       intersect nontrivially. Contradiction. Hence \<le>2 components.
+       Combine with \<ge>2 to get exactly 2. Extract two connected components.\<close>
 qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
