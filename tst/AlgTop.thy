@@ -12977,8 +12977,20 @@ proof -
             proof -
               have hf_x0: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 f"
                 using hf True by simp
-              from Theorem_59_1[OF hTX_strict hU_open_X hV_open_X hX_UV hUV_pc_X hx0, rule_format, OF hf_x0]
-              show ?thesis using that sorry
+              have hT59: "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
+                  (\<forall>i<n. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (gs ! i) \<and>
+                    (gs ! i ` I_set \<subseteq> ?U \<or> gs ! i ` I_set \<subseteq> ?V)) \<and>
+                  top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                    f (foldr top1_path_product gs (top1_constant_path x0))"
+                using Theorem_59_1[OF hTX_strict hU_open_X hV_open_X hX_UV hUV_pc_X hx0, rule_format, OF hf_x0] .
+              from hT59 obtain n' gs' where "n' \<ge> 1" "length gs' = n'"
+                  "\<forall>i<n'. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (gs' ! i) \<and>
+                    (gs' ! i ` I_set \<subseteq> ?U \<or> gs' ! i ` I_set \<subseteq> ?V)"
+                  "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                    f (foldr top1_path_product gs' (top1_constant_path x0))"
+                by blast
+              show ?thesis using that[of n' gs'] \<open>n' \<ge> 1\<close> \<open>length gs' = n'\<close>
+                sorry
             qed
             \<comment> \<open>Each piece nulhomotopic.\<close>
             have hgi_nul: "\<forall>i < length gs.
