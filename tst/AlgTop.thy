@@ -9025,17 +9025,6 @@ proof -
         thus ?thesis by (simp add: subspace_topology_trans[OF hC0_sub])
       qed
       have hC0_sub_S2: "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
-      have hc_exists: "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0"
-      proof -
-        \<comment> \<open>f(A) nonempty (a,b \<in> S^2, a \<noteq> b, so S^2 has \<ge> 2 pts \<notin> f(A)).
-           Actually: a \<in> S^2, b \<in> S^2, C0 \<subseteq> S^2\f(A).
-           If f(A) nonempty: any c \<in> f(A) works (c \<in> S^2, c \<notin> C0).
-           If f(A) empty: C0 = S^2, but C0\{b} has other pts, need c \<notin> S^2 ... contradiction.
-           Actually if C0 = S^2 we need c \<in> S^2 \<and> c \<notin> S^2 which is impossible.
-           So this sorry only works if f(A) \<noteq> {} or C0 \<noteq> S^2.\<close>
-        show ?thesis sorry
-      qed
-      obtain c where "c \<in> top1_S2" "c \<notin> C0" using hc_exists by (by100 blast)
       have hh_cont_C0b: "continuous_on (C0 - {b}) h"
       proof -
         have hh_cont_std: "continuous_on (top1_S2 - {b}) h"
@@ -9077,9 +9066,26 @@ proof -
         show ?thesis by (rule continuous_on_subset[OF hh_cont_std]) (use hC0_sub_S2 in blast)
       qed
       show ?thesis
-        by (rule connected_open_delete_S2'[OF hC0_open_S2 hC0_conn_custom True
-            \<open>c \<in> top1_S2\<close> \<open>c \<notin> C0\<close> hh_cont_C0b])
-           simp
+      proof (cases "f ` A = {}")
+        case True
+        \<comment> \<open>f(A) = {} \<Rightarrow> C0 = S^2. h(C0\{b}) = h(S^2\{b}) = R^2 connected.\<close>
+        have "h ` (top1_S2 - {b}) = UNIV"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "C0 = top1_S2" sorry \<comment> \<open>f(A)={} \<Rightarrow> S^2\f(A)=S^2 connected \<Rightarrow> C0=S^2.\<close>
+        hence "C0 - {b} = top1_S2 - {b}" by simp
+        hence "h ` (C0 - {b}) = UNIV" using \<open>h ` (top1_S2 - {b}) = UNIV\<close> by simp
+        thus ?thesis using connected_Times[OF connected_UNIV connected_UNIV]
+          by (simp add: UNIV_Times_UNIV)
+      next
+        case False
+        then obtain c where hc: "c \<in> f ` A" by (by100 blast)
+        have "c \<in> top1_S2" using hf hc unfolding top1_continuous_map_on_def by (by100 blast)
+        have "c \<notin> C0" using hc hC0_sub by (by100 blast)
+        show ?thesis
+          by (rule connected_open_delete_S2'[OF hC0_open_S2 hC0_conn_custom True
+              \<open>c \<in> top1_S2\<close> \<open>c \<notin> C0\<close> hh_cont_C0b])
+             simp
+      qed
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
