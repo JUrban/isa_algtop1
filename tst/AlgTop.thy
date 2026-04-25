@@ -13248,7 +13248,16 @@ proof -
             obtain \<gamma> where h\<gamma>: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma>"
             proof -
               have "top1_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
-                sorry \<comment> \<open>Proved as first conjunct.\<close>
+              proof -
+                have hX_open: "?X \<in> top1_S2_topology"
+                  sorry \<comment> \<open>{a,b} closed (singletons) → S^2\{a,b} open. Same as first show.\<close>
+                have hX_lpc2: "top1_locally_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+                  by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hX_open]) blast
+                have hX_conn2: "top1_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+                  sorry \<comment> \<open>S^2\{a,b} connected. Same as first show.\<close>
+                show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+                    hTX_weak hX_conn2 hX_lpc2]) (use hUV_ne hX_UV in blast)
+              qed
               thus ?thesis using that hx0X hy0 unfolding top1_path_connected_on_def by blast
             qed
             have hrev\<gamma>: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 x0 (top1_path_reverse \<gamma>)"
