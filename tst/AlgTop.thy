@@ -8964,8 +8964,54 @@ proof -
       \<comment> \<open>Use connected_open_delete_S2': C0 open connected in S^2, b \<in> C0,
          \<exists>c \<in> S^2\C0, h continuous on C0\{b} \<Rightarrow> h(C0\{b}) connected.\<close>
       have hC0_open_S2: "C0 \<in> top1_S2_topology"
-        sorry \<comment> \<open>C0 is a path component of S^2\f(A) which is open in S^2 (lpc).
-           Path component of lpc open set is open. Proof identical to line 8836.\<close>
+      proof -
+        have hTS2_l: "is_topology_on top1_S2 top1_S2_topology"
+          using hT unfolding is_topology_on_strict_def by (by100 blast)
+        have hfA_sub_l: "f ` A \<subseteq> top1_S2"
+          using hf unfolding top1_continuous_map_on_def by (by100 blast)
+        have hfA_compact_l: "top1_compact_on (f ` A) (subspace_topology top1_S2 top1_S2_topology (f ` A))"
+        proof -
+          have hf_S2_l: "top1_continuous_map_on A TA top1_S2 top1_S2_topology f"
+            unfolding top1_continuous_map_on_def proof (intro conjI ballI)
+            fix x assume "x \<in> A" thus "f x \<in> top1_S2" using hfA_sub_l by (by100 blast) next
+            fix V assume hV: "V \<in> top1_S2_topology"
+            have "(top1_S2 - {a,b}) \<inter> V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a,b})"
+              by (rule subspace_topology_memI[OF hV])
+            hence "{x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V} \<in> TA"
+              using hf unfolding top1_continuous_map_on_def by (by100 blast)
+            moreover have "{x \<in> A. f x \<in> V} = {x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V}"
+              using hf unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "{x \<in> A. f x \<in> V} \<in> TA" by simp qed
+          show ?thesis by (rule top1_compact_on_continuous_image[OF hcomp hTS2_l hf_S2_l])
+        qed
+        have hS2fA_open_l: "top1_S2 - f ` A \<in> top1_S2_topology"
+        proof -
+          have "closedin_on top1_S2 top1_S2_topology (f ` A)"
+            by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+                top1_S2_is_topology_on_strict hfA_sub_l hfA_compact_l])
+          thus ?thesis unfolding closedin_on_def using hTS2_l unfolding is_topology_on_def by (by100 blast)
+        qed
+        have hTS2fA_l: "is_topology_on (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+          by (rule subspace_topology_is_topology_on[OF hTS2_l]) (by100 blast)
+        have hS2fA_lpc_l: "top1_locally_path_connected_on (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+          by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2fA_open_l]) simp
+        obtain x where hx: "x \<in> top1_S2 - f ` A"
+            and hC0_eq: "C0 = top1_component_of_on (top1_S2 - f ` A)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x"
+          using hC0 unfolding top1_components_on_def by (by100 blast)
+        have hC0_pc: "C0 = top1_path_component_of_on (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x"
+          using Theorem_25_5[OF hTS2fA_l] hS2fA_lpc_l hx hC0_eq by (by100 blast)
+        have "top1_path_component_of_on (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) x
+            \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2fA_l hS2fA_lpc_l hx])
+        then obtain W where hW: "W \<in> top1_S2_topology" and hpc_eq: "C0 = (top1_S2 - f ` A) \<inter> W"
+          using hC0_pc unfolding subspace_topology_def by (by100 blast)
+        show ?thesis using hpc_eq topology_inter_open[OF hTS2_l hS2fA_open_l hW] by simp
+      qed
       have hC0_conn_custom: "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
       proof -
         have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
@@ -8991,7 +9037,45 @@ proof -
       qed
       obtain c where "c \<in> top1_S2" "c \<notin> C0" using hc_exists by (by100 blast)
       have hh_cont_C0b: "continuous_on (C0 - {b}) h"
-        sorry \<comment> \<open>h continuous on S^2\{b} (from homeomorphism hh), C0\{b} \<subseteq> S^2\{b}.\<close>
+      proof -
+        have hh_cont_std: "continuous_on (top1_S2 - {b}) h"
+        proof -
+          have hh_cont_cust: "top1_continuous_map_on (top1_S2 - {b})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          show ?thesis unfolding continuous_on_open_invariant
+          proof (intro allI impI)
+            fix V :: "(real \<times> real) set" assume "open V"
+            have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+              using \<open>open V\<close> unfolding top1_open_sets_def by simp
+            hence "V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+              using product_topology_on_open_sets_real2 by (by100 metis)
+            hence "{x \<in> top1_S2 - {b}. h x \<in> V} \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})"
+              using hh_cont_cust unfolding top1_continuous_map_on_def by (by100 blast)
+            then obtain W where "W \<in> top1_S2_topology" "{x \<in> top1_S2 - {b}. h x \<in> V} = (top1_S2 - {b}) \<inter> W"
+              unfolding subspace_topology_def by (by100 blast)
+            have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+              unfolding top1_S2_topology_def
+              using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                    product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+            then obtain W' where "W' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)" "W = top1_S2 \<inter> W'"
+              using \<open>W \<in> top1_S2_topology\<close> unfolding subspace_topology_def by (by100 blast)
+            have "open W'" using \<open>W' \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+            moreover have "W' \<inter> (top1_S2 - {b}) = h -` V \<inter> (top1_S2 - {b})"
+            proof -
+              have "(top1_S2 - {b}) \<inter> W = (top1_S2 - {b}) \<inter> (top1_S2 \<inter> W')"
+                using \<open>W = top1_S2 \<inter> W'\<close> by simp
+              hence "(top1_S2 - {b}) \<inter> W = (top1_S2 - {b}) \<inter> W'" by (by100 blast)
+              hence "{x \<in> top1_S2 - {b}. h x \<in> V} = (top1_S2 - {b}) \<inter> W'"
+                using \<open>{x \<in> top1_S2 - {b}. h x \<in> V} = (top1_S2 - {b}) \<inter> W\<close> by simp
+              thus ?thesis by (by100 blast)
+            qed
+            ultimately show "\<exists>T. open T \<and> T \<inter> (top1_S2 - {b}) = h -` V \<inter> (top1_S2 - {b})" by (by100 blast)
+          qed
+        qed
+        show ?thesis by (rule continuous_on_subset[OF hh_cont_std]) (use hC0_sub_S2 in blast)
+      qed
       show ?thesis
         by (rule connected_open_delete_S2'[OF hC0_open_S2 hC0_conn_custom True
             \<open>c \<in> top1_S2\<close> \<open>c \<notin> C0\<close> hh_cont_C0b])
