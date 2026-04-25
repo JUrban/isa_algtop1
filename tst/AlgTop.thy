@@ -12945,15 +12945,15 @@ proof -
           \<comment> \<open>Step 3: Each piece in U/V nulhomotopic.\<close>
           \<comment> \<open>Step 4: Product of nulhomotopic = nulhomotopic.\<close>
           \<comment> \<open>Handle basepoint: if y0 = x0 use directly, else conjugate.\<close>
+          have hTX_weak: "is_topology_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+            using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hx0X: "x0 \<in> ?X" using hx0 hX_UV by (by100 blast)
           show "top1_path_homotopic_on ?X
               (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
               f (top1_constant_path y0)"
           proof (cases "y0 = x0")
             case True
             \<comment> \<open>y0 = x0: apply Theorem 59.1 to decompose f.\<close>
-            have hTX_weak: "is_topology_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
-              using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
-            have hx0X: "x0 \<in> ?X" using hx0 hX_UV by (by100 blast)
             \<comment> \<open>Key helper: any loop g at x0 mapping into U is nulhomotopic in X.\<close>
             have hU_nul: "\<And>g. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g
                 \<Longrightarrow> g ` I_set \<subseteq> ?U \<Longrightarrow>
@@ -13236,14 +13236,9 @@ proof -
                Hence f nulhomotopic at y0.\<close>
             \<comment> \<open>Conjugation: get \<gamma>: x0 \<rightarrow> y0. bc(\<gamma>, f) = \<gamma> * f * rev(\<gamma>) is loop at x0.
                Nulhomotopic by True case. Unconjugate via bc roundtrip.\<close>
-            show ?thesis
-              sorry \<comment> \<open>Standard conjugation (~80 lines, same as 61.3 lines 12382-12509):
-                 1. \<gamma>: x0→y0 from path-connectivity
-                 2. bc(\<gamma>, f) = \<gamma>*f*rev(\<gamma>) loop at x0
-                 3. Nulhomotopic (True case applied to bc(\<gamma>,f))
-                 4. f \<simeq> bc(rev(\<gamma>), bc(\<gamma>,f)) by roundtrip
-                 5. bc(rev(\<gamma>), const) \<simeq> const_y0
-                 6. Transitivity gives f \<simeq> const_y0.\<close>
+            show ?thesis sorry \<comment> \<open>Conjugation: ~80 lines (same as 61.3).
+               Uses top1_basepoint_change_roundtrip, congruence, path algebra.
+               All infrastructure available, just verbose.\<close>
           qed
         qed
       qed
