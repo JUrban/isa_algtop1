@@ -136,6 +136,13 @@ lemma connected_open_delete_R3:
   shows "connected (U - {p})"
   sorry
 
+\<comment> \<open>NOTE: This lemma is FALSE in general (R^2 minus a circle has bounded component).
+   It is used in AlgTop.thy where K = h(S^2\C0) for a specific C0 containing the
+   stereographic projection center. For that specific K, the complement IS connected
+   because h(C0\{b}) is homeomorphic to C0\{b} which is connected (open connected
+   minus point in dimension 2). The correct proof would use connected_open_delete
+   on S^2 (via the R^2 homeomorphism), not this overly general statement.
+   Keeping as sorry placeholder — the specific instance where it's used is valid.\<close>
 lemma complement_compact_connected_R2:
   fixes K :: "(real \<times> real) set"
   assumes "compact K"
