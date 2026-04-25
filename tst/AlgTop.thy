@@ -8963,11 +8963,35 @@ proof -
       qed
       \<comment> \<open>Use connected_open_delete_S2': C0 open connected in S^2, b \<in> C0,
          \<exists>c \<in> S^2\C0, h continuous on C0\{b} \<Rightarrow> h(C0\{b}) connected.\<close>
-      have hC0_open_S2: "C0 \<in> top1_S2_topology" sorry
-      have hC0_conn_custom: "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)" sorry
-      have hc_exists: "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0" sorry
+      have hC0_open_S2: "C0 \<in> top1_S2_topology"
+        sorry \<comment> \<open>C0 is a path component of S^2\f(A) which is open in S^2 (lpc).
+           Path component of lpc open set is open. Proof identical to line 8836.\<close>
+      have hC0_conn_custom: "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
+      proof -
+        have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+          using hT unfolding is_topology_on_strict_def by (by100 blast)
+        have hTS2fA: "is_topology_on (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+          by (rule subspace_topology_is_topology_on[OF hTS2_loc]) (by100 blast)
+        have "top1_connected_on C0 (subspace_topology (top1_S2 - f ` A)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) C0)"
+          by (rule Theorem_25_1(3)[OF hTS2fA hC0])
+        thus ?thesis by (simp add: subspace_topology_trans[OF hC0_sub])
+      qed
+      have hC0_sub_S2: "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
+      have hc_exists: "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0"
+      proof -
+        \<comment> \<open>f(A) nonempty (a,b \<in> S^2, a \<noteq> b, so S^2 has \<ge> 2 pts \<notin> f(A)).
+           Actually: a \<in> S^2, b \<in> S^2, C0 \<subseteq> S^2\f(A).
+           If f(A) nonempty: any c \<in> f(A) works (c \<in> S^2, c \<notin> C0).
+           If f(A) empty: C0 = S^2, but C0\{b} has other pts, need c \<notin> S^2 ... contradiction.
+           Actually if C0 = S^2 we need c \<in> S^2 \<and> c \<notin> S^2 which is impossible.
+           So this sorry only works if f(A) \<noteq> {} or C0 \<noteq> S^2.\<close>
+        show ?thesis sorry
+      qed
       obtain c where "c \<in> top1_S2" "c \<notin> C0" using hc_exists by (by100 blast)
-      have hh_cont_C0b: "continuous_on (C0 - {b}) h" sorry
+      have hh_cont_C0b: "continuous_on (C0 - {b}) h"
+        sorry \<comment> \<open>h continuous on S^2\{b} (from homeomorphism hh), C0\{b} \<subseteq> S^2\{b}.\<close>
       show ?thesis
         by (rule connected_open_delete_S2'[OF hC0_open_S2 hC0_conn_custom True
             \<open>c \<in> top1_S2\<close> \<open>c \<notin> C0\<close> hh_cont_C0b])
