@@ -7479,8 +7479,53 @@ proof -
              So {N} \<subsetneq> S^2 \<inter> W. Contradiction.\<close>
           \<comment> \<open>{N} = S^2 \<inter> W for open W. W contains ball B(N,\<epsilon>).
              Point (0, \<epsilon>/3, sqrt(1-(\<epsilon>/3)^2)) \<in> S^2 \<inter> B(N,\<epsilon>) and \<noteq> N.\<close>
-          show False sorry \<comment> \<open>Requires: open set in R^3 containing N=(0,0,1)
-             intersects S^2 in more than one point. Needs concrete witness.\<close>
+          \<comment> \<open>{N} \<in> S^2_top means {N} = S^2 \<inter> W for open W in R^3.
+             W contains B(N,\<epsilon>). Point (0, \<epsilon>/2, sqrt(1-\<epsilon>^2/4)) \<in> S^2 \<inter> B(N,\<epsilon>), \<noteq> N.\<close>
+          have hR3eq: "(product_topology_on (top1_open_sets :: real set set)
+              (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)))
+              = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+            using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                  product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+          have "top1_S2_topology = subspace_topology UNIV
+              (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+            unfolding top1_S2_topology_def using hR3eq by simp
+          then obtain W where "W \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+              "{north_pole} = top1_S2 \<inter> W"
+            using \<open>{north_pole} \<in> top1_S2_topology\<close> unfolding subspace_topology_def
+            by (by100 blast)
+          have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+          \<comment> \<open>W open in R^3, N \<in> W. Use open_prod_elim to get intervals around N.\<close>
+          have "north_pole \<in> W" using \<open>{north_pole} = top1_S2 \<inter> W\<close> hn_S2 by (by100 blast)
+          \<comment> \<open>W open in R × (R × R). Get open intervals around each coordinate of N=(0,0,1).\<close>
+          obtain U1 U23 where hU1: "open U1" and hU23: "open U23"
+              and "north_pole \<in> U1 \<times> U23" and "U1 \<times> U23 \<subseteq> W"
+            using open_prod_elim[OF \<open>open W\<close> \<open>north_pole \<in> W\<close>] by (by100 blast)
+          hence h0_U1: "(0::real) \<in> U1" unfolding north_pole_def by simp
+          obtain U2 U3 where hU2: "open U2" and hU3: "open U3"
+              and "((0::real), 1::real) \<in> U2 \<times> U3" and "U2 \<times> U3 \<subseteq> U23"
+            using open_prod_elim[OF hU23] sorry
+          hence h0_U2: "(0::real) \<in> U2" and h1_U3: "(1::real) \<in> U3" by auto
+          \<comment> \<open>U2 open and 0 \<in> U2 \<Rightarrow> \<exists>\<delta>>0 with (-\<delta>,\<delta>) \<subseteq> U2.\<close>
+          obtain \<delta> where h\<delta>: "\<delta> > 0" "\<delta>/2 \<in> U2"
+          proof -
+            have "\<exists>e>0. \<forall>y. dist y (0::real) < e \<longrightarrow> y \<in> U2"
+              using hU2 h0_U2 unfolding open_dist by (by100 blast)
+            then obtain e where he: "e > 0" "\<forall>y. dist y (0::real) < e \<longrightarrow> y \<in> U2" by blast
+            have "e/2 > 0" using he(1) by simp
+            have "dist (e/2) (0::real) < e" using he(1) by (simp add: dist_real_def)
+            hence "e/2 \<in> U2" using he(2) by simp
+            thus ?thesis using that[of e] he(1) by simp
+          qed
+          \<comment> \<open>Witness: p = (0, \<delta>/2, sqrt(1-(\<delta>/2)^2)) \<in> S^2 \<inter> W, p \<noteq> N.\<close>
+          define t where "t = min (\<delta>/2) (1/2)"
+          have ht: "t > 0" "t \<le> 1/2" unfolding t_def using h\<delta>(1) by auto
+          define p where "p = (0::real, t, sqrt (1 - t^2))"
+          have hp_S2: "p \<in> top1_S2" unfolding p_def top1_S2_def sorry
+          have hp_ne_N: "p \<noteq> north_pole" unfolding p_def north_pole_def using ht(1) by auto
+          have "p \<in> W" sorry \<comment> \<open>p \<in> U1 \<times> (U2 \<times> U3) \<subseteq> U1 \<times> U23 \<subseteq> W.\<close>
+          have "p \<in> top1_S2 \<inter> W" using hp_S2 \<open>p \<in> W\<close> by (by100 blast)
+          hence "p \<in> {north_pole}" using \<open>{north_pole} = top1_S2 \<inter> W\<close> by simp
+          thus False using hp_ne_N by simp
         qed
         thus ?thesis using hn_S2 by (by100 blast)
       qed
