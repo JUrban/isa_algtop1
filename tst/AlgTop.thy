@@ -7367,6 +7367,11 @@ next
   qed
 qed
 
+lemma S2_connected: "top1_connected_on top1_S2 top1_S2_topology"
+  sorry \<comment> \<open>S^2 connected: S^2\{N} simply connected hence connected (path_connected \<Rightarrow> connected).
+     S^2 = closure(S^2\{N}), connected closure = connected by Theorem 23.4.
+     Needs: (1) path_connected \<Rightarrow> connected in custom topology, (2) N \<in> closure(S^2\{N}).\<close>
+
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
     and b :: "real \<times> real \<times> real" and U :: "(real \<times> real \<times> real) set"
@@ -9312,7 +9317,38 @@ proof -
         have "h ` (top1_S2 - {b}) = UNIV"
           using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
         have "C0 = top1_S2"
-          sorry \<comment> \<open>f(A)={} \<Rightarrow> S^2\f(A) = S^2 connected \<Rightarrow> unique component C0 = S^2.\<close>
+        proof -
+          have "top1_S2 - f ` A = top1_S2" using True by simp
+          have hTS2_l: "is_topology_on top1_S2 top1_S2_topology"
+            using hT unfolding is_topology_on_strict_def by (by100 blast)
+          have hself: "\<forall>U \<in> top1_S2_topology. U \<subseteq> top1_S2"
+            using top1_S2_is_topology_on_strict
+            unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+          have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+            by (rule subspace_topology_self_carrier[OF hself])
+          have hC0_comp: "C0 \<in> top1_components_on top1_S2 top1_S2_topology"
+            using hC0 \<open>top1_S2 - f ` A = top1_S2\<close> \<open>subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology\<close>
+            by simp
+          have hS2_ne: "top1_S2 \<noteq> {}" using ha by (by100 blast)
+          have hS2_conn_sub: "top1_connected_on top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2)"
+            using S2_connected \<open>subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology\<close> by simp
+          have "\<exists>C'\<in>top1_components_on top1_S2 top1_S2_topology. top1_S2 \<subseteq> C'"
+          proof -
+            have "\<exists>C'\<in>top1_components_on top1_S2 top1_S2_topology. top1_S2 \<subseteq> C'"
+            proof -
+              have hTS2_sub: "is_topology_on top1_S2 top1_S2_topology" by (rule hTS2_l)
+              show ?thesis using Theorem_25_1(4)[OF hTS2_sub _ hS2_conn_sub hS2_ne] by simp
+            qed
+            thus ?thesis by simp
+          qed
+          then obtain C' where hC': "C' \<in> top1_components_on top1_S2 top1_S2_topology" "top1_S2 \<subseteq> C'"
+            by blast
+          have "C' = C0"
+            by (rule Theorem_25_1(2)[OF hTS2_l hC'(1) hC0_comp])
+               (use ha_C0 hC'(2) ha in blast)
+          have "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
+          thus ?thesis using hC'(2) \<open>C' = C0\<close> by (by100 blast)
+        qed
         hence "C0 - {b} = top1_S2 - {b}" by simp
         hence "h ` (C0 - {b}) = UNIV" using \<open>h ` (top1_S2 - {b}) = UNIV\<close> by simp
         thus ?thesis using connected_Times[OF connected_UNIV connected_UNIV]
