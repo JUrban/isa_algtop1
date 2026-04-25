@@ -13940,7 +13940,20 @@ proof (rule ccontr)
     \<comment> \<open>Apply Theorem 63.1: \<alpha>*\<beta> nontrivial in \<pi>_1(X,a).\<close>
     have "\<not> top1_path_homotopic_on ?X ?TX a a
         (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
-      sorry \<comment> \<open>Direct application of Theorem_63_1_loop_nontrivial with the setup above.\<close>
+    proof (rule Theorem_63_1_loop_nontrivial)
+      show "is_topology_on ?X ?TX" by (rule hTX)
+      show "openin_on ?X ?TX ?U" by (rule hU_open)
+      show "openin_on ?X ?TX ?V" by (rule hV_open)
+      show "?U \<union> ?V = ?X" by (rule hUV_eq)
+      show "?U \<inter> ?V = A \<union> B" using hAB_cover by simp
+      show "A \<inter> B = {}" by (rule hAB_disj)
+      show "openin_on ?X ?TX A" by (rule hA_open)
+      show "openin_on ?X ?TX B" by (rule hB_open)
+      show "a \<in> A" by (rule ha_A)
+      show "b \<in> B" by (rule hb_B)
+      show "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b \<alpha>" by (rule h\<alpha>_U)
+      show "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a \<beta>" by (rule h\<beta>_V)
+    qed
     moreover have "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)"
     proof -
       \<comment> \<open>\<alpha> path in U (\<subseteq> X) \<Rightarrow> \<alpha> path in X. \<beta> path in V (\<subseteq> X) \<Rightarrow> \<beta> path in X.\<close>
