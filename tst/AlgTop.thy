@@ -12562,16 +12562,13 @@ proof -
         show ?thesis by (rule open_subset_locally_path_connected[OF
             S2_locally_path_connected hUV_open \<open>?U \<inter> ?V \<subseteq> top1_S2\<close>])
       qed
-      have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
+      have hTUV: "is_topology_on (?U \<inter> ?V)
           (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
-      proof -
-        have hTUV: "is_topology_on (?U \<inter> ?V)
-            (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
-          by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
-        have hUV_conn': "top1_connected_on (?U \<inter> ?V)
-            (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
-          using hconn hUV_eq by simp
-        have "?U \<inter> ?V \<noteq> {}"
+        by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+      have hUV_conn': "top1_connected_on (?U \<inter> ?V)
+          (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+        using hconn hUV_eq by simp
+      have hUV_ne_inner: "?U \<inter> ?V \<noteq> {}"
         proof -
           \<comment> \<open>S^2\(A1\<union>A2) nonempty. S^2 uncountable, A1\<union>A2 \<neq> S^2 (otherwise S^2 = union of
              two closed connected sets with 2-point intersection, but S^2 is simply connected
@@ -12769,9 +12766,10 @@ proof -
               by contradiction
           qed
         qed
-        show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
-            hTUV hUV_conn' hUV_lpc \<open>?U \<inter> ?V \<noteq> {}\<close>])
-      qed
+      have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
+          (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+        by (rule connected_locally_path_connected_imp_path_connected[OF
+            hTUV hUV_conn' hUV_lpc hUV_ne_inner])
       \<comment> \<open>X = S^2\{a,b} is strict topology (subspace of strict S^2).\<close>
       have hTX_strict: "is_topology_on_strict ?X
           (subspace_topology top1_S2 top1_S2_topology ?X)"
@@ -12806,8 +12804,7 @@ proof -
       \<comment> \<open>x0 \<in> U\<inter>V.\<close>
       \<comment> \<open>U\<inter>V nonempty: S^2 connected, A1,A2 closed connected with |A1\<inter>A2|=2 \<Rightarrow>
          A1\<union>A2 \<noteq> S^2 (proved inside hUV_pc via partition argument).\<close>
-      have hUV_ne: "?U \<inter> ?V \<noteq> {}"
-        sorry \<comment> \<open>Same argument as inside hUV_pc (fully proved there). Needs hoisting.\<close>
+      have hUV_ne: "?U \<inter> ?V \<noteq> {}" by (rule hUV_ne_inner)
       obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V"
         using hUV_ne by (by100 blast)
       \<comment> \<open>By Theorem 59.1: every loop in X decomposes into pieces in U and V.
