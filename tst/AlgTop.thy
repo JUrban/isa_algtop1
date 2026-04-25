@@ -13869,9 +13869,31 @@ proof
           qed
         next
           assume hbVU: "b \<in> V - U"
-          show ?thesis sorry \<comment> \<open>V evenly covered for b \<in> V \ U. Use Ub = V.
-             V-sheets: Sn = {(x,2(n+1))|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.
-             Same argument pattern as U sheets.\<close>
+          \<comment> \<open>V evenly covered. V-sheet n = image under norm of V \<times> {2n+1}.\<close>
+          let ?\<V>V = "(\<lambda>n::int. A \<times> {2*(n+1)} \<union> B \<times> {2*n} \<union> (V - U) \<times> {2*n+1}) ` UNIV"
+          show ?thesis
+          proof (intro exI[of _ V] conjI)
+            show "b \<in> V" using hbVU by (by100 blast)
+            show "top1_evenly_covered_on E TE X TX p0 V"
+              unfolding top1_evenly_covered_on_def
+            proof (intro conjI exI[of _ ?\<V>V])
+              show "openin_on X TX V" by (rule assms(3))
+              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+                \<comment> \<open>Each V-sheet is open in TE. Proof: even slices give A or B \<in> TX,
+                   odd slices give V\U \<in> TX (checking the TE conditions).\<close>
+              show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
+                sorry \<comment> \<open>V-sheets disjoint: integer components {2(n+1), 2n, 2n+1} for different n
+                   are disjoint due to A\<inter>B = {} and A,B \<subseteq> U, V\U \<inter> U = {}.\<close>
+              show "{x \<in> E. p0 x \<in> V} = \<Union>?\<V>V" sorry
+                \<comment> \<open>Union of V-sheets = p0\<inverse>(V) in E. For x \<in> V:
+                   if x \<in> A: (x,2k) \<in> E, appears in V-sheet (k-1) as A\<times>{2k}.
+                   if x \<in> B: (x,2k) \<in> E, appears in V-sheet k as B\<times>{2k}.
+                   if x \<in> V\U: (x,2k+1) \<in> E, appears in V-sheet k.\<close>
+              show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
+                  (subspace_topology X TX V) p0" sorry
+                \<comment> \<open>Each V-sheet homeomorphic to V via p0=fst. Same pattern as U.\<close>
+            qed
+          qed
         qed
       qed
     qed
