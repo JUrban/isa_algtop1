@@ -13579,7 +13579,23 @@ proof
               {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}
               = \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                     {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}"
-            sorry \<comment> \<open>Intersection distributes: A,B,V\U disjoint partition of V.\<close>
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}"
+            thus "x \<in> \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" by (by100 blast)
+          next
+            fix x assume hx: "x \<in> \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}"
+            \<comment> \<open>x is in every member. Since A, B, V\U are disjoint, x's "type" is fixed.\<close>
+            from hF obtain W0 where "W0 \<in> F" by (by100 blast)
+            hence "x \<in> {x \<in> A. (x, 2*n+2) \<in> W0} \<union> {x \<in> B. (x, 2*n) \<in> W0} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W0}" using hx by (by100 blast)
+            hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" by (by100 blast)
+            thus "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}"
+              using hx hAB_disj hAB_UV by (by100 blast)
+          qed
           have hfin: "finite {{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                     {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" using hF by simp
           have hne: "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
