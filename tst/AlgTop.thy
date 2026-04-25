@@ -13869,7 +13869,18 @@ proof
           qed
         next
           assume hbV: "b \<in> V"
-          show ?thesis sorry \<comment> \<open>V evenly covered: V-sheets more complex but same pattern.\<close>
+          \<comment> \<open>b \<in> V. Since U \<union> V = X and we need a neighborhood, use U if b \<in> U.\<close>
+          show ?thesis
+          proof (cases "b \<in> U")
+            case True
+            thus ?thesis sorry \<comment> \<open>Same as first branch (U evenly covered).\<close>
+          next
+            case False
+            hence hbVU: "b \<in> V - U" using hbV by (by100 blast)
+            show ?thesis sorry \<comment> \<open>V evenly covered for b \<in> V \ U. V-sheets:
+               Sn = {(x,2(n+1))|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.
+               Same argument pattern as U sheets.\<close>
+          qed
         qed
       qed
     qed
