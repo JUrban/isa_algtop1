@@ -13804,7 +13804,26 @@ proof -
           qed
         next
           assume "b \<in> V - U"
-          show ?thesis sorry \<comment> \<open>V evenly covered, same pattern as U.\<close>
+          \<comment> \<open>V evenly covered. V-sheets defined via vsheet.\<close>
+          define vsheet :: "int \<Rightarrow> ('a \<times> int) set" where
+            "vsheet = (\<lambda>n. {e \<in> E. fst e \<in> V \<and>
+              (fst e \<in> A \<and> snd e = 2*(n+1) \<or> fst e \<in> B \<and> snd e = 2*n \<or> fst e \<in> V - U \<and> snd e = 2*n+1)})"
+          let ?\<V>V = "vsheet ` UNIV"
+          show ?thesis
+          proof (intro exI[of _ V] conjI)
+            show "b \<in> V" using \<open>b \<in> V - U\<close> by (by100 blast)
+            show "top1_evenly_covered_on E TE X TX p0 V"
+              unfolding top1_evenly_covered_on_def
+            proof (intro conjI exI[of _ ?\<V>V])
+              show "openin_on X TX V" by (rule assms(3))
+              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+              show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
+                unfolding vsheet_def using assms(6) hAB sorry
+              show "{x \<in> E. p0 x \<in> V} = \<Union>?\<V>V" sorry
+              show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
+                  (subspace_topology X TX V) p0" sorry
+            qed
+          qed
         qed
       qed
     qed
