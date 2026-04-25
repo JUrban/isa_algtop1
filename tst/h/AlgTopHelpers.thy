@@ -128,18 +128,7 @@ proof (rule connectedI)
   qed
 qed
 
-text \<open>Open connected minus point for R^3 = real \<times> (real \<times> real).\<close>
-text \<open>Same technique as connected_open_delete_R2 but for triples.\<close>
-lemma connected_open_delete_R3:
-  fixes U :: "(real \<times> (real \<times> real)) set" and p :: "real \<times> (real \<times> real)"
-  assumes "open U" "connected U"
-  shows "connected (U - {p})"
-  sorry
-
-\<comment> \<open>NOTE: complement_compact_connected_R2 was here but is FALSE in general
-   (R^2 minus a circle has a bounded component). Removed.
-   The specific case in AlgTop.thy uses a direct sorry with correct proof sketch.\<close>
-
-\<comment> \<open>connected_minus_point_via_homeo: in AlgTop.thy (uses connected_open_delete_R2).\<close>
+\<comment> \<open>connected_open_delete_R3, complement_compact_connected_R2 removed (unused/false).
+   connected_minus_point_via_homeo is in AlgTop.thy.\<close>
 
 end
