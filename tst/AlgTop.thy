@@ -8455,7 +8455,50 @@ proof -
         qed
         thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
       qed
-      moreover have "continuous_on C0 h" sorry \<comment> \<open>h continuous on S^2-{b} \<supseteq> C0.\<close>
+      moreover have "continuous_on C0 h"
+      proof -
+        \<comment> \<open>h continuous on S^2-{b} in custom framework. Bridge to standard.\<close>
+        have hh_cont: "top1_continuous_map_on (top1_S2 - {b})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hC0_sub_S2b: "C0 \<subseteq> top1_S2 - {b}" using hC0_sub False by (by100 blast)
+        have hh_cont_C0: "top1_continuous_map_on C0
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) C0)
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_cont hC0_sub_S2b])
+        have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) C0
+            = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+        proof -
+          have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) C0
+              = subspace_topology top1_S2 top1_S2_topology C0"
+            by (rule subspace_topology_trans[OF hC0_sub_S2b])
+          also have "... = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+          proof -
+            have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+              unfolding top1_S2_topology_def
+              using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                    product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+            have "subspace_topology top1_S2 (subspace_topology UNIV
+                (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2) C0
+                = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) C0"
+            proof -
+              have "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
+              thus ?thesis by (rule subspace_topology_trans)
+            qed
+            thus ?thesis
+              using \<open>top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2\<close> by simp
+          qed
+          finally show ?thesis .
+        qed
+        hence hh_cont_C0': "top1_continuous_map_on C0
+            (subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) C0)
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+          using hh_cont_C0 by simp
+        \<comment> \<open>Bridge: custom cont on C0 (subspace of R^3) to UNIV (R^2) \<Rightarrow> standard continuous_on.\<close>
+        show ?thesis sorry \<comment> \<open>Bridge custom continuous to standard continuous_on.\<close>
+      qed
       ultimately show ?thesis
         using connected_continuous_image by simp
     next
