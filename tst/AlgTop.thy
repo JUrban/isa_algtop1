@@ -13611,10 +13611,74 @@ proof
       qed
     qed
     \<comment> \<open>p0 is a covering map.\<close>
-    have hcov: "top1_covering_map_on E TE X TX p0" sorry \<comment> \<open>U and V evenly covered.
-       p\<inverse>(U) = disjoint \<Union>n {(x,2n)|x\<in>U}, each homeomorphic to U via p0.
-       p\<inverse>(V) = disjoint \<Union>n (V-sheet n), each homeomorphic to V via p0.
-       V-sheet n = {(x,2n+2)|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.\<close>
+    have hcov: "top1_covering_map_on E TE X TX p0"
+      unfolding top1_covering_map_on_def
+    proof (intro conjI)
+      \<comment> \<open>p0 continuous.\<close>
+      show "top1_continuous_map_on E TE X TX p0"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix e assume "e \<in> E"
+        thus "p0 e \<in> X"
+          unfolding p0_def E_def using assms(2,3,4) unfolding openin_on_def by auto
+      next
+        fix W assume hW: "W \<in> TX"
+        show "{e \<in> E. p0 e \<in> W} \<in> TE" unfolding TE_def
+        proof (intro CollectI conjI allI)
+          show "{e \<in> E. p0 e \<in> W} \<subseteq> E" by (by100 blast)
+          fix n :: int
+          show "{x \<in> U. (x, 2 * n) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+          proof -
+            have "{x \<in> U. (x, 2 * n) \<in> {e \<in> E. p0 e \<in> W}} = U \<inter> W"
+              unfolding p0_def E_def by auto
+            thus ?thesis using topology_inter_open[OF assms(1) hU_open_TX hW] by simp
+          qed
+          show "{x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+              {x \<in> B. (x, 2 * n) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+          proof -
+            have "{x \<in> A. (x, 2*n+2) \<in> {e \<in> E. p0 e \<in> W}} = A \<inter> W"
+              unfolding p0_def E_def using hAB_UV by auto
+            moreover have "{x \<in> B. (x, 2*n) \<in> {e \<in> E. p0 e \<in> W}} = B \<inter> W"
+              unfolding p0_def E_def using hAB_UV by auto
+            moreover have "{x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. p0 e \<in> W}} = (V - U) \<inter> W"
+              unfolding p0_def E_def by auto
+            moreover have "(A \<inter> W) \<union> (B \<inter> W) \<union> ((V-U) \<inter> W) = V \<inter> W"
+              using hAB_UV by (by100 blast)
+            ultimately show ?thesis using topology_inter_open[OF assms(1) hV_open_TX hW] by simp
+          qed
+        qed
+      qed
+    next
+      \<comment> \<open>p0 surjective.\<close>
+      show "p0 ` E = X"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> p0 ` E"
+        thus "x \<in> X"
+          unfolding p0_def E_def using assms(2,3,4) unfolding openin_on_def by auto
+      next
+        fix x assume "x \<in> X"
+        hence "x \<in> U \<or> x \<in> V - U" using assms(4) by (by100 blast)
+        thus "x \<in> p0 ` E"
+        proof
+          assume "x \<in> U"
+          hence "(x, 0::int) \<in> E" unfolding E_def by simp
+          thus ?thesis unfolding p0_def by (by100 force)
+        next
+          assume "x \<in> V - U"
+          hence "(x, 1::int) \<in> E" unfolding E_def by simp
+          thus ?thesis unfolding p0_def by (by100 force)
+        qed
+      qed
+    next
+      \<comment> \<open>Evenly covered.\<close>
+      show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
+        sorry \<comment> \<open>U and V are evenly covered neighborhoods.
+           For b \<in> U: take Ub = U. p\<inverse>(U) = \<Union>n {(x,2n)|x\<in>U}, disjoint sheets.
+           For b \<in> V\U: take Ub = V. p\<inverse>(V) = \<Union>n (V-sheet n), disjoint.
+           Each sheet maps homeomorphically to U (or V) via p0.
+           This requires showing sheet homeomorphisms (similar to the old proof).\<close>
+    qed
     \<comment> \<open>Define the lift: \<alpha>-tilde on [0,1/2] maps to (alpha(2s), 0).
        \<beta>-tilde on [1/2,1] maps to norm(\<beta>(2s-1), 1).\<close>
     define ftilde :: "real \<Rightarrow> ('a \<times> int)" where
