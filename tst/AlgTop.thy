@@ -13250,11 +13250,73 @@ proof -
               have "top1_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
               proof -
                 have hX_open: "?X \<in> top1_S2_topology"
-                  sorry \<comment> \<open>{a,b} closed (singletons) → S^2\{a,b} open. Same as first show.\<close>
+                proof -
+                  have "closedin_on top1_S2 top1_S2_topology {a}"
+                    by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2])
+                  have "closedin_on top1_S2 top1_S2_topology {b}"
+                    by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hb_S2])
+                  have "closedin_on top1_S2 top1_S2_topology {a,b}"
+                    unfolding closedin_on_def
+                  proof (intro conjI)
+                    show "{a,b} \<subseteq> top1_S2" using ha_S2 hb_S2 by (by100 blast)
+                    show "top1_S2 - {a,b} \<in> top1_S2_topology"
+                    proof -
+                      have "top1_S2 - {a} \<in> top1_S2_topology"
+                        using \<open>closedin_on top1_S2 top1_S2_topology {a}\<close>
+                        hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                      have "top1_S2 - {b} \<in> top1_S2_topology"
+                        using \<open>closedin_on top1_S2 top1_S2_topology {b}\<close>
+                        hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                      have "top1_S2 - {a,b} = (top1_S2 - {a}) \<inter> (top1_S2 - {b})" by (by100 blast)
+                      thus ?thesis using topology_inter_open[OF hTS2
+                          \<open>top1_S2 - {a} \<in> top1_S2_topology\<close> \<open>top1_S2 - {b} \<in> top1_S2_topology\<close>]
+                        by simp
+                    qed
+                  qed
+                  thus ?thesis using hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                qed
                 have hX_lpc2: "top1_locally_path_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
                   by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hX_open]) blast
                 have hX_conn2: "top1_connected_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
-                  sorry \<comment> \<open>S^2\{a,b} connected. Same as first show.\<close>
+                proof -
+                  have "connected (top1_S2 - {a, b})"
+                  proof -
+                    have "top1_S2 - {a} \<in> top1_S2_topology"
+                      using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff ha_S2]
+                      hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+                    have "top1_connected_on (top1_S2 - {a})
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a}))"
+                      by (rule path_connected_imp_connected)
+                         (use S2_minus_point_simply_connected[OF ha_S2] in
+                          \<open>unfold top1_simply_connected_on_def, by100 blast\<close>)
+                    have "b \<in> top1_S2 - {a}" using hb_S2 hab_ne by (by100 blast)
+                    have "\<exists>c. c \<in> top1_S2 \<and> c \<notin> (top1_S2 - {a})" using ha_S2 by (by100 blast)
+                    have "connected ((top1_S2 - {a}) - {b})"
+                      by (rule connected_open_delete_S2[OF \<open>top1_S2 - {a} \<in> top1_S2_topology\<close>
+                          \<open>top1_connected_on (top1_S2 - {a}) _\<close> \<open>b \<in> top1_S2 - {a}\<close>
+                          \<open>\<exists>c. _\<close>])
+                    moreover have "(top1_S2 - {a}) - {b} = top1_S2 - {a, b}" by (by100 blast)
+                    ultimately show ?thesis by simp
+                  qed
+                  hence "top1_connected_on (top1_S2 - {a, b})
+                      (subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b}))"
+                    using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+                  moreover have "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})
+                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b})"
+                  proof -
+                    have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                        (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                      unfolding top1_S2_topology_def
+                      using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                            product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+                    have "subspace_topology top1_S2 (subspace_topology UNIV
+                        (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {a, b})
+                        = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {a, b})"
+                      by (rule subspace_topology_trans) blast
+                    thus ?thesis using hR3eq by simp
+                  qed
+                  ultimately show ?thesis by simp
+                qed
                 show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
                     hTX_weak hX_conn2 hX_lpc2]) (use hUV_ne hX_UV in blast)
               qed
