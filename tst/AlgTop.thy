@@ -14165,6 +14165,42 @@ proof
   thus False using hne by simp
 qed
 
+\<comment> \<open>Theorem 63.1(c): the g-loop lifts to a loop in E (no sheet shift).
+   This means [f]^m \<noteq> [g]^k for nonzero m, k.
+   Proof: f-lift shifts by 2 per iteration, g-lift loops at e0.
+   By Theorem 54.3, homotopic paths have lifts with same endpoint.
+   If f^m \<simeq> g^k, then (a, 2m) = (a, 0) \<Rightarrow> m = 0.\<close>
+theorem Theorem_63_1_part_c_consequence:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B" and "a' \<in> A"
+      and "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+      and "top1_is_path_on V (subspace_topology X TX V) b a beta"
+      and "top1_is_path_on U (subspace_topology X TX U) a a' gamma"
+      and "top1_is_path_on V (subspace_topology X TX V) a' a delta"
+      \<comment> \<open>g = \<gamma>*\<delta> lifts to a loop at e0 in the helix E.
+         So [f] and [g] generate subgroups with trivial intersection.\<close>
+  shows "\<not> top1_path_homotopic_on X TX a a
+           (top1_path_product gamma delta) (top1_constant_path a)"
+  sorry \<comment> \<open>Proof: In the helix covering, g-lift = \<gamma>_lift * \<delta>_lift where
+     \<gamma>_lift(s) = (\<gamma>(s), 0) and \<delta>_lift(s) = norm(\<delta>(s), -1).
+     Since a' \<in> A: \<gamma>_lift(1) = (a', 0) = \<delta>_lift(0) (junction).
+     Since a \<in> A: \<delta>_lift(1) = norm(a, -1) = (a, 0) = e0 (loop!).
+     So g lifts to a loop at e0. By same argument as 63.1(a),
+     if [g] were trivial, the loop lift = constant lift, but the
+     lift IS a loop, so this would mean e0 = e0 (tautology).
+     Actually [g] nontrivial follows from 63.1(a) with decomposition
+     A' = {y \<in> A. y in a's path-component}, B' = rest. So this is
+     just 63.1(a) with different A, B decomposition.
+
+     The ADDITIONAL content of (c) is: [f]^m \<noteq> [g]^k for nonzero m, k.
+     This needs: f-lift shifts sheets by 2 per iteration, g-lift doesn't.
+     If f^m \<simeq> g^k then their lifts have same endpoint: (a, 2m) = (a, 0).
+     Hence m = 0. Same argument for k.\<close>
+
 
 
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
