@@ -7937,6 +7937,8 @@ lemma connected_open_delete_R2:
 lemma exterior_ball_connected_R2:
   fixes R :: real
   shows "connected {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
+  \<comment> \<open>The exterior {x | |x|^2 > R^2} is connected for any R.
+     Strategy: show every point connects to (|R|+1, 0) via a path in the exterior.\<close>
   sorry
 
 \<comment> \<open>General composition lemma: if g: A \<rightarrow> R^2 is custom-continuous and
@@ -8410,8 +8412,7 @@ proof -
     \<comment> \<open>h(C0-{b}) connected: C0 open connected in S^2, C0-{b} homeomorphic to open connected in R^2,
        connected_open_delete_R2 gives R^2 image connected.\<close>
     have himg_conn: "connected (h ` (C0 - {b}))"
-      sorry \<comment> \<open>C0 open connected in S^2, h homeo S^2-{b}\<cong>R^2, h(C0-{b}) open connected in R^2,
-         connected_open_delete_R2 preserves connectivity.\<close>
+      sorry \<comment> \<open>h(C0-{b}) connected: needs connected_open_delete for R^2/R^3.\<close>
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
     proof
