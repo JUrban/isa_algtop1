@@ -13496,6 +13496,7 @@ proof
 qed
 
 
+
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
     Munkres' proof: by contradiction + Theorem 63.1; use that \<pi>_1(S^2) is trivial. **)
 text \<open>Helper: R^2 is locally path-connected (every open set has path-connected neighborhoods).\<close>
@@ -15627,20 +15628,68 @@ proof -
   have hlpc: "top1_locally_path_connected_on (top1_S2 - (C1 \<union> C2))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (C1 \<union> C2)))"
     by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hopen]) (by100 blast)
-  \<comment> \<open>Get at least 2 components.\<close>
-  \<comment> \<open>Get exactly 2 components: \<ge>2 from separation + \<le>2 from 63.1(c) argument.\<close>
+  \<comment> \<open>Step 1: Extract intersection points.\<close>
+  obtain p q where hpq: "C1 \<inter> C2 = {p, q}" and hpq_ne: "p \<noteq> q"
+    using assms(6) card_2_iff by (by100 metis)
+  have hp_S2: "p \<in> top1_S2" using hpq hC1sub by (by100 blast)
+  have hq_S2: "q \<in> top1_S2" using hpq hC1sub by (by100 blast)
+  \<comment> \<open>Step 2: S^2-C1 and S^2-C2 are path-connected (non-separation + lpc).\<close>
+  have hU_pc: "top1_path_connected_on (top1_S2 - C1)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1))"
+  proof -
+    have hU_conn: "top1_connected_on (top1_S2 - C1)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1))"
+      using assms(7) unfolding top1_separates_on_def by (by100 blast)
+    have hU_open: "top1_S2 - C1 \<in> top1_S2_topology"
+      using assms(2) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+    have hU_lpc: "top1_locally_path_connected_on (top1_S2 - C1)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1))"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hU_open])
+         (by100 blast)
+    have hTU: "is_topology_on (top1_S2 - C1)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    have "top1_S2 - C1 \<noteq> {}"
+      sorry \<comment> \<open>C2 has \<ge>3 points (connected, |C1\<inter>C2|=2 \<Rightarrow> C2\<noteq>{p,q}). So C2\C1\<noteq>{}.\<close>
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+        hTU hU_conn hU_lpc \<open>top1_S2 - C1 \<noteq> {}\<close>])
+  qed
+  have hV_pc: "top1_path_connected_on (top1_S2 - C2)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2))"
+  proof -
+    have hV_conn: "top1_connected_on (top1_S2 - C2)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2))"
+      using assms(8) unfolding top1_separates_on_def by (by100 blast)
+    have hV_open: "top1_S2 - C2 \<in> top1_S2_topology"
+      using assms(3) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+    have hV_lpc: "top1_locally_path_connected_on (top1_S2 - C2)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2))"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hV_open])
+         (by100 blast)
+    have hTV: "is_topology_on (top1_S2 - C2)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    have "top1_S2 - C2 \<noteq> {}"
+      sorry \<comment> \<open>C1 has \<ge>3 points (connected, |C1\<inter>C2|=2 \<Rightarrow> C1\<noteq>{p,q}). So C1\C2\<noteq>{}.\<close>
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+        hTV hV_conn hV_lpc \<open>top1_S2 - C2 \<noteq> {}\<close>])
+  qed
+  \<comment> \<open>Step 3: Exactly 2 components. \<ge>2 from hsep. \<le>2 needs 63.1(c).\<close>
   show ?thesis
-    sorry \<comment> \<open>Structure: hsep gives \<ge>2 components. For \<le>2, assume 3+ and derive contradiction.
-       Pick a \<in> W1, a' \<in> W2, b \<in> B (three components of S^2-(C1\<union>C2)).
-       C1, C2 don't separate \<Rightarrow> paths in S^2-C1 and S^2-C2 between any points.
-       Let X = S^2-{p,q} where C1\<inter>C2 = {p,q}. U = S^2-C1, V = S^2-C2.
-       X = U\<union>V, U\<inter>V = S^2-(C1\<union>C2) with components W1, W2, B.
-       By Theorem 63.1(a): f = \<alpha>*\<beta> nontrivial (a\<rightarrow>b in U, b\<rightarrow>a in V).
-       By Theorem 63.1(a): g = \<gamma>*\<delta> nontrivial (a\<rightarrow>a' in U, a'\<rightarrow>a in V).
-       By Theorem 63.1(c): \<langle>[f]\<rangle> \<inter> \<langle>[g]\<rangle> = {1}.
-       But \<pi>_1(X) \<cong> Z (S^2 minus 2 points). In Z, any two nonzero subgroups
-       intersect nontrivially. Contradiction. Hence \<le>2 components.
-       Combine with \<ge>2 to get exactly 2. Extract two connected components.\<close>
+    sorry \<comment> \<open>Extract exactly 2 connected components.
+       \<ge>2: from hsep (S^2-(C1\<union>C2) disconnected).
+       \<le>2: by contradiction via 63.1(a)+(c):
+         If 3+ components W1, W2, B (open in lpc S^2-(C1\<union>C2)):
+         - Let X = S^2-{p,q}, U = S^2-C1, V = S^2-C2.
+         - X = U\<union>V, U\<inter>V = S^2-(C1\<union>C2).
+         - Pick a \<in> W1, a' \<in> W2, b \<in> B.
+         - Path \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V (by hU_pc, hV_pc).
+         - Path \<gamma>: a\<rightarrow>a' in U, \<delta>: a'\<rightarrow>a in V.
+         - f = \<alpha>*\<beta> nontrivial by 63.1(a) [decomp A = W1\<union>W2, B = rest].
+         - g = \<gamma>*\<delta> nontrivial by 63.1(a) [decomp A' = W1, B' = W2\<union>rest].
+         - By 63.1(c) [same helix covering]: \<langle>[f]\<rangle> \<inter> \<langle>[g]\<rangle> = {1}.
+         - \<pi>_1(X) \<cong> Z. In Z, rank 1 \<Rightarrow> any two nonzero subgroups overlap. Contradiction.
+       Ingredients: 63.1(c) (helix sorry), hU_pc (DONE), hV_pc (DONE), hsep (DONE).\<close>
 qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
