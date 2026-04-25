@@ -13031,9 +13031,24 @@ proof -
                     S1_compact ha_S2 hb_S2 hab_ne])
                    (use hh hX_UV in auto, use hsame in auto)
               \<comment> \<open>Step 5: g = h_S1 \<circ> p nulhomotopic.\<close>
+              \<comment> \<open>R_to_S1 restricted to I is a loop at (1,0) in S^1.\<close>
+              have hR_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+                  top1_R_to_S1"
+              proof -
+                have "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+                have "top1_R_to_S1 1 = (1, 0)" unfolding top1_R_to_S1_def by simp
+                show ?thesis sorry \<comment> \<open>R_to_S1 is loop: continuous I → S^1, endpoints (1,0).\<close>
+              qed
+              have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
               have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                   (h_S1 \<circ> top1_R_to_S1) (top1_constant_path x0)"
-                sorry \<comment> \<open>nulhomotopic_trivializes_loops_general + topology bridge.\<close>
+              proof -
+                have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+                  using S1_compact unfolding top1_compact_on_def by (by100 blast)
+                show ?thesis
+                  by (rule nulhomotopic_trivializes_loops_general[OF
+                      hTS1 hTX_weak hh hh_nul hh10 h10_S1 hR_loop])
+              qed
               moreover have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                   g (h_S1 \<circ> top1_R_to_S1)"
               proof -
@@ -18424,6 +18439,7 @@ end
  
  
  
+
 
 
 
