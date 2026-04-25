@@ -8194,7 +8194,47 @@ proof -
   have hC0_sub_S2c: "C0 \<subseteq> top1_S2 - {c}" using hC0_sub_S2 hc(2) by (by100 blast)
   \<comment> \<open>\<sigma>(C0) open in R^2: C0 open in S^2\{c} (subspace), \<sigma> homeomorphism (open map).\<close>
   have h\<sigma>C0_open: "open (\<sigma> ` C0)"
-    sorry \<comment> \<open>C0 open in S^2, C0 \<subseteq> S^2\{c} \<Rightarrow> C0 open in S^2\{c}. \<sigma> open map.\<close>
+  proof -
+    \<comment> \<open>C0 open in S^2\{c} (subspace): C0 open in S^2 and C0 \<subseteq> S^2\{c}.\<close>
+    have hC0_open_S2c: "C0 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c})"
+      using assms(1) hC0_sub_S2c unfolding subspace_topology_def by (by100 blast)
+    \<comment> \<open>\<sigma> open map: inv continuous \<Rightarrow> preimage of open = open = \<sigma>(open).\<close>
+    have hinv_cont: "top1_continuous_map_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+        (top1_S2 - {c}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
+        (inv_into (top1_S2 - {c}) \<sigma>)"
+      using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hbij: "bij_betw \<sigma> (top1_S2 - {c}) UNIV"
+      using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hsurj: "\<sigma> ` (top1_S2 - {c}) = UNIV" using hbij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>{y \<in> UNIV. inv y \<in> C0} = \<sigma>(C0) and is open in custom R^2 topology.\<close>
+    have hpre_open: "{y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> C0}
+        \<in> product_topology_on top1_open_sets top1_open_sets"
+      using hinv_cont hC0_open_S2c unfolding top1_continuous_map_on_def by (by100 blast)
+    have hpre_eq: "{y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> C0} = \<sigma> ` C0"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> {y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> C0}"
+      hence hinv_C0: "inv_into (top1_S2 - {c}) \<sigma> y \<in> C0" by simp
+      have "y \<in> \<sigma> ` (top1_S2 - {c})" using hsurj by simp
+      then obtain x where hx: "x \<in> top1_S2 - {c}" "\<sigma> x = y" by (by100 blast)
+      have hinj_loc: "inj_on \<sigma> (top1_S2 - {c})" using hbij unfolding bij_betw_def by (by100 blast)
+      have "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) = x"
+        by (rule inv_into_f_f[OF hinj_loc hx(1)])
+      hence "inv_into (top1_S2 - {c}) \<sigma> y = x" using hx(2) by simp
+      hence "x \<in> C0" using hinv_C0 by simp
+      thus "y \<in> \<sigma> ` C0" using hx(2) by (by100 blast)
+    next
+      fix y assume "y \<in> \<sigma> ` C0"
+      then obtain x where hx: "x \<in> C0" "y = \<sigma> x" by (by100 blast)
+      have "x \<in> top1_S2 - {c}" using hC0_sub_S2c hx(1) by (by100 blast)
+      have hinj_loc: "inj_on \<sigma> (top1_S2 - {c})" using hbij unfolding bij_betw_def by (by100 blast)
+      have "inv_into (top1_S2 - {c}) \<sigma> y = x"
+        by (simp add: hx(2) inv_into_f_f[OF hinj_loc \<open>x \<in> top1_S2 - {c}\<close>])
+      thus "y \<in> {y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> C0}" using hx(1) by simp
+    qed
+    have "\<sigma> ` C0 \<in> product_topology_on top1_open_sets top1_open_sets"
+      using hpre_open hpre_eq by simp
+    thus ?thesis using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+  qed
   \<comment> \<open>\<sigma>(C0) connected: C0 connected (custom), bridge to standard, \<sigma> continuous.\<close>
   have h\<sigma>C0_conn: "connected (\<sigma> ` C0)"
   proof -
