@@ -13842,7 +13842,50 @@ proof (rule ccontr)
           by (intro ballI top1_path_component_of_on_open_if_locally_path_connected[OF hTUV hUV_lpc'])
         \<comment> \<open>B = \<Union>{path_component(x) | x \<in> U\<inter>V, path_component(x) \<noteq> A}.\<close>
         have "B = \<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
-            | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}" sorry
+            | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> B"
+          hence "y \<in> ?U \<inter> ?V" "y \<notin> A" unfolding B_def by auto
+          have "y \<in> top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) y"
+            by (rule top1_path_component_of_on_self_mem[OF hTUV \<open>y \<in> ?U \<inter> ?V\<close>])
+          thus "y \<in> \<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+              | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}"
+            using \<open>y \<in> ?U \<inter> ?V\<close> \<open>y \<notin> A\<close> by (by100 blast)
+        next
+          fix y assume "y \<in> \<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+              | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}"
+          then obtain x where hx: "x \<in> ?U \<inter> ?V" "x \<notin> A"
+              and hy: "y \<in> top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x"
+            by (by100 blast)
+          have "y \<in> ?U \<inter> ?V"
+            using top1_path_component_of_on_subset[OF hTUV hx(1)] hy by (by100 blast)
+          moreover have "y \<notin> A"
+          proof
+            assume "y \<in> A"
+            \<comment> \<open>y \<in> A = path_comp(a) and y \<in> path_comp(x).
+               Path components overlap \<Rightarrow> equal. So path_comp(x) = A. But x \<notin> A.
+               x \<in> path_comp(x) = A. Contradiction.\<close>
+            hence "top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) a y"
+              unfolding A_def top1_path_component_of_on_def by simp
+            have "top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x y"
+              using hy unfolding top1_path_component_of_on_def by simp
+            \<comment> \<open>By symmetry+transitivity: a and x in same path component. So x \<in> A.\<close>
+            have "top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) y a"
+              by (rule top1_in_same_path_component_on_sym[OF hTUV
+                  \<open>top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) a y\<close>])
+            have "top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x a"
+              by (rule top1_in_same_path_component_on_trans[OF hTUV
+                  \<open>top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x y\<close>
+                  \<open>top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) y a\<close>])
+            hence "top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) a x"
+              by (rule top1_in_same_path_component_on_sym[OF hTUV])
+            have "x \<in> A" unfolding A_def top1_path_component_of_on_def
+              using \<open>top1_in_same_path_component_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) a x\<close>
+              by simp
+            thus False using hx(2) by simp
+          qed
+          ultimately show "y \<in> B" unfolding B_def by (by100 blast)
+        qed
         moreover have "\<forall>P \<in> {top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
             | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}.
             P \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
