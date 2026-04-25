@@ -7367,10 +7367,102 @@ next
   qed
 qed
 
+lemma path_connected_imp_connected:
+  assumes "top1_path_connected_on X TX"
+  shows "top1_connected_on X TX"
+proof -
+  have hTX: "is_topology_on X TX" using assms unfolding top1_path_connected_on_def by (by100 blast)
+  show ?thesis unfolding top1_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on X TX" by (rule hTX)
+    show "\<nexists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+    proof (rule notI)
+      assume "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+      then obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hUne: "U \<noteq> {}"
+          and hVne: "V \<noteq> {}" and hdisj: "U \<inter> V = {}" and hcover: "U \<union> V = X" by blast
+      obtain x where hx: "x \<in> U" using hUne by blast
+      obtain y where hy: "y \<in> V" using hVne by blast
+      have hxX: "x \<in> X" using hx hcover by (by100 blast)
+      have hyX: "y \<in> X" using hy hcover by (by100 blast)
+      obtain f where hf: "top1_is_path_on X TX x y f"
+        using assms hxX hyX unfolding top1_path_connected_on_def by (by100 blast)
+      \<comment> \<open>f(I) connected (continuous image of connected [0,1]). Intersects both U and V.
+         But U, V separate X \<supseteq> f(I). Contradiction.\<close>
+      have hfI_conn: "top1_connected_on (f ` I_set) (subspace_topology X TX (f ` I_set))"
+      proof -
+        have hI_top: "is_topology_on I_set I_top"
+          unfolding top1_unit_interval_topology_def
+          by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) simp
+        have hI_conn: "top1_connected_on I_set I_top"
+        proof -
+          have hI_01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+            by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+          have "connected {0..1::real}" by (rule connected_Icc)
+          hence "connected I_set" using hI_01 by simp
+          thus ?thesis
+            unfolding top1_unit_interval_topology_def
+            using top1_connected_on_subspace_openI by (by100 blast)
+        qed
+        have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+          using hf unfolding top1_is_path_on_def by (by100 blast)
+        show ?thesis by (rule Theorem_23_5[OF hI_top hTX hI_conn hf_cont])
+      qed
+      \<comment> \<open>f(I) \<subseteq> U \<union> V = X, f(0) = x \<in> U, f(1) = y \<in> V.
+         So f(I) \<inter> U \<noteq> {} and f(I) \<inter> V \<noteq> {}.
+         U \<inter> f(I) and V \<inter> f(I) are open in subspace of f(I), disjoint, cover f(I).
+         This contradicts f(I) connected.\<close>
+      have hfI_sub: "f ` I_set \<subseteq> X"
+        using hf unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have "f 0 = x" using hf unfolding top1_is_path_on_def by (by100 blast)
+      have "f 1 = y" using hf unfolding top1_is_path_on_def by (by100 blast)
+      have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      have hfU: "f ` I_set \<inter> U \<noteq> {}" using \<open>f 0 = x\<close> hx h0_I by (by100 blast)
+      have hfV: "f ` I_set \<inter> V \<noteq> {}" using \<open>f 1 = y\<close> hy h1_I by (by100 blast)
+      have "U \<inter> f ` I_set \<in> subspace_topology X TX (f ` I_set)"
+        using hU unfolding subspace_topology_def by (by100 blast)
+      moreover have "V \<inter> f ` I_set \<in> subspace_topology X TX (f ` I_set)"
+        using hV unfolding subspace_topology_def by (by100 blast)
+      moreover have "U \<inter> f ` I_set \<noteq> {}" using hfU by (by100 blast)
+      moreover have "V \<inter> f ` I_set \<noteq> {}" using hfV by (by100 blast)
+      moreover have "(U \<inter> f ` I_set) \<inter> (V \<inter> f ` I_set) = {}" using hdisj by (by100 blast)
+      moreover have "(U \<inter> f ` I_set) \<union> (V \<inter> f ` I_set) = f ` I_set"
+        using hfI_sub hcover by (by100 blast)
+      ultimately show False using hfI_conn unfolding top1_connected_on_def by (by100 blast)
+    qed
+  qed
+qed
+
 lemma S2_connected: "top1_connected_on top1_S2 top1_S2_topology"
-  sorry \<comment> \<open>S^2 connected: S^2\{N} simply connected hence connected (path_connected \<Rightarrow> connected).
-     S^2 = closure(S^2\{N}), connected closure = connected by Theorem 23.4.
-     Needs: (1) path_connected \<Rightarrow> connected in custom topology, (2) N \<in> closure(S^2\{N}).\<close>
+proof -
+  \<comment> \<open>S^2\{N} simply connected \<Rightarrow> path connected \<Rightarrow> connected.\<close>
+  have hn_S2: "north_pole \<in> top1_S2" unfolding north_pole_def top1_S2_def by simp
+  have "top1_simply_connected_on (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+    by (rule S2_minus_point_simply_connected[OF hn_S2])
+  hence "top1_path_connected_on (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+    unfolding top1_simply_connected_on_def by (by100 blast)
+  hence hN_conn: "top1_connected_on (top1_S2 - {north_pole})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+    by (rule path_connected_imp_connected)
+  \<comment> \<open>S^2 = closure(S^2\{N}). N is a limit point.\<close>
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have "top1_S2 \<subseteq> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+    sorry \<comment> \<open>N \<in> closure(S^2\{N}): every open nbhd of N in S^2 contains other S^2 points.\<close>
+  have "top1_connected_on top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2)"
+    by (rule Theorem_23_4[OF hTS2 _ _ _ _ hN_conn])
+       (use \<open>top1_S2 \<subseteq> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})\<close> in blast)+
+  moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+  proof -
+    have "\<forall>U \<in> top1_S2_topology. U \<subseteq> top1_S2"
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def is_topology_on_def
+      by (by100 blast)
+    thus ?thesis by (rule subspace_topology_self_carrier)
+  qed
+  ultimately show ?thesis by simp
+qed
 
 lemma Lemma_61_1_components_correspond:
   fixes h :: "(real \<times> real \<times> real) \<Rightarrow> (real \<times> real)" and C :: "(real \<times> real \<times> real) set"
