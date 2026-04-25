@@ -13446,17 +13446,100 @@ proof
     \<and> e0 \<noteq> e1
     \<and> (\<exists>ftilde. top1_is_path_on E TE e0 e1 ftilde
         \<and> (\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s))"
-  sorry \<comment> \<open>Munkres 63.1 Step 1+2: Helix covering space construction.
-     Build E as quotient of Y = \<Union>n (U\<times>{2n} \<union> V\<times>{2n+1}) under identifications:
-       (x, 2n) ~ (x, 2n-1) for x \<in> A, and (x, 2n) ~ (x, 2n+1) for x \<in> B.
-     Covering map p: E \<rightarrow> X by p(\<pi>(x,m)) = x.
-     Lift of \<alpha>*\<beta>: \<alpha>-tilde(s) = \<pi>(\<alpha>(s), 0), \<beta>-tilde(s) = \<pi>(\<beta>(s), 1).
-     Since b \<in> B: \<pi>(b, 0) = \<pi>(b, 1), so product is well-defined.
-     Since a \<in> A: \<pi>(a, 1) = \<pi>(a, 2) = e1 \<noteq> e0 = \<pi>(a, 0).
-     Key properties: \<pi> is an open map (preimage of \<pi>(W\<times>2n) =
-       W\<times>{2n} \<union> (W\<inter>B)\<times>{2n+1} \<union> (W\<inter>A)\<times>{2n-1}, open in Y).
-     U evenly covered: p\<inverse>(U) = \<Union>n \<pi>(U\<times>{2n}), disjoint sheets.
-     V evenly covered: p\<inverse>(V) = \<Union>n \<pi>(V\<times>{2n+1}), disjoint sheets.\<close>
+  proof -
+    \<comment> \<open>Helix covering: E = canonical representatives of quotient Y/~.
+       E = {(x, 2n) | x \<in> U} \<union> {(x, 2n+1) | x \<in> V\U}. Covering map p = fst.\<close>
+    have ha_X: "a \<in> X" using assms(4,5,9) by (by100 blast)
+    have hb_X: "b \<in> X" using assms(4,5,10) by (by100 blast)
+    have ha_U: "a \<in> U" using assms(5,9) by (by100 blast)
+    have hb_U: "b \<in> U" using assms(5,10) by (by100 blast)
+    have ha_V: "a \<in> V" using assms(5,9) by (by100 blast)
+    have hb_V: "b \<in> V" using assms(5,10) by (by100 blast)
+    have hU_open_TX: "U \<in> TX" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hV_open_TX: "V \<in> TX" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hA_open_TX: "A \<in> TX" using assms(7) unfolding openin_on_def by (by100 blast)
+    have hB_open_TX: "B \<in> TX" using assms(8) unfolding openin_on_def by (by100 blast)
+    have hAB_UV: "A \<union> B = U \<inter> V" using assms(5) by simp
+    have hAB_disj: "A \<inter> B = {}" using assms(6) .
+    \<comment> \<open>Define normalization: maps Y = \<Union>(U\<times>{2n}) \<union> \<Union>(V\<times>{2n+1}) to canonical reps.\<close>
+    define norm :: "'a \<times> int \<Rightarrow> 'a \<times> int" where
+      "norm = (\<lambda>(x, m). if even m then (x, m)
+               else if x \<in> A then (x, m + 1)
+               else if x \<in> B then (x, m - 1)
+               else (x, m))"
+    \<comment> \<open>Define E = set of canonical representatives.\<close>
+    define E :: "('a \<times> int) set" where
+      "E = {(x, m). (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)}"
+    \<comment> \<open>Define quotient topology on E.\<close>
+    define TE :: "('a \<times> int) set set" where
+      "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+    define p0 :: "'a \<times> int \<Rightarrow> 'a" where "p0 = fst"
+    define e0 :: "'a \<times> int" where "e0 = (a, 0)"
+    define e1 :: "'a \<times> int" where "e1 = (a, 2)"
+    \<comment> \<open>Basic facts about e0, e1.\<close>
+    have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_U by simp
+    have he1_E: "e1 \<in> E" unfolding e1_def E_def using ha_U by simp
+    have hp0e0: "p0 e0 = a" unfolding p0_def e0_def by simp
+    have hp0e1: "p0 e1 = a" unfolding p0_def e1_def by simp
+    have hne: "e0 \<noteq> e1" unfolding e0_def e1_def by simp
+    \<comment> \<open>TE is a topology on E.\<close>
+    have hTE: "is_topology_on E TE" sorry \<comment> \<open>Quotient of product topology. Standard.\<close>
+    \<comment> \<open>p0 is a covering map.\<close>
+    have hcov: "top1_covering_map_on E TE X TX p0" sorry \<comment> \<open>U and V evenly covered.
+       p\<inverse>(U) = disjoint \<Union>n {(x,2n)|x\<in>U}, each homeomorphic to U via p0.
+       p\<inverse>(V) = disjoint \<Union>n (V-sheet n), each homeomorphic to V via p0.
+       V-sheet n = {(x,2n+2)|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.\<close>
+    \<comment> \<open>Define the lift: \<alpha>-tilde on [0,1/2] maps to (alpha(2s), 0).
+       \<beta>-tilde on [1/2,1] maps to norm(\<beta>(2s-1), 1).\<close>
+    define ftilde :: "real \<Rightarrow> ('a \<times> int)" where
+      "ftilde = (\<lambda>s. if s \<le> 1/2
+        then (alpha (2*s), 0)
+        else (let y = beta (2*s - 1) in
+              if y \<in> A then (y, 2)
+              else if y \<in> B then (y, 0)
+              else (y, 1)))"
+    \<comment> \<open>Lift is a path from e0 to e1.\<close>
+    have hft_path: "top1_is_path_on E TE e0 e1 ftilde" sorry
+      \<comment> \<open>Key: continuous at s=1/2 because alpha(1) = b \<in> B, so left limit = (b,0)
+         and right limit = norm(beta(0), 1) = norm(b, 1) = (b, 0). Continuous.
+         ftilde(0) = (alpha(0), 0) = (a, 0) = e0. ftilde(1) = norm(beta(1), 1) = norm(a, 1) = (a, 2) = e1.\<close>
+    \<comment> \<open>Lift projects correctly.\<close>
+    have hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have hs_range: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by auto
+      show "p0 (ftilde s) = top1_path_product alpha beta s"
+      proof (cases "s \<le> 1/2")
+        case True
+        hence "ftilde s = (alpha (2*s), 0)" unfolding ftilde_def by simp
+        hence "p0 (ftilde s) = alpha (2*s)" unfolding p0_def by simp
+        moreover have "top1_path_product alpha beta s = alpha (2*s)"
+          unfolding top1_path_product_def using True by simp
+        ultimately show ?thesis by simp
+      next
+        case False
+        hence hs_half: "s > 1/2" by simp
+        have "p0 (ftilde s) = beta (2*s - 1)"
+        proof -
+          define y where "y = beta (2*s - 1)"
+          have "ftilde s = (if y \<in> A then (y, 2) else if y \<in> B then (y, 0) else (y, 1))"
+            unfolding ftilde_def y_def using hs_half by (simp add: Let_def)
+          hence "p0 (ftilde s) = y" unfolding p0_def by (cases "y \<in> A"; cases "y \<in> B"; simp)
+          thus ?thesis unfolding y_def by simp
+        qed
+        moreover have "top1_path_product alpha beta s = beta (2*s - 1)"
+          unfolding top1_path_product_def using False by simp
+        ultimately show ?thesis by simp
+      qed
+    qed
+    show ?thesis
+      using hcov hTE he0_E he1_E hp0e0 hp0e1 hne hft_path hft_lift
+      by (intro exI[of _ E] exI[of _ TE] exI[of _ p0] exI[of _ e0] exI[of _ e1])
+         (by100 blast)
+  qed
   \<comment> \<open>Step 3: If f were nulhomotopic, the lift would be a loop (same start and end).
      But we showed the lift has different endpoints. Contradiction.\<close>
   \<comment> \<open>From step 2, obtain covering E, map p0, points e0 \<noteq> e1, and lift ftilde.\<close>
