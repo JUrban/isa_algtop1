@@ -7467,6 +7467,47 @@ proof -
   qed
 qed
 
+lemma singleton_not_open_in_S2:
+  assumes "x \<in> top1_S2"
+  shows "{x} \<notin> top1_S2_topology"
+proof
+  assume "{x} \<in> top1_S2_topology"
+  have hR3eq: "(product_topology_on (top1_open_sets :: real set set)
+      (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)))
+      = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+  have "top1_S2_topology = subspace_topology UNIV
+      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+    unfolding top1_S2_topology_def using hR3eq by simp
+  then obtain W where "W \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+      "{x} = top1_S2 \<inter> W"
+    using \<open>{x} \<in> top1_S2_topology\<close> unfolding subspace_topology_def
+    by (by100 blast)
+  have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+  have "x \<in> W" using \<open>{x} = top1_S2 \<inter> W\<close> assms by (by100 blast)
+  obtain U1 U23 where hU1: "open U1" and hU23: "open U23"
+      and "x \<in> U1 \<times> U23" and "U1 \<times> U23 \<subseteq> W"
+    using open_prod_elim[OF \<open>open W\<close> \<open>x \<in> W\<close>] by (by100 blast)
+  have "snd x \<in> U23" using \<open>x \<in> U1 \<times> U23\<close> unfolding mem_Times_iff by simp
+  obtain U2 U3 where hU2: "open U2" and hU3: "open U3"
+      and h_U23: "fst (snd x) \<in> U2" "snd (snd x) \<in> U3" and "U2 \<times> U3 \<subseteq> U23"
+  proof -
+    from open_prod_elim[OF hU23 \<open>snd x \<in> U23\<close>]
+    obtain A B where "open A" "open B" "snd x \<in> A \<times> B" "A \<times> B \<subseteq> U23" by blast
+    thus ?thesis using that by auto
+  qed
+  \<comment> \<open>Get intervals and construct nearby S^2 point, as in S2_connected proof.\<close>
+  obtain \<epsilon>1 where h\<epsilon>1: "\<epsilon>1 > 0" "\<forall>y::real. dist y (fst (snd x)) < \<epsilon>1 \<longrightarrow> y \<in> U2"
+  proof -
+    have "\<exists>e>0. \<forall>y. dist y (fst (snd x)) < e \<longrightarrow> y \<in> U2"
+      using hU2 h_U23(1) unfolding open_dist by (by100 blast)
+    thus ?thesis using that by blast
+  qed
+  \<comment> \<open>Construct a point p \<in> S^2 \<inter> W, p \<noteq> x. This contradicts {x} = S^2 \<inter> W.\<close>
+  show False sorry \<comment> \<open>Concrete witness construction (same as in S2_connected).\<close>
+qed
+
 lemma S2_connected: "top1_connected_on top1_S2 top1_S2_topology"
 proof -
   \<comment> \<open>S^2\{N} simply connected \<Rightarrow> path connected \<Rightarrow> connected.\<close>
@@ -14476,7 +14517,100 @@ proof -
       qed
       \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
       have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-        sorry \<comment> \<open>C bounded \<Rightarrow> R^2\C unbounded \<Rightarrow> \<sigma>^{-1} of far points \<rightarrow> N.\<close>
+      proof -
+        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\C')\{N}. Since C' \<subseteq> S^2\{N}, N \<notin> C', N \<in> S^2\C'.
+           S^2\C' is open (C' closed = compact in Hausdorff S^2).
+           For N \<in> closure((S^2\C')\{N}): every open W \<ni> N intersects (S^2\C')\{N}.
+           W \<inter> (S^2\C') is open, contains N. If = {N}, then {N} open in S^2 \<Rightarrow> FALSE.
+           So \<exists> point \<noteq> N in W \<inter> (S^2\C') = W \<inter> (S^2\C')\{N}.\<close>
+        have hN_notin_C': "north_pole \<notin> C'" using hC'_sub by (by100 blast)
+        have hC'_closed: "closedin_on top1_S2 top1_S2_topology C'"
+          sorry \<comment> \<open>C' compact (continuous image of compact C) in Hausdorff S^2 \<Rightarrow> closed.\<close>
+        have hS2C'_open: "top1_S2 - C' \<in> top1_S2_topology"
+        proof -
+          have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis using hC'_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
+            by (by100 blast)
+        qed
+        have hN_in_S2C': "north_pole \<in> top1_S2 - C'" using hN_S2 hN_notin_C' by (by100 blast)
+        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\{N})\C' = (S^2\C')\{N}.\<close>
+        have h\<sigma>inv_eq: "\<sigma>inv ` (UNIV - C) = (top1_S2 - C') - {north_pole}"
+        proof -
+          have "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}" by (rule hS2C'_eq)
+          moreover have "north_pole \<notin> \<sigma>inv ` (UNIV - C)"
+          proof -
+            have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+              using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+              unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
+            hence "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
+              unfolding bij_betw_def by (by100 blast)
+            hence "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}" by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>N \<in> closure((S^2\C')\{N}): same as S2_connected argument.\<close>
+        show ?thesis unfolding h\<sigma>inv_eq closure_on_def
+        proof (rule InterI)
+          fix D assume hD: "D \<in> {Ca. closedin_on top1_S2 top1_S2_topology Ca \<and>
+              (top1_S2 - C') - {north_pole} \<subseteq> Ca}"
+          hence hD_closed: "closedin_on top1_S2 top1_S2_topology D"
+              and hD_sup: "(top1_S2 - C') - {north_pole} \<subseteq> D" by auto
+          have "top1_S2 - D \<subseteq> C' \<union> {north_pole}"
+          proof -
+            have "top1_S2 - D \<subseteq> top1_S2 - ((top1_S2 - C') - {north_pole})"
+              using hD_sup by (by100 blast)
+            also have "... \<subseteq> C' \<union> {north_pole}" by (by100 blast)
+            finally show ?thesis .
+          qed
+          have hD_open: "top1_S2 - D \<in> top1_S2_topology"
+          proof -
+            have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+              using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+            show ?thesis using hD_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
+              by (by100 blast)
+          qed
+          \<comment> \<open>If N \<notin> D: then N \<in> S^2\D which is open and \<subseteq> C'\<union>{N}.
+             So S^2\D is open and contained in C'\<union>{N}. Since N \<in> S^2\D,
+             S^2\D \<inter> (S^2\C') is open (intersection of opens) and contains... hmm.
+             Actually: S^2\D \<subseteq> C'\<union>{N} and N \<in> S^2\D.
+             (S^2\D)\{N} \<subseteq> C'. And S^2\D is open. If S^2\D = {N}, then {N} open → FALSE.
+             If S^2\D has another point x \<noteq> N, then x \<in> C'. But also x \<in> S^2\D \<subseteq> S^2.
+             Actually S^2\D is open and \<subseteq> C'\<union>{N}. The complement S^2\(C'\<union>{N}) \<subseteq> D.
+             Since C'\<union>{N} is closed (C' closed, {N} closed in Hausdorff, finite union of closed),
+             S^2\(C'\<union>{N}) is open. So D \<supseteq> open set.
+             Hmm, this doesn't directly help.\<close>
+          show "north_pole \<in> D"
+          proof (rule ccontr)
+            assume "north_pole \<notin> D"
+            hence "north_pole \<in> top1_S2 - D" using hN_S2 by (by100 blast)
+            \<comment> \<open>S^2\D is open, \<subseteq> C'\<union>{N}, contains N.
+               If S^2\D = {N}: {N} open in S^2 \<Rightarrow> FALSE (proved in S2_connected).\<close>
+            have "top1_S2 - D \<subseteq> C' \<union> {north_pole}" by (rule \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close>)
+            \<comment> \<open>(S^2\D) \<inter> (S^2\C') \<subseteq> {N}.\<close>
+            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}"
+              using \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close> by (by100 blast)
+            \<comment> \<open>(S^2\D) \<inter> (S^2\C') open (intersection of opens) and contains N.\<close>
+            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology"
+            proof -
+              have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+                using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+              show ?thesis by (rule topology_inter_open[OF hTS2_loc hD_open hS2C'_open])
+            qed
+            have "north_pole \<in> (top1_S2 - D) \<inter> (top1_S2 - C')"
+              using \<open>north_pole \<in> top1_S2 - D\<close> hN_in_S2C' by (by100 blast)
+            \<comment> \<open>So (S^2\D) \<inter> (S^2\C') is a nonempty open set \<subseteq> {N}. Hence = {N}. So {N} \<in> S^2_topology.\<close>
+            hence "(top1_S2 - D) \<inter> (top1_S2 - C') = {north_pole}"
+              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}\<close> by (by100 blast)
+            hence "{north_pole} \<in> top1_S2_topology"
+              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology\<close> by simp
+            \<comment> \<open>{N} open in S^2 \<Rightarrow> FALSE (same argument as S2_connected).\<close>
+            show False using singleton_not_open_in_S2[OF hN_S2] \<open>{north_pole} \<in> top1_S2_topology\<close> by simp
+          qed
+        qed
+      qed
       \<comment> \<open>Connected set \<union> limit point = connected. Use Theorem 23.4.\<close>
       have "top1_connected_on (top1_S2 - C') (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
       proof -
