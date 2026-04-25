@@ -13084,7 +13084,31 @@ proof -
        S^2\C' not connected \<Rightarrow> R^2\C not connected (if R^2\C connected,
        \<sigma>^{-1}(R^2\C) connected, and adding {N} preserves connectivity since
        N is a limit point of \<sigma>^{-1}(R^2\C), giving S^2\C' connected \<Rightarrow> contradiction).\<close>
-    show ?thesis sorry \<comment> \<open>Transfer: not-connected on S^2 \<Rightarrow> not-connected on R^2.\<close>
+    \<comment> \<open>Contrapositive: if R^2\C connected, then S^2\C' connected (contradiction).
+       S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}. \<sigma>^{-1}(R^2\C) connected (homeo image).
+       N \<in> closure(\<sigma>^{-1}(R^2\C)) (unbounded points map near N).
+       Connected \<union> limit point = connected.\<close>
+    show ?thesis
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      hence hR2C_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        by simp
+      \<comment> \<open>\<sigma>^{-1}(R^2\C) connected.\<close>
+      have h\<sigma>inv_R2C_conn: "top1_connected_on (\<sigma>inv ` (UNIV - C))
+          (subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C)))"
+        sorry \<comment> \<open>Homeomorphic image of connected set is connected. Bridge custom/standard.\<close>
+      \<comment> \<open>S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
+      have hS2C'_eq: "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}"
+        sorry \<comment> \<open>Set equality: S^2\C' = S^2\{N}\C' \<union> {N} = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
+      \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
+      have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+        sorry \<comment> \<open>C bounded \<Rightarrow> R^2\C unbounded \<Rightarrow> \<sigma>^{-1} of far points \<rightarrow> N.\<close>
+      \<comment> \<open>Connected set \<union> limit point = connected.\<close>
+      have "top1_connected_on (top1_S2 - C') (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+        sorry \<comment> \<open>Use Theorem 23.4: closure of connected is connected, applied with
+           A = \<sigma>^{-1}(R^2\C), B = S^2\C' \<subseteq> closure(A). A connected \<Rightarrow> B connected.\<close>
+      thus False using hS2_C'_sep unfolding top1_separates_on_def by (by100 blast)
+    qed
   qed
   \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
      By Theorem 63.5 (applied via 63.2 + 63.3), exactly two components.\<close>
