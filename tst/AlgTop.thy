@@ -12969,7 +12969,30 @@ proof -
                   and hg_factor: "\<forall>s\<in>I_set. g s = h_S1 (top1_R_to_S1 s)"
                 using loop_factors_through_S1[OF hTX_weak hg_loop] by (by100 blast)
               \<comment> \<open>Step 2: h_S1(S^1) \<subseteq> S^2\A1. So A1 \<subseteq> S^2\h_S1(S^1).\<close>
-              have hh_U: "h_S1 ` top1_S1 \<subseteq> ?U" sorry \<comment> \<open>From g(I) \<subseteq> U, g = h\<circ>p, p surjective.\<close>
+              have hh_U: "h_S1 ` top1_S1 \<subseteq> ?U"
+              proof
+                fix y assume "y \<in> h_S1 ` top1_S1"
+                then obtain q where hq: "q \<in> top1_S1" "y = h_S1 q" by (by100 blast)
+                \<comment> \<open>q \<in> S^1. Need t \<in> I_set with R_to_S1(t) = q. Then y = h(q) = g(t) \<in> U.\<close>
+                have "\<exists>t\<in>I_set. top1_R_to_S1 t = q"
+                proof -
+                  obtain x y where hq_eq: "q = (x, y)" by (cases q)
+                  have hcirc: "x^2 + y^2 = 1" using hq hq_eq unfolding top1_S1_def by simp
+                  obtain t where "0 \<le> t" "t < 2*pi" "x = cos t" "y = sin t"
+                    using sincos_total_2pi[OF hcirc] by blast
+                  define t' where "t' = t / (2*pi)"
+                  have "0 \<le> t'" "t' < 1" unfolding t'_def using \<open>0 \<le> t\<close> \<open>t < 2*pi\<close> pi_gt_zero by auto
+                  hence "t' \<in> I_set" unfolding top1_unit_interval_def by simp
+                  moreover have "top1_R_to_S1 t' = q"
+                    unfolding top1_R_to_S1_def t'_def hq_eq using \<open>x = cos t\<close> \<open>y = sin t\<close> pi_gt_zero by simp
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                then obtain t where ht: "t \<in> I_set" "top1_R_to_S1 t = q" by blast
+                have "g t \<in> ?U" using hg_U ht(1) by (by100 blast)
+                have "g t = h_S1 (top1_R_to_S1 t)" using hg_factor ht(1) by simp
+                hence "h_S1 q = g t" using ht(2) by simp
+                thus "y \<in> ?U" using hq(2) \<open>g t \<in> ?U\<close> \<open>h_S1 q = g t\<close> by simp
+              qed
               have hA1_disj: "A1 \<subseteq> top1_S2 - h_S1 ` top1_S1"
                 using hh_U assms(2) by (by100 blast)
               \<comment> \<open>Step 3: a,b in same component of S^2\h_S1(S^1) (A1 connected, {a,b}\<subseteq>A1).\<close>
