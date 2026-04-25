@@ -8402,8 +8402,89 @@ proof -
   have hH_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
       (\<lambda>x. pair_sub ((h \<circ> f) x) p) (\<lambda>_. pair_sub (0, 0) p)"
-    unfolding top1_homotopic_on_def
-    sorry \<comment> \<open>Textbook H homotopy: pair_sub (pair_scl (1-t) (g x)) p stays in R^2-{0}.\<close>
+  proof -
+    let ?Y = "UNIV - {(0::real,0::real)}"
+    let ?TY = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y"
+    let ?g = "h \<circ> f"
+    \<comment> \<open>The homotopy F(x,t) = ((1-t)*fst(g(x))-fst(p), (1-t)*snd(g(x))-snd(p)).\<close>
+    define F :: "'a \<Rightarrow> real \<Rightarrow> real \<times> real" where
+      "F x t = ((1-t) * fst (?g x) - fst p, (1-t) * snd (?g x) - snd p)" for x t
+    \<comment> \<open>F(x,0) = g(x)-p, F(x,1) = -p.\<close>
+    have hF0: "\<forall>x\<in>A. F x 0 = pair_sub (?g x) p"
+      unfolding F_def pair_sub_def by simp
+    have hF1: "\<forall>x\<in>A. F x 1 = pair_sub (0,0) p"
+      unfolding F_def pair_sub_def by simp
+    \<comment> \<open>F maps into ?Y: F(x,t) \<noteq> 0 because |(1-t)*g(x)| \<le> M < |p|.\<close>
+    have hF_in_Y: "\<forall>x\<in>A. \<forall>t\<in>I_set. F x t \<in> ?Y"
+    proof (intro ballI)
+      fix x t assume hx: "x \<in> A" and ht: "t \<in> I_set"
+      have hgx_bdd: "fst (?g x) ^ 2 + snd (?g x) ^ 2 \<le> M ^ 2"
+        using hgA_bdd hx by (by100 blast)
+      have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by simp
+      have h1t: "0 \<le> 1 - t \<and> 1 - t \<le> 1" using ht01 by simp
+      have "F x t \<noteq> (0, 0)"
+      proof
+        assume heq: "F x t = (0, 0)"
+        have hfp: "fst p = (1-t) * fst (?g x)" using heq unfolding F_def by (cases "F x t") simp
+        have hsp: "snd p = (1-t) * snd (?g x)" using heq unfolding F_def by (cases "F x t") simp
+        have hfp2: "fst p ^ 2 = (1-t)^2 * (fst (?g x))^2"
+          using hfp by (simp add: power_mult_distrib)
+        have hsp2: "snd p ^ 2 = (1-t)^2 * (snd (?g x))^2"
+          using hsp by (simp add: power_mult_distrib)
+        have h1t2: "(1-t)^2 \<le> 1"
+        proof -
+          have "(1-t) * (1-t) \<le> 1 * 1"
+            by (rule mult_mono) (use h1t in auto)
+          thus ?thesis by (simp add: power2_eq_square)
+        qed
+        have "(1-t)^2 * (fst (?g x) ^ 2 + snd (?g x) ^ 2) \<le> 1 * M ^ 2"
+          by (rule mult_mono[OF h1t2 hgx_bdd]) simp_all
+        have "fst p ^ 2 + snd p ^ 2 \<le> M ^ 2"
+          using \<open>(1-t)\<^sup>2 * (fst (?g x) ^ 2 + snd (?g x) ^ 2) \<le> 1 * M ^ 2\<close>
+            hfp2 hsp2 by (simp add: algebra_simps)
+        show False using \<open>fst p ^ 2 + snd p ^ 2 \<le> M ^ 2\<close> hp_far by (by100 linarith)
+      qed
+      thus "F x t \<in> ?Y" by simp
+    qed
+    \<comment> \<open>Continuity of F: need top1_continuous_map_on (A\<times>I) ... ?Y ?TY (\<lambda>(x,t). F x t).\<close>
+    have hF_cont: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY
+        (\<lambda>xt. F (fst xt) (snd xt))"
+      sorry \<comment> \<open>F is polynomial in t and continuous in g(x); needs boilerplate for custom framework.\<close>
+    \<comment> \<open>f0 = \<lambda>x. pair_sub (g(x)) p is continuous from A to ?Y.\<close>
+    have hf0_cont: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>x. pair_sub (?g x) p)"
+      sorry \<comment> \<open>Follows from hg_cont + pair_sub continuous; or from hF_cont at t=0.\<close>
+    \<comment> \<open>f1 = constant pair_sub(0,0)(p) is continuous.\<close>
+    have hf1_cont: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. pair_sub (0,0) p)"
+    proof -
+      have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+      have hTY: "is_topology_on ?Y ?TY"
+      proof -
+        have "is_topology_on (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+      qed
+      have "pair_sub (0,0) p \<in> ?Y"
+      proof -
+        have "pair_sub (0,0) p = (- fst p, - snd p)" unfolding pair_sub_def by simp
+        moreover have "(- fst p, - snd p) \<noteq> (0::real, 0::real)"
+          unfolding p_def using hM by simp
+        ultimately show ?thesis by simp
+      qed
+      thus ?thesis by (rule top1_continuous_map_on_const[OF hTA hTY])
+    qed
+    show ?thesis unfolding top1_homotopic_on_def
+    proof (intro conjI exI[of _ "\<lambda>xt. F (fst xt) (snd xt)"])
+      show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>x. pair_sub (?g x) p)" by (rule hf0_cont)
+      show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. pair_sub (0,0) p)" by (rule hf1_cont)
+      show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY
+          (\<lambda>xt. F (fst xt) (snd xt))" by (rule hF_cont)
+      show "\<forall>x\<in>A. F (fst (x, 0::real)) (snd (x, 0::real)) = pair_sub (?g x) p"
+        using hF0 by simp
+      show "\<forall>x\<in>A. F (fst (x, 1::real)) (snd (x, 1::real)) = pair_sub (0, 0) p"
+        using hF1 by simp
+    qed
+  qed
   \<comment> \<open>Compose: g(\<cdot>)-ha nulhomotopic in R^2-{0}.\<close>
   have "top1_nulhomotopic_on A TA (UNIV - {(0::real,0::real)})
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0,0)}))
