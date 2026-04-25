@@ -7887,7 +7887,103 @@ lemma continuous_compose_product_R2:
   shows "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) S
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
       (\<lambda>xt. \<phi> (g (fst xt), snd xt))"
-  sorry
+proof -
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  let ?f = "\<lambda>xt. \<phi> (g (fst xt), snd xt)"
+  have hTR2eq: "?TR2 = (top1_open_sets :: (real \<times> real) set set)"
+    using product_topology_on_open_sets_real2 by (by100 metis)
+  have hTI: "is_topology_on I_set I_top"
+    unfolding top1_unit_interval_topology_def
+    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) simp
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix xt assume "xt \<in> A \<times> I_set"
+    thus "?f xt \<in> S" using hrange by auto
+  next
+    fix V assume hV: "V \<in> subspace_topology UNIV ?TR2 S"
+    obtain W where hW: "W \<in> ?TR2" and hV_eq: "V = S \<inter> W"
+      using hV unfolding subspace_topology_def by (by100 blast)
+    have hW_open: "open W" using hW hTR2eq unfolding top1_open_sets_def by (by100 blast)
+    obtain W' where hW'_open: "open W'"
+        and hW'_eq: "\<phi> -` W \<inter> (UNIV \<times> I_set) = W' \<inter> (UNIV \<times> I_set)"
+    proof -
+      have hcoi: "\<forall>T. open T \<longrightarrow> (\<exists>T'. open T' \<and> T' \<inter> (UNIV \<times> I_set) = \<phi> -` T \<inter> (UNIV \<times> I_set))"
+        using iffD1[OF continuous_on_open_invariant h\<phi>] by (by100 blast)
+      have "\<exists>T'. open T' \<and> T' \<inter> (UNIV \<times> I_set) = \<phi> -` W \<inter> (UNIV \<times> I_set)"
+        using hcoi hW_open by (by100 blast)
+      then obtain T' where "open T'" "T' \<inter> (UNIV \<times> I_set) = \<phi> -` W \<inter> (UNIV \<times> I_set)" by blast
+      have "\<exists>T'. open T' \<and> \<phi> -` W \<inter> (UNIV \<times> I_set) = T' \<inter> (UNIV \<times> I_set)"
+        using \<open>open T'\<close> \<open>T' \<inter> (UNIV \<times> I_set) = \<phi> -` W \<inter> (UNIV \<times> I_set)\<close> by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    show "{xt \<in> A \<times> I_set. ?f xt \<in> V} \<in> product_topology_on TA I_top"
+      unfolding product_topology_on_def topology_generated_by_basis_def
+    proof (rule CollectI, intro conjI)
+      show "{xt \<in> A \<times> I_set. ?f xt \<in> V} \<subseteq> UNIV" by simp
+      show "\<forall>p\<in>{xt \<in> A \<times> I_set. ?f xt \<in> V}.
+          \<exists>b\<in>product_basis TA I_top. p \<in> b \<and> b \<subseteq> {xt \<in> A \<times> I_set. ?f xt \<in> V}"
+      proof
+        fix xt assume hxt_mem: "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> V}"
+        hence ha: "fst xt \<in> A" and ht: "snd xt \<in> I_set" by auto
+        have "?f xt \<in> V" using hxt_mem by simp
+        hence "?f xt \<in> W" using hV_eq hrange ha ht by (by100 blast)
+        hence hW'_mem: "(g (fst xt), snd xt) \<in> W'"
+          using hW'_eq ht by (by100 blast)
+        obtain Uy Ut where hUy_open: "open Uy" and hUt_open: "open Ut"
+            and hUy_mem: "g (fst xt) \<in> Uy" and hUt_mem: "snd xt \<in> Ut"
+            and hUyUt_sub: "Uy \<times> Ut \<subseteq> W'"
+        proof -
+          from open_prod_elim[OF hW'_open hW'_mem]
+          obtain A0 B0 where hA0: "open A0" "open B0" "(g (fst xt), snd xt) \<in> A0 \<times> B0" "A0 \<times> B0 \<subseteq> W'"
+            by (by100 blast)
+          have "g (fst xt) \<in> A0" "snd xt \<in> B0" using hA0(3) by auto
+          thus ?thesis using that hA0(1,2,4) by (by100 blast)
+        qed
+        have hUy_TR2: "Uy \<in> ?TR2" using hUy_open hTR2eq unfolding top1_open_sets_def by (by100 blast)
+        have hpre_g: "{a \<in> A. g a \<in> Uy} \<in> TA"
+          using hg hUy_TR2 unfolding top1_continuous_map_on_def by (by100 blast)
+        have hUt_I: "Ut \<inter> I_set \<in> I_top"
+        proof -
+          have "Ut \<in> top1_open_sets" using hUt_open unfolding top1_open_sets_def by simp
+          hence "I_set \<inter> Ut \<in> I_top" unfolding top1_unit_interval_topology_def
+            by (rule subspace_topology_memI)
+          thus ?thesis by (simp add: Int_commute)
+        qed
+        define B where "B = {a \<in> A. g a \<in> Uy} \<times> (Ut \<inter> I_set)"
+        have hB_basis: "B \<in> product_basis TA I_top"
+          unfolding B_def product_basis_def using hpre_g hUt_I by (by100 blast)
+        have hB_mem: "xt \<in> B" unfolding B_def
+        proof -
+          have "fst xt \<in> {a \<in> A. g a \<in> Uy}" using ha hUy_mem by simp
+          moreover have "snd xt \<in> Ut \<inter> I_set" using hUt_mem ht by simp
+          ultimately show "xt \<in> {a \<in> A. g a \<in> Uy} \<times> (Ut \<inter> I_set)"
+            using SigmaI[of "fst xt" _ "snd xt"] by (by100 force)
+        qed
+        have hB_sub: "B \<subseteq> {xt \<in> A \<times> I_set. ?f xt \<in> V}"
+        proof
+          fix yt assume "yt \<in> B"
+          hence "fst yt \<in> A" "g (fst yt) \<in> Uy" "snd yt \<in> Ut" "snd yt \<in> I_set"
+            unfolding B_def by auto
+          hence "(g (fst yt), snd yt) \<in> Uy \<times> Ut" by simp
+          hence "(g (fst yt), snd yt) \<in> W'" using hUyUt_sub by (by100 blast)
+          hence "(g (fst yt), snd yt) \<in> UNIV \<times> I_set" using \<open>snd yt \<in> I_set\<close> by simp
+          hence "(g (fst yt), snd yt) \<in> \<phi> -` W \<inter> (UNIV \<times> I_set)"
+            using hW'_eq \<open>(g (fst yt), snd yt) \<in> W'\<close> by (by100 blast)
+          hence "\<phi> (g (fst yt), snd yt) \<in> W" by simp
+          moreover have "\<phi> (g (fst yt), snd yt) \<in> S"
+            using hrange \<open>fst yt \<in> A\<close> \<open>snd yt \<in> I_set\<close> by simp
+          ultimately have "?f yt \<in> V" using hV_eq by (by100 blast)
+          have "yt \<in> A \<times> I_set"
+            using \<open>fst yt \<in> A\<close> \<open>snd yt \<in> I_set\<close>
+            by (metis SigmaI surjective_pairing)
+          thus "yt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> V}" using \<open>?f yt \<in> V\<close> by simp
+        qed
+        show "\<exists>b\<in>product_basis TA I_top. xt \<in> b \<and> b \<subseteq> {xt \<in> A \<times> I_set. ?f xt \<in> V}"
+          using hB_basis hB_mem hB_sub by (by100 blast)
+      qed
+    qed
+  qed
+qed
 (*  unfolding top1_continuous_map_on_def
 proof (intro conjI ballI)
   let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
