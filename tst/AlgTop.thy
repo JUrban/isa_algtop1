@@ -8176,6 +8176,28 @@ qed
 \<comment> \<open>Exterior of a ball in R^2 is connected.\<close>
 \<comment> \<open>exterior_ball_connected_R2 imported from AlgTopHelpers.\<close>
 
+text \<open>Removing a point from an open connected subset of S^2 preserves connectivity.
+  This is the S^2 analogue of connected_open_delete_R2, proved via stereographic projection.\<close>
+lemma connected_open_delete_S2:
+  assumes "C0 \<in> top1_S2_topology" "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
+      and "b \<in> C0" and "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0"
+  shows "connected (C0 - {b})"
+  sorry \<comment> \<open>Proof: pick c \<in> S^2\C0. \<sigma>: S^2\{c}\<rightarrow>R^2 homeomorphism.
+     C0 \<subseteq> S^2\{c}. \<sigma>(C0) open connected in R^2.
+     connected_open_delete_R2: \<sigma>(C0)\{\<sigma>(b)} connected.
+     \<sigma>^{-1} continuous \<Rightarrow> C0\{b} = \<sigma>^{-1}(\<sigma>(C0)\{\<sigma>(b)}) connected.\<close>
+
+lemma connected_open_delete_S2':
+  assumes "C0 \<in> top1_S2_topology" "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
+      and "b \<in> C0" and "c \<in> top1_S2" and "c \<notin> C0"
+      and "continuous_on (C0 - {b}) h" and "h ` (C0 - {b}) = S"
+  shows "connected S"
+proof -
+  have hconn: "connected (C0 - {b})" by (rule connected_open_delete_S2[OF assms(1,2,3)]) (use assms(4,5) in blast)
+  have "connected (h ` (C0 - {b}))" by (rule connected_continuous_image[OF assms(6) hconn])
+  thus ?thesis using assms(7) by simp
+qed
+
 lemma continuous_compose_product_R2:
   fixes g :: "'a \<Rightarrow> real \<times> real" and \<phi> :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
     and A :: "'a set" and TA :: "'a set set" and S :: "(real \<times> real) set"
@@ -8939,10 +8961,17 @@ proof -
         show ?thesis
           by (rule compact_continuous_image[OF \<open>continuous_on (top1_S2 - C0) h\<close> \<open>compact (top1_S2 - C0)\<close>])
       qed
+      \<comment> \<open>Use connected_open_delete_S2': C0 open connected in S^2, b \<in> C0,
+         \<exists>c \<in> S^2\C0, h continuous on C0\{b} \<Rightarrow> h(C0\{b}) connected.\<close>
+      have hC0_open_S2: "C0 \<in> top1_S2_topology" sorry
+      have hC0_conn_custom: "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)" sorry
+      have hc_exists: "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0" sorry
+      obtain c where "c \<in> top1_S2" "c \<notin> C0" using hc_exists by (by100 blast)
+      have hh_cont_C0b: "continuous_on (C0 - {b}) h" sorry
       show ?thesis
-        sorry \<comment> \<open>Need: h(C0\{b}) connected. Follows from C0\{b} connected (open connected
-           S^2-subset minus a point, dim 2 preserves connectivity) + h continuous.
-           Requires connected_open_delete for S^2 manifold.\<close>
+        by (rule connected_open_delete_S2'[OF hC0_open_S2 hC0_conn_custom True
+            \<open>c \<in> top1_S2\<close> \<open>c \<notin> C0\<close> hh_cont_C0b])
+           simp
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
