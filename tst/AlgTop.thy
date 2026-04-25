@@ -13037,7 +13037,11 @@ proof -
               proof -
                 have "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
                 have "top1_R_to_S1 1 = (1, 0)" unfolding top1_R_to_S1_def by simp
-                show ?thesis sorry \<comment> \<open>R_to_S1 is loop: continuous I → S^1, endpoints (1,0).\<close>
+                have hR_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+                  sorry \<comment> \<open>R_to_S1 continuous on I. From imported Theorem_53_1.\<close>
+                show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  using hR_cont \<open>top1_R_to_S1 0 = (1, 0)\<close> \<open>top1_R_to_S1 1 = (1, 0)\<close>
+                  by (by100 blast)
               qed
               have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
               have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
