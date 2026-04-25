@@ -8214,8 +8214,6 @@ qed
 lemma exterior_ball_connected_R2:
   fixes R :: real
   shows "connected {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
-  \<comment> \<open>The exterior {x | |x|^2 > R^2} is connected for any R.
-     Strategy: show every point connects to (|R|+1, 0) via a path in the exterior.\<close>
   sorry
 
 \<comment> \<open>General composition lemma: if g: A \<rightarrow> R^2 is custom-continuous and
@@ -8797,7 +8795,21 @@ proof -
       ultimately show ?thesis
         using connected_continuous_image by simp
     next
-      case True show ?thesis sorry \<comment> \<open>b \<in> C0: needs connected_open_delete.\<close>
+      case True
+      \<comment> \<open>b \<in> C0. h(C0-{b}) = R^2 \ h(S^2\C0). h(S^2\C0) compact. Complement connected.\<close>
+      \<comment> \<open>h(C0-{b}) is open in R^2. Show connected via connected_open_delete_R2.\<close>
+      \<comment> \<open>h restricted to S^2-{b} is homeomorphism. C0 open in S^2 and connected.
+         h(C0-{b}) open in R^2 (homeomorphic image of open in S^2-{b}).
+         C0 connected \<Rightarrow> h(C0-{b}) = h(C0 \<inter> (S^2-{b})). If C0 = S^2: h(C0-{b}) = R^2, connected. \<checkmark>
+         If C0 \<subset> S^2: h(S^2-C0) nonempty. h(S^2-{b}) = R^2.
+         h(C0-{b}) \<union> h(S^2-C0-{b}) = R^2 (disjoint union, both open? No, S^2-C0-{b} might not map to open set).
+
+         Key: C0 is open connected subset of S^2 containing b. Under stereographic projection h: S^2-{b} \<rightarrow> R^2,
+         h(C0-{b}) is the complement of a compact set K = h(S^2 \setminus C0) in R^2.
+
+         Need: R^2 \setminus K connected for compact K. This follows from connected_open_delete_R2
+         when K is a single point. For general compact K: standard fact.\<close>
+      show ?thesis sorry \<comment> \<open>R^2 minus compact set connected (standard, needs exterior_ball + L-path).\<close>
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
