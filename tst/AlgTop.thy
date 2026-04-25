@@ -13653,7 +13653,48 @@ proof -
       \<comment> \<open>\<sigma>^{-1}(R^2\C) connected.\<close>
       have h\<sigma>inv_R2C_conn: "top1_connected_on (\<sigma>inv ` (UNIV - C))
           (subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C)))"
-        sorry \<comment> \<open>Homeomorphic image of connected set is connected. Bridge custom/standard.\<close>
+      proof -
+        \<comment> \<open>\<sigma>inv continuous from R^2 to S^2\{N}. Restrict domain to UNIV-C.\<close>
+        have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+          using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        have hTR2C: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+          by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+        have h\<sigma>inv_cont_UC: "top1_continuous_map_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
+            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>inv_cont]) simp
+        have hTS2N: "is_topology_on (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+        proof -
+          have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+        qed
+        \<comment> \<open>By Theorem_23_5: \<sigma>inv(UNIV-C) connected in subspace of S^2\{N}.\<close>
+        have "top1_connected_on (\<sigma>inv ` (UNIV - C))
+            (subspace_topology (top1_S2 - {north_pole})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+              (\<sigma>inv ` (UNIV - C)))"
+          by (rule Theorem_23_5[OF hTR2C hTS2N hR2C_conn h\<sigma>inv_cont_UC])
+        \<comment> \<open>Bridge: subspace of S^2\{N} = subspace of S^2 (transitivity).\<close>
+        moreover have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
+        proof -
+          have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+            using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+            unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
+          thus ?thesis unfolding bij_betw_def by (by100 blast)
+        qed
+        moreover have "subspace_topology (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+            (\<sigma>inv ` (UNIV - C))
+            = subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+          by (rule subspace_topology_trans) (use \<open>\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}\<close> in blast)
+        ultimately show ?thesis by simp
+      qed
       \<comment> \<open>S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
       have hS2C'_eq: "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}"
       proof -
