@@ -13869,11 +13869,71 @@ proof
           qed
         next
           assume hbVU: "b \<in> V - U"
-          show ?thesis sorry \<comment> \<open>V evenly covered for b \<in> V\U. Same pattern as U case.
-             V-sheet n = A\<times>{2(n+1)} \<union> B\<times>{2n} \<union> (V\U)\<times>{2n+1}. Use Ub = V.
-             Open: TE conditions check out (even slices = A or B, odd = V\U).
-             Disjoint: different n, A\<inter>B = {}, V\U \<inter> U = {}.
-             Union = p0\<inverse>(V). Homeomorphic via p0=fst.\<close>
+          \<comment> \<open>V evenly covered. Define V-sheet at level n via norm.\<close>
+          define vsheet :: "int \<Rightarrow> ('a \<times> int) set" where
+            "vsheet = (\<lambda>n. {(x, m) \<in> E. x \<in> V \<and>
+              (x \<in> A \<and> m = 2*(n+1) \<or> x \<in> B \<and> m = 2*n \<or> x \<in> V - U \<and> m = 2*n+1)})"
+          let ?\<V>V = "vsheet ` UNIV"
+          show ?thesis
+          proof (intro exI[of _ V] conjI)
+            show "b \<in> V" using hbVU by (by100 blast)
+            show "top1_evenly_covered_on E TE X TX p0 V"
+              unfolding top1_evenly_covered_on_def
+            proof (intro conjI exI[of _ ?\<V>V])
+              show "openin_on X TX V" by (rule assms(3))
+              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+              show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
+              proof (intro ballI impI)
+                fix S1 S2 assume "S1 \<in> ?\<V>V" "S2 \<in> ?\<V>V" "S1 \<noteq> S2"
+                then obtain n1 n2 where hS1: "S1 = vsheet n1" and hS2: "S2 = vsheet n2"
+                  by (by100 blast)
+                have "n1 \<noteq> n2" using \<open>S1 \<noteq> S2\<close> hS1 hS2 by auto
+                show "S1 \<inter> S2 = {}" unfolding hS1 hS2 vsheet_def
+                  using \<open>n1 \<noteq> n2\<close> hAB_disj hAB_UV by auto
+              qed
+              show "{x \<in> E. p0 x \<in> V} = \<Union>?\<V>V"
+              proof (rule set_eqI, rule iffI)
+                fix e assume "e \<in> {x \<in> E. p0 x \<in> V}"
+                hence he: "e \<in> E" and "fst e \<in> V" unfolding p0_def by auto
+                obtain x m where hxm: "e = (x, m)" by (cases e)
+                hence "x \<in> V" using \<open>fst e \<in> V\<close> by simp
+                have "(even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
+                  using he hxm unfolding E_def by auto
+                hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U"
+                  using \<open>x \<in> V\<close> hAB_UV by (by100 blast)
+                thus "e \<in> \<Union>?\<V>V"
+                proof (elim disjE)
+                  assume "x \<in> A"
+                  hence "even m" using \<open>(even m \<and> x \<in> U) \<or> _\<close> hAB_UV by (by100 blast)
+                  then obtain k where "m = 2 * k" using evenE by auto
+                  have "e \<in> vsheet (k - 1)" unfolding vsheet_def hxm
+                    using \<open>x \<in> A\<close> \<open>x \<in> V\<close> \<open>m = 2*k\<close> he hxm by auto
+                  thus "e \<in> \<Union>?\<V>V" by (by100 blast)
+                next
+                  assume "x \<in> B"
+                  hence "even m" using \<open>(even m \<and> x \<in> U) \<or> _\<close> hAB_UV by (by100 blast)
+                  then obtain k where "m = 2 * k" using evenE by auto
+                  have "e \<in> vsheet k" unfolding vsheet_def hxm
+                    using \<open>x \<in> B\<close> \<open>x \<in> V\<close> \<open>m = 2*k\<close> he hxm by auto
+                  thus "e \<in> \<Union>?\<V>V" by (by100 blast)
+                next
+                  assume "x \<in> V - U"
+                  hence "odd m" using \<open>(even m \<and> x \<in> U) \<or> _\<close> by (by100 blast)
+                  then obtain k where "m = 2 * k + 1" using oddE by auto
+                  have "e \<in> vsheet k" unfolding vsheet_def hxm
+                    using \<open>x \<in> V - U\<close> \<open>x \<in> V\<close> \<open>m = 2*k+1\<close> he hxm by auto
+                  thus "e \<in> \<Union>?\<V>V" by (by100 blast)
+                qed
+              next
+                fix e assume "e \<in> \<Union>?\<V>V"
+                then obtain n where "e \<in> vsheet n" by (by100 blast)
+                hence "e \<in> E" "fst e \<in> V" unfolding vsheet_def by auto
+                thus "e \<in> {x \<in> E. p0 x \<in> V}" unfolding p0_def by simp
+              qed
+              show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
+                  (subspace_topology X TX V) p0" sorry
+            qed
+          qed
         qed
       qed
     qed
