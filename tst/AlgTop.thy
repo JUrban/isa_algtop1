@@ -13436,12 +13436,116 @@ lemma helix_covering_construction:
                   {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
   defines "p0 \<equiv> (fst :: ('a \<times> int) \<Rightarrow> 'a)"
   shows "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
-  sorry \<comment> \<open>CODE FACTORING ISSUE (not a mathematical gap).
-     This exact proof exists inside Theorem_63_1_loop_nontrivial (0 sorry).
-     The sorry is due to Isabelle set comprehension normalization preventing
-     sharing between 'defines' and 'define' contexts.
-     Proof content: TE topology (4 axioms), p0 continuous/surjective,
-     U and V evenly covered (sheets open/disjoint/union/homeomorphisms).\<close>
+proof -
+    have hU_TX: "U \<in> TX" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hV_TX: "V \<in> TX" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hA_TX: "A \<in> TX" using assms(7) unfolding openin_on_def by (by100 blast)
+    have hB_TX: "B \<in> TX" using assms(8) unfolding openin_on_def by (by100 blast)
+    have hAB: "A \<union> B = U \<inter> V" using assms(5) by simp
+    have hTX_empty: "{} \<in> TX" using assms(1) unfolding is_topology_on_def by (by100 blast)
+    have hTE: "is_topology_on E TE"
+      unfolding is_topology_on_def
+    proof (intro conjI allI impI)
+      show "{} \<in> TE" unfolding TE_def using hTX_empty by simp
+      show "E \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "E \<subseteq> E" by simp
+        fix n :: int
+        show "{x \<in> U. (x, 2*n) \<in> E} \<in> TX"
+          unfolding E_def using hU_TX by auto
+        have "{x \<in> A. (x, 2*n+2) \<in> E} = A"
+          unfolding E_def using hAB by auto
+        moreover have "{x \<in> B. (x, 2*n) \<in> E} = B"
+          unfolding E_def using hAB by auto
+        moreover have "{x \<in> V-U. (x, 2*n+1) \<in> E} = V - U"
+          unfolding E_def by auto
+        moreover have "A \<union> B \<union> (V - U) = V" using hAB by (by100 blast)
+        ultimately show "{x \<in> A. (x, 2*n+2) \<in> E} \<union> {x \<in> B. (x, 2*n) \<in> E} \<union> {x \<in> V-U. (x, 2*n+1) \<in> E} \<in> TX"
+          using hV_TX by simp
+      qed
+    next
+      fix U0 :: "('a \<times> int) set set" assume hU0: "U0 \<subseteq> TE"
+      show "\<Union>U0 \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Union>U0 \<subseteq> E" using hU0 unfolding TE_def by (by100 blast)
+        fix n :: int
+        have heven_eq: "{x \<in> U. (x, 2*n) \<in> \<Union>U0} = \<Union>{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> U0}"
+          by (by100 blast)
+        have "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> U0} \<subseteq> TX"
+          using hU0 unfolding TE_def by (by100 blast)
+        hence "\<Union>{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> U0} \<in> TX"
+          using assms(1) unfolding is_topology_on_def by (by100 blast)
+        thus "{x \<in> U. (x, 2*n) \<in> \<Union>U0} \<in> TX" using heven_eq by simp
+        have hodd_eq: "{x \<in> A. (x, 2*n+2) \<in> \<Union>U0} \<union> {x \<in> B. (x, 2*n) \<in> \<Union>U0} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> \<Union>U0}
+            = \<Union>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0}" by (by100 blast)
+        have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0} \<subseteq> TX"
+          using hU0 unfolding TE_def by (by100 blast)
+        hence "\<Union>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0} \<in> TX"
+          using assms(1) unfolding is_topology_on_def by (by100 blast)
+        thus "{x \<in> A. (x, 2*n+2) \<in> \<Union>U0} \<union> {x \<in> B. (x, 2*n) \<in> \<Union>U0} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> \<Union>U0} \<in> TX" using hodd_eq by simp
+      qed
+    next
+      fix F :: "('a \<times> int) set set" assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TE"
+      show "\<Inter>F \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Inter>F \<subseteq> E" using hF unfolding TE_def by (by100 blast)
+        fix n :: int
+        have "{x \<in> U. (x, 2*n) \<in> \<Inter>F} = \<Inter>{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F}"
+          using hF by (by100 blast)
+        moreover have "... \<in> TX"
+        proof -
+          have "finite {{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F}" using hF by simp
+          moreover have "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+          moreover have "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<subseteq> TX"
+            using hF unfolding TE_def by (by100 blast)
+          ultimately show ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+        qed
+        ultimately show "{x \<in> U. (x, 2*n) \<in> \<Inter>F} \<in> TX" by simp
+        have heq: "{x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}
+            = \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}"
+          thus "x \<in> \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" by (by100 blast)
+        next
+          fix x assume hx: "x \<in> \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}"
+          from hF obtain W0 where "W0 \<in> F" by (by100 blast)
+          hence "x \<in> {x \<in> A. (x, 2*n+2) \<in> W0} \<union> {x \<in> B. (x, 2*n) \<in> W0} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W0}" using hx by (by100 blast)
+          hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" by (by100 blast)
+          thus "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}"
+            using hx hAB assms(6) by (by100 blast)
+        qed
+        have "\<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<in> TX"
+        proof -
+          have "finite {{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" using hF by simp
+          moreover have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+          moreover have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<subseteq> TX"
+            using hF unfolding TE_def by (by100 blast)
+          ultimately show ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+        qed
+        thus "{x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F} \<in> TX" using heq by simp
+      qed
+    qed
+    have hcov: "top1_covering_map_on E TE X TX p0" sorry
+      \<comment> \<open>p0=fst continuous + surjective. U and V evenly covered with sheet homeomorphisms.\<close>
+    show ?thesis using hTE hcov by simp
+  qed
 
 (** from \<S>63 Theorem 63.1: if X = U \<union> V with U \<inter> V = A \<union> B (disjoint open),
     and alpha: a to b in U, beta: b to a in V, then the loop f = alpha * beta is
