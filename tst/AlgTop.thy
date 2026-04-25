@@ -11367,9 +11367,7 @@ proof
             qed
             show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) X
                 (subspace_topology X TX X) p0"
-              sorry \<comment> \<open>Each sheet X\<times>{n} maps homeomorphically onto X via fst.
-                 Proof structure: bij_betw p0 (X\<times>{n}) X, p0 continuous (slice of TE),
-                 inverse x\<mapsto>(x,n) continuous (inverse slice of TX). Timeout issues with force.\<close>
+              sorry \<comment> \<open>Sheet homeomorphism: timeout issues, needs is_topology_on_strict.\<close>
           qed
         qed
       qed
