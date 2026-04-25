@@ -8803,7 +8803,43 @@ proof -
 
          Need: R^2 \setminus K connected for compact K. This follows from connected_open_delete_R2
          when K is a single point. For general compact K: standard fact.\<close>
-      show ?thesis sorry \<comment> \<open>R^2 minus compact set connected (standard, needs exterior_ball + L-path).\<close>
+      \<comment> \<open>h(C0-{b}) = R^2 \ K where K = h(S^2\C0) compact. Use complement_compact_connected_R2.\<close>
+      have "h ` (C0 - {b}) = UNIV - h ` (top1_S2 - C0)"
+      proof -
+        have "bij_betw h (top1_S2 - {b}) UNIV"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hC0_sub_S2: "C0 \<subseteq> top1_S2" using hC0_sub by (by100 blast)
+        have "C0 - {b} \<subseteq> top1_S2 - {b}" using hC0_sub_S2 by (by100 blast)
+        have "top1_S2 - C0 \<subseteq> top1_S2 - {b}" using True by (by100 blast)
+        have "(C0 - {b}) \<union> (top1_S2 - C0) = top1_S2 - {b}" using hC0_sub_S2 True by (by100 blast)
+        have "(C0 - {b}) \<inter> (top1_S2 - C0) = {}" by (by100 blast)
+        have hsurj: "h ` (top1_S2 - {b}) = UNIV"
+          using \<open>bij_betw h (top1_S2 - {b}) UNIV\<close> unfolding bij_betw_def by (by100 blast)
+        have hinj: "inj_on h (top1_S2 - {b})"
+          using \<open>bij_betw h (top1_S2 - {b}) UNIV\<close> unfolding bij_betw_def by (by100 blast)
+        have "h ` (top1_S2 - {b}) = h ` (C0 - {b}) \<union> h ` (top1_S2 - C0)"
+          using image_Un[of h "C0 - {b}" "top1_S2 - C0"]
+            \<open>(C0 - {b}) \<union> (top1_S2 - C0) = top1_S2 - {b}\<close> by simp
+        moreover have "h ` (C0 - {b}) \<inter> h ` (top1_S2 - C0) = {}"
+          using \<open>(C0 - {b}) \<inter> (top1_S2 - C0) = {}\<close>
+            inj_on_image_Int[OF hinj \<open>C0 - {b} \<subseteq> top1_S2 - {b}\<close> \<open>top1_S2 - C0 \<subseteq> top1_S2 - {b}\<close>]
+          by simp
+        ultimately have "UNIV = h ` (C0 - {b}) \<union> h ` (top1_S2 - C0)" using hsurj by simp
+        moreover have "h ` (C0 - {b}) \<inter> h ` (top1_S2 - C0) = {}" by fact
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "compact (h ` (top1_S2 - C0))"
+      proof -
+        have "compact (top1_S2 - C0)" sorry \<comment> \<open>Closed subset of compact S^2.\<close>
+        have "continuous_on (top1_S2 - {b}) h"
+          sorry \<comment> \<open>h continuous on S^2-{b} in standard topology (bridge from custom).\<close>
+        have "top1_S2 - C0 \<subseteq> top1_S2 - {b}" using True by (by100 blast)
+        have "continuous_on (top1_S2 - C0) h"
+          by (rule continuous_on_subset[OF \<open>continuous_on (top1_S2 - {b}) h\<close> \<open>top1_S2 - C0 \<subseteq> top1_S2 - {b}\<close>])
+        show ?thesis
+          by (rule compact_continuous_image[OF \<open>continuous_on (top1_S2 - C0) h\<close> \<open>compact (top1_S2 - C0)\<close>])
+      qed
+      ultimately show ?thesis using complement_compact_connected_R2 by simp
     qed
     \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
     have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
