@@ -14547,7 +14547,58 @@ proof -
             thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
           qed
           have hC'_compact_std: "compact C'"
-            sorry \<comment> \<open>C' = \<sigma>inv(C). \<sigma>inv continuous (standard) on compact C \<Rightarrow> C' compact.\<close>
+          proof -
+            \<comment> \<open>\<sigma>inv continuous on C (standard topology): bridge from custom.\<close>
+            have h\<sigma>inv_cont_std: "continuous_on C \<sigma>inv"
+            proof -
+              have hinv_cust: "top1_continuous_map_on UNIV ?TR2
+                  (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+                  \<sigma>inv"
+                using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+              show ?thesis unfolding continuous_on_open_invariant
+              proof (intro allI impI)
+                fix V :: "(real\<times>real\<times>real) set" assume "open V"
+                have "V \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                  using \<open>open V\<close> unfolding top1_open_sets_def by simp
+                \<comment> \<open>V \<inter> (S^2\{N}) open in subspace S^2\{N}.\<close>
+                have hV_sub: "V \<inter> (top1_S2 - {north_pole}) \<in>
+                    subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+                proof -
+                  have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                    unfolding top1_S2_topology_def
+                    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+                  have hS2N_sub: "top1_S2 - {north_pole} \<subseteq> top1_S2" by (by100 blast)
+                  have "subspace_topology top1_S2 (subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {north_pole})
+                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
+                    by (rule subspace_topology_trans[OF hS2N_sub])
+                  hence "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
+                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
+                    using hR3eq by simp
+                  thus ?thesis using \<open>V \<in> top1_open_sets\<close> unfolding subspace_topology_def by (by100 blast)
+                qed
+                \<comment> \<open>Preimage under \<sigma>inv: {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (S^2\{N})} \<in> TR2.\<close>
+                have "{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}
+                    \<in> product_topology_on top1_open_sets top1_open_sets"
+                  using hinv_cust hV_sub unfolding top1_continuous_map_on_def by (by100 blast)
+                \<comment> \<open>Since \<sigma>inv always maps into S^2\{N}, preimage of V = preimage of V \<inter> (S^2\{N}).\<close>
+                have "\<forall>y. \<sigma>inv y \<in> top1_S2 - {north_pole}"
+                  using hinv_cust unfolding top1_continuous_map_on_def by (by100 blast)
+                hence heq: "{y \<in> UNIV. \<sigma>inv y \<in> V} = {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}"
+                  by (by100 blast)
+                have "{y \<in> UNIV. \<sigma>inv y \<in> V} \<in> product_topology_on top1_open_sets top1_open_sets"
+                  using \<open>{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> _} \<in> _\<close> heq by simp
+                hence "open {y. \<sigma>inv y \<in> V}"
+                  using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+                moreover have "{y. \<sigma>inv y \<in> V} \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
+                ultimately show "\<exists>T. open T \<and> T \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
+              qed
+            qed
+            show ?thesis unfolding C'_def
+              by (rule compact_continuous_image[OF h\<sigma>inv_cont_std hC_compact_std])
+          qed
           have "closed C'" using compact_imp_closed[OF hC'_compact_std] .
           \<comment> \<open>closed in R^3 + C' \<subseteq> S^2 \<Rightarrow> closed in S^2 (subspace).\<close>
           show ?thesis unfolding closedin_on_def
