@@ -13826,9 +13826,56 @@ proof (rule ccontr)
       ultimately show ?thesis unfolding openin_on_def by (by100 blast)
     qed
     have hB_open: "openin_on ?X ?TX B"
-      sorry \<comment> \<open>B = (U\<inter>V)\A, union of non-A path components of lpc space.
-         Each path component open (lpc). B = union of opens = open in U\<inter>V.
-         U\<inter>V open in X. Hence B open in X.\<close>
+    proof -
+      \<comment> \<open>B = (U\<inter>V)\A. Show B open in subspace U\<inter>V, then lift to X.\<close>
+      \<comment> \<open>In U\<inter>V (lpc), each path component is open.
+         B = union of path components \<noteq> A. Each open. Union open.\<close>
+      have hB_open_UV: "B \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
+      proof -
+        \<comment> \<open>(?U\<inter>?V) \ A = B. A open in U\<inter>V. A also closed (complement = union of open path comp).
+           So B = (U\<inter>V)\A open in U\<inter>V.\<close>
+        \<comment> \<open>Key: \<forall> path component P of U\<inter>V, P is open (lpc).
+           B = \<Union>{P \<in> path_components. P \<noteq> A}. Union of opens.\<close>
+        have "\<forall>x \<in> ?U \<inter> ?V. top1_path_component_of_on (?U \<inter> ?V)
+            (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+            \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
+          by (intro ballI top1_path_component_of_on_open_if_locally_path_connected[OF hTUV hUV_lpc'])
+        \<comment> \<open>B = \<Union>{path_component(x) | x \<in> U\<inter>V, path_component(x) \<noteq> A}.\<close>
+        have "B = \<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+            | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}" sorry
+        moreover have "\<forall>P \<in> {top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+            | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}.
+            P \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
+          using \<open>\<forall>x \<in> ?U \<inter> ?V. top1_path_component_of_on (?U \<inter> ?V)
+              (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+              \<in> subspace_topology ?X ?TX (?U \<inter> ?V)\<close> by (by100 blast)
+        ultimately have "B \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
+        proof -
+          have hTUV_top: "is_topology_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V))"
+            by (rule hTUV)
+          have "{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+              | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A} \<subseteq> subspace_topology ?X ?TX (?U \<inter> ?V)"
+            using \<open>\<forall>P \<in> _. P \<in> subspace_topology ?X ?TX (?U \<inter> ?V)\<close> by (by100 blast)
+          hence "\<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+              | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A} \<in> subspace_topology ?X ?TX (?U \<inter> ?V)"
+            using hTUV_top unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis
+            using \<open>B = \<Union>{top1_path_component_of_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) x
+                | x. x \<in> ?U \<inter> ?V \<and> x \<notin> A}\<close> by simp
+        qed
+        thus ?thesis .
+      qed
+      \<comment> \<open>B open in U\<inter>V + U\<inter>V open in X \<Rightarrow> B open in X.\<close>
+      obtain W where "W \<in> ?TX" "B = (?U \<inter> ?V) \<inter> W"
+        using hB_open_UV unfolding subspace_topology_def by (by100 blast)
+      have hU_in_TX: "?U \<in> ?TX" using hU_open unfolding openin_on_def by (by100 blast)
+      have hV_in_TX: "?V \<in> ?TX" using hV_open unfolding openin_on_def by (by100 blast)
+      have hUV_in_TX: "?U \<inter> ?V \<in> ?TX" by (rule topology_inter_open[OF hTX hU_in_TX hV_in_TX])
+      have "B \<in> ?TX" using \<open>B = (?U \<inter> ?V) \<inter> W\<close> \<open>W \<in> ?TX\<close> hUV_in_TX
+        by (simp add: topology_inter_open[OF hTX])
+      moreover have "B \<subseteq> ?X" unfolding B_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+    qed
     have hAB_disj: "A \<inter> B = {}" unfolding B_def by (by100 blast)
     have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub' by auto
     \<comment> \<open>Lift \<alpha> to path in U (subspace of X), \<beta> to path in V (subspace of X).
