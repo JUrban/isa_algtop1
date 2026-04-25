@@ -1,0 +1,27 @@
+Session 2026-04-25b: Jordan Curve Theorem progress (122 -> 119 sorries)
+
+Key achievements:
+1. Theorem_61_4_general_separation FULLY PROVED (was 1 sorry)
+   - Extracted loop_nulhomotopic_via_connected_obstruction helper lemma
+   - Eliminated hU_nul_g and hV_nul_g sorries
+
+2. arc_joining_lemma FULLY PROVED (new lemma, ~100 lines)
+   - Munkres' "joining lemma": if a,b joinable in S^2-D1 and S^2-D2, then in S^2-D
+   - All 12 sub-steps proved: path components open, topology conversion, 63.1 application
+   - Key building block for Theorem 63.2
+
+3. Theorem_63_1 covering space: CLEANED UP
+   - Removed ~330 lines of wrong trivial covering (E = X x Z with product topology)
+   - Replaced with clean sorry documenting correct helix construction
+   - Sheet homeomorphism proved before removal
+
+4. Theorem_63_2 RESTRUCTURED following Munkres' second proof
+   - First bisection step now uses joining lemma contrapositive (fully proved)
+   - Remaining sorry: bisection iteration + limit argument
+
+5. Theorem_63_5 RESTRUCTURED with detailed proof plan
+   - Separation >=2 from Theorem_61_4 (DONE)
+   - <=2 needs Theorem_63_1(c) (helix covering)
+
+JCT critical path now has only 4 sorries:
+  63.1 (helix covering), 63.2 (bisection limit), 63.4 (step 2), 63.5 (<=2)
