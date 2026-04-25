@@ -13596,7 +13596,10 @@ proof -
       qed
     next
       show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
-        sorry \<comment> \<open>U and V evenly covered. Same proof as in 63.1(a).\<close>
+        sorry \<comment> \<open>U and V evenly covered (sheets open/disjoint/union/homeomorphisms).
+           This is the ONLY remaining sorry. The proof (identical to 63.1(a)) requires
+           ~400 lines for sheet construction + homeomorphisms.
+           TE topology: PROVED. p0 continuous: PROVED. p0 surjective: PROVED.\<close>
     qed
     show ?thesis using hTE hcov by simp
   qed
