@@ -8347,8 +8347,55 @@ proof -
       \<comment> \<open>Need: {y \<in> \<sigma>(C0\{b}). inv y \<in> V} is open rel \<sigma>(C0\{b}).
          inv maps into S^2\{c}. V open in R^3.
          {y \<in> UNIV. inv y \<in> V'} for some V' in subspace of S^2\{c} is open in R^2.\<close>
-      show "\<exists>T. open T \<and> T \<inter> \<sigma> ` (C0 - {b}) = inv_into (top1_S2 - {c}) \<sigma> -` V \<inter> \<sigma> ` (C0 - {b})"
-        sorry
+      \<comment> \<open>V \<inter> (S^2\{c}) open in subspace_topology S^2 S^2_top (S^2\{c}).\<close>
+      have hV_S2c: "V \<inter> (top1_S2 - {c}) \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c})"
+      proof -
+        have hR3eq: "(product_topology_on (top1_open_sets :: real set set)
+            (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)))
+            = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        have hTS2_sub: "top1_S2_topology = subspace_topology UNIV
+            (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+          unfolding top1_S2_topology_def using hR3eq by simp
+        have "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c})
+            = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {c})"
+        proof -
+          have "subspace_topology top1_S2 (subspace_topology UNIV
+              (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {c})
+              = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {c})"
+            by (rule subspace_topology_trans) blast
+          thus ?thesis using hTS2_sub by simp
+        qed
+        moreover have "V \<inter> (top1_S2 - {c}) \<in> subspace_topology UNIV
+            (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {c})"
+          using \<open>V \<in> top1_open_sets\<close> unfolding subspace_topology_def by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>Preimage under inv of V \<inter> (S^2\{c}) is open in R^2 (custom = standard).\<close>
+      have hinv_cont_loc: "top1_continuous_map_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+          (top1_S2 - {c}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
+          (inv_into (top1_S2 - {c}) \<sigma>)"
+        using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hpre: "{y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> V \<inter> (top1_S2 - {c})}
+          \<in> product_topology_on top1_open_sets top1_open_sets"
+        using hinv_cont_loc hV_S2c unfolding top1_continuous_map_on_def by (by100 blast)
+      define T where "T = {y. inv_into (top1_S2 - {c}) \<sigma> y \<in> V}"
+      have "open T"
+      proof -
+        have "T = {y \<in> UNIV. inv_into (top1_S2 - {c}) \<sigma> y \<in> V \<inter> (top1_S2 - {c})}"
+        proof -
+          have "\<forall>y. inv_into (top1_S2 - {c}) \<sigma> y \<in> top1_S2 - {c}"
+            using hinv_cont_loc unfolding top1_continuous_map_on_def by (by100 blast)
+          thus ?thesis unfolding T_def by (by100 blast)
+        qed
+        hence "T \<in> product_topology_on top1_open_sets top1_open_sets" using hpre by simp
+        thus ?thesis using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+      qed
+      moreover have "T \<inter> \<sigma> ` (C0 - {b}) = inv_into (top1_S2 - {c}) \<sigma> -` V \<inter> \<sigma> ` (C0 - {b})"
+        unfolding T_def by (by100 blast)
+      ultimately show "\<exists>T. open T \<and> T \<inter> \<sigma> ` (C0 - {b}) = inv_into (top1_S2 - {c}) \<sigma> -` V \<inter> \<sigma> ` (C0 - {b})"
+        by (by100 blast)
     qed
   qed
   have h\<sigma>inv_img: "inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b})) = C0 - {b}"
@@ -8366,10 +8413,13 @@ proof -
     next
       fix x assume hx: "x \<in> C0 - {b}"
       have "x \<in> top1_S2 - {c}" using hC0b_sub hx by (by100 blast)
-      have "\<sigma> x \<in> \<sigma> ` (C0 - {b})" using hx by (by100 blast)
-      moreover have "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) = x"
+      have h\<sigma>x: "\<sigma> x \<in> \<sigma> ` (C0 - {b})" using hx by (by100 blast)
+      have "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) = x"
         by (rule inv_into_f_f[OF hinj \<open>x \<in> top1_S2 - {c}\<close>])
-      ultimately show "x \<in> inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b}))" by (by100 force)
+      hence "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) \<in> inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b}))"
+        using h\<sigma>x by (by100 blast)
+      thus "x \<in> inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b}))"
+        using \<open>inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) = x\<close> by simp
     qed
   qed
   show ?thesis
