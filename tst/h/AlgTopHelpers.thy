@@ -128,4 +128,19 @@ proof (rule connectedI)
   qed
 qed
 
+text \<open>Open connected minus point for R^3 = real \<times> (real \<times> real).\<close>
+text \<open>Same technique as connected_open_delete_R2 but for triples.\<close>
+lemma connected_open_delete_R3:
+  fixes U :: "(real \<times> (real \<times> real)) set" and p :: "real \<times> (real \<times> real)"
+  assumes "open U" "connected U"
+  shows "connected (U - {p})"
+  sorry
+
+lemma complement_compact_connected_R2:
+  fixes K :: "(real \<times> real) set"
+  assumes "compact K"
+  shows "connected (UNIV - K)"
+  sorry
+
+
 end
