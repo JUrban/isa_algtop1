@@ -12748,7 +12748,23 @@ proof -
             have "open (- A1)" using \<open>closed A1\<close> by (rule open_Compl)
             have "open (- A2)" using \<open>closed A2\<close> by (rule open_Compl)
             have "\<not> connected (top1_S2 - {a, b})"
-              unfolding connected_def sorry
+              unfolding connected_def
+            proof (intro notI)
+              assume "\<not> (\<exists>A B. open A \<and> open B \<and> top1_S2 - {a, b} \<subseteq> A \<union> B \<and>
+                  A \<inter> B \<inter> (top1_S2 - {a, b}) = {} \<and> A \<inter> (top1_S2 - {a, b}) \<noteq> {} \<and>
+                  B \<inter> (top1_S2 - {a, b}) \<noteq> {})"
+              \<comment> \<open>Exhibit separation: A = -A2, B = -A1.\<close>
+              have h1: "top1_S2 - {a, b} \<subseteq> (- A2) \<union> (- A1)"
+                using hAA_S2' hab by auto
+              have h2: "(- A2) \<inter> (- A1) \<inter> (top1_S2 - {a, b}) = {}"
+                using hAA_S2' by auto
+              have h3: "(- A2) \<inter> (top1_S2 - {a, b}) \<noteq> {}"
+                using \<open>A1 - {a, b} \<noteq> {}\<close> hAA_S2' assms(2) hab by auto
+              have h4: "(- A1) \<inter> (top1_S2 - {a, b}) \<noteq> {}"
+                using \<open>A2 - {a, b} \<noteq> {}\<close> hAA_S2' assms(3) hab by auto
+              thus False
+                using \<open>\<not> (\<exists>A B. _)\<close> \<open>open (- A1)\<close> \<open>open (- A2)\<close> h1 h2 h3 h4 by blast
+            qed
             show False using \<open>connected (top1_S2 - {a, b})\<close> \<open>\<not> connected (top1_S2 - {a, b})\<close>
               by contradiction
           qed
