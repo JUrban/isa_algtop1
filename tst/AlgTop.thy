@@ -15984,12 +15984,33 @@ proof -
       and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
       and hU_bdy_raw: "closure U = U \<union> C"
       and hV_bdy_raw: "closure V = V \<union> C"
-    sorry \<comment> \<open>Exactly 2 components with all properties.
-       Step 2a: Decompose C = C1 \<union> C2 (two arcs via simple_closed_curve_arc_decomposition).
-       Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get SCC and two arcs on S^2.
-       Step 2c: By 63.2, arcs don't separate S^2. By 63.5, exactly 2 components on S^2.
-       Step 2d: Transfer back to R^2. Label V = unbounded component.
-       Step 2e: Boundary = C follows from Munkres' Step 2 argument (arc nonseparation).\<close>
+  proof -
+    \<comment> \<open>Step 2a: Decompose C into two arcs C1, C2 with C1 \<inter> C2 = {p, q}.\<close>
+    obtain C1_arc C2_arc p_arc q_arc where
+        hC_decomp: "C = C1_arc \<union> C2_arc"
+        and hC_inter: "C1_arc \<inter> C2_arc = {p_arc, q_arc}"
+        and hpq_ne: "p_arc \<noteq> q_arc"
+        and hC1_arc: "top1_is_arc_on C1_arc
+            (subspace_topology UNIV ?TR2 C1_arc)"
+        and hC2_arc: "top1_is_arc_on C2_arc
+            (subspace_topology UNIV ?TR2 C2_arc)"
+      sorry \<comment> \<open>Decompose simple closed curve into 2 arcs with 2-point intersection.
+         Uses: simple_closed_curve_on = continuous injection S^1 \<rightarrow> R^2.
+         Take two opposite points on S^1, their images split C into 2 arcs.\<close>
+    \<comment> \<open>Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get arcs C1', C2' on S^2.\<close>
+    \<comment> \<open>Step 2c: On S^2: C1', C2' are arcs (don't separate by 63.2).
+       C1' \<inter> C2' = {p', q'}, card = 2. C1', C2' closed, connected.
+       By 63.5: C1' \<union> C2' separates S^2 into exactly 2 components.\<close>
+    \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
+    \<comment> \<open>Step 2e: Identify bounded/unbounded. Boundary = C.\<close>
+    show ?thesis sorry \<comment> \<open>Full argument requires:
+       - Arc decomposition of SCC (step 2a)
+       - Stereographic transfer to S^2 (step 2b, same as step 1)
+       - Theorem_63_2 (arcs don't separate S^2) - has 1 sorry
+       - Theorem_63_5 (exactly 2 components) - has 1 sorry
+       - Transfer back + bounded/unbounded identification
+       - Boundary = C (Munkres Step 2 argument using arc nonseparation)\<close>
+  qed
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
   have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
