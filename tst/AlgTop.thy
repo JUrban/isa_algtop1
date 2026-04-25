@@ -15650,7 +15650,39 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1))"
       by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
     have "top1_S2 - C1 \<noteq> {}"
-      sorry \<comment> \<open>C2 has \<ge>3 points (connected, |C1\<inter>C2|=2 \<Rightarrow> C2\<noteq>{p,q}). So C2\C1\<noteq>{}.\<close>
+    proof -
+      \<comment> \<open>C2 \<noteq> {p,q}: if C2 = {p,q}, singletons open in Hausdorff subspace \<Rightarrow> disconnected.\<close>
+      have "C2 \<noteq> {p, q}"
+      proof
+        assume "C2 = {p, q}"
+        have "{p} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {q} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hq_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{p} = {p, q} \<inter> (top1_S2 - {q})" using hpq_ne hp_S2 by auto
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "{q} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {p} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hp_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{q} = {p, q} \<inter> (top1_S2 - {p})" using hpq_ne hq_S2 by auto
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "\<not> top1_connected_on {p, q} (subspace_topology top1_S2 top1_S2_topology {p, q})"
+          unfolding top1_connected_on_def
+          using \<open>{p} \<in> _\<close> \<open>{q} \<in> _\<close> hpq_ne by (by100 blast)
+        thus False using assms(5) \<open>C2 = {p, q}\<close> by simp
+      qed
+      moreover have "{p, q} \<subseteq> C2" using hpq by (by100 blast)
+      ultimately obtain c where "c \<in> C2" "c \<notin> {p, q}"
+        by (by100 blast)
+      hence "c \<notin> C1" using hpq by (by100 blast)
+      hence "c \<in> top1_S2 - C1" using \<open>c \<in> C2\<close> hC2sub by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
         hTU hU_conn hU_lpc \<open>top1_S2 - C1 \<noteq> {}\<close>])
   qed
@@ -15670,7 +15702,38 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2))"
       by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
     have "top1_S2 - C2 \<noteq> {}"
-      sorry \<comment> \<open>C1 has \<ge>3 points (connected, |C1\<inter>C2|=2 \<Rightarrow> C1\<noteq>{p,q}). So C1\C2\<noteq>{}.\<close>
+    proof -
+      have "C1 \<noteq> {p, q}"
+      proof
+        assume "C1 = {p, q}"
+        have "{p} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {q} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hq_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{p} = {p, q} \<inter> (top1_S2 - {q})" using hpq_ne hp_S2 by auto
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "{q} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {p} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hp_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{q} = {p, q} \<inter> (top1_S2 - {p})" using hpq_ne hq_S2 by auto
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "\<not> top1_connected_on {p, q} (subspace_topology top1_S2 top1_S2_topology {p, q})"
+          unfolding top1_connected_on_def
+          using \<open>{p} \<in> _\<close> \<open>{q} \<in> _\<close> hpq_ne by (by100 blast)
+        thus False using assms(4) \<open>C1 = {p, q}\<close> by simp
+      qed
+      moreover have "{p, q} \<subseteq> C1" using hpq by (by100 blast)
+      ultimately obtain c where "c \<in> C1" "c \<notin> {p, q}"
+        by (by100 blast)
+      hence "c \<notin> C2" using hpq by (by100 blast)
+      hence "c \<in> top1_S2 - C2" using \<open>c \<in> C1\<close> hC1sub by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
         hTV hV_conn hV_lpc \<open>top1_S2 - C2 \<noteq> {}\<close>])
   qed
