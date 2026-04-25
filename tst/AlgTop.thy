@@ -16518,9 +16518,22 @@ proof -
             (subspace_topology UNIV ?TR2 C1_arc)"
         and hC2_arc: "top1_is_arc_on C2_arc
             (subspace_topology UNIV ?TR2 C2_arc)"
-      sorry \<comment> \<open>Decompose simple closed curve into 2 arcs with 2-point intersection.
-         Uses: simple_closed_curve_on = continuous injection S^1 \<rightarrow> R^2.
-         Take two opposite points on S^1, their images split C into 2 arcs.\<close>
+    proof -
+      have hR2_strict: "is_topology_on_strict (UNIV :: (real\<times>real) set) ?TR2"
+      proof -
+        have "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have hR2_haus: "is_hausdorff_on (UNIV :: (real\<times>real) set) ?TR2"
+        by (rule top1_R2_is_hausdorff)
+      obtain A1 A2 aa bb where hd: "C = A1 \<union> A2" "A1 \<inter> A2 = {aa, bb}" "aa \<noteq> bb"
+          "top1_is_arc_on A1 (subspace_topology UNIV ?TR2 A1)"
+          "top1_is_arc_on A2 (subspace_topology UNIV ?TR2 A2)"
+        using simple_closed_curve_arc_decomposition[OF assms hR2_strict hR2_haus] by (by100 blast)
+      show ?thesis using hd by (intro that[of A1 A2 aa bb]) (by100 blast)+
+    qed
     \<comment> \<open>Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get arcs C1', C2' on S^2.\<close>
     \<comment> \<open>Step 2c: On S^2: C1', C2' are arcs (don't separate by 63.2).
        C1' \<inter> C2' = {p', q'}, card = 2. C1', C2' closed, connected.
