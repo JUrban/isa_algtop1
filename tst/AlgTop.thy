@@ -13077,7 +13077,105 @@ proof -
                 \<Longrightarrow> g ` I_set \<subseteq> ?V \<Longrightarrow>
                 top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                   g (top1_constant_path x0)"
-              sorry \<comment> \<open>Same with A2.\<close>
+            proof -
+              fix g assume hg_loop: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g"
+                  and hg_V: "g ` I_set \<subseteq> ?V"
+              obtain h_S1' where hh': "top1_continuous_map_on top1_S1 top1_S1_topology ?X
+                  (subspace_topology top1_S2 top1_S2_topology ?X) h_S1'"
+                  and hh10': "h_S1' (1, 0) = x0"
+                  and hg_factor': "\<forall>s\<in>I_set. g s = h_S1' (top1_R_to_S1 s)"
+                using loop_factors_through_S1[OF hTX_weak hg_loop] by (by100 blast)
+              have hh_V: "h_S1' ` top1_S1 \<subseteq> ?V"
+              proof
+                fix y assume "y \<in> h_S1' ` top1_S1"
+                then obtain q where hq: "q \<in> top1_S1" "y = h_S1' q" by (by100 blast)
+                obtain t where ht: "t \<in> I_set" "top1_R_to_S1 t = q"
+                proof -
+                  obtain x y where hq_eq: "q = (x, y)" by (cases q)
+                  have hcirc: "x^2 + y^2 = 1" using hq hq_eq unfolding top1_S1_def by simp
+                  obtain t where "0 \<le> t" "t < 2*pi" "x = cos t" "y = sin t"
+                    using sincos_total_2pi[OF hcirc] by blast
+                  define t' where "t' = t / (2*pi)"
+                  have "0 \<le> t'" "t' < 1" unfolding t'_def using \<open>0 \<le> t\<close> \<open>t < 2*pi\<close> pi_gt_zero by auto
+                  hence "t' \<in> I_set" unfolding top1_unit_interval_def by simp
+                  moreover have "top1_R_to_S1 t' = q"
+                    unfolding top1_R_to_S1_def t'_def hq_eq using \<open>x = cos t\<close> \<open>y = sin t\<close> pi_gt_zero by simp
+                  ultimately show ?thesis using that by (by100 blast)
+                qed
+                have "g t \<in> ?V" using hg_V ht(1) by (by100 blast)
+                have "g t = h_S1' (top1_R_to_S1 t)" using hg_factor' ht(1) by simp
+                hence "h_S1' q = g t" using ht(2) by simp
+                thus "y \<in> ?V" using hq(2) \<open>g t \<in> ?V\<close> \<open>h_S1' q = g t\<close> by simp
+              qed
+              have hA2_disj: "A2 \<subseteq> top1_S2 - h_S1' ` top1_S1"
+                using hh_V assms(3) by (by100 blast)
+              have hsame': "\<exists>CC. CC \<in> top1_components_on (top1_S2 - h_S1' ` top1_S1)
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))
+                  \<and> a \<in> CC \<and> b \<in> CC"
+              proof -
+                have hTS2hS1': "is_topology_on (top1_S2 - h_S1' ` top1_S1)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))"
+                  by (rule subspace_topology_is_topology_on[OF
+                      is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+                have hA2_conn_sub: "top1_connected_on A2
+                    (subspace_topology (top1_S2 - h_S1' ` top1_S1)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1)) A2)"
+                proof -
+                  have "subspace_topology (top1_S2 - h_S1' ` top1_S1)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1)) A2
+                      = subspace_topology top1_S2 top1_S2_topology A2"
+                    by (rule subspace_topology_trans[OF hA2_disj])
+                  thus ?thesis using assms(7) by simp
+                qed
+                have "A2 \<noteq> {}" using hab by (by100 blast)
+                obtain CC where "CC \<in> top1_components_on (top1_S2 - h_S1' ` top1_S1)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h_S1' ` top1_S1))"
+                    "A2 \<subseteq> CC"
+                  using Theorem_25_1(4)[OF hTS2hS1' hA2_disj hA2_conn_sub \<open>A2 \<noteq> {}\<close>] by (by100 blast)
+                thus ?thesis using hab by (by100 blast)
+              qed
+              have hh_nul': "top1_nulhomotopic_on top1_S1 top1_S1_topology
+                  (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) h_S1'"
+                by (rule Lemma_61_2_nulhomotopy_textbook[OF top1_S2_is_topology_on_strict
+                    S1_compact ha_S2 hb_S2 hab_ne])
+                   (use hh' hX_UV in auto, use hsame' in auto)
+              have hR_loop': "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) top1_R_to_S1"
+              proof -
+                have "top1_R_to_S1 0 = (1, 0)" unfolding top1_R_to_S1_def by simp
+                have "top1_R_to_S1 1 = (1, 0)" unfolding top1_R_to_S1_def by simp
+                have hR_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology top1_R_to_S1"
+                proof -
+                  have "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+                    by (rule top1_covering_map_on_continuous[OF Theorem_53_1])
+                  hence "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+                      top1_S1 top1_S1_topology top1_R_to_S1"
+                    by (rule top1_continuous_map_on_restrict_domain_simple) simp
+                  thus ?thesis unfolding top1_unit_interval_topology_def by simp
+                qed
+                show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  using hR_cont \<open>top1_R_to_S1 0 = (1, 0)\<close> \<open>top1_R_to_S1 1 = (1, 0)\<close>
+                  by (by100 blast)
+              qed
+              have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+                using S1_compact unfolding top1_compact_on_def by (by100 blast)
+              have h10_S1': "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+              have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  (h_S1' \<circ> top1_R_to_S1) (top1_constant_path x0)"
+                by (rule nulhomotopic_trivializes_loops_general[OF
+                    hTS1 hTX_weak hh' hh_nul' hh10' h10_S1' hR_loop'])
+              moreover have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (h_S1' \<circ> top1_R_to_S1)"
+              proof -
+                have hg_path: "top1_is_path_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0 g"
+                  using hg_loop unfolding top1_is_loop_on_def by (by100 blast)
+                have "\<forall>s\<in>I_set. g s = (h_S1' \<circ> top1_R_to_S1) s"
+                  using hg_factor' unfolding comp_def by simp
+                thus ?thesis by (rule paths_agree_on_I_path_homotopic[OF hTX_weak hg_path])
+              qed
+              ultimately show "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (top1_constant_path x0)"
+                using Lemma_51_1_path_homotopic_trans[OF hTX_weak] by (by100 blast)
+            qed
             \<comment> \<open>Decompose f via Theorem 59.1.\<close>
             obtain n gs where hn: "n \<ge> 1" and hlen: "length gs = n"
                 and hgi: "\<forall>i<n. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (gs!i)
