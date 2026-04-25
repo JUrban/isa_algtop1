@@ -13883,10 +13883,26 @@ proof
               else if y \<in> B then (y, 0)
               else (y, 1)))"
     \<comment> \<open>Lift is a path from e0 to e1.\<close>
-    have hft_path: "top1_is_path_on E TE e0 e1 ftilde" sorry
-      \<comment> \<open>Key: continuous at s=1/2 because alpha(1) = b \<in> B, so left limit = (b,0)
-         and right limit = norm(beta(0), 1) = norm(b, 1) = (b, 0). Continuous.
-         ftilde(0) = (alpha(0), 0) = (a, 0) = e0. ftilde(1) = norm(beta(1), 1) = norm(a, 1) = (a, 2) = e1.\<close>
+    have hft_path: "top1_is_path_on E TE e0 e1 ftilde"
+    proof -
+      \<comment> \<open>ftilde = path_product of \<alpha>-lift and \<beta>-lift. Use path product.\<close>
+      define \<alpha>_lift where "\<alpha>_lift = (\<lambda>s. (alpha s, 0::int))"
+      define \<beta>_lift where "\<beta>_lift = (\<lambda>s. let y = beta s in
+        if y \<in> A then (y, 2::int) else if y \<in> B then (y, 0::int) else (y, 1::int))"
+      have hft_eq: "ftilde = top1_path_product \<alpha>_lift \<beta>_lift"
+        unfolding ftilde_def top1_path_product_def \<alpha>_lift_def \<beta>_lift_def by (rule ext) auto
+      \<comment> \<open>\<alpha>_lift: path from (a,0) to (b,0) in U-sheet 0.\<close>
+      have h\<alpha>_lift_path: "top1_is_path_on E TE (a, 0) (b, 0) \<alpha>_lift"
+        sorry \<comment> \<open>\<alpha> path in U, U-sheet 0 homeo to U via p0. Lift via inverse homeomorphism.\<close>
+      \<comment> \<open>\<beta>_lift: path from (b,0) to (a,2) in E.\<close>
+      have h\<beta>_lift_path: "top1_is_path_on E TE (b, 0) (a, 2) \<beta>_lift"
+        sorry \<comment> \<open>\<beta> path in V, compose with norm(\<cdot>,1). Continuous via quotient map.
+           \<beta>(0)=b\<in>B \<Rightarrow> \<beta>_lift(0) = (b,0). \<beta>(1)=a\<in>A \<Rightarrow> \<beta>_lift(1) = (a,2).\<close>
+      have hTX_E: "is_topology_on E TE" by (rule hTE)
+      have "top1_is_path_on E TE (a, 0) (a, 2) (top1_path_product \<alpha>_lift \<beta>_lift)"
+        by (rule top1_path_product_is_path[OF hTX_E h\<alpha>_lift_path h\<beta>_lift_path])
+      thus ?thesis unfolding hft_eq e0_def e1_def .
+    qed
     \<comment> \<open>Lift projects correctly.\<close>
     have hft_lift: "\<forall>s\<in>I_set. p0 (ftilde s) = top1_path_product alpha beta s"
     proof
