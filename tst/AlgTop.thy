@@ -8837,7 +8837,22 @@ proof -
           \<comment> \<open>Closed subset of compact S^2 \<Rightarrow> compact.\<close>
           have "closed top1_S2" by (rule compact_imp_closed[OF S2_compact_standard])
           have "closed (top1_S2 - C0)"
-            sorry \<comment> \<open>S^2\C0 closed: C0 open in S^2 subspace \<Rightarrow> S^2\C0 closed in R^3.\<close>
+          proof -
+            have hC0_open_S2: "C0 \<in> top1_S2_topology"
+              sorry \<comment> \<open>C0 is open in S^2 (component of open set in lpc space).\<close>
+            have "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+              unfolding top1_S2_topology_def
+              using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                    product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+            then obtain W :: "(real\<times>real\<times>real) set" where hW: "W \<in> top1_open_sets" "C0 = top1_S2 \<inter> W"
+              using hC0_open_S2 unfolding subspace_topology_def by blast
+            have "open W" using hW(1) unfolding top1_open_sets_def by simp
+            have "closed (- W)" using \<open>open W\<close> by (simp add: open_closed)
+            hence "closed (UNIV - W)" by (simp add: Compl_eq_Diff_UNIV)
+            have "top1_S2 - C0 = top1_S2 \<inter> (UNIV - W)" using hW(2) by blast
+            thus ?thesis using \<open>closed top1_S2\<close> \<open>closed (UNIV - W)\<close>
+              by (simp add: closed_Int)
+          qed
           have "compact (top1_S2 \<inter> (top1_S2 - C0))"
             by (rule compact_Int_closed[OF S2_compact_standard \<open>closed (top1_S2 - C0)\<close>])
           moreover have "top1_S2 \<inter> (top1_S2 - C0) = top1_S2 - C0" by blast
