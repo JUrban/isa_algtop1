@@ -10794,7 +10794,23 @@ proof (rule ccontr)
               (gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V)"
             using hgs_UV hi by blast
           show "top1_path_homotopic_on ?X ?TX x0 x0 (gs!i) (top1_constant_path x0)"
-            using hgi hU_nul hV_nul by (by100 blast)
+          proof -
+            have hgi_loop: "top1_is_loop_on ?X ?TX x0 (gs!i)" using hgi by simp
+            have hUV_case: "gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V" using hgi by simp
+            show ?thesis
+            proof (cases "gs!i ` I_set \<subseteq> ?U")
+              case True
+              have "top1_is_loop_on ?X ?TX x0 (gs!i) \<and> gs!i ` I_set \<subseteq> ?U"
+                using hgi_loop True by simp
+              thus ?thesis using hU_nul by (by100 blast)
+            next
+              case False
+              hence "gs!i ` I_set \<subseteq> ?V" using hUV_case by simp
+              have "top1_is_loop_on ?X ?TX x0 (gs!i) \<and> gs!i ` I_set \<subseteq> ?V"
+                using hgi_loop \<open>gs!i ` I_set \<subseteq> ?V\<close> by simp
+              thus ?thesis using hV_nul by (by100 blast)
+            qed
+          qed
         qed
         \<comment> \<open>Product of trivial loops is trivial.\<close>
         have hgi_nul': "\<forall>i < length gs. top1_path_homotopic_on ?X ?TX x0 x0 (gs!i) (top1_constant_path x0)"
@@ -11220,7 +11236,9 @@ proof
             qed
             show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) X
                 (subspace_topology X TX X) p0"
-              sorry \<comment> \<open>Each sheet X\<times>{n} maps homeomorphically onto X via fst.\<close>
+              sorry \<comment> \<open>Each sheet X\<times>{n} maps homeomorphically onto X via fst.
+                 Proof structure: bij_betw p0 (X\<times>{n}) X, p0 continuous (slice of TE),
+                 inverse x\<mapsto>(x,n) continuous (inverse slice of TX). Timeout issues with force.\<close>
           qed
         qed
       qed
@@ -15393,6 +15411,7 @@ end
  
  
  
+
 
 
 
