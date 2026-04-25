@@ -13513,162 +13513,6 @@ proof -
   show ?thesis using hd_D hD_union hD_inter hD1_arc hD2_arc by (by100 blast)
 qed
 
-theorem Theorem_63_2_arc_no_separation:
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-  and "D \<subseteq> top1_S2"
-  and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
-  shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
-proof -
-  \<comment> \<open>Munkres 63.2 first proof: D is an arc (contractible), so inclusion j: D \<rightarrow> S^2-{a,b}
-     is nulhomotopic. By Borsuk lemma (62.2), a and b in same component of S^2-D.
-     Hence D does not separate S^2.\<close>
-  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
-    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-  show ?thesis unfolding top1_separates_on_def
-  proof
-    assume hnsep: "\<not> top1_connected_on (top1_S2 - D) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-    \<comment> \<open>Derive contradiction: all points in S^2-D are in the same component.\<close>
-    show False
-    proof -
-      \<comment> \<open>For any a, b \<in> S^2-D, show they're in the same component.
-         D \<cong> [0,1] is contractible. The inclusion j: D \<hookrightarrow> S^2-{a,b} is nulhomotopic
-         (contractible domain). By Borsuk lemma, a and b in same component of S^2-j(D)=S^2-D.\<close>
-      have hD_compact: "top1_compact_on D (subspace_topology top1_S2 top1_S2_topology D)"
-      proof -
-        obtain h where hh: "top1_homeomorphism_on I_set I_top D
-            (subspace_topology top1_S2 top1_S2_topology D) h"
-          using assms(3) unfolding top1_is_arc_on_def by (by100 blast)
-        have hI_compact: "top1_compact_on I_set I_top"
-        proof -
-          have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
-            by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
-          have "compact I_set" unfolding hI01 by (rule compact_Icc)
-          thus ?thesis
-            unfolding top1_unit_interval_topology_def
-            using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
-        qed
-        have hcont: "top1_continuous_map_on I_set I_top D
-            (subspace_topology top1_S2 top1_S2_topology D) h"
-          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
-        have hTD: "is_topology_on D (subspace_topology top1_S2 top1_S2_topology D)"
-          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
-        have himg: "h ` I_set = D"
-          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-        have "top1_compact_on (h ` I_set) (subspace_topology D
-            (subspace_topology top1_S2 top1_S2_topology D) (h ` I_set))"
-          by (rule top1_compact_on_continuous_image[OF hI_compact hTD hcont])
-        hence "top1_compact_on D (subspace_topology D
-            (subspace_topology top1_S2 top1_S2_topology D) D)"
-          using himg by simp
-        moreover have "subspace_topology D (subspace_topology top1_S2 top1_S2_topology D) D
-            = subspace_topology top1_S2 top1_S2_topology D"
-          by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
-        ultimately show ?thesis by simp
-      qed
-      have hD_contractible: "\<forall>a b. a \<in> top1_S2 \<longrightarrow> b \<in> top1_S2 \<longrightarrow> a \<noteq> b \<longrightarrow>
-          a \<notin> D \<longrightarrow> b \<notin> D \<longrightarrow>
-          top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
-            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
-            (\<lambda>x. x)"
-        sorry \<comment> \<open>D contractible (arc \<cong> [0,1]). Proof: D ≅ [0,1] via homeomorphism h.
-           Homotopy H(x,t) = h((1-t)*h^{-1}(x)) contracts D to h(0).
-           H: D × I → D continuous, H(x,0) = x, H(x,1) = h(0).
-           Since D ⊆ S²\{a,b}, H composed with inclusion gives nulhomotopy.
-           Needs: continuous_on (D × I_set) H, H maps into D ⊆ S²\{a,b}.\<close>
-      have hD_injective: "inj_on (\<lambda>x. x) D" by (simp add: inj_on_def)
-      \<comment> \<open>For any a, b \<in> S^2-D: by Borsuk lemma, a and b in same component of S^2-D.\<close>
-      have hall_same_comp: "\<forall>a b. a \<in> top1_S2 - D \<longrightarrow> b \<in> top1_S2 - D \<longrightarrow> a \<noteq> b \<longrightarrow>
-          (\<exists>C. C \<in> top1_components_on (top1_S2 - D)
-               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))
-               \<and> a \<in> C \<and> b \<in> C)"
-      proof (intro allI impI)
-        fix a b assume ha: "a \<in> top1_S2 - D" and hb: "b \<in> top1_S2 - D" and hab: "a \<noteq> b"
-        have ha_S2: "a \<in> top1_S2" using ha by (by100 blast)
-        have hb_S2: "b \<in> top1_S2" using hb by (by100 blast)
-        have ha_notin_D: "a \<notin> D" using ha by (by100 blast)
-        have hb_notin_D: "b \<notin> D" using hb by (by100 blast)
-        have hD_sub_S2ab: "D \<subseteq> top1_S2 - {a, b}"
-          using assms(2) ha_notin_D hb_notin_D by (by100 blast)
-        have hf_cont: "top1_continuous_map_on D (subspace_topology top1_S2 top1_S2_topology D)
-            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
-            (\<lambda>x. x)"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          fix x assume "x \<in> D" thus "x \<in> top1_S2 - {a, b}" using hD_sub_S2ab by (by100 blast)
-        next
-          fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})"
-          then obtain W where hW: "W \<in> top1_S2_topology" "V = (top1_S2 - {a, b}) \<inter> W"
-            unfolding subspace_topology_def by (by100 blast)
-          have "{x \<in> D. x \<in> V} = D \<inter> W" using hW(2) hD_sub_S2ab by (by100 blast)
-          also have "... \<in> subspace_topology top1_S2 top1_S2_topology D"
-            using hW(1) unfolding subspace_topology_def by (by100 blast)
-          finally show "{x \<in> D. x \<in> V} \<in> subspace_topology top1_S2 top1_S2_topology D" .
-        qed
-        have hf_nul: "top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
-            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
-            (\<lambda>x. x)"
-          using hD_contractible ha_S2 hb_S2 hab ha_notin_D hb_notin_D by blast
-        have "(\<lambda>x. x) ` D = D" by simp
-        show "\<exists>C. C \<in> top1_components_on (top1_S2 - D)
-             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))
-             \<and> a \<in> C \<and> b \<in> C"
-          using Lemma_62_2_BorsukLemma[OF assms(1) hD_compact ha_S2 hb_S2 hab hf_cont
-              hD_injective hf_nul]
-          by simp
-      qed
-      \<comment> \<open>Derive contradiction: hnsep gives separation U,V of S^2\D.
-         Pick a \<in> U, b \<in> V. a \<noteq> b. hall_same_comp gives component C with a,b \<in> C.
-         C connected, C \<subseteq> U \<union> V, C \<inter> U \<noteq> {}, C \<inter> V \<noteq> {}. Contradicts C connected.\<close>
-      have hTS2D: "is_topology_on (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-        by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
-      have "\<exists>U' V'. U' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
-          V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
-          U' \<noteq> {} \<and> V' \<noteq> {} \<and> U' \<inter> V' = {} \<and> U' \<union> V' = top1_S2 - D"
-      proof -
-        have "is_topology_on (top1_S2 - D)
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) \<and>
-          \<not> (\<nexists>U V. U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
-              V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D) \<and>
-              U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = top1_S2 - D)"
-          using hnsep hTS2D unfolding top1_connected_on_def by (by100 blast)
-        thus ?thesis by (by100 blast)
-      qed
-      then obtain U' V' where hU': "U' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)"
-          and hV': "V' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)"
-          and hU'ne: "U' \<noteq> {}" and hV'ne: "V' \<noteq> {}"
-          and hU'V'disj: "U' \<inter> V' = {}" and hU'V'cover: "U' \<union> V' = top1_S2 - D"
-        by blast
-      obtain a where ha': "a \<in> U'" using hU'ne by (by100 blast)
-      obtain b where hb': "b \<in> V'" using hV'ne by (by100 blast)
-      have hab': "a \<noteq> b" using ha' hb' hU'V'disj by (by100 blast)
-      have ha_S2D: "a \<in> top1_S2 - D" using ha' hU'V'cover by (by100 blast)
-      have hb_S2D: "b \<in> top1_S2 - D" using hb' hU'V'cover by (by100 blast)
-      obtain C where hC: "C \<in> top1_components_on (top1_S2 - D)
-           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-           and haC: "a \<in> C" and hbC: "b \<in> C"
-        using hall_same_comp ha_S2D hb_S2D hab' by blast
-      have hC_conn: "top1_connected_on C (subspace_topology (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C)"
-        by (rule Theorem_25_1(3)[OF hTS2D hC])
-      have hC_sub: "C \<subseteq> top1_S2 - D" using hC unfolding top1_components_on_def
-        top1_component_of_on_def by (by100 blast)
-      \<comment> \<open>U' \<inter> C and V' \<inter> C separate C.\<close>
-      have "U' \<inter> C \<in> subspace_topology (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C"
-        using hU' unfolding subspace_topology_def by (by100 blast)
-      moreover have "V' \<inter> C \<in> subspace_topology (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) C"
-        using hV' unfolding subspace_topology_def by (by100 blast)
-      moreover have "U' \<inter> C \<noteq> {}" using haC ha' by (by100 blast)
-      moreover have "V' \<inter> C \<noteq> {}" using hbC hb' by (by100 blast)
-      moreover have "(U' \<inter> C) \<inter> (V' \<inter> C) = {}" using hU'V'disj by (by100 blast)
-      moreover have "(U' \<inter> C) \<union> (V' \<inter> C) = C" using hC_sub hU'V'cover by (by100 blast)
-      ultimately show ?thesis using hC_conn unfolding top1_connected_on_def by (by100 blast)
-    qed
-  qed
-qed
-
 (** from \<S>63 Theorem 63.3: general non-separation theorem. **)
 theorem Theorem_63_3_general_nonseparation:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
@@ -13977,6 +13821,77 @@ proof (rule ccontr)
     using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
   show False using hf_nontrivial assms(4) ha_mem
     unfolding top1_simply_connected_on_def by (by100 blast)
+qed
+
+
+theorem Theorem_63_2_arc_no_separation:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "D \<subseteq> top1_S2"
+  and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
+  shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
+proof -
+  \<comment> \<open>Munkres 63.2 SECOND proof (bisection + Theorem 63.3).
+     Assume D separates. Split D = D1 \<union> D2 at midpoint d.
+     By Theorem 63.3 contrapositive: since D separates and S^2\{d} simply connected,
+     at least one of D1, D2 separates (assuming neither does → D doesn't).
+     Repeat bisection. Get nested arcs D \<supset> D1 \<supset> D2 \<supset> ..., each separating,
+     shrinking to a single point x. But S^2\{x} \<cong> R^2, hence a,b connected there.
+     Path avoids h(x), hence avoids h(I_n) for large n. Contradiction.\<close>
+  show ?thesis
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence hsep: "top1_separates_on top1_S2 top1_S2_topology D" by simp
+    \<comment> \<open>Split D = D1 \<union> D2 at midpoint.\<close>
+    obtain d D1 D2 where hd: "d \<in> D" and hD: "D = D1 \<union> D2" and hD12: "D1 \<inter> D2 = {d}"
+        and hD1_arc: "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+        and hD2_arc: "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+      using arc_split_at_midpoint[OF assms(1) top1_S2_is_hausdorff assms(2) assms(3)] by (by100 blast)
+    have hd_S2: "d \<in> top1_S2" using hd assms(2) by (by100 blast)
+    \<comment> \<open>D1, D2 are closed in S^2 (compact subsets of Hausdorff).\<close>
+    have hD1_sub: "D1 \<subseteq> top1_S2" using assms(2) hD by (by100 blast)
+    have hD2_sub: "D2 \<subseteq> top1_S2" using assms(2) hD by (by100 blast)
+    have hD1_closed: "closedin_on top1_S2 top1_S2_topology D1"
+      sorry \<comment> \<open>D1 is an arc (compact image of [0,1]) in Hausdorff S^2, hence closed.\<close>
+    have hD2_closed: "closedin_on top1_S2 top1_S2_topology D2"
+      sorry \<comment> \<open>Same as D1.\<close>
+    \<comment> \<open>S^2\{d} simply connected.\<close>
+    have hsc: "top1_simply_connected_on (top1_S2 - {d})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))"
+      by (rule S2_minus_point_simply_connected[OF hd_S2])
+    \<comment> \<open>D1 \<inter> D2 = {d} so S^2\(D1\<inter>D2) = S^2\{d} simply connected.\<close>
+    have "top1_S2 - (D1 \<inter> D2) = top1_S2 - {d}" using hD12 by simp
+    hence hsc': "top1_simply_connected_on (top1_S2 - (D1 \<inter> D2))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2)))"
+      using hsc by simp
+    \<comment> \<open>By Theorem 63.3 contrapositive: since D = D1\<union>D2 separates,
+       at least one of D1, D2 must separate S^2.\<close>
+    have "top1_separates_on top1_S2 top1_S2_topology D1
+        \<or> top1_separates_on top1_S2 top1_S2_topology D2"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      hence h1: "\<not> top1_separates_on top1_S2 top1_S2_topology D1"
+          and h2: "\<not> top1_separates_on top1_S2 top1_S2_topology D2" by auto
+      have "\<not> top1_separates_on top1_S2 top1_S2_topology (D1 \<union> D2)"
+      proof (rule Theorem_63_3_general_nonseparation)
+        show "is_topology_on_strict top1_S2 top1_S2_topology" by (rule assms(1))
+        show "closedin_on top1_S2 top1_S2_topology D1" by (rule hD1_closed)
+        show "closedin_on top1_S2 top1_S2_topology D2" by (rule hD2_closed)
+        show "top1_simply_connected_on (top1_S2 - (D1 \<inter> D2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2)))"
+          by (rule hsc')
+        show "\<not> top1_separates_on top1_S2 top1_S2_topology D1" by (rule h1)
+        show "\<not> top1_separates_on top1_S2 top1_S2_topology D2" by (rule h2)
+      qed
+      thus False using hsep hD by simp
+    qed
+    \<comment> \<open>Continue bisecting the separating sub-arc. Eventually shrinks to a point.
+       S^2 minus a point is simply connected (\<cong> R^2). Contradiction.\<close>
+    \<comment> \<open>This requires an induction/limit argument with nested compact intervals.
+       The key steps: (1) bisect repeatedly to get separating sub-arcs of diameter \<rightarrow> 0,
+       (2) the intersection is a single point, (3) S^2 minus that point is path-connected,
+       (4) the connecting path avoids a small neighborhood, hence avoids the sub-arc.\<close>
+    show False sorry \<comment> \<open>Bisection + compactness argument. Needs metric structure.\<close>
+  qed
 qed
 
 (** from \<S>63 Theorem 63.4: Jordan Curve Theorem.
