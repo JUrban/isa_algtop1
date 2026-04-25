@@ -8223,7 +8223,53 @@ proof -
         using assms(2) by simp
       thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
     qed
-    have h\<sigma>_cont_C0: "continuous_on C0 \<sigma>" sorry
+    have h\<sigma>_cont_C0: "continuous_on C0 \<sigma>"
+    proof -
+      have h\<sigma>_cont_cust: "top1_continuous_map_on (top1_S2 - {c})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
+          UNIV (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+        using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+      show ?thesis unfolding continuous_on_open_invariant
+      proof (intro allI impI)
+        fix V :: "(real \<times> real) set" assume "open V"
+        have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+          using \<open>open V\<close> unfolding top1_open_sets_def by simp
+        hence "V \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          using product_topology_on_open_sets_real2 by (by100 metis)
+        hence hpre: "{x \<in> top1_S2 - {c}. \<sigma> x \<in> V} \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c})"
+          using h\<sigma>_cont_cust unfolding top1_continuous_map_on_def by (by100 blast)
+        then obtain W where hW: "W \<in> top1_S2_topology" "{x \<in> top1_S2 - {c}. \<sigma> x \<in> V} = (top1_S2 - {c}) \<inter> W"
+          unfolding subspace_topology_def by (by100 blast)
+        have hTS2eq: "top1_S2_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+          unfolding top1_S2_topology_def
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        then obtain W' where hW': "W' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)" "W = top1_S2 \<inter> W'"
+          using hW(1) unfolding subspace_topology_def by (by100 blast)
+        have "open W'" using hW'(1) unfolding top1_open_sets_def by simp
+        have "W' \<inter> C0 = \<sigma> -` V \<inter> C0"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> W' \<inter> C0"
+          hence "x \<in> C0" "x \<in> W'" by auto
+          have "x \<in> top1_S2 - {c}" using hC0_sub_S2c \<open>x \<in> C0\<close> by (by100 blast)
+          have "x \<in> top1_S2 \<inter> W'" using \<open>x \<in> W'\<close> \<open>x \<in> top1_S2 - {c}\<close> by (by100 blast)
+          hence "x \<in> W" using hW'(2) by simp
+          hence "x \<in> {x \<in> top1_S2 - {c}. \<sigma> x \<in> V}"
+            using \<open>x \<in> top1_S2 - {c}\<close> hW(2) by (by100 blast)
+          thus "x \<in> \<sigma> -` V \<inter> C0" using \<open>x \<in> C0\<close> by (by100 blast)
+        next
+          fix x assume "x \<in> \<sigma> -` V \<inter> C0"
+          hence "x \<in> C0" "\<sigma> x \<in> V" by auto
+          have "x \<in> top1_S2 - {c}" using hC0_sub_S2c \<open>x \<in> C0\<close> by (by100 blast)
+          hence "x \<in> (top1_S2 - {c}) \<inter> W"
+            using hW(2) \<open>\<sigma> x \<in> V\<close> \<open>x \<in> top1_S2 - {c}\<close> by (by100 blast)
+          hence "x \<in> W" by (by100 blast)
+          hence "x \<in> top1_S2 \<inter> W'" using hW'(2) by simp
+          thus "x \<in> W' \<inter> C0" using \<open>x \<in> C0\<close> by (by100 blast)
+        qed
+        thus "\<exists>T. open T \<and> T \<inter> C0 = \<sigma> -` V \<inter> C0" using \<open>open W'\<close> by (by100 blast)
+      qed
+    qed
     show ?thesis using connected_continuous_image[OF h\<sigma>_cont_C0 \<open>connected C0\<close>] by simp
   qed
   \<comment> \<open>\<sigma>(C0)\{\<sigma>(b)} connected by connected_open_delete_R2.\<close>
