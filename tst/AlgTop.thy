@@ -13169,6 +13169,40 @@ proof -
   show ?thesis using haX hbX hno_path by (by100 blast)
 qed
 
+lemma arc_in_S2_closed:
+  assumes "D \<subseteq> top1_S2"
+      and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
+  shows "closedin_on top1_S2 top1_S2_topology D"
+proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+    top1_S2_is_topology_on_strict assms(1)])
+  obtain h where hh: "top1_homeomorphism_on I_set I_top D
+      (subspace_topology top1_S2 top1_S2_topology D) h"
+    using assms(2) unfolding top1_is_arc_on_def by (by100 blast)
+  have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+    by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+  have "compact I_set" unfolding hI01 by (rule compact_Icc)
+  have hI_compact: "top1_compact_on I_set I_top"
+    unfolding top1_unit_interval_topology_def
+    using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+  have hcont: "top1_continuous_map_on I_set I_top D
+      (subspace_topology top1_S2 top1_S2_topology D) h"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTD: "is_topology_on D (subspace_topology top1_S2 top1_S2_topology D)"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have himg: "h ` I_set = D"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have "top1_compact_on (h ` I_set) (subspace_topology D
+      (subspace_topology top1_S2 top1_S2_topology D) (h ` I_set))"
+    by (rule top1_compact_on_continuous_image[OF hI_compact hTD hcont])
+  hence "top1_compact_on D (subspace_topology D
+      (subspace_topology top1_S2 top1_S2_topology D) D)"
+    using himg by simp
+  moreover have "subspace_topology D (subspace_topology top1_S2 top1_S2_topology D) D
+      = subspace_topology top1_S2 top1_S2_topology D"
+    by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+  ultimately show "top1_compact_on D (subspace_topology top1_S2 top1_S2_topology D)" by simp
+qed
+
 lemma arc_split_at_midpoint:
   assumes hT: "is_topology_on_strict X TX"
       and hH: "is_hausdorff_on X TX"
@@ -13851,9 +13885,9 @@ proof -
     have hD1_sub: "D1 \<subseteq> top1_S2" using assms(2) hD by (by100 blast)
     have hD2_sub: "D2 \<subseteq> top1_S2" using assms(2) hD by (by100 blast)
     have hD1_closed: "closedin_on top1_S2 top1_S2_topology D1"
-      sorry \<comment> \<open>D1 is an arc (compact image of [0,1]) in Hausdorff S^2, hence closed.\<close>
+      by (rule arc_in_S2_closed[OF hD1_sub hD1_arc])
     have hD2_closed: "closedin_on top1_S2 top1_S2_topology D2"
-      sorry \<comment> \<open>Same as D1.\<close>
+      by (rule arc_in_S2_closed[OF hD2_sub hD2_arc])
     \<comment> \<open>S^2\{d} simply connected.\<close>
     have hsc: "top1_simply_connected_on (top1_S2 - {d})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))"
