@@ -14881,9 +14881,23 @@ proof (rule ccontr)
   have hTV_eq: "subspace_topology ?X ?TX ?V = subspace_topology top1_S2 top1_S2_topology ?V"
     by (rule subspace_topology_trans[OF hV_sub_X])
   obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b \<alpha>"
-    using hab_D1 hTU_eq sorry \<comment> \<open>Path a \<rightarrow> b in U. Topology matches via subspace_topology_trans.\<close>
+  proof -
+    obtain f where "top1_is_path_on ?U (subspace_topology top1_S2 top1_S2_topology ?U) a b f"
+      using hab_D1 by blast
+    hence "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b f" using hTU_eq by simp
+    thus ?thesis using that by blast
+  qed
   obtain \<beta> where h\<beta>: "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a \<beta>"
-    using hab_D2 hTV_eq sorry \<comment> \<open>Get path b \<rightarrow> a in V (reverse of hab_D2, same topology).\<close>
+  proof -
+    obtain f where hf: "top1_is_path_on ?V (subspace_topology top1_S2 top1_S2_topology ?V) a b f"
+      using hab_D2 by blast
+    \<comment> \<open>Reverse: path b \<rightarrow> a from path a \<rightarrow> b.\<close>
+    have "top1_is_path_on ?V (subspace_topology top1_S2 top1_S2_topology ?V) b a (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_path[OF hf])
+    hence "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a (top1_path_reverse f)"
+      using hTV_eq by simp
+    thus ?thesis using that by blast
+  qed
   \<comment> \<open>Step 3: Apply Theorem 63.1(a).\<close>
   have hX_TX: "is_topology_on ?X ?TX"
     by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
@@ -14914,7 +14928,17 @@ proof (rule ccontr)
   proof -
     have ha_X: "a \<in> ?X" using hab hD_inter by (by100 blast)
     have hab_loop: "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)"
-      sorry \<comment> \<open>Compose \<alpha> and \<beta>: path a\<rightarrow>b in U \<subseteq> X, then b\<rightarrow>a in V \<subseteq> X.\<close>
+    proof -
+      have hTX_strict: "is_topology_on_strict ?X ?TX"
+        by (rule subspace_topology_is_strict[OF hT]) (by100 blast)
+      have h\<alpha>_X: "top1_is_path_on ?X ?TX a b \<alpha>"
+        by (rule path_in_subspace_imp_path_in_ambient[OF hTX_strict hU_sub_X h\<alpha>])
+      have h\<beta>_X: "top1_is_path_on ?X ?TX b a \<beta>"
+        by (rule path_in_subspace_imp_path_in_ambient[OF hTX_strict hV_sub_X h\<beta>])
+      have hprod: "top1_is_path_on ?X ?TX a a (top1_path_product \<alpha> \<beta>)"
+        by (rule top1_path_product_is_path[OF hX_TX h\<alpha>_X h\<beta>_X])
+      thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+    qed
     show ?thesis using hsc ha_X hab_loop
       unfolding top1_simply_connected_on_def by (by100 blast)
   qed
