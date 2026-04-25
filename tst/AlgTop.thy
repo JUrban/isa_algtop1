@@ -13025,9 +13025,48 @@ proof -
     have hC'_sub_S2: "C' \<subseteq> top1_S2" using hC'_sub by (by100 blast)
     \<comment> \<open>Step 1c: C' is a simple closed curve on S^2.\<close>
     have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
-      sorry \<comment> \<open>Homeomorphic image of simple closed curve is simple closed curve.
-         \<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is a homeomorphism, C is a simple closed curve in R^2,
-         hence C' = \<sigma>^{-1}(C) is a simple closed curve in S^2\{N} \<subseteq> S^2.\<close>
+    proof -
+      \<comment> \<open>From assumption: f: S^1 \<rightarrow> R^2 continuous injective with f(S^1) = C.\<close>
+      obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f"
+          and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
+        using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      \<comment> \<open>\<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is the inverse of homeomorphism \<sigma>.\<close>
+      define \<sigma>inv where "\<sigma>inv = inv_into (top1_S2 - {north_pole}) \<sigma>"
+      have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+        using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+      have h\<sigma>inv_inj: "inj_on \<sigma>inv UNIV"
+      proof -
+        have "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+          unfolding \<sigma>inv_def by (rule bij_betw_inv_into)
+        thus ?thesis unfolding bij_betw_def by (by100 blast)
+      qed
+      \<comment> \<open>g = \<sigma>^{-1} \<circ> f: S^1 \<rightarrow> S^2 continuous injective, g(S^1) = C'.\<close>
+      define g where "g = \<sigma>inv \<circ> f"
+      have hg_cont_S2N: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) g"
+        sorry \<comment> \<open>Composition of continuous maps: f then \<sigma>^{-1}.\<close>
+      \<comment> \<open>Lift to S^2: inclusion S^2\{N} \<hookrightarrow> S^2 is continuous.\<close>
+      have hg_cont_S2: "top1_continuous_map_on top1_S1 top1_S1_topology
+          top1_S2 top1_S2_topology g"
+        sorry \<comment> \<open>Compose g: S^1 \<rightarrow> S^2\{N} with inclusion S^2\{N} \<hookrightarrow> S^2.\<close>
+      have hg_inj: "inj_on g top1_S1"
+        unfolding g_def comp_def
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1"
+            and heq: "\<sigma>inv (f x) = \<sigma>inv (f y)"
+        have "f x \<in> UNIV" by simp
+        have "f y \<in> UNIV" by simp
+        have "f x = f y" using h\<sigma>inv_inj heq unfolding inj_on_def by (by100 blast)
+        thus "x = y" using hf_inj hx hy unfolding inj_on_def by (by100 blast)
+      qed
+      have hg_img: "g ` top1_S1 = C'"
+        unfolding g_def C'_def \<sigma>inv_def image_comp[symmetric] using hf_img by simp
+      show ?thesis unfolding top1_simple_closed_curve_on_def
+        using hg_cont_S2 hg_inj hg_img by (by100 blast)
+    qed
     \<comment> \<open>Step 1d: By Theorem 61.3, S^2\C' is not connected.\<close>
     have hS2_C'_sep: "top1_separates_on top1_S2 top1_S2_topology C'"
       by (rule Theorem_61_3_JordanSeparation_S2[OF top1_S2_is_topology_on_strict hC'_scc])
