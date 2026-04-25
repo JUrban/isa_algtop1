@@ -7874,6 +7874,40 @@ proof -
 qed
 
 \<comment> \<open>Connected open delete for R^2: removing one point from a connected open set preserves connectivity.\<close>
+lemma open_nonempty_R2_has_two_points:
+  fixes V :: "(real \<times> real) set" and p :: "real \<times> real"
+  assumes "open V" "p \<in> V"
+  shows "\<exists>q \<in> V. q \<noteq> p"
+proof -
+  \<comment> \<open>V open in R^2 product topology. Get basic open U1\<times>U2 around p.\<close>
+  obtain U1 U2 :: "real set" where "open U1" "open U2" "fst p \<in> U1" "snd p \<in> U2"
+      and hU12: "U1 \<times> U2 \<subseteq> V"
+  proof -
+    from open_prod_elim[OF assms(1) assms(2)]
+    obtain A B where "open A" "open B" "p \<in> A \<times> B" "A \<times> B \<subseteq> V" by (by100 blast)
+    hence "fst p \<in> A" "snd p \<in> B" by auto
+    thus ?thesis using that \<open>open A\<close> \<open>open B\<close> \<open>A \<times> B \<subseteq> V\<close> by (by100 blast)
+  qed
+  \<comment> \<open>U1 open real set containing fst p. It contains a point \<noteq> fst p.\<close>
+  have "\<exists>x \<in> U1. x \<noteq> fst p"
+  proof -
+    \<comment> \<open>fst p + 1 or fst p - 1 might not be in U1 but {fst p - 1 <..< fst p + 1} is a nhd.\<close>
+    \<comment> \<open>Use: open U1 means it's a union of open intervals. fst p \<in> some interval.\<close>
+    have "\<exists>a b. a < fst p \<and> fst p < b \<and> {a<..<b} \<subseteq> U1"
+      sorry \<comment> \<open>Standard: open real set contains interval around each point.\<close>
+    then obtain a b where "a < fst p" "fst p < b" "{a<..<b} \<subseteq> U1" by blast
+    have "(fst p + b) / 2 \<in> {a<..<b}" using \<open>a < fst p\<close> \<open>fst p < b\<close> by simp
+    moreover have "(fst p + b) / 2 \<noteq> fst p" using \<open>fst p < b\<close> by simp
+    ultimately show ?thesis using \<open>{a<..<b} \<subseteq> U1\<close> by (by100 blast)
+  qed
+  then obtain x where "x \<in> U1" "x \<noteq> fst p" by blast
+  define q where "q = (x, snd p)"
+  have "q \<in> U1 \<times> U2" unfolding q_def using \<open>x \<in> U1\<close> \<open>snd p \<in> U2\<close> by simp
+  hence "q \<in> V" using hU12 by (by100 blast)
+  moreover have "q \<noteq> p" unfolding q_def using \<open>x \<noteq> fst p\<close> by (cases p) simp
+  ultimately show ?thesis by (by100 blast)
+qed
+
 lemma connected_open_delete_R2:
   fixes U :: "(real \<times> real) set" and p :: "real \<times> real"
   assumes "open U" "connected U"
