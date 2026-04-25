@@ -13881,7 +13881,44 @@ proof
               unfolding top1_evenly_covered_on_def
             proof (intro conjI exI[of _ ?\<V>V])
               show "openin_on X TX V" by (rule assms(3))
-              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn"
+              proof
+                fix Sn assume "Sn \<in> ?\<V>V"
+                then obtain k where hSn: "Sn = vsheet k" by (by100 blast)
+                show "openin_on E TE Sn" unfolding openin_on_def
+                proof (intro conjI)
+                  show "Sn \<subseteq> E" unfolding hSn vsheet_def by (by100 blast)
+                  show "Sn \<in> TE" unfolding TE_def hSn
+                  proof (intro CollectI conjI allI)
+                    show "vsheet k \<subseteq> E" unfolding vsheet_def by (by100 blast)
+                    fix m :: int
+                    \<comment> \<open>Even slice: {x \<in> U | (x,2m) \<in> vsheet k} = A if m=k+1, B if m=k, else {}.\<close>
+                    have heven: "{x \<in> U. (x, 2*m) \<in> vsheet k} =
+                        (if m = k+1 then A else if m = k then B else {})"
+                      unfolding vsheet_def E_def using hAB_UV hAB_disj by auto
+                    show "{x \<in> U. (x, 2*m) \<in> vsheet k} \<in> TX"
+                      unfolding heven using hA_open_TX hB_open_TX
+                        assms(1) unfolding is_topology_on_def by simp
+                    \<comment> \<open>Odd slice: at m=k gives V, else A or B or {}.\<close>
+                    have hodd_A: "{x \<in> A. (x, 2*m+2) \<in> vsheet k} = (if m = k then A else {})"
+                      unfolding vsheet_def E_def using hAB_UV hAB_disj by auto
+                    have hodd_B: "{x \<in> B. (x, 2*m) \<in> vsheet k} = (if m = k then B else {})"
+                      unfolding vsheet_def E_def using hAB_UV hAB_disj by auto
+                    have hodd_VU: "{x \<in> V-U. (x, 2*m+1) \<in> vsheet k} = (if m = k then V-U else {})"
+                      unfolding vsheet_def E_def by auto
+                    have hodd_eq: "{x \<in> A. (x, 2*m+2) \<in> vsheet k} \<union>
+                        {x \<in> B. (x, 2*m) \<in> vsheet k} \<union>
+                        {x \<in> V-U. (x, 2*m+1) \<in> vsheet k} =
+                        (if m = k then V else {})"
+                      using hodd_A hodd_B hodd_VU hAB_UV by auto
+                    show "{x \<in> A. (x, 2*m+2) \<in> vsheet k} \<union>
+                        {x \<in> B. (x, 2*m) \<in> vsheet k} \<union>
+                        {x \<in> V-U. (x, 2*m+1) \<in> vsheet k} \<in> TX"
+                      unfolding hodd_eq using hV_open_TX
+                        assms(1) unfolding is_topology_on_def by simp
+                  qed
+                qed
+              qed
               show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
               proof (intro ballI impI)
                 fix S1 S2 assume "S1 \<in> ?\<V>V" "S2 \<in> ?\<V>V" "S1 \<noteq> S2"
