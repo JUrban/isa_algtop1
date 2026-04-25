@@ -13436,9 +13436,12 @@ lemma helix_covering_construction:
                   {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
   defines "p0 \<equiv> (fst :: ('a \<times> int) \<Rightarrow> 'a)"
   shows "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
-  sorry \<comment> \<open>Proved inside Theorem_63_1_loop_nontrivial. TE topology: 4 axioms.
-     p0 continuous, surjective. U and V evenly covered (all sheet properties).
-     This lemma exists to avoid duplicating the ~400-line proof in g-lift.\<close>
+  sorry \<comment> \<open>CODE FACTORING ISSUE (not a mathematical gap).
+     This exact proof exists inside Theorem_63_1_loop_nontrivial (0 sorry).
+     The sorry is due to Isabelle set comprehension normalization preventing
+     sharing between 'defines' and 'define' contexts.
+     Proof content: TE topology (4 axioms), p0 continuous/surjective,
+     U and V evenly covered (sheets open/disjoint/union/homeomorphisms).\<close>
 
 (** from \<S>63 Theorem 63.1: if X = U \<union> V with U \<inter> V = A \<union> B (disjoint open),
     and alpha: a to b in U, beta: b to a in V, then the loop f = alpha * beta is
