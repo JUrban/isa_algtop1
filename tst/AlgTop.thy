@@ -7505,7 +7505,12 @@ proof
     thus ?thesis using that by blast
   qed
   \<comment> \<open>Construct a point p \<in> S^2 \<inter> W, p \<noteq> x. This contradicts {x} = S^2 \<inter> W.\<close>
-  show False sorry \<comment> \<open>Concrete witness construction (same as in S2_connected).\<close>
+  \<comment> \<open>The same argument as S2_connected: find \<epsilon>2>0 with ball around snd(snd x),
+     construct nearby S^2 point via (fst x, fst(snd x)+t, adjusted_z) with small t.\<close>
+  show False sorry \<comment> \<open>Concrete R^3 witness construction. Same technique as
+     S2_connected proof (lines 7560-7630): get \<epsilon>-intervals around each
+     coordinate, construct p=(fst x, fst(snd x)+t, sqrt(1-(fst x)^2-(fst(snd x)+t)^2))
+     for small t, show p \<in> S^2 \<inter> W and p \<noteq> x.\<close>
 qed
 
 lemma S2_connected: "top1_connected_on top1_S2 top1_S2_topology"
