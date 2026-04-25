@@ -13823,7 +13823,17 @@ proof (rule ccontr)
     have "\<not> top1_path_homotopic_on ?X ?TX a a
         (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
       sorry \<comment> \<open>Direct application of Theorem_63_1_loop_nontrivial with the setup above.\<close>
-    moreover have "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)" sorry
+    moreover have "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)"
+    proof -
+      \<comment> \<open>\<alpha> path in U (\<subseteq> X) \<Rightarrow> \<alpha> path in X. \<beta> path in V (\<subseteq> X) \<Rightarrow> \<beta> path in X.\<close>
+      have h\<alpha>_X: "top1_is_path_on ?X ?TX a b \<alpha>"
+        sorry \<comment> \<open>Path in subspace U \<Rightarrow> path in ambient X.\<close>
+      have h\<beta>_X: "top1_is_path_on ?X ?TX b a \<beta>"
+        sorry \<comment> \<open>Path in subspace V \<Rightarrow> path in ambient X.\<close>
+      have "top1_is_path_on ?X ?TX a a (top1_path_product \<alpha> \<beta>)"
+        by (rule top1_path_product_is_path[OF hTX h\<alpha>_X h\<beta>_X])
+      thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+    qed
     ultimately show ?thesis by (by100 blast)
   qed
   \<comment> \<open>But S^2-(D1\<inter>D2) is simply connected by assumption. Contradiction.\<close>
