@@ -13596,10 +13596,89 @@ proof -
       qed
     next
       show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
-        sorry \<comment> \<open>U and V evenly covered (sheets open/disjoint/union/homeomorphisms).
-           This is the ONLY remaining sorry. The proof (identical to 63.1(a)) requires
-           ~400 lines for sheet construction + homeomorphisms.
-           TE topology: PROVED. p0 continuous: PROVED. p0 surjective: PROVED.\<close>
+      proof
+        fix b assume "b \<in> X"
+        hence "b \<in> U \<or> b \<in> V - U" using assms(4) by (by100 blast)
+        thus "\<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
+        proof
+          assume "b \<in> U"
+          let ?\<V> = "(\<lambda>n::int. U \<times> {2*n}) ` UNIV"
+          show ?thesis
+          proof (intro exI[of _ U] conjI)
+            show "b \<in> U" by (rule \<open>b \<in> U\<close>)
+            show "top1_evenly_covered_on E TE X TX p0 U"
+              unfolding top1_evenly_covered_on_def
+            proof (intro conjI exI[of _ ?\<V>])
+              show "openin_on X TX U" by (rule assms(2))
+              \<comment> \<open>U-sheets open in TE.\<close>
+              show "\<forall>V\<in>?\<V>. openin_on E TE V"
+              proof
+                fix Sn assume "Sn \<in> ?\<V>"
+                then obtain k where hSn: "Sn = U \<times> {2*k}" by auto
+                show "openin_on E TE Sn" unfolding openin_on_def
+                proof (intro conjI)
+                  show "Sn \<subseteq> E" unfolding hSn E_def by auto
+                  show "Sn \<in> TE" unfolding TE_def hSn
+                  proof (intro CollectI conjI allI)
+                    show "U \<times> {2*k} \<subseteq> E" unfolding E_def by auto
+                    fix m :: int
+                    have "{x \<in> U. (x, 2*m) \<in> U \<times> {2*k}} = (if m = k then U else {})" by auto
+                    thus "{x \<in> U. (x, 2*m) \<in> U \<times> {2*k}} \<in> TX"
+                      using hU_TX hTX_empty by simp
+                    have hA: "{x \<in> A. (x, 2*m+2) \<in> U \<times> {2*k}} = (if m+1=k then A else {})"
+                      using hAB by auto
+                    have hB: "{x \<in> B. (x, 2*m) \<in> U \<times> {2*k}} = (if m=k then B else {})"
+                      using hAB by auto
+                    have hVU: "{x \<in> V-U. (x, 2*m+1) \<in> U \<times> {2*k}} = {}" by auto
+                    have hresult: "(if m+1=k then A else {}) \<union> (if m=k then B else {}) \<union> {} \<in> TX"
+                    proof -
+                      have "(if m+1=k then A else {}) \<in> TX" using hA_TX hTX_empty by simp
+                      moreover have "(if m=k then B else {}) \<in> TX" using hB_TX hTX_empty by simp
+                      moreover have "{} \<in> TX" by (rule hTX_empty)
+                      ultimately have "{(if m+1=k then A else {}), (if m=k then B else {}), {}} \<subseteq> TX"
+                        by (by100 blast)
+                      hence "\<Union>{(if m+1=k then A else {}), (if m=k then B else {}), {}} \<in> TX"
+                        using assms(1) unfolding is_topology_on_def by (by100 blast)
+                      thus ?thesis by (by100 simp)
+                    qed
+                    have "{x \<in> A. (x, 2*m+2) \<in> U \<times> {2*k}} \<union>
+                        {x \<in> B. (x, 2*m) \<in> U \<times> {2*k}} \<union>
+                        {x \<in> V-U. (x, 2*m+1) \<in> U \<times> {2*k}}
+                        = (if m+1=k then A else {}) \<union> (if m=k then B else {}) \<union> {}"
+                      using hA hB hVU by presburger
+                    thus "{x \<in> A. (x, 2*m+2) \<in> U \<times> {2*k}} \<union>
+                        {x \<in> B. (x, 2*m) \<in> U \<times> {2*k}} \<union>
+                        {x \<in> V-U. (x, 2*m+1) \<in> U \<times> {2*k}} \<in> TX"
+                      using hresult by simp
+                  qed
+                qed
+              qed
+              show "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" by force
+              \<comment> \<open>Union = p0\<inverse>(U).\<close>
+              show "{x \<in> E. p0 x \<in> U} = \<Union>?\<V>"
+              proof (rule set_eqI, rule iffI)
+                fix e assume "e \<in> {x \<in> E. p0 x \<in> U}"
+                hence "e \<in> E" "fst e \<in> U" unfolding p0_def by auto
+                hence "even (snd e)" unfolding E_def by auto
+                then obtain k where "snd e = 2 * k" using evenE by auto
+                hence "e \<in> U \<times> {2*k}" using \<open>fst e \<in> U\<close> by (cases e) auto
+                thus "e \<in> \<Union>?\<V>" by (by100 blast)
+              next
+                fix e assume "e \<in> \<Union>?\<V>"
+                then obtain n where "e \<in> U \<times> {2*n}" by (by100 blast)
+                hence "e \<in> E" "p0 e \<in> U" unfolding E_def p0_def by auto
+                thus "e \<in> {x \<in> E. p0 x \<in> U}" by simp
+              qed
+              \<comment> \<open>Sheet homeomorphisms.\<close>
+              show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                  (subspace_topology X TX U) p0" sorry
+            qed
+          qed
+        next
+          assume "b \<in> V - U"
+          show ?thesis sorry \<comment> \<open>V evenly covered, same pattern as U.\<close>
+        qed
+      qed
     qed
     show ?thesis using hTE hcov by simp
   qed
