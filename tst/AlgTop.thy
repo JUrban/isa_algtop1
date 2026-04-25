@@ -13816,10 +13816,58 @@ proof -
               unfolding top1_evenly_covered_on_def
             proof (intro conjI exI[of _ ?\<V>V])
               show "openin_on X TX V" by (rule assms(3))
-              show "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
+              show hVsheets_open: "\<forall>Vn\<in>?\<V>V. openin_on E TE Vn" sorry
               show "\<forall>Vn\<in>?\<V>V. \<forall>Vn'\<in>?\<V>V. Vn \<noteq> Vn' \<longrightarrow> Vn \<inter> Vn' = {}"
-                unfolding vsheet_def using assms(6) hAB sorry
-              show "{x \<in> E. p0 x \<in> V} = \<Union>?\<V>V" sorry
+              proof (intro ballI impI)
+                fix S1 S2 assume "S1 \<in> ?\<V>V" "S2 \<in> ?\<V>V" "S1 \<noteq> S2"
+                then obtain n1 n2 where hS: "S1 = vsheet n1" "S2 = vsheet n2" by (by100 blast)
+                have "n1 \<noteq> n2" using \<open>S1 \<noteq> S2\<close> hS by auto
+                show "S1 \<inter> S2 = {}"
+                proof (rule ccontr)
+                  assume "S1 \<inter> S2 \<noteq> {}"
+                  then obtain e where "e \<in> S1" "e \<in> S2" by (by100 blast)
+                  hence "fst e \<in> A \<and> snd e = 2*(n1+1) \<or> fst e \<in> B \<and> snd e = 2*n1 \<or>
+                      fst e \<in> V-U \<and> snd e = 2*n1+1"
+                    "fst e \<in> A \<and> snd e = 2*(n2+1) \<or> fst e \<in> B \<and> snd e = 2*n2 \<or>
+                      fst e \<in> V-U \<and> snd e = 2*n2+1"
+                    unfolding hS vsheet_def by auto
+                  thus False using \<open>n1 \<noteq> n2\<close> assms(6) hAB by auto
+                qed
+              qed
+              show "{x \<in> E. p0 x \<in> V} = \<Union>?\<V>V"
+              proof (rule set_eqI, rule iffI)
+                fix e assume "e \<in> {x \<in> E. p0 x \<in> V}"
+                hence he: "e \<in> E" "fst e \<in> V" unfolding p0_def by auto
+                have "fst e \<in> A \<or> fst e \<in> B \<or> fst e \<in> V - U" using he(2) hAB by (by100 blast)
+                thus "e \<in> \<Union>?\<V>V"
+                proof (elim disjE)
+                  assume "fst e \<in> A"
+                  hence "even (snd e)" using he(1) unfolding E_def using hAB by auto
+                  then obtain k where "snd e = 2 * k" using evenE by auto
+                  have "e \<in> vsheet (k - 1)" unfolding vsheet_def
+                    using he \<open>fst e \<in> A\<close> \<open>snd e = 2*k\<close> by (cases e) auto
+                  thus ?thesis by (by100 blast)
+                next
+                  assume "fst e \<in> B"
+                  hence "even (snd e)" using he(1) unfolding E_def using hAB by auto
+                  then obtain k where "snd e = 2 * k" using evenE by auto
+                  have "e \<in> vsheet k" unfolding vsheet_def
+                    using he \<open>fst e \<in> B\<close> \<open>snd e = 2*k\<close> by (cases e) auto
+                  thus ?thesis by (by100 blast)
+                next
+                  assume "fst e \<in> V - U"
+                  hence "odd (snd e)" using he(1) unfolding E_def by auto
+                  then obtain k where "snd e = 2 * k + 1" using oddE by auto
+                  have "e \<in> vsheet k" unfolding vsheet_def
+                    using he \<open>fst e \<in> V - U\<close> \<open>snd e = 2*k+1\<close> by (cases e) auto
+                  thus ?thesis by (by100 blast)
+                qed
+              next
+                fix e assume "e \<in> \<Union>?\<V>V"
+                then obtain n where "e \<in> vsheet n" by (by100 blast)
+                hence "e \<in> E" "fst e \<in> V" unfolding vsheet_def by auto
+                thus "e \<in> {x \<in> E. p0 x \<in> V}" unfolding p0_def by simp
+              qed
               show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
                   (subspace_topology X TX V) p0" sorry
             qed
