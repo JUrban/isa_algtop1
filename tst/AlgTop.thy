@@ -14530,7 +14530,41 @@ proof -
            So \<exists> point \<noteq> N in W \<inter> (S^2\C') = W \<inter> (S^2\C')\{N}.\<close>
         have hN_notin_C': "north_pole \<notin> C'" using hC'_sub by (by100 blast)
         have hC'_closed: "closedin_on top1_S2 top1_S2_topology C'"
-          sorry \<comment> \<open>C' compact (continuous image of compact C) in Hausdorff S^2 \<Rightarrow> closed.\<close>
+        proof -
+          \<comment> \<open>C' = \<sigma>inv(C). \<sigma>inv continuous, C compact \<Rightarrow> C' compact \<Rightarrow> closed in Hausdorff S^2.\<close>
+          \<comment> \<open>Actually C' \<subseteq> S^2\{N} \<subseteq> S^2. C' compact in S^2\{N} subspace.
+             Compact in Hausdorff \<Rightarrow> closed in Hausdorff \<Rightarrow> closed in S^2.\<close>
+          \<comment> \<open>C compact (continuous image of S^1 which is compact).
+             \<sigma>inv continuous from R^2 to S^2\{N}. C' = \<sigma>inv(C) compact.\<close>
+          have "C \<subseteq> UNIV" by simp
+          have hC_compact_std: "compact C"
+            sorry \<comment> \<open>C = image of compact S^1 under continuous f. Standard.\<close>
+          have hC'_compact_std: "compact C'"
+            sorry \<comment> \<open>C' = continuous image of compact C. Needs \<sigma>inv continuous (standard).\<close>
+          have "closed C'" using compact_imp_closed[OF hC'_compact_std] .
+          \<comment> \<open>closed in R^3 + C' \<subseteq> S^2 \<Rightarrow> closed in S^2 (subspace).\<close>
+          show ?thesis unfolding closedin_on_def
+          proof (intro conjI)
+            show "C' \<subseteq> top1_S2" by (rule hC'_sub_S2)
+            show "top1_S2 - C' \<in> top1_S2_topology"
+            proof -
+              have "open (- C')" using open_Compl[OF \<open>closed C'\<close>] .
+              have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+              have "- C' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                using \<open>open (- C')\<close> unfolding top1_open_sets_def by simp
+              have "top1_S2 \<inter> (- C') = top1_S2 - C'" by (by100 blast)
+              have "top1_S2 - C' \<in> subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                using \<open>- C' \<in> top1_open_sets\<close> \<open>top1_S2 \<inter> (- C') = top1_S2 - C'\<close>
+                unfolding subspace_topology_def by (by100 blast)
+              thus ?thesis using hR3eq by simp
+            qed
+          qed
+        qed
         have hS2C'_open: "top1_S2 - C' \<in> top1_S2_topology"
         proof -
           have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
