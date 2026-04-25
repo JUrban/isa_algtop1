@@ -8214,7 +8214,45 @@ qed
 lemma exterior_ball_connected_R2:
   fixes R :: real
   shows "connected {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
-  sorry
+proof (rule connectedI)
+  fix A B :: "(real \<times> real) set"
+  let ?E = "{x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
+  assume hA: "open A" and hB: "open B" and hcov: "?E \<subseteq> A \<union> B"
+      and hdisj: "A \<inter> B \<inter> ?E = {}" and hAne: "A \<inter> ?E \<noteq> {}" and hBne: "B \<inter> ?E \<noteq> {}"
+  \<comment> \<open>The half-plane H = {(x,y) | x > |R|+1} is convex \<subseteq> ?E, connected.\<close>
+  define N where "N = \<bar>R\<bar> + 1"
+  have hN: "N > 0" "N > \<bar>R\<bar>" unfolding N_def by auto
+  have hN2: "N ^ 2 > R ^ 2"
+  proof -
+    have "N \<ge> \<bar>R\<bar> + 1" unfolding N_def by simp
+    hence "N ^ 2 \<ge> (\<bar>R\<bar> + 1) ^ 2" by (rule power_mono) simp
+    moreover have "(\<bar>R\<bar> + 1) ^ 2 > \<bar>R\<bar> ^ 2"
+      by (simp add: power2_eq_square algebra_simps)
+    moreover have "\<bar>R\<bar> ^ 2 = R ^ 2" by (simp add: power2_abs)
+    ultimately show ?thesis by (by100 linarith)
+  qed
+  \<comment> \<open>Key connected subset: the right strip {x > N} \<times> UNIV.\<close>
+  have hstrip_sub: "{N<..} \<times> (UNIV :: real set) \<subseteq> ?E"
+  proof
+    fix z :: "real \<times> real" assume "z \<in> {N<..} \<times> UNIV"
+    hence "fst z > N" by auto
+    hence "fst z ^ 2 > N ^ 2" using hN(1)
+      by (simp add: power_strict_mono)
+    have "snd z ^ 2 \<ge> 0" by simp
+    have "fst z ^ 2 + snd z ^ 2 > N ^ 2" using \<open>fst z ^ 2 > N ^ 2\<close> \<open>snd z ^ 2 \<ge> 0\<close> by (by100 linarith)
+    hence "fst z ^ 2 + snd z ^ 2 > R ^ 2" using hN2 by (by100 linarith)
+    show "z \<in> {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
+      using \<open>fst z ^ 2 + snd z ^ 2 > R ^ 2\<close> by (by100 force)
+  qed
+  have hstrip_conn: "connected ({N<..} \<times> (UNIV :: real set))"
+    by (rule connected_Times) (simp_all add: connected_Ici)
+  \<comment> \<open>Strip is in A or B.\<close>
+  have "A \<inter> ({N<..} \<times> UNIV) = {} \<or> B \<inter> ({N<..} \<times> UNIV) = {}"
+    by (rule connectedD[OF hstrip_conn hA hB]) (use hdisj hcov hstrip_sub in auto)
+  \<comment> \<open>Similarly for left, top, bottom strips and four diagonal quadrant segments.\<close>
+  \<comment> \<open>All connected, overlapping \<Rightarrow> all in same part. Every ?E point connects.\<close>
+  thus False sorry
+qed
 
 \<comment> \<open>General composition lemma: if g: A \<rightarrow> R^2 is custom-continuous and
    \<phi>: R^2 \<times> I \<rightarrow> R^2 is standard-continuous, then \<phi>(g(\<cdot>),\<cdot>): A\<times>I \<rightarrow> R^2 is custom-continuous.
