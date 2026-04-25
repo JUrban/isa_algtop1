@@ -7927,6 +7927,13 @@ proof -
   ultimately show ?thesis by (by100 blast)
 qed
 
+lemma open_rectangle_delete_connected_R2:
+  fixes U1 U2 :: "real set" and p1 p2 :: real
+  assumes "open U1" "open U2" "p1 \<in> U1" "p2 \<in> U2"
+  shows "connected (U1 \<times> U2 - {(p1, p2)})"
+  sorry
+
+
 lemma connected_open_delete_R2:
   fixes U :: "(real \<times> real) set" and p :: "real \<times> real"
   assumes "open U" "connected U"
