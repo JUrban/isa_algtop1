@@ -7927,6 +7927,131 @@ proof -
   ultimately show ?thesis by (by100 blast)
 qed
 
+lemma interval_delete_connected_R2:
+  fixes a1 b1 a2 b2 p1 p2 :: real
+  assumes "a1 < p1" "p1 < b1" "a2 < p2" "p2 < b2"
+  shows "connected ({a1<..<b1} \<times> {a2<..<b2} - {(p1, p2)})"
+proof (rule connectedI)
+  fix A B :: "(real \<times> real) set"
+  assume hA: "open A" and hB: "open B"
+      and hcov: "{a1<..<b1} \<times> {a2<..<b2} - {(p1,p2)} \<subseteq> A \<union> B"
+      and hdisj: "A \<inter> B \<inter> ({a1<..<b1} \<times> {a2<..<b2} - {(p1,p2)}) = {}"
+      and hAne: "A \<inter> ({a1<..<b1} \<times> {a2<..<b2} - {(p1,p2)}) \<noteq> {}"
+      and hBne: "B \<inter> ({a1<..<b1} \<times> {a2<..<b2} - {(p1,p2)}) \<noteq> {}"
+  let ?I1 = "{a1<..<b1}" and ?I2 = "{a2<..<b2}" and ?R = "{a1<..<b1} \<times> {a2<..<b2} - {(p1,p2)}"
+  define y0 where "y0 = (p2 + b2) / 2"
+  have hy0: "y0 \<in> ?I2" "y0 \<noteq> p2" unfolding y0_def using assms by auto
+  have hL2_conn: "connected (?I1 \<times> {y0})"
+    by (rule connected_Times[OF connected_Ioo connected_sing])
+  have hL2_sub: "?I1 \<times> {y0} \<subseteq> ?R" using hy0 by auto
+  have "A \<inter> (?I1 \<times> {y0}) = {} \<or> B \<inter> (?I1 \<times> {y0}) = {}"
+    by (rule connectedD[OF hL2_conn hA hB]) (use hdisj hcov hL2_sub in auto)
+  \<comment> \<open>L2 in A or B. WLOG in A (B case symmetric). Then all of ?R in A.\<close>
+  moreover {
+    assume "B \<inter> (?I1 \<times> {y0}) = {}"
+    hence hL2A: "?I1 \<times> {y0} \<subseteq> A" using hcov hL2_sub by auto
+    define x0 where "x0 = (p1 + b1) / 2"
+    have hx0: "x0 \<in> ?I1" "x0 \<noteq> p1" unfolding x0_def using assms by auto
+    \<comment> \<open>Vertical line {x0}\<times>I2: connected, in ?R, contains (x0,y0)\<in>A.\<close>
+    have "{x0} \<times> ?I2 \<subseteq> A"
+    proof -
+      have "connected ({x0} \<times> ?I2)" by (rule connected_Times[OF connected_sing connected_Ioo])
+      have "{x0} \<times> ?I2 \<subseteq> ?R" using hx0 by auto
+      have "(x0, y0) \<in> A" using hL2A hx0(1) hy0(1) by auto
+      hence "A \<inter> ({x0} \<times> ?I2) \<noteq> {}" using hy0(1) by auto
+      have "A \<inter> ({x0} \<times> ?I2) = {} \<or> B \<inter> ({x0} \<times> ?I2) = {}"
+        by (rule connectedD[OF \<open>connected ({x0} \<times> ?I2)\<close> hA hB])
+           (use hdisj hcov \<open>{x0} \<times> ?I2 \<subseteq> ?R\<close> in auto)
+      hence "B \<inter> ({x0} \<times> ?I2) = {}" using \<open>A \<inter> ({x0} \<times> ?I2) \<noteq> {}\<close> by auto
+      thus ?thesis using hcov \<open>{x0} \<times> ?I2 \<subseteq> ?R\<close> by auto
+    qed
+    \<comment> \<open>Every (x,y)\<in>?R is in A.\<close>
+    have "?R \<subseteq> A"
+    proof
+      fix xy assume "xy \<in> ?R"
+      obtain x y where [simp]: "xy = (x,y)" and hx: "x \<in> ?I1" and hy: "y \<in> ?I2"
+          and hne: "(x,y) \<noteq> (p1,p2)" using \<open>xy \<in> ?R\<close> by (by100 force)
+      show "xy \<in> A"
+      proof (cases "x = p1")
+        case False
+        have "connected ({x} \<times> ?I2)" by (rule connected_Times[OF connected_sing connected_Ioo])
+        have "{x} \<times> ?I2 \<subseteq> ?R" using False hx by auto
+        have "(x, y0) \<in> A" using hL2A hx hy0(1) by auto
+        hence "A \<inter> ({x} \<times> ?I2) \<noteq> {}" using hy0(1) by auto
+        have "A \<inter> ({x} \<times> ?I2) = {} \<or> B \<inter> ({x} \<times> ?I2) = {}"
+          by (rule connectedD[OF \<open>connected ({x} \<times> ?I2)\<close> hA hB])
+             (use hdisj hcov \<open>{x} \<times> ?I2 \<subseteq> ?R\<close> in auto)
+        hence "{x} \<times> ?I2 \<subseteq> A"
+          using \<open>A \<inter> ({x} \<times> ?I2) \<noteq> {}\<close> hcov \<open>{x} \<times> ?I2 \<subseteq> ?R\<close> by auto
+        thus ?thesis using hy by auto
+      next
+        case True hence "y \<noteq> p2" using hne by auto
+        have "connected (?I1 \<times> {y})" by (rule connected_Times[OF connected_Ioo connected_sing])
+        have "?I1 \<times> {y} \<subseteq> ?R" using \<open>y \<noteq> p2\<close> hy by auto
+        have "(x0, y) \<in> A" using \<open>{x0} \<times> ?I2 \<subseteq> A\<close> hy by auto
+        hence "A \<inter> (?I1 \<times> {y}) \<noteq> {}" using hx0(1) by auto
+        have "A \<inter> (?I1 \<times> {y}) = {} \<or> B \<inter> (?I1 \<times> {y}) = {}"
+          by (rule connectedD[OF \<open>connected (?I1 \<times> {y})\<close> hA hB])
+             (use hdisj hcov \<open>?I1 \<times> {y} \<subseteq> ?R\<close> in auto)
+        hence "?I1 \<times> {y} \<subseteq> A"
+          using \<open>A \<inter> (?I1 \<times> {y}) \<noteq> {}\<close> hcov \<open>?I1 \<times> {y} \<subseteq> ?R\<close> by auto
+        thus ?thesis using hx True by auto
+      qed
+    qed
+    hence False using hBne hdisj by auto }
+  moreover {
+    assume "A \<inter> (?I1 \<times> {y0}) = {}"
+    \<comment> \<open>Symmetric: L2 \<subseteq> B, all of ?R \<subseteq> B, A empty.\<close>
+    hence hL2B: "?I1 \<times> {y0} \<subseteq> B" using hcov hL2_sub by auto
+    define x0' where "x0' = (p1 + b1) / 2"
+    have hx0': "x0' \<in> ?I1" "x0' \<noteq> p1" unfolding x0'_def using assms by auto
+    have "{x0'} \<times> ?I2 \<subseteq> B"
+    proof -
+      have "connected ({x0'} \<times> ?I2)" by (rule connected_Times[OF connected_sing connected_Ioo])
+      have "{x0'} \<times> ?I2 \<subseteq> ?R" using hx0' by auto
+      have "(x0', y0) \<in> B" using hL2B hx0'(1) hy0(1) by auto
+      hence "B \<inter> ({x0'} \<times> ?I2) \<noteq> {}" using hy0(1) by auto
+      have "A \<inter> ({x0'} \<times> ?I2) = {} \<or> B \<inter> ({x0'} \<times> ?I2) = {}"
+        by (rule connectedD[OF \<open>connected ({x0'} \<times> ?I2)\<close> hA hB])
+           (use hdisj hcov \<open>{x0'} \<times> ?I2 \<subseteq> ?R\<close> in auto)
+      thus ?thesis using \<open>B \<inter> ({x0'} \<times> ?I2) \<noteq> {}\<close> hcov \<open>{x0'} \<times> ?I2 \<subseteq> ?R\<close> by auto
+    qed
+    have "?R \<subseteq> B"
+    proof
+      fix xy assume "xy \<in> ?R"
+      obtain x y where [simp]: "xy = (x,y)" and hx: "x \<in> ?I1" and hy: "y \<in> ?I2"
+          and hne: "(x,y) \<noteq> (p1,p2)" using \<open>xy \<in> ?R\<close> by (by100 force)
+      show "xy \<in> B"
+      proof (cases "x = p1")
+        case False
+        have "connected ({x} \<times> ?I2)" by (rule connected_Times[OF connected_sing connected_Ioo])
+        have "{x} \<times> ?I2 \<subseteq> ?R" using False hx by auto
+        have "(x, y0) \<in> B" using hL2B hx hy0(1) by auto
+        hence "B \<inter> ({x} \<times> ?I2) \<noteq> {}" using hy0(1) by auto
+        have "A \<inter> ({x} \<times> ?I2) = {} \<or> B \<inter> ({x} \<times> ?I2) = {}"
+          by (rule connectedD[OF \<open>connected ({x} \<times> ?I2)\<close> hA hB])
+             (use hdisj hcov \<open>{x} \<times> ?I2 \<subseteq> ?R\<close> in auto)
+        hence "{x} \<times> ?I2 \<subseteq> B"
+          using \<open>B \<inter> ({x} \<times> ?I2) \<noteq> {}\<close> hcov \<open>{x} \<times> ?I2 \<subseteq> ?R\<close> by auto
+        thus ?thesis using hy by auto
+      next
+        case True hence "y \<noteq> p2" using hne by auto
+        have "connected (?I1 \<times> {y})" by (rule connected_Times[OF connected_Ioo connected_sing])
+        have "?I1 \<times> {y} \<subseteq> ?R" using \<open>y \<noteq> p2\<close> hy by auto
+        have "(x0', y) \<in> B" using \<open>{x0'} \<times> ?I2 \<subseteq> B\<close> hy by auto
+        hence "B \<inter> (?I1 \<times> {y}) \<noteq> {}" using hx0'(1) by auto
+        have "A \<inter> (?I1 \<times> {y}) = {} \<or> B \<inter> (?I1 \<times> {y}) = {}"
+          by (rule connectedD[OF \<open>connected (?I1 \<times> {y})\<close> hA hB])
+             (use hdisj hcov \<open>?I1 \<times> {y} \<subseteq> ?R\<close> in auto)
+        hence "?I1 \<times> {y} \<subseteq> B"
+          using \<open>B \<inter> (?I1 \<times> {y}) \<noteq> {}\<close> hcov \<open>?I1 \<times> {y} \<subseteq> ?R\<close> by auto
+        thus ?thesis using hx True by auto
+      qed
+    qed
+    hence False using hAne hdisj by auto }
+  ultimately show False by auto
+qed
+
 lemma open_rectangle_delete_connected_R2:
   fixes U1 U2 :: "real set" and p1 p2 :: real
   assumes "open U1" "open U2" "p1 \<in> U1" "p2 \<in> U2"
