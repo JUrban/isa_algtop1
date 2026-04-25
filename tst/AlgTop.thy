@@ -13802,9 +13802,7 @@ proof (rule ccontr)
       ultimately show ?thesis sorry
     qed
     have hAB_disj: "A \<inter> B = {}" unfolding B_def by (by100 blast)
-    have hA_sub: "A \<subseteq> ?U \<inter> ?V" unfolding A_def
-      by (rule top1_path_component_of_on_subset[OF hTUV ha_UV])
-    have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub by auto
+    have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub' by auto
     \<comment> \<open>Lift \<alpha> to path in U (subspace of X), \<beta> to path in V (subspace of X).
        Key: subspace X TX U = subspace S^2 S^2_top U (by transitivity, U \<subseteq> X).\<close>
     have hU_sub_X: "?U \<subseteq> ?X" by (by100 blast)
