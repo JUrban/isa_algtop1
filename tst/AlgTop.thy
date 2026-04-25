@@ -1,5 +1,5 @@
 theory AlgTop
-  imports "Top0.Top1_Ch9_13"
+  imports "Top0.Top1_Ch9_13" "AlgTopH.AlgTopHelpers"
 begin
 
 
@@ -8211,10 +8211,7 @@ next
 qed
 
 \<comment> \<open>Exterior of a ball in R^2 is connected.\<close>
-lemma exterior_ball_connected_R2:
-  fixes R :: real
-  shows "connected {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
-  sorry
+\<comment> \<open>exterior_ball_connected_R2 imported from AlgTopHelpers.\<close>
 
 lemma continuous_compose_product_R2:
   fixes g :: "'a \<Rightarrow> real \<times> real" and \<phi> :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"

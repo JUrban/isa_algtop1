@@ -7,7 +7,14 @@ session Top0 in i = HOL +
     Top1_Ch5_8
     Top1_Ch9_13
 
+session AlgTopH in h = HOL +
+  options [quick_and_dirty, timeout = 300]
+  theories
+    AlgTopHelpers
+
 session AlgTop = Top0 +
   options [quick_and_dirty, timeout = 120]
+  sessions
+    AlgTopH
   theories
     AlgTop
