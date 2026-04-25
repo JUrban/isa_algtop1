@@ -13712,8 +13712,22 @@ proof
                     show "{x \<in> A. (x, 2 * m + 2) \<in> U \<times> {2 * n}} \<union>
                         {x \<in> B. (x, 2 * m) \<in> U \<times> {2 * n}} \<union>
                         {x \<in> V - U. (x, 2 * m + 1) \<in> U \<times> {2 * n}} \<in> TX"
-                      sorry \<comment> \<open>= (if m+1=n then A else {}) \<union> (if m=n then B else {}).
-                         A, B, {} \<in> TX. Finite union of TX \<in> TX.\<close>
+                    proof -
+                      have hTX_empty: "{} \<in> TX"
+                        using assms(1) unfolding is_topology_on_def by (by100 blast)
+                      have hgoal_eq: "{x \<in> A. (x, 2*m+2) \<in> U \<times> {2*n}} \<union>
+                          {x \<in> B. (x, 2*m) \<in> U \<times> {2*n}} \<union>
+                          {x \<in> V-U. (x, 2*m+1) \<in> U \<times> {2*n}}
+                          = (if m+1=n then A else {}) \<union> (if m=n then B else {})"
+                        using hA_slice hB_slice hVU_slice by auto
+                      have hresult: "(if m+1=n then A else {}) \<union> (if m=n then B else {}) \<in> TX"
+                      proof (cases "m + 1 = n")
+                        case True show ?thesis using True hA_open_TX hB_open_TX hTX_empty by simp
+                      next
+                        case False show ?thesis using False hB_open_TX hTX_empty by simp
+                      qed
+                      show ?thesis using hgoal_eq hresult by simp
+                    qed
                   qed
                 qed
               qed
