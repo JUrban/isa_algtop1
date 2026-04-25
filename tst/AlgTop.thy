@@ -8182,10 +8182,62 @@ lemma connected_open_delete_S2:
   assumes "C0 \<in> top1_S2_topology" "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
       and "b \<in> C0" and "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C0"
   shows "connected (C0 - {b})"
-  sorry \<comment> \<open>Proof: pick c \<in> S^2\C0. \<sigma>: S^2\{c}\<rightarrow>R^2 homeomorphism.
-     C0 \<subseteq> S^2\{c}. \<sigma>(C0) open connected in R^2.
-     connected_open_delete_R2: \<sigma>(C0)\{\<sigma>(b)} connected.
-     \<sigma>^{-1} continuous \<Rightarrow> C0\{b} = \<sigma>^{-1}(\<sigma>(C0)\{\<sigma>(b)}) connected.\<close>
+proof -
+  obtain c where hc: "c \<in> top1_S2" "c \<notin> C0" using assms(4) by (by100 blast)
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {c})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+    using S2_minus_point_homeo_R2[OF hc(1)] by (by100 blast)
+  have hC0_sub_S2c: "C0 \<subseteq> top1_S2 - {c}" using assms(1) hc(2) sorry
+  \<comment> \<open>\<sigma>(C0) open in R^2.\<close>
+  have h\<sigma>C0_open: "open (\<sigma> ` C0)" sorry
+  \<comment> \<open>\<sigma>(C0) connected in R^2.\<close>
+  have h\<sigma>C0_conn: "connected (\<sigma> ` C0)" sorry
+  \<comment> \<open>\<sigma>(C0)\{\<sigma>(b)} connected by connected_open_delete_R2.\<close>
+  have "connected (\<sigma> ` C0 - {\<sigma> b})" by (rule connected_open_delete_R2[OF h\<sigma>C0_open h\<sigma>C0_conn])
+  \<comment> \<open>\<sigma>(C0\{b}) = \<sigma>(C0)\{\<sigma>(b)} by injectivity.\<close>
+  have hinj: "inj_on \<sigma> (top1_S2 - {c})"
+    using h\<sigma> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have "\<sigma> ` (C0 - {b}) = \<sigma> ` C0 - {\<sigma> b}"
+  proof -
+    have "{b} \<subseteq> C0" using assms(3) by (by100 blast)
+    have "C0 - {b} \<subseteq> C0" by (by100 blast)
+    have "\<sigma> ` (C0 - {b}) = \<sigma> ` C0 - \<sigma> ` {b}"
+      by (rule inj_on_image_set_diff[OF inj_on_subset[OF hinj hC0_sub_S2c]
+          \<open>C0 - {b} \<subseteq> C0\<close> \<open>{b} \<subseteq> C0\<close>])
+    thus ?thesis by simp
+  qed
+  hence "connected (\<sigma> ` (C0 - {b}))" using \<open>connected (\<sigma> ` C0 - {\<sigma> b})\<close> by simp
+  \<comment> \<open>C0\{b} = \<sigma>^{-1}(\<sigma>(C0\{b})). \<sigma>^{-1} continuous. connected image.\<close>
+  \<comment> \<open>Actually: \<sigma> restricted to C0\{b} is a homeomorphism onto \<sigma>(C0\{b}).
+     So C0\{b} homeomorphic to connected set \<Rightarrow> connected.
+     Use: \<sigma>^{-1} continuous (standard) on \<sigma>(C0\{b}), image = C0\{b}.\<close>
+  have h\<sigma>inv_cont: "continuous_on (\<sigma> ` (C0 - {b})) (inv_into (top1_S2 - {c}) \<sigma>)" sorry
+  have h\<sigma>inv_img: "inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b})) = C0 - {b}"
+  proof -
+    have hC0b_sub: "C0 - {b} \<subseteq> top1_S2 - {c}" using hC0_sub_S2c by (by100 blast)
+    show ?thesis
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b}))"
+      then obtain y where hy: "y \<in> \<sigma> ` (C0 - {b})" "x = inv_into (top1_S2 - {c}) \<sigma> y" by (by100 blast)
+      then obtain z where hz: "z \<in> C0 - {b}" "y = \<sigma> z" by (by100 blast)
+      have "z \<in> top1_S2 - {c}" using hC0b_sub hz(1) by (by100 blast)
+      have "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> z) = z"
+        by (rule inv_into_f_f[OF hinj \<open>z \<in> top1_S2 - {c}\<close>])
+      thus "x \<in> C0 - {b}" using hy(2) hz by simp
+    next
+      fix x assume hx: "x \<in> C0 - {b}"
+      have "x \<in> top1_S2 - {c}" using hC0b_sub hx by (by100 blast)
+      have "\<sigma> x \<in> \<sigma> ` (C0 - {b})" using hx by (by100 blast)
+      moreover have "inv_into (top1_S2 - {c}) \<sigma> (\<sigma> x) = x"
+        by (rule inv_into_f_f[OF hinj \<open>x \<in> top1_S2 - {c}\<close>])
+      ultimately show "x \<in> inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b}))" by (by100 force)
+    qed
+  qed
+  show ?thesis
+    using connected_continuous_image[OF h\<sigma>inv_cont \<open>connected (\<sigma> ` (C0 - {b}))\<close>]
+      h\<sigma>inv_img by simp
+qed
 
 lemma connected_open_delete_S2':
   assumes "C0 \<in> top1_S2_topology" "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
