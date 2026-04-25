@@ -3361,6 +3361,40 @@ proof (intro conjI)
   show "g 1 = b" using hg unfolding top1_is_path_on_def by (by100 blast)
 qed
 
+text \<open>A path in a subspace is also a path in the ambient space.\<close>
+lemma path_in_subspace_imp_path_in_ambient:
+  assumes hTX: "is_topology_on_strict X TX"
+      and hUsub: "U \<subseteq> X"
+      and hf: "top1_is_path_on U (subspace_topology X TX U) a b f"
+  shows "top1_is_path_on X TX a b f"
+proof -
+  have hTX': "is_topology_on X TX" using hTX unfolding is_topology_on_strict_def by (by100 blast)
+  have hf_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+    using hf unfolding top1_is_path_on_def by (by100 blast)
+  have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
+  proof -
+    have "top1_continuous_map_on I_set I_top X (subspace_topology X TX X) f"
+      by (rule top1_continuous_map_on_codomain_enlarge[OF hf_cont_U hUsub]) simp
+    moreover have "subspace_topology X TX X = TX"
+    proof (rule subspace_topology_self_carrier)
+      show "\<forall>U\<in>TX. U \<subseteq> X" using hTX unfolding is_topology_on_strict_def
+        by (by100 blast)
+    qed
+    ultimately show ?thesis by simp
+  qed
+  have hf_map: "\<forall>t\<in>I_set. f t \<in> U" using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+  have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have "f 0 = a" using hf unfolding top1_is_path_on_def by (by100 blast)
+  have "f 1 = b" using hf unfolding top1_is_path_on_def by (by100 blast)
+  have "a \<in> U" using hf_map h0_I \<open>f 0 = a\<close> by (by100 force)
+  have "a \<in> X" using \<open>a \<in> U\<close> hUsub by (by100 blast)
+  have "b \<in> U" using hf_map h1_I \<open>f 1 = b\<close> by (by100 force)
+  have "b \<in> X" using \<open>b \<in> U\<close> hUsub by (by100 blast)
+  show ?thesis unfolding top1_is_path_on_def
+    using hf_cont_X \<open>f 0 = a\<close> \<open>f 1 = b\<close> \<open>a \<in> X\<close> \<open>b \<in> X\<close> by (by100 blast)
+qed
+
 text \<open>Helper: union of path-connected open sets with nonempty path-connected intersection
   is path-connected.\<close>
 lemma path_connected_union:
@@ -13820,10 +13854,12 @@ proof (rule ccontr)
     moreover have "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)"
     proof -
       \<comment> \<open>\<alpha> path in U (\<subseteq> X) \<Rightarrow> \<alpha> path in X. \<beta> path in V (\<subseteq> X) \<Rightarrow> \<beta> path in X.\<close>
+      have hTX_strict: "is_topology_on_strict ?X ?TX"
+        by (rule subspace_topology_is_strict[OF assms(1)]) (by100 blast)
       have h\<alpha>_X: "top1_is_path_on ?X ?TX a b \<alpha>"
-        sorry \<comment> \<open>Path in subspace U \<Rightarrow> path in ambient X (codomain_enlarge + self_carrier).\<close>
+        by (rule path_in_subspace_imp_path_in_ambient[OF hTX_strict _ h\<alpha>_U]) (by100 blast)
       have h\<beta>_X: "top1_is_path_on ?X ?TX b a \<beta>"
-        sorry \<comment> \<open>Path in subspace V \<Rightarrow> path in ambient X (codomain_enlarge + self_carrier).\<close>
+        by (rule path_in_subspace_imp_path_in_ambient[OF hTX_strict _ h\<beta>_V]) (by100 blast)
       have "top1_is_path_on ?X ?TX a a (top1_path_product \<alpha> \<beta>)"
         by (rule top1_path_product_is_path[OF hTX h\<alpha>_X h\<beta>_X])
       thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
