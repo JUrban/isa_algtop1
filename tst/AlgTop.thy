@@ -13280,8 +13280,37 @@ proof -
             have hbc_const: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
                 (top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 y0 \<gamma> (top1_constant_path x0))
                 (top1_constant_path y0)"
-              sorry \<comment> \<open>bc(\<gamma>, const_x0) = rev(\<gamma>) * const * \<gamma> \<simeq> rev(\<gamma>) * \<gamma> \<simeq> const_y0.
-                 Path algebra (inverse cancellation).\<close>
+            proof -
+              \<comment> \<open>bc(\<gamma>, const_x0) = rev(\<gamma>) * (const_x0 * \<gamma>).\<close>
+              have "top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                  x0 y0 \<gamma> (top1_constant_path x0)
+                  = top1_path_product (top1_path_reverse \<gamma>)
+                      (top1_path_product (top1_constant_path x0) \<gamma>)"
+                unfolding top1_basepoint_change_on_def by simp
+              \<comment> \<open>const_x0 * \<gamma> \<simeq> \<gamma> (left identity).\<close>
+              have hleft: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                  x0 y0 (top1_path_product (top1_constant_path x0) \<gamma>) \<gamma>"
+                by (rule Theorem_51_2_left_identity[OF hTX_weak h\<gamma>])
+              \<comment> \<open>rev(\<gamma>) * \<gamma> \<simeq> const_y0 (inverse right).\<close>
+              have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                  y0 y0 (top1_path_product (top1_path_reverse \<gamma>) \<gamma>) (top1_constant_path y0)"
+                by (rule Theorem_51_2_invgerse_right[OF hTX_weak h\<gamma>])
+              \<comment> \<open>rev(\<gamma>) * (const * \<gamma>) \<simeq> rev(\<gamma>) * \<gamma> (right congruence).\<close>
+              have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                  y0 y0 (top1_path_product (top1_path_reverse \<gamma>) (top1_path_product (top1_constant_path x0) \<gamma>))
+                  (top1_path_product (top1_path_reverse \<gamma>) \<gamma>)"
+                by (rule path_homotopic_product_right[OF hTX_weak hleft hrev\<gamma>])
+              \<comment> \<open>Chain: bc(\<gamma>,const) = rev(\<gamma>)*(const*\<gamma>) \<simeq> rev(\<gamma>)*\<gamma> \<simeq> const_y0.\<close>
+              \<comment> \<open>bc = rev(\<gamma>)*(const*\<gamma>) \<simeq> rev(\<gamma>)*\<gamma> \<simeq> const_y0.\<close>
+              hence "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                  y0 y0 (top1_path_product (top1_path_reverse \<gamma>) (top1_path_product (top1_constant_path x0) \<gamma>))
+                  (top1_constant_path y0)"
+                using \<open>top1_path_homotopic_on _ _ _ _ (top1_path_product (top1_path_reverse \<gamma>) \<gamma>) _\<close>
+                  Lemma_51_1_path_homotopic_trans[OF hTX_weak]
+                by (by100 blast)
+              thus ?thesis
+                using \<open>top1_basepoint_change_on _ _ _ _ _ _ = _\<close> by simp
+            qed
             show ?thesis using hf_conj hbc_cong hbc_const
               Lemma_51_1_path_homotopic_trans[OF hTX_weak] by (by100 blast)
           qed
