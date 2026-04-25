@@ -13486,7 +13486,114 @@ proof
     have hp0e1: "p0 e1 = a" unfolding p0_def e1_def by simp
     have hne: "e0 \<noteq> e1" unfolding e0_def e1_def by simp
     \<comment> \<open>TE is a topology on E.\<close>
-    have hTE: "is_topology_on E TE" sorry \<comment> \<open>Quotient of product topology. Standard.\<close>
+    have hTE: "is_topology_on E TE"
+      unfolding is_topology_on_def
+    proof (intro conjI allI impI)
+      have hTX_empty: "{} \<in> TX" using assms(1) unfolding is_topology_on_def by (by100 blast)
+      have hTX_X: "X \<in> TX" using assms(1) unfolding is_topology_on_def by (by100 blast)
+      show "{} \<in> TE" unfolding TE_def using hTX_empty by simp
+      show "E \<in> TE" unfolding TE_def E_def
+      proof (intro CollectI conjI allI)
+        show "{(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U} \<subseteq>
+            {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}" by simp
+        fix n :: int
+        show "{x \<in> U. (x, 2 * n) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} \<in> TX"
+        proof -
+          have "{x \<in> U. (x, 2 * n) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} = U"
+            by auto
+          thus ?thesis using hU_open_TX by simp
+        qed
+        show "{x \<in> A. (x, 2 * n + 2) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} \<union>
+            {x \<in> B. (x, 2 * n) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} \<union>
+            {x \<in> V - U. (x, 2 * n + 1) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}}
+            \<in> TX"
+        proof -
+          have h1: "{x \<in> A. (x, 2*n+2) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} = A"
+            using assms(5,6) by auto
+          have h2: "{x \<in> B. (x, 2*n) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} = B"
+            using assms(5,6) by auto
+          have h3: "{x \<in> V-U. (x, 2*n+1) \<in> {(x, m). even m \<and> x \<in> U \<or> odd m \<and> x \<in> V - U}} = V - U"
+            by auto
+          have "A \<union> B \<union> (V - U) = V" using hAB_UV by (by100 blast)
+          thus ?thesis using h1 h2 h3 hV_open_TX by simp
+        qed
+      qed
+    next
+      fix U0 :: "('a \<times> int) set set" assume hU0: "U0 \<subseteq> TE"
+      show "\<Union>U0 \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Union>U0 \<subseteq> E" using hU0 unfolding TE_def by (by100 blast)
+        fix n :: int
+        show "{x \<in> U. (x, 2 * n) \<in> \<Union>U0} \<in> TX"
+        proof -
+          have "{x \<in> U. (x, 2 * n) \<in> \<Union>U0} = \<Union>{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> U0}"
+            by (by100 blast)
+          moreover have "\<Union>{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> U0} \<in> TX"
+          proof -
+            have "{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> U0} \<subseteq> TX"
+              using hU0 unfolding TE_def by (by100 blast)
+            thus ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        qed
+        show "{x \<in> A. (x, 2 * n + 2) \<in> \<Union>U0} \<union> {x \<in> B. (x, 2 * n) \<in> \<Union>U0} \<union>
+            {x \<in> V - U. (x, 2 * n + 1) \<in> \<Union>U0} \<in> TX"
+        proof -
+          have heq: "{x \<in> A. (x, 2*n+2) \<in> \<Union>U0} \<union> {x \<in> B. (x, 2*n) \<in> \<Union>U0} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> \<Union>U0}
+              = \<Union>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0}" by (by100 blast)
+          have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0} \<subseteq> TX"
+            using hU0 unfolding TE_def by (by100 blast)
+          hence "\<Union>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> U0} \<in> TX"
+            using assms(1) unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis using heq by simp
+        qed
+      qed
+    next
+      fix F :: "('a \<times> int) set set" assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TE"
+      show "\<Inter>F \<in> TE" unfolding TE_def
+      proof (intro CollectI conjI allI)
+        show "\<Inter>F \<subseteq> E" using hF unfolding TE_def by (by100 blast)
+        fix n :: int
+        show "{x \<in> U. (x, 2 * n) \<in> \<Inter>F} \<in> TX"
+        proof -
+          have "{x \<in> U. (x, 2 * n) \<in> \<Inter>F} = \<Inter>{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> F}"
+            using hF by (by100 blast)
+          moreover have "\<Inter>{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> F} \<in> TX"
+          proof -
+            have hfin: "finite {{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> F}" using hF by simp
+            have hne: "{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+            have hsub: "{{x \<in> U. (x, 2 * n) \<in> W} | W. W \<in> F} \<subseteq> TX"
+              using hF unfolding TE_def by (by100 blast)
+            show ?thesis using assms(1) hfin hne hsub unfolding is_topology_on_def by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        qed
+        show "{x \<in> A. (x, 2 * n + 2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2 * n) \<in> \<Inter>F} \<union>
+            {x \<in> V - U. (x, 2 * n + 1) \<in> \<Inter>F} \<in> TX"
+        proof -
+          have heq: "{x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}
+              = \<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}"
+            sorry \<comment> \<open>Intersection distributes: A,B,V\U disjoint partition of V.\<close>
+          have hfin: "finite {{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" using hF by simp
+          have hne: "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+          have hsub: "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<subseteq> TX"
+            using hF unfolding TE_def by (by100 blast)
+          have "\<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<in> TX"
+            using assms(1) hfin hne hsub unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis using heq by simp
+        qed
+      qed
+    qed
     \<comment> \<open>p0 is a covering map.\<close>
     have hcov: "top1_covering_map_on E TE X TX p0" sorry \<comment> \<open>U and V evenly covered.
        p\<inverse>(U) = disjoint \<Union>n {(x,2n)|x\<in>U}, each homeomorphic to U via p0.
