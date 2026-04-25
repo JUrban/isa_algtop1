@@ -8630,7 +8630,34 @@ proof -
       by (rule translation_homeo_R2[of p])
     have hgf_p: "top1_continuous_map_on A TA (UNIV - {p})
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p})) (h \<circ> f)"
-      sorry \<comment> \<open>g maps A into UNIV-{p} (p \<notin> g(A)) + continuity from hg_cont.\<close>
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> A"
+      have "(h \<circ> f) x \<noteq> p" using hp_not_in_gA \<open>x \<in> A\<close> by (by100 blast)
+      thus "(h \<circ> f) x \<in> UNIV - {p}" by simp
+    next
+      fix V assume hV: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p})"
+      obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+          and hV_eq: "V = (UNIV - {p}) \<inter> W" using hV unfolding subspace_topology_def by (by100 blast)
+      have "(UNIV - {?ha}) \<inter> W \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {?ha})"
+        by (rule subspace_topology_memI[OF hW])
+      hence "{x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> W} \<in> TA"
+        using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{x \<in> A. (h \<circ> f) x \<in> V} = {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}"
+        hence "x \<in> A" "(h \<circ> f) x \<in> W" using hV_eq by auto
+        moreover have "(h \<circ> f) x \<in> UNIV - {?ha}"
+          using hg_cont \<open>x \<in> A\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "x \<in> {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> W}" by (by100 blast)
+      next
+        fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> W}"
+        hence "x \<in> A" "(h \<circ> f) x \<in> W" by auto
+        have "(h \<circ> f) x \<noteq> p" using hp_not_in_gA \<open>x \<in> A\<close> by (by100 blast)
+        thus "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}" using \<open>x \<in> A\<close> \<open>(h \<circ> f) x \<in> W\<close> hV_eq by (by100 blast)
+      qed
+      ultimately show "{x \<in> A. (h \<circ> f) x \<in> V} \<in> TA" by simp
+    qed
     have hT_cont: "top1_continuous_map_on (UNIV - {p})
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {p}))
         ?Y0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y0) ?T"
@@ -8657,6 +8684,31 @@ proof -
     moreover have "?T \<circ> (h \<circ> f) = (\<lambda>x. pair_sub ((h \<circ> f) x) ?ha)"
       unfolding pair_sub_def comp_def by (rule ext) simp
     ultimately show ?thesis by simp
+  qed
+  have hg_UNIV_fact: "top1_continuous_map_on A TA (UNIV :: (real\<times>real) set)
+      (product_topology_on top1_open_sets top1_open_sets) (h \<circ> f)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> A" thus "(h \<circ> f) x \<in> UNIV" by simp
+  next
+    let ?R2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+    fix V :: "(real \<times> real) set" assume hV: "V \<in> ?R2"
+    have "(UNIV - {?ha}) \<inter> V \<in> subspace_topology UNIV ?R2 (UNIV - {?ha})"
+      by (rule subspace_topology_memI[OF hV])
+    hence "{x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> V} \<in> TA"
+      using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    moreover have "{x \<in> A. (h \<circ> f) x \<in> V} = {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> V}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}"
+      hence "x \<in> A" "(h \<circ> f) x \<in> V" by auto
+      moreover have "(h \<circ> f) x \<in> UNIV - {?ha}"
+        using hg_cont \<open>x \<in> A\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "x \<in> {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> V}" by (by100 blast)
+    next
+      fix x assume "x \<in> {x \<in> A. (h \<circ> f) x \<in> (UNIV - {?ha}) \<inter> V}"
+      thus "x \<in> {x \<in> A. (h \<circ> f) x \<in> V}" by (by100 blast)
+    qed
+    ultimately show "{x \<in> A. (h \<circ> f) x \<in> V} \<in> TA" by simp
   qed
   \<comment> \<open>Step 6b: G homotopy. g(x)-\<alpha>(t) \<in> R^2-{0} since \<alpha>(t) \<notin> g(A) but g(x) \<in> g(A).\<close>
   have hG_hom: "top1_homotopic_on A TA (UNIV - {(0,0)})
@@ -8702,8 +8754,66 @@ proof -
     \<comment> \<open>Continuity via continuous_compose_product_R2.\<close>
     have hFG_cont: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY
         (\<lambda>xt. F_G (fst xt) (snd xt))"
-      sorry \<comment> \<open>Needs \<phi>(y,t) = (fst y - fst(\<alpha>R(t)), snd y - snd(\<alpha>R(t))) standard-continuous.
-         This requires \<alpha>R standard-continuous, which follows from custom-continuous + R^2 bridge.\<close>
+    proof -
+      define \<phi>G :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real" where
+        "\<phi>G yt = (fst (fst yt) - fst (\<alpha>R (snd yt)), snd (fst yt) - snd (\<alpha>R (snd yt)))" for yt
+      have hFG_eq: "\<And>x t. F_G x t = \<phi>G (?g x, t)" unfolding F_G_def \<phi>G_def by simp
+      \<comment> \<open>\<alpha>R is standard-continuous on I_set (custom continuous in R^2 = standard).\<close>
+      have h\<alpha>_std_cont: "continuous_on I_set \<alpha>R"
+      proof -
+        have h\<alpha>_custom: "top1_continuous_map_on I_set I_top (UNIV - (h \<circ> f) ` A)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A)) \<alpha>R"
+          using h\<alpha>R unfolding top1_is_path_on_def by (by100 blast)
+        \<comment> \<open>Bridge: custom continuous \<Rightarrow> standard continuous.
+           preimage of open W \<subseteq> R^2 under \<alpha>R intersected with I_set is open in I_top = standard.\<close>
+        show ?thesis unfolding continuous_on_open_invariant
+        proof (intro allI impI)
+          fix W :: "(real \<times> real) set" assume hW_open: "open W"
+          have hW_R2: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          proof -
+            have "W \<in> (top1_open_sets :: (real \<times> real) set set)"
+              using hW_open unfolding top1_open_sets_def by simp
+            thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+          qed
+          have "(UNIV - (h \<circ> f) ` A) \<inter> W \<in> subspace_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A)"
+            by (rule subspace_topology_memI[OF hW_R2])
+          hence hpre: "{s \<in> I_set. \<alpha>R s \<in> (UNIV - (h \<circ> f) ` A) \<inter> W} \<in> I_top"
+            using h\<alpha>_custom unfolding top1_continuous_map_on_def by (by100 blast)
+          have hpre_eq: "\<alpha>R -` W \<inter> I_set = {s \<in> I_set. \<alpha>R s \<in> (UNIV - (h \<circ> f) ` A) \<inter> W}"
+          proof (rule set_eqI, rule iffI)
+            fix s assume "s \<in> \<alpha>R -` W \<inter> I_set"
+            hence "s \<in> I_set" "\<alpha>R s \<in> W" by auto
+            moreover have "\<alpha>R s \<in> UNIV - (h \<circ> f) ` A"
+              using h\<alpha>_custom \<open>s \<in> I_set\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "s \<in> {s \<in> I_set. \<alpha>R s \<in> (UNIV - (h \<circ> f) ` A) \<inter> W}" by (by100 blast)
+          next
+            fix s assume "s \<in> {s \<in> I_set. \<alpha>R s \<in> (UNIV - (h \<circ> f) ` A) \<inter> W}"
+            thus "s \<in> \<alpha>R -` W \<inter> I_set" by (by100 blast)
+          qed
+          \<comment> \<open>I_top is subspace topology of R, so hpre means \<exists>W'. open W' \<and> ... = W' \<inter> I.\<close>
+          obtain W' where hW': "W' \<in> top1_open_sets" and hW'_eq: "{s \<in> I_set. \<alpha>R s \<in> (UNIV - (h \<circ> f) ` A) \<inter> W} = I_set \<inter> W'"
+            using hpre unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          have "open W'" using hW' unfolding top1_open_sets_def by simp
+          moreover have "W' \<inter> I_set = \<alpha>R -` W \<inter> I_set"
+            using hW'_eq hpre_eq by (by100 blast)
+          ultimately show "\<exists>T'. open T' \<and> T' \<inter> I_set = \<alpha>R -` W \<inter> I_set" by (by100 blast)
+        qed
+      qed
+      have h\<phi>G_cont: "continuous_on (UNIV \<times> I_set) \<phi>G"
+        unfolding \<phi>G_def by (intro continuous_intros continuous_on_compose2[OF h\<alpha>_std_cont]) auto
+      have hg_UNIV: "top1_continuous_map_on A TA (UNIV :: (real\<times>real) set)
+          (product_topology_on top1_open_sets top1_open_sets) ?g"
+        by (rule hg_UNIV_fact)
+      have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+      have hresult: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY
+          (\<lambda>xt. \<phi>G (?g (fst xt), snd xt))"
+        by (rule continuous_compose_product_R2[OF hg_UNIV h\<phi>G_cont _ hTA])
+           (use hFG_Y hFG_eq in simp)
+      moreover have "\<And>xt. \<phi>G (?g (fst xt), snd xt) = F_G (fst xt) (snd xt)"
+        using hFG_eq by simp
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>f0 continuous.\<close>
     have hf0: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>x. pair_sub (?g x) ?ha)"
       by (rule hgsub_ha_cont)
