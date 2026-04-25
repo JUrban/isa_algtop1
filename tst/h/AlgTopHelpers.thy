@@ -140,5 +140,6 @@ lemma connected_open_delete_R3:
    (R^2 minus a circle has a bounded component). Removed.
    The specific case in AlgTop.thy uses a direct sorry with correct proof sketch.\<close>
 
+\<comment> \<open>connected_minus_point_via_homeo: in AlgTop.thy (uses connected_open_delete_R2).\<close>
 
 end

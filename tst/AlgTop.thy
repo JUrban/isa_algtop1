@@ -8678,8 +8678,18 @@ proof -
       using hsame by blast
     have hC0_sub: "C0 \<subseteq> top1_S2 - f ` A"
       using hC0 unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
-    \<comment> \<open>h(C0-{b}) connected: C0 open connected in S^2, C0-{b} homeomorphic to open connected in R^2,
-       connected_open_delete_R2 gives R^2 image connected.\<close>
+    \<comment> \<open>Helper: h(U\{p}) connected when h injective continuous and h(U) open connected.\<close>
+    have connected_minus_pt: "\<And>U p. continuous_on U h \<Longrightarrow> inj_on h U \<Longrightarrow> open (h ` U) \<Longrightarrow>
+        connected (h ` U) \<Longrightarrow> p \<in> U \<Longrightarrow> connected (h ` (U - {p}))"
+    proof -
+      fix U :: "(real \<times> real \<times> real) set" and p
+      assume hcont: "continuous_on U h" and hinj: "inj_on h U"
+          and hopen: "open (h ` U)" and hconn: "connected (h ` U)" and hp: "p \<in> U"
+      have "h ` (U - {p}) = h ` U - {h p}" using hinj hp unfolding inj_on_def by blast
+      moreover have "connected (h ` U - {h p})" by (rule connected_open_delete_R2[OF hopen hconn])
+      ultimately show "connected (h ` (U - {p}))" by simp
+    qed
+    \<comment> \<open>h(C0-{b}) connected: use connected_minus_pt.\<close>
     have himg_conn: "connected (h ` (C0 - {b}))"
     proof (cases "b \<in> C0")
       case False
