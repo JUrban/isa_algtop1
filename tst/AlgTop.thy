@@ -13968,7 +13968,75 @@ proof
                 thus "e \<in> {x \<in> E. p0 x \<in> V}" unfolding p0_def by simp
               qed
               show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
-                  (subspace_topology X TX V) p0" sorry
+                  (subspace_topology X TX V) p0"
+              proof
+                fix Sn assume "Sn \<in> ?\<V>V"
+                then obtain k where hSn: "Sn = vsheet k" by (by100 blast)
+                have hSn_sub: "Sn \<subseteq> E" unfolding hSn vsheet_def by (by100 blast)
+                have hTSn: "is_topology_on Sn (subspace_topology E TE Sn)"
+                  by (rule subspace_topology_is_topology_on[OF hTE hSn_sub])
+                have hV_sub_X: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+                have hTV: "is_topology_on V (subspace_topology X TX V)"
+                  by (rule subspace_topology_is_topology_on[OF assms(1) hV_sub_X])
+                \<comment> \<open>Bijection: p0 maps vsheet k bijectively to V.\<close>
+                have hbij: "bij_betw p0 Sn V"
+                  unfolding bij_betw_def
+                proof (intro conjI)
+                  show "inj_on p0 Sn" unfolding p0_def hSn
+                  proof (intro inj_onI)
+                    fix e1 e2 assume he1: "e1 \<in> vsheet k" and he2: "e2 \<in> vsheet k"
+                        and hfst: "fst e1 = fst e2"
+                    obtain x1 m1 x2 m2 where hd: "e1 = (x1,m1)" "e2 = (x2,m2)"
+                      by (cases e1, cases e2)
+                    hence "x1 = x2" using hfst by simp
+                    have h1: "x1 \<in> A \<and> m1 = 2*(k+1) \<or> x1 \<in> B \<and> m1 = 2*k \<or> x1 \<in> V-U \<and> m1 = 2*k+1"
+                      using he1 hd unfolding vsheet_def by auto
+                    have h2: "x2 \<in> A \<and> m2 = 2*(k+1) \<or> x2 \<in> B \<and> m2 = 2*k \<or> x2 \<in> V-U \<and> m2 = 2*k+1"
+                      using he2 hd unfolding vsheet_def by auto
+                    have "m1 = m2" using h1 h2 \<open>x1 = x2\<close> hAB_disj hAB_UV by auto
+                    thus "e1 = e2" using hd \<open>x1 = x2\<close> \<open>m1 = m2\<close> by simp
+                  qed
+                  show "p0 ` Sn = V"
+                  proof (rule set_eqI, rule iffI)
+                    fix x assume "x \<in> p0 ` Sn"
+                    thus "x \<in> V" unfolding p0_def hSn vsheet_def by auto
+                  next
+                    fix x assume "x \<in> V"
+                    hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" using hAB_UV by (by100 blast)
+                    thus "x \<in> p0 ` Sn"
+                    proof (elim disjE)
+                      assume "x \<in> A"
+                      hence "(x, 2*(k+1)) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> hAB_UV by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    next
+                      assume "x \<in> B"
+                      hence "(x, 2*k) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> hAB_UV by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    next
+                      assume "x \<in> V - U"
+                      hence "(x, 2*k+1) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    qed
+                  qed
+                qed
+                \<comment> \<open>Continuous: same as U case — preimage of TX-open matches TE slices.\<close>
+                have hcont: "top1_continuous_map_on Sn (subspace_topology E TE Sn) V
+                    (subspace_topology X TX V) p0"
+                  sorry
+                \<comment> \<open>Inverse continuous: for W \<in> subspace_topology E TE Sn,
+                   p0(W) corresponds to the odd-slice condition of TE,
+                   which gives TX-open sets.\<close>
+                have hinv_cont: "top1_continuous_map_on V (subspace_topology X TX V) Sn
+                    (subspace_topology E TE Sn) (inv_into Sn p0)"
+                  sorry
+                show "top1_homeomorphism_on Sn (subspace_topology E TE Sn) V
+                    (subspace_topology X TX V) p0"
+                  unfolding top1_homeomorphism_on_def
+                  using hTSn hTV hbij hcont hinv_cont by (by100 blast)
+              qed
             qed
           qed
         qed
