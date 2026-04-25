@@ -12544,9 +12544,94 @@ proof -
          Loops in U nulhomotopic (factor through S^1 + Lemma 61.2, A1 connected).
          Loops in V nulhomotopic (same with A2).
          Theorem 59.1 \<Rightarrow> \<pi>_1(X) trivial.\<close>
-      show ?thesis sorry \<comment> \<open>Identical proof structure as Theorem 61.3 body.
-         All ingredients available: A1,A2 closed (assms 4,5), connected (assms 6,7),
-         |A1\<inter>A2|=2 (assms 8), S^2-(A1\<union>A2) connected (hconn).\<close>
+      \<comment> \<open>Setup: U,V open in S^2. U\<inter>V connected \<Rightarrow> path-connected (lpc).
+         X = U\<union>V. is_topology_on_strict X TX.\<close>
+      have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      have hU_open: "?U \<in> top1_S2_topology"
+        using assms(4) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+      have hV_open: "?V \<in> top1_S2_topology"
+        using assms(5) hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+      \<comment> \<open>U\<inter>V open in S^2, hence lpc, hence path-connected (from connected + lpc).\<close>
+      have hUV_open: "?U \<inter> ?V \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2 hU_open hV_open])
+      have hUV_lpc: "top1_locally_path_connected_on (?U \<inter> ?V)
+          (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+      proof -
+        have "?U \<inter> ?V \<subseteq> top1_S2" by (by100 blast)
+        show ?thesis by (rule open_subset_locally_path_connected[OF
+            S2_locally_path_connected hUV_open \<open>?U \<inter> ?V \<subseteq> top1_S2\<close>])
+      qed
+      have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
+          (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+      proof -
+        have hTUV: "is_topology_on (?U \<inter> ?V)
+            (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+          by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+        have hUV_conn': "top1_connected_on (?U \<inter> ?V)
+            (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+          using hconn hUV_eq by simp
+        have "?U \<inter> ?V \<noteq> {}"
+        proof -
+          \<comment> \<open>S^2\(A1\<union>A2) nonempty. S^2 uncountable, A1\<union>A2 \<neq> S^2 (otherwise S^2 = union of
+             two closed connected sets with 2-point intersection, but S^2 is simply connected
+             and this would give a separation — S^2 connected!).
+             Actually simpler: A1\<union>A2 is proper closed subset of S^2 (not all of S^2).
+             If A1\<union>A2 = S^2: then S^2 = A1\<union>A2 connected but S^2-A1 and S^2-A2 are open,
+             nonempty (A2\A1 \<noteq> {} because |A1\<inter>A2|=2 but A2 connected ...).
+             Actually: if A1\<union>A2 = S^2, then S^2\(A1\<union>A2) = {}, so it IS "connected" (vacuously).
+             But hconn gives connected S^2\(A1\<union>A2) = connected {}, which IS true.
+             So the proof by contradiction at the outer level needs S^2\(A1\<union>A2) \<noteq> {}.\<close>
+          show ?thesis sorry \<comment> \<open>S^2\(A1\<union>A2) nonempty: needs S^2 \<noteq> A1\<union>A2.\<close>
+        qed
+        show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF
+            hTUV hUV_conn' hUV_lpc \<open>?U \<inter> ?V \<noteq> {}\<close>])
+      qed
+      \<comment> \<open>X = S^2\{a,b} is strict topology (subspace of strict S^2).\<close>
+      have hTX_strict: "is_topology_on_strict ?X
+          (subspace_topology top1_S2 top1_S2_topology ?X)"
+        by (rule subspace_topology_is_strict[OF assms(1)]) (by100 blast)
+      \<comment> \<open>U, V open in X.\<close>
+      have hU_open_X: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?U"
+      proof -
+        have "?U \<subseteq> ?X" using hab by (by100 blast)
+        have "?U = ?X \<inter> ?U" using hab by (by100 blast)
+        hence "?U \<in> subspace_topology top1_S2 top1_S2_topology ?X"
+          using hU_open unfolding subspace_topology_def by (by100 blast)
+        thus ?thesis using \<open>?U \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+      qed
+      have hV_open_X: "openin_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) ?V"
+      proof -
+        have "?V \<subseteq> ?X" using hab by (by100 blast)
+        have "?V = ?X \<inter> ?V" using hab by (by100 blast)
+        hence "?V \<in> subspace_topology top1_S2 top1_S2_topology ?X"
+          using hV_open unfolding subspace_topology_def by (by100 blast)
+        thus ?thesis using \<open>?V \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+      qed
+      \<comment> \<open>U\<inter>V path-connected in X topology.\<close>
+      have hUV_sub_X: "?U \<inter> ?V \<subseteq> ?X" using hab by (by100 blast)
+      have hUV_pc_X: "top1_path_connected_on (?U \<inter> ?V)
+          (subspace_topology ?X (subspace_topology top1_S2 top1_S2_topology ?X) (?U \<inter> ?V))"
+      proof -
+        have "subspace_topology ?X (subspace_topology top1_S2 top1_S2_topology ?X) (?U \<inter> ?V)
+            = subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+          by (rule subspace_topology_trans[OF hUV_sub_X])
+        thus ?thesis using hUV_pc by simp
+      qed
+      \<comment> \<open>x0 \<in> U\<inter>V.\<close>
+      obtain x0 where hx0: "x0 \<in> ?U \<inter> ?V"
+        sorry \<comment> \<open>U\<inter>V nonempty.\<close>
+      \<comment> \<open>By Theorem 59.1: every loop in X decomposes into pieces in U and V.
+         Each piece in U is nulhomotopic (via Lemma 61.2 + A1 connected).
+         Each piece in V is nulhomotopic (via Lemma 61.2 + A2 connected).
+         Hence every loop in X is nulhomotopic: X simply connected.\<close>
+      show ?thesis sorry \<comment> \<open>Apply Theorem 59.1 decomposition + Lemma 61.2 nulhomotopy.
+         This is the core ~200 lines of the 61.3 proof, which uses:
+         - loop_factors_through_S1: loops factor through S^1
+         - Lemma_61_2_nulhomotopy_textbook: a,b same component \<Rightarrow> nulhomotopic
+         - A1 connected + {a,b} \<subseteq> A1 \<Rightarrow> a,b same component of S^2\g(S^1) for g in U
+         - Theorem_59_1: loop decomposition into U/V pieces
+         - nulhomotopic_trivializes_loops_general: nulhomotopic pieces \<Rightarrow> trivial loop\<close>
     qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
         (subspace_topology top1_S2 top1_S2_topology ?X)"
