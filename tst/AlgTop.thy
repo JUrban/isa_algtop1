@@ -13422,6 +13422,24 @@ section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
 \<comment> \<open>top1_simple_closed_curve_on defined earlier (before \<S>61).\<close>
 
+\<comment> \<open>Helix covering construction: provides E, TE, p0 for both 63.1(a) and g-lift.\<close>
+lemma helix_covering_construction:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+  defines "E \<equiv> {(x::('a \<times> int)). (even (snd x) \<and> fst x \<in> U) \<or> (odd (snd x) \<and> fst x \<in> V - U)}"
+  defines "TE \<equiv> {W. W \<subseteq> E \<and>
+        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  defines "p0 \<equiv> (fst :: ('a \<times> int) \<Rightarrow> 'a)"
+  shows "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
+  sorry \<comment> \<open>Proved inside Theorem_63_1_loop_nontrivial. TE topology: 4 axioms.
+     p0 continuous, surjective. U and V evenly covered (all sheet properties).
+     This lemma exists to avoid duplicating the ~400-line proof in g-lift.\<close>
+
 (** from \<S>63 Theorem 63.1: if X = U \<union> V with U \<inter> V = A \<union> B (disjoint open),
     and alpha: a to b in U, beta: b to a in V, then the loop f = alpha * beta is
     nontrivial in pi_1(X, a) (plus further properties: homotopy lifts, f^m and f^k
@@ -14516,8 +14534,21 @@ proof -
     define e0 :: "'a \<times> int" where "e0 = (a, 0)"
     have he0_E: "e0 \<in> E" unfolding e0_def E_def using ha_U by simp
     have hp0e0: "p0 e0 = a" unfolding p0_def e0_def by simp
-    have hTE: "is_topology_on E TE" sorry \<comment> \<open>Same proof as in 63.1(a).\<close>
-    have hcov: "top1_covering_map_on E TE X TX p0" sorry \<comment> \<open>Same proof as in 63.1(a).\<close>
+    have hcov_and_TE: "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
+    proof -
+      note h = helix_covering_construction[OF assms(1-8)]
+      have "E = {x. even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+        unfolding E_def by auto
+      moreover have "TE = {W. W \<subseteq> E \<and>
+          (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+          (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+                {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+        unfolding TE_def E_def by auto
+      moreover have "p0 = fst" unfolding p0_def by simp
+      ultimately show ?thesis using h by simp
+    qed
+    hence hTE: "is_topology_on E TE" and hcov: "top1_covering_map_on E TE X TX p0"
+      by auto
     \<comment> \<open>g-lift: \<gamma>_lift on [0,1/2], \<delta>_lift on [1/2,1].
        \<gamma>_lift(s) = (\<gamma>(s), 0). \<delta>_lift(s) = norm(\<delta>(s), -1).
        Since a' \<in> A: norm(a', -1) = (a', 0) = \<gamma>_lift(1). Junction OK.
