@@ -13010,8 +13010,9 @@ proof -
         (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
       using S2_minus_point_homeo_R2[OF hN_S2] by (by100 blast)
     \<comment> \<open>Step 1b: Transfer C to S^2: C' = \<sigma>^{-1}(C) \<subseteq> S^2\{N}.\<close>
-    define C' where "C' = inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
-    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}" unfolding C'_def
+    define \<sigma>inv where "\<sigma>inv = inv_into (top1_S2 - {north_pole}) \<sigma>"
+    define C' where "C' = \<sigma>inv ` C"
+    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}" unfolding C'_def \<sigma>inv_def
     proof
       fix x assume "x \<in> inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
       then obtain c where hc: "c \<in> C" "x = inv_into (top1_S2 - {north_pole}) \<sigma> c" by (by100 blast)
@@ -13031,7 +13032,6 @@ proof -
           and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
         using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
       \<comment> \<open>\<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is the inverse of homeomorphism \<sigma>.\<close>
-      define \<sigma>inv where "\<sigma>inv = inv_into (top1_S2 - {north_pole}) \<sigma>"
       have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
           (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
         using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
@@ -13040,7 +13040,7 @@ proof -
         have "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
           using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
         hence "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-          unfolding \<sigma>inv_def by (rule bij_betw_inv_into)
+          using \<sigma>inv_def by (simp add: bij_betw_inv_into)
         thus ?thesis unfolding bij_betw_def by (by100 blast)
       qed
       \<comment> \<open>g = \<sigma>^{-1} \<circ> f: S^1 \<rightarrow> S^2 continuous injective, g(S^1) = C'.\<close>
@@ -13072,7 +13072,7 @@ proof -
         thus "x = y" using hf_inj hx hy unfolding inj_on_def by (by100 blast)
       qed
       have hg_img: "g ` top1_S1 = C'"
-        unfolding g_def C'_def \<sigma>inv_def image_comp[symmetric] using hf_img by simp
+        unfolding g_def C'_def image_comp[symmetric] using hf_img by simp
       show ?thesis unfolding top1_simple_closed_curve_on_def
         using hg_cont_S2 hg_inj hg_img by (by100 blast)
     qed
@@ -13099,7 +13099,35 @@ proof -
         sorry \<comment> \<open>Homeomorphic image of connected set is connected. Bridge custom/standard.\<close>
       \<comment> \<open>S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
       have hS2C'_eq: "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}"
-        sorry \<comment> \<open>Set equality: S^2\C' = S^2\{N}\C' \<union> {N} = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
+      proof -
+        have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
+          using hbij unfolding bij_betw_def by (by100 blast)
+        have hinj: "inj_on \<sigma> (top1_S2 - {north_pole})"
+          using hbij unfolding bij_betw_def by (by100 blast)
+        have hbij_inv: "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+          unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
+        have h\<sigma>inv_img: "\<sigma>inv ` UNIV = top1_S2 - {north_pole}"
+          using hbij_inv unfolding bij_betw_def by (by100 blast)
+        have h\<sigma>inv_C: "\<sigma>inv ` C = C'" unfolding C'_def \<sigma>inv_def by simp
+        have hinj_inv: "inj_on \<sigma>inv UNIV"
+          using hbij_inv unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>\<sigma>^{-1}(R^2\C) = \<sigma>^{-1}(UNIV) \ \<sigma>^{-1}(C) = (S^2\{N}) \ C'.\<close>
+        have "\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'"
+        proof -
+          have "\<sigma>inv ` (UNIV - C) = \<sigma>inv ` UNIV - \<sigma>inv ` C"
+            by (rule inj_on_image_set_diff[OF hinj_inv]) blast+
+          also have "... = (top1_S2 - {north_pole}) - C'"
+            using h\<sigma>inv_img h\<sigma>inv_C by simp
+          finally show ?thesis .
+        qed
+        \<comment> \<open>S^2\C' = ((S^2\{N})\C') \<union> ({N}\C'). N \<notin> C' since C' \<subseteq> S^2\{N}.\<close>
+        have "north_pole \<notin> C'" using hC'_sub by (by100 blast)
+        hence "top1_S2 - C' = ((top1_S2 - {north_pole}) - C') \<union> {north_pole}"
+          using hN_S2 by (by100 blast)
+        thus ?thesis using \<open>\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'\<close> by simp
+      qed
       \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
       have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
         sorry \<comment> \<open>C bounded \<Rightarrow> R^2\C unbounded \<Rightarrow> \<sigma>^{-1} of far points \<rightarrow> N.\<close>
