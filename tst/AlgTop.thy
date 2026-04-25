@@ -12944,13 +12944,69 @@ proof -
           \<comment> \<open>Step 2: Decompose via Theorem 59.1.\<close>
           \<comment> \<open>Step 3: Each piece in U/V nulhomotopic.\<close>
           \<comment> \<open>Step 4: Product of nulhomotopic = nulhomotopic.\<close>
+          \<comment> \<open>Handle basepoint: if y0 = x0 use directly, else conjugate.\<close>
           show "top1_path_homotopic_on ?X
               (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
               f (top1_constant_path y0)"
-            sorry \<comment> \<open>Identical to 61.3 proof body (lines 12060-12470) with
-               A1 connected (assms 6) replacing A1-arc-connected,
-               A2 connected (assms 7) replacing A2-arc-connected.
-               The ONLY used property is connectivity of A1, A2 for Lemma 61.2.\<close>
+          proof (cases "y0 = x0")
+            case True
+            \<comment> \<open>y0 = x0: apply Theorem 59.1 to decompose f.\<close>
+            have hTX_weak: "is_topology_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)"
+              using hTX_strict unfolding is_topology_on_strict_def by (by100 blast)
+            have hx0X: "x0 \<in> ?X" using hx0 hX_UV by (by100 blast)
+            \<comment> \<open>Key helper: any loop g at x0 mapping into U is nulhomotopic in X.\<close>
+            have hU_nul: "\<And>g. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g
+                \<Longrightarrow> g ` I_set \<subseteq> ?U \<Longrightarrow>
+                top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (top1_constant_path x0)"
+              sorry \<comment> \<open>Factor g through S^1 (loop_factors_through_S1).
+                 h: S^1 \<rightarrow> U. A1 \<subseteq> S^2\h(S^1). A1 connected, {a,b}\<subseteq>A1.
+                 By Lemma_61_2: h nulhomotopic.
+                 By nulhomotopic_trivializes_loops_general: g \<simeq> const.\<close>
+            have hV_nul: "\<And>g. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 g
+                \<Longrightarrow> g ` I_set \<subseteq> ?V \<Longrightarrow>
+                top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  g (top1_constant_path x0)"
+              sorry \<comment> \<open>Same with A2.\<close>
+            \<comment> \<open>Decompose f via Theorem 59.1.\<close>
+            obtain n gs where hn: "n \<ge> 1" and hlen: "length gs = n"
+                and hgi: "\<forall>i<n. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (gs!i)
+                    \<and> (gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V)"
+                and hf_prod: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                    f (foldr top1_path_product gs (top1_constant_path x0))"
+            proof -
+              have hf_x0: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 f"
+                using hf True by simp
+              from Theorem_59_1[OF hTX_strict hU_open_X hV_open_X hX_UV hUV_pc_X hx0, rule_format, OF hf_x0]
+              show ?thesis using that sorry
+            qed
+            \<comment> \<open>Each piece nulhomotopic.\<close>
+            have hgi_nul: "\<forall>i < length gs.
+                top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  (gs!i) (top1_constant_path x0)"
+            proof (intro allI impI)
+              fix i assume "i < length gs"
+              hence "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 (gs!i)
+                  \<and> (gs!i ` I_set \<subseteq> ?U \<or> gs!i ` I_set \<subseteq> ?V)"
+                using hgi hlen by simp
+              thus "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                  (gs!i) (top1_constant_path x0)"
+                using hU_nul hV_nul by (by100 blast)
+            qed
+            \<comment> \<open>Product nulhomotopic.\<close>
+            have "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
+                (foldr top1_path_product gs (top1_constant_path x0)) (top1_constant_path x0)"
+              by (rule foldr_path_product_nulhomotopic[OF hTX_weak hx0X hgi_nul])
+            \<comment> \<open>f \<simeq> product \<simeq> const.\<close>
+            thus ?thesis using hf_prod True
+              Lemma_51_1_path_homotopic_trans[OF hTX_weak] by (by100 blast)
+          next
+            case False
+            \<comment> \<open>y0 \<noteq> x0: conjugate. Get path \<alpha>: x0 \<rightarrow> y0 in X (X path-connected).
+               Then \<alpha>^{-1}*f*\<alpha> is a loop at x0, nulhomotopic by the True case.
+               Hence f nulhomotopic at y0.\<close>
+            show ?thesis sorry \<comment> \<open>Standard conjugation argument.\<close>
+          qed
         qed
       qed
     qed
