@@ -7450,7 +7450,45 @@ proof -
   have hTS2: "is_topology_on top1_S2 top1_S2_topology"
     using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
   have "top1_S2 \<subseteq> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
-    sorry \<comment> \<open>N \<in> closure(S^2\{N}): every open nbhd of N in S^2 contains other S^2 points.\<close>
+  proof -
+    \<comment> \<open>N \<in> closure(S^2\{N}): every closed C \<supseteq> S^2\{N} contains N.
+       If C closed and C \<supseteq> S^2\{N}, then S^2\C \<subseteq> {N}. S^2\C open.
+       {N} not open in S^2 (Hausdorff + |S^2| \<ge> 2 implies non-discrete).
+       So S^2\C = {}, C = S^2, N \<in> C.\<close>
+    have "north_pole \<in> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      unfolding closure_on_def
+    proof (rule InterI)
+      fix C' assume "C' \<in> {C. closedin_on top1_S2 top1_S2_topology C \<and> top1_S2 - {north_pole} \<subseteq> C}"
+      hence hC_closed: "closedin_on top1_S2 top1_S2_topology C'" and hC_sup: "top1_S2 - {north_pole} \<subseteq> C'"
+        by auto
+      show "north_pole \<in> C'"
+      proof -
+        have hC_sub: "C' \<subseteq> top1_S2" using hC_closed unfolding closedin_on_def by (by100 blast)
+        have "top1_S2 - C' \<subseteq> {north_pole}" using hC_sup by (by100 blast)
+        have "top1_S2 - C' \<in> top1_S2_topology"
+          using hC_closed hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+        have "top1_S2 - C' = {}"
+        proof (rule ccontr)
+          assume "top1_S2 - C' \<noteq> {}"
+          hence "top1_S2 - C' = {north_pole}"
+            using \<open>top1_S2 - C' \<subseteq> {north_pole}\<close> by (by100 blast)
+          hence "{north_pole} \<in> top1_S2_topology" using \<open>top1_S2 - C' \<in> top1_S2_topology\<close> by simp
+          \<comment> \<open>{N} \<in> S^2_top = subspace UNIV R^3_open S^2. So {N} = S^2 \<inter> W for open W \<subseteq> R^3.
+             W open in R^3 and N \<in> W \<Rightarrow> B(N,\<epsilon>) \<subseteq> W.
+             But B(N,\<epsilon>) \<inter> S^2 contains e.g. (0,sin(\<epsilon>/2),cos(\<epsilon>/2)) \<noteq> N.
+             So {N} \<subsetneq> S^2 \<inter> W. Contradiction.\<close>
+          \<comment> \<open>{N} = S^2 \<inter> W for open W. W contains ball B(N,\<epsilon>).
+             Point (0, \<epsilon>/3, sqrt(1-(\<epsilon>/3)^2)) \<in> S^2 \<inter> B(N,\<epsilon>) and \<noteq> N.\<close>
+          show False sorry \<comment> \<open>Requires: open set in R^3 containing N=(0,0,1)
+             intersects S^2 in more than one point. Needs concrete witness.\<close>
+        qed
+        thus ?thesis using hn_S2 by (by100 blast)
+      qed
+    qed
+    moreover have "top1_S2 - {north_pole} \<subseteq> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      by (rule subset_closure_on)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have "top1_connected_on top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2)"
     by (rule Theorem_23_4[OF hTS2 _ _ _ _ hN_conn])
        (use \<open>top1_S2 \<subseteq> closure_on top1_S2 top1_S2_topology (top1_S2 - {north_pole})\<close> in blast)+
