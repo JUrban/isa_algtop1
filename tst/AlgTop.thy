@@ -7873,6 +7873,19 @@ proof -
   qed
 qed
 
+\<comment> \<open>Connected open delete for R^2: removing one point from a connected open set preserves connectivity.\<close>
+lemma connected_open_delete_R2:
+  fixes U :: "(real \<times> real) set" and p :: "real \<times> real"
+  assumes "open U" "connected U"
+  shows "connected (U - {p})"
+  sorry
+
+\<comment> \<open>Exterior of a ball in R^2 is connected.\<close>
+lemma exterior_ball_connected_R2:
+  fixes R :: real
+  shows "connected {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > R ^ 2}"
+  sorry
+
 \<comment> \<open>General composition lemma: if g: A \<rightarrow> R^2 is custom-continuous and
    \<phi>: R^2 \<times> I \<rightarrow> R^2 is standard-continuous, then \<phi>(g(\<cdot>),\<cdot>): A\<times>I \<rightarrow> R^2 is custom-continuous.
    This bridges custom topology on A with standard topology on R^2.\<close>
@@ -8328,8 +8341,194 @@ proof -
   have hsame_comp_R2: "\<exists>C. C \<in> top1_components_on (UNIV - (h \<circ> f) ` A)
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - (h \<circ> f) ` A))
       \<and> ?ha \<in> C \<and> p \<in> C"
-    sorry \<comment> \<open>h(a), p in same component of R^2-g(A): both in unique unbounded component.
-       Needs bounded/connected_component type class instances not available for real \<times> real.\<close>
+  proof -
+    let ?gA = "(h \<circ> f) ` A"
+    let ?S = "UNIV - ?gA :: (real \<times> real) set"
+    let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+    have hTR2eq: "?TR2 = (top1_open_sets :: (real \<times> real) set set)"
+      using product_topology_on_open_sets_real2 by (by100 metis)
+    \<comment> \<open>Step 1: Get C0 containing a,b. Show h(C0-{b}) connected in standard topology.\<close>
+    obtain C0 where hC0: "C0 \<in> top1_components_on (top1_S2 - f ` A)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+        and ha_C0: "a \<in> C0" and hb_C0: "b \<in> C0"
+      using hsame by blast
+    have hC0_sub: "C0 \<subseteq> top1_S2 - f ` A"
+      using hC0 unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+    \<comment> \<open>h(C0-{b}) connected: C0 open connected in S^2, C0-{b} homeomorphic to open connected in R^2,
+       connected_open_delete_R2 gives R^2 image connected.\<close>
+    have himg_conn: "connected (h ` (C0 - {b}))"
+      sorry \<comment> \<open>C0 open connected in S^2, h homeo S^2-{b}\<cong>R^2, h(C0-{b}) open connected in R^2,
+         connected_open_delete_R2 preserves connectivity.\<close>
+    \<comment> \<open>Step 2: h(C0-{b}) \<subseteq> R^2-gA, unbounded, contains h(a).\<close>
+    have himg_sub: "h ` (C0 - {b}) \<subseteq> ?S"
+    proof
+      fix y assume "y \<in> h ` (C0 - {b})"
+      then obtain x where hx: "x \<in> C0 - {b}" and hyx: "y = h x" by blast
+      have "x \<notin> f ` A" using hx hC0_sub by (by100 blast)
+      have "x \<in> top1_S2 - {b}" using hx hC0_sub by (by100 blast)
+      have "h x \<notin> ?gA"
+      proof
+        assume "h x \<in> ?gA"
+        then obtain z where "z \<in> A" "h (f z) = h x" by auto
+        have "f z \<in> top1_S2 - {a,b}" using hf \<open>z \<in> A\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+        hence "f z \<in> top1_S2 - {b}" by (by100 blast)
+        have hinj_loc: "inj_on h (top1_S2 - {b})"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "f z = x"
+          by (rule inj_onD[OF hinj_loc \<open>h (f z) = h x\<close> \<open>f z \<in> top1_S2 - {b}\<close> \<open>x \<in> top1_S2 - {b}\<close>])
+        thus False using \<open>x \<notin> f ` A\<close> \<open>z \<in> A\<close> by (by100 blast)
+      qed
+      thus "y \<in> ?S" using hyx by simp
+    qed
+    have hha_img: "?ha \<in> h ` (C0 - {b})" using ha_C0 hab by (by100 blast)
+    \<comment> \<open>h(C0-{b}) unbounded.\<close>
+    have hfA_sub: "f ` A \<subseteq> top1_S2"
+    proof
+      fix x assume "x \<in> f ` A"
+      then obtain y where "y \<in> A" "x = f y" by blast
+      thus "x \<in> top1_S2" using hf unfolding top1_continuous_map_on_def by (by100 blast)
+    qed
+    have hfA_compact: "top1_compact_on (f ` A) (subspace_topology top1_S2 top1_S2_topology (f ` A))"
+    proof -
+      have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+        using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hf_S2: "top1_continuous_map_on A TA top1_S2 top1_S2_topology f"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> A" thus "f x \<in> top1_S2" using hfA_sub by (by100 blast)
+      next
+        fix V assume hV: "V \<in> top1_S2_topology"
+        have "(top1_S2 - {a,b}) \<inter> V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a,b})"
+          by (rule subspace_topology_memI[OF hV])
+        hence "{x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V} \<in> TA"
+          using hf unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{x \<in> A. f x \<in> V} = {x \<in> A. f x \<in> (top1_S2 - {a,b}) \<inter> V}"
+          using hf unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{x \<in> A. f x \<in> V} \<in> TA" by simp
+      qed
+      show ?thesis by (rule top1_compact_on_continuous_image[OF hcomp hTS2 hf_S2])
+    qed
+    have hb_S2fA: "b \<in> top1_S2 - f ` A"
+    proof
+      show "b \<in> top1_S2" by (rule hb)
+      show "b \<notin> f ` A"
+      proof
+        assume "b \<in> f ` A"
+        then obtain y where "y \<in> A" "f y = b" by blast
+        hence "f y \<in> top1_S2 - {a, b}" using hf unfolding top1_continuous_map_on_def by (by100 blast)
+        thus False using \<open>f y = b\<close> by simp
+      qed
+    qed
+    have hC0_conn_custom: "top1_connected_on C0 (subspace_topology top1_S2 top1_S2_topology C0)"
+    proof -
+      have hTS2_: "is_topology_on top1_S2 top1_S2_topology"
+        using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hTS2fA: "is_topology_on (top1_S2 - f ` A)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))"
+        by (rule subspace_topology_is_topology_on[OF hTS2_]) (by100 blast)
+      have "top1_connected_on C0 (subspace_topology (top1_S2 - f ` A)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A)) C0)"
+        by (rule Theorem_25_1(3)[OF hTS2fA hC0])
+      thus ?thesis by (simp add: subspace_topology_trans[OF hC0_sub])
+    qed
+    have himg_unbdd: "\<forall>N. \<exists>q \<in> h ` (C0 - {b}). fst q ^ 2 + snd q ^ 2 > N"
+      using Lemma_61_1_components_correspond[OF hT hfA_sub hfA_compact hb_S2fA hh
+          hC0_conn_custom hC0_sub hC0] hb_C0 by (by100 blast)
+    \<comment> \<open>Step 3: Exterior connected and in ?S.\<close>
+    define ext where "ext = {x :: real \<times> real. fst x ^ 2 + snd x ^ 2 > M ^ 2}"
+    have hext_conn: "connected ext" unfolding ext_def by (rule exterior_ball_connected_R2)
+    have hext_sub: "ext \<subseteq> ?S"
+    proof
+      fix x assume "x \<in> ext"
+      hence "fst x ^ 2 + snd x ^ 2 > M ^ 2" unfolding ext_def by simp
+      hence "x \<notin> ?gA" using hgA_bdd by (by100 force)
+      thus "x \<in> ?S" by simp
+    qed
+    have hp_ext: "p \<in> ext" unfolding ext_def using hp_far by simp
+    \<comment> \<open>h(C0-{b}) intersects ext (unbounded image has points outside B(0,M)).\<close>
+    have himg_ext_ne: "h ` (C0 - {b}) \<inter> ext \<noteq> {}"
+    proof -
+      obtain q where "q \<in> h ` (C0 - {b})" "fst q ^ 2 + snd q ^ 2 > M ^ 2"
+        using himg_unbdd[THEN spec[of _ "M ^ 2"]] by (by100 blast)
+      hence "q \<in> ext" unfolding ext_def by simp
+      thus ?thesis using \<open>q \<in> h ` (C0 - {b})\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Union connected (Theorem_23_3 analog for standard topology).\<close>
+    have hunion_conn: "connected (h ` (C0 - {b}) \<union> ext)"
+    proof (rule connectedI)
+      fix T1 T2 :: "(real \<times> real) set"
+      assume hT1: "open T1" and hT2: "open T2" and hcov: "h ` (C0 - {b}) \<union> ext \<subseteq> T1 \<union> T2"
+          and hdisj: "T1 \<inter> T2 \<inter> (h ` (C0 - {b}) \<union> ext) = {}"
+          and hne1: "T1 \<inter> (h ` (C0 - {b}) \<union> ext) \<noteq> {}" and hne2: "T2 \<inter> (h ` (C0 - {b}) \<union> ext) \<noteq> {}"
+      \<comment> \<open>From connected components: h(C0-{b}) and ext each lie in T1 or T2.\<close>
+      have himg_sub_T: "h ` (C0 - {b}) \<subseteq> T1 \<union> T2" using hcov by (by100 blast)
+      have himg_disj: "T1 \<inter> T2 \<inter> h ` (C0 - {b}) = {}" using hdisj by (by100 blast)
+      have "T1 \<inter> h ` (C0 - {b}) = {} \<or> T2 \<inter> h ` (C0 - {b}) = {}"
+        by (rule connectedD[OF himg_conn hT1 hT2 himg_disj himg_sub_T])
+      hence himg_T: "h ` (C0 - {b}) \<subseteq> T1 \<or> h ` (C0 - {b}) \<subseteq> T2"
+        using himg_sub_T by (by100 blast)
+      have hext_sub_T: "ext \<subseteq> T1 \<union> T2" using hcov by (by100 blast)
+      have hext_disj: "T1 \<inter> T2 \<inter> ext = {}" using hdisj by (by100 blast)
+      have "T1 \<inter> ext = {} \<or> T2 \<inter> ext = {}"
+        by (rule connectedD[OF hext_conn hT1 hT2 hext_disj hext_sub_T])
+      hence hext_T: "ext \<subseteq> T1 \<or> ext \<subseteq> T2"
+        using hext_sub_T by (by100 blast)
+      \<comment> \<open>Since they share a point (himg_ext_ne), they must be in the same Ti.\<close>
+      obtain z where hz: "z \<in> h ` (C0 - {b})" "z \<in> ext" using himg_ext_ne by (by100 blast)
+      show False
+      proof (cases "h ` (C0 - {b}) \<subseteq> T1")
+        case True
+        hence "z \<in> T1" using hz(1) by (by100 blast)
+        hence "ext \<subseteq> T1" using hext_T hdisj hz(2) by (by100 blast)
+        hence "h ` (C0 - {b}) \<union> ext \<subseteq> T1" using True by (by100 blast)
+        thus False using hne2 hdisj by (by100 blast)
+      next
+        case False
+        hence "h ` (C0 - {b}) \<subseteq> T2" using himg_T by simp
+        hence "z \<in> T2" using hz(1) by (by100 blast)
+        hence "ext \<subseteq> T2" using hext_T hdisj hz(2) by (by100 blast)
+        hence "h ` (C0 - {b}) \<union> ext \<subseteq> T2" using \<open>h ` (C0 - {b}) \<subseteq> T2\<close> by (by100 blast)
+        thus False using hne1 hdisj by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Union contains ha and p, is connected, and \<subseteq> ?S.\<close>
+    have hunion_sub: "h ` (C0 - {b}) \<union> ext \<subseteq> ?S" using himg_sub hext_sub by (by100 blast)
+    have hha_union: "?ha \<in> h ` (C0 - {b}) \<union> ext" using hha_img by (by100 blast)
+    have hp_union: "p \<in> h ` (C0 - {b}) \<union> ext" using hp_ext by (by100 blast)
+    have hunion_ne: "h ` (C0 - {b}) \<union> ext \<noteq> {}" using hha_union by (by100 blast)
+    \<comment> \<open>Bridge to custom topology: connected in standard \<Rightarrow> connected in custom.\<close>
+    have hunion_custom_conn: "top1_connected_on (h ` (C0 - {b}) \<union> ext)
+        (subspace_topology UNIV ?TR2 (h ` (C0 - {b}) \<union> ext))"
+    proof -
+      have "top1_connected_on (h ` (C0 - {b}) \<union> ext)
+          (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) (h ` (C0 - {b}) \<union> ext))"
+        using top1_connected_on_subspace_open_iff_connected hunion_conn by (by100 blast)
+      thus ?thesis using hTR2eq by simp
+    qed
+    \<comment> \<open>Subspace transition: from UNIV to ?S.\<close>
+    have hunion_custom_conn2: "top1_connected_on (h ` (C0 - {b}) \<union> ext)
+        (subspace_topology ?S (subspace_topology UNIV ?TR2 ?S) (h ` (C0 - {b}) \<union> ext))"
+    proof -
+      have "subspace_topology ?S (subspace_topology UNIV ?TR2 ?S) (h ` (C0 - {b}) \<union> ext)
+          = subspace_topology UNIV ?TR2 (h ` (C0 - {b}) \<union> ext)"
+        by (rule subspace_topology_trans[OF hunion_sub])
+      thus ?thesis using hunion_custom_conn by simp
+    qed
+    \<comment> \<open>By Theorem_25_1(4): connected subset contained in a component.\<close>
+    have hTS: "is_topology_on ?S (subspace_topology UNIV ?TR2 ?S)"
+    proof -
+      have "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+            top1_open_sets_is_topology_on_UNIV] by simp
+      thus ?thesis by (rule subspace_topology_is_topology_on) simp
+    qed
+    obtain D where hD: "D \<in> top1_components_on ?S (subspace_topology UNIV ?TR2 ?S)"
+        and hunion_D: "h ` (C0 - {b}) \<union> ext \<subseteq> D"
+      using Theorem_25_1(4)[OF hTS hunion_sub hunion_custom_conn2 hunion_ne] by blast
+    have "?ha \<in> D" using hha_union hunion_D by (by100 blast)
+    moreover have "p \<in> D" using hp_union hunion_D by (by100 blast)
+    ultimately show ?thesis using hD by (by100 blast)
+  qed
   \<comment> \<open>Step 6: h(a) and p in same component \<Rightarrow> path \<alpha> from h(a) to p in R^2-g(A).\<close>
   have hinj': "inj_on h (top1_S2 - {b})"
     using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
