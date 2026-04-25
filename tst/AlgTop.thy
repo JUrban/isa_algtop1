@@ -13651,7 +13651,110 @@ proof
             qed
             show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) X
                 (subspace_topology X TX X) p0"
-              sorry \<comment> \<open>Sheet homeomorphism: timeout issues, needs is_topology_on_strict.\<close>
+            proof
+              fix Vn assume "Vn \<in> ?\<V>"
+              then obtain n :: int where hVn_eq: "Vn = X \<times> {n}" by (by100 blast)
+              have hVn_sub_E: "Vn \<subseteq> E" unfolding hVn_eq E_def by (by100 blast)
+              have hTVn: "is_topology_on Vn (subspace_topology E TE Vn)"
+                by (rule subspace_topology_is_topology_on[OF hTE' hVn_sub_E])
+              have hTX_sub: "is_topology_on X (subspace_topology X TX X)"
+                by (rule subspace_topology_is_topology_on[OF assms(1)]) simp
+              \<comment> \<open>bij_betw: fst maps X \<times> {n} bijectively to X.\<close>
+              have hbij: "bij_betw p0 Vn X"
+                unfolding bij_betw_def p0_def hVn_eq
+              proof (intro conjI)
+                show "inj_on fst (X \<times> {n})" by (intro inj_onI) auto
+                show "fst ` (X \<times> {n}) = X" by force
+              qed
+              \<comment> \<open>p0 continuous: subspace E TE Vn \<rightarrow> subspace X TX X.\<close>
+              have hcont: "top1_continuous_map_on Vn (subspace_topology E TE Vn) X
+                  (subspace_topology X TX X) p0"
+                unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix e assume "e \<in> Vn"
+                thus "p0 e \<in> X" unfolding hVn_eq p0_def by auto
+              next
+                fix V assume hV_open: "V \<in> subspace_topology X TX X"
+                \<comment> \<open>V = X \<inter> V' for some V' \<in> TX. Want {e \<in> Vn. p0 e \<in> V} \<in> subspace_topology E TE Vn.\<close>
+                obtain V' where hV': "V' \<in> TX" and hV_eq: "V = X \<inter> V'"
+                  using hV_open unfolding subspace_topology_def by (by100 blast)
+                have hV_sub_X: "V \<subseteq> X" using hV_eq by (by100 blast)
+                \<comment> \<open>Preimage: {e \<in> Vn. p0 e \<in> V} = V \<times> {n}.\<close>
+                have hpre_eq: "{e \<in> Vn. p0 e \<in> V} = V \<times> {n}"
+                  unfolding hVn_eq p0_def using hV_sub_X by auto
+                \<comment> \<open>Build W \<in> TE with Vn \<inter> W = V \<times> {n}.\<close>
+                define W where "W = {(x, m) \<in> E. x \<in> V}"
+                have hW_TE: "W \<in> TE" unfolding TE_def W_def
+                proof (intro CollectI conjI allI)
+                  show "{(x, m) \<in> E. x \<in> V} \<subseteq> E" by (by100 blast)
+                  fix m :: int show "{x. (x, m) \<in> {(x, m) \<in> E. x \<in> V}} \<in> TX"
+                  proof -
+                    have heq: "{x. (x, m) \<in> {(x, m) \<in> E. x \<in> V}} = V"
+                      unfolding E_def using hV_sub_X by auto
+                    have "V \<in> TX"
+                    proof -
+                      have "X \<in> TX" using assms(1) unfolding is_topology_on_def by (by100 blast)
+                      have "X \<inter> V' \<in> TX" by (rule topology_inter_open[OF assms(1) \<open>X \<in> TX\<close> hV'])
+                      thus ?thesis using hV_eq by simp
+                    qed
+                    thus ?thesis using heq by simp
+                  qed
+                qed
+                have hVnW: "Vn \<inter> W = V \<times> {n}" unfolding hVn_eq W_def E_def using hV_sub_X by auto
+                hence "{e \<in> Vn. p0 e \<in> V} = Vn \<inter> W" using hpre_eq by simp
+                moreover have "Vn \<inter> W \<in> subspace_topology E TE Vn"
+                  using hW_TE unfolding subspace_topology_def by (by100 blast)
+                ultimately show "{e \<in> Vn. p0 e \<in> V} \<in> subspace_topology E TE Vn" by simp
+              qed
+              \<comment> \<open>Inverse continuous: subspace X TX X \<rightarrow> subspace E TE Vn.\<close>
+              have hinv_eq: "\<And>x. x \<in> X \<Longrightarrow> inv_into Vn p0 x = (x, n)"
+              proof -
+                fix x assume "x \<in> X"
+                have "(x, n) \<in> Vn" unfolding hVn_eq using \<open>x \<in> X\<close> by simp
+                moreover have "p0 (x, n) = x" unfolding p0_def by simp
+                moreover have "inj_on p0 Vn" using hbij unfolding bij_betw_def by blast
+                ultimately show "inv_into Vn p0 x = (x, n)"
+                  by (intro inv_into_f_eq) auto
+              qed
+              have hinv_cont: "top1_continuous_map_on X (subspace_topology X TX X) Vn
+                  (subspace_topology E TE Vn) (inv_into Vn p0)"
+                unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix x assume "x \<in> X"
+                thus "inv_into Vn p0 x \<in> Vn" using hinv_eq hVn_eq by simp
+              next
+                fix W assume "W \<in> subspace_topology E TE Vn"
+                \<comment> \<open>W = Vn \<inter> W' for W' \<in> TE. Preimage = {x \<in> X. (x,n) \<in> W'} = slice_n(W').\<close>
+                then obtain W' where hW': "W' \<in> TE" and hW_eq: "W = Vn \<inter> W'"
+                  unfolding subspace_topology_def by (by100 blast)
+                have hslice: "{x \<in> X. inv_into Vn p0 x \<in> W} = {x. (x, n) \<in> W'} \<inter> X"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> {x \<in> X. inv_into Vn p0 x \<in> W}"
+                  hence hx: "x \<in> X" and "inv_into Vn p0 x \<in> W" by auto
+                  hence "(x, n) \<in> W" using hinv_eq[OF hx] by simp
+                  hence "(x, n) \<in> W'" using hW_eq hVn_eq hx by auto
+                  thus "x \<in> {x. (x, n) \<in> W'} \<inter> X" using hx by (by100 blast)
+                next
+                  fix x assume "x \<in> {x. (x, n) \<in> W'} \<inter> X"
+                  hence hx: "x \<in> X" and hxW': "(x, n) \<in> W'" by auto
+                  have "(x, n) \<in> Vn" unfolding hVn_eq using hx by simp
+                  hence "(x, n) \<in> W" using hxW' hW_eq by (by100 blast)
+                  thus "x \<in> {x \<in> X. inv_into Vn p0 x \<in> W}" using hx hinv_eq[OF hx] by simp
+                qed
+                have hslice_TX: "{x. (x, n) \<in> W'} \<in> TX" using hW' unfolding TE_def by (by100 blast)
+                have hslice_sub: "{x. (x, n) \<in> W'} \<inter> X \<in> subspace_topology X TX X"
+                proof -
+                  have "{x. (x, n) \<in> W'} \<inter> X = X \<inter> {x. (x, n) \<in> W'}" by (by100 blast)
+                  thus ?thesis using hslice_TX unfolding subspace_topology_def by (by100 blast)
+                qed
+                show "{x \<in> X. inv_into Vn p0 x \<in> W} \<in> subspace_topology X TX X"
+                  using hslice hslice_sub by simp
+              qed
+              show "top1_homeomorphism_on Vn (subspace_topology E TE Vn) X
+                  (subspace_topology X TX X) p0"
+                unfolding top1_homeomorphism_on_def
+                using hTVn hTX_sub hbij hcont hinv_cont by (by100 blast)
+            qed
           qed
         qed
       qed
