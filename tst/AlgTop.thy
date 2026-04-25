@@ -11860,6 +11860,31 @@ qed
 
 section \<open>*\<S>62 Invariance of Domain\<close>
 
+text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
+  and nulhomotopic, then a and b lie in the same component of S^2-f(A).\<close>
+
+lemma Lemma_62_2_BorsukLemma:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+    and a b :: "real \<times> real \<times> real"
+  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hcomp: "top1_compact_on A TA"
+      and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
+      and hf: "top1_continuous_map_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+      and hinj: "inj_on f A"
+      and hnul: "top1_nulhomotopic_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
+         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
+         \<and> a \<in> C \<and> b \<in> C"
+  sorry \<comment> \<open>Munkres Lemma 62.2: Converse of Lemma 61.2 under injectivity.
+     Proof: By Lemma 61.2's contrapositive + injectivity.
+     If a,b NOT in same component, then f NOT nulhomotopic (by converse of 61.2).
+     But f IS nulhomotopic. Contradiction.
+     Actually: 61.2 says same_component \<Rightarrow> nulhomotopic.
+     62.2 says nulhomotopic + injective \<Rightarrow> same_component.
+     The proof of 62.2 in Munkres uses a retraction argument.\<close>
+
 text \<open>Invariance of domain in R^2: an open injective continuous map R^2 \<rightarrow> R^2
   has open image, and its invgerse is continuous.\<close>
 
@@ -12796,56 +12821,92 @@ theorem Theorem_63_2_arc_no_separation:
   and "D \<subseteq> top1_S2"
   and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
   shows "\<not> top1_separates_on top1_S2 top1_S2_topology D"
-proof (rule ccontr)
-  assume hnot: "\<not> \<not> top1_separates_on top1_S2 top1_S2_topology D"
-  hence hsep: "top1_separates_on top1_S2 top1_S2_topology D" by blast
-  \<comment> \<open>Munkres 63.2: Split D=D1\<union>D2 at midpoint d.\<close>
-  obtain d D1 D2 where hd: "d \<in> D" and hD: "D = D1 \<union> D2" and "D1 \<inter> D2 = {d}"
-      and "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
-      and "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
-    using arc_split_at_midpoint[OF assms(1) top1_S2_is_hausdorff assms(2) assms(3)] by (by100 blast)
-  \<comment> \<open>Since D separates S^2, take a\<in>A, b\<in>B in different components of S^2-D.\<close>
-  \<comment> \<open>From separation: S^2-D is not connected. Extract two points in different components.\<close>
-  have hab_exists: "\<exists>a b. a \<in> top1_S2 - D \<and> b \<in> top1_S2 - D \<and>
-      \<not> (\<exists>f. top1_is_path_on (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a b f)"
-  proof -
-    have hTS2D: "is_topology_on (top1_S2 - D) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-      by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
-    show ?thesis by (rule not_connected_imp_no_path[OF hTS2D
-        hsep[unfolded top1_separates_on_def]])
+proof -
+  \<comment> \<open>Munkres 63.2 first proof: D is an arc (contractible), so inclusion j: D \<rightarrow> S^2-{a,b}
+     is nulhomotopic. By Borsuk lemma (62.2), a and b in same component of S^2-D.
+     Hence D does not separate S^2.\<close>
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  show ?thesis unfolding top1_separates_on_def
+  proof
+    assume hnsep: "\<not> top1_connected_on (top1_S2 - D) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+    \<comment> \<open>Derive contradiction: all points in S^2-D are in the same component.\<close>
+    show False
+    proof -
+      \<comment> \<open>For any a, b \<in> S^2-D, show they're in the same component.
+         D \<cong> [0,1] is contractible. The inclusion j: D \<hookrightarrow> S^2-{a,b} is nulhomotopic
+         (contractible domain). By Borsuk lemma, a and b in same component of S^2-j(D)=S^2-D.\<close>
+      have hD_compact: "top1_compact_on D (subspace_topology top1_S2 top1_S2_topology D)"
+      proof -
+        obtain h where hh: "top1_homeomorphism_on I_set I_top D
+            (subspace_topology top1_S2 top1_S2_topology D) h"
+          using assms(3) unfolding top1_is_arc_on_def by (by100 blast)
+        have hI_compact: "top1_compact_on I_set I_top"
+        proof -
+          have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+            by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+          have "compact I_set" unfolding hI01 by (rule compact_Icc)
+          thus ?thesis
+            unfolding top1_unit_interval_topology_def
+            using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+        qed
+        have hcont: "top1_continuous_map_on I_set I_top D
+            (subspace_topology top1_S2 top1_S2_topology D) h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTD: "is_topology_on D (subspace_topology top1_S2 top1_S2_topology D)"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have himg: "h ` I_set = D"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "top1_compact_on (h ` I_set) (subspace_topology D
+            (subspace_topology top1_S2 top1_S2_topology D) (h ` I_set))"
+          by (rule top1_compact_on_continuous_image[OF hI_compact hTD hcont])
+        hence "top1_compact_on D (subspace_topology D
+            (subspace_topology top1_S2 top1_S2_topology D) D)"
+          using himg by simp
+        moreover have "subspace_topology D (subspace_topology top1_S2 top1_S2_topology D) D
+            = subspace_topology top1_S2 top1_S2_topology D"
+          by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+        ultimately show ?thesis by simp
+      qed
+      have hD_contractible: "\<forall>a b. a \<in> top1_S2 \<longrightarrow> b \<in> top1_S2 \<longrightarrow> a \<noteq> b \<longrightarrow>
+          a \<notin> D \<longrightarrow> b \<notin> D \<longrightarrow>
+          top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
+            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
+            (\<lambda>x. x)"
+        sorry \<comment> \<open>D contractible (arc \<cong> [0,1]), so any continuous map from D is nulhomotopic.
+           The inclusion j: D \<hookrightarrow> S^2-{a,b} is continuous and nulhomotopic.\<close>
+      have hD_injective: "inj_on (\<lambda>x. x) D" by (simp add: inj_on_def)
+      \<comment> \<open>For any a, b \<in> S^2-D: by Borsuk lemma, a and b in same component of S^2-D.\<close>
+      have hall_same_comp: "\<forall>a b. a \<in> top1_S2 - D \<longrightarrow> b \<in> top1_S2 - D \<longrightarrow> a \<noteq> b \<longrightarrow>
+          (\<exists>C. C \<in> top1_components_on (top1_S2 - D)
+               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))
+               \<and> a \<in> C \<and> b \<in> C)"
+      proof (intro allI impI)
+        fix a b assume ha: "a \<in> top1_S2 - D" and hb: "b \<in> top1_S2 - D" and hab: "a \<noteq> b"
+        have ha_S2: "a \<in> top1_S2" using ha by (by100 blast)
+        have hb_S2: "b \<in> top1_S2" using hb by (by100 blast)
+        have ha_notin_D: "a \<notin> D" using ha by (by100 blast)
+        have hb_notin_D: "b \<notin> D" using hb by (by100 blast)
+        have hf_cont: "top1_continuous_map_on D (subspace_topology top1_S2 top1_S2_topology D)
+            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
+            (\<lambda>x. x)"
+          sorry \<comment> \<open>Inclusion D \<hookrightarrow> S^2-{a,b} continuous: D \<subseteq> S^2-{a,b} since a,b \<notin> D.\<close>
+        have hf_nul: "top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
+            (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
+            (\<lambda>x. x)"
+          using hD_contractible ha_S2 hb_S2 hab ha_notin_D hb_notin_D by blast
+        have "(\<lambda>x. x) ` D = D" by simp
+        show "\<exists>C. C \<in> top1_components_on (top1_S2 - D)
+             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))
+             \<and> a \<in> C \<and> b \<in> C"
+          using Lemma_62_2_BorsukLemma[OF assms(1) hD_compact ha_S2 hb_S2 hab hf_cont
+              hD_injective hf_nul]
+          by simp
+      qed
+      \<comment> \<open>All points in same component \<Rightarrow> connected. Contradicts hnsep.\<close>
+      show ?thesis sorry \<comment> \<open>Derive contradiction from all-same-component + hnsep.\<close>
+    qed
   qed
-  obtain a b where hab: "a \<in> top1_S2 - D" "b \<in> top1_S2 - D"
-      and hab_sep: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - D)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a b f)"
-    using hab_exists by (by100 blast)
-  \<comment> \<open>X=S^2-{d}, U=S^2-D1, V=S^2-D2. Apply Theorem 63.1.\<close>
-  \<comment> \<open>Get nontrivial element of \<pi>_1(X). But X\<cong>R^2 has trivial \<pi>_1. Contradiction.\<close>
-  have hd_S2: "d \<in> top1_S2" using hd assms(2) by (by100 blast)
-  have h_pi1_trivial: "top1_simply_connected_on (top1_S2 - {d})
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d}))"
-    by (rule S2_minus_point_simply_connected[OF hd_S2])
-  \<comment> \<open>By Theorem 63.1 applied to X=S^2-{d}, U=S^2-D1, V=S^2-D2,
-     with U\<inter>V = S^2-D = A\<sqcup>B (path components from the separation), and
-     paths \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V, the loop \<alpha>*\<beta> is nontrivial in \<pi>_1(X, a).
-     But X = S^2-{d} is simply connected (by S2_minus_point_simply_connected).
-     So all loops are trivial. Contradiction.\<close>
-  have h_pi1_nontrivial: "\<exists>l. top1_is_loop_on (top1_S2 - {d})
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d})) a l
-      \<and> \<not> top1_path_homotopic_on (top1_S2 - {d})
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d})) a a l
-          (top1_constant_path a)" sorry
-  have ha_S2: "a \<in> top1_S2" using hab(1) by (by100 blast)
-  have ha_ne_d: "a \<noteq> d" using hab(1) hd by (by100 blast)
-  have ha_X: "a \<in> top1_S2 - {d}" using ha_S2 ha_ne_d by (by100 blast)
-  obtain l where hl: "top1_is_loop_on (top1_S2 - {d})
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d})) a l
-      \<and> \<not> top1_path_homotopic_on (top1_S2 - {d})
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {d})) a a l
-          (top1_constant_path a)"
-    using h_pi1_nontrivial by (by100 blast)
-  show False using hl h_pi1_trivial ha_X
-    unfolding top1_simply_connected_on_def by (by100 blast)
 qed
 
 (** from \<S>63 Theorem 63.3: general non-separation theorem. **)
