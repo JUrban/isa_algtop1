@@ -13542,8 +13542,62 @@ proof -
             {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F} \<in> TX" using heq by simp
       qed
     qed
-    have hcov: "top1_covering_map_on E TE X TX p0" sorry
-      \<comment> \<open>p0=fst continuous + surjective. U and V evenly covered with sheet homeomorphisms.\<close>
+    have hcov: "top1_covering_map_on E TE X TX p0"
+      unfolding top1_covering_map_on_def
+    proof (intro conjI)
+      show "top1_continuous_map_on E TE X TX p0"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix e assume "e \<in> E"
+        thus "p0 e \<in> X" unfolding p0_def E_def using assms(2,3,4) unfolding openin_on_def by auto
+      next
+        fix W assume hW: "W \<in> TX"
+        show "{e \<in> E. p0 e \<in> W} \<in> TE" unfolding TE_def
+        proof (intro CollectI conjI allI)
+          show "{e \<in> E. p0 e \<in> W} \<subseteq> E" by (by100 blast)
+          fix n :: int
+          have "{x \<in> U. (x, 2*n) \<in> {e \<in> E. p0 e \<in> W}} = U \<inter> W"
+            unfolding p0_def E_def by auto
+          thus "{x \<in> U. (x, 2*n) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+            using topology_inter_open[OF assms(1) hU_TX hW] by simp
+          have h1: "{x \<in> A. (x, 2*n+2) \<in> {e \<in> E. p0 e \<in> W}} = A \<inter> W"
+            unfolding p0_def E_def using hAB by auto
+          have h2: "{x \<in> B. (x, 2*n) \<in> {e \<in> E. p0 e \<in> W}} = B \<inter> W"
+            unfolding p0_def E_def using hAB by auto
+          have h3: "{x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. p0 e \<in> W}} = (V-U) \<inter> W"
+            unfolding p0_def E_def by auto
+          have "(A \<inter> W) \<union> (B \<inter> W) \<union> ((V-U) \<inter> W) = V \<inter> W" using hAB by (by100 blast)
+          moreover have "V \<inter> W \<in> TX"
+            by (rule topology_inter_open[OF assms(1) hV_TX hW])
+          ultimately show "{x \<in> A. (x, 2*n+2) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+              {x \<in> B. (x, 2*n) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+            using h1 h2 h3 by simp
+        qed
+      qed
+    next
+      show "p0 ` E = X"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> p0 ` E"
+        thus "x \<in> X" unfolding p0_def E_def using assms(2,3,4) unfolding openin_on_def by auto
+      next
+        fix x assume "x \<in> X"
+        hence "x \<in> U \<or> x \<in> V - U" using assms(4) by (by100 blast)
+        thus "x \<in> p0 ` E"
+        proof
+          assume "x \<in> U"
+          hence "(x, 0::int) \<in> E" unfolding E_def by simp
+          thus ?thesis unfolding p0_def by (by100 force)
+        next
+          assume "x \<in> V - U"
+          hence "(x, 1::int) \<in> E" unfolding E_def by simp
+          thus ?thesis unfolding p0_def by (by100 force)
+        qed
+      qed
+    next
+      show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
+        sorry \<comment> \<open>U and V evenly covered. Same proof as in 63.1(a).\<close>
+    qed
     show ?thesis using hTE hcov by simp
   qed
 
