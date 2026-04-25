@@ -10896,7 +10896,106 @@ proof
         ultimately show "{x. (x, n) \<in> \<Inter>F} \<in> TX" by simp
       qed
     qed
-    have hcov': "top1_covering_map_on E TE X TX p0" sorry
+    have hcov': "top1_covering_map_on E TE X TX p0"
+      unfolding top1_covering_map_on_def
+    proof (intro conjI)
+      \<comment> \<open>p0 continuous: for each open V \<in> TX, preimage = V \<times> Z which has each slice V \<in> TX.\<close>
+      show "top1_continuous_map_on E TE X TX p0"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix e assume "e \<in> E"
+        hence "fst e \<in> X" unfolding E_def using mem_Times_iff[of e X "UNIV::int set"]
+          by simp
+        thus "p0 e \<in> X" unfolding p0_def by simp
+      next
+        fix V assume hV: "V \<in> TX"
+        show "{e \<in> E. p0 e \<in> V} \<in> TE" unfolding TE_def
+        proof (intro CollectI conjI allI)
+          show "{e \<in> E. p0 e \<in> V} \<subseteq> E" by (by100 blast)
+          fix n :: int show "{x. (x, n) \<in> {e \<in> E. p0 e \<in> V}} \<in> TX"
+          proof -
+            have heq: "{x. (x, n) \<in> {e \<in> E. p0 e \<in> V}} = X \<inter> V"
+              unfolding p0_def E_def by auto
+            moreover have "X \<inter> V \<in> TX"
+            proof -
+              have "X \<in> TX" using assms(1) unfolding is_topology_on_def by (by100 blast)
+              thus ?thesis by (rule topology_inter_open[OF assms(1) _ hV])
+            qed
+            ultimately show ?thesis by simp
+          qed
+        qed
+      qed
+    next
+      \<comment> \<open>p0 surjective.\<close>
+      show "p0 ` E = X"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> p0 ` E"
+        thus "x \<in> X" unfolding p0_def E_def by auto
+      next
+        fix x assume "x \<in> X"
+        hence "(x, 0::int) \<in> E" unfolding E_def by simp
+        moreover have "p0 (x, 0::int) = x" unfolding p0_def by simp
+        ultimately show "x \<in> p0 ` E" by force
+      qed
+    next
+      \<comment> \<open>Evenly covered: for each b \<in> X, U = X is evenly covered with sheets X\<times>{n}.\<close>
+      show "\<forall>b\<in>X. \<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE X TX p0 U"
+      proof
+        fix b assume "b \<in> X"
+        let ?\<V> = "(\<lambda>n. X \<times> {n}) ` (UNIV :: int set)"
+        show "\<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE X TX p0 U"
+        proof (intro exI[of _ X] conjI)
+          show "b \<in> X" by (rule \<open>b \<in> X\<close>)
+          show "top1_evenly_covered_on E TE X TX p0 X"
+            unfolding top1_evenly_covered_on_def
+          proof (intro conjI exI[of _ ?\<V>])
+            show "openin_on X TX X" unfolding openin_on_def
+              using assms(1) unfolding is_topology_on_def by (by100 blast)
+            show "\<forall>V\<in>?\<V>. openin_on E TE V"
+            proof
+              fix V assume "V \<in> ?\<V>"
+              then obtain n where hV_eq: "V = X \<times> {n}" by (by100 blast)
+              show "openin_on E TE V" unfolding openin_on_def hV_eq
+              proof (intro conjI)
+                show "X \<times> {n} \<subseteq> E" unfolding E_def by (by100 blast)
+                show "X \<times> {n} \<in> TE" unfolding TE_def
+                proof (intro CollectI conjI allI)
+                  show "X \<times> {n} \<subseteq> E" unfolding E_def by (by100 blast)
+                  fix m :: int show "{x. (x, m) \<in> X \<times> {n}} \<in> TX"
+                  proof (cases "m = n")
+                    case True
+                    hence "{x. (x, m) \<in> X \<times> {n}} = X" by (by100 force)
+                    thus ?thesis using assms(1) unfolding is_topology_on_def by simp
+                  next
+                    case False
+                    have h0: "{x. (x, m) \<in> X \<times> {n}} = {}" using False by (by100 force)
+                    show ?thesis unfolding h0 using assms(1) unfolding is_topology_on_def by simp
+                  qed
+                qed
+              qed
+            qed
+            show "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+              by (by100 blast)
+            show "{x \<in> E. p0 x \<in> X} = \<Union>?\<V>"
+            proof (rule set_eqI, rule iffI)
+              fix e assume "e \<in> {x \<in> E. p0 x \<in> X}"
+              hence "e \<in> E" by simp
+              then obtain x n where he: "e = (x, n)" "x \<in> X" unfolding E_def by auto
+              hence "e \<in> X \<times> {n}" by simp
+              thus "e \<in> \<Union>?\<V>" by (by100 blast)
+            next
+              fix e assume "e \<in> \<Union>?\<V>"
+              then obtain n where "e \<in> X \<times> {n}" by (by100 blast)
+              hence "e \<in> E" "p0 e \<in> X" unfolding E_def p0_def by auto
+              thus "e \<in> {x \<in> E. p0 x \<in> X}" by simp
+            qed
+            show "\<forall>V\<in>?\<V>. top1_homeomorphism_on V (subspace_topology E TE V) X
+                (subspace_topology X TX X) p0"
+              sorry \<comment> \<open>Each sheet X\<times>{n} maps homeomorphically onto X via fst.\<close>
+          qed
+        qed
+      qed
+    qed
     \<comment> \<open>Lift: \<alpha>-tilde(s) = (\<alpha>(s), 0), \<beta>-tilde(s) = (\<beta>(s), 1).
        \<alpha>-tilde: (a,0) \<rightarrow> (b,0). Since b \<in> B, (b,0) ~ (b,1) in the identification.
        \<beta>-tilde: (b,1) \<rightarrow> (a,1). Since a \<in> A, (a,1) ~ (a,2) in the identification.
