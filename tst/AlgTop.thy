@@ -13690,8 +13690,28 @@ proof (rule ccontr)
     have hTX: "is_topology_on ?X ?TX"
       by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
     \<comment> \<open>U, V open in X.\<close>
-    have hU_open: "openin_on ?X ?TX ?U" sorry
-    have hV_open: "openin_on ?X ?TX ?V" sorry
+    have hU_open: "openin_on ?X ?TX ?U"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology D1" by (rule assms(2))
+      hence "top1_S2 - D1 \<in> top1_S2_topology"
+        using hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+      have "?U \<subseteq> ?X" by (by100 blast)
+      have "?U = ?X \<inter> (top1_S2 - D1)" by (by100 blast)
+      hence "?U \<in> ?TX" using \<open>top1_S2 - D1 \<in> top1_S2_topology\<close>
+        unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis using \<open>?U \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+    qed
+    have hV_open: "openin_on ?X ?TX ?V"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology D2" by (rule assms(3))
+      hence "top1_S2 - D2 \<in> top1_S2_topology"
+        using hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+      have "?V \<subseteq> ?X" by (by100 blast)
+      have "?V = ?X \<inter> (top1_S2 - D2)" by (by100 blast)
+      hence "?V \<in> ?TX" using \<open>top1_S2 - D2 \<in> top1_S2_topology\<close>
+        unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis using \<open>?V \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+    qed
     have hUV_eq: "?U \<union> ?V = ?X" by (by100 blast)
     \<comment> \<open>Decompose U \<inter> V into path component A of a and rest B.\<close>
     have hUV_inter: "?U \<inter> ?V = top1_S2 - (D1 \<union> D2)" by (by100 blast)
