@@ -12989,8 +12989,17 @@ proof -
                   "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                     f (foldr top1_path_product gs' (top1_constant_path x0))"
                 by blast
-              show ?thesis using that[of n' gs'] \<open>n' \<ge> 1\<close> \<open>length gs' = n'\<close>
-                sorry
+              show ?thesis
+              proof (rule that[of n' gs'])
+                show "1 \<le> n'" using \<open>n' \<ge> 1\<close> .
+                show "length gs' = n'" using \<open>length gs' = n'\<close> .
+                show "\<forall>i<n'. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                    x0 (gs' ! i) \<and> (gs' ! i ` I_set \<subseteq> ?U \<or> gs' ! i ` I_set \<subseteq> ?V)"
+                  using \<open>\<forall>i<n'. _\<close> .
+                show "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X)
+                    x0 x0 f (foldr top1_path_product gs' (top1_constant_path x0))"
+                  using \<open>top1_path_homotopic_on _ _ _ _ f _\<close> .
+              qed
             qed
             \<comment> \<open>Each piece nulhomotopic.\<close>
             have hgi_nul: "\<forall>i < length gs.
