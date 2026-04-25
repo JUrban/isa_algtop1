@@ -12931,10 +12931,27 @@ proof -
         show "\<forall>x0\<in>?X. \<forall>f. top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 f \<longrightarrow>
             top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
               f (top1_constant_path x0)"
-          sorry \<comment> \<open>The core SVK+61.2 argument (~200 lines in 61.3).
-             Uses: Theorem_59_1, loop_factors_through_S1,
-             Lemma_61_2_nulhomotopy_textbook (a,b same component via A1/A2 connected),
-             nulhomotopic_trivializes_loops_general.\<close>
+        proof (intro ballI allI impI)
+          fix y0 f
+          assume hy0: "y0 \<in> ?X" and hf: "top1_is_loop_on ?X
+              (subspace_topology top1_S2 top1_S2_topology ?X) y0 f"
+          \<comment> \<open>Key: every loop g at x0 that maps into U (or V) is nulhomotopic.
+             g factors through S^1 (loop_factors_through_S1). The S^1 map h satisfies:
+             h(S^1) \<subseteq> U = S^2\A1, so A1 \<subseteq> S^2\h(S^1). A1 connected, {a,b} \<subseteq> A1.
+             By Lemma 61.2: h nulhomotopic. By nulhomotopic_trivializes_loops_general:
+             g = h\<circ>p \<simeq> const. Same for V with A2.\<close>
+          \<comment> \<open>Step 1: Reduce to x0 basepoint (conjugation).\<close>
+          \<comment> \<open>Step 2: Decompose via Theorem 59.1.\<close>
+          \<comment> \<open>Step 3: Each piece in U/V nulhomotopic.\<close>
+          \<comment> \<open>Step 4: Product of nulhomotopic = nulhomotopic.\<close>
+          show "top1_path_homotopic_on ?X
+              (subspace_topology top1_S2 top1_S2_topology ?X) y0 y0
+              f (top1_constant_path y0)"
+            sorry \<comment> \<open>Identical to 61.3 proof body (lines 12060-12470) with
+               A1 connected (assms 6) replacing A1-arc-connected,
+               A2 connected (assms 7) replacing A2-arc-connected.
+               The ONLY used property is connectivity of A1, A2 for Lemma 61.2.\<close>
+        qed
       qed
     qed
     have h_nontrivial: "\<not> top1_simply_connected_on ?X
