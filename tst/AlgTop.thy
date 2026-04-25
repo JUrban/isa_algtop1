@@ -13675,7 +13675,7 @@ proof
       show "\<forall>b\<in>X. \<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
       proof
         fix b assume "b \<in> X"
-        hence "b \<in> U \<or> b \<in> V" using assms(4) by (by100 blast)
+        hence "b \<in> U \<or> b \<in> V - U" using assms(4) by (by100 blast)
         thus "\<exists>Ub. b \<in> Ub \<and> top1_evenly_covered_on E TE X TX p0 Ub"
         proof
           assume hbU: "b \<in> U"
@@ -13868,19 +13868,10 @@ proof
             qed
           qed
         next
-          assume hbV: "b \<in> V"
-          \<comment> \<open>b \<in> V. Since U \<union> V = X and we need a neighborhood, use U if b \<in> U.\<close>
-          show ?thesis
-          proof (cases "b \<in> U")
-            case True
-            thus ?thesis sorry \<comment> \<open>Same as first branch (U evenly covered).\<close>
-          next
-            case False
-            hence hbVU: "b \<in> V - U" using hbV by (by100 blast)
-            show ?thesis sorry \<comment> \<open>V evenly covered for b \<in> V \ U. V-sheets:
-               Sn = {(x,2(n+1))|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.
-               Same argument pattern as U sheets.\<close>
-          qed
+          assume hbVU: "b \<in> V - U"
+          show ?thesis sorry \<comment> \<open>V evenly covered for b \<in> V \ U. Use Ub = V.
+             V-sheets: Sn = {(x,2(n+1))|x\<in>A} \<union> {(x,2n)|x\<in>B} \<union> {(x,2n+1)|x\<in>V\U}.
+             Same argument pattern as U sheets.\<close>
         qed
       qed
     qed
