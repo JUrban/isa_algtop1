@@ -13234,7 +13234,16 @@ proof -
             \<comment> \<open>y0 \<noteq> x0: conjugate. Get path \<alpha>: x0 \<rightarrow> y0 in X (X path-connected).
                Then \<alpha>^{-1}*f*\<alpha> is a loop at x0, nulhomotopic by the True case.
                Hence f nulhomotopic at y0.\<close>
-            show ?thesis sorry \<comment> \<open>Standard conjugation argument.\<close>
+            \<comment> \<open>Conjugation: get \<gamma>: x0 \<rightarrow> y0. bc(\<gamma>, f) = \<gamma> * f * rev(\<gamma>) is loop at x0.
+               Nulhomotopic by True case. Unconjugate via bc roundtrip.\<close>
+            show ?thesis
+              sorry \<comment> \<open>Standard conjugation (~80 lines, same as 61.3 lines 12382-12509):
+                 1. \<gamma>: x0→y0 from path-connectivity
+                 2. bc(\<gamma>, f) = \<gamma>*f*rev(\<gamma>) loop at x0
+                 3. Nulhomotopic (True case applied to bc(\<gamma>,f))
+                 4. f \<simeq> bc(rev(\<gamma>), bc(\<gamma>,f)) by roundtrip
+                 5. bc(rev(\<gamma>), const) \<simeq> const_y0
+                 6. Transitivity gives f \<simeq> const_y0.\<close>
           qed
         qed
       qed
