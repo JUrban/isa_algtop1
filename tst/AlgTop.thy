@@ -13570,8 +13570,11 @@ proof -
           top1_nulhomotopic_on D (subspace_topology top1_S2 top1_S2_topology D)
             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b}))
             (\<lambda>x. x)"
-        sorry \<comment> \<open>D contractible (arc \<cong> [0,1]), so any continuous map from D is nulhomotopic.
-           The inclusion j: D \<hookrightarrow> S^2-{a,b} is continuous and nulhomotopic.\<close>
+        sorry \<comment> \<open>D contractible (arc \<cong> [0,1]). Proof: D ≅ [0,1] via homeomorphism h.
+           Homotopy H(x,t) = h((1-t)*h^{-1}(x)) contracts D to h(0).
+           H: D × I → D continuous, H(x,0) = x, H(x,1) = h(0).
+           Since D ⊆ S²\{a,b}, H composed with inclusion gives nulhomotopy.
+           Needs: continuous_on (D × I_set) H, H maps into D ⊆ S²\{a,b}.\<close>
       have hD_injective: "inj_on (\<lambda>x. x) D" by (simp add: inj_on_def)
       \<comment> \<open>For any a, b \<in> S^2-D: by Borsuk lemma, a and b in same component of S^2-D.\<close>
       have hall_same_comp: "\<forall>a b. a \<in> top1_S2 - D \<longrightarrow> b \<in> top1_S2 - D \<longrightarrow> a \<noteq> b \<longrightarrow>
