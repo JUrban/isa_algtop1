@@ -7520,7 +7520,14 @@ proof -
           define t where "t = min (\<delta>/2) (1/2)"
           have ht: "t > 0" "t \<le> 1/2" unfolding t_def using h\<delta>(1) by auto
           define p where "p = (0::real, t, sqrt (1 - t^2))"
-          have hp_S2: "p \<in> top1_S2" unfolding p_def top1_S2_def sorry
+          have hp_S2: "p \<in> top1_S2" unfolding p_def top1_S2_def
+          proof simp
+            have "t^2 \<le> (1/2)^2" using ht(2) ht(1) by (intro power_mono) simp_all
+            hence "t^2 \<le> 1/4" by (simp add: power2_eq_square)
+            hence h_nneg: "1 - t^2 \<ge> 0" by simp
+            show "t\<^sup>2 + (sqrt (1 - t\<^sup>2))\<^sup>2 = 1"
+              using real_sqrt_pow2[OF h_nneg] by simp
+          qed
           have hp_ne_N: "p \<noteq> north_pole" unfolding p_def north_pole_def using ht(1) by auto
           have "p \<in> W" sorry \<comment> \<open>p \<in> U1 \<times> (U2 \<times> U3) \<subseteq> U1 \<times> U23 \<subseteq> W.\<close>
           have "p \<in> top1_S2 \<inter> W" using hp_S2 \<open>p \<in> W\<close> by (by100 blast)
