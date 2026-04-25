@@ -9071,7 +9071,8 @@ proof -
         \<comment> \<open>f(A) = {} \<Rightarrow> C0 = S^2. h(C0\{b}) = h(S^2\{b}) = R^2 connected.\<close>
         have "h ` (top1_S2 - {b}) = UNIV"
           using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-        have "C0 = top1_S2" sorry \<comment> \<open>f(A)={} \<Rightarrow> S^2\f(A)=S^2 connected \<Rightarrow> C0=S^2.\<close>
+        have "C0 = top1_S2"
+          sorry \<comment> \<open>f(A)={} \<Rightarrow> S^2\f(A) = S^2 connected \<Rightarrow> unique component C0 = S^2.\<close>
         hence "C0 - {b} = top1_S2 - {b}" by simp
         hence "h ` (C0 - {b}) = UNIV" using \<open>h ` (top1_S2 - {b}) = UNIV\<close> by simp
         thus ?thesis using connected_Times[OF connected_UNIV connected_UNIV]
