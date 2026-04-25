@@ -13681,9 +13681,58 @@ proof (rule ccontr)
       \<and> \<not> top1_path_homotopic_on (top1_S2 - (D1 \<inter> D2))
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<inter> D2))) a a f
           (top1_constant_path a)"
-    sorry \<comment> \<open>Apply Theorem 63.1 to X=S^2\(D1\<inter>D2), U=S^2\D1, V=S^2\D2,
-       with U\<inter>V decomposed into path component A of a and rest B.
-       \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V. Result: \<alpha>*\<beta> nontrivial.\<close>
+  proof -
+    let ?X = "top1_S2 - (D1 \<inter> D2)"
+    let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+    let ?U = "top1_S2 - D1" and ?V = "top1_S2 - D2"
+    have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTX: "is_topology_on ?X ?TX"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    \<comment> \<open>U, V open in X.\<close>
+    have hU_open: "openin_on ?X ?TX ?U" sorry
+    have hV_open: "openin_on ?X ?TX ?V" sorry
+    have hUV_eq: "?U \<union> ?V = ?X" by (by100 blast)
+    \<comment> \<open>Decompose U \<inter> V into path component A of a and rest B.\<close>
+    have hUV_inter: "?U \<inter> ?V = top1_S2 - (D1 \<union> D2)" by (by100 blast)
+    \<comment> \<open>A = path component of a in U\<inter>V, B = rest.\<close>
+    define A where "A = top1_path_component_of_on (?U \<inter> ?V)
+        (subspace_topology ?X ?TX (?U \<inter> ?V)) a"
+    define B where "B = (?U \<inter> ?V) - A"
+    have ha_UV: "a \<in> ?U \<inter> ?V" using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
+    have hb_UV: "b \<in> ?U \<inter> ?V" using \<open>b \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
+    \<comment> \<open>a \<in> A, b \<notin> A (can't be connected to a), hence b \<in> B.\<close>
+    have ha_A: "a \<in> A" sorry
+    have hb_B: "b \<in> B" sorry
+    \<comment> \<open>A, B open in X (path components of lpc space are open).\<close>
+    have hA_open: "openin_on ?X ?TX A" sorry
+    have hB_open: "openin_on ?X ?TX B" sorry
+    have hAB_disj: "A \<inter> B = {}" unfolding B_def by (by100 blast)
+    have hA_sub: "A \<subseteq> ?U \<inter> ?V" sorry
+    have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub by auto
+    \<comment> \<open>Lift \<alpha> to path in U (subspace of X), \<beta> to path in V (subspace of X).
+       Key: subspace X TX U = subspace S^2 S^2_top U (by transitivity, U \<subseteq> X).\<close>
+    have hU_sub_X: "?U \<subseteq> ?X" by (by100 blast)
+    have hV_sub_X: "?V \<subseteq> ?X" by (by100 blast)
+    have hU_top_eq: "subspace_topology ?X ?TX ?U = subspace_topology top1_S2 top1_S2_topology ?U"
+      by (rule subspace_topology_trans[OF hU_sub_X])
+    have hV_top_eq: "subspace_topology ?X ?TX ?V = subspace_topology top1_S2 top1_S2_topology ?V"
+      by (rule subspace_topology_trans[OF hV_sub_X])
+    have h\<alpha>_U: "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b \<alpha>"
+      using \<open>top1_is_path_on (top1_S2 - D1)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D1)) a b \<alpha>\<close>
+      hU_top_eq by simp
+    have h\<beta>_V: "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a \<beta>"
+      using \<open>top1_is_path_on (top1_S2 - D2)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) b a \<beta>\<close>
+      hV_top_eq by simp
+    \<comment> \<open>Apply Theorem 63.1: \<alpha>*\<beta> nontrivial in \<pi>_1(X,a).\<close>
+    have "\<not> top1_path_homotopic_on ?X ?TX a a
+        (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+      sorry \<comment> \<open>Direct application of Theorem_63_1_loop_nontrivial with the setup above.\<close>
+    moreover have "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)" sorry
+    ultimately show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>But S^2-(D1\<inter>D2) is simply connected by assumption. Contradiction.\<close>
   have ha_mem: "a \<in> top1_S2 - (D1 \<inter> D2)"
     using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
