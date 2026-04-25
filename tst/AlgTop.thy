@@ -14828,14 +14828,49 @@ proof (rule ccontr)
   \<comment> \<open>By Theorem 63.1(a): \<alpha>*\<beta> nontrivial in \<pi>_1(X, a).\<close>
   \<comment> \<open>But X = S^2-{d} simply connected. Contradiction.\<close>
   \<comment> \<open>Step 1: A = path-component of a, B = rest.\<close>
-  define PC_a :: "(real \<times> real \<times> real) set" where "PC_a = top1_path_component_on (?U \<inter> ?V)
+  define PC_a :: "(real \<times> real \<times> real) set" where "PC_a = top1_path_component_of_on (?U \<inter> ?V)
       (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a"
   define Rest :: "(real \<times> real \<times> real) set" where "Rest = (?U \<inter> ?V) - PC_a"
-  have ha_PC: "a \<in> PC_a" sorry \<comment> \<open>Point is in its own path component.\<close>
-  have hb_Rest: "b \<in> Rest" sorry \<comment> \<open>b not in a's path-component (from hnot + hUV_inter).\<close>
+  have ha_UV: "a \<in> ?U \<inter> ?V" using hab hD_inter by auto
+  have hb_UV: "b \<in> ?U \<inter> ?V" using hab hD_inter by auto
+  have hT_UV: "is_topology_on (?U \<inter> ?V)
+      (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+    by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+  have ha_PC: "a \<in> PC_a"
+  proof -
+    have "top1_in_same_path_component_on (?U \<inter> ?V)
+        (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a a"
+      unfolding top1_in_same_path_component_on_def
+      using top1_constant_path_is_path[OF hT_UV ha_UV] by (by100 blast)
+    thus ?thesis unfolding PC_a_def top1_path_component_of_on_def by (by100 blast)
+  qed
+  have hb_Rest: "b \<in> Rest"
+  proof -
+    have "\<not> (\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a b f)"
+      using hnot hUV_inter by simp
+    hence "b \<notin> PC_a" unfolding PC_a_def top1_path_component_of_on_def
+        top1_in_same_path_component_on_def by (by100 blast)
+    thus ?thesis unfolding Rest_def using hb_UV by (by100 blast)
+  qed
   have hPC_open: "openin_on ?X ?TX PC_a" sorry \<comment> \<open>Path components of lpc open set are open.\<close>
   have hRest_open: "openin_on ?X ?TX Rest" sorry \<comment> \<open>Union of other path components is open.\<close>
-  have hPCR_cover: "PC_a \<union> Rest = ?U \<inter> ?V" sorry
+  have hPC_sub: "PC_a \<subseteq> ?U \<inter> ?V"
+  proof
+    fix y assume "y \<in> PC_a"
+    hence "\<exists>f. top1_is_path_on (?U \<inter> ?V)
+        (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a y f"
+      unfolding PC_a_def top1_path_component_of_on_def top1_in_same_path_component_on_def
+      by simp
+    then obtain f where "top1_is_path_on (?U \<inter> ?V)
+        (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a y f" by blast
+    hence "f 1 = y" "f 1 \<in> ?U \<inter> ?V"
+      unfolding top1_is_path_on_def top1_continuous_map_on_def
+        top1_unit_interval_def by auto
+    hence "y \<in> ?U \<inter> ?V" by simp
+    thus "y \<in> ?U \<inter> ?V" .
+  qed
+  have hPCR_cover: "PC_a \<union> Rest = ?U \<inter> ?V"
+    unfolding Rest_def using hPC_sub by (by100 blast)
   have hPCR_disj: "PC_a \<inter> Rest = {}" unfolding Rest_def by (by100 blast)
   \<comment> \<open>Step 2: Get paths \<alpha> and \<beta>.\<close>
   \<comment> \<open>Step 2: Get paths \<alpha> and \<beta>. Need them with subspace_topology X TX U.\<close>
@@ -14852,8 +14887,20 @@ proof (rule ccontr)
   \<comment> \<open>Step 3: Apply Theorem 63.1(a).\<close>
   have hX_TX: "is_topology_on ?X ?TX"
     by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
-  have hU_open_X: "openin_on ?X ?TX ?U" sorry \<comment> \<open>S^2-D1 open in X = S^2-{d}.\<close>
-  have hV_open_X: "openin_on ?X ?TX ?V" sorry \<comment> \<open>S^2-D2 open in X.\<close>
+  have hU_open_X: "openin_on ?X ?TX ?U"
+  proof -
+    have "?U \<subseteq> ?X" using hD_inter by (by100 blast)
+    have "?U = ?X \<inter> ?U" using hD_inter by (by100 blast)
+    hence "?U \<in> ?TX" using hU_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis using \<open>?U \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+  qed
+  have hV_open_X: "openin_on ?X ?TX ?V"
+  proof -
+    have "?V \<subseteq> ?X" using hD_inter by (by100 blast)
+    have "?V = ?X \<inter> ?V" using hD_inter by (by100 blast)
+    hence "?V \<in> ?TX" using hV_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis using \<open>?V \<subseteq> ?X\<close> unfolding openin_on_def by (by100 blast)
+  qed
   have hnontrivial: "\<not> top1_path_homotopic_on ?X ?TX a a
       (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
     sorry \<comment> \<open>By Theorem_63_1_loop_nontrivial with X=S^2-{d}, U=S^2-D1, V=S^2-D2,
