@@ -13722,13 +13722,36 @@ proof (rule ccontr)
     have ha_UV: "a \<in> ?U \<inter> ?V" using \<open>a \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
     have hb_UV: "b \<in> ?U \<inter> ?V" using \<open>b \<in> top1_S2 - (D1 \<union> D2)\<close> by (by100 blast)
     \<comment> \<open>a \<in> A, b \<notin> A (can't be connected to a), hence b \<in> B.\<close>
-    have ha_A: "a \<in> A" sorry
-    have hb_B: "b \<in> B" sorry
+    have ha_A: "a \<in> A" sorry \<comment> \<open>a \<in> path_component(a) by reflexivity.\<close>
+    have hb_B: "b \<in> B"
+    proof -
+      have "b \<in> ?U \<inter> ?V" by (rule hb_UV)
+      moreover have "b \<notin> A"
+      proof
+        assume "b \<in> A"
+        \<comment> \<open>b \<in> A = path_component(a) means b connected to a in U\<inter>V = S^2\(D1\<union>D2).\<close>
+        \<comment> \<open>But hab_sep says a,b NOT connected in S^2\(D1\<union>D2). Contradiction.\<close>
+        hence "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?X ?TX (?U \<inter> ?V)) a b f"
+          unfolding A_def top1_path_component_of_on_def sorry
+        moreover have "?U \<inter> ?V = top1_S2 - (D1 \<union> D2)" by (by100 blast)
+        moreover have "subspace_topology ?X ?TX (?U \<inter> ?V)
+            = subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<union> D2))"
+        proof -
+          have "?U \<inter> ?V \<subseteq> ?X" by (by100 blast)
+          have "subspace_topology ?X ?TX (?U \<inter> ?V)
+              = subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+            by (rule subspace_topology_trans[OF \<open>?U \<inter> ?V \<subseteq> ?X\<close>])
+          thus ?thesis using \<open>?U \<inter> ?V = top1_S2 - (D1 \<union> D2)\<close> by simp
+        qed
+        ultimately show False using hab_sep by simp
+      qed
+      ultimately show ?thesis unfolding B_def by (by100 blast)
+    qed
     \<comment> \<open>A, B open in X (path components of lpc space are open).\<close>
     have hA_open: "openin_on ?X ?TX A" sorry
     have hB_open: "openin_on ?X ?TX B" sorry
     have hAB_disj: "A \<inter> B = {}" unfolding B_def by (by100 blast)
-    have hA_sub: "A \<subseteq> ?U \<inter> ?V" sorry
+    have hA_sub: "A \<subseteq> ?U \<inter> ?V" sorry \<comment> \<open>Path component of U\<inter>V point is subset of U\<inter>V.\<close>
     have hAB_cover: "A \<union> B = ?U \<inter> ?V" unfolding B_def using hA_sub by auto
     \<comment> \<open>Lift \<alpha> to path in U (subspace of X), \<beta> to path in V (subspace of X).
        Key: subspace X TX U = subspace S^2 S^2_top U (by transitivity, U \<subseteq> X).\<close>
