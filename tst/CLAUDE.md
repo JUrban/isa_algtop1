@@ -1,5 +1,15 @@
 # Rules for Working on AlgTop Formalization of /project/algtop.tex in Isabelle/HOL.
 
+# First pass: a "faithful formal proof sketch pass": for each stated
+theorem corresponding to the book, create a compiling proof sketch
+(i.e. with sorries) that will faithfully mirror the algtop.tex  proof.
+
+## Note: while it's OK to initially just write the proof in comments (if it's easier),
+this pass really has to ultimately produce a nontrivial formal
+proof sketch. Just a comment is	not a "faithful formal proof sketch".
+
+## Things below (except the checking instructions) should come only after the formal proof sketch pass is done for all
+
 ## ❗ ABSOLUTE RULE: New Proof Workflow
 
 When writing **any new proof code** (skeleton, step, or edit):
@@ -14,7 +24,10 @@ When writing **any new proof code** (skeleton, step, or edit):
 4. Only after a successful build:
 
    * replace `sorry`s in **small batches (3–5)** using `sledgehammer` / `process_theories`
-5. If you catch yourself writing anything other than `sorry`:
+5. If sledgehammer fails, you can very cautiously experiment with a subproof.
+6. Instead of `by blast` etc always use our safe `by (by100 blast)` , `by (by100 fast)` , `by (by100 simp)`, etc
+   methods that limit the time to 100 ms, or the restricted apply (rule ...), apply (erule ...), apply (drule ...) ).
+7. If you catch yourself writing anything other than `sorry`:
    → **STOP and replace it with `sorry`**
 
 **Interpretation:**
@@ -221,6 +234,11 @@ Process file quickly:
 /project/bin/isabelle process_theories -d . -l AlgTop -o quick_and_dirty -f AlgTop.thy
 ```
 
+Find useful theorems:
+```
+/project/bin/isabelle eval_at -d . -l Top0 AlgTop.thy 100 'find_theorems "_ + _ = _ + _"'
+```
+
 Show proof states:
 
 ```bash
@@ -231,7 +249,7 @@ Show proof states:
 Timing:
 
 ```bash
-/project/bin/isabelle eval_at -t AlgTop.thy [second-to-last-line] > timing_info_XXX
+project/bin/isabelle eval_at -t -d . -l Top0 AlgTop.thy [second-to-last-line] > timing_info_XXX
 ```
 
 Use timing regularly; aim for total runtime well below ~30s.
