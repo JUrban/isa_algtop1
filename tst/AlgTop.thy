@@ -13893,7 +13893,72 @@ proof
         unfolding ftilde_def top1_path_product_def \<alpha>_lift_def \<beta>_lift_def by (rule ext) auto
       \<comment> \<open>\<alpha>_lift: path from (a,0) to (b,0) in U-sheet 0.\<close>
       have h\<alpha>_lift_path: "top1_is_path_on E TE (a, 0) (b, 0) \<alpha>_lift"
-        sorry \<comment> \<open>\<alpha> path in U, U-sheet 0 homeo to U via p0. Lift via inverse homeomorphism.\<close>
+      proof -
+        \<comment> \<open>\<alpha> is a path in U. The U-sheet S0 = U \<times> {0} is open in E, and
+           p0|S0: S0 \<rightarrow> U is a homeomorphism. The inverse sends x to (x, 0).
+           So \<alpha>_lift = inv(p0|S0) \<circ> \<alpha> is continuous.\<close>
+        have hS0: "U \<times> {0::int} \<subseteq> E" unfolding E_def by auto
+        \<comment> \<open>\<alpha> is continuous from I to U with subspace topology from TX.\<close>
+        have h\<alpha>_path_U: "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+          by (rule assms(11))
+        \<comment> \<open>\<alpha>_lift = (\<lambda>s. (alpha s, 0)). Continuous because: for each open W \<in> TE,
+           {s \<in> I | \<alpha>_lift s \<in> W} = {s \<in> I | alpha s \<in> {x \<in> U. (x,0) \<in> W}}.
+           And {x \<in> U. (x,0) \<in> W} is open in TX (from TE definition, even slice).
+           So this is open in I (since \<alpha> is continuous).\<close>
+        show ?thesis unfolding top1_is_path_on_def
+        proof (intro conjI)
+          show "top1_continuous_map_on I_set I_top E TE \<alpha>_lift"
+            unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix s assume "s \<in> I_set"
+            hence "alpha s \<in> U" using h\<alpha>_path_U
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+            thus "\<alpha>_lift s \<in> E" unfolding \<alpha>_lift_def E_def by auto
+          next
+            fix W assume hW: "W \<in> TE"
+            \<comment> \<open>Need {s \<in> I. \<alpha>_lift s \<in> W} \<in> I_top.\<close>
+            have hslice: "{x \<in> U. (x, 0::int) \<in> W} \<in> TX"
+            proof -
+              have "\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+              hence "{x \<in> U. (x, 2*(0::int)) \<in> W} \<in> TX" by (rule spec)
+              thus ?thesis by simp
+            qed
+            have heq: "{s \<in> I_set. \<alpha>_lift s \<in> W} = {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+            proof (rule set_eqI, rule iffI)
+              fix s assume "s \<in> {s \<in> I_set. \<alpha>_lift s \<in> W}"
+              hence "s \<in> I_set" "\<alpha>_lift s \<in> W" by auto
+              hence "alpha s \<in> U" "(alpha s, 0::int) \<in> W"
+                using h\<alpha>_path_U unfolding top1_is_path_on_def top1_continuous_map_on_def
+                  \<alpha>_lift_def by auto
+              thus "s \<in> {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+                using \<open>s \<in> I_set\<close> by (by100 blast)
+            next
+              fix s assume "s \<in> {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+              hence "s \<in> I_set" "alpha s \<in> U" "(alpha s, 0::int) \<in> W" by auto
+              thus "s \<in> {s \<in> I_set. \<alpha>_lift s \<in> W}" unfolding \<alpha>_lift_def by simp
+            qed
+            \<comment> \<open>The slice {x \<in> U. (x,0) \<in> W} is TX-open. It's also a subset of U,
+               so it's open in the subspace topology of U from TX.
+               \<alpha> continuous from I to U means preimage of this set is I_top-open.\<close>
+            have hslice_U: "{x \<in> U. (x, 0::int) \<in> W} \<in> subspace_topology X TX U"
+            proof -
+              have "{x \<in> U. (x, 0::int) \<in> W} \<subseteq> U" by (by100 blast)
+              hence "{x \<in> U. (x, 0::int) \<in> W} = U \<inter> {x \<in> U. (x, 0::int) \<in> W}" by (by100 blast)
+              thus ?thesis using hslice unfolding subspace_topology_def by (by100 blast)
+            qed
+            have "{s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}} \<in> I_top"
+              using h\<alpha>_path_U hslice_U
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+            thus "{s \<in> I_set. \<alpha>_lift s \<in> W} \<in> I_top" using heq by simp
+          qed
+          show "\<alpha>_lift 0 = (a, 0::int)"
+            unfolding \<alpha>_lift_def using assms(11)
+            unfolding top1_is_path_on_def by simp
+          show "\<alpha>_lift 1 = (b, 0::int)"
+            unfolding \<alpha>_lift_def using assms(11)
+            unfolding top1_is_path_on_def by simp
+        qed
+      qed
       \<comment> \<open>\<beta>_lift: path from (b,0) to (a,2) in E.\<close>
       have h\<beta>_lift_path: "top1_is_path_on E TE (b, 0) (a, 2) \<beta>_lift"
         sorry \<comment> \<open>\<beta> path in V, compose with norm(\<cdot>,1). Continuous via quotient map.
