@@ -13689,8 +13689,34 @@ proof
             proof (intro conjI exI[of _ ?\<V>])
               show "openin_on X TX U" by (rule assms(2))
               show "\<forall>V\<in>?\<V>. openin_on E TE V"
-                sorry \<comment> \<open>Each U-sheet {(x,2n)|x\<in>U} is open in TE: even slice = U \<in> TX,
-                   odd slices = A or B or {} \<in> TX, all other slices = {} \<in> TX.\<close>
+              proof
+                fix Vn assume "Vn \<in> ?\<V>"
+                then obtain n where hVn: "Vn = {(x, 2*n) | x. x \<in> U}" by (by100 blast)
+                have hVn_eq: "Vn = U \<times> {2*n}" unfolding hVn by auto
+                show "openin_on E TE Vn" unfolding openin_on_def
+                proof (intro conjI)
+                  show "Vn \<subseteq> E" unfolding hVn_eq E_def by auto
+                  show "Vn \<in> TE" unfolding TE_def hVn_eq
+                  proof (intro CollectI conjI allI)
+                    show "U \<times> {2*n} \<subseteq> E" unfolding E_def by auto
+                    fix m :: int
+                    have hslice_even: "{x \<in> U. (x, 2*m) \<in> U \<times> {2*n}} = (if m = n then U else {})"
+                      by auto
+                    show "{x \<in> U. (x, 2 * m) \<in> U \<times> {2 * n}} \<in> TX"
+                      using hslice_even hU_open_TX assms(1) unfolding is_topology_on_def by simp
+                    have hA_slice: "{x \<in> A. (x, 2*m+2) \<in> U \<times> {2*n}} = (if m + 1 = n then A else {})"
+                      using hAB_UV by auto
+                    have hB_slice: "{x \<in> B. (x, 2*m) \<in> U \<times> {2*n}} = (if m = n then B else {})"
+                      using hAB_UV by auto
+                    have hVU_slice: "{x \<in> V-U. (x, 2*m+1) \<in> U \<times> {2*n}} = {}" by auto
+                    show "{x \<in> A. (x, 2 * m + 2) \<in> U \<times> {2 * n}} \<union>
+                        {x \<in> B. (x, 2 * m) \<in> U \<times> {2 * n}} \<union>
+                        {x \<in> V - U. (x, 2 * m + 1) \<in> U \<times> {2 * n}} \<in> TX"
+                      sorry \<comment> \<open>= (if m+1=n then A else {}) \<union> (if m=n then B else {}).
+                         A, B, {} \<in> TX. Finite union of TX \<in> TX.\<close>
+                  qed
+                qed
+              qed
               show "\<forall>V\<in>?\<V>. \<forall>V'\<in>?\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
                 by force \<comment> \<open>Different n gives different 2nd components.\<close>
               show "{x \<in> E. p0 x \<in> U} = \<Union>?\<V>"
