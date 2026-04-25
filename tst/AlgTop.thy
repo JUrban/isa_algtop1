@@ -13256,7 +13256,7 @@ proof -
             \<comment> \<open>Conjugate: bc(rev(\<gamma>), f) = \<gamma> * f * rev(\<gamma>) is loop at x0.\<close>
             let ?conj = "top1_basepoint_change_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) y0 x0 (top1_path_reverse \<gamma>) f"
             have hconj_loop: "top1_is_loop_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 ?conj"
-              sorry \<comment> \<open>basepoint_change_on is a loop (path product of paths).\<close>
+              by (rule top1_basepoint_change_is_loop[OF hTX_weak hrev\<gamma> hf])
             \<comment> \<open>Conjugated loop nulhomotopic by hx0_all_nul.\<close>
             have hconj_triv: "top1_path_homotopic_on ?X (subspace_topology top1_S2 top1_S2_topology ?X) x0 x0
                 ?conj (top1_constant_path x0)"
