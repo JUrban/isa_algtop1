@@ -13955,13 +13955,56 @@ proof -
       qed
       thus False using hsep hD by simp
     qed
-    \<comment> \<open>Continue bisecting the separating sub-arc. Eventually shrinks to a point.
-       S^2 minus a point is simply connected (\<cong> R^2). Contradiction.\<close>
-    \<comment> \<open>This requires an induction/limit argument with nested compact intervals.
-       The key steps: (1) bisect repeatedly to get separating sub-arcs of diameter \<rightarrow> 0,
-       (2) the intersection is a single point, (3) S^2 minus that point is path-connected,
-       (4) the connecting path avoids a small neighborhood, hence avoids the sub-arc.\<close>
-    show False sorry \<comment> \<open>Bisection + compactness argument. Needs metric structure.\<close>
+    \<comment> \<open>Bisection: at least one of D1, D2 separates. D is an arc, D1,D2 are sub-arcs.
+       The separating sub-arc is still an arc.
+       Repeat: get sequence of nested arcs, each separating a from b.
+       By Theorem 63.3 at each step, at least one sub-half separates.
+
+       The key insight: every arc that separates a from b contains a sub-arc
+       that separates a from b with half the parametric length. By induction,
+       we get arcs of parametric length (1/2)^n, all separating.
+
+       The nested intervals theorem gives a limit point x. S^2\{x} \<cong> R^2
+       is path-connected. A path from a to b in S^2\{x} avoids x, hence
+       avoids a small neighborhood, hence avoids the sub-arc for large n.\<close>
+
+    \<comment> \<open>Obtain the homeomorphism h: [0,1] \<rightarrow> D.\<close>
+    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top D
+        (subspace_topology top1_S2 top1_S2_topology D) h0"
+      using assms(3) unfolding top1_is_arc_on_def by (by100 blast)
+
+    \<comment> \<open>From the separation of D and the split D = D1 \<union> D2:
+       at least one half separates. That half is also an arc.
+       Since both halves are arcs (from arc_split_at_midpoint),
+       we can iterate. By a compactness/limit argument, get contradiction.\<close>
+
+    \<comment> \<open>Get a,b that D separates.\<close>
+    have hTS2D: "is_topology_on (top1_S2 - D)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+      by (rule subspace_topology_is_topology_on[OF
+          is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
+    obtain a' b' where ha': "a' \<in> top1_S2 - D" and hb': "b' \<in> top1_S2 - D"
+        and hab'_sep: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - D)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a' b' f)"
+    proof -
+      have "\<exists>a b. a \<in> top1_S2 - D \<and> b \<in> top1_S2 - D \<and> \<not> (\<exists>f. top1_is_path_on
+          (top1_S2 - D) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) a b f)"
+        by (rule not_connected_imp_no_path[OF hTS2D hsep[unfolded top1_separates_on_def]])
+      thus ?thesis using that by (by100 blast)
+    qed
+
+    \<comment> \<open>At least one of D1, D2 separates a' from b'.
+       That sub-arc is still an arc. Repeat forever.
+       The limit argument (nested intervals + compactness) gives contradiction.\<close>
+    show False
+      sorry \<comment> \<open>Full bisection+compactness argument:
+         (1) Iterate: at each step, one half-arc separates a' from b'
+         (2) Nested compact intervals in [0,1]: intersection = single point x
+         (3) S^2-{h0(x)} path-connected (S2_minus_point_simply_connected)
+         (4) Path \<alpha> from a' to b' in S^2-{h0(x)}
+         (5) \<alpha>(I) compact, disjoint from {h0(x)} \<Rightarrow> dist(\<alpha>(I), h0(x)) > 0
+         (6) h0 uniformly continuous \<Rightarrow> h0(I_n) \<subseteq> B(h0(x), \<epsilon>) for large n
+         (7) \<alpha> is a path in S^2-h0(I_n), contradicting separation.\<close>
   qed
 qed
 
