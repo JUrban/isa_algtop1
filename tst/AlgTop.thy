@@ -7873,6 +7873,135 @@ proof -
   qed
 qed
 
+\<comment> \<open>General composition lemma: if g: A \<rightarrow> R^2 is custom-continuous and
+   \<phi>: R^2 \<times> I \<rightarrow> R^2 is standard-continuous, then \<phi>(g(\<cdot>),\<cdot>): A\<times>I \<rightarrow> R^2 is custom-continuous.
+   This bridges custom topology on A with standard topology on R^2.\<close>
+lemma continuous_compose_product_R2:
+  fixes g :: "'a \<Rightarrow> real \<times> real" and \<phi> :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real"
+    and A :: "'a set" and TA :: "'a set set" and S :: "(real \<times> real) set"
+  assumes hg: "top1_continuous_map_on A TA (UNIV :: (real\<times>real) set)
+      (product_topology_on top1_open_sets top1_open_sets) g"
+      and h\<phi>: "continuous_on (UNIV \<times> I_set) \<phi>"
+      and hrange: "\<forall>a\<in>A. \<forall>t\<in>I_set. \<phi> (g a, t) \<in> S"
+      and hTA: "is_topology_on A TA"
+  shows "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) S
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+      (\<lambda>xt. \<phi> (g (fst xt), snd xt))"
+  sorry
+(*  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  let ?f = "\<lambda>xt. \<phi> (g (fst xt), snd xt)"
+  have hTR2eq: "?TR2 = (top1_open_sets :: (real \<times> real) set set)"
+    using product_topology_on_open_sets_real2 by (by100 metis)
+  fix xt assume "xt \<in> A \<times> I_set"
+  hence "fst xt \<in> A" "snd xt \<in> I_set" by auto
+  thus "?f xt \<in> S" using hrange by simp
+next
+  let ?TR2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+  let ?f = "\<lambda>xt. \<phi> (g (fst xt), snd xt)"
+  have hTR2eq: "?TR2 = (top1_open_sets :: (real \<times> real) set set)"
+    using product_topology_on_open_sets_real2 by (by100 metis)
+  fix V assume hV: "V \<in> subspace_topology UNIV ?TR2 S"
+  obtain W where hW: "W \<in> ?TR2" and hV_eq: "V = S \<inter> W"
+    using hV unfolding subspace_topology_def by (by100 blast)
+  have hW_open: "open W" using hW hTR2eq unfolding top1_open_sets_def by (by100 blast)
+  \<comment> \<open>Need: {xt \<in> A\<times>I. ?f xt \<in> V} \<in> product_topology_on TA I_top.
+     Since ?f xt \<in> S always (for xt \<in> A\<times>I), preimage of V = preimage of W.
+     W open in R^2, \<phi> continuous on UNIV\<times>I, g continuous from A to R^2.\<close>
+  have hpre_eq: "{xt \<in> A \<times> I_set. ?f xt \<in> V} = {xt \<in> A \<times> I_set. ?f xt \<in> W}"
+  proof (rule set_eqI, rule iffI)
+    fix xt assume "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> V}"
+    thus "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> W}" using hV_eq by (by100 blast)
+  next
+    fix xt assume hxt: "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> W}"
+    hence hxtA: "fst xt \<in> A" and hxtI: "snd xt \<in> I_set" and hxtW: "?f xt \<in> W" by auto
+    have "?f xt \<in> S" using hrange hxtA hxtI by simp
+    hence "?f xt \<in> V" using hxtW hV_eq by (by100 blast)
+    thus "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> V}" using hxt by auto
+  qed
+  \<comment> \<open>\<phi> continuous on UNIV\<times>I_set \<Rightarrow> \<phi>^{-1}(W) relatively open in UNIV\<times>I_set.
+     So \<exists>W'. open W' \<and> \<phi>^{-1}(W) \<inter> (UNIV\<times>I_set) = W' \<inter> (UNIV\<times>I_set).\<close>
+  obtain W' where hW'_open: "open W'" and hW'_eq: "\<phi> -` W \<inter> (UNIV \<times> I_set) = W' \<inter> (UNIV \<times> I_set)"
+    using h\<phi> hW_open unfolding continuous_on_open_invariant by blast
+  \<comment> \<open>{xt \<in> A\<times>I. ?f xt \<in> W} = {xt \<in> A\<times>I. (g(fst xt), snd xt) \<in> W'}.
+     This is because (g(fst xt), snd xt) \<in> UNIV\<times>I_set, so
+     \<phi>(g(fst xt), snd xt) \<in> W \<longleftrightarrow> (g(fst xt), snd xt) \<in> W'.\<close>
+  have hpre_eq2: "{xt \<in> A \<times> I_set. ?f xt \<in> W} = {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}"
+  proof (rule set_eqI, rule iffI)
+    fix xt assume "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> W}"
+    hence hxt: "fst xt \<in> A" "snd xt \<in> I_set" "\<phi> (g (fst xt), snd xt) \<in> W" by auto
+    have "(g (fst xt), snd xt) \<in> UNIV \<times> I_set" using hxt(2) by simp
+    hence "(g (fst xt), snd xt) \<in> \<phi> -` W \<inter> (UNIV \<times> I_set)" using hxt(3) by simp
+    hence "(g (fst xt), snd xt) \<in> W'" using hW'_eq by (by100 blast)
+    thus "xt \<in> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}" using hxt(1,2) by simp
+  next
+    fix xt assume "xt \<in> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}"
+    hence hxt: "fst xt \<in> A" "snd xt \<in> I_set" "(g (fst xt), snd xt) \<in> W'" by auto
+    have "(g (fst xt), snd xt) \<in> UNIV \<times> I_set" using hxt(2) by simp
+    hence "(g (fst xt), snd xt) \<in> W' \<inter> (UNIV \<times> I_set)" using hxt(3) by simp
+    hence "(g (fst xt), snd xt) \<in> \<phi> -` W \<inter> (UNIV \<times> I_set)" using hW'_eq by (by100 blast)
+    hence "\<phi> (g (fst xt), snd xt) \<in> W" by simp
+    thus "xt \<in> {xt \<in> A \<times> I_set. ?f xt \<in> W}" using hxt(1,2) by simp
+  qed
+  \<comment> \<open>W' is open in R^2\<times>R = R^3 (standard). Decompose: for each point in the preimage,
+     find a basic open rectangle U_R2 \<times> U_R \<subseteq> W', pull back to TA \<times> I_top.\<close>
+  \<comment> \<open>{xt \<in> A\<times>I. (g(fst xt), snd xt) \<in> W'} is open in product_topology_on TA I_top.\<close>
+  have "{xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'} \<in> product_topology_on TA I_top"
+  proof -
+    \<comment> \<open>W' is open in R^2\<times>R. For each point (y,t) \<in> W', there exists open U_y \<times> U_t with
+       (y,t) \<in> U_y \<times> U_t \<subseteq> W' (basis of product topology).
+       U_y open in R^2 \<Rightarrow> g^{-1}(U_y) \<in> TA (g continuous).
+       U_t open in R \<Rightarrow> U_t \<inter> I_set \<in> I_top (subspace topology).
+       So g^{-1}(U_y) \<times> (U_t \<inter> I_set) \<in> product_topology_on TA I_top.
+       The preimage is the union of all such rectangles.\<close>
+    have "\<forall>xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W' \<longrightarrow>
+        (\<exists>U\<in>TA. \<exists>V\<in>I_top. fst xt \<in> U \<and> snd xt \<in> V \<and> U \<times> V \<subseteq> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'})"
+    proof (intro ballI impI)
+      fix xt assume hxt: "xt \<in> A \<times> I_set" and hW'_mem: "(g (fst xt), snd xt) \<in> W'"
+      have ha: "fst xt \<in> A" and ht: "snd xt \<in> I_set" using hxt by auto
+      \<comment> \<open>W' open, so (g(fst xt), snd xt) has open neighborhood U_y \<times> U_t \<subseteq> W'.\<close>
+      obtain Uy Ut where hUy_open: "open Uy" and hUt_open: "open Ut"
+          and hUy_mem: "g (fst xt) \<in> Uy" and hUt_mem: "snd xt \<in> Ut"
+          and hUyUt_sub: "Uy \<times> Ut \<subseteq> W'"
+        using hW'_open hW'_mem open_prod_elim[of W' "g (fst xt)" "snd xt"] by (by100 blast)
+      \<comment> \<open>g^{-1}(Uy) \<in> TA.\<close>
+      have hUy_R2: "Uy \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+        using hUy_open hTR2eq unfolding top1_open_sets_def by (by100 blast)
+      have hpre_g: "{a \<in> A. g a \<in> Uy} \<in> TA"
+        using hg hUy_R2 unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Ut \<inter> I_set \<in> I_top.\<close>
+      have hUt_Itop: "Ut \<inter> I_set \<in> I_top"
+      proof -
+        have "Ut \<in> top1_open_sets" using hUt_open unfolding top1_open_sets_def by simp
+        thus ?thesis unfolding top1_unit_interval_topology_def
+          by (rule subspace_topology_memI)
+      qed
+      show "\<exists>U\<in>TA. \<exists>V\<in>I_top. fst xt \<in> U \<and> snd xt \<in> V \<and>
+          U \<times> V \<subseteq> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}"
+      proof (intro bexI conjI)
+        show "fst xt \<in> {a \<in> A. g a \<in> Uy}" using ha hUy_mem by simp
+        show "snd xt \<in> Ut \<inter> I_set" using ht hUt_mem by simp
+        show "{a \<in> A. g a \<in> Uy} \<times> (Ut \<inter> I_set) \<subseteq> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}"
+        proof
+          fix yt assume "yt \<in> {a \<in> A. g a \<in> Uy} \<times> (Ut \<inter> I_set)"
+          hence "fst yt \<in> A" "g (fst yt) \<in> Uy" "snd yt \<in> Ut" "snd yt \<in> I_set" by auto
+          hence "(g (fst yt), snd yt) \<in> Uy \<times> Ut" by simp
+          hence "(g (fst yt), snd yt) \<in> W'" using hUyUt_sub by (by100 blast)
+          thus "yt \<in> {xt \<in> A \<times> I_set. (g (fst xt), snd xt) \<in> W'}"
+            using \<open>fst yt \<in> A\<close> \<open>snd yt \<in> I_set\<close> by simp
+        qed
+        show "{a \<in> A. g a \<in> Uy} \<in> TA" by (rule hpre_g)
+        show "Ut \<inter> I_set \<in> I_top" by (rule hUt_Itop)
+      qed
+    qed
+    \<comment> \<open>The preimage is union of such rectangles, hence open in product topology.\<close>
+    thus ?thesis sorry \<comment> \<open>Union of basic open rectangles in product_topology_on is open.\<close>
+  qed
+  thus "{xt \<in> A \<times> I_set. ?f xt \<in> V} \<in> product_topology_on TA I_top"
+    using hpre_eq hpre_eq2 by simp
+qed *)
+
 \<comment> \<open>Translation homeomorphism: T(x) = pair_sub x c maps R^2-{c} \<cong> R^2-{0}.\<close>
 lemma translation_homeo_R2:
   fixes c :: "real \<times> real"
@@ -8449,7 +8578,47 @@ proof -
     \<comment> \<open>Continuity of F: need top1_continuous_map_on (A\<times>I) ... ?Y ?TY (\<lambda>(x,t). F x t).\<close>
     have hF_cont: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY
         (\<lambda>xt. F (fst xt) (snd xt))"
-      sorry \<comment> \<open>F is polynomial in t and continuous in g(x); needs boilerplate for custom framework.\<close>
+    proof -
+      \<comment> \<open>Use continuous_compose_product_R2 with \<phi>(y,t) = ((1-t)*fst(y)-fst(p), (1-t)*snd(y)-snd(p)).\<close>
+      define \<phi> :: "(real \<times> real) \<times> real \<Rightarrow> real \<times> real" where
+        "\<phi> yt = ((1 - snd yt) * fst (fst yt) - fst p, (1 - snd yt) * snd (fst yt) - snd p)" for yt
+      have hF_eq: "\<And>x t. F x t = \<phi> (?g x, t)" unfolding F_def \<phi>_def by simp
+      have h\<phi>_cont: "continuous_on (UNIV \<times> I_set) \<phi>"
+        unfolding \<phi>_def by (intro continuous_intros)
+      \<comment> \<open>g continuous from A to UNIV (R^2).\<close>
+      have hg_UNIV: "top1_continuous_map_on A TA (UNIV :: (real\<times>real) set)
+          (product_topology_on top1_open_sets top1_open_sets) ?g"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> A" thus "?g x \<in> UNIV" by simp
+      next
+        fix V :: "(real\<times>real) set" assume hV: "V \<in> product_topology_on top1_open_sets top1_open_sets"
+        have "(UNIV - {?ha}) \<inter> V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {?ha})"
+          by (rule subspace_topology_memI[OF hV])
+        hence "{x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> V} \<in> TA"
+          using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{x \<in> A. ?g x \<in> V} = {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> V}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> A. ?g x \<in> V}"
+          moreover have "?g x \<in> UNIV - {?ha}" if "x \<in> A" for x
+            using hg_cont that unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "x \<in> {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> V}" by (by100 blast)
+        next
+          fix x assume "x \<in> {x \<in> A. ?g x \<in> (UNIV - {?ha}) \<inter> V}"
+          thus "x \<in> {x \<in> A. ?g x \<in> V}" by (by100 blast)
+        qed
+        ultimately show "{x \<in> A. ?g x \<in> V} \<in> TA" by simp
+      qed
+      have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+      have hresult: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?Y)
+          (\<lambda>xt. \<phi> (?g (fst xt), snd xt))"
+        by (rule continuous_compose_product_R2[OF hg_UNIV h\<phi>_cont _ hTA])
+           (use hF_in_Y hF_eq in \<open>simp\<close>)
+      moreover have "\<And>xt. \<phi> (?g (fst xt), snd xt) = F (fst xt) (snd xt)"
+        using hF_eq by simp
+      ultimately show ?thesis by simp
+    qed
     \<comment> \<open>f0 = \<lambda>x. pair_sub (g(x)) p is continuous from A to ?Y.\<close>
     have hf0_cont: "top1_continuous_map_on A TA ?Y ?TY (\<lambda>x. pair_sub (?g x) p)"
     proof -
