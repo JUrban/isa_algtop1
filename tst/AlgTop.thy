@@ -13002,9 +13002,42 @@ proof -
   \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
      to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
   have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-    \<comment> \<open>Transfer C to S^2 via stereographic inverse. By Theorem 61.3, S^2-C' not connected.
-       Via homeomorphism S^2-{b} \<cong> R^2, components correspond. Hence R^2-C not connected.\<close>
-    sorry
+  proof -
+    \<comment> \<open>Step 1a: Get stereographic projection \<sigma>: S^2\{N} \<rightarrow> R^2.\<close>
+    have hN_S2: "north_pole \<in> top1_S2" unfolding north_pole_def top1_S2_def by simp
+    obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+      using S2_minus_point_homeo_R2[OF hN_S2] by (by100 blast)
+    \<comment> \<open>Step 1b: Transfer C to S^2: C' = \<sigma>^{-1}(C) \<subseteq> S^2\{N}.\<close>
+    define C' where "C' = inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
+    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}" unfolding C'_def
+    proof
+      fix x assume "x \<in> inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
+      then obtain c where hc: "c \<in> C" "x = inv_into (top1_S2 - {north_pole}) \<sigma> c" by (by100 blast)
+      have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
+        using h\<sigma> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "c \<in> \<sigma> ` (top1_S2 - {north_pole})" using hsurj by simp
+      hence "inv_into (top1_S2 - {north_pole}) \<sigma> c \<in> top1_S2 - {north_pole}"
+        by (rule inv_into_into)
+      thus "x \<in> top1_S2 - {north_pole}" using hc(2) by simp
+    qed
+    have hC'_sub_S2: "C' \<subseteq> top1_S2" using hC'_sub by (by100 blast)
+    \<comment> \<open>Step 1c: C' is a simple closed curve on S^2.\<close>
+    have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
+      sorry \<comment> \<open>Homeomorphic image of simple closed curve is simple closed curve.
+         \<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is a homeomorphism, C is a simple closed curve in R^2,
+         hence C' = \<sigma>^{-1}(C) is a simple closed curve in S^2\{N} \<subseteq> S^2.\<close>
+    \<comment> \<open>Step 1d: By Theorem 61.3, S^2\C' is not connected.\<close>
+    have hS2_C'_sep: "top1_separates_on top1_S2 top1_S2_topology C'"
+      by (rule Theorem_61_3_JordanSeparation_S2[OF top1_S2_is_topology_on_strict hC'_scc])
+    \<comment> \<open>Step 1e: Transfer non-connectivity back to R^2.
+       S^2\C' = (S^2\{N}\C') \<union> {N}. \<sigma> maps S^2\{N}\C' homeo to R^2\C.
+       S^2\C' not connected \<Rightarrow> R^2\C not connected (if R^2\C connected,
+       \<sigma>^{-1}(R^2\C) connected, and adding {N} preserves connectivity since
+       N is a limit point of \<sigma>^{-1}(R^2\C), giving S^2\C' connected \<Rightarrow> contradiction).\<close>
+    show ?thesis sorry \<comment> \<open>Transfer: not-connected on S^2 \<Rightarrow> not-connected on R^2.\<close>
+  qed
   \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
      By Theorem 63.5 (applied via 63.2 + 63.3), exactly two components.\<close>
   obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
