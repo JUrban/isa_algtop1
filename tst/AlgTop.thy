@@ -14758,9 +14758,14 @@ proof -
       and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
       and hU_bdd_raw: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
       and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
-    sorry \<comment> \<open>Exactly 2 components with bounded/unbounded labeling.
-       Transfer to S^2, apply 63.5 (uses 63.2, 63.3, 63.1), transfer back.
-       Label V = component containing exterior ball (unbounded).\<close>
+      and hU_bdy_raw: "closure U = U \<union> C"
+      and hV_bdy_raw: "closure V = V \<union> C"
+    sorry \<comment> \<open>Exactly 2 components with all properties.
+       Step 2a: Decompose C = C1 \<union> C2 (two arcs via simple_closed_curve_arc_decomposition).
+       Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get SCC and two arcs on S^2.
+       Step 2c: By 63.2, arcs don't separate S^2. By 63.5, exactly 2 components on S^2.
+       Step 2d: Transfer back to R^2. Label V = unbounded component.
+       Step 2e: Boundary = C follows from Munkres' Step 2 argument (arc nonseparation).\<close>
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
   have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
@@ -15047,8 +15052,8 @@ proof -
   have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" by (rule hU_bdd_raw)
   have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" by (rule hV_unbdd_raw)
   \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
-  have hU_bdy: "closure U = U \<union> C" sorry
-  have hV_bdy: "closure V = V \<union> C" sorry
+  have hU_bdy: "closure U = U \<union> C" by (rule hU_bdy_raw)
+  have hV_bdy: "closure V = V \<union> C" by (rule hV_bdy_raw)
   show ?thesis using hUV_ne hUV_disj hUV_cover hU_pc hV_pc hU_bdd hV_unbdd hU_bdy hV_bdy
     by blast
 qed
