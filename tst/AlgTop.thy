@@ -8291,7 +8291,26 @@ proof -
   \<comment> \<open>Actually: \<sigma> restricted to C0\{b} is a homeomorphism onto \<sigma>(C0\{b}).
      So C0\{b} homeomorphic to connected set \<Rightarrow> connected.
      Use: \<sigma>^{-1} continuous (standard) on \<sigma>(C0\{b}), image = C0\{b}.\<close>
-  have h\<sigma>inv_cont: "continuous_on (\<sigma> ` (C0 - {b})) (inv_into (top1_S2 - {c}) \<sigma>)" sorry
+  have h\<sigma>inv_cont: "continuous_on (\<sigma> ` (C0 - {b})) (inv_into (top1_S2 - {c}) \<sigma>)"
+  proof -
+    \<comment> \<open>inv continuous on UNIV from custom topology. Bridge to standard on \<sigma>(C0\{b}).\<close>
+    have hinv_cust: "top1_continuous_map_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+        (top1_S2 - {c}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {c}))
+        (inv_into (top1_S2 - {c}) \<sigma>)"
+      using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h\<sigma>C0b_sub: "\<sigma> ` (C0 - {b}) \<subseteq> UNIV" by simp
+    show ?thesis unfolding continuous_on_open_invariant
+    proof (intro allI impI)
+      fix V :: "(real\<times>real\<times>real) set" assume "open V"
+      have "V \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+        using \<open>open V\<close> unfolding top1_open_sets_def by simp
+      \<comment> \<open>Need: {y \<in> \<sigma>(C0\{b}). inv y \<in> V} is open rel \<sigma>(C0\{b}).
+         inv maps into S^2\{c}. V open in R^3.
+         {y \<in> UNIV. inv y \<in> V'} for some V' in subspace of S^2\{c} is open in R^2.\<close>
+      show "\<exists>T. open T \<and> T \<inter> \<sigma> ` (C0 - {b}) = inv_into (top1_S2 - {c}) \<sigma> -` V \<inter> \<sigma> ` (C0 - {b})"
+        sorry
+    qed
+  qed
   have h\<sigma>inv_img: "inv_into (top1_S2 - {c}) \<sigma> ` (\<sigma> ` (C0 - {b})) = C0 - {b}"
   proof -
     have hC0b_sub: "C0 - {b} \<subseteq> top1_S2 - {c}" using hC0_sub_S2c by (by100 blast)
