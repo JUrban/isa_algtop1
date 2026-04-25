@@ -14777,6 +14777,103 @@ proof (rule ccontr)
 qed
 
 
+\<comment> \<open>Munkres' joining lemma (used in second proof of 63.2):
+   If D = D1 \<union> D2 with D1 \<inter> D2 = {d}, and a,b can be joined by paths in
+   S^2-D1 and S^2-D2, then they can be joined by a path in S^2-D.
+   Proof: if not, apply Theorem 63.1 to X = S^2-{d}, U = S^2-D1, V = S^2-D2.
+   U \<inter> V = S^2-D contains a,b (disconnected). Let A = path-component of a in U\<inter>V.
+   B = rest. Then \<alpha>*\<beta> is nontrivial in \<pi>_1(S^2-{d}). But S^2-{d} simply connected.\<close>
+lemma arc_joining_lemma:
+  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hD1_sub: "D1 \<subseteq> top1_S2" and hD2_sub: "D2 \<subseteq> top1_S2"
+      and hD1_closed: "closedin_on top1_S2 top1_S2_topology D1"
+      and hD2_closed: "closedin_on top1_S2 top1_S2_topology D2"
+      and hD_inter: "D1 \<inter> D2 = {d}"
+      and hd_S2: "d \<in> top1_S2"
+      and hab: "a \<in> top1_S2 - (D1 \<union> D2)" "b \<in> top1_S2 - (D1 \<union> D2)"
+      and hab_D1: "\<exists>f. top1_is_path_on (top1_S2 - D1)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D1)) a b f"
+      and hab_D2: "\<exists>f. top1_is_path_on (top1_S2 - D2)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D2)) a b f"
+  shows "\<exists>f. top1_is_path_on (top1_S2 - (D1 \<union> D2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (D1 \<union> D2))) a b f"
+proof (rule ccontr)
+  assume hnot: "\<not> ?thesis"
+  let ?X = "top1_S2 - {d}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  let ?U = "top1_S2 - D1" and ?V = "top1_S2 - D2"
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hT unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>U, V open in S^2 (complements of closed sets).\<close>
+  have hU_open: "?U \<in> top1_S2_topology"
+    using hD1_closed hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have hV_open: "?V \<in> top1_S2_topology"
+    using hD2_closed hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  \<comment> \<open>X = U \<union> V, U \<inter> V = S^2 - D.\<close>
+  have hUV: "?U \<union> ?V = ?X" using hD_inter by (by100 blast)
+  have hUV_inter: "?U \<inter> ?V = top1_S2 - (D1 \<union> D2)" by (by100 blast)
+  \<comment> \<open>a, b \<in> U \<inter> V but not path-connected in U \<inter> V.\<close>
+  have hab_UV: "a \<in> ?U \<inter> ?V" "b \<in> ?U \<inter> ?V"
+    using hab hD_inter by auto
+  \<comment> \<open>U \<inter> V is open in S^2 hence lpc. Components = path components.\<close>
+  have hUV_open: "?U \<inter> ?V \<in> top1_S2_topology"
+    by (rule topology_inter_open[OF hTS2 hU_open hV_open])
+  have hlpc: "top1_locally_path_connected_on (?U \<inter> ?V)
+      (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hUV_open]) (by100 blast)
+  \<comment> \<open>Let A = path-component of a in U \<inter> V. B = rest of U \<inter> V.\<close>
+  \<comment> \<open>A and B are open (components of lpc space). a \<in> A, b \<in> B.\<close>
+  \<comment> \<open>A \<union> B = U \<inter> V, A \<inter> B = {}.\<close>
+  \<comment> \<open>Get paths \<alpha>: a \<rightarrow> b in U, \<beta>: b \<rightarrow> a in V.\<close>
+  \<comment> \<open>By Theorem 63.1(a): \<alpha>*\<beta> nontrivial in \<pi>_1(X, a).\<close>
+  \<comment> \<open>But X = S^2-{d} simply connected. Contradiction.\<close>
+  \<comment> \<open>Step 1: A = path-component of a, B = rest.\<close>
+  define PC_a :: "(real \<times> real \<times> real) set" where "PC_a = top1_path_component_on (?U \<inter> ?V)
+      (subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)) a"
+  define Rest :: "(real \<times> real \<times> real) set" where "Rest = (?U \<inter> ?V) - PC_a"
+  have ha_PC: "a \<in> PC_a" sorry \<comment> \<open>Point is in its own path component.\<close>
+  have hb_Rest: "b \<in> Rest" sorry \<comment> \<open>b not in a's path-component (from hnot + hUV_inter).\<close>
+  have hPC_open: "openin_on ?X ?TX PC_a" sorry \<comment> \<open>Path components of lpc open set are open.\<close>
+  have hRest_open: "openin_on ?X ?TX Rest" sorry \<comment> \<open>Union of other path components is open.\<close>
+  have hPCR_cover: "PC_a \<union> Rest = ?U \<inter> ?V" sorry
+  have hPCR_disj: "PC_a \<inter> Rest = {}" unfolding Rest_def by (by100 blast)
+  \<comment> \<open>Step 2: Get paths \<alpha> and \<beta>.\<close>
+  \<comment> \<open>Step 2: Get paths \<alpha> and \<beta>. Need them with subspace_topology X TX U.\<close>
+  have hU_sub_X: "?U \<subseteq> ?X" using hD_inter by (by100 blast)
+  have hV_sub_X: "?V \<subseteq> ?X" using hD_inter by (by100 blast)
+  have hTU_eq: "subspace_topology ?X ?TX ?U = subspace_topology top1_S2 top1_S2_topology ?U"
+    by (rule subspace_topology_trans[OF hU_sub_X])
+  have hTV_eq: "subspace_topology ?X ?TX ?V = subspace_topology top1_S2 top1_S2_topology ?V"
+    by (rule subspace_topology_trans[OF hV_sub_X])
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U (subspace_topology ?X ?TX ?U) a b \<alpha>"
+    using hab_D1 hTU_eq sorry \<comment> \<open>Path a \<rightarrow> b in U. Topology matches via subspace_topology_trans.\<close>
+  obtain \<beta> where h\<beta>: "top1_is_path_on ?V (subspace_topology ?X ?TX ?V) b a \<beta>"
+    using hab_D2 hTV_eq sorry \<comment> \<open>Get path b \<rightarrow> a in V (reverse of hab_D2, same topology).\<close>
+  \<comment> \<open>Step 3: Apply Theorem 63.1(a).\<close>
+  have hX_TX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+  have hU_open_X: "openin_on ?X ?TX ?U" sorry \<comment> \<open>S^2-D1 open in X = S^2-{d}.\<close>
+  have hV_open_X: "openin_on ?X ?TX ?V" sorry \<comment> \<open>S^2-D2 open in X.\<close>
+  have hnontrivial: "\<not> top1_path_homotopic_on ?X ?TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+    sorry \<comment> \<open>By Theorem_63_1_loop_nontrivial with X=S^2-{d}, U=S^2-D1, V=S^2-D2,
+       A=PC_a, B=Rest, paths \<alpha>: a\<rightarrow>b in U, \<beta>: b\<rightarrow>a in V.
+       All premises verified above (some with sorry).\<close>
+  \<comment> \<open>Step 4: But X = S^2-{d} simply connected.\<close>
+  have hsc: "top1_simply_connected_on ?X ?TX"
+    by (rule S2_minus_point_simply_connected[OF hd_S2])
+  have "top1_path_homotopic_on ?X ?TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+  proof -
+    have ha_X: "a \<in> ?X" using hab hD_inter by (by100 blast)
+    have hab_loop: "top1_is_loop_on ?X ?TX a (top1_path_product \<alpha> \<beta>)"
+      sorry \<comment> \<open>Compose \<alpha> and \<beta>: path a\<rightarrow>b in U \<subseteq> X, then b\<rightarrow>a in V \<subseteq> X.\<close>
+    show ?thesis using hsc ha_X hab_loop
+      unfolding top1_simply_connected_on_def by (by100 blast)
+  qed
+  thus False using \<open>\<not> top1_path_homotopic_on ?X ?TX a a _ _\<close> by contradiction
+qed
+
 theorem Theorem_63_2_arc_no_separation:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "D \<subseteq> top1_S2"
