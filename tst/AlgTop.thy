@@ -3535,11 +3535,12 @@ proof -
       \<comment> \<open>Compose bijections.\<close>
       \<comment> \<open>Build bij_betw for \<psi> directly.\<close>
       \<comment> \<open>Prove \<psi> is a group iso: bij_betw + group_hom_on.\<close>
+      \<comment> \<open>\<psi> is a group iso: compose 4 individual group isos.\<close>
       have h\<psi>_iso: "top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
-        sorry \<comment> \<open>\<psi> = f4 \<circ> inv(f3) \<circ> f2 \<circ> f1. Each is a group iso.
-           bij_betw: compose 4 bijections (hb1, hb2, hb3i, hb4).
-           group_hom_on: compose 4 homomorphisms (extract from hf1'-hf4').
-           Standard group theory, but by100 limits + comp normalization make it tedious.\<close>
+        sorry \<comment> \<open>\<psi> = f4 \<circ> f3\<inverse> \<circ> f2 \<circ> f1. Each is a group iso (hf1'-hf4', hb1-hb4, hb3i).
+           bij_betw: bij_betw_trans chain. group_hom_on: compose hom preserving mul.
+           The proof is purely mechanical group theory but requires careful handling of
+           by100 limits with the composition normalization.\<close>
       have h\<psi>_bij: "bij_betw \<psi> G1 top1_Z_group"
         using h\<psi>_iso unfolding top1_group_iso_on_def by (by100 blast)
       have h\<psi>_hom: "top1_group_hom_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
