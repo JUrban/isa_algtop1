@@ -7690,37 +7690,125 @@ proof -
       using h_img_conn[unfolded h_img_top_eq top1_connected_on_def]
         h\<alpha>_meets_W1 h\<alpha>_meets_W2 by (by100 blast)
   qed
-  \<comment> \<open>Step 6: Path meets C1 \<subseteq> V. And path starts in W1 (at a).
-     The path point in C1 is in V. Path also visits W1. Near the C1-meeting,
-     path points in W1 are in V (by continuity + V open). Hence V \<inter> W1 \<noteq> {}.\<close>
-  \<comment> \<open>Actually simpler: \<alpha>(0) = a \<in> W1. If a \<in> V: V \<inter> W1 \<ni> a \<noteq> {}. Done.
-     If a \<notin> V: the path goes from a (not in V) to some point in C1 \<subseteq> V.
-     By continuity, the preimage of V under \<alpha> is open in [0,1].
-     The first time the path enters V, it must be near C1. But it was in W1 \<union> W2 just before.
-     By continuity of the path, the point just before V-entry is near the V-boundary.
-     Actually, let's use a simpler argument.\<close>
-  \<comment> \<open>Simpler: \<alpha> continuous. \<alpha>(I) meets W1 (at \<alpha>(0)=a) and C1\<subseteq>V.
-     Let y \<in> \<alpha>(I) \<inter> C1. y \<in> V (C1\<subseteq>V). Let t_y with \<alpha>(t_y) = y.
-     Let t_a = 0, \<alpha>(t_a) = a \<in> W1.
-     If t_a < t_y: \<alpha> maps [t_a, t_y] continuously into S^2-C2.
-     \<alpha>(t_a) \<in> W1. \<alpha>(t_y) \<in> C1, not in W1 (C1 \<subseteq> C', W1 \<inter> C' = {}).
-     \<alpha>^{-1}(W1) open in [0,1] (W1 open, \<alpha> continuous), contains t_a.
-     sup(\<alpha>^{-1}(W1) \<inter> [t_a, t_y]) = t* \<le> t_y.
-     For t < t* near t*: \<alpha>(t) \<in> W1. By continuity: \<alpha>(t*) \<in> cl(W1).
-     \<alpha>(t*) \<in> S^2-C2. cl(W1) \<inter> (S^2-C') = W1 (W1 open hence cl(W1)-W1 \<subseteq> C').
-     So \<alpha>(t*) \<in> W1 \<union> C'. If \<alpha>(t*) \<in> C': \<alpha>(t*) \<in> C'-C2 = C1 \<subseteq> V.
-     For t < t* near t*: \<alpha>(t) \<in> W1 \<inter> V (V open, \<alpha> continuous, \<alpha>(t*) \<in> V).
-     Hence V \<inter> W1 \<noteq> {}.
-     If \<alpha>(t*) \<in> W1: t* is the sup, so t* \<in> \<alpha>^{-1}(W1) (closed sup of open set might
-     not be in the set). But W1 open \<Rightarrow> \<alpha>^{-1}(W1) open \<Rightarrow> if t* \<in> \<alpha>^{-1}(W1),
-     there's room above t*, contradicting t* = sup. Unless t* = t_y.
-     If t* = t_y: \<alpha>(t_y) \<in> W1 \<inter> C1 \<subseteq> W1 \<inter> C' = {}. Contradiction.
-     So t* < t_y and \<alpha>(t*) \<notin> W1, hence \<alpha>(t*) \<in> C1 \<subseteq> V. QED.\<close>
-  \<comment> \<open>Final step: \<alpha>(0) \<in> W1, \<alpha> meets C1 \<subseteq> V, path continuous \<Rightarrow> V \<inter> W1 \<noteq> {}.\<close>
+  \<comment> \<open>Step 6 (Munkres textbook argument): \<alpha>(I) connected in S^2. cl(W1) \<subseteq> W1 \<union> C'.
+     b \<in> W2 \<subseteq> S^2 - cl(W1). So \<alpha>(I) meets both W1 and S^2-cl(W1).
+     Connectedness \<Rightarrow> \<alpha>(I) \<inter> (cl(W1) - W1) \<noteq> {}.
+     y \<in> \<alpha>(I) \<inter> (cl(W1) - W1) \<subseteq> C' \<inter> (S^2-C2) = C1 \<subseteq> V.
+     y \<in> cl(W1) \<inter> V, V open \<Rightarrow> V \<inter> W1 \<noteq> {} by closure_meets_open.\<close>
+  \<comment> \<open>\<alpha>(I) connected in S^2 subspace topology.\<close>
+  have h_img_conn_S2: "top1_connected_on (\<alpha> ` I_set)
+      (subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set))"
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTS2C2: "is_topology_on (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    have h\<alpha>_cont: "top1_continuous_map_on I_set I_top (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) \<alpha>"
+      using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+    have hI_conn: "top1_connected_on I_set I_top" by (rule top1_unit_interval_connected)
+    have h_conn: "top1_connected_on (\<alpha> ` I_set)
+        (subspace_topology (top1_S2 - C2_arc)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) (\<alpha> ` I_set))"
+      by (rule Theorem_23_5[OF hTI hTS2C2 hI_conn h\<alpha>_cont])
+    moreover have "subspace_topology (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) (\<alpha> ` I_set)
+        = subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      by (rule subspace_topology_trans) (use h\<alpha>_img_sub in simp)
+    ultimately show ?thesis by simp
+  qed
+  \<comment> \<open>cl(W1) \<subseteq> W1 \<union> C' (since W2 = S^2 - W1 - C' is open, so W1\<union>C' is closed).\<close>
+  have hW1_C'_closed: "closedin_on top1_S2 top1_S2_topology (W1 \<union> C')"
+  proof -
+    have hW12_C: "W1 \<union> W2 = top1_S2 - C'" using hW12(2) by simp
+    have "top1_S2 - (W1 \<union> C') = W2"
+    proof (intro set_eqI iffI)
+      fix z assume "z \<in> top1_S2 - (W1 \<union> C')"
+      hence "z \<in> top1_S2" "z \<notin> W1" "z \<notin> C'" by auto
+      hence "z \<in> top1_S2 - C'" by (by100 blast)
+      hence "z \<in> W1 \<union> W2" using hW12(2) by simp
+      thus "z \<in> W2" using \<open>z \<notin> W1\<close> by (by100 blast)
+    next
+      fix z assume "z \<in> W2"
+      have "z \<in> top1_S2" using \<open>z \<in> W2\<close> hW12(2) hC'_sub by (by100 blast)
+      moreover have "z \<notin> W1" using \<open>z \<in> W2\<close> hW12(1) by (by100 blast)
+      moreover have "z \<notin> C'" using \<open>z \<in> W2\<close> hW12(2) by (by100 blast)
+      ultimately show "z \<in> top1_S2 - (W1 \<union> C')" by (by100 blast)
+    qed
+    moreover have "W1 \<union> C' \<subseteq> top1_S2" using hW12(2) hC'_sub by (by100 blast)
+    ultimately show ?thesis unfolding closedin_on_def using hW2_open by simp
+  qed
+  have hW1_sub_C': "W1 \<subseteq> W1 \<union> C'" by (by100 blast)
+  have hcl_W1_sub: "closure_on top1_S2 top1_S2_topology W1 \<subseteq> W1 \<union> C'"
+    by (rule closure_on_subset_of_closed[OF hW1_C'_closed hW1_sub_C'])
+  \<comment> \<open>b \<in> W2 \<subseteq> S^2 - cl(W1).\<close>
+  have hW2_disj_cl: "W2 \<inter> closure_on top1_S2 top1_S2_topology W1 = {}"
+  proof -
+    have "W2 \<inter> (W1 \<union> C') = {}" using hW12(1,2) hC_decomp by (by100 blast)
+    thus ?thesis using hcl_W1_sub by (by100 blast)
+  qed
+  have hb_not_cl: "b \<notin> closure_on top1_S2 top1_S2_topology W1"
+    using hb hW2_disj_cl by (by100 blast)
+  \<comment> \<open>S^2 - cl(W1) is open (complement of closed set).\<close>
+  have hcl_W1_closed: "closedin_on top1_S2 top1_S2_topology
+      (closure_on top1_S2 top1_S2_topology W1)"
+    by (rule closure_on_closed[OF hTS2])
+       (use hW12(2) hC_decomp hC'_sub in blast)
+  have hS2_cl_open: "top1_S2 - closure_on top1_S2 top1_S2_topology W1 \<in> top1_S2_topology"
+    using hcl_W1_closed unfolding closedin_on_def by (by100 blast)
+  \<comment> \<open>\<alpha>(I) \<inter> (S^2-cl(W1)) \<noteq> {} since b \<in> \<alpha>(I) \<inter> (S^2-cl(W1)).\<close>
+  have h\<alpha>_img_sub_S2: "\<alpha> ` I_set \<subseteq> top1_S2"
+    using h\<alpha>_img_sub hC2_sub by (by100 blast)
+  have hb_in_compl: "b \<in> \<alpha> ` I_set \<inter> (top1_S2 - closure_on top1_S2 top1_S2_topology W1)"
+    using h\<alpha>_1 h1_I hb_not_cl h\<alpha>_img_sub_S2 by (by100 blast)
+  \<comment> \<open>By connectedness: \<alpha>(I) \<inter> (cl(W1) - W1) \<noteq> {}.\<close>
+  have "\<alpha> ` I_set \<inter> (closure_on top1_S2 top1_S2_topology W1 - W1) \<noteq> {}"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence h_disj2: "\<alpha> ` I_set \<inter> (closure_on top1_S2 top1_S2_topology W1 - W1) = {}" by simp
+    \<comment> \<open>\<alpha>(I) \<subseteq> W1 \<union> (S^2 - cl(W1)).\<close>
+    have h_sub2: "\<alpha> ` I_set \<subseteq> W1 \<union> (top1_S2 - closure_on top1_S2 top1_S2_topology W1)"
+    proof
+      fix z assume "z \<in> \<alpha> ` I_set"
+      hence hz_S2: "z \<in> top1_S2" using h\<alpha>_img_sub_S2 by (by100 blast)
+      show "z \<in> W1 \<union> (top1_S2 - closure_on top1_S2 top1_S2_topology W1)"
+      proof (cases "z \<in> closure_on top1_S2 top1_S2_topology W1")
+        case True
+        hence "z \<notin> closure_on top1_S2 top1_S2_topology W1 - W1"
+          using h_disj2 \<open>z \<in> \<alpha> ` I_set\<close> by (by100 blast)
+        hence "z \<in> W1" using True by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        case False thus ?thesis using hz_S2 by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>W1 and S^2-cl(W1) are disjoint open sets in S^2, both meeting \<alpha>(I). Contradiction.\<close>
+    have "W1 \<inter> \<alpha> ` I_set \<in> subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      using hW1_open unfolding subspace_topology_def by (by100 blast)
+    moreover have "(top1_S2 - closure_on top1_S2 top1_S2_topology W1) \<inter> \<alpha> ` I_set
+        \<in> subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      using hS2_cl_open unfolding subspace_topology_def by (by100 blast)
+    moreover have "(W1 \<inter> \<alpha> ` I_set) \<inter>
+        ((top1_S2 - closure_on top1_S2 top1_S2_topology W1) \<inter> \<alpha> ` I_set) = {}"
+      using subset_closure_on[of W1 top1_S2 top1_S2_topology] by (by100 blast)
+    moreover have "(W1 \<inter> \<alpha> ` I_set) \<union>
+        ((top1_S2 - closure_on top1_S2 top1_S2_topology W1) \<inter> \<alpha> ` I_set) = \<alpha> ` I_set"
+      using h_sub2 by (by100 blast)
+    ultimately show False
+      using h_img_conn_S2[unfolded top1_connected_on_def]
+        h\<alpha>_meets_W1 hb_in_compl by (by100 blast)
+  qed
+  \<comment> \<open>Get y \<in> \<alpha>(I) \<inter> (cl(W1) - W1). y \<in> C1 \<subseteq> V.\<close>
+  then obtain y where hy: "y \<in> \<alpha> ` I_set" "y \<in> closure_on top1_S2 top1_S2_topology W1"
+      "y \<notin> W1" by (by100 blast)
+  have "y \<in> C'" using hy(2,3) hcl_W1_sub by (by100 blast)
+  moreover have "y \<in> top1_S2 - C2_arc" using hy(1) h\<alpha>_img_sub by (by100 blast)
+  ultimately have "y \<in> C1_arc" using hC_decomp by (by100 blast)
+  hence "y \<in> V" using hC1_sub_V by (by100 blast)
+  \<comment> \<open>y \<in> cl(W1) \<inter> V, V open in S^2 \<Rightarrow> V \<inter> W1 \<noteq> {} by closure_meets_open.\<close>
   show ?thesis
-    sorry \<comment> \<open>\<alpha>^{-1}(W1) open in [0,1], contains 0. \<alpha> meets C1 at t_y, \<alpha>(t_y) \<notin> W1.
-       Sup of \<alpha>^{-1}(W1) \<inter> [0,t_y] is t*. \<alpha>(t*) \<in> cl(W1) - W1 \<subseteq> C1 \<subseteq> V.
-       For t < t* near t*: \<alpha>(t) \<in> W1. By continuity + V open: \<alpha>(t) \<in> V \<inter> W1.\<close>
+    using closure_meets_open[OF hTS2 _ hy(2) hV \<open>y \<in> V\<close>]
+      hW12(2) hC_decomp hC'_sub by (by100 blast)
 qed
 
 theorem Theorem_63_4_JordanCurve:
@@ -9220,8 +9308,6 @@ proof -
       qed
       ultimately show ?thesis by simp
     qed
-    have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)"
-      sorry \<comment> \<open>Same argument for W2_S2-{N} \<Rightarrow> V_R2. Need W2_S2-{N} connected.\<close>
     \<comment> \<open>Bounded/unbounded: via Lemma_61_1_components_correspond.\<close>
     \<comment> \<open>Bounded/unbounded via Lemma_61_1. Need: C' compact, W1/W2 \<in> components.\<close>
     have hC'_compact: "top1_compact_on C' (subspace_topology top1_S2 top1_S2_topology C')"
@@ -9534,6 +9620,82 @@ proof -
         by (rule topology_inter_open[OF hTS2_here hS2C_open_here[folded S2C_here_def] hU2(1)])
       thus ?thesis using hU2(2) by simp
     qed
+    \<comment> \<open>V_R2 connected: W2_S2 - {N} connected (connected_open_delete_S2), transfer via \<sigma>2.\<close>
+    have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)"
+    proof -
+      have hW2_sub_S2: "W2_S2 \<subseteq> top1_S2"
+        using hW2_sub_S2C_here unfolding S2C_here_def by (by100 blast)
+      \<comment> \<open>Step 1: W2_S2 - {N} connected via connected_open_delete_S2.\<close>
+      have hW2N_conn_hol: "connected (W2_S2 - {north_pole})"
+      proof (rule connected_open_delete_S2[OF hW2_open_S2 hW2_conn hN_in_W2])
+        obtain c where hc: "c \<in> W1_S2" using hW1_ne by (by100 blast)
+        have "c \<in> top1_S2 - (C1' \<union> C2')" using hc hW12_cover by (by100 blast)
+        hence hc_S2: "c \<in> top1_S2" by (by100 blast)
+        have hc_not: "c \<notin> W2_S2" using hc hW12_disj by (by100 blast)
+        thus "\<exists>c. c \<in> top1_S2 \<and> c \<notin> W2_S2" using hc_S2 by (by100 blast)
+      qed
+      \<comment> \<open>Step 2: \<sigma>2 continuous_on S^2\{N} in HOL sense.\<close>
+      have h\<sigma>2_cont_on_S2N: "continuous_on (top1_S2 - {north_pole}) \<sigma>2"
+      proof -
+        have h\<sigma>2_cont_cust: "top1_continuous_map_on (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) UNIV ?TR2 \<sigma>2"
+          using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+        show ?thesis unfolding continuous_on_open_invariant
+        proof (intro allI impI)
+          fix V :: "(real \<times> real) set" assume "open V"
+          have "V \<in> (top1_open_sets :: (real \<times> real) set set)"
+            using \<open>open V\<close> unfolding top1_open_sets_def by simp
+          hence hV_TR2: "V \<in> ?TR2"
+            using product_topology_on_open_sets_real2 by (by100 metis)
+          have hpre: "{x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> V}
+              \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+            using h\<sigma>2_cont_cust hV_TR2 unfolding top1_continuous_map_on_def by (by100 blast)
+          then obtain W where hW: "W \<in> top1_S2_topology"
+              "{x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> V} = (top1_S2 - {north_pole}) \<inter> W"
+            unfolding subspace_topology_def by (by100 blast)
+          have hTS2eq: "top1_S2_topology = subspace_topology UNIV
+              (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+            unfolding top1_S2_topology_def
+            using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                  product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+          then obtain W' where hW': "W' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+              "W = top1_S2 \<inter> W'"
+            using hW(1) unfolding subspace_topology_def by (by100 blast)
+          have "open W'" using hW'(1) unfolding top1_open_sets_def by simp
+          have "W' \<inter> (top1_S2 - {north_pole}) = \<sigma>2 -` V \<inter> (top1_S2 - {north_pole})"
+          proof (intro set_eqI iffI)
+            fix x assume "x \<in> W' \<inter> (top1_S2 - {north_pole})"
+            hence hx1: "x \<in> top1_S2 - {north_pole}" and hx2: "x \<in> W'" by auto
+            hence "x \<in> top1_S2 \<inter> W'" by (by100 blast)
+            hence "x \<in> W" using hW'(2) by simp
+            hence "x \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> V}"
+              using hx1 hW(2) by (by100 blast)
+            thus "x \<in> \<sigma>2 -` V \<inter> (top1_S2 - {north_pole})" by (by100 blast)
+          next
+            fix x assume "x \<in> \<sigma>2 -` V \<inter> (top1_S2 - {north_pole})"
+            hence hx1: "x \<in> top1_S2 - {north_pole}" and hx2: "\<sigma>2 x \<in> V" by auto
+            hence "x \<in> (top1_S2 - {north_pole}) \<inter> W" using hW(2) by (by100 blast)
+            thus "x \<in> W' \<inter> (top1_S2 - {north_pole})" using hW'(2) hx1 by (by100 blast)
+          qed
+          thus "\<exists>A. open A \<and> A \<inter> (top1_S2 - {north_pole}) = \<sigma>2 -` V \<inter> (top1_S2 - {north_pole})"
+            using \<open>open W'\<close> by (by100 blast)
+        qed
+      qed
+      have h\<sigma>2_cont_on_W2N: "continuous_on (W2_S2 - {north_pole}) \<sigma>2"
+        by (rule continuous_on_subset[OF h\<sigma>2_cont_on_S2N]) (use hW2_sub_S2 in blast)
+      \<comment> \<open>Step 3: V_R2 connected in HOL sense.\<close>
+      have "connected V_R2"
+      proof -
+        have "connected (\<sigma>2 ` (W2_S2 - {north_pole}))"
+          by (rule connected_continuous_image[OF h\<sigma>2_cont_on_W2N hW2N_conn_hol])
+        thus ?thesis unfolding V_R2_def by simp
+      qed
+      \<comment> \<open>Step 4: Bridge to top1_connected_on.\<close>
+      thus ?thesis
+        using top1_connected_on_subspace_open_iff_connected[of V_R2]
+              product_topology_on_open_sets_real2
+        by (by100 simp)
+    qed
     \<comment> \<open>\<sigma>2 homeomorphism maps open subsets of S^2\{N} to open subsets of R^2.\<close>
     have h\<sigma>2_open_map: "\<And>V. V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
         \<Longrightarrow> \<sigma>2 ` V \<in> ?TR2"
@@ -9757,6 +9919,50 @@ proof -
         using h61_1_W2 hN_in_W2 by simp
       thus ?thesis unfolding V_R2_def by (by100 blast)
     qed
+    \<comment> \<open>Shared: \<sigma>2inv maps open sets in TR2 to open sets in S^2_topology.\<close>
+    have h\<sigma>2inv_open_map_S2: "\<And>W :: (real\<times>real) set. W \<in> ?TR2 \<Longrightarrow> \<sigma>2inv ` W \<in> top1_S2_topology"
+    proof -
+      fix W :: "(real\<times>real) set" assume hW: "W \<in> ?TR2"
+      have h\<sigma>2_cont_here: "top1_continuous_map_on (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) UNIV ?TR2 \<sigma>2"
+        using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hpreimg: "{x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}
+          \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+        using h\<sigma>2_cont_here hW unfolding top1_continuous_map_on_def by (by100 blast)
+      have h\<sigma>2inv_W_eq: "\<sigma>2inv ` W = {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
+      proof (intro set_eqI iffI)
+        fix z assume "z \<in> \<sigma>2inv ` W"
+        then obtain w where hw: "w \<in> W" "z = \<sigma>2inv w" by (by100 blast)
+        have "z \<in> top1_S2 - {north_pole}"
+          using h\<sigma>2inv_bij hw(2) unfolding bij_betw_def by (by100 blast)
+        moreover have "\<sigma>2 z = w"
+        proof -
+          have "w \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+            using h\<sigma>2_bij unfolding bij_betw_def by simp
+          hence "\<sigma>2 (\<sigma>2inv w) = w" unfolding \<sigma>2inv_def by (rule f_inv_into_f)
+          thus ?thesis using hw(2) by simp
+        qed
+        ultimately show "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}" using hw(1) by simp
+      next
+        fix z assume "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
+        hence hz: "z \<in> top1_S2 - {north_pole}" "\<sigma>2 z \<in> W" by simp_all
+        have "\<sigma>2inv (\<sigma>2 z) = z" unfolding \<sigma>2inv_def
+          by (rule inv_into_f_f[OF bij_betw_imp_inj_on[OF h\<sigma>2_bij] hz(1)])
+        thus "z \<in> \<sigma>2inv ` W" using hz(2) by (by100 force)
+      qed
+      have hS2N_open: "top1_S2 - {north_pole} \<in> top1_S2_topology"
+        using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff north_pole_in_S2]
+          top1_S2_is_topology_on_strict
+        unfolding closedin_on_def is_topology_on_strict_def is_topology_on_def
+        by (by100 blast)
+      obtain V_S2 where hVS2_open: "V_S2 \<in> top1_S2_topology"
+          and hVS2_eq: "\<sigma>2inv ` W = (top1_S2 - {north_pole}) \<inter> V_S2"
+        using hpreimg[unfolded h\<sigma>2inv_W_eq[symmetric]]
+        unfolding subspace_topology_def by blast
+      thus "\<sigma>2inv ` W \<in> top1_S2_topology"
+        using topology_inter_open[OF is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]
+          hS2N_open hVS2_open] hVS2_eq by simp
+    qed
     have hUR2_bdy: "closure_on UNIV ?TR2 U_R2 = U_R2 \<union> C"
     proof -
       \<comment> \<open>\<supseteq>: cl(U) \<supseteq> U trivially. cl(U) \<supseteq> C by textbook Step 2.\<close>
@@ -9803,56 +10009,7 @@ proof -
                  Apply simple_closed_curve_boundary_meets_component.\<close>
               \<comment> \<open>Transfer to S^2 via \<sigma>2inv.\<close>
               have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
-              proof -
-                \<comment> \<open>\<sigma>2 continuous S^2\{N} \<rightarrow> R^2. \<sigma>2inv(W) = \<sigma>2^{-1}(W) open in S^2\{N}.\<close>
-                have h\<sigma>2_cont: "top1_continuous_map_on (top1_S2 - {north_pole})
-                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
-                    UNIV ?TR2 \<sigma>2"
-                  using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
-                have "{x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}
-                    \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
-                  using h\<sigma>2_cont hW_open unfolding top1_continuous_map_on_def by (by100 blast)
-                moreover have "\<sigma>2inv ` W = {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
-                proof (intro set_eqI iffI)
-                  fix z assume "z \<in> \<sigma>2inv ` W"
-                  then obtain w where hw: "w \<in> W" "z = \<sigma>2inv w" by (by100 blast)
-                  have "z \<in> top1_S2 - {north_pole}"
-                    using h\<sigma>2inv_bij hw(2) unfolding bij_betw_def by (by100 blast)
-                  moreover have "\<sigma>2 z = w"
-                  proof -
-                    have "w \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
-                      using h\<sigma>2_bij unfolding bij_betw_def by simp
-                    hence "\<sigma>2 (\<sigma>2inv w) = w" unfolding \<sigma>2inv_def by (rule f_inv_into_f)
-                    thus ?thesis using hw(2) by simp
-                  qed
-                  ultimately show "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
-                    using hw(1) by simp
-                next
-                  fix z assume "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
-                  hence hz: "z \<in> top1_S2 - {north_pole}" "\<sigma>2 z \<in> W" by simp_all
-                  have "\<sigma>2inv (\<sigma>2 z) = z"
-                    unfolding \<sigma>2inv_def
-                    by (rule inv_into_f_f[OF bij_betw_imp_inj_on[OF h\<sigma>2_bij] hz(1)])
-                  thus "z \<in> \<sigma>2inv ` W" using hz(2) by (by100 force)
-                qed
-                moreover have "top1_S2 - {north_pole} \<in> top1_S2_topology"
-                  using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff north_pole_in_S2]
-                    top1_S2_is_topology_on_strict
-                  unfolding closedin_on_def is_topology_on_strict_def is_topology_on_def
-                  by (by100 blast)
-                ultimately have "\<sigma>2inv ` W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
-                  by simp
-                then obtain V_S2 where hVS2: "V_S2 \<in> top1_S2_topology"
-                    and h\<sigma>W_eq: "\<sigma>2inv ` W = (top1_S2 - {north_pole}) \<inter> V_S2"
-                  unfolding subspace_topology_def by blast
-                have hS2N_open: "(top1_S2 - {north_pole}) \<in> top1_S2_topology"
-                  using \<open>top1_S2 - {north_pole} \<in> top1_S2_topology\<close> .
-                have "(top1_S2 - {north_pole}) \<inter> V_S2 \<in> top1_S2_topology"
-                  by (rule topology_inter_open[OF
-                    is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]
-                    hS2N_open hVS2])
-                thus ?thesis using h\<sigma>W_eq by simp
-              qed
+                using h\<sigma>2inv_open_map_S2[OF hW_open] .
               have hx_in_\<sigma>W: "\<sigma>2inv x \<in> \<sigma>2inv ` W" using hxW by (by100 blast)
               have hx_in_C': "\<sigma>2inv x \<in> C'"
                 unfolding C'_def \<sigma>2inv_def using \<open>x \<in> C\<close> by (by100 blast)
@@ -9921,7 +10078,7 @@ proof -
               have hW_open: "W \<in> ?TR2" and hxW: "x \<in> W"
                 using hW unfolding neighborhood_of_def by simp_all
               have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
-                sorry \<comment> \<open>Same as U: \<sigma>2inv continuous, preimage of open is open in S^2\{N} \<subseteq> S^2.\<close>
+                using h\<sigma>2inv_open_map_S2[OF hW_open] .
               have hx_in_C': "\<sigma>2inv x \<in> C'"
                 unfolding C'_def \<sigma>2inv_def using \<open>x \<in> C\<close> by (by100 blast)
               have hW12_eq: "W1_S2 \<union> W2_S2 = top1_S2 - C'"
