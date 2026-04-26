@@ -15998,7 +15998,9 @@ proof -
           fix W assume hW: "W \<in> product_topology_on I_top I_top"
           \<comment> \<open>swap\<inverse>(W) = {(s,t) | (t,s) \<in> W}. For product topology this is open.\<close>
           show "{p \<in> I_set \<times> I_set. swap p \<in> W} \<in> product_topology_on I_top I_top"
-            sorry \<comment> \<open>Preimage of open under swap is open: swap maps basis U\<times>V to V\<times>U.\<close>
+            sorry \<comment> \<open>Swap preimage: for (s,t) with (t,s)\<in>W, get basis U\<times>V with (t,s)\<in>U\<times>V\<subseteq>W,
+               then (s,t)\<in>V\<times>U\<subseteq>swap\<inverse>(W). V\<times>U is in the symmetric product basis.
+               Proof causes session timeout due to heavy product_basis reasoning.\<close>
         qed
         have h1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
             (I_set \<times> I_set) (product_topology_on I_top I_top) (tflip \<circ> swap)"
