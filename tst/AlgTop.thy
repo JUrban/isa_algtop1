@@ -3446,10 +3446,27 @@ proof -
     have hS1_top_eq: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
     proof -
       have hS1_sub: "top1_S1 \<subseteq> R2_0" unfolding R2_0_def top1_S1_def by (by100 auto)
+      \<comment> \<open>Direct proof: both sides equal {S^1 \<inter> W | W \<in> product_topology_on ...}.\<close>
       show ?thesis
-        sorry \<comment> \<open>subspace_topology_trans: S^1 \<subseteq> R^2-{0} \<Rightarrow> subspace(R^2-{0}, subspace(R^2, R^2-{0}), S^1) = subspace(R^2, S^1) = top1_S1_topology.
-           The type unification between UNIV :: (real\<times>real) set in different contexts blocks
-           the direct rule application. Mathematically trivial.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix W assume "W \<in> subspace_topology R2_0 TR2_0 top1_S1"
+        then obtain V where hV: "V \<in> TR2_0" "W = top1_S1 \<inter> V"
+          unfolding subspace_topology_def by (by100 blast)
+        then obtain V0 where hV0: "V0 \<in> product_topology_on top1_open_sets top1_open_sets"
+            "V = R2_0 \<inter> V0" unfolding TR2_0_def R2_0_def subspace_topology_def by (by100 blast)
+        have "W = top1_S1 \<inter> V0" using hV(2) hV0(2) hS1_sub by (by100 blast)
+        thus "W \<in> top1_S1_topology" unfolding top1_S1_topology_def subspace_topology_def
+          using hV0(1) by (by100 blast)
+      next
+        fix W assume "W \<in> top1_S1_topology"
+        then obtain V0 where hV0: "V0 \<in> product_topology_on top1_open_sets top1_open_sets"
+            "W = top1_S1 \<inter> V0" unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+        have "R2_0 \<inter> V0 \<in> TR2_0" unfolding TR2_0_def R2_0_def subspace_topology_def
+          using hV0(1) by (by100 blast)
+        moreover have "W = top1_S1 \<inter> (R2_0 \<inter> V0)" using hV0(2) hS1_sub by (by100 blast)
+        ultimately show "W \<in> subspace_topology R2_0 TR2_0 top1_S1"
+          unfolding subspace_topology_def by (by100 blast)
+      qed
     qed
     \<comment> \<open>Step 4: \<pi>_1(S^1, (1,0)) \<cong> Z (Theorem_54_5_iso).\<close>
     have h54_5: "top1_groups_isomorphic_on
