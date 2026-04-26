@@ -3308,7 +3308,77 @@ proof -
       show "\<forall>x\<in>?X. (case (x, 1::real) of (x, t) \<Rightarrow> x) = x" by (by100 simp)
     qed
     show "top1_homotopic_on R2_0 TR2_0 R2_0 TR2_0 (h \<circ> inv_into ?X h) (\<lambda>y. y)"
-      sorry \<comment> \<open>Symmetric: h\<circ>inv = id on R2_0. Same constant homotopy.\<close>
+      unfolding top1_homotopic_on_def
+    proof (intro conjI exI[of _ "\<lambda>(y,t). y"])
+      have hh_cont: "top1_continuous_map_on ?X ?TX R2_0 TR2_0 h"
+        using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinv_cont: "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
+        using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      show "top1_continuous_map_on R2_0 TR2_0 R2_0 TR2_0 (h \<circ> inv_into ?X h)"
+        by (rule top1_continuous_map_on_comp[OF hinv_cont hh_cont])
+      show "top1_continuous_map_on R2_0 TR2_0 R2_0 TR2_0 (\<lambda>y. y)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix y assume "y \<in> R2_0" thus "y \<in> R2_0" .
+      next
+        fix W assume "W \<in> TR2_0"
+        have "W \<subseteq> R2_0"
+        proof -
+          obtain W0 where "W = R2_0 \<inter> W0"
+            using \<open>W \<in> TR2_0\<close> unfolding TR2_0_def R2_0_def subspace_topology_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        hence "{y \<in> R2_0. y \<in> W} = W" by (by100 blast)
+        thus "{y \<in> R2_0. y \<in> W} \<in> TR2_0" using \<open>W \<in> TR2_0\<close> by (by100 simp)
+      qed
+      show "top1_continuous_map_on (R2_0 \<times> I_set) (product_topology_on TR2_0 I_top) R2_0 TR2_0 (\<lambda>(y, t). y)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume hp: "p \<in> R2_0 \<times> I_set"
+        obtain y t where "p = (y, t)" "y \<in> R2_0" using hp by (by100 blast)
+        thus "(case p of (y, t) \<Rightarrow> y) \<in> R2_0" by (by100 simp)
+      next
+        fix W assume hW: "W \<in> TR2_0"
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hI_mem: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        have hW_sub: "W \<subseteq> R2_0"
+        proof -
+          obtain W0 where "W = R2_0 \<inter> W0"
+            using hW unfolding TR2_0_def R2_0_def subspace_topology_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have "{p \<in> R2_0 \<times> I_set. (case p of (y, t) \<Rightarrow> y) \<in> W} = W \<times> I_set"
+        proof (rule set_eqI, rule iffI)
+          fix p assume hp: "p \<in> {p \<in> R2_0 \<times> I_set. (case p of (y, t) \<Rightarrow> y) \<in> W}"
+          obtain y t where hyt: "p = (y,t)" "y \<in> R2_0" "t \<in> I_set"
+              "(case (y,t) of (y,t) \<Rightarrow> y) \<in> W"
+            using hp by (by100 blast)
+          have "y \<in> W" using hyt(4) by (by100 simp)
+          thus "p \<in> W \<times> I_set" using hyt(1,3) by (by100 blast)
+        next
+          fix p assume hp: "p \<in> W \<times> I_set"
+          obtain y t where "p = (y,t)" "y \<in> W" "t \<in> I_set" using hp by (by100 blast)
+          hence "y \<in> R2_0" using hW_sub by (by100 blast)
+          show "p \<in> {p \<in> R2_0 \<times> I_set. (case p of (y, t) \<Rightarrow> y) \<in> W}"
+            using \<open>p = (y,t)\<close> \<open>y \<in> W\<close> \<open>y \<in> R2_0\<close> \<open>t \<in> I_set\<close> by (by100 simp)
+        qed
+        moreover have "W \<times> I_set \<in> product_topology_on TR2_0 I_top"
+          by (rule product_rect_open[OF hW hI_mem])
+        ultimately show "{p \<in> R2_0 \<times> I_set. (case p of (y, t) \<Rightarrow> y) \<in> W} \<in> product_topology_on TR2_0 I_top"
+          by (by100 simp)
+      qed
+      show "\<forall>y\<in>R2_0. (case (y, 0::real) of (y, t) \<Rightarrow> y) = (h \<circ> inv_into ?X h) y"
+      proof
+        fix y assume hy: "y \<in> R2_0"
+        have hbij_h: "bij_betw h ?X R2_0"
+          using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have "y \<in> h ` ?X" using hy hbij_h unfolding bij_betw_def by (by100 blast)
+        have "h (inv_into ?X h y) = y" using f_inv_into_f[OF \<open>y \<in> h ` ?X\<close>] by (by100 simp)
+        thus "(case (y, 0::real) of (y, t) \<Rightarrow> y) = (h \<circ> inv_into ?X h) y"
+          unfolding comp_def by (by100 simp)
+      qed
+      show "\<forall>y\<in>R2_0. (case (y, 1::real) of (y, t) \<Rightarrow> y) = y" by (by100 simp)
+    qed
   qed
   have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
