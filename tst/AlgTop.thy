@@ -15934,7 +15934,8 @@ proof -
       define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
       have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
       have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
-        sorry \<comment> \<open>\<phi>(s,t) = (1-s,t) continuous on I^2: first component s\<mapsto>1-s continuous, second id.\<close>
+        sorry \<comment> \<open>\<phi>(s,t)=(1-s,t) continuous: standard analysis fact. Components s\<mapsto>1-s and
+           t\<mapsto>t are both continuous, so by Theorem_18_4, \<phi> is continuous.\<close>
       show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
     qed
     show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
