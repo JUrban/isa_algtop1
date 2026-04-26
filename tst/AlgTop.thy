@@ -15574,11 +15574,32 @@ proof -
   \<comment> \<open>Step 6: \<pi>_1(S^1) \<cong> Z (Theorem_54_5_iso).\<close>
   \<comment> \<open>Step 7: Chain of isomorphisms: \<pi>_1(S^2-{p,q}) \<cong> \<pi>_1(R^2-{q'}) \<cong> \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z.\<close>
   \<comment> \<open>Step 8: Extract generator and generate-all property.\<close>
+  \<comment> \<open>Step 3: \<sigma> restricts to homeomorphism ?X \<cong> R^2-{q'}.\<close>
+  define R2_q' :: "(real \<times> real) set" where "R2_q' = UNIV - {q'}"
+  define TR2_q' where "TR2_q' = subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) R2_q'"
+  have h\<sigma>_restrict: "top1_homeomorphism_on ?X ?TX R2_q' TR2_q' \<sigma>"
+    sorry \<comment> \<open>Restrict homeomorphism to the punctured spaces. \<sigma> maps S^2-{p} to R^2,
+       so it maps S^2-{p}-{q} to R^2-{\<sigma>(q)} = R^2-{q'} = R2_q'.\<close>
+  \<comment> \<open>Step 4: Translation t(x) = x - q' gives R^2-{q'} \<cong> R^2-{0}.\<close>
+  define R2_0 :: "(real \<times> real) set" where "R2_0 = UNIV - {(0, 0)}"
+  define TR2_0 where "TR2_0 = subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) R2_0"
+  define t :: "real \<times> real \<Rightarrow> real \<times> real" where
+    "t = (\<lambda>(x, y). (x - fst q', y - snd q'))"
+  have ht_homeo: "top1_homeomorphism_on R2_q' TR2_q' R2_0 TR2_0 t"
+    sorry \<comment> \<open>Translation by -q' is a homeomorphism.\<close>
+  \<comment> \<open>Step 5-6: \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z. Use existing Theorem_58_2 + Theorem_54_5.\<close>
+  \<comment> \<open>Step 7: Chain: \<pi>_1(S^2-{p,q}) \<cong> \<pi>_1(R^2-{q'}) \<cong> \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z.
+     The composition \<sigma> ; t maps a \<in> S^2-{p,q} to t(\<sigma>(a)) \<in> R^2-{0}.
+     By Theorem_58_7, the induced map on \<pi>_1 is an isomorphism.\<close>
+  \<comment> \<open>Step 8: Extract generator from the isomorphism with Z and convert to path_power form.\<close>
   show ?thesis
-    sorry \<comment> \<open>Full proof requires: stereographic restriction (step 3),
-       translation homeomorphism (step 4), Theorem_58_2 chain (step 5-6),
-       homeomorphism-induced \<pi>_1 isomorphism (step 7), and extraction (step 8).
-       Each step ~30-50 lines. Total: ~200 lines.\<close>
+    sorry \<comment> \<open>Combines steps 3-7. The key chain:
+       \<pi>_1(S^2-{p,q}, a) \<cong> \<pi>_1(R^2-{q'}, \<sigma>(a)) \<cong> \<pi>_1(R^2-{0}, t(\<sigma>(a)))
+       \<cong> \<pi>_1(S^1, (1,0)) \<cong> Z (basepoint change needed for the last step).
+       Each \<cong> uses Theorem_58_7 with the appropriate homeomorphism/homotopy equivalence.
+       The final step extracts a generator from the Z-isomorphism.\<close>
 qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
