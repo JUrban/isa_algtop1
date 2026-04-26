@@ -8160,7 +8160,19 @@ proof -
       moreover have "W1_S2 \<union> (W2_S2 - {north_pole}) \<subseteq> top1_S2 - {north_pole}"
         using hW1_sub_S2N hW2_sub by (by100 blast)
       ultimately show ?thesis unfolding U_R2_def V_R2_def
-        sorry \<comment> \<open>inj_on \<sigma>2 + W1 \<inter> (W2-{N}) = {} \<Rightarrow> \<sigma>2`W1 \<inter> \<sigma>2`(W2-{N}) = {}.\<close>
+      proof (intro set_eqI iffI)
+        fix x assume hx: "x \<in> \<sigma>2 ` W1_S2 \<inter> \<sigma>2 ` (W2_S2 - {north_pole})"
+        have "x \<in> \<sigma>2 ` W1_S2" using hx by (by100 blast)
+        then obtain a where ha: "a \<in> W1_S2" "x = \<sigma>2 a" by (by100 blast)
+        have "x \<in> \<sigma>2 ` (W2_S2 - {north_pole})" using hx by (by100 blast)
+        then obtain b where hb: "b \<in> W2_S2 - {north_pole}" "\<sigma>2 b = x" by (by100 blast)
+        have "a \<in> top1_S2 - {north_pole}" using ha(1) hW1_sub_S2N by (by100 blast)
+        have "b \<in> top1_S2 - {north_pole}" using hb(1) hW2_sub by (by100 blast)
+        have "a = b" using h\<sigma>2_inj \<open>a \<in> top1_S2 - _\<close> \<open>b \<in> top1_S2 - _\<close>
+            ha(2) hb(2) unfolding inj_on_def by (by100 blast)
+        hence "a \<in> W1_S2 \<inter> (W2_S2 - {north_pole})" using ha(1) hb(1) by simp
+        thus "x \<in> {}" using \<open>W1_S2 \<inter> (W2_S2 - {north_pole}) = {}\<close> by (by100 blast)
+      qed simp
     qed
     have hUR2VR2_cover: "U_R2 \<union> V_R2 = UNIV - C"
     proof -
@@ -8199,8 +8211,12 @@ proof -
           finally show ?thesis .
         qed
         moreover have "C' \<subseteq> top1_S2 - {north_pole}" using hC'_sub by simp
-        ultimately show ?thesis
-          sorry \<comment> \<open>\<sigma>2 ` (A - B) = \<sigma>2 ` A - \<sigma>2 ` B when B \<subseteq> A and \<sigma>2 injective on A.\<close>
+        have hAB_sub: "(top1_S2 - {north_pole}) - C' \<subseteq> top1_S2 - {north_pole}" by (by100 blast)
+        have "\<sigma>2 ` ((top1_S2 - {north_pole}) - C') = \<sigma>2 ` (top1_S2 - {north_pole}) - \<sigma>2 ` C'"
+          by (rule inj_on_image_set_diff[OF h\<sigma>2_inj hAB_sub hC'_sub])
+        hence "\<sigma>2 ` ((top1_S2 - {north_pole}) - C') = UNIV - C"
+          using \<open>\<sigma>2 ` (top1_S2 - {north_pole}) = UNIV\<close> \<open>\<sigma>2 ` C' = C\<close> by simp
+        thus ?thesis .
       qed
       have "\<sigma>2 ` (W1_S2 \<union> (W2_S2 - {north_pole})) = UNIV - C"
         using \<open>\<sigma>2 ` ((top1_S2 - {north_pole}) - C') = UNIV - C\<close> hW12_minus_N by simp
@@ -11844,6 +11860,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
