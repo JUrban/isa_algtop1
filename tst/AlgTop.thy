@@ -3131,7 +3131,7 @@ proof -
      This gives \<pi>_1(X, a) \<cong> Z.\<close>
   \<comment> \<open>Step 8: Extract generator from Z-isomorphism.\<close>
   show ?thesis
-    sorry \<comment> \<open>From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>(gen) = 1.
+    sorry \<comment> \<open>LAST JCT MATHEMATICAL GAP. From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>(gen) = 1.
        For any loop f, \<phi>([f]) = n. If n\<ge>0: [f] = gen^n. If n<0: [f] = (gen\<inverse>)^{|n|}.
        Needs: group iso \<rightarrow> path_power form (the bridge lemma).\<close>
 qed
