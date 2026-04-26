@@ -9061,8 +9061,35 @@ proof -
     have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
       using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
           top1_open_sets_is_topology_on_UNIV] by simp
-    have hUR2_in_TR2: "U_R2 \<in> ?TR2" sorry \<comment> \<open>\<sigma>2(W1) open in TR2: W1 open in S^2\{N}, \<sigma>2 homeo.\<close>
-    have hVR2_in_TR2: "V_R2 \<in> ?TR2" sorry \<comment> \<open>\<sigma>2(W2-{N}) open in TR2: same.\<close>
+    \<comment> \<open>W1, W2 open in S^2 (path components of lpc S2C = S^2 - C').\<close>
+    have hW1_open_S2: "W1_S2 \<in> top1_S2_topology"
+      sorry \<comment> \<open>W1 is a path component of lpc S2C. Path components open. Open in open = open.\<close>
+    have hW2_open_S2: "W2_S2 \<in> top1_S2_topology"
+      sorry \<comment> \<open>Same for W2.\<close>
+    \<comment> \<open>\<sigma>2 homeomorphism maps open subsets of S^2\{N} to open subsets of R^2.\<close>
+    have h\<sigma>2_open_map: "\<And>V. V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
+        \<Longrightarrow> \<sigma>2 ` V \<in> ?TR2"
+      using h\<sigma>2 unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+      sorry \<comment> \<open>Homeomorphism maps opens to opens (use inverse continuity).\<close>
+    have hUR2_in_TR2: "U_R2 \<in> ?TR2"
+    proof -
+      have "W1_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+        using hW1_open_S2 hW1_sub_S2N unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis unfolding U_R2_def using h\<sigma>2_open_map by simp
+    qed
+    have hVR2_in_TR2: "V_R2 \<in> ?TR2"
+    proof -
+      have "W2_S2 - {north_pole} \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      proof -
+        have "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
+        have "W2_S2 - {north_pole} = (top1_S2 - {north_pole}) - W1_S2"
+          using hW12_cover hC'_decomp hW12_disj hN_not_C' north_pole_in_S2 sorry
+        moreover have "... \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+          sorry \<comment> \<open>Complement of open W1 in open S^2\{N} subspace.\<close>
+        ultimately show ?thesis sorry
+      qed
+      thus ?thesis unfolding V_R2_def using h\<sigma>2_open_map by simp
+    qed
     have hUR2_sub: "U_R2 \<subseteq> UNIV" by simp
     have hVR2_sub: "V_R2 \<subseteq> UNIV" by simp
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
@@ -12752,6 +12779,7 @@ qed
 
 
 end
+
 
 
 
