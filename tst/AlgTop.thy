@@ -16195,7 +16195,36 @@ proof -
       sorry \<comment> \<open>Induction: initial from hab'_sep, step from joining lemma contrapositive.\<close>
     \<comment> \<open>Step 3: Cantor intersection. Monotone bounded sequences converge.\<close>
     define x where "x = (SUP n. fst (seq n))"
-    have hx_range: "0 \<le> x \<and> x \<le> 1" sorry
+    have hfst_le_snd: "\<forall>n. fst (seq n) \<le> snd (seq n)"
+    proof
+      fix n have "snd (seq n) - fst (seq n) = (1/2)^n" using hseq_len by (by100 blast)
+      moreover have "(1/2::real)^n \<ge> 0" by simp
+      ultimately show "fst (seq n) \<le> snd (seq n)" by linarith
+    qed
+    have hfst_le_1: "\<forall>n. fst (seq n) \<le> 1"
+    proof
+      fix n show "fst (seq n) \<le> 1"
+        using spec[OF hfst_le_snd, of n] spec[OF hseq_range, of n] by linarith
+    qed
+    have hbdd: "bdd_above (range (\<lambda>n. fst (seq n)))"
+      by (intro bdd_aboveI[of _ 1]) (use hfst_le_1 in auto)
+    have hx_range: "0 \<le> x \<and> x \<le> 1"
+    proof (intro conjI)
+      show "0 \<le> x"
+      proof -
+        have "fst (seq 0) \<in> range (\<lambda>n. fst (seq n))" by (by100 blast)
+        hence "fst (seq 0) \<le> x" unfolding x_def
+          using cSUP_upper[OF _ hbdd] by (by100 blast)
+        thus ?thesis using hseq_0 by simp
+      qed
+      show "x \<le> 1"
+      proof -
+        have "\<forall>n. fst (seq n) \<le> 1" by (rule hfst_le_1)
+        hence "Sup (range (\<lambda>n. fst (seq n))) \<le> 1"
+          by (intro cSup_least) auto
+        thus ?thesis unfolding x_def by simp
+      qed
+    qed
     have hx_limit: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
         snd (seq n) - fst (seq n) < \<epsilon>"
       sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
