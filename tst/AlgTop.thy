@@ -15625,7 +15625,45 @@ lemma path_power_product_add:
   shows "top1_path_homotopic_on X TX a a
     (top1_path_product (top1_path_power f a m) (top1_path_power f a n))
     (top1_path_power f a (m + n))"
-  sorry \<comment> \<open>By induction on m: base uses left-identity, step uses associativity.\<close>
+proof (induction m)
+  case 0
+  \<comment> \<open>const * f^n \<simeq> f^n = f^{0+n}.\<close>
+  show ?case by (simp add: Theorem_51_2_left_identity[OF assms(1)
+      top1_path_power_is_path[OF assms]])
+next
+  case (Suc m)
+  \<comment> \<open>f^{m+1} * f^n = (f * f^m) * f^n \<simeq> f * (f^m * f^n) \<simeq> f * f^{m+n} = f^{m+1+n}.\<close>
+  have hf: "top1_is_path_on X TX a a f" using assms(2) unfolding top1_is_loop_on_def by simp
+  have hfm: "top1_is_path_on X TX a a (top1_path_power f a m)"
+    by (rule top1_path_power_is_path[OF assms])
+  have hfn: "top1_is_path_on X TX a a (top1_path_power f a n)"
+    by (rule top1_path_power_is_path[OF assms])
+  have hfmn: "top1_is_path_on X TX a a (top1_path_power f a (m + n))"
+    by (rule top1_path_power_is_path[OF assms])
+  have hfm_fn: "top1_is_path_on X TX a a (top1_path_product (top1_path_power f a m) (top1_path_power f a n))"
+    by (rule top1_path_product_is_path[OF assms(1) hfm hfn])
+  \<comment> \<open>Step 1: (f * f^m) * f^n \<simeq> f * (f^m * f^n) by associativity.\<close>
+  have h_assoc: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_product f (top1_path_power f a m)) (top1_path_power f a n))
+      (top1_path_product f (top1_path_product (top1_path_power f a m) (top1_path_power f a n)))"
+    by (rule Lemma_51_1_path_homotopic_sym[OF
+        Theorem_51_2_associativity[OF assms(1) hf hfm hfn]])
+  \<comment> \<open>Step 2: f * (f^m * f^n) \<simeq> f * f^{m+n} by IH.\<close>
+  have h_IH: "top1_path_homotopic_on X TX a a
+      (top1_path_product f (top1_path_product (top1_path_power f a m) (top1_path_power f a n)))
+      (top1_path_product f (top1_path_power f a (m + n)))"
+    by (rule path_homotopic_product_right[OF assms(1) Suc hf])
+  \<comment> \<open>Combine.\<close>
+  have "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power f a (Suc m)) (top1_path_power f a n))
+      (top1_path_product f (top1_path_product (top1_path_power f a m) (top1_path_power f a n)))"
+    using h_assoc by simp
+  hence "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power f a (Suc m)) (top1_path_power f a n))
+      (top1_path_product f (top1_path_power f a (m + n)))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) _ h_IH])
+  thus ?case by simp
+qed
 
 text \<open>Path power multiplication: (f^m)^n \<simeq> f^{m*n} (for loops at a).\<close>
 lemma path_power_mult:
