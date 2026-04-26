@@ -3401,10 +3401,63 @@ proof -
       (top1_fundamental_group_carrier ?X ?TX a)
       (top1_fundamental_group_mul ?X ?TX a)
       top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>Chain: \<pi>_1(X,a) \<cong> \<pi>_1(R^2-{0},h(a)) \<cong> \<pi>_1(S^1,(1,0)) \<cong> Z.
-       Uses hpi1_iso_R2, Theorem_58_2_inclusion_iso, Theorem_54_5_iso,
-       and basepoint change isomorphism. Each step is a known group iso;
-       composition gives the chain.\<close>
+  proof -
+    \<comment> \<open>Step 1: \<pi>_1(R^2-{0}, h(a)) \<cong> \<pi>_1(R^2-{0}, (1,0)) via basepoint change.\<close>
+    have hR2_0_pc: "top1_path_connected_on R2_0 TR2_0"
+      sorry \<comment> \<open>R^2-{0} is path-connected (deformation retract to S^1 which is path-connected).\<close>
+    have hha_R2: "h a \<in> R2_0"
+    proof -
+      have "a \<in> ?X" using ha_X .
+      hence "\<sigma> a \<in> R2_q'"
+        using h\<sigma>_restrict unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      hence "t (\<sigma> a) \<in> R2_0"
+        using ht_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      thus ?thesis unfolding h_def comp_def by (by100 simp)
+    qed
+    have h10_R2: "(1::real, 0::real) \<in> R2_0" unfolding R2_0_def by (by100 simp)
+    have hbp_change: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier R2_0 TR2_0 (h a))
+        (top1_fundamental_group_mul R2_0 TR2_0 (h a))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      by (rule Theorem_52_1_iso[OF hTR2_0 hR2_0_pc hha_R2 h10_R2])
+    \<comment> \<open>Step 2: \<pi>_1(S^1, (1,0)) \<cong> \<pi>_1(R^2-{0}, (1,0)) (Theorem_58_2 with matching TR2_0).\<close>
+    have hTR2_0_eq: "TR2_0 = subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) (UNIV - {(0::real, 0::real)})"
+      unfolding TR2_0_def R2_0_def by (by100 simp)
+    have hR2_0_eq: "R2_0 = UNIV - {(0::real, 0::real)}" unfolding R2_0_def by (by100 simp)
+    have h58_2: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1
+          (subspace_topology (UNIV - {(0::real, 0::real)})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+              (UNIV - {(0, 0)})) top1_S1) (1, 0))
+        (top1_fundamental_group_mul top1_S1
+          (subspace_topology (UNIV - {(0::real, 0::real)})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+              (UNIV - {(0, 0)})) top1_S1) (1, 0))
+        (top1_fundamental_group_carrier (UNIV - {(0::real, 0::real)})
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - {(0, 0)})) (1, 0))
+        (top1_fundamental_group_mul (UNIV - {(0::real, 0::real)})
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV - {(0, 0)})) (1, 0))"
+      by (rule Theorem_58_2_inclusion_iso)
+    \<comment> \<open>Step 3: Match S^1 topologies. subspace R2_0 TR2_0 S^1 = top1_S1_topology.\<close>
+    have hS1_top_eq: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
+      sorry \<comment> \<open>S^1 \<subseteq> R^2-{0}, subspace of subspace = subspace of R^2 = top1_S1_topology.\<close>
+    \<comment> \<open>Step 4: \<pi>_1(S^1, (1,0)) \<cong> Z (Theorem_54_5_iso).\<close>
+    have h54_5: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        top1_Z_group top1_Z_mul"
+      by (rule Theorem_54_5_iso)
+    \<comment> \<open>Step 5: Compose the chain. Need transitivity of groups_isomorphic_on.\<close>
+    show ?thesis
+      sorry \<comment> \<open>Chain: hpi1_iso_R2 + hbp_change + h58_2[sym] + hS1_top_eq + h54_5.
+         Each is a known group isomorphism. Composition = transitivity of \<cong>.
+         Transitivity: if \<exists>f. iso f (G\<rightarrow>H) and \<exists>g. iso g (H\<rightarrow>K) then \<exists>g\<circ>f. iso (g\<circ>f) (G\<rightarrow>K).
+         This is standard (compose bij_betw + group_hom_on).\<close>
+  qed
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
   show ?thesis
     sorry \<comment> \<open>From hpi1_iso_Z: \<exists>\<psi> bijective homomorphism \<pi>_1(X,a) \<rightarrow> Z.
