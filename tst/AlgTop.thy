@@ -9887,9 +9887,21 @@ proof -
                     hx_in_C' h\<sigma>2inv_W_open h\<sigma>x_in_\<sigma>W])
               then obtain z where "z \<in> \<sigma>2inv ` W" "z \<in> W2_S2" by (by100 blast)
               have "\<sigma>2 z \<in> W"
-                sorry \<comment> \<open>Same as U: \<sigma>2(\<sigma>2inv(w)) = w via f_inv_into_f.\<close>
+              proof -
+                obtain w where "w \<in> W" "z = \<sigma>2inv w" using \<open>z \<in> \<sigma>2inv ` W\<close> by (by100 blast)
+                have "w \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+                  using h\<sigma>2_bij unfolding bij_betw_def by simp
+                hence "\<sigma>2 (\<sigma>2inv w) = w" unfolding \<sigma>2inv_def by (rule f_inv_into_f)
+                thus ?thesis using \<open>z = \<sigma>2inv w\<close> \<open>w \<in> W\<close> by simp
+              qed
               moreover have "\<sigma>2 z \<in> V_R2"
-                sorry \<comment> \<open>z \<in> W2_S2, z \<noteq> N (since z \<in> \<sigma>2inv ` W \<subseteq> S^2\{N}). So z \<in> W2-{N}.\<close>
+              proof -
+                have "z \<in> top1_S2 - {north_pole}"
+                  using \<open>z \<in> \<sigma>2inv ` W\<close> h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+                hence "z \<noteq> north_pole" by (by100 blast)
+                hence "z \<in> W2_S2 - {north_pole}" using \<open>z \<in> W2_S2\<close> by (by100 blast)
+                thus ?thesis unfolding V_R2_def by (by100 blast)
+              qed
               ultimately show "intersects W V_R2" unfolding intersects_def by (by100 blast)
             qed
           qed
@@ -13528,6 +13540,8 @@ qed
 
 
 end
+
+
 
 
 
