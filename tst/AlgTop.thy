@@ -16343,9 +16343,28 @@ proof -
         and hU_avoids: "h0 ` (U_nbhd \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}" by blast
     \<comment> \<open>For large m, I_m \<subseteq> U_nbhd (since I_m shrinks to {x} and U_nbhd is open).\<close>
     have "\<exists>N. {fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}"
-      sorry \<comment> \<open>Open U_nbhd contains x, I_m \<ni> x with length \<rightarrow> 0.
-         Since U_nbhd is open, \<exists>\<delta>>0. (x-\<delta>, x+\<delta>) \<subseteq> U_nbhd.
-         For large m, I_m \<subseteq> (x-\<delta>, x+\<delta>) \<inter> [0,1] \<subseteq> U_nbhd \<inter> [0,1].\<close>
+    proof -
+      obtain \<delta> where h\<delta>: "\<delta> > 0" "\<forall>y. dist y x < \<delta> \<longrightarrow> y \<in> U_nbhd"
+        using hU_open hx_U unfolding open_dist by (by100 blast)
+      obtain N where hN': "\<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
+          snd (seq n) - fst (seq n) < \<delta>"
+        using spec[OF hx_limit, of \<delta>] h\<delta>(1) by (by100 blast)
+      have "{fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}"
+      proof
+        fix t assume "t \<in> {fst (seq N)..snd (seq N)}"
+        hence ht: "fst (seq N) \<le> t" "t \<le> snd (seq N)" by auto
+        have hN_props: "fst (seq N) \<le> x" "x \<le> snd (seq N)"
+            "snd (seq N) - fst (seq N) < \<delta>"
+          using hN' by auto
+        have "dist t x < \<delta>"
+          using ht hN_props unfolding dist_real_def by linarith
+        hence "t \<in> U_nbhd" using h\<delta>(2) by simp
+        moreover have "t \<in> {0..1}"
+          using ht spec[OF hseq_range, of N] hfst_le_snd by auto
+        ultimately show "t \<in> U_nbhd \<inter> {0..1}" by simp
+      qed
+      thus ?thesis by (by100 blast)
+    qed
     then obtain N where hN_sub: "{fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}" by blast
     have hN: "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
       using hN_sub hU_avoids by (by100 blast)
