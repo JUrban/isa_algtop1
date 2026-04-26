@@ -7669,7 +7669,8 @@ proof -
   \<comment> \<open>5a: S^1 = short \<union> long.\<close>
   have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc" sorry
   have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}" sorry
-  have hab_ne: "?a_S1 \<noteq> ?b_S1" sorry
+  have hab_ne: "?a_S1 \<noteq> ?b_S1"
+    sorry \<comment> \<open>(cos(\<theta>-\<epsilon>),sin(\<theta>-\<epsilon>)) \<noteq> (cos(\<theta>+\<epsilon>),sin(\<theta>+\<epsilon>)) since 0<\<epsilon><\<pi>: trig identity.\<close>
   \<comment> \<open>5b: C' = C1 \<union> C2.\<close>
   have "C' = C1 \<union> C2"
   proof -
@@ -7757,7 +7758,14 @@ proof -
     have hC2_haus: "is_hausdorff_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
       by (rule hausdorff_subspace[OF top1_S2_is_hausdorff])
          (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
-    have hI_compact: "top1_compact_on I_set I_top" sorry
+    have hI_compact: "top1_compact_on I_set I_top"
+    proof -
+      have "compact (I_set :: real set)"
+        unfolding top1_unit_interval_def using compact_Icc by simp
+      have "I_top = subspace_topology UNIV top1_open_sets I_set"
+        unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+      thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+    qed
     have hI_top: "is_topology_on I_set I_top"
       by (rule top1_unit_interval_topology_is_topology_on)
     have hC2_top: "is_topology_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
