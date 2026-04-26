@@ -15665,72 +15665,6 @@ next
   show ?case by (simp add: Lemma_51_1_path_homotopic_trans[OF assms(1) h1 h2])
 qed
 
-text \<open>Reverse distributes over power: (f^n)\<inverse> \<simeq> (f\<inverse>)^n.\<close>
-lemma path_power_reverse:
-  assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
-  shows "top1_path_homotopic_on X TX a a
-    (top1_path_reverse (top1_path_power f a n))
-    (top1_path_power (top1_path_reverse f) a n)"
-  sorry \<comment> \<open>By induction on n: base trivial. Step: (f*f^n)\<inverse> = (f^n)\<inverse>*f\<inverse> \<simeq> (f\<inverse>)^n*f\<inverse>
-     = f\<inverse>*(f\<inverse>)^n = (f\<inverse>)^{n+1}. Needs: reverse of product, IH, product compat, power add.\<close>
-
-text \<open>Corollary: if f \<simeq> g, then f\<inverse> \<simeq> g\<inverse>.\<close>
-lemma path_homotopic_reverse:
-  assumes "is_topology_on X TX"
-      and "top1_path_homotopic_on X TX a a f g"
-      and "top1_is_path_on X TX a a f" and "top1_is_path_on X TX a a g"
-  shows "top1_path_homotopic_on X TX a a (top1_path_reverse f) (top1_path_reverse g)"
-proof -
-  \<comment> \<open>If F is a homotopy from f to g, then G(s,t) = F(1-s,t) is a homotopy from f\<inverse> to g\<inverse>.\<close>
-  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
-      and hFl: "\<forall>t\<in>I_set. F (0, t) = a" and hFr: "\<forall>t\<in>I_set. F (1, t) = a"
-    using assms(2) unfolding top1_path_homotopic_on_def by blast
-  define G where "G = (\<lambda>(s::real, t::real). F (1 - s, t))"
-  have hrf: "top1_is_path_on X TX a a (top1_path_reverse f)"
-    using top1_path_reverse_is_path[OF assms(3)] unfolding top1_path_reverse_def
-    using assms(3) unfolding top1_is_path_on_def by auto
-  have hrg: "top1_is_path_on X TX a a (top1_path_reverse g)"
-    using top1_path_reverse_is_path[OF assms(4)] unfolding top1_path_reverse_def
-    using assms(4) unfolding top1_is_path_on_def by auto
-  show ?thesis unfolding top1_path_homotopic_on_def
-  proof (intro exI[of _ G] conjI)
-    show "top1_is_path_on X TX a a (top1_path_reverse f)" by (rule hrf)
-    show "top1_is_path_on X TX a a (top1_path_reverse g)" by (rule hrg)
-    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
-    proof -
-      define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
-      have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
-      have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
-        sorry \<comment> \<open>\<phi>(s,t) = (1-s,t) continuous on I^2: first component s\<mapsto>1-s continuous, second id.\<close>
-      show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
-    qed
-    show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
-    proof
-      fix s assume hs: "s \<in> I_set"
-      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
-      show "G (s, 0) = top1_path_reverse f s"
-        unfolding G_def top1_path_reverse_def using hF0 \<open>1 - s \<in> I_set\<close> by auto
-    qed
-    show "\<forall>s\<in>I_set. G (s, 1) = top1_path_reverse g s"
-    proof
-      fix s assume hs: "s \<in> I_set"
-      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
-      thus "G (s, 1) = top1_path_reverse g s"
-        unfolding G_def top1_path_reverse_def using hF1 by auto
-    qed
-    show "\<forall>t\<in>I_set. G (0, t) = a"
-    proof
-      fix t assume ht: "t \<in> I_set"
-      show "G (0, t) = a" unfolding G_def using hFr ht by simp
-    qed
-    show "\<forall>t\<in>I_set. G (1, t) = a"
-    proof
-      fix t assume ht: "t \<in> I_set"
-      show "G (1, t) = a" unfolding G_def using hFl ht by simp
-    qed
-  qed
-qed
 
 text \<open>Path power addition: f^a * f^b \<simeq> f^{a+b} (for loops at a).\<close>
 lemma path_power_product_add:
@@ -15817,6 +15751,218 @@ next
   show ?case using h12 unfolding hgoal_lhs hgoal_rhs .
 qed
 
+
+text \<open>Reverse distributes over power: (f^n)\<inverse> \<simeq> (f\<inverse>)^n.\<close>
+lemma path_power_reverse:
+  assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
+  shows "top1_path_homotopic_on X TX a a
+    (top1_path_reverse (top1_path_power f a n))
+    (top1_path_power (top1_path_reverse f) a n)"
+proof (induction n)
+  case 0
+  \<comment> \<open>(const)\<inverse> = const = (f\<inverse>)^0. Definitional.\<close>
+  have haX: "a \<in> X"
+    using top1_is_loop_on_start[OF assms(2)] top1_is_loop_on_continuous[OF assms(2)]
+    unfolding top1_continuous_map_on_def top1_unit_interval_def by force
+  have "top1_path_reverse (top1_constant_path a) = top1_constant_path a"
+    unfolding top1_path_reverse_def top1_constant_path_def by auto
+  thus ?case by (simp add: Lemma_51_1_path_homotopic_refl[OF
+      top1_constant_path_is_path[OF assms(1) haX]])
+next
+  case (Suc n)
+  \<comment> \<open>(f * f^n)\<inverse> = (f^n)\<inverse> * f\<inverse> (definitional).
+     \<simeq> (f\<inverse>)^n * f\<inverse> (IH + product left).
+     \<simeq> (f\<inverse>)^n * (f\<inverse>)^1 (product right with f\<inverse> \<simeq> (f\<inverse>)^1 via right identity sym).
+     \<simeq> (f\<inverse>)^{n+1} (path_power_product_add).\<close>
+  have hf: "top1_is_path_on X TX a a f" using assms(2) unfolding top1_is_loop_on_def by simp
+  have hfr: "top1_is_path_on X TX a a (top1_path_reverse f)"
+    using top1_path_reverse_is_path[OF hf] hf unfolding top1_is_path_on_def top1_path_reverse_def by auto
+  have hfr_loop: "top1_is_loop_on X TX a (top1_path_reverse f)"
+    by (rule top1_path_reverse_is_loop[OF assms(2)])
+  have hfn: "top1_is_path_on X TX a a (top1_path_power f a n)"
+    by (rule top1_path_power_is_path[OF assms])
+  have hfn_rev: "top1_is_path_on X TX a a (top1_path_reverse (top1_path_power f a n))"
+    using top1_path_reverse_is_path[OF hfn] hfn
+    unfolding top1_is_path_on_def top1_path_reverse_def by auto
+  have hfrn: "top1_is_path_on X TX a a (top1_path_power (top1_path_reverse f) a n)"
+    by (rule top1_path_power_is_path[OF assms(1) hfr_loop])
+  \<comment> \<open>Step 1: (f * f^n)\<inverse> = (f^n)\<inverse> * f\<inverse> (definitional equality).\<close>
+  have hrev_eq: "top1_path_reverse (top1_path_power f a (Suc n))
+      = top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f)"
+  proof (rule ext)
+    fix s :: real
+    have hf0: "f 0 = a" and hf1: "f 1 = a"
+      using hf unfolding top1_is_path_on_def by (by100 blast)+
+    have hfn0: "top1_path_power f a n 0 = a" and hfn1: "top1_path_power f a n 1 = a"
+      using hfn unfolding top1_is_path_on_def by (by100 blast)+
+    show "top1_path_reverse (top1_path_power f a (Suc n)) s
+        = top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) s"
+    proof (cases "s < 1/2")
+      case True
+      \<comment> \<open>s < 1/2, so 1-s > 1/2. LHS uses else branch, RHS uses then branch.\<close>
+      have h1s: "\<not> ((1::real) - s \<le> 1/2)" using True by linarith
+      have lhs: "top1_path_reverse (top1_path_power f a (Suc n)) s
+          = top1_path_power f a n (1 - 2*s)"
+      proof -
+        have "top1_path_reverse (top1_path_power f a (Suc n)) s
+            = top1_path_product f (top1_path_power f a n) (1 - s)"
+          unfolding top1_path_reverse_def by simp
+        also have "... = top1_path_power f a n (2 * (1 - s) - 1)"
+          unfolding top1_path_product_def using h1s by simp
+        also have "(2::real) * (1 - s) - 1 = 1 - 2 * s" by (simp add: algebra_simps)
+        finally show ?thesis by simp
+      qed
+      have hs2: "s \<le> 1/2" using True by simp
+      have rhs: "top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) s
+          = top1_path_power f a n (1 - 2*s)"
+        unfolding top1_path_product_def top1_path_reverse_def using hs2 by simp
+      show ?thesis using lhs rhs by simp
+    next
+      case False
+      hence hs_ge: "s \<ge> 1/2" by simp
+      show ?thesis
+      proof (cases "s > 1/2")
+        case True
+        have h1s: "((1::real) - s) \<le> 1/2" using True by linarith
+        have lhs: "top1_path_reverse (top1_path_power f a (Suc n)) s
+            = f (2 - 2*s)"
+        proof -
+          have "top1_path_reverse (top1_path_power f a (Suc n)) s
+              = top1_path_product f (top1_path_power f a n) (1 - s)"
+            unfolding top1_path_reverse_def by simp
+          also have "... = f (2 * (1 - s))"
+            unfolding top1_path_product_def using h1s by simp
+          also have "(2::real) * (1 - s) = 2 - 2 * s" by (simp add: algebra_simps)
+          finally show ?thesis by simp
+        qed
+        have hs2: "\<not> (s \<le> 1/2)" using True by simp
+        have rhs: "top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) s
+            = f (2 - 2*s)"
+          unfolding top1_path_product_def top1_path_reverse_def using hs2 by simp
+        show ?thesis using lhs rhs by simp
+      next
+        case False
+        hence hs_eq: "s = 1/2" using hs_ge by simp
+        \<comment> \<open>At s = 1/2: both sides = a (boundary between branches).\<close>
+        have lhs': "top1_path_reverse (top1_path_power f a (Suc n)) (1/2) = a"
+        proof -
+          have "top1_path_reverse (top1_path_power f a (Suc n)) (1/2)
+              = top1_path_product f (top1_path_power f a n) (1/2)"
+            unfolding top1_path_reverse_def by simp
+          also have "... = f (2 * (1/2))"
+            unfolding top1_path_product_def by simp
+          also have "... = f 1" by simp
+          also have "... = a" using hf1 by simp
+          finally show ?thesis .
+        qed
+        have rhs: "top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) (1/2)
+            = top1_path_power f a n (1 - 2 * (1/2))"
+          unfolding top1_path_product_def top1_path_reverse_def by simp
+        hence rhs': "top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) (1/2) = a"
+          using hfn0 by simp
+        have hs12: "s = 1/2" using hs_eq by linarith
+        have "top1_path_reverse (top1_path_power f a (Suc n)) s = a"
+          by (subst hs12, rule lhs')
+        moreover have "top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f) s = a"
+          by (subst hs12, rule rhs')
+        ultimately show ?thesis by simp
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 2: (f^n)\<inverse> * f\<inverse> \<simeq> (f\<inverse>)^n * f\<inverse> (IH + product_left).\<close>
+  have h2: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f))
+      (top1_path_product (top1_path_power (top1_path_reverse f) a n) (top1_path_reverse f))"
+    by (rule path_homotopic_product_left[OF assms(1) Suc hfr])
+  \<comment> \<open>Step 3: (f\<inverse>)^n * f\<inverse> \<simeq> (f\<inverse>)^n * (f\<inverse>)^1 (right identity sym: f\<inverse> \<simeq> f\<inverse> * const = (f\<inverse>)^1).\<close>
+  have hfr_eq_fr1: "top1_path_homotopic_on X TX a a
+      (top1_path_reverse f) (top1_path_power (top1_path_reverse f) a 1)"
+  proof -
+    have "(top1_path_power (top1_path_reverse f) a 1) =
+        top1_path_product (top1_path_reverse f) (top1_constant_path a)" by simp
+    moreover have "top1_path_homotopic_on X TX a a
+        (top1_path_product (top1_path_reverse f) (top1_constant_path a)) (top1_path_reverse f)"
+      by (rule Theorem_51_2_right_identity[OF assms(1) hfr])
+    ultimately show ?thesis using Lemma_51_1_path_homotopic_sym by simp
+  qed
+  have h3: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power (top1_path_reverse f) a n) (top1_path_reverse f))
+      (top1_path_product (top1_path_power (top1_path_reverse f) a n) (top1_path_power (top1_path_reverse f) a 1))"
+    by (rule path_homotopic_product_right[OF assms(1) hfr_eq_fr1 hfrn])
+  \<comment> \<open>Step 4: (f\<inverse>)^n * (f\<inverse>)^1 \<simeq> (f\<inverse>)^{n+1} (path_power_product_add).\<close>
+  have h4: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power (top1_path_reverse f) a n) (top1_path_power (top1_path_reverse f) a 1))
+      (top1_path_power (top1_path_reverse f) a (n + 1))"
+    by (rule path_power_product_add[OF assms(1) hfr_loop])
+  \<comment> \<open>Chain: rev(f^{n+1}) = rev(f^n) * rev(f) \<simeq> (f\<inverse>)^n * f\<inverse> \<simeq> (f\<inverse>)^n * (f\<inverse>)^1 \<simeq> (f\<inverse>)^{n+1}.\<close>
+  have h23: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f))
+      (top1_path_product (top1_path_power (top1_path_reverse f) a n) (top1_path_power (top1_path_reverse f) a 1))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) h2 h3])
+  have h234: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_reverse (top1_path_power f a n)) (top1_path_reverse f))
+      (top1_path_power (top1_path_reverse f) a (n + 1))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) h23 h4])
+  show ?case using h234 unfolding hrev_eq by simp
+qed
+
+text \<open>Corollary: if f \<simeq> g, then f\<inverse> \<simeq> g\<inverse>.\<close>
+lemma path_homotopic_reverse:
+  assumes "is_topology_on X TX"
+      and "top1_path_homotopic_on X TX a a f g"
+      and "top1_is_path_on X TX a a f" and "top1_is_path_on X TX a a g"
+  shows "top1_path_homotopic_on X TX a a (top1_path_reverse f) (top1_path_reverse g)"
+proof -
+  \<comment> \<open>If F is a homotopy from f to g, then G(s,t) = F(1-s,t) is a homotopy from f\<inverse> to g\<inverse>.\<close>
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFl: "\<forall>t\<in>I_set. F (0, t) = a" and hFr: "\<forall>t\<in>I_set. F (1, t) = a"
+    using assms(2) unfolding top1_path_homotopic_on_def by blast
+  define G where "G = (\<lambda>(s::real, t::real). F (1 - s, t))"
+  have hrf: "top1_is_path_on X TX a a (top1_path_reverse f)"
+    using top1_path_reverse_is_path[OF assms(3)] unfolding top1_path_reverse_def
+    using assms(3) unfolding top1_is_path_on_def by auto
+  have hrg: "top1_is_path_on X TX a a (top1_path_reverse g)"
+    using top1_path_reverse_is_path[OF assms(4)] unfolding top1_path_reverse_def
+    using assms(4) unfolding top1_is_path_on_def by auto
+  show ?thesis unfolding top1_path_homotopic_on_def
+  proof (intro exI[of _ G] conjI)
+    show "top1_is_path_on X TX a a (top1_path_reverse f)" by (rule hrf)
+    show "top1_is_path_on X TX a a (top1_path_reverse g)" by (rule hrg)
+    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
+    proof -
+      define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
+      have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
+      have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
+        sorry \<comment> \<open>\<phi>(s,t) = (1-s,t) continuous on I^2: first component s\<mapsto>1-s continuous, second id.\<close>
+      show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
+    qed
+    show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+      show "G (s, 0) = top1_path_reverse f s"
+        unfolding G_def top1_path_reverse_def using hF0 \<open>1 - s \<in> I_set\<close> by auto
+    qed
+    show "\<forall>s\<in>I_set. G (s, 1) = top1_path_reverse g s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+      thus "G (s, 1) = top1_path_reverse g s"
+        unfolding G_def top1_path_reverse_def using hF1 by auto
+    qed
+    show "\<forall>t\<in>I_set. G (0, t) = a"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "G (0, t) = a" unfolding G_def using hFr ht by simp
+    qed
+    show "\<forall>t\<in>I_set. G (1, t) = a"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "G (1, t) = a" unfolding G_def using hFl ht by simp
+    qed
+  qed
+qed
 \<comment> \<open>Key algebraic fact for 63.5: in an infinite cyclic group,
    any two nontrivial elements have a common nonzero power.
    Applied here: if [f] and [g] are both nontrivial in \<pi>_1(X) \<cong> Z,
