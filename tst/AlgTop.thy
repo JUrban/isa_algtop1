@@ -8751,8 +8751,23 @@ proof -
                  contradict anything directly. We need: S2C = PC_N \<Rightarrow> connected \<Rightarrow> but S2C separated.
                  S2C separated means W1, W2 open. W1 open in TS2C \<Rightarrow> need W1 path-component (lpc).
                  For now, sorry the contradiction.\<close>
-              show False sorry \<comment> \<open>S2C = PC_N (path-connected) but S2C disconnected (2 components).
-                 Needs components open in lpc space (\<sim>10 lines of lpc infrastructure).\<close>
+              \<comment> \<open>S2C = PC_N (path-connected). But S2C is NOT connected (separated by C1'\<union>C2').\<close>
+              have "S2C \<subseteq> PC_N" using hW1_sub_PC hW2_sub_S2C hN_in_PC hPC_sub
+                sorry \<comment> \<open>W1\<subseteq>PC_N + W2\<subseteq>PC_N (from other direction) + W1\<union>W2=S2C.\<close>
+              hence "S2C = PC_N" using hPC_sub by (by100 blast)
+              \<comment> \<open>S2C path-connected (= PC_N which is a path component).\<close>
+              have "top1_path_connected_on S2C TS2C"
+                sorry \<comment> \<open>S2C = PC_N. Path component is path-connected.\<close>
+              hence hS2C_conn: "top1_connected_on S2C TS2C"
+                by (rule top1_path_connected_imp_connected)
+              \<comment> \<open>But S2C is NOT connected (C1'\<union>C2' separates S^2).\<close>
+              have "\<not> top1_connected_on S2C TS2C"
+                unfolding S2C_def TS2C_def
+                using Theorem_61_4_general_separation[OF top1_S2_is_topology_on_strict
+                      hC1'_sub_S2 hC2'_sub_S2 hC1'_closed hC2'_closed
+                      hC1'_conn hC2'_conn hC12'_card]
+                unfolding top1_separates_on_def by simp
+              show False using hS2C_conn \<open>\<not> top1_connected_on S2C TS2C\<close> by simp
             qed
           next
             fix x assume hx: "x \<in> W2_S2"
@@ -12562,6 +12577,9 @@ qed
 
 
 end
+
+
+
 
 
 
