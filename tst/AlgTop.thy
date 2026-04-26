@@ -14907,9 +14907,91 @@ proof (rule ccontr)
   have hT_E: "\<And>e. e \<in> E \<Longrightarrow> T e \<in> E" unfolding T_def E_def by auto
   have hT_p0: "\<And>e. p0 (T e) = p0 e" unfolding T_def p0_def by auto
   have hT_cont: "top1_continuous_map_on E TE E TE T"
-    sorry \<comment> \<open>T is continuous: for W \<in> TE, T^{-1}(W) = {(x,m-2) | (x,m) \<in> W} \<in> TE.
-       The slice conditions shift: even slice n of T^{-1}(W) = even slice n+1 of W,
-       odd slice n of T^{-1}(W) = odd slice n+1 of W.\<close>
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix e assume "e \<in> E" thus "T e \<in> E" using hT_E by simp
+  next
+    fix W assume hW: "W \<in> TE"
+    \<comment> \<open>T^{-1}(W) = {e \<in> E. T e \<in> W}. Show this is in TE.\<close>
+    show "{e \<in> E. T e \<in> W} \<in> TE"
+      unfolding TE_def
+    proof (intro CollectI conjI allI)
+      show "{e \<in> E. T e \<in> W} \<subseteq> E" by (by100 blast)
+    next
+      \<comment> \<open>Even slices: {x \<in> U. (x, 2n) \<in> T^{-1}(W)} = {x \<in> U. (x, 2n+2) \<in> W} = even slice n+1 of W.\<close>
+      fix n :: int
+      have "{x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} = {x \<in> U. (x, 2 * (n + 1)) \<in> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}}"
+        hence "x \<in> U" "T (x, 2*n) \<in> W" by auto
+        hence "(x, 2*n + 2) \<in> W" unfolding T_def by simp
+        thus "x \<in> {x \<in> U. (x, 2 * (n + 1)) \<in> W}" using \<open>x \<in> U\<close> by (simp add: algebra_simps)
+      next
+        fix x assume "x \<in> {x \<in> U. (x, 2 * (n + 1)) \<in> W}"
+        hence "x \<in> U" "(x, 2*n + 2) \<in> W" by (auto simp: algebra_simps)
+        have "(x, 2*n) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by auto
+        moreover have "T (x, 2*n) = (x, 2*n + 2)" unfolding T_def by simp
+        ultimately show "x \<in> {x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}}"
+          using \<open>x \<in> U\<close> \<open>(x, 2*n + 2) \<in> W\<close> by auto
+      qed
+      also have "... \<in> TX" using hW unfolding TE_def by (by100 blast)
+      finally show "{x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} \<in> TX" .
+    next
+      \<comment> \<open>Odd slices: shift by +2, getting odd slice n+1 of W.\<close>
+      fix n :: int
+      have h_A: "{x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}} = {x \<in> A. (x, 2 * (n+1) + 2) \<in> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}}"
+        hence "x \<in> A" "T (x, 2*n + 2) \<in> W" by auto
+        thus "x \<in> {x \<in> A. (x, 2 * (n+1) + 2) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+      next
+        fix x assume "x \<in> {x \<in> A. (x, 2 * (n+1) + 2) \<in> W}"
+        hence "x \<in> A" "(x, 2*n + 4) \<in> W" by (auto simp: algebra_simps)
+        have "x \<in> U" using \<open>x \<in> A\<close> assms(5) by (by100 blast)
+        have "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by auto
+        moreover have "T (x, 2*n+2) = (x, 2*n+4)" unfolding T_def by simp
+        ultimately show "x \<in> {x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}}"
+          using \<open>x \<in> A\<close> \<open>(x, 2*n+4) \<in> W\<close> by auto
+      qed
+      have h_B: "{x \<in> B. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} = {x \<in> B. (x, 2 * (n+1)) \<in> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> B. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}}"
+        hence "x \<in> B" "T (x, 2*n) \<in> W" by auto
+        thus "x \<in> {x \<in> B. (x, 2 * (n+1)) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+      next
+        fix x assume "x \<in> {x \<in> B. (x, 2 * (n+1)) \<in> W}"
+        hence "x \<in> B" "(x, 2*n + 2) \<in> W" by (auto simp: algebra_simps)
+        have "x \<in> U" using \<open>x \<in> B\<close> assms(5) by (by100 blast)
+        have "(x, 2*n) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by auto
+        moreover have "T (x, 2*n) = (x, 2*n+2)" unfolding T_def by simp
+        ultimately show "x \<in> {x \<in> B. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}}"
+          using \<open>x \<in> B\<close> \<open>(x, 2*n+2) \<in> W\<close> by auto
+      qed
+      have h_VU: "{x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. T e \<in> W}} = {x \<in> V - U. (x, 2 * (n+1) + 1) \<in> W}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. T e \<in> W}}"
+        hence "x \<in> V - U" "T (x, 2*n+1) \<in> W" by auto
+        thus "x \<in> {x \<in> V - U. (x, 2 * (n+1) + 1) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+      next
+        fix x assume "x \<in> {x \<in> V - U. (x, 2 * (n+1) + 1) \<in> W}"
+        hence "x \<in> V - U" "(x, 2*n + 3) \<in> W" by (auto simp: algebra_simps)
+        have "(x, 2*n+1) \<in> E" unfolding E_def using \<open>x \<in> V - U\<close> by auto
+        moreover have "T (x, 2*n+1) = (x, 2*n+3)" unfolding T_def by simp
+        ultimately show "x \<in> {x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. T e \<in> W}}"
+          using \<open>x \<in> V - U\<close> \<open>(x, 2*n+3) \<in> W\<close> by auto
+      qed
+      have "{x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> B. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. T e \<in> W}}
+        = {x \<in> A. (x, 2*(n+1)+2) \<in> W} \<union> {x \<in> B. (x, 2*(n+1)) \<in> W} \<union>
+          {x \<in> V - U. (x, 2*(n+1)+1) \<in> W}"
+        using h_A h_B h_VU by simp
+      also have "... \<in> TX" using hW unfolding TE_def by (by100 blast)
+      finally show "{x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> B. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> V - U. (x, 2 * n + 1) \<in> {e \<in> E. T e \<in> W}} \<in> TX" .
+    qed
+  qed
   \<comment> \<open>T^n maps e0=(a,0) to (a, 2*int n).\<close>
   have hT_iter: "\<And>n::nat. (T ^^ n) e0 = (a, 2 * int n)"
   proof -
