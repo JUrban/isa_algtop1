@@ -9050,8 +9050,16 @@ proof -
         using h61_1_W2 hN_in_W2 by simp
       thus ?thesis unfolding V_R2_def by (by100 blast)
     qed
-    have hUR2_bdy: "closure U_R2 = U_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
-    have hVR2_bdy: "closure V_R2 = V_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
+    \<comment> \<open>Boundary: closure(U) = U \<union> C and closure(V) = V \<union> C.
+       Direction \<supseteq>: U \<subseteq> closure(U) trivially. C \<subseteq> closure(U) by textbook Step 2.
+       Direction \<subseteq>: closure(U) \<inter> V = {} since V open and U \<inter> V = {}.
+       Hence closure(U) \<subseteq> UNIV - V = U \<union> C.\<close>
+    have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
+      sorry \<comment> \<open>Boundary argument. Direction \<supseteq>: U \<subseteq> cl(U) + C \<subseteq> cl(U) (textbook Step 2).
+         Direction \<subseteq>: cl(U) \<inter> V = {} since V open, U \<inter> V = {} (needs open_Int_closure_eq_empty).
+         U, V open since W1, W2 open in S^2 (PC_N = W2 proved) and \<sigma>2 homeo.\<close>
+    have hVR2_bdy: "closure V_R2 = V_R2 \<union> C"
+      sorry \<comment> \<open>Same argument symmetrically.\<close>
     show ?thesis by (intro that[of U_R2 V_R2])
       (use hUR2_ne hVR2_ne hUR2VR2_disj hUR2VR2_cover hUR2_conn hVR2_conn
            hUR2_bdd hVR2_unbdd hUR2_bdy hVR2_bdy in simp)+
@@ -12682,6 +12690,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
