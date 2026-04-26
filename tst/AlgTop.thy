@@ -9064,8 +9064,9 @@ proof -
         assume "x \<notin> U_R2 \<union> C"
         hence hxV: "x \<in> V_R2" using hUR2VR2_cover by (by100 blast)
         \<comment> \<open>V open, x \<in> V, V \<inter> U = {} \<Rightarrow> x \<notin> closure U.\<close>
-        thus False using hx hVR2_open hUR2VR2_disj
-          sorry \<comment> \<open>x \<in> V open, V \<inter> U = {}, x \<in> closure U \<Rightarrow> False.\<close>
+        have "V_R2 \<inter> closure U_R2 = {}"
+          using hVR2_open hUR2VR2_disj sorry
+        thus False using hxV hx by (by100 blast)
       qed
     next
       fix x assume "x \<in> U_R2 \<union> C"
@@ -9079,8 +9080,9 @@ proof -
       proof (rule ccontr)
         assume "x \<notin> V_R2 \<union> C"
         hence hxU: "x \<in> U_R2" using hUR2VR2_cover by (by100 blast)
-        thus False using hx hUR2_open hUR2VR2_disj
-          sorry \<comment> \<open>Same: x \<in> U open, U \<inter> V = {}, x \<in> closure V \<Rightarrow> False.\<close>
+        have "U_R2 \<inter> closure V_R2 = {}"
+          using hUR2_open hUR2VR2_disj sorry
+        thus False using hxU hx by (by100 blast)
       qed
     next
       fix x assume "x \<in> V_R2 \<union> C"
@@ -12717,6 +12719,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
