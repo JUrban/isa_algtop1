@@ -16082,10 +16082,52 @@ proof -
       using hh0_bij hI01 unfolding bij_betw_def by simp
     have hh0_img: "h0 ` {0..1} = D"
       using hh0_bij hI01 unfolding bij_betw_def by simp
+    have hh0_cont_custom: "top1_continuous_map_on I_set I_top D
+        (subspace_topology top1_S2 top1_S2_topology D) h0"
+      using hh0 unfolding top1_homeomorphism_on_def by (by100 blast)
     have hh0_cont_std: "continuous_on {0..1::real} h0"
-      sorry \<comment> \<open>Bridge from top1_continuous_map_on to standard continuous_on.
-         Needs: for each open B in R^3, h0\<inverse>(B) \<inter> [0,1] open in [0,1].
-         This follows from the custom topology matching the standard one.\<close>
+      unfolding continuous_on_open_invariant
+    proof (intro allI impI)
+      fix B :: "(real \<times> real \<times> real) set" assume "open B"
+      \<comment> \<open>B is standard-open in R^3. B \<inter> D is open in D (subspace from S^2 subspace from R^3).
+         h0\<inverse>(B \<inter> D) is open in I_set (from custom continuity).
+         The I_set custom topology = standard [0,1] subspace topology.\<close>
+      have "B \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using \<open>open B\<close> unfolding top1_open_sets_def by simp
+      have hR3eq: "top1_S2_topology = subspace_topology UNIV
+          (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+        unfolding top1_S2_topology_def
+        using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+              product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+      have hD_sub_S2: "D \<subseteq> top1_S2" using assms(2) by (by100 blast)
+      have "B \<inter> D \<in> subspace_topology top1_S2 top1_S2_topology D"
+      proof -
+        have "B \<inter> top1_S2 \<in> top1_S2_topology"
+          using \<open>B \<in> top1_open_sets\<close> hR3eq unfolding subspace_topology_def by (by100 blast)
+        moreover have "B \<inter> D = D \<inter> (B \<inter> top1_S2)" using hD_sub_S2 by (by100 blast)
+        ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+      qed
+      hence "{s \<in> I_set. h0 s \<in> B \<inter> D} \<in> I_top"
+        using hh0_cont_custom unfolding top1_continuous_map_on_def by (by100 blast)
+      have hh0_range: "\<forall>s \<in> I_set. h0 s \<in> D"
+        using hh0_cont_custom unfolding top1_continuous_map_on_def by (by100 blast)
+      hence "{s \<in> I_set. h0 s \<in> B} = {s \<in> I_set. h0 s \<in> B \<inter> D}" by (by100 blast)
+      hence hpre_Itop: "{s \<in> I_set. h0 s \<in> B} \<in> I_top"
+        using \<open>{s \<in> I_set. h0 s \<in> B \<inter> D} \<in> I_top\<close> by simp
+      \<comment> \<open>I_top = subspace_topology UNIV top1_open_sets I_set.
+         An I_top-open set = I_set \<inter> W for some standard-open W.\<close>
+      obtain W where "W \<in> (top1_open_sets :: real set set)" "{s \<in> I_set. h0 s \<in> B} = I_set \<inter> W"
+        using hpre_Itop unfolding top1_unit_interval_topology_def subspace_topology_def
+        by (by100 blast)
+      have hW_open: "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+      have hpre_W: "{s \<in> I_set. h0 s \<in> B} = I_set \<inter> W"
+        by (rule \<open>{s \<in> I_set. h0 s \<in> B} = I_set \<inter> W\<close>)
+      have "h0 -` B \<inter> {0..1} = {s \<in> I_set. h0 s \<in> B}" unfolding hI01 by (by100 blast)
+      hence "h0 -` B \<inter> {0..1} = I_set \<inter> W" using hpre_W by simp
+      hence "W \<inter> {0..1} = h0 -` B \<inter> {0..1::real}" unfolding hI01 by (by100 blast)
+      thus "\<exists>T. open T \<and> T \<inter> {0..1} = h0 -` B \<inter> {0..1::real}"
+        using hW_open by (by100 blast)
+    qed
     \<comment> \<open>Step 2: Define nested intervals by recursion.
        At each step, the joining lemma contrapositive gives that at least one half
        separates a' from b'. Pick that half.\<close>
