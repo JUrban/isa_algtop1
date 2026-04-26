@@ -9546,77 +9546,10 @@ proof -
       proof -
         have "U_R2 \<subseteq> closure_on UNIV ?TR2 U_R2" by (rule subset_closure_on)
         moreover have "C \<subseteq> closure_on UNIV ?TR2 U_R2"
-        proof -
-          \<comment> \<open>Proof via connected C: if C \<not>\<subseteq> cl(U), then cl(U) = U (clopen), R^2 connected \<Rightarrow> contradiction.
-             Then C splits by cl(U), but C connected \<Rightarrow> contradiction.\<close>
-          have hR2_conn: "top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
-            sorry \<comment> \<open>R^2 is connected (path-connected via straight lines).\<close>
-          have hC_conn: "top1_connected_on C (subspace_topology UNIV ?TR2 C)"
-            sorry \<comment> \<open>C is a simple closed curve (homeomorphic to S^1), hence connected.\<close>
-          \<comment> \<open>Case 1: C \<inter> cl(U) = {} \<Rightarrow> cl(U) = U \<Rightarrow> U clopen \<Rightarrow> R^2 not connected. Contradiction.\<close>
-          have hC_meets_clU: "C \<inter> closure_on UNIV ?TR2 U_R2 \<noteq> {}"
-          proof
-            assume hdisjoint: "C \<inter> closure_on UNIV ?TR2 U_R2 = {}"
-            hence "closure_on UNIV ?TR2 U_R2 \<subseteq> U_R2"
-              using hcl_sub by (by100 blast)
-            hence "closure_on UNIV ?TR2 U_R2 = U_R2"
-              using subset_closure_on[of U_R2 UNIV ?TR2] by (by100 blast)
-            have "closedin_on UNIV ?TR2 U_R2"
-            proof -
-              have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 U_R2)"
-                by (rule closure_on_closed[OF hTR2]) simp
-              thus ?thesis using \<open>closure_on UNIV ?TR2 U_R2 = U_R2\<close> by simp
-            qed
-            have "UNIV - U_R2 \<noteq> {}"
-              using hVR2_ne hUR2VR2_disj by (by100 blast)
-            have "UNIV - U_R2 \<in> ?TR2"
-              using \<open>closedin_on UNIV ?TR2 U_R2\<close> unfolding closedin_on_def by (by100 blast)
-            hence "\<not> top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
-              unfolding top1_connected_on_def top1_is_separation_on_def
-              using hUR2_in_TR2 hUR2_ne \<open>UNIV - U_R2 \<noteq> {}\<close> by (by100 blast)
-            thus False using hR2_conn by simp
-          qed
-          \<comment> \<open>Case 2: C meets cl(U) and C \<not>\<subseteq> cl(U) \<Rightarrow> C separated by cl(U). But C connected.\<close>
-          show ?thesis
-          proof (rule ccontr)
-            assume "\<not> C \<subseteq> closure_on UNIV ?TR2 U_R2"
-            \<comment> \<open>C - cl(U) \<noteq> {} and C \<inter> cl(U) \<noteq> {}. C - cl(U) \<subseteq> V (open). cl(U) closed.
-               {C \<inter> cl(U), C - cl(U)} separates C. C connected. Contradiction.\<close>
-            have "C - closure_on UNIV ?TR2 U_R2 \<noteq> {}"
-              using \<open>\<not> C \<subseteq> closure_on UNIV ?TR2 U_R2\<close> by (by100 blast)
-            \<comment> \<open>C \<inter> (UNIV - cl(U)) open in C's subspace. cl(U) closed.\<close>
-            have hcl_closed_here: "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 U_R2)"
-              by (rule closure_on_closed[OF hTR2]) simp
-            have "UNIV - closure_on UNIV ?TR2 U_R2 \<in> ?TR2"
-              using hcl_closed_here unfolding closedin_on_def by (by100 blast)
-            hence hC_minus_open: "C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2)
-                \<in> subspace_topology UNIV ?TR2 C"
-              unfolding subspace_topology_def by (by100 blast)
-            \<comment> \<open>C \<inter> cl(U) closed in C's subspace.\<close>
-            have "C - (C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2))
-                = C \<inter> closure_on UNIV ?TR2 U_R2" by (by100 blast)
-            \<comment> \<open>C = (C \<inter> cl(U)) \<union> (C - cl(U)). Both nonempty. One open-in-C. Separation of C.\<close>
-            have "C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2) \<noteq> {}"
-              using \<open>C - closure_on UNIV ?TR2 U_R2 \<noteq> {}\<close> by (by100 blast)
-            have "(C \<inter> closure_on UNIV ?TR2 U_R2) \<inter>
-                (C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2)) = {}" by (by100 blast)
-            have "(C \<inter> closure_on UNIV ?TR2 U_R2) \<union>
-                (C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2)) = C" by (by100 blast)
-            \<comment> \<open>C \<inter> cl(U) = C - open-part, hence closed in subspace. So both parts are in subspace topology.\<close>
-            have "C \<inter> closure_on UNIV ?TR2 U_R2 \<in> subspace_topology UNIV ?TR2 C"
-              sorry \<comment> \<open>Closed in ambient \<Rightarrow> intersection with C is closed-in-C.
-                 Closed-in-C = C - open-in-C. C - (C \<inter> (UNIV-cl(U))) = C \<inter> cl(U).\<close>
-            show False
-              using hC_conn hC_meets_clU
-                \<open>C \<inter> (UNIV - closure_on UNIV ?TR2 U_R2) \<noteq> {}\<close>
-                hC_minus_open
-                \<open>C \<inter> closure_on UNIV ?TR2 U_R2 \<in> subspace_topology UNIV ?TR2 C\<close>
-                \<open>(C \<inter> closure_on UNIV ?TR2 U_R2) \<inter> _ = {}\<close>
-                \<open>_ \<union> _ = C\<close>
-              unfolding top1_connected_on_def top1_is_separation_on_def
-              by (by100 blast)
-          qed
-        qed
+          sorry \<comment> \<open>C \<subseteq> cl(U): textbook Step 2 (every point of C is in closure of U).
+             For x \<in> C, every open W \<ni> x in TR2 must meet U. Proof: decompose C into arcs
+             C1 (small, in W) and C2. C2 doesn't separate S^2 \<Rightarrow> path from U to V in S^2-C2
+             \<Rightarrow> path crosses from U to V \<Rightarrow> crossing point in C1 \<subseteq> W. Hence W \<inter> U \<noteq> {}.\<close>
         ultimately show ?thesis by (by100 blast)
       qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
@@ -13283,10 +13216,6 @@ qed
 
 
 end
-
-
-
-
 
 
 
