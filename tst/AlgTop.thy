@@ -963,8 +963,7 @@ proof
                \<alpha> continuous from I to U means preimage of this set is I_top-open.\<close>
             have hslice_U: "{x \<in> U. (x, 0::int) \<in> W} \<in> subspace_topology X TX U"
             proof -
-              have "{x \<in> U. (x, 0::int) \<in> W} \<subseteq> U" by (by100 blast)
-              hence "{x \<in> U. (x, 0::int) \<in> W} = U \<inter> {x \<in> U. (x, 0::int) \<in> W}" by (by100 blast)
+              have "{x \<in> U. (x, 0::int) \<in> W} = U \<inter> {x \<in> U. (x, 0::int) \<in> W}" by (by100 fast)
               thus ?thesis using hslice unfolding subspace_topology_def by (by100 blast)
             qed
             have "{s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}} \<in> I_top"
@@ -3529,8 +3528,16 @@ proof -
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
         (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
-      using h58_2 hS1_top_eq R2_0_def TR2_0_def sorry
-      \<comment> \<open>Pure definitional rewriting: unfold R2_0, TR2_0 in h58_2 to match hS1_top_eq.\<close>
+    proof -
+      \<comment> \<open>h58_2 uses expanded R2_0/TR2_0; goal uses abbreviated names. Bridge via hS1_top_eq.\<close>
+      have "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier top1_S1 (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+          (top1_fundamental_group_mul top1_S1 (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+          (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+          (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+        using h58_2 unfolding R2_0_def TR2_0_def by simp
+      thus ?thesis using hS1_top_eq by simp
+    qed
     \<comment> \<open>Chain: compose 4 group isos. Use transitivity + symmetry.\<close>
     show ?thesis unfolding top1_groups_isomorphic_on_def
     proof -
@@ -12148,6 +12155,12 @@ qed
 
 
 end
+
+
+
+
+
+
 
 
 
