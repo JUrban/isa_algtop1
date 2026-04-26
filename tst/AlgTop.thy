@@ -15536,6 +15536,30 @@ proof (rule ccontr)
   thus False using hm by simp
 qed
 
+\<comment> \<open>Corollary: 63.1(c) also works for the reverse loop g\<inverse>.
+   If [f^m] \<simeq> [(g\<inverse>)^k] then m = 0. Same argument: g\<inverse> lifts to the reverse of the g-lift loop,
+   which is also a loop at e_0. By Theorem_54_3, (a,2m) = (a,0).\<close>
+lemma Theorem_63_1_c_subgroups_trivial_reverse:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+      and "top1_is_path_on V (subspace_topology X TX V) b a beta"
+      and "a' \<in> A"
+      and "top1_is_path_on U (subspace_topology X TX U) a a' gamma"
+      and "top1_is_path_on V (subspace_topology X TX V) a' a delta"
+      and "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_product alpha beta) a m)
+            (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k)"
+  shows "m = 0"
+  sorry \<comment> \<open>Same helix construction as 63.1(c). The g-lift g\<tilde> is a loop at e_0.
+     The lift of g\<inverse> from e_0 is the reverse g\<tilde>\<inverse>, also a loop at e_0
+     (since p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), and g\<tilde> starts and ends at e_0).
+     Then (g\<inverse>)^k lifts to a loop at e_0, same Theorem_54_3 argument.\<close>
+
 \<comment> \<open>Corollary for 63.5: In the setting of 63.1 on S^2-{p,q}, if we have two loops f and g
    where f = \<alpha>*\<beta> and g = \<gamma>*\<delta> (constructed from different component decompositions),
    both nontrivial, the fact that \<pi>_1(S^2-{p,q}) \<cong> Z forces [f]^m = [g]^k for some
@@ -19492,7 +19516,10 @@ proof -
       \<comment> \<open>g\<inverse> = (\<gamma>*\<delta>)\<inverse> = \<delta>\<inverse>*\<gamma>\<inverse>: path from a to a' (reversed) in V then U.
          Apply 63.1(c) with \<gamma>' = \<delta>\<inverse> (in V from a to a') and \<delta>' = \<gamma>\<inverse> (in U from a' to a).
          Note: a' \<in> A1, same decomposition. Need paths in correct subspaces.\<close>
-      show "m = 0" sorry \<comment> \<open>Apply 63.1(c) with reversed \<gamma>,\<delta>. Same argument, different path direction.\<close>
+      show "m = 0"
+        by (rule Theorem_63_1_c_subgroups_trivial_reverse[OF hTX hU_open hV_open hX_eq
+          hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1
+          h\<alpha>_X h\<beta>_X ha'_A1 h\<gamma>_X h\<delta>_X hmk2])
     qed
     thus False using hm by simp
   qed
