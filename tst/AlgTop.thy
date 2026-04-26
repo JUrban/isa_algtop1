@@ -8999,8 +8999,16 @@ proof -
       qed
       \<comment> \<open>S^2 compact.\<close>
       have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
-        sorry \<comment> \<open>S^2 compact: S2_compact_standard + bridge to top1_compact_on.
-           Type matching for real\<times>real\<times>real needs product_topology_on_open_sets.\<close>
+      proof -
+        have "top1_S2_topology = subspace_topology UNIV
+            (top1_open_sets :: (real \<times> real \<times> real) set set) top1_S2"
+          unfolding top1_S2_topology_def
+          using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+        hence "top1_compact_on top1_S2 top1_S2_topology = compact top1_S2"
+          using top1_compact_on_subspace_UNIV_iff_compact[of top1_S2] by simp
+        thus ?thesis using S2_compact_standard by simp
+      qed
       show ?thesis
         using conjunct1[OF Theorem_26_2_strict[OF hS2_compact
               top1_S2_is_topology_on_strict hC'_closed]] .
@@ -12674,6 +12682,8 @@ qed
 
 
 end
+
+
 
 
 
