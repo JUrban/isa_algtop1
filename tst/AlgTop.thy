@@ -7555,6 +7555,10 @@ theorem Theorem_63_4_JordanCurve:
     \<and> closure V = V \<union> C"
 proof -
   let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+  \<comment> \<open>Bridge: HOL closure = closure_on UNIV TR2 for R^2.\<close>
+  have closure_bridge: "\<And>S::((real\<times>real) set). closure S = closure_on UNIV ?TR2 S"
+    sorry \<comment> \<open>Both are the smallest closed superset of S. Standard open = TR2 open
+       (product_topology_on_open_sets_real2). Hence closed sets identical, closures equal.\<close>
   \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
      to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
   have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
@@ -9054,42 +9058,69 @@ proof -
        Direction \<supseteq>: U \<subseteq> closure(U) trivially. C \<subseteq> closure(U) by textbook Step 2.
        Direction \<subseteq>: closure(U) \<inter> V = {} since V open and U \<inter> V = {}.
        Hence closure(U) \<subseteq> UNIV - V = U \<union> C.\<close>
-    have hUR2_open: "open U_R2" sorry \<comment> \<open>\<sigma>2(W1) open: W1 open in S^2\{N}, \<sigma>2 homeo.\<close>
-    have hVR2_open: "open V_R2" sorry \<comment> \<open>\<sigma>2(W2-{N}) open: same.\<close>
+    have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+          top1_open_sets_is_topology_on_UNIV] by simp
+    have hUR2_in_TR2: "U_R2 \<in> ?TR2" sorry \<comment> \<open>\<sigma>2(W1) open in TR2: W1 open in S^2\{N}, \<sigma>2 homeo.\<close>
+    have hVR2_in_TR2: "V_R2 \<in> ?TR2" sorry \<comment> \<open>\<sigma>2(W2-{N}) open in TR2: same.\<close>
+    have hUR2_sub: "U_R2 \<subseteq> UNIV" by simp
+    have hVR2_sub: "V_R2 \<subseteq> UNIV" by simp
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
-    proof (intro set_eqI iffI)
-      fix x assume hx: "x \<in> closure U_R2"
-      show "x \<in> U_R2 \<union> C"
-      proof (rule ccontr)
-        assume "x \<notin> U_R2 \<union> C"
-        hence hxV: "x \<in> V_R2" using hUR2VR2_cover by (by100 blast)
-        \<comment> \<open>V open, x \<in> V, V \<inter> U = {} \<Rightarrow> x \<notin> closure U.\<close>
-        have "V_R2 \<inter> closure U_R2 = {}"
-          using hVR2_open hUR2VR2_disj
-          sorry \<comment> \<open>V open, V\<inter>U={}. -V closed, U\<subseteq>-V, closure_minimal \<Rightarrow> cl(U)\<subseteq>-V.\<close>
-        thus False using hxV hx by (by100 blast)
+    proof -
+      \<comment> \<open>\<supseteq>: cl(U) \<supseteq> U trivially. cl(U) \<supseteq> C by textbook Step 2.\<close>
+      \<comment> \<open>\<subseteq>: cl(U) \<inter> V = {} since V \<in> TR2 and closure_meets_open.\<close>
+      have hcl_sub: "closure_on UNIV ?TR2 U_R2 \<subseteq> U_R2 \<union> C"
+      proof -
+        have hcompl: "UNIV - V_R2 = U_R2 \<union> C"
+        proof (intro set_eqI iffI)
+          fix x assume "x \<in> UNIV - V_R2"
+          hence "x \<notin> V_R2" by simp
+          thus "x \<in> U_R2 \<union> C" using hUR2VR2_cover by (by100 blast)
+        next
+          fix x assume "x \<in> U_R2 \<union> C"
+          thus "x \<in> UNIV - V_R2" using hUR2VR2_disj hUR2VR2_cover by (by100 blast)
+        qed
+        have "closedin_on UNIV ?TR2 (UNIV - V_R2)"
+        proof -
+          have "UNIV - V_R2 \<subseteq> UNIV" by simp
+          moreover have "UNIV - (UNIV - V_R2) = V_R2" by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def using hVR2_in_TR2 by simp
+        qed
+        moreover have "U_R2 \<subseteq> UNIV - V_R2" using hUR2VR2_disj by (by100 blast)
+        ultimately have "closure_on UNIV ?TR2 U_R2 \<subseteq> UNIV - V_R2"
+          by (rule closure_on_subset_of_closed)
+        thus ?thesis using hcompl by simp
       qed
-    next
-      fix x assume "x \<in> U_R2 \<union> C"
-      thus "x \<in> closure U_R2"
-        sorry \<comment> \<open>U \<subseteq> closure(U) trivially. C \<subseteq> closure(U): textbook Step 2 (arc argument).\<close>
+      have hcl_sup: "U_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 U_R2"
+        sorry \<comment> \<open>U \<subseteq> cl(U) by closure_on_contains. C \<subseteq> cl(U): textbook Step 2.\<close>
+      show ?thesis using hcl_sub hcl_sup closure_bridge by (by100 blast)
     qed
     have hVR2_bdy: "closure V_R2 = V_R2 \<union> C"
-    proof (intro set_eqI iffI)
-      fix x assume hx: "x \<in> closure V_R2"
-      show "x \<in> V_R2 \<union> C"
-      proof (rule ccontr)
-        assume "x \<notin> V_R2 \<union> C"
-        hence hxU: "x \<in> U_R2" using hUR2VR2_cover by (by100 blast)
-        have "U_R2 \<inter> closure V_R2 = {}"
-          using hUR2_open hUR2VR2_disj
-          sorry \<comment> \<open>Same: U open, U\<inter>V={} \<Rightarrow> U\<inter>cl(V)={}.\<close>
-        thus False using hxU hx by (by100 blast)
+    proof -
+      have hcl_sub: "closure_on UNIV ?TR2 V_R2 \<subseteq> V_R2 \<union> C"
+      proof -
+        have hcompl: "UNIV - U_R2 = V_R2 \<union> C"
+        proof (intro set_eqI iffI)
+          fix x assume "x \<in> UNIV - U_R2"
+          thus "x \<in> V_R2 \<union> C" using hUR2VR2_cover by (by100 blast)
+        next
+          fix x assume "x \<in> V_R2 \<union> C"
+          thus "x \<in> UNIV - U_R2" using hUR2VR2_disj hUR2VR2_cover by (by100 blast)
+        qed
+        have "closedin_on UNIV ?TR2 (UNIV - U_R2)"
+        proof -
+          have "UNIV - U_R2 \<subseteq> UNIV" by simp
+          moreover have "UNIV - (UNIV - U_R2) = U_R2" by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def using hUR2_in_TR2 by simp
+        qed
+        moreover have "V_R2 \<subseteq> UNIV - U_R2" using hUR2VR2_disj by (by100 blast)
+        ultimately have "closure_on UNIV ?TR2 V_R2 \<subseteq> UNIV - U_R2"
+          by (rule closure_on_subset_of_closed)
+        thus ?thesis using hcompl by simp
       qed
-    next
-      fix x assume "x \<in> V_R2 \<union> C"
-      thus "x \<in> closure V_R2"
-        sorry \<comment> \<open>V \<subseteq> closure(V) + C \<subseteq> closure(V): textbook Step 2.\<close>
+      have hcl_sup: "V_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 V_R2"
+        sorry \<comment> \<open>V \<subseteq> cl(V) by closure_on_contains. C \<subseteq> cl(V): textbook Step 2.\<close>
+      show ?thesis using hcl_sub hcl_sup closure_bridge by (by100 blast)
     qed
     show ?thesis by (intro that[of U_R2 V_R2])
       (use hUR2_ne hVR2_ne hUR2VR2_disj hUR2VR2_cover hUR2_conn hVR2_conn
@@ -12721,6 +12752,13 @@ qed
 
 
 end
+
+
+
+
+
+
+
 
 
 
