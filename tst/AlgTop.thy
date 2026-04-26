@@ -8059,7 +8059,22 @@ proof -
     have hC2'_closed: "closedin_on top1_S2 top1_S2_topology C2'" sorry
     have hC1'_conn: "top1_connected_on C1' (subspace_topology top1_S2 top1_S2_topology C1')" sorry
     have hC2'_conn: "top1_connected_on C2' (subspace_topology top1_S2 top1_S2_topology C2')" sorry
-    have hC12'_card: "card (C1' \<inter> C2') = 2" sorry
+    have hC12'_card: "card (C1' \<inter> C2') = 2"
+    proof -
+      have h\<sigma>2inv_inj: "inj \<sigma>2inv"
+        using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+      have "C1' \<inter> C2' = \<sigma>2inv ` (C1_arc \<inter> C2_arc)"
+        unfolding C1'_def C2'_def using image_Int[OF h\<sigma>2inv_inj, of C1_arc C2_arc]
+        by simp
+      also have "\<dots> = \<sigma>2inv ` {p_arc, q_arc}" using hC_inter by simp
+      also have "card \<dots> = 2"
+      proof -
+        have "\<sigma>2inv p_arc \<noteq> \<sigma>2inv q_arc"
+          using hpq_ne h\<sigma>2inv_inj unfolding inj_def by (by100 blast)
+        thus ?thesis by simp
+      qed
+      finally show ?thesis .
+    qed
     have hC1'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1'" sorry
     have hC2'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2'" sorry
     \<comment> \<open>Apply Theorem_63_5: S^2-(C1'\<union>C2') has exactly 2 components.\<close>
@@ -11728,6 +11743,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
