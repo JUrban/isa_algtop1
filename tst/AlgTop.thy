@@ -3479,14 +3479,58 @@ proof -
        groups_isomorphic_on G mulG H mulH \<equiv> \<exists>f. group_iso_on G mulG H mulH f
        group_iso_on \<equiv> group_hom_on + bij_betw.
        Transitivity: compose hom + bij. Symmetry: inverse.\<close>
-    show ?thesis
-      sorry \<comment> \<open>Chain of 4 group isomorphisms:
-         (1) hpi1_iso_R2: \<pi>_1(X,a) \<cong> \<pi>_1(R^2-{0}, h(a))
-         (2) hbp_change: \<pi>_1(R^2-{0}, h(a)) \<cong> \<pi>_1(R^2-{0}, (1,0))
-         (3) h58_2[with hS1_top_eq]: \<pi>_1(S^1, (1,0)) \<cong> \<pi>_1(R^2-{0}, (1,0)) [use sym]
-         (4) h54_5: \<pi>_1(S^1, (1,0)) \<cong> Z
-         Needs: group iso transitivity (compose hom + bij_betw) and symmetry (inverse).
-         Each is ~15 lines. Total: ~60 lines. Purely mechanical algebra.\<close>
+    \<comment> \<open>Rewrite h58_2 using hS1_top_eq to match S^1 topologies.\<close>
+    have h58_2': "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      using h58_2 hS1_top_eq hR2_0_eq hTR2_0_eq by (by100 simp)
+    \<comment> \<open>Chain: compose 4 group isos. Use transitivity + symmetry.\<close>
+    show ?thesis unfolding top1_groups_isomorphic_on_def
+    proof -
+      \<comment> \<open>Extract individual isomorphisms.\<close>
+      obtain f1 where hf1: "top1_group_iso_on
+          (top1_fundamental_group_carrier ?X ?TX a) (top1_fundamental_group_mul ?X ?TX a)
+          (top1_fundamental_group_carrier R2_0 TR2_0 (h a)) (top1_fundamental_group_mul R2_0 TR2_0 (h a)) f1"
+        using hpi1_iso_R2 unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      obtain f2 where hf2: "top1_group_iso_on
+          (top1_fundamental_group_carrier R2_0 TR2_0 (h a)) (top1_fundamental_group_mul R2_0 TR2_0 (h a))
+          (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) (top1_fundamental_group_mul R2_0 TR2_0 (1, 0)) f2"
+        using hbp_change unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      obtain f3 where hf3: "top1_group_iso_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) (top1_fundamental_group_mul R2_0 TR2_0 (1, 0)) f3"
+        using h58_2' unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      obtain f4 where hf4: "top1_group_iso_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          top1_Z_group top1_Z_mul f4"
+        using h54_5 unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      \<comment> \<open>Compose: f4 \<circ> inv(f3) \<circ> f2 \<circ> f1 : \<pi>_1(X) \<rightarrow> Z.\<close>
+      define \<psi> where "\<psi> = f4 \<circ> inv_into (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) f3 \<circ> f2 \<circ> f1"
+      \<comment> \<open>Show \<psi> is a group iso by composing hom + bij.\<close>
+      define G1 where "G1 = top1_fundamental_group_carrier ?X ?TX a"
+      define M1 where "M1 = top1_fundamental_group_mul ?X ?TX a"
+      define G2 where "G2 = top1_fundamental_group_carrier R2_0 TR2_0 (h a)"
+      define M2 where "M2 = top1_fundamental_group_mul R2_0 TR2_0 (h a)"
+      define G3 where "G3 = top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)"
+      define M3 where "M3 = top1_fundamental_group_mul R2_0 TR2_0 (1, 0)"
+      define G4 where "G4 = top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      define M4 where "M4 = top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0)"
+      have hf1': "top1_group_iso_on G1 M1 G2 M2 f1"
+        using hf1 unfolding G1_def M1_def G2_def M2_def .
+      have hf2': "top1_group_iso_on G2 M2 G3 M3 f2"
+        using hf2 unfolding G2_def M2_def G3_def M3_def .
+      have hf3': "top1_group_iso_on G4 M4 G3 M3 f3"
+        using hf3 unfolding G4_def M4_def G3_def M3_def .
+      have hf4': "top1_group_iso_on G4 M4 top1_Z_group top1_Z_mul f4"
+        using hf4 unfolding G4_def M4_def .
+      show "\<exists>f. top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul f"
+        unfolding G1_def M1_def
+        sorry \<comment> \<open>Compose: f1 (G1\<rightarrow>G2), f2 (G2\<rightarrow>G3), inv(f3) (G3\<rightarrow>G4), f4 (G4\<rightarrow>Z).
+           Each is a group_iso_on. Composition and inverse preserve group_iso_on.
+           Needs: group_hom_on_comp, bij_betw_comp_iff, inv_into preserves hom.\<close>
+    qed
   qed
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
   show ?thesis
