@@ -15634,7 +15634,52 @@ lemma path_homotopic_reverse:
       and "top1_path_homotopic_on X TX a a f g"
       and "top1_is_path_on X TX a a f" and "top1_is_path_on X TX a a g"
   shows "top1_path_homotopic_on X TX a a (top1_path_reverse f) (top1_path_reverse g)"
-  sorry \<comment> \<open>By: f*f\<inverse> \<simeq> const \<simeq> g*g\<inverse>. Then f\<inverse> \<simeq> g\<inverse> by left-cancel with f\<simeq>g.\<close>
+proof -
+  \<comment> \<open>If F is a homotopy from f to g, then G(s,t) = F(1-s,t) is a homotopy from f\<inverse> to g\<inverse>.\<close>
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFl: "\<forall>t\<in>I_set. F (0, t) = a" and hFr: "\<forall>t\<in>I_set. F (1, t) = a"
+    using assms(2) unfolding top1_path_homotopic_on_def by blast
+  define G where "G = (\<lambda>(s::real, t::real). F (1 - s, t))"
+  have hrf: "top1_is_path_on X TX a a (top1_path_reverse f)"
+    using top1_path_reverse_is_path[OF assms(3)] unfolding top1_path_reverse_def
+    using assms(3) unfolding top1_is_path_on_def by auto
+  have hrg: "top1_is_path_on X TX a a (top1_path_reverse g)"
+    using top1_path_reverse_is_path[OF assms(4)] unfolding top1_path_reverse_def
+    using assms(4) unfolding top1_is_path_on_def by auto
+  show ?thesis unfolding top1_path_homotopic_on_def
+  proof (intro exI[of _ G] conjI)
+    show "top1_is_path_on X TX a a (top1_path_reverse f)" by (rule hrf)
+    show "top1_is_path_on X TX a a (top1_path_reverse g)" by (rule hrg)
+    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
+      sorry \<comment> \<open>G = F \<circ> (\<lambda>(s,t). (1-s,t)). Composition of continuous maps is continuous.
+         The map (s,t) \<mapsto> (1-s,t) is continuous (linear).\<close>
+    show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+      show "G (s, 0) = top1_path_reverse f s"
+        unfolding G_def top1_path_reverse_def using hF0 \<open>1 - s \<in> I_set\<close> by auto
+    qed
+    show "\<forall>s\<in>I_set. G (s, 1) = top1_path_reverse g s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+      thus "G (s, 1) = top1_path_reverse g s"
+        unfolding G_def top1_path_reverse_def using hF1 by auto
+    qed
+    show "\<forall>t\<in>I_set. G (0, t) = a"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "G (0, t) = a" unfolding G_def using hFr ht by simp
+    qed
+    show "\<forall>t\<in>I_set. G (1, t) = a"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      show "G (1, t) = a" unfolding G_def using hFl ht by simp
+    qed
+  qed
+qed
 
 text \<open>Path power addition: f^a * f^b \<simeq> f^{a+b} (for loops at a).\<close>
 lemma path_power_product_add:
