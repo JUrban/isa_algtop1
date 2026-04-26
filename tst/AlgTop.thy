@@ -9069,8 +9069,41 @@ proof -
     \<comment> \<open>\<sigma>2 homeomorphism maps open subsets of S^2\{N} to open subsets of R^2.\<close>
     have h\<sigma>2_open_map: "\<And>V. V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
         \<Longrightarrow> \<sigma>2 ` V \<in> ?TR2"
-      using h\<sigma>2 unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
-      sorry \<comment> \<open>Homeomorphism maps opens to opens (use inverse continuity).\<close>
+    proof -
+      fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      \<comment> \<open>\<sigma>2\<inverse> continuous: preimage of V under \<sigma>2\<inverse> = \<sigma>2(V).\<close>
+      have hinv_cont: "top1_continuous_map_on UNIV ?TR2 (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+          (inv_into (top1_S2 - {north_pole}) \<sigma>2)"
+        using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      hence "{x \<in> UNIV. inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> V} \<in> ?TR2"
+        using hV unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{x \<in> UNIV. inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> V} = \<sigma>2 ` V"
+      proof (intro set_eqI iffI)
+        fix x assume "x \<in> {x \<in> UNIV. inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> V}"
+        hence hinv_in: "inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> V" by simp
+        have hV_sub: "V \<subseteq> top1_S2 - {north_pole}"
+          using hV unfolding subspace_topology_def by (by100 blast)
+        hence "inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> top1_S2 - {north_pole}"
+          using hinv_in by (by100 blast)
+        have "x \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+          using h\<sigma>2_bij unfolding bij_betw_def by simp
+        hence "\<sigma>2 (inv_into (top1_S2 - {north_pole}) \<sigma>2 x) = x"
+          by (rule f_inv_into_f)
+        thus "x \<in> \<sigma>2 ` V" using hinv_in by (by100 force)
+      next
+        fix x assume "x \<in> \<sigma>2 ` V"
+        then obtain y where hy: "y \<in> V" "x = \<sigma>2 y" by (by100 blast)
+        have hV_sub: "V \<subseteq> top1_S2 - {north_pole}"
+          using hV unfolding subspace_topology_def by (by100 blast)
+        hence "y \<in> top1_S2 - {north_pole}" using hy(1) by (by100 blast)
+        hence "inv_into (top1_S2 - {north_pole}) \<sigma>2 x = y"
+          using hy(2) inv_into_f_f[OF bij_betw_imp_inj_on[OF h\<sigma>2_bij]] by simp
+        thus "x \<in> {x \<in> UNIV. inv_into (top1_S2 - {north_pole}) \<sigma>2 x \<in> V}"
+          using hy(1) by simp
+      qed
+      ultimately show "\<sigma>2 ` V \<in> ?TR2" by simp
+    qed
     have hUR2_in_TR2: "U_R2 \<in> ?TR2"
     proof -
       have "W1_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
@@ -12779,6 +12812,9 @@ qed
 
 
 end
+
+
+
 
 
 
