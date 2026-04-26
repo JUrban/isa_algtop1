@@ -17210,11 +17210,11 @@ proof -
        By 63.5: C1' \<union> C2' separates S^2 into exactly 2 components.\<close>
     \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
     \<comment> \<open>Step 2e: Identify bounded/unbounded. Boundary = C.\<close>
-    show ?thesis sorry \<comment> \<open>Full argument requires:
-       - Arc decomposition of SCC (step 2a)
-       - Stereographic transfer to S^2 (step 2b, same as step 1)
-       - Theorem_63_2 (arcs don't separate S^2) - has 1 sorry
-       - Theorem_63_5 (exactly 2 components) - has 1 sorry
+    show ?thesis sorry \<comment> \<open>Remaining argument:
+       - Arc decomposition of SCC (step 2a) — PROVED above
+       - Stereographic transfer to S^2 (step 2b, same as step 1) — mostly done
+       - Theorem_63_2 (arcs don't separate S^2) — FULLY PROVED!
+       - Theorem_63_5 (exactly 2 components) — SORRY (needs 63.1(c) + \<pi>_1\<cong>Z)
        - Transfer back + bounded/unbounded identification
        - Boundary = C (Munkres Step 2 argument using arc nonseparation)\<close>
   qed
