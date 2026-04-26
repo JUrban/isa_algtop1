@@ -15619,6 +15619,22 @@ next
   show ?case by (simp add: Lemma_51_1_path_homotopic_trans[OF assms(1) h1 h2])
 qed
 
+text \<open>Path power addition: f^a * f^b \<simeq> f^{a+b} (for loops at a).\<close>
+lemma path_power_product_add:
+  assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
+  shows "top1_path_homotopic_on X TX a a
+    (top1_path_product (top1_path_power f a m) (top1_path_power f a n))
+    (top1_path_power f a (m + n))"
+  sorry \<comment> \<open>By induction on m: base uses left-identity, step uses associativity.\<close>
+
+text \<open>Path power multiplication: (f^m)^n \<simeq> f^{m*n} (for loops at a).\<close>
+lemma path_power_mult:
+  assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
+  shows "top1_path_homotopic_on X TX a a
+    (top1_path_power (top1_path_power f a m) a n)
+    (top1_path_power f a (m * n))"
+  sorry \<comment> \<open>By induction on n using path_power_product_add.\<close>
+
 \<comment> \<open>Key algebraic fact for 63.5: in an infinite cyclic group,
    any two nontrivial elements have a common nonzero power.
    Applied here: if [f] and [g] are both nontrivial in \<pi>_1(X) \<cong> Z,
@@ -15665,12 +15681,71 @@ proof -
       using hn2 by (simp add: top1_constant_path_def)
     thus False using assms(5) by simp
   qed
-  \<comment> \<open>Now [f]^n2 = gen^(n1*n2) = [g]^n1 (modulo signs).
-     This needs: path_power distributes over homotopy, (gen^n1)^n2 = gen^(n1*n2).
-     For now, sorry the algebraic computation.\<close>
-  show ?thesis sorry \<comment> \<open>Algebraic: [f]=[gen]^{n1} (or inverse) and [g]=[gen]^{n2} (or inverse)
-     with n1,n2>0. Then [f]^{n2} = [gen]^{n1*n2} = [g]^{n1} (or inverse^{n1*n2}).
-     In both cases, get m=n2>0 and k=n1 (or adjusted for signs).\<close>
+  \<comment> \<open>Case analysis on signs. When both same sign: [f^n2] \<simeq> gen^{n1*n2} \<simeq> [g^n1].
+     When opposite signs: need integer powers (path_reverse). Key facts used:
+     - path_homotopic_path_power: f \<simeq> g \<Rightarrow> f^n \<simeq> g^n
+     - path_power_mult: (f^m)^n \<simeq> f^{m*n}
+     - Commutativity of nat multiplication: n1*n2 = n2*n1.\<close>
+  have hf_path: "top1_is_path_on X TX a a f" using assms(2) unfolding top1_is_loop_on_def by simp
+  have hg_path: "top1_is_path_on X TX a a g" using assms(3) unfolding top1_is_loop_on_def by simp
+  have hgen_path: "top1_is_path_on X TX a a gen" using hgen unfolding top1_is_loop_on_def by simp
+  have hgenn1: "top1_is_path_on X TX a a (top1_path_power gen a n1)"
+    by (rule top1_path_power_is_path[OF assms(1) hgen])
+  have hgenn2: "top1_is_path_on X TX a a (top1_path_power gen a n2)"
+    by (rule top1_path_power_is_path[OF assms(1) hgen])
+  \<comment> \<open>Handle the case where both f and g are positive powers of gen.\<close>
+  show ?thesis using hn1 hn2
+  proof (elim disjE)
+    assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n1)"
+       and h2: "top1_path_homotopic_on X TX a a g (top1_path_power gen a n2)"
+    \<comment> \<open>[f^n2] \<simeq> (gen^n1)^n2 \<simeq> gen^{n1*n2} and [g^n1] \<simeq> (gen^n2)^n1 \<simeq> gen^{n2*n1} = gen^{n1*n2}.\<close>
+    have hfn2: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power (top1_path_power gen a n1) a n2)"
+      by (rule path_homotopic_path_power[OF assms(1) h1 hf_path hgenn1])
+    have hgn1: "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+        (top1_path_power (top1_path_power gen a n2) a n1)"
+      by (rule path_homotopic_path_power[OF assms(1) h2 hg_path hgenn2])
+    have hmult1: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen a n1) a n2) (top1_path_power gen a (n1 * n2))"
+      by (rule path_power_mult[OF assms(1) hgen])
+    have hmult2: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen a n2) a n1) (top1_path_power gen a (n2 * n1))"
+      by (rule path_power_mult[OF assms(1) hgen])
+    have "n1 * n2 = n2 * n1" by simp
+    have hfn2_eq: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power gen a (n1 * n2))"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2 hmult1])
+    have hgn1_eq: "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+        (top1_path_power gen a (n1 * n2))"
+    proof -
+      have "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+          (top1_path_power gen a (n2 * n1))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hgn1 hmult2])
+      moreover have "n2 * n1 = n1 * n2" by (rule mult.commute)
+      ultimately show ?thesis by simp
+    qed
+    \<comment> \<open>By symmetry+transitivity: [f^n2] \<simeq> gen^{n1*n2} \<simeq> [g^n1].\<close>
+    have hgn1_sym: "top1_path_homotopic_on X TX a a
+        (top1_path_power gen a (n1 * n2)) (top1_path_power g a n1)"
+      by (rule Lemma_51_1_path_homotopic_sym[OF hgn1_eq])
+    have "top1_path_homotopic_on X TX a a (top1_path_power f a n2) (top1_path_power g a n1)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2_eq hgn1_sym])
+    thus ?thesis using hn2_pos by (intro exI[of _ n2] exI[of _ n1]) (by100 blast)
+  next
+    \<comment> \<open>Other sign combinations: similar but need path_reverse handling.\<close>
+    assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n1)"
+       and h2: "top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
+    show ?thesis sorry \<comment> \<open>Need integer power handling for opposite signs.\<close>
+  next
+    assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
+       and h2: "top1_path_homotopic_on X TX a a g (top1_path_power gen a n2)"
+    show ?thesis sorry \<comment> \<open>Need integer power handling for opposite signs.\<close>
+  next
+    assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
+       and h2: "top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
+    \<comment> \<open>Same as case 1 but with gen\<inverse> instead of gen.\<close>
+    show ?thesis sorry \<comment> \<open>Same structure as case 1, using gen\<inverse>.\<close>
+  qed
 qed
 
 
