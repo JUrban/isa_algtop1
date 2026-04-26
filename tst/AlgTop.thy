@@ -9170,10 +9170,41 @@ proof -
           thus ?thesis unfolding TS2C_here_def by simp
         qed
         \<comment> \<open>PC_w \<union> W2 connected (Theorem_23_3 with common point y).\<close>
-        have "top1_path_connected_on S2C_here TS2C_here"
-          sorry \<comment> \<open>PC_w \<union> W2 \<supseteq> W1\<union>W2 = S2C. PC_w\<union>W2 connected (Theorem_23_3). S2C pc.\<close>
+        \<comment> \<open>PC_w \<union> W2 connected (Theorem_23_3: two connected sets sharing point y).\<close>
+        have hPCw_union_W2_conn: "top1_connected_on (PC_w \<union> W2_S2)
+            (subspace_topology S2C_here TS2C_here (PC_w \<union> W2_S2))"
+        proof -
+          define I2 :: "nat set" where "I2 = {0, 1}"
+          define A2 :: "nat \<Rightarrow> (real\<times>real\<times>real) set" where
+            "A2 = (\<lambda>i. if i = 0 then PC_w else W2_S2)"
+          have "I2 \<noteq> {}" unfolding I2_def by simp
+          have "\<forall>i\<in>I2. A2 i \<subseteq> S2C_here"
+            unfolding I2_def A2_def using hPC_sub hW2_sub_S2C_here by simp
+          have "\<forall>i\<in>I2. top1_connected_on (A2 i) (subspace_topology S2C_here TS2C_here (A2 i))"
+            unfolding I2_def A2_def
+            using hPCw_conn hW2_conn[unfolded hW2_top_eq] by simp
+          have "y \<in> \<Inter>(A2 ` I2)" unfolding I2_def A2_def using hy(1) \<open>y \<in> W2_S2\<close> by simp
+          have "PC_w \<union> W2_S2 = (\<Union>i\<in>I2. A2 i)" unfolding I2_def A2_def by (by100 force)
+          show ?thesis using Theorem_23_3[OF hTS2C_here \<open>I2 \<noteq> {}\<close> \<open>\<forall>i\<in>I2. A2 i \<subseteq> S2C_here\<close>
+            \<open>\<forall>i\<in>I2. top1_connected_on _ _\<close> \<open>y \<in> \<Inter>(A2 ` I2)\<close>]
+            unfolding \<open>PC_w \<union> W2_S2 = _\<close>[symmetric] by simp
+        qed
+        \<comment> \<open>PC_w \<union> W2 \<supseteq> W1 \<union> W2 = S2C (since PC_w \<supseteq> W1).\<close>
+        have "S2C_here = PC_w \<union> W2_S2"
+          using \<open>W1_S2 \<subseteq> PC_w\<close> hW12_cover hC'_decomp hPC_sub hW2_sub_S2C_here
+          unfolding S2C_here_def by (by100 blast)
         hence "top1_connected_on S2C_here TS2C_here"
-          by (rule top1_path_connected_imp_connected)
+        proof -
+          have "subspace_topology S2C_here TS2C_here (PC_w \<union> W2_S2) = TS2C_here"
+          proof -
+            have "\<forall>U\<in>TS2C_here. U \<subseteq> S2C_here"
+              unfolding TS2C_here_def subspace_topology_def by (by100 blast)
+            hence "subspace_topology S2C_here TS2C_here S2C_here = TS2C_here"
+              by (rule subspace_topology_self)
+            thus ?thesis using \<open>S2C_here = PC_w \<union> W2_S2\<close> by simp
+          qed
+          thus ?thesis using hPCw_union_W2_conn \<open>S2C_here = PC_w \<union> W2_S2\<close> by simp
+        qed
         thus False using hS2C_not_conn by simp
       qed
       ultimately have "W1_S2 = PC_w" by (by100 blast)
@@ -12956,6 +12987,9 @@ qed
 
 
 end
+
+
+
 
 
 
