@@ -9543,7 +9543,15 @@ proof -
         thus ?thesis using hcompl by simp
       qed
       have hcl_sup: "U_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 U_R2"
-        sorry \<comment> \<open>U \<subseteq> cl(U) by closure_on_contains. C \<subseteq> cl(U): textbook Step 2.\<close>
+      proof -
+        have "U_R2 \<subseteq> closure_on UNIV ?TR2 U_R2" by (rule subset_closure_on)
+        moreover have "C \<subseteq> closure_on UNIV ?TR2 U_R2"
+          sorry \<comment> \<open>C \<subseteq> cl(U): textbook Step 2 (every point of C is in closure of U).
+             For x \<in> C, every open W \<ni> x in TR2 must meet U. Proof: decompose C into arcs
+             C1 (small, in W) and C2. C2 doesn't separate S^2 \<Rightarrow> path from U to V in S^2-C2
+             \<Rightarrow> path crosses from U to V \<Rightarrow> crossing point in C1 \<subseteq> W. Hence W \<inter> U \<noteq> {}.\<close>
+        ultimately show ?thesis by (by100 blast)
+      qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
     qed
     have hVR2_bdy: "closure_on UNIV ?TR2 V_R2 = V_R2 \<union> C"
@@ -9570,7 +9578,12 @@ proof -
         thus ?thesis using hcompl by simp
       qed
       have hcl_sup: "V_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 V_R2"
-        sorry \<comment> \<open>V \<subseteq> cl(V) by closure_on_contains. C \<subseteq> cl(V): textbook Step 2.\<close>
+      proof -
+        have "V_R2 \<subseteq> closure_on UNIV ?TR2 V_R2" by (rule subset_closure_on)
+        moreover have "C \<subseteq> closure_on UNIV ?TR2 V_R2"
+          sorry \<comment> \<open>C \<subseteq> cl(V): same textbook Step 2 argument as for U.\<close>
+        ultimately show ?thesis by (by100 blast)
+      qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
     qed
     show ?thesis by (intro that[of U_R2 V_R2])
@@ -13203,6 +13216,7 @@ qed
 
 
 end
+
 
 
 
