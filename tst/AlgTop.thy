@@ -9379,14 +9379,29 @@ proof -
     qed
     have hVR2_in_TR2: "V_R2 \<in> ?TR2"
     proof -
-      have "W2_S2 - {north_pole} \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      \<comment> \<open>W2 - {N} open in S^2: W2 open, {N} closed (Hausdorff), intersection of opens.\<close>
+      have "W2_S2 - {north_pole} \<in> top1_S2_topology"
       proof -
-        have "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
-        have "W2_S2 - {north_pole} = (top1_S2 - {north_pole}) - W1_S2"
-          using hW12_cover hC'_decomp hW12_disj hN_not_C' north_pole_in_S2 sorry
-        moreover have "... \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
-          sorry \<comment> \<open>Complement of open W1 in open S^2\{N} subspace.\<close>
-        ultimately show ?thesis sorry
+        have "{north_pole} \<in> top1_S2_topology \<longrightarrow> False"
+          using singleton_not_open_in_S2[OF north_pole_in_S2] by simp
+        have "top1_S2 - {north_pole} \<in> top1_S2_topology"
+          using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff north_pole_in_S2]
+            hTS2_here unfolding closedin_on_def is_topology_on_def by (by100 blast)
+        hence "W2_S2 \<inter> (top1_S2 - {north_pole}) \<in> top1_S2_topology"
+          by (rule topology_inter_open[OF hTS2_here hW2_open_S2])
+        moreover have "W2_S2 \<inter> (top1_S2 - {north_pole}) = W2_S2 - {north_pole}"
+          using hW2_sub_S2C_here unfolding S2C_here_def by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>W2 - {N} \<subseteq> S^2 \{N}, so it's in the subspace topology.\<close>
+      hence "W2_S2 - {north_pole} \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+      proof -
+        have "W2_S2 \<subseteq> top1_S2" using hW2_sub_S2C_here unfolding S2C_here_def by (by100 blast)
+        have "W2_S2 - {north_pole} \<subseteq> top1_S2 - {north_pole}" using \<open>W2_S2 \<subseteq> top1_S2\<close> by (by100 blast)
+        hence "W2_S2 - {north_pole} = (top1_S2 - {north_pole}) \<inter> (W2_S2 - {north_pole})"
+          by (by100 blast)
+        thus ?thesis using \<open>W2_S2 - {north_pole} \<in> top1_S2_topology\<close>
+          unfolding subspace_topology_def by (by100 blast)
       qed
       thus ?thesis unfolding V_R2_def using h\<sigma>2_open_map by simp
     qed
@@ -13079,6 +13094,8 @@ qed
 
 
 end
+
+
 
 
 
