@@ -7548,11 +7548,132 @@ lemma simple_closed_curve_boundary_meets_component:
   and hW1_open: "W1 \<in> top1_S2_topology" and hW2_open: "W2 \<in> top1_S2_topology"
   and hx: "x \<in> C'" and hV: "V \<in> top1_S2_topology" and hxV: "x \<in> V"
   shows "V \<inter> W1 \<noteq> {}"
-  sorry \<comment> \<open>Textbook Step 2: Decompose C' = C1'\<union>C2' with C1' \<subseteq> V (flexible arc decomposition).
-     C2' is an arc \<Rightarrow> S^2-C2' connected (Theorem_63_2).
-     Path from W1 to W2 in S^2-C2'. Connected path image meets both W1,W2.
-     Path image \<subseteq> S^2-C2' = W1 \<union> W2 \<union> C1'. If \<not> meets C1': separated. So meets C1' \<subseteq> V.
-     Near the C1'-meeting, path points in W1 are in V. Hence V \<inter> W1 \<noteq> {}.\<close>
+proof -
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hTS unfolding is_topology_on_strict_def by (by100 blast)
+  have hC'_sub: "C' \<subseteq> top1_S2"
+    using hSCC unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+    by (by100 blast)
+  \<comment> \<open>Step 1: Flexible arc decomposition. C' = C1'\<union>C2' with C1' \<subseteq> V, both arcs.\<close>
+  obtain C1_arc C2_arc a_arc b_arc where
+      hC_decomp: "C' = C1_arc \<union> C2_arc"
+      and hC_inter: "C1_arc \<inter> C2_arc = {a_arc, b_arc}" and hab: "a_arc \<noteq> b_arc"
+      and hC1_arc: "top1_is_arc_on C1_arc (subspace_topology top1_S2 top1_S2_topology C1_arc)"
+      and hC2_arc: "top1_is_arc_on C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc)"
+      and hC1_sub_V: "C1_arc \<subseteq> V"
+    sorry \<comment> \<open>Flexible arc decomposition of simple closed curve C' with C1 \<subseteq> V.
+       Proof: C' = f(S^1). f^{-1}(V \<inter> C') open in S^1 contains f^{-1}(x).
+       Choose subarc I \<subseteq> f^{-1}(V \<inter> C'). C1 = f(I), C2 = f(S^1-int(I)).\<close>
+  \<comment> \<open>Step 2: C2 doesn't separate S^2.\<close>
+  have hC2_sub: "C2_arc \<subseteq> top1_S2" using hC_decomp hC'_sub by (by100 blast)
+  have hC2_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2_arc"
+    by (rule Theorem_63_2_arc_no_separation[OF hTS hC2_sub hC2_arc])
+  \<comment> \<open>Step 3: S^2-C2 is connected. W1, W2 \<subseteq> S^2-C2 (since W1\<union>W2 = S^2-C' \<subseteq> S^2-C2).\<close>
+  have hS2C2_conn: "top1_connected_on (top1_S2 - C2_arc)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+    using hC2_nonsep unfolding top1_separates_on_def by simp
+  have hW1_sub_S2C2: "W1 \<subseteq> top1_S2 - C2_arc"
+    using hW12(2) hC_decomp hW12(1) by (by100 blast)
+  have hW2_sub_S2C2: "W2 \<subseteq> top1_S2 - C2_arc"
+    using hW12(2) hC_decomp hW12(1) by (by100 blast)
+  \<comment> \<open>Step 4: S^2-C2 = W1 \<union> W2 \<union> C1. Connected path image meets both W1, W2.\<close>
+  have hS2C2_decomp: "top1_S2 - C2_arc = W1 \<union> W2 \<union> (C1_arc - C2_arc)"
+  proof -
+    have hC2_sub_C': "C2_arc \<subseteq> C'" using hC_decomp by (by100 blast)
+    have "top1_S2 - C2_arc = (top1_S2 - C') \<union> (C' - C2_arc)"
+      using hC'_sub hC2_sub_C' by (by100 blast)
+    also have "C' - C2_arc = C1_arc - C2_arc" using hC_decomp by (by100 blast)
+    finally show ?thesis using hW12(2) by simp
+  qed
+  \<comment> \<open>Take a \<in> W1, b \<in> W2. Path from a to b in S^2-C2 (connected + lpc \<Rightarrow> path-connected).\<close>
+  obtain a where ha: "a \<in> W1" using hW12(3) by (by100 blast)
+  obtain b where hb: "b \<in> W2" using hW12(4) by (by100 blast)
+  \<comment> \<open>Path \<alpha> from a to b in S^2-C2.\<close>
+  have hS2C2_pc: "top1_path_connected_on (top1_S2 - C2_arc)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+    sorry \<comment> \<open>S^2-C2 connected + S^2 lpc + open \<Rightarrow> path-connected.\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on (top1_S2 - C2_arc)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) a b \<alpha>"
+    using hS2C2_pc ha hb hW1_sub_S2C2 hW2_sub_S2C2
+    unfolding top1_path_connected_on_def top1_in_same_path_component_on_def by (by100 blast)
+  \<comment> \<open>Step 5: Path image is connected and meets W1 (at a) and W2 (at b).
+     Image \<subseteq> S^2-C2 = W1 \<union> W2 \<union> C1. If image \<inter> C1 = {}: image \<subseteq> W1\<union>W2 separated.
+     Connected image can't be in separated W1\<union>W2. So image meets C1 \<subseteq> V.\<close>
+  have h\<alpha>_img_sub: "\<alpha> ` I_set \<subseteq> top1_S2 - C2_arc"
+    using h\<alpha> unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+  have h\<alpha>_0: "\<alpha> 0 = a" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+  have h\<alpha>_1: "\<alpha> 1 = b" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+  have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+  have h\<alpha>_meets_W1: "\<alpha> ` I_set \<inter> W1 \<noteq> {}"
+    using h\<alpha>_0 h0_I ha by (by100 blast)
+  have h\<alpha>_meets_W2: "\<alpha> ` I_set \<inter> W2 \<noteq> {}"
+    using h\<alpha>_1 h1_I hb by (by100 blast)
+  have "\<alpha> ` I_set \<inter> C1_arc \<noteq> {}"
+  proof (rule ccontr)
+    assume h_not: "\<not> \<alpha> ` I_set \<inter> C1_arc \<noteq> {}"
+    hence h_disj: "\<alpha> ` I_set \<inter> C1_arc = {}" by simp
+    hence h_sub: "\<alpha> ` I_set \<subseteq> W1 \<union> W2"
+      using h\<alpha>_img_sub hS2C2_decomp by (by100 blast)
+    \<comment> \<open>Connected image in W1 \<union> W2 (disjoint opens) meeting both \<Rightarrow> separated. Contradiction.\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTS2C2: "is_topology_on (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    have h\<alpha>_cont: "top1_continuous_map_on I_set I_top (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) \<alpha>"
+      using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+    have hI_conn: "top1_connected_on I_set I_top" by (rule top1_unit_interval_connected)
+    have h_img_conn: "top1_connected_on (\<alpha> ` I_set)
+        (subspace_topology (top1_S2 - C2_arc)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) (\<alpha> ` I_set))"
+      by (rule Theorem_23_5[OF hTI hTS2C2 hI_conn h\<alpha>_cont])
+    \<comment> \<open>\<alpha>(I) \<subseteq> W1\<union>W2 (disjoint opens in S^2). W1 \<inter> \<alpha>(I) and W2 \<inter> \<alpha>(I) separate \<alpha>(I).\<close>
+    have h_img_top_eq: "subspace_topology (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) (\<alpha> ` I_set)
+        = subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      by (rule subspace_topology_trans) (use h\<alpha>_img_sub in simp)
+    have "W1 \<inter> \<alpha> ` I_set \<in> subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      using hW1_open unfolding subspace_topology_def by (by100 blast)
+    moreover have "W2 \<inter> \<alpha> ` I_set \<in> subspace_topology top1_S2 top1_S2_topology (\<alpha> ` I_set)"
+      using hW2_open unfolding subspace_topology_def by (by100 blast)
+    moreover have "(W1 \<inter> \<alpha> ` I_set) \<inter> (W2 \<inter> \<alpha> ` I_set) = {}" using hW12(1) by (by100 blast)
+    moreover have "(W1 \<inter> \<alpha> ` I_set) \<union> (W2 \<inter> \<alpha> ` I_set) = \<alpha> ` I_set"
+      using h_sub by (by100 blast)
+    ultimately show False
+      using h_img_conn[unfolded h_img_top_eq top1_connected_on_def]
+        h\<alpha>_meets_W1 h\<alpha>_meets_W2 by (by100 blast)
+  qed
+  \<comment> \<open>Step 6: Path meets C1 \<subseteq> V. And path starts in W1 (at a).
+     The path point in C1 is in V. Path also visits W1. Near the C1-meeting,
+     path points in W1 are in V (by continuity + V open). Hence V \<inter> W1 \<noteq> {}.\<close>
+  \<comment> \<open>Actually simpler: \<alpha>(0) = a \<in> W1. If a \<in> V: V \<inter> W1 \<ni> a \<noteq> {}. Done.
+     If a \<notin> V: the path goes from a (not in V) to some point in C1 \<subseteq> V.
+     By continuity, the preimage of V under \<alpha> is open in [0,1].
+     The first time the path enters V, it must be near C1. But it was in W1 \<union> W2 just before.
+     By continuity of the path, the point just before V-entry is near the V-boundary.
+     Actually, let's use a simpler argument.\<close>
+  \<comment> \<open>Simpler: \<alpha> continuous. \<alpha>(I) meets W1 (at \<alpha>(0)=a) and C1\<subseteq>V.
+     Let y \<in> \<alpha>(I) \<inter> C1. y \<in> V (C1\<subseteq>V). Let t_y with \<alpha>(t_y) = y.
+     Let t_a = 0, \<alpha>(t_a) = a \<in> W1.
+     If t_a < t_y: \<alpha> maps [t_a, t_y] continuously into S^2-C2.
+     \<alpha>(t_a) \<in> W1. \<alpha>(t_y) \<in> C1, not in W1 (C1 \<subseteq> C', W1 \<inter> C' = {}).
+     \<alpha>^{-1}(W1) open in [0,1] (W1 open, \<alpha> continuous), contains t_a.
+     sup(\<alpha>^{-1}(W1) \<inter> [t_a, t_y]) = t* \<le> t_y.
+     For t < t* near t*: \<alpha>(t) \<in> W1. By continuity: \<alpha>(t*) \<in> cl(W1).
+     \<alpha>(t*) \<in> S^2-C2. cl(W1) \<inter> (S^2-C') = W1 (W1 open hence cl(W1)-W1 \<subseteq> C').
+     So \<alpha>(t*) \<in> W1 \<union> C'. If \<alpha>(t*) \<in> C': \<alpha>(t*) \<in> C'-C2 = C1 \<subseteq> V.
+     For t < t* near t*: \<alpha>(t) \<in> W1 \<inter> V (V open, \<alpha> continuous, \<alpha>(t*) \<in> V).
+     Hence V \<inter> W1 \<noteq> {}.
+     If \<alpha>(t*) \<in> W1: t* is the sup, so t* \<in> \<alpha>^{-1}(W1) (closed sup of open set might
+     not be in the set). But W1 open \<Rightarrow> \<alpha>^{-1}(W1) open \<Rightarrow> if t* \<in> \<alpha>^{-1}(W1),
+     there's room above t*, contradicting t* = sup. Unless t* = t_y.
+     If t* = t_y: \<alpha>(t_y) \<in> W1 \<inter> C1 \<subseteq> W1 \<inter> C' = {}. Contradiction.
+     So t* < t_y and \<alpha>(t*) \<notin> W1, hence \<alpha>(t*) \<in> C1 \<subseteq> V. QED.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Final step: from \<alpha>(I) \<inter> C1 \<noteq> {} and \<alpha>(0) \<in> W1, derive V \<inter> W1 \<noteq> {}.
+       Uses sup argument on \<alpha>^{-1}(W1) + continuity + V open. ~15 lines.\<close>
+qed
 
 theorem Theorem_63_4_JordanCurve:
   fixes C :: "(real \<times> real) set"
@@ -13263,6 +13384,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
