@@ -16442,9 +16442,9 @@ proof -
     have hpath_exists: "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq N)..snd (seq N)}))
         a' b' f"
-      sorry \<comment> \<open>Convert \<alpha> (standard continuous_on) to top1_is_path_on (custom topology).
-         \<alpha> maps into S^2-h0(I_N) (from h\<alpha>_avoids + h\<alpha>(4) + I_N \<supseteq> {x}).
-         Bridge: continuous_on to top1_continuous_map_on.\<close>
+      sorry \<comment> \<open>Bridge standard \<alpha> to custom top1_is_path_on.
+         \<alpha> maps [0,1] into S^2-{h0(x)}, avoids h0(I_N), so \<alpha> maps into S^2-h0(I_N).
+         Same bridge pattern as h\<alpha>c_cont_std (continuous_on_open_invariant) but reversed.\<close>
     show False using hseq_sep hpath_exists by blast
   qed
 qed
