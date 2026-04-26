@@ -3237,10 +3237,35 @@ proof -
     show "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
       using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
     \<comment> \<open>inv \<circ> h = id on X, h \<circ> inv = id on R2_0.\<close>
+    \<comment> \<open>Both homotopies: inv\<circ>h = id on X and h\<circ>inv = id on R2_0.
+       The constant homotopy H(x,t) = x works. This is the fst projection X\<times>I \<rightarrow> X.\<close>
     show "top1_homotopic_on ?X ?TX ?X ?TX (inv_into ?X h \<circ> h) (\<lambda>x. x)"
-      sorry \<comment> \<open>inv h \<circ> h = id on X (by inv_into_f_f). Constant homotopy H(x,t) = x.\<close>
+      unfolding top1_homotopic_on_def
+    proof (intro conjI exI[of _ "\<lambda>(x,t). x"])
+      have hh_cont: "top1_continuous_map_on ?X ?TX R2_0 TR2_0 h"
+        using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinv_cont: "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
+        using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      show "top1_continuous_map_on ?X ?TX ?X ?TX (inv_into ?X h \<circ> h)"
+        by (rule top1_continuous_map_on_comp[OF hh_cont hinv_cont])
+      show "top1_continuous_map_on ?X ?TX ?X ?TX (\<lambda>x. x)"
+        sorry \<comment> \<open>Identity is continuous (trivial but needs careful by100 handling).\<close>
+      show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX (\<lambda>(x, t). x)"
+        sorry \<comment> \<open>Projection fst is continuous from product topology.\<close>
+      show "\<forall>x\<in>?X. (case (x, 0::real) of (x, t) \<Rightarrow> x) = (inv_into ?X h \<circ> h) x"
+      proof
+        fix x assume hx: "x \<in> ?X"
+        have hbij_h: "bij_betw h ?X R2_0"
+          using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have "inv_into ?X h (h x) = x"
+          using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij_h] hx] by (by100 simp)
+        thus "(case (x, 0::real) of (x, t) \<Rightarrow> x) = (inv_into ?X h \<circ> h) x"
+          unfolding comp_def by (by100 simp)
+      qed
+      show "\<forall>x\<in>?X. (case (x, 1::real) of (x, t) \<Rightarrow> x) = x" by (by100 simp)
+    qed
     show "top1_homotopic_on R2_0 TR2_0 R2_0 TR2_0 (h \<circ> inv_into ?X h) (\<lambda>y. y)"
-      sorry \<comment> \<open>h \<circ> inv h = id on R2_0 (by f_inv_into_f). Constant homotopy H(y,t) = y.\<close>
+      sorry \<comment> \<open>Symmetric: h\<circ>inv = id on R2_0. Same constant homotopy.\<close>
   qed
   have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
