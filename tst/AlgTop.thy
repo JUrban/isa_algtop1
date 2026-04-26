@@ -8981,12 +8981,46 @@ proof -
     have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)"
       sorry \<comment> \<open>Same argument for W2_S2-{N} \<Rightarrow> V_R2. Need W2_S2-{N} connected.\<close>
     \<comment> \<open>Bounded/unbounded: via Lemma_61_1_components_correspond.\<close>
+    \<comment> \<open>Bounded/unbounded via Lemma_61_1. Need: C' compact, W1/W2 \<in> components.\<close>
+    have hC'_compact: "top1_compact_on C' (subspace_topology top1_S2 top1_S2_topology C')"
+      sorry \<comment> \<open>C' = C1'\<union>C2'. Both compact (arc images of [0,1]). Union of compact is compact.\<close>
+    have hW1_comp: "W1_S2 \<in> top1_components_on (top1_S2 - C')
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+      sorry \<comment> \<open>W1 connected + open in S2C (complement of open W2) + maximal.\<close>
+    have hN_S2C': "north_pole \<in> top1_S2 - C'"
+      using north_pole_in_S2 hN_not_C' by (by100 blast)
+    have hW1_sub_C': "W1_S2 \<subseteq> top1_S2 - C'"
+      using hW12_cover hC'_decomp by (by100 blast)
+    have h61_1_W1: "(north_pole \<notin> W1_S2 \<longrightarrow>
+        (\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
+      \<and> (north_pole \<in> W1_S2 \<longrightarrow>
+        (\<forall>M. \<exists>x\<in>W1_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
+      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
+            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW1_conn hW1_sub_C' hW1_comp])
     have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M"
-      sorry \<comment> \<open>Lemma_61_1: N \<notin> W1_S2, W1_S2 component of S^2-C', \<sigma>2 homeo \<Rightarrow> \<sigma>2(W1_S2) bounded.
-         Needs: W1_S2 \<in> top1_components_on S2C TS2C (component of S^2-C'),
-         C' compact (arc images of [0,1]), N \<in> S^2-C' (proved).\<close>
+    proof -
+      have "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
+      hence "\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M"
+        using h61_1_W1 by simp
+      thus ?thesis unfolding U_R2_def by (by100 blast)
+    qed
+    have hW2_comp: "W2_S2 \<in> top1_components_on (top1_S2 - C')
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+      sorry \<comment> \<open>Same as W1: connected + open + maximal.\<close>
+    have hW2_sub_C': "W2_S2 \<subseteq> top1_S2 - C'"
+      using hW12_cover hC'_decomp by (by100 blast)
+    have h61_1_W2: "(north_pole \<notin> W2_S2 \<longrightarrow>
+        (\<exists>M. \<forall>x\<in>W2_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
+      \<and> (north_pole \<in> W2_S2 \<longrightarrow>
+        (\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
+      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
+            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW2_conn hW2_sub_C' hW2_comp])
     have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M"
-      sorry \<comment> \<open>Lemma_61_1: N \<in> W2_S2, W2_S2 component of S^2-C' \<Rightarrow> \<sigma>2(W2_S2-{N}) unbounded.\<close>
+    proof -
+      have "\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M"
+        using h61_1_W2 hN_in_W2 by simp
+      thus ?thesis unfolding V_R2_def by (by100 blast)
+    qed
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
     have hVR2_bdy: "closure V_R2 = V_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
     show ?thesis by (intro that[of U_R2 V_R2])
@@ -12619,6 +12653,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
