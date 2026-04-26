@@ -16243,14 +16243,51 @@ proof -
               using spec[OF hseq_len, of n] hlh by simp
             hence "lo \<le> hi" by (simp add: algebra_simps)
             hence hmid_range: "lo \<le> ?mid" "?mid \<le> hi" by auto
-            have hD1_sub: "?D1 \<subseteq> top1_S2" using assms(2) hh0_img hmid_range hseq_range hlh
-              sorry
-            have hD2_sub: "?D2 \<subseteq> top1_S2" using assms(2) hh0_img hmid_range hseq_range hlh
-              sorry
-            have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1" sorry
-            have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2" sorry
+            have hD1_sub: "?D1 \<subseteq> top1_S2"
+            proof -
+              have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+              have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+              have "?mid \<le> 1" using \<open>hi \<le> 1\<close> hmid_range by linarith
+              have "{lo..?mid} \<subseteq> {0..1}" using \<open>0 \<le> lo\<close> \<open>?mid \<le> 1\<close> by auto
+              hence "h0 ` {lo..?mid} \<subseteq> D" using hh0_img by (by100 blast)
+              thus ?thesis using assms(2) by (by100 blast)
+            qed
+            have hD2_sub: "?D2 \<subseteq> top1_S2"
+            proof -
+              have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+              have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+              have "0 \<le> ?mid" using \<open>0 \<le> lo\<close> hmid_range by linarith
+              have "{?mid..hi} \<subseteq> {0..1}" using \<open>0 \<le> ?mid\<close> \<open>hi \<le> 1\<close> by auto
+              hence "h0 ` {?mid..hi} \<subseteq> D" using hh0_img by (by100 blast)
+              thus ?thesis using assms(2) by (by100 blast)
+            qed
+            have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1"
+              sorry \<comment> \<open>h0`{lo..mid} compact (cont. image of compact) → closed in Hausdorff S².\<close>
+            have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2"
+              sorry \<comment> \<open>Same for h0`{mid..hi}.\<close>
             have hD12_inter: "?D1 \<inter> ?D2 = {h0 ?mid}"
-              using hh0_inj hmid_range hseq_range hlh unfolding hI01 sorry
+            proof (rule set_eqI, rule iffI)
+              fix y assume "y \<in> ?D1 \<inter> ?D2"
+              then obtain s t where hs: "s \<in> {lo..?mid}" "y = h0 s"
+                  and ht: "t \<in> {?mid..hi}" "y = h0 t" by (by100 blast)
+              hence "h0 s = h0 t" by simp
+              have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+              have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+              have "s \<in> {0..1}" using hs(1) \<open>0 \<le> lo\<close> hmid_range \<open>hi \<le> 1\<close> by auto
+              have "t \<in> {0..1}" using ht(1) \<open>0 \<le> lo\<close> hmid_range \<open>hi \<le> 1\<close> by auto
+              have "s = t" using \<open>h0 s = h0 t\<close> hh0_inj \<open>s \<in> {0..1}\<close> \<open>t \<in> {0..1}\<close>
+                unfolding inj_on_def by (by100 blast)
+              have "s \<le> ?mid" using hs(1) by simp
+              have "?mid \<le> s" using ht(1) \<open>s = t\<close> by simp
+              hence "s = ?mid" using \<open>s \<le> ?mid\<close> by linarith
+              have "y = h0 ?mid" using hs(2) \<open>s = ?mid\<close> by simp
+              thus "y \<in> {h0 ?mid}" by simp
+            next
+              fix y assume "y \<in> {h0 ?mid}"
+              hence "y = h0 ?mid" by simp
+              moreover have "?mid \<in> {lo..?mid}" "?mid \<in> {?mid..hi}" using hmid_range by auto
+              ultimately show "y \<in> ?D1 \<inter> ?D2" by (by100 blast)
+            qed
             have hd_S2: "h0 ?mid \<in> top1_S2"
             proof -
               have "?mid \<in> {lo..?mid}" using hmid_range by simp
@@ -16260,7 +16297,18 @@ proof -
             have hD12_union: "?D1 \<union> ?D2 = h0 ` {lo..hi}"
               using hmid_range by (auto simp: image_Un[symmetric] ivl_disj_un_two_touch)
             have hab'_D12: "a' \<in> top1_S2 - (?D1 \<union> ?D2)" "b' \<in> top1_S2 - (?D1 \<union> ?D2)"
-              sorry \<comment> \<open>a', b' \<in> S^2-D ⊆ S^2-h0({lo..hi}) = S^2-(D1∪D2).\<close>
+            proof -
+              have "h0 ` {lo..hi} \<subseteq> D"
+              proof -
+                have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+                have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+                have "{lo..hi} \<subseteq> {0..1}" using \<open>0 \<le> lo\<close> \<open>hi \<le> 1\<close> by auto
+                thus ?thesis using hh0_img by (by100 blast)
+              qed
+              hence "?D1 \<union> ?D2 \<subseteq> D" using hD12_union by simp
+              thus "a' \<in> top1_S2 - (?D1 \<union> ?D2)" "b' \<in> top1_S2 - (?D1 \<union> ?D2)"
+                using ha' hb' by (by100 blast)+
+            qed
             have "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..hi})
                 (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..hi})) a' b' f"
             proof -
