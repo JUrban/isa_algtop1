@@ -14833,11 +14833,20 @@ lemma helix_f_power_lift:
       and "is_topology_on E TE"
       and "(a, 0::int) \<in> E"
       and "p0 (a, 0::int) = a"
+      \<comment> \<open>TE slice conditions (needed for lift continuity proofs).\<close>
+      and "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> U. (x, 2*n) \<in> W} \<in> TX"
+      and "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX"
+      \<comment> \<open>E membership for even/odd sheets.\<close>
+      and "\<And>x n. x \<in> U \<Longrightarrow> (x, 2*n) \<in> E"
+      and "\<And>x n. x \<in> V - U \<Longrightarrow> (x, 2*n + 1) \<in> E"
+      and "\<And>x n. x \<in> A \<Longrightarrow> (x, 2*n + 2) \<in> E"
+      and "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
+      and "p0 = fst"
   shows "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
       (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
   sorry \<comment> \<open>Same ftilde_0 + deck transformation construction as in Theorem_63_1_c proof.
-     The construction is self-contained: ftilde_0, \<alpha>_lift, \<beta>_lift, deck transformation T,
-     T\<circ>ftm composition, inductive concatenation. All proved in 63.1(c) body.\<close>
+     Now with explicit TE slice conditions and E membership as assumptions.\<close>
 
 lemma Theorem_63_1_c_subgroups_trivial:
   assumes "is_topology_on X TX"
@@ -15629,7 +15638,28 @@ proof -
   \<comment> \<open>f^m lift from (a,0) to (a,2m). Same construction as in Theorem_63_1_c.\<close>
   have hfm_lift: "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
       (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
-    by (rule helix_f_power_lift[OF assms(1-12) hcov hTE he0 hp0])
+  proof (rule helix_f_power_lift[OF assms(1-12) hcov hTE he0 hp0])
+    show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> U. (x, 2 * n) \<in> W} \<in> TX"
+      unfolding TE_def by (by100 blast)
+    show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+        {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX"
+      unfolding TE_def by (by100 blast)
+    show "\<And>x n. x \<in> U \<Longrightarrow> (x, 2*n) \<in> E" unfolding E_def by auto
+    show "\<And>x n. x \<in> V - U \<Longrightarrow> (x, 2*n + 1) \<in> E" unfolding E_def by auto
+    show "\<And>x n. x \<in> A \<Longrightarrow> (x, 2*n + 2) \<in> E"
+    proof -
+      fix x :: 'a and n :: int assume "x \<in> A"
+      hence "x \<in> U" using assms(5) by (by100 blast)
+      thus "(x, 2*n + 2) \<in> E" unfolding E_def by auto
+    qed
+    show "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
+    proof -
+      fix x :: 'a and n :: int assume "x \<in> B"
+      hence "x \<in> U" using assms(5) by (by100 blast)
+      thus "(x, 2*n) \<in> E" unfolding E_def by auto
+    qed
+    show "p0 = fst" unfolding p0_def by simp
+  qed
   \<comment> \<open>(g\<inverse>)^k lift: reverse of g-lift is a loop at (a,0), projects to g\<inverse>.
      By induction, (g\<inverse>)^k lifts to a loop at (a,0).\<close>
   \<comment> \<open>Construct single g-lift directly (same formula as in 63.1(c) proof).\<close>
