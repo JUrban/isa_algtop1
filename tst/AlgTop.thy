@@ -15671,7 +15671,38 @@ lemma path_power_mult:
   shows "top1_path_homotopic_on X TX a a
     (top1_path_power (top1_path_power f a m) a n)
     (top1_path_power f a (m * n))"
-  sorry \<comment> \<open>By induction on n using path_power_product_add.\<close>
+proof (induction n)
+  case 0
+  have haX: "a \<in> X"
+    using top1_is_loop_on_start[OF assms(2)]
+          top1_is_loop_on_continuous[OF assms(2)]
+    unfolding top1_continuous_map_on_def top1_unit_interval_def by force
+  show ?case by (simp add: Lemma_51_1_path_homotopic_refl[OF
+      top1_constant_path_is_path[OF assms(1) haX]])
+next
+  case (Suc n)
+  have hfm_loop: "top1_is_loop_on X TX a (top1_path_power f a m)"
+    by (rule top1_path_power_is_loop[OF assms])
+  have hfm: "top1_is_path_on X TX a a (top1_path_power f a m)"
+    using hfm_loop unfolding top1_is_loop_on_def by simp
+  have h1: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power f a m) (top1_path_power (top1_path_power f a m) a n))
+      (top1_path_product (top1_path_power f a m) (top1_path_power f a (m * n)))"
+    by (rule path_homotopic_product_right[OF assms(1) Suc hfm])
+  have h2: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power f a m) (top1_path_power f a (m * n)))
+      (top1_path_power f a (m + m * n))"
+    by (rule path_power_product_add[OF assms])
+  have h12: "top1_path_homotopic_on X TX a a
+      (top1_path_product (top1_path_power f a m) (top1_path_power (top1_path_power f a m) a n))
+      (top1_path_power f a (m + m * n))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) h1 h2])
+  have hgoal_lhs: "top1_path_power (top1_path_power f a m) a (Suc n)
+      = top1_path_product (top1_path_power f a m) (top1_path_power (top1_path_power f a m) a n)"
+    by simp
+  have hgoal_rhs: "m * Suc n = m + m * n" by simp
+  show ?case using h12 unfolding hgoal_lhs hgoal_rhs .
+qed
 
 \<comment> \<open>Key algebraic fact for 63.5: in an infinite cyclic group,
    any two nontrivial elements have a common nonzero power.
