@@ -152,6 +152,8 @@ proof -
       qed
     next
       fix F :: "('a \<times> int) set set" assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TE"
+      have hTX_fin_inter: "\<And>G. finite G \<Longrightarrow> G \<noteq> {} \<Longrightarrow> G \<subseteq> TX \<Longrightarrow> \<Inter>G \<in> TX"
+        using assms(1) unfolding is_topology_on_def by (by100 blast)
       show "\<Inter>F \<in> TE" unfolding TE_def
       proof (intro CollectI conjI allI)
         show "\<Inter>F \<subseteq> E" using hF unfolding TE_def by (by100 blast)
@@ -160,11 +162,13 @@ proof -
           using hF by (by100 blast)
         moreover have "... \<in> TX"
         proof -
-          have "finite {{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F}" using hF by simp
-          moreover have "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
-          moreover have "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<subseteq> TX"
+          have heven_fin: "finite {{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F}" using hF by simp
+          have heven_ne: "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
+          have heven_sub: "{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<subseteq> TX"
             using hF unfolding TE_def by (by100 blast)
-          ultimately show ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+          have "\<Inter>{{x \<in> U. (x, 2*n) \<in> W} | W. W \<in> F} \<in> TX"
+            by (rule hTX_fin_inter[OF heven_fin heven_ne heven_sub])
+          thus ?thesis .
         qed
         ultimately show "{x \<in> U. (x, 2*n) \<in> \<Inter>F} \<in> TX" by simp
         have heq: "{x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
@@ -182,22 +186,54 @@ proof -
           from hF obtain W0 where "W0 \<in> F" by (by100 blast)
           hence "x \<in> {x \<in> A. (x, 2*n+2) \<in> W0} \<union> {x \<in> B. (x, 2*n) \<in> W0} \<union>
               {x \<in> V-U. (x, 2*n+1) \<in> W0}" using hx by (by100 blast)
-          hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" by (by100 blast)
-          thus "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
+          hence hcases: "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" by (by100 blast)
+          have hAllW: "\<forall>W\<in>F. x \<in> {x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W}" using hx by (by100 blast)
+          show "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
               {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}"
-            using hx hAB assms(6) by (by100 blast)
+          proof -
+            { assume hxA: "x \<in> A"
+              hence "x \<notin> B" using assms(6) by (by100 blast)
+              hence hxnVU: "x \<notin> V - U" using assms(5) hxA by (by100 blast)
+              have "\<forall>W\<in>F. x \<in> {x \<in> A. (x, 2*n+2) \<in> W}"
+                using hAllW hxA \<open>x \<notin> B\<close> hxnVU by (by100 fast)
+              hence "\<forall>W\<in>F. (x, 2*n+2) \<in> W" by (by100 blast)
+              hence "x \<in> {x \<in> A. (x, 2*n+2) \<in> \<Inter>F}" using \<open>x \<in> A\<close> by (by100 blast)
+              hence ?thesis by (by100 blast) }
+            moreover
+            { assume hxB: "x \<in> B"
+              hence "x \<notin> A" using assms(6) by (by100 blast)
+              hence hxnVU: "x \<notin> V - U" using assms(5) hxB by (by100 blast)
+              have "\<forall>W\<in>F. x \<in> {x \<in> B. (x, 2*n) \<in> W}"
+                using hAllW hxB \<open>x \<notin> A\<close> hxnVU by (by100 fast)
+              hence "\<forall>W\<in>F. (x, 2*n) \<in> W" by (by100 blast)
+              hence "x \<in> {x \<in> B. (x, 2*n) \<in> \<Inter>F}" using \<open>x \<in> B\<close> by (by100 blast)
+              hence ?thesis by (by100 blast) }
+            moreover
+            { assume hxVU: "x \<in> V - U"
+              hence "x \<notin> A" "x \<notin> B" using assms(5) by (by100 blast)+
+              have "\<forall>W\<in>F. x \<in> {x \<in> V-U. (x, 2*n+1) \<in> W}"
+                using hAllW hxVU \<open>x \<notin> A\<close> \<open>x \<notin> B\<close> by (by100 fast)
+              hence "\<forall>W\<in>F. (x, 2*n+1) \<in> W" by (by100 blast)
+              hence "x \<in> {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F}" using \<open>x \<in> V - U\<close> by (by100 blast)
+              hence ?thesis by (by100 blast) }
+            ultimately show ?thesis using hcases by (by100 fast)
+          qed
         qed
         have "\<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
               {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<in> TX"
         proof -
-          have "finite {{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+          have hodd_fin: "finite {{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                 {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F}" using hF by simp
-          moreover have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+          have hodd_ne: "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                 {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<noteq> {}" using hF by (by100 blast)
-          moreover have "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+          have hodd_sub: "{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                 {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<subseteq> TX"
             using hF unfolding TE_def by (by100 blast)
-          ultimately show ?thesis using assms(1) unfolding is_topology_on_def by (by100 blast)
+          have "\<Inter>{{x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} | W. W \<in> F} \<in> TX"
+            by (rule hTX_fin_inter[OF hodd_fin hodd_ne hodd_sub])
+          thus ?thesis .
         qed
         thus "{x \<in> A. (x, 2*n+2) \<in> \<Inter>F} \<union> {x \<in> B. (x, 2*n) \<in> \<Inter>F} \<union>
             {x \<in> V-U. (x, 2*n+1) \<in> \<Inter>F} \<in> TX" using heq by simp
@@ -3157,7 +3193,13 @@ proof -
           have "x \<in> ?X" using hx(1) hW_sub by (by100 blast)
           hence "inv_into ?X h y = x"
             using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij] \<open>x \<in> ?X\<close>] hx(2) by (by100 simp)
-          moreover have "y \<in> R2_0" using hx hW_sub hbij unfolding bij_betw_def by (by100 blast)
+          moreover have "y \<in> R2_0"
+          proof -
+            have "x \<in> ?X" using hx(1) hW_sub by (by100 blast)
+            hence "h x \<in> h ` ?X" by (by100 blast)
+            hence "h x \<in> R2_0" using hbij unfolding bij_betw_def by (by100 blast)
+            thus ?thesis using hx(2) by simp
+          qed
           ultimately show "y \<in> {y \<in> R2_0. inv_into ?X h y \<in> W}" using hx(1) by (by100 blast)
         qed
         \<comment> \<open>h ` W is open: h = t \<circ> \<sigma>, \<sigma> maps open to open, t maps open to open.\<close>
@@ -3452,8 +3494,10 @@ proof -
         fix W assume "W \<in> subspace_topology R2_0 TR2_0 top1_S1"
         then obtain V where hV: "V \<in> TR2_0" "W = top1_S1 \<inter> V"
           unfolding subspace_topology_def by (by100 blast)
+        have hV_in: "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) R2_0"
+          using hV(1) unfolding TR2_0_def by simp
         then obtain V0 where hV0: "V0 \<in> product_topology_on top1_open_sets top1_open_sets"
-            "V = R2_0 \<inter> V0" unfolding TR2_0_def R2_0_def subspace_topology_def by (by100 blast)
+            "V = R2_0 \<inter> V0" unfolding subspace_topology_def by (by100 blast)
         have "W = top1_S1 \<inter> V0" using hV(2) hV0(2) hS1_sub by (by100 blast)
         thus "W \<in> top1_S1_topology" unfolding top1_S1_topology_def subspace_topology_def
           using hV0(1) by (by100 blast)
@@ -3506,9 +3550,7 @@ proof -
           (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
           top1_Z_group top1_Z_mul f4"
         using h54_5 unfolding top1_groups_isomorphic_on_def by (by100 blast)
-      \<comment> \<open>Compose: f4 \<circ> inv(f3) \<circ> f2 \<circ> f1 : \<pi>_1(X) \<rightarrow> Z.\<close>
-      define \<psi> where "\<psi> = f4 \<circ> inv_into G4 f3 \<circ> f2 \<circ> f1"
-      \<comment> \<open>Show \<psi> is a group iso by composing hom + bij.\<close>
+      \<comment> \<open>Name the carrier and multiplication sets.\<close>
       define G1 where "G1 = top1_fundamental_group_carrier ?X ?TX a"
       define M1 where "M1 = top1_fundamental_group_mul ?X ?TX a"
       define G2 where "G2 = top1_fundamental_group_carrier R2_0 TR2_0 (h a)"
@@ -3517,6 +3559,8 @@ proof -
       define M3 where "M3 = top1_fundamental_group_mul R2_0 TR2_0 (1, 0)"
       define G4 where "G4 = top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
       define M4 where "M4 = top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0)"
+      \<comment> \<open>Compose: f4 \<circ> inv(f3) \<circ> f2 \<circ> f1 : \<pi>_1(X) \<rightarrow> Z.\<close>
+      define \<psi> where "\<psi> = f4 \<circ> (inv_into G4 f3 \<circ> (f2 \<circ> f1))"
       have hf1': "top1_group_iso_on G1 M1 G2 M2 f1"
         using hf1 unfolding G1_def M1_def G2_def M2_def .
       have hf2': "top1_group_iso_on G2 M2 G3 M3 f2"
@@ -3536,31 +3580,483 @@ proof -
       \<comment> \<open>Build bij_betw for \<psi> directly.\<close>
       \<comment> \<open>Prove \<psi> is a group iso: bij_betw + group_hom_on.\<close>
       \<comment> \<open>\<psi> is a group iso: compose 4 individual group isos.\<close>
-      have h\<psi>_iso: "top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
-        sorry \<comment> \<open>\<psi> = f4 \<circ> f3\<inverse> \<circ> f2 \<circ> f1. Each is a group iso (hf1'-hf4', hb1-hb4, hb3i).
-           bij_betw: bij_betw_trans chain. group_hom_on: compose hom preserving mul.
-           The proof is purely mechanical group theory but requires careful handling of
-           by100 limits with the composition normalization.\<close>
+      \<comment> \<open>Bijection: chain bij_betw via bij_betw_trans.\<close>
+      have hb12: "bij_betw (f2 \<circ> f1) G1 G3"
+        by (rule bij_betw_trans[OF hb1 hb2])
+      have hb123: "bij_betw (inv_into G4 f3 \<circ> (f2 \<circ> f1)) G1 G4"
+        by (rule bij_betw_trans[OF hb12 hb3i])
+      have hb1234: "bij_betw (f4 \<circ> (inv_into G4 f3 \<circ> (f2 \<circ> f1))) G1 top1_Z_group"
+        by (rule bij_betw_trans[OF hb123 hb4])
       have h\<psi>_bij: "bij_betw \<psi> G1 top1_Z_group"
-        using h\<psi>_iso unfolding top1_group_iso_on_def by (by100 blast)
-      have h\<psi>_hom: "top1_group_hom_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
-        using h\<psi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+        unfolding \<psi>_def using hb1234 .
+      have h\<psi>_iso: "top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
+        unfolding top1_group_iso_on_def
+      proof (intro conjI)
+        show "bij_betw \<psi> G1 top1_Z_group" by (rule h\<psi>_bij)
+      next
+        \<comment> \<open>Homomorphism: \<psi>(M1 x y) = top1_Z_mul (\<psi> x) (\<psi> y).\<close>
+        have hh1: "top1_group_hom_on G1 M1 G2 M2 f1"
+          using hf1' unfolding top1_group_iso_on_def by (by100 blast)
+        have hh2: "top1_group_hom_on G2 M2 G3 M3 f2"
+          using hf2' unfolding top1_group_iso_on_def by (by100 blast)
+        have hh3: "top1_group_hom_on G4 M4 G3 M3 f3"
+          using hf3' unfolding top1_group_iso_on_def by (by100 blast)
+        have hh4: "top1_group_hom_on G4 M4 top1_Z_group top1_Z_mul f4"
+          using hf4' unfolding top1_group_iso_on_def by (by100 blast)
+        \<comment> \<open>inv_into G4 f3 is a homomorphism G3 \<rightarrow> G4.\<close>
+        have hh3i_map: "\<And>z. z \<in> G3 \<Longrightarrow> inv_into G4 f3 z \<in> G4"
+          using hb3i unfolding bij_betw_def by (by100 blast)
+        have hh3i_hom:
+            "inv_into G4 f3 (M3 x y) = M4 (inv_into G4 f3 x) (inv_into G4 f3 y)"
+          if hx: "x \<in> G3" and hy: "y \<in> G3" for x y
+        proof -
+          have hx4: "inv_into G4 f3 x \<in> G4" using hh3i_map hx by simp
+          have hy4: "inv_into G4 f3 y \<in> G4" using hh3i_map hy by simp
+          have hxim: "x \<in> f3 ` G4" using hx hb3 unfolding bij_betw_def by (by100 blast)
+          have hyim: "y \<in> f3 ` G4" using hy hb3 unfolding bij_betw_def by (by100 blast)
+          have hfx: "f3 (inv_into G4 f3 x) = x" by (rule f_inv_into_f[OF hxim])
+          have hfy: "f3 (inv_into G4 f3 y) = y" by (rule f_inv_into_f[OF hyim])
+          have "f3 (M4 (inv_into G4 f3 x) (inv_into G4 f3 y))
+              = M3 (f3 (inv_into G4 f3 x)) (f3 (inv_into G4 f3 y))"
+            using hh3 hx4 hy4 unfolding top1_group_hom_on_def by (by100 blast)
+          hence hf3_eq: "f3 (M4 (inv_into G4 f3 x) (inv_into G4 f3 y)) = M3 x y"
+            using hfx hfy by simp
+          \<comment> \<open>M4 closed on G4: path product of loops is a loop.\<close>
+          have hM4_cl: "M4 (inv_into G4 f3 x) (inv_into G4 f3 y) \<in> G4"
+          proof -
+            have hTR2: "is_topology_on (UNIV::((real\<times>real) set))
+                (product_topology_on top1_open_sets top1_open_sets)"
+              using product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+              by simp
+            have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+              unfolding top1_S1_topology_def
+              using subspace_topology_is_topology_on[OF hTR2 subset_UNIV] .
+            obtain fa where hfa: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) fa"
+                "inv_into G4 f3 x = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) fa g}"
+              using hx4 unfolding G4_def top1_fundamental_group_carrier_def by (by100 blast)
+            obtain fb where hfb: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) fb"
+                "inv_into G4 f3 y = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) fb g}"
+              using hy4 unfolding G4_def top1_fundamental_group_carrier_def by (by100 blast)
+            have hprod_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (top1_path_product fa fb)"
+              by (rule top1_path_product_is_loop[OF hTS1 hfa(1) hfb(1)])
+            have hmul_class: "M4
+                {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) fa g}
+                {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) fb g}
+              = {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (top1_path_product fa fb) h}"
+              unfolding M4_def
+              by (rule top1_fundamental_group_mul_class[OF hTS1 hfa(1) hfb(1)])
+            have "M4 (inv_into G4 f3 x) (inv_into G4 f3 y) =
+                {h. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (top1_path_product fa fb) h}"
+              using hmul_class hfa(2) hfb(2) by simp
+            thus ?thesis unfolding G4_def top1_fundamental_group_carrier_def
+              using hprod_loop by (by100 blast)
+          qed
+          have "inv_into G4 f3 (f3 (M4 (inv_into G4 f3 x) (inv_into G4 f3 y)))
+              = M4 (inv_into G4 f3 x) (inv_into G4 f3 y)"
+            by (rule inv_into_f_f[OF bij_betw_imp_inj_on[OF hb3] hM4_cl])
+          thus "inv_into G4 f3 (M3 x y) = M4 (inv_into G4 f3 x) (inv_into G4 f3 y)"
+            using hf3_eq by simp
+        qed
+        show "top1_group_hom_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> G1"
+          thus "\<psi> x \<in> top1_Z_group"
+            using h\<psi>_bij unfolding bij_betw_def by (by100 blast)
+        next
+          fix a b assume "a \<in> G1" and "b \<in> G1"
+          note ha = \<open>a \<in> G1\<close> and hb = \<open>b \<in> G1\<close>
+          have hf1a: "f1 a \<in> G2" using hh1 ha unfolding top1_group_hom_on_def by (by100 blast)
+          have hf1b: "f1 b \<in> G2" using hh1 hb unfolding top1_group_hom_on_def by (by100 blast)
+          have hf2f1a: "f2 (f1 a) \<in> G3" using hh2 hf1a unfolding top1_group_hom_on_def by (by100 blast)
+          have hf2f1b: "f2 (f1 b) \<in> G3" using hh2 hf1b unfolding top1_group_hom_on_def by (by100 blast)
+          have hif2f1a: "inv_into G4 f3 (f2 (f1 a)) \<in> G4" using hh3i_map hf2f1a by simp
+          have hif2f1b: "inv_into G4 f3 (f2 (f1 b)) \<in> G4" using hh3i_map hf2f1b by simp
+          \<comment> \<open>Chain the homomorphism equations.\<close>
+          have "\<psi> (M1 a b) = f4 (inv_into G4 f3 (f2 (f1 (M1 a b))))"
+            unfolding \<psi>_def by simp
+          also have "f1 (M1 a b) = M2 (f1 a) (f1 b)"
+            using hh1 ha hb unfolding top1_group_hom_on_def by (by100 blast)
+          also have "f2 (M2 (f1 a) (f1 b)) = M3 (f2 (f1 a)) (f2 (f1 b))"
+            using hh2 hf1a hf1b unfolding top1_group_hom_on_def by (by100 blast)
+          also have "inv_into G4 f3 (M3 (f2 (f1 a)) (f2 (f1 b)))
+              = M4 (inv_into G4 f3 (f2 (f1 a))) (inv_into G4 f3 (f2 (f1 b)))"
+            using hh3i_hom hf2f1a hf2f1b by simp
+          also have "f4 (M4 (inv_into G4 f3 (f2 (f1 a))) (inv_into G4 f3 (f2 (f1 b))))
+              = top1_Z_mul (f4 (inv_into G4 f3 (f2 (f1 a)))) (f4 (inv_into G4 f3 (f2 (f1 b))))"
+            using hh4 hif2f1a hif2f1b unfolding top1_group_hom_on_def by (by100 blast)
+          also have "f4 (inv_into G4 f3 (f2 (f1 a))) = \<psi> a" unfolding \<psi>_def by simp
+          also have "f4 (inv_into G4 f3 (f2 (f1 b))) = \<psi> b" unfolding \<psi>_def by simp
+          finally show "\<psi> (M1 a b) = top1_Z_mul (\<psi> a) (\<psi> b)" .
+        qed
+      qed
       show "\<exists>f. top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul f"
-        using h\<psi>_bij h\<psi>_hom unfolding G1_def M1_def top1_group_iso_on_def by (by100 blast)
+        using h\<psi>_iso unfolding G1_def M1_def by (by100 blast)
     qed
   qed
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
+  obtain \<psi> where h\<psi>: "top1_group_iso_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      top1_Z_group top1_Z_mul \<psi>"
+    using hpi1_iso_Z unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  have h\<psi>_bij: "bij_betw \<psi> (top1_fundamental_group_carrier ?X ?TX a) top1_Z_group"
+    using h\<psi> unfolding top1_group_iso_on_def by (by100 blast)
+  have h\<psi>_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier ?X ?TX a) (top1_fundamental_group_mul ?X ?TX a)
+      top1_Z_group top1_Z_mul \<psi>"
+    using h\<psi> unfolding top1_group_iso_on_def by (by100 blast)
+  \<comment> \<open>\<psi>\<inverse>(1): preimage of 1 under \<psi> is a homotopy class.\<close>
+  define gen_class where "gen_class = inv_into (top1_fundamental_group_carrier ?X ?TX a) \<psi> (1::int)"
+  have hgc_in: "gen_class \<in> top1_fundamental_group_carrier ?X ?TX a"
+  proof -
+    have "(1::int) \<in> \<psi> ` (top1_fundamental_group_carrier ?X ?TX a)"
+      using h\<psi>_bij unfolding bij_betw_def top1_Z_group_def by simp
+    thus ?thesis unfolding gen_class_def by (rule inv_into_into)
+  qed
+  have h\<psi>gc: "\<psi> gen_class = (1::int)"
+    unfolding gen_class_def
+    by (rule f_inv_into_f) (simp add: top1_Z_group_def h\<psi>_bij[unfolded bij_betw_def])
+  \<comment> \<open>Extract a representative loop from gen_class.\<close>
+  obtain gen where hgen_loop: "top1_is_loop_on ?X ?TX a gen"
+      and hgen_class: "gen_class = {g. top1_loop_equiv_on ?X ?TX a gen g}"
+    using hgc_in unfolding top1_fundamental_group_carrier_def by (by100 blast)
+  \<comment> \<open>Now show the generator property: every loop is homotopic to gen^n or (gen\<inverse>)^n.\<close>
   show ?thesis
-    sorry \<comment> \<open>From hpi1_iso_Z: \<exists>\<psi> bijective homomorphism \<pi>_1(X,a) \<rightarrow> Z.
-       Let gen_class = \<psi>\<inverse>(1). Pick gen \<in> gen_class (a loop at a).
-       For any loop f: \<psi>([f]) = n. Since \<psi> is homomorphism:
-         \<psi>([gen]^n) = n\<cdot>\<psi>([gen]) = n\<cdot>1 = n (by group hom + induction).
-       Bijectivity: [f] = [gen]^n = [gen^n] (by fund. group mul = path product).
-       For n\<ge>0: f \<simeq> gen^n (same homotopy class). For n<0: f \<simeq> (gen\<inverse>)^{|n|}.
-       Proof requires: group iso extraction (\<exists>-elim), representative extraction
-       from homotopy class (Hilbert choice), n-fold group product = path_power class
-       (induction on n using top1_fundamental_group_mul_def), homotopy class membership
-       = path homotopy (by top1_loop_equiv_on_def). Each step is ~10-20 lines.\<close>
+  proof (intro exI[of _ gen] conjI allI impI)
+    show "top1_is_loop_on ?X ?TX a gen" by (rule hgen_loop)
+  next
+    fix f assume hf_loop: "top1_is_loop_on ?X ?TX a f"
+    \<comment> \<open>[f] \<in> \<pi>_1(X,a)\<close>
+    define f_class where "f_class = {g. top1_loop_equiv_on ?X ?TX a f g}"
+    have hfc_in: "f_class \<in> top1_fundamental_group_carrier ?X ?TX a"
+      unfolding f_class_def top1_fundamental_group_carrier_def
+      using hf_loop by (by100 blast)
+    \<comment> \<open>\<psi>([f]) = n for some integer n.\<close>
+    define n_int where "n_int = \<psi> f_class"
+    \<comment> \<open>We need: f \<simeq> gen^n or f \<simeq> (gen\<inverse>)^|n| where n = |n_int|.\<close>
+    \<comment> \<open>Key: [gen]^n = [gen^n] in the fundamental group (mul iterated = path_power class).\<close>
+    \<comment> \<open>And \<psi>([gen]^n) = n\<cdot>\<psi>([gen]) = n\<cdot>1 = n.\<close>
+    \<comment> \<open>Since \<psi> bijective: [f] = [gen]^n when \<psi>([f]) = n.\<close>
+    \<comment> \<open>Then f \<in> [gen^n] means f \<simeq> gen^n.\<close>
+    \<comment> \<open>Key bridge lemma: \<psi>([gen^k]) = int k for all k::nat.\<close>
+    have hTX_local: "is_topology_on ?X ?TX"
+      by (rule subspace_topology_is_topology_on[OF
+            is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
+    \<comment> \<open>\<psi> maps identity class to 0.\<close>
+    have h\<psi>_id: "\<psi> (top1_fundamental_group_id ?X ?TX a) = (0::int)"
+    proof -
+      define e_class where "e_class = top1_fundamental_group_id ?X ?TX a"
+      have haX: "a \<in> ?X" using assms(5) by (by100 blast)
+      have hconst_loop: "top1_is_loop_on ?X ?TX a (top1_constant_path a)"
+        unfolding top1_is_loop_on_def
+        by (rule top1_constant_path_is_path[OF hTX_local haX])
+      have he_in: "e_class \<in> top1_fundamental_group_carrier ?X ?TX a"
+        unfolding e_class_def top1_fundamental_group_id_def top1_fundamental_group_carrier_def
+        using hconst_loop by (by100 blast)
+      \<comment> \<open>mul(e, e) = e: use left identity const*const \<simeq> const + mul_class.\<close>
+      have hmul_ee: "top1_fundamental_group_mul ?X ?TX a e_class e_class = e_class"
+      proof -
+        have hmul_class: "top1_fundamental_group_mul ?X ?TX a
+            {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}
+            {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}
+          = {h. top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) h}"
+          by (rule top1_fundamental_group_mul_class[OF hTX_local hconst_loop hconst_loop])
+        have hlid: "top1_path_homotopic_on ?X ?TX a a
+            (top1_path_product (top1_constant_path a) (top1_constant_path a)) (top1_constant_path a)"
+          by (rule Theorem_51_2_left_identity[OF hTX_local
+                top1_constant_path_is_path[OF hTX_local haX]])
+        have hprod_loop: "top1_is_loop_on ?X ?TX a
+            (top1_path_product (top1_constant_path a) (top1_constant_path a))"
+          by (rule top1_path_product_is_loop[OF hTX_local hconst_loop hconst_loop])
+        \<comment> \<open>Class equality: loop_equiv (const*const) h \<longleftrightarrow> loop_equiv const h.\<close>
+        have hclass_eq: "{h. top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) h}
+            = {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+        proof (intro set_eqI iffI)
+          fix h assume "h \<in> {h. top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) h}"
+          hence "top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) h" by simp
+          moreover have "top1_loop_equiv_on ?X ?TX a (top1_constant_path a)
+              (top1_path_product (top1_constant_path a) (top1_constant_path a))"
+            unfolding top1_loop_equiv_on_def
+            using hconst_loop hprod_loop Lemma_51_1_path_homotopic_sym[OF hlid]
+            unfolding top1_is_loop_on_def by (by100 blast)
+          ultimately show "h \<in> {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+            using top1_loop_equiv_on_trans[OF hTX_local] by (by100 blast)
+        next
+          fix h assume "h \<in> {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+          hence "top1_loop_equiv_on ?X ?TX a (top1_constant_path a) h" by simp
+          moreover have "top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) (top1_constant_path a)"
+            unfolding top1_loop_equiv_on_def
+            using hconst_loop hprod_loop hlid
+            unfolding top1_is_loop_on_def by (by100 blast)
+          ultimately show "h \<in> {h. top1_loop_equiv_on ?X ?TX a
+              (top1_path_product (top1_constant_path a) (top1_constant_path a)) h}"
+            using top1_loop_equiv_on_trans[OF hTX_local] by (by100 blast)
+        qed
+        show ?thesis using hmul_class hclass_eq
+          unfolding e_class_def top1_fundamental_group_id_def by simp
+      qed
+      \<comment> \<open>\<psi>(mul e e) = \<psi>(e) + \<psi>(e), and mul e e = e.\<close>
+      have "\<psi> e_class = top1_Z_mul (\<psi> e_class) (\<psi> e_class)"
+      proof -
+        have "\<psi> (top1_fundamental_group_mul ?X ?TX a e_class e_class)
+            = top1_Z_mul (\<psi> e_class) (\<psi> e_class)"
+          using h\<psi>_hom he_in unfolding top1_group_hom_on_def by (by100 blast)
+        thus ?thesis using hmul_ee by simp
+      qed
+      hence "\<psi> e_class = \<psi> e_class + \<psi> e_class" unfolding top1_Z_mul_def .
+      hence "\<psi> e_class = 0" by linarith
+      thus ?thesis unfolding e_class_def .
+    qed
+    \<comment> \<open>Path power class correspondence: [gen^(Suc k)] = mul [gen] [gen^k].\<close>
+    have hpower_class_step: "\<And>k::nat.
+        {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a (Suc k)) g} =
+        top1_fundamental_group_mul ?X ?TX a gen_class
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}"
+    proof -
+      fix k :: nat
+      have hpk_loop: "top1_is_loop_on ?X ?TX a (top1_path_power gen a k)"
+        by (rule top1_path_power_is_loop[OF hTX_local hgen_loop])
+      have "top1_fundamental_group_mul ?X ?TX a
+          {g. top1_loop_equiv_on ?X ?TX a gen g}
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}
+        = {h. top1_loop_equiv_on ?X ?TX a (top1_path_product gen (top1_path_power gen a k)) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX_local hgen_loop hpk_loop])
+      also have "top1_path_product gen (top1_path_power gen a k) = top1_path_power gen a (Suc k)"
+        by simp
+      finally have "top1_fundamental_group_mul ?X ?TX a
+          {g. top1_loop_equiv_on ?X ?TX a gen g}
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}
+        = {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a (Suc k)) g}" .
+      thus "{g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a (Suc k)) g} =
+        top1_fundamental_group_mul ?X ?TX a gen_class
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}"
+        using hgen_class by simp
+    qed
+    have hpk_in_carrier: "\<And>k::nat. {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}
+        \<in> top1_fundamental_group_carrier ?X ?TX a"
+      unfolding top1_fundamental_group_carrier_def
+      using top1_path_power_is_loop[OF hTX_local hgen_loop] by (by100 blast)
+    have h\<psi>_power: "\<And>k::nat. \<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g} = int k"
+    proof -
+      fix k :: nat show "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g} = int k"
+      proof (induction k)
+        case 0
+        have "{g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a 0) g}
+            = {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+          by simp
+        also have "\<dots> = top1_fundamental_group_id ?X ?TX a"
+          unfolding top1_fundamental_group_id_def by simp
+        finally show ?case using h\<psi>_id by simp
+      next
+        case (Suc k)
+        have "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a (Suc k)) g}
+            = \<psi> (top1_fundamental_group_mul ?X ?TX a gen_class
+                {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g})"
+          using hpower_class_step by simp
+        also have "\<dots> = top1_Z_mul (\<psi> gen_class)
+            (\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g})"
+          using h\<psi>_hom hgc_in hpk_in_carrier
+          unfolding top1_group_hom_on_def by (by100 blast)
+        also have "\<dots> = top1_Z_mul 1 (int k)"
+          using h\<psi>gc Suc.IH by simp
+        also have "\<dots> = int (Suc k)" unfolding top1_Z_mul_def by simp
+        finally show ?case .
+      qed
+    qed
+    \<comment> \<open>\<psi>([gen\<inverse>]) = -1. From gen*gen\<inverse> \<simeq> const, so \<psi>([gen*gen\<inverse>]) = \<psi>(e) = 0.
+       Also \<psi>([gen*gen\<inverse>]) = \<psi>([gen]) + \<psi>([gen\<inverse>]) = 1 + \<psi>([gen\<inverse>]). So \<psi>([gen\<inverse>]) = -1.\<close>
+    define rev_class where "rev_class = {g. top1_loop_equiv_on ?X ?TX a (top1_path_reverse gen) g}"
+    have hrc_in: "rev_class \<in> top1_fundamental_group_carrier ?X ?TX a"
+      unfolding rev_class_def top1_fundamental_group_carrier_def
+      using top1_path_reverse_is_loop[OF hgen_loop] by (by100 blast)
+    have haX: "a \<in> ?X" using assms(5) by (by100 blast)
+    have hconst_loop: "top1_is_loop_on ?X ?TX a (top1_constant_path a)"
+      unfolding top1_is_loop_on_def
+      by (rule top1_constant_path_is_path[OF hTX_local haX])
+    have h\<psi>_rev: "\<psi> rev_class = -(1::int)"
+    proof -
+      \<comment> \<open>gen * gen\<inverse> \<simeq> const.\<close>
+      have hgen_path: "top1_is_path_on ?X ?TX a a gen"
+        using hgen_loop unfolding top1_is_loop_on_def .
+      have hinv_left: "top1_path_homotopic_on ?X ?TX a a
+          (top1_path_product gen (top1_path_reverse gen)) (top1_constant_path a)"
+        by (rule Theorem_51_2_invgerse_left[OF hTX_local hgen_path])
+      \<comment> \<open>mul(gen_class, rev_class) = [gen * gen\<inverse>].\<close>
+      have hmul_gr: "top1_fundamental_group_mul ?X ?TX a gen_class rev_class
+          = {h. top1_loop_equiv_on ?X ?TX a (top1_path_product gen (top1_path_reverse gen)) h}"
+        unfolding rev_class_def
+        using top1_fundamental_group_mul_class[OF hTX_local hgen_loop
+              top1_path_reverse_is_loop[OF hgen_loop]]
+              hgen_class by simp
+      \<comment> \<open>[gen * gen\<inverse>] = [const] = e_class, using hinv_left.\<close>
+      have hprod_rev_loop: "top1_is_loop_on ?X ?TX a (top1_path_product gen (top1_path_reverse gen))"
+        by (rule top1_path_product_is_loop[OF hTX_local hgen_loop
+              top1_path_reverse_is_loop[OF hgen_loop]])
+      have hclass_eq: "{h. top1_loop_equiv_on ?X ?TX a (top1_path_product gen (top1_path_reverse gen)) h}
+          = top1_fundamental_group_id ?X ?TX a"
+        unfolding top1_fundamental_group_id_def
+      proof (intro set_eqI iffI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on ?X ?TX a
+            (top1_path_product gen (top1_path_reverse gen)) h}"
+        hence "top1_loop_equiv_on ?X ?TX a (top1_path_product gen (top1_path_reverse gen)) h" by simp
+        moreover have "top1_loop_equiv_on ?X ?TX a (top1_constant_path a)
+            (top1_path_product gen (top1_path_reverse gen))"
+          unfolding top1_loop_equiv_on_def
+          using hconst_loop hprod_rev_loop Lemma_51_1_path_homotopic_sym[OF hinv_left]
+          unfolding top1_is_loop_on_def by (by100 blast)
+        ultimately show "h \<in> {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+          using top1_loop_equiv_on_trans[OF hTX_local] by (by100 blast)
+      next
+        fix h assume "h \<in> {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}"
+        hence "top1_loop_equiv_on ?X ?TX a (top1_constant_path a) h" by simp
+        moreover have "top1_loop_equiv_on ?X ?TX a
+            (top1_path_product gen (top1_path_reverse gen)) (top1_constant_path a)"
+          unfolding top1_loop_equiv_on_def
+          using hconst_loop hprod_rev_loop hinv_left
+          unfolding top1_is_loop_on_def by (by100 blast)
+        ultimately show "h \<in> {h. top1_loop_equiv_on ?X ?TX a
+            (top1_path_product gen (top1_path_reverse gen)) h}"
+          using top1_loop_equiv_on_trans[OF hTX_local] by (by100 blast)
+      qed
+      hence hmul_gr_id: "top1_fundamental_group_mul ?X ?TX a gen_class rev_class
+          = top1_fundamental_group_id ?X ?TX a"
+        using hmul_gr by simp
+      \<comment> \<open>\<psi>(mul gen_class rev_class) = \<psi>(gen_class) + \<psi>(rev_class) = 1 + \<psi>(rev_class).\<close>
+      have "\<psi> (top1_fundamental_group_mul ?X ?TX a gen_class rev_class)
+          = top1_Z_mul (\<psi> gen_class) (\<psi> rev_class)"
+        using h\<psi>_hom hgc_in hrc_in unfolding top1_group_hom_on_def by (by100 blast)
+      hence "top1_Z_mul 1 (\<psi> rev_class) = 0"
+        using hmul_gr_id h\<psi>_id h\<psi>gc by simp
+      thus "\<psi> rev_class = -1" unfolding top1_Z_mul_def by linarith
+    qed
+    have hrev_gen_loop: "top1_is_loop_on ?X ?TX a (top1_path_reverse gen)"
+      by (rule top1_path_reverse_is_loop[OF hgen_loop])
+    have hpower_rev_class_step: "\<And>k::nat.
+        {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a (Suc k)) g} =
+        top1_fundamental_group_mul ?X ?TX a rev_class
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g}"
+    proof -
+      fix k :: nat
+      have hrpk_loop: "top1_is_loop_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k)"
+        by (rule top1_path_power_is_loop[OF hTX_local hrev_gen_loop])
+      have "top1_fundamental_group_mul ?X ?TX a
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_reverse gen) g}
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g}
+        = {h. top1_loop_equiv_on ?X ?TX a
+            (top1_path_product (top1_path_reverse gen) (top1_path_power (top1_path_reverse gen) a k)) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX_local hrev_gen_loop hrpk_loop])
+      also have "top1_path_product (top1_path_reverse gen) (top1_path_power (top1_path_reverse gen) a k)
+          = top1_path_power (top1_path_reverse gen) a (Suc k)" by simp
+      finally show "{g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a (Suc k)) g} =
+        top1_fundamental_group_mul ?X ?TX a rev_class
+          {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g}"
+        unfolding rev_class_def by simp
+    qed
+    have hrpk_in_carrier: "\<And>k::nat. {g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a k) g}
+        \<in> top1_fundamental_group_carrier ?X ?TX a"
+      unfolding top1_fundamental_group_carrier_def
+      using top1_path_power_is_loop[OF hTX_local top1_path_reverse_is_loop[OF hgen_loop]]
+      by (by100 blast)
+    have h\<psi>_rev_power: "\<And>k::nat. \<psi> {g. top1_loop_equiv_on ?X ?TX a
+        (top1_path_power (top1_path_reverse gen) a k) g} = - int k"
+    proof -
+      fix k :: nat show "\<psi> {g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a k) g} = - int k"
+      proof (induction k)
+        case 0
+        have "{g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a 0) g}
+            = {g. top1_loop_equiv_on ?X ?TX a (top1_constant_path a) g}" by simp
+        also have "\<dots> = top1_fundamental_group_id ?X ?TX a"
+          unfolding top1_fundamental_group_id_def by simp
+        finally show ?case using h\<psi>_id by simp
+      next
+        case (Suc k)
+        have "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a (Suc k)) g}
+            = \<psi> (top1_fundamental_group_mul ?X ?TX a rev_class
+                {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g})"
+          using hpower_rev_class_step by simp
+        also have "\<dots> = top1_Z_mul (\<psi> rev_class)
+            (\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g})"
+          using h\<psi>_hom hrc_in hrpk_in_carrier
+          unfolding top1_group_hom_on_def by (by100 blast)
+        also have "\<dots> = top1_Z_mul (-1) (- int k)"
+          using h\<psi>_rev Suc.IH by simp
+        also have "\<dots> = - int (Suc k)" unfolding top1_Z_mul_def by simp
+        finally show ?case .
+      qed
+    qed
+    \<comment> \<open>Case analysis on sign of n_int.\<close>
+    show "\<exists>n. top1_path_homotopic_on ?X ?TX a a f (top1_path_power gen a n) \<or>
+         top1_path_homotopic_on ?X ?TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+    proof (cases "n_int \<ge> 0")
+      case True
+      define k where "k = nat n_int"
+      have "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g} = int k"
+        by (rule h\<psi>_power)
+      moreover have "int k = n_int" using True k_def by simp
+      ultimately have h\<psi>_eq: "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g} = n_int"
+        by simp
+      \<comment> \<open>Both f_class and [gen^k] map to n_int under \<psi>. By injectivity: f_class = [gen^k].\<close>
+      have hpk_class_in: "{g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}
+          \<in> top1_fundamental_group_carrier ?X ?TX a"
+        unfolding top1_fundamental_group_carrier_def
+        using top1_path_power_is_loop[OF hTX_local hgen_loop] by (by100 blast)
+      have hfc_eq_pk: "f_class = {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}"
+        using bij_betw_imp_inj_on[OF h\<psi>_bij] hfc_in hpk_class_in h\<psi>_eq
+        unfolding n_int_def inj_on_def by (by100 blast)
+      have "f \<in> f_class" unfolding f_class_def
+        using top1_loop_equiv_on_refl[OF hf_loop] by simp
+      hence "f \<in> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) g}"
+        using hfc_eq_pk by simp
+      hence "top1_loop_equiv_on ?X ?TX a (top1_path_power gen a k) f" by simp
+      hence "top1_path_homotopic_on ?X ?TX a a (top1_path_power gen a k) f"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on ?X ?TX a a f (top1_path_power gen a k)"
+        by (rule Lemma_51_1_path_homotopic_sym)
+      thus ?thesis by (by100 blast)
+    next
+      case False
+      hence hn_neg: "n_int < 0" by simp
+      define k where "k = nat (- n_int)"
+      have "\<psi> {g. top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) g} = - int k"
+        by (rule h\<psi>_rev_power)
+      moreover have "- int k = n_int" using hn_neg k_def by simp
+      ultimately have h\<psi>_eq: "\<psi> {g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a k) g} = n_int"
+        by simp
+      have hrev_loop: "top1_is_loop_on ?X ?TX a (top1_path_reverse gen)"
+        by (rule top1_path_reverse_is_loop[OF hgen_loop])
+      have hpk_class_in: "{g. top1_loop_equiv_on ?X ?TX a
+            (top1_path_power (top1_path_reverse gen) a k) g}
+          \<in> top1_fundamental_group_carrier ?X ?TX a"
+        unfolding top1_fundamental_group_carrier_def
+        using top1_path_power_is_loop[OF hTX_local hrev_loop] by (by100 blast)
+      have hfc_eq_rpk: "f_class = {g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a k) g}"
+        using bij_betw_imp_inj_on[OF h\<psi>_bij] hfc_in hpk_class_in h\<psi>_eq
+        unfolding n_int_def inj_on_def by (by100 blast)
+      have "f \<in> f_class" unfolding f_class_def
+        using top1_loop_equiv_on_refl[OF hf_loop] by simp
+      hence "f \<in> {g. top1_loop_equiv_on ?X ?TX a
+          (top1_path_power (top1_path_reverse gen) a k) g}"
+        using hfc_eq_rpk by simp
+      hence "top1_loop_equiv_on ?X ?TX a (top1_path_power (top1_path_reverse gen) a k) f" by simp
+      hence "top1_path_homotopic_on ?X ?TX a a (top1_path_power (top1_path_reverse gen) a k) f"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on ?X ?TX a a f (top1_path_power (top1_path_reverse gen) a k)"
+        by (rule Lemma_51_1_path_homotopic_sym)
+      thus ?thesis by (by100 blast)
+    qed
+  qed
 qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
@@ -4382,9 +4878,11 @@ lemma not_connected_imp_no_path:
       and hncn: "\<not> top1_connected_on X TX"
   shows "\<exists>a b. a \<in> X \<and> b \<in> X \<and> \<not> (\<exists>f. top1_is_path_on X TX a b f)"
 proof -
-  obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hUne: "U \<noteq> {}" and hVne: "V \<noteq> {}"
+  have "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+    using hncn hT unfolding top1_connected_on_def by (by100 blast)
+  then obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hUne: "U \<noteq> {}" and hVne: "V \<noteq> {}"
       and hdisj: "U \<inter> V = {}" and hcover: "U \<union> V = X"
-    using hncn unfolding top1_connected_on_def using hT by (by100 blast)
+    by (by100 blast)
   obtain a where ha: "a \<in> U" using hUne by (by100 blast)
   obtain b where hb: "b \<in> V" using hVne by (by100 blast)
   have haX: "a \<in> X" and hbX: "b \<in> X" using ha hb hcover by (by100 blast)+
@@ -5298,13 +5796,22 @@ proof (rule ccontr)
         by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF hT_UV hlpc ha_UV])
       thus ?thesis unfolding Rest_def by simp
     qed
-    obtain W where "W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
-        and "Rest = (?U \<inter> ?V) \<inter> W"
-      using hRest_open_UV hRest_sub unfolding subspace_topology_def by (by100 blast)
-    obtain W0 where "W0 \<in> top1_S2_topology" and hW0: "W = (?U \<inter> ?V) \<inter> W0"
-      using \<open>W \<in> _\<close> unfolding subspace_topology_def by (by100 blast)
+    obtain W0 where hW0: "W0 \<in> top1_S2_topology" "Rest = (?U \<inter> ?V) \<inter> W0"
+    proof -
+      have "Rest \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
+        using hRest_open_UV by (by100 simp)
+      then obtain W' where hW': "W' \<in> top1_S2_topology" "Rest = (?U \<inter> ?V) \<inter> W'"
+      proof -
+        assume h: "\<And>W'. \<lbrakk>W' \<in> top1_S2_topology; Rest = (?U \<inter> ?V) \<inter> W'\<rbrakk> \<Longrightarrow> thesis"
+        from \<open>Rest \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)\<close>
+        obtain W where "W \<in> top1_S2_topology" "Rest = (?U \<inter> ?V) \<inter> W"
+          unfolding subspace_topology_def by blast
+        thus thesis by (rule h)
+      qed
+      show ?thesis by (rule that[OF hW'])
+    qed
     have "Rest = (?U \<inter> ?V) \<inter> W0"
-      using \<open>Rest = (?U \<inter> ?V) \<inter> W\<close> hW0 hRest_sub by (by100 blast)
+      using hW0 hRest_sub by (by100 blast)
     have "(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology"
       by (rule topology_inter_open[OF hTS2 hUV_open \<open>W0 \<in> top1_S2_topology\<close>])
     have "Rest = ?X \<inter> ((?U \<inter> ?V) \<inter> W0)"
@@ -11149,4 +11656,57 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
