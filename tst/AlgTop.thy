@@ -7712,8 +7712,34 @@ proof -
   proof -
     \<comment> \<open>Short arc \<cong> [0,1] via g(t) = (cos(\<theta>-\<epsilon>+2\<epsilon>t), sin(\<theta>-\<epsilon>+2\<epsilon>t)).\<close>
     define g where "g = (\<lambda>t::real. (cos (\<theta>-\<epsilon>+2*\<epsilon>*t), sin (\<theta>-\<epsilon>+2*\<epsilon>*t)))"
-    have hg_img: "g ` I_set = ?short_arc" sorry
-    have hg_inj: "inj_on g I_set" sorry
+    have hg_img: "g ` I_set = ?short_arc"
+    proof (intro set_eqI iffI)
+      fix p assume "p \<in> g ` I_set"
+      then obtain t where ht: "t \<in> I_set" "p = g t" by (by100 blast)
+      have "p = (cos (\<theta>-\<epsilon>+2*\<epsilon>*t), sin (\<theta>-\<epsilon>+2*\<epsilon>*t))" using ht(2) unfolding g_def by simp
+      moreover have "\<theta>-\<epsilon>+2*\<epsilon>*t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}" using ht(1) h\<epsilon>(1)
+        unfolding top1_unit_interval_def by auto
+      ultimately show "p \<in> ?short_arc" by (by100 force)
+    next
+      fix p assume "p \<in> ?short_arc"
+      then obtain s where hs: "s \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}" "p = (cos s, sin s)" by (by100 blast)
+      define t where "t = (s - (\<theta>-\<epsilon>)) / (2*\<epsilon>)"
+      have "t \<in> I_set" unfolding t_def top1_unit_interval_def using hs(1) h\<epsilon>(1) by auto
+      moreover have "g t = p" unfolding g_def t_def using h\<epsilon>(1) hs(2) by (simp add: field_simps)
+      ultimately show "p \<in> g ` I_set" by (by100 blast)
+    qed
+    have hg_inj: "inj_on g I_set"
+    proof (rule inj_onI)
+      fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "g s = g t"
+      have "cos (\<theta>-\<epsilon>+2*\<epsilon>*s) = cos (\<theta>-\<epsilon>+2*\<epsilon>*t)"
+        using heq unfolding g_def by simp
+      moreover have "sin (\<theta>-\<epsilon>+2*\<epsilon>*s) = sin (\<theta>-\<epsilon>+2*\<epsilon>*t)"
+        using heq unfolding g_def by simp
+      \<comment> \<open>cos a = cos b \<and> sin a = sin b \<Rightarrow> a - b = 2k\<pi>. Since |a-b| < 2\<pi> (both in range 2\<epsilon> < 2\<pi>), k=0.\<close>
+      ultimately have "\<theta>-\<epsilon>+2*\<epsilon>*s = \<theta>-\<epsilon>+2*\<epsilon>*t"
+        sorry \<comment> \<open>sin_cos_eq: cos a = cos b \<and> sin a = sin b \<Rightarrow> \<exists>k. a - b = 2k\<pi>. Range: |a-b| \<le> 2\<epsilon> < 2\<pi>.\<close>
+      thus "s = t" using h\<epsilon>(1) by simp
+    qed
     have hg_cont: "continuous_on I_set g" unfolding g_def by (intro continuous_intros)
     have hfg_cont: "top1_continuous_map_on I_set I_top C1
         (subspace_topology top1_S2 top1_S2_topology C1) (f \<circ> g)"
@@ -7805,8 +7831,55 @@ proof -
   proof -
     \<comment> \<open>Long arc \<cong> [0,1] via g'(t) = (cos(\<theta>+\<epsilon>+(2\<pi>-2\<epsilon>)t), sin(\<theta>+\<epsilon>+(2\<pi>-2\<epsilon>)t)).\<close>
     define g' where "g' = (\<lambda>t::real. (cos (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t), sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)))"
-    have hg'_img: "g' ` I_set = ?long_arc" sorry
-    have hg'_inj: "inj_on g' I_set" sorry
+    have hg'_img: "g' ` I_set = ?long_arc"
+    proof (intro set_eqI iffI)
+      fix p assume "p \<in> g' ` I_set"
+      then obtain t where ht: "t \<in> I_set" "p = g' t" by (by100 blast)
+      have "p = (cos (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t), sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t))"
+        using ht(2) unfolding g'_def by simp
+      moreover have "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}"
+      proof -
+        have "t \<ge> 0" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by auto
+        have "2*pi - 2*\<epsilon> \<ge> 0" using h\<epsilon>(2) pi_gt_zero by linarith
+        have "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t \<ge> \<theta>+\<epsilon>"
+          using \<open>t \<ge> 0\<close> \<open>2*pi-2*\<epsilon> \<ge> 0\<close> by (simp add: mult_nonneg_nonneg)
+        moreover have "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t \<le> \<theta>-\<epsilon>+2*pi"
+        proof -
+          have "(2*pi-2*\<epsilon>)*t \<le> (2*pi-2*\<epsilon>)*1"
+            using \<open>t \<le> 1\<close> \<open>2*pi-2*\<epsilon> \<ge> 0\<close> by (rule mult_left_mono)
+          hence "(2*pi-2*\<epsilon>)*t \<le> 2*pi-2*\<epsilon>" by simp
+          thus ?thesis by linarith
+        qed
+        ultimately show ?thesis by simp
+      qed
+      ultimately show "p \<in> ?long_arc"
+        unfolding mem_Collect_eq by (by100 blast)
+    next
+      fix p assume "p \<in> ?long_arc"
+      then obtain s where hs: "s \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}" "p = (cos s, sin s)" by (by100 blast)
+      define t where "t = (s - (\<theta>+\<epsilon>)) / (2*pi-2*\<epsilon>)"
+      have "t \<in> I_set" unfolding t_def top1_unit_interval_def using hs(1) h\<epsilon> pi_gt_zero by (auto simp: field_simps)
+      moreover have "g' t = p"
+      proof -
+        have "2*pi - 2*\<epsilon> \<noteq> 0" using h\<epsilon>(2) pi_gt_zero by linarith
+        hence "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*((s-(\<theta>+\<epsilon>))/(2*pi-2*\<epsilon>)) = s" by (simp add: field_simps)
+        thus ?thesis unfolding g'_def t_def using hs(2) by simp
+      qed
+      ultimately show "p \<in> g' ` I_set" by (by100 blast)
+    qed
+    have hg'_inj: "inj_on g' I_set"
+    proof (rule inj_onI)
+      fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "g' s = g' t"
+      have "cos (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s) = cos (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)"
+        using heq unfolding g'_def by simp
+      moreover have "sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s) = sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)"
+        using heq unfolding g'_def by simp
+      ultimately have "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s = \<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t"
+        sorry \<comment> \<open>Same trig argument: |a-b| \<le> 2\<pi>-2\<epsilon> < 2\<pi>.\<close>
+      hence "(2*pi-2*\<epsilon>)*s = (2*pi-2*\<epsilon>)*t" by linarith
+      moreover have "2*pi-2*\<epsilon> \<noteq> (0::real)" using h\<epsilon>(2) pi_gt_zero by linarith
+      ultimately show "s = t" by simp
+    qed
     have hg'_cont: "continuous_on I_set g'" unfolding g'_def by (intro continuous_intros)
     have hfg'_cont: "top1_continuous_map_on I_set I_top C2
         (subspace_topology top1_S2 top1_S2_topology C2) (f \<circ> g')"
