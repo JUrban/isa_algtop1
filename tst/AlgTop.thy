@@ -19071,6 +19071,30 @@ proof -
     by blast
 qed
 
+\<comment> \<open>Helper for 63.5: 3+ open components of S^2-(C1\<union>C2) give a contradiction.
+   This encapsulates the 63.1(a)+(c) + \<pi>_1\<cong>Z argument.\<close>
+lemma three_components_contradiction:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "closedin_on top1_S2 top1_S2_topology C1"
+  and "closedin_on top1_S2 top1_S2_topology C2"
+  and "top1_connected_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+  and "top1_connected_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+  and "card (C1 \<inter> C2) = 2"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology C1"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology C2"
+  \<comment> \<open>Three disjoint nonempty open (in S^2) subsets covering S^2-(C1\<union>C2).\<close>
+  and "W1 \<in> top1_S2_topology" and "W2 \<in> top1_S2_topology" and "B \<in> top1_S2_topology"
+  and "W1 \<noteq> {}" and "W2 \<noteq> {}" and "B \<noteq> {}"
+  and "W1 \<inter> W2 = {}" and "W1 \<inter> B = {}" and "W2 \<inter> B = {}"
+  and "W1 \<union> W2 \<union> B = top1_S2 - (C1 \<union> C2)"
+  shows False
+  sorry \<comment> \<open>Same argument as hR_conn in 63.5: set up 63.1 framework with X = S^2-{p,q},
+     U = S^2-C1, V = S^2-C2. Two decompositions of U\<inter>V = S^2-(C1\<union>C2):
+     (1) A1 = W1\<union>W2, B1 = B. (2) A2 = W1, B2 = W2\<union>B.
+     Get [f] nontrivial from 63.1(a), [g] nontrivial from 63.1(a).
+     By \<pi>_1\<cong>Z: [f]^m \<simeq> [g]^k or [(g\<inverse>)^k] for m>0.
+     By 63.1(c) or 63.1(c)_reverse: m=0. Contradiction.\<close>
+
 (** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into exactly two components. **)
 theorem Theorem_63_5_two_closed_connected:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
@@ -19593,10 +19617,33 @@ proof -
         "W1b \<in> subspace_topology top1_S2 top1_S2_topology W1"
         "W1a \<noteq> {}" "W1b \<noteq> {}" "W1a \<inter> W1b = {}" "W1a \<union> W1b = W1"
       using \<open>\<not> top1_connected_on W1 _\<close> hTW1 unfolding top1_connected_on_def by blast
-    \<comment> \<open>Now {W1a, W1b, R} are 3 disjoint nonempty open sets covering S^2-(C1\<union>C2).
-       Same 63.1(a)+(c) argument gives contradiction. By symmetry with hR_conn proof.\<close>
-    thus False sorry \<comment> \<open>Exact same structure as hR_conn proof: pick points in the 3 sets,
-       get paths via hU_pc/hV_pc, apply 63.1(a) twice and 63.1(c), contradiction with \<pi>_1\<cong>Z.\<close>
+    \<comment> \<open>W1a, W1b are open in S^2 (open in open set = open).\<close>
+    have hW1a_open_S2: "W1a \<in> top1_S2_topology"
+    proof -
+      obtain V where hV: "V \<in> top1_S2_topology" "W1a = W1 \<inter> V"
+        using hWab(1) unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis using topology_inter_open[OF hTS2 hW1_open_S2 hV(1)] by (by100 blast)
+    qed
+    have hW1b_open_S2: "W1b \<in> top1_S2_topology"
+    proof -
+      obtain V where hV: "V \<in> top1_S2_topology" "W1b = W1 \<inter> V"
+        using hWab(2) unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis using topology_inter_open[OF hTS2 hW1_open_S2 hV(1)] by (by100 blast)
+    qed
+    have hR_open_S2: "R \<in> top1_S2_topology"
+    proof -
+      obtain V where "V \<in> top1_S2_topology" "R = (top1_S2 - (C1 \<union> C2)) \<inter> V"
+        using hW1R(2) unfolding subspace_topology_def by (by100 blast)
+      hence "R = V \<inter> (top1_S2 - (C1 \<union> C2))" by (by100 blast)
+      thus ?thesis using topology_inter_open[OF hTS2 \<open>V \<in> _\<close> hopen] by simp
+    qed
+    have h3_disj: "W1a \<inter> W1b = {}" "W1a \<inter> R = {}" "W1b \<inter> R = {}"
+      using hWab(5,6) hW1R(5) by (by100 blast)+
+    have h3_cover: "W1a \<union> W1b \<union> R = top1_S2 - (C1 \<union> C2)"
+      using hWab(6) hW1R(6) by (by100 blast)
+    have hR_ne: "R \<noteq> {}" by (rule hW1R(4))
+    show False by (rule three_components_contradiction[OF assms(1-8)
+        hW1a_open_S2 hW1b_open_S2 hR_open_S2 hWab(3,4) hR_ne h3_disj h3_cover])
   qed
   show ?thesis
   proof (intro exI conjI)
