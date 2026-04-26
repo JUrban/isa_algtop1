@@ -15812,8 +15812,42 @@ proof -
   next
     assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
        and h2: "top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
-    \<comment> \<open>Same as case 1 but with gen\<inverse> instead of gen.\<close>
-    show ?thesis sorry \<comment> \<open>Same structure as case 1, using gen\<inverse>.\<close>
+    \<comment> \<open>Same as case 1 but with gen\<inverse>. [f^n2] \<simeq> (gen\<inverse>^n1)^n2 \<simeq> gen\<inverse>^{n1*n2} \<simeq> (gen\<inverse>^n2)^n1 \<simeq> [g^n1].\<close>
+    define gen' where "gen' = top1_path_reverse gen"
+    have hgen'_loop: "top1_is_loop_on X TX a gen'"
+      unfolding gen'_def by (rule top1_path_reverse_is_loop[OF hgen])
+    have hgen'n1: "top1_is_path_on X TX a a (top1_path_power gen' a n1)"
+      by (rule top1_path_power_is_path[OF assms(1) hgen'_loop])
+    have hgen'n2: "top1_is_path_on X TX a a (top1_path_power gen' a n2)"
+      by (rule top1_path_power_is_path[OF assms(1) hgen'_loop])
+    have hfn2: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power (top1_path_power gen' a n1) a n2)"
+      using path_homotopic_path_power[OF assms(1) h1[folded gen'_def] hf_path hgen'n1] by simp
+    have hgn1: "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+        (top1_path_power (top1_path_power gen' a n2) a n1)"
+      using path_homotopic_path_power[OF assms(1) h2[folded gen'_def] hg_path hgen'n2] by simp
+    have hmult1: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen' a n1) a n2) (top1_path_power gen' a (n1 * n2))"
+      by (rule path_power_mult[OF assms(1) hgen'_loop])
+    have hmult2: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen' a n2) a n1) (top1_path_power gen' a (n2 * n1))"
+      by (rule path_power_mult[OF assms(1) hgen'_loop])
+    have hfn2_eq: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power gen' a (n1 * n2))"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2 hmult1])
+    have hgn1_eq: "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+        (top1_path_power gen' a (n1 * n2))"
+    proof -
+      have "top1_path_homotopic_on X TX a a (top1_path_power g a n1)
+          (top1_path_power gen' a (n2 * n1))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hgn1 hmult2])
+      moreover have "n2 * n1 = n1 * n2" by (rule mult.commute)
+      ultimately show ?thesis by simp
+    qed
+    have "top1_path_homotopic_on X TX a a (top1_path_power f a n2) (top1_path_power g a n1)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2_eq
+          Lemma_51_1_path_homotopic_sym[OF hgn1_eq]])
+    thus ?thesis using hn2_pos by (intro exI[of _ n2] exI[of _ n1]) (by100 blast)
   qed
 qed
 
