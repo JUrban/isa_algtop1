@@ -15720,8 +15720,10 @@ lemma infinite_cyclic_common_power:
               (\<exists>n::nat. top1_path_homotopic_on X TX a a h (top1_path_power gen a n) \<or>
                top1_path_homotopic_on X TX a a h (top1_path_power (top1_path_reverse gen) a n)))"
   shows "\<exists>m k. m > 0 \<and>
-      top1_path_homotopic_on X TX a a
-        (top1_path_power f a m) (top1_path_power g a k)"
+      (top1_path_homotopic_on X TX a a
+        (top1_path_power f a m) (top1_path_power g a k) \<or>
+       top1_path_homotopic_on X TX a a
+        (top1_path_power f a m) (top1_path_power (top1_path_reverse g) a k))"
 proof -
   obtain gen where hgen: "top1_is_loop_on X TX a gen"
       and hgen_generates: "\<forall>h. top1_is_loop_on X TX a h \<longrightarrow>
@@ -15799,16 +15801,102 @@ proof -
       by (rule Lemma_51_1_path_homotopic_sym[OF hgn1_eq])
     have "top1_path_homotopic_on X TX a a (top1_path_power f a n2) (top1_path_power g a n1)"
       by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2_eq hgn1_sym])
-    thus ?thesis using hn2_pos by (intro exI[of _ n2] exI[of _ n1]) (by100 blast)
+    thus ?thesis using hn2_pos by (intro exI[of _ n2] exI[of _ n1]) blast
   next
-    \<comment> \<open>Other sign combinations: similar but need path_reverse handling.\<close>
+    \<comment> \<open>Case 2: [f] = gen^n1, [g] = (gen\<inverse>)^n2. Then [f^n2] = gen^{n1*n2} = [(g\<inverse>)^n1].\<close>
     assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n1)"
        and h2: "top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
-    show ?thesis sorry \<comment> \<open>Need integer power handling for opposite signs.\<close>
+    \<comment> \<open>g\<inverse> \<simeq> gen^n2 (reverse of (gen\<inverse>)^n2). Use path_reverse of g.\<close>
+    have hfn2: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power (top1_path_power gen a n1) a n2)"
+      by (rule path_homotopic_path_power[OF assms(1) h1 hf_path hgenn1])
+    have hmult1: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen a n1) a n2) (top1_path_power gen a (n1 * n2))"
+      by (rule path_power_mult[OF assms(1) hgen])
+    have hfn2_eq: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power gen a (n1 * n2))"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2 hmult1])
+    \<comment> \<open>g\<inverse> \<simeq> gen^n2. Path power of g\<inverse>: (g\<inverse>)^n1 \<simeq> (gen^n2)^n1 \<simeq> gen^{n2*n1}.\<close>
+    define g' where "g' = top1_path_reverse g"
+    have hg'_loop: "top1_is_loop_on X TX a g'"
+      unfolding g'_def by (rule top1_path_reverse_is_loop[OF assms(3)])
+    have hg'_path: "top1_is_path_on X TX a a g'"
+      using hg'_loop unfolding top1_is_loop_on_def by simp
+    \<comment> \<open>g \<simeq> (gen\<inverse>)^n2, so g\<inverse> \<simeq> ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2.
+       But proving ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2 is complex. Use sorry.\<close>
+    have hg'_gen: "top1_path_homotopic_on X TX a a g' (top1_path_power gen a n2)"
+      sorry \<comment> \<open>Reverse distributes: ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2.\<close>
+    have hg'n1: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+        (top1_path_power (top1_path_power gen a n2) a n1)"
+      by (rule path_homotopic_path_power[OF assms(1) hg'_gen hg'_path hgenn2])
+    have hmult2: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen a n2) a n1) (top1_path_power gen a (n2 * n1))"
+      by (rule path_power_mult[OF assms(1) hgen])
+    have hg'n1_eq: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+        (top1_path_power gen a (n1 * n2))"
+    proof -
+      have "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+          (top1_path_power gen a (n2 * n1))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hg'n1 hmult2])
+      moreover have "n2 * n1 = n1 * n2" by (rule mult.commute)
+      ultimately show ?thesis by simp
+    qed
+    have "top1_path_homotopic_on X TX a a (top1_path_power f a n2) (top1_path_power g' a n1)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2_eq
+          Lemma_51_1_path_homotopic_sym[OF hg'n1_eq]])
+    thus ?thesis using hn2_pos unfolding g'_def
+      by (intro exI[of _ n2] exI[of _ n1]) blast
   next
+    \<comment> \<open>Case 3: [f] = (gen\<inverse>)^n1, [g] = gen^n2. Symmetric to case 2.\<close>
     assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
        and h2: "top1_path_homotopic_on X TX a a g (top1_path_power gen a n2)"
-    show ?thesis sorry \<comment> \<open>Need integer power handling for opposite signs.\<close>
+    \<comment> \<open>[f^n2] \<simeq> ((gen\<inverse>)^n1)^n2 \<simeq> (gen\<inverse>)^{n1*n2}. [g^n1] \<simeq> gen^{n2*n1}.
+       So [f^n2] \<simeq> (gen\<inverse>)^{n1*n2} and [(g\<inverse>)^n1] \<simeq> (gen\<inverse>)^{n2*n1}.
+       Thus [f^n2] \<simeq> [(g\<inverse>)^n1].\<close>
+    define gen' where "gen' = top1_path_reverse gen"
+    have hgen'_loop: "top1_is_loop_on X TX a gen'"
+      unfolding gen'_def by (rule top1_path_reverse_is_loop[OF hgen])
+    have hgen'n1: "top1_is_path_on X TX a a (top1_path_power gen' a n1)"
+      by (rule top1_path_power_is_path[OF assms(1) hgen'_loop])
+    have hfn2: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power (top1_path_power gen' a n1) a n2)"
+      using path_homotopic_path_power[OF assms(1) h1[folded gen'_def] hf_path hgen'n1] by simp
+    have hmult1: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen' a n1) a n2) (top1_path_power gen' a (n1 * n2))"
+      by (rule path_power_mult[OF assms(1) hgen'_loop])
+    have hfn2_eq: "top1_path_homotopic_on X TX a a (top1_path_power f a n2)
+        (top1_path_power gen' a (n1 * n2))"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2 hmult1])
+    \<comment> \<open>g\<inverse> \<simeq> (gen)^{-n2} = (gen\<inverse>)^n2 = gen'^n2.\<close>
+    define g' where "g' = top1_path_reverse g"
+    have hg'_loop: "top1_is_loop_on X TX a g'"
+      unfolding g'_def by (rule top1_path_reverse_is_loop[OF assms(3)])
+    have hg'_path: "top1_is_path_on X TX a a g'"
+      using hg'_loop unfolding top1_is_loop_on_def by simp
+    have hg'_gen': "top1_path_homotopic_on X TX a a g' (top1_path_power gen' a n2)"
+      sorry \<comment> \<open>g \<simeq> gen^n2, so g\<inverse> \<simeq> (gen^n2)\<inverse> \<simeq> (gen\<inverse>)^n2 = gen'^n2.\<close>
+    have hgen'n2: "top1_is_path_on X TX a a (top1_path_power gen' a n2)"
+      by (rule top1_path_power_is_path[OF assms(1) hgen'_loop])
+    have hg'n1: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+        (top1_path_power (top1_path_power gen' a n2) a n1)"
+      by (rule path_homotopic_path_power[OF assms(1) hg'_gen' hg'_path hgen'n2])
+    have hmult2: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_power gen' a n2) a n1) (top1_path_power gen' a (n2 * n1))"
+      by (rule path_power_mult[OF assms(1) hgen'_loop])
+    have hg'n1_eq: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+        (top1_path_power gen' a (n1 * n2))"
+    proof -
+      have "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
+          (top1_path_power gen' a (n2 * n1))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hg'n1 hmult2])
+      moreover have "n2 * n1 = n1 * n2" by (rule mult.commute)
+      ultimately show ?thesis by simp
+    qed
+    have "top1_path_homotopic_on X TX a a (top1_path_power f a n2) (top1_path_power g' a n1)"
+      by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hfn2_eq
+          Lemma_51_1_path_homotopic_sym[OF hg'n1_eq]])
+    thus ?thesis using hn2_pos unfolding g'_def
+      by (intro exI[of _ n2] exI[of _ n1]) blast
   next
     assume h1: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
        and h2: "top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
@@ -19086,18 +19174,37 @@ proof -
       have "a \<in> ?X" using ha hW1_X by (by100 blast)
       thus ?thesis by (rule pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hpq_ne])
     qed
-    obtain m k where hm: "m > 0" and hmk: "top1_path_homotopic_on ?X ?TX a a
-        (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
-        (top1_path_power (top1_path_product \<gamma> \<delta>) a k)"
+    obtain m k where hm: "m > 0" and hmk:
+        "top1_path_homotopic_on ?X ?TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+          (top1_path_power (top1_path_product \<gamma> \<delta>) a k) \<or>
+         top1_path_homotopic_on ?X ?TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+          (top1_path_power (top1_path_reverse (top1_path_product \<gamma> \<delta>)) a k)"
       using infinite_cyclic_common_power[OF hTX hf_loop hg_loop
         hf_nontrivial hg_nontrivial hpi1_cyclic] by (by100 blast)
     \<comment> \<open>By 63.1(c): m must be 0. But m > 0. Contradiction!\<close>
-    \<comment> \<open>For 63.1(c), we use decomposition 1 (A1, B1) for \<alpha>*\<beta>, and a' \<in> A1 for \<gamma>*\<delta>.\<close>
+    \<comment> \<open>For 63.1(c), we use decomposition 1 (A1, B1) for \<alpha>*\<beta>, and a' \<in> A1 for \<gamma>*\<delta>.
+       In the reverse case, use \<delta>\<inverse>*\<gamma>\<inverse> instead of \<gamma>*\<delta>, with same 63.1(c).\<close>
     have ha'_A1: "a' \<in> A1" unfolding A1_def using ha' by (by100 blast)
-    have "m = 0"
-      by (rule Theorem_63_1_c_subgroups_trivial[OF hTX hU_open hV_open hX_eq
-        hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1
-        h\<alpha>_X h\<beta>_X ha'_A1 h\<gamma>_X h\<delta>_X hmk])
+    have "m = 0" using hmk
+    proof
+      assume hmk1: "top1_path_homotopic_on ?X ?TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+          (top1_path_power (top1_path_product \<gamma> \<delta>) a k)"
+      show "m = 0"
+        by (rule Theorem_63_1_c_subgroups_trivial[OF hTX hU_open hV_open hX_eq
+          hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1
+          h\<alpha>_X h\<beta>_X ha'_A1 h\<gamma>_X h\<delta>_X hmk1])
+    next
+      assume hmk2: "top1_path_homotopic_on ?X ?TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+          (top1_path_power (top1_path_reverse (top1_path_product \<gamma> \<delta>)) a k)"
+      \<comment> \<open>g\<inverse> = (\<gamma>*\<delta>)\<inverse> = \<delta>\<inverse>*\<gamma>\<inverse>: path from a to a' (reversed) in V then U.
+         Apply 63.1(c) with \<gamma>' = \<delta>\<inverse> (in V from a to a') and \<delta>' = \<gamma>\<inverse> (in U from a' to a).
+         Note: a' \<in> A1, same decomposition. Need paths in correct subspaces.\<close>
+      show "m = 0" sorry \<comment> \<open>Apply 63.1(c) with reversed \<gamma>,\<delta>. Same argument, different path direction.\<close>
+    qed
     thus False using hm by simp
   qed
   \<comment> \<open>Now construct the two connected components.\<close>
