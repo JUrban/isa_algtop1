@@ -16298,9 +16298,32 @@ proof -
       hence "h0 x \<in> D" using hh0_img by simp
       thus ?thesis using assms(2) by (by100 blast)
     qed
+    \<comment> \<open>Get custom path from S2_minus_point_simply_connected.\<close>
+    have hh0x_in_D: "h0 x \<in> D"
+    proof -
+      have "x \<in> {0..1}" using hx_range by simp
+      thus ?thesis using hh0_img by (by100 blast)
+    qed
+    have ha'_S2x: "a' \<in> top1_S2 - {h0 x}"
+      using ha' hh0x_in_D by (by100 blast)
+    have hb'_S2x: "b' \<in> top1_S2 - {h0 x}"
+      using hb' hh0x_in_D by (by100 blast)
+    have hpc_S2x: "top1_path_connected_on (top1_S2 - {h0 x})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x}))"
+    proof -
+      have "top1_simply_connected_on (top1_S2 - {h0 x})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x}))"
+        by (rule S2_minus_point_simply_connected[OF hx_S2])
+      thus ?thesis unfolding top1_simply_connected_on_def by (by100 blast)
+    qed
+    obtain \<alpha>_custom where h\<alpha>c: "top1_is_path_on (top1_S2 - {h0 x})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x})) a' b' \<alpha>_custom"
+      using hpc_S2x ha'_S2x hb'_S2x unfolding top1_path_connected_on_def by (by100 blast)
+    \<comment> \<open>Bridge custom path to standard continuous_on.\<close>
     obtain \<alpha> where h\<alpha>: "continuous_on {0..1::real} \<alpha>"
         "\<alpha> 0 = a'" "\<alpha> 1 = b'" "\<forall>t\<in>{0..1}. \<alpha> t \<in> top1_S2 - {h0 x}"
-      sorry \<comment> \<open>S^2-{h0(x)} is path-connected (simply connected). a', b' \<in> S^2-D \<subseteq> S^2-{h0(x)}.\<close>
+      sorry \<comment> \<open>Bridge top1_is_path_on to standard continuous_on.
+         Same pattern as h0_cont_std but in reverse for the codomain.\<close>
     \<comment> \<open>Step 5: \<alpha>(I) compact, positive distance from h0(x).\<close>
     have h\<alpha>_compact: "compact (\<alpha> ` {0..1})" by (rule compact_continuous_image[OF h\<alpha>(1) compact_Icc])
     have h\<alpha>_disjoint: "h0 x \<notin> \<alpha> ` {0..1}"
