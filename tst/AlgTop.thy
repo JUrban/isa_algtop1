@@ -9752,10 +9752,59 @@ proof -
                  Apply simple_closed_curve_boundary_meets_component.\<close>
               \<comment> \<open>Transfer to S^2 via \<sigma>2inv.\<close>
               have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
-                sorry \<comment> \<open>\<sigma>2inv maps open W to open in S^2\{N} \<subseteq> S^2. \<sigma>2inv homeo + open map.\<close>
+              proof -
+                \<comment> \<open>\<sigma>2 continuous S^2\{N} \<rightarrow> R^2. \<sigma>2inv(W) = \<sigma>2^{-1}(W) open in S^2\{N}.\<close>
+                have h\<sigma>2_cont: "top1_continuous_map_on (top1_S2 - {north_pole})
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+                    UNIV ?TR2 \<sigma>2"
+                  using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+                have "{x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}
+                    \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+                  using h\<sigma>2_cont hW_open unfolding top1_continuous_map_on_def by (by100 blast)
+                moreover have "\<sigma>2inv ` W = {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
+                proof (intro set_eqI iffI)
+                  fix z assume "z \<in> \<sigma>2inv ` W"
+                  then obtain w where hw: "w \<in> W" "z = \<sigma>2inv w" by (by100 blast)
+                  have "z \<in> top1_S2 - {north_pole}"
+                    using h\<sigma>2inv_bij hw(2) unfolding bij_betw_def by (by100 blast)
+                  moreover have "\<sigma>2 z = w"
+                  proof -
+                    have "w \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+                      using h\<sigma>2_bij unfolding bij_betw_def by simp
+                    hence "\<sigma>2 (\<sigma>2inv w) = w" unfolding \<sigma>2inv_def by (rule f_inv_into_f)
+                    thus ?thesis using hw(2) by simp
+                  qed
+                  ultimately show "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
+                    using hw(1) by simp
+                next
+                  fix z assume "z \<in> {x \<in> top1_S2 - {north_pole}. \<sigma>2 x \<in> W}"
+                  hence hz: "z \<in> top1_S2 - {north_pole}" "\<sigma>2 z \<in> W" by simp_all
+                  have "\<sigma>2inv (\<sigma>2 z) = z"
+                    unfolding \<sigma>2inv_def
+                    by (rule inv_into_f_f[OF bij_betw_imp_inj_on[OF h\<sigma>2_bij] hz(1)])
+                  thus "z \<in> \<sigma>2inv ` W" using hz(2) by (by100 force)
+                qed
+                moreover have "top1_S2 - {north_pole} \<in> top1_S2_topology"
+                  using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff north_pole_in_S2]
+                    top1_S2_is_topology_on_strict
+                  unfolding closedin_on_def is_topology_on_strict_def is_topology_on_def
+                  by (by100 blast)
+                ultimately have "\<sigma>2inv ` W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+                  by simp
+                then obtain V_S2 where hVS2: "V_S2 \<in> top1_S2_topology"
+                    and h\<sigma>W_eq: "\<sigma>2inv ` W = (top1_S2 - {north_pole}) \<inter> V_S2"
+                  unfolding subspace_topology_def by blast
+                have hS2N_open: "(top1_S2 - {north_pole}) \<in> top1_S2_topology"
+                  using \<open>top1_S2 - {north_pole} \<in> top1_S2_topology\<close> .
+                have "(top1_S2 - {north_pole}) \<inter> V_S2 \<in> top1_S2_topology"
+                  by (rule topology_inter_open[OF
+                    is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]
+                    hS2N_open hVS2])
+                thus ?thesis using h\<sigma>W_eq by simp
+              qed
               have hx_in_\<sigma>W: "\<sigma>2inv x \<in> \<sigma>2inv ` W" using hxW by (by100 blast)
               have hx_in_C': "\<sigma>2inv x \<in> C'"
-                sorry \<comment> \<open>x \<in> C, \<sigma>2inv(C) = C'.\<close>
+                unfolding C'_def \<sigma>2inv_def using \<open>x \<in> C\<close> by (by100 blast)
               have hW12_eq: "W1_S2 \<union> W2_S2 = top1_S2 - C'"
                 using hW12_cover hC'_decomp by simp
               have "\<sigma>2inv ` W \<inter> W1_S2 \<noteq> {}"
@@ -9766,7 +9815,13 @@ proof -
                     hx_in_C' h\<sigma>2inv_W_open hx_in_\<sigma>W])
               then obtain z where hz: "z \<in> \<sigma>2inv ` W" "z \<in> W1_S2" by (by100 blast)
               have "\<sigma>2 z \<in> W"
-                sorry \<comment> \<open>\<sigma>2(\<sigma>2inv(w)) = w for w \<in> R^2. z \<in> \<sigma>2inv ` W.\<close>
+              proof -
+                obtain w where "w \<in> W" "z = \<sigma>2inv w" using hz(1) by (by100 blast)
+                have "w \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+                  using h\<sigma>2_bij unfolding bij_betw_def by simp
+                hence "\<sigma>2 (\<sigma>2inv w) = w" unfolding \<sigma>2inv_def by (rule f_inv_into_f)
+                thus ?thesis using \<open>z = \<sigma>2inv w\<close> \<open>w \<in> W\<close> by simp
+              qed
               moreover have "\<sigma>2 z \<in> U_R2" unfolding U_R2_def using hz(2) by (by100 blast)
               ultimately show "intersects W U_R2" unfolding intersects_def by (by100 blast)
             qed
@@ -13472,6 +13527,13 @@ qed
 
 
 end
+
+
+
+
+
+
+
 
 
 
