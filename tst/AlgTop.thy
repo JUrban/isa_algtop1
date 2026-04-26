@@ -3534,14 +3534,16 @@ proof -
       have hb4: "bij_betw f4 G4 top1_Z_group" using hf4' unfolding top1_group_iso_on_def by (by100 blast)
       \<comment> \<open>Compose bijections.\<close>
       \<comment> \<open>Build bij_betw for \<psi> directly.\<close>
+      \<comment> \<open>Prove \<psi> is a group iso: bij_betw + group_hom_on.\<close>
+      have h\<psi>_iso: "top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
+        sorry \<comment> \<open>\<psi> = f4 \<circ> inv(f3) \<circ> f2 \<circ> f1. Each is a group iso.
+           bij_betw: compose 4 bijections (hb1, hb2, hb3i, hb4).
+           group_hom_on: compose 4 homomorphisms (extract from hf1'-hf4').
+           Standard group theory, but by100 limits + comp normalization make it tedious.\<close>
       have h\<psi>_bij: "bij_betw \<psi> G1 top1_Z_group"
-        unfolding \<psi>_def top1_group_iso_on_def
-        sorry \<comment> \<open>bij_betw of composition of 4 bijections. Standard.\<close>
-      \<comment> \<open>Homomorphisms.\<close>
+        using h\<psi>_iso unfolding top1_group_iso_on_def by (by100 blast)
       have h\<psi>_hom: "top1_group_hom_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
-        sorry \<comment> \<open>Composition of group homomorphisms is a group homomorphism.
-           f1: hom G1\<rightarrow>G2, f2: hom G2\<rightarrow>G3, inv(f3): hom G3\<rightarrow>G4 (inverse of hom is hom
-           for bijective hom), f4: hom G4\<rightarrow>Z. Compose all 4.\<close>
+        using h\<psi>_iso unfolding top1_group_iso_on_def by (by100 blast)
       show "\<exists>f. top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul f"
         using h\<psi>_bij h\<psi>_hom unfolding G1_def M1_def top1_group_iso_on_def by (by100 blast)
     qed
