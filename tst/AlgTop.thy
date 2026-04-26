@@ -16070,13 +16070,35 @@ proof -
        h0 uniformly continuous on compact [0,1] \<Rightarrow> h0(sub-interval_n) \<subseteq> B(h0(x), \<epsilon>) for large n.
        So \<gamma> is a path from a' to b' in S^2 - D^n (since \<gamma>(I) \<inter> D^n = {}).
        But a', b' \<in> S^2 - D \<subseteq> S^2 - D^n. Contradiction with D^n separating a' from b'.\<close>
+    \<comment> \<open>Step 1: Get homeomorphism h0: [0,1] \<rightarrow> D (standard topology).\<close>
+    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top D
+        (subspace_topology top1_S2 top1_S2_topology D) h0"
+      using assms(3) unfolding top1_is_arc_on_def by (by100 blast)
+    have hh0_bij: "bij_betw h0 I_set D"
+      using hh0 unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hI01: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+      by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+    have hh0_inj: "inj_on h0 {0..1::real}"
+      using hh0_bij hI01 unfolding bij_betw_def by simp
+    have hh0_img: "h0 ` {0..1} = D"
+      using hh0_bij hI01 unfolding bij_betw_def by simp
+    have hh0_cont_std: "continuous_on {0..1::real} h0"
+      sorry \<comment> \<open>Bridge from top1_continuous_map_on to standard continuous_on.
+         Needs: for each open B in R^3, h0\<inverse>(B) \<inter> [0,1] open in [0,1].
+         This follows from the custom topology matching the standard one.\<close>
+    \<comment> \<open>Step 2: Define nested intervals by recursion.
+       At each step, the joining lemma contrapositive gives that at least one half
+       separates a' from b'. Pick that half.\<close>
+    \<comment> \<open>Step 3: Cantor intersection \<Rightarrow> unique point x.\<close>
+    \<comment> \<open>Step 4: Path \<alpha> from a' to b' in S^2-{h0(x)}.\<close>
+    \<comment> \<open>Step 5: \<alpha>(I) compact, dist(\<alpha>(I), h0(x)) > 0.\<close>
+    \<comment> \<open>Step 6: h0 uniformly continuous, h0(I_m) \<subseteq> B(h0(x), \<epsilon>) for large m.\<close>
+    \<comment> \<open>Step 7: Contradiction.\<close>
     show False
-      sorry \<comment> \<open>Bisection+compactness limit argument. Key ingredients:
-         (1) arc_split_at_midpoint + arc_joining_lemma contrapositive (iterated)
-         (2) Cantor's intersection theorem: \<Inter>_n [a_n, b_n] = {x} for nested intervals
-         (3) S2_minus_point_simply_connected \<Rightarrow> path-connected
-         (4) compact_continuous_image + dist_compact_closed for \<gamma>(I) avoids h0(x)
-         (5) uniform_continuous_on + small sub-intervals for h0(sub-interval) small\<close>
+      sorry \<comment> \<open>Full bisection limit argument. Steps 2-7 above.
+         Key tools: dependent choice, compact_Inter/Bolzano-Weierstrass,
+         S2_minus_point_simply_connected, setdist/compact_closed_dist,
+         uniformly_continuous_on_def + compact.\<close>
   qed
 qed
 
