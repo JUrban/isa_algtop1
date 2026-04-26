@@ -3260,7 +3260,41 @@ proof -
         thus "{x \<in> ?X. x \<in> W} \<in> ?TX" using \<open>W \<in> ?TX\<close> by (by100 simp)
       qed
       show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX (\<lambda>(x, t). x)"
-        sorry \<comment> \<open>Projection fst continuous from product topology. Standard, by Theorem_18_4.\<close>
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume hp: "p \<in> ?X \<times> I_set"
+        obtain x t where hxt: "p = (x, t)" "x \<in> ?X" "t \<in> I_set"
+          using hp by (by100 blast)
+        show "(case p of (x, t) \<Rightarrow> x) \<in> ?X" using hxt by (by100 simp)
+      next
+        fix W assume hW: "W \<in> ?TX"
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hI_mem: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        \<comment> \<open>{p \<in> X\<times>I. fst p \<in> W} = W \<times> I_set (since W \<subseteq> X from subspace topology).\<close>
+        have hW_sub: "W \<subseteq> ?X"
+        proof -
+          obtain W0 where "W = ?X \<inter> W0" using hW unfolding subspace_topology_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have "{p \<in> ?X \<times> I_set. (case p of (x, t) \<Rightarrow> x) \<in> W} = W \<times> I_set"
+        proof (rule set_eqI, rule iffI)
+          fix p assume hp: "p \<in> {p \<in> ?X \<times> I_set. (case p of (x, t) \<Rightarrow> x) \<in> W}"
+          obtain x t where hxt: "p = (x,t)" "x \<in> ?X" "t \<in> I_set" "(case (x,t) of (x,t) \<Rightarrow> x) \<in> W"
+            using hp by (by100 blast)
+          have "x \<in> W" using hxt(4) by (by100 simp)
+          thus "p \<in> W \<times> I_set" using hxt(1,3) by (by100 blast)
+        next
+          fix p assume hp: "p \<in> W \<times> I_set"
+          obtain x t where "p = (x,t)" "x \<in> W" "t \<in> I_set" using hp by (by100 blast)
+          hence "x \<in> ?X" using hW_sub by (by100 blast)
+          show "p \<in> {p \<in> ?X \<times> I_set. (case p of (x, t) \<Rightarrow> x) \<in> W}"
+            using \<open>p = (x,t)\<close> \<open>x \<in> W\<close> \<open>x \<in> ?X\<close> \<open>t \<in> I_set\<close> by (by100 simp)
+        qed
+        moreover have "W \<times> I_set \<in> product_topology_on ?TX I_top"
+          by (rule product_rect_open[OF hW hI_mem])
+        ultimately show "{p \<in> ?X \<times> I_set. (case p of (x, t) \<Rightarrow> x) \<in> W} \<in> product_topology_on ?TX I_top"
+          by (by100 simp)
+      qed
       show "\<forall>x\<in>?X. (case (x, 0::real) of (x, t) \<Rightarrow> x) = (inv_into ?X h \<circ> h) x"
       proof
         fix x assume hx: "x \<in> ?X"
