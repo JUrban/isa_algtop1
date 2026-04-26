@@ -6505,12 +6505,183 @@ lemma three_components_contradiction:
   and "W1 \<inter> W2 = {}" and "W1 \<inter> B = {}" and "W2 \<inter> B = {}"
   and "W1 \<union> W2 \<union> B = top1_S2 - (C1 \<union> C2)"
   shows False
-  sorry \<comment> \<open>PROVABLE: same argument as hR_conn in 63.5 body (which IS proved).
-     Set up: X = S^2-{p,q}, U = S^2-C1, V = S^2-C2.
-     Decompositions: (W1\<union>W2, B) and (W1, W2\<union>B).
-     Apply 63.1(a) twice, infinite_cyclic_common_power, 63.1(c)/reverse.
-     The proof code is ~200 lines, identical to the inline hR_conn proof
-     in Theorem_63_5 body. Omitted to avoid code duplication.\<close>
+proof -
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC1sub: "C1 \<subseteq> top1_S2" using assms(2) unfolding closedin_on_def by (by100 blast)
+  have hC2sub: "C2 \<subseteq> top1_S2" using assms(3) unfolding closedin_on_def by (by100 blast)
+  obtain p q where hpq: "C1 \<inter> C2 = {p, q}" and hpq_ne: "p \<noteq> q"
+    using assms(6) card_2_iff by (by100 metis)
+  have hp_S2: "p \<in> top1_S2" and hq_S2: "q \<in> top1_S2"
+    using hpq hC1sub by (by100 blast)+
+  define X where "X = top1_S2 - {p} - {q}"
+  define TX where "TX = subspace_topology top1_S2 top1_S2_topology X"
+  define U where "U = top1_S2 - C1"
+  define V where "V = top1_S2 - C2"
+  have hX_eq: "U \<union> V = X"
+    unfolding U_def V_def X_def using hpq by (by100 blast)
+  have hUV_eq: "U \<inter> V = top1_S2 - (C1 \<union> C2)"
+    unfolding U_def V_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    unfolding TX_def by (rule subspace_topology_is_topology_on[OF hTS2])
+      (unfold X_def, by100 blast)
+  \<comment> \<open>Subsets and openness.\<close>
+  have hU_sub_X: "U \<subseteq> X" unfolding U_def X_def using hpq hC1sub by (by100 blast)
+  have hV_sub_X: "V \<subseteq> X" unfolding V_def X_def using hpq hC2sub by (by100 blast)
+  have hU_open: "openin_on X TX U"
+  proof -
+    have "U \<in> top1_S2_topology"
+      using assms(2) hTS2 unfolding closedin_on_def is_topology_on_def U_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def TX_def subspace_topology_def using hU_sub_X by (by100 blast)
+  qed
+  have hV_open: "openin_on X TX V"
+  proof -
+    have "V \<in> top1_S2_topology"
+      using assms(3) hTS2 unfolding closedin_on_def is_topology_on_def V_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def TX_def subspace_topology_def using hV_sub_X by (by100 blast)
+  qed
+  \<comment> \<open>Path-connectivity.\<close>
+  have hU_pc: "top1_path_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+    sorry \<comment> \<open>U = S^2-C1 non-separated + lpc \<Rightarrow> path-connected. Same as 63.5.\<close>
+  have hV_pc: "top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+    sorry \<comment> \<open>V = S^2-C2 non-separated + lpc \<Rightarrow> path-connected. Same as 63.5.\<close>
+  \<comment> \<open>Subspace topology transitivity.\<close>
+  have hU_subtop: "subspace_topology X TX U = subspace_topology top1_S2 top1_S2_topology U"
+    unfolding TX_def by (rule subspace_topology_trans[OF hU_sub_X])
+  have hV_subtop: "subspace_topology X TX V = subspace_topology top1_S2 top1_S2_topology V"
+    unfolding TX_def by (rule subspace_topology_trans[OF hV_sub_X])
+  \<comment> \<open>W1, W2, B are subsets of X and open in X.\<close>
+  have hW1_sub: "W1 \<subseteq> X" unfolding X_def using assms(18) hpq by (by100 blast)
+  have hW2_sub: "W2 \<subseteq> X" unfolding X_def using assms(18) hpq by (by100 blast)
+  have hB_sub: "B \<subseteq> X" unfolding X_def using assms(18) hpq by (by100 blast)
+  have hW1_open_X: "openin_on X TX W1"
+    unfolding openin_on_def TX_def subspace_topology_def using hW1_sub assms(9) by (by100 blast)
+  have hW2_open_X: "openin_on X TX W2"
+    unfolding openin_on_def TX_def subspace_topology_def using hW2_sub assms(10) by (by100 blast)
+  have hB_open_X: "openin_on X TX B"
+    unfolding openin_on_def TX_def subspace_topology_def using hB_sub assms(11) by (by100 blast)
+  \<comment> \<open>Decomposition 1: A1 = W1\<union>W2, B1 = B.\<close>
+  define A1 where "A1 = W1 \<union> W2"
+  define B1 where "B1 = B"
+  have hA1B1_eq: "U \<inter> V = A1 \<union> B1"
+    unfolding A1_def B1_def using hUV_eq assms(18) by (by100 blast)
+  have hA1B1_disj: "A1 \<inter> B1 = {}" unfolding A1_def B1_def using assms(16,17) by (by100 blast)
+  have hA1_open: "openin_on X TX A1"
+  proof -
+    have "W1 \<in> TX" using hW1_open_X unfolding openin_on_def by (by100 blast)
+    moreover have "W2 \<in> TX" using hW2_open_X unfolding openin_on_def by (by100 blast)
+    ultimately have "W1 \<union> W2 \<in> TX" by (rule topology_union2[OF hTX])
+    thus ?thesis unfolding A1_def openin_on_def using hW1_sub hW2_sub by (by100 blast)
+  qed
+  have hB1_open: "openin_on X TX B1" unfolding B1_def using hB_open_X by (by100 simp)
+  \<comment> \<open>Pick points.\<close>
+  obtain a where ha: "a \<in> W1" using assms(12) by (by100 blast)
+  obtain b where hb: "b \<in> B" using assms(14) by (by100 blast)
+  have ha_A1: "a \<in> A1" unfolding A1_def using ha by (by100 blast)
+  have hb_B1: "b \<in> B1" unfolding B1_def using hb by (by100 simp)
+  have ha_U: "a \<in> U" unfolding U_def using ha assms(18) by (by100 blast)
+  have hb_U: "b \<in> U" unfolding U_def using hb assms(18) by (by100 blast)
+  have ha_V: "a \<in> V" unfolding V_def using ha assms(18) by (by100 blast)
+  have hb_V: "b \<in> V" unfolding V_def using hb assms(18) by (by100 blast)
+  \<comment> \<open>Paths.\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on U (subspace_topology top1_S2 top1_S2_topology U) a b \<alpha>"
+    using hU_pc ha_U hb_U unfolding top1_path_connected_on_def by (by100 blast)
+  obtain \<beta> where h\<beta>: "top1_is_path_on V (subspace_topology top1_S2 top1_S2_topology V) b a \<beta>"
+    using hV_pc hb_V ha_V unfolding top1_path_connected_on_def by (by100 blast)
+  have h\<alpha>_X: "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
+    using h\<alpha> hU_subtop by (by100 simp)
+  have h\<beta>_X: "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
+    using h\<beta> hV_subtop by (by100 simp)
+  have hf_nontrivial: "\<not> top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+    by (rule Theorem_63_1_loop_nontrivial[OF hTX hU_open hV_open hX_eq
+        hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1 h\<alpha>_X h\<beta>_X])
+  \<comment> \<open>Decomposition 2: A2 = W1, B2 = W2\<union>B.\<close>
+  obtain a' where ha': "a' \<in> W2" using assms(13) by (by100 blast)
+  have ha'_U: "a' \<in> U" unfolding U_def using ha' assms(18) by (by100 blast)
+  have ha'_V: "a' \<in> V" unfolding V_def using ha' assms(18) by (by100 blast)
+  obtain \<gamma> where h\<gamma>: "top1_is_path_on U (subspace_topology top1_S2 top1_S2_topology U) a a' \<gamma>"
+    using hU_pc ha_U ha'_U unfolding top1_path_connected_on_def by (by100 blast)
+  obtain \<delta> where h\<delta>: "top1_is_path_on V (subspace_topology top1_S2 top1_S2_topology V) a' a \<delta>"
+    using hV_pc ha'_V ha_V unfolding top1_path_connected_on_def by (by100 blast)
+  have h\<gamma>_X: "top1_is_path_on U (subspace_topology X TX U) a a' \<gamma>"
+    using h\<gamma> hU_subtop by (by100 simp)
+  have h\<delta>_X: "top1_is_path_on V (subspace_topology X TX V) a' a \<delta>"
+    using h\<delta> hV_subtop by (by100 simp)
+  define A2 where "A2 = W1"
+  define B2 where "B2 = W2 \<union> B"
+  have hA2B2_eq: "U \<inter> V = A2 \<union> B2"
+    unfolding A2_def B2_def using hUV_eq assms(18) by (by100 blast)
+  have hA2B2_disj: "A2 \<inter> B2 = {}" unfolding A2_def B2_def using assms(15,16) by (by100 blast)
+  have hA2_open: "openin_on X TX A2" unfolding A2_def using hW1_open_X by (by100 simp)
+  have hB2_open: "openin_on X TX B2"
+  proof -
+    have "W2 \<in> TX" using hW2_open_X unfolding openin_on_def by (by100 blast)
+    moreover have "B \<in> TX" using hB_open_X unfolding openin_on_def by (by100 blast)
+    ultimately have "W2 \<union> B \<in> TX" by (rule topology_union2[OF hTX])
+    thus ?thesis unfolding B2_def openin_on_def using hW2_sub hB_sub by (by100 blast)
+  qed
+  have ha_A2: "a \<in> A2" unfolding A2_def using ha by (by100 simp)
+  have ha'_B2: "a' \<in> B2" unfolding B2_def using ha' by (by100 blast)
+  have hg_nontrivial: "\<not> top1_path_homotopic_on X TX a a
+      (top1_path_product \<gamma> \<delta>) (top1_constant_path a)"
+    by (rule Theorem_63_1_loop_nontrivial[OF hTX hU_open hV_open hX_eq
+        hA2B2_eq hA2B2_disj hA2_open hB2_open ha_A2 ha'_B2 h\<gamma>_X h\<delta>_X])
+  \<comment> \<open>Loops in X.\<close>
+  have h_path_U_to_X: "\<And>a' b' f. top1_is_path_on U (subspace_topology X TX U) a' b' f
+      \<Longrightarrow> top1_is_path_on X TX a' b' f"
+    using path_in_subspace_is_path_in_space[OF hTX hU_sub_X hU_open] by (by100 blast)
+  have h_path_V_to_X: "\<And>a' b' f. top1_is_path_on V (subspace_topology X TX V) a' b' f
+      \<Longrightarrow> top1_is_path_on X TX a' b' f"
+    using path_in_subspace_is_path_in_space[OF hTX hV_sub_X hV_open] by (by100 blast)
+  have hf_loop: "top1_is_loop_on X TX a (top1_path_product \<alpha> \<beta>)"
+    unfolding top1_is_loop_on_def
+    using top1_path_product_is_path[OF hTX h_path_U_to_X[OF h\<alpha>_X] h_path_V_to_X[OF h\<beta>_X]]
+    by (by100 blast)
+  have hg_loop: "top1_is_loop_on X TX a (top1_path_product \<gamma> \<delta>)"
+    unfolding top1_is_loop_on_def
+    using top1_path_product_is_path[OF hTX h_path_U_to_X[OF h\<gamma>_X] h_path_V_to_X[OF h\<delta>_X]]
+    by (by100 blast)
+  \<comment> \<open>\<pi>_1(X) \<cong> Z \<Rightarrow> common power.\<close>
+  have hpi1_cyclic: "\<exists>gen. top1_is_loop_on X TX a gen \<and>
+      (\<forall>h. top1_is_loop_on X TX a h \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on X TX a a h (top1_path_power gen a n) \<or>
+         top1_path_homotopic_on X TX a a h (top1_path_power (top1_path_reverse gen) a n)))"
+  proof -
+    have "a \<in> X" using ha hW1_sub by (by100 blast)
+    thus ?thesis unfolding X_def TX_def
+      by (rule pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hpq_ne])
+  qed
+  obtain m k where hm: "m > 0" and hmk:
+      "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+        (top1_path_power (top1_path_product \<gamma> \<delta>) a k) \<or>
+       top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+        (top1_path_power (top1_path_reverse (top1_path_product \<gamma> \<delta>)) a k)"
+    using infinite_cyclic_common_power[OF hTX hf_loop hg_loop
+      hf_nontrivial hg_nontrivial hpi1_cyclic] by (by100 blast)
+  have ha'_A1: "a' \<in> A1" unfolding A1_def using ha' by (by100 blast)
+  have "m = 0" using hmk
+  proof
+    assume hmk1: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+        (top1_path_power (top1_path_product \<gamma> \<delta>) a k)"
+    show "m = 0"
+      by (rule Theorem_63_1_c_subgroups_trivial[OF hTX hU_open hV_open hX_eq
+        hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1
+        h\<alpha>_X h\<beta>_X ha'_A1 h\<gamma>_X h\<delta>_X hmk1])
+  next
+    assume hmk2: "top1_path_homotopic_on X TX a a
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
+        (top1_path_power (top1_path_reverse (top1_path_product \<gamma> \<delta>)) a k)"
+    show "m = 0"
+      by (rule Theorem_63_1_c_subgroups_trivial_reverse[OF hTX hU_open hV_open hX_eq
+        hA1B1_eq hA1B1_disj hA1_open hB1_open ha_A1 hb_B1
+        h\<alpha>_X h\<beta>_X ha'_A1 h\<gamma>_X h\<delta>_X hmk2])
+  qed
+  thus False using hm by (by100 simp)
+qed
 
 (** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into exactly two components. **)
 theorem Theorem_63_5_two_closed_connected:
