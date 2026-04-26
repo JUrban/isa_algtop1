@@ -3080,12 +3080,21 @@ proof -
   have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
     sorry \<comment> \<open>Homeomorphism is a homotopy equivalence (with inverse as homotopy inverse).\<close>
   have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF
+        is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
+  have hTR2_0: "is_topology_on R2_0 TR2_0"
+    unfolding TR2_0_def R2_0_def
+    by (rule subspace_topology_is_topology_on[OF
+        product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+          simplified]]) (by100 simp)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX a)
       (top1_fundamental_group_mul ?X ?TX a)
       (top1_fundamental_group_carrier R2_0 TR2_0 (h a))
       (top1_fundamental_group_mul R2_0 TR2_0 (h a))"
-    sorry \<comment> \<open>By Theorem_58_7 with the homotopy equivalence h.\<close>
+    using Theorem_58_7[OF hTX hTR2_0 hh_htpeq ha_X] by (by100 blast)
   \<comment> \<open>Step 7: Chain with Theorem_58_2 (R^2-{0} \<cong> S^1) and Theorem_54_5 (\<pi>_1(S^1) \<cong> Z).
      This gives \<pi>_1(X, a) \<cong> Z.\<close>
   \<comment> \<open>Step 8: Extract generator from Z-isomorphism.\<close>
