@@ -8300,7 +8300,23 @@ proof -
     proof -
       \<comment> \<open>W2_S2 \<noteq> {N}: if W2_S2 = {N}, then {N} is open in S^2 (it's a component,
          hence open since S^2 is locally connected). But singletons aren't open in S^2.\<close>
-      have "W2_S2 \<noteq> {north_pole}" sorry \<comment> \<open>Component of S^2 minus closed set can't be singleton.\<close>
+      have "W2_S2 \<noteq> {north_pole}"
+      proof
+        assume heq: "W2_S2 = {north_pole}"
+        \<comment> \<open>W2_S2 is open in S^2 (component of open set in locally connected S^2).\<close>
+        have hC12'_closed: "closedin_on top1_S2 top1_S2_topology (C1' \<union> C2')"
+          using hC1'_closed hC2'_closed unfolding closedin_on_def
+          sorry \<comment> \<open>Union of two closed sets is closed.\<close>
+        have "top1_S2 - (C1' \<union> C2') \<in> top1_S2_topology"
+          using hC12'_closed
+          unfolding closedin_on_def
+          sorry \<comment> \<open>Complement of closed set is open.\<close>
+        \<comment> \<open>W2_S2 \<subseteq> S^2-(C1'\<union>C2') and it's a component, hence open in S^2.\<close>
+        have "W2_S2 \<in> top1_S2_topology"
+          sorry \<comment> \<open>Component of open set is open (S^2 locally connected).\<close>
+        hence "{north_pole} \<in> top1_S2_topology" using heq by simp
+        thus False using singleton_not_open_in_S2[OF north_pole_in_S2] by simp
+      qed
       hence "\<exists>x. x \<in> W2_S2 \<and> x \<noteq> north_pole" using hW2_ne hN_in_W2 by (by100 blast)
       then obtain x where "x \<in> W2_S2" "x \<noteq> north_pole" by (by100 blast)
       hence "x \<in> W2_S2 - {north_pole}" by (by100 blast)
@@ -12018,6 +12034,7 @@ qed
 
 
 end
+
 
 
 
