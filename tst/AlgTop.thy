@@ -14875,13 +14875,180 @@ proof (rule ccontr)
   hence hTE: "is_topology_on E TE" and hcov: "top1_covering_map_on E TE X TX p0"
     by auto
   \<comment> \<open>Step 2: f^m lifts from e0 = (a,0) to (a, 2*(int m)) in E.\<close>
+  \<comment> \<open>First construct the base f-lift (sheet 0): from (a,0) to (a,2).\<close>
+  define ftilde_0 :: "real \<Rightarrow> ('a \<times> int)" where
+    "ftilde_0 = (\<lambda>s. if s \<le> 1/2
+      then (alpha (2*s), 0)
+      else (let y = beta (2*s - 1) in
+            if y \<in> A then (y, 2)
+            else if y \<in> B then (y, 0)
+            else (y, 1)))"
+  have hft0_path: "top1_is_path_on E TE e0 (a, 2) ftilde_0"
+    sorry \<comment> \<open>Same as the f-lift in Theorem_63_1_loop_nontrivial.\<close>
+  have hft0_proj: "\<forall>s\<in>I_set. p0 (ftilde_0 s) = top1_path_product alpha beta s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    show "p0 (ftilde_0 s) = top1_path_product alpha beta s"
+    proof (cases "s \<le> 1/2")
+      case True
+      thus ?thesis unfolding ftilde_0_def p0_def top1_path_product_def by simp
+    next
+      case False
+      define y where "y = beta (2*s - 1)"
+      have "ftilde_0 s = (if y \<in> A then (y, 2) else if y \<in> B then (y, 0) else (y, 1))"
+        unfolding ftilde_0_def y_def using False by (simp add: Let_def)
+      hence "p0 (ftilde_0 s) = y"
+        unfolding p0_def by (cases "y \<in> A"; cases "y \<in> B"; simp)
+      thus ?thesis unfolding y_def top1_path_product_def using False by simp
+    qed
+  qed
+  \<comment> \<open>Deck transformation: T(x,m) = (x, m+2). Shifts sheets by 1.\<close>
+  define T :: "'a \<times> int \<Rightarrow> 'a \<times> int" where "T = (\<lambda>(x,m). (x, m + 2))"
+  have hT_E: "\<And>e. e \<in> E \<Longrightarrow> T e \<in> E" unfolding T_def E_def by auto
+  have hT_p0: "\<And>e. p0 (T e) = p0 e" unfolding T_def p0_def by auto
+  have hT_cont: "top1_continuous_map_on E TE E TE T"
+    sorry \<comment> \<open>T is continuous: for W \<in> TE, T^{-1}(W) = {(x,m-2) | (x,m) \<in> W} \<in> TE.
+       The slice conditions shift: even slice n of T^{-1}(W) = even slice n+1 of W,
+       odd slice n of T^{-1}(W) = odd slice n+1 of W.\<close>
+  \<comment> \<open>T^n maps e0=(a,0) to (a, 2*int n).\<close>
+  have hT_iter: "\<And>n::nat. (T ^^ n) e0 = (a, 2 * int n)"
+  proof -
+    fix n :: nat show "(T ^^ n) e0 = (a, 2 * int n)"
+    proof (induction n)
+      case 0 thus ?case unfolding e0_def by simp
+    next
+      case (Suc n) thus ?case unfolding T_def by simp
+    qed
+  qed
+  \<comment> \<open>By induction: f^m lifts from e0 to (a, 2*int m).\<close>
   have hfm_lift: "\<exists>ftilde_m. top1_is_path_on E TE e0 (a, 2 * int m) ftilde_m \<and>
       (\<forall>s\<in>I_set. p0 (ftilde_m s) = top1_path_power (top1_path_product alpha beta) a m s)"
-    sorry \<comment> \<open>By induction on m:
-       Base: m=0, constant path at e0, projects to constant.
-       Step: f^{m+1} = f * f^m. Lift of f from (a,2m) to (a,2(m+1)),
-       concatenated with lift of f^m from (a,0) to (a,2m).
-       Uses deck transformation T(x,k) = (x,k+2) or explicit shifted lift.\<close>
+  proof (induction m)
+    case 0
+    have "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
+      by (rule top1_constant_path_is_path[OF hTE he0_E])
+    moreover have "e0 = (a, 2 * int 0)" unfolding e0_def by simp
+    moreover have "\<forall>s\<in>I_set. p0 (top1_constant_path e0 s) = top1_path_power (top1_path_product alpha beta) a 0 s"
+    proof
+      fix s assume "s \<in> I_set"
+      have lhs: "p0 (top1_constant_path e0 s) = a"
+        unfolding top1_constant_path_def using hp0e0 by simp
+      have rhs: "top1_path_power (top1_path_product alpha beta) a 0 s = a"
+        by (simp add: top1_constant_path_def)
+      show "p0 (top1_constant_path e0 s) = top1_path_power (top1_path_product alpha beta) a 0 s"
+        using lhs rhs by simp
+    qed
+    ultimately show ?case by (intro exI[of _ "top1_constant_path e0"]) auto
+  next
+    case (Suc m)
+    obtain ftm where hftm: "top1_is_path_on E TE e0 (a, 2 * int m) ftm"
+        and hftm_proj: "\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s"
+      using Suc by (by100 blast)
+    \<comment> \<open>T \<circ> ftm: path from T(e0)=(a,2) to T((a,2m))=(a,2m+2), projects to f^m.\<close>
+    define Tftm where "Tftm = T \<circ> ftm"
+    have hTftm_path: "top1_is_path_on E TE (a, 2) (a, 2 * int m + 2) Tftm"
+      unfolding top1_is_path_on_def top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume hs: "s \<in> I_set"
+      have "ftm s \<in> E" using hftm hs unfolding top1_is_path_on_def top1_continuous_map_on_def
+        by (by100 blast)
+      thus "Tftm s \<in> E" unfolding Tftm_def comp_def using hT_E by (by100 blast)
+    next
+      fix W assume hW: "W \<in> TE"
+      have hTinvW: "{e \<in> E. T e \<in> W} \<in> TE"
+        using hT_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+      have "{s \<in> I_set. Tftm s \<in> W} = {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}"
+      proof (rule set_eqI, rule iffI)
+        fix s assume "s \<in> {s \<in> I_set. Tftm s \<in> W}"
+        hence hs: "s \<in> I_set" and hTW: "Tftm s \<in> W" by auto
+        have "ftm s \<in> E" using hftm hs unfolding top1_is_path_on_def top1_continuous_map_on_def
+          by (by100 blast)
+        moreover have "T (ftm s) \<in> W" using hTW unfolding Tftm_def comp_def by simp
+        ultimately show "s \<in> {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}" using hs by (by100 blast)
+      next
+        fix s assume "s \<in> {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}"
+        thus "s \<in> {s \<in> I_set. Tftm s \<in> W}" unfolding Tftm_def comp_def by (by100 blast)
+      qed
+      moreover have "{s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}} \<in> I_top"
+        using hftm hTinvW unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{s \<in> I_set. Tftm s \<in> W} \<in> I_top" by simp
+    next
+      show "Tftm 0 = (a, 2)"
+      proof -
+        have "ftm 0 = e0" using hftm unfolding top1_is_path_on_def by (by100 blast)
+        thus ?thesis unfolding Tftm_def comp_def T_def e0_def by simp
+      qed
+    next
+      show "Tftm 1 = (a, 2 * int m + 2)"
+      proof -
+        have "ftm 1 = (a, 2 * int m)" using hftm unfolding top1_is_path_on_def by (by100 blast)
+        thus ?thesis unfolding Tftm_def comp_def T_def by simp
+      qed
+    qed
+    have hTftm_proj: "\<forall>s\<in>I_set. p0 (Tftm s) = top1_path_power (top1_path_product alpha beta) a m s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "p0 (Tftm s) = p0 (T (ftm s))" unfolding Tftm_def comp_def by simp
+      also have "... = p0 (ftm s)" using hT_p0 by simp
+      also have "... = top1_path_power (top1_path_product alpha beta) a m s"
+        using hftm_proj hs by (by100 blast)
+      finally show "p0 (Tftm s) = top1_path_power (top1_path_product alpha beta) a m s" .
+    qed
+    \<comment> \<open>Concatenate: ftilde_0 * (T \<circ> ftm) from e0 to (a, 2*(m+1)).\<close>
+    define ftSm where "ftSm = top1_path_product ftilde_0 Tftm"
+    have hftSm_path: "top1_is_path_on E TE e0 (a, 2 * int m + 2) ftSm"
+    proof -
+      have "top1_is_path_on E TE (a, 0) (a, 2 * int m + 2) ftSm"
+        unfolding ftSm_def
+        by (rule top1_path_product_is_path[OF hTE])
+           (use hft0_path hTftm_path e0_def in auto)
+      thus ?thesis unfolding e0_def by simp
+    qed
+    have h_int_eq: "(2::int) * int m + 2 = 2 + 2 * int m" by linarith
+    have hftSm_end: "top1_is_path_on E TE e0 (a, 2 * int (Suc m)) ftSm"
+      using hftSm_path by (simp add: h_int_eq algebra_simps)
+    have hftSm_proj: "\<forall>s\<in>I_set. p0 (ftSm s) = top1_path_power (top1_path_product alpha beta) a (Suc m) s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      show "p0 (ftSm s) = top1_path_power (top1_path_product alpha beta) a (Suc m) s"
+      proof (cases "s \<le> 1/2")
+        case True
+        have "ftSm s = ftilde_0 (2*s)" unfolding ftSm_def top1_path_product_def using True by simp
+        have "2*s \<in> I_set" using hs True unfolding top1_unit_interval_def by auto
+        hence "p0 (ftilde_0 (2*s)) = top1_path_product alpha beta (2*s)"
+          using hft0_proj by (by100 blast)
+        moreover have "top1_path_power (top1_path_product alpha beta) a (Suc m) s
+            = (top1_path_product alpha beta) (2*s)"
+        proof -
+          have "top1_path_power (top1_path_product alpha beta) a (Suc m) s
+              = top1_path_product (top1_path_product alpha beta)
+                  (top1_path_power (top1_path_product alpha beta) a m) s" by simp
+          also have "... = (top1_path_product alpha beta) (2*s)"
+            unfolding top1_path_product_def using True by simp
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis using \<open>ftSm s = ftilde_0 (2*s)\<close> unfolding p0_def by simp
+      next
+        case False
+        have "ftSm s = Tftm (2*s - 1)" unfolding ftSm_def top1_path_product_def using False by simp
+        have "2*s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by auto
+        hence "p0 (Tftm (2*s - 1)) = top1_path_power (top1_path_product alpha beta) a m (2*s - 1)"
+          using hTftm_proj by (by100 blast)
+        moreover have "top1_path_power (top1_path_product alpha beta) a (Suc m) s
+            = top1_path_power (top1_path_product alpha beta) a m (2*s - 1)"
+        proof -
+          have "top1_path_power (top1_path_product alpha beta) a (Suc m) s
+              = top1_path_product (top1_path_product alpha beta)
+                  (top1_path_power (top1_path_product alpha beta) a m) s" by simp
+          also have "... = top1_path_power (top1_path_product alpha beta) a m (2*s - 1)"
+            unfolding top1_path_product_def using False by simp
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis using \<open>ftSm s = Tftm (2*s - 1)\<close> unfolding p0_def by simp
+      qed
+    qed
+    show ?case by (intro exI[of _ ftSm]) (use hftSm_end hftSm_proj in blast)
+  qed
   \<comment> \<open>Step 3: g^k lifts to a loop at e0 = (a,0) in E.\<close>
   \<comment> \<open>First get the single g-lift from helix_g_lift_is_loop.\<close>
   have hg1_lift: "\<exists>gt. top1_is_path_on E TE e0 e0 gt \<and>
