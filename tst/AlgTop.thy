@@ -15974,8 +15974,33 @@ proof -
       define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
       have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
       have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
-        sorry \<comment> \<open>\<phi>(s,t)=(1-s,t) continuous: standard analysis fact. Components s\<mapsto>1-s and
-           t\<mapsto>t are both continuous, so by Theorem_18_4, \<phi> is continuous.\<close>
+      proof -
+        \<comment> \<open>\<phi> = swap \<circ> t-flip \<circ> swap, where swap(s,t)=(t,s) and t-flip(s,t)=(s,1-t).\<close>
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        define swap :: "real \<times> real \<Rightarrow> real \<times> real" where "swap = (\<lambda>(s,t). (t,s))"
+        define tflip :: "real \<times> real \<Rightarrow> real \<times> real" where "tflip = (\<lambda>(s,t). (s, 1-t))"
+        have h\<phi>_eq: "\<phi> = swap \<circ> tflip \<circ> swap"
+          unfolding \<phi>_def swap_def tflip_def comp_def by (rule ext) auto
+        have htf_raw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (fst p, 1 - snd p))"
+          by (rule flip_t_continuous_product[OF hTI])
+        have htf_eq: "tflip = (\<lambda>p. (fst p, 1 - snd p))" unfolding tflip_def by (rule ext) auto
+        have htf: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) tflip"
+          using htf_raw htf_eq by simp
+        have hsw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) swap"
+          sorry \<comment> \<open>Coordinate swap is continuous (symmetric product topology).\<close>
+        have h1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) (tflip \<circ> swap)"
+          by (rule top1_continuous_map_on_comp[OF hsw htf])
+        have h2: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) (swap \<circ> (tflip \<circ> swap))"
+          by (rule top1_continuous_map_on_comp[OF h1 hsw])
+        have "swap \<circ> (tflip \<circ> swap) = swap \<circ> tflip \<circ> swap"
+          unfolding comp_def by auto
+        thus ?thesis using h2 h\<phi>_eq unfolding II_topology_def by simp
+      qed
       show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
     qed
     show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
