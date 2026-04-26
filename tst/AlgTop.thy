@@ -16262,9 +16262,72 @@ proof -
               thus ?thesis using assms(2) by (by100 blast)
             qed
             have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1"
-              sorry \<comment> \<open>h0`{lo..mid} compact (cont. image of compact) → closed in Hausdorff S².\<close>
+            proof -
+              have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+              have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+              have "{lo..?mid} \<subseteq> {0..1}" using \<open>0 \<le> lo\<close> hmid_range \<open>hi \<le> 1\<close> by auto
+              have "continuous_on {lo..?mid} h0"
+                by (rule continuous_on_subset[OF hh0_cont_std \<open>{lo..?mid} \<subseteq> {0..1}\<close>])
+              have "compact {lo..?mid}" by (rule compact_Icc)
+              hence "compact (h0 ` {lo..?mid})"
+                by (rule compact_continuous_image[OF \<open>continuous_on {lo..?mid} h0\<close>])
+              hence "closed (h0 ` {lo..?mid})" by (rule compact_imp_closed)
+              \<comment> \<open>closed in R^3 + subset of S^2 → closedin_on S^2.\<close>
+              show ?thesis unfolding closedin_on_def
+              proof (intro conjI)
+                show "?D1 \<subseteq> top1_S2" by (rule hD1_sub)
+                show "top1_S2 - ?D1 \<in> top1_S2_topology"
+                proof -
+                  have "open (- h0 ` {lo..?mid})" using \<open>closed (h0 ` {lo..?mid})\<close>
+                    by (rule open_Compl)
+                  have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                    unfolding top1_S2_topology_def
+                    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+                  have "- h0 ` {lo..?mid} \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                    using \<open>open (- h0 ` {lo..?mid})\<close> unfolding top1_open_sets_def by simp
+                  have "top1_S2 \<inter> (- h0 ` {lo..?mid}) \<in> top1_S2_topology"
+                    using \<open>- h0 ` {lo..?mid} \<in> top1_open_sets\<close> hR3eq
+                    unfolding subspace_topology_def by (by100 blast)
+                  moreover have "top1_S2 - ?D1 = top1_S2 \<inter> (- h0 ` {lo..?mid})" by (by100 blast)
+                  ultimately show ?thesis by simp
+                qed
+              qed
+            qed
             have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2"
-              sorry \<comment> \<open>Same for h0`{mid..hi}.\<close>
+            proof -
+              have "0 \<le> lo" using spec[OF hseq_range, of n] hlh by simp
+              have "hi \<le> 1" using spec[OF hseq_range, of n] hlh by simp
+              have "{?mid..hi} \<subseteq> {0..1}" using \<open>0 \<le> lo\<close> hmid_range \<open>hi \<le> 1\<close> by auto
+              have "continuous_on {?mid..hi} h0"
+                by (rule continuous_on_subset[OF hh0_cont_std \<open>{?mid..hi} \<subseteq> {0..1}\<close>])
+              have "compact {?mid..hi}" by (rule compact_Icc)
+              hence "compact (h0 ` {?mid..hi})"
+                by (rule compact_continuous_image[OF \<open>continuous_on {?mid..hi} h0\<close>])
+              hence "closed (h0 ` {?mid..hi})" by (rule compact_imp_closed)
+              show ?thesis unfolding closedin_on_def
+              proof (intro conjI)
+                show "?D2 \<subseteq> top1_S2" by (rule hD2_sub)
+                show "top1_S2 - ?D2 \<in> top1_S2_topology"
+                proof -
+                  have "open (- h0 ` {?mid..hi})" using \<open>closed (h0 ` {?mid..hi})\<close>
+                    by (rule open_Compl)
+                  have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                    unfolding top1_S2_topology_def
+                    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+                  have "- h0 ` {?mid..hi} \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                    using \<open>open (- h0 ` {?mid..hi})\<close> unfolding top1_open_sets_def by simp
+                  have "top1_S2 \<inter> (- h0 ` {?mid..hi}) \<in> top1_S2_topology"
+                    using \<open>- h0 ` {?mid..hi} \<in> top1_open_sets\<close> hR3eq
+                    unfolding subspace_topology_def by (by100 blast)
+                  moreover have "top1_S2 - ?D2 = top1_S2 \<inter> (- h0 ` {?mid..hi})" by (by100 blast)
+                  ultimately show ?thesis by simp
+                qed
+              qed
+            qed
             have hD12_inter: "?D1 \<inter> ?D2 = {h0 ?mid}"
             proof (rule set_eqI, rule iffI)
               fix y assume "y \<in> ?D1 \<inter> ?D2"
