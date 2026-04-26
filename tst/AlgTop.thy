@@ -16237,12 +16237,41 @@ proof -
             \<comment> \<open>Both halves joinable. By arc_joining_lemma, full arc joinable. Contradiction.\<close>
             \<comment> \<open>Need: h0({lo..mid}) and h0({mid..hi}) are arcs, closed, intersect in {h0(mid)}.\<close>
             \<comment> \<open>a', b' \<in> S^2 - D \<subseteq> S^2 - h0({lo..hi}).\<close>
+            \<comment> \<open>Setup for arc_joining_lemma.\<close>
+            let ?D1 = "h0 ` {lo..?mid}" and ?D2 = "h0 ` {?mid..hi}"
+            have hlen_n: "hi - lo = (1/2)^n"
+              using spec[OF hseq_len, of n] hlh by simp
+            hence "lo \<le> hi" by (simp add: algebra_simps)
+            hence hmid_range: "lo \<le> ?mid" "?mid \<le> hi" by auto
+            have hD1_sub: "?D1 \<subseteq> top1_S2" using assms(2) hh0_img hmid_range hseq_range hlh
+              sorry
+            have hD2_sub: "?D2 \<subseteq> top1_S2" using assms(2) hh0_img hmid_range hseq_range hlh
+              sorry
+            have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1" sorry
+            have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2" sorry
+            have hD12_inter: "?D1 \<inter> ?D2 = {h0 ?mid}"
+              using hh0_inj hmid_range hseq_range hlh unfolding hI01 sorry
+            have hd_S2: "h0 ?mid \<in> top1_S2"
+            proof -
+              have "?mid \<in> {lo..?mid}" using hmid_range by simp
+              hence "h0 ?mid \<in> ?D1" by (by100 blast)
+              thus ?thesis using hD1_sub by (by100 blast)
+            qed
+            have hD12_union: "?D1 \<union> ?D2 = h0 ` {lo..hi}"
+              using hmid_range by (auto simp: image_Un[symmetric] ivl_disj_un_two_touch)
+            have hab'_D12: "a' \<in> top1_S2 - (?D1 \<union> ?D2)" "b' \<in> top1_S2 - (?D1 \<union> ?D2)"
+              sorry \<comment> \<open>a', b' \<in> S^2-D ⊆ S^2-h0({lo..hi}) = S^2-(D1∪D2).\<close>
             have "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..hi})
                 (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..hi})) a' b' f"
-              sorry \<comment> \<open>arc_joining_lemma with D1 = h0({lo..mid}), D2 = h0({mid..hi}).
-                 Needs: D1, D2 arcs in S^2, closed, D1 \<inter> D2 = {h0(mid)}, h0(mid) \<in> S^2.
-                 a', b' \<in> S^2 - (D1 \<union> D2). Both halves joinable (hjoinable_left, hjoinable_right).
-                 By arc_joining_lemma: joinable in S^2 - D.\<close>
+            proof -
+              have "?D1 \<union> ?D2 = h0 ` {lo..hi}"
+                using hmid_range by (auto simp: image_Un[symmetric] ivl_disj_un_two_touch)
+              have "\<exists>f. top1_is_path_on (top1_S2 - (?D1 \<union> ?D2))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2))) a' b' f"
+                by (rule arc_joining_lemma[OF assms(1) hD1_sub hD2_sub hD1_closed hD2_closed
+                    hD12_inter hd_S2 hab'_D12 hjoinable_left hjoinable_right])
+              thus ?thesis using \<open>?D1 \<union> ?D2 = h0 ` {lo..hi}\<close> by simp
+            qed
             moreover have "h0 ` {fst (seq n)..snd (seq n)} = h0 ` {lo..hi}" using hlh by simp
             ultimately show False using Suc by simp
           qed
