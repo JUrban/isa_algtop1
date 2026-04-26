@@ -8084,6 +8084,17 @@ proof -
         = subspace_topology (top1_S2 - {north_pole})
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) C2'"
       by (rule subspace_topology_trans[OF hC2'_sub_S2N, symmetric])
+    \<comment> \<open>Shared: \<sigma>2inv homeomorphism + continuity + injectivity.\<close>
+    have h\<sigma>2inv_homeo: "top1_homeomorphism_on UNIV ?TR2
+        (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
+      unfolding \<sigma>2inv_def by (rule homeomorphism_inverse[OF h\<sigma>2])
+    have h\<sigma>2inv_cont: "top1_continuous_map_on UNIV ?TR2
+        (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
+      using h\<sigma>2inv_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h\<sigma>2inv_inj_global: "inj \<sigma>2inv"
+      using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
     \<comment> \<open>C1' is an arc on S^2.\<close>
     have hC1'_arc: "top1_is_arc_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
     proof -
@@ -8093,11 +8104,6 @@ proof -
       obtain h1_arc where hh1_arc: "top1_homeomorphism_on I_set I_top C1_arc
           (subspace_topology UNIV ?TR2 C1_arc) h1_arc"
         using hC1_arc_R2 unfolding top1_is_arc_on_def by (by100 blast)
-      \<comment> \<open>\<sigma>2inv is a homeomorphism R^2 \<rightarrow> S^2\{N} (inverse of \<sigma>2).\<close>
-      have h\<sigma>2inv_homeo: "top1_homeomorphism_on UNIV ?TR2
-          (top1_S2 - {north_pole})
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
-        unfolding \<sigma>2inv_def by (rule homeomorphism_inverse[OF h\<sigma>2])
       \<comment> \<open>Compose: \<sigma>2inv \<circ> h1_arc : [0,1] \<rightarrow> C1' (in S^2 topology).\<close>
       \<comment> \<open>The composed homeomorphism lands in C1' with S^2\{N} subspace topology,\<close>
       \<comment> \<open>which equals S^2 subspace topology by hC1'_top_eq.\<close>
@@ -8122,21 +8128,14 @@ proof -
         have hh1_cont: "top1_continuous_map_on I_set I_top C1_arc
             (subspace_topology UNIV ?TR2 C1_arc) h1_arc"
           using hh1_arc unfolding top1_homeomorphism_on_def by (by100 blast)
-        have h\<sigma>2inv_cont: "top1_continuous_map_on UNIV ?TR2
-            (top1_S2 - {north_pole})
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
-          using h\<sigma>2inv_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
-        have h\<sigma>2inv_bij_full: "bij_betw \<sigma>2inv UNIV (top1_S2 - {north_pole})"
-          using h\<sigma>2inv_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
-        have h\<sigma>2inv_inj_local: "inj \<sigma>2inv"
-          using h\<sigma>2inv_bij_full unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>Use shared h\<sigma>2inv_cont, h\<sigma>2inv_inj_global from above.\<close>
         \<comment> \<open>bij_betw for composition.\<close>
         have hbij_comp: "bij_betw h_comp I_set C1'"
         proof -
           have "bij_betw \<sigma>2inv C1_arc C1'"
             unfolding C1'_def
             by (rule inj_on_imp_bij_betw[OF inj_on_subset[OF
-                  h\<sigma>2inv_inj_local[unfolded inj_on_def[symmetric]] subset_UNIV]])
+                  h\<sigma>2inv_inj_global[unfolded inj_on_def[symmetric]] subset_UNIV]])
           thus ?thesis unfolding h_comp_def
             by (rule bij_betw_trans[OF hh1_bij])
         qed
@@ -8290,8 +8289,160 @@ proof -
       obtain h2_arc where hh2_arc: "top1_homeomorphism_on I_set I_top C2_arc
           (subspace_topology UNIV ?TR2 C2_arc) h2_arc"
         using hC2_arc unfolding top1_is_arc_on_def by (by100 blast)
+      define h_comp2 where "h_comp2 = \<sigma>2inv \<circ> h2_arc"
       show ?thesis unfolding top1_is_arc_on_def
-        sorry \<comment> \<open>Same composition argument as C1'.\<close>
+      proof (intro conjI exI[of _ h_comp2])
+        show "is_topology_on_strict C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+          unfolding is_topology_on_strict_def
+        proof (intro conjI)
+          show "is_topology_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+            by (rule subspace_topology_is_topology_on[OF
+                  is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC2'_sub_S2])
+          show "subspace_topology top1_S2 top1_S2_topology C2' \<subseteq> Pow C2'"
+            unfolding subspace_topology_def by (by100 blast)
+        qed
+      next
+        have hh2_bij: "bij_betw h2_arc I_set C2_arc"
+          using hh2_arc unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hh2_cont: "top1_continuous_map_on I_set I_top C2_arc
+            (subspace_topology UNIV ?TR2 C2_arc) h2_arc"
+          using hh2_arc unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>Use shared h\<sigma>2inv_inj_global from above.\<close>
+        have hbij_comp2: "bij_betw h_comp2 I_set C2'"
+        proof -
+          have "bij_betw \<sigma>2inv C2_arc C2'"
+            unfolding C2'_def
+            by (rule inj_on_imp_bij_betw[OF inj_on_subset[OF
+                  h\<sigma>2inv_inj_global[unfolded inj_on_def[symmetric]] subset_UNIV]])
+          thus ?thesis unfolding h_comp2_def
+            by (rule bij_betw_trans[OF hh2_bij])
+        qed
+        show "top1_homeomorphism_on I_set I_top C2'
+            (subspace_topology top1_S2 top1_S2_topology C2') h_comp2"
+          unfolding top1_homeomorphism_on_def
+        proof (intro conjI)
+          show "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          show "is_topology_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+            by (rule subspace_topology_is_topology_on[OF
+                  is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC2'_sub_S2])
+          show "bij_betw h_comp2 I_set C2'" by (rule hbij_comp2)
+          \<comment> \<open>Forward continuity: same chain as C1'.\<close>
+          show "top1_continuous_map_on I_set I_top C2'
+              (subspace_topology top1_S2 top1_S2_topology C2') h_comp2"
+          proof -
+            have hh2_to_UNIV: "top1_continuous_map_on I_set I_top UNIV ?TR2 h2_arc"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> I_set" thus "h2_arc x \<in> UNIV" by simp
+            next
+              fix V :: "(real \<times> real) set" assume "V \<in> ?TR2"
+              have "\<forall>x\<in>I_set. h2_arc x \<in> C2_arc"
+                using hh2_bij unfolding bij_betw_def by (by100 blast)
+              hence "{x \<in> I_set. h2_arc x \<in> V} = {x \<in> I_set. h2_arc x \<in> C2_arc \<inter> V}"
+                by (by100 blast)
+              moreover have "C2_arc \<inter> V \<in> subspace_topology UNIV ?TR2 C2_arc"
+                using \<open>V \<in> ?TR2\<close> unfolding subspace_topology_def by (by100 blast)
+              moreover have "{x \<in> I_set. h2_arc x \<in> C2_arc \<inter> V} \<in> I_top"
+                using hh2_cont calculation(2) unfolding top1_continuous_map_on_def by (by100 blast)
+              ultimately show "{x \<in> I_set. h2_arc x \<in> V} \<in> I_top" by simp
+            qed
+            \<comment> \<open>Use shared h\<sigma>2inv_cont.\<close>
+            have hcomp2_to_S2N: "top1_continuous_map_on I_set I_top (top1_S2 - {north_pole})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+                (\<sigma>2inv \<circ> h2_arc)"
+              by (rule top1_continuous_map_on_comp[OF hh2_to_UNIV h\<sigma>2inv_cont])
+            have himg2: "(\<sigma>2inv \<circ> h2_arc) ` I_set = C2'"
+              using hbij_comp2 unfolding bij_betw_def h_comp2_def by simp
+            show ?thesis
+              using top1_continuous_map_on_codomain_shrink[OF hcomp2_to_S2N _ hC2'_sub_S2N]
+                subspace_topology_trans[OF hC2'_sub_S2N, of top1_S2 top1_S2_topology]
+                himg2 unfolding h_comp2_def by auto
+          qed
+          \<comment> \<open>Inverse continuity: same compact\<rightarrow>Hausdorff argument as C1'.\<close>
+          show "top1_continuous_map_on C2'
+              (subspace_topology top1_S2 top1_S2_topology C2') I_set I_top
+              (inv_into I_set h_comp2)"
+          proof -
+            have hTC2': "is_topology_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+              by (rule subspace_topology_is_topology_on[OF
+                is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC2'_sub_S2])
+            have hI_compact2: "top1_compact_on I_set I_top"
+            proof -
+              have "compact {0..1::real}" by (rule compact_Icc)
+              moreover have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+                by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+              ultimately have "compact I_set" by simp
+              thus ?thesis unfolding top1_unit_interval_topology_def
+                using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+            qed
+            have hC2'_haus: "is_hausdorff_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+              using conjunct2[OF conjunct2[OF Theorem_17_11]]
+                top1_S2_is_hausdorff hC2'_sub_S2 by (by100 blast)
+            show ?thesis
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix y assume "y \<in> C2'"
+              hence "y \<in> h_comp2 ` I_set"
+                using hbij_comp2 unfolding bij_betw_def by (by100 blast)
+              thus "inv_into I_set h_comp2 y \<in> I_set"
+                by (rule inv_into_into)
+            next
+              fix V :: "real set" assume hV: "V \<in> I_top"
+              have hV_sub: "V \<subseteq> I_set"
+                using hV top1_unit_interval_topology_is_topology_on
+                unfolding is_topology_on_def top1_unit_interval_topology_def
+                subspace_topology_def by (by100 blast)
+              \<comment> \<open>Closed map argument: I_set - V closed \<Rightarrow> h_comp2(I_set-V) closed \<Rightarrow> C2' - ... open.\<close>
+              have hclosed_compl: "closedin_on I_set I_top (I_set - V)"
+              proof -
+                have "I_set - V \<subseteq> I_set" by (by100 blast)
+                moreover have "I_set - (I_set - V) = V" using hV_sub by (by100 blast)
+                ultimately show ?thesis unfolding closedin_on_def using hV by simp
+              qed
+              have "closedin_on C2' (subspace_topology top1_S2 top1_S2_topology C2')
+                  (h_comp2 ` (I_set - V))"
+                by (rule compact_hausdorff_continuous_closed_map[OF hI_compact2 hC2'_haus
+                  \<open>top1_continuous_map_on I_set I_top C2' _ h_comp2\<close> hclosed_compl])
+              hence hopen: "C2' - h_comp2 ` (I_set - V)
+                  \<in> subspace_topology top1_S2 top1_S2_topology C2'"
+                unfolding closedin_on_def using hTC2' unfolding is_topology_on_def by (by100 blast)
+              have "C2' - h_comp2 ` (I_set - V) = h_comp2 ` V"
+              proof -
+                have hinj: "inj_on h_comp2 I_set" using hbij_comp2 unfolding bij_betw_def
+                  by (by100 blast)
+                have himg: "h_comp2 ` I_set = C2'" using hbij_comp2 unfolding bij_betw_def
+                  by (by100 blast)
+                have "h_comp2 ` V = h_comp2 ` (I_set - (I_set - V))"
+                  using hV_sub by (by100 force)
+                also have "\<dots> = h_comp2 ` I_set - h_comp2 ` (I_set - V)"
+                  by (rule inj_on_image_set_diff[OF hinj]) (by100 blast)+
+                finally show ?thesis using himg by simp
+              qed
+              hence "h_comp2 ` V \<in> subspace_topology top1_S2 top1_S2_topology C2'"
+                using hopen by simp
+              moreover have "{y \<in> C2'. inv_into I_set h_comp2 y \<in> V} = h_comp2 ` V"
+              proof (intro set_eqI iffI)
+                fix y assume "y \<in> {y \<in> C2'. inv_into I_set h_comp2 y \<in> V}"
+                hence "y \<in> h_comp2 ` I_set" "inv_into I_set h_comp2 y \<in> V"
+                  using hbij_comp2 unfolding bij_betw_def by simp_all
+                have "h_comp2 (inv_into I_set h_comp2 y) = y"
+                  by (rule f_inv_into_f[OF \<open>y \<in> h_comp2 ` I_set\<close>])
+                hence "y = h_comp2 (inv_into I_set h_comp2 y)" by simp
+                thus "y \<in> h_comp2 ` V" using \<open>inv_into I_set h_comp2 y \<in> V\<close> by (by100 blast)
+              next
+                fix y assume "y \<in> h_comp2 ` V"
+                then obtain x where "x \<in> V" "y = h_comp2 x" by (by100 blast)
+                thus "y \<in> {y \<in> C2'. inv_into I_set h_comp2 y \<in> V}"
+                  using hV_sub hbij_comp2
+                    inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij_comp2]]
+                  unfolding bij_betw_def by (by100 force)
+              qed
+              ultimately show "{y \<in> C2'. inv_into I_set h_comp2 y \<in> V}
+                  \<in> subspace_topology top1_S2 top1_S2_topology C2'" by simp
+            qed
+          qed
+        qed
+      qed
     qed
     \<comment> \<open>Arc \<Rightarrow> closed (compact in Hausdorff) + connected (homeomorphic to [0,1]).\<close>
     have hC1'_closed: "closedin_on top1_S2 top1_S2_topology C1'"
@@ -12368,6 +12519,14 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
 
 
 
