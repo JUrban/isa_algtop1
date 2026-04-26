@@ -16258,13 +16258,24 @@ proof -
     proof -
       have "open (- \<alpha> ` {0..1})" by (rule hcompl_open)
       moreover have "h0 x \<in> - \<alpha> ` {0..1}" by (rule hh0x_in_compl)
-      ultimately obtain U where "open U" "x \<in> U" "h0 ` (U \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}"
-        using hh0_cont_std hx_range
-        unfolding continuous_on_open_invariant
-        sorry \<comment> \<open>From continuous_on: preimage of open = relatively open.
-           h0(x) \<in> complement (open), so h0\<inverse>(complement) \<inter> [0,1] = W \<inter> [0,1] for open W.
-           x \<in> W \<inter> [0,1], so x \<in> W (open). Take U = W.\<close>
-      thus ?thesis by (by100 blast)
+      \<comment> \<open>continuous_on_open_invariant: preimage of open is relatively open.\<close>
+      obtain W where hW_open: "open W" and hW_eq: "W \<inter> {0..1} = h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1}"
+        using iffD1[OF continuous_on_open_invariant hh0_cont_std, rule_format, OF hcompl_open]
+        by auto
+      have "x \<in> W"
+      proof -
+        have "x \<in> h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1}" using hh0x_in_compl hx_range by simp
+        hence "x \<in> W \<inter> {0..1}" using hW_eq by auto
+        thus "x \<in> W" by simp
+      qed
+      have "h0 ` (W \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}"
+      proof
+        fix y assume "y \<in> h0 ` (W \<inter> {0..1})"
+        then obtain t where "t \<in> W \<inter> {0..1}" "y = h0 t" by (by100 blast)
+        hence "t \<in> h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1}" using hW_eq by auto
+        thus "y \<in> - \<alpha> ` {0..1}" using \<open>y = h0 t\<close> by simp
+      qed
+      thus ?thesis using hW_open \<open>x \<in> W\<close> by (by100 blast)
     qed
     then obtain U_nbhd where hU_open: "open U_nbhd" and hx_U: "x \<in> U_nbhd"
         and hU_avoids: "h0 ` (U_nbhd \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}" by blast
