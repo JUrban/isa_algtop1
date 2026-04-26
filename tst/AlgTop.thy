@@ -3407,11 +3407,16 @@ proof -
        composition gives the chain.\<close>
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
   show ?thesis
-    sorry \<comment> \<open>From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>([gen]) = 1.
-       For any loop f: \<phi>([f]) = n \<in> Z. If n\<ge>0: [f] = [gen^n].
-       If n<0: [f] = [(gen\<inverse>)^{|n|}].
-       Requires: group iso extraction + fundamental group \<leftrightarrow> path_power bridge.
-       This is the last piece connecting abstract algebra to path topology.\<close>
+    sorry \<comment> \<open>From hpi1_iso_Z: \<exists>\<psi> bijective homomorphism \<pi>_1(X,a) \<rightarrow> Z.
+       Let gen_class = \<psi>\<inverse>(1). Pick gen \<in> gen_class (a loop at a).
+       For any loop f: \<psi>([f]) = n. Since \<psi> is homomorphism:
+         \<psi>([gen]^n) = n\<cdot>\<psi>([gen]) = n\<cdot>1 = n (by group hom + induction).
+       Bijectivity: [f] = [gen]^n = [gen^n] (by fund. group mul = path product).
+       For n\<ge>0: f \<simeq> gen^n (same homotopy class). For n<0: f \<simeq> (gen\<inverse>)^{|n|}.
+       Proof requires: group iso extraction (\<exists>-elim), representative extraction
+       from homotopy class (Hilbert choice), n-fold group product = path_power class
+       (induction on n using top1_fundamental_group_mul_def), homotopy class membership
+       = path homotopy (by top1_loop_equiv_on_def). Each step is ~10-20 lines.\<close>
 qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
