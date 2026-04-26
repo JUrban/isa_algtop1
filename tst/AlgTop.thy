@@ -14844,6 +14844,8 @@ lemma helix_f_power_lift:
       and "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
       and "p0 = fst"
       \<comment> \<open>TE characterization: W \<in> TE iff W \<subseteq> E + slice conditions.\<close>
+      \<comment> \<open>E characterization for T_E proof.\<close>
+      and "\<And>x m. (x, m) \<in> E \<Longrightarrow> (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
       and "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
           \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                     {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
@@ -15010,7 +15012,23 @@ proof -
   \<comment> \<open>Deck transformation T and induction — same as Theorem_63_1_c.\<close>
   define T :: "'a \<times> int \<Rightarrow> 'a \<times> int" where "T = (\<lambda>(x,m). (x, m + 2))"
   have hT_E: "\<And>e. e \<in> E \<Longrightarrow> T e \<in> E"
-    sorry \<comment> \<open>T(x,m)=(x,m+2) maps E to E: preserves even/odd parity of sheet number.\<close>
+  proof -
+    fix e assume he: "e \<in> E"
+    obtain x n where hxn: "e = (x, n)" by (cases e) auto
+    have "(even n \<and> x \<in> U) \<or> (odd n \<and> x \<in> V - U)"
+      using assms(24)[of x n] he hxn by simp
+    thus "T e \<in> E"
+    proof
+      assume "even n \<and> x \<in> U"
+      hence "x \<in> U" "even (n + 2)" by auto
+      thus ?thesis using assms(19)[of x "(n+2) div 2"] hxn unfolding T_def by simp
+    next
+      assume "odd n \<and> x \<in> V - U"
+      hence "x \<in> V - U" "odd (n + 2)" by auto
+      thus ?thesis using assms(20)[of x "(n + 2 - 1) div 2"] hxn unfolding T_def
+        by (simp add: algebra_simps)
+    qed
+  qed
   have hT_p0: "\<And>e. p0 (T e) = p0 e" unfolding T_def assms(23) by auto
   have hT_cont: "top1_continuous_map_on E TE E TE T"
     unfolding top1_continuous_map_on_def
@@ -15019,7 +15037,7 @@ proof -
   next
     fix W assume hW: "W \<in> TE"
     show "{e \<in> E. T e \<in> W} \<in> TE"
-    proof (rule assms(24))
+    proof (rule assms(25))
       show "{e \<in> E. T e \<in> W} \<subseteq> E" by (by100 blast)
     next
       show "\<forall>n::int. {x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} \<in> TX"
@@ -16016,6 +16034,8 @@ proof -
       thus "(x, 2*n) \<in> E" unfolding E_def by auto
     qed
     show "p0 = fst" unfolding p0_def by simp
+    show "\<And>x m. (x, m) \<in> E \<Longrightarrow> (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
+      unfolding E_def by auto
     show "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
         \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                   {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
