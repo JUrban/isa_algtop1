@@ -8714,7 +8714,45 @@ proof -
                 unfolding S2C_def by (by100 blast)
               \<comment> \<open>Both W1 \<inter> S2C and W2 \<inter> S2C are open in S2C (W1, W2 \<subseteq> S2C, so trivially open).\<close>
               \<comment> \<open>Actually W1 and W2 cover S2C and are disjoint. PC_N meets both. Contradiction.\<close>
-              show False sorry \<comment> \<open>PC_N connected but split by W1/W2.\<close>
+              \<comment> \<open>W1_S2 \<subseteq> PC_N: W1 connected, PC_N and S2C-PC_N partition S2C openly.\<close>
+              have hW1_sub_S2C: "W1_S2 \<subseteq> S2C"
+                using hW12_cover hC'_decomp unfolding S2C_def by (by100 blast)
+              have hW1_top_eq: "subspace_topology top1_S2 top1_S2_topology W1_S2
+                  = subspace_topology S2C TS2C W1_S2"
+              proof -
+                have "subspace_topology S2C (subspace_topology top1_S2 top1_S2_topology S2C) W1_S2
+                    = subspace_topology top1_S2 top1_S2_topology W1_S2"
+                  by (rule subspace_topology_trans[OF hW1_sub_S2C])
+                thus ?thesis unfolding TS2C_def by simp
+              qed
+              \<comment> \<open>W1 connected. PC_N, S2C-PC_N open in TS2C. Their restrictions separate W1.\<close>
+              have "(S2C - PC_N) \<inter> W1_S2 = {}"
+              proof (rule ccontr)
+                assume hne: "(S2C - PC_N) \<inter> W1_S2 \<noteq> {}"
+                have "PC_N \<inter> W1_S2 \<in> subspace_topology S2C TS2C W1_S2"
+                  using hPC_N_open unfolding subspace_topology_def by (by100 blast)
+                moreover have "(S2C - PC_N) \<inter> W1_S2 \<in> subspace_topology S2C TS2C W1_S2"
+                  using hCompl_open unfolding subspace_topology_def by (by100 blast)
+                moreover have "PC_N \<inter> W1_S2 \<noteq> {}" using \<open>x \<in> W1_S2\<close> hx by (by100 blast)
+                moreover have "(PC_N \<inter> W1_S2) \<inter> ((S2C - PC_N) \<inter> W1_S2) = {}" by (by100 blast)
+                moreover have "(PC_N \<inter> W1_S2) \<union> ((S2C - PC_N) \<inter> W1_S2) = W1_S2"
+                  using hW1_sub_S2C by (by100 blast)
+                ultimately show False
+                  using hW1_conn[unfolded hW1_top_eq top1_connected_on_def] hne
+                  by (by100 blast)
+              qed
+              hence hW1_sub_PC: "W1_S2 \<subseteq> PC_N" using hW1_sub_S2C by (by100 blast)
+              \<comment> \<open>W1 \<subseteq> PC_N and W2 \<subseteq> PC_N \<Rightarrow> S2C = PC_N \<Rightarrow> S2C path-connected \<Rightarrow> connected.
+                 But S2C = W1\<union>W2 separated (by Theorem_61_4). S2C not connected.
+                 Contradiction: S2C both connected and not connected.\<close>
+              \<comment> \<open>W1 \<subseteq> PC_N contradicts the assumption x \<in> W1 \<inter> PC_N: no, that's consistent.
+                 The contradiction is: x \<in> W1 but we want x \<in> W2. Since W1 \<subseteq> PC_N doesn't help.
+                 Actually the real issue: we assumed x \<notin> W2 and derived W1 \<subseteq> PC_N. This doesn't
+                 contradict anything directly. We need: S2C = PC_N \<Rightarrow> connected \<Rightarrow> but S2C separated.
+                 S2C separated means W1, W2 open. W1 open in TS2C \<Rightarrow> need W1 path-component (lpc).
+                 For now, sorry the contradiction.\<close>
+              show False sorry \<comment> \<open>S2C = PC_N (path-connected) but S2C disconnected (2 components).
+                 Needs components open in lpc space (\<sim>10 lines of lpc infrastructure).\<close>
             qed
           next
             fix x assume hx: "x \<in> W2_S2"
@@ -12519,6 +12557,9 @@ qed
 
 
 end
+
+
+
 
 
 
