@@ -16320,10 +16320,55 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x})) a' b' \<alpha>_custom"
       using hpc_S2x ha'_S2x hb'_S2x unfolding top1_path_connected_on_def by (by100 blast)
     \<comment> \<open>Bridge custom path to standard continuous_on.\<close>
-    obtain \<alpha> where h\<alpha>: "continuous_on {0..1::real} \<alpha>"
+    \<comment> \<open>Bridge custom path to standard continuous_on. Same pattern as h0_cont_std.\<close>
+    have h\<alpha>c_cont: "top1_continuous_map_on I_set I_top (top1_S2 - {h0 x})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x})) \<alpha>_custom"
+      using h\<alpha>c unfolding top1_is_path_on_def by (by100 blast)
+    have h\<alpha>c_range: "\<forall>t\<in>I_set. \<alpha>_custom t \<in> top1_S2 - {h0 x}"
+      using h\<alpha>c_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    have h\<alpha>c_0: "\<alpha>_custom 0 = a'" using h\<alpha>c unfolding top1_is_path_on_def by (by100 blast)
+    have h\<alpha>c_1: "\<alpha>_custom 1 = b'" using h\<alpha>c unfolding top1_is_path_on_def by (by100 blast)
+    have h\<alpha>c_cont_std: "continuous_on {0..1::real} \<alpha>_custom"
+      unfolding continuous_on_open_invariant
+    proof (intro allI impI)
+      fix B :: "(real \<times> real \<times> real) set" assume "open B"
+      have "B \<in> (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using \<open>open B\<close> unfolding top1_open_sets_def by simp
+      have hR3eq: "top1_S2_topology = subspace_topology UNIV
+          (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+        unfolding top1_S2_topology_def
+        using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+              product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+      have hS2x_sub: "top1_S2 - {h0 x} \<subseteq> top1_S2" by (by100 blast)
+      have "B \<inter> (top1_S2 - {h0 x}) \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {h0 x})"
+      proof -
+        have "B \<inter> top1_S2 \<in> top1_S2_topology"
+          using \<open>B \<in> top1_open_sets\<close> hR3eq unfolding subspace_topology_def by (by100 blast)
+        moreover have "B \<inter> (top1_S2 - {h0 x}) = (top1_S2 - {h0 x}) \<inter> (B \<inter> top1_S2)"
+          by (by100 blast)
+        ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+      qed
+      hence "{s \<in> I_set. \<alpha>_custom s \<in> B \<inter> (top1_S2 - {h0 x})} \<in> I_top"
+        using h\<alpha>c_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have "{s \<in> I_set. \<alpha>_custom s \<in> B} = {s \<in> I_set. \<alpha>_custom s \<in> B \<inter> (top1_S2 - {h0 x})}"
+        using h\<alpha>c_range by (by100 blast)
+      hence "{s \<in> I_set. \<alpha>_custom s \<in> B} \<in> I_top"
+        using \<open>{s \<in> I_set. \<alpha>_custom s \<in> B \<inter> _} \<in> I_top\<close> by simp
+      then obtain W where "W \<in> (top1_open_sets :: real set set)"
+          "{s \<in> I_set. \<alpha>_custom s \<in> B} = I_set \<inter> W"
+        unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+      have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by simp
+      have "\<alpha>_custom -` B \<inter> {0..1} = {s \<in> I_set. \<alpha>_custom s \<in> B}" unfolding hI01 by (by100 blast)
+      hence "\<alpha>_custom -` B \<inter> {0..1} = I_set \<inter> W"
+        using \<open>{s \<in> I_set. \<alpha>_custom s \<in> B} = I_set \<inter> W\<close> by simp
+      hence "W \<inter> {0..1} = \<alpha>_custom -` B \<inter> {0..1}" unfolding hI01 by (by100 blast)
+      thus "\<exists>T. open T \<and> T \<inter> {0..1} = \<alpha>_custom -` B \<inter> {0..1::real}"
+        using \<open>open W\<close> by (by100 blast)
+    qed
+    define \<alpha> where "\<alpha> = \<alpha>_custom"
+    have h\<alpha>: "continuous_on {0..1::real} \<alpha>"
         "\<alpha> 0 = a'" "\<alpha> 1 = b'" "\<forall>t\<in>{0..1}. \<alpha> t \<in> top1_S2 - {h0 x}"
-      sorry \<comment> \<open>Bridge top1_is_path_on to standard continuous_on.
-         Same pattern as h0_cont_std but in reverse for the codomain.\<close>
+      unfolding \<alpha>_def using h\<alpha>c_cont_std h\<alpha>c_0 h\<alpha>c_1 h\<alpha>c_range unfolding hI01 by auto
     \<comment> \<open>Step 5: \<alpha>(I) compact, positive distance from h0(x).\<close>
     have h\<alpha>_compact: "compact (\<alpha> ` {0..1})" by (rule compact_continuous_image[OF h\<alpha>(1) compact_Icc])
     have h\<alpha>_disjoint: "h0 x \<notin> \<alpha> ` {0..1}"
