@@ -16225,9 +16225,71 @@ proof -
         thus ?thesis unfolding x_def by simp
       qed
     qed
+    have hx_ge_fst: "\<forall>n. fst (seq n) \<le> x"
+    proof
+      fix n
+      have "fst (seq n) \<in> range (\<lambda>n. fst (seq n))" by (by100 blast)
+      thus "fst (seq n) \<le> x" unfolding x_def using cSUP_upper[OF _ hbdd] by (by100 blast)
+    qed
+    have hx_le_snd: "\<forall>n. x \<le> snd (seq n)"
+    proof
+      fix n
+      have "\<forall>m. fst (seq m) \<le> snd (seq n)"
+      proof
+        fix m show "fst (seq m) \<le> snd (seq n)"
+        proof (cases "m \<le> n")
+          case True
+          have "fst (seq m) \<le> fst (seq n)"
+            by (rule lift_Suc_mono_le[of "\<lambda>k. fst (seq k)"])
+               (use hseq_nested in auto, rule True)
+          also have "... \<le> snd (seq n)" using hfst_le_snd by (by100 blast)
+          finally show ?thesis .
+        next
+          case False hence "n \<le> m" by simp
+          have "snd (seq m) \<le> snd (seq n)"
+            using \<open>n \<le> m\<close>
+          proof (induction m)
+            case 0 thus ?case by simp
+          next
+            case (Suc m)
+            show ?case
+            proof (cases "n \<le> m")
+              case True
+              have "snd (seq (Suc m)) \<le> snd (seq m)" using hseq_nested by (by100 blast)
+              also have "... \<le> snd (seq n)" using Suc True by simp
+              finally show ?thesis .
+            next
+              case False hence "n = Suc m" using Suc by simp
+              thus ?thesis by simp
+            qed
+          qed
+          have "fst (seq m) \<le> snd (seq m)" using hfst_le_snd by (by100 blast)
+          thus ?thesis using \<open>snd (seq m) \<le> snd (seq n)\<close> by linarith
+        qed
+      qed
+      thus "x \<le> snd (seq n)" unfolding x_def
+        using cSup_least[of "range (\<lambda>m. fst (seq m))"] by auto
+    qed
     have hx_limit: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
         snd (seq n) - fst (seq n) < \<epsilon>"
-      sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
+    proof (intro allI impI)
+      fix \<epsilon> :: real assume "0 < \<epsilon>"
+      obtain N where "(1/2::real)^N < \<epsilon>"
+        using real_arch_pow_inv[OF \<open>0 < \<epsilon>\<close>, of "1/2"] by auto
+      show "\<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and> snd (seq n) - fst (seq n) < \<epsilon>"
+      proof (intro exI[of _ N] allI impI)
+        fix n assume "N \<le> n"
+        show "fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and> snd (seq n) - fst (seq n) < \<epsilon>"
+        proof (intro conjI)
+          show "fst (seq n) \<le> x" using hx_ge_fst by (by100 blast)
+          show "x \<le> snd (seq n)" using hx_le_snd by (by100 blast)
+          have "snd (seq n) - fst (seq n) = (1/2)^n" using hseq_len by (by100 blast)
+          also have "... \<le> (1/2::real)^N" using \<open>N \<le> n\<close> by (rule power_decreasing) simp_all
+          also have "... < \<epsilon>" by (rule \<open>(1/2)^N < \<epsilon>\<close>)
+          finally show "snd (seq n) - fst (seq n) < \<epsilon>" .
+        qed
+      qed
+    qed
     \<comment> \<open>Step 4: Path from a' to b' in S^2-{h0(x)}.\<close>
     have hx_S2: "h0 x \<in> top1_S2"
     proof -
