@@ -8101,9 +8101,29 @@ proof -
       \<comment> \<open>Compose: \<sigma>2inv \<circ> h1_arc : [0,1] \<rightarrow> C1' (in S^2 topology).\<close>
       \<comment> \<open>The composed homeomorphism lands in C1' with S^2\{N} subspace topology,\<close>
       \<comment> \<open>which equals S^2 subspace topology by hC1'_top_eq.\<close>
+      \<comment> \<open>Define the composed map.\<close>
+      define h_comp where "h_comp = \<sigma>2inv \<circ> h1_arc"
       show ?thesis unfolding top1_is_arc_on_def
-        sorry \<comment> \<open>Compose homeomorphisms: h1_arc then \<sigma>2inv restricted to C1_arc.
-           Result: [0,1] \<cong> C1' with subspace_topology S^2 S^2_top C1'.\<close>
+      proof (intro conjI exI[of _ h_comp])
+        \<comment> \<open>is_topology_on_strict: subspace of Hausdorff is strict.\<close>
+        show "is_topology_on_strict C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+          unfolding is_topology_on_strict_def
+        proof (intro conjI)
+          show "is_topology_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+            by (rule subspace_topology_is_topology_on[OF
+                  is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC1'_sub_S2])
+          show "subspace_topology top1_S2 top1_S2_topology C1' \<subseteq> Pow C1'"
+            unfolding subspace_topology_def by (by100 blast)
+        qed
+      next
+        show "top1_homeomorphism_on I_set I_top C1'
+            (subspace_topology top1_S2 top1_S2_topology C1') h_comp"
+          sorry \<comment> \<open>\<sigma>2inv \<circ> h1_arc: compose homeomorphisms [0,1] \<rightarrow> C1_arc \<rightarrow> C1'.
+             bij_betw: compose bij_betw. continuous: compose continuous.
+             inverse continuous: compose inverse continuous.
+             Topology: sub(S^2, S^2_top, C1') = sub(S^2\{N}, sub(S^2, S^2_top, S^2\{N}), C1')
+             by subspace_topology_trans.\<close>
+      qed
     qed
     have hC2'_arc: "top1_is_arc_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
     proof -
@@ -12155,6 +12175,8 @@ qed
 
 
 end
+
+
 
 
 
