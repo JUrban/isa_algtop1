@@ -15990,7 +15990,16 @@ proof -
           using htf_raw htf_eq by simp
         have hsw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
             (I_set \<times> I_set) (product_topology_on I_top I_top) swap"
-          sorry \<comment> \<open>Coordinate swap is continuous. Standard but causes timeout with Theorem_18_4.\<close>
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> I_set \<times> I_set"
+          thus "swap p \<in> I_set \<times> I_set" unfolding swap_def by auto
+        next
+          fix W assume hW: "W \<in> product_topology_on I_top I_top"
+          \<comment> \<open>swap\<inverse>(W) = {(s,t) | (t,s) \<in> W}. For product topology this is open.\<close>
+          show "{p \<in> I_set \<times> I_set. swap p \<in> W} \<in> product_topology_on I_top I_top"
+            sorry \<comment> \<open>Preimage of open under swap is open: swap maps basis U\<times>V to V\<times>U.\<close>
+        qed
         have h1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
             (I_set \<times> I_set) (product_topology_on I_top I_top) (tflip \<circ> swap)"
           by (rule top1_continuous_map_on_comp[OF hsw htf])
