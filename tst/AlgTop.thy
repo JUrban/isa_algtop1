@@ -16178,15 +16178,24 @@ proof -
         using hcases hseq_Suc hlh hmid_range by auto
     qed
     have hseq_range: "\<forall>n. 0 \<le> fst (seq n) \<and> snd (seq n) \<le> 1"
-      sorry \<comment> \<open>Induction from hseq_0 + hseq_nested.\<close>
+    proof (rule allI)
+      fix n show "0 \<le> fst (seq n) \<and> snd (seq n) \<le> 1"
+      proof (induction n)
+        case 0 show ?case using hseq_0 by simp
+      next
+        case (Suc n)
+        have "fst (seq n) \<le> fst (seq (Suc n))" using hseq_nested by (by100 blast)
+        moreover have "snd (seq (Suc n)) \<le> snd (seq n)" using hseq_nested by (by100 blast)
+        ultimately show ?case using Suc by simp
+      qed
+    qed
     have hseq_sep: "\<forall>n. \<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq n)..snd (seq n)})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq n)..snd (seq n)}))
         a' b' f)"
       sorry \<comment> \<open>Induction: initial from hab'_sep, step from joining lemma contrapositive.\<close>
     \<comment> \<open>Step 3: Cantor intersection. Monotone bounded sequences converge.\<close>
     define x where "x = (SUP n. fst (seq n))"
-    have hx_range: "0 \<le> x \<and> x \<le> 1"
-      sorry \<comment> \<open>SUP of bounded monotone sequence in [0,1] is in [0,1].\<close>
+    have hx_range: "0 \<le> x \<and> x \<le> 1" sorry
     have hx_limit: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
         snd (seq n) - fst (seq n) < \<epsilon>"
       sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
