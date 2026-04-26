@@ -15579,8 +15579,32 @@ proof -
   define TR2_q' where "TR2_q' = subspace_topology UNIV
       (product_topology_on top1_open_sets top1_open_sets) R2_q'"
   have h\<sigma>_restrict: "top1_homeomorphism_on ?X ?TX R2_q' TR2_q' \<sigma>"
-    sorry \<comment> \<open>Restrict homeomorphism to the punctured spaces. \<sigma> maps S^2-{p} to R^2,
-       so it maps S^2-{p}-{q} to R^2-{\<sigma>(q)} = R^2-{q'} = R2_q'.\<close>
+  proof -
+    have h_step: "top1_homeomorphism_on ((top1_S2 - {p}) - {q})
+        (subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+          ((top1_S2 - {p}) - {q}))
+        ((UNIV :: (real \<times> real) set) - {\<sigma> q})
+        (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)
+          (UNIV - {\<sigma> q})) \<sigma>"
+      by (rule homeomorphism_restrict_point[OF h\<sigma> hq_in])
+    \<comment> \<open>Simplify: (S^2-{p})-{q} = S^2-{p}-{q} = ?X, subspace of subspace = subspace.\<close>
+    have hX_eq: "(top1_S2 - {p}) - {q} = ?X" by (by100 blast)
+    have hY_eq: "(UNIV :: (real \<times> real) set) - {\<sigma> q} = R2_q'" unfolding R2_q'_def q'_def by simp
+    have hTX_eq: "subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+        ((top1_S2 - {p}) - {q}) = ?TX"
+    proof -
+      have "?X \<subseteq> top1_S2 - {p}" by (by100 blast)
+      hence "subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+          ?X = subspace_topology top1_S2 top1_S2_topology ?X"
+        by (rule subspace_topology_trans)
+      moreover have "(top1_S2 - {p}) - {q} = ?X" by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
+    have hTY_eq: "subspace_topology (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (UNIV - {\<sigma> q}) = TR2_q'"
+      unfolding TR2_q'_def R2_q'_def q'_def by simp
+    show ?thesis using h_step hX_eq hY_eq hTX_eq hTY_eq by simp
+  qed
   \<comment> \<open>Step 4: Translation t(x) = x - q' gives R^2-{q'} \<cong> R^2-{0}.\<close>
   define R2_0 :: "(real \<times> real) set" where "R2_0 = UNIV - {(0, 0)}"
   define TR2_0 where "TR2_0 = subspace_topology UNIV
