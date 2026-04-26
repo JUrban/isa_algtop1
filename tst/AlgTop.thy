@@ -3507,7 +3507,7 @@ proof -
           top1_Z_group top1_Z_mul f4"
         using h54_5 unfolding top1_groups_isomorphic_on_def by (by100 blast)
       \<comment> \<open>Compose: f4 \<circ> inv(f3) \<circ> f2 \<circ> f1 : \<pi>_1(X) \<rightarrow> Z.\<close>
-      define \<psi> where "\<psi> = f4 \<circ> inv_into (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) f3 \<circ> f2 \<circ> f1"
+      define \<psi> where "\<psi> = f4 \<circ> inv_into G4 f3 \<circ> f2 \<circ> f1"
       \<comment> \<open>Show \<psi> is a group iso by composing hom + bij.\<close>
       define G1 where "G1 = top1_fundamental_group_carrier ?X ?TX a"
       define M1 where "M1 = top1_fundamental_group_mul ?X ?TX a"
@@ -3525,11 +3525,25 @@ proof -
         using hf3 unfolding G4_def M4_def G3_def M3_def .
       have hf4': "top1_group_iso_on G4 M4 top1_Z_group top1_Z_mul f4"
         using hf4 unfolding G4_def M4_def .
+      \<comment> \<open>Bijections.\<close>
+      have hb1: "bij_betw f1 G1 G2" using hf1' unfolding top1_group_iso_on_def by (by100 blast)
+      have hb2: "bij_betw f2 G2 G3" using hf2' unfolding top1_group_iso_on_def by (by100 blast)
+      have hb3: "bij_betw f3 G4 G3" using hf3' unfolding top1_group_iso_on_def by (by100 blast)
+      have hb3i: "bij_betw (inv_into G4 f3) G3 G4"
+        by (rule bij_betw_inv_into[OF hb3])
+      have hb4: "bij_betw f4 G4 top1_Z_group" using hf4' unfolding top1_group_iso_on_def by (by100 blast)
+      \<comment> \<open>Compose bijections.\<close>
+      \<comment> \<open>Build bij_betw for \<psi> directly.\<close>
+      have h\<psi>_bij: "bij_betw \<psi> G1 top1_Z_group"
+        unfolding \<psi>_def top1_group_iso_on_def
+        sorry \<comment> \<open>bij_betw of composition of 4 bijections. Standard.\<close>
+      \<comment> \<open>Homomorphisms.\<close>
+      have h\<psi>_hom: "top1_group_hom_on G1 M1 top1_Z_group top1_Z_mul \<psi>"
+        sorry \<comment> \<open>Composition of group homomorphisms is a group homomorphism.
+           f1: hom G1\<rightarrow>G2, f2: hom G2\<rightarrow>G3, inv(f3): hom G3\<rightarrow>G4 (inverse of hom is hom
+           for bijective hom), f4: hom G4\<rightarrow>Z. Compose all 4.\<close>
       show "\<exists>f. top1_group_iso_on G1 M1 top1_Z_group top1_Z_mul f"
-        unfolding G1_def M1_def
-        sorry \<comment> \<open>Compose: f1 (G1\<rightarrow>G2), f2 (G2\<rightarrow>G3), inv(f3) (G3\<rightarrow>G4), f4 (G4\<rightarrow>Z).
-           Each is a group_iso_on. Composition and inverse preserve group_iso_on.
-           Needs: group_hom_on_comp, bij_betw_comp_iff, inv_into preserves hom.\<close>
+        using h\<psi>_bij h\<psi>_hom unfolding G1_def M1_def top1_group_iso_on_def by (by100 blast)
     qed
   qed
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
