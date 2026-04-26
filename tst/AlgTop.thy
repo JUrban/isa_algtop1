@@ -14884,7 +14884,135 @@ proof (rule ccontr)
             else if y \<in> B then (y, 0)
             else (y, 1)))"
   have hft0_path: "top1_is_path_on E TE e0 (a, 2) ftilde_0"
-    sorry \<comment> \<open>Same as the f-lift in Theorem_63_1_loop_nontrivial.\<close>
+  proof -
+    define \<alpha>_lift where "\<alpha>_lift = (\<lambda>s. (alpha s, 0::int))"
+    define \<beta>_lift where "\<beta>_lift = (\<lambda>s. let y = beta s in
+      if y \<in> A then (y, 2::int) else if y \<in> B then (y, 0::int) else (y, 1::int))"
+    have hft_eq: "ftilde_0 = top1_path_product \<alpha>_lift \<beta>_lift"
+      unfolding ftilde_0_def top1_path_product_def \<alpha>_lift_def \<beta>_lift_def by (rule ext) auto
+    have h\<alpha>_lift_path: "top1_is_path_on E TE (a, 0) (b, 0) \<alpha>_lift"
+      unfolding top1_is_path_on_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top E TE \<alpha>_lift"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume "s \<in> I_set"
+        hence "alpha s \<in> U" using assms(11)
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        thus "\<alpha>_lift s \<in> E" unfolding \<alpha>_lift_def E_def by auto
+      next
+        fix W assume hW: "W \<in> TE"
+        have hslice: "{x \<in> U. (x, 0::int) \<in> W} \<in> TX"
+        proof -
+          have "\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+          hence "{x \<in> U. (x, 2*(0::int)) \<in> W} \<in> TX" by (rule spec)
+          thus ?thesis by simp
+        qed
+        have "{s \<in> I_set. \<alpha>_lift s \<in> W} = {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+        proof (rule set_eqI, rule iffI)
+          fix s assume "s \<in> {s \<in> I_set. \<alpha>_lift s \<in> W}"
+          hence hs: "s \<in> I_set" and hW': "\<alpha>_lift s \<in> W" by auto
+          have "alpha s \<in> U" using assms(11) hs
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          thus "s \<in> {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+            using hs hW' unfolding \<alpha>_lift_def by auto
+        next
+          fix s assume "s \<in> {s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+          thus "s \<in> {s \<in> I_set. \<alpha>_lift s \<in> W}" unfolding \<alpha>_lift_def by simp
+        qed
+        moreover have "{s \<in> I_set. alpha s \<in> {x \<in> U. (x, 0::int) \<in> W}} \<in> I_top"
+        proof -
+          have "{x \<in> U. (x, 0::int) \<in> W} \<in> subspace_topology X TX U"
+            unfolding subspace_topology_def using hslice by blast
+          thus ?thesis using assms(11)
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        qed
+        ultimately show "{s \<in> I_set. \<alpha>_lift s \<in> W} \<in> I_top" by simp
+      qed
+    next
+      show "\<alpha>_lift 0 = (a, 0)" unfolding \<alpha>_lift_def
+        using assms(11) unfolding top1_is_path_on_def by (by100 blast)
+    next
+      show "\<alpha>_lift 1 = (b, 0)" unfolding \<alpha>_lift_def
+        using assms(11) unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have h\<beta>_lift_path: "top1_is_path_on E TE (b, 0) (a, 2) \<beta>_lift"
+      unfolding top1_is_path_on_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top E TE \<beta>_lift"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume hs: "s \<in> I_set"
+        have "beta s \<in> V" using assms(12) hs
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        thus "\<beta>_lift s \<in> E" unfolding \<beta>_lift_def E_def Let_def
+          using assms(5) by auto
+      next
+        fix W assume hW: "W \<in> TE"
+        \<comment> \<open>V-slice at sheet 0: {x \<in> A. (x,2) \<in> W} \<union> {x \<in> B. (x,0) \<in> W} \<union> {x \<in> V-U. (x,1) \<in> W} \<in> TX.\<close>
+        have hV_slice: "{x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+            {x \<in> V - U. (x, 1::int) \<in> W} \<in> TX"
+        proof -
+          have "\<forall>n::int. {x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*n+1) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+          hence "{x \<in> A. (x, 2*(0::int)+2) \<in> W} \<union> {x \<in> B. (x, 2*(0::int)) \<in> W} \<union>
+              {x \<in> V-U. (x, 2*(0::int)+1) \<in> W} \<in> TX" by (rule spec)
+          thus ?thesis by simp
+        qed
+        \<comment> \<open>The preimage: \<beta>_lift(s) \<in> W iff beta(s) \<in> V-slice.\<close>
+        have heq: "{s \<in> I_set. \<beta>_lift s \<in> W} =
+            {s \<in> I_set. beta s \<in> ({x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+                {x \<in> V - U. (x, 1::int) \<in> W})}"
+        proof (rule set_eqI, rule iffI)
+          fix s assume "s \<in> {s \<in> I_set. \<beta>_lift s \<in> W}"
+          hence hs: "s \<in> I_set" and hW': "\<beta>_lift s \<in> W" by auto
+          have "beta s \<in> V" using assms(12) hs
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          have "beta s \<in> A \<union> B \<or> beta s \<in> V - U" using \<open>beta s \<in> V\<close> assms(5) by (by100 blast)
+          thus "s \<in> {s \<in> I_set. beta s \<in> ({x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+              {x \<in> V - U. (x, 1::int) \<in> W})}"
+            using hs hW' assms(6) unfolding \<beta>_lift_def Let_def by (auto split: if_splits)
+        next
+          fix s assume "s \<in> {s \<in> I_set. beta s \<in> ({x \<in> A. (x, 2::int) \<in> W} \<union>
+              {x \<in> B. (x, 0::int) \<in> W} \<union> {x \<in> V - U. (x, 1::int) \<in> W})}"
+          hence hs: "s \<in> I_set" and hbs: "beta s \<in> {x \<in> A. (x, 2::int) \<in> W} \<union>
+              {x \<in> B. (x, 0::int) \<in> W} \<union> {x \<in> V - U. (x, 1::int) \<in> W}" by auto
+          have "\<beta>_lift s \<in> W"
+          proof -
+            have hAsub: "A \<subseteq> U" and hBsub: "B \<subseteq> U" using assms(5) by (by100 blast)+
+            have "beta s \<in> A \<and> (beta s, 2) \<in> W \<or>
+                  beta s \<in> B \<and> (beta s, 0) \<in> W \<or>
+                  beta s \<in> V - U \<and> (beta s, 1) \<in> W" using hbs by (by100 blast)
+            thus ?thesis unfolding \<beta>_lift_def Let_def using assms(6) hAsub hBsub
+              by (auto split: if_splits)
+          qed
+          thus "s \<in> {s \<in> I_set. \<beta>_lift s \<in> W}" using hs by (by100 blast)
+        qed
+        \<comment> \<open>The V-slice is open in TX, hence in subspace topology of V.\<close>
+        have hV_sub_open: "{x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+            {x \<in> V - U. (x, 1::int) \<in> W} \<in> subspace_topology X TX V"
+        proof -
+          have hsub: "{x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+              {x \<in> V - U. (x, 1::int) \<in> W} \<subseteq> V"
+            using assms(5) by (by100 blast)
+          thus ?thesis using hV_slice unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "{s \<in> I_set. beta s \<in> ({x \<in> A. (x, 2::int) \<in> W} \<union> {x \<in> B. (x, 0::int) \<in> W} \<union>
+            {x \<in> V - U. (x, 1::int) \<in> W})} \<in> I_top"
+          using assms(12) hV_sub_open
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        thus "{s \<in> I_set. \<beta>_lift s \<in> W} \<in> I_top" using heq by simp
+      qed
+    next
+      show "\<beta>_lift 0 = (b, 0)" unfolding \<beta>_lift_def Let_def
+        using assms(12) assms(10) assms(6) unfolding top1_is_path_on_def by auto
+    next
+      show "\<beta>_lift 1 = (a, 2)" unfolding \<beta>_lift_def Let_def
+        using assms(12) assms(9) assms(6) unfolding top1_is_path_on_def by auto
+    qed
+    show ?thesis unfolding hft_eq e0_def
+      by (rule top1_path_product_is_path[OF hTE h\<alpha>_lift_path h\<beta>_lift_path])
+  qed
   have hft0_proj: "\<forall>s\<in>I_set. p0 (ftilde_0 s) = top1_path_product alpha beta s"
   proof
     fix s assume hs: "s \<in> I_set"
