@@ -16168,9 +16168,14 @@ proof -
         using spec[OF hseq_len, of n] hlh by simp
       hence "lo \<le> hi" by (simp add: algebra_simps)
       hence hmid_range: "lo \<le> (lo+hi)/2" "(lo+hi)/2 \<le> hi" by auto
-      from hpick_half_props[of lo hi] hlh
-      show "fst (seq n) \<le> fst (seq (Suc n))" sorry
-      show "snd (seq (Suc n)) \<le> snd (seq n)" sorry
+      note hph = hpick_half_props[of lo hi]
+      have hcases: "fst (pick_half (lo, hi)) = lo \<and> snd (pick_half (lo, hi)) = (lo+hi)/2 \<or>
+          fst (pick_half (lo, hi)) = (lo+hi)/2 \<and> snd (pick_half (lo, hi)) = hi"
+        using hph by (simp add: Let_def)
+      show "fst (seq n) \<le> fst (seq (Suc n))"
+        using hcases hseq_Suc hlh hmid_range by auto
+      show "snd (seq (Suc n)) \<le> snd (seq n)"
+        using hcases hseq_Suc hlh hmid_range by auto
     qed
     have hseq_range: "\<forall>n. 0 \<le> fst (seq n) \<and> snd (seq n) \<le> 1"
       sorry \<comment> \<open>Induction from hseq_0 + hseq_nested.\<close>
