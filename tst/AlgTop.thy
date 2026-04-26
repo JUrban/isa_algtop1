@@ -7551,14 +7551,11 @@ theorem Theorem_63_4_JordanCurve:
     \<and> (\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M)
     \<and> (\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M)
     \<comment> \<open>Both components have C as boundary.\<close>
-    \<and> closure U = U \<union> C
-    \<and> closure V = V \<union> C"
+    \<and> closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U = U \<union> C
+    \<and> closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V = V \<union> C"
 proof -
   let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
-  \<comment> \<open>Bridge: HOL closure = closure_on UNIV TR2 for R^2.\<close>
-  have closure_bridge: "\<And>S::((real\<times>real) set). closure S = closure_on UNIV ?TR2 S"
-    sorry \<comment> \<open>Both are the smallest closed superset of S. Standard open = TR2 open
-       (product_topology_on_open_sets_real2). Hence closed sets identical, closures equal.\<close>
+  \<comment> \<open>Boundary uses closure_on directly (no bridge needed).\<close>
   \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
      to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
   have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
@@ -7989,8 +7986,8 @@ proof -
       and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
       and hU_bdd_raw: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
       and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
-      and hU_bdy_raw: "closure U = U \<union> C"
-      and hV_bdy_raw: "closure V = V \<union> C"
+      and hU_bdy_raw: "closure_on UNIV ?TR2 U = U \<union> C"
+      and hV_bdy_raw: "closure_on UNIV ?TR2 V = V \<union> C"
   proof -
     \<comment> \<open>Step 2a: Decompose C into two arcs C1, C2 with C1 \<inter> C2 = {p, q}.\<close>
     obtain C1_arc C2_arc p_arc q_arc where
@@ -9519,7 +9516,7 @@ proof -
         using h61_1_W2 hN_in_W2 by simp
       thus ?thesis unfolding V_R2_def by (by100 blast)
     qed
-    have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
+    have hUR2_bdy: "closure_on UNIV ?TR2 U_R2 = U_R2 \<union> C"
     proof -
       \<comment> \<open>\<supseteq>: cl(U) \<supseteq> U trivially. cl(U) \<supseteq> C by textbook Step 2.\<close>
       \<comment> \<open>\<subseteq>: cl(U) \<inter> V = {} since V \<in> TR2 and closure_meets_open.\<close>
@@ -9547,9 +9544,9 @@ proof -
       qed
       have hcl_sup: "U_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 U_R2"
         sorry \<comment> \<open>U \<subseteq> cl(U) by closure_on_contains. C \<subseteq> cl(U): textbook Step 2.\<close>
-      show ?thesis using hcl_sub hcl_sup closure_bridge by (by100 blast)
+      show ?thesis using hcl_sub hcl_sup by (by100 blast)
     qed
-    have hVR2_bdy: "closure V_R2 = V_R2 \<union> C"
+    have hVR2_bdy: "closure_on UNIV ?TR2 V_R2 = V_R2 \<union> C"
     proof -
       have hcl_sub: "closure_on UNIV ?TR2 V_R2 \<subseteq> V_R2 \<union> C"
       proof -
@@ -9574,7 +9571,7 @@ proof -
       qed
       have hcl_sup: "V_R2 \<union> C \<subseteq> closure_on UNIV ?TR2 V_R2"
         sorry \<comment> \<open>V \<subseteq> cl(V) by closure_on_contains. C \<subseteq> cl(V): textbook Step 2.\<close>
-      show ?thesis using hcl_sub hcl_sup closure_bridge by (by100 blast)
+      show ?thesis using hcl_sub hcl_sup by (by100 blast)
     qed
     show ?thesis by (intro that[of U_R2 V_R2])
       (use hUR2_ne hVR2_ne hUR2VR2_disj hUR2VR2_cover hUR2_conn hVR2_conn
@@ -9866,8 +9863,8 @@ proof -
   have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" by (rule hU_bdd_raw)
   have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" by (rule hV_unbdd_raw)
   \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
-  have hU_bdy: "closure U = U \<union> C" by (rule hU_bdy_raw)
-  have hV_bdy: "closure V = V \<union> C" by (rule hV_bdy_raw)
+  have hU_bdy: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U = U \<union> C" by (rule hU_bdy_raw)
+  have hV_bdy: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V = V \<union> C" by (rule hV_bdy_raw)
   show ?thesis using hUV_ne hUV_disj hUV_cover hU_pc hV_pc hU_bdd hV_unbdd hU_bdy hV_bdy
     by blast
 qed
@@ -13206,6 +13203,8 @@ qed
 
 
 end
+
+
 
 
 
