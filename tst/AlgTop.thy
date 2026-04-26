@@ -9546,10 +9546,35 @@ proof -
       proof -
         have "U_R2 \<subseteq> closure_on UNIV ?TR2 U_R2" by (rule subset_closure_on)
         moreover have "C \<subseteq> closure_on UNIV ?TR2 U_R2"
-          sorry \<comment> \<open>C \<subseteq> cl(U): textbook Step 2 (every point of C is in closure of U).
-             For x \<in> C, every open W \<ni> x in TR2 must meet U. Proof: decompose C into arcs
-             C1 (small, in W) and C2. C2 doesn't separate S^2 \<Rightarrow> path from U to V in S^2-C2
-             \<Rightarrow> path crosses from U to V \<Rightarrow> crossing point in C1 \<subseteq> W. Hence W \<inter> U \<noteq> {}.\<close>
+        proof (rule ccontr)
+          assume hnotC: "\<not> C \<subseteq> closure_on UNIV ?TR2 U_R2"
+          \<comment> \<open>R^2 is connected.\<close>
+          have hR2_conn: "top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
+            using R2_simply_connected unfolding top1_simply_connected_on_def
+            by (intro top1_path_connected_imp_connected) (by100 blast)
+          \<comment> \<open>cl(U) closed.\<close>
+          have hcl_closed: "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 U_R2)"
+            by (rule closure_on_closed[OF hTR2]) simp
+          \<comment> \<open>If C \<inter> cl(U) = {}: cl(U) \<subseteq> U (from hcl_sub), cl(U) = U, U clopen,
+             {U, UNIV-U} separates R^2. But R^2 connected. Contradiction.\<close>
+          \<comment> \<open>If C \<inter> cl(U) \<noteq> {}: needs textbook arc decomposition (Step 2).\<close>
+          have "C \<inter> closure_on UNIV ?TR2 U_R2 = {}"
+            sorry \<comment> \<open>From C connected + textbook Step 2. Or: if C meets cl(U) and C \<not>\<subseteq> cl(U),
+               then C - cl(U) is open-in-C + nonempty, C \<inter> cl(U) closed-in-C + nonempty.
+               This gives a separation of C... but only via Lemma_23_1_proper (closure-disjointness),
+               not via both-open separation. Needs arc decomposition for the precise argument.\<close>
+          hence hcl_sub_U: "closure_on UNIV ?TR2 U_R2 \<subseteq> U_R2" using hcl_sub by (by100 blast)
+          have hU_sub_cl: "U_R2 \<subseteq> closure_on UNIV ?TR2 U_R2" by (rule subset_closure_on)
+          hence "closure_on UNIV ?TR2 U_R2 = U_R2" using hcl_sub_U by (by100 blast)
+          hence "closedin_on UNIV ?TR2 U_R2" using hcl_closed by simp
+          have "UNIV - U_R2 \<in> ?TR2"
+            using \<open>closedin_on UNIV ?TR2 U_R2\<close> unfolding closedin_on_def by (by100 blast)
+          have "\<not> top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
+            unfolding top1_connected_on_def
+            using hUR2_in_TR2 \<open>UNIV - U_R2 \<in> ?TR2\<close> hUR2_ne
+              hVR2_ne hUR2VR2_disj by (by100 blast)
+          thus False using hR2_conn by simp
+        qed
         ultimately show ?thesis by (by100 blast)
       qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
@@ -9581,7 +9606,27 @@ proof -
       proof -
         have "V_R2 \<subseteq> closure_on UNIV ?TR2 V_R2" by (rule subset_closure_on)
         moreover have "C \<subseteq> closure_on UNIV ?TR2 V_R2"
-          sorry \<comment> \<open>C \<subseteq> cl(V): same textbook Step 2 argument as for U.\<close>
+        proof (rule ccontr)
+          assume "\<not> C \<subseteq> closure_on UNIV ?TR2 V_R2"
+          have hR2_conn: "top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
+            using R2_simply_connected unfolding top1_simply_connected_on_def
+            by (intro top1_path_connected_imp_connected) (by100 blast)
+          have hcl_closed: "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 V_R2)"
+            by (rule closure_on_closed[OF hTR2]) simp
+          have "C \<inter> closure_on UNIV ?TR2 V_R2 = {}"
+            sorry \<comment> \<open>Same as U case: needs arc decomposition.\<close>
+          hence hcl_sub_V: "closure_on UNIV ?TR2 V_R2 \<subseteq> V_R2" using hcl_sub by (by100 blast)
+          have hV_sub_cl: "V_R2 \<subseteq> closure_on UNIV ?TR2 V_R2" by (rule subset_closure_on)
+          hence "closure_on UNIV ?TR2 V_R2 = V_R2" using hcl_sub_V by (by100 blast)
+          hence "closedin_on UNIV ?TR2 V_R2" using hcl_closed by simp
+          have "UNIV - V_R2 \<in> ?TR2"
+            using \<open>closedin_on UNIV ?TR2 V_R2\<close> unfolding closedin_on_def by (by100 blast)
+          have "\<not> top1_connected_on (UNIV :: (real\<times>real) set) ?TR2"
+            unfolding top1_connected_on_def
+            using hVR2_in_TR2 \<open>UNIV - V_R2 \<in> ?TR2\<close> hVR2_ne
+              hUR2_ne hUR2VR2_disj by (by100 blast)
+          thus False using hR2_conn by simp
+        qed
         ultimately show ?thesis by (by100 blast)
       qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
@@ -13216,6 +13261,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
