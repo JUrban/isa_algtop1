@@ -15292,6 +15292,7 @@ qed
 lemma pi1_S2_minus_two_points_infinite_cyclic:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
       and "p \<in> top1_S2" and "q \<in> top1_S2" and "p \<noteq> q"
+      and "a \<in> top1_S2 - {p} - {q}"
   shows "\<exists>gen. top1_is_loop_on (top1_S2 - {p} - {q})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a gen \<and>
     (\<forall>f. top1_is_loop_on (top1_S2 - {p} - {q})
@@ -18589,7 +18590,11 @@ proof -
         (\<forall>h. top1_is_loop_on ?X ?TX a h \<longrightarrow>
           (\<exists>n::nat. top1_path_homotopic_on ?X ?TX a a h (top1_path_power gen a n) \<or>
            top1_path_homotopic_on ?X ?TX a a h (top1_path_power (top1_path_reverse gen) a n)))"
-      sorry \<comment> \<open>\<pi>_1(S^2-{p,q}) \<cong> Z. Uses pi1_S2_minus_two_points_infinite_cyclic.\<close>
+    proof -
+      have "a \<in> ?X" using ha hW1_X by (by100 blast)
+      thus ?thesis using pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hpq_ne]
+        sorry \<comment> \<open>Instantiate pi1_S2_minus_two_points_infinite_cyclic with a \<in> X.\<close>
+    qed
     obtain m k where hm: "m > 0" and hmk: "top1_path_homotopic_on ?X ?TX a a
         (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
         (top1_path_power (top1_path_product \<gamma> \<delta>) a k)"
