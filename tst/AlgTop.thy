@@ -15275,7 +15275,130 @@ proof (rule ccontr)
               else if y \<in> B then (y, -2)
               else (y, -1)))"
     have hgt_path: "top1_is_path_on E TE e0 e0 gtilde"
-      sorry \<comment> \<open>Same proof as in helix_g_lift_is_loop: \<gamma>-lift on [0,1/2], \<delta>-lift on [1/2,1].\<close>
+    proof -
+      define \<gamma>_lift where "\<gamma>_lift = (\<lambda>s. (gamma s, 0::int))"
+      define \<delta>_lift where "\<delta>_lift = (\<lambda>s. let y = delta s in
+        if y \<in> A then (y, 0::int) else if y \<in> B then (y, -2::int) else (y, -1::int))"
+      have hgt_eq: "gtilde = top1_path_product \<gamma>_lift \<delta>_lift"
+        unfolding gtilde_def top1_path_product_def \<gamma>_lift_def \<delta>_lift_def by (rule ext) auto
+      have h\<gamma>_lift_path: "top1_is_path_on E TE (a, 0) (a', 0) \<gamma>_lift"
+        unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top E TE \<gamma>_lift"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume "s \<in> I_set"
+          hence "gamma s \<in> U" using assms(14)
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          thus "\<gamma>_lift s \<in> E" unfolding \<gamma>_lift_def E_def by auto
+        next
+          fix W assume hW: "W \<in> TE"
+          have hslice: "{x \<in> U. (x, 0::int) \<in> W} \<in> TX"
+          proof -
+            have "\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+            hence "{x \<in> U. (x, 2*(0::int)) \<in> W} \<in> TX" by (rule spec)
+            thus ?thesis by simp
+          qed
+          have "{s \<in> I_set. \<gamma>_lift s \<in> W} = {s \<in> I_set. gamma s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+          proof (rule set_eqI, rule iffI)
+            fix s assume "s \<in> {s \<in> I_set. \<gamma>_lift s \<in> W}"
+            hence hs: "s \<in> I_set" and hW': "\<gamma>_lift s \<in> W" by auto
+            have "gamma s \<in> U" using assms(14) hs
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+            thus "s \<in> {s \<in> I_set. gamma s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+              using hs hW' unfolding \<gamma>_lift_def by auto
+          next
+            fix s assume "s \<in> {s \<in> I_set. gamma s \<in> {x \<in> U. (x, 0::int) \<in> W}}"
+            thus "s \<in> {s \<in> I_set. \<gamma>_lift s \<in> W}" unfolding \<gamma>_lift_def by simp
+          qed
+          moreover have "{s \<in> I_set. gamma s \<in> {x \<in> U. (x, 0::int) \<in> W}} \<in> I_top"
+          proof -
+            have "{x \<in> U. (x, 0::int) \<in> W} \<in> subspace_topology X TX U"
+              unfolding subspace_topology_def using hslice by blast
+            thus ?thesis using assms(14)
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          qed
+          ultimately show "{s \<in> I_set. \<gamma>_lift s \<in> W} \<in> I_top" by simp
+        qed
+      next
+        show "\<gamma>_lift 0 = (a, 0)" unfolding \<gamma>_lift_def
+          using assms(14) unfolding top1_is_path_on_def by (by100 blast)
+      next
+        show "\<gamma>_lift 1 = (a', 0)" unfolding \<gamma>_lift_def
+          using assms(14) unfolding top1_is_path_on_def by (by100 blast)
+      qed
+      have h\<delta>_lift_path: "top1_is_path_on E TE (a', 0) (a, 0) \<delta>_lift"
+        unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top E TE \<delta>_lift"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume hs: "s \<in> I_set"
+          have "delta s \<in> V" using assms(15) hs
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          thus "\<delta>_lift s \<in> E" unfolding \<delta>_lift_def E_def Let_def using assms(5) by auto
+        next
+          fix W assume hW: "W \<in> TE"
+          have hV_slice: "{x \<in> A. (x, 0::int) \<in> W} \<union> {x \<in> B. (x, -2::int) \<in> W} \<union>
+              {x \<in> V - U. (x, -1::int) \<in> W} \<in> TX"
+          proof -
+            have "\<forall>n::int. {x \<in> A. (x, 2*n+2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*n+1) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+            hence "{x \<in> A. (x, 2*(-1::int)+2) \<in> W} \<union> {x \<in> B. (x, 2*(-1::int)) \<in> W} \<union>
+                {x \<in> V-U. (x, 2*(-1::int)+1) \<in> W} \<in> TX" by (rule spec)
+            thus ?thesis by simp
+          qed
+          have heq: "{s \<in> I_set. \<delta>_lift s \<in> W} =
+              {s \<in> I_set. delta s \<in> ({x \<in> A. (x, 0::int) \<in> W} \<union> {x \<in> B. (x, -2::int) \<in> W} \<union>
+                  {x \<in> V - U. (x, -1::int) \<in> W})}"
+          proof (rule set_eqI, rule iffI)
+            fix s assume "s \<in> {s \<in> I_set. \<delta>_lift s \<in> W}"
+            hence hs: "s \<in> I_set" and hW': "\<delta>_lift s \<in> W" by auto
+            have "delta s \<in> V" using assms(15) hs
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+            thus "s \<in> {s \<in> I_set. delta s \<in> ({x \<in> A. (x, 0::int) \<in> W} \<union>
+                {x \<in> B. (x, -2::int) \<in> W} \<union> {x \<in> V - U. (x, -1::int) \<in> W})}"
+              using hs hW' assms(5,6) unfolding \<delta>_lift_def Let_def by (auto split: if_splits)
+          next
+            fix s assume "s \<in> {s \<in> I_set. delta s \<in> ({x \<in> A. (x, 0::int) \<in> W} \<union>
+                {x \<in> B. (x, -2::int) \<in> W} \<union> {x \<in> V - U. (x, -1::int) \<in> W})}"
+            hence hs: "s \<in> I_set" and hds: "delta s \<in> {x \<in> A. (x, 0::int) \<in> W} \<union>
+                {x \<in> B. (x, -2::int) \<in> W} \<union> {x \<in> V - U. (x, -1::int) \<in> W}" by auto
+            have hAsub: "A \<subseteq> U" and hBsub: "B \<subseteq> U" using assms(5) by (by100 blast)+
+            have "\<delta>_lift s \<in> W"
+            proof -
+              have "delta s \<in> A \<and> (delta s, 0) \<in> W \<or>
+                    delta s \<in> B \<and> (delta s, -2) \<in> W \<or>
+                    delta s \<in> V - U \<and> (delta s, -1) \<in> W" using hds by (by100 blast)
+              thus ?thesis unfolding \<delta>_lift_def Let_def using assms(6) hAsub hBsub
+                by (auto split: if_splits)
+            qed
+            thus "s \<in> {s \<in> I_set. \<delta>_lift s \<in> W}" using hs by (by100 blast)
+          qed
+          have hV_sub_open: "{x \<in> A. (x, 0::int) \<in> W} \<union> {x \<in> B. (x, -2::int) \<in> W} \<union>
+              {x \<in> V - U. (x, -1::int) \<in> W} \<in> subspace_topology X TX V"
+          proof -
+            have hsub: "{x \<in> A. (x, 0::int) \<in> W} \<union> {x \<in> B. (x, -2::int) \<in> W} \<union>
+                {x \<in> V - U. (x, -1::int) \<in> W} \<subseteq> V"
+              using assms(5) by (by100 blast)
+            thus ?thesis using hV_slice unfolding subspace_topology_def by (by100 blast)
+          qed
+          have "{s \<in> I_set. delta s \<in> ({x \<in> A. (x, 0::int) \<in> W} \<union> {x \<in> B. (x, -2::int) \<in> W} \<union>
+              {x \<in> V - U. (x, -1::int) \<in> W})} \<in> I_top"
+            using assms(15) hV_sub_open
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          thus "{s \<in> I_set. \<delta>_lift s \<in> W} \<in> I_top" using heq by simp
+        qed
+      next
+        show "\<delta>_lift 0 = (a', 0)" unfolding \<delta>_lift_def Let_def
+          using assms(15) assms(13) assms(6) unfolding top1_is_path_on_def by auto
+      next
+        show "\<delta>_lift 1 = (a, 0)" unfolding \<delta>_lift_def Let_def
+          using assms(15) assms(9) assms(6) unfolding top1_is_path_on_def by auto
+      qed
+      show ?thesis unfolding hgt_eq e0_def
+        by (rule top1_path_product_is_path[OF hTE h\<gamma>_lift_path h\<delta>_lift_path])
+    qed
     have hgt_proj: "\<forall>s\<in>I_set. p0 (gtilde s) = top1_path_product gamma delta s"
     proof
       fix s assume hs: "s \<in> I_set"
