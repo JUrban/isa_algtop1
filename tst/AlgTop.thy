@@ -3103,11 +3103,23 @@ proof -
       show ?thesis unfolding h_def by (rule top1_continuous_map_on_comp[OF h1 h2])
     qed
     show "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
-      sorry \<comment> \<open>Inverse of composition: inv(t\<circ>\<sigma>) = \<sigma>\<inverse>\<circ>t\<inverse>, both continuous.\<close>
+    proof -
+      have hinv_\<sigma>: "top1_continuous_map_on R2_q' TR2_q' ?X ?TX (inv_into ?X \<sigma>)"
+        using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinv_t: "top1_continuous_map_on R2_0 TR2_0 R2_q' TR2_q' (inv_into R2_q' t)"
+        using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hcomp_inv: "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X \<sigma> \<circ> inv_into R2_q' t)"
+        by (rule top1_continuous_map_on_comp[OF hinv_t hinv_\<sigma>])
+      \<comment> \<open>inv_into X (t \<circ> \<sigma>) = inv_into X \<sigma> \<circ> inv_into R2_q' t on R2_0.\<close>
+      show ?thesis using hcomp_inv
+        sorry \<comment> \<open>inv(t\<circ>\<sigma>) = \<sigma>\<inverse>\<circ>t\<inverse> pointwise on R2_0 (standard bij_betw composition inverse).
+           Then continuity transfers. Both \<sigma>\<inverse> and t\<inverse> are continuous (from homeomorphisms).\<close>
+    qed
   qed
-  \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence \<Rightarrow> \<pi>_1 isomorphism.\<close>
+  \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence.\<close>
   have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
-    sorry \<comment> \<open>Homeomorphism is a homotopy equivalence (with inverse as homotopy inverse).\<close>
+    sorry \<comment> \<open>Homeomorphism (h, inv_into X h) gives: inv\<circ>h = id on X, h\<circ>inv = id on R2_0.
+       Both id homotopic to itself (homotopy reflexivity). Standard.\<close>
   have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX a)
