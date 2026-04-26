@@ -15990,7 +15990,7 @@ proof -
           using htf_raw htf_eq by simp
         have hsw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
             (I_set \<times> I_set) (product_topology_on I_top I_top) swap"
-          sorry \<comment> \<open>Coordinate swap is continuous (symmetric product topology).\<close>
+          sorry \<comment> \<open>Coordinate swap is continuous. Standard but causes timeout with Theorem_18_4.\<close>
         have h1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
             (I_set \<times> I_set) (product_topology_on I_top I_top) (tflip \<circ> swap)"
           by (rule top1_continuous_map_on_comp[OF hsw htf])
