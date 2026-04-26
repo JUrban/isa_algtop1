@@ -18617,8 +18617,7 @@ proof -
            top1_path_homotopic_on ?X ?TX a a h (top1_path_power (top1_path_reverse gen) a n)))"
     proof -
       have "a \<in> ?X" using ha hW1_X by (by100 blast)
-      thus ?thesis using pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hpq_ne]
-        sorry \<comment> \<open>Instantiate pi1_S2_minus_two_points_infinite_cyclic with a \<in> X.\<close>
+      thus ?thesis by (rule pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hpq_ne])
     qed
     obtain m k where hm: "m > 0" and hmk: "top1_path_homotopic_on ?X ?TX a a
         (top1_path_power (top1_path_product \<alpha> \<beta>) a m)
