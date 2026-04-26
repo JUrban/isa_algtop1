@@ -15619,6 +15619,23 @@ next
   show ?case by (simp add: Lemma_51_1_path_homotopic_trans[OF assms(1) h1 h2])
 qed
 
+text \<open>Reverse distributes over power: (f^n)\<inverse> \<simeq> (f\<inverse>)^n.\<close>
+lemma path_power_reverse:
+  assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
+  shows "top1_path_homotopic_on X TX a a
+    (top1_path_reverse (top1_path_power f a n))
+    (top1_path_power (top1_path_reverse f) a n)"
+  sorry \<comment> \<open>By induction on n: base trivial. Step: (f*f^n)\<inverse> = (f^n)\<inverse>*f\<inverse> \<simeq> (f\<inverse>)^n*f\<inverse>
+     = f\<inverse>*(f\<inverse>)^n = (f\<inverse>)^{n+1}. Needs: reverse of product, IH, product compat, power add.\<close>
+
+text \<open>Corollary: if f \<simeq> g, then f\<inverse> \<simeq> g\<inverse>.\<close>
+lemma path_homotopic_reverse:
+  assumes "is_topology_on X TX"
+      and "top1_path_homotopic_on X TX a a f g"
+      and "top1_is_path_on X TX a a f" and "top1_is_path_on X TX a a g"
+  shows "top1_path_homotopic_on X TX a a (top1_path_reverse f) (top1_path_reverse g)"
+  sorry \<comment> \<open>By: f*f\<inverse> \<simeq> const \<simeq> g*g\<inverse>. Then f\<inverse> \<simeq> g\<inverse> by left-cancel with f\<simeq>g.\<close>
+
 text \<open>Path power addition: f^a * f^b \<simeq> f^{a+b} (for loops at a).\<close>
 lemma path_power_product_add:
   assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
@@ -15825,7 +15842,25 @@ proof -
     \<comment> \<open>g \<simeq> (gen\<inverse>)^n2, so g\<inverse> \<simeq> ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2.
        But proving ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2 is complex. Use sorry.\<close>
     have hg'_gen: "top1_path_homotopic_on X TX a a g' (top1_path_power gen a n2)"
-      sorry \<comment> \<open>Reverse distributes: ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2.\<close>
+    proof -
+      define gen_inv where "gen_inv = top1_path_reverse gen"
+      have hgi_loop: "top1_is_loop_on X TX a gen_inv"
+        unfolding gen_inv_def by (rule top1_path_reverse_is_loop[OF hgen])
+      have hgi_n2: "top1_is_path_on X TX a a (top1_path_power gen_inv a n2)"
+        by (rule top1_path_power_is_path[OF assms(1) hgi_loop])
+      \<comment> \<open>g \<simeq> gen_inv^n2, so g\<inverse> \<simeq> (gen_inv^n2)\<inverse>.\<close>
+      have h_rev: "top1_path_homotopic_on X TX a a g' (top1_path_reverse (top1_path_power gen_inv a n2))"
+        unfolding g'_def
+        by (rule path_homotopic_reverse[OF assms(1) h2[folded gen_inv_def] hg_path hgi_n2])
+      \<comment> \<open>(gen_inv^n2)\<inverse> \<simeq> (gen_inv\<inverse>)^n2 = gen^n2.\<close>
+      have h_dist: "top1_path_homotopic_on X TX a a
+          (top1_path_reverse (top1_path_power gen_inv a n2))
+          (top1_path_power (top1_path_reverse gen_inv) a n2)"
+        by (rule path_power_reverse[OF assms(1) hgi_loop])
+      have "top1_path_reverse gen_inv = gen" unfolding gen_inv_def top1_path_reverse_def by auto
+      hence "top1_path_power (top1_path_reverse gen_inv) a n2 = top1_path_power gen a n2" by simp
+      thus ?thesis using Lemma_51_1_path_homotopic_trans[OF assms(1) h_rev h_dist] by simp
+    qed
     have hg'n1: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
         (top1_path_power (top1_path_power gen a n2) a n1)"
       by (rule path_homotopic_path_power[OF assms(1) hg'_gen hg'_path hgenn2])
@@ -15874,7 +15909,18 @@ proof -
     have hg'_path: "top1_is_path_on X TX a a g'"
       using hg'_loop unfolding top1_is_loop_on_def by simp
     have hg'_gen': "top1_path_homotopic_on X TX a a g' (top1_path_power gen' a n2)"
-      sorry \<comment> \<open>g \<simeq> gen^n2, so g\<inverse> \<simeq> (gen^n2)\<inverse> \<simeq> (gen\<inverse>)^n2 = gen'^n2.\<close>
+    proof -
+      \<comment> \<open>g \<simeq> gen^n2, so g\<inverse> \<simeq> (gen^n2)\<inverse> \<simeq> (gen\<inverse>)^n2 = gen'^n2.\<close>
+      have h_rev: "top1_path_homotopic_on X TX a a g' (top1_path_reverse (top1_path_power gen a n2))"
+        unfolding g'_def
+        by (rule path_homotopic_reverse[OF assms(1) h2 hg_path hgenn2])
+      have h_dist: "top1_path_homotopic_on X TX a a
+          (top1_path_reverse (top1_path_power gen a n2))
+          (top1_path_power (top1_path_reverse gen) a n2)"
+        by (rule path_power_reverse[OF assms(1) hgen])
+      show ?thesis using Lemma_51_1_path_homotopic_trans[OF assms(1) h_rev h_dist]
+        unfolding gen'_def by simp
+    qed
     have hgen'n2: "top1_is_path_on X TX a a (top1_path_power gen' a n2)"
       by (rule top1_path_power_is_path[OF assms(1) hgen'_loop])
     have hg'n1: "top1_path_homotopic_on X TX a a (top1_path_power g' a n1)
