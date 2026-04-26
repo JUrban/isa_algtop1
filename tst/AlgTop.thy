@@ -8090,7 +8090,7 @@ proof -
       have h\<sigma>2inv_homeo: "top1_homeomorphism_on UNIV ?TR2
           (top1_S2 - {north_pole})
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
-        sorry \<comment> \<open>Inverse of homeomorphism \<sigma>2 is homeomorphism. Standard.\<close>
+        unfolding \<sigma>2inv_def by (rule homeomorphism_inverse[OF h\<sigma>2])
       \<comment> \<open>Compose: \<sigma>2inv \<circ> h1_arc : [0,1] \<rightarrow> C1' (in S^2 topology).\<close>
       \<comment> \<open>The composed homeomorphism lands in C1' with S^2\{N} subspace topology,\<close>
       \<comment> \<open>which equals S^2 subspace topology by hC1'_top_eq.\<close>
@@ -8141,11 +8141,80 @@ proof -
         by simp
     qed
     have hC2'_closed: "closedin_on top1_S2 top1_S2_topology C2'"
-      sorry \<comment> \<open>Same argument as C1' closed.\<close>
+    proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+        top1_S2_is_topology_on_strict hC2'_sub_S2])
+      obtain h2 where hh2: "top1_homeomorphism_on I_set I_top C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') h2"
+        using hC2'_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have "compact {0..1::real}" by (rule compact_Icc)
+      moreover have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+        by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+      ultimately have "compact I_set" by simp
+      hence hI_compact: "top1_compact_on I_set I_top"
+        unfolding top1_unit_interval_topology_def
+        using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+      have hcont: "top1_continuous_map_on I_set I_top C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') h2"
+        using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTS2_C2: "is_topology_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+        using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h2 ` I_set = C2'"
+        using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "top1_compact_on (h2 ` I_set) (subspace_topology C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') (h2 ` I_set))"
+        by (rule top1_compact_on_continuous_image[OF hI_compact hTS2_C2 hcont])
+      moreover have "h2 ` I_set = C2'" by (rule himg)
+      moreover have "subspace_topology C2' (subspace_topology top1_S2 top1_S2_topology C2') C2'
+          = subspace_topology top1_S2 top1_S2_topology C2'"
+        using hC2'_arc unfolding top1_is_arc_on_def is_topology_on_strict_def
+        by (intro subspace_topology_self) (by100 blast)
+      ultimately show "top1_compact_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+        by simp
+    qed
     have hC1'_conn: "top1_connected_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
-      sorry \<comment> \<open>[0,1] connected, homeomorphic image of connected is connected.\<close>
+    proof -
+      obtain h1 where hh1: "top1_homeomorphism_on I_set I_top C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') h1"
+        using hC1'_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hcont: "top1_continuous_map_on I_set I_top C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') h1"
+        using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h1 ` I_set = C1'"
+        using hh1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hTS2_C1: "is_topology_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+        using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "top1_connected_on (h1 ` I_set) (subspace_topology C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') (h1 ` I_set))"
+        by (rule Theorem_23_5[OF top1_unit_interval_topology_is_topology_on hTS2_C1
+              top1_unit_interval_connected hcont])
+      moreover have "subspace_topology C1' (subspace_topology top1_S2 top1_S2_topology C1') C1'
+          = subspace_topology top1_S2 top1_S2_topology C1'"
+        using hC1'_arc unfolding top1_is_arc_on_def is_topology_on_strict_def
+        by (intro subspace_topology_self) (by100 blast)
+      ultimately show ?thesis using himg by simp
+    qed
     have hC2'_conn: "top1_connected_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
-      sorry \<comment> \<open>Same.\<close>
+    proof -
+      obtain h2 where hh2: "top1_homeomorphism_on I_set I_top C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') h2"
+        using hC2'_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hcont: "top1_continuous_map_on I_set I_top C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') h2"
+        using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h2 ` I_set = C2'"
+        using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hTS2_C2: "is_topology_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+        using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "top1_connected_on (h2 ` I_set) (subspace_topology C2'
+          (subspace_topology top1_S2 top1_S2_topology C2') (h2 ` I_set))"
+        by (rule Theorem_23_5[OF top1_unit_interval_topology_is_topology_on hTS2_C2
+              top1_unit_interval_connected hcont])
+      moreover have "subspace_topology C2' (subspace_topology top1_S2 top1_S2_topology C2') C2'
+          = subspace_topology top1_S2 top1_S2_topology C2'"
+        using hC2'_arc unfolding top1_is_arc_on_def is_topology_on_strict_def
+        by (intro subspace_topology_self) (by100 blast)
+      ultimately show ?thesis using himg by simp
+    qed
     have hC12'_card: "card (C1' \<inter> C2') = 2"
     proof -
       have h\<sigma>2inv_inj: "inj \<sigma>2inv"
@@ -11949,6 +12018,9 @@ qed
 
 
 end
+
+
+
 
 
 
