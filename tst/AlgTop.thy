@@ -6684,800 +6684,6 @@ qed
     boundary by an auxiliary argument.
 
     NB: Currently stated for C \<subseteq> R^2 (as in the original formalization). **)
-theorem Theorem_63_4_JordanCurve:
-  fixes C :: "(real \<times> real) set"
-  assumes "top1_simple_closed_curve_on
-    UNIV (product_topology_on top1_open_sets top1_open_sets) C"
-  shows "\<exists>U V. U \<noteq> {} \<and> V \<noteq> {}
-    \<and> U \<inter> V = {} \<and> U \<union> V = UNIV - C
-    \<and> top1_path_connected_on U
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
-    \<and> top1_path_connected_on V
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)
-    \<comment> \<open>One component is bounded (interior), the other unbounded (exterior).\<close>
-    \<and> (\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M)
-    \<and> (\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M)
-    \<comment> \<open>Both components have C as boundary.\<close>
-    \<and> closure U = U \<union> C
-    \<and> closure V = V \<union> C"
-proof -
-  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
-  \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
-     to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
-  have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-  proof -
-    \<comment> \<open>Step 1a: Get stereographic projection \<sigma>: S^2\{N} \<rightarrow> R^2.\<close>
-    have hN_S2: "north_pole \<in> top1_S2" unfolding north_pole_def top1_S2_def by simp
-    obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {north_pole})
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
-        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
-      using S2_minus_point_homeo_R2[OF hN_S2] by (by100 blast)
-    \<comment> \<open>Step 1b: Transfer C to S^2: C' = \<sigma>^{-1}(C) \<subseteq> S^2\{N}.\<close>
-    define \<sigma>inv where "\<sigma>inv = inv_into (top1_S2 - {north_pole}) \<sigma>"
-    define C' where "C' = \<sigma>inv ` C"
-    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}" unfolding C'_def \<sigma>inv_def
-    proof
-      fix x assume "x \<in> inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
-      then obtain c where hc: "c \<in> C" "x = inv_into (top1_S2 - {north_pole}) \<sigma> c" by (by100 blast)
-      have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
-        using h\<sigma> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      have "c \<in> \<sigma> ` (top1_S2 - {north_pole})" using hsurj by simp
-      hence "inv_into (top1_S2 - {north_pole}) \<sigma> c \<in> top1_S2 - {north_pole}"
-        by (rule inv_into_into)
-      thus "x \<in> top1_S2 - {north_pole}" using hc(2) by simp
-    qed
-    have hC'_sub_S2: "C' \<subseteq> top1_S2" using hC'_sub by (by100 blast)
-    \<comment> \<open>Step 1c: C' is a simple closed curve on S^2.\<close>
-    have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
-    proof -
-      \<comment> \<open>From assumption: f: S^1 \<rightarrow> R^2 continuous injective with f(S^1) = C.\<close>
-      obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f"
-          and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
-        using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
-      \<comment> \<open>\<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is the inverse of homeomorphism \<sigma>.\<close>
-      have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
-          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
-        using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
-      have h\<sigma>inv_inj: "inj_on \<sigma>inv UNIV"
-      proof -
-        have "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
-          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
-        hence "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-          using \<sigma>inv_def by (simp add: bij_betw_inv_into)
-        thus ?thesis unfolding bij_betw_def by (by100 blast)
-      qed
-      \<comment> \<open>g = \<sigma>^{-1} \<circ> f: S^1 \<rightarrow> S^2 continuous injective, g(S^1) = C'.\<close>
-      define g where "g = \<sigma>inv \<circ> f"
-      have hg_cont_S2N: "top1_continuous_map_on top1_S1 top1_S1_topology
-          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) g"
-        unfolding g_def by (rule top1_continuous_map_on_comp[OF hf h\<sigma>inv_cont])
-      \<comment> \<open>Lift to S^2: inclusion S^2\{N} \<hookrightarrow> S^2 is continuous.\<close>
-      have hg_cont_S2: "top1_continuous_map_on top1_S1 top1_S1_topology
-          top1_S2 top1_S2_topology g"
-      proof -
-        have "top1_continuous_map_on top1_S1 top1_S1_topology
-            top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2) g"
-          by (rule top1_continuous_map_on_codomain_enlarge[OF hg_cont_S2N]) blast+
-        moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
-          by (rule subspace_topology_self_carrier)
-             (use top1_S2_is_topology_on_strict[unfolded is_topology_on_strict_def]
-              in \<open>auto simp: is_topology_on_def\<close>)
-        ultimately show ?thesis by simp
-      qed
-      have hg_inj: "inj_on g top1_S1"
-        unfolding g_def comp_def
-      proof (rule inj_onI)
-        fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1"
-            and heq: "\<sigma>inv (f x) = \<sigma>inv (f y)"
-        have "f x \<in> UNIV" by simp
-        have "f y \<in> UNIV" by simp
-        have "f x = f y" using h\<sigma>inv_inj heq unfolding inj_on_def by (by100 blast)
-        thus "x = y" using hf_inj hx hy unfolding inj_on_def by (by100 blast)
-      qed
-      have hg_img: "g ` top1_S1 = C'"
-        unfolding g_def C'_def image_comp[symmetric] using hf_img by simp
-      show ?thesis unfolding top1_simple_closed_curve_on_def
-        using hg_cont_S2 hg_inj hg_img by (by100 blast)
-    qed
-    \<comment> \<open>Step 1d: By Theorem 61.3, S^2\C' is not connected.\<close>
-    have hS2_C'_sep: "top1_separates_on top1_S2 top1_S2_topology C'"
-      by (rule Theorem_61_3_JordanSeparation_S2[OF top1_S2_is_topology_on_strict hC'_scc])
-    \<comment> \<open>Step 1e: Transfer non-connectivity back to R^2.
-       S^2\C' = (S^2\{N}\C') \<union> {N}. \<sigma> maps S^2\{N}\C' homeo to R^2\C.
-       S^2\C' not connected \<Rightarrow> R^2\C not connected (if R^2\C connected,
-       \<sigma>^{-1}(R^2\C) connected, and adding {N} preserves connectivity since
-       N is a limit point of \<sigma>^{-1}(R^2\C), giving S^2\C' connected \<Rightarrow> contradiction).\<close>
-    \<comment> \<open>Contrapositive: if R^2\C connected, then S^2\C' connected (contradiction).
-       S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}. \<sigma>^{-1}(R^2\C) connected (homeo image).
-       N \<in> closure(\<sigma>^{-1}(R^2\C)) (unbounded points map near N).
-       Connected \<union> limit point = connected.\<close>
-    show ?thesis
-    proof (rule ccontr)
-      assume "\<not> ?thesis"
-      hence hR2C_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-        by simp
-      \<comment> \<open>\<sigma>^{-1}(R^2\C) connected.\<close>
-      have h\<sigma>inv_R2C_conn: "top1_connected_on (\<sigma>inv ` (UNIV - C))
-          (subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C)))"
-      proof -
-        \<comment> \<open>\<sigma>inv continuous from R^2 to S^2\{N}. Restrict domain to UNIV-C.\<close>
-        have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
-            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
-          using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
-        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-              top1_open_sets_is_topology_on_UNIV] by simp
-        have hTR2C: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-          by (rule subspace_topology_is_topology_on[OF hTR2]) simp
-        have h\<sigma>inv_cont_UC: "top1_continuous_map_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
-            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
-          by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>inv_cont]) simp
-        have hTS2N: "is_topology_on (top1_S2 - {north_pole})
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
-        proof -
-          have hTS2: "is_topology_on top1_S2 top1_S2_topology"
-            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-          show ?thesis by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
-        qed
-        \<comment> \<open>By Theorem_23_5: \<sigma>inv(UNIV-C) connected in subspace of S^2\{N}.\<close>
-        have "top1_connected_on (\<sigma>inv ` (UNIV - C))
-            (subspace_topology (top1_S2 - {north_pole})
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
-              (\<sigma>inv ` (UNIV - C)))"
-          by (rule Theorem_23_5[OF hTR2C hTS2N hR2C_conn h\<sigma>inv_cont_UC])
-        \<comment> \<open>Bridge: subspace of S^2\{N} = subspace of S^2 (transitivity).\<close>
-        moreover have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
-        proof -
-          have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
-            using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
-          have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-            unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
-          thus ?thesis unfolding bij_betw_def by (by100 blast)
-        qed
-        moreover have "subspace_topology (top1_S2 - {north_pole})
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
-            (\<sigma>inv ` (UNIV - C))
-            = subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-          by (rule subspace_topology_trans) (use \<open>\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}\<close> in blast)
-        ultimately show ?thesis by simp
-      qed
-      \<comment> \<open>S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
-      have hS2C'_eq: "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}"
-      proof -
-        have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
-          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
-        have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
-          using hbij unfolding bij_betw_def by (by100 blast)
-        have hinj: "inj_on \<sigma> (top1_S2 - {north_pole})"
-          using hbij unfolding bij_betw_def by (by100 blast)
-        have hbij_inv: "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-          unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
-        have h\<sigma>inv_img: "\<sigma>inv ` UNIV = top1_S2 - {north_pole}"
-          using hbij_inv unfolding bij_betw_def by (by100 blast)
-        have h\<sigma>inv_C: "\<sigma>inv ` C = C'" unfolding C'_def \<sigma>inv_def by simp
-        have hinj_inv: "inj_on \<sigma>inv UNIV"
-          using hbij_inv unfolding bij_betw_def by (by100 blast)
-        \<comment> \<open>\<sigma>^{-1}(R^2\C) = \<sigma>^{-1}(UNIV) \ \<sigma>^{-1}(C) = (S^2\{N}) \ C'.\<close>
-        have "\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'"
-        proof -
-          have "\<sigma>inv ` (UNIV - C) = \<sigma>inv ` UNIV - \<sigma>inv ` C"
-            by (rule inj_on_image_set_diff[OF hinj_inv]) blast+
-          also have "... = (top1_S2 - {north_pole}) - C'"
-            using h\<sigma>inv_img h\<sigma>inv_C by simp
-          finally show ?thesis .
-        qed
-        \<comment> \<open>S^2\C' = ((S^2\{N})\C') \<union> ({N}\C'). N \<notin> C' since C' \<subseteq> S^2\{N}.\<close>
-        have "north_pole \<notin> C'" using hC'_sub by (by100 blast)
-        hence "top1_S2 - C' = ((top1_S2 - {north_pole}) - C') \<union> {north_pole}"
-          using hN_S2 by (by100 blast)
-        thus ?thesis using \<open>\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'\<close> by simp
-      qed
-      \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
-      have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-      proof -
-        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\C')\{N}. Since C' \<subseteq> S^2\{N}, N \<notin> C', N \<in> S^2\C'.
-           S^2\C' is open (C' closed = compact in Hausdorff S^2).
-           For N \<in> closure((S^2\C')\{N}): every open W \<ni> N intersects (S^2\C')\{N}.
-           W \<inter> (S^2\C') is open, contains N. If = {N}, then {N} open in S^2 \<Rightarrow> FALSE.
-           So \<exists> point \<noteq> N in W \<inter> (S^2\C') = W \<inter> (S^2\C')\{N}.\<close>
-        have hN_notin_C': "north_pole \<notin> C'" using hC'_sub by (by100 blast)
-        have hC'_closed: "closedin_on top1_S2 top1_S2_topology C'"
-        proof -
-          \<comment> \<open>C' = \<sigma>inv(C). \<sigma>inv continuous, C compact \<Rightarrow> C' compact \<Rightarrow> closed in Hausdorff S^2.\<close>
-          \<comment> \<open>Actually C' \<subseteq> S^2\{N} \<subseteq> S^2. C' compact in S^2\{N} subspace.
-             Compact in Hausdorff \<Rightarrow> closed in Hausdorff \<Rightarrow> closed in S^2.\<close>
-          \<comment> \<open>C compact (continuous image of S^1 which is compact).
-             \<sigma>inv continuous from R^2 to S^2\{N}. C' = \<sigma>inv(C) compact.\<close>
-          have "C \<subseteq> UNIV" by simp
-          have hC_compact_std: "compact C"
-          proof -
-            obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f" "f ` top1_S1 = C"
-              using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
-            have "compact top1_S1" using S1_compact
-              top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
-              product_topology_on_open_sets_real2
-              unfolding top1_S1_topology_def by (by100 simp)
-            have "compact (f ` top1_S1)"
-            proof (rule compact_continuous_image)
-              show "continuous_on top1_S1 f"
-                unfolding continuous_on_open_invariant
-              proof (intro allI impI)
-                fix B :: "(real \<times> real) set" assume "open B"
-                have "B \<in> ?TR2" using \<open>open B\<close> product_topology_on_open_sets_real2
-                  unfolding top1_open_sets_def by (by100 simp)
-                hence "{x \<in> top1_S1. f x \<in> B} \<in> top1_S1_topology"
-                  using \<open>top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f\<close>
-                  unfolding top1_continuous_map_on_def by (by100 blast)
-                then obtain W where "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-                    and "{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W"
-                  unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
-                have "open W" using \<open>W \<in> _\<close> product_topology_on_open_sets_real2
-                  unfolding top1_open_sets_def by (by100 simp)
-                thus "\<exists>A. open A \<and> A \<inter> top1_S1 = f -` B \<inter> top1_S1"
-                  using \<open>{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W\<close> by (by100 blast)
-              qed
-              show "compact top1_S1" by (rule \<open>compact top1_S1\<close>)
-            qed
-            thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
-          qed
-          have hC'_compact_std: "compact C'"
-          proof -
-            \<comment> \<open>\<sigma>inv continuous on C (standard topology): bridge from custom.\<close>
-            have h\<sigma>inv_cont_std: "continuous_on C \<sigma>inv"
-            proof -
-              have hinv_cust: "top1_continuous_map_on UNIV ?TR2
-                  (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
-                  \<sigma>inv"
-                using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
-              show ?thesis unfolding continuous_on_open_invariant
-              proof (intro allI impI)
-                fix V :: "(real\<times>real\<times>real) set" assume "open V"
-                have "V \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
-                  using \<open>open V\<close> unfolding top1_open_sets_def by simp
-                \<comment> \<open>V \<inter> (S^2\{N}) open in subspace S^2\{N}.\<close>
-                have hV_sub: "V \<inter> (top1_S2 - {north_pole}) \<in>
-                    subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
-                proof -
-                  have hR3eq: "top1_S2_topology = subspace_topology UNIV
-                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
-                    unfolding top1_S2_topology_def
-                    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
-                          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
-                  have hS2N_sub: "top1_S2 - {north_pole} \<subseteq> top1_S2" by (by100 blast)
-                  have "subspace_topology top1_S2 (subspace_topology UNIV
-                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {north_pole})
-                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
-                    by (rule subspace_topology_trans[OF hS2N_sub])
-                  hence "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
-                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
-                    using hR3eq by simp
-                  thus ?thesis using \<open>V \<in> top1_open_sets\<close> unfolding subspace_topology_def by (by100 blast)
-                qed
-                \<comment> \<open>Preimage under \<sigma>inv: {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (S^2\{N})} \<in> TR2.\<close>
-                have "{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}
-                    \<in> product_topology_on top1_open_sets top1_open_sets"
-                  using hinv_cust hV_sub unfolding top1_continuous_map_on_def by (by100 blast)
-                \<comment> \<open>Since \<sigma>inv always maps into S^2\{N}, preimage of V = preimage of V \<inter> (S^2\{N}).\<close>
-                have "\<forall>y. \<sigma>inv y \<in> top1_S2 - {north_pole}"
-                  using hinv_cust unfolding top1_continuous_map_on_def by (by100 blast)
-                hence heq: "{y \<in> UNIV. \<sigma>inv y \<in> V} = {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}"
-                  by (by100 blast)
-                have "{y \<in> UNIV. \<sigma>inv y \<in> V} \<in> product_topology_on top1_open_sets top1_open_sets"
-                  using \<open>{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> _} \<in> _\<close> heq by simp
-                hence "open {y. \<sigma>inv y \<in> V}"
-                  using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
-                moreover have "{y. \<sigma>inv y \<in> V} \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
-                ultimately show "\<exists>T. open T \<and> T \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
-              qed
-            qed
-            show ?thesis unfolding C'_def
-              by (rule compact_continuous_image[OF h\<sigma>inv_cont_std hC_compact_std])
-          qed
-          have "closed C'" using compact_imp_closed[OF hC'_compact_std] .
-          \<comment> \<open>closed in R^3 + C' \<subseteq> S^2 \<Rightarrow> closed in S^2 (subspace).\<close>
-          show ?thesis unfolding closedin_on_def
-          proof (intro conjI)
-            show "C' \<subseteq> top1_S2" by (rule hC'_sub_S2)
-            show "top1_S2 - C' \<in> top1_S2_topology"
-            proof -
-              have "open (- C')" using open_Compl[OF \<open>closed C'\<close>] .
-              have hR3eq: "top1_S2_topology = subspace_topology UNIV
-                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
-                unfolding top1_S2_topology_def
-                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
-                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
-              have "- C' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
-                using \<open>open (- C')\<close> unfolding top1_open_sets_def by simp
-              have "top1_S2 \<inter> (- C') = top1_S2 - C'" by (by100 blast)
-              have "top1_S2 - C' \<in> subspace_topology UNIV
-                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
-                using \<open>- C' \<in> top1_open_sets\<close> \<open>top1_S2 \<inter> (- C') = top1_S2 - C'\<close>
-                unfolding subspace_topology_def by (by100 blast)
-              thus ?thesis using hR3eq by simp
-            qed
-          qed
-        qed
-        have hS2C'_open: "top1_S2 - C' \<in> top1_S2_topology"
-        proof -
-          have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
-            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-          show ?thesis using hC'_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
-            by (by100 blast)
-        qed
-        have hN_in_S2C': "north_pole \<in> top1_S2 - C'" using hN_S2 hN_notin_C' by (by100 blast)
-        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\{N})\C' = (S^2\C')\{N}.\<close>
-        have h\<sigma>inv_eq: "\<sigma>inv ` (UNIV - C) = (top1_S2 - C') - {north_pole}"
-        proof -
-          have "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}" by (rule hS2C'_eq)
-          moreover have "north_pole \<notin> \<sigma>inv ` (UNIV - C)"
-          proof -
-            have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
-              using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
-            have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-              unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
-            hence "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
-              unfolding bij_betw_def by (by100 blast)
-            hence "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}" by (by100 blast)
-            thus ?thesis by (by100 blast)
-          qed
-          ultimately show ?thesis by (by100 blast)
-        qed
-        \<comment> \<open>N \<in> closure((S^2\C')\{N}): same as S2_connected argument.\<close>
-        show ?thesis unfolding h\<sigma>inv_eq closure_on_def
-        proof (rule InterI)
-          fix D assume hD: "D \<in> {Ca. closedin_on top1_S2 top1_S2_topology Ca \<and>
-              (top1_S2 - C') - {north_pole} \<subseteq> Ca}"
-          hence hD_closed: "closedin_on top1_S2 top1_S2_topology D"
-              and hD_sup: "(top1_S2 - C') - {north_pole} \<subseteq> D" by auto
-          have "top1_S2 - D \<subseteq> C' \<union> {north_pole}"
-          proof -
-            have "top1_S2 - D \<subseteq> top1_S2 - ((top1_S2 - C') - {north_pole})"
-              using hD_sup by (by100 blast)
-            also have "... \<subseteq> C' \<union> {north_pole}" by (by100 blast)
-            finally show ?thesis .
-          qed
-          have hD_open: "top1_S2 - D \<in> top1_S2_topology"
-          proof -
-            have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
-              using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-            show ?thesis using hD_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
-              by (by100 blast)
-          qed
-          \<comment> \<open>If N \<notin> D: then N \<in> S^2\D which is open and \<subseteq> C'\<union>{N}.
-             So S^2\D is open and contained in C'\<union>{N}. Since N \<in> S^2\D,
-             S^2\D \<inter> (S^2\C') is open (intersection of opens) and contains... hmm.
-             Actually: S^2\D \<subseteq> C'\<union>{N} and N \<in> S^2\D.
-             (S^2\D)\{N} \<subseteq> C'. And S^2\D is open. If S^2\D = {N}, then {N} open → FALSE.
-             If S^2\D has another point x \<noteq> N, then x \<in> C'. But also x \<in> S^2\D \<subseteq> S^2.
-             Actually S^2\D is open and \<subseteq> C'\<union>{N}. The complement S^2\(C'\<union>{N}) \<subseteq> D.
-             Since C'\<union>{N} is closed (C' closed, {N} closed in Hausdorff, finite union of closed),
-             S^2\(C'\<union>{N}) is open. So D \<supseteq> open set.
-             Hmm, this doesn't directly help.\<close>
-          show "north_pole \<in> D"
-          proof (rule ccontr)
-            assume "north_pole \<notin> D"
-            hence "north_pole \<in> top1_S2 - D" using hN_S2 by (by100 blast)
-            \<comment> \<open>S^2\D is open, \<subseteq> C'\<union>{N}, contains N.
-               If S^2\D = {N}: {N} open in S^2 \<Rightarrow> FALSE (proved in S2_connected).\<close>
-            have "top1_S2 - D \<subseteq> C' \<union> {north_pole}" by (rule \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close>)
-            \<comment> \<open>(S^2\D) \<inter> (S^2\C') \<subseteq> {N}.\<close>
-            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}"
-              using \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close> by (by100 blast)
-            \<comment> \<open>(S^2\D) \<inter> (S^2\C') open (intersection of opens) and contains N.\<close>
-            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology"
-            proof -
-              have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
-                using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-              show ?thesis by (rule topology_inter_open[OF hTS2_loc hD_open hS2C'_open])
-            qed
-            have "north_pole \<in> (top1_S2 - D) \<inter> (top1_S2 - C')"
-              using \<open>north_pole \<in> top1_S2 - D\<close> hN_in_S2C' by (by100 blast)
-            \<comment> \<open>So (S^2\D) \<inter> (S^2\C') is a nonempty open set \<subseteq> {N}. Hence = {N}. So {N} \<in> S^2_topology.\<close>
-            hence "(top1_S2 - D) \<inter> (top1_S2 - C') = {north_pole}"
-              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}\<close> by (by100 blast)
-            hence "{north_pole} \<in> top1_S2_topology"
-              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology\<close> by simp
-            \<comment> \<open>{N} open in S^2 \<Rightarrow> FALSE (same argument as S2_connected).\<close>
-            show False using singleton_not_open_in_S2[OF hN_S2] \<open>{north_pole} \<in> top1_S2_topology\<close> by simp
-          qed
-        qed
-      qed
-      \<comment> \<open>Connected set \<union> limit point = connected. Use Theorem 23.4.\<close>
-      have "top1_connected_on (top1_S2 - C') (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
-      proof -
-        have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
-          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-        have hA_sub_S2: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2"
-        proof -
-          have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
-          proof -
-            have h\<sigma>inv_img_sub: "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
-            proof -
-              have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
-                using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
-              have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
-                unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
-              thus ?thesis unfolding bij_betw_def by (by100 blast)
-            qed
-            thus ?thesis by (by100 blast)
-          qed
-          thus ?thesis by (by100 blast)
-        qed
-        have hB_sub_S2: "top1_S2 - C' \<subseteq> top1_S2" by (by100 blast)
-        have hA_sub_B: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - C'"
-          using hS2C'_eq by (by100 blast)
-        have hB_sub_cl: "top1_S2 - C' \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-        proof -
-          have hA_sub_cl: "\<sigma>inv ` (UNIV - C) \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-            by (rule subset_closure_on)
-          have hN_in_cl: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
-            by (rule hN_closure)
-          show ?thesis using hS2C'_eq hA_sub_cl hN_in_cl by (by100 blast)
-        qed
-        show ?thesis
-          by (rule Theorem_23_4[OF hTS2_loc hA_sub_S2 hB_sub_S2 hA_sub_B hB_sub_cl h\<sigma>inv_R2C_conn])
-      qed
-      thus False using hS2_C'_sep unfolding top1_separates_on_def by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
-     Transfer to S^2, apply Theorem 63.5 (via 63.2 + 63.3), transfer back.\<close>
-  \<comment> \<open>Step 2a: Decompose C into two arcs.\<close>
-  \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1}. Get SCC and two arcs on S^2.\<close>
-  \<comment> \<open>Step 2c: By 63.2, arcs don't separate S^2. By 63.5, exactly 2 components on S^2.\<close>
-  \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
-  obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
-      and hUV_cover: "U \<union> V = UNIV - C"
-      and hU_conn: "top1_connected_on U (subspace_topology UNIV ?TR2 U)"
-      and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
-      and hU_bdd_raw: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
-      and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
-      and hU_bdy_raw: "closure U = U \<union> C"
-      and hV_bdy_raw: "closure V = V \<union> C"
-  proof -
-    \<comment> \<open>Step 2a: Decompose C into two arcs C1, C2 with C1 \<inter> C2 = {p, q}.\<close>
-    obtain C1_arc C2_arc p_arc q_arc where
-        hC_decomp: "C = C1_arc \<union> C2_arc"
-        and hC_inter: "C1_arc \<inter> C2_arc = {p_arc, q_arc}"
-        and hpq_ne: "p_arc \<noteq> q_arc"
-        and hC1_arc: "top1_is_arc_on C1_arc
-            (subspace_topology UNIV ?TR2 C1_arc)"
-        and hC2_arc: "top1_is_arc_on C2_arc
-            (subspace_topology UNIV ?TR2 C2_arc)"
-    proof -
-      have hR2_strict: "is_topology_on_strict (UNIV :: (real\<times>real) set) ?TR2"
-      proof -
-        have "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
-          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-              top1_open_sets_is_topology_on_UNIV] by simp
-        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
-      qed
-      have hR2_haus: "is_hausdorff_on (UNIV :: (real\<times>real) set) ?TR2"
-        by (rule top1_R2_is_hausdorff)
-      obtain A1 A2 aa bb where hd: "C = A1 \<union> A2" "A1 \<inter> A2 = {aa, bb}" "aa \<noteq> bb"
-          "top1_is_arc_on A1 (subspace_topology UNIV ?TR2 A1)"
-          "top1_is_arc_on A2 (subspace_topology UNIV ?TR2 A2)"
-        using simple_closed_curve_arc_decomposition[OF assms hR2_strict hR2_haus] by (by100 blast)
-      show ?thesis using hd by (intro that[of A1 A2 aa bb]) (by100 blast)+
-    qed
-    \<comment> \<open>Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get arcs C1', C2' on S^2.\<close>
-    \<comment> \<open>Step 2c: On S^2: C1', C2' are arcs (don't separate by 63.2).
-       C1' \<inter> C2' = {p', q'}, card = 2. C1', C2' closed, connected.
-       By 63.5: C1' \<union> C2' separates S^2 into exactly 2 components.\<close>
-    \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
-    \<comment> \<open>Step 2e: Identify bounded/unbounded. Boundary = C.\<close>
-    \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1} (same as step 1 transfer).
-       Step 2c: On S^2, apply 63.2 (arcs don't separate — PROVED!) and
-       63.5 (exactly 2 components — needs 63.1(c)+\<pi>_1\<cong>Z).
-       Step 2d: Transfer back to R^2.
-       Step 2e: Bounded/unbounded + boundary.\<close>
-    \<comment> \<open>C1_arc, C2_arc don't separate S^2 (by Theorem_63_2 applied on S^2).
-       This requires transferring arcs to S^2 and applying 63.2 there.
-       The transfer uses the same \<sigma>^{-1} as in step 1.\<close>
-    \<comment> \<open>C1_arc and C2_arc don't separate S^2 (by Theorem_63_2 after transfer).
-       The transfer requires re-obtaining \<sigma>^{-1} (it was local to hC_sep proof).\<close>
-    \<comment> \<open>NOTE: \<sigma>inv is not in scope here (it was inside hC_sep's proof block).
-       The proof requires: obtain \<sigma>, define \<sigma>inv, transfer arcs, apply 63.2.\<close>
-    \<comment> \<open>By 63.5: exactly 2 components on S^2.\<close>
-    \<comment> \<open>Transfer back to R^2 and identify bounded/unbounded.\<close>
-    show ?thesis sorry \<comment> \<open>Needs:
-       - 63.5 (SORRY) with C1'=\<sigma>^{-1}(C1_arc), C2'=\<sigma>^{-1}(C2_arc)
-       - Transfer 2 S^2-components to R^2-components via \<sigma>
-       - One bounded (interior), one unbounded (exterior)
-       - Boundary = C (Munkres Step 2 argument)\<close>
-  qed
-  \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
-  \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
-  have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
-  proof -
-    obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f" "f ` top1_S1 = C"
-      using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
-    have "compact top1_S1" using S1_compact
-      top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
-      product_topology_on_open_sets_real2
-      unfolding top1_S1_topology_def by (by100 simp)
-    have "compact C"
-    proof -
-      have "compact (f ` top1_S1)"
-      proof (rule compact_continuous_image)
-        show "continuous_on top1_S1 f"
-          unfolding continuous_on_open_invariant
-        proof (intro allI impI)
-          fix B :: "(real \<times> real) set" assume hBo: "open B"
-          have "B \<in> ?TR2" using hBo product_topology_on_open_sets_real2
-            unfolding top1_open_sets_def by (by100 simp)
-          hence "{x \<in> top1_S1. f x \<in> B} \<in> top1_S1_topology"
-            using \<open>top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f\<close>
-            unfolding top1_continuous_map_on_def by (by100 blast)
-          then obtain W where hW: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
-              and heq: "{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W"
-            unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
-          have "open W" using hW product_topology_on_open_sets_real2
-            unfolding top1_open_sets_def by (by100 simp)
-          moreover have "W \<inter> top1_S1 = f -` B \<inter> top1_S1"
-            using heq by (by100 blast)
-          ultimately show "\<exists>A. open A \<and> A \<inter> top1_S1 = f -` B \<inter> top1_S1" by (by100 blast)
-        qed
-        show "compact top1_S1" by (rule \<open>compact top1_S1\<close>)
-      qed
-      thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
-    qed
-    hence "closed C" by (rule compact_imp_closed)
-    hence "open (- C)" by (rule open_Compl)
-    hence "open (UNIV - C)" by (simp add: Compl_eq_Diff_UNIV)
-    thus ?thesis using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
-  qed
-  have hUNIV_C_lpc_global: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-    by (rule open_subset_locally_path_connected[OF R2_locally_path_connected hUNIV_C_open_global]) simp
-  have hU_pc: "top1_path_connected_on U (subspace_topology UNIV ?TR2 U)"
-  proof -
-    have hTU: "is_topology_on U (subspace_topology UNIV ?TR2 U)"
-      using hU_conn unfolding top1_connected_on_def by (by100 blast)
-    have hU_locp: "top1_locally_path_connected_on U (subspace_topology UNIV ?TR2 U)"
-    proof -
-      \<comment> \<open>UNIV-C is open in R^2. U \<subseteq> UNIV-C. U is open in UNIV-C (component of lpc space).
-         Open subset of R^2 is lpc. U open subset of that.\<close>
-      have hUNIV_C_open: "UNIV - C \<in> ?TR2" by (rule hUNIV_C_open_global)
-      have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-        by (rule hUNIV_C_lpc_global)
-      \<comment> \<open>U is open in UNIV-C (component of lpc open space).\<close>
-      have hU_open_in_UC: "U \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
-      proof -
-        \<comment> \<open>U is a connected component of UNIV-C (lpc space). Components of lpc = open.\<close>
-        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-        proof -
-          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-                top1_open_sets_is_topology_on_UNIV] by simp
-          thus ?thesis by (rule subspace_topology_is_topology_on) simp
-        qed
-        obtain u where hu: "u \<in> U" using hUV_ne(1) by (by100 blast)
-        have hu_UC: "u \<in> UNIV - C" using hu hUV_cover by (by100 blast)
-        \<comment> \<open>The path component of u in UNIV-C equals U.
-           By Theorem 25.5, in lpc space path component = component.\<close>
-        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
-        proof -
-          \<comment> \<open>U is a connected component: U connected, U \<subseteq> UNIV-C, U maximal.
-             In lpc space, path component = component (Theorem 25.5).\<close>
-          have "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
-          proof -
-            \<comment> \<open>U is a component of UNIV-C: it's connected, and any connected set containing u
-               that is bigger than U would have to intersect V, but U \<inter> V = {} and both open.\<close>
-            \<comment> \<open>component_of(u) = \<Union>{C \<subseteq> UNIV-C. u \<in> C \<and> connected C}.\<close>
-            \<comment> \<open>U \<subseteq> component_of(u): U is connected and u \<in> U.\<close>
-            have hU_sub_comp: "U \<subseteq> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
-              unfolding top1_component_of_on_def
-            proof
-              fix x assume hxU: "x \<in> U"
-              have hUsub: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-              moreover have "u \<in> U" using hu by simp
-              moreover have "top1_connected_on U (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
-              proof -
-                have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
-                    = subspace_topology UNIV ?TR2 U"
-                  by (rule subspace_topology_trans[OF hUsub])
-                thus ?thesis using hU_conn by simp
-              qed
-              ultimately show "x \<in> \<Union>{Ca. Ca \<subseteq> UNIV - C \<and> u \<in> Ca \<and>
-                  top1_connected_on Ca (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) Ca)}"
-                using hxU hUsub by (by100 blast)
-            qed
-            \<comment> \<open>component_of(u) \<subseteq> U: any connected C with u \<in> C \<subseteq> UNIV-C lies in U.
-               (If C intersected V, C = (C\<inter>U) \<union> (C\<inter>V) with both open in C, contradicting connected.)\<close>
-            have hcomp_sub_U: "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u \<subseteq> U"
-            proof (rule ccontr)
-              assume "\<not> ?thesis"
-              then obtain v where hv_comp: "v \<in> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
-                  and hv_notU: "v \<notin> U" by (by100 blast)
-              have hv_UC: "v \<in> UNIV - C"
-                using hv_comp unfolding top1_component_of_on_def by (by100 blast)
-              hence "v \<in> V" using hv_notU hUV_cover by (by100 blast)
-              \<comment> \<open>component_of(u) is connected. V is connected. They share v.\<close>
-              have hcomp_conn: "top1_connected_on (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u)
-                  (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
-                    (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u))"
-                by (rule top1_component_of_on_connected[OF hTUC hu_UC])
-              \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
-              have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-              proof -
-                let ?comp = "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
-                define A :: "nat \<Rightarrow> (real \<times> real) set" where "A = (\<lambda>i. if i = 0 then ?comp else V)"
-                have hI: "{0::nat, 1} \<noteq> {}" by simp
-                have hV_sub: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-                have hcomp_sub: "?comp \<subseteq> UNIV - C" unfolding top1_component_of_on_def by (by100 blast)
-                have hAsub: "\<forall>i\<in>{0::nat,1}. A i \<subseteq> UNIV - C"
-                  unfolding A_def using hV_sub hcomp_sub by auto
-                have hAconn: "\<forall>i\<in>{0::nat,1}. top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
-                proof
-                  fix i :: nat assume "i \<in> {0, 1}"
-                  show "top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
-                  proof (cases "i = 0")
-                    case True thus ?thesis unfolding A_def using hcomp_conn by simp
-                  next
-                    case False
-                    have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
-                        = subspace_topology UNIV ?TR2 V"
-                      by (rule subspace_topology_trans[OF hV_sub])
-                    thus ?thesis using False unfolding A_def using hV_conn by simp
-                  qed
-                qed
-                have hv_inter: "v \<in> \<Inter>(A ` {0::nat, 1})"
-                  unfolding A_def using hv_comp \<open>v \<in> V\<close> by simp
-                have hY_eq: "(\<Union>i\<in>{0::nat,1}. A i) = UNIV - C"
-                proof -
-                  have "?comp \<union> V \<supseteq> U \<union> V" using hU_sub_comp by (by100 blast)
-                  hence "?comp \<union> V = UNIV - C" using hUV_cover
-                    unfolding top1_component_of_on_def by (by100 blast)
-                  moreover have "(\<Union>i\<in>{0::nat,1}. A i) = ?comp \<union> V" unfolding A_def by auto
-                  ultimately show ?thesis by simp
-                qed
-                have "top1_connected_on (\<Union>i\<in>{0::nat,1}. A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (\<Union>i\<in>{0::nat,1}. A i))"
-                  by (rule Theorem_23_3[OF hTUC hI hAsub hAconn hv_inter])
-                hence "top1_connected_on (UNIV - C) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C))"
-                  using hY_eq by simp
-                moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C)
-                    = subspace_topology UNIV ?TR2 (UNIV - C)"
-                  by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
-                ultimately show ?thesis by simp
-              qed
-              show False using hC_sep hcomp_V_conn by simp
-            qed
-            show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
-          qed
-          moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
-              = top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
-            using Theorem_25_5[OF hTUC] hUNIV_C_lpc_global hu_UC by (by100 blast)
-          ultimately show ?thesis by simp
-        qed
-        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
-            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
-          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc hu_UC])
-        ultimately show ?thesis by simp
-      qed
-      have hU_sub_UC: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-      have "top1_locally_path_connected_on U
-          (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
-        by (rule open_subset_locally_path_connected[OF hUNIV_C_lpc hU_open_in_UC hU_sub_UC])
-      moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
-          = subspace_topology UNIV ?TR2 U"
-        by (rule subspace_topology_trans[OF hU_sub_UC])
-      ultimately show ?thesis by simp
-    qed
-    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTU hU_conn hU_locp hUV_ne(1)])
-  qed
-  have hV_pc: "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)"
-  proof -
-    have hTV: "is_topology_on V (subspace_topology UNIV ?TR2 V)"
-      using hV_conn unfolding top1_connected_on_def by (by100 blast)
-    have hV_locp: "top1_locally_path_connected_on V (subspace_topology UNIV ?TR2 V)"
-    proof -
-      have hUNIV_C_open: "UNIV - C \<in> ?TR2" by (rule hUNIV_C_open_global)
-      have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-        by (rule hUNIV_C_lpc_global)
-      have hV_open_in_UC: "V \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
-      proof -
-        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
-        proof -
-          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-                top1_open_sets_is_topology_on_UNIV] by simp
-          thus ?thesis by (rule subspace_topology_is_topology_on) simp
-        qed
-        obtain v where hv: "v \<in> V" using hUV_ne(2) by (by100 blast)
-        have hv_UC: "v \<in> UNIV - C" using hv hUV_cover by (by100 blast)
-        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v = V"
-        proof -
-          let ?comp_v = "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v"
-          have hV_sub': "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-          have hV_sub_comp: "V \<subseteq> ?comp_v"
-            unfolding top1_component_of_on_def
-          proof
-            fix x assume hxV: "x \<in> V"
-            have "top1_connected_on V (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V)"
-            proof -
-              have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
-                  = subspace_topology UNIV ?TR2 V" by (rule subspace_topology_trans[OF hV_sub'])
-              thus ?thesis using hV_conn by simp
-            qed
-            thus "x \<in> \<Union>{Ca. Ca \<subseteq> UNIV - C \<and> v \<in> Ca \<and>
-                top1_connected_on Ca (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) Ca)}"
-              using hxV hV_sub' hv by (by100 blast)
-          qed
-          have hcomp_v_sub_V: "?comp_v \<subseteq> V"
-          proof (rule ccontr)
-            assume "\<not> ?thesis"
-            then obtain w where hw_comp: "w \<in> ?comp_v" and hw_notV: "w \<notin> V" by (by100 blast)
-            have hw_UC: "w \<in> UNIV - C" using hw_comp unfolding top1_component_of_on_def by (by100 blast)
-            hence "w \<in> U" using hw_notV hUV_cover by (by100 blast)
-            have hcomp_v_conn: "top1_connected_on ?comp_v
-                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) ?comp_v)"
-              by (rule top1_component_of_on_connected[OF hTUC hv_UC])
-            have hU_sub': "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-            have hU_conn_sub: "top1_connected_on U
-                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
-            proof -
-              have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
-                  = subspace_topology UNIV ?TR2 U" by (rule subspace_topology_trans[OF hU_sub'])
-              thus ?thesis using hU_conn by simp
-            qed
-            define B :: "nat \<Rightarrow> (real \<times> real) set" where "B = (\<lambda>i. if i = 0 then ?comp_v else U)"
-            have "w \<in> \<Inter>(B ` {0::nat, 1})" unfolding B_def using hw_comp \<open>w \<in> U\<close> by simp
-            moreover have "\<forall>i\<in>{0::nat,1}. B i \<subseteq> UNIV - C"
-              unfolding B_def using hU_sub' unfolding top1_component_of_on_def by auto
-            moreover have "\<forall>i\<in>{0::nat,1}. top1_connected_on (B i)
-                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (B i))"
-            proof
-              fix i :: nat assume "i \<in> {0, 1}"
-              show "top1_connected_on (B i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (B i))"
-                unfolding B_def using hcomp_v_conn hU_conn_sub by auto
-            qed
-            ultimately have "top1_connected_on (\<Union>i\<in>{0::nat,1}. B i)
-                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (\<Union>i\<in>{0::nat,1}. B i))"
-              using Theorem_23_3[OF hTUC, of "{0::nat,1}" B w] by (by100 blast)
-            moreover have "(\<Union>i\<in>{0::nat,1}. B i) = UNIV - C"
-            proof -
-              have "?comp_v \<union> U \<supseteq> V \<union> U" using hV_sub_comp by (by100 blast)
-              thus ?thesis unfolding B_def using hUV_cover
-                unfolding top1_component_of_on_def by auto
-            qed
-            moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C)
-                = subspace_topology UNIV ?TR2 (UNIV - C)"
-              by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
-            ultimately have "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))" by simp
-            thus False using hC_sep by simp
-          qed
-          have "?comp_v = V" using hV_sub_comp hcomp_v_sub_V by (by100 blast)
-          moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v = ?comp_v"
-            using Theorem_25_5[OF hTUC] hUNIV_C_lpc_global hv_UC by (by100 blast)
-          ultimately show ?thesis by simp
-        qed
-        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v
-            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
-          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc_global hv_UC])
-        ultimately show ?thesis by simp
-      qed
-      have hV_sub_UC: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
-      have "top1_locally_path_connected_on V
-          (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V)"
-        by (rule open_subset_locally_path_connected[OF hUNIV_C_lpc hV_open_in_UC hV_sub_UC])
-      moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
-          = subspace_topology UNIV ?TR2 V"
-        by (rule subspace_topology_trans[OF hV_sub_UC])
-      ultimately show ?thesis by simp
-    qed
-    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTV hV_conn hV_locp hUV_ne(2)])
-  qed
-  \<comment> \<open>Step 4 (Bounded/unbounded): Under stereographic projection, one component maps to
-     the bounded component and the other to the unbounded one (Lemma 61.1).\<close>
-  have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" by (rule hU_bdd_raw)
-  have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" by (rule hV_unbdd_raw)
-  \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
-  have hU_bdy: "closure U = U \<union> C" by (rule hU_bdy_raw)
-  have hV_bdy: "closure V = V \<union> C" by (rule hV_bdy_raw)
-  show ?thesis using hUV_ne hUV_disj hUV_cover hU_pc hV_pc hU_bdd hV_unbdd hU_bdy hV_bdy
-    by blast
-qed
-
 \<comment> \<open>Helper for 63.5: 3+ open components of S^2-(C1\<union>C2) give a contradiction.
    This encapsulates the 63.1(a)+(c) + \<pi>_1\<cong>Z argument.\<close>
 lemma three_components_contradiction:
@@ -8320,6 +7526,872 @@ proof -
     show "top1_connected_on R (subspace_topology top1_S2 top1_S2_topology R)"
       by (rule hR_conn)
   qed
+qed
+
+theorem Theorem_63_4_JordanCurve:
+  fixes C :: "(real \<times> real) set"
+  assumes "top1_simple_closed_curve_on
+    UNIV (product_topology_on top1_open_sets top1_open_sets) C"
+  shows "\<exists>U V. U \<noteq> {} \<and> V \<noteq> {}
+    \<and> U \<inter> V = {} \<and> U \<union> V = UNIV - C
+    \<and> top1_path_connected_on U
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
+    \<and> top1_path_connected_on V
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V)
+    \<comment> \<open>One component is bounded (interior), the other unbounded (exterior).\<close>
+    \<and> (\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M)
+    \<and> (\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M)
+    \<comment> \<open>Both components have C as boundary.\<close>
+    \<and> closure U = U \<union> C
+    \<and> closure V = V \<union> C"
+proof -
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+  \<comment> \<open>Step 1 (Separation): Transfer to S^2 via stereographic projection. C corresponds
+     to a simple closed curve on S^2. By Theorem 61.3, S^2 - C' has \<ge> 2 components.\<close>
+  have hC_sep: "\<not> top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+  proof -
+    \<comment> \<open>Step 1a: Get stereographic projection \<sigma>: S^2\{N} \<rightarrow> R^2.\<close>
+    have hN_S2: "north_pole \<in> top1_S2" unfolding north_pole_def top1_S2_def by simp
+    obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+      using S2_minus_point_homeo_R2[OF hN_S2] by (by100 blast)
+    \<comment> \<open>Step 1b: Transfer C to S^2: C' = \<sigma>^{-1}(C) \<subseteq> S^2\{N}.\<close>
+    define \<sigma>inv where "\<sigma>inv = inv_into (top1_S2 - {north_pole}) \<sigma>"
+    define C' where "C' = \<sigma>inv ` C"
+    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}" unfolding C'_def \<sigma>inv_def
+    proof
+      fix x assume "x \<in> inv_into (top1_S2 - {north_pole}) \<sigma> ` C"
+      then obtain c where hc: "c \<in> C" "x = inv_into (top1_S2 - {north_pole}) \<sigma> c" by (by100 blast)
+      have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
+        using h\<sigma> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "c \<in> \<sigma> ` (top1_S2 - {north_pole})" using hsurj by simp
+      hence "inv_into (top1_S2 - {north_pole}) \<sigma> c \<in> top1_S2 - {north_pole}"
+        by (rule inv_into_into)
+      thus "x \<in> top1_S2 - {north_pole}" using hc(2) by simp
+    qed
+    have hC'_sub_S2: "C' \<subseteq> top1_S2" using hC'_sub by (by100 blast)
+    \<comment> \<open>Step 1c: C' is a simple closed curve on S^2.\<close>
+    have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
+    proof -
+      \<comment> \<open>From assumption: f: S^1 \<rightarrow> R^2 continuous injective with f(S^1) = C.\<close>
+      obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f"
+          and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
+        using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      \<comment> \<open>\<sigma>^{-1}: R^2 \<rightarrow> S^2\{N} is the inverse of homeomorphism \<sigma>.\<close>
+      have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+        using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+      have h\<sigma>inv_inj: "inj_on \<sigma>inv UNIV"
+      proof -
+        have "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+          using \<sigma>inv_def by (simp add: bij_betw_inv_into)
+        thus ?thesis unfolding bij_betw_def by (by100 blast)
+      qed
+      \<comment> \<open>g = \<sigma>^{-1} \<circ> f: S^1 \<rightarrow> S^2 continuous injective, g(S^1) = C'.\<close>
+      define g where "g = \<sigma>inv \<circ> f"
+      have hg_cont_S2N: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) g"
+        unfolding g_def by (rule top1_continuous_map_on_comp[OF hf h\<sigma>inv_cont])
+      \<comment> \<open>Lift to S^2: inclusion S^2\{N} \<hookrightarrow> S^2 is continuous.\<close>
+      have hg_cont_S2: "top1_continuous_map_on top1_S1 top1_S1_topology
+          top1_S2 top1_S2_topology g"
+      proof -
+        have "top1_continuous_map_on top1_S1 top1_S1_topology
+            top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2) g"
+          by (rule top1_continuous_map_on_codomain_enlarge[OF hg_cont_S2N]) blast+
+        moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+          by (rule subspace_topology_self_carrier)
+             (use top1_S2_is_topology_on_strict[unfolded is_topology_on_strict_def]
+              in \<open>auto simp: is_topology_on_def\<close>)
+        ultimately show ?thesis by simp
+      qed
+      have hg_inj: "inj_on g top1_S1"
+        unfolding g_def comp_def
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1"
+            and heq: "\<sigma>inv (f x) = \<sigma>inv (f y)"
+        have "f x \<in> UNIV" by simp
+        have "f y \<in> UNIV" by simp
+        have "f x = f y" using h\<sigma>inv_inj heq unfolding inj_on_def by (by100 blast)
+        thus "x = y" using hf_inj hx hy unfolding inj_on_def by (by100 blast)
+      qed
+      have hg_img: "g ` top1_S1 = C'"
+        unfolding g_def C'_def image_comp[symmetric] using hf_img by simp
+      show ?thesis unfolding top1_simple_closed_curve_on_def
+        using hg_cont_S2 hg_inj hg_img by (by100 blast)
+    qed
+    \<comment> \<open>Step 1d: By Theorem 61.3, S^2\C' is not connected.\<close>
+    have hS2_C'_sep: "top1_separates_on top1_S2 top1_S2_topology C'"
+      by (rule Theorem_61_3_JordanSeparation_S2[OF top1_S2_is_topology_on_strict hC'_scc])
+    \<comment> \<open>Step 1e: Transfer non-connectivity back to R^2.
+       S^2\C' = (S^2\{N}\C') \<union> {N}. \<sigma> maps S^2\{N}\C' homeo to R^2\C.
+       S^2\C' not connected \<Rightarrow> R^2\C not connected (if R^2\C connected,
+       \<sigma>^{-1}(R^2\C) connected, and adding {N} preserves connectivity since
+       N is a limit point of \<sigma>^{-1}(R^2\C), giving S^2\C' connected \<Rightarrow> contradiction).\<close>
+    \<comment> \<open>Contrapositive: if R^2\C connected, then S^2\C' connected (contradiction).
+       S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}. \<sigma>^{-1}(R^2\C) connected (homeo image).
+       N \<in> closure(\<sigma>^{-1}(R^2\C)) (unbounded points map near N).
+       Connected \<union> limit point = connected.\<close>
+    show ?thesis
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      hence hR2C_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        by simp
+      \<comment> \<open>\<sigma>^{-1}(R^2\C) connected.\<close>
+      have h\<sigma>inv_R2C_conn: "top1_connected_on (\<sigma>inv ` (UNIV - C))
+          (subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C)))"
+      proof -
+        \<comment> \<open>\<sigma>inv continuous from R^2 to S^2\{N}. Restrict domain to UNIV-C.\<close>
+        have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+          using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+        have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        have hTR2C: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+          by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+        have h\<sigma>inv_cont_UC: "top1_continuous_map_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
+            (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>inv"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>inv_cont]) simp
+        have hTS2N: "is_topology_on (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+        proof -
+          have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+        qed
+        \<comment> \<open>By Theorem_23_5: \<sigma>inv(UNIV-C) connected in subspace of S^2\{N}.\<close>
+        have "top1_connected_on (\<sigma>inv ` (UNIV - C))
+            (subspace_topology (top1_S2 - {north_pole})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+              (\<sigma>inv ` (UNIV - C)))"
+          by (rule Theorem_23_5[OF hTR2C hTS2N hR2C_conn h\<sigma>inv_cont_UC])
+        \<comment> \<open>Bridge: subspace of S^2\{N} = subspace of S^2 (transitivity).\<close>
+        moreover have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
+        proof -
+          have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+            using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+            unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
+          thus ?thesis unfolding bij_betw_def by (by100 blast)
+        qed
+        moreover have "subspace_topology (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+            (\<sigma>inv ` (UNIV - C))
+            = subspace_topology top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+          by (rule subspace_topology_trans) (use \<open>\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}\<close> in blast)
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>S^2\C' = \<sigma>^{-1}(R^2\C) \<union> {N}.\<close>
+      have hS2C'_eq: "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}"
+      proof -
+        have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+          using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hsurj: "\<sigma> ` (top1_S2 - {north_pole}) = UNIV"
+          using hbij unfolding bij_betw_def by (by100 blast)
+        have hinj: "inj_on \<sigma> (top1_S2 - {north_pole})"
+          using hbij unfolding bij_betw_def by (by100 blast)
+        have hbij_inv: "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+          unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
+        have h\<sigma>inv_img: "\<sigma>inv ` UNIV = top1_S2 - {north_pole}"
+          using hbij_inv unfolding bij_betw_def by (by100 blast)
+        have h\<sigma>inv_C: "\<sigma>inv ` C = C'" unfolding C'_def \<sigma>inv_def by simp
+        have hinj_inv: "inj_on \<sigma>inv UNIV"
+          using hbij_inv unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>\<sigma>^{-1}(R^2\C) = \<sigma>^{-1}(UNIV) \ \<sigma>^{-1}(C) = (S^2\{N}) \ C'.\<close>
+        have "\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'"
+        proof -
+          have "\<sigma>inv ` (UNIV - C) = \<sigma>inv ` UNIV - \<sigma>inv ` C"
+            by (rule inj_on_image_set_diff[OF hinj_inv]) blast+
+          also have "... = (top1_S2 - {north_pole}) - C'"
+            using h\<sigma>inv_img h\<sigma>inv_C by simp
+          finally show ?thesis .
+        qed
+        \<comment> \<open>S^2\C' = ((S^2\{N})\C') \<union> ({N}\C'). N \<notin> C' since C' \<subseteq> S^2\{N}.\<close>
+        have "north_pole \<notin> C'" using hC'_sub by (by100 blast)
+        hence "top1_S2 - C' = ((top1_S2 - {north_pole}) - C') \<union> {north_pole}"
+          using hN_S2 by (by100 blast)
+        thus ?thesis using \<open>\<sigma>inv ` (UNIV - C) = (top1_S2 - {north_pole}) - C'\<close> by simp
+      qed
+      \<comment> \<open>N \<in> closure(\<sigma>^{-1}(R^2\C)) in S^2 topology.\<close>
+      have hN_closure: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+      proof -
+        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\C')\{N}. Since C' \<subseteq> S^2\{N}, N \<notin> C', N \<in> S^2\C'.
+           S^2\C' is open (C' closed = compact in Hausdorff S^2).
+           For N \<in> closure((S^2\C')\{N}): every open W \<ni> N intersects (S^2\C')\{N}.
+           W \<inter> (S^2\C') is open, contains N. If = {N}, then {N} open in S^2 \<Rightarrow> FALSE.
+           So \<exists> point \<noteq> N in W \<inter> (S^2\C') = W \<inter> (S^2\C')\{N}.\<close>
+        have hN_notin_C': "north_pole \<notin> C'" using hC'_sub by (by100 blast)
+        have hC'_closed: "closedin_on top1_S2 top1_S2_topology C'"
+        proof -
+          \<comment> \<open>C' = \<sigma>inv(C). \<sigma>inv continuous, C compact \<Rightarrow> C' compact \<Rightarrow> closed in Hausdorff S^2.\<close>
+          \<comment> \<open>Actually C' \<subseteq> S^2\{N} \<subseteq> S^2. C' compact in S^2\{N} subspace.
+             Compact in Hausdorff \<Rightarrow> closed in Hausdorff \<Rightarrow> closed in S^2.\<close>
+          \<comment> \<open>C compact (continuous image of S^1 which is compact).
+             \<sigma>inv continuous from R^2 to S^2\{N}. C' = \<sigma>inv(C) compact.\<close>
+          have "C \<subseteq> UNIV" by simp
+          have hC_compact_std: "compact C"
+          proof -
+            obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f" "f ` top1_S1 = C"
+              using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+            have "compact top1_S1" using S1_compact
+              top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
+              product_topology_on_open_sets_real2
+              unfolding top1_S1_topology_def by (by100 simp)
+            have "compact (f ` top1_S1)"
+            proof (rule compact_continuous_image)
+              show "continuous_on top1_S1 f"
+                unfolding continuous_on_open_invariant
+              proof (intro allI impI)
+                fix B :: "(real \<times> real) set" assume "open B"
+                have "B \<in> ?TR2" using \<open>open B\<close> product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+                hence "{x \<in> top1_S1. f x \<in> B} \<in> top1_S1_topology"
+                  using \<open>top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f\<close>
+                  unfolding top1_continuous_map_on_def by (by100 blast)
+                then obtain W where "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+                    and "{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W"
+                  unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+                have "open W" using \<open>W \<in> _\<close> product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+                thus "\<exists>A. open A \<and> A \<inter> top1_S1 = f -` B \<inter> top1_S1"
+                  using \<open>{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W\<close> by (by100 blast)
+              qed
+              show "compact top1_S1" by (rule \<open>compact top1_S1\<close>)
+            qed
+            thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
+          qed
+          have hC'_compact_std: "compact C'"
+          proof -
+            \<comment> \<open>\<sigma>inv continuous on C (standard topology): bridge from custom.\<close>
+            have h\<sigma>inv_cont_std: "continuous_on C \<sigma>inv"
+            proof -
+              have hinv_cust: "top1_continuous_map_on UNIV ?TR2
+                  (top1_S2 - {north_pole}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+                  \<sigma>inv"
+                using h\<sigma> unfolding top1_homeomorphism_on_def \<sigma>inv_def by (by100 blast)
+              show ?thesis unfolding continuous_on_open_invariant
+              proof (intro allI impI)
+                fix V :: "(real\<times>real\<times>real) set" assume "open V"
+                have "V \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                  using \<open>open V\<close> unfolding top1_open_sets_def by simp
+                \<comment> \<open>V \<inter> (S^2\{N}) open in subspace S^2\{N}.\<close>
+                have hV_sub: "V \<inter> (top1_S2 - {north_pole}) \<in>
+                    subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+                proof -
+                  have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                    unfolding top1_S2_topology_def
+                    using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                          product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+                  have hS2N_sub: "top1_S2 - {north_pole} \<subseteq> top1_S2" by (by100 blast)
+                  have "subspace_topology top1_S2 (subspace_topology UNIV
+                      (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2) (top1_S2 - {north_pole})
+                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
+                    by (rule subspace_topology_trans[OF hS2N_sub])
+                  hence "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
+                      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) (top1_S2 - {north_pole})"
+                    using hR3eq by simp
+                  thus ?thesis using \<open>V \<in> top1_open_sets\<close> unfolding subspace_topology_def by (by100 blast)
+                qed
+                \<comment> \<open>Preimage under \<sigma>inv: {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (S^2\{N})} \<in> TR2.\<close>
+                have "{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}
+                    \<in> product_topology_on top1_open_sets top1_open_sets"
+                  using hinv_cust hV_sub unfolding top1_continuous_map_on_def by (by100 blast)
+                \<comment> \<open>Since \<sigma>inv always maps into S^2\{N}, preimage of V = preimage of V \<inter> (S^2\{N}).\<close>
+                have "\<forall>y. \<sigma>inv y \<in> top1_S2 - {north_pole}"
+                  using hinv_cust unfolding top1_continuous_map_on_def by (by100 blast)
+                hence heq: "{y \<in> UNIV. \<sigma>inv y \<in> V} = {y \<in> UNIV. \<sigma>inv y \<in> V \<inter> (top1_S2 - {north_pole})}"
+                  by (by100 blast)
+                have "{y \<in> UNIV. \<sigma>inv y \<in> V} \<in> product_topology_on top1_open_sets top1_open_sets"
+                  using \<open>{y \<in> UNIV. \<sigma>inv y \<in> V \<inter> _} \<in> _\<close> heq by simp
+                hence "open {y. \<sigma>inv y \<in> V}"
+                  using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+                moreover have "{y. \<sigma>inv y \<in> V} \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
+                ultimately show "\<exists>T. open T \<and> T \<inter> C = \<sigma>inv -` V \<inter> C" by (by100 blast)
+              qed
+            qed
+            show ?thesis unfolding C'_def
+              by (rule compact_continuous_image[OF h\<sigma>inv_cont_std hC_compact_std])
+          qed
+          have "closed C'" using compact_imp_closed[OF hC'_compact_std] .
+          \<comment> \<open>closed in R^3 + C' \<subseteq> S^2 \<Rightarrow> closed in S^2 (subspace).\<close>
+          show ?thesis unfolding closedin_on_def
+          proof (intro conjI)
+            show "C' \<subseteq> top1_S2" by (rule hC'_sub_S2)
+            show "top1_S2 - C' \<in> top1_S2_topology"
+            proof -
+              have "open (- C')" using open_Compl[OF \<open>closed C'\<close>] .
+              have hR3eq: "top1_S2_topology = subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+              have "- C' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+                using \<open>open (- C')\<close> unfolding top1_open_sets_def by simp
+              have "top1_S2 \<inter> (- C') = top1_S2 - C'" by (by100 blast)
+              have "top1_S2 - C' \<in> subspace_topology UNIV
+                  (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+                using \<open>- C' \<in> top1_open_sets\<close> \<open>top1_S2 \<inter> (- C') = top1_S2 - C'\<close>
+                unfolding subspace_topology_def by (by100 blast)
+              thus ?thesis using hR3eq by simp
+            qed
+          qed
+        qed
+        have hS2C'_open: "top1_S2 - C' \<in> top1_S2_topology"
+        proof -
+          have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+            using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis using hC'_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
+            by (by100 blast)
+        qed
+        have hN_in_S2C': "north_pole \<in> top1_S2 - C'" using hN_S2 hN_notin_C' by (by100 blast)
+        \<comment> \<open>\<sigma>inv(R^2\C) = (S^2\{N})\C' = (S^2\C')\{N}.\<close>
+        have h\<sigma>inv_eq: "\<sigma>inv ` (UNIV - C) = (top1_S2 - C') - {north_pole}"
+        proof -
+          have "top1_S2 - C' = \<sigma>inv ` (UNIV - C) \<union> {north_pole}" by (rule hS2C'_eq)
+          moreover have "north_pole \<notin> \<sigma>inv ` (UNIV - C)"
+          proof -
+            have hbij_\<sigma>: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+              using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+              unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij_\<sigma>])
+            hence "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
+              unfolding bij_betw_def by (by100 blast)
+            hence "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}" by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>N \<in> closure((S^2\C')\{N}): same as S2_connected argument.\<close>
+        show ?thesis unfolding h\<sigma>inv_eq closure_on_def
+        proof (rule InterI)
+          fix D assume hD: "D \<in> {Ca. closedin_on top1_S2 top1_S2_topology Ca \<and>
+              (top1_S2 - C') - {north_pole} \<subseteq> Ca}"
+          hence hD_closed: "closedin_on top1_S2 top1_S2_topology D"
+              and hD_sup: "(top1_S2 - C') - {north_pole} \<subseteq> D" by auto
+          have "top1_S2 - D \<subseteq> C' \<union> {north_pole}"
+          proof -
+            have "top1_S2 - D \<subseteq> top1_S2 - ((top1_S2 - C') - {north_pole})"
+              using hD_sup by (by100 blast)
+            also have "... \<subseteq> C' \<union> {north_pole}" by (by100 blast)
+            finally show ?thesis .
+          qed
+          have hD_open: "top1_S2 - D \<in> top1_S2_topology"
+          proof -
+            have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+              using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+            show ?thesis using hD_closed hTS2_loc unfolding closedin_on_def is_topology_on_def
+              by (by100 blast)
+          qed
+          \<comment> \<open>If N \<notin> D: then N \<in> S^2\D which is open and \<subseteq> C'\<union>{N}.
+             So S^2\D is open and contained in C'\<union>{N}. Since N \<in> S^2\D,
+             S^2\D \<inter> (S^2\C') is open (intersection of opens) and contains... hmm.
+             Actually: S^2\D \<subseteq> C'\<union>{N} and N \<in> S^2\D.
+             (S^2\D)\{N} \<subseteq> C'. And S^2\D is open. If S^2\D = {N}, then {N} open → FALSE.
+             If S^2\D has another point x \<noteq> N, then x \<in> C'. But also x \<in> S^2\D \<subseteq> S^2.
+             Actually S^2\D is open and \<subseteq> C'\<union>{N}. The complement S^2\(C'\<union>{N}) \<subseteq> D.
+             Since C'\<union>{N} is closed (C' closed, {N} closed in Hausdorff, finite union of closed),
+             S^2\(C'\<union>{N}) is open. So D \<supseteq> open set.
+             Hmm, this doesn't directly help.\<close>
+          show "north_pole \<in> D"
+          proof (rule ccontr)
+            assume "north_pole \<notin> D"
+            hence "north_pole \<in> top1_S2 - D" using hN_S2 by (by100 blast)
+            \<comment> \<open>S^2\D is open, \<subseteq> C'\<union>{N}, contains N.
+               If S^2\D = {N}: {N} open in S^2 \<Rightarrow> FALSE (proved in S2_connected).\<close>
+            have "top1_S2 - D \<subseteq> C' \<union> {north_pole}" by (rule \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close>)
+            \<comment> \<open>(S^2\D) \<inter> (S^2\C') \<subseteq> {N}.\<close>
+            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}"
+              using \<open>top1_S2 - D \<subseteq> C' \<union> {north_pole}\<close> by (by100 blast)
+            \<comment> \<open>(S^2\D) \<inter> (S^2\C') open (intersection of opens) and contains N.\<close>
+            have "(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology"
+            proof -
+              have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+                using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+              show ?thesis by (rule topology_inter_open[OF hTS2_loc hD_open hS2C'_open])
+            qed
+            have "north_pole \<in> (top1_S2 - D) \<inter> (top1_S2 - C')"
+              using \<open>north_pole \<in> top1_S2 - D\<close> hN_in_S2C' by (by100 blast)
+            \<comment> \<open>So (S^2\D) \<inter> (S^2\C') is a nonempty open set \<subseteq> {N}. Hence = {N}. So {N} \<in> S^2_topology.\<close>
+            hence "(top1_S2 - D) \<inter> (top1_S2 - C') = {north_pole}"
+              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<subseteq> {north_pole}\<close> by (by100 blast)
+            hence "{north_pole} \<in> top1_S2_topology"
+              using \<open>(top1_S2 - D) \<inter> (top1_S2 - C') \<in> top1_S2_topology\<close> by simp
+            \<comment> \<open>{N} open in S^2 \<Rightarrow> FALSE (same argument as S2_connected).\<close>
+            show False using singleton_not_open_in_S2[OF hN_S2] \<open>{north_pole} \<in> top1_S2_topology\<close> by simp
+          qed
+        qed
+      qed
+      \<comment> \<open>Connected set \<union> limit point = connected. Use Theorem 23.4.\<close>
+      have "top1_connected_on (top1_S2 - C') (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+      proof -
+        have hTS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hA_sub_S2: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2"
+        proof -
+          have "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - {north_pole}"
+          proof -
+            have h\<sigma>inv_img_sub: "\<sigma>inv ` UNIV \<subseteq> top1_S2 - {north_pole}"
+            proof -
+              have hbij: "bij_betw \<sigma> (top1_S2 - {north_pole}) UNIV"
+                using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "bij_betw \<sigma>inv UNIV (top1_S2 - {north_pole})"
+                unfolding \<sigma>inv_def by (rule bij_betw_inv_into[OF hbij])
+              thus ?thesis unfolding bij_betw_def by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+          thus ?thesis by (by100 blast)
+        qed
+        have hB_sub_S2: "top1_S2 - C' \<subseteq> top1_S2" by (by100 blast)
+        have hA_sub_B: "\<sigma>inv ` (UNIV - C) \<subseteq> top1_S2 - C'"
+          using hS2C'_eq by (by100 blast)
+        have hB_sub_cl: "top1_S2 - C' \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+        proof -
+          have hA_sub_cl: "\<sigma>inv ` (UNIV - C) \<subseteq> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+            by (rule subset_closure_on)
+          have hN_in_cl: "north_pole \<in> closure_on top1_S2 top1_S2_topology (\<sigma>inv ` (UNIV - C))"
+            by (rule hN_closure)
+          show ?thesis using hS2C'_eq hA_sub_cl hN_in_cl by (by100 blast)
+        qed
+        show ?thesis
+          by (rule Theorem_23_4[OF hTS2_loc hA_sub_S2 hB_sub_S2 hA_sub_B hB_sub_cl h\<sigma>inv_R2C_conn])
+      qed
+      thus False using hS2_C'_sep unfolding top1_separates_on_def by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 2 (Exactly two components): Decompose C = C_1 \<union> C_2 (two arcs with endpoints a, b).
+     Transfer to S^2, apply Theorem 63.5 (via 63.2 + 63.3), transfer back.\<close>
+  \<comment> \<open>Step 2a: Decompose C into two arcs.\<close>
+  \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1}. Get SCC and two arcs on S^2.\<close>
+  \<comment> \<open>Step 2c: By 63.2, arcs don't separate S^2. By 63.5, exactly 2 components on S^2.\<close>
+  \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
+  obtain U V where hUV_ne: "U \<noteq> {}" "V \<noteq> {}" and hUV_disj: "U \<inter> V = {}"
+      and hUV_cover: "U \<union> V = UNIV - C"
+      and hU_conn: "top1_connected_on U (subspace_topology UNIV ?TR2 U)"
+      and hV_conn: "top1_connected_on V (subspace_topology UNIV ?TR2 V)"
+      and hU_bdd_raw: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
+      and hV_unbdd_raw: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
+      and hU_bdy_raw: "closure U = U \<union> C"
+      and hV_bdy_raw: "closure V = V \<union> C"
+  proof -
+    \<comment> \<open>Step 2a: Decompose C into two arcs C1, C2 with C1 \<inter> C2 = {p, q}.\<close>
+    obtain C1_arc C2_arc p_arc q_arc where
+        hC_decomp: "C = C1_arc \<union> C2_arc"
+        and hC_inter: "C1_arc \<inter> C2_arc = {p_arc, q_arc}"
+        and hpq_ne: "p_arc \<noteq> q_arc"
+        and hC1_arc: "top1_is_arc_on C1_arc
+            (subspace_topology UNIV ?TR2 C1_arc)"
+        and hC2_arc: "top1_is_arc_on C2_arc
+            (subspace_topology UNIV ?TR2 C2_arc)"
+    proof -
+      have hR2_strict: "is_topology_on_strict (UNIV :: (real\<times>real) set) ?TR2"
+      proof -
+        have "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have hR2_haus: "is_hausdorff_on (UNIV :: (real\<times>real) set) ?TR2"
+        by (rule top1_R2_is_hausdorff)
+      obtain A1 A2 aa bb where hd: "C = A1 \<union> A2" "A1 \<inter> A2 = {aa, bb}" "aa \<noteq> bb"
+          "top1_is_arc_on A1 (subspace_topology UNIV ?TR2 A1)"
+          "top1_is_arc_on A2 (subspace_topology UNIV ?TR2 A2)"
+        using simple_closed_curve_arc_decomposition[OF assms hR2_strict hR2_haus] by (by100 blast)
+      show ?thesis using hd by (intro that[of A1 A2 aa bb]) (by100 blast)+
+    qed
+    \<comment> \<open>Step 2b: Transfer to S^2 via \<sigma>^{-1}. Get arcs C1', C2' on S^2.\<close>
+    \<comment> \<open>Step 2c: On S^2: C1', C2' are arcs (don't separate by 63.2).
+       C1' \<inter> C2' = {p', q'}, card = 2. C1', C2' closed, connected.
+       By 63.5: C1' \<union> C2' separates S^2 into exactly 2 components.\<close>
+    \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
+    \<comment> \<open>Step 2e: Identify bounded/unbounded. Boundary = C.\<close>
+    \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1} (same as step 1 transfer).
+       Step 2c: On S^2, apply 63.2 (arcs don't separate — PROVED!) and
+       63.5 (exactly 2 components — needs 63.1(c)+\<pi>_1\<cong>Z).
+       Step 2d: Transfer back to R^2.
+       Step 2e: Bounded/unbounded + boundary.\<close>
+    \<comment> \<open>C1_arc, C2_arc don't separate S^2 (by Theorem_63_2 applied on S^2).
+       This requires transferring arcs to S^2 and applying 63.2 there.
+       The transfer uses the same \<sigma>^{-1} as in step 1.\<close>
+    \<comment> \<open>C1_arc and C2_arc don't separate S^2 (by Theorem_63_2 after transfer).
+       The transfer requires re-obtaining \<sigma>^{-1} (it was local to hC_sep proof).\<close>
+    \<comment> \<open>NOTE: \<sigma>inv is not in scope here (it was inside hC_sep's proof block).
+       The proof requires: obtain \<sigma>, define \<sigma>inv, transfer arcs, apply 63.2.\<close>
+    \<comment> \<open>By 63.5: exactly 2 components on S^2.\<close>
+    \<comment> \<open>Transfer back to R^2 and identify bounded/unbounded.\<close>
+    \<comment> \<open>Step 2b: Re-obtain stereographic projection \<sigma>.\<close>
+    obtain \<sigma>2 where h\<sigma>2: "top1_homeomorphism_on (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+        (UNIV :: (real \<times> real) set) ?TR2 \<sigma>2"
+      using S2_minus_point_homeo_R2[of north_pole] north_pole_in_S2 by blast
+    define \<sigma>2inv where "\<sigma>2inv = inv_into (top1_S2 - {north_pole}) \<sigma>2"
+    \<comment> \<open>\<sigma>2inv maps R^2 homeomorphically to S^2\{N}.\<close>
+    have h\<sigma>2_bij: "bij_betw \<sigma>2 (top1_S2 - {north_pole}) UNIV"
+      using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h\<sigma>2inv_bij: "bij_betw \<sigma>2inv UNIV (top1_S2 - {north_pole})"
+      unfolding \<sigma>2inv_def by (rule bij_betw_inv_into[OF h\<sigma>2_bij])
+    \<comment> \<open>Transfer arcs: C1' = \<sigma>2inv(C1_arc), C2' = \<sigma>2inv(C2_arc).\<close>
+    define C1' where "C1' = \<sigma>2inv ` C1_arc"
+    define C2' where "C2' = \<sigma>2inv ` C2_arc"
+    define C' where "C' = \<sigma>2inv ` C"
+    \<comment> \<open>C' = C1' \<union> C2', C1' \<inter> C2' = {\<sigma>2inv p_arc, \<sigma>2inv q_arc}.\<close>
+    \<comment> \<open>C' is a simple closed curve on S^2 (in S^2\{N}).\<close>
+    \<comment> \<open>Apply Theorem_63_5 to C1', C2' on S^2 to get exactly 2 components.\<close>
+    \<comment> \<open>Transfer components back to R^2 via \<sigma>2.\<close>
+    \<comment> \<open>C' \<subseteq> S^2\{N} (since \<sigma>2inv maps into S^2\{N}).\<close>
+    have hC'_sub: "C' \<subseteq> top1_S2 - {north_pole}"
+      unfolding C'_def using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+    have hC'_sub_S2: "C' \<subseteq> top1_S2" using hC'_sub by (by100 blast)
+    \<comment> \<open>C' = C1' \<union> C2'.\<close>
+    have hC'_decomp: "C' = C1' \<union> C2'"
+      unfolding C'_def C1'_def C2'_def using hC_decomp by (by100 blast)
+    \<comment> \<open>N \<notin> C' (since C' \<subseteq> S^2\{N}).\<close>
+    have hN_not_C': "north_pole \<notin> C'"
+      using hC'_sub by (by100 blast)
+    \<comment> \<open>C1', C2' are closed, connected subsets of S^2 with card(C1'\<inter>C2') = 2.\<close>
+    \<comment> \<open>C1', C2' don't separate S^2 (by Theorem 63.2, arcs don't separate).\<close>
+    have hC1'_closed: "closedin_on top1_S2 top1_S2_topology C1'" sorry
+    have hC2'_closed: "closedin_on top1_S2 top1_S2_topology C2'" sorry
+    have hC1'_conn: "top1_connected_on C1' (subspace_topology top1_S2 top1_S2_topology C1')" sorry
+    have hC2'_conn: "top1_connected_on C2' (subspace_topology top1_S2 top1_S2_topology C2')" sorry
+    have hC12'_card: "card (C1' \<inter> C2') = 2" sorry
+    have hC1'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1'" sorry
+    have hC2'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2'" sorry
+    \<comment> \<open>Apply Theorem_63_5: S^2-(C1'\<union>C2') has exactly 2 components.\<close>
+    obtain U_S2 V_S2 where
+        hUS2_ne: "U_S2 \<noteq> {}" and hVS2_ne: "V_S2 \<noteq> {}"
+        and hUVS2_disj: "U_S2 \<inter> V_S2 = {}"
+        and hUVS2_cover: "U_S2 \<union> V_S2 = top1_S2 - (C1' \<union> C2')"
+        and hUS2_conn: "top1_connected_on U_S2 (subspace_topology top1_S2 top1_S2_topology U_S2)"
+        and hVS2_conn: "top1_connected_on V_S2 (subspace_topology top1_S2 top1_S2_topology V_S2)"
+    proof -
+      have "\<exists>U V. U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = top1_S2 - (C1' \<union> C2') \<and>
+          top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U) \<and>
+          top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+        by (rule Theorem_63_5_two_closed_connected[OF top1_S2_is_topology_on_strict
+              hC1'_closed hC2'_closed hC1'_conn hC2'_conn hC12'_card hC1'_nonsep hC2'_nonsep])
+      then obtain U0 V0 where "U0 \<noteq> {}" "V0 \<noteq> {}" "U0 \<inter> V0 = {}"
+          "U0 \<union> V0 = top1_S2 - (C1' \<union> C2')"
+          "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
+          "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)"
+        by blast
+      show ?thesis
+        apply (intro that[of U0 V0])
+        using \<open>U0 \<noteq> {}\<close> \<open>V0 \<noteq> {}\<close> \<open>U0 \<inter> V0 = {}\<close> \<open>U0 \<union> V0 = _\<close>
+          \<open>top1_connected_on U0 _\<close> \<open>top1_connected_on V0 _\<close>
+        by simp_all
+    qed
+    \<comment> \<open>N \<in> one of U_S2, V_S2. WLOG N \<in> V_S2 (swap if needed).\<close>
+    have hN_in_comp: "north_pole \<in> U_S2 \<or> north_pole \<in> V_S2"
+      using hUVS2_cover hN_not_C' north_pole_in_S2 hC'_decomp by (by100 blast)
+    \<comment> \<open>Transfer to R^2: \<sigma>2 maps S^2\{N} homeomorphically to R^2.\<close>
+    \<comment> \<open>Define R^2 components from S^2 components.\<close>
+    \<comment> \<open>U = \<sigma>2(U_S2), or U = \<sigma>2(U_S2) and V = \<sigma>2(V_S2 - {N}).\<close>
+    \<comment> \<open>The component containing N maps to the unbounded component in R^2.\<close>
+    show ?thesis sorry \<comment> \<open>Transfer S^2 components to R^2 via \<sigma>2.
+       N is in one component (say V_S2). Then:
+       - U = \<sigma>2 ` U_S2 (bounded, since U_S2 \<subseteq> S^2\{N} compact minus N)
+       - V = \<sigma>2 ` (V_S2 - {N}) (unbounded, contains far points)
+       - U \<union> V = UNIV - C, U \<inter> V = {}
+       - Connected (homeomorphic image of connected set)
+       - Bounded/unbounded by compactness of U_S2
+       - Boundary = C by closure arguments\<close>
+  qed
+  \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
+  \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
+  have hUNIV_C_open_global: "UNIV - C \<in> ?TR2"
+  proof -
+    obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f" "f ` top1_S1 = C"
+      using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    have "compact top1_S1" using S1_compact
+      top1_compact_on_subspace_UNIV_iff_compact[of top1_S1]
+      product_topology_on_open_sets_real2
+      unfolding top1_S1_topology_def by (by100 simp)
+    have "compact C"
+    proof -
+      have "compact (f ` top1_S1)"
+      proof (rule compact_continuous_image)
+        show "continuous_on top1_S1 f"
+          unfolding continuous_on_open_invariant
+        proof (intro allI impI)
+          fix B :: "(real \<times> real) set" assume hBo: "open B"
+          have "B \<in> ?TR2" using hBo product_topology_on_open_sets_real2
+            unfolding top1_open_sets_def by (by100 simp)
+          hence "{x \<in> top1_S1. f x \<in> B} \<in> top1_S1_topology"
+            using \<open>top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f\<close>
+            unfolding top1_continuous_map_on_def by (by100 blast)
+          then obtain W where hW: "W \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+              and heq: "{x \<in> top1_S1. f x \<in> B} = top1_S1 \<inter> W"
+            unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+          have "open W" using hW product_topology_on_open_sets_real2
+            unfolding top1_open_sets_def by (by100 simp)
+          moreover have "W \<inter> top1_S1 = f -` B \<inter> top1_S1"
+            using heq by (by100 blast)
+          ultimately show "\<exists>A. open A \<and> A \<inter> top1_S1 = f -` B \<inter> top1_S1" by (by100 blast)
+        qed
+        show "compact top1_S1" by (rule \<open>compact top1_S1\<close>)
+      qed
+      thus ?thesis using \<open>f ` top1_S1 = C\<close> by simp
+    qed
+    hence "closed C" by (rule compact_imp_closed)
+    hence "open (- C)" by (rule open_Compl)
+    hence "open (UNIV - C)" by (simp add: Compl_eq_Diff_UNIV)
+    thus ?thesis using product_topology_on_open_sets_real2 unfolding top1_open_sets_def by (by100 simp)
+  qed
+  have hUNIV_C_lpc_global: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+    by (rule open_subset_locally_path_connected[OF R2_locally_path_connected hUNIV_C_open_global]) simp
+  have hU_pc: "top1_path_connected_on U (subspace_topology UNIV ?TR2 U)"
+  proof -
+    have hTU: "is_topology_on U (subspace_topology UNIV ?TR2 U)"
+      using hU_conn unfolding top1_connected_on_def by (by100 blast)
+    have hU_locp: "top1_locally_path_connected_on U (subspace_topology UNIV ?TR2 U)"
+    proof -
+      \<comment> \<open>UNIV-C is open in R^2. U \<subseteq> UNIV-C. U is open in UNIV-C (component of lpc space).
+         Open subset of R^2 is lpc. U open subset of that.\<close>
+      have hUNIV_C_open: "UNIV - C \<in> ?TR2" by (rule hUNIV_C_open_global)
+      have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        by (rule hUNIV_C_lpc_global)
+      \<comment> \<open>U is open in UNIV-C (component of lpc open space).\<close>
+      have hU_open_in_UC: "U \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+      proof -
+        \<comment> \<open>U is a connected component of UNIV-C (lpc space). Components of lpc = open.\<close>
+        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        proof -
+          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+          thus ?thesis by (rule subspace_topology_is_topology_on) simp
+        qed
+        obtain u where hu: "u \<in> U" using hUV_ne(1) by (by100 blast)
+        have hu_UC: "u \<in> UNIV - C" using hu hUV_cover by (by100 blast)
+        \<comment> \<open>The path component of u in UNIV-C equals U.
+           By Theorem 25.5, in lpc space path component = component.\<close>
+        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
+        proof -
+          \<comment> \<open>U is a connected component: U connected, U \<subseteq> UNIV-C, U maximal.
+             In lpc space, path component = component (Theorem 25.5).\<close>
+          have "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u = U"
+          proof -
+            \<comment> \<open>U is a component of UNIV-C: it's connected, and any connected set containing u
+               that is bigger than U would have to intersect V, but U \<inter> V = {} and both open.\<close>
+            \<comment> \<open>component_of(u) = \<Union>{C \<subseteq> UNIV-C. u \<in> C \<and> connected C}.\<close>
+            \<comment> \<open>U \<subseteq> component_of(u): U is connected and u \<in> U.\<close>
+            have hU_sub_comp: "U \<subseteq> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+              unfolding top1_component_of_on_def
+            proof
+              fix x assume hxU: "x \<in> U"
+              have hUsub: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+              moreover have "u \<in> U" using hu by simp
+              moreover have "top1_connected_on U (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
+              proof -
+                have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
+                    = subspace_topology UNIV ?TR2 U"
+                  by (rule subspace_topology_trans[OF hUsub])
+                thus ?thesis using hU_conn by simp
+              qed
+              ultimately show "x \<in> \<Union>{Ca. Ca \<subseteq> UNIV - C \<and> u \<in> Ca \<and>
+                  top1_connected_on Ca (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) Ca)}"
+                using hxU hUsub by (by100 blast)
+            qed
+            \<comment> \<open>component_of(u) \<subseteq> U: any connected C with u \<in> C \<subseteq> UNIV-C lies in U.
+               (If C intersected V, C = (C\<inter>U) \<union> (C\<inter>V) with both open in C, contradicting connected.)\<close>
+            have hcomp_sub_U: "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u \<subseteq> U"
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              then obtain v where hv_comp: "v \<in> top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+                  and hv_notU: "v \<notin> U" by (by100 blast)
+              have hv_UC: "v \<in> UNIV - C"
+                using hv_comp unfolding top1_component_of_on_def by (by100 blast)
+              hence "v \<in> V" using hv_notU hUV_cover by (by100 blast)
+              \<comment> \<open>component_of(u) is connected. V is connected. They share v.\<close>
+              have hcomp_conn: "top1_connected_on (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u)
+                  (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))
+                    (top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u))"
+                by (rule top1_component_of_on_connected[OF hTUC hu_UC])
+              \<comment> \<open>comp(u) \<union> V is connected (share point v) and = UNIV-C.\<close>
+              have hcomp_V_conn: "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+              proof -
+                let ?comp = "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+                define A :: "nat \<Rightarrow> (real \<times> real) set" where "A = (\<lambda>i. if i = 0 then ?comp else V)"
+                have hI: "{0::nat, 1} \<noteq> {}" by simp
+                have hV_sub: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+                have hcomp_sub: "?comp \<subseteq> UNIV - C" unfolding top1_component_of_on_def by (by100 blast)
+                have hAsub: "\<forall>i\<in>{0::nat,1}. A i \<subseteq> UNIV - C"
+                  unfolding A_def using hV_sub hcomp_sub by auto
+                have hAconn: "\<forall>i\<in>{0::nat,1}. top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
+                proof
+                  fix i :: nat assume "i \<in> {0, 1}"
+                  show "top1_connected_on (A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (A i))"
+                  proof (cases "i = 0")
+                    case True thus ?thesis unfolding A_def using hcomp_conn by simp
+                  next
+                    case False
+                    have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
+                        = subspace_topology UNIV ?TR2 V"
+                      by (rule subspace_topology_trans[OF hV_sub])
+                    thus ?thesis using False unfolding A_def using hV_conn by simp
+                  qed
+                qed
+                have hv_inter: "v \<in> \<Inter>(A ` {0::nat, 1})"
+                  unfolding A_def using hv_comp \<open>v \<in> V\<close> by simp
+                have hY_eq: "(\<Union>i\<in>{0::nat,1}. A i) = UNIV - C"
+                proof -
+                  have "?comp \<union> V \<supseteq> U \<union> V" using hU_sub_comp by (by100 blast)
+                  hence "?comp \<union> V = UNIV - C" using hUV_cover
+                    unfolding top1_component_of_on_def by (by100 blast)
+                  moreover have "(\<Union>i\<in>{0::nat,1}. A i) = ?comp \<union> V" unfolding A_def by auto
+                  ultimately show ?thesis by simp
+                qed
+                have "top1_connected_on (\<Union>i\<in>{0::nat,1}. A i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (\<Union>i\<in>{0::nat,1}. A i))"
+                  by (rule Theorem_23_3[OF hTUC hI hAsub hAconn hv_inter])
+                hence "top1_connected_on (UNIV - C) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C))"
+                  using hY_eq by simp
+                moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C)
+                    = subspace_topology UNIV ?TR2 (UNIV - C)"
+                  by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+                ultimately show ?thesis by simp
+              qed
+              show False using hC_sep hcomp_V_conn by simp
+            qed
+            show ?thesis using hU_sub_comp hcomp_sub_U by (by100 blast)
+          qed
+          moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
+              = top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u"
+            using Theorem_25_5[OF hTUC] hUNIV_C_lpc_global hu_UC by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) u
+            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc hu_UC])
+        ultimately show ?thesis by simp
+      qed
+      have hU_sub_UC: "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+      have "top1_locally_path_connected_on U
+          (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
+        by (rule open_subset_locally_path_connected[OF hUNIV_C_lpc hU_open_in_UC hU_sub_UC])
+      moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
+          = subspace_topology UNIV ?TR2 U"
+        by (rule subspace_topology_trans[OF hU_sub_UC])
+      ultimately show ?thesis by simp
+    qed
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTU hU_conn hU_locp hUV_ne(1)])
+  qed
+  have hV_pc: "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)"
+  proof -
+    have hTV: "is_topology_on V (subspace_topology UNIV ?TR2 V)"
+      using hV_conn unfolding top1_connected_on_def by (by100 blast)
+    have hV_locp: "top1_locally_path_connected_on V (subspace_topology UNIV ?TR2 V)"
+    proof -
+      have hUNIV_C_open: "UNIV - C \<in> ?TR2" by (rule hUNIV_C_open_global)
+      have hUNIV_C_lpc: "top1_locally_path_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        by (rule hUNIV_C_lpc_global)
+      have hV_open_in_UC: "V \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+      proof -
+        have hTUC: "is_topology_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))"
+        proof -
+          have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+          thus ?thesis by (rule subspace_topology_is_topology_on) simp
+        qed
+        obtain v where hv: "v \<in> V" using hUV_ne(2) by (by100 blast)
+        have hv_UC: "v \<in> UNIV - C" using hv hUV_cover by (by100 blast)
+        have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v = V"
+        proof -
+          let ?comp_v = "top1_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v"
+          have hV_sub': "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+          have hV_sub_comp: "V \<subseteq> ?comp_v"
+            unfolding top1_component_of_on_def
+          proof
+            fix x assume hxV: "x \<in> V"
+            have "top1_connected_on V (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V)"
+            proof -
+              have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
+                  = subspace_topology UNIV ?TR2 V" by (rule subspace_topology_trans[OF hV_sub'])
+              thus ?thesis using hV_conn by simp
+            qed
+            thus "x \<in> \<Union>{Ca. Ca \<subseteq> UNIV - C \<and> v \<in> Ca \<and>
+                top1_connected_on Ca (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) Ca)}"
+              using hxV hV_sub' hv by (by100 blast)
+          qed
+          have hcomp_v_sub_V: "?comp_v \<subseteq> V"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            then obtain w where hw_comp: "w \<in> ?comp_v" and hw_notV: "w \<notin> V" by (by100 blast)
+            have hw_UC: "w \<in> UNIV - C" using hw_comp unfolding top1_component_of_on_def by (by100 blast)
+            hence "w \<in> U" using hw_notV hUV_cover by (by100 blast)
+            have hcomp_v_conn: "top1_connected_on ?comp_v
+                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) ?comp_v)"
+              by (rule top1_component_of_on_connected[OF hTUC hv_UC])
+            have hU_sub': "U \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+            have hU_conn_sub: "top1_connected_on U
+                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U)"
+            proof -
+              have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) U
+                  = subspace_topology UNIV ?TR2 U" by (rule subspace_topology_trans[OF hU_sub'])
+              thus ?thesis using hU_conn by simp
+            qed
+            define B :: "nat \<Rightarrow> (real \<times> real) set" where "B = (\<lambda>i. if i = 0 then ?comp_v else U)"
+            have "w \<in> \<Inter>(B ` {0::nat, 1})" unfolding B_def using hw_comp \<open>w \<in> U\<close> by simp
+            moreover have "\<forall>i\<in>{0::nat,1}. B i \<subseteq> UNIV - C"
+              unfolding B_def using hU_sub' unfolding top1_component_of_on_def by auto
+            moreover have "\<forall>i\<in>{0::nat,1}. top1_connected_on (B i)
+                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (B i))"
+            proof
+              fix i :: nat assume "i \<in> {0, 1}"
+              show "top1_connected_on (B i) (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (B i))"
+                unfolding B_def using hcomp_v_conn hU_conn_sub by auto
+            qed
+            ultimately have "top1_connected_on (\<Union>i\<in>{0::nat,1}. B i)
+                (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (\<Union>i\<in>{0::nat,1}. B i))"
+              using Theorem_23_3[OF hTUC, of "{0::nat,1}" B w] by (by100 blast)
+            moreover have "(\<Union>i\<in>{0::nat,1}. B i) = UNIV - C"
+            proof -
+              have "?comp_v \<union> U \<supseteq> V \<union> U" using hV_sub_comp by (by100 blast)
+              thus ?thesis unfolding B_def using hUV_cover
+                unfolding top1_component_of_on_def by auto
+            qed
+            moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) (UNIV - C)
+                = subspace_topology UNIV ?TR2 (UNIV - C)"
+              by (rule subspace_topology_self_carrier) (auto simp: subspace_topology_def)
+            ultimately have "top1_connected_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C))" by simp
+            thus False using hC_sep by simp
+          qed
+          have "?comp_v = V" using hV_sub_comp hcomp_v_sub_V by (by100 blast)
+          moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v = ?comp_v"
+            using Theorem_25_5[OF hTUC] hUNIV_C_lpc_global hv_UC by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        moreover have "top1_path_component_of_on (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) v
+            \<in> subspace_topology UNIV ?TR2 (UNIV - C)"
+          by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTUC hUNIV_C_lpc_global hv_UC])
+        ultimately show ?thesis by simp
+      qed
+      have hV_sub_UC: "V \<subseteq> UNIV - C" using hUV_cover by (by100 blast)
+      have "top1_locally_path_connected_on V
+          (subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V)"
+        by (rule open_subset_locally_path_connected[OF hUNIV_C_lpc hV_open_in_UC hV_sub_UC])
+      moreover have "subspace_topology (UNIV - C) (subspace_topology UNIV ?TR2 (UNIV - C)) V
+          = subspace_topology UNIV ?TR2 V"
+        by (rule subspace_topology_trans[OF hV_sub_UC])
+      ultimately show ?thesis by simp
+    qed
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTV hV_conn hV_locp hUV_ne(2)])
+  qed
+  \<comment> \<open>Step 4 (Bounded/unbounded): Under stereographic projection, one component maps to
+     the bounded component and the other to the unbounded one (Lemma 61.1).\<close>
+  have hU_bdd: "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M" by (rule hU_bdd_raw)
+  have hV_unbdd: "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M" by (rule hV_unbdd_raw)
+  \<comment> \<open>Step 5 (Boundary = C): Both components have C as their common boundary.\<close>
+  have hU_bdy: "closure U = U \<union> C" by (rule hU_bdy_raw)
+  have hV_bdy: "closure V = V \<union> C" by (rule hV_bdy_raw)
+  show ?thesis using hUV_ne hUV_disj hUV_cover hU_pc hV_pc hU_bdd hV_unbdd hU_bdy hV_bdy
+    by blast
 qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
@@ -11656,6 +11728,15 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
 
 
 
