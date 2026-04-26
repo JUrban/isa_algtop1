@@ -7591,7 +7591,27 @@ proof -
   \<comment> \<open>Path \<alpha> from a to b in S^2-C2.\<close>
   have hS2C2_pc: "top1_path_connected_on (top1_S2 - C2_arc)
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
-    sorry \<comment> \<open>S^2-C2 connected + S^2 lpc + open \<Rightarrow> path-connected.\<close>
+  proof (rule connected_locally_path_connected_imp_path_connected)
+    show "is_topology_on (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (by100 blast)
+    show "top1_connected_on (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+      by (rule hS2C2_conn)
+    show "top1_locally_path_connected_on (top1_S2 - C2_arc)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
+    proof -
+      have hC2_compact: "top1_compact_on C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc)"
+        sorry \<comment> \<open>C2 arc = homeomorphic to [0,1] = compact.\<close>
+      have "closedin_on top1_S2 top1_S2_topology C2_arc"
+        by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff hTS hC2_sub hC2_compact])
+      hence "top1_S2 - C2_arc \<in> top1_S2_topology"
+        unfolding closedin_on_def by (by100 blast)
+      thus ?thesis
+        by (rule open_subset_locally_path_connected[OF S2_locally_path_connected]) simp
+    qed
+    show "top1_S2 - C2_arc \<noteq> {}" using hW1_sub_S2C2 hW12(3) by (by100 blast)
+  qed
   obtain \<alpha> where h\<alpha>: "top1_is_path_on (top1_S2 - C2_arc)
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc)) a b \<alpha>"
     using hS2C2_pc ha hb hW1_sub_S2C2 hW2_sub_S2C2
@@ -13384,6 +13404,8 @@ qed
 
 
 end
+
+
 
 
 
