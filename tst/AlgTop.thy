@@ -8613,8 +8613,41 @@ proof -
         by (simp add: image_Un)
       thus ?thesis unfolding U_R2_def V_R2_def by simp
     qed
-    have hUR2_conn: "top1_connected_on U_R2 (subspace_topology UNIV ?TR2 U_R2)" sorry
-    have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)" sorry
+    have hUR2_conn: "top1_connected_on U_R2 (subspace_topology UNIV ?TR2 U_R2)"
+    proof -
+      \<comment> \<open>W1_S2 connected + \<sigma>2 continuous \<Rightarrow> \<sigma>2(W1_S2) connected.\<close>
+      have hTS2N: "is_topology_on (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+        by (rule subspace_topology_is_topology_on[OF
+              is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+      have h\<sigma>2_cont: "top1_continuous_map_on (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) UNIV ?TR2 \<sigma>2"
+        using h\<sigma>2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+          top1_open_sets_is_topology_on_UNIV] by simp
+      \<comment> \<open>W1_S2 connected in S^2\{N} subspace = S^2 subspace (by trans, since W1_S2 \<subseteq> S^2\{N}).\<close>
+      have hW1_conn_S2N: "top1_connected_on W1_S2
+          (subspace_topology (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) W1_S2)"
+        using hW1_conn subspace_topology_trans[OF hW1_sub_S2N, of top1_S2 top1_S2_topology]
+        by simp
+      have "\<sigma>2 ` W1_S2 = U_R2" unfolding U_R2_def by simp
+      moreover have "top1_connected_on (\<sigma>2 ` W1_S2)
+          (subspace_topology UNIV ?TR2 (\<sigma>2 ` W1_S2))"
+      proof -
+        have h\<sigma>2_rest: "top1_continuous_map_on W1_S2
+            (subspace_topology (top1_S2 - {north_pole})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) W1_S2)
+            UNIV ?TR2 \<sigma>2"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>2_cont hW1_sub_S2N])
+        show ?thesis by (rule Theorem_23_5[OF _ hTR2 hW1_conn_S2N h\<sigma>2_rest])
+            (rule subspace_topology_is_topology_on[OF hTS2N hW1_sub_S2N])
+      qed
+      ultimately show ?thesis by simp
+    qed
+    have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)"
+      sorry \<comment> \<open>Same argument for W2_S2-{N} \<Rightarrow> V_R2. Need W2_S2-{N} connected.\<close>
     have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M" sorry \<comment> \<open>W1_S2 compact in S^2\{N}.\<close>
     have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M" sorry \<comment> \<open>V_R2 contains far points.\<close>
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
@@ -12249,6 +12282,7 @@ qed
 
 
 end
+
 
 
 
