@@ -9054,12 +9054,39 @@ proof -
        Direction \<supseteq>: U \<subseteq> closure(U) trivially. C \<subseteq> closure(U) by textbook Step 2.
        Direction \<subseteq>: closure(U) \<inter> V = {} since V open and U \<inter> V = {}.
        Hence closure(U) \<subseteq> UNIV - V = U \<union> C.\<close>
+    have hUR2_open: "open U_R2" sorry \<comment> \<open>\<sigma>2(W1) open: W1 open in S^2\{N}, \<sigma>2 homeo.\<close>
+    have hVR2_open: "open V_R2" sorry \<comment> \<open>\<sigma>2(W2-{N}) open: same.\<close>
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
-      sorry \<comment> \<open>Boundary argument. Direction \<supseteq>: U \<subseteq> cl(U) + C \<subseteq> cl(U) (textbook Step 2).
-         Direction \<subseteq>: cl(U) \<inter> V = {} since V open, U \<inter> V = {} (needs open_Int_closure_eq_empty).
-         U, V open since W1, W2 open in S^2 (PC_N = W2 proved) and \<sigma>2 homeo.\<close>
+    proof (intro set_eqI iffI)
+      fix x assume hx: "x \<in> closure U_R2"
+      show "x \<in> U_R2 \<union> C"
+      proof (rule ccontr)
+        assume "x \<notin> U_R2 \<union> C"
+        hence hxV: "x \<in> V_R2" using hUR2VR2_cover by (by100 blast)
+        \<comment> \<open>V open, x \<in> V, V \<inter> U = {} \<Rightarrow> x \<notin> closure U.\<close>
+        thus False using hx hVR2_open hUR2VR2_disj
+          sorry \<comment> \<open>x \<in> V open, V \<inter> U = {}, x \<in> closure U \<Rightarrow> False.\<close>
+      qed
+    next
+      fix x assume "x \<in> U_R2 \<union> C"
+      thus "x \<in> closure U_R2"
+        sorry \<comment> \<open>U \<subseteq> closure(U) trivially. C \<subseteq> closure(U): textbook Step 2 (arc argument).\<close>
+    qed
     have hVR2_bdy: "closure V_R2 = V_R2 \<union> C"
-      sorry \<comment> \<open>Same argument symmetrically.\<close>
+    proof (intro set_eqI iffI)
+      fix x assume hx: "x \<in> closure V_R2"
+      show "x \<in> V_R2 \<union> C"
+      proof (rule ccontr)
+        assume "x \<notin> V_R2 \<union> C"
+        hence hxU: "x \<in> U_R2" using hUR2VR2_cover by (by100 blast)
+        thus False using hx hUR2_open hUR2VR2_disj
+          sorry \<comment> \<open>Same: x \<in> U open, U \<inter> V = {}, x \<in> closure V \<Rightarrow> False.\<close>
+      qed
+    next
+      fix x assume "x \<in> V_R2 \<union> C"
+      thus "x \<in> closure V_R2"
+        sorry \<comment> \<open>V \<subseteq> closure(V) + C \<subseteq> closure(V): textbook Step 2.\<close>
+    qed
     show ?thesis by (intro that[of U_R2 V_R2])
       (use hUR2_ne hVR2_ne hUR2VR2_disj hUR2VR2_cover hUR2_conn hVR2_conn
            hUR2_bdd hVR2_unbdd hUR2_bdy hVR2_bdy in simp)+
@@ -12690,6 +12717,10 @@ qed
 
 
 end
+
+
+
+
 
 
 
