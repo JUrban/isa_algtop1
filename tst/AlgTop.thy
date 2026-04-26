@@ -8152,7 +8152,46 @@ proof -
           \<comment> \<open>Continuity: compose h1_arc (I\<rightarrow>C1_arc in R^2) with \<sigma>2inv (R^2\<rightarrow>S^2\{N}).\<close>
           show "top1_continuous_map_on I_set I_top C1'
               (subspace_topology top1_S2 top1_S2_topology C1') h_comp"
-            sorry \<comment> \<open>Compose continuous maps + restrict codomain to C1' \<subseteq> S^2\{N}.\<close>
+          proof -
+            \<comment> \<open>Step 1: h1_arc continuous I \<rightarrow> UNIV (embed codomain from C1_arc to UNIV).\<close>
+            have hh1_to_UNIV: "top1_continuous_map_on I_set I_top UNIV ?TR2 h1_arc"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> I_set"
+              thus "h1_arc x \<in> UNIV" by simp
+            next
+              fix V :: "(real \<times> real) set" assume "V \<in> ?TR2"
+              have "{x \<in> I_set. h1_arc x \<in> V} = {x \<in> I_set. h1_arc x \<in> C1_arc \<inter> V}"
+              proof -
+                have "\<forall>x\<in>I_set. h1_arc x \<in> C1_arc"
+                  using hh1_bij unfolding bij_betw_def by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              moreover have "C1_arc \<inter> V \<in> subspace_topology UNIV ?TR2 C1_arc"
+                using \<open>V \<in> ?TR2\<close> unfolding subspace_topology_def by (by100 blast)
+              moreover have "{x \<in> I_set. h1_arc x \<in> C1_arc \<inter> V} \<in> I_top"
+                using hh1_cont calculation(2) unfolding top1_continuous_map_on_def by (by100 blast)
+              ultimately show "{x \<in> I_set. h1_arc x \<in> V} \<in> I_top" by simp
+            qed
+            \<comment> \<open>Step 2: compose with \<sigma>2inv: I \<rightarrow> S^2\{N}.\<close>
+            have hcomp_to_S2N: "top1_continuous_map_on I_set I_top (top1_S2 - {north_pole})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))
+                (\<sigma>2inv \<circ> h1_arc)"
+              by (rule top1_continuous_map_on_comp[OF hh1_to_UNIV h\<sigma>2inv_cont])
+            \<comment> \<open>Step 3: restrict codomain to C1' \<subseteq> S^2\{N}.\<close>
+            have himg: "(\<sigma>2inv \<circ> h1_arc) ` I_set = C1'"
+              using hbij_comp unfolding bij_betw_def h_comp_def by simp
+            have hcomp_to_C1': "top1_continuous_map_on I_set I_top C1'
+                (subspace_topology (top1_S2 - {north_pole})
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) C1')
+                (\<sigma>2inv \<circ> h1_arc)"
+              by (rule top1_continuous_map_on_codomain_shrink[OF hcomp_to_S2N])
+                 (use himg hC1'_sub_S2N in auto)
+            \<comment> \<open>Step 4: sub(S^2\{N}, sub(S^2, S^2_top, S^2\{N}), C1') = sub(S^2, S^2_top, C1').\<close>
+            thus ?thesis
+              using subspace_topology_trans[OF hC1'_sub_S2N, of top1_S2 top1_S2_topology]
+              unfolding h_comp_def by simp
+          qed
           show "top1_continuous_map_on C1'
               (subspace_topology top1_S2 top1_S2_topology C1') I_set I_top
               (inv_into I_set h_comp)"
@@ -12210,6 +12249,9 @@ qed
 
 
 end
+
+
+
 
 
 
