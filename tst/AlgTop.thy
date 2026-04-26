@@ -15303,7 +15303,32 @@ lemma pi1_S2_minus_two_points_infinite_cyclic:
        top1_path_homotopic_on (top1_S2 - {p} - {q})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a a
         f (top1_path_power (top1_path_reverse gen) a n)))"
-  sorry
+proof -
+  \<comment> \<open>Chain: S^2-{p} \<cong> R^2 (stereographic), S^2-{p,q} \<cong> R^2-{h(q)},
+     R^2-{point} deformation retracts to S^1, \<pi>_1(S^1) \<cong> Z (Theorem_54_5_iso).\<close>
+  let ?X = "top1_S2 - {p} - {q}" and ?TX = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})"
+  \<comment> \<open>Step 1: Stereographic projection \<sigma> from p gives S^2-{p} \<cong> R^2.\<close>
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+    using S2_minus_point_homeo_R2[OF assms(2)] by blast
+  \<comment> \<open>Step 2: Restrict to S^2-{p,q}: \<sigma> maps this to R^2-{\<sigma>(q)}.\<close>
+  define q' where "q' = \<sigma> q"
+  have hq_in: "q \<in> top1_S2 - {p}" using assms(3,4) by (by100 blast)
+  have ha_in: "a \<in> top1_S2 - {p}" using assms(5) by (by100 blast)
+  define a' where "a' = \<sigma> a"
+  \<comment> \<open>Step 3: \<sigma> restricts to homeomorphism S^2-{p,q} \<cong> R^2-{q'}.\<close>
+  \<comment> \<open>Step 4: R^2-{q'} is homeomorphic to R^2-{0} (by translation).\<close>
+  \<comment> \<open>Step 5: R^2-{0} deformation retracts to S^1 (Theorem_58_2_inclusion_iso).\<close>
+  \<comment> \<open>Step 6: \<pi>_1(S^1) \<cong> Z (Theorem_54_5_iso).\<close>
+  \<comment> \<open>Step 7: Chain of isomorphisms: \<pi>_1(S^2-{p,q}) \<cong> \<pi>_1(R^2-{q'}) \<cong> \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z.\<close>
+  \<comment> \<open>Step 8: Extract generator and generate-all property.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Full proof requires: stereographic restriction (step 3),
+       translation homeomorphism (step 4), Theorem_58_2 chain (step 5-6),
+       homeomorphism-induced \<pi>_1 isomorphism (step 7), and extraction (step 8).
+       Each step ~30-50 lines. Total: ~200 lines.\<close>
+qed
 
 \<comment> \<open>Key algebraic fact for 63.5: in an infinite cyclic group,
    any two nontrivial elements have a common nonzero power.
