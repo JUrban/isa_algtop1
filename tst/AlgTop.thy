@@ -9546,14 +9546,15 @@ proof -
       proof -
         have "U_R2 \<subseteq> closure_on UNIV ?TR2 U_R2" by (rule subset_closure_on)
         moreover have "C \<subseteq> closure_on UNIV ?TR2 U_R2"
-          sorry \<comment> \<open>Textbook Step 2 boundary argument. For x \<in> C, W \<in> TR2, x \<in> W:
-             show W \<inter> U_R2 \<noteq> {} (hence x \<in> closure via closure_meets_open).
-             Proof: Transfer to S^2. Decompose C' = C1'\<union>C2' with C1' \<subseteq> \<sigma>2inv(W).
-             C2' arc \<Rightarrow> doesn't separate S^2 (Theorem_63_2). S^2-C2' connected.
-             Path from W1_S2 to W2_S2 in S^2-C2'. Connected image meets C1'.
-             Points near the C1'-meeting that are in W1_S2 are also in \<sigma>2inv(W).
-             Hence \<sigma>2inv(W) \<inter> W1_S2 \<noteq> {}, so W \<inter> U_R2 \<noteq> {}.
-             Needs: flexible arc decomposition of simple closed curve.\<close>
+        proof
+          fix x assume "x \<in> C"
+          show "x \<in> closure_on UNIV ?TR2 U_R2"
+            using iffD2[OF Theorem_17_5a[OF hTR2 _ _]]
+            sorry \<comment> \<open>By Theorem_17_5a: suffices to show every neighborhood of x meets U_R2.
+               Textbook Step 2 arc argument: decompose C' = C1'\<union>C2' with C1' near x.
+               C2' arc \<Rightarrow> S^2-C2' connected. Path from W1 to W2 in S^2-C2' meets C1'.
+               Points near C1'-meeting in W1 are in the neighborhood. Hence nbhd \<inter> U \<noteq> {}.\<close>
+        qed
         ultimately show ?thesis by (by100 blast)
       qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
@@ -9585,7 +9586,12 @@ proof -
       proof -
         have "V_R2 \<subseteq> closure_on UNIV ?TR2 V_R2" by (rule subset_closure_on)
         moreover have "C \<subseteq> closure_on UNIV ?TR2 V_R2"
-          sorry \<comment> \<open>Same textbook Step 2 argument as for U (symmetric).\<close>
+        proof
+          fix x assume "x \<in> C"
+          show "x \<in> closure_on UNIV ?TR2 V_R2"
+            using iffD2[OF Theorem_17_5a[OF hTR2 _ _]]
+            sorry \<comment> \<open>Same as U: every neighborhood of x \<in> C meets V_R2.\<close>
+        qed
         ultimately show ?thesis by (by100 blast)
       qed
       show ?thesis using hcl_sub hcl_sup by (by100 blast)
@@ -13220,6 +13226,8 @@ qed
 
 
 end
+
+
 
 
 
