@@ -8923,8 +8923,13 @@ proof -
     qed
     have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)"
       sorry \<comment> \<open>Same argument for W2_S2-{N} \<Rightarrow> V_R2. Need W2_S2-{N} connected.\<close>
-    have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M" sorry \<comment> \<open>W1_S2 compact in S^2\{N}.\<close>
-    have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M" sorry \<comment> \<open>V_R2 contains far points.\<close>
+    \<comment> \<open>Bounded/unbounded: via Lemma_61_1_components_correspond.\<close>
+    have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M"
+      sorry \<comment> \<open>Lemma_61_1: N \<notin> W1_S2, W1_S2 component of S^2-C', \<sigma>2 homeo \<Rightarrow> \<sigma>2(W1_S2) bounded.
+         Needs: W1_S2 \<in> top1_components_on S2C TS2C (component of S^2-C'),
+         C' compact (arc images of [0,1]), N \<in> S^2-C' (proved).\<close>
+    have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M"
+      sorry \<comment> \<open>Lemma_61_1: N \<in> W2_S2, W2_S2 component of S^2-C' \<Rightarrow> \<sigma>2(W2_S2-{N}) unbounded.\<close>
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
     have hVR2_bdy: "closure V_R2 = V_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
     show ?thesis by (intro that[of U_R2 V_R2])
@@ -12557,6 +12562,7 @@ qed
 
 
 end
+
 
 
 
