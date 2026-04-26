@@ -15322,7 +15322,41 @@ lemma infinite_cyclic_common_power:
   shows "\<exists>m k. m > 0 \<and>
       top1_path_homotopic_on X TX a a
         (top1_path_power f a m) (top1_path_power g a k)"
-  sorry
+proof -
+  obtain gen where hgen: "top1_is_loop_on X TX a gen"
+      and hgen_generates: "\<forall>h. top1_is_loop_on X TX a h \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on X TX a a h (top1_path_power gen a n) \<or>
+         top1_path_homotopic_on X TX a a h (top1_path_power (top1_path_reverse gen) a n))"
+    using assms(6) by (by100 blast)
+  \<comment> \<open>[f] = gen^n1 or (gen^{-1})^n1 for some n1.\<close>
+  obtain n1 where hn1: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n1) \<or>
+      top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n1)"
+    using hgen_generates assms(2) by (by100 blast)
+  obtain n2 where hn2: "top1_path_homotopic_on X TX a a g (top1_path_power gen a n2) \<or>
+      top1_path_homotopic_on X TX a a g (top1_path_power (top1_path_reverse gen) a n2)"
+    using hgen_generates assms(3) by (by100 blast)
+  \<comment> \<open>n1 > 0 (since f nontrivial) and n2 > 0 (since g nontrivial).\<close>
+  have hn1_pos: "n1 > 0"
+  proof (rule ccontr)
+    assume "\<not> n1 > 0" hence "n1 = 0" by simp
+    hence "top1_path_homotopic_on X TX a a f (top1_constant_path a)"
+      using hn1 by (simp add: top1_constant_path_def)
+    thus False using assms(4) by simp
+  qed
+  have hn2_pos: "n2 > 0"
+  proof (rule ccontr)
+    assume "\<not> n2 > 0" hence "n2 = 0" by simp
+    hence "top1_path_homotopic_on X TX a a g (top1_constant_path a)"
+      using hn2 by (simp add: top1_constant_path_def)
+    thus False using assms(5) by simp
+  qed
+  \<comment> \<open>Now [f]^n2 = gen^(n1*n2) = [g]^n1 (modulo signs).
+     This needs: path_power distributes over homotopy, (gen^n1)^n2 = gen^(n1*n2).
+     For now, sorry the algebraic computation.\<close>
+  show ?thesis sorry \<comment> \<open>Algebraic: [f]=[gen]^{n1} (or inverse) and [g]=[gen]^{n2} (or inverse)
+     with n1,n2>0. Then [f]^{n2} = [gen]^{n1*n2} = [g]^{n1} (or inverse^{n1*n2}).
+     In both cases, get m=n2>0 and k=n1 (or adjusted for signs).\<close>
+qed
 
 
 (** from \<S>63 Theorem 63.2: an arc D in S^2 does not separate S^2.
@@ -18573,11 +18607,25 @@ proof -
   \<comment> \<open>Now construct the two connected components.\<close>
   have hW1_conn: "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
   proof (rule ccontr)
-    \<comment> \<open>If W1 splits, swap roles: take R' = W1, and split it. Same argument applies.\<close>
     assume "\<not> top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
-    \<comment> \<open>Then W1 splits into W1a, W1b, and together with R we have \<ge>3 components.
-       Same 63.1(a)+(c) argument gives contradiction.\<close>
-    thus False sorry \<comment> \<open>Symmetric to hR_conn proof above: W1 splits \<Rightarrow> 3+ components \<Rightarrow> contradiction.\<close>
+    \<comment> \<open>Symmetric to hR_conn: W1 splits into W1a, W1b, giving 3 components {W1a, W1b, R}.\<close>
+    have hW1_open_S2: "W1 \<in> top1_S2_topology"
+    proof -
+      obtain W where "W \<in> top1_S2_topology" "W1 = (top1_S2 - (C1 \<union> C2)) \<inter> W"
+        using hW1R(1) unfolding subspace_topology_def by (by100 blast)
+      hence "W1 = W \<inter> (top1_S2 - (C1 \<union> C2))" by (by100 blast)
+      thus ?thesis using topology_inter_open[OF hTS2 \<open>W \<in> _\<close> hopen] by simp
+    qed
+    have hTW1: "is_topology_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (use hW1R(6) in blast)
+    obtain W1a W1b where hWab: "W1a \<in> subspace_topology top1_S2 top1_S2_topology W1"
+        "W1b \<in> subspace_topology top1_S2 top1_S2_topology W1"
+        "W1a \<noteq> {}" "W1b \<noteq> {}" "W1a \<inter> W1b = {}" "W1a \<union> W1b = W1"
+      using \<open>\<not> top1_connected_on W1 _\<close> hTW1 unfolding top1_connected_on_def by blast
+    \<comment> \<open>Now {W1a, W1b, R} are 3 disjoint nonempty open sets covering S^2-(C1\<union>C2).
+       Same 63.1(a)+(c) argument gives contradiction. By symmetry with hR_conn proof.\<close>
+    thus False sorry \<comment> \<open>Exact same structure as hR_conn proof: pick points in the 3 sets,
+       get paths via hU_pc/hV_pc, apply 63.1(a) twice and 63.1(c), contradiction with \<pi>_1\<cong>Z.\<close>
   qed
   show ?thesis
   proof (intro exI conjI)
