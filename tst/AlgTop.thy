@@ -13909,7 +13909,196 @@ proof -
                 thus "e \<in> {x \<in> E. p0 x \<in> V}" unfolding p0_def by simp
               qed
               show "\<forall>Vn\<in>?\<V>V. top1_homeomorphism_on Vn (subspace_topology E TE Vn) V
-                  (subspace_topology X TX V) p0" sorry
+                  (subspace_topology X TX V) p0"
+              proof
+                fix Sn assume "Sn \<in> ?\<V>V"
+                then obtain k where hSn: "Sn = vsheet k" by (by100 blast)
+                have hSn_sub: "Sn \<subseteq> E" unfolding hSn vsheet_def by (by100 blast)
+                have hV_sub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+                have hbij: "bij_betw p0 Sn V" unfolding bij_betw_def
+                proof (intro conjI)
+                  show "inj_on p0 Sn" unfolding p0_def hSn
+                  proof (intro inj_onI)
+                    fix e1 e2 assume he1: "e1 \<in> vsheet k" and he2: "e2 \<in> vsheet k"
+                        and hfst: "fst e1 = fst e2"
+                    have h1: "fst e1 \<in> A \<and> snd e1 = 2*(k+1) \<or> fst e1 \<in> B \<and> snd e1 = 2*k \<or>
+                        fst e1 \<in> V-U \<and> snd e1 = 2*k+1"
+                      using he1 unfolding vsheet_def by auto
+                    have h2: "fst e2 \<in> A \<and> snd e2 = 2*(k+1) \<or> fst e2 \<in> B \<and> snd e2 = 2*k \<or>
+                        fst e2 \<in> V-U \<and> snd e2 = 2*k+1"
+                      using he2 unfolding vsheet_def by auto
+                    have "snd e1 = snd e2" using h1 h2 hfst assms(6) hAB by auto
+                    thus "e1 = e2" using hfst by (cases e1, cases e2) auto
+                  qed
+                  show "p0 ` Sn = V"
+                  proof (rule set_eqI, rule iffI)
+                    fix x assume "x \<in> p0 ` Sn"
+                    thus "x \<in> V" unfolding p0_def hSn vsheet_def by auto
+                  next
+                    fix x assume "x \<in> V"
+                    hence "x \<in> A \<or> x \<in> B \<or> x \<in> V - U" using hAB by (by100 blast)
+                    thus "x \<in> p0 ` Sn"
+                    proof (elim disjE)
+                      assume "x \<in> A"
+                      hence "(x, 2*(k+1)) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> hAB by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    next
+                      assume "x \<in> B"
+                      hence "(x, 2*k) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> hAB by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    next
+                      assume "x \<in> V - U"
+                      hence "(x, 2*k+1) \<in> vsheet k" unfolding vsheet_def E_def
+                        using \<open>x \<in> V\<close> by auto
+                      thus ?thesis unfolding p0_def hSn by force
+                    qed
+                  qed
+                qed
+                have hp0_img: "p0 ` Sn = V" using hbij unfolding bij_betw_def by (by100 blast)
+                have hinj: "inj_on p0 Sn" using hbij unfolding bij_betw_def by (by100 blast)
+                show "top1_homeomorphism_on Sn (subspace_topology E TE Sn) V
+                    (subspace_topology X TX V) p0"
+                  unfolding top1_homeomorphism_on_def
+                proof (intro conjI)
+                  show "is_topology_on Sn (subspace_topology E TE Sn)"
+                    by (rule subspace_topology_is_topology_on[OF hTE hSn_sub])
+                  show "is_topology_on V (subspace_topology X TX V)"
+                    by (rule subspace_topology_is_topology_on[OF assms(1) hV_sub])
+                  show "bij_betw p0 Sn V" by (rule hbij)
+                  \<comment> \<open>p0 continuous: preimage of TX-open in V = TE-open in Sn.\<close>
+                  show "top1_continuous_map_on Sn (subspace_topology E TE Sn) V
+                      (subspace_topology X TX V) p0"
+                    unfolding top1_continuous_map_on_def
+                  proof (intro conjI ballI)
+                    fix e assume "e \<in> Sn"
+                    thus "p0 e \<in> V" unfolding hSn p0_def vsheet_def by auto
+                  next
+                    fix W assume "W \<in> subspace_topology X TX V"
+                    then obtain W0 where hW0: "W0 \<in> TX" "W = V \<inter> W0"
+                      unfolding subspace_topology_def by (by100 blast)
+                    have hW_sub: "W \<subseteq> V" using hW0 by (by100 blast)
+                    have hW_TX: "V \<inter> W0 \<in> TX"
+                      by (rule topology_inter_open[OF assms(1) hV_TX hW0(1)])
+                    hence hW_in_TX: "W \<in> TX" using hW0 by simp
+                    \<comment> \<open>Build W' \<in> TE with Sn \<inter> W' = {e \<in> Sn. p0 e \<in> W}.\<close>
+                    define W' where "W' = {e \<in> E. p0 e \<in> W}"
+                    have "W' \<in> TE" unfolding TE_def W'_def
+                    proof (intro CollectI conjI allI)
+                      show "{e \<in> E. p0 e \<in> W} \<subseteq> E" by (by100 blast)
+                      fix m :: int
+                      have "{x \<in> U. (x, 2*m) \<in> {e \<in> E. p0 e \<in> W}} = U \<inter> W"
+                        unfolding p0_def E_def by auto
+                      thus "{x \<in> U. (x, 2*m) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+                        using topology_inter_open[OF assms(1) hU_TX hW_in_TX] by simp
+                      have h1: "{x \<in> A. (x, 2*m+2) \<in> {e \<in> E. p0 e \<in> W}} = A \<inter> W"
+                        unfolding p0_def E_def using hAB by auto
+                      have h2: "{x \<in> B. (x, 2*m) \<in> {e \<in> E. p0 e \<in> W}} = B \<inter> W"
+                        unfolding p0_def E_def using hAB by auto
+                      have h3: "{x \<in> V-U. (x, 2*m+1) \<in> {e \<in> E. p0 e \<in> W}} = (V-U) \<inter> W"
+                        unfolding p0_def E_def using hW_sub by auto
+                      have "(A\<inter>W) \<union> (B\<inter>W) \<union> ((V-U)\<inter>W) = V \<inter> W" using hAB by (by100 blast)
+                      hence "... \<in> TX" using topology_inter_open[OF assms(1) hV_TX hW_in_TX] by simp
+                      thus "{x \<in> A. (x, 2*m+2) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+                          {x \<in> B. (x, 2*m) \<in> {e \<in> E. p0 e \<in> W}} \<union>
+                          {x \<in> V-U. (x, 2*m+1) \<in> {e \<in> E. p0 e \<in> W}} \<in> TX"
+                        using h1 h2 h3 \<open>(A\<inter>W) \<union> (B\<inter>W) \<union> ((V-U)\<inter>W) = V \<inter> W\<close> by presburger
+                    qed
+                    have "{e \<in> Sn. p0 e \<in> W} = Sn \<inter> W'"
+                      unfolding W'_def using hSn_sub by (by100 blast)
+                    thus "{e \<in> Sn. p0 e \<in> W} \<in> subspace_topology E TE Sn"
+                      using \<open>W' \<in> TE\<close> unfolding subspace_topology_def by (by100 blast)
+                  qed
+                  \<comment> \<open>Inverse continuous: preimage under inv_into uses odd-slice of TE.\<close>
+                  show "top1_continuous_map_on V (subspace_topology X TX V) Sn
+                      (subspace_topology E TE Sn) (inv_into Sn p0)"
+                    unfolding top1_continuous_map_on_def
+                  proof (intro conjI ballI)
+                    fix x assume "x \<in> V"
+                    thus "inv_into Sn p0 x \<in> Sn" using hp0_img by (simp add: inv_into_into)
+                  next
+                    fix W assume "W \<in> subspace_topology E TE Sn"
+                    then obtain W' where hW': "W' \<in> TE" "W = Sn \<inter> W'"
+                      unfolding subspace_topology_def by (by100 blast)
+                    have hslice: "{x \<in> A. (x, 2*k+2) \<in> W'} \<union> {x \<in> B. (x, 2*k) \<in> W'} \<union>
+                        {x \<in> V-U. (x, 2*k+1) \<in> W'} \<in> TX"
+                    proof -
+                      have "\<forall>n::int. {x \<in> A. (x, 2*n+2) \<in> W'} \<union> {x \<in> B. (x, 2*n) \<in> W'} \<union>
+                          {x \<in> V-U. (x, 2*n+1) \<in> W'} \<in> TX"
+                        using hW'(1) unfolding TE_def by (by100 blast)
+                      hence "{x \<in> A. (x, 2*k+2) \<in> W'} \<union> {x \<in> B. (x, 2*k) \<in> W'} \<union>
+                          {x \<in> V-U. (x, 2*k+1) \<in> W'} \<in> TX" by blast
+                      thus ?thesis .
+                    qed
+                    \<comment> \<open>inv_into maps: x\<in>A \<mapsto> (x,2(k+1)), x\<in>B \<mapsto> (x,2k), x\<in>V\U \<mapsto> (x,2k+1).\<close>
+                    have hinv_A: "\<And>x. x \<in> A \<Longrightarrow> x \<in> V \<Longrightarrow> inv_into Sn p0 x = (x, 2*(k+1))"
+                    proof -
+                      fix x assume "x \<in> A" "x \<in> V"
+                      have "(x, 2*(k+1)) \<in> Sn" unfolding hSn vsheet_def E_def
+                        using \<open>x \<in> A\<close> \<open>x \<in> V\<close> hAB by auto
+                      thus "inv_into Sn p0 x = (x, 2*(k+1))"
+                        by (intro inv_into_f_eq[OF hinj]) (simp_all add: p0_def)
+                    qed
+                    have hinv_B: "\<And>x. x \<in> B \<Longrightarrow> x \<in> V \<Longrightarrow> inv_into Sn p0 x = (x, 2*k)"
+                    proof -
+                      fix x assume "x \<in> B" "x \<in> V"
+                      have "(x, 2*k) \<in> Sn" unfolding hSn vsheet_def E_def
+                        using \<open>x \<in> B\<close> \<open>x \<in> V\<close> hAB by auto
+                      thus "inv_into Sn p0 x = (x, 2*k)"
+                        by (intro inv_into_f_eq[OF hinj]) (simp_all add: p0_def)
+                    qed
+                    have hinv_VU: "\<And>x. x \<in> V - U \<Longrightarrow> inv_into Sn p0 x = (x, 2*k+1)"
+                    proof -
+                      fix x assume "x \<in> V - U"
+                      have "(x, 2*k+1) \<in> Sn" unfolding hSn vsheet_def E_def
+                        using \<open>x \<in> V - U\<close> by auto
+                      thus "inv_into Sn p0 x = (x, 2*k+1)"
+                        by (intro inv_into_f_eq[OF hinj]) (simp_all add: p0_def)
+                    qed
+                    have hpre: "{x \<in> V. inv_into Sn p0 x \<in> W} =
+                        {x \<in> A. (x, 2*(k+1)) \<in> W'} \<union> {x \<in> B. (x, 2*k) \<in> W'} \<union>
+                        {x \<in> V-U. (x, 2*k+1) \<in> W'}"
+                    proof (rule set_eqI, rule iffI)
+                      fix x assume hx: "x \<in> {x \<in> V. inv_into Sn p0 x \<in> W}"
+                      hence "x \<in> V" "inv_into Sn p0 x \<in> W'" "inv_into Sn p0 x \<in> Sn"
+                        using hW'(2) hp0_img inv_into_into[of x p0 Sn] by auto
+                      have "x \<in> A \<or> x \<in> B \<or> x \<in> V-U" using \<open>x \<in> V\<close> hAB by (by100 blast)
+                      thus "x \<in> {x \<in> A. (x, 2*(k+1)) \<in> W'} \<union> {x \<in> B. (x, 2*k) \<in> W'} \<union>
+                          {x \<in> V-U. (x, 2*k+1) \<in> W'}"
+                      proof (elim disjE)
+                        assume "x \<in> A"
+                        thus ?thesis using hinv_A \<open>x \<in> V\<close> \<open>inv_into Sn p0 x \<in> W'\<close> by auto
+                      next
+                        assume "x \<in> B"
+                        thus ?thesis using hinv_B \<open>x \<in> V\<close> \<open>inv_into Sn p0 x \<in> W'\<close> by auto
+                      next
+                        assume "x \<in> V - U"
+                        thus ?thesis using hinv_VU \<open>inv_into Sn p0 x \<in> W'\<close> by auto
+                      qed
+                    next
+                      fix x assume "x \<in> {x \<in> A. (x, 2*(k+1)) \<in> W'} \<union>
+                          {x \<in> B. (x, 2*k) \<in> W'} \<union> {x \<in> V-U. (x, 2*k+1) \<in> W'}"
+                      hence "x \<in> V" using hAB by (by100 blast)
+                      have "inv_into Sn p0 x \<in> W'"
+                        using \<open>x \<in> _ \<union> _ \<union> _\<close> hinv_A hinv_B hinv_VU \<open>x \<in> V\<close> by auto
+                      moreover have "inv_into Sn p0 x \<in> Sn"
+                        using \<open>x \<in> V\<close> hp0_img by (simp add: inv_into_into)
+                      ultimately show "x \<in> {x \<in> V. inv_into Sn p0 x \<in> W}"
+                        using \<open>x \<in> V\<close> hW'(2) by (by100 blast)
+                    qed
+                    have hpre_sub: "{x \<in> V. inv_into Sn p0 x \<in> W} \<subseteq> V" by (by100 blast)
+                    have hpre_TX: "{x \<in> V. inv_into Sn p0 x \<in> W} \<in> TX"
+                      using hpre hslice by simp
+                    show "{x \<in> V. inv_into Sn p0 x \<in> W} \<in> subspace_topology X TX V"
+                    proof -
+                      have "{x \<in> V. inv_into Sn p0 x \<in> W} =
+                          V \<inter> {x \<in> V. inv_into Sn p0 x \<in> W}" using hpre_sub by (by100 blast)
+                      thus ?thesis using hpre_TX unfolding subspace_topology_def by (by100 blast)
+                    qed
+                  qed
+                qed
+              qed
             qed
           qed
         qed
