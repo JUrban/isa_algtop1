@@ -17218,10 +17218,10 @@ proof -
     \<comment> \<open>C1_arc, C2_arc don't separate S^2 (by Theorem_63_2 applied on S^2).
        This requires transferring arcs to S^2 and applying 63.2 there.
        The transfer uses the same \<sigma>^{-1} as in step 1.\<close>
-    have hC1_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology
-        (\<sigma>inv ` C1_arc)" sorry \<comment> \<open>Transfer C1_arc to S^2 arc, apply Theorem_63_2.\<close>
-    have hC2_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology
-        (\<sigma>inv ` C2_arc)" sorry \<comment> \<open>Same for C2_arc.\<close>
+    \<comment> \<open>C1_arc and C2_arc don't separate S^2 (by Theorem_63_2 after transfer).
+       The transfer requires re-obtaining \<sigma>^{-1} (it was local to hC_sep proof).\<close>
+    \<comment> \<open>NOTE: \<sigma>inv is not in scope here (it was inside hC_sep's proof block).
+       The proof requires: obtain \<sigma>, define \<sigma>inv, transfer arcs, apply 63.2.\<close>
     \<comment> \<open>By 63.5: exactly 2 components on S^2.\<close>
     \<comment> \<open>Transfer back to R^2 and identify bounded/unbounded.\<close>
     show ?thesis sorry \<comment> \<open>Needs:
