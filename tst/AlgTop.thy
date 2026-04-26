@@ -6831,7 +6831,7 @@ proof -
       qed
       moreover have "{p, q} \<subseteq> C1" using hpq by (by100 blast)
       ultimately obtain c where "c \<in> C1" "c \<notin> {p, q}" by (by100 blast)
-      hence "c \<notin> C2" using hpq by (by100 blast)
+      hence "c \<notin> C2" using hpq by (by100 fast)
       hence "c \<in> V" unfolding V_def using \<open>c \<in> C1\<close> hC1sub by (by100 blast)
       thus ?thesis by (by100 blast)
     qed
@@ -7717,9 +7717,66 @@ proof -
     have hg_cont: "continuous_on I_set g" unfolding g_def by (intro continuous_intros)
     have hfg_cont: "top1_continuous_map_on I_set I_top C1
         (subspace_topology top1_S2 top1_S2_topology C1) (f \<circ> g)"
-      sorry \<comment> \<open>Composition of continuous functions.\<close>
+    proof -
+      \<comment> \<open>Bridge: continuous_on I_set (f \<circ> g) in HOL \<Rightarrow> top1_continuous_map_on.\<close>
+      have hg_sub: "g ` I_set \<subseteq> top1_S1" using hg_img hS1_decomp by (by100 blast)
+      have hfg_maps: "\<And>t. t \<in> I_set \<Longrightarrow> (f \<circ> g) t \<in> C1"
+      proof -
+        fix t assume "t \<in> I_set"
+        hence "g t \<in> g ` I_set" by (by100 blast)
+        hence "g t \<in> ?short_arc" using hg_img by simp
+        thus "(f \<circ> g) t \<in> C1" unfolding C1_def comp_def by (by100 blast)
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix t assume "t \<in> I_set" thus "(f \<circ> g) t \<in> C1" by (rule hfg_maps)
+      next
+        fix W assume hW: "W \<in> subspace_topology top1_S2 top1_S2_topology C1"
+        then obtain W0 where hW0: "W0 \<in> top1_S2_topology" "W = C1 \<inter> W0"
+          unfolding subspace_topology_def by (by100 blast)
+        have hS1_open: "{s \<in> top1_S1. f s \<in> W0} \<in> top1_S1_topology"
+          using hf_cont hW0(1) unfolding top1_continuous_map_on_def by (by100 blast)
+        have heq: "{t \<in> I_set. (f \<circ> g) t \<in> W} = {t \<in> I_set. g t \<in> {s \<in> top1_S1. f s \<in> W0}}"
+          using hfg_maps hW0(2) hg_sub by (by100 force)
+        show "{t \<in> I_set. (f \<circ> g) t \<in> W} \<in> I_top"
+        proof -
+          obtain W1 where hW1: "W1 \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+              "{s \<in> top1_S1. f s \<in> W0} = top1_S1 \<inter> W1"
+            using hS1_open unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+          have "open W1" using hW1(1) product_topology_on_open_sets_real2
+            unfolding top1_open_sets_def by (by100 simp)
+          have "{t \<in> I_set. g t \<in> {s \<in> top1_S1. f s \<in> W0}} = I_set \<inter> g -` W1"
+            using hg_sub hW1(2) by (by100 force)
+          hence "{t \<in> I_set. (f \<circ> g) t \<in> W} = I_set \<inter> g -` W1" using heq by simp
+          moreover have "I_set \<inter> g -` W1 \<in> I_top"
+          proof -
+            have "\<exists>A. open A \<and> A \<inter> I_set = g -` W1 \<inter> I_set"
+              using hg_cont \<open>open W1\<close> unfolding continuous_on_open_invariant by simp
+            then obtain A where "open A" "A \<inter> I_set = g -` W1 \<inter> I_set" by (by100 blast)
+            have "A \<in> (top1_open_sets :: real set set)" using \<open>open A\<close>
+              unfolding top1_open_sets_def by simp
+            have "I_set \<inter> g -` W1 = I_set \<inter> A" using \<open>A \<inter> I_set = _\<close> by (by100 blast)
+            thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def
+              subspace_topology_def using \<open>A \<in> top1_open_sets\<close> by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        qed
+      qed
+    qed
     have hfg_bij: "bij_betw (f \<circ> g) I_set C1"
-      sorry \<comment> \<open>Injective composition of injective functions with right images.\<close>
+    proof -
+      have hinj_f_short: "inj_on f ?short_arc"
+        by (rule inj_on_subset[OF hf_inj]) (use hS1_decomp in blast)
+      have "inj_on (f \<circ> g) I_set"
+        by (rule comp_inj_on[OF hg_inj]) (use hinj_f_short hg_img in simp)
+      moreover have "(f \<circ> g) ` I_set = C1"
+      proof -
+        have "(f \<circ> g) ` I_set = f ` (g ` I_set)" by (simp add: image_comp)
+        also have "\<dots> = f ` ?short_arc" using hg_img by simp
+        finally show ?thesis unfolding C1_def by simp
+      qed
+      ultimately show ?thesis unfolding bij_betw_def by simp
+    qed
     have hC1_haus: "is_hausdorff_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
       by (rule hausdorff_subspace[OF top1_S2_is_hausdorff])
          (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
@@ -7753,8 +7810,64 @@ proof -
     have hg'_cont: "continuous_on I_set g'" unfolding g'_def by (intro continuous_intros)
     have hfg'_cont: "top1_continuous_map_on I_set I_top C2
         (subspace_topology top1_S2 top1_S2_topology C2) (f \<circ> g')"
-      sorry
-    have hfg'_bij: "bij_betw (f \<circ> g') I_set C2" sorry
+    proof -
+      have hg'_sub: "g' ` I_set \<subseteq> top1_S1" using hg'_img hS1_decomp by (by100 blast)
+      have hfg'_maps: "\<And>t. t \<in> I_set \<Longrightarrow> (f \<circ> g') t \<in> C2"
+      proof -
+        fix t assume "t \<in> I_set"
+        hence "g' t \<in> g' ` I_set" by (by100 blast)
+        hence "g' t \<in> ?long_arc" using hg'_img by simp
+        thus "(f \<circ> g') t \<in> C2" unfolding C2_def comp_def by (by100 blast)
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix t assume "t \<in> I_set" thus "(f \<circ> g') t \<in> C2" by (rule hfg'_maps)
+      next
+        fix W assume hW: "W \<in> subspace_topology top1_S2 top1_S2_topology C2"
+        then obtain W0 where hW0: "W0 \<in> top1_S2_topology" "W = C2 \<inter> W0"
+          unfolding subspace_topology_def by (by100 blast)
+        have hS1_open: "{s \<in> top1_S1. f s \<in> W0} \<in> top1_S1_topology"
+          using hf_cont hW0(1) unfolding top1_continuous_map_on_def by (by100 blast)
+        show "{t \<in> I_set. (f \<circ> g') t \<in> W} \<in> I_top"
+        proof -
+          obtain W1 where hW1: "W1 \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+              "{s \<in> top1_S1. f s \<in> W0} = top1_S1 \<inter> W1"
+            using hS1_open unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+          have "open W1" using hW1(1) product_topology_on_open_sets_real2
+            unfolding top1_open_sets_def by (by100 simp)
+          have heq_g': "{t \<in> I_set. g' t \<in> {s \<in> top1_S1. f s \<in> W0}} = I_set \<inter> g' -` W1"
+            using hg'_sub hW1(2) by (by100 force)
+          have heq_main: "{t \<in> I_set. (f \<circ> g') t \<in> W} = {t \<in> I_set. g' t \<in> {s \<in> top1_S1. f s \<in> W0}}"
+            using hfg'_maps hW0(2) hg'_sub by (by100 force)
+          have "I_set \<inter> g' -` W1 \<in> I_top"
+          proof -
+            have "\<exists>A. open A \<and> A \<inter> I_set = g' -` W1 \<inter> I_set"
+              using hg'_cont \<open>open W1\<close> unfolding continuous_on_open_invariant by simp
+            then obtain A where "open A" "A \<inter> I_set = g' -` W1 \<inter> I_set" by (by100 blast)
+            have "A \<in> (top1_open_sets :: real set set)" using \<open>open A\<close>
+              unfolding top1_open_sets_def by simp
+            have "I_set \<inter> g' -` W1 = I_set \<inter> A" using \<open>A \<inter> I_set = _\<close> by (by100 blast)
+            thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def
+              subspace_topology_def using \<open>A \<in> top1_open_sets\<close> by (by100 blast)
+          qed
+          thus ?thesis using heq_main heq_g' by simp
+        qed
+      qed
+    qed
+    have hfg'_bij: "bij_betw (f \<circ> g') I_set C2"
+    proof -
+      have hinj_f_long: "inj_on f ?long_arc"
+        by (rule inj_on_subset[OF hf_inj]) (use hS1_decomp in blast)
+      have "inj_on (f \<circ> g') I_set"
+        by (rule comp_inj_on[OF hg'_inj]) (use hinj_f_long hg'_img in simp)
+      moreover have "(f \<circ> g') ` I_set = C2"
+      proof -
+        have "(f \<circ> g') ` I_set = f ` (g' ` I_set)" by (simp add: image_comp)
+        also have "\<dots> = f ` ?long_arc" using hg'_img by simp
+        finally show ?thesis unfolding C2_def by simp
+      qed
+      ultimately show ?thesis unfolding bij_betw_def by simp
+    qed
     have hC2_haus: "is_hausdorff_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
       by (rule hausdorff_subspace[OF top1_S2_is_hausdorff])
          (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
