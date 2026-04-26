@@ -16284,10 +16284,9 @@ proof -
       sorry \<comment> \<open>Open U_nbhd contains x, I_m \<ni> x with length \<rightarrow> 0.
          Since U_nbhd is open, \<exists>\<delta>>0. (x-\<delta>, x+\<delta>) \<subseteq> U_nbhd.
          For large m, I_m \<subseteq> (x-\<delta>, x+\<delta>) \<inter> [0,1] \<subseteq> U_nbhd \<inter> [0,1].\<close>
-    then obtain N where hN: "{fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}" by blast
-    have "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
-      using hN hU_avoids by (by100 blast)
-    then obtain N where hN: "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}" by blast
+    then obtain N where hN_sub: "{fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}" by blast
+    have hN: "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
+      using hN_sub hU_avoids by (by100 blast)
     have h\<alpha>_avoids: "\<alpha> ` {0..1} \<inter> h0 ` {fst (seq N)..snd (seq N)} = {}"
       using hN by (by100 blast)
     \<comment> \<open>\<alpha> is a path from a' to b' in S^2 - h0(I_N), contradicting separation.\<close>
