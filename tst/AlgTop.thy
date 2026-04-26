@@ -8304,13 +8304,22 @@ proof -
       proof
         assume heq: "W2_S2 = {north_pole}"
         \<comment> \<open>W2_S2 is open in S^2 (component of open set in locally connected S^2).\<close>
+        have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
         have hC12'_closed: "closedin_on top1_S2 top1_S2_topology (C1' \<union> C2')"
-          using hC1'_closed hC2'_closed unfolding closedin_on_def
-          sorry \<comment> \<open>Union of two closed sets is closed.\<close>
-        have "top1_S2 - (C1' \<union> C2') \<in> top1_S2_topology"
-          using hC12'_closed
-          unfolding closedin_on_def
-          sorry \<comment> \<open>Complement of closed set is open.\<close>
+        proof -
+          have "top1_S2 - (C1' \<union> C2') = (top1_S2 - C1') \<inter> (top1_S2 - C2')" by (by100 blast)
+          moreover have "(top1_S2 - C1') \<in> top1_S2_topology"
+            using hC1'_closed unfolding closedin_on_def by (by100 blast)
+          moreover have "(top1_S2 - C2') \<in> top1_S2_topology"
+            using hC2'_closed unfolding closedin_on_def by (by100 blast)
+          ultimately have "top1_S2 - (C1' \<union> C2') \<in> top1_S2_topology"
+            using topology_inter_open[OF hTS2] by (by100 simp)
+          thus ?thesis unfolding closedin_on_def
+            using hC1'_sub_S2 hC2'_sub_S2 by (by100 blast)
+        qed
+        have hS2C12_open: "top1_S2 - (C1' \<union> C2') \<in> top1_S2_topology"
+          using hC12'_closed unfolding closedin_on_def by (by100 blast)
         \<comment> \<open>W2_S2 \<subseteq> S^2-(C1'\<union>C2') and it's a component, hence open in S^2.\<close>
         have "W2_S2 \<in> top1_S2_topology"
           sorry \<comment> \<open>Component of open set is open (S^2 locally connected).\<close>
@@ -12034,6 +12043,7 @@ qed
 
 
 end
+
 
 
 
