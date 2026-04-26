@@ -1040,11 +1040,12 @@ proof
                   hence "(beta s, 0::int) \<in> W" using \<open>\<beta>_lift s \<in> W\<close> by simp
                   thus ?thesis using \<open>beta s \<in> B\<close> by (by100 blast)
                 next
-                  assume "beta s \<in> V - U"
-                  hence "beta s \<notin> A" "beta s \<notin> B" using hAB_UV by (by100 blast)+
-                  hence "\<beta>_lift s = (beta s, 1::int)" unfolding \<beta>_lift_def Let_def by auto
+                  assume hbsVU: "beta s \<in> V - U"
+                  hence "beta s \<notin> A" using hAB_UV by (by100 fast)
+                  moreover have "beta s \<notin> B" using hbsVU hAB_UV by (by100 fast)
+                  ultimately have "\<beta>_lift s = (beta s, 1::int)" unfolding \<beta>_lift_def Let_def by auto
                   hence "(beta s, 1::int) \<in> W" using \<open>\<beta>_lift s \<in> W\<close> by simp
-                  thus ?thesis using \<open>beta s \<in> V - U\<close> by (by100 blast)
+                  thus ?thesis using hbsVU by (by100 blast)
                 qed
               qed
               thus "s \<in> {s \<in> I_set. beta s \<in> ({x \<in> A. (x, 2::int) \<in> W} \<union>
@@ -2177,7 +2178,7 @@ proof (rule ccontr)
       next
         fix x assume "x \<in> {x \<in> A. (x, 2 * (n+1) + 2) \<in> W}"
         hence "x \<in> A" "(x, 2*n + 4) \<in> W" by (auto simp: algebra_simps)
-        have "x \<in> U" using \<open>x \<in> A\<close> assms(5) by (by100 blast)
+        have "x \<in> U" using \<open>x \<in> A\<close> assms(5) by (by100 fast)
         have "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by auto
         moreover have "T (x, 2*n+2) = (x, 2*n+4)" unfolding T_def by simp
         ultimately show "x \<in> {x \<in> A. (x, 2 * n + 2) \<in> {e \<in> E. T e \<in> W}}"
@@ -7537,6 +7538,260 @@ proof -
   qed
 qed
 
+\<comment> \<open>Flexible arc decomposition: given SCC C' and open V with x \<in> V \<inter> C',
+   decompose C' = C1 \<union> C2 with C1 \<subseteq> V, both arcs.\<close>
+lemma flexible_arc_decomposition:
+  assumes hTS: "is_topology_on_strict top1_S2 top1_S2_topology"
+  and hSCC: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
+  and hV: "V \<in> top1_S2_topology" and hx: "x \<in> C'" and hxV: "x \<in> V"
+  shows "\<exists>C1 C2 a b. C' = C1 \<union> C2 \<and> C1 \<inter> C2 = {a, b} \<and> a \<noteq> b
+    \<and> top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)
+    \<and> top1_is_arc_on C2 (subspace_topology top1_S2 top1_S2_topology C2)
+    \<and> C1 \<subseteq> V"
+proof -
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hTS unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Step 1: f: S^1 \<rightarrow> C' homeomorphism from SCC definition.\<close>
+  obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+      and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C'"
+  proof -
+    obtain f where "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+        "inj_on f top1_S1" "f ` top1_S1 = C'"
+      using hSCC unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  have hC'_sub: "C' \<subseteq> top1_S2"
+    using hSCC unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+    by (by100 blast)
+  \<comment> \<open>f: S^1 \<rightarrow> C' is a homeomorphism (compact to Hausdorff continuous bijection).\<close>
+  have hf_bij: "bij_betw f top1_S1 C'" using hf_inj hf_img unfolding bij_betw_def by simp
+  have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C'
+      (subspace_topology top1_S2 top1_S2_topology C') f"
+  proof -
+    have hf_cont_C': "top1_continuous_map_on top1_S1 top1_S1_topology C'
+        (subspace_topology top1_S2 top1_S2_topology C') f"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> top1_S1" thus "f x \<in> C'" using hf_img by (by100 blast)
+    next
+      fix U assume "U \<in> subspace_topology top1_S2 top1_S2_topology C'"
+      then obtain W where hW: "W \<in> top1_S2_topology" "U = C' \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "{x \<in> top1_S1. f x \<in> U} = {x \<in> top1_S1. f x \<in> W}"
+        using hf_img hW(2) by (by100 blast)
+      also have "\<dots> \<in> top1_S1_topology"
+        using hf_cont hW(1) unfolding top1_continuous_map_on_def by (by100 blast)
+      finally show "{x \<in> top1_S1. f x \<in> U} \<in> top1_S1_topology" .
+    qed
+    have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+    have hC'_haus: "is_hausdorff_on C' (subspace_topology top1_S2 top1_S2_topology C')"
+      by (rule hausdorff_subspace[OF top1_S2_is_hausdorff hC'_sub])
+    show ?thesis
+    proof (rule Theorem_26_6[OF is_topology_on_strict_imp[OF top1_S1_is_topology_on_strict]
+              _ hS1_compact hC'_haus hf_cont_C' hf_bij])
+      show "is_topology_on C' (subspace_topology top1_S2 top1_S2_topology C')"
+        by (rule subspace_topology_is_topology_on[OF hTS2]) (use hC'_sub in blast)
+    qed
+  qed
+  \<comment> \<open>Step 2: f\<inverse>(V \<inter> C') open in S^1, contains f\<inverse>(x).\<close>
+  define finv where "finv = inv_into top1_S1 f"
+  have hfinv_bij: "bij_betw finv C' top1_S1" unfolding finv_def
+    by (rule bij_betw_inv_into[OF hf_bij])
+  have hfinv_cont: "top1_continuous_map_on C' (subspace_topology top1_S2 top1_S2_topology C')
+      top1_S1 top1_S1_topology finv"
+    using hf_homeo unfolding top1_homeomorphism_on_def finv_def by (by100 blast)
+  have hp: "finv x \<in> top1_S1" using hx hfinv_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Preimage of V \<inter> C' under finv\<inverse> = f\<inverse>(V) \<inter> S^1, open in S^1.\<close>
+  have hVC'_open: "V \<inter> C' \<in> subspace_topology top1_S2 top1_S2_topology C'"
+    using hV unfolding subspace_topology_def by (by100 blast)
+  \<comment> \<open>finv(V\<inter>C') open in S^1: follows from f being an open map (homeomorphism).\<close>
+  have hfinv_VC'_open: "finv ` (V \<inter> C') \<in> top1_S1_topology"
+  proof -
+    \<comment> \<open>finv: C' \<rightarrow> S^1 is continuous. V\<inter>C' open in C' subspace. Preimage = image since finv continuous.\<close>
+    \<comment> \<open>Actually: f is a homeomorphism C'\<cong>S^1, so f\<inverse> maps open sets to open sets.\<close>
+    \<comment> \<open>f maps open sets in S^1 to open sets in C' (f is an open map).\<close>
+    \<comment> \<open>So finv maps open sets in C' to open sets in S^1 (since finv = f\<inverse>, open map \<leftrightarrow> inverse continuous).\<close>
+    have "\<And>U. U \<in> subspace_topology top1_S2 top1_S2_topology C' \<Longrightarrow>
+        finv ` U \<in> top1_S1_topology"
+    proof -
+      fix U assume hU: "U \<in> subspace_topology top1_S2 top1_S2_topology C'"
+      \<comment> \<open>finv ` U = {finv y | y \<in> U} = {t \<in> S^1 | f t \<in> U} (since finv(y) \<in> S^1 and f(finv(y))=y).\<close>
+      have hfinv_U_eq: "finv ` U = {t \<in> top1_S1. f t \<in> U}"
+      proof (intro set_eqI iffI)
+        fix t assume "t \<in> finv ` U"
+        then obtain y where hy: "y \<in> U" "t = finv y" by (by100 blast)
+        have "y \<in> C'" using hy(1) hU unfolding subspace_topology_def by (by100 blast)
+        have "t \<in> top1_S1" using hy(2) hfinv_bij \<open>y \<in> C'\<close>
+          unfolding bij_betw_def by (by100 blast)
+        moreover have "f t = y"
+        proof -
+          have "y \<in> f ` top1_S1" using hf_img \<open>y \<in> C'\<close> by simp
+          hence "f (inv_into top1_S1 f y) = y" by (rule f_inv_into_f)
+          thus ?thesis using hy(2) unfolding finv_def by simp
+        qed
+        ultimately show "t \<in> {t \<in> top1_S1. f t \<in> U}" using hy(1) by simp
+      next
+        fix t assume ht: "t \<in> {t \<in> top1_S1. f t \<in> U}"
+        hence "t \<in> top1_S1" "f t \<in> U" by auto
+        have "finv (f t) = t" unfolding finv_def
+          by (rule inv_into_f_f[OF bij_betw_imp_inj_on[OF hf_bij] \<open>t \<in> top1_S1\<close>])
+        thus "t \<in> finv ` U" using \<open>f t \<in> U\<close> by (by100 force)
+      qed
+      have "{t \<in> top1_S1. f t \<in> U} \<in> top1_S1_topology"
+      proof -
+        have hf_cont_C'2: "top1_continuous_map_on top1_S1 top1_S1_topology C'
+            (subspace_topology top1_S2 top1_S2_topology C') f"
+          using hf_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        thus ?thesis using hU unfolding top1_continuous_map_on_def by (by100 blast)
+      qed
+      thus "finv ` U \<in> top1_S1_topology" using hfinv_U_eq by simp
+    qed
+    thus ?thesis using hVC'_open by simp
+  qed
+  have hp_in_VC': "finv x \<in> finv ` (V \<inter> C')" using hx hxV by (by100 blast)
+  \<comment> \<open>Step 3: Choose \<epsilon> > 0 so that the arc of width 2\<epsilon> around finv(x) on S^1 maps into V.\<close>
+  \<comment> \<open>finv(x) = (cos \<theta>, sin \<theta>) for some \<theta>. Open set in S^1 \<Rightarrow> \<exists>\<epsilon>. B(\<epsilon>,finv(x))\<inter>S^1 \<subseteq> preimage.\<close>
+  obtain \<theta> where h\<theta>: "finv x = (cos \<theta>, sin \<theta>)" and h\<theta>_range: "\<theta> \<in> {0..<2*pi}"
+    sorry \<comment> \<open>Every point of S^1 has angular parameterization.\<close>
+  obtain \<epsilon> :: real where h\<epsilon>: "\<epsilon> > 0" "\<epsilon> < pi"
+      and h_arc_sub: "\<And>t. t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>} \<Longrightarrow> (cos t, sin t) \<in> finv ` (V \<inter> C')"
+    sorry \<comment> \<open>Open set in S^1 around (cos \<theta>, sin \<theta>) contains an \<epsilon>-arc.\<close>
+  \<comment> \<open>Step 4: Define arcs. C1 = f(short arc), C2 = f(long arc).\<close>
+  let ?short_arc = "{(cos t, sin t) | t. t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}}"
+  let ?long_arc = "{(cos t, sin t) | t. t \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}}"
+  let ?a_S1 = "(cos (\<theta>-\<epsilon>), sin (\<theta>-\<epsilon>))"
+  let ?b_S1 = "(cos (\<theta>+\<epsilon>), sin (\<theta>+\<epsilon>))"
+  define C1 where "C1 = f ` ?short_arc"
+  define C2 where "C2 = f ` ?long_arc"
+  define a_pt where "a_pt = f ?a_S1"
+  define b_pt where "b_pt = f ?b_S1"
+  \<comment> \<open>Step 5: Show the 6 properties.\<close>
+  \<comment> \<open>5a: S^1 = short \<union> long.\<close>
+  have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc" sorry
+  have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}" sorry
+  have hab_ne: "?a_S1 \<noteq> ?b_S1" sorry
+  \<comment> \<open>5b: C' = C1 \<union> C2.\<close>
+  have "C' = C1 \<union> C2"
+  proof -
+    have "C' = f ` top1_S1" using hf_img by simp
+    also have "\<dots> = f ` (?short_arc \<union> ?long_arc)" using hS1_decomp by simp
+    also have "\<dots> = f ` ?short_arc \<union> f ` ?long_arc" by (by100 blast)
+    finally show ?thesis unfolding C1_def C2_def by simp
+  qed
+  \<comment> \<open>5c: C1 \<inter> C2 = {a, b}.\<close>
+  moreover have "C1 \<inter> C2 = {a_pt, b_pt}"
+  proof -
+    have hshort_sub: "?short_arc \<subseteq> top1_S1" using hS1_decomp by (by100 blast)
+    have hlong_sub: "?long_arc \<subseteq> top1_S1" using hS1_decomp by (by100 blast)
+    have "f ` ?short_arc \<inter> f ` ?long_arc = f ` (?short_arc \<inter> ?long_arc)"
+      by (rule inj_on_image_Int[OF hf_inj hshort_sub hlong_sub, symmetric])
+    also have "\<dots> = f ` {?a_S1, ?b_S1}" using hS1_inter by simp
+    also have "\<dots> = {f ?a_S1, f ?b_S1}" by (by100 blast)
+    finally show ?thesis unfolding C1_def C2_def a_pt_def b_pt_def by simp
+  qed
+  \<comment> \<open>5d: a \<noteq> b.\<close>
+  moreover have "a_pt \<noteq> b_pt"
+  proof -
+    have "?a_S1 \<in> ?short_arc"
+      apply (rule CollectI) apply (rule exI[of _ "\<theta>-\<epsilon>"]) using h\<epsilon> by simp
+    hence ha_S1: "?a_S1 \<in> top1_S1" using hS1_decomp by (by100 blast)
+    have "?b_S1 \<in> ?short_arc"
+      apply (rule CollectI) apply (rule exI[of _ "\<theta>+\<epsilon>"]) using h\<epsilon> by simp
+    hence hb_S1: "?b_S1 \<in> top1_S1" using hS1_decomp by (by100 blast)
+    show ?thesis
+    proof
+      assume "a_pt = b_pt"
+      hence "f ?a_S1 = f ?b_S1" unfolding a_pt_def b_pt_def by simp
+      hence "?a_S1 = ?b_S1" using inj_onD[OF hf_inj _ ha_S1 hb_S1] by simp
+      thus False using hab_ne by simp
+    qed
+  qed
+  \<comment> \<open>5e: Both are arcs.\<close>
+  moreover have "top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+  proof -
+    \<comment> \<open>Short arc \<cong> [0,1] via g(t) = (cos(\<theta>-\<epsilon>+2\<epsilon>t), sin(\<theta>-\<epsilon>+2\<epsilon>t)).\<close>
+    define g where "g = (\<lambda>t::real. (cos (\<theta>-\<epsilon>+2*\<epsilon>*t), sin (\<theta>-\<epsilon>+2*\<epsilon>*t)))"
+    have hg_img: "g ` I_set = ?short_arc" sorry
+    have hg_inj: "inj_on g I_set" sorry
+    have hg_cont: "continuous_on I_set g" unfolding g_def by (intro continuous_intros)
+    have hfg_cont: "top1_continuous_map_on I_set I_top C1
+        (subspace_topology top1_S2 top1_S2_topology C1) (f \<circ> g)"
+      sorry \<comment> \<open>Composition of continuous functions.\<close>
+    have hfg_bij: "bij_betw (f \<circ> g) I_set C1"
+      sorry \<comment> \<open>Injective composition of injective functions with right images.\<close>
+    have hC1_haus: "is_hausdorff_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      by (rule hausdorff_subspace[OF top1_S2_is_hausdorff])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    have hI_compact: "top1_compact_on I_set I_top"
+    proof -
+      have "compact (I_set :: real set)"
+        unfolding top1_unit_interval_def using compact_Icc by simp
+      have "I_top = subspace_topology UNIV top1_open_sets I_set"
+        unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+      thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by simp
+    qed
+    have hI_top: "is_topology_on I_set I_top"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hC1_top: "is_topology_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      by (rule subspace_topology_is_topology_on[OF hTS2])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    have "top1_homeomorphism_on I_set I_top C1
+        (subspace_topology top1_S2 top1_S2_topology C1) (f \<circ> g)"
+      by (rule Theorem_26_6[OF hI_top hC1_top hI_compact hC1_haus hfg_cont hfg_bij])
+    moreover have "is_topology_on_strict C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      by (rule subspace_topology_is_strict[OF hTS])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+  qed
+  moreover have "top1_is_arc_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+  proof -
+    \<comment> \<open>Long arc \<cong> [0,1] via g'(t) = (cos(\<theta>+\<epsilon>+(2\<pi>-2\<epsilon>)t), sin(\<theta>+\<epsilon>+(2\<pi>-2\<epsilon>)t)).\<close>
+    define g' where "g' = (\<lambda>t::real. (cos (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t), sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)))"
+    have hg'_img: "g' ` I_set = ?long_arc" sorry
+    have hg'_inj: "inj_on g' I_set" sorry
+    have hg'_cont: "continuous_on I_set g'" unfolding g'_def by (intro continuous_intros)
+    have hfg'_cont: "top1_continuous_map_on I_set I_top C2
+        (subspace_topology top1_S2 top1_S2_topology C2) (f \<circ> g')"
+      sorry
+    have hfg'_bij: "bij_betw (f \<circ> g') I_set C2" sorry
+    have hC2_haus: "is_hausdorff_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+      by (rule hausdorff_subspace[OF top1_S2_is_hausdorff])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    have hI_compact: "top1_compact_on I_set I_top" sorry
+    have hI_top: "is_topology_on I_set I_top"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hC2_top: "is_topology_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+      by (rule subspace_topology_is_topology_on[OF hTS2])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    have "top1_homeomorphism_on I_set I_top C2
+        (subspace_topology top1_S2 top1_S2_topology C2) (f \<circ> g')"
+      by (rule Theorem_26_6[OF hI_top hC2_top hI_compact hC2_haus hfg'_cont hfg'_bij])
+    moreover have "is_topology_on_strict C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+      by (rule subspace_topology_is_strict[OF hTS])
+         (use hC'_sub \<open>C' = C1 \<union> C2\<close> in blast)
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+  qed
+  \<comment> \<open>5f: C1 \<subseteq> V.\<close>
+  moreover have "C1 \<subseteq> V"
+  proof -
+    have "?short_arc \<subseteq> finv ` (V \<inter> C')" using h_arc_sub by (by100 blast)
+    hence "f ` ?short_arc \<subseteq> f ` (finv ` (V \<inter> C'))" by (by100 blast)
+    moreover have "f ` (finv ` (V \<inter> C')) \<subseteq> V \<inter> C'"
+    proof -
+      have "\<And>y. y \<in> V \<inter> C' \<Longrightarrow> f (finv y) = y"
+      proof -
+        fix y assume "y \<in> V \<inter> C'"
+        hence "y \<in> C'" by (by100 blast)
+        hence "y \<in> f ` top1_S1" using hf_img by simp
+        thus "f (finv y) = y" unfolding finv_def by (rule f_inv_into_f)
+      qed
+      thus ?thesis by (by100 force)
+    qed
+    ultimately show ?thesis unfolding C1_def by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Helper: every open set meeting a simple closed curve on S^2 meets both components.
    This is the core of the textbook Step 2 boundary argument.\<close>
 lemma simple_closed_curve_boundary_meets_component:
@@ -7561,9 +7816,7 @@ proof -
       and hC1_arc: "top1_is_arc_on C1_arc (subspace_topology top1_S2 top1_S2_topology C1_arc)"
       and hC2_arc: "top1_is_arc_on C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc)"
       and hC1_sub_V: "C1_arc \<subseteq> V"
-    sorry \<comment> \<open>Flexible arc decomposition of simple closed curve C' with C1 \<subseteq> V.
-       Proof: C' = f(S^1). f^{-1}(V \<inter> C') open in S^1 contains f^{-1}(x).
-       Choose subarc I \<subseteq> f^{-1}(V \<inter> C'). C1 = f(I), C2 = f(S^1-int(I)).\<close>
+    using flexible_arc_decomposition[OF hTS hSCC hV hx hxV] by blast
   \<comment> \<open>Step 2: C2 doesn't separate S^2.\<close>
   have hC2_sub: "C2_arc \<subseteq> top1_S2" using hC_decomp hC'_sub by (by100 blast)
   have hC2_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2_arc"
