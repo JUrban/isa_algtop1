@@ -14817,6 +14817,28 @@ qed
      - f^m lifts from e_0 = (a,0) to (a, 2*m) in the helix covering (by concatenating shifted lifts).
      - g^k lifts to a loop at e_0 = (a,0) (since each g-lift is a loop, by helix_g_lift_is_loop).
      - By Theorem_54_3 (unique lift endpoints), if [f]^m = [g]^k then (a,2*m) = (a,0), so m = 0.\<close>
+
+\<comment> \<open>Standalone f^m lift: in the helix covering, f^m lifts from (a,0) to (a,2m).
+   Factored out for reuse by both 63.1(c) and 63.1(c)_reverse.\<close>
+lemma helix_f_power_lift:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+      and "top1_is_path_on V (subspace_topology X TX V) b a beta"
+      and "top1_covering_map_on E TE X TX p0"
+      and "is_topology_on E TE"
+      and "(a, 0::int) \<in> E"
+      and "p0 (a, 0::int) = a"
+  shows "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+      (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
+  sorry \<comment> \<open>Same ftilde_0 + deck transformation construction as in Theorem_63_1_c proof.
+     The construction is self-contained: ftilde_0, \<alpha>_lift, \<beta>_lift, deck transformation T,
+     T\<circ>ftm composition, inductive concatenation. All proved in 63.1(c) body.\<close>
+
 lemma Theorem_63_1_c_subgroups_trivial:
   assumes "is_topology_on X TX"
       and "openin_on X TX U" and "openin_on X TX V"
@@ -15607,7 +15629,7 @@ proof -
   \<comment> \<open>f^m lift from (a,0) to (a,2m). Same construction as in Theorem_63_1_c.\<close>
   have hfm_lift: "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
       (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
-    sorry \<comment> \<open>Same ftilde_0 + deck transformation construction as Theorem_63_1_c.\<close>
+    by (rule helix_f_power_lift[OF assms(1-12) hcov hTE he0 hp0])
   \<comment> \<open>(g\<inverse>)^k lift: reverse of g-lift is a loop at (a,0), projects to g\<inverse>.
      By induction, (g\<inverse>)^k lifts to a loop at (a,0).\<close>
   \<comment> \<open>Construct single g-lift directly (same formula as in 63.1(c) proof).\<close>
