@@ -15539,6 +15539,32 @@ qed
 \<comment> \<open>Corollary: 63.1(c) also works for the reverse loop g\<inverse>.
    If [f^m] \<simeq> [(g\<inverse>)^k] then m = 0. Same argument: g\<inverse> lifts to the reverse of the g-lift loop,
    which is also a loop at e_0. By Theorem_54_3, (a,2m) = (a,0).\<close>
+\<comment> \<open>Generalized 63.1(c): works for any loop h at a whose power h^k has a lift that is a loop at e_0.
+   This subsumes both 63.1(c) (h = \<gamma>*\<delta>) and 63.1(c)_reverse (h = (\<gamma>*\<delta>)\<inverse>).\<close>
+lemma Theorem_63_1_c_general:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b alpha"
+      and "top1_is_path_on V (subspace_topology X TX V) b a beta"
+      \<comment> \<open>h is any loop at a, and h^k lifts to a loop at e_0 in the helix.\<close>
+      and "top1_is_path_on X TX a a h"
+      and "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_product alpha beta) a m)
+            (top1_path_power h a k)"
+  shows "m = 0"
+  sorry \<comment> \<open>Same helix as 63.1(c). f^m lifts from e0 to (a,2m).
+     h^k lift: construct explicitly by lifting h to a loop at e0 (since h lifts to a loop
+     when h = \<gamma>*\<delta> or h = (\<gamma>*\<delta>)\<inverse>), then concatenating k copies.
+     By Theorem_54_3: (a,2m) = e0 = (a,0), so m = 0.
+     Key issue: need explicit h-lift construction (not just Lemma_54_1)
+     to determine the endpoint = e0.\<close>
+
+
+\<comment> \<open>63.1(c) for the reverse loop g\<inverse>: corollary of Theorem_63_1_c_general.\<close>
 lemma Theorem_63_1_c_subgroups_trivial_reverse:
   assumes "is_topology_on X TX"
       and "openin_on X TX U" and "openin_on X TX V"
@@ -15555,21 +15581,19 @@ lemma Theorem_63_1_c_subgroups_trivial_reverse:
             (top1_path_power (top1_path_product alpha beta) a m)
             (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k)"
   shows "m = 0"
-proof -
-  \<comment> \<open>Reduce to 63.1(c) by showing g\<inverse> = (\<gamma>*\<delta>)\<inverse> also has a loop lift at e_0.
-     The g-lift g\<tilde> is a loop at e_0 (from 63.1(c) construction).
-     The reverse g\<tilde>\<inverse> is also a loop at e_0 in E.
-     p_0(g\<tilde>\<inverse>(s)) = p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), so g\<tilde>\<inverse> lifts g\<inverse>.
-     Then (g\<inverse>)^k lifts to a loop (concatenating k copies of g\<tilde>\<inverse>).
-     f^m lifts to (a,2m) (same as in 63.1(c)).
-     By Theorem_54_3: (a,2m) = (a,0), so m = 0.\<close>
-  \<comment> \<open>The construction is exactly the same as Theorem_63_1_c but with the reverse g-lift.
-     The entire ~700-line proof of 63.1(c) applies here with a trivial change:
-     define gtilde = path_reverse(original_gtilde), which is still a loop at e_0.\<close>
-  show ?thesis sorry \<comment> \<open>Provable by the same structure as Theorem_63_1_c: same helix, same f^m lift,
-     The lift of g\<inverse> from e_0 is the reverse g\<tilde>\<inverse>, also a loop at e_0
-     (since p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), and g\<tilde> starts and ends at e_0).
-     Then (g\<inverse>)^k lifts to a loop at e_0, same Theorem_54_3 argument.\<close>
+proof (rule Theorem_63_1_c_general[OF assms(1-12) _ assms(16)])
+  \<comment> \<open>Need: (top1_path_reverse (top1_path_product gamma delta)) is a path from a to a in X.\<close>
+  have h\<gamma>_X: "top1_is_path_on X TX a a' gamma"
+    by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(2) assms(14)])
+       (use assms(4) in blast)
+  have h\<delta>_X: "top1_is_path_on X TX a' a delta"
+    by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(3) assms(15)])
+       (use assms(4) in blast)
+  have hgd: "top1_is_path_on X TX a a (top1_path_product gamma delta)"
+    by (rule top1_path_product_is_path[OF assms(1) h\<gamma>_X h\<delta>_X])
+  show "top1_is_path_on X TX a a (top1_path_reverse (top1_path_product gamma delta))"
+    using top1_path_reverse_is_path[OF hgd] hgd
+    unfolding top1_is_path_on_def top1_path_reverse_def by auto
 qed
 
 \<comment> \<open>Corollary for 63.5: In the setting of 63.1 on S^2-{p,q}, if we have two loops f and g
