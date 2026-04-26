@@ -3072,12 +3072,27 @@ proof -
      The composition \<sigma> ; t maps a \<in> S^2-{p,q} to t(\<sigma>(a)) \<in> R^2-{0}.
      By Theorem_58_7, the induced map on \<pi>_1 is an isomorphism.\<close>
   \<comment> \<open>Step 8: Extract generator from the isomorphism with Z and convert to path_power form.\<close>
+  \<comment> \<open>Step 5: Compose \<sigma> and t to get homeomorphism X \<rightarrow> R^2-{0}.\<close>
+  define h where "h = t \<circ> \<sigma>"
+  have hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+    sorry \<comment> \<open>Composition of homeomorphisms \<sigma> (X \<rightarrow> R2_q') and t (R2_q' \<rightarrow> R2_0).\<close>
+  \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence \<Rightarrow> \<pi>_1 isomorphism.\<close>
+  have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
+    sorry \<comment> \<open>Homeomorphism is a homotopy equivalence (with inverse as homotopy inverse).\<close>
+  have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
+  have hpi1_iso_R2: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      (top1_fundamental_group_carrier R2_0 TR2_0 (h a))
+      (top1_fundamental_group_mul R2_0 TR2_0 (h a))"
+    sorry \<comment> \<open>By Theorem_58_7 with the homotopy equivalence h.\<close>
+  \<comment> \<open>Step 7: Chain with Theorem_58_2 (R^2-{0} \<cong> S^1) and Theorem_54_5 (\<pi>_1(S^1) \<cong> Z).
+     This gives \<pi>_1(X, a) \<cong> Z.\<close>
+  \<comment> \<open>Step 8: Extract generator from Z-isomorphism.\<close>
   show ?thesis
-    sorry \<comment> \<open>Combines steps 3-7. The key chain:
-       \<pi>_1(S^2-{p,q}, a) \<cong> \<pi>_1(R^2-{q'}, \<sigma>(a)) \<cong> \<pi>_1(R^2-{0}, t(\<sigma>(a)))
-       \<cong> \<pi>_1(S^1, (1,0)) \<cong> Z (basepoint change needed for the last step).
-       Each \<cong> uses Theorem_58_7 with the appropriate homeomorphism/homotopy equivalence.
-       The final step extracts a generator from the Z-isomorphism.\<close>
+    sorry \<comment> \<open>From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>(gen) = 1.
+       For any loop f, \<phi>([f]) = n. If n\<ge>0: [f] = gen^n. If n<0: [f] = (gen\<inverse>)^{|n|}.
+       Needs: group iso \<rightarrow> path_power form (the bridge lemma).\<close>
 qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
