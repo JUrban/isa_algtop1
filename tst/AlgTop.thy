@@ -15610,11 +15610,93 @@ proof -
     sorry \<comment> \<open>Same ftilde_0 + deck transformation construction as Theorem_63_1_c.\<close>
   \<comment> \<open>(g\<inverse>)^k lift: reverse of g-lift is a loop at (a,0), projects to g\<inverse>.
      By induction, (g\<inverse>)^k lifts to a loop at (a,0).\<close>
+  \<comment> \<open>Get single g-lift from helix_g_lift_is_loop.\<close>
+  have hg1_lift: "\<exists>gt. top1_is_path_on E TE (a, 0) (a, 0) gt \<and>
+      (\<forall>s\<in>I_set. p0 (gt s) = top1_path_product gamma delta s)"
+    sorry \<comment> \<open>From helix_g_lift_is_loop: existential matching E'=E, TE'=TE, p0'=p0.
+       Same as in 63.1(c) proof (helix_g_lift_is_loop returns same covering).\<close>
+  obtain gt where hgt: "top1_is_path_on E TE (a, 0) (a, 0) gt"
+      and hgt_proj: "\<forall>s\<in>I_set. p0 (gt s) = top1_path_product gamma delta s"
+    using hg1_lift by (by100 blast)
+  \<comment> \<open>Reverse g-lift: loop at (a,0), projects to g\<inverse>.\<close>
+  define gt_rev where "gt_rev = top1_path_reverse gt"
+  have hgt_rev_path: "top1_is_path_on E TE (a, 0) (a, 0) gt_rev"
+  proof -
+    have "top1_is_path_on E TE (a, 0) (a, 0) (top1_path_reverse gt)"
+      using top1_path_reverse_is_path[OF hgt] hgt
+      unfolding top1_is_path_on_def top1_path_reverse_def by auto
+    thus ?thesis unfolding gt_rev_def by simp
+  qed
+  have hgt_rev_proj: "\<forall>s\<in>I_set. p0 (gt_rev s) = top1_path_reverse (top1_path_product gamma delta) s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "1 - s \<in> I_set" using hs unfolding top1_unit_interval_def by auto
+    show "p0 (gt_rev s) = top1_path_reverse (top1_path_product gamma delta) s"
+      unfolding gt_rev_def top1_path_reverse_def using hgt_proj \<open>1 - s \<in> I_set\<close> p0_def by auto
+  qed
+  \<comment> \<open>By induction: (g\<inverse>)^k lifts to a loop at (a,0).\<close>
   have hginvk_lift: "\<exists>gkl. top1_is_path_on E TE (a, 0) (a, 0) gkl \<and>
       (\<forall>s\<in>I_set. p0 (gkl s) = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k s)"
-    sorry \<comment> \<open>Get g-lift gt from helix_g_lift_is_loop (loop at (a,0), projects to g=\<gamma>*\<delta>).
-       Define g\<inverse>-lift = top1_path_reverse gt: loop at (a,0), projects to g\<inverse>.
-       Concatenate k copies: still loop at (a,0), projects to (g\<inverse>)^k.\<close>
+  proof (induction k)
+    case 0
+    have "top1_is_path_on E TE (a, 0) (a, 0) (top1_constant_path (a, 0))"
+      by (rule top1_constant_path_is_path[OF hTE he0])
+    moreover have "\<forall>s\<in>I_set. p0 (top1_constant_path (a, 0) s) =
+        top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a 0 s"
+      by (simp add: top1_constant_path_def hp0)
+    ultimately show ?case by (intro exI[of _ "top1_constant_path (a, 0)"]) auto
+  next
+    case (Suc k)
+    obtain gkl where hgkl_k: "top1_is_path_on E TE (a, 0) (a, 0) gkl"
+        and hgkl_proj_k: "\<forall>s\<in>I_set. p0 (gkl s) =
+            top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k s"
+      using Suc by (by100 blast)
+    define gSk where "gSk = top1_path_product gt_rev gkl"
+    have "top1_is_path_on E TE (a, 0) (a, 0) gSk"
+      unfolding gSk_def by (rule top1_path_product_is_path[OF hTE hgt_rev_path hgkl_k])
+    moreover have "\<forall>s\<in>I_set. p0 (gSk s) =
+        top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      show "p0 (gSk s) = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s"
+      proof (cases "s \<le> 1/2")
+        case True
+        have "gSk s = gt_rev (2*s)" unfolding gSk_def top1_path_product_def using True by simp
+        have "2*s \<in> I_set" using hs True unfolding top1_unit_interval_def by auto
+        hence "p0 (gt_rev (2*s)) = top1_path_reverse (top1_path_product gamma delta) (2*s)"
+          using hgt_rev_proj by (by100 blast)
+        moreover have "top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s
+            = top1_path_reverse (top1_path_product gamma delta) (2*s)"
+        proof -
+          have "top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s
+              = top1_path_product (top1_path_reverse (top1_path_product gamma delta))
+                  (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k) s" by simp
+          also have "... = (top1_path_reverse (top1_path_product gamma delta)) (2*s)"
+            unfolding top1_path_product_def using True by simp
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis using \<open>gSk s = gt_rev (2*s)\<close> unfolding p0_def by simp
+      next
+        case False
+        have "gSk s = gkl (2*s - 1)" unfolding gSk_def top1_path_product_def using False by simp
+        have "2*s - 1 \<in> I_set" using hs False unfolding top1_unit_interval_def by auto
+        hence "p0 (gkl (2*s - 1)) = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k (2*s - 1)"
+          using hgkl_proj_k by (by100 blast)
+        moreover have "top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s
+            = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k (2*s - 1)"
+        proof -
+          have "top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a (Suc k) s
+              = top1_path_product (top1_path_reverse (top1_path_product gamma delta))
+                  (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k) s" by simp
+          also have "... = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k (2*s - 1)"
+            unfolding top1_path_product_def using False by simp
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis using \<open>gSk s = gkl (2*s - 1)\<close> unfolding p0_def by simp
+      qed
+    qed
+    ultimately show ?case by (intro exI[of _ gSk]) (by100 blast)
+  qed
   \<comment> \<open>Apply covering_lift_endpoint_contradiction.\<close>
   obtain ftm where hftm: "top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm"
       and hftm_proj: "\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s"
