@@ -9870,9 +9870,9 @@ proof -
               have hW_open: "W \<in> ?TR2" and hxW: "x \<in> W"
                 using hW unfolding neighborhood_of_def by simp_all
               have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
-                sorry \<comment> \<open>\<sigma>2inv open map.\<close>
+                sorry \<comment> \<open>Same as U: \<sigma>2inv continuous, preimage of open is open in S^2\{N} \<subseteq> S^2.\<close>
               have hx_in_C': "\<sigma>2inv x \<in> C'"
-                sorry \<comment> \<open>x \<in> C, C' = \<sigma>2inv(C).\<close>
+                unfolding C'_def \<sigma>2inv_def using \<open>x \<in> C\<close> by (by100 blast)
               have hW12_eq: "W1_S2 \<union> W2_S2 = top1_S2 - C'"
                 using hW12_cover hC'_decomp by simp
               \<comment> \<open>Apply helper with W2 as target (swap W1/W2 roles).\<close>
@@ -9886,9 +9886,10 @@ proof -
                     hW21_disj hW21_cover hW2_ne hW1_ne hW2_open_S2 hW1_open_S2
                     hx_in_C' h\<sigma>2inv_W_open h\<sigma>x_in_\<sigma>W])
               then obtain z where "z \<in> \<sigma>2inv ` W" "z \<in> W2_S2" by (by100 blast)
-              have "\<sigma>2 z \<in> W" sorry \<comment> \<open>\<sigma>2(\<sigma>2inv(w)) = w.\<close>
-              moreover have "\<sigma>2 z \<in> V_R2" unfolding V_R2_def
-                using \<open>z \<in> W2_S2\<close> hN_in_W2 hW12_disj sorry
+              have "\<sigma>2 z \<in> W"
+                sorry \<comment> \<open>Same as U: \<sigma>2(\<sigma>2inv(w)) = w via f_inv_into_f.\<close>
+              moreover have "\<sigma>2 z \<in> V_R2"
+                sorry \<comment> \<open>z \<in> W2_S2, z \<noteq> N (since z \<in> \<sigma>2inv ` W \<subseteq> S^2\{N}). So z \<in> W2-{N}.\<close>
               ultimately show "intersects W V_R2" unfolding intersects_def by (by100 blast)
             qed
           qed
@@ -13527,6 +13528,8 @@ qed
 
 
 end
+
+
 
 
 
