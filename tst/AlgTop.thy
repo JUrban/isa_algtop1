@@ -8249,6 +8249,10 @@ proof -
     \<comment> \<open>N \<notin> C' (since C' \<subseteq> S^2\{N}).\<close>
     have hN_not_C': "north_pole \<notin> C'"
       using hC'_sub by (by100 blast)
+    \<comment> \<open>C' is a simple closed curve on S^2 (transferred from R^2 via \<sigma>2inv).\<close>
+    have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
+      sorry \<comment> \<open>C = f(S^1) SCC on R^2. \<sigma>2inv: R^2 \<rightarrow> S^2\{N} homeo. C' = \<sigma>2inv(C).
+         \<sigma>2inv \<circ> f: S^1 \<rightarrow> S^2 continuous + injective. Image = C' \<subseteq> S^2.\<close>
     \<comment> \<open>C1', C2' are closed, connected subsets of S^2 with card(C1'\<inter>C2') = 2.\<close>
     \<comment> \<open>C1', C2' don't separate S^2 (by Theorem 63.2, arcs don't separate).\<close>
     \<comment> \<open>C1' is an arc on S^2: transfer arc property from R^2 via \<sigma>2inv.\<close>
@@ -9746,10 +9750,25 @@ proof -
                 unfolding neighborhood_of_def by simp_all
               \<comment> \<open>Transfer to S^2: \<sigma>2inv(W) open in S^2\{N}, meets C'.
                  Apply simple_closed_curve_boundary_meets_component.\<close>
-              show "intersects W U_R2"
-                sorry \<comment> \<open>Transfer to S^2. \<sigma>2inv maps W to open set in S^2\{N} containing \<sigma>2inv(x) \<in> C'.
-                   By simple_closed_curve_boundary_meets_component: open set meets W1_S2.
-                   Hence W meets U_R2 = \<sigma>2(W1_S2).\<close>
+              \<comment> \<open>Transfer to S^2 via \<sigma>2inv.\<close>
+              have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
+                sorry \<comment> \<open>\<sigma>2inv maps open W to open in S^2\{N} \<subseteq> S^2. \<sigma>2inv homeo + open map.\<close>
+              have hx_in_\<sigma>W: "\<sigma>2inv x \<in> \<sigma>2inv ` W" using hxW by (by100 blast)
+              have hx_in_C': "\<sigma>2inv x \<in> C'"
+                sorry \<comment> \<open>x \<in> C, \<sigma>2inv(C) = C'.\<close>
+              have hW12_eq: "W1_S2 \<union> W2_S2 = top1_S2 - C'"
+                using hW12_cover hC'_decomp by simp
+              have "\<sigma>2inv ` W \<inter> W1_S2 \<noteq> {}"
+                by (rule simple_closed_curve_boundary_meets_component[OF
+                    top1_S2_is_topology_on_strict hC'_scc hW1_conn hW2_conn
+                    hW12_disj[folded hC'_decomp[symmetric]]
+                    hW12_eq hW1_ne hW2_ne hW1_open_S2 hW2_open_S2
+                    hx_in_C' h\<sigma>2inv_W_open hx_in_\<sigma>W])
+              then obtain z where hz: "z \<in> \<sigma>2inv ` W" "z \<in> W1_S2" by (by100 blast)
+              have "\<sigma>2 z \<in> W"
+                sorry \<comment> \<open>\<sigma>2(\<sigma>2inv(w)) = w for w \<in> R^2. z \<in> \<sigma>2inv ` W.\<close>
+              moreover have "\<sigma>2 z \<in> U_R2" unfolding U_R2_def using hz(2) by (by100 blast)
+              ultimately show "intersects W U_R2" unfolding intersects_def by (by100 blast)
             qed
           qed
         qed
@@ -9793,8 +9812,29 @@ proof -
             show "\<forall>U. neighborhood_of x UNIV ?TR2 U \<longrightarrow> intersects U V_R2"
             proof (intro allI impI)
               fix W assume hW: "neighborhood_of x UNIV ?TR2 W"
-              show "intersects W V_R2"
-                sorry \<comment> \<open>Same as U: transfer to S^2 + boundary_meets_component.\<close>
+              have hW_open: "W \<in> ?TR2" and hxW: "x \<in> W"
+                using hW unfolding neighborhood_of_def by simp_all
+              have h\<sigma>2inv_W_open: "\<sigma>2inv ` W \<in> top1_S2_topology"
+                sorry \<comment> \<open>\<sigma>2inv open map.\<close>
+              have hx_in_C': "\<sigma>2inv x \<in> C'"
+                sorry \<comment> \<open>x \<in> C, C' = \<sigma>2inv(C).\<close>
+              have hW12_eq: "W1_S2 \<union> W2_S2 = top1_S2 - C'"
+                using hW12_cover hC'_decomp by simp
+              \<comment> \<open>Apply helper with W2 as target (swap W1/W2 roles).\<close>
+              have hW21_disj: "W2_S2 \<inter> W1_S2 = {}" using hW12_disj by (by100 blast)
+              have hW21_cover: "W2_S2 \<union> W1_S2 = top1_S2 - C'"
+                using hW12_cover hC'_decomp by (by100 blast)
+              have h\<sigma>x_in_\<sigma>W: "\<sigma>2inv x \<in> \<sigma>2inv ` W" using hxW by (by100 blast)
+              have "\<sigma>2inv ` W \<inter> W2_S2 \<noteq> {}"
+                by (rule simple_closed_curve_boundary_meets_component[OF
+                    top1_S2_is_topology_on_strict hC'_scc hW2_conn hW1_conn
+                    hW21_disj hW21_cover hW2_ne hW1_ne hW2_open_S2 hW1_open_S2
+                    hx_in_C' h\<sigma>2inv_W_open h\<sigma>x_in_\<sigma>W])
+              then obtain z where "z \<in> \<sigma>2inv ` W" "z \<in> W2_S2" by (by100 blast)
+              have "\<sigma>2 z \<in> W" sorry \<comment> \<open>\<sigma>2(\<sigma>2inv(w)) = w.\<close>
+              moreover have "\<sigma>2 z \<in> V_R2" unfolding V_R2_def
+                using \<open>z \<in> W2_S2\<close> hN_in_W2 hW12_disj sorry
+              ultimately show "intersects W V_R2" unfolding intersects_def by (by100 blast)
             qed
           qed
         qed
@@ -13432,6 +13472,12 @@ qed
 
 
 end
+
+
+
+
+
+
 
 
 
