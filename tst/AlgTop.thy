@@ -8079,9 +8079,33 @@ proof -
       by (rule subspace_topology_trans[OF hC2'_sub_S2N, symmetric])
     \<comment> \<open>C1' is an arc on S^2.\<close>
     have hC1'_arc: "top1_is_arc_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
-      sorry \<comment> \<open>\<sigma>2inv \<circ> h_arc is homeomorphism [0,1] \<rightarrow> C1' with S^2 sub-topology.\<close>
+    proof -
+      \<comment> \<open>C1_arc is an arc in R^2: get homeomorphism h1_arc: [0,1] \<rightarrow> C1_arc.\<close>
+      have hC1_arc_R2: "top1_is_arc_on C1_arc (subspace_topology UNIV ?TR2 C1_arc)"
+        using hC1_arc .
+      obtain h1_arc where hh1_arc: "top1_homeomorphism_on I_set I_top C1_arc
+          (subspace_topology UNIV ?TR2 C1_arc) h1_arc"
+        using hC1_arc_R2 unfolding top1_is_arc_on_def by (by100 blast)
+      \<comment> \<open>\<sigma>2inv is a homeomorphism R^2 \<rightarrow> S^2\{N} (inverse of \<sigma>2).\<close>
+      have h\<sigma>2inv_homeo: "top1_homeomorphism_on UNIV ?TR2
+          (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
+        sorry \<comment> \<open>Inverse of homeomorphism \<sigma>2 is homeomorphism. Standard.\<close>
+      \<comment> \<open>Compose: \<sigma>2inv \<circ> h1_arc : [0,1] \<rightarrow> C1' (in S^2 topology).\<close>
+      \<comment> \<open>The composed homeomorphism lands in C1' with S^2\{N} subspace topology,\<close>
+      \<comment> \<open>which equals S^2 subspace topology by hC1'_top_eq.\<close>
+      show ?thesis unfolding top1_is_arc_on_def
+        sorry \<comment> \<open>Compose homeomorphisms: h1_arc then \<sigma>2inv restricted to C1_arc.
+           Result: [0,1] \<cong> C1' with subspace_topology S^2 S^2_top C1'.\<close>
+    qed
     have hC2'_arc: "top1_is_arc_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
-      sorry \<comment> \<open>Same for C2'.\<close>
+    proof -
+      obtain h2_arc where hh2_arc: "top1_homeomorphism_on I_set I_top C2_arc
+          (subspace_topology UNIV ?TR2 C2_arc) h2_arc"
+        using hC2_arc unfolding top1_is_arc_on_def by (by100 blast)
+      show ?thesis unfolding top1_is_arc_on_def
+        sorry \<comment> \<open>Same composition argument as C1'.\<close>
+    qed
     \<comment> \<open>Arc \<Rightarrow> closed (compact in Hausdorff) + connected (homeomorphic to [0,1]).\<close>
     have hC1'_closed: "closedin_on top1_S2 top1_S2_topology C1'"
     proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
@@ -11925,6 +11949,7 @@ qed
 
 
 end
+
 
 
 
