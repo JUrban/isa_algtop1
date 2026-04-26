@@ -14843,6 +14843,10 @@ lemma helix_f_power_lift:
       and "\<And>x n. x \<in> A \<Longrightarrow> (x, 2*n + 2) \<in> E"
       and "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
       and "p0 = fst"
+      \<comment> \<open>TE characterization: W \<in> TE iff W \<subseteq> E + slice conditions.\<close>
+      and "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
+          \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
   shows "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
       (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
 proof -
@@ -15006,9 +15010,88 @@ proof -
   \<comment> \<open>Deck transformation T and induction — same as Theorem_63_1_c.\<close>
   define T :: "'a \<times> int \<Rightarrow> 'a \<times> int" where "T = (\<lambda>(x,m). (x, m + 2))"
   have hT_E: "\<And>e. e \<in> E \<Longrightarrow> T e \<in> E"
-    sorry \<comment> \<open>T(x,m) = (x,m+2) maps E to E: even m \<rightarrow> even m+2, odd m \<rightarrow> odd m+2.\<close>
+    sorry \<comment> \<open>T(x,m)=(x,m+2) maps E to E: preserves even/odd parity of sheet number.\<close>
   have hT_p0: "\<And>e. p0 (T e) = p0 e" unfolding T_def assms(23) by auto
-  have hT_cont: "top1_continuous_map_on E TE E TE T" sorry \<comment> \<open>T continuous (slice shift).\<close>
+  have hT_cont: "top1_continuous_map_on E TE E TE T"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix e assume "e \<in> E" thus "T e \<in> E" using hT_E by simp
+  next
+    fix W assume hW: "W \<in> TE"
+    show "{e \<in> E. T e \<in> W} \<in> TE"
+    proof (rule assms(24))
+      show "{e \<in> E. T e \<in> W} \<subseteq> E" by (by100 blast)
+    next
+      show "\<forall>n::int. {x \<in> U. (x, 2 * n) \<in> {e \<in> E. T e \<in> W}} \<in> TX"
+      proof
+        fix n :: int
+        have "{x \<in> U. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} = {x \<in> U. (x, 2*(n+1)) \<in> W}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> U. (x, 2*n) \<in> {e \<in> E. T e \<in> W}}"
+          hence "x \<in> U" "T (x, 2*n) \<in> W" by auto
+          thus "x \<in> {x \<in> U. (x, 2*(n+1)) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+        next
+          fix x assume "x \<in> {x \<in> U. (x, 2*(n+1)) \<in> W}"
+          hence "x \<in> U" "(x, 2*n + 2) \<in> W" by (auto simp: algebra_simps)
+          moreover have "(x, 2*n) \<in> E" using \<open>x \<in> U\<close> assms(19) by simp
+          moreover have "T (x, 2*n) = (x, 2*n + 2)" unfolding T_def by simp
+          ultimately show "x \<in> {x \<in> U. (x, 2*n) \<in> {e \<in> E. T e \<in> W}}" by auto
+        qed
+        also have "... \<in> TX" using assms(17)[OF hW, of "n+1"] by (simp add: algebra_simps)
+        finally show "{x \<in> U. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} \<in> TX" .
+      qed
+    next
+      show "\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} \<union>
+          {x \<in> V - U. (x, 2*n + 1) \<in> {e \<in> E. T e \<in> W}} \<in> TX"
+      proof
+        fix n :: int
+        have h_A: "{x \<in> A. (x, 2*n + 2) \<in> {e \<in> E. T e \<in> W}} = {x \<in> A. (x, 2*(n+1) + 2) \<in> W}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> A. (x, 2*n + 2) \<in> {e \<in> E. T e \<in> W}}"
+          thus "x \<in> {x \<in> A. (x, 2*(n+1) + 2) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+        next
+          fix x assume "x \<in> {x \<in> A. (x, 2*(n+1) + 2) \<in> W}"
+          hence "x \<in> A" "(x, 2*n + 4) \<in> W" by (auto simp: algebra_simps)
+          moreover have "(x, 2*n+2) \<in> E" using \<open>x \<in> A\<close> assms(21) by simp
+          moreover have "T (x, 2*n+2) = (x, 2*n+4)" unfolding T_def by simp
+          ultimately show "x \<in> {x \<in> A. (x, 2*n+2) \<in> {e \<in> E. T e \<in> W}}" by auto
+        qed
+        have h_B: "{x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} = {x \<in> B. (x, 2*(n+1)) \<in> W}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}}"
+          thus "x \<in> {x \<in> B. (x, 2*(n+1)) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+        next
+          fix x assume "x \<in> {x \<in> B. (x, 2*(n+1)) \<in> W}"
+          hence "x \<in> B" "(x, 2*n+2) \<in> W" by (auto simp: algebra_simps)
+          moreover have "(x, 2*n) \<in> E" using \<open>x \<in> B\<close> assms(22) by simp
+          moreover have "T (x, 2*n) = (x, 2*n+2)" unfolding T_def by simp
+          ultimately show "x \<in> {x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}}" by auto
+        qed
+        have h_VU: "{x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. T e \<in> W}} = {x \<in> V-U. (x, 2*(n+1)+1) \<in> W}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. T e \<in> W}}"
+          thus "x \<in> {x \<in> V-U. (x, 2*(n+1)+1) \<in> W}" unfolding T_def by (simp add: algebra_simps)
+        next
+          fix x assume "x \<in> {x \<in> V-U. (x, 2*(n+1)+1) \<in> W}"
+          hence "x \<in> V-U" "(x, 2*n+3) \<in> W" by (auto simp: algebra_simps)
+          moreover have "(x, 2*n+1) \<in> E" using \<open>x \<in> V-U\<close> assms(20) by simp
+          moreover have "T (x, 2*n+1) = (x, 2*n+3)" unfolding T_def by simp
+          ultimately show "x \<in> {x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. T e \<in> W}}" by auto
+        qed
+        have "{x \<in> A. (x, 2*n+2) \<in> {e \<in> E. T e \<in> W}} \<union>
+            {x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. T e \<in> W}}
+          = {x \<in> A. (x, 2*(n+1)+2) \<in> W} \<union> {x \<in> B. (x, 2*(n+1)) \<in> W} \<union>
+            {x \<in> V-U. (x, 2*(n+1)+1) \<in> W}"
+          using h_A h_B h_VU by simp
+        also have "... \<in> TX" using assms(18)[OF hW, of "n+1"] by (simp add: algebra_simps)
+        finally show "{x \<in> A. (x, 2*n+2) \<in> {e \<in> E. T e \<in> W}} \<union>
+            {x \<in> B. (x, 2*n) \<in> {e \<in> E. T e \<in> W}} \<union>
+            {x \<in> V-U. (x, 2*n+1) \<in> {e \<in> E. T e \<in> W}} \<in> TX" .
+      qed
+    qed
+  qed
   \<comment> \<open>Induction: f^m lift from (a,0) to (a,2m).\<close>
   show ?thesis
   proof (induction m)
@@ -15933,6 +16016,10 @@ proof -
       thus "(x, 2*n) \<in> E" unfolding E_def by auto
     qed
     show "p0 = fst" unfolding p0_def by simp
+    show "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
+        \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
+      unfolding TE_def by (by100 blast)
   qed
   \<comment> \<open>(g\<inverse>)^k lift: reverse of g-lift is a loop at (a,0), projects to g\<inverse>.
      By induction, (g\<inverse>)^k lifts to a loop at (a,0).\<close>
