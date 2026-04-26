@@ -8752,12 +8752,54 @@ proof -
                  S2C separated means W1, W2 open. W1 open in TS2C \<Rightarrow> need W1 path-component (lpc).
                  For now, sorry the contradiction.\<close>
               \<comment> \<open>S2C = PC_N (path-connected). But S2C is NOT connected (separated by C1'\<union>C2').\<close>
-              have "S2C \<subseteq> PC_N" using hW1_sub_PC hW2_sub_S2C hN_in_PC hPC_sub
-                sorry \<comment> \<open>W1\<subseteq>PC_N + W2\<subseteq>PC_N (from other direction) + W1\<union>W2=S2C.\<close>
+              \<comment> \<open>W2_S2 \<subseteq> PC_N (same separation argument as for W2\<subseteq>PC_N direction below).\<close>
+              have hW2_sub_PC_local: "W2_S2 \<subseteq> PC_N"
+              proof -
+                have "\<And>y. y \<in> W2_S2 \<Longrightarrow> y \<in> PC_N"
+                proof (rule ccontr)
+                  fix y assume hyW2: "y \<in> W2_S2" and "y \<notin> PC_N"
+                  have "y \<in> S2C" using hyW2 hW2_sub_S2C by (by100 blast)
+                  have hW2_top_eq: "subspace_topology top1_S2 top1_S2_topology W2_S2
+                      = subspace_topology S2C TS2C W2_S2"
+                  proof -
+                    have "subspace_topology S2C (subspace_topology top1_S2 top1_S2_topology S2C) W2_S2
+                        = subspace_topology top1_S2 top1_S2_topology W2_S2"
+                      by (rule subspace_topology_trans[OF hW2_sub_S2C])
+                    thus ?thesis unfolding TS2C_def by simp
+                  qed
+                  have "PC_N \<inter> W2_S2 \<in> subspace_topology S2C TS2C W2_S2"
+                    using hPC_N_open unfolding subspace_topology_def by (by100 blast)
+                  moreover have "(S2C - PC_N) \<inter> W2_S2 \<in> subspace_topology S2C TS2C W2_S2"
+                    using hCompl_open unfolding subspace_topology_def by (by100 blast)
+                  moreover have "PC_N \<inter> W2_S2 \<noteq> {}" using hN_in_PC hN_in_W2 by (by100 blast)
+                  moreover have "(S2C - PC_N) \<inter> W2_S2 \<noteq> {}" using \<open>y \<in> S2C\<close> \<open>y \<notin> PC_N\<close> hyW2 by (by100 blast)
+                  moreover have "(PC_N \<inter> W2_S2) \<inter> ((S2C - PC_N) \<inter> W2_S2) = {}" by (by100 blast)
+                  moreover have "(PC_N \<inter> W2_S2) \<union> ((S2C - PC_N) \<inter> W2_S2) = W2_S2"
+                    using hW2_sub_S2C by (by100 blast)
+                  ultimately show False
+                    using hW2_conn[unfolded hW2_top_eq top1_connected_on_def] by (by100 blast)
+                qed
+                thus ?thesis by (by100 blast)
+              qed
+              have "S2C \<subseteq> PC_N" using hW1_sub_PC hW2_sub_PC_local hW12_cover hC'_decomp
+                unfolding S2C_def by (by100 blast)
               hence "S2C = PC_N" using hPC_sub by (by100 blast)
-              \<comment> \<open>S2C path-connected (= PC_N which is a path component).\<close>
+              \<comment> \<open>S2C path-connected (= PC_N). PC_N path-connected by definition.\<close>
               have "top1_path_connected_on S2C TS2C"
-                sorry \<comment> \<open>S2C = PC_N. Path component is path-connected.\<close>
+              proof -
+                have "top1_path_connected_on PC_N (subspace_topology S2C TS2C PC_N)"
+                  unfolding PC_N_def
+                  by (rule top1_path_component_of_on_path_connected[OF hTS2C hN_S2C])
+                moreover have "subspace_topology S2C TS2C PC_N = TS2C"
+                proof -
+                  have "\<forall>U\<in>TS2C. U \<subseteq> S2C"
+                    unfolding TS2C_def subspace_topology_def by (by100 blast)
+                  hence "subspace_topology S2C TS2C S2C = TS2C" by (rule subspace_topology_self)
+                  thus ?thesis using \<open>S2C = PC_N\<close> by simp
+                qed
+                ultimately have "top1_path_connected_on PC_N TS2C" by simp
+                thus ?thesis using \<open>S2C = PC_N\<close> by simp
+              qed
               hence hS2C_conn: "top1_connected_on S2C TS2C"
                 by (rule top1_path_connected_imp_connected)
               \<comment> \<open>But S2C is NOT connected (C1'\<union>C2' separates S^2).\<close>
@@ -12577,6 +12619,12 @@ qed
 
 
 end
+
+
+
+
+
+
 
 
 
