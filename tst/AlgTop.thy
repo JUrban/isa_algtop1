@@ -3111,9 +3111,121 @@ proof -
       have hcomp_inv: "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X \<sigma> \<circ> inv_into R2_q' t)"
         by (rule top1_continuous_map_on_comp[OF hinv_t hinv_\<sigma>])
       \<comment> \<open>inv_into X (t \<circ> \<sigma>) = inv_into X \<sigma> \<circ> inv_into R2_q' t on R2_0.\<close>
-      show ?thesis using hcomp_inv
-        sorry \<comment> \<open>inv(t\<circ>\<sigma>) = \<sigma>\<inverse>\<circ>t\<inverse> pointwise on R2_0 (standard bij_betw composition inverse).
-           Then continuity transfers. Both \<sigma>\<inverse> and t\<inverse> are continuous (from homeomorphisms).\<close>
+      \<comment> \<open>inv_into X h continuous: show preimage of TX-open under inv_into = h-image is TR2_0-open.
+         h = t \<circ> \<sigma>, both open maps (homeomorphisms), so h is an open map.\<close>
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix y assume "y \<in> R2_0"
+        have hbij: "bij_betw h ?X R2_0"
+        proof -
+          have "bij_betw \<sigma> ?X R2_q'" using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+          moreover have "bij_betw t R2_q' R2_0" using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          ultimately show ?thesis unfolding h_def using bij_betw_comp_iff by (by100 blast)
+        qed
+        have "y \<in> h ` ?X" using \<open>y \<in> R2_0\<close> hbij unfolding bij_betw_def by (by100 blast)
+        thus "inv_into ?X h y \<in> ?X" using inv_into_into[OF \<open>y \<in> h ` ?X\<close>] by (by100 blast)
+      next
+        fix W assume "W \<in> ?TX"
+        \<comment> \<open>Need: {y \<in> R2_0. inv_into X h y \<in> W} \<in> TR2_0.
+           This equals h ` (W \<inter> X) = h ` W (since W \<subseteq> X from topology).
+           h ` W = t ` (\<sigma> ` W). \<sigma> ` W is open in TR2_q' (σ is open map).
+           t ` (\<sigma> ` W) is open in TR2_0 (t is open map).\<close>
+        have hbij: "bij_betw h ?X R2_0"
+        proof -
+          have "bij_betw \<sigma> ?X R2_q'" using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+          moreover have "bij_betw t R2_q' R2_0" using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          ultimately show ?thesis unfolding h_def using bij_betw_comp_iff by (by100 blast)
+        qed
+        \<comment> \<open>{y \<in> R2_0 | inv h y \<in> W} = h ` W (since h bijection X \<rightarrow> R2_0).\<close>
+        have hW_sub: "W \<subseteq> ?X"
+        proof -
+          have "?TX = subspace_topology top1_S2 top1_S2_topology ?X" by (by100 simp)
+          then obtain W0 where "W0 \<in> top1_S2_topology" "W = ?X \<inter> W0"
+            using \<open>W \<in> ?TX\<close> unfolding subspace_topology_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have heq: "{y \<in> R2_0. inv_into ?X h y \<in> W} = h ` W"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> {y \<in> R2_0. inv_into ?X h y \<in> W}"
+          hence hy: "y \<in> R2_0" and hinv: "inv_into ?X h y \<in> W" by (by100 auto)
+          have "y \<in> h ` ?X" using hy hbij unfolding bij_betw_def by (by100 blast)
+          have "y = h (inv_into ?X h y)" using f_inv_into_f[OF \<open>y \<in> h ` ?X\<close>] by (by100 simp)
+          thus "y \<in> h ` W" using hinv by (by100 blast)
+        next
+          fix y assume "y \<in> h ` W"
+          then obtain x where hx: "x \<in> W" "y = h x" by (by100 blast)
+          have "x \<in> ?X" using hx(1) hW_sub by (by100 blast)
+          hence "inv_into ?X h y = x"
+            using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij] \<open>x \<in> ?X\<close>] hx(2) by (by100 simp)
+          moreover have "y \<in> R2_0" using hx hW_sub hbij unfolding bij_betw_def by (by100 blast)
+          ultimately show "y \<in> {y \<in> R2_0. inv_into ?X h y \<in> W}" using hx(1) by (by100 blast)
+        qed
+        \<comment> \<open>h ` W is open: h = t \<circ> \<sigma>, \<sigma> maps open to open, t maps open to open.\<close>
+        have "\<sigma> ` W \<in> TR2_q'"
+        proof -
+          \<comment> \<open>\<sigma>\<inverse> continuous: {x \<in> X. \<sigma> x \<in> V} = {x \<in> X. x \<in> \<sigma>\<inverse>(V)} for V open.
+             Since \<sigma> bijective: \<sigma> ` W = {v \<in> R2_q'. \<sigma>\<inverse>(v) \<in> W} = preimage of W under \<sigma>\<inverse>.\<close>
+          have hinv_\<sigma>_cont: "top1_continuous_map_on R2_q' TR2_q' ?X ?TX (inv_into ?X \<sigma>)"
+            using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hbij_\<sigma>: "bij_betw \<sigma> ?X R2_q'"
+            using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "\<sigma> ` W = {v \<in> R2_q'. inv_into ?X \<sigma> v \<in> W}"
+          proof (rule set_eqI, rule iffI)
+            fix v assume "v \<in> \<sigma> ` W"
+            then obtain x where "x \<in> W" "v = \<sigma> x" by (by100 blast)
+            have "x \<in> ?X" using \<open>x \<in> W\<close> hW_sub by (by100 blast)
+            hence "inv_into ?X \<sigma> v = x"
+              using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij_\<sigma>] \<open>x \<in> ?X\<close>] \<open>v = \<sigma> x\<close> by (by100 simp)
+            moreover have "v \<in> R2_q'" using \<open>x \<in> ?X\<close> hbij_\<sigma> \<open>v = \<sigma> x\<close> unfolding bij_betw_def by (by100 blast)
+            ultimately show "v \<in> {v \<in> R2_q'. inv_into ?X \<sigma> v \<in> W}" using \<open>x \<in> W\<close> by (by100 blast)
+          next
+            fix v assume "v \<in> {v \<in> R2_q'. inv_into ?X \<sigma> v \<in> W}"
+            hence "v \<in> R2_q'" "inv_into ?X \<sigma> v \<in> W" by (by100 auto)
+            have "v \<in> \<sigma> ` ?X" using \<open>v \<in> R2_q'\<close> hbij_\<sigma> unfolding bij_betw_def by (by100 blast)
+            have "v = \<sigma> (inv_into ?X \<sigma> v)" using f_inv_into_f[OF \<open>v \<in> \<sigma> ` ?X\<close>] by (by100 simp)
+            thus "v \<in> \<sigma> ` W" using \<open>inv_into ?X \<sigma> v \<in> W\<close> by (by100 blast)
+          qed
+          moreover have "{v \<in> R2_q'. inv_into ?X \<sigma> v \<in> W} \<in> TR2_q'"
+            using hinv_\<sigma>_cont \<open>W \<in> ?TX\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have "t ` (\<sigma> ` W) \<in> TR2_0"
+        proof -
+          have hinv_t_cont: "top1_continuous_map_on R2_0 TR2_0 R2_q' TR2_q' (inv_into R2_q' t)"
+            using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hbij_t: "bij_betw t R2_q' R2_0"
+            using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hsW_sub: "\<sigma> ` W \<subseteq> R2_q'"
+          proof -
+            have "\<sigma> ` W \<subseteq> \<sigma> ` ?X" using hW_sub by (by100 blast)
+            moreover have "bij_betw \<sigma> ?X R2_q'"
+              using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+            ultimately show ?thesis using bij_betw_imp_surj_on by (by100 fast)
+          qed
+          have "t ` (\<sigma> ` W) = {v \<in> R2_0. inv_into R2_q' t v \<in> \<sigma> ` W}"
+          proof (rule set_eqI, rule iffI)
+            fix v assume "v \<in> t ` (\<sigma> ` W)"
+            then obtain u where "u \<in> \<sigma> ` W" "v = t u" by (by100 blast)
+            have "u \<in> R2_q'" using \<open>u \<in> \<sigma> ` W\<close> hsW_sub by (by100 blast)
+            hence "inv_into R2_q' t v = u"
+              using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij_t] \<open>u \<in> R2_q'\<close>] \<open>v = t u\<close> by (by100 simp)
+            moreover have "v \<in> R2_0" using \<open>u \<in> R2_q'\<close> hbij_t \<open>v = t u\<close> unfolding bij_betw_def by (by100 blast)
+            ultimately show "v \<in> {v \<in> R2_0. inv_into R2_q' t v \<in> \<sigma> ` W}" using \<open>u \<in> \<sigma> ` W\<close> by (by100 blast)
+          next
+            fix v assume "v \<in> {v \<in> R2_0. inv_into R2_q' t v \<in> \<sigma> ` W}"
+            hence "v \<in> R2_0" "inv_into R2_q' t v \<in> \<sigma> ` W" by (by100 auto)
+            have "v \<in> t ` R2_q'" using \<open>v \<in> R2_0\<close> hbij_t unfolding bij_betw_def by (by100 blast)
+            have "v = t (inv_into R2_q' t v)" using f_inv_into_f[OF \<open>v \<in> t ` R2_q'\<close>] by (by100 simp)
+            thus "v \<in> t ` (\<sigma> ` W)" using \<open>inv_into R2_q' t v \<in> \<sigma> ` W\<close> by (by100 blast)
+          qed
+          moreover have "{v \<in> R2_0. inv_into R2_q' t v \<in> \<sigma> ` W} \<in> TR2_0"
+            using hinv_t_cont \<open>\<sigma> ` W \<in> TR2_q'\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have "h ` W = t ` (\<sigma> ` W)" unfolding h_def by (by100 auto)
+        show "{y \<in> R2_0. inv_into ?X h y \<in> W} \<in> TR2_0"
+          unfolding heq \<open>h ` W = t ` (\<sigma> ` W)\<close> by (rule \<open>t ` (\<sigma> ` W) \<in> TR2_0\<close>)
+      qed
     qed
   qed
   \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence.\<close>
