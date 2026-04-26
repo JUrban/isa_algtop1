@@ -3387,9 +3387,48 @@ proof -
       define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
       have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
       have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
-        sorry \<comment> \<open>\<phi>(s,t)=(1-s,t) continuous: components s\<mapsto>1-s (proved at line ~394 of Top1_Ch9_13)
-           and t\<mapsto>t (identity) are both continuous I\<rightarrow>I. By Theorem_18_4, \<phi> is continuous.
-           Direct proof causes session timeout; the argument is mathematically trivial.\<close>
+      proof -
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+          unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+        have hid: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (I_set \<times> I_set) (product_topology_on I_top I_top) id"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> I_set \<times> I_set" thus "id p \<in> I_set \<times> I_set" by (by100 simp)
+        next
+          fix W assume hW: "W \<in> product_topology_on I_top I_top"
+          \<comment> \<open>{p \<in> I^2. id p \<in> W} = I^2 \<inter> W. Since I^2 \<in> T and W \<in> T, intersection \<in> T.\<close>
+          have hII_mem: "(I_set \<times> I_set) \<in> product_topology_on I_top I_top"
+            using hTII[unfolded II_topology_def] unfolding is_topology_on_def by (by100 blast)
+          have heq: "{p \<in> I_set \<times> I_set. id p \<in> W} = (I_set \<times> I_set) \<inter> W" by (by100 auto)
+          show "{p \<in> I_set \<times> I_set. id p \<in> W} \<in> product_topology_on I_top I_top"
+            unfolding heq
+            by (rule topology_inter_open[OF hTII[unfolded II_topology_def] hII_mem hW])
+        qed
+        have hprojs: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            I_set I_top (pi1 \<circ> id) \<and>
+            top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            I_set I_top (pi2 \<circ> id)"
+          using iffD1[OF Theorem_18_4[OF hTII[unfolded II_topology_def] hTI hTI] hid] by (by100 simp)
+        have hfst: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top fst"
+          using hprojs unfolding II_topology_def pi1_def comp_def by (by100 simp)
+        have hsnd: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top snd"
+          using hprojs unfolding II_topology_def pi2_def comp_def by (by100 simp)
+        have hrev: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+          by (rule op_minus_continuous_on_interval)
+        have hcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top ((\<lambda>t. 1-t) \<circ> fst)"
+          by (rule top1_continuous_map_on_comp[OF hfst hrev])
+        have hpi1: "pi1 \<circ> \<phi> = (\<lambda>t. 1 - t) \<circ> fst"
+          unfolding \<phi>_def pi1_def comp_def by (by100 auto)
+        have hpi2: "pi2 \<circ> \<phi> = snd"
+          unfolding \<phi>_def pi2_def comp_def by (by100 auto)
+        have "top1_continuous_map_on (I_set \<times> I_set) II_topology
+            (I_set \<times> I_set) (product_topology_on I_top I_top) \<phi>"
+          using iffD2[OF Theorem_18_4[OF hTII hTI hTI]]
+            hcomp[folded hpi1] hsnd[folded hpi2] by (by100 blast)
+        thus ?thesis unfolding II_topology_def by (by100 simp)
+      qed
       show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
     qed
     show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
@@ -10370,3 +10409,4 @@ qed
 
 
 end
+
