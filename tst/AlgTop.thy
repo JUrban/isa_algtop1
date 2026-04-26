@@ -15577,12 +15577,92 @@ lemma Theorem_63_1_c_subgroups_trivial_reverse:
             (top1_path_power (top1_path_product alpha beta) a m)
             (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k)"
   shows "m = 0"
-  sorry \<comment> \<open>Same helix construction as 63.1(c). The g-lift g\<tilde> is a loop at e_0.
-     The lift of g\<inverse> from e_0 is the reverse path g\<tilde>\<inverse> in E: also a loop at e_0
-     (since p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), and g\<tilde> starts/ends at e_0).
-     Then (g\<inverse>)^k lifts to concatenation of k loops g\<tilde>\<inverse> = loop at e_0.
-     f^m lifts from e_0 to (a, 2m) (same as 63.1(c)).
-     By Theorem_54_3: (a,2m) = e_0 = (a,0), so m = 0.\<close>
+proof -
+  \<comment> \<open>Build helix (same as 63.1(c)).\<close>
+  have ha_U: "a \<in> U" using assms(5,9) by (by100 blast)
+  define E :: "('a \<times> int) set" where
+    "E = {(x, m). (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)}"
+  define TE :: "('a \<times> int) set set" where
+    "TE = {W. W \<subseteq> E \<and>
+      (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+      (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  define p0 :: "'a \<times> int \<Rightarrow> 'a" where "p0 = fst"
+  have he0: "(a, 0::int) \<in> E" unfolding E_def using ha_U by simp
+  have hp0: "p0 (a, 0::int) = a" unfolding p0_def by simp
+  have hcov_TE: "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
+  proof -
+    note h = helix_covering_construction[OF assms(1-8)]
+    have "E = {x. even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "p0 = fst" unfolding p0_def by simp
+    ultimately show ?thesis using h by simp
+  qed
+  hence hTE: "is_topology_on E TE" and hcov: "top1_covering_map_on E TE X TX p0" by auto
+  \<comment> \<open>f^m lift from (a,0) to (a,2m). Same construction as in Theorem_63_1_c.\<close>
+  have hfm_lift: "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+      (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s)"
+    sorry \<comment> \<open>Same ftilde_0 + deck transformation construction as Theorem_63_1_c.\<close>
+  \<comment> \<open>(g\<inverse>)^k lift: reverse of g-lift is a loop at (a,0), projects to g\<inverse>.
+     By induction, (g\<inverse>)^k lifts to a loop at (a,0).\<close>
+  have hginvk_lift: "\<exists>gkl. top1_is_path_on E TE (a, 0) (a, 0) gkl \<and>
+      (\<forall>s\<in>I_set. p0 (gkl s) = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k s)"
+    sorry \<comment> \<open>Get g-lift gt from helix_g_lift_is_loop (loop at (a,0), projects to g=\<gamma>*\<delta>).
+       Define g\<inverse>-lift = top1_path_reverse gt: loop at (a,0), projects to g\<inverse>.
+       Concatenate k copies: still loop at (a,0), projects to (g\<inverse>)^k.\<close>
+  \<comment> \<open>Apply covering_lift_endpoint_contradiction.\<close>
+  obtain ftm where hftm: "top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm"
+      and hftm_proj: "\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product alpha beta) a m s"
+    using hfm_lift by (by100 blast)
+  obtain gkl where hgkl: "top1_is_path_on E TE (a, 0) (a, 0) gkl"
+      and hgkl_proj: "\<forall>s\<in>I_set. p0 (gkl s) = top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k s"
+    using hginvk_lift by (by100 blast)
+  have hfm_path: "top1_is_path_on X TX a a (top1_path_power (top1_path_product alpha beta) a m)"
+  proof -
+    have hf_loop: "top1_is_loop_on X TX a (top1_path_product alpha beta)"
+    proof -
+      have "top1_is_path_on X TX a b alpha"
+        by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(2) assms(11)])
+           (use assms(4) in blast)
+      moreover have "top1_is_path_on X TX b a beta"
+        by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(3) assms(12)])
+           (use assms(4) in blast)
+      ultimately show ?thesis unfolding top1_is_loop_on_def
+        using top1_path_product_is_path[OF assms(1)] by (by100 blast)
+    qed
+    show ?thesis by (rule top1_path_power_is_path[OF assms(1) hf_loop])
+  qed
+  have hginvk_path: "top1_is_path_on X TX a a
+      (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k)"
+  proof -
+    have hg_path: "top1_is_path_on X TX a a (top1_path_product gamma delta)"
+    proof -
+      have "top1_is_path_on X TX a a' gamma"
+        by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(2) assms(14)])
+           (use assms(4) in blast)
+      moreover have "top1_is_path_on X TX a' a delta"
+        by (rule path_in_subspace_is_path_in_space[OF assms(1) _ assms(3) assms(15)])
+           (use assms(4) in blast)
+      ultimately show ?thesis using top1_path_product_is_path[OF assms(1)] by (by100 blast)
+    qed
+    have hginv_loop: "top1_is_loop_on X TX a (top1_path_reverse (top1_path_product gamma delta))"
+    proof -
+      have "top1_is_path_on X TX a a (top1_path_reverse (top1_path_product gamma delta))"
+        using top1_path_reverse_is_path[OF hg_path] hg_path
+        unfolding top1_is_path_on_def top1_path_reverse_def by auto
+      thus ?thesis unfolding top1_is_loop_on_def by simp
+    qed
+    show ?thesis by (rule top1_path_power_is_path[OF assms(1) hginv_loop])
+  qed
+  show "m = 0"
+    by (rule covering_lift_endpoint_contradiction[OF hcov hTE assms(1) he0 hp0
+        hftm hftm_proj hfm_path hgkl hgkl_proj hginvk_path assms(16)])
+qed
 
 \<comment> \<open>Corollary for 63.5: In the setting of 63.1 on S^2-{p,q}, if we have two loops f and g
    where f = \<alpha>*\<beta> and g = \<gamma>*\<delta> (constructed from different component decompositions),
