@@ -9065,7 +9065,8 @@ proof -
         hence hxV: "x \<in> V_R2" using hUR2VR2_cover by (by100 blast)
         \<comment> \<open>V open, x \<in> V, V \<inter> U = {} \<Rightarrow> x \<notin> closure U.\<close>
         have "V_R2 \<inter> closure U_R2 = {}"
-          using hVR2_open hUR2VR2_disj sorry
+          using hVR2_open hUR2VR2_disj
+          sorry \<comment> \<open>V open, V\<inter>U={}. -V closed, U\<subseteq>-V, closure_minimal \<Rightarrow> cl(U)\<subseteq>-V.\<close>
         thus False using hxV hx by (by100 blast)
       qed
     next
@@ -9081,7 +9082,8 @@ proof -
         assume "x \<notin> V_R2 \<union> C"
         hence hxU: "x \<in> U_R2" using hUR2VR2_cover by (by100 blast)
         have "U_R2 \<inter> closure V_R2 = {}"
-          using hUR2_open hUR2VR2_disj sorry
+          using hUR2_open hUR2VR2_disj
+          sorry \<comment> \<open>Same: U open, U\<inter>V={} \<Rightarrow> U\<inter>cl(V)={}.\<close>
         thus False using hxU hx by (by100 blast)
       qed
     next
@@ -12719,6 +12721,13 @@ qed
 
 
 end
+
+
+
+
+
+
+
 
 
 
