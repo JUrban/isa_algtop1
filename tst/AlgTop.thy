@@ -8251,8 +8251,59 @@ proof -
       using hC'_sub by (by100 blast)
     \<comment> \<open>C' is a simple closed curve on S^2 (transferred from R^2 via \<sigma>2inv).\<close>
     have hC'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
-      sorry \<comment> \<open>C = f(S^1) SCC on R^2. \<sigma>2inv: R^2 \<rightarrow> S^2\{N} homeo. C' = \<sigma>2inv(C).
-         \<sigma>2inv \<circ> f: S^1 \<rightarrow> S^2 continuous + injective. Image = C' \<subseteq> S^2.\<close>
+      unfolding top1_simple_closed_curve_on_def
+    proof -
+      obtain f0 where hf0_cont: "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 f0"
+          and hf0_inj: "inj_on f0 top1_S1" and hf0_img: "f0 ` top1_S1 = C"
+        using assms unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      define g where "g = \<sigma>2inv \<circ> f0"
+      \<comment> \<open>\<sigma>2inv continuous R^2 \<rightarrow> S^2\{N}.\<close>
+      have h\<sigma>2inv_cont: "top1_continuous_map_on UNIV ?TR2 (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
+        using homeomorphism_inverse[OF h\<sigma>2, folded \<sigma>2inv_def]
+        unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>Compose: g = \<sigma>2inv \<circ> f0 continuous S^1 \<rightarrow> S^2\{N}.\<close>
+      have hg_cont_S2N: "top1_continuous_map_on top1_S1 top1_S1_topology (top1_S2 - {north_pole})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) g"
+        unfolding g_def by (rule top1_continuous_map_on_comp[OF hf0_cont h\<sigma>2inv_cont])
+      \<comment> \<open>Continuous into subspace \<Rightarrow> continuous into ambient S^2.\<close>
+      have hg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology g"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume "s \<in> top1_S1"
+        thus "g s \<in> top1_S2"
+          using hg_cont_S2N unfolding top1_continuous_map_on_def by (by100 blast)
+      next
+        fix V assume hV: "V \<in> top1_S2_topology"
+        have hg_map: "\<forall>s\<in>top1_S1. g s \<in> top1_S2 - {north_pole}"
+          using hg_cont_S2N unfolding top1_continuous_map_on_def by (by100 blast)
+        have hinter_open: "(top1_S2 - {north_pole}) \<inter> V \<in>
+            subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})"
+          using hV unfolding subspace_topology_def by (by100 blast)
+        have "{s \<in> top1_S1. g s \<in> (top1_S2 - {north_pole}) \<inter> V} \<in> top1_S1_topology"
+          using hg_cont_S2N hinter_open unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{s \<in> top1_S1. g s \<in> V} = {s \<in> top1_S1. g s \<in> (top1_S2 - {north_pole}) \<inter> V}"
+          using hg_map by (by100 blast)
+        ultimately show "{s \<in> top1_S1. g s \<in> V} \<in> top1_S1_topology" by simp
+      qed
+      \<comment> \<open>g injective (composition of injectives).\<close>
+      have hg_inj: "inj_on g top1_S1"
+      proof -
+        have h\<sigma>2inv_inj: "inj \<sigma>2inv"
+          using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+        show ?thesis unfolding g_def comp_def
+          using hf0_inj h\<sigma>2inv_inj unfolding inj_on_def inj_def by (by100 blast)
+      qed
+      \<comment> \<open>g(S^1) = C'.\<close>
+      have hg_img: "g ` top1_S1 = C'"
+      proof -
+        have "g ` top1_S1 = \<sigma>2inv ` (f0 ` top1_S1)" unfolding g_def image_comp by simp
+        thus ?thesis unfolding C'_def using hf0_img by simp
+      qed
+      show "\<exists>f. top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f
+                \<and> inj_on f top1_S1 \<and> f ` top1_S1 = C'"
+        using hg_cont hg_inj hg_img by (by100 blast)
+    qed
     \<comment> \<open>C1', C2' are closed, connected subsets of S^2 with card(C1'\<inter>C2') = 2.\<close>
     \<comment> \<open>C1', C2' don't separate S^2 (by Theorem 63.2, arcs don't separate).\<close>
     \<comment> \<open>C1' is an arc on S^2: transfer arc property from R^2 via \<sigma>2inv.\<close>
@@ -13540,6 +13591,12 @@ qed
 
 
 end
+
+
+
+
+
+
 
 
 
