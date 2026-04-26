@@ -15648,8 +15648,12 @@ proof -
   define t :: "real \<times> real \<Rightarrow> real \<times> real" where
     "t = (\<lambda>(x, y). (x - fst q', y - snd q'))"
   have ht_homeo: "top1_homeomorphism_on R2_q' TR2_q' R2_0 TR2_0 t"
-    sorry \<comment> \<open>Translation t(x,y) = (x-fst q', y-snd q') is a homeomorphism R^2-{q'} \<rightarrow> R^2-{0}.
-       Continuous (subtraction), bijective (inverse = addition by q'), maps q' to 0.\<close>
+  proof -
+    have ht_eq: "t = (\<lambda>x. (fst x - fst q', snd x - snd q'))"
+      unfolding t_def by (rule ext) auto
+    show ?thesis unfolding R2_q'_def TR2_q'_def R2_0_def TR2_0_def ht_eq
+      by (rule translation_homeo_R2[of q'])
+  qed
   \<comment> \<open>Step 5-6: \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z. Use existing Theorem_58_2 + Theorem_54_5.\<close>
   \<comment> \<open>Step 7: Chain: \<pi>_1(S^2-{p,q}) \<cong> \<pi>_1(R^2-{q'}) \<cong> \<pi>_1(R^2-{0}) \<cong> \<pi>_1(S^1) \<cong> Z.
      The composition \<sigma> ; t maps a \<in> S^2-{p,q} to t(\<sigma>(a)) \<in> R^2-{0}.
