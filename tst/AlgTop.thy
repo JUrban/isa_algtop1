@@ -9062,10 +9062,154 @@ proof -
       using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
           top1_open_sets_is_topology_on_UNIV] by simp
     \<comment> \<open>W1, W2 open in S^2 (path components of lpc S2C = S^2 - C').\<close>
+    \<comment> \<open>W1, W2 open in S^2: path components of lpc S2C.\<close>
+    have hTS2_here: "is_topology_on top1_S2 top1_S2_topology"
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hS2C_open_here: "top1_S2 - (C1' \<union> C2') \<in> top1_S2_topology"
+    proof -
+      have "top1_S2 - (C1' \<union> C2') = (top1_S2 - C1') \<inter> (top1_S2 - C2')" by (by100 blast)
+      moreover have "(top1_S2 - C1') \<in> top1_S2_topology"
+        using hC1'_closed unfolding closedin_on_def by (by100 blast)
+      moreover have "(top1_S2 - C2') \<in> top1_S2_topology"
+        using hC2'_closed unfolding closedin_on_def by (by100 blast)
+      ultimately show ?thesis using topology_inter_open[OF hTS2_here] by (by100 simp)
+    qed
+    define S2C_here where "S2C_here = top1_S2 - (C1' \<union> C2')"
+    define TS2C_here where "TS2C_here = subspace_topology top1_S2 top1_S2_topology S2C_here"
+    have "S2C_here \<subseteq> top1_S2" unfolding S2C_here_def by (by100 blast)
+    have hTS2C_here: "is_topology_on S2C_here TS2C_here"
+      unfolding TS2C_here_def
+      by (rule subspace_topology_is_topology_on[OF hTS2_here \<open>S2C_here \<subseteq> top1_S2\<close>])
+    have hS2C_lpc_here: "top1_locally_path_connected_on S2C_here TS2C_here"
+      unfolding TS2C_here_def S2C_here_def
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2C_open_here]) simp
+    have hW1_sub_S2C_here: "W1_S2 \<subseteq> S2C_here" and hW2_sub_S2C_here: "W2_S2 \<subseteq> S2C_here"
+      using hW12_cover hC'_decomp unfolding S2C_here_def by (by100 blast)+
+    \<comment> \<open>W1 is a path component of S2C_here.\<close>
+    \<comment> \<open>W1 = path component of any w \<in> W1 (hence open).\<close>
+    have hS2C_not_conn: "\<not> top1_connected_on S2C_here TS2C_here"
+      unfolding S2C_here_def TS2C_here_def
+      using Theorem_61_4_general_separation[OF top1_S2_is_topology_on_strict
+            hC1'_sub_S2 hC2'_sub_S2 hC1'_closed hC2'_closed
+            hC1'_conn hC2'_conn hC12'_card]
+      unfolding top1_separates_on_def by simp
+    have hW1_open_S2C: "W1_S2 \<in> TS2C_here"
+    proof -
+      obtain w where hw: "w \<in> W1_S2" using hW1_ne by (by100 blast)
+      hence hw_S2C: "w \<in> S2C_here" using hW1_sub_S2C_here by (by100 blast)
+      define PC_w where "PC_w = top1_path_component_of_on S2C_here TS2C_here w"
+      have hPCw_open: "PC_w \<in> TS2C_here" unfolding PC_w_def
+        by (rule top1_path_component_of_on_open_if_locally_path_connected[OF
+              hTS2C_here hS2C_lpc_here hw_S2C])
+      have hPCw_compl_open: "S2C_here - PC_w \<in> TS2C_here" unfolding PC_w_def
+        by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF
+              hTS2C_here hS2C_lpc_here hw_S2C])
+      have hw_PC: "w \<in> PC_w" unfolding PC_w_def top1_path_component_of_on_def
+        top1_in_same_path_component_on_def
+        using top1_constant_path_is_path[OF hTS2C_here hw_S2C] by (by100 blast)
+      \<comment> \<open>W1 \<subseteq> PC_w: W1 connected, PC_w and S2C-PC_w open, W1 meets PC_w.\<close>
+      have "W1_S2 \<subseteq> PC_w"
+      proof -
+        have hW1_top_eq: "subspace_topology top1_S2 top1_S2_topology W1_S2
+            = subspace_topology S2C_here TS2C_here W1_S2"
+        proof -
+          have "subspace_topology S2C_here (subspace_topology top1_S2 top1_S2_topology S2C_here) W1_S2
+              = subspace_topology top1_S2 top1_S2_topology W1_S2"
+            by (rule subspace_topology_trans[OF hW1_sub_S2C_here])
+          thus ?thesis unfolding TS2C_here_def by simp
+        qed
+        have "(S2C_here - PC_w) \<inter> W1_S2 = {}"
+        proof (rule ccontr)
+          assume hne: "(S2C_here - PC_w) \<inter> W1_S2 \<noteq> {}"
+          have "PC_w \<inter> W1_S2 \<in> subspace_topology S2C_here TS2C_here W1_S2"
+            using hPCw_open unfolding subspace_topology_def by (by100 blast)
+          moreover have "(S2C_here - PC_w) \<inter> W1_S2 \<in> subspace_topology S2C_here TS2C_here W1_S2"
+            using hPCw_compl_open unfolding subspace_topology_def by (by100 blast)
+          moreover have "PC_w \<inter> W1_S2 \<noteq> {}" using hw hw_PC by (by100 blast)
+          moreover have "(PC_w \<inter> W1_S2) \<inter> ((S2C_here - PC_w) \<inter> W1_S2) = {}" by (by100 blast)
+          moreover have "(PC_w \<inter> W1_S2) \<union> ((S2C_here - PC_w) \<inter> W1_S2) = W1_S2"
+            using hW1_sub_S2C_here by (by100 blast)
+          ultimately show False
+            using hW1_conn[unfolded hW1_top_eq top1_connected_on_def] hne by (by100 blast)
+        qed
+        thus ?thesis using hW1_sub_S2C_here by (by100 blast)
+      qed
+      \<comment> \<open>PC_w \<subseteq> W1: if PC_w meets W2, then S2C connected (contradiction).\<close>
+      moreover have "PC_w \<subseteq> W1_S2"
+      proof (rule ccontr)
+        assume "\<not> PC_w \<subseteq> W1_S2"
+        then obtain y where hy: "y \<in> PC_w" "y \<notin> W1_S2" by (by100 blast)
+        have hPC_sub: "PC_w \<subseteq> S2C_here"
+        proof
+          fix z assume "z \<in> PC_w"
+          then obtain f where "top1_is_path_on S2C_here TS2C_here w z f"
+            unfolding PC_w_def top1_path_component_of_on_def
+            top1_in_same_path_component_on_def by (by100 blast)
+          hence "f 1 = z" and "\<forall>s\<in>I_set. f s \<in> S2C_here"
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)+
+          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+          ultimately show "z \<in> S2C_here" by (by100 blast)
+        qed
+        hence "y \<in> W2_S2" using hy hW12_cover hC'_decomp hPC_sub
+          unfolding S2C_here_def by (by100 blast)
+        \<comment> \<open>PC_w path-connected (connected). W2 connected. They meet at y. Union connected.\<close>
+        have hPCw_conn: "top1_connected_on PC_w (subspace_topology S2C_here TS2C_here PC_w)"
+        proof -
+          have "top1_path_connected_on PC_w (subspace_topology S2C_here TS2C_here PC_w)"
+            unfolding PC_w_def
+            using top1_path_component_of_on_path_connected[OF hTS2C_here hw_S2C]
+            by simp
+          thus ?thesis by (rule top1_path_connected_imp_connected)
+        qed
+        have hW2_top_eq: "subspace_topology top1_S2 top1_S2_topology W2_S2
+            = subspace_topology S2C_here TS2C_here W2_S2"
+        proof -
+          have "subspace_topology S2C_here (subspace_topology top1_S2 top1_S2_topology S2C_here) W2_S2
+              = subspace_topology top1_S2 top1_S2_topology W2_S2"
+            by (rule subspace_topology_trans[OF hW2_sub_S2C_here])
+          thus ?thesis unfolding TS2C_here_def by simp
+        qed
+        \<comment> \<open>PC_w \<union> W2 connected (Theorem_23_3 with common point y).\<close>
+        have "top1_path_connected_on S2C_here TS2C_here"
+          sorry \<comment> \<open>PC_w \<union> W2 \<supseteq> W1\<union>W2 = S2C. PC_w\<union>W2 connected (Theorem_23_3). S2C pc.\<close>
+        hence "top1_connected_on S2C_here TS2C_here"
+          by (rule top1_path_connected_imp_connected)
+        thus False using hS2C_not_conn by simp
+      qed
+      ultimately have "W1_S2 = PC_w" by (by100 blast)
+      thus ?thesis using hPCw_open by simp
+    qed
+    have hW2_open_S2C: "W2_S2 \<in> TS2C_here"
+    proof -
+      \<comment> \<open>Same argument as W1: W2 is a path component of S2C, hence open.\<close>
+      obtain w2 where hw2: "w2 \<in> W2_S2" using hW2_ne by (by100 blast)
+      hence hw2_S2C: "w2 \<in> S2C_here" using hW2_sub_S2C_here by (by100 blast)
+      define PC_w2 where "PC_w2 = top1_path_component_of_on S2C_here TS2C_here w2"
+      have hPCw2_open: "PC_w2 \<in> TS2C_here" unfolding PC_w2_def
+        by (rule top1_path_component_of_on_open_if_locally_path_connected[OF
+              hTS2C_here hS2C_lpc_here hw2_S2C])
+      \<comment> \<open>W2 = PC_w2 by same separation argument (skip details, same as W1).\<close>
+      have "W2_S2 = PC_w2"
+        sorry \<comment> \<open>Same argument as W1 = PC_w. W2\<subseteq>PC_w2 (separation), PC_w2\<subseteq>W2 (S2C connected contradiction).\<close>
+      thus ?thesis using hPCw2_open by simp
+    qed
+    \<comment> \<open>Open in S2C (which is open in S^2) = open in S^2.\<close>
     have hW1_open_S2: "W1_S2 \<in> top1_S2_topology"
-      sorry \<comment> \<open>W1 is a path component of lpc S2C. Path components open. Open in open = open.\<close>
+    proof -
+      obtain U1 where hU1: "U1 \<in> top1_S2_topology" "W1_S2 = S2C_here \<inter> U1"
+        using hW1_open_S2C unfolding TS2C_here_def subspace_topology_def by (by100 blast)
+      have "S2C_here \<inter> U1 \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2_here hS2C_open_here[folded S2C_here_def] hU1(1)])
+      thus ?thesis using hU1(2) by simp
+    qed
     have hW2_open_S2: "W2_S2 \<in> top1_S2_topology"
-      sorry \<comment> \<open>Same for W2.\<close>
+    proof -
+      obtain U2 where hU2: "U2 \<in> top1_S2_topology" "W2_S2 = S2C_here \<inter> U2"
+        using hW2_open_S2C unfolding TS2C_here_def subspace_topology_def by (by100 blast)
+      have "S2C_here \<inter> U2 \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2_here hS2C_open_here[folded S2C_here_def] hU2(1)])
+      thus ?thesis using hU2(2) by simp
+    qed
     \<comment> \<open>\<sigma>2 homeomorphism maps open subsets of S^2\{N} to open subsets of R^2.\<close>
     have h\<sigma>2_open_map: "\<And>V. V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})
         \<Longrightarrow> \<sigma>2 ` V \<in> ?TR2"
@@ -12812,6 +12956,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
