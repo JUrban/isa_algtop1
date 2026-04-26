@@ -15536,9 +15536,30 @@ proof (rule ccontr)
   thus False using hm by simp
 qed
 
-\<comment> \<open>Corollary: 63.1(c) also works for the reverse loop g\<inverse>.
-   If [f^m] \<simeq> [(g\<inverse>)^k] then m = 0. Same argument: g\<inverse> lifts to the reverse of the g-lift loop,
-   which is also a loop at e_0. By Theorem_54_3, (a,2m) = (a,0).\<close>
+\<comment> \<open>Abstract endpoint lemma: if f^m lifts from e0 to (a,2m) and h^k lifts to a loop at e0,
+   and [f^m] \<simeq> [h^k], then m = 0 by Theorem_54_3.\<close>
+lemma covering_lift_endpoint_contradiction:
+  assumes "top1_covering_map_on E TE X TX p0"
+      and "is_topology_on E TE" and "is_topology_on X TX"
+      and "(a, 0::int) \<in> E" and "p0 (a, 0::int) = a"
+      \<comment> \<open>f^m lifts from (a,0) to (a, 2*int m).\<close>
+      and "top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm"
+      and "\<forall>s\<in>I_set. p0 (ftm s) = fm s"
+      and "top1_is_path_on X TX a a fm"
+      \<comment> \<open>h^k lifts to a LOOP at (a,0).\<close>
+      and "top1_is_path_on E TE (a, 0) (a, 0) hkl"
+      and "\<forall>s\<in>I_set. p0 (hkl s) = hk s"
+      and "top1_is_path_on X TX a a hk"
+      \<comment> \<open>f^m \<simeq> h^k.\<close>
+      and "top1_path_homotopic_on X TX a a fm hk"
+  shows "m = 0"
+proof -
+  have "(a, 2 * int m) = (a, 0::int)"
+    using conjunct1[OF Theorem_54_3[OF assms(1-5,8,11,12,6,7,9,10)]] by simp
+  hence "2 * int m = (0::int)" by simp
+  thus ?thesis by simp
+qed
+
 \<comment> \<open>63.1(c) for the reverse loop g\<inverse>: same helix, reverse g-lift is a loop.\<close>
 lemma Theorem_63_1_c_subgroups_trivial_reverse:
   assumes "is_topology_on X TX"
