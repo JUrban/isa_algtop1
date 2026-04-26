@@ -9017,43 +9017,6 @@ proof -
         using conjunct1[OF Theorem_26_2_strict[OF hS2_compact
               top1_S2_is_topology_on_strict hC'_closed]] .
     qed
-    have hW1_comp: "W1_S2 \<in> top1_components_on (top1_S2 - C')
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
-      sorry \<comment> \<open>W1 connected + open in S2C (complement of open W2) + maximal.\<close>
-    have hN_S2C': "north_pole \<in> top1_S2 - C'"
-      using north_pole_in_S2 hN_not_C' by (by100 blast)
-    have hW1_sub_C': "W1_S2 \<subseteq> top1_S2 - C'"
-      using hW12_cover hC'_decomp by (by100 blast)
-    have h61_1_W1: "(north_pole \<notin> W1_S2 \<longrightarrow>
-        (\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
-      \<and> (north_pole \<in> W1_S2 \<longrightarrow>
-        (\<forall>M. \<exists>x\<in>W1_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
-      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
-            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW1_conn hW1_sub_C' hW1_comp])
-    have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M"
-    proof -
-      have "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
-      hence "\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M"
-        using h61_1_W1 by simp
-      thus ?thesis unfolding U_R2_def by (by100 blast)
-    qed
-    have hW2_comp: "W2_S2 \<in> top1_components_on (top1_S2 - C')
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
-      sorry \<comment> \<open>Same as W1: connected + open + maximal.\<close>
-    have hW2_sub_C': "W2_S2 \<subseteq> top1_S2 - C'"
-      using hW12_cover hC'_decomp by (by100 blast)
-    have h61_1_W2: "(north_pole \<notin> W2_S2 \<longrightarrow>
-        (\<exists>M. \<forall>x\<in>W2_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
-      \<and> (north_pole \<in> W2_S2 \<longrightarrow>
-        (\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
-      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
-            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW2_conn hW2_sub_C' hW2_comp])
-    have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M"
-    proof -
-      have "\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M"
-        using h61_1_W2 hN_in_W2 by simp
-      thus ?thesis unfolding V_R2_def by (by100 blast)
-    qed
     \<comment> \<open>Boundary: closure(U) = U \<union> C and closure(V) = V \<union> C.
        Direction \<supseteq>: U \<subseteq> closure(U) trivially. C \<subseteq> closure(U) by textbook Step 2.
        Direction \<subseteq>: closure(U) \<inter> V = {} since V open and U \<inter> V = {}.
@@ -9407,6 +9370,155 @@ proof -
     qed
     have hUR2_sub: "U_R2 \<subseteq> UNIV" by simp
     have hVR2_sub: "V_R2 \<subseteq> UNIV" by simp
+    have hW1_sub_C': "W1_S2 \<subseteq> top1_S2 - C'" using hW12_cover hC'_decomp by (by100 blast)
+    have hW2_sub_C': "W2_S2 \<subseteq> top1_S2 - C'" using hW12_cover hC'_decomp by (by100 blast)
+    have hW1_comp: "W1_S2 \<in> top1_components_on (top1_S2 - C')
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+    proof -
+      obtain w where hw: "w \<in> W1_S2" using hW1_ne by (by100 blast)
+      have "W1_S2 = top1_component_of_on (top1_S2 - C')
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w"
+      proof (intro set_eqI iffI)
+        \<comment> \<open>\<supseteq>: W1 connected, w \<in> W1, \<subseteq> S^2-C'.\<close>
+        fix z assume "z \<in> W1_S2"
+        show "z \<in> top1_component_of_on (top1_S2 - C')
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w"
+          unfolding top1_component_of_on_mem_iff
+          using hw \<open>z \<in> W1_S2\<close> hW1_sub_C' hW1_conn
+            subspace_topology_trans[OF hW1_sub_C']
+          by (intro exI[of _ W1_S2]) simp
+      next
+        \<comment> \<open>\<subseteq>: any connected C \<ni> w in S^2-C' must be \<subseteq> W1 (else C meets W2, separation).\<close>
+        fix z assume "z \<in> top1_component_of_on (top1_S2 - C')
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w"
+        then obtain Ca where hCa: "Ca \<subseteq> top1_S2 - C'" "w \<in> Ca" "z \<in> Ca"
+            "top1_connected_on Ca (subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca)"
+          unfolding top1_component_of_on_mem_iff by (by100 blast)
+        \<comment> \<open>Ca \<subseteq> W1: if Ca meets W2, separation via W1/W2 both open.\<close>
+        have "Ca \<subseteq> W1_S2"
+        proof (rule ccontr)
+          assume "\<not> Ca \<subseteq> W1_S2"
+          then obtain y where "y \<in> Ca" "y \<notin> W1_S2" by (by100 blast)
+          hence "y \<in> W2_S2" using hCa(1) hW12_cover hC'_decomp by (by100 blast)
+          \<comment> \<open>W1\<inter>Ca and W2\<inter>Ca separate Ca. W1, W2 open in S^2 hence in subspace.\<close>
+          have "W1_S2 \<inter> Ca \<in> subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca"
+          proof -
+            have "W1_S2 \<inter> (top1_S2 - C') \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              using hW1_open_S2 unfolding subspace_topology_def by (by100 blast)
+            moreover have "W1_S2 \<inter> (top1_S2 - C') = W1_S2" using hW1_sub_C' by (by100 blast)
+            ultimately have "W1_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              by simp
+            thus ?thesis unfolding subspace_topology_def by (by100 blast)
+          qed
+          moreover have "W2_S2 \<inter> Ca \<in> subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca"
+          proof -
+            have "W2_S2 \<inter> (top1_S2 - C') \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              using hW2_open_S2 unfolding subspace_topology_def by (by100 blast)
+            moreover have "W2_S2 \<inter> (top1_S2 - C') = W2_S2" using hW2_sub_C' by (by100 blast)
+            ultimately have "W2_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              by simp
+            thus ?thesis unfolding subspace_topology_def by (by100 blast)
+          qed
+          moreover have "W1_S2 \<inter> Ca \<noteq> {}" using hw hCa(2) by (by100 blast)
+          moreover have "W2_S2 \<inter> Ca \<noteq> {}" using \<open>y \<in> W2_S2\<close> \<open>y \<in> Ca\<close> by (by100 blast)
+          moreover have "(W1_S2 \<inter> Ca) \<inter> (W2_S2 \<inter> Ca) = {}" using hW12_disj by (by100 blast)
+          moreover have "(W1_S2 \<inter> Ca) \<union> (W2_S2 \<inter> Ca) = Ca"
+            using hCa(1) hW12_cover hC'_decomp by (by100 blast)
+          ultimately show False
+            using hCa(4)[unfolded top1_connected_on_def] by (by100 blast)
+        qed
+        thus "z \<in> W1_S2" using hCa(3) by (by100 blast)
+      qed
+      thus ?thesis unfolding top1_components_on_def
+        using hw hW1_sub_C' by (by100 blast)
+    qed
+    have hN_S2C': "north_pole \<in> top1_S2 - C'"
+      using north_pole_in_S2 hN_not_C' by (by100 blast)
+    have hW1_sub_C': "W1_S2 \<subseteq> top1_S2 - C'"
+      using hW12_cover hC'_decomp by (by100 blast)
+    have h61_1_W1: "(north_pole \<notin> W1_S2 \<longrightarrow>
+        (\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
+      \<and> (north_pole \<in> W1_S2 \<longrightarrow>
+        (\<forall>M. \<exists>x\<in>W1_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
+      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
+            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW1_conn hW1_sub_C' hW1_comp])
+    have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M"
+    proof -
+      have "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
+      hence "\<exists>M. \<forall>x\<in>W1_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M"
+        using h61_1_W1 by simp
+      thus ?thesis unfolding U_R2_def by (by100 blast)
+    qed
+    have hW2_comp: "W2_S2 \<in> top1_components_on (top1_S2 - C')
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
+    proof -
+      obtain w2 where hw2: "w2 \<in> W2_S2" using hW2_ne by (by100 blast)
+      have "W2_S2 = top1_component_of_on (top1_S2 - C')
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w2"
+      proof (intro set_eqI iffI)
+        fix z assume "z \<in> W2_S2"
+        show "z \<in> top1_component_of_on (top1_S2 - C')
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w2"
+          unfolding top1_component_of_on_mem_iff
+          using hw2 \<open>z \<in> W2_S2\<close> hW2_sub_C' hW2_conn
+            subspace_topology_trans[OF hW2_sub_C']
+          by (intro exI[of _ W2_S2]) simp
+      next
+        fix z assume "z \<in> top1_component_of_on (top1_S2 - C')
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) w2"
+        then obtain Ca where hCa: "Ca \<subseteq> top1_S2 - C'" "w2 \<in> Ca" "z \<in> Ca"
+            "top1_connected_on Ca (subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca)"
+          unfolding top1_component_of_on_mem_iff by (by100 blast)
+        have "Ca \<subseteq> W2_S2"
+        proof (rule ccontr)
+          assume "\<not> Ca \<subseteq> W2_S2"
+          then obtain y where "y \<in> Ca" "y \<notin> W2_S2" by (by100 blast)
+          hence "y \<in> W1_S2" using hCa(1) hW12_cover hC'_decomp by (by100 blast)
+          have "W1_S2 \<inter> Ca \<in> subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca"
+          proof -
+            have "W1_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              using hW1_open_S2 hW1_sub_C' unfolding subspace_topology_def by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def by (by100 blast)
+          qed
+          moreover have "W2_S2 \<inter> Ca \<in> subspace_topology (top1_S2 - C')
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')) Ca"
+          proof -
+            have "W2_S2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C')"
+              using hW2_open_S2 hW2_sub_C' unfolding subspace_topology_def by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def by (by100 blast)
+          qed
+          moreover have "W1_S2 \<inter> Ca \<noteq> {}" using \<open>y \<in> W1_S2\<close> \<open>y \<in> Ca\<close> by (by100 blast)
+          moreover have "W2_S2 \<inter> Ca \<noteq> {}" using hw2 hCa(2) by (by100 blast)
+          moreover have "(W1_S2 \<inter> Ca) \<inter> (W2_S2 \<inter> Ca) = {}" using hW12_disj by (by100 blast)
+          moreover have "(W1_S2 \<inter> Ca) \<union> (W2_S2 \<inter> Ca) = Ca"
+            using hCa(1) hW12_cover hC'_decomp by (by100 blast)
+          ultimately show False
+            using hCa(4)[unfolded top1_connected_on_def] by (by100 blast)
+        qed
+        thus "z \<in> W2_S2" using hCa(3) by (by100 blast)
+      qed
+      thus ?thesis unfolding top1_components_on_def
+        using hw2 hW2_sub_C' by (by100 blast)
+    qed
+    have hW2_sub_C': "W2_S2 \<subseteq> top1_S2 - C'"
+      using hW12_cover hC'_decomp by (by100 blast)
+    have h61_1_W2: "(north_pole \<notin> W2_S2 \<longrightarrow>
+        (\<exists>M. \<forall>x\<in>W2_S2. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 \<le> M))
+      \<and> (north_pole \<in> W2_S2 \<longrightarrow>
+        (\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M))"
+      by (rule Lemma_61_1_components_correspond[OF top1_S2_is_topology_on_strict
+            hC'_sub_S2 hC'_compact hN_S2C' h\<sigma>2 hW2_conn hW2_sub_C' hW2_comp])
+    have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M"
+    proof -
+      have "\<forall>M. \<exists>x\<in>W2_S2 - {north_pole}. fst (\<sigma>2 x) ^ 2 + snd (\<sigma>2 x) ^ 2 > M"
+        using h61_1_W2 hN_in_W2 by simp
+      thus ?thesis unfolding V_R2_def by (by100 blast)
+    qed
     have hUR2_bdy: "closure U_R2 = U_R2 \<union> C"
     proof -
       \<comment> \<open>\<supseteq>: cl(U) \<supseteq> U trivially. cl(U) \<supseteq> C by textbook Step 2.\<close>
@@ -13094,6 +13206,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
