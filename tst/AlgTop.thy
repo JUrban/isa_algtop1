@@ -16156,7 +16156,12 @@ proof -
       sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
     \<comment> \<open>Step 4: Path from a' to b' in S^2-{h0(x)}.\<close>
     have hx_S2: "h0 x \<in> top1_S2"
-      using hh0_img hx_range unfolding hI01[symmetric] assms(2) sorry
+    proof -
+      have "x \<in> {0..1}" using hx_range by simp
+      hence "h0 x \<in> h0 ` {0..1}" by (by100 blast)
+      hence "h0 x \<in> D" using hh0_img by simp
+      thus ?thesis using assms(2) by (by100 blast)
+    qed
     obtain \<alpha> where h\<alpha>: "continuous_on {0..1::real} \<alpha>"
         "\<alpha> 0 = a'" "\<alpha> 1 = b'" "\<forall>t\<in>{0..1}. \<alpha> t \<in> top1_S2 - {h0 x}"
       sorry \<comment> \<open>S^2-{h0(x)} is path-connected (simply connected). a', b' \<in> S^2-D \<subseteq> S^2-{h0(x)}.\<close>
@@ -16174,16 +16179,29 @@ proof -
     have h\<alpha>_closed: "closed (\<alpha> ` {0..1})" by (rule compact_imp_closed[OF h\<alpha>_compact])
     have hcompl_open: "open (- \<alpha> ` {0..1})" using h\<alpha>_closed by (rule open_Compl)
     have hh0x_in_compl: "h0 x \<in> - \<alpha> ` {0..1}" using h\<alpha>_disjoint by simp
-    \<comment> \<open>Step 6: h0 continuous at x. Preimage of open complement contains an interval around x.\<close>
-    have hh0_preimage_open: "open (h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1})"
-      sorry \<comment> \<open>From continuous_on + open complement. Standard: continuous_on_open_vimage.\<close>
-    have hx_in_preimage: "x \<in> h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1}"
-      using hh0x_in_compl hx_range by simp
-    \<comment> \<open>open set in [0,1] containing x \<Rightarrow> contains interval around x.\<close>
-    \<comment> \<open>For large m, I_m \<subseteq> preimage (since I_m shrinks to {x}).\<close>
-    have "\<exists>N. h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
-      sorry \<comment> \<open>From: x in open preimage, I_m \<ni> x with length \<rightarrow> 0 \<Rightarrow> I_m \<subseteq> preimage for large m.
-         Then h0(I_m) \<subseteq> complement.\<close>
+    \<comment> \<open>Step 6: h0 continuous at x. Find open neighborhood of x whose h0-image avoids \<alpha>.\<close>
+    have "\<exists>U. open U \<and> x \<in> U \<and> h0 ` (U \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}"
+    proof -
+      have "open (- \<alpha> ` {0..1})" by (rule hcompl_open)
+      moreover have "h0 x \<in> - \<alpha> ` {0..1}" by (rule hh0x_in_compl)
+      ultimately obtain U where "open U" "x \<in> U" "h0 ` (U \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}"
+        using hh0_cont_std hx_range
+        unfolding continuous_on_open_invariant
+        sorry \<comment> \<open>From continuous_on: preimage of open = relatively open.
+           h0(x) \<in> complement (open), so h0\<inverse>(complement) \<inter> [0,1] = W \<inter> [0,1] for open W.
+           x \<in> W \<inter> [0,1], so x \<in> W (open). Take U = W.\<close>
+      thus ?thesis by (by100 blast)
+    qed
+    then obtain U_nbhd where hU_open: "open U_nbhd" and hx_U: "x \<in> U_nbhd"
+        and hU_avoids: "h0 ` (U_nbhd \<inter> {0..1}) \<subseteq> - \<alpha> ` {0..1}" by blast
+    \<comment> \<open>For large m, I_m \<subseteq> U_nbhd (since I_m shrinks to {x} and U_nbhd is open).\<close>
+    have "\<exists>N. {fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}"
+      sorry \<comment> \<open>Open U_nbhd contains x, I_m \<ni> x with length \<rightarrow> 0.
+         Since U_nbhd is open, \<exists>\<delta>>0. (x-\<delta>, x+\<delta>) \<subseteq> U_nbhd.
+         For large m, I_m \<subseteq> (x-\<delta>, x+\<delta>) \<inter> [0,1] \<subseteq> U_nbhd \<inter> [0,1].\<close>
+    then obtain N where hN: "{fst (seq N)..snd (seq N)} \<subseteq> U_nbhd \<inter> {0..1}" by blast
+    have "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
+      using hN hU_avoids by (by100 blast)
     then obtain N where hN: "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}" by blast
     have h\<alpha>_avoids: "\<alpha> ` {0..1} \<inter> h0 ` {fst (seq N)..snd (seq N)} = {}"
       using hN by (by100 blast)
