@@ -7602,7 +7602,33 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2_arc))"
     proof -
       have hC2_compact: "top1_compact_on C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc)"
-        sorry \<comment> \<open>C2 arc = homeomorphic to [0,1] = compact.\<close>
+      proof -
+        obtain h2 where hh2: "top1_homeomorphism_on I_set I_top C2_arc
+            (subspace_topology top1_S2 top1_S2_topology C2_arc) h2"
+          using hC2_arc unfolding top1_is_arc_on_def by (by100 blast)
+        have "compact {0..1::real}" by (rule compact_Icc)
+        moreover have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        ultimately have "compact I_set" by simp
+        hence hI_compact: "top1_compact_on I_set I_top"
+          unfolding top1_unit_interval_topology_def
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+        have hcont: "top1_continuous_map_on I_set I_top C2_arc
+            (subspace_topology top1_S2 top1_S2_topology C2_arc) h2"
+          using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTS2_C2: "is_topology_on C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc)"
+          using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+        have himg: "h2 ` I_set = C2_arc"
+          using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "top1_compact_on (h2 ` I_set) (subspace_topology C2_arc
+            (subspace_topology top1_S2 top1_S2_topology C2_arc) (h2 ` I_set))"
+          by (rule top1_compact_on_continuous_image[OF hI_compact hTS2_C2 hcont])
+        moreover have "subspace_topology C2_arc (subspace_topology top1_S2 top1_S2_topology C2_arc) C2_arc
+            = subspace_topology top1_S2 top1_S2_topology C2_arc"
+          using hC2_arc unfolding top1_is_arc_on_def is_topology_on_strict_def
+          by (intro subspace_topology_self) (by100 blast)
+        ultimately show ?thesis using himg by simp
+      qed
       have "closedin_on top1_S2 top1_S2_topology C2_arc"
         by (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff hTS hC2_sub hC2_compact])
       hence "top1_S2 - C2_arc \<in> top1_S2_topology"
@@ -13404,6 +13430,7 @@ qed
 
 
 end
+
 
 
 
