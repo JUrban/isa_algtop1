@@ -8197,9 +8197,91 @@ proof -
           show "top1_continuous_map_on C1'
               (subspace_topology top1_S2 top1_S2_topology C1') I_set I_top
               (inv_into I_set h_comp)"
-            sorry \<comment> \<open>[0,1] compact + C1'(S^2 sub) Hausdorff + h_comp bij + h_comp continuous
-               \<Rightarrow> h_comp closed map \<Rightarrow> inverse continuous. ~25 lines using
-               compact_hausdorff_continuous_closed_map + closed_map_inverse_continuous.\<close>
+          proof -
+            define TC1' where "TC1' = subspace_topology top1_S2 top1_S2_topology C1'"
+            have hTC1': "is_topology_on C1' TC1'"
+              unfolding TC1'_def by (rule subspace_topology_is_topology_on[OF
+                is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC1'_sub_S2])
+            have hI_compact: "top1_compact_on I_set I_top"
+            proof -
+              have "compact {0..1::real}" by (rule compact_Icc)
+              moreover have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+                by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+              ultimately have "compact I_set" by simp
+              thus ?thesis unfolding top1_unit_interval_topology_def
+                using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+            qed
+            have hC1'_haus: "is_hausdorff_on C1' TC1'"
+              unfolding TC1'_def
+              using conjunct2[OF conjunct2[OF Theorem_17_11]]
+                top1_S2_is_hausdorff hC1'_sub_S2 by (by100 blast)
+            have hcomp_fwd: "top1_continuous_map_on I_set I_top C1' TC1' h_comp"
+              using \<open>top1_continuous_map_on I_set I_top C1'
+                (subspace_topology top1_S2 top1_S2_topology C1') h_comp\<close>
+              unfolding TC1'_def .
+            \<comment> \<open>h_comp is a closed map (compact \<rightarrow> Hausdorff continuous = closed map).\<close>
+            \<comment> \<open>Bijective closed map \<Rightarrow> open map \<Rightarrow> inverse continuous.\<close>
+            show ?thesis unfolding TC1'_def[symmetric]
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix y assume "y \<in> C1'"
+              have "y \<in> h_comp ` I_set"
+                using hbij_comp \<open>y \<in> C1'\<close> unfolding bij_betw_def by (by100 blast)
+              have "inv_into I_set h_comp y \<in> I_set"
+                by (rule inv_into_into[OF \<open>y \<in> h_comp ` I_set\<close>])
+              thus "inv_into I_set h_comp y \<in> I_set" .
+            next
+              fix V assume hV: "V \<in> I_top"
+              have hV_sub: "V \<subseteq> I_set"
+                using hV top1_unit_interval_topology_is_topology_on
+                unfolding is_topology_on_def top1_unit_interval_topology_def
+                subspace_topology_def by (by100 blast)
+              have hV_eq: "{y \<in> C1'. inv_into I_set h_comp y \<in> V} = h_comp ` V"
+              proof (intro set_eqI iffI)
+                fix y assume "y \<in> {y \<in> C1'. inv_into I_set h_comp y \<in> V}"
+                hence "y \<in> C1'" "inv_into I_set h_comp y \<in> V" by simp_all
+                have "y \<in> h_comp ` I_set"
+                  using hbij_comp \<open>y \<in> C1'\<close> unfolding bij_betw_def by (by100 blast)
+                have "h_comp (inv_into I_set h_comp y) = y"
+                  by (rule f_inv_into_f[OF \<open>y \<in> h_comp ` I_set\<close>])
+                thus "y \<in> h_comp ` V"
+                  using \<open>inv_into I_set h_comp y \<in> V\<close> \<open>h_comp _ = y\<close> by (by100 force)
+              next
+                fix y assume "y \<in> h_comp ` V"
+                then obtain x where hx: "x \<in> V" "y = h_comp x" by (by100 blast)
+                have "x \<in> I_set" using hx(1) hV_sub by (by100 blast)
+                have "y \<in> C1'" using hbij_comp \<open>x \<in> I_set\<close> hx(2) unfolding bij_betw_def by (by100 blast)
+                moreover have "inv_into I_set h_comp y = x"
+                  using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij_comp] \<open>x \<in> I_set\<close>] hx(2) by simp
+                ultimately show "y \<in> {y \<in> C1'. inv_into I_set h_comp y \<in> V}"
+                  using hx(1) by simp
+              qed
+              \<comment> \<open>Show h_comp ` V \<in> TC1': h_comp maps opens to opens (closed map arg).\<close>
+              have hclosed_compl: "closedin_on I_set I_top (I_set - V)"
+              proof -
+                have "I_set - V \<subseteq> I_set" by (by100 blast)
+                moreover have "I_set - (I_set - V) = V" using hV_sub by (by100 blast)
+                ultimately show ?thesis unfolding closedin_on_def using hV by simp
+              qed
+              have "closedin_on C1' TC1' (h_comp ` (I_set - V))"
+                by (rule compact_hausdorff_continuous_closed_map[OF hI_compact hC1'_haus
+                      hcomp_fwd hclosed_compl])
+              hence "C1' - h_comp ` (I_set - V) \<in> TC1'"
+                unfolding closedin_on_def using hTC1' unfolding is_topology_on_def by (by100 blast)
+              moreover have "C1' - h_comp ` (I_set - V) = h_comp ` V"
+              proof -
+                have hinj: "inj_on h_comp I_set" using hbij_comp unfolding bij_betw_def by (by100 blast)
+                have himg: "h_comp ` I_set = C1'" using hbij_comp unfolding bij_betw_def by (by100 blast)
+                have "h_comp ` V = h_comp ` (I_set - (I_set - V))"
+                  using hV_sub by (by100 force)
+                also have "\<dots> = h_comp ` I_set - h_comp ` (I_set - V)"
+                  by (rule inj_on_image_set_diff[OF hinj]) (by100 blast)+
+                finally show ?thesis using himg by simp
+              qed
+              ultimately show "{y \<in> C1'. inv_into I_set h_comp y \<in> V} \<in> TC1'"
+                using hV_eq by simp
+            qed
+          qed
         qed
       qed
     qed
@@ -12286,6 +12368,17 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
 
 
 
