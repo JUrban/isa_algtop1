@@ -7537,6 +7537,23 @@ proof -
   qed
 qed
 
+\<comment> \<open>Helper: every open set meeting a simple closed curve on S^2 meets both components.
+   This is the core of the textbook Step 2 boundary argument.\<close>
+lemma simple_closed_curve_boundary_meets_component:
+  assumes hTS: "is_topology_on_strict top1_S2 top1_S2_topology"
+  and hSCC: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C'"
+  and hW1: "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+  and hW2: "top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+  and hW12: "W1 \<inter> W2 = {}" "W1 \<union> W2 = top1_S2 - C'" "W1 \<noteq> {}" "W2 \<noteq> {}"
+  and hW1_open: "W1 \<in> top1_S2_topology" and hW2_open: "W2 \<in> top1_S2_topology"
+  and hx: "x \<in> C'" and hV: "V \<in> top1_S2_topology" and hxV: "x \<in> V"
+  shows "V \<inter> W1 \<noteq> {}"
+  sorry \<comment> \<open>Textbook Step 2: Decompose C' = C1'\<union>C2' with C1' \<subseteq> V (flexible arc decomposition).
+     C2' is an arc \<Rightarrow> S^2-C2' connected (Theorem_63_2).
+     Path from W1 to W2 in S^2-C2'. Connected path image meets both W1,W2.
+     Path image \<subseteq> S^2-C2' = W1 \<union> W2 \<union> C1'. If \<not> meets C1': separated. So meets C1' \<subseteq> V.
+     Near the C1'-meeting, path points in W1 are in V. Hence V \<inter> W1 \<noteq> {}.\<close>
+
 theorem Theorem_63_4_JordanCurve:
   fixes C :: "(real \<times> real) set"
   assumes "top1_simple_closed_curve_on
@@ -9548,12 +9565,24 @@ proof -
         moreover have "C \<subseteq> closure_on UNIV ?TR2 U_R2"
         proof
           fix x assume "x \<in> C"
+          \<comment> \<open>Use Theorem_17_5a: suffices to show every neighborhood of x meets U_R2.\<close>
           show "x \<in> closure_on UNIV ?TR2 U_R2"
-            using iffD2[OF Theorem_17_5a[OF hTR2 _ _]]
-            sorry \<comment> \<open>By Theorem_17_5a: suffices to show every neighborhood of x meets U_R2.
-               Textbook Step 2 arc argument: decompose C' = C1'\<union>C2' with C1' near x.
-               C2' arc \<Rightarrow> S^2-C2' connected. Path from W1 to W2 in S^2-C2' meets C1'.
-               Points near C1'-meeting in W1 are in the neighborhood. Hence nbhd \<inter> U \<noteq> {}.\<close>
+          proof (rule iffD2[OF Theorem_17_5a[OF hTR2]])
+            show "(x :: real\<times>real) \<in> UNIV" by simp
+            show "U_R2 \<subseteq> (UNIV :: (real\<times>real) set)" by simp
+            show "\<forall>U. neighborhood_of x UNIV ?TR2 U \<longrightarrow> intersects U U_R2"
+            proof (intro allI impI)
+              fix W assume hW: "neighborhood_of x UNIV ?TR2 W"
+              hence hW_open: "W \<in> ?TR2" and hxW: "x \<in> W"
+                unfolding neighborhood_of_def by simp_all
+              \<comment> \<open>Transfer to S^2: \<sigma>2inv(W) open in S^2\{N}, meets C'.
+                 Apply simple_closed_curve_boundary_meets_component.\<close>
+              show "intersects W U_R2"
+                sorry \<comment> \<open>Transfer to S^2. \<sigma>2inv maps W to open set in S^2\{N} containing \<sigma>2inv(x) \<in> C'.
+                   By simple_closed_curve_boundary_meets_component: open set meets W1_S2.
+                   Hence W meets U_R2 = \<sigma>2(W1_S2).\<close>
+            qed
+          qed
         qed
         ultimately show ?thesis by (by100 blast)
       qed
@@ -9589,8 +9618,16 @@ proof -
         proof
           fix x assume "x \<in> C"
           show "x \<in> closure_on UNIV ?TR2 V_R2"
-            using iffD2[OF Theorem_17_5a[OF hTR2 _ _]]
-            sorry \<comment> \<open>Same as U: every neighborhood of x \<in> C meets V_R2.\<close>
+          proof (rule iffD2[OF Theorem_17_5a[OF hTR2]])
+            show "(x :: real\<times>real) \<in> UNIV" by simp
+            show "V_R2 \<subseteq> (UNIV :: (real\<times>real) set)" by simp
+            show "\<forall>U. neighborhood_of x UNIV ?TR2 U \<longrightarrow> intersects U V_R2"
+            proof (intro allI impI)
+              fix W assume hW: "neighborhood_of x UNIV ?TR2 W"
+              show "intersects W V_R2"
+                sorry \<comment> \<open>Same as U: transfer to S^2 + boundary_meets_component.\<close>
+            qed
+          qed
         qed
         ultimately show ?thesis by (by100 blast)
       qed
@@ -13226,6 +13263,8 @@ qed
 
 
 end
+
+
 
 
 
