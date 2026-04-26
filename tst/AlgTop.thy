@@ -16192,7 +16192,66 @@ proof -
     have hseq_sep: "\<forall>n. \<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq n)..snd (seq n)})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq n)..snd (seq n)}))
         a' b' f)"
-      sorry \<comment> \<open>Induction: initial from hab'_sep, step from joining lemma contrapositive.\<close>
+    proof (rule allI)
+      fix n show "\<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq n)..snd (seq n)})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq n)..snd (seq n)}))
+          a' b' f)"
+      proof (induction n)
+        case 0
+        have "h0 ` {fst (seq 0)..snd (seq 0)} = D"
+          using hseq_0 hh0_img by simp
+        thus ?case using hab'_sep by simp
+      next
+        case (Suc n)
+        \<comment> \<open>IH: can't be joined in S^2-h0(I_n). pick_half picks the bad half.\<close>
+        obtain lo hi where hlh: "seq n = (lo, hi)" by (cases "seq n")
+        let ?mid = "(lo + hi) / 2"
+        have "seq (Suc n) = pick_half (lo, hi)" using hseq_Suc hlh by simp
+        show ?case
+        proof (cases "\<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..?mid})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..?mid})) a' b' f)")
+          case True
+          \<comment> \<open>pick_half picks left half (lo, mid).\<close>
+          have hph_True: "pick_half (lo, hi) = (lo, ?mid)"
+            unfolding pick_half_def Let_def using True by simp
+          hence "seq (Suc n) = (lo, ?mid)" using \<open>seq (Suc n) = pick_half (lo, hi)\<close> by simp
+          hence "h0 ` {fst (seq (Suc n))..snd (seq (Suc n))} = h0 ` {lo..?mid}" by simp
+          thus ?thesis using True by simp
+        next
+          case False
+          hence hjoinable_left: "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..?mid})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..?mid})) a' b' f"
+            by simp
+          have hph_False: "pick_half (lo, hi) = (?mid, hi)"
+            unfolding pick_half_def Let_def using False by auto
+          hence hseq_eq: "seq (Suc n) = (?mid, hi)" using \<open>seq (Suc n) = pick_half (lo, hi)\<close> by simp
+          \<comment> \<open>By joining lemma contrapositive: since can't join in S^2-h0({lo..hi}),
+             and CAN join in S^2-h0({lo..mid}), MUST NOT join in S^2-h0({mid..hi}).\<close>
+          have hcant_join_right: "\<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {?mid..hi})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {?mid..hi})) a' b' f)"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence hjoinable_right: "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {?mid..hi})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {?mid..hi})) a' b' f"
+              by simp
+            \<comment> \<open>Both halves joinable. By arc_joining_lemma, full arc joinable. Contradiction.\<close>
+            \<comment> \<open>Need: h0({lo..mid}) and h0({mid..hi}) are arcs, closed, intersect in {h0(mid)}.\<close>
+            \<comment> \<open>a', b' \<in> S^2 - D \<subseteq> S^2 - h0({lo..hi}).\<close>
+            have "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..hi})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..hi})) a' b' f"
+              sorry \<comment> \<open>arc_joining_lemma with D1 = h0({lo..mid}), D2 = h0({mid..hi}).
+                 Needs: D1, D2 arcs in S^2, closed, D1 \<inter> D2 = {h0(mid)}, h0(mid) \<in> S^2.
+                 a', b' \<in> S^2 - (D1 \<union> D2). Both halves joinable (hjoinable_left, hjoinable_right).
+                 By arc_joining_lemma: joinable in S^2 - D.\<close>
+            moreover have "h0 ` {fst (seq n)..snd (seq n)} = h0 ` {lo..hi}" using hlh by simp
+            ultimately show False using Suc by simp
+          qed
+          have "h0 ` {fst (seq (Suc n))..snd (seq (Suc n))} = h0 ` {?mid..hi}"
+            using hseq_eq by simp
+          thus ?thesis using hcant_join_right by simp
+        qed
+      qed
+    qed
     \<comment> \<open>Step 3: Cantor intersection. Monotone bounded sequences converge.\<close>
     define x where "x = (SUP n. fst (seq n))"
     have hfst_le_snd: "\<forall>n. fst (seq n) \<le> snd (seq n)"
