@@ -3230,8 +3230,18 @@ proof -
   qed
   \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence.\<close>
   have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
-    sorry \<comment> \<open>Homeomorphism (h, inv_into X h) gives: inv\<circ>h = id on X, h\<circ>inv = id on R2_0.
-       Both id homotopic to itself (homotopy reflexivity). Standard.\<close>
+    unfolding top1_homotopy_equivalence_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on ?X ?TX R2_0 TR2_0 h"
+      using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    show "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
+      using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>inv \<circ> h = id on X, h \<circ> inv = id on R2_0.\<close>
+    show "top1_homotopic_on ?X ?TX ?X ?TX (inv_into ?X h \<circ> h) (\<lambda>x. x)"
+      sorry \<comment> \<open>inv h \<circ> h = id on X (by inv_into_f_f). Constant homotopy H(x,t) = x.\<close>
+    show "top1_homotopic_on R2_0 TR2_0 R2_0 TR2_0 (h \<circ> inv_into ?X h) (\<lambda>y. y)"
+      sorry \<comment> \<open>h \<circ> inv h = id on R2_0 (by f_inv_into_f). Constant homotopy H(y,t) = y.\<close>
+  qed
   have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX a)
