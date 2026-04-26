@@ -17210,13 +17210,25 @@ proof -
        By 63.5: C1' \<union> C2' separates S^2 into exactly 2 components.\<close>
     \<comment> \<open>Step 2d: Transfer 2 components back to R^2.\<close>
     \<comment> \<open>Step 2e: Identify bounded/unbounded. Boundary = C.\<close>
-    show ?thesis sorry \<comment> \<open>Remaining argument:
-       - Arc decomposition of SCC (step 2a) — PROVED above
-       - Stereographic transfer to S^2 (step 2b, same as step 1) — mostly done
-       - Theorem_63_2 (arcs don't separate S^2) — FULLY PROVED!
-       - Theorem_63_5 (exactly 2 components) — SORRY (needs 63.1(c) + \<pi>_1\<cong>Z)
-       - Transfer back + bounded/unbounded identification
-       - Boundary = C (Munkres Step 2 argument using arc nonseparation)\<close>
+    \<comment> \<open>Step 2b: Transfer arcs to S^2 via \<sigma>^{-1} (same as step 1 transfer).
+       Step 2c: On S^2, apply 63.2 (arcs don't separate — PROVED!) and
+       63.5 (exactly 2 components — needs 63.1(c)+\<pi>_1\<cong>Z).
+       Step 2d: Transfer back to R^2.
+       Step 2e: Bounded/unbounded + boundary.\<close>
+    \<comment> \<open>C1_arc, C2_arc don't separate S^2 (by Theorem_63_2 applied on S^2).
+       This requires transferring arcs to S^2 and applying 63.2 there.
+       The transfer uses the same \<sigma>^{-1} as in step 1.\<close>
+    have hC1_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology
+        (\<sigma>inv ` C1_arc)" sorry \<comment> \<open>Transfer C1_arc to S^2 arc, apply Theorem_63_2.\<close>
+    have hC2_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology
+        (\<sigma>inv ` C2_arc)" sorry \<comment> \<open>Same for C2_arc.\<close>
+    \<comment> \<open>By 63.5: exactly 2 components on S^2.\<close>
+    \<comment> \<open>Transfer back to R^2 and identify bounded/unbounded.\<close>
+    show ?thesis sorry \<comment> \<open>Needs:
+       - 63.5 (SORRY) with C1'=\<sigma>^{-1}(C1_arc), C2'=\<sigma>^{-1}(C2_arc)
+       - Transfer 2 S^2-components to R^2-components via \<sigma>
+       - One bounded (interior), one unbounded (exterior)
+       - Boundary = C (Munkres Step 2 argument)\<close>
   qed
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
