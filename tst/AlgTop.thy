@@ -8322,7 +8322,112 @@ proof -
           using hC12'_closed unfolding closedin_on_def by (by100 blast)
         \<comment> \<open>W2_S2 \<subseteq> S^2-(C1'\<union>C2') and it's a component, hence open in S^2.\<close>
         have "W2_S2 \<in> top1_S2_topology"
-          sorry \<comment> \<open>Component of open set is open (S^2 locally connected).\<close>
+        proof -
+          \<comment> \<open>S^2-(C1'\<union>C2') is open and locally path-connected.\<close>
+          define S2C where "S2C = top1_S2 - (C1' \<union> C2')"
+          define TS2C where "TS2C = subspace_topology top1_S2 top1_S2_topology S2C"
+          have "S2C \<subseteq> top1_S2" unfolding S2C_def by (by100 blast)
+          have hTS2C: "is_topology_on S2C TS2C"
+            unfolding TS2C_def by (rule subspace_topology_is_topology_on[OF hTS2 \<open>S2C \<subseteq> top1_S2\<close>])
+          have hS2C_lpc: "top1_locally_path_connected_on S2C TS2C"
+            unfolding TS2C_def S2C_def
+            by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hS2C12_open]) simp
+          \<comment> \<open>Path component of N in S^2-(C1'\<union>C2') is open.\<close>
+          have hN_S2C: "north_pole \<in> S2C"
+            unfolding S2C_def using hN_in_W2 hW12_cover hC'_decomp by (by100 blast)
+          define PC_N where "PC_N = top1_path_component_of_on S2C TS2C north_pole"
+          have hPC_N_open: "PC_N \<in> TS2C"
+            unfolding PC_N_def
+            by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTS2C hS2C_lpc hN_S2C])
+          \<comment> \<open>PC_N = W2_S2 (both are the maximal connected set containing N in S2C).\<close>
+          \<comment> \<open>PC_N = W2_S2: path component = connected component in lpc space.\<close>
+          have hN_in_PC: "north_pole \<in> PC_N"
+            unfolding PC_N_def top1_path_component_of_on_def
+            top1_in_same_path_component_on_def
+            using top1_constant_path_is_path[OF hTS2C hN_S2C] by (by100 blast)
+          have hPC_sub: "PC_N \<subseteq> S2C"
+          proof
+            fix y assume "y \<in> PC_N"
+            then obtain f where "top1_is_path_on S2C TS2C north_pole y f"
+              unfolding PC_N_def top1_path_component_of_on_def
+              top1_in_same_path_component_on_def by (by100 blast)
+            hence "f 1 = y" and "\<forall>s\<in>I_set. f s \<in> S2C"
+              unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)+
+            moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+            ultimately show "y \<in> S2C" by (by100 blast)
+          qed
+          have hW2_sub_S2C: "W2_S2 \<subseteq> S2C"
+            using hW12_cover hC'_decomp unfolding S2C_def by (by100 blast)
+          \<comment> \<open>Complement of PC_N is open (union of other path components).\<close>
+          have hCompl_open: "S2C - PC_N \<in> TS2C"
+            unfolding PC_N_def
+            by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF
+                  hTS2C hS2C_lpc hN_S2C])
+          have "PC_N = W2_S2"
+          proof (intro set_eqI iffI)
+            fix x assume hx: "x \<in> PC_N"
+            \<comment> \<open>PC_N \<subseteq> W2_S2: if x \<in> PC_N but x \<notin> W2_S2, then x \<in> W1_S2.
+               But PC_N is connected (path-connected) and meets both W1 and W2.
+               W1 \<inter> W2 = {}, W1 \<union> W2 = S2C, so PC_N \<inter> W1 and PC_N \<inter> W2 separate PC_N.\<close>
+            show "x \<in> W2_S2"
+            proof (rule ccontr)
+              assume "x \<notin> W2_S2"
+              hence "x \<in> W1_S2" using hx hPC_sub hW12_cover hC'_decomp
+                unfolding S2C_def by (by100 blast)
+              \<comment> \<open>Both W1 \<inter> S2C and W2 \<inter> S2C are open in S2C (W1, W2 \<subseteq> S2C, so trivially open).\<close>
+              \<comment> \<open>Actually W1 and W2 cover S2C and are disjoint. PC_N meets both. Contradiction.\<close>
+              show False sorry \<comment> \<open>PC_N connected but split by W1/W2.\<close>
+            qed
+          next
+            fix x assume hx: "x \<in> W2_S2"
+            \<comment> \<open>W2_S2 \<subseteq> PC_N: if x \<in> W2_S2 but x \<notin> PC_N, then x \<in> S2C-PC_N which is open.
+               W2_S2 meets PC_N (at N) and S2C-PC_N (at x). Both open in S2C.
+               This separates W2_S2 (connected). Contradiction.\<close>
+            show "x \<in> PC_N"
+            proof (rule ccontr)
+              assume "x \<notin> PC_N"
+              have "x \<in> S2C" using hx hW2_sub_S2C by (by100 blast)
+              hence "x \<in> S2C - PC_N" using \<open>x \<notin> PC_N\<close> by (by100 blast)
+              \<comment> \<open>W2_S2 meets PC_N (at N) and S2C-PC_N (at x). Both open.\<close>
+              have hW2_meet_PC: "W2_S2 \<inter> PC_N \<noteq> {}" using hN_in_PC hN_in_W2 by (by100 blast)
+              have hW2_meet_compl: "W2_S2 \<inter> (S2C - PC_N) \<noteq> {}" using \<open>x \<in> S2C - PC_N\<close> hx by (by100 blast)
+              have hW2_sub_union: "W2_S2 \<subseteq> PC_N \<union> (S2C - PC_N)" using hW2_sub_S2C by (by100 blast)
+              have hPC_compl_disj: "PC_N \<inter> (S2C - PC_N) = {}" by (by100 blast)
+              \<comment> \<open>PC_N and S2C-PC_N are both in TS2C: separation of W2_S2.\<close>
+              \<comment> \<open>Convert to TS2C subspace: sub(S2, S2_top, W2) = sub(S2C, TS2C, W2).\<close>
+              have hW2_top_eq: "subspace_topology top1_S2 top1_S2_topology W2_S2
+                  = subspace_topology S2C TS2C W2_S2"
+              proof -
+                have "subspace_topology S2C (subspace_topology top1_S2 top1_S2_topology S2C) W2_S2
+                    = subspace_topology top1_S2 top1_S2_topology W2_S2"
+                  by (rule subspace_topology_trans[OF hW2_sub_S2C])
+                thus ?thesis unfolding TS2C_def by simp
+              qed
+              \<comment> \<open>PC_N \<inter> W2_S2 and (S2C-PC_N) \<inter> W2_S2 open in sub(S2C, TS2C, W2).\<close>
+              have hA_open: "PC_N \<inter> W2_S2 \<in> subspace_topology S2C TS2C W2_S2"
+                using hPC_N_open unfolding subspace_topology_def by (by100 blast)
+              have hB_open: "(S2C - PC_N) \<inter> W2_S2 \<in> subspace_topology S2C TS2C W2_S2"
+                using hCompl_open unfolding subspace_topology_def by (by100 blast)
+              \<comment> \<open>They cover W2_S2, are disjoint, and each nonempty.\<close>
+              have hcover: "PC_N \<inter> W2_S2 \<union> ((S2C - PC_N) \<inter> W2_S2) = W2_S2"
+                using hW2_sub_S2C by (by100 blast)
+              have hdisj_AB: "(PC_N \<inter> W2_S2) \<inter> ((S2C - PC_N) \<inter> W2_S2) = {}" by (by100 blast)
+              \<comment> \<open>This is a separation of W2_S2, contradicting connectedness.\<close>
+              show False
+                using hW2_conn[unfolded hW2_top_eq top1_connected_on_def]
+                hA_open hB_open hW2_meet_PC hW2_meet_compl
+                hcover hdisj_AB
+                by (by100 blast)
+            qed
+          qed
+          hence "W2_S2 \<in> TS2C" using hPC_N_open by simp
+          \<comment> \<open>Open in S^2-(C1'\<union>C2') (which is open in S^2) \<Rightarrow> open in S^2.\<close>
+          then obtain W where hW: "W \<in> top1_S2_topology" "W2_S2 = S2C \<inter> W"
+            unfolding TS2C_def subspace_topology_def by (by100 blast)
+          have "S2C \<inter> W \<in> top1_S2_topology"
+            by (rule topology_inter_open[OF hTS2 hS2C12_open[folded S2C_def] hW(1)])
+          thus ?thesis using hW(2) by simp
+        qed
         hence "{north_pole} \<in> top1_S2_topology" using heq by simp
         thus False using singleton_not_open_in_S2[OF north_pole_in_S2] by simp
       qed
@@ -12043,6 +12148,17 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
 
 
 
