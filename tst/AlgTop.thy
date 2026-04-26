@@ -15826,18 +15826,14 @@ proof (rule ccontr)
     \<comment> \<open>PC_a open in U\<inter>V (S^2-sub). Transfer to X.\<close>
     have "PC_a \<in> ?TX"
     proof -
-      obtain W where "W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)"
-          and "PC_a = (?U \<inter> ?V) \<inter> W"
-        using hPC_open_UV hPC_sub unfolding subspace_topology_def by (by100 blast)
-      obtain W0 where "W0 \<in> top1_S2_topology" and hW0: "W = (?U \<inter> ?V) \<inter> W0"
-        using \<open>W \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)\<close>
+      have "PC_a \<in> subspace_topology top1_S2 top1_S2_topology (?U \<inter> ?V)" by (rule hPC_open_UV)
+      then obtain W where hW_mem: "W \<in> top1_S2_topology" and hPC_W: "PC_a = (?U \<inter> ?V) \<inter> W"
         unfolding subspace_topology_def by (by100 blast)
-      have "PC_a = (?U \<inter> ?V) \<inter> W0" using \<open>PC_a = (?U \<inter> ?V) \<inter> W\<close> hW0 hPC_sub by (by100 blast)
-      have "(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology"
-        by (rule topology_inter_open[OF hTS2 hUV_open \<open>W0 \<in> top1_S2_topology\<close>])
-      have "PC_a = ?X \<inter> ((?U \<inter> ?V) \<inter> W0)"
-        using \<open>PC_a = (?U \<inter> ?V) \<inter> W0\<close> hPC_sub hUV_sub_X by (by100 blast)
-      thus ?thesis using \<open>(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology\<close>
+      have "(?U \<inter> ?V) \<inter> W \<in> top1_S2_topology"
+        by (rule topology_inter_open[OF hTS2 hUV_open hW_mem])
+      have "PC_a = ?X \<inter> ((?U \<inter> ?V) \<inter> W)"
+        using hPC_W hPC_sub hUV_sub_X by (by100 blast)
+      thus ?thesis using \<open>(?U \<inter> ?V) \<inter> W \<in> top1_S2_topology\<close>
         unfolding subspace_topology_def by (by100 blast)
     qed
     thus ?thesis using hPC_sub hUV_sub_X unfolding openin_on_def by (by100 blast)
@@ -16150,7 +16146,8 @@ proof -
       sorry \<comment> \<open>Induction: initial from hab'_sep, step from joining lemma contrapositive.\<close>
     \<comment> \<open>Step 3: Cantor intersection. Monotone bounded sequences converge.\<close>
     define x where "x = (SUP n. fst (seq n))"
-    have hx_range: "0 \<le> x \<and> x \<le> 1" sorry
+    have hx_range: "0 \<le> x \<and> x \<le> 1"
+      sorry \<comment> \<open>SUP of bounded monotone sequence in [0,1] is in [0,1].\<close>
     have hx_limit: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
         snd (seq n) - fst (seq n) < \<epsilon>"
       sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
