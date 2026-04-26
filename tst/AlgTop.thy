@@ -4859,7 +4859,7 @@ proof -
       have hS2b_lpc: "top1_locally_path_connected_on (top1_S2 - {b'})
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b'}))"
         by (rule homeomorphism_preserves_lpc[OF homeomorphism_inverse[OF hh_st] R2_locally_path_connected])
-      have hS2D_sub: "top1_S2 - D \<subseteq> top1_S2 - {b'}" using hb' by (by100 blast)
+      have hS2D_sub: "top1_S2 - D \<subseteq> top1_S2 - {b'}" using hb' by (by100 fast)
       have hS2D_open_in_S2b: "top1_S2 - D \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b'})"
       proof -
         have "(top1_S2 - {b'}) \<inter> (top1_S2 - D) = top1_S2 - D" using hS2D_sub by (by100 blast)
@@ -13220,6 +13220,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
