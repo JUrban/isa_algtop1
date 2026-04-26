@@ -3249,9 +3249,18 @@ proof -
       show "top1_continuous_map_on ?X ?TX ?X ?TX (inv_into ?X h \<circ> h)"
         by (rule top1_continuous_map_on_comp[OF hh_cont hinv_cont])
       show "top1_continuous_map_on ?X ?TX ?X ?TX (\<lambda>x. x)"
-        sorry \<comment> \<open>Identity is continuous (trivial but needs careful by100 handling).\<close>
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> ?X" thus "x \<in> ?X" .
+      next
+        fix W assume "W \<in> ?TX"
+        then obtain W0 where "W0 \<in> top1_S2_topology" "W = ?X \<inter> W0"
+          unfolding subspace_topology_def by (by100 blast)
+        hence "{x \<in> ?X. x \<in> W} = W" by (by100 blast)
+        thus "{x \<in> ?X. x \<in> W} \<in> ?TX" using \<open>W \<in> ?TX\<close> by (by100 simp)
+      qed
       show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX (\<lambda>(x, t). x)"
-        sorry \<comment> \<open>Projection fst is continuous from product topology.\<close>
+        sorry \<comment> \<open>Projection fst continuous from product topology. Standard, by Theorem_18_4.\<close>
       show "\<forall>x\<in>?X. (case (x, 0::real) of (x, t) \<Rightarrow> x) = (inv_into ?X h \<circ> h) x"
       proof
         fix x assume hx: "x \<in> ?X"
