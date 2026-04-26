@@ -6542,9 +6542,95 @@ proof -
   qed
   \<comment> \<open>Path-connectivity.\<close>
   have hU_pc: "top1_path_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
-    sorry \<comment> \<open>U = S^2-C1 non-separated + lpc \<Rightarrow> path-connected. Same as 63.5.\<close>
+  proof -
+    have hU_conn: "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      using assms(7) unfolding top1_separates_on_def U_def by (by100 blast)
+    have hU_S2: "U \<in> top1_S2_topology"
+      using assms(2) hTS2 unfolding closedin_on_def is_topology_on_def U_def by (by100 blast)
+    have hU_lpc: "top1_locally_path_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hU_S2])
+         (unfold U_def, by100 blast)
+    have hTU: "is_topology_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (unfold U_def, by100 blast)
+    have "U \<noteq> {}"
+    proof -
+      have "C2 \<noteq> {p, q}"
+      proof
+        assume "C2 = {p, q}"
+        have "{p} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {q} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hq_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{p} = {p, q} \<inter> (top1_S2 - {q})" using hpq_ne hp_S2 by (by100 auto)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "{q} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {p} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hp_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{q} = {p, q} \<inter> (top1_S2 - {p})" using hpq_ne hq_S2 by (by100 auto)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "\<not> top1_connected_on {p, q} (subspace_topology top1_S2 top1_S2_topology {p, q})"
+          unfolding top1_connected_on_def
+          using \<open>{p} \<in> _\<close> \<open>{q} \<in> _\<close> hpq_ne by (by100 blast)
+        thus False using assms(5) \<open>C2 = {p, q}\<close> by (by100 simp)
+      qed
+      moreover have "{p, q} \<subseteq> C2" using hpq by (by100 blast)
+      ultimately obtain c where "c \<in> C2" "c \<notin> {p, q}" by (by100 blast)
+      hence "c \<notin> C1" using hpq by (by100 blast)
+      hence "c \<in> U" unfolding U_def using \<open>c \<in> C2\<close> hC2sub by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTU hU_conn hU_lpc \<open>U \<noteq> {}\<close>])
+  qed
   have hV_pc: "top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
-    sorry \<comment> \<open>V = S^2-C2 non-separated + lpc \<Rightarrow> path-connected. Same as 63.5.\<close>
+  proof -
+    have hV_conn: "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      using assms(8) unfolding top1_separates_on_def V_def by (by100 blast)
+    have hV_S2: "V \<in> top1_S2_topology"
+      using assms(3) hTS2 unfolding closedin_on_def is_topology_on_def V_def by (by100 blast)
+    have hV_lpc: "top1_locally_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hV_S2])
+         (unfold V_def, by100 blast)
+    have hTV: "is_topology_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      by (rule subspace_topology_is_topology_on[OF hTS2]) (unfold V_def, by100 blast)
+    have "V \<noteq> {}"
+    proof -
+      have "C1 \<noteq> {p, q}"
+      proof
+        assume "C1 = {p, q}"
+        have "{p} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {q} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hq_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{p} = {p, q} \<inter> (top1_S2 - {q})" using hpq_ne hp_S2 by (by100 auto)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "{q} \<in> subspace_topology top1_S2 top1_S2_topology {p, q}"
+        proof -
+          have "top1_S2 - {p} \<in> top1_S2_topology"
+            using singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hp_S2]
+            hTS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+          moreover have "{q} = {p, q} \<inter> (top1_S2 - {p})" using hpq_ne hq_S2 by (by100 auto)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "\<not> top1_connected_on {p, q} (subspace_topology top1_S2 top1_S2_topology {p, q})"
+          unfolding top1_connected_on_def
+          using \<open>{p} \<in> _\<close> \<open>{q} \<in> _\<close> hpq_ne by (by100 blast)
+        thus False using assms(4) \<open>C1 = {p, q}\<close> by (by100 simp)
+      qed
+      moreover have "{p, q} \<subseteq> C1" using hpq by (by100 blast)
+      ultimately obtain c where "c \<in> C1" "c \<notin> {p, q}" by (by100 blast)
+      hence "c \<notin> C2" using hpq by (by100 blast)
+      hence "c \<in> V" unfolding V_def using \<open>c \<in> C1\<close> hC1sub by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    show ?thesis by (rule connected_locally_path_connected_imp_path_connected[OF hTV hV_conn hV_lpc \<open>V \<noteq> {}\<close>])
+  qed
   \<comment> \<open>Subspace topology transitivity.\<close>
   have hU_subtop: "subspace_topology X TX U = subspace_topology top1_S2 top1_S2_topology U"
     unfolding TX_def by (rule subspace_topology_trans[OF hU_sub_X])
