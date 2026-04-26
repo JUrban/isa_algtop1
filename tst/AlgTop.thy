@@ -16439,12 +16439,85 @@ proof -
     have h\<alpha>_avoids: "\<alpha> ` {0..1} \<inter> h0 ` {fst (seq N)..snd (seq N)} = {}"
       using hN by (by100 blast)
     \<comment> \<open>\<alpha> is a path from a' to b' in S^2 - h0(I_N), contradicting separation.\<close>
+    \<comment> \<open>\<alpha> maps into S^2-h0(I_N) (from h\<alpha>(4) + h\<alpha>_avoids).\<close>
+    have h\<alpha>_in_DN: "\<forall>t\<in>I_set. \<alpha> t \<in> top1_S2 - h0 ` {fst (seq N)..snd (seq N)}"
+    proof
+      fix t assume "t \<in> I_set"
+      hence "t \<in> {0..1::real}" unfolding hI01 by simp
+      have "\<alpha> t \<in> top1_S2 - {h0 x}" using h\<alpha>(4) \<open>t \<in> {0..1}\<close> by simp
+      hence h1: "\<alpha> t \<in> top1_S2" by (by100 blast)
+      have h2: "\<alpha> t \<notin> h0 ` {fst (seq N)..snd (seq N)}"
+      proof
+        assume "\<alpha> t \<in> h0 ` {fst (seq N)..snd (seq N)}"
+        hence "\<alpha> t \<in> \<alpha> ` {0..1} \<inter> h0 ` {fst (seq N)..snd (seq N)}"
+          using \<open>t \<in> {0..1}\<close> by (by100 blast)
+        thus False using h\<alpha>_avoids by (by100 blast)
+      qed
+      show "\<alpha> t \<in> top1_S2 - h0 ` {fst (seq N)..snd (seq N)}" using h1 h2 by (by100 blast)
+    qed
+    \<comment> \<open>Bridge standard \<alpha> to custom top1_is_path_on.\<close>
     have hpath_exists: "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq N)..snd (seq N)}))
         a' b' f"
-      sorry \<comment> \<open>Bridge standard \<alpha> to custom top1_is_path_on.
-         \<alpha> maps [0,1] into S^2-{h0(x)}, avoids h0(I_N), so \<alpha> maps into S^2-h0(I_N).
-         Same bridge pattern as h\<alpha>c_cont_std (continuous_on_open_invariant) but reversed.\<close>
+    proof (intro exI[of _ \<alpha>])
+      show "top1_is_path_on (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq N)..snd (seq N)}))
+          a' b' \<alpha>"
+        unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top
+            (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})) \<alpha>"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume "s \<in> I_set"
+          thus "\<alpha> s \<in> top1_S2 - h0 ` {fst (seq N)..snd (seq N)}" using h\<alpha>_in_DN by simp
+        next
+          fix W assume "W \<in> subspace_topology top1_S2 top1_S2_topology
+              (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})"
+          then obtain V where "V \<in> top1_S2_topology"
+              "W = (top1_S2 - h0 ` {fst (seq N)..snd (seq N)}) \<inter> V"
+            unfolding subspace_topology_def by (by100 blast)
+          have hR3eq: "top1_S2_topology = subspace_topology UNIV
+              (top1_open_sets :: (real\<times>real\<times>real) set set) top1_S2"
+            unfolding top1_S2_topology_def
+            using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                  product_topology_on_open_sets[where ?'a=real and ?'b=real] by simp
+          obtain V' where hV': "V' \<in> (top1_open_sets :: (real\<times>real\<times>real) set set)"
+              "V = top1_S2 \<inter> V'"
+            using \<open>V \<in> top1_S2_topology\<close> hR3eq
+            unfolding subspace_topology_def by (by100 blast)
+          have "open V'" using hV' unfolding top1_open_sets_def by simp
+          have "{s \<in> I_set. \<alpha> s \<in> W} = {s \<in> I_set. \<alpha> s \<in> V'}"
+          proof (rule set_eqI, rule iffI)
+            fix s assume "s \<in> {s \<in> I_set. \<alpha> s \<in> W}"
+            thus "s \<in> {s \<in> I_set. \<alpha> s \<in> V'}"
+              using \<open>W = _ \<inter> V\<close> \<open>V = _ \<inter> V'\<close> by (by100 blast)
+          next
+            fix s assume "s \<in> {s \<in> I_set. \<alpha> s \<in> V'}"
+            hence "s \<in> I_set" "\<alpha> s \<in> V'" by auto
+            have "\<alpha> s \<in> top1_S2 - h0 ` {fst (seq N)..snd (seq N)}"
+              using h\<alpha>_in_DN \<open>s \<in> I_set\<close> by simp
+            thus "s \<in> {s \<in> I_set. \<alpha> s \<in> W}"
+              using \<open>W = _ \<inter> V\<close> \<open>V = _ \<inter> V'\<close> \<open>\<alpha> s \<in> V'\<close> \<open>s \<in> I_set\<close> by (by100 blast)
+          qed
+          moreover have "{s \<in> I_set. \<alpha> s \<in> V'} \<in> I_top"
+          proof -
+            obtain U_r where "open U_r" "\<alpha> -` V' \<inter> {0..1} = U_r \<inter> {0..1}"
+              using iffD1[OF continuous_on_open_invariant h\<alpha>(1), rule_format, OF \<open>open V'\<close>] by auto
+            have "{s \<in> I_set. \<alpha> s \<in> V'} = I_set \<inter> U_r" unfolding hI01
+              using \<open>\<alpha> -` V' \<inter> {0..1} = U_r \<inter> {0..1}\<close> by (by100 blast)
+            moreover have "U_r \<in> (top1_open_sets :: real set set)"
+              using \<open>open U_r\<close> unfolding top1_open_sets_def by simp
+            ultimately show ?thesis
+              unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          qed
+          ultimately show "{s \<in> I_set. \<alpha> s \<in> W} \<in> I_top" by simp
+        qed
+        show "\<alpha> 0 = a'" by (rule h\<alpha>(2))
+        show "\<alpha> 1 = b'" by (rule h\<alpha>(3))
+      qed
+    qed
     show False using hseq_sep hpath_exists by blast
   qed
 qed
