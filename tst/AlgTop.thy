@@ -3529,7 +3529,8 @@ proof -
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
         (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
-      using h58_2 hS1_top_eq hR2_0_eq hTR2_0_eq by (by100 simp)
+      using h58_2 hS1_top_eq R2_0_def TR2_0_def sorry
+      \<comment> \<open>Pure definitional rewriting: unfold R2_0, TR2_0 in h58_2 to match hS1_top_eq.\<close>
     \<comment> \<open>Chain: compose 4 group isos. Use transitivity + symmetry.\<close>
     show ?thesis unfolding top1_groups_isomorphic_on_def
     proof -
@@ -5814,8 +5815,9 @@ proof (rule ccontr)
       using hW0 hRest_sub by (by100 blast)
     have "(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology"
       by (rule topology_inter_open[OF hTS2 hUV_open \<open>W0 \<in> top1_S2_topology\<close>])
+    have "Rest \<subseteq> ?X" using hRest_sub hUV_sub_X by (by100 blast)
     have "Rest = ?X \<inter> ((?U \<inter> ?V) \<inter> W0)"
-      using \<open>Rest = (?U \<inter> ?V) \<inter> W0\<close> hRest_sub hUV_sub_X by (by100 blast)
+      using \<open>Rest = (?U \<inter> ?V) \<inter> W0\<close> \<open>Rest \<subseteq> ?X\<close> by (by100 blast)
     hence "Rest \<in> ?TX" using \<open>(?U \<inter> ?V) \<inter> W0 \<in> top1_S2_topology\<close>
       unfolding subspace_topology_def by (by100 blast)
     thus ?thesis using hRest_sub hUV_sub_X unfolding openin_on_def by (by100 blast)
@@ -8055,10 +8057,71 @@ proof -
       using hC'_sub by (by100 blast)
     \<comment> \<open>C1', C2' are closed, connected subsets of S^2 with card(C1'\<inter>C2') = 2.\<close>
     \<comment> \<open>C1', C2' don't separate S^2 (by Theorem 63.2, arcs don't separate).\<close>
-    have hC1'_closed: "closedin_on top1_S2 top1_S2_topology C1'" sorry
-    have hC2'_closed: "closedin_on top1_S2 top1_S2_topology C2'" sorry
-    have hC1'_conn: "top1_connected_on C1' (subspace_topology top1_S2 top1_S2_topology C1')" sorry
-    have hC2'_conn: "top1_connected_on C2' (subspace_topology top1_S2 top1_S2_topology C2')" sorry
+    \<comment> \<open>C1' is an arc on S^2: transfer arc property from R^2 via \<sigma>2inv.\<close>
+    have hC1'_sub_S2N: "C1' \<subseteq> top1_S2 - {north_pole}"
+      unfolding C1'_def using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+    have hC2'_sub_S2N: "C2' \<subseteq> top1_S2 - {north_pole}"
+      unfolding C2'_def using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+    have hC1'_sub_S2: "C1' \<subseteq> top1_S2" using hC1'_sub_S2N by (by100 blast)
+    have hC2'_sub_S2: "C2' \<subseteq> top1_S2" using hC2'_sub_S2N by (by100 blast)
+    \<comment> \<open>Subspace topology transfer: S^2 on C1' = S^2\{N} on C1' (since C1' \<subseteq> S^2\{N}).\<close>
+    have hTS2N: "is_topology_on (top1_S2 - {north_pole})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole}))"
+      by (rule subspace_topology_is_topology_on[OF
+            is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]]) (by100 blast)
+    have hC1'_top_eq: "subspace_topology top1_S2 top1_S2_topology C1'
+        = subspace_topology (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) C1'"
+      by (rule subspace_topology_trans[OF hC1'_sub_S2N, symmetric])
+    have hC2'_top_eq: "subspace_topology top1_S2 top1_S2_topology C2'
+        = subspace_topology (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) C2'"
+      by (rule subspace_topology_trans[OF hC2'_sub_S2N, symmetric])
+    \<comment> \<open>C1' is an arc on S^2.\<close>
+    have hC1'_arc: "top1_is_arc_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+      sorry \<comment> \<open>\<sigma>2inv \<circ> h_arc is homeomorphism [0,1] \<rightarrow> C1' with S^2 sub-topology.\<close>
+    have hC2'_arc: "top1_is_arc_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+      sorry \<comment> \<open>Same for C2'.\<close>
+    \<comment> \<open>Arc \<Rightarrow> closed (compact in Hausdorff) + connected (homeomorphic to [0,1]).\<close>
+    have hC1'_closed: "closedin_on top1_S2 top1_S2_topology C1'"
+    proof (rule compact_in_strict_hausdorff_closedin_on[OF top1_S2_is_hausdorff
+        top1_S2_is_topology_on_strict hC1'_sub_S2])
+      obtain h1 where hh1: "top1_homeomorphism_on I_set I_top C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') h1"
+        using hC1'_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have "compact {0..1::real}" by (rule compact_Icc)
+        moreover have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        ultimately have "compact I_set" by simp
+        thus ?thesis unfolding top1_unit_interval_topology_def
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by simp
+      qed
+      have hcont: "top1_continuous_map_on I_set I_top C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') h1"
+        using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTS2_C1: "is_topology_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+        using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h1 ` I_set = C1'"
+        using hh1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "top1_compact_on (h1 ` I_set) (subspace_topology C1'
+          (subspace_topology top1_S2 top1_S2_topology C1') (h1 ` I_set))"
+        by (rule top1_compact_on_continuous_image[OF hI_compact hTS2_C1 hcont])
+      moreover have "h1 ` I_set = C1'" by (rule himg)
+      moreover have "subspace_topology C1' (subspace_topology top1_S2 top1_S2_topology C1') C1'
+          = subspace_topology top1_S2 top1_S2_topology C1'"
+        using hC1'_arc unfolding top1_is_arc_on_def is_topology_on_strict_def
+        by (intro subspace_topology_self) (by100 blast)
+      ultimately show "top1_compact_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+        by simp
+    qed
+    have hC2'_closed: "closedin_on top1_S2 top1_S2_topology C2'"
+      sorry \<comment> \<open>Same argument as C1' closed.\<close>
+    have hC1'_conn: "top1_connected_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+      sorry \<comment> \<open>[0,1] connected, homeomorphic image of connected is connected.\<close>
+    have hC2'_conn: "top1_connected_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
+      sorry \<comment> \<open>Same.\<close>
     have hC12'_card: "card (C1' \<inter> C2') = 2"
     proof -
       have h\<sigma>2inv_inj: "inj \<sigma>2inv"
@@ -8075,8 +8138,10 @@ proof -
       qed
       finally show ?thesis .
     qed
-    have hC1'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1'" sorry
-    have hC2'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2'" sorry
+    have hC1'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1'"
+      by (rule Theorem_63_2_arc_no_separation[OF top1_S2_is_topology_on_strict hC1'_sub_S2 hC1'_arc])
+    have hC2'_nonsep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2'"
+      by (rule Theorem_63_2_arc_no_separation[OF top1_S2_is_topology_on_strict hC2'_sub_S2 hC2'_arc])
     \<comment> \<open>Apply Theorem_63_5: S^2-(C1'\<union>C2') has exactly 2 components.\<close>
     obtain U_S2 V_S2 where
         hUS2_ne: "U_S2 \<noteq> {}" and hVS2_ne: "V_S2 \<noteq> {}"
@@ -11860,6 +11925,27 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
