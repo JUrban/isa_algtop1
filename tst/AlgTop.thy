@@ -15026,7 +15026,44 @@ proof -
       using Suc by (by100 blast)
     define Tftm where "Tftm = T \<circ> ftm"
     have hTftm_path: "top1_is_path_on E TE (a, 2) (a, 2 * int m + 2) Tftm"
-      sorry \<comment> \<open>T \<circ> ftm path: same as Theorem_63_1_c (T continuous + ftm path).\<close>
+      unfolding top1_is_path_on_def top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume hs: "s \<in> I_set"
+      have "ftm s \<in> E" using hftm hs unfolding top1_is_path_on_def top1_continuous_map_on_def
+        by (by100 blast)
+      thus "Tftm s \<in> E" unfolding Tftm_def comp_def using hT_E by (by100 blast)
+    next
+      fix W assume hW: "W \<in> TE"
+      have hTinvW: "{e \<in> E. T e \<in> W} \<in> TE"
+        using hT_cont hW unfolding top1_continuous_map_on_def by (by100 blast)
+      have "{s \<in> I_set. Tftm s \<in> W} = {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}"
+      proof (rule set_eqI, rule iffI)
+        fix s assume "s \<in> {s \<in> I_set. Tftm s \<in> W}"
+        hence hs: "s \<in> I_set" and "Tftm s \<in> W" by auto
+        have "ftm s \<in> E" using hftm hs unfolding top1_is_path_on_def top1_continuous_map_on_def
+          by (by100 blast)
+        moreover have "T (ftm s) \<in> W" using \<open>Tftm s \<in> W\<close> unfolding Tftm_def comp_def by simp
+        ultimately show "s \<in> {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}" using hs by (by100 blast)
+      next
+        fix s assume "s \<in> {s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}}"
+        thus "s \<in> {s \<in> I_set. Tftm s \<in> W}" unfolding Tftm_def comp_def by (by100 blast)
+      qed
+      moreover have "{s \<in> I_set. ftm s \<in> {e \<in> E. T e \<in> W}} \<in> I_top"
+        using hftm hTinvW unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{s \<in> I_set. Tftm s \<in> W} \<in> I_top" by simp
+    next
+      show "Tftm 0 = (a, 2)"
+      proof -
+        have "ftm 0 = (a, 0)" using hftm unfolding top1_is_path_on_def by (by100 blast)
+        thus ?thesis unfolding Tftm_def comp_def T_def by simp
+      qed
+    next
+      show "Tftm 1 = (a, 2 * int m + 2)"
+      proof -
+        have "ftm 1 = (a, 2 * int m)" using hftm unfolding top1_is_path_on_def by (by100 blast)
+        thus ?thesis unfolding Tftm_def comp_def T_def by simp
+      qed
+    qed
     have hTftm_proj: "\<forall>s\<in>I_set. p0 (Tftm s) = top1_path_power (top1_path_product alpha beta) a m s"
     proof
       fix s assume hs: "s \<in> I_set"
