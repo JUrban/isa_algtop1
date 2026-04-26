@@ -3073,13 +3073,6 @@ proof -
      By Theorem_58_7, the induced map on \<pi>_1 is an isomorphism.\<close>
   \<comment> \<open>Step 8: Extract generator from the isomorphism with Z and convert to path_power form.\<close>
   \<comment> \<open>Step 5: Compose \<sigma> and t to get homeomorphism X \<rightarrow> R^2-{0}.\<close>
-  define h where "h = t \<circ> \<sigma>"
-  have hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
-    sorry \<comment> \<open>Composition of homeomorphisms \<sigma> (X \<rightarrow> R2_q') and t (R2_q' \<rightarrow> R2_0).\<close>
-  \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence \<Rightarrow> \<pi>_1 isomorphism.\<close>
-  have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
-    sorry \<comment> \<open>Homeomorphism is a homotopy equivalence (with inverse as homotopy inverse).\<close>
-  have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hTX: "is_topology_on ?X ?TX"
     by (rule subspace_topology_is_topology_on[OF
         is_topology_on_strict_imp[OF assms(1)]]) (by100 blast)
@@ -3089,6 +3082,33 @@ proof -
         product_topology_on_is_topology_on[OF
           top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
           simplified]]) (by100 simp)
+  define h where "h = t \<circ> \<sigma>"
+  have hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on ?X ?TX" by (rule hTX)
+    show "is_topology_on R2_0 TR2_0" by (rule hTR2_0)
+    show "bij_betw h ?X R2_0"
+    proof -
+      have "bij_betw \<sigma> ?X R2_q'" using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+      moreover have "bij_betw t R2_q' R2_0" using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      ultimately show ?thesis unfolding h_def using bij_betw_comp_iff by (by100 blast)
+    qed
+    show "top1_continuous_map_on ?X ?TX R2_0 TR2_0 h"
+    proof -
+      have h1: "top1_continuous_map_on ?X ?TX R2_q' TR2_q' \<sigma>"
+        using h\<sigma>_restrict unfolding top1_homeomorphism_on_def by (by100 blast)
+      have h2: "top1_continuous_map_on R2_q' TR2_q' R2_0 TR2_0 t"
+        using ht_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      show ?thesis unfolding h_def by (rule top1_continuous_map_on_comp[OF h1 h2])
+    qed
+    show "top1_continuous_map_on R2_0 TR2_0 ?X ?TX (inv_into ?X h)"
+      sorry \<comment> \<open>Inverse of composition: inv(t\<circ>\<sigma>) = \<sigma>\<inverse>\<circ>t\<inverse>, both continuous.\<close>
+  qed
+  \<comment> \<open>Step 6: Homeomorphism \<Rightarrow> homotopy equivalence \<Rightarrow> \<pi>_1 isomorphism.\<close>
+  have hh_htpeq: "top1_homotopy_equivalence_on ?X ?TX R2_0 TR2_0 h (inv_into ?X h)"
+    sorry \<comment> \<open>Homeomorphism is a homotopy equivalence (with inverse as homotopy inverse).\<close>
+  have ha_X: "a \<in> ?X" using assms(5) by (by100 blast)
   have hpi1_iso_R2: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX a)
       (top1_fundamental_group_mul ?X ?TX a)
