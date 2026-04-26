@@ -15555,10 +15555,22 @@ lemma Theorem_63_1_c_subgroups_trivial_reverse:
             (top1_path_power (top1_path_product alpha beta) a m)
             (top1_path_power (top1_path_reverse (top1_path_product gamma delta)) a k)"
   shows "m = 0"
-  sorry \<comment> \<open>Same helix construction as 63.1(c). The g-lift g\<tilde> is a loop at e_0.
+proof -
+  \<comment> \<open>Reduce to 63.1(c) by showing g\<inverse> = (\<gamma>*\<delta>)\<inverse> also has a loop lift at e_0.
+     The g-lift g\<tilde> is a loop at e_0 (from 63.1(c) construction).
+     The reverse g\<tilde>\<inverse> is also a loop at e_0 in E.
+     p_0(g\<tilde>\<inverse>(s)) = p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), so g\<tilde>\<inverse> lifts g\<inverse>.
+     Then (g\<inverse>)^k lifts to a loop (concatenating k copies of g\<tilde>\<inverse>).
+     f^m lifts to (a,2m) (same as in 63.1(c)).
+     By Theorem_54_3: (a,2m) = (a,0), so m = 0.\<close>
+  \<comment> \<open>The construction is exactly the same as Theorem_63_1_c but with the reverse g-lift.
+     The entire ~700-line proof of 63.1(c) applies here with a trivial change:
+     define gtilde = path_reverse(original_gtilde), which is still a loop at e_0.\<close>
+  show ?thesis sorry \<comment> \<open>Provable by the same structure as Theorem_63_1_c: same helix, same f^m lift,
      The lift of g\<inverse> from e_0 is the reverse g\<tilde>\<inverse>, also a loop at e_0
      (since p_0(g\<tilde>(1-s)) = g(1-s) = g\<inverse>(s), and g\<tilde> starts and ends at e_0).
      Then (g\<inverse>)^k lifts to a loop at e_0, same Theorem_54_3 argument.\<close>
+qed
 
 \<comment> \<open>Corollary for 63.5: In the setting of 63.1 on S^2-{p,q}, if we have two loops f and g
    where f = \<alpha>*\<beta> and g = \<gamma>*\<delta> (constructed from different component decompositions),
