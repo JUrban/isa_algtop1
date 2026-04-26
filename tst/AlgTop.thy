@@ -7716,9 +7716,11 @@ proof -
      there's room above t*, contradicting t* = sup. Unless t* = t_y.
      If t* = t_y: \<alpha>(t_y) \<in> W1 \<inter> C1 \<subseteq> W1 \<inter> C' = {}. Contradiction.
      So t* < t_y and \<alpha>(t*) \<notin> W1, hence \<alpha>(t*) \<in> C1 \<subseteq> V. QED.\<close>
+  \<comment> \<open>Final step: \<alpha>(0) \<in> W1, \<alpha> meets C1 \<subseteq> V, path continuous \<Rightarrow> V \<inter> W1 \<noteq> {}.\<close>
   show ?thesis
-    sorry \<comment> \<open>Final step: from \<alpha>(I) \<inter> C1 \<noteq> {} and \<alpha>(0) \<in> W1, derive V \<inter> W1 \<noteq> {}.
-       Uses sup argument on \<alpha>^{-1}(W1) + continuity + V open. ~15 lines.\<close>
+    sorry \<comment> \<open>\<alpha>^{-1}(W1) open in [0,1], contains 0. \<alpha> meets C1 at t_y, \<alpha>(t_y) \<notin> W1.
+       Sup of \<alpha>^{-1}(W1) \<inter> [0,t_y] is t*. \<alpha>(t*) \<in> cl(W1) - W1 \<subseteq> C1 \<subseteq> V.
+       For t < t* near t*: \<alpha>(t) \<in> W1. By continuity + V open: \<alpha>(t) \<in> V \<inter> W1.\<close>
 qed
 
 theorem Theorem_63_4_JordanCurve:
@@ -13430,6 +13432,7 @@ qed
 
 
 end
+
 
 
 
