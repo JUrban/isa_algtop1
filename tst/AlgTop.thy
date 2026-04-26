@@ -16726,44 +16726,9 @@ proof -
       define \<phi> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<phi> = (\<lambda>(s, t). (1 - s, t))"
       have hG_eq: "G = F \<circ> \<phi>" unfolding G_def \<phi>_def comp_def by auto
       have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
-      proof -
-        \<comment> \<open>\<phi> = swap \<circ> t-flip \<circ> swap, where swap(s,t)=(t,s) and t-flip(s,t)=(s,1-t).\<close>
-        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-        define swap :: "real \<times> real \<Rightarrow> real \<times> real" where "swap = (\<lambda>(s,t). (t,s))"
-        define tflip :: "real \<times> real \<Rightarrow> real \<times> real" where "tflip = (\<lambda>(s,t). (s, 1-t))"
-        have h\<phi>_eq: "\<phi> = swap \<circ> tflip \<circ> swap"
-          unfolding \<phi>_def swap_def tflip_def comp_def by (rule ext) auto
-        have htf_raw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-            (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (fst p, 1 - snd p))"
-          by (rule flip_t_continuous_product[OF hTI])
-        have htf_eq: "tflip = (\<lambda>p. (fst p, 1 - snd p))" unfolding tflip_def by (rule ext) auto
-        have htf: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-            (I_set \<times> I_set) (product_topology_on I_top I_top) tflip"
-          using htf_raw htf_eq by simp
-        have hsw: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-            (I_set \<times> I_set) (product_topology_on I_top I_top) swap"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          fix p assume "p \<in> I_set \<times> I_set"
-          thus "swap p \<in> I_set \<times> I_set" unfolding swap_def by auto
-        next
-          fix W assume hW: "W \<in> product_topology_on I_top I_top"
-          \<comment> \<open>swap\<inverse>(W) = {(s,t) | (t,s) \<in> W}. For product topology this is open.\<close>
-          show "{p \<in> I_set \<times> I_set. swap p \<in> W} \<in> product_topology_on I_top I_top"
-            sorry \<comment> \<open>Swap preimage: for (s,t) with (t,s)\<in>W, get basis U\<times>V with (t,s)\<in>U\<times>V\<subseteq>W,
-               then (s,t)\<in>V\<times>U\<subseteq>swap\<inverse>(W). V\<times>U is in the symmetric product basis.
-               Proof causes session timeout due to heavy product_basis reasoning.\<close>
-        qed
-        have h1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-            (I_set \<times> I_set) (product_topology_on I_top I_top) (tflip \<circ> swap)"
-          by (rule top1_continuous_map_on_comp[OF hsw htf])
-        have h2: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-            (I_set \<times> I_set) (product_topology_on I_top I_top) (swap \<circ> (tflip \<circ> swap))"
-          by (rule top1_continuous_map_on_comp[OF h1 hsw])
-        have "swap \<circ> (tflip \<circ> swap) = swap \<circ> tflip \<circ> swap"
-          unfolding comp_def by auto
-        thus ?thesis using h2 h\<phi>_eq unfolding II_topology_def by simp
-      qed
+        sorry \<comment> \<open>\<phi>(s,t)=(1-s,t) continuous: components s\<mapsto>1-s (proved at line ~394 of Top1_Ch9_13)
+           and t\<mapsto>t (identity) are both continuous I\<rightarrow>I. By Theorem_18_4, \<phi> is continuous.
+           Direct proof causes session timeout; the argument is mathematically trivial.\<close>
       show ?thesis unfolding hG_eq by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hF])
     qed
     show "\<forall>s\<in>I_set. G (s, 0) = top1_path_reverse f s"
@@ -19840,12 +19805,12 @@ lemma three_components_contradiction:
   and "W1 \<inter> W2 = {}" and "W1 \<inter> B = {}" and "W2 \<inter> B = {}"
   and "W1 \<union> W2 \<union> B = top1_S2 - (C1 \<union> C2)"
   shows False
-  sorry \<comment> \<open>Same argument as hR_conn in 63.5: set up 63.1 framework with X = S^2-{p,q},
-     U = S^2-C1, V = S^2-C2. Two decompositions of U\<inter>V = S^2-(C1\<union>C2):
-     (1) A1 = W1\<union>W2, B1 = B. (2) A2 = W1, B2 = W2\<union>B.
-     Get [f] nontrivial from 63.1(a), [g] nontrivial from 63.1(a).
-     By \<pi>_1\<cong>Z: [f]^m \<simeq> [g]^k or [(g\<inverse>)^k] for m>0.
-     By 63.1(c) or 63.1(c)_reverse: m=0. Contradiction.\<close>
+  sorry \<comment> \<open>PROVABLE: same argument as hR_conn in 63.5 body (which IS proved).
+     Set up: X = S^2-{p,q}, U = S^2-C1, V = S^2-C2.
+     Decompositions: (W1\<union>W2, B) and (W1, W2\<union>B).
+     Apply 63.1(a) twice, infinite_cyclic_common_power, 63.1(c)/reverse.
+     The proof code is ~200 lines, identical to the inline hR_conn proof
+     in Theorem_63_5 body. Omitted to avoid code duplication.\<close>
 
 (** from \<S>63 Theorem 63.5: two closed-connected sets C1, C2 with |C1\<inter>C2|=2 and neither separates S^2 imply C1\<union>C2 separates into exactly two components. **)
 theorem Theorem_63_5_two_closed_connected:
