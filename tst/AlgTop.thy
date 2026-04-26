@@ -8192,10 +8192,14 @@ proof -
               using subspace_topology_trans[OF hC1'_sub_S2N, of top1_S2 top1_S2_topology]
               unfolding h_comp_def by simp
           qed
+          \<comment> \<open>Inverse continuous: [0,1] compact, C1' Hausdorff. Bijective continuous
+             from compact to Hausdorff is a closed map. Closed bijection = homeomorphism.\<close>
           show "top1_continuous_map_on C1'
               (subspace_topology top1_S2 top1_S2_topology C1') I_set I_top
               (inv_into I_set h_comp)"
-            sorry \<comment> \<open>Inverse continuous: compose inverse continuous maps.\<close>
+            sorry \<comment> \<open>[0,1] compact + C1'(S^2 sub) Hausdorff + h_comp bij + h_comp continuous
+               \<Rightarrow> h_comp closed map \<Rightarrow> inverse continuous. ~25 lines using
+               compact_hausdorff_continuous_closed_map + closed_map_inverse_continuous.\<close>
         qed
       qed
     qed
@@ -12282,6 +12286,7 @@ qed
 
 
 end
+
 
 
 
