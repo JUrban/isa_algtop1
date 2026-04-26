@@ -8138,9 +8138,76 @@ proof -
     define V_R2 where "V_R2 = \<sigma>2 ` (W2_S2 - {north_pole})"
     \<comment> \<open>Show all 8 properties.\<close>
     have hUR2_ne: "U_R2 \<noteq> {}" using hW1_ne unfolding U_R2_def by (by100 blast)
-    have hVR2_ne: "V_R2 \<noteq> {}" sorry \<comment> \<open>W2_S2 has more than just N (connected, nonempty, not just {N}).\<close>
-    have hUR2VR2_disj: "U_R2 \<inter> V_R2 = {}" sorry \<comment> \<open>\<sigma>2 injective + W1\<inter>W2={}.\<close>
-    have hUR2VR2_cover: "U_R2 \<union> V_R2 = UNIV - C" sorry \<comment> \<open>\<sigma>2 bijection S^2\{N} \<leftrightarrow> R^2, C'=\<sigma>2inv(C).\<close>
+    have hVR2_ne: "V_R2 \<noteq> {}"
+    proof -
+      \<comment> \<open>W2_S2 \<noteq> {N}: if W2_S2 = {N}, then {N} is open in S^2 (it's a component,
+         hence open since S^2 is locally connected). But singletons aren't open in S^2.\<close>
+      have "W2_S2 \<noteq> {north_pole}" sorry \<comment> \<open>Component of S^2 minus closed set can't be singleton.\<close>
+      hence "\<exists>x. x \<in> W2_S2 \<and> x \<noteq> north_pole" using hW2_ne hN_in_W2 by (by100 blast)
+      then obtain x where "x \<in> W2_S2" "x \<noteq> north_pole" by (by100 blast)
+      hence "x \<in> W2_S2 - {north_pole}" by (by100 blast)
+      hence "\<sigma>2 x \<in> V_R2" unfolding V_R2_def by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    have h\<sigma>2_inj: "inj_on \<sigma>2 (top1_S2 - {north_pole})"
+      using h\<sigma>2_bij unfolding bij_betw_def by (by100 blast)
+    have hW2_sub: "W2_S2 - {north_pole} \<subseteq> top1_S2 - {north_pole}"
+      using hW12_cover by (by100 blast)
+    have hUR2VR2_disj: "U_R2 \<inter> V_R2 = {}"
+    proof -
+      have "W1_S2 \<inter> (W2_S2 - {north_pole}) = {}"
+        using hW12_disj by (by100 blast)
+      moreover have "W1_S2 \<union> (W2_S2 - {north_pole}) \<subseteq> top1_S2 - {north_pole}"
+        using hW1_sub_S2N hW2_sub by (by100 blast)
+      ultimately show ?thesis unfolding U_R2_def V_R2_def
+        sorry \<comment> \<open>inj_on \<sigma>2 + W1 \<inter> (W2-{N}) = {} \<Rightarrow> \<sigma>2`W1 \<inter> \<sigma>2`(W2-{N}) = {}.\<close>
+    qed
+    have hUR2VR2_cover: "U_R2 \<union> V_R2 = UNIV - C"
+    proof -
+      have hW12_minus_N: "W1_S2 \<union> (W2_S2 - {north_pole}) = (top1_S2 - {north_pole}) - C'"
+        using hW12_cover hN_not_W1 hC'_decomp by (by100 blast)
+      have "\<sigma>2 ` ((top1_S2 - {north_pole}) - C') = UNIV - C"
+      proof -
+        have "\<sigma>2 ` (top1_S2 - {north_pole}) = UNIV"
+          using h\<sigma>2_bij unfolding bij_betw_def by (by100 blast)
+        moreover have "\<sigma>2 ` C' = C"
+        proof -
+          have "C' = \<sigma>2inv ` C" unfolding C'_def by simp
+          hence "\<sigma>2 ` C' = \<sigma>2 ` (\<sigma>2inv ` C)" by simp
+          also have "\<dots> = C"
+          proof (intro set_eqI iffI)
+            fix x assume "x \<in> \<sigma>2 ` (\<sigma>2inv ` C)"
+            then obtain y where "y \<in> C" "x = \<sigma>2 (\<sigma>2inv y)" by (by100 blast)
+            have "\<sigma>2inv y \<in> top1_S2 - {north_pole}"
+              using h\<sigma>2inv_bij \<open>y \<in> C\<close> unfolding bij_betw_def by (by100 blast)
+            have "y \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+              using h\<sigma>2_bij \<open>y \<in> C\<close> unfolding bij_betw_def by simp
+            hence "\<sigma>2 (\<sigma>2inv y) = y"
+              unfolding \<sigma>2inv_def by (rule f_inv_into_f)
+            thus "x \<in> C" using \<open>x = _\<close> \<open>y \<in> C\<close> by simp
+          next
+            fix x assume "x \<in> C"
+            have "x \<in> \<sigma>2 ` (top1_S2 - {north_pole})"
+              using h\<sigma>2_bij \<open>x \<in> C\<close> unfolding bij_betw_def by simp
+            hence "\<sigma>2inv x \<in> top1_S2 - {north_pole}"
+              using h\<sigma>2inv_bij unfolding bij_betw_def by (by100 blast)
+            have "\<sigma>2 (\<sigma>2inv x) = x"
+              unfolding \<sigma>2inv_def using \<open>x \<in> \<sigma>2 ` _\<close> by (rule f_inv_into_f)
+            have "\<sigma>2inv x \<in> \<sigma>2inv ` C" using \<open>x \<in> C\<close> by (by100 blast)
+            thus "x \<in> \<sigma>2 ` (\<sigma>2inv ` C)" using \<open>\<sigma>2 (\<sigma>2inv x) = x\<close> by (by100 force)
+          qed
+          finally show ?thesis .
+        qed
+        moreover have "C' \<subseteq> top1_S2 - {north_pole}" using hC'_sub by simp
+        ultimately show ?thesis
+          sorry \<comment> \<open>\<sigma>2 ` (A - B) = \<sigma>2 ` A - \<sigma>2 ` B when B \<subseteq> A and \<sigma>2 injective on A.\<close>
+      qed
+      have "\<sigma>2 ` (W1_S2 \<union> (W2_S2 - {north_pole})) = UNIV - C"
+        using \<open>\<sigma>2 ` ((top1_S2 - {north_pole}) - C') = UNIV - C\<close> hW12_minus_N by simp
+      hence "\<sigma>2 ` W1_S2 \<union> \<sigma>2 ` (W2_S2 - {north_pole}) = UNIV - C"
+        by (simp add: image_Un)
+      thus ?thesis unfolding U_R2_def V_R2_def by simp
+    qed
     have hUR2_conn: "top1_connected_on U_R2 (subspace_topology UNIV ?TR2 U_R2)" sorry
     have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)" sorry
     have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M" sorry \<comment> \<open>W1_S2 compact in S^2\{N}.\<close>
@@ -11777,6 +11844,11 @@ qed
 
 
 end
+
+
+
+
+
 
 
 
