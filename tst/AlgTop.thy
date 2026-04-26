@@ -3475,11 +3475,18 @@ proof -
         top1_Z_group top1_Z_mul"
       by (rule Theorem_54_5_iso)
     \<comment> \<open>Step 5: Compose the chain. Need transitivity of groups_isomorphic_on.\<close>
+    \<comment> \<open>Compose: need transitivity + symmetry of groups_isomorphic_on.
+       groups_isomorphic_on G mulG H mulH \<equiv> \<exists>f. group_iso_on G mulG H mulH f
+       group_iso_on \<equiv> group_hom_on + bij_betw.
+       Transitivity: compose hom + bij. Symmetry: inverse.\<close>
     show ?thesis
-      sorry \<comment> \<open>Chain: hpi1_iso_R2 + hbp_change + h58_2[sym] + hS1_top_eq + h54_5.
-         Each is a known group isomorphism. Composition = transitivity of \<cong>.
-         Transitivity: if \<exists>f. iso f (G\<rightarrow>H) and \<exists>g. iso g (H\<rightarrow>K) then \<exists>g\<circ>f. iso (g\<circ>f) (G\<rightarrow>K).
-         This is standard (compose bij_betw + group_hom_on).\<close>
+      sorry \<comment> \<open>Chain of 4 group isomorphisms:
+         (1) hpi1_iso_R2: \<pi>_1(X,a) \<cong> \<pi>_1(R^2-{0}, h(a))
+         (2) hbp_change: \<pi>_1(R^2-{0}, h(a)) \<cong> \<pi>_1(R^2-{0}, (1,0))
+         (3) h58_2[with hS1_top_eq]: \<pi>_1(S^1, (1,0)) \<cong> \<pi>_1(R^2-{0}, (1,0)) [use sym]
+         (4) h54_5: \<pi>_1(S^1, (1,0)) \<cong> Z
+         Needs: group iso transitivity (compose hom + bij_betw) and symmetry (inverse).
+         Each is ~15 lines. Total: ~60 lines. Purely mechanical algebra.\<close>
   qed
   \<comment> \<open>Extract generator from Z-isomorphism.\<close>
   show ?thesis
