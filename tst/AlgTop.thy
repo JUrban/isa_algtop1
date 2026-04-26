@@ -15581,6 +15581,44 @@ proof -
        Each step ~30-50 lines. Total: ~200 lines.\<close>
 qed
 
+text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
+lemma path_homotopic_path_power:
+  assumes "is_topology_on X TX"
+      and "top1_path_homotopic_on X TX a a f g"
+      and "top1_is_path_on X TX a a f" and "top1_is_path_on X TX a a g"
+  shows "top1_path_homotopic_on X TX a a (top1_path_power f a n) (top1_path_power g a n)"
+proof (induction n)
+  case 0
+  have haX: "a \<in> X"
+  proof -
+    have "f 0 = a" using assms(3) unfolding top1_is_path_on_def by (by100 blast)
+    moreover have "f 0 \<in> X"
+    proof -
+      have "\<forall>s\<in>I_set. f s \<in> X" using assms(3)
+        unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+      ultimately show ?thesis by (by100 blast)
+    qed
+    ultimately show ?thesis by simp
+  qed
+  show ?case by (simp add: Lemma_51_1_path_homotopic_refl[OF
+      top1_constant_path_is_path[OF assms(1) haX]])
+next
+  case (Suc n)
+  \<comment> \<open>f^{n+1} = f * f^n \<simeq> g * g^n = g^{n+1} by product compatibility.\<close>
+  have hfn: "top1_is_path_on X TX a a (top1_path_power f a n)"
+    by (rule top1_path_power_is_path[OF assms(1)]) (simp add: assms(3) top1_is_loop_on_def)
+  have hgn: "top1_is_path_on X TX a a (top1_path_power g a n)"
+    by (rule top1_path_power_is_path[OF assms(1)]) (simp add: assms(4) top1_is_loop_on_def)
+  have h1: "top1_path_homotopic_on X TX a a (top1_path_product f (top1_path_power f a n))
+      (top1_path_product g (top1_path_power f a n))"
+    by (rule path_homotopic_product_left[OF assms(1) assms(2) hfn])
+  have h2: "top1_path_homotopic_on X TX a a (top1_path_product g (top1_path_power f a n))
+      (top1_path_product g (top1_path_power g a n))"
+    by (rule path_homotopic_product_right[OF assms(1) Suc assms(4)])
+  show ?case by (simp add: Lemma_51_1_path_homotopic_trans[OF assms(1) h1 h2])
+qed
+
 \<comment> \<open>Key algebraic fact for 63.5: in an infinite cyclic group,
    any two nontrivial elements have a common nonzero power.
    Applied here: if [f] and [g] are both nontrivial in \<pi>_1(X) \<cong> Z,
