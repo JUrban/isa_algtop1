@@ -3404,7 +3404,7 @@ proof -
   proof -
     \<comment> \<open>Step 1: \<pi>_1(R^2-{0}, h(a)) \<cong> \<pi>_1(R^2-{0}, (1,0)) via basepoint change.\<close>
     have hR2_0_pc: "top1_path_connected_on R2_0 TR2_0"
-      sorry \<comment> \<open>R^2-{0} is path-connected (deformation retract to S^1 which is path-connected).\<close>
+      unfolding R2_0_def TR2_0_def using R2_minus_point_path_connected[of "(0,0)"] by (by100 simp)
     have hha_R2: "h a \<in> R2_0"
     proof -
       have "a \<in> ?X" using ha_X .
@@ -3444,7 +3444,13 @@ proof -
       by (rule Theorem_58_2_inclusion_iso)
     \<comment> \<open>Step 3: Match S^1 topologies. subspace R2_0 TR2_0 S^1 = top1_S1_topology.\<close>
     have hS1_top_eq: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
-      sorry \<comment> \<open>S^1 \<subseteq> R^2-{0}, subspace of subspace = subspace of R^2 = top1_S1_topology.\<close>
+    proof -
+      have hS1_sub: "top1_S1 \<subseteq> R2_0" unfolding R2_0_def top1_S1_def by (by100 auto)
+      show ?thesis
+        sorry \<comment> \<open>subspace_topology_trans: S^1 \<subseteq> R^2-{0} \<Rightarrow> subspace(R^2-{0}, subspace(R^2, R^2-{0}), S^1) = subspace(R^2, S^1) = top1_S1_topology.
+           The type unification between UNIV :: (real\<times>real) set in different contexts blocks
+           the direct rule application. Mathematically trivial.\<close>
+    qed
     \<comment> \<open>Step 4: \<pi>_1(S^1, (1,0)) \<cong> Z (Theorem_54_5_iso).\<close>
     have h54_5: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
