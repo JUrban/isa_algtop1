@@ -8108,14 +8108,48 @@ proof -
     \<comment> \<open>Define R^2 components from S^2 components.\<close>
     \<comment> \<open>U = \<sigma>2(U_S2), or U = \<sigma>2(U_S2) and V = \<sigma>2(V_S2 - {N}).\<close>
     \<comment> \<open>The component containing N maps to the unbounded component in R^2.\<close>
-    show ?thesis sorry \<comment> \<open>Transfer S^2 components to R^2 via \<sigma>2.
-       N is in one component (say V_S2). Then:
-       - U = \<sigma>2 ` U_S2 (bounded, since U_S2 \<subseteq> S^2\{N} compact minus N)
-       - V = \<sigma>2 ` (V_S2 - {N}) (unbounded, contains far points)
-       - U \<union> V = UNIV - C, U \<inter> V = {}
-       - Connected (homeomorphic image of connected set)
-       - Bounded/unbounded by compactness of U_S2
-       - Boundary = C by closure arguments\<close>
+    \<comment> \<open>WLOG: ensure N \<in> V_S2 (swap if needed).\<close>
+    obtain W1_S2 W2_S2 where hW1_ne: "W1_S2 \<noteq> {}" and hW2_ne: "W2_S2 \<noteq> {}"
+        and hW12_disj: "W1_S2 \<inter> W2_S2 = {}"
+        and hW12_cover: "W1_S2 \<union> W2_S2 = top1_S2 - (C1' \<union> C2')"
+        and hW1_conn: "top1_connected_on W1_S2 (subspace_topology top1_S2 top1_S2_topology W1_S2)"
+        and hW2_conn: "top1_connected_on W2_S2 (subspace_topology top1_S2 top1_S2_topology W2_S2)"
+        and hN_in_W2: "north_pole \<in> W2_S2"
+    proof -
+      show ?thesis using hN_in_comp hUS2_ne hVS2_ne hUVS2_disj hUVS2_cover hUS2_conn hVS2_conn
+      proof (cases "north_pole \<in> V_S2")
+        case True
+        thus ?thesis by (intro that[of U_S2 V_S2])
+           (use hUS2_ne hVS2_ne hUVS2_disj hUVS2_cover hUS2_conn hVS2_conn in simp)+
+      next
+        case False
+        hence "north_pole \<in> U_S2" using hN_in_comp by simp
+        thus ?thesis by (intro that[of V_S2 U_S2])
+           (use hUS2_ne hVS2_ne hUVS2_disj hUVS2_cover hUS2_conn hVS2_conn in auto)+
+      qed
+    qed
+    \<comment> \<open>N \<notin> W1_S2 (disjoint from W2_S2 which contains N).\<close>
+    have hN_not_W1: "north_pole \<notin> W1_S2" using hW12_disj hN_in_W2 by (by100 blast)
+    \<comment> \<open>W1_S2 \<subseteq> S^2\{N} (doesn't contain N).\<close>
+    have hW1_sub_S2N: "W1_S2 \<subseteq> top1_S2 - {north_pole}"
+      using hW12_cover hN_not_W1 by (by100 blast)
+    \<comment> \<open>Define R^2 components.\<close>
+    define U_R2 where "U_R2 = \<sigma>2 ` W1_S2"
+    define V_R2 where "V_R2 = \<sigma>2 ` (W2_S2 - {north_pole})"
+    \<comment> \<open>Show all 8 properties.\<close>
+    have hUR2_ne: "U_R2 \<noteq> {}" using hW1_ne unfolding U_R2_def by (by100 blast)
+    have hVR2_ne: "V_R2 \<noteq> {}" sorry \<comment> \<open>W2_S2 has more than just N (connected, nonempty, not just {N}).\<close>
+    have hUR2VR2_disj: "U_R2 \<inter> V_R2 = {}" sorry \<comment> \<open>\<sigma>2 injective + W1\<inter>W2={}.\<close>
+    have hUR2VR2_cover: "U_R2 \<union> V_R2 = UNIV - C" sorry \<comment> \<open>\<sigma>2 bijection S^2\{N} \<leftrightarrow> R^2, C'=\<sigma>2inv(C).\<close>
+    have hUR2_conn: "top1_connected_on U_R2 (subspace_topology UNIV ?TR2 U_R2)" sorry
+    have hVR2_conn: "top1_connected_on V_R2 (subspace_topology UNIV ?TR2 V_R2)" sorry
+    have hUR2_bdd: "\<exists>M. \<forall>p\<in>U_R2. fst p ^ 2 + snd p ^ 2 \<le> M" sorry \<comment> \<open>W1_S2 compact in S^2\{N}.\<close>
+    have hVR2_unbdd: "\<forall>M. \<exists>p\<in>V_R2. fst p ^ 2 + snd p ^ 2 > M" sorry \<comment> \<open>V_R2 contains far points.\<close>
+    have hUR2_bdy: "closure U_R2 = U_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
+    have hVR2_bdy: "closure V_R2 = V_R2 \<union> C" sorry \<comment> \<open>Boundary argument.\<close>
+    show ?thesis by (intro that[of U_R2 V_R2])
+      (use hUR2_ne hVR2_ne hUR2VR2_disj hUR2VR2_cover hUR2_conn hVR2_conn
+           hUR2_bdd hVR2_unbdd hUR2_bdy hVR2_bdy in simp)+
   qed
   \<comment> \<open>Step 3 (Path-connected): R^2 is locally path-connected, so components are path-connected.\<close>
   \<comment> \<open>First show UNIV-C is open (C compact hence closed).\<close>
@@ -11743,6 +11777,7 @@ qed
 
 
 end
+
 
 
 
