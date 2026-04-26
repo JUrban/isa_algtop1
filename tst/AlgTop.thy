@@ -16128,19 +16128,73 @@ proof -
       thus "\<exists>T. open T \<and> T \<inter> {0..1} = h0 -` B \<inter> {0..1::real}"
         using hW_open by (by100 blast)
     qed
-    \<comment> \<open>Step 2: Define nested intervals by recursion.
-       At each step, the joining lemma contrapositive gives that at least one half
-       separates a' from b'. Pick that half.\<close>
-    \<comment> \<open>Step 3: Cantor intersection \<Rightarrow> unique point x.\<close>
-    \<comment> \<open>Step 4: Path \<alpha> from a' to b' in S^2-{h0(x)}.\<close>
-    \<comment> \<open>Step 5: \<alpha>(I) compact, dist(\<alpha>(I), h0(x)) > 0.\<close>
-    \<comment> \<open>Step 6: h0 uniformly continuous, h0(I_m) \<subseteq> B(h0(x), \<epsilon>) for large m.\<close>
-    \<comment> \<open>Step 7: Contradiction.\<close>
-    show False
-      sorry \<comment> \<open>Full bisection limit argument. Steps 2-7 above.
-         Key tools: dependent choice, compact_Inter/Bolzano-Weierstrass,
-         S2_minus_point_simply_connected, setdist/compact_closed_dist,
-         uniformly_continuous_on_def + compact.\<close>
+    \<comment> \<open>Step 2: Sequence of nested intervals. Use nat recursion.\<close>
+    define pick_half :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
+      "pick_half = (\<lambda>(lo, hi). let mid = (lo + hi) / 2 in
+        if \<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {lo..mid})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {lo..mid})) a' b' f)
+        then (lo, mid) else (mid, hi))"
+    define seq :: "nat \<Rightarrow> real \<times> real" where
+      "seq = rec_nat (0, 1) (\<lambda>_ iv. pick_half iv)"
+    \<comment> \<open>Properties: nested, length \<rightarrow> 0, each h0(interval) separates a' from b'.\<close>
+    have hseq_0: "seq 0 = (0, 1)" unfolding seq_def by simp
+    have hseq_nested: "\<forall>n. fst (seq n) \<le> fst (seq (Suc n)) \<and> snd (seq (Suc n)) \<le> snd (seq n)"
+      sorry \<comment> \<open>From pick_half: midpoint is between lo and hi.\<close>
+    have hseq_len: "\<forall>n. snd (seq n) - fst (seq n) = (1/2)^n"
+      sorry \<comment> \<open>Induction: each step halves the interval.\<close>
+    have hseq_range: "\<forall>n. 0 \<le> fst (seq n) \<and> snd (seq n) \<le> 1"
+      sorry \<comment> \<open>Nested in [0,1].\<close>
+    have hseq_sep: "\<forall>n. \<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq n)..snd (seq n)})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq n)..snd (seq n)}))
+        a' b' f)"
+      sorry \<comment> \<open>Induction: initial from hab'_sep, step from joining lemma contrapositive.\<close>
+    \<comment> \<open>Step 3: Cantor intersection. Monotone bounded sequences converge.\<close>
+    define x where "x = (SUP n. fst (seq n))"
+    have hx_range: "0 \<le> x \<and> x \<le> 1" sorry
+    have hx_limit: "\<forall>\<epsilon>>0. \<exists>N. \<forall>n\<ge>N. fst (seq n) \<le> x \<and> x \<le> snd (seq n) \<and>
+        snd (seq n) - fst (seq n) < \<epsilon>"
+      sorry \<comment> \<open>From monotone convergence + hseq_len \<rightarrow> 0.\<close>
+    \<comment> \<open>Step 4: Path from a' to b' in S^2-{h0(x)}.\<close>
+    have hx_S2: "h0 x \<in> top1_S2"
+      using hh0_img hx_range unfolding hI01[symmetric] assms(2) sorry
+    obtain \<alpha> where h\<alpha>: "continuous_on {0..1::real} \<alpha>"
+        "\<alpha> 0 = a'" "\<alpha> 1 = b'" "\<forall>t\<in>{0..1}. \<alpha> t \<in> top1_S2 - {h0 x}"
+      sorry \<comment> \<open>S^2-{h0(x)} is path-connected (simply connected). a', b' \<in> S^2-D \<subseteq> S^2-{h0(x)}.\<close>
+    \<comment> \<open>Step 5: \<alpha>(I) compact, positive distance from h0(x).\<close>
+    have h\<alpha>_compact: "compact (\<alpha> ` {0..1})" by (rule compact_continuous_image[OF h\<alpha>(1) compact_Icc])
+    have h\<alpha>_disjoint: "h0 x \<notin> \<alpha> ` {0..1}"
+    proof
+      assume "h0 x \<in> \<alpha> ` {0..1}"
+      then obtain t where "t \<in> {0..1}" "\<alpha> t = h0 x" by auto
+      hence "\<alpha> t \<in> top1_S2 - {h0 x}" using h\<alpha>(4) \<open>t \<in> {0..1}\<close> by simp
+      hence "\<alpha> t \<noteq> h0 x" by (by100 blast)
+      thus False using \<open>\<alpha> t = h0 x\<close> by simp
+    qed
+    \<comment> \<open>Step 5: \<alpha>(I) compact hence closed. S^2-\<alpha>(I) open, contains h0(x).\<close>
+    have h\<alpha>_closed: "closed (\<alpha> ` {0..1})" by (rule compact_imp_closed[OF h\<alpha>_compact])
+    have hcompl_open: "open (- \<alpha> ` {0..1})" using h\<alpha>_closed by (rule open_Compl)
+    have hh0x_in_compl: "h0 x \<in> - \<alpha> ` {0..1}" using h\<alpha>_disjoint by simp
+    \<comment> \<open>Step 6: h0 continuous at x. Preimage of open complement contains an interval around x.\<close>
+    have hh0_preimage_open: "open (h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1})"
+      sorry \<comment> \<open>From continuous_on + open complement. Standard: continuous_on_open_vimage.\<close>
+    have hx_in_preimage: "x \<in> h0 -` (- \<alpha> ` {0..1}) \<inter> {0..1}"
+      using hh0x_in_compl hx_range by simp
+    \<comment> \<open>open set in [0,1] containing x \<Rightarrow> contains interval around x.\<close>
+    \<comment> \<open>For large m, I_m \<subseteq> preimage (since I_m shrinks to {x}).\<close>
+    have "\<exists>N. h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}"
+      sorry \<comment> \<open>From: x in open preimage, I_m \<ni> x with length \<rightarrow> 0 \<Rightarrow> I_m \<subseteq> preimage for large m.
+         Then h0(I_m) \<subseteq> complement.\<close>
+    then obtain N where hN: "h0 ` {fst (seq N)..snd (seq N)} \<subseteq> - \<alpha> ` {0..1}" by blast
+    have h\<alpha>_avoids: "\<alpha> ` {0..1} \<inter> h0 ` {fst (seq N)..snd (seq N)} = {}"
+      using hN by (by100 blast)
+    \<comment> \<open>\<alpha> is a path from a' to b' in S^2 - h0(I_N), contradicting separation.\<close>
+    have hpath_exists: "\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq N)..snd (seq N)})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq N)..snd (seq N)}))
+        a' b' f"
+      sorry \<comment> \<open>Convert \<alpha> (standard continuous_on) to top1_is_path_on (custom topology).
+         \<alpha> maps into S^2-h0(I_N) (from h\<alpha>_avoids + h\<alpha>(4) + I_N \<supseteq> {x}).
+         Bridge: continuous_on to top1_continuous_map_on.\<close>
+    show False using hseq_sep hpath_exists by blast
   qed
 qed
 
