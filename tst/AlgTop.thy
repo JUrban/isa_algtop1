@@ -3390,10 +3390,28 @@ proof -
   \<comment> \<open>Step 7: Chain with Theorem_58_2 (R^2-{0} \<cong> S^1) and Theorem_54_5 (\<pi>_1(S^1) \<cong> Z).
      This gives \<pi>_1(X, a) \<cong> Z.\<close>
   \<comment> \<open>Step 8: Extract generator from Z-isomorphism.\<close>
+  \<comment> \<open>Step 7-8: From \<pi>_1(X,a) \<cong> Z, extract generator.\<close>
+  \<comment> \<open>The chain \<pi>_1(X,a) \<cong> \<pi>_1(R^2-{0}, h(a)) \<cong> \<pi>_1(S^1, (1,0)) \<cong> Z
+     gives a group isomorphism \<phi>: \<pi>_1(X,a) \<rightarrow> Z.
+     Let gen_class = \<phi>\<inverse>(1). Pick a representative gen from gen_class.
+     For any loop f: \<phi>([f]) = n. [f] = [gen]^n in the group.
+     For n \<ge> 0: f \<simeq> gen^n (path_power). For n < 0: f \<simeq> (gen\<inverse>)^{|n|}.\<close>
+  \<comment> \<open>From hpi1_iso_R2 + Theorem_58_2 + Theorem_54_5: \<pi>_1(X,a) \<cong> Z.\<close>
+  have hpi1_iso_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>Chain: \<pi>_1(X,a) \<cong> \<pi>_1(R^2-{0},h(a)) \<cong> \<pi>_1(S^1,(1,0)) \<cong> Z.
+       Uses hpi1_iso_R2, Theorem_58_2_inclusion_iso, Theorem_54_5_iso,
+       and basepoint change isomorphism. Each step is a known group iso;
+       composition gives the chain.\<close>
+  \<comment> \<open>Extract generator from Z-isomorphism.\<close>
   show ?thesis
-    sorry \<comment> \<open>LAST JCT MATHEMATICAL GAP. From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>(gen) = 1.
-       For any loop f, \<phi>([f]) = n. If n\<ge>0: [f] = gen^n. If n<0: [f] = (gen\<inverse>)^{|n|}.
-       Needs: group iso \<rightarrow> path_power form (the bridge lemma).\<close>
+    sorry \<comment> \<open>From \<pi>_1(X,a) \<cong> Z: extract gen with \<phi>([gen]) = 1.
+       For any loop f: \<phi>([f]) = n \<in> Z. If n\<ge>0: [f] = [gen^n].
+       If n<0: [f] = [(gen\<inverse>)^{|n|}].
+       Requires: group iso extraction + fundamental group \<leftrightarrow> path_power bridge.
+       This is the last piece connecting abstract algebra to path topology.\<close>
 qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
