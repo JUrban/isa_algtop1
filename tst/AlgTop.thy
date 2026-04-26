@@ -8983,7 +8983,28 @@ proof -
     \<comment> \<open>Bounded/unbounded: via Lemma_61_1_components_correspond.\<close>
     \<comment> \<open>Bounded/unbounded via Lemma_61_1. Need: C' compact, W1/W2 \<in> components.\<close>
     have hC'_compact: "top1_compact_on C' (subspace_topology top1_S2 top1_S2_topology C')"
-      sorry \<comment> \<open>C' = C1'\<union>C2'. Both compact (arc images of [0,1]). Union of compact is compact.\<close>
+    proof -
+      \<comment> \<open>C' closed in S^2 (C1' \<union> C2' both closed, union of closed is closed).\<close>
+      have hC'_closed: "closedin_on top1_S2 top1_S2_topology C'"
+      proof -
+        have "top1_S2 - C' = (top1_S2 - C1') \<inter> (top1_S2 - C2')" using hC'_decomp by (by100 blast)
+        moreover have "(top1_S2 - C1') \<in> top1_S2_topology"
+          using hC1'_closed unfolding closedin_on_def by (by100 blast)
+        moreover have "(top1_S2 - C2') \<in> top1_S2_topology"
+          using hC2'_closed unfolding closedin_on_def by (by100 blast)
+        ultimately have "top1_S2 - C' \<in> top1_S2_topology"
+          using topology_inter_open[OF
+            is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict]] by (by100 simp)
+        thus ?thesis unfolding closedin_on_def using hC'_sub_S2 by (by100 blast)
+      qed
+      \<comment> \<open>S^2 compact.\<close>
+      have hS2_compact: "top1_compact_on top1_S2 top1_S2_topology"
+        sorry \<comment> \<open>S^2 compact: S2_compact_standard + bridge to top1_compact_on.
+           Type matching for real\<times>real\<times>real needs product_topology_on_open_sets.\<close>
+      show ?thesis
+        using conjunct1[OF Theorem_26_2_strict[OF hS2_compact
+              top1_S2_is_topology_on_strict hC'_closed]] .
+    qed
     have hW1_comp: "W1_S2 \<in> top1_components_on (top1_S2 - C')
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C'))"
       sorry \<comment> \<open>W1 connected + open in S2C (complement of open W2) + maximal.\<close>
@@ -12653,6 +12674,9 @@ qed
 
 
 end
+
+
+
 
 
 
