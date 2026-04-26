@@ -16134,12 +16134,46 @@ proof -
       "seq = rec_nat (0, 1) (\<lambda>_ iv. pick_half iv)"
     \<comment> \<open>Properties: nested, length \<rightarrow> 0, each h0(interval) separates a' from b'.\<close>
     have hseq_0: "seq 0 = (0, 1)" unfolding seq_def by simp
-    have hseq_nested: "\<forall>n. fst (seq n) \<le> fst (seq (Suc n)) \<and> snd (seq (Suc n)) \<le> snd (seq n)"
-      sorry \<comment> \<open>From pick_half: midpoint is between lo and hi.\<close>
+    have hseq_Suc: "\<And>n. seq (Suc n) = pick_half (seq n)" unfolding seq_def by simp
+    have hpick_half_props: "\<And>lo hi. let mid = (lo + hi) / 2 in
+        fst (pick_half (lo, hi)) = lo \<and> snd (pick_half (lo, hi)) = mid \<or>
+        fst (pick_half (lo, hi)) = mid \<and> snd (pick_half (lo, hi)) = hi"
+      unfolding pick_half_def by (simp add: Let_def)
     have hseq_len: "\<forall>n. snd (seq n) - fst (seq n) = (1/2)^n"
-      sorry \<comment> \<open>Induction: each step halves the interval.\<close>
+    proof (rule allI)
+      fix n show "snd (seq n) - fst (seq n) = (1/2)^n"
+      proof (induction n)
+        case 0 show ?case using hseq_0 by simp
+      next
+        case (Suc n)
+        have "seq (Suc n) = pick_half (seq n)" by (rule hseq_Suc)
+        obtain lo hi where hlh: "seq n = (lo, hi)" by (cases "seq n")
+        hence hlen: "hi - lo = (1/2)^n" using Suc by simp
+        have hmid: "(lo + hi) / 2 - lo = (hi - lo) / 2" "hi - (lo + hi) / 2 = (hi - lo) / 2"
+          by (simp_all add: field_simps)
+        from hpick_half_props[of lo hi] hlh
+        have "fst (pick_half (lo, hi)) = lo \<and> snd (pick_half (lo, hi)) = (lo+hi)/2 \<or>
+            fst (pick_half (lo, hi)) = (lo+hi)/2 \<and> snd (pick_half (lo, hi)) = hi"
+          by (simp add: Let_def)
+        hence "snd (seq (Suc n)) - fst (seq (Suc n)) = (hi - lo) / 2"
+          using \<open>seq (Suc n) = pick_half (seq n)\<close> hlh hmid by auto
+        thus ?case using hlen by simp
+      qed
+    qed
+    have hseq_nested: "\<forall>n. fst (seq n) \<le> fst (seq (Suc n)) \<and> snd (seq (Suc n)) \<le> snd (seq n)"
+    proof (rule allI, intro conjI)
+      fix n
+      obtain lo hi where hlh: "seq n = (lo, hi)" by (cases "seq n")
+      have hlen_pos: "hi - lo = (1/2)^n"
+        using spec[OF hseq_len, of n] hlh by simp
+      hence "lo \<le> hi" by (simp add: algebra_simps)
+      hence hmid_range: "lo \<le> (lo+hi)/2" "(lo+hi)/2 \<le> hi" by auto
+      from hpick_half_props[of lo hi] hlh
+      show "fst (seq n) \<le> fst (seq (Suc n))" sorry
+      show "snd (seq (Suc n)) \<le> snd (seq n)" sorry
+    qed
     have hseq_range: "\<forall>n. 0 \<le> fst (seq n) \<and> snd (seq n) \<le> 1"
-      sorry \<comment> \<open>Nested in [0,1].\<close>
+      sorry \<comment> \<open>Induction from hseq_0 + hseq_nested.\<close>
     have hseq_sep: "\<forall>n. \<not> (\<exists>f. top1_is_path_on (top1_S2 - h0 ` {fst (seq n)..snd (seq n)})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - h0 ` {fst (seq n)..snd (seq n)}))
         a' b' f)"
