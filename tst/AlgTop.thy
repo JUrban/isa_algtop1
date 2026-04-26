@@ -8116,13 +8116,48 @@ proof -
             unfolding subspace_topology_def by (by100 blast)
         qed
       next
+        \<comment> \<open>Extract properties of h1_arc and \<sigma>2inv.\<close>
+        have hh1_bij: "bij_betw h1_arc I_set C1_arc"
+          using hh1_arc unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hh1_cont: "top1_continuous_map_on I_set I_top C1_arc
+            (subspace_topology UNIV ?TR2 C1_arc) h1_arc"
+          using hh1_arc unfolding top1_homeomorphism_on_def by (by100 blast)
+        have h\<sigma>2inv_cont: "top1_continuous_map_on UNIV ?TR2
+            (top1_S2 - {north_pole})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {north_pole})) \<sigma>2inv"
+          using h\<sigma>2inv_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have h\<sigma>2inv_bij_full: "bij_betw \<sigma>2inv UNIV (top1_S2 - {north_pole})"
+          using h\<sigma>2inv_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have h\<sigma>2inv_inj_local: "inj \<sigma>2inv"
+          using h\<sigma>2inv_bij_full unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>bij_betw for composition.\<close>
+        have hbij_comp: "bij_betw h_comp I_set C1'"
+        proof -
+          have "bij_betw \<sigma>2inv C1_arc C1'"
+            unfolding C1'_def
+            by (rule inj_on_imp_bij_betw[OF inj_on_subset[OF
+                  h\<sigma>2inv_inj_local[unfolded inj_on_def[symmetric]] subset_UNIV]])
+          thus ?thesis unfolding h_comp_def
+            by (rule bij_betw_trans[OF hh1_bij])
+        qed
         show "top1_homeomorphism_on I_set I_top C1'
             (subspace_topology top1_S2 top1_S2_topology C1') h_comp"
-          sorry \<comment> \<open>\<sigma>2inv \<circ> h1_arc: compose homeomorphisms [0,1] \<rightarrow> C1_arc \<rightarrow> C1'.
-             bij_betw: compose bij_betw. continuous: compose continuous.
-             inverse continuous: compose inverse continuous.
-             Topology: sub(S^2, S^2_top, C1') = sub(S^2\{N}, sub(S^2, S^2_top, S^2\{N}), C1')
-             by subspace_topology_trans.\<close>
+          unfolding top1_homeomorphism_on_def
+        proof (intro conjI)
+          show "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          show "is_topology_on C1' (subspace_topology top1_S2 top1_S2_topology C1')"
+            by (rule subspace_topology_is_topology_on[OF
+                  is_topology_on_strict_imp[OF top1_S2_is_topology_on_strict] hC1'_sub_S2])
+          show "bij_betw h_comp I_set C1'" by (rule hbij_comp)
+          \<comment> \<open>Continuity: compose h1_arc (I\<rightarrow>C1_arc in R^2) with \<sigma>2inv (R^2\<rightarrow>S^2\{N}).\<close>
+          show "top1_continuous_map_on I_set I_top C1'
+              (subspace_topology top1_S2 top1_S2_topology C1') h_comp"
+            sorry \<comment> \<open>Compose continuous maps + restrict codomain to C1' \<subseteq> S^2\{N}.\<close>
+          show "top1_continuous_map_on C1'
+              (subspace_topology top1_S2 top1_S2_topology C1') I_set I_top
+              (inv_into I_set h_comp)"
+            sorry \<comment> \<open>Inverse continuous: compose inverse continuous maps.\<close>
+        qed
       qed
     qed
     have hC2'_arc: "top1_is_arc_on C2' (subspace_topology top1_S2 top1_S2_topology C2')"
@@ -12175,6 +12210,8 @@ qed
 
 
 end
+
+
 
 
 
