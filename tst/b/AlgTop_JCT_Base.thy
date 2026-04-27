@@ -2837,8 +2837,10 @@ proof
   have hft_S1: "\<And>t. ftilde t \<in> top1_S1" unfolding ftilde_def top1_S1_def by (by100 simp)
   have hft0: "ftilde 0 = (1, 0)" unfolding ftilde_def by simp
   have hft1: "ftilde 1 = (-1, 0)" unfolding ftilde_def by simp
+  have hft_cont: "continuous_on I_set ftilde"
+    unfolding ftilde_def by (intro continuous_intros)
   have hft_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (-1, 0) ftilde"
-    sorry \<comment> \<open>ftilde continuous on I (cos/sin continuous), range in S^1, endpoints correct.\<close>
+    sorry \<comment> \<open>Need top1_continuous_map_on bridge from continuous_on + range in S^1.\<close>
   \<comment> \<open>Step 2: f = q \<circ> ftilde is a loop at (1,0).\<close>
   define f where "f = ?q \<circ> ftilde"
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
