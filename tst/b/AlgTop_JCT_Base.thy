@@ -2443,11 +2443,99 @@ proof (intro allI impI)
            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
       proof -
         fix j assume haj: "a \<le> j" "j < b"
+        \<comment> \<open>Prove: if piece a \<subseteq> S (for S = U or V), then piece j \<subseteq> S.
+           By strong induction on j-a. Key step: sub0(j) \<in> piece(j-1) and piece(j-1) \<subseteq> S (IH).
+           So f(sub0(j)) \<in> S. Since f(sub0(j)) \<notin> U\<inter>V, f(sub0(j)) \<in> S - (other set).
+           h_deleted_same then gives piece(j) \<subseteq> S.\<close>
+        have "\<And>S. S \<in> {U, V} \<Longrightarrow> f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> S \<Longrightarrow>
+            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> S"
+        proof -
+          fix S assume hS: "S \<in> {U, V}" and hpieceA: "f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> S"
+          \<comment> \<open>By induction on j-a: all pieces in [a,j] map to S.\<close>
+          have "\<And>j'. a \<le> j' \<Longrightarrow> j' < b \<Longrightarrow> f ` {s\<in>I_set. sub0 j' \<le> s \<and> s \<le> sub0 (Suc j')} \<subseteq> S"
+          proof -
+            fix j' assume "a \<le> j'" "j' < b"
+            thus "f ` {s\<in>I_set. sub0 j' \<le> s \<and> s \<le> sub0 (Suc j')} \<subseteq> S"
+            proof (induction "j' - a" arbitrary: j')
+              case 0 hence "j' = a" by simp thus ?case using hpieceA by simp
+            next
+              case (Suc n)
+              hence hj'_pos: "a < j'" by linarith
+              have hj'_prev: "a \<le> j' - 1" "j' - 1 < b" using hj'_pos Suc.prems by linarith+
+              have "j' - 1 - a = n" using Suc.hyps(2) by linarith
+              hence hIH: "f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 (Suc (j'-1))} \<subseteq> S"
+                using Suc.hyps(1)[of "j'-1"] hj'_prev by simp
+              \<comment> \<open>sub0(j') \<in> piece(j'-1), so f(sub0(j')) \<in> S.\<close>
+              have hSuc_eq: "Suc (j' - 1) = j'" using hj'_pos by simp
+              hence hIH': "f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> S" using hIH by simp
+              have hj'_lt_nsub: "j' < n_sub" using Suc.prems(2) hab(2) by simp
+              have hj'_in_I: "sub0 j' \<in> I_set"
+              proof -
+                have "sub0 0 < sub0 j'" using hsub0_strict_mono[of 0 j'] hj'_pos hj'_lt_nsub by linarith
+                hence "0 \<le> sub0 j'" using hsub0_0 by linarith
+                moreover have "sub0 j' < sub0 n_sub" using hsub0_strict_mono[of j' n_sub] hj'_lt_nsub by simp
+                hence "sub0 j' \<le> 1" using hsub0_n by linarith
+                ultimately show ?thesis unfolding top1_unit_interval_def by simp
+              qed
+              have "j' - 1 < n_sub" using hj'_lt_nsub by simp
+              have "sub0 (j'-1) < sub0 j'"
+                using hsub0_mono[rule_format, of "j'-1"] \<open>j'-1 < n_sub\<close> hSuc_eq by simp
+              hence "sub0 (j'-1) \<le> sub0 j'" by linarith
+              hence "sub0 j' \<in> {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'}"
+                using hj'_in_I by simp
+              hence "f (sub0 j') \<in> S" using hIH' by (by100 blast)
+              have hj'_not: "f (sub0 j') \<notin> U \<inter> V" using hno_good hj'_pos Suc.prems(2) by simp
+              have hj'_lt: "j' < n_sub" using Suc.prems(2) hab(2) by simp
+              \<comment> \<open>h_deleted_same at j': both adjacent pieces map to same set.\<close>
+              have h_same: "(f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> U
+                   \<and> f ` {s\<in>I_set. sub0 j' \<le> s \<and> s \<le> sub0 (Suc j')} \<subseteq> U)
+                \<or> (f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> V
+                   \<and> f ` {s\<in>I_set. sub0 j' \<le> s \<and> s \<le> sub0 (Suc j')} \<subseteq> V)"
+                using h_deleted_same[of j'] hj'_pos hj'_lt hj'_not by simp
+              \<comment> \<open>f(sub0(j')) \<in> S and \<notin> U\<inter>V. If S=U: f(sub0(j')) \<in> U-V, h_same gives U branch.
+                 If S=V: f(sub0(j')) \<in> V-U, h_same gives V branch.\<close>
+              show "f ` {s\<in>I_set. sub0 j' \<le> s \<and> s \<le> sub0 (Suc j')} \<subseteq> S"
+              proof -
+                \<comment> \<open>sub0(j') \<in> piece(j'-1) and f(sub0(j')) \<in> S, \<notin> U\<inter>V.
+                   If S = U: f(sub0(j')) \<notin> V. piece(j'-1) contains sub0(j') so piece(j'-1) \<not>\<subseteq> V.
+                   h_same: both \<subseteq> U or both \<subseteq> V. Since \<not>\<subseteq> V, both \<subseteq> U.
+                   Similarly for S = V.\<close>
+                have "f (sub0 j') \<notin> U \<or> f (sub0 j') \<notin> V" using hj'_not by (by100 blast)
+                have hprev_not_other: "(S = U \<longrightarrow> \<not> f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> V)
+                    \<and> (S = V \<longrightarrow> \<not> f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> U)"
+                proof (intro conjI impI)
+                  assume "S = U"
+                  hence "f (sub0 j') \<notin> V" using \<open>f (sub0 j') \<in> S\<close> hj'_not by (by100 blast)
+                  moreover have "sub0 j' \<in> {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'}"
+                    using hj'_in_I \<open>sub0 (j'-1) \<le> sub0 j'\<close> by simp
+                  ultimately show "\<not> f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> V"
+                    by (by100 blast)
+                next
+                  assume "S = V"
+                  hence "f (sub0 j') \<notin> U" using \<open>f (sub0 j') \<in> S\<close> hj'_not by (by100 blast)
+                  moreover have "sub0 j' \<in> {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'}"
+                    using hj'_in_I \<open>sub0 (j'-1) \<le> sub0 j'\<close> by simp
+                  ultimately show "\<not> f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> U"
+                    by (by100 blast)
+                qed
+                show ?thesis
+                proof (cases "S = U")
+                  case True thus ?thesis using h_same hprev_not_other by (by100 blast)
+                next
+                  case False hence "S = V" using hS by (by100 blast)
+                  thus ?thesis using h_same hprev_not_other by (by100 blast)
+                qed
+              qed
+            qed
+          qed
+          thus "f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> S" using haj by simp
+        qed
+        note hdir = this
         show "(f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> U \<longrightarrow>
            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
         \<and> (f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V \<longrightarrow>
            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
-          sorry \<comment> \<open>Induction on j - a. Base j=a: trivial. Step j+1: use h_deleted_same at j+1.\<close>
+          using hdir[of U] hdir[of V] by simp
       qed
       show "(\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
