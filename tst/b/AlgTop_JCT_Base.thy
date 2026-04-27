@@ -2244,29 +2244,51 @@ proof -
       show ?thesis
       proof -
         have hk1: "Suc k' = 1" using True by (by100 simp)
+        obtain g0 where hgs1: "gs = [g0]"
+          using Suc.prems(1) hk1 by (cases gs) (by100 simp)+
+        obtain f0 where hfs1: "fs = [f0]"
+          using Suc.prems(2) hk1 by (cases fs) (by100 simp)+
         have hfoldr_gs: "foldr top1_path_product gs (top1_constant_path x0)
             = top1_path_product (gs ! 0) (top1_constant_path x0)"
-          using Suc.prems(1) hk1 sorry
+          unfolding hgs1 by (by100 simp)
         have hfoldr_fs: "foldr top1_path_product fs
             (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))
             = top1_path_product (fs ! 0)
               (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))"
-          using Suc.prems(2) hk1 sorry
+          unfolding hfs1 by (by100 simp)
         have hg0: "gs ! 0 = top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
             (top1_path_reverse (\<alpha> (Suc k')))"
           using Suc.prems(5)[of 0] hk1 by (by100 simp)
+        have h\<alpha>0: "top1_is_path_on X TX x0 (a 0) (\<alpha> 0)"
+          using Suc.prems(6)[of 0] by (by100 simp)
+        have h\<alpha>1: "top1_is_path_on X TX x0 (a (Suc k')) (\<alpha> (Suc k'))"
+          using Suc.prems(6)[of "Suc k'"] by (by100 simp)
+        have hf0: "top1_is_path_on X TX (a 0) (a (Suc 0)) (fs ! 0)"
+          using Suc.prems(4)[of 0] hk1 by (by100 simp)
+        have hSk': "Suc 0 = Suc k'" using hk1 by (by100 simp)
+        have hrev: "top1_is_path_on X TX (a (Suc k')) x0 (top1_path_reverse (\<alpha> (Suc k')))"
+          by (rule top1_path_reverse_is_path[OF h\<alpha>1])
+        have h\<alpha>0f0: "top1_is_path_on X TX x0 (a (Suc k')) (top1_path_product (\<alpha> 0) (fs ! 0))"
+          using top1_path_product_is_path[OF hTX h\<alpha>0 hf0] hSk' by (by100 simp)
+        have hrevconst: "top1_is_path_on X TX (a (Suc k')) x0
+            (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))"
+          by (rule top1_path_product_is_path[OF hTX hrev hconst])
         have hassoc1: "top1_path_homotopic_on X TX x0 x0
             (top1_path_product (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
               (top1_path_reverse (\<alpha> (Suc k')))) (top1_constant_path x0))
             (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
               (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0)))"
-          sorry
+          by (rule Lemma_51_1_path_homotopic_sym[OF
+                Theorem_51_2_associativity[OF hTX h\<alpha>0f0 hrev hconst]])
+        have hf0': "top1_is_path_on X TX (a 0) (a (Suc k')) (fs ! 0)"
+          using hf0 hSk' by (by100 simp)
         have hassoc2: "top1_path_homotopic_on X TX x0 x0
             (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
               (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0)))
             (top1_path_product (\<alpha> 0) (top1_path_product (fs ! 0)
               (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))))"
-          sorry
+          by (rule Lemma_51_1_path_homotopic_sym[OF
+                Theorem_51_2_associativity[OF hTX h\<alpha>0 hf0' hrevconst]])
         have hchain: "top1_path_homotopic_on X TX x0 x0
             (top1_path_product (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
               (top1_path_reverse (\<alpha> (Suc k')))) (top1_constant_path x0))
@@ -3500,6 +3522,8 @@ qed
 
 
 end
+
+
 
 
 
