@@ -445,12 +445,77 @@ proof -
         qed
         \<comment> \<open>qi maps U_top into V1.\<close>
         have hqi_V1: "\<And>w. w \<in> U_top \<Longrightarrow> qi w \<in> V1"
-          sorry
+        proof -
+          fix w assume hw: "w \<in> U_top"
+          have "qi w = inv_into V1 q w" by (rule hqi_eq[OF hw])
+          moreover have "inv_into V1 q w \<in> V1"
+          proof -
+            have "q ` V1 = U_top" using \<open>bij_betw q V1 U_top\<close> unfolding bij_betw_def by (by100 blast)
+            hence "w \<in> q ` V1" using hw by simp
+            thus ?thesis by (rule inv_into_into)
+          qed
+          ultimately show "qi w \<in> V1" by simp
+        qed
         \<comment> \<open>qi is continuous on U_top (sqrt composed with continuous affine maps).\<close>
         have hqi_cont: "continuous_on U_top qi"
-          sorry
-        \<comment> \<open>Bridge: continuous_on + range gives top1_continuous_map_on.\<close>
-        show ?thesis sorry
+        proof -
+          have "continuous_on U_top (\<lambda>(a, b). (sqrt ((1+a)/2), sqrt ((1-a)/2)))"
+            unfolding split_def by (intro continuous_intros) auto
+          thus ?thesis unfolding qi_def by simp
+        qed
+        \<comment> \<open>Bridge: since qi = inv_into on U_top, and qi is continuous + maps into V1,
+           we get inv_into continuous from U_top to V1.\<close>
+        have hU_sub: "U_top \<subseteq> top1_S1" unfolding U_top_def by (by100 blast)
+        have hV1_sub: "V1 \<subseteq> top1_S1" unfolding V1_def by (by100 blast)
+        \<comment> \<open>U_top \<subseteq> UNIV (as pairs of reals), so continuous_on U_top qi gives
+           preimages of open sets are relatively open.\<close>
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix w assume "w \<in> U_top"
+          show "inv_into V1 q w \<in> V1" using hqi_eq[OF \<open>w \<in> U_top\<close>] hqi_V1[OF \<open>w \<in> U_top\<close>] by simp
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S1 top1_S1_topology V1"
+          obtain W where hW: "W \<in> top1_S1_topology" and hVeq: "V = V1 \<inter> W"
+            using hV unfolding subspace_topology_def by (by100 blast)
+          obtain W'' where hW'': "W'' \<in> product_topology_on top1_open_sets top1_open_sets"
+              and hWeq: "W = top1_S1 \<inter> W''"
+            using hW unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+          have hW'_open: "open W''" using hW''
+            by (metis product_topology_on_open_sets_real2 top1_open_sets_def mem_Collect_eq)
+          define W' where "W' = W''"
+          have hW': "open W'" and hW'eq: "W = top1_S1 \<inter> W'"
+            using hW'_open hWeq unfolding W'_def by auto
+          \<comment> \<open>{w \<in> U_top. inv_into w \<in> V} = {w \<in> U_top. qi w \<in> W'} (since qi maps into V1 \<subseteq> S^1).\<close>
+          have "{w \<in> U_top. inv_into V1 q w \<in> V} = {w \<in> U_top. qi w \<in> W'}"
+          proof (intro Collect_cong conj_cong refl)
+            fix w assume hw: "w \<in> U_top"
+            have "inv_into V1 q w = qi w" using hqi_eq[OF hw] by simp
+            moreover have "qi w \<in> V1" using hqi_V1[OF hw] .
+            moreover have "V1 \<subseteq> top1_S1" using hV1_sub .
+            ultimately show "(inv_into V1 q w \<in> V) = (qi w \<in> W')"
+              using hVeq hW'eq by auto
+          qed
+          \<comment> \<open>qi^{-1}(W') \<inter> U_top is open in U_top (by continuous_on).\<close>
+          moreover have "{w \<in> U_top. qi w \<in> W'} \<in> subspace_topology top1_S1 top1_S1_topology U_top"
+          proof -
+            obtain U where hU: "open U" and hUeq: "U \<inter> U_top = qi -` W' \<inter> U_top"
+              using hqi_cont hW' unfolding continuous_on_open_invariant by blast
+            have "{w \<in> U_top. qi w \<in> W'} = U \<inter> U_top" using hUeq by (by100 blast)
+            moreover have "U \<inter> U_top \<in> subspace_topology top1_S1 top1_S1_topology U_top"
+            proof -
+              have "U \<in> top1_open_sets" using hU unfolding top1_open_sets_def by simp
+              hence "U \<in> product_topology_on top1_open_sets top1_open_sets"
+                using product_topology_on_open_sets_real2 by (by100 metis)
+              hence "top1_S1 \<inter> U \<in> top1_S1_topology"
+                unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+              moreover have "U \<inter> U_top = U_top \<inter> (top1_S1 \<inter> U)" using hU_sub by blast
+              ultimately show ?thesis unfolding subspace_topology_def by blast
+            qed
+            ultimately show ?thesis by simp
+          qed
+          ultimately show "{w \<in> U_top. inv_into V1 q w \<in> V}
+              \<in> subspace_topology top1_S1 top1_S1_topology U_top" by simp
+        qed
       qed
     qed
     \<comment> \<open>q is a homeomorphism V2 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
