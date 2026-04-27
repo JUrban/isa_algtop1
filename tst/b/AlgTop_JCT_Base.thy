@@ -2640,7 +2640,59 @@ proof (intro allI impI)
         \<comment> \<open>For any s in merged piece, find j with sub0(j) \<le> s \<le> sub0(j+1).\<close>
         have hpoint: "\<And>s. s \<in> I_set \<Longrightarrow> sub0 ?a \<le> s \<Longrightarrow> s \<le> sub0 ?b \<Longrightarrow>
             \<exists>j. ?a \<le> j \<and> j < ?b \<and> sub0 j \<le> s \<and> s \<le> sub0 (Suc j)"
-          sorry \<comment> \<open>Monotone sequence covers interval. Standard real analysis.\<close>
+        proof -
+          fix s assume hs: "s \<in> I_set" "sub0 ?a \<le> s" "s \<le> sub0 ?b"
+          \<comment> \<open>Find the largest j with ?a \<le> j \<le> ?b and sub0(j) \<le> s.\<close>
+          define J where "J = {j. ?a \<le> j \<and> j \<le> ?b \<and> sub0 j \<le> s}"
+          have "?a \<in> J" using hs(2) hab_lt unfolding J_def by simp
+          hence "J \<noteq> {}" by (by100 blast)
+          have "finite J" unfolding J_def by simp
+          have "J \<subseteq> {?a..?b}" unfolding J_def by auto
+          obtain j where hj: "j \<in> J" "\<forall>k \<in> J. k \<le> j"
+            using \<open>finite J\<close> \<open>J \<noteq> {}\<close> by (metis Max_in Max_ge)
+          have "?a \<le> j" "j \<le> ?b" "sub0 j \<le> s" using hj(1) unfolding J_def by auto
+          \<comment> \<open>If j = ?b, take ?b-1 instead (which works since sub0(?b-1) \<le> s \<le> sub0(?b)).\<close>
+          define j' where "j' = (if j < ?b then j else ?b - 1)"
+          have "?a \<le> j'" and "j' < ?b"
+            unfolding j'_def using \<open>?a \<le> j\<close> hab_lt by auto
+          have "sub0 j' \<le> s"
+          proof (cases "j < ?b")
+            case True thus ?thesis unfolding j'_def using \<open>sub0 j \<le> s\<close> by simp
+          next
+            case False
+            hence "j = ?b" using \<open>j \<le> ?b\<close> by simp
+            hence "sub0 ?b \<le> s" using \<open>sub0 j \<le> s\<close> by simp
+            hence "s = sub0 ?b" using hs(3) by linarith
+            have "sub0 (?b - 1) < sub0 ?b"
+              using hsub0_strict_mono[of "?b-1" "?b"] hab_lt hb_le by linarith
+            have "j' = ?b - 1" unfolding j'_def using False by simp
+            hence "sub0 j' = sub0 (?b - 1)" by simp
+            thus ?thesis using \<open>sub0 (?b - 1) < sub0 ?b\<close> \<open>s = sub0 ?b\<close> by linarith
+          qed
+          have "s \<le> sub0 (Suc j')"
+          proof (cases "j < ?b")
+            case True
+            hence "j' = j" unfolding j'_def by simp
+            show ?thesis
+            proof (rule ccontr)
+              assume "\<not> s \<le> sub0 (Suc j')"
+              hence "sub0 (Suc j') \<le> s" by linarith
+              hence "sub0 (Suc j) \<le> s" using \<open>j' = j\<close> by simp
+              have "Suc j \<in> J" unfolding J_def
+                using \<open>?a \<le> j\<close> True \<open>sub0 (Suc j) \<le> s\<close> by simp
+              hence "Suc j \<le> j" using hj(2) by simp
+              thus False by simp
+            qed
+          next
+            case False
+            hence hj_eq_b: "j = ?b" using \<open>j \<le> ?b\<close> by simp
+            hence "j' = ?b - 1" unfolding j'_def by simp
+            hence "Suc j' = ?b" using hab_lt by simp
+            show ?thesis using hs(3) \<open>Suc j' = ?b\<close> by simp
+          qed
+          show "\<exists>j. ?a \<le> j \<and> j < ?b \<and> sub0 j \<le> s \<and> s \<le> sub0 (Suc j)"
+            using \<open>?a \<le> j'\<close> \<open>j' < ?b\<close> \<open>sub0 j' \<le> s\<close> \<open>s \<le> sub0 (Suc j')\<close> by (by100 blast)
+        qed
         have hfinal: "\<And>S. (\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
             f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> S)
             \<Longrightarrow> f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} \<subseteq> S"
