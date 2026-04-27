@@ -3165,10 +3165,28 @@ proof (intro allI impI)
       qed
     qed
     \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
+    \<comment> \<open>Step 2f-1: f \<simeq> f1*f2*...*fm (Theorem 51.3: reparametrization preserves homotopy class).\<close>
+    define fi_list where "fi_list = map fi [0..<m]"
+    have hf_fi: "top1_path_homotopic_on X TX x0 x0 f
+        (foldr top1_path_product fi_list (top1_constant_path x0))"
+      sorry \<comment> \<open>Theorem 51.3: f restricted to [sub(i),sub(i+1)] and reparametrized gives fi(i).
+         f = f1*f2*...*fm up to reparametrization (piecewise linear). Standard path algebra.\<close>
+    \<comment> \<open>Step 2f-2: f1*...*fm \<simeq> g1*...*gm (telescoping via \<alpha>i * rev(\<alpha>i) \<simeq> const).\<close>
+    have hfi_gi: "top1_path_homotopic_on X TX x0 x0
+        (foldr top1_path_product fi_list (top1_constant_path x0))
+        (foldr top1_path_product gs_list (top1_constant_path x0))"
+      sorry \<comment> \<open>Telescoping: gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)).
+         \<alpha>0 = const_x0, \<alpha>m = const_x0.
+         g1*...*gm = (\<alpha>0*f1*rev(\<alpha>1)) * (\<alpha>1*f2*rev(\<alpha>2)) * ... * (\<alpha>(m-1)*fm*rev(\<alpha>m))
+         = \<alpha>0 * f1 * (rev(\<alpha>1)*\<alpha>1) * f2 * (rev(\<alpha>2)*\<alpha>2) * ... * fm * rev(\<alpha>m)
+         \<simeq> const * f1 * const * f2 * const * ... * fm * const (inverse cancellation)
+         = f1 * f2 * ... * fm (identity removal).\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
-      sorry \<comment> \<open>f \<simeq> f1*...*fm (Theorem 51.3: reparametrization)
-         \<simeq> (\<alpha>0*f1*rev(\<alpha>1)) * (\<alpha>1*f2*rev(\<alpha>2)) * ... (telescoping, since \<alpha>0 = \<alpha>m = const).\<close>
+    proof -
+      have hTX': "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      show ?thesis using Lemma_51_1_path_homotopic_trans[OF hTX' hf_fi hfi_gi] .
+    qed
     show ?thesis by (rule that[OF hgs_len hgs_loops hgs_product])
   qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
@@ -14220,3 +14238,8 @@ end
 
 
 
+
+
+  
+ 
+  
