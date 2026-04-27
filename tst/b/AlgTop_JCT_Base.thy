@@ -2315,8 +2315,43 @@ proof (intro allI impI)
     qed
     have hsub1_0: "sub1 0 = 0" unfolding sub1_def using hgl_0 hsub0_0 by simp
     have hsub1_n: "sub1 n1 = 1" unfolding sub1_def using hgl_n hsub0_n by simp
+    have hsub0_strict_mono: "\<And>j k. j < k \<Longrightarrow> k \<le> n_sub \<Longrightarrow> sub0 j < sub0 k"
+    proof -
+      fix j k :: nat assume "j < k" "k \<le> n_sub"
+      thus "sub0 j < sub0 k"
+      proof (induction k)
+        case 0 thus ?case by simp
+      next
+        case (Suc k)
+        show ?case
+        proof (cases "j = k")
+          case True thus ?thesis using hsub0_mono Suc.prems by simp
+        next
+          case False
+          hence "j < k" using Suc.prems by simp
+          hence "sub0 j < sub0 k" using Suc.IH Suc.prems by simp
+          also have "sub0 k < sub0 (Suc k)" using hsub0_mono Suc.prems by simp
+          finally show ?thesis .
+        qed
+      qed
+    qed
     have hsub1_mono: "\<forall>i<n1. sub1 i < sub1 (Suc i)"
-      sorry \<comment> \<open>sub0 strictly monotone + glist strictly increasing (sorted distinct) \<Rightarrow> sub1 strictly monotone.\<close>
+    proof (intro allI impI)
+      fix i assume hi: "i < n1"
+      have hi_len: "i < length glist" using hi n1_def hglist_len by linarith
+      have hsi_len: "Suc i < length glist" using hi n1_def hglist_len by linarith
+      have "glist ! i < glist ! Suc i"
+        using sorted_nth_mono[OF hglist_sorted, of i "Suc i"] hsi_len
+              nth_eq_iff_index_eq[OF hglist_distinct hi_len hsi_len]
+        by linarith
+      moreover have "glist ! Suc i \<le> n_sub"
+      proof -
+        have "glist ! Suc i \<in> set glist" using hsi_len by (rule nth_mem)
+        thus ?thesis using hglist_sub by auto
+      qed
+      ultimately show "sub1 i < sub1 (Suc i)" unfolding sub1_def
+        using hsub0_strict_mono by simp
+    qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
       sorry \<comment> \<open>Each merged piece is a union of consecutive original pieces mapping to the same set.
