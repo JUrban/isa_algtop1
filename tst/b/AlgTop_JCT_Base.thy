@@ -3201,7 +3201,7 @@ proof (intro allI impI)
     have hfi_gi: "top1_path_homotopic_on X TX x0 x0
         (foldr top1_path_product fi_list (top1_constant_path x0))
         (foldr top1_path_product gs_list (top1_constant_path x0))"
-      sorry \<comment> \<open>Telescoping: The hardest path algebra step.
+      sorry \<comment> \<open>Telescoping with \<alpha>s'(0)=\<alpha>s'(m)=const_x0. The hardest path algebra step.
          gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)), \<alpha>0 = \<alpha>m = const_x0.
          By induction on m using:
          - Theorem_51_2_invgerse_right: rev(\<alpha>)*\<alpha> \<simeq> const
@@ -14272,6 +14272,7 @@ end
   
  
   
+
 
 
 
