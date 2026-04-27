@@ -309,7 +309,18 @@ proof -
             using ha_le by (simp add: real_sqrt_mult_self)
           have hqa: "x\<^sup>2 - y\<^sup>2 = a" using hx2 hy2 by simp
           have h2xy_eq_b2: "(2*x*y)\<^sup>2 = b\<^sup>2"
-            using hx2 hy2 hS1w sorry \<comment> \<open>Arithmetic: (2xy)^2 = 4*x^2*y^2 = (1+a)(1-a) = 1-a^2 = b^2.\<close>
+          proof -
+            have "2 * x\<^sup>2 = 1 + a" using hx2 by auto
+            have "2 * y\<^sup>2 = 1 - a" using hy2 by auto
+            have "(2*x*y)\<^sup>2 = 4 * (x\<^sup>2 * y\<^sup>2)"
+              by (simp add: power2_eq_square algebra_simps)
+            also have "4 * (x\<^sup>2 * y\<^sup>2) = (2 * x\<^sup>2) * (2 * y\<^sup>2)"
+              by (simp add: algebra_simps)
+            also have "\<dots> = (1+a) * (1-a)" using \<open>2*x\<^sup>2 = 1+a\<close> \<open>2*y\<^sup>2 = 1-a\<close> by simp
+            also have "\<dots> = 1 - a\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+            also have "\<dots> = b\<^sup>2" using hS1w by linarith
+            finally show ?thesis .
+          qed
           have hxy_nonneg: "2*x*y \<ge> 0" using hx_pos hy_nonneg by simp
           have hqb: "2*x*y = b" using h2xy_eq_b2 hxy_nonneg hb by (simp add: power2_eq_iff_nonneg)
           have hy_pos: "y > 0"
@@ -326,10 +337,121 @@ proof -
       qed
       show "top1_continuous_map_on V1 (subspace_topology top1_S1 top1_S1_topology V1)
           U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
-        sorry
+      proof -
+        have hV1_sub: "V1 \<subseteq> top1_S1" unfolding V1_def by (by100 blast)
+        have hU_sub: "U_top \<subseteq> top1_S1" unfolding U_top_def by (by100 blast)
+        have hq_V1: "top1_continuous_map_on V1 (subspace_topology top1_S1 top1_S1_topology V1)
+            top1_S1 top1_S1_topology q"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hq_cont hV1_sub])
+        have hq_img: "q ` V1 \<subseteq> U_top" using \<open>bij_betw q V1 U_top\<close> unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>Restrict range: V \<in> subspace(S^1, U_top) means V = U_top \<inter> W, W \<in> top_S1.
+           q^{-1}(V) \<inter> V1 = q^{-1}(W) \<inter> V1 \<in> subspace(S^1, V1).\<close>
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> V1" thus "q p \<in> U_top" using hq_img by (by100 blast)
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S1 top1_S1_topology U_top"
+          obtain W where hW: "W \<in> top1_S1_topology" and hVeq: "V = U_top \<inter> W"
+            using hV unfolding subspace_topology_def by (by100 blast)
+          have "{p \<in> V1. q p \<in> V} = {p \<in> V1. q p \<in> W}"
+            using hq_img hVeq by (by100 blast)
+          moreover have "{p \<in> V1. q p \<in> W} \<in> subspace_topology top1_S1 top1_S1_topology V1"
+            using hq_V1 hW unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "{p \<in> V1. q p \<in> V} \<in> subspace_topology top1_S1 top1_S1_topology V1" by simp
+        qed
+      qed
       show "top1_continuous_map_on U_top (subspace_topology top1_S1 top1_S1_topology U_top)
           V1 (subspace_topology top1_S1 top1_S1_topology V1) (inv_into V1 q)"
-        sorry
+      proof -
+        \<comment> \<open>The inverse is (a,b) \<mapsto> (sqrt((1+a)/2), sqrt((1-a)/2)).
+           This is continuous as a real-valued function on U_top.\<close>
+        define qi where "qi = (\<lambda>(a::real, b::real). (sqrt ((1+a)/2), sqrt ((1-a)/2)))"
+        \<comment> \<open>qi agrees with inv_into V1 q on U_top.\<close>
+        have hqi_eq: "\<And>w. w \<in> U_top \<Longrightarrow> qi w = inv_into V1 q w"
+        proof -
+          fix w assume hw: "w \<in> U_top"
+          \<comment> \<open>qi w \<in> V1 and q(qi w) = w, so inv_into gives qi w.\<close>
+          obtain a b where hab: "w = (a, b)" by (cases w) auto
+          have hS1w: "a\<^sup>2 + b\<^sup>2 = 1" and hb: "b > 0"
+            using hw unfolding U_top_def top1_S1_def hab by auto
+          have "b\<^sup>2 > 0" using hb by (simp add: power2_eq_square zero_less_mult_iff)
+          hence "a\<^sup>2 < 1" using hS1w by linarith
+          hence ha_bounds: "a < 1 \<and> -1 < a"
+          proof -
+            have "\<not> (a \<ge> 1)" proof assume "1 \<le> a"
+              hence "1 \<le> a * a" using mult_mono[of 1 a 1 a] by simp
+              thus False using \<open>a\<^sup>2 < 1\<close> by (simp add: power2_eq_square) qed
+            moreover have "\<not> (a \<le> -1)" proof assume "a \<le> -1"
+              hence "(-a) \<ge> 1" by linarith
+              hence "1 \<le> (-a)*(-a)" using mult_mono[of 1 "-a" 1 "-a"] by simp
+              hence "1 \<le> a*a" by simp
+              thus False using \<open>a\<^sup>2 < 1\<close> by (simp add: power2_eq_square) qed
+            ultimately show ?thesis by linarith
+          qed
+          define x where "x = sqrt ((1+a)/2)"
+          define y where "y = sqrt ((1-a)/2)"
+          have "qi w = (x, y)" unfolding qi_def hab x_def y_def by simp
+          moreover have "(x, y) \<in> V1"
+          proof -
+            have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+            have hy2: "y\<^sup>2 = (1-a)/2" unfolding y_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+            have "x > 0" unfolding x_def using ha_bounds by simp
+            have "y > 0"
+            proof -
+              have h2xy_eq_b2: "(2*x*y)\<^sup>2 = b\<^sup>2"
+              proof -
+                have "2*x\<^sup>2 = 1+a" using hx2 by auto
+                have "2*y\<^sup>2 = 1-a" using hy2 by auto
+                have "(2*x*y)\<^sup>2 = 4*(x\<^sup>2*y\<^sup>2)" by (simp add: power2_eq_square algebra_simps)
+                also have "\<dots> = (2*x\<^sup>2)*(2*y\<^sup>2)" by (simp add: algebra_simps)
+                also have "\<dots> = (1+a)*(1-a)" using \<open>2*x\<^sup>2 = 1+a\<close> \<open>2*y\<^sup>2 = 1-a\<close> by simp
+                also have "\<dots> = 1 - a\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+                also have "\<dots> = b\<^sup>2" using hS1w by linarith
+                finally show ?thesis .
+              qed
+              have "2*x*y \<ge> 0" using \<open>x > 0\<close> ha_bounds unfolding y_def
+                by (intro mult_nonneg_nonneg) auto
+              have "2*x*y = b" using h2xy_eq_b2 \<open>2*x*y \<ge> 0\<close> hb by (simp add: power2_eq_iff_nonneg)
+              hence "x*y > 0" using hb by simp
+              thus "y > 0" using \<open>x > 0\<close> by (simp add: zero_less_mult_iff)
+            qed
+            have "x\<^sup>2 + y\<^sup>2 = 1" using hx2 hy2 by simp
+            show ?thesis unfolding V1_def top1_S1_def using \<open>x > 0\<close> \<open>y > 0\<close> \<open>x\<^sup>2+y\<^sup>2=1\<close> by simp
+          qed
+          moreover have "q (x, y) = w"
+          proof -
+            have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+            have hy2: "y\<^sup>2 = (1-a)/2" unfolding y_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+            have "2*x\<^sup>2 = 1+a" using hx2 by auto
+            have "2*y\<^sup>2 = 1-a" using hy2 by auto
+            have hqa: "x\<^sup>2 - y\<^sup>2 = a" using hx2 hy2 by simp
+            have h2xy_eq_b2: "(2*x*y)\<^sup>2 = b\<^sup>2"
+            proof -
+              have "(2*x*y)\<^sup>2 = (2*x\<^sup>2)*(2*y\<^sup>2)" by (simp add: power2_eq_square algebra_simps)
+              also have "\<dots> = (1+a)*(1-a)" using \<open>2*x\<^sup>2=1+a\<close> \<open>2*y\<^sup>2=1-a\<close> by simp
+              also have "\<dots> = 1-a\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+              also have "\<dots> = b\<^sup>2" using hS1w by linarith
+              finally show ?thesis .
+            qed
+            have "x > 0" unfolding x_def using ha_bounds by simp
+            have "2*x*y \<ge> 0" using \<open>x > 0\<close> ha_bounds unfolding y_def
+              by (intro mult_nonneg_nonneg) auto
+            have hqb: "2*x*y = b"
+              using h2xy_eq_b2 \<open>2*x*y \<ge> 0\<close> hb by (simp add: power2_eq_iff_nonneg)
+            show ?thesis unfolding q_def hab using hqa hqb by simp
+          qed
+          ultimately show "qi w = inv_into V1 q w"
+            by (simp add: inv_into_f_eq[OF inj_on_subset[OF bij_betw_imp_inj_on[OF \<open>bij_betw q V1 U_top\<close>]]])
+        qed
+        \<comment> \<open>qi maps U_top into V1.\<close>
+        have hqi_V1: "\<And>w. w \<in> U_top \<Longrightarrow> qi w \<in> V1"
+          sorry
+        \<comment> \<open>qi is continuous on U_top (sqrt composed with continuous affine maps).\<close>
+        have hqi_cont: "continuous_on U_top qi"
+          sorry
+        \<comment> \<open>Bridge: continuous_on + range gives top1_continuous_map_on.\<close>
+        show ?thesis sorry
+      qed
     qed
     \<comment> \<open>q is a homeomorphism V2 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
     have hhomeo2: "top1_homeomorphism_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
