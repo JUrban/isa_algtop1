@@ -8247,7 +8247,7 @@ proof -
   moreover have "C1 \<subseteq> V"
   proof -
     have "?short_arc \<subseteq> finv ` (V \<inter> C')" using h_arc_sub by (by100 blast)
-    hence "f ` ?short_arc \<subseteq> f ` (finv ` (V \<inter> C'))" by (by100 blast)
+    hence "f ` ?short_arc \<subseteq> f ` (finv ` (V \<inter> C'))" by (by100 fast)
     moreover have "f ` (finv ` (V \<inter> C')) \<subseteq> V \<inter> C'"
     proof -
       have "\<And>y. y \<in> V \<inter> C' \<Longrightarrow> f (finv y) = y"
