@@ -2646,7 +2646,8 @@ proof -
     qed
     \<comment> \<open>q is a quotient map. Covering maps are quotient maps.\<close>
     have hq_quotient: "top1_quotient_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q"
-      sorry \<comment> \<open>Covering map \<Rightarrow> open map \<Rightarrow> quotient map. Standard fact.\<close>
+      sorry \<comment> \<open>Covering map \<Rightarrow> open map \<Rightarrow> quotient map. Standard fact.
+         q is open because each sheet maps homeomorphically.\<close>
     \<comment> \<open>By Theorem 22.2: g = q∘h constant on fibers, so \<exists>f with f∘q=g and f continuous iff g continuous.\<close>
     have hg_range: "\<forall>z\<in>top1_S1. (q \<circ> h) z \<in> top1_S1"
       using hqh_cont unfolding top1_continuous_map_on_def by (by100 blast)
