@@ -2289,21 +2289,28 @@ proof (intro allI impI)
     define sub1 where "sub1 j = sub0 (glist ! j)" for j
     have hgl_0: "glist ! 0 = 0"
     proof -
-      have "\<forall>x \<in> set glist. 0 \<le> x" using hglist_sub by (by100 blast)
-      hence "glist ! 0 \<le> 0"
-        using sorted_nth_mono[OF hglist_sorted, of 0] h0_mem hglist_len
-        sorry \<comment> \<open>First element of sorted list \<le> all elements, and 0 \<in> list.\<close>
+      obtain j where hj: "glist ! j = 0" "j < length glist"
+        using h0_mem by (metis in_set_conv_nth)
+      have "glist ! 0 \<le> glist ! j"
+        by (rule sorted_nth_mono[OF hglist_sorted]) (use hj hglist_len in auto)
+      hence "glist ! 0 \<le> 0" using hj(1) by simp
       moreover have "glist ! 0 \<ge> 0" by simp
       ultimately show ?thesis by simp
     qed
     have hgl_n: "glist ! n1 = n_sub"
     proof -
-      have "\<forall>x \<in> set glist. x \<le> n_sub" using hglist_sub by auto
-      hence "glist ! n1 \<ge> n_sub"
-        using sorted_nth_mono[OF hglist_sorted] hn_mem hglist_len n1_def
-        sorry \<comment> \<open>Last element of sorted list \<ge> all elements, and n_sub \<in> list.\<close>
+      obtain j where hj: "glist ! j = n_sub" "j < length glist"
+        using hn_mem by (metis in_set_conv_nth)
+      have "glist ! j \<le> glist ! n1"
+        by (rule sorted_nth_mono[OF hglist_sorted])
+           (use hj hglist_len in \<open>auto simp: n1_def\<close>)
+      hence "n_sub \<le> glist ! n1" using hj(1) by simp
       moreover have "glist ! n1 \<le> n_sub"
-        using hglist_sub n1_def hglist_len sorry
+      proof -
+        have "glist ! n1 \<in> set glist"
+          using hglist_len unfolding n1_def by (intro nth_mem) simp
+        thus ?thesis using hglist_sub by auto
+      qed
       ultimately show ?thesis by simp
     qed
     have hsub1_0: "sub1 0 = 0" unfolding sub1_def using hgl_0 hsub0_0 by simp
