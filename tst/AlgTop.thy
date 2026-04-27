@@ -4891,7 +4891,7 @@ proof -
     using hncn hT unfolding top1_connected_on_def by (by100 blast)
   then obtain U V where hU: "U \<in> TX" and hV: "V \<in> TX" and hUne: "U \<noteq> {}" and hVne: "V \<noteq> {}"
       and hdisj: "U \<inter> V = {}" and hcover: "U \<union> V = X"
-    by (by100 blast)
+    by blast
   obtain a where ha: "a \<in> U" using hUne by (by100 blast)
   obtain b where hb: "b \<in> V" using hVne by (by100 blast)
   have haX: "a \<in> X" and hbX: "b \<in> X" using ha hb hcover by (by100 blast)+
@@ -7761,7 +7761,58 @@ proof -
   qed
   obtain \<epsilon> :: real where h\<epsilon>: "\<epsilon> > 0" "\<epsilon> < pi"
       and h_arc_sub: "\<And>t. t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>} \<Longrightarrow> (cos t, sin t) \<in> finv ` (V \<inter> C')"
-    sorry \<comment> \<open>Open set in S^1 around (cos \<theta>, sin \<theta>) contains an \<epsilon>-arc.\<close>
+  proof -
+    \<comment> \<open>finv(V\<inter>C') open in S^1 topology. S^1 topology = subspace of R^2 euclidean.\<close>
+    \<comment> \<open>So \<exists> open W in R^2 with (cos \<theta>, sin \<theta>) \<in> W \<inter> S^1 \<subseteq> finv(V\<inter>C').\<close>
+    obtain W where hW: "open W" "(cos \<theta>, sin \<theta>) \<in> W"
+        "W \<inter> top1_S1 \<subseteq> finv ` (V \<inter> C')"
+    proof -
+      have "finv ` (V \<inter> C') \<in> top1_S1_topology" by (rule hfinv_VC'_open)
+      then obtain W0 where "W0 \<in> product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+          "finv ` (V \<inter> C') = top1_S1 \<inter> W0"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      have "open W0" using \<open>W0 \<in> _\<close> product_topology_on_open_sets_real2
+        unfolding top1_open_sets_def by (by100 simp)
+      moreover have "(cos \<theta>, sin \<theta>) \<in> W0"
+      proof -
+        have "(cos \<theta>, sin \<theta>) \<in> finv ` (V \<inter> C')" using hp_in_VC' h\<theta> by simp
+        thus ?thesis using \<open>finv ` (V \<inter> C') = top1_S1 \<inter> W0\<close> by (by100 blast)
+      qed
+      moreover have "W0 \<inter> top1_S1 \<subseteq> finv ` (V \<inter> C')"
+        using \<open>finv ` (V \<inter> C') = top1_S1 \<inter> W0\<close> by (by100 blast)
+      ultimately show ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>W open in R^2, so \<exists>\<delta>>0. ball((cos \<theta>,sin \<theta>),\<delta>) \<subseteq> W.\<close>
+    \<comment> \<open>The continuous map t \<mapsto> (cos t, sin t) at \<theta> maps into the open set W.
+       By continuity, \<exists>\<epsilon>>0 s.t. the arc of width 2\<epsilon> maps into W.\<close>
+    define \<phi> where "\<phi> = (\<lambda>t::real. (cos t, sin t) :: real \<times> real)"
+    have h\<phi>_cont: "continuous_on UNIV \<phi>" unfolding \<phi>_def by (intro continuous_intros)
+    have h\<phi>\<theta>: "\<phi> \<theta> = (cos \<theta>, sin \<theta>)" unfolding \<phi>_def by simp
+    have h\<phi>\<theta>_in_W: "\<phi> \<theta> \<in> W" using hW(2) h\<phi>\<theta> by simp
+    \<comment> \<open>Continuity at \<theta>: \<exists>\<epsilon>0>0. |t-\<theta>| < \<epsilon>0 \<Rightarrow> \<phi>(t) \<in> W.\<close>
+    obtain \<epsilon>0 :: real where h\<epsilon>0: "\<epsilon>0 > 0" "\<And>t. \<bar>t - \<theta>\<bar> < \<epsilon>0 \<Longrightarrow> (cos t, sin t) \<in> W"
+      sorry \<comment> \<open>Continuity of (cos,sin) at \<theta> + W open + \<phi>(\<theta>) \<in> W \<Rightarrow> \<exists>\<epsilon>>0 preimage.\<close>
+    have h_arc_in_S1: "\<And>t. (cos t, sin t) \<in> top1_S1" unfolding top1_S1_def
+      using sin_cos_squared_add2 by simp
+    define \<epsilon>1 where "\<epsilon>1 = min (\<epsilon>0 / 2) (pi / 2)"
+    have h\<epsilon>1: "\<epsilon>1 > 0" "\<epsilon>1 < pi"
+    proof -
+      show "\<epsilon>1 > 0" unfolding \<epsilon>1_def using h\<epsilon>0(1) pi_gt_zero by simp
+      have "\<epsilon>1 \<le> pi/2" unfolding \<epsilon>1_def by simp
+      also have "pi/2 < pi" using pi_gt_zero by simp
+      finally show "\<epsilon>1 < pi" .
+    qed
+    have "\<And>t. t \<in> {\<theta>-\<epsilon>1..\<theta>+\<epsilon>1} \<Longrightarrow> (cos t, sin t) \<in> finv ` (V \<inter> C')"
+    proof -
+      fix t assume "t \<in> {\<theta>-\<epsilon>1..\<theta>+\<epsilon>1}"
+      hence "\<bar>t - \<theta>\<bar> \<le> \<epsilon>1" by auto
+      hence "\<bar>t - \<theta>\<bar> < \<epsilon>0" unfolding \<epsilon>1_def using h\<epsilon>0(1) by auto
+      hence "(cos t, sin t) \<in> W" by (rule h\<epsilon>0(2))
+      moreover have "(cos t, sin t) \<in> top1_S1" by (rule h_arc_in_S1)
+      ultimately show "(cos t, sin t) \<in> finv ` (V \<inter> C')" using hW(3) by (by100 blast)
+    qed
+    thus ?thesis using that h\<epsilon>1 by (by100 blast)
+  qed
   \<comment> \<open>Step 4: Define arcs. C1 = f(short arc), C2 = f(long arc).\<close>
   let ?short_arc = "{(cos t, sin t) | t. t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}}"
   let ?long_arc = "{(cos t, sin t) | t. t \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}}"
