@@ -2522,8 +2522,10 @@ proof (intro allI impI)
                 proof (cases "S = U")
                   case True thus ?thesis using h_same hprev_not_other by (by100 blast)
                 next
-                  case False hence "S = V" using hS by (by100 blast)
-                  thus ?thesis using h_same hprev_not_other by (by100 blast)
+                  case False hence hSV: "S = V" using hS by (by100 blast)
+                  hence "\<not> f ` {s\<in>I_set. sub0 (j'-1) \<le> s \<and> s \<le> sub0 j'} \<subseteq> U"
+                    using hprev_not_other by simp
+                  thus ?thesis using h_same hSV by (by100 blast)
                 qed
               qed
             qed
@@ -2545,7 +2547,11 @@ proof (intro allI impI)
         case True
         have "\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
             f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U"
-          using True h_all_same_as_a by (by100 blast)
+        proof (intro allI impI)
+          fix j assume "a \<le> j" "j < b"
+          thus "f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U"
+            using True h_all_same_as_a[of j] by simp
+        qed
         thus ?thesis by (by100 blast)
       next
         case False
@@ -2573,7 +2579,54 @@ proof (intro allI impI)
         thus ?thesis using hglist_sub by auto
       qed
       have hno_good_ab: "\<forall>k. ?a < k \<longrightarrow> k < ?b \<longrightarrow> f (sub0 k) \<notin> U \<inter> V"
-        sorry \<comment> \<open>Points between consecutive good indices are NOT good (filtered out).\<close>
+      proof (intro allI impI)
+        fix k assume hk: "?a < k" "k < ?b"
+        \<comment> \<open>k is between consecutive glist elements, so k \<notin> set glist.\<close>
+        have "k \<notin> set glist"
+        proof
+          assume "k \<in> set glist"
+          then obtain m where hm: "m < length glist" "glist ! m = k" by (metis in_set_conv_nth)
+          \<comment> \<open>glist!i < k = glist!m, and glist sorted+distinct \<Rightarrow> i < m.\<close>
+          have "i \<noteq> m" using hk(1) hm(2) by auto
+          have "i \<le> m \<or> m \<le> i" by linarith
+          hence "i < m"
+          proof
+            assume "i \<le> m" thus "i < m" using \<open>i \<noteq> m\<close> by simp
+          next
+            assume "m \<le> i"
+            hence "glist ! m \<le> glist ! i" using sorted_nth_mono[OF hglist_sorted] hi_len hm(1) by auto
+            hence "k \<le> ?a" using hm(2) by simp
+            thus "i < m" using hk(1) by simp
+          qed
+          \<comment> \<open>k = glist!m < glist!(Suc i), and sorted+distinct \<Rightarrow> m < Suc i.\<close>
+          have "m \<noteq> Suc i"
+          proof
+            assume "m = Suc i"
+            hence "glist ! m = ?b" by simp
+            thus False using hm(2) hk(2) by simp
+          qed
+          have "m \<le> Suc i \<or> Suc i \<le> m" by linarith
+          hence "m < Suc i"
+          proof
+            assume "m \<le> Suc i" thus ?thesis using \<open>m \<noteq> Suc i\<close> by simp
+          next
+            assume "Suc i \<le> m"
+            hence "glist ! Suc i \<le> glist ! m" using sorted_nth_mono[OF hglist_sorted] hsi_len hm(1) by auto
+            thus ?thesis using hm(2) hk(2) by simp
+          qed
+          thus False using \<open>i < m\<close> by simp
+        qed
+        have "k \<le> n_sub" using hk(2) hb_le by linarith
+        hence "k \<in> set [0..<Suc n_sub]" by auto
+        hence "\<not> good k" using \<open>k \<notin> set glist\<close> unfolding glist_def by auto
+        moreover have "k \<noteq> 0" using hk(1) by simp
+        moreover have "k \<noteq> n_sub"
+        proof -
+          have "k < n_sub" using \<open>k \<le> n_sub\<close> hk(2) hb_le by linarith
+          thus ?thesis by simp
+        qed
+        ultimately show "f (sub0 k) \<notin> U \<inter> V" unfolding good_def by simp
+      qed
       \<comment> \<open>h_range_same: all original pieces in [?a, ?b) map to U, or all map to V.\<close>
       have h_all: "(\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
@@ -13691,4 +13744,5 @@ qed
 
 
 end
+
 
