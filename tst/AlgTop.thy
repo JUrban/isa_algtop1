@@ -11189,8 +11189,15 @@ proof -
         "top1_path_connected_on W2 (subspace_topology UNIV ?TR2 W2)"
         "(\<exists>M. \<forall>p\<in>W1. fst p ^ 2 + snd p ^ 2 \<le> M)"
         "(\<forall>M. \<exists>p\<in>W2. fst p ^ 2 + snd p ^ 2 > M)"
-      using Theorem_63_4_JordanCurve[OF hfBd_SCC]
-      sorry \<comment> \<open>Decompose JCT existential (10 conjuncts, blast too slow).\<close>
+    proof -
+      obtain U V where "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = UNIV - f ` frontier B"
+          "top1_path_connected_on U (subspace_topology UNIV ?TR2 U)"
+          "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)"
+          "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
+          "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
+        using Theorem_63_4_JordanCurve[OF hfBd_SCC] by metis
+      thus ?thesis using that by simp
+    qed
     \<comment> \<open>Steps 4-5: f(x) \<in> W1 (bounded), W1 \<subseteq> f(U).\<close>
     have "f x \<in> W1" sorry
     moreover have "W1 \<subseteq> f ` U" sorry
