@@ -2417,10 +2417,35 @@ proof (intro allI impI)
         ultimately show ?thesis by (by100 blast)
       qed
     qed
+    \<comment> \<open>All original pieces between consecutive good points map to the same set (U or V).
+       Proof by induction: if a deleted point is between them, h_deleted_same says
+       both adjacent pieces map to the same set, so we can extend by one step.\<close>
+    have h_range_same: "\<And>a b. a < b \<Longrightarrow> b \<le> n_sub \<Longrightarrow>
+        (\<forall>k. a < k \<longrightarrow> k < b \<longrightarrow> f (sub0 k) \<notin> U \<inter> V) \<Longrightarrow>
+        (\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
+        \<or> (\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
+    proof -
+      fix a b :: nat assume hab: "a < b" "b \<le> n_sub"
+          and hno_good: "\<forall>k. a < k \<longrightarrow> k < b \<longrightarrow> f (sub0 k) \<notin> U \<inter> V"
+      \<comment> \<open>Base: piece a maps to U or V.\<close>
+      have ha_lt: "a < n_sub" using hab by simp
+      have hpiece_a: "f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> U
+          \<or> f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V"
+        using hsub0_UV[rule_format, OF ha_lt] by simp
+      \<comment> \<open>Induction: extend from piece a to piece b-1.\<close>
+      show "(\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
+        \<or> (\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
+        sorry \<comment> \<open>Induction on b-a using h_deleted_same. Base: b=a+1, single piece.
+           Step: use h_deleted_same at b-1 (deleted), extend from [a,b-1] to [a,b].\<close>
+    qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
-      sorry \<comment> \<open>Uses h_deleted_same: all original pieces between two good points map to the same set.
-         The merged piece is the union of these original pieces, hence maps to the same set.\<close>
+      sorry \<comment> \<open>Apply h_range_same to a=glist!i, b=glist!(i+1).
+         Merged piece = union of original pieces in [a,b), all mapping to same set.\<close>
     have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
       fix i assume "i \<le> n1"
