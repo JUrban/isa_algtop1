@@ -2004,6 +2004,7 @@ proof -
       ultimately show "p \<in> {p \<in> top1_S1. q p \<in> U_left}" unfolding U_left_def using hpS1 by auto
     qed
     \<comment> \<open>Homeomorphisms V7 \<rightarrow> U_left and V8 \<rightarrow> U_left. Same pattern.\<close>
+    \<comment> \<open>hhomeo7/hhomeo8: same pattern as hhomeo5/hhomeo6 but using b/(2y) inverse.\<close>
     have hhomeo7: "top1_homeomorphism_on V7 (subspace_topology top1_S1 top1_S1_topology V7)
         U_left (subspace_topology top1_S1 top1_S1_topology U_left) q" sorry
     have hhomeo8: "top1_homeomorphism_on V8 (subspace_topology top1_S1 top1_S1_topology V8)
