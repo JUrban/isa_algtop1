@@ -2872,11 +2872,17 @@ proof (intro allI impI)
       show "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) (\<alpha>s' i)"
       proof (cases "i = 0 \<or> i = m")
         case True
-        hence "\<alpha>s' i = top1_constant_path x0" unfolding \<alpha>s'_def by simp
-        moreover have "f (subdivision i) = x0"
+        have h\<alpha>_const: "\<alpha>s' i = top1_constant_path x0" unfolding \<alpha>s'_def using True by simp
+        have hf_x0: "f (subdivision i) = x0"
           using True hsub0 hsubm hf
           unfolding top1_is_loop_on_def top1_is_path_on_def by auto
-        ultimately show ?thesis sorry \<comment> \<open>const_x0 is path x0\<rightarrow>x0 in U\<inter>V (x0 \<in> U\<inter>V).\<close>
+        have hUVX: "U \<inter> V \<subseteq> X" using assms(2,3) unfolding openin_on_def by (by100 blast)
+        have "is_topology_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+          by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]])
+             (use hUVX in blast)
+        hence "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x0 (top1_constant_path x0)"
+          by (rule top1_constant_path_is_path) (rule hx0)
+        thus ?thesis using h\<alpha>_const hf_x0 by simp
       next
         case False thus ?thesis unfolding \<alpha>s'_def using h\<alpha>s \<open>i \<le> m\<close> by simp
       qed
@@ -14266,5 +14272,8 @@ end
   
  
   
+
+
+
 
 
