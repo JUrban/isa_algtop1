@@ -1375,9 +1375,19 @@ proof -
   qed
 
 text \<open>N-fold product of a loop: f^0 = const, f^(n+1) = f * f^n.\<close>
-fun top1_path_power :: "(real \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> (real \<Rightarrow> 'a)" where
+primrec top1_path_power :: "(real \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> nat \<Rightarrow> (real \<Rightarrow> 'a)" where
   "top1_path_power f x 0 = top1_constant_path x"
 | "top1_path_power f x (Suc n) = top1_path_product f (top1_path_power f x n)"
+
+declare top1_path_power.simps[simp del]
+
+lemma top1_path_power_0[simp]:
+  "top1_path_power f x 0 = top1_constant_path x"
+  unfolding top1_path_power_def by simp
+
+lemma top1_path_power_Suc[simp]:
+  "top1_path_power f x (Suc n) = top1_path_product f (top1_path_power f x n)"
+  unfolding top1_path_power_def by simp
 
 lemma top1_path_power_is_path:
   assumes "is_topology_on X TX" and "top1_is_loop_on X TX a f"
@@ -1388,12 +1398,12 @@ proof (induction n)
     using top1_is_loop_on_start[OF assms(2)]
           top1_is_loop_on_continuous[OF assms(2)]
     unfolding top1_continuous_map_on_def top1_unit_interval_def by force
-  thus ?case by (simp add: top1_constant_path_is_path[OF assms(1)])
+  thus ?case by (simp only: top1_path_power_0 top1_constant_path_is_path[OF assms(1) haX])
 next
   case (Suc n)
   have hf: "top1_is_path_on X TX a a f"
     using assms(2) unfolding top1_is_loop_on_def by simp
-  show ?case by (simp add: top1_path_product_is_path[OF assms(1) hf Suc])
+  show ?case by (simp only: top1_path_power_Suc top1_path_product_is_path[OF assms(1) hf Suc])
 qed
 
 lemma top1_path_power_is_loop:
