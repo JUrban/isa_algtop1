@@ -2827,7 +2827,135 @@ lemma antipode_preserving_basepoint_nontrivial:
   shows "\<not> (\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
       \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
             (g \<circ> f) (top1_constant_path (1, 0)))"
-  sorry
+proof
+  assume hall: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+      \<longrightarrow> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+            (g \<circ> f) (top1_constant_path (1, 0))"
+  let ?q = "\<lambda>(x, y). (x^2 - y^2 :: real, 2*x*y)"
+  \<comment> \<open>Step 1: Construct f\<tilde> = upper semicircle from (1,0) to (-1,0).\<close>
+  define ftilde where "ftilde t = (cos (pi * t), sin (pi * t))" for t :: real
+  have hft_S1: "\<And>t. ftilde t \<in> top1_S1" unfolding ftilde_def top1_S1_def by (by100 simp)
+  have hft0: "ftilde 0 = (1, 0)" unfolding ftilde_def by simp
+  have hft1: "ftilde 1 = (-1, 0)" unfolding ftilde_def by simp
+  have hft_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (-1, 0) ftilde"
+    sorry \<comment> \<open>ftilde continuous on I (cos/sin continuous), range in S^1, endpoints correct.\<close>
+  \<comment> \<open>Step 2: f = q \<circ> ftilde is a loop at (1,0).\<close>
+  define f where "f = ?q \<circ> ftilde"
+  have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+    sorry \<comment> \<open>q maps S^1 \<rightarrow> S^1, continuous, f(0) = q(1,0) = (1,0), f(1) = q(-1,0) = (1,0).\<close>
+  \<comment> \<open>Step 3: g \<circ> f is assumed trivial. So g \<circ> q \<circ> ftilde \<simeq> const.\<close>
+  have hgf_triv: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+      (g \<circ> f) (top1_constant_path (1, 0))"
+    using hall hf_loop by (by100 blast)
+  \<comment> \<open>Step 4: g \<circ> ftilde is a path from (1,0) to (-1,0) (since g(1,0)=(1,0), g(-1,0)=(-1,0)).\<close>
+  have hg_minus10: "g (-1, 0) = (-1, 0)"
+  proof -
+    have "g (-(1::real), -(0::real)) = (- fst (g (1, 0)), - snd (g (1, 0)))"
+      using hanti unfolding top1_antipode_preserving_S1_def
+      by (rule allE[of _ 1]) (rule allE[of _ 0], simp)
+    thus ?thesis using hg10 by simp
+  qed
+  have hgft_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (-1, 0) (g \<circ> ftilde)"
+    sorry \<comment> \<open>g continuous on S^1, ftilde path in S^1, composition is path. Endpoints: g(1,0)=(1,0), g(-1,0)=(-1,0).\<close>
+  \<comment> \<open>Step 5: q \<circ> (g \<circ> ftilde) = (g \<circ> f) (since q \<circ> g = k \<circ> q for some k, but more directly:
+     k \<circ> q \<circ> ftilde = k \<circ> f = ?, and q \<circ> g \<circ> ftilde = g \<circ> f? No: g \<circ> q \<noteq> q \<circ> g in general.
+     Actually: g \<circ> f = g \<circ> (q \<circ> ftilde) \<noteq> q \<circ> (g \<circ> ftilde) in general.
+     We need: q \<circ> (g \<circ> ftilde) is a loop at (1,0) that is ALSO trivial if g \<circ> f is trivial.
+
+     The correct argument: q \<circ> (g \<circ> ftilde) is a loop at q(g(1,0)) = q(1,0) = (1,0).
+     g \<circ> ftilde is a LIFTING of q \<circ> (g \<circ> ftilde) (since q \<circ> (g \<circ> ftilde) = q \<circ> g \<circ> ftilde).
+     If q \<circ> (g \<circ> ftilde) were trivial, then by Theorem 54.3 (unique lifting),
+     the lift g \<circ> ftilde would end at (1,0). But g \<circ> ftilde ends at (-1,0). Contradiction.
+
+     But we need q \<circ> (g \<circ> ftilde) to be trivial. We know g \<circ> f = g \<circ> (q \<circ> ftilde) is trivial.
+     And k \<circ> q = q \<circ> g, so q \<circ> g \<circ> ftilde = k \<circ> q \<circ> ftilde = k \<circ> f.
+     If g \<circ> f is trivial, is k \<circ> f trivial? Not necessarily directly.
+
+     Actually the textbook argument is different: it shows k_* is nontrivial, then q_* injective,
+     then k_* \<circ> q_* injective, then since q_* \<circ> g_* = k_* \<circ> q_* and k_* \<circ> q_* is injective,
+     g_* is injective (hence nontrivial).
+
+     Let me follow that approach instead.\<close>
+  \<comment> \<open>Direct approach: q \<circ> (g \<circ> ftilde) has lift g \<circ> ftilde ending at (-1,0) \<noteq> (1,0).
+     By covering theory, this loop is nontrivial. But q \<circ> (g \<circ> ftilde) = k \<circ> f.
+     And k \<circ> f is trivial iff g \<circ> f is trivial (since k_* is injective on π_1... wait, no).
+
+     Simpler: if g_* is trivial, then for ALL loops L, g \<circ> L \<simeq> const. In particular,
+     g \<circ> (q \<circ> ftilde) \<simeq> const. So q \<circ> g \<circ> (q \<circ> ftilde) \<simeq> q \<circ> const = const.
+     But q \<circ> g \<circ> (q \<circ> ftilde) = k \<circ> q \<circ> (q \<circ> ftilde) = k \<circ> (q \<circ> q \<circ> ftilde).
+     This doesn't simplify nicely.
+
+     Even simpler: q \<circ> (g \<circ> ftilde) = (q \<circ> g) \<circ> ftilde = (k \<circ> q) \<circ> ftilde = k \<circ> f.
+     So q \<circ> (g \<circ> ftilde) = k \<circ> f.
+
+     g \<circ> ftilde is a lift of k \<circ> f (since q \<circ> (g \<circ> ftilde) = k \<circ> f).
+     g \<circ> ftilde starts at (1,0) and ends at (-1,0).
+
+     If k \<circ> f were trivial, then by Theorem 54.3 the lift g \<circ> ftilde would be homotopic to
+     the constant lift at (1,0), hence end at (1,0). Contradiction.
+
+     Now: from g_* trivial, we get g \<circ> f \<simeq> const. Then k \<circ> (g \<circ> f) \<simeq> k \<circ> const = const.
+     But k \<circ> (g \<circ> f) = k \<circ> g \<circ> f = ??? We don't have k \<circ> g = anything useful.
+
+     OK, the correct path: we need k \<circ> f nontrivial.
+     k \<circ> f = q \<circ> (g \<circ> ftilde).
+     g \<circ> ftilde lifts k \<circ> f, starts at (1,0), ends at (-1,0).
+     If k \<circ> f were trivial, Theorem 54.3 gives g \<circ> ftilde ends at (1,0). Contradiction.
+     So k \<circ> f is nontrivial. Hence k_* nontrivial.
+
+     Now if g_* is trivial (the assumption), then g \<circ> L \<simeq> const for all L.
+     In particular g \<circ> f \<simeq> const. Then q_* \<circ> g_*([f]) = q_*([const]) = [const].
+     But q_* \<circ> g_* = k_* \<circ> q_*. So k_*(q_*([f])) = [const].
+     Since q_*([f]) = [q \<circ> f] = [q \<circ> q \<circ> ftilde]. Hmm, not useful.
+
+     THE KEY: q_* \<circ> g_* = k_* \<circ> q_* as homomorphisms.
+     g_* trivial \<Rightarrow> q_* \<circ> g_* trivial \<Rightarrow> k_* \<circ> q_* trivial.
+     But k_* nontrivial and q_* nontrivial (maps generator to double).
+     k_* \<circ> q_* maps generator [gen] to k_*(q_*([gen])) = k_*([gen^2]).
+     If k_* is injective (nontrivial on Z means injective), k_*([gen^2]) \<noteq> [const].
+     So k_* \<circ> q_* is nontrivial. Contradiction.\<close>
+  \<comment> \<open>Let's just use the direct lifting argument: k\<circ>f is nontrivial.\<close>
+  obtain k where hk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology k"
+      and hk_eq: "\<forall>z\<in>top1_S1. k (?q z) = ?q (g z)"
+    by (rule squaring_map_factorization[OF hg hanti])
+  \<comment> \<open>k \<circ> f = q \<circ> (g \<circ> ftilde).\<close>
+  have hkf_eq: "\<And>t. t \<in> I_set \<Longrightarrow> (k \<circ> f) t = (?q \<circ> (g \<circ> ftilde)) t"
+  proof -
+    fix t assume ht: "t \<in> I_set"
+    have "ftilde t \<in> top1_S1" by (rule hft_S1)
+    hence "(k \<circ> f) t = k (?q (ftilde t))" unfolding f_def comp_def by simp
+    also have "\<dots> = ?q (g (ftilde t))" using hk_eq \<open>ftilde t \<in> top1_S1\<close> by (by100 blast)
+    finally show "(k \<circ> f) t = (?q \<circ> (g \<circ> ftilde)) t" by (simp add: comp_def)
+  qed
+  \<comment> \<open>g \<circ> ftilde is a lift of k \<circ> f under q, starting at (1,0), ending at (-1,0).\<close>
+  \<comment> \<open>If k \<circ> f were trivial, Theorem 54.3 would force the lift to end at (1,0). Contradiction.\<close>
+  \<comment> \<open>So k \<circ> f is nontrivial.\<close>
+  \<comment> \<open>But from g_* trivial: g \<circ> f \<simeq> const. Then q \<circ> g = k \<circ> q means
+     q_*(g_*([f])) = k_*(q_*([f])). g_*([f]) = [const], so q_*([const]) = [const].
+     Hence k_*(q_*([f])) = [const]. But q_*([f]) = [q \<circ> f] and we showed
+     k \<circ> (q \<circ> ftilde) = k \<circ> f is nontrivial. Since q \<circ> ftilde = f,
+     k_*([f]) is nontrivial. So k_*(q_*([ftilde'])) where q \<circ> ftilde' = f...
+     This is getting circular. Let me just use the lifting argument directly.\<close>
+  \<comment> \<open>The key fact: q \<circ> (g \<circ> ftilde) = k \<circ> f, and g \<circ> ftilde lifts this loop,
+     starting at (1,0) and ending at (-1,0). If this loop were trivial (constant),
+     the lift would end at (1,0) by Theorem 54.3. Contradiction.\<close>
+  \<comment> \<open>Key: q \<circ> (g \<circ> ftilde) = k \<circ> f (from hkf_eq). g \<circ> ftilde is a lift of this loop,
+     starting at (1,0) and ending at (-1,0). By Theorem 54.3, if k \<circ> f were trivial,
+     the lift would end at (1,0). Contradiction. So k \<circ> f is nontrivial.
+
+     From g_* trivial: g \<circ> f \<simeq> const. Then q \<circ> g \<circ> f = k \<circ> q \<circ> f.
+     q \<circ> (g \<circ> f) \<simeq> q \<circ> const = const. So k \<circ> (q \<circ> f) \<simeq> const.
+     But q \<circ> f = q \<circ> (q \<circ> ftilde). This is a different loop from f.
+     The key: k_* maps [q \<circ> f] = k_*( q_*([f]) ) to const. Since k \<circ> f is nontrivial,
+     and [q \<circ> f] \<noteq> [f], this doesn't immediately contradict.
+
+     The textbook resolves this by showing k_* injective (Step 3) + q_* injective,
+     hence k_* \<circ> q_* injective, hence g_* injective (since q_* \<circ> g_* = k_* \<circ> q_*).
+
+     For the full formal proof, we need the injectivity of q_* (Theorem_56_1 from the
+     existing formalization) and the above arguments. This is substantial.\<close>
+  show False sorry
+qed
 
 (** from *\<S>57 Theorem 57.1: antipode-preserving S^1 \<rightarrow> S^1 is NOT nulhomotopic.
 
