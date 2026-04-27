@@ -2939,7 +2939,301 @@ lemma Theorem_51_3_aux:
       (foldr top1_path_product
         (map (\<lambda>i t. f (subdivision i + t * (subdivision (Suc i) - subdivision i))) [0..<m])
         (top1_constant_path x1))"
-  sorry
+  using hm hsub0 hsubm hsub_mono hf
+proof (induction m arbitrary: subdivision f x0 x1)
+  case 0 thus ?case by simp
+next
+  case (Suc m')
+  show ?case
+  proof (cases "m' = 0")
+    case True
+    have hfi0_eq: "(\<lambda>t. f (subdivision 0 + t * (subdivision 1 - subdivision 0))) = f"
+    proof (intro ext)
+      fix t :: real
+      show "f (subdivision 0 + t * (subdivision 1 - subdivision 0)) = f t"
+      proof -
+        have hsub1: "subdivision (Suc m') = 1" using Suc.prems(3) .
+        have "subdivision (Suc 0) = 1" using hsub1 True by simp
+        have hsub0': "subdivision 0 = 0" using Suc.prems(2) .
+        show "f (subdivision 0 + t * (subdivision 1 - subdivision 0)) = f t"
+          using \<open>subdivision (Suc 0) = 1\<close> hsub0' by simp
+      qed
+    qed
+    have heq: "foldr top1_path_product
+        (map (\<lambda>i t. f (subdivision i + t * (subdivision (Suc i) - subdivision i))) [0..<Suc m'])
+        (top1_constant_path x1) = top1_path_product f (top1_constant_path x1)"
+      using True hfi0_eq by simp
+    show ?thesis using Lemma_51_1_path_homotopic_sym[OF
+        Theorem_51_2_right_identity[OF hTX Suc.prems(5)]] heq by simp
+  next
+    case False
+    hence hm': "m' \<ge> 1" by simp
+    define a where "a = subdivision 1"
+    have ha_pos: "0 < a" using Suc.prems(2) Suc.prems(4)[of 0] unfolding a_def by simp
+    note hsub_mono' = Suc.prems(4)
+    have hsub_strict_mono: "\<And>i j. i < j \<Longrightarrow> j \<le> Suc m' \<Longrightarrow> subdivision i < subdivision j"
+    proof -
+      fix i j :: nat assume hij: "i < j" "j \<le> Suc m'"
+      show "subdivision i < subdivision j" using hij
+      proof (induction "j - i" arbitrary: j)
+        case 0 thus ?case by simp
+      next
+        case (Suc d)
+        hence hj_pos: "j > 0" by simp
+        have hjm: "j - 1 < Suc m'" using Suc.prems by simp
+        show ?case
+        proof (cases "i < j - 1")
+          case True
+          have "subdivision i < subdivision (j-1)"
+            using Suc.hyps(1)[of "j-1"] True hjm Suc.hyps(2) hj_pos by simp
+          also have "subdivision (j-1) < subdivision j"
+            using hsub_mono'[of "j-1"] hjm hj_pos by simp
+          finally show ?thesis .
+        next
+          case False hence "i = j - 1" using Suc.prems by simp
+          thus ?thesis using hsub_mono'[of "j-1"] hjm hj_pos by simp
+        qed
+      qed
+    qed
+    have ha_lt1: "a < 1"
+    proof -
+      have "subdivision 1 < subdivision (Suc m')"
+        by (rule hsub_strict_mono) (use hm' in auto)
+      thus ?thesis unfolding a_def using Suc.prems(3) by linarith
+    qed
+    \<comment> \<open>f \<simeq> f_L * f_R via path_product_split.\<close>
+    have hf_split: "top1_path_homotopic_on X TX x0 x1 f
+        (top1_path_product (\<lambda>t. f (a*t)) (\<lambda>t. f (a + (1-a)*t)))"
+      by (rule path_product_split[OF hTX Suc.prems(5) ha_pos ha_lt1])
+    \<comment> \<open>fi(0) = f_L.\<close>
+    have hfi0_eq: "(\<lambda>t. f (subdivision 0 + t * (subdivision (Suc 0) - subdivision 0))) = (\<lambda>t. f (a*t))"
+    proof (intro ext)
+      fix t :: real
+      show "f (subdivision 0 + t * (subdivision (Suc 0) - subdivision 0)) = f (a*t)"
+        unfolding a_def using Suc.prems(2) by (simp add: mult.commute)
+    qed
+    \<comment> \<open>f_R path and IH setup.\<close>
+    define f_R where "f_R t = f (a + (1-a)*t)" for t
+    have hfR_path: "top1_is_path_on X TX (f a) x1 f_R"
+    proof -
+      have hf_path: "top1_is_path_on X TX x0 x1 f" using Suc.prems(5) .
+      have hshift_range: "\<And>t. t \<in> I_set \<Longrightarrow> a + (1-a) * t \<in> I_set"
+      proof -
+        fix t assume "t \<in> I_set"
+        hence ht01: "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by auto
+        have "a + (1-a)*t \<ge> 0" using ha_pos ha_lt1 ht01
+          by (intro add_nonneg_nonneg mult_nonneg_nonneg) linarith+
+        moreover have "a + (1-a)*t \<le> a + (1-a)*1"
+          by (intro add_left_mono mult_left_mono) (use ha_lt1 ht01 in linarith)+
+        hence "a + (1-a)*t \<le> 1" by simp
+        ultimately show "a + (1-a)*t \<in> I_set" unfolding top1_unit_interval_def by simp
+      qed
+      have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+        using hf_path unfolding top1_is_path_on_def by (by100 blast)
+      have hf_pre: "\<And>V. V \<in> TX \<Longrightarrow> {u \<in> I_set. f u \<in> V} \<in> I_top"
+        using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have hfR_cont: "top1_continuous_map_on I_set I_top X TX f_R"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix t assume "t \<in> I_set"
+        thus "f_R t \<in> X" unfolding f_R_def
+          using hshift_range hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      next
+        fix V assume hV: "V \<in> TX"
+        obtain W where hoW: "open W" and hWI: "{u \<in> I_set. f u \<in> V} = I_set \<inter> W"
+          using hf_pre[OF hV] unfolding top1_unit_interval_topology_def subspace_topology_def top1_open_sets_def by auto
+        have "{t \<in> I_set. f_R t \<in> V} = {t \<in> I_set. a + (1-a)*t \<in> W}"
+        proof (intro Collect_cong conj_cong refl)
+          fix t assume "t \<in> I_set"
+          hence "a + (1-a)*t \<in> I_set" by (rule hshift_range)
+          thus "(f_R t \<in> V) = (a + (1-a)*t \<in> W)" unfolding f_R_def using hWI by (by100 blast)
+        qed
+        moreover have "{t \<in> I_set. a + (1-a)*t \<in> W} \<in> I_top"
+        proof -
+          have "continuous_on UNIV (\<lambda>t::real. a + (1-a)*t)" by (intro continuous_intros)
+          hence "open ((\<lambda>t. a + (1-a)*t) -` W)" by (rule open_vimage[OF hoW])
+          moreover have "{t. a + (1-a)*t \<in> W} = (\<lambda>t. a + (1-a)*t) -` W" by auto
+          ultimately have "open {t. a + (1-a)*t \<in> W}" by simp
+          hence "{t. a + (1-a)*t \<in> W} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+          hence "I_set \<inter> {t. a + (1-a)*t \<in> W} \<in> I_top"
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          moreover have "I_set \<inter> {t. a + (1-a)*t \<in> W} = {t \<in> I_set. a + (1-a)*t \<in> W}" by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        ultimately show "{t \<in> I_set. f_R t \<in> V} \<in> I_top" by simp
+      qed
+      have hfR0: "f_R 0 = f a" unfolding f_R_def by simp
+      have hfR1: "f_R 1 = x1" unfolding f_R_def
+        using hf_path unfolding top1_is_path_on_def by simp
+      show ?thesis unfolding top1_is_path_on_def using hfR_cont hfR0 hfR1 by (by100 blast)
+    qed
+    define sub' where "sub' j = (subdivision (Suc j) - a) / (1 - a)" for j
+    have hsub'0: "sub' 0 = 0" unfolding sub'_def a_def by simp
+    have hsub'm': "sub' m' = 1"
+      unfolding sub'_def using Suc.prems(3) a_def ha_lt1 by simp
+    have hsub'_mono: "\<And>j. j < m' \<Longrightarrow> sub' j < sub' (Suc j)"
+    proof -
+      fix j assume "j < m'"
+      hence "Suc j < Suc m'" by simp
+      hence "subdivision (Suc j) < subdivision (Suc (Suc j))" using Suc.prems(4) by simp
+      thus "sub' j < sub' (Suc j)" unfolding sub'_def using ha_lt1
+        by (simp add: divide_strict_right_mono)
+    qed
+    have hIH: "top1_path_homotopic_on X TX (f a) x1 f_R
+        (foldr top1_path_product
+          (map (\<lambda>j t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) [0..<m'])
+          (top1_constant_path x1))"
+      by (rule Suc.IH[OF hm' hsub'0 hsub'm' hsub'_mono hfR_path])
+    \<comment> \<open>Each piece fi'(j)(t) = f_R(sub'(j)+t*\<Delta>') = f(sub(j+1)+t*(sub(j+2)-sub(j+1))) = fi(j+1)(t).\<close>
+    have hfi_shift: "\<And>j. j < m' \<Longrightarrow>
+        (\<lambda>t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) =
+        (\<lambda>t. f (subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j))))"
+    proof -
+      fix j :: nat assume hj: "j < m'"
+      show "(\<lambda>t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) =
+            (\<lambda>t. f (subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j))))"
+      proof (intro ext)
+        fix t :: real
+        have h1a: "(1::real) - a > 0" using ha_lt1 by simp
+        have "sub' j = (subdivision (Suc j) - a) / (1-a)" unfolding sub'_def ..
+        have "sub' (Suc j) = (subdivision (Suc (Suc j)) - a) / (1-a)" unfolding sub'_def ..
+        have "sub' (Suc j) - sub' j = (subdivision (Suc (Suc j)) - subdivision (Suc j)) / (1-a)"
+          unfolding sub'_def using h1a by (simp add: divide_simps)
+        hence "sub' j + t * (sub' (Suc j) - sub' j) =
+              (subdivision (Suc j) - a) / (1-a) + t * ((subdivision (Suc (Suc j)) - subdivision (Suc j)) / (1-a))"
+          unfolding sub'_def by simp
+        also have "\<dots> = (subdivision (Suc j) - a + t * (subdivision (Suc (Suc j)) - subdivision (Suc j))) / (1-a)"
+          using h1a by (simp add: add_divide_distrib)
+        finally have harg: "a + (1-a) * (sub' j + t * (sub' (Suc j) - sub' j)) =
+              subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j))"
+          using h1a by simp
+        show "f_R (sub' j + t * (sub' (Suc j) - sub' j)) =
+              f (subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j)))"
+          unfolding f_R_def using harg by simp
+      qed
+    qed
+    \<comment> \<open>Rewrite IH: map fi' [0..<m'] = map (\<lambda>j. fi(Suc j)) [0..<m'].\<close>
+    have hmap_eq: "map (\<lambda>j t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) [0..<m'] =
+        map (\<lambda>j t. f (subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j)))) [0..<m']"
+    proof (rule map_cong[OF refl])
+      fix j assume "j \<in> set [0..<m']"
+      hence "j < m'" by simp
+      thus "(\<lambda>t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) =
+            (\<lambda>t. f (subdivision (Suc j) + t * (subdivision (Suc (Suc j)) - subdivision (Suc j))))"
+        by (rule hfi_shift)
+    qed
+    \<comment> \<open>Shift and foldr manipulation using a local definition.\<close>
+    define fi' where "fi' i = (\<lambda>t::real. f (subdivision i + t * (subdivision (Suc i) - subdivision i)))" for i
+    have hmap_shift: "map (\<lambda>j. fi' (Suc j)) [0..<m'] = map fi' [1..<Suc m']"
+    proof -
+      have "map (\<lambda>j. fi' (Suc j)) [0..<m'] = map (fi' \<circ> Suc) [0..<m']" by (simp add: comp_def)
+      also have "\<dots> = map fi' (map Suc [0..<m'])" by (simp add: map_map)
+      also have "map Suc [0..<m'] = [Suc 0..<Suc m']" by (rule map_Suc_upt)
+      also have "[Suc 0..<Suc m'] = [1..<Suc m']" by simp
+      finally show ?thesis .
+    qed
+    \<comment> \<open>fi'(0) = (\<lambda>t. f(a*t)).\<close>
+    have hfi0: "fi' 0 = (\<lambda>t. f (a*t))"
+    proof (intro ext)
+      fix t :: real
+      show "fi' 0 t = f (a*t)" unfolding fi'_def a_def using Suc.prems(2) by (simp add: mult.commute)
+    qed
+    \<comment> \<open>From IH + rewriting: f_R \<simeq> foldr [fi'(1),...,fi'(m')] const.\<close>
+    have hmap_eq': "map (\<lambda>j t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) [0..<m'] =
+        map (\<lambda>j. fi' (Suc j)) [0..<m']"
+    proof (rule map_cong[OF refl])
+      fix j assume "j \<in> set [0..<m']"
+      hence "j < m'" by simp
+      thus "(\<lambda>t. f_R (sub' j + t * (sub' (Suc j) - sub' j))) = fi' (Suc j)"
+        using hfi_shift unfolding fi'_def by simp
+    qed
+    have hIH': "top1_path_homotopic_on X TX (f a) x1 f_R
+        (foldr top1_path_product (map fi' [1..<Suc m']) (top1_constant_path x1))"
+      using hIH hmap_eq' hmap_shift by simp
+    \<comment> \<open>[1..<Suc m'] is a prefix of [1..<Suc(Suc m')].\<close>
+    have hupt_ext: "[1::nat..<Suc (Suc m')] = [1..<Suc m'] @ [Suc m']" by simp
+    \<comment> \<open>Lift: (\<lambda>t. f(at)) * f_R \<simeq> (\<lambda>t. f(at)) * foldr [fi'(1),...,fi'(Suc m')] const.\<close>
+    \<comment> \<open>But IH gives foldr [fi'(1),...,fi'(m')], and the full list is [fi'(1),...,fi'(Suc m')].\<close>
+    \<comment> \<open>Wait: m = Suc m', so [0..<m] = [0..<Suc m'] and [1..<Suc m'] has m'-1 elements.\<close>
+    \<comment> \<open>Actually: [1..<Suc(Suc m')] = [1,...,Suc m'] has Suc m' elements.\<close>
+    \<comment> \<open>But the IH applies to m' pieces (j=0,...,m'-1), giving fi'(1),...,fi'(m').\<close>
+    \<comment> \<open>We need foldr of fi'(0),...,fi'(Suc m') = fi'(0)*foldr(fi'(1),...,fi'(Suc m')).\<close>
+    \<comment> \<open>And IH gives f_R \<simeq> foldr [fi'(1),...,fi'(m')] const.\<close>
+    \<comment> \<open>Hmm, [1..<Suc m'] = [1,...,m'] has m' elements = fi'(1),...,fi'(m').\<close>
+    \<comment> \<open>And [1..<Suc(Suc m')] = [1,...,Suc m'] has Suc m' elements.\<close>
+    \<comment> \<open>So IH gives m' pieces but we need Suc m' pieces. Something is off.\<close>
+    \<comment> \<open>Let me recheck: the goal is foldr [fi'(0),...,fi'(Suc m')] const where m=Suc(Suc m').\<close>
+    \<comment> \<open>Wait: m = Suc m' in the induction. The goal has [0..<Suc m'] = [0,...,m'] = Suc m' pieces.\<close>
+    \<comment> \<open>foldr = fi'(0) * foldr [fi'(1),...,fi'(m')] const. IH: f_R \<simeq> foldr [fi'(1),...,fi'(m')] const. OK!\<close>
+    have hfL_path: "top1_is_path_on X TX x0 (f a) (\<lambda>t. f (a*t))"
+    proof -
+      have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+        using Suc.prems(5) unfolding top1_is_path_on_def by (by100 blast)
+      have hf_pre: "\<And>V. V \<in> TX \<Longrightarrow> {u \<in> I_set. f u \<in> V} \<in> I_top"
+        using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have hscale: "\<And>t. t \<in> I_set \<Longrightarrow> a*t \<in> I_set"
+      proof -
+        fix t assume "t \<in> I_set"
+        hence "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by auto
+        thus "a*t \<in> I_set" unfolding top1_unit_interval_def
+          using ha_pos ha_lt1 by (auto intro: mult_nonneg_nonneg mult_le_one simp: less_imp_le)
+      qed
+      show ?thesis unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (a*t))"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix t assume "t \<in> I_set"
+          thus "f (a*t) \<in> X" using hscale hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        next
+          fix V assume hV: "V \<in> TX"
+          obtain W where hoW: "open W" and hWI: "{u \<in> I_set. f u \<in> V} = I_set \<inter> W"
+            using hf_pre[OF hV] unfolding top1_unit_interval_topology_def subspace_topology_def top1_open_sets_def by auto
+          have "{t \<in> I_set. f (a*t) \<in> V} = {t \<in> I_set. a*t \<in> W}"
+            using hscale hWI by (by100 blast)
+          moreover have "open ((\<lambda>t. a*t) -` W)"
+            by (rule open_vimage[OF hoW]) (intro continuous_intros)
+          hence "{t \<in> I_set. a*t \<in> W} \<in> I_top"
+          proof -
+            have "{t. a*t \<in> W} = (\<lambda>t. a*t) -` W" by auto
+            hence "open {t. a*t \<in> W}" using \<open>open ((\<lambda>t. a*t) -` W)\<close> by simp
+            hence "{t. a*t \<in> W} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+            hence "I_set \<inter> {t. a*t \<in> W} \<in> I_top"
+              unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+            thus ?thesis by (simp add: Collect_conj_eq inf_commute)
+          qed
+          ultimately show "{t \<in> I_set. f (a*t) \<in> V} \<in> I_top" by simp
+        qed
+        show "f (a * 0) = x0" using Suc.prems(5) unfolding top1_is_path_on_def by simp
+        show "f (a * 1) = f a" by simp
+      qed
+    qed
+    have hlift: "top1_path_homotopic_on X TX x0 x1
+        (top1_path_product (\<lambda>t. f (a*t)) f_R)
+        (top1_path_product (\<lambda>t. f (a*t))
+          (foldr top1_path_product (map fi' [1..<Suc m']) (top1_constant_path x1)))"
+      by (rule path_homotopic_product_right[OF hTX hIH' hfL_path])
+    have hf_split': "top1_path_homotopic_on X TX x0 x1 f
+        (top1_path_product (\<lambda>t. f (a*t)) f_R)"
+      using hf_split unfolding f_R_def by simp
+    have hchain: "top1_path_homotopic_on X TX x0 x1 f
+        (top1_path_product (\<lambda>t. f (a*t))
+          (foldr top1_path_product (map fi' [1..<Suc m']) (top1_constant_path x1)))"
+      by (rule Lemma_51_1_path_homotopic_trans[OF hTX hf_split' hlift])
+    \<comment> \<open>Now use hfoldr_cons: the above = foldr [fi'(0),...,fi'(m')] const.\<close>
+    \<comment> \<open>Wait: hfoldr_cons splits [0..<Suc(Suc m')], but the goal has [0..<Suc m'].\<close>
+    \<comment> \<open>Actually: Suc case has m = Suc m', so the goal is foldr [0..<Suc m'] = foldr [0,...,m'].\<close>
+    \<comment> \<open>And hupt_cons says [0..<Suc m'] = 0 # [1..<Suc m']. Wait no, hupt_cons is for Suc(Suc m').\<close>
+    \<comment> \<open>Let me redo: the case is m = Suc m'. Goal: foldr (map fi' [0..<Suc m']) const.\<close>
+    \<comment> \<open>[0..<Suc m'] = 0 # [1..<Suc m'] when m' >= 1.\<close>
+    have hupt_cons2: "[0::nat..<Suc m'] = 0 # [1..<Suc m']" using hm' by (simp add: upt_rec)
+    have hfoldr_cons2: "foldr top1_path_product (map fi' [0..<Suc m']) (top1_constant_path x1) =
+      top1_path_product (fi' 0)
+        (foldr top1_path_product (map fi' [1..<Suc m']) (top1_constant_path x1))"
+      unfolding hupt_cons2 by simp
+    show ?thesis using hchain hfoldr_cons2 hfi0 unfolding fi'_def by simp
+  qed
+qed
 
 
 end
