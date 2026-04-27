@@ -2633,14 +2633,43 @@ proof (intro allI impI)
         \<or> (\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
         by (rule h_range_same[OF hab_lt hb_le hno_good_ab])
-      \<comment> \<open>Merged piece [sub0(?a), sub0(?b)] = union of original pieces [sub0(j), sub0(j+1)] for j in [?a,?b).\<close>
-      have hmerge: "{s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} =
-          (\<Union>j\<in>{?a..<?b}. {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)})"
-        sorry \<comment> \<open>Interval decomposition: [sub0(a), sub0(b)] = union of [sub0(j), sub0(j+1)].\<close>
+      \<comment> \<open>Every point in merged piece is in some original piece, hence f maps it to S.\<close>
       show "f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
           \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
-        unfolding sub1_def using h_all hmerge
-        sorry \<comment> \<open>f ` union = union f ` piece_j. Each f ` piece_j \<subseteq> S. So union \<subseteq> S.\<close>
+      proof -
+        \<comment> \<open>For any s in merged piece, find j with sub0(j) \<le> s \<le> sub0(j+1).\<close>
+        have hpoint: "\<And>s. s \<in> I_set \<Longrightarrow> sub0 ?a \<le> s \<Longrightarrow> s \<le> sub0 ?b \<Longrightarrow>
+            \<exists>j. ?a \<le> j \<and> j < ?b \<and> sub0 j \<le> s \<and> s \<le> sub0 (Suc j)"
+          sorry \<comment> \<open>Monotone sequence covers interval. Standard real analysis.\<close>
+        have hfinal: "\<And>S. (\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
+            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> S)
+            \<Longrightarrow> f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} \<subseteq> S"
+        proof -
+          fix S assume hS: "\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
+              f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> S"
+          show "f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} \<subseteq> S"
+          proof
+            fix y assume "y \<in> f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b}"
+            then obtain s where hs: "s \<in> I_set" "sub0 ?a \<le> s" "s \<le> sub0 ?b" "y = f s"
+              by (by100 blast)
+            obtain j where hj: "?a \<le> j" "j < ?b" "sub0 j \<le> s" "s \<le> sub0 (Suc j)"
+              using hpoint[OF hs(1-3)] by (by100 blast)
+            have "f s \<in> S" using hS hj hs(1) by (by100 blast)
+            thus "y \<in> S" using hs(4) by simp
+          qed
+        qed
+        have hsub1_eq: "sub1 i = sub0 ?a" "sub1 (Suc i) = sub0 ?b" unfolding sub1_def by simp_all
+        show ?thesis
+        proof (rule disjE[OF h_all])
+          assume "\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow> f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U"
+          hence "f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} \<subseteq> U" by (rule hfinal)
+          thus ?thesis unfolding sub1_def by simp
+        next
+          assume "\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow> f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V"
+          hence "f ` {s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} \<subseteq> V" by (rule hfinal)
+          thus ?thesis unfolding sub1_def by simp
+        qed
+      qed
     qed
     have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
