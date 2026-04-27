@@ -2471,8 +2471,10 @@ proof (intro allI impI)
     qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
-      sorry \<comment> \<open>Apply h_range_same to a=glist!i, b=glist!(i+1).
-         Merged piece = union of original pieces in [a,b), all mapping to same set.\<close>
+      sorry \<comment> \<open>Merged piece = union of orig pieces in [glist!i, glist!(i+1)).
+         All map to same set: first piece maps to U or V. Each subsequent deleted point
+         has f-value in U-V or V-U (not in U\<inter>V), forcing the same set via h_deleted_same.
+         Induction on j-glist!i using the directed lemma h_deleted_U / h_deleted_V.\<close>
     have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
       fix i assume "i \<le> n1"
