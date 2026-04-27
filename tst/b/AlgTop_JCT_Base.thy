@@ -3094,8 +3094,75 @@ proof (intro allI impI)
         unfolding \<open>gs_list ! i = gi i\<close> top1_is_loop_on_def using hgi_path by simp
       \<comment> \<open>Image: \<alpha>s \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev \<subseteq> U\<inter>V.\<close>
       show "gs_list ! i ` I_set \<subseteq> U \<or> gs_list ! i ` I_set \<subseteq> V"
-        sorry \<comment> \<open>Path product image \<subseteq> union of component images.
-           All components \<subseteq> U or all \<subseteq> V (from fi_UV + \<alpha>s \<subseteq> U\<inter>V).\<close>
+      proof -
+        \<comment> \<open>Path product image \<subseteq> union of component images.\<close>
+        have hprod_img: "\<And>f g :: real \<Rightarrow> 'a. top1_path_product f g ` I_set \<subseteq> f ` I_set \<union> g ` I_set"
+        proof -
+          fix f g :: "real \<Rightarrow> 'a"
+          show "top1_path_product f g ` I_set \<subseteq> f ` I_set \<union> g ` I_set"
+          proof
+            fix y assume "y \<in> top1_path_product f g ` I_set"
+            then obtain t where ht: "t \<in> I_set" "y = top1_path_product f g t" by (by100 blast)
+            show "y \<in> f ` I_set \<union> g ` I_set"
+            proof (cases "t \<le> 1/2")
+              case True
+              hence "y = f (2 * t)" using ht(2) unfolding top1_path_product_def by simp
+              moreover have "2 * t \<in> I_set" using ht(1) True unfolding top1_unit_interval_def by auto
+              ultimately show ?thesis by (by100 blast)
+            next
+              case False
+              hence "y = g (2 * t - 1)" using ht(2) unfolding top1_path_product_def by simp
+              moreover have "2 * t - 1 \<in> I_set" using ht(1) False unfolding top1_unit_interval_def by auto
+              ultimately show ?thesis by (by100 blast)
+            qed
+          qed
+        qed
+        have hrev_img: "\<And>f :: real \<Rightarrow> 'a. top1_path_reverse f ` I_set \<subseteq> f ` I_set"
+        proof -
+          fix f :: "real \<Rightarrow> 'a"
+          show "top1_path_reverse f ` I_set \<subseteq> f ` I_set"
+          proof
+            fix y assume "y \<in> top1_path_reverse f ` I_set"
+            then obtain t where "t \<in> I_set" "y = f (1 - t)"
+              unfolding top1_path_reverse_def by (by100 blast)
+            moreover have "1 - t \<in> I_set" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by auto
+            ultimately show "y \<in> f ` I_set" by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>gi image \<subseteq> \<alpha>s(i) \<union> fi(i) \<union> rev(\<alpha>s(Suc i)) images.\<close>
+        have "gi i ` I_set \<subseteq> (top1_path_product (\<alpha>s i) (fi i)) ` I_set
+            \<union> (top1_path_reverse (\<alpha>s (Suc i))) ` I_set"
+          unfolding gi_def using hprod_img by (by100 blast)
+        also have "\<dots> \<subseteq> \<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set"
+          using hprod_img hrev_img by (by100 blast)
+        finally have hgi_img: "gi i ` I_set \<subseteq> \<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set" .
+        \<comment> \<open>\<alpha>s images \<subseteq> U\<inter>V.\<close>
+        have h\<alpha>i_maps: "\<forall>t\<in>I_set. \<alpha>s i t \<in> U \<inter> V"
+          using h\<alpha>s[rule_format, of i] hi
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+        have h\<alpha>i_img: "\<alpha>s i ` I_set \<subseteq> U \<inter> V" using h\<alpha>i_maps by (by100 blast)
+        have h\<alpha>si_maps: "\<forall>t\<in>I_set. \<alpha>s (Suc i) t \<in> U \<inter> V"
+          using h\<alpha>s[rule_format, of "Suc i"] hi
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
+        have h\<alpha>si_img: "\<alpha>s (Suc i) ` I_set \<subseteq> U \<inter> V" using h\<alpha>si_maps by (by100 blast)
+        have "gi i ` I_set \<subseteq> U \<or> gi i ` I_set \<subseteq> V"
+        proof (rule disjE[OF hfi_UV[OF hi]])
+          assume hfiU: "fi i ` I_set \<subseteq> U"
+          have hunionU: "\<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set \<subseteq> U"
+            using h\<alpha>i_img h\<alpha>si_img hfiU by (by100 blast)
+          hence "gi i ` I_set \<subseteq> U" by (rule subset_trans[OF hgi_img])
+          thus ?thesis by (by100 blast)
+        next
+          assume "fi i ` I_set \<subseteq> V"
+          have h\<alpha>iV: "\<alpha>s i ` I_set \<subseteq> V" using h\<alpha>i_img by (by100 blast)
+          have h\<alpha>siV: "\<alpha>s (Suc i) ` I_set \<subseteq> V" using h\<alpha>si_img by (by100 blast)
+          have hunionV: "\<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set \<subseteq> V"
+            using h\<alpha>iV \<open>fi i ` I_set \<subseteq> V\<close> h\<alpha>siV by (by100 blast)
+          hence "gi i ` I_set \<subseteq> V" by (rule subset_trans[OF hgi_img])
+          thus ?thesis by (by100 blast)
+        qed
+        thus ?thesis unfolding \<open>gs_list ! i = gi i\<close> by simp
+      qed
     qed
     \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
@@ -14121,6 +14188,17 @@ end
 
 
  
+
+
+
+
+
+
+
+
+
+
+
 
 
 
