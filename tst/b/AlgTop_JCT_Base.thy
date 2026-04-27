@@ -2206,11 +2206,32 @@ proof -
         (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))
         (top1_constant_path x0)" by simp
     \<comment> \<open>Replace rev(\<alpha>n)*const with const in the foldr, then remove \<alpha>(0)=const via left identity.\<close>
-    show ?thesis using hrev_simp h\<alpha>0 sorry
-    \<comment> \<open>Uses: hrev_simp (rev(\<alpha>n)*const \<simeq> const), h\<alpha>0 (\<alpha>0 = const).
-       1. Replace base: foldr fs (rev(\<alpha>n)*const) \<simeq> foldr fs const (foldr respects base homotopy).
-       2. Remove \<alpha>0: const * foldr fs const \<simeq> foldr fs const (left identity).
-       Both are standard path algebra. ~20 lines.\<close>
+    \<comment> \<open>Step 2a: foldr respects base homotopy: if base1 \<simeq> base2 then foldr fs base1 \<simeq> foldr fs base2.\<close>
+    have hfoldr_base: "\<And>base1 base2. top1_path_homotopic_on X TX x0 x0 base1 base2 \<Longrightarrow>
+        top1_path_homotopic_on X TX x0 x0
+          (foldr top1_path_product fs base1) (foldr top1_path_product fs base2)"
+      sorry \<comment> \<open>Induction on fs using path_homotopic_product_right at each step.\<close>
+    have hstep2a: "top1_path_homotopic_on X TX x0 x0
+        (foldr top1_path_product fs (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0)))
+        (foldr top1_path_product fs (top1_constant_path x0))"
+      by (rule hfoldr_base[OF hrev_simp])
+    \<comment> \<open>Step 2b: \<alpha>(0) = const, so const * foldr \<simeq> foldr (left identity).\<close>
+    have hfoldr_path: "top1_is_path_on X TX x0 x0
+        (foldr top1_path_product fs (top1_constant_path x0))"
+      sorry \<comment> \<open>foldr of paths is a loop. Induction on fs + path_product_is_path.\<close>
+    have hstep2b: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (top1_constant_path x0) (foldr top1_path_product fs (top1_constant_path x0)))
+        (foldr top1_path_product fs (top1_constant_path x0))"
+      by (rule Theorem_51_2_left_identity[OF hTX hfoldr_path])
+    \<comment> \<open>Combine: \<alpha>0 * foldr(rev(\<alpha>n)*const) \<simeq> const * foldr(rev(\<alpha>n)*const)
+                                                \<simeq> const * foldr(const) \<simeq> foldr(const).\<close>
+    have hstep2c: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
+          (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))))
+        (top1_path_product (top1_constant_path x0) (foldr top1_path_product fs (top1_constant_path x0)))"
+      using h\<alpha>0 path_homotopic_product_right[OF hTX hstep2a hconst] by simp
+    show ?thesis
+      using Lemma_51_1_path_homotopic_trans[OF hTX hstep2c hstep2b] .
   qed
   \<comment> \<open>Combine: foldr gs \<simeq> ... \<simeq> foldr fs. Use sym to get foldr fs \<simeq> foldr gs.\<close>
   have "top1_path_homotopic_on X TX x0 x0
@@ -14396,6 +14417,9 @@ end
 
 
    
+
+
+
 
 
 
