@@ -521,7 +521,49 @@ proof -
     \<comment> \<open>q is a homeomorphism V2 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
     have hhomeo2: "top1_homeomorphism_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
         U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
-      sorry \<comment> \<open>Analogous to hhomeo1 with negated signs: inverse is (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      have hTS1': "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+      qed
+      show "is_topology_on V2 (subspace_topology top1_S1 top1_S1_topology V2)"
+        by (rule subspace_topology_is_topology_on[OF hTS1']) (use V2_def in blast)
+      show "is_topology_on U_top (subspace_topology top1_S1 top1_S1_topology U_top)"
+        by (rule subspace_topology_is_topology_on[OF hTS1']) (use U_top_def in blast)
+      show "bij_betw q V2 U_top" sorry
+      \<comment> \<open>Continuity: same pattern as V1.\<close>
+      show "top1_continuous_map_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
+          U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
+      proof -
+        have hV2_sub: "V2 \<subseteq> top1_S1" unfolding V2_def by (by100 blast)
+        have hU_sub: "U_top \<subseteq> top1_S1" unfolding U_top_def by (by100 blast)
+        have hq_V2: "top1_continuous_map_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
+            top1_S1 top1_S1_topology q"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hq_cont hV2_sub])
+        have hq_img: "q ` V2 \<subseteq> U_top"
+          using \<open>bij_betw q V2 U_top\<close> unfolding bij_betw_def by (by100 blast)
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> V2" thus "q p \<in> U_top" using hq_img by (by100 blast)
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S1 top1_S1_topology U_top"
+          obtain W where hW: "W \<in> top1_S1_topology" and hVeq: "V = U_top \<inter> W"
+            using hV unfolding subspace_topology_def by (by100 blast)
+          have "{p \<in> V2. q p \<in> V} = {p \<in> V2. q p \<in> W}"
+            using hq_img hVeq by (by100 blast)
+          moreover have "{p \<in> V2. q p \<in> W} \<in> subspace_topology top1_S1 top1_S1_topology V2"
+            using hq_V2 hW unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "{p \<in> V2. q p \<in> V} \<in> subspace_topology top1_S1 top1_S1_topology V2" by simp
+        qed
+      qed
+      show "top1_continuous_map_on U_top (subspace_topology top1_S1 top1_S1_topology U_top)
+          V2 (subspace_topology top1_S1 top1_S1_topology V2) (inv_into V2 q)"
+        sorry
+    qed
     show ?thesis unfolding top1_evenly_covered_on_def
     proof (intro conjI exI[of _ "{V1, V2}"])
       show "openin_on top1_S1 top1_S1_topology U_top" by (rule hU_top_open)
