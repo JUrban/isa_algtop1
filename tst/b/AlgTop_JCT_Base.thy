@@ -2206,7 +2206,21 @@ proof -
         (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))
         (top1_constant_path x0)" by simp
     \<comment> \<open>Replace rev(\<alpha>n)*const with const in the foldr, then remove \<alpha>(0)=const via left identity.\<close>
-    show ?thesis sorry \<comment> \<open>Need: path_homotopic_product respects foldr, then left identity.\<close>
+    \<comment> \<open>Step 2a: Replace base of foldr: foldr fs (rev(\<alpha>n)*const) \<simeq> foldr fs const.
+       By induction on fs using path_homotopic_product_right at each step.\<close>
+    have hbase_replace: "top1_path_homotopic_on X TX x0 x0
+        (foldr top1_path_product fs (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0)))
+        (foldr top1_path_product fs (top1_constant_path x0))"
+      sorry \<comment> \<open>foldr respects base homotopy. By induction on fs + product_right.\<close>
+    \<comment> \<open>Step 2b: Remove \<alpha>(0)=const from front via left identity.\<close>
+    have "\<alpha> 0 = top1_constant_path x0" by (rule h\<alpha>0)
+    hence "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (\<alpha> 0) (foldr top1_path_product fs (top1_constant_path x0)))
+        (foldr top1_path_product fs (top1_constant_path x0))"
+      sorry \<comment> \<open>const * foldr_fs_const \<simeq> foldr_fs_const. Left identity.\<close>
+    \<comment> \<open>Chain: \<alpha>0 * foldr fs (rev(\<alpha>n)*const) \<simeq> \<alpha>0 * foldr fs const \<simeq> foldr fs const.\<close>
+    show ?thesis
+      sorry \<comment> \<open>Transitivity of the two steps above + product_right.\<close>
   qed
   \<comment> \<open>Combine: foldr gs \<simeq> ... \<simeq> foldr fs. Use sym to get foldr fs \<simeq> foldr gs.\<close>
   have "top1_path_homotopic_on X TX x0 x0
@@ -14380,3 +14394,5 @@ end
 
 
 
+
+   
