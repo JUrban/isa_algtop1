@@ -2300,7 +2300,44 @@ proof -
     next
       case False
       \<comment> \<open>Induction step: k = Suc k' with k' \<ge> 1.\<close>
-      show ?thesis using False Suc sorry
+      show ?thesis
+      proof -
+        have hk': "k' \<ge> 1" using False by (by100 simp)
+        obtain g0 gs' where hgs_eq: "gs = g0 # gs'"
+          using Suc.prems(1) by (cases gs) (by100 simp)+
+        obtain f0 fs' where hfs_eq: "fs = f0 # fs'"
+          using Suc.prems(2) by (cases fs) (by100 simp)+
+        have hgs'_len: "length gs' = k'" using Suc.prems(1) hgs_eq by (by100 simp)
+        have hfs'_len: "length fs' = k'" using Suc.prems(2) hfs_eq by (by100 simp)
+        define \<alpha>' where "\<alpha>' i = \<alpha> (Suc i)" for i
+        define a' where "a' i = a (Suc i)" for i
+        have h\<alpha>': "\<And>i. i \<le> k' \<Longrightarrow> top1_is_path_on X TX x0 (a' i) (\<alpha>' i)"
+          using Suc.prems(6) unfolding \<alpha>'_def a'_def by (by100 simp)
+        have hfi': "\<And>i. i < k' \<Longrightarrow> top1_is_path_on X TX (a' i) (a' (Suc i)) (fs' ! i)"
+        proof -
+          fix i assume "i < k'"
+          thus "top1_is_path_on X TX (a' i) (a' (Suc i)) (fs' ! i)"
+            using Suc.prems(4)[of "Suc i"] hfs_eq unfolding a'_def by (by100 simp)
+        qed
+        have hgi': "\<And>i. i < k' \<Longrightarrow> gs' ! i = top1_path_product
+            (top1_path_product (\<alpha>' i) (fs' ! i)) (top1_path_reverse (\<alpha>' (Suc i)))"
+        proof -
+          fix i assume "i < k'"
+          thus "gs' ! i = top1_path_product (top1_path_product (\<alpha>' i) (fs' ! i))
+              (top1_path_reverse (\<alpha>' (Suc i)))"
+            using Suc.prems(5)[of "Suc i"] hgs_eq hfs_eq unfolding \<alpha>'_def by (by100 simp)
+        qed
+        have hIH: "top1_path_homotopic_on X TX x0 x0
+            (foldr top1_path_product gs' (top1_constant_path x0))
+            (top1_path_product (\<alpha>' 0) (foldr top1_path_product fs'
+              (top1_path_product (top1_path_reverse (\<alpha>' k')) (top1_constant_path x0))))"
+          sorry
+        \<comment> \<open>Now combine g0 * IH to get the result.
+           g0 = (\<alpha>(0)*f0)*rev(\<alpha>(1)) = (\<alpha>(0)*f0)*rev(\<alpha>'(0)).
+           The full path algebra needs associativity + inverse cancellation.
+           This is the core of the telescoping step.\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
 qed
@@ -3522,6 +3559,8 @@ qed
 
 
 end
+
+
 
 
 
