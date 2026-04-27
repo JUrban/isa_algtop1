@@ -7791,7 +7791,25 @@ proof -
     have h\<phi>\<theta>_in_W: "\<phi> \<theta> \<in> W" using hW(2) h\<phi>\<theta> by simp
     \<comment> \<open>Continuity at \<theta>: \<exists>\<epsilon>0>0. |t-\<theta>| < \<epsilon>0 \<Rightarrow> \<phi>(t) \<in> W.\<close>
     obtain \<epsilon>0 :: real where h\<epsilon>0: "\<epsilon>0 > 0" "\<And>t. \<bar>t - \<theta>\<bar> < \<epsilon>0 \<Longrightarrow> (cos t, sin t) \<in> W"
-      sorry \<comment> \<open>Continuity of (cos,sin) at \<theta> + W open + \<phi>(\<theta>) \<in> W \<Rightarrow> \<exists>\<epsilon>>0 preimage.\<close>
+    proof -
+      have "open (\<phi> -` W)"
+      proof -
+        have "\<forall>B. open B \<longrightarrow> open (\<phi> -` B \<inter> UNIV)"
+          using iffD1[OF continuous_on_open_vimage[OF open_UNIV] h\<phi>_cont] by simp
+        hence "open (\<phi> -` W \<inter> UNIV)" using hW(1) by simp
+        thus ?thesis by simp
+      qed
+      then obtain e where he: "e > (0::real)" "\<forall>y. dist y \<theta> < e \<longrightarrow> y \<in> \<phi> -` W"
+        using h\<phi>\<theta>_in_W unfolding open_dist by (by100 blast)
+      show ?thesis
+      proof (rule that[of e])
+        show "e > 0" by (rule he(1))
+        fix t assume "\<bar>t - \<theta>\<bar> < e"
+        hence "dist t \<theta> < e" unfolding dist_real_def by simp
+        hence "t \<in> \<phi> -` W" using he(2) by simp
+        thus "(cos t, sin t) \<in> W" unfolding \<phi>_def by simp
+      qed
+    qed
     have h_arc_in_S1: "\<And>t. (cos t, sin t) \<in> top1_S1" unfolding top1_S1_def
       using sin_cos_squared_add2 by simp
     define \<epsilon>1 where "\<epsilon>1 = min (\<epsilon>0 / 2) (pi / 2)"
