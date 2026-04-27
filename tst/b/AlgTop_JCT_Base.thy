@@ -2855,7 +2855,43 @@ proof (intro allI impI)
         unfolding top1_is_path_on_def
       proof (intro conjI)
         show "top1_continuous_map_on I_set I_top X TX (fi i)"
-          sorry \<comment> \<open>fi = f \<circ> linear. linear continuous I_set\<rightarrow>I_set, f continuous I_set\<rightarrow>X.\<close>
+        proof -
+          define \<phi> where "\<phi> t = subdivision i + t * (subdivision (Suc i) - subdivision i)" for t
+          have hfi_eq: "fi i = f \<circ> \<phi>" unfolding fi_def \<phi>_def comp_def by (rule ext) simp
+          have h\<phi>_cont_on: "continuous_on I_set \<phi>" unfolding \<phi>_def by (intro continuous_intros)
+          have h\<phi>_maps: "\<forall>t\<in>I_set. \<phi> t \<in> I_set"
+            sorry \<comment> \<open>\<phi> maps [0,1] into [sub(i),sub(Suc i)] \<subseteq> [0,1].\<close>
+          have h\<phi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>"
+          proof -
+            have hItop: "I_top = subspace_topology UNIV top1_open_sets I_set"
+              unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+            show ?thesis unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix t assume "t \<in> I_set" thus "\<phi> t \<in> I_set" using h\<phi>_maps by simp
+            next
+              fix V assume hV: "V \<in> I_top"
+              obtain W where hW: "open W" "V = I_set \<inter> W"
+                using hV unfolding hItop subspace_topology_def top1_open_sets_def by auto
+              have "{t \<in> I_set. \<phi> t \<in> V} = {t \<in> I_set. \<phi> t \<in> W}"
+                using h\<phi>_maps hW(2) by (by100 blast)
+              also have "\<dots> = I_set \<inter> \<phi> -` W" by (by100 blast)
+              also have "\<dots> \<in> I_top"
+              proof -
+                have "\<exists>A. open A \<and> A \<inter> I_set = \<phi> -` W \<inter> I_set"
+                  using iffD1[OF continuous_on_open_invariant h\<phi>_cont_on] hW(1) by simp
+                then obtain A where "open A" "A \<inter> I_set = \<phi> -` W \<inter> I_set" by (by100 blast)
+                hence "I_set \<inter> A \<in> I_top" unfolding hItop subspace_topology_def top1_open_sets_def
+                  by (by100 blast)
+                moreover have "I_set \<inter> \<phi> -` W = I_set \<inter> A"
+                  using \<open>A \<inter> I_set = \<phi> -` W \<inter> I_set\<close> by (by100 blast)
+                ultimately show ?thesis by simp
+              qed
+              finally show "{t \<in> I_set. \<phi> t \<in> V} \<in> I_top" .
+            qed
+          qed
+          show ?thesis unfolding hfi_eq
+            by (rule top1_continuous_map_on_comp[OF h\<phi>_cont hf_cont])
+        qed
         show "fi i 0 = f (subdivision i)" unfolding fi_def by simp
         show "fi i 1 = f (subdivision (Suc i))" unfolding fi_def by simp
       qed
@@ -13994,6 +14030,9 @@ end
 
 
  
+
+
+
 
 
 
