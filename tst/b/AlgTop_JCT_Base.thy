@@ -2619,7 +2619,62 @@ proof -
     thus "k (q z) = q (h z)" unfolding k_def z'_def by simp
   qed
   have hk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology k"
-    sorry \<comment> \<open>Continuity: on each evenly covered U, k = q∘h∘(local section), continuous.\<close>
+  proof -
+    \<comment> \<open>k is continuous because q is a quotient map and k∘q = q∘h is continuous.\<close>
+    \<comment> \<open>First: q∘h is continuous S^1 \<rightarrow> S^1.\<close>
+    have hq_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q"
+      using squaring_map_covering unfolding top1_covering_map_on_def hq_alt[symmetric] by (by100 blast)
+    have hqh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (q \<circ> h)"
+      by (rule top1_continuous_map_on_comp[OF hh hq_cont])
+    \<comment> \<open>q is a quotient map (covering \<Rightarrow> open surjection \<Rightarrow> preimages of open=open characterize topology).\<close>
+    \<comment> \<open>For V open in S^1: q^{-1}(k^{-1}(V)) = (q\<circ>h)^{-1}(V) is open (since q\<circ>h continuous).
+       Since q is a quotient map, k^{-1}(V) is open.\<close>
+    \<comment> \<open>Instead of proving q is a quotient map in general, we use Theorem_22_2 directly.\<close>
+    have hg_const: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1. q z = q z' \<longrightarrow> (q \<circ> h) z = (q \<circ> h) z'"
+    proof (intro ballI impI)
+      fix z z' assume hz: "z \<in> top1_S1" and hz': "z' \<in> top1_S1" and hqeq: "q z = q z'"
+      have "z' = z \<or> z' = (- fst z, - snd z)" by (rule hq_fiber[OF hz hz' hqeq[symmetric]])
+      thus "(q \<circ> h) z = (q \<circ> h) z'"
+      proof
+        assume "z' = z" thus ?thesis by simp
+      next
+        assume "z' = (- fst z, - snd z)"
+        hence "(q \<circ> h) z' = q (h (- fst z, - snd z))" by simp
+        also have "\<dots> = q (h z)" using hqh_fiber[OF hz] by simp
+        finally show ?thesis by simp
+      qed
+    qed
+    \<comment> \<open>q is a quotient map. Covering maps are quotient maps.\<close>
+    have hq_quotient: "top1_quotient_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q"
+      sorry \<comment> \<open>Covering map \<Rightarrow> open map \<Rightarrow> quotient map. Standard fact.\<close>
+    \<comment> \<open>By Theorem 22.2: g = q∘h constant on fibers, so \<exists>f with f∘q=g and f continuous iff g continuous.\<close>
+    have hg_range: "\<forall>z\<in>top1_S1. (q \<circ> h) z \<in> top1_S1"
+      using hqh_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    obtain f where hf_range: "\<forall>w\<in>top1_S1. f w \<in> top1_S1"
+        and hf_eq: "\<forall>z\<in>top1_S1. f (q z) = (q \<circ> h) z"
+        and hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology f
+            \<longleftrightarrow> top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (q \<circ> h)"
+      using Theorem_22_2[OF hq_quotient hg_range hg_const] by blast
+    have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology f"
+      using hf_cont_iff hqh_cont by simp
+    \<comment> \<open>f = k on S^1 (both satisfy f(q(z)) = q(h(z))).\<close>
+    have hfk_eq: "\<And>w. w \<in> top1_S1 \<Longrightarrow> f w = k w"
+    proof -
+      fix w assume hw: "w \<in> top1_S1"
+      have "w \<in> q ` top1_S1" using hq_surj hw by simp
+      then obtain z where hz: "z \<in> top1_S1" and hqz: "q z = w" by (by100 auto)
+      have "f w = f (q z)" using hqz by simp
+      also have "\<dots> = (q \<circ> h) z" using hf_eq hz by simp
+      also have "\<dots> = q (h z)" by simp
+      also have "\<dots> = k (q z)" using hk_eq[OF hz] by simp
+      also have "\<dots> = k w" using hqz by simp
+      finally show "f w = k w" .
+    qed
+    \<comment> \<open>k is continuous (= f on S^1, and f is continuous).\<close>
+    show ?thesis
+      using iffD1[OF top1_continuous_map_on_cong[of top1_S1 f k] hf_cont]
+      using hfk_eq by (by100 blast)
+  qed
   show ?thesis
   proof (rule that[of k])
     show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology k" by (rule hk_cont)
