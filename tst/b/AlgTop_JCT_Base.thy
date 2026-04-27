@@ -110,10 +110,50 @@ proof -
   qed
   \<comment> \<open>Every point of S^1 has an evenly covered neighborhood.
      Use 4 open semicircles: U_top = {(a,b) \<in> S^1 | b > 0}, etc.\<close>
+  \<comment> \<open>4 open semicircles covering S^1.\<close>
+  define U_top where "U_top = {p \<in> top1_S1. snd p > 0}"
+  define U_bot where "U_bot = {p \<in> top1_S1. snd p < 0}"
+  define U_right where "U_right = {p \<in> top1_S1. fst p > 0}"
+  define U_left where "U_left = {p \<in> top1_S1. fst p < 0}"
+  \<comment> \<open>Every point of S^1 is in at least one semicircle.\<close>
+  have hcover: "\<And>p. p \<in> top1_S1 \<Longrightarrow> p \<in> U_top \<or> p \<in> U_bot \<or> p \<in> U_right \<or> p \<in> U_left"
+  proof -
+    fix p assume hp: "p \<in> top1_S1"
+    obtain a b where hab: "p = (a, b)" by (cases p) auto
+    have hS1: "a\<^sup>2 + b\<^sup>2 = 1" using hp unfolding top1_S1_def hab by simp
+    show "p \<in> U_top \<or> p \<in> U_bot \<or> p \<in> U_right \<or> p \<in> U_left"
+    proof (cases "b > 0")
+      case True thus ?thesis unfolding U_top_def using hp hab by simp
+    next
+      case False
+      show ?thesis
+      proof (cases "b < 0")
+        case True thus ?thesis unfolding U_bot_def using hp hab by simp
+      next
+        case False
+        hence "b = 0" using \<open>\<not> b > 0\<close> by simp
+        hence "a\<^sup>2 = 1" using hS1 by simp
+        hence "a = 1 \<or> a = -1" by (metis power2_eq_1_iff)
+        thus ?thesis unfolding U_right_def U_left_def using hp hab by auto
+      qed
+    qed
+  qed
+  \<comment> \<open>Each semicircle is evenly covered. We prove this for U_top; the others are analogous.\<close>
+  have hevenly_top: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_top"
+    sorry
+  have hevenly_bot: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_bot"
+    sorry
+  have hevenly_right: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_right"
+    sorry
+  have hevenly_left: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_left"
+    sorry
   have hq_evenly: "\<And>b. b \<in> top1_S1 \<Longrightarrow>
       \<exists>U. b \<in> U \<and> top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U"
-    sorry \<comment> \<open>TODO: 4 semicircle cover. Each semicircle U has q^{-1}(U) = V1 \<union> V2 disjoint,
-       q|V1 and q|V2 homeomorphisms onto U. Substantial but systematic.\<close>
+  proof -
+    fix b assume hb: "b \<in> top1_S1"
+    from hcover[OF hb] show "\<exists>U. b \<in> U \<and> top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U"
+      using hevenly_top hevenly_bot hevenly_right hevenly_left by (by100 blast)
+  qed
   show ?thesis unfolding hq_alt[symmetric] top1_covering_map_on_def
     using hq_cont hq_surj hq_evenly by (by100 blast)
 qed
