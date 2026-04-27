@@ -1410,7 +1410,214 @@ proof -
     \<comment> \<open>Homeomorphisms: same pattern as previous cases. Inverse for V5: (a,b) \<mapsto> (sqrt((1+a)/2), b/(2*sqrt((1+a)/2))).
        For V6: negate both components.\<close>
     have hhomeo5: "top1_homeomorphism_on V5 (subspace_topology top1_S1 top1_S1_topology V5)
-        U_right (subspace_topology top1_S1 top1_S1_topology U_right) q" sorry
+        U_right (subspace_topology top1_S1 top1_S1_topology U_right) q"
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      have hTS1r: "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+      qed
+      show "is_topology_on V5 (subspace_topology top1_S1 top1_S1_topology V5)"
+        by (rule subspace_topology_is_topology_on[OF hTS1r]) (use V5_def in blast)
+      show "is_topology_on U_right (subspace_topology top1_S1 top1_S1_topology U_right)"
+        by (rule subspace_topology_is_topology_on[OF hTS1r]) (use U_right_def in blast)
+      show hbij5: "bij_betw q V5 U_right"
+      proof (rule bij_betw_imageI)
+        show "inj_on q V5"
+        proof (rule inj_onI)
+          fix p1 p2 assume hp1: "p1 \<in> V5" and hp2: "p2 \<in> V5" and heq: "q p1 = q p2"
+          obtain x1 y1 where h1: "p1 = (x1, y1)" by (cases p1) auto
+          obtain x2 y2 where h2: "p2 = (x2, y2)" by (cases p2) auto
+          have hx1: "x1 + y1 > 0" "x1 - y1 > 0" "x1\<^sup>2 + y1\<^sup>2 = 1"
+            using hp1 unfolding V5_def top1_S1_def h1 by auto
+          have hx2: "x2 + y2 > 0" "x2 - y2 > 0" "x2\<^sup>2 + y2\<^sup>2 = 1"
+            using hp2 unfolding V5_def top1_S1_def h2 by auto
+          have "x1\<^sup>2 - y1\<^sup>2 = x2\<^sup>2 - y2\<^sup>2" using heq unfolding q_def h1 h2 by auto
+          have "x1\<^sup>2 = x2\<^sup>2"
+          proof -
+            have "x1\<^sup>2 = (1 + (x1\<^sup>2 - y1\<^sup>2))/2" using hx1(3) by (simp add: field_simps)
+            also have "\<dots> = (1 + (x2\<^sup>2 - y2\<^sup>2))/2" using \<open>x1\<^sup>2 - y1\<^sup>2 = x2\<^sup>2 - y2\<^sup>2\<close> by simp
+            also have "\<dots> = x2\<^sup>2" using hx2(3) by (simp add: field_simps)
+            finally show ?thesis .
+          qed
+          moreover have "2*x1*y1 = 2*x2*y2" using heq unfolding q_def h1 h2 by auto
+          hence "x1*y1 = x2*y2" by simp
+          \<comment> \<open>x1^2 = x2^2 and x1 > 0 (since x1+y1>0 and x1-y1>0 imply x1>0).\<close>
+          moreover have "x1 > 0" using hx1(1) hx1(2) by linarith
+          moreover have "x2 > 0" using hx2(1) hx2(2) by linarith
+          ultimately have "x1 = x2" by (simp add: power2_eq_iff_nonneg)
+          moreover have "y1 = y2"
+          proof -
+            have "y1\<^sup>2 = y2\<^sup>2" using \<open>x1\<^sup>2 = x2\<^sup>2\<close> hx1(3) hx2(3) by linarith
+            moreover have "x1*y1 = x1*y2" using \<open>x1*y1 = x2*y2\<close> \<open>x1 = x2\<close> by simp
+            hence "y1 = y2" using \<open>x1 > 0\<close> by simp
+            thus ?thesis .
+          qed
+          ultimately show "p1 = p2" unfolding h1 h2 by simp
+        qed
+      next
+        show "q ` V5 = U_right"
+        proof (intro set_eqI iffI)
+          fix w assume "w \<in> q ` V5"
+          then obtain p where hp: "p \<in> V5" and hw: "w = q p" by (by100 blast)
+          have "p \<in> top1_S1" using hp unfolding V5_def by auto
+          obtain x y where hxy: "p = (x, y)" by (cases p) auto
+          have "x + y > 0" "x - y > 0" using hp unfolding V5_def hxy by auto
+          hence "(x+y)*(x-y) > 0" by (simp add: mult_pos_pos)
+          hence "x\<^sup>2 - y\<^sup>2 > 0" by (simp add: power2_eq_square algebra_simps)
+          hence "fst (q p) > 0" unfolding q_def hxy by (simp add: power2_eq_square)
+          moreover have "q p \<in> top1_S1" by (rule hq_S1[OF \<open>p \<in> top1_S1\<close>])
+          ultimately show "w \<in> U_right" unfolding U_right_def using hw by simp
+        next
+          fix w assume hw: "w \<in> U_right"
+          obtain a b where hab: "w = (a, b)" by (cases w) auto
+          have hS1w: "a\<^sup>2 + b\<^sup>2 = 1" and ha: "a > 0" using hw unfolding U_right_def top1_S1_def hab by auto
+          define x where "x = sqrt ((1+a)/2)" define y where "y = b / (2 * sqrt ((1+a)/2))"
+          have hx_pos: "x > 0" unfolding x_def using ha by simp
+          have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square using ha by (simp add: real_sqrt_mult_self)
+          \<comment> \<open>y = b/(2x). Then 2xy = b. And x^2+y^2 = (1+a)/2 + b^2/(4*(1+a)/2) = (1+a)/2 + b^2/(2(1+a)).\<close>
+          have hx_eq: "2*x = 2*sqrt((1+a)/2)" unfolding x_def by simp
+          have h2x_pos: "2*x > 0" using hx_pos by simp
+          have hqb: "2*x*y = b"
+          proof -
+            have "sqrt ((1+a)/2) > 0" using ha by simp
+            hence "2 * sqrt ((1+a)/2) \<noteq> 0" by simp
+            thus ?thesis unfolding y_def x_def by simp
+          qed
+          \<comment> \<open>x^2+y^2=1: from (2xy)^2=b^2 and x^2=(1+a)/2.\<close>
+          have "4*x\<^sup>2*(x\<^sup>2 + y\<^sup>2) = 4*x\<^sup>2*x\<^sup>2 + (2*x*y)\<^sup>2"
+            by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = (2*x\<^sup>2)\<^sup>2 + b\<^sup>2" using hqb by (simp add: power2_eq_square algebra_simps)
+          also have "2*x\<^sup>2 = 1+a" using hx2 by auto
+          also have "(1+a)\<^sup>2 + b\<^sup>2 = 1 + 2*a + a\<^sup>2 + b\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = 2 + 2*a" using hS1w by linarith
+          also have "\<dots> = 2*(1+a)" by simp
+          also have "\<dots> = 4*x\<^sup>2" using hx2 by auto
+          finally have "4*x\<^sup>2*(x\<^sup>2+y\<^sup>2) = 4*x\<^sup>2" .
+          hence hxy_S1: "x\<^sup>2 + y\<^sup>2 = 1" using hx_pos by simp
+          have hqa: "x\<^sup>2 - y\<^sup>2 = a"
+          proof -
+            have "2*x\<^sup>2 = 1+a" using hx2 by auto
+            hence "x\<^sup>2 - y\<^sup>2 = 2*x\<^sup>2 - 1" using hxy_S1 by linarith
+            also have "\<dots> = a" using \<open>2*x\<^sup>2 = 1+a\<close> by linarith
+            finally show ?thesis .
+          qed
+          \<comment> \<open>(x,y) \<in> V5: need x+y > 0 and x-y > 0.\<close>
+          have "x + y > 0 \<and> x - y > 0"
+          proof -
+            have "(x+y)*(x-y) = x\<^sup>2 - y\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+            hence "(x+y)*(x-y) = a" using hqa by simp
+            hence "(x+y)*(x-y) > 0" using ha by simp
+            hence "(x+y > 0 \<and> x-y > 0) \<or> (x+y < 0 \<and> x-y < 0)"
+              using zero_less_mult_iff by force
+            moreover have "x + y > 0 \<or> x - y > 0" using hx_pos by linarith
+            ultimately show ?thesis by linarith
+          qed
+          hence "(x, y) \<in> V5" unfolding V5_def top1_S1_def using hxy_S1 by simp
+          moreover have "q (x, y) = w"
+          proof -
+            have "fst (q (x, y)) = a" unfolding q_def using hqa by simp
+            moreover have "snd (q (x, y)) = b" unfolding q_def using hqb by simp
+            ultimately have "q (x, y) = (a, b)" by (simp add: prod_eq_iff)
+            thus ?thesis using hab by simp
+          qed
+          ultimately show "w \<in> q ` V5" by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Forward and inverse continuity: same pattern as previous cases.\<close>
+      show "top1_continuous_map_on V5 (subspace_topology top1_S1 top1_S1_topology V5)
+          U_right (subspace_topology top1_S1 top1_S1_topology U_right) q"
+      proof -
+        have hV5_sub: "V5 \<subseteq> top1_S1" unfolding V5_def by (by100 blast)
+        have hU_sub: "U_right \<subseteq> top1_S1" unfolding U_right_def by (by100 blast)
+        have hq_V5: "top1_continuous_map_on V5 (subspace_topology top1_S1 top1_S1_topology V5)
+            top1_S1 top1_S1_topology q"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hq_cont hV5_sub])
+        have hq_img: "q ` V5 \<subseteq> U_right" using hbij5 unfolding bij_betw_def by (by100 blast)
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> V5" thus "q p \<in> U_right" using hq_img by (by100 blast)
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S1 top1_S1_topology U_right"
+          obtain W where hW: "W \<in> top1_S1_topology" and hVeq: "V = U_right \<inter> W"
+            using hV unfolding subspace_topology_def by (by100 blast)
+          have "{p \<in> V5. q p \<in> V} = {p \<in> V5. q p \<in> W}" using hq_img hVeq by (by100 blast)
+          moreover have "{p \<in> V5. q p \<in> W} \<in> subspace_topology top1_S1 top1_S1_topology V5"
+            using hq_V5 hW unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "{p \<in> V5. q p \<in> V} \<in> subspace_topology top1_S1 top1_S1_topology V5" by simp
+        qed
+      qed
+      show "top1_continuous_map_on U_right (subspace_topology top1_S1 top1_S1_topology U_right)
+          V5 (subspace_topology top1_S1 top1_S1_topology V5) (inv_into V5 q)"
+      proof -
+        define qi5 where "qi5 = (\<lambda>(a::real, b::real). (sqrt ((1+a)/2), b / (2 * sqrt ((1+a)/2))))"
+        have hqi5_props: "\<And>w. w \<in> U_right \<Longrightarrow> qi5 w \<in> V5 \<and> q (qi5 w) = w"
+          sorry \<comment> \<open>Same arithmetic as the surjectivity proof for V5 above.\<close>
+        have hqi5_eq: "\<And>w. w \<in> U_right \<Longrightarrow> qi5 w = inv_into V5 q w"
+        proof -
+          fix w assume hw: "w \<in> U_right"
+          have "qi5 w \<in> V5" and "q (qi5 w) = w" using hqi5_props[OF hw] by auto
+          thus "qi5 w = inv_into V5 q w"
+            by (simp add: inv_into_f_eq[OF inj_on_subset[OF bij_betw_imp_inj_on[OF hbij5]]])
+        qed
+        have hqi5_V5: "\<And>w. w \<in> U_right \<Longrightarrow> qi5 w \<in> V5" using hqi5_props by (by100 blast)
+        have hqi5_cont: "continuous_on U_right qi5"
+          unfolding qi5_def split_def
+          by (intro continuous_intros continuous_on_divide)
+             (auto simp: U_right_def top1_S1_def)
+        have hU_sub: "U_right \<subseteq> top1_S1" unfolding U_right_def by (by100 blast)
+        have hV5_sub: "V5 \<subseteq> top1_S1" unfolding V5_def by (by100 blast)
+        show ?thesis unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix w assume "w \<in> U_right"
+          show "inv_into V5 q w \<in> V5" using hqi5_eq[OF \<open>w \<in> U_right\<close>] hqi5_V5[OF \<open>w \<in> U_right\<close>] by simp
+        next
+          fix V assume hV: "V \<in> subspace_topology top1_S1 top1_S1_topology V5"
+          obtain W'' where hW'': "W'' \<in> product_topology_on top1_open_sets top1_open_sets"
+              and hWeq: "V = V5 \<inter> (top1_S1 \<inter> W'')"
+          proof -
+            obtain W where hW: "W \<in> top1_S1_topology" and hVeq: "V = V5 \<inter> W"
+              using hV unfolding subspace_topology_def by (by100 blast)
+            obtain W' where hW': "W' \<in> product_topology_on top1_open_sets top1_open_sets"
+                and hWW': "W = top1_S1 \<inter> W'"
+              using hW unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+            show ?thesis using that[OF hW'] hVeq hWW' by simp
+          qed
+          have hW''_open: "open W''"
+            using hW'' by (metis product_topology_on_open_sets_real2 top1_open_sets_def mem_Collect_eq)
+          have "{w \<in> U_right. inv_into V5 q w \<in> V} = {w \<in> U_right. qi5 w \<in> W''}"
+          proof (intro Collect_cong conj_cong refl)
+            fix w assume hw: "w \<in> U_right"
+            have "inv_into V5 q w = qi5 w" using hqi5_eq[OF hw] by simp
+            moreover have "qi5 w \<in> V5" using hqi5_V5[OF hw] .
+            moreover have "V5 \<subseteq> top1_S1" using hV5_sub .
+            ultimately show "(inv_into V5 q w \<in> V) = (qi5 w \<in> W'')" using hWeq by auto
+          qed
+          moreover have "{w \<in> U_right. qi5 w \<in> W''} \<in> subspace_topology top1_S1 top1_S1_topology U_right"
+          proof -
+            obtain U where hU: "open U" and hUeq: "U \<inter> U_right = qi5 -` W'' \<inter> U_right"
+              using hqi5_cont hW''_open unfolding continuous_on_open_invariant by blast
+            have "{w \<in> U_right. qi5 w \<in> W''} = U \<inter> U_right" using hUeq by (by100 blast)
+            moreover have "U \<inter> U_right \<in> subspace_topology top1_S1 top1_S1_topology U_right"
+            proof -
+              have "U \<in> top1_open_sets" using hU unfolding top1_open_sets_def by simp
+              hence "U \<in> product_topology_on top1_open_sets top1_open_sets"
+                using product_topology_on_open_sets_real2 by (by100 metis)
+              hence "top1_S1 \<inter> U \<in> top1_S1_topology"
+                unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+              moreover have "U \<inter> U_right = U_right \<inter> (top1_S1 \<inter> U)" using hU_sub by blast
+              ultimately show ?thesis unfolding subspace_topology_def by blast
+            qed
+            ultimately show ?thesis by simp
+          qed
+          ultimately show "{w \<in> U_right. inv_into V5 q w \<in> V}
+              \<in> subspace_topology top1_S1 top1_S1_topology U_right" by simp
+        qed
+      qed
+    qed
     have hhomeo6: "top1_homeomorphism_on V6 (subspace_topology top1_S1 top1_S1_topology V6)
         U_right (subspace_topology top1_S1 top1_S1_topology U_right) q" sorry
     show ?thesis unfolding top1_evenly_covered_on_def
