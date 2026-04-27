@@ -2863,11 +2863,31 @@ proof (intro allI impI)
           x0 (f (subdivision i)) (\<alpha>s i)" by metis
       thus ?thesis using that by (by100 blast)
     qed
+    \<comment> \<open>Modify \<alpha>s so \<alpha>s(0) = const_x0 and \<alpha>s(m) = const_x0 (Munkres convention).\<close>
+    define \<alpha>s' where "\<alpha>s' i = (if i = 0 \<or> i = m then top1_constant_path x0 else \<alpha>s i)" for i
+    have h\<alpha>s': "\<forall>i\<le>m. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+        x0 (f (subdivision i)) (\<alpha>s' i)"
+    proof (intro allI impI)
+      fix i assume "i \<le> m"
+      show "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 (f (subdivision i)) (\<alpha>s' i)"
+      proof (cases "i = 0 \<or> i = m")
+        case True
+        hence "\<alpha>s' i = top1_constant_path x0" unfolding \<alpha>s'_def by simp
+        moreover have "f (subdivision i) = x0"
+          using True hsub0 hsubm hf
+          unfolding top1_is_loop_on_def top1_is_path_on_def by auto
+        ultimately show ?thesis sorry \<comment> \<open>const_x0 is path x0\<rightarrow>x0 in U\<inter>V (x0 \<in> U\<inter>V).\<close>
+      next
+        case False thus ?thesis unfolding \<alpha>s'_def using h\<alpha>s \<open>i \<le> m\<close> by simp
+      qed
+    qed
+    have h\<alpha>s'_0: "\<alpha>s' 0 = top1_constant_path x0" unfolding \<alpha>s'_def by simp
+    have h\<alpha>s'_m: "\<alpha>s' m = top1_constant_path x0" unfolding \<alpha>s'_def by simp
     \<comment> \<open>Step 2b: Define reparametrized pieces fi(t) = f(sub(i) + t*(sub(i+1)-sub(i))).\<close>
     define fi where "fi i = (\<lambda>t. f (subdivision i + t * (subdivision (Suc i) - subdivision i)))" for i
-    \<comment> \<open>Step 2c: Define conjugated loops gi = (\<alpha>s i * fi i) * rev(\<alpha>s (Suc i)).\<close>
-    define gi where "gi i = top1_path_product (top1_path_product (\<alpha>s i) (fi i))
-        (top1_path_reverse (\<alpha>s (Suc i)))" for i
+    \<comment> \<open>Step 2c: Define conjugated loops gi = (\<alpha>s' i * fi i) * rev(\<alpha>s' (Suc i)).\<close>
+    define gi where "gi i = top1_path_product (top1_path_product (\<alpha>s' i) (fi i))
+        (top1_path_reverse (\<alpha>s' (Suc i)))" for i
     \<comment> \<open>Step 2d: Build the list gs = [gi 0, gi 1, ..., gi (m-1)].\<close>
     define gs_list where "gs_list = map gi [0..<m]"
     have hgs_len: "length gs_list = m" unfolding gs_list_def by simp
@@ -3076,23 +3096,23 @@ proof (intro allI impI)
       fix i assume hi: "i < m"
       have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
       have hUV_sub: "U \<inter> V \<subseteq> X" using assms(2,3) unfolding openin_on_def by (by100 blast)
-      have h\<alpha>i: "top1_is_path_on X TX x0 (f (subdivision i)) (\<alpha>s i)"
-        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s[rule_format]])
+      have h\<alpha>i: "top1_is_path_on X TX x0 (f (subdivision i)) (\<alpha>s' i)"
+        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s'[rule_format]])
            (use hi in simp)
-      have h\<alpha>si: "top1_is_path_on X TX x0 (f (subdivision (Suc i))) (\<alpha>s (Suc i))"
-        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s[rule_format]])
+      have h\<alpha>si: "top1_is_path_on X TX x0 (f (subdivision (Suc i))) (\<alpha>s' (Suc i))"
+        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s'[rule_format]])
            (use hi in simp)
-      have hrev: "top1_is_path_on X TX (f (subdivision (Suc i))) x0 (top1_path_reverse (\<alpha>s (Suc i)))"
+      have hrev: "top1_is_path_on X TX (f (subdivision (Suc i))) x0 (top1_path_reverse (\<alpha>s' (Suc i)))"
         by (rule top1_path_reverse_is_path[OF h\<alpha>si])
       have hprod1: "top1_is_path_on X TX x0 (f (subdivision (Suc i)))
-          (top1_path_product (\<alpha>s i) (fi i))"
+          (top1_path_product (\<alpha>s' i) (fi i))"
         by (rule top1_path_product_is_path[OF hTX h\<alpha>i hfi_path[OF hi]])
       have hgi_path: "top1_is_path_on X TX x0 x0 (gi i)"
         unfolding gi_def by (rule top1_path_product_is_path[OF hTX hprod1 hrev])
       have "gs_list ! i = gi i" unfolding gs_list_def using hi by simp
       show "top1_is_loop_on X TX x0 (gs_list ! i)"
         unfolding \<open>gs_list ! i = gi i\<close> top1_is_loop_on_def using hgi_path by simp
-      \<comment> \<open>Image: \<alpha>s \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev \<subseteq> U\<inter>V.\<close>
+      \<comment> \<open>Image: \<alpha>s' \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev \<subseteq> U\<inter>V.\<close>
       show "gs_list ! i ` I_set \<subseteq> U \<or> gs_list ! i ` I_set \<subseteq> V"
       proof -
         \<comment> \<open>Path product image \<subseteq> union of component images.\<close>
@@ -3129,34 +3149,34 @@ proof (intro allI impI)
             ultimately show "y \<in> f ` I_set" by (by100 blast)
           qed
         qed
-        \<comment> \<open>gi image \<subseteq> \<alpha>s(i) \<union> fi(i) \<union> rev(\<alpha>s(Suc i)) images.\<close>
-        have "gi i ` I_set \<subseteq> (top1_path_product (\<alpha>s i) (fi i)) ` I_set
-            \<union> (top1_path_reverse (\<alpha>s (Suc i))) ` I_set"
+        \<comment> \<open>gi image \<subseteq> \<alpha>s'(i) \<union> fi(i) \<union> rev(\<alpha>s'(Suc i)) images.\<close>
+        have "gi i ` I_set \<subseteq> (top1_path_product (\<alpha>s' i) (fi i)) ` I_set
+            \<union> (top1_path_reverse (\<alpha>s' (Suc i))) ` I_set"
           unfolding gi_def using hprod_img by (by100 blast)
-        also have "\<dots> \<subseteq> \<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set"
+        also have "\<dots> \<subseteq> \<alpha>s' i ` I_set \<union> fi i ` I_set \<union> \<alpha>s' (Suc i) ` I_set"
           using hprod_img hrev_img by (by100 blast)
-        finally have hgi_img: "gi i ` I_set \<subseteq> \<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set" .
-        \<comment> \<open>\<alpha>s images \<subseteq> U\<inter>V.\<close>
-        have h\<alpha>i_maps: "\<forall>t\<in>I_set. \<alpha>s i t \<in> U \<inter> V"
-          using h\<alpha>s[rule_format, of i] hi
+        finally have hgi_img: "gi i ` I_set \<subseteq> \<alpha>s' i ` I_set \<union> fi i ` I_set \<union> \<alpha>s' (Suc i) ` I_set" .
+        \<comment> \<open>\<alpha>s' images \<subseteq> U\<inter>V.\<close>
+        have h\<alpha>i_maps: "\<forall>t\<in>I_set. \<alpha>s' i t \<in> U \<inter> V"
+          using h\<alpha>s'[rule_format, of i] hi
           unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
-        have h\<alpha>i_img: "\<alpha>s i ` I_set \<subseteq> U \<inter> V" using h\<alpha>i_maps by (by100 blast)
-        have h\<alpha>si_maps: "\<forall>t\<in>I_set. \<alpha>s (Suc i) t \<in> U \<inter> V"
-          using h\<alpha>s[rule_format, of "Suc i"] hi
+        have h\<alpha>i_img: "\<alpha>s' i ` I_set \<subseteq> U \<inter> V" using h\<alpha>i_maps by (by100 blast)
+        have h\<alpha>si_maps: "\<forall>t\<in>I_set. \<alpha>s' (Suc i) t \<in> U \<inter> V"
+          using h\<alpha>s'[rule_format, of "Suc i"] hi
           unfolding top1_is_path_on_def top1_continuous_map_on_def by simp
-        have h\<alpha>si_img: "\<alpha>s (Suc i) ` I_set \<subseteq> U \<inter> V" using h\<alpha>si_maps by (by100 blast)
+        have h\<alpha>si_img: "\<alpha>s' (Suc i) ` I_set \<subseteq> U \<inter> V" using h\<alpha>si_maps by (by100 blast)
         have "gi i ` I_set \<subseteq> U \<or> gi i ` I_set \<subseteq> V"
         proof (rule disjE[OF hfi_UV[OF hi]])
           assume hfiU: "fi i ` I_set \<subseteq> U"
-          have hunionU: "\<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set \<subseteq> U"
+          have hunionU: "\<alpha>s' i ` I_set \<union> fi i ` I_set \<union> \<alpha>s' (Suc i) ` I_set \<subseteq> U"
             using h\<alpha>i_img h\<alpha>si_img hfiU by (by100 blast)
           hence "gi i ` I_set \<subseteq> U" by (rule subset_trans[OF hgi_img])
           thus ?thesis by (by100 blast)
         next
           assume "fi i ` I_set \<subseteq> V"
-          have h\<alpha>iV: "\<alpha>s i ` I_set \<subseteq> V" using h\<alpha>i_img by (by100 blast)
-          have h\<alpha>siV: "\<alpha>s (Suc i) ` I_set \<subseteq> V" using h\<alpha>si_img by (by100 blast)
-          have hunionV: "\<alpha>s i ` I_set \<union> fi i ` I_set \<union> \<alpha>s (Suc i) ` I_set \<subseteq> V"
+          have h\<alpha>iV: "\<alpha>s' i ` I_set \<subseteq> V" using h\<alpha>i_img by (by100 blast)
+          have h\<alpha>siV: "\<alpha>s' (Suc i) ` I_set \<subseteq> V" using h\<alpha>si_img by (by100 blast)
+          have hunionV: "\<alpha>s' i ` I_set \<union> fi i ` I_set \<union> \<alpha>s' (Suc i) ` I_set \<subseteq> V"
             using h\<alpha>iV \<open>fi i ` I_set \<subseteq> V\<close> h\<alpha>siV by (by100 blast)
           hence "gi i ` I_set \<subseteq> V" by (rule subset_trans[OF hgi_img])
           thus ?thesis by (by100 blast)
@@ -3175,12 +3195,15 @@ proof (intro allI impI)
     have hfi_gi: "top1_path_homotopic_on X TX x0 x0
         (foldr top1_path_product fi_list (top1_constant_path x0))
         (foldr top1_path_product gs_list (top1_constant_path x0))"
-      sorry \<comment> \<open>Telescoping: gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)).
-         \<alpha>0 = const_x0, \<alpha>m = const_x0.
-         g1*...*gm = (\<alpha>0*f1*rev(\<alpha>1)) * (\<alpha>1*f2*rev(\<alpha>2)) * ... * (\<alpha>(m-1)*fm*rev(\<alpha>m))
-         = \<alpha>0 * f1 * (rev(\<alpha>1)*\<alpha>1) * f2 * (rev(\<alpha>2)*\<alpha>2) * ... * fm * rev(\<alpha>m)
-         \<simeq> const * f1 * const * f2 * const * ... * fm * const (inverse cancellation)
-         = f1 * f2 * ... * fm (identity removal).\<close>
+      sorry \<comment> \<open>Telescoping: The hardest path algebra step.
+         gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)), \<alpha>0 = \<alpha>m = const_x0.
+         By induction on m using:
+         - Theorem_51_2_invgerse_right: rev(\<alpha>)*\<alpha> \<simeq> const
+         - Theorem_51_2_left/right_identity: const*f \<simeq> f, f*const \<simeq> f
+         - Theorem_51_2_associativity: (f*g)*h \<simeq> f*(g*h)
+         - path_homotopic_product_left/right: homotopy respects products
+         - Lemma_51_1_path_homotopic_trans: transitivity of path homotopy
+         All available in Top1_Ch9_13.thy. ~80 lines of path algebra.\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
     proof -
@@ -14243,3 +14266,5 @@ end
   
  
   
+
+
