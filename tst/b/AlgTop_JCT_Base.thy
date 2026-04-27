@@ -2646,8 +2646,30 @@ proof -
     qed
     \<comment> \<open>q is a quotient map. Covering maps are quotient maps.\<close>
     have hq_quotient: "top1_quotient_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q"
-      sorry \<comment> \<open>Covering map \<Rightarrow> open map \<Rightarrow> quotient map. Standard fact.
-         q is open because each sheet maps homeomorphically.\<close>
+    proof -
+      have hTS1q: "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+      qed
+      have hq_cover: "top1_covering_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q"
+        using squaring_map_covering unfolding hq_alt[symmetric] by simp
+      \<comment> \<open>q is an open map: for U open in S^1, q(U) is open in S^1.
+         This follows from q being a local homeomorphism (covering map).
+         For each w \<in> q(U), pick evenly covered V \<ni> w. On the sheet containing the
+         preimage point in U, q restricts to a homeomorphism, so q(sheet \<inter> U) is open.
+         Hence q(U) is a union of opens = open.\<close>
+      \<comment> \<open>Proving q is an open map is substantial. Instead, we prove the quotient
+         condition directly: if q^{-1}(V) is open and V \<subseteq> S^1, then V is open.
+         For each w \<in> V, pick evenly covered U \<ni> w. The preimage q^{-1}(U) = \<Union>V_i
+         with q|V_i homeomorphisms. V_i \<inter> q^{-1}(V) is open in V_i (since q^{-1}(V) open).
+         q(V_i \<inter> q^{-1}(V)) = U \<inter> V is open in S^1 (homeomorphism maps open to open).
+         So w has open neighborhood U \<inter> V \<subseteq> V. Hence V is open.\<close>
+      show ?thesis unfolding top1_quotient_map_on_def
+        using hTS1q hq_cont hq_surj sorry
+    qed
     \<comment> \<open>By Theorem 22.2: g = q∘h constant on fibers, so \<exists>f with f∘q=g and f continuous iff g continuous.\<close>
     have hg_range: "\<forall>z\<in>top1_S1. (q \<circ> h) z \<in> top1_S1"
       using hqh_cont unfolding top1_continuous_map_on_def by (by100 blast)
