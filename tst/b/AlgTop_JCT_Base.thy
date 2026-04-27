@@ -648,7 +648,53 @@ proof -
         define qi2 where "qi2 = (\<lambda>(a::real, b::real). (-sqrt ((1+a)/2), -sqrt ((1-a)/2)))"
         \<comment> \<open>qi2 maps U_top into V2 and q \<circ> qi2 = id on U_top.\<close>
         have hqi2_props: "\<And>w. w \<in> U_top \<Longrightarrow> qi2 w \<in> V2 \<and> q (qi2 w) = w"
-          sorry \<comment> \<open>Arithmetic: same as bij_betw surjectivity proof for V2.\<close>
+        proof -
+          fix w assume hw: "w \<in> U_top"
+          obtain a b where hab: "w = (a, b)" by (cases w) auto
+          have hS1w: "a\<^sup>2 + b\<^sup>2 = 1" and hb: "b > 0"
+            using hw unfolding U_top_def top1_S1_def hab by auto
+          have "b\<^sup>2 > 0" using hb by (simp add: power2_eq_square zero_less_mult_iff)
+          hence ha2: "a\<^sup>2 < 1" using hS1w by linarith
+          hence ha_bounds: "a < 1 \<and> -1 < a"
+          proof -
+            have "\<not> (a \<ge> 1)" proof assume "1 \<le> a"
+              hence "1 \<le> a * a" using mult_mono[of 1 a 1 a] by simp
+              thus False using ha2 by (simp add: power2_eq_square) qed
+            moreover have "\<not> (a \<le> -1)" proof assume "a \<le> -1"
+              hence "1 \<le> (-a)*(-a)" using mult_mono[of 1 "-a" 1 "-a"] by linarith
+              thus False using ha2 by (simp add: power2_eq_square) qed
+            ultimately show ?thesis by linarith
+          qed
+          define x where "x = -sqrt ((1+a)/2)"
+          define y where "y = -sqrt ((1-a)/2)"
+          have hqi2_w: "qi2 w = (x, y)" unfolding qi2_def hab x_def y_def by simp
+          have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+          have hy2: "y\<^sup>2 = (1-a)/2" unfolding y_def power2_eq_square using ha_bounds by (simp add: real_sqrt_mult_self)
+          have hx_neg: "x < 0" unfolding x_def using ha_bounds by simp
+          have hy_neg: "y < 0" unfolding y_def using ha_bounds by simp
+          have hxy_S1: "x\<^sup>2 + y\<^sup>2 = 1" using hx2 hy2 by simp
+          have hqa: "x\<^sup>2 - y\<^sup>2 = a" using hx2 hy2 by simp
+          have "2*x\<^sup>2 = 1+a" using hx2 by auto
+          have "2*y\<^sup>2 = 1-a" using hy2 by auto
+          have "(2*x*y)\<^sup>2 = (2*x\<^sup>2)*(2*y\<^sup>2)" by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = (1+a)*(1-a)" using \<open>2*x\<^sup>2=1+a\<close> \<open>2*y\<^sup>2=1-a\<close> by simp
+          also have "\<dots> = 1-a\<^sup>2" by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = b\<^sup>2" using hS1w by linarith
+          finally have h2xy_eq_b2: "(2*x*y)\<^sup>2 = b\<^sup>2" .
+          have "2*x*y \<ge> 0" using hx_neg hy_neg by (simp add: mult_nonpos_nonpos)
+          have hqb: "2*x*y = b" using h2xy_eq_b2 \<open>2*x*y \<ge> 0\<close> hb by (simp add: power2_eq_iff_nonneg)
+          have "qi2 w \<in> V2" unfolding hqi2_w V2_def top1_S1_def using hxy_S1 hx_neg hy_neg by simp
+          moreover have "q (qi2 w) = w"
+          proof -
+            have "fst (q (x, y)) = x\<^sup>2 - y\<^sup>2" unfolding q_def by simp
+            hence "fst (q (x, y)) = a" using hqa by simp
+            moreover have "snd (q (x, y)) = 2*x*y" unfolding q_def by simp
+            hence "snd (q (x, y)) = b" using hqb by simp
+            ultimately have "q (x, y) = (a, b)" by (simp add: prod_eq_iff)
+            thus ?thesis using hqi2_w hab by simp
+          qed
+          ultimately show "qi2 w \<in> V2 \<and> q (qi2 w) = w" by (by100 blast)
+        qed
         have hqi2_eq: "\<And>w. w \<in> U_top \<Longrightarrow> qi2 w = inv_into V2 q w"
         proof -
           fix w assume hw: "w \<in> U_top"
