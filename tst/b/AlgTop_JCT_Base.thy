@@ -2120,6 +2120,33 @@ definition top1_Sn :: "nat \<Rightarrow> (nat \<Rightarrow> real) set" where
     j_*: \<pi>_1(V, x_0) \<rightarrow> \<pi>_1(X, x_0) generate \<pi>_1(X, x_0). Equivalently, every loop in
     X at x_0 is path-homotopic to a finite concatenation of loops, each of which
     lies entirely in U or entirely in V. **)
+text \<open>Helper: a path in a subspace is a path in the ambient space. (Moved here for use in 59.1.)\<close>
+lemma path_in_subspace_is_path_in_ambient':
+  assumes hTX: "is_topology_on X TX" and hWX: "W \<subseteq> X"
+      and hg: "top1_is_path_on W (subspace_topology X TX W) a b g"
+  shows "top1_is_path_on X TX a b g"
+  unfolding top1_is_path_on_def
+proof (intro conjI)
+  have hg_cont: "top1_continuous_map_on I_set I_top W (subspace_topology X TX W) g"
+    using hg unfolding top1_is_path_on_def by (by100 blast)
+  show "top1_continuous_map_on I_set I_top X TX g"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix s assume "s \<in> I_set"
+    thus "g s \<in> X" using hg_cont hWX unfolding top1_continuous_map_on_def by (by100 blast)
+  next
+    fix V assume hV: "V \<in> TX"
+    have hVW: "W \<inter> V \<in> subspace_topology X TX W"
+      unfolding subspace_topology_def using hV by (by100 blast)
+    have "{s \<in> I_set. g s \<in> V} = {s \<in> I_set. g s \<in> W \<inter> V}"
+      using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    also have "\<dots> \<in> I_top" using hg_cont hVW unfolding top1_continuous_map_on_def by (by100 blast)
+    finally show "{s \<in> I_set. g s \<in> V} \<in> I_top" .
+  qed
+  show "g 0 = a" using hg unfolding top1_is_path_on_def by (by100 blast)
+  show "g 1 = b" using hg unfolding top1_is_path_on_def by (by100 blast)
+qed
+
 theorem Theorem_59_1:
   assumes hT: "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
       and hUV: "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
@@ -14076,6 +14103,7 @@ end
 
 
  
+
 
 
 
