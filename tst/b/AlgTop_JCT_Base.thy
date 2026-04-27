@@ -2337,11 +2337,28 @@ proof (intro allI impI)
           case False
           \<comment> \<open>Internal good point: good(glist!i) holds, and glist!i \<noteq> 0, glist!i \<noteq> n_sub.\<close>
           have "0 < i" "i < n1" using \<open>i \<le> n1\<close> \<open>i \<noteq> 0\<close> \<open>i \<noteq> n1\<close> by auto
-          have "good (glist ! i)" sorry
-          moreover have "glist ! i \<noteq> 0" using \<open>0 < i\<close> hglist_sorted hglist_distinct hgl_0
-            sorry \<comment> \<open>i > 0 and glist!0 = 0 and distinct \<Rightarrow> glist!i \<noteq> 0.\<close>
-          moreover have "glist ! i \<noteq> n_sub" using \<open>i < n1\<close> hglist_sorted hglist_distinct hgl_n
-            sorry \<comment> \<open>i < n1 and glist!n1 = n_sub and distinct \<Rightarrow> glist!i \<noteq> n_sub.\<close>
+          have hi_lt_len: "i < length glist" using \<open>i < n1\<close> n1_def hglist_len by simp
+          have "glist ! i \<in> set glist" by (rule nth_mem[OF hi_lt_len])
+          have "set glist \<subseteq> {i. good i}" unfolding glist_def by auto
+          hence "good (glist ! i)" using \<open>glist ! i \<in> set glist\<close> by (by100 blast)
+          moreover have "glist ! i \<noteq> 0"
+          proof
+            assume "glist ! i = 0"
+            hence "glist ! i = glist ! 0" using hgl_0 by simp
+            have "0 < length glist" using hglist_len by linarith
+            hence "i = 0" using nth_eq_iff_index_eq[OF hglist_distinct]
+              hi_lt_len \<open>0 < length glist\<close> \<open>glist ! i = glist ! 0\<close> by simp
+            thus False using \<open>0 < i\<close> by simp
+          qed
+          moreover have "glist ! i \<noteq> n_sub"
+          proof
+            assume "glist ! i = n_sub"
+            hence "glist ! i = glist ! n1" using hgl_n by simp
+            have "n1 < length glist" using hglist_len n1_def by simp
+            hence "i = n1" using nth_eq_iff_index_eq[OF hglist_distinct]
+              hi_lt_len \<open>n1 < length glist\<close> \<open>glist ! i = glist ! n1\<close> by simp
+            thus False using \<open>i < n1\<close> by simp
+          qed
           ultimately show ?thesis unfolding sub1_def good_def by simp
         qed
       qed
