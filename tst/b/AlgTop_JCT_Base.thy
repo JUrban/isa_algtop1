@@ -3072,13 +3072,31 @@ proof (intro allI impI)
     qed
     have hgs_loops: "\<forall>i<m. top1_is_loop_on X TX x0 (gs_list!i)
         \<and> (gs_list!i ` I_set \<subseteq> U \<or> gs_list!i ` I_set \<subseteq> V)"
-      sorry \<comment> \<open>gi = (\<alpha>s(i) * fi(i)) * rev(\<alpha>s(Suc i)).
-         Loop: Uses top1_path_product_is_path, top1_path_reverse_is_path.
-         \<alpha>s(i): x0\<rightarrow>f(sub(i)), fi(i): f(sub(i))\<rightarrow>f(sub(Suc i)),
-         rev(\<alpha>s(Suc i)): f(sub(Suc i))\<rightarrow>x0.
-         Product: ((\<alpha>s(i)*fi(i))*rev(\<alpha>s(Suc i)))(0) = x0, ...(1) = x0.
-         Image: \<alpha>s \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev(\<alpha>s) \<subseteq> U\<inter>V.
-         U\<inter>V \<subseteq> U and \<subseteq> V, so gi \<subseteq> U or gi \<subseteq> V.\<close>
+    proof (intro allI impI conjI)
+      fix i assume hi: "i < m"
+      have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hUV_sub: "U \<inter> V \<subseteq> X" using assms(2,3) unfolding openin_on_def by (by100 blast)
+      have h\<alpha>i: "top1_is_path_on X TX x0 (f (subdivision i)) (\<alpha>s i)"
+        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s[rule_format]])
+           (use hi in simp)
+      have h\<alpha>si: "top1_is_path_on X TX x0 (f (subdivision (Suc i))) (\<alpha>s (Suc i))"
+        by (rule path_in_subspace_is_path_in_ambient'[OF hTX hUV_sub h\<alpha>s[rule_format]])
+           (use hi in simp)
+      have hrev: "top1_is_path_on X TX (f (subdivision (Suc i))) x0 (top1_path_reverse (\<alpha>s (Suc i)))"
+        by (rule top1_path_reverse_is_path[OF h\<alpha>si])
+      have hprod1: "top1_is_path_on X TX x0 (f (subdivision (Suc i)))
+          (top1_path_product (\<alpha>s i) (fi i))"
+        by (rule top1_path_product_is_path[OF hTX h\<alpha>i hfi_path[OF hi]])
+      have hgi_path: "top1_is_path_on X TX x0 x0 (gi i)"
+        unfolding gi_def by (rule top1_path_product_is_path[OF hTX hprod1 hrev])
+      have "gs_list ! i = gi i" unfolding gs_list_def using hi by simp
+      show "top1_is_loop_on X TX x0 (gs_list ! i)"
+        unfolding \<open>gs_list ! i = gi i\<close> top1_is_loop_on_def using hgi_path by simp
+      \<comment> \<open>Image: \<alpha>s \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev \<subseteq> U\<inter>V.\<close>
+      show "gs_list ! i ` I_set \<subseteq> U \<or> gs_list ! i ` I_set \<subseteq> V"
+        sorry \<comment> \<open>Path product image \<subseteq> union of component images.
+           All components \<subseteq> U or all \<subseteq> V (from fi_UV + \<alpha>s \<subseteq> U\<inter>V).\<close>
+    qed
     \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
@@ -14103,6 +14121,8 @@ end
 
 
  
+
+
 
 
 
