@@ -2812,7 +2812,50 @@ proof (intro allI impI)
        Telescoping: f \<simeq> f1*f2*...*fm (reparametrization of f)
                       \<simeq> (rev(\<alpha>0)*f1*\<alpha>1) * (rev(\<alpha>1)*f2*\<alpha>2) * ... * (rev(\<alpha>_{m-1})*fm*\<alpha>_m)
                       (by inserting \<alpha>i*rev(\<alpha>i) \<simeq> const between consecutive pieces).\<close>
-    show ?thesis sorry
+    \<comment> \<open>Step 2a: Choose connecting paths \<alpha>i.\<close>
+    obtain \<alpha>s where h\<alpha>s: "\<forall>i\<le>m. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+        x0 (f (subdivision i)) (\<alpha>s i)"
+    proof -
+      have "\<forall>i. \<exists>\<alpha>. i \<le> m \<longrightarrow> top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+          x0 (f (subdivision i)) \<alpha>"
+      proof
+        fix i show "\<exists>\<alpha>. i \<le> m \<longrightarrow> top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+            x0 (f (subdivision i)) \<alpha>"
+        proof (cases "i \<le> m")
+          case True
+          hence "f (subdivision i) \<in> U \<inter> V" using hsub_int by blast
+          then obtain \<alpha> where "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+              x0 (f (subdivision i)) \<alpha>"
+            using hUV_pc hx0 unfolding top1_path_connected_on_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        next
+          case False thus ?thesis by simp
+        qed
+      qed
+      hence "\<exists>\<alpha>s. \<forall>i. i \<le> m \<longrightarrow> top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))
+          x0 (f (subdivision i)) (\<alpha>s i)" by metis
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>Step 2b: Define reparametrized pieces fi(t) = f(sub(i) + t*(sub(i+1)-sub(i))).\<close>
+    define fi where "fi i = (\<lambda>t. f (subdivision i + t * (subdivision (Suc i) - subdivision i)))" for i
+    \<comment> \<open>Step 2c: Define conjugated loops gi = (\<alpha>s i * fi i) * rev(\<alpha>s (Suc i)).\<close>
+    define gi where "gi i = top1_path_product (top1_path_product (\<alpha>s i) (fi i))
+        (top1_path_reverse (\<alpha>s (Suc i)))" for i
+    \<comment> \<open>Step 2d: Build the list gs = [gi 0, gi 1, ..., gi (m-1)].\<close>
+    define gs_list where "gs_list = map gi [0..<m]"
+    have hgs_len: "length gs_list = m" unfolding gs_list_def by simp
+    \<comment> \<open>Step 2e: Each gi is a loop at x0 in U or V.\<close>
+    have hgs_loops: "\<forall>i<m. top1_is_loop_on X TX x0 (gs_list!i)
+        \<and> (gs_list!i ` I_set \<subseteq> U \<or> gs_list!i ` I_set \<subseteq> V)"
+      sorry \<comment> \<open>gi starts at \<alpha>s(i)(0) = x0, ends at rev(\<alpha>s(Suc i))(1) = x0.
+         Image: \<alpha>s(i) \<subseteq> U\<inter>V, fi(i) \<subseteq> U or V, rev(\<alpha>s(Suc i)) \<subseteq> U\<inter>V.
+         So gi \<subseteq> U or gi \<subseteq> V.\<close>
+    \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
+    have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
+        (foldr top1_path_product gs_list (top1_constant_path x0))"
+      sorry \<comment> \<open>f \<simeq> f1*...*fm (Theorem 51.3: reparametrization)
+         \<simeq> (\<alpha>0*f1*rev(\<alpha>1)) * (\<alpha>1*f2*rev(\<alpha>2)) * ... (telescoping, since \<alpha>0 = \<alpha>m = const).\<close>
+    show ?thesis by (rule that[OF hgs_len hgs_loops hgs_product])
   qed
   show "\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
        (\<forall>i<n. top1_is_loop_on X TX x0 (gs ! i) \<and>
