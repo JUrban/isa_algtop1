@@ -2262,28 +2262,63 @@ proof (intro allI impI)
        If adjacent pieces map to different sets, f(sub0 i) \<in> U \<inter> V.
        After merging consecutive same-set pieces, all internal endpoints are transitions.
        f(0) = x0 \<in> U\<inter>V, f(1) = x0 \<in> U\<inter>V.\<close>
-    have hsub0_int: "\<forall>i\<le>n_sub. f (sub0 i) \<in> U \<inter> V"
+    \<comment> \<open>Munkres deletion: if f(sub0(i)) \<notin> U\<inter>V for some 0<i<n_sub, delete sub0(i).
+       Both adjacent pieces map to the same set, so the merged piece still maps to U or V.
+       Repeat until all internal points are in U\<inter>V. Formalized via filtering.\<close>
+    define good where "good i = (i = 0 \<or> i = n_sub \<or> f (sub0 i) \<in> U \<inter> V)" for i
+    define glist where "glist = filter good [0..<Suc n_sub]"
+    \<comment> \<open>0 and n_sub are always good.\<close>
+    have hg0: "good 0" unfolding good_def by simp
+    have hgn: "good n_sub" unfolding good_def by simp
+    have h0_mem: "0 \<in> set glist" unfolding glist_def using hg0 hn_sub by simp
+    have hn_mem: "n_sub \<in> set glist" unfolding glist_def using hgn by simp
+    have hglist_sorted: "sorted glist" unfolding glist_def sorry
+    have hglist_distinct: "distinct glist" unfolding glist_def sorry
+    have hglist_sub: "set glist \<subseteq> {0..n_sub}" unfolding glist_def by auto
+    have hglist_len: "length glist \<ge> 2" using h0_mem hn_mem hn_sub hglist_distinct
+      sorry \<comment> \<open>0 \<noteq> n_sub and both in distinct list \<Rightarrow> length \<ge> 2.\<close>
+    define n1 where "n1 = length glist - 1"
+    have hn1_ge: "n1 \<ge> 1" using hglist_len unfolding n1_def by simp
+    define sub1 where "sub1 j = sub0 (glist ! j)" for j
+    have hgl_0: "glist ! 0 = 0" using h0_mem hglist_sorted
+      sorry \<comment> \<open>0 is the minimum, sorted list starts with it.\<close>
+    have hgl_n: "glist ! n1 = n_sub" using hn_mem hglist_sorted n1_def
+      sorry \<comment> \<open>n_sub is the maximum, sorted list ends with it.\<close>
+    have hsub1_0: "sub1 0 = 0" unfolding sub1_def using hgl_0 hsub0_0 by simp
+    have hsub1_n: "sub1 n1 = 1" unfolding sub1_def using hgl_n hsub0_n by simp
+    have hsub1_mono: "\<forall>i<n1. sub1 i < sub1 (Suc i)"
+      sorry \<comment> \<open>sub0 strictly monotone + glist strictly increasing (sorted distinct) \<Rightarrow> sub1 strictly monotone.\<close>
+    have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
+                         \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
+      sorry \<comment> \<open>Each merged piece is a union of consecutive original pieces mapping to the same set.
+         Key: if f(sub0(k)) \<notin> U\<inter>V, both adjacent original pieces map to the same set,
+         so deleting sub0(k) preserves the U-or-V property of the merged piece.\<close>
+    have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
-      fix i assume hi: "i \<le> n_sub"
-      show "f (sub0 i) \<in> U \<inter> V"
+      fix i assume "i \<le> n1"
+      show "f (sub1 i) \<in> U \<inter> V"
       proof (cases "i = 0")
-        case True thus ?thesis using hsub0_0 hf0 hx0 by simp
+        case True thus ?thesis using hsub1_0 hf0 hx0 by simp
       next
-        case False hence hi_pos: "i > 0" by simp
+        case False
         show ?thesis
-        proof (cases "i = n_sub")
-          case True thus ?thesis using hsub0_n hf1 hx0 by simp
+        proof (cases "i = n1")
+          case True thus ?thesis using hsub1_n hf1 hx0 by simp
         next
-          case False hence hi_lt: "i < n_sub" using hi by simp
-          \<comment> \<open>sub0(i) is in piece i-1 and piece i. If they are in different W's
-             (one W_U, one W_V), sub0(i) \<in> W_U \<inter> W_V hence f(sub0(i)) \<in> U \<inter> V.
-             After merging consecutive same-type intervals, all internal points
-             are transitions between U and V. Sorry for the merge argument.\<close>
-          show ?thesis sorry \<comment> \<open>Needs subdivision merge (combinatorial).\<close>
+          case False
+          \<comment> \<open>Internal good point: good(glist!i) holds, and glist!i \<noteq> 0, glist!i \<noteq> n_sub.\<close>
+          have "0 < i" "i < n1" using \<open>i \<le> n1\<close> \<open>i \<noteq> 0\<close> \<open>i \<noteq> n1\<close> by auto
+          have "good (glist ! i)" sorry
+          moreover have "glist ! i \<noteq> 0" using \<open>0 < i\<close> hglist_sorted hglist_distinct hgl_0
+            sorry \<comment> \<open>i > 0 and glist!0 = 0 and distinct \<Rightarrow> glist!i \<noteq> 0.\<close>
+          moreover have "glist ! i \<noteq> n_sub" using \<open>i < n1\<close> hglist_sorted hglist_distinct hgl_n
+            sorry \<comment> \<open>i < n1 and glist!n1 = n_sub and distinct \<Rightarrow> glist!i \<noteq> n_sub.\<close>
+          ultimately show ?thesis unfolding sub1_def good_def by simp
         qed
       qed
     qed
-    show ?thesis using that[OF hn_sub hsub0_0 hsub0_n hsub0_mono hsub0_UV hsub0_int] .
+    show ?thesis
+      by (rule that[OF hn1_ge hsub1_0 hsub1_n hsub1_mono hsub1_UV hsub1_int])
   qed
   \<comment> \<open>Step 2: For each subinterval, define fi = f restricted + reparametrized.
      Choose paths \<alpha>i in U\<inter>V from x0 to f(ai). Set gi = (\<alpha>_{i-1} * fi) * rev \<alpha>i.\<close>
