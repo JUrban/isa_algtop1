@@ -2273,7 +2273,7 @@ proof (intro allI impI)
     have h0_mem: "0 \<in> set glist" unfolding glist_def using hg0 hn_sub by simp
     have hn_mem: "n_sub \<in> set glist" unfolding glist_def using hgn by simp
     have hglist_sorted: "sorted glist" unfolding glist_def sorry
-    have hglist_distinct: "distinct glist" unfolding glist_def sorry
+    have hglist_distinct: "distinct glist" unfolding glist_def by simp
     have hglist_sub: "set glist \<subseteq> {0..n_sub}" unfolding glist_def by auto
     have hglist_len: "length glist \<ge> 2" using h0_mem hn_mem hn_sub hglist_distinct
       sorry \<comment> \<open>0 \<noteq> n_sub and both in distinct list \<Rightarrow> length \<ge> 2.\<close>
