@@ -2352,11 +2352,75 @@ proof (intro allI impI)
       ultimately show "sub1 i < sub1 (Suc i)" unfolding sub1_def
         using hsub0_strict_mono by simp
     qed
+    \<comment> \<open>Key lemma: if f(sub0(k)) \<notin> U\<inter>V for 0 < k < n_sub, both adjacent original pieces
+       map to the same set. Proof: sub0(k) is in both pieces. f(sub0(k)) \<in> U \<or> V (from X=U\<union>V).
+       If f(sub0(k)) \<in> U - V: piece k-1 maps into f\<inverse>(U) (sub0(k) in piece k-1 and f(sub0(k)) \<in> U
+       forces piece k-1 into U since it maps to U or V and intersects U).
+       Similarly piece k maps into U.\<close>
+    have h_deleted_same: "\<And>k. 0 < k \<Longrightarrow> k < n_sub \<Longrightarrow> f (sub0 k) \<notin> U \<inter> V \<Longrightarrow>
+        (f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> U
+         \<and> f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> U)
+        \<or> (f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> V
+         \<and> f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> V)"
+    proof -
+      fix k assume hk_pos: "0 < k" and hk_lt: "k < n_sub" and hk_not: "f (sub0 k) \<notin> U \<inter> V"
+      have hk_prev: "k - 1 < n_sub" using hk_pos hk_lt by simp
+      have hSuc_prev: "Suc (k-1) = k" using hk_pos by simp
+      \<comment> \<open>Piece k-1 and piece k each map to U or V.\<close>
+      have hprev: "f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> U
+          \<or> f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> V"
+        using hsub0_UV[rule_format, OF hk_prev] hSuc_prev by simp
+      have hcurr: "f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> U
+          \<or> f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> V"
+        using hsub0_UV[rule_format, OF hk_lt] by simp
+      \<comment> \<open>sub0(k) is in both pieces (as an I_set point).\<close>
+      have hk_in_I: "sub0 k \<in> I_set"
+      proof -
+        have "sub0 0 \<le> sub0 k"
+          using hsub0_strict_mono[of 0 k] hk_pos hk_lt by linarith
+        hence "0 \<le> sub0 k" using hsub0_0 by linarith
+        moreover have "sub0 k \<le> sub0 n_sub"
+          using hsub0_strict_mono[of k n_sub] hk_lt by linarith
+        hence "sub0 k \<le> 1" using hsub0_n by linarith
+        ultimately show ?thesis unfolding top1_unit_interval_def by simp
+      qed
+      have "sub0 (k-1) \<le> sub0 k"
+        using hsub0_mono[rule_format, of "k-1"] hk_pos hk_lt hSuc_prev by auto
+      have hk_in_prev: "sub0 k \<in> {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k}"
+        using hk_in_I \<open>sub0 (k-1) \<le> sub0 k\<close> by simp
+      have "sub0 k \<le> sub0 (Suc k)" using hsub0_mono[rule_format, OF hk_lt] by linarith
+      have hk_in_curr: "sub0 k \<in> {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)}"
+        using hk_in_I \<open>sub0 k \<le> sub0 (Suc k)\<close> by simp
+      \<comment> \<open>f(sub0(k)) \<in> U \<union> V but not U \<inter> V, so either U-V or V-U.\<close>
+      have hfk_UV: "f (sub0 k) \<in> U \<union> V"
+        using hprev hk_in_prev by (by100 blast)
+      show "(f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> U
+         \<and> f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> U)
+        \<or> (f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> V
+         \<and> f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> V)"
+      proof (cases "f (sub0 k) \<in> U")
+        case True
+        hence "f (sub0 k) \<notin> V" using hk_not by (by100 blast)
+        have "f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> U"
+          using hprev hk_in_prev \<open>f (sub0 k) \<notin> V\<close> by (by100 blast)
+        moreover have "f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> U"
+          using hcurr hk_in_curr \<open>f (sub0 k) \<notin> V\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      next
+        case False
+        hence "f (sub0 k) \<in> V" using hfk_UV by (by100 blast)
+        hence "f (sub0 k) \<notin> U" using hk_not by (by100 blast)
+        have "f ` {s\<in>I_set. sub0 (k-1) \<le> s \<and> s \<le> sub0 k} \<subseteq> V"
+          using hprev hk_in_prev \<open>f (sub0 k) \<notin> U\<close> by (by100 blast)
+        moreover have "f ` {s\<in>I_set. sub0 k \<le> s \<and> s \<le> sub0 (Suc k)} \<subseteq> V"
+          using hcurr hk_in_curr \<open>f (sub0 k) \<notin> U\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
-      sorry \<comment> \<open>Each merged piece is a union of consecutive original pieces mapping to the same set.
-         Key: if f(sub0(k)) \<notin> U\<inter>V, both adjacent original pieces map to the same set,
-         so deleting sub0(k) preserves the U-or-V property of the merged piece.\<close>
+      sorry \<comment> \<open>Uses h_deleted_same: all original pieces between two good points map to the same set.
+         The merged piece is the union of these original pieces, hence maps to the same set.\<close>
     have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
       fix i assume "i \<le> n1"
