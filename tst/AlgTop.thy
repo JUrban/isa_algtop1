@@ -2,83 +2,6 @@ theory AlgTop
   imports "AlgTopBase.AlgTop_JCT_Base"
 begin
 
-section \<open>*\<S>62 Invariance of Domain\<close>
-
-text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
-  and nulhomotopic, then a and b lie in the same component of S^2-f(A).\<close>
-
-lemma Lemma_62_2_BorsukLemma:
-  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
-    and a b :: "real \<times> real \<times> real"
-  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
-      and hcomp: "top1_compact_on A TA"
-      and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
-      and hf: "top1_continuous_map_on A TA
-             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
-      and hinj: "inj_on f A"
-      and hnul: "top1_nulhomotopic_on A TA
-             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
-  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
-         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
-         \<and> a \<in> C \<and> b \<in> C"
-  sorry \<comment> \<open>Munkres Lemma 62.2: Converse of Lemma 61.2 under injectivity.
-     Proof: By Lemma 61.2's contrapositive + injectivity.
-     If a,b NOT in same component, then f NOT nulhomotopic (by converse of 61.2).
-     But f IS nulhomotopic. Contradiction.
-     Actually: 61.2 says same_component \<Rightarrow> nulhomotopic.
-     62.2 says nulhomotopic + injective \<Rightarrow> same_component.
-     The proof of 62.2 in Munkres uses a retraction argument.\<close>
-
-text \<open>Invariance of domain in R^2: an open injective continuous map R^2 \<rightarrow> R^2
-  has open image, and its invgerse is continuous.\<close>
-
-(** from *\<S>62 Theorem 62.3: Invariance of Domain in R^2. **)
-theorem Theorem_62_3_invgariance_of_domain:
-  fixes U :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
-  assumes "U \<in> product_topology_on top1_open_sets top1_open_sets"
-      and "top1_continuous_map_on U
-             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
-             UNIV (product_topology_on top1_open_sets top1_open_sets) f"
-      and "inj_on f U"
-  shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
-proof -
-  \<comment> \<open>Munkres 62.3: For x\<in>U, show f(x)\<in>Int(f(U)).
-     Step 1: Take a closed ball B centered at x with B \<subseteq> U.
-     Step 2: f|B is injective continuous on compact B; f(Bd B) is a simple closed
-     curve in R^2 (since Bd B \<cong> S^1 and f is injective on it).
-     Step 3: By the Jordan Separation Theorem (61.3), f(Bd B) separates R^2.
-     Step 4: f(x) is in the bounded component W of R^2 - f(Bd B).
-     Step 5: W \<subseteq> f(Int B) \<subseteq> f(U), so f(x) \<in> Int(f(U)).\<close>
-  have "\<forall>x\<in>U. \<exists>W. x \<in> W \<and> W \<in> product_topology_on top1_open_sets top1_open_sets \<and> W \<subseteq> f ` U"
-  proof
-    fix x assume hx: "x \<in> U"
-    \<comment> \<open>Step 1: Take closed ball B with x \<in> Int(B) \<subseteq> B \<subseteq> U.\<close>
-    obtain B where hBsub: "B \<subseteq> U"
-        and hB_compact: "top1_compact_on B (subspace_topology UNIV
-            (product_topology_on top1_open_sets top1_open_sets) B)"
-        and hx_int: "x \<in> B - frontier B"
-        and hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-            (frontier B) (subspace_topology UNIV
-              (product_topology_on top1_open_sets top1_open_sets) (frontier B)) h"
-      sorry
-    \<comment> \<open>Step 2: f(Bd B) is a simple closed curve (f injective on compact Bd B \<cong> S^1).\<close>
-    have hfBd_curve: "top1_simple_closed_curve_on UNIV
-        (product_topology_on top1_open_sets top1_open_sets) (f ` frontier B)" sorry
-    \<comment> \<open>Step 3: By Jordan Curve Theorem, f(Bd B) separates R^2 into two components.\<close>
-    obtain W1 W2 where hW_disj: "W1 \<inter> W2 = {}" and hW_union: "W1 \<union> W2 = UNIV - f ` frontier B"
-        and hW1_ne: "W1 \<noteq> {}" and hW2_ne: "W2 \<noteq> {}"
-        and hW1_open: "W1 \<in> product_topology_on top1_open_sets top1_open_sets"
-      sorry \<comment> \<open>By Jordan Curve Theorem (Theorem 63.4). Forward reference: JCT defined later.\<close>
-    \<comment> \<open>Step 4: f(x) is in the bounded component.\<close>
-    have hfx_in_W: "f x \<in> W1" sorry
-    \<comment> \<open>Step 5: W1 \<subseteq> f(Int B) \<subseteq> f(U).\<close>
-    have hW1_sub: "W1 \<subseteq> f ` U" sorry
-    show "\<exists>W. x \<in> W \<and> W \<in> product_topology_on top1_open_sets top1_open_sets \<and> W \<subseteq> f ` U"
-      sorry
-  qed
-  show ?thesis sorry
-qed
-
 section \<open>\<S>63 The Jordan Curve Theorem\<close>
 
 \<comment> \<open>top1_simple_closed_curve_on defined earlier (before \<S>61).\<close>
@@ -11216,6 +11139,69 @@ proof -
     by blast
 qed
 
+section \<open>*\<S>62 Invariance of Domain\<close>
+
+text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
+  and nulhomotopic, then a and b lie in the same component of S^2-f(A).\<close>
+
+lemma Lemma_62_2_BorsukLemma:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+    and a b :: "real \<times> real \<times> real"
+  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hcomp: "top1_compact_on A TA"
+      and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
+      and hf: "top1_continuous_map_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+      and hinj: "inj_on f A"
+      and hnul: "top1_nulhomotopic_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
+         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
+         \<and> a \<in> C \<and> b \<in> C"
+  sorry \<comment> \<open>Munkres Lemma 62.2\<close>
+
+text \<open>Invariance of domain in R^2.\<close>
+
+theorem Theorem_62_3_invariance_of_domain:
+  fixes U :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
+  assumes "U \<in> product_topology_on top1_open_sets top1_open_sets"
+      and "top1_continuous_map_on U
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
+             UNIV (product_topology_on top1_open_sets top1_open_sets) f"
+      and "inj_on f U"
+  shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
+proof -
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  have "\<forall>x\<in>U. \<exists>W. x \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
+  proof
+    fix x assume hx: "x \<in> U"
+    \<comment> \<open>Step 1: Closed ball B with x \<in> Int(B) \<subseteq> B \<subseteq> U, Bd(B) \<cong> S^1.\<close>
+    obtain B where hBsub: "B \<subseteq> U"
+        and hx_int: "x \<in> B - frontier B"
+        and hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+            (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
+      sorry \<comment> \<open>Take closed ball in open U around x.\<close>
+    \<comment> \<open>Step 2: f(Bd B) is SCC. Step 3: JCT gives 2 components.\<close>
+    have hfBd_SCC: "top1_simple_closed_curve_on UNIV ?TR2 (f ` frontier B)" sorry
+    obtain W1 W2 where hW: "W1 \<noteq> {}" "W2 \<noteq> {}" "W1 \<inter> W2 = {}"
+        "W1 \<union> W2 = UNIV - f ` frontier B"
+        "top1_path_connected_on W1 (subspace_topology UNIV ?TR2 W1)"
+        "top1_path_connected_on W2 (subspace_topology UNIV ?TR2 W2)"
+        "(\<exists>M. \<forall>p\<in>W1. fst p ^ 2 + snd p ^ 2 \<le> M)"
+        "(\<forall>M. \<exists>p\<in>W2. fst p ^ 2 + snd p ^ 2 > M)"
+      using Theorem_63_4_JordanCurve[OF hfBd_SCC]
+      sorry \<comment> \<open>Decompose JCT existential (10 conjuncts, blast too slow).\<close>
+    \<comment> \<open>Steps 4-5: f(x) \<in> W1 (bounded), W1 \<subseteq> f(U).\<close>
+    have "f x \<in> W1" sorry
+    moreover have "W1 \<subseteq> f ` U" sorry
+    moreover have "W1 \<in> ?TR2" sorry
+    ultimately show "\<exists>W. x \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
+      sorry \<comment> \<open>Need: x \<in> W (not f x \<in> W). Restructure: show f(U) open directly.\<close>
+  qed
+  thus ?thesis
+    sorry \<comment> \<open>Every point of f(U) has open neighborhood in f(U), so f(U) is open.\<close>
+qed
+
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
 
 text \<open>The winding number of a loop f in R^2-{0} around the origin.
@@ -14837,3 +14823,7 @@ end
   
    
     
+
+
+
+  
