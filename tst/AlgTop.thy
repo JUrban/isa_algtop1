@@ -68,7 +68,7 @@ proof -
     obtain W1 W2 where hW_disj: "W1 \<inter> W2 = {}" and hW_union: "W1 \<union> W2 = UNIV - f ` frontier B"
         and hW1_ne: "W1 \<noteq> {}" and hW2_ne: "W2 \<noteq> {}"
         and hW1_open: "W1 \<in> product_topology_on top1_open_sets top1_open_sets"
-      sorry \<comment> \<open>By Jordan Curve Theorem (Theorem 63.4).\<close>
+      sorry \<comment> \<open>By Jordan Curve Theorem (Theorem 63.4). Forward reference: JCT defined later.\<close>
     \<comment> \<open>Step 4: f(x) is in the bounded component.\<close>
     have hfx_in_W: "f x \<in> W1" sorry
     \<comment> \<open>Step 5: W1 \<subseteq> f(Int B) \<subseteq> f(U).\<close>
@@ -14550,6 +14550,7 @@ qed
 
 
 end
+
 
 
 
