@@ -521,7 +521,7 @@ proof -
     \<comment> \<open>q is a homeomorphism V2 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
     have hhomeo2: "top1_homeomorphism_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
         U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
-      sorry
+      sorry \<comment> \<open>Analogous to hhomeo1 with negated signs: inverse is (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
     show ?thesis unfolding top1_evenly_covered_on_def
     proof (intro conjI exI[of _ "{V1, V2}"])
       show "openin_on top1_S1 top1_S1_topology U_top" by (rule hU_top_open)
