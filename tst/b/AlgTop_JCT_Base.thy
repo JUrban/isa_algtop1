@@ -2213,6 +2213,21 @@ next
   thus ?case by simp
 qed
 
+\<comment> \<open>Core telescoping identity: foldr of conjugated paths = α(0) * foldr of raw paths * rev(α(n)).\<close>
+lemma telescoping_core:
+  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
+      and hlen: "length gs = k" "length fs = k" "k \<ge> 1"
+      and h\<alpha>: "\<And>i. i \<le> k \<Longrightarrow> top1_is_path_on X TX x0 (a i) (\<alpha> i)"
+      and hfi: "\<And>i. i < k \<Longrightarrow> top1_is_path_on X TX (a i) (a (Suc i)) (fs!i)"
+      and hgi: "\<And>i. i < k \<Longrightarrow> gs!i = top1_path_product (top1_path_product (\<alpha> i) (fs!i))
+                                     (top1_path_reverse (\<alpha> (Suc i)))"
+  shows "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product gs (top1_constant_path x0))
+      (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
+        (top1_path_product (top1_path_reverse (\<alpha> k)) (top1_constant_path x0))))"
+  using assms
+  sorry
+
 \<comment> \<open>Telescoping lemma for conjugated path products (Munkres 59.1 Step 2).
    If gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)) and \<alpha>0 = \<alpha>n = const_x0,
    then g0*g1*...*g(n-1)*const \<simeq> f0*f1*...*f(n-1)*const.\<close>
@@ -2253,7 +2268,18 @@ proof -
       (foldr top1_path_product gs (top1_constant_path x0))
       (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
         (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))))"
-    sorry \<comment> \<open>By induction on n. Base: n=1 expand gi defn. Step: expand g0, use IH on tail.\<close>
+    using telescoping_core[OF hTX hx0 hgs hfs hn h\<alpha> hfi hgi] .
+  \<comment> \<open>Was: Main telescoping induction on n.
+       Base n=1: ((\<alpha>0*f0)*rev(\<alpha>1))*const \<simeq> \<alpha>0*(f0*(rev(\<alpha>1)*const)) by associativity.
+       Step: g0*(foldr gs' const) \<simeq> g0*(\<alpha>1*foldr fs'(rev(\<alpha>n)*const)) (by IH)
+             \<simeq> ((\<alpha>0*f0)*rev(\<alpha>1))*(\<alpha>1*...) (expand g0)
+             \<simeq> (\<alpha>0*f0)*(rev(\<alpha>1)*\<alpha>1)*... (reassoc)
+             \<simeq> (\<alpha>0*f0)*const*... (inverse cancel)
+             \<simeq> (\<alpha>0*f0)*... (identity)
+             = \<alpha>0*f0*foldr fs'(rev(\<alpha>n)*const)
+             = \<alpha>0*foldr(f0#fs')(rev(\<alpha>n)*const).
+       Each step uses Theorem_51_2 (assoc/id/inv) + product_left/right + trans.
+       ~40 lines of Isabelle path algebra.\<close>
   \<comment> \<open>Step 2: Simplify RHS using \<alpha>(0) = \<alpha>(n) = const_x0.\<close>
   have hstep2: "top1_path_homotopic_on X TX x0 x0
       (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
@@ -3419,6 +3445,8 @@ qed
 
 
 end
+
+
 
 
 
