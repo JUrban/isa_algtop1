@@ -2147,6 +2147,26 @@ proof (intro conjI)
   show "g 1 = b" using hg unfolding top1_is_path_on_def by (by100 blast)
 qed
 
+\<comment> \<open>Telescoping lemma for conjugated path products (Munkres 59.1 Step 2).
+   If gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)) and \<alpha>0 = \<alpha>n = const_x0,
+   then g0*g1*...*g(n-1)*const \<simeq> f0*f1*...*f(n-1)*const.\<close>
+lemma telescoping_conjugated_product:
+  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
+      and hn: "n \<ge> 1"
+      and hfs: "length fs = n" and hgs: "length gs = n"
+      and h\<alpha>: "\<And>i. i \<le> n \<Longrightarrow> top1_is_path_on X TX x0 (a i) (\<alpha> i)"
+      and hfi: "\<And>i. i < n \<Longrightarrow> top1_is_path_on X TX (a i) (a (Suc i)) (fs!i)"
+      and hgi: "\<And>i. i < n \<Longrightarrow> gs!i = top1_path_product (top1_path_product (\<alpha> i) (fs!i))
+                                     (top1_path_reverse (\<alpha> (Suc i)))"
+      and h\<alpha>0: "\<alpha> 0 = top1_constant_path x0"
+      and h\<alpha>n: "\<alpha> n = top1_constant_path x0"
+      and ha0: "a 0 = x0" and han: "a n = x0"
+  shows "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product fs (top1_constant_path x0))
+      (foldr top1_path_product gs (top1_constant_path x0))"
+  using assms
+  sorry
+
 theorem Theorem_59_1:
   assumes hT: "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
       and hUV: "U \<union> V = X" and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
@@ -3201,15 +3221,34 @@ proof (intro allI impI)
     have hfi_gi: "top1_path_homotopic_on X TX x0 x0
         (foldr top1_path_product fi_list (top1_constant_path x0))
         (foldr top1_path_product gs_list (top1_constant_path x0))"
-      sorry \<comment> \<open>Telescoping with \<alpha>s'(0)=\<alpha>s'(m)=const_x0. The hardest path algebra step.
-         gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)), \<alpha>0 = \<alpha>m = const_x0.
-         By induction on m using:
-         - Theorem_51_2_invgerse_right: rev(\<alpha>)*\<alpha> \<simeq> const
-         - Theorem_51_2_left/right_identity: const*f \<simeq> f, f*const \<simeq> f
-         - Theorem_51_2_associativity: (f*g)*h \<simeq> f*(g*h)
-         - path_homotopic_product_left/right: homotopy respects products
-         - Lemma_51_1_path_homotopic_trans: transitivity of path homotopy
-         All available in Top1_Ch9_13.thy. ~80 lines of path algebra.\<close>
+    proof -
+      have hTX': "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hx0_X: "x0 \<in> X" using hx0 assms(2) unfolding openin_on_def by (by100 blast)
+      have hUV_sub: "U \<inter> V \<subseteq> X" using assms(2,3) unfolding openin_on_def by (by100 blast)
+      \<comment> \<open>Lift \<alpha>s' paths to X.\<close>
+      have h\<alpha>'_X: "\<And>i. i \<le> m \<Longrightarrow> top1_is_path_on X TX x0 (f (subdivision i)) (\<alpha>s' i)"
+        by (rule path_in_subspace_is_path_in_ambient'[OF hTX' hUV_sub h\<alpha>s'[rule_format]]) simp
+      \<comment> \<open>Textbook "direct computation": by induction on m.
+         Base m=1: g0*const = ((const*f0)*rev(const))*const \<simeq> f0*const.
+         Step: use gi = (\<alpha>i*fi)*rev(\<alpha>(i+1)) and cancel rev(\<alpha>k)*\<alpha>k \<simeq> const.\<close>
+      \<comment> \<open>The telescoping computation, following the textbook literally.
+         For each i: gi = (\<alpha>i*fi)*rev(\<alpha>(i+1)).
+         The product g0*g1*...*g(m-1)*const telescopes because
+         rev(\<alpha>(k))*\<alpha>(k) cancels at each junction.
+         With \<alpha>0 = \<alpha>m = const, the outermost factors also simplify.\<close>
+      \<comment> \<open>Key facts for the algebra:\<close>
+      have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
+        unfolding top1_path_reverse_def top1_constant_path_def by (rule ext) simp
+      have hfi_path_X: "\<And>i. i < m \<Longrightarrow> top1_is_path_on X TX (f (subdivision i)) (f (subdivision (Suc i))) (fi i)"
+        by (rule hfi_path)
+      have hconst_path: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+        by (rule top1_constant_path_is_path[OF hTX' hx0_X])
+      have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hfsub0: "f (subdivision 0) = x0" using hsub0 hf0 by simp
+      have hfsubm: "f (subdivision m) = x0" using hsubm hf1 by simp
+      show ?thesis sorry \<comment> \<open>Apply telescoping_conjugated_product. Need to match arguments.\<close>
+    qed
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
     proof -
@@ -14274,6 +14313,13 @@ end
   
 
 
+
+
+
+
+
+
+  
 
 
 
