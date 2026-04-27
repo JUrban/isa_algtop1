@@ -1328,7 +1328,102 @@ proof -
     qed
   qed
   have hevenly_right: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_right"
-    sorry \<comment> \<open>Same pattern: preimage of {a>0} is {x^2-y^2>0} = {|x|>|y|} = upper-right \<union> lower-left arcs.\<close>
+  proof -
+    have hU_right_open: "openin_on top1_S1 top1_S1_topology U_right"
+    proof -
+      have "open {p :: real \<times> real. fst p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      hence "{p :: real \<times> real. fst p > 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+      proof -
+        have "{p :: real \<times> real. fst p > 0} \<in> top1_open_sets"
+          using \<open>open {p :: real \<times> real. fst p > 0}\<close> unfolding top1_open_sets_def by simp
+        thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+      qed
+      hence "top1_S1 \<inter> {p. fst p > 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "U_right = top1_S1 \<inter> {p. fst p > 0}" unfolding U_right_def by (by100 blast)
+      moreover have "U_right \<subseteq> top1_S1" unfolding U_right_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    \<comment> \<open>V5 = {x+y>0, x-y>0} \<inter> S^1 (arc near (1,0)), V6 = {x+y<0, x-y<0} \<inter> S^1 (arc near (-1,0)).\<close>
+    define V5 where "V5 = {p \<in> top1_S1. fst p + snd p > 0 \<and> fst p - snd p > 0}"
+    define V6 where "V6 = {p \<in> top1_S1. fst p + snd p < 0 \<and> fst p - snd p < 0}"
+    have hV5_open: "openin_on top1_S1 top1_S1_topology V5"
+    proof -
+      have h1: "open {p :: real \<times> real. fst p + snd p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have h2: "open {p :: real \<times> real. fst p - snd p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have "open {p :: real \<times> real. fst p + snd p > 0 \<and> fst p - snd p > 0}"
+        using open_Int[OF h1 h2] by (auto simp: Int_def)
+      hence "{p :: real \<times> real. fst p + snd p > 0 \<and> fst p - snd p > 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+      proof -
+        have "{p :: real \<times> real. fst p + snd p > 0 \<and> fst p - snd p > 0} \<in> top1_open_sets"
+          using \<open>open {p :: real \<times> real. fst p + snd p > 0 \<and> fst p - snd p > 0}\<close> unfolding top1_open_sets_def by simp
+        thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+      qed
+      hence "top1_S1 \<inter> {p. fst p + snd p > 0 \<and> fst p - snd p > 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "V5 = top1_S1 \<inter> {p. fst p + snd p > 0 \<and> fst p - snd p > 0}" unfolding V5_def by (by100 blast)
+      moreover have "V5 \<subseteq> top1_S1" unfolding V5_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    have hV6_open: "openin_on top1_S1 top1_S1_topology V6"
+    proof -
+      have h1: "open {p :: real \<times> real. fst p + snd p < 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have h2: "open {p :: real \<times> real. fst p - snd p < 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have "open {p :: real \<times> real. fst p + snd p < 0 \<and> fst p - snd p < 0}"
+        using open_Int[OF h1 h2] by (auto simp: Int_def)
+      hence "{p :: real \<times> real. fst p + snd p < 0 \<and> fst p - snd p < 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+      proof -
+        have "{p :: real \<times> real. fst p + snd p < 0 \<and> fst p - snd p < 0} \<in> top1_open_sets"
+          using \<open>open {p :: real \<times> real. fst p + snd p < 0 \<and> fst p - snd p < 0}\<close> unfolding top1_open_sets_def by simp
+        thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+      qed
+      hence "top1_S1 \<inter> {p. fst p + snd p < 0 \<and> fst p - snd p < 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "V6 = top1_S1 \<inter> {p. fst p + snd p < 0 \<and> fst p - snd p < 0}" unfolding V6_def by (by100 blast)
+      moreover have "V6 \<subseteq> top1_S1" unfolding V6_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    have hV_disj: "V5 \<inter> V6 = {}" unfolding V5_def V6_def by auto
+    have hpreimage: "{p \<in> top1_S1. q p \<in> U_right} = V5 \<union> V6"
+    proof (intro set_eqI iffI)
+      fix p assume hp: "p \<in> {p \<in> top1_S1. q p \<in> U_right}"
+      hence hpS1: "p \<in> top1_S1" and hqp: "q p \<in> U_right" by auto
+      obtain x y where hxy: "p = (x, y)" by (cases p) auto
+      have hS1: "x\<^sup>2 + y\<^sup>2 = 1" using hpS1 unfolding top1_S1_def hxy by simp
+      have "fst (q p) > 0" using hqp unfolding U_right_def by (by100 blast)
+      hence "x\<^sup>2 - y\<^sup>2 > 0" unfolding q_def hxy by (simp add: power2_eq_square)
+      \<comment> \<open>x^2-y^2 = (x+y)(x-y) > 0 iff both same sign.\<close>
+      hence "(x+y)*(x-y) > 0" by (simp add: power2_eq_square algebra_simps)
+      hence "(x+y > 0 \<and> x-y > 0) \<or> (x+y < 0 \<and> x-y < 0)" using zero_less_mult_iff by force
+      thus "p \<in> V5 \<union> V6" unfolding V5_def V6_def using hpS1 hxy by auto
+    next
+      fix p assume "p \<in> V5 \<union> V6"
+      hence hpS1: "p \<in> top1_S1" and hq: "(fst p + snd p) * (fst p - snd p) > 0"
+        unfolding V5_def V6_def by (auto intro: mult_pos_pos mult_neg_neg)
+      have "fst (q p) = fst p ^ 2 - snd p ^ 2" unfolding q_def by simp
+      also have "\<dots> = (fst p + snd p) * (fst p - snd p)" by (simp add: power2_eq_square algebra_simps)
+      finally have "fst (q p) > 0" using hq by simp
+      moreover have "q p \<in> top1_S1" by (rule hq_S1[OF hpS1])
+      ultimately show "p \<in> {p \<in> top1_S1. q p \<in> U_right}" unfolding U_right_def using hpS1 by auto
+    qed
+    \<comment> \<open>Homeomorphisms V5 \<rightarrow> U_right and V6 \<rightarrow> U_right.\<close>
+    \<comment> \<open>Homeomorphisms: same pattern as previous cases. Inverse for V5: (a,b) \<mapsto> (sqrt((1+a)/2), b/(2*sqrt((1+a)/2))).
+       For V6: negate both components.\<close>
+    have hhomeo5: "top1_homeomorphism_on V5 (subspace_topology top1_S1 top1_S1_topology V5)
+        U_right (subspace_topology top1_S1 top1_S1_topology U_right) q" sorry
+    have hhomeo6: "top1_homeomorphism_on V6 (subspace_topology top1_S1 top1_S1_topology V6)
+        U_right (subspace_topology top1_S1 top1_S1_topology U_right) q" sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+    proof (intro conjI exI[of _ "{V5, V6}"])
+      show "openin_on top1_S1 top1_S1_topology U_right" by (rule hU_right_open)
+      show "\<forall>V\<in>{V5, V6}. openin_on top1_S1 top1_S1_topology V" using hV5_open hV6_open by (by100 blast)
+      show "\<forall>V\<in>{V5, V6}. \<forall>V'\<in>{V5, V6}. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" using hV_disj by (by100 blast)
+      show "{x \<in> top1_S1. q x \<in> U_right} = \<Union> {V5, V6}" using hpreimage by simp
+      show "\<forall>V\<in>{V5, V6}. top1_homeomorphism_on V (subspace_topology top1_S1 top1_S1_topology V)
+          U_right (subspace_topology top1_S1 top1_S1_topology U_right) q"
+        using hhomeo5 hhomeo6 by (by100 blast)
+    qed
+  qed
   have hevenly_left: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_left"
     sorry \<comment> \<open>Same pattern: preimage of {a<0} is {x^2-y^2<0} = {|y|>|x|} = upper-left \<union> lower-right arcs.\<close>
   have hq_evenly: "\<And>b. b \<in> top1_S1 \<Longrightarrow>
