@@ -222,10 +222,119 @@ proof -
       ultimately show "p \<in> {p \<in> top1_S1. q p \<in> U_top}" unfolding U_top_def using hpS1 by auto
     qed
     \<comment> \<open>q is a homeomorphism from V1 to U_top and from V2 to U_top.\<close>
+    \<comment> \<open>q is a homeomorphism V1 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (sqrt((1+a)/2), sqrt((1-a)/2)).\<close>
     have hhomeo1: "top1_homeomorphism_on V1 (subspace_topology top1_S1 top1_S1_topology V1)
-        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q" sorry
+        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by simp
+        thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+      qed
+      show "is_topology_on V1 (subspace_topology top1_S1 top1_S1_topology V1)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use V1_def in blast)
+      show "is_topology_on U_top (subspace_topology top1_S1 top1_S1_topology U_top)"
+        by (rule subspace_topology_is_topology_on[OF hTS1]) (use U_top_def in blast)
+      show "bij_betw q V1 U_top"
+      proof (rule bij_betw_imageI)
+        \<comment> \<open>Injectivity of q on V1.\<close>
+        show "inj_on q V1"
+        proof (rule inj_onI)
+          fix p1 p2 assume hp1: "p1 \<in> V1" and hp2: "p2 \<in> V1" and heq: "q p1 = q p2"
+          obtain x1 y1 where h1: "p1 = (x1, y1)" by (cases p1) auto
+          obtain x2 y2 where h2: "p2 = (x2, y2)" by (cases p2) auto
+          have hx1: "x1 > 0" "y1 > 0" "x1\<^sup>2 + y1\<^sup>2 = 1"
+            using hp1 unfolding V1_def top1_S1_def h1 by auto
+          have hx2: "x2 > 0" "y2 > 0" "x2\<^sup>2 + y2\<^sup>2 = 1"
+            using hp2 unfolding V1_def top1_S1_def h2 by auto
+          have "x1\<^sup>2 - y1\<^sup>2 = x2\<^sup>2 - y2\<^sup>2"
+            using heq unfolding q_def h1 h2 by auto
+          have "x1\<^sup>2 = (1 + (x1\<^sup>2 - y1\<^sup>2))/2" using hx1(3) by (simp add: field_simps)
+          also have "\<dots> = (1 + (x2\<^sup>2 - y2\<^sup>2))/2" using \<open>x1\<^sup>2 - y1\<^sup>2 = x2\<^sup>2 - y2\<^sup>2\<close> by simp
+          also have "\<dots> = x2\<^sup>2" using hx2(3) by (simp add: field_simps)
+          finally have "x1\<^sup>2 = x2\<^sup>2" .
+          hence "x1 = x2" using hx1(1) hx2(1) by (simp add: power2_eq_iff_nonneg)
+          moreover have "y1\<^sup>2 = y2\<^sup>2" using \<open>x1\<^sup>2 = x2\<^sup>2\<close> hx1(3) hx2(3) by linarith
+          hence "y1 = y2" using hx1(2) hx2(2) by (simp add: power2_eq_iff_nonneg)
+          ultimately show "p1 = p2" unfolding h1 h2 by simp
+        qed
+      next
+        \<comment> \<open>q maps V1 onto U_top.\<close>
+        show "q ` V1 = U_top"
+        proof (intro set_eqI iffI)
+          fix w assume "w \<in> q ` V1"
+          then obtain p where hp: "p \<in> V1" and hw: "w = q p" by (by100 blast)
+          have "p \<in> top1_S1" "fst p > 0" "snd p > 0" using hp unfolding V1_def by auto
+          have "q p \<in> top1_S1" by (rule hq_S1[OF \<open>p \<in> top1_S1\<close>])
+          moreover have "snd (q p) = 2 * fst p * snd p" unfolding q_def by simp
+          hence "snd (q p) > 0" using \<open>fst p > 0\<close> \<open>snd p > 0\<close> by simp
+          ultimately show "w \<in> U_top" unfolding U_top_def using hw by simp
+        next
+          fix w assume hw: "w \<in> U_top"
+          obtain a b where hab: "w = (a, b)" by (cases w) auto
+          have hS1w: "a\<^sup>2 + b\<^sup>2 = 1" and hb: "b > 0"
+            using hw unfolding U_top_def top1_S1_def hab by auto
+          define x where "x = sqrt ((1+a)/2)"
+          define y where "y = sqrt ((1-a)/2)"
+          have "b\<^sup>2 > 0" using hb by (simp add: power2_eq_square zero_less_mult_iff)
+          hence "a\<^sup>2 < 1" using hS1w by linarith
+          hence "a < 1 \<and> -1 < a"
+          proof -
+            have "\<not> (a \<ge> 1)"
+            proof
+              assume "1 \<le> a"
+              hence "1 \<le> a * a" using mult_mono[of 1 a 1 a] by simp
+              thus False using \<open>a\<^sup>2 < 1\<close> by (simp add: power2_eq_square)
+            qed
+            moreover have "\<not> (a \<le> -1)"
+            proof
+              assume "a \<le> -1"
+              hence "(-a) \<ge> 1" by linarith
+              hence "1 \<le> (-a) * (-a)" using mult_mono[of 1 "-a" 1 "-a"] by simp
+              hence "1 \<le> a * a" by simp
+              thus False using \<open>a\<^sup>2 < 1\<close> by (simp add: power2_eq_square)
+            qed
+            ultimately show ?thesis by linarith
+          qed
+          hence ha_lt: "a < 1" and ha_gt: "-1 < a" by linarith+
+          have ha_le: "a \<le> 1" and ha_ge: "-1 \<le> a" using ha_lt ha_gt by linarith+
+          have hx_pos: "x > 0" unfolding x_def using ha_gt by simp
+          have hy_nonneg: "y \<ge> 0" unfolding y_def using ha_le by simp
+          have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square
+            using ha_ge by (simp add: real_sqrt_mult_self)
+          have hy2: "y\<^sup>2 = (1-a)/2" unfolding y_def power2_eq_square
+            using ha_le by (simp add: real_sqrt_mult_self)
+          have hqa: "x\<^sup>2 - y\<^sup>2 = a" using hx2 hy2 by simp
+          have h2xy_eq_b2: "(2*x*y)\<^sup>2 = b\<^sup>2"
+            using hx2 hy2 hS1w sorry \<comment> \<open>Arithmetic: (2xy)^2 = 4*x^2*y^2 = (1+a)(1-a) = 1-a^2 = b^2.\<close>
+          have hxy_nonneg: "2*x*y \<ge> 0" using hx_pos hy_nonneg by simp
+          have hqb: "2*x*y = b" using h2xy_eq_b2 hxy_nonneg hb by (simp add: power2_eq_iff_nonneg)
+          have hy_pos: "y > 0"
+          proof -
+            have "2*x*y > 0" using hqb hb by simp
+            hence "x*y > 0" by simp
+            thus "y > 0" using hx_pos by (simp add: zero_less_mult_iff)
+          qed
+          have hxy_S1: "x\<^sup>2 + y\<^sup>2 = 1" using hx2 hy2 by simp
+          have "(x, y) \<in> V1" unfolding V1_def top1_S1_def using hxy_S1 hx_pos hy_pos by simp
+          moreover have "q (x, y) = w" unfolding q_def hab using hqa hqb by simp
+          ultimately show "w \<in> q ` V1" by (by100 blast)
+        qed
+      qed
+      show "top1_continuous_map_on V1 (subspace_topology top1_S1 top1_S1_topology V1)
+          U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
+        sorry
+      show "top1_continuous_map_on U_top (subspace_topology top1_S1 top1_S1_topology U_top)
+          V1 (subspace_topology top1_S1 top1_S1_topology V1) (inv_into V1 q)"
+        sorry
+    qed
+    \<comment> \<open>q is a homeomorphism V2 \<rightarrow> U_top. Inverse: (a,b) \<mapsto> (-sqrt((1+a)/2), -sqrt((1-a)/2)).\<close>
     have hhomeo2: "top1_homeomorphism_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
-        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q" sorry
+        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
+      sorry
     show ?thesis unfolding top1_evenly_covered_on_def
     proof (intro conjI exI[of _ "{V1, V2}"])
       show "openin_on top1_S1 top1_S1_topology U_top" by (rule hU_top_open)
