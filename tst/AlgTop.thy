@@ -1345,7 +1345,7 @@ proof -
               have "delta s \<in> V" using \<open>s \<in> I_set\<close> h\<delta>_V
                 unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
               hence "delta s \<in> A \<or> delta s \<in> B \<or> delta s \<in> V - U"
-                using hAB_UV by (by100 blast)
+                using hAB_UV by (by100 fast)
               have "delta s \<in> {x \<in> A. (x, 0::int) \<in> W} \<union>
                   {x \<in> B. (x, -2::int) \<in> W} \<union> {x \<in> V - U. (x, -1::int) \<in> W}"
               proof -
@@ -6856,7 +6856,7 @@ proof -
   define A1 where "A1 = W1 \<union> W2"
   define B1 where "B1 = B"
   have hA1B1_eq: "U \<inter> V = A1 \<union> B1"
-    unfolding A1_def B1_def using hUV_eq assms(18) by (by100 blast)
+    unfolding A1_def B1_def using hUV_eq assms(18) by (by100 simp)
   have hA1B1_disj: "A1 \<inter> B1 = {}" unfolding A1_def B1_def using assms(16,17) by (by100 blast)
   have hA1_open: "openin_on X TX A1"
   proof -
@@ -7538,6 +7538,34 @@ proof -
   qed
 qed
 
+\<comment> \<open>Helper: cos a = cos b and sin a = sin b implies a = b + 2k\<pi>.\<close>
+lemma cos_sin_eq_imp:
+  assumes "cos a = cos b" "sin a = sin b"
+  shows "\<exists>k::int. a - b = real_of_int k * 2 * pi"
+proof -
+  have "cos (a - b) = cos a * cos b + sin a * sin b" by (rule cos_diff)
+  also have "\<dots> = cos b * cos b + sin b * sin b" using assms by simp
+  also have "\<dots> = 1" using sin_cos_squared_add3[of b] by linarith
+  finally have "cos (a - b) = 1" .
+  thus ?thesis using cos_one_2pi_int by simp
+qed
+
+\<comment> \<open>Corollary: if |a - b| < 2\<pi> then a = b.\<close>
+lemma cos_sin_eq_small_diff:
+  assumes "cos a = cos b" "sin a = sin b" "\<bar>a - b\<bar> < 2 * pi"
+  shows "a = b"
+proof -
+  obtain k :: int where hk: "a - b = real_of_int k * 2 * pi"
+    using cos_sin_eq_imp[OF assms(1,2)] by (by100 blast)
+  have "\<bar>real_of_int k * 2 * pi\<bar> < 2 * pi"
+    using hk assms(3) by simp
+  hence "\<bar>real_of_int k\<bar> * (2 * pi) < 2 * pi"
+    by (simp add: abs_mult abs_of_nonneg[OF pi_ge_zero])
+  hence "\<bar>real_of_int k\<bar> < 1" using pi_gt_zero by simp
+  hence "k = 0" by auto
+  thus "a = b" using hk by simp
+qed
+
 \<comment> \<open>Flexible arc decomposition: given SCC C' and open V with x \<in> V \<inter> C',
    decompose C' = C1 \<union> C2 with C1 \<subseteq> V, both arcs.\<close>
 lemma flexible_arc_decomposition:
@@ -7652,7 +7680,34 @@ proof -
   \<comment> \<open>Step 3: Choose \<epsilon> > 0 so that the arc of width 2\<epsilon> around finv(x) on S^1 maps into V.\<close>
   \<comment> \<open>finv(x) = (cos \<theta>, sin \<theta>) for some \<theta>. Open set in S^1 \<Rightarrow> \<exists>\<epsilon>. B(\<epsilon>,finv(x))\<inter>S^1 \<subseteq> preimage.\<close>
   obtain \<theta> where h\<theta>: "finv x = (cos \<theta>, sin \<theta>)" and h\<theta>_range: "\<theta> \<in> {0..<2*pi}"
-    sorry \<comment> \<open>Every point of S^1 has angular parameterization.\<close>
+  proof -
+    have hp_S1: "finv x \<in> top1_S1" by (rule hp)
+    hence "fst (finv x) ^ 2 + snd (finv x) ^ 2 = 1"
+      unfolding top1_S1_def by simp
+    obtain t :: real where ht: "finv x = (cos (2*pi*t), sin (2*pi*t))"
+    proof -
+      have "(finv x) \<in> top1_R_to_S1 ` UNIV"
+        sorry \<comment> \<open>S^1 = R_to_S1(R): surjectivity of angle parameterization.\<close>
+      then obtain t :: real where "finv x = top1_R_to_S1 t" by (by100 blast)
+      hence "finv x = (cos (2*pi*t), sin (2*pi*t))" unfolding top1_R_to_S1_def by simp
+      thus ?thesis using that by (by100 blast)
+    qed
+    define \<theta>' where "\<theta>' = 2*pi*(t - of_int \<lfloor>t\<rfloor>)"
+    have h\<theta>'_range: "\<theta>' \<ge> 0 \<and> \<theta>' < 2*pi"
+    proof
+      have "t - of_int \<lfloor>t\<rfloor> \<ge> 0" by linarith
+      thus "\<theta>' \<ge> 0" unfolding \<theta>'_def using pi_gt_zero by (simp add: mult_nonneg_nonneg)
+      have "t - of_int \<lfloor>t\<rfloor> < 1" by linarith
+      hence "2*pi*(t - of_int \<lfloor>t\<rfloor>) < 2*pi*1" using pi_gt_zero
+        by (simp add: mult_strict_left_mono)
+      thus "\<theta>' < 2*pi" unfolding \<theta>'_def by simp
+    qed
+    have "cos \<theta>' = cos (2*pi*t)" and "sin \<theta>' = sin (2*pi*t)"
+      unfolding \<theta>'_def
+      sorry \<comment> \<open>cos(2\<pi>(t-\<lfloor>t\<rfloor>)) = cos(2\<pi>t): periodicity of cos/sin by 2\<pi>.\<close>
+    hence "finv x = (cos \<theta>', sin \<theta>')" using ht by simp
+    thus ?thesis using that h\<theta>'_range by auto
+  qed
   obtain \<epsilon> :: real where h\<epsilon>: "\<epsilon> > 0" "\<epsilon> < pi"
       and h_arc_sub: "\<And>t. t \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>} \<Longrightarrow> (cos t, sin t) \<in> finv ` (V \<inter> C')"
     sorry \<comment> \<open>Open set in S^1 around (cos \<theta>, sin \<theta>) contains an \<epsilon>-arc.\<close>
@@ -7670,7 +7725,13 @@ proof -
   have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc" sorry
   have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}" sorry
   have hab_ne: "?a_S1 \<noteq> ?b_S1"
-    sorry \<comment> \<open>(cos(\<theta>-\<epsilon>),sin(\<theta>-\<epsilon>)) \<noteq> (cos(\<theta>+\<epsilon>),sin(\<theta>+\<epsilon>)) since 0<\<epsilon><\<pi>: trig identity.\<close>
+  proof
+    assume "?a_S1 = ?b_S1"
+    hence "cos (\<theta>-\<epsilon>) = cos (\<theta>+\<epsilon>)" and "sin (\<theta>-\<epsilon>) = sin (\<theta>+\<epsilon>)" by simp_all
+    hence "\<theta>-\<epsilon> = \<theta>+\<epsilon>" by (rule cos_sin_eq_small_diff) (use h\<epsilon> in linarith)
+    hence "\<epsilon> = 0" by linarith
+    thus False using h\<epsilon>(1) by simp
+  qed
   \<comment> \<open>5b: C' = C1 \<union> C2.\<close>
   have "C' = C1 \<union> C2"
   proof -
@@ -7737,7 +7798,17 @@ proof -
         using heq unfolding g_def by simp
       \<comment> \<open>cos a = cos b \<and> sin a = sin b \<Rightarrow> a - b = 2k\<pi>. Since |a-b| < 2\<pi> (both in range 2\<epsilon> < 2\<pi>), k=0.\<close>
       ultimately have "\<theta>-\<epsilon>+2*\<epsilon>*s = \<theta>-\<epsilon>+2*\<epsilon>*t"
-        sorry \<comment> \<open>sin_cos_eq: cos a = cos b \<and> sin a = sin b \<Rightarrow> \<exists>k. a - b = 2k\<pi>. Range: |a-b| \<le> 2\<epsilon> < 2\<pi>.\<close>
+      proof (rule cos_sin_eq_small_diff)
+        have "0 \<le> s" "s \<le> 1" "0 \<le> t" "t \<le> 1"
+          using hs ht unfolding top1_unit_interval_def by auto
+        have "\<bar>(\<theta>-\<epsilon>+2*\<epsilon>*s) - (\<theta>-\<epsilon>+2*\<epsilon>*t)\<bar> = \<bar>2*\<epsilon>*(s-t)\<bar>"
+          by (simp add: algebra_simps)
+        also have "\<dots> = 2*\<epsilon> * \<bar>s-t\<bar>" using h\<epsilon>(1) by (simp add: abs_mult)
+        also have "\<dots> \<le> 2*\<epsilon> * 1"
+          by (rule mult_left_mono) (use \<open>0\<le>s\<close> \<open>s\<le>1\<close> \<open>0\<le>t\<close> \<open>t\<le>1\<close> h\<epsilon>(1) in auto)
+        also have "\<dots> < 2*pi" using h\<epsilon>(2) by linarith
+        finally show "\<bar>(\<theta>-\<epsilon>+2*\<epsilon>*s) - (\<theta>-\<epsilon>+2*\<epsilon>*t)\<bar> < 2 * pi" .
+      qed
       thus "s = t" using h\<epsilon>(1) by simp
     qed
     have hg_cont: "continuous_on I_set g" unfolding g_def by (intro continuous_intros)
@@ -7875,7 +7946,19 @@ proof -
       moreover have "sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s) = sin (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)"
         using heq unfolding g'_def by simp
       ultimately have "\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s = \<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t"
-        sorry \<comment> \<open>Same trig argument: |a-b| \<le> 2\<pi>-2\<epsilon> < 2\<pi>.\<close>
+      proof (rule cos_sin_eq_small_diff)
+        have "0 \<le> s" "s \<le> 1" "0 \<le> t" "t \<le> 1"
+          using hs ht unfolding top1_unit_interval_def by auto
+        have "2*pi-2*\<epsilon> > 0" using h\<epsilon>(2) pi_gt_zero by linarith
+        have "\<bar>(\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s) - (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)\<bar> = \<bar>(2*pi-2*\<epsilon>)*(s-t)\<bar>"
+          by (simp add: algebra_simps)
+        also have "\<dots> = (2*pi-2*\<epsilon>) * \<bar>s-t\<bar>" using \<open>2*pi-2*\<epsilon> > 0\<close> by (simp add: abs_mult)
+        also have "\<dots> \<le> (2*pi-2*\<epsilon>) * 1"
+          by (rule mult_left_mono) (use \<open>0\<le>s\<close> \<open>s\<le>1\<close> \<open>0\<le>t\<close> \<open>t\<le>1\<close> \<open>2*pi-2*\<epsilon> > 0\<close> in auto)
+        also have "(2*pi-2*\<epsilon>) * 1 = 2*pi-2*\<epsilon>" by simp
+        also have "\<dots> < 2*pi" using h\<epsilon>(1) by linarith
+        finally show "\<bar>(\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*s) - (\<theta>+\<epsilon>+(2*pi-2*\<epsilon>)*t)\<bar> < 2 * pi" .
+      qed
       hence "(2*pi-2*\<epsilon>)*s = (2*pi-2*\<epsilon>)*t" by linarith
       moreover have "2*pi-2*\<epsilon> \<noteq> (0::real)" using h\<epsilon>(2) pi_gt_zero by linarith
       ultimately show "s = t" by simp
