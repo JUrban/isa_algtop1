@@ -2845,11 +2845,25 @@ proof (intro allI impI)
     define gs_list where "gs_list = map gi [0..<m]"
     have hgs_len: "length gs_list = m" unfolding gs_list_def by simp
     \<comment> \<open>Step 2e: Each gi is a loop at x0 in U or V.\<close>
+    \<comment> \<open>fi(i) is a path from f(sub(i)) to f(sub(i+1)) in X, with image in U or V.\<close>
+    have hfi_path: "\<And>i. i < m \<Longrightarrow> top1_is_path_on X TX (f (subdivision i)) (f (subdivision (Suc i))) (fi i)"
+      sorry \<comment> \<open>fi is f reparametrized on [sub(i), sub(i+1)]. Continuous (comp of continuous).
+         fi(0) = f(sub(i)), fi(1) = f(sub(i+1)).\<close>
+    have hfi_UV: "\<And>i. i < m \<Longrightarrow> fi i ` I_set \<subseteq> U \<or> fi i ` I_set \<subseteq> V"
+    proof -
+      fix i assume hi: "i < m"
+      have "fi i ` I_set = f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)}"
+        sorry \<comment> \<open>Image of linear reparametrization = original restricted piece image.\<close>
+      moreover have "f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> U
+          \<or> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> V"
+        using hsub_UV[rule_format, OF hi] by simp
+      ultimately show "fi i ` I_set \<subseteq> U \<or> fi i ` I_set \<subseteq> V" by simp
+    qed
     have hgs_loops: "\<forall>i<m. top1_is_loop_on X TX x0 (gs_list!i)
         \<and> (gs_list!i ` I_set \<subseteq> U \<or> gs_list!i ` I_set \<subseteq> V)"
-      sorry \<comment> \<open>gi starts at \<alpha>s(i)(0) = x0, ends at rev(\<alpha>s(Suc i))(1) = x0.
-         Image: \<alpha>s(i) \<subseteq> U\<inter>V, fi(i) \<subseteq> U or V, rev(\<alpha>s(Suc i)) \<subseteq> U\<inter>V.
-         So gi \<subseteq> U or gi \<subseteq> V.\<close>
+      sorry \<comment> \<open>gi = (\<alpha>s(i) * fi(i)) * rev(\<alpha>s(Suc i)).
+         Loop: \<alpha>s(i)(0)=x0, fi(i)(1)=f(sub(i+1)), rev(\<alpha>s(Suc i))(1)=x0.
+         Image: \<alpha>s \<subseteq> U\<inter>V \<subseteq> U,V; fi \<subseteq> U or V; rev(\<alpha>s) \<subseteq> U\<inter>V.\<close>
     \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
@@ -13870,3 +13884,7 @@ qed
 end
 
 
+
+
+
+ 
