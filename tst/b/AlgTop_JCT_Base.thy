@@ -2272,18 +2272,40 @@ proof (intro allI impI)
     have hgn: "good n_sub" unfolding good_def by simp
     have h0_mem: "0 \<in> set glist" unfolding glist_def using hg0 hn_sub by simp
     have hn_mem: "n_sub \<in> set glist" unfolding glist_def using hgn by simp
-    have hglist_sorted: "sorted glist" unfolding glist_def sorry
+    have hglist_sorted: "sorted glist" unfolding glist_def
+      by (metis sorted_wrt_filter sorted_upt)
     have hglist_distinct: "distinct glist" unfolding glist_def by simp
     have hglist_sub: "set glist \<subseteq> {0..n_sub}" unfolding glist_def by auto
-    have hglist_len: "length glist \<ge> 2" using h0_mem hn_mem hn_sub hglist_distinct
-      sorry \<comment> \<open>0 \<noteq> n_sub and both in distinct list \<Rightarrow> length \<ge> 2.\<close>
+    have h0_ne_n: "(0::nat) \<noteq> n_sub" using hn_sub by simp
+    have hglist_len: "length glist \<ge> 2"
+    proof -
+      have "card {0, n_sub} = 2" using h0_ne_n by simp
+      moreover have "{0, n_sub} \<subseteq> set glist" using h0_mem hn_mem by (by100 blast)
+      moreover have "card (set glist) = length glist" using hglist_distinct by (rule distinct_card)
+      ultimately show ?thesis using card_mono[OF finite_set \<open>{0, n_sub} \<subseteq> set glist\<close>] by linarith
+    qed
     define n1 where "n1 = length glist - 1"
     have hn1_ge: "n1 \<ge> 1" using hglist_len unfolding n1_def by simp
     define sub1 where "sub1 j = sub0 (glist ! j)" for j
-    have hgl_0: "glist ! 0 = 0" using h0_mem hglist_sorted
-      sorry \<comment> \<open>0 is the minimum, sorted list starts with it.\<close>
-    have hgl_n: "glist ! n1 = n_sub" using hn_mem hglist_sorted n1_def
-      sorry \<comment> \<open>n_sub is the maximum, sorted list ends with it.\<close>
+    have hgl_0: "glist ! 0 = 0"
+    proof -
+      have "\<forall>x \<in> set glist. 0 \<le> x" using hglist_sub by (by100 blast)
+      hence "glist ! 0 \<le> 0"
+        using sorted_nth_mono[OF hglist_sorted, of 0] h0_mem hglist_len
+        sorry \<comment> \<open>First element of sorted list \<le> all elements, and 0 \<in> list.\<close>
+      moreover have "glist ! 0 \<ge> 0" by simp
+      ultimately show ?thesis by simp
+    qed
+    have hgl_n: "glist ! n1 = n_sub"
+    proof -
+      have "\<forall>x \<in> set glist. x \<le> n_sub" using hglist_sub by auto
+      hence "glist ! n1 \<ge> n_sub"
+        using sorted_nth_mono[OF hglist_sorted] hn_mem hglist_len n1_def
+        sorry \<comment> \<open>Last element of sorted list \<ge> all elements, and n_sub \<in> list.\<close>
+      moreover have "glist ! n1 \<le> n_sub"
+        using hglist_sub n1_def hglist_len sorry
+      ultimately show ?thesis by simp
+    qed
     have hsub1_0: "sub1 0 = 0" unfolding sub1_def using hgl_0 hsub0_0 by simp
     have hsub1_n: "sub1 n1 = 1" unfolding sub1_def using hgl_n hsub0_n by simp
     have hsub1_mono: "\<forall>i<n1. sub1 i < sub1 (Suc i)"
