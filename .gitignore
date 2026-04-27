@@ -1,0 +1,35 @@
+# Isabelle distribution
+bin/
+contrib/
+contrib.old1/
+doc/
+etc/
+etc.old1/
+heaps/
+lib/
+src/
+diff/
+
+# Isabelle files
+Isabelle*
+*.options
+
+# Project metadata at root
+ANNOUNCE
+CONTRIBUTORS
+COPYRIGHT
+NEWS
+README
+ROOT
+ROOTS
+REVIEW.txt
+CLAUDE.md
+algtop.tex
+
+# Archives
+*.tar.*
+*.7z*
+*.gz
+
+# Git backup
+.git.backup/
