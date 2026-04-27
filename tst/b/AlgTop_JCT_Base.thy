@@ -2550,8 +2550,57 @@ proof -
   \<comment> \<open>Fibers of q on S^1: q(z')=q(z) iff z'=z or z'=-z.\<close>
   have hq_fiber: "\<And>z z'. z \<in> top1_S1 \<Longrightarrow> z' \<in> top1_S1 \<Longrightarrow> q z' = q z \<Longrightarrow>
       z' = z \<or> z' = (- fst z, - snd z)"
-    sorry \<comment> \<open>From injectivity on each sheet: if q(z')=q(z) and they're in the same sheet, z'=z.
-       Otherwise z' is in the other sheet, which is the antipodal.\<close>
+  proof -
+    fix z z' assume hz: "z \<in> top1_S1" and hz': "z' \<in> top1_S1" and hqeq: "q z' = q z"
+    obtain x y where hxy: "z = (x, y)" by (cases z) auto
+    obtain x' y' where hxy': "z' = (x', y')" by (cases z') auto
+    have hS1: "x\<^sup>2 + y\<^sup>2 = 1" using hz unfolding top1_S1_def hxy by simp
+    have hS1': "x'\<^sup>2 + y'\<^sup>2 = 1" using hz' unfolding top1_S1_def hxy' by simp
+    have heq1: "x'\<^sup>2 - y'\<^sup>2 = x\<^sup>2 - y\<^sup>2" using hqeq unfolding q_def hxy hxy' by auto
+    have heq2: "x'*y' = x*y" using hqeq unfolding q_def hxy hxy' by auto
+    \<comment> \<open>From S^1 equations: x'^2 = x^2 and y'^2 = y^2.\<close>
+    have hx2: "x'\<^sup>2 = x\<^sup>2"
+    proof -
+      have "x'\<^sup>2 = (1 + (x'\<^sup>2 - y'\<^sup>2))/2" using hS1' by (simp add: field_simps)
+      also have "\<dots> = (1 + (x\<^sup>2 - y\<^sup>2))/2" using heq1 by simp
+      also have "\<dots> = x\<^sup>2" using hS1 by (simp add: field_simps)
+      finally show ?thesis .
+    qed
+    have hy2: "y'\<^sup>2 = y\<^sup>2" using hx2 hS1 hS1' by linarith
+    \<comment> \<open>x' = \<pm>x, y' = \<pm>y. Combined with x'y' = xy:\<close>
+    have "x' = x \<or> x' = -x" using hx2 power2_eq_iff by (by100 blast)
+    moreover have "y' = y \<or> y' = -y" using hy2 power2_eq_iff by (by100 blast)
+    ultimately consider "x' = x \<and> y' = y" | "x' = -x \<and> y' = -y"
+        | "x' = x \<and> y' = -y" | "x' = -x \<and> y' = y" by blast
+    thus "z' = z \<or> z' = (- fst z, - snd z)"
+    proof cases
+      case 1 thus ?thesis using hxy hxy' by simp
+    next
+      case 2 thus ?thesis using hxy hxy' by simp
+    next
+      case 3 \<comment> \<open>x'=x, y'=-y. Then x'y' = -xy = xy, so 2xy=0, x=0 or y=0.\<close>
+      hence "x*(-y) = x*y" using heq2 by simp
+      hence "x*y = 0" by simp
+      hence "x = 0 \<or> y = 0" by simp
+      thus ?thesis
+      proof
+        assume "x = 0" thus ?thesis using 3 hxy hxy' by simp
+      next
+        assume "y = 0" thus ?thesis using 3 hxy hxy' by simp
+      qed
+    next
+      case 4 \<comment> \<open>x'=-x, y'=y. Then x'y' = -xy = xy, so 2xy=0.\<close>
+      hence "(-x)*y = x*y" using heq2 by simp
+      hence "x*y = 0" by simp
+      hence "x = 0 \<or> y = 0" by simp
+      thus ?thesis
+      proof
+        assume "x = 0" thus ?thesis using 4 hxy hxy' by simp
+      next
+        assume "y = 0" thus ?thesis using 4 hxy hxy' by simp
+      qed
+    qed
+  qed
   have hk_eq: "\<And>z. z \<in> top1_S1 \<Longrightarrow> k (q z) = q (h z)"
   proof -
     fix z assume hz: "z \<in> top1_S1"
