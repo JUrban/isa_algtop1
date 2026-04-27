@@ -2164,8 +2164,23 @@ lemma telescoping_conjugated_product:
   shows "top1_path_homotopic_on X TX x0 x0
       (foldr top1_path_product fs (top1_constant_path x0))
       (foldr top1_path_product gs (top1_constant_path x0))"
-  using assms
-  sorry
+proof -
+  \<comment> \<open>By induction on n. We prove a slightly stronger statement:
+     foldr pp gs const \<simeq> \<alpha>(0) * (foldr pp fs (rev(\<alpha>(n)) * const)).
+     Then use \<alpha>(0) = \<alpha>(n) = const to simplify.\<close>
+  \<comment> \<open>Helper: reverse of constant path is itself.\<close>
+  have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
+    unfolding top1_path_reverse_def top1_constant_path_def by (rule ext) simp
+  have hconst: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0])
+  \<comment> \<open>The conjugation with \<alpha>(0) = const and \<alpha>(n) = const simplifies:
+     const * (foldr fi (rev(const) * const)) \<simeq> const * (foldr fi (const * const))
+     \<simeq> const * (foldr fi const) \<simeq> foldr fi const.\<close>
+  \<comment> \<open>For the main argument, we show element-wise that the telescoping cancels.
+     We prove this by a direct chain of homotopies for the m=1 base case,
+     and then generalize by induction.\<close>
+  show ?thesis sorry \<comment> \<open>Main telescoping proof. Needs ~60 lines of path algebra.\<close>
+qed
 
 theorem Theorem_59_1:
   assumes hT: "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
@@ -14324,3 +14339,7 @@ end
 
 
 
+
+   
+
+  
