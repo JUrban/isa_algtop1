@@ -2845,6 +2845,32 @@ proof (intro allI impI)
     define gs_list where "gs_list = map gi [0..<m]"
     have hgs_len: "length gs_list = m" unfolding gs_list_def by simp
     \<comment> \<open>Step 2e: Each gi is a loop at x0 in U or V.\<close>
+    \<comment> \<open>Helper: subdivision is weakly monotone.\<close>
+    have hsub_weak_mono: "\<And>j k. j \<le> k \<Longrightarrow> k \<le> m \<Longrightarrow> subdivision j \<le> subdivision k"
+    proof -
+      fix j k :: nat assume hjk: "j \<le> k" "k \<le> m"
+      show "subdivision j \<le> subdivision k" using hjk
+      proof (induction "k - j" arbitrary: k)
+        case 0 thus ?case by simp
+      next
+        case (Suc d)
+        hence "j \<le> k - 1" "k - 1 \<le> m" "k > 0" by linarith+
+        have hIH: "subdivision j \<le> subdivision (k - 1)"
+          using Suc.hyps(1)[of "k-1"] \<open>j \<le> k-1\<close> \<open>k-1 \<le> m\<close> Suc.hyps(2) by linarith
+        have "k - 1 < m" using Suc.prems(2) \<open>k > 0\<close> by linarith
+        have "Suc (k - 1) = k" using \<open>k > 0\<close> by simp
+        hence "subdivision (k - 1) < subdivision k"
+          using hsub_mono[rule_format, OF \<open>k-1 < m\<close>] by simp
+        thus ?case using hIH by linarith
+      qed
+    qed
+    have hsub_in_I: "\<And>j. j \<le> m \<Longrightarrow> subdivision j \<in> I_set"
+    proof -
+      fix j assume "j \<le> m"
+      have "subdivision j \<ge> 0" using hsub_weak_mono[of 0 j] \<open>j \<le> m\<close> hsub0 by simp
+      moreover have "subdivision j \<le> 1" using hsub_weak_mono[of j m] \<open>j \<le> m\<close> hsubm by simp
+      ultimately show "subdivision j \<in> I_set" unfolding top1_unit_interval_def by simp
+    qed
     \<comment> \<open>fi(i) is a path from f(sub(i)) to f(sub(i+1)) in X, with image in U or V.\<close>
     have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
       by (rule top1_is_loop_on_continuous[OF hf])
@@ -2860,7 +2886,23 @@ proof (intro allI impI)
           have hfi_eq: "fi i = f \<circ> \<phi>" unfolding fi_def \<phi>_def comp_def by (rule ext) simp
           have h\<phi>_cont_on: "continuous_on I_set \<phi>" unfolding \<phi>_def by (intro continuous_intros)
           have h\<phi>_maps: "\<forall>t\<in>I_set. \<phi> t \<in> I_set"
-            sorry \<comment> \<open>\<phi> maps [0,1] into [sub(i),sub(Suc i)] \<subseteq> [0,1].\<close>
+          proof (intro ballI)
+            fix t assume "t \<in> I_set"
+            hence "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by auto
+            have hDelta: "subdivision (Suc i) - subdivision i \<ge> 0"
+              using hsub_mono[rule_format, OF hi] by simp
+            have "\<phi> t \<ge> subdivision i" unfolding \<phi>_def
+              using \<open>0 \<le> t\<close> hDelta by (simp add: mult_nonneg_nonneg)
+            moreover have "\<phi> t \<le> subdivision (Suc i)"
+            proof -
+              have "t * (subdivision (Suc i) - subdivision i) \<le> 1 * (subdivision (Suc i) - subdivision i)"
+                by (rule mult_right_mono[OF \<open>t \<le> 1\<close> hDelta])
+              thus ?thesis unfolding \<phi>_def by simp
+            qed
+            moreover have "subdivision i \<ge> 0" using hsub_weak_mono[of 0 i] hi hsub0 by simp
+            moreover have "subdivision (Suc i) \<le> 1" using hsub_weak_mono[of "Suc i" m] hi hsubm by simp
+            ultimately show "\<phi> t \<in> I_set" unfolding top1_unit_interval_def by simp
+          qed
           have h\<phi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>"
           proof -
             have hItop: "I_top = subspace_topology UNIV top1_open_sets I_set"
@@ -14030,6 +14072,9 @@ end
 
 
  
+
+
+
 
 
 
