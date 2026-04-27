@@ -2776,8 +2776,35 @@ proof -
     using hH_eq by (by100 blast)
   \<comment> \<open>Assemble the path homotopy. The definition uses F(s,t) where s=path, t=homotopy.\<close>
   define F where "F p = H (snd p, fst p)" for p :: "real \<times> real"
+  have hswap_cont: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+      (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (snd p, fst p))"
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTP: "is_topology_on (I_set \<times> I_set) (product_topology_on I_top I_top)"
+      by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top pi1"
+      by (rule top1_continuous_pi1[OF hTI hTI])
+    have hpi2: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top pi2"
+      by (rule top1_continuous_pi2[OF hTI hTI])
+    \<comment> \<open>swap = (pi2, pi1). Use Theorem 18.4 to get continuity.\<close>
+    have hpi2_eq: "pi1 \<circ> (\<lambda>p :: real \<times> real. (snd p, fst p)) = pi2"
+      unfolding pi1_def pi2_def by (rule ext) simp
+    have hpi1_eq: "pi2 \<circ> (\<lambda>p :: real \<times> real. (snd p, fst p)) = pi1"
+      unfolding pi1_def pi2_def by (rule ext) simp
+    show ?thesis
+      using iffD2[OF Theorem_18_4[OF hTP hTI hTI, of "(\<lambda>p. (snd p, fst p))"]]
+      using hpi2 hpi1 unfolding hpi2_eq hpi1_eq by (by100 blast)
+  qed
+  have hF_comp: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX
+      (H \<circ> (\<lambda>p. (snd p, fst p)))"
+    by (rule top1_continuous_map_on_comp[OF hswap_cont hH_cont])
+  have hF_eq: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> (H \<circ> (\<lambda>p. (snd p, fst p))) p = F p"
+    unfolding F_def comp_def by simp
   have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-    sorry \<comment> \<open>H ∘ swap is continuous; II_topology = product I_top I_top.\<close>
+    unfolding II_topology_def
+    using iffD1[OF top1_continuous_map_on_cong[of "I_set \<times> I_set" "H \<circ> (\<lambda>p. (snd p, fst p))" F]
+      hF_comp]
+    using hF_eq by (by100 blast)
   \<comment> \<open>f_L = f \<circ> (\<lambda>t. a*t) and f_R = f \<circ> (\<lambda>t. a+(1-a)*t) are paths.\<close>
   have hscale_range: "\<And>t. t \<in> I_set \<Longrightarrow> a * t \<in> I_set"
   proof -
