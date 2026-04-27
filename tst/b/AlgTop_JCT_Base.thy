@@ -2856,10 +2856,10 @@ proof (intro allI impI)
       proof (intro set_eqI iffI)
         fix y assume "y \<in> fi i ` I_set"
         then obtain t where ht: "t \<in> I_set" "y = fi i t" by (by100 blast)
-        have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<ge> subdivision i"
+        have hlb: "subdivision i + t * (subdivision (Suc i) - subdivision i) \<ge> subdivision i"
           using ht(1) hsub_mono[rule_format, OF hi]
           unfolding top1_unit_interval_def by (simp add: mult_nonneg_nonneg)
-        moreover have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<le> subdivision (Suc i)"
+        moreover have hub: "subdivision i + t * (subdivision (Suc i) - subdivision i) \<le> subdivision (Suc i)"
         proof -
           have "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by simp
           have "subdivision (Suc i) - subdivision i \<ge> 0" using hsub_mono[rule_format, OF hi] by simp
@@ -2868,7 +2868,66 @@ proof (intro allI impI)
           thus ?thesis by simp
         qed
         moreover have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<in> I_set"
-          sorry \<comment> \<open>In [sub(i), sub(Suc i)] \<subseteq> [0,1]. Needs sub(i)\<ge>0, sub(Suc i)\<le>1.\<close>
+        proof -
+          have "subdivision 0 \<le> subdivision i"
+          proof (cases "i = 0")
+            case True thus ?thesis by simp
+          next
+            case False hence "0 < i" by simp
+            show ?thesis
+            proof (rule order.strict_implies_order)
+              show "subdivision 0 < subdivision i"
+                using \<open>0 < i\<close> hi hsub_mono
+              proof (induction i)
+                case 0 thus ?case by simp
+              next
+                case (Suc n)
+                show ?case
+                proof (cases "n = 0")
+                  case True thus ?thesis using hsub_mono Suc.prems by simp
+                next
+                  case False
+                  hence "subdivision 0 < subdivision n" using Suc by simp
+                  also have "subdivision n < subdivision (Suc n)" using hsub_mono Suc.prems by simp
+                  finally show ?thesis .
+                qed
+              qed
+            qed
+          qed
+          hence "subdivision i \<ge> 0" using hsub0 by simp
+          have "subdivision (Suc i) \<le> subdivision m"
+          proof (cases "Suc i = m")
+            case True thus ?thesis by simp
+          next
+            case False hence "Suc i < m" using hi by simp
+            show ?thesis
+            proof (rule order.strict_implies_order)
+              show "subdivision (Suc i) < subdivision m"
+                using \<open>Suc i < m\<close> hsub_mono
+              proof (induction m)
+                case 0 thus ?case by simp
+              next
+                case (Suc n)
+                show ?case
+                proof (cases "Suc i = n")
+                  case True thus ?thesis using hsub_mono Suc.prems by simp
+                next
+                  case False
+                  hence "Suc i < n" using Suc.prems by simp
+                  hence "subdivision (Suc i) < subdivision n" using Suc by simp
+                  also have "subdivision n < subdivision (Suc n)" using hsub_mono Suc.prems by simp
+                  finally show ?thesis .
+                qed
+              qed
+            qed
+          qed
+          hence "subdivision (Suc i) \<le> 1" using hsubm by simp
+          have "0 \<le> subdivision i + t * (subdivision (Suc i) - subdivision i)"
+            using \<open>subdivision i \<ge> 0\<close> hlb by linarith
+          moreover have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<le> 1"
+            using \<open>subdivision (Suc i) \<le> 1\<close> hub by linarith
+          ultimately show ?thesis unfolding top1_unit_interval_def by simp
+        qed
         ultimately show "y \<in> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)}"
           using ht(2) unfolding fi_def by (by100 blast)
       next
@@ -13924,6 +13983,9 @@ end
 
 
  
+
+
+
 
 
 
