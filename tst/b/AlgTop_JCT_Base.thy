@@ -2853,7 +2853,43 @@ proof (intro allI impI)
     proof -
       fix i assume hi: "i < m"
       have "fi i ` I_set = f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)}"
-        sorry \<comment> \<open>Image of linear reparametrization = original restricted piece image.\<close>
+      proof (intro set_eqI iffI)
+        fix y assume "y \<in> fi i ` I_set"
+        then obtain t where ht: "t \<in> I_set" "y = fi i t" by (by100 blast)
+        have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<ge> subdivision i"
+          using ht(1) hsub_mono[rule_format, OF hi]
+          unfolding top1_unit_interval_def by (simp add: mult_nonneg_nonneg)
+        moreover have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<le> subdivision (Suc i)"
+        proof -
+          have "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by simp
+          have "subdivision (Suc i) - subdivision i \<ge> 0" using hsub_mono[rule_format, OF hi] by simp
+          hence "t * (subdivision (Suc i) - subdivision i) \<le> 1 * (subdivision (Suc i) - subdivision i)"
+            using mult_right_mono[OF \<open>t \<le> 1\<close>] by simp
+          thus ?thesis by simp
+        qed
+        moreover have "subdivision i + t * (subdivision (Suc i) - subdivision i) \<in> I_set"
+          sorry \<comment> \<open>In [sub(i), sub(Suc i)] \<subseteq> [0,1]. Needs sub(i)\<ge>0, sub(Suc i)\<le>1.\<close>
+        ultimately show "y \<in> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)}"
+          using ht(2) unfolding fi_def by (by100 blast)
+      next
+        fix y assume "y \<in> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)}"
+        then obtain s where hs: "s \<in> I_set" "subdivision i \<le> s" "s \<le> subdivision (Suc i)" "y = f s"
+          by (by100 blast)
+        define t where "t = (s - subdivision i) / (subdivision (Suc i) - subdivision i)"
+        have hDelta: "subdivision (Suc i) - subdivision i > 0" using hsub_mono[rule_format, OF hi] by simp
+        have "t \<ge> 0" unfolding t_def using hs(2) hDelta by simp
+        moreover have "t \<le> 1" unfolding t_def using hs(3) hDelta by (simp add: divide_le_eq_1)
+        ultimately have "t \<in> I_set" unfolding top1_unit_interval_def by simp
+        moreover have "fi i t = f s"
+        proof -
+          have "subdivision i + (s - subdivision i) / (subdivision (Suc i) - subdivision i)
+              * (subdivision (Suc i) - subdivision i) = s"
+            using hDelta by simp
+          thus ?thesis unfolding fi_def t_def by simp
+        qed
+        ultimately have "fi i t \<in> fi i ` I_set" by (by100 blast)
+        thus "y \<in> fi i ` I_set" using hs(4) \<open>fi i t = f s\<close> by simp
+      qed
       moreover have "f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> U
           \<or> f ` {s\<in>I_set. subdivision i \<le> s \<and> s \<le> subdivision (Suc i)} \<subseteq> V"
         using hsub_UV[rule_format, OF hi] by simp
@@ -13888,3 +13924,10 @@ end
 
 
  
+
+
+
+
+
+
+
