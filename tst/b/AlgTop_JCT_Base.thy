@@ -2435,12 +2435,39 @@ proof (intro allI impI)
           \<or> f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V"
         using hsub0_UV[rule_format, OF ha_lt] by simp
       \<comment> \<open>Induction: extend from piece a to piece b-1.\<close>
+      \<comment> \<open>Each piece j \<in> [a,b) maps to the same set as piece a. Prove by induction on j-a.\<close>
+      have h_all_same_as_a: "\<And>j. a \<le> j \<Longrightarrow> j < b \<Longrightarrow>
+          (f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> U \<longrightarrow>
+           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
+        \<and> (f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V \<longrightarrow>
+           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
+      proof -
+        fix j assume haj: "a \<le> j" "j < b"
+        show "(f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> U \<longrightarrow>
+           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
+        \<and> (f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V \<longrightarrow>
+           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
+          sorry \<comment> \<open>Induction on j - a. Base j=a: trivial. Step j+1: use h_deleted_same at j+1.\<close>
+      qed
       show "(\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
         \<or> (\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
           f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
-        sorry \<comment> \<open>Induction on b-a using h_deleted_same. Base: b=a+1, single piece.
-           Step: use h_deleted_same at b-1 (deleted), extend from [a,b-1] to [a,b].\<close>
+      proof (cases "f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> U")
+        case True
+        have "\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U"
+          using True h_all_same_as_a by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        hence "f ` {s\<in>I_set. sub0 a \<le> s \<and> s \<le> sub0 (Suc a)} \<subseteq> V"
+          using hpiece_a by (by100 blast)
+        hence "\<forall>j. a \<le> j \<longrightarrow> j < b \<longrightarrow>
+            f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V"
+          using h_all_same_as_a by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
     qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
