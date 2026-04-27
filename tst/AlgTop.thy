@@ -7843,11 +7843,159 @@ proof -
   \<comment> \<open>Step 5: Show the 6 properties.\<close>
   \<comment> \<open>5a: S^1 = short \<union> long.\<close>
   have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc"
-    sorry \<comment> \<open>S^1 circle decomposition: uses angular parameterization + interval cover.\<close>
+  proof (intro set_eqI iffI)
+    fix p assume "p \<in> top1_S1"
+    hence hp: "fst p ^ 2 + snd p ^ 2 = 1" unfolding top1_S1_def by simp
+    \<comment> \<open>p = (cos t0, sin t0) for some t0. Normalize t0 to [\<theta>-\<epsilon>, \<theta>-\<epsilon>+2\<pi>).\<close>
+    obtain t0 where ht0: "p = (cos t0, sin t0)" "t0 \<in> {\<theta>-\<epsilon>..<\<theta>-\<epsilon>+2*pi}"
+    proof -
+      obtain t where ht: "p = (cos t, sin t)"
+      proof -
+        have "\<bar>fst p\<bar> \<le> 1"
+        proof -
+          have "(snd p)^2 \<ge> 0" by simp
+          hence "(fst p)^2 \<le> 1" using hp by linarith
+          have "fst p \<le> 1" using power2_le_imp_le[of "fst p" 1] \<open>(fst p)^2 \<le> 1\<close> by simp
+          have "(-fst p)^2 = (fst p)^2" by (simp add: power2_eq_square)
+          hence "(-fst p)^2 \<le> 1" using \<open>(fst p)^2 \<le> 1\<close> by simp
+          hence "-fst p \<le> 1" using power2_le_imp_le[of "-fst p" 1] by simp
+          thus ?thesis using \<open>fst p \<le> 1\<close> by simp
+        qed
+        define t0 where "t0 = (if snd p \<ge> 0 then arccos (fst p) else 2*pi - arccos (fst p))"
+        have "cos t0 = fst p" unfolding t0_def using \<open>\<bar>fst p\<bar> \<le> 1\<close> by (simp add: cos_arccos)
+        have "sin t0 = snd p"
+        proof (cases "snd p \<ge> 0")
+          case True
+          hence "t0 = arccos (fst p)" unfolding t0_def by simp
+          have "sin (arccos (fst p)) = sqrt (1 - (fst p)^2)"
+            using \<open>\<bar>fst p\<bar> \<le> 1\<close> by (intro sin_arccos) auto
+          also have "1 - (fst p)^2 = (snd p)^2" using hp by linarith
+          finally have "sin (arccos (fst p)) = \<bar>snd p\<bar>" using real_sqrt_abs by simp
+          thus ?thesis using True \<open>t0 = arccos (fst p)\<close> by simp
+        next
+          case False
+          hence "t0 = 2*pi - arccos (fst p)" unfolding t0_def by simp
+          have "sin (2*pi - arccos (fst p)) = - sin (arccos (fst p))"
+            by (simp add: sin_diff)
+          also have "sin (arccos (fst p)) = sqrt (1 - (fst p)^2)"
+            using \<open>\<bar>fst p\<bar> \<le> 1\<close> by (intro sin_arccos) auto
+          also have "1 - (fst p)^2 = (snd p)^2" using hp by linarith
+          finally have "sin (2*pi - arccos (fst p)) = - \<bar>snd p\<bar>"
+            using real_sqrt_abs by simp
+          thus ?thesis using False \<open>t0 = 2*pi - arccos (fst p)\<close> by simp
+        qed
+        hence "p = (cos t0, sin t0)" using \<open>cos t0 = fst p\<close> by (cases p) simp
+        thus ?thesis using that by (by100 blast)
+      qed
+      \<comment> \<open>Normalize t to [\<theta>-\<epsilon>, \<theta>-\<epsilon>+2\<pi>) via periodicity.\<close>
+      define t' where "t' = t - 2*pi * of_int \<lfloor>(t - (\<theta>-\<epsilon>)) / (2*pi)\<rfloor>"
+      have h2pi_pos: "(2*pi :: real) > 0" using pi_gt_zero by simp
+      have ht'_range: "t' \<ge> \<theta>-\<epsilon> \<and> t' < \<theta>-\<epsilon>+2*pi"
+      proof
+        have "of_int \<lfloor>(t - (\<theta>-\<epsilon>)) / (2*pi)\<rfloor> * (2*pi) \<le> t - (\<theta>-\<epsilon>)"
+          by (rule floor_divide_lower[OF h2pi_pos])
+        hence "2*pi * of_int \<lfloor>(t - (\<theta>-\<epsilon>)) / (2*pi)\<rfloor> \<le> t - (\<theta>-\<epsilon>)"
+          by (simp add: mult.commute)
+        thus "t' \<ge> \<theta>-\<epsilon>" unfolding t'_def by linarith
+        have "t - (\<theta>-\<epsilon>) < (of_int \<lfloor>(t - (\<theta>-\<epsilon>)) / (2*pi)\<rfloor> + 1) * (2*pi)"
+          by (rule floor_divide_upper[OF h2pi_pos])
+        thus "t' < \<theta>-\<epsilon>+2*pi" unfolding t'_def by (simp add: algebra_simps)
+      qed
+      have "cos t' = cos t" and "sin t' = sin t"
+      proof -
+        define k where "k = \<lfloor>(t - (\<theta>-\<epsilon>)) / (2*pi)\<rfloor>"
+        have ht'_eq: "t' = t - of_int k * (2 * pi)" unfolding t'_def k_def by (simp add: algebra_simps)
+        have hcos_k: "cos (of_int k * (2 * pi)) = 1"
+          using cos_integer_2pi[of "of_int k"] by (simp add: algebra_simps)
+        have hsin_k: "sin (of_int k * (2 * pi)) = 0"
+          using sin_integer_2pi[of "of_int k"] by (simp add: algebra_simps)
+        show "cos t' = cos t" unfolding ht'_eq using hcos_k hsin_k by (simp add: cos_diff)
+        show "sin t' = sin t" unfolding ht'_eq using hcos_k hsin_k by (simp add: sin_diff)
+      qed
+      hence "p = (cos t', sin t')" using ht by simp
+      thus ?thesis using that ht'_range by auto
+    qed
+    \<comment> \<open>t0 \<in> [\<theta>-\<epsilon>, \<theta>-\<epsilon>+2\<pi>). Either t0 \<le> \<theta>+\<epsilon> (short arc) or t0 > \<theta>+\<epsilon> (long arc).\<close>
+    show "p \<in> ?short_arc \<union> ?long_arc"
+    proof (cases "t0 \<le> \<theta>+\<epsilon>")
+      case True
+      hence "t0 \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}" using ht0(2) by auto
+      hence "p \<in> ?short_arc" using ht0(1) unfolding mem_Collect_eq by (by100 blast)
+      thus ?thesis by (by100 blast)
+    next
+      case False
+      hence "t0 > \<theta>+\<epsilon>" by simp
+      hence "t0 \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}" using ht0(2) by auto
+      hence "p \<in> ?long_arc" using ht0(1) unfolding mem_Collect_eq by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+  next
+    fix p assume "p \<in> ?short_arc \<union> ?long_arc"
+    then obtain t where "p = (cos t, sin t)" by (by100 blast)
+    thus "p \<in> top1_S1" unfolding top1_S1_def using sin_cos_squared_add2 by simp
+  qed
   have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}"
-    sorry \<comment> \<open>The two arcs share only their endpoints. Uses cos_sin_eq_small_diff to show
-       (cos s, sin s) = (cos t, sin t) with s \<in> [\<theta>-\<epsilon>,\<theta>+\<epsilon>] and t \<in> [\<theta>+\<epsilon>,\<theta>-\<epsilon>+2\<pi>] implies
-       s = \<theta>-\<epsilon> or s = \<theta>+\<epsilon> (the endpoints).\<close>
+  proof (intro set_eqI iffI)
+    fix p assume "p \<in> ?short_arc \<inter> ?long_arc"
+    then obtain s t where hs: "s \<in> {\<theta>-\<epsilon>..\<theta>+\<epsilon>}" and ht: "t \<in> {\<theta>+\<epsilon>..\<theta>-\<epsilon>+2*pi}"
+        and hst: "(cos s, sin s) = (cos t, sin t)" and hp: "p = (cos s, sin s)" by (by100 blast)
+    have "cos s = cos t" and "sin s = sin t" using hst by simp_all
+    obtain k :: int where hk: "s - t = real_of_int k * 2 * pi"
+      using cos_sin_eq_imp[OF \<open>cos s = cos t\<close> \<open>sin s = sin t\<close>] by (by100 blast)
+    have "s \<le> \<theta>+\<epsilon>" and "s \<ge> \<theta>-\<epsilon>" and "t \<ge> \<theta>+\<epsilon>" and "t \<le> \<theta>-\<epsilon>+2*pi"
+      using hs ht by auto
+    hence "s - t \<le> 0" by linarith
+    hence "k \<le> 0"
+    proof -
+      have "real_of_int k * 2 * pi \<le> 0" using hk \<open>s - t \<le> 0\<close> by simp
+      hence "real_of_int k \<le> 0" using pi_gt_zero by (simp add: mult_le_0_iff)
+      thus ?thesis by linarith
+    qed
+    have "s - t \<ge> (\<theta>-\<epsilon>) - (\<theta>-\<epsilon>+2*pi)" using \<open>s \<ge> \<theta>-\<epsilon>\<close> \<open>t \<le> \<theta>-\<epsilon>+2*pi\<close> by linarith
+    hence "s - t \<ge> -2*pi" by linarith
+    hence "real_of_int k * 2 * pi \<ge> -2*pi" using hk by simp
+    hence "real_of_int k \<ge> -1"
+    proof -
+      have "(2*pi) > 0" using pi_gt_zero by simp
+      have "real_of_int k * (2*pi) \<ge> (-1) * (2*pi)"
+        using \<open>real_of_int k * 2 * pi \<ge> -2*pi\<close> by (simp add: mult.assoc)
+      thus ?thesis using \<open>(2*pi) > 0\<close> mult_le_cancel_right_pos by (by100 fast)
+    qed
+    hence "k \<in> {-1, 0}" using \<open>k \<le> 0\<close> by auto
+    show "p \<in> {?a_S1, ?b_S1}"
+    proof (cases "k = 0")
+      case True
+      hence "s = t" using hk by simp
+      hence "s = \<theta>+\<epsilon>" using \<open>s \<le> \<theta>+\<epsilon>\<close> \<open>t \<ge> \<theta>+\<epsilon>\<close> by linarith
+      thus ?thesis using hp by simp
+    next
+      case False
+      hence "k = -1" using \<open>k \<in> {-1, 0}\<close> by simp
+      hence "s = t - 2*pi" using hk by simp
+      hence "s \<le> (\<theta>-\<epsilon>+2*pi) - 2*pi" using \<open>t \<le> \<theta>-\<epsilon>+2*pi\<close> by linarith
+      hence "s = \<theta>-\<epsilon>" using \<open>s \<ge> \<theta>-\<epsilon>\<close> by linarith
+      thus ?thesis using hp by simp
+    qed
+  next
+    fix p assume "p \<in> {?a_S1, ?b_S1}"
+    hence "p = ?a_S1 \<or> p = ?b_S1" by simp
+    thus "p \<in> ?short_arc \<inter> ?long_arc"
+    proof
+      assume "p = ?a_S1"
+      have "?a_S1 \<in> ?short_arc" unfolding mem_Collect_eq
+        using h\<epsilon>(1) by (intro exI[of _ "\<theta>-\<epsilon>"]) auto
+      moreover have "?a_S1 \<in> ?long_arc" unfolding mem_Collect_eq
+        using h\<epsilon>(1,2) pi_gt_zero by (intro exI[of _ "\<theta>-\<epsilon>+2*pi"]) auto
+      ultimately show ?thesis using \<open>p = ?a_S1\<close> by simp
+    next
+      assume "p = ?b_S1"
+      have "?b_S1 \<in> ?short_arc" unfolding mem_Collect_eq
+        using h\<epsilon>(1) by (intro exI[of _ "\<theta>+\<epsilon>"]) auto
+      moreover have "?b_S1 \<in> ?long_arc" unfolding mem_Collect_eq
+        using h\<epsilon>(1,2) pi_gt_zero by (intro exI[of _ "\<theta>+\<epsilon>"]) auto
+      ultimately show ?thesis using \<open>p = ?b_S1\<close> by simp
+    qed
+  qed
   have hab_ne: "?a_S1 \<noteq> ?b_S1"
   proof
     assume "?a_S1 = ?b_S1"
