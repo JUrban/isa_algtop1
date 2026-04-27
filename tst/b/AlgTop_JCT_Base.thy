@@ -2225,8 +2225,63 @@ lemma telescoping_core:
       (foldr top1_path_product gs (top1_constant_path x0))
       (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
         (top1_path_product (top1_path_reverse (\<alpha> k)) (top1_constant_path x0))))"
-  using assms
-  sorry
+proof -
+  have hconst: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0])
+  \<comment> \<open>Proof by induction on k. The conclusion has the form:
+     foldr gs const \<simeq> \<alpha>(0) * foldr fs (rev(\<alpha>(k)) * const).
+     Base k=1: double associativity.
+     Step k\<rightarrow>k+1: expand g0, apply IH to tail, cancel rev(\<alpha>1)*\<alpha>1.\<close>
+  show ?thesis using hlen hfi hgi h\<alpha>
+  proof (induction k arbitrary: gs fs \<alpha> a)
+    case 0 thus ?case by (by100 simp)
+  next
+    case (Suc k')
+    show ?case
+    proof (cases "k' = 0")
+      case True
+      \<comment> \<open>Base k=1: ((a0*f0)*rev(a1))*const \<simeq> a0*(f0*(rev(a1)*const)).\<close>
+      show ?thesis
+      proof -
+        have hk1: "Suc k' = 1" using True by (by100 simp)
+        have hfoldr_gs: "foldr top1_path_product gs (top1_constant_path x0)
+            = top1_path_product (gs ! 0) (top1_constant_path x0)"
+          using Suc.prems(1) hk1 sorry
+        have hfoldr_fs: "foldr top1_path_product fs
+            (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))
+            = top1_path_product (fs ! 0)
+              (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))"
+          using Suc.prems(2) hk1 sorry
+        have hg0: "gs ! 0 = top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
+            (top1_path_reverse (\<alpha> (Suc k')))"
+          using Suc.prems(5)[of 0] hk1 by (by100 simp)
+        have hassoc1: "top1_path_homotopic_on X TX x0 x0
+            (top1_path_product (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
+              (top1_path_reverse (\<alpha> (Suc k')))) (top1_constant_path x0))
+            (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
+              (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0)))"
+          sorry
+        have hassoc2: "top1_path_homotopic_on X TX x0 x0
+            (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
+              (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0)))
+            (top1_path_product (\<alpha> 0) (top1_path_product (fs ! 0)
+              (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))))"
+          sorry
+        have hchain: "top1_path_homotopic_on X TX x0 x0
+            (top1_path_product (top1_path_product (top1_path_product (\<alpha> 0) (fs ! 0))
+              (top1_path_reverse (\<alpha> (Suc k')))) (top1_constant_path x0))
+            (top1_path_product (\<alpha> 0) (top1_path_product (fs ! 0)
+              (top1_path_product (top1_path_reverse (\<alpha> (Suc k'))) (top1_constant_path x0))))"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX hassoc1 hassoc2])
+        show ?thesis using hchain hg0 hfoldr_gs hfoldr_fs by (by100 simp)
+      qed
+    next
+      case False
+      \<comment> \<open>Induction step: k = Suc k' with k' \<ge> 1.\<close>
+      show ?thesis using False Suc sorry
+    qed
+  qed
+qed
 
 \<comment> \<open>Telescoping lemma for conjugated path products (Munkres 59.1 Step 2).
    If gi = (\<alpha>i * fi) * rev(\<alpha>(i+1)) and \<alpha>0 = \<alpha>n = const_x0,
@@ -3445,6 +3500,12 @@ qed
 
 
 end
+
+
+
+
+
+
 
 
 
