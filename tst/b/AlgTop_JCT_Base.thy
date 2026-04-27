@@ -646,10 +646,18 @@ proof -
           V2 (subspace_topology top1_S1 top1_S1_topology V2) (inv_into V2 q)"
       proof -
         define qi2 where "qi2 = (\<lambda>(a::real, b::real). (-sqrt ((1+a)/2), -sqrt ((1-a)/2)))"
+        \<comment> \<open>qi2 maps U_top into V2 and q \<circ> qi2 = id on U_top.\<close>
+        have hqi2_props: "\<And>w. w \<in> U_top \<Longrightarrow> qi2 w \<in> V2 \<and> q (qi2 w) = w"
+          sorry \<comment> \<open>Arithmetic: same as bij_betw surjectivity proof for V2.\<close>
         have hqi2_eq: "\<And>w. w \<in> U_top \<Longrightarrow> qi2 w = inv_into V2 q w"
-          sorry \<comment> \<open>Same pattern as hqi_eq but with negated inverse.\<close>
+        proof -
+          fix w assume hw: "w \<in> U_top"
+          have "qi2 w \<in> V2" and "q (qi2 w) = w" using hqi2_props[OF hw] by auto
+          thus "qi2 w = inv_into V2 q w"
+            by (simp add: inv_into_f_eq[OF inj_on_subset[OF bij_betw_imp_inj_on[OF \<open>bij_betw q V2 U_top\<close>]]])
+        qed
         have hqi2_V2: "\<And>w. w \<in> U_top \<Longrightarrow> qi2 w \<in> V2"
-          sorry
+          using hqi2_props by (by100 blast)
         have hqi2_cont: "continuous_on U_top qi2"
           unfolding qi2_def split_def by (intro continuous_intros) auto
         have hU_sub: "U_top \<subseteq> top1_S1" unfolding U_top_def by (by100 blast)
