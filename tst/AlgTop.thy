@@ -7722,8 +7722,13 @@ proof -
   define b_pt where "b_pt = f ?b_S1"
   \<comment> \<open>Step 5: Show the 6 properties.\<close>
   \<comment> \<open>5a: S^1 = short \<union> long.\<close>
-  have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc" sorry
-  have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}" sorry
+  have hS1_decomp: "top1_S1 = ?short_arc \<union> ?long_arc"
+    sorry \<comment> \<open>S^1 = {(cos t, sin t) | t \<in> [\<theta>-\<epsilon>,\<theta>+\<epsilon>]} \<union> {(cos t, sin t) | t \<in> [\<theta>+\<epsilon>,\<theta>-\<epsilon>+2\<pi>]}.
+       Uses: every point of S^1 = (cos t, sin t), and [0,2\<pi>) decomposes into the two intervals mod 2\<pi>.\<close>
+  have hS1_inter: "?short_arc \<inter> ?long_arc = {?a_S1, ?b_S1}"
+    sorry \<comment> \<open>The two arcs share only their endpoints. Uses cos_sin_eq_small_diff to show
+       (cos s, sin s) = (cos t, sin t) with s \<in> [\<theta>-\<epsilon>,\<theta>+\<epsilon>] and t \<in> [\<theta>+\<epsilon>,\<theta>-\<epsilon>+2\<pi>] implies
+       s = \<theta>-\<epsilon> or s = \<theta>+\<epsilon> (the endpoints).\<close>
   have hab_ne: "?a_S1 \<noteq> ?b_S1"
   proof
     assume "?a_S1 = ?b_S1"
@@ -14278,6 +14283,7 @@ qed
 
 
 end
+
 
 
 
