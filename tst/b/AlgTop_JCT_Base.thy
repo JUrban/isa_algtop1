@@ -3300,7 +3300,17 @@ proof (intro allI impI)
       have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       have hfsub0: "f (subdivision 0) = x0" using hsub0 hf0 by simp
       have hfsubm: "f (subdivision m) = x0" using hsubm hf1 by simp
-      show ?thesis sorry \<comment> \<open>Apply telescoping_conjugated_product. Need to match arguments.\<close>
+      have hgi_eq: "\<And>i. i < m \<Longrightarrow> gs_list ! i = top1_path_product
+          (top1_path_product (\<alpha>s' i) (fi_list ! i)) (top1_path_reverse (\<alpha>s' (Suc i)))"
+        unfolding gs_list_def fi_list_def gi_def using hm by simp
+      have hfi_len: "length fi_list = m" unfolding fi_list_def by simp
+      have hfi_list_path: "\<And>i. i < m \<Longrightarrow> top1_is_path_on X TX
+          (f (subdivision i)) (f (subdivision (Suc i))) (fi_list ! i)"
+        unfolding fi_list_def using hfi_path_X by simp
+      show ?thesis
+        by (rule telescoping_conjugated_product[where a="\<lambda>i. f (subdivision i)",
+            OF hTX' hx0_X hm hfi_len hgs_len h\<alpha>'_X hfi_list_path hgi_eq
+            h\<alpha>s'_0 h\<alpha>s'_m hfsub0 hfsubm])
     qed
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
@@ -14386,4 +14396,8 @@ end
 
 
    
+
+
+
+
 
