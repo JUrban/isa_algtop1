@@ -140,7 +140,105 @@ proof -
   qed
   \<comment> \<open>Each semicircle is evenly covered. We prove this for U_top; the others are analogous.\<close>
   have hevenly_top: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_top"
-    sorry
+  proof -
+    \<comment> \<open>U_top is open in S^1: intersection with open upper half-plane.\<close>
+    have hU_top_open: "openin_on top1_S1 top1_S1_topology U_top"
+    proof -
+      have "open {p :: real \<times> real. snd p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      hence "{p :: real \<times> real. snd p > 0} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+      hence "{p :: real \<times> real. snd p > 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+        using product_topology_on_open_sets_real2 by (by100 metis)
+      hence "top1_S1 \<inter> {p. snd p > 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "U_top = top1_S1 \<inter> {p. snd p > 0}" unfolding U_top_def by (by100 blast)
+      moreover have "U_top \<subseteq> top1_S1" unfolding U_top_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    \<comment> \<open>V1 = first quadrant, V2 = third quadrant of S^1.\<close>
+    define V1 where "V1 = {p \<in> top1_S1. fst p > 0 \<and> snd p > 0}"
+    define V2 where "V2 = {p \<in> top1_S1. fst p < 0 \<and> snd p < 0}"
+    \<comment> \<open>V1, V2 are open in S^1, disjoint, and q^{-1}(U_top) = V1 \<union> V2.\<close>
+    have hV1_open: "openin_on top1_S1 top1_S1_topology V1"
+    proof -
+      have h1: "open {p :: real \<times> real. fst p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have h2: "open {p :: real \<times> real. snd p > 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have "open {p :: real \<times> real. fst p > 0 \<and> snd p > 0}"
+      proof -
+        have "{p :: real \<times> real. fst p > 0 \<and> snd p > 0} = {p. fst p > 0} \<inter> {p. snd p > 0}" by auto
+        thus ?thesis using open_Int[OF h1 h2] by simp
+      qed
+      hence "{p :: real \<times> real. fst p > 0 \<and> snd p > 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+      proof -
+        have "{p :: real \<times> real. fst p > 0 \<and> snd p > 0} \<in> top1_open_sets"
+          using \<open>open {p :: real \<times> real. fst p > 0 \<and> snd p > 0}\<close> unfolding top1_open_sets_def by simp
+        thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+      qed
+      hence "top1_S1 \<inter> {p. fst p > 0 \<and> snd p > 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "V1 = top1_S1 \<inter> {p. fst p > 0 \<and> snd p > 0}" unfolding V1_def by (by100 blast)
+      moreover have "V1 \<subseteq> top1_S1" unfolding V1_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    have hV2_open: "openin_on top1_S1 top1_S1_topology V2"
+    proof -
+      have h1: "open {p :: real \<times> real. fst p < 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have h2: "open {p :: real \<times> real. snd p < 0}" by (intro open_Collect_less) (intro continuous_intros)+
+      have "open {p :: real \<times> real. fst p < 0 \<and> snd p < 0}"
+      proof -
+        have "{p :: real \<times> real. fst p < 0 \<and> snd p < 0} = {p. fst p < 0} \<inter> {p. snd p < 0}" by auto
+        thus ?thesis using open_Int[OF h1 h2] by simp
+      qed
+      hence "{p :: real \<times> real. fst p < 0 \<and> snd p < 0} \<in> product_topology_on top1_open_sets top1_open_sets"
+      proof -
+        have "{p :: real \<times> real. fst p < 0 \<and> snd p < 0} \<in> top1_open_sets"
+          using \<open>open {p :: real \<times> real. fst p < 0 \<and> snd p < 0}\<close> unfolding top1_open_sets_def by simp
+        thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+      qed
+      hence "top1_S1 \<inter> {p. fst p < 0 \<and> snd p < 0} \<in> top1_S1_topology"
+        unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      moreover have "V2 = top1_S1 \<inter> {p. fst p < 0 \<and> snd p < 0}" unfolding V2_def by (by100 blast)
+      moreover have "V2 \<subseteq> top1_S1" unfolding V2_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by simp
+    qed
+    have hV_disj: "V1 \<inter> V2 = {}" unfolding V1_def V2_def by auto
+    have hpreimage: "{p \<in> top1_S1. q p \<in> U_top} = V1 \<union> V2"
+    proof (intro set_eqI iffI)
+      fix p assume hp: "p \<in> {p \<in> top1_S1. q p \<in> U_top}"
+      hence hpS1: "p \<in> top1_S1" and hqp: "q p \<in> U_top" by auto
+      obtain x y where hxy: "p = (x, y)" by (cases p) auto
+      have hS1: "x\<^sup>2 + y\<^sup>2 = 1" using hpS1 unfolding top1_S1_def hxy by simp
+      have "snd (q p) > 0" using hqp unfolding U_top_def by (by100 blast)
+      hence "2*x*y > 0" unfolding q_def hxy by simp
+      hence "x*y > 0" by simp
+      hence "(x > 0 \<and> y > 0) \<or> (x < 0 \<and> y < 0)" using zero_less_mult_iff by force
+      thus "p \<in> V1 \<union> V2" unfolding V1_def V2_def using hpS1 hxy by auto
+    next
+      fix p assume "p \<in> V1 \<union> V2"
+      hence hpS1: "p \<in> top1_S1" and hq: "fst p * snd p > 0"
+        unfolding V1_def V2_def by (auto intro: mult_pos_pos mult_neg_neg)
+      have "snd (q p) = 2 * fst p * snd p" unfolding q_def by simp
+      hence "snd (q p) > 0" using hq by simp
+      moreover have "q p \<in> top1_S1" by (rule hq_S1[OF hpS1])
+      ultimately show "p \<in> {p \<in> top1_S1. q p \<in> U_top}" unfolding U_top_def using hpS1 by auto
+    qed
+    \<comment> \<open>q is a homeomorphism from V1 to U_top and from V2 to U_top.\<close>
+    have hhomeo1: "top1_homeomorphism_on V1 (subspace_topology top1_S1 top1_S1_topology V1)
+        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q" sorry
+    have hhomeo2: "top1_homeomorphism_on V2 (subspace_topology top1_S1 top1_S1_topology V2)
+        U_top (subspace_topology top1_S1 top1_S1_topology U_top) q" sorry
+    show ?thesis unfolding top1_evenly_covered_on_def
+    proof (intro conjI exI[of _ "{V1, V2}"])
+      show "openin_on top1_S1 top1_S1_topology U_top" by (rule hU_top_open)
+      show "\<forall>V\<in>{V1, V2}. openin_on top1_S1 top1_S1_topology V"
+        using hV1_open hV2_open by (by100 blast)
+      show "\<forall>V\<in>{V1, V2}. \<forall>V'\<in>{V1, V2}. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+        using hV_disj by (by100 blast)
+      show "{x \<in> top1_S1. q x \<in> U_top} = \<Union> {V1, V2}" using hpreimage by simp
+      show "\<forall>V\<in>{V1, V2}. top1_homeomorphism_on V (subspace_topology top1_S1 top1_S1_topology V)
+          U_top (subspace_topology top1_S1 top1_S1_topology U_top) q"
+        using hhomeo1 hhomeo2 by (by100 blast)
+    qed
+  qed
   have hevenly_bot: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_bot"
     sorry
   have hevenly_right: "top1_evenly_covered_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology q U_right"
