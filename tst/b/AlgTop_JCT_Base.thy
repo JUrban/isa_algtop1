@@ -2846,9 +2846,20 @@ proof (intro allI impI)
     have hgs_len: "length gs_list = m" unfolding gs_list_def by simp
     \<comment> \<open>Step 2e: Each gi is a loop at x0 in U or V.\<close>
     \<comment> \<open>fi(i) is a path from f(sub(i)) to f(sub(i+1)) in X, with image in U or V.\<close>
+    have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+      by (rule top1_is_loop_on_continuous[OF hf])
     have hfi_path: "\<And>i. i < m \<Longrightarrow> top1_is_path_on X TX (f (subdivision i)) (f (subdivision (Suc i))) (fi i)"
-      sorry \<comment> \<open>fi is f reparametrized on [sub(i), sub(i+1)]. Continuous (comp of continuous).
-         fi(0) = f(sub(i)), fi(1) = f(sub(i+1)).\<close>
+    proof -
+      fix i assume hi: "i < m"
+      show "top1_is_path_on X TX (f (subdivision i)) (f (subdivision (Suc i))) (fi i)"
+        unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top X TX (fi i)"
+          sorry \<comment> \<open>fi = f \<circ> linear. linear continuous I_set\<rightarrow>I_set, f continuous I_set\<rightarrow>X.\<close>
+        show "fi i 0 = f (subdivision i)" unfolding fi_def by simp
+        show "fi i 1 = f (subdivision (Suc i))" unfolding fi_def by simp
+      qed
+    qed
     have hfi_UV: "\<And>i. i < m \<Longrightarrow> fi i ` I_set \<subseteq> U \<or> fi i ` I_set \<subseteq> V"
     proof -
       fix i assume hi: "i < m"
@@ -13983,6 +13994,7 @@ end
 
 
  
+
 
 
 
