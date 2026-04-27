@@ -7687,7 +7687,49 @@ proof -
     obtain t :: real where ht: "finv x = (cos (2*pi*t), sin (2*pi*t))"
     proof -
       have "(finv x) \<in> top1_R_to_S1 ` UNIV"
-        sorry \<comment> \<open>S^1 = R_to_S1(R): surjectivity of angle parameterization.\<close>
+      proof -
+        obtain a b :: real where hab: "finv x = (a, b)" "a^2 + b^2 = 1"
+          using hp_S1 unfolding top1_S1_def by (by100 force)
+        have ha_range: "a \<in> {-1..1}"
+        proof -
+          have "a^2 \<le> a^2 + b^2" by simp
+          hence "a^2 \<le> 1" using hab(2) by linarith
+          have "a \<le> 1" using power2_le_imp_le[of a 1] \<open>a^2 \<le> 1\<close> by simp
+          moreover have "-1 \<le> a"
+          proof -
+            have "(-a)^2 = a^2" by (simp add: power2_eq_square)
+            hence "(-a)^2 \<le> 1" using \<open>a^2 \<le> 1\<close> by simp
+            hence "-a \<le> 1" using power2_le_imp_le[of "-a" 1] by simp
+            thus ?thesis by linarith
+          qed
+          ultimately have "\<bar>a\<bar> \<le> 1" by simp
+          thus ?thesis by auto
+        qed
+        define t where "t = (if b \<ge> 0 then arccos a else 2*pi - arccos a)"
+        have "cos t = a"
+          unfolding t_def using ha_range by (simp add: cos_arccos)
+        moreover have "sin t = b"
+        proof (cases "b \<ge> 0")
+          case True
+          hence "t = arccos a" unfolding t_def by simp
+          have "sin (arccos a) = sqrt (1 - a^2)" using ha_range by (intro sin_arccos) auto
+          also have "1 - a^2 = b^2" using hab(2) by linarith
+          finally have "sin (arccos a) = \<bar>b\<bar>" using real_sqrt_abs by simp
+          thus ?thesis using True \<open>t = arccos a\<close> by simp
+        next
+          case False
+          hence "t = 2*pi - arccos a" unfolding t_def by simp
+          have "sin (2*pi - arccos a) = - sin (arccos a)" by (simp add: sin_diff)
+          also have "sin (arccos a) = sqrt (1 - a^2)" using ha_range by (intro sin_arccos) auto
+          also have "1 - a^2 = b^2" using hab(2) by linarith
+          finally have "sin (2*pi - arccos a) = - \<bar>b\<bar>" using real_sqrt_abs by simp
+          thus ?thesis using False \<open>t = 2*pi - arccos a\<close> by simp
+        qed
+        ultimately have "finv x = (cos t, sin t)" using hab(1) by simp
+        hence "finv x = top1_R_to_S1 (t / (2*pi))"
+          unfolding top1_R_to_S1_def by simp
+        thus ?thesis by (by100 blast)
+      qed
       then obtain t :: real where "finv x = top1_R_to_S1 t" by (by100 blast)
       hence "finv x = (cos (2*pi*t), sin (2*pi*t))" unfolding top1_R_to_S1_def by simp
       thus ?thesis using that by (by100 blast)
@@ -7703,8 +7745,17 @@ proof -
       thus "\<theta>' < 2*pi" unfolding \<theta>'_def by simp
     qed
     have "cos \<theta>' = cos (2*pi*t)" and "sin \<theta>' = sin (2*pi*t)"
-      unfolding \<theta>'_def
-      sorry \<comment> \<open>cos(2\<pi>(t-\<lfloor>t\<rfloor>)) = cos(2\<pi>t): periodicity of cos/sin by 2\<pi>.\<close>
+    proof -
+      have hd: "\<theta>' = 2*pi*t - of_int \<lfloor>t\<rfloor> * (2 * pi)" unfolding \<theta>'_def by (simp add: algebra_simps)
+      have hcos_k: "cos (of_int \<lfloor>t\<rfloor> * (2 * pi)) = 1"
+        using cos_integer_2pi[of "of_int \<lfloor>t\<rfloor>"] by (simp add: algebra_simps)
+      have hsin_k: "sin (of_int \<lfloor>t\<rfloor> * (2 * pi)) = 0"
+        using sin_integer_2pi[of "of_int \<lfloor>t\<rfloor>"] by (simp add: algebra_simps)
+      show "cos \<theta>' = cos (2*pi*t)" unfolding hd using hcos_k hsin_k
+        by (simp add: cos_diff)
+      show "sin \<theta>' = sin (2*pi*t)" unfolding hd using hcos_k hsin_k
+        by (simp add: sin_diff)
+    qed
     hence "finv x = (cos \<theta>', sin \<theta>')" using ht by simp
     thus ?thesis using that h\<theta>'_range by auto
   qed
