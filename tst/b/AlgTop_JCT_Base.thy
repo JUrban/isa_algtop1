@@ -3046,8 +3046,12 @@ proof (intro allI impI)
     have hgs_loops: "\<forall>i<m. top1_is_loop_on X TX x0 (gs_list!i)
         \<and> (gs_list!i ` I_set \<subseteq> U \<or> gs_list!i ` I_set \<subseteq> V)"
       sorry \<comment> \<open>gi = (\<alpha>s(i) * fi(i)) * rev(\<alpha>s(Suc i)).
-         Loop: \<alpha>s(i)(0)=x0, fi(i)(1)=f(sub(i+1)), rev(\<alpha>s(Suc i))(1)=x0.
-         Image: \<alpha>s \<subseteq> U\<inter>V \<subseteq> U,V; fi \<subseteq> U or V; rev(\<alpha>s) \<subseteq> U\<inter>V.\<close>
+         Loop: Uses top1_path_product_is_path, top1_path_reverse_is_path.
+         \<alpha>s(i): x0\<rightarrow>f(sub(i)), fi(i): f(sub(i))\<rightarrow>f(sub(Suc i)),
+         rev(\<alpha>s(Suc i)): f(sub(Suc i))\<rightarrow>x0.
+         Product: ((\<alpha>s(i)*fi(i))*rev(\<alpha>s(Suc i)))(0) = x0, ...(1) = x0.
+         Image: \<alpha>s \<subseteq> U\<inter>V, fi \<subseteq> U or V, rev(\<alpha>s) \<subseteq> U\<inter>V.
+         U\<inter>V \<subseteq> U and \<subseteq> V, so gi \<subseteq> U or gi \<subseteq> V.\<close>
     \<comment> \<open>Step 2f: f \<simeq> foldr (*) gs_list const.\<close>
     have hgs_product: "top1_path_homotopic_on X TX x0 x0 f
         (foldr top1_path_product gs_list (top1_constant_path x0))"
@@ -14072,6 +14076,7 @@ end
 
 
  
+
 
 
 
