@@ -1555,7 +1555,59 @@ proof -
       proof -
         define qi5 where "qi5 = (\<lambda>(a::real, b::real). (sqrt ((1+a)/2), b / (2 * sqrt ((1+a)/2))))"
         have hqi5_props: "\<And>w. w \<in> U_right \<Longrightarrow> qi5 w \<in> V5 \<and> q (qi5 w) = w"
-          sorry \<comment> \<open>Same arithmetic as the surjectivity proof for V5 above.\<close>
+        proof -
+          fix w assume hw: "w \<in> U_right"
+          obtain a b where hab: "w = (a, b)" by (cases w) auto
+          have hS1w: "a\<^sup>2 + b\<^sup>2 = 1" and ha: "a > 0" using hw unfolding U_right_def top1_S1_def hab by auto
+          define x where "x = sqrt ((1+a)/2)" define y where "y = b / (2 * sqrt ((1+a)/2))"
+          have hqi5_w: "qi5 w = (x, y)" unfolding qi5_def hab x_def y_def by simp
+          have hx_pos: "x > 0" unfolding x_def using ha by simp
+          have hx2: "x\<^sup>2 = (1+a)/2" unfolding x_def power2_eq_square using ha by (simp add: real_sqrt_mult_self)
+          have hqb: "2*x*y = b"
+          proof -
+            have "sqrt ((1+a)/2) > 0" using ha by simp
+            hence "2 * sqrt ((1+a)/2) \<noteq> 0" by simp
+            thus ?thesis unfolding y_def x_def by simp
+          qed
+          have "4*x\<^sup>2*(x\<^sup>2 + y\<^sup>2) = (2*x\<^sup>2)\<^sup>2 + (2*x*y)\<^sup>2"
+            by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = (1+a)\<^sup>2 + b\<^sup>2"
+          proof -
+            have "2*x\<^sup>2 = 1+a" using hx2 by auto
+            thus ?thesis using hqb by simp
+          qed
+          also have "\<dots> = 2 + 2*a"
+            using hS1w by (simp add: power2_eq_square algebra_simps)
+          also have "\<dots> = 4*x\<^sup>2"
+          proof -
+            have "2*x\<^sup>2 = 1+a" using hx2 by auto
+            thus ?thesis by linarith
+          qed
+          finally have hxy_S1: "x\<^sup>2 + y\<^sup>2 = 1" using hx_pos by simp
+          have hqa: "x\<^sup>2 - y\<^sup>2 = a"
+          proof -
+            have "2*x\<^sup>2 = 1+a" using hx2 by auto
+            thus ?thesis using hxy_S1 by linarith
+          qed
+          have "x + y > 0 \<and> x - y > 0"
+          proof -
+            have "(x+y)*(x-y) = a" by (simp add: power2_eq_square algebra_simps) (use hqa in \<open>simp add: power2_eq_square algebra_simps\<close>)
+            hence "(x+y)*(x-y) > 0" using ha by simp
+            hence "(x+y > 0 \<and> x-y > 0) \<or> (x+y < 0 \<and> x-y < 0)"
+              using zero_less_mult_iff by force
+            moreover have "x + y > 0 \<or> x - y > 0" using hx_pos by linarith
+            ultimately show ?thesis by linarith
+          qed
+          have "qi5 w \<in> V5" unfolding hqi5_w V5_def top1_S1_def using hxy_S1 \<open>x+y>0 \<and> x-y>0\<close> by simp
+          moreover have "q (qi5 w) = w"
+          proof -
+            have "fst (q (x, y)) = a" unfolding q_def using hqa by simp
+            moreover have "snd (q (x, y)) = b" unfolding q_def using hqb by simp
+            ultimately have "q (x, y) = (a, b)" by (simp add: prod_eq_iff)
+            thus ?thesis using hqi5_w hab by simp
+          qed
+          ultimately show "qi5 w \<in> V5 \<and> q (qi5 w) = w" by (by100 blast)
+        qed
         have hqi5_eq: "\<And>w. w \<in> U_right \<Longrightarrow> qi5 w = inv_into V5 q w"
         proof -
           fix w assume hw: "w \<in> U_right"
