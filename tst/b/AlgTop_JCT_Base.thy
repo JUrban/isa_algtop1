@@ -2840,11 +2840,50 @@ proof
   have hft_cont: "continuous_on I_set ftilde"
     unfolding ftilde_def by (intro continuous_intros)
   have hft_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (-1, 0) ftilde"
-    sorry \<comment> \<open>Need top1_continuous_map_on bridge from continuous_on + range in S^1.\<close>
+    unfolding top1_is_path_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ftilde"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix t assume "t \<in> I_set" show "ftilde t \<in> top1_S1" by (rule hft_S1)
+    next
+      fix V assume hV: "V \<in> top1_S1_topology"
+      obtain W' where hW': "W' \<in> product_topology_on top1_open_sets top1_open_sets"
+          and hVeq: "V = top1_S1 \<inter> W'"
+        using hV unfolding top1_S1_topology_def subspace_topology_def by (by100 blast)
+      have hW'_open: "open W'"
+        using hW' by (metis product_topology_on_open_sets_real2 top1_open_sets_def mem_Collect_eq)
+      have "{t \<in> I_set. ftilde t \<in> V} = {t \<in> I_set. ftilde t \<in> W'}"
+        using hft_S1 hVeq by (by100 blast)
+      moreover have "{t \<in> I_set. ftilde t \<in> W'} \<in> I_top"
+      proof -
+        obtain U where hU: "open U" and hUeq: "U \<inter> I_set = ftilde -` W' \<inter> I_set"
+          using hft_cont hW'_open unfolding continuous_on_open_invariant by auto
+        have "{t \<in> I_set. ftilde t \<in> W'} = U \<inter> I_set" using hUeq by (by100 blast)
+        moreover have "U \<in> top1_open_sets" using hU unfolding top1_open_sets_def by simp
+        hence "I_set \<inter> U \<in> I_top"
+          unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        moreover have "U \<inter> I_set = I_set \<inter> U" by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      ultimately show "{t \<in> I_set. ftilde t \<in> V} \<in> I_top" by simp
+    qed
+    show "ftilde 0 = (1, 0)" by (rule hft0)
+    show "ftilde 1 = (-1, 0)" by (rule hft1)
+  qed
   \<comment> \<open>Step 2: f = q \<circ> ftilde is a loop at (1,0).\<close>
   define f where "f = ?q \<circ> ftilde"
+  have hq_cont_loc: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?q"
+    using squaring_map_covering unfolding top1_covering_map_on_def by (by100 blast)
+  have hft_cont_top: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ftilde"
+    using hft_path unfolding top1_is_path_on_def by (by100 blast)
+  have hf_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology f"
+    unfolding f_def using top1_continuous_map_on_comp[OF hft_cont_top hq_cont_loc]
+    by (simp add: comp_assoc)
+  have hf0: "f 0 = (1, 0)" unfolding f_def comp_def using hft0 by simp
+  have hf1: "f 1 = (1, 0)" unfolding f_def comp_def using hft1 by simp
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
-    sorry \<comment> \<open>q maps S^1 \<rightarrow> S^1, continuous, f(0) = q(1,0) = (1,0), f(1) = q(-1,0) = (1,0).\<close>
+    unfolding top1_is_loop_on_def top1_is_path_on_def using hf_cont hf0 hf1 by (by100 blast)
   \<comment> \<open>Step 3: g \<circ> f is assumed trivial. So g \<circ> q \<circ> ftilde \<simeq> const.\<close>
   have hgf_triv: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
       (g \<circ> f) (top1_constant_path (1, 0))"
@@ -2857,8 +2896,12 @@ proof
       by (rule allE[of _ 1]) (rule allE[of _ 0], simp)
     thus ?thesis using hg10 by simp
   qed
+  have hgft_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology (g \<circ> ftilde)"
+    using top1_continuous_map_on_comp[OF hft_cont_top hg] by (simp add: comp_assoc)
+  have hgft0: "(g \<circ> ftilde) 0 = (1, 0)" using hft0 hg10 by simp
+  have hgft1: "(g \<circ> ftilde) 1 = (-1, 0)" using hft1 hg_minus10 by simp
   have hgft_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (-1, 0) (g \<circ> ftilde)"
-    sorry \<comment> \<open>g continuous on S^1, ftilde path in S^1, composition is path. Endpoints: g(1,0)=(1,0), g(-1,0)=(-1,0).\<close>
+    unfolding top1_is_path_on_def using hgft_cont hgft0 hgft1 by (by100 blast)
   \<comment> \<open>Step 5: q \<circ> (g \<circ> ftilde) = (g \<circ> f) (since q \<circ> g = k \<circ> q for some k, but more directly:
      k \<circ> q \<circ> ftilde = k \<circ> f = ?, and q \<circ> g \<circ> ftilde = g \<circ> f? No: g \<circ> q \<noteq> q \<circ> g in general.
      Actually: g \<circ> f = g \<circ> (q \<circ> ftilde) \<noteq> q \<circ> (g \<circ> ftilde) in general.
