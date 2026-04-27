@@ -2179,7 +2179,41 @@ proof -
   \<comment> \<open>For the main argument, we show element-wise that the telescoping cancels.
      We prove this by a direct chain of homotopies for the m=1 base case,
      and then generalize by induction.\<close>
-  show ?thesis sorry \<comment> \<open>Main telescoping proof. Needs ~60 lines of path algebra.\<close>
+  \<comment> \<open>Proof: show foldr gs const \<simeq> foldr fs const by showing
+     foldr gs const \<simeq> \<alpha>(0) * foldr fs (rev(\<alpha>(n)) * const)
+     and then simplifying with \<alpha>(0) = \<alpha>(n) = const.\<close>
+  \<comment> \<open>Step 1: foldr gs const \<simeq> \<alpha>(0) * foldr fs (rev(\<alpha>(n)) * const).\<close>
+  have hstep1: "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product gs (top1_constant_path x0))
+      (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
+        (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))))"
+    sorry \<comment> \<open>By induction on n. Base: n=1 expand gi defn. Step: expand g0, use IH on tail.\<close>
+  \<comment> \<open>Step 2: Simplify RHS using \<alpha>(0) = \<alpha>(n) = const_x0.\<close>
+  have hstep2: "top1_path_homotopic_on X TX x0 x0
+      (top1_path_product (\<alpha> 0) (foldr top1_path_product fs
+        (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))))
+      (foldr top1_path_product fs (top1_constant_path x0))"
+  proof -
+    \<comment> \<open>\<alpha>(0) = const, \<alpha>(n) = const, rev(const) = const.\<close>
+    have "top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0)
+        = top1_path_product (top1_constant_path x0) (top1_constant_path x0)"
+      using h\<alpha>n hrev_const by simp
+    moreover have "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (top1_constant_path x0) (top1_constant_path x0))
+        (top1_constant_path x0)"
+      by (rule Theorem_51_2_left_identity[OF hTX hconst])
+    ultimately have hrev_simp: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (top1_path_reverse (\<alpha> n)) (top1_constant_path x0))
+        (top1_constant_path x0)" by simp
+    \<comment> \<open>Replace rev(\<alpha>n)*const with const in the foldr, then remove \<alpha>(0)=const via left identity.\<close>
+    show ?thesis sorry \<comment> \<open>Need: path_homotopic_product respects foldr, then left identity.\<close>
+  qed
+  \<comment> \<open>Combine: foldr gs \<simeq> ... \<simeq> foldr fs. Use sym to get foldr fs \<simeq> foldr gs.\<close>
+  have "top1_path_homotopic_on X TX x0 x0
+      (foldr top1_path_product gs (top1_constant_path x0))
+      (foldr top1_path_product fs (top1_constant_path x0))"
+    by (rule Lemma_51_1_path_homotopic_trans[OF hTX hstep1 hstep2])
+  thus ?thesis by (rule Lemma_51_1_path_homotopic_sym)
 qed
 
 theorem Theorem_59_1:
@@ -14343,3 +14377,6 @@ end
    
 
   
+
+
+
