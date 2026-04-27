@@ -2559,10 +2559,36 @@ proof (intro allI impI)
     qed
     have hsub1_UV: "\<forall>i<n1. f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
                          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
-      sorry \<comment> \<open>Merged piece = union of orig pieces in [glist!i, glist!(i+1)).
-         All map to same set: first piece maps to U or V. Each subsequent deleted point
-         has f-value in U-V or V-U (not in U\<inter>V), forcing the same set via h_deleted_same.
-         Induction on j-glist!i using the directed lemma h_deleted_U / h_deleted_V.\<close>
+    proof (intro allI impI)
+      fix i assume hi: "i < n1"
+      let ?a = "glist ! i" and ?b = "glist ! Suc i"
+      have hi_len: "i < length glist" using hi n1_def hglist_len by linarith
+      have hsi_len: "Suc i < length glist" using hi n1_def hglist_len by linarith
+      have hab_lt: "?a < ?b"
+        using sorted_nth_mono[OF hglist_sorted, of i "Suc i"] hsi_len
+              nth_eq_iff_index_eq[OF hglist_distinct hi_len hsi_len] by linarith
+      have hb_le: "?b \<le> n_sub"
+      proof -
+        have "?b \<in> set glist" using hsi_len by (rule nth_mem)
+        thus ?thesis using hglist_sub by auto
+      qed
+      have hno_good_ab: "\<forall>k. ?a < k \<longrightarrow> k < ?b \<longrightarrow> f (sub0 k) \<notin> U \<inter> V"
+        sorry \<comment> \<open>Points between consecutive good indices are NOT good (filtered out).\<close>
+      \<comment> \<open>h_range_same: all original pieces in [?a, ?b) map to U, or all map to V.\<close>
+      have h_all: "(\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> U)
+        \<or> (\<forall>j. ?a \<le> j \<longrightarrow> j < ?b \<longrightarrow>
+          f ` {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)} \<subseteq> V)"
+        by (rule h_range_same[OF hab_lt hb_le hno_good_ab])
+      \<comment> \<open>Merged piece [sub0(?a), sub0(?b)] = union of original pieces [sub0(j), sub0(j+1)] for j in [?a,?b).\<close>
+      have hmerge: "{s\<in>I_set. sub0 ?a \<le> s \<and> s \<le> sub0 ?b} =
+          (\<Union>j\<in>{?a..<?b}. {s\<in>I_set. sub0 j \<le> s \<and> s \<le> sub0 (Suc j)})"
+        sorry \<comment> \<open>Interval decomposition: [sub0(a), sub0(b)] = union of [sub0(j), sub0(j+1)].\<close>
+      show "f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> U
+          \<or> f ` {s\<in>I_set. sub1 i \<le> s \<and> s \<le> sub1 (Suc i)} \<subseteq> V"
+        unfolding sub1_def using h_all hmerge
+        sorry \<comment> \<open>f ` union = union f ` piece_j. Each f ` piece_j \<subseteq> S. So union \<subseteq> S.\<close>
+    qed
     have hsub1_int: "\<forall>i\<le>n1. f (sub1 i) \<in> U \<inter> V"
     proof (intro allI impI)
       fix i assume "i \<le> n1"
@@ -13665,3 +13691,4 @@ qed
 
 
 end
+
