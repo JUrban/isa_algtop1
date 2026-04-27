@@ -1,0 +1,14 @@
+*.bak*
+*.clean*
+*.full
+*.restore
+*.pre_split
+*.exterior_backup
+*.shbak*
+*.sledge_backup*
+*~
+CHANGES*
+bck*
+00hist*
+*_tail.thy
+PLAN_TO_FINISH_JCT.md
