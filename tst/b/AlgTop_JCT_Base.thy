@@ -3108,8 +3108,96 @@ proof
   \<comment> \<open>Chain: g\<circ>f\<simeq>const, q\<circ>g=k\<circ>q, q\<circ>f=f*f on I_set, k distributes over product.\<close>
   have hkf2_triv: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
       (top1_path_product (k \<circ> f) (k \<circ> f)) (top1_constant_path (1, 0))"
-    sorry \<comment> \<open>Steps: g\<circ>f\<simeq>const \<Rightarrow> q\<circ>(g\<circ>f)\<simeq>const \<Rightarrow> k\<circ>(q\<circ>f)\<simeq>const (since q\<circ>g=k\<circ>q)
-       \<Rightarrow> k\<circ>(f*f)\<simeq>const (since q\<circ>f=f*f) \<Rightarrow> (k\<circ>f)*(k\<circ>f)\<simeq>const (k distributes).\<close>
+  proof -
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    proof -
+      have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by simp
+      thus ?thesis unfolding top1_S1_topology_def by (rule subspace_topology_is_topology_on) simp
+    qed
+    \<comment> \<open>q continuous.\<close>
+    have hq_cont_local: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?q"
+      using squaring_map_covering unfolding top1_covering_map_on_def by (by100 blast)
+    \<comment> \<open>q \<circ> (g \<circ> f) \<simeq> q \<circ> const = const. Uses continuous_preserves_path_homotopic.\<close>
+    have hqgf: "top1_path_homotopic_on top1_S1 top1_S1_topology (?q (1,0)) (?q (1,0))
+        (?q \<circ> (g \<circ> f)) (?q \<circ> top1_constant_path (1, 0))"
+      by (rule continuous_preserves_path_homotopic[OF hTS1 hTS1 hq_cont_local hgf_triv])
+    have hq10: "?q (1::real, 0::real) = (1, 0)" by simp
+    have hq_const: "?q \<circ> top1_constant_path (1, 0) = top1_constant_path (1, 0)"
+      unfolding top1_constant_path_def comp_def using hq10 by (intro ext) simp
+    have hqgf': "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        (?q \<circ> (g \<circ> f)) (top1_constant_path (1, 0))"
+      using hqgf hq10 hq_const by simp
+    \<comment> \<open>q \<circ> (g \<circ> f) = q \<circ> g \<circ> f = k \<circ> q \<circ> f = k \<circ> (f*f) = (k\<circ>f)*(k\<circ>f) pointwise on I_set.\<close>
+    have hchain_eq: "\<And>t. t \<in> I_set \<Longrightarrow> (?q \<circ> (g \<circ> f)) t = top1_path_product (k \<circ> f) (k \<circ> f) t"
+    proof -
+      fix t assume ht: "t \<in> I_set"
+      have hft_S1: "f t \<in> top1_S1"
+        using hf_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
+      have "(?q \<circ> (g \<circ> f)) t = ?q (g (f t))" by (simp add: comp_def)
+      also have "\<dots> = k (?q (f t))"
+      proof -
+        have "?q (g (f t)) = k (?q (f t))" using hk_eq[rule_format, OF hft_S1] by simp
+        thus ?thesis by (simp add: comp_def)
+      qed
+      also have "?q (f t) = top1_path_product f f t" by (rule hqf_eq)
+      also have "k (top1_path_product f f t) = top1_path_product (k \<circ> f) (k \<circ> f) t"
+        using hk_prod by simp
+      finally show "(?q \<circ> (g \<circ> f)) t = top1_path_product (k \<circ> f) (k \<circ> f) t" .
+    qed
+    \<comment> \<open>Since the functions agree on I_set and one is homotopic to const, so is the other.\<close>
+    have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+        (?q \<circ> (g \<circ> f)) (top1_constant_path (1, 0))" by (rule hqgf')
+    moreover have "\<forall>t\<in>I_set. (?q \<circ> (g \<circ> f)) t = top1_path_product (k \<circ> f) (k \<circ> f) t"
+      using hchain_eq by (by100 blast)
+    \<comment> \<open>The two functions agree on I_set. Path homotopy only depends on values on I_set.\<close>
+    \<comment> \<open>Transfer via top1_path_homotopic_on_def: only I_set values matter.\<close>
+    ultimately show ?thesis
+    proof -
+      assume hhom: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+          (?q \<circ> (g \<circ> f)) (top1_constant_path (1, 0))"
+      assume heq: "\<forall>t\<in>I_set. (?q \<circ> (g \<circ> f)) t = top1_path_product (k \<circ> f) (k \<circ> f) t"
+      obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology top1_S1 top1_S1_topology F"
+          and hF0: "\<forall>s\<in>I_set. F (s, 0) = (?q \<circ> (g \<circ> f)) s"
+          and hF1: "\<forall>s\<in>I_set. F (s, 1) = top1_constant_path (1, 0) s"
+          and hFl: "\<forall>t\<in>I_set. F (0, t) = (1, 0)" and hFr: "\<forall>t\<in>I_set. F (1, t) = (1, 0)"
+        using hhom unfolding top1_path_homotopic_on_def
+        apply (by100 simp)
+        apply (by100 blast)
+        done
+      have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (k \<circ> f) (k \<circ> f) s"
+        using hF0 heq by simp
+      have hkf_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (k \<circ> f)"
+      proof -
+        have "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology (k \<circ> f)"
+          using top1_continuous_map_on_comp[OF hf_cont hk_cont] by (simp add: comp_assoc)
+        moreover have "(k \<circ> f) 0 = (1, 0)"
+        proof -
+          have "f 0 = (1, 0)" using hf0 .
+          have h10S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          have "k (1, 0) = k (?q (1, 0))" by simp
+          also have "\<dots> = ?q (g (1, 0))" using hk_eq[rule_format, OF h10S1] by simp
+          also have "\<dots> = ?q (1, 0)" using hg10 by simp
+          also have "\<dots> = (1, 0)" by simp
+          finally show ?thesis using hf0 by (simp add: comp_def)
+        qed
+        moreover have "(k \<circ> f) 1 = (1, 0)"
+        proof -
+          have "f 1 = (1, 0)" using hf1 .
+          thus ?thesis using \<open>(k \<circ> f) 0 = (1, 0)\<close> hf0 hf1 by (simp add: comp_def)
+        qed
+        ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+      qed
+      have hpath1: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+          (top1_path_product (k \<circ> f) (k \<circ> f))"
+        by (rule top1_path_product_is_path[OF hTS1 hkf_path hkf_path])
+      have hpath2: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0))"
+        using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+      show ?thesis unfolding top1_path_homotopic_on_def
+        using hpath1 hpath2 hF hF0' hF1 hFl hFr by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step E: In \<pi>_1(S^1) \<cong> Z: k\<circ>f corresponds to n \<noteq> 0, (k\<circ>f)*(k\<circ>f) to 2n.
      2n = 0 and n \<noteq> 0 impossible. Use covering p: R \<rightarrow> S^1.\<close>
   \<comment> \<open>Lift k\<circ>f under p from 0 to some endpoint e1. Since k\<circ>f nontrivial, e1 \<noteq> 0.
