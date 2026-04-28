@@ -89,8 +89,7 @@ proof -
       Y ?TY F"
       and hF0: "\<forall>a\<in>A. F (a, 0) = f a"
       and hF1: "\<forall>a\<in>A. F (a, 1) = y0"
-    using hF_hom unfolding top1_homotopic_on_def
-    sorry \<comment> \<open>Extract the homotopy F from the definition. May need unfolding.\<close>
+    using hF_hom unfolding top1_homotopic_on_def by (by100 blast)
   \<comment> \<open>Step 2: Extend F to (A\<times>I) \<union> (X\<times>{1}) by setting F(x,1) = y0.\<close>
   \<comment> \<open>Step 3: Tietze-extend coordinatewise to G: X\<times>I \<rightarrow> R^2.\<close>
   \<comment> \<open>Step 4: U = G^{-1}(Y) open, contains (A\<times>I) \<union> (X\<times>{1}).\<close>
