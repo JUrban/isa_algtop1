@@ -1625,7 +1625,61 @@ proof -
             Lemma_51_1_path_homotopic_trans[OF hTY hsndg_sndj2 hsndj2_sndf_ph]])
     \<comment> \<open>Combine componentwise: f \<simeq> g in X\<times>Y.\<close>
     have hfg_hom: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f g"
-      sorry
+    proof -
+      \<comment> \<open>Extract homotopies F1, F2 from the path homotopies.\<close>
+      have hfst_ph: "\<exists>F1. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F1
+          \<and> (\<forall>s\<in>I_set. F1 (s, 0) = (fst \<circ> f) s) \<and> (\<forall>s\<in>I_set. F1 (s, 1) = (fst \<circ> g) s)
+          \<and> (\<forall>t\<in>I_set. F1 (0, t) = x0) \<and> (\<forall>t\<in>I_set. F1 (1, t) = x0)"
+        using hfstf_equiv_fstg unfolding top1_path_homotopic_on_def by (by100 fast)
+      obtain F1 where hF1cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F1"
+          and hF10: "\<forall>s\<in>I_set. F1 (s, 0) = (fst \<circ> f) s" and hF11: "\<forall>s\<in>I_set. F1 (s, 1) = (fst \<circ> g) s"
+          and hF1l: "\<forall>t\<in>I_set. F1 (0, t) = x0" and hF1r: "\<forall>t\<in>I_set. F1 (1, t) = x0"
+        using hfst_ph by (by100 auto)
+      have hsnd_ph: "\<exists>F2. top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F2
+          \<and> (\<forall>s\<in>I_set. F2 (s, 0) = (snd \<circ> f) s) \<and> (\<forall>s\<in>I_set. F2 (s, 1) = (snd \<circ> g) s)
+          \<and> (\<forall>t\<in>I_set. F2 (0, t) = y0) \<and> (\<forall>t\<in>I_set. F2 (1, t) = y0)"
+        using hsndf_equiv_sndg unfolding top1_path_homotopic_on_def by (by100 fast)
+      obtain F2 where hF2cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY F2"
+          and hF20: "\<forall>s\<in>I_set. F2 (s, 0) = (snd \<circ> f) s" and hF21: "\<forall>s\<in>I_set. F2 (s, 1) = (snd \<circ> g) s"
+          and hF2l: "\<forall>t\<in>I_set. F2 (0, t) = y0" and hF2r: "\<forall>t\<in>I_set. F2 (1, t) = y0"
+        using hsnd_ph by (by100 auto)
+      let ?F = "\<lambda>st. (F1 st, F2 st)"
+      have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+        unfolding II_topology_def by (rule product_topology_on_is_topology_on)
+          (rule top1_unit_interval_topology_is_topology_on)+
+      have hpi1_F: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (pi1 \<circ> ?F)"
+        using hF1cont unfolding pi1_def comp_def by (by100 simp)
+      have hpi2_F: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY (pi2 \<circ> ?F)"
+        using hF2cont unfolding pi2_def comp_def by (by100 simp)
+      have hFcont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (X \<times> Y) ?TXY ?F"
+        using iffD2[OF Theorem_18_4[OF hTII hTX hTY]] hpi1_F hpi2_F by (by100 blast)
+      show ?thesis unfolding top1_path_homotopic_on_def
+      proof (intro conjI exI)
+        show "top1_is_path_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f"
+          using hf_loop unfolding top1_is_loop_on_def by (by100 blast)
+        show "top1_is_path_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) g"
+          using hg_loop unfolding top1_is_loop_on_def by (by100 blast)
+        show "top1_continuous_map_on (I_set \<times> I_set) II_topology (X \<times> Y) ?TXY ?F" by (rule hFcont)
+        show "\<forall>s\<in>I_set. ?F (s, 0) = f s"
+        proof (intro ballI)
+          fix s assume hs: "s \<in> I_set"
+          have "?F (s, 0) = ((fst \<circ> f) s, (snd \<circ> f) s)" using hF10 hF20 hs by (by100 simp)
+          also have "\<dots> = (fst (f s), snd (f s))" unfolding comp_def by (by100 simp)
+          also have "\<dots> = f s" by (by100 simp)
+          finally show "?F (s, 0) = f s" .
+        qed
+        show "\<forall>s\<in>I_set. ?F (s, 1) = g s"
+        proof (intro ballI)
+          fix s assume hs: "s \<in> I_set"
+          have "?F (s, 1) = ((fst \<circ> g) s, (snd \<circ> g) s)" using hF11 hF21 hs by (by100 simp)
+          also have "\<dots> = (fst (g s), snd (g s))" unfolding comp_def by (by100 simp)
+          also have "\<dots> = g s" by (by100 simp)
+          finally show "?F (s, 1) = g s" .
+        qed
+        show "\<forall>t\<in>I_set. ?F (0, t) = (x0, y0)" using hF1l hF2l by (by100 simp)
+        show "\<forall>t\<in>I_set. ?F (1, t) = (x0, y0)" using hF1r hF2r by (by100 simp)
+      qed
+    qed
     hence "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f g"
       unfolding top1_loop_equiv_on_def using hf_loop hg_loop by (by100 blast)
     hence hfg_equiv: "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f g"
@@ -1894,6 +1948,10 @@ proof -
   qed
 qed
 
+section \<open>Chapter 10: Separation Theorems in the Plane\<close>
+section \<open>Chapter 10: Separation Theorems in the Plane\<close>
+
+section \<open>\<S>61 The Jordan Separation Theorem\<close>
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 
