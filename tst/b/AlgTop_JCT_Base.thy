@@ -2263,10 +2263,67 @@ proof -
             (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
           by (rule Lemma_51_1_path_homotopic_trans[OF hTU_here hri hli])
         \<comment> \<open>const*f*const \<simeq> \<alpha>*const_q*rev(\<alpha>) via the 3-strip.\<close>
+        \<comment> \<open>Contraction: Hc(s,t) = normalize((1-t)*f(s)+t*q). Boundaries:
+           Hc(s,0)=f(s), Hc(s,1)=q, Hc(0,t)=Hc(1,t)=\<alpha>(t) (since f(0)=f(1)=x0).
+           3-strip G uses Hc in the middle strip, \<alpha> on both sides.\<close>
         have hG_strip: "top1_path_homotopic_on ?U ?TU x0 x0
             (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
             (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))"
-          sorry
+        proof -
+          \<comment> \<open>Define G: I\<times>I \<rightarrow> U.
+             Strip 1 (s \<le> 1/2): G(s,t) = \<alpha>(t\<cdot>2s)
+             Strip 2 (1/2 \<le> s \<le> 3/4): G(s,t) = normalize((1-t)f(4s-2)+tq)
+             Strip 3 (s > 3/4): G(s,t) = \<alpha>(t\<cdot>(4-4s))\<close>
+          define G :: "real \<times> real \<Rightarrow> nat \<Rightarrow> real" where
+            "G = (\<lambda>(s, t).
+               if s \<le> 1/2 then ?\<alpha> (t * (2*s))
+               else if s \<le> 3/4 then (\<lambda>i. ((1-t) * (f (4*s-2)) i + t * ?q i) /
+                   sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))
+               else ?\<alpha> (t * (4 - 4*s)))"
+          \<comment> \<open>G is continuous on I\<times>I and maps into U. (The main technical burden.)\<close>
+          have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?U ?TU G" sorry
+          \<comment> \<open>G boundaries.\<close>
+          have hG_bottom: "\<forall>s\<in>I_set. G (s, 0) =
+              top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s"
+            sorry
+          have hG_top: "\<forall>s\<in>I_set. G (s, 1) =
+              top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s"
+            sorry
+          have hG_left: "\<forall>t\<in>I_set. G (0, t) = x0"
+          proof (intro ballI)
+            fix t assume "t \<in> I_set"
+            have "G (0, t) = ?\<alpha> (t * 0)" unfolding G_def by (by100 simp)
+            also have "t * 0 = (0::real)" by (by100 simp)
+            also have "?\<alpha> 0 = x0" using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+            finally show "G (0, t) = x0" .
+          qed
+          have hG_right: "\<forall>t\<in>I_set. G (1, t) = x0"
+          proof (intro ballI)
+            fix t assume "t \<in> I_set"
+            have h1: "G (1, t) = ?\<alpha> (t * (4 - 4))" unfolding G_def by (by100 simp)
+            have h2: "t * (4 - 4) = (0::real)" by (by100 simp)
+            have h3: "?\<alpha> 0 = x0" using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+            show "G (1, t) = x0" using h1 h2 h3 by (by100 simp)
+          qed
+          \<comment> \<open>Source and target are paths.\<close>
+          have hbottom_path: "top1_is_path_on ?U ?TU x0 x0
+              (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+            using hf_eq unfolding top1_path_homotopic_on_def by (by100 blast)
+          have htop_path: "top1_is_path_on ?U ?TU x0 x0
+              (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))"
+          proof -
+            have h1: "top1_is_path_on ?U ?TU ?q x0 (top1_path_reverse ?\<alpha>)"
+              by (rule top1_path_reverse_is_path[OF h\<alpha>_U])
+            have hcq: "top1_is_path_on ?U ?TU ?q ?q (top1_constant_path ?q)"
+              by (rule top1_constant_path_is_path[OF hTU_here hq_U])
+            have h2: "top1_is_path_on ?U ?TU ?q x0 (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>))"
+              by (rule top1_path_product_is_path[OF hTU_here hcq h1])
+            show ?thesis by (rule top1_path_product_is_path[OF hTU_here h\<alpha>_U h2])
+          qed
+          show ?thesis unfolding top1_path_homotopic_on_def
+            using hbottom_path htop_path hG_cont hG_bottom hG_top hG_left hG_right
+            by (intro conjI exI[of _ G]) (by100 blast)+
+        qed
         show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTU_here hf_eq hG_strip])
       qed
       \<comment> \<open>\<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) by left identity.\<close>
@@ -2793,6 +2850,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
