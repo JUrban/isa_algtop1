@@ -275,8 +275,26 @@ proof -
   qed
   \<comment> \<open>g continuous: composition of G: X\<times>I \<rightarrow> R^2 with (x \<mapsto> (x,\<phi>(x))): X \<rightarrow> X\<times>I.\<close>
   have hg_cont: "top1_continuous_map_on X TX Y ?TY g"
-    sorry \<comment> \<open>Composition of continuous maps. G continuous, \<phi> continuous,
-       so x \<mapsto> G(x,\<phi>(x)) continuous. Then restrict codomain to Y.\<close>
+  proof -
+    \<comment> \<open>The map x \<mapsto> (x, \<phi> x) : X \<rightarrow> X \<times> I is continuous (Theorem 18.4 + identity + \<phi>).\<close>
+    have hpair_cont: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
+        (\<lambda>x. (x, \<phi> x))"
+      sorry \<comment> \<open>Theorem_18_4: \<pi>1 \<circ> (x,(x)) = id continuous, \<pi>2 \<circ> (x,\<phi>(x)) = \<phi> continuous.
+         Needs bridge \<phi>: X \<rightarrow> [0,1] to \<phi>: X \<rightarrow> I_set.\<close>
+    \<comment> \<open>g = G \<circ> (x \<mapsto> (x, \<phi>(x))): composition of continuous maps.\<close>
+    have hcomp: "top1_continuous_map_on X TX UNIV ?TR2 (G \<circ> (\<lambda>x. (x, \<phi> x)))"
+      by (rule top1_continuous_map_on_comp[OF hpair_cont hG_cont])
+    have hg_eq: "\<And>x. x \<in> X \<Longrightarrow> g x = (G \<circ> (\<lambda>x. (x, \<phi> x))) x"
+      unfolding g_def comp_def by (by100 simp)
+    \<comment> \<open>g continuous X \<rightarrow> R^2, then restrict codomain to Y.\<close>
+    have hg_R2: "top1_continuous_map_on X TX UNIV ?TR2 g"
+      sorry \<comment> \<open>Transfer from g = G \<circ> pair via pointwise equality.\<close>
+    have hg_img: "g ` X \<subseteq> Y"
+      using hg_range by (by100 blast)
+    have hY_sub: "Y \<subseteq> (UNIV :: (real\<times>real) set)" by (by100 simp)
+    show ?thesis
+      by (rule top1_continuous_map_on_codomain_shrink[OF hg_R2 hg_img hY_sub])
+  qed
   \<comment> \<open>g nulhomotopic: H(x,t) = G(x, (1-t)\<phi>(x) + t) is homotopy from g to const y0.
      H(x,0) = G(x, \<phi>(x)) = g(x). H(x,1) = G(x, 1) = Fe(x,1) = y0.\<close>
   have hg_nul: "top1_nulhomotopic_on X TX Y ?TY g"
