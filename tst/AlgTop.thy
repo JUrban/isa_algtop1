@@ -343,7 +343,40 @@ proof -
   \<comment> \<open>g nulhomotopic: H(x,t) = G(x, (1-t)\<phi>(x) + t) is homotopy from g to const y0.
      H(x,0) = G(x, \<phi>(x)) = g(x). H(x,1) = G(x, 1) = Fe(x,1) = y0.\<close>
   have hg_nul: "top1_nulhomotopic_on X TX Y ?TY g"
-    sorry \<comment> \<open>H continuous (composition), H(x,0) = g(x), H(x,1) = y0 for all x.\<close>
+  proof -
+    \<comment> \<open>H(x,t) = G(x, (1-t)\<phi>(x)+t). Homotopy from g to const y0.\<close>
+    define H where "H = (\<lambda>(x::'a, t::real). G (x, (1-t) * \<phi> x + t))"
+    have hH0: "\<forall>x\<in>X. H (x, 0) = g x" unfolding H_def g_def by (by100 simp)
+    have hH1: "\<forall>x\<in>X. H (x, 1) = y0"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> X"
+      have "H (x, 1) = G (x, 1)" unfolding H_def by (by100 simp)
+      also have "... = Fe (x, 1)"
+      proof -
+        have "(x, 1::real) \<in> ?S" using hx by (by100 blast)
+        thus ?thesis using hG_ext by (by100 blast)
+      qed
+      also have "... = y0" using hFe_X1 hx by (by100 blast)
+      finally show "H (x, 1) = y0" .
+    qed
+    \<comment> \<open>H maps X\<times>I to Y (range check).\<close>
+    have hH_range: "\<forall>p\<in>X \<times> I_set. H p \<in> Y"
+      sorry \<comment> \<open>(x,(1-t)\<phi>(x)+t) \<in> U_pre: case x\<in>W or x\<notin>W.\<close>
+    \<comment> \<open>H continuous: composition.\<close>
+    have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y ?TY H"
+      sorry \<comment> \<open>H = G \<circ> (x,t) \<mapsto> (x, (1-t)\<phi>(x)+t). The inner map continuous by Theorem_18_4.\<close>
+    have "top1_homotopic_on X TX Y ?TY g (\<lambda>_. y0)"
+      unfolding top1_homotopic_on_def using hg_cont
+    proof (intro conjI exI[of _ H])
+      show "top1_continuous_map_on X TX Y ?TY (\<lambda>_. y0)"
+        sorry \<comment> \<open>Constant map to y0 \<in> Y is continuous.\<close>
+      show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y ?TY H"
+        by (rule hH_cont)
+      show "\<forall>x\<in>X. H (x, 0) = g x" by (rule hH0)
+      show "\<forall>x\<in>X. H (x, 1) = y0" by (rule hH1)
+    qed
+    thus ?thesis unfolding top1_nulhomotopic_on_def using hy0 by (by100 blast)
+  qed
   show ?thesis using hg_cont hg_ext hg_nul by (by100 blast)
 qed
 
