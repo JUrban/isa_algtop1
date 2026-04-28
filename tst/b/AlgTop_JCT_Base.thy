@@ -1616,6 +1616,118 @@ qed
     Munkres' proof (2 steps):
     Step 1: S^n - p is homeomorphic to R^n via stereographic projection.
     Step 2: Apply Corollary 59.2 with U = S^n - p, V = S^n - q. **)
+
+text \<open>Key fact: the normalized interpolation from x \<in> S^n-\{p\} to q never hits p.
+  Proof: normalize((1-t)x + tq) = p requires x(i)=0 for all i\<ge>1, hence x = \<plusminus>p.
+  Since x \<noteq> p and x = q gives the constant path q \<noteq> p.\<close>
+lemma Sn_interpolation_to_q_avoids_p:
+  fixes n :: nat and x :: "nat \<Rightarrow> real"
+  assumes hx: "x \<in> top1_Sn n" and hxnp: "x \<noteq> (\<lambda>i. if i = 0 then 1 else 0)"
+  defines "p \<equiv> \<lambda>i::nat. if i = 0 then (1::real) else 0"
+      and "q \<equiv> \<lambda>i::nat. if i = 0 then (-1::real) else 0"
+  shows "\<forall>t. (\<lambda>i. ((1-t) * x i + t * q i) /
+          sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2)) \<noteq> p"
+proof (intro allI notI)
+  fix t
+  let ?\<gamma> = "\<lambda>i. ((1-t) * x i + t * q i) /
+          sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2)"
+  assume heq: "?\<gamma> = p"
+  \<comment> \<open>If \<gamma>(t) = p, then (1-t)x(i) + tq(i) = c\<cdot>p(i) for some c > 0.\<close>
+  have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2) > 0"
+  proof -
+    have hna: "x \<noteq> (\<lambda>i. - q i)"
+    proof
+      assume hxnq: "x = (\<lambda>i. - q i)"
+      have "(\<lambda>i::nat. - q i) = p" unfolding q_def p_def by (rule ext) (by100 simp)
+      hence "x = p" using hxnq by (by100 simp)
+      thus False using hxnp unfolding p_def by (by100 blast)
+    qed
+    show ?thesis sorry \<comment> \<open>From Sn_normalized_interpolation_path hN_pos with y=q.\<close>
+  qed
+  let ?N = "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2)"
+  \<comment> \<open>From \<gamma>(t) = p: for each i, ((1-t)*x(i) + t*q(i)) / N = p(i).\<close>
+  have hcoord: "\<And>i. ((1-t) * x i + t * q i) / ?N = p i"
+  proof -
+    fix i
+    have "?\<gamma> i = p i" using fun_cong[OF heq, of i] by (by100 simp)
+    thus "((1-t) * x i + t * q i) / ?N = p i" by (by100 simp)
+  qed
+  \<comment> \<open>For i \<ge> 1: p(i) = 0, so (1-t)*x(i) + t*q(i) = 0. Since q(i)=0 for i\<ge>1: (1-t)*x(i)=0.\<close>
+  have hxi_zero: "\<And>i. i \<ge> 1 \<Longrightarrow> (1-t) * x i = 0"
+  proof -
+    fix i :: nat assume hi: "i \<ge> 1"
+    have "p i = 0" unfolding p_def using hi by (by100 simp)
+    hence "((1-t) * x i + t * q i) / ?N = 0" using hcoord[of i] by (by100 simp)
+    hence "(1-t) * x i + t * q i = 0" using hN_pos by (by100 simp)
+    moreover have "t * q i = 0" unfolding q_def using hi by (by100 simp)
+    ultimately show "(1-t) * x i = 0" by (by100 linarith)
+  qed
+  \<comment> \<open>Case 1: t = 1. Then \<gamma>(1) = normalize(q) = q. But q \<noteq> p.\<close>
+  \<comment> \<open>Case 2: t \<noteq> 1. Then x(i) = 0 for i \<ge> 1. So x = (x(0), 0, 0, ...).
+     From x \<in> S^n: x(0)^2 = 1, so x = p or x = q. Since x \<noteq> p: x = q.
+     But then \<gamma>(t) = normalize((1-t)q + tq) = normalize(q) = q \<noteq> p. Contradiction.\<close>
+  show False
+  proof (cases "t = 1")
+    case True
+    hence "?\<gamma> = q" sorry
+    hence "p = q" using heq by (by100 simp)
+    hence "p 0 = q 0" by (by100 simp)
+    thus False unfolding p_def q_def by (by100 simp)
+  next
+    case False
+    hence ht1: "1 - t \<noteq> 0" by (by100 linarith)
+    have hxi0: "\<And>i. i \<ge> 1 \<Longrightarrow> x i = 0" using hxi_zero ht1 by (by100 simp)
+    have hx_zero_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0"
+      using hx unfolding top1_Sn_def by (by100 blast)
+    have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1" using hx unfolding top1_Sn_def by (by100 blast)
+    have "(\<Sum>j\<le>n. (x j)^2) = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)" sorry
+    also have "(\<Sum>j\<in>{1..n}. (x j)^2) = 0"
+      sorry
+    finally have "x 0 ^ 2 = 1" using hx_norm by (by100 linarith)
+    hence "x 0 = 1 \<or> x 0 = -1"
+    proof -
+      assume "x 0 ^ 2 = 1"
+      hence "\<bar>x 0\<bar> = 1" sorry
+      thus ?thesis by (by100 linarith)
+    qed
+    thus False
+    proof
+      assume "x 0 = 1"
+      have "\<And>i. x i = p i"
+      proof -
+        fix i show "x i = p i"
+        proof (cases "i = 0")
+          case True thus ?thesis using \<open>x 0 = 1\<close> unfolding p_def by (by100 simp)
+        next
+          case False hence "i \<ge> 1" by (by100 linarith)
+          hence "x i = 0" by (rule hxi0)
+          thus ?thesis unfolding p_def using False by (by100 simp)
+        qed
+      qed
+      hence "x = p" by (rule ext)
+      thus False using hxnp unfolding p_def by (by100 blast)
+    next
+      assume "x 0 = -1"
+      \<comment> \<open>Then x = q, and \<gamma>(t) = normalize((1-t)q + tq) = q \<noteq> p.\<close>
+      have hxq: "x = q"
+      proof (rule ext)
+        fix i show "x i = q i"
+        proof (cases "i = 0")
+          case True thus ?thesis using \<open>x 0 = -1\<close> unfolding q_def by (by100 simp)
+        next
+          case False hence "i \<ge> 1" by (by100 linarith)
+          hence "x i = 0" by (rule hxi0)
+          thus ?thesis unfolding q_def using False by (by100 simp)
+        qed
+      qed
+      hence "?\<gamma> = q" sorry
+      hence "p = q" using heq by (by100 simp)
+      hence "p 0 = q 0" by (by100 simp)
+    thus False unfolding p_def q_def by (by100 simp)
+    qed
+  qed
+qed
+
 theorem Theorem_59_3:
   assumes "n \<ge> 2"
   shows "top1_simply_connected_on (top1_Sn n)
@@ -1797,6 +1909,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 corollary Theorem_59_3_path_connected:
   assumes "n \<ge> 2"
