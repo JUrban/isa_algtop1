@@ -2410,7 +2410,46 @@ proof -
                 unfolding top1_unit_interval_def by auto
               \<comment> \<open>G on LEFT = \<alpha>(t\<cdot>2s), continuous via composition.\<close>
               have hG_L: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L) ?Sn ?TSn G"
-                sorry
+              proof -
+                have h\<alpha>_cont_Sn: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<alpha>"
+                  using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+                have h\<mu>_cont: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
+                    I_set I_top (\<lambda>(s,t). t * (2*s))" sorry
+                have hG_eq_L: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
+                  using hG1 by (by100 auto)
+                have hcomp: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
+                    ?Sn ?TSn (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s)))"
+                  by (rule top1_continuous_map_on_comp[OF h\<mu>_cont h\<alpha>_cont_Sn])
+                show ?thesis unfolding top1_continuous_map_on_def
+                proof (intro conjI ballI)
+                  fix st assume hst: "st \<in> ?L"
+                  have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st" using hG_eq_L hst by (by100 blast)
+                  moreover have "(?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> ?Sn"
+                    using hcomp hst unfolding top1_continuous_map_on_def by (by100 blast)
+                  ultimately show "G st \<in> ?Sn" by (by100 simp)
+                next
+                  fix V assume hV: "V \<in> ?TSn"
+                  have "{st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}
+                      \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
+                    using hcomp hV unfolding top1_continuous_map_on_def by (by100 blast)
+                  moreover have "{st \<in> ?L. G st \<in> V} = {st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}"
+                  proof (intro set_eqI iffI)
+                    fix st assume "st \<in> {st \<in> ?L. G st \<in> V}"
+                    hence "st \<in> ?L" "G st \<in> V" by (by100 blast)+
+                    have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st" using hG_eq_L \<open>st \<in> ?L\<close> by (by100 blast)
+                    thus "st \<in> {st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}"
+                      using \<open>G st \<in> V\<close> \<open>st \<in> ?L\<close> by (by100 simp)
+                  next
+                    fix st assume "st \<in> {st \<in> ?L. (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V}"
+                    hence "st \<in> ?L" "(?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V" by (by100 blast)+
+                    have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st" using hG_eq_L \<open>st \<in> ?L\<close> by (by100 blast)
+                    thus "st \<in> {st \<in> ?L. G st \<in> V}"
+                      using \<open>(?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st \<in> V\<close> \<open>st \<in> ?L\<close> by (by100 simp)
+                  qed
+                  ultimately show "{st \<in> ?L. G st \<in> V}
+                      \<in> subspace_topology (I_set \<times> I_set) II_topology ?L" by simp
+                qed
+              qed
               \<comment> \<open>G on RIGHT: paste middle {1/2 \<le> s \<le> 3/4} and far-right {s \<ge> 3/4}.\<close>
               have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?Sn ?TSn G"
                 sorry
@@ -3120,6 +3159,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
