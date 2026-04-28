@@ -3206,8 +3206,13 @@ proof
   \<comment> \<open>Contradiction: k\<circ>f nontrivial (hkf_nontrivial) but (k\<circ>f)*(k\<circ>f) trivial (hkf2_triv).
      By Theorem_54_5_iso, \<pi>_1(S^1) \<cong> Z. In Z, 2n = 0 implies n = 0.
      The isomorphism maps [k\<circ>f] to n \<noteq> 0 and [(k\<circ>f)*(k\<circ>f)] to 2n = 0. Contradiction.\<close>
+  \<comment> \<open>Use Theorem_54_5_iso: \<pi>_1(S^1,(1,0)) \<cong> Z (group isomorphism).
+     The isomorphism \<phi> satisfies \<phi>([f]*[g]) = \<phi>([f]) + \<phi>([g]).
+     \<phi>([k\<circ>f]) = n \<noteq> 0 (since k\<circ>f nontrivial).
+     \<phi>([(k\<circ>f)*(k\<circ>f)]) = 2n = 0 (since (k\<circ>f)*(k\<circ>f) trivial).
+     2n = 0 in Z implies n = 0. Contradiction.\<close>
   show False
-    using hkf_nontrivial hkf2_triv sorry
+    using hkf_nontrivial hkf2_triv Theorem_54_5_iso sorry
 qed
 
 end
