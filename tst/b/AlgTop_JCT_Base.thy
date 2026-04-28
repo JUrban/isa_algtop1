@@ -1611,6 +1611,25 @@ proof -
   show ?thesis unfolding top1_is_path_on_def
     using h\<gamma>_cont h\<gamma>0 h\<gamma>1 by (by100 blast)
 qed
+text \<open>Helper corollaries of Sn_normalized_interpolation_path: membership and norm.\<close>
+lemma Sn_interpolation_in_Sn:
+  fixes x y :: "nat \<Rightarrow> real"
+  assumes hx: "x \<in> top1_Sn n" and hy: "y \<in> top1_Sn n" and hna: "x \<noteq> (\<lambda>i. - y i)"
+  shows "(\<lambda>i. ((1-t) * x i + t * y i) / sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)) \<in> top1_Sn n"
+  sorry
+
+lemma Sn_interpolation_norm_pos:
+  fixes x y :: "nat \<Rightarrow> real"
+  assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
+  shows "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0"
+  sorry
+
+lemma Sn_interpolation_at_1:
+  fixes x y :: "nat \<Rightarrow> real"
+  assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
+  shows "(\<lambda>i. ((1-(1::real)) * x i + 1 * y i) / sqrt (\<Sum>j\<le>n. ((1-1) * x j + 1 * y j)^2)) = y"
+  sorry
+
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
     Munkres' proof (2 steps):
@@ -2209,7 +2228,8 @@ proof -
         have havoids: "\<forall>t. ?\<gamma> t \<in> ?U \<inter> ?V"
         proof (intro allI)
           fix t
-          have h\<gamma>_Sn: "?\<gamma> t \<in> ?Sn" sorry \<comment> \<open>From Sn_normalized_interpolation_path.\<close>
+          have h\<gamma>_Sn: "?\<gamma> t \<in> ?Sn"
+            by (rule Sn_interpolation_in_Sn[OF hz_Sn hr_Sn hz_na])
           have h\<gamma>_np: "?\<gamma> t \<noteq> ?p"
           proof
             assume heq: "?\<gamma> t = ?p"
@@ -2219,14 +2239,15 @@ proof -
             obtain k where hk: "k \<ge> 2" "k \<le> n" "z k \<noteq> 0" using True by (by100 blast)
             have hpk: "?p k = 0" using hk(1) by (by100 simp)
             have hrk: "?r k = 0" using hk(1) by (by100 simp)
-            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0" sorry
+            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hz_Sn hr_Sn hz_na])
             have "?\<gamma> t k = ?p k" using fun_cong[OF heq, of k] by (by100 simp)
             hence "((1-t) * z k + t * ?r k) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) = 0"
               using hpk by (by100 simp)
             hence "(1-t) * z k + t * ?r k = 0" using hN_pos by (by100 simp)
             hence "(1-t) * z k = 0" using hrk by (by100 simp)
             hence "t = 1" using hk(3) using mult_eq_0_iff by (by100 simp)
-            hence "?\<gamma> t = ?r" sorry \<comment> \<open>\<gamma>(1) = r.\<close>
+            hence "?\<gamma> t = ?r" using Sn_interpolation_at_1[OF hz_Sn hr_Sn hz_na] by (by100 simp)
             thus False using heq hr_ne_p by (by100 simp)
           qed
           have h\<gamma>_nq: "?\<gamma> t \<noteq> ?q"
@@ -2235,13 +2256,14 @@ proof -
             obtain k where hk: "k \<ge> 2" "k \<le> n" "z k \<noteq> 0" using True by (by100 blast)
             have hqk: "?q k = 0" using hk(1) by (by100 simp)
             have hrk: "?r k = 0" using hk(1) by (by100 simp)
-            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0" sorry
+            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hz_Sn hr_Sn hz_na])
             have "?\<gamma> t k = ?q k" using fun_cong[OF heq, of k] by (by100 simp)
             hence "((1-t) * z k + t * ?r k) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) = 0"
               using hqk by (by100 simp)
             hence "(1-t) * z k = 0" using hN_pos hrk by (by100 simp)
             hence "t = 1" using hk(3) using mult_eq_0_iff by (by100 simp)
-            hence "?\<gamma> t = ?r" sorry
+            hence "?\<gamma> t = ?r" using Sn_interpolation_at_1[OF hz_Sn hr_Sn hz_na] by (by100 simp)
             thus False using heq hr_ne_q by (by100 simp)
           qed
           show "?\<gamma> t \<in> ?U \<inter> ?V" using h\<gamma>_Sn h\<gamma>_np h\<gamma>_nq by (by100 blast)
@@ -2289,6 +2311,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
