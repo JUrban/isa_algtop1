@@ -2233,7 +2233,21 @@ proof -
           (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))"
       proof -
         let ?TU = "subspace_topology ?Sn ?TSn ?U"
-        have hTU_here: "is_topology_on ?U ?TU" sorry
+        have hTSn_h: "is_topology_on ?Sn ?TSn"
+        proof -
+          have "\<forall>i\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+            using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+          hence "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+              (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+            by (rule top1_product_topology_on_is_topology_on)
+          moreover have "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+            unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+          ultimately have "is_topology_on (UNIV::(nat\<Rightarrow>real) set)
+              (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))" by (by100 simp)
+          thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+        qed
+        have hTU_here: "is_topology_on ?U ?TU"
+          by (rule subspace_topology_is_topology_on[OF hTSn_h]) (by100 blast)
         have hf_path: "top1_is_path_on ?U ?TU x0 x0 f"
           using hf unfolding top1_is_loop_on_def by (by100 blast)
         \<comment> \<open>f \<simeq> const*f*const.\<close>
