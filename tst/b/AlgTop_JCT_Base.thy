@@ -1930,7 +1930,101 @@ proof -
       show "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)" by (rule hTU)
     next
       fix x y assume hx: "x \<in> ?U" and hy: "y \<in> ?U"
-      show "\<exists>f. top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x y f" sorry
+      have hx_Sn: "x \<in> ?Sn" and hx_np: "x \<noteq> ?p" using hx by (by100 blast)+
+      have hy_Sn: "y \<in> ?Sn" and hy_np: "y \<noteq> ?p" using hy by (by100 blast)+
+      \<comment> \<open>q \<in> S^n and q \<noteq> p.\<close>
+      have hq_Sn: "?q \<in> ?Sn" unfolding top1_Sn_def
+      proof (intro CollectI conjI allI impI)
+        fix i :: nat assume "i \<ge> Suc n" thus "(if i = 0 then -1::real else 0) = 0" by (by100 simp)
+      next
+        have "(\<Sum>i\<le>n. (if i = (0::nat) then -1::real else 0)\<^sup>2) = (\<Sum>i\<le>n. (if i = 0 then 1 else 0::real))"
+          by (intro sum.cong) (by100 simp)+
+        also have "\<dots> = 1" using sum.delta'[of "{..n}" 0 "\<lambda>_. (1::real)"] assms by (by100 simp)
+        finally show "(\<Sum>i\<le>n. (if i = (0::nat) then - 1::real else 0)\<^sup>2) = 1" .
+      qed
+      have hq_np: "?q \<noteq> ?p"
+      proof
+        assume "?q = ?p" hence "?q 0 = ?p 0" using fun_cong[of ?q ?p 0] by (by100 simp)
+        thus False by (by100 simp)
+      qed
+      have hq_U: "?q \<in> ?U" using hq_Sn hq_np by (by100 blast)
+      \<comment> \<open>x \<noteq> -q (since -q = p and x \<noteq> p).\<close>
+      have hx_na: "x \<noteq> (\<lambda>i. - ?q i)"
+      proof
+        assume "x = (\<lambda>i. - ?q i)"
+        moreover have "(\<lambda>i::nat. - ?q i) = ?p" by (rule ext) (by100 simp)
+        ultimately show False using hx_np by (by100 simp)
+      qed
+      have hy_na: "y \<noteq> (\<lambda>i. - ?q i)"
+      proof
+        assume "y = (\<lambda>i. - ?q i)"
+        moreover have "(\<lambda>i::nat. - ?q i) = ?p" by (rule ext) (by100 simp)
+        ultimately show False using hy_np by (by100 simp)
+      qed
+      \<comment> \<open>Path x \<rightarrow> q on S^n via interpolation, avoids p.\<close>
+      let ?\<gamma>xq = "\<lambda>t i. ((1-t) * x i + t * ?q i) / sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * ?q j)^2)"
+      have hpath_xq: "top1_is_path_on ?Sn ?TSn x ?q ?\<gamma>xq"
+        by (rule Sn_normalized_interpolation_path[OF hx_Sn hq_Sn hx_na])
+      have havoids_xq: "\<forall>t. ?\<gamma>xq t \<noteq> ?p"
+        by (rule Sn_interpolation_to_q_avoids_p[OF hx_Sn hx_np])
+      \<comment> \<open>Path x \<rightarrow> q is in U = S^n - {p}: maps into S^n and avoids p.\<close>
+      \<comment> \<open>Similarly path y \<rightarrow> q. Concatenate reverse(y\<rightarrow>q) with x\<rightarrow>q for x\<rightarrow>q\<rightarrow>y.\<close>
+      \<comment> \<open>Convert S^n path that avoids p to S^n-{p} path via codomain_shrink.\<close>
+      have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
+      have hxq_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>xq"
+        using hpath_xq unfolding top1_is_path_on_def by (by100 blast)
+      have hxq_img: "?\<gamma>xq ` I_set \<subseteq> ?U"
+      proof (intro subsetI)
+        fix z assume "z \<in> ?\<gamma>xq ` I_set"
+        then obtain t where ht: "t \<in> I_set" and hz: "z = ?\<gamma>xq t" by (by100 blast)
+        have "z \<in> ?Sn" using hz hxq_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "z \<noteq> ?p"
+        proof -
+          have "?\<gamma>xq t \<noteq> ?p" using havoids_xq by (by100 blast)
+          thus ?thesis using hz by (by100 simp)
+        qed
+        ultimately show "z \<in> ?U" by (by100 blast)
+      qed
+      have hxq_U: "top1_continuous_map_on I_set I_top ?U (subspace_topology ?Sn ?TSn ?U) ?\<gamma>xq"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hxq_cont hxq_img hU_sub])
+      have hxq0: "?\<gamma>xq 0 = x" using hpath_xq unfolding top1_is_path_on_def by (by100 blast)
+      have hxq1: "?\<gamma>xq 1 = ?q" using hpath_xq unfolding top1_is_path_on_def by (by100 blast)
+      have hpath_xq_U: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x ?q ?\<gamma>xq"
+        unfolding top1_is_path_on_def using hxq_U hxq0 hxq1 by (by100 blast)
+      \<comment> \<open>Similarly path y \<rightarrow> q in U.\<close>
+      let ?\<gamma>yq = "\<lambda>t i. ((1-t) * y i + t * ?q i) / sqrt (\<Sum>j\<le>n. ((1-t) * y j + t * ?q j)^2)"
+      have hpath_yq: "top1_is_path_on ?Sn ?TSn y ?q ?\<gamma>yq"
+        by (rule Sn_normalized_interpolation_path[OF hy_Sn hq_Sn hy_na])
+      have havoids_yq: "\<forall>t. ?\<gamma>yq t \<noteq> ?p"
+        by (rule Sn_interpolation_to_q_avoids_p[OF hy_Sn hy_np])
+      have hyq_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>yq"
+        using hpath_yq unfolding top1_is_path_on_def by (by100 blast)
+      have hyq_img: "?\<gamma>yq ` I_set \<subseteq> ?U"
+      proof (intro subsetI)
+        fix z assume "z \<in> ?\<gamma>yq ` I_set"
+        then obtain t where ht: "t \<in> I_set" and hz: "z = ?\<gamma>yq t" by (by100 blast)
+        have "z \<in> ?Sn" using hz hyq_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "z \<noteq> ?p"
+        proof -
+          have "?\<gamma>yq t \<noteq> ?p" using havoids_yq by (by100 blast)
+          thus ?thesis using hz by (by100 simp)
+        qed
+        ultimately show "z \<in> ?U" by (by100 blast)
+      qed
+      have hyq_U: "top1_continuous_map_on I_set I_top ?U (subspace_topology ?Sn ?TSn ?U) ?\<gamma>yq"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hyq_cont hyq_img hU_sub])
+      have hyq0: "?\<gamma>yq 0 = y" using hpath_yq unfolding top1_is_path_on_def by (by100 blast)
+      have hyq1: "?\<gamma>yq 1 = ?q" using hpath_yq unfolding top1_is_path_on_def by (by100 blast)
+      have hpath_yq_U: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) y ?q ?\<gamma>yq"
+        unfolding top1_is_path_on_def using hyq_U hyq0 hyq1 by (by100 blast)
+      \<comment> \<open>Concatenate: x \<rightarrow> q (via \<gamma>xq), then q \<rightarrow> y (via reverse of \<gamma>yq).\<close>
+      have hrev_yq: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) ?q y (top1_path_reverse ?\<gamma>yq)"
+        by (rule top1_path_reverse_is_path[OF hpath_yq_U])
+      have hconcat: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x y
+          (top1_path_product ?\<gamma>xq (top1_path_reverse ?\<gamma>yq))"
+        by (rule top1_path_product_is_path[OF hTU hpath_xq_U hrev_yq])
+      show "\<exists>f. top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x y f"
+        using hconcat by (by100 blast)
     qed
   next
     show "\<forall>x0\<in>?U. \<forall>f. top1_is_loop_on ?U (subspace_topology ?Sn ?TSn ?U) x0 f \<longrightarrow>
