@@ -2181,9 +2181,51 @@ proof -
     have hr_ne_p: "?r \<noteq> ?p" by (metis zero_neq_one)
     have hr_ne_q: "?r \<noteq> ?q" by (metis neg_0_equal_iff_equal zero_neq_one)
     have hr_UV: "?r \<in> ?U \<inter> ?V" using hr_Sn hr_ne_p hr_ne_q by (by100 blast)
-    \<comment> \<open>Construct path from x to r in S^n, then restrict to U \<inter> V.\<close>
+    have hUV_sub: "?U \<inter> ?V \<subseteq> ?Sn" by (by100 blast)
+    have hx_na_r: "x \<noteq> (\<lambda>i. - ?r i)" sorry
+    have hy_na_r: "y \<noteq> (\<lambda>i. - ?r i)" sorry
+    let ?\<gamma>xr = "\<lambda>t i. ((1-t) * x i + t * ?r i) / sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * ?r j)^2)"
+    have hpath_xr: "top1_is_path_on ?Sn ?TSn x ?r ?\<gamma>xr"
+      by (rule Sn_normalized_interpolation_path[OF hx_Sn hr_Sn hx_na_r])
+    have havoids_xr: "\<forall>t. ?\<gamma>xr t \<in> ?U \<inter> ?V" sorry
+    have hxr_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>xr"
+      using hpath_xr unfolding top1_is_path_on_def by (by100 blast)
+    have hxr_img: "?\<gamma>xr ` I_set \<subseteq> ?U \<inter> ?V"
+    proof (intro subsetI) fix z assume "z \<in> ?\<gamma>xr ` I_set"
+      then obtain t where "t \<in> I_set" "z = ?\<gamma>xr t" by (by100 blast)
+      have "?\<gamma>xr t \<in> ?U \<inter> ?V" using havoids_xr by (by100 blast)
+      thus "z \<in> ?U \<inter> ?V" using \<open>z = ?\<gamma>xr t\<close> by (by100 simp)
+    qed
+    have hxr_UV: "top1_continuous_map_on I_set I_top (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) ?\<gamma>xr"
+      by (rule top1_continuous_map_on_codomain_shrink[OF hxr_cont hxr_img hUV_sub])
+    have hpath_xr_UV: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x ?r ?\<gamma>xr"
+      unfolding top1_is_path_on_def using hxr_UV
+      hpath_xr[unfolded top1_is_path_on_def] by (by100 blast)
+    let ?\<gamma>yr = "\<lambda>t i. ((1-t) * y i + t * ?r i) / sqrt (\<Sum>j\<le>n. ((1-t) * y j + t * ?r j)^2)"
+    have hpath_yr: "top1_is_path_on ?Sn ?TSn y ?r ?\<gamma>yr"
+      by (rule Sn_normalized_interpolation_path[OF hy_Sn hr_Sn hy_na_r])
+    have havoids_yr: "\<forall>t. ?\<gamma>yr t \<in> ?U \<inter> ?V" sorry
+    have hyr_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>yr"
+      using hpath_yr unfolding top1_is_path_on_def by (by100 blast)
+    have hyr_img: "?\<gamma>yr ` I_set \<subseteq> ?U \<inter> ?V"
+    proof (intro subsetI) fix z assume "z \<in> ?\<gamma>yr ` I_set"
+      then obtain t where "t \<in> I_set" "z = ?\<gamma>yr t" by (by100 blast)
+      have "?\<gamma>yr t \<in> ?U \<inter> ?V" using havoids_yr by (by100 blast)
+      thus "z \<in> ?U \<inter> ?V" using \<open>z = ?\<gamma>yr t\<close> by (by100 simp)
+    qed
+    have hyr_UV: "top1_continuous_map_on I_set I_top (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) ?\<gamma>yr"
+      by (rule top1_continuous_map_on_codomain_shrink[OF hyr_cont hyr_img hUV_sub])
+    have hpath_yr_UV: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) y ?r ?\<gamma>yr"
+      unfolding top1_is_path_on_def using hyr_UV
+      hpath_yr[unfolded top1_is_path_on_def] by (by100 blast)
+    have hrev_yr: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) ?r y
+        (top1_path_reverse ?\<gamma>yr)"
+      by (rule top1_path_reverse_is_path[OF hpath_yr_UV])
+    have hconcat: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x y
+        (top1_path_product ?\<gamma>xr (top1_path_reverse ?\<gamma>yr))"
+      by (rule top1_path_product_is_path[OF hTUV hpath_xr_UV hrev_yr])
     show "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x y f"
-      sorry
+      using hconcat by (by100 blast)
   qed
   have hT_strict: "is_topology_on_strict ?Sn ?TSn"
     unfolding is_topology_on_strict_def
@@ -2196,6 +2238,8 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
+
 
 
 
