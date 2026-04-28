@@ -9415,7 +9415,34 @@ proof -
   \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
   have h\<Phi>_surj: "?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
       = (top1_fundamental_group_carrier X TX x0) \<times>
-        (top1_fundamental_group_carrier Y TY y0)" sorry
+        (top1_fundamental_group_carrier Y TY y0)"
+  proof (intro set_eqI iffI)
+    fix z assume "z \<in> ?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))"
+    then obtain c where hc: "c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+        and hzc: "z = ?\<Phi> c" by (by100 blast)
+    \<comment> \<open>c = [f] for some loop f at (x0,y0). Then \<Phi>(c) = ([fst\<circ>f], [snd\<circ>f]).\<close>
+    \<comment> \<open>[fst\<circ>f] \<in> carrier_X and [snd\<circ>f] \<in> carrier_Y.\<close>
+    show "z \<in> top1_fundamental_group_carrier X TX x0 \<times> top1_fundamental_group_carrier Y TY y0"
+      sorry
+  next
+    fix z assume hz: "z \<in> top1_fundamental_group_carrier X TX x0 \<times>
+        top1_fundamental_group_carrier Y TY y0"
+    then obtain c1 c2 where hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+        and hc2: "c2 \<in> top1_fundamental_group_carrier Y TY y0"
+        and hzp: "z = (c1, c2)" by (by100 auto)
+    \<comment> \<open>c1 = [g] for some loop g at x0, c2 = [h] for some loop h at y0.\<close>
+    obtain g where hg_loop: "top1_is_loop_on X TX x0 g"
+        and hc1_eq: "c1 = {g'. top1_loop_equiv_on X TX x0 g g'}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    obtain h where hh_loop: "top1_is_loop_on Y TY y0 h"
+        and hc2_eq: "c2 = {h'. top1_loop_equiv_on Y TY y0 h h'}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    \<comment> \<open>Define f(s) = (g(s), h(s)), a loop at (x0,y0) in X\<times>Y. By Theorem 18.4 continuous.
+       Then \<Phi>([f]) = ([fst\<circ>f], [snd\<circ>f]) = ([g], [h]) since fst\<circ>f = g and snd\<circ>f = h.
+       Uses continuous_preserves_path_homotopic for the equivalence class matching.\<close>
+    show "z \<in> ?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))"
+      sorry
+  qed
   \<comment> \<open>Assemble: \<Phi> is a group isomorphism.\<close>
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
