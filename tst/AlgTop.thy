@@ -2,6 +2,26 @@ theory AlgTop
   imports "AlgTop0.AlgTop0"
 begin
 
+text \<open>Bridge: the order topology on R equals top1_open_sets (= {U. open U}).
+  Hence top1_closed_interval_topology 0 1 = I_top.\<close>
+lemma order_topology_UNIV_eq_top1_open_sets_real:
+  "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+  sorry \<comment> \<open>Both are the standard topology on R. order_topology uses open rays as basis,
+     top1_open_sets = {U. open U}. For real (linear_continuum_topology), these coincide.\<close>
+
+lemma closed_interval_top_eq_I_top:
+  "top1_closed_interval_topology 0 1 = I_top"
+proof -
+  have "top1_closed_interval_topology 0 1 =
+      subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
+    unfolding top1_closed_interval_topology_def by (by100 simp)
+  also have "... = subspace_topology UNIV top1_open_sets (top1_closed_interval 0 1)"
+    using order_topology_UNIV_eq_top1_open_sets_real by (by100 simp)
+  also have "top1_closed_interval 0 1 = I_set"
+    unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
+  finally show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+qed
+
 section \<open>*\<S>62 Invariance of Domain\<close>
 
 text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
@@ -277,10 +297,20 @@ proof -
   have hg_cont: "top1_continuous_map_on X TX Y ?TY g"
   proof -
     \<comment> \<open>The map x \<mapsto> (x, \<phi> x) : X \<rightarrow> X \<times> I is continuous (Theorem 18.4 + identity + \<phi>).\<close>
+    \<comment> \<open>Bridge \<phi> from closed_interval_topology to I_top.\<close>
+    have h\<phi>_I: "top1_continuous_map_on X TX I_set I_top \<phi>"
+      using h\<phi> unfolding closed_interval_top_eq_I_top
+      sorry \<comment> \<open>top1_closed_interval 0 1 = I_set (proved above).\<close>
     have hpair_cont: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
         (\<lambda>x. (x, \<phi> x))"
-      sorry \<comment> \<open>Theorem_18_4: \<pi>1 \<circ> (x,(x)) = id continuous, \<pi>2 \<circ> (x,\<phi>(x)) = \<phi> continuous.
-         Needs bridge \<phi>: X \<rightarrow> [0,1] to \<phi>: X \<rightarrow> I_set.\<close>
+    proof -
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hid: "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTX])
+      have hpi1: "pi1 \<circ> (\<lambda>x. (x, \<phi> x)) = id" unfolding pi1_def by (rule ext) (by100 simp)
+      have hpi2: "pi2 \<circ> (\<lambda>x. (x, \<phi> x)) = \<phi>" unfolding pi2_def by (rule ext) (by100 simp)
+      show ?thesis using iffD2[OF Theorem_18_4[OF hTX hTX hTI]]
+        sorry \<comment> \<open>hid[folded hpi1] and h\<phi>_I[folded hpi2] give the two projections.\<close>
+    qed
     \<comment> \<open>g = G \<circ> (x \<mapsto> (x, \<phi>(x))): composition of continuous maps.\<close>
     have hcomp: "top1_continuous_map_on X TX UNIV ?TR2 (G \<circ> (\<lambda>x. (x, \<phi> x)))"
       by (rule top1_continuous_map_on_comp[OF hpair_cont hG_cont])
