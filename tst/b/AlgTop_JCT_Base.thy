@@ -1577,11 +1577,52 @@ proof -
       using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
     have hg0: "g 0 = (x0, y0)" "g 1 = (x0, y0)"
       using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
-    \<comment> \<open>fst\<circ>f \<simeq> fst\<circ>g: from induced classes equal, fst\<circ>f \<in> [fst\<circ>g].\<close>
+    \<comment> \<open>From \<Phi>(c)=\<Phi>(d): induced_fst([f]) = induced_fst([g]).\<close>
+    have heq_fst: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c
+        = top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst d"
+      using heq by (by100 simp)
+    have heq_snd: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c
+        = top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd d"
+      using heq by (by100 simp)
+    \<comment> \<open>fst\<circ>f \<in> induced_fst(c) = induced_fst(d). Extract j \<in> d with equiv(fst\<circ>j, fst\<circ>f).
+       Then fst\<circ>g \<simeq> fst\<circ>j \<simeq> fst\<circ>f, hence fst\<circ>f \<simeq> fst\<circ>g by sym.\<close>
+    have hfstf_loop: "top1_is_loop_on X TX x0 (fst \<circ> f)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+      using top1_continuous_map_on_comp[OF hf_cont hfst_cont] hf0 unfolding comp_def by (by100 simp)
+    have hfstf_in: "fst \<circ> f \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst d"
+      using heq_fst[symmetric]
+      unfolding top1_fundamental_group_induced_on_def
+      using hf_in_c top1_loop_equiv_on_refl[OF hfstf_loop] by (by100 blast)
+    then obtain j where hj_d: "j \<in> d" and hfstj_fstf: "top1_loop_equiv_on X TX x0 (fst \<circ> j) (fst \<circ> f)"
+      unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+    have hgj_ph: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) g j"
+      using hj_d hd_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hfstg_fstj: "top1_path_homotopic_on X TX x0 x0 (fst \<circ> g) (fst \<circ> j)"
+      using continuous_preserves_path_homotopic[OF hTXY hTX hfst_cont hgj_ph] by (by100 simp)
+    have hfstj_fstf_ph: "top1_path_homotopic_on X TX x0 x0 (fst \<circ> j) (fst \<circ> f)"
+      using hfstj_fstf unfolding top1_loop_equiv_on_def by (by100 blast)
     have hfstf_equiv_fstg: "top1_path_homotopic_on X TX x0 x0 (fst \<circ> f) (fst \<circ> g)"
-      sorry
+      by (rule Lemma_51_1_path_homotopic_sym[OF
+            Lemma_51_1_path_homotopic_trans[OF hTX hfstg_fstj hfstj_fstf_ph]])
+    \<comment> \<open>Same for snd.\<close>
+    have hsndf_loop: "top1_is_loop_on Y TY y0 (snd \<circ> f)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+      using top1_continuous_map_on_comp[OF hf_cont hsnd_cont] hf0 unfolding comp_def by (by100 simp)
+    have hsndf_in: "snd \<circ> f \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd d"
+      using heq_snd[symmetric]
+      unfolding top1_fundamental_group_induced_on_def
+      using hf_in_c top1_loop_equiv_on_refl[OF hsndf_loop] by (by100 blast)
+    then obtain j2 where hj2_d: "j2 \<in> d" and hsndj2_sndf: "top1_loop_equiv_on Y TY y0 (snd \<circ> j2) (snd \<circ> f)"
+      unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+    have hgj2_ph: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) g j2"
+      using hj2_d hd_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hsndg_sndj2: "top1_path_homotopic_on Y TY y0 y0 (snd \<circ> g) (snd \<circ> j2)"
+      using continuous_preserves_path_homotopic[OF hTXY hTY hsnd_cont hgj2_ph] by (by100 simp)
+    have hsndj2_sndf_ph: "top1_path_homotopic_on Y TY y0 y0 (snd \<circ> j2) (snd \<circ> f)"
+      using hsndj2_sndf unfolding top1_loop_equiv_on_def by (by100 blast)
     have hsndf_equiv_sndg: "top1_path_homotopic_on Y TY y0 y0 (snd \<circ> f) (snd \<circ> g)"
-      sorry
+      by (rule Lemma_51_1_path_homotopic_sym[OF
+            Lemma_51_1_path_homotopic_trans[OF hTY hsndg_sndj2 hsndj2_sndf_ph]])
     \<comment> \<open>Combine componentwise: f \<simeq> g in X\<times>Y.\<close>
     have hfg_hom: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f g"
       sorry
