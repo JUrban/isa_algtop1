@@ -3850,7 +3850,49 @@ proof (rule ccontr)
   let ?h = "?g \<circ> ?embed"
   \<comment> \<open>h is continuous S^1 \<rightarrow> S^1.\<close>
   have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
-    sorry
+  proof -
+    \<comment> \<open>embed maps S^1 into S^2: (x,y) \<in> S^1 \<Longrightarrow> (x,y,0) \<in> S^2.\<close>
+    have hembed_range: "\<And>p. p \<in> top1_S1 \<Longrightarrow> ?embed p \<in> ?S2"
+    proof -
+      fix p assume hp: "p \<in> top1_S1"
+      have "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_def by (by100 auto)
+      thus "?embed p \<in> ?S2" by (cases p) simp
+    qed
+    \<comment> \<open>embed is continuous on S^1.\<close>
+    have hembed_cont: "continuous_on top1_S1 ?embed"
+    proof -
+      have hc: "continuous_on top1_S1 (\<lambda>p::real\<times>real. (fst p, snd p, 0::real))"
+        by (intro continuous_on_Pair continuous_on_fst continuous_on_snd continuous_on_const continuous_on_id)
+      have heq: "(\<lambda>p::real\<times>real. (fst p, snd p, 0::real)) = ?embed"
+        by (by100 auto)
+      show ?thesis using hc unfolding heq .
+    qed
+    \<comment> \<open>Bridge to top1_continuous_map_on via subspace topologies.\<close>
+    have hprod_R3: "product_topology_on (top1_open_sets::real set set)
+        (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))
+      = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+      using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+      by (simp add: product_topology_on_open_sets)
+    have hprod_R2: "product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)
+      = (top1_open_sets :: (real \<times> real) set set)"
+      by (rule product_topology_on_open_sets_real2)
+    have hembed_cmo: "top1_continuous_map_on top1_S1
+        (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1)
+        ?S2 (subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) ?S2)
+        ?embed"
+      by (rule top1_continuous_map_on_subspace_open_sets_on[OF hembed_range hembed_cont])
+    have hS1_top_eq: "top1_S1_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1"
+      unfolding top1_S1_topology_def hprod_R2 by (by100 simp)
+    have hS2_top_eq: "subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2
+      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) ?S2"
+      unfolding hprod_R3 by (by100 simp)
+    have hembed_top: "top1_continuous_map_on top1_S1 top1_S1_topology ?S2
+        (subspace_topology UNIV (product_topology_on top1_open_sets
+          (product_topology_on top1_open_sets top1_open_sets)) ?S2) ?embed"
+      using hembed_cmo unfolding hS1_top_eq hS2_top_eq by (by100 simp)
+    show ?thesis by (rule top1_continuous_map_on_comp[OF hembed_top hg_cont])
+  qed
   \<comment> \<open>h is antipode-preserving.\<close>
   have hg_anti_all: "\<And>p. ?g (?neg p) = (- fst (?g p), - snd (?g p))"
   proof -
@@ -3860,13 +3902,20 @@ proof (rule ccontr)
     have hnn: "?neg (?neg p) = p" using hp by simp
     have hd1: "fst (?diff (?neg p)) = - fst (?diff p)" using hnn by simp
     have hd2: "snd (?diff (?neg p)) = - snd (?diff p)" using hnn by simp
-    \<comment> \<open>g(neg p) = -g(p): use hd1, hd2, and norm equality directly.\<close>
-    \<comment> \<open>g(neg p) = (fst(diff(neg p))/norm(neg p), snd(diff(neg p))/norm(neg p))
-              = (-fst(diff p)/norm(neg p), -snd(diff p)/norm(neg p))   [by hd1, hd2]
-       We need norm(neg p) = norm(p). Since diff component squares are equal,
-       the sum of squares is equal, hence sqrt is equal.\<close>
+    \<comment> \<open>Norm preserved: (-a)^2 = a^2, so norm(neg p) = norm(p).\<close>
+    have hpc1: "(fst (f (?neg p)) - fst (f p))\<^sup>2 = (fst (f p) - fst (f (?neg p)))\<^sup>2"
+      by (rule power2_commute)
+    have hpc2: "(snd (f (?neg p)) - snd (f p))\<^sup>2 = (snd (f p) - snd (f (?neg p)))\<^sup>2"
+      by (rule power2_commute)
+    have h3: "?norm (?neg p) = ?norm p"
+      using hnn hpc1 hpc2 by (by100 simp)
+    \<comment> \<open>Raw difference rewrites for simp.\<close>
+    have hd1a: "fst (f (?neg p)) - fst (f p) = - (fst (f p) - fst (f (?neg p)))"
+      by (by100 linarith)
+    have hd2a: "snd (f (?neg p)) - snd (f p) = - (snd (f p) - snd (f (?neg p)))"
+      by (by100 linarith)
     show "?g (?neg p) = (- fst (?g p), - snd (?g p))"
-      sorry \<comment> \<open>From hd1, hd2: diff components negated. Norm preserved ((-a)^2=a^2). Division: -d/n = -(d/n).\<close>
+      by (simp del: minus_diff_eq add: prod_eq_iff hnn h3 hd1a hd2a)
   qed
   have hh_anti: "top1_antipode_preserving_S1 ?h"
     unfolding top1_antipode_preserving_S1_def comp_def
@@ -3882,7 +3931,94 @@ proof (rule ccontr)
   \<comment> \<open>But h IS nulhomotopic: g extends h over the upper hemisphere E \<cong> B^2.
      Since E is contractible, g|E \<simeq> const. Restricting to S^1 = \<partial>E gives h \<simeq> const.\<close>
   have hh_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
-    sorry
+  proof -
+    \<comment> \<open>Use Lemma 55.3 backward: h extends to k: B^2 \<rightarrow> S^1 via the upper hemisphere.
+       Define \<phi>(x,y) = (x, y, sqrt(1-x^2-y^2)) mapping B^2 into S^2.
+       Then k = g \<circ> \<phi> : B^2 \<rightarrow> S^1, and k|S^1 = g(x,y,0) = h(x,y).\<close>
+    let ?\<phi> = "\<lambda>p::real\<times>real. (fst p, snd p, sqrt (1 - fst p ^ 2 - snd p ^ 2))"
+    let ?k = "?g \<circ> ?\<phi>"
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    proof -
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on (top1_open_sets::real set set) top1_open_sets)"
+        using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      show ?thesis unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+    qed
+    \<comment> \<open>\<phi> maps B^2 into S^2: x^2 + y^2 + (sqrt(1-x^2-y^2))^2 = 1.\<close>
+    have h\<phi>_S2: "\<And>p. p \<in> top1_B2 \<Longrightarrow> ?\<phi> p \<in> ?S2"
+    proof -
+      fix p :: "real \<times> real" assume hp: "p \<in> top1_B2"
+      have hle: "fst p ^ 2 + snd p ^ 2 \<le> 1" using hp unfolding top1_B2_def by (by100 auto)
+      have hge: "1 - fst p ^ 2 - snd p ^ 2 \<ge> 0" using hle by (by100 linarith)
+      have "(sqrt (1 - fst p ^ 2 - snd p ^ 2)) ^ 2 = 1 - fst p ^ 2 - snd p ^ 2"
+        by (rule real_sqrt_pow2[OF hge])
+      hence "fst p ^ 2 + snd p ^ 2 + (sqrt (1 - fst p ^ 2 - snd p ^ 2)) ^ 2 = 1"
+        by (by100 linarith)
+      thus "?\<phi> p \<in> ?S2" by simp
+    qed
+    \<comment> \<open>\<phi> is continuous on B^2 (polynomial + sqrt of nonneg).\<close>
+    have h\<phi>_cont: "continuous_on top1_B2 ?\<phi>"
+    proof -
+      have hfst: "continuous_on top1_B2 (\<lambda>p::real\<times>real. fst p)" by (rule continuous_on_fst[OF continuous_on_id])
+      have hsnd: "continuous_on top1_B2 (\<lambda>p::real\<times>real. snd p)" by (rule continuous_on_snd[OF continuous_on_id])
+      have hfsq: "continuous_on top1_B2 (\<lambda>p. fst p ^ 2 :: real)"
+        using continuous_on_power[OF hfst] by (by100 blast)
+      have hssq: "continuous_on top1_B2 (\<lambda>p. snd p ^ 2 :: real)"
+        using continuous_on_power[OF hsnd] by (by100 blast)
+      have hdiff: "continuous_on top1_B2 (\<lambda>p. 1 - fst p ^ 2 - snd p ^ 2 :: real)"
+        by (rule continuous_on_diff[OF continuous_on_diff[OF continuous_on_const hfsq] hssq])
+      have hsqrt: "continuous_on top1_B2 (\<lambda>p. sqrt (1 - fst p ^ 2 - snd p ^ 2))"
+        by (rule continuous_on_real_sqrt[OF hdiff])
+      have hpair: "continuous_on top1_B2 (\<lambda>p::real\<times>real. (snd p, sqrt (1 - fst p ^ 2 - snd p ^ 2)))"
+        by (rule continuous_on_Pair[OF hsnd hsqrt])
+      show ?thesis by (rule continuous_on_Pair[OF hfst hpair])
+    qed
+    \<comment> \<open>k = g \<circ> \<phi> is continuous B^2 \<rightarrow> S^1.\<close>
+    have hk_cont: "top1_continuous_map_on top1_B2 top1_B2_topology top1_S1 top1_S1_topology ?k"
+    proof -
+      \<comment> \<open>Bridge \<phi> to top1_continuous_map_on.\<close>
+      have hprod_R3: "product_topology_on (top1_open_sets::real set set)
+          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))
+        = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+        using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+        by (simp add: product_topology_on_open_sets)
+      have hprod_R2: "product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)
+        = (top1_open_sets :: (real \<times> real) set set)"
+        by (rule product_topology_on_open_sets_real2)
+      have h\<phi>_cmo: "top1_continuous_map_on top1_B2
+          (subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_B2)
+          ?S2 (subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) ?S2)
+          ?\<phi>"
+        by (rule top1_continuous_map_on_subspace_open_sets_on[OF h\<phi>_S2 h\<phi>_cont])
+      have hB2_top_eq: "top1_B2_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_B2"
+        unfolding top1_B2_topology_def hprod_R2 by (by100 simp)
+      have hS2_top_eq: "subspace_topology UNIV (product_topology_on top1_open_sets
+          (product_topology_on top1_open_sets top1_open_sets)) ?S2
+        = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) ?S2"
+        unfolding hprod_R3 by (by100 simp)
+      have h\<phi>_top: "top1_continuous_map_on top1_B2 top1_B2_topology ?S2
+          (subspace_topology UNIV (product_topology_on top1_open_sets
+            (product_topology_on top1_open_sets top1_open_sets)) ?S2) ?\<phi>"
+        using h\<phi>_cmo unfolding hB2_top_eq hS2_top_eq by (by100 simp)
+      show ?thesis by (rule top1_continuous_map_on_comp[OF h\<phi>_top hg_cont])
+    qed
+    \<comment> \<open>Extension: k|S^1 = h. On S^1, sqrt(1-x^2-y^2) = sqrt(0) = 0, so \<phi>(x,y) = (x,y,0) = embed(x,y).\<close>
+    have hext: "\<forall>x\<in>top1_S1. ?k x = ?h x"
+    proof (intro ballI)
+      fix p :: "real \<times> real" assume hp: "p \<in> top1_S1"
+      have hS1: "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_def by (by100 auto)
+      have "1 - fst p ^ 2 - snd p ^ 2 = 0" using hS1 by (by100 linarith)
+      hence "sqrt (1 - fst p ^ 2 - snd p ^ 2) = 0" by (by100 simp)
+      hence h\<phi>eq: "?\<phi> p = ?embed p" by (cases p) simp
+      have "?k p = ?g (?\<phi> p)" unfolding comp_def by simp
+      also have "\<dots> = ?g (?embed p)" using h\<phi>eq by simp
+      also have "\<dots> = ?h p" unfolding comp_def by simp
+      finally show "?k p = ?h p" .
+    qed
+    show ?thesis by (rule Lemma_55_3_backward[OF hh_cont hTS1 hk_cont hext])
+  qed
   show False using hh_not_nul hh_nul by contradiction
 qed
 
