@@ -3060,15 +3060,21 @@ proof
   \<comment> \<open>Step D: k \<circ> (q \<circ> f) = k \<circ> (f*f) = (k\<circ>f)*(k\<circ>f).\<close>
   \<comment> \<open>From g_* trivial: g \<circ> f \<simeq> const. q \<circ> (g \<circ> f) = k \<circ> (q \<circ> f) \<simeq> const.
      So (k\<circ>f)*(k\<circ>f) \<simeq> const.\<close>
+  \<comment> \<open>Chain: g\<circ>f\<simeq>const, q\<circ>g=k\<circ>q, q\<circ>f=f*f on I_set, k distributes over product.\<close>
   have hkf2_triv: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0)
       (top1_path_product (k \<circ> f) (k \<circ> f)) (top1_constant_path (1, 0))"
-    sorry \<comment> \<open>From g \<circ> f \<simeq> const, q \<circ> g = k \<circ> q, q \<circ> f = f*f.\<close>
+    sorry \<comment> \<open>Steps: g\<circ>f\<simeq>const \<Rightarrow> q\<circ>(g\<circ>f)\<simeq>const \<Rightarrow> k\<circ>(q\<circ>f)\<simeq>const (since q\<circ>g=k\<circ>q)
+       \<Rightarrow> k\<circ>(f*f)\<simeq>const (since q\<circ>f=f*f) \<Rightarrow> (k\<circ>f)*(k\<circ>f)\<simeq>const (k distributes).\<close>
   \<comment> \<open>Step E: In \<pi>_1(S^1) \<cong> Z: k\<circ>f corresponds to n \<noteq> 0, (k\<circ>f)*(k\<circ>f) to 2n.
      2n = 0 and n \<noteq> 0 impossible. Use covering p: R \<rightarrow> S^1.\<close>
   \<comment> \<open>Lift k\<circ>f under p from 0 to some endpoint e1. Since k\<circ>f nontrivial, e1 \<noteq> 0.
      Lift (k\<circ>f)*(k\<circ>f) from 0 to 2*e1 (translated lift concatenation).
      Since (k\<circ>f)*(k\<circ>f) trivial, 2*e1 = 0. So e1 = 0. Contradiction.\<close>
-  show False sorry
+  \<comment> \<open>Contradiction: k\<circ>f nontrivial (hkf_nontrivial) but (k\<circ>f)*(k\<circ>f) trivial (hkf2_triv).
+     By Theorem_54_5_iso, \<pi>_1(S^1) \<cong> Z. In Z, 2n = 0 implies n = 0.
+     The isomorphism maps [k\<circ>f] to n \<noteq> 0 and [(k\<circ>f)*(k\<circ>f)] to 2n = 0. Contradiction.\<close>
+  show False
+    using hkf_nontrivial hkf2_triv sorry
 qed
 
 end
