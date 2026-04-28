@@ -3852,8 +3852,30 @@ proof (rule ccontr)
   have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
     sorry
   \<comment> \<open>h is antipode-preserving.\<close>
+  have hg_anti_all: "\<And>p. ?g (?neg p) = (- fst (?g p), - snd (?g p))"
+  proof -
+    fix p :: "real \<times> real \<times> real"
+    obtain a b c where hp: "p = (a, b, c)" by (cases p, cases "snd p") auto
+    \<comment> \<open>Key: neg(neg(p)) = p, so diff(neg(p)) = f(neg(p))-f(neg(neg(p))) = f(neg(p))-f(p) = -diff(p).\<close>
+    have hnn: "?neg (?neg p) = p" using hp by simp
+    have hd1: "fst (?diff (?neg p)) = - fst (?diff p)" using hnn by simp
+    have hd2: "snd (?diff (?neg p)) = - snd (?diff p)" using hnn by simp
+    \<comment> \<open>g(neg p) = -g(p): use hd1, hd2, and norm equality directly.\<close>
+    \<comment> \<open>g(neg p) = (fst(diff(neg p))/norm(neg p), snd(diff(neg p))/norm(neg p))
+              = (-fst(diff p)/norm(neg p), -snd(diff p)/norm(neg p))   [by hd1, hd2]
+       We need norm(neg p) = norm(p). Since diff component squares are equal,
+       the sum of squares is equal, hence sqrt is equal.\<close>
+    show "?g (?neg p) = (- fst (?g p), - snd (?g p))"
+      sorry \<comment> \<open>From hd1, hd2: diff components negated. Norm preserved ((-a)^2=a^2). Division: -d/n = -(d/n).\<close>
+  qed
   have hh_anti: "top1_antipode_preserving_S1 ?h"
-    sorry \<comment> \<open>Algebraic: diff(-p)=-diff(p), norm(-p)=norm(p), g(-p)=-g(p).\<close>
+    unfolding top1_antipode_preserving_S1_def comp_def
+  proof (intro allI)
+    fix x y :: real
+    have "?embed (-x, -y) = ?neg (?embed (x, y))" by simp
+    thus "?g (?embed (-x, -y)) = (- fst (?g (?embed (x, y))), - snd (?g (?embed (x, y))))"
+      using hg_anti_all[of "?embed (x, y)"] by simp
+  qed
   \<comment> \<open>By Theorem 57.1: h is not nulhomotopic.\<close>
   have hh_not_nul: "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
     by (rule Theorem_57_1[OF hh_cont hh_anti])
