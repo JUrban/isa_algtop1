@@ -2357,7 +2357,69 @@ proof -
           qed
           have hG_top: "\<forall>s\<in>I_set. G (s, 1) =
               top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s"
-            sorry
+          proof (intro ballI)
+            fix s :: real assume hs: "s \<in> I_set"
+            have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 auto)+
+            have h\<alpha>1_eq: "?\<alpha> 1 = ?q"
+              using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+            show "G (s, 1) = top1_path_product ?\<alpha>
+                (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s"
+            proof (cases "s \<le> 1/2")
+              case True
+              have "G (s, 1) = ?\<alpha> (1 * (2*s))" using hG1[OF True, of 1] by (by100 simp)
+              hence hG: "G (s, 1) = ?\<alpha> (2*s)" by (by100 simp)
+              have "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s
+                  = ?\<alpha> (2*s)" using True unfolding top1_path_product_def by (by100 simp)
+              thus ?thesis using hG by (by100 simp)
+            next
+              case hgt: False hence hs_gt: "s > 1/2" by (by100 linarith)
+              show ?thesis
+              proof (cases "s \<le> 3/4")
+                case True
+                have hng: "\<not>(s \<le> 1/2)" using hs_gt by (by100 linarith)
+                have "G (s, 1) = (\<lambda>i. ((1-(1::real)) * (f (4*s-2)) i + 1 * ?q i) /
+                    sqrt (\<Sum>j\<le>n. ((1-1) * (f (4*s-2)) j + 1 * ?q j)^2))"
+                  using hG2[OF hng True, of 1] by (by100 simp)
+                hence "G (s, 1) = ?q"
+                proof -
+                  assume h: "G (s, 1) = (\<lambda>i. ((1-1) * (f (4*s-2)) i + 1 * ?q i) /
+                      sqrt (\<Sum>j\<le>n. ((1-1) * (f (4*s-2)) j + 1 * ?q j)^2))"
+                  have hqn: "(\<Sum>j\<le>n. (?q j)^2) = 1" using hq_Sn unfolding top1_Sn_def by (by100 blast)
+                  have "(\<lambda>i. ((1-(1::real)) * (f (4*s-2)) i + 1 * ?q i) /
+                      sqrt (\<Sum>j\<le>n. ((1-1) * (f (4*s-2)) j + 1 * ?q j)^2)) = ?q"
+                  proof -
+                    have "(\<Sum>j\<le>n. ((1-(1::real)) * (f (4*s-2)) j + 1 * ?q j)^2) = (\<Sum>j\<le>n. (?q j)^2)"
+                      by (intro sum.cong arg_cong[of _ _ "\<lambda>x. x^2"]) (by100 simp)+
+                    hence hN1: "sqrt (\<Sum>j\<le>n. ((1-1) * (f (4*s-2)) j + 1 * ?q j)^2) = 1" using hqn by (by100 simp)
+                    show ?thesis
+                    proof (rule ext)
+                      fix i show "((1-1) * (f (4*s-2)) i + 1 * ?q i) /
+                          sqrt (\<Sum>j\<le>n. ((1-1) * (f (4*s-2)) j + 1 * ?q j)^2) = ?q i"
+                        using hN1 by (by100 simp)
+                    qed
+                  qed
+                  thus ?thesis using h by (by100 simp)
+                qed
+                hence hG: "G (s, 1) = ?q" .
+                have "2*s-1 \<le> 1/2" using True by (by100 linarith)
+                hence "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s
+                    = ?q" using hs_gt unfolding top1_path_product_def top1_constant_path_def by (by100 simp)
+                thus ?thesis using hG by (by100 simp)
+              next
+                case False hence hs_gt2: "s > 3/4" by (by100 linarith)
+                have hng: "\<not>(s \<le> 3/4)" using hs_gt2 by (by100 linarith)
+                have "G (s, 1) = ?\<alpha> (1 * (4 - 4*s))" using hG3[OF hng, of 1] by (by100 simp)
+                hence hG: "G (s, 1) = ?\<alpha> (4 - 4*s)" by (by100 simp)
+                have "2*s-1 > 1/2" using hs_gt2 by (by100 linarith)
+                hence "top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) s
+                    = top1_path_reverse ?\<alpha> (2*(2*s-1)-1)"
+                  using hs_gt unfolding top1_path_product_def top1_constant_path_def by (by100 simp)
+                also have "\<dots> = ?\<alpha> (1 - (4*s - 3))" unfolding top1_path_reverse_def by (by100 simp)
+                also have "1 - (4*s - 3) = 4 - 4*s" by (by100 algebra)
+                finally show ?thesis using hG by (by100 simp)
+              qed
+            qed
+          qed
           have hG_left: "\<forall>t\<in>I_set. G (0, t) = x0"
           proof (intro ballI)
             fix t assume "t \<in> I_set"
@@ -12768,6 +12830,5 @@ proof -
 qed
 
 
+
 end
-
-
