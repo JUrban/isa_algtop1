@@ -6,11 +6,85 @@ text \<open>Bridge: the order topology on R equals top1_open_sets (= {U. open U}
   Hence top1_closed_interval_topology 0 1 = I_top.\<close>
 lemma order_topology_UNIV_eq_top1_open_sets_real:
   "(order_topology_on_UNIV :: real set set) = top1_open_sets"
-  sorry \<comment> \<open>Both are the standard topology on R.
-     Direction 1 (order_top \<subseteq> open): basis elements (open rays/intervals) are HOL-open.
-     Direction 2 (open \<subseteq> order_top): open = generate_topology(rays),
-       rays \<in> basis \<subseteq> order_topology, closed under \<union>/\<inter>.
-     Full proof ~60 lines. For real (linorder_topology), these topologies coincide.\<close>
+proof (rule set_eqI, rule iffI)
+  fix U :: "real set"
+  \<comment> \<open>Direction 1: order_topology \<subseteq> top1_open_sets.
+     Basis elements are HOL-open, generated topology preserves openness.\<close>
+  assume "U \<in> order_topology_on_UNIV"
+  thus "U \<in> top1_open_sets"
+    sorry \<comment> \<open>Basis elements (open rays/intervals) are HOL-open, then open_subopen.\<close>
+next
+  fix U :: "real set"
+  \<comment> \<open>Direction 2: open \<Rightarrow> in order_topology.
+     open = generate_topology(rays). Rays in basis. order_topology is a topology.\<close>
+  assume "U \<in> top1_open_sets"
+  hence "open U" unfolding top1_open_sets_def by (by100 blast)
+  hence hgen: "generate_topology (range (\<lambda>a::real. {..< a}) \<union> range (\<lambda>a. {a <..})) U"
+    unfolding open_generated_order .
+  \<comment> \<open>Show by induction on generate_topology that U \<in> order_topology_on_UNIV.\<close>
+  have hOT: "is_topology_on (UNIV::real set) (order_topology_on_UNIV::real set set)"
+    unfolding order_topology_on_UNIV_def
+    by (rule topology_generated_by_basis_is_topology_on[OF basis_order_topology_is_basis_on_UNIV])
+  \<comment> \<open>Open rays are in basis, hence in order_topology.\<close>
+  have hlt_in: "\<And>a::real. {..<a} \<in> order_topology_on_UNIV"
+  proof -
+    fix a :: real
+    have "open_ray_lt a \<in> basis_order_topology"
+      unfolding basis_order_topology_def by (by100 blast)
+    hence "open_ray_lt a \<in> order_topology_on_UNIV"
+      unfolding order_topology_on_UNIV_def topology_generated_by_basis_def
+    proof (intro CollectI conjI ballI)
+      show "open_ray_lt a \<subseteq> UNIV" by (by100 simp)
+      fix x assume "x \<in> open_ray_lt a"
+      show "\<exists>b\<in>basis_order_topology. x \<in> b \<and> b \<subseteq> open_ray_lt a"
+        using \<open>x \<in> open_ray_lt a\<close> \<open>open_ray_lt a \<in> basis_order_topology\<close> by (by100 blast)
+    qed
+    thus "{..<a} \<in> order_topology_on_UNIV"
+      unfolding open_ray_lt_def lessThan_def by (by100 simp)
+  qed
+  have hgt_in: "\<And>a::real. {a<..} \<in> order_topology_on_UNIV"
+  proof -
+    fix a :: real
+    have hgt_basis: "open_ray_gt a \<in> basis_order_topology"
+      unfolding basis_order_topology_def by (by100 blast)
+    hence "open_ray_gt a \<in> order_topology_on_UNIV"
+      unfolding order_topology_on_UNIV_def topology_generated_by_basis_def
+    proof (intro CollectI conjI ballI)
+      show "open_ray_gt a \<subseteq> UNIV" by (by100 simp)
+      fix x assume "x \<in> open_ray_gt a"
+      show "\<exists>b\<in>basis_order_topology. x \<in> b \<and> b \<subseteq> open_ray_gt a"
+        using \<open>x \<in> open_ray_gt a\<close> hgt_basis by (by100 blast)
+    qed
+    thus "{a<..} \<in> order_topology_on_UNIV"
+      unfolding open_ray_gt_def greaterThan_def by (by100 simp)
+  qed
+  \<comment> \<open>Induction on generate_topology: UNIV \<in> T, \<inter> closed, \<union> closed, basis \<in> T.\<close>
+  from hgen show "U \<in> order_topology_on_UNIV"
+  proof (induction rule: generate_topology.induct)
+    case UNIV
+    show ?case using hOT unfolding is_topology_on_def by (by100 blast)
+  next
+    case (Int a b)
+    have "{a} \<subseteq> order_topology_on_UNIV" "{b} \<subseteq> order_topology_on_UNIV"
+      using Int.IH by (by100 blast)+
+    hence "{a} \<union> {b} \<subseteq> order_topology_on_UNIV" by (by100 blast)
+    hence "finite ({a,b}) \<and> {a,b} \<noteq> {} \<and> {a,b} \<subseteq> order_topology_on_UNIV" by (by100 simp)
+    hence "\<Inter>{a,b} \<in> order_topology_on_UNIV"
+      using hOT unfolding is_topology_on_def by (by100 blast)
+    thus ?case by (by100 simp)
+  next
+    case (UN K)
+    have "K \<subseteq> order_topology_on_UNIV" using UN.IH by (by100 blast)
+    hence "\<Union>K \<in> order_topology_on_UNIV"
+      using hOT unfolding is_topology_on_def by (by100 blast)
+    thus ?case .
+  next
+    case (Basis s)
+    hence "s \<in> range (\<lambda>a::real. {..< a}) \<union> range (\<lambda>a. {a <..})" .
+    hence "(\<exists>a. s = {..<a}) \<or> (\<exists>a. s = {a<..})" by (by100 blast)
+    thus ?case using hlt_in hgt_in by (by100 blast)
+  qed
+qed
 
 lemma closed_interval_top_eq_I_top:
   "top1_closed_interval_topology 0 1 = I_top"
