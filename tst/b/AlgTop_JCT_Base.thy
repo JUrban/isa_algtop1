@@ -9401,11 +9401,15 @@ proof -
     using top1_continuous_pi1[OF hTX hTY] unfolding hpi1_eq .
   have hsnd_cont: "top1_continuous_map_on (X \<times> Y) ?TXY Y TY snd"
     using top1_continuous_pi2[OF hTX hTY] unfolding hpi2_eq .
+  \<comment> \<open>Key fact: h \<circ> (path_product f g) = path_product (h\<circ>f) (h\<circ>g) for any h.\<close>
+  have hcomp_prod: "\<And>h f g. h \<circ> (top1_path_product f g) = top1_path_product (h \<circ> f) (h \<circ> g)"
+    unfolding top1_path_product_def comp_def by (rule ext) auto
   have h\<Phi>_hom: "\<forall>c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       \<forall>d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       ?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
       = (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
-           top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)" sorry
+           top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)"
+    sorry
   \<comment> \<open>Step 2: Injectivity. If p\<circ>f \<simeq> const and q\<circ>f \<simeq> const, combine homotopies componentwise.\<close>
   have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))" sorry
   \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
