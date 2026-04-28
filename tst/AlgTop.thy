@@ -369,7 +369,23 @@ proof -
       unfolding top1_homotopic_on_def using hg_cont
     proof (intro conjI exI[of _ H])
       show "top1_continuous_map_on X TX Y ?TY (\<lambda>_. y0)"
-        sorry \<comment> \<open>Constant map to y0 \<in> Y is continuous.\<close>
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> X" show "y0 \<in> Y" by (rule hy0)
+      next
+        fix V assume "V \<in> ?TY"
+        show "{x \<in> X. y0 \<in> V} \<in> TX"
+        proof (cases "y0 \<in> V")
+          case True hence "{x \<in> X. y0 \<in> V} = X" by (by100 blast)
+          moreover have "X \<in> TX"
+            using conjunct1[OF conjunct2[OF hTX[unfolded is_topology_on_def]]] .
+          ultimately show ?thesis by (by100 simp)
+        next
+          case False hence heq: "{x \<in> X. y0 \<in> V} = {}" by (by100 blast)
+          show ?thesis unfolding heq
+            using conjunct1[OF hTX[unfolded is_topology_on_def]] .
+        qed
+      qed
       show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y ?TY H"
         by (rule hH_cont)
       show "\<forall>x\<in>X. H (x, 0) = g x" by (rule hH0)
