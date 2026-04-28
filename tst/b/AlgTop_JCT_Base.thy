@@ -2415,8 +2415,35 @@ proof -
         thus ?thesis by (by100 blast)
       next
         case False
-        \<comment> \<open>z(i) = 0 for all i \<ge> 2. Then z(1) \<noteq> 0, so z \<noteq> -r' where r' = e_2.
-           Path z \<rightarrow> r' \<rightarrow> r in U \<inter> V.\<close>
+        hence hzero2: "\<And>k. k \<ge> 2 \<Longrightarrow> k \<le> n \<Longrightarrow> z k = 0" by (by100 blast)
+        \<comment> \<open>z(1) \<noteq> 0: if z(1) = 0, then z(i)=0 for i\<ge>1, so z = (\<plusminus>1,0,...) = p or q.\<close>
+        have hz1_ne: "z 1 \<noteq> 0"
+        proof
+          assume "z 1 = 0"
+          have "\<And>i. i \<ge> 1 \<Longrightarrow> i \<le> n \<Longrightarrow> z i = 0"
+          proof -
+            fix i assume "i \<ge> 1" "i \<le> n"
+            show "z i = 0"
+            proof (cases "i \<ge> 2")
+              case True thus ?thesis using hzero2 \<open>i \<le> n\<close> by (by100 blast)
+            next
+              case False hence "i = 1" using \<open>i \<ge> 1\<close> by (by100 linarith)
+              thus ?thesis using \<open>z 1 = 0\<close> by (by100 simp)
+            qed
+          qed
+          hence "\<And>i. i \<ge> Suc 0 \<Longrightarrow> i \<le> n \<Longrightarrow> z i = 0" by (by100 simp)
+          \<comment> \<open>Then z(0)^2 = 1, so z = p or z = q.\<close>
+          hence "z 0 = 1 \<or> z 0 = -1" sorry
+          thus False
+          proof
+            assume "z 0 = 1" hence "z = ?p" sorry
+            thus False using hz_np by (by100 blast)
+          next
+            assume "z 0 = -1" hence "z = ?q" sorry
+            thus False using hz_nq by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Use r' = e_2 as stepping stone. z \<rightarrow> r' \<rightarrow> r.\<close>
         thus ?thesis sorry
       qed
     qed
