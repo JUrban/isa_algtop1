@@ -1612,23 +1612,61 @@ proof -
     using h\<gamma>_cont h\<gamma>0 h\<gamma>1 by (by100 blast)
 qed
 text \<open>Helper corollaries of Sn_normalized_interpolation_path: membership and norm.\<close>
-lemma Sn_interpolation_in_Sn:
-  fixes x y :: "nat \<Rightarrow> real"
-  assumes hx: "x \<in> top1_Sn n" and hy: "y \<in> top1_Sn n" and hna: "x \<noteq> (\<lambda>i. - y i)"
-  shows "(\<lambda>i. ((1-t) * x i + t * y i) / sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)) \<in> top1_Sn n"
-  sorry
-
 lemma Sn_interpolation_norm_pos:
   fixes x y :: "nat \<Rightarrow> real"
   assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
   shows "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0"
   sorry
 
+lemma Sn_interpolation_in_Sn:
+  fixes x y :: "nat \<Rightarrow> real"
+  assumes hx: "x \<in> top1_Sn n" and hy: "y \<in> top1_Sn n" and hna: "x \<noteq> (\<lambda>i. - y i)"
+  shows "(\<lambda>i. ((1-t) * x i + t * y i) / sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)) \<in> top1_Sn n"
+proof -
+  let ?N = "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)"
+  have hN_pos: "?N > 0" by (rule Sn_interpolation_norm_pos[OF assms])
+  have hx_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0" using hx unfolding top1_Sn_def by (by100 blast)
+  have hy_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> y i = 0" using hy unfolding top1_Sn_def by (by100 blast)
+  show ?thesis unfolding top1_Sn_def
+  proof (intro CollectI conjI allI impI)
+    fix i assume "i \<ge> Suc n"
+    hence "x i = 0" "y i = 0" using hx_zero hy_zero by (by100 blast)+
+    thus "((1-t) * x i + t * y i) / ?N = 0" by (by100 simp)
+  next
+    have "(\<Sum>j\<le>n. (((1-t) * x j + t * y j) / ?N)^2) = (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) / ?N^2"
+    proof -
+      have "\<And>j. (((1-t) * x j + t * y j) / ?N)^2 = ((1-t) * x j + t * y j)^2 / ?N^2"
+        using power_divide by (by100 blast)
+      hence "(\<Sum>j\<le>n. (((1-t) * x j + t * y j) / ?N)^2) = (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2 / ?N^2)"
+        by (intro sum.cong) (by100 simp)+
+      also have "\<dots> = (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) / ?N^2"
+        using sum_divide_distrib[symmetric] by (by100 simp)
+      finally show ?thesis .
+    qed
+    also have "?N^2 = (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)" using hN_pos by (by100 simp)
+    also have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) / (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) = 1"
+      using hN_pos by (by100 simp)
+    finally show "(\<Sum>j\<le>n. (((1-t) * x j + t * y j) / ?N)^2) = 1" .
+  qed
+qed
+
+
+
 lemma Sn_interpolation_at_1:
   fixes x y :: "nat \<Rightarrow> real"
   assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
   shows "(\<lambda>i. ((1-(1::real)) * x i + 1 * y i) / sqrt (\<Sum>j\<le>n. ((1-1) * x j + 1 * y j)^2)) = y"
-  sorry
+proof -
+  have hy_norm: "(\<Sum>j\<le>n. (y j)^2) = 1" using assms(2) unfolding top1_Sn_def by (by100 blast)
+  have hN: "(\<Sum>j\<le>n. ((1-(1::real)) * x j + 1 * y j)^2) = (\<Sum>j\<le>n. (y j)^2)"
+    by (intro sum.cong) (by100 simp)+
+  have hN1: "sqrt (\<Sum>j\<le>n. ((1-(1::real)) * x j + 1 * y j)^2) = 1" using hN hy_norm by (by100 simp)
+  show ?thesis
+  proof (rule ext)
+    fix i show "((1-(1::real)) * x i + 1 * y i) / sqrt (\<Sum>j\<le>n. ((1-1) * x j + 1 * y j)^2) = y i"
+      using hN1 by (by100 simp)
+  qed
+qed
 
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
