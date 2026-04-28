@@ -1411,13 +1411,22 @@ proof -
             proof -
               have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<le>n. (-(t/(1-t)) * y j)^2)"
                 using hxi by (intro sum.cong) (by100 simp)+
+              also have "\<dots> = (\<Sum>j\<le>n. (t/(1-t))^2 * (y j)^2)"
+                using power_mult_distrib[of "-(t/(1-t))" _ 2]
+                by (intro sum.cong) (by100 simp)+
               also have "\<dots> = (t/(1-t))^2 * (\<Sum>j\<le>n. (y j)^2)"
-                sorry
+                by (rule sum_distrib_left[symmetric])
               finally have "(t/(1-t))^2 * 1 = 1" using hx_norm0 hy_norm0 by (by100 simp)
               thus ?thesis by (by100 simp)
             qed
             have "t/(1-t) = 1 \<or> t/(1-t) = -1"
-              using hratio sorry
+            proof -
+              have h_sq: "(\<bar>t/(1-t)\<bar>)^2 = (1::real)^2"
+                using hratio power2_abs[of "t/(1-t)"] by (by100 simp)
+              hence "\<bar>t/(1-t)\<bar> = (1::real)"
+                using power2_eq_imp_eq[OF h_sq] by (by100 simp)
+              thus ?thesis by (by100 linarith)
+            qed
             thus ?thesis
             proof
               assume ht_eq: "t/(1-t) = 1"
