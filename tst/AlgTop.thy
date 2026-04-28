@@ -11763,7 +11763,12 @@ proof -
         have hf_intB_conn: "connected (f ` (B - frontier B))"
         proof -
           have "continuous_on (B - frontier B) f"
-            sorry \<comment> \<open>f continuous on U (from assms(2)), B - frontier B \<subseteq> B \<subseteq> U.\<close>
+          proof -
+            have "continuous_on U f"
+              by (rule top1_continuous_map_on_to_continuous_on_R2[OF assms(2)])
+            moreover have "B - frontier B \<subseteq> U" using hBsub by (by100 blast)
+            ultimately show ?thesis using continuous_on_subset by (by100 blast)
+          qed
           thus ?thesis using connected_continuous_image[OF _ hIntB_conn] by (by100 blast)
         qed
         have hf_intB_sub: "f ` (B - frontier B) \<subseteq> UNIV - f ` frontier B"
