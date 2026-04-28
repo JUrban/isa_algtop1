@@ -11738,7 +11738,26 @@ proof -
        hence in one component. f(x) \<in> f(Int B) and f(B) is bounded \<Rightarrow> f(Int B) \<subseteq> W1.
        Conversely W1 \<subseteq> f(Int B) by Borsuk (any a \<in> W1 \<setminus> f(Int B) and b \<in> W2 would be separated
        by f(B), but f(B) doesn't separate S^2 since B is contractible).\<close>
-    have hfx_W1: "f x \<in> W1" sorry
+    have hfx_W1: "f x \<in> W1"
+    proof -
+      \<comment> \<open>f(x) \<notin> f(frontier B) since f injective on U, x \<in> B - frontier B, frontier B \<subseteq> U.\<close>
+      have hfr_sub_U: "frontier B \<subseteq> U" using frontier_closed_sub[OF hBclosed] hBsub by (by100 blast)
+      have "f x \<notin> f ` frontier B"
+      proof
+        assume "f x \<in> f ` frontier B"
+        then obtain z where hz: "z \<in> frontier B" and hfz: "f x = f z" by (by100 blast)
+        have "x \<in> U" by (rule hx)
+        have "z \<in> U" using hz hfr_sub_U by (by100 blast)
+        have "x = z" using inj_onD[OF assms(3) hfz \<open>x \<in> U\<close> \<open>z \<in> U\<close>] .
+        thus False using hx_int hz by (by100 blast)
+      qed
+      hence hfx_compl: "f x \<in> UNIV - f ` frontier B" by (by100 blast)
+      hence "f x \<in> W1 \<or> f x \<in> W2" using hW(4) by (by100 blast)
+      \<comment> \<open>f(x) is in bounded component: f(B) is bounded (compact image), so f(x) can't be in W2.\<close>
+      moreover have "f x \<notin> W2"
+        sorry \<comment> \<open>f(x) \<in> f(B) which is bounded. W2 unbounded.\<close>
+      ultimately show "f x \<in> W1" by (by100 blast)
+    qed
     have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)" sorry
     have hW1_open: "W1 \<in> ?TR2"
     proof -
