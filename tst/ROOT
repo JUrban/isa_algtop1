@@ -12,10 +12,15 @@ session AlgTopH in h = HOL +
   theories
     AlgTopHelpers
 
-session AlgTopBase in b = Top0 +
+session AlgTopBase0 in b0 = Top0 +
   options [quick_and_dirty, timeout = 300]
   sessions
     AlgTopH
+  theories
+    AlgTop_JCT_Base0
+
+session AlgTopBase in b = AlgTopBase0 +
+  options [quick_and_dirty, timeout = 300]
   theories
     AlgTop_JCT_Base
 
