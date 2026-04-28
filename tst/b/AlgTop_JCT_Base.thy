@@ -1543,8 +1543,91 @@ proof -
         and hzc: "z = ?\<Phi> c" by (by100 blast)
     \<comment> \<open>c = [f] for some loop f at (x0,y0). Then \<Phi>(c) = ([fst\<circ>f], [snd\<circ>f]).\<close>
     \<comment> \<open>[fst\<circ>f] \<in> carrier_X and [snd\<circ>f] \<in> carrier_Y.\<close>
+    obtain f where hf_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) f"
+        and hc_eq: "c = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    have hf_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY f"
+      using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hf0: "f 0 = (x0, y0)" "f 1 = (x0, y0)"
+      using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hfstf_loop: "top1_is_loop_on X TX x0 (fst \<circ> f)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+      using top1_continuous_map_on_comp[OF hf_cont hfst_cont] hf0 unfolding comp_def
+      by (by100 simp)
+    have hsndf_loop: "top1_is_loop_on Y TY y0 (snd \<circ> f)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+      using top1_continuous_map_on_comp[OF hf_cont hsnd_cont] hf0 unfolding comp_def
+      by (by100 simp)
+    \<comment> \<open>induced([f]) = [fst\<circ>f] \<in> carrier_X, induced([f]) = [snd\<circ>f] \<in> carrier_Y.\<close>
+    \<comment> \<open>By the hind_gen pattern: induced([f]) = {k. loop_equiv(fst\<circ>f, k)}.\<close>
+    have hind_eq_fst: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c
+        = {k. top1_loop_equiv_on X TX x0 (fst \<circ> f) k}"
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c"
+      then obtain j where hj_in: "j \<in> c" and hk: "top1_loop_equiv_on X TX x0 (fst \<circ> j) k"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      have hfj: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f j"
+        using hj_in hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hph: "top1_path_homotopic_on X TX x0 x0 (fst \<circ> f) (fst \<circ> j)"
+        using continuous_preserves_path_homotopic[OF hTXY hTX hfst_cont hfj] by (by100 simp)
+      have hj_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) j"
+        using hj_in hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hj_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY j"
+        using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hj0: "j 0 = (x0, y0)" "j 1 = (x0, y0)"
+        using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+      have hfstj_loop: "top1_is_loop_on X TX x0 (fst \<circ> j)"
+        unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+        using top1_continuous_map_on_comp[OF hj_cont hfst_cont] hj0 unfolding comp_def by (by100 simp)
+      have "top1_loop_equiv_on X TX x0 (fst \<circ> f) (fst \<circ> j)"
+        unfolding top1_loop_equiv_on_def using hfstf_loop hfstj_loop hph by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on X TX x0 (fst \<circ> f) k}"
+        using hk top1_loop_equiv_on_trans[OF hTX] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (fst \<circ> f) k}"
+      hence hk: "top1_loop_equiv_on X TX x0 (fst \<circ> f) k" by (by100 blast)
+      have "f \<in> c" using hc_eq top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+      thus "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c"
+        unfolding top1_fundamental_group_induced_on_def using hk by (by100 blast)
+    qed
+    have hfst_in: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c
+        \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding hind_eq_fst top1_fundamental_group_carrier_def using hfstf_loop by (by100 blast)
+    have hind_eq_snd: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c
+        = {k. top1_loop_equiv_on Y TY y0 (snd \<circ> f) k}"
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c"
+      then obtain j where hj_in: "j \<in> c" and hk: "top1_loop_equiv_on Y TY y0 (snd \<circ> j) k"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      have hfj: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f j"
+        using hj_in hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hph: "top1_path_homotopic_on Y TY y0 y0 (snd \<circ> f) (snd \<circ> j)"
+        using continuous_preserves_path_homotopic[OF hTXY hTY hsnd_cont hfj] by (by100 simp)
+      have hj_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) j"
+        using hj_in hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hj_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY j"
+        using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hj0: "j 0 = (x0, y0)" "j 1 = (x0, y0)"
+        using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+      have hsndj_loop: "top1_is_loop_on Y TY y0 (snd \<circ> j)"
+        unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+        using top1_continuous_map_on_comp[OF hj_cont hsnd_cont] hj0 unfolding comp_def by (by100 simp)
+      have "top1_loop_equiv_on Y TY y0 (snd \<circ> f) (snd \<circ> j)"
+        unfolding top1_loop_equiv_on_def using hsndf_loop hsndj_loop hph by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on Y TY y0 (snd \<circ> f) k}"
+        using hk top1_loop_equiv_on_trans[OF hTY] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on Y TY y0 (snd \<circ> f) k}"
+      hence hk: "top1_loop_equiv_on Y TY y0 (snd \<circ> f) k" by (by100 blast)
+      have "f \<in> c" using hc_eq top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+      thus "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c"
+        unfolding top1_fundamental_group_induced_on_def using hk by (by100 blast)
+    qed
+    have hsnd_in: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c
+        \<in> top1_fundamental_group_carrier Y TY y0"
+      unfolding hind_eq_snd top1_fundamental_group_carrier_def using hsndf_loop by (by100 blast)
     show "z \<in> top1_fundamental_group_carrier X TX x0 \<times> top1_fundamental_group_carrier Y TY y0"
-      sorry
+      using hfst_in hsnd_in hzc by (by100 simp)
   next
     fix z assume hz: "z \<in> top1_fundamental_group_carrier X TX x0 \<times>
         top1_fundamental_group_carrier Y TY y0"
@@ -1561,8 +1644,111 @@ proof -
     \<comment> \<open>Define f(s) = (g(s), h(s)), a loop at (x0,y0) in X\<times>Y. By Theorem 18.4 continuous.
        Then \<Phi>([f]) = ([fst\<circ>f], [snd\<circ>f]) = ([g], [h]) since fst\<circ>f = g and snd\<circ>f = h.
        Uses continuous_preserves_path_homotopic for the equivalence class matching.\<close>
-    show "z \<in> ?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))"
-      sorry
+    let ?f = "\<lambda>s. (g s, h s)"
+    have hg_cont: "top1_continuous_map_on I_set I_top X TX g"
+      using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hh_cont: "top1_continuous_map_on I_set I_top Y TY h"
+      using hh_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hfst_f: "fst \<circ> ?f = g" by (rule ext) (by100 simp)
+    have hsnd_f: "snd \<circ> ?f = h" by (rule ext) (by100 simp)
+    have hpi1_f: "top1_continuous_map_on I_set I_top X TX (pi1 \<circ> ?f)"
+      using hg_cont unfolding hfst_f hpi1_eq by (by100 simp)
+    have hpi2_f: "top1_continuous_map_on I_set I_top Y TY (pi2 \<circ> ?f)"
+      using hh_cont unfolding hsnd_f hpi2_eq by (by100 simp)
+    have hf_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY ?f"
+      using iffD2[OF Theorem_18_4[OF hTI hTX hTY]] hpi1_f hpi2_f by (by100 blast)
+    have hg0: "g 0 = x0" "g 1 = x0"
+      using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hh0: "h 0 = y0" "h 1 = y0"
+      using hh_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hf_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) ?f"
+      unfolding top1_is_loop_on_def top1_is_path_on_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY ?f" by (rule hf_cont)
+      show "?f 0 = (x0, y0)" using hg0 hh0 by (by100 simp)
+      show "?f 1 = (x0, y0)" using hg0 hh0 by (by100 simp)
+    qed
+    let ?cf = "{f'. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) ?f f'}"
+    have hcf_carrier: "?cf \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+      unfolding top1_fundamental_group_carrier_def using hf_loop by (by100 blast)
+    \<comment> \<open>induced_fst([f]) = [fst\<circ>f] = [g]. Key: fst\<circ>f = g, and induced preserves equiv classes.\<close>
+    have hind_fst_eq: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst ?cf
+        = {k. top1_loop_equiv_on X TX x0 g k}"
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst ?cf"
+      then obtain j where hj_in: "j \<in> ?cf" and hk: "top1_loop_equiv_on X TX x0 (fst \<circ> j) k"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      have hfj: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) ?f j"
+        using hj_in unfolding top1_loop_equiv_on_def by (by100 blast)
+      have "top1_path_homotopic_on X TX x0 x0 g (fst \<circ> j)"
+        using continuous_preserves_path_homotopic[OF hTXY hTX hfst_cont hfj]
+        unfolding hfst_f by (by100 simp)
+      moreover have "top1_is_loop_on X TX x0 (fst \<circ> j)"
+      proof -
+        have hj_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) j"
+          using hj_in unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hj_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY j"
+          using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hfstj_cont: "top1_continuous_map_on I_set I_top X TX (fst \<circ> j)"
+          by (rule top1_continuous_map_on_comp[OF hj_cont hfst_cont])
+        have hj0: "j 0 = (x0, y0)" "j 1 = (x0, y0)"
+          using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+          using hfstj_cont hj0 unfolding comp_def by (by100 simp)
+      qed
+      ultimately have "top1_loop_equiv_on X TX x0 g (fst \<circ> j)"
+        unfolding top1_loop_equiv_on_def using hg_loop by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on X TX x0 g k}"
+        using hk top1_loop_equiv_on_trans[OF hTX] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 g k}"
+      hence hk: "top1_loop_equiv_on X TX x0 g k" by (by100 blast)
+      have "?f \<in> ?cf" using top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+      moreover have "top1_loop_equiv_on X TX x0 (fst \<circ> ?f) k" using hk unfolding hfst_f .
+      ultimately show "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst ?cf"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+    qed
+    have hind_snd_eq: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd ?cf
+        = {k. top1_loop_equiv_on Y TY y0 h k}"
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd ?cf"
+      then obtain j where hj_in: "j \<in> ?cf" and hk: "top1_loop_equiv_on Y TY y0 (snd \<circ> j) k"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      have hfj: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) ?f j"
+        using hj_in unfolding top1_loop_equiv_on_def by (by100 blast)
+      have "top1_path_homotopic_on Y TY y0 y0 h (snd \<circ> j)"
+        using continuous_preserves_path_homotopic[OF hTXY hTY hsnd_cont hfj]
+        unfolding hsnd_f by (by100 simp)
+      moreover have "top1_is_loop_on Y TY y0 (snd \<circ> j)"
+      proof -
+        have hj_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) j"
+          using hj_in unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hj_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY j"
+          using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hsndj_cont: "top1_continuous_map_on I_set I_top Y TY (snd \<circ> j)"
+          by (rule top1_continuous_map_on_comp[OF hj_cont hsnd_cont])
+        have hj0: "j 0 = (x0, y0)" "j 1 = (x0, y0)"
+          using hj_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+          using hsndj_cont hj0 unfolding comp_def by (by100 simp)
+      qed
+      ultimately have "top1_loop_equiv_on Y TY y0 h (snd \<circ> j)"
+        unfolding top1_loop_equiv_on_def using hh_loop by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on Y TY y0 h k}"
+        using hk top1_loop_equiv_on_trans[OF hTY] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on Y TY y0 h k}"
+      hence hk: "top1_loop_equiv_on Y TY y0 h k" by (by100 blast)
+      have "?f \<in> ?cf" using top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+      moreover have "top1_loop_equiv_on Y TY y0 (snd \<circ> ?f) k" using hk unfolding hsnd_f .
+      ultimately show "k \<in> top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd ?cf"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+    qed
+    have "?\<Phi> ?cf = (c1, c2)" unfolding hind_fst_eq hind_snd_eq hc1_eq hc2_eq ..
+    hence "?\<Phi> ?cf = z" using hzp by (by100 simp)
+    thus "z \<in> ?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))"
+      using hcf_carrier by (by100 blast)
   qed
   \<comment> \<open>Assemble: \<Phi> is a group isomorphism.\<close>
   show ?thesis
