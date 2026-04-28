@@ -1566,7 +1566,43 @@ proof -
     obtain g where hg_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) g"
         and hd_eq: "d = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k}"
       using hd unfolding top1_fundamental_group_carrier_def by (by100 auto)
-    show "c = d" sorry
+    \<comment> \<open>Extract: fst\<circ>f path-homotopic to fst\<circ>g (from equal equiv classes).\<close>
+    have hf_in_c: "f \<in> c" using hc_eq top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+    have hg_in_d: "g \<in> d" using hd_eq top1_loop_equiv_on_refl[OF hg_loop] by (by100 blast)
+    have hf_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY f"
+      using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hg_cont: "top1_continuous_map_on I_set I_top (X \<times> Y) ?TXY g"
+      using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hf0: "f 0 = (x0, y0)" "f 1 = (x0, y0)"
+      using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hg0: "g 0 = (x0, y0)" "g 1 = (x0, y0)"
+      using hg_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    \<comment> \<open>fst\<circ>f \<simeq> fst\<circ>g: from induced classes equal, fst\<circ>f \<in> [fst\<circ>g].\<close>
+    have hfstf_equiv_fstg: "top1_path_homotopic_on X TX x0 x0 (fst \<circ> f) (fst \<circ> g)"
+      sorry
+    have hsndf_equiv_sndg: "top1_path_homotopic_on Y TY y0 y0 (snd \<circ> f) (snd \<circ> g)"
+      sorry
+    \<comment> \<open>Combine componentwise: f \<simeq> g in X\<times>Y.\<close>
+    have hfg_hom: "top1_path_homotopic_on (X \<times> Y) ?TXY (x0, y0) (x0, y0) f g"
+      sorry
+    hence "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f g"
+      unfolding top1_loop_equiv_on_def using hf_loop hg_loop by (by100 blast)
+    hence hfg_equiv: "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f g"
+      unfolding top1_loop_equiv_on_def using hf_loop hg_loop by (by100 blast)
+    have hgf_equiv: "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g f"
+      by (rule top1_loop_equiv_on_sym[OF hfg_equiv])
+    show "c = d" unfolding hc_eq hd_eq
+    proof (intro set_eqI iffI)
+      fix k assume "k \<in> {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k}"
+      hence "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k" by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k}"
+        using hgf_equiv top1_loop_equiv_on_trans[OF hTXY] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k}"
+      hence "top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k" by (by100 blast)
+      thus "k \<in> {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k}"
+        using hfg_equiv top1_loop_equiv_on_trans[OF hTXY] by (by100 blast)
+    qed
   qed
   \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
   have h\<Phi>_surj: "?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
@@ -1817,6 +1853,7 @@ proof -
   qed
 qed
 
+section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 section \<open>Chapter 10: Separation Theorems in the Plane\<close>
 
 section \<open>\<S>61 The Jordan Separation Theorem\<close>
