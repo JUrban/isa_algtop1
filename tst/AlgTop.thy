@@ -74,9 +74,31 @@ lemma Lemma_62_1_homotopy_extension:
              \<and> (\<forall>x\<in>A. g x = f x)
              \<and> top1_nulhomotopic_on X TX Y
                (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) g"
-  sorry \<comment> \<open>Proof sketch: Tietze-extend the homotopy F: A\<times>I \<rightarrow> Y (coordinatewise to R^2),
-     then use tube lemma to find W \<supseteq> A with W\<times>I \<subseteq> G^{-1}(Y), then Urysohn for
-     \<phi>: X \<rightarrow> [0,1] with \<phi>|A=0, \<phi>|X-W=1, and g(x) = G(x,\<phi>(x)).\<close>
+proof -
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  let ?TY = "subspace_topology UNIV ?TR2 Y"
+  have hTX: "is_topology_on X TX"
+    sorry \<comment> \<open>From X\<times>I normal, X is normal, hence has a topology.\<close>
+  have hAX: "A \<subseteq> X" using hA_closed by (rule closedin_sub)
+  \<comment> \<open>Step 1: Get nulhomotopy F: A \<times> I \<rightarrow> Y with F(a,0) = f(a), F(a,1) = y0.\<close>
+  obtain y0 where hy0: "y0 \<in> Y"
+      and hF_hom: "top1_homotopic_on A (subspace_topology X TX A) Y ?TY f (\<lambda>_. y0)"
+    using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+  obtain F where hF: "top1_continuous_map_on (A \<times> I_set)
+      (product_topology_on (subspace_topology X TX A) I_top)
+      Y ?TY F"
+      and hF0: "\<forall>a\<in>A. F (a, 0) = f a"
+      and hF1: "\<forall>a\<in>A. F (a, 1) = y0"
+    using hF_hom unfolding top1_homotopic_on_def
+    sorry \<comment> \<open>Extract the homotopy F from the definition. May need unfolding.\<close>
+  \<comment> \<open>Step 2: Extend F to (A\<times>I) \<union> (X\<times>{1}) by setting F(x,1) = y0.\<close>
+  \<comment> \<open>Step 3: Tietze-extend coordinatewise to G: X\<times>I \<rightarrow> R^2.\<close>
+  \<comment> \<open>Step 4: U = G^{-1}(Y) open, contains (A\<times>I) \<union> (X\<times>{1}).\<close>
+  \<comment> \<open>Step 5: Tube lemma gives W \<supseteq> A open with W\<times>I \<subseteq> U.\<close>
+  \<comment> \<open>Step 6: Urysohn gives \<phi>: X \<rightarrow> [0,1] with \<phi>|A=0, \<phi>|X-W=1.\<close>
+  \<comment> \<open>Step 7: g(x) = G(x, \<phi>(x)) maps X \<rightarrow> Y, extends f, is nulhomotopic.\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
   HOL-Analysis is not imported, so frontier_def is unavailable.
