@@ -2290,7 +2290,59 @@ proof -
           \<comment> \<open>G is continuous on I\<times>I and maps into U. (The main technical burden.)\<close>
           have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?U ?TU G"
           proof -
-            have hG_range: "\<forall>st\<in>I_set \<times> I_set. G st \<in> ?U" sorry
+            have hG_range: "\<forall>st\<in>I_set \<times> I_set. G st \<in> ?U"
+            proof (intro ballI)
+              fix st assume hst: "st \<in> I_set \<times> I_set"
+              obtain s t where hst_eq: "st = (s,t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                using hst by (by100 blast)
+              show "G st \<in> ?U"
+              proof (cases "s \<le> 1/2")
+                case True
+                have hGeq: "G st = ?\<alpha> (t * (2*s))" using hG1[OF True] hst_eq by (by100 simp)
+                have "?\<alpha> (t * (2*s)) \<in> ?Sn"
+                  by (rule Sn_interpolation_in_Sn[OF hx0_Sn hq_Sn hx0_na])
+                hence "G st \<in> ?Sn" using hGeq by (by100 simp)
+                moreover have "G st \<noteq> ?p" using hGeq h\<alpha>_avoids by (by100 simp)
+                ultimately show ?thesis by (by100 blast)
+              next
+                case hgt: False show ?thesis
+                proof (cases "s \<le> 3/4")
+                  case True
+                  have h4sI: "4*s-2 \<in> I_set"
+                    using hgt True unfolding top1_unit_interval_def by (by100 simp)
+                  have hfs_U: "f (4*s-2) \<in> ?U"
+                  proof -
+                    have hfc: "top1_continuous_map_on I_set I_top ?U ?TU f"
+                      using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                    thus ?thesis using h4sI unfolding top1_continuous_map_on_def by (by100 blast)
+                  qed
+                  hence hfs_Sn: "f (4*s-2) \<in> ?Sn" and hfs_np: "f (4*s-2) \<noteq> ?p"
+                    by (by100 blast)+
+                  have hfs_na: "f (4*s-2) \<noteq> (\<lambda>i. - ?q i)"
+                  proof assume h: "f (4*s-2) = (\<lambda>i. - ?q i)"
+                    have "(\<lambda>i::nat. - ?q i) = ?p" by (rule ext) (by100 simp)
+                    thus False using h hfs_np by (by100 simp)
+                  qed
+                  have hng: "\<not>(s \<le> 1/2)" using hgt by (by100 blast)
+                  have hGeq: "G st = (\<lambda>i. ((1-t) * (f (4*s-2)) i + t * ?q i) /
+                      sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))"
+                    using hG2[OF hng True] hst_eq by (by100 simp)
+                  have "G st \<in> ?Sn" using hGeq
+                    Sn_interpolation_in_Sn[OF hfs_Sn hq_Sn hfs_na] by (by100 simp)
+                  moreover have "G st \<noteq> ?p" using hGeq
+                    Sn_interpolation_to_q_avoids_p[OF hfs_Sn hfs_np] by (by100 simp)
+                  ultimately show ?thesis by (by100 blast)
+                next
+                  case False
+                  have hng: "\<not>(s \<le> 3/4)" using False by (by100 blast)
+                  have hGeq: "G st = ?\<alpha> (t * (4 - 4*s))" using hG3[OF hng] hst_eq by (by100 simp)
+                  have "G st \<in> ?Sn" using hGeq
+                    Sn_interpolation_in_Sn[OF hx0_Sn hq_Sn hx0_na] by (by100 simp)
+                  moreover have "G st \<noteq> ?p" using hGeq h\<alpha>_avoids by (by100 simp)
+                  ultimately show ?thesis by (by100 blast)
+                qed
+              qed
+            qed
             have hG_cont_Sn: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?Sn ?TSn G" sorry
             have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
             have hG_img: "G ` (I_set \<times> I_set) \<subseteq> ?U"
@@ -2995,6 +3047,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
