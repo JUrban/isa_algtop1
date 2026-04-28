@@ -1616,6 +1616,9 @@ lemma Sn_interpolation_norm_pos:
   fixes x y :: "nat \<Rightarrow> real"
   assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
   shows "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0"
+  \<comment> \<open>Same as hN_pos in Sn_normalized_interpolation_path.
+     Proof: if all (1-t)x(j)+ty(j)=0 then x = -y (contradiction).
+     So \<exists>j. term \<noteq> 0, hence sum > 0, hence sqrt > 0.\<close>
   sorry
 
 lemma Sn_interpolation_in_Sn:
