@@ -2184,7 +2184,17 @@ proof -
     have hUV_sub: "?U \<inter> ?V \<subseteq> ?Sn" by (by100 blast)
     have hpath_to_r: "\<And>z. z \<in> ?U \<inter> ?V \<Longrightarrow>
         \<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r f"
-      sorry
+    proof -
+      fix z assume hz: "z \<in> ?U \<inter> ?V"
+      have hz_Sn: "z \<in> ?Sn" and hz_np: "z \<noteq> ?p" and hz_nq: "z \<noteq> ?q" using hz by (by100 blast)+
+      \<comment> \<open>The interpolation from z to any equator point e gives a path on S^n.
+         We need it to also avoid p and q. For target r with z \<noteq> -r: this works
+         because normalize((1-t)z+tr) = p or q forces z to have specific form
+         (all coords \<ge> 2 zero), but z \<in> S^n-{p,q} and n \<ge> 2 provides enough freedom.
+         If z = -r, use r' = e_2 instead, then chain r' \<rightarrow> r.\<close>
+      show "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r f"
+        sorry
+    qed
     then obtain fx where hfx: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x ?r fx"
       using hpath_to_r[OF hx] by (by100 blast)
     obtain fy where hfy: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) y ?r fy"
