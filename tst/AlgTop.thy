@@ -298,9 +298,10 @@ proof -
   proof -
     \<comment> \<open>The map x \<mapsto> (x, \<phi> x) : X \<rightarrow> X \<times> I is continuous (Theorem 18.4 + identity + \<phi>).\<close>
     \<comment> \<open>Bridge \<phi> from closed_interval_topology to I_top.\<close>
+    have hCI_eq_I: "top1_closed_interval 0 1 = I_set"
+      unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
     have h\<phi>_I: "top1_continuous_map_on X TX I_set I_top \<phi>"
-      using h\<phi> unfolding closed_interval_top_eq_I_top
-      sorry \<comment> \<open>top1_closed_interval 0 1 = I_set (proved above).\<close>
+      using h\<phi> unfolding closed_interval_top_eq_I_top hCI_eq_I .
     have hpair_cont: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
         (\<lambda>x. (x, \<phi> x))"
     proof -
@@ -308,8 +309,12 @@ proof -
       have hid: "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTX])
       have hpi1: "pi1 \<circ> (\<lambda>x. (x, \<phi> x)) = id" unfolding pi1_def by (rule ext) (by100 simp)
       have hpi2: "pi2 \<circ> (\<lambda>x. (x, \<phi> x)) = \<phi>" unfolding pi2_def by (rule ext) (by100 simp)
-      show ?thesis using iffD2[OF Theorem_18_4[OF hTX hTX hTI]]
-        sorry \<comment> \<open>hid[folded hpi1] and h\<phi>_I[folded hpi2] give the two projections.\<close>
+      have "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, \<phi> x)))"
+        unfolding hpi1 by (rule hid)
+      moreover have "top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, \<phi> x)))"
+        unfolding hpi2 by (rule h\<phi>_I)
+      ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTX hTX hTI]]
+        by (by100 blast)
     qed
     \<comment> \<open>g = G \<circ> (x \<mapsto> (x, \<phi>(x))): composition of continuous maps.\<close>
     have hcomp: "top1_continuous_map_on X TX UNIV ?TR2 (G \<circ> (\<lambda>x. (x, \<phi> x)))"
