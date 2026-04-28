@@ -62,7 +62,8 @@ text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A 
   tube lemma (Lemma_26_8), Urysohn separation (Theorem_33_1).\<close>
 lemma Lemma_62_1_homotopy_extension:
   fixes f :: "'a \<Rightarrow> real \<times> real"
-  assumes hXI_normal: "top1_normal_on (X \<times> I_set) (product_topology_on TX I_top)"
+  assumes hTX_top: "is_topology_on X TX"
+      and hXI_normal: "top1_normal_on (X \<times> I_set) (product_topology_on TX I_top)"
       and hA_closed: "closedin_on X TX A"
       and hY_open: "Y \<in> product_topology_on top1_open_sets top1_open_sets"
       and hf: "top1_continuous_map_on A (subspace_topology X TX A) Y
@@ -77,8 +78,7 @@ lemma Lemma_62_1_homotopy_extension:
 proof -
   let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
   let ?TY = "subspace_topology UNIV ?TR2 Y"
-  have hTX: "is_topology_on X TX"
-    sorry \<comment> \<open>From X\<times>I normal, X is normal, hence has a topology.\<close>
+  have hTX: "is_topology_on X TX" by (rule hTX_top)
   have hAX: "A \<subseteq> X" using hA_closed by (rule closedin_sub)
   \<comment> \<open>Step 1: Get nulhomotopy F: A \<times> I \<rightarrow> Y with F(a,0) = f(a), F(a,1) = y0.\<close>
   obtain y0 where hy0: "y0 \<in> Y"
