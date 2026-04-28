@@ -979,15 +979,17 @@ proof -
             by (rule connectedD[OF hf_intB_conn _ _ _ hf_intB_sub'])
           thus ?thesis using hf_intB_sub' by (by100 blast)
         qed
-        moreover have "\<not> (f ` (B - frontier B) \<subseteq> W2)"
-          sorry \<comment> \<open>f(B - frontier B) bounded (compact image), W2 unbounded.\<close>
-        ultimately have "f ` (B - frontier B) \<subseteq> W1" by (by100 blast)
-        moreover have "f x \<in> f ` (B - frontier B)" using hx_int by (by100 blast)
-        ultimately show "f x \<notin> W2" using hW(3) by (by100 blast)
+        show "f x \<notin> W2"
+          sorry \<comment> \<open>f(intB) in one component. If in W2, then by Borsuk, W2 = f(intB),
+             but W2 unbounded and f(B) bounded (compact image). Contradiction.
+             Key: needs Borsuk Lemma or bounded/unbounded argument.\<close>
       qed
       ultimately show "f x \<in> W1" by (by100 blast)
     qed
-    have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)" sorry
+    \<comment> \<open>The component containing f(intB) is open and contained in f(U).\<close>
+    have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)"
+      sorry \<comment> \<open>Uses Borsuk: if a \<in> W1-f(intB), take b \<in> W2, then {a,b} separated by f(B)
+         in S^2. But f(B) contractible (B convex), so it doesn't separate. Contradiction.\<close>
     have hW1_open: "W1 \<in> ?TR2"
     proof -
       \<comment> \<open>closure W2 = W2 \<union> C. Complement of closure is open. UNIV-(W2 \<union> C) = W1.\<close>
