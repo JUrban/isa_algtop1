@@ -11194,9 +11194,36 @@ proof -
   \<comment> \<open>Step 6: Restrict to large ball B \<supseteq> C \<union> g(A). Get h|B: B \<rightarrow> R^2 - {origin}.
      Compose with retraction R^2-{origin} \<rightarrow> Bd(B) to get retraction B \<rightarrow> Bd(B).
      This contradicts Theorem 55.2 (no retraction of disk onto circle).\<close>
-  \<comment> \<open>Therefore a and b must be in the same component.\<close>
+  \<comment> \<open>The proof follows Munkres: reduce to R^2, suppose 0 in bounded component,
+     use Lemma 62.1 (homotopy extension) to extend, get retraction contradiction.
+     The key missing ingredient is Lemma 62.1 (homotopy extension lemma):
+     If A closed in normal X, f: A \<rightarrow> Y nulhomotopic, Y open in R^n, then f extends to g: X \<rightarrow> Y.
+     This uses Tietze (Theorem_35_1), tube lemma (Lemma_26_8), Urysohn (Theorem_33_1),
+     all of which are available. Full proof would be ~400 lines.\<close>
   show ?thesis sorry
 qed
+
+text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
+  f: A \<rightarrow> Y continuous where Y open in R^n, and f nulhomotopic, then f extends to g: X \<rightarrow> Y.
+  This is the key tool for the Borsuk lemma. Uses Tietze extension (Theorem_35_1),
+  tube lemma (Lemma_26_8), Urysohn separation (Theorem_33_1).\<close>
+lemma Lemma_62_1_homotopy_extension:
+  fixes f :: "'a \<Rightarrow> real \<times> real"
+  assumes hXI_normal: "top1_normal_on (X \<times> I_set) (product_topology_on TX I_top)"
+      and hA_closed: "closedin_on X TX A"
+      and hY_open: "Y \<in> product_topology_on top1_open_sets top1_open_sets"
+      and hf: "top1_continuous_map_on A (subspace_topology X TX A) Y
+               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) f"
+      and hnul: "top1_nulhomotopic_on A (subspace_topology X TX A) Y
+               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) f"
+  shows "\<exists>g. top1_continuous_map_on X TX Y
+               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) g
+             \<and> (\<forall>x\<in>A. g x = f x)
+             \<and> top1_nulhomotopic_on X TX Y
+               (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) g"
+  sorry \<comment> \<open>Proof sketch: Tietze-extend the homotopy F: A\<times>I \<rightarrow> Y (coordinatewise to R^2),
+     then use tube lemma to find W \<supseteq> A with W\<times>I \<subseteq> G^{-1}(Y), then Urysohn for
+     \<phi>: X \<rightarrow> [0,1] with \<phi>|A=0, \<phi>|X-W=1, and g(x) = G(x,\<phi>(x)).\<close>
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
   HOL-Analysis is not imported, so frontier_def is unavailable.
