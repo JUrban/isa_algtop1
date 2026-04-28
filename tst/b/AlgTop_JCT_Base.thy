@@ -1642,7 +1642,119 @@ proof (intro allI notI)
       hence "x = p" using hxnq by (by100 simp)
       thus False using hxnp unfolding p_def by (by100 blast)
     qed
-    show ?thesis sorry \<comment> \<open>From Sn_normalized_interpolation_path hN_pos with y=q.\<close>
+    \<comment> \<open>Same argument as Sn_normalized_interpolation_path.hN_pos: x \<noteq> -q \<Longrightarrow> norm > 0.\<close>
+    have "\<exists>k\<le>n. (1-t) * x k + t * q k \<noteq> 0"
+    proof (rule ccontr)
+      assume "\<not>(\<exists>k\<le>n. (1-t) * x k + t * q k \<noteq> 0)"
+      hence hall: "\<And>k. k \<le> n \<Longrightarrow> (1-t) * x k + t * q k = 0" by (by100 blast)
+      have hq_zero_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> q i = 0" unfolding q_def by (by100 simp)
+      \<comment> \<open>Then x = -q by the hN_pos argument, contradicting hna.\<close>
+      have "x = (\<lambda>i. - q i)"
+      proof (cases "t = 0")
+        case True hence "\<And>k. k \<le> n \<Longrightarrow> x k = 0" using hall by (by100 simp)
+        hence "(\<Sum>j\<le>n. (x j)^2) = 0" by (by100 simp)
+        moreover have "(\<Sum>j\<le>n. (x j)^2) = 1" using hx unfolding top1_Sn_def by (by100 blast)
+        ultimately have False by (by100 linarith)
+        thus ?thesis by (by100 blast)
+      next
+        case ht0: False show ?thesis
+        proof (cases "t = 1")
+          case True
+          have hall_q: "\<And>k. k \<le> n \<Longrightarrow> q k = 0" using hall True by (by100 simp)
+          have "0 \<le> n" using assms by (by100 linarith)
+          hence "q 0 = 0" using hall_q[of 0] by (by100 simp)
+          hence False unfolding q_def by (by100 simp)
+          thus ?thesis by (by100 blast)
+        next
+          case False hence ht1: "1-t \<noteq> 0" by (by100 linarith)
+          have "\<And>k. k \<le> n \<Longrightarrow> x k = -(t/(1-t)) * q k"
+          proof -
+            fix k assume hk: "k \<le> n"
+            have "(1-t) * x k + t * q k = 0" by (rule hall[OF hk])
+            hence "(1-t) * x k = -(t * q k)" by (by100 linarith)
+            have "x k = (1-t) * x k / (1-t)" using ht1 by (by100 simp)
+            also have "\<dots> = -(t * q k) / (1-t)" using \<open>(1-t) * x k = -(t * q k)\<close> by (by100 simp)
+            finally show "x k = -(t/(1-t)) * q k" by (by100 simp)
+          qed
+          moreover have "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = -(t/(1-t)) * q i"
+          proof -
+            fix i assume hi: "i \<ge> Suc n"
+            have "x i = 0" using hx hi unfolding top1_Sn_def by (by100 blast)
+            moreover have "q i = 0" using hq_zero_above hi by (by100 blast)
+            ultimately show "x i = -(t/(1-t)) * q i" by (by100 simp)
+          qed
+          ultimately have hxi_all: "\<And>i. x i = -(t/(1-t)) * q i"
+          proof -
+            fix i
+            assume hle: "\<And>k. k \<le> n \<Longrightarrow> x k = -(t/(1-t)) * q k"
+               and hge: "\<And>j. j \<ge> Suc n \<Longrightarrow> x j = -(t/(1-t)) * q j"
+            show "x i = -(t/(1-t)) * q i"
+              using hle[of i] hge[of i] by (cases "i \<le> n") (by100 simp)+
+          qed
+          \<comment> \<open>From ||x||=1: (t/(1-t))^2 * ||q||^2 = 1, so (t/(1-t))^2=1, so t/(1-t)=\<plusminus>1.\<close>
+          have "x = (\<lambda>i. -(t/(1-t)) * q i)" by (rule ext) (rule hxi_all)
+          \<comment> \<open>Since hna: x \<noteq> -q, if t/(1-t)=1 then x=-q contradiction. So t/(1-t)=-1 and x=q.
+             But then ||x||=||q||=1 and (1-t)*q+t*q=q\<noteq>0, contradicting hall.\<close>
+          \<comment> \<open>||x||=1 and x=-(t/(1-t))*q with ||q||=1 gives (t/(1-t))^2=1.\<close>
+          have hx_norm_loc: "(\<Sum>j\<le>n. (x j)^2) = 1" using hx unfolding top1_Sn_def by (by100 blast)
+          have hq_norm_loc: "(\<Sum>j\<le>n. (q j)^2) = 1"
+          proof -
+            have "(\<Sum>j\<le>n. (q j)^2) = (\<Sum>j\<le>n. (if j = 0 then 1 else 0::real))"
+              unfolding q_def by (intro sum.cong) (by100 simp)+
+            also have "\<dots> = 1" using sum.delta'[of "{..n}" 0 "\<lambda>_. (1::real)"] assms by (by100 simp)
+            finally show ?thesis .
+          qed
+          have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<le>n. (-(t/(1-t)) * q j)^2)"
+            using hxi_all by (intro sum.cong) (by100 simp)+
+          also have "\<dots> = (\<Sum>j\<le>n. (t/(1-t))^2 * (q j)^2)"
+            using power_mult_distrib[of "-(t/(1-t))" _ 2]
+            by (intro sum.cong) (by100 simp)+
+          also have "\<dots> = (t/(1-t))^2 * (\<Sum>j\<le>n. (q j)^2)"
+            by (rule sum_distrib_left[symmetric])
+          finally have "(t/(1-t))^2 = 1" using hx_norm_loc hq_norm_loc by (by100 simp)
+          have h_sq: "(\<bar>t/(1-t)\<bar>)^2 = (1::real)^2"
+            using \<open>(t/(1-t))^2 = 1\<close> power2_abs[of "t/(1-t)"] by (by100 simp)
+          have "\<bar>t/(1-t)\<bar> = (1::real)"
+            by (rule power2_eq_imp_eq[OF h_sq]) (by100 simp)+
+          hence "t/(1-t) = 1 \<or> t/(1-t) = -1" by (by100 linarith)
+          thus ?thesis
+          proof
+            assume ht_eq: "t/(1-t) = 1"
+            have "\<And>i. x i = -q i"
+            proof -
+              fix i have "x i = -(t/(1-t)) * q i" by (rule hxi_all)
+              thus "x i = -q i" using ht_eq by (by100 simp)
+            qed
+            thus ?thesis by (rule ext)
+          next
+            assume ht_eq: "t/(1-t) = -1"
+            have "\<And>i. x i = q i"
+            proof -
+              fix i have "x i = -(t/(1-t)) * q i" by (rule hxi_all)
+              thus "x i = q i" using ht_eq by (by100 simp)
+            qed
+            hence "x = q" by (rule ext)
+            hence "(1-t) * q 0 + t * q 0 = 0" using hall[of 0] assms by (by100 simp)
+            hence "q 0 = 0" by (by100 algebra)
+            thus ?thesis unfolding q_def by (by100 simp)
+          qed
+        qed
+      qed
+      thus False using hna by (by100 blast)
+    qed
+    then obtain k where hk: "k \<le> n" "(1-t) * x k + t * q k \<noteq> 0" by (by100 blast)
+    have "((1-t) * x k + t * q k)^2 > 0" using hk(2) by (by100 simp)
+    moreover have "(\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2) \<ge> ((1-t) * x k + t * q k)^2"
+    proof -
+      have "(\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2) =
+            ((1-t) * x k + t * q k)^2 + (\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * q j)^2)"
+        using sum.remove[of "{..n}" k] hk(1) by (by100 simp)
+      moreover have "(\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * q j)^2) \<ge> 0"
+        by (rule sum_nonneg) (by100 simp)
+      ultimately show ?thesis by (by100 linarith)
+    qed
+    ultimately have "(\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2) > 0" by (by100 linarith)
+    thus ?thesis by (by100 simp)
   qed
   let ?N = "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * q j)^2)"
   \<comment> \<open>From \<gamma>(t) = p: for each i, ((1-t)*x(i) + t*q(i)) / N = p(i).\<close>
@@ -1666,10 +1778,25 @@ proof (intro allI notI)
   \<comment> \<open>Case 2: t \<noteq> 1. Then x(i) = 0 for i \<ge> 1. So x = (x(0), 0, 0, ...).
      From x \<in> S^n: x(0)^2 = 1, so x = p or x = q. Since x \<noteq> p: x = q.
      But then \<gamma>(t) = normalize((1-t)q + tq) = normalize(q) = q \<noteq> p. Contradiction.\<close>
+  have hq_Sn: "q \<in> top1_Sn n" unfolding q_def top1_Sn_def
+  proof (intro CollectI conjI allI impI)
+    fix i :: nat assume "i \<ge> Suc n"
+    thus "(if i = 0 then - 1::real else 0) = 0" by (by100 simp)
+  next
+    have "(\<Sum>i\<le>n. (if i = 0 then - 1::real else 0)\<^sup>2) = (\<Sum>i\<le>n. (if i = 0 then 1 else 0::real))"
+      by (intro sum.cong) (by100 simp)+
+    also have "\<dots> = 1" using sum.delta'[of "{..n}" 0 "\<lambda>_. (1::real)"] assms by (by100 simp)
+    finally show "(\<Sum>i\<le>n. (if i = 0 then - 1::real else 0)\<^sup>2) = 1" .
+  qed
+  have hq_norm: "(\<Sum>j\<le>n. (q j)^2) = 1" using hq_Sn unfolding top1_Sn_def by (by100 blast)
   show False
   proof (cases "t = 1")
     case True
-    hence "?\<gamma> = q" sorry
+    have hN1: "?N = 1" using True hq_norm by (by100 simp)
+    have "?\<gamma> = q"
+    proof (rule ext)
+      fix i show "?\<gamma> i = q i" using True hN1 by (by100 simp)
+    qed
     hence "p = q" using heq by (by100 simp)
     hence "p 0 = q 0" by (by100 simp)
     thus False unfolding p_def q_def by (by100 simp)
@@ -1680,14 +1807,33 @@ proof (intro allI notI)
     have hx_zero_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0"
       using hx unfolding top1_Sn_def by (by100 blast)
     have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1" using hx unfolding top1_Sn_def by (by100 blast)
-    have "(\<Sum>j\<le>n. (x j)^2) = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)" sorry
-    also have "(\<Sum>j\<in>{1..n}. (x j)^2) = 0"
-      sorry
-    finally have "x 0 ^ 2 = 1" using hx_norm by (by100 linarith)
+    have "x 0 ^ 2 = 1"
+    proof -
+      have "(\<Sum>j\<le>n. (x j)^2) = (x 0)^2"
+      proof -
+        have "\<And>j. j \<in> {1..n} \<Longrightarrow> (x j)^2 = 0"
+        proof -
+          fix j assume "j \<in> {1..n}"
+          hence "j \<ge> 1" by (by100 simp)
+          hence "x j = 0" by (rule hxi0)
+          thus "(x j)^2 = 0" by (by100 simp)
+        qed
+        hence hzero: "(\<Sum>j\<in>{1..n}. (x j)^2) = 0" by (intro sum.neutral) (by100 blast)
+        have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<in>{0..n}. (x j)^2)"
+          using atLeast0AtMost by (by100 metis)
+        also have "\<dots> = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)"
+          using sum.atLeast_Suc_atMost[of 0 n "\<lambda>j. (x j)^2"] assms by (by100 simp)
+        finally have "(\<Sum>j\<le>n. (x j)^2) = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)" .
+        thus ?thesis using hzero by (by100 simp)
+      qed
+      thus ?thesis using hx_norm by (by100 linarith)
+    qed
     hence "x 0 = 1 \<or> x 0 = -1"
     proof -
       assume "x 0 ^ 2 = 1"
-      hence "\<bar>x 0\<bar> = 1" sorry
+      have "(\<bar>x 0\<bar>)^2 = 1" using \<open>x 0 ^ 2 = 1\<close> power2_abs[of "x 0"] by (by100 simp)
+      hence "\<bar>x 0\<bar> = 1"
+        using power2_eq_imp_eq[of "\<bar>x 0\<bar>" 1] by (by100 simp)
       thus ?thesis by (by100 linarith)
     qed
     thus False
@@ -1720,13 +1866,27 @@ proof (intro allI notI)
           thus ?thesis unfolding q_def using False by (by100 simp)
         qed
       qed
-      hence "?\<gamma> = q" sorry
+      have hinterp_q: "\<And>i. (1-t) * x i + t * q i = q i"
+      proof -
+        fix i have "(1-t) * q i + t * q i = ((1-t) + t) * q i" by (by100 algebra)
+        also have "\<dots> = q i" by (by100 simp)
+        finally show "(1-t) * x i + t * q i = q i" using hxq by (by100 simp)
+      qed
+      have hNq: "?N = sqrt (\<Sum>j\<le>n. (q j)^2)" using hinterp_q
+        by (intro arg_cong[of _ _ sqrt] sum.cong) (by100 simp)+
+      also have "\<dots> = 1" using hq_norm by (by100 simp)
+      finally have hN_1: "?N = 1" .
+      have "?\<gamma> = q"
+      proof (rule ext)
+        fix i show "?\<gamma> i = q i" using hinterp_q hN_1 by (by100 simp)
+      qed
       hence "p = q" using heq by (by100 simp)
       hence "p 0 = q 0" by (by100 simp)
     thus False unfolding p_def q_def by (by100 simp)
     qed
   qed
 qed
+
 
 theorem Theorem_59_3:
   assumes "n \<ge> 2"
