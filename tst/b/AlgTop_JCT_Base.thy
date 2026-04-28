@@ -2280,6 +2280,13 @@ proof -
                else if s \<le> 3/4 then (\<lambda>i. ((1-t) * (f (4*s-2)) i + t * ?q i) /
                    sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))
                else ?\<alpha> (t * (4 - 4*s)))"
+          have hG1: "\<And>s t. s \<le> 1/2 \<Longrightarrow> G (s, t) = ?\<alpha> (t * (2*s))"
+            unfolding G_def by (by100 simp)
+          have hG2: "\<And>s t. \<not>(s \<le> 1/2) \<Longrightarrow> s \<le> 3/4 \<Longrightarrow> G (s, t) = (\<lambda>i. ((1-t) * (f (4*s-2)) i + t * ?q i) /
+              sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))"
+            unfolding G_def by (by100 simp)
+          have hG3: "\<And>s t. \<not>(s \<le> 3/4) \<Longrightarrow> G (s, t) = ?\<alpha> (t * (4 - 4*s))"
+            unfolding G_def by (by100 simp)
           \<comment> \<open>G is continuous on I\<times>I and maps into U. (The main technical burden.)\<close>
           have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?U ?TU G" sorry
           \<comment> \<open>G boundaries.\<close>
@@ -2303,7 +2310,7 @@ proof -
               case True
               have hG: "G (s, 0) = x0"
               proof -
-                have "G (s, 0) = ?\<alpha> (0 * (2*s))" using True unfolding G_def sorry
+                have "G (s, 0) = ?\<alpha> (0 * (2*s))" using hG1[OF True, of 0] by (by100 simp)
                 thus ?thesis using h\<alpha>0_eq by (by100 simp)
               qed
               have "top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s
@@ -2319,8 +2326,12 @@ proof -
                   using hf_Sn_I[OF h4sI] unfolding top1_Sn_def by (by100 blast)
                 have hG: "G (s, 0) = f (4*s-2)"
                 proof -
-                  have "G (s, 0) = (\<lambda>i. (f (4*s-2)) i / sqrt (\<Sum>j\<le>n. ((f (4*s-2)) j)^2))"
-                    using hs_gt True unfolding G_def sorry
+                  have hng: "\<not>(s \<le> 1/2)" using hs_gt by (by100 linarith)
+                  have "G (s, 0) = (\<lambda>i. ((1-(0::real)) * (f (4*s-2)) i + 0 * ?q i) /
+                      sqrt (\<Sum>j\<le>n. ((1-0) * (f (4*s-2)) j + 0 * ?q j)^2))"
+                    using hG2[OF hng True, of 0] by (by100 simp)
+                  hence "G (s, 0) = (\<lambda>i. (f (4*s-2)) i / sqrt (\<Sum>j\<le>n. ((f (4*s-2)) j)^2))"
+                    by (by100 simp)
                   also have "\<dots> = (\<lambda>i. (f (4*s-2)) i)" using hfn by (by100 simp)
                   finally show ?thesis by (by100 simp)
                 qed
@@ -2334,7 +2345,9 @@ proof -
                 thus ?thesis using hG by (by100 simp)
               next
                 case False hence hs_gt2: "s > 3/4" by (by100 linarith)
-                have hG: "G (s, 0) = x0" using hs_gt hs_gt2 h\<alpha>0_eq unfolding G_def sorry
+                have hng: "\<not>(s \<le> 3/4)" using hs_gt2 by (by100 linarith)
+                have "G (s, 0) = ?\<alpha> (0 * (4 - 4*s))" using hG3[OF hng, of 0] by (by100 simp)
+                hence hG: "G (s, 0) = x0" using h\<alpha>0_eq by (by100 simp)
                 have "2*s-1 > 1/2" using hs_gt2 by (by100 linarith)
                 hence "top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)) s
                   = x0" using hs_gt unfolding top1_path_product_def top1_constant_path_def by (by100 simp)
@@ -2348,7 +2361,7 @@ proof -
           have hG_left: "\<forall>t\<in>I_set. G (0, t) = x0"
           proof (intro ballI)
             fix t assume "t \<in> I_set"
-            have "G (0, t) = ?\<alpha> (t * 0)" unfolding G_def sorry
+            have "G (0, t) = ?\<alpha> (t * 0)" using hG1[of 0 t] by (by100 simp)
             also have "t * 0 = (0::real)" by (by100 simp)
             also have "?\<alpha> 0 = x0" using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
             finally show "G (0, t) = x0" .
@@ -2356,7 +2369,8 @@ proof -
           have hG_right: "\<forall>t\<in>I_set. G (1, t) = x0"
           proof (intro ballI)
             fix t assume "t \<in> I_set"
-            have h1: "G (1, t) = ?\<alpha> (t * (4 - 4))" unfolding G_def sorry
+            have hng: "\<not>((1::real) \<le> 3/4)" by (by100 simp)
+            have h1: "G (1, t) = ?\<alpha> (t * (4 - 4))" using hG3[OF hng, of t] by (by100 simp)
             have h2: "t * (4 - 4) = (0::real)" by (by100 simp)
             have h3: "?\<alpha> 0 = x0" using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
             show "G (1, t) = x0" using h1 h2 h3 by (by100 simp)
@@ -2906,6 +2920,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
