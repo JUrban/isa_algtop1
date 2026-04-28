@@ -1555,7 +1555,19 @@ proof -
       using hfst_hom hsnd_hom by (cases "?\<Phi> c", cases "?\<Phi> d") (by100 auto)
   qed
   \<comment> \<open>Step 2: Injectivity. If p\<circ>f \<simeq> const and q\<circ>f \<simeq> const, combine homotopies componentwise.\<close>
-  have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))" sorry
+  have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))"
+  proof (rule inj_onI)
+    fix c d assume hc: "c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+        and hd: "d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+        and heq: "?\<Phi> c = ?\<Phi> d"
+    obtain f where hf_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) f"
+        and hc_eq: "c = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    obtain g where hg_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) g"
+        and hd_eq: "d = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k}"
+      using hd unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    show "c = d" sorry
+  qed
   \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
   have h\<Phi>_surj: "?\<Phi> ` (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))
       = (top1_fundamental_group_carrier X TX x0) \<times>
