@@ -11755,7 +11755,92 @@ proof -
       hence "f x \<in> W1 \<or> f x \<in> W2" using hW(4) by (by100 blast)
       \<comment> \<open>f(x) is in bounded component: f(B) is bounded (compact image), so f(x) can't be in W2.\<close>
       moreover have "f x \<notin> W2"
-        sorry \<comment> \<open>f(x) \<in> f(B) which is bounded. W2 unbounded.\<close>
+      proof -
+        \<comment> \<open>f(B - frontier B) is connected, bounded, and disjoint from f(frontier B).
+           Hence entirely in one component. Since bounded, in W1 not W2.\<close>
+        have hIntB_conn: "connected (B - frontier B)"
+          sorry \<comment> \<open>Open ball in R^2 is convex hence connected. Uses B_def.\<close>
+        have hf_intB_conn: "connected (f ` (B - frontier B))"
+        proof -
+          have "continuous_on (B - frontier B) f"
+            sorry \<comment> \<open>f continuous on U (from assms(2)), B - frontier B \<subseteq> B \<subseteq> U.\<close>
+          thus ?thesis using connected_continuous_image[OF _ hIntB_conn] by (by100 blast)
+        qed
+        have hf_intB_sub: "f ` (B - frontier B) \<subseteq> UNIV - f ` frontier B"
+        proof
+          fix y assume "y \<in> f ` (B - frontier B)"
+          then obtain z where hz: "z \<in> B - frontier B" and hfz: "y = f z" by (by100 blast)
+          have "z \<in> U" using hz hBsub by (by100 blast)
+          show "y \<in> UNIV - f ` frontier B"
+          proof (rule DiffI)
+            show "y \<in> UNIV" by (by100 simp)
+            show "y \<notin> f ` frontier B"
+            proof
+              assume "y \<in> f ` frontier B"
+              then obtain w where hw: "w \<in> frontier B" and hfw: "y = f w" by (by100 blast)
+              have "w \<in> U" using hw hfr_sub_U by (by100 blast)
+              have "f z = f w" using hfz hfw by (by100 simp)
+              hence "z = w" using assms(3) \<open>z \<in> U\<close> \<open>w \<in> U\<close> unfolding inj_on_def by (by100 blast)
+              thus False using hz hw by (by100 blast)
+            qed
+          qed
+        qed
+        hence hf_intB_sub': "f ` (B - frontier B) \<subseteq> W1 \<union> W2" using hW(4) by (by100 blast)
+        \<comment> \<open>f(B - frontier B) connected \<subseteq> W1 \<union> W2, W1 \<inter> W2 = {}. So in one component.\<close>
+        have "f ` (B - frontier B) \<subseteq> W1 \<or> f ` (B - frontier B) \<subseteq> W2"
+        proof -
+          have hW2_open: "W2 \<in> ?TR2"
+          proof -
+            have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+              using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                    top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+            have hW1_closed': "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W1)"
+              by (rule closure_on_closed[OF hTR2]) (by100 simp)
+            hence "UNIV - closure_on UNIV ?TR2 W1 \<in> ?TR2"
+              unfolding closedin_on_def by (by100 blast)
+            moreover have "UNIV - closure_on UNIV ?TR2 W1 = W2"
+            proof -
+              have "W1 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+              hence "UNIV - (W1 \<union> f ` frontier B) = W2"
+                using hW(3) hW(4) by (by100 blast)
+              thus ?thesis unfolding hW1_cl .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "open W1"
+          proof -
+            have "W2 \<in> ?TR2" by (rule hW2_open)
+            have "W1 \<in> ?TR2"
+            proof -
+              have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+                using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                      top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+              have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W2)"
+                by (rule closure_on_closed[OF hTR2]) (by100 simp)
+              hence "UNIV - closure_on UNIV ?TR2 W2 \<in> ?TR2"
+                unfolding closedin_on_def by (by100 blast)
+              moreover have "W2 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+              hence "UNIV - (W2 \<union> f ` frontier B) = W1"
+                using hW(3) hW(4) by (by100 blast)
+              hence "UNIV - closure_on UNIV ?TR2 W2 = W1" unfolding hW2_cl .
+              ultimately show ?thesis by (by100 simp)
+            qed
+            thus ?thesis using product_topology_on_open_sets_real2
+              unfolding top1_open_sets_def by (by100 simp)
+          qed
+          moreover have "open W2" using hW2_open product_topology_on_open_sets_real2
+            unfolding top1_open_sets_def by (by100 simp)
+          moreover have "W1 \<inter> W2 \<inter> f ` (B - frontier B) = {}" using hW(3) by (by100 blast)
+          ultimately have "W1 \<inter> f ` (B - frontier B) = {} \<or> W2 \<inter> f ` (B - frontier B) = {}"
+            by (rule connectedD[OF hf_intB_conn _ _ _ hf_intB_sub'])
+          thus ?thesis using hf_intB_sub' by (by100 blast)
+        qed
+        moreover have "\<not> (f ` (B - frontier B) \<subseteq> W2)"
+          sorry \<comment> \<open>f(B - frontier B) bounded (compact image), W2 unbounded.\<close>
+        ultimately have "f ` (B - frontier B) \<subseteq> W1" by (by100 blast)
+        moreover have "f x \<in> f ` (B - frontier B)" using hx_int by (by100 blast)
+        ultimately show "f x \<notin> W2" using hW(3) by (by100 blast)
+      qed
       ultimately show "f x \<in> W1" by (by100 blast)
     qed
     have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)" sorry
