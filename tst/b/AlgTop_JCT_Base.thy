@@ -3787,18 +3787,23 @@ proof (rule ccontr)
     show "?g (?neg x) = (- fst (?g x), - snd (?g x))"
       by (simp del: minus_diff_eq add: prod_eq_iff hnegneg h3 hd1 hd2)
   qed
-  \<comment> \<open>Restrict g to the equator S^1: h = g|_{S^1}. h is antipode-preserving S^1 \<rightarrow> S^1.\<close>
-  \<comment> \<open>By Theorem 57.1, h is not nulhomotopic. But g extends h over the upper hemisphere
-     which is homeomorphic to B^2, so h is nulhomotopic. Contradiction.\<close>
-  have hg_not_nulhomo: "\<not> top1_nulhomotopic_on ?S2
-      (subspace_topology UNIV (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
-      top1_S1 top1_S1_topology ?g" sorry
-  have hg_nulhomo: "top1_nulhomotopic_on ?S2
-      (subspace_topology UNIV (product_topology_on top1_open_sets
-        (product_topology_on top1_open_sets top1_open_sets)) ?S2)
-      top1_S1 top1_S1_topology ?g" sorry
-  show False using hg_not_nulhomo hg_nulhomo by contradiction
+  \<comment> \<open>Restrict g to equator S^1 \<hookrightarrow> S^2: h(x,y) = g(x,y,0). h is antipode-preserving S^1\<rightarrow>S^1.\<close>
+  let ?embed = "\<lambda>(x::real, y::real). (x, y, 0::real)"
+  let ?h = "?g \<circ> ?embed"
+  \<comment> \<open>h is continuous S^1 \<rightarrow> S^1.\<close>
+  have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
+    sorry
+  \<comment> \<open>h is antipode-preserving.\<close>
+  have hh_anti: "top1_antipode_preserving_S1 ?h"
+    sorry
+  \<comment> \<open>By Theorem 57.1: h is not nulhomotopic.\<close>
+  have hh_not_nul: "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
+    by (rule Theorem_57_1[OF hh_cont hh_anti])
+  \<comment> \<open>But h IS nulhomotopic: g extends h over the upper hemisphere E \<cong> B^2.
+     Since E is contractible, g|E \<simeq> const. Restricting to S^1 = \<partial>E gives h \<simeq> const.\<close>
+  have hh_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
+    sorry
+  show False using hh_not_nul hh_nul by contradiction
 qed
 
 
