@@ -3853,7 +3853,7 @@ proof (rule ccontr)
     sorry
   \<comment> \<open>h is antipode-preserving.\<close>
   have hh_anti: "top1_antipode_preserving_S1 ?h"
-    sorry \<comment> \<open>g(-p)=-g(p) for all p, so h(-x,-y)=-h(x,y). Algebraic.\<close>
+    sorry \<comment> \<open>Algebraic: diff(-p)=-diff(p), norm(-p)=norm(p), g(-p)=-g(p).\<close>
   \<comment> \<open>By Theorem 57.1: h is not nulhomotopic.\<close>
   have hh_not_nul: "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
     by (rule Theorem_57_1[OF hh_cont hh_anti])
