@@ -2343,7 +2343,31 @@ proof -
                 qed
               qed
             qed
-            have hG_cont_Sn: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?Sn ?TSn G" sorry
+            have hG_cont_Sn: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?Sn ?TSn G"
+            proof -
+              have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+                unfolding II_topology_def by (rule product_topology_on_is_topology_on)
+                  (rule top1_unit_interval_topology_is_topology_on)+
+              \<comment> \<open>G maps into S^n.\<close>
+              have hG_Sn: "\<forall>st\<in>I_set \<times> I_set. G st \<in> ?Sn"
+                using hG_range by (by100 blast)
+              \<comment> \<open>Split I\<times>I into LEFT = {s \<le> 1/2} and RIGHT = {s \<ge> 1/2}.\<close>
+              let ?L = "{(s::real,t::real). 0 \<le> s \<and> s \<le> 1/2 \<and> 0 \<le> t \<and> t \<le> 1}"
+              let ?R = "{(s::real,t::real). 1/2 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
+              \<comment> \<open>Both closed in II_topology and cover I\<times>I.\<close>
+              have hL_closed: "closedin_on (I_set \<times> I_set) II_topology ?L" sorry
+              have hR_closed: "closedin_on (I_set \<times> I_set) II_topology ?R" sorry
+              have hLR_cover: "?L \<union> ?R = I_set \<times> I_set"
+                unfolding top1_unit_interval_def sorry
+              \<comment> \<open>G on LEFT = \<alpha>(t\<cdot>2s), continuous via composition.\<close>
+              have hG_L: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L) ?Sn ?TSn G"
+                sorry
+              \<comment> \<open>G on RIGHT: paste middle {1/2 \<le> s \<le> 3/4} and far-right {s \<ge> 3/4}.\<close>
+              have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?Sn ?TSn G"
+                sorry
+              show ?thesis
+                by (rule pasting_lemma_two_closed[OF hTII hTSn_h hL_closed hR_closed hLR_cover hG_Sn hG_L hG_R])
+            qed
             have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
             have hG_img: "G ` (I_set \<times> I_set) \<subseteq> ?U"
             proof (intro subsetI) fix w assume "w \<in> G ` (I_set \<times> I_set)"
@@ -3047,6 +3071,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
