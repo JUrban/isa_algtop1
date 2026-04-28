@@ -1423,8 +1423,10 @@ proof -
             proof -
               have h_sq: "(\<bar>t/(1-t)\<bar>)^2 = (1::real)^2"
                 using hratio power2_abs[of "t/(1-t)"] by (by100 simp)
-              hence "\<bar>t/(1-t)\<bar> = (1::real)"
-                using power2_eq_imp_eq[OF h_sq] by (by100 simp)
+              have h_abs_nn: "(0::real) \<le> \<bar>t/(1-t)\<bar>" by (by100 simp)
+              have h_1_nn: "(0::real) \<le> 1" by (by100 simp)
+              have "\<bar>t/(1-t)\<bar> = (1::real)"
+                by (rule power2_eq_imp_eq[OF h_sq h_abs_nn h_1_nn])
               thus ?thesis by (by100 linarith)
             qed
             thus ?thesis
@@ -1478,8 +1480,34 @@ proof -
     qed
   qed
   \<comment> \<open>Step 2: \<gamma> maps into S^n.\<close>
+  have hx_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0" using hx unfolding top1_Sn_def by (by100 blast)
+  have hy_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> y i = 0" using hy unfolding top1_Sn_def by (by100 blast)
   have h\<gamma>_Sn: "\<forall>t. \<gamma> t \<in> top1_Sn n"
-    sorry
+  proof (intro allI)
+    fix t :: real
+    have hNt: "?N t > 0" using hN_pos by (by100 blast)
+    show "\<gamma> t \<in> top1_Sn n" unfolding top1_Sn_def \<gamma>_def
+    proof (intro CollectI conjI allI impI)
+      fix i assume "i \<ge> Suc n"
+      hence "x i = 0" "y i = 0" using hx_zero hy_zero by (by100 blast)+
+      thus "((1 - t) * x i + t * y i) / ?N t = 0" by (by100 simp)
+    next
+      have hstep1: "\<And>j. (((1-t) * x j + t * y j) / ?N t)^2
+          = ((1-t) * x j + t * y j)^2 / (?N t)^2"
+        using power_divide by (by100 blast)
+      have "(\<Sum>j\<le>n. (((1 - t) * x j + t * y j) / ?N t)\<^sup>2)
+          = (\<Sum>j\<le>n. ((1 - t) * x j + t * y j)\<^sup>2 / (?N t)\<^sup>2)"
+        using hstep1 by (intro sum.cong) (by100 simp)+
+      also have "\<dots> = (\<Sum>j\<le>n. ((1 - t) * x j + t * y j)\<^sup>2) / (?N t)\<^sup>2"
+        using sum_divide_distrib[symmetric] by (by100 simp)
+      also have "(?N t)\<^sup>2 = (\<Sum>j\<le>n. ((1 - t) * x j + t * y j)\<^sup>2)"
+        using hNt by (by100 simp)
+      also have "(\<Sum>j\<le>n. ((1 - t) * x j + t * y j)\<^sup>2) /
+          (\<Sum>j\<le>n. ((1 - t) * x j + t * y j)\<^sup>2) = 1"
+        using hNt by (by100 simp)
+      finally show "(\<Sum>j\<le>n. (((1 - t) * x j + t * y j) / ?N t)\<^sup>2) = 1" .
+    qed
+  qed
   \<comment> \<open>Step 3: \<gamma>(0) = x and \<gamma>(1) = y.\<close>
   have h\<gamma>0: "\<gamma> 0 = x"
   proof (rule ext)
