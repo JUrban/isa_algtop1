@@ -361,7 +361,44 @@ proof -
     qed
     \<comment> \<open>H maps X\<times>I to Y (range check).\<close>
     have hH_range: "\<forall>p\<in>X \<times> I_set. H p \<in> Y"
-      sorry \<comment> \<open>(x,(1-t)\<phi>(x)+t) \<in> U_pre: case x\<in>W or x\<notin>W.\<close>
+    proof (intro ballI)
+      fix p assume hp: "p \<in> X \<times> I_set"
+      obtain x t where hxt: "p = (x, t)" "x \<in> X" "t \<in> I_set" using hp by (by100 blast)
+      have ht01: "0 \<le> t" "t \<le> 1" using hxt(3) unfolding top1_unit_interval_def by (by100 auto)+
+      have h\<phi>01: "0 \<le> \<phi> x" "\<phi> x \<le> 1"
+        using h\<phi> hxt(2) sorry
+      have hs_I: "(1-t) * \<phi> x + t \<in> I_set"
+      proof -
+        have "0 \<le> (1-t) * \<phi> x" using ht01 h\<phi>01 by (intro mult_nonneg_nonneg) (by100 linarith)+
+        hence "0 \<le> (1-t) * \<phi> x + t" using ht01 by (by100 linarith)
+        moreover have "(1-t) * \<phi> x + t \<le> 1"
+        proof -
+          have "1 - t \<ge> 0" using ht01 by (by100 linarith)
+          have "(1-t) * \<phi> x \<le> (1-t)"
+          proof -
+            have "(1-t) * \<phi> x \<le> (1-t) * 1"
+              using h\<phi>01 \<open>1-t \<ge> 0\<close> by (intro mult_left_mono) (by100 linarith)+
+            thus ?thesis by (by100 simp)
+          qed
+          thus ?thesis by (by100 linarith)
+        qed
+        ultimately show ?thesis unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      have "(x, (1-t) * \<phi> x + t) \<in> ?U_pre"
+      proof (cases "x \<in> W")
+        case True thus ?thesis using hWI_U hs_I by (by100 blast)
+      next
+        case False hence "\<phi> x = 1" using h\<phi>XW hxt(2) by (by100 blast)
+        hence "(1-t) * \<phi> x + t = 1" by (by100 simp)
+        hence "(x, (1-t) * \<phi> x + t) = (x, 1::real)" by (by100 simp)
+        moreover have "(x, 1::real) \<in> ?S" using hxt(2) by (by100 blast)
+        ultimately show ?thesis using hU_contains by (by100 blast)
+      qed
+      have "H p = G (x, (1-t) * \<phi> x + t)" unfolding H_def hxt(1) by (by100 simp)
+      moreover have "G (x, (1-t) * \<phi> x + t) \<in> Y"
+        using \<open>(x, (1-t) * \<phi> x + t) \<in> ?U_pre\<close> by (by100 blast)
+      ultimately show "H p \<in> Y" by (by100 simp)
+    qed
     \<comment> \<open>H continuous: composition.\<close>
     have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y ?TY H"
       sorry \<comment> \<open>H = G \<circ> (x,t) \<mapsto> (x, (1-t)\<phi>(x)+t). The inner map continuous by Theorem_18_4.\<close>
