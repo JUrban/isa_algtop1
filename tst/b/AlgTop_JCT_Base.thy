@@ -2184,10 +2184,23 @@ proof -
          3-strip with \<alpha>(t) = normalize((1-t)x0+tq) on both sides gives:
          f \<simeq>_{path} \<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) \<simeq> const_{x0}.\<close>
       have hx0_Sn: "x0 \<in> ?Sn" and hx0_np: "x0 \<noteq> ?p" using hx0 by (by100 blast)+
-      have hq_Sn: "?q \<in> ?Sn" sorry
-      have hq_np: "?q \<noteq> ?p" sorry
+      have hq_Sn: "?q \<in> ?Sn" unfolding top1_Sn_def
+      proof (intro CollectI conjI allI impI)
+        fix i :: nat assume "i \<ge> Suc n" thus "?q i = 0" by (by100 simp)
+      next
+        have "(\<Sum>i\<le>n. (?q i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 0 then 1 else 0::real))"
+          by (intro sum.cong) (by100 simp)+
+        also have "\<dots> = 1" using sum.delta'[of "{..n}" 0 "\<lambda>_. (1::real)"] assms by (by100 simp)
+        finally show "(\<Sum>i\<le>n. (?q i)\<^sup>2) = 1" .
+      qed
+      have hq_np: "?q \<noteq> ?p"
+        by (rule) (use fun_cong[of ?q ?p 0] in \<open>by100 simp\<close>)
       have hq_U: "?q \<in> ?U" using hq_Sn hq_np by (by100 blast)
-      have hx0_na: "x0 \<noteq> (\<lambda>i. - ?q i)" sorry \<comment> \<open>x0 \<noteq> -q = p, but x0 \<noteq> p.\<close>
+      have hx0_na: "x0 \<noteq> (\<lambda>i. - ?q i)"
+      proof assume h: "x0 = (\<lambda>i. - ?q i)"
+        have "(\<lambda>i::nat. - ?q i) = ?p" by (rule ext) (by100 simp)
+        thus False using h hx0_np by (by100 simp)
+      qed
       \<comment> \<open>\<alpha>: path from x0 to q in U (via interpolation).\<close>
       let ?\<alpha> = "\<lambda>t i. ((1-t) * x0 i + t * ?q i) / sqrt (\<Sum>j\<le>n. ((1-t) * x0 j + t * ?q j)^2)"
       have h\<alpha>_path_Sn: "top1_is_path_on ?Sn ?TSn x0 ?q ?\<alpha>"
@@ -2195,20 +2208,58 @@ proof -
       have h\<alpha>_avoids: "\<forall>t. ?\<alpha> t \<noteq> ?p"
         by (rule Sn_interpolation_to_q_avoids_p[OF hx0_Sn hx0_np])
       \<comment> \<open>\<alpha> is a path in U.\<close>
-      have h\<alpha>_U: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x0 ?q ?\<alpha>" sorry
+      have h\<alpha>_U: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x0 ?q ?\<alpha>"
+      proof -
+        have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
+        have h_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<alpha>"
+          using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+        have h_img: "?\<alpha> ` I_set \<subseteq> ?U"
+        proof (intro subsetI)
+          fix w assume "w \<in> ?\<alpha> ` I_set"
+          then obtain t where "w = ?\<alpha> t" by (by100 blast)
+          have "?\<alpha> t \<in> ?Sn"
+            by (rule Sn_interpolation_in_Sn[OF hx0_Sn hq_Sn hx0_na])
+          moreover have "?\<alpha> t \<noteq> ?p" using h\<alpha>_avoids by (by100 blast)
+          ultimately show "w \<in> ?U" using \<open>w = ?\<alpha> t\<close> by (by100 simp)
+        qed
+        show ?thesis unfolding top1_is_path_on_def
+          using top1_continuous_map_on_codomain_shrink[OF h_cont h_img hU_sub]
+          h\<alpha>_path_Sn[unfolded top1_is_path_on_def] by (by100 blast)
+      qed
       \<comment> \<open>The contraction G(s,t) = normalize((1-t)f(s)+tq). This is the free homotopy from f to const_q
          with both side boundaries = \<alpha>. Continuous in the subspace product topology.\<close>
       \<comment> \<open>3-strip gives f \<simeq>_{path} \<alpha> * const_q * rev(\<alpha>) in U.\<close>
       have hstrip: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f
           (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))" sorry
       \<comment> \<open>\<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) by left identity.\<close>
+      have hTSn_here: "is_topology_on ?Sn ?TSn"
+      proof -
+        have "\<forall>i\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+          using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+        hence "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+            (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+          by (rule top1_product_topology_on_is_topology_on)
+        moreover have "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+          unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+        ultimately have "is_topology_on (UNIV::(nat\<Rightarrow>real) set)
+            (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))" by (by100 simp)
+        thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+      qed
+      have hTU_loc: "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)"
+        by (rule subspace_topology_is_topology_on[OF hTSn_here]) (by100 blast)
+      have hrev\<alpha>: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) ?q x0 (top1_path_reverse ?\<alpha>)"
+        by (rule top1_path_reverse_is_path[OF h\<alpha>_U])
+      have hstep2a: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) ?q x0
+          (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)) (top1_path_reverse ?\<alpha>)"
+        by (rule Theorem_51_2_left_identity[OF hTU_loc hrev\<alpha>])
       have hstep2: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0
           (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))
-          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))" sorry
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))"
+        by (rule path_homotopic_product_right[OF hTU_loc hstep2a h\<alpha>_U])
       \<comment> \<open>\<alpha> * rev(\<alpha>) \<simeq> const_{x0} by inverse law.\<close>
       have hstep3: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0
-          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)) (top1_constant_path x0)" sorry
-      have hTU_loc: "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)" sorry
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)) (top1_constant_path x0)"
+        by (rule Theorem_51_2_invgerse_left[OF hTU_loc h\<alpha>_U])
       show "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f (top1_constant_path x0)"
         by (rule Lemma_51_1_path_homotopic_trans[OF hTU_loc
               Lemma_51_1_path_homotopic_trans[OF hTU_loc hstrip hstep2] hstep3])
@@ -2704,6 +2755,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
