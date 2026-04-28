@@ -11693,12 +11693,16 @@ proof -
         "top1_path_connected_on W2 (subspace_topology UNIV ?TR2 W2)"
         "(\<exists>M. \<forall>p\<in>W1. fst p ^ 2 + snd p ^ 2 \<le> M)"
         "(\<forall>M. \<exists>p\<in>W2. fst p ^ 2 + snd p ^ 2 > M)"
+        and hW1_cl: "closure_on UNIV ?TR2 W1 = W1 \<union> f ` frontier B"
+        and hW2_cl: "closure_on UNIV ?TR2 W2 = W2 \<union> f ` frontier B"
     proof -
       obtain U' V where "U' \<noteq> {}" "V \<noteq> {}" "U' \<inter> V = {}" "U' \<union> V = UNIV - f ` frontier B"
           "top1_path_connected_on U' (subspace_topology UNIV ?TR2 U')"
           "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)"
           "\<exists>M. \<forall>p\<in>U'. fst p ^ 2 + snd p ^ 2 \<le> M"
           "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
+          "closure_on UNIV ?TR2 U' = U' \<union> f ` frontier B"
+          "closure_on UNIV ?TR2 V = V \<union> f ` frontier B"
         using Theorem_63_4_JordanCurve[OF hfBd_SCC] by metis
       thus ?thesis using that by simp
     qed
@@ -11709,7 +11713,24 @@ proof -
        by f(B), but f(B) doesn't separate S^2 since B is contractible).\<close>
     have hfx_W1: "f x \<in> W1" sorry
     have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)" sorry
-    have hW1_open: "W1 \<in> ?TR2" sorry
+    have hW1_open: "W1 \<in> ?TR2"
+    proof -
+      \<comment> \<open>closure W2 = W2 \<union> C. Complement of closure is open. UNIV-(W2 \<union> C) = W1.\<close>
+      have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have hW2_closed: "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W2)"
+        by (rule closure_on_closed[OF hTR2]) (by100 simp)
+      hence "UNIV - closure_on UNIV ?TR2 W2 \<in> ?TR2"
+        unfolding closedin_on_def by (by100 blast)
+      moreover have "UNIV - closure_on UNIV ?TR2 W2 = W1"
+      proof -
+        have "UNIV - (W2 \<union> f ` frontier B) = W1"
+          using hW(3) hW(4) by (by100 blast)
+        thus ?thesis unfolding hW2_cl .
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>W1 is open, f(x) \<in> W1, W1 \<subseteq> f(Int B) \<subseteq> f(U).\<close>
     have "W1 \<subseteq> f ` U" using hW1_sub hBsub by (by100 blast)
     thus "\<exists>W. y \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
