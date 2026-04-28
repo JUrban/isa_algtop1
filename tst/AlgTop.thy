@@ -151,7 +151,60 @@ proof -
      So \<exists>W open in X with A \<subseteq> W and W\<times>I \<subseteq> U.\<close>
   obtain W where hW_open: "W \<in> TX" and hA_W: "A \<subseteq> W"
       and hW_sub: "W \<subseteq> X" and hWI_U: "W \<times> I_set \<subseteq> ?U_pre"
-    sorry \<comment> \<open>Tube lemma (Lemma_26_8). I_set compact, A\<times>I_set \<subseteq> ?U_pre.\<close>
+  proof -
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hI_comp: "top1_compact_on I_set I_top"
+    proof -
+      have hI_01: "I_set = {0..1::real}" unfolding top1_unit_interval_def by (by100 auto)
+      have "compact ({0..1} :: real set)" by (rule compact_Icc)
+      hence "compact I_set" unfolding hI_01 .
+      hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+        using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+      thus ?thesis unfolding top1_unit_interval_topology_def .
+    qed
+    \<comment> \<open>For each a \<in> A: {a}\<times>I \<subseteq> ?U_pre (since A\<times>I \<subseteq> ?S \<subseteq> ?U_pre).
+       By tube lemma: \<exists>Wa neighborhood of a with Wa\<times>I \<subseteq> ?U_pre.\<close>
+    have "\<forall>a\<in>A. \<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Wa \<times> I_set \<subseteq> ?U_pre"
+    proof (intro ballI)
+      fix a assume ha: "a \<in> A"
+      have "{a} \<times> I_set \<subseteq> ?U_pre"
+      proof
+        fix p assume "p \<in> {a} \<times> I_set"
+        hence "p \<in> A \<times> I_set" using ha by (by100 blast)
+        hence "p \<in> ?S" by (by100 blast)
+        thus "p \<in> ?U_pre" using hU_contains by (by100 blast)
+      qed
+      have "a \<in> X" using ha hAX by (by100 blast)
+      obtain Wa where hWa: "neighborhood_of a X TX Wa" and hWaI: "Wa \<times> I_set \<subseteq> ?U_pre"
+        using Lemma_26_8[OF hI_comp hTX hTI hU_open \<open>a \<in> X\<close> \<open>{a} \<times> I_set \<subseteq> ?U_pre\<close>]
+        by (by100 blast)
+      obtain U_a where hUa: "U_a \<in> TX" and ha_Ua: "a \<in> U_a" and hUa_Wa: "U_a \<subseteq> Wa"
+        using hWa unfolding neighborhood_of_def by (by100 blast)
+      have "U_a \<times> I_set \<subseteq> ?U_pre" using hUa_Wa hWaI by (by100 blast)
+      thus "\<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Wa \<times> I_set \<subseteq> ?U_pre"
+        using hUa ha_Ua by (by100 blast)
+    qed
+    \<comment> \<open>W = \<Union>{Wa | a \<in> A} is open, contains A, and W\<times>I \<subseteq> U.\<close>
+    define W where "W = \<Union>{Wa. \<exists>a\<in>A. Wa \<in> TX \<and> a \<in> Wa \<and> Wa \<times> I_set \<subseteq> ?U_pre}"
+    have "W \<in> TX"
+    proof -
+      have "{Wa. \<exists>a\<in>A. Wa \<in> TX \<and> a \<in> Wa \<and> Wa \<times> I_set \<subseteq> ?U_pre} \<subseteq> TX"
+        by (by100 blast)
+      thus ?thesis using hTX unfolding is_topology_on_def W_def by (by100 blast)
+    qed
+    moreover have "A \<subseteq> W"
+      using \<open>\<forall>a\<in>A. \<exists>Wa. Wa \<in> TX \<and> a \<in> Wa \<and> Wa \<times> I_set \<subseteq> ?U_pre\<close>
+      unfolding W_def by (by100 blast)
+    moreover have hWI: "W \<times> I_set \<subseteq> ?U_pre"
+      unfolding W_def by (by100 blast)
+    moreover have "W \<subseteq> X"
+    proof -
+      have "W \<times> I_set \<subseteq> X \<times> I_set" using hWI by (by100 blast)
+      moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    ultimately show ?thesis using that by (by100 blast)
+  qed
   \<comment> \<open>Step 6: Urysohn: \<phi>: X \<rightarrow> [0,1] with \<phi>|A = 0, \<phi>|X-W = 1.\<close>
   have hX_normal: "top1_normal_on X TX"
     sorry \<comment> \<open>X\<times>I normal \<Rightarrow> X normal (closed subspace of normal is normal).\<close>
