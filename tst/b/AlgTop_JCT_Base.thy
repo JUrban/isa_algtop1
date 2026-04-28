@@ -7890,9 +7890,10 @@ proof -
 qed
 
 text \<open>Key fact: a nulhomotopic loop is path-homotopic to the constant loop.
-  If f: I \<rightarrow> X is a loop at x0 and is nulhomotopic (homotopic to a constant map),
-  then f is path-homotopic to constant_{x0}. Uses basepoint change via the path
-  \<alpha>(t) = H(0,t) from x0 to c.\<close>
+  NOTE: The hypothesis top1_nulhomotopic_on I_set I_top is vacuously true for any
+  continuous f: I \<rightarrow> X (since I is contractible). This lemma needs to be restated
+  with the correct hypothesis (nulhomotopic as a map S^1 \<rightarrow> X, or equivalently
+  extending to B^2). The sorry here reflects this incorrect formulation.\<close>
 lemma nulhomotopic_loop_path_homotopic_constant:
   assumes hTX: "is_topology_on X TX"
       and hf: "top1_is_loop_on X TX x0 f"
@@ -9404,11 +9405,17 @@ proof -
   \<comment> \<open>Key fact: h \<circ> (path_product f g) = path_product (h\<circ>f) (h\<circ>g) for any h.\<close>
   have hcomp_prod: "\<And>h f g. h \<circ> (top1_path_product f g) = top1_path_product (h \<circ> f) (h \<circ> g)"
     unfolding top1_path_product_def comp_def by (rule ext) auto
+  have hTXY: "is_topology_on (X \<times> Y) ?TXY"
+    by (rule product_topology_on_is_topology_on[OF hTX hTY])
+  \<comment> \<open>Helper: induced map on fundamental group commutes with mul.
+     Uses hcomp_prod + top1_fundamental_group_mul_class + continuous_preserves_path_homotopic.\<close>
   have h\<Phi>_hom: "\<forall>c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       \<forall>d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0).
       ?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
       = (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
            top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)"
+    \<comment> \<open>Uses hcomp_prod + mul_class + continuous_preserves_path_homotopic.
+       Key: fst\<circ>(f*g) = (fst\<circ>f)*(fst\<circ>g), so induced_fst(mul(c,d)) = mul_X(induced_fst(c), induced_fst(d)).\<close>
     sorry
   \<comment> \<open>Step 2: Injectivity. If p\<circ>f \<simeq> const and q\<circ>f \<simeq> const, combine homotopies componentwise.\<close>
   have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))" sorry
