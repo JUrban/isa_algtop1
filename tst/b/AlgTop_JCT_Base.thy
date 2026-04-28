@@ -1454,26 +1454,28 @@ proof -
     have "?r \<in> ?U \<inter> ?V" using hr_Sn hr_ne_p hr_ne_q by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
+  \<comment> \<open>Topology facts needed for path-connected proof.\<close>
+  have hTop_each: "\<forall>i\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+    using top1_open_sets_is_topology_on_UNIV by simp
+  have hTop_prod: "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+    by (rule top1_product_topology_on_is_topology_on[OF hTop_each])
+  have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+    unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+  have hTop_UNIV: "is_topology_on (UNIV :: (nat \<Rightarrow> real) set)
+      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+    using hTop_prod unfolding hPiE_eq .
+  have hTSn_top: "is_topology_on ?Sn ?TSn"
+    by (rule subspace_topology_is_topology_on[OF hTop_UNIV]) simp
   have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
       (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" sorry
   have hT_strict: "is_topology_on_strict ?Sn ?TSn"
     unfolding is_topology_on_strict_def
+    using hTSn_top
   proof (intro conjI)
-    have hTop_each: "\<forall>i\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
-      using top1_open_sets_is_topology_on_UNIV by simp
-    have hTop_prod: "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
-        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
-      by (rule top1_product_topology_on_is_topology_on[OF hTop_each])
-    have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
-      unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
-    have hTop_UNIV: "is_topology_on (UNIV :: (nat \<Rightarrow> real) set)
-        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
-      using hTop_prod unfolding hPiE_eq .
-    show "is_topology_on ?Sn ?TSn"
-      by (rule subspace_topology_is_topology_on[OF hTop_UNIV]) simp
     show "?TSn \<subseteq> Pow ?Sn"
       unfolding subspace_topology_def by (by100 blast)
-  qed
+  qed simp
   \<comment> \<open>Apply Corollary 59.2.\<close>
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
