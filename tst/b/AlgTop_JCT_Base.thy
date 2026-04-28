@@ -2230,7 +2230,31 @@ proof -
          with both side boundaries = \<alpha>. Continuous in the subspace product topology.\<close>
       \<comment> \<open>3-strip gives f \<simeq>_{path} \<alpha> * const_q * rev(\<alpha>) in U.\<close>
       have hstrip: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f
-          (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))" sorry
+          (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))"
+      proof -
+        let ?TU = "subspace_topology ?Sn ?TSn ?U"
+        have hTU_here: "is_topology_on ?U ?TU" sorry
+        have hf_path: "top1_is_path_on ?U ?TU x0 x0 f"
+          using hf unfolding top1_is_loop_on_def by (by100 blast)
+        \<comment> \<open>f \<simeq> const*f*const.\<close>
+        have hri: "top1_path_homotopic_on ?U ?TU x0 x0 f (top1_path_product f (top1_constant_path x0))"
+          by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTU_here hf_path]])
+        have hf_const: "top1_is_path_on ?U ?TU x0 x0 (top1_path_product f (top1_constant_path x0))"
+          using hri unfolding top1_path_homotopic_on_def by (by100 blast)
+        have hli: "top1_path_homotopic_on ?U ?TU x0 x0
+            (top1_path_product f (top1_constant_path x0))
+            (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+          by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTU_here hf_const]])
+        have hf_eq: "top1_path_homotopic_on ?U ?TU x0 x0 f
+            (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTU_here hri hli])
+        \<comment> \<open>const*f*const \<simeq> \<alpha>*const_q*rev(\<alpha>) via the 3-strip.\<close>
+        have hG_strip: "top1_path_homotopic_on ?U ?TU x0 x0
+            (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
+            (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))"
+          sorry
+        show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTU_here hf_eq hG_strip])
+      qed
       \<comment> \<open>\<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) by left identity.\<close>
       have hTSn_here: "is_topology_on ?Sn ?TSn"
       proof -
@@ -2755,6 +2779,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
