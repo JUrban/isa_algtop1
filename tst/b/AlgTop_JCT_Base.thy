@@ -1616,10 +1616,99 @@ lemma Sn_interpolation_norm_pos:
   fixes x y :: "nat \<Rightarrow> real"
   assumes "x \<in> top1_Sn n" "y \<in> top1_Sn n" "x \<noteq> (\<lambda>i. - y i)"
   shows "sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0"
-  \<comment> \<open>Same as hN_pos in Sn_normalized_interpolation_path.
-     Proof: if all (1-t)x(j)+ty(j)=0 then x = -y (contradiction).
-     So \<exists>j. term \<noteq> 0, hence sum > 0, hence sqrt > 0.\<close>
-  sorry
+proof -
+  have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1" using assms(1) unfolding top1_Sn_def by (by100 blast)
+  have hy_norm: "(\<Sum>j\<le>n. (y j)^2) = 1" using assms(2) unfolding top1_Sn_def by (by100 blast)
+  have hx_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0" using assms(1) unfolding top1_Sn_def by (by100 blast)
+  have hy_zero: "\<And>i. i \<ge> Suc n \<Longrightarrow> y i = 0" using assms(2) unfolding top1_Sn_def by (by100 blast)
+  have "\<exists>k\<le>n. (1-t) * x k + t * y k \<noteq> 0"
+  proof (rule ccontr)
+    assume "\<not>(\<exists>k\<le>n. (1-t) * x k + t * y k \<noteq> 0)"
+    hence hall: "\<And>k. k \<le> n \<Longrightarrow> (1-t) * x k + t * y k = 0" by (by100 blast)
+    show False
+    proof (cases "t = 0")
+      case True hence "\<And>k. k \<le> n \<Longrightarrow> x k = 0" using hall by (by100 simp)
+      hence "(\<Sum>j\<le>n. (x j)^2) = 0" by (by100 simp)
+      thus False using hx_norm by (by100 linarith)
+    next
+      case ht0: False show False
+      proof (cases "t = 1")
+        case True hence "\<And>k. k \<le> n \<Longrightarrow> y k = 0" using hall by (by100 simp)
+        hence "(\<Sum>j\<le>n. (y j)^2) = 0" by (by100 simp)
+        thus False using hy_norm by (by100 linarith)
+      next
+        case False hence ht1: "1-t \<noteq> 0" by (by100 linarith)
+        have hxi: "\<And>k. k \<le> n \<Longrightarrow> x k = -(t/(1-t)) * y k"
+        proof -
+          fix k assume hk: "k \<le> n"
+          have h1: "(1-t) * x k = -(t * y k)" using hall[OF hk] by (by100 linarith)
+          have "x k = (1-t) * x k / (1-t)" using ht1 by (by100 simp)
+          also have "\<dots> = -(t * y k) / (1-t)" using h1 by (by100 simp)
+          finally show "x k = -(t/(1-t)) * y k" by (by100 simp)
+        qed
+        have hxi_all: "\<And>i. x i = -(t/(1-t)) * y i"
+        proof -
+          fix i show "x i = -(t/(1-t)) * y i"
+            using hxi[of i] hx_zero[of i] hy_zero[of i] by (cases "i \<le> n") (by100 simp)+
+        qed
+        have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<le>n. (-(t/(1-t)) * y j)^2)"
+          using hxi by (intro sum.cong) (by100 simp)+
+        also have "\<dots> = (\<Sum>j\<le>n. (t/(1-t))^2 * (y j)^2)"
+          using power_mult_distrib[of "-(t/(1-t))" _ 2]
+          by (intro sum.cong) (by100 simp)+
+        also have "\<dots> = (t/(1-t))^2 * (\<Sum>j\<le>n. (y j)^2)"
+          by (rule sum_distrib_left[symmetric])
+        finally have hratio: "(t/(1-t))^2 = 1" using hx_norm hy_norm by (by100 simp)
+        have h_sq: "(\<bar>t/(1-t)\<bar>)^2 = (1::real)^2"
+          using hratio power2_abs[of "t/(1-t)"] by (by100 simp)
+        have "\<bar>t/(1-t)\<bar> = (1::real)"
+          by (rule power2_eq_imp_eq[OF h_sq]) (by100 simp)+
+        hence "t/(1-t) = 1 \<or> t/(1-t) = -1" by (by100 linarith)
+        thus False
+        proof
+          assume ht_eq: "t/(1-t) = 1"
+          have "\<And>i. x i = -y i"
+          proof -
+            fix i have "x i = -(t/(1-t)) * y i" by (rule hxi_all)
+            thus "x i = -y i" using ht_eq by (by100 simp)
+          qed
+          hence "x = (\<lambda>i. -y i)" by (rule ext)
+          thus False using assms(3) by (by100 blast)
+        next
+          assume ht_eq: "t/(1-t) = -1"
+          have "\<And>i. x i = y i"
+          proof -
+            fix i have "x i = -(t/(1-t)) * y i" by (rule hxi_all)
+            thus "x i = y i" using ht_eq by (by100 simp)
+          qed
+          hence "x = y" by (rule ext)
+          have "\<And>k. k \<le> n \<Longrightarrow> y k = 0"
+          proof -
+            fix k assume hk: "k \<le> n"
+            have "(1-t) * y k + t * y k = 0" using hall[OF hk] \<open>x = y\<close> by (by100 simp)
+            thus "y k = 0" by (by100 algebra)
+          qed
+          hence "(\<Sum>j\<le>n. (y j)^2) = 0" by (by100 simp)
+          thus False using hy_norm by (by100 linarith)
+        qed
+      qed
+    qed
+  qed
+  then obtain k where hk: "k \<le> n" "(1-t) * x k + t * y k \<noteq> 0" by (by100 blast)
+  have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) \<ge> ((1-t) * x k + t * y k)^2"
+  proof -
+    have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) =
+          ((1-t) * x k + t * y k)^2 + (\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2)"
+      using sum.remove[of "{..n}" k] hk(1) by (by100 simp)
+    moreover have "(\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2) \<ge> 0"
+      by (rule sum_nonneg) (by100 simp)
+    ultimately show ?thesis by (by100 linarith)
+  qed
+  moreover have "((1-t) * x k + t * y k)^2 > 0" using hk(2) by (by100 simp)
+  ultimately have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0" by (by100 linarith)
+  thus ?thesis by (by100 simp)
+qed
+
 
 lemma Sn_interpolation_in_Sn:
   fixes x y :: "nat \<Rightarrow> real"
