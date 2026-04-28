@@ -90,13 +90,61 @@ proof -
       and hF0: "\<forall>a\<in>A. F (a, 0) = f a"
       and hF1: "\<forall>a\<in>A. F (a, 1) = y0"
     using hF_hom unfolding top1_homotopic_on_def by (by100 blast)
-  \<comment> \<open>Step 2: Extend F to (A\<times>I) \<union> (X\<times>{1}) by setting F(x,1) = y0.\<close>
-  \<comment> \<open>Step 3: Tietze-extend coordinatewise to G: X\<times>I \<rightarrow> R^2.\<close>
-  \<comment> \<open>Step 4: U = G^{-1}(Y) open, contains (A\<times>I) \<union> (X\<times>{1}).\<close>
-  \<comment> \<open>Step 5: Tube lemma gives W \<supseteq> A open with W\<times>I \<subseteq> U.\<close>
-  \<comment> \<open>Step 6: Urysohn gives \<phi>: X \<rightarrow> [0,1] with \<phi>|A=0, \<phi>|X-W=1.\<close>
-  \<comment> \<open>Step 7: g(x) = G(x, \<phi>(x)) maps X \<rightarrow> Y, extends f, is nulhomotopic.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 2: Extend F to (A\<times>I) \<union> (X\<times>{1}) by setting F(x,1) = y0.
+     Fe agrees with F on A\<times>I and maps (x,1) to y0 for all x \<in> X.\<close>
+  let ?S = "(A \<times> I_set) \<union> (X \<times> {1::real})"
+  define Fe where "Fe = (\<lambda>(x, t). if x \<in> A then F (x, t) else y0)"
+  have hFe_agree_AI: "\<forall>p\<in>A \<times> I_set. Fe p = F p"
+    unfolding Fe_def by (by100 auto)
+  have hFe_X1: "\<forall>x\<in>X. Fe (x, 1) = y0"
+    unfolding Fe_def using hF1 by (by100 auto)
+  have hFe_range: "\<forall>p\<in>?S. Fe p \<in> Y"
+    sorry \<comment> \<open>On A\<times>I: Fe = F maps to Y. On X\<times>{1}: Fe = y0 \<in> Y.\<close>
+  \<comment> \<open>Step 3: Tietze-extend Fe coordinatewise to G: X\<times>I \<rightarrow> R^2.
+     Each coordinate of Fe: ?S \<rightarrow> [-M,M] for large M. Tietze extends to X\<times>I.\<close>
+  obtain G :: "'a \<times> real \<Rightarrow> real \<times> real" where
+      hG_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          UNIV ?TR2 G"
+      and hG_ext: "\<forall>p\<in>?S. G p = Fe p"
+    sorry \<comment> \<open>Tietze extension (Theorem_35_1) applied coordinatewise.
+       Needs: ?S closed in X\<times>I, Fe continuous on ?S, X\<times>I normal.
+       Two applications (one per coordinate), combine into G.\<close>
+  \<comment> \<open>Step 4: U = G^{-1}(Y) is open in X\<times>I, contains ?S.\<close>
+  let ?U_pre = "{p \<in> X \<times> I_set. G p \<in> Y}"
+  have hU_open: "?U_pre \<in> product_topology_on TX I_top"
+    sorry \<comment> \<open>Y open in R^2, G continuous, so G^{-1}(Y) open in X\<times>I.\<close>
+  have hU_contains: "?S \<subseteq> ?U_pre"
+    sorry \<comment> \<open>On ?S: G = Fe which maps to Y.\<close>
+  \<comment> \<open>Step 5: Tube lemma: I_set compact, ?S \<supseteq> A\<times>I, U open containing A\<times>I.
+     So \<exists>W open in X with A \<subseteq> W and W\<times>I \<subseteq> U.\<close>
+  obtain W where hW_open: "W \<in> TX" and hA_W: "A \<subseteq> W"
+      and hWI_U: "W \<times> I_set \<subseteq> ?U_pre"
+    sorry \<comment> \<open>Tube lemma (Lemma_26_8). I_set compact, A\<times>I_set \<subseteq> ?U_pre.\<close>
+  \<comment> \<open>Step 6: Urysohn: \<phi>: X \<rightarrow> [0,1] with \<phi>|A = 0, \<phi>|X-W = 1.\<close>
+  have hX_normal: "top1_normal_on X TX"
+    sorry \<comment> \<open>X\<times>I normal \<Rightarrow> X normal (closed subspace of normal is normal).\<close>
+  have hXW_closed: "closedin_on X TX (X - W)"
+  proof (rule closedin_intro)
+    show "X - W \<subseteq> X" by (by100 blast)
+    show "X - (X - W) \<in> TX"
+    proof -
+      have "X - (X - W) = X \<inter> W" by (by100 blast)
+      also have "... = W"
+        sorry \<comment> \<open>W \<subseteq> X since W \<in> TX and TX is topology on X.\<close>
+      finally show ?thesis using hW_open by (by100 simp)
+    qed
+  qed
+  obtain \<phi> where h\<phi>: "top1_continuous_map_on X TX
+      (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<phi>"
+      and h\<phi>A: "\<forall>x\<in>A. \<phi> x = 0" and h\<phi>XW: "\<forall>x\<in>X-W. \<phi> x = 1"
+    using Theorem_33_1[OF hX_normal hA_closed hXW_closed _ zero_le_one]
+    sorry \<comment> \<open>Urysohn (Theorem_33_1). Needs A \<inter> (X-W) = {} (since A \<subseteq> W).\<close>
+  \<comment> \<open>Step 7: g(x) = G(x, \<phi>(x)). Maps X to Y (since (x,\<phi>(x)) \<in> ?U_pre).
+     Extends f (since \<phi>(a)=0, G(a,0)=Fe(a,0)=F(a,0)=f(a)).
+     Nulhomotopic via H(x,t) = G(x, (1-t)\<phi>(x)+t).\<close>
+  define g where "g x = G (x, \<phi> x)" for x
+  show ?thesis
+    sorry \<comment> \<open>g continuous (composition), g extends f, g nulhomotopic (via H).\<close>
 qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
