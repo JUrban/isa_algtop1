@@ -2178,7 +2178,41 @@ proof -
   next
     show "\<forall>x0\<in>?U. \<forall>f. top1_is_loop_on ?U (subspace_topology ?Sn ?TSn ?U) x0 f \<longrightarrow>
         top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f (top1_constant_path x0)"
-      sorry
+    proof (intro ballI allI impI)
+      fix x0 f assume hx0: "x0 \<in> ?U" and hf: "top1_is_loop_on ?U (subspace_topology ?Sn ?TSn ?U) x0 f"
+      \<comment> \<open>Contract f to q via normalize((1-t)f(s)+tq). Stays in S^n-{p} by avoids_p.
+         3-strip with \<alpha>(t) = normalize((1-t)x0+tq) on both sides gives:
+         f \<simeq>_{path} \<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) \<simeq> const_{x0}.\<close>
+      have hx0_Sn: "x0 \<in> ?Sn" and hx0_np: "x0 \<noteq> ?p" using hx0 by (by100 blast)+
+      have hq_Sn: "?q \<in> ?Sn" sorry
+      have hq_np: "?q \<noteq> ?p" sorry
+      have hq_U: "?q \<in> ?U" using hq_Sn hq_np by (by100 blast)
+      have hx0_na: "x0 \<noteq> (\<lambda>i. - ?q i)" sorry \<comment> \<open>x0 \<noteq> -q = p, but x0 \<noteq> p.\<close>
+      \<comment> \<open>\<alpha>: path from x0 to q in U (via interpolation).\<close>
+      let ?\<alpha> = "\<lambda>t i. ((1-t) * x0 i + t * ?q i) / sqrt (\<Sum>j\<le>n. ((1-t) * x0 j + t * ?q j)^2)"
+      have h\<alpha>_path_Sn: "top1_is_path_on ?Sn ?TSn x0 ?q ?\<alpha>"
+        by (rule Sn_normalized_interpolation_path[OF hx0_Sn hq_Sn hx0_na])
+      have h\<alpha>_avoids: "\<forall>t. ?\<alpha> t \<noteq> ?p"
+        by (rule Sn_interpolation_to_q_avoids_p[OF hx0_Sn hx0_np])
+      \<comment> \<open>\<alpha> is a path in U.\<close>
+      have h\<alpha>_U: "top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x0 ?q ?\<alpha>" sorry
+      \<comment> \<open>The contraction G(s,t) = normalize((1-t)f(s)+tq). This is the free homotopy from f to const_q
+         with both side boundaries = \<alpha>. Continuous in the subspace product topology.\<close>
+      \<comment> \<open>3-strip gives f \<simeq>_{path} \<alpha> * const_q * rev(\<alpha>) in U.\<close>
+      have hstrip: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f
+          (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))" sorry
+      \<comment> \<open>\<alpha> * const_q * rev(\<alpha>) \<simeq> \<alpha> * rev(\<alpha>) by left identity.\<close>
+      have hstep2: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0
+          (top1_path_product ?\<alpha> (top1_path_product (top1_constant_path ?q) (top1_path_reverse ?\<alpha>)))
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>))" sorry
+      \<comment> \<open>\<alpha> * rev(\<alpha>) \<simeq> const_{x0} by inverse law.\<close>
+      have hstep3: "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0
+          (top1_path_product ?\<alpha> (top1_path_reverse ?\<alpha>)) (top1_constant_path x0)" sorry
+      have hTU_loc: "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)" sorry
+      show "top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f (top1_constant_path x0)"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTU_loc
+              Lemma_51_1_path_homotopic_trans[OF hTU_loc hstrip hstep2] hstep3])
+    qed
   qed
   have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)" sorry
   \<comment> \<open>Step 2: U, V are open in S^n.\<close>
@@ -2670,6 +2704,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
