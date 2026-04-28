@@ -2431,15 +2431,44 @@ proof -
               thus ?thesis using \<open>z 1 = 0\<close> by (by100 simp)
             qed
           qed
-          hence "\<And>i. i \<ge> Suc 0 \<Longrightarrow> i \<le> n \<Longrightarrow> z i = 0" by (by100 simp)
-          \<comment> \<open>Then z(0)^2 = 1, so z = p or z = q.\<close>
-          hence "z 0 = 1 \<or> z 0 = -1" sorry
+          hence hzi0: "\<And>i. i \<ge> 1 \<Longrightarrow> i \<le> n \<Longrightarrow> z i = 0" by (by100 simp)
+          have hz_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> z i = 0"
+            using hz_Sn unfolding top1_Sn_def by (by100 blast)
+          have hzi0_all: "\<And>i. i \<ge> 1 \<Longrightarrow> z i = 0"
+          proof -
+            fix i :: nat assume "i \<ge> 1"
+            show "z i = 0"
+            proof (cases "i \<le> n")
+              case True thus ?thesis using hzi0 \<open>i \<ge> 1\<close> by (by100 blast)
+            next
+              case False hence "i \<ge> Suc n" by (by100 linarith)
+              thus ?thesis using hz_above by (by100 blast)
+            qed
+          qed
+          \<comment> \<open>z(0)^2 = 1 since other coords = 0.\<close>
+          have hz_Sn_norm: "(\<Sum>j\<le>n. (z j)^2) = 1" using hz_Sn unfolding top1_Sn_def by (by100 blast)
+          have hz0_sq: "z 0 ^ 2 = 1" sorry
+          have "(\<bar>z 0\<bar>)^2 = (1::real)^2" using hz0_sq power2_abs[of "z 0"] by (by100 simp)
+          hence "\<bar>z 0\<bar> = (1::real)" by (rule power2_eq_imp_eq) (by100 simp)+
+          hence "z 0 = 1 \<or> z 0 = -1" by (by100 linarith)
           thus False
           proof
-            assume "z 0 = 1" hence "z = ?p" sorry
+            assume hz01: "z 0 = 1"
+            have "\<And>i. z i = ?p i"
+            proof -
+              fix i show "z i = ?p i"
+                using hz01 hzi0_all[of i] by (cases "i = 0") (by100 simp)+
+            qed
+            hence "z = ?p" by (rule ext)
             thus False using hz_np by (by100 blast)
           next
-            assume "z 0 = -1" hence "z = ?q" sorry
+            assume hz0m1: "z 0 = -1"
+            have "\<And>i. z i = ?q i"
+            proof -
+              fix i show "z i = ?q i"
+                using hz0m1 hzi0_all[of i] by (cases "i = 0") (by100 simp)+
+            qed
+            hence "z = ?q" by (rule ext)
             thus False using hz_nq by (by100 blast)
           qed
         qed
