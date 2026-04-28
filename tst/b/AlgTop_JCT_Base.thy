@@ -2288,7 +2288,20 @@ proof -
           have hG3: "\<And>s t. \<not>(s \<le> 3/4) \<Longrightarrow> G (s, t) = ?\<alpha> (t * (4 - 4*s))"
             unfolding G_def by (by100 simp)
           \<comment> \<open>G is continuous on I\<times>I and maps into U. (The main technical burden.)\<close>
-          have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?U ?TU G" sorry
+          have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?U ?TU G"
+          proof -
+            have hG_range: "\<forall>st\<in>I_set \<times> I_set. G st \<in> ?U" sorry
+            have hG_cont_Sn: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?Sn ?TSn G" sorry
+            have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
+            have hG_img: "G ` (I_set \<times> I_set) \<subseteq> ?U"
+            proof (intro subsetI) fix w assume "w \<in> G ` (I_set \<times> I_set)"
+              then obtain s t where "s \<in> I_set" "t \<in> I_set" "w = G (s,t)" by (by100 blast)
+              have "G (s,t) \<in> ?U" using hG_range \<open>s \<in> I_set\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+              thus "w \<in> ?U" using \<open>w = G (s,t)\<close> by (by100 simp)
+            qed
+            show ?thesis
+              by (rule top1_continuous_map_on_codomain_shrink[OF hG_cont_Sn hG_img hU_sub])
+          qed
           \<comment> \<open>G boundaries.\<close>
           have h\<alpha>0_eq: "?\<alpha> 0 = x0"
             using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
@@ -2982,6 +2995,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
