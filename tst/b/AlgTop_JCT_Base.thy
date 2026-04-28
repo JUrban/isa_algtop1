@@ -1528,9 +1528,32 @@ proof -
       ?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
       = (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
            top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)"
-    \<comment> \<open>Both components commute with mul, by induced_hom_mul applied to fst and snd.\<close>
-    sorry \<comment> \<open>Use induced_hom_mul[OF hTXY hTX hfst_cont ...] for fst component,
-           induced_hom_mul[OF hTXY hTY hsnd_cont ...] for snd component.\<close>
+  proof (intro ballI)
+    fix c d assume hc: "c \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+        and hd: "d \<in> top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0)"
+    obtain f where hf_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) f"
+        and hc_eq: "c = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) f k}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    obtain g where hg_loop: "top1_is_loop_on (X \<times> Y) ?TXY (x0, y0) g"
+        and hd_eq: "d = {k. top1_loop_equiv_on (X \<times> Y) ?TXY (x0, y0) g k}"
+      using hd unfolding top1_fundamental_group_carrier_def by (by100 auto)
+    have hfst_hom: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst
+        (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
+      = top1_fundamental_group_mul X TX x0
+          (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst c)
+          (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) X TX x0 fst d)"
+      unfolding hc_eq hd_eq by (rule induced_hom_mul[OF hTXY hTX hfst_cont _ hf_loop hg_loop]) (by100 simp)
+    have hsnd_hom: "top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd
+        (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
+      = top1_fundamental_group_mul Y TY y0
+          (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd c)
+          (top1_fundamental_group_induced_on (X \<times> Y) ?TXY (x0, y0) Y TY y0 snd d)"
+      unfolding hc_eq hd_eq by (rule induced_hom_mul[OF hTXY hTY hsnd_cont _ hf_loop hg_loop]) (by100 simp)
+    show "?\<Phi> (top1_fundamental_group_mul (X \<times> Y) ?TXY (x0, y0) c d)
+      = (\<lambda>(c1, c2) (d1, d2). (top1_fundamental_group_mul X TX x0 c1 d1,
+           top1_fundamental_group_mul Y TY y0 c2 d2)) (?\<Phi> c) (?\<Phi> d)"
+      using hfst_hom hsnd_hom by (cases "?\<Phi> c", cases "?\<Phi> d") (by100 auto)
+  qed
   \<comment> \<open>Step 2: Injectivity. If p\<circ>f \<simeq> const and q\<circ>f \<simeq> const, combine homotopies componentwise.\<close>
   have h\<Phi>_inj: "inj_on ?\<Phi> (top1_fundamental_group_carrier (X \<times> Y) ?TXY (x0, y0))" sorry
   \<comment> \<open>Step 3: Surjectivity. Given [g] \<in> \<pi>_1(X) and [h] \<in> \<pi>_1(Y), define f(s) = (g(s), h(s)).\<close>
