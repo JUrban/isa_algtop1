@@ -133,7 +133,7 @@ proof -
   \<comment> \<open>Step 4: U = G^{-1}(Y) is open in X\<times>I, contains ?S.\<close>
   let ?U_pre = "{p \<in> X \<times> I_set. G p \<in> Y}"
   have hU_open: "?U_pre \<in> product_topology_on TX I_top"
-    sorry \<comment> \<open>Y open in R^2, G continuous, so G^{-1}(Y) open in X\<times>I.\<close>
+    using hG_cont hY_open unfolding top1_continuous_map_on_def by (by100 blast)
   have hU_contains: "?S \<subseteq> ?U_pre"
   proof
     fix p assume "p \<in> ?S"
@@ -165,17 +165,65 @@ proof -
       finally show ?thesis using hW_open by (by100 simp)
     qed
   qed
+  have hA_XW_disj: "A \<inter> (X - W) = {}" using hA_W by (by100 blast)
   obtain \<phi> where h\<phi>: "top1_continuous_map_on X TX
       (top1_closed_interval 0 1) (top1_closed_interval_topology 0 1) \<phi>"
       and h\<phi>A: "\<forall>x\<in>A. \<phi> x = 0" and h\<phi>XW: "\<forall>x\<in>X-W. \<phi> x = 1"
-    using Theorem_33_1[OF hX_normal hA_closed hXW_closed _ zero_le_one]
-    sorry \<comment> \<open>Urysohn (Theorem_33_1). Needs A \<inter> (X-W) = {} (since A \<subseteq> W).\<close>
+    using Theorem_33_1[OF hX_normal hA_closed hXW_closed hA_XW_disj zero_le_one]
+    by (by100 blast)
   \<comment> \<open>Step 7: g(x) = G(x, \<phi>(x)). Maps X to Y (since (x,\<phi>(x)) \<in> ?U_pre).
      Extends f (since \<phi>(a)=0, G(a,0)=Fe(a,0)=F(a,0)=f(a)).
      Nulhomotopic via H(x,t) = G(x, (1-t)\<phi>(x)+t).\<close>
   define g where "g x = G (x, \<phi> x)" for x
+  \<comment> \<open>g extends f: for a \<in> A, \<phi>(a) = 0, G(a,0) = Fe(a,0) = F(a,0) = f(a).\<close>
+  have hg_ext: "\<forall>x\<in>A. g x = f x"
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    have "\<phi> a = 0" using h\<phi>A ha by (by100 blast)
+    have "g a = G (a, 0)" unfolding g_def using \<open>\<phi> a = 0\<close> by (by100 simp)
+    also have "... = Fe (a, 0)" using hG_ext ha hAX
+    proof -
+      have "(a, 0::real) \<in> ?S"
+      proof -
+        have "a \<in> A" by (rule ha)
+        moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      thus ?thesis using hG_ext by (by100 blast)
+    qed
+    also have "... = F (a, 0)" unfolding Fe_def using ha by (by100 simp)
+    also have "... = f a" using hF0 ha by (by100 blast)
+    finally show "g a = f a" .
+  qed
+  \<comment> \<open>g maps X to Y: for x \<in> X, (x, \<phi>(x)) \<in> ?U_pre, so G(x,\<phi>(x)) \<in> Y.\<close>
+  have hg_range: "\<forall>x\<in>X. g x \<in> Y"
+  proof (intro ballI)
+    fix x assume hx: "x \<in> X"
+    have h\<phi>_01: "\<phi> x \<in> top1_closed_interval 0 1"
+      using h\<phi> hx unfolding top1_continuous_map_on_def by (by100 blast)
+    hence h\<phi>_I: "\<phi> x \<in> I_set"
+      unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
+    \<comment> \<open>If x \<in> W: (x, \<phi>(x)) \<in> W\<times>I \<subseteq> ?U_pre.\<close>
+    \<comment> \<open>If x \<notin> W: \<phi>(x) = 1, so (x, 1) \<in> X\<times>{1} \<subseteq> ?S \<subseteq> ?U_pre.\<close>
+    have "(x, \<phi> x) \<in> ?U_pre"
+    proof (cases "x \<in> W")
+      case True
+      hence "(x, \<phi> x) \<in> W \<times> I_set" using h\<phi>_I by (by100 blast)
+      thus ?thesis using hWI_U by (by100 blast)
+    next
+      case False
+      hence "x \<in> X - W" using hx by (by100 blast)
+      hence "\<phi> x = 1" using h\<phi>XW by (by100 blast)
+      hence "(x, \<phi> x) = (x, 1::real)" by (by100 simp)
+      moreover have "(x, 1::real) \<in> ?S" using hx by (by100 blast)
+      ultimately show ?thesis using hU_contains by (by100 blast)
+    qed
+    thus "g x \<in> Y" unfolding g_def by (by100 blast)
+  qed
   show ?thesis
-    sorry \<comment> \<open>g continuous (composition), g extends f, g nulhomotopic (via H).\<close>
+    sorry \<comment> \<open>Need: g continuous X\<rightarrow>Y, and g nulhomotopic.
+       g continuous: composition of G with (id, \<phi>).
+       g nulhomotopic: H(x,t) = G(x, (1-t)\<phi>(x)+t).\<close>
 qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
