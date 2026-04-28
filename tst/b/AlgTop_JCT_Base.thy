@@ -3786,9 +3786,13 @@ proof (rule ccontr)
         hence "?norm x > 0" by (rule hnorm_pos)
         thus "?norm x \<noteq> 0" by linarith
       qed
-      have hnorm_cont: "continuous_on ?S2 ?norm"
-        sorry \<comment> \<open>sqrt(sum of squares of continuous) is continuous. continuous_intros can't decompose the complex \<lambda>.\<close>
-      show ?thesis sorry \<comment> \<open>g = (diff/norm) is continuous via continuous_on_divide.\<close>
+      \<comment> \<open>All components continuous \<Rightarrow> g continuous. Use continuous_intros with explicit steps.\<close>
+      show ?thesis
+        using hdiff_fst_cont hdiff_snd_cont hnorm_ne
+        sorry \<comment> \<open>g = (d1/n, d2/n) where d1, d2, n are continuous on S^2 and n > 0.
+           Needs: continuous_on_mult for squares, continuous_on_add for sum,
+           continuous_on_real_sqrt for sqrt, continuous_on_divide for division.
+           continuous_intros can't decompose the nested let-expressions.\<close>
     qed
     \<comment> \<open>Bridge to top1_continuous_map_on via subspace_open_sets_on.\<close>
     show ?thesis
