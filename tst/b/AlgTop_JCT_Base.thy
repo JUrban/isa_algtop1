@@ -1390,8 +1390,10 @@ proof -
           have hxi: "\<And>k. k \<le> n \<Longrightarrow> x k = -(t/(1-t)) * y k"
           proof -
             fix k assume hk: "k \<le> n"
-            have "(1-t) * x k = -(t * y k)" by (rule hall'[OF hk])
-            thus "x k = -(t/(1-t)) * y k" using ht1 sorry
+            have h1: "(1-t) * x k = -(t * y k)" by (rule hall'[OF hk])
+            have "x k = (1-t) * x k / (1-t)" using ht1 by (by100 simp)
+            also have "\<dots> = -(t * y k) / (1-t)" using h1 by (by100 simp)
+            finally show "x k = -(t/(1-t)) * y k" by (by100 simp)
           qed
           have hxi_all: "\<And>i. x i = - (t/(1-t)) * y i"
           proof -
@@ -11500,4 +11502,5 @@ qed
 
 
 end
+
 
