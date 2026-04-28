@@ -11168,7 +11168,57 @@ lemma Lemma_62_2_BorsukLemma:
   shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
          \<and> a \<in> C \<and> b \<in> C"
-  sorry \<comment> \<open>Munkres Lemma 62.2\<close>
+proof -
+  let ?S2 = top1_S2 and ?TS2 = top1_S2_topology
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  \<comment> \<open>Step 1: Transfer to R^2. Stereographic projection from b gives h: S^2-{b} \<rightarrow> R^2.
+     Map a to 0 (the origin). Then the image g = h \<circ> f maps A into R^2-{0}.
+     The statement becomes: 0 and \<infinity> are in the same component of S^2-f(A),
+     i.e., 0 is in the unbounded component of R^2-g(A).\<close>
+  obtain h where hh: "top1_homeomorphism_on (?S2 - {b})
+      (subspace_topology ?S2 ?TS2 (?S2 - {b}))
+      (UNIV :: (real\<times>real) set) ?TR2 h"
+    using S2_minus_point_homeo_R2[OF hb] by (by100 blast)
+  \<comment> \<open>Step 2: g = h \<circ> f : A \<rightarrow> R^2. g is continuous, injective, nulhomotopic.
+     g(A) \<subseteq> R^2 - {h(a)} since f(A) \<subseteq> S^2 - {a,b} and h maps S^2-{b} to R^2.\<close>
+  let ?g = "h \<circ> f"
+  let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
+  \<comment> \<open>Step 3: Suppose for contradiction that a and b are in different components.
+     In R^2 terms: suppose h(a) = origin is in a BOUNDED component C of R^2 - g(A).
+     Let D be the union of other components.\<close>
+  \<comment> \<open>Step 4: Since g is nulhomotopic in R^2 - {origin}, the inclusion
+     j: g(A) \<hookrightarrow> R^2 - {origin} is also nulhomotopic (compose nulhomotopy with h).
+     By Lemma 55.3, j extends to k: closure(C) \<union> g(A) \<rightarrow> R^2 - {origin}.\<close>
+  \<comment> \<open>Step 5: Extend k to all of R^2 by h(x) = x for x \<in> D.
+     Then h: R^2 \<rightarrow> R^2 - {origin}, h = id outside C.\<close>
+  \<comment> \<open>Step 6: Restrict to large ball B \<supseteq> C \<union> g(A). Get h|B: B \<rightarrow> R^2 - {origin}.
+     Compose with retraction R^2-{origin} \<rightarrow> Bd(B) to get retraction B \<rightarrow> Bd(B).
+     This contradicts Theorem 55.2 (no retraction of disk onto circle).\<close>
+  \<comment> \<open>Therefore a and b must be in the same component.\<close>
+  show ?thesis sorry
+qed
+
+text \<open>Define frontier (boundary) for the standard euclidean topology.
+  HOL-Analysis is not imported, so frontier_def is unavailable.
+  We define it here using closure and interior from HOL's topological_space class.\<close>
+
+definition frontier :: "'a::topological_space set \<Rightarrow> 'a set" where
+  "frontier S = {x. (\<forall>U. open U \<longrightarrow> x \<in> U \<longrightarrow> U \<inter> S \<noteq> {}) \<and>
+                     (\<forall>U. open U \<longrightarrow> x \<in> U \<longrightarrow> U \<inter> (- S) \<noteq> {})}"
+
+lemma frontier_closed_sub: "closed (S :: 'a::topological_space set) \<Longrightarrow> frontier S \<subseteq> S"
+proof
+  fix x assume hcl: "closed S" and hx: "x \<in> frontier S"
+  show "x \<in> S"
+  proof (rule ccontr)
+    assume "x \<notin> S"
+    hence "x \<in> - S" by (by100 blast)
+    have "open (- S)" using hcl by (rule open_Compl)
+    have "(-S) \<inter> S \<noteq> {}"
+      using hx \<open>open (- S)\<close> \<open>x \<in> - S\<close> unfolding frontier_def by (by100 blast)
+    thus False by (by100 blast)
+  qed
+qed
 
 text \<open>Invariance of domain in R^2.\<close>
 
@@ -11182,17 +11232,461 @@ theorem Theorem_62_3_invariance_of_domain:
   shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
 proof -
   let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
-  have "\<forall>x\<in>U. \<exists>W. x \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
+  \<comment> \<open>Show: for every y \<in> f(U), there exists open W with y \<in> W \<subseteq> f(U).
+     Strategy (Munkres): For x = f\<inverse>(y) \<in> U, take closed ball B around x with B \<subseteq> U.
+     Then f(Int B) is open (by JCT + Borsuk) and y = f(x) \<in> f(Int B) \<subseteq> f(U).\<close>
+  have "\<forall>y\<in>f ` U. \<exists>W. y \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
   proof
-    fix x assume hx: "x \<in> U"
-    \<comment> \<open>Step 1: Closed ball B with x \<in> Int(B) \<subseteq> B \<subseteq> U, Bd(B) \<cong> S^1.\<close>
-    obtain B where hBsub: "B \<subseteq> U"
-        and hx_int: "x \<in> B - frontier B"
-        and hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-            (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
-      sorry \<comment> \<open>Take closed ball in open U around x.\<close>
-    \<comment> \<open>Step 2: f(Bd B) is SCC. Step 3: JCT gives 2 components.\<close>
-    have hfBd_SCC: "top1_simple_closed_curve_on UNIV ?TR2 (f ` frontier B)" sorry
+    fix y assume "y \<in> f ` U"
+    then obtain x where hx: "x \<in> U" and hy: "y = f x" by (by100 blast)
+    \<comment> \<open>Step 1: Closed ball B around x with B \<subseteq> U, Bd(B) \<cong> S^1.\<close>
+    \<comment> \<open>U is open in R^2. Take a closed ball B \<subseteq> U around x.\<close>
+    have hU_open: "open U"
+    proof -
+      have "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+        by (rule product_topology_on_open_sets_real2)
+      hence "U \<in> (top1_open_sets :: (real\<times>real) set set)" using assms(1) by (by100 simp)
+      thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+    qed
+    \<comment> \<open>Get rectangular neighborhood from open_prod_def.\<close>
+    obtain A0 B0 where hA0: "open A0" and hB0: "open B0"
+        and hx_AB: "x \<in> A0 \<times> B0" and hAB_U: "A0 \<times> B0 \<subseteq> U"
+      using open_prod_elim[OF hU_open hx] by (by100 blast)
+    \<comment> \<open>Get small radius: open intervals around fst x, snd x.\<close>
+    have hfx_A0: "fst x \<in> A0" and hsx_B0: "snd x \<in> B0"
+      using hx_AB by (by100 auto)+
+    obtain ra where hra: "ra > 0" and hra_sub: "\<forall>t. dist t (fst x) < ra \<longrightarrow> t \<in> A0"
+      using hA0 hfx_A0 unfolding open_dist by (by100 blast)
+    obtain rb where hrb: "rb > 0" and hrb_sub: "\<forall>t. dist t (snd x) < rb \<longrightarrow> t \<in> B0"
+      using hB0 hsx_B0 unfolding open_dist by (by100 blast)
+    define r where "r = min ra rb / 2"
+    have hr: "r > 0" unfolding r_def using hra hrb by (by100 simp)
+    \<comment> \<open>Define closed ball of radius r centered at x.\<close>
+    define B where "B = {y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2 \<le> r^2}"
+    \<comment> \<open>B \<subseteq> U: any point in the disk has each coordinate within distance r of x.\<close>
+    have hBsub: "B \<subseteq> U"
+    proof
+      fix y assume hy: "y \<in> B"
+      have hle: "(fst y - fst x)^2 + (snd y - snd x)^2 \<le> r^2"
+        using hy unfolding B_def by (by100 blast)
+      have hfst: "(fst y - fst x)^2 \<le> r^2"
+      proof -
+        have "(snd y - snd x)^2 \<ge> 0" by (by100 simp)
+        thus ?thesis using hle by (by100 linarith)
+      qed
+      have hsnd: "(snd y - snd x)^2 \<le> r^2"
+      proof -
+        have "(fst y - fst x)^2 \<ge> 0" by (by100 simp)
+        thus ?thesis using hle by (by100 linarith)
+      qed
+      have hfst_dist: "dist (fst y) (fst x) \<le> r"
+      proof -
+        have "r \<ge> 0" using hr by (by100 linarith)
+        have "abs (fst y - fst x) ^ 2 = (fst y - fst x)^2" by (rule power2_abs)
+        hence "\<bar>fst y - fst x\<bar>^2 \<le> r^2" using hfst by (by100 linarith)
+        hence "\<bar>fst y - fst x\<bar> \<le> r" using \<open>r \<ge> 0\<close>
+          using power2_le_imp_le by (by100 blast)
+        thus ?thesis unfolding dist_real_def by (by100 simp)
+      qed
+      have hsnd_dist: "dist (snd y) (snd x) \<le> r"
+      proof -
+        have "r \<ge> 0" using hr by (by100 linarith)
+        have "abs (snd y - snd x) ^ 2 = (snd y - snd x)^2" by (rule power2_abs)
+        hence "\<bar>snd y - snd x\<bar>^2 \<le> r^2" using hsnd by (by100 linarith)
+        hence "\<bar>snd y - snd x\<bar> \<le> r" using \<open>r \<ge> 0\<close>
+          using power2_le_imp_le by (by100 blast)
+        thus ?thesis unfolding dist_real_def by (by100 simp)
+      qed
+      have hr_ra: "r < ra" unfolding r_def using hra hrb by (by100 linarith)
+      have hr_rb: "r < rb" unfolding r_def using hra hrb by (by100 linarith)
+      have "dist (fst y) (fst x) < ra" using hfst_dist hr_ra by (by100 linarith)
+      hence "fst y \<in> A0" using hra_sub by (by100 blast)
+      moreover have "dist (snd y) (snd x) < rb" using hsnd_dist hr_rb by (by100 linarith)
+      hence "snd y \<in> B0" using hrb_sub by (by100 blast)
+      ultimately have "y \<in> A0 \<times> B0" using mem_Times_iff[of y A0 B0] by (by100 simp)
+      thus "y \<in> U" using hAB_U by (by100 blast)
+    qed
+    \<comment> \<open>B closed: {y | continuous_function(y) \<le> constant} is closed.\<close>
+    have hBclosed: "closed B"
+    proof -
+      let ?g = "\<lambda>y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2"
+      have hcont: "continuous_on UNIV ?g" by (intro continuous_intros)
+      have "B = ?g -` {..r^2}" unfolding B_def by (by100 auto)
+      moreover have "closed (?g -` {..r^2})"
+        using closed_vimage[OF closed_atMost hcont] by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>x \<in> B - frontier B: x is the center of the disk.\<close>
+    have hx_int: "x \<in> B - frontier B"
+    proof -
+      have hxB: "x \<in> B" unfolding B_def using hr by (by100 simp)
+      have "x \<notin> frontier B"
+      proof
+        assume hxf: "x \<in> frontier B"
+        \<comment> \<open>The open ball Br of radius r around x is inside B.\<close>
+        define Br where "Br = {y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2 < r^2}"
+        have hBr_open: "open Br"
+        proof -
+          have "Br = (\<lambda>y. (fst y - fst x)^2 + (snd y - snd x)^2) -` {..<r^2}"
+            unfolding Br_def by (by100 auto)
+          moreover have "open ((\<lambda>y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2) -` {..<r^2})"
+            by (rule open_vimage) (auto intro!: continuous_intros)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hx_Br: "x \<in> Br" unfolding Br_def using hr by (by100 simp)
+        have hBr_sub: "Br \<subseteq> B" unfolding Br_def B_def by (by100 auto)
+        \<comment> \<open>frontier B: every open nbhd of x meets -B. But Br \<subseteq> B, so Br \<inter> (-B) = {}.\<close>
+        have "Br \<inter> (- B) = {}" using hBr_sub by (by100 blast)
+        moreover have "Br \<inter> (- B) \<noteq> {}"
+          using hxf hBr_open hx_Br unfolding frontier_def by (by100 blast)
+        ultimately show False by (by100 blast)
+      qed
+      thus ?thesis using hxB by (by100 blast)
+    qed
+    \<comment> \<open>frontier B \<cong> S^1: the circle of radius r is homeomorphic to S^1.\<close>
+    have hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
+    proof -
+      \<comment> \<open>The circle of radius r centered at x.\<close>
+      let ?circle = "{y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2 = r^2}"
+      \<comment> \<open>frontier B \<subseteq> circle (interior and exterior points are not in frontier).\<close>
+      have hfr_sub: "frontier B \<subseteq> ?circle"
+      proof
+        fix y assume hy: "y \<in> frontier B"
+        let ?g = "\<lambda>y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2"
+        have hg_cont: "continuous_on UNIV ?g" by (intro continuous_intros)
+        show "y \<in> ?circle"
+        proof (rule ccontr)
+          assume "y \<notin> ?circle"
+          hence "?g y \<noteq> r^2" by (by100 blast)
+          thus False
+          proof (cases "?g y < r^2")
+            case True
+            have "open (?g -` {..<r^2})" by (rule open_vimage[OF open_lessThan hg_cont])
+            moreover have "y \<in> ?g -` {..<r^2}" using True by (by100 blast)
+            moreover have "?g -` {..<r^2} \<inter> (- B) = {}" unfolding B_def by (by100 auto)
+            ultimately show False using hy unfolding frontier_def by (by100 blast)
+          next
+            case False hence "?g y > r^2" using \<open>?g y \<noteq> r^2\<close> by (by100 linarith)
+            have "open (?g -` {r^2<..})" by (rule open_vimage[OF open_greaterThan hg_cont])
+            moreover have "y \<in> ?g -` {r^2<..}" using \<open>?g y > r^2\<close> by (by100 blast)
+            moreover have "?g -` {r^2<..} \<inter> B = {}" unfolding B_def by (by100 auto)
+            ultimately show False using hy unfolding frontier_def by (by100 blast)
+          qed
+        qed
+      qed
+      \<comment> \<open>circle \<subseteq> frontier B.\<close>
+      have hcircle_sub: "?circle \<subseteq> frontier B"
+      proof
+        fix y assume hy: "y \<in> ?circle"
+        hence hg_eq: "(fst y - fst x)^2 + (snd y - snd x)^2 = r^2" by (by100 blast)
+        show "y \<in> frontier B" unfolding frontier_def
+        proof (intro CollectI conjI allI impI)
+          fix V :: "(real \<times> real) set" assume hV: "open V" and hyV: "y \<in> V"
+          \<comment> \<open>V \<inter> B \<noteq> {}: y itself is in B (on the boundary, g(y) = r^2 \<le> r^2).\<close>
+          show "V \<inter> B \<noteq> {}"
+          proof -
+            have "y \<in> B" unfolding B_def using hg_eq by (by100 auto)
+            thus ?thesis using hyV by (by100 blast)
+          qed
+          \<comment> \<open>V \<inter> (-B) \<noteq> {}: find a point outside B in V by scaling outward.\<close>
+          show "V \<inter> (- B) \<noteq> {}"
+          proof -
+            \<comment> \<open>Get rectangular neighborhood inside V.\<close>
+            obtain A0' B0' where hA0': "open A0'" and hB0': "open B0'"
+                and hy_AB: "y \<in> A0' \<times> B0'" and hAB_V: "A0' \<times> B0' \<subseteq> V"
+              using open_prod_elim[OF hV hyV] by (by100 blast)
+            obtain d1 where hd1: "d1 > 0" and hd1_sub: "\<forall>t. dist t (fst y) < d1 \<longrightarrow> t \<in> A0'"
+              using hA0' hy_AB unfolding open_dist by (by100 auto)
+            obtain d2 where hd2: "d2 > 0" and hd2_sub: "\<forall>t. dist t (snd y) < d2 \<longrightarrow> t \<in> B0'"
+              using hB0' hy_AB unfolding open_dist by (by100 auto)
+            \<comment> \<open>Scale y outward from x: z = x + (1+\<epsilon>)(y-x) for small \<epsilon> > 0.\<close>
+            define \<epsilon> where "\<epsilon> = min d1 d2 / (2 * (r + 1))"
+            have h\<epsilon>: "\<epsilon> > 0" unfolding \<epsilon>_def using hd1 hd2 hr by (by100 simp)
+            define z where "z = (fst x + (1 + \<epsilon>) * (fst y - fst x), snd x + (1 + \<epsilon>) * (snd y - snd x))"
+            \<comment> \<open>z is outside B: g(z) = (1+\<epsilon>)^2 * r^2 > r^2.\<close>
+            have "z \<notin> B"
+            proof -
+              have hfz: "fst z - fst x = (1 + \<epsilon>) * (fst y - fst x)" unfolding z_def by (by100 simp)
+              have hsz: "snd z - snd x = (1 + \<epsilon>) * (snd y - snd x)" unfolding z_def by (by100 simp)
+              have "(fst z - fst x)^2 + (snd z - snd x)^2
+                  = ((1 + \<epsilon>) * (fst y - fst x))^2 + ((1 + \<epsilon>) * (snd y - snd x))^2"
+                using hfz hsz by (by100 simp)
+              also have "... = (1 + \<epsilon>)^2 * ((fst y - fst x)^2 + (snd y - snd x)^2)"
+                by (by100 algebra)
+              also have "... = (1 + \<epsilon>)^2 * r^2" using hg_eq by (by100 simp)
+              finally have hgz: "(fst z - fst x)^2 + (snd z - snd x)^2 = (1 + \<epsilon>)^2 * r^2" .
+              have "(1 + \<epsilon>)^2 > 1" using h\<epsilon>
+              proof -
+                have "1 + \<epsilon> > 1" using h\<epsilon> by (by100 linarith)
+                hence "(1 + \<epsilon>)^2 > 1^2"
+                  by (rule power_strict_mono) (by100 linarith)+
+                thus ?thesis by (by100 simp)
+              qed
+              hence "(1 + \<epsilon>)^2 * r^2 > 1 * r^2"
+                using hr by (intro mult_strict_right_mono) (by100 simp)+
+              hence "(1 + \<epsilon>)^2 * r^2 > r^2" by (by100 simp)
+              have "(fst z - fst x)^2 + (snd z - snd x)^2 > r^2"
+                using hgz \<open>(1 + \<epsilon>)^2 * r^2 > r^2\<close> by (by100 linarith)
+              thus "z \<notin> B" unfolding B_def by (by100 auto)
+            qed
+            moreover have "z \<in> V"
+            proof -
+              \<comment> \<open>Key bound: \<epsilon> * r < min d1 d2 / 2 < d1 (and < d2).\<close>
+              have h\<epsilon>_bound: "\<epsilon> * r < min d1 d2 / 2"
+              proof -
+                have "r + 1 > 0" using hr by (by100 linarith)
+                hence h2rp: "(2::real) * (r + 1) > 0" by (by100 simp)
+                have h2rp_ne: "(2::real) * (r + 1) \<noteq> 0" using h2rp by (by100 linarith)
+                have h_\<epsilon>_eq: "\<epsilon> = min d1 d2 / (2 * (r + 1))" unfolding \<epsilon>_def by (by100 simp)
+                have "\<epsilon> * (2 * (r + 1)) = min d1 d2 / (2 * (r + 1)) * (2 * (r + 1))"
+                  using h_\<epsilon>_eq by (by100 simp)
+                also have "... = min d1 d2"
+                  using h2rp_ne nonzero_mult_div_cancel_right[of "2*(r+1)" "min d1 d2"]
+                  by (by100 simp)
+                finally have h_\<epsilon>_cancel: "\<epsilon> * (2 * (r + 1)) = min d1 d2" .
+                have h_\<epsilon>2r: "\<epsilon> * r * (2 * (r + 1)) = min d1 d2 * r"
+                proof -
+                  have "\<epsilon> * r * (2 * (r + 1)) = (\<epsilon> * (2 * (r + 1))) * r"
+                    by (by100 algebra)
+                  also have "... = min d1 d2 * r" using h_\<epsilon>_cancel by (by100 simp)
+                  finally show ?thesis .
+                qed
+                have "min d1 d2 * r < min d1 d2 * (r + 1)"
+                  using hd1 hd2 by (by100 simp)
+                also have "... = min d1 d2 / 2 * (2 * (r + 1))"
+                  by (by100 algebra)
+                finally have "\<epsilon> * r * (2 * (r + 1)) < min d1 d2 / 2 * (2 * (r + 1))"
+                  using h_\<epsilon>2r by (by100 linarith)
+                thus ?thesis using h2rp by (by100 simp)
+              qed
+              \<comment> \<open>|fst y - fst x| \<le> r and |snd y - snd x| \<le> r (from circle equation).\<close>
+              have hfabs: "\<bar>fst y - fst x\<bar> \<le> r"
+              proof -
+                have "(snd y - snd x)^2 \<ge> 0" by (by100 simp)
+                hence "(fst y - fst x)^2 \<le> r^2"
+                  using hg_eq by (by100 linarith)
+                have "abs (fst y - fst x) ^ 2 = (fst y - fst x)^2" by (rule power2_abs)
+                hence "\<bar>fst y - fst x\<bar>^2 \<le> r^2" using \<open>(fst y - fst x)^2 \<le> r^2\<close> by (by100 linarith)
+                show ?thesis
+                proof (rule power2_le_imp_le)
+                  show "\<bar>fst y - fst x\<bar>\<^sup>2 \<le> r\<^sup>2" using \<open>\<bar>fst y - fst x\<bar>^2 \<le> r^2\<close> by (by100 simp)
+                  show "0 \<le> r" using hr by (by100 linarith)
+                qed
+              qed
+              have hsabs: "\<bar>snd y - snd x\<bar> \<le> r"
+              proof -
+                have "(fst y - fst x)^2 \<ge> 0" by (by100 simp)
+                hence "(snd y - snd x)^2 \<le> r^2" using hg_eq by (by100 linarith)
+                have "abs (snd y - snd x) ^ 2 = (snd y - snd x)^2" by (rule power2_abs)
+                hence "\<bar>snd y - snd x\<bar>^2 \<le> r^2" using \<open>(snd y - snd x)^2 \<le> r^2\<close> by (by100 linarith)
+                show ?thesis
+                proof (rule power2_le_imp_le)
+                  show "\<bar>snd y - snd x\<bar>\<^sup>2 \<le> r\<^sup>2" using \<open>\<bar>snd y - snd x\<bar>^2 \<le> r^2\<close> by (by100 simp)
+                  show "0 \<le> r" using hr by (by100 linarith)
+                qed
+              qed
+              \<comment> \<open>dist(fst z, fst y) = \<epsilon> * |fst y - fst x| \<le> \<epsilon> * r < d1.\<close>
+              have hfz_y: "fst z - fst y = \<epsilon> * (fst y - fst x)"
+              proof -
+                have "fst z = fst x + (1 + \<epsilon>) * (fst y - fst x)" unfolding z_def by (by100 simp)
+                thus ?thesis by (by100 algebra)
+              qed
+              have "dist (fst z) (fst y) = \<bar>\<epsilon> * (fst y - fst x)\<bar>"
+                unfolding dist_real_def using hfz_y by (by100 simp)
+              also have "... = \<epsilon> * \<bar>fst y - fst x\<bar>"
+                using h\<epsilon> abs_mult[of \<epsilon> "fst y - fst x"] by (by100 simp)
+              also have "... \<le> \<epsilon> * r" using hfabs h\<epsilon> by (intro mult_left_mono) (by100 linarith)+
+              also have "... < min d1 d2 / 2" by (rule h\<epsilon>_bound)
+              also have "... \<le> d1" using hd1 hd2 by (by100 linarith)
+              finally have "dist (fst z) (fst y) < d1" .
+              hence "fst z \<in> A0'" using hd1_sub by (by100 blast)
+              \<comment> \<open>Same for snd.\<close>
+              have hsz_y: "snd z - snd y = \<epsilon> * (snd y - snd x)"
+              proof -
+                have "snd z = snd x + (1 + \<epsilon>) * (snd y - snd x)" unfolding z_def by (by100 simp)
+                thus ?thesis by (by100 algebra)
+              qed
+              have "dist (snd z) (snd y) = \<bar>\<epsilon> * (snd y - snd x)\<bar>"
+                unfolding dist_real_def using hsz_y by (by100 simp)
+              also have "... = \<epsilon> * \<bar>snd y - snd x\<bar>"
+                using h\<epsilon> abs_mult[of \<epsilon> "snd y - snd x"] by (by100 simp)
+              also have "... \<le> \<epsilon> * r" using hsabs h\<epsilon> by (intro mult_left_mono) (by100 linarith)+
+              also have "... < min d1 d2 / 2" by (rule h\<epsilon>_bound)
+              also have "... \<le> d2" using hd1 hd2 by (by100 linarith)
+              finally have "dist (snd z) (snd y) < d2" .
+              hence "snd z \<in> B0'" using hd2_sub by (by100 blast)
+              have "z \<in> A0' \<times> B0'" unfolding z_def
+                using \<open>fst z \<in> A0'\<close> \<open>snd z \<in> B0'\<close> unfolding z_def by (by100 simp)
+              thus "z \<in> V" using hAB_V by (by100 blast)
+            qed
+            ultimately show ?thesis by (by100 blast)
+          qed
+        qed
+      qed
+      \<comment> \<open>frontier B = circle.\<close>
+      have hfr_eq: "frontier B = ?circle" using hfr_sub hcircle_sub by (by100 blast)
+      \<comment> \<open>The homeomorphism h: S^1 \<rightarrow> frontier B = circle, h(a,b) = (cx+r*a, cy+r*b).\<close>
+      define hh where "hh = (\<lambda>p :: real \<times> real. (fst x + r * fst p, snd x + r * snd p))"
+      \<comment> \<open>hh continuous: polynomial, hence continuous on S^1 with subspace topology.\<close>
+      have hh_range: "\<And>p. p \<in> top1_S1 \<Longrightarrow> hh p \<in> frontier B"
+      proof -
+        fix p assume hp: "p \<in> top1_S1"
+        have "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_def by (by100 blast)
+        have "(fst (hh p) - fst x)^2 + (snd (hh p) - snd x)^2 = r^2"
+        proof -
+          have "fst (hh p) - fst x = r * fst p" unfolding hh_def by (by100 simp)
+          moreover have "snd (hh p) - snd x = r * snd p" unfolding hh_def by (by100 simp)
+          ultimately have "(fst (hh p) - fst x)^2 + (snd (hh p) - snd x)^2 = (r*fst p)^2 + (r*snd p)^2"
+            by (by100 simp)
+          also have "... = r^2 * (fst p^2 + snd p^2)" by (by100 algebra)
+          also have "... = r^2" using \<open>fst p ^ 2 + snd p ^ 2 = 1\<close> by (by100 simp)
+          finally show ?thesis .
+        qed
+        thus "hh p \<in> frontier B" unfolding hfr_eq by (by100 blast)
+      qed
+      have hh_cont_std: "continuous_on UNIV hh"
+        unfolding hh_def by (intro continuous_intros)
+      have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) hh"
+      proof -
+        have hcont_S1: "continuous_on top1_S1 hh"
+          using continuous_on_subset[OF hh_cont_std subset_UNIV] by (by100 blast)
+        show ?thesis unfolding top1_S1_topology_def
+          by (rule top1_continuous_map_on_real2_subspace_general[OF hh_range hcont_S1])
+      qed
+      \<comment> \<open>hh injective: r > 0 ensures (a1,b1) \<noteq> (a2,b2) \<Rightarrow> hh(a1,b1) \<noteq> hh(a2,b2).\<close>
+      have hh_inj: "inj_on hh top1_S1"
+        unfolding hh_def inj_on_def using hr by (by100 auto)
+      \<comment> \<open>hh surjective: for y \<in> frontier B = circle, ((fst y - cx)/r, (snd y - cy)/r) \<in> S^1.\<close>
+      have hh_surj: "hh ` top1_S1 = frontier B"
+      proof (intro set_eqI iffI)
+        fix y assume "y \<in> hh ` top1_S1"
+        then obtain p where hp: "p \<in> top1_S1" and hy: "y = hh p" by (by100 blast)
+        have "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_def by (by100 blast)
+        have "(fst y - fst x)^2 + (snd y - snd x)^2 = r^2"
+        proof -
+          have "fst y - fst x = r * fst p" unfolding hy hh_def by (by100 simp)
+          moreover have "snd y - snd x = r * snd p" unfolding hy hh_def by (by100 simp)
+          ultimately have "(fst y - fst x)^2 + (snd y - snd x)^2 = (r * fst p)^2 + (r * snd p)^2"
+            by (by100 simp)
+          also have "... = r^2 * (fst p^2 + snd p^2)" by (by100 algebra)
+          also have "... = r^2" using \<open>fst p ^ 2 + snd p ^ 2 = 1\<close> by (by100 simp)
+          finally show ?thesis .
+        qed
+        thus "y \<in> frontier B" unfolding hfr_eq by (by100 blast)
+      next
+        fix y assume "y \<in> frontier B"
+        thus "y \<in> hh ` top1_S1"
+        proof -
+          assume "y \<in> frontier B"
+          hence "y \<in> ?circle" using hfr_eq by (by100 blast)
+          hence hcirc: "(fst y - fst x)^2 + (snd y - snd x)^2 = r^2" by (by100 blast)
+          have "r \<noteq> 0" using hr by (by100 linarith)
+          let ?p = "((fst y - fst x)/r, (snd y - snd x)/r)"
+          have "hh ?p = y"
+          proof -
+            have "fst (hh ?p) = fst y" unfolding hh_def using \<open>r \<noteq> 0\<close> by (by100 simp)
+            moreover have "snd (hh ?p) = snd y" unfolding hh_def using \<open>r \<noteq> 0\<close> by (by100 simp)
+            ultimately show ?thesis by (rule prod_eqI)
+          qed
+          moreover have "?p \<in> top1_S1" unfolding top1_S1_def
+          proof (intro CollectI)
+            have "r^2 > 0" using hr by (by100 simp)
+            have "r^2 * (fst ?p ^ 2 + snd ?p ^ 2) = r^2 * 1"
+            proof -
+              have hfp: "fst ?p = (fst y - fst x) / r" by (by100 simp)
+              have hsp: "snd ?p = (snd y - snd x) / r" by (by100 simp)
+              have h_div_sq: "\<And>a :: real. r^2 * (a/r)^2 = a^2"
+              proof -
+                fix a :: real
+                have "(a/r) = a * (1/r)" by (by100 simp)
+                hence "(a/r)^2 = a^2 * (1/r)^2" by (by100 algebra)
+                hence "r^2 * (a/r)^2 = r^2 * a^2 * (1/r)^2" by (by100 algebra)
+                also have "... = a^2 * (r^2 * (1/r)^2)" by (by100 algebra)
+                also have "r^2 * (1/r)^2 = (r * (1/r))^2" by (by100 algebra)
+                also have "... = 1" using \<open>r \<noteq> 0\<close> by (by100 simp)
+                finally show "r^2 * (a/r)^2 = a^2" by (by100 simp)
+              qed
+              have "r^2 * fst ?p ^ 2 = (fst y - fst x)^2"
+                unfolding hfp by (rule h_div_sq)
+              moreover have "r^2 * snd ?p ^ 2 = (snd y - snd x)^2"
+                unfolding hsp by (rule h_div_sq)
+              ultimately have "r^2 * (fst ?p ^ 2 + snd ?p ^ 2)
+                  = (fst y - fst x)^2 + (snd y - snd x)^2"
+                by (by100 algebra)
+              thus ?thesis using hcirc by (by100 simp)
+            qed
+            thus "fst ?p ^ 2 + snd ?p ^ 2 = 1" using \<open>r^2 > 0\<close> by (by100 simp)
+          qed
+          ultimately show "y \<in> hh ` top1_S1" by (by100 force)
+        qed
+      qed
+      \<comment> \<open>hh inverse continuous: ((fst y - cx)/r, (snd y - cy)/r) is continuous.\<close>
+      \<comment> \<open>Use Theorem 26.6: compact + Hausdorff + continuous bijection \<Rightarrow> homeomorphism.\<close>
+      have hh_bij: "bij_betw hh top1_S1 (frontier B)" unfolding bij_betw_def
+        using hh_inj hh_surj by (by100 blast)
+      have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hTfr: "is_topology_on (frontier B) (subspace_topology UNIV ?TR2 (frontier B))"
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      have hfr_haus: "is_hausdorff_on (frontier B) (subspace_topology UNIV ?TR2 (frontier B))"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] top1_R2_is_hausdorff by (by100 blast)
+      have "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) hh"
+        by (rule Theorem_26_6[OF hTS1 hTfr S1_compact hfr_haus hh_cont hh_bij])
+      thus ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: f(Bd B) is a SCC (f injective continuous on compact, Bd B \<cong> S^1).\<close>
+    have hfBd_SCC: "top1_simple_closed_curve_on UNIV ?TR2 (f ` frontier B)"
+    proof -
+      obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
+        using hBd_S1 by (by100 blast)
+      \<comment> \<open>Extract parts from the homeomorphism separately.\<close>
+      have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
+        and hh_bij: "bij_betw h top1_S1 (frontier B)"
+        using hh[unfolded top1_homeomorphism_on_def] by (by100 blast)+
+      have hh_img: "h ` top1_S1 = frontier B"
+        using hh_bij[unfolded bij_betw_def] by (by100 blast)
+      have hh_inj: "inj_on h top1_S1"
+        using hh_bij[unfolded bij_betw_def] by (by100 blast)
+      \<comment> \<open>frontier B \<subseteq> U (since B closed and B \<subseteq> U).\<close>
+      have hfr_sub: "frontier B \<subseteq> U"
+        using frontier_closed_sub[OF hBclosed] hBsub by (by100 blast)
+      \<comment> \<open>f restricted to frontier B is continuous.\<close>
+      have hf_cont_B: "top1_continuous_map_on (frontier B) (subspace_topology UNIV ?TR2 (frontier B))
+          UNIV ?TR2 f"
+      proof -
+        have "top1_continuous_map_on (frontier B)
+            (subspace_topology U (subspace_topology UNIV ?TR2 U) (frontier B))
+            UNIV ?TR2 f"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF assms(2) hfr_sub])
+        moreover have "subspace_topology U (subspace_topology UNIV ?TR2 U) (frontier B)
+            = subspace_topology UNIV ?TR2 (frontier B)"
+          by (rule subspace_topology_trans[OF hfr_sub])
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>f injective on frontier B.\<close>
+      have hf_inj_B: "inj_on f (frontier B)"
+        using assms(3) hfr_sub by (rule inj_on_subset)
+      \<comment> \<open>Compose: f \<circ> h : S^1 \<rightarrow> R^2 continuous, injective, image = f(frontier B).\<close>
+      have "(f \<circ> h) ` top1_S1 = f ` frontier B" unfolding hh_img[symmetric] by (by100 auto)
+      moreover have "top1_continuous_map_on top1_S1 top1_S1_topology UNIV ?TR2 (f \<circ> h)"
+        by (rule top1_continuous_map_on_comp[OF hh_cont hf_cont_B])
+      moreover have "inj_on (f \<circ> h) top1_S1"
+      proof (rule comp_inj_on[OF hh_inj])
+        show "inj_on f (h ` top1_S1)" unfolding hh_img by (rule hf_inj_B)
+      qed
+      ultimately show ?thesis unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: JCT gives bounded component W1 and unbounded W2.\<close>
     obtain W1 W2 where hW: "W1 \<noteq> {}" "W2 \<noteq> {}" "W1 \<inter> W2 = {}"
         "W1 \<union> W2 = UNIV - f ` frontier B"
         "top1_path_connected_on W1 (subspace_topology UNIV ?TR2 W1)"
@@ -11200,23 +11694,55 @@ proof -
         "(\<exists>M. \<forall>p\<in>W1. fst p ^ 2 + snd p ^ 2 \<le> M)"
         "(\<forall>M. \<exists>p\<in>W2. fst p ^ 2 + snd p ^ 2 > M)"
     proof -
-      obtain U V where "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = UNIV - f ` frontier B"
-          "top1_path_connected_on U (subspace_topology UNIV ?TR2 U)"
+      obtain U' V where "U' \<noteq> {}" "V \<noteq> {}" "U' \<inter> V = {}" "U' \<union> V = UNIV - f ` frontier B"
+          "top1_path_connected_on U' (subspace_topology UNIV ?TR2 U')"
           "top1_path_connected_on V (subspace_topology UNIV ?TR2 V)"
-          "\<exists>M. \<forall>p\<in>U. fst p ^ 2 + snd p ^ 2 \<le> M"
+          "\<exists>M. \<forall>p\<in>U'. fst p ^ 2 + snd p ^ 2 \<le> M"
           "\<forall>M. \<exists>p\<in>V. fst p ^ 2 + snd p ^ 2 > M"
         using Theorem_63_4_JordanCurve[OF hfBd_SCC] by metis
       thus ?thesis using that by simp
     qed
-    \<comment> \<open>Steps 4-5: f(x) \<in> W1 (bounded), W1 \<subseteq> f(U).\<close>
-    have "f x \<in> W1" sorry
-    moreover have "W1 \<subseteq> f ` U" sorry
-    moreover have "W1 \<in> ?TR2" sorry
-    ultimately show "\<exists>W. x \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
-      sorry \<comment> \<open>Need: x \<in> W (not f x \<in> W). Restructure: show f(U) open directly.\<close>
+    \<comment> \<open>Step 4: f(Int B) is the bounded component W1.
+       f(Int B) is connected (continuous image of connected), contained in UNIV - f(Bd B),
+       hence in one component. f(x) \<in> f(Int B) and f(B) is bounded \<Rightarrow> f(Int B) \<subseteq> W1.
+       Conversely W1 \<subseteq> f(Int B) by Borsuk (any a \<in> W1 \<setminus> f(Int B) and b \<in> W2 would be separated
+       by f(B), but f(B) doesn't separate S^2 since B is contractible).\<close>
+    have hfx_W1: "f x \<in> W1" sorry
+    have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)" sorry
+    have hW1_open: "W1 \<in> ?TR2" sorry
+    \<comment> \<open>W1 is open, f(x) \<in> W1, W1 \<subseteq> f(Int B) \<subseteq> f(U).\<close>
+    have "W1 \<subseteq> f ` U" using hW1_sub hBsub by (by100 blast)
+    thus "\<exists>W. y \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U"
+      using hfx_W1 hW1_open hy by (by100 blast)
   qed
-  thus ?thesis
-    sorry \<comment> \<open>Every point of f(U) has open neighborhood in f(U), so f(U) is open.\<close>
+  \<comment> \<open>f(U) is open: every point has an open neighborhood in f(U).\<close>
+  \<comment> \<open>f(U) = \<Union>{W | W open, W \<subseteq> f(U)} which is a union of open sets, hence open.\<close>
+  have "f ` U = \<Union>{W \<in> ?TR2. W \<subseteq> f ` U}"
+  proof (intro set_eqI iffI)
+    fix y assume hy: "y \<in> f ` U"
+    then obtain W where hW: "W \<in> ?TR2" "y \<in> W" "W \<subseteq> f ` U"
+      using \<open>\<forall>y\<in>f ` U. \<exists>W. y \<in> W \<and> W \<in> ?TR2 \<and> W \<subseteq> f ` U\<close> by (by100 blast)
+    thus "y \<in> \<Union>{W \<in> ?TR2. W \<subseteq> f ` U}" by (by100 blast)
+  next
+    fix y assume "y \<in> \<Union>{W \<in> ?TR2. W \<subseteq> f ` U}"
+    then obtain W where "W \<in> ?TR2" "W \<subseteq> f ` U" "y \<in> W" by (by100 blast)
+    thus "y \<in> f ` U" by (by100 blast)
+  qed
+  moreover have "{W \<in> ?TR2. W \<subseteq> f ` U} \<subseteq> ?TR2" by (by100 blast)
+  moreover have "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+  proof -
+    have "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+      by (rule product_topology_on_open_sets_real2)
+    thus ?thesis using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+  qed
+  hence hUnion: "\<Union>{W \<in> ?TR2. W \<subseteq> f ` U} \<in> ?TR2"
+  proof -
+    have hsub: "{W \<in> ?TR2. W \<subseteq> f ` U} \<subseteq> ?TR2" by (by100 blast)
+    have "(\<forall>U. U \<subseteq> ?TR2 \<longrightarrow> \<Union>U \<in> ?TR2)"
+      using \<open>is_topology_on (UNIV :: (real\<times>real) set) ?TR2\<close> unfolding is_topology_on_def by (by100 blast)
+    thus ?thesis using hsub by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 simp)
 qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>

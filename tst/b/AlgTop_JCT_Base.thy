@@ -3,11 +3,12 @@ theory AlgTop_JCT_Base
 begin
 
 
-text \<open>Key fact: a nulhomotopic loop is path-homotopic to the constant loop.
-  NOTE: The hypothesis top1_nulhomotopic_on I_set I_top is vacuously true for any
-  continuous f: I \<rightarrow> X (since I is contractible). This lemma needs to be restated
-  with the correct hypothesis (nulhomotopic as a map S^1 \<rightarrow> X, or equivalently
-  extending to B^2). The sorry here reflects this incorrect formulation.\<close>
+text \<open>DISABLED: nulhomotopic_loop_path_homotopic_constant had incorrect hypothesis.
+  top1_nulhomotopic_on I_set I_top X TX f is vacuously true (I contractible).
+  Correct formulation needs S^1-nulhomotopy or B^2-extension.
+  Lemma was never used in the formalization. Commented out to achieve zero sorry.\<close>
+lemma nulhomotopic_loop_DISABLED: True by (by100 blast)
+(*
 lemma nulhomotopic_loop_path_homotopic_constant:
   assumes hTX: "is_topology_on X TX"
       and hf: "top1_is_loop_on X TX x0 f"
@@ -909,6 +910,7 @@ proof -
   show ?thesis
     by (rule Lemma_51_1_path_homotopic_trans[OF hTX hchain2 hstep4])
 qed
+*)
 
 text \<open>Helper: a path in a subspace is a path in the ambient space.\<close>
 lemma path_in_subspace_is_path_in_ambient:
@@ -1697,9 +1699,10 @@ proof -
   then obtain k where hk: "k \<le> n" "(1-t) * x k + t * y k \<noteq> 0" by (by100 blast)
   have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) \<ge> ((1-t) * x k + t * y k)^2"
   proof -
+    have hk_in: "k \<in> {..n}" using hk(1) by (by100 blast)
     have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) =
           ((1-t) * x k + t * y k)^2 + (\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2)"
-      using sum.remove[of "{..n}" k] hk(1) by (by100 simp)
+      using sum.remove[OF finite_atMost hk_in] by (by100 simp)
     moreover have "(\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2) \<ge> 0"
       by (rule sum_nonneg) (by100 simp)
     ultimately show ?thesis by (by100 linarith)
@@ -2039,6 +2042,172 @@ proof (intro allI notI)
   qed
 qed
 
+
+
+lemma homeomorphism_preserves_path_connected:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
+      and hpc: "top1_path_connected_on X TX"
+  shows "top1_path_connected_on Y TY"
+  unfolding top1_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on Y TY"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+next
+  fix y1 y2 assume hy1: "y1 \<in> Y" and hy2: "y2 \<in> Y"
+  have hTX: "is_topology_on X TX"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hbij: "bij_betw h X Y"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hcont: "top1_continuous_map_on X TX Y TY h"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
+  obtain x1 where hx1: "x1 \<in> X" "h x1 = y1"
+    using hy1 hbij unfolding bij_betw_def by (by100 blast)
+  obtain x2 where hx2: "x2 \<in> X" "h x2 = y2"
+    using hy2 hbij unfolding bij_betw_def by (by100 blast)
+  obtain f where hf: "top1_is_path_on X TX x1 x2 f"
+    using hpc hx1(1) hx2(1) unfolding top1_path_connected_on_def by (by100 blast)
+  \<comment> \<open>h \<circ> f is a path from y1 to y2 in Y.\<close>
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_path_on_def by (by100 blast)
+  have hhf_cont: "top1_continuous_map_on I_set I_top Y TY (h \<circ> f)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume ht: "t \<in> I_set"
+    have "f t \<in> X" using hf_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
+    thus "(h \<circ> f) t \<in> Y" using hcont unfolding top1_continuous_map_on_def comp_def by (by100 blast)
+  next
+    fix V assume hV: "V \<in> TY"
+    have "{x \<in> X. h x \<in> V} \<in> TX" using hcont hV unfolding top1_continuous_map_on_def by (by100 blast)
+    hence "{t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}} \<in> I_top"
+      using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    moreover have "{t \<in> I_set. (h \<circ> f) t \<in> V} = {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}"
+    proof (rule set_eqI, rule iffI)
+      fix t assume "t \<in> {t \<in> I_set. (h \<circ> f) t \<in> V}"
+      hence ht: "t \<in> I_set" and hv: "h (f t) \<in> V" unfolding comp_def by auto
+      have "f t \<in> X" using hf_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "t \<in> {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}" using ht hv by (by100 blast)
+    next
+      fix t assume "t \<in> {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}"
+      thus "t \<in> {t \<in> I_set. (h \<circ> f) t \<in> V}" unfolding comp_def by (by100 blast)
+    qed
+    ultimately show "{t \<in> I_set. (h \<circ> f) t \<in> V} \<in> I_top" by simp
+  qed
+  have "(h \<circ> f) 0 = y1" using hf hx1(2) unfolding top1_is_path_on_def comp_def by (by100 blast)
+  moreover have "(h \<circ> f) 1 = y2" using hf hx2(2) unfolding top1_is_path_on_def comp_def by (by100 blast)
+  ultimately have "top1_is_path_on Y TY y1 y2 (h \<circ> f)"
+    unfolding top1_is_path_on_def using hhf_cont by (by100 blast)
+  thus "\<exists>f. top1_is_path_on Y TY y1 y2 f" by (by100 blast)
+qed
+
+lemma homeomorphism_preserves_simply_connected:
+  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
+      and hsc: "top1_simply_connected_on Y TY"
+  shows "top1_simply_connected_on X TX"
+  unfolding top1_simply_connected_on_def
+proof (intro conjI allI impI ballI)
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hbij: "bij_betw h X Y"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hg_cont: "top1_continuous_map_on Y TY X TX (inv_into X h)" by (rule hg)
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
+  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
+    by (rule inv_into_f_f[OF hinj])
+  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
+  have hg_map: "\<And>y. y \<in> Y \<Longrightarrow> inv_into X h y \<in> X"
+    using hbij unfolding bij_betw_def by (simp add: inv_into_into)
+  have hg_inv: "\<And>y. y \<in> Y \<Longrightarrow> h (inv_into X h y) = y"
+    using hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
+  \<comment> \<open>Path-connected: transfer via h and inv.\<close>
+  show "top1_path_connected_on X TX"
+    unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on X TX" by (rule hTX)
+  next
+    fix x1 x2 assume hx1: "x1 \<in> X" and hx2: "x2 \<in> X"
+    have "h x1 \<in> Y" by (rule hh_map[OF hx1])
+    moreover have "h x2 \<in> Y" by (rule hh_map[OF hx2])
+    ultimately obtain \<alpha> where h\<alpha>: "top1_is_path_on Y TY (h x1) (h x2) \<alpha>"
+      using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+    have "top1_is_path_on X TX (inv_into X h (h x1)) (inv_into X h (h x2)) (inv_into X h \<circ> \<alpha>)"
+    proof -
+      have h\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY \<alpha>"
+        using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      have hinv_\<alpha>_cont: "top1_continuous_map_on I_set I_top X TX (inv_into X h \<circ> \<alpha>)"
+        by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont hg])
+      have "(\<alpha> 0) = h x1" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      hence h0: "(inv_into X h \<circ> \<alpha>) 0 = inv_into X h (h x1)" by simp
+      have "(\<alpha> 1) = h x2" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      hence h1: "(inv_into X h \<circ> \<alpha>) 1 = inv_into X h (h x2)" by simp
+      show ?thesis unfolding top1_is_path_on_def using hinv_\<alpha>_cont h0 h1 by (by100 blast)
+    qed
+    hence "top1_is_path_on X TX x1 x2 (inv_into X h \<circ> \<alpha>)"
+      using hh_inv[OF hx1] hh_inv[OF hx2] by simp
+    thus "\<exists>f. top1_is_path_on X TX x1 x2 f" by (by100 blast)
+  qed
+next
+  fix x0 f
+  assume hx0: "x0 \<in> X"
+  assume hf: "top1_is_loop_on X TX x0 f"
+  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hh: "top1_continuous_map_on X TX Y TY h"
+      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
+      and hbij: "bij_betw h X Y"
+    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
+  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
+    by (rule inv_into_f_f[OF hinj])
+  \<comment> \<open>h\<circ>f is a loop at h(x0) in Y.\<close>
+  have hhf_loop: "top1_is_loop_on Y TY (h x0) (h \<circ> f)"
+    using top1_continuous_map_loop_early[OF hh hf] .
+  \<comment> \<open>Y simply connected: h\<circ>f is contractible.\<close>
+  have hhx0: "h x0 \<in> Y" by (rule hh_map[OF hx0])
+  have hhf_contract: "top1_path_homotopic_on Y TY (h x0) (h x0)
+      (h \<circ> f) (top1_constant_path (h x0))"
+    using hsc hhx0 hhf_loop unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>Transfer back via inv_into: f = inv\<circ>h\<circ>f is contractible.\<close>
+  have hg_transfer: "top1_path_homotopic_on X TX
+      (inv_into X h (h x0)) (inv_into X h (h x0))
+      (inv_into X h \<circ> (h \<circ> f)) (inv_into X h \<circ> top1_constant_path (h x0))"
+    by (rule continuous_preserves_path_homotopic[OF hTY hTX hg hhf_contract])
+  have "inv_into X h (h x0) = x0" by (rule hh_inv[OF hx0])
+  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
+  proof
+    fix s assume hs: "s \<in> I_set"
+    have "f s \<in> X" using hf hs
+      unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      by (by100 blast)
+    thus "(inv_into X h \<circ> (h \<circ> f)) s = f s" by (simp add: hh_inv)
+  qed
+  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
+    unfolding top1_constant_path_def using hh_inv[OF hx0] by simp
+  ultimately have hinv_x0: "inv_into X h (h x0) = x0"
+      and hinv_f: "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
+      and hinv_c: "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
+    by auto
+  \<comment> \<open>Extract homotopy from hg_transfer, rebuild with I_set agreement.\<close>
+  obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
+      and hH0: "\<forall>s\<in>I_set. H (s, 0) = (inv_into X h \<circ> (h \<circ> f)) s"
+      and hH1: "\<forall>s\<in>I_set. H (s, 1) = (inv_into X h \<circ> top1_constant_path (h x0)) s"
+      and hHL: "\<forall>t\<in>I_set. H (0, t) = inv_into X h (h x0)"
+      and hHR: "\<forall>t\<in>I_set. H (1, t) = inv_into X h (h x0)"
+    using hg_transfer hinv_x0 unfolding top1_path_homotopic_on_def by auto
+  have hfpath: "top1_is_path_on X TX x0 x0 f"
+    using hf unfolding top1_is_loop_on_def .
+  have hcpath: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_path[OF hTX hx0])
+  show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+    unfolding top1_path_homotopic_on_def
+    using hfpath hcpath hH_cont
+  proof (intro conjI exI[of _ H])
+    show "\<forall>s\<in>I_set. H (s, 0) = f s" using hH0 hinv_f by simp
+    show "\<forall>s\<in>I_set. H (s, 1) = top1_constant_path x0 s" using hH1 hinv_c by simp
+    show "\<forall>t\<in>I_set. H (0, t) = x0" using hHL hinv_x0 by simp
+    show "\<forall>t\<in>I_set. H (1, t) = x0" using hHR hinv_x0 by simp
+  qed auto
+qed
 
 theorem Theorem_59_3:
   assumes "n \<ge> 2"
@@ -2464,8 +2633,13 @@ proof -
                     qed
                     hence "A \<in> (top1_open_sets :: (real\<times>real) set set)"
                       using product_topology_on_open_sets_real2 by (by100 simp)
-                    hence "(I_set \<times> I_set) \<inter> A \<in> II_topology"
-                      sorry
+                    hence "A \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                      using product_topology_on_open_sets_real2 by (by100 metis)
+                    moreover have "II_topology = subspace_topology UNIV
+                        (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+                      unfolding II_topology_def by (rule II_topology_eq_subspace)
+                    ultimately have "(I_set \<times> I_set) \<inter> A \<in> II_topology"
+                      unfolding subspace_topology_def by (by100 blast)
                     hence "?L \<inter> ((I_set \<times> I_set) \<inter> A) \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
                       unfolding subspace_topology_def by (by100 blast)
                     moreover have "?L \<inter> ((I_set \<times> I_set) \<inter> A) = ?L \<inter> A"
@@ -2514,7 +2688,531 @@ proof -
               qed
               \<comment> \<open>G on RIGHT: paste middle {1/2 \<le> s \<le> 3/4} and far-right {s \<ge> 3/4}.\<close>
               have hG_R: "top1_continuous_map_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?Sn ?TSn G"
-                sorry
+              proof -
+                \<comment> \<open>Split R into M = {1/2 \<le> s \<le> 3/4} and FR = {3/4 \<le> s \<le> 1}.
+                   On M: G = normalized interpolation. On FR: G = \<alpha>\<circ>(t*(4-4s)).\<close>
+                let ?M = "{(s::real,t::real). 1/2 \<le> s \<and> s \<le> 3/4 \<and> 0 \<le> t \<and> t \<le> 1}"
+                let ?FR = "{(s::real,t::real). 3/4 \<le> s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}"
+                have hR_sub: "?R \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+                have hTR: "is_topology_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R)"
+                  by (rule subspace_topology_is_topology_on[OF hTII hR_sub])
+                have hMFR_cover: "?M \<union> ?FR = ?R" by auto
+                \<comment> \<open>M closed in R.\<close>
+                have hM_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M"
+                  unfolding closedin_on_def
+                proof (intro conjI)
+                  show "?M \<subseteq> ?R" by auto
+                  have "?R - ?M = {(s::real,t::real). 3/4 < s \<and> s \<le> 1 \<and> 0 \<le> t \<and> t \<le> 1}" by auto
+                  also have "... = ({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R"
+                    unfolding top1_unit_interval_def by auto
+                  finally have hcomp_eq: "?R - ?M = ({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R" .
+                  have "{s \<in> I_set. s > 3/4} \<times> I_set \<in> II_topology"
+                  proof -
+                    have "open {s::real. s > 3/4}" using open_greaterThan[of "3/4::real"]
+                      by (simp add: greaterThan_def)
+                    hence "{s::real. s > 3/4} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+                    hence "I_set \<inter> {s::real. s > 3/4} \<in> I_top"
+                      unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                    moreover have "I_set \<inter> {s::real. s > 3/4} = {s \<in> I_set. s > 3/4}" by (by100 blast)
+                    ultimately have "{s \<in> I_set. s > 3/4} \<in> I_top" by simp
+                    moreover have "I_set \<in> I_top"
+                      using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+                    ultimately show ?thesis unfolding II_topology_def by (rule product_rect_open)
+                  qed
+                  hence "({s \<in> I_set. s > 3/4} \<times> I_set) \<inter> ?R \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+                    unfolding subspace_topology_def by (by100 blast)
+                  thus "?R - ?M \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+                    using hcomp_eq by simp
+                qed
+                \<comment> \<open>FR closed in R.\<close>
+                have hFR_closed: "closedin_on ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?FR"
+                  unfolding closedin_on_def
+                proof (intro conjI)
+                  show "?FR \<subseteq> ?R" by auto
+                  have "?R - ?FR = {(s::real,t::real). 1/2 \<le> s \<and> s < 3/4 \<and> 0 \<le> t \<and> t \<le> 1}" by auto
+                  also have "... = ({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R"
+                    unfolding top1_unit_interval_def by auto
+                  finally have hcomp_eq: "?R - ?FR = ({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R" .
+                  have "{s \<in> I_set. s < 3/4} \<times> I_set \<in> II_topology"
+                  proof -
+                    have "open {s::real. s < 3/4}" using open_lessThan[of "3/4::real"]
+                      by (simp add: greaterThan_def lessThan_def)
+                    hence "{s::real. s < 3/4} \<in> top1_open_sets" unfolding top1_open_sets_def by simp
+                    hence "I_set \<inter> {s::real. s < 3/4} \<in> I_top"
+                      unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                    moreover have "I_set \<inter> {s::real. s < 3/4} = {s \<in> I_set. s < 3/4}" by (by100 blast)
+                    ultimately have "{s \<in> I_set. s < 3/4} \<in> I_top" by simp
+                    moreover have "I_set \<in> I_top"
+                      using top1_unit_interval_topology_is_topology_on unfolding is_topology_on_def by (by100 blast)
+                    ultimately show ?thesis unfolding II_topology_def by (rule product_rect_open)
+                  qed
+                  hence "({s \<in> I_set. s < 3/4} \<times> I_set) \<inter> ?R \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+                    unfolding subspace_topology_def by (by100 blast)
+                  thus "?R - ?FR \<in> subspace_topology (I_set \<times> I_set) II_topology ?R"
+                    using hcomp_eq by simp
+                qed
+                have hG_Sn_R: "\<forall>st\<in>?R. G st \<in> ?Sn"
+                proof (intro ballI)
+                  fix st assume "st \<in> ?R"
+                  hence "st \<in> I_set \<times> I_set" using hR_sub by (by100 blast)
+                  thus "G st \<in> ?Sn" using hG_Sn by (by100 blast)
+                qed
+                \<comment> \<open>G on M: normalized interpolation (s,t) \<mapsto> ((1-t)*f(4s-2)+t*q)/||...||.
+                   This requires showing the normalized interpolation is jointly continuous.\<close>
+                have hG_M: "top1_continuous_map_on ?M
+                    (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M) ?Sn ?TSn G"
+                proof -
+                  have hM_sub_R: "?M \<subseteq> ?R" by (by100 auto)
+                  have hM_trans: "subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?M
+                      = subspace_topology (I_set \<times> I_set) II_topology ?M"
+                    by (rule subspace_topology_trans[OF hM_sub_R])
+                  \<comment> \<open>f range in S^n.\<close>
+                  have hf_cont: "top1_continuous_map_on I_set I_top ?U ?TU f"
+                    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  have hf_in_Sn: "\<forall>u\<in>I_set. f u \<in> ?Sn"
+                  proof (intro ballI)
+                    fix u assume "u \<in> I_set"
+                    have "f u \<in> ?U" using hf_cont \<open>u \<in> I_set\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+                    thus "f u \<in> ?Sn" by (by100 blast)
+                  qed
+                  have hM_sub: "?M \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                  \<comment> \<open>Each f(u) is non-antipodal to q since f(u) \<in> U = S^n - {p} and p = -q.\<close>
+                  have hf_na: "\<And>u. u \<in> I_set \<Longrightarrow> f u \<noteq> (\<lambda>i. - ?q i)"
+                  proof
+                    fix u assume hu: "u \<in> I_set" and h: "f u = (\<lambda>i. - ?q i)"
+                    have "(\<lambda>i::nat. - ?q i) = ?p" by (rule ext) (by100 simp)
+                    have "f u \<in> ?U" using hf_cont hu unfolding top1_continuous_map_on_def by (by100 blast)
+                    hence "f u \<noteq> ?p" by (by100 blast)
+                    thus False using h \<open>(\<lambda>i::nat. - ?q i) = ?p\<close> by (by100 simp)
+                  qed
+                  \<comment> \<open>4s-2 maps M into I.\<close>
+                  have h4s2_range: "\<forall>st\<in>?M. 4*fst st-2 \<in> I_set"
+                  proof (intro ballI)
+                    fix st assume "st \<in> ?M"
+                    then obtain s t where hst: "st = (s,t)" "1/2 \<le> s" "s \<le> 3/4" "0 \<le> t" "t \<le> 1" by (by100 auto)
+                    show "4*fst st-2 \<in> I_set" unfolding hst top1_unit_interval_def
+                      using hst by (by100 simp)
+                  qed
+                  \<comment> \<open>Norm N(s,t) > 0 on M: because f(4s-2) \<noteq> -q.\<close>
+                  have hN_pos: "\<forall>st\<in>?M. sqrt (\<Sum>j\<le>n. ((1-snd st) * (f (4*fst st-2)) j + snd st * ?q j)^2) > 0"
+                  proof (intro ballI)
+                    fix st assume hst: "st \<in> ?M"
+                    have hu: "4*fst st-2 \<in> I_set" using h4s2_range hst by (by100 blast)
+                    have hfu_Sn: "f (4*fst st-2) \<in> ?Sn" using hf_in_Sn hu by (by100 blast)
+                    have hfu_na: "f (4*fst st-2) \<noteq> (\<lambda>i. - ?q i)" using hf_na hu by (by100 blast)
+                    show "sqrt (\<Sum>j\<le>n. ((1-snd st) * (f (4*fst st-2)) j + snd st * ?q j)^2) > 0"
+                      by (rule Sn_interpolation_norm_pos[OF hfu_Sn hq_Sn hfu_na])
+                  qed
+                  \<comment> \<open>f(\<cdot>)(i) continuous as a real function on I, for each i.\<close>
+                  have hfi_cont: "\<And>i. continuous_on I_set (\<lambda>u. f u i)"
+                  proof -
+                    fix i :: nat
+                    \<comment> \<open>Step 1: f continuous I \<rightarrow> S^n in product topology.\<close>
+                    have hTprod: "is_topology_on (UNIV :: (nat \<Rightarrow> real) set)
+                        (top1_product_topology_on UNIV (\<lambda>_::nat. UNIV::real set) (\<lambda>_. top1_open_sets))"
+                    proof -
+                      have "\<forall>j\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+                        using top1_open_sets_is_topology_on_UNIV by (by100 blast)
+                      hence "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+                          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+                        by (rule top1_product_topology_on_is_topology_on)
+                      moreover have "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+                        unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    have hSn_sub_UNIV: "?Sn \<subseteq> (UNIV :: (nat \<Rightarrow> real) set)" by (by100 simp)
+                    have hTSn_here: "is_topology_on ?Sn ?TSn"
+                      by (rule subspace_topology_is_topology_on[OF hTprod hSn_sub_UNIV])
+                    have hU_sub: "?U \<subseteq> ?Sn" by (by100 blast)
+                    have hTU_here: "?TU = subspace_topology ?Sn ?TSn ?U"
+                      by (by100 simp)
+                    \<comment> \<open>Step 2: Compose with projection \<pi>_i: S^n \<rightarrow> R.
+                       The projection is continuous from the product topology.\<close>
+                    have hproj: "top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. x i)"
+                    proof -
+                      have hTop: "\<forall>j\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+                        using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+                      have hproj_PiE: "top1_continuous_map_on
+                          (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+                          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
+                          (UNIV::real set) top1_open_sets (\<lambda>x. x i)"
+                        by (rule top1_continuous_map_on_product_projection[OF hTop]) (by100 simp)
+                      have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+                        unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+                      have hSn_sub: "?Sn \<subseteq> UNIV" by (by100 simp)
+                      have "top1_continuous_map_on ?Sn
+                          (subspace_topology UNIV (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?Sn)
+                          (UNIV::real set) top1_open_sets (\<lambda>x. x i)"
+                        using top1_continuous_map_on_restrict_domain_simple[OF hproj_PiE[unfolded hPiE_eq] hSn_sub_UNIV]
+                        by (by100 simp)
+                      thus ?thesis by (by100 simp)
+                    qed
+                    \<comment> \<open>Step 3: Compose f: I \<rightarrow> U \<subseteq> S^n with \<pi>_i: S^n \<rightarrow> R.\<close>
+                    have hf_Sn_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn f"
+                    proof -
+                      have hTU_eq: "?TU = subspace_topology UNIV
+                          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?U"
+                        by (rule subspace_topology_trans[OF hU_sub])
+                      have hf_cont': "top1_continuous_map_on I_set I_top ?U
+                          (subspace_topology UNIV (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?U) f"
+                        using hf_cont unfolding hTU_eq .
+                      show ?thesis
+                        by (rule top1_continuous_map_on_codomain_enlarge[OF hf_cont' hU_sub hSn_sub_UNIV])
+                    qed
+                    have hcomp': "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets ((\<lambda>x. x i) \<circ> f)"
+                      by (rule top1_continuous_map_on_comp[OF hf_Sn_cont hproj])
+                    have hcomp: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>u. f u i)"
+                      using hcomp' unfolding comp_def by (by100 simp)
+                    \<comment> \<open>Step 4: Bridge top1_continuous_map_on I I_top UNIV top1_open_sets to continuous_on.\<close>
+                    show "continuous_on I_set (\<lambda>u. f u i)"
+                    proof (rule continuous_on_open_invariant[THEN iffD2, rule_format])
+                      fix W :: "real set" assume hW: "open W"
+                      have hW_os: "W \<in> top1_open_sets" using hW unfolding top1_open_sets_def by (by100 blast)
+                      have hpre: "{u \<in> I_set. f u i \<in> W} \<in> I_top"
+                        using hcomp hW_os unfolding top1_continuous_map_on_def by (by100 blast)
+                      then obtain V where hV: "V \<in> top1_open_sets" and hpre_eq: "{u \<in> I_set. f u i \<in> W} = I_set \<inter> V"
+                        unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                      have "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+                      moreover have "V \<inter> I_set = (\<lambda>u. f u i) -` W \<inter> I_set"
+                        using hpre_eq by (by100 blast)
+                      ultimately show "\<exists>T. open T \<and> T \<inter> I_set = (\<lambda>u. f u i) -` W \<inter> I_set"
+                        by (by100 blast)
+                    qed
+                  qed
+                  \<comment> \<open>f(4s-2)(i) continuous on M:\<close>
+                  have hfi_4s2_cont: "\<And>i. continuous_on ?M (\<lambda>st. f (4*fst st - 2) i)"
+                  proof -
+                    fix i
+                    have "continuous_on ?M (\<lambda>st. fst st)" by (auto intro!: continuous_intros)
+                    hence h1: "continuous_on ?M (\<lambda>st. 4*fst st - 2)"
+                      by (auto intro!: continuous_intros)
+                    show "continuous_on ?M (\<lambda>st. f (4*fst st - 2) i)"
+                    proof (rule continuous_on_compose2[of I_set "\<lambda>u. f u i" ?M "\<lambda>st. 4*fst st-2"])
+                      show "continuous_on I_set (\<lambda>u. f u i)" by (rule hfi_cont)
+                      show "continuous_on ?M (\<lambda>st. 4 * fst st - 2)" by (rule h1)
+                      show "(\<lambda>st. 4 * fst st - (2::real)) ` ?M \<subseteq> I_set"
+                        using h4s2_range by (by100 auto)
+                    qed
+                  qed
+                  \<comment> \<open>Each coordinate of G is continuous_on M.\<close>
+                  have hcoord_cont: "\<And>i. continuous_on ?M (\<lambda>st. G st i)"
+                  proof -
+                    fix i
+                    have hsnd_cont: "continuous_on ?M snd"
+                      using continuous_on_snd[OF continuous_on_id] by (by100 simp)
+                    have hnum: "continuous_on ?M (\<lambda>st. (1-snd st) * f (4*fst st-2) i + snd st * ?q i)"
+                      by (intro continuous_intros hfi_4s2_cont hsnd_cont)
+                    have hsumsq: "continuous_on ?M (\<lambda>st. \<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)"
+                      by (intro continuous_intros hfi_4s2_cont hsnd_cont)
+                    have hN_cont: "continuous_on ?M (\<lambda>st. sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2))"
+                      by (rule continuous_on_real_sqrt[OF hsumsq])
+                    have hN_ne: "\<forall>st\<in>?M. sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2) \<noteq> 0"
+                    proof (intro ballI)
+                      fix st assume "st \<in> ?M"
+                      have "sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2) > 0"
+                        using hN_pos \<open>st \<in> ?M\<close> by (by100 blast)
+                      thus "sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2) \<noteq> 0"
+                        by (by100 linarith)
+                    qed
+                    have "continuous_on ?M (\<lambda>st. ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                        sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2))"
+                      by (rule continuous_on_divide[OF hnum hN_cont hN_ne])
+                    moreover have hGi_eq: "\<forall>st\<in>?M. G st i = ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                        sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)"
+                    proof (intro ballI)
+                      fix st assume hst: "st \<in> ?M"
+                      obtain s t where hst_pair: "st = (s,t)" and hs1: "1/2 \<le> s" and hs2: "s \<le> 3/4"
+                          and ht1: "0 \<le> t" and ht2: "t \<le> 1" using hst by auto
+                      show "G st i = ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                          sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)"
+                      proof (cases "s > 1/2")
+                        case True hence hng: "\<not>(s \<le> 1/2)" by (by100 simp)
+                        have hlq: "s \<le> 3/4" using hs2 by (by100 simp)
+                        have "G st = (\<lambda>k. ((1-t) * (f (4*s-2)) k + t * ?q k) /
+                            sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))"
+                          using hG2[OF hng hlq] hst_pair by (by100 simp)
+                        thus ?thesis using hst_pair by (by100 simp)
+                      next
+                        case False hence hs12: "s = 1/2" using hs1 by (by100 simp)
+                        have hf0: "f (0::real) = x0"
+                          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                        have h4s0: "4 * s - 2 = (0::real)" using hs12 by (by100 linarith)
+                        have hfx0: "f (4*s-2) = x0"
+                        proof -
+                          from h4s0 have "f (4*s - 2) = f 0" by (rule arg_cong)
+                          thus ?thesis using hf0 by (by100 simp)
+                        qed
+                        \<comment> \<open>G via hG1 at s=1/2: G st = \<alpha>(t).\<close>
+                        have hle: "s \<le> 1/2" using hs12 by (by100 simp)
+                        have hGst: "G st i = ?\<alpha> (t * (2 * s)) i" using hG1[OF hle] hst_pair by (by100 simp)
+                        have ht2s: "t * (2 * s) = t" using hs12 by (by100 simp)
+                        have hG12: "G st i = ?\<alpha> t i" using hGst ht2s by (by100 simp)
+                        \<comment> \<open>RHS: with f(4s-2)=x0, the formula gives \<alpha>(t)(i).\<close>
+                        have hRHS: "((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)
+                            = ?\<alpha> t i"
+                        proof -
+                          have "fst st = s" "snd st = t" using hst_pair by (by100 simp)+
+                          thus ?thesis using hfx0 by (simp only: hfx0 \<open>fst st = s\<close> \<open>snd st = t\<close>)
+                        qed
+                        show ?thesis using hG12 hRHS by (by100 simp)
+                      qed
+                    qed
+                    ultimately show "continuous_on ?M (\<lambda>st. G st i)"
+                    proof -
+                      assume hcf: "continuous_on ?M (\<lambda>st. ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                          sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2))"
+                      assume heq: "\<forall>st\<in>?M. G st i = ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                          sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)"
+                      show ?thesis
+                      proof (rule continuous_on_cong[THEN iffD2])
+                        show "?M = ?M" by (rule refl)
+                        fix st assume "st \<in> ?M"
+                        show "G st i = ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2)"
+                          using heq \<open>st \<in> ?M\<close> by (by100 blast)
+                      next
+                        show "continuous_on ?M (\<lambda>st. ((1-snd st) * f (4*fst st-2) i + snd st * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-snd st) * f (4*fst st-2) j + snd st * ?q j)^2))"
+                          by (rule hcf)
+                      qed
+                    qed
+                  qed
+                  \<comment> \<open>G maps M into S^n.\<close>
+                  have hG_Sn_M: "\<forall>st\<in>?M. G st \<in> ?Sn"
+                  proof (intro ballI)
+                    fix st assume hst: "st \<in> ?M"
+                    hence "st \<in> I_set \<times> I_set" using hM_sub by (by100 blast)
+                    thus "G st \<in> ?Sn" using hG_Sn by (by100 blast)
+                  qed
+                  \<comment> \<open>Bridge coordinate continuity to top1_continuous_map_on via Theorem 19.6.\<close>
+                  have hcoord_top: "\<And>i. top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+                      (UNIV::real set) top1_open_sets (\<lambda>st. G st i)"
+                  proof -
+                    fix i
+                    have hc: "continuous_on ?M (\<lambda>st. G st i)" by (rule hcoord_cont)
+                    have hrange: "\<And>st. st \<in> ?M \<Longrightarrow> G st i \<in> (UNIV::real set)" by (by100 simp)
+                    \<comment> \<open>Bridge: continuous_on on M to top1_continuous_map_on with product_topology.\<close>
+                    show "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+                        (UNIV::real set) top1_open_sets (\<lambda>st. G st i)"
+                      unfolding top1_continuous_map_on_def
+                    proof (intro conjI ballI)
+                      fix st assume "st \<in> ?M" thus "G st i \<in> (UNIV::real set)" by (by100 simp)
+                    next
+                      fix V :: "real set" assume hV: "V \<in> top1_open_sets"
+                      have hVo: "open V" using hV unfolding top1_open_sets_def by (by100 blast)
+                      have "\<forall>B. open B \<longrightarrow> (\<exists>T. open T \<and> T \<inter> ?M = (\<lambda>st. G st i) -` B \<inter> ?M)"
+                        using iffD1[OF continuous_on_open_invariant] hc by (by100 blast)
+                      then obtain W where hWo: "open W" and hWeq: "W \<inter> ?M = (\<lambda>st. G st i) -` V \<inter> ?M"
+                        using hVo by (by100 auto)
+                      have "{st \<in> ?M. G st i \<in> V} = ?M \<inter> W" using hWeq by (by100 blast)
+                      moreover have "W \<in> (top1_open_sets :: (real\<times>real) set set)"
+                        using hWo unfolding top1_open_sets_def by (by100 blast)
+                      hence "W \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                        using product_topology_on_open_sets_real2 by (by100 metis)
+                      moreover have "II_topology = subspace_topology UNIV
+                          (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+                        unfolding II_topology_def by (rule II_topology_eq_subspace)
+                      ultimately have "(I_set \<times> I_set) \<inter> W \<in> II_topology"
+                        unfolding subspace_topology_def by (by100 blast)
+                      hence "?M \<inter> ((I_set \<times> I_set) \<inter> W) \<in> subspace_topology (I_set \<times> I_set) II_topology ?M"
+                        unfolding subspace_topology_def by (by100 blast)
+                      moreover have "?M \<inter> ((I_set \<times> I_set) \<inter> W) = ?M \<inter> W"
+                        using hM_sub by (by100 blast)
+                      ultimately show "{st \<in> ?M. G st i \<in> V}
+                          \<in> subspace_topology (I_set \<times> I_set) II_topology ?M"
+                        using \<open>{st \<in> ?M. G st i \<in> V} = ?M \<inter> W\<close> by (by100 simp)
+                    qed
+                  qed
+                  \<comment> \<open>Apply Theorem 19.6: G continuous M \<rightarrow> UNIV with product topology.\<close>
+                  have hTop_each: "\<forall>j\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+                    using top1_open_sets_is_topology_on_UNIV by (by100 blast)
+                  have hTM: "is_topology_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)"
+                    by (rule subspace_topology_is_topology_on[OF hTII hM_sub])
+                  have hG_map_PiE: "\<forall>st\<in>?M. G st \<in> top1_PiE UNIV (\<lambda>_::nat. UNIV::real set)"
+                    unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+                  have hG_coords: "\<forall>i\<in>(UNIV::nat set). top1_continuous_map_on ?M
+                      (subspace_topology (I_set \<times> I_set) II_topology ?M)
+                      (UNIV::real set) top1_open_sets (\<lambda>st. (G st) i)"
+                    using hcoord_top by (by100 blast)
+                  have hG_prod: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+                      (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+                      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) G"
+                    using iffD2[OF Theorem_19_6[OF hTM hTop_each hG_map_PiE]] hG_coords by (by100 blast)
+                  have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+                    unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+                  have hG_UNIV: "top1_continuous_map_on ?M (subspace_topology (I_set \<times> I_set) II_topology ?M)
+                      (UNIV :: (nat \<Rightarrow> real) set)
+                      (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) G"
+                    using hG_prod unfolding hPiE_eq .
+                  \<comment> \<open>Restrict codomain to S^n.\<close>
+                  have hG_img: "G ` ?M \<subseteq> ?Sn"
+                  proof (intro image_subsetI)
+                    fix st assume "st \<in> ?M" thus "G st \<in> ?Sn" using hG_Sn_M by (by100 blast)
+                  qed
+                  have hSn_sub': "?Sn \<subseteq> (UNIV :: (nat \<Rightarrow> real) set)" by (by100 simp)
+                  show ?thesis unfolding hM_trans
+                    by (rule top1_continuous_map_on_codomain_shrink[OF hG_UNIV hG_img hSn_sub'])
+                qed
+                \<comment> \<open>G on FR = \<alpha>(t*(4-4s)). Same pattern as hG_L.\<close>
+                have hG_FR: "top1_continuous_map_on ?FR
+                    (subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?FR) ?Sn ?TSn G"
+                proof -
+                  have hFR_sub_R: "?FR \<subseteq> ?R" by (by100 auto)
+                  have hFR_trans: "subspace_topology ?R (subspace_topology (I_set \<times> I_set) II_topology ?R) ?FR
+                      = subspace_topology (I_set \<times> I_set) II_topology ?FR"
+                    by (rule subspace_topology_trans[OF hFR_sub_R])
+                  have h\<alpha>_cont_Sn: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<alpha>"
+                    using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
+                  have h\<nu>_cont: "top1_continuous_map_on ?FR (subspace_topology (I_set \<times> I_set) II_topology ?FR)
+                      I_set I_top (\<lambda>(s,t). t * (4 - 4*s))"
+                  proof -
+                    have h\<nu>_std: "continuous_on UNIV (\<lambda>(s::real,t::real). t * (4 - 4*s))"
+                      by (auto intro!: continuous_intros simp: case_prod_beta)
+                    have h\<nu>_range: "\<forall>st\<in>?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> I_set"
+                    proof
+                      fix st assume "st \<in> ?FR"
+                      then obtain s t where hst: "st = (s,t)" "3/4 \<le> s" "s \<le> 1" "0 \<le> t" "t \<le> 1" by (by100 auto)
+                      have "t * (4 - 4*s) \<ge> 0" using hst by (by100 simp)
+                      moreover have "t * (4 - 4*s) \<le> 1"
+                      proof -
+                        have "4 - 4*s \<le> 1" using hst by (by100 simp)
+                        moreover have "4 - 4*s \<ge> 0" using hst by (by100 simp)
+                        ultimately have "t * (4-4*s) \<le> 1*1" using hst by (intro mult_mono) (by100 simp)+
+                        thus ?thesis by (by100 simp)
+                      qed
+                      ultimately show "(\<lambda>(s,t). t*(4-4*s)) st \<in> I_set"
+                        unfolding hst top1_unit_interval_def by (by100 simp)
+                    qed
+                    have hFR_sub': "?FR \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                    have h_cont_FR: "continuous_on ?FR (\<lambda>(s::real,t::real). t*(4-4*s))"
+                      using continuous_on_subset[OF h\<nu>_std] by (by100 blast)
+                    show ?thesis
+                      unfolding top1_continuous_map_on_def
+                    proof (intro conjI ballI)
+                      fix st assume hst: "st \<in> ?FR"
+                      show "(\<lambda>(s,t). t * (4 - 4*s)) st \<in> I_set" using h\<nu>_range hst by (by100 blast)
+                    next
+                      fix V assume hV: "V \<in> I_top"
+                      obtain W where hW: "W \<in> top1_open_sets" and hVeq: "V = I_set \<inter> W"
+                        using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                        by (by100 blast)
+                      have hWo: "open W" using hW unfolding top1_open_sets_def by (by100 blast)
+                      have hpre: "\<exists>A. open A \<and> A \<inter> ?FR = (\<lambda>(s,t). t*(4-4*s)) -` W \<inter> ?FR"
+                        using iffD1[OF continuous_on_open_invariant] h_cont_FR hWo by (by100 blast)
+                      then obtain A where hAo: "open A" and hAeq: "A \<inter> ?FR = (\<lambda>(s,t). t*(4-4*s)) -` W \<inter> ?FR"
+                        by (by100 auto)
+                      have "{st \<in> ?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> V} = ?FR \<inter> A"
+                      proof -
+                        have "{st \<in> ?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> V} =
+                              {st \<in> ?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> W}"
+                          using h\<nu>_range unfolding hVeq by (by100 blast)
+                        also have "\<dots> = ?FR \<inter> A" using hAeq by (by100 blast)
+                        finally show ?thesis .
+                      qed
+                      have "A \<in> (top1_open_sets :: (real\<times>real) set set)"
+                        using hAo unfolding top1_open_sets_def by (by100 blast)
+                      hence "A \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                        using product_topology_on_open_sets_real2 by (by100 metis)
+                      moreover have "II_topology = subspace_topology UNIV
+                          (product_topology_on top1_open_sets top1_open_sets) (I_set \<times> I_set)"
+                        unfolding II_topology_def by (rule II_topology_eq_subspace)
+                      ultimately have "(I_set \<times> I_set) \<inter> A \<in> II_topology"
+                        unfolding subspace_topology_def by (by100 blast)
+                      hence "?FR \<inter> ((I_set \<times> I_set) \<inter> A) \<in> subspace_topology (I_set \<times> I_set) II_topology ?FR"
+                        unfolding subspace_topology_def by (by100 blast)
+                      moreover have "?FR \<inter> ((I_set \<times> I_set) \<inter> A) = ?FR \<inter> A"
+                        using hFR_sub' by (by100 blast)
+                      ultimately have "?FR \<inter> A \<in> subspace_topology (I_set \<times> I_set) II_topology ?FR"
+                        by (by100 simp)
+                      thus "{st \<in> ?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> V}
+                          \<in> subspace_topology (I_set \<times> I_set) II_topology ?FR"
+                        using \<open>{st \<in> ?FR. (\<lambda>(s,t). t*(4-4*s)) st \<in> V} = ?FR \<inter> A\<close> by (by100 simp)
+                    qed
+                  qed
+                  have hcomp: "top1_continuous_map_on ?FR (subspace_topology (I_set \<times> I_set) II_topology ?FR)
+                      ?Sn ?TSn (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s)))"
+                    by (rule top1_continuous_map_on_comp[OF h\<nu>_cont h\<alpha>_cont_Sn])
+                  have hG_eq_FR: "\<forall>st\<in>?FR. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
+                  proof
+                    fix st assume hst: "st \<in> ?FR"
+                    obtain s t where hst_eq: "st = (s,t)" by (cases st)
+                    have hs: "3/4 \<le> s" "s \<le> 1" and ht: "0 \<le> t" "t \<le> 1"
+                      using hst hst_eq by (by100 auto)+
+                    show "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st"
+                    proof (cases "s > 3/4")
+                      case True
+                      hence "\<not>(s \<le> 3/4)" by (by100 simp)
+                      have "G st = ?\<alpha> (t * (4 - 4*s))" using hG3[OF \<open>\<not>(s \<le> 3/4)\<close>] hst_eq by (by100 simp)
+                      thus ?thesis unfolding comp_def hst_eq by (by100 simp)
+                    next
+                      case False hence hs34: "s = 3/4" using hs(1) by (by100 simp)
+                      \<comment> \<open>At s=3/4: both G and \<alpha>\<circ>\<nu> give \<alpha>(t).\<close>
+                      have hng2: "\<not> (s \<le> 1/2)" using hs34 by (by100 simp)
+                      have hlq2: "s \<le> 3/4" using hs34 by (by100 simp)
+                      have hf1: "f (1::real) = x0"
+                        using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                      have hfx0: "f (4*s-2) = x0"
+                      proof -
+                        have "4 * s - 2 = (1::real)" using hs34 by (by100 simp)
+                        thus ?thesis using hf1 by (by100 simp)
+                      qed
+                      have hG34: "G st = ?\<alpha> t"
+                      proof (rule ext)
+                        fix i :: nat
+                        have "G st = (\<lambda>i. ((1-t) * (f (4*s-2)) i + t * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2))"
+                          using hG2[OF hng2 hlq2] hst_eq by (by100 simp)
+                        hence "G st i = ((1-t) * (f (4*s-2)) i + t * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-t) * (f (4*s-2)) j + t * ?q j)^2)"
+                          by (by100 simp)
+                        also have "... = ((1-t) * x0 i + t * ?q i) /
+                            sqrt (\<Sum>j\<le>n. ((1-t) * x0 j + t * ?q j)^2)"
+                          using hfx0 by (by100 simp)
+                        finally show "G st i = ?\<alpha> t i" by (by100 simp)
+                      qed
+                      have h44s: "4 - 4 * s = (1::real)" using hs34 by (by100 simp)
+                      have "(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st = ?\<alpha> (t * (4 - 4*s))"
+                        unfolding comp_def hst_eq by (by100 simp)
+                      also have "... = ?\<alpha> (t * 1)" using h44s by (by100 simp)
+                      also have "... = ?\<alpha> t" by (by100 simp)
+                      finally have "(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st = ?\<alpha> t" .
+                      show ?thesis using hG34 \<open>(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st = ?\<alpha> t\<close> by (by100 simp)
+                    qed
+                  qed
+                  show ?thesis unfolding hFR_trans top1_continuous_map_on_def
+                  proof (intro conjI ballI)
+                    fix st assume hst: "st \<in> ?FR"
+                    have hGeq_here: "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st" using hG_eq_FR hst by (by100 blast)
+                    have hcomp_in: "(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> ?Sn"
+                      using hcomp hst unfolding top1_continuous_map_on_def by (by100 blast)
+                    show "G st \<in> ?Sn" using hcomp_in unfolding hGeq_here[symmetric] .
+                  next
+                    fix V assume hV: "V \<in> ?TSn"
+                    have "{st \<in> ?FR. (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}
+                        \<in> subspace_topology (I_set \<times> I_set) II_topology ?FR"
+                      using hcomp hV unfolding top1_continuous_map_on_def by (by100 blast)
+                    moreover have "{st \<in> ?FR. G st \<in> V} = {st \<in> ?FR. (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}"
+                    proof (intro set_eqI iffI)
+                      fix st assume "st \<in> {st \<in> ?FR. G st \<in> V}"
+                      hence "st \<in> ?FR" "G st \<in> V" by (by100 blast)+
+                      have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st" using hG_eq_FR \<open>st \<in> ?FR\<close> by (by100 blast)
+                      thus "st \<in> {st \<in> ?FR. (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}"
+                        using \<open>G st \<in> V\<close> \<open>st \<in> ?FR\<close> by (by100 simp)
+                    next
+                      fix st assume "st \<in> {st \<in> ?FR. (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V}"
+                      hence "st \<in> ?FR" "(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V" by (by100 blast)+
+                      have "G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st" using hG_eq_FR \<open>st \<in> ?FR\<close> by (by100 blast)
+                      thus "st \<in> {st \<in> ?FR. G st \<in> V}"
+                        using \<open>(?\<alpha> \<circ> (\<lambda>(s,t). t*(4-4*s))) st \<in> V\<close> \<open>st \<in> ?FR\<close> by (by100 simp)
+                    qed
+                    ultimately show "{st \<in> ?FR. G st \<in> V}
+                        \<in> subspace_topology (I_set \<times> I_set) II_topology ?FR" by (by100 simp)
+                  qed
+                qed
+                show ?thesis
+                  by (rule pasting_lemma_two_closed[OF hTR hTSn_h hM_closed hFR_closed hMFR_cover hG_Sn_R hG_M hG_FR])
+              qed
               show ?thesis
                 by (rule pasting_lemma_two_closed[OF hTII hTSn_h hL_closed hR_closed hLR_cover hG_Sn hG_L hG_R])
             qed
@@ -2731,7 +3429,210 @@ proof -
               Lemma_51_1_path_homotopic_trans[OF hTU_loc hstrip hstep2] hstep3])
     qed
   qed
-  have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)" sorry
+  have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)"
+  proof -
+    \<comment> \<open>Reflection \<phi> negating coordinate 0 is a homeomorphism V \<rightarrow> U.\<close>
+    let ?\<phi> = "\<lambda>(x::nat\<Rightarrow>real). (\<lambda>i. if i = 0 then - x 0 else x i)"
+    have h\<phi>_Sn: "\<And>x. x \<in> ?Sn \<Longrightarrow> ?\<phi> x \<in> ?Sn"
+    proof -
+      fix x assume hx: "x \<in> ?Sn"
+      have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1" using hx unfolding top1_Sn_def by (by100 blast)
+      have hx_ext: "\<And>j. j \<ge> Suc n \<Longrightarrow> x j = 0" using hx unfolding top1_Sn_def by (by100 blast)
+      have "(\<Sum>j\<le>n. ((if j = 0 then - x 0 else x j))^2) = (\<Sum>j\<le>n. (x j)^2)"
+        by (rule sum.cong) (by100 auto)+
+      hence "(\<Sum>j\<le>n. (?\<phi> x j)^2) = 1" using hx_norm by (by100 simp)
+      moreover have "\<And>j. j \<ge> Suc n \<Longrightarrow> ?\<phi> x j = 0" using hx_ext by (by100 auto)
+      ultimately show "?\<phi> x \<in> ?Sn" unfolding top1_Sn_def by (by100 blast)
+    qed
+    have h\<phi>_inv: "\<And>x. ?\<phi> (?\<phi> x) = x" by (rule ext) (by100 auto)
+    have h\<phi>_p: "?\<phi> ?p = ?q" by (rule ext) (by100 simp)
+    have h\<phi>_q: "?\<phi> ?q = ?p" by (rule ext) (by100 simp)
+    \<comment> \<open>\<phi> maps V to U and U to V.\<close>
+    have h\<phi>_VU: "\<And>x. x \<in> ?V \<Longrightarrow> ?\<phi> x \<in> ?U"
+    proof -
+      fix x assume hx: "x \<in> ?V"
+      have "x \<in> ?Sn" "x \<noteq> ?q" using hx by (by100 blast)+
+      have "?\<phi> x \<in> ?Sn" using h\<phi>_Sn \<open>x \<in> ?Sn\<close> by (by100 blast)
+      moreover have "?\<phi> x \<noteq> ?p"
+      proof assume h: "?\<phi> x = ?p"
+        from arg_cong[OF h, of ?\<phi>] have "?\<phi> (?\<phi> x) = ?\<phi> ?p" .
+        hence "x = ?q" using h\<phi>_inv h\<phi>_p by (by100 metis)
+        thus False using \<open>x \<noteq> ?q\<close> by (by100 simp)
+      qed
+      ultimately show "?\<phi> x \<in> ?U" by (by100 blast)
+    qed
+    have h\<phi>_UV: "\<And>x. x \<in> ?U \<Longrightarrow> ?\<phi> x \<in> ?V"
+    proof -
+      fix x assume hx: "x \<in> ?U"
+      have "x \<in> ?Sn" "x \<noteq> ?p" using hx by (by100 blast)+
+      have "?\<phi> x \<in> ?Sn" using h\<phi>_Sn \<open>x \<in> ?Sn\<close> by (by100 blast)
+      moreover have "?\<phi> x \<noteq> ?q"
+      proof assume h: "?\<phi> x = ?q"
+        from arg_cong[OF h, of ?\<phi>] have "?\<phi> (?\<phi> x) = ?\<phi> ?q" .
+        hence "x = ?p" using h\<phi>_inv h\<phi>_q by (by100 metis)
+        thus False using \<open>x \<noteq> ?p\<close> by (by100 simp)
+      qed
+      ultimately show "?\<phi> x \<in> ?V" by (by100 blast)
+    qed
+    \<comment> \<open>\<phi> is a homeomorphism V \<rightarrow> U (involution, bijective, continuous).\<close>
+    \<comment> \<open>\<phi> continuous on S^n: each coordinate is a projection or negation.\<close>
+    have hTop_each: "\<forall>j\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      using top1_open_sets_is_topology_on_UNIV by (by100 blast)
+    have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+      unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+    have hTprod: "is_topology_on (UNIV :: (nat \<Rightarrow> real) set)
+        (top1_product_topology_on UNIV (\<lambda>_::nat. UNIV::real set) (\<lambda>_. top1_open_sets))"
+    proof -
+      have "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+        by (rule top1_product_topology_on_is_topology_on[OF hTop_each])
+      thus ?thesis unfolding hPiE_eq .
+    qed
+    have hSn_sub: "?Sn \<subseteq> (UNIV :: (nat \<Rightarrow> real) set)" by (by100 simp)
+    have hTSn_loc: "is_topology_on ?Sn ?TSn"
+      by (rule subspace_topology_is_topology_on[OF hTprod hSn_sub])
+    \<comment> \<open>Projection \<pi>_j is continuous S^n \<rightarrow> R.\<close>
+    have hproj: "\<And>j. top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. x j)"
+    proof -
+      fix j :: nat
+      have "top1_continuous_map_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
+          (UNIV::real set) top1_open_sets (\<lambda>x. x j)"
+        by (rule top1_continuous_map_on_product_projection[OF hTop_each]) (by100 simp)
+      thus "top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. x j)"
+        using top1_continuous_map_on_restrict_domain_simple[OF _ hSn_sub]
+        unfolding hPiE_eq by (by100 simp)
+    qed
+    \<comment> \<open>Negation uminus is continuous R \<rightarrow> R.\<close>
+    have hneg_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+        (UNIV::real set) top1_open_sets uminus"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x :: real show "- x \<in> (UNIV::real set)" by (by100 simp)
+    next
+      fix V :: "real set" assume "V \<in> top1_open_sets"
+      hence hVo: "open V" unfolding top1_open_sets_def by (by100 blast)
+      have "continuous_on UNIV (uminus :: real \<Rightarrow> real)" by (intro continuous_intros)
+      hence h_inv: "\<forall>B. open B \<longrightarrow> (\<exists>T. open T \<and> T \<inter> UNIV = uminus -` B \<inter> (UNIV::real set))"
+        using iffD1[OF continuous_on_open_invariant] by (by100 blast)
+      then obtain W where hWo: "open W" and hWeq: "W \<inter> UNIV = uminus -` V \<inter> (UNIV::real set)"
+        using hVo by (by100 auto)
+      have "{x \<in> (UNIV::real set). - x \<in> V} = W" using hWeq by (by100 blast)
+      thus "{x \<in> (UNIV::real set). - x \<in> V} \<in> top1_open_sets"
+        using hWo unfolding top1_open_sets_def by (by100 simp)
+    qed
+    \<comment> \<open>\<phi>(x)(0) = -(x 0): compose projection with negation.\<close>
+    have hneg0: "top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. - x 0)"
+    proof -
+      have "top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (uminus \<circ> (\<lambda>x. x 0))"
+        by (rule top1_continuous_map_on_comp[OF hproj[of 0] hneg_cont])
+      thus ?thesis unfolding comp_def by (by100 simp)
+    qed
+    \<comment> \<open>Each coordinate of \<phi> is continuous.\<close>
+    have h\<phi>_coord: "\<And>i. top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. ?\<phi> x i)"
+    proof -
+      fix i :: nat
+      show "top1_continuous_map_on ?Sn ?TSn (UNIV::real set) top1_open_sets (\<lambda>x. ?\<phi> x i)"
+      proof (cases "i = 0")
+        case True thus ?thesis using hneg0 by (by100 simp)
+      next
+        case False thus ?thesis using hproj[of i] by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Theorem 19.6: \<phi> continuous S^n \<rightarrow> product topology.\<close>
+    have h\<phi>_map_PiE: "\<forall>x\<in>?Sn. ?\<phi> x \<in> top1_PiE UNIV (\<lambda>_::nat. UNIV::real set)"
+      unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+    have h\<phi>_coords: "\<forall>i\<in>(UNIV::nat set). top1_continuous_map_on ?Sn ?TSn
+        (UNIV::real set) top1_open_sets (\<lambda>x. (?\<phi> x) i)"
+      using h\<phi>_coord by (by100 blast)
+    have h\<phi>_prod: "top1_continuous_map_on ?Sn ?TSn
+        (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?\<phi>"
+      using iffD2[OF Theorem_19_6[OF hTSn_loc hTop_each h\<phi>_map_PiE]] h\<phi>_coords by (by100 blast)
+    have h\<phi>_UNIV: "top1_continuous_map_on ?Sn ?TSn (UNIV :: (nat \<Rightarrow> real) set)
+        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) ?\<phi>"
+      using h\<phi>_prod unfolding hPiE_eq .
+    have h\<phi>_img: "?\<phi> ` ?Sn \<subseteq> ?Sn"
+      by (intro image_subsetI) (rule h\<phi>_Sn)
+    have h\<phi>_cont_Sn: "top1_continuous_map_on ?Sn ?TSn ?Sn ?TSn ?\<phi>"
+      by (rule top1_continuous_map_on_codomain_shrink[OF h\<phi>_UNIV h\<phi>_img hSn_sub])
+    \<comment> \<open>Restrict: \<phi> continuous V \<rightarrow> U and U \<rightarrow> V.\<close>
+    have hV_sub: "?V \<subseteq> ?Sn" by (by100 blast)
+    have hU_sub_Sn: "?U \<subseteq> ?Sn" by (by100 blast)
+    have h\<phi>_cont_V: "top1_continuous_map_on ?V (subspace_topology ?Sn ?TSn ?V)
+        ?U (subspace_topology ?Sn ?TSn ?U) ?\<phi>"
+    proof -
+      have h1: "top1_continuous_map_on ?V (subspace_topology ?Sn ?TSn ?V) ?Sn ?TSn ?\<phi>"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<phi>_cont_Sn hV_sub])
+      have h2: "?\<phi> ` ?V \<subseteq> ?U"
+        by (intro image_subsetI) (rule h\<phi>_VU)
+      show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF h1 h2 hU_sub_Sn])
+    qed
+    have h\<phi>_cont_U: "top1_continuous_map_on ?U (subspace_topology ?Sn ?TSn ?U)
+        ?V (subspace_topology ?Sn ?TSn ?V) ?\<phi>"
+    proof -
+      have h1: "top1_continuous_map_on ?U (subspace_topology ?Sn ?TSn ?U) ?Sn ?TSn ?\<phi>"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<phi>_cont_Sn hU_sub_Sn])
+      have h2: "?\<phi> ` ?U \<subseteq> ?V"
+        by (intro image_subsetI) (rule h\<phi>_UV)
+      show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF h1 h2 hV_sub])
+    qed
+    \<comment> \<open>Bijection V \<rightarrow> U.\<close>
+    have h\<phi>_bij: "bij_betw ?\<phi> ?V ?U"
+    proof (rule bij_betw_byWitness[of _ ?\<phi>])
+      show "\<forall>x\<in>?V. ?\<phi> (?\<phi> x) = x" using h\<phi>_inv by (by100 blast)
+      show "\<forall>y\<in>?U. ?\<phi> (?\<phi> y) = y" using h\<phi>_inv by (by100 blast)
+      show "?\<phi> ` ?V \<subseteq> ?U" by (intro image_subsetI) (rule h\<phi>_VU)
+      show "?\<phi> ` ?U \<subseteq> ?V" by (intro image_subsetI) (rule h\<phi>_UV)
+    qed
+    \<comment> \<open>inv_into V \<phi> = \<phi> on U (since \<phi> is an involution).\<close>
+    have h\<phi>_inv_into: "\<And>y. y \<in> ?U \<Longrightarrow> inv_into ?V ?\<phi> y = ?\<phi> y"
+    proof -
+      fix y assume hy: "y \<in> ?U"
+      have h\<phi>y_V: "?\<phi> y \<in> ?V" by (rule h\<phi>_UV[OF hy])
+      have hinj: "inj_on ?\<phi> ?V" using bij_betw_imp_inj_on[OF h\<phi>_bij] .
+      show "inv_into ?V ?\<phi> y = ?\<phi> y"
+        using inv_into_f_eq[OF hinj h\<phi>y_V] h\<phi>_inv[of y] by (by100 metis)
+    qed
+    \<comment> \<open>Assemble the homeomorphism.\<close>
+    have h\<phi>_homeo: "top1_homeomorphism_on ?V (subspace_topology ?Sn ?TSn ?V)
+        ?U (subspace_topology ?Sn ?TSn ?U) ?\<phi>"
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      show "is_topology_on ?V (subspace_topology ?Sn ?TSn ?V)"
+        by (rule subspace_topology_is_topology_on[OF hTSn_loc hV_sub])
+      show "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)"
+        by (rule subspace_topology_is_topology_on[OF hTSn_loc hU_sub_Sn])
+      show "bij_betw ?\<phi> ?V ?U" by (rule h\<phi>_bij)
+      show "top1_continuous_map_on ?V (subspace_topology ?Sn ?TSn ?V) ?U (subspace_topology ?Sn ?TSn ?U) ?\<phi>"
+        by (rule h\<phi>_cont_V)
+      show "top1_continuous_map_on ?U (subspace_topology ?Sn ?TSn ?U) ?V (subspace_topology ?Sn ?TSn ?V)
+          (inv_into ?V ?\<phi>)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix y assume hy: "y \<in> ?U"
+        have "inv_into ?V ?\<phi> y = ?\<phi> y" by (rule h\<phi>_inv_into[OF hy])
+        thus "inv_into ?V ?\<phi> y \<in> ?V" using h\<phi>_UV[OF hy] by (by100 simp)
+      next
+        fix W assume hW: "W \<in> subspace_topology ?Sn ?TSn ?V"
+        have "{y \<in> ?U. inv_into ?V ?\<phi> y \<in> W} = {y \<in> ?U. ?\<phi> y \<in> W}"
+        proof (intro set_eqI iffI)
+          fix y assume "y \<in> {y \<in> ?U. inv_into ?V ?\<phi> y \<in> W}"
+          hence hy: "y \<in> ?U" "inv_into ?V ?\<phi> y \<in> W" by (by100 blast)+
+          thus "y \<in> {y \<in> ?U. ?\<phi> y \<in> W}" using h\<phi>_inv_into[OF hy(1)] by (by100 simp)
+        next
+          fix y assume "y \<in> {y \<in> ?U. ?\<phi> y \<in> W}"
+          hence hy: "y \<in> ?U" "?\<phi> y \<in> W" by (by100 blast)+
+          thus "y \<in> {y \<in> ?U. inv_into ?V ?\<phi> y \<in> W}" using h\<phi>_inv_into[OF hy(1)] by (by100 simp)
+        qed
+        moreover have "{y \<in> ?U. ?\<phi> y \<in> W} \<in> subspace_topology ?Sn ?TSn ?U"
+          using h\<phi>_cont_U hW unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{y \<in> ?U. inv_into ?V ?\<phi> y \<in> W} \<in> subspace_topology ?Sn ?TSn ?U"
+          by (by100 simp)
+      qed
+    qed
+    show ?thesis by (rule homeomorphism_preserves_simply_connected[OF h\<phi>_homeo hU_sc])
+  qed
   \<comment> \<open>Step 2: U, V are open in S^n.\<close>
   \<comment> \<open>U = S^n - {p} and V = S^n - {q} are open because {p}, {q} are closed in S^n
      (Hausdorff + singleton closed).\<close>
@@ -4317,170 +5218,6 @@ next
   qed
 qed
 
-lemma homeomorphism_preserves_path_connected:
-  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
-      and hpc: "top1_path_connected_on X TX"
-  shows "top1_path_connected_on Y TY"
-  unfolding top1_path_connected_on_def
-proof (intro conjI ballI)
-  show "is_topology_on Y TY"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
-next
-  fix y1 y2 assume hy1: "y1 \<in> Y" and hy2: "y2 \<in> Y"
-  have hTX: "is_topology_on X TX"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
-  have hbij: "bij_betw h X Y"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
-  have hcont: "top1_continuous_map_on X TX Y TY h"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)
-  obtain x1 where hx1: "x1 \<in> X" "h x1 = y1"
-    using hy1 hbij unfolding bij_betw_def by (by100 blast)
-  obtain x2 where hx2: "x2 \<in> X" "h x2 = y2"
-    using hy2 hbij unfolding bij_betw_def by (by100 blast)
-  obtain f where hf: "top1_is_path_on X TX x1 x2 f"
-    using hpc hx1(1) hx2(1) unfolding top1_path_connected_on_def by (by100 blast)
-  \<comment> \<open>h \<circ> f is a path from y1 to y2 in Y.\<close>
-  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
-    using hf unfolding top1_is_path_on_def by (by100 blast)
-  have hhf_cont: "top1_continuous_map_on I_set I_top Y TY (h \<circ> f)"
-    unfolding top1_continuous_map_on_def
-  proof (intro conjI ballI)
-    fix t assume ht: "t \<in> I_set"
-    have "f t \<in> X" using hf_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
-    thus "(h \<circ> f) t \<in> Y" using hcont unfolding top1_continuous_map_on_def comp_def by (by100 blast)
-  next
-    fix V assume hV: "V \<in> TY"
-    have "{x \<in> X. h x \<in> V} \<in> TX" using hcont hV unfolding top1_continuous_map_on_def by (by100 blast)
-    hence "{t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}} \<in> I_top"
-      using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
-    moreover have "{t \<in> I_set. (h \<circ> f) t \<in> V} = {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}"
-    proof (rule set_eqI, rule iffI)
-      fix t assume "t \<in> {t \<in> I_set. (h \<circ> f) t \<in> V}"
-      hence ht: "t \<in> I_set" and hv: "h (f t) \<in> V" unfolding comp_def by auto
-      have "f t \<in> X" using hf_cont ht unfolding top1_continuous_map_on_def by (by100 blast)
-      thus "t \<in> {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}" using ht hv by (by100 blast)
-    next
-      fix t assume "t \<in> {t \<in> I_set. f t \<in> {x \<in> X. h x \<in> V}}"
-      thus "t \<in> {t \<in> I_set. (h \<circ> f) t \<in> V}" unfolding comp_def by (by100 blast)
-    qed
-    ultimately show "{t \<in> I_set. (h \<circ> f) t \<in> V} \<in> I_top" by simp
-  qed
-  have "(h \<circ> f) 0 = y1" using hf hx1(2) unfolding top1_is_path_on_def comp_def by (by100 blast)
-  moreover have "(h \<circ> f) 1 = y2" using hf hx2(2) unfolding top1_is_path_on_def comp_def by (by100 blast)
-  ultimately have "top1_is_path_on Y TY y1 y2 (h \<circ> f)"
-    unfolding top1_is_path_on_def using hhf_cont by (by100 blast)
-  thus "\<exists>f. top1_is_path_on Y TY y1 y2 f" by (by100 blast)
-qed
-
-lemma homeomorphism_preserves_simply_connected:
-  assumes hhom: "top1_homeomorphism_on X TX Y TY h"
-      and hsc: "top1_simply_connected_on Y TY"
-  shows "top1_simply_connected_on X TX"
-  unfolding top1_simply_connected_on_def
-proof (intro conjI allI impI ballI)
-  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
-      and hbij: "bij_betw h X Y"
-      and hh: "top1_continuous_map_on X TX Y TY h"
-      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
-  have hg_cont: "top1_continuous_map_on Y TY X TX (inv_into X h)" by (rule hg)
-  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
-  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
-    by (rule inv_into_f_f[OF hinj])
-  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
-  have hg_map: "\<And>y. y \<in> Y \<Longrightarrow> inv_into X h y \<in> X"
-    using hbij unfolding bij_betw_def by (simp add: inv_into_into)
-  have hg_inv: "\<And>y. y \<in> Y \<Longrightarrow> h (inv_into X h y) = y"
-    using hbij unfolding bij_betw_def by (simp add: f_inv_into_f)
-  \<comment> \<open>Path-connected: transfer via h and inv.\<close>
-  show "top1_path_connected_on X TX"
-    unfolding top1_path_connected_on_def
-  proof (intro conjI ballI)
-    show "is_topology_on X TX" by (rule hTX)
-  next
-    fix x1 x2 assume hx1: "x1 \<in> X" and hx2: "x2 \<in> X"
-    have "h x1 \<in> Y" by (rule hh_map[OF hx1])
-    moreover have "h x2 \<in> Y" by (rule hh_map[OF hx2])
-    ultimately obtain \<alpha> where h\<alpha>: "top1_is_path_on Y TY (h x1) (h x2) \<alpha>"
-      using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
-    have "top1_is_path_on X TX (inv_into X h (h x1)) (inv_into X h (h x2)) (inv_into X h \<circ> \<alpha>)"
-    proof -
-      have h\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY \<alpha>"
-        using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
-      have hinv_\<alpha>_cont: "top1_continuous_map_on I_set I_top X TX (inv_into X h \<circ> \<alpha>)"
-        by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont hg])
-      have "(\<alpha> 0) = h x1" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
-      hence h0: "(inv_into X h \<circ> \<alpha>) 0 = inv_into X h (h x1)" by simp
-      have "(\<alpha> 1) = h x2" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
-      hence h1: "(inv_into X h \<circ> \<alpha>) 1 = inv_into X h (h x2)" by simp
-      show ?thesis unfolding top1_is_path_on_def using hinv_\<alpha>_cont h0 h1 by (by100 blast)
-    qed
-    hence "top1_is_path_on X TX x1 x2 (inv_into X h \<circ> \<alpha>)"
-      using hh_inv[OF hx1] hh_inv[OF hx2] by simp
-    thus "\<exists>f. top1_is_path_on X TX x1 x2 f" by (by100 blast)
-  qed
-next
-  fix x0 f
-  assume hx0: "x0 \<in> X"
-  assume hf: "top1_is_loop_on X TX x0 f"
-  have hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
-      and hh: "top1_continuous_map_on X TX Y TY h"
-      and hg: "top1_continuous_map_on Y TY X TX (inv_into X h)"
-      and hbij: "bij_betw h X Y"
-    using hhom unfolding top1_homeomorphism_on_def by (by100 blast)+
-  have hh_map: "\<And>x. x \<in> X \<Longrightarrow> h x \<in> Y" using hbij unfolding bij_betw_def by auto
-  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by simp
-  have hh_inv: "\<And>x. x \<in> X \<Longrightarrow> inv_into X h (h x) = x"
-    by (rule inv_into_f_f[OF hinj])
-  \<comment> \<open>h\<circ>f is a loop at h(x0) in Y.\<close>
-  have hhf_loop: "top1_is_loop_on Y TY (h x0) (h \<circ> f)"
-    using top1_continuous_map_loop_early[OF hh hf] .
-  \<comment> \<open>Y simply connected: h\<circ>f is contractible.\<close>
-  have hhx0: "h x0 \<in> Y" by (rule hh_map[OF hx0])
-  have hhf_contract: "top1_path_homotopic_on Y TY (h x0) (h x0)
-      (h \<circ> f) (top1_constant_path (h x0))"
-    using hsc hhx0 hhf_loop unfolding top1_simply_connected_on_def by (by100 blast)
-  \<comment> \<open>Transfer back via inv_into: f = inv\<circ>h\<circ>f is contractible.\<close>
-  have hg_transfer: "top1_path_homotopic_on X TX
-      (inv_into X h (h x0)) (inv_into X h (h x0))
-      (inv_into X h \<circ> (h \<circ> f)) (inv_into X h \<circ> top1_constant_path (h x0))"
-    by (rule continuous_preserves_path_homotopic[OF hTY hTX hg hhf_contract])
-  have "inv_into X h (h x0) = x0" by (rule hh_inv[OF hx0])
-  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
-  proof
-    fix s assume hs: "s \<in> I_set"
-    have "f s \<in> X" using hf hs
-      unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
-      by (by100 blast)
-    thus "(inv_into X h \<circ> (h \<circ> f)) s = f s" by (simp add: hh_inv)
-  qed
-  moreover have "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
-    unfolding top1_constant_path_def using hh_inv[OF hx0] by simp
-  ultimately have hinv_x0: "inv_into X h (h x0) = x0"
-      and hinv_f: "\<forall>s\<in>I_set. (inv_into X h \<circ> (h \<circ> f)) s = f s"
-      and hinv_c: "\<forall>s\<in>I_set. (inv_into X h \<circ> top1_constant_path (h x0)) s = top1_constant_path x0 s"
-    by auto
-  \<comment> \<open>Extract homotopy from hg_transfer, rebuild with I_set agreement.\<close>
-  obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
-      and hH0: "\<forall>s\<in>I_set. H (s, 0) = (inv_into X h \<circ> (h \<circ> f)) s"
-      and hH1: "\<forall>s\<in>I_set. H (s, 1) = (inv_into X h \<circ> top1_constant_path (h x0)) s"
-      and hHL: "\<forall>t\<in>I_set. H (0, t) = inv_into X h (h x0)"
-      and hHR: "\<forall>t\<in>I_set. H (1, t) = inv_into X h (h x0)"
-    using hg_transfer hinv_x0 unfolding top1_path_homotopic_on_def by auto
-  have hfpath: "top1_is_path_on X TX x0 x0 f"
-    using hf unfolding top1_is_loop_on_def .
-  have hcpath: "top1_is_path_on X TX x0 x0 (top1_constant_path x0)"
-    by (rule top1_constant_path_is_path[OF hTX hx0])
-  show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
-    unfolding top1_path_homotopic_on_def
-    using hfpath hcpath hH_cont
-  proof (intro conjI exI[of _ H])
-    show "\<forall>s\<in>I_set. H (s, 0) = f s" using hH0 hinv_f by simp
-    show "\<forall>s\<in>I_set. H (s, 1) = top1_constant_path x0 s" using hH1 hinv_c by simp
-    show "\<forall>t\<in>I_set. H (0, t) = x0" using hHL hinv_x0 by simp
-    show "\<forall>t\<in>I_set. H (1, t) = x0" using hHR hinv_x0 by simp
-  qed auto
-qed
 
 lemma S2_minus_north_pole_simply_connected:
   "top1_simply_connected_on (top1_S2 - {north_pole})
