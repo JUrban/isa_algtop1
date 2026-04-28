@@ -1349,21 +1349,132 @@ proof -
       (top1_Sn n)"
   let ?N = "\<lambda>t. sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)"
   \<comment> \<open>Step 1: N(t) > 0 for all t \<in> [0,1], since x \<noteq> -y.\<close>
+  have hx_norm0: "(\<Sum>j\<le>n. (x j)^2) = 1"
+    using hx unfolding top1_Sn_def by (by100 blast)
+  have hy_norm0: "(\<Sum>j\<le>n. (y j)^2) = 1"
+    using hy unfolding top1_Sn_def by (by100 blast)
   have hN_pos: "\<forall>t. ?N t > 0"
-    sorry
+  proof -
+    have hne: "\<And>t. \<exists>k\<le>n. (1-t) * x k + t * y k \<noteq> 0"
+    proof (rule ccontr)
+      fix t :: real
+      assume "\<not> (\<exists>k\<le>n. (1-t) * x k + t * y k \<noteq> 0)"
+      hence hall: "\<And>k. k \<le> n \<Longrightarrow> (1-t) * x k + t * y k = 0" by (by100 blast)
+      have hall': "\<And>k. k \<le> n \<Longrightarrow> (1-t) * x k = -(t * y k)"
+      proof -
+        fix k assume "k \<le> n"
+        hence "(1-t) * x k + t * y k = 0" by (rule hall)
+        thus "(1-t) * x k = -(t * y k)" by (by100 linarith)
+      qed
+      have hx_zero_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> x i = 0"
+        using hx unfolding top1_Sn_def by (by100 blast)
+      have hy_zero_above: "\<And>i. i \<ge> Suc n \<Longrightarrow> y i = 0"
+        using hy unfolding top1_Sn_def by (by100 blast)
+      show False
+      proof (cases "t = 0")
+        case True
+        hence "\<And>k. k \<le> n \<Longrightarrow> x k = 0" using hall by (by100 simp)
+        hence "(\<Sum>j\<le>n. (x j)^2) = 0" by (by100 simp)
+        thus False using hx_norm0 by (by100 linarith)
+      next
+        case False note ht0 = this
+        show False
+        proof (cases "t = 1")
+          case True
+          hence "\<And>k. k \<le> n \<Longrightarrow> y k = 0" using hall by (by100 simp)
+          hence "(\<Sum>j\<le>n. (y j)^2) = 0" by (by100 simp)
+          thus False using hy_norm0 by (by100 linarith)
+        next
+          case False
+          hence ht1: "1 - t \<noteq> 0" by (by100 linarith)
+          have hxi: "\<And>k. k \<le> n \<Longrightarrow> x k = -(t/(1-t)) * y k"
+          proof -
+            fix k assume hk: "k \<le> n"
+            have "(1-t) * x k = -(t * y k)" by (rule hall'[OF hk])
+            thus "x k = -(t/(1-t)) * y k" using ht1 sorry
+          qed
+          have hxi_all: "\<And>i. x i = - (t/(1-t)) * y i"
+          proof -
+            fix i show "x i = - (t/(1-t)) * y i"
+            proof (cases "i \<le> n")
+              case True thus ?thesis using hxi[OF True] by (by100 linarith)
+            next
+              case False hence "i \<ge> Suc n" by (by100 linarith)
+              thus ?thesis using hx_zero_above hy_zero_above by (by100 simp)
+            qed
+          qed
+          have "x = (\<lambda>i. - y i)"
+          proof -
+            have hratio: "(t/(1-t))^2 = 1"
+            proof -
+              have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<le>n. (-(t/(1-t)) * y j)^2)"
+                using hxi by (intro sum.cong) (by100 simp)+
+              also have "\<dots> = (t/(1-t))^2 * (\<Sum>j\<le>n. (y j)^2)"
+                sorry
+              finally have "(t/(1-t))^2 * 1 = 1" using hx_norm0 hy_norm0 by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+            have "t/(1-t) = 1 \<or> t/(1-t) = -1"
+              using hratio sorry
+            thus ?thesis
+            proof
+              assume ht_eq: "t/(1-t) = 1"
+              have "\<And>i. x i = -y i"
+              proof -
+                fix i have "x i = -(t/(1-t)) * y i" by (rule hxi_all)
+                thus "x i = -y i" using ht_eq by (by100 simp)
+              qed
+              thus ?thesis by (rule ext)
+            next
+              assume "t/(1-t) = -1"
+              hence "\<And>i. x i = y i" using hxi_all by (by100 simp)
+              hence "x = y" by (rule ext)
+              \<comment> \<open>But then (1-t)*x+t*y = x \<noteq> 0 since ||x||=1, contradiction.\<close>
+              hence "\<And>k. k \<le> n \<Longrightarrow> x k = 0"
+              proof -
+                fix k assume hk: "k \<le> n"
+                have "(1-t) * x k + t * x k = 0" using hall[OF hk] \<open>x = y\<close> by (by100 simp)
+                hence "x k = 0" by (by100 algebra)
+                thus "x k = 0" .
+              qed
+              hence "(\<Sum>j\<le>n. (x j)^2) = 0" by (by100 simp)
+              thus ?thesis using hx_norm0 by (by100 linarith)
+            qed
+          qed
+          thus False using hna by (by100 simp)
+        qed
+      qed
+    qed
+    show ?thesis
+    proof (intro allI)
+      fix t :: real
+      obtain k where hk: "k \<le> n" "(1-t) * x k + t * y k \<noteq> 0" using hne by (by100 blast)
+      have hksq: "((1-t) * x k + t * y k)^2 > 0" using hk(2) by (by100 simp)
+      have hge: "\<And>j. ((1-t) * x j + t * y j)^2 \<ge> 0" by (by100 simp)
+      have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) \<ge> ((1-t) * x k + t * y k)^2"
+      proof -
+        have hfin: "finite ({..n}::nat set)" by (by100 simp)
+        have hk_in: "k \<in> {..n}" using hk(1) by (by100 simp)
+        have "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) =
+              ((1-t) * x k + t * y k)^2 + (\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2)"
+          using sum.remove[OF hfin hk_in] by (by100 simp)
+        moreover have "(\<Sum>j\<in>{..n}-{k}. ((1-t) * x j + t * y j)^2) \<ge> 0"
+          by (rule sum_nonneg) (by100 simp)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      hence "(\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2) > 0" using hksq by (by100 linarith)
+      thus "?N t > 0" by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 2: \<gamma> maps into S^n.\<close>
   have h\<gamma>_Sn: "\<forall>t. \<gamma> t \<in> top1_Sn n"
     sorry
   \<comment> \<open>Step 3: \<gamma>(0) = x and \<gamma>(1) = y.\<close>
-  have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1"
-    using hx unfolding top1_Sn_def by (by100 blast)
-  have hy_norm: "(\<Sum>j\<le>n. (y j)^2) = 1"
-    using hy unfolding top1_Sn_def by (by100 blast)
   have h\<gamma>0: "\<gamma> 0 = x"
   proof (rule ext)
     fix i
     have "?N 0 = sqrt (\<Sum>j\<le>n. (x j)^2)" by (by100 simp)
-    also have "\<dots> = 1" using hx_norm by (by100 simp)
+    also have "\<dots> = 1" using hx_norm0 by (by100 simp)
     finally have hN0: "?N 0 = 1" .
     show "\<gamma> 0 i = x i" unfolding \<gamma>_def using hN0 by (by100 simp)
   qed
@@ -1371,7 +1482,7 @@ proof -
   proof (rule ext)
     fix i
     have "?N 1 = sqrt (\<Sum>j\<le>n. (y j)^2)" by (by100 simp)
-    also have "\<dots> = 1" using hy_norm by (by100 simp)
+    also have "\<dots> = 1" using hy_norm0 by (by100 simp)
     finally have hN1: "?N 1 = 1" .
     show "\<gamma> 1 i = y i" unfolding \<gamma>_def using hN1 by (by100 simp)
   qed
@@ -1381,7 +1492,6 @@ proof -
   show ?thesis unfolding top1_is_path_on_def
     using h\<gamma>_cont h\<gamma>0 h\<gamma>1 by (by100 blast)
 qed
-
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
     Munkres' proof (2 steps):
