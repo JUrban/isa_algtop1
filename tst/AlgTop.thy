@@ -99,7 +99,28 @@ proof -
   have hFe_X1: "\<forall>x\<in>X. Fe (x, 1) = y0"
     unfolding Fe_def using hF1 by (by100 auto)
   have hFe_range: "\<forall>p\<in>?S. Fe p \<in> Y"
-    sorry \<comment> \<open>On A\<times>I: Fe = F maps to Y. On X\<times>{1}: Fe = y0 \<in> Y.\<close>
+  proof (intro ballI)
+    fix p assume "p \<in> ?S"
+    hence "p \<in> A \<times> I_set \<or> p \<in> X \<times> {1::real}" by (by100 blast)
+    thus "Fe p \<in> Y"
+    proof
+      assume "p \<in> A \<times> I_set"
+      hence "Fe p = F p" using hFe_agree_AI by (by100 blast)
+      moreover have "F p \<in> Y" using hF \<open>p \<in> A \<times> I_set\<close> unfolding top1_continuous_map_on_def
+        by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    next
+      assume "p \<in> X \<times> {1::real}"
+      then obtain x where hxX: "x \<in> X" and hp: "p = (x, 1)" by (by100 blast)
+      have "Fe p = y0"
+      proof (cases "x \<in> A")
+        case True thus ?thesis unfolding hp Fe_def using hF1 True by (by100 simp)
+      next
+        case False thus ?thesis unfolding hp Fe_def by (by100 simp)
+      qed
+      thus ?thesis using hy0 by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 3: Tietze-extend Fe coordinatewise to G: X\<times>I \<rightarrow> R^2.
      Each coordinate of Fe: ?S \<rightarrow> [-M,M] for large M. Tietze extends to X\<times>I.\<close>
   obtain G :: "'a \<times> real \<Rightarrow> real \<times> real" where
@@ -114,11 +135,22 @@ proof -
   have hU_open: "?U_pre \<in> product_topology_on TX I_top"
     sorry \<comment> \<open>Y open in R^2, G continuous, so G^{-1}(Y) open in X\<times>I.\<close>
   have hU_contains: "?S \<subseteq> ?U_pre"
-    sorry \<comment> \<open>On ?S: G = Fe which maps to Y.\<close>
+  proof
+    fix p assume "p \<in> ?S"
+    have "p \<in> X \<times> I_set"
+      using \<open>p \<in> ?S\<close> hAX unfolding top1_unit_interval_def by (by100 auto)
+    moreover have "G p \<in> Y"
+    proof -
+      have "G p = Fe p" using hG_ext \<open>p \<in> ?S\<close> by (by100 blast)
+      moreover have "Fe p \<in> Y" using hFe_range \<open>p \<in> ?S\<close> by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately show "p \<in> ?U_pre" by (by100 blast)
+  qed
   \<comment> \<open>Step 5: Tube lemma: I_set compact, ?S \<supseteq> A\<times>I, U open containing A\<times>I.
      So \<exists>W open in X with A \<subseteq> W and W\<times>I \<subseteq> U.\<close>
   obtain W where hW_open: "W \<in> TX" and hA_W: "A \<subseteq> W"
-      and hWI_U: "W \<times> I_set \<subseteq> ?U_pre"
+      and hW_sub: "W \<subseteq> X" and hWI_U: "W \<times> I_set \<subseteq> ?U_pre"
     sorry \<comment> \<open>Tube lemma (Lemma_26_8). I_set compact, A\<times>I_set \<subseteq> ?U_pre.\<close>
   \<comment> \<open>Step 6: Urysohn: \<phi>: X \<rightarrow> [0,1] with \<phi>|A = 0, \<phi>|X-W = 1.\<close>
   have hX_normal: "top1_normal_on X TX"
@@ -129,8 +161,7 @@ proof -
     show "X - (X - W) \<in> TX"
     proof -
       have "X - (X - W) = X \<inter> W" by (by100 blast)
-      also have "... = W"
-        sorry \<comment> \<open>W \<subseteq> X since W \<in> TX and TX is topology on X.\<close>
+      also have "... = W" using hW_sub by (by100 blast)
       finally show ?thesis using hW_open by (by100 simp)
     qed
   qed
