@@ -1909,7 +1909,19 @@ proof -
   have hU_sc: "top1_simply_connected_on ?U (subspace_topology ?Sn ?TSn ?U)"
     unfolding top1_simply_connected_on_def
   proof (intro conjI)
-    have hTSn_loc: "is_topology_on ?Sn ?TSn" sorry
+    have hTSn_loc: "is_topology_on ?Sn ?TSn"
+    proof -
+      have "\<forall>i\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+      hence "is_topology_on (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))"
+        by (rule top1_product_topology_on_is_topology_on)
+      moreover have "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+        unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+      ultimately have "is_topology_on (UNIV::(nat\<Rightarrow>real) set)
+          (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))" by (by100 simp)
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
     have hTU: "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)"
       by (rule subspace_topology_is_topology_on[OF hTSn_loc]) (by100 blast)
     show "top1_path_connected_on ?U (subspace_topology ?Sn ?TSn ?U)"
@@ -2090,6 +2102,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
