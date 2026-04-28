@@ -1822,7 +1822,10 @@ proof (intro allI notI)
         have "(\<Sum>j\<le>n. (x j)^2) = (\<Sum>j\<in>{0..n}. (x j)^2)"
           using atLeast0AtMost by (by100 metis)
         also have "\<dots> = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)"
-          using sum.atLeast_Suc_atMost[of 0 n "\<lambda>j. (x j)^2"] assms by (by100 simp)
+        proof -
+          have "0 \<le> n" using assms by (by100 linarith)
+          thus ?thesis using sum.atLeast_Suc_atMost[of 0 n "\<lambda>j. (x j)^2"] by (by100 simp)
+        qed
         finally have "(\<Sum>j\<le>n. (x j)^2) = (x 0)^2 + (\<Sum>j\<in>{1..n}. (x j)^2)" .
         thus ?thesis using hzero by (by100 simp)
       qed
@@ -1903,7 +1906,25 @@ proof -
   let ?q = "\<lambda>i::nat. if i = 0 then (-1::real) else 0"
   let ?U = "?Sn - {?p}" and ?V = "?Sn - {?q}"
   \<comment> \<open>Step 1: U = S^n - {p} \<cong> R^n via stereographic projection, hence simply connected.\<close>
-  have hU_sc: "top1_simply_connected_on ?U (subspace_topology ?Sn ?TSn ?U)" sorry
+  have hU_sc: "top1_simply_connected_on ?U (subspace_topology ?Sn ?TSn ?U)"
+    unfolding top1_simply_connected_on_def
+  proof (intro conjI)
+    have hTSn_loc: "is_topology_on ?Sn ?TSn" sorry
+    have hTU: "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)"
+      by (rule subspace_topology_is_topology_on[OF hTSn_loc]) (by100 blast)
+    show "top1_path_connected_on ?U (subspace_topology ?Sn ?TSn ?U)"
+      unfolding top1_path_connected_on_def
+    proof (intro conjI ballI)
+      show "is_topology_on ?U (subspace_topology ?Sn ?TSn ?U)" by (rule hTU)
+    next
+      fix x y assume hx: "x \<in> ?U" and hy: "y \<in> ?U"
+      show "\<exists>f. top1_is_path_on ?U (subspace_topology ?Sn ?TSn ?U) x y f" sorry
+    qed
+  next
+    show "\<forall>x0\<in>?U. \<forall>f. top1_is_loop_on ?U (subspace_topology ?Sn ?TSn ?U) x0 f \<longrightarrow>
+        top1_path_homotopic_on ?U (subspace_topology ?Sn ?TSn ?U) x0 x0 f (top1_constant_path x0)"
+      sorry
+  qed
   have hV_sc: "top1_simply_connected_on ?V (subspace_topology ?Sn ?TSn ?V)" sorry
   \<comment> \<open>Step 2: U, V are open in S^n.\<close>
   \<comment> \<open>U = S^n - {p} and V = S^n - {q} are open because {p}, {q} are closed in S^n
@@ -2069,6 +2090,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 corollary Theorem_59_3_path_connected:
