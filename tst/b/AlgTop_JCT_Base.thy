@@ -2447,7 +2447,25 @@ proof -
           qed
           \<comment> \<open>z(0)^2 = 1 since other coords = 0.\<close>
           have hz_Sn_norm: "(\<Sum>j\<le>n. (z j)^2) = 1" using hz_Sn unfolding top1_Sn_def by (by100 blast)
-          have hz0_sq: "z 0 ^ 2 = 1" sorry
+          have hz0_sq: "z 0 ^ 2 = 1"
+          proof -
+            have "(\<Sum>j\<le>n. (z j)^2) = (\<Sum>j\<in>{0..n}. (z j)^2)"
+              using atLeast0AtMost by (by100 metis)
+            also have "\<dots> = (z 0)^2 + (\<Sum>j\<in>{1..n}. (z j)^2)"
+            proof -
+              have "0 \<le> n" using assms by (by100 linarith)
+              thus ?thesis using sum.atLeast_Suc_atMost[of 0 n "\<lambda>j. (z j)^2"] by (by100 simp)
+            qed
+            also have "(\<Sum>j\<in>{1..n}. (z j)^2) = (\<Sum>j\<in>{1..n}. (0::real))"
+            proof (intro sum.cong)
+              fix j assume "j \<in> {1..n}"
+              hence "j \<ge> 1" by (by100 simp)
+              hence "z j = 0" using hzi0_all by (by100 blast)
+              thus "(z j)^2 = (0::real)" by (by100 simp)
+            qed (by100 simp)
+            also have "\<dots> = 0" by (by100 simp)
+            finally show ?thesis using hz_Sn_norm by (by100 linarith)
+          qed
           have "(\<bar>z 0\<bar>)^2 = (1::real)^2" using hz0_sq power2_abs[of "z 0"] by (by100 simp)
           hence "\<bar>z 0\<bar> = (1::real)" by (rule power2_eq_imp_eq) (by100 simp)+
           hence "z 0 = 1 \<or> z 0 = -1" by (by100 linarith)
