@@ -2193,7 +2193,80 @@ proof -
          (all coords \<ge> 2 zero), but z \<in> S^n-{p,q} and n \<ge> 2 provides enough freedom.
          If z = -r, use r' = e_2 instead, then chain r' \<rightarrow> r.\<close>
       show "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r f"
-        sorry
+      proof (cases "\<exists>k. k \<ge> 2 \<and> k \<le> n \<and> z k \<noteq> 0")
+        case True
+        \<comment> \<open>z has nonzero coord \<ge> 2: z \<noteq> -r since -r has coords \<ge> 2 all zero.\<close>
+        have hz_na: "z \<noteq> (\<lambda>i. - ?r i)"
+        proof
+          assume "z = (\<lambda>i. - ?r i)"
+          hence "\<And>k. k \<ge> 2 \<Longrightarrow> z k = 0" by (by100 simp)
+          thus False using True by (by100 blast)
+        qed
+        let ?\<gamma> = "\<lambda>t i. ((1-t) * z i + t * ?r i) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2)"
+        have hpath_Sn: "top1_is_path_on ?Sn ?TSn z ?r ?\<gamma>"
+          by (rule Sn_normalized_interpolation_path[OF hz_Sn hr_Sn hz_na])
+        \<comment> \<open>This path avoids p,q because hitting them requires z(j)=0 for j \<ge> 2, contradicting True.\<close>
+        have havoids: "\<forall>t. ?\<gamma> t \<in> ?U \<inter> ?V"
+        proof (intro allI)
+          fix t
+          have h\<gamma>_Sn: "?\<gamma> t \<in> ?Sn" sorry \<comment> \<open>From Sn_normalized_interpolation_path.\<close>
+          have h\<gamma>_np: "?\<gamma> t \<noteq> ?p"
+          proof
+            assume heq: "?\<gamma> t = ?p"
+            \<comment> \<open>For k \<ge> 2 with z(k) \<noteq> 0: p(k) = 0 and r(k) = 0, so
+               ((1-t)*z(k) + t*0)/N = 0, hence (1-t)*z(k) = 0.
+               If t \<noteq> 1: z(k) = 0, contradiction. If t = 1: \<gamma>(1) = r \<noteq> p.\<close>
+            obtain k where hk: "k \<ge> 2" "k \<le> n" "z k \<noteq> 0" using True by (by100 blast)
+            have hpk: "?p k = 0" using hk(1) by (by100 simp)
+            have hrk: "?r k = 0" using hk(1) by (by100 simp)
+            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0" sorry
+            have "?\<gamma> t k = ?p k" using fun_cong[OF heq, of k] by (by100 simp)
+            hence "((1-t) * z k + t * ?r k) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) = 0"
+              using hpk by (by100 simp)
+            hence "(1-t) * z k + t * ?r k = 0" using hN_pos by (by100 simp)
+            hence "(1-t) * z k = 0" using hrk by (by100 simp)
+            hence "t = 1" using hk(3) using mult_eq_0_iff by (by100 simp)
+            hence "?\<gamma> t = ?r" sorry \<comment> \<open>\<gamma>(1) = r.\<close>
+            thus False using heq hr_ne_p by (by100 simp)
+          qed
+          have h\<gamma>_nq: "?\<gamma> t \<noteq> ?q"
+          proof
+            assume heq: "?\<gamma> t = ?q"
+            obtain k where hk: "k \<ge> 2" "k \<le> n" "z k \<noteq> 0" using True by (by100 blast)
+            have hqk: "?q k = 0" using hk(1) by (by100 simp)
+            have hrk: "?r k = 0" using hk(1) by (by100 simp)
+            have hN_pos: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) > 0" sorry
+            have "?\<gamma> t k = ?q k" using fun_cong[OF heq, of k] by (by100 simp)
+            hence "((1-t) * z k + t * ?r k) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r j)^2) = 0"
+              using hqk by (by100 simp)
+            hence "(1-t) * z k = 0" using hN_pos hrk by (by100 simp)
+            hence "t = 1" using hk(3) using mult_eq_0_iff by (by100 simp)
+            hence "?\<gamma> t = ?r" sorry
+            thus False using heq hr_ne_q by (by100 simp)
+          qed
+          show "?\<gamma> t \<in> ?U \<inter> ?V" using h\<gamma>_Sn h\<gamma>_np h\<gamma>_nq by (by100 blast)
+        qed
+        have "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r ?\<gamma>"
+        proof -
+          have h_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>"
+            using hpath_Sn unfolding top1_is_path_on_def by (by100 blast)
+          have h_img: "?\<gamma> ` I_set \<subseteq> ?U \<inter> ?V"
+          proof (intro subsetI)
+            fix w assume "w \<in> ?\<gamma> ` I_set"
+            then obtain t where "w = ?\<gamma> t" by (by100 blast)
+            thus "w \<in> ?U \<inter> ?V" using havoids by (by100 simp)
+          qed
+          show ?thesis unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h_cont h_img hUV_sub]
+            hpath_Sn[unfolded top1_is_path_on_def] by (by100 blast)
+        qed
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        \<comment> \<open>z(i) = 0 for all i \<ge> 2. Then z(1) \<noteq> 0, so z \<noteq> -r' where r' = e_2.
+           Path z \<rightarrow> r' \<rightarrow> r in U \<inter> V.\<close>
+        thus ?thesis sorry
+      qed
     qed
     then obtain fx where hfx: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x ?r fx"
       using hpath_to_r[OF hx] by (by100 blast)
@@ -2216,6 +2289,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
