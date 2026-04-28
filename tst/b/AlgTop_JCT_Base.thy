@@ -3795,9 +3795,25 @@ proof (rule ccontr)
            continuous_intros can't decompose the nested let-expressions.\<close>
     qed
     \<comment> \<open>Bridge to top1_continuous_map_on via subspace_open_sets_on.\<close>
+    \<comment> \<open>Bridge: subspace_open_sets_on gives top1_continuous_map_on with top1_open_sets.
+       product_topology_on = top1_open_sets for R^2 and R^3 (by product_topology_on_open_sets).\<close>
+    have hprod_R3: "product_topology_on (top1_open_sets::real set set)
+        (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))
+      = (top1_open_sets :: (real \<times> real \<times> real) set set)"
+      using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+      by (simp add: product_topology_on_open_sets)
+    have hprod_R2: "product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)
+      = (top1_open_sets :: (real \<times> real) set set)"
+      by (rule product_topology_on_open_sets_real2)
+    have hS2_top_eq: "subspace_topology UNIV (product_topology_on top1_open_sets
+        (product_topology_on top1_open_sets top1_open_sets)) ?S2
+      = subspace_topology UNIV (top1_open_sets :: (real\<times>real\<times>real) set set) ?S2"
+      unfolding hprod_R3 by simp
+    have hS1_top_eq: "top1_S1_topology = subspace_topology UNIV (top1_open_sets :: (real\<times>real) set set) top1_S1"
+      unfolding top1_S1_topology_def hprod_R2 by simp
     show ?thesis
       using top1_continuous_map_on_subspace_open_sets_on[OF hg_range hg_cont_on]
-      sorry \<comment> \<open>Need topology matching: subspace of product = subspace of open_sets for R^3, R^2.\<close>
+      unfolding hS2_top_eq[symmetric] hS1_top_eq[symmetric] by simp
   qed
   \<comment> \<open>g is antipode-preserving: g(-x) = -g(x).\<close>
   have hg_anti: "\<forall>x\<in>?S2. ?g (?neg x) = (- fst (?g x), - snd (?g x))"
