@@ -220,10 +220,15 @@ proof -
     qed
     thus "g x \<in> Y" unfolding g_def by (by100 blast)
   qed
-  show ?thesis
-    sorry \<comment> \<open>Need: g continuous X\<rightarrow>Y, and g nulhomotopic.
-       g continuous: composition of G with (id, \<phi>).
-       g nulhomotopic: H(x,t) = G(x, (1-t)\<phi>(x)+t).\<close>
+  \<comment> \<open>g continuous: composition of G: X\<times>I \<rightarrow> R^2 with (x \<mapsto> (x,\<phi>(x))): X \<rightarrow> X\<times>I.\<close>
+  have hg_cont: "top1_continuous_map_on X TX Y ?TY g"
+    sorry \<comment> \<open>Composition of continuous maps. G continuous, \<phi> continuous,
+       so x \<mapsto> G(x,\<phi>(x)) continuous. Then restrict codomain to Y.\<close>
+  \<comment> \<open>g nulhomotopic: H(x,t) = G(x, (1-t)\<phi>(x) + t) is homotopy from g to const y0.
+     H(x,0) = G(x, \<phi>(x)) = g(x). H(x,1) = G(x, 1) = Fe(x,1) = y0.\<close>
+  have hg_nul: "top1_nulhomotopic_on X TX Y ?TY g"
+    sorry \<comment> \<open>H continuous (composition), H(x,0) = g(x), H(x,1) = y0 for all x.\<close>
+  show ?thesis using hg_cont hg_ext hg_nul by (by100 blast)
 qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
