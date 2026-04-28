@@ -1330,6 +1330,58 @@ proof -
           is_topology_on_strict_imp[OF assms(1)] hpc hx0X_outer hnul])
 qed
 
+text \<open>Helper: normalized interpolation on S^n gives a continuous path.
+  For x,y \<in> S^n with x \<noteq> -y, the path \<gamma>(t) = ((1-t)x + ty)/||(1-t)x + ty|| is
+  continuous in the indexed product topology and stays on S^n.\<close>
+lemma Sn_normalized_interpolation_path:
+  fixes n :: nat and x y :: "nat \<Rightarrow> real"
+  assumes hx: "x \<in> top1_Sn n" and hy: "y \<in> top1_Sn n"
+      and hna: "x \<noteq> (\<lambda>i. - y i)" \<comment> \<open>x \<noteq> -y (not antipodal)\<close>
+  defines "\<gamma> \<equiv> \<lambda>t. \<lambda>i. ((1-t) * x i + t * y i) /
+      sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)"
+  shows "top1_is_path_on (top1_Sn n)
+      (subspace_topology UNIV
+        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets))
+        (top1_Sn n)) x y \<gamma>"
+proof -
+  let ?TSn = "subspace_topology UNIV
+      (top1_product_topology_on UNIV (\<lambda>_::nat. UNIV::real set) (\<lambda>_. top1_open_sets))
+      (top1_Sn n)"
+  let ?N = "\<lambda>t. sqrt (\<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)"
+  \<comment> \<open>Step 1: N(t) > 0 for all t \<in> [0,1], since x \<noteq> -y.\<close>
+  have hN_pos: "\<forall>t. ?N t > 0"
+    sorry
+  \<comment> \<open>Step 2: \<gamma> maps into S^n.\<close>
+  have h\<gamma>_Sn: "\<forall>t. \<gamma> t \<in> top1_Sn n"
+    sorry
+  \<comment> \<open>Step 3: \<gamma>(0) = x and \<gamma>(1) = y.\<close>
+  have hx_norm: "(\<Sum>j\<le>n. (x j)^2) = 1"
+    using hx unfolding top1_Sn_def by (by100 blast)
+  have hy_norm: "(\<Sum>j\<le>n. (y j)^2) = 1"
+    using hy unfolding top1_Sn_def by (by100 blast)
+  have h\<gamma>0: "\<gamma> 0 = x"
+  proof (rule ext)
+    fix i
+    have "?N 0 = sqrt (\<Sum>j\<le>n. (x j)^2)" by (by100 simp)
+    also have "\<dots> = 1" using hx_norm by (by100 simp)
+    finally have hN0: "?N 0 = 1" .
+    show "\<gamma> 0 i = x i" unfolding \<gamma>_def using hN0 by (by100 simp)
+  qed
+  have h\<gamma>1: "\<gamma> 1 = y"
+  proof (rule ext)
+    fix i
+    have "?N 1 = sqrt (\<Sum>j\<le>n. (y j)^2)" by (by100 simp)
+    also have "\<dots> = 1" using hy_norm by (by100 simp)
+    finally have hN1: "?N 1 = 1" .
+    show "\<gamma> 1 i = y i" unfolding \<gamma>_def using hN1 by (by100 simp)
+  qed
+  \<comment> \<open>Step 4: \<gamma> is continuous I \<rightarrow> S^n in the subspace topology.\<close>
+  have h\<gamma>_cont: "top1_continuous_map_on I_set I_top (top1_Sn n) ?TSn \<gamma>"
+    sorry
+  show ?thesis unfolding top1_is_path_on_def
+    using h\<gamma>_cont h\<gamma>0 h\<gamma>1 by (by100 blast)
+qed
+
 (** from \<S>59 Theorem 59.3: for n \<ge> 2, S^n is simply connected.
 
     Munkres' proof (2 steps):
@@ -1467,8 +1519,31 @@ proof -
     using hTop_prod unfolding hPiE_eq .
   have hTSn_top: "is_topology_on ?Sn ?TSn"
     by (rule subspace_topology_is_topology_on[OF hTop_UNIV]) simp
+  have hTUV: "is_topology_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V))"
+    by (rule subspace_topology_is_topology_on[OF hTSn_top]) (by100 blast)
   have hUV_pc: "top1_path_connected_on (?U \<inter> ?V)
-      (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" sorry
+      (subspace_topology ?Sn ?TSn (?U \<inter> ?V))"
+    unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V))" by (rule hTUV)
+  next
+    \<comment> \<open>For any x,y \<in> S^n - {p,q}, construct path x \<rightarrow> r \<rightarrow> y via great circle arcs.
+       The equator point r = (\<lambda>i. if i=1 then 1 else 0) is in U \<inter> V (already proved).
+       Path: \<gamma>(t) = normalize((1-t)x + tr) — well-defined since x \<noteq> -r.\<close>
+    fix x y assume hx: "x \<in> ?U \<inter> ?V" and hy: "y \<in> ?U \<inter> ?V"
+    have hx_Sn: "x \<in> ?Sn" and hx_np: "x \<noteq> ?p" and hx_nq: "x \<noteq> ?q"
+      using hx by (by100 blast)+
+    have hy_Sn: "y \<in> ?Sn" and hy_np: "y \<noteq> ?p" and hy_nq: "y \<noteq> ?q"
+      using hy by (by100 blast)+
+    \<comment> \<open>Use equator point r. Connect x \<rightarrow> r \<rightarrow> y via great circle arcs.
+       Need x \<noteq> -r and y \<noteq> -r. If either fails, use alternate point r'.\<close>
+    let ?r = "\<lambda>i::nat. if i = 1 then (1::real) else 0"
+    have hr_Sn: "?r \<in> ?Sn" and hr_UV: "?r \<in> ?U \<inter> ?V"
+      using hUV_ne sorry
+    \<comment> \<open>Construct path from x to r in S^n, then restrict to U \<inter> V.\<close>
+    show "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x y f"
+      sorry
+  qed
   have hT_strict: "is_topology_on_strict ?Sn ?TSn"
     unfolding is_topology_on_strict_def
     using hTSn_top
