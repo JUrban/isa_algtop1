@@ -226,8 +226,153 @@ proof -
     \<comment> \<open>frontier B = circle of radius r centered at x.\<close>
     let ?circle = "{y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2 = r^2}"
     have hfr_eq_top: "frontier B = ?circle"
-      sorry \<comment> \<open>Same proof as inside hBd_S1 (frontier \<subseteq> circle via open_vimage,
-         circle \<subseteq> frontier via radial perturbation). Already proved inside hBd_S1 block.\<close>
+    proof (intro set_eqI iffI)
+      fix y assume hy: "y \<in> frontier B"
+      let ?g = "\<lambda>y :: real \<times> real. (fst y - fst x)^2 + (snd y - snd x)^2"
+      have hg_cont: "continuous_on UNIV ?g" by (intro continuous_intros)
+      show "y \<in> ?circle"
+      proof (rule ccontr)
+        assume "y \<notin> ?circle" hence "?g y \<noteq> r^2" by (by100 blast)
+        thus False
+        proof (cases "?g y < r^2")
+          case True
+          have "open (?g -` {..<r^2})" by (rule open_vimage[OF open_lessThan hg_cont])
+          moreover have "y \<in> ?g -` {..<r^2}" using True by (by100 blast)
+          moreover have "?g -` {..<r^2} \<inter> (- B) = {}" unfolding B_def by (by100 auto)
+          ultimately show False using hy unfolding frontier_def by (by100 blast)
+        next
+          case False hence "?g y > r^2" using \<open>?g y \<noteq> r^2\<close> by (by100 linarith)
+          have "open (?g -` {r^2<..})" by (rule open_vimage[OF open_greaterThan hg_cont])
+          moreover have "y \<in> ?g -` {r^2<..}" using \<open>?g y > r^2\<close> by (by100 blast)
+          moreover have "?g -` {r^2<..} \<inter> B = {}" unfolding B_def by (by100 auto)
+          ultimately show False using hy unfolding frontier_def by (by100 blast)
+        qed
+      qed
+    next
+      fix y assume hy: "y \<in> ?circle"
+      hence hg_eq: "(fst y - fst x)^2 + (snd y - snd x)^2 = r^2" by (by100 blast)
+      show "y \<in> frontier B" unfolding frontier_def
+      proof (intro CollectI conjI allI impI)
+        fix V :: "(real \<times> real) set" assume hV: "open V" and hyV: "y \<in> V"
+        show "V \<inter> B \<noteq> {}"
+        proof -
+          have "y \<in> B" unfolding B_def using hg_eq by (by100 auto)
+          thus ?thesis using hyV by (by100 blast)
+        qed
+        show "V \<inter> (- B) \<noteq> {}"
+        proof -
+          obtain A0' B0' where hA0': "open A0'" and hB0': "open B0'"
+              and hy_AB: "y \<in> A0' \<times> B0'" and hAB_V: "A0' \<times> B0' \<subseteq> V"
+            using open_prod_elim[OF hV hyV] by (by100 blast)
+          obtain d1 where hd1: "d1 > 0" and hd1_sub: "\<forall>t. dist t (fst y) < d1 \<longrightarrow> t \<in> A0'"
+            using hA0' hy_AB unfolding open_dist by (by100 auto)
+          obtain d2 where hd2: "d2 > 0" and hd2_sub: "\<forall>t. dist t (snd y) < d2 \<longrightarrow> t \<in> B0'"
+            using hB0' hy_AB unfolding open_dist by (by100 auto)
+          define \<epsilon>0 where "\<epsilon>0 = min d1 d2 / (2 * (r + 1))"
+          have h\<epsilon>0: "\<epsilon>0 > 0" unfolding \<epsilon>0_def using hd1 hd2 hr by (by100 simp)
+          define z0 where "z0 = (fst x + (1 + \<epsilon>0) * (fst y - fst x), snd x + (1 + \<epsilon>0) * (snd y - snd x))"
+          have "z0 \<notin> B"
+          proof -
+            have hfz0: "fst z0 - fst x = (1 + \<epsilon>0) * (fst y - fst x)" unfolding z0_def by (by100 simp)
+            have hsz0: "snd z0 - snd x = (1 + \<epsilon>0) * (snd y - snd x)" unfolding z0_def by (by100 simp)
+            have "(fst z0 - fst x)^2 + (snd z0 - snd x)^2
+                = ((1 + \<epsilon>0) * (fst y - fst x))^2 + ((1 + \<epsilon>0) * (snd y - snd x))^2"
+              using hfz0 hsz0 by (by100 simp)
+            also have "... = (1 + \<epsilon>0)^2 * ((fst y - fst x)^2 + (snd y - snd x)^2)"
+              by (by100 algebra)
+            also have "... = (1 + \<epsilon>0)^2 * r^2" using hg_eq by (by100 simp)
+            finally have hgz0: "(fst z0 - fst x)^2 + (snd z0 - snd x)^2 = (1 + \<epsilon>0)^2 * r^2" .
+            have "(1 + \<epsilon>0) > 1" using h\<epsilon>0 by (by100 linarith)
+            hence "(1 + \<epsilon>0)^2 > 1^2" by (rule power_strict_mono) (by100 linarith)+
+            hence "(1 + \<epsilon>0)^2 * r^2 > 1 * r^2"
+              using hr by (intro mult_strict_right_mono) (by100 simp)+
+            hence "(1 + \<epsilon>0)^2 * r^2 > r^2" by (by100 simp)
+            have "(fst z0 - fst x)^2 + (snd z0 - snd x)^2 > r^2"
+              using hgz0 \<open>(1 + \<epsilon>0)^2 * r^2 > r^2\<close> by (by100 linarith)
+            thus "z0 \<notin> B" unfolding B_def by (by100 auto)
+          qed
+          moreover have "z0 \<in> V"
+          proof -
+            have h\<epsilon>0_bound: "\<epsilon>0 * r < min d1 d2 / 2"
+            proof -
+              have "r + 1 > 0" using hr by (by100 linarith)
+              hence h2rp: "(2::real) * (r + 1) > 0" by (by100 simp)
+              have h2rp_ne: "(2::real) * (r + 1) \<noteq> 0" using h2rp by (by100 linarith)
+              have h_eq: "\<epsilon>0 = min d1 d2 / (2 * (r + 1))" unfolding \<epsilon>0_def by (by100 simp)
+              have "\<epsilon>0 * (2 * (r + 1)) = min d1 d2 / (2 * (r + 1)) * (2 * (r + 1))"
+                using h_eq by (by100 simp)
+              also have "... = min d1 d2"
+                using h2rp_ne nonzero_mult_div_cancel_right[of "2*(r+1)" "min d1 d2"] by (by100 simp)
+              finally have h_cancel: "\<epsilon>0 * (2 * (r + 1)) = min d1 d2" .
+              have "\<epsilon>0 * r * (2 * (r + 1)) = (\<epsilon>0 * (2 * (r + 1))) * r" by (by100 algebra)
+              also have "... = min d1 d2 * r" using h_cancel by (by100 simp)
+              finally have h_mul: "\<epsilon>0 * r * (2 * (r + 1)) = min d1 d2 * r" .
+              have "min d1 d2 * r < min d1 d2 * (r + 1)" using hd1 hd2 by (by100 simp)
+              also have "... = min d1 d2 / 2 * (2 * (r + 1))" by (by100 algebra)
+              finally have "\<epsilon>0 * r * (2 * (r + 1)) < min d1 d2 / 2 * (2 * (r + 1))"
+                using h_mul by (by100 linarith)
+              thus ?thesis using h2rp by (by100 simp)
+            qed
+            have hfabs0: "\<bar>fst y - fst x\<bar> \<le> r"
+            proof -
+              have "(snd y - snd x)^2 \<ge> 0" by (by100 simp)
+              hence "(fst y - fst x)^2 \<le> r^2" using hg_eq by (by100 linarith)
+              have "abs (fst y - fst x) ^ 2 = (fst y - fst x)^2" by (rule power2_abs)
+              hence "\<bar>fst y - fst x\<bar>^2 \<le> r^2" using \<open>(fst y - fst x)^2 \<le> r^2\<close> by (by100 linarith)
+              show ?thesis
+              proof (rule power2_le_imp_le)
+                show "\<bar>fst y - fst x\<bar>\<^sup>2 \<le> r\<^sup>2" using \<open>\<bar>fst y - fst x\<bar>^2 \<le> r^2\<close> by (by100 simp)
+                show "0 \<le> r" using hr by (by100 linarith)
+              qed
+            qed
+            have hsabs0: "\<bar>snd y - snd x\<bar> \<le> r"
+            proof -
+              have "(fst y - fst x)^2 \<ge> 0" by (by100 simp)
+              hence "(snd y - snd x)^2 \<le> r^2" using hg_eq by (by100 linarith)
+              have "abs (snd y - snd x) ^ 2 = (snd y - snd x)^2" by (rule power2_abs)
+              hence "\<bar>snd y - snd x\<bar>^2 \<le> r^2" using \<open>(snd y - snd x)^2 \<le> r^2\<close> by (by100 linarith)
+              show ?thesis
+              proof (rule power2_le_imp_le)
+                show "\<bar>snd y - snd x\<bar>\<^sup>2 \<le> r\<^sup>2" using \<open>\<bar>snd y - snd x\<bar>^2 \<le> r^2\<close> by (by100 simp)
+                show "0 \<le> r" using hr by (by100 linarith)
+              qed
+            qed
+            have hfz0_y: "fst z0 - fst y = \<epsilon>0 * (fst y - fst x)"
+            proof -
+              have "fst z0 = fst x + (1 + \<epsilon>0) * (fst y - fst x)" unfolding z0_def by (by100 simp)
+              thus ?thesis by (by100 algebra)
+            qed
+            have hsz0_y: "snd z0 - snd y = \<epsilon>0 * (snd y - snd x)"
+            proof -
+              have "snd z0 = snd x + (1 + \<epsilon>0) * (snd y - snd x)" unfolding z0_def by (by100 simp)
+              thus ?thesis by (by100 algebra)
+            qed
+            have "dist (fst z0) (fst y) = \<bar>\<epsilon>0 * (fst y - fst x)\<bar>"
+              unfolding dist_real_def using hfz0_y by (by100 simp)
+            also have "... = \<epsilon>0 * \<bar>fst y - fst x\<bar>"
+              using h\<epsilon>0 abs_mult[of \<epsilon>0 "fst y - fst x"] by (by100 simp)
+            also have "... \<le> \<epsilon>0 * r" using hfabs0 h\<epsilon>0 by (intro mult_left_mono) (by100 linarith)+
+            also have "... < min d1 d2 / 2" by (rule h\<epsilon>0_bound)
+            also have "... \<le> d1" using hd1 hd2 by (by100 linarith)
+            finally have "dist (fst z0) (fst y) < d1" .
+            hence "fst z0 \<in> A0'" using hd1_sub by (by100 blast)
+            have "dist (snd z0) (snd y) = \<bar>\<epsilon>0 * (snd y - snd x)\<bar>"
+              unfolding dist_real_def using hsz0_y by (by100 simp)
+            also have "... = \<epsilon>0 * \<bar>snd y - snd x\<bar>"
+              using h\<epsilon>0 abs_mult[of \<epsilon>0 "snd y - snd x"] by (by100 simp)
+            also have "... \<le> \<epsilon>0 * r" using hsabs0 h\<epsilon>0 by (intro mult_left_mono) (by100 linarith)+
+            also have "... < min d1 d2 / 2" by (rule h\<epsilon>0_bound)
+            also have "... \<le> d2" using hd1 hd2 by (by100 linarith)
+            finally have "dist (snd z0) (snd y) < d2" .
+            hence "snd z0 \<in> B0'" using hd2_sub by (by100 blast)
+            have "z0 \<in> A0' \<times> B0'" unfolding z0_def
+              using \<open>fst z0 \<in> A0'\<close> \<open>snd z0 \<in> B0'\<close> unfolding z0_def by (by100 simp)
+            thus "z0 \<in> V" using hAB_V by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+      qed
+    qed
     \<comment> \<open>frontier B \<cong> S^1: the circle of radius r is homeomorphic to S^1.\<close>
     have hBd_S1: "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
         (frontier B) (subspace_topology UNIV ?TR2 (frontier B)) h"
@@ -705,7 +850,36 @@ proof -
           obtain y1 where hy1: "y1 \<in> T1 \<inter> (B - frontier B)" using hne1 by (by100 blast)
           let ?\<delta> = "\<lambda>t :: real. ((1-t) * fst x + t * fst y1, (1-t) * snd x + t * snd y1)"
           have "?\<delta> ` {0..1} \<subseteq> B - frontier B"
-            sorry \<comment> \<open>Same star-shape argument as for \<gamma>.\<close>
+          proof (intro image_subsetI)
+            fix t :: real assume "t \<in> {0..1}"
+            hence ht: "0 \<le> t" "t \<le> 1" by (by100 auto)+
+            have hy1_ball: "(fst y1 - fst x)^2 + (snd y1 - snd x)^2 < r^2"
+            proof -
+              have "y1 \<in> B" using hy1 by (by100 blast)
+              hence "(fst y1 - fst x)^2 + (snd y1 - snd x)^2 \<le> r^2" unfolding B_def by (by100 blast)
+              moreover have "y1 \<notin> frontier B" using hy1 by (by100 blast)
+              hence "(fst y1 - fst x)^2 + (snd y1 - snd x)^2 \<noteq> r^2" unfolding hfr_eq_top by (by100 blast)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            have "fst (?\<delta> t) = (1-t) * fst x + t * fst y1" by (by100 simp)
+            hence hf\<delta>: "fst (?\<delta> t) - fst x = t * (fst y1 - fst x)" by (by100 algebra)
+            have "snd (?\<delta> t) = (1-t) * snd x + t * snd y1" by (by100 simp)
+            hence hs\<delta>: "snd (?\<delta> t) - snd x = t * (snd y1 - snd x)" by (by100 algebra)
+            have "(fst (?\<delta> t) - fst x)^2 + (snd (?\<delta> t) - snd x)^2
+                = t^2 * ((fst y1 - fst x)^2 + (snd y1 - snd x)^2)"
+              using hf\<delta> hs\<delta> by (by100 algebra)
+            also have "... \<le> 1 * ((fst y1 - fst x)^2 + (snd y1 - snd x)^2)"
+            proof (intro mult_right_mono)
+              have "t \<le> 1" using ht by (by100 blast)
+              thus "t^2 \<le> 1" using power_le_one ht by (by100 blast)
+              show "(fst y1 - fst x)^2 + (snd y1 - snd x)^2 \<ge> 0" by (by100 simp)
+            qed
+            also have "... < r^2" using hy1_ball by (by100 simp)
+            finally have hlt: "(fst (?\<delta> t) - fst x)^2 + (snd (?\<delta> t) - snd x)^2 < r^2" .
+            have "?\<delta> t \<in> B" unfolding B_def using hlt by (by100 auto)
+            moreover have "?\<delta> t \<notin> frontier B" unfolding hfr_eq_top using hlt by (by100 auto)
+            ultimately show "?\<delta> t \<in> B - frontier B" by (by100 blast)
+          qed
           hence h\<delta>_sub_T12: "?\<delta> ` {0..1} \<subseteq> T1 \<union> T2" using hcov by (by100 blast)
           have h\<delta>_cont: "continuous_on {0..1} ?\<delta>" by (intro continuous_intros)
           have h\<delta>_conn: "connected (?\<delta> ` {0..1})"
