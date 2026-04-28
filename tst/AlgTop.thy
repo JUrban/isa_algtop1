@@ -6,8 +6,11 @@ text \<open>Bridge: the order topology on R equals top1_open_sets (= {U. open U}
   Hence top1_closed_interval_topology 0 1 = I_top.\<close>
 lemma order_topology_UNIV_eq_top1_open_sets_real:
   "(order_topology_on_UNIV :: real set set) = top1_open_sets"
-  sorry \<comment> \<open>Both are the standard topology on R. order_topology uses open rays as basis,
-     top1_open_sets = {U. open U}. For real (linear_continuum_topology), these coincide.\<close>
+  sorry \<comment> \<open>Both are the standard topology on R.
+     Direction 1 (order_top \<subseteq> open): basis elements (open rays/intervals) are HOL-open.
+     Direction 2 (open \<subseteq> order_top): open = generate_topology(rays),
+       rays \<in> basis \<subseteq> order_topology, closed under \<union>/\<inter>.
+     Full proof ~60 lines. For real (linorder_topology), these topologies coincide.\<close>
 
 lemma closed_interval_top_eq_I_top:
   "top1_closed_interval_topology 0 1 = I_top"
