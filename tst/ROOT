@@ -24,7 +24,12 @@ session AlgTopBase in b = AlgTopBase0 +
   theories
     AlgTop_JCT_Base
 
-session AlgTop = AlgTopBase +
+session AlgTop0 in a0 = AlgTopBase +
+  options [quick_and_dirty, timeout = 300]
+  theories
+    AlgTop0
+
+session AlgTop = AlgTop0 +
   options [quick_and_dirty, timeout = 120]
   theories
     AlgTop
