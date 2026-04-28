@@ -1527,7 +1527,87 @@ proof -
   qed
   \<comment> \<open>Step 4: \<gamma> is continuous I \<rightarrow> S^n in the subspace topology.\<close>
   have h\<gamma>_cont: "top1_continuous_map_on I_set I_top (top1_Sn n) ?TSn \<gamma>"
-    sorry
+  proof -
+    \<comment> \<open>Each coordinate of \<gamma> is continuous: polynomial / sqrt(polynomial), with sqrt > 0.\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTop_each: "\<forall>j\<in>(UNIV::nat set). is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+      using top1_open_sets_is_topology_on_UNIV by (by100 simp)
+    \<comment> \<open>Numerator for coordinate i: (1-t)*x(i) + t*y(i) is continuous_on I_set.\<close>
+    have hnum_cont: "\<And>i. continuous_on I_set (\<lambda>t. (1-t) * x i + t * y i)"
+      by (intro continuous_intros)
+    \<comment> \<open>The sum under sqrt: \<Sum>j\<le>n ((1-t)*x(j)+t*y(j))^2 is continuous_on I_set.\<close>
+    have hsumsq_cont: "continuous_on I_set (\<lambda>t. \<Sum>j\<le>n. ((1-t) * x j + t * y j)^2)"
+      by (intro continuous_intros)
+    \<comment> \<open>N(t) = sqrt(...) is continuous_on I_set.\<close>
+    have hN_cont: "continuous_on I_set ?N"
+      by (rule continuous_on_real_sqrt[OF hsumsq_cont])
+    \<comment> \<open>N(t) \<noteq> 0 on I_set.\<close>
+    have hN_ne: "\<forall>t\<in>I_set. ?N t \<noteq> 0"
+    proof (intro ballI)
+      fix t assume "t \<in> I_set"
+      have "?N t > 0" using hN_pos by (by100 blast)
+      thus "?N t \<noteq> 0" by (by100 linarith)
+    qed
+    \<comment> \<open>Each coordinate: ((1-t)*x(i)+t*y(i)) / N(t) is continuous_on I_set.\<close>
+    have hcoord_cont: "\<And>i. continuous_on I_set (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)"
+    proof -
+      fix i
+      show "continuous_on I_set (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)"
+        by (rule continuous_on_divide[OF hnum_cont hN_cont hN_ne])
+    qed
+    \<comment> \<open>Bridge: continuous_on I_set gives top1_continuous_map_on I_set I_top UNIV top1_open_sets.\<close>
+    have hcoord_top: "\<And>i. top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+        (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)"
+    proof -
+      fix i
+      have hc: "continuous_on I_set (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)" by (rule hcoord_cont)
+      have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> ((1-t) * x i + t * y i) / ?N t \<in> (UNIV::real set)"
+        by (by100 simp)
+      have "top1_continuous_map_on I_set
+          (subspace_topology UNIV top1_open_sets I_set)
+          (UNIV::real set) (subspace_topology UNIV (top1_open_sets::real set set) UNIV)
+          (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)"
+        by (rule top1_continuous_map_on_subspace_open_sets_on[OF hrange hc])
+      thus "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+          (\<lambda>t. ((1-t) * x i + t * y i) / ?N t)"
+      proof -
+        have heq1: "subspace_topology UNIV (top1_open_sets::real set set) UNIV = top1_open_sets"
+          unfolding subspace_topology_def by (by100 auto)
+        have heq2: "subspace_topology UNIV top1_open_sets I_set = I_top"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        show ?thesis
+          using top1_continuous_map_on_subspace_open_sets_on[OF hrange hc]
+          unfolding heq1 heq2 .
+      qed
+    qed
+    \<comment> \<open>The coordinate function is \<gamma> t i.\<close>
+    have hcoord_eq: "\<And>i t. \<gamma> t i = ((1-t) * x i + t * y i) / ?N t"
+      unfolding \<gamma>_def by (by100 simp)
+    \<comment> \<open>Apply Theorem 19.6: \<gamma> continuous iff each coordinate continuous.\<close>
+    have h\<gamma>_UNIV: "top1_continuous_map_on I_set I_top
+        (top1_PiE UNIV (\<lambda>_::nat. UNIV::real set))
+        (top1_product_topology_on UNIV (\<lambda>_. UNIV) (\<lambda>_. top1_open_sets)) \<gamma>"
+    proof -
+      have hmap: "\<forall>t\<in>I_set. \<gamma> t \<in> top1_PiE UNIV (\<lambda>_::nat. UNIV::real set)"
+        unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+      have hcoords: "\<forall>i\<in>(UNIV::nat set). top1_continuous_map_on I_set I_top
+          (UNIV::real set) top1_open_sets (\<lambda>t. (\<gamma> t) i)"
+      proof (intro ballI)
+        fix i :: nat
+        show "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (\<lambda>t. (\<gamma> t) i)"
+          using hcoord_top[of i] hcoord_eq by (by100 simp)
+      qed
+      show ?thesis using iffD2[OF Theorem_19_6[OF hTI hTop_each hmap]] hcoords by (by100 blast)
+    qed
+    \<comment> \<open>Restrict codomain from UNIV to S^n using h\<gamma>_Sn.\<close>
+    have h\<gamma>_img: "\<forall>t\<in>I_set. \<gamma> t \<in> top1_Sn n" using h\<gamma>_Sn by (by100 blast)
+    have hPiE_eq: "top1_PiE UNIV (\<lambda>_::nat. UNIV::real set) = UNIV"
+      unfolding top1_PiE_def top1_Pi_def top1_extensional_def by (by100 auto)
+    have h\<gamma>_img2: "\<gamma> ` I_set \<subseteq> top1_Sn n" using h\<gamma>_img by (by100 blast)
+    show ?thesis
+      using top1_continuous_map_on_codomain_shrink[OF h\<gamma>_UNIV[unfolded hPiE_eq] h\<gamma>_img2]
+      by (by100 simp)
+  qed
   show ?thesis unfolding top1_is_path_on_def
     using h\<gamma>_cont h\<gamma>0 h\<gamma>1 by (by100 blast)
 qed
