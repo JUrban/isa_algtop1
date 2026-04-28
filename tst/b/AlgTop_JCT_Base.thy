@@ -2491,7 +2491,162 @@ proof -
           qed
         qed
         \<comment> \<open>Use r' = e_2 as stepping stone. z \<rightarrow> r' \<rightarrow> r.\<close>
-        thus ?thesis sorry
+        let ?r' = "\<lambda>i::nat. if i = 2 then (1::real) else 0"
+        have hr'_Sn: "?r' \<in> ?Sn" unfolding top1_Sn_def
+        proof (intro CollectI conjI allI impI)
+          fix i :: nat assume "i \<ge> Suc n" hence "i \<noteq> 2" using assms by (by100 linarith)
+          thus "?r' i = 0" by (by100 simp)
+        next
+          have h2n: "(2::nat) \<le> n" using assms by (by100 linarith)
+          have "(\<Sum>i\<le>n. (?r' i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 2 then 1 else 0::real))"
+            by (intro sum.cong) (by100 simp)+
+          also have "\<dots> = 1" using sum.delta'[of "{..n}" 2 "\<lambda>_. (1::real)"] h2n by (by100 simp)
+          finally show "(\<Sum>i\<le>n. (?r' i)\<^sup>2) = 1" .
+        qed
+        have hr'_UV: "?r' \<in> ?U \<inter> ?V"
+        proof -
+          have "?r' \<noteq> ?p"
+          proof assume h: "?r' = ?p"
+            have "?r' 0 = (0::real)" by (by100 simp)
+            moreover have "?p 0 = (1::real)" by (by100 simp)
+            ultimately show False using h fun_cong[OF h, of 0] by (by100 simp) qed
+          moreover have "?r' \<noteq> ?q"
+          proof assume h: "?r' = ?q"
+            have "?r' 0 = (0::real)" by (by100 simp)
+            moreover have "?q 0 = (-1::real)" by (by100 simp)
+            ultimately show False using fun_cong[OF h, of 0] by (by100 simp) qed
+          ultimately show ?thesis using hr'_Sn by (by100 blast)
+        qed
+        \<comment> \<open>z \<noteq> -r' since z(1) \<noteq> 0 but (-r')(1) = 0.\<close>
+        have hz_na_r': "z \<noteq> (\<lambda>i. - ?r' i)"
+        proof
+          assume "z = (\<lambda>i. - ?r' i)"
+          hence "z 1 = - ?r' 1" using fun_cong[of z "\<lambda>i. - ?r' i" 1] by (by100 simp)
+          hence "z 1 = 0" by (by100 simp)
+          thus False using hz1_ne by (by100 blast)
+        qed
+        \<comment> \<open>r \<noteq> -r' since r(1) = 1 but (-r')(1) = 0.\<close>
+        have hr_na_r': "?r \<noteq> (\<lambda>i. - ?r' i)"
+        proof
+          assume h: "?r = (\<lambda>i. - ?r' i)"
+          have "?r 1 = (1::real)" by (by100 simp)
+          moreover have "(\<lambda>i. - ?r' i) 1 = (0::real)" by (by100 simp)
+          ultimately have "(1::real) = (0::real)" using fun_cong[OF h, of 1] by (by100 simp)
+          thus False by (by100 simp)
+        qed
+        \<comment> \<open>Path z \<rightarrow> r' in U \<inter> V: interpolation avoids p,q since z(1) \<noteq> 0.\<close>
+        let ?\<gamma>1 = "\<lambda>t i. ((1-t) * z i + t * ?r' i) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r' j)^2)"
+        have hpath1: "top1_is_path_on ?Sn ?TSn z ?r' ?\<gamma>1"
+          by (rule Sn_normalized_interpolation_path[OF hz_Sn hr'_Sn hz_na_r'])
+        have havoids1: "\<forall>t. ?\<gamma>1 t \<in> ?U \<inter> ?V"
+        proof (intro allI)
+          fix t
+          have h_Sn: "?\<gamma>1 t \<in> ?Sn" by (rule Sn_interpolation_in_Sn[OF hz_Sn hr'_Sn hz_na_r'])
+          have h_np: "?\<gamma>1 t \<noteq> ?p"
+          proof assume heq: "?\<gamma>1 t = ?p"
+            have hN: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r' j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hz_Sn hr'_Sn hz_na_r'])
+            have "?\<gamma>1 t 1 = ?p 1" using fun_cong[OF heq, of 1] by (by100 simp)
+            hence "((1-t) * z 1 + t * ?r' 1) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r' j)^2) = 0"
+              by (by100 simp)
+            hence "(1-t) * z 1 = 0" using hN by (by100 simp)
+            hence "t = 1" using hz1_ne using mult_eq_0_iff by (by100 simp)
+            hence "?\<gamma>1 t = ?r'" using Sn_interpolation_at_1[OF hz_Sn hr'_Sn hz_na_r'] by (by100 simp)
+            hence h_eq: "?p = ?r'" using heq by (by100 simp)
+            have "?p 0 = (1::real)" by (by100 simp)
+            moreover have "?r' 0 = (0::real)" by (by100 simp)
+            ultimately have "(1::real) = (0::real)" using fun_cong[OF h_eq, of 0] by (by100 simp)
+            thus False by (by100 simp)
+          qed
+          have h_nq: "?\<gamma>1 t \<noteq> ?q"
+          proof assume heq: "?\<gamma>1 t = ?q"
+            have hN: "sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r' j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hz_Sn hr'_Sn hz_na_r'])
+            have "?\<gamma>1 t 1 = ?q 1" using fun_cong[OF heq, of 1] by (by100 simp)
+            hence "((1-t) * z 1 + t * ?r' 1) / sqrt (\<Sum>j\<le>n. ((1-t) * z j + t * ?r' j)^2) = 0"
+              by (by100 simp)
+            hence "(1-t) * z 1 = 0" using hN by (by100 simp)
+            hence "t = 1" using hz1_ne using mult_eq_0_iff by (by100 simp)
+            hence "?\<gamma>1 t = ?r'" using Sn_interpolation_at_1[OF hz_Sn hr'_Sn hz_na_r'] by (by100 simp)
+            hence h_eq: "?q = ?r'" using heq by (by100 simp)
+            have "?q 0 = (-1::real)" by (by100 simp)
+            moreover have "?r' 0 = (0::real)" by (by100 simp)
+            ultimately have "(-1::real) = (0::real)" using fun_cong[OF h_eq, of 0] by (by100 simp)
+            thus False by (by100 simp)
+          qed
+          show "?\<gamma>1 t \<in> ?U \<inter> ?V" using h_Sn h_np h_nq by (by100 blast)
+        qed
+        \<comment> \<open>Path r' \<rightarrow> r in U \<inter> V: interpolation avoids p,q since r'(2) \<noteq> 0.\<close>
+        let ?\<gamma>2 = "\<lambda>t i. ((1-t) * ?r' i + t * ?r i) / sqrt (\<Sum>j\<le>n. ((1-t) * ?r' j + t * ?r j)^2)"
+        have hr'_na_r: "?r' \<noteq> (\<lambda>i. - ?r i)"
+        proof assume h: "?r' = (\<lambda>i. - ?r i)"
+          have "?r' 2 = (1::real)" by (by100 simp)
+          moreover have "(\<lambda>i. - ?r i) 2 = (0::real)" by (by100 simp)
+          ultimately show False using fun_cong[OF h, of 2] by (by100 simp)
+        qed
+        have hpath2: "top1_is_path_on ?Sn ?TSn ?r' ?r ?\<gamma>2"
+          by (rule Sn_normalized_interpolation_path[OF hr'_Sn hr_Sn hr'_na_r])
+        have havoids2: "\<forall>t. ?\<gamma>2 t \<in> ?U \<inter> ?V"
+        proof (intro allI)
+          fix t
+          have h_Sn: "?\<gamma>2 t \<in> ?Sn" by (rule Sn_interpolation_in_Sn[OF hr'_Sn hr_Sn hr'_na_r])
+          have hr'2: "?r' 2 \<noteq> (0::real)" by (by100 simp)
+          have h_np: "?\<gamma>2 t \<noteq> ?p"
+          proof assume heq: "?\<gamma>2 t = ?p"
+            have hN: "sqrt (\<Sum>j\<le>n. ((1-t) * ?r' j + t * ?r j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hr'_Sn hr_Sn hr'_na_r])
+            have "?\<gamma>2 t 2 = ?p 2" using fun_cong[OF heq, of 2] by (by100 simp)
+            hence "((1-t) * ?r' 2 + t * ?r 2) / sqrt (\<Sum>j\<le>n. ((1-t) * ?r' j + t * ?r j)^2) = 0"
+              by (by100 simp)
+            hence "(1-t) * ?r' 2 + t * ?r 2 = 0" using hN by (by100 simp)
+            hence "(1-t) = 0" by (by100 simp)
+            hence "t = 1" by (by100 linarith)
+            hence "?\<gamma>2 t = ?r" using Sn_interpolation_at_1[OF hr'_Sn hr_Sn hr'_na_r] by (by100 simp)
+            thus False using heq hr_ne_p by (by100 simp)
+          qed
+          have h_nq: "?\<gamma>2 t \<noteq> ?q"
+          proof assume heq: "?\<gamma>2 t = ?q"
+            have hN: "sqrt (\<Sum>j\<le>n. ((1-t) * ?r' j + t * ?r j)^2) > 0"
+              by (rule Sn_interpolation_norm_pos[OF hr'_Sn hr_Sn hr'_na_r])
+            have "?\<gamma>2 t 2 = ?q 2" using fun_cong[OF heq, of 2] by (by100 simp)
+            hence "((1-t) * ?r' 2 + t * ?r 2) / sqrt (\<Sum>j\<le>n. ((1-t) * ?r' j + t * ?r j)^2) = 0"
+              by (by100 simp)
+            hence "(1-t) = 0" using hN by (by100 simp)
+            hence "t = 1" by (by100 linarith)
+            hence "?\<gamma>2 t = ?r" using Sn_interpolation_at_1[OF hr'_Sn hr_Sn hr'_na_r] by (by100 simp)
+            thus False using heq hr_ne_q by (by100 simp)
+          qed
+          show "?\<gamma>2 t \<in> ?U \<inter> ?V" using h_Sn h_np h_nq by (by100 blast)
+        qed
+        \<comment> \<open>Chain z \<rightarrow> r' \<rightarrow> r via codomain_shrink + path_product.\<close>
+        have h1_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>1"
+          using hpath1 unfolding top1_is_path_on_def by (by100 blast)
+        have h1_img: "?\<gamma>1 ` I_set \<subseteq> ?U \<inter> ?V"
+        proof (intro subsetI)
+          fix w assume "w \<in> ?\<gamma>1 ` I_set"
+          then obtain t where "w = ?\<gamma>1 t" by (by100 blast)
+          thus "w \<in> ?U \<inter> ?V" using havoids1 by (by100 simp)
+        qed
+        have h1_UV: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r' ?\<gamma>1"
+          unfolding top1_is_path_on_def
+          using top1_continuous_map_on_codomain_shrink[OF h1_cont h1_img hUV_sub]
+          hpath1[unfolded top1_is_path_on_def] by (by100 blast)
+        have h2_cont: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<gamma>2"
+          using hpath2 unfolding top1_is_path_on_def by (by100 blast)
+        have h2_img: "?\<gamma>2 ` I_set \<subseteq> ?U \<inter> ?V"
+        proof (intro subsetI)
+          fix w assume "w \<in> ?\<gamma>2 ` I_set"
+          then obtain t where "w = ?\<gamma>2 t" by (by100 blast)
+          thus "w \<in> ?U \<inter> ?V" using havoids2 by (by100 simp)
+        qed
+        have h2_UV: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) ?r' ?r ?\<gamma>2"
+          unfolding top1_is_path_on_def
+          using top1_continuous_map_on_codomain_shrink[OF h2_cont h2_img hUV_sub]
+          hpath2[unfolded top1_is_path_on_def] by (by100 blast)
+        have "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) z ?r
+            (top1_path_product ?\<gamma>1 ?\<gamma>2)"
+          by (rule top1_path_product_is_path[OF hTUV h1_UV h2_UV])
+        thus ?thesis by (by100 blast)
       qed
     qed
     then obtain fx where hfx: "top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x ?r fx"
