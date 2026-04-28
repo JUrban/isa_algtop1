@@ -4,6 +4,27 @@ begin
 
 text \<open>Bridge: the order topology on R equals top1_open_sets (= {U. open U}).
   Hence top1_closed_interval_topology 0 1 = I_top.\<close>
+lemma open_ray_gt_is_open: "open (open_ray_gt (a::real))"
+proof -
+  have "open_ray_gt a = {x. a < x}" unfolding open_ray_gt_def by (by100 blast)
+  moreover have "open {x::real. a < x}" using open_greaterThan unfolding greaterThan_def by (by100 blast)
+  ultimately show ?thesis by (by100 simp)
+qed
+
+lemma open_ray_lt_is_open: "open (open_ray_lt (a::real))"
+proof -
+  have "open_ray_lt a = {x. x < a}" unfolding open_ray_lt_def by (by100 blast)
+  moreover have "open {x::real. x < a}" using open_lessThan unfolding lessThan_def by (by100 blast)
+  ultimately show ?thesis by (by100 simp)
+qed
+
+lemma open_interval_is_open: "open (open_interval (a::real) c)"
+proof -
+  have "open_interval a c = open_ray_gt a \<inter> open_ray_lt c"
+    unfolding open_interval_def open_ray_gt_def open_ray_lt_def by (by100 blast)
+  thus ?thesis using open_Int[OF open_ray_gt_is_open open_ray_lt_is_open] by (by100 simp)
+qed
+
 lemma order_topology_UNIV_eq_top1_open_sets_real:
   "(order_topology_on_UNIV :: real set set) = top1_open_sets"
 proof (rule set_eqI, rule iffI)
@@ -12,7 +33,10 @@ proof (rule set_eqI, rule iffI)
      Basis elements are HOL-open, generated topology preserves openness.\<close>
   assume "U \<in> order_topology_on_UNIV"
   thus "U \<in> top1_open_sets"
-    sorry \<comment> \<open>Basis elements (open rays/intervals) are HOL-open, then open_subopen.\<close>
+    sorry \<comment> \<open>Each basis element (open_interval, open_ray_gt/lt, UNIV) is HOL-open
+       (proved via helper lemmas). By open_subopen, U is open.
+       The proof structure is correct but unfolding topology_generated_by_basis_def
+       inside blast causes a session-level hang due to complex set comprehensions.\<close>
 next
   fix U :: "real set"
   \<comment> \<open>Direction 2: open \<Rightarrow> in order_topology.
