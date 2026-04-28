@@ -288,7 +288,17 @@ proof -
       unfolding g_def comp_def by (by100 simp)
     \<comment> \<open>g continuous X \<rightarrow> R^2, then restrict codomain to Y.\<close>
     have hg_R2: "top1_continuous_map_on X TX UNIV ?TR2 g"
-      sorry \<comment> \<open>Transfer from g = G \<circ> pair via pointwise equality.\<close>
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> X" show "g x \<in> (UNIV :: (real\<times>real) set)" by (by100 simp)
+    next
+      fix V assume hV: "V \<in> ?TR2"
+      have "{x \<in> X. g x \<in> V} = {x \<in> X. (G \<circ> (\<lambda>x. (x, \<phi> x))) x \<in> V}"
+        using hg_eq by (by100 auto)
+      moreover have "{x \<in> X. (G \<circ> (\<lambda>x. (x, \<phi> x))) x \<in> V} \<in> TX"
+        using hcomp hV unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{x \<in> X. g x \<in> V} \<in> TX" by (by100 simp)
+    qed
     have hg_img: "g ` X \<subseteq> Y"
       using hg_range by (by100 blast)
     have hY_sub: "Y \<subseteq> (UNIV :: (real\<times>real) set)" by (by100 simp)
