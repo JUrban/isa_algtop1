@@ -1767,8 +1767,21 @@ proof -
     \<comment> \<open>Use equator point r. Connect x \<rightarrow> r \<rightarrow> y via great circle arcs.
        Need x \<noteq> -r and y \<noteq> -r. If either fails, use alternate point r'.\<close>
     let ?r = "\<lambda>i::nat. if i = 1 then (1::real) else 0"
-    have hr_Sn: "?r \<in> ?Sn" and hr_UV: "?r \<in> ?U \<inter> ?V"
-      using hUV_ne sorry
+    have hr_Sn: "?r \<in> ?Sn" unfolding top1_Sn_def
+    proof (intro CollectI conjI allI impI)
+      fix i :: nat assume "i \<ge> Suc n"
+      hence "i \<noteq> 1" using assms by (by100 linarith)
+      thus "?r i = 0" by (by100 simp)
+    next
+      have h1n: "(1::nat) \<le> n" using assms by (by100 linarith)
+      have "(\<Sum>i\<le>n. (?r i)\<^sup>2) = (\<Sum>i\<le>n. (if i = 1 then 1 else 0::real))"
+        by (intro sum.cong) (by100 simp)+
+      also have "\<dots> = 1" using sum.delta'[of "{..n}" 1 "\<lambda>_. (1::real)"] h1n by (by100 simp)
+      finally show "(\<Sum>i\<le>n. (?r i)\<^sup>2) = 1" .
+    qed
+    have hr_ne_p: "?r \<noteq> ?p" by (metis zero_neq_one)
+    have hr_ne_q: "?r \<noteq> ?q" by (metis neg_0_equal_iff_equal zero_neq_one)
+    have hr_UV: "?r \<in> ?U \<inter> ?V" using hr_Sn hr_ne_p hr_ne_q by (by100 blast)
     \<comment> \<open>Construct path from x to r in S^n, then restrict to U \<inter> V.\<close>
     show "\<exists>f. top1_is_path_on (?U \<inter> ?V) (subspace_topology ?Sn ?TSn (?U \<inter> ?V)) x y f"
       sorry
