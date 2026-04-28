@@ -2414,7 +2414,69 @@ proof -
                 have h\<alpha>_cont_Sn: "top1_continuous_map_on I_set I_top ?Sn ?TSn ?\<alpha>"
                   using h\<alpha>_path_Sn unfolding top1_is_path_on_def by (by100 blast)
                 have h\<mu>_cont: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
-                    I_set I_top (\<lambda>(s,t). t * (2*s))" sorry
+                    I_set I_top (\<lambda>(s,t). t * (2*s))"
+                proof -
+                  have h_std: "continuous_on UNIV (\<lambda>(s::real,t::real). t * (2*s))"
+                    by (auto intro!: continuous_intros simp: case_prod_beta)
+                  have h_range: "\<forall>st\<in>?L. (\<lambda>(s,t). t * (2*s)) st \<in> I_set"
+                  proof
+                    fix st assume "st \<in> ?L"
+                    then obtain s t where hst: "st = (s,t)" "0 \<le> s" "s \<le> 1/2" "0 \<le> t" "t \<le> 1" by auto
+                    thus "(\<lambda>(s,t). t * (2*s)) st \<in> I_set" unfolding hst top1_unit_interval_def
+                      by (simp add: mult_le_one)
+                  qed
+                  have hL_sub: "?L \<subseteq> I_set \<times> I_set" unfolding top1_unit_interval_def by auto
+                  have h_cont_L: "continuous_on ?L (\<lambda>(s::real,t::real). t * (2*s))"
+                    using continuous_on_subset[OF h_std] by (by100 blast)
+                  show ?thesis
+                    unfolding top1_continuous_map_on_def
+                  proof (intro conjI ballI)
+                    fix st assume hst: "st \<in> ?L"
+                    show "(\<lambda>(s,t). t * (2*s)) st \<in> I_set" using h_range hst by (by100 blast)
+                  next
+                    fix V assume hV: "V \<in> I_top"
+                    obtain W where hW: "W \<in> top1_open_sets" and hVeq: "V = I_set \<inter> W"
+                      using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                      by (by100 blast)
+                    have hWo: "open W" using hW unfolding top1_open_sets_def by (by100 blast)
+                    have hco: "continuous_on ?L (\<lambda>(s::real,t::real). t*(2*s))" by (rule h_cont_L)
+                    have hpre: "\<exists>A. open A \<and> A \<inter> ?L = (\<lambda>(s,t). t*(2*s)) -` W \<inter> ?L"
+                      using iffD1[OF continuous_on_open_invariant] hco hWo by (by100 blast)
+                    then obtain A where hAo: "open A" and hAeq: "A \<inter> ?L = (\<lambda>(s,t). t*(2*s)) -` W \<inter> ?L"
+                      by (by100 auto)
+                    have "{st \<in> ?L. (\<lambda>(s,t). t*(2*s)) st \<in> V} = ?L \<inter> A"
+                    proof -
+                      have "{st \<in> ?L. (\<lambda>(s,t). t*(2*s)) st \<in> V} =
+                            {st \<in> ?L. (\<lambda>(s,t). t*(2*s)) st \<in> W}"
+                        using h_range unfolding hVeq by (by100 blast)
+                      also have "\<dots> = ?L \<inter> A" using hAeq by (by100 blast)
+                      finally show ?thesis .
+                    qed
+                    have "open A" by (rule hAo)
+                    hence "A \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+                    hence "A \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                    proof -
+                      assume "A \<in> top1_open_sets"
+                      have "product_topology_on (top1_open_sets::real set set) top1_open_sets
+                          = (top1_open_sets :: (real\<times>real) set set)"
+                        by (rule product_topology_on_open_sets_real2)
+                      thus ?thesis using \<open>A \<in> top1_open_sets\<close> by (by100 simp)
+                    qed
+                    hence "A \<in> (top1_open_sets :: (real\<times>real) set set)"
+                      using product_topology_on_open_sets_real2 by (by100 simp)
+                    hence "(I_set \<times> I_set) \<inter> A \<in> II_topology"
+                      sorry
+                    hence "?L \<inter> ((I_set \<times> I_set) \<inter> A) \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
+                      unfolding subspace_topology_def by (by100 blast)
+                    moreover have "?L \<inter> ((I_set \<times> I_set) \<inter> A) = ?L \<inter> A"
+                      using hL_sub by (by100 blast)
+                    ultimately have "?L \<inter> A \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
+                      by (by100 simp)
+                    thus "{st \<in> ?L. (\<lambda>(s,t). t*(2*s)) st \<in> V}
+                        \<in> subspace_topology (I_set \<times> I_set) II_topology ?L"
+                      using \<open>{st \<in> ?L. (\<lambda>(s,t). t*(2*s)) st \<in> V} = ?L \<inter> A\<close> by simp
+                  qed
+                qed
                 have hG_eq_L: "\<forall>st\<in>?L. G st = (?\<alpha> \<circ> (\<lambda>(s,t). t*(2*s))) st"
                   using hG1 by (by100 auto)
                 have hcomp: "top1_continuous_map_on ?L (subspace_topology (I_set \<times> I_set) II_topology ?L)
@@ -3159,6 +3221,7 @@ proof -
   show ?thesis
     using Corollary_59_2[OF hT_strict hU_open hV_open hUV hUV_ne hUV_pc hU_sc hV_sc] by (by100 blast)
 qed
+
 
 
 
