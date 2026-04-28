@@ -365,8 +365,10 @@ proof -
       fix p assume hp: "p \<in> X \<times> I_set"
       obtain x t where hxt: "p = (x, t)" "x \<in> X" "t \<in> I_set" using hp by (by100 blast)
       have ht01: "0 \<le> t" "t \<le> 1" using hxt(3) unfolding top1_unit_interval_def by (by100 auto)+
-      have h\<phi>01: "0 \<le> \<phi> x" "\<phi> x \<le> 1"
-        using h\<phi> hxt(2) sorry
+      have "\<phi> x \<in> top1_closed_interval 0 1"
+        using h\<phi> hxt(2) unfolding top1_continuous_map_on_def by (by100 blast)
+      hence h\<phi>01: "0 \<le> \<phi> x" "\<phi> x \<le> 1"
+        unfolding top1_closed_interval_def by (by100 blast)+
       have hs_I: "(1-t) * \<phi> x + t \<in> I_set"
       proof -
         have "0 \<le> (1-t) * \<phi> x" using ht01 h\<phi>01 by (intro mult_nonneg_nonneg) (by100 linarith)+
