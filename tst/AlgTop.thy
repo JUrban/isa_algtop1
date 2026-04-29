@@ -672,7 +672,26 @@ proof -
   \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}. Equivalently, inclusion K \<hookrightarrow> R^2-{?origin} nulhomotopic.\<close>
   have hj_nul: "top1_nulhomotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
       (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-    sorry \<comment> \<open>Transfer: g nulhomotopic \<Longrightarrow> inclusion g(A) \<hookrightarrow> R^2-{0} nulhomotopic.\<close>
+  proof -
+    \<comment> \<open>Step 1: Transfer f nulhomotopic in S^2-{a,b} to g nulhomotopic in R^2-{origin}.\<close>
+    have hg_nul: "top1_nulhomotopic_on A TA
+        (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
+      sorry \<comment> \<open>h homeomorphism preserves nulhomotopy. f nulhom in S^2-{a,b}, h maps to R^2-{origin}.\<close>
+    \<comment> \<open>Step 2: g injective A \<rightarrow> K = g(A). A compact, R^2 Hausdorff.
+       By Theorem 26.6, g: A \<rightarrow> K is homeomorphism. So g^{-1}: K \<rightarrow> A exists continuous.\<close>
+    have hg_inj: "inj_on ?g A"
+    proof -
+      have h_inj: "inj_on h (?S2 - {b})"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hfA_sub: "f ` A \<subseteq> ?S2 - {b}"
+        using hf unfolding top1_continuous_map_on_def by (by100 blast)
+      show ?thesis using comp_inj_on[OF hinj inj_on_subset[OF h_inj hfA_sub]] .
+    qed
+    \<comment> \<open>Step 3: Compose nulhomotopy of g with g^{-1}: K \<rightarrow> A.
+       inclusion K \<hookrightarrow> R^2-{origin} = g \<circ> g^{-1}, so nulhomotopic.\<close>
+    show ?thesis
+      sorry \<comment> \<open>Use Theorem_26_6 to get g: A \<cong> K. Compose hg_nul with g^{-1}.\<close>
+  qed
   \<comment> \<open>Step 5 (Contradiction argument, following Munkres):
      Suppose for contradiction that ?origin is in a BOUNDED component C of R^2-K.
      Let D = union of other components. C, D open disjoint, R^2-K = C \<union> D.
