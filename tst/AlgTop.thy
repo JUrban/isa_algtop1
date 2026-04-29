@@ -956,13 +956,26 @@ proof -
   qed
   \<comment> \<open>The R^2 version of the Borsuk conclusion:
      0 lies in the unbounded component of R^2 - K.\<close>
+  have horigin_not_in_K: "?origin \<in> UNIV - ?K"
+    using hK_sub by (by100 blast)
   have hR2_claim: "?origin \<in> UNIV - ?K \<and>
     (\<forall>C. C \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
          \<longrightarrow> ?origin \<in> C \<longrightarrow> \<not> bounded C)"
-    sorry \<comment> \<open>By contradiction: suppose ?origin in bounded component C.
-       Apply Lemma 62.1 to C\<union>K, paste with id on D, large ball, retraction contradiction.
-       Uses: K compact/closed, j nulhomotopic, Y open, Theorem_55_2_no_retraction.
-       This is the core ~150 lines of the Borsuk lemma.\<close>
+  proof (intro conjI allI impI)
+    show "?origin \<in> UNIV - ?K" by (rule horigin_not_in_K)
+    fix C0 assume hC0_comp: "C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))"
+    assume horigin_C0: "?origin \<in> C0"
+    \<comment> \<open>Munkres: Suppose C0 bounded. Derive contradiction.
+       D = union of other components (including unbounded). C0 \<inter> D = \<emptyset>. C0 \<union> D = UNIV - K.
+       Step A: Apply Lemma 62.1 with X = closure(C0), A = \<partial>C0 \<subseteq> K, Y = R^2-{0}.
+         Or equivalently: X = C0 \<union> K (Munkres), A = K, f = inclusion.
+       Step B: Paste with identity on D \<union> K to get h: R^2 \<rightarrow> R^2-{0}, h = id outside C0.
+       Step C: Large ball B \<supset> C0 \<union> K centered at 0. h|\<partial>B = id.
+       Step D: Radial projection r: R^2-{0} \<rightarrow> \<partial>B. r \<circ> h|_B: B \<rightarrow> \<partial>B retraction.
+       Step E: Contradiction with Theorem_55_2_no_retraction.\<close>
+    show "\<not> bounded C0"
+      sorry \<comment> \<open>The core ~150 lines. Uses Lemma_62_1, pasting lemma, Theorem_55_2.\<close>
+  qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
