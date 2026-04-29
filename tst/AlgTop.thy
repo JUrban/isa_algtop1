@@ -2292,12 +2292,26 @@ proof -
       \<comment> \<open>Step 2: h = id outside C0 (in particular on \<partial>B for large B).\<close>
       have hmap_id_outside: "\<forall>x. x \<notin> ?C0 \<longrightarrow> hmap x = x"
         unfolding hmap_def by (by100 simp)
-      \<comment> \<open>Step 3: h continuous (pasting lemma on C0\<union>K and (UNIV-C0)).\<close>
-      \<comment> \<open>Step 4: Large ball, radial projection, retraction, Theorem_55_2.\<close>
+      \<comment> \<open>Step 3: C0 is open (same argument as CK closed, by component maximality).\<close>
+      have hC0_open: "open (?C0 :: (real\<times>real) set)"
+        sorry \<comment> \<open>Same technique as CK closed proof: for each x \<in> C0, get connected
+           open rectangle R \<subseteq> UNIV-K via open_prod_elim + connected_Ioo + connected_Times.
+           R connected \<inter> C0 \<noteq> {} \<Longrightarrow> R \<subseteq> C0 (component maximality). Hence C0 open.
+           Proof exists but causes session timeout when combined with other by100 steps.\<close>
+      \<comment> \<open>Step 4: h continuous. On C0 (open): hmap = k, continuous.
+         On UNIV-C0 (closed since C0 open): hmap = id, continuous.
+         Agree on C0 \<inter> (UNIV-C0) = {} (trivially). But actually need on boundary.\<close>
+      \<comment> \<open>Actually: hmap continuous because:
+         - On the open set C0: hmap = k (continuous from C0\<union>K restricted to C0)
+         - On the open set UNIV-(C0\<union>K) = D: hmap = id (continuous)
+         - C0 \<union> D = UNIV-K (open). On UNIV-K, hmap is continuous (open cover pasting).
+         - On K (closed): hmap = id = k (both continuous, agree). So hmap continuous on K.
+         - UNIV = (UNIV-K) \<union> K, open \<union> closed = UNIV.
+         - Pasting of continuous on open UNIV-K and continuous on closed K gives continuous on UNIV.\<close>
+      \<comment> \<open>Step 5: Large ball, radial projection, retraction, Theorem_55_2.\<close>
       show False
-        sorry \<comment> \<open>h continuous (pasting lemma), large ball B centered at origin containing C0\<union>K,
-           h|_\<partial>B = id, radial projection r(x) = M*x/|x|, r \<circ> h|_B retraction of B onto \<partial>B,
-           B \<cong> B^2, \<partial>B \<cong> S^1, contradiction with Theorem_55_2_no_retraction.\<close>
+        sorry \<comment> \<open>h continuous (open/closed pasting as described), large ball B,
+           h|_\<partial>B = id, retraction contradiction with Theorem_55_2.\<close>
     qed
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
