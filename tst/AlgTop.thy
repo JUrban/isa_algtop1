@@ -8924,6 +8924,65 @@ proof -
     using group_id_right[OF hG hiix] group_id_right[OF hG hx] by (by100 simp)
 qed
 
+text \<open>Group homomorphisms preserve identity and inverses.\<close>
+
+lemma hom_preserves_id:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hh: "top1_group_hom_on G mul H mulH h"
+  shows "h e = eH"
+proof -
+  have he: "e \<in> G" by (rule group_e_mem[OF hG])
+  have hhe: "h e \<in> H" using hh he unfolding top1_group_hom_on_def by (by100 blast)
+  have hinv_he: "invgH (h e) \<in> H" by (rule group_inv_closed[OF hH hhe])
+  have "h e = h (mul e e)"
+    using group_id_left[OF hG he] by (by100 simp)
+  also have "\<dots> = mulH (h e) (h e)"
+    using hh he unfolding top1_group_hom_on_def by (by100 blast)
+  finally have heq: "h e = mulH (h e) (h e)" .
+  have "h e = mulH (h e) eH"
+    using group_id_right[OF hH hhe] by (by100 simp)
+  also have "\<dots> = mulH (h e) (mulH (h e) (invgH (h e)))"
+    using group_inv_right[OF hH hhe] by (by100 simp)
+  also have "\<dots> = mulH (mulH (h e) (h e)) (invgH (h e))"
+    using group_assoc[OF hH hhe hhe hinv_he] by (by100 simp)
+  also have "mulH (h e) (h e) = h e" using heq by (by100 simp)
+  also have "mulH (h e) (invgH (h e)) = eH"
+    by (rule group_inv_right[OF hH hhe])
+  finally show "h e = eH" .
+qed
+
+lemma hom_preserves_inv:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hh: "top1_group_hom_on G mul H mulH h"
+      and hx: "x \<in> G"
+  shows "h (invg x) = invgH (h x)"
+proof -
+  have hix: "invg x \<in> G" by (rule group_inv_closed[OF hG hx])
+  have hhx: "h x \<in> H" using hh hx unfolding top1_group_hom_on_def by (by100 blast)
+  have hhix: "h (invg x) \<in> H" using hh hix unfolding top1_group_hom_on_def by (by100 blast)
+  have hinv_hx: "invgH (h x) \<in> H" by (rule group_inv_closed[OF hH hhx])
+  \<comment> \<open>h(invg x) * h(x) = h(invg x * x) = h(e) = eH.\<close>
+  have hmul_eq: "mulH (h (invg x)) (h x) = eH"
+  proof -
+    have "h (mul (invg x) x) = mulH (h (invg x)) (h x)"
+      using hh hix hx unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "mul (invg x) x = e" by (rule group_inv_left[OF hG hx])
+    moreover have "h e = eH" by (rule hom_preserves_id[OF hG hH hh])
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Left inverse in a group is THE inverse: h(invg x) = invgH(h x).\<close>
+  have "h (invg x) = mulH (h (invg x)) (mulH (h x) (invgH (h x)))"
+    using group_inv_right[OF hH hhx] group_id_right[OF hH hhix] by (by100 simp)
+  also have "\<dots> = mulH (mulH (h (invg x)) (h x)) (invgH (h x))"
+    using group_assoc[OF hH hhix hhx hinv_hx] by (by100 simp)
+  also have "mulH (h (invg x)) (h x) = eH" by (rule hmul_eq)
+  also have "mulH eH (invgH (h x)) = invgH (h x)"
+    by (rule group_id_left[OF hH hinv_hx])
+  finally show ?thesis .
+qed
+
 text \<open>Intersection of subgroups (with same operations from ambient G) is a subgroup.\<close>
 lemma intersection_of_subgroups_is_group:
   assumes hG: "top1_is_group_on G mul e invg" and hS: "S \<subseteq> G"
