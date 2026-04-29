@@ -623,11 +623,85 @@ corollary Corollary_52_5_homeomorphism_iso:
   shows "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
     (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)"
-  sorry
-  \<comment> \<open>Proof outline: h_* is a hom (by induced_on_is_hom). h is a homeomorphism so
-     h^{-1} exists and (h^{-1})_* \<circ> h_* = (h^{-1} \<circ> h)_* = id_* = id (by Theorem 52.4).
-     Similarly h_* \<circ> (h^{-1})_* = id. So h_* is bijective. Needs careful formal work
-     with Theorem_52_4_composition and Theorem_52_4_identity.\<close>
+proof -
+  \<comment> \<open>A homeomorphism is a homotopy equivalence, so apply Theorem 58.7.\<close>
+  let ?g = "inv_into X h"
+  have hh_cont: "top1_continuous_map_on X TX Y TY h"
+    using assms(3) unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hg_cont: "top1_continuous_map_on Y TY X TX ?g"
+    using assms(3) unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hbij: "bij_betw h X Y"
+    using assms(3) unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinj: "inj_on h X" using hbij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>g \<circ> h = id on X (by inv_into property), so g \<circ> h \<simeq> id.\<close>
+  have hgh_eq: "\<forall>x\<in>X. (inv_into X h \<circ> h) x = x"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    thus "(inv_into X h \<circ> h) x = x" using inv_into_f_f[OF hinj] by (by100 simp)
+  qed
+  have hid_cont: "top1_continuous_map_on X TX X TX id"
+    by (rule top1_continuous_map_on_id[OF assms(1)])
+  \<comment> \<open>g \<circ> h continuous on X.\<close>
+  have hgh_cont: "top1_continuous_map_on X TX X TX (?g \<circ> h)"
+    by (rule top1_continuous_map_on_comp[OF hh_cont hg_cont])
+  \<comment> \<open>g \<circ> h agrees with id on X, so they are homotopic (both continuous, same values).\<close>
+  have hgh_htpy: "top1_homotopic_on X TX X TX (?g \<circ> h) (\<lambda>x. x)"
+    unfolding top1_homotopic_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on X TX X TX (?g \<circ> h)" by (rule hgh_cont)
+    show "top1_continuous_map_on X TX X TX (\<lambda>x. x)"
+      using hid_cont unfolding id_def by (by100 simp)
+    \<comment> \<open>Homotopy F(x,t) = (g \<circ> h)(x): constant in t, equals g \<circ> h at t=0 and id at t=1.\<close>
+    show "\<exists>F. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX F
+        \<and> (\<forall>x\<in>X. F (x, 0) = (?g \<circ> h) x) \<and> (\<forall>x\<in>X. F (x, 1) = x)"
+    proof (rule exI[of _ "\<lambda>p. (?g \<circ> h) (fst p)"])
+      have hF_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+          (\<lambda>p. (?g \<circ> h) (fst p))"
+        by (rule homotopy_const_continuous[OF hgh_cont assms(1)])
+      show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+            (\<lambda>p. (?g \<circ> h) (fst p))
+          \<and> (\<forall>x\<in>X. (?g \<circ> h) (fst (x, 0::real)) = (?g \<circ> h) x)
+          \<and> (\<forall>x\<in>X. (?g \<circ> h) (fst (x, 1::real)) = x)"
+        using hF_cont hgh_eq by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>h \<circ> g = id on Y — symmetric argument.\<close>
+  have hhg_htpy: "top1_homotopic_on Y TY Y TY (h \<circ> ?g) (\<lambda>y. y)"
+    unfolding top1_homotopic_on_def
+  proof (intro conjI)
+    show "top1_continuous_map_on Y TY Y TY (h \<circ> ?g)"
+      by (rule top1_continuous_map_on_comp[OF hg_cont hh_cont])
+    show "top1_continuous_map_on Y TY Y TY (\<lambda>y. y)"
+      using top1_continuous_map_on_id[OF assms(2)] unfolding id_def by (by100 simp)
+    have hhg_eq: "\<forall>y\<in>Y. (h \<circ> ?g) y = y"
+    proof (intro ballI)
+      fix y assume "y \<in> Y"
+      hence "?g y \<in> X" using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have "h (?g y) = y"
+      proof -
+        have "y \<in> h ` X" using hbij \<open>y \<in> Y\<close> unfolding bij_betw_def by (by100 blast)
+        thus ?thesis by (rule f_inv_into_f)
+      qed
+      thus "(h \<circ> ?g) y = y" by (by100 simp)
+    qed
+    show "\<exists>F. top1_continuous_map_on (Y \<times> I_set) (product_topology_on TY I_top) Y TY F
+        \<and> (\<forall>y\<in>Y. F (y, 0) = (h \<circ> ?g) y) \<and> (\<forall>y\<in>Y. F (y, 1) = y)"
+    proof (rule exI[of _ "\<lambda>p. (h \<circ> ?g) (fst p)"])
+      have "top1_continuous_map_on (Y \<times> I_set) (product_topology_on TY I_top) Y TY
+          (\<lambda>p. (h \<circ> ?g) (fst p))"
+        by (rule homotopy_const_continuous[OF top1_continuous_map_on_comp[OF hg_cont hh_cont] assms(2)])
+      thus "top1_continuous_map_on (Y \<times> I_set) (product_topology_on TY I_top) Y TY
+            (\<lambda>p. (h \<circ> ?g) (fst p))
+          \<and> (\<forall>y\<in>Y. (h \<circ> ?g) (fst (y, 0::real)) = (h \<circ> ?g) y)
+          \<and> (\<forall>y\<in>Y. (h \<circ> ?g) (fst (y, 1::real)) = y)"
+        using hhg_eq by (by100 simp)
+    qed
+  qed
+  have heq: "top1_homotopy_equivalence_on X TX Y TY h ?g"
+    unfolding top1_homotopy_equivalence_on_def
+    using hh_cont hg_cont hgh_htpy hhg_htpy by (by100 blast)
+  show ?thesis using Theorem_58_7[OF assms(1,2) heq assms(4)] assms(5) by (by100 simp)
+qed
 
 text \<open>Theorem 57.2 (Munkres): There is no continuous antipode-preserving map g : S^2 \<rightarrow> S^1.
   Proof: restricting g to the equator S^1 \<hookrightarrow> S^2 gives an antipode-preserving
