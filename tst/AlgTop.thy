@@ -590,424 +590,6 @@ qed
 
 section \<open>*\<S>62 Invariance of Domain\<close>
 
-text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
-  and nulhomotopic, then a and b lie in the same component of S^2-f(A).\<close>
-
-lemma Lemma_62_2_BorsukLemma:
-  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
-    and a b :: "real \<times> real \<times> real"
-  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
-      and hcomp: "top1_compact_on A TA"
-      and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
-      and hf: "top1_continuous_map_on A TA
-             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
-      and hinj: "inj_on f A"
-      and hnul: "top1_nulhomotopic_on A TA
-             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
-  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
-         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
-         \<and> a \<in> C \<and> b \<in> C"
-proof -
-  let ?S2 = top1_S2 and ?TS2 = top1_S2_topology
-  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
-  \<comment> \<open>Step 1: Transfer to R^2. Stereographic projection from b gives h: S^2-{b} \<rightarrow> R^2.
-     Map a to 0 (the origin). Then the image g = h \<circ> f maps A into R^2-{0}.
-     The statement becomes: 0 and \<infinity> are in the same component of S^2-f(A),
-     i.e., 0 is in the unbounded component of R^2-g(A).\<close>
-  obtain h where hh: "top1_homeomorphism_on (?S2 - {b})
-      (subspace_topology ?S2 ?TS2 (?S2 - {b}))
-      (UNIV :: (real\<times>real) set) ?TR2 h"
-    using S2_minus_point_homeo_R2[OF hb] by (by100 blast)
-  \<comment> \<open>Step 2: g = h \<circ> f : A \<rightarrow> R^2. g is continuous, injective, nulhomotopic.
-     g(A) \<subseteq> R^2 - {h(a)} since f(A) \<subseteq> S^2 - {a,b} and h maps S^2-{b} to R^2.\<close>
-  let ?g = "h \<circ> f"
-  let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
-  \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K \<subseteq> R^2 - {?origin}.\<close>
-  have hg_cont: "top1_continuous_map_on A TA (UNIV::(real\<times>real) set) ?TR2 ?g"
-  proof -
-    \<comment> \<open>h continuous: extract from homeomorphism.\<close>
-    have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))
-        (UNIV::(real\<times>real) set) ?TR2 h"
-      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
-    \<comment> \<open>f maps A into S^2-{a,b} \<subseteq> S^2-{b}. Enlarge codomain.\<close>
-    have hf_S2b: "top1_continuous_map_on A TA (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) f"
-    proof -
-      have hsub: "?S2 - {a, b} \<subseteq> ?S2 - {b}" by (by100 blast)
-      have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
-      show ?thesis
-        using top1_continuous_map_on_codomain_enlarge[OF hf hsub hS2b_sub] .
-    qed
-    \<comment> \<open>Compose: g = h \<circ> f.\<close>
-    show ?thesis by (rule top1_continuous_map_on_comp[OF hf_S2b hh_cont])
-  qed
-  let ?K = "?g ` A"
-  have hK_compact: "compact ?K"
-  proof -
-    have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-      by (by100 simp)
-    have hK_top1: "top1_compact_on ?K (subspace_topology UNIV ?TR2 ?K)"
-      by (rule top1_compact_on_continuous_image[OF hcomp hTR2_top hg_cont])
-    \<comment> \<open>Bridge: ?TR2 = top1_open_sets for (real\<times>real).\<close>
-    have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
-      using product_topology_on_open_sets_real2 by (by100 metis)
-    have "top1_compact_on ?K (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?K)"
-      using hK_top1 unfolding hTR2_eq .
-    thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
-  qed
-  have hK_sub: "?K \<subseteq> UNIV - {?origin}"
-  proof (rule image_subsetI)
-    fix x assume hx: "x \<in> A"
-    have hfx: "f x \<in> ?S2 - {a, b}" using hf hx unfolding top1_continuous_map_on_def by (by100 blast)
-    hence hfx_ne_a: "f x \<noteq> a" by (by100 blast)
-    have hfx_in_S2b: "f x \<in> ?S2 - {b}" using hfx by (by100 blast)
-    have ha_in_S2b: "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
-    have h_inj: "inj_on h (?S2 - {b})"
-      using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have "h (f x) \<noteq> h a"
-      using inj_on_eq_iff[OF h_inj hfx_in_S2b ha_in_S2b] hfx_ne_a by (by100 blast)
-    thus "(h \<circ> f) x \<in> UNIV - {?origin}" unfolding comp_def by (by100 blast)
-  qed
-  have hK_closed: "closed ?K" using hK_compact by (rule compact_imp_closed)
-  \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}. Equivalently, inclusion K \<hookrightarrow> R^2-{?origin} nulhomotopic.\<close>
-  have hj_nul: "top1_nulhomotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-  proof -
-    \<comment> \<open>Step 1: Transfer f nulhomotopic in S^2-{a,b} to g nulhomotopic in R^2-{origin}.\<close>
-    have hg_nul: "top1_nulhomotopic_on A TA
-        (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
-    proof -
-      let ?Sab = "?S2 - {a, b}" and ?TSab = "subspace_topology ?S2 ?TS2 (?S2 - {a, b})"
-      let ?Y = "UNIV - {?origin} :: (real\<times>real) set" and ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
-      \<comment> \<open>From nulhomotopy of f: get homotopy H: A\<times>I \<rightarrow> S^2-{a,b}.\<close>
-      obtain c where hc: "c \<in> ?Sab" and hfhom: "top1_homotopic_on A TA ?Sab ?TSab f (\<lambda>_. c)"
-        using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
-      obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Sab ?TSab H"
-          and hH0: "\<forall>x\<in>A. H (x, 0) = f x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
-        using hfhom unfolding top1_homotopic_on_def by (by100 blast)
-      \<comment> \<open>h restricts to continuous S^2-{a,b} \<rightarrow> R^2-{origin} (enlarge domain to S^2-{b}, restrict codomain).\<close>
-      have hh_Sab: "top1_continuous_map_on ?Sab ?TSab ?Y ?TY h"
-      proof -
-        have hsub: "?Sab \<subseteq> ?S2 - {b}" by (by100 blast)
-        have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (UNIV::(real\<times>real) set) ?TR2 h"
-          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
-        have hTopS2: "is_topology_on ?S2 ?TS2"
-          using hT unfolding is_topology_on_strict_def by (by100 blast)
-        have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
-        have hTopS2b: "is_topology_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))"
-          by (rule subspace_topology_is_topology_on[OF hTopS2 hS2b_sub])
-        \<comment> \<open>Restrict h to S^2-{a,b}: use subspace restriction + transitivity.\<close>
-        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-          by (by100 simp)
-        have hh_Sab_R2: "top1_continuous_map_on ?Sab (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab) (UNIV::(real\<times>real) set) ?TR2 h"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          fix x assume "x \<in> ?Sab"
-          hence "x \<in> ?S2 - {b}" using hsub by (by100 blast)
-          thus "h x \<in> (UNIV::(real\<times>real) set)" by (by100 simp)
-        next
-          fix V assume hV: "V \<in> ?TR2"
-          have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
-          moreover have hpre: "{x \<in> ?S2 - {b}. h x \<in> V} \<in> subspace_topology ?S2 ?TS2 (?S2 - {b})"
-            using hh_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
-          ultimately have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
-          moreover have "?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V} \<in>
-            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
-            unfolding subspace_topology_def
-            apply (rule CollectI)
-            apply (rule exI[of _ "{x \<in> ?S2 - {b}. h x \<in> V}"])
-            apply (intro conjI)
-             apply (by100 blast)
-            using hpre unfolding subspace_topology_def apply (by100 blast)
-            done
-          ultimately show "{x \<in> ?Sab. h x \<in> V} \<in>
-            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
-            by (by100 simp)
-        qed
-        have hh_Sab_R2': "top1_continuous_map_on ?Sab ?TSab (UNIV::(real\<times>real) set) ?TR2 h"
-        proof -
-          have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab
-              = subspace_topology ?S2 ?TS2 ?Sab"
-            by (rule subspace_topology_trans) (by100 blast)
-          moreover have "subspace_topology ?S2 ?TS2 ?Sab = ?TSab" by (by100 simp)
-          ultimately have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab = ?TSab"
-            by (by100 simp)
-          thus ?thesis using hh_Sab_R2 by (by100 simp)
-        qed
-        \<comment> \<open>Restrict codomain to UNIV - {origin}.\<close>
-        have himg: "h ` ?Sab \<subseteq> ?Y"
-        proof (rule image_subsetI)
-          fix x assume "x \<in> ?Sab"
-          hence "x \<in> ?S2 - {b}" and "x \<noteq> a" by (by100 blast)+
-          have "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
-          have h_inj: "inj_on h (?S2 - {b})"
-            using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-          have "h x \<noteq> h a" using inj_on_eq_iff[OF h_inj \<open>x \<in> ?S2 - {b}\<close> \<open>a \<in> ?S2 - {b}\<close>] \<open>x \<noteq> a\<close>
-            by (by100 blast)
-          thus "h x \<in> ?Y" by (by100 blast)
-        qed
-        have hY_sub: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
-        show ?thesis
-          by (rule top1_continuous_map_on_codomain_shrink[OF hh_Sab_R2' himg hY_sub])
-      qed
-      \<comment> \<open>Compose: h \<circ> H : A\<times>I \<rightarrow> R^2-{origin}.\<close>
-      have hHg: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
-        by (rule top1_continuous_map_on_comp[OF hH hh_Sab])
-      have hhc: "h c \<in> ?Y"
-        using hh_Sab hc unfolding top1_continuous_map_on_def by (by100 blast)
-      \<comment> \<open>h \<circ> H is a homotopy from h \<circ> f to constant h(c).\<close>
-      have "top1_homotopic_on A TA ?Y ?TY (h \<circ> f) (\<lambda>_. h c)"
-        unfolding top1_homotopic_on_def
-      proof (intro conjI exI[of _ "h \<circ> H"])
-        show "top1_continuous_map_on A TA ?Y ?TY (h \<circ> f)"
-          by (rule top1_continuous_map_on_comp[OF hf hh_Sab])
-        show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. h c)"
-        proof -
-          have hTA: "is_topology_on A TA"
-            using hcomp unfolding top1_compact_on_def by (by100 blast)
-          have hTY: "is_topology_on ?Y ?TY"
-          proof -
-            have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-              using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-              by (by100 simp)
-            show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
-          qed
-          have "h c \<in> ?Y" by (rule hhc)
-          have "\<forall>y0\<in>?Y. top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. y0)"
-            by (rule Theorem_18_2(1)[OF hTA hTY hTY])
-          thus ?thesis using hhc by (by100 blast)
-        qed
-        show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
-          by (rule hHg)
-        show "\<forall>x\<in>A. (h \<circ> H) (x, 0) = (h \<circ> f) x"
-          using hH0 unfolding comp_def by (by100 auto)
-        show "\<forall>x\<in>A. (h \<circ> H) (x, 1) = (\<lambda>_. h c) x"
-          using hH1 unfolding comp_def by (by100 auto)
-      qed
-      thus ?thesis unfolding top1_nulhomotopic_on_def using hhc by (by100 blast)
-    qed
-    \<comment> \<open>Step 2: g injective A \<rightarrow> K = g(A). A compact, R^2 Hausdorff.
-       By Theorem 26.6, g: A \<rightarrow> K is homeomorphism. So g^{-1}: K \<rightarrow> A exists continuous.\<close>
-    have hg_inj: "inj_on ?g A"
-    proof -
-      have h_inj: "inj_on h (?S2 - {b})"
-        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      have hfA_sub: "f ` A \<subseteq> ?S2 - {b}"
-        using hf unfolding top1_continuous_map_on_def by (by100 blast)
-      show ?thesis using comp_inj_on[OF hinj inj_on_subset[OF h_inj hfA_sub]] .
-    qed
-    \<comment> \<open>Step 3: Compose nulhomotopy of g with g^{-1}: K \<rightarrow> A.
-       inclusion K \<hookrightarrow> R^2-{origin} = g \<circ> g^{-1}, so nulhomotopic.\<close>
-    \<comment> \<open>g: A \<cong> K via Theorem 26.6 (compact, Hausdorff, continuous bijection).\<close>
-    let ?Y = "UNIV - {?origin} :: (real\<times>real) set"
-    let ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
-    have hTK: "is_topology_on ?K (subspace_topology UNIV ?TR2 ?K)"
-    proof -
-      have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-        by (by100 simp)
-      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
-    qed
-    have hK_haus: "is_hausdorff_on ?K (subspace_topology UNIV ?TR2 ?K)"
-    proof -
-      have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
-        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
-      have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
-        using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
-      have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
-          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
-        using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
-      hence hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set) ?TR2" by (by100 simp)
-      thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
-    qed
-    have hg_K: "top1_continuous_map_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
-      by (rule top1_continuous_map_on_codomain_shrink[OF hg_cont]) (by100 simp)+
-    have hg_bij: "bij_betw ?g A ?K"
-      unfolding bij_betw_def using hg_inj by (by100 blast)
-    have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
-    have hg_homeo: "top1_homeomorphism_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
-      by (rule Theorem_26_6[OF hTA hTK hcomp hK_haus hg_K hg_bij])
-    \<comment> \<open>g^{-1}: K \<rightarrow> A continuous.\<close>
-    have hginv: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) A TA (inv_into A ?g)"
-      using hg_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
-    \<comment> \<open>Compose nulhomotopy of g with g^{-1}: H(g^{-1}(y), t) is a nulhomotopy of inclusion.\<close>
-    obtain c where hcY: "c \<in> ?Y"
-        and hghom: "top1_homotopic_on A TA ?Y ?TY ?g (\<lambda>_. c)"
-      using hg_nul unfolding top1_nulhomotopic_on_def by (by100 blast)
-    obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY H"
-        and hH0: "\<forall>x\<in>A. H (x, 0) = ?g x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
-      using hghom unfolding top1_homotopic_on_def by (by100 blast)
-    \<comment> \<open>H': K \<times> I \<rightarrow> R^2-{origin}, H'(y,t) = H(g^{-1}(y), t).\<close>
-    define H' where "H' = (\<lambda>(y,t). H (inv_into A ?g y, t))"
-    have hH'_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
-        ?Y ?TY H'"
-    proof -
-      \<comment> \<open>H' = H \<circ> (g^{-1} \<times> id). Both g^{-1} and id are continuous.\<close>
-      have hpair: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
-          (A \<times> I_set) (product_topology_on TA I_top) (\<lambda>(y,t). (inv_into A ?g y, t))"
-      proof -
-        have hTKI: "is_topology_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)"
-          by (rule product_topology_on_is_topology_on[OF hTK top1_unit_interval_topology_is_topology_on])
-        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-        \<comment> \<open>\<pi>1 \<circ> pair = g^{-1}: continuous by hginv.\<close>
-        have hpi1_p: "pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = inv_into A ?g \<circ> pi1"
-          unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
-        have hpi2_p: "pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = pi2"
-          unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
-        have hpi1_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top) ?K (subspace_topology UNIV ?TR2 ?K) pi1"
-          by (rule top1_continuous_pi1[OF hTK hTI])
-        have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
-            A TA (pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
-          unfolding hpi1_p by (rule top1_continuous_map_on_comp[OF hpi1_cont hginv])
-        moreover have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
-            I_set I_top (pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
-          unfolding hpi2_p by (rule top1_continuous_pi2[OF hTK hTI])
-        ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTKI hTA hTI]] by (by100 blast)
-      qed
-      have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
-          ?Y ?TY (H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
-        by (rule top1_continuous_map_on_comp[OF hpair hH])
-      moreover have "H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = H'"
-      proof (rule ext)
-        fix p show "(H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t))) p = H' p"
-          unfolding H'_def comp_def by (cases p) (by100 simp)
-      qed
-      ultimately show ?thesis by (by100 simp)
-    qed
-    have hH'0: "\<forall>y\<in>?K. H' (y, 0) = y"
-    proof (intro ballI)
-      fix y assume "y \<in> ?K"
-      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
-      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
-      hence "H' (y, 0) = H (x, 0)" unfolding H'_def by (by100 simp)
-      also have "\<dots> = ?g x" using hH0 hx by (by100 blast)
-      finally show "H' (y, 0) = y" using hy by (by100 simp)
-    qed
-    have hH'1: "\<forall>y\<in>?K. H' (y, 1) = c"
-    proof (intro ballI)
-      fix y assume "y \<in> ?K"
-      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
-      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
-      hence "H' (y, 1) = H (x, 1)" unfolding H'_def by (by100 simp)
-      also have "\<dots> = c" using hH1 hx by (by100 blast)
-      finally show "H' (y, 1) = c" .
-    qed
-    \<comment> \<open>The inclusion id: K \<rightarrow> R^2-{origin} is nulhomotopic via H'.\<close>
-    have hid_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x)"
-    proof -
-      have hKsub: "?K \<subseteq> ?Y" using hK_sub by (by100 blast)
-      have hKY: "?K \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
-      have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-        by (by100 simp)
-      have hTR2_top2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2" by (rule hTR2_top)
-      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
-      proof -
-        have "\<forall>A. A \<subseteq> (UNIV::(real\<times>real) set) \<longrightarrow> top1_continuous_map_on A (subspace_topology UNIV ?TR2 A) (UNIV::(real\<times>real) set) ?TR2 id"
-          using Theorem_18_2(2)[OF hTR2_top hTR2_top hTR2_top2] by (by100 blast)
-        thus ?thesis by (by100 simp)
-      qed
-      hence hid_R2: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
-        unfolding id_def .
-      have himg_Y: "(\<lambda>x. x) ` ?K \<subseteq> ?Y" using hKsub by (by100 blast)
-      have hY_sub_UNIV: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
-      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
-          ?Y (subspace_topology (UNIV::(real\<times>real) set) ?TR2 ?Y) (\<lambda>x. x)"
-        by (rule top1_continuous_map_on_codomain_shrink[OF hid_R2 himg_Y hY_sub_UNIV])
-      thus ?thesis by (by100 simp)
-    qed
-    have hconst_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. c)"
-    proof -
-      have hTY: "is_topology_on ?Y ?TY"
-      proof -
-        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-          by (by100 simp)
-        show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
-      qed
-      have "\<forall>y0\<in>?Y. top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. y0)"
-        using Theorem_18_2(1)[OF hTK hTY hTY] by (by100 blast)
-      thus ?thesis using hcY by (by100 blast)
-    qed
-    have "top1_homotopic_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x) (\<lambda>_. c)"
-      unfolding top1_homotopic_on_def
-      using hid_cont hconst_cont hH'_cont hH'0 hH'1 by (by100 blast)
-    thus ?thesis unfolding top1_nulhomotopic_on_def using hcY by (by100 blast)
-  qed
-  \<comment> \<open>Step 5 (Contradiction argument, following Munkres):
-     Suppose for contradiction that ?origin is in a BOUNDED component C of R^2-K.
-     Let D = union of other components. C, D open disjoint, R^2-K = C \<union> D.
-     Apply Lemma 62.1 to X = C \<union> K, A = K, Y = R^2-{?origin}:
-       extend inclusion K \<hookrightarrow> R^2-{0} to k: C \<union> K \<rightarrow> R^2-{0}.
-     Paste k with identity on D: define h(x) = k(x) for x \<in> C, h(x) = x for x \<in> D \<union> K.
-     h: R^2 \<rightarrow> R^2-{0}, h = identity on D \<union> K.
-     Large ball B centered at 0 containing C \<union> K: h|_\<partial>B = id (since \<partial>B \<subseteq> D).
-     r: R^2-{0} \<rightarrow> \<partial>B (radial projection). r \<circ> h|_B : B \<rightarrow> \<partial>B retraction.
-     Contradiction with Theorem_55_2.\<close>
-  \<comment> \<open>Key helper: R^2 is metrizable, hence normal. C \<union> K metrizable, hence (C\<union>K)\<times>I normal.\<close>
-  have hR2_Y_open: "UNIV - {?origin} \<in> ?TR2"
-  proof -
-    have "open (UNIV - {?origin} :: (real\<times>real) set)"
-      by (intro open_Diff open_UNIV finite_imp_closed) (by100 simp)
-    hence "UNIV - {?origin} \<in> (top1_open_sets :: (real\<times>real) set set)"
-      unfolding top1_open_sets_def by (by100 blast)
-    thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
-  qed
-  \<comment> \<open>The R^2 version of the Borsuk conclusion:
-     0 lies in the unbounded component of R^2 - K.\<close>
-  have horigin_not_in_K: "?origin \<in> UNIV - ?K"
-    using hK_sub by (by100 blast)
-  \<comment> \<open>The R^2 version of the Borsuk conclusion:
-     0 lies in the unbounded component of R^2 - K.
-     "Unbounded" means: for any R > 0, C intersects the complement of the ball of radius R.
-     The proof is by contradiction: assume 0 in a compact-closure component.
-     Apply Lemma 62.1 to extend, paste with identity, get retraction contradiction.\<close>
-  \<comment> \<open>R^2 normality (needed for Lemma 62.1 application).\<close>
-  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
-    sorry \<comment> \<open>R^2 is metrizable \<Longrightarrow> normal (Theorem_32_2).\<close>
-  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set) (product_topology_on ?TR2 I_top)"
-    sorry \<comment> \<open>R^2 \<times> I metrizable (product of metrizable) \<Longrightarrow> normal.\<close>
-  have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-    by (by100 simp)
-  \<comment> \<open>K closed in R^2 in the top1 sense.\<close>
-  have hK_closedin: "closedin_on (UNIV::(real\<times>real) set) ?TR2 ?K"
-  proof -
-    have "closed ?K" by (rule hK_closed)
-    hence "UNIV - ?K \<in> (top1_open_sets :: (real\<times>real) set set)"
-      unfolding top1_open_sets_def using open_Diff[OF open_UNIV hK_closed] by (by100 blast)
-    hence "UNIV - ?K \<in> ?TR2" using product_topology_on_open_sets_real2 by (by100 metis)
-    thus ?thesis unfolding closedin_on_def by (by100 blast)
-  qed
-  \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} as top1_continuous_map_on.\<close>
-  have hj_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-    sorry \<comment> \<open>Inclusion continuous (proved in hj_nul proof above, extract).\<close>
-  \<comment> \<open>Apply Lemma 62.1 to X = R^2, A = K, Y = R^2-{origin}, f = inclusion.\<close>
-  obtain G where hG_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
-      and hG_ext: "\<forall>x\<in>?K. G x = x"
-      and hG_nul: "top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
-          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
-    sorry \<comment> \<open>By Lemma_62_1_homotopy_extension (defined below, line ~1015) with
-       X=R^2, A=K, Y=R^2-{origin}. Forward reference since Borsuk precedes Lemma_62_1 in file.\<close>
-  \<comment> \<open>Now we have G: R^2 \<rightarrow> R^2-{origin} with G|_K = id and G nulhomotopic.
-     The key consequence: origin \<notin> G(R^2), so ?origin has no G-preimage.
-     This contradicts the existence of a bounded component containing origin.\<close>
-  have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
-         \<and> ?origin \<in> C0
-         \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
-    sorry \<comment> \<open>By contradiction using G: suppose origin in bounded C0.
-       Paste G with id on D (other components): h = G on C0, h = id on D\<union>K.
-       Both C0\<union>K and D\<union>K closed (frontier \<subseteq> K). Pasting gives h: R^2 \<rightarrow> R^2-{origin}.
-       h|_{\<partial>B} = id for large ball B. Radial projection r: R^2-{origin} \<rightarrow> \<partial>B.
-       r \<circ> h|_B: B \<rightarrow> \<partial>B retraction. Contradiction with Theorem_55_2.\<close>
-  \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
-  show ?thesis
-    sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
-qed
-
 text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
   f: A \<rightarrow> Y continuous where Y open in R^n, and f nulhomotopic, then f extends to g: X \<rightarrow> Y.
   This is the key tool for the Borsuk lemma. Uses Tietze extension (Theorem_35_1),
@@ -1917,6 +1499,426 @@ proof -
     thus ?thesis unfolding top1_nulhomotopic_on_def using hy0 by (by100 blast)
   qed
   show ?thesis using hg_cont hg_ext hg_nul by (by100 blast)
+qed
+
+text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
+  and nulhomotopic, then a and b lie in the same component of S^2-f(A).\<close>
+
+lemma Lemma_62_2_BorsukLemma:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+    and a b :: "real \<times> real \<times> real"
+  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hcomp: "top1_compact_on A TA"
+      and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
+      and hf: "top1_continuous_map_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+      and hinj: "inj_on f A"
+      and hnul: "top1_nulhomotopic_on A TA
+             (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
+         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
+         \<and> a \<in> C \<and> b \<in> C"
+proof -
+  let ?S2 = top1_S2 and ?TS2 = top1_S2_topology
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  \<comment> \<open>Step 1: Transfer to R^2. Stereographic projection from b gives h: S^2-{b} \<rightarrow> R^2.
+     Map a to 0 (the origin). Then the image g = h \<circ> f maps A into R^2-{0}.
+     The statement becomes: 0 and \<infinity> are in the same component of S^2-f(A),
+     i.e., 0 is in the unbounded component of R^2-g(A).\<close>
+  obtain h where hh: "top1_homeomorphism_on (?S2 - {b})
+      (subspace_topology ?S2 ?TS2 (?S2 - {b}))
+      (UNIV :: (real\<times>real) set) ?TR2 h"
+    using S2_minus_point_homeo_R2[OF hb] by (by100 blast)
+  \<comment> \<open>Step 2: g = h \<circ> f : A \<rightarrow> R^2. g is continuous, injective, nulhomotopic.
+     g(A) \<subseteq> R^2 - {h(a)} since f(A) \<subseteq> S^2 - {a,b} and h maps S^2-{b} to R^2.\<close>
+  let ?g = "h \<circ> f"
+  let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
+  \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K \<subseteq> R^2 - {?origin}.\<close>
+  have hg_cont: "top1_continuous_map_on A TA (UNIV::(real\<times>real) set) ?TR2 ?g"
+  proof -
+    \<comment> \<open>h continuous: extract from homeomorphism.\<close>
+    have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))
+        (UNIV::(real\<times>real) set) ?TR2 h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>f maps A into S^2-{a,b} \<subseteq> S^2-{b}. Enlarge codomain.\<close>
+    have hf_S2b: "top1_continuous_map_on A TA (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) f"
+    proof -
+      have hsub: "?S2 - {a, b} \<subseteq> ?S2 - {b}" by (by100 blast)
+      have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
+      show ?thesis
+        using top1_continuous_map_on_codomain_enlarge[OF hf hsub hS2b_sub] .
+    qed
+    \<comment> \<open>Compose: g = h \<circ> f.\<close>
+    show ?thesis by (rule top1_continuous_map_on_comp[OF hf_S2b hh_cont])
+  qed
+  let ?K = "?g ` A"
+  have hK_compact: "compact ?K"
+  proof -
+    have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+      by (by100 simp)
+    have hK_top1: "top1_compact_on ?K (subspace_topology UNIV ?TR2 ?K)"
+      by (rule top1_compact_on_continuous_image[OF hcomp hTR2_top hg_cont])
+    \<comment> \<open>Bridge: ?TR2 = top1_open_sets for (real\<times>real).\<close>
+    have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+      using product_topology_on_open_sets_real2 by (by100 metis)
+    have "top1_compact_on ?K (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?K)"
+      using hK_top1 unfolding hTR2_eq .
+    thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+  qed
+  have hK_sub: "?K \<subseteq> UNIV - {?origin}"
+  proof (rule image_subsetI)
+    fix x assume hx: "x \<in> A"
+    have hfx: "f x \<in> ?S2 - {a, b}" using hf hx unfolding top1_continuous_map_on_def by (by100 blast)
+    hence hfx_ne_a: "f x \<noteq> a" by (by100 blast)
+    have hfx_in_S2b: "f x \<in> ?S2 - {b}" using hfx by (by100 blast)
+    have ha_in_S2b: "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
+    have h_inj: "inj_on h (?S2 - {b})"
+      using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "h (f x) \<noteq> h a"
+      using inj_on_eq_iff[OF h_inj hfx_in_S2b ha_in_S2b] hfx_ne_a by (by100 blast)
+    thus "(h \<circ> f) x \<in> UNIV - {?origin}" unfolding comp_def by (by100 blast)
+  qed
+  have hK_closed: "closed ?K" using hK_compact by (rule compact_imp_closed)
+  \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}. Equivalently, inclusion K \<hookrightarrow> R^2-{?origin} nulhomotopic.\<close>
+  have hj_nul: "top1_nulhomotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+  proof -
+    \<comment> \<open>Step 1: Transfer f nulhomotopic in S^2-{a,b} to g nulhomotopic in R^2-{origin}.\<close>
+    have hg_nul: "top1_nulhomotopic_on A TA
+        (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
+    proof -
+      let ?Sab = "?S2 - {a, b}" and ?TSab = "subspace_topology ?S2 ?TS2 (?S2 - {a, b})"
+      let ?Y = "UNIV - {?origin} :: (real\<times>real) set" and ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
+      \<comment> \<open>From nulhomotopy of f: get homotopy H: A\<times>I \<rightarrow> S^2-{a,b}.\<close>
+      obtain c where hc: "c \<in> ?Sab" and hfhom: "top1_homotopic_on A TA ?Sab ?TSab f (\<lambda>_. c)"
+        using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+      obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Sab ?TSab H"
+          and hH0: "\<forall>x\<in>A. H (x, 0) = f x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
+        using hfhom unfolding top1_homotopic_on_def by (by100 blast)
+      \<comment> \<open>h restricts to continuous S^2-{a,b} \<rightarrow> R^2-{origin} (enlarge domain to S^2-{b}, restrict codomain).\<close>
+      have hh_Sab: "top1_continuous_map_on ?Sab ?TSab ?Y ?TY h"
+      proof -
+        have hsub: "?Sab \<subseteq> ?S2 - {b}" by (by100 blast)
+        have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (UNIV::(real\<times>real) set) ?TR2 h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTopS2: "is_topology_on ?S2 ?TS2"
+          using hT unfolding is_topology_on_strict_def by (by100 blast)
+        have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
+        have hTopS2b: "is_topology_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2 hS2b_sub])
+        \<comment> \<open>Restrict h to S^2-{a,b}: use subspace restriction + transitivity.\<close>
+        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+          by (by100 simp)
+        have hh_Sab_R2: "top1_continuous_map_on ?Sab (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab) (UNIV::(real\<times>real) set) ?TR2 h"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> ?Sab"
+          hence "x \<in> ?S2 - {b}" using hsub by (by100 blast)
+          thus "h x \<in> (UNIV::(real\<times>real) set)" by (by100 simp)
+        next
+          fix V assume hV: "V \<in> ?TR2"
+          have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
+          moreover have hpre: "{x \<in> ?S2 - {b}. h x \<in> V} \<in> subspace_topology ?S2 ?TS2 (?S2 - {b})"
+            using hh_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
+          moreover have "?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V} \<in>
+            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
+            unfolding subspace_topology_def
+            apply (rule CollectI)
+            apply (rule exI[of _ "{x \<in> ?S2 - {b}. h x \<in> V}"])
+            apply (intro conjI)
+             apply (by100 blast)
+            using hpre unfolding subspace_topology_def apply (by100 blast)
+            done
+          ultimately show "{x \<in> ?Sab. h x \<in> V} \<in>
+            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
+            by (by100 simp)
+        qed
+        have hh_Sab_R2': "top1_continuous_map_on ?Sab ?TSab (UNIV::(real\<times>real) set) ?TR2 h"
+        proof -
+          have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab
+              = subspace_topology ?S2 ?TS2 ?Sab"
+            by (rule subspace_topology_trans) (by100 blast)
+          moreover have "subspace_topology ?S2 ?TS2 ?Sab = ?TSab" by (by100 simp)
+          ultimately have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab = ?TSab"
+            by (by100 simp)
+          thus ?thesis using hh_Sab_R2 by (by100 simp)
+        qed
+        \<comment> \<open>Restrict codomain to UNIV - {origin}.\<close>
+        have himg: "h ` ?Sab \<subseteq> ?Y"
+        proof (rule image_subsetI)
+          fix x assume "x \<in> ?Sab"
+          hence "x \<in> ?S2 - {b}" and "x \<noteq> a" by (by100 blast)+
+          have "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
+          have h_inj: "inj_on h (?S2 - {b})"
+            using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "h x \<noteq> h a" using inj_on_eq_iff[OF h_inj \<open>x \<in> ?S2 - {b}\<close> \<open>a \<in> ?S2 - {b}\<close>] \<open>x \<noteq> a\<close>
+            by (by100 blast)
+          thus "h x \<in> ?Y" by (by100 blast)
+        qed
+        have hY_sub: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+        show ?thesis
+          by (rule top1_continuous_map_on_codomain_shrink[OF hh_Sab_R2' himg hY_sub])
+      qed
+      \<comment> \<open>Compose: h \<circ> H : A\<times>I \<rightarrow> R^2-{origin}.\<close>
+      have hHg: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
+        by (rule top1_continuous_map_on_comp[OF hH hh_Sab])
+      have hhc: "h c \<in> ?Y"
+        using hh_Sab hc unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>h \<circ> H is a homotopy from h \<circ> f to constant h(c).\<close>
+      have "top1_homotopic_on A TA ?Y ?TY (h \<circ> f) (\<lambda>_. h c)"
+        unfolding top1_homotopic_on_def
+      proof (intro conjI exI[of _ "h \<circ> H"])
+        show "top1_continuous_map_on A TA ?Y ?TY (h \<circ> f)"
+          by (rule top1_continuous_map_on_comp[OF hf hh_Sab])
+        show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. h c)"
+        proof -
+          have hTA: "is_topology_on A TA"
+            using hcomp unfolding top1_compact_on_def by (by100 blast)
+          have hTY: "is_topology_on ?Y ?TY"
+          proof -
+            have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+              using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+              by (by100 simp)
+            show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
+          qed
+          have "h c \<in> ?Y" by (rule hhc)
+          have "\<forall>y0\<in>?Y. top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. y0)"
+            by (rule Theorem_18_2(1)[OF hTA hTY hTY])
+          thus ?thesis using hhc by (by100 blast)
+        qed
+        show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
+          by (rule hHg)
+        show "\<forall>x\<in>A. (h \<circ> H) (x, 0) = (h \<circ> f) x"
+          using hH0 unfolding comp_def by (by100 auto)
+        show "\<forall>x\<in>A. (h \<circ> H) (x, 1) = (\<lambda>_. h c) x"
+          using hH1 unfolding comp_def by (by100 auto)
+      qed
+      thus ?thesis unfolding top1_nulhomotopic_on_def using hhc by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: g injective A \<rightarrow> K = g(A). A compact, R^2 Hausdorff.
+       By Theorem 26.6, g: A \<rightarrow> K is homeomorphism. So g^{-1}: K \<rightarrow> A exists continuous.\<close>
+    have hg_inj: "inj_on ?g A"
+    proof -
+      have h_inj: "inj_on h (?S2 - {b})"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hfA_sub: "f ` A \<subseteq> ?S2 - {b}"
+        using hf unfolding top1_continuous_map_on_def by (by100 blast)
+      show ?thesis using comp_inj_on[OF hinj inj_on_subset[OF h_inj hfA_sub]] .
+    qed
+    \<comment> \<open>Step 3: Compose nulhomotopy of g with g^{-1}: K \<rightarrow> A.
+       inclusion K \<hookrightarrow> R^2-{origin} = g \<circ> g^{-1}, so nulhomotopic.\<close>
+    \<comment> \<open>g: A \<cong> K via Theorem 26.6 (compact, Hausdorff, continuous bijection).\<close>
+    let ?Y = "UNIV - {?origin} :: (real\<times>real) set"
+    let ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
+    have hTK: "is_topology_on ?K (subspace_topology UNIV ?TR2 ?K)"
+    proof -
+      have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
+    have hK_haus: "is_hausdorff_on ?K (subspace_topology UNIV ?TR2 ?K)"
+    proof -
+      have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+      have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+        using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+      have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+        using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+      hence hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set) ?TR2" by (by100 simp)
+      thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+    qed
+    have hg_K: "top1_continuous_map_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
+      by (rule top1_continuous_map_on_codomain_shrink[OF hg_cont]) (by100 simp)+
+    have hg_bij: "bij_betw ?g A ?K"
+      unfolding bij_betw_def using hg_inj by (by100 blast)
+    have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+    have hg_homeo: "top1_homeomorphism_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
+      by (rule Theorem_26_6[OF hTA hTK hcomp hK_haus hg_K hg_bij])
+    \<comment> \<open>g^{-1}: K \<rightarrow> A continuous.\<close>
+    have hginv: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) A TA (inv_into A ?g)"
+      using hg_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>Compose nulhomotopy of g with g^{-1}: H(g^{-1}(y), t) is a nulhomotopy of inclusion.\<close>
+    obtain c where hcY: "c \<in> ?Y"
+        and hghom: "top1_homotopic_on A TA ?Y ?TY ?g (\<lambda>_. c)"
+      using hg_nul unfolding top1_nulhomotopic_on_def by (by100 blast)
+    obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY H"
+        and hH0: "\<forall>x\<in>A. H (x, 0) = ?g x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
+      using hghom unfolding top1_homotopic_on_def by (by100 blast)
+    \<comment> \<open>H': K \<times> I \<rightarrow> R^2-{origin}, H'(y,t) = H(g^{-1}(y), t).\<close>
+    define H' where "H' = (\<lambda>(y,t). H (inv_into A ?g y, t))"
+    have hH'_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+        ?Y ?TY H'"
+    proof -
+      \<comment> \<open>H' = H \<circ> (g^{-1} \<times> id). Both g^{-1} and id are continuous.\<close>
+      have hpair: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+          (A \<times> I_set) (product_topology_on TA I_top) (\<lambda>(y,t). (inv_into A ?g y, t))"
+      proof -
+        have hTKI: "is_topology_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)"
+          by (rule product_topology_on_is_topology_on[OF hTK top1_unit_interval_topology_is_topology_on])
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        \<comment> \<open>\<pi>1 \<circ> pair = g^{-1}: continuous by hginv.\<close>
+        have hpi1_p: "pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = inv_into A ?g \<circ> pi1"
+          unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
+        have hpi2_p: "pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = pi2"
+          unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
+        have hpi1_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top) ?K (subspace_topology UNIV ?TR2 ?K) pi1"
+          by (rule top1_continuous_pi1[OF hTK hTI])
+        have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+            A TA (pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+          unfolding hpi1_p by (rule top1_continuous_map_on_comp[OF hpi1_cont hginv])
+        moreover have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+            I_set I_top (pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+          unfolding hpi2_p by (rule top1_continuous_pi2[OF hTK hTI])
+        ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTKI hTA hTI]] by (by100 blast)
+      qed
+      have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+          ?Y ?TY (H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+        by (rule top1_continuous_map_on_comp[OF hpair hH])
+      moreover have "H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = H'"
+      proof (rule ext)
+        fix p show "(H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t))) p = H' p"
+          unfolding H'_def comp_def by (cases p) (by100 simp)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hH'0: "\<forall>y\<in>?K. H' (y, 0) = y"
+    proof (intro ballI)
+      fix y assume "y \<in> ?K"
+      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
+      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
+      hence "H' (y, 0) = H (x, 0)" unfolding H'_def by (by100 simp)
+      also have "\<dots> = ?g x" using hH0 hx by (by100 blast)
+      finally show "H' (y, 0) = y" using hy by (by100 simp)
+    qed
+    have hH'1: "\<forall>y\<in>?K. H' (y, 1) = c"
+    proof (intro ballI)
+      fix y assume "y \<in> ?K"
+      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
+      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
+      hence "H' (y, 1) = H (x, 1)" unfolding H'_def by (by100 simp)
+      also have "\<dots> = c" using hH1 hx by (by100 blast)
+      finally show "H' (y, 1) = c" .
+    qed
+    \<comment> \<open>The inclusion id: K \<rightarrow> R^2-{origin} is nulhomotopic via H'.\<close>
+    have hid_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x)"
+    proof -
+      have hKsub: "?K \<subseteq> ?Y" using hK_sub by (by100 blast)
+      have hKY: "?K \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      have hTR2_top2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2" by (rule hTR2_top)
+      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
+      proof -
+        have "\<forall>A. A \<subseteq> (UNIV::(real\<times>real) set) \<longrightarrow> top1_continuous_map_on A (subspace_topology UNIV ?TR2 A) (UNIV::(real\<times>real) set) ?TR2 id"
+          using Theorem_18_2(2)[OF hTR2_top hTR2_top hTR2_top2] by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      hence hid_R2: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
+        unfolding id_def .
+      have himg_Y: "(\<lambda>x. x) ` ?K \<subseteq> ?Y" using hKsub by (by100 blast)
+      have hY_sub_UNIV: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
+          ?Y (subspace_topology (UNIV::(real\<times>real) set) ?TR2 ?Y) (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hid_R2 himg_Y hY_sub_UNIV])
+      thus ?thesis by (by100 simp)
+    qed
+    have hconst_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. c)"
+    proof -
+      have hTY: "is_topology_on ?Y ?TY"
+      proof -
+        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+          by (by100 simp)
+        show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
+      qed
+      have "\<forall>y0\<in>?Y. top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. y0)"
+        using Theorem_18_2(1)[OF hTK hTY hTY] by (by100 blast)
+      thus ?thesis using hcY by (by100 blast)
+    qed
+    have "top1_homotopic_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x) (\<lambda>_. c)"
+      unfolding top1_homotopic_on_def
+      using hid_cont hconst_cont hH'_cont hH'0 hH'1 by (by100 blast)
+    thus ?thesis unfolding top1_nulhomotopic_on_def using hcY by (by100 blast)
+  qed
+  \<comment> \<open>Step 5 (Contradiction argument, following Munkres):
+     Suppose for contradiction that ?origin is in a BOUNDED component C of R^2-K.
+     Let D = union of other components. C, D open disjoint, R^2-K = C \<union> D.
+     Apply Lemma 62.1 to X = C \<union> K, A = K, Y = R^2-{?origin}:
+       extend inclusion K \<hookrightarrow> R^2-{0} to k: C \<union> K \<rightarrow> R^2-{0}.
+     Paste k with identity on D: define h(x) = k(x) for x \<in> C, h(x) = x for x \<in> D \<union> K.
+     h: R^2 \<rightarrow> R^2-{0}, h = identity on D \<union> K.
+     Large ball B centered at 0 containing C \<union> K: h|_\<partial>B = id (since \<partial>B \<subseteq> D).
+     r: R^2-{0} \<rightarrow> \<partial>B (radial projection). r \<circ> h|_B : B \<rightarrow> \<partial>B retraction.
+     Contradiction with Theorem_55_2.\<close>
+  \<comment> \<open>Key helper: R^2 is metrizable, hence normal. C \<union> K metrizable, hence (C\<union>K)\<times>I normal.\<close>
+  have hR2_Y_open: "UNIV - {?origin} \<in> ?TR2"
+  proof -
+    have "open (UNIV - {?origin} :: (real\<times>real) set)"
+      by (intro open_Diff open_UNIV finite_imp_closed) (by100 simp)
+    hence "UNIV - {?origin} \<in> (top1_open_sets :: (real\<times>real) set set)"
+      unfolding top1_open_sets_def by (by100 blast)
+    thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+  qed
+  \<comment> \<open>The R^2 version of the Borsuk conclusion:
+     0 lies in the unbounded component of R^2 - K.\<close>
+  have horigin_not_in_K: "?origin \<in> UNIV - ?K"
+    using hK_sub by (by100 blast)
+  \<comment> \<open>The R^2 version of the Borsuk conclusion:
+     0 lies in the unbounded component of R^2 - K.
+     "Unbounded" means: for any R > 0, C intersects the complement of the ball of radius R.
+     The proof is by contradiction: assume 0 in a compact-closure component.
+     Apply Lemma 62.1 to extend, paste with identity, get retraction contradiction.\<close>
+  \<comment> \<open>R^2 normality (needed for Lemma 62.1 application).\<close>
+  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
+    sorry \<comment> \<open>R^2 is metrizable \<Longrightarrow> normal (Theorem_32_2).\<close>
+  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set) (product_topology_on ?TR2 I_top)"
+    sorry \<comment> \<open>R^2 \<times> I metrizable (product of metrizable) \<Longrightarrow> normal.\<close>
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+    by (by100 simp)
+  \<comment> \<open>K closed in R^2 in the top1 sense.\<close>
+  have hK_closedin: "closedin_on (UNIV::(real\<times>real) set) ?TR2 ?K"
+  proof -
+    have "closed ?K" by (rule hK_closed)
+    hence "UNIV - ?K \<in> (top1_open_sets :: (real\<times>real) set set)"
+      unfolding top1_open_sets_def using open_Diff[OF open_UNIV hK_closed] by (by100 blast)
+    hence "UNIV - ?K \<in> ?TR2" using product_topology_on_open_sets_real2 by (by100 metis)
+    thus ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} as top1_continuous_map_on.\<close>
+  have hj_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+    sorry \<comment> \<open>Inclusion continuous (proved in hj_nul proof above, extract).\<close>
+  \<comment> \<open>Apply Lemma 62.1 to X = R^2, A = K, Y = R^2-{origin}, f = inclusion.\<close>
+  obtain G where hG_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
+      and hG_ext: "\<forall>x\<in>?K. G x = x"
+      and hG_nul: "top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
+  proof -
+    from Lemma_62_1_homotopy_extension[OF hTR2 hR2_normal hR2I_normal hK_closedin hR2_Y_open hj_cont hj_nul]
+    show ?thesis using that by blast
+  qed
+  \<comment> \<open>Now we have G: R^2 \<rightarrow> R^2-{origin} with G|_K = id and G nulhomotopic.
+     The key consequence: origin \<notin> G(R^2), so ?origin has no G-preimage.
+     This contradicts the existence of a bounded component containing origin.\<close>
+  have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
+         \<and> ?origin \<in> C0
+         \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
+    sorry \<comment> \<open>By contradiction using G: suppose origin in bounded C0.
+       Paste G with id on D (other components): h = G on C0, h = id on D\<union>K.
+       Both C0\<union>K and D\<union>K closed (frontier \<subseteq> K). Pasting gives h: R^2 \<rightarrow> R^2-{origin}.
+       h|_{\<partial>B} = id for large ball B. Radial projection r: R^2-{origin} \<rightarrow> \<partial>B.
+       r \<circ> h|_B: B \<rightarrow> \<partial>B retraction. Contradiction with Theorem_55_2.\<close>
+  \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
 qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
