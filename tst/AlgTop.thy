@@ -3741,7 +3741,7 @@ proof -
   have hleft_id: "\<forall>ws\<in>G. mul e ws = ws" unfolding mul_def e_def by (by100 simp)
   \<comment> \<open>(3) Right identity: mul ws e = ws for ws \<in> G.\<close>
   have hright_id: "\<forall>ws\<in>G. mul ws e = ws"
-    sorry \<comment> \<open>By induction on ws: prepend preserves the word when appending to [].\<close>
+    sorry \<comment> \<open>By induction on ws. Each prepend at head of reduced word = Cons.\<close>
   \<comment> \<open>(4) Closure under mul.\<close>
   have hmul_closed: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. mul ws1 ws2 \<in> G"
     sorry \<comment> \<open>By induction on ws1 using hprepend_reduced.\<close>
