@@ -2006,13 +2006,32 @@ proof -
                  By component_of definition: R (connected, intersects C0, ⊆ UNIV-K) ⊆ C0.\<close>
               have "?R \<subseteq> ?C0"
               proof -
-                have "?R \<subseteq> UNIV - ?K" by (rule hR_sub_UK)
-                moreover have "\<exists>z. z \<in> ?R \<and> z \<in> ?C0" using hne by (by100 blast)
-                ultimately show ?thesis
+                obtain z where hz_R: "z \<in> ?R" and hz_C0: "z \<in> ?C0" using hne by (by100 blast)
+                \<comment> \<open>R connected (HOL) \<rightarrow> top1_connected_on R (subspace UNIV TR2 R).\<close>
+                have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+                  using product_topology_on_open_sets_real2 by (by100 metis)
+                have "top1_connected_on ?R (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?R)"
+                  using top1_connected_on_subspace_open_iff_connected hR_conn by (by100 blast)
+                hence hR_top1_conn: "top1_connected_on ?R (subspace_topology (UNIV::(real\<times>real) set) ?TR2 ?R)"
+                  unfolding hTR2_eq .
+                \<comment> \<open>Subspace transitivity: subspace(UNIV, TR2, R) = subspace(UNIV-K, T_UK, R).\<close>
+                have hR_sub_UK': "?R \<subseteq> UNIV - ?K" by (rule hR_sub_UK)
+                have "subspace_topology (UNIV - ?K) ?T_UK ?R = subspace_topology UNIV ?TR2 ?R"
+                  by (rule subspace_topology_trans[OF hR_sub_UK'])
+                hence hR_conn_UK: "top1_connected_on ?R (subspace_topology (UNIV - ?K) ?T_UK ?R)"
+                  using hR_top1_conn by (by100 simp)
+                \<comment> \<open>R connected, R \<subseteq> UNIV-K, z \<in> R, z \<in> C0.
+                   By component_of definition: R \<subseteq> C0 = component_of origin.\<close>
+                have "z \<in> ?C0" by (rule hz_C0)
+                hence "top1_component_of_on (UNIV - ?K) ?T_UK z = ?C0"
+                  by (rule top1_component_of_on_eq_of_mem[OF hT_UK])
+                moreover have "?R \<subseteq> top1_component_of_on (UNIV - ?K) ?T_UK z"
                   unfolding top1_component_of_on_def
-                  sorry \<comment> \<open>R connected, R \<subseteq> UNIV-K, R \<inter> C0 \<noteq> {}.
-                     By component_of_on_eq_of_mem: if z \<in> C0 \<inter> R, then
-                     component_of z = C0 and R \<subseteq> component_of z = C0.\<close>
+                proof (rule Union_upper)
+                  show "?R \<in> {C. C \<subseteq> UNIV - ?K \<and> z \<in> C \<and> top1_connected_on C (subspace_topology (UNIV - ?K) ?T_UK C)}"
+                    using hR_sub_UK hz_R hR_conn_UK by (by100 blast)
+                qed
+                ultimately show "?R \<subseteq> ?C0" by (by100 simp)
               qed
               hence "x \<in> ?C0" using hx_R by (by100 blast)
               thus False using hxnC0 by (by100 blast)
