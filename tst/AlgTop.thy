@@ -5342,6 +5342,17 @@ proof -
   show ?thesis sorry
 qed
 
+text \<open>The fundamental group \<pi>_1(X, x_0) is a group under path-product of equivalence classes.\<close>
+lemma top1_fundamental_group_is_group:
+  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
+  shows "top1_is_group_on
+    (top1_fundamental_group_carrier X TX x0)
+    (top1_fundamental_group_mul X TX x0)
+    (top1_fundamental_group_id X TX x0)
+    (top1_fundamental_group_invg X TX x0)"
+  sorry \<comment> \<open>From Theorem_51_2: associativity, left/right identity, left/right inverse
+     of path products, lifted to equivalence classes via top1_fundamental_group_mul_class.\<close>
+
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
     with U, V, U \<inter> V open and path-connected, then \<pi>_1(X, x_0) is isomorphic to
     the free product of \<pi>_1(U, x_0) and \<pi>_1(V, x_0) amalgamated over \<pi>_1(U \<inter> V, x_0).
@@ -5387,13 +5398,47 @@ proof -
   let ?\<pi>V = "top1_fundamental_group_carrier V ?TV x0"
   let ?\<pi>X = "top1_fundamental_group_carrier X TX x0"
   \<comment> \<open>Step 1: Construct the free product FP = \<pi>_1(U) \<star> \<pi>_1(V) (exists by Theorem 68.2).\<close>
-  obtain FP mulFP eFP invgFP \<iota>fam where
+  have hTopX: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hUsub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hx0U: "x0 \<in> U" using assms(8) by (by100 blast)
+  have hx0V: "x0 \<in> V" using assms(8) by (by100 blast)
+  have hgrpU: "top1_is_group_on ?\<pi>U (top1_fundamental_group_mul U ?TU x0)
+      (top1_fundamental_group_id U ?TU x0) (top1_fundamental_group_invg U ?TU x0)"
+    by (rule top1_fundamental_group_is_group[OF hTopU hx0U])
+  have hgrpV: "top1_is_group_on ?\<pi>V (top1_fundamental_group_mul V ?TV x0)
+      (top1_fundamental_group_id V ?TV x0) (top1_fundamental_group_invg V ?TV x0)"
+    by (rule top1_fundamental_group_is_group[OF hTopV hx0V])
+  have hgroups: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
+      ((if \<alpha> = 0 then ?\<pi>U else ?\<pi>V))
+      (if \<alpha> = 0 then top1_fundamental_group_mul U ?TU x0 else top1_fundamental_group_mul V ?TV x0)
+      (if \<alpha> = 0 then top1_fundamental_group_id U ?TU x0 else top1_fundamental_group_id V ?TV x0)
+      (if \<alpha> = 0 then top1_fundamental_group_invg U ?TU x0 else top1_fundamental_group_invg V ?TV x0)"
+  proof (intro ballI)
+    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+    thus "top1_is_group_on (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)
+        (if \<alpha> = 0 then top1_fundamental_group_mul U ?TU x0 else top1_fundamental_group_mul V ?TV x0)
+        (if \<alpha> = 0 then top1_fundamental_group_id U ?TU x0 else top1_fundamental_group_id V ?TV x0)
+        (if \<alpha> = 0 then top1_fundamental_group_invg U ?TU x0 else top1_fundamental_group_invg V ?TV x0)"
+    proof
+      assume "\<alpha> = 0" thus ?thesis using hgrpU by (by100 simp)
+    next
+      assume "\<alpha> = 1" thus ?thesis using hgrpV by (by100 simp)
+    qed
+  qed
+  obtain FP :: "(nat \<times> (real \<Rightarrow> 'a) set) list set" and mulFP eFP invgFP \<iota>fam where
       hFP: "top1_is_free_product_on FP mulFP eFP invgFP
              (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)
              (\<lambda>i. if i = 0 then top1_fundamental_group_mul U ?TU x0
                   else top1_fundamental_group_mul V ?TV x0)
              \<iota>fam {0, 1}"
-    sorry
+  proof -
+    from Theorem_68_2_free_product_exists[OF hgroups]
+    show ?thesis using that by blast
+  qed
   \<comment> \<open>Step 2: Define the natural map j: FP \<rightarrow> \<pi>_1(X) induced by the inclusions U, V \<hookrightarrow> X.\<close>
   \<comment> \<open>Step 3 (Surjectivity): By Theorem 59.1, every loop in X decomposes into loops in U or V.
      Hence j is surjective onto \<pi>_1(X).\<close>
