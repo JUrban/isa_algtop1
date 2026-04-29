@@ -9338,15 +9338,112 @@ proof -
     qed
     \<comment> \<open>?N is a normal subgroup containing S, and ?conj \<subseteq> ?N, so ?Np \<subseteq> ?N.\<close>
     moreover have "?N \<subseteq> G"
-      unfolding top1_normal_subgroup_generated_on_def top1_normal_subgroup_on_def sorry
+    proof -
+      \<comment> \<open>G is a normal subgroup of G containing S, so it's in the intersection.\<close>
+      have "top1_normal_subgroup_on G mul e invg G"
+        unfolding top1_normal_subgroup_on_def
+        using hG group_mul_closed[OF hG] group_inv_closed[OF hG] by (by100 blast)
+      hence "G \<in> { N. S \<subseteq> N \<and> top1_normal_subgroup_on G mul e invg N }" using hS by (by100 blast)
+      thus ?thesis unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+    qed
     moreover have "top1_is_group_on ?N mul e invg"
-      sorry
+    proof -
+      \<comment> \<open>Intersection of subgroups is a subgroup. Each normal subgroup is a subgroup.\<close>
+      have "\<And>N. S \<subseteq> N \<Longrightarrow> top1_normal_subgroup_on G mul e invg N \<Longrightarrow>
+          top1_is_group_on N mul e invg"
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      show ?thesis
+        unfolding top1_normal_subgroup_generated_on_def
+        sorry
+    qed
     ultimately show ?thesis
       by (rule subgroup_generated_minimal)
   qed
   \<comment> \<open>Step 3: N' is normal (conjugating a product of conjugates gives a product of conjugates).\<close>
   have hNp_normal: "top1_normal_subgroup_on G mul e invg ?Np"
-    sorry
+    unfolding top1_normal_subgroup_on_def
+  proof (intro conjI)
+    show "?Np \<subseteq> G" by (rule subgroup_generated_subset[OF hG hconj_sub])
+    show "top1_is_group_on ?Np mul e invg" by (rule intersection_of_subgroups_is_group[OF hG hconj_sub])
+    show "\<forall>g\<in>G. \<forall>n\<in>?Np. mul (mul g n) (invg g) \<in> ?Np"
+    proof (intro ballI)
+      fix g n assume hg: "g \<in> G" and hn: "n \<in> ?Np"
+      \<comment> \<open>K_g = {n \<in> G. gng^{-1} \<in> N'} contains conjugates and is a subgroup.\<close>
+      let ?Kg = "{n \<in> G. mul (mul g n) (invg g) \<in> ?Np}"
+      have "?conj \<subseteq> ?Kg"
+      proof (rule subsetI)
+        fix x assume "x \<in> ?conj"
+        then obtain g0 s where hg0: "g0 \<in> G" and hs: "s \<in> S" and hx: "x = mul (mul g0 s) (invg g0)"
+          by (by100 blast)
+        have "x \<in> G" using hconj_sub \<open>x \<in> ?conj\<close> by (by100 blast)
+        \<comment> \<open>g(g0 s g0^{-1})g^{-1} = (g*g0) s (g*g0)^{-1}, which is a conjugate of s.\<close>
+        have "mul (mul g x) (invg g) \<in> ?conj"
+        proof -
+          have hgg0: "mul g g0 \<in> G" by (rule group_mul_closed[OF hG hg hg0])
+          \<comment> \<open>g * (g0*s*g0^{-1}) * g^{-1} = (g*g0) * s * (g*g0)^{-1} by assoc + inv_mul.\<close>
+          have "mul (mul g x) (invg g) = mul (mul (mul g g0) s) (invg (mul g g0))"
+            using hx sorry
+          moreover have "mul g g0 \<in> G" by (rule hgg0)
+          ultimately show ?thesis using hs by (by100 blast)
+        qed
+        hence "mul (mul g x) (invg g) \<in> ?Np"
+          by (rule subgroup_generated_contains[OF hG hconj_sub])
+        thus "x \<in> ?Kg" using \<open>x \<in> G\<close> by (by100 blast)
+      qed
+      moreover have "?Kg \<subseteq> G" by (by100 blast)
+      moreover have "top1_is_group_on ?Kg mul e invg"
+      proof -
+        have hNp_grp: "top1_is_group_on ?Np mul e invg"
+          by (rule intersection_of_subgroups_is_group[OF hG hconj_sub])
+        show ?thesis unfolding top1_is_group_on_def
+        proof (intro conjI ballI)
+          show "e \<in> ?Kg"
+          proof -
+            have "e \<in> G" by (rule group_e_mem[OF hG])
+            moreover have "mul (mul g e) (invg g) = e"
+              using group_id_right[OF hG hg] group_inv_right[OF hG hg] by (by100 simp)
+            hence "mul (mul g e) (invg g) \<in> ?Np"
+              using group_e_mem[OF hNp_grp] by (by100 simp)
+            ultimately show ?thesis by (by100 blast)
+          qed
+        next
+          fix n1 n2 assume "n1 \<in> ?Kg" "n2 \<in> ?Kg"
+          hence hn1: "n1 \<in> G" "mul (mul g n1) (invg g) \<in> ?Np"
+            and hn2: "n2 \<in> G" "mul (mul g n2) (invg g) \<in> ?Np" by (by100 blast)+
+          have "mul (mul g (mul n1 n2)) (invg g) = mul (mul (mul g n1) (invg g)) (mul (mul g n2) (invg g))"
+            by (rule group_conjugate_mul[OF hG hg hn1(1) hn2(1)])
+          hence "mul (mul g (mul n1 n2)) (invg g) \<in> ?Np"
+            using group_mul_closed[OF hNp_grp hn1(2) hn2(2)] by (by100 simp)
+          moreover have "mul n1 n2 \<in> G" by (rule group_mul_closed[OF hG hn1(1) hn2(1)])
+          ultimately show "mul n1 n2 \<in> ?Kg" by (by100 blast)
+        next
+          fix n assume "n \<in> ?Kg"
+          hence hnG: "n \<in> G" and hconj_n: "mul (mul g n) (invg g) \<in> ?Np" by (by100 blast)+
+          have "mul (mul g (invg n)) (invg g) = invg (mul (mul g n) (invg g))"
+            by (rule group_conjugate_inv[OF hG hg hnG])
+          hence "mul (mul g (invg n)) (invg g) \<in> ?Np"
+            using group_inv_closed[OF hNp_grp hconj_n] by (by100 simp)
+          moreover have "invg n \<in> G" by (rule group_inv_closed[OF hG hnG])
+          ultimately show "invg n \<in> ?Kg" by (by100 blast)
+        next
+          fix n1 n2 n3 assume "n1 \<in> ?Kg" "n2 \<in> ?Kg" "n3 \<in> ?Kg"
+          thus "mul (mul n1 n2) n3 = mul n1 (mul n2 n3)"
+            using group_assoc[OF hG] by (by100 blast)
+        next
+          fix n assume "n \<in> ?Kg" thus "mul e n = n" using group_id_left[OF hG] by (by100 blast)
+        next
+          fix n assume "n \<in> ?Kg" thus "mul n e = n" using group_id_right[OF hG] by (by100 blast)
+        next
+          fix n assume "n \<in> ?Kg" thus "mul (invg n) n = e" using group_inv_left[OF hG] by (by100 blast)
+        next
+          fix n assume "n \<in> ?Kg" thus "mul n (invg n) = e" using group_inv_right[OF hG] by (by100 blast)
+        qed
+      qed
+      ultimately have "?Np \<subseteq> ?Kg"
+        by (rule subgroup_generated_minimal)
+      thus "mul (mul g n) (invg g) \<in> ?Np" using hn by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 4: S \<subseteq> N' (s = e*s*e^{-1} is a conjugate).\<close>
   have hS_sub_Np: "S \<subseteq> ?Np"
   proof (rule subsetI)
