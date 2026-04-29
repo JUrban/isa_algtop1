@@ -188,7 +188,47 @@ proof -
   have hh_inv: "\<And>y::real. -1 < y \<Longrightarrow> y < 1 \<Longrightarrow> h (h_inv y) = y"
     sorry \<comment> \<open>Algebra: h(y/(1-|y|)) = y for |y| < 1.\<close>
   have hh_inv2: "\<And>x::real. h_inv (h x) = x"
-    sorry \<comment> \<open>Algebra: h_inv(x/(1+|x|)) = x.\<close>
+  proof -
+    fix x :: real
+    have hpos: "1 + \<bar>x\<bar> > 0" by (by100 linarith)
+    have hne: "1 + \<bar>x\<bar> \<noteq> 0" using hpos by (by100 linarith)
+    \<comment> \<open>h(x) = x/(1+|x|), |h(x)| = |x|/(1+|x|), 1-|h(x)| = 1/(1+|x|).\<close>
+    have h_hx: "h x = x / (1 + \<bar>x\<bar>)" unfolding h_def by (by100 simp)
+    have h_abs_hx: "\<bar>h x\<bar> = \<bar>x\<bar> / (1 + \<bar>x\<bar>)"
+    proof -
+      have "\<bar>x / (1 + \<bar>x\<bar>)\<bar> = \<bar>x\<bar> / \<bar>1 + \<bar>x\<bar>\<bar>" by (rule abs_divide)
+      moreover have "\<bar>1 + \<bar>x\<bar>\<bar> = 1 + \<bar>x\<bar>" using hpos by (by100 linarith)
+      ultimately show ?thesis unfolding h_def by (by100 simp)
+    qed
+    \<comment> \<open>(1 - |h x|) * (1 + |x|) = 1, so h_inv(h x) = h x / (1-|h x|) = x.\<close>
+    have key: "(1 - \<bar>h x\<bar>) * (1 + \<bar>x\<bar>) = 1"
+    proof -
+      have "(1 - \<bar>x\<bar> / (1 + \<bar>x\<bar>)) * (1 + \<bar>x\<bar>) = 1 * (1 + \<bar>x\<bar>) - \<bar>x\<bar> / (1 + \<bar>x\<bar>) * (1 + \<bar>x\<bar>)"
+        using left_diff_distrib[of 1 "\<bar>x\<bar> / (1 + \<bar>x\<bar>)" "1 + \<bar>x\<bar>"] by (by100 simp)
+      also have "\<bar>x\<bar> / (1 + \<bar>x\<bar>) * (1 + \<bar>x\<bar>) = \<bar>x\<bar>"
+        using hne by (by100 simp)
+      finally have "(1 - \<bar>x\<bar> / (1 + \<bar>x\<bar>)) * (1 + \<bar>x\<bar>) = (1 + \<bar>x\<bar>) - \<bar>x\<bar>"
+        by (by100 simp)
+      also have "\<dots> = 1" by (by100 simp)
+      finally show ?thesis unfolding h_abs_hx .
+    qed
+    have h_1_minus_ne: "1 - \<bar>h x\<bar> \<noteq> 0"
+    proof -
+      from key have "(1 - \<bar>h x\<bar>) * (1 + \<bar>x\<bar>) \<noteq> 0" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    show "h_inv (h x) = x"
+    proof -
+      have "h_inv (h x) = h x / (1 - \<bar>h x\<bar>)" unfolding h_inv_def by (by100 simp)
+      also have "\<dots> = (x / (1 + \<bar>x\<bar>)) / (1 - \<bar>h x\<bar>)" unfolding h_hx by (by100 simp)
+      also have "\<dots> = x / ((1 + \<bar>x\<bar>) * (1 - \<bar>h x\<bar>))"
+        using hne h_1_minus_ne by (by100 simp)
+      also have "(1 + \<bar>x\<bar>) * (1 - \<bar>h x\<bar>) = (1 - \<bar>h x\<bar>) * (1 + \<bar>x\<bar>)"
+        by (rule mult.commute)
+      also have "\<dots> = 1" by (rule key)
+      finally show ?thesis by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 2: h \<circ> f: A \<rightarrow> (-1,1) \<subset> [-1,1]. Compose, extend via Theorem_35_1.\<close>
   have hhf_range: "\<forall>a\<in>A. h (f a) \<in> top1_closed_interval (-1) 1"
   proof (intro ballI)
