@@ -5394,7 +5394,50 @@ proof (intro conjI)
     sorry \<comment> \<open>From Theorem_51_2_associativity + mul_class. ~30 lines.\<close>
   \<comment> \<open>(5) Left identity.\<close>
   show "\<forall>x\<in>?G. ?mul ?e x = x \<and> ?mul x ?e = x"
-    sorry \<comment> \<open>From Theorem_51_2_left/right_identity + mul_class. ~30 lines.\<close>
+  proof (intro ballI conjI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    \<comment> \<open>Left identity: [const]*[f] = [const*f] = [f] by Theorem_51_2_left_identity.\<close>
+    have "?mul ?e c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+      unfolding top1_fundamental_group_id_def hc
+      by (rule top1_fundamental_group_mul_class[OF hTX hconst_loop hf])
+    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+      hence "top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h"
+        by (by100 blast)
+      hence "top1_is_loop_on X TX x0 h \<and> top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
+        by (rule Theorem_51_2_left_identity[OF hTX hfp])
+      ultimately have "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h" by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product (top1_constant_path x0) f)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
+        by (rule Theorem_51_2_left_identity[OF hTX hfp])
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hconst_loop hf] hloop_h by (by100 blast)
+    qed
+    finally show "?mul ?e c = c" unfolding hc .
+    \<comment> \<open>Right identity: [f]*[const] = [f*const] = [f] by Theorem_51_2_right_identity.\<close>
+    show "?mul c ?e = c"
+      sorry \<comment> \<open>Symmetric argument with Theorem_51_2_right_identity.\<close>
+  qed
   \<comment> \<open>(6) Inverse.\<close>
   show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
     sorry \<comment> \<open>From Theorem_51_2_invgerse_left/right + mul_class. ~30 lines.\<close>
