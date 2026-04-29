@@ -9301,6 +9301,155 @@ proof (intro conjI)
   qed
 qed
 
+text \<open>Lemma 69.3 part 3 (Munkres): If h: G \<rightarrow> H is a homomorphism to an abelian group H,
+  then ker(h) contains [G,G]. Proof: every commutator [a,b] maps to
+  h(a)*h(b)*h(a)^{-1}*h(b)^{-1} = eH (since H is abelian). Then [G,G] \<subseteq> ker(h)
+  by subgroup_generated_minimal.\<close>
+lemma Lemma_69_3_commutator_in_kernel:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_abelian_group_on H mulH eH invgH"
+      and hh: "top1_group_hom_on G mul H mulH h"
+  shows "top1_commutator_subgroup_on G mul e invg
+      \<subseteq> top1_group_kernel_on G eH h"
+proof -
+  have hH_grp: "top1_is_group_on H mulH eH invgH"
+    using hH unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hH_comm: "\<forall>x\<in>H. \<forall>y\<in>H. mulH x y = mulH y x"
+    using hH unfolding top1_is_abelian_group_on_def by (by100 blast)
+  let ?gens = "{ top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G }"
+  let ?K = "top1_group_kernel_on G eH h"
+  have hgens_sub: "?gens \<subseteq> G"
+  proof (rule subsetI)
+    fix x assume "x \<in> ?gens"
+    then obtain a b where "a \<in> G" "b \<in> G" "x = top1_group_commutator_on mul invg a b"
+      by (by100 blast)
+    thus "x \<in> G" unfolding top1_group_commutator_on_def
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Step 1: every commutator maps to eH under h.\<close>
+  have hgens_ker: "?gens \<subseteq> ?K"
+  proof (rule subsetI)
+    fix x assume hx_gen: "x \<in> ?gens"
+    then obtain a b where hab: "a \<in> G" "b \<in> G"
+        and hx: "x = top1_group_commutator_on mul invg a b" by (by100 blast)
+    have ha: "h a \<in> H" and hb: "h b \<in> H"
+      using hh hab unfolding top1_group_hom_on_def by (by100 blast)+
+    have hia: "invg a \<in> G" and hib: "invg b \<in> G"
+      using group_inv_closed[OF hG hab(1)] group_inv_closed[OF hG hab(2)] by (by100 blast)+
+    have hab_G: "mul a b \<in> G" by (rule group_mul_closed[OF hG hab(1) hab(2)])
+    have habia: "mul (mul a b) (invg a) \<in> G" by (rule group_mul_closed[OF hG hab_G hia])
+    \<comment> \<open>h([a,b]) = h(a)*h(b)*invgH(h(a))*invgH(h(b)).\<close>
+    have hx_eq: "x = mul (mul (mul a b) (invg a)) (invg b)"
+      using hx unfolding top1_group_commutator_on_def by (by100 simp)
+    have hhab: "h (mul a b) = mulH (h a) (h b)"
+    proof -
+      have "h (mul a b) = mulH (h a) (h b)"
+        using hh hab unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis .
+    qed
+    have hhabia: "h (mul (mul a b) (invg a)) = mulH (h (mul a b)) (h (invg a))"
+    proof -
+      have "h (mul (mul a b) (invg a)) = mulH (h (mul a b)) (h (invg a))"
+        using hh hab_G hia unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis .
+    qed
+    have hhx: "h x = mulH (h (mul (mul a b) (invg a))) (h (invg b))"
+    proof -
+      have "h (mul (mul (mul a b) (invg a)) (invg b))
+          = mulH (h (mul (mul a b) (invg a))) (h (invg b))"
+        using hh habia hib unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis using hx_eq by (by100 simp)
+    qed
+    have hhinva: "h (invg a) = invgH (h a)" by (rule hom_preserves_inv[OF hG hH_grp hh hab(1)])
+    have hhinvb: "h (invg b) = invgH (h b)" by (rule hom_preserves_inv[OF hG hH_grp hh hab(2)])
+    \<comment> \<open>Combine: h(x) = mulH (mulH (mulH (h a) (h b)) (invgH (h a))) (invgH (h b)).\<close>
+    have hhx_expanded: "h x = mulH (mulH (mulH (h a) (h b)) (invgH (h a))) (invgH (h b))"
+      using hhx hhabia hhab hhinva hhinvb by (by100 simp)
+    \<comment> \<open>Abelian cancellation: h(a)*h(b) = h(b)*h(a), so (h(b)*h(a))*invgH(h(a)) = h(b),
+       then h(b)*invgH(h(b)) = eH.\<close>
+    have hinv_ha: "invgH (h a) \<in> H" by (rule group_inv_closed[OF hH_grp ha])
+    have hinv_hb: "invgH (h b) \<in> H" by (rule group_inv_closed[OF hH_grp hb])
+    have hcomm_ab: "mulH (h a) (h b) = mulH (h b) (h a)" using hH_comm ha hb by (by100 blast)
+    have hstep1: "mulH (mulH (h a) (h b)) (invgH (h a)) = h b"
+    proof -
+      have "mulH (mulH (h a) (h b)) (invgH (h a)) = mulH (mulH (h b) (h a)) (invgH (h a))"
+        using hcomm_ab by (by100 simp)
+      also have "\<dots> = mulH (h b) (mulH (h a) (invgH (h a)))"
+        by (rule group_assoc[OF hH_grp hb ha hinv_ha])
+      also have "mulH (h a) (invgH (h a)) = eH"
+        by (rule group_inv_right[OF hH_grp ha])
+      also have "mulH (h b) eH = h b"
+        by (rule group_id_right[OF hH_grp hb])
+      finally show ?thesis .
+    qed
+    have hhx_hb: "h x = mulH (h b) (invgH (h b))"
+      using hhx_expanded hstep1 by (by100 simp)
+    have hb_inv_eH: "mulH (h b) (invgH (h b)) = eH"
+      by (rule group_inv_right[OF hH_grp hb])
+    have hhx_eH: "h x = eH" using hhx_hb hb_inv_eH by (by100 simp)
+    have hxG: "x \<in> G" using hgens_sub hx_gen by (by100 blast)
+    show "x \<in> ?K" unfolding top1_group_kernel_on_def
+      using hhx_eH hxG by (by100 blast)
+  qed
+  \<comment> \<open>Step 2: ker(h) is a subgroup of G, and gens \<subseteq> G.\<close>
+  have hK_sub: "?K \<subseteq> G"
+    unfolding top1_group_kernel_on_def by (by100 blast)
+  have hK_grp: "top1_is_group_on ?K mul e invg"
+    unfolding top1_is_group_on_def top1_group_kernel_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>e \<in> ker: h(e) = eH.\<close>
+    show "e \<in> {x \<in> G. h x = eH}"
+      using group_e_mem[OF hG] hom_preserves_id[OF hG hH_grp hh] by (by100 blast)
+  next
+    fix x y assume hxK: "x \<in> {x \<in> G. h x = eH}" and hyK: "y \<in> {x \<in> G. h x = eH}"
+    hence hxG: "x \<in> G" and hyG: "y \<in> G" and hhx: "h x = eH" and hhy: "h y = eH"
+      by (by100 blast)+
+    have "h (mul x y) = mulH (h x) (h y)"
+      using hh hxG hyG unfolding top1_group_hom_on_def by (by100 blast)
+    also have "\<dots> = mulH eH eH" using hhx hhy by (by100 simp)
+    also have "\<dots> = eH"
+    proof -
+      have "eH \<in> H" by (rule group_e_mem[OF hH_grp])
+      thus ?thesis by (rule group_id_left[OF hH_grp])
+    qed
+    finally show "mul x y \<in> {x \<in> G. h x = eH}"
+      using group_mul_closed[OF hG hxG hyG] by (by100 blast)
+  next
+    fix x assume hxK: "x \<in> {x \<in> G. h x = eH}"
+    hence hxG: "x \<in> G" and hhx: "h x = eH" by (by100 blast)+
+    have "h (invg x) = invgH (h x)" by (rule hom_preserves_inv[OF hG hH_grp hh hxG])
+    also have "\<dots> = invgH eH" using hhx by (by100 simp)
+    also have "\<dots> = eH"
+    proof -
+      have heH: "eH \<in> H" by (rule group_e_mem[OF hH_grp])
+      have hinveH: "invgH eH \<in> H" by (rule group_inv_closed[OF hH_grp heH])
+      have "mulH (invgH eH) eH = eH" by (rule group_inv_left[OF hH_grp heH])
+      moreover have "mulH (invgH eH) eH = invgH eH" by (rule group_id_right[OF hH_grp hinveH])
+      ultimately show ?thesis by (by100 simp)
+    qed
+    finally show "invg x \<in> {x \<in> G. h x = eH}"
+      using group_inv_closed[OF hG hxG] by (by100 blast)
+  next
+    fix x y z assume "x \<in> {x \<in> G. h x = eH}" "y \<in> {x \<in> G. h x = eH}" "z \<in> {x \<in> G. h x = eH}"
+    thus "mul (mul x y) z = mul x (mul y z)"
+      using group_assoc[OF hG] by (by100 blast)
+  next
+    fix x assume "x \<in> {x \<in> G. h x = eH}"
+    thus "mul e x = x" using group_id_left[OF hG] by (by100 blast)
+  next
+    fix x assume "x \<in> {x \<in> G. h x = eH}"
+    thus "mul x e = x" using group_id_right[OF hG] by (by100 blast)
+  next
+    fix x assume "x \<in> {x \<in> G. h x = eH}"
+    thus "mul (invg x) x = e" using group_inv_left[OF hG] by (by100 blast)
+  next
+    fix x assume "x \<in> {x \<in> G. h x = eH}"
+    thus "mul x (invg x) = e" using group_inv_right[OF hG] by (by100 blast)
+  qed
+  show ?thesis unfolding top1_commutator_subgroup_on_def
+    by (rule subgroup_generated_minimal[OF hgens_ker hK_sub hK_grp])
+qed
+
 text \<open>Quotient group infrastructure: coset membership, normality, and the natural projection.\<close>
 
 lemma coset_self_mem:
