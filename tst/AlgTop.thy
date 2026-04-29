@@ -643,7 +643,13 @@ proof -
       (product_topology_on ?TR2 I_top)"
     sorry \<comment> \<open>R^2 \<times> I normal (metric × compact = normal).\<close>
   have hY_open: "UNIV - {?origin} \<in> ?TR2"
-    sorry \<comment> \<open>Complement of singleton is open in R^2.\<close>
+  proof -
+    have "open (UNIV - {?origin} :: (real\<times>real) set)"
+      by (intro open_Diff open_UNIV finite_imp_closed) (by100 simp)
+    hence "UNIV - {?origin} \<in> (top1_open_sets :: (real\<times>real) set set)"
+      unfolding top1_open_sets_def by (by100 blast)
+    thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+  qed
   \<comment> \<open>Lemma 62.1 gives: G: R^2 \<rightarrow> R^2-{?origin} extending id|_K and nulhomotopic.\<close>
   have hextension: "\<exists>G. top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
       (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G
