@@ -4053,7 +4053,65 @@ proof -
     sorry \<comment> \<open>The hardest part. By induction on ws1.\<close>
   \<comment> \<open>(7) Left/right inverse.\<close>
   have hinverse: "\<forall>ws\<in>G. mul (invg ws) ws = e \<and> mul ws (invg ws) = e"
-    sorry \<comment> \<open>Cancellation: each element meets its inverse.\<close>
+  proof (intro ballI conjI)
+    fix ws assume hws: "ws \<in> G"
+    \<comment> \<open>Left inverse: mul (invg ws) ws = e. By induction on ws.\<close>
+    show "mul (invg ws) ws = e" unfolding mul_def invg_def e_def
+      using hws
+    proof (induction ws)
+      case Nil show ?case by (by100 simp)
+    next
+      case (Cons p ws')
+      obtain \<alpha> g where hp: "p = (\<alpha>, g)" by (cases p)
+      have hpws: "p # ws' \<in> G" using Cons.prems .
+      have hws': "ws' \<in> G" by (rule htail_G[OF hpws])
+      have hIH: "foldr prepend (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws')) ws' = []"
+        using Cons.IH[OF hws'] .
+      have helem: "\<alpha> \<in> J \<and> g \<in> GG \<alpha> \<and> g \<noteq> eGG \<alpha>"
+        using hG_elem[OF hpws, of 0] unfolding hp by (by100 simp)
+      have hgrp: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+        using hgroups helem by (by100 blast)
+      \<comment> \<open>invg (p#ws') = invg ws' @ [(\<alpha>, invgGG \<alpha> g)].\<close>
+      have hinv_eq: "rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (p # ws')) =
+          rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws') @ [(\<alpha>, invgGG \<alpha> g)]"
+        unfolding hp by (by100 simp)
+      \<comment> \<open>foldr prepend (xs @ ys) z = foldr prepend xs (foldr prepend ys z).\<close>
+      have "foldr prepend (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (p # ws'))) (p # ws')
+          = foldr prepend (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws'))
+              (foldr prepend [(\<alpha>, invgGG \<alpha> g)] (p # ws'))"
+        unfolding hinv_eq foldr_append by (by100 simp)
+      \<comment> \<open>foldr prepend [(\<alpha>, invgGG \<alpha> g)] (p#ws') = prepend (\<alpha>, invgGG \<alpha> g) (p#ws').\<close>
+      also have "foldr prepend [(\<alpha>, invgGG \<alpha> g)] (p # ws') = prepend (\<alpha>, invgGG \<alpha> g) (p # ws')"
+        by (by100 simp)
+      \<comment> \<open>prepend (\<alpha>, invgGG \<alpha> g) ((\<alpha>,g)#ws') cancels: invg(g)\<cdot>g = eGG, remove head → ws'.\<close>
+      also have "prepend (\<alpha>, invgGG \<alpha> g) (p # ws') = ws'"
+      proof -
+        have hne: "invgGG \<alpha> g \<noteq> eGG \<alpha>"
+        proof
+          assume "invgGG \<alpha> g = eGG \<alpha>"
+          hence "mulGG \<alpha> (invgGG \<alpha> g) g = mulGG \<alpha> (eGG \<alpha>) g" by (by100 simp)
+          moreover have "mulGG \<alpha> (invgGG \<alpha> g) g = eGG \<alpha>"
+            using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+          moreover have "mulGG \<alpha> (eGG \<alpha>) g = g"
+            using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+          ultimately have "g = eGG \<alpha>" by (by100 simp)
+          thus False using helem by (by100 simp)
+        qed
+        have "mulGG \<alpha> (invgGG \<alpha> g) g = eGG \<alpha>"
+          using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis unfolding hp prepend_def using hne by (by100 simp)
+      qed
+      \<comment> \<open>Now: foldr prepend (invg ws') ws' = [] by IH.\<close>
+      also have "foldr prepend (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws')) ws' = []"
+        by (rule hIH)
+      finally show ?case .
+    qed
+  next
+    fix ws assume hws: "ws \<in> G"
+    \<comment> \<open>Right inverse: mul ws (invg ws) = e. Similar argument with reversed cancellation.\<close>
+    show "mul ws (invg ws) = e"
+      sorry \<comment> \<open>Symmetric: each g \<cdot> invg(g) = eGG from right inverse.\<close>
+  qed
   \<comment> \<open>(8) \<iota>fam properties.\<close>
   have h\<iota>_in_G: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> G"
   proof (intro ballI)
