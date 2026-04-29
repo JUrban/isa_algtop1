@@ -9732,6 +9732,48 @@ proof -
   qed
 qed
 
+text \<open>First isomorphism theorem: a surjective homomorphism j: G \<rightarrow> H with kernel N
+  induces an isomorphism G/N \<cong> H.\<close>
+lemma first_isomorphism_theorem:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hN: "top1_normal_subgroup_on G mul e invg N"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hj_hom: "top1_group_hom_on G mul H mulH j"
+      and hj_surj: "j ` G = H"
+      and hj_ker: "top1_group_kernel_on G eH j = N"
+  shows "top1_groups_isomorphic_on H mulH
+      (top1_quotient_group_carrier_on G mul N) (top1_quotient_group_mul_on mul)"
+proof -
+  \<comment> \<open>The induced map j_bar: G/N \<rightarrow> H sends coset gN to j(g). Well-defined by kernel = N.\<close>
+  let ?Q = "top1_quotient_group_carrier_on G mul N"
+  let ?mulQ = "top1_quotient_group_mul_on mul"
+  let ?j_bar = "\<lambda>C. j (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+  have hNsub: "N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on N mul e invg"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  \<comment> \<open>Representative picker.\<close>
+  have hsome: "\<And>C. C \<in> ?Q \<Longrightarrow>
+      (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G \<and>
+      C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+  proof -
+    fix C assume "C \<in> ?Q"
+    hence "\<exists>g. g \<in> G \<and> C = top1_group_coset_on G mul N g"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    thus "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G \<and>
+      C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+      by (rule someI_ex)
+  qed
+  \<comment> \<open>The induced map j_bar: G/N \<rightarrow> H is a bijective homomorphism.
+     Well-definedness, homomorphism, injectivity, surjectivity follow from
+     normal_coset_eq + kernel property + hom property.\<close>
+  have "top1_group_iso_on ?Q ?mulQ H mulH ?j_bar" sorry
+  hence hiso: "top1_groups_isomorphic_on ?Q ?mulQ H mulH"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  show ?thesis
+    by (rule top1_groups_isomorphic_on_sym[OF hiso
+          quotient_group_is_group[OF hG hN] hH])
+qed
+
 text \<open>General abelianization: for any group G, the quotient G/[G,G] is the abelianization.
   Stated without existentials for ease of application.\<close>
 lemma abelianization_concrete:
