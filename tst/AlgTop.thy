@@ -1955,17 +1955,34 @@ proof -
         sorry \<comment> \<open>Product of compact spaces \<Longrightarrow> compact \<Longrightarrow> Hausdorff \<Longrightarrow> normal.\<close>
       \<comment> \<open>K closed in C0\<union>K.\<close>
       have hK_closedin_CK: "closedin_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K"
-        sorry \<comment> \<open>K closed in R^2 (hK_closedin), restrict to C0\<union>K.\<close>
+      proof -
+        have hCK_sub: "?C0 \<union> ?K \<subseteq> UNIV" by (by100 simp)
+        have "?K = ?K \<inter> (?C0 \<union> ?K)" by (by100 blast)
+        thus ?thesis using iffD2[OF Theorem_17_2[OF hTR2 hCK_sub]] hK_closedin by (by100 blast)
+      qed
       \<comment> \<open>Apply Lemma 62.1 to X = C0\<union>K, A = K, Y = R^2-{origin}.\<close>
       have hTCK: "is_topology_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
         by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
       \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} continuous from C0\<union>K subspace.\<close>
+      have hK_sub_CK: "?K \<subseteq> ?C0 \<union> ?K" by (by100 blast)
+      have hsubspace_trans: "subspace_topology (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K
+          = subspace_topology UNIV ?TR2 ?K"
+        by (rule subspace_topology_trans[OF hK_sub_CK])
+      \<comment> \<open>Extract continuity of inclusion from nulhomotopy.\<close>
+      have hj_cont_UK: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+      proof -
+        from hj_nul obtain c where "top1_homotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
+            (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x) (\<lambda>_. c)"
+          unfolding top1_nulhomotopic_on_def by (by100 blast)
+        thus ?thesis unfolding top1_homotopic_on_def by (by100 blast)
+      qed
       have hj_cont_CK: "top1_continuous_map_on ?K (subspace_topology (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K)
           (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-        sorry \<comment> \<open>From hj_cont + subspace transitivity.\<close>
+        unfolding hsubspace_trans by (rule hj_cont_UK)
       have hj_nul_CK: "top1_nulhomotopic_on ?K (subspace_topology (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K)
           (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-        sorry \<comment> \<open>From hj_nul + subspace transitivity.\<close>
+        unfolding hsubspace_trans by (rule hj_nul)
       obtain k where hk: "top1_continuous_map_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))
           (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) k"
           and hk_ext: "\<forall>x\<in>?K. k x = x"
