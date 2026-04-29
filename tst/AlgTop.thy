@@ -202,6 +202,7 @@ text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A 
 lemma Lemma_62_1_homotopy_extension:
   fixes f :: "'a \<Rightarrow> real \<times> real"
   assumes hTX_top: "is_topology_on X TX"
+      and hX_normal: "top1_normal_on X TX"
       and hXI_normal: "top1_normal_on (X \<times> I_set) (product_topology_on TX I_top)"
       and hA_closed: "closedin_on X TX A"
       and hY_open: "Y \<in> product_topology_on top1_open_sets top1_open_sets"
@@ -345,8 +346,7 @@ proof -
     ultimately show ?thesis using that by (by100 blast)
   qed
   \<comment> \<open>Step 6: Urysohn: \<phi>: X \<rightarrow> [0,1] with \<phi>|A = 0, \<phi>|X-W = 1.\<close>
-  have hX_normal: "top1_normal_on X TX"
-    sorry \<comment> \<open>X\<times>I normal \<Rightarrow> X normal (closed subspace of normal is normal).\<close>
+  note hX_normal_loc = hX_normal
   have hXW_closed: "closedin_on X TX (X - W)"
   proof (rule closedin_intro)
     show "X - W \<subseteq> X" by (by100 blast)
