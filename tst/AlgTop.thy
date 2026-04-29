@@ -415,7 +415,8 @@ proof -
           have "1 - \<phi> x \<le> 1" using h1\<phi> by (by100 linarith)
           thus ?thesis using abs_ge_zero[of "g x"] by (rule mult_right_mono)
         qed
-        ultimately show ?thesis by (by100 linarith)
+        ultimately have "\<bar>(1 - \<phi> x) * g x\<bar> \<le> 1 * \<bar>g x\<bar>" by (by100 linarith)
+        thus ?thesis by (by100 simp)
       qed
       have habs_g: "\<bar>g x\<bar> \<le> 1" using hg_bounds by (by100 linarith)
       show "-1 < (1 - \<phi> x) * g x"
@@ -573,7 +574,7 @@ proof -
       hence hVopen: "open V" using order_topology_on_UNIV_eq_HOL_open by (by100 blast)
       have "\<exists>W. open W \<and> W \<inter> ?OI = h_inv -` V \<inter> ?OI"
         using hhinv_cont hVopen unfolding continuous_on_open_invariant by (by100 blast)
-      then obtain W where hW: "open W" and hfW: "W \<inter> ?OI = h_inv -` V \<inter> ?OI" by (by100 blast)
+      then obtain W where hW: "open W" and hfW: "W \<inter> ?OI = h_inv -` V \<inter> ?OI" by (by100 auto)
       have hW_OT: "W \<in> ?TOR" using hW order_topology_on_UNIV_eq_HOL_open by (by100 blast)
       have "{y \<in> ?OI. h_inv y \<in> V} = ?OI \<inter> W" using hfW by (by100 blast)
       thus "{y \<in> ?OI. h_inv y \<in> V} \<in> subspace_topology UNIV ?TOR ?OI"
@@ -2016,10 +2017,10 @@ proof -
                   unfolding hTR2_eq .
                 \<comment> \<open>Subspace transitivity: subspace(UNIV, TR2, R) = subspace(UNIV-K, T_UK, R).\<close>
                 have hR_sub_UK': "?R \<subseteq> UNIV - ?K" by (rule hR_sub_UK)
-                have "subspace_topology (UNIV - ?K) ?T_UK ?R = subspace_topology UNIV ?TR2 ?R"
+                have hsub_eq_R: "subspace_topology (UNIV - ?K) ?T_UK ?R = subspace_topology UNIV ?TR2 ?R"
                   by (rule subspace_topology_trans[OF hR_sub_UK'])
-                hence hR_conn_UK: "top1_connected_on ?R (subspace_topology (UNIV - ?K) ?T_UK ?R)"
-                  using hR_top1_conn by (by100 simp)
+                have hR_conn_UK: "top1_connected_on ?R (subspace_topology (UNIV - ?K) ?T_UK ?R)"
+                  unfolding hsub_eq_R using hR_top1_conn .
                 \<comment> \<open>R connected, R \<subseteq> UNIV-K, z \<in> R, z \<in> C0.
                    By component_of definition: R \<subseteq> C0 = component_of origin.\<close>
                 have "z \<in> ?C0" by (rule hz_C0)
@@ -2294,10 +2295,56 @@ proof -
         unfolding hmap_def by (by100 simp)
       \<comment> \<open>Step 3: C0 is open (same argument as CK closed, by component maximality).\<close>
       have hC0_open: "open (?C0 :: (real\<times>real) set)"
-        sorry \<comment> \<open>Same technique as CK closed proof: for each x \<in> C0, get connected
-           open rectangle R \<subseteq> UNIV-K via open_prod_elim + connected_Ioo + connected_Times.
-           R connected \<inter> C0 \<noteq> {} \<Longrightarrow> R \<subseteq> C0 (component maximality). Hence C0 open.
-           Proof exists but causes session timeout when combined with other by100 steps.\<close>
+      proof (rule openI)
+        fix x :: "real\<times>real" assume hx_C0: "x \<in> ?C0"
+        hence hx_UK: "x \<in> UNIV - ?K" using hC0_sub_UK by (by100 blast)
+        have hUK_HOL: "open (UNIV - ?K :: (real\<times>real) set)"
+        proof -
+          have "open (- ?K :: (real\<times>real) set)" using open_closed hK_closed by (by100 blast)
+          thus ?thesis unfolding Compl_eq_Diff_UNIV[symmetric] .
+        qed
+        obtain A0 B0 where "open A0" "open B0" "x \<in> A0 \<times> B0" "A0 \<times> B0 \<subseteq> UNIV - ?K"
+          using open_prod_elim[OF hUK_HOL hx_UK] by (by100 blast)
+        obtain e1 where he1: "e1 > 0" and hI1: "\<forall>y. dist y (fst x) < e1 \<longrightarrow> y \<in> A0"
+          using \<open>open A0\<close> \<open>x \<in> A0 \<times> B0\<close> unfolding open_dist by (by100 auto)
+        obtain e2 where he2: "e2 > 0" and hI2: "\<forall>y. dist y (snd x) < e2 \<longrightarrow> y \<in> B0"
+          using \<open>open B0\<close> \<open>x \<in> A0 \<times> B0\<close> unfolding open_dist by (by100 auto)
+        let ?Rx = "{fst x - e1 <..< fst x + e1} \<times> {snd x - e2 <..< snd x + e2}"
+        have hRx_sub: "?Rx \<subseteq> UNIV - ?K"
+        proof (rule subset_trans[of _ "A0 \<times> B0"])
+          show "?Rx \<subseteq> A0 \<times> B0"
+          proof (rule subsetI)
+            fix y assume hy: "y \<in> ?Rx"
+            have "dist (fst y) (fst x) < e1" using hy unfolding dist_real_def by (by100 auto)
+            hence "fst y \<in> A0" using hI1 by (by100 blast)
+            moreover have "dist (snd y) (snd x) < e2" using hy unfolding dist_real_def by (by100 auto)
+            hence "snd y \<in> B0" using hI2 by (by100 blast)
+            ultimately show "y \<in> A0 \<times> B0" by (cases y) (by100 simp)
+          qed
+        qed (rule \<open>A0 \<times> B0 \<subseteq> UNIV - ?K\<close>)
+        have "?Rx \<subseteq> ?C0"
+        proof -
+          have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+            using product_topology_on_open_sets_real2 by (by100 metis)
+          have "connected ?Rx" by (rule connected_Times[OF connected_Ioo connected_Ioo])
+          hence "top1_connected_on ?Rx (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?Rx)"
+            using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+          hence hRx_conn_TR2: "top1_connected_on ?Rx (subspace_topology UNIV ?TR2 ?Rx)" unfolding hTR2_eq .
+          have hsub_eq: "subspace_topology (UNIV - ?K) ?T_UK ?Rx = subspace_topology UNIV ?TR2 ?Rx"
+            by (rule subspace_topology_trans[OF hRx_sub])
+          have hRx_conn: "top1_connected_on ?Rx (subspace_topology (UNIV - ?K) ?T_UK ?Rx)"
+            unfolding hsub_eq using hRx_conn_TR2 .
+          have hx_Rx: "x \<in> ?Rx" using he1 he2 by (cases x) (by100 simp)
+          have "?Rx \<subseteq> top1_component_of_on (UNIV - ?K) ?T_UK x"
+            unfolding top1_component_of_on_def
+            apply (rule Union_upper)
+            using hRx_sub hx_Rx hRx_conn by (by100 blast)
+          thus ?thesis using top1_component_of_on_eq_of_mem[OF hT_UK hx_C0] by (by100 simp)
+        qed
+        moreover have "open ?Rx" by (rule open_Times[OF open_greaterThanLessThan open_greaterThanLessThan])
+        moreover have "x \<in> ?Rx" using he1 he2 by (cases x) (by100 simp)
+        ultimately show "\<exists>T. open T \<and> x \<in> T \<and> T \<subseteq> ?C0" by (by100 blast)
+      qed
       \<comment> \<open>Step 4: h continuous. On C0 (open): hmap = k, continuous.
          On UNIV-C0 (closed since C0 open): hmap = id, continuous.
          Agree on C0 \<inter> (UNIV-C0) = {} (trivially). But actually need on boundary.\<close>
@@ -2309,9 +2356,398 @@ proof -
          - UNIV = (UNIV-K) \<union> K, open \<union> closed = UNIV.
          - Pasting of continuous on open UNIV-K and continuous on closed K gives continuous on UNIV.\<close>
       \<comment> \<open>Step 5: Large ball, radial projection, retraction, Theorem_55_2.\<close>
-      show False
-        sorry \<comment> \<open>h continuous (open/closed pasting as described), large ball B,
-           h|_\<partial>B = id, retraction contradiction with Theorem_55_2.\<close>
+      \<comment> \<open>Step 4: hmap continuous on UNIV.
+         Use continuous_on_If with s = C0\<union>K (closed) and t = UNIV-C0 (closed).
+         On s: f = k (continuous). On t: g = id (continuous).
+         Agreement on s \<inter> \<not>P: x \<in> C0\<union>K, x \<notin> C0, so x \<in> K, k(x) = x.
+         On t \<inter> P: vacuously true (UNIV-C0 \<inter> C0 = {}).\<close>
+      have hk_cont_HOL: "continuous_on (?C0 \<union> ?K) k"
+      proof -
+        \<comment> \<open>Bridge: top1_continuous_map_on to continuous_on via preimage argument.\<close>
+        {
+          fix U :: "(real \<times> real) set" assume hUo: "open U"
+          have hU_os: "U \<in> (top1_open_sets :: (real\<times>real) set set)"
+            using hUo unfolding top1_open_sets_def by (by100 blast)
+          have hU_prod: "U \<in> ?TR2"
+            using hU_os product_topology_on_open_sets_real2 by (by100 metis)
+          \<comment> \<open>V = (UNIV-{origin}) \<inter> U is open in the codomain subspace topology.\<close>
+          have hV_in: "(UNIV - {?origin}) \<inter> U \<in> subspace_topology UNIV ?TR2 (UNIV - {?origin})"
+            unfolding subspace_topology_def using hU_prod by (by100 blast)
+          have hpre: "{x \<in> ?C0 \<union> ?K. k x \<in> (UNIV - {?origin}) \<inter> U}
+              \<in> subspace_topology UNIV ?TR2 (?C0 \<union> ?K)"
+            using hk hV_in unfolding top1_continuous_map_on_def by (by100 blast)
+          \<comment> \<open>Since k maps into UNIV-{origin}, preimage of U = preimage of (UNIV-{0})\<inter>U.\<close>
+          have hk_range: "\<forall>x\<in>?C0 \<union> ?K. k x \<in> UNIV - {?origin}"
+            using hk unfolding top1_continuous_map_on_def by (by100 blast)
+          have hpre_eq: "{x \<in> ?C0 \<union> ?K. k x \<in> U} = {x \<in> ?C0 \<union> ?K. k x \<in> (UNIV - {?origin}) \<inter> U}"
+            using hk_range by (by100 blast)
+          have hpre2: "{x \<in> ?C0 \<union> ?K. k x \<in> U} \<in> subspace_topology UNIV ?TR2 (?C0 \<union> ?K)"
+          proof -
+            have "{x \<in> ?C0 \<union> ?K. k x \<in> (UNIV - {?origin}) \<inter> U}
+                \<in> subspace_topology UNIV ?TR2 (?C0 \<union> ?K)" by (rule hpre)
+            thus ?thesis using hpre_eq by (by100 simp)
+          qed
+          then obtain W where hW: "W \<in> ?TR2" and hW_eq: "{x \<in> ?C0 \<union> ?K. k x \<in> U} = (?C0 \<union> ?K) \<inter> W"
+            unfolding subspace_topology_def by (by100 auto)
+          have hW_os: "W \<in> (top1_open_sets :: (real\<times>real) set set)"
+            using hW product_topology_on_open_sets_real2 by (by100 metis)
+          have hWo: "open W" using hW_os unfolding top1_open_sets_def by (by100 simp)
+          have "\<exists>A. open A \<and> A \<inter> (?C0 \<union> ?K) = k -` U \<inter> (?C0 \<union> ?K)"
+          proof (intro exI[of _ W] conjI)
+            show "open W" by (rule hWo)
+            show "W \<inter> (?C0 \<union> ?K) = k -` U \<inter> (?C0 \<union> ?K)"
+            proof (rule set_eqI)
+              fix x show "x \<in> W \<inter> (?C0 \<union> ?K) \<longleftrightarrow> x \<in> k -` U \<inter> (?C0 \<union> ?K)"
+                using hW_eq by (by100 blast)
+            qed
+          qed
+        } note hstep = this
+        show ?thesis unfolding continuous_on_open_invariant
+        proof (intro allI impI)
+          fix B :: "(real \<times> real) set" assume "open B"
+          thus "\<exists>A. open A \<and> A \<inter> (?C0 \<union> ?K) = k -` B \<inter> (?C0 \<union> ?K)" by (rule hstep)
+        qed
+      qed
+      have hmap_cont_UNIV: "continuous_on UNIV hmap"
+      proof -
+        have hclosed_compl: "closed (UNIV - ?C0 :: (real\<times>real) set)"
+          using hC0_open open_closed by (by100 blast)
+        have huniv: "(?C0 \<union> ?K) \<union> (UNIV - ?C0) = (UNIV :: (real\<times>real) set)"
+          by (by100 blast)
+        have hk_agree: "\<And>x. x \<in> ?C0 \<union> ?K \<Longrightarrow> x \<notin> ?C0 \<Longrightarrow> k x = x"
+          using hk_ext by (by100 blast)
+        have hvac: "\<And>x::real\<times>real. x \<in> UNIV - ?C0 \<Longrightarrow> x \<in> ?C0 \<Longrightarrow> k x = x"
+          by (by100 blast)
+        have "continuous_on ((?C0 \<union> ?K) \<union> (UNIV - ?C0)) (\<lambda>x. if x \<in> ?C0 then k x else x)"
+          by (rule continuous_on_If[OF hCK_closed hclosed_compl hk_cont_HOL continuous_on_id hk_agree hvac])
+        hence "continuous_on UNIV (\<lambda>x. if x \<in> ?C0 then k x else x)"
+          using huniv by (by100 simp)
+        thus ?thesis unfolding hmap_def .
+      qed
+      \<comment> \<open>Step 5: Retraction contradiction via Theorem_55_2.\<close>
+      \<comment> \<open>C0 bounded by R, K bounded by some R'. Choose S for the ball.\<close>
+      obtain R' where hR': "\<forall>x\<in>?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'"
+        using hK_bounded by (by100 blast)
+      define S where "S = 1 + sqrt (max (R\<^sup>2) (max R' 0))"
+      have hS_pos: "S > 0" unfolding S_def
+        using real_sqrt_ge_zero[of "max (R\<^sup>2) (max R' 0)"] by (by100 linarith)
+      have hCK_in_ball: "\<forall>x\<in>?C0 \<union> ?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 < S\<^sup>2"
+      proof (intro ballI)
+        fix x assume "x \<in> ?C0 \<union> ?K"
+        have hx_bnd: "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> max (R\<^sup>2) (max R' 0)"
+        proof (cases "x \<in> ?C0")
+          case True
+          hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2" using hbnd by (by100 blast)
+          thus ?thesis by (by100 linarith)
+        next
+          case False
+          hence "x \<in> ?K" using \<open>x \<in> ?C0 \<union> ?K\<close> by (by100 blast)
+          hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'" using hR' by (by100 blast)
+          moreover have "(0::real) \<le> (fst x)\<^sup>2 + (snd x)\<^sup>2" by (by100 simp)
+          ultimately have "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> max R' 0" by (by100 linarith)
+          thus ?thesis by (by100 linarith)
+        qed
+        let ?M = "max (R\<^sup>2) (max R' 0)"
+        have hM_nonneg: "?M \<ge> 0" using hR by (by100 simp)
+        have "sqrt ?M < S" unfolding S_def by (by100 linarith)
+        hence "?M < S\<^sup>2"
+        proof -
+          have hsqrt_nonneg: "sqrt ?M \<ge> 0" using real_sqrt_ge_zero[of ?M] by (by100 linarith)
+          have hsqrt_lt: "sqrt ?M < S" using \<open>sqrt ?M < S\<close> .
+          have hsqrt_sq: "sqrt ?M * sqrt ?M = ?M"
+            using real_sqrt_mult_self[of ?M] hM_nonneg by (by100 linarith)
+          have "sqrt ?M * sqrt ?M < S * S"
+          proof -
+            have "sqrt ?M \<le> S" using hsqrt_lt by (by100 linarith)
+            hence "sqrt ?M * sqrt ?M \<le> sqrt ?M * S"
+              using hsqrt_nonneg by (rule mult_left_mono)
+            also have "sqrt ?M * S < S * S"
+              using hsqrt_lt hS_pos by (rule mult_strict_right_mono)
+            finally show ?thesis .
+          qed
+          thus "?M < S\<^sup>2" using hsqrt_sq unfolding power2_eq_square by (by100 linarith)
+        qed
+        thus "(fst x)\<^sup>2 + (snd x)\<^sup>2 < S\<^sup>2" using hx_bnd by (by100 linarith)
+      qed
+      have hmap_fix_outside: "\<forall>x. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<ge> S\<^sup>2 \<longrightarrow> hmap x = x"
+      proof (intro allI impI)
+        fix x :: "real \<times> real" assume hx: "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<ge> S\<^sup>2"
+        have "x \<notin> ?C0"
+        proof
+          assume "x \<in> ?C0"
+          hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 < S\<^sup>2" using hCK_in_ball by (by100 blast)
+          with hx show False by (by100 linarith)
+        qed
+        thus "hmap x = x" using hmap_id_outside by (by100 blast)
+      qed
+      \<comment> \<open>Radial projection retracts R^2-{0} onto S^1 (in top1 framework, from Ch9_13).\<close>
+      \<comment> \<open>Construct ret(x) = r(hmap(S*x))/S for x in B^2, where r is radial projection.\<close>
+      \<comment> \<open>Translate so origin maps to (0,0). Define hmap' = T o hmap o T^{-1}.\<close>
+      define hmap' where "hmap' = (\<lambda>x::real\<times>real. (fst (hmap (fst x + fst ?origin, snd x + snd ?origin)) - fst ?origin,
+                                                    snd (hmap (fst x + fst ?origin, snd x + snd ?origin)) - snd ?origin))"
+      have hmap'_avoids: "\<forall>x. hmap' x \<noteq> (0::real, 0::real)"
+      proof (intro allI)
+        fix x :: "real \<times> real"
+        let ?y = "(fst x + fst ?origin, snd x + snd ?origin)"
+        have "hmap ?y \<noteq> ?origin" using hmap_avoids by (by100 blast)
+        hence "fst (hmap ?y) - fst ?origin \<noteq> 0 \<or> snd (hmap ?y) - snd ?origin \<noteq> 0"
+          by (cases "hmap ?y") (by100 auto)
+        thus "hmap' x \<noteq> (0, 0)" unfolding hmap'_def by (by100 auto)
+      qed
+      have hmap'_cont: "continuous_on UNIV hmap'"
+      proof -
+        let ?T = "\<lambda>x::real\<times>real. (fst x + fst ?origin, snd x + snd ?origin)"
+        have hT_cont: "continuous_on UNIV ?T"
+          by (intro continuous_on_Pair continuous_on_add continuous_on_fst continuous_on_snd continuous_on_const continuous_on_id)
+        have hcomp: "continuous_on UNIV (\<lambda>x. hmap (?T x))"
+        proof -
+          have "continuous_on UNIV (hmap \<circ> ?T)"
+          proof (rule continuous_on_compose[OF hT_cont])
+            have "?T ` UNIV = (UNIV :: (real\<times>real) set)"
+            proof (rule set_eqI, rule iffI)
+              fix y :: "real \<times> real" assume "y \<in> ?T ` UNIV" thus "y \<in> UNIV" by (by100 simp)
+            next
+              fix y :: "real \<times> real" assume "y \<in> UNIV"
+              let ?x = "(fst y - fst ?origin, snd y - snd ?origin)"
+              have "?T ?x = y" by (by100 simp)
+              hence "y = ?T ?x" by (by100 simp)
+              thus "y \<in> ?T ` UNIV" by (by100 blast)
+            qed
+            thus "continuous_on (?T ` UNIV) hmap" using hmap_cont_UNIV by (by100 simp)
+          qed
+          thus ?thesis unfolding comp_def .
+        qed
+        have hfst: "continuous_on UNIV (\<lambda>x. fst (hmap (?T x)))"
+          by (rule continuous_on_fst[OF hcomp])
+        have hsnd: "continuous_on UNIV (\<lambda>x. snd (hmap (?T x)))"
+          by (rule continuous_on_snd[OF hcomp])
+        show ?thesis unfolding hmap'_def
+          by (intro continuous_on_Pair continuous_on_diff hfst hsnd continuous_on_const)
+      qed
+      have hmap'_fix: "\<forall>x. x \<notin> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0 \<longrightarrow> hmap' x = x"
+      proof (intro allI impI)
+        fix x :: "real \<times> real"
+        assume hx: "x \<notin> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0"
+        let ?y = "(fst x + fst ?origin, snd x + snd ?origin)"
+        have "?y \<notin> ?C0"
+        proof
+          assume "?y \<in> ?C0"
+          hence "(fst ?y - fst ?origin, snd ?y - snd ?origin) \<in> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0"
+            by (rule imageI)
+          moreover have "(fst ?y - fst ?origin, snd ?y - snd ?origin) = x" by (by100 simp)
+          ultimately show False using hx by (by100 simp)
+        qed
+        hence "hmap ?y = ?y" using hmap_id_outside by (by100 blast)
+        thus "hmap' x = x" unfolding hmap'_def by (by100 simp)
+      qed
+      \<comment> \<open>The translated C0 is bounded (C0 bounded + translation).\<close>
+      \<comment> \<open>Choose S' large enough, use standard retraction from Ch9_13.\<close>
+      \<comment> \<open>T(C0) bounded: if x in C0, then T(x) = x - origin, and |x| \<le> S, |origin| \<le> S,
+         so |T(x)| \<le> |x| + |origin| \<le> 2S. More precisely, work with CK_in_ball.\<close>
+      have horigin_bnd: "(fst ?origin)\<^sup>2 + (snd ?origin)\<^sup>2 < S\<^sup>2"
+        using hCK_in_ball horigin_C0 by (by100 blast)
+      have hTC0_bounded: "\<forall>x\<in>(\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0.
+          (fst x)\<^sup>2 + (snd x)\<^sup>2 < (2*S)\<^sup>2"
+      proof (intro ballI)
+        fix x assume "x \<in> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0"
+        then obtain p where hp: "p \<in> ?C0" and hx_eq: "x = (fst p - fst ?origin, snd p - snd ?origin)"
+          by (by100 blast)
+        have hp_bnd: "(fst p)\<^sup>2 + (snd p)\<^sup>2 < S\<^sup>2"
+          using hCK_in_ball hp by (by100 blast)
+        \<comment> \<open>Key inequality: (a-b)^2 \<le> 2a^2 + 2b^2, since 0 \<le> (a+b)^2 = a^2 + 2ab + b^2.\<close>
+        have hfst: "(fst p - fst ?origin)\<^sup>2 \<le> 2 * (fst p)\<^sup>2 + 2 * (fst ?origin)\<^sup>2"
+        proof -
+          have "0 \<le> (fst p + fst ?origin)\<^sup>2" by (by100 simp)
+          moreover have "(fst p - fst ?origin)\<^sup>2 + (fst p + fst ?origin)\<^sup>2
+              = 2 * (fst p)\<^sup>2 + 2 * (fst ?origin)\<^sup>2"
+            by (by100 algebra)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have hsnd: "(snd p - snd ?origin)\<^sup>2 \<le> 2 * (snd p)\<^sup>2 + 2 * (snd ?origin)\<^sup>2"
+        proof -
+          have "0 \<le> (snd p + snd ?origin)\<^sup>2" by (by100 simp)
+          moreover have "(snd p - snd ?origin)\<^sup>2 + (snd p + snd ?origin)\<^sup>2
+              = 2 * (snd p)\<^sup>2 + 2 * (snd ?origin)\<^sup>2"
+            by (by100 algebra)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "(fst x)\<^sup>2 + (snd x)\<^sup>2 = (fst p - fst ?origin)\<^sup>2 + (snd p - snd ?origin)\<^sup>2"
+          using hx_eq by (by100 simp)
+        also have "\<dots> \<le> (2 * (fst p)\<^sup>2 + 2 * (fst ?origin)\<^sup>2) + (2 * (snd p)\<^sup>2 + 2 * (snd ?origin)\<^sup>2)"
+          using hfst hsnd by (by100 linarith)
+        also have "\<dots> = 2 * ((fst p)\<^sup>2 + (snd p)\<^sup>2) + 2 * ((fst ?origin)\<^sup>2 + (snd ?origin)\<^sup>2)"
+          by (by100 algebra)
+        also have "\<dots> < 2 * S\<^sup>2 + 2 * S\<^sup>2"
+        proof -
+          have "2 * ((fst p)\<^sup>2 + (snd p)\<^sup>2) < 2 * S\<^sup>2"
+            using hp_bnd by (by100 simp)
+          moreover have "2 * ((fst ?origin)\<^sup>2 + (snd ?origin)\<^sup>2) < 2 * S\<^sup>2"
+            using horigin_bnd by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        also have "\<dots> = (2*S)\<^sup>2" by (by100 algebra)
+        finally show "(fst x)\<^sup>2 + (snd x)\<^sup>2 < (2*S)\<^sup>2" .
+      qed
+      \<comment> \<open>For |x| \<ge> 2*S: x not in T(C0), so hmap'(x) = x.\<close>
+      have hmap'_fix_outside: "\<forall>x. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<ge> (2*S)\<^sup>2 \<longrightarrow> hmap' x = x"
+      proof (intro allI impI)
+        fix x :: "real \<times> real" assume hx: "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<ge> (2*S)\<^sup>2"
+        have "x \<notin> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0"
+        proof
+          assume "x \<in> (\<lambda>p. (fst p - fst ?origin, snd p - snd ?origin)) ` ?C0"
+          hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 < (2*S)\<^sup>2" using hTC0_bounded by (by100 blast)
+          with hx show False by (by100 linarith)
+        qed
+        thus "hmap' x = x" using hmap'_fix by (by100 blast)
+      qed
+      \<comment> \<open>Radial projection + scaling retraction.\<close>
+      let ?norm = "\<lambda>x::real\<times>real. sqrt (fst x ^ 2 + snd x ^ 2)"
+      let ?r = "\<lambda>x::real\<times>real. (fst x / ?norm x, snd x / ?norm x)"
+      let ?S' = "2 * S"
+      let ?ret = "\<lambda>x::real\<times>real. ?r (hmap' (?S' * fst x, ?S' * snd x))"
+      have hS'_pos: "?S' > 0" using hS_pos by (by100 linarith)
+      \<comment> \<open>ret maps B^2 into S^1 (r normalizes any nonzero vector to norm 1).\<close>
+      have hret_maps: "\<forall>x\<in>top1_B2. ?ret x \<in> top1_S1"
+      proof (intro ballI)
+        fix x :: "real \<times> real" assume "x \<in> top1_B2"
+        let ?y = "hmap' (?S' * fst x, ?S' * snd x)"
+        define y where "y = hmap' (?S' * fst x, ?S' * snd x)"
+        have hy_ne: "y \<noteq> (0::real, 0::real)" using hmap'_avoids unfolding y_def by (by100 blast)
+        hence hpos: "fst y ^ 2 + snd y ^ 2 > 0"
+          by (cases y) (auto simp: sum_power2_gt_zero_iff)
+        define n where "n = sqrt (fst y ^ 2 + snd y ^ 2)"
+        have hn_pos: "n > 0" unfolding n_def by (rule real_sqrt_gt_zero[OF hpos])
+        have hn_sq: "n ^ 2 = fst y ^ 2 + snd y ^ 2" unfolding n_def
+          using hpos by (by100 simp)
+        have hret_eq: "?ret x = (fst y / n, snd y / n)" unfolding y_def n_def by (by100 simp)
+        have "(fst y / n) ^ 2 + (snd y / n) ^ 2 = 1"
+        proof -
+          have "(fst y / n) ^ 2 + (snd y / n) ^ 2 = fst y ^ 2 / n ^ 2 + snd y ^ 2 / n ^ 2"
+            unfolding power_divide ..
+          also have "\<dots> = (fst y ^ 2 + snd y ^ 2) / n ^ 2"
+            by (rule add_divide_distrib[symmetric])
+          also have "\<dots> = n ^ 2 / n ^ 2" using hn_sq by (by100 simp)
+          also have "\<dots> = 1" using hn_pos by (by100 simp)
+          finally show ?thesis .
+        qed
+        thus "?ret x \<in> top1_S1" unfolding top1_S1_def hret_eq by (by100 simp)
+      qed
+      \<comment> \<open>ret fixes S^1.\<close>
+      have hret_fix: "\<forall>x\<in>top1_S1. ?ret x = x"
+      proof (intro ballI)
+        fix x :: "real \<times> real" assume hx: "x \<in> top1_S1"
+        hence hx_eq: "(fst x)^2 + (snd x)^2 = 1" unfolding top1_S1_def by (by100 simp)
+        \<comment> \<open>S'*x has norm S' since |x|=1.\<close>
+        have "(?S' * fst x)^2 + (?S' * snd x)^2 = ?S'^2"
+        proof -
+          have "(?S' * fst x)^2 = ?S'^2 * (fst x)^2" unfolding power_mult_distrib by (by100 simp)
+          moreover have "(?S' * snd x)^2 = ?S'^2 * (snd x)^2" unfolding power_mult_distrib by (by100 simp)
+          ultimately have "(?S' * fst x)^2 + (?S' * snd x)^2 = ?S'^2 * ((fst x)^2 + (snd x)^2)"
+            using distrib_left[of "?S'^2" "(fst x)^2" "(snd x)^2"] by (by100 linarith)
+          also have "\<dots> = ?S'^2" using hx_eq by (by100 simp)
+          finally show ?thesis .
+        qed
+        hence "(fst (?S' * fst x, ?S' * snd x))\<^sup>2 + (snd (?S' * fst x, ?S' * snd x))\<^sup>2 \<ge> ?S'\<^sup>2"
+          by (by100 simp)
+        hence "hmap' (?S' * fst x, ?S' * snd x) = (?S' * fst x, ?S' * snd x)"
+          using spec[OF hmap'_fix_outside, of "(?S' * fst x, ?S' * snd x)"] by (by100 blast)
+        hence "?ret x = ?r (?S' * fst x, ?S' * snd x)" by (by100 simp)
+        also have "\<dots> = x"
+        proof -
+          have hnorm: "?norm (?S' * fst x, ?S' * snd x) = ?S'"
+          proof -
+            have "(?S' * fst x)^2 + (?S' * snd x)^2 = ?S'^2"
+              using \<open>(?S' * fst x)^2 + (?S' * snd x)^2 = ?S'^2\<close> .
+            hence "sqrt ((?S' * fst x)^2 + (?S' * snd x)^2) = sqrt (?S'^2)" by (by100 simp)
+            also have "\<dots> = \<bar>?S'\<bar>" using real_sqrt_abs by (by100 metis)
+            also have "\<dots> = ?S'" using hS'_pos by (by100 simp)
+            finally show ?thesis by (by100 simp)
+          qed
+          have "?r (?S' * fst x, ?S' * snd x) = (?S' * fst x / ?S', ?S' * snd x / ?S')"
+            using hnorm by (by100 simp)
+          also have "\<dots> = (fst x, snd x)" using hS'_pos by (by100 simp)
+          also have "\<dots> = x" by (by100 simp)
+          finally show ?thesis .
+        qed
+        finally show "?ret x = x" .
+      qed
+      \<comment> \<open>ret continuous on B^2.\<close>
+      have hret_cont: "continuous_on top1_B2 ?ret"
+      proof -
+        \<comment> \<open>Step 1: Scaling continuous.\<close>
+        have hscale_cont: "continuous_on top1_B2 (\<lambda>x::real\<times>real. (?S' * fst x, ?S' * snd x))"
+          by (intro continuous_on_Pair continuous_on_mult continuous_on_const
+              continuous_on_fst continuous_on_snd continuous_on_id)
+        \<comment> \<open>Step 2: hmap' continuous on UNIV, hence on any subset.\<close>
+        have hmap'_cont_sub: "continuous_on ((\<lambda>x. (?S' * fst x, ?S' * snd x)) ` top1_B2) hmap'"
+          using continuous_on_subset[OF hmap'_cont] by (by100 blast)
+        \<comment> \<open>Step 3: Compose scaling + hmap'.\<close>
+        have hcomp: "continuous_on top1_B2 (\<lambda>x. hmap' (?S' * fst x, ?S' * snd x))"
+        proof (rule continuous_on_compose2[OF hmap'_cont_sub hscale_cont])
+          show "(\<lambda>x::real\<times>real. (?S' * fst x, ?S' * snd x)) ` top1_B2
+              \<subseteq> (\<lambda>x. (?S' * fst x, ?S' * snd x)) ` top1_B2" ..
+        qed
+        \<comment> \<open>Step 4: Radial projection continuous on R^2-{0}.\<close>
+        have hr_cont: "continuous_on (UNIV - {(0::real, 0)}) ?r"
+        proof (rule continuous_on_Pair)
+          have hnorm_cont: "continuous_on (UNIV - {(0::real, 0)}) ?norm"
+            by (intro continuous_on_compose2[OF continuous_on_real_sqrt]
+                continuous_on_add continuous_on_power
+                continuous_on_fst continuous_on_snd continuous_on_id) (by100 auto)
+          have hnorm_nz: "\<forall>x\<in>UNIV - {(0::real, 0)}. ?norm x \<noteq> 0"
+          proof (intro ballI)
+            fix x :: "real \<times> real" assume "x \<in> UNIV - {(0, 0)}"
+            hence "x \<noteq> (0, 0)" by (by100 blast)
+            hence "fst x ^ 2 + snd x ^ 2 > 0"
+              by (cases x) (auto simp: sum_power2_gt_zero_iff)
+            hence "?norm x > 0" by (rule real_sqrt_gt_zero)
+            thus "?norm x \<noteq> 0" by (by100 linarith)
+          qed
+          have hfst_cont: "continuous_on (UNIV - {(0::real, 0)}) fst"
+            by (intro continuous_intros)
+          have hsnd_cont: "continuous_on (UNIV - {(0::real, 0)}) snd"
+            by (intro continuous_intros)
+          show "continuous_on (UNIV - {(0, 0)}) (\<lambda>x. fst x / ?norm x)"
+            by (rule continuous_on_divide[OF hfst_cont hnorm_cont hnorm_nz])
+          show "continuous_on (UNIV - {(0, 0)}) (\<lambda>x. snd x / ?norm x)"
+            by (rule continuous_on_divide[OF hsnd_cont hnorm_cont hnorm_nz])
+        qed
+        \<comment> \<open>Step 5: Image of hmap' avoids (0,0).\<close>
+        have himg_sub: "(\<lambda>x. hmap' (?S' * fst x, ?S' * snd x)) ` top1_B2 \<subseteq> UNIV - {(0, 0)}"
+        proof (rule subsetI)
+          fix y assume "y \<in> (\<lambda>x. hmap' (?S' * fst x, ?S' * snd x)) ` top1_B2"
+          then obtain x where "x \<in> top1_B2" and "y = hmap' (?S' * fst x, ?S' * snd x)"
+            by (by100 blast)
+          have "hmap' (?S' * fst x, ?S' * snd x) \<noteq> (0, 0)" using hmap'_avoids by (by100 blast)
+          hence "y \<noteq> (0, 0)" using \<open>y = hmap' (?S' * fst x, ?S' * snd x)\<close> by (by100 simp)
+          thus "y \<in> UNIV - {(0, 0)}" by (by100 simp)
+        qed
+        \<comment> \<open>Step 6: Compose all three.\<close>
+        have hr_cont_sub: "continuous_on ((\<lambda>x. hmap' (?S' * fst x, ?S' * snd x)) ` top1_B2) ?r"
+          using continuous_on_subset[OF hr_cont himg_sub] .
+        show ?thesis by (rule continuous_on_compose2[OF hr_cont_sub hcomp subset_refl])
+      qed
+      \<comment> \<open>Bridge to top1_retract_of_on.\<close>
+      have hretract: "top1_retract_of_on top1_B2 top1_B2_topology top1_S1"
+      proof -
+        have hS1_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have hret_top1: "top1_continuous_map_on top1_B2
+            (subspace_topology UNIV ?TR2 top1_B2)
+            top1_S1 (subspace_topology UNIV ?TR2 top1_S1) ?ret"
+          by (rule top1_continuous_map_on_real2_subspace_general)
+             (use hret_maps in \<open>by100 blast\<close>, rule hret_cont)
+        have hB2_eq: "subspace_topology UNIV ?TR2 top1_B2 = top1_B2_topology"
+          unfolding top1_B2_topology_def ..
+        have hS1_eq: "subspace_topology UNIV ?TR2 top1_S1
+            = subspace_topology top1_B2 top1_B2_topology top1_S1"
+          unfolding top1_B2_topology_def using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+        have "top1_continuous_map_on top1_B2 top1_B2_topology
+            top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) ?ret"
+          using hret_top1 unfolding hB2_eq hS1_eq .
+        thus ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+          using hS1_B2 hret_fix by (by100 blast)
+      qed
+      show False using hretract Theorem_55_2_no_retraction by (by100 blast)
     qed
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
@@ -2335,9 +2771,266 @@ proof -
        In stereographic: nbhd of b = complement of compact in R^2, which C0 intersects.\<close>
     have "\<exists>D. top1_connected_on D (subspace_topology ?S2 ?TS2 D) \<and> D \<subseteq> ?S2 - f ` A
         \<and> a \<in> D \<and> b \<in> D"
-      sorry \<comment> \<open>D = h^{-1}(C0) \<union> {b}. Connected by one-point compactification argument.
-         a = h^{-1}(origin) \<in> h^{-1}(C0). b \<in> D by construction.
-         D \<subseteq> S^2-f(A) since C0 \<subseteq> UNIV-K and h^{-1}(UNIV-K) = S^2-{b}-f(A).\<close>
+    proof (intro exI[of _ "?hinv ` C0 \<union> {b}"] conjI)
+      let ?D = "?hinv ` C0 \<union> {b}"
+      \<comment> \<open>D connected: h^{-1}(C0) connected, b in closure, Theorem_23_4.\<close>
+      show "top1_connected_on ?D (subspace_topology ?S2 ?TS2 ?D)"
+      proof -
+        have hTopS2: "is_topology_on ?S2 ?TS2"
+          using hT unfolding is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>Step 1: h^{-1}(C0) connected.\<close>
+        have hinvC0_conn: "top1_connected_on (?hinv ` C0) (subspace_topology ?S2 ?TS2 (?hinv ` C0))"
+        proof -
+          have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+          let ?T_UK = "subspace_topology UNIV ?TR2 (UNIV - ?K)"
+          have hT_UK: "is_topology_on (UNIV - ?K) ?T_UK"
+            by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+          \<comment> \<open>C0 connected: component of UNIV-K is connected (Theorem 25.1).\<close>
+          obtain x where hxUK: "x \<in> UNIV - ?K" and hC0eq: "C0 = top1_component_of_on (UNIV - ?K) ?T_UK x"
+            using hC0 unfolding top1_components_on_def by (by100 blast)
+          have hC0_conn_UK: "top1_connected_on C0 (subspace_topology (UNIV - ?K) ?T_UK C0)"
+            unfolding hC0eq by (rule top1_component_of_on_connected[OF hT_UK hxUK])
+          have hC0_conn: "top1_connected_on C0 (subspace_topology UNIV ?TR2 C0)"
+            using hC0_conn_UK unfolding subspace_topology_trans[OF hC0_sub] .
+          \<comment> \<open>Restrict hinv to C0, apply Theorem_23_5.\<close>
+          have hinv_C0: "top1_continuous_map_on C0 (subspace_topology UNIV ?TR2 C0)
+              (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?hinv"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hinv_cont]) (by100 simp)
+          have hTC0: "is_topology_on C0 (subspace_topology UNIV ?TR2 C0)"
+            by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+          have hTS2b: "is_topology_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))"
+            by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+          have himg_conn: "top1_connected_on (?hinv ` C0)
+              (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (?hinv ` C0))"
+            by (rule Theorem_23_5[OF hTC0 hTS2b hC0_conn hinv_C0])
+          \<comment> \<open>Subspace transitivity.\<close>
+          have hinvC0_sub_S2b: "?hinv ` C0 \<subseteq> ?S2 - {b}"
+          proof (rule image_subsetI)
+            fix c assume "c \<in> C0"
+            thus "?hinv c \<in> ?S2 - {b}"
+              using hinv_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (?hinv ` C0)
+              = subspace_topology ?S2 ?TS2 (?hinv ` C0)"
+            by (rule subspace_topology_trans[OF hinvC0_sub_S2b])
+          with himg_conn show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Step 2: h^{-1}(C0) \<subseteq> S^2.\<close>
+        have hinvC0_sub: "?hinv ` C0 \<subseteq> ?S2"
+        proof (rule subsetI)
+          fix x assume "x \<in> ?hinv ` C0"
+          then obtain c where "c \<in> C0" and "x = ?hinv c" by (by100 blast)
+          have "?hinv c \<in> ?S2 - {b}"
+            using hinv_cont \<open>c \<in> C0\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          thus "x \<in> ?S2" using \<open>x = ?hinv c\<close> by (by100 blast)
+        qed
+        \<comment> \<open>Step 3: b in closure of h^{-1}(C0) in S^2.\<close>
+        have hb_closure: "b \<in> closure_on ?S2 ?TS2 (?hinv ` C0)"
+        proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 hb hinvC0_sub]])
+          \<comment> \<open>Show: every neighborhood of b intersects hinv(C0).\<close>
+          show "\<forall>U. neighborhood_of b ?S2 ?TS2 U \<longrightarrow> intersects U (?hinv ` C0)"
+          proof (intro allI impI)
+            fix U assume hU: "neighborhood_of b ?S2 ?TS2 U"
+            hence hU_open: "U \<in> ?TS2" and hb_U: "b \<in> U"
+              unfolding neighborhood_of_def by (by100 blast)+
+            \<comment> \<open>S^2 - U is closed in S^2, S^2 compact \<Longrightarrow> S^2 - U compact in S^2.\<close>
+            \<comment> \<open>S^2 - U \<subseteq> S^2 - {b}, h maps it to R^2. Image is compact, hence bounded.\<close>
+            \<comment> \<open>C0 unbounded \<Longrightarrow> C0 not contained in image. Get c \<in> C0 - h(S^2-U).\<close>
+            \<comment> \<open>Then hinv(c) \<in> U \<inter> hinv(C0).\<close>
+            \<comment> \<open>S^2 compact (top1_compact_on).\<close>
+            have hS2_compact: "top1_compact_on ?S2 ?TS2"
+            proof -
+              have "?TS2 = subspace_topology UNIV (top1_open_sets :: (real \<times> real \<times> real) set set) ?S2"
+                unfolding top1_S2_topology_def
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 simp)
+              hence "top1_compact_on ?S2 ?TS2 = compact ?S2"
+                using top1_compact_on_subspace_UNIV_iff_compact[of ?S2] by (by100 simp)
+              thus ?thesis using S2_compact_standard by (by100 simp)
+            qed
+            \<comment> \<open>S^2-U closed in S^2, hence compact.\<close>
+            have hU_sub_S2: "U \<subseteq> ?S2"
+              using hT hU_open unfolding is_topology_on_strict_def
+              by (by100 fast)
+            have hS2U_closed: "closedin_on ?S2 ?TS2 (?S2 - U)"
+            proof -
+              have "?S2 - (?S2 - U) = U" using hU_sub_S2 by (by100 blast)
+              thus ?thesis unfolding closedin_on_def using hU_open by (by100 simp)
+            qed
+            have hS2U_compact: "top1_compact_on (?S2 - U) (subspace_topology ?S2 ?TS2 (?S2 - U))"
+              by (rule Theorem_26_2[OF hS2_compact hS2U_closed])
+            \<comment> \<open>S^2-U \<subseteq> S^2-{b}, h maps it to a compact subset of R^2.\<close>
+            have hS2U_sub: "?S2 - U \<subseteq> ?S2 - {b}" using hb_U by (by100 blast)
+            \<comment> \<open>h(S^2-U) compact in R^2. Compact in R^2 \<Longrightarrow> bounded.\<close>
+            \<comment> \<open>C0 unbounded: \<exists>c \<in> C0 not in h(S^2-U).\<close>
+            have "\<exists>c\<in>C0. c \<notin> h ` (?S2 - U)"
+            proof -
+              \<comment> \<open>Step A: h restricted to S^2-U is continuous.\<close>
+              have hh_cont: "top1_continuous_map_on (?S2 - {b})
+                  (subspace_topology ?S2 ?TS2 (?S2 - {b}))
+                  (UNIV::(real\<times>real) set) ?TR2 h"
+                using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hh_restr: "top1_continuous_map_on (?S2 - U)
+                  (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (?S2 - U))
+                  (UNIV::(real\<times>real) set) ?TR2 h"
+                by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_cont hS2U_sub])
+              \<comment> \<open>Step B: Subspace topology transitivity.\<close>
+              have hsub_eq: "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (?S2 - U)
+                  = subspace_topology ?S2 ?TS2 (?S2 - U)"
+                by (rule subspace_topology_trans[OF hS2U_sub])
+              have hh_restr2: "top1_continuous_map_on (?S2 - U)
+                  (subspace_topology ?S2 ?TS2 (?S2 - U))
+                  (UNIV::(real\<times>real) set) ?TR2 h"
+                using hh_restr unfolding hsub_eq .
+              \<comment> \<open>Step C: h(S^2-U) is compact in R^2 (top1 sense).\<close>
+              have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+                using product_topology_on_is_topology_on[OF
+                  top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+              have hTS2U: "is_topology_on (?S2 - U) (subspace_topology ?S2 ?TS2 (?S2 - U))"
+                by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+              have himg_compact: "top1_compact_on (h ` (?S2 - U))
+                  (subspace_topology UNIV ?TR2 (h ` (?S2 - U)))"
+                by (rule Theorem_26_5[OF hTS2U hTR2 hS2U_compact hh_restr2])
+              \<comment> \<open>Step D: Bridge to HOL compact, then bounded via continuous_attains_sup.\<close>
+              have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+                using product_topology_on_open_sets_real2 by (by100 metis)
+              have himg_HOL_compact: "compact (h ` (?S2 - U))"
+                using himg_compact top1_compact_on_subspace_UNIV_iff_compact[of "h ` (?S2 - U)"]
+                unfolding hTR2_eq by (by100 simp)
+              \<comment> \<open>Step E: h(S^2-U) bounded.\<close>
+              have "\<exists>M. \<forall>y\<in>h ` (?S2 - U). (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> M"
+              proof (cases "h ` (?S2 - U) = {}")
+                case True thus ?thesis by (by100 blast)
+              next
+                case False
+                have "continuous_on (h ` (?S2 - U)) (\<lambda>y::(real\<times>real). (fst y)\<^sup>2 + (snd y)\<^sup>2)"
+                  by (intro continuous_intros)
+                from continuous_attains_sup[OF himg_HOL_compact False this]
+                obtain y0 where "y0 \<in> h ` (?S2 - U)"
+                    and "\<forall>y\<in>h ` (?S2 - U). (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> (fst y0)\<^sup>2 + (snd y0)\<^sup>2"
+                  by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              then obtain M where hM: "\<forall>y\<in>h ` (?S2 - U). (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> M"
+                by (by100 blast)
+              \<comment> \<open>Step F: C0 unbounded \<Longrightarrow> c \<in> C0 outside the bound.\<close>
+              obtain c where "c \<in> C0" and "(fst c)\<^sup>2 + (snd c)\<^sup>2 > max M 0"
+              proof -
+                have "max M 0 \<ge> 0" by (by100 simp)
+                have "sqrt (max M 0) + 1 > 0" using real_sqrt_ge_zero[of "max M 0"] by (by100 linarith)
+                from hunbnd[THEN spec[of _ "sqrt (max M 0) + 1"], THEN mp[OF _ this]]
+                obtain c where "c \<in> C0" and "(sqrt (max M 0) + 1)\<^sup>2 < (fst c)\<^sup>2 + (snd c)\<^sup>2"
+                  by (by100 blast)
+                moreover have "(sqrt (max M 0) + 1)\<^sup>2 > max M 0"
+                proof -
+                  have "sqrt (max M 0) \<ge> 0" using real_sqrt_ge_zero[of "max M 0"] by (by100 linarith)
+                  have "(sqrt (max M 0) + 1)\<^sup>2 = (sqrt (max M 0))\<^sup>2 + 2 * sqrt (max M 0) + 1"
+                    by (by100 algebra)
+                  moreover have "(sqrt (max M 0))\<^sup>2 = max M 0"
+                    using real_sqrt_pow2[of "max M 0"] by (by100 simp)
+                  ultimately have "(sqrt (max M 0) + 1)\<^sup>2 = max M 0 + 2 * sqrt (max M 0) + 1"
+                    by (by100 linarith)
+                  thus ?thesis using \<open>sqrt (max M 0) \<ge> 0\<close> by (by100 linarith)
+                qed
+                ultimately have "(fst c)\<^sup>2 + (snd c)\<^sup>2 > max M 0" by (by100 linarith)
+                thus ?thesis using that \<open>c \<in> C0\<close> by (by100 blast)
+              qed
+              hence "c \<notin> h ` (?S2 - U)"
+                using hM by (by100 force)
+              thus ?thesis using \<open>c \<in> C0\<close> by (by100 blast)
+            qed
+            then obtain c where hcC0: "c \<in> C0" and hc_out: "c \<notin> h ` (?S2 - U)"
+              by (by100 blast)
+            \<comment> \<open>hinv(c) \<in> S^2-{b} and hinv(c) \<notin> S^2-U, so hinv(c) \<in> U.\<close>
+            have "?hinv c \<in> ?S2 - {b}"
+              using hinv_cont hcC0 unfolding top1_continuous_map_on_def by (by100 blast)
+            have "?hinv c \<notin> ?S2 - U"
+            proof
+              assume "?hinv c \<in> ?S2 - U"
+              hence "h (?hinv c) \<in> h ` (?S2 - U)" by (by100 blast)
+              moreover have "h (?hinv c) = c"
+              proof -
+                have hsurj: "h ` (?S2 - {b}) = (UNIV::(real\<times>real) set)"
+                  using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                have "c \<in> h ` (?S2 - {b})" using hsurj by (by100 blast)
+                thus ?thesis by (rule f_inv_into_f)
+              qed
+              ultimately show False using hc_out by (by100 simp)
+            qed
+            hence "?hinv c \<in> U" using \<open>?hinv c \<in> ?S2 - {b}\<close> by (by100 blast)
+            moreover have "?hinv c \<in> ?hinv ` C0" using hcC0 by (by100 blast)
+            ultimately show "intersects U (?hinv ` C0)"
+              unfolding intersects_def by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Step 4: Apply Theorem_23_4: A \<subseteq> B \<subseteq> closure(A), A connected \<Longrightarrow> B connected.\<close>
+        have hD_sub_S2: "?D \<subseteq> ?S2" using hinvC0_sub hb by (by100 blast)
+        have hA_sub_D: "?hinv ` C0 \<subseteq> ?D" by (by100 blast)
+        have hD_sub_cl: "?D \<subseteq> closure_on ?S2 ?TS2 (?hinv ` C0)"
+          using subset_closure_on[of "?hinv ` C0" ?S2 ?TS2] hinvC0_sub hb_closure
+          by (by100 blast)
+        show ?thesis
+          by (rule Theorem_23_4[OF hTopS2 hinvC0_sub hD_sub_S2 hA_sub_D hD_sub_cl hinvC0_conn])
+      qed
+      \<comment> \<open>D \<subseteq> S^2 - f(A).\<close>
+      show "?D \<subseteq> ?S2 - f ` A"
+      proof (rule subsetI)
+        fix x assume "x \<in> ?D"
+        hence "x \<in> ?hinv ` C0 \<or> x = b" by (by100 blast)
+        thus "x \<in> ?S2 - f ` A"
+        proof
+          assume "x \<in> ?hinv ` C0"
+          then obtain c where hc: "c \<in> C0" and hxc: "x = ?hinv c" by (by100 blast)
+          \<comment> \<open>c \<in> C0 \<subseteq> UNIV-K, so h^{-1}(c) \<in> S^2-{b}-f(A).\<close>
+          have "c \<in> UNIV - ?K" using hC0_sub hc by (by100 blast)
+          \<comment> \<open>hinv maps UNIV to S^2-{b}.\<close>
+          have "?hinv c \<in> ?S2 - {b}"
+            using hinv_cont hc unfolding top1_continuous_map_on_def by (by100 blast)
+          moreover have "?hinv c \<notin> f ` A"
+          proof
+            assume "?hinv c \<in> f ` A"
+            then obtain y where "y \<in> A" and "f y = ?hinv c" by (by100 auto)
+            hence "h (f y) = h (?hinv c)" by (by100 simp)
+            \<comment> \<open>h(h^{-1}(c)) = c since c \<in> UNIV = range h.\<close>
+            have hsurj: "h ` (?S2 - {b}) = (UNIV::(real\<times>real) set)"
+              using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            hence "c \<in> h ` (?S2 - {b})" by (by100 blast)
+            hence "h (?hinv c) = c"
+              by (rule f_inv_into_f)
+            hence "h (f y) = c" using \<open>f y = ?hinv c\<close> by (by100 simp)
+            hence "c = (h \<circ> f) y" unfolding comp_def by (by100 simp)
+            hence "c \<in> ?K" using \<open>y \<in> A\<close> by (by100 blast)
+            with \<open>c \<in> UNIV - ?K\<close> show False by (by100 blast)
+          qed
+          ultimately have "?hinv c \<in> ?S2 - f ` A" by (by100 blast)
+          thus "x \<in> ?S2 - f ` A" using hxc by (by100 simp)
+        next
+          assume "x = b"
+          have "f ` A \<subseteq> ?S2 - {a, b}"
+            using hf unfolding top1_continuous_map_on_def by (by100 blast)
+          hence "b \<notin> f ` A" by (by100 blast)
+          thus "x \<in> ?S2 - f ` A" using \<open>x = b\<close> hb by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>a \<in> D: a = h^{-1}(origin) \<in> h^{-1}(C0) since origin \<in> C0.\<close>
+      show "a \<in> ?D"
+      proof -
+        have "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
+        have hinj: "inj_on h (?S2 - {b})"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        have "?hinv ?origin = a"
+          by (rule inv_into_f_f[OF hinj \<open>a \<in> ?S2 - {b}\<close>])
+        moreover have "?origin \<in> C0" by (rule horigin_in)
+        ultimately have "a \<in> ?hinv ` C0"
+          by (by100 force)
+        thus ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>b \<in> D: by construction.\<close>
+      show "b \<in> ?D" by (by100 blast)
+    qed
     then obtain D where hDconn: "top1_connected_on D (subspace_topology ?S2 ?TS2 D)"
         and hD_sub: "D \<subseteq> ?S2 - f ` A" and ha_D: "a \<in> D" and hb_D: "b \<in> D"
       by (by100 blast)
@@ -2402,6 +3095,745 @@ proof
     have "(-S) \<inter> S \<noteq> {}"
       using hx \<open>open (- S)\<close> \<open>x \<in> - S\<close> unfolding frontier_def by (by100 blast)
     thus False by (by100 blast)
+  qed
+qed
+
+text \<open>Nulhomotopy via convex extension: if B is a closed convex set in R^2 containing x,
+  frontier B \<subseteq> B, f continuous on B mapping into Y, then f|_{frontier B} is nulhomotopic in Y.
+  Uses the straight-line homotopy H(y,t) = f((1-t)*y + t*x).\<close>
+
+lemma nulhomotopic_via_convex_R2:
+  fixes B :: "(real \<times> real) set" and Y :: "(real \<times> real) set"
+    and f :: "real \<times> real \<Rightarrow> real \<times> real" and x :: "real \<times> real"
+  assumes hconv: "\<forall>y\<in>B. \<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+      ((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x) \<in> B"
+      and hx: "x \<in> B"
+      and hfr_sub: "frontier B \<subseteq> B"
+      and hcont: "continuous_on B f"
+      and hfB_Y: "\<forall>y\<in>B. f y \<in> Y"
+  shows "top1_nulhomotopic_on (frontier B)
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (frontier B))
+      Y (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) f"
+proof -
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  let ?TfB = "subspace_topology UNIV ?TR2 (frontier B)"
+  let ?TY = "subspace_topology UNIV ?TR2 Y"
+  \<comment> \<open>The homotopy: H(y,t) = f((1-t)*y + t*x).\<close>
+  define H where "H = (\<lambda>(yt :: (real\<times>real) \<times> real).
+    f ((1 - snd yt) *\<^sub>R fst (fst yt) + snd yt *\<^sub>R fst x,
+       (1 - snd yt) *\<^sub>R snd (fst yt) + snd yt *\<^sub>R snd x))"
+  let ?c = "f x"
+  \<comment> \<open>c \<in> Y.\<close>
+  have hc_Y: "?c \<in> Y" using hfB_Y hx by (by100 blast)
+  \<comment> \<open>H maps frontier B \<times> I into Y.\<close>
+  have hH_maps: "\<forall>p \<in> frontier B \<times> I_set. H p \<in> Y"
+  proof (intro ballI)
+    fix p assume hp: "p \<in> frontier B \<times> I_set"
+    then obtain y t where hyt: "p = (y, t)" and hy: "y \<in> frontier B" and ht: "t \<in> I_set"
+      by (by100 blast)
+    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+    let ?z = "((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x)"
+    have "?z \<in> B"
+    proof -
+      have "y \<in> B" using hy hfr_sub by (by100 blast)
+      thus ?thesis using hconv ht01 by (by100 blast)
+    qed
+    hence "f ?z \<in> Y" using hfB_Y by (by100 blast)
+    thus "H p \<in> Y" unfolding H_def hyt by (by100 simp)
+  qed
+  \<comment> \<open>H(y,0) = f(y).\<close>
+  have hH0: "\<forall>y \<in> frontier B. H (y, 0) = f y"
+    unfolding H_def by (by100 simp)
+  \<comment> \<open>H(y,1) = f(x) = c.\<close>
+  have hH1: "\<forall>y \<in> frontier B. H (y, 1) = ?c"
+    unfolding H_def by (by100 simp)
+  \<comment> \<open>H continuous on frontier B \<times> I.\<close>
+  have hH_cont_HOL: "continuous_on (frontier B \<times> I_set) H"
+  proof -
+    have "continuous_on (frontier B \<times> I_set) (\<lambda>yt.
+        ((1 - snd yt) * fst (fst yt) + snd yt * fst x,
+         (1 - snd yt) * snd (fst yt) + snd yt * snd x))"
+      by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+          continuous_on_diff continuous_on_snd continuous_on_fst
+          continuous_on_compose2[OF continuous_on_fst]
+          continuous_on_compose2[OF continuous_on_snd]
+          continuous_on_const continuous_on_id) (by100 auto)+
+    moreover have hlin_in_B: "\<forall>yt \<in> frontier B \<times> I_set.
+        ((1 - snd yt) * fst (fst yt) + snd yt * fst x,
+         (1 - snd yt) * snd (fst yt) + snd yt * snd x) \<in> B"
+    proof (intro ballI)
+      fix yt assume "yt \<in> frontier B \<times> I_set"
+      then obtain y t where "yt = (y, t)" and "y \<in> frontier B" and "t \<in> I_set" by (by100 blast)
+      hence "y \<in> B" using hfr_sub by (by100 blast)
+      moreover have "0 \<le> t \<and> t \<le> 1" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+      ultimately show "((1 - snd yt) * fst (fst yt) + snd yt * fst x,
+         (1 - snd yt) * snd (fst yt) + snd yt * snd x) \<in> B"
+        using hconv \<open>yt = (y, t)\<close> by (by100 simp)
+    qed
+    ultimately have "continuous_on (frontier B \<times> I_set) (\<lambda>yt.
+        f ((1 - snd yt) * fst (fst yt) + snd yt * fst x,
+           (1 - snd yt) * snd (fst yt) + snd yt * snd x))"
+    proof -
+      let ?g = "\<lambda>yt. ((1 - snd yt) * fst (fst yt) + snd yt * fst x,
+         (1 - snd yt) * snd (fst yt) + snd yt * snd x)"
+      assume hg_cont: "continuous_on (frontier B \<times> I_set) ?g"
+      have "?g ` (frontier B \<times> I_set) \<subseteq> B" using hlin_in_B by (by100 blast)
+      hence "continuous_on (?g ` (frontier B \<times> I_set)) f"
+        using continuous_on_subset[OF hcont] by (by100 blast)
+      have hg_img: "?g ` (frontier B \<times> I_set) \<subseteq> B"
+        using hlin_in_B by (by100 force)
+      have "continuous_on (?g ` (frontier B \<times> I_set)) f"
+        using continuous_on_subset[OF hcont hg_img] .
+      have "continuous_on (frontier B \<times> I_set) (f \<circ> ?g)"
+        by (rule continuous_on_compose[OF hg_cont \<open>continuous_on (?g ` (frontier B \<times> I_set)) f\<close>])
+      thus ?thesis unfolding comp_def by (by100 simp)
+    qed
+    thus ?thesis unfolding H_def by (by100 simp)
+  qed
+  \<comment> \<open>Bridge to top1 continuous.\<close>
+  have hH_top1: "top1_continuous_map_on (frontier B \<times> I_set)
+      (product_topology_on ?TfB I_top) Y ?TY H"
+    by (rule R2_subspace_I_continuous_on_transfer[OF hH_cont_HOL])
+       (use hH_maps in \<open>by100 blast\<close>)
+  \<comment> \<open>f continuous on frontier B in top1.\<close>
+  have hf_cont_top1: "top1_continuous_map_on (frontier B) ?TfB Y ?TY f"
+  proof -
+    have hf_cont_fB: "continuous_on (frontier B) f"
+      using continuous_on_subset[OF hcont hfr_sub] .
+    have hf_maps: "\<And>p. p \<in> frontier B \<Longrightarrow> f p \<in> Y"
+      using hfB_Y hfr_sub by (by100 blast)
+    from top1_continuous_map_on_real2_subspace_general[OF hf_maps hf_cont_fB]
+    show ?thesis .
+  qed
+  \<comment> \<open>Constant map continuous.\<close>
+  have hconst_cont: "top1_continuous_map_on (frontier B) ?TfB Y ?TY (\<lambda>_. ?c)"
+  proof -
+    have "continuous_on (frontier B) (\<lambda>_::real\<times>real. ?c)" by (rule continuous_on_const)
+    from top1_continuous_map_on_real2_subspace_general[OF _ this]
+    show ?thesis using hc_Y by (by100 blast)
+  qed
+  \<comment> \<open>Assemble nulhomotopic.\<close>
+  show ?thesis unfolding top1_nulhomotopic_on_def top1_homotopic_on_def
+    using hc_Y hf_cont_top1 hconst_cont hH_top1 hH0 hH1 by (by100 blast)
+qed
+
+text \<open>Borsuk for R^2: if K is a compact set in R^2, f: K \<rightarrow> R^2 is injective continuous,
+  f nulhomotopic in R^2 - {a, b}, and a, b \<in> R^2 - f(K), then a and b are in the same
+  connected component of R^2 - f(K).\<close>
+
+lemma Borsuk_R2:
+  fixes K :: "(real \<times> real) set" and TK :: "(real \<times> real) set set"
+    and f :: "real \<times> real \<Rightarrow> real \<times> real"
+    and a b :: "real \<times> real"
+  assumes hTK: "is_topology_on K TK"
+      and hcomp: "top1_compact_on K TK"
+      and hcont: "top1_continuous_map_on K TK (UNIV::(real\<times>real) set)
+           (product_topology_on top1_open_sets top1_open_sets) f"
+      and hinj: "inj_on f K"
+      and ha: "a \<notin> f ` K" and hb: "b \<notin> f ` K"
+      and hnul: "top1_nulhomotopic_on K TK
+           (UNIV - {a, b}) (subspace_topology UNIV
+             (product_topology_on top1_open_sets top1_open_sets) (UNIV - {a, b})) f"
+  shows "\<exists>C. top1_connected_on C (subspace_topology UNIV
+           (product_topology_on top1_open_sets top1_open_sets) C)
+         \<and> C \<subseteq> UNIV - f ` K \<and> a \<in> C \<and> b \<in> C"
+proof (cases "a = b")
+  case True
+  \<comment> \<open>Trivial: a = b, take any connected set containing a.\<close>
+  let ?C = "top1_component_of_on (UNIV - f ` K)
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - f ` K)) a"
+  have hTR2': "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF
+      top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+  let ?T_compl = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - f ` K)"
+  have hT_compl: "is_topology_on (UNIV - f ` K) ?T_compl"
+    by (rule subspace_topology_is_topology_on[OF hTR2']) (by100 simp)
+  have "a \<in> UNIV - f ` K" using ha by (by100 blast)
+  hence "a \<in> ?C"
+    by (rule top1_component_of_on_self_mem[OF hT_compl])
+  moreover have "top1_connected_on ?C (subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) ?C)"
+  proof -
+    have "top1_connected_on ?C (subspace_topology (UNIV - f ` K) ?T_compl ?C)"
+      by (rule top1_component_of_on_connected[OF hT_compl \<open>a \<in> UNIV - f ` K\<close>])
+    moreover have "?C \<subseteq> UNIV - f ` K"
+      unfolding top1_component_of_on_def by (by100 blast)
+    hence "subspace_topology (UNIV - f ` K) ?T_compl ?C =
+        subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?C"
+      by (rule subspace_topology_trans)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  moreover have "?C \<subseteq> UNIV - f ` K"
+    unfolding top1_component_of_on_def by (by100 blast)
+  ultimately show ?thesis using True by (by100 blast)
+next
+  case False
+  hence hab: "a \<noteq> b" .
+  \<comment> \<open>Get stereographic projection \<sigma>: S^2-{N} \<rightarrow> R^2.\<close>
+  let ?N = "north_pole :: real \<times> real \<times> real"
+  let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real\<times>real) set set"
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {?N})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N}))
+      (UNIV :: (real\<times>real) set) ?TR2 \<sigma>"
+    using S2_minus_point_homeo_R2[OF north_pole_in_S2] by (by100 blast)
+  let ?\<sigma>inv = "inv_into (top1_S2 - {?N}) \<sigma>"
+  \<comment> \<open>Properties of \<sigma>.\<close>
+  have h\<sigma>_bij: "bij_betw \<sigma> (top1_S2 - {?N}) UNIV"
+    using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+  have h\<sigma>_surj: "\<sigma> ` (top1_S2 - {?N}) = UNIV"
+    using h\<sigma>_bij unfolding bij_betw_def by (by100 blast)
+  have h\<sigma>_inj: "inj_on \<sigma> (top1_S2 - {?N})"
+    using h\<sigma>_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>\<sigma>^{-1} maps R^2 to S^2-{N}.\<close>
+  have h\<sigma>inv_mem: "\<And>p :: real\<times>real. ?\<sigma>inv p \<in> top1_S2 - {?N}"
+  proof -
+    fix p :: "real \<times> real"
+    have "p \<in> \<sigma> ` (top1_S2 - {?N})" using h\<sigma>_surj by (by100 blast)
+    thus "?\<sigma>inv p \<in> top1_S2 - {?N}" by (rule inv_into_into)
+  qed
+  have h\<sigma>inv_S2: "\<And>p. ?\<sigma>inv p \<in> top1_S2"
+    using h\<sigma>inv_mem by (by100 blast)
+  have h\<sigma>_\<sigma>inv: "\<And>p :: real\<times>real. \<sigma> (?\<sigma>inv p) = p"
+  proof -
+    fix p :: "real \<times> real"
+    have "p \<in> \<sigma> ` (top1_S2 - {?N})" using h\<sigma>_surj by (by100 blast)
+    thus "\<sigma> (?\<sigma>inv p) = p" by (rule f_inv_into_f)
+  qed
+  have h\<sigma>inv_\<sigma>: "\<And>p. p \<in> top1_S2 - {?N} \<Longrightarrow> ?\<sigma>inv (\<sigma> p) = p"
+    by (rule inv_into_f_f[OF h\<sigma>_inj])
+  \<comment> \<open>Map a, b into S^2.\<close>
+  let ?a_S2 = "?\<sigma>inv a" and ?b_S2 = "?\<sigma>inv b"
+  have ha_S2: "?a_S2 \<in> top1_S2" by (rule h\<sigma>inv_S2)
+  have hb_S2: "?b_S2 \<in> top1_S2" by (rule h\<sigma>inv_S2)
+  have hab_S2: "?a_S2 \<noteq> ?b_S2"
+  proof
+    assume "?a_S2 = ?b_S2"
+    hence "\<sigma> ?a_S2 = \<sigma> ?b_S2" by (by100 simp)
+    hence "a = b" using h\<sigma>_\<sigma>inv by (by100 simp)
+    thus False using hab by (by100 blast)
+  qed
+  \<comment> \<open>Compose: g = \<sigma>^{-1} \<circ> f : K \<rightarrow> S^2-{N}.\<close>
+  let ?g = "?\<sigma>inv \<circ> f"
+  \<comment> \<open>g maps into S^2-{\<sigma>^{-1}(a), \<sigma>^{-1}(b)}.\<close>
+  have hg_maps: "\<forall>x\<in>K. ?g x \<in> top1_S2 - {?a_S2, ?b_S2}"
+  proof (intro ballI)
+    fix y assume hy: "y \<in> K"
+    have hgy: "?g y = ?\<sigma>inv (f y)" by (by100 simp)
+    have "?g y \<in> top1_S2 - {?N}" unfolding hgy by (rule h\<sigma>inv_mem)
+    moreover have "?g y \<noteq> ?a_S2"
+    proof
+      assume "?g y = ?a_S2"
+      hence "\<sigma> (?g y) = \<sigma> ?a_S2" by (by100 simp)
+      hence "f y = a" using h\<sigma>_\<sigma>inv by (by100 simp)
+      hence "a \<in> f ` K" using hy by (by100 blast)
+      thus False using ha by (by100 blast)
+    qed
+    moreover have "?g y \<noteq> ?b_S2"
+    proof
+      assume "?g y = ?b_S2"
+      hence "\<sigma> (?g y) = \<sigma> ?b_S2" by (by100 simp)
+      hence "f y = b" using h\<sigma>_\<sigma>inv by (by100 simp)
+      hence "b \<in> f ` K" using hy by (by100 blast)
+      thus False using hb by (by100 blast)
+    qed
+    ultimately show "?g y \<in> top1_S2 - {?a_S2, ?b_S2}" by (by100 blast)
+  qed
+  \<comment> \<open>g continuous, injective, compact domain, nulhomotopic.\<close>
+  have hg_cont: "top1_continuous_map_on K TK
+      (top1_S2 - {?a_S2, ?b_S2}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?a_S2, ?b_S2})) ?g"
+  proof -
+    \<comment> \<open>\<sigma>^{-1} continuous from R^2 to S^2-{N}.\<close>
+    have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+        (top1_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})) ?\<sigma>inv"
+      using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>Enlarge codomain to S^2.\<close>
+    have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+      using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have h\<sigma>inv_S2: "top1_continuous_map_on UNIV ?TR2 top1_S2 top1_S2_topology ?\<sigma>inv"
+    proof -
+      have "top1_S2 - {?N} \<subseteq> top1_S2" by (by100 blast)
+      from top1_continuous_map_on_codomain_enlarge[OF h\<sigma>inv_cont this subset_refl]
+      have "top1_continuous_map_on UNIV ?TR2 top1_S2
+          (subspace_topology top1_S2 top1_S2_topology top1_S2) ?\<sigma>inv" .
+      moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+      proof (rule set_eqI, rule iffI)
+        fix V assume "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+        then obtain U where "U \<in> top1_S2_topology" and "V = top1_S2 \<inter> U"
+          unfolding subspace_topology_def by (by100 auto)
+        moreover have "U \<subseteq> top1_S2"
+          using \<open>U \<in> top1_S2_topology\<close> top1_S2_is_topology_on_strict
+          unfolding is_topology_on_strict_def by (by100 blast)
+        hence "V = U" using \<open>U \<subseteq> top1_S2\<close> \<open>V = top1_S2 \<inter> U\<close> by (by100 blast)
+        thus "V \<in> top1_S2_topology" using \<open>U \<in> top1_S2_topology\<close> by (by100 simp)
+      next
+        fix V assume "V \<in> top1_S2_topology"
+        have "V \<subseteq> top1_S2"
+          using \<open>V \<in> top1_S2_topology\<close> top1_S2_is_topology_on_strict
+          unfolding is_topology_on_strict_def by (by100 blast)
+        hence "top1_S2 \<inter> V = V" by (by100 blast)
+        thus "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+          unfolding subspace_topology_def using \<open>V \<in> top1_S2_topology\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Compose f then \<sigma>^{-1}: K \<rightarrow> S^2.\<close>
+    have hg_S2: "top1_continuous_map_on K TK top1_S2 top1_S2_topology ?g"
+      by (rule top1_continuous_map_on_comp[OF hcont h\<sigma>inv_S2])
+    \<comment> \<open>Shrink codomain to S^2-{a_S2,b_S2} (g maps K into it).\<close>
+    have hg_img: "?g ` K \<subseteq> top1_S2 - {?a_S2, ?b_S2}"
+    proof (rule image_subsetI)
+      fix x assume "x \<in> K"
+      thus "?g x \<in> top1_S2 - {?a_S2, ?b_S2}" using hg_maps by (by100 blast)
+    qed
+    have hg_sub: "top1_S2 - {?a_S2, ?b_S2} \<subseteq> top1_S2" by (by100 blast)
+    show ?thesis
+      by (rule top1_continuous_map_on_codomain_shrink[OF hg_S2 hg_img hg_sub])
+  qed
+  have hg_inj: "inj_on ?g K"
+  proof (rule comp_inj_on[OF hinj])
+    show "inj_on ?\<sigma>inv (f ` K)"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> f ` K" "y \<in> f ` K" "?\<sigma>inv x = ?\<sigma>inv y"
+      hence "\<sigma> (?\<sigma>inv x) = \<sigma> (?\<sigma>inv y)" by (by100 simp)
+      thus "x = y" using h\<sigma>_\<sigma>inv by (by100 simp)
+    qed
+  qed
+  have hg_nul: "top1_nulhomotopic_on K TK
+      (top1_S2 - {?a_S2, ?b_S2}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?a_S2, ?b_S2})) ?g"
+  proof -
+    let ?Y_R2 = "UNIV - {a, b} :: (real\<times>real) set"
+    let ?TY_R2 = "subspace_topology UNIV ?TR2 ?Y_R2"
+    let ?Y_S2 = "top1_S2 - {?a_S2, ?b_S2}"
+    let ?TY_S2 = "subspace_topology top1_S2 top1_S2_topology ?Y_S2"
+    \<comment> \<open>\<sigma>^{-1} continuous from R^2-{a,b} to S^2-{a_S2,b_S2}.\<close>
+    have h\<sigma>inv_Y: "top1_continuous_map_on ?Y_R2 ?TY_R2 ?Y_S2 ?TY_S2 ?\<sigma>inv"
+    proof -
+      have h\<sigma>inv_cont: "top1_continuous_map_on UNIV ?TR2
+          (top1_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})) ?\<sigma>inv"
+        using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+        using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>Enlarge codomain to S^2.\<close>
+      have h\<sigma>inv_S2: "top1_continuous_map_on UNIV ?TR2 top1_S2 top1_S2_topology ?\<sigma>inv"
+      proof -
+        have "top1_S2 - {?N} \<subseteq> top1_S2" by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF h\<sigma>inv_cont this subset_refl]
+        have "top1_continuous_map_on UNIV ?TR2 top1_S2
+            (subspace_topology top1_S2 top1_S2_topology top1_S2) ?\<sigma>inv" .
+        moreover have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+        proof (rule set_eqI, rule iffI)
+          fix V assume "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+          then obtain U where "U \<in> top1_S2_topology" "V = top1_S2 \<inter> U"
+            unfolding subspace_topology_def by (by100 auto)
+          moreover have "U \<subseteq> top1_S2"
+            using \<open>U \<in> top1_S2_topology\<close> top1_S2_is_topology_on_strict
+            unfolding is_topology_on_strict_def by (by100 blast)
+          hence "V = U" using \<open>V = top1_S2 \<inter> U\<close> by (by100 blast)
+          ultimately show "V \<in> top1_S2_topology" by (by100 simp)
+        next
+          fix V assume "V \<in> top1_S2_topology"
+          have "V \<subseteq> top1_S2" using \<open>V \<in> top1_S2_topology\<close> top1_S2_is_topology_on_strict
+            unfolding is_topology_on_strict_def by (by100 blast)
+          hence "top1_S2 \<inter> V = V" by (by100 blast)
+          thus "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+            unfolding subspace_topology_def using \<open>V \<in> top1_S2_topology\<close> by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Restrict domain to R^2-{a,b}.\<close>
+      have h\<sigma>inv_R2ab: "top1_continuous_map_on ?Y_R2 ?TY_R2 top1_S2 top1_S2_topology ?\<sigma>inv"
+      proof -
+        have "?Y_R2 \<subseteq> (UNIV::(real\<times>real) set)" by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>inv_S2 this]
+        have "top1_continuous_map_on ?Y_R2 (subspace_topology UNIV ?TR2 ?Y_R2)
+            top1_S2 top1_S2_topology ?\<sigma>inv" .
+        thus ?thesis .
+      qed
+      \<comment> \<open>Shrink codomain to S^2-{a_S2,b_S2}.\<close>
+      have himg: "?\<sigma>inv ` ?Y_R2 \<subseteq> ?Y_S2"
+      proof (rule image_subsetI)
+        fix p assume "p \<in> ?Y_R2"
+        hence "p \<noteq> a" "p \<noteq> b" by (by100 blast)+
+        have "?\<sigma>inv p \<in> top1_S2" using h\<sigma>inv_mem[of p] by (by100 blast)
+        moreover have "?\<sigma>inv p \<noteq> ?a_S2"
+        proof
+          assume "?\<sigma>inv p = ?a_S2"
+          hence "\<sigma> (?\<sigma>inv p) = \<sigma> ?a_S2" by (by100 simp)
+          hence "p = a" using h\<sigma>_\<sigma>inv by (by100 simp)
+          with \<open>p \<noteq> a\<close> show False by (by100 blast)
+        qed
+        moreover have "?\<sigma>inv p \<noteq> ?b_S2"
+        proof
+          assume "?\<sigma>inv p = ?b_S2"
+          hence "\<sigma> (?\<sigma>inv p) = \<sigma> ?b_S2" by (by100 simp)
+          hence "p = b" using h\<sigma>_\<sigma>inv by (by100 simp)
+          with \<open>p \<noteq> b\<close> show False by (by100 blast)
+        qed
+        ultimately show "?\<sigma>inv p \<in> ?Y_S2" by (by100 blast)
+      qed
+      show ?thesis
+        by (rule top1_continuous_map_on_codomain_shrink[OF h\<sigma>inv_R2ab himg]) (by100 blast)
+    qed
+    \<comment> \<open>Compose: nulhomotopy F with \<sigma>^{-1} gives nulhomotopy \<sigma>^{-1}\<circ>F.\<close>
+    from hnul obtain c where hc: "c \<in> ?Y_R2"
+        and hhom: "top1_homotopic_on K TK ?Y_R2 ?TY_R2 f (\<lambda>_. c)"
+      unfolding top1_nulhomotopic_on_def by (by100 blast)
+    from hhom obtain F where
+        hf_cont': "top1_continuous_map_on K TK ?Y_R2 ?TY_R2 f"
+        and hconst: "top1_continuous_map_on K TK ?Y_R2 ?TY_R2 (\<lambda>_. c)"
+        and hF: "top1_continuous_map_on (K \<times> I_set) (product_topology_on TK I_top) ?Y_R2 ?TY_R2 F"
+        and hF0: "\<forall>x\<in>K. F (x, 0) = f x"
+        and hF1: "\<forall>x\<in>K. F (x, 1) = c"
+      unfolding top1_homotopic_on_def by (by100 blast)
+    \<comment> \<open>G = \<sigma>^{-1} \<circ> F.\<close>
+    let ?G = "?\<sigma>inv \<circ> F"
+    let ?c' = "?\<sigma>inv c"
+    have hc'_mem: "?c' \<in> ?Y_S2"
+    proof -
+      have "c \<in> ?Y_R2" by (rule hc)
+      thus ?thesis using h\<sigma>inv_Y unfolding top1_continuous_map_on_def by (by100 blast)
+    qed
+    have hG_cont: "top1_continuous_map_on (K \<times> I_set) (product_topology_on TK I_top) ?Y_S2 ?TY_S2 ?G"
+      by (rule top1_continuous_map_on_comp[OF hF h\<sigma>inv_Y])
+    have hG0: "\<forall>x\<in>K. ?G (x, 0) = ?g x" using hF0 by (by100 simp)
+    have hG1: "\<forall>x\<in>K. ?G (x, 1) = ?c'" using hF1 by (by100 simp)
+    have hg_cont_Y: "top1_continuous_map_on K TK ?Y_S2 ?TY_S2 ?g"
+      by (rule top1_continuous_map_on_comp[OF hf_cont' h\<sigma>inv_Y])
+    have hconst_Y: "top1_continuous_map_on K TK ?Y_S2 ?TY_S2 (\<lambda>_. ?c')"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> K" show "?c' \<in> ?Y_S2" by (rule hc'_mem)
+    next
+      fix V assume "V \<in> ?TY_S2"
+      show "{x \<in> K. ?c' \<in> V} \<in> TK"
+      proof -
+        have "K \<in> TK" using hTK unfolding is_topology_on_def by (by100 blast)
+        moreover have "{} \<in> TK" using hTK unfolding is_topology_on_def by (by100 blast)
+        have "{x \<in> K. ?c' \<in> V} = K \<or> {x \<in> K. ?c' \<in> V} = {}"
+          by (by100 blast)
+        thus ?thesis using \<open>K \<in> TK\<close> \<open>{} \<in> TK\<close> by (by100 metis)
+      qed
+    qed
+    show ?thesis unfolding top1_nulhomotopic_on_def top1_homotopic_on_def
+      using hc'_mem hg_cont_Y hconst_Y hG_cont hG0 hG1
+      by (by100 blast)
+  qed
+  \<comment> \<open>Apply Borsuk on S^2.\<close>
+  have hT_S2: "is_topology_on_strict top1_S2 top1_S2_topology"
+    by (rule top1_S2_is_topology_on_strict)
+  from Lemma_62_2_BorsukLemma[OF hT_S2 hcomp ha_S2 hb_S2 hab_S2 hg_cont hg_inj hg_nul]
+  obtain C_S2 where hC_S2: "C_S2 \<in> top1_components_on (top1_S2 - ?g ` K)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?g ` K))"
+    and ha_C: "?a_S2 \<in> C_S2" and hb_C: "?b_S2 \<in> C_S2"
+    by (by100 blast)
+  \<comment> \<open>Transfer back to R^2: \<sigma>(C_S2 \<inter> (S^2-{N})) is connected in R^2 and contains a, b.\<close>
+  let ?C = "\<sigma> ` (C_S2 - {?N})"
+  show ?thesis
+  proof (intro exI[of _ ?C] conjI)
+    show "a \<in> ?C"
+    proof -
+      have "?a_S2 \<in> C_S2 - {?N}" using ha_C h\<sigma>inv_mem by (by100 blast)
+      hence "\<sigma> ?a_S2 \<in> ?C" by (by100 blast)
+      thus ?thesis using h\<sigma>_\<sigma>inv by (by100 simp)
+    qed
+    show "b \<in> ?C"
+    proof -
+      have "?b_S2 \<in> C_S2 - {?N}" using hb_C h\<sigma>inv_mem by (by100 blast)
+      hence "\<sigma> ?b_S2 \<in> ?C" by (by100 blast)
+      thus ?thesis using h\<sigma>_\<sigma>inv by (by100 simp)
+    qed
+    show "?C \<subseteq> UNIV - f ` K"
+    proof (rule subsetI)
+      fix p assume "p \<in> ?C"
+      then obtain q where hq: "q \<in> C_S2 - {?N}" and hp: "p = \<sigma> q" by (by100 blast)
+      have "q \<in> top1_S2 - ?g ` K"
+        using hC_S2 hq unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+      hence "q \<notin> ?g ` K" by (by100 blast)
+      hence "p \<notin> f ` K"
+      proof (rule contrapos_nn)
+        assume "p \<in> f ` K"
+        then obtain y where "y \<in> K" and "f y = p" by (by100 blast)
+        hence "?g y = ?\<sigma>inv p" by (by100 simp)
+        moreover have "?\<sigma>inv p = ?\<sigma>inv (\<sigma> q)" using hp by (by100 simp)
+        moreover have "q \<in> top1_S2 - {?N}"
+          using hC_S2 hq unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+        hence "?\<sigma>inv (\<sigma> q) = q" by (rule h\<sigma>inv_\<sigma>)
+        ultimately have "?g y = q" by (by100 simp)
+        thus "q \<in> ?g ` K" using \<open>y \<in> K\<close> by (by100 blast)
+      qed
+      thus "p \<in> UNIV - f ` K" by (by100 blast)
+    qed
+    show "top1_connected_on ?C (subspace_topology UNIV ?TR2 ?C)"
+    proof -
+      \<comment> \<open>C_S2 connected in S^2.\<close>
+      have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+        using hT_S2 unfolding is_topology_on_strict_def by (by100 blast)
+      let ?T_compl_S2 = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?g ` K)"
+      have hT_compl_S2: "is_topology_on (top1_S2 - ?g ` K) ?T_compl_S2"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      obtain z where hz: "z \<in> top1_S2 - ?g ` K" and hCeq: "C_S2 = top1_component_of_on (top1_S2 - ?g ` K) ?T_compl_S2 z"
+        using hC_S2 unfolding top1_components_on_def by (by100 blast)
+      have hC_conn_S2: "top1_connected_on C_S2 (subspace_topology (top1_S2 - ?g ` K) ?T_compl_S2 C_S2)"
+        unfolding hCeq by (rule top1_component_of_on_connected[OF hT_compl_S2 hz])
+      have hC_sub_S2: "C_S2 \<subseteq> top1_S2 - ?g ` K"
+        using hC_S2 unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+      hence hC_sub_S2': "C_S2 \<subseteq> top1_S2" by (by100 blast)
+      \<comment> \<open>C_S2-{N} connected.\<close>
+      have hC_minus_N_conn: "top1_connected_on (C_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N}))"
+      proof (cases "?N \<in> C_S2")
+        case False
+        hence "C_S2 - {?N} = C_S2" by (by100 blast)
+        hence "subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N})
+            = subspace_topology top1_S2 top1_S2_topology C_S2" by (by100 simp)
+        moreover have "top1_connected_on C_S2 (subspace_topology top1_S2 top1_S2_topology C_S2)"
+        proof -
+          have "subspace_topology (top1_S2 - ?g ` K) ?T_compl_S2 C_S2
+              = subspace_topology top1_S2 top1_S2_topology C_S2"
+            by (rule subspace_topology_trans[OF hC_sub_S2])
+          with hC_conn_S2 show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis using \<open>C_S2 - {?N} = C_S2\<close> by (by100 simp)
+      next
+        case True
+        \<comment> \<open>N \<in> C_S2, and C_S2 is open in S^2-g(K) (component of open set).
+           C_S2 connected, open in S^2-g(K). Need: C_S2 open in S^2 if S^2-g(K) open in S^2.\<close>
+        \<comment> \<open>Apply connected_open_delete_S2: C_S2 open in S^2, connected, N \<in> C_S2.\<close>
+        \<comment> \<open>Need: C_S2 open in S^2, which requires g(K) closed (compact image in Hausdorff).\<close>
+        \<comment> \<open>Step 1: g(K) compact in S^2 (image of compact under continuous).\<close>
+        have hgK_compact: "top1_compact_on (?g ` K)
+            (subspace_topology top1_S2 top1_S2_topology (?g ` K))"
+        proof -
+          have "top1_compact_on (?g ` K) (subspace_topology (top1_S2 - {?a_S2, ?b_S2})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?a_S2, ?b_S2})) (?g ` K))"
+            by (rule Theorem_26_5[OF hTK
+                  subspace_topology_is_topology_on[OF hTopS2, of "top1_S2 - {?a_S2, ?b_S2}"]
+                  hcomp hg_cont]) (by100 blast)
+          moreover have "?g ` K \<subseteq> top1_S2 - {?a_S2, ?b_S2}"
+            using hg_maps by (by100 force)
+          hence "subspace_topology (top1_S2 - {?a_S2, ?b_S2})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?a_S2, ?b_S2})) (?g ` K)
+              = subspace_topology top1_S2 top1_S2_topology (?g ` K)"
+            by (rule subspace_topology_trans)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Step 2: g(K) closed in S^2 (compact in Hausdorff).\<close>
+        have hgK_closed: "closedin_on top1_S2 top1_S2_topology (?g ` K)"
+        proof (rule compact_in_strict_hausdorff_closedin_on)
+          show "is_hausdorff_on top1_S2 top1_S2_topology"
+            using top1_S2_is_hausdorff by (by100 blast)
+          show "is_topology_on_strict top1_S2 top1_S2_topology" by (rule hT_S2)
+          show "?g ` K \<subseteq> top1_S2" using hg_maps by (by100 force)
+          show "top1_compact_on (?g ` K) (subspace_topology top1_S2 top1_S2_topology (?g ` K))"
+            by (rule hgK_compact)
+        qed
+        \<comment> \<open>Step 3: S^2-g(K) open in S^2.\<close>
+        have hS2gK_open: "top1_S2 - ?g ` K \<in> top1_S2_topology"
+          using hgK_closed unfolding closedin_on_def by (by100 blast)
+        \<comment> \<open>Step 4: C_S2 open in S^2 (component of open set in locally connected space).\<close>
+        have hC_open_S2: "C_S2 \<in> top1_S2_topology"
+        proof -
+          have hS2_lpc: "top1_locally_path_connected_on top1_S2 top1_S2_topology"
+            by (rule S2_locally_path_connected)
+          \<comment> \<open>S^2 locally connected (from locally path connected).\<close>
+          have hS2_lc: "top1_locally_connected_on top1_S2 top1_S2_topology"
+          proof -
+            have "\<forall>x\<in>top1_S2. top1_locally_connected_at top1_S2 top1_S2_topology x"
+            proof (intro ballI)
+              fix x assume hx: "x \<in> top1_S2"
+              have "top1_locally_path_connected_at top1_S2 top1_S2_topology x"
+                using hS2_lpc hx unfolding top1_locally_path_connected_on_def by (by100 blast)
+              show "top1_locally_connected_at top1_S2 top1_S2_topology x"
+                unfolding top1_locally_connected_at_def
+              proof (intro allI impI)
+                fix U assume hU: "neighborhood_of x top1_S2 top1_S2_topology U \<and> U \<subseteq> top1_S2"
+                have "\<exists>V. neighborhood_of x top1_S2 top1_S2_topology V \<and> V \<subseteq> U \<and> V \<subseteq> top1_S2
+                    \<and> top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+                  using \<open>top1_locally_path_connected_at top1_S2 top1_S2_topology x\<close> hU
+                  unfolding top1_locally_path_connected_at_def by (by100 blast)
+                then obtain V where hV: "neighborhood_of x top1_S2 top1_S2_topology V"
+                    and hVU: "V \<subseteq> U" and hVS: "V \<subseteq> top1_S2"
+                    and hVpc: "top1_path_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+                  by (by100 blast)
+                have "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+                  using hVpc path_connected_imp_connected by (by100 blast)
+                thus "\<exists>V. neighborhood_of x top1_S2 top1_S2_topology V \<and> V \<subseteq> U \<and> V \<subseteq> top1_S2
+                    \<and> top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+                  using hV hVU hVS by (by100 blast)
+              qed
+            qed
+            thus ?thesis unfolding top1_locally_connected_on_def
+              using hTopS2 by (by100 blast)
+          qed
+          \<comment> \<open>Apply Theorem_25_3: components of open sets are open in lc space.\<close>
+          have "top1_S2 - ?g ` K \<in> top1_S2_topology" by (rule hS2gK_open)
+          moreover have "top1_S2 - ?g ` K \<subseteq> top1_S2" by (by100 blast)
+          moreover have "C_S2 \<in> top1_components_on (top1_S2 - ?g ` K)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?g ` K))"
+            by (rule hC_S2)
+          ultimately show ?thesis
+            using iffD1[OF Theorem_25_3[OF hTopS2]] hS2_lc by (by100 blast)
+        qed
+        \<comment> \<open>Step 5: C_S2 connected in S^2.\<close>
+        have hC_conn_S2_top: "top1_connected_on C_S2 (subspace_topology top1_S2 top1_S2_topology C_S2)"
+        proof -
+          have "subspace_topology (top1_S2 - ?g ` K) ?T_compl_S2 C_S2
+              = subspace_topology top1_S2 top1_S2_topology C_S2"
+            by (rule subspace_topology_trans[OF hC_sub_S2])
+          with hC_conn_S2 show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Step 6: C_S2 - {N} connected. Two cases: K={} or K\<noteq>{}.\<close>
+        have "connected (C_S2 - {?N})"
+        proof (cases "K = {}")
+          case True
+          \<comment> \<open>K={} \<Longrightarrow> g(K)={} \<Longrightarrow> S^2-g(K) = S^2. S^2 connected \<Longrightarrow> C_S2 = S^2 (only component).
+             S^2-{N} connected (homeomorphic to R^2 via \<sigma>).\<close>
+          have "connected (top1_S2 - {?N})"
+          proof -
+            have "top1_simply_connected_on (top1_S2 - {?N})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N}))"
+              by (rule S2_minus_point_simply_connected[OF north_pole_in_S2])
+            hence "top1_path_connected_on (top1_S2 - {?N})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N}))"
+              unfolding top1_simply_connected_on_def by (by100 blast)
+            hence "top1_connected_on (top1_S2 - {?N})
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N}))"
+              using path_connected_imp_connected by (by100 blast)
+            hence "top1_connected_on (top1_S2 - {?N})
+                (subspace_topology (UNIV::(real\<times>real\<times>real) set) top1_open_sets (top1_S2 - {?N}))"
+            proof -
+              have "top1_S2 - {?N} \<subseteq> top1_S2" by (by100 blast)
+              hence "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})
+                  = subspace_topology UNIV
+                    (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets))
+                    (top1_S2 - {?N})"
+                unfolding top1_S2_topology_def by (rule subspace_topology_trans)
+              also have "\<dots> = subspace_topology (UNIV::(real\<times>real\<times>real) set) top1_open_sets (top1_S2 - {?N})"
+                using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                      product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 simp)
+              finally have "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})
+                  = subspace_topology UNIV top1_open_sets (top1_S2 - {?N})" .
+              with \<open>top1_connected_on (top1_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N}))\<close>
+              show ?thesis by (by100 simp)
+            qed
+            thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+          qed
+          moreover have "C_S2 = top1_S2"
+          proof -
+            have "?g ` K = {}" using True by (by100 blast)
+            hence "top1_S2 - ?g ` K = top1_S2" by (by100 blast)
+            hence hS2_eq: "top1_S2 - ?g ` K = top1_S2" by (by100 blast)
+            \<comment> \<open>T_compl_S2 restricted to S^2 = TS2.\<close>
+            have hT_eq: "?T_compl_S2 = top1_S2_topology"
+            proof -
+              have "?T_compl_S2 = subspace_topology top1_S2 top1_S2_topology top1_S2"
+                using hS2_eq by (by100 simp)
+              also have "\<dots> = top1_S2_topology"
+              proof (rule set_eqI, rule iffI)
+                fix V assume "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+                then obtain U where "U \<in> top1_S2_topology" "V = top1_S2 \<inter> U"
+                  unfolding subspace_topology_def by (by100 auto)
+                moreover have "U \<subseteq> top1_S2" using \<open>U \<in> top1_S2_topology\<close>
+                  top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+                hence "V = U" using \<open>U \<subseteq> top1_S2\<close> \<open>V = top1_S2 \<inter> U\<close> by (by100 blast)
+                thus "V \<in> top1_S2_topology" using \<open>U \<in> top1_S2_topology\<close> by (by100 simp)
+              next
+                fix V assume "V \<in> top1_S2_topology"
+                have "V \<subseteq> top1_S2" using \<open>V \<in> top1_S2_topology\<close>
+                  top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+                thus "V \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+                  unfolding subspace_topology_def using \<open>V \<in> top1_S2_topology\<close> by (by100 blast)
+              qed
+              finally show ?thesis .
+            qed
+            \<comment> \<open>S^2 connected, z \<in> S^2 \<Longrightarrow> component_of z = S^2.\<close>
+            have "top1_component_of_on top1_S2 top1_S2_topology z = top1_S2"
+            proof -
+              have hS2_conn: "top1_connected_on top1_S2 top1_S2_topology"
+                by (rule S2_connected)
+              have hz_S2: "z \<in> top1_S2" using hz hS2_eq by (by100 blast)
+              have "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+                using hT_eq hS2_eq by (by100 simp)
+              hence hS2_conn_sub: "top1_connected_on top1_S2 (subspace_topology top1_S2 top1_S2_topology top1_S2)"
+                using hS2_conn by (by100 simp)
+              have "top1_S2 \<subseteq> top1_component_of_on top1_S2 top1_S2_topology z"
+                using top1_connected_subspace_subset_component_of[OF subset_refl hz_S2 hS2_conn_sub] .
+              moreover have "top1_component_of_on top1_S2 top1_S2_topology z \<subseteq> top1_S2"
+                unfolding top1_component_of_on_def by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            thus ?thesis using hCeq hS2_eq hT_eq by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        next
+          case False
+          \<comment> \<open>K\<noteq>{} \<Longrightarrow> g(K)\<noteq>{} \<Longrightarrow> \<exists>c \<in> S^2 not in C_S2.\<close>
+          then obtain y where "y \<in> K" by (by100 blast)
+          have "?g y \<in> top1_S2 - {?a_S2, ?b_S2}" using hg_maps \<open>y \<in> K\<close> by (by100 blast)
+          hence "?g y \<in> top1_S2" and "?g y \<in> ?g ` K" using \<open>y \<in> K\<close> by (by100 blast)+
+          hence "?g y \<notin> C_S2" using hC_sub_S2 by (by100 blast)
+          hence "\<exists>c. c \<in> top1_S2 \<and> c \<notin> C_S2" using \<open>?g y \<in> top1_S2\<close> by (by100 blast)
+          thus ?thesis
+            by (rule connected_open_delete_S2[OF hC_open_S2 hC_conn_S2_top True])
+        qed
+        \<comment> \<open>Bridge HOL connected to top1_connected_on.\<close>
+        hence "top1_connected_on (C_S2 - {?N})
+            (subspace_topology (UNIV::(real\<times>real\<times>real) set) top1_open_sets (C_S2 - {?N}))"
+          using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+        \<comment> \<open>Bridge: subspace UNIV top1_open_sets = subspace S^2 TS2 for subsets of S^2.\<close>
+        moreover have "subspace_topology (UNIV::(real\<times>real\<times>real) set) top1_open_sets (C_S2 - {?N})
+            = subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N})"
+        proof -
+          have hprod_eq: "(top1_open_sets :: (real\<times>real\<times>real) set set) =
+              product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets)"
+            using product_topology_on_open_sets[where ?'a=real and ?'b="real \<times> real"]
+                  product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 simp)
+          have hTS2_eq: "top1_S2_topology = subspace_topology UNIV
+              (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets)) top1_S2"
+            unfolding top1_S2_topology_def by (by100 simp)
+          have "C_S2 - {?N} \<subseteq> top1_S2" using hC_sub_S2' by (by100 blast)
+          have "subspace_topology top1_S2
+              (subspace_topology UNIV (product_topology_on top1_open_sets
+                  (product_topology_on top1_open_sets top1_open_sets)) top1_S2) (C_S2 - {?N})
+              = subspace_topology UNIV (product_topology_on top1_open_sets
+                  (product_topology_on top1_open_sets top1_open_sets)) (C_S2 - {?N})"
+            by (rule subspace_topology_trans[OF \<open>C_S2 - {?N} \<subseteq> top1_S2\<close>])
+          hence "subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N})
+              = subspace_topology UNIV (product_topology_on top1_open_sets
+                  (product_topology_on top1_open_sets top1_open_sets)) (C_S2 - {?N})"
+            unfolding hTS2_eq .
+          thus ?thesis using hprod_eq by (by100 simp)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>C_S2-{N} \<subseteq> S^2-{N}. \<sigma> continuous from S^2-{N} to R^2.\<close>
+      have hC_sub_S2N: "C_S2 - {?N} \<subseteq> top1_S2 - {?N}" using hC_sub_S2' by (by100 blast)
+      have h\<sigma>_cont_S2: "top1_continuous_map_on (top1_S2 - {?N})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})) UNIV ?TR2 \<sigma>"
+        using h\<sigma> unfolding top1_homeomorphism_on_def by (by100 blast)
+      have h\<sigma>_cont_C: "top1_continuous_map_on (C_S2 - {?N})
+          (subspace_topology (top1_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})) (C_S2 - {?N}))
+          UNIV ?TR2 \<sigma>"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF h\<sigma>_cont_S2 hC_sub_S2N])
+      have hsub_trans: "subspace_topology (top1_S2 - {?N})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {?N})) (C_S2 - {?N})
+          = subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N})"
+        by (rule subspace_topology_trans[OF hC_sub_S2N])
+      have h\<sigma>_cont_C': "top1_continuous_map_on (C_S2 - {?N})
+          (subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N})) UNIV ?TR2 \<sigma>"
+        using h\<sigma>_cont_C unfolding hsub_trans .
+      have hTC_N: "is_topology_on (C_S2 - {?N}) (subspace_topology top1_S2 top1_S2_topology (C_S2 - {?N}))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2' in \<open>by100 blast\<close>)
+      \<comment> \<open>Image connected by Theorem_23_5.\<close>
+      have "top1_connected_on (\<sigma> ` (C_S2 - {?N}))
+          (subspace_topology UNIV ?TR2 (\<sigma> ` (C_S2 - {?N})))"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF
+            top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+        thus ?thesis by (rule Theorem_23_5[OF hTC_N _ hC_minus_N_conn h\<sigma>_cont_C'])
+      qed
+      thus ?thesis .
+    qed
   qed
 qed
 
@@ -2865,6 +4297,163 @@ proof -
         using Theorem_63_4_JordanCurve[OF hfBd_SCC] by metis
       thus ?thesis using that by simp
     qed
+    \<comment> \<open>Common fact: B compact and f(B) bounded, W2 has escape points.\<close>
+    have hBcompact: "compact B"
+    proof -
+      \<comment> \<open>B \<subseteq> closed square of side 2r centered at x.\<close>
+      let ?sq = "{fst x - r .. fst x + r} \<times> {snd x - r .. snd x + r}"
+      have hB_sq: "B \<subseteq> ?sq"
+      proof (rule subsetI)
+        fix y assume hy: "y \<in> B"
+        hence hle: "(fst y - fst x)^2 + (snd y - snd x)^2 \<le> r^2" unfolding B_def by (by100 auto)
+        have hfst: "(fst y - fst x)^2 \<le> r^2"
+        proof -
+          have "(snd y - snd x)^2 \<ge> 0" by (by100 simp)
+          thus ?thesis using hle by (by100 linarith)
+        qed
+        have hsnd: "(snd y - snd x)^2 \<le> r^2"
+        proof -
+          have "(fst y - fst x)^2 \<ge> 0" by (by100 simp)
+          thus ?thesis using hle by (by100 linarith)
+        qed
+        have hr_nn: "r \<ge> 0" using hr by (by100 linarith)
+        have "fst y - fst x \<le> r" using power2_le_imp_le[OF hfst hr_nn] .
+        moreover have "fst x - fst y \<le> r"
+        proof -
+          have "(fst x - fst y)^2 = (fst y - fst x)^2" by (by100 algebra)
+          hence "(fst x - fst y)^2 \<le> r^2" using hfst by (by100 linarith)
+          thus ?thesis using power2_le_imp_le[OF _ hr_nn] by (by100 blast)
+        qed
+        moreover have "snd y - snd x \<le> r" using power2_le_imp_le[OF hsnd hr_nn] .
+        moreover have "snd x - snd y \<le> r"
+        proof -
+          have "(snd x - snd y)^2 = (snd y - snd x)^2" by (by100 algebra)
+          hence "(snd x - snd y)^2 \<le> r^2" using hsnd by (by100 linarith)
+          thus ?thesis using power2_le_imp_le[OF _ hr_nn] by (by100 blast)
+        qed
+        ultimately show "y \<in> ?sq" by (cases y) (by100 auto)
+      qed
+      \<comment> \<open>Square compact via top1 bridge.\<close>
+      have hsq_compact: "compact ?sq"
+      proof -
+        have h1: "compact ({fst x - r .. fst x + r} :: real set)" by (rule compact_Icc)
+        have h1': "top1_compact_on {fst x - r .. fst x + r}
+            (subspace_topology (UNIV::real set) top1_open_sets {fst x - r .. fst x + r})"
+          using top1_compact_on_subspace_UNIV_iff_compact h1 by (by100 blast)
+        have h2: "compact ({snd x - r .. snd x + r} :: real set)" by (rule compact_Icc)
+        have h2': "top1_compact_on {snd x - r .. snd x + r}
+            (subspace_topology (UNIV::real set) top1_open_sets {snd x - r .. snd x + r})"
+          using top1_compact_on_subspace_UNIV_iff_compact h2 by (by100 blast)
+        have hprod: "top1_compact_on ?sq
+            (product_topology_on (subspace_topology UNIV top1_open_sets {fst x - r .. fst x + r})
+                                 (subspace_topology UNIV top1_open_sets {snd x - r .. snd x + r}))"
+          by (rule Theorem_26_7[OF h1' h2'])
+        have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+          using product_topology_on_open_sets_real2 by (by100 metis)
+        have heq: "product_topology_on
+            (subspace_topology UNIV top1_open_sets {fst x - r .. fst x + r})
+            (subspace_topology UNIV top1_open_sets {snd x - r .. snd x + r})
+          = subspace_topology (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) ?sq"
+          using Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+        have "top1_compact_on ?sq (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?sq)"
+          using hprod unfolding heq hTR2_eq by (by100 simp)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+      qed
+      show ?thesis by (rule compact_Int_closed[OF hsq_compact hBclosed, simplified Int_absorb1[OF hB_sq]])
+    qed
+    have hfB_compact: "compact (f ` B)"
+    proof -
+      have "continuous_on B f"
+        using continuous_on_subset[OF top1_continuous_map_on_to_continuous_on_R2[OF assms(2)] hBsub] .
+      thus ?thesis by (rule compact_continuous_image[OF _ hBcompact])
+    qed
+    have hW2_escape: "\<forall>a. a \<notin> f ` B \<longrightarrow> (\<exists>b1. b1 \<in> W2 \<and> b1 \<notin> f ` B)"
+    proof (intro allI impI)
+      fix a assume "a \<notin> f ` B"
+      have "\<exists>M. \<forall>y \<in> f ` B. (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> M"
+      proof (cases "f ` B = {}")
+        case True thus ?thesis by (by100 blast)
+      next
+        case False
+        have "continuous_on (f ` B) (\<lambda>y::(real\<times>real). (fst y)\<^sup>2 + (snd y)\<^sup>2)"
+          by (intro continuous_intros)
+        from continuous_attains_sup[OF hfB_compact False this]
+        obtain y0 where "y0 \<in> f ` B"
+            and "\<forall>y\<in>f ` B. (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> (fst y0)\<^sup>2 + (snd y0)\<^sup>2"
+          by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      then obtain M where hM: "\<forall>y \<in> f ` B. (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> M" by (by100 blast)
+      from hW(8)[THEN spec[of _ "max M 0 + 1"]]
+      obtain p where hp_W2: "p \<in> W2" and hp_big: "(fst p)\<^sup>2 + (snd p)\<^sup>2 > max M 0 + 1"
+        by (by100 blast)
+      have "p \<notin> f ` B"
+      proof
+        assume "p \<in> f ` B"
+        hence "(fst p)\<^sup>2 + (snd p)\<^sup>2 \<le> M" using hM by (by100 blast)
+        with hp_big show False by (by100 linarith)
+      qed
+      thus "\<exists>b1. b1 \<in> W2 \<and> b1 \<notin> f ` B" using hp_W2 by (by100 blast)
+    qed
+    \<comment> \<open>W1 and W2 are open (complement of closure of the other).\<close>
+    have hTR2_top: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+      using product_topology_on_is_topology_on[OF
+        top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+    have hW1_is_open: "open W1"
+    proof -
+      have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W2)"
+        by (rule closure_on_closed[OF hTR2_top]) (by100 simp)
+      hence "UNIV - closure_on UNIV ?TR2 W2 \<in> ?TR2"
+        unfolding closedin_on_def by (by100 blast)
+      moreover have "W2 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+      hence "UNIV - (W2 \<union> f ` frontier B) = W1" using hW(3) hW(4) by (by100 blast)
+      hence "UNIV - closure_on UNIV ?TR2 W2 = W1" unfolding hW2_cl .
+      ultimately have "W1 \<in> ?TR2" by (by100 simp)
+      thus ?thesis using product_topology_on_open_sets_real2
+        unfolding top1_open_sets_def by (by100 simp)
+    qed
+    have hW2_is_open: "open W2"
+    proof -
+      have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W1)"
+        by (rule closure_on_closed[OF hTR2_top]) (by100 simp)
+      hence "UNIV - closure_on UNIV ?TR2 W1 \<in> ?TR2"
+        unfolding closedin_on_def by (by100 blast)
+      moreover have "W1 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+      hence "UNIV - (W1 \<union> f ` frontier B) = W2" using hW(3) hW(4) by (by100 blast)
+      hence "UNIV - closure_on UNIV ?TR2 W1 = W2" unfolding hW1_cl .
+      ultimately have "W2 \<in> ?TR2" by (by100 simp)
+      thus ?thesis using product_topology_on_open_sets_real2
+        unfolding top1_open_sets_def by (by100 simp)
+    qed
+    have hfr_compact: "compact (frontier B)"
+    proof -
+      \<comment> \<open>frontier always closed: complement = interior(B) \<union> interior(-B), both open.\<close>
+      have hfr_closed: "closed (frontier B)"
+      proof -
+        have "open (- frontier B)"
+        proof (rule openI)
+          fix x assume hx: "x \<in> - frontier B"
+          hence "\<exists>U. open U \<and> x \<in> U \<and> (U \<inter> B = {} \<or> U \<inter> (- B) = {})"
+            unfolding frontier_def by (by100 blast)
+          then obtain U where hU: "open U" "x \<in> U" and hU_disj: "U \<inter> B = {} \<or> U \<inter> (- B) = {}"
+            by (by100 blast)
+          have "U \<subseteq> - frontier B"
+          proof (rule subsetI)
+            fix y assume "y \<in> U"
+            show "y \<in> - frontier B" unfolding frontier_def
+              using hU(1) \<open>y \<in> U\<close> hU_disj by (by100 blast)
+          qed
+          thus "\<exists>T. open T \<and> x \<in> T \<and> T \<subseteq> - frontier B"
+            using hU by (by100 blast)
+        qed
+        hence "closed (- (- frontier B))" using open_closed by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      have "frontier B \<subseteq> B" by (rule frontier_closed_sub[OF hBclosed])
+      hence "B \<inter> frontier B = frontier B" by (by100 blast)
+      thus ?thesis using compact_Int_closed[OF hBcompact hfr_closed] by (by100 simp)
+    qed
+    have hfr_sub_B_top: "frontier B \<subseteq> B" by (rule frontier_closed_sub[OF hBclosed])
     \<comment> \<open>Step 4: f(Int B) is the bounded component W1.
        f(Int B) is connected (continuous image of connected), contained in UNIV - f(Bd B),
        hence in one component. f(x) \<in> f(Int B) and f(B) is bounded \<Rightarrow> f(Int B) \<subseteq> W1.
@@ -3109,16 +4698,315 @@ proof -
           thus ?thesis using hf_intB_sub' by (by100 blast)
         qed
         show "f x \<notin> W2"
-          sorry \<comment> \<open>f(intB) in one component. If in W2, then by Borsuk, W2 = f(intB),
-             but W2 unbounded and f(B) bounded (compact image). Contradiction.
-             Key: needs Borsuk Lemma or bounded/unbounded argument.\<close>
+        proof (rule ccontr)
+          assume "\<not> f x \<notin> W2" hence hfx_W2: "f x \<in> W2" by (by100 blast)
+          \<comment> \<open>f(int B) connected, in one component. Since f(x) \<in> W2, f(int B) \<subseteq> W2.\<close>
+          hence hfintB_W2: "f ` (B - frontier B) \<subseteq> W2"
+          proof -
+            have "f ` (B - frontier B) \<subseteq> W1 \<or> f ` (B - frontier B) \<subseteq> W2"
+              using \<open>f ` (B - frontier B) \<subseteq> W1 \<or> f ` (B - frontier B) \<subseteq> W2\<close> .
+            moreover have "f x \<in> f ` (B - frontier B)" using hx_int by (by100 blast)
+            moreover have "f x \<notin> W1" using hfx_W2 hW(3) by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          \<comment> \<open>W1 \<noteq> {}, so get a \<in> W1. Since f(int B) \<subseteq> W2 and a \<in> W1, a \<notin> f(int B).\<close>
+          obtain a1 where ha1: "a1 \<in> W1" using hW(1) by (by100 blast)
+          have ha1_notfB: "a1 \<notin> f ` B"
+          proof -
+            have "a1 \<notin> f ` (B - frontier B)" using ha1 hfintB_W2 hW(3) by (by100 blast)
+            moreover have "a1 \<notin> f ` frontier B" using ha1 hW(4) by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          \<comment> \<open>W2 unbounded, f(B) bounded: get b1 \<in> W2 - f(B).\<close>
+          obtain b1 where hb1: "b1 \<in> W2" and hb1_notfB: "b1 \<notin> f ` B"
+            using hW2_escape ha1_notfB by (by100 blast)
+          \<comment> \<open>Apply Borsuk: f|_{\<partial>B} nulhomotopic in S^2-{a1,b1}, injective, compact.
+             Conclusion: a1, b1 in same component of S^2 - f(\<partial>B).
+             But a1 \<in> W1, b1 \<in> W2 (different components) \<longrightarrow> contradiction.\<close>
+          \<comment> \<open>Embed into S^2. a1, b1 \<notin> f(B) \<Longrightarrow> a1, b1 \<notin> f(\<partial>B).\<close>
+          \<comment> \<open>f|_{\<partial>B} nulhomotopic in S^2-{a1,b1}: extends to f|_B : B \<rightarrow> R^2-{a1,b1} \<subseteq> S^2-{a1,b1}.\<close>
+          \<comment> \<open>B contractible, f|_B avoids a1 and b1 (both \<notin> f(B)).\<close>
+          \<comment> \<open>Borsuk: a1, b1 in same component of S^2-f(\<partial>B).\<close>
+          \<comment> \<open>But one-point-compactification: components of R^2-f(\<partial>B) correspond to
+             components of S^2-f(\<partial>B) (plus b at infinity joins the unbounded component).\<close>
+          \<comment> \<open>a1 \<in> W1 and b1 \<in> W2 are in different R^2 components, hence different S^2 components
+             (W1 bounded, W2 unbounded + {\<infinity>} makes a single S^2 component).\<close>
+          \<comment> \<open>Contradiction with Borsuk conclusion.\<close>
+          show "False"
+          proof -
+            \<comment> \<open>frontier B topology.\<close>
+            have hTR2: "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+              using product_topology_on_is_topology_on[OF
+                top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+            let ?TfB = "subspace_topology UNIV ?TR2 (frontier B)"
+            have hTfB: "is_topology_on (frontier B) ?TfB"
+              by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+            \<comment> \<open>frontier B compact.\<close>
+            have hfB_compact': "top1_compact_on (frontier B) ?TfB"
+            proof -
+              have "compact (frontier B)" by (rule hfr_compact)
+              hence "top1_compact_on (frontier B) (subspace_topology UNIV top1_open_sets (frontier B))"
+                using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+              thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+            qed
+            \<comment> \<open>f continuous on frontier B.\<close>
+            have hf_cont_fB_HOL: "continuous_on (frontier B) f"
+              using continuous_on_subset[OF
+                top1_continuous_map_on_to_continuous_on_R2[OF assms(2)] hfr_sub_U] .
+            have hf_cont_fB: "top1_continuous_map_on (frontier B) ?TfB UNIV ?TR2 f"
+            proof -
+              have "top1_continuous_map_on (frontier B) ?TfB
+                  UNIV (subspace_topology UNIV ?TR2 UNIV) f"
+              proof (rule top1_continuous_map_on_real2_subspace_general)
+                show "\<And>p. p \<in> frontier B \<Longrightarrow> f p \<in> (UNIV::(real\<times>real) set)" by (by100 simp)
+                show "continuous_on (frontier B) f" by (rule hf_cont_fB_HOL)
+              qed
+              moreover have "subspace_topology UNIV ?TR2 UNIV = ?TR2"
+                unfolding subspace_topology_def by (by100 auto)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>f injective on frontier B.\<close>
+            have hf_inj_fB: "inj_on f (frontier B)"
+              using assms(3) hfr_sub_U by (rule inj_on_subset)
+            \<comment> \<open>a1, b1 \<notin> f(frontier B) (both \<notin> f(B) \<supseteq> f(frontier B)).\<close>
+            have hfr_sub_B: "frontier B \<subseteq> B" by (rule frontier_closed_sub[OF hBclosed])
+            have ha1_not_ffB: "a1 \<notin> f ` frontier B"
+            proof -
+              have "f ` frontier B \<subseteq> f ` B" using hfr_sub_B by (by100 blast)
+              thus ?thesis using ha1_notfB by (by100 blast)
+            qed
+            have hb1_not_ffB: "b1 \<notin> f ` frontier B"
+            proof -
+              have "f ` frontier B \<subseteq> f ` B" using hfr_sub_B by (by100 blast)
+              thus ?thesis using hb1_notfB by (by100 blast)
+            qed
+            \<comment> \<open>f|_{\<partial>B} nulhomotopic in R^2 - {a1, b1}: extends to f|_B : B \<rightarrow> R^2 - {a1, b1}.\<close>
+            have hf_nul: "top1_nulhomotopic_on (frontier B) ?TfB
+                (UNIV - {a1, b1}) (subspace_topology UNIV ?TR2 (UNIV - {a1, b1})) f"
+            proof (rule nulhomotopic_via_convex_R2)
+              \<comment> \<open>B satisfies the convex combination property (closed ball).\<close>
+              show "\<forall>y\<in>B. \<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+                  ((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x) \<in> B"
+              proof (intro ballI allI impI)
+                fix y :: "real \<times> real" and t :: real assume hy: "y \<in> B" and ht: "0 \<le> t \<and> t \<le> 1"
+                have hle: "(fst y - fst x)^2 + (snd y - snd x)^2 \<le> r^2"
+                  using hy unfolding B_def by (by100 auto)
+                have "((1-t) * fst y + t * fst x - fst x)\<^sup>2 + ((1-t) * snd y + t * snd x - snd x)\<^sup>2
+                    = (1-t)\<^sup>2 * ((fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2)"
+                  by (by100 algebra)
+                also have "\<dots> \<le> 1 * r^2"
+                proof (rule mult_mono)
+                  show "(1-t)\<^sup>2 \<le> 1"
+                  proof -
+                    have "0 \<le> 1 - t" and "1 - t \<le> 1" using ht by (by100 linarith)+
+                    hence "(1-t) * (1-t) \<le> 1 * 1"
+                      by (intro mult_mono) (by100 linarith)+
+                    thus ?thesis unfolding power2_eq_square by (by100 linarith)
+                  qed
+                  show "(fst y - fst x)^2 + (snd y - snd x)^2 \<le> r^2" by (rule hle)
+                  show "0 \<le> (fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2" by (by100 simp)
+                  show "0 \<le> (1::real)" by (by100 simp)
+                qed
+                finally show "((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x) \<in> B"
+                  unfolding B_def by (by100 auto)
+              qed
+              show "x \<in> B" using hx_int by (by100 blast)
+              show "frontier B \<subseteq> B" by (rule hfr_sub_B_top)
+              show "continuous_on B f"
+                using continuous_on_subset[OF
+                  top1_continuous_map_on_to_continuous_on_R2[OF assms(2)] hBsub] .
+              show "\<forall>y\<in>B. f y \<in> UNIV - {a1, b1}"
+                using ha1_notfB hb1_notfB by (by100 blast)
+            qed
+            \<comment> \<open>Apply Borsuk_R2: a1, b1 in same R^2 component.\<close>
+            from Borsuk_R2[OF hTfB hfB_compact' hf_cont_fB hf_inj_fB
+                ha1_not_ffB hb1_not_ffB hf_nul]
+            obtain C where hC_conn: "top1_connected_on C (subspace_topology UNIV ?TR2 C)"
+                and hC_sub: "C \<subseteq> UNIV - f ` frontier B" and ha1C: "a1 \<in> C" and hb1C: "b1 \<in> C"
+              by (by100 blast)
+            \<comment> \<open>C connected, a1 \<in> W1, b1 \<in> W2. But C \<subseteq> UNIV - f(\<partial>B) = W1 \<union> W2.\<close>
+            have "C \<subseteq> W1 \<or> C \<subseteq> W2"
+            proof -
+              have hC_sub_W12: "C \<subseteq> W1 \<union> W2" using hC_sub hW(4) by (by100 blast)
+              have hC_HOL_conn: "connected C"
+              proof -
+                have "top1_connected_on C (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets C)
+                    = connected C"
+                  by (rule top1_connected_on_subspace_open_iff_connected)
+                moreover have "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+                  using product_topology_on_open_sets_real2 by (by100 metis)
+                ultimately show ?thesis using hC_conn by (by100 simp)
+              qed
+              have hW1_open: "open W1"
+              proof -
+                have hTR2': "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+                  using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                        top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+                have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W2)"
+                  by (rule closure_on_closed[OF hTR2']) (by100 simp)
+                hence "UNIV - closure_on UNIV ?TR2 W2 \<in> ?TR2"
+                  unfolding closedin_on_def by (by100 blast)
+                moreover have "UNIV - closure_on UNIV ?TR2 W2 = W1"
+                proof -
+                  have "W2 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+                  hence "UNIV - (W2 \<union> f ` frontier B) = W1"
+                    using hW(3) hW(4) by (by100 blast)
+                  thus ?thesis unfolding hW2_cl .
+                qed
+                ultimately have "W1 \<in> ?TR2" by (by100 simp)
+                thus ?thesis using product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+              qed
+              have hW2_open: "open W2"
+              proof -
+                have hTR2': "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+                  using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                        top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+                have "closedin_on UNIV ?TR2 (closure_on UNIV ?TR2 W1)"
+                  by (rule closure_on_closed[OF hTR2']) (by100 simp)
+                hence "UNIV - closure_on UNIV ?TR2 W1 \<in> ?TR2"
+                  unfolding closedin_on_def by (by100 blast)
+                moreover have "UNIV - closure_on UNIV ?TR2 W1 = W2"
+                proof -
+                  have "W1 \<inter> f ` frontier B = {}" using hW(3) hW(4) by (by100 blast)
+                  hence "UNIV - (W1 \<union> f ` frontier B) = W2"
+                    using hW(3) hW(4) by (by100 blast)
+                  thus ?thesis unfolding hW1_cl .
+                qed
+                ultimately have "W2 \<in> ?TR2" by (by100 simp)
+                thus ?thesis using product_topology_on_open_sets_real2
+                  unfolding top1_open_sets_def by (by100 simp)
+              qed
+              have "W1 \<inter> W2 \<inter> C = {}" using hW(3) by (by100 blast)
+              have "W1 \<inter> C = {} \<or> W2 \<inter> C = {}"
+                by (rule connectedD[OF hC_HOL_conn hW1_open hW2_open \<open>W1 \<inter> W2 \<inter> C = {}\<close> hC_sub_W12])
+              thus ?thesis using hC_sub_W12 by (by100 blast)
+            qed
+            thus False using ha1 hb1 ha1C hb1C hW(3) by (by100 blast)
+          qed
+        qed
       qed
       ultimately show "f x \<in> W1" by (by100 blast)
     qed
     \<comment> \<open>The component containing f(intB) is open and contained in f(U).\<close>
     have hW1_sub: "W1 \<subseteq> f ` (B - frontier B)"
-      sorry \<comment> \<open>Uses Borsuk: if a \<in> W1-f(intB), take b \<in> W2, then {a,b} separated by f(B)
-         in S^2. But f(B) contractible (B convex), so it doesn't separate. Contradiction.\<close>
+    proof (rule ccontr)
+      assume "\<not> W1 \<subseteq> f ` (B - frontier B)"
+      then obtain a1 where ha1: "a1 \<in> W1" and ha1_not: "a1 \<notin> f ` (B - frontier B)"
+        by (by100 blast)
+      have ha1_notfB: "a1 \<notin> f ` B"
+      proof -
+        have "a1 \<notin> f ` frontier B" using ha1 hW(4) by (by100 blast)
+        thus ?thesis using ha1_not by (by100 blast)
+      qed
+      \<comment> \<open>Get b1 \<in> W2 - f(B) (same as before: W2 unbounded, f(B) bounded).\<close>
+      obtain b1 where hb1: "b1 \<in> W2" and hb1_notfB: "b1 \<notin> f ` B"
+        using hW2_escape ha1_notfB by (by100 blast)
+      \<comment> \<open>Apply Borsuk: a1, b1 \<notin> f(B), f|_{\<partial>B} nulhomotopic in S^2-{a1,b1}.
+         Borsuk gives a1, b1 in same component of S^2-f(\<partial>B). But W1 \<inter> W2 = {}.\<close>
+      show False
+      proof -
+        have hfr_sub_U': "frontier B \<subseteq> U" using frontier_closed_sub[OF hBclosed] hBsub by (by100 blast)
+        let ?TfB = "subspace_topology UNIV ?TR2 (frontier B)"
+        have hTfB: "is_topology_on (frontier B) ?TfB"
+        proof -
+          have hTR2': "is_topology_on (UNIV :: (real\<times>real) set) ?TR2"
+            using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+          thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+        qed
+        have hfB_compact': "top1_compact_on (frontier B) ?TfB"
+        proof -
+          have "compact (frontier B)" by (rule hfr_compact)
+          hence "top1_compact_on (frontier B) (subspace_topology UNIV top1_open_sets (frontier B))"
+            using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+          thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+        qed
+        have hf_cont_fB: "top1_continuous_map_on (frontier B) ?TfB UNIV ?TR2 f"
+        proof -
+          have hcont_fB: "continuous_on (frontier B) f"
+            using continuous_on_subset[OF top1_continuous_map_on_to_continuous_on_R2[OF assms(2)] hfr_sub_U'] .
+          have "top1_continuous_map_on (frontier B) ?TfB
+              UNIV (subspace_topology UNIV ?TR2 UNIV) f"
+          proof (rule top1_continuous_map_on_real2_subspace_general)
+            show "\<And>p. p \<in> frontier B \<Longrightarrow> f p \<in> (UNIV::(real\<times>real) set)" by (by100 simp)
+            show "continuous_on (frontier B) f" by (rule hcont_fB)
+          qed
+          moreover have "subspace_topology UNIV ?TR2 UNIV = ?TR2"
+            unfolding subspace_topology_def by (by100 auto)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hf_inj_fB: "inj_on f (frontier B)"
+          using assms(3) hfr_sub_U' by (rule inj_on_subset)
+        have hfr_sub_B: "frontier B \<subseteq> B" by (rule frontier_closed_sub[OF hBclosed])
+        have ha1_not_ffB: "a1 \<notin> f ` frontier B"
+        proof -
+          have "f ` frontier B \<subseteq> f ` B" using hfr_sub_B by (by100 blast)
+          thus ?thesis using ha1_notfB by (by100 blast)
+        qed
+        have hb1_not_ffB: "b1 \<notin> f ` frontier B"
+        proof -
+          have "f ` frontier B \<subseteq> f ` B" using hfr_sub_B by (by100 blast)
+          thus ?thesis using hb1_notfB by (by100 blast)
+        qed
+        have hf_nul: "top1_nulhomotopic_on (frontier B) ?TfB
+            (UNIV - {a1, b1}) (subspace_topology UNIV ?TR2 (UNIV - {a1, b1})) f"
+        proof (rule nulhomotopic_via_convex_R2)
+          show "\<forall>y\<in>B. \<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+              ((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x) \<in> B"
+          proof (intro ballI allI impI)
+            fix y :: "real \<times> real" and t :: real assume hy: "y \<in> B" and ht: "0 \<le> t \<and> t \<le> 1"
+            have hle: "(fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2 \<le> r\<^sup>2"
+              using hy unfolding B_def by (by100 auto)
+            have "((1-t) * fst y + t * fst x - fst x)\<^sup>2 + ((1-t) * snd y + t * snd x - snd x)\<^sup>2
+                = (1-t)\<^sup>2 * ((fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2)"
+              by (by100 algebra)
+            also have "\<dots> \<le> 1 * r\<^sup>2"
+            proof (rule mult_mono)
+              show "(1-t)\<^sup>2 \<le> 1"
+              proof -
+                have "0 \<le> 1 - t" and "1 - t \<le> 1" using ht by (by100 linarith)+
+                hence "(1-t) * (1-t) \<le> 1 * 1" by (intro mult_mono) (by100 linarith)+
+                thus ?thesis unfolding power2_eq_square by (by100 linarith)
+              qed
+              show "(fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2 \<le> r\<^sup>2" by (rule hle)
+              show "0 \<le> (fst y - fst x)\<^sup>2 + (snd y - snd x)\<^sup>2" by (by100 simp)
+              show "0 \<le> (1::real)" by (by100 simp)
+            qed
+            finally show "((1-t) * fst y + t * fst x, (1-t) * snd y + t * snd x) \<in> B"
+              unfolding B_def by (by100 auto)
+          qed
+          show "x \<in> B" using hx_int by (by100 blast)
+          show "frontier B \<subseteq> B" by (rule hfr_sub_B_top)
+          show "continuous_on B f"
+            using continuous_on_subset[OF
+              top1_continuous_map_on_to_continuous_on_R2[OF assms(2)] hBsub] .
+          show "\<forall>y\<in>B. f y \<in> UNIV - {a1, b1}"
+            using ha1_notfB hb1_notfB by (by100 blast)
+        qed
+        from Borsuk_R2[OF hTfB hfB_compact' hf_cont_fB hf_inj_fB ha1_not_ffB hb1_not_ffB hf_nul]
+        obtain C where hC_conn: "top1_connected_on C (subspace_topology UNIV ?TR2 C)"
+            and hC_sub: "C \<subseteq> UNIV - f ` frontier B" and ha1C: "a1 \<in> C" and hb1C: "b1 \<in> C"
+          by (by100 blast)
+        have hC_sub_W12: "C \<subseteq> W1 \<union> W2" using hC_sub hW(4) by (by100 blast)
+        have hC_HOL_conn: "connected C"
+        proof -
+          have "top1_connected_on C (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets C)
+              = connected C"
+            by (rule top1_connected_on_subspace_open_iff_connected)
+          moreover have "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+            using product_topology_on_open_sets_real2 by (by100 metis)
+          ultimately show ?thesis using hC_conn by (by100 simp)
+        qed
+        have hW1_open': "open W1" by (rule hW1_is_open)
+        have hW2_open': "open W2" by (rule hW2_is_open)
+        have "W1 \<inter> W2 \<inter> C = {}" using hW(3) by (by100 blast)
+        have "W1 \<inter> C = {} \<or> W2 \<inter> C = {}"
+          by (rule connectedD[OF hC_HOL_conn hW1_open' hW2_open' \<open>W1 \<inter> W2 \<inter> C = {}\<close> hC_sub_W12])
+        have "C \<subseteq> W1 \<or> C \<subseteq> W2" using \<open>W1 \<inter> C = {} \<or> W2 \<inter> C = {}\<close> hC_sub_W12 by (by100 blast)
+        thus False using ha1 hb1 ha1C hb1C hW(3) by (by100 blast)
+      qed
+    qed
     have hW1_open: "W1 \<in> ?TR2"
     proof -
       \<comment> \<open>closure W2 = W2 \<union> C. Complement of closure is open. UNIV-(W2 \<union> C) = W1.\<close>
@@ -3170,6 +5058,233 @@ proof -
     thus ?thesis using hsub by (by100 blast)
   qed
   ultimately show ?thesis by (by100 simp)
+qed
+
+text \<open>The induced map h_* on fundamental groups is a group homomorphism.
+  Key: h \<circ> (f * g) = (h \<circ> f) * (h \<circ> g) by definition of path product.\<close>
+
+lemma comp_path_product:
+  "h \<circ> top1_path_product f g = top1_path_product (h \<circ> f) (h \<circ> g)"
+proof (rule ext)
+  fix t :: real
+  show "(h \<circ> top1_path_product f g) t = top1_path_product (h \<circ> f) (h \<circ> g) t"
+    unfolding top1_path_product_def comp_def by (by100 simp)
+qed
+
+lemma top1_fundamental_group_induced_on_is_hom:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hx0: "x0 \<in> X" and hy0: "y0 \<in> Y"
+      and hcont: "top1_continuous_map_on X TX Y TY h"
+      and hh0: "h x0 = y0"
+  shows "top1_group_hom_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_carrier Y TY y0)
+      (top1_fundamental_group_mul Y TY y0)
+      (top1_fundamental_group_induced_on X TX x0 Y TY y0 h)"
+  unfolding top1_group_hom_on_def
+proof (intro conjI ballI)
+  let ?ind = "top1_fundamental_group_induced_on X TX x0 Y TY y0 h"
+  \<comment> \<open>Part 1: induced maps carrier to carrier.\<close>
+  fix c assume hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+  show "?ind c \<in> top1_fundamental_group_carrier Y TY y0"
+  proof -
+    \<comment> \<open>c is a loop class: c = {g. loop_equiv X TX x0 f0 g} for some loop f0.\<close>
+    from hc obtain f0 where hf0: "top1_is_loop_on X TX x0 f0"
+        and hc_eq: "c = {g. top1_loop_equiv_on X TX x0 f0 g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>h\<circ>f0 is a loop at y0.\<close>
+    have hf0_Y: "top1_is_loop_on Y TY y0 (h \<circ> f0)"
+      using top1_continuous_map_loop[OF hcont hf0] hh0 by (by100 simp)
+    \<comment> \<open>ind(c) = {g. loop_equiv Y TY y0 (h\<circ>f0) g}.\<close>
+    have "?ind c = {g. top1_loop_equiv_on Y TY y0 (h \<circ> f0) g}"
+    proof (rule set_eqI)
+      fix g
+      show "g \<in> ?ind c \<longleftrightarrow> g \<in> {g. top1_loop_equiv_on Y TY y0 (h \<circ> f0) g}"
+      proof
+        assume "g \<in> ?ind c"
+        hence "g \<in> {g'. \<exists>f\<in>c. top1_loop_equiv_on Y TY (h x0) (h \<circ> f) g'}"
+          unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 simp)
+        then obtain f where hf_c: "f \<in> c" and hg_eq: "top1_loop_equiv_on Y TY (h x0) (h \<circ> f) g"
+          by (by100 blast)
+        have hf_equiv: "top1_loop_equiv_on X TX x0 f0 f"
+          using hf_c hc_eq by (by100 blast)
+        have hf0_loop: "top1_is_loop_on X TX x0 f0" by (rule hf0)
+        have hf_loop: "top1_is_loop_on X TX x0 f"
+          using hf_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_loop_equiv_on Y TY (h x0) (h \<circ> f0) (h \<circ> f)"
+          by (rule top1_induced_preserves_loop_equiv[OF hTX hcont hf0_loop hf_loop hf_equiv])
+        hence "top1_loop_equiv_on Y TY y0 (h \<circ> f0) (h \<circ> f)"
+          using hh0 by (by100 simp)
+        moreover have "top1_loop_equiv_on Y TY y0 (h \<circ> f) g"
+          using hg_eq hh0 by (by100 simp)
+        ultimately have "top1_loop_equiv_on Y TY y0 (h \<circ> f0) g"
+          by (rule top1_loop_equiv_on_trans[OF hTY])
+        thus "g \<in> {g. top1_loop_equiv_on Y TY y0 (h \<circ> f0) g}" by (by100 blast)
+      next
+        assume "g \<in> {g. top1_loop_equiv_on Y TY y0 (h \<circ> f0) g}"
+        hence hg: "top1_loop_equiv_on Y TY y0 (h \<circ> f0) g" by (by100 blast)
+        have "f0 \<in> c" using hc_eq top1_loop_equiv_on_refl[OF hf0] by (by100 blast)
+        moreover have "top1_loop_equiv_on Y TY (h x0) (h \<circ> f0) g"
+          using hg hh0 by (by100 simp)
+        hence "top1_loop_equiv_on Y TY y0 (h \<circ> f0) g"
+          using hh0 by (by100 simp)
+        with \<open>f0 \<in> c\<close> show "g \<in> ?ind c"
+          unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 blast)
+      qed
+    qed
+    thus ?thesis unfolding top1_fundamental_group_carrier_def
+      using hf0_Y by (by100 blast)
+  qed
+next
+  \<comment> \<open>Part 2: induced preserves multiplication.\<close>
+  fix c1 c2
+  let ?ind = "top1_fundamental_group_induced_on X TX x0 Y TY y0 h"
+  assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+     and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+  show "?ind (top1_fundamental_group_mul X TX x0 c1 c2)
+      = top1_fundamental_group_mul Y TY y0 (?ind c1) (?ind c2)"
+  proof (rule set_eqI)
+    fix k
+    show "k \<in> ?ind (top1_fundamental_group_mul X TX x0 c1 c2) \<longleftrightarrow>
+          k \<in> top1_fundamental_group_mul Y TY y0 (?ind c1) (?ind c2)"
+    proof
+      \<comment> \<open>Forward: k \<in> ind(mul c1 c2) \<Longrightarrow> k \<in> mul_Y(ind c1, ind c2).\<close>
+      assume "k \<in> ?ind (top1_fundamental_group_mul X TX x0 c1 c2)"
+      then obtain p where hp_mul: "p \<in> top1_fundamental_group_mul X TX x0 c1 c2"
+          and hk_eq: "top1_loop_equiv_on Y TY y0 (h \<circ> p) k"
+        unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 blast)
+      from hp_mul obtain f1 g1 where hf1: "f1 \<in> c1" and hg1: "g1 \<in> c2"
+          and hfg_eq: "top1_loop_equiv_on X TX x0 (top1_path_product f1 g1) p"
+        unfolding top1_fundamental_group_mul_def by (by100 blast)
+      \<comment> \<open>h\<circ>(f1*g1) = (h\<circ>f1)*(h\<circ>g1) by comp_path_product.\<close>
+      \<comment> \<open>h\<circ>(f1*g1) ~_Y h\<circ>p (by preservation of loop_equiv).\<close>
+      \<comment> \<open>h\<circ>p ~_Y k (given). So (h\<circ>f1)*(h\<circ>g1) ~_Y k.\<close>
+      \<comment> \<open>h\<circ>f1 \<in> ind(c1) (reflexivity). h\<circ>g1 \<in> ind(c2). So k \<in> mul_Y(ind c1, ind c2).\<close>
+      have hf1_loop: "top1_is_loop_on X TX x0 f1"
+        using hc1 hf1 unfolding top1_fundamental_group_carrier_def top1_loop_equiv_on_def
+        by (by100 blast)
+      have hg1_loop: "top1_is_loop_on X TX x0 g1"
+        using hc2 hg1 unfolding top1_fundamental_group_carrier_def top1_loop_equiv_on_def
+        by (by100 blast)
+      have hf1_Y: "top1_is_loop_on Y TY y0 (h \<circ> f1)"
+        using top1_continuous_map_loop[OF hcont hf1_loop] hh0 by (by100 simp)
+      have hg1_Y: "top1_is_loop_on Y TY y0 (h \<circ> g1)"
+        using top1_continuous_map_loop[OF hcont hg1_loop] hh0 by (by100 simp)
+      have "h \<circ> f1 \<in> ?ind c1"
+      proof -
+        have "top1_loop_equiv_on Y TY y0 (h \<circ> f1) (h \<circ> f1)"
+          by (rule top1_loop_equiv_on_refl[OF hf1_Y])
+        thus ?thesis unfolding top1_fundamental_group_induced_on_def hh0[symmetric]
+          using hf1 by (by100 blast)
+      qed
+      moreover have "h \<circ> g1 \<in> ?ind c2"
+      proof -
+        have "top1_loop_equiv_on Y TY y0 (h \<circ> g1) (h \<circ> g1)"
+          by (rule top1_loop_equiv_on_refl[OF hg1_Y])
+        thus ?thesis unfolding top1_fundamental_group_induced_on_def hh0[symmetric]
+          using hg1 by (by100 blast)
+      qed
+      moreover have "top1_loop_equiv_on Y TY y0 (top1_path_product (h \<circ> f1) (h \<circ> g1)) k"
+      proof -
+        have "top1_path_product (h \<circ> f1) (h \<circ> g1) = h \<circ> top1_path_product f1 g1"
+          using comp_path_product[symmetric] .
+        moreover have "top1_loop_equiv_on Y TY y0 (h \<circ> top1_path_product f1 g1) k"
+        proof -
+          have hfg1_loop: "top1_is_loop_on X TX x0 (top1_path_product f1 g1)"
+            using hfg_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hp_loop: "top1_is_loop_on X TX x0 p"
+            using hfg_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+          have "top1_loop_equiv_on Y TY (h x0) (h \<circ> top1_path_product f1 g1) (h \<circ> p)"
+            by (rule top1_induced_preserves_loop_equiv[OF hTX hcont hfg1_loop hp_loop hfg_eq])
+          hence "top1_loop_equiv_on Y TY y0 (h \<circ> top1_path_product f1 g1) (h \<circ> p)"
+            using hh0 by (by100 simp)
+          thus ?thesis by (rule top1_loop_equiv_on_trans[OF hTY _ hk_eq])
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show "k \<in> top1_fundamental_group_mul Y TY y0 (?ind c1) (?ind c2)"
+        unfolding top1_fundamental_group_mul_def by (by100 blast)
+    next
+      \<comment> \<open>Backward: k \<in> mul_Y(ind c1, ind c2) \<Longrightarrow> k \<in> ind(mul c1 c2).\<close>
+      assume "k \<in> top1_fundamental_group_mul Y TY y0 (?ind c1) (?ind c2)"
+      \<comment> \<open>Expand: \<exists>\<phi>\<in>ind(c1). \<exists>\<psi>\<in>ind(c2). loop_equiv_Y(\<phi>*\<psi>, k).\<close>
+      \<comment> \<open>\<phi> ~ h\<circ>f for some f\<in>c1, \<psi> ~ h\<circ>g for some g\<in>c2.\<close>
+      \<comment> \<open>\<phi>*\<psi> ~ (h\<circ>f)*(h\<circ>g) = h\<circ>(f*g). And f*g \<in> mul(c1,c2).\<close>
+      then obtain \<phi> \<psi> where h\<phi>: "\<phi> \<in> ?ind c1" and h\<psi>: "\<psi> \<in> ?ind c2"
+          and hk_mul: "top1_loop_equiv_on Y TY y0 (top1_path_product \<phi> \<psi>) k"
+        unfolding top1_fundamental_group_mul_def by (by100 blast)
+      from h\<phi> obtain f1 where hf1: "f1 \<in> c1"
+          and h\<phi>_eq: "top1_loop_equiv_on Y TY y0 (h \<circ> f1) \<phi>"
+        unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 blast)
+      from h\<psi> obtain g1 where hg1: "g1 \<in> c2"
+          and h\<psi>_eq: "top1_loop_equiv_on Y TY y0 (h \<circ> g1) \<psi>"
+        unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 blast)
+      \<comment> \<open>(h\<circ>f1)*(h\<circ>g1) ~_Y \<phi>*\<psi> (product preserves homotopy).\<close>
+      \<comment> \<open>(h\<circ>f1)*(h\<circ>g1) = h\<circ>(f1*g1) by comp_path_product.\<close>
+      \<comment> \<open>So h\<circ>(f1*g1) ~_Y \<phi>*\<psi> ~_Y k. And f1*g1 \<in> mul(c1,c2).\<close>
+      have hf1_loop: "top1_is_loop_on X TX x0 f1"
+        using hc1 hf1 unfolding top1_fundamental_group_carrier_def top1_loop_equiv_on_def
+        by (by100 blast)
+      have hg1_loop: "top1_is_loop_on X TX x0 g1"
+        using hc2 hg1 unfolding top1_fundamental_group_carrier_def top1_loop_equiv_on_def
+        by (by100 blast)
+      \<comment> \<open>f1*g1 is a loop, h\<circ>(f1*g1) is a loop.\<close>
+      have hfg_loop: "top1_is_loop_on X TX x0 (top1_path_product f1 g1)"
+        by (rule top1_path_product_is_loop[OF hTX hf1_loop hg1_loop])
+      \<comment> \<open>f1*g1 ~_X f1*g1 (reflexivity) means f1*g1 \<in> mul(c1,c2).\<close>
+      have "top1_path_product f1 g1 \<in> top1_fundamental_group_mul X TX x0 c1 c2"
+        unfolding top1_fundamental_group_mul_def
+        using hf1 hg1 top1_loop_equiv_on_refl[OF hfg_loop] by (by100 blast)
+      \<comment> \<open>h\<circ>(f1*g1) ~_Y k.\<close>
+      moreover have "top1_loop_equiv_on Y TY y0 (h \<circ> top1_path_product f1 g1) k"
+      proof -
+        \<comment> \<open>Step 1: (h\<circ>f1)*(h\<circ>g1) ~_Y \<phi>*\<psi> by product preserves homotopy.\<close>
+        have h\<phi>_hom: "top1_path_homotopic_on Y TY y0 y0 (h \<circ> f1) \<phi>"
+          using h\<phi>_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+        have h\<psi>_hom: "top1_path_homotopic_on Y TY y0 y0 (h \<circ> g1) \<psi>"
+          using h\<psi>_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hf1_Y': "top1_is_loop_on Y TY y0 (h \<circ> f1)"
+          using top1_continuous_map_loop[OF hcont hf1_loop] hh0 by (by100 simp)
+        have hg1_Y': "top1_is_loop_on Y TY y0 (h \<circ> g1)"
+          using top1_continuous_map_loop[OF hcont hg1_loop] hh0 by (by100 simp)
+        have hprod_hom: "top1_path_homotopic_on Y TY y0 y0
+            (top1_path_product (h \<circ> f1) (h \<circ> g1)) (top1_path_product \<phi> \<psi>)"
+        proof -
+          have s1: "top1_path_homotopic_on Y TY y0 y0
+              (top1_path_product (h \<circ> f1) (h \<circ> g1)) (top1_path_product \<phi> (h \<circ> g1))"
+          proof -
+            have "top1_is_path_on Y TY y0 y0 (h \<circ> g1)"
+              using hg1_Y' unfolding top1_is_loop_on_def by (by100 blast)
+            thus ?thesis by (rule path_homotopic_product_left[OF hTY h\<phi>_hom])
+          qed
+          have s2: "top1_path_homotopic_on Y TY y0 y0
+              (top1_path_product \<phi> (h \<circ> g1)) (top1_path_product \<phi> \<psi>)"
+          proof -
+            have "\<phi> \<in> ?ind c1" by (rule h\<phi>)
+            hence "top1_is_path_on Y TY y0 y0 \<phi>"
+              using h\<phi>_eq unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
+            thus ?thesis by (rule path_homotopic_product_right[OF hTY h\<psi>_hom])
+          qed
+          show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTY s1 s2])
+        qed
+        \<comment> \<open>Step 2: h\<circ>(f1*g1) = (h\<circ>f1)*(h\<circ>g1).\<close>
+        have "h \<circ> top1_path_product f1 g1 = top1_path_product (h \<circ> f1) (h \<circ> g1)"
+          by (rule comp_path_product)
+        \<comment> \<open>Step 3: Combine via transitivity.\<close>
+        hence "top1_path_homotopic_on Y TY y0 y0
+            (h \<circ> top1_path_product f1 g1) (top1_path_product \<phi> \<psi>)"
+          using hprod_hom by (by100 simp)
+        hence "top1_loop_equiv_on Y TY y0 (h \<circ> top1_path_product f1 g1) (top1_path_product \<phi> \<psi>)"
+          unfolding top1_loop_equiv_on_def
+          using top1_continuous_map_loop[OF hcont hfg_loop] hh0
+                hk_mul unfolding top1_loop_equiv_on_def by (by100 simp)
+        thus ?thesis by (rule top1_loop_equiv_on_trans[OF hTY _ hk_mul])
+      qed
+      ultimately show "k \<in> ?ind (top1_fundamental_group_mul X TX x0 c1 c2)"
+        unfolding top1_fundamental_group_induced_on_def hh0[symmetric] by (by100 blast)
+    qed
+  qed
 qed
 
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
@@ -3285,7 +5400,44 @@ proof -
   have hj_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       (top1_fundamental_group_carrier ?Xpq ?TXpq c0) (top1_fundamental_group_mul ?Xpq ?TXpq c0)
-      (top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))" sorry
+      (top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))"
+  proof -
+    have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTC: "is_topology_on C ?TC"
+    proof -
+      have "C \<subseteq> top1_S2"
+        using assms(2) unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+        by (by100 blast)
+      thus ?thesis by (rule subspace_topology_is_topology_on[OF hTopS2])
+    qed
+    have hTXpq: "is_topology_on ?Xpq ?TXpq"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hc0_C: "c0 \<in> C" by (rule assms(6))
+    have hC_sub_S2: "C \<subseteq> top1_S2" using simple_closed_curve_subset[OF assms(2)] .
+    have hC_sub_Xpq: "C \<subseteq> top1_S2 - {p} - {q}"
+    proof -
+      have "p \<notin> C" using assms(3) by (by100 blast)
+      moreover have "q \<notin> C" using assms(4) by (by100 blast)
+      ultimately show ?thesis using hC_sub_S2 by (by100 blast)
+    qed
+    have hc0_Xpq: "c0 \<in> ?Xpq" using hC_sub_Xpq hc0_C by (by100 blast)
+    \<comment> \<open>Inclusion C \<hookrightarrow> Xpq continuous.\<close>
+    have hincl: "top1_continuous_map_on C ?TC ?Xpq ?TXpq (\<lambda>x. x)"
+    proof -
+      have hid_Xpq: "top1_continuous_map_on ?Xpq ?TXpq ?Xpq ?TXpq id"
+        by (rule top1_continuous_map_on_id[OF hTXpq])
+      have "C \<subseteq> ?Xpq" using hC_sub_Xpq .
+      from top1_continuous_map_on_restrict_domain_simple[OF hid_Xpq this]
+      have "top1_continuous_map_on C (subspace_topology ?Xpq ?TXpq C) ?Xpq ?TXpq id" .
+      moreover have "subspace_topology ?Xpq ?TXpq C = ?TC"
+        using subspace_topology_trans[OF \<open>C \<subseteq> ?Xpq\<close>] by (by100 simp)
+      moreover have "id = (\<lambda>x::(real\<times>real\<times>real). x)" by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    show ?thesis
+      by (rule top1_fundamental_group_induced_on_is_hom[OF hTC hTXpq hc0_C hc0_Xpq hincl]) (by100 simp)
+  qed
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
     using hj_hom hj_inj hj_surj unfolding bij_betw_def by (by100 blast)
@@ -3473,6 +5625,29 @@ definition top1_subgroup_generated_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set" where
   "top1_subgroup_generated_on G mul e invg S =
      \<Inter> { H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg }"
+
+lemma subgroup_generated_subset:
+  assumes "top1_is_group_on G mul e invg" and "S \<subseteq> G"
+  shows "top1_subgroup_generated_on G mul e invg S \<subseteq> G"
+proof -
+  have "G \<in> { H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg }"
+    using assms by (by100 blast)
+  thus ?thesis unfolding top1_subgroup_generated_on_def by (rule Inter_lower)
+qed
+
+lemma subgroup_generated_contains:
+  assumes "top1_is_group_on G mul e invg" and "S \<subseteq> G" and "x \<in> S"
+  shows "x \<in> top1_subgroup_generated_on G mul e invg S"
+  unfolding top1_subgroup_generated_on_def using assms by (by100 blast)
+
+lemma subgroup_generated_minimal:
+  assumes "S \<subseteq> H" and "H \<subseteq> G" and "top1_is_group_on H mul e invg"
+  shows "top1_subgroup_generated_on G mul e invg S \<subseteq> H"
+proof -
+  have "H \<in> { H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg }"
+    using assms by (by100 blast)
+  thus ?thesis unfolding top1_subgroup_generated_on_def by (rule Inter_lower)
+qed
 
 definition top1_normal_subgroup_generated_on ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g \<Rightarrow> ('g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set" where
@@ -5368,7 +7543,7 @@ proof -
      reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
   have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
     \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
-  show ?thesis sorry
+  show ?thesis using hFP h_free_on_union sorry
 qed
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
@@ -5403,7 +7578,7 @@ proof -
       top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
     \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
     \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))" sorry
-  show ?thesis sorry
+  show ?thesis using h_free_abel by (by100 blast)
 qed
 
 section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
@@ -5665,7 +7840,17 @@ proof -
      By SvK, \<pi>_1(X) = \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial relations
      = free on (n-1) generators * Z = free on n generators.\<close>
   \<comment> \<open>Base: n=0 gives trivial group; n=1 gives \<pi>_1(S^1) \<cong> Z.\<close>
-  have hbase: "n = 0 \<longrightarrow> ?thesis" sorry
+  have hn_pos: "n > 0"
+  proof (rule ccontr)
+    assume "\<not> n > 0"
+    hence "n = 0" by (by100 simp)
+    hence "{..<n} = ({} :: nat set)" by (by100 simp)
+    moreover from assms obtain C where "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" and "p \<in> X"
+      unfolding top1_is_wedge_of_circles_on_def
+      apply (elim conjE exE) by (by100 blast)
+    ultimately show False by (by100 simp)
+  qed
+  have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
   \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_n. Apply SvK.\<close>
   have hstep: "n > 0 \<longrightarrow> (\<exists>Xprev TXprev Cn.
       Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
@@ -6483,6 +8668,1096 @@ proof -
   show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
 qed
 
+text \<open>Group axiom extraction lemmas (avoid unfolding top1_is_group_on_def repeatedly).\<close>
+
+lemma group_e_mem: "top1_is_group_on G mul e invg \<Longrightarrow> e \<in> G"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_mul_closed: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y \<in> G"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_inv_closed: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> invg x \<in> G"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_assoc: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow>
+    mul (mul x y) z = mul x (mul y z)"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_id_left: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> mul e x = x"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_id_right: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> mul x e = x"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_inv_left: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> mul (invg x) x = e"
+  unfolding top1_is_group_on_def by (by100 blast)
+lemma group_inv_right: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> mul x (invg x) = e"
+  unfolding top1_is_group_on_def by (by100 blast)
+
+text \<open>Derived: inverse of product.\<close>
+lemma group_inv_mul:
+  assumes hG: "top1_is_group_on G mul e invg" and hx: "x \<in> G" and hy: "y \<in> G"
+  shows "invg (mul x y) = mul (invg y) (invg x)"
+proof -
+  let ?ix = "invg x" and ?iy = "invg y" and ?xy = "mul x y"
+  have hix: "?ix \<in> G" by (rule group_inv_closed[OF hG hx])
+  have hiy: "?iy \<in> G" by (rule group_inv_closed[OF hG hy])
+  have hxy: "?xy \<in> G" by (rule group_mul_closed[OF hG hx hy])
+  have hixy: "invg ?xy \<in> G" by (rule group_inv_closed[OF hG hxy])
+  have hiyix: "mul ?iy ?ix \<in> G" by (rule group_mul_closed[OF hG hiy hix])
+  \<comment> \<open>(iy*ix)*(x*y) = iy*((ix*x)*y) = iy*(e*y) = iy*y = e.\<close>
+  have s0: "mul ?ix ?xy = mul (mul ?ix x) y"
+    using group_assoc[OF hG hix hx hy] by (by100 simp)
+  have s1: "mul (mul ?ix x) y = mul e y"
+    using group_inv_left[OF hG hx] by (by100 simp)
+  have s2: "mul e y = y" by (rule group_id_left[OF hG hy])
+  have s3: "mul ?ix ?xy = y" using s0 s1 s2 by (by100 simp)
+  have s4: "mul (mul ?iy ?ix) ?xy = mul ?iy (mul ?ix ?xy)"
+    by (rule group_assoc[OF hG hiy hix hxy])
+  have hleft: "mul (mul ?iy ?ix) ?xy = e"
+    using s4 s3 group_inv_left[OF hG hy] by (by100 simp)
+  \<comment> \<open>invg(xy)*(xy) = e = (iy*ix)*(xy). Right-cancel xy.\<close>
+  have "mul (invg ?xy) ?xy = e" by (rule group_inv_left[OF hG hxy])
+  \<comment> \<open>Both invg(xy) and (iy*ix) are left-inverses of xy. Unique left inverse.\<close>
+  \<comment> \<open>a = a*e = a*(xy)*(xy)\<inverse> for any a. Apply to both sides.\<close>
+  \<comment> \<open>iy*ix = (iy*ix)*e = (iy*ix)*(xy)*(xy)\<inverse> = e*(xy)\<inverse> = (xy)\<inverse>.\<close>
+  have t1: "mul (mul ?iy ?ix) (mul ?xy (invg ?xy)) = mul (mul (mul ?iy ?ix) ?xy) (invg ?xy)"
+    using group_assoc[OF hG hiyix hxy hixy] by (by100 simp)
+  have t2: "mul ?xy (invg ?xy) = e" by (rule group_inv_right[OF hG hxy])
+  have t3: "mul (mul ?iy ?ix) e = mul ?iy ?ix"
+    by (rule group_id_right[OF hG hiyix])
+  have t4: "mul ?iy ?ix = mul (mul ?iy ?ix) (mul ?xy (invg ?xy))"
+    using t2 t3 by (by100 simp)
+  have t5: "\<dots> = mul (mul (mul ?iy ?ix) ?xy) (invg ?xy)" by (rule t1)
+  have t6: "mul (mul (mul ?iy ?ix) ?xy) (invg ?xy) = mul e (invg ?xy)"
+    using hleft by (by100 simp)
+  have t7: "mul e (invg ?xy) = invg ?xy"
+    by (rule group_id_left[OF hG hixy])
+  show "invg ?xy = mul ?iy ?ix"
+    using t4 t5 t6 t7 by (by100 simp)
+qed
+
+lemma group_inv_inv:
+  assumes hG: "top1_is_group_on G mul e invg" and hx: "x \<in> G"
+  shows "invg (invg x) = x"
+proof -
+  have hix: "invg x \<in> G" by (rule group_inv_closed[OF hG hx])
+  have hiix: "invg (invg x) \<in> G" by (rule group_inv_closed[OF hG hix])
+  have "mul (invg (invg x)) (invg x) = e" by (rule group_inv_left[OF hG hix])
+  moreover have "mul x (invg x) = e" by (rule group_inv_right[OF hG hx])
+  \<comment> \<open>Both invg(invg x) and x are left-inverses of invg x. By right-cancel: they're equal.\<close>
+  hence "mul (mul (invg (invg x)) (invg x)) (invg (invg x))
+      = mul (mul x (invg x)) (invg (invg x))" using calculation by (by100 simp)
+  hence "mul (invg (invg x)) (mul (invg x) (invg (invg x)))
+      = mul x (mul (invg x) (invg (invg x)))"
+    using group_assoc[OF hG hiix hix hiix] group_assoc[OF hG hx hix hiix] by (by100 simp)
+  hence "mul (invg (invg x)) e = mul x e"
+    using group_inv_right[OF hG hix] by (by100 simp)
+  thus "invg (invg x) = x"
+    using group_id_right[OF hG hiix] group_id_right[OF hG hx] by (by100 simp)
+qed
+
+text \<open>Intersection of subgroups (with same operations from ambient G) is a subgroup.\<close>
+lemma intersection_of_subgroups_is_group:
+  assumes hG: "top1_is_group_on G mul e invg" and hS: "S \<subseteq> G"
+  shows "top1_is_group_on (top1_subgroup_generated_on G mul e invg S) mul e invg"
+proof -
+  let ?I = "top1_subgroup_generated_on G mul e invg S"
+  have hI_sub: "?I \<subseteq> G" by (rule subgroup_generated_subset[OF hG hS])
+  show ?thesis unfolding top1_is_group_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>e \<in> ?I: e is in every subgroup containing S.\<close>
+    show "e \<in> ?I" unfolding top1_subgroup_generated_on_def
+    proof (rule InterI)
+      fix H assume "H \<in> {H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg}"
+      hence "top1_is_group_on H mul e invg" by (by100 blast)
+      thus "e \<in> H" by (rule group_e_mem)
+    qed
+  next
+    fix x y assume hx: "x \<in> ?I" and hy: "y \<in> ?I"
+    show "mul x y \<in> ?I" unfolding top1_subgroup_generated_on_def
+    proof (rule InterI)
+      fix H assume hH: "H \<in> {H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg}"
+      have "top1_is_group_on H mul e invg" using hH by (by100 blast)
+      moreover have "x \<in> H"
+        using hx hH unfolding top1_subgroup_generated_on_def by (by100 blast)
+      moreover have "y \<in> H"
+        using hy hH unfolding top1_subgroup_generated_on_def by (by100 blast)
+      ultimately show "mul x y \<in> H" by (rule group_mul_closed)
+    qed
+  next
+    fix x assume hx: "x \<in> ?I"
+    show "invg x \<in> ?I" unfolding top1_subgroup_generated_on_def
+    proof (rule InterI)
+      fix H assume hH: "H \<in> {H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mul e invg}"
+      have "top1_is_group_on H mul e invg" using hH by (by100 blast)
+      moreover have "x \<in> H"
+        using hx hH unfolding top1_subgroup_generated_on_def by (by100 blast)
+      ultimately show "invg x \<in> H" by (rule group_inv_closed)
+    qed
+  next
+    fix x y z assume "x \<in> ?I" "y \<in> ?I" "z \<in> ?I"
+    hence "x \<in> G" "y \<in> G" "z \<in> G" using hI_sub by (by100 blast)+
+    thus "mul (mul x y) z = mul x (mul y z)" by (rule group_assoc[OF hG])
+  next
+    fix x assume "x \<in> ?I"
+    hence "x \<in> G" using hI_sub by (by100 blast)
+    show "mul e x = x" by (rule group_id_left[OF hG \<open>x \<in> G\<close>])
+  next
+    fix x assume "x \<in> ?I"
+    hence "x \<in> G" using hI_sub by (by100 blast)
+    show "mul x e = x" by (rule group_id_right[OF hG \<open>x \<in> G\<close>])
+  next
+    fix x assume "x \<in> ?I"
+    hence "x \<in> G" using hI_sub by (by100 blast)
+    show "mul (invg x) x = e" by (rule group_inv_left[OF hG \<open>x \<in> G\<close>])
+  next
+    fix x assume "x \<in> ?I"
+    hence "x \<in> G" using hI_sub by (by100 blast)
+    show "mul x (invg x) = e" by (rule group_inv_right[OF hG \<open>x \<in> G\<close>])
+  qed
+qed
+
+text \<open>Conjugation by g is a homomorphism: g(xy)g\<inverse> = (gxg\<inverse>)(gyg\<inverse>).\<close>
+lemma group_conjugate_mul:
+  assumes hG: "top1_is_group_on G mul e invg" and hg: "g \<in> G" and hx: "x \<in> G" and hy: "y \<in> G"
+  shows "mul (mul g (mul x y)) (invg g) = mul (mul (mul g x) (invg g)) (mul (mul g y) (invg g))"
+proof -
+  have hig: "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+  have hgx: "mul g x \<in> G" by (rule group_mul_closed[OF hG hg hx])
+  have hgy: "mul g y \<in> G" by (rule group_mul_closed[OF hG hg hy])
+  have hxy: "mul x y \<in> G" by (rule group_mul_closed[OF hG hx hy])
+  have hgxig: "mul (mul g x) (invg g) \<in> G" by (rule group_mul_closed[OF hG hgx hig])
+  have hgyig: "mul (mul g y) (invg g) \<in> G" by (rule group_mul_closed[OF hG hgy hig])
+  \<comment> \<open>RHS = (gxg\<inverse>)(gyg\<inverse>) = gx(g\<inverse>g)y g\<inverse> = gxyg\<inverse> = LHS.\<close>
+  have "mul (mul (mul g x) (invg g)) (mul (mul g y) (invg g))
+      = mul (mul g x) (mul (invg g) (mul (mul g y) (invg g)))"
+    by (rule group_assoc[OF hG hgx hig hgyig])
+  also have "mul (invg g) (mul (mul g y) (invg g)) = mul (mul (invg g) (mul g y)) (invg g)"
+    using group_assoc[OF hG hig hgy hig] by (by100 simp)
+  also have "mul (invg g) (mul g y) = mul (mul (invg g) g) y"
+    using group_assoc[OF hG hig hg hy] by (by100 simp)
+  also have "mul (invg g) g = e" by (rule group_inv_left[OF hG hg])
+  also have "mul e y = y" by (rule group_id_left[OF hG hy])
+  finally have rhs_simp: "mul (mul (mul g x) (invg g)) (mul (mul g y) (invg g))
+      = mul (mul g x) (mul y (invg g))" by (by100 simp)
+  have "mul (mul g (mul x y)) (invg g) = mul g (mul (mul x y) (invg g))"
+    by (rule group_assoc[OF hG hg hxy hig])
+  also have "mul (mul x y) (invg g) = mul x (mul y (invg g))"
+    by (rule group_assoc[OF hG hx hy hig])
+  finally have lhs_simp: "mul (mul g (mul x y)) (invg g) = mul g (mul x (mul y (invg g)))" .
+  also have "mul g (mul x (mul y (invg g))) = mul (mul g x) (mul y (invg g))"
+  proof -
+    have "mul y (invg g) \<in> G" by (rule group_mul_closed[OF hG hy hig])
+    thus ?thesis using group_assoc[OF hG hg hx \<open>mul y (invg g) \<in> G\<close>] by (by100 simp)
+  qed
+  finally show ?thesis using rhs_simp by (by100 simp)
+qed
+
+text \<open>Conjugation preserves inverses: g(x\<inverse>)g\<inverse> = (gxg\<inverse>)\<inverse>.\<close>
+lemma group_conjugate_inv:
+  assumes hG: "top1_is_group_on G mul e invg" and hg: "g \<in> G" and hx: "x \<in> G"
+  shows "mul (mul g (invg x)) (invg g) = invg (mul (mul g x) (invg g))"
+proof -
+  have hig: "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+  have hix: "invg x \<in> G" by (rule group_inv_closed[OF hG hx])
+  have hgx: "mul g x \<in> G" by (rule group_mul_closed[OF hG hg hx])
+  have hgxig: "mul (mul g x) (invg g) \<in> G" by (rule group_mul_closed[OF hG hgx hig])
+  have hgix: "mul g (invg x) \<in> G" by (rule group_mul_closed[OF hG hg hix])
+  have hgixig: "mul (mul g (invg x)) (invg g) \<in> G"
+    by (rule group_mul_closed[OF hG hgix hig])
+  \<comment> \<open>(gxg\<inverse>)(gx\<inverse>g\<inverse>) = g(x·x\<inverse>)g\<inverse> = g·e·g\<inverse> = g·g\<inverse> = e.\<close>
+  let ?gxig = "mul (mul g x) (invg g)"
+  let ?gixig = "mul (mul g (invg x)) (invg g)"
+  have h1: "mul ?gxig ?gixig = e"
+  proof -
+    have "mul ?gxig ?gixig = mul (mul g (mul x (invg x))) (invg g)"
+      using group_conjugate_mul[OF hG hg hx hix] by (by100 simp)
+    also have "mul x (invg x) = e" by (rule group_inv_right[OF hG hx])
+    hence "mul (mul g (mul x (invg x))) (invg g) = mul (mul g e) (invg g)" by (by100 simp)
+    also have "mul g e = g" by (rule group_id_right[OF hG hg])
+    hence "mul (mul g e) (invg g) = mul g (invg g)" by (by100 simp)
+    also have "mul g (invg g) = e" by (rule group_inv_right[OF hG hg])
+    finally show ?thesis by (by100 simp)
+  qed
+  have h2: "mul ?gixig ?gxig = e"
+  proof -
+    have "mul ?gixig ?gxig = mul (mul g (mul (invg x) x)) (invg g)"
+      using group_conjugate_mul[OF hG hg hix hx] by (by100 simp)
+    also have "mul (invg x) x = e" by (rule group_inv_left[OF hG hx])
+    hence "mul (mul g (mul (invg x) x)) (invg g) = mul (mul g e) (invg g)" by (by100 simp)
+    also have "mul g e = g" by (rule group_id_right[OF hG hg])
+    hence "mul (mul g e) (invg g) = mul g (invg g)" by (by100 simp)
+    also have "mul g (invg g) = e" by (rule group_inv_right[OF hG hg])
+    finally show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>gx\<inverse>g\<inverse> is a two-sided inverse of gxg\<inverse>, hence equals invg(gxg\<inverse>).\<close>
+  \<comment> \<open>gx\<inverse>g\<inverse> = gx\<inverse>g\<inverse> · e = gx\<inverse>g\<inverse> · (gxg\<inverse> · invg(gxg\<inverse>)) = (gx\<inverse>g\<inverse> · gxg\<inverse>) · invg(gxg\<inverse>) = e · invg(gxg\<inverse>) = invg(gxg\<inverse>).\<close>
+  have hgixig_G: "?gixig \<in> G" by (rule group_mul_closed[OF hG hgix hig])
+  have hgxig_G: "?gxig \<in> G" by (rule group_mul_closed[OF hG hgx hig])
+  have higxig: "invg ?gxig \<in> G" by (rule group_inv_closed[OF hG hgxig_G])
+  have "?gixig = mul ?gixig e" using group_id_right[OF hG hgixig_G] by (by100 simp)
+  also have "mul ?gixig e = mul ?gixig (mul ?gxig (invg ?gxig))"
+    using group_inv_right[OF hG hgxig_G] by (by100 simp)
+  also have "\<dots> = mul (mul ?gixig ?gxig) (invg ?gxig)"
+    using group_assoc[OF hG hgixig_G hgxig_G higxig] by (by100 simp)
+  also have "mul ?gixig ?gxig = e" by (rule h2)
+  also have "mul e (invg ?gxig) = invg ?gxig"
+    by (rule group_id_left[OF hG higxig])
+  finally show ?thesis by (by100 simp)
+qed
+
+text \<open>Commutator subgroup [G,G] is always normal. Key algebraic identity:
+  g[a,b]g\<inverse> = [gag\<inverse>, gbg\<inverse>] (conjugate of commutator is commutator).\<close>
+
+lemma commutator_conjugate:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and "g \<in> G" "a \<in> G" "b \<in> G"
+  shows "mul (mul g (top1_group_commutator_on mul invg a b)) (invg g) =
+         top1_group_commutator_on mul invg (mul (mul g a) (invg g)) (mul (mul g b) (invg g))"
+proof -
+  have hig: "invg g \<in> G" by (rule group_inv_closed[OF hG assms(2)])
+  have hia: "invg a \<in> G" by (rule group_inv_closed[OF hG assms(3)])
+  have hib: "invg b \<in> G" by (rule group_inv_closed[OF hG assms(4)])
+  have hab: "mul a b \<in> G" by (rule group_mul_closed[OF hG assms(3) assms(4)])
+  have hiaib: "mul (invg a) (invg b) \<in> G" by (rule group_mul_closed[OF hG hia hib])
+  let ?ga = "mul (mul g a) (invg g)" and ?gb = "mul (mul g b) (invg g)"
+  \<comment> \<open>[a,b] = (a*b)*(a\<inverse>*b\<inverse>). So g[a,b]g\<inverse> = g((ab)(a\<inverse>b\<inverse>))g\<inverse>.\<close>
+  have comm_split: "top1_group_commutator_on mul invg a b = mul (mul a b) (mul (invg a) (invg b))"
+    unfolding top1_group_commutator_on_def
+    using group_assoc[OF hG hab hia hib] by (by100 simp)
+  have lhs: "mul (mul g (top1_group_commutator_on mul invg a b)) (invg g) =
+      mul (mul (mul g (mul a b)) (invg g)) (mul (mul g (mul (invg a) (invg b))) (invg g))"
+    unfolding comm_split by (rule group_conjugate_mul[OF hG assms(2) hab hiaib])
+  \<comment> \<open>g(ab)g\<inverse> = (gag\<inverse>)(gbg\<inverse>).\<close>
+  have s1: "mul (mul g (mul a b)) (invg g) = mul ?ga ?gb"
+    by (rule group_conjugate_mul[OF hG assms(2) assms(3) assms(4)])
+  \<comment> \<open>g(a\<inverse>b\<inverse>)g\<inverse> = (ga\<inverse>g\<inverse>)(gb\<inverse>g\<inverse>).\<close>
+  have s2: "mul (mul g (mul (invg a) (invg b))) (invg g) =
+      mul (mul (mul g (invg a)) (invg g)) (mul (mul g (invg b)) (invg g))"
+    by (rule group_conjugate_mul[OF hG assms(2) hia hib])
+  \<comment> \<open>ga\<inverse>g\<inverse> = invg(gag\<inverse>), gb\<inverse>g\<inverse> = invg(gbg\<inverse>).\<close>
+  have s3: "mul (mul g (invg a)) (invg g) = invg ?ga"
+    by (rule group_conjugate_inv[OF hG assms(2) assms(3)])
+  have s4: "mul (mul g (invg b)) (invg g) = invg ?gb"
+    by (rule group_conjugate_inv[OF hG assms(2) assms(4)])
+  \<comment> \<open>RHS: [gag\<inverse>, gbg\<inverse>] = (gag\<inverse>)(gbg\<inverse>)(invg(gag\<inverse>))(invg(gbg\<inverse>))
+       = (gag\<inverse>)(gbg\<inverse>) * (invg(gag\<inverse>))(invg(gbg\<inverse>)).\<close>
+  have hga': "mul g a \<in> G" by (rule group_mul_closed[OF hG assms(2) assms(3)])
+  have hga: "?ga \<in> G" by (rule group_mul_closed[OF hG hga' hig])
+  have hgb': "mul g b \<in> G" by (rule group_mul_closed[OF hG assms(2) assms(4)])
+  have hgb: "?gb \<in> G" by (rule group_mul_closed[OF hG hgb' hig])
+  have higa: "invg ?ga \<in> G" by (rule group_inv_closed[OF hG hga])
+  have higb: "invg ?gb \<in> G" by (rule group_inv_closed[OF hG hgb])
+  have hgagb: "mul ?ga ?gb \<in> G" by (rule group_mul_closed[OF hG hga hgb])
+  have rhs_split: "top1_group_commutator_on mul invg ?ga ?gb =
+      mul (mul ?ga ?gb) (mul (invg ?ga) (invg ?gb))"
+    unfolding top1_group_commutator_on_def
+    using group_assoc[OF hG hgagb higa higb] by (by100 simp)
+  show ?thesis using lhs s1 s2 s3 s4 rhs_split by (by100 simp)
+qed
+
+lemma commutator_subgroup_is_normal:
+  assumes hG: "top1_is_group_on G mul e invg"
+  shows "top1_normal_subgroup_on G mul e invg (top1_commutator_subgroup_on G mul e invg)"
+  unfolding top1_normal_subgroup_on_def
+proof (intro conjI)
+  let ?comm = "top1_commutator_subgroup_on G mul e invg"
+  let ?gens = "{ top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G }"
+  have hgens_sub: "?gens \<subseteq> G"
+  proof (rule subsetI)
+    fix x assume "x \<in> ?gens"
+    then obtain a b where "a \<in> G" "b \<in> G" "x = top1_group_commutator_on mul invg a b"
+      by (by100 blast)
+    thus "x \<in> G" unfolding top1_group_commutator_on_def
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+  qed
+  show "?comm \<subseteq> G"
+    unfolding top1_commutator_subgroup_on_def
+    by (rule subgroup_generated_subset[OF hG hgens_sub])
+  show "top1_is_group_on ?comm mul e invg"
+    unfolding top1_commutator_subgroup_on_def
+    by (rule intersection_of_subgroups_is_group[OF hG hgens_sub])
+  show "\<forall>g\<in>G. \<forall>n\<in>?comm. mul (mul g n) (invg g) \<in> ?comm"
+  proof (intro ballI)
+    fix g n assume hg: "g \<in> G" and hn: "n \<in> ?comm"
+    \<comment> \<open>K_g = {n \<in> G. gng\<inverse> \<in> [G,G]} contains commutators and is a subgroup.\<close>
+    let ?Kg = "{n \<in> G. mul (mul g n) (invg g) \<in> ?comm}"
+    have "?gens \<subseteq> ?Kg"
+    proof (rule subsetI)
+      fix x assume "x \<in> ?gens"
+      then obtain a b where hab: "a \<in> G" "b \<in> G"
+          and hx: "x = top1_group_commutator_on mul invg a b" by (by100 blast)
+      have "x \<in> G" using hx hgens_sub \<open>x \<in> ?gens\<close> by (by100 blast)
+      moreover have "mul (mul g x) (invg g) \<in> ?comm"
+      proof -
+        have "mul (mul g x) (invg g) =
+            top1_group_commutator_on mul invg (mul (mul g a) (invg g)) (mul (mul g b) (invg g))"
+          unfolding hx by (rule commutator_conjugate[OF hG hg hab])
+        moreover have "mul (mul g a) (invg g) \<in> G"
+          using hG hg hab unfolding top1_is_group_on_def by (by100 blast)
+        moreover have "mul (mul g b) (invg g) \<in> G"
+          using hG hg hab unfolding top1_is_group_on_def by (by100 blast)
+        ultimately have "mul (mul g x) (invg g) \<in> ?gens" by (by100 blast)
+        thus ?thesis unfolding top1_commutator_subgroup_on_def
+          by (rule subgroup_generated_contains[OF hG hgens_sub])
+      qed
+      ultimately show "x \<in> ?Kg" by (by100 blast)
+    qed
+    moreover have "?Kg \<subseteq> G" by (by100 blast)
+    moreover have "top1_is_group_on ?Kg mul e invg"
+    proof -
+      have hcomm_grp: "top1_is_group_on ?comm mul e invg"
+        unfolding top1_commutator_subgroup_on_def
+        by (rule intersection_of_subgroups_is_group[OF hG hgens_sub])
+      show ?thesis unfolding top1_is_group_on_def
+      proof (intro conjI ballI)
+        \<comment> \<open>e \<in> K_g.\<close>
+        show "e \<in> ?Kg"
+        proof -
+          have "e \<in> G" by (rule group_e_mem[OF hG])
+          moreover have "mul (mul g e) (invg g) = e"
+            using group_id_right[OF hG hg] group_inv_right[OF hG hg] by (by100 simp)
+          hence "mul (mul g e) (invg g) \<in> ?comm"
+            using group_e_mem[OF hcomm_grp] by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+      next
+        fix n1 n2 assume hn1: "n1 \<in> ?Kg" and hn2: "n2 \<in> ?Kg"
+        show "mul n1 n2 \<in> ?Kg"
+        proof -
+          have "n1 \<in> G" "n2 \<in> G" using hn1 hn2 by (by100 blast)+
+          hence hmn: "mul n1 n2 \<in> G" by (rule group_mul_closed[OF hG])
+          have c1: "mul (mul g n1) (invg g) \<in> ?comm" using hn1 by (by100 blast)
+          have c2: "mul (mul g n2) (invg g) \<in> ?comm" using hn2 by (by100 blast)
+          have "mul (mul g (mul n1 n2)) (invg g) =
+              mul (mul (mul g n1) (invg g)) (mul (mul g n2) (invg g))"
+            by (rule group_conjugate_mul[OF hG hg \<open>n1 \<in> G\<close> \<open>n2 \<in> G\<close>])
+          hence "mul (mul g (mul n1 n2)) (invg g) \<in> ?comm"
+            using group_mul_closed[OF hcomm_grp c1 c2] by (by100 simp)
+          thus ?thesis using hmn by (by100 blast)
+        qed
+      next
+        fix n assume hn: "n \<in> ?Kg"
+        show "invg n \<in> ?Kg"
+        proof -
+          have "n \<in> G" using hn by (by100 blast)
+          hence hin: "invg n \<in> G" by (rule group_inv_closed[OF hG])
+          have cn: "mul (mul g n) (invg g) \<in> ?comm" using hn by (by100 blast)
+          have "mul (mul g (invg n)) (invg g) = invg (mul (mul g n) (invg g))"
+            by (rule group_conjugate_inv[OF hG hg \<open>n \<in> G\<close>])
+          hence "mul (mul g (invg n)) (invg g) \<in> ?comm"
+            using group_inv_closed[OF hcomm_grp cn] by (by100 simp)
+          thus ?thesis using hin by (by100 blast)
+        qed
+      next
+        fix n1 n2 n3 assume "n1 \<in> ?Kg" "n2 \<in> ?Kg" "n3 \<in> ?Kg"
+        hence "n1 \<in> G" "n2 \<in> G" "n3 \<in> G" by (by100 blast)+
+        thus "mul (mul n1 n2) n3 = mul n1 (mul n2 n3)" by (rule group_assoc[OF hG])
+      next
+        fix n assume "n \<in> ?Kg" hence "n \<in> G" by (by100 blast)
+        show "mul e n = n" by (rule group_id_left[OF hG \<open>n \<in> G\<close>])
+      next
+        fix n assume "n \<in> ?Kg" hence "n \<in> G" by (by100 blast)
+        show "mul n e = n" by (rule group_id_right[OF hG \<open>n \<in> G\<close>])
+      next
+        fix n assume "n \<in> ?Kg" hence "n \<in> G" by (by100 blast)
+        show "mul (invg n) n = e" by (rule group_inv_left[OF hG \<open>n \<in> G\<close>])
+      next
+        fix n assume "n \<in> ?Kg" hence "n \<in> G" by (by100 blast)
+        show "mul n (invg n) = e" by (rule group_inv_right[OF hG \<open>n \<in> G\<close>])
+      qed
+    qed
+    ultimately have "?comm \<subseteq> ?Kg"
+      unfolding top1_commutator_subgroup_on_def
+      by (rule subgroup_generated_minimal)
+    thus "mul (mul g n) (invg g) \<in> ?comm" using hn by (by100 blast)
+  qed
+qed
+
+text \<open>Quotient group infrastructure: coset membership, normality, and the natural projection.\<close>
+
+lemma coset_self_mem:
+  assumes hG: "top1_is_group_on G mul e invg" and hN: "N \<subseteq> G"
+      and hN_grp: "top1_is_group_on N mul e invg" and hg: "g \<in> G"
+  shows "g \<in> top1_group_coset_on G mul N g"
+proof -
+  have "e \<in> N" by (rule group_e_mem[OF hN_grp])
+  hence "mul g e \<in> {mul g n | n. n \<in> N}" by (by100 blast)
+  moreover have "mul g e = g" by (rule group_id_right[OF hG hg])
+  ultimately show ?thesis unfolding top1_group_coset_on_def by (by100 simp)
+qed
+
+lemma coset_e_is_N:
+  assumes hG: "top1_is_group_on G mul e invg" and hN: "N \<subseteq> G"
+      and hN_grp: "top1_is_group_on N mul e invg"
+  shows "top1_group_coset_on G mul N e = N"
+proof (rule set_eqI)
+  fix x show "x \<in> top1_group_coset_on G mul N e \<longleftrightarrow> x \<in> N"
+  proof
+    assume "x \<in> top1_group_coset_on G mul N e"
+    then obtain n where hn: "n \<in> N" and hx: "x = mul e n"
+      unfolding top1_group_coset_on_def by (by100 blast)
+    have "n \<in> G" using hn hN by (by100 blast)
+    hence "mul e n = n" by (rule group_id_left[OF hG])
+    thus "x \<in> N" using hx hn by (by100 simp)
+  next
+    assume "x \<in> N"
+    hence "mul e x \<in> {mul e n | n. n \<in> N}" by (by100 blast)
+    have "x \<in> G" using \<open>x \<in> N\<close> hN by (by100 blast)
+    hence "mul e x = x" by (rule group_id_left[OF hG])
+    thus "x \<in> top1_group_coset_on G mul N e"
+      unfolding top1_group_coset_on_def using \<open>x \<in> N\<close> by (by100 force)
+  qed
+qed
+
+lemma normal_coset_eq:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hN: "top1_normal_subgroup_on G mul e invg N"
+      and hg: "g \<in> G" and hh: "h \<in> G"
+  shows "top1_group_coset_on G mul N g = top1_group_coset_on G mul N h
+         \<longleftrightarrow> mul (invg g) h \<in> N"
+proof -
+  let ?gN = "top1_group_coset_on G mul N g"
+  let ?hN = "top1_group_coset_on G mul N h"
+  have hNsub: "N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on N mul e invg"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_conj: "\<And>g0 n0. g0 \<in> G \<Longrightarrow> n0 \<in> N \<Longrightarrow> mul (mul g0 n0) (invg g0) \<in> N"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hinvg: "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+  show ?thesis
+  proof
+    \<comment> \<open>(\<Rightarrow>): gN = hN implies g \<in> hN, so g = mul h n for some n \<in> N.
+       Then invg(g) * h = invg(h * n) * h = invg(n) * invg(h) * h = invg(n) \<in> N.\<close>
+    assume heq: "?gN = ?hN"
+    have "g \<in> ?gN" by (rule coset_self_mem[OF hG hNsub hN_grp hg])
+    hence "g \<in> ?hN" using heq by (by100 simp)
+    then obtain n where hn: "n \<in> N" and hg_eq: "g = mul h n"
+      unfolding top1_group_coset_on_def by (by100 blast)
+    have hnG: "n \<in> G" using hn hNsub by (by100 blast)
+    have "invg g = invg (mul h n)" using hg_eq by (by100 simp)
+    also have "\<dots> = mul (invg n) (invg h)" by (rule group_inv_mul[OF hG hh hnG])
+    finally have hinvg_eq: "invg g = mul (invg n) (invg h)" .
+    have "mul (invg g) h = mul (mul (invg n) (invg h)) h"
+      using hinvg_eq by (by100 simp)
+    also have "\<dots> = mul (invg n) (mul (invg h) h)"
+    proof -
+      have "invg n \<in> G" by (rule group_inv_closed[OF hG hnG])
+      have "invg h \<in> G" by (rule group_inv_closed[OF hG hh])
+      show ?thesis by (rule group_assoc[OF hG \<open>invg n \<in> G\<close> \<open>invg h \<in> G\<close> hh])
+    qed
+    also have "mul (invg h) h = e" by (rule group_inv_left[OF hG hh])
+    also have "mul (invg n) e = invg n"
+    proof -
+      have "invg n \<in> G" by (rule group_inv_closed[OF hG hnG])
+      show ?thesis by (rule group_id_right[OF hG \<open>invg n \<in> G\<close>])
+    qed
+    finally have "mul (invg g) h = invg n" .
+    moreover have "invg n \<in> N" by (rule group_inv_closed[OF hN_grp hn])
+    ultimately show "mul (invg g) h \<in> N" by (by100 simp)
+  next
+    \<comment> \<open>(\<Leftarrow>): invg(g) * h \<in> N implies gN = hN via set equality.\<close>
+    assume hmem: "mul (invg g) h \<in> N"
+    show "?gN = ?hN"
+    proof (rule set_eqI)
+      fix x show "x \<in> ?gN \<longleftrightarrow> x \<in> ?hN"
+      proof
+        assume "x \<in> ?gN"
+        then obtain n1 where hn1: "n1 \<in> N" and hx: "x = mul g n1"
+          unfolding top1_group_coset_on_def by (by100 blast)
+        have hn1G: "n1 \<in> G" using hn1 hNsub by (by100 blast)
+        \<comment> \<open>x = g * n1 = h * (invg(h) * g) * n1.
+           invg(h) * g = invg(invg(g) * h) ... use normality.\<close>
+        \<comment> \<open>g = h * (invg h * g). And invg h * g = invg(invg g * h)^{-1}... complex.
+           Simpler: x = g * n1. We want x = h * n2.
+           x = g * n1 = (g * (invg g * h)^{-1}) * (invg g * h) * ... no.
+           Let m = invg(g) * h \<in> N. Then h = g * m (from g * m = g * invg g * h = h).
+           Wait: mul g m = mul g (mul (invg g) h) = mul (mul g (invg g)) h = mul e h = h.
+           So h = mul g m. And g = mul h (invg m).
+           x = mul g n1 = mul (mul h (invg m)) n1 = mul h (mul (invg m) n1).
+           invg m \<in> N and n1 \<in> N, so mul (invg m) n1 \<in> N. Done.\<close>
+        let ?m = "mul (invg g) h"
+        have hmG: "?m \<in> G" by (rule group_mul_closed[OF hG hinvg hh])
+        have hg_eq: "mul g ?m = h"
+        proof -
+          have "mul g (mul (invg g) h) = mul (mul g (invg g)) h"
+            using group_assoc[OF hG hg hinvg hh] by (by100 simp)
+          also have "mul g (invg g) = e" by (rule group_inv_right[OF hG hg])
+          also have "mul e h = h" by (rule group_id_left[OF hG hh])
+          finally show ?thesis by (by100 simp)
+        qed
+        have "invg ?m \<in> N" by (rule group_inv_closed[OF hN_grp hmem])
+        have "invg ?m \<in> G" using hNsub \<open>invg ?m \<in> N\<close> by (by100 blast)
+        have "x = mul g n1" using hx .
+        \<comment> \<open>g = mul h (invg m).\<close>
+        have "mul h (invg ?m) = g"
+        proof -
+          have "mul (mul h (invg ?m)) ?m = mul h (mul (invg ?m) ?m)"
+            by (rule group_assoc[OF hG hh \<open>invg ?m \<in> G\<close> hmG])
+          also have "mul (invg ?m) ?m = e" by (rule group_inv_left[OF hG hmG])
+          also have "mul h e = h" by (rule group_id_right[OF hG hh])
+          finally have "mul (mul h (invg ?m)) ?m = h" .
+          moreover have "mul g ?m = h" by (rule hg_eq)
+          ultimately have "mul (mul h (invg ?m)) ?m = mul g ?m" by (by100 simp)
+          \<comment> \<open>Right-cancel ?m.\<close>
+          have hmul1: "mul h (invg ?m) \<in> G"
+            by (rule group_mul_closed[OF hG hh \<open>invg ?m \<in> G\<close>])
+          have "mul (mul (mul h (invg ?m)) ?m) (invg ?m) = mul (mul g ?m) (invg ?m)"
+            using \<open>mul (mul h (invg ?m)) ?m = mul g ?m\<close> by (by100 simp)
+          have lhs: "mul (mul (mul h (invg ?m)) ?m) (invg ?m) = mul h (invg ?m)"
+          proof -
+            have "mul (mul (mul h (invg ?m)) ?m) (invg ?m)
+                = mul (mul h (invg ?m)) (mul ?m (invg ?m))"
+              by (rule group_assoc[OF hG hmul1 hmG \<open>invg ?m \<in> G\<close>])
+            also have "mul ?m (invg ?m) = e" by (rule group_inv_right[OF hG hmG])
+            also have "mul (mul h (invg ?m)) e = mul h (invg ?m)"
+              by (rule group_id_right[OF hG hmul1])
+            finally show ?thesis by (by100 simp)
+          qed
+          have rhs: "mul (mul g ?m) (invg ?m) = g"
+          proof -
+            have "mul (mul g ?m) (invg ?m) = mul g (mul ?m (invg ?m))"
+              by (rule group_assoc[OF hG hg hmG \<open>invg ?m \<in> G\<close>])
+            also have "mul ?m (invg ?m) = e" by (rule group_inv_right[OF hG hmG])
+            also have "mul g e = g" by (rule group_id_right[OF hG hg])
+            finally show ?thesis by (by100 simp)
+          qed
+          show ?thesis using lhs rhs
+            \<open>mul (mul (mul h (invg ?m)) ?m) (invg ?m) = mul (mul g ?m) (invg ?m)\<close>
+            by (by100 simp)
+        qed
+        hence "x = mul (mul h (invg ?m)) n1" using hx by (by100 simp)
+        also have "\<dots> = mul h (mul (invg ?m) n1)"
+          by (rule group_assoc[OF hG hh \<open>invg ?m \<in> G\<close> hn1G])
+        finally have hx_eq: "x = mul h (mul (invg ?m) n1)" .
+        have "mul (invg ?m) n1 \<in> N"
+          by (rule group_mul_closed[OF hN_grp \<open>invg ?m \<in> N\<close> hn1])
+        thus "x \<in> ?hN" unfolding top1_group_coset_on_def using hx_eq by (by100 blast)
+      next
+        \<comment> \<open>Symmetric direction: x \<in> hN \<Rightarrow> x \<in> gN.
+           Similar argument using invg(invg g * h) = invg h * g, and mul (invg h) g \<in> N
+           follows from invg(invg g * h) \<in> N.\<close>
+        assume "x \<in> ?hN"
+        then obtain n2 where hn2: "n2 \<in> N" and hx: "x = mul h n2"
+          unfolding top1_group_coset_on_def by (by100 blast)
+        have hn2G: "n2 \<in> G" using hn2 hNsub by (by100 blast)
+        let ?m = "mul (invg g) h"
+        have hmG: "?m \<in> G" by (rule group_mul_closed[OF hG hinvg hh])
+        have hg_eq: "mul g ?m = h"
+        proof -
+          have "mul g (mul (invg g) h) = mul (mul g (invg g)) h"
+            using group_assoc[OF hG hg hinvg hh] by (by100 simp)
+          also have "mul g (invg g) = e" by (rule group_inv_right[OF hG hg])
+          also have "mul e h = h" by (rule group_id_left[OF hG hh])
+          finally show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>h = g * m, so x = h * n2 = g * m * n2 = g * (m * n2). m \<in> N, n2 \<in> N \<Rightarrow> m * n2 \<in> N.\<close>
+        have "x = mul h n2" using hx .
+        also have "mul h n2 = mul (mul g ?m) n2" using hg_eq by (by100 simp)
+        also have "\<dots> = mul g (mul ?m n2)"
+          by (rule group_assoc[OF hG hg hmG hn2G])
+        finally have hx_eq: "x = mul g (mul ?m n2)" .
+        have "mul ?m n2 \<in> N" by (rule group_mul_closed[OF hN_grp hmem hn2])
+        thus "x \<in> ?gN" unfolding top1_group_coset_on_def using hx_eq by (by100 blast)
+      qed
+    qed
+  qed
+qed
+
+lemma normal_coset_mul_eq:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hN: "top1_normal_subgroup_on G mul e invg N"
+      and hg: "g \<in> G" and hh: "h \<in> G"
+  shows "top1_quotient_group_mul_on mul
+           (top1_group_coset_on G mul N g) (top1_group_coset_on G mul N h)
+         = top1_group_coset_on G mul N (mul g h)"
+proof (rule set_eqI)
+  let ?gN = "top1_group_coset_on G mul N g"
+  let ?hN = "top1_group_coset_on G mul N h"
+  let ?ghN = "top1_group_coset_on G mul N (mul g h)"
+  have hNsub: "N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on N mul e invg"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_conj: "\<And>g0 n0. g0 \<in> G \<Longrightarrow> n0 \<in> N \<Longrightarrow> mul (mul g0 n0) (invg g0) \<in> N"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  fix x
+  show "x \<in> top1_quotient_group_mul_on mul ?gN ?hN \<longleftrightarrow> x \<in> ?ghN"
+  proof
+    \<comment> \<open>(\<subseteq>): x = mul (mul g n1) (mul h n2) for n1, n2 \<in> N.
+       Rewrite using normality: mul n1 h = mul h n'' for n'' \<in> N.\<close>
+    assume "x \<in> top1_quotient_group_mul_on mul ?gN ?hN"
+    then obtain a b where ha: "a \<in> ?gN" and hb: "b \<in> ?hN" and hx: "x = mul a b"
+      unfolding top1_quotient_group_mul_on_def by (by100 blast)
+    obtain n1 where hn1: "n1 \<in> N" and ha_eq: "a = mul g n1"
+      using ha unfolding top1_group_coset_on_def by (by100 blast)
+    obtain n2 where hn2: "n2 \<in> N" and hb_eq: "b = mul h n2"
+      using hb unfolding top1_group_coset_on_def by (by100 blast)
+    have hn1G: "n1 \<in> G" using hn1 hNsub by (by100 blast)
+    have hn2G: "n2 \<in> G" using hn2 hNsub by (by100 blast)
+    \<comment> \<open>Key: mul (invg h) n1 h = n'' \<in> N, so n1 h = h n''.\<close>
+    have hinvh: "invg h \<in> G" by (rule group_inv_closed[OF hG hh])
+    have hn1h: "mul n1 h \<in> G" by (rule group_mul_closed[OF hG hn1G hh])
+    \<comment> \<open>Conjugate n1 by invg h: mul (mul (invg h) n1) h \<in> N (normality with invg h).\<close>
+    have hconj_step: "mul (mul (invg h) n1) (invg (invg h)) \<in> N"
+      by (rule hN_conj[OF hinvh hn1])
+    have hinvinvh: "invg (invg h) = h" by (rule group_inv_inv[OF hG hh])
+    hence "mul (mul (invg h) n1) h \<in> N" using hconj_step by (by100 simp)
+    then obtain n'' where hn'': "n'' \<in> N" and hn''_eq: "n'' = mul (mul (invg h) n1) h"
+      by (by100 blast)
+    \<comment> \<open>Show: mul h n'' = mul n1 h.\<close>
+    have hn''G: "n'' \<in> G" using hn'' hNsub by (by100 blast)
+    have "mul h n'' = mul h (mul (mul (invg h) n1) h)"
+      using hn''_eq by (by100 simp)
+    also have "\<dots> = mul (mul h (mul (invg h) n1)) h"
+    proof -
+      have hmid: "mul (invg h) n1 \<in> G" by (rule group_mul_closed[OF hG hinvh hn1G])
+      show ?thesis using group_assoc[OF hG hh hmid hh] by (by100 simp)
+    qed
+    also have "mul h (mul (invg h) n1) = mul (mul h (invg h)) n1"
+      using group_assoc[OF hG hh hinvh hn1G] by (by100 simp)
+    also have "mul h (invg h) = e" by (rule group_inv_right[OF hG hh])
+    also have "mul e n1 = n1" by (rule group_id_left[OF hG hn1G])
+    finally have hmul_n1h: "mul h n'' = mul n1 h" by (by100 simp)
+    \<comment> \<open>Now: x = mul (mul g n1) (mul h n2) = mul g (mul n1 (mul h n2))
+            = mul g (mul (mul n1 h) n2) = mul g (mul (mul h n'') n2)
+            = mul g (mul h (mul n'' n2)) = mul (mul g h) (mul n'' n2).\<close>
+    have hhn2: "mul h n2 \<in> G" by (rule group_mul_closed[OF hG hh hn2G])
+    have hn''n2: "mul n'' n2 \<in> G" by (rule group_mul_closed[OF hG hn''G hn2G])
+    have "x = mul (mul g n1) (mul h n2)" using hx ha_eq hb_eq by (by100 simp)
+    also have "\<dots> = mul g (mul n1 (mul h n2))"
+      by (rule group_assoc[OF hG hg hn1G hhn2])
+    also have "mul n1 (mul h n2) = mul (mul n1 h) n2"
+      using group_assoc[OF hG hn1G hh hn2G] by (by100 simp)
+    also have "mul n1 h = mul h n''" using hmul_n1h[symmetric] .
+    also have "mul (mul h n'') n2 = mul h (mul n'' n2)"
+      by (rule group_assoc[OF hG hh hn''G hn2G])
+    also have "mul g (mul h (mul n'' n2)) = mul (mul g h) (mul n'' n2)"
+      using group_assoc[OF hG hg hh hn''n2] by (by100 simp)
+    finally have "x = mul (mul g h) (mul n'' n2)" by (by100 simp)
+    moreover have "mul n'' n2 \<in> N" by (rule group_mul_closed[OF hN_grp hn'' hn2])
+    ultimately show "x \<in> ?ghN" unfolding top1_group_coset_on_def by (by100 blast)
+  next
+    \<comment> \<open>(\<supseteq>): x = mul (mul g h) n for n \<in> N. Take a = g (= mul g e) and b = mul h n.\<close>
+    assume "x \<in> ?ghN"
+    then obtain n where hn: "n \<in> N" and hx: "x = mul (mul g h) n"
+      unfolding top1_group_coset_on_def by (by100 blast)
+    have hnG: "n \<in> G" using hn hNsub by (by100 blast)
+    have he_N: "e \<in> N" by (rule group_e_mem[OF hN_grp])
+    have hge: "mul g e = g" by (rule group_id_right[OF hG hg])
+    have "x = mul g (mul h n)"
+      using hx group_assoc[OF hG hg hh hnG] by (by100 simp)
+    moreover have "g \<in> ?gN" unfolding top1_group_coset_on_def using he_N hge by (by100 force)
+    moreover have "mul h n \<in> ?hN" unfolding top1_group_coset_on_def using hn by (by100 blast)
+    ultimately show "x \<in> top1_quotient_group_mul_on mul ?gN ?hN"
+      unfolding top1_quotient_group_mul_on_def by (by100 blast)
+  qed
+qed
+
+text \<open>The natural projection \<phi>(g) = gN is a surjective group homomorphism with kernel N.\<close>
+lemma quotient_projection_properties:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hN: "top1_normal_subgroup_on G mul e invg N"
+  shows "top1_group_hom_on G mul
+           (top1_quotient_group_carrier_on G mul N)
+           (top1_quotient_group_mul_on mul)
+           (\<lambda>g. top1_group_coset_on G mul N g)"
+    and "(\<lambda>g. top1_group_coset_on G mul N g) ` G
+           = top1_quotient_group_carrier_on G mul N"
+    and "top1_group_kernel_on G (top1_group_coset_on G mul N e)
+           (\<lambda>g. top1_group_coset_on G mul N g) = N"
+proof -
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul N g"
+  let ?H = "top1_quotient_group_carrier_on G mul N"
+  have hNsub: "N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on N mul e invg" using hN unfolding top1_normal_subgroup_on_def
+    by (by100 blast)
+  \<comment> \<open>Part 1: \<phi> is a homomorphism.\<close>
+  show "top1_group_hom_on G mul ?H (top1_quotient_group_mul_on mul) ?\<phi>"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix g assume hg: "g \<in> G"
+    show "?\<phi> g \<in> ?H" unfolding top1_quotient_group_carrier_on_def
+      using hg by (by100 blast)
+  next
+    fix g h assume hg: "g \<in> G" and hh: "h \<in> G"
+    show "?\<phi> (mul g h) = top1_quotient_group_mul_on mul (?\<phi> g) (?\<phi> h)"
+      using normal_coset_mul_eq[OF hG hN hg hh, symmetric] .
+  qed
+  \<comment> \<open>Part 2: \<phi> is surjective.\<close>
+  show "?\<phi> ` G = ?H" unfolding top1_quotient_group_carrier_on_def image_def
+    by (by100 blast)
+  \<comment> \<open>Part 3: ker(\<phi>) = N.\<close>
+  show "top1_group_kernel_on G (?\<phi> e) ?\<phi> = N"
+  proof -
+    have heN: "?\<phi> e = N" by (rule coset_e_is_N[OF hG hNsub hN_grp])
+    show ?thesis unfolding top1_group_kernel_on_def heN
+    proof (rule set_eqI)
+      fix g show "g \<in> {x \<in> G. ?\<phi> x = N} \<longleftrightarrow> g \<in> N"
+      proof
+        assume "g \<in> {x \<in> G. ?\<phi> x = N}"
+        hence hg: "g \<in> G" and hcoset: "?\<phi> g = N" by (by100 blast)+
+        have "g \<in> ?\<phi> g" by (rule coset_self_mem[OF hG hNsub hN_grp hg])
+        thus "g \<in> N" using hcoset by (by100 simp)
+      next
+        assume "g \<in> N"
+        hence hg: "g \<in> G" using hNsub by (by100 blast)
+        have he: "e \<in> G" by (rule group_e_mem[OF hG])
+        have hinve: "invg e \<in> G" by (rule group_inv_closed[OF hG he])
+        have "invg e = e"
+        proof -
+          have "mul (invg e) e = e" by (rule group_inv_left[OF hG he])
+          moreover have "mul (invg e) e = invg e" by (rule group_id_right[OF hG hinve])
+          ultimately show ?thesis by (by100 simp)
+        qed
+        hence "mul (invg e) g = mul e g" by (by100 simp)
+        also have "... = g" by (rule group_id_left[OF hG hg])
+        finally have "mul (invg e) g = g" .
+        hence "mul (invg e) g \<in> N" using \<open>g \<in> N\<close> by (by100 simp)
+        hence "?\<phi> e = ?\<phi> g" using normal_coset_eq[OF hG hN he hg] by (by100 simp)
+        hence "?\<phi> g = N" using heN by (by100 simp)
+        thus "g \<in> {x \<in> G. ?\<phi> x = N}" using hg by (by100 blast)
+      qed
+    qed
+  qed
+qed
+
+text \<open>G/[G,G] is abelian: for any g, h \<in> G, the cosets gN and hN commute
+  because g\<inverse>h\<inverse>gh \<in> [G,G] = N.\<close>
+lemma quotient_by_commutator_is_abelian:
+  assumes hG: "top1_is_group_on G mul e invg"
+  shows "\<forall>g\<in>G. \<forall>h\<in>G.
+    top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) g)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) h)
+    = top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) h)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) g)"
+proof (intro ballI)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  have hNnormal: "top1_normal_subgroup_on G mul e invg ?N"
+    by (rule commutator_subgroup_is_normal[OF hG])
+  have hNsub: "?N \<subseteq> G" using hNnormal unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on ?N mul e invg"
+    using hNnormal unfolding top1_normal_subgroup_on_def by (by100 blast)
+  fix g h assume hg: "g \<in> G" and hh: "h \<in> G"
+  \<comment> \<open>(gN)(hN) = (gh)N and (hN)(gN) = (hg)N. Need (gh)N = (hg)N.\<close>
+  have lhs: "top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul ?N g) (top1_group_coset_on G mul ?N h)
+    = top1_group_coset_on G mul ?N (mul g h)"
+    by (rule normal_coset_mul_eq[OF hG hNnormal hg hh])
+  have rhs: "top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul ?N h) (top1_group_coset_on G mul ?N g)
+    = top1_group_coset_on G mul ?N (mul h g)"
+    by (rule normal_coset_mul_eq[OF hG hNnormal hh hg])
+  \<comment> \<open>Need: (gh)N = (hg)N, i.e. invg(gh) * hg \<in> N = [G,G].
+     invg(gh) * hg = (invg h * invg g) * (h * g) = invg h * (invg g * h * g)
+     But the commutator [invg g, invg h] = invg g * invg h * g * h.
+     More directly: invg(gh) * hg = invg(h) * invg(g) * h * g = [g,h]\<inverse>^{...}.\<close>
+  have "top1_group_coset_on G mul ?N (mul g h) = top1_group_coset_on G mul ?N (mul h g)"
+  proof -
+    have hgh: "mul g h \<in> G" by (rule group_mul_closed[OF hG hg hh])
+    have hhg: "mul h g \<in> G" by (rule group_mul_closed[OF hG hh hg])
+    \<comment> \<open>Show invg(mul g h) * mul h g \<in> [G,G].\<close>
+    have hinvgh: "invg (mul g h) \<in> G" by (rule group_inv_closed[OF hG hgh])
+    have "invg (mul g h) = mul (invg h) (invg g)"
+      by (rule group_inv_mul[OF hG hg hh])
+    hence "mul (invg (mul g h)) (mul h g) = mul (mul (invg h) (invg g)) (mul h g)"
+      by (by100 simp)
+    also have "\<dots> = mul (invg h) (mul (invg g) (mul h g))"
+    proof -
+      have "invg h \<in> G" by (rule group_inv_closed[OF hG hh])
+      have "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+      show ?thesis by (rule group_assoc[OF hG \<open>invg h \<in> G\<close> \<open>invg g \<in> G\<close> hhg])
+    qed
+    also have "mul (invg g) (mul h g) = mul (mul (invg g) h) g"
+    proof -
+      have "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+      thus ?thesis using group_assoc[OF hG \<open>invg g \<in> G\<close> hh hg] by (by100 simp)
+    qed
+    finally have hkey: "mul (invg (mul g h)) (mul h g)
+        = mul (invg h) (mul (mul (invg g) h) g)" .
+    \<comment> \<open>This is mul (invg h) (mul (mul (invg g) h) (invg (invg h))  * invg h)...
+       Actually this equals the commutator [invg g, invg h] = invg g * invg h * g * h,
+       which is in [G,G]. More directly:
+       mul (invg h) (mul (mul (invg g) h) g)
+       = mul (invg h) (mul (invg g) (mul h g))... already shown.
+       Hmm let me try: this is [g, h]\<inverse> form. The commutator of g and h is
+       top1_group_commutator_on mul invg g h = mul (mul (mul g h) (invg g)) (invg h).
+       We need mul (invg (mul g h)) (mul h g) \<in> [G,G].\<close>
+    \<comment> \<open>Simpler approach: the commutator [g,h] = g h g\<inverse> h\<inverse>. Then
+       [g,h] * h * g = g * h. So h * g = [g,h]\<inverse> * g * h.
+       Therefore invg(g*h) * h*g = invg(g*h) * [g,h]\<inverse> * g * h
+       = invg(g*h) * invg([g,h]) * g * h.
+       But invg([g,h]) * g * h = invg(g h g\<inverse> h\<inverse>) * g * h
+       = h * g * invg(h) * invg(g) * g * h... getting circular.
+
+       Direct approach: show mul (invg (mul g h)) (mul h g) is a product of commutators.
+
+       mul (invg (mul g h)) (mul h g)
+       = mul (mul (invg h) (invg g)) (mul h g)   [inv_mul]
+       = mul (invg h) (mul (invg g) (mul h g))    [assoc]
+       = mul (invg h) (mul (mul (invg g) h) g)    [assoc]
+
+       Now mul (mul (invg g) h) g = mul (invg g) (mul h g)... wait already done.
+
+       Let's compute: top1_group_commutator_on mul invg (invg g) (invg h)
+       = mul (mul (mul (invg g) (invg h)) g) h
+
+       Hmm actually top1_group_commutator_on is defined as:
+       "top1_group_commutator_on mul invg a b = mul (mul (mul a b) (invg a)) (invg b)"
+
+       So [a,b] = a*b*a\<inverse>*b\<inverse>.
+
+       For a = invg(h), b = invg(g):
+       [invg h, invg g] = invg(h) * invg(g) * h * g
+
+       = mul (mul (mul (invg h) (invg g)) h) g
+
+       Compare with our expression:
+       mul (invg h) (mul (mul (invg g) h) g)
+       = mul (invg h) (mul (invg g) (mul h g))   [re-assoc]
+       = mul (mul (invg h) (invg g)) (mul h g)    [assoc]
+       = mul (mul (mul (invg h) (invg g)) h) g    [assoc]
+
+       So mul (invg (mul g h)) (mul h g) = [invg h, invg g].
+
+       And since invg h, invg g ∈ G, this commutator is in [G,G].
+
+       That works!\<close>
+    have hinvg: "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+    have hinvh: "invg h \<in> G" by (rule group_inv_closed[OF hG hh])
+    \<comment> \<open>The commutator [invg h, invg g] is in [G,G].\<close>
+    have hcomm: "top1_group_commutator_on mul invg (invg h) (invg g) \<in> ?N"
+    proof -
+      let ?gens = "{ top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G }"
+      have "top1_group_commutator_on mul invg (invg h) (invg g) \<in> ?gens"
+        using hinvh hinvg by (by100 blast)
+      moreover have "?gens \<subseteq> G"
+      proof (rule subsetI)
+        fix x assume "x \<in> ?gens"
+        then obtain a b where "a \<in> G" "b \<in> G" "x = top1_group_commutator_on mul invg a b"
+          by (by100 blast)
+        thus "x \<in> G" unfolding top1_group_commutator_on_def
+          using hG unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      ultimately have "top1_group_commutator_on mul invg (invg h) (invg g)
+          \<in> top1_subgroup_generated_on G mul e invg ?gens"
+        by (intro subgroup_generated_contains[OF hG]) (by100 blast)+
+      thus ?thesis unfolding top1_commutator_subgroup_on_def .
+    qed
+    \<comment> \<open>Now show [invg h, invg g] = mul (invg (mul g h)) (mul h g).\<close>
+    have "top1_group_commutator_on mul invg (invg h) (invg g)
+        = mul (mul (mul (invg h) (invg g)) (invg (invg h))) (invg (invg g))"
+      unfolding top1_group_commutator_on_def ..
+    also have "invg (invg h) = h" by (rule group_inv_inv[OF hG hh])
+    also have "invg (invg g) = g" by (rule group_inv_inv[OF hG hg])
+    finally have hcomm_eq: "top1_group_commutator_on mul invg (invg h) (invg g)
+        = mul (mul (mul (invg h) (invg g)) h) g" by (by100 simp)
+    \<comment> \<open>And mul (invg (mul g h)) (mul h g) = mul (mul (mul (invg h) (invg g)) h) g.\<close>
+    have hstep1: "mul (invg (mul g h)) (mul h g) = mul (mul (invg h) (invg g)) (mul h g)"
+      using group_inv_mul[OF hG hg hh] by (by100 simp)
+    have hstep2: "mul (mul (invg h) (invg g)) (mul h g)
+        = mul (mul (mul (invg h) (invg g)) h) g"
+    proof -
+      have hmid: "mul (invg h) (invg g) \<in> G" by (rule group_mul_closed[OF hG hinvh hinvg])
+      have "mul (mul (mul (invg h) (invg g)) h) g = mul (mul (invg h) (invg g)) (mul h g)"
+        by (rule group_assoc[OF hG hmid hh hg])
+      thus ?thesis by (by100 simp)
+    qed
+    have "mul (invg (mul g h)) (mul h g) = top1_group_commutator_on mul invg (invg h) (invg g)"
+      using hstep1 hstep2 hcomm_eq by (by100 simp)
+    hence "mul (invg (mul g h)) (mul h g) \<in> ?N" using hcomm by (by100 simp)
+    thus ?thesis using normal_coset_eq[OF hG hNnormal hgh hhg] by (by100 simp)
+  qed
+  thus "top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul ?N g) (top1_group_coset_on G mul ?N h)
+    = top1_quotient_group_mul_on mul
+      (top1_group_coset_on G mul ?N h) (top1_group_coset_on G mul ?N g)"
+    using lhs rhs by (by100 simp)
+qed
+
+text \<open>The quotient G/N is a group when N is normal.\<close>
+lemma quotient_group_is_group:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hN: "top1_normal_subgroup_on G mul e invg N"
+  shows "top1_is_group_on
+    (top1_quotient_group_carrier_on G mul N)
+    (top1_quotient_group_mul_on mul)
+    (top1_group_coset_on G mul N e)
+    (\<lambda>C. top1_group_coset_on G mul N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)))"
+proof -
+  let ?H = "top1_quotient_group_carrier_on G mul N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g))"
+  have hNsub: "N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on N mul e invg"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  \<comment> \<open>Helper: for any C \<in> H, there exists g \<in> G with C = coset g.\<close>
+  have hrep: "\<And>C. C \<in> ?H \<Longrightarrow> \<exists>g. g \<in> G \<and> C = top1_group_coset_on G mul N g"
+    unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+  \<comment> \<open>Helper: SOME picks a valid representative.\<close>
+  have hsome: "\<And>C. C \<in> ?H \<Longrightarrow>
+      (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G \<and>
+      C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+  proof -
+    fix C assume "C \<in> ?H"
+    from hrep[OF this] have "\<exists>g. g \<in> G \<and> C = top1_group_coset_on G mul N g" .
+    thus "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G \<and>
+      C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+      by (rule someI_ex)
+  qed
+  show ?thesis unfolding top1_is_group_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>eH \<in> H.\<close>
+    show "?eH \<in> ?H" unfolding top1_quotient_group_carrier_on_def
+      using group_e_mem[OF hG] by (by100 blast)
+  next
+    \<comment> \<open>mul closed.\<close>
+    fix C1 C2 assume hC1: "C1 \<in> ?H" and hC2: "C2 \<in> ?H"
+    obtain g1 where hg1: "g1 \<in> G" and hC1_eq: "C1 = top1_group_coset_on G mul N g1"
+      using hrep[OF hC1] by (by100 blast)
+    obtain g2 where hg2: "g2 \<in> G" and hC2_eq: "C2 = top1_group_coset_on G mul N g2"
+      using hrep[OF hC2] by (by100 blast)
+    have "?mulH C1 C2 = top1_group_coset_on G mul N (mul g1 g2)"
+      using hC1_eq hC2_eq normal_coset_mul_eq[OF hG hN hg1 hg2] by (by100 simp)
+    thus "?mulH C1 C2 \<in> ?H" unfolding top1_quotient_group_carrier_on_def
+      using group_mul_closed[OF hG hg1 hg2] by (by100 blast)
+  next
+    \<comment> \<open>inv closed.\<close>
+    fix C assume hC: "C \<in> ?H"
+    have hsome_C: "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+      using hsome[OF hC] by (by100 blast)
+    have "invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+      by (rule group_inv_closed[OF hG hsome_C])
+    thus "?invgH C \<in> ?H" unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+  next
+    \<comment> \<open>Associativity.\<close>
+    fix C1 C2 C3 assume hC1: "C1 \<in> ?H" and hC2: "C2 \<in> ?H" and hC3: "C3 \<in> ?H"
+    obtain g1 where hg1: "g1 \<in> G" and hC1_eq: "C1 = top1_group_coset_on G mul N g1"
+      using hrep[OF hC1] by (by100 blast)
+    obtain g2 where hg2: "g2 \<in> G" and hC2_eq: "C2 = top1_group_coset_on G mul N g2"
+      using hrep[OF hC2] by (by100 blast)
+    obtain g3 where hg3: "g3 \<in> G" and hC3_eq: "C3 = top1_group_coset_on G mul N g3"
+      using hrep[OF hC3] by (by100 blast)
+    have hg12: "mul g1 g2 \<in> G" by (rule group_mul_closed[OF hG hg1 hg2])
+    have hg23: "mul g2 g3 \<in> G" by (rule group_mul_closed[OF hG hg2 hg3])
+    have hC12: "?mulH C1 C2 = top1_group_coset_on G mul N (mul g1 g2)"
+      using hC1_eq hC2_eq normal_coset_mul_eq[OF hG hN hg1 hg2] by (by100 simp)
+    have hC23: "?mulH C2 C3 = top1_group_coset_on G mul N (mul g2 g3)"
+      using hC2_eq hC3_eq normal_coset_mul_eq[OF hG hN hg2 hg3] by (by100 simp)
+    have lhs: "?mulH (?mulH C1 C2) C3 = top1_group_coset_on G mul N (mul (mul g1 g2) g3)"
+      using hC12 hC3_eq normal_coset_mul_eq[OF hG hN hg12 hg3] by (by100 simp)
+    have rhs: "?mulH C1 (?mulH C2 C3) = top1_group_coset_on G mul N (mul g1 (mul g2 g3))"
+      using hC23 hC1_eq normal_coset_mul_eq[OF hG hN hg1 hg23] by (by100 simp)
+    show "?mulH (?mulH C1 C2) C3 = ?mulH C1 (?mulH C2 C3)"
+      using lhs rhs group_assoc[OF hG hg1 hg2 hg3] by (by100 simp)
+  next
+    \<comment> \<open>Left identity.\<close>
+    fix C assume hC: "C \<in> ?H"
+    obtain g where hg: "g \<in> G" and hC_eq: "C = top1_group_coset_on G mul N g"
+      using hrep[OF hC] by (by100 blast)
+    have he: "e \<in> G" by (rule group_e_mem[OF hG])
+    have "?mulH ?eH C = top1_group_coset_on G mul N (mul e g)"
+      using hC_eq normal_coset_mul_eq[OF hG hN he hg] by (by100 simp)
+    also have "mul e g = g" by (rule group_id_left[OF hG hg])
+    finally show "?mulH ?eH C = C" using hC_eq by (by100 simp)
+  next
+    \<comment> \<open>Right identity.\<close>
+    fix C assume hC: "C \<in> ?H"
+    obtain g where hg: "g \<in> G" and hC_eq: "C = top1_group_coset_on G mul N g"
+      using hrep[OF hC] by (by100 blast)
+    have he2: "e \<in> G" by (rule group_e_mem[OF hG])
+    have "?mulH C ?eH = top1_group_coset_on G mul N (mul g e)"
+      using hC_eq normal_coset_mul_eq[OF hG hN hg he2] by (by100 simp)
+    also have "mul g e = g" by (rule group_id_right[OF hG hg])
+    finally show "?mulH C ?eH = C" using hC_eq by (by100 simp)
+  next
+    \<comment> \<open>Left inverse.\<close>
+    fix C assume hC: "C \<in> ?H"
+    have hsome_C: "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+      using hsome[OF hC] by (by100 blast)
+    have hC_some: "C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+      using hsome[OF hC] by (by100 blast)
+    let ?g = "SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g"
+    have hinvg_mem: "invg ?g \<in> G" by (rule group_inv_closed[OF hG hsome_C])
+    have "?mulH (?invgH C) C = ?mulH (top1_group_coset_on G mul N (invg ?g))
+        (top1_group_coset_on G mul N ?g)"
+      using hC_some by (by100 simp)
+    also have "\<dots> = top1_group_coset_on G mul N (mul (invg ?g) ?g)"
+      by (rule normal_coset_mul_eq[OF hG hN hinvg_mem hsome_C])
+    also have "\<dots> = top1_group_coset_on G mul N e"
+      using group_inv_left[OF hG hsome_C] by (by100 simp)
+    finally show "?mulH (?invgH C) C = ?eH" .
+  next
+    \<comment> \<open>Right inverse.\<close>
+    fix C assume hC: "C \<in> ?H"
+    have hsome_C: "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+      using hsome[OF hC] by (by100 blast)
+    have hC_some: "C = top1_group_coset_on G mul N (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g)"
+      using hsome[OF hC] by (by100 blast)
+    let ?g = "SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g"
+    have hinvg_mem2: "invg ?g \<in> G" by (rule group_inv_closed[OF hG hsome_C])
+    have "?mulH C (?invgH C) = ?mulH (top1_group_coset_on G mul N ?g)
+        (top1_group_coset_on G mul N (invg ?g))"
+      using hC_some by (by100 simp)
+    also have "\<dots> = top1_group_coset_on G mul N (mul ?g (invg ?g))"
+      by (rule normal_coset_mul_eq[OF hG hN hsome_C hinvg_mem2])
+    also have "\<dots> = top1_group_coset_on G mul N e"
+      using group_inv_right[OF hG hsome_C] by (by100 simp)
+    finally show "?mulH C (?invgH C) = ?eH" .
+  qed
+qed
+
+text \<open>General abelianization: for any group G, the quotient G/[G,G] is the abelianization.
+  Stated without existentials for ease of application.\<close>
+lemma abelianization_concrete:
+  assumes hG: "top1_is_group_on G mul e invg"
+  shows "top1_is_abelianization_of
+      (top1_quotient_group_carrier_on G mul (top1_commutator_subgroup_on G mul e invg))
+      (top1_quotient_group_mul_on mul)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+      (\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
+         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
+            (top1_commutator_subgroup_on G mul e invg) g)))
+      G mul e invg
+      (\<lambda>g. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) g)"
+proof -
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  have hN: "top1_normal_subgroup_on G mul e invg ?N"
+    by (rule commutator_subgroup_is_normal[OF hG])
+  have hNsub: "?N \<subseteq> G" using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on ?N mul e invg"
+    using hN unfolding top1_normal_subgroup_on_def by (by100 blast)
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N
+      (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  have h_grp: "top1_is_group_on (top1_quotient_group_carrier_on G mul ?N)
+      (top1_quotient_group_mul_on mul) (top1_group_coset_on G mul ?N e) ?invgH"
+    by (rule quotient_group_is_group[OF hG hN])
+  have h_abel_comm: "\<forall>a\<in>G. \<forall>b\<in>G.
+      top1_quotient_group_mul_on mul (top1_group_coset_on G mul ?N a) (top1_group_coset_on G mul ?N b)
+    = top1_quotient_group_mul_on mul (top1_group_coset_on G mul ?N b) (top1_group_coset_on G mul ?N a)"
+    by (rule quotient_by_commutator_is_abelian[OF hG])
+  have h_abelian: "top1_is_abelian_group_on (top1_quotient_group_carrier_on G mul ?N)
+      (top1_quotient_group_mul_on mul) (top1_group_coset_on G mul ?N e) ?invgH"
+    unfolding top1_is_abelian_group_on_def
+  proof (intro conjI ballI)
+    show "top1_is_group_on (top1_quotient_group_carrier_on G mul ?N)
+        (top1_quotient_group_mul_on mul) (top1_group_coset_on G mul ?N e) ?invgH"
+      by (rule h_grp)
+  next
+    fix C1 C2
+    assume "C1 \<in> top1_quotient_group_carrier_on G mul ?N"
+       and "C2 \<in> top1_quotient_group_carrier_on G mul ?N"
+    then obtain g1 g2 where "g1 \<in> G" "C1 = top1_group_coset_on G mul ?N g1"
+        "g2 \<in> G" "C2 = top1_group_coset_on G mul ?N g2"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    thus "top1_quotient_group_mul_on mul C1 C2 = top1_quotient_group_mul_on mul C2 C1"
+      using h_abel_comm by (by100 simp)
+  qed
+  show ?thesis unfolding top1_is_abelianization_of_def
+    using h_abelian hG
+      quotient_projection_properties(1)[OF hG hN]
+      quotient_projection_properties(2)[OF hG hN]
+      quotient_projection_properties(3)[OF hG hN]
+      coset_e_is_N[OF hG hNsub hN_grp] by (by100 blast)
+qed
+
 section \<open>\<S>75 Homology of Surfaces\<close>
 
 (** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0).
@@ -6490,7 +9765,8 @@ section \<open>\<S>75 Homology of Surfaces\<close>
     \<pi>_1(X, x_0) \<rightarrow> H whose kernel is the commutator subgroup of \<pi>_1. **)
 theorem Theorem_75_1_H1_abelianization:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
-  shows "\<exists>(H::'h set) mulH eH invgH \<phi>.
+  assumes "is_topology_on X TX" and "x0 \<in> X"
+  shows "\<exists>(H :: (real \<Rightarrow> 'a) set set set) mulH eH invgH \<phi>.
            top1_is_abelianization_of H mulH eH invgH
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)
@@ -6508,14 +9784,79 @@ proof -
   let ?inv = "top1_fundamental_group_invg X TX x0"
   let ?comm = "top1_commutator_subgroup_on ?G ?mul ?e ?inv"
   \<comment> \<open>Step 1: [G,G] is a normal subgroup of G.\<close>
-  have h_comm_normal: "top1_normal_subgroup_on ?G ?mul ?e ?inv ?comm" sorry
-  \<comment> \<open>Step 2: G/[G,G] is an abelian group with the natural projection \<phi>.\<close>
-  have h_quotient_abelian: "\<exists>\<phi>. top1_group_hom_on ?G ?mul
+  have h_comm_normal: "top1_normal_subgroup_on ?G ?mul ?e ?inv ?comm"
+  proof -
+    have "top1_is_group_on ?G ?mul ?e ?inv"
+      by (rule top1_fundamental_group_is_group[OF assms])
+    thus ?thesis by (rule commutator_subgroup_is_normal)
+  qed
+  have hG: "top1_is_group_on ?G ?mul ?e ?inv"
+    by (rule top1_fundamental_group_is_group[OF assms])
+  \<comment> \<open>Step 2: The natural projection \<phi>(g) = gN is a surjective homomorphism with kernel N.\<close>
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on ?G ?mul ?comm g"
+  have h_hom: "top1_group_hom_on ?G ?mul
       (top1_quotient_group_carrier_on ?G ?mul ?comm)
-      (top1_quotient_group_mul_on ?mul) \<phi>
-    \<and> \<phi> ` ?G = top1_quotient_group_carrier_on ?G ?mul ?comm
-    \<and> top1_group_kernel_on ?G (top1_quotient_group_mul_on ?mul ?comm ?comm) \<phi> = ?comm" sorry
-  show ?thesis sorry
+      (top1_quotient_group_mul_on ?mul) ?\<phi>"
+    by (rule quotient_projection_properties(1)[OF hG h_comm_normal])
+  have h_surj: "?\<phi> ` ?G = top1_quotient_group_carrier_on ?G ?mul ?comm"
+    by (rule quotient_projection_properties(2)[OF hG h_comm_normal])
+  have hNsub: "?comm \<subseteq> ?G"
+    using h_comm_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hN_grp: "top1_is_group_on ?comm ?mul ?e ?inv"
+    using h_comm_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have h_ker: "top1_group_kernel_on ?G (top1_group_coset_on ?G ?mul ?comm ?e) ?\<phi> = ?comm"
+    by (rule quotient_projection_properties(3)[OF hG h_comm_normal])
+  have hcoset_e: "top1_group_coset_on ?G ?mul ?comm ?e = ?comm"
+    by (rule coset_e_is_N[OF hG hNsub hN_grp])
+  \<comment> \<open>Step 3: G/[G,G] is abelian.\<close>
+  have h_abelian: "\<forall>g\<in>?G. \<forall>h\<in>?G.
+    top1_quotient_group_mul_on ?mul
+      (top1_group_coset_on ?G ?mul ?comm g) (top1_group_coset_on ?G ?mul ?comm h)
+    = top1_quotient_group_mul_on ?mul
+      (top1_group_coset_on ?G ?mul ?comm h) (top1_group_coset_on ?G ?mul ?comm g)"
+    by (rule quotient_by_commutator_is_abelian[OF hG])
+  \<comment> \<open>Step 4: G/[G,G] is a group.\<close>
+  let ?invgH = "\<lambda>C. top1_group_coset_on ?G ?mul ?comm
+      (?inv (SOME g. g \<in> ?G \<and> C = top1_group_coset_on ?G ?mul ?comm g))"
+  have h_quotient_grp: "top1_is_group_on
+      (top1_quotient_group_carrier_on ?G ?mul ?comm)
+      (top1_quotient_group_mul_on ?mul)
+      (top1_group_coset_on ?G ?mul ?comm ?e) ?invgH"
+    by (rule quotient_group_is_group[OF hG h_comm_normal])
+  \<comment> \<open>Step 5: G/[G,G] is abelian (commutativity from quotient_by_commutator_is_abelian,
+     but need to lift from generator-level to carrier-level).\<close>
+  have h_quot_abelian: "top1_is_abelian_group_on
+      (top1_quotient_group_carrier_on ?G ?mul ?comm)
+      (top1_quotient_group_mul_on ?mul)
+      (top1_group_coset_on ?G ?mul ?comm ?e) ?invgH"
+    unfolding top1_is_abelian_group_on_def
+  proof (intro conjI ballI)
+    show "top1_is_group_on
+        (top1_quotient_group_carrier_on ?G ?mul ?comm) (top1_quotient_group_mul_on ?mul)
+        (top1_group_coset_on ?G ?mul ?comm ?e) ?invgH"
+      by (rule h_quotient_grp)
+  next
+    fix C1 C2
+    assume hC1: "C1 \<in> top1_quotient_group_carrier_on ?G ?mul ?comm"
+       and hC2: "C2 \<in> top1_quotient_group_carrier_on ?G ?mul ?comm"
+    obtain g1 where hg1: "g1 \<in> ?G" and hC1_eq: "C1 = top1_group_coset_on ?G ?mul ?comm g1"
+      using hC1 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    obtain g2 where hg2: "g2 \<in> ?G" and hC2_eq: "C2 = top1_group_coset_on ?G ?mul ?comm g2"
+      using hC2 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    show "top1_quotient_group_mul_on ?mul C1 C2 = top1_quotient_group_mul_on ?mul C2 C1"
+      using hC1_eq hC2_eq h_abelian hg1 hg2 by (by100 simp)
+  qed
+  \<comment> \<open>Step 6: Assemble all pieces into top1_is_abelianization_of.\<close>
+  have h_ker_comm: "top1_group_kernel_on ?G (top1_group_coset_on ?G ?mul ?comm ?e) ?\<phi> = ?comm"
+    by (rule h_ker)
+  have "top1_is_abelianization_of
+      (top1_quotient_group_carrier_on ?G ?mul ?comm)
+      (top1_quotient_group_mul_on ?mul)
+      (top1_group_coset_on ?G ?mul ?comm ?e)
+      ?invgH ?G ?mul ?e ?inv ?\<phi>"
+    unfolding top1_is_abelianization_of_def
+    using h_quot_abelian hG h_hom h_surj h_ker_comm hcoset_e by (by100 blast)
+  thus ?thesis by (by100 blast)
 qed
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
@@ -7188,13 +10529,39 @@ theorem Theorem_80_3_universal:
       and "top1_simply_connected_on E TE"
       and "top1_covering_map_on Y TY B TB r"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
-proof -
+proof (cases "E = {}")
+  case True
+  \<comment> \<open>Empty case: E = {} implies B = {} (surjectivity of p) implies Y = {} (surjectivity of r).
+     Any function from {} to {} is a covering map.\<close>
+  have hB_empty: "B = {}" using True top1_covering_map_on_surj[OF assms(4)] by (by100 blast)
+  have hY_empty: "Y = {}" using hB_empty top1_covering_map_on_surj[OF assms(6)] by (by100 blast)
+  have "top1_covering_map_on E TE Y TY (\<lambda>e. undefined)"
+    unfolding top1_covering_map_on_def top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> E" thus "(undefined :: 'c) \<in> Y" using True by (by100 blast)
+  next
+    fix V assume "V \<in> TY" show "{x \<in> E. (undefined :: 'c) \<in> V} \<in> TE"
+      using True assms(1) unfolding is_topology_on_strict_def is_topology_on_def by (by100 auto)
+  next
+    show "(\<lambda>e. undefined :: 'c) ` E = Y" using True hY_empty by (by100 blast)
+  next
+    fix b assume "b \<in> Y" thus "\<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE Y TY (\<lambda>e. undefined) U"
+      using hY_empty by (by100 blast)
+  qed
+  thus ?thesis using True by (by100 blast)
+next
+  case False
   \<comment> \<open>Munkres 80.3: Define q: E \<rightarrow> Y by path-lifting. For e \<in> E, choose path \<alpha> in E
      from e0 to e. Lift r\<inverse> \<circ> p \<circ> \<alpha> to Y starting at y0 (where r(y0)=b0).
      The lift's endpoint is q(e). Well-defined because E is simply connected.\<close>
-  obtain e0 where he0: "e0 \<in> E" sorry
+  obtain e0 where he0: "e0 \<in> E" using False by (by100 blast)
   let ?b0 = "p e0"
-  obtain y0 where hy0: "y0 \<in> Y" and hry0: "r y0 = ?b0" sorry
+  have hb0_B: "?b0 \<in> B"
+    using he0 top1_covering_map_on_surj[OF assms(4)] by (by100 blast)
+  have hr_surj: "r ` Y = B" by (rule top1_covering_map_on_surj[OF assms(6)])
+  have "?b0 \<in> r ` Y" using hb0_B hr_surj by (by100 simp)
+  then obtain y0 where hy0: "y0 \<in> Y" and hry0: "r y0 = ?b0"
+    unfolding image_def by (by100 auto)
   \<comment> \<open>For each e \<in> E, pick path \<alpha> from e0 to e. Lift p\<circ>\<alpha> to Y starting at y0.
      Simple connectivity ensures uniqueness (different \<alpha>'s give same endpoint).\<close>
   have "\<exists>q. (\<forall>e\<in>E. q e \<in> Y) \<and> (\<forall>e\<in>E. r (q e) = p e)
