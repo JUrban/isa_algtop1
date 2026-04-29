@@ -9957,6 +9957,111 @@ qed
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
+lemma standard_simplex_is_polygonal_region:
+  "top1_is_polygonal_region_on top1_standard_simplex 3"
+proof -
+  let ?vx = "\<lambda>i::nat. if i = 0 then (0::real) else if i = 1 then 1 else 0"
+  let ?vy = "\<lambda>i::nat. if i = 0 then (0::real) else if i = 1 then 0 else 1"
+  \<comment> \<open>Precompute: {..<3} = {0,1,2} and sum expansions.\<close>
+  have h3eq: "{..<(3::nat)} = {0,1,2}" by (by100 auto)
+  have hsx: "\<And>c::nat\<Rightarrow>real. (\<Sum>i<3. c i * ?vx i) = c 1"
+    unfolding h3eq by (by100 simp)
+  have hsy: "\<And>c::nat\<Rightarrow>real. (\<Sum>i<3. c i * ?vy i) = c 2"
+    unfolding h3eq by (by100 simp)
+  have hsc: "\<And>c::nat\<Rightarrow>real. (\<Sum>i<3. c i) = c 0 + c 1 + c 2"
+    unfolding h3eq by (by100 simp)
+  \<comment> \<open>Part 1: vertices are distinct.\<close>
+  have hd: "\<forall>i<3. \<forall>j<3. i \<noteq> j \<longrightarrow> (?vx i, ?vy i) \<noteq> (?vx j, ?vy j)"
+  proof (intro allI impI)
+    fix i j :: nat assume "i < 3" "j < 3" "i \<noteq> j"
+    hence "i \<in> {0,1,2}" "j \<in> {0,1,2}" by (by100 auto)+
+    thus "(?vx i, ?vy i) \<noteq> (?vx j, ?vy j)" using \<open>i \<noteq> j\<close> by (by100 force)
+  qed
+  \<comment> \<open>Part 2: no vertex is convex combination of others.\<close>
+  have he: "\<forall>k<3. \<not> (\<exists>c. (\<forall>i<3. i \<noteq> k \<longrightarrow> (0::real) \<le> c i)
+      \<and> c k = 0 \<and> (\<Sum>i<3. c i) = 1
+      \<and> ?vx k = (\<Sum>i<3. c i * ?vx i) \<and> ?vy k = (\<Sum>i<3. c i * ?vy i))"
+  proof (intro allI impI)
+    fix k :: nat assume hk: "k < 3"
+    show "\<not> (\<exists>c. (\<forall>i<3. i \<noteq> k \<longrightarrow> 0 \<le> c i) \<and> c k = 0 \<and> (\<Sum>i<3. c i) = 1
+        \<and> ?vx k = (\<Sum>i<3. c i * ?vx i) \<and> ?vy k = (\<Sum>i<3. c i * ?vy i))"
+    proof
+      assume "\<exists>c. (\<forall>i<3. i \<noteq> k \<longrightarrow> 0 \<le> c i) \<and> c k = 0 \<and> (\<Sum>i<3. c i) = 1
+          \<and> ?vx k = (\<Sum>i<3. c i * ?vx i) \<and> ?vy k = (\<Sum>i<3. c i * ?vy i)"
+      then obtain c where hc: "(\<forall>i<3. i \<noteq> k \<longrightarrow> 0 \<le> c i) \<and> c k = 0
+          \<and> (\<Sum>i<3. c i) = 1 \<and> ?vx k = (\<Sum>i<3. c i * ?vx i)
+          \<and> ?vy k = (\<Sum>i<3. c i * ?vy i)" by (by100 blast)
+      have hck: "c k = 0" using hc by (by100 blast)
+      have hcsum: "c 0 + c 1 + c 2 = 1" using hc hsc by (by100 simp)
+      have hcx: "?vx k = c 1" using hc hsx by (by100 simp)
+      have hcy: "?vy k = c 2" using hc hsy by (by100 simp)
+      show False
+      proof (cases "k = 0")
+        case True thus False using hck hcx hcy hcsum by (by100 simp)
+      next
+        case False
+        show False
+        proof (cases "k = 1")
+          case True thus False using hck hcx by (by100 simp)
+        next
+          case False
+          hence "k = 2" using hk \<open>k \<noteq> 0\<close> by (by100 simp)
+          thus False using hck hcy by (by100 simp)
+        qed
+      qed
+    qed
+  qed
+  \<comment> \<open>Part 3: set equality. The simplex {(x,y)|x\<ge>0,y\<ge>0,x+y\<le>1} equals the convex hull.\<close>
+  have hs: "top1_standard_simplex = {(x, y) | x y.
+      \<exists>c. (\<forall>i<3. (0::real) \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+      \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)}"
+  proof (rule set_eqI)
+    fix p :: "real \<times> real"
+    obtain x y where hp: "p = (x, y)" by (cases p) (by100 blast)
+    show "p \<in> top1_standard_simplex \<longleftrightarrow>
+        p \<in> {(x, y) | x y. \<exists>c. (\<forall>i<3. 0 \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+            \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)}"
+    proof
+      assume "p \<in> top1_standard_simplex"
+      hence hx: "x \<ge> 0" and hy: "y \<ge> 0" and hxy: "x + y \<le> 1"
+        using hp unfolding top1_standard_simplex_def by (by100 auto)+
+      let ?c = "\<lambda>i::nat. if i = 0 then 1 - x - y else if i = 1 then x else y"
+      have hcge: "\<forall>i<3. (0::real) \<le> ?c i" using hx hy hxy by (by100 auto)
+      have hcsum: "(\<Sum>i<3. ?c i) = 1" using hsc by (by100 simp)
+      have hcvx: "x = (\<Sum>i<3. ?c i * ?vx i)" using hsx by (by100 simp)
+      have hcvy: "y = (\<Sum>i<3. ?c i * ?vy i)" using hsy by (by100 simp)
+      have "\<exists>c. (\<forall>i<3. (0::real) \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+          \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)"
+        apply (rule exI[of _ ?c])
+        using hcge hcsum hcvx hcvy by (by100 blast)
+      thus "p \<in> {(x, y) | x y. \<exists>c. (\<forall>i<3. 0 \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+          \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)}"
+        using hp by (by100 blast)
+    next
+      assume "p \<in> {(x, y) | x y. \<exists>c. (\<forall>i<3. 0 \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+          \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)}"
+      then obtain c where hcge: "\<forall>i<3. (0::real) \<le> c i"
+          and hcsum: "(\<Sum>i<3. c i) = 1"
+          and hpx_raw: "x = (\<Sum>i<3. c i * ?vx i)" and hpy_raw: "y = (\<Sum>i<3. c i * ?vy i)"
+        using hp by (by100 auto)
+      have hpx: "x = c 1" using hpx_raw hsx by (by100 simp)
+      have hpy: "y = c 2" using hpy_raw hsy by (by100 simp)
+      have "c 0 + c 1 + c 2 = 1" using hcsum hsc by (by100 simp)
+      have "c 0 \<ge> 0" "c 1 \<ge> 0" "c 2 \<ge> 0" using hcge by (by100 auto)+
+      hence "x \<ge> 0" "y \<ge> 0" "x + y \<le> 1" using hpx hpy \<open>c 0 + c 1 + c 2 = 1\<close> \<open>c 0 \<ge> 0\<close>
+        by (by100 linarith)+
+      thus "p \<in> top1_standard_simplex" using hp unfolding top1_standard_simplex_def
+        by (by100 auto)
+    qed
+  qed
+  show ?thesis unfolding top1_is_polygonal_region_on_def
+    apply (intro conjI)
+     apply (by100 simp)
+    apply (rule exI[of _ ?vx])
+    apply (rule exI[of _ ?vy])
+    using hd he hs unfolding top1_standard_simplex_def by (by100 blast)
+qed
+
 (** from \<S>78 Theorem 78.1: compact triangulable surfaces are quotients of
     triangular regions by edge pasting. **)
 theorem Theorem_78_1_triangulable_surface:
@@ -9992,7 +10097,8 @@ proof -
     using assms(2) unfolding top1_is_triangulable_on_def by auto
   \<comment> \<open>Step 2: Each homeomorphism h0(T) maps the standard simplex to T.
      The simplex is a polygonal region with 3 sides.\<close>
-  have h_simplex_poly: "top1_is_polygonal_region_on top1_standard_simplex 3" sorry
+  have h_simplex_poly: "top1_is_polygonal_region_on top1_standard_simplex 3"
+    by (rule standard_simplex_is_polygonal_region)
   \<comment> \<open>Step 3: Assemble with quotient map q = identity on interior, edge-pasting on boundary.\<close>
   show ?thesis sorry
 qed
