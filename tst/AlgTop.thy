@@ -5342,6 +5342,51 @@ proof -
   show ?thesis sorry
 qed
 
+text \<open>Path homotopy is compatible with path reversal: f \<simeq> g \<Longrightarrow> rev f \<simeq> rev g.\<close>
+lemma path_homotopic_reverse_congruence:
+  assumes hTX: "is_topology_on X TX"
+      and hhom: "top1_path_homotopic_on X TX x0 x1 f g"
+  shows "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFleft: "\<forall>t\<in>I_set. F (0, t) = x0" and hFright: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using hhom unfolding top1_path_homotopic_on_def by blast
+  \<comment> \<open>G(s,t) = F(1-s, t): homotopy from rev f to rev g.\<close>
+  let ?G = "\<lambda>p. F (1 - fst p, snd p)"
+  have hflip_s: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+      (I_set \<times> I_set) II_topology (\<lambda>p. (1 - fst p, snd p))"
+    sorry \<comment> \<open>Continuous: (s,t) \<mapsto> (1-s, t) on I\<times>I.\<close>
+  have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+  proof -
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (F \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      by (rule top1_continuous_map_on_comp[OF hflip_s hF])
+    thus ?thesis unfolding comp_def by (by100 simp)
+  qed
+  have hfp: "top1_is_path_on X TX x0 x1 f" and hgp: "top1_is_path_on X TX x0 x1 g"
+    using hhom unfolding top1_path_homotopic_on_def by blast+
+  have "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
+    unfolding top1_path_homotopic_on_def
+  proof (intro exI[of _ ?G] conjI)
+    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G" by (rule hG)
+    show "\<forall>s\<in>I_set. ?G (s, 0) = top1_path_reverse f s"
+      unfolding top1_path_reverse_def using hF0
+      unfolding top1_unit_interval_def by (by100 auto)
+    show "\<forall>s\<in>I_set. ?G (s, 1) = top1_path_reverse g s"
+      unfolding top1_path_reverse_def using hF1
+      unfolding top1_unit_interval_def by (by100 auto)
+    show "\<forall>t\<in>I_set. ?G (0, t) = x1"
+      using hFright by (by100 simp)
+    show "\<forall>t\<in>I_set. ?G (1, t) = x0"
+      using hFleft by (by100 simp)
+    show "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_path[OF hfp])
+    show "top1_is_path_on X TX x1 x0 (top1_path_reverse g)"
+      by (rule top1_path_reverse_is_path[OF hgp])
+  qed
+  thus ?thesis .
+qed
+
 text \<open>The fundamental group \<pi>_1(X, x_0) is a group under path-product of equivalence classes.\<close>
 lemma top1_fundamental_group_is_group:
   assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
@@ -5385,9 +5430,34 @@ proof (intro conjI)
       unfolding top1_fundamental_group_carrier_def by (by100 blast)
     have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
       by (rule top1_path_reverse_is_loop[OF hf])
+    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> ?inv c"
+      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 f g" unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
+        by (rule path_homotopic_reverse_congruence[OF hTX])
+      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hrg: "top1_is_loop_on X TX x0 (top1_path_reverse g)" by (rule top1_path_reverse_is_loop[OF hg_loop])
+      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) (top1_path_reverse g)"
+        unfolding top1_loop_equiv_on_def
+        using hrf \<open>top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)\<close>
+        by (by100 blast)
+      moreover have "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h" by (rule hrev_g_h)
+      ultimately show "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] hrf by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) h" by (by100 blast)
+      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+      ultimately show "h \<in> ?inv c"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+    qed
     show "?inv c \<in> ?G"
-      unfolding top1_fundamental_group_invg_def hc top1_fundamental_group_carrier_def
-      sorry \<comment> \<open>inv([f]) = [rev f] \<in> carrier. Needs: loop_equiv compatible with reverse.\<close>
+      unfolding hinvc top1_fundamental_group_carrier_def using hrf by (by100 blast)
   qed
   \<comment> \<open>(4) Associativity.\<close>
   show "\<forall>x\<in>?G. \<forall>y\<in>?G. \<forall>z\<in>?G. ?mul (?mul x y) z = ?mul x (?mul y z)"
@@ -5478,7 +5548,27 @@ proof (intro conjI)
       using hrf unfolding top1_is_loop_on_def .
     \<comment> \<open>inv([f]) = {h. \<exists>g\<in>[f]. rev(g) \<simeq> h} = [rev f] (reverse respects equiv class).\<close>
     have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-      sorry \<comment> \<open>inv([f]) = [rev f]. Needs: loop_equiv compatible with reverse.\<close>
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> ?inv c"
+      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
+      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      have "top1_path_homotopic_on X TX x0 x0 f g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
+        by (rule path_homotopic_reverse_congruence[OF hTX])
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse g) h"
+        using hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+        unfolding top1_loop_equiv_on_def using hrf hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+      ultimately show "h \<in> ?inv c"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+    qed
     \<comment> \<open>Left inverse: [rev f]*[f] = [rev f * f] = [const].\<close>
     have "?mul (?inv c) c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
     proof -
