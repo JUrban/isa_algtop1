@@ -5461,7 +5461,56 @@ proof (intro conjI)
   qed
   \<comment> \<open>(4) Associativity.\<close>
   show "\<forall>x\<in>?G. \<forall>y\<in>?G. \<forall>z\<in>?G. ?mul (?mul x y) z = ?mul x (?mul y z)"
-    sorry \<comment> \<open>From Theorem_51_2_associativity + mul_class. ~30 lines.\<close>
+  proof (intro ballI)
+    fix c1 c2 c3 assume "c1 \<in> ?G" "c2 \<in> ?G" "c3 \<in> ?G"
+    then obtain f g h where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {k. top1_loop_equiv_on X TX x0 f k}"
+        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {k. top1_loop_equiv_on X TX x0 g k}"
+        and hh: "top1_is_loop_on X TX x0 h" and hc3: "c3 = {k. top1_loop_equiv_on X TX x0 h k}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    have hgp: "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
+    have hhp: "top1_is_path_on X TX x0 x0 h" using hh unfolding top1_is_loop_on_def .
+    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+      by (rule top1_path_product_is_loop[OF hTX hf hg])
+    have hgh: "top1_is_loop_on X TX x0 (top1_path_product g h)"
+      by (rule top1_path_product_is_loop[OF hTX hg hh])
+    \<comment> \<open>LHS: (c1*c2)*c3 = [(f*g)*h].\<close>
+    have "?mul c1 c2 = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
+      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
+    hence hlhs: "?mul (?mul c1 c2) c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+      unfolding hc3 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hfg hh])
+    \<comment> \<open>RHS: c1*(c2*c3) = [f*(g*h)].\<close>
+    have "?mul c2 c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product g h) k}"
+      unfolding hc2 hc3 by (rule top1_fundamental_group_mul_class[OF hTX hg hh])
+    hence hrhs: "?mul c1 (?mul c2 c3) = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+      unfolding hc1 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hf hgh])
+    \<comment> \<open>By Theorem_51_2_associativity: (f*g)*h \<simeq> f*(g*h). Hence equiv classes equal.\<close>
+    have hassoc_path: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
+      by (rule Theorem_51_2_associativity[OF hTX hfp hgp hhp])
+    have "{k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}
+        = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+    proof (rule set_eqI, rule iffI)
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) k"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
+        by (rule hassoc_path)
+      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hf hgh] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) k"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) (top1_path_product f (top1_path_product g h))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hassoc_path])
+      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hfg hh] by (by100 blast)
+    qed
+    thus "?mul (?mul c1 c2) c3 = ?mul c1 (?mul c2 c3)" unfolding hlhs hrhs .
+  qed
   \<comment> \<open>(5) Left identity.\<close>
   show "\<forall>x\<in>?G. ?mul ?e x = x \<and> ?mul x ?e = x"
   proof (intro ballI conjI)
