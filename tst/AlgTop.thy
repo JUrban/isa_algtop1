@@ -1926,14 +1926,25 @@ proof -
   \<comment> \<open>Now we have G: R^2 \<rightarrow> R^2-{origin} with G|_K = id and G nulhomotopic.
      The key consequence: origin \<notin> G(R^2), so ?origin has no G-preimage.
      This contradicts the existence of a bounded component containing origin.\<close>
+  \<comment> \<open>Origin is in UNIV-K (proved). Get the component containing it.\<close>
+  have hUK_open: "UNIV - ?K \<in> ?TR2"
+  proof -
+    have "closed ?K" by (rule hK_closed)
+    hence "open (- ?K :: (real\<times>real) set)" using open_closed by (by100 blast)
+    hence "open (UNIV - ?K :: (real\<times>real) set)" unfolding Compl_eq_Diff_UNIV[symmetric] .
+    hence "(UNIV - ?K) \<in> (top1_open_sets :: (real\<times>real) set set)" unfolding top1_open_sets_def by (by100 blast)
+    thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+  qed
+  \<comment> \<open>The origin is in a component of UNIV-K, and that component is unbounded.\<close>
   have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
          \<and> ?origin \<in> C0
          \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
-    sorry \<comment> \<open>By contradiction using G: suppose origin in bounded C0.
-       Paste G with id on D (other components): h = G on C0, h = id on D\<union>K.
-       Both C0\<union>K and D\<union>K closed (frontier \<subseteq> K). Pasting gives h: R^2 \<rightarrow> R^2-{origin}.
-       h|_{\<partial>B} = id for large ball B. Radial projection r: R^2-{origin} \<rightarrow> \<partial>B.
-       r \<circ> h|_B: B \<rightarrow> \<partial>B retraction. Contradiction with Theorem_55_2.\<close>
+    sorry \<comment> \<open>Part 1: origin \<in> component C0 (origin \<in> UNIV-K, components partition open sets).
+       Part 2: C0 unbounded. By contradiction: suppose C0 bounded.
+       Paste G with id on D\<union>K: h = G on C0, h = id elsewhere.
+       C0\<union>K, D\<union>K both closed (\<partial>C0 \<subseteq> K). Pasting → h: R^2 \<rightarrow> R^2-{0}.
+       Large ball B: h|_\<partial>B = id. Radial projection gives retraction B \<rightarrow> \<partial>B.
+       Contradiction with Theorem_55_2_no_retraction.\<close>
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
