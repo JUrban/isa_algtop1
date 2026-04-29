@@ -2264,8 +2264,40 @@ proof -
       \<comment> \<open>h: R^2 \<rightarrow> R^2-{origin}. For large ball B: h|_\<partial>B = id (since \<partial>B \<subseteq> D).
          Radial projection r: R^2-{origin} \<rightarrow> \<partial>B gives r \<circ> h|_B retraction.
          Contradiction with Theorem_55_2_no_retraction.\<close>
+      \<comment> \<open>Step 1: Define h(x) = k(x) for x \<in> C0\<union>K, h(x) = x for x \<notin> C0.
+         Since k|_K = id, both definitions agree on K.\<close>
+      define hmap where "hmap = (\<lambda>x. if x \<in> ?C0 then k x else x)"
+      \<comment> \<open>h maps R^2 to R^2-{origin}: for x \<in> C0, k(x) \<in> R^2-{origin} (from k range).
+         For x \<notin> C0: x \<noteq> origin? Yes, since origin \<in> C0.\<close>
+      have hmap_avoids: "\<forall>x. hmap x \<noteq> ?origin"
+      proof
+        fix x show "hmap x \<noteq> ?origin"
+        proof (cases "x \<in> ?C0")
+          case True
+          hence "hmap x = k x" unfolding hmap_def by (by100 simp)
+          moreover have "k x \<in> UNIV - {?origin}"
+          proof -
+            have "x \<in> ?C0 \<union> ?K" using True by (by100 blast)
+            thus ?thesis using hk unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          ultimately have "hmap x \<in> UNIV - {?origin}" by (by100 simp)
+          thus ?thesis by (by100 simp)
+        next
+          case False
+          hence "hmap x = x" unfolding hmap_def by (by100 simp)
+          moreover have "x \<noteq> ?origin" using False horigin_C0 by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>Step 2: h = id outside C0 (in particular on \<partial>B for large B).\<close>
+      have hmap_id_outside: "\<forall>x. x \<notin> ?C0 \<longrightarrow> hmap x = x"
+        unfolding hmap_def by (by100 simp)
+      \<comment> \<open>Step 3: h continuous (pasting lemma on C0\<union>K and (UNIV-C0)).\<close>
+      \<comment> \<open>Step 4: Large ball, radial projection, retraction, Theorem_55_2.\<close>
       show False
-        sorry \<comment> \<open>Pasting + large ball + radial projection + retraction contradiction.\<close>
+        sorry \<comment> \<open>h continuous (pasting lemma), large ball B centered at origin containing C0\<union>K,
+           h|_\<partial>B = id, radial projection r(x) = M*x/|x|, r \<circ> h|_B retraction of B onto \<partial>B,
+           B \<cong> B^2, \<partial>B \<cong> S^1, contradiction with Theorem_55_2_no_retraction.\<close>
     qed
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
