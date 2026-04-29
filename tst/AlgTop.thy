@@ -4050,10 +4050,81 @@ proof -
   qed
   \<comment> \<open>(6) Associativity: mul (mul x y) z = mul x (mul y z).\<close>
   \<comment> \<open>Key helper for associativity: prepend distributes over mul on the left.\<close>
+  \<comment> \<open>Prepend composition: prepend (\<alpha>,g) (prepend (\<alpha>,h) z) = prepend (\<alpha>,g\<cdot>h) z.\<close>
+  have hprepend_compose: "\<And>\<alpha> g h z. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> g \<noteq> eGG \<alpha> \<Longrightarrow>
+      h \<in> GG \<alpha> \<Longrightarrow> h \<noteq> eGG \<alpha> \<Longrightarrow>
+      prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = prepend (\<alpha>, mulGG \<alpha> g h) z"
+    sorry \<comment> \<open>Case analysis on what prepend (\<alpha>,h) z produces:
+       - z empty or different index: prepend (\<alpha>,h) z = (\<alpha>,h)#z, then prepend (\<alpha>,g) merges.
+       - z starts with (\<alpha>,...): prepend (\<alpha>,h) merges with head, result may or may not start with \<alpha>.
+       Requires showing mulGG \<alpha> g (mulGG \<alpha> h x) = mulGG \<alpha> (mulGG \<alpha> g h) x (assoc in GG \<alpha>).\<close>
   have hprepend_mul: "\<And>\<alpha> g ws zs. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow> zs \<in> G \<Longrightarrow>
       mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, g) (mul ws zs)"
-    sorry \<comment> \<open>Case analysis: identity skip, empty, different index (just cons), same index.
-       Same-index case requires showing prepend(\<alpha>,g)(prepend(\<alpha>,h) x) = prepend(\<alpha>,g\<cdot>h) x.\<close>
+  proof -
+    fix \<alpha> :: 'i and g :: 'gg and ws zs :: "('i \<times> 'gg) list"
+    assume h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>" and hws: "ws \<in> G" and hzs: "zs \<in> G"
+    show "mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, g) (mul ws zs)"
+    proof (cases "g = eGG \<alpha>")
+      case True \<comment> \<open>Identity: prepend skips.\<close>
+      thus ?thesis unfolding prepend_def by (by100 simp)
+    next
+      case hgne: False
+      show ?thesis
+      proof (cases ws)
+        case Nil \<comment> \<open>Empty word: prepend = singleton.\<close>
+        have "prepend (\<alpha>, g) [] = [(\<alpha>, g)]" unfolding prepend_def using hgne by (by100 simp)
+        hence "mul (prepend (\<alpha>, g) ws) zs = mul [(\<alpha>, g)] zs" unfolding Nil by (by100 simp)
+        also have "\<dots> = prepend (\<alpha>, g) zs" unfolding mul_def by (by100 simp)
+        also have "\<dots> = prepend (\<alpha>, g) (mul ws zs)" unfolding Nil mul_def by (by100 simp)
+        finally show ?thesis .
+      next
+        case (Cons p rest)
+        obtain \<beta> h where hp: "p = (\<beta>, h)" by (cases p)
+        show ?thesis
+        proof (cases "\<alpha> = \<beta>")
+          case hdiff: False \<comment> \<open>Different index: prepend = cons.\<close>
+          have "prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+            unfolding Cons hp prepend_def using hgne hdiff by (by100 simp)
+          hence "mul (prepend (\<alpha>, g) ws) zs = foldr prepend ((\<alpha>, g) # ws) zs" unfolding mul_def by (by100 simp)
+          also have "\<dots> = prepend (\<alpha>, g) (foldr prepend ws zs)" by (by100 simp)
+          finally show ?thesis unfolding mul_def .
+        next
+          case hsame: True \<comment> \<open>Same index: uses prepend_compose.\<close>
+          have helem: "h \<in> GG \<alpha> \<and> h \<noteq> eGG \<alpha>"
+            using hG_elem[OF hws, of 0] unfolding Cons hp hsame by (by100 simp)
+          let ?gh = "mulGG \<alpha> g h"
+          show ?thesis
+          proof (cases "?gh = eGG \<alpha>")
+            case True \<comment> \<open>Product = identity: prepend removes head.\<close>
+            have hprep: "prepend (\<alpha>, g) ws = rest" unfolding Cons hp prepend_def using hgne hsame True by (by100 simp)
+            \<comment> \<open>mul rest zs vs prepend (\<alpha>,g) (prepend (\<beta>,h) (mul rest zs)).\<close>
+            have "mul ws zs = foldr prepend ws zs" unfolding mul_def by (by100 simp)
+            also have "foldr prepend ws zs = prepend p (foldr prepend rest zs)" unfolding Cons by (by100 simp)
+            finally have hmulws: "mul ws zs = prepend (\<beta>, h) (mul rest zs)" unfolding hp mul_def by (by100 simp)
+            have "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, g) (prepend (\<beta>, h) (mul rest zs))"
+              using hmulws by (by100 simp)
+            also have "\<dots> = prepend (\<alpha>, ?gh) (mul rest zs)"
+              using hprepend_compose[OF h\<alpha> hg hgne _ _ ] helem unfolding hsame by (by100 blast)
+            also have "\<dots> = mul rest zs" unfolding prepend_def using True by (by100 simp)
+            finally show ?thesis unfolding hprep by (by100 simp)
+          next
+            case ghne: False \<comment> \<open>Product non-identity: replace head.\<close>
+            have hprep: "prepend (\<alpha>, g) ws = (\<alpha>, ?gh) # rest"
+              unfolding Cons hp prepend_def using hgne hsame ghne by (by100 simp)
+            have "mul ws zs = prepend (\<beta>, h) (mul rest zs)"
+              unfolding mul_def Cons hp by (by100 simp)
+            hence "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, g) (prepend (\<beta>, h) (mul rest zs))" by (by100 simp)
+            also have "\<dots> = prepend (\<alpha>, ?gh) (mul rest zs)"
+              using hprepend_compose[OF h\<alpha> hg hgne _ _] helem unfolding hsame by (by100 blast)
+            finally have "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, ?gh) (mul rest zs)" .
+            moreover have "mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, ?gh) (mul rest zs)"
+              unfolding hprep mul_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
+      qed
+    qed
+  qed
   have hassoc: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. \<forall>ws3\<in>G. mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
   proof (intro ballI)
     fix ws1 ws2 ws3 assume hws1: "ws1 \<in> G" and hws2: "ws2 \<in> G" and hws3: "ws3 \<in> G"
