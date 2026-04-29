@@ -4134,7 +4134,17 @@ proof -
             \<comment> \<open>g\<cdot>h \<noteq> e. RHS = prepend (\<alpha>, g\<cdot>h) ((q)#rest).\<close>
             \<comment> \<open>Both sides equal (\<alpha>, g) # rest via hghk (= g, non-identity).\<close>
             have hrhs: "prepend (\<alpha>, mulGG \<alpha> g h) z = (\<alpha>, g) # rest"
-              sorry \<comment> \<open>Unfold prepend at z = (\<alpha>,k)#rest: compute (g\<cdot>h)\<cdot>k = g, check g \<noteq> eGG.\<close>
+            proof -
+              have "prepend (\<alpha>, mulGG \<alpha> g h) z =
+                  (let v = mulGG \<alpha> (mulGG \<alpha> g h) k in if v = eGG \<alpha> then rest else (\<alpha>, v) # rest)"
+              proof -
+                have "prepend (\<alpha>, mulGG \<alpha> g h) ((\<alpha>, k) # rest) =
+                    (let gh = mulGG \<alpha> (mulGG \<alpha> g h) k in if gh = eGG \<alpha> then rest else (\<alpha>, gh) # rest)"
+                  unfolding prepend_def using ghne by (by100 simp)
+                thus ?thesis unfolding Cons hq hsame by (by100 simp)
+              qed
+              thus ?thesis unfolding hghk using hgne by (by100 simp)
+            qed
             moreover have hlhs: "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = (\<alpha>, g) # rest"
               using hinner hprepend_cons[OF hgne hdiff_rest] by (by100 simp)
             ultimately show ?thesis by (by100 simp)
