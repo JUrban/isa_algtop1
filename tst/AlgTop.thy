@@ -624,10 +624,37 @@ proof -
   let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
   \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K \<subseteq> R^2 - {?origin}.\<close>
   have hg_cont: "top1_continuous_map_on A TA (UNIV::(real\<times>real) set) ?TR2 ?g"
-    sorry \<comment> \<open>Compose f (A \<rightarrow> S^2-{a,b}) with h (S^2-{b} \<rightarrow> R^2).\<close>
+  proof -
+    \<comment> \<open>h continuous: extract from homeomorphism.\<close>
+    have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))
+        (UNIV::(real\<times>real) set) ?TR2 h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>f maps A into S^2-{a,b} \<subseteq> S^2-{b}. Enlarge codomain.\<close>
+    have hf_S2b: "top1_continuous_map_on A TA (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) f"
+    proof -
+      have hsub: "?S2 - {a, b} \<subseteq> ?S2 - {b}" by (by100 blast)
+      have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
+      show ?thesis
+        using top1_continuous_map_on_codomain_enlarge[OF hf hsub hS2b_sub] .
+    qed
+    \<comment> \<open>Compose: g = h \<circ> f.\<close>
+    show ?thesis by (rule top1_continuous_map_on_comp[OF hf_S2b hh_cont])
+  qed
   let ?K = "?g ` A"
   have hK_compact: "compact ?K"
-    sorry \<comment> \<open>Continuous image of compact set is compact.\<close>
+  proof -
+    have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+      by (by100 simp)
+    have hK_top1: "top1_compact_on ?K (subspace_topology UNIV ?TR2 ?K)"
+      by (rule top1_compact_on_continuous_image[OF hcomp hTR2_top hg_cont])
+    \<comment> \<open>Bridge: ?TR2 = top1_open_sets for (real\<times>real).\<close>
+    have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+      using product_topology_on_open_sets_real2 by (by100 metis)
+    have "top1_compact_on ?K (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?K)"
+      using hK_top1 unfolding hTR2_eq .
+    thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+  qed
   have hK_sub: "?K \<subseteq> UNIV - {?origin}"
     sorry \<comment> \<open>f(A) \<subseteq> S^2-{a,b}, h(a)=?origin, h injective on S^2-{b}.\<close>
   have hK_closed: "closed ?K" using hK_compact by (rule compact_imp_closed)
