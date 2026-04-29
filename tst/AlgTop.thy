@@ -5466,7 +5466,86 @@ proof (intro conjI)
   qed
   \<comment> \<open>(6) Inverse.\<close>
   show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
-    sorry \<comment> \<open>From Theorem_51_2_invgerse_left/right + mul_class. ~30 lines.\<close>
+  proof (intro ballI conjI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_loop[OF hf])
+    have hrfp: "top1_is_path_on X TX x0 x0 (top1_path_reverse f)"
+      using hrf unfolding top1_is_loop_on_def .
+    \<comment> \<open>inv([f]) = {h. \<exists>g\<in>[f]. rev(g) \<simeq> h} = [rev f] (reverse respects equiv class).\<close>
+    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+      sorry \<comment> \<open>inv([f]) = [rev f]. Needs: loop_equiv compatible with reverse.\<close>
+    \<comment> \<open>Left inverse: [rev f]*[f] = [rev f * f] = [const].\<close>
+    have "?mul (?inv c) c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+    proof -
+      have "?mul {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h} {h. top1_loop_equiv_on X TX x0 f h}
+          = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX hrf hf])
+      thus ?thesis using hinvc hc by (by100 simp)
+    qed
+    also have "\<dots> = ?e"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product (top1_path_reverse f) f)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_right[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
+        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> ?e"
+      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) (top1_constant_path x0)"
+        by (rule Theorem_51_2_invgerse_right[OF hTX hfp])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hrf hf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    qed
+    finally show "?mul (?inv c) c = ?e" .
+    \<comment> \<open>Right inverse: [f]*[rev f] = [f * rev f] = [const].\<close>
+    have "?mul c (?inv c) = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+    proof -
+      have "?mul {h. top1_loop_equiv_on X TX x0 f h} {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}
+          = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX hf hrf])
+      thus ?thesis using hinvc hc by (by100 simp)
+    qed
+    also have "\<dots> = ?e"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product f (top1_path_reverse f))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_left[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
+        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> ?e"
+      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) (top1_constant_path x0)"
+        by (rule Theorem_51_2_invgerse_left[OF hTX hfp])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hf hrf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    qed
+    finally show "?mul c (?inv c) = ?e" .
+  qed
 qed
 
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
