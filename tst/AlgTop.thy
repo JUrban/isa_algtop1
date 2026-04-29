@@ -4052,10 +4052,9 @@ proof -
   have hassoc: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. \<forall>ws3\<in>G. mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
     sorry \<comment> \<open>The hardest part. By induction on ws1.\<close>
   \<comment> \<open>(7) Left/right inverse.\<close>
-  have hinverse: "\<forall>ws\<in>G. mul (invg ws) ws = e \<and> mul ws (invg ws) = e"
-  proof (intro ballI conjI)
+  have hleft_inv: "\<forall>ws\<in>G. mul (invg ws) ws = e"
+  proof (intro ballI)
     fix ws assume hws: "ws \<in> G"
-    \<comment> \<open>Left inverse: mul (invg ws) ws = e. By induction on ws.\<close>
     show "mul (invg ws) ws = e" unfolding mul_def invg_def e_def
       using hws
     proof (induction ws)
@@ -4106,12 +4105,96 @@ proof -
         by (rule hIH)
       finally show ?case .
     qed
+  qed
+  have hinverse: "\<forall>ws\<in>G. mul (invg ws) ws = e \<and> mul ws (invg ws) = e"
+  proof (intro ballI conjI)
+    fix ws assume hws: "ws \<in> G"
+    show "mul (invg ws) ws = e" using hleft_inv hws by (by100 blast)
   next
     fix ws assume hws: "ws \<in> G"
-    \<comment> \<open>Right inverse: mul ws (invg ws) = e. Similar argument with reversed cancellation.\<close>
-    show "mul ws (invg ws) = e"
-      sorry \<comment> \<open>Right inverse: use invg(invg ws) = ws (double inverse) + left inverse on invg ws.
-         Or direct induction from the right: each g\<cdot>invg(g) = eGG.\<close>
+    \<comment> \<open>Right inverse: mul ws (invg ws) = e.\<close>
+    \<comment> \<open>Double inverse in factor groups: invgGG \<alpha> (invgGG \<alpha> g) = g.\<close>
+    have hdouble_inv: "\<And>\<alpha> g. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> invgGG \<alpha> (invgGG \<alpha> g) = g"
+    proof -
+      fix \<alpha> g assume h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>"
+      have hgrp: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+        using hgroups h\<alpha> by (by100 blast)
+      have hig: "invgGG \<alpha> g \<in> GG \<alpha>" using hgrp hg unfolding top1_is_group_on_def by (by100 blast)
+      have hiig: "invgGG \<alpha> (invgGG \<alpha> g) \<in> GG \<alpha>" using hgrp hig unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>invg(invg(g)) \<cdot> invg(g) = e, and g \<cdot> invg(g) = e. By left cancel: invg(invg(g)) = g.\<close>
+      have h1: "mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (invgGG \<alpha> g) = eGG \<alpha>"
+        using hgrp hig unfolding top1_is_group_on_def by (by100 blast)
+      have h2: "mulGG \<alpha> g (invgGG \<alpha> g) = eGG \<alpha>"
+        using hgrp hg unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>Multiply both sides on the right by g: use associativity in GG \<alpha>.\<close>
+      have h3: "mulGG \<alpha> (mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (invgGG \<alpha> g)) g
+              = mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (mulGG \<alpha> (invgGG \<alpha> g) g)"
+        using hgrp hiig hig hg unfolding top1_is_group_on_def by (by100 blast)
+      have "mulGG \<alpha> (invgGG \<alpha> g) g = eGG \<alpha>"
+        using hgrp hg unfolding top1_is_group_on_def by (by100 blast)
+      hence "mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (mulGG \<alpha> (invgGG \<alpha> g) g) = mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (eGG \<alpha>)"
+        by (by100 simp)
+      also have "\<dots> = invgGG \<alpha> (invgGG \<alpha> g)"
+        using hgrp hiig unfolding top1_is_group_on_def by (by100 blast)
+      finally have hrhs: "mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (mulGG \<alpha> (invgGG \<alpha> g) g) = invgGG \<alpha> (invgGG \<alpha> g)" .
+      have "mulGG \<alpha> (eGG \<alpha>) g = g" using hgrp hg unfolding top1_is_group_on_def by (by100 blast)
+      hence "mulGG \<alpha> (mulGG \<alpha> (invgGG \<alpha> (invgGG \<alpha> g)) (invgGG \<alpha> g)) g = g"
+        using h1 by (by100 simp)
+      hence "invgGG \<alpha> (invgGG \<alpha> g) = g" using h3 hrhs by (by100 simp)
+      thus "invgGG \<alpha> (invgGG \<alpha> g) = g" .
+    qed
+    \<comment> \<open>invg (invg ws) = ws: map(inv) \<circ> rev \<circ> map(inv) \<circ> rev = map(inv\<circ>inv) = map(id) = id.\<close>
+    have hinvg_invg: "invg (invg ws) = ws"
+    proof -
+      \<comment> \<open>Direct proof by list equality.\<close>
+      have hlen: "length (invg (invg ws)) = length ws" unfolding invg_def by (by100 simp)
+      have "\<forall>i<length ws. (invg (invg ws))!i = ws!i"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ws"
+        let ?n = "length ws"
+        \<comment> \<open>invg ws = rev(map inv ws), so (invg ws)!j = inv(ws!(?n-1-j)).\<close>
+        \<comment> \<open>invg(invg ws)!i = inv((invg ws)!(?n-1-i)) = inv(inv(ws!(i))) = ws!i.\<close>
+        have hi': "?n - Suc i < ?n" using hi by (by100 linarith)
+        have h1: "(invg ws)!(?n - Suc i) = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (ws!i)"
+        proof -
+          have "(invg ws)!(?n - Suc i) = (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws))!(?n - Suc i)"
+            unfolding invg_def by (by100 simp)
+          also have "\<dots> = (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws)!(?n - Suc (?n - Suc i))"
+            using rev_nth[of "?n - Suc i" "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws"] hi by (by100 simp)
+          also have "?n - Suc (?n - Suc i) = i" using hi by (by100 linarith)
+          also have "(map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws)!i = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (ws!i)"
+            using hi by (by100 simp)
+          finally show ?thesis .
+        qed
+        have h2: "(invg (invg ws))!i = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ((invg ws)!(?n - Suc i))"
+        proof -
+          have "(invg (invg ws))!i = (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)))!i"
+            unfolding invg_def by (by100 simp)
+          also have "\<dots> = (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws))!(length (invg ws) - Suc i)"
+            using rev_nth[of i "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)"] hi
+            unfolding invg_def by (by100 simp)
+          also have "length (invg ws) = ?n" unfolding invg_def by (by100 simp)
+          also have "(map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws))!(?n - Suc i)
+              = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ((invg ws)!(?n - Suc i))"
+            using hi' unfolding invg_def by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        have "(\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ((\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (ws!i)) = ws!i"
+        proof -
+          obtain \<alpha> g where hwsi: "ws!i = (\<alpha>, g)" by (cases "ws!i")
+          have "\<alpha> \<in> J \<and> g \<in> GG \<alpha>" using hG_elem[OF hws hi] unfolding hwsi by (by100 simp)
+          hence "invgGG \<alpha> (invgGG \<alpha> g) = g" using hdouble_inv by (by100 blast)
+          thus ?thesis unfolding hwsi by (by100 simp)
+        qed
+        thus "(invg (invg ws))!i = ws!i" using h2 h1 by (by100 simp)
+      qed
+      hence "\<forall>i<length (invg (invg ws)). (invg (invg ws))!i = ws!i" using hlen by (by100 simp)
+      thus ?thesis using hlen by (intro nth_equalityI) (by100 simp)+
+    qed
+    \<comment> \<open>Right inverse from left inverse: mul (invg(invg ws)) (invg ws) = e, i.e., mul ws (invg ws) = e.\<close>
+    have "invg ws \<in> G" using hinvg_closed hws by (by100 blast)
+    hence "mul (invg (invg ws)) (invg ws) = e" using hleft_inv by (by100 blast)
+    thus "mul ws (invg ws) = e" unfolding hinvg_invg .
   qed
   \<comment> \<open>(8) \<iota>fam properties.\<close>
   have h\<iota>_in_G: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> G"
