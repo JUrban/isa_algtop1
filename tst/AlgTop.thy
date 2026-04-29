@@ -525,9 +525,217 @@ proof -
       let ?\<psi> = "\<lambda>(x::'a, t::real). (x, (1-t) * \<phi> x + t)"
       have h\<psi>_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
           (X \<times> I_set) (product_topology_on TX I_top) ?\<psi>"
-        sorry \<comment> \<open>Theorem_18_4: \<pi>1\<circ>\<psi> = \<pi>1 (continuous), \<pi>2\<circ>\<psi> = (1-t)\<phi>(x)+t (continuous).
-           Needs: \<phi>\<circ>\<pi>1 continuous X\<times>I \<rightarrow> R, \<pi>2 continuous X\<times>I \<rightarrow> R,
-           polynomial operations, then bridge to I_top.\<close>
+      proof -
+        have hTXI: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+          by (rule product_topology_on_is_topology_on[OF hTX top1_unit_interval_topology_is_topology_on])
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        \<comment> \<open>\<pi>1 \<circ> \<psi> = \<pi>1: continuous.\<close>
+        have hpi1_\<psi>: "pi1 \<circ> ?\<psi> = pi1"
+        proof (rule ext)
+          fix p show "(pi1 \<circ> ?\<psi>) p = pi1 p"
+            unfolding pi1_def comp_def by (cases p) (by100 simp)
+        qed
+        have hpi1_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX pi1"
+          by (rule top1_continuous_pi1[OF hTX_top hTI])
+        \<comment> \<open>\<pi>2 \<circ> \<psi>(x,t) = (1-t)\<phi>(x)+t: continuous X\<times>I \<rightarrow> I.\<close>
+        have hpi2_\<psi>: "pi2 \<circ> ?\<psi> = (\<lambda>(x,t). (1-t) * \<phi> x + t)"
+        proof (rule ext)
+          fix p show "(pi2 \<circ> ?\<psi>) p = (\<lambda>(x,t). (1-t) * \<phi> x + t) p"
+            unfolding pi2_def comp_def by (cases p) (by100 simp)
+        qed
+        have hpi2_\<psi>_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top
+            (\<lambda>(x,t). (1-t) * \<phi> x + t)"
+        proof -
+          \<comment> \<open>Key bridge: order_topology_on_UNIV = top1_open_sets for reals.\<close>
+          have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+          proof (rule set_eqI)
+            fix U :: "real set"
+            show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+              using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def
+              by (by100 simp)
+          qed
+          let ?TR = "top1_open_sets :: real set set"
+          let ?TRR = "product_topology_on ?TR ?TR :: (real \<times> real) set set"
+          have hTR: "is_topology_on (UNIV::real set) ?TR"
+            by (rule top1_open_sets_is_topology_on_UNIV)
+          have hTRR: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) ?TRR"
+            by (rule product_topology_on_is_topology_on[OF hTR hTR])
+          \<comment> \<open>Arithmetic ops continuous on R\<times>R (Lemma 21.4).\<close>
+          have cont_add: "top1_continuous_map_on (UNIV \<times> UNIV) ?TRR UNIV ?TR (\<lambda>p::real\<times>real. pi1 p + pi2 p)"
+            using Lemma_21_4(1) unfolding hTR_eq[symmetric] by (by100 simp)
+          have cont_mul: "top1_continuous_map_on (UNIV \<times> UNIV) ?TRR UNIV ?TR (\<lambda>p::real\<times>real. pi1 p * pi2 p)"
+            using Lemma_21_4(3) unfolding hTR_eq[symmetric] by (by100 simp)
+          have cont_sub: "top1_continuous_map_on (UNIV \<times> UNIV) ?TRR UNIV ?TR (\<lambda>p::real\<times>real. pi1 p - pi2 p)"
+            using Lemma_21_4(2) unfolding hTR_eq[symmetric] by (by100 simp)
+          \<comment> \<open>I_top = subspace_topology UNIV top1_open_sets I_set.\<close>
+          have hItop_eq: "I_top = subspace_topology (UNIV::real set) ?TR I_set"
+            unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+          \<comment> \<open>\<phi> continuous X \<rightarrow> I.\<close>
+          have h\<phi>_I: "top1_continuous_map_on X TX I_set I_top \<phi>"
+            by (rule continuous_closed_interval_imp_I_top[OF h\<phi>])
+          \<comment> \<open>\<phi>\<circ>\<pi>1 continuous X\<times>I \<rightarrow> I.\<close>
+          have h\<phi>_pi1_I: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (\<phi> \<circ> pi1)"
+            by (rule top1_continuous_map_on_comp[OF hpi1_cont h\<phi>_I])
+          \<comment> \<open>Enlarge codomain of \<phi>\<circ>\<pi>1 from I_set to UNIV.\<close>
+          have h\<phi>_pi1_R: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (\<phi> \<circ> pi1)"
+          proof -
+            have h1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set (subspace_topology UNIV ?TR I_set) (\<phi> \<circ> pi1)"
+              using h\<phi>_pi1_I unfolding hItop_eq .
+            have h2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) (subspace_topology UNIV ?TR UNIV) (\<phi> \<circ> pi1)"
+              using top1_continuous_map_on_codomain_enlarge[OF h1] by (by100 simp)
+            thus ?thesis unfolding subspace_topology_UNIV_self .
+          qed
+          \<comment> \<open>\<pi>2 continuous X\<times>I \<rightarrow> I, then enlarge to UNIV.\<close>
+          have hpi2_I: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top pi2"
+            by (rule top1_continuous_pi2[OF hTX_top hTI])
+          have hpi2_R: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR pi2"
+          proof -
+            have h1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set (subspace_topology UNIV ?TR I_set) pi2"
+              using hpi2_I unfolding hItop_eq .
+            have h2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) (subspace_topology UNIV ?TR UNIV) pi2"
+              using top1_continuous_map_on_codomain_enlarge[OF h1] by (by100 simp)
+            thus ?thesis unfolding subspace_topology_UNIV_self .
+          qed
+          \<comment> \<open>Pair (\<phi>\<circ>\<pi>1, \<pi>2) continuous X\<times>I \<rightarrow> R\<times>R.\<close>
+          have hpair1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+              ((UNIV::real set) \<times> (UNIV::real set)) ?TRR (\<lambda>p. (\<phi> (pi1 p), pi2 p))"
+          proof -
+            have hpi1_pair: "pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)) = (\<phi> \<circ> pi1)"
+              unfolding pi1_def by (rule ext) (by100 simp)
+            have hpi2_pair: "pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)) = pi2"
+              unfolding pi2_def by (rule ext) (by100 simp)
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)))"
+              unfolding hpi1_pair by (rule h\<phi>_pi1_R)
+            moreover have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)))"
+              unfolding hpi2_pair by (rule hpi2_R)
+            ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTXI hTR hTR]] by (by100 blast)
+          qed
+          \<comment> \<open>Compose with mult: \<phi>(x)*t continuous X\<times>I \<rightarrow> R.\<close>
+          have h\<phi>t: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+              (\<lambda>p. \<phi> (pi1 p) * pi2 p)"
+          proof -
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+                ((\<lambda>p. pi1 p * pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)))"
+              by (rule top1_continuous_map_on_comp[OF hpair1 cont_mul])
+            moreover have "(\<lambda>p. pi1 p * pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p), pi2 p)) = (\<lambda>p. \<phi> (pi1 p) * pi2 p)"
+              unfolding pi1_def pi2_def by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Pair (\<phi>\<circ>\<pi>1, \<phi>*\<pi>2) and subtract: \<phi>(x) - \<phi>(x)*t = (1-t)*\<phi>(x).\<close>
+          have hpair2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+              ((UNIV::real set) \<times> (UNIV::real set)) ?TRR (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p))"
+          proof -
+            have hpi1_p: "pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)) = (\<phi> \<circ> pi1)"
+              unfolding pi1_def by (rule ext) (by100 simp)
+            have hpi2_p: "pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)) = (\<lambda>p. \<phi> (pi1 p) * pi2 p)"
+              unfolding pi2_def by (rule ext) (by100 simp)
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)))"
+              unfolding hpi1_p by (rule h\<phi>_pi1_R)
+            moreover have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)))"
+              unfolding hpi2_p by (rule h\<phi>t)
+            ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTXI hTR hTR]] by (by100 blast)
+          qed
+          have h1t\<phi>: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+              (\<lambda>p. \<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p)"
+          proof -
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+                ((\<lambda>p. pi1 p - pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)))"
+              by (rule top1_continuous_map_on_comp[OF hpair2 cont_sub])
+            moreover have "(\<lambda>p. pi1 p - pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p), \<phi> (pi1 p) * pi2 p)) = (\<lambda>p. \<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p)"
+              unfolding pi1_def pi2_def by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Pair ((1-t)*\<phi>(x), t) and add.\<close>
+          have hpair3: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+              ((UNIV::real set) \<times> (UNIV::real set)) ?TRR (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p))"
+          proof -
+            have hpi1_p: "pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)) = (\<lambda>p. \<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p)"
+              unfolding pi1_def by (rule ext) (by100 simp)
+            have hpi2_p: "pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)) = pi2"
+              unfolding pi2_def by (rule ext) (by100 simp)
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi1 \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)))"
+              unfolding hpi1_p by (rule h1t\<phi>)
+            moreover have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR (pi2 \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)))"
+              unfolding hpi2_p by (rule hpi2_R)
+            ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTXI hTR hTR]] by (by100 blast)
+          qed
+          have hresult_R: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+              (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p)"
+          proof -
+            have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+                ((\<lambda>p. pi1 p + pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)))"
+              by (rule top1_continuous_map_on_comp[OF hpair3 cont_add])
+            moreover have "(\<lambda>p. pi1 p + pi2 p) \<circ> (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p, pi2 p)) = (\<lambda>p. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p)"
+              unfolding pi1_def pi2_def by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Rewrite: \<phi>(x) - \<phi>(x)*t + t = (1-t)*\<phi>(x) + t.\<close>
+          have hfun_eq: "\<And>p. p \<in> X \<times> I_set \<Longrightarrow> (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p = (case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t)"
+          proof -
+            fix p assume "p \<in> X \<times> I_set"
+            obtain x t where hp: "p = (x, t)" by (cases p)
+            have halg: "\<phi> x - \<phi> x * t = (1 - t) * \<phi> x"
+              using left_diff_distrib[of 1 t "\<phi> x"] by (by100 simp)
+            show "(\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p = (case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t)"
+              unfolding hp pi1_def pi2_def using halg by (by100 simp)
+          qed
+          \<comment> \<open>Transfer continuity to our target function.\<close>
+          have hresult_R': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) ?TR
+              (\<lambda>(x,t). (1-t) * \<phi> x + t)"
+            unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix p assume "p \<in> X \<times> I_set" show "(case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t) \<in> (UNIV::real set)" by (by100 simp)
+          next
+            fix V assume hV: "V \<in> ?TR"
+            have "{p \<in> X \<times> I_set. (case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t) \<in> V} =
+                  {p \<in> X \<times> I_set. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p \<in> V}"
+              using hfun_eq by (by100 auto)
+            moreover have "{p \<in> X \<times> I_set. (\<phi> (pi1 p) - \<phi> (pi1 p) * pi2 p) + pi2 p \<in> V} \<in> product_topology_on TX I_top"
+              using hresult_R hV unfolding top1_continuous_map_on_def by (by100 blast)
+            ultimately show "{p \<in> X \<times> I_set. (case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t) \<in> V} \<in> product_topology_on TX I_top"
+              by (by100 simp)
+          qed
+          \<comment> \<open>Range: (1-t)*\<phi>(x)+t \<in> I_set for x \<in> X, t \<in> I_set.\<close>
+          have hrange: "(\<lambda>(x,t). (1-t) * \<phi> x + t) ` (X \<times> I_set) \<subseteq> I_set"
+          proof (rule image_subsetI)
+            fix p assume "p \<in> X \<times> I_set"
+            then obtain x t where hp: "p = (x,t)" and hx: "x \<in> X" and ht: "t \<in> I_set" by (by100 blast)
+            have h\<phi>01: "\<phi> x \<in> I_set" using h\<phi>_I hx unfolding top1_continuous_map_on_def by (by100 blast)
+            hence h\<phi>0: "0 \<le> \<phi> x" and h\<phi>1: "\<phi> x \<le> 1"
+              unfolding top1_unit_interval_def by (by100 simp)+
+            have ht0: "0 \<le> t" and ht1: "t \<le> 1"
+              using ht unfolding top1_unit_interval_def by (by100 simp)+
+            have "(1-t) * \<phi> x + t = (1-t) * \<phi> x + t * 1" by (by100 simp)
+            have h1t: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+            have h_low: "0 \<le> (1-t) * \<phi> x + t"
+            proof -
+              have "0 \<le> (1-t) * \<phi> x" using h1t h\<phi>0 by (rule mult_nonneg_nonneg)
+              thus ?thesis using ht0 by (by100 linarith)
+            qed
+            have h_high: "(1-t) * \<phi> x + t \<le> 1"
+            proof -
+              have "(1-t) * \<phi> x \<le> (1-t) * 1" using h\<phi>1 h1t by (rule mult_left_mono)
+              hence "(1-t) * \<phi> x \<le> 1 - t" by (by100 simp)
+              thus ?thesis by (by100 linarith)
+            qed
+            show "(case p of (x,t) \<Rightarrow> (1-t) * \<phi> x + t) \<in> I_set"
+              unfolding hp top1_unit_interval_def using h_low h_high by (by100 simp)
+          qed
+          \<comment> \<open>Shrink codomain from UNIV to I_set with I_top.\<close>
+          have hI_sub: "I_set \<subseteq> (UNIV::real set)" by (by100 simp)
+          have hI_top_sub: "I_top = subspace_topology (UNIV::real set) ?TR I_set"
+            by (rule hItop_eq)
+          show ?thesis
+            using top1_continuous_map_on_codomain_shrink[OF hresult_R' hrange hI_sub]
+            unfolding hI_top_sub[symmetric] .
+        qed
+        have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (pi1 \<circ> ?\<psi>)"
+          unfolding hpi1_\<psi> by (rule hpi1_cont)
+        moreover have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) I_set I_top (pi2 \<circ> ?\<psi>)"
+          unfolding hpi2_\<psi> by (rule hpi2_\<psi>_cont)
+        ultimately show ?thesis
+          using iffD2[OF Theorem_18_4[OF hTXI hTX hTI]] by (by100 blast)
+      qed
       \<comment> \<open>H = G \<circ> \<psi>: composition of continuous maps.\<close>
       have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
           UNIV ?TR2 (G \<circ> ?\<psi>)"
