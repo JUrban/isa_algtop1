@@ -919,7 +919,112 @@ proof -
       hG_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
           UNIV ?TR2 G"
       and hG_ext: "\<forall>p\<in>?S. G p = Fe p"
-    sorry \<comment> \<open>Apply Theorem_35_1_R to fst\<circ>Fe and snd\<circ>Fe, combine via Theorem_18_4.\<close>
+  proof -
+    let ?TOR = "order_topology_on_UNIV :: real set set"
+    have hTR: "is_topology_on (UNIV::real set) ?TOR" by (rule order_topology_on_UNIV_is_topology_on)
+    have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+    proof (rule set_eqI)
+      fix U :: "real set"
+      show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 simp)
+    qed
+    \<comment> \<open>Projections continuous from R^2.\<close>
+    have hfst_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2 (UNIV::real set) ?TOR fst"
+    proof -
+      have hTOS_R: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))
+          (UNIV::real set) (top1_open_sets::real set set) pi1"
+        by (rule top1_continuous_pi1[OF hTOS_R hTOS_R])
+      hence "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2 (UNIV::real set) ?TOR pi1"
+        unfolding hTR_eq by (by100 simp)
+      moreover have "pi1 = (fst :: real\<times>real \<Rightarrow> real)" unfolding pi1_def by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hsnd_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2 (UNIV::real set) ?TOR snd"
+    proof -
+      have hTOS_R: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set))
+          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))
+          (UNIV::real set) (top1_open_sets::real set set) pi2"
+        by (rule top1_continuous_pi2[OF hTOS_R hTOS_R])
+      hence "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2 (UNIV::real set) ?TOR pi2"
+        unfolding hTR_eq by (by100 simp)
+      moreover have "pi2 = (snd :: real\<times>real \<Rightarrow> real)" unfolding pi2_def by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Fe continuous S \<rightarrow> Y (proved). Compose with fst/snd projections.\<close>
+    have hFe_cont_Y: "top1_continuous_map_on ?S
+        (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S)
+        (UNIV::(real\<times>real) set) ?TR2 Fe"
+    proof -
+      have hY_sub: "Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have "top1_continuous_map_on ?S
+          (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S)
+          (UNIV::(real\<times>real) set) (subspace_topology (UNIV::(real\<times>real) set) ?TR2 (UNIV::(real\<times>real) set)) Fe"
+        using top1_continuous_map_on_codomain_enlarge[OF hFe_cont] by (by100 simp)
+      thus ?thesis unfolding subspace_topology_UNIV_self .
+    qed
+    have hFe1: "top1_continuous_map_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S)
+        (UNIV::real set) ?TOR (fst \<circ> Fe)"
+      by (rule top1_continuous_map_on_comp[OF hFe_cont_Y hfst_cont])
+    have hFe2: "top1_continuous_map_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S)
+        (UNIV::real set) ?TOR (snd \<circ> Fe)"
+      by (rule top1_continuous_map_on_comp[OF hFe_cont_Y hsnd_cont])
+    \<comment> \<open>Apply Theorem_35_1_R to each coordinate.\<close>
+    obtain G1 where hG1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        (UNIV::real set) ?TOR G1" and hG1_ext: "\<forall>p\<in>?S. G1 p = fst (Fe p)"
+    proof -
+      from Theorem_35_1_R[OF hXI_normal hS_closed hFe1]
+      obtain F1 where "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) UNIV ?TOR F1"
+          "\<forall>p\<in>?S. F1 p = (fst \<circ> Fe) p" by (by100 blast)
+      thus ?thesis using that unfolding comp_def by (by100 blast)
+    qed
+    obtain G2 where hG2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+        (UNIV::real set) ?TOR G2" and hG2_ext: "\<forall>p\<in>?S. G2 p = snd (Fe p)"
+    proof -
+      from Theorem_35_1_R[OF hXI_normal hS_closed hFe2]
+      obtain F2 where "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) UNIV ?TOR F2"
+          "\<forall>p\<in>?S. F2 p = (snd \<circ> Fe) p" by (by100 blast)
+      thus ?thesis using that unfolding comp_def by (by100 blast)
+    qed
+    \<comment> \<open>Combine G = (G1, G2) via Theorem_18_4.\<close>
+    define G where "G = (\<lambda>p. (G1 p, G2 p))"
+    have hG_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::(real\<times>real) set) ?TR2 G"
+    proof -
+      have hpi1_G: "pi1 \<circ> G = G1" unfolding G_def pi1_def by (rule ext) (by100 simp)
+      have hpi2_G: "pi2 \<circ> G = G2" unfolding G_def pi2_def by (rule ext) (by100 simp)
+      have hG1': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          (UNIV::real set) top1_open_sets G1" using hG1 unfolding hTR_eq .
+      have hG2': "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          (UNIV::real set) top1_open_sets G2" using hG2 unfolding hTR_eq .
+      have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          (UNIV::real set) top1_open_sets (pi1 \<circ> G)" unfolding hpi1_G by (rule hG1')
+      moreover have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          (UNIV::real set) top1_open_sets (pi2 \<circ> G)" unfolding hpi2_G by (rule hG2')
+      ultimately have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set)) G"
+      proof -
+        have hTOS: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+          by (rule top1_open_sets_is_topology_on_UNIV)
+        assume h1: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) (top1_open_sets::real set set) (pi1 \<circ> G)"
+        assume h2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) (UNIV::real set) (top1_open_sets::real set set) (pi2 \<circ> G)"
+        show ?thesis using iffD2[OF Theorem_18_4[OF hTXI hTOS hTOS]] h1 h2 by (by100 blast)
+      qed
+      thus ?thesis by (by100 simp)
+    qed
+    have hG_ext: "\<forall>p\<in>?S. G p = Fe p"
+    proof (intro ballI)
+      fix p assume "p \<in> ?S"
+      have "G p = (G1 p, G2 p)" unfolding G_def by (by100 simp)
+      also have "G1 p = fst (Fe p)" using hG1_ext \<open>p \<in> ?S\<close> by (by100 blast)
+      also have "G2 p = snd (Fe p)" using hG2_ext \<open>p \<in> ?S\<close> by (by100 blast)
+      finally show "G p = Fe p" by (by100 simp)
+    qed
+    show ?thesis using hG_cont hG_ext by (rule that)
+  qed
   \<comment> \<open>Step 4: U = G^{-1}(Y) is open in X\<times>I, contains ?S.\<close>
   let ?U_pre = "{p \<in> X \<times> I_set. G p \<in> Y}"
   have hU_open: "?U_pre \<in> product_topology_on TX I_top"
