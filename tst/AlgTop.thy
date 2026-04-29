@@ -3954,7 +3954,9 @@ proof -
   qed
   \<comment> \<open>(5) Inverse closure.\<close>
   have hinvg_closed: "\<forall>ws\<in>G. invg ws \<in> G"
-    sorry \<comment> \<open>Reverse of reduced word with inverted elements is reduced.\<close>
+    sorry \<comment> \<open>Reverse + coordinatewise inverse preserves reducedness.
+       Each element: invgGG \<alpha> g \<in> GG \<alpha> (inverse closure) and \<noteq> eGG (from g \<noteq> eGG).
+       Alternating indices preserved by rev (reversed order).\<close>
   \<comment> \<open>(6) Associativity: mul (mul x y) z = mul x (mul y z).\<close>
   have hassoc: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. \<forall>ws3\<in>G. mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
     sorry \<comment> \<open>The hardest part. By induction on ws1.\<close>
