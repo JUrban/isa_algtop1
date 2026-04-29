@@ -676,7 +676,65 @@ proof -
     \<comment> \<open>Step 1: Transfer f nulhomotopic in S^2-{a,b} to g nulhomotopic in R^2-{origin}.\<close>
     have hg_nul: "top1_nulhomotopic_on A TA
         (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
-      sorry \<comment> \<open>h homeomorphism preserves nulhomotopy. f nulhom in S^2-{a,b}, h maps to R^2-{origin}.\<close>
+    proof -
+      let ?Sab = "?S2 - {a, b}" and ?TSab = "subspace_topology ?S2 ?TS2 (?S2 - {a, b})"
+      let ?Y = "UNIV - {?origin} :: (real\<times>real) set" and ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
+      \<comment> \<open>From nulhomotopy of f: get homotopy H: A\<times>I \<rightarrow> S^2-{a,b}.\<close>
+      obtain c where hc: "c \<in> ?Sab" and hfhom: "top1_homotopic_on A TA ?Sab ?TSab f (\<lambda>_. c)"
+        using hnul unfolding top1_nulhomotopic_on_def by (by100 blast)
+      obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Sab ?TSab H"
+          and hH0: "\<forall>x\<in>A. H (x, 0) = f x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
+        using hfhom unfolding top1_homotopic_on_def by (by100 blast)
+      \<comment> \<open>h restricts to continuous S^2-{a,b} \<rightarrow> R^2-{origin} (enlarge domain to S^2-{b}, restrict codomain).\<close>
+      have hh_Sab: "top1_continuous_map_on ?Sab ?TSab ?Y ?TY h"
+      proof -
+        have hsub: "?Sab \<subseteq> ?S2 - {b}" by (by100 blast)
+        have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (UNIV::(real\<times>real) set) ?TR2 h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTopS2b: "is_topology_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))"
+          sorry \<comment> \<open>Subspace topology is a topology.\<close>
+        have hh_Sab_R2: "top1_continuous_map_on ?Sab (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab) (UNIV::(real\<times>real) set) ?TR2 h"
+          sorry \<comment> \<open>Restriction of continuous to subspace.\<close>
+        have hh_Sab_R2': "top1_continuous_map_on ?Sab ?TSab (UNIV::(real\<times>real) set) ?TR2 h"
+          sorry \<comment> \<open>Subspace transitivity: subspace of subspace = subspace.\<close>
+        \<comment> \<open>Restrict codomain to UNIV - {origin}.\<close>
+        have himg: "h ` ?Sab \<subseteq> ?Y"
+        proof (rule image_subsetI)
+          fix x assume "x \<in> ?Sab"
+          hence "x \<in> ?S2 - {b}" and "x \<noteq> a" by (by100 blast)+
+          have "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
+          have h_inj: "inj_on h (?S2 - {b})"
+            using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "h x \<noteq> h a" using inj_on_eq_iff[OF h_inj \<open>x \<in> ?S2 - {b}\<close> \<open>a \<in> ?S2 - {b}\<close>] \<open>x \<noteq> a\<close>
+            by (by100 blast)
+          thus "h x \<in> ?Y" by (by100 blast)
+        qed
+        have hY_sub: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+        show ?thesis
+          by (rule top1_continuous_map_on_codomain_shrink[OF hh_Sab_R2' himg hY_sub])
+      qed
+      \<comment> \<open>Compose: h \<circ> H : A\<times>I \<rightarrow> R^2-{origin}.\<close>
+      have hHg: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
+        by (rule top1_continuous_map_on_comp[OF hH hh_Sab])
+      have hhc: "h c \<in> ?Y"
+        using hh_Sab hc unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>h \<circ> H is a homotopy from h \<circ> f to constant h(c).\<close>
+      have "top1_homotopic_on A TA ?Y ?TY (h \<circ> f) (\<lambda>_. h c)"
+        unfolding top1_homotopic_on_def
+      proof (intro conjI exI[of _ "h \<circ> H"])
+        show "top1_continuous_map_on A TA ?Y ?TY (h \<circ> f)"
+          by (rule top1_continuous_map_on_comp[OF hf hh_Sab])
+        show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. h c)"
+          sorry \<comment> \<open>Constant map continuous.\<close>
+        show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
+          by (rule hHg)
+        show "\<forall>x\<in>A. (h \<circ> H) (x, 0) = (h \<circ> f) x"
+          using hH0 unfolding comp_def by (by100 auto)
+        show "\<forall>x\<in>A. (h \<circ> H) (x, 1) = (\<lambda>_. h c) x"
+          using hH1 unfolding comp_def by (by100 auto)
+      qed
+      thus ?thesis unfolding top1_nulhomotopic_on_def using hhc by (by100 blast)
+    qed
     \<comment> \<open>Step 2: g injective A \<rightarrow> K = g(A). A compact, R^2 Hausdorff.
        By Theorem 26.6, g: A \<rightarrow> K is homeomorphism. So g^{-1}: K \<rightarrow> A exists continuous.\<close>
     have hg_inj: "inj_on ?g A"
