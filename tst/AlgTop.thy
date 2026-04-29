@@ -1928,8 +1928,72 @@ proof -
          Contradiction with Theorem_55_2_no_retraction.\<close>
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
+  \<comment> \<open>Transfer from R^2 to S^2. The key: h^{-1}(C0) \<union> {b} is connected in S^2-f(A).\<close>
   show ?thesis
-    sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
+  proof -
+    obtain C0 where hC0: "C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))"
+        and horigin_in: "?origin \<in> C0"
+        and hunbnd: "\<forall>R>0. \<exists>x\<in>C0. R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2"
+      using hR2_claim by (by100 blast)
+    \<comment> \<open>h^{-1} maps C0 into S^2-{b}-f(A). a = h^{-1}(origin) \<in> h^{-1}(C0).\<close>
+    let ?hinv = "inv_into (?S2 - {b}) h"
+    have hinv_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
+        (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?hinv"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>h^{-1}(C0) \<subseteq> S^2-{b}-f(A) and connected.\<close>
+    have hC0_sub: "C0 \<subseteq> UNIV - ?K" using hC0
+      unfolding top1_components_on_def top1_component_of_on_def by (by100 blast)
+    \<comment> \<open>h^{-1}(C0) \<union> {b} is connected in S^2-f(A) and contains both a and b.
+       Connectedness: every open nbhd of b in S^2 meets h^{-1}(C0) since C0 is unbounded.
+       In stereographic: nbhd of b = complement of compact in R^2, which C0 intersects.\<close>
+    have "\<exists>D. top1_connected_on D (subspace_topology ?S2 ?TS2 D) \<and> D \<subseteq> ?S2 - f ` A
+        \<and> a \<in> D \<and> b \<in> D"
+      sorry \<comment> \<open>D = h^{-1}(C0) \<union> {b}. Connected by one-point compactification argument.
+         a = h^{-1}(origin) \<in> h^{-1}(C0). b \<in> D by construction.
+         D \<subseteq> S^2-f(A) since C0 \<subseteq> UNIV-K and h^{-1}(UNIV-K) = S^2-{b}-f(A).\<close>
+    then obtain D where hDconn: "top1_connected_on D (subspace_topology ?S2 ?TS2 D)"
+        and hD_sub: "D \<subseteq> ?S2 - f ` A" and ha_D: "a \<in> D" and hb_D: "b \<in> D"
+      by (by100 blast)
+    \<comment> \<open>D is contained in some component of S^2-f(A), which also contains a and b.\<close>
+    let ?C = "top1_component_of_on (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A)) a"
+    have ha_in_S2fA: "a \<in> ?S2 - f ` A"
+    proof -
+      have "f ` A \<subseteq> ?S2 - {a, b}" using hf unfolding top1_continuous_map_on_def by (by100 blast)
+      thus ?thesis using ha by (by100 blast)
+    qed
+    have hT_S2fA: "is_topology_on (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A))"
+    proof -
+      have hTopS2: "is_topology_on ?S2 ?TS2" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    qed
+    have ha_C: "a \<in> ?C" by (rule top1_component_of_on_self_mem[OF hT_S2fA ha_in_S2fA])
+    \<comment> \<open>b is in the same component as a (since D connects them).\<close>
+    have hb_C: "b \<in> ?C"
+    proof -
+      \<comment> \<open>D is a connected set containing a, so D \<subseteq> component_of a.\<close>
+      have "D \<subseteq> ?C"
+        unfolding top1_component_of_on_def
+      proof (rule Union_upper)
+        show "D \<in> {C. C \<subseteq> ?S2 - f ` A \<and> a \<in> C \<and> top1_connected_on C (subspace_topology (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A)) C)}"
+        proof -
+          have "D \<subseteq> ?S2 - f ` A" by (rule hD_sub)
+          moreover have "a \<in> D" by (rule ha_D)
+          moreover have "top1_connected_on D (subspace_topology (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A)) D)"
+          proof -
+            have "subspace_topology (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A)) D
+                = subspace_topology ?S2 ?TS2 D"
+              by (rule subspace_topology_trans[OF hD_sub])
+            thus ?thesis using hDconn by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+      qed
+      thus ?thesis using hb_D by (by100 blast)
+    qed
+    have hC_comp: "?C \<in> top1_components_on (?S2 - f ` A) (subspace_topology ?S2 ?TS2 (?S2 - f ` A))"
+      unfolding top1_components_on_def using ha_in_S2fA by (by100 blast)
+    show ?thesis using hC_comp ha_C hb_C by (by100 blast)
+  qed
 qed
 
 text \<open>Define frontier (boundary) for the standard euclidean topology.
