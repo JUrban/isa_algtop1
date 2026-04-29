@@ -272,6 +272,15 @@ Work in small, validated increments.
 
 * Commit frequently with clear descriptions
 
+* At the end of each session, regenerate the theorem index:
+
+  ```bash
+  cd /project/tst && bash gen_index.sh
+  ```
+
+  Before stating a new lemma/definition, check `THEOREMS_AND_DEFS.txt`
+  to avoid duplicating existing results (grep for keywords).
+
 ---
 
 ## One-line summary

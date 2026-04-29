@@ -2,11 +2,10 @@
 # Generated: 2026-04-29
 # Format: session | kind | name | line
 #
-# Sessions: Top1_Ch2, Top1_Ch3, Top1_Ch4, Top1_Ch5_8, Top1_Ch9_13,
-#   AlgTopHelpers, AlgTop_JCT_Base0, AlgTop_JCT_Base, AlgTop0, AlgTop
+# Sessions: Top1_Ch2, Top1_Ch3, Top1_Ch4, Top1_Ch5_8, Top1_Ch9_13, AlgTopHelpers, AlgTop_JCT_Base0, AlgTop_JCT_Base, AlgTop0, AlgTop
 #
 # Total entries: 1665
-# Duplicate names (cross-session): 4
+# Duplicate names: 8
 
 ## definitions (326)
 
@@ -1690,4 +1689,31 @@ Theorem_58_7_strict                            AlgTop_JCT_Base0           line 5
 Theorem_59_3_path_connected                    AlgTop_JCT_Base            line 3249
 Theorem_80_3_universal_strict                  AlgTop                     line 10919
 top1_same_homotopy_type_strict                 AlgTop_JCT_Base0           line 5560
+
+## DUPLICATES (8 names appear in multiple locations)
+
+  connected_open_delete_S2:
+    AlgTop_JCT_Base            lemma  line 8060
+    AlgTop_JCT_Base            lemma  line 8309
+  metrizable_imp_strict:
+    Top1_Ch2                   lemma  line 11786
+    Top1_Ch5_8                 lemma  line 5230
+  path_in_subspace_is_path_in_ambient:
+    AlgTop_JCT_Base0           lemma  line 5576
+    AlgTop_JCT_Base            lemma  line 19
+  Theorem_30_2_first_countable_product:
+    Top1_Ch2                   theorem  line 133
+    Top1_Ch4                   theorem  line 578
+  Theorem_30_2_second_countable_product:
+    Top1_Ch2                   theorem  line 566
+    Top1_Ch4                   theorem  line 1072
+  top1_continuous_map_on_agree:
+    Top1_Ch9_13                lemma  line 1460
+    Top1_Ch9_13                lemma  line 485
+  top1_dim_on_le_of_dim_le:
+    Top1_Ch5_8                 lemma  line 26450
+    Top1_Ch5_8                 lemma  line 26456
+  top1_R_to_S1_int_shift:
+    Top1_Ch9_13                lemma  line 10829
+    Top1_Ch9_13                lemma  line 10843
 
