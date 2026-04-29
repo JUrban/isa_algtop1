@@ -186,7 +186,47 @@ proof -
     ultimately show "h x \<in> {y. -1 < y \<and> y < 1}" by (by100 simp)
   qed
   have hh_inv: "\<And>y::real. -1 < y \<Longrightarrow> y < 1 \<Longrightarrow> h (h_inv y) = y"
-    sorry \<comment> \<open>Algebra: h(y/(1-|y|)) = y for |y| < 1.\<close>
+  proof -
+    fix y :: real assume hy1: "-1 < y" and hy2: "y < 1"
+    have habs: "\<bar>y\<bar> < 1" using hy1 hy2 by (by100 linarith)
+    have hpos: "1 - \<bar>y\<bar> > 0" using habs by (by100 linarith)
+    have hne: "1 - \<bar>y\<bar> \<noteq> 0" using hpos by (by100 linarith)
+    have h_hinv: "h_inv y = y / (1 - \<bar>y\<bar>)" unfolding h_inv_def by (by100 simp)
+    have h_abs_hinv: "\<bar>h_inv y\<bar> = \<bar>y\<bar> / (1 - \<bar>y\<bar>)"
+    proof -
+      have "\<bar>y / (1 - \<bar>y\<bar>)\<bar> = \<bar>y\<bar> / \<bar>1 - \<bar>y\<bar>\<bar>" by (rule abs_divide)
+      moreover have "\<bar>1 - \<bar>y\<bar>\<bar> = 1 - \<bar>y\<bar>" using hpos by (by100 linarith)
+      ultimately show ?thesis unfolding h_inv_def by (by100 simp)
+    qed
+    \<comment> \<open>Key: (1 + |h_inv y|) * (1 - |y|) = 1.\<close>
+    have key: "(1 + \<bar>h_inv y\<bar>) * (1 - \<bar>y\<bar>) = 1"
+    proof -
+      have hd: "\<bar>y\<bar> / (1 - \<bar>y\<bar>) * (1 - \<bar>y\<bar>) = \<bar>y\<bar>"
+        using hne by (by100 simp)
+      have "(1 + \<bar>y\<bar> / (1 - \<bar>y\<bar>)) * (1 - \<bar>y\<bar>)
+          = 1 * (1 - \<bar>y\<bar>) + \<bar>y\<bar> / (1 - \<bar>y\<bar>) * (1 - \<bar>y\<bar>)"
+        using distrib_right[of 1 "\<bar>y\<bar> / (1 - \<bar>y\<bar>)" "1 - \<bar>y\<bar>"] by (by100 simp)
+      also have "\<dots> = (1 - \<bar>y\<bar>) + \<bar>y\<bar>" using hd by (by100 simp)
+      also have "\<dots> = 1" by (by100 simp)
+      finally show ?thesis unfolding h_abs_hinv .
+    qed
+    have hne2: "1 + \<bar>h_inv y\<bar> \<noteq> 0"
+    proof -
+      from key have "(1 + \<bar>h_inv y\<bar>) * (1 - \<bar>y\<bar>) \<noteq> 0" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    show "h (h_inv y) = y"
+    proof -
+      have "h (h_inv y) = h_inv y / (1 + \<bar>h_inv y\<bar>)" unfolding h_def by (by100 simp)
+      also have "\<dots> = (y / (1 - \<bar>y\<bar>)) / (1 + \<bar>h_inv y\<bar>)" unfolding h_hinv by (by100 simp)
+      also have "\<dots> = y / ((1 - \<bar>y\<bar>) * (1 + \<bar>h_inv y\<bar>))"
+        using hne hne2 by (by100 simp)
+      also have "(1 - \<bar>y\<bar>) * (1 + \<bar>h_inv y\<bar>) = (1 + \<bar>h_inv y\<bar>) * (1 - \<bar>y\<bar>)"
+        by (rule mult.commute)
+      also have "\<dots> = 1" by (rule key)
+      finally show ?thesis by (by100 simp)
+    qed
+  qed
   have hh_inv2: "\<And>x::real. h_inv (h x) = x"
   proof -
     fix x :: real
