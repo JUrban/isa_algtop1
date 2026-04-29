@@ -4052,11 +4052,127 @@ proof -
   \<comment> \<open>Key helper for associativity: prepend distributes over mul on the left.\<close>
   \<comment> \<open>Prepend composition: prepend (\<alpha>,g) (prepend (\<alpha>,h) z) = prepend (\<alpha>,g\<cdot>h) z.\<close>
   have hprepend_compose: "\<And>\<alpha> g h z. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> g \<noteq> eGG \<alpha> \<Longrightarrow>
-      h \<in> GG \<alpha> \<Longrightarrow> h \<noteq> eGG \<alpha> \<Longrightarrow>
+      h \<in> GG \<alpha> \<Longrightarrow> h \<noteq> eGG \<alpha> \<Longrightarrow> z \<in> G \<Longrightarrow>
       prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = prepend (\<alpha>, mulGG \<alpha> g h) z"
-    sorry \<comment> \<open>3 cases: z empty (merge to singleton), z diff index (merge pair),
-       z same index (triple merge using associativity in GG \<alpha>).
-       All use mulGG \<alpha> (mulGG \<alpha> g h) k = mulGG \<alpha> g (mulGG \<alpha> h k).\<close>
+  proof -
+    fix \<alpha> :: 'i and g h :: 'gg and z :: "('i \<times> 'gg) list"
+    assume h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>" and hgne: "g \<noteq> eGG \<alpha>"
+        and hh: "h \<in> GG \<alpha>" and hhne: "h \<noteq> eGG \<alpha>" and hz: "z \<in> G"
+    have hgrp: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+      using hgroups h\<alpha> by (by100 blast)
+    have hgh: "mulGG \<alpha> g h \<in> GG \<alpha>" using hgrp hg hh unfolding top1_is_group_on_def by (by100 blast)
+    show "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = prepend (\<alpha>, mulGG \<alpha> g h) z"
+    proof (cases z)
+      case Nil
+      \<comment> \<open>z = []: prepend (\<alpha>,h) [] = [(\<alpha>,h)]. Merge: g\<cdot>h.\<close>
+      show ?thesis unfolding Nil prepend_def using hgne hhne by (by100 simp)
+    next
+      case (Cons q rest)
+      obtain \<beta> k where hq: "q = (\<beta>, k)" by (cases q)
+      show ?thesis
+      proof (cases "\<alpha> = \<beta>")
+        case hdiff: False
+        \<comment> \<open>\<alpha> \<noteq> \<beta>: inner = (\<alpha>,h)#z, outer merges g with h.\<close>
+        show ?thesis unfolding Cons hq prepend_def using hgne hhne hdiff by (by100 simp)
+      next
+        case hsame: True
+        have hk: "k \<in> GG \<alpha>" using hG_elem[OF hz, of 0] unfolding Cons hq hsame by (by100 simp)
+        have hkne: "k \<noteq> eGG \<alpha>" using hG_elem[OF hz, of 0] unfolding Cons hq hsame by (by100 simp)
+        have hassoc_grp: "mulGG \<alpha> (mulGG \<alpha> g h) k = mulGG \<alpha> g (mulGG \<alpha> h k)"
+          using hgrp hg hh hk unfolding top1_is_group_on_def by (by100 blast)
+        have hhk: "mulGG \<alpha> h k \<in> GG \<alpha>" using hgrp hh hk unfolding top1_is_group_on_def by (by100 blast)
+        have hrest: "rest \<in> G"
+        proof -
+          have "q # rest \<in> G" using hz unfolding Cons by (by100 simp)
+          thus ?thesis by (rule htail_G)
+        qed
+        show ?thesis
+        proof (cases "mulGG \<alpha> h k = eGG \<alpha>")
+          case hhk_e: True
+          \<comment> \<open>h\<cdot>k = e. Inner = rest. (g\<cdot>h)\<cdot>k = g\<cdot>(h\<cdot>k) = g.\<close>
+          have hghk: "mulGG \<alpha> (mulGG \<alpha> g h) k = g"
+          proof -
+            have "mulGG \<alpha> (mulGG \<alpha> g h) k = mulGG \<alpha> g (mulGG \<alpha> h k)" by (rule hassoc_grp)
+            also have "mulGG \<alpha> h k = eGG \<alpha>" by (rule hhk_e)
+            also have "mulGG \<alpha> g (eGG \<alpha>) = g" using hgrp hg unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis .
+          qed
+          have hinner: "prepend (\<alpha>, h) z = rest"
+            unfolding Cons hq hsame[symmetric] prepend_def using hhne hsame hhk_e by (by100 simp)
+          have hdiff_rest: "rest = [] \<or> \<alpha> \<noteq> fst (hd rest)"
+          proof (cases rest)
+            case Nil thus ?thesis by (by100 blast)
+          next
+            case (Cons r rest2)
+            have "fst q \<noteq> fst r" using hG_alt[OF hz, of 0] unfolding \<open>z = _\<close> Cons by (by100 simp)
+            thus ?thesis unfolding hq hsame Cons by (by100 simp)
+          qed
+          show ?thesis
+          proof (cases "mulGG \<alpha> g h = eGG \<alpha>")
+            case True
+            \<comment> \<open>g\<cdot>h = e. Then (g\<cdot>h)\<cdot>k = e\<cdot>k = k. But also = g, so g = k.
+               RHS = prepend (\<alpha>, e) z = z = (q#rest). LHS = prepend (\<alpha>,g) rest.\<close>
+            have "g = k"
+            proof -
+              have "mulGG \<alpha> (mulGG \<alpha> g h) k = g" by (rule hghk)
+              moreover have "mulGG \<alpha> (eGG \<alpha>) k = k" using hgrp hk unfolding top1_is_group_on_def by (by100 blast)
+              ultimately show ?thesis using True by (by100 simp)
+            qed
+            have hrhs: "prepend (\<alpha>, mulGG \<alpha> g h) z = z" unfolding prepend_def using True by (by100 simp)
+            have hlhs: "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = z"
+            proof -
+              have "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = prepend (\<alpha>, g) rest" using hinner by (by100 simp)
+              also have "\<dots> = (\<alpha>, g) # rest" using hprepend_cons[OF hgne hdiff_rest] .
+              also have "\<dots> = (\<alpha>, k) # rest" using \<open>g = k\<close> by (by100 simp)
+              also have "\<dots> = q # rest" unfolding hq hsame by (by100 simp)
+              also have "\<dots> = z" unfolding Cons by (by100 simp)
+              finally show ?thesis .
+            qed
+            show ?thesis using hlhs hrhs by (by100 simp)
+          next
+            case ghne: False
+            \<comment> \<open>g\<cdot>h \<noteq> e. RHS = prepend (\<alpha>, g\<cdot>h) ((q)#rest).\<close>
+            \<comment> \<open>Both sides equal (\<alpha>, g) # rest via hghk (= g, non-identity).\<close>
+            have hrhs: "prepend (\<alpha>, mulGG \<alpha> g h) z = (\<alpha>, g) # rest"
+              sorry \<comment> \<open>Unfold prepend at z = (\<alpha>,k)#rest: compute (g\<cdot>h)\<cdot>k = g, check g \<noteq> eGG.\<close>
+            moreover have hlhs: "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = (\<alpha>, g) # rest"
+              using hinner hprepend_cons[OF hgne hdiff_rest] by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+        next
+          case hhk_ne: False
+          \<comment> \<open>h\<cdot>k \<noteq> e. Inner = (\<alpha>, h\<cdot>k)#rest. Outer: merge g with h\<cdot>k.\<close>
+          have hinner: "prepend (\<alpha>, h) z = (\<alpha>, mulGG \<alpha> h k) # rest"
+            unfolding Cons hq hsame[symmetric] prepend_def using hhne hsame hhk_ne by (by100 simp)
+          \<comment> \<open>LHS = prepend (\<alpha>,g) ((\<alpha>, h\<cdot>k)#rest): merge g\<cdot>(h\<cdot>k).\<close>
+          have "prepend (\<alpha>, g) ((\<alpha>, mulGG \<alpha> h k) # rest) =
+              (let v = mulGG \<alpha> g (mulGG \<alpha> h k) in if v = eGG \<alpha> then rest else (\<alpha>, v) # rest)"
+            unfolding prepend_def using hgne by (by100 simp)
+          hence hlhs: "prepend (\<alpha>, g) (prepend (\<alpha>, h) z) =
+              (let v = mulGG \<alpha> g (mulGG \<alpha> h k) in if v = eGG \<alpha> then rest else (\<alpha>, v) # rest)"
+            unfolding hinner .
+          \<comment> \<open>RHS = prepend (\<alpha>, g\<cdot>h) ((\<beta>,k)#rest): merge (g\<cdot>h)\<cdot>k = g\<cdot>(h\<cdot>k) by assoc.\<close>
+          have "prepend (\<alpha>, mulGG \<alpha> g h) z =
+              (let v = mulGG \<alpha> (mulGG \<alpha> g h) k in if v = eGG \<alpha> then rest else (\<alpha>, v) # rest)"
+          proof (cases "mulGG \<alpha> g h = eGG \<alpha>")
+            case True
+            have "mulGG \<alpha> (eGG \<alpha>) k = k" using hgrp hk unfolding top1_is_group_on_def by (by100 blast)
+            hence "prepend (\<alpha>, eGG \<alpha>) ((\<beta>,k)#rest) = (\<beta>,k)#rest"
+              unfolding prepend_def by (by100 simp)
+            moreover have "mulGG \<beta> (eGG \<beta>) k = k" using \<open>mulGG \<alpha> (eGG \<alpha>) k = k\<close> hsame by (by100 simp)
+            ultimately show ?thesis unfolding Cons hq using True hkne hsame by (by100 simp)
+          next
+            case False
+            have "prepend (\<alpha>, mulGG \<alpha> g h) ((\<alpha>, k) # rest) =
+                (let gh = mulGG \<alpha> (mulGG \<alpha> g h) k in if gh = eGG \<alpha> then rest else (\<alpha>, gh) # rest)"
+              unfolding prepend_def using False by (by100 simp)
+            thus ?thesis unfolding Cons hq hsame by (by100 simp)
+          qed
+          thus ?thesis unfolding hlhs hassoc_grp by (by100 simp)
+        qed
+      qed
+    qed
+  qed
   have hprepend_mul: "\<And>\<alpha> g ws zs. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow> zs \<in> G \<Longrightarrow>
       mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, g) (mul ws zs)"
   proof -
@@ -4079,6 +4195,11 @@ proof -
       next
         case (Cons p rest)
         obtain \<beta> h where hp: "p = (\<beta>, h)" by (cases p)
+        have hrest_G: "rest \<in> G"
+        proof -
+          have "p # rest \<in> G" using hws unfolding Cons by (by100 simp)
+          thus ?thesis by (rule htail_G)
+        qed
         show ?thesis
         proof (cases "\<alpha> = \<beta>")
           case hdiff: False \<comment> \<open>Different index: prepend = cons.\<close>
@@ -4103,7 +4224,11 @@ proof -
             have "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, g) (prepend (\<beta>, h) (mul rest zs))"
               using hmulws by (by100 simp)
             also have "\<dots> = prepend (\<alpha>, ?gh) (mul rest zs)"
-              using hprepend_compose[OF h\<alpha> hg hgne _ _ ] helem unfolding hsame by (by100 blast)
+            proof -
+              have "mul rest zs \<in> G" using hmul_closed hrest_G hzs by (by100 blast)
+              thus ?thesis
+                using hprepend_compose[OF h\<alpha> hg hgne _ _ \<open>mul rest zs \<in> G\<close>] helem unfolding hsame by (by100 blast)
+            qed
             also have "\<dots> = mul rest zs" unfolding prepend_def using True by (by100 simp)
             finally show ?thesis unfolding hprep by (by100 simp)
           next
@@ -4114,7 +4239,11 @@ proof -
               unfolding mul_def Cons hp by (by100 simp)
             hence "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, g) (prepend (\<beta>, h) (mul rest zs))" by (by100 simp)
             also have "\<dots> = prepend (\<alpha>, ?gh) (mul rest zs)"
-              using hprepend_compose[OF h\<alpha> hg hgne _ _] helem unfolding hsame by (by100 blast)
+            proof -
+              have "mul rest zs \<in> G" using hmul_closed hrest_G hzs by (by100 blast)
+              thus ?thesis
+                using hprepend_compose[OF h\<alpha> hg hgne _ _ \<open>mul rest zs \<in> G\<close>] helem unfolding hsame by (by100 blast)
+            qed
             finally have "prepend (\<alpha>, g) (mul ws zs) = prepend (\<alpha>, ?gh) (mul rest zs)" .
             moreover have "mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, ?gh) (mul rest zs)"
               unfolding hprep mul_def by (by100 simp)
