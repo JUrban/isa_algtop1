@@ -1874,14 +1874,6 @@ proof -
      "Unbounded" means: for any R > 0, C intersects the complement of the ball of radius R.
      The proof is by contradiction: assume 0 in a compact-closure component.
      Apply Lemma 62.1 to extend, paste with identity, get retraction contradiction.\<close>
-  \<comment> \<open>R^2 normality (needed for Lemma 62.1 application).\<close>
-  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
-    sorry \<comment> \<open>R^2 is normal (metrizable \<Longrightarrow> normal). Cannot use t4_space class since
-       'No type arity prod :: t4_space' — the instance isn't registered in HOL.
-       Provable via Theorem_32_2 (metrizable \<Longrightarrow> normal) once R^2 metrizability is established.\<close>
-  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set) (product_topology_on ?TR2 I_top)"
-    sorry \<comment> \<open>R^2 \<times> I normal. Needs: product of normal with compact = normal,
-       or direct t4_space bridge for R^2\<times>[0,1] (which is also a metric space).\<close>
   have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
     using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
     by (by100 simp)
@@ -1893,35 +1885,6 @@ proof -
       unfolding top1_open_sets_def using open_Diff[OF open_UNIV hK_closed] by (by100 blast)
     hence "UNIV - ?K \<in> ?TR2" using product_topology_on_open_sets_real2 by (by100 metis)
     thus ?thesis unfolding closedin_on_def by (by100 blast)
-  qed
-  \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} as top1_continuous_map_on.\<close>
-  have hj_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-  proof -
-    have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
-      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
-      by (by100 simp)
-    have hTK: "is_topology_on ?K (subspace_topology UNIV ?TR2 ?K)"
-      by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
-    have "\<forall>A. A \<subseteq> (UNIV::(real\<times>real) set) \<longrightarrow> top1_continuous_map_on A (subspace_topology UNIV ?TR2 A) (UNIV::(real\<times>real) set) ?TR2 id"
-      using Theorem_18_2(2)[OF hTR2_top hTR2_top hTR2_top] by (by100 blast)
-    hence "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
-      by (by100 simp)
-    hence hid_R2: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
-      unfolding id_def .
-    have himg_Y: "(\<lambda>x. x) ` ?K \<subseteq> (UNIV - {?origin})" using hK_sub by (by100 blast)
-    have hY_sub: "(UNIV - {?origin}) \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
-    show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF hid_R2 himg_Y hY_sub])
-  qed
-  \<comment> \<open>Apply Lemma 62.1 to X = R^2, A = K, Y = R^2-{origin}, f = inclusion.\<close>
-  obtain G where hG_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
-      and hG_ext: "\<forall>x\<in>?K. G x = x"
-      and hG_nul: "top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
-          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
-  proof -
-    from Lemma_62_1_homotopy_extension[OF hTR2 hR2_normal hR2I_normal hK_closedin hR2_Y_open hj_cont hj_nul]
-    show ?thesis using that by blast
   qed
   \<comment> \<open>Now we have G: R^2 \<rightarrow> R^2-{origin} with G|_K = id and G nulhomotopic.
      The key consequence: origin \<notin> G(R^2), so ?origin has no G-preimage.
@@ -1939,12 +1902,12 @@ proof -
   have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
          \<and> ?origin \<in> C0
          \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
-    sorry \<comment> \<open>Part 1: origin \<in> component C0 (origin \<in> UNIV-K, components partition open sets).
-       Part 2: C0 unbounded. By contradiction: suppose C0 bounded.
-       Paste G with id on D\<union>K: h = G on C0, h = id elsewhere.
-       C0\<union>K, D\<union>K both closed (\<partial>C0 \<subseteq> K). Pasting → h: R^2 \<rightarrow> R^2-{0}.
-       Large ball B: h|_\<partial>B = id. Radial projection gives retraction B \<rightarrow> \<partial>B.
-       Contradiction with Theorem_55_2_no_retraction.\<close>
+    sorry \<comment> \<open>Munkres' proof: origin \<in> component C0 (UNIV-K open, has components).
+       Suppose C0 bounded. Then C0\<union>K closed+bounded = compact (Heine-Borel).
+       Compact Hausdorff \<Longrightarrow> normal (Theorem_32_3). Apply Lemma_62_1 to X = C0\<union>K.
+       Get k: C0\<union>K \<rightarrow> R^2-{0} with k|_K = id. Paste k with id on D\<union>K.
+       h: R^2 \<rightarrow> R^2-{0} with h = id on D\<union>K. Large ball: h|_\<partial>B = id.
+       Retraction contradiction with Theorem_55_2. Hence C0 unbounded.\<close>
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
