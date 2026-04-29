@@ -3766,8 +3766,122 @@ proof -
   qed
   have hprepend_reduced: "\<And>\<alpha> g ws. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow>
       prepend (\<alpha>, g) ws \<in> G"
-    sorry \<comment> \<open>Case analysis using hG_elem, hG_alt, hG_intro, htail_G.
-       Avoids G_def unfolding in each case.\<close>
+  proof -
+    fix \<alpha> :: 'i and g :: 'gg and ws :: "('i \<times> 'gg) list"
+    assume h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>" and hws: "ws \<in> G"
+    show "prepend (\<alpha>, g) ws \<in> G"
+    proof (cases "g = eGG \<alpha>")
+      case True thus ?thesis unfolding prepend_def using hws by (by100 simp)
+    next
+      case hgne: False
+      show ?thesis
+      proof (cases ws)
+        case Nil
+        have "[(\<alpha>, g)] \<in> G"
+        proof (rule hG_intro)
+          show "\<forall>i<length [(\<alpha>, g)]. fst ([(\<alpha>, g)]!i) \<in> J \<and> snd ([(\<alpha>, g)]!i) \<in> GG (fst ([(\<alpha>, g)]!i))
+              \<and> snd ([(\<alpha>, g)]!i) \<noteq> eGG (fst ([(\<alpha>, g)]!i))"
+            using h\<alpha> hg hgne by (by100 simp)
+          show "\<forall>i. i+1 < length [(\<alpha>, g)] \<longrightarrow> fst ([(\<alpha>, g)]!i) \<noteq> fst ([(\<alpha>, g)]!(i+1))"
+            by (by100 simp)
+        qed
+        thus ?thesis unfolding Nil prepend_def using hgne by (by100 simp)
+      next
+        case (Cons p rest)
+        obtain \<beta> h where hp: "p = (\<beta>, h)" by (cases p)
+        have hrest_G: "rest \<in> G"
+        proof -
+          have "p # rest \<in> G" using hws unfolding Cons by (by100 simp)
+          thus ?thesis by (rule htail_G)
+        qed
+        show ?thesis
+        proof (cases "\<alpha> = \<beta>")
+          case hdiff: False
+          have hprep: "prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+            unfolding Cons hp prepend_def using hgne hdiff by (by100 simp)
+          show ?thesis unfolding hprep
+          proof (rule hG_intro)
+            show "\<forall>i<length ((\<alpha>,g)#ws). fst (((\<alpha>,g)#ws)!i) \<in> J \<and> snd (((\<alpha>,g)#ws)!i) \<in> GG (fst (((\<alpha>,g)#ws)!i))
+                \<and> snd (((\<alpha>,g)#ws)!i) \<noteq> eGG (fst (((\<alpha>,g)#ws)!i))"
+            proof (intro allI impI)
+              fix i assume "i < length ((\<alpha>,g)#ws)"
+              thus "fst (((\<alpha>,g)#ws)!i) \<in> J \<and> snd (((\<alpha>,g)#ws)!i) \<in> GG (fst (((\<alpha>,g)#ws)!i))
+                  \<and> snd (((\<alpha>,g)#ws)!i) \<noteq> eGG (fst (((\<alpha>,g)#ws)!i))"
+                using h\<alpha> hg hgne hG_elem[OF hws] by (cases i) (by100 simp)+
+            qed
+          next
+            show "\<forall>i. i+1 < length ((\<alpha>,g)#ws) \<longrightarrow> fst (((\<alpha>,g)#ws)!i) \<noteq> fst (((\<alpha>,g)#ws)!(i+1))"
+            proof (intro allI impI)
+              fix i assume "i+1 < length ((\<alpha>,g)#ws)"
+              thus "fst (((\<alpha>,g)#ws)!i) \<noteq> fst (((\<alpha>,g)#ws)!(i+1))"
+                using hdiff hG_alt[OF hws] unfolding Cons hp by (cases i) (by100 simp)+
+            qed
+          qed
+        next
+          case hsame: True
+          let ?gh = "mulGG \<alpha> g h"
+          have hgrp: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+            using hgroups h\<alpha> by (by100 blast)
+          have hh_in: "h \<in> GG \<alpha>" using hG_elem[OF hws, of 0] unfolding Cons hp hsame by (by100 simp)
+          have hgh_in: "?gh \<in> GG \<alpha>" using hgrp hg hh_in unfolding top1_is_group_on_def by (by100 blast)
+          show ?thesis
+          proof (cases "?gh = eGG \<alpha>")
+            case True
+            have "prepend (\<alpha>, g) ws = rest" unfolding Cons hp prepend_def using hgne hsame True by (by100 simp)
+            thus ?thesis using hrest_G by (by100 simp)
+          next
+            case ghne: False
+            have hprep: "prepend (\<alpha>, g) ws = (\<alpha>, ?gh) # rest"
+              unfolding Cons hp prepend_def using hgne hsame ghne by (by100 simp)
+            show ?thesis unfolding hprep
+            proof (rule hG_intro)
+              show "\<forall>i<length ((\<alpha>,?gh)#rest). fst (((\<alpha>,?gh)#rest)!i) \<in> J \<and> snd (((\<alpha>,?gh)#rest)!i) \<in> GG (fst (((\<alpha>,?gh)#rest)!i))
+                  \<and> snd (((\<alpha>,?gh)#rest)!i) \<noteq> eGG (fst (((\<alpha>,?gh)#rest)!i))"
+              proof (intro allI impI)
+                fix i assume "i < length ((\<alpha>,?gh)#rest)"
+                thus "fst (((\<alpha>,?gh)#rest)!i) \<in> J \<and> snd (((\<alpha>,?gh)#rest)!i) \<in> GG (fst (((\<alpha>,?gh)#rest)!i))
+                    \<and> snd (((\<alpha>,?gh)#rest)!i) \<noteq> eGG (fst (((\<alpha>,?gh)#rest)!i))"
+                  using h\<alpha> hgh_in ghne hG_elem[OF hrest_G] by (cases i) (by100 simp)+
+              qed
+            next
+              show "\<forall>i. i+1 < length ((\<alpha>,?gh)#rest) \<longrightarrow> fst (((\<alpha>,?gh)#rest)!i) \<noteq> fst (((\<alpha>,?gh)#rest)!(i+1))"
+              proof (intro allI impI)
+                fix i assume "i+1 < length ((\<alpha>,?gh)#rest)"
+                show "fst (((\<alpha>,?gh)#rest)!i) \<noteq> fst (((\<alpha>,?gh)#rest)!(i+1))"
+                proof (cases i)
+                  case 0
+                  show ?thesis
+                  proof (cases rest)
+                    case Nil thus ?thesis using \<open>i+1 < _\<close> unfolding 0 by (by100 simp)
+                  next
+                    case (Cons q rest2)
+                    have "\<alpha> \<noteq> fst q"
+                    proof -
+                      have "0 + 1 < length ws"
+                      proof -
+                        have "length ws = Suc (Suc (length rest2))"
+                          unfolding \<open>ws = _\<close> hp \<open>rest = _\<close> by (by100 simp)
+                        thus ?thesis by (by100 simp)
+                      qed
+                      from hG_alt[OF hws this] have "fst (ws!0) \<noteq> fst (ws!1)" by (by100 simp)
+                      moreover have "fst (ws!0) = \<beta>" unfolding \<open>ws = _\<close> hp by (by100 simp)
+                      moreover have "fst (ws!1) = fst q" unfolding \<open>ws = _\<close> hp \<open>rest = _\<close> by (by100 simp)
+                      ultimately have "\<beta> \<noteq> fst q" by (by100 simp)
+                      thus ?thesis using hsame by (by100 simp)
+                    qed
+                    thus ?thesis unfolding 0 Cons by (by100 simp)
+                  qed
+                next
+                  case (Suc j)
+                  thus ?thesis using hG_alt[OF hrest_G] \<open>i+1 < _\<close> by (by100 simp)
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
   \<comment> \<open>(1) e \<in> G: empty list is reduced.\<close>
   have he_G: "e \<in> G" unfolding e_def G_def by (by100 simp)
   \<comment> \<open>(2) Left identity: mul e ws = ws.\<close>
