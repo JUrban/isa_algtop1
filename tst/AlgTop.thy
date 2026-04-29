@@ -5435,8 +5435,34 @@ proof (intro conjI)
     qed
     finally show "?mul ?e c = c" unfolding hc .
     \<comment> \<open>Right identity: [f]*[const] = [f*const] = [f] by Theorem_51_2_right_identity.\<close>
-    show "?mul c ?e = c"
-      sorry \<comment> \<open>Symmetric argument with Theorem_51_2_right_identity.\<close>
+    have "?mul c ?e = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+      unfolding hc top1_fundamental_group_id_def
+      by (rule top1_fundamental_group_mul_class[OF hTX hf hconst_loop])
+    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f (top1_constant_path x0))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) f"
+        by (rule Theorem_51_2_right_identity[OF hTX hfp])
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hf hconst_loop] hloop_h by (by100 blast)
+    qed
+    finally show "?mul c ?e = c" unfolding hc .
   qed
   \<comment> \<open>(6) Inverse.\<close>
   show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
