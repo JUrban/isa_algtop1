@@ -1917,15 +1917,68 @@ proof -
     show "?C0 \<in> top1_components_on (UNIV - ?K) ?T_UK" by (rule hC0_comp)
     show "?origin \<in> ?C0" by (rule horigin_C0)
     show "\<forall>R>0. \<exists>x\<in>?C0. R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2"
-      sorry \<comment> \<open>By contradiction: suppose C0 bounded (contained in ball of radius R).
-         Then C0\<union>K closed + bounded \<Longrightarrow> compact (Heine-Borel for R^2).
-         Compact Hausdorff \<Longrightarrow> normal (Theorem_32_3).
-         Apply Lemma_62_1 to X = C0\<union>K, A = K, Y = R^2-{origin}:
-           get k: C0\<union>K \<rightarrow> R^2-{0} with k|_K = id.
-         Paste k with id on D\<union>K \<Longrightarrow> h: R^2 \<rightarrow> R^2-{0} with h = id on D\<union>K.
-         Large ball B: h|_\<partial>B = id. Radial projection r: R^2-{0} \<rightarrow> \<partial>B.
-         r \<circ> h|_B retraction of B onto \<partial>B.
+    proof (rule ccontr)
+      assume hneg: "\<not> (\<forall>R>0. \<exists>x\<in>?C0. R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2)"
+      hence "\<exists>R>0. \<forall>x\<in>?C0. \<not> (R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2)" by (by100 blast)
+      then obtain R where hR: "R > 0" and hbnd': "\<forall>x\<in>?C0. \<not> (R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2)"
+        by (by100 blast)
+      have hbnd: "\<forall>x\<in>?C0. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2"
+      proof (intro ballI)
+        fix x assume "x \<in> ?C0"
+        from hbnd'[THEN bspec, OF this] show "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2" by (by100 linarith)
+      qed
+      \<comment> \<open>C0 \<subseteq> UNIV-K (component is subset).\<close>
+      have hC0_sub_UK: "?C0 \<subseteq> UNIV - ?K"
+        unfolding top1_component_of_on_def by (by100 blast)
+      \<comment> \<open>C0 bounded: contained in ball of radius R.\<close>
+      have hC0_bounded: "\<forall>x\<in>?C0. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2" by (rule hbnd)
+      \<comment> \<open>K bounded: compact \<Longrightarrow> bounded.\<close>
+      have hK_bounded: "\<exists>R'. \<forall>x\<in>?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'\<^sup>2"
+      proof -
+        have "compact ?K" by (rule hK_compact)
+        hence "bounded ?K"
+          sorry \<comment> \<open>compact \<Longrightarrow> bounded for (real\<times>real). HOL-Analysis fact.\<close>
+        thus ?thesis sorry \<comment> \<open>bounded \<Longrightarrow> contained in ball.\<close>
+      qed
+      \<comment> \<open>C0 \<union> K closed in R^2 (\<partial>C0 \<subseteq> K, so complement D is open).\<close>
+      have hCK_closed: "closed (?C0 \<union> ?K)"
+        sorry \<comment> \<open>Components of open set: \<partial>(component) \<subseteq> boundary of open set = K.\<close>
+      \<comment> \<open>C0 \<union> K bounded + closed \<Longrightarrow> compact (Heine-Borel).\<close>
+      have hCK_compact: "compact (?C0 \<union> ?K)"
+        sorry \<comment> \<open>Bounded (from hC0_bounded + hK_bounded) + closed \<Longrightarrow> compact.\<close>
+      \<comment> \<open>Compact \<Longrightarrow> top1_compact_on \<Longrightarrow> Hausdorff \<Longrightarrow> normal (Theorem_32_3).\<close>
+      have hCK_normal: "top1_normal_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+        sorry \<comment> \<open>compact \<Longrightarrow> top1_compact_on (bridge) \<Longrightarrow> Hausdorff (subspace of R^2)
+           \<Longrightarrow> Theorem_32_3.\<close>
+      have hCKI_normal: "top1_normal_on ((?C0 \<union> ?K) \<times> I_set)
+          (product_topology_on (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) I_top)"
+        sorry \<comment> \<open>Product of compact spaces \<Longrightarrow> compact \<Longrightarrow> Hausdorff \<Longrightarrow> normal.\<close>
+      \<comment> \<open>K closed in C0\<union>K.\<close>
+      have hK_closedin_CK: "closedin_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K"
+        sorry \<comment> \<open>K closed in R^2 (hK_closedin), restrict to C0\<union>K.\<close>
+      \<comment> \<open>Apply Lemma 62.1 to X = C0\<union>K, A = K, Y = R^2-{origin}.\<close>
+      have hTCK: "is_topology_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+      \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} continuous from C0\<union>K subspace.\<close>
+      have hj_cont_CK: "top1_continuous_map_on ?K (subspace_topology (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K)
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+        sorry \<comment> \<open>From hj_cont + subspace transitivity.\<close>
+      have hj_nul_CK: "top1_nulhomotopic_on ?K (subspace_topology (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K)
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+        sorry \<comment> \<open>From hj_nul + subspace transitivity.\<close>
+      obtain k where hk: "top1_continuous_map_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) k"
+          and hk_ext: "\<forall>x\<in>?K. k x = x"
+        using Lemma_62_1_homotopy_extension[OF hTCK hCK_normal hCKI_normal hK_closedin_CK hR2_Y_open hj_cont_CK hj_nul_CK]
+        by blast
+      \<comment> \<open>Paste k with identity on D\<union>K: h(x) = k(x) for x \<in> C0, h(x) = x for x \<in> D\<union>K.
+         Both maps continuous, agree on K. C0\<union>K and D\<union>K closed. Pasting lemma gives h continuous.\<close>
+      \<comment> \<open>h: R^2 \<rightarrow> R^2-{origin}. For large ball B: h|_\<partial>B = id (since \<partial>B \<subseteq> D).
+         Radial projection r: R^2-{origin} \<rightarrow> \<partial>B gives r \<circ> h|_B retraction.
          Contradiction with Theorem_55_2_no_retraction.\<close>
+      show False
+        sorry \<comment> \<open>Pasting + large ball + radial projection + retraction contradiction.\<close>
+    qed
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   \<comment> \<open>Transfer from R^2 to S^2. The key: h^{-1}(C0) \<union> {b} is connected in S^2-f(A).\<close>
