@@ -279,7 +279,50 @@ proof -
   qed
   have hhf_cont: "top1_continuous_map_on A (subspace_topology X TX A)
       (top1_closed_interval (-1) 1) (top1_closed_interval_topology (-1) 1) (\<lambda>x. h (f x))"
-    sorry \<comment> \<open>h continuous, f continuous, compose. Range in [-1,1].\<close>
+  proof -
+    \<comment> \<open>h continuous on R in standard (HOL) sense.\<close>
+    have hh_cont_on: "continuous_on (UNIV::real set) h"
+    proof -
+      have "\<And>x::real. 1 + \<bar>x\<bar> \<noteq> 0" by (by100 linarith)
+      thus ?thesis unfolding h_def by (intro continuous_intros) (by100 blast)
+    qed
+    \<comment> \<open>Bridge to order topology = top1_open_sets.\<close>
+    have hh_top1: "top1_continuous_map_on (UNIV::real set) (order_topology_on_UNIV::real set set)
+        (UNIV::real set) (order_topology_on_UNIV::real set set) h"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x :: real show "h x \<in> (UNIV::real set)" by (by100 simp)
+    next
+      fix V :: "real set" assume hV: "V \<in> (order_topology_on_UNIV::real set set)"
+      hence "open V" using order_topology_on_UNIV_eq_HOL_open by (by100 blast)
+      hence "open (h -` V)" using hh_cont_on by (rule open_vimage)
+      hence "h -` V \<in> (order_topology_on_UNIV::real set set)"
+        using order_topology_on_UNIV_eq_HOL_open by (by100 blast)
+      moreover have "{x \<in> (UNIV::real set). h x \<in> V} = h -` V" by (by100 blast)
+      ultimately show "{x \<in> (UNIV::real set). h x \<in> V} \<in> (order_topology_on_UNIV::real set set)"
+        by (by100 simp)
+    qed
+    \<comment> \<open>Compose f: A \<rightarrow> R with h: R \<rightarrow> R.\<close>
+    have hTA: "is_topology_on A (subspace_topology X TX A)"
+      by (rule subspace_topology_is_topology_on[OF hTopX hAX])
+    have hTR: "is_topology_on (UNIV::real set) order_topology_on_UNIV"
+      by (rule order_topology_on_UNIV_is_topology_on)
+    have "top1_continuous_map_on A (subspace_topology X TX A)
+        (UNIV::real set) order_topology_on_UNIV (h \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hf hh_top1])
+    hence hhf_R: "top1_continuous_map_on A (subspace_topology X TX A)
+        (UNIV::real set) order_topology_on_UNIV (\<lambda>x. h (f x))"
+      unfolding comp_def .
+    \<comment> \<open>Restrict codomain to [-1,1].\<close>
+    let ?I = "top1_closed_interval (-1::real) 1"
+    let ?TI = "top1_closed_interval_topology (-1::real) 1"
+    have hI_sub: "?I \<subseteq> (UNIV::real set)" by (by100 simp)
+    have himg: "(\<lambda>x. h (f x)) ` A \<subseteq> ?I" using hhf_range by (by100 blast)
+    have hTI_sub: "?TI = subspace_topology (UNIV::real set) order_topology_on_UNIV ?I"
+      unfolding top1_closed_interval_topology_def by (by100 blast)
+    show ?thesis unfolding hTI_sub
+      by (rule top1_continuous_map_on_codomain_shrink[OF hhf_R himg hI_sub])
+  qed
   obtain g where hg: "top1_continuous_map_on X TX (top1_closed_interval (-1) 1)
       (top1_closed_interval_topology (-1) 1) g"
       and hg_ext: "\<forall>x\<in>A. g x = h (f x)"
