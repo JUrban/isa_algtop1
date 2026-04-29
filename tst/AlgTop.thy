@@ -553,8 +553,37 @@ proof -
         using continuous_on_divide[OF hnum hden] hne by (by100 blast)
       thus ?thesis unfolding h_inv_def by (by100 simp)
     qed
-    show ?thesis
-      sorry \<comment> \<open>Compose: F = h_inv \<circ> ((1-\<phi>)\<cdot>g), range in (-1,1), continuous.\<close>
+    \<comment> \<open>Compose: F = h_inv \<circ> ((1-\<phi>)\<cdot>g). Range in (-1,1), compose continuous.\<close>
+    let ?OI = "{y::real. -1 < y \<and> y < 1}" \<comment> \<open>open interval (-1,1)\<close>
+    let ?TOR = "order_topology_on_UNIV :: real set set"
+    have hTR: "is_topology_on (UNIV::real set) ?TOR" by (rule order_topology_on_UNIV_is_topology_on)
+    \<comment> \<open>Restrict codomain of (1-\<phi>)\<cdot>g to (-1,1).\<close>
+    have hprod_img: "(\<lambda>x. (1 - \<phi> x) * g x) ` X \<subseteq> ?OI"
+      using hrange by (by100 blast)
+    have hOI_sub: "?OI \<subseteq> (UNIV::real set)" by (by100 simp)
+    have hprod_OI: "top1_continuous_map_on X TX ?OI (subspace_topology UNIV ?TOR ?OI) (\<lambda>x. (1 - \<phi> x) * g x)"
+      by (rule top1_continuous_map_on_codomain_shrink[OF hprod_cont hprod_img hOI_sub])
+    \<comment> \<open>h_inv continuous (-1,1) \<rightarrow> R in top1 sense.\<close>
+    have hhinv_top1: "top1_continuous_map_on ?OI (subspace_topology UNIV ?TOR ?OI) (UNIV::real set) ?TOR h_inv"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix y assume "y \<in> ?OI" show "h_inv y \<in> (UNIV::real set)" by (by100 simp)
+    next
+      fix V :: "real set" assume hV: "V \<in> ?TOR"
+      hence hVopen: "open V" using order_topology_on_UNIV_eq_HOL_open by (by100 blast)
+      have "\<exists>W. open W \<and> W \<inter> ?OI = h_inv -` V \<inter> ?OI"
+        using hhinv_cont hVopen unfolding continuous_on_open_invariant by (by100 blast)
+      then obtain W where hW: "open W" and hfW: "W \<inter> ?OI = h_inv -` V \<inter> ?OI" by (by100 blast)
+      have hW_OT: "W \<in> ?TOR" using hW order_topology_on_UNIV_eq_HOL_open by (by100 blast)
+      have "{y \<in> ?OI. h_inv y \<in> V} = ?OI \<inter> W" using hfW by (by100 blast)
+      thus "{y \<in> ?OI. h_inv y \<in> V} \<in> subspace_topology UNIV ?TOR ?OI"
+        unfolding subspace_topology_def using hW_OT by (by100 blast)
+    qed
+    \<comment> \<open>Compose.\<close>
+    have "top1_continuous_map_on X TX (UNIV::real set) ?TOR (h_inv \<circ> (\<lambda>x. (1 - \<phi> x) * g x))"
+      by (rule top1_continuous_map_on_comp[OF hprod_OI hhinv_top1])
+    moreover have "h_inv \<circ> (\<lambda>x. (1 - \<phi> x) * g x) = F" unfolding F_def by (rule ext) (by100 simp)
+    ultimately show ?thesis by (by100 simp)
   qed
   show ?thesis using hF_cont hF_ext by (by100 blast)
 qed
