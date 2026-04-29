@@ -3349,37 +3349,37 @@ definition top1_free_product_carrier ::
      \<comment> \<open>The boolean flag indicates which factor each element belongs to.
          Empty list represents the identity.\<close>
 
-(** from \<S>68 Theorem 68.2: given a family of groups, a free product exists. **)
+(** from \<S>68 Theorem 68.2: given a family of groups, a free product exists.
+    The carrier is ('i \<times> 'gg) list: reduced words (index, element) pairs. **)
 theorem Theorem_68_2_free_product_exists:
-  assumes "\<forall>\<alpha>\<in>(J::'i set). top1_is_group_on (GG \<alpha>::'gg set) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
-  shows "\<exists>(G::'gg set) mul e invg \<iota>fam.
+  assumes hgroups: "\<forall>\<alpha>\<in>(J::'i set). top1_is_group_on (GG \<alpha>::'gg set) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+  shows "\<exists>(G::('i \<times> 'gg) list set) mul e invg
+         (\<iota>fam :: 'i \<Rightarrow> 'gg \<Rightarrow> ('i \<times> 'gg) list).
            top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
 proof -
-  \<comment> \<open>Munkres 68.2: Construct G as the set of reduced words in the G\<alpha>'s.
-     A word is a list [(i1, g1), (i2, g2), ...] with i_k \<in> J, g_k \<in> G_{i_k} \ {e_{i_k}},
-     and consecutive indices differ. The empty list is the identity.
-     Multiplication = concatenation + iterative reduction (cancel adjacent elements
-     from the same group, contract e's).
-     The natural inclusions \<iota>\<alpha>(g) = [(a, g)] are injective homomorphisms.\<close>
-  \<comment> \<open>Step 1: Define the carrier G as reduced words (lists of (index, element) pairs
-     with alternating indices and non-identity elements).\<close>
-  \<comment> \<open>Step 2: Define multiplication as concatenation + iterative reduction.\<close>
-  \<comment> \<open>Step 3: Verify group axioms.\<close>
-  have hG_group: "\<exists>(G::'gg set) mul e invg.
-      top1_is_group_on G mul e invg
-    \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<exists>g\<in>G. True)
-    \<and> (\<forall>\<alpha>\<in>J. \<exists>\<iota>. inj_on \<iota> (GG \<alpha>) \<and> (\<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>.
-         \<iota> (mulGG \<alpha> x y) = mul (\<iota> x) (\<iota> y)))" sorry
-  \<comment> \<open>Step 4: No nonempty reduced word represents the identity (freeness condition).\<close>
-  have hG_free: "\<exists>(G::'gg set) mul e invg \<iota>fam.
-      top1_is_group_on G mul e invg
-    \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (GG \<alpha>))
-    \<and> (\<forall>indices word. length indices = length word \<longrightarrow> length indices > 0 \<longrightarrow>
-        (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
-                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e) \<longrightarrow>
-        (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
-        foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e)" sorry
-  show ?thesis sorry
+  \<comment> \<open>Carrier: reduced words. A word is a list [(\<alpha>1,g1), (\<alpha>2,g2), ...] where
+     \<alpha>k \<in> J, gk \<in> GG(\<alpha>k) \ {eGG(\<alpha>k)}, and consecutive indices differ.
+     The empty list [] is the identity.\<close>
+  define G :: "('i \<times> 'gg) list set" where
+    "G = {ws. (\<forall>i<length ws. fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i))
+                           \<and> snd (ws!i) \<noteq> eGG (fst (ws!i)))
+            \<and> (\<forall>i. i+1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1)))}"
+  define e :: "('i \<times> 'gg) list" where "e = []"
+  \<comment> \<open>Natural inclusions: \<iota>\<alpha>(g) = [(\<alpha>, g)] for g \<noteq> e\<alpha>, and \<iota>\<alpha>(e\<alpha>) = [].\<close>
+  define \<iota>fam :: "'i \<Rightarrow> 'gg \<Rightarrow> ('i \<times> 'gg) list" where
+    "\<iota>fam = (\<lambda>\<alpha> g. if g = eGG \<alpha> then [] else [(\<alpha>, g)])"
+  \<comment> \<open>Reduction: iteratively cancel adjacent elements from the same group
+     and remove identity elements.\<close>
+  \<comment> \<open>Multiplication: concatenate and reduce.\<close>
+  \<comment> \<open>Inverse: reverse the list and invert each element.\<close>
+  define invg :: "('i \<times> 'gg) list \<Rightarrow> ('i \<times> 'gg) list" where
+    "invg = (\<lambda>ws. rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws))"
+  \<comment> \<open>Multiplication by concatenation + single reduction step.
+     Full reduction is the iterative closure. For the proof, we define
+     reduce and mul, then verify all properties.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Full construction: define reduce/mul, verify group axioms, injectivity of \<iota>,
+       generation, and freeness (no nontrivial reduced word = e). ~200 lines of list algebra.\<close>
 qed
 
 (** from \<S>68 Theorem 68.4: uniqueness of free product — any two
