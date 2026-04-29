@@ -520,7 +520,45 @@ proof -
     qed
     \<comment> \<open>H continuous: composition.\<close>
     have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) Y ?TY H"
-      sorry \<comment> \<open>H = G \<circ> (x,t) \<mapsto> (x, (1-t)\<phi>(x)+t). The inner map continuous by Theorem_18_4.\<close>
+    proof -
+      \<comment> \<open>\<psi>(x,t) = (x, (1-t)\<phi>(x)+t) : X\<times>I \<rightarrow> X\<times>I continuous.\<close>
+      let ?\<psi> = "\<lambda>(x::'a, t::real). (x, (1-t) * \<phi> x + t)"
+      have h\<psi>_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          (X \<times> I_set) (product_topology_on TX I_top) ?\<psi>"
+        sorry \<comment> \<open>Theorem_18_4: \<pi>1\<circ>\<psi> = \<pi>1 (continuous), \<pi>2\<circ>\<psi> = (1-t)\<phi>(x)+t (continuous).
+           Needs: \<phi>\<circ>\<pi>1 continuous X\<times>I \<rightarrow> R, \<pi>2 continuous X\<times>I \<rightarrow> R,
+           polynomial operations, then bridge to I_top.\<close>
+      \<comment> \<open>H = G \<circ> \<psi>: composition of continuous maps.\<close>
+      have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+          UNIV ?TR2 (G \<circ> ?\<psi>)"
+        by (rule top1_continuous_map_on_comp[OF h\<psi>_cont hG_cont])
+      \<comment> \<open>H = G \<circ> \<psi> pointwise, then restrict codomain to Y.\<close>
+      have hH_eq: "\<And>p. p \<in> X \<times> I_set \<Longrightarrow> H p = (G \<circ> ?\<psi>) p"
+      proof -
+        fix p assume "p \<in> X \<times> I_set"
+        obtain x t where hp: "p = (x, t)" by (cases p)
+        show "H p = (G \<circ> ?\<psi>) p" unfolding H_def comp_def hp by (by100 simp)
+      qed
+      hence hH_R2: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) UNIV ?TR2 H"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume "p \<in> X \<times> I_set" show "H p \<in> (UNIV :: (real\<times>real) set)" by (by100 simp)
+      next
+        fix V assume hV: "V \<in> ?TR2"
+        have "{p \<in> X \<times> I_set. H p \<in> V} = {p \<in> X \<times> I_set. (G \<circ> ?\<psi>) p \<in> V}"
+          using \<open>\<And>p. p \<in> X \<times> I_set \<Longrightarrow> H p = (G \<circ> ?\<psi>) p\<close> by (by100 auto)
+        moreover have "{p \<in> X \<times> I_set. (G \<circ> ?\<psi>) p \<in> V} \<in> product_topology_on TX I_top"
+          using \<open>top1_continuous_map_on _ _ UNIV ?TR2 (G \<circ> ?\<psi>)\<close> hV
+          unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{p \<in> X \<times> I_set. H p \<in> V} \<in> product_topology_on TX I_top"
+          by (by100 simp)
+      qed
+      have hH_img: "H ` (X \<times> I_set) \<subseteq> Y"
+        using hH_range by (by100 blast)
+      have hY_sub: "Y \<subseteq> (UNIV :: (real\<times>real) set)" by (by100 simp)
+      show ?thesis
+        by (rule top1_continuous_map_on_codomain_shrink[OF hH_R2 hH_img hY_sub])
+    qed
     have "top1_homotopic_on X TX Y ?TY g (\<lambda>_. y0)"
       unfolding top1_homotopic_on_def using hg_cont
     proof (intro conjI exI[of _ H])
