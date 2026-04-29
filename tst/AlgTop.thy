@@ -5350,8 +5350,55 @@ lemma top1_fundamental_group_is_group:
     (top1_fundamental_group_mul X TX x0)
     (top1_fundamental_group_id X TX x0)
     (top1_fundamental_group_invg X TX x0)"
-  sorry \<comment> \<open>From Theorem_51_2: associativity, left/right identity, left/right inverse
-     of path products, lifted to equivalence classes via top1_fundamental_group_mul_class.\<close>
+  unfolding top1_is_group_on_def
+proof (intro conjI)
+  let ?G = "top1_fundamental_group_carrier X TX x0"
+  let ?mul = "top1_fundamental_group_mul X TX x0"
+  let ?e = "top1_fundamental_group_id X TX x0"
+  let ?inv = "top1_fundamental_group_invg X TX x0"
+  have hconst_loop: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_loop[OF hTX hx0])
+  \<comment> \<open>(1) Identity in carrier.\<close>
+  show "?e \<in> ?G"
+    unfolding top1_fundamental_group_carrier_def top1_fundamental_group_id_def
+    using hconst_loop by (by100 blast)
+  \<comment> \<open>(2) Closure under mul.\<close>
+  show "\<forall>x\<in>?G. \<forall>y\<in>?G. ?mul x y \<in> ?G"
+  proof (intro ballI)
+    fix c1 c2 assume "c1 \<in> ?G" "c2 \<in> ?G"
+    then obtain f g where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {h. top1_loop_equiv_on X TX x0 f h}"
+        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {h. top1_loop_equiv_on X TX x0 g h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+      by (rule top1_path_product_is_loop[OF hTX hf hg])
+    have "?mul c1 c2 = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
+    thus "?mul c1 c2 \<in> ?G"
+      unfolding top1_fundamental_group_carrier_def using hfg by (by100 blast)
+  qed
+  \<comment> \<open>(3) Closure under inverse.\<close>
+  show "\<forall>x\<in>?G. ?inv x \<in> ?G"
+  proof (intro ballI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_loop[OF hf])
+    show "?inv c \<in> ?G"
+      unfolding top1_fundamental_group_invg_def hc top1_fundamental_group_carrier_def
+      sorry \<comment> \<open>inv([f]) = [rev f] \<in> carrier. Needs: loop_equiv compatible with reverse.\<close>
+  qed
+  \<comment> \<open>(4) Associativity.\<close>
+  show "\<forall>x\<in>?G. \<forall>y\<in>?G. \<forall>z\<in>?G. ?mul (?mul x y) z = ?mul x (?mul y z)"
+    sorry \<comment> \<open>From Theorem_51_2_associativity + mul_class. ~30 lines.\<close>
+  \<comment> \<open>(5) Left identity.\<close>
+  show "\<forall>x\<in>?G. ?mul ?e x = x \<and> ?mul x ?e = x"
+    sorry \<comment> \<open>From Theorem_51_2_left/right_identity + mul_class. ~30 lines.\<close>
+  \<comment> \<open>(6) Inverse.\<close>
+  show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
+    sorry \<comment> \<open>From Theorem_51_2_invgerse_left/right + mul_class. ~30 lines.\<close>
+qed
 
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
     with U, V, U \<inter> V open and path-connected, then \<pi>_1(X, x_0) is isomorphic to
