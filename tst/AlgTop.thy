@@ -963,13 +963,46 @@ proof -
      "Unbounded" means: for any R > 0, C intersects the complement of the ball of radius R.
      The proof is by contradiction: assume 0 in a compact-closure component.
      Apply Lemma 62.1 to extend, paste with identity, get retraction contradiction.\<close>
+  \<comment> \<open>R^2 normality (needed for Lemma 62.1 application).\<close>
+  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
+    sorry \<comment> \<open>R^2 is metrizable \<Longrightarrow> normal (Theorem_32_2).\<close>
+  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set) (product_topology_on ?TR2 I_top)"
+    sorry \<comment> \<open>R^2 \<times> I metrizable (product of metrizable) \<Longrightarrow> normal.\<close>
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+    by (by100 simp)
+  \<comment> \<open>K closed in R^2 in the top1 sense.\<close>
+  have hK_closedin: "closedin_on (UNIV::(real\<times>real) set) ?TR2 ?K"
+  proof -
+    have "closed ?K" by (rule hK_closed)
+    hence "UNIV - ?K \<in> (top1_open_sets :: (real\<times>real) set set)"
+      unfolding top1_open_sets_def using open_Diff[OF open_UNIV hK_closed] by (by100 blast)
+    hence "UNIV - ?K \<in> ?TR2" using product_topology_on_open_sets_real2 by (by100 metis)
+    thus ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} as top1_continuous_map_on.\<close>
+  have hj_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+    sorry \<comment> \<open>Inclusion continuous (proved in hj_nul proof above, extract).\<close>
+  \<comment> \<open>Apply Lemma 62.1 to X = R^2, A = K, Y = R^2-{origin}, f = inclusion.\<close>
+  obtain G where hG_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
+      and hG_ext: "\<forall>x\<in>?K. G x = x"
+      and hG_nul: "top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
+    sorry \<comment> \<open>By Lemma_62_1_homotopy_extension (defined below, line ~1015) with
+       X=R^2, A=K, Y=R^2-{origin}. Forward reference since Borsuk precedes Lemma_62_1 in file.\<close>
+  \<comment> \<open>Now we have G: R^2 \<rightarrow> R^2-{origin} with G|_K = id and G nulhomotopic.
+     The key consequence: origin \<notin> G(R^2), so ?origin has no G-preimage.
+     This contradicts the existence of a bounded component containing origin.\<close>
   have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
          \<and> ?origin \<in> C0
          \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
-    sorry \<comment> \<open>By contradiction: suppose ?origin in component C0 contained in some ball.
-       Apply Lemma 62.1 to C0\<union>K, paste with id, large ball, retraction contradiction.
-       Uses: K compact/closed, j nulhomotopic, Y open, Theorem_55_2_no_retraction.
-       This is the core ~200 lines of the Borsuk lemma.\<close>
+    sorry \<comment> \<open>By contradiction using G: suppose origin in bounded C0.
+       Paste G with id on D (other components): h = G on C0, h = id on D\<union>K.
+       Both C0\<union>K and D\<union>K closed (frontier \<subseteq> K). Pasting gives h: R^2 \<rightarrow> R^2-{origin}.
+       h|_{\<partial>B} = id for large ball B. Radial projection r: R^2-{origin} \<rightarrow> \<partial>B.
+       r \<circ> h|_B: B \<rightarrow> \<partial>B retraction. Contradiction with Theorem_55_2.\<close>
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
