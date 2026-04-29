@@ -810,7 +810,17 @@ proof -
       thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
     qed
     have hK_haus: "is_hausdorff_on ?K (subspace_topology UNIV ?TR2 ?K)"
-      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff. R^2 is Hausdorff (metric).\<close>
+    proof -
+      have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+      have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+        using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+      have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+          (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+        using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+      hence hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set) ?TR2" by (by100 simp)
+      thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+    qed
     have hg_K: "top1_continuous_map_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
       by (rule top1_continuous_map_on_codomain_shrink[OF hg_cont]) (by100 simp)+
     have hg_bij: "bij_betw ?g A ?K"
@@ -870,15 +880,38 @@ proof -
     proof -
       have hKsub: "?K \<subseteq> ?Y" using hK_sub by (by100 blast)
       have hKY: "?K \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      have hTR2_top2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2" by (rule hTR2_top)
       have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
-        sorry \<comment> \<open>Inclusion continuous.\<close>
-      hence "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
+      proof -
+        have "\<forall>A. A \<subseteq> (UNIV::(real\<times>real) set) \<longrightarrow> top1_continuous_map_on A (subspace_topology UNIV ?TR2 A) (UNIV::(real\<times>real) set) ?TR2 id"
+          using Theorem_18_2(2)[OF hTR2_top hTR2_top hTR2_top2] by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      hence hid_R2: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
         unfolding id_def .
-      thus ?thesis using top1_continuous_map_on_codomain_shrink[OF _ _ hKY]
-        sorry \<comment> \<open>Shrink codomain from UNIV to UNIV-{origin}.\<close>
+      have himg_Y: "(\<lambda>x. x) ` ?K \<subseteq> ?Y" using hKsub by (by100 blast)
+      have hY_sub_UNIV: "?Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
+          ?Y (subspace_topology (UNIV::(real\<times>real) set) ?TR2 ?Y) (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hid_R2 himg_Y hY_sub_UNIV])
+      thus ?thesis by (by100 simp)
     qed
     have hconst_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. c)"
-      sorry \<comment> \<open>Constant map continuous.\<close>
+    proof -
+      have hTY: "is_topology_on ?Y ?TY"
+      proof -
+        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+          by (by100 simp)
+        show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
+      qed
+      have "\<forall>y0\<in>?Y. top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. y0)"
+        using Theorem_18_2(1)[OF hTK hTY hTY] by (by100 blast)
+      thus ?thesis using hcY by (by100 blast)
+    qed
     have "top1_homotopic_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x) (\<lambda>_. c)"
       unfolding top1_homotopic_on_def
       using hid_cont hconst_cont hH'_cont hH'0 hH'1 by (by100 blast)
