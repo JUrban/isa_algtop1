@@ -3882,16 +3882,76 @@ proof -
       qed
     qed
   qed
+  \<comment> \<open>Helper: prepend with different index just conses.\<close>
+  have hprepend_cons: "\<And>\<alpha> g ws. g \<noteq> eGG \<alpha> \<Longrightarrow> ws = [] \<or> \<alpha> \<noteq> fst (hd ws) \<Longrightarrow>
+      prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+  proof -
+    fix \<alpha> :: 'i and g :: 'gg and ws :: "('i \<times> 'gg) list"
+    assume hg: "g \<noteq> eGG \<alpha>" and hdiff: "ws = [] \<or> \<alpha> \<noteq> fst (hd ws)"
+    show "prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+    proof (cases ws)
+      case Nil thus ?thesis unfolding prepend_def using hg by (by100 simp)
+    next
+      case (Cons p rest)
+      have "\<alpha> \<noteq> fst p" using hdiff unfolding Cons by (by100 simp)
+      thus ?thesis unfolding prepend_def Cons using hg by (cases p) (by100 simp)
+    qed
+  qed
   \<comment> \<open>(1) e \<in> G: empty list is reduced.\<close>
   have he_G: "e \<in> G" unfolding e_def G_def by (by100 simp)
   \<comment> \<open>(2) Left identity: mul e ws = ws.\<close>
   have hleft_id: "\<forall>ws\<in>G. mul e ws = ws" unfolding mul_def e_def by (by100 simp)
   \<comment> \<open>(3) Right identity: mul ws e = ws for ws \<in> G.\<close>
   have hright_id: "\<forall>ws\<in>G. mul ws e = ws"
-    sorry \<comment> \<open>By induction on ws. Each prepend at head of reduced word = Cons.\<close>
+  proof (intro ballI)
+    fix ws assume hws: "ws \<in> G"
+    show "mul ws e = ws" unfolding mul_def e_def
+      using hws
+    proof (induction ws)
+      case Nil show ?case by (by100 simp)
+    next
+      case (Cons p ws')
+      \<comment> \<open>Cons.prems gives p # ws' \<in> G.\<close>
+      have hpws: "p # ws' \<in> G" using Cons.prems .
+      have hws': "ws' \<in> G" by (rule htail_G[OF hpws])
+      have hIH: "foldr prepend ws' [] = ws'" using Cons.IH[OF hws'] .
+      obtain \<alpha> g where hp: "p = (\<alpha>, g)" by (cases p)
+      have hgne: "g \<noteq> eGG \<alpha>" using hG_elem[OF hpws, of 0] unfolding hp by (by100 simp)
+      have hdiff: "ws' = [] \<or> \<alpha> \<noteq> fst (hd ws')"
+      proof (cases ws')
+        case Nil thus ?thesis by (by100 blast)
+      next
+        case (Cons q rest)
+        have "0 + 1 < length (p # ws')" unfolding Cons by (by100 simp)
+        from hG_alt[OF hpws this] have "fst p \<noteq> fst (ws'!0)" by (by100 simp)
+        thus ?thesis unfolding Cons hp by (by100 simp)
+      qed
+      have "foldr prepend (p # ws') [] = prepend p (foldr prepend ws' [])" by (by100 simp)
+      also have "foldr prepend ws' [] = ws'" by (rule hIH)
+      also have "prepend p ws' = p # ws'"
+        unfolding hp using hprepend_cons[OF hgne hdiff] .
+      finally show ?case .
+    qed
+  qed
   \<comment> \<open>(4) Closure under mul.\<close>
   have hmul_closed: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. mul ws1 ws2 \<in> G"
-    sorry \<comment> \<open>By induction on ws1 using hprepend_reduced.\<close>
+  proof (intro ballI)
+    fix ws1 ws2 assume hws1: "ws1 \<in> G" and hws2: "ws2 \<in> G"
+    show "mul ws1 ws2 \<in> G" unfolding mul_def
+      using hws1
+    proof (induction ws1)
+      case Nil show ?case using hws2 by (by100 simp)
+    next
+      case (Cons p ws1')
+      obtain \<alpha> g where hp: "p = (\<alpha>, g)" by (cases p)
+      have hpws1: "p # ws1' \<in> G" using Cons.prems .
+      have h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>"
+        using hG_elem[OF hpws1, of 0] unfolding hp by (by100 simp)+
+      have hws1': "ws1' \<in> G" by (rule htail_G[OF hpws1])
+      have hIH: "foldr prepend ws1' ws2 \<in> G" using Cons.IH[OF hws1'] .
+      show ?case unfolding hp by (by100 simp) (rule hprepend_reduced[OF h\<alpha> hg hIH])
+    qed
+  qed
   \<comment> \<open>(5) Inverse closure.\<close>
   have hinvg_closed: "\<forall>ws\<in>G. invg ws \<in> G"
     sorry \<comment> \<open>Reverse of reduced word with inverted elements is reduced.\<close>
@@ -4031,21 +4091,7 @@ proof -
     \<comment> \<open>The product of singletons with alternating indices = the word itself.\<close>
     \<comment> \<open>By induction: foldr mul [w0,...,wn-1] [] builds the reduced word
        [(indices!(n-1), word!(n-1)), ..., (indices!0, word!0)] which is nonempty.\<close>
-    \<comment> \<open>Key: prepend (\<alpha>,g) ws = (\<alpha>,g) # ws when g \<noteq> eGG \<alpha> and (ws=[] or \<alpha> \<noteq> fst(hd ws)).\<close>
-    have hprepend_cons: "\<And>\<alpha> g ws. g \<noteq> eGG \<alpha> \<Longrightarrow> ws = [] \<or> \<alpha> \<noteq> fst (hd ws) \<Longrightarrow>
-        prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
-    proof -
-      fix \<alpha> :: 'i and g :: 'gg and ws :: "('i \<times> 'gg) list"
-      assume hg: "g \<noteq> eGG \<alpha>" and hdiff: "ws = [] \<or> \<alpha> \<noteq> fst (hd ws)"
-      show "prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
-      proof (cases ws)
-        case Nil thus ?thesis unfolding prepend_def using hg by (by100 simp)
-      next
-        case (Cons p rest)
-        have "\<alpha> \<noteq> fst p" using hdiff unfolding Cons by (by100 simp)
-        thus ?thesis unfolding prepend_def Cons using hg by (cases p) (by100 simp)
-      qed
-    qed
+    \<comment> \<open>Use hprepend_cons (proved above).\<close>
     \<comment> \<open>The product of singletons with alternating indices: by reverse induction,
        each prepend just conses since consecutive indices differ.\<close>
     show "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e"
