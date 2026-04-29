@@ -393,8 +393,64 @@ proof -
     finally show "F x = f x" .
   qed
   have hF_cont: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV F"
-    sorry \<comment> \<open>\<phi>, g continuous, arithmetic ops continuous, h_inv continuous on (-1,1),
-       (1-\<phi>)\<cdot>g maps into (-1,1), compose.\<close>
+  proof -
+    let ?TRI = "top1_closed_interval_topology (-1::real) 1"
+    let ?I = "top1_closed_interval (-1::real) 1"
+    \<comment> \<open>(1-\<phi>)\<cdot>g maps X into (-1,1): key range argument.\<close>
+    have hrange: "\<forall>x\<in>X. -1 < (1 - \<phi> x) * g x \<and> (1 - \<phi> x) * g x < 1"
+    proof (intro ballI conjI)
+      fix x assume hx: "x \<in> X"
+      have h\<phi>01: "0 \<le> \<phi> x \<and> \<phi> x \<le> 1"
+        using h\<phi> hx unfolding top1_continuous_map_on_def top1_closed_interval_def by (by100 blast)
+      have hg_bounds: "-1 \<le> g x \<and> g x \<le> 1"
+        using hg hx unfolding top1_continuous_map_on_def top1_closed_interval_def by (by100 blast)
+      \<comment> \<open>Abs value bound: |(1-\<phi>)\<cdot>g| \<le> |g| \<le> 1, strict when x \<notin> B.\<close>
+      have h1\<phi>: "0 \<le> 1 - \<phi> x \<and> 1 - \<phi> x \<le> 1" using h\<phi>01 by (by100 linarith)
+      have habs_bound: "\<bar>(1 - \<phi> x) * g x\<bar> \<le> \<bar>g x\<bar>"
+      proof -
+        have "\<bar>(1 - \<phi> x) * g x\<bar> = \<bar>1 - \<phi> x\<bar> * \<bar>g x\<bar>" by (rule abs_mult)
+        moreover have "\<bar>1 - \<phi> x\<bar> = 1 - \<phi> x" using h1\<phi> by (by100 linarith)
+        moreover have "(1 - \<phi> x) * \<bar>g x\<bar> \<le> 1 * \<bar>g x\<bar>"
+        proof -
+          have "1 - \<phi> x \<le> 1" using h1\<phi> by (by100 linarith)
+          thus ?thesis using abs_ge_zero[of "g x"] by (rule mult_right_mono)
+        qed
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      have habs_g: "\<bar>g x\<bar> \<le> 1" using hg_bounds by (by100 linarith)
+      show "-1 < (1 - \<phi> x) * g x"
+      proof (cases "x \<in> B")
+        case True hence "\<phi> x = 1" using h\<phi>B by (by100 blast)
+        thus ?thesis by (by100 simp)
+      next
+        case False
+        hence "g x \<noteq> -1 \<and> g x \<noteq> 1" unfolding B_def using hx by (by100 blast)
+        hence "\<bar>g x\<bar> < 1" using hg_bounds by (by100 linarith)
+        hence "\<bar>(1 - \<phi> x) * g x\<bar> < 1" using habs_bound by (by100 linarith)
+        thus ?thesis by (by100 linarith)
+      qed
+      show "(1 - \<phi> x) * g x < 1"
+      proof (cases "x \<in> B")
+        case True hence "\<phi> x = 1" using h\<phi>B by (by100 blast)
+        thus ?thesis by (by100 simp)
+      next
+        case False
+        hence "g x \<noteq> -1 \<and> g x \<noteq> 1" unfolding B_def using hx by (by100 blast)
+        hence "\<bar>g x\<bar> < 1" using hg_bounds by (by100 linarith)
+        hence "\<bar>(1 - \<phi> x) * g x\<bar> < 1" using habs_bound by (by100 linarith)
+        thus ?thesis by (by100 linarith)
+      qed
+    qed
+    \<comment> \<open>(1-\<phi>)\<cdot>g continuous X \<rightarrow> R, then h_inv continuous on (-1,1), compose.\<close>
+    have hprod_cont: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV
+        (\<lambda>x. (1 - \<phi> x) * g x)"
+      sorry \<comment> \<open>\<phi> continuous, g continuous, arithmetic (Lemma_21_4) compose.\<close>
+    \<comment> \<open>h_inv continuous (-1,1) \<rightarrow> R: h_inv(y) = y/(1-|y|), denominator > 0 on (-1,1).\<close>
+    have hhinv_cont: "continuous_on {y::real. -1 < y \<and> y < 1} h_inv"
+      sorry \<comment> \<open>continuous_intros: y/(1-|y|) with denominator 1-|y| > 0 on (-1,1).\<close>
+    show ?thesis
+      sorry \<comment> \<open>Compose: F = h_inv \<circ> ((1-\<phi>)\<cdot>g), range in (-1,1), continuous.\<close>
+  qed
   show ?thesis using hF_cont hF_ext by (by100 blast)
 qed
 
