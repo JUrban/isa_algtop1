@@ -799,8 +799,90 @@ proof -
     qed
     \<comment> \<open>Step 3: Compose nulhomotopy of g with g^{-1}: K \<rightarrow> A.
        inclusion K \<hookrightarrow> R^2-{origin} = g \<circ> g^{-1}, so nulhomotopic.\<close>
-    show ?thesis
-      sorry \<comment> \<open>Use Theorem_26_6 to get g: A \<cong> K. Compose hg_nul with g^{-1}.\<close>
+    \<comment> \<open>g: A \<cong> K via Theorem 26.6 (compact, Hausdorff, continuous bijection).\<close>
+    let ?Y = "UNIV - {?origin} :: (real\<times>real) set"
+    let ?TY = "subspace_topology UNIV ?TR2 (UNIV - {?origin})"
+    have hTK: "is_topology_on ?K (subspace_topology UNIV ?TR2 ?K)"
+    proof -
+      have "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
+    have hK_haus: "is_hausdorff_on ?K (subspace_topology UNIV ?TR2 ?K)"
+      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff. R^2 is Hausdorff (metric).\<close>
+    have hg_K: "top1_continuous_map_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
+      by (rule top1_continuous_map_on_codomain_shrink[OF hg_cont]) (by100 simp)+
+    have hg_bij: "bij_betw ?g A ?K"
+      unfolding bij_betw_def using hg_inj by (by100 blast)
+    have hTA: "is_topology_on A TA" using hcomp unfolding top1_compact_on_def by (by100 blast)
+    have hg_homeo: "top1_homeomorphism_on A TA ?K (subspace_topology UNIV ?TR2 ?K) ?g"
+      by (rule Theorem_26_6[OF hTA hTK hcomp hK_haus hg_K hg_bij])
+    \<comment> \<open>g^{-1}: K \<rightarrow> A continuous.\<close>
+    have hginv: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) A TA (inv_into A ?g)"
+      using hg_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>Compose nulhomotopy of g with g^{-1}: H(g^{-1}(y), t) is a nulhomotopy of inclusion.\<close>
+    obtain c where hcY: "c \<in> ?Y"
+        and hghom: "top1_homotopic_on A TA ?Y ?TY ?g (\<lambda>_. c)"
+      using hg_nul unfolding top1_nulhomotopic_on_def by (by100 blast)
+    obtain H where hH: "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY H"
+        and hH0: "\<forall>x\<in>A. H (x, 0) = ?g x" and hH1: "\<forall>x\<in>A. H (x, 1) = c"
+      using hghom unfolding top1_homotopic_on_def by (by100 blast)
+    \<comment> \<open>H': K \<times> I \<rightarrow> R^2-{origin}, H'(y,t) = H(g^{-1}(y), t).\<close>
+    define H' where "H' = (\<lambda>(y,t). H (inv_into A ?g y, t))"
+    have hH'_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+        ?Y ?TY H'"
+    proof -
+      \<comment> \<open>H' = H \<circ> (g^{-1} \<times> id). Both g^{-1} and id are continuous.\<close>
+      have hpair: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+          (A \<times> I_set) (product_topology_on TA I_top) (\<lambda>(y,t). (inv_into A ?g y, t))"
+        sorry \<comment> \<open>Product of g^{-1} and id, by Theorem_18_4.\<close>
+      have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+          ?Y ?TY (H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+        by (rule top1_continuous_map_on_comp[OF hpair hH])
+      moreover have "H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = H'"
+      proof (rule ext)
+        fix p show "(H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t))) p = H' p"
+          unfolding H'_def comp_def by (cases p) (by100 simp)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hH'0: "\<forall>y\<in>?K. H' (y, 0) = y"
+    proof (intro ballI)
+      fix y assume "y \<in> ?K"
+      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
+      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
+      hence "H' (y, 0) = H (x, 0)" unfolding H'_def by (by100 simp)
+      also have "\<dots> = ?g x" using hH0 hx by (by100 blast)
+      finally show "H' (y, 0) = y" using hy by (by100 simp)
+    qed
+    have hH'1: "\<forall>y\<in>?K. H' (y, 1) = c"
+    proof (intro ballI)
+      fix y assume "y \<in> ?K"
+      then obtain x where hx: "x \<in> A" and hy: "y = ?g x" by (by100 blast)
+      have "inv_into A ?g y = x" unfolding hy using inv_into_f_f[OF hg_inj hx] by (by100 simp)
+      hence "H' (y, 1) = H (x, 1)" unfolding H'_def by (by100 simp)
+      also have "\<dots> = c" using hH1 hx by (by100 blast)
+      finally show "H' (y, 1) = c" .
+    qed
+    \<comment> \<open>The inclusion id: K \<rightarrow> R^2-{origin} is nulhomotopic via H'.\<close>
+    have hid_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x)"
+    proof -
+      have hKsub: "?K \<subseteq> ?Y" using hK_sub by (by100 blast)
+      have hKY: "?K \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      have "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
+        sorry \<comment> \<open>Inclusion continuous.\<close>
+      hence "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
+        unfolding id_def .
+      thus ?thesis using top1_continuous_map_on_codomain_shrink[OF _ _ hKY]
+        sorry \<comment> \<open>Shrink codomain from UNIV to UNIV-{origin}.\<close>
+    qed
+    have hconst_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>_. c)"
+      sorry \<comment> \<open>Constant map continuous.\<close>
+    have "top1_homotopic_on ?K (subspace_topology UNIV ?TR2 ?K) ?Y ?TY (\<lambda>x. x) (\<lambda>_. c)"
+      unfolding top1_homotopic_on_def
+      using hid_cont hconst_cont hH'_cont hH'0 hH'1 by (by100 blast)
+    thus ?thesis unfolding top1_nulhomotopic_on_def using hcY by (by100 blast)
   qed
   \<comment> \<open>Step 5 (Contradiction argument, following Munkres):
      Suppose for contradiction that ?origin is in a BOUNDED component C of R^2-K.
