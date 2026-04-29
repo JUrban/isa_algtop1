@@ -149,8 +149,98 @@ lemma Theorem_35_1_R:
       (UNIV::real set) order_topology_on_UNIV f"
   shows "\<exists>F. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV F
            \<and> (\<forall>x\<in>A. F x = f x)"
-  sorry \<comment> \<open>Uses h(x)=x/(1+|x|): R \<rightarrow> (-1,1), Theorem_35_1 for [-1,1],
-     Urysohn to separate A from g\<inverse>(\<pm>1), then h\<inverse>(\<phi>\<cdot>g) extends.\<close>
+proof -
+  have hTopX: "is_topology_on X TX"
+    using hX unfolding top1_normal_on_def top1_T1_on_def by (by100 blast)
+  have hAX: "A \<subseteq> X" by (rule closedin_sub[OF hA])
+  \<comment> \<open>Step 1: h: R \<rightarrow> (-1,1), h(x) = x / (1+|x|). Continuous bijection.\<close>
+  define h :: "real \<Rightarrow> real" where "h = (\<lambda>x. x / (1 + \<bar>x\<bar>))"
+  define h_inv :: "real \<Rightarrow> real" where "h_inv = (\<lambda>y. y / (1 - \<bar>y\<bar>))"
+  have hh_range: "\<And>x::real. h x \<in> {y. -1 < y \<and> y < 1}"
+  proof -
+    fix x :: real
+    have hpos: "1 + \<bar>x\<bar> > 0" by (by100 linarith)
+    have hne: "1 + \<bar>x\<bar> \<noteq> 0" using hpos by (by100 linarith)
+    have "- 1 < h x"
+    proof -
+      have "-1 - \<bar>x\<bar> < x" by (by100 linarith)
+      hence "(-1 - \<bar>x\<bar>) / (1 + \<bar>x\<bar>) < x / (1 + \<bar>x\<bar>)"
+        using hpos by (rule divide_strict_right_mono)
+      moreover have "(-1 - \<bar>x\<bar>) / (1 + \<bar>x\<bar>) = -1"
+      proof -
+        have h_eq: "(-1 - \<bar>x\<bar>) = -(1 + \<bar>x\<bar>)" by (by100 linarith)
+        have "(1 + \<bar>x\<bar>) / (1 + \<bar>x\<bar>) = (1::real)" using hne by (by100 simp)
+        hence "-(1 + \<bar>x\<bar>) / (1 + \<bar>x\<bar>) = -(1::real)" by (by100 linarith)
+        thus ?thesis unfolding h_eq[symmetric] .
+      qed
+      ultimately show ?thesis unfolding h_def by (by100 linarith)
+    qed
+    moreover have "h x < 1"
+    proof -
+      have "x < 1 + \<bar>x\<bar>" by (by100 linarith)
+      hence "x / (1 + \<bar>x\<bar>) < (1 + \<bar>x\<bar>) / (1 + \<bar>x\<bar>)"
+        using hpos by (rule divide_strict_right_mono)
+      moreover have "(1 + \<bar>x\<bar>) / (1 + \<bar>x\<bar>) = 1" using hne by (by100 simp)
+      ultimately show ?thesis unfolding h_def by (by100 linarith)
+    qed
+    ultimately show "h x \<in> {y. -1 < y \<and> y < 1}" by (by100 simp)
+  qed
+  have hh_inv: "\<And>y::real. -1 < y \<Longrightarrow> y < 1 \<Longrightarrow> h (h_inv y) = y"
+    sorry \<comment> \<open>Algebra: h(y/(1-|y|)) = y for |y| < 1.\<close>
+  have hh_inv2: "\<And>x::real. h_inv (h x) = x"
+    sorry \<comment> \<open>Algebra: h_inv(x/(1+|x|)) = x.\<close>
+  \<comment> \<open>Step 2: h \<circ> f: A \<rightarrow> (-1,1) \<subset> [-1,1]. Compose, extend via Theorem_35_1.\<close>
+  have hhf_range: "\<forall>a\<in>A. h (f a) \<in> top1_closed_interval (-1) 1"
+  proof (intro ballI)
+    fix a assume "a \<in> A"
+    have "h (f a) \<in> {y. -1 < y \<and> y < 1}" by (rule hh_range)
+    thus "h (f a) \<in> top1_closed_interval (-1) 1"
+      unfolding top1_closed_interval_def by (by100 simp)
+  qed
+  have hhf_cont: "top1_continuous_map_on A (subspace_topology X TX A)
+      (top1_closed_interval (-1) 1) (top1_closed_interval_topology (-1) 1) (\<lambda>x. h (f x))"
+    sorry \<comment> \<open>h continuous, f continuous, compose. Range in [-1,1].\<close>
+  obtain g where hg: "top1_continuous_map_on X TX (top1_closed_interval (-1) 1)
+      (top1_closed_interval_topology (-1) 1) g"
+      and hg_ext: "\<forall>x\<in>A. g x = h (f x)"
+    using Theorem_35_1[OF hX hA hhf_cont] by (by100 blast)
+  \<comment> \<open>Step 3: B = g\<inverse>({-1,1}) closed, disjoint from A. Urysohn separation.\<close>
+  define B where "B = {x \<in> X. g x = -1 \<or> g x = 1}"
+  have hB_closed: "closedin_on X TX B"
+    sorry \<comment> \<open>Preimage of closed {-1,1} under continuous g.\<close>
+  have hAB_disj: "A \<inter> B = {}"
+  proof (rule equals0I)
+    fix x assume "x \<in> A \<inter> B"
+    hence hxA: "x \<in> A" and hxB: "x \<in> B" by (by100 blast)+
+    have "g x = h (f x)" using hg_ext hxA by (by100 blast)
+    moreover have "h (f x) \<in> {y. -1 < y \<and> y < 1}" by (rule hh_range)
+    ultimately have "g x \<noteq> -1 \<and> g x \<noteq> 1" by (by100 simp)
+    thus False using hxB unfolding B_def by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: Urysohn \<phi>: X \<rightarrow> [0,1] with \<phi>|_A = 1, \<phi>|_B = 0.\<close>
+  obtain \<phi> where h\<phi>: "top1_continuous_map_on X TX (top1_closed_interval 0 1)
+      (top1_closed_interval_topology 0 1) \<phi>"
+      and h\<phi>A: "\<forall>x\<in>A. \<phi> x = 0" and h\<phi>B: "\<forall>x\<in>B. \<phi> x = 1"
+    using Theorem_33_1[OF hX hA hB_closed hAB_disj, of 0 1] by (by100 auto)
+  \<comment> \<open>Step 5: Define F(x) = h_inv((1-\<phi>(x)) \<cdot> g(x)).
+     On A: \<phi>=0, g=h\<circ>f, so (1-0)\<cdot>h(f(x)) = h(f(x)), F(x)=h_inv(h(f(x)))=f(x).
+     On B: \<phi>=1, so (1-1)\<cdot>g(x)=0, F(x)=h_inv(0)=0. Avoids \<pm>1.
+     Elsewhere: |g(x)|<1 (x\<notin>B), |(1-\<phi>(x))\<cdot>g(x)| \<le> |g(x)| < 1.\<close>
+  define F where "F = (\<lambda>x. h_inv ((1 - \<phi> x) * g x))"
+  have hF_ext: "\<forall>x\<in>A. F x = f x"
+  proof (intro ballI)
+    fix x assume hx: "x \<in> A"
+    have "\<phi> x = 0" using h\<phi>A hx by (by100 blast)
+    hence "F x = h_inv (g x)" unfolding F_def by (by100 simp)
+    also have "\<dots> = h_inv (h (f x))" using hg_ext hx by (by100 simp)
+    also have "\<dots> = f x" by (rule hh_inv2)
+    finally show "F x = f x" .
+  qed
+  have hF_cont: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV F"
+    sorry \<comment> \<open>\<phi>, g continuous, arithmetic ops continuous, h_inv continuous on (-1,1),
+       (1-\<phi>)\<cdot>g maps into (-1,1), compose.\<close>
+  show ?thesis using hF_cont hF_ext by (by100 blast)
+qed
 
 section \<open>*\<S>62 Invariance of Domain\<close>
 
