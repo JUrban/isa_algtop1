@@ -9766,7 +9766,176 @@ proof -
   \<comment> \<open>The induced map j_bar: G/N \<rightarrow> H is a bijective homomorphism.
      Well-definedness, homomorphism, injectivity, surjectivity follow from
      normal_coset_eq + kernel property + hom property.\<close>
-  have "top1_group_iso_on ?Q ?mulQ H mulH ?j_bar" sorry
+  \<comment> \<open>Well-definedness: j(g) depends only on the coset.\<close>
+  \<comment> \<open>Hom preserves identity: j(e) = eH (since e \<in> N = ker(j)).\<close>
+  have hj_e: "j e = eH"
+  proof -
+    have "e \<in> N" by (rule group_e_mem[OF hN_grp])
+    hence "e \<in> top1_group_kernel_on G eH j" using hj_ker by (by100 simp)
+    thus ?thesis unfolding top1_group_kernel_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Hom preserves inverse: j(invg g) = invgH(j g).\<close>
+  have hj_inv: "\<And>g0. g0 \<in> G \<Longrightarrow> j (invg g0) = invgH (j g0)"
+  proof -
+    fix g0 assume hg0: "g0 \<in> G"
+    have hjg0: "j g0 \<in> H" using hj_hom hg0 unfolding top1_group_hom_on_def by (by100 blast)
+    have hinvg0: "invg g0 \<in> G" by (rule group_inv_closed[OF hG hg0])
+    have hjinvg0: "j (invg g0) \<in> H" using hj_hom hinvg0 unfolding top1_group_hom_on_def by (by100 blast)
+    have "j (mul (invg g0) g0) = mulH (j (invg g0)) (j g0)"
+      using hj_hom hinvg0 hg0 unfolding top1_group_hom_on_def by (by100 blast)
+    hence "mulH (j (invg g0)) (j g0) = j (mul (invg g0) g0)" by (by100 simp)
+    also have "mul (invg g0) g0 = e" by (rule group_inv_left[OF hG hg0])
+    also have "j e = eH" by (rule hj_e)
+    finally have "mulH (j (invg g0)) (j g0) = eH" .
+    \<comment> \<open>In group H: if a*b=eH then a=invgH(b).\<close>
+    have "j (invg g0) = mulH (j (invg g0)) (mulH (j g0) (invgH (j g0)))"
+      using group_inv_right[OF hH hjg0] group_id_right[OF hH hjinvg0] by (by100 simp)
+    also have "\<dots> = mulH (mulH (j (invg g0)) (j g0)) (invgH (j g0))"
+    proof -
+      have "invgH (j g0) \<in> H" by (rule group_inv_closed[OF hH hjg0])
+      show ?thesis using group_assoc[OF hH hjinvg0 hjg0 \<open>invgH (j g0) \<in> H\<close>] by (by100 simp)
+    qed
+    also have "mulH (j (invg g0)) (j g0) = eH"
+      by (rule \<open>mulH (j (invg g0)) (j g0) = eH\<close>)
+    also have "mulH eH (invgH (j g0)) = invgH (j g0)"
+      using group_inv_closed[OF hH hjg0] by (rule group_id_left[OF hH])
+    finally show "j (invg g0) = invgH (j g0)" .
+  qed
+  have hj_wd: "\<And>g1 g2. g1 \<in> G \<Longrightarrow> g2 \<in> G \<Longrightarrow>
+      top1_group_coset_on G mul N g1 = top1_group_coset_on G mul N g2 \<Longrightarrow> j g1 = j g2"
+  proof -
+    fix g1 g2 assume hg1: "g1 \<in> G" and hg2: "g2 \<in> G"
+        and hcoset: "top1_group_coset_on G mul N g1 = top1_group_coset_on G mul N g2"
+    have hinvg1: "invg g1 \<in> G" by (rule group_inv_closed[OF hG hg1])
+    have "mul (invg g1) g2 \<in> N" using normal_coset_eq[OF hG hN hg1 hg2] hcoset by (by100 simp)
+    hence "j (mul (invg g1) g2) = eH" using hj_ker
+      unfolding top1_group_kernel_on_def
+      using group_mul_closed[OF hG hinvg1 hg2] by (by100 blast)
+    moreover have "j (mul (invg g1) g2) = mulH (j (invg g1)) (j g2)"
+      using hj_hom hinvg1 hg2 unfolding top1_group_hom_on_def by (by100 blast)
+    ultimately have "mulH (invgH (j g1)) (j g2) = eH"
+      using hj_inv[OF hg1] by (by100 simp)
+    have hjg1: "j g1 \<in> H" using hj_hom hg1 unfolding top1_group_hom_on_def by (by100 blast)
+    have hjg2: "j g2 \<in> H" using hj_hom hg2 unfolding top1_group_hom_on_def by (by100 blast)
+    have hinvjg1: "invgH (j g1) \<in> H" by (rule group_inv_closed[OF hH hjg1])
+    \<comment> \<open>invgH(j g1) * j g2 = eH implies j g2 = j g1.\<close>
+    have "j g2 = mulH eH (j g2)" using group_id_left[OF hH hjg2] by (by100 simp)
+    also have "\<dots> = mulH (mulH (j g1) (invgH (j g1))) (j g2)"
+      using group_inv_right[OF hH hjg1] by (by100 simp)
+    also have "\<dots> = mulH (j g1) (mulH (invgH (j g1)) (j g2))"
+      by (rule group_assoc[OF hH hjg1 hinvjg1 hjg2])
+    also have "mulH (invgH (j g1)) (j g2) = eH"
+      by (rule \<open>mulH (invgH (j g1)) (j g2) = eH\<close>)
+    also have "mulH (j g1) eH = j g1" by (rule group_id_right[OF hH hjg1])
+    finally show "j g1 = j g2" by (by100 simp)
+  qed
+  have "top1_group_iso_on ?Q ?mulQ H mulH ?j_bar"
+    unfolding top1_group_iso_on_def
+  proof (intro conjI)
+    \<comment> \<open>j_bar is a homomorphism.\<close>
+    show "top1_group_hom_on ?Q ?mulQ H mulH ?j_bar"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix C assume hC: "C \<in> ?Q"
+      have hsC: "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+        using hsome[OF hC] by (by100 blast)
+      show "?j_bar C \<in> H" using hj_hom hsC unfolding top1_group_hom_on_def by (by100 blast)
+    next
+      fix C1 C2 assume hC1: "C1 \<in> ?Q" and hC2: "C2 \<in> ?Q"
+      obtain g1 where hg1: "g1 \<in> G" and hC1_eq: "C1 = top1_group_coset_on G mul N g1"
+        using hsome[OF hC1] by (by100 blast)
+      obtain g2 where hg2: "g2 \<in> G" and hC2_eq: "C2 = top1_group_coset_on G mul N g2"
+        using hsome[OF hC2] by (by100 blast)
+      let ?r1 = "SOME g. g \<in> G \<and> C1 = top1_group_coset_on G mul N g"
+      let ?r2 = "SOME g. g \<in> G \<and> C2 = top1_group_coset_on G mul N g"
+      let ?r12 = "SOME g. g \<in> G \<and> ?mulQ C1 C2 = top1_group_coset_on G mul N g"
+      have hr1: "?r1 \<in> G" and hr1_eq: "C1 = top1_group_coset_on G mul N ?r1"
+        using hsome[OF hC1] by (by100 blast)+
+      have hr2: "?r2 \<in> G" and hr2_eq: "C2 = top1_group_coset_on G mul N ?r2"
+        using hsome[OF hC2] by (by100 blast)+
+      have hprod_eq: "?mulQ C1 C2 = top1_group_coset_on G mul N (mul ?r1 ?r2)"
+        using hr1_eq hr2_eq normal_coset_mul_eq[OF hG hN hr1 hr2] by (by100 simp)
+      have hprod_in: "?mulQ C1 C2 \<in> ?Q"
+        unfolding top1_quotient_group_carrier_on_def
+        using group_mul_closed[OF hG hr1 hr2] hprod_eq by (by100 blast)
+      have hr12: "?r12 \<in> G" and hr12_eq: "?mulQ C1 C2 = top1_group_coset_on G mul N ?r12"
+        using hsome[OF hprod_in] by (by100 blast)+
+      \<comment> \<open>?r12 and mul ?r1 ?r2 are in the same coset, so j(?r12) = j(mul ?r1 ?r2).\<close>
+      have hr12_mem: "mul ?r1 ?r2 \<in> G" by (rule group_mul_closed[OF hG hr1 hr2])
+      have "j ?r12 = j (mul ?r1 ?r2)"
+      proof (rule hj_wd[OF hr12 hr12_mem])
+        show "top1_group_coset_on G mul N ?r12 = top1_group_coset_on G mul N (mul ?r1 ?r2)"
+          using hr12_eq hprod_eq by (by100 simp)
+      qed
+      also have "\<dots> = mulH (j ?r1) (j ?r2)"
+        using hj_hom hr1 hr2 unfolding top1_group_hom_on_def by (by100 blast)
+      finally show "?j_bar (?mulQ C1 C2) = mulH (?j_bar C1) (?j_bar C2)" .
+    qed
+  next
+    \<comment> \<open>j_bar is bijective.\<close>
+    show "bij_betw ?j_bar ?Q H"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      \<comment> \<open>Injectivity: j_bar(C1) = j_bar(C2) implies C1 = C2.\<close>
+      show "inj_on ?j_bar ?Q"
+      proof (rule inj_onI)
+        fix C1 C2 assume hC1: "C1 \<in> ?Q" and hC2: "C2 \<in> ?Q" and heq: "?j_bar C1 = ?j_bar C2"
+        let ?r1 = "SOME g. g \<in> G \<and> C1 = top1_group_coset_on G mul N g"
+        let ?r2 = "SOME g. g \<in> G \<and> C2 = top1_group_coset_on G mul N g"
+        have hr1: "?r1 \<in> G" and hC1_eq: "C1 = top1_group_coset_on G mul N ?r1"
+          using hsome[OF hC1] by (by100 blast)+
+        have hr2: "?r2 \<in> G" and hC2_eq: "C2 = top1_group_coset_on G mul N ?r2"
+          using hsome[OF hC2] by (by100 blast)+
+        \<comment> \<open>j(?r1) = j(?r2), so j(invg(?r1) * ?r2) = eH, so invg(?r1)*?r2 \<in> ker = N.\<close>
+        have "j ?r1 = j ?r2" using heq by (by100 simp)
+        hence "mul (invg ?r1) ?r2 \<in> N"
+        proof -
+          have hinvr1: "invg ?r1 \<in> G" by (rule group_inv_closed[OF hG hr1])
+          have "j (mul (invg ?r1) ?r2) = mulH (j (invg ?r1)) (j ?r2)"
+            using hj_hom hinvr1 hr2 unfolding top1_group_hom_on_def by (by100 blast)
+          also have "j (invg ?r1) = invgH (j ?r1)" by (rule hj_inv[OF hr1])
+          also have "mulH (invgH (j ?r1)) (j ?r2) = mulH (invgH (j ?r1)) (j ?r1)"
+            using \<open>j ?r1 = j ?r2\<close> by (by100 simp)
+          also have "\<dots> = eH"
+          proof -
+            have "j ?r1 \<in> H" using hj_hom hr1 unfolding top1_group_hom_on_def by (by100 blast)
+            thus ?thesis by (rule group_inv_left[OF hH])
+          qed
+          finally have "j (mul (invg ?r1) ?r2) = eH" .
+          hence "mul (invg ?r1) ?r2 \<in> {x \<in> G. j x = eH}"
+            using group_mul_closed[OF hG hinvr1 hr2] by (by100 blast)
+          thus ?thesis using hj_ker unfolding top1_group_kernel_on_def by (by100 simp)
+        qed
+        thus "C1 = C2" using normal_coset_eq[OF hG hN hr1 hr2] hC1_eq hC2_eq by (by100 simp)
+      qed
+    next
+      \<comment> \<open>Surjectivity: for h \<in> H, take g \<in> G with j(g) = h. Then j_bar(coset g) = h.\<close>
+      show "?j_bar ` ?Q = H"
+      proof (rule set_eqI)
+        fix h show "h \<in> ?j_bar ` ?Q \<longleftrightarrow> h \<in> H"
+        proof
+          assume "h \<in> ?j_bar ` ?Q"
+          then obtain C where hC: "C \<in> ?Q" and heq: "h = ?j_bar C" by (by100 blast)
+          have "(SOME g. g \<in> G \<and> C = top1_group_coset_on G mul N g) \<in> G"
+            using hsome[OF hC] by (by100 blast)
+          thus "h \<in> H" using heq hj_hom unfolding top1_group_hom_on_def by (by100 blast)
+        next
+          assume "h \<in> H"
+          then obtain g where hg: "g \<in> G" and hgj: "j g = h"
+            using hj_surj by (by100 force)
+          let ?C = "top1_group_coset_on G mul N g"
+          have hCQ: "?C \<in> ?Q" unfolding top1_quotient_group_carrier_on_def
+            using hg by (by100 blast)
+          let ?r = "SOME ga. ga \<in> G \<and> ?C = top1_group_coset_on G mul N ga"
+          have hr: "?r \<in> G" and hr_eq: "?C = top1_group_coset_on G mul N ?r"
+            using hsome[OF hCQ] by (by100 blast)+
+          have "j ?r = j g" by (rule hj_wd[OF hr hg hr_eq[symmetric]])
+          hence "?j_bar ?C = h" using hgj by (by100 simp)
+          thus "h \<in> ?j_bar ` ?Q" using hCQ by (by100 blast)
+        qed
+      qed
+    qed
+  qed
   hence hiso: "top1_groups_isomorphic_on ?Q ?mulQ H mulH"
     unfolding top1_groups_isomorphic_on_def by (by100 blast)
   show ?thesis
