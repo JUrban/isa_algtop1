@@ -3953,10 +3953,101 @@ proof -
     qed
   qed
   \<comment> \<open>(5) Inverse closure.\<close>
+  \<comment> \<open>Helper: map (coordinatewise inverse) preserves G.\<close>
+  have hmap_inv_G: "\<And>ws. ws \<in> G \<Longrightarrow> map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws \<in> G"
+  proof -
+    fix ws assume hws: "ws \<in> G"
+    let ?ws' = "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws"
+    show "?ws' \<in> G"
+    proof (rule hG_intro)
+      show "\<forall>i<length ?ws'. fst (?ws'!i) \<in> J \<and> snd (?ws'!i) \<in> GG (fst (?ws'!i))
+          \<and> snd (?ws'!i) \<noteq> eGG (fst (?ws'!i))"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ?ws'"
+        hence hi': "i < length ws" by (by100 simp)
+        have helem: "fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i)) \<and> snd (ws!i) \<noteq> eGG (fst (ws!i))"
+          using hG_elem[OF hws hi'] .
+        have hgrp: "top1_is_group_on (GG (fst (ws!i))) (mulGG (fst (ws!i))) (eGG (fst (ws!i))) (invgGG (fst (ws!i)))"
+          using hgroups helem by (by100 blast)
+        have hfst: "fst (?ws'!i) = fst (ws!i)"
+          using hi' by (cases "ws!i") (by100 simp)
+        have hsnd: "snd (?ws'!i) = invgGG (fst (ws!i)) (snd (ws!i))"
+          using hi' by (cases "ws!i") (by100 simp)
+        have "invgGG (fst (ws!i)) (snd (ws!i)) \<in> GG (fst (ws!i))"
+          using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+        moreover have "invgGG (fst (ws!i)) (snd (ws!i)) \<noteq> eGG (fst (ws!i))"
+        proof
+          assume heq: "invgGG (fst (ws!i)) (snd (ws!i)) = eGG (fst (ws!i))"
+          have "mulGG (fst (ws!i)) (invgGG (fst (ws!i)) (snd (ws!i))) (snd (ws!i)) = eGG (fst (ws!i))"
+            using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+          hence "mulGG (fst (ws!i)) (eGG (fst (ws!i))) (snd (ws!i)) = eGG (fst (ws!i))"
+            using heq by (by100 simp)
+          moreover have "mulGG (fst (ws!i)) (eGG (fst (ws!i))) (snd (ws!i)) = snd (ws!i)"
+            using hgrp helem unfolding top1_is_group_on_def by (by100 blast)
+          ultimately have "snd (ws!i) = eGG (fst (ws!i))" by (by100 simp)
+          thus False using helem by (by100 simp)
+        qed
+        ultimately show "fst (?ws'!i) \<in> J \<and> snd (?ws'!i) \<in> GG (fst (?ws'!i))
+            \<and> snd (?ws'!i) \<noteq> eGG (fst (?ws'!i))"
+          unfolding hfst hsnd using helem by (by100 blast)
+      qed
+    next
+      show "\<forall>i. i+1 < length ?ws' \<longrightarrow> fst (?ws'!i) \<noteq> fst (?ws'!(i+1))"
+      proof (intro allI impI)
+        fix i assume hi: "i+1 < length ?ws'"
+        hence hi': "i+1 < length ws" by (by100 simp)
+        have "fst (?ws'!i) = fst (ws!i)" using hi' by (cases "ws!i") (by100 simp)
+        moreover have "fst (?ws'!(i+1)) = fst (ws!(i+1))" using hi' by (cases "ws!(i+1)") (by100 simp)
+        moreover have "fst (ws!i) \<noteq> fst (ws!(i+1))" using hG_alt[OF hws] hi' by (by100 blast)
+        ultimately show "fst (?ws'!i) \<noteq> fst (?ws'!(i+1))" by (by100 simp)
+      qed
+    qed
+  qed
+  \<comment> \<open>Helper: rev preserves G.\<close>
+  have hrev_G: "\<And>ws. ws \<in> G \<Longrightarrow> rev ws \<in> G"
+  proof -
+    fix ws assume hws: "ws \<in> G"
+    show "rev ws \<in> G"
+    proof (rule hG_intro)
+      show "\<forall>i<length (rev ws). fst ((rev ws)!i) \<in> J \<and> snd ((rev ws)!i) \<in> GG (fst ((rev ws)!i))
+          \<and> snd ((rev ws)!i) \<noteq> eGG (fst ((rev ws)!i))"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (rev ws)"
+        hence hi_ws: "i < length ws" by (by100 simp)
+        hence hi': "length ws - 1 - i < length ws" by (by100 linarith)
+        have hrev_eq: "(rev ws)!i = ws!(length ws - Suc i)" using rev_nth[OF hi_ws] .
+        have hi'': "length ws - Suc i < length ws" using hi_ws by (by100 linarith)
+        show "fst ((rev ws)!i) \<in> J \<and> snd ((rev ws)!i) \<in> GG (fst ((rev ws)!i))
+            \<and> snd ((rev ws)!i) \<noteq> eGG (fst ((rev ws)!i))"
+          unfolding hrev_eq using hG_elem[OF hws hi''] .
+      qed
+    next
+      show "\<forall>i. i+1 < length (rev ws) \<longrightarrow> fst ((rev ws)!i) \<noteq> fst ((rev ws)!(i+1))"
+      proof (intro allI impI)
+        fix i assume hi: "i+1 < length (rev ws)"
+        hence hi': "i+1 < length ws" and hi_ws: "i < length ws" by (by100 simp)+
+        have hrev_i: "(rev ws)!i = ws!(length ws - Suc i)" using rev_nth[OF hi_ws] .
+        have hi1_ws: "i+1 < length ws" using hi' .
+        have hrev_i1: "(rev ws)!(i+1) = ws!(length ws - Suc (i+1))" using rev_nth[OF hi1_ws] .
+        have hj_eq: "length ws - Suc (i+1) + 1 = length ws - Suc i"
+          using hi' by (by100 linarith)
+        have hj_lt: "length ws - Suc (i+1) + 1 < length ws" using hi' by (by100 linarith)
+        have "fst (ws!(length ws - Suc (i+1))) \<noteq> fst (ws!(length ws - Suc (i+1) + 1))"
+          using hG_alt[OF hws hj_lt] .
+        hence "fst (ws!(length ws - Suc (i+1))) \<noteq> fst (ws!(length ws - Suc i))"
+          unfolding hj_eq .
+        hence "fst ((rev ws)!(i+1)) \<noteq> fst ((rev ws)!i)"
+          unfolding hrev_i hrev_i1 .
+        thus "fst ((rev ws)!i) \<noteq> fst ((rev ws)!(i+1))" by (rule not_sym)
+      qed
+    qed
+  qed
   have hinvg_closed: "\<forall>ws\<in>G. invg ws \<in> G"
-    sorry \<comment> \<open>Reverse + coordinatewise inverse preserves reducedness.
-       Each element: invgGG \<alpha> g \<in> GG \<alpha> (inverse closure) and \<noteq> eGG (from g \<noteq> eGG).
-       Alternating indices preserved by rev (reversed order).\<close>
+  proof (intro ballI)
+    fix ws assume "ws \<in> G"
+    have "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws \<in> G" by (rule hmap_inv_G[OF \<open>ws \<in> G\<close>])
+    thus "invg ws \<in> G" unfolding invg_def by (rule hrev_G)
+  qed
   \<comment> \<open>(6) Associativity: mul (mul x y) z = mul x (mul y z).\<close>
   have hassoc: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. \<forall>ws3\<in>G. mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
     sorry \<comment> \<open>The hardest part. By induction on ws1.\<close>
