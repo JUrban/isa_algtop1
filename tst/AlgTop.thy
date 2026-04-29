@@ -589,6 +589,77 @@ proof -
   show ?thesis using hF_cont hF_ext by (by100 blast)
 qed
 
+section \<open>Additional Corollaries from \<S>51-\<S>60 (Main Theorems in Cached Sessions)\<close>
+
+text \<open>Corollary 52.2 (Munkres): If X is path connected and x0, x1 \<in> X, then
+  \<pi>_1(X, x0) is isomorphic to \<pi>_1(X, x1).\<close>
+corollary Corollary_52_2_basepoint_independent:
+  assumes "top1_path_connected_on X TX" and "x0 \<in> X" and "x1 \<in> X"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+    (top1_fundamental_group_carrier X TX x1) (top1_fundamental_group_mul X TX x1)"
+proof -
+  have "is_topology_on X TX"
+    using assms(1) unfolding top1_path_connected_on_def by (by100 blast)
+  thus ?thesis by (rule Theorem_52_1_iso[OF _ assms])
+qed
+
+text \<open>Lemma 52.3 (Munkres): In a simply connected space, any two paths with the same
+  initial and terminal points are path homotopic.
+  Already proved as simply_connected_paths_homotopic in Top1_Ch9_13.\<close>
+lemma Lemma_52_3_simply_connected_unique_paths:
+  assumes "top1_simply_connected_on X TX"
+      and "top1_is_path_on X TX x0 x1 f" and "top1_is_path_on X TX x0 x1 g"
+      and "x0 \<in> X"
+  shows "top1_path_homotopic_on X TX x0 x1 f g"
+  by (rule simply_connected_paths_homotopic[OF assms])
+
+text \<open>Corollary 52.5 (Munkres): If h: (X, x0) \<rightarrow> (Y, y0) is a homeomorphism then
+  h_* : \<pi>_1(X, x0) \<rightarrow> \<pi>_1(Y, y0) is an isomorphism.\<close>
+corollary Corollary_52_5_homeomorphism_iso:
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+      and "top1_homeomorphism_on X TX Y TY h"
+      and "x0 \<in> X" and "h x0 = y0"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+    (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)"
+  sorry
+  \<comment> \<open>Proof outline: h_* is a hom (by induced_on_is_hom). h is a homeomorphism so
+     h^{-1} exists and (h^{-1})_* \<circ> h_* = (h^{-1} \<circ> h)_* = id_* = id (by Theorem 52.4).
+     Similarly h_* \<circ> (h^{-1})_* = id. So h_* is bijective. Needs careful formal work
+     with Theorem_52_4_composition and Theorem_52_4_identity.\<close>
+
+text \<open>Theorem 57.2 (Munkres): There is no continuous antipode-preserving map g : S^2 \<rightarrow> S^1.
+  Proof: restricting g to the equator S^1 \<hookrightarrow> S^2 gives an antipode-preserving
+  S^1 \<rightarrow> S^1 map, which by Theorem 57.1 is not nulhomotopic. But the upper hemisphere
+  E \<cong> B^2 extends g|_{S^1} to B^2, making it nulhomotopic. Contradiction.\<close>
+theorem Theorem_57_2_no_antipode_S2_to_S1:
+  assumes "top1_continuous_map_on top1_S2 top1_S2_topology top1_S1 top1_S1_topology g"
+      and "\<forall>x\<in>top1_S2. g (- fst x, - fst (snd x), - snd (snd x)) =
+             (- fst (g x), - snd (g x))"
+  shows False
+  sorry
+
+text \<open>Corollary 60.2 (Munkres): pi_1(T^2) is isomorphic to Z x Z.\<close>
+corollary Corollary_60_2_torus_pi1:
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+      and "top1_homeomorphism_on X TX (top1_S1 \<times> top1_S1)
+             (product_topology_on top1_S1_topology top1_S1_topology) h"
+      and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+    (UNIV :: (int \<times> int) set) (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  sorry
+
+text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
+lemma Lemma_60_5_figure_eight_not_abelian:
+  assumes "is_topology_on X TX"
+      and "top1_is_wedge_of_circles_on X TX {0::nat, 1} p"
+  shows "\<not> (\<forall>a\<in>top1_fundamental_group_carrier X TX p.
+             \<forall>b\<in>top1_fundamental_group_carrier X TX p.
+               top1_fundamental_group_mul X TX p a b = top1_fundamental_group_mul X TX p b a)"
+  sorry
+
 section \<open>*\<S>62 Invariance of Domain\<close>
 
 text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
