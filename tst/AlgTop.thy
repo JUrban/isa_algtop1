@@ -4110,7 +4110,8 @@ proof -
     fix ws assume hws: "ws \<in> G"
     \<comment> \<open>Right inverse: mul ws (invg ws) = e. Similar argument with reversed cancellation.\<close>
     show "mul ws (invg ws) = e"
-      sorry \<comment> \<open>Symmetric: each g \<cdot> invg(g) = eGG from right inverse.\<close>
+      sorry \<comment> \<open>Right inverse: use invg(invg ws) = ws (double inverse) + left inverse on invg ws.
+         Or direct induction from the right: each g\<cdot>invg(g) = eGG.\<close>
   qed
   \<comment> \<open>(8) \<iota>fam properties.\<close>
   have h\<iota>_in_G: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> G"
