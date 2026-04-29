@@ -3791,10 +3791,13 @@ proof -
       (if \<alpha> = 0 then e1 else e2)
       (if \<alpha> = 0 then invg1 else invg2)"
     using assms(1) assms(2) by (by100 auto)
-  obtain FP mulFP eFP invgFP \<iota>fam12 where
+  obtain FP :: "(nat \<times> 'g) list set" and mulFP eFP invgFP \<iota>fam12 where
       hFP: "top1_is_free_product_on FP mulFP eFP invgFP
         (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
-    sorry \<comment> \<open>By Theorem_68_2_free_product_exists[OF hgroups]. Needs existential decomposition.\<close>
+  proof -
+    from Theorem_68_2_free_product_exists[OF hgroups]
+    show ?thesis using that by blast
+  qed
   \<comment> \<open>Step 2: Natural surjection \<pi>: FP \<rightarrow> FPQ with kernel = normal closure of \<iota>1(N1)\<union>\<iota>2(N2).\<close>
   have h_surj: "\<exists>\<pi>. top1_group_hom_on FP mulFP FP mulFP \<pi> \<and> \<pi> ` FP = FP" sorry
   \<comment> \<open>Step 3: First isomorphism theorem gives the result.\<close>
@@ -3835,10 +3838,23 @@ proof -
      reduced words in S1 \<union> S2 (with S1 \<inter> S2 = {}). So G1*G2 is free on S1\<union>S2.
      The injection \<iota>S12 maps s\<in>S1 to \<iota>fam12(0)(\<iota>1(s)) and s\<in>S2 to \<iota>fam12(1)(\<iota>2(s)).\<close>
   \<comment> \<open>Step 1: Build the free product FP = G1 * G2 (Theorem 68.2).\<close>
-  obtain FP mulFP eFP invgFP \<iota>fam12 where
+  have hgroups: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
+      ((if \<alpha> = 0 then G1 else G2)::'g set) (if \<alpha> = 0 then mul1 else mul2)
+      (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
+  proof (intro ballI)
+    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+    thus "top1_is_group_on (if \<alpha> = 0 then G1 else G2) (if \<alpha> = 0 then mul1 else mul2)
+        (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
+      using assms(1) assms(2) unfolding top1_is_free_group_full_on_def by (by100 auto)
+  qed
+  obtain FP :: "(nat \<times> 'g) list set" and mulFP eFP invgFP \<iota>fam12 where
       hFP: "top1_is_free_product_on FP mulFP eFP invgFP
         (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
-    sorry
+  proof -
+    from Theorem_68_2_free_product_exists[OF hgroups]
+    show ?thesis using that by blast
+  qed
   \<comment> \<open>Step 2: Since G1, G2 are free on S1, S2, reduced words in FP correspond to
      reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
   have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
