@@ -622,24 +622,47 @@ proof -
      g(A) \<subseteq> R^2 - {h(a)} since f(A) \<subseteq> S^2 - {a,b} and h maps S^2-{b} to R^2.\<close>
   let ?g = "h \<circ> f"
   let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
-  \<comment> \<open>Step 3: Suppose for contradiction that a and b are in different components.
-     In R^2 terms: suppose h(a) = origin is in a BOUNDED component C of R^2 - g(A).
-     Let D be the union of other components.\<close>
-  \<comment> \<open>Step 4: Since g is nulhomotopic in R^2 - {origin}, the inclusion
-     j: g(A) \<hookrightarrow> R^2 - {origin} is also nulhomotopic (compose nulhomotopy with h).
-     By Lemma 55.3, j extends to k: closure(C) \<union> g(A) \<rightarrow> R^2 - {origin}.\<close>
-  \<comment> \<open>Step 5: Extend k to all of R^2 by h(x) = x for x \<in> D.
-     Then h: R^2 \<rightarrow> R^2 - {origin}, h = id outside C.\<close>
-  \<comment> \<open>Step 6: Restrict to large ball B \<supseteq> C \<union> g(A). Get h|B: B \<rightarrow> R^2 - {origin}.
-     Compose with retraction R^2-{origin} \<rightarrow> Bd(B) to get retraction B \<rightarrow> Bd(B).
-     This contradicts Theorem 55.2 (no retraction of disk onto circle).\<close>
-  \<comment> \<open>The proof follows Munkres: reduce to R^2, suppose 0 in bounded component,
-     use Lemma 62.1 (homotopy extension) to extend, get retraction contradiction.
-     The key missing ingredient is Lemma 62.1 (homotopy extension lemma):
-     If A closed in normal X, f: A \<rightarrow> Y nulhomotopic, Y open in R^n, then f extends to g: X \<rightarrow> Y.
-     This uses Tietze (Theorem_35_1), tube lemma (Lemma_26_8), Urysohn (Theorem_33_1),
-     all of which are available. Full proof would be ~400 lines.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K ⊂ R^2 - {?origin}.\<close>
+  have hg_cont: "top1_continuous_map_on A TA (UNIV::(real\<times>real) set) ?TR2 ?g"
+    sorry \<comment> \<open>Compose f (A \<rightarrow> S^2-{a,b}) with h (S^2-{b} \<rightarrow> R^2).\<close>
+  let ?K = "?g ` A"
+  have hK_compact: "compact ?K"
+    sorry \<comment> \<open>Continuous image of compact set is compact.\<close>
+  have hK_sub: "?K \<subseteq> UNIV - {?origin}" sorry \<comment> \<open>f(A) \<subseteq> S^2-{a,b}, h(a)=?origin, h injective on S^2-{b}.\<close>
+  have hK_closed: "closedin_on (UNIV::(real\<times>real) set) ?TR2 ?K"
+    sorry \<comment> \<open>Compact in Hausdorff ⟹ closed.\<close>
+  \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}.\<close>
+  have hg_nul: "top1_nulhomotopic_on A TA
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
+    sorry \<comment> \<open>Transfer nulhomotopy of f in S^2-{a,b} to g in R^2-{?origin} via homeomorphism h.\<close>
+  \<comment> \<open>Step 5: Apply Lemma_62_1: the inclusion K \<hookrightarrow> R^2-{?origin} (nulhomotopic)
+     extends to G: R^2 \<rightarrow> R^2-{?origin} with G|_K = id.\<close>
+  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
+    sorry \<comment> \<open>R^2 is metrizable ⟹ normal.\<close>
+  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set)
+      (product_topology_on ?TR2 I_top)"
+    sorry \<comment> \<open>R^2 \<times> I normal (metric × compact = normal).\<close>
+  have hY_open: "UNIV - {?origin} \<in> ?TR2"
+    sorry \<comment> \<open>Complement of singleton is open in R^2.\<close>
+  \<comment> \<open>Lemma 62.1 gives: G: R^2 \<rightarrow> R^2-{?origin} extending id|_K and nulhomotopic.\<close>
+  have hextension: "\<exists>G. top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G
+      \<and> (\<forall>x\<in>?K. G x = x)
+      \<and> top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
+    sorry \<comment> \<open>By Lemma_62_1_homotopy_extension with X=R^2, A=K, Y=R^2-{?origin}, f=id|_K.
+       Need K closed in R^2 (proved), R^2 \<times> I normal (proved), Y open (proved), f nulhomotopic (proved).\<close>
+  \<comment> \<open>Step 6: Choose large ball B containing K and ?origin.
+     G: B \<rightarrow> R^2-{?origin}. Radial projection r: R^2-{?origin} \<rightarrow> \<partial>B.
+     Compose: r \<circ> G|_B : B \<rightarrow> \<partial>B is retraction (since G|_K = id, r \<circ> id|_{\<partial>B} = id on \<partial>B).
+     Contradiction: Theorem_55_2 says B^2 has no retraction onto S^1.\<close>
+  have hretraction_contradiction: False
+    sorry \<comment> \<open>Large ball + radial projection + composition = retraction.
+       Contradiction with Theorem_55_2_no_retraction.\<close>
+  \<comment> \<open>The contradiction shows the supposition (a, b in different components) is wrong.
+     Transfer back from R^2 to S^2.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Transfer the R^2 result back to S^2 via h^{-1}.\<close>
 qed
 
 text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
@@ -3432,10 +3455,16 @@ proof -
      homomorphism. Its kernel is exactly the normal closure of \<iota>1(N1) \<union> \<iota>2(N2).
      By the first isomorphism theorem, (G1*G2)/ker \<cong> (G1/N1)*(G2/N2).\<close>
   \<comment> \<open>Step 1: Build free products FP = G1*G2 and FPQ = (G1/N1)*(G2/N2).\<close>
+  have hgroups: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
+      ((if \<alpha> = 0 then G1 else G2)::'g set)
+      (if \<alpha> = 0 then mul1 else mul2)
+      (if \<alpha> = 0 then e1 else e2)
+      (if \<alpha> = 0 then invg1 else invg2)"
+    using assms(1) assms(2) by (by100 auto)
   obtain FP mulFP eFP invgFP \<iota>fam12 where
       hFP: "top1_is_free_product_on FP mulFP eFP invgFP
         (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
-    sorry
+    sorry \<comment> \<open>By Theorem_68_2_free_product_exists[OF hgroups]. Needs existential decomposition.\<close>
   \<comment> \<open>Step 2: Natural surjection \<pi>: FP \<rightarrow> FPQ with kernel = normal closure of \<iota>1(N1)\<union>\<iota>2(N2).\<close>
   have h_surj: "\<exists>\<pi>. top1_group_hom_on FP mulFP FP mulFP \<pi> \<and> \<pi> ` FP = FP" sorry
   \<comment> \<open>Step 3: First isomorphism theorem gives the result.\<close>
