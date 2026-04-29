@@ -1965,11 +1965,53 @@ proof -
           qed
           \<comment> \<open>For each x \<in> D: find open rectangle in UNIV-K avoiding C0.\<close>
           have "\<forall>x \<in> UNIV - (?C0 \<union> ?K). \<exists>T. open T \<and> x \<in> T \<and> T \<subseteq> UNIV - (?C0 \<union> ?K)"
-            sorry \<comment> \<open>Needs: open rectangles (a,b)\<times>(c,d) are connected (path-connected).
-               If such rectangle intersects C0, then rectangle \<union> C0 is connected,
-               hence \<subseteq> C0 (maximality), contradicting x \<notin> C0.
-               BLOCKED by: prod :: metric_space not registered.
-               Alternative: prove connectedness of open rectangles directly.\<close>
+          proof (intro ballI)
+            fix x :: "real \<times> real" assume hx: "x \<in> UNIV - (?C0 \<union> ?K)"
+            hence hxUK: "x \<in> UNIV - ?K" and hxnC0: "x \<notin> ?C0" by (by100 blast)+
+            \<comment> \<open>Get open rectangle A\<times>B around x in UNIV-K.\<close>
+            obtain A0 B0 where hA0: "open A0" and hB0: "open B0"
+                and hxAB: "x \<in> A0 \<times> B0" and hABsub: "A0 \<times> B0 \<subseteq> UNIV - ?K"
+              using open_prod_elim[OF hUK_open_HOL hxUK] by (by100 blast)
+            \<comment> \<open>A0\<times>B0 is open, connected (product of open sets), contains x.\<close>
+            have hAB_conn: "connected (A0 \<times> B0)"
+              sorry \<comment> \<open>A0, B0 open in R \<Longrightarrow> connected? Only if each is connected.
+                 Not necessarily. But A0\<times>B0 contains x, so the connected component
+                 of x in A0\<times>B0 is an open connected set. Alternatively, refine
+                 A0, B0 to connected open intervals around fst x, snd x.\<close>
+            \<comment> \<open>A0\<times>B0 \<subseteq> UNIV-K. If A0\<times>B0 \<inter> C0 \<noteq> {}, then connected union \<subseteq> C0, x \<in> C0. Contradiction.\<close>
+            have "A0 \<times> B0 \<inter> ?C0 = {}"
+            proof (rule ccontr)
+              assume hne: "\<not> (A0 \<times> B0 \<inter> ?C0 = {})"
+              \<comment> \<open>A0\<times>B0 connected, C0 connected (component), nonempty intersection.\<close>
+              have hC0_conn: "connected ?C0"
+                sorry \<comment> \<open>Component is connected. Needs bridge from top1_connected_on.\<close>
+              have "connected (A0 \<times> B0 \<union> ?C0)"
+                sorry \<comment> \<open>Union of connected with nonempty intersection = connected.\<close>
+              \<comment> \<open>A0\<times>B0 \<union> C0 \<subseteq> UNIV-K, connected, contains origin (via C0).\<close>
+              moreover have "A0 \<times> B0 \<union> ?C0 \<subseteq> UNIV - ?K"
+              proof -
+                have "A0 \<times> B0 \<subseteq> UNIV - ?K" by (rule hABsub)
+                moreover have "?C0 \<subseteq> UNIV - ?K" by (rule hC0_sub_UK)
+                ultimately show ?thesis by (rule Un_least)
+              qed
+              moreover have "?origin \<in> A0 \<times> B0 \<union> ?C0" using horigin_C0 by (by100 blast)
+              ultimately have "A0 \<times> B0 \<union> ?C0 \<subseteq> ?C0"
+                sorry \<comment> \<open>Connected set containing origin, \<subseteq> UNIV-K \<Longrightarrow> \<subseteq> component_of origin.\<close>
+              hence "x \<in> ?C0" using hxAB by (by100 blast)
+              thus False using hxnC0 by (by100 blast)
+            qed
+            have "A0 \<times> B0 \<subseteq> UNIV - (?C0 \<union> ?K)"
+            proof (rule subsetI)
+              fix y assume "y \<in> A0 \<times> B0"
+              have "y \<in> UNIV - ?K" by (rule subsetD[OF hABsub \<open>y \<in> A0 \<times> B0\<close>])
+              hence "y \<notin> ?K" by (by100 simp)
+              moreover have "y \<notin> ?C0" using \<open>A0 \<times> B0 \<inter> ?C0 = {}\<close> \<open>y \<in> A0 \<times> B0\<close> by (by100 blast)
+              ultimately show "y \<in> UNIV - (?C0 \<union> ?K)" by (by100 blast)
+            qed
+            moreover have "open (A0 \<times> B0)" by (rule open_Times[OF hA0 hB0])
+            ultimately show "\<exists>T. open T \<and> x \<in> T \<and> T \<subseteq> UNIV - (?C0 \<union> ?K)"
+              using hxAB by (by100 blast)
+          qed
           thus ?thesis using open_subopen by (by100 blast)
         qed
         hence "closed (- (UNIV - (?C0 \<union> ?K)) :: (real\<times>real) set)" using open_closed by (by100 blast)
