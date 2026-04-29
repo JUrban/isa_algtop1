@@ -656,7 +656,18 @@ proof -
     thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
   qed
   have hK_sub: "?K \<subseteq> UNIV - {?origin}"
-    sorry \<comment> \<open>f(A) \<subseteq> S^2-{a,b}, h(a)=?origin, h injective on S^2-{b}.\<close>
+  proof (rule image_subsetI)
+    fix x assume hx: "x \<in> A"
+    have hfx: "f x \<in> ?S2 - {a, b}" using hf hx unfolding top1_continuous_map_on_def by (by100 blast)
+    hence hfx_ne_a: "f x \<noteq> a" by (by100 blast)
+    have hfx_in_S2b: "f x \<in> ?S2 - {b}" using hfx by (by100 blast)
+    have ha_in_S2b: "a \<in> ?S2 - {b}" using ha hab by (by100 blast)
+    have h_inj: "inj_on h (?S2 - {b})"
+      using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "h (f x) \<noteq> h a"
+      using inj_on_eq_iff[OF h_inj hfx_in_S2b ha_in_S2b] hfx_ne_a by (by100 blast)
+    thus "(h \<circ> f) x \<in> UNIV - {?origin}" unfolding comp_def by (by100 blast)
+  qed
   have hK_closed: "closed ?K" using hK_compact by (rule compact_imp_closed)
   \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}. Equivalently, inclusion K \<hookrightarrow> R^2-{?origin} nulhomotopic.\<close>
   have hj_nul: "top1_nulhomotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
