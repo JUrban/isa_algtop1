@@ -974,7 +974,38 @@ proof -
        Step D: Radial projection r: R^2-{0} \<rightarrow> \<partial>B. r \<circ> h|_B: B \<rightarrow> \<partial>B retraction.
        Step E: Contradiction with Theorem_55_2_no_retraction.\<close>
     show "\<not> bounded C0"
-      sorry \<comment> \<open>The core ~150 lines. Uses Lemma_62_1, pasting lemma, Theorem_55_2.\<close>
+    proof
+      assume hbnd: "bounded C0"
+      \<comment> \<open>C0 bounded component containing origin. D = union of other components.\<close>
+      let ?D = "UNIV - ?K - C0"
+      \<comment> \<open>Step A: C0 \<union> K is contained in some large ball B centered at origin.\<close>
+      obtain M :: real where hM: "M > 0" and hC0_sub: "C0 \<subseteq> cball ?origin M"
+          and hK_sub_ball: "?K \<subseteq> cball ?origin M"
+        sorry \<comment> \<open>C0 bounded + K compact (bounded) \<Longrightarrow> both in large ball.\<close>
+      \<comment> \<open>Step B: Apply Lemma 62.1 to extend inclusion K \<hookrightarrow> R^2-{origin}
+         from K to C0 \<union> K. Need (C0\<union>K)\<times>I normal, K closed in C0\<union>K.\<close>
+      obtain k where hk: "top1_continuous_map_on (C0 \<union> ?K)
+          (subspace_topology UNIV ?TR2 (C0 \<union> ?K))
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) k"
+          and hk_ext: "\<forall>x\<in>?K. k x = x"
+        sorry \<comment> \<open>By Lemma_62_1_homotopy_extension with X=C0\<union>K, A=K, Y=R^2-{origin}.
+           Needs: K closed in C0\<union>K (K closed in R^2, C0 open in R^2-K),
+           (C0\<union>K)\<times>I normal (metrizable), inclusion nulhomotopic (hj_nul).\<close>
+      \<comment> \<open>Step C: Paste k with identity on D \<union> K to get H: R^2 \<rightarrow> R^2-{origin}.\<close>
+      define H where "H = (\<lambda>x. if x \<in> C0 then k x else x)"
+      have hH_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
+          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) H"
+        sorry \<comment> \<open>Pasting: H = k on C0 \<union> K, H = id on D \<union> K. Both agree on K (k|_K = id).\<close>
+      \<comment> \<open>Step D: H|\<partial>B = id since \<partial>B \<subseteq> D (outside C0 \<union> K for large B).\<close>
+      let ?bdry = "{x::(real\<times>real). (fst x - fst ?origin)^2 + (snd x - snd ?origin)^2 = M^2}"
+      have hH_bdry: "\<forall>x\<in>?bdry. H x = x"
+        sorry \<comment> \<open>\<partial>B \<subseteq> D (\<partial>B disjoint from C0 and K for large M).\<close>
+      \<comment> \<open>Step E: Radial projection r: R^2-{origin} \<rightarrow> \<partial>B.
+         r \<circ> H|_B: B \<rightarrow> \<partial>B retraction. Contradiction.\<close>
+      show False
+        sorry \<comment> \<open>r \<circ> H|_B is retraction of B onto \<partial>B.
+           B \<cong> B^2, \<partial>B \<cong> S^1. Contradiction with Theorem_55_2_no_retraction.\<close>
+    qed
   qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
