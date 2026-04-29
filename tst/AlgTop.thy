@@ -5356,7 +5356,33 @@ proof -
   let ?G = "\<lambda>p. F (1 - fst p, snd p)"
   have hflip_s: "top1_continuous_map_on (I_set \<times> I_set) II_topology
       (I_set \<times> I_set) II_topology (\<lambda>p. (1 - fst p, snd p))"
-    sorry \<comment> \<open>Continuous: (s,t) \<mapsto> (1-s, t) on I\<times>I.\<close>
+  proof -
+    \<comment> \<open>By Theorem_18_4: \<pi>1 \<circ> flip = (1-) \<circ> \<pi>1, \<pi>2 \<circ> flip = \<pi>2.\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTP: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    \<comment> \<open>(1-) continuous I \<rightarrow> I.\<close>
+    have h1minus: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. 1 - s)"
+      unfolding top1_unit_interval_topology_def
+      by (rule top1_continuous_map_on_real_subspace_open_sets)
+         (auto simp: top1_unit_interval_def intro: continuous_intros)
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+    have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
+      unfolding II_topology_def by (rule top1_continuous_pi2[OF hTI hTI])
+    have hpi1_flip: "pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)) = (\<lambda>s. 1 - s) \<circ> pi1"
+      unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
+    have hpi2_flip: "pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)) = pi2"
+      unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      unfolding hpi1_flip by (rule top1_continuous_map_on_comp[OF hpi1 h1minus])
+    moreover have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      unfolding hpi2_flip by (rule hpi2)
+    ultimately have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+        (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (1 - fst p, snd p))"
+      using iffD2[OF Theorem_18_4[OF hTP hTI hTI]] unfolding II_topology_def by (by100 blast)
+    thus ?thesis unfolding II_topology_def .
+  qed
   have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
   proof -
     have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (F \<circ> (\<lambda>p. (1 - fst p, snd p)))"
