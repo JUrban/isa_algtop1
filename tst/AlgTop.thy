@@ -3884,9 +3884,34 @@ proof -
     \<comment> \<open>The product of singletons with alternating indices = the word itself.\<close>
     \<comment> \<open>By induction: foldr mul [w0,...,wn-1] [] builds the reduced word
        [(indices!(n-1), word!(n-1)), ..., (indices!0, word!0)] which is nonempty.\<close>
+    \<comment> \<open>Key: prepend (\<alpha>,g) ws = (\<alpha>,g) # ws when g \<noteq> eGG \<alpha> and (ws=[] or \<alpha> \<noteq> fst(hd ws)).\<close>
+    have hprepend_cons: "\<And>\<alpha> g ws. g \<noteq> eGG \<alpha> \<Longrightarrow> ws = [] \<or> \<alpha> \<noteq> fst (hd ws) \<Longrightarrow>
+        prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+    proof -
+      fix \<alpha> :: 'i and g :: 'gg and ws :: "('i \<times> 'gg) list"
+      assume hg: "g \<noteq> eGG \<alpha>" and hdiff: "ws = [] \<or> \<alpha> \<noteq> fst (hd ws)"
+      show "prepend (\<alpha>, g) ws = (\<alpha>, g) # ws"
+      proof (cases ws)
+        case Nil thus ?thesis unfolding prepend_def using hg by (by100 simp)
+      next
+        case (Cons p rest)
+        have "\<alpha> \<noteq> fst p" using hdiff unfolding Cons by (by100 simp)
+        thus ?thesis unfolding prepend_def Cons using hg by (cases p) (by100 simp)
+      qed
+    qed
+    \<comment> \<open>The product of singletons with alternating indices: by reverse induction,
+       each prepend just conses since consecutive indices differ.\<close>
     show "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e"
-      sorry \<comment> \<open>Induction on length: foldr of singletons with alternating indices \<noteq> [].
-         Key: prepend (\<alpha>,g) ws with \<alpha> \<noteq> fst(hd ws) just prepends, so result nonempty.\<close>
+    proof -
+      \<comment> \<open>Show the result is the word [(indices!0, word!0), ..., (indices!(n-1), word!(n-1))].\<close>
+      let ?n = "length indices"
+      let ?ws = "map (\<lambda>i. (indices!i, word!i)) [0..<?n]"
+      have hresult: "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<?n]) e = ?ws"
+        sorry \<comment> \<open>By induction on n from the right: each mul singleton onto accumulator
+           just prepends (consecutive indices differ). Result = the word list.\<close>
+      have "?ws \<noteq> []" using hpos by (by100 simp)
+      thus ?thesis using hresult unfolding e_def by (by100 simp)
+    qed
   qed
   \<comment> \<open>Assemble the free product.\<close>
   show ?thesis
