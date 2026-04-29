@@ -3767,7 +3767,57 @@ proof -
   qed
   have h\<iota>_hom: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>.
       \<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
-    sorry \<comment> \<open>Case analysis: identity cases + non-identity prepend.\<close>
+  proof (intro ballI)
+    fix \<alpha> x y assume h\<alpha>: "\<alpha> \<in> J" and hx: "x \<in> GG \<alpha>" and hy: "y \<in> GG \<alpha>"
+    have hgrp: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+      using hgroups h\<alpha> by (by100 blast)
+    have hxy_in: "mulGG \<alpha> x y \<in> GG \<alpha>"
+      using hgrp hx hy unfolding top1_is_group_on_def by (by100 blast)
+    show "\<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+    proof (cases "x = eGG \<alpha>")
+      case True
+      hence "mulGG \<alpha> x y = y" using hgrp hy unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "\<iota>fam \<alpha> x = e" unfolding \<iota>fam_def e_def using True by (by100 simp)
+      ultimately show ?thesis using hleft_id h\<iota>_in_G[THEN bspec[OF _ h\<alpha>], THEN bspec[OF _ hy]]
+        by (by100 simp)
+    next
+      case xne: False
+      show ?thesis
+      proof (cases "y = eGG \<alpha>")
+        case True
+        hence "mulGG \<alpha> x y = x" using hgrp hx unfolding top1_is_group_on_def by (by100 blast)
+        moreover have "\<iota>fam \<alpha> y = e" unfolding \<iota>fam_def e_def using True by (by100 simp)
+        ultimately show ?thesis using hright_id h\<iota>_in_G[THEN bspec[OF _ h\<alpha>], THEN bspec[OF _ hx]]
+          by (by100 simp)
+      next
+        case yne: False
+        \<comment> \<open>Both x, y non-identity. \<iota>fam \<alpha> x = [(\<alpha>,x)], \<iota>fam \<alpha> y = [(\<alpha>,y)].
+           mul [(\<alpha>,x)] [(\<alpha>,y)] = prepend (\<alpha>,x) [(\<alpha>,y)] = [(\<alpha>, mulGG \<alpha> x y)] if xy \<noteq> eGG,
+           or [] if xy = eGG.\<close>
+        have h\<iota>x: "\<iota>fam \<alpha> x = [(\<alpha>, x)]" unfolding \<iota>fam_def using xne by (by100 simp)
+        have h\<iota>y: "\<iota>fam \<alpha> y = [(\<alpha>, y)]" unfolding \<iota>fam_def using yne by (by100 simp)
+        have hmulxy: "mul [(\<alpha>, x)] [(\<alpha>, y)] = prepend (\<alpha>, x) [(\<alpha>, y)]"
+          unfolding mul_def by (by100 simp)
+        have hprep: "prepend (\<alpha>, x) [(\<alpha>, y)] = (let gh = mulGG \<alpha> x y in
+            if gh = eGG \<alpha> then [] else [(\<alpha>, gh)])"
+          unfolding prepend_def using xne by (by100 simp)
+        show ?thesis
+        proof (cases "mulGG \<alpha> x y = eGG \<alpha>")
+          case True
+          hence "\<iota>fam \<alpha> (mulGG \<alpha> x y) = []" unfolding \<iota>fam_def by (by100 simp)
+          moreover have "mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y) = []"
+            unfolding h\<iota>x h\<iota>y hmulxy hprep using True by (by100 simp)
+          ultimately show ?thesis unfolding e_def by (by100 simp)
+        next
+          case xyFalse: False
+          hence "\<iota>fam \<alpha> (mulGG \<alpha> x y) = [(\<alpha>, mulGG \<alpha> x y)]" unfolding \<iota>fam_def by (by100 simp)
+          moreover have "mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y) = [(\<alpha>, mulGG \<alpha> x y)]"
+            unfolding h\<iota>x h\<iota>y hmulxy hprep using xyFalse by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
+    qed
+  qed
   have h\<iota>_inj: "\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (GG \<alpha>)"
   proof (intro ballI)
     fix \<alpha> assume "\<alpha> \<in> J"
@@ -3811,8 +3861,33 @@ proof -
                         \<and> \<iota>fam (indices!i) (word!i) \<noteq> e) \<longrightarrow>
       (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<longrightarrow>
       foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e"
-    sorry \<comment> \<open>Each \<iota>fam(indices!i)(word!i) is a singleton. Consecutive differ.
-       foldr mul builds a reduced word = the original word \<noteq> [].\<close>
+  proof (intro allI impI)
+    fix indices :: "'i list" and word :: "'gg list"
+    assume hlen: "length indices = length word" and hpos: "0 < length indices"
+    assume hvals: "\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i) \<and> \<iota>fam (indices!i) (word!i) \<noteq> e"
+    assume halt: "\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)"
+    \<comment> \<open>Each \<iota>fam(indices!i)(word!i) = [(indices!i, word!i)] since \<noteq> e = [].\<close>
+    have h\<iota>_single: "\<forall>i<length indices. \<iota>fam (indices!i) (word!i) = [(indices!i, word!i)]"
+    proof (intro allI impI)
+      fix i assume hi: "i < length indices"
+      have hne: "word!i \<noteq> eGG (indices!i)"
+      proof
+        assume "word!i = eGG (indices!i)"
+        hence "\<iota>fam (indices!i) (word!i) = []" unfolding \<iota>fam_def by (by100 simp)
+        hence "\<iota>fam (indices!i) (word!i) = e" unfolding e_def by (by100 simp)
+        moreover have "\<iota>fam (indices!i) (word!i) \<noteq> e" using hvals hi by (by100 blast)
+        ultimately show False by (by100 simp)
+      qed
+      show "\<iota>fam (indices!i) (word!i) = [(indices!i, word!i)]"
+        unfolding \<iota>fam_def using hne by (by100 simp)
+    qed
+    \<comment> \<open>The product of singletons with alternating indices = the word itself.\<close>
+    \<comment> \<open>By induction: foldr mul [w0,...,wn-1] [] builds the reduced word
+       [(indices!(n-1), word!(n-1)), ..., (indices!0, word!0)] which is nonempty.\<close>
+    show "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e \<noteq> e"
+      sorry \<comment> \<open>Induction on length: foldr of singletons with alternating indices \<noteq> [].
+         Key: prepend (\<alpha>,g) ws with \<alpha> \<noteq> fst(hd ws) just prepends, so result nonempty.\<close>
+  qed
   \<comment> \<open>Assemble the free product.\<close>
   show ?thesis
     unfolding top1_is_free_product_on_def
