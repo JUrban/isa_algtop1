@@ -3732,9 +3732,13 @@ proof -
      - mul(invg ws, ws) = [] (inverse property via cancellation)
      - Associativity of mul (the hardest part)\<close>
   \<comment> \<open>Key helper: prepend preserves reducedness.\<close>
+  have htail_G: "\<And>p ws. p # ws \<in> G \<Longrightarrow> ws \<in> G"
+    sorry \<comment> \<open>Tail of reduced word is reduced (shift indices by 1).\<close>
   have hprepend_reduced: "\<And>\<alpha> g ws. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow>
       prepend (\<alpha>, g) ws \<in> G"
-    sorry \<comment> \<open>Case analysis on whether g = eGG \<alpha>, ws empty, same/different index at head.\<close>
+    sorry \<comment> \<open>Case analysis: identity (skip), empty (singleton), different index (cons),
+       same index with product identity (tail), same index non-identity (replace head).
+       Each case verifiable from G_def + group axioms. Uses htail_G.\<close>
   \<comment> \<open>(1) e \<in> G: empty list is reduced.\<close>
   have he_G: "e \<in> G" unfolding e_def G_def by (by100 simp)
   \<comment> \<open>(2) Left identity: mul e ws = ws.\<close>
