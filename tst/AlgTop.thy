@@ -4049,8 +4049,46 @@ proof -
     thus "invg ws \<in> G" unfolding invg_def by (rule hrev_G)
   qed
   \<comment> \<open>(6) Associativity: mul (mul x y) z = mul x (mul y z).\<close>
+  \<comment> \<open>Key helper for associativity: prepend distributes over mul on the left.\<close>
+  have hprepend_mul: "\<And>\<alpha> g ws zs. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow> zs \<in> G \<Longrightarrow>
+      mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, g) (mul ws zs)"
+    sorry \<comment> \<open>Case analysis: identity skip, empty, different index (just cons), same index.
+       Same-index case requires showing prepend(\<alpha>,g)(prepend(\<alpha>,h) x) = prepend(\<alpha>,g\<cdot>h) x.\<close>
   have hassoc: "\<forall>ws1\<in>G. \<forall>ws2\<in>G. \<forall>ws3\<in>G. mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
-    sorry \<comment> \<open>The hardest part. By induction on ws1.\<close>
+  proof (intro ballI)
+    fix ws1 ws2 ws3 assume hws1: "ws1 \<in> G" and hws2: "ws2 \<in> G" and hws3: "ws3 \<in> G"
+    show "mul (mul ws1 ws2) ws3 = mul ws1 (mul ws2 ws3)"
+      unfolding mul_def
+      using hws1
+    proof (induction ws1)
+      case Nil show ?case by (by100 simp)
+    next
+      case (Cons p ws1')
+      obtain \<alpha> g where hp: "p = (\<alpha>, g)" by (cases p)
+      have hpws1: "p # ws1' \<in> G" using Cons.prems .
+      have h\<alpha>: "\<alpha> \<in> J" and hg: "g \<in> GG \<alpha>"
+        using hG_elem[OF hpws1, of 0] unfolding hp by (by100 simp)+
+      have hws1': "ws1' \<in> G" by (rule htail_G[OF hpws1])
+      have hIH: "foldr prepend (foldr prepend ws1' ws2) ws3 = foldr prepend ws1' (foldr prepend ws2 ws3)"
+        using Cons.IH[OF hws1'] .
+      have hmul12: "foldr prepend ws1' ws2 \<in> G"
+        using hmul_closed hws1' hws2 unfolding mul_def by (by100 blast)
+      have hmul23: "foldr prepend ws2 ws3 \<in> G"
+        using hmul_closed hws2 hws3 unfolding mul_def by (by100 blast)
+      \<comment> \<open>LHS: foldr prepend (prepend p (foldr prepend ws1' ws2)) ws3
+             = prepend p (foldr prepend (foldr prepend ws1' ws2) ws3)  [by hprepend_mul]
+             = prepend p (foldr prepend ws1' (foldr prepend ws2 ws3))  [by IH]\<close>
+      have "foldr prepend (p # ws1') (foldr prepend ws2 ws3) = prepend p (foldr prepend ws1' (foldr prepend ws2 ws3))"
+        by (by100 simp)
+      moreover have "foldr prepend (foldr prepend (p # ws1') ws2) ws3
+          = foldr prepend (prepend p (foldr prepend ws1' ws2)) ws3" by (by100 simp)
+      moreover have "foldr prepend (prepend p (foldr prepend ws1' ws2)) ws3
+          = prepend p (foldr prepend (foldr prepend ws1' ws2) ws3)"
+        unfolding hp using hprepend_mul[OF h\<alpha> hg hmul12 hws3] unfolding mul_def hp by (by100 simp)
+      moreover note hIH
+      ultimately show ?case unfolding hp by (by100 simp)
+    qed
+  qed
   \<comment> \<open>(7) Left/right inverse.\<close>
   have hleft_inv: "\<forall>ws\<in>G. mul (invg ws) ws = e"
   proof (intro ballI)
