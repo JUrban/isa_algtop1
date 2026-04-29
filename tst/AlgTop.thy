@@ -9352,9 +9352,66 @@ proof -
       have "\<And>N. S \<subseteq> N \<Longrightarrow> top1_normal_subgroup_on G mul e invg N \<Longrightarrow>
           top1_is_group_on N mul e invg"
         unfolding top1_normal_subgroup_on_def by (by100 blast)
-      show ?thesis
-        unfolding top1_normal_subgroup_generated_on_def
-        sorry
+      \<comment> \<open>The normal closure = \<Inter>{N. S\<subseteq>N \<and> normal N}. Every such N is a subgroup.
+         G is one such N (with S \<subseteq> G). So the intersection is non-empty and a group.\<close>
+      let ?F = "{ N. S \<subseteq> N \<and> top1_normal_subgroup_on G mul e invg N }"
+      have hG_in: "G \<in> ?F"
+      proof -
+        have "top1_normal_subgroup_on G mul e invg G"
+          unfolding top1_normal_subgroup_on_def
+          using hG group_mul_closed[OF hG] group_inv_closed[OF hG] by (by100 blast)
+        thus ?thesis using hS by (by100 blast)
+      qed
+      show ?thesis unfolding top1_normal_subgroup_generated_on_def top1_is_group_on_def
+      proof (intro conjI ballI)
+        show "e \<in> \<Inter>?F"
+        proof (rule InterI)
+          fix N assume "N \<in> ?F"
+          hence "top1_is_group_on N mul e invg"
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          thus "e \<in> N" by (rule group_e_mem)
+        qed
+      next
+        fix x y assume hx: "x \<in> \<Inter>?F" and hy: "y \<in> \<Inter>?F"
+        show "mul x y \<in> \<Inter>?F"
+        proof (rule InterI)
+          fix N assume hN: "N \<in> ?F"
+          hence hN_grp: "top1_is_group_on N mul e invg"
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          have "x \<in> N" "y \<in> N" using hx hy hN by (by100 blast)+
+          thus "mul x y \<in> N" by (rule group_mul_closed[OF hN_grp])
+        qed
+      next
+        fix x assume hx: "x \<in> \<Inter>?F"
+        show "invg x \<in> \<Inter>?F"
+        proof (rule InterI)
+          fix N assume hN: "N \<in> ?F"
+          hence hN_grp: "top1_is_group_on N mul e invg"
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          have "x \<in> N" using hx hN by (by100 blast)
+          thus "invg x \<in> N" by (rule group_inv_closed[OF hN_grp])
+        qed
+      next
+        fix x y z assume "x \<in> \<Inter>?F" "y \<in> \<Inter>?F" "z \<in> \<Inter>?F"
+        hence "x \<in> G" "y \<in> G" "z \<in> G" using hG_in by (by100 blast)+
+        thus "mul (mul x y) z = mul x (mul y z)" by (rule group_assoc[OF hG])
+      next
+        fix x assume "x \<in> \<Inter>?F"
+        hence "x \<in> G" using hG_in by (by100 blast)
+        thus "mul e x = x" by (rule group_id_left[OF hG])
+      next
+        fix x assume "x \<in> \<Inter>?F"
+        hence "x \<in> G" using hG_in by (by100 blast)
+        thus "mul x e = x" by (rule group_id_right[OF hG])
+      next
+        fix x assume "x \<in> \<Inter>?F"
+        hence "x \<in> G" using hG_in by (by100 blast)
+        thus "mul (invg x) x = e" by (rule group_inv_left[OF hG])
+      next
+        fix x assume "x \<in> \<Inter>?F"
+        hence "x \<in> G" using hG_in by (by100 blast)
+        thus "mul x (invg x) = e" by (rule group_inv_right[OF hG])
+      qed
     qed
     ultimately show ?thesis
       by (rule subgroup_generated_minimal)
@@ -9381,8 +9438,29 @@ proof -
         proof -
           have hgg0: "mul g g0 \<in> G" by (rule group_mul_closed[OF hG hg hg0])
           \<comment> \<open>g * (g0*s*g0^{-1}) * g^{-1} = (g*g0) * s * (g*g0)^{-1} by assoc + inv_mul.\<close>
-          have "mul (mul g x) (invg g) = mul (mul (mul g g0) s) (invg (mul g g0))"
-            using hx sorry
+          have hsG: "s \<in> G" using hs hS by (by100 blast)
+          have hig0: "invg g0 \<in> G" by (rule group_inv_closed[OF hG hg0])
+          have hig: "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+          have hg0s: "mul g0 s \<in> G" by (rule group_mul_closed[OF hG hg0 hsG])
+          \<comment> \<open>Step a: g*x = g*(g0*s*g0^{-1}) = (g*g0*s)*g0^{-1} (by assoc).\<close>
+          have "mul g x = mul g (mul (mul g0 s) (invg g0))" using hx by (by100 simp)
+          also have "\<dots> = mul (mul g (mul g0 s)) (invg g0)"
+            using group_assoc[OF hG hg hg0s hig0] by (by100 simp)
+          also have "mul g (mul g0 s) = mul (mul g g0) s"
+            using group_assoc[OF hG hg hg0 hsG] by (by100 simp)
+          finally have hgx: "mul g x = mul (mul (mul g g0) s) (invg g0)" by (by100 simp)
+          \<comment> \<open>Step b: (g*x)*g^{-1} = ((g*g0)*s*g0^{-1})*g^{-1} = (g*g0)*s*(g0^{-1}*g^{-1}).\<close>
+          have "mul (mul g x) (invg g) = mul (mul (mul (mul g g0) s) (invg g0)) (invg g)"
+            using hgx by (by100 simp)
+          also have "\<dots> = mul (mul (mul g g0) s) (mul (invg g0) (invg g))"
+          proof -
+            have "mul (mul g g0) s \<in> G" by (rule group_mul_closed[OF hG hgg0 hsG])
+            thus ?thesis by (rule group_assoc[OF hG _ hig0 hig])
+          qed
+          \<comment> \<open>Step c: g0^{-1}*g^{-1} = (g*g0)^{-1} (by inv_mul).\<close>
+          also have "mul (invg g0) (invg g) = invg (mul g g0)"
+            using group_inv_mul[OF hG hg hg0] by (by100 simp)
+          finally have "mul (mul g x) (invg g) = mul (mul (mul g g0) s) (invg (mul g g0))" .
           moreover have "mul g g0 \<in> G" by (rule hgg0)
           ultimately show ?thesis using hs by (by100 blast)
         qed
