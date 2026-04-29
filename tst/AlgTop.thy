@@ -1894,7 +1894,22 @@ proof -
   \<comment> \<open>Inclusion K \<hookrightarrow> R^2-{origin} as top1_continuous_map_on.\<close>
   have hj_cont: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K)
       (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
-    sorry \<comment> \<open>Inclusion continuous (proved in hj_nul proof above, extract).\<close>
+  proof -
+    have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+      using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+      by (by100 simp)
+    have hTK: "is_topology_on ?K (subspace_topology UNIV ?TR2 ?K)"
+      by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
+    have "\<forall>A. A \<subseteq> (UNIV::(real\<times>real) set) \<longrightarrow> top1_continuous_map_on A (subspace_topology UNIV ?TR2 A) (UNIV::(real\<times>real) set) ?TR2 id"
+      using Theorem_18_2(2)[OF hTR2_top hTR2_top hTR2_top] by (by100 blast)
+    hence "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 id"
+      by (by100 simp)
+    hence hid_R2: "top1_continuous_map_on ?K (subspace_topology UNIV ?TR2 ?K) (UNIV::(real\<times>real) set) ?TR2 (\<lambda>x. x)"
+      unfolding id_def .
+    have himg_Y: "(\<lambda>x. x) ` ?K \<subseteq> (UNIV - {?origin})" using hK_sub by (by100 blast)
+    have hY_sub: "(UNIV - {?origin}) \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+    show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF hid_R2 himg_Y hY_sub])
+  qed
   \<comment> \<open>Apply Lemma 62.1 to X = R^2, A = K, Y = R^2-{origin}, f = inclusion.\<close>
   obtain G where hG_cont: "top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
       (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
