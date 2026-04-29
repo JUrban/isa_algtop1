@@ -1975,7 +1975,65 @@ proof -
       qed
       have hCKI_normal: "top1_normal_on ((?C0 \<union> ?K) \<times> I_set)
           (product_topology_on (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) I_top)"
-        sorry \<comment> \<open>Product of compact spaces \<Longrightarrow> compact \<Longrightarrow> Hausdorff \<Longrightarrow> normal.\<close>
+      proof -
+        \<comment> \<open>I compact in top1.\<close>
+        have "compact (I_set :: real set)"
+        proof -
+          have "I_set = {0..1::real}" unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "compact ({0..1::real})" by (rule compact_Icc)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        hence "top1_compact_on I_set (subspace_topology (UNIV::real set) top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        hence hI_compact: "top1_compact_on I_set I_top"
+          unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+        \<comment> \<open>C0\<union>K compact in top1.\<close>
+        have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+          using product_topology_on_open_sets_real2 by (by100 metis)
+        have hCK_top1: "top1_compact_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+        proof -
+          have "top1_compact_on (?C0 \<union> ?K) (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets (?C0 \<union> ?K))"
+            using top1_compact_on_subspace_UNIV_iff_compact hCK_compact by (by100 blast)
+          thus ?thesis unfolding hTR2_eq .
+        qed
+        \<comment> \<open>Product compact.\<close>
+        have "top1_compact_on ((?C0 \<union> ?K) \<times> I_set)
+            (product_topology_on (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) I_top)"
+          by (rule Theorem_26_7[OF hCK_top1 hI_compact])
+        moreover have "is_hausdorff_on ((?C0 \<union> ?K) \<times> I_set)
+            (product_topology_on (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) I_top)"
+        proof -
+          have "is_hausdorff_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+          proof -
+            have "is_hausdorff_on (UNIV::(real\<times>real) set) ?TR2"
+            proof -
+              have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+                using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+              have "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+                using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq by (by100 simp)
+              hence "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+                  (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+                using conjunct1[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+              thus ?thesis by (by100 simp)
+            qed
+            thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+          qed
+          moreover have "is_hausdorff_on I_set I_top"
+          proof -
+            have "is_hausdorff_on (UNIV::real set) (order_topology_on_UNIV::real set set)"
+              using conjunct1[OF Theorem_17_11[where 'a=real]] .
+            have hTOS: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+              using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+            hence "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+              using conjunct1[OF Theorem_17_11[where 'a=real]] by (by100 simp)
+            hence "is_hausdorff_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+              using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+            thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+          qed
+          ultimately show ?thesis using conjunct1[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+        qed
+        ultimately show ?thesis by (rule Theorem_32_3)
+      qed
       \<comment> \<open>K closed in C0\<union>K.\<close>
       have hK_closedin_CK: "closedin_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) ?K"
       proof -
