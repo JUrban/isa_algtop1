@@ -622,27 +622,31 @@ proof -
      g(A) \<subseteq> R^2 - {h(a)} since f(A) \<subseteq> S^2 - {a,b} and h maps S^2-{b} to R^2.\<close>
   let ?g = "h \<circ> f"
   let ?origin = "h a"  \<comment> \<open>The image of a under stereographic projection\<close>
-  \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K ⊂ R^2 - {?origin}.\<close>
+  \<comment> \<open>Step 3: g = h \<circ> f maps A into R^2. K = g(A) compact. K \<subseteq> R^2 - {?origin}.\<close>
   have hg_cont: "top1_continuous_map_on A TA (UNIV::(real\<times>real) set) ?TR2 ?g"
     sorry \<comment> \<open>Compose f (A \<rightarrow> S^2-{a,b}) with h (S^2-{b} \<rightarrow> R^2).\<close>
   let ?K = "?g ` A"
   have hK_compact: "compact ?K"
     sorry \<comment> \<open>Continuous image of compact set is compact.\<close>
-  have hK_sub: "?K \<subseteq> UNIV - {?origin}" sorry \<comment> \<open>f(A) \<subseteq> S^2-{a,b}, h(a)=?origin, h injective on S^2-{b}.\<close>
-  have hK_closed: "closedin_on (UNIV::(real\<times>real) set) ?TR2 ?K"
-    sorry \<comment> \<open>Compact in Hausdorff ⟹ closed.\<close>
-  \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}.\<close>
-  have hg_nul: "top1_nulhomotopic_on A TA
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) ?g"
-    sorry \<comment> \<open>Transfer nulhomotopy of f in S^2-{a,b} to g in R^2-{?origin} via homeomorphism h.\<close>
-  \<comment> \<open>Step 5: Apply Lemma_62_1: the inclusion K \<hookrightarrow> R^2-{?origin} (nulhomotopic)
-     extends to G: R^2 \<rightarrow> R^2-{?origin} with G|_K = id.\<close>
-  have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
-    sorry \<comment> \<open>R^2 is metrizable ⟹ normal.\<close>
-  have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set)
-      (product_topology_on ?TR2 I_top)"
-    sorry \<comment> \<open>R^2 \<times> I normal (metric × compact = normal).\<close>
-  have hY_open: "UNIV - {?origin} \<in> ?TR2"
+  have hK_sub: "?K \<subseteq> UNIV - {?origin}"
+    sorry \<comment> \<open>f(A) \<subseteq> S^2-{a,b}, h(a)=?origin, h injective on S^2-{b}.\<close>
+  have hK_closed: "closed ?K" using hK_compact by (rule compact_imp_closed)
+  \<comment> \<open>Step 4: g nulhomotopic in R^2 - {?origin}. Equivalently, inclusion K \<hookrightarrow> R^2-{?origin} nulhomotopic.\<close>
+  have hj_nul: "top1_nulhomotopic_on ?K (subspace_topology UNIV ?TR2 ?K)
+      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) (\<lambda>x. x)"
+    sorry \<comment> \<open>Transfer: g nulhomotopic \<Longrightarrow> inclusion g(A) \<hookrightarrow> R^2-{0} nulhomotopic.\<close>
+  \<comment> \<open>Step 5 (Contradiction argument, following Munkres):
+     Suppose for contradiction that ?origin is in a BOUNDED component C of R^2-K.
+     Let D = union of other components. C, D open disjoint, R^2-K = C \<union> D.
+     Apply Lemma 62.1 to X = C \<union> K, A = K, Y = R^2-{?origin}:
+       extend inclusion K \<hookrightarrow> R^2-{0} to k: C \<union> K \<rightarrow> R^2-{0}.
+     Paste k with identity on D: define h(x) = k(x) for x \<in> C, h(x) = x for x \<in> D \<union> K.
+     h: R^2 \<rightarrow> R^2-{0}, h = identity on D \<union> K.
+     Large ball B centered at 0 containing C \<union> K: h|_\<partial>B = id (since \<partial>B \<subseteq> D).
+     r: R^2-{0} \<rightarrow> \<partial>B (radial projection). r \<circ> h|_B : B \<rightarrow> \<partial>B retraction.
+     Contradiction with Theorem_55_2.\<close>
+  \<comment> \<open>Key helper: R^2 is metrizable, hence normal. C \<union> K metrizable, hence (C\<union>K)\<times>I normal.\<close>
+  have hR2_Y_open: "UNIV - {?origin} \<in> ?TR2"
   proof -
     have "open (UNIV - {?origin} :: (real\<times>real) set)"
       by (intro open_Diff open_UNIV finite_imp_closed) (by100 simp)
@@ -650,25 +654,18 @@ proof -
       unfolding top1_open_sets_def by (by100 blast)
     thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
   qed
-  \<comment> \<open>Lemma 62.1 gives: G: R^2 \<rightarrow> R^2-{?origin} extending id|_K and nulhomotopic.\<close>
-  have hextension: "\<exists>G. top1_continuous_map_on (UNIV::(real\<times>real) set) ?TR2
-      (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G
-      \<and> (\<forall>x\<in>?K. G x = x)
-      \<and> top1_nulhomotopic_on (UNIV::(real\<times>real) set) ?TR2
-          (UNIV - {?origin}) (subspace_topology UNIV ?TR2 (UNIV - {?origin})) G"
-    sorry \<comment> \<open>By Lemma_62_1_homotopy_extension with X=R^2, A=K, Y=R^2-{?origin}, f=id|_K.
-       Need K closed in R^2 (proved), R^2 \<times> I normal (proved), Y open (proved), f nulhomotopic (proved).\<close>
-  \<comment> \<open>Step 6: Choose large ball B containing K and ?origin.
-     G: B \<rightarrow> R^2-{?origin}. Radial projection r: R^2-{?origin} \<rightarrow> \<partial>B.
-     Compose: r \<circ> G|_B : B \<rightarrow> \<partial>B is retraction (since G|_K = id, r \<circ> id|_{\<partial>B} = id on \<partial>B).
-     Contradiction: Theorem_55_2 says B^2 has no retraction onto S^1.\<close>
-  have hretraction_contradiction: False
-    sorry \<comment> \<open>Large ball + radial projection + composition = retraction.
-       Contradiction with Theorem_55_2_no_retraction.\<close>
-  \<comment> \<open>The contradiction shows the supposition (a, b in different components) is wrong.
-     Transfer back from R^2 to S^2.\<close>
+  \<comment> \<open>The R^2 version of the Borsuk conclusion:
+     0 lies in the unbounded component of R^2 - K.\<close>
+  have hR2_claim: "?origin \<in> UNIV - ?K \<and>
+    (\<forall>C. C \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
+         \<longrightarrow> ?origin \<in> C \<longrightarrow> \<not> bounded C)"
+    sorry \<comment> \<open>By contradiction: suppose ?origin in bounded component C.
+       Apply Lemma 62.1 to C\<union>K, paste with id on D, large ball, retraction contradiction.
+       Uses: K compact/closed, j nulhomotopic, Y open, Theorem_55_2_no_retraction.
+       This is the core ~150 lines of the Borsuk lemma.\<close>
+  \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
-    sorry \<comment> \<open>Transfer the R^2 result back to S^2 via h^{-1}.\<close>
+    sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
 qed
 
 text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
