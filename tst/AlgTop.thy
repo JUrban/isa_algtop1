@@ -141,6 +141,17 @@ proof -
   qed
 qed
 
+text \<open>Tietze extension to R (unbounded version). Uses Theorem_35_1 (bounded version)
+  plus homeomorphism R \<cong> (-1,1) and Urysohn to avoid boundary.\<close>
+lemma Theorem_35_1_R:
+  assumes hX: "top1_normal_on X TX" and hA: "closedin_on X TX A"
+  assumes hf: "top1_continuous_map_on A (subspace_topology X TX A)
+      (UNIV::real set) order_topology_on_UNIV f"
+  shows "\<exists>F. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV F
+           \<and> (\<forall>x\<in>A. F x = f x)"
+  sorry \<comment> \<open>Uses h(x)=x/(1+|x|): R \<rightarrow> (-1,1), Theorem_35_1 for [-1,1],
+     Urysohn to separate A from g\<inverse>(\<pm>1), then h\<inverse>(\<phi>\<cdot>g) extends.\<close>
+
 section \<open>*\<S>62 Invariance of Domain\<close>
 
 text \<open>Lemma 62.2 (Borsuk lemma): if f: A \<rightarrow> S^2-{a,b} is continuous, injective, compact domain,
@@ -263,13 +274,216 @@ proof -
   qed
   \<comment> \<open>Step 3: Tietze-extend Fe coordinatewise to G: X\<times>I \<rightarrow> R^2.
      Each coordinate of Fe: ?S \<rightarrow> [-M,M] for large M. Tietze extends to X\<times>I.\<close>
+  \<comment> \<open>Step 3a: ?S is closed in X\<times>I.\<close>
+  have hTXI: "is_topology_on (X \<times> I_set) (product_topology_on TX I_top)"
+    by (rule product_topology_on_is_topology_on[OF hTX top1_unit_interval_topology_is_topology_on])
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hAI_closed: "closedin_on (X \<times> I_set) (product_topology_on TX I_top) (A \<times> I_set)"
+  proof (rule closedin_intro)
+    show "A \<times> I_set \<subseteq> X \<times> I_set" using hAX by (by100 blast)
+    have hXA_open: "X - A \<in> TX"
+      using hA_closed unfolding closedin_on_def by (by100 blast)
+    have "(X \<times> I_set) - (A \<times> I_set) = (X - A) \<times> I_set"
+      by (by100 blast)
+    moreover have "(X - A) \<times> I_set \<in> product_topology_on TX I_top"
+    proof -
+      have "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+      thus ?thesis by (rule product_rect_open[OF hXA_open])
+    qed
+    ultimately show "(X \<times> I_set) - (A \<times> I_set) \<in> product_topology_on TX I_top" by (by100 simp)
+  qed
+  have h1_closed_I: "closedin_on I_set I_top {1::real}"
+  proof (rule closedin_intro)
+    show "{1::real} \<subseteq> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "I_set - {1::real} = I_set \<inter> {x. x < 1}"
+      unfolding top1_unit_interval_def by (by100 auto)
+    moreover have "{x::real. x < 1} \<in> top1_open_sets"
+      unfolding top1_open_sets_def using open_lessThan[of "1::real"] unfolding lessThan_def by (by100 blast)
+    moreover have "I_top = subspace_topology (UNIV::real set) top1_open_sets I_set"
+      unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+    ultimately show "I_set - {1::real} \<in> I_top"
+      unfolding top1_unit_interval_topology_def top1_unit_interval_def subspace_topology_def
+      by (by100 auto)
+  qed
+  have hX1_closed: "closedin_on (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})"
+  proof (rule closedin_intro)
+    show "X \<times> {1::real} \<subseteq> X \<times> I_set"
+      unfolding top1_unit_interval_def by (by100 auto)
+    have "(X \<times> I_set) - (X \<times> {1::real}) = X \<times> (I_set - {1::real})"
+      by (by100 blast)
+    moreover have "I_set - {1::real} \<in> I_top"
+      using h1_closed_I unfolding closedin_on_def by (by100 blast)
+    moreover have "X \<in> TX" using hTX unfolding is_topology_on_def by (by100 blast)
+    ultimately show "(X \<times> I_set) - (X \<times> {1::real}) \<in> product_topology_on TX I_top"
+      by (by100 simp) (rule product_rect_open)
+  qed
+  have hS_closed: "closedin_on (X \<times> I_set) (product_topology_on TX I_top) ?S"
+  proof -
+    have hfin: "finite {(A \<times> I_set), (X \<times> {1::real})}" by (by100 simp)
+    have hall: "\<forall>C \<in> {(A \<times> I_set), (X \<times> {1::real})}. closedin_on (X \<times> I_set) (product_topology_on TX I_top) C"
+      using hAI_closed hX1_closed by (by100 blast)
+    have "closedin_on (X \<times> I_set) (product_topology_on TX I_top)
+      (\<Union>{(A \<times> I_set), (X \<times> {1::real})})"
+      by (rule closedin_Union_finite[OF hTXI hfin hall])
+    moreover have "\<Union>{(A \<times> I_set), (X \<times> {1::real})} = ?S" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 3b: Fe continuous on ?S via closed pasting lemma.\<close>
+  have hFe_cont: "top1_continuous_map_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) Y ?TY Fe"
+  proof -
+    \<comment> \<open>Fe on A\<times>I = F: continuous by hF (with subspace topology adjustment).\<close>
+    have hFe_AI: "top1_continuous_map_on (A \<times> I_set)
+        (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (A \<times> I_set)) Y ?TY Fe"
+    proof -
+      \<comment> \<open>On A\<times>I, Fe = F. Bridge topology: subspace of product = product of subspace.\<close>
+      have hbridge: "subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (A \<times> I_set)
+          = product_topology_on (subspace_topology X TX A) I_top"
+      proof -
+        have "subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (A \<times> I_set)
+            = product_topology_on (subspace_topology X TX A) (subspace_topology I_set I_top I_set)"
+          using Theorem_16_3[OF hTX hTI, of A I_set, symmetric] .
+        moreover have "subspace_topology I_set I_top I_set = I_top"
+        proof (rule subspace_topology_self)
+          show "\<forall>U\<in>I_top. U \<subseteq> I_set"
+          proof (intro ballI)
+            fix U assume "U \<in> I_top"
+            then obtain W where "U = I_set \<inter> W"
+              unfolding top1_unit_interval_topology_def top1_unit_interval_def subspace_topology_def
+              by (by100 blast)
+            thus "U \<subseteq> I_set" by (by100 blast)
+          qed
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Fe = F on A\<times>I_set.\<close>
+      have hFe_eq_F: "\<forall>p\<in>A \<times> I_set. Fe p = F p" using hFe_agree_AI by (by100 blast)
+      \<comment> \<open>F continuous A\<times>I with product (subspace A) \<times> I_top.\<close>
+      show ?thesis unfolding hbridge top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume hp: "p \<in> A \<times> I_set"
+        have "Fe p = F p" using hFe_eq_F hp by (by100 blast)
+        moreover have "F p \<in> Y" using hF hp unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "Fe p \<in> Y" by (by100 simp)
+      next
+        fix V assume hV: "V \<in> ?TY"
+        have "{p \<in> A \<times> I_set. Fe p \<in> V} = {p \<in> A \<times> I_set. F p \<in> V}"
+          using hFe_eq_F by (by100 auto)
+        moreover have "{p \<in> A \<times> I_set. F p \<in> V} \<in> product_topology_on (subspace_topology X TX A) I_top"
+          using hF hV unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "{p \<in> A \<times> I_set. Fe p \<in> V} \<in> product_topology_on (subspace_topology X TX A) I_top"
+          by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Fe on X\<times>{1} = constant y0: continuous.\<close>
+    have hFe_X1: "top1_continuous_map_on (X \<times> {1::real})
+        (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})) Y ?TY Fe"
+    proof -
+      \<comment> \<open>On X\<times>\{1\}, Fe(x,1) = y0 for all x \<in> X.\<close>
+      have hFe_const: "\<forall>p\<in>X \<times> {1::real}. Fe p = y0"
+      proof (intro ballI)
+        fix p assume "p \<in> X \<times> {1::real}"
+        then obtain x where hx: "x \<in> X" and hp: "p = (x, 1)" by (by100 blast)
+        show "Fe p = y0" unfolding hp Fe_def using hF1 by (by100 auto)
+      qed
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume hp: "p \<in> X \<times> {1::real}"
+        have "Fe p = y0" using hFe_const hp by (by100 blast)
+        thus "Fe p \<in> Y" using hy0 by (by100 simp)
+      next
+        fix V assume hV: "V \<in> ?TY"
+        show "{p \<in> X \<times> {1::real}. Fe p \<in> V} \<in>
+            subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})"
+        proof (cases "y0 \<in> V")
+          case True
+          have "\<forall>p\<in>X \<times> {1::real}. Fe p \<in> V"
+            using hFe_const True by (by100 simp)
+          hence "{p \<in> X \<times> {1::real}. Fe p \<in> V} = X \<times> {1::real}" by (by100 blast)
+          moreover have "X \<times> {1::real} \<in> subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})"
+          proof -
+            have hXI_open: "(X \<times> I_set) \<in> product_topology_on TX I_top"
+              using hTXI unfolding is_topology_on_def by (by100 blast)
+            have "X \<times> {1::real} = (X \<times> {1::real}) \<inter> (X \<times> I_set)"
+              unfolding top1_unit_interval_def by (by100 auto)
+            thus ?thesis unfolding subspace_topology_def using hXI_open by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        next
+          case False
+          have "\<forall>p\<in>X \<times> {1::real}. Fe p \<notin> V"
+            using hFe_const False by (by100 simp)
+          hence heq: "{p \<in> X \<times> {1::real}. Fe p \<in> V} = {}" by (by100 blast)
+          have "{} \<in> subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})"
+          proof -
+            have "{} \<in> product_topology_on TX I_top"
+              using hTXI unfolding is_topology_on_def by (by100 blast)
+            have "(X \<times> {1::real}) \<inter> {} = {}" by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def
+              using \<open>{} \<in> product_topology_on TX I_top\<close> by (by100 blast)
+          qed
+          thus ?thesis unfolding heq .
+        qed
+      qed
+    qed
+    \<comment> \<open>Paste: both are closed in X\<times>I, their union is ?S.\<close>
+    have hS_union: "(A \<times> I_set) \<union> (X \<times> {1::real}) = ?S" by (by100 blast)
+    have hS_sub: "?S \<subseteq> X \<times> I_set" using hAX unfolding top1_unit_interval_def by (by100 auto)
+    have hAI_closed_S: "closedin_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (A \<times> I_set)"
+    proof -
+      have "A \<times> I_set = (A \<times> I_set) \<inter> ?S" by (by100 blast)
+      thus ?thesis using iffD2[OF Theorem_17_2[OF hTXI hS_sub]] hAI_closed by (by100 blast)
+    qed
+    have hX1_closed_S: "closedin_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (X \<times> {1::real})"
+    proof -
+      have "X \<times> {1::real} = (X \<times> {1::real}) \<inter> ?S"
+        unfolding top1_unit_interval_def by (by100 auto)
+      thus ?thesis using iffD2[OF Theorem_17_2[OF hTXI hS_sub]] hX1_closed by (by100 blast)
+    qed
+    have hTS: "is_topology_on ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S)"
+    proof -
+      have "?S \<subseteq> X \<times> I_set" using hAX unfolding top1_unit_interval_def by (by100 auto)
+      thus ?thesis by (rule subspace_topology_is_topology_on[OF hTXI])
+    qed
+    have hTY_top: "is_topology_on Y ?TY"
+    proof -
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      have "Y \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+      thus ?thesis by (rule subspace_topology_is_topology_on[OF hTR2])
+    qed
+    \<comment> \<open>Adjust continuity from subspace of X\<times>I to subspace of ?S.\<close>
+    have hFe_AI_S: "top1_continuous_map_on (A \<times> I_set)
+        (subspace_topology ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (A \<times> I_set)) Y ?TY Fe"
+    proof -
+      have hAI_sub_S: "A \<times> I_set \<subseteq> ?S" by (by100 blast)
+      have "subspace_topology ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (A \<times> I_set)
+          = subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (A \<times> I_set)"
+        by (rule subspace_topology_trans[OF hAI_sub_S])
+      thus ?thesis using hFe_AI by (by100 simp)
+    qed
+    have hFe_X1_S: "top1_continuous_map_on (X \<times> {1::real})
+        (subspace_topology ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (X \<times> {1::real})) Y ?TY Fe"
+    proof -
+      have hX1_sub_S: "X \<times> {1::real} \<subseteq> ?S"
+        unfolding top1_unit_interval_def by (by100 auto)
+      have "subspace_topology ?S (subspace_topology (X \<times> I_set) (product_topology_on TX I_top) ?S) (X \<times> {1::real})
+          = subspace_topology (X \<times> I_set) (product_topology_on TX I_top) (X \<times> {1::real})"
+        by (rule subspace_topology_trans[OF hX1_sub_S])
+      thus ?thesis using hFe_X1 by (by100 simp)
+    qed
+    have hFe_range: "\<forall>x\<in>?S. Fe x \<in> Y"
+      using \<open>\<forall>p\<in>?S. Fe p \<in> Y\<close> by (by100 blast)
+    show ?thesis
+      by (rule pasting_lemma_two_closed[OF hTS hTY_top hAI_closed_S hX1_closed_S hS_union hFe_range hFe_AI_S hFe_X1_S])
+  qed
+  \<comment> \<open>Step 3c: Apply Tietze coordinatewise. Each coordinate of Fe is continuous
+     ?S \<rightarrow> R. By Theorem_35_1_R (Tietze for R target), extend to X\<times>I \<rightarrow> R.
+     Combine two coordinate extensions into G: X\<times>I \<rightarrow> R^2.\<close>
   obtain G :: "'a \<times> real \<Rightarrow> real \<times> real" where
       hG_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
           UNIV ?TR2 G"
       and hG_ext: "\<forall>p\<in>?S. G p = Fe p"
-    sorry \<comment> \<open>Tietze extension (Theorem_35_1) applied coordinatewise.
-       Needs: ?S closed in X\<times>I, Fe continuous on ?S, X\<times>I normal.
-       Two applications (one per coordinate), combine into G.\<close>
+    sorry \<comment> \<open>Apply Theorem_35_1_R to fst\<circ>Fe and snd\<circ>Fe, combine via Theorem_18_4.\<close>
   \<comment> \<open>Step 4: U = G^{-1}(Y) is open in X\<times>I, contains ?S.\<close>
   let ?U_pre = "{p \<in> X \<times> I_set. G p \<in> Y}"
   have hU_open: "?U_pre \<in> product_topology_on TX I_top"
