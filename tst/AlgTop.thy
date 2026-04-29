@@ -287,7 +287,40 @@ proof -
   \<comment> \<open>Step 3: B = g\<inverse>({-1,1}) closed, disjoint from A. Urysohn separation.\<close>
   define B where "B = {x \<in> X. g x = -1 \<or> g x = 1}"
   have hB_closed: "closedin_on X TX B"
-    sorry \<comment> \<open>Preimage of closed {-1,1} under continuous g.\<close>
+  proof -
+    let ?I = "top1_closed_interval (-1::real) 1"
+    let ?TI = "top1_closed_interval_topology (-1::real) 1"
+    have hTopI: "is_topology_on ?I ?TI"
+    proof -
+      have "?I \<subseteq> (UNIV::real set)" by (by100 simp)
+      thus ?thesis unfolding top1_closed_interval_topology_def
+        by (rule subspace_topology_is_topology_on[OF order_topology_on_UNIV_is_topology_on])
+    qed
+    \<comment> \<open>{-1, 1} is closed in [-1,1].\<close>
+    have hend_closed: "closedin_on ?I ?TI {-1::real, 1}"
+    proof (rule closedin_intro)
+      show "{-1::real, 1} \<subseteq> ?I" unfolding top1_closed_interval_def by (by100 auto)
+      \<comment> \<open>[-1,1] \ {-1,1} = (-1,1) which is open in the subspace topology.\<close>
+      have "?I - {-1::real, 1} = {x. -1 < x \<and> x < 1}"
+        unfolding top1_closed_interval_def by (by100 auto)
+      moreover have "{x::real. -1 < x \<and> x < 1} \<in> ?TI"
+      proof -
+        have "{x::real. -1 < x \<and> x < 1} = ?I \<inter> {x. -1 < x \<and> x < 1}"
+          unfolding top1_closed_interval_def by (by100 auto)
+        moreover have "{x::real. -1 < x \<and> x < 1} \<in> order_topology_on_UNIV"
+          using order_topology_on_UNIV_eq_HOL_open open_interval_is_open
+          unfolding open_interval_def by (by100 blast)
+        moreover have "?TI = subspace_topology UNIV order_topology_on_UNIV ?I"
+          unfolding top1_closed_interval_topology_def by (by100 blast)
+        ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+      qed
+      ultimately show "?I - {-1::real, 1} \<in> ?TI" by (by100 simp)
+    qed
+    \<comment> \<open>B = {x \<in> X. g x \<in> {-1,1}}: preimage of closed under continuous.\<close>
+    have hB_eq: "B = {x \<in> X. g x \<in> {-1::real, 1}}" unfolding B_def by (by100 blast)
+    show ?thesis unfolding hB_eq
+      by (rule continuous_preimage_closedin[OF hTopX hTopI hg hend_closed])
+  qed
   have hAB_disj: "A \<inter> B = {}"
   proof (rule equals0I)
     fix x assume "x \<in> A \<inter> B"
