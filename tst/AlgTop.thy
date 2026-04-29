@@ -1876,9 +1876,9 @@ proof -
      Apply Lemma 62.1 to extend, paste with identity, get retraction contradiction.\<close>
   \<comment> \<open>R^2 normality (needed for Lemma 62.1 application).\<close>
   have hR2_normal: "top1_normal_on (UNIV::(real\<times>real) set) ?TR2"
-    sorry \<comment> \<open>R^2 is normal: bridge from HOL's t4_space class.
-       Proof exists but blast on t4_space causes session timeout.
-       Needs: closedin_on → closed → t4_space → open U,V → U,V ∈ TR2.\<close>
+    sorry \<comment> \<open>R^2 is normal (metrizable \<Longrightarrow> normal). Cannot use t4_space class since
+       'No type arity prod :: t4_space' — the instance isn't registered in HOL.
+       Provable via Theorem_32_2 (metrizable \<Longrightarrow> normal) once R^2 metrizability is established.\<close>
   have hR2I_normal: "top1_normal_on ((UNIV::(real\<times>real) set) \<times> I_set) (product_topology_on ?TR2 I_top)"
     sorry \<comment> \<open>R^2 \<times> I normal. Needs: product of normal with compact = normal,
        or direct t4_space bridge for R^2\<times>[0,1] (which is also a metric space).\<close>
