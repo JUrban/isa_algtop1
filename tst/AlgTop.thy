@@ -447,7 +447,22 @@ proof -
       sorry \<comment> \<open>\<phi> continuous, g continuous, arithmetic (Lemma_21_4) compose.\<close>
     \<comment> \<open>h_inv continuous (-1,1) \<rightarrow> R: h_inv(y) = y/(1-|y|), denominator > 0 on (-1,1).\<close>
     have hhinv_cont: "continuous_on {y::real. -1 < y \<and> y < 1} h_inv"
-      sorry \<comment> \<open>continuous_intros: y/(1-|y|) with denominator 1-|y| > 0 on (-1,1).\<close>
+    proof -
+      let ?S = "{y::real. -1 < y \<and> y < 1}"
+      have hnum: "continuous_on ?S (\<lambda>y::real. y)" by (rule continuous_on_id)
+      have hden: "continuous_on ?S (\<lambda>y::real. 1 - \<bar>y\<bar>)"
+        by (intro continuous_intros)
+      have hne: "\<forall>y\<in>?S. 1 - \<bar>y\<bar> \<noteq> (0::real)"
+      proof (intro ballI)
+        fix y :: real assume "y \<in> ?S"
+        hence "-1 < y" "y < 1" by (by100 simp)+
+        hence "\<bar>y\<bar> < 1" by (by100 linarith)
+        thus "1 - \<bar>y\<bar> \<noteq> 0" by (by100 linarith)
+      qed
+      have "continuous_on ?S (\<lambda>y. y / (1 - \<bar>y\<bar>))"
+        using continuous_on_divide[OF hnum hden] hne by (by100 blast)
+      thus ?thesis unfolding h_inv_def by (by100 simp)
+    qed
     show ?thesis
       sorry \<comment> \<open>Compose: F = h_inv \<circ> ((1-\<phi>)\<cdot>g), range in (-1,1), continuous.\<close>
   qed
