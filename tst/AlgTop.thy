@@ -4582,8 +4582,70 @@ proof -
       let ?n = "length indices"
       let ?ws = "map (\<lambda>i. (indices!i, word!i)) [0..<?n]"
       have hresult: "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<?n]) e = ?ws"
-        sorry \<comment> \<open>By induction on n from the right: each mul singleton onto accumulator
-           just prepends (consecutive indices differ). Result = the word list.\<close>
+      proof -
+        \<comment> \<open>Prove by induction on n. Key: mul of singleton onto word = prepend = cons.\<close>
+        have "\<forall>m \<le> ?n. foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [m..<?n]) e
+            = map (\<lambda>i. (indices!i, word!i)) [m..<?n]"
+        proof (rule allI, rule impI)
+          fix m show "m \<le> ?n \<Longrightarrow> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [m..<?n]) e
+            = map (\<lambda>i. (indices!i, word!i)) [m..<?n]"
+          proof (induction "?n - m" arbitrary: m)
+            case 0
+            hence "m = ?n" using 0 by (by100 linarith)
+            thus ?case unfolding e_def by (by100 simp)
+          next
+            case (Suc k)
+            hence hm_lt: "m < ?n" by (by100 linarith)
+            have hSm: "Suc m \<le> ?n" using hm_lt by (by100 linarith)
+            have hk: "k = ?n - Suc m" using Suc by (by100 linarith)
+            have hIH: "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [Suc m..<?n]) e
+                = map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n]"
+              using Suc.hyps(1)[OF hk hSm] .
+            have hupt: "[m..<?n] = m # [Suc m..<?n]" using upt_rec[of m ?n] hm_lt by (by100 simp)
+            have "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [m..<?n]) e
+                = mul (\<iota>fam (indices!m) (word!m)) (foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [Suc m..<?n]) e)"
+              unfolding hupt by (by100 simp)
+            also have "\<dots> = mul (\<iota>fam (indices!m) (word!m)) (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n])"
+              unfolding hIH ..
+            also have "\<dots> = mul [(indices!m, word!m)] (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n])"
+              using h\<iota>_single hm_lt by (by100 simp)
+            also have "\<dots> = prepend (indices!m, word!m) (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n])"
+              unfolding mul_def by (by100 simp)
+            also have "\<dots> = (indices!m, word!m) # (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n])"
+            proof (rule hprepend_cons)
+              show "word!m \<noteq> eGG (indices!m)"
+              proof -
+                have "\<iota>fam (indices!m) (word!m) \<noteq> e" using hvals hm_lt by (by100 blast)
+                thus ?thesis unfolding \<iota>fam_def e_def by (cases "word!m = eGG (indices!m)") (by100 simp)+
+              qed
+            next
+              show "map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n] = [] \<or>
+                  indices!m \<noteq> fst (hd (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n]))"
+              proof (cases "Suc m < ?n")
+                case False
+                hence "[Suc m..<?n] = []" by (by100 simp)
+                thus ?thesis by (by100 simp)
+              next
+                case True
+                have "[Suc m..<?n] = Suc m # [Suc (Suc m)..<?n]"
+                  using upt_rec[of "Suc m" ?n] True by (by100 simp)
+                hence "hd (map (\<lambda>i. (indices!i, word!i)) [Suc m..<?n]) = (indices!(Suc m), word!(Suc m))"
+                  by (by100 simp)
+                moreover have "indices!m \<noteq> indices!(Suc m)"
+                proof -
+                  have "m + 1 < length indices" using True by (by100 simp)
+                  hence "indices ! m \<noteq> indices ! (m + 1)" using halt by (by100 blast)
+                  thus ?thesis by (by100 simp)
+                qed
+                ultimately show ?thesis by (by100 simp)
+              qed
+            qed
+            also have "\<dots> = map (\<lambda>i. (indices!i, word!i)) [m..<?n]" unfolding hupt by (by100 simp)
+            finally show ?case .
+          qed
+        qed
+        thus ?thesis by (by100 simp)
+      qed
       have "?ws \<noteq> []" using hpos by (by100 simp)
       thus ?thesis using hresult unfolding e_def by (by100 simp)
     qed
