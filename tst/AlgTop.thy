@@ -846,7 +846,25 @@ proof -
       \<comment> \<open>H' = H \<circ> (g^{-1} \<times> id). Both g^{-1} and id are continuous.\<close>
       have hpair: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
           (A \<times> I_set) (product_topology_on TA I_top) (\<lambda>(y,t). (inv_into A ?g y, t))"
-        sorry \<comment> \<open>Product of g^{-1} and id, by Theorem_18_4.\<close>
+      proof -
+        have hTKI: "is_topology_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)"
+          by (rule product_topology_on_is_topology_on[OF hTK top1_unit_interval_topology_is_topology_on])
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        \<comment> \<open>\<pi>1 \<circ> pair = g^{-1}: continuous by hginv.\<close>
+        have hpi1_p: "pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = inv_into A ?g \<circ> pi1"
+          unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
+        have hpi2_p: "pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)) = pi2"
+          unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
+        have hpi1_cont: "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top) ?K (subspace_topology UNIV ?TR2 ?K) pi1"
+          by (rule top1_continuous_pi1[OF hTK hTI])
+        have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+            A TA (pi1 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+          unfolding hpi1_p by (rule top1_continuous_map_on_comp[OF hpi1_cont hginv])
+        moreover have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
+            I_set I_top (pi2 \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
+          unfolding hpi2_p by (rule top1_continuous_pi2[OF hTK hTI])
+        ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTKI hTA hTI]] by (by100 blast)
+      qed
       have "top1_continuous_map_on (?K \<times> I_set) (product_topology_on (subspace_topology UNIV ?TR2 ?K) I_top)
           ?Y ?TY (H \<circ> (\<lambda>(y,t). (inv_into A ?g y, t)))"
         by (rule top1_continuous_map_on_comp[OF hpair hH])
