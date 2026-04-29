@@ -1899,15 +1899,34 @@ proof -
     thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
   qed
   \<comment> \<open>The origin is in a component of UNIV-K, and that component is unbounded.\<close>
-  have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) (subspace_topology UNIV ?TR2 (UNIV - ?K))
+  \<comment> \<open>UNIV-K has subspace topology from TR2.\<close>
+  let ?T_UK = "subspace_topology UNIV ?TR2 (UNIV - ?K)"
+  have hT_UK: "is_topology_on (UNIV - ?K) ?T_UK"
+    by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+  \<comment> \<open>Part 1: origin is in a component of UNIV-K.\<close>
+  let ?C0 = "top1_component_of_on (UNIV - ?K) ?T_UK ?origin"
+  have hC0_comp: "?C0 \<in> top1_components_on (UNIV - ?K) ?T_UK"
+    unfolding top1_components_on_def using horigin_not_in_K by (by100 blast)
+  have horigin_C0: "?origin \<in> ?C0"
+    by (rule top1_component_of_on_self_mem[OF hT_UK horigin_not_in_K])
+  \<comment> \<open>Part 2: C0 is unbounded.\<close>
+  have hR2_claim: "\<exists>C0. C0 \<in> top1_components_on (UNIV - ?K) ?T_UK
          \<and> ?origin \<in> C0
          \<and> (\<forall>R > 0. \<exists>x \<in> C0. (fst x)^2 + (snd x)^2 > R^2)"
-    sorry \<comment> \<open>Munkres' proof: origin \<in> component C0 (UNIV-K open, has components).
-       Suppose C0 bounded. Then C0\<union>K closed+bounded = compact (Heine-Borel).
-       Compact Hausdorff \<Longrightarrow> normal (Theorem_32_3). Apply Lemma_62_1 to X = C0\<union>K.
-       Get k: C0\<union>K \<rightarrow> R^2-{0} with k|_K = id. Paste k with id on D\<union>K.
-       h: R^2 \<rightarrow> R^2-{0} with h = id on D\<union>K. Large ball: h|_\<partial>B = id.
-       Retraction contradiction with Theorem_55_2. Hence C0 unbounded.\<close>
+  proof (intro exI[of _ ?C0] conjI)
+    show "?C0 \<in> top1_components_on (UNIV - ?K) ?T_UK" by (rule hC0_comp)
+    show "?origin \<in> ?C0" by (rule horigin_C0)
+    show "\<forall>R>0. \<exists>x\<in>?C0. R\<^sup>2 < (fst x)\<^sup>2 + (snd x)\<^sup>2"
+      sorry \<comment> \<open>By contradiction: suppose C0 bounded (contained in ball of radius R).
+         Then C0\<union>K closed + bounded \<Longrightarrow> compact (Heine-Borel for R^2).
+         Compact Hausdorff \<Longrightarrow> normal (Theorem_32_3).
+         Apply Lemma_62_1 to X = C0\<union>K, A = K, Y = R^2-{origin}:
+           get k: C0\<union>K \<rightarrow> R^2-{0} with k|_K = id.
+         Paste k with id on D\<union>K \<Longrightarrow> h: R^2 \<rightarrow> R^2-{0} with h = id on D\<union>K.
+         Large ball B: h|_\<partial>B = id. Radial projection r: R^2-{0} \<rightarrow> \<partial>B.
+         r \<circ> h|_B retraction of B onto \<partial>B.
+         Contradiction with Theorem_55_2_no_retraction.\<close>
+  qed
   \<comment> \<open>Transfer back to S^2 via h^{-1}.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: unbounded component of R^2-K maps to component of S^2-f(A) containing both a and b.\<close>
