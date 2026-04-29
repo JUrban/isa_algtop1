@@ -1947,7 +1947,34 @@ proof -
       qed
       \<comment> \<open>C0 \<union> K closed in R^2 (\<partial>C0 \<subseteq> K, so complement D is open).\<close>
       have hCK_closed: "closed (?C0 \<union> ?K)"
-        sorry \<comment> \<open>Components of open set: \<partial>(component) \<subseteq> boundary of open set = K.\<close>
+      proof -
+        \<comment> \<open>D = UNIV-(C0\<union>K) is open. For each x \<in> D, find open connected nbhd avoiding C0.\<close>
+        \<comment> \<open>Use open_subopen: open S if for each x \<in> S, \<exists> open T. x \<in> T \<subseteq> S.\<close>
+        \<comment> \<open>For x \<in> D: x \<in> UNIV-K (open). Get open nbhd U \<subseteq> UNIV-K.
+           U is open in R^2. Need: U is connected (or restrict to connected component of x in U).
+           If U (or a connected part of U) doesn't intersect C0, then it's \<subseteq> D.
+           If it does intersect C0, then x is in the same component as C0, contradicting x \<notin> C0.\<close>
+        \<comment> \<open>Key issue: prod :: metric_space not registered, so can't use dist/ball/openE.
+           Use HOL's open_prod_def directly: open in product topology = union of open rectangles.\<close>
+        have "open (UNIV - (?C0 \<union> ?K) :: (real\<times>real) set)"
+        proof -
+          have hUK_open_HOL: "open (UNIV - ?K :: (real\<times>real) set)"
+          proof -
+            have "open (- ?K :: (real\<times>real) set)" using open_closed hK_closed by (by100 blast)
+            thus ?thesis unfolding Compl_eq_Diff_UNIV[symmetric] .
+          qed
+          \<comment> \<open>For each x \<in> D: find open rectangle in UNIV-K avoiding C0.\<close>
+          have "\<forall>x \<in> UNIV - (?C0 \<union> ?K). \<exists>T. open T \<and> x \<in> T \<and> T \<subseteq> UNIV - (?C0 \<union> ?K)"
+            sorry \<comment> \<open>Needs: open rectangles (a,b)\<times>(c,d) are connected (path-connected).
+               If such rectangle intersects C0, then rectangle \<union> C0 is connected,
+               hence \<subseteq> C0 (maximality), contradicting x \<notin> C0.
+               BLOCKED by: prod :: metric_space not registered.
+               Alternative: prove connectedness of open rectangles directly.\<close>
+          thus ?thesis using open_subopen by (by100 blast)
+        qed
+        hence "closed (- (UNIV - (?C0 \<union> ?K)) :: (real\<times>real) set)" using open_closed by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
       \<comment> \<open>C0 \<union> K bounded + closed \<Longrightarrow> compact (Heine-Borel).\<close>
       have hCK_compact: "compact (?C0 \<union> ?K)"
       proof -
@@ -1996,8 +2023,10 @@ proof -
             hence "\<bar>snd x\<bar> \<le> sqrt M" using real_le_rsqrt by (by100 blast)
             thus ?thesis .
           qed
-          ultimately show "x \<in> {- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M}"
-            by (cases x) (by100 auto)
+          ultimately have "- sqrt M \<le> fst x \<and> fst x \<le> sqrt M \<and> - sqrt M \<le> snd x \<and> snd x \<le> sqrt M"
+            by (by100 linarith)
+          thus "x \<in> {- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M}"
+            by (cases x) (by100 simp)
         qed
         \<comment> \<open>The square is compact (via top1 product of compact intervals + bridge).\<close>
         have hsq_compact: "compact ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M} :: (real\<times>real) set)"
