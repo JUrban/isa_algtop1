@@ -25,19 +25,9 @@ proof -
   thus ?thesis using open_Int[OF open_ray_gt_is_open open_ray_lt_is_open] by (by100 simp)
 qed
 
-lemma order_topology_UNIV_eq_top1_open_sets_real:
-  "(order_topology_on_UNIV :: real set set) = top1_open_sets"
-proof (rule set_eqI, rule iffI)
-  fix U :: "real set"
-  \<comment> \<open>Direction 1: order_topology \<subseteq> top1_open_sets.
-     Basis elements are HOL-open, generated topology preserves openness.\<close>
-  assume "U \<in> order_topology_on_UNIV"
-  thus "U \<in> top1_open_sets"
-    sorry \<comment> \<open>Each basis element (open_interval, open_ray_gt/lt, UNIV) is HOL-open
-       (proved via helper lemmas). By open_subopen, U is open.
-       The proof structure is correct but unfolding topology_generated_by_basis_def
-       inside blast causes a session-level hang due to complex set comprehensions.\<close>
-next
+lemma top1_open_sets_sub_order_topology_real:
+  "(top1_open_sets :: real set set) \<subseteq> order_topology_on_UNIV"
+proof
   fix U :: "real set"
   \<comment> \<open>Direction 2: open \<Rightarrow> in order_topology.
      open = generate_topology(rays). Rays in basis. order_topology is a topology.\<close>
@@ -110,17 +100,45 @@ next
   qed
 qed
 
-lemma closed_interval_top_eq_I_top:
-  "top1_closed_interval_topology 0 1 = I_top"
-proof -
-  have "top1_closed_interval_topology 0 1 =
-      subspace_topology UNIV order_topology_on_UNIV (top1_closed_interval 0 1)"
-    unfolding top1_closed_interval_topology_def by (by100 simp)
-  also have "... = subspace_topology UNIV top1_open_sets (top1_closed_interval 0 1)"
-    using order_topology_UNIV_eq_top1_open_sets_real by (by100 simp)
-  also have "top1_closed_interval 0 1 = I_set"
+lemma I_top_sub_closed_interval_top:
+  "I_top \<subseteq> top1_closed_interval_topology 0 1"
+proof
+  fix V assume "V \<in> I_top"
+  hence "V \<in> subspace_topology UNIV top1_open_sets I_set"
+    unfolding top1_unit_interval_topology_def .
+  then obtain W where hW: "W \<in> top1_open_sets" and hV: "V = I_set \<inter> W"
+    unfolding subspace_topology_def by (by100 blast)
+  have "W \<in> order_topology_on_UNIV"
+    using top1_open_sets_sub_order_topology_real hW by (by100 blast)
+  have hCI_eq: "top1_closed_interval 0 1 = I_set"
     unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
-  finally show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+  have "V = top1_closed_interval 0 1 \<inter> W" unfolding hCI_eq hV ..
+  moreover have "W \<in> order_topology_on_UNIV" by (rule \<open>W \<in> order_topology_on_UNIV\<close>)
+  ultimately show "V \<in> top1_closed_interval_topology 0 1"
+    unfolding top1_closed_interval_topology_def subspace_topology_def by (by100 blast)
+qed
+
+text \<open>Continuity transfer: if \<phi> continuous X \<rightarrow> [0,1] (closed_interval_topology),
+  then \<phi> continuous X \<rightarrow> I_set (I_top), since I_top \<subseteq> closed_interval_topology.\<close>
+lemma continuous_closed_interval_imp_I_top:
+  assumes "top1_continuous_map_on X TX (top1_closed_interval 0 1)
+               (top1_closed_interval_topology 0 1) f"
+  shows "top1_continuous_map_on X TX I_set I_top f"
+proof -
+  have hCI_eq: "top1_closed_interval 0 1 = I_set"
+    unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> X"
+    have "f x \<in> top1_closed_interval 0 1"
+      using assms \<open>x \<in> X\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+    thus "f x \<in> I_set" unfolding hCI_eq .
+  next
+    fix V assume "V \<in> I_top"
+    hence "V \<in> top1_closed_interval_topology 0 1" using I_top_sub_closed_interval_top by (by100 blast)
+    thus "{x \<in> X. f x \<in> V} \<in> TX"
+      using assms unfolding top1_continuous_map_on_def by (by100 blast)
+  qed
 qed
 
 section \<open>*\<S>62 Invariance of Domain\<close>
@@ -399,10 +417,8 @@ proof -
   proof -
     \<comment> \<open>The map x \<mapsto> (x, \<phi> x) : X \<rightarrow> X \<times> I is continuous (Theorem 18.4 + identity + \<phi>).\<close>
     \<comment> \<open>Bridge \<phi> from closed_interval_topology to I_top.\<close>
-    have hCI_eq_I: "top1_closed_interval 0 1 = I_set"
-      unfolding top1_closed_interval_def top1_unit_interval_def by (by100 auto)
     have h\<phi>_I: "top1_continuous_map_on X TX I_set I_top \<phi>"
-      using h\<phi> unfolding closed_interval_top_eq_I_top hCI_eq_I .
+      by (rule continuous_closed_interval_imp_I_top[OF h\<phi>])
     have hpair_cont: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
         (\<lambda>x. (x, \<phi> x))"
     proof -
