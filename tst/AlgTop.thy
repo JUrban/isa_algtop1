@@ -444,7 +444,60 @@ proof -
     \<comment> \<open>(1-\<phi>)\<cdot>g continuous X \<rightarrow> R, then h_inv continuous on (-1,1), compose.\<close>
     have hprod_cont: "top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV
         (\<lambda>x. (1 - \<phi> x) * g x)"
-      sorry \<comment> \<open>\<phi> continuous, g continuous, arithmetic (Lemma_21_4) compose.\<close>
+    proof -
+      let ?TOR = "order_topology_on_UNIV :: real set set"
+      have hTR: "is_topology_on (UNIV::real set) ?TOR" by (rule order_topology_on_UNIV_is_topology_on)
+      have hTRR: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on ?TOR ?TOR)"
+        by (rule product_topology_on_is_topology_on[OF hTR hTR])
+      \<comment> \<open>Enlarge codomain of g to R.\<close>
+      have hg_R: "top1_continuous_map_on X TX (UNIV::real set) ?TOR g"
+      proof -
+        have hg_sub: "top1_continuous_map_on X TX ?I (subspace_topology UNIV ?TOR ?I) g"
+          using hg unfolding top1_closed_interval_topology_def by (by100 simp)
+        have "top1_continuous_map_on X TX (UNIV::real set) (subspace_topology UNIV ?TOR UNIV) g"
+          using top1_continuous_map_on_codomain_enlarge[OF hg_sub] by (by100 simp)
+        thus ?thesis unfolding subspace_topology_UNIV_self .
+      qed
+      \<comment> \<open>Enlarge codomain of \<phi> to R, then form 1-\<phi>.\<close>
+      have h\<phi>_R: "top1_continuous_map_on X TX (UNIV::real set) ?TOR \<phi>"
+      proof -
+        have h\<phi>_sub: "top1_continuous_map_on X TX (top1_closed_interval 0 1) (subspace_topology UNIV ?TOR (top1_closed_interval 0 1)) \<phi>"
+          using h\<phi> unfolding top1_closed_interval_topology_def by (by100 simp)
+        have "top1_continuous_map_on X TX (UNIV::real set) (subspace_topology UNIV ?TOR UNIV) \<phi>"
+          using top1_continuous_map_on_codomain_enlarge[OF h\<phi>_sub] by (by100 simp)
+        thus ?thesis unfolding subspace_topology_UNIV_self .
+      qed
+      \<comment> \<open>1-\<phi> continuous: compose with negation and addition.\<close>
+      have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+      proof (rule set_eqI)
+        fix U :: "real set"
+        show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+          using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 simp)
+      qed
+      have h1\<phi>_R: "top1_continuous_map_on X TX (UNIV::real set) ?TOR (\<lambda>x. 1 - \<phi> x)"
+        sorry \<comment> \<open>1-\<phi> = const 1 - \<phi>. Subtraction continuous via Lemma_21_4.\<close>
+      \<comment> \<open>Pair (1-\<phi>, g) and compose with multiplication.\<close>
+      have hpair: "top1_continuous_map_on X TX ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on ?TOR ?TOR)
+          (\<lambda>x. (1 - \<phi> x, g x))"
+      proof -
+        have hpi1_p: "pi1 \<circ> (\<lambda>x. (1 - \<phi> x, g x)) = (\<lambda>x. 1 - \<phi> x)"
+          unfolding pi1_def by (rule ext) (by100 simp)
+        have hpi2_p: "pi2 \<circ> (\<lambda>x. (1 - \<phi> x, g x)) = g"
+          unfolding pi2_def by (rule ext) (by100 simp)
+        have "top1_continuous_map_on X TX (UNIV::real set) ?TOR (pi1 \<circ> (\<lambda>x. (1 - \<phi> x, g x)))"
+          unfolding hpi1_p by (rule h1\<phi>_R)
+        moreover have "top1_continuous_map_on X TX (UNIV::real set) ?TOR (pi2 \<circ> (\<lambda>x. (1 - \<phi> x, g x)))"
+          unfolding hpi2_p by (rule hg_R)
+        ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTopX hTR hTR]] by (by100 blast)
+      qed
+      have cont_mul: "top1_continuous_map_on ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on ?TOR ?TOR) (UNIV::real set) ?TOR (\<lambda>p::real\<times>real. pi1 p * pi2 p)"
+        using Lemma_21_4(3) by (by100 simp)
+      have "top1_continuous_map_on X TX (UNIV::real set) ?TOR ((\<lambda>p. pi1 p * pi2 p) \<circ> (\<lambda>x. (1 - \<phi> x, g x)))"
+        by (rule top1_continuous_map_on_comp[OF hpair cont_mul])
+      moreover have "(\<lambda>p::real\<times>real. pi1 p * pi2 p) \<circ> (\<lambda>x. (1 - \<phi> x, g x)) = (\<lambda>x. (1 - \<phi> x) * g x)"
+        unfolding pi1_def pi2_def by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>h_inv continuous (-1,1) \<rightarrow> R: h_inv(y) = y/(1-|y|), denominator > 0 on (-1,1).\<close>
     have hhinv_cont: "continuous_on {y::real. -1 < y \<and> y < 1} h_inv"
     proof -
