@@ -3732,13 +3732,42 @@ proof -
      - mul(invg ws, ws) = [] (inverse property via cancellation)
      - Associativity of mul (the hardest part)\<close>
   \<comment> \<open>Key helper: prepend preserves reducedness.\<close>
+  \<comment> \<open>G membership helpers to avoid repeated G_def unfolding.\<close>
+  have hG_elem: "\<And>ws i. ws \<in> G \<Longrightarrow> i < length ws \<Longrightarrow>
+      fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i)) \<and> snd (ws!i) \<noteq> eGG (fst (ws!i))"
+    unfolding G_def by (by100 blast)
+  have hG_alt: "\<And>ws i. ws \<in> G \<Longrightarrow> i + 1 < length ws \<Longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1))"
+    unfolding G_def by (by100 blast)
+  have hG_intro: "\<And>ws. (\<forall>i<length ws. fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i))
+                           \<and> snd (ws!i) \<noteq> eGG (fst (ws!i)))
+            \<Longrightarrow> (\<forall>i. i+1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1)))
+            \<Longrightarrow> ws \<in> G"
+    unfolding G_def by (by100 blast)
   have htail_G: "\<And>p ws. p # ws \<in> G \<Longrightarrow> ws \<in> G"
-    sorry \<comment> \<open>Tail of reduced word is reduced (shift indices by 1).\<close>
+  proof -
+    fix p ws assume hpws: "p # ws \<in> G"
+    show "ws \<in> G"
+    proof (rule hG_intro)
+      show "\<forall>i<length ws. fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i)) \<and> snd (ws!i) \<noteq> eGG (fst (ws!i))"
+      proof (intro allI impI)
+        fix i assume "i < length ws"
+        hence "Suc i < length (p # ws)" by (by100 simp)
+        from hG_elem[OF hpws this] show "fst (ws!i) \<in> J \<and> snd (ws!i) \<in> GG (fst (ws!i)) \<and> snd (ws!i) \<noteq> eGG (fst (ws!i))"
+          by (by100 simp)
+      qed
+    next
+      show "\<forall>i. i + 1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1))"
+      proof (intro allI impI)
+        fix i assume "i + 1 < length ws"
+        hence "Suc i + 1 < length (p # ws)" by (by100 simp)
+        from hG_alt[OF hpws this] show "fst (ws!i) \<noteq> fst (ws!(i+1))" by (by100 simp)
+      qed
+    qed
+  qed
   have hprepend_reduced: "\<And>\<alpha> g ws. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow>
       prepend (\<alpha>, g) ws \<in> G"
-    sorry \<comment> \<open>Case analysis: identity (skip), empty (singleton), different index (cons),
-       same index with product identity (tail), same index non-identity (replace head).
-       Each case verifiable from G_def + group axioms. Uses htail_G.\<close>
+    sorry \<comment> \<open>Case analysis using hG_elem, hG_alt, hG_intro, htail_G.
+       Avoids G_def unfolding in each case.\<close>
   \<comment> \<open>(1) e \<in> G: empty list is reduced.\<close>
   have he_G: "e \<in> G" unfolding e_def G_def by (by100 simp)
   \<comment> \<open>(2) Left identity: mul e ws = ws.\<close>
