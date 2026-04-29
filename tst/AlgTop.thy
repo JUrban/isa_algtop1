@@ -475,7 +475,44 @@ proof -
           using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 simp)
       qed
       have h1\<phi>_R: "top1_continuous_map_on X TX (UNIV::real set) ?TOR (\<lambda>x. 1 - \<phi> x)"
-        sorry \<comment> \<open>1-\<phi> = const 1 - \<phi>. Subtraction continuous via Lemma_21_4.\<close>
+      proof -
+        \<comment> \<open>Constant 1 continuous.\<close>
+        have hconst: "top1_continuous_map_on X TX (UNIV::real set) ?TOR (\<lambda>_. 1::real)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> X" show "(1::real) \<in> UNIV" by (by100 simp)
+        next
+          fix V assume "V \<in> ?TOR"
+          have hX_open: "X \<in> TX" using hTopX unfolding is_topology_on_def by (by100 blast)
+          have hempty: "{} \<in> TX" using hTopX unfolding is_topology_on_def by (by100 blast)
+          show "{x \<in> X. (1::real) \<in> V} \<in> TX"
+          proof -
+            have "((1::real) \<in> V \<and> {x \<in> X. (1::real) \<in> V} = X) \<or>
+                  ((1::real) \<notin> V \<and> {x \<in> X. (1::real) \<in> V} = {})" by (by100 blast)
+            thus ?thesis using hX_open hempty by (by100 auto)
+          qed
+        qed
+        \<comment> \<open>Pair (const 1, \<phi>) and compose with subtraction.\<close>
+        have hpair_sub: "top1_continuous_map_on X TX ((UNIV::real set)\<times>(UNIV::real set)) (product_topology_on ?TOR ?TOR) (\<lambda>x. (1::real, \<phi> x))"
+        proof -
+          have hpi1_p: "pi1 \<circ> (\<lambda>x. (1::real, \<phi> x)) = (\<lambda>_. 1::real)"
+            unfolding pi1_def by (rule ext) (by100 simp)
+          have hpi2_p: "pi2 \<circ> (\<lambda>x. (1::real, \<phi> x)) = \<phi>"
+            unfolding pi2_def by (rule ext) (by100 simp)
+          have "top1_continuous_map_on X TX (UNIV::real set) ?TOR (pi1 \<circ> (\<lambda>x. (1::real, \<phi> x)))"
+            unfolding hpi1_p by (rule hconst)
+          moreover have "top1_continuous_map_on X TX (UNIV::real set) ?TOR (pi2 \<circ> (\<lambda>x. (1::real, \<phi> x)))"
+            unfolding hpi2_p by (rule h\<phi>_R)
+          ultimately show ?thesis using iffD2[OF Theorem_18_4[OF hTopX hTR hTR]] by (by100 blast)
+        qed
+        have cont_sub: "top1_continuous_map_on ((UNIV::real set)\<times>(UNIV::real set)) (product_topology_on ?TOR ?TOR) (UNIV::real set) ?TOR (\<lambda>p::real\<times>real. pi1 p - pi2 p)"
+          using Lemma_21_4(2) by (by100 simp)
+        have "top1_continuous_map_on X TX (UNIV::real set) ?TOR ((\<lambda>p. pi1 p - pi2 p) \<circ> (\<lambda>x. (1::real, \<phi> x)))"
+          by (rule top1_continuous_map_on_comp[OF hpair_sub cont_sub])
+        moreover have "(\<lambda>p::real\<times>real. pi1 p - pi2 p) \<circ> (\<lambda>x. (1, \<phi> x)) = (\<lambda>x. 1 - \<phi> x)"
+          unfolding pi1_def pi2_def by (rule ext) (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       \<comment> \<open>Pair (1-\<phi>, g) and compose with multiplication.\<close>
       have hpair: "top1_continuous_map_on X TX ((UNIV::real set) \<times> (UNIV::real set)) (product_topology_on ?TOR ?TOR)
           (\<lambda>x. (1 - \<phi> x, g x))"
