@@ -1948,8 +1948,31 @@ proof -
         sorry \<comment> \<open>Bounded (from hC0_bounded + hK_bounded) + closed \<Longrightarrow> compact.\<close>
       \<comment> \<open>Compact \<Longrightarrow> top1_compact_on \<Longrightarrow> Hausdorff \<Longrightarrow> normal (Theorem_32_3).\<close>
       have hCK_normal: "top1_normal_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
-        sorry \<comment> \<open>compact \<Longrightarrow> top1_compact_on (bridge) \<Longrightarrow> Hausdorff (subspace of R^2)
-           \<Longrightarrow> Theorem_32_3.\<close>
+      proof -
+        \<comment> \<open>Bridge: HOL compact \<rightarrow> top1_compact_on.\<close>
+        have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+          using product_topology_on_open_sets_real2 by (by100 metis)
+        have hCK_top1_compact: "top1_compact_on (?C0 \<union> ?K) (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets (?C0 \<union> ?K))"
+          using top1_compact_on_subspace_UNIV_iff_compact hCK_compact by (by100 blast)
+        hence "top1_compact_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+          unfolding hTR2_eq .
+        moreover have "is_hausdorff_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
+        proof -
+          have "is_hausdorff_on (UNIV::(real\<times>real) set) ?TR2"
+          proof -
+            have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+              using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+            have "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+              using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq by (by100 simp)
+            hence "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+                (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+              using conjunct1[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+        qed
+        ultimately show ?thesis by (rule Theorem_32_3)
+      qed
       have hCKI_normal: "top1_normal_on ((?C0 \<union> ?K) \<times> I_set)
           (product_topology_on (subspace_topology UNIV ?TR2 (?C0 \<union> ?K)) I_top)"
         sorry \<comment> \<open>Product of compact spaces \<Longrightarrow> compact \<Longrightarrow> Hausdorff \<Longrightarrow> normal.\<close>
