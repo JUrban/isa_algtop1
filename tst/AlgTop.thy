@@ -4054,10 +4054,9 @@ proof -
   have hprepend_compose: "\<And>\<alpha> g h z. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> g \<noteq> eGG \<alpha> \<Longrightarrow>
       h \<in> GG \<alpha> \<Longrightarrow> h \<noteq> eGG \<alpha> \<Longrightarrow>
       prepend (\<alpha>, g) (prepend (\<alpha>, h) z) = prepend (\<alpha>, mulGG \<alpha> g h) z"
-    sorry \<comment> \<open>Case analysis on what prepend (\<alpha>,h) z produces:
-       - z empty or different index: prepend (\<alpha>,h) z = (\<alpha>,h)#z, then prepend (\<alpha>,g) merges.
-       - z starts with (\<alpha>,...): prepend (\<alpha>,h) merges with head, result may or may not start with \<alpha>.
-       Requires showing mulGG \<alpha> g (mulGG \<alpha> h x) = mulGG \<alpha> (mulGG \<alpha> g h) x (assoc in GG \<alpha>).\<close>
+    sorry \<comment> \<open>3 cases: z empty (merge to singleton), z diff index (merge pair),
+       z same index (triple merge using associativity in GG \<alpha>).
+       All use mulGG \<alpha> (mulGG \<alpha> g h) k = mulGG \<alpha> g (mulGG \<alpha> h k).\<close>
   have hprepend_mul: "\<And>\<alpha> g ws zs. \<alpha> \<in> J \<Longrightarrow> g \<in> GG \<alpha> \<Longrightarrow> ws \<in> G \<Longrightarrow> zs \<in> G \<Longrightarrow>
       mul (prepend (\<alpha>, g) ws) zs = prepend (\<alpha>, g) (mul ws zs)"
   proof -
