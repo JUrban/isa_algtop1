@@ -7558,19 +7558,109 @@ proof -
   qed
 qed
 
+text \<open>Lemma 68.3 (Munkres): Extension property of free products.
+  If G is a free product of groups G_\<alpha> via injections \<iota>_\<alpha>, then for any group H
+  and homomorphisms h_\<alpha>: G_\<alpha> \<rightarrow> H, there exists a unique hom h: G \<rightarrow> H
+  with h \<circ> \<iota>_\<alpha> = h_\<alpha> for each \<alpha>.\<close>
+lemma Lemma_68_3_extension_property:
+  assumes hFP: "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hfam: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
+  shows "\<exists>!h. top1_group_hom_on G mul H mulH h
+      \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
+  sorry
+
 (** from \<S>68 Theorem 68.4: uniqueness of free product — any two
     free products of the same family are isomorphic. **)
 theorem Theorem_68_4_free_product_unique:
-  assumes "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
-      and "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
+  assumes hG1: "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
+      and hG2: "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
   shows "top1_groups_isomorphic_on G1 mul1 G2 mul2"
 proof -
-  \<comment> \<open>Munkres 68.4: Both G1, G2 have the extension property (Lemma 68.3).
-     Step 1: Define \<phi>: G1 \<rightarrow> G2 by extending the maps \<iota>2_\<alpha> \<circ> \<iota>1_\<alpha>\<inverse> on generators.
-     Step 2: Similarly define \<psi>: G2 \<rightarrow> G1.
-     Step 3: \<psi>\<circ>\<phi> extends id on the generators of G1, so \<psi>\<circ>\<phi> = id by uniqueness.
-     Step 4: Similarly \<phi>\<circ>\<psi> = id. Hence \<phi> is an isomorphism.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Munkres 68.4: Use extension property (Lemma 68.3) to build \<phi>: G1 \<rightarrow> G2 and \<psi>: G2 \<rightarrow> G1.\<close>
+  have hgrp1: "top1_is_group_on G1 mul1 e1 invg1"
+    using hG1 unfolding top1_is_free_product_on_def by (by100 blast)
+  have hgrp2: "top1_is_group_on G2 mul2 e2 invg2"
+    using hG2 unfolding top1_is_free_product_on_def by (by100 blast)
+  \<comment> \<open>Step 1: \<iota>2_\<alpha> : GG_\<alpha> \<rightarrow> G2 are hom. Apply 68.3 to G1 to get \<phi>: G1 \<rightarrow> G2.\<close>
+  have h\<iota>2_hom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G2 mul2 (\<iota>2 \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+    show "top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G2 mul2 (\<iota>2 \<alpha>)"
+      unfolding top1_group_hom_on_def
+      using hG2 h\<alpha> unfolding top1_is_free_product_on_def by (by100 blast)
+  qed
+  obtain \<phi> where h\<phi>_hom: "top1_group_hom_on G1 mul1 G2 mul2 \<phi>"
+      and h\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<phi> (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x"
+      and h\<phi>_unique: "\<forall>h'. top1_group_hom_on G1 mul1 G2 mul2 h'
+          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x) \<longrightarrow> h' = \<phi>"
+    using Lemma_68_3_extension_property[OF hG1 hgrp2 h\<iota>2_hom] sorry
+  \<comment> \<open>Step 2: Similarly \<psi>: G2 \<rightarrow> G1.\<close>
+  have h\<iota>1_hom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G1 mul1 (\<iota>1 \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+    show "top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G1 mul1 (\<iota>1 \<alpha>)"
+      unfolding top1_group_hom_on_def
+      using hG1 h\<alpha> unfolding top1_is_free_product_on_def by (by100 blast)
+  qed
+  obtain \<psi> where h\<psi>_hom: "top1_group_hom_on G2 mul2 G1 mul1 \<psi>"
+      and h\<psi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<psi> (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x"
+      and h\<psi>_unique: "\<forall>h'. top1_group_hom_on G2 mul2 G1 mul1 h'
+          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x) \<longrightarrow> h' = \<psi>"
+    using Lemma_68_3_extension_property[OF hG2 hgrp1 h\<iota>1_hom] sorry
+  \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators of G1. By uniqueness, \<psi>\<circ>\<phi> = id on G1.\<close>
+  \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators. id also extends id. By uniqueness, \<psi>\<circ>\<phi> = id.\<close>
+  have h\<psi>\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. (\<psi> \<circ> \<phi>) (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x"
+  proof (intro ballI)
+    fix \<alpha> x assume h\<alpha>: "\<alpha> \<in> J" and hx: "x \<in> GG \<alpha>"
+    have "(\<psi> \<circ> \<phi>) (\<iota>1 \<alpha> x) = \<psi> (\<phi> (\<iota>1 \<alpha> x))" by (by100 simp)
+    also have "\<phi> (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x" using h\<phi>_ext h\<alpha> hx by (by100 blast)
+    also have "\<psi> (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x" using h\<psi>_ext h\<alpha> hx by (by100 blast)
+    finally show "(\<psi> \<circ> \<phi>) (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x" .
+  qed
+  \<comment> \<open>id: G1 \<rightarrow> G1 also extends \<iota>1. By uniqueness (68.3 for G1 with H=G1), \<psi>\<circ>\<phi> = id.\<close>
+  have h\<psi>\<phi>_id: "\<forall>x\<in>G1. \<psi> (\<phi> x) = x"
+    sorry
+  \<comment> \<open>Step 4: Similarly \<phi>\<circ>\<psi> = id on G2.\<close>
+  have h\<phi>\<psi>_id: "\<forall>x\<in>G2. \<phi> (\<psi> x) = x"
+    sorry
+  \<comment> \<open>Step 5: \<phi> is bijective (has two-sided inverse \<psi>).\<close>
+  have himg1: "\<phi> ` G1 \<subseteq> G2"
+  proof (rule subsetI)
+    fix y assume "y \<in> \<phi> ` G1"
+    then obtain x where "x \<in> G1" "y = \<phi> x" by (by100 blast)
+    thus "y \<in> G2" using h\<phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+  qed
+  have himg2: "\<psi> ` G2 \<subseteq> G1"
+  proof (rule subsetI)
+    fix y assume "y \<in> \<psi> ` G2"
+    then obtain x where "x \<in> G2" "y = \<psi> x" by (by100 blast)
+    thus "y \<in> G1" using h\<psi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+  qed
+  have "bij_betw \<phi> G1 G2"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on \<phi> G1"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> G1" "y \<in> G1" "\<phi> x = \<phi> y"
+      hence "\<psi> (\<phi> x) = \<psi> (\<phi> y)" by (by100 simp)
+      thus "x = y" using h\<psi>\<phi>_id \<open>x \<in> G1\<close> \<open>y \<in> G1\<close> by (by100 force)
+    qed
+    show "\<phi> ` G1 = G2"
+    proof (rule set_eqI)
+      fix y show "y \<in> \<phi> ` G1 \<longleftrightarrow> y \<in> G2"
+      proof
+        assume "y \<in> \<phi> ` G1" thus "y \<in> G2" using himg1 by (by100 blast)
+      next
+        assume "y \<in> G2"
+        hence "\<psi> y \<in> G1" using himg2 by (by100 blast)
+        moreover have "\<phi> (\<psi> y) = y" using h\<phi>\<psi>_id \<open>y \<in> G2\<close> by (by100 blast)
+        ultimately show "y \<in> \<phi> ` G1" by (by100 force)
+      qed
+    qed
+  qed
+  thus ?thesis unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using h\<phi>_hom by (by100 blast)
 qed
 
 (** from \<S>68 Theorem 68.7: if G = G_1 * G_2 is a free product and N_i \<lhd> G_i are
