@@ -691,12 +691,50 @@ proof -
         have hsub: "?Sab \<subseteq> ?S2 - {b}" by (by100 blast)
         have hh_cont: "top1_continuous_map_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) (UNIV::(real\<times>real) set) ?TR2 h"
           using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTopS2: "is_topology_on ?S2 ?TS2"
+          using hT unfolding is_topology_on_strict_def by (by100 blast)
+        have hS2b_sub: "?S2 - {b} \<subseteq> ?S2" by (by100 blast)
         have hTopS2b: "is_topology_on (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b}))"
-          sorry \<comment> \<open>Subspace topology is a topology.\<close>
+          by (rule subspace_topology_is_topology_on[OF hTopS2 hS2b_sub])
+        \<comment> \<open>Restrict h to S^2-{a,b}: use subspace restriction + transitivity.\<close>
+        have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+          by (by100 simp)
         have hh_Sab_R2: "top1_continuous_map_on ?Sab (subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab) (UNIV::(real\<times>real) set) ?TR2 h"
-          sorry \<comment> \<open>Restriction of continuous to subspace.\<close>
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> ?Sab"
+          hence "x \<in> ?S2 - {b}" using hsub by (by100 blast)
+          thus "h x \<in> (UNIV::(real\<times>real) set)" by (by100 simp)
+        next
+          fix V assume hV: "V \<in> ?TR2"
+          have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
+          moreover have hpre: "{x \<in> ?S2 - {b}. h x \<in> V} \<in> subspace_topology ?S2 ?TS2 (?S2 - {b})"
+            using hh_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately have "{x \<in> ?Sab. h x \<in> V} = ?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V}" by (by100 blast)
+          moreover have "?Sab \<inter> {x \<in> ?S2 - {b}. h x \<in> V} \<in>
+            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
+            unfolding subspace_topology_def
+            apply (rule CollectI)
+            apply (rule exI[of _ "{x \<in> ?S2 - {b}. h x \<in> V}"])
+            apply (intro conjI)
+             apply (by100 blast)
+            using hpre unfolding subspace_topology_def apply (by100 blast)
+            done
+          ultimately show "{x \<in> ?Sab. h x \<in> V} \<in>
+            subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab"
+            by (by100 simp)
+        qed
         have hh_Sab_R2': "top1_continuous_map_on ?Sab ?TSab (UNIV::(real\<times>real) set) ?TR2 h"
-          sorry \<comment> \<open>Subspace transitivity: subspace of subspace = subspace.\<close>
+        proof -
+          have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab
+              = subspace_topology ?S2 ?TS2 ?Sab"
+            by (rule subspace_topology_trans) (by100 blast)
+          moreover have "subspace_topology ?S2 ?TS2 ?Sab = ?TSab" by (by100 simp)
+          ultimately have "subspace_topology (?S2 - {b}) (subspace_topology ?S2 ?TS2 (?S2 - {b})) ?Sab = ?TSab"
+            by (by100 simp)
+          thus ?thesis using hh_Sab_R2 by (by100 simp)
+        qed
         \<comment> \<open>Restrict codomain to UNIV - {origin}.\<close>
         have himg: "h ` ?Sab \<subseteq> ?Y"
         proof (rule image_subsetI)
@@ -725,7 +763,21 @@ proof -
         show "top1_continuous_map_on A TA ?Y ?TY (h \<circ> f)"
           by (rule top1_continuous_map_on_comp[OF hf hh_Sab])
         show "top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. h c)"
-          sorry \<comment> \<open>Constant map continuous.\<close>
+        proof -
+          have hTA: "is_topology_on A TA"
+            using hcomp unfolding top1_compact_on_def by (by100 blast)
+          have hTY: "is_topology_on ?Y ?TY"
+          proof -
+            have hTR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?TR2"
+              using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+              by (by100 simp)
+            show ?thesis by (rule subspace_topology_is_topology_on[OF hTR2_top]) (by100 simp)
+          qed
+          have "h c \<in> ?Y" by (rule hhc)
+          have "\<forall>y0\<in>?Y. top1_continuous_map_on A TA ?Y ?TY (\<lambda>_. y0)"
+            by (rule Theorem_18_2(1)[OF hTA hTY hTY])
+          thus ?thesis using hhc by (by100 blast)
+        qed
         show "top1_continuous_map_on (A \<times> I_set) (product_topology_on TA I_top) ?Y ?TY (h \<circ> H)"
           by (rule hHg)
         show "\<forall>x\<in>A. (h \<circ> H) (x, 0) = (h \<circ> f) x"
