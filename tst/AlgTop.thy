@@ -1933,19 +1933,102 @@ proof -
       \<comment> \<open>C0 bounded: contained in ball of radius R.\<close>
       have hC0_bounded: "\<forall>x\<in>?C0. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2" by (rule hbnd)
       \<comment> \<open>K bounded: compact \<Longrightarrow> bounded.\<close>
-      have hK_bounded: "\<exists>R'. \<forall>x\<in>?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'\<^sup>2"
-      proof -
-        have "compact ?K" by (rule hK_compact)
-        hence "bounded ?K"
-          sorry \<comment> \<open>compact \<Longrightarrow> bounded for (real\<times>real). HOL-Analysis fact.\<close>
-        thus ?thesis sorry \<comment> \<open>bounded \<Longrightarrow> contained in ball.\<close>
+      have hK_bounded: "\<exists>R'. \<forall>x\<in>?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'"
+      proof (cases "?K = {}")
+        case True thus ?thesis by (by100 blast)
+      next
+        case False
+        have "continuous_on ?K (\<lambda>x::(real\<times>real). (fst x)\<^sup>2 + (snd x)\<^sup>2)"
+          by (intro continuous_intros)
+        from continuous_attains_sup[OF hK_compact False this]
+        obtain x0 where "x0 \<in> ?K" "\<forall>y\<in>?K. (fst y)\<^sup>2 + (snd y)\<^sup>2 \<le> (fst x0)\<^sup>2 + (snd x0)\<^sup>2"
+          by (by100 blast)
+        thus ?thesis by (by100 blast)
       qed
       \<comment> \<open>C0 \<union> K closed in R^2 (\<partial>C0 \<subseteq> K, so complement D is open).\<close>
       have hCK_closed: "closed (?C0 \<union> ?K)"
         sorry \<comment> \<open>Components of open set: \<partial>(component) \<subseteq> boundary of open set = K.\<close>
       \<comment> \<open>C0 \<union> K bounded + closed \<Longrightarrow> compact (Heine-Borel).\<close>
       have hCK_compact: "compact (?C0 \<union> ?K)"
-        sorry \<comment> \<open>Bounded (from hC0_bounded + hK_bounded) + closed \<Longrightarrow> compact.\<close>
+      proof -
+        \<comment> \<open>C0\<union>K \<subseteq> big closed square. Show the square is compact, C0\<union>K closed \<Longrightarrow> compact.\<close>
+        obtain R' where hR': "\<forall>x\<in>?K. (fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'" using hK_bounded by (by100 blast)
+        define M where "M = max (R\<^sup>2) R' + 1"
+        have hM_pos: "M > 0" unfolding M_def
+        proof -
+          have "R\<^sup>2 > 0" using hR by (by100 simp)
+          thus "0 < max (R\<^sup>2) R' + 1" by (by100 linarith)
+        qed
+        have hCK_sub_sq: "?C0 \<union> ?K \<subseteq> {- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M}"
+        proof (rule subsetI)
+          fix x assume "x \<in> ?C0 \<union> ?K"
+          hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> M"
+          proof
+            assume "x \<in> ?C0"
+            hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R\<^sup>2" using hbnd by (by100 blast)
+            also have "R\<^sup>2 \<le> max (R\<^sup>2) R'" by (by100 simp)
+            finally show ?thesis unfolding M_def by (by100 linarith)
+          next
+            assume "x \<in> ?K"
+            hence "(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> R'" using hR' by (by100 blast)
+            also have "R' \<le> max (R\<^sup>2) R'" by (by100 simp)
+            finally show ?thesis unfolding M_def by (by100 linarith)
+          qed
+          have hfst: "(fst x)\<^sup>2 \<le> M"
+          proof -
+            have "(snd x)\<^sup>2 \<ge> 0" by (by100 simp)
+            thus ?thesis using \<open>(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> M\<close> by (by100 linarith)
+          qed
+          have hsnd: "(snd x)\<^sup>2 \<le> M"
+          proof -
+            have "(fst x)\<^sup>2 \<ge> 0" by (by100 simp)
+            thus ?thesis using \<open>(fst x)\<^sup>2 + (snd x)\<^sup>2 \<le> M\<close> by (by100 linarith)
+          qed
+          have "\<bar>fst x\<bar> \<le> sqrt M"
+          proof -
+            have "\<bar>fst x\<bar>\<^sup>2 \<le> M" using hfst by (by100 simp)
+            hence "\<bar>fst x\<bar> \<le> sqrt M" using real_le_rsqrt by (by100 blast)
+            thus ?thesis .
+          qed
+          moreover have "\<bar>snd x\<bar> \<le> sqrt M"
+          proof -
+            have "\<bar>snd x\<bar>\<^sup>2 \<le> M" using hsnd by (by100 simp)
+            hence "\<bar>snd x\<bar> \<le> sqrt M" using real_le_rsqrt by (by100 blast)
+            thus ?thesis .
+          qed
+          ultimately show "x \<in> {- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M}"
+            by (cases x) (by100 auto)
+        qed
+        \<comment> \<open>The square is compact (via top1 product of compact intervals + bridge).\<close>
+        have hsq_compact: "compact ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M} :: (real\<times>real) set)"
+        proof -
+          have h1: "compact ({- sqrt M .. sqrt M} :: real set)" by (rule compact_Icc)
+          have h1': "top1_compact_on {- sqrt M .. sqrt M}
+              (subspace_topology (UNIV::real set) top1_open_sets {- sqrt M .. sqrt M})"
+            using top1_compact_on_subspace_UNIV_iff_compact h1 by (by100 blast)
+          have hprod: "top1_compact_on ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M})
+              (product_topology_on (subspace_topology UNIV top1_open_sets {- sqrt M .. sqrt M})
+                                   (subspace_topology UNIV top1_open_sets {- sqrt M .. sqrt M}))"
+            by (rule Theorem_26_7[OF h1' h1'])
+          have hTR2_eq: "?TR2 = (top1_open_sets :: (real\<times>real) set set)"
+            using product_topology_on_open_sets_real2 by (by100 metis)
+          have heq: "product_topology_on (subspace_topology UNIV top1_open_sets {- sqrt M .. sqrt M})
+                                         (subspace_topology UNIV top1_open_sets {- sqrt M .. sqrt M})
+              = subspace_topology (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)
+                  ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M})"
+            using Theorem_16_3[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV,
+                of "{- sqrt M .. sqrt M}" "{- sqrt M .. sqrt M}"] by (by100 simp)
+          have "top1_compact_on ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M})
+              (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M}))"
+            using hprod unfolding heq hTR2_eq by (by100 simp)
+          thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        qed
+        have "compact ({- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M} \<inter> (?C0 \<union> ?K))"
+          by (rule compact_Int_closed[OF hsq_compact hCK_closed])
+        moreover have "{- sqrt M .. sqrt M} \<times> {- sqrt M .. sqrt M} \<inter> (?C0 \<union> ?K) = ?C0 \<union> ?K"
+          using hCK_sub_sq by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
       \<comment> \<open>Compact \<Longrightarrow> top1_compact_on \<Longrightarrow> Hausdorff \<Longrightarrow> normal (Theorem_32_3).\<close>
       have hCK_normal: "top1_normal_on (?C0 \<union> ?K) (subspace_topology UNIV ?TR2 (?C0 \<union> ?K))"
       proof -
