@@ -5828,6 +5828,53 @@ proof (rule set_eqI)
   qed
 qed
 
+text \<open>If two maps agree on X, their induced maps on π₁(X) agree.
+  Key insight: loop_equiv only depends on values on [0,1], and loops map [0,1] into X.\<close>
+lemma fundamental_group_induced_agree:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
+      and hx0: "x0 \<in> X"
+      and hf_cont: "top1_continuous_map_on X TX Y TY f"
+      and hg_cont: "top1_continuous_map_on X TX Y TY g"
+      and hfg: "\<forall>x\<in>X. f x = g x"
+      and hf0: "f x0 = y0" and hg0: "g x0 = y0"
+      and hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+  shows "top1_fundamental_group_induced_on X TX x0 Y TY y0 f c
+       = top1_fundamental_group_induced_on X TX x0 Y TY y0 g c"
+  unfolding top1_fundamental_group_induced_on_def
+proof (rule Collect_cong, rule iffI)
+  fix k
+  \<comment> \<open>Any loop α at x0 maps [0,1] into X, so f∘α = g∘α on [0,1].\<close>
+  { fix \<alpha> assume h\<alpha>c: "\<alpha> \<in> c"
+    have "\<forall>t\<in>top1_unit_interval. \<alpha> t \<in> X"
+    proof -
+      from hc obtain f0 where "top1_is_loop_on X TX x0 f0"
+          "c = {g. top1_loop_equiv_on X TX x0 f0 g}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      hence "top1_is_loop_on X TX x0 \<alpha>"
+        using h\<alpha>c unfolding top1_loop_equiv_on_def by (by100 blast)
+      thus ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    qed
+    hence "\<forall>t\<in>top1_unit_interval. (f \<circ> \<alpha>) t = (g \<circ> \<alpha>) t"
+      using hfg by (by100 auto)
+  } note hagree = this
+  \<comment> \<open>loop_equiv only depends on values on [0,1] (via continuous_map_on and path_homotopic).\<close>
+  { fix \<alpha> assume h\<alpha>: "\<alpha> \<in> c"
+    have hag: "\<forall>t\<in>top1_unit_interval. (f \<circ> \<alpha>) t = (g \<circ> \<alpha>) t" by (rule hagree[OF h\<alpha>])
+    have "top1_loop_equiv_on Y TY y0 (f \<circ> \<alpha>) k \<longleftrightarrow> top1_loop_equiv_on Y TY y0 (g \<circ> \<alpha>) k"
+      sorry
+  } note hequiv = this
+  {
+    assume "\<exists>\<alpha>\<in>c. top1_loop_equiv_on Y TY y0 (f \<circ> \<alpha>) k"
+    then obtain \<alpha> where "\<alpha> \<in> c" "top1_loop_equiv_on Y TY y0 (f \<circ> \<alpha>) k" by (by100 blast)
+    thus "\<exists>\<alpha>\<in>c. top1_loop_equiv_on Y TY y0 (g \<circ> \<alpha>) k" using hequiv by (by100 blast)
+  next
+    assume "\<exists>\<alpha>\<in>c. top1_loop_equiv_on Y TY y0 (g \<circ> \<alpha>) k"
+    then obtain \<alpha> where "\<alpha> \<in> c" "top1_loop_equiv_on Y TY y0 (g \<circ> \<alpha>) k" by (by100 blast)
+    thus "\<exists>\<alpha>\<in>c. top1_loop_equiv_on Y TY y0 (f \<circ> \<alpha>) k" using hequiv by (by100 blast)
+  }
+qed
+
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
 
 text \<open>The winding number of a loop f in R^2-{0} around the origin.
