@@ -610,10 +610,55 @@ proof (intro conjI ballI)
   qed
 next
   fix p q assume hp: "p \<in> top1_S1" and hq: "q \<in> top1_S1"
-  \<comment> \<open>Use covering map: p = R_to_S1(s), q = R_to_S1(u) for some s, u.
-     Path: t \<mapsto> R_to_S1((1-t)*s + t*u).\<close>
-  show "\<exists>f. top1_is_path_on top1_S1 top1_S1_topology p q f"
+  \<comment> \<open>Get preimages under covering map.\<close>
+  obtain s where hs: "p = (cos (2 * pi * s), sin (2 * pi * s))"
+  proof -
+    obtain a b where hab: "p = (a, b)" by (cases p)
+    have "a^2 + b^2 = 1"
+    proof -
+      have "(fst p)^2 + (snd p)^2 = 1" using hp unfolding top1_S1_def by (by100 blast)
+      thus ?thesis using hab by simp
+    qed
+    obtain t where ht: "a = cos t" "b = sin t"
+      using sincos_total_2pi[OF \<open>a^2+b^2=1\<close>] by blast
+    let ?s = "t / (2 * pi)"
+    have "2 * pi * ?s = t" using pi_gt_zero by (by100 simp)
+    hence "p = (cos (2 * pi * ?s), sin (2 * pi * ?s))"
+      using hab ht by (by100 simp)
+    thus ?thesis using that by (by100 blast)
+  qed
+  obtain u where hu: "q = (cos (2 * pi * u), sin (2 * pi * u))"
+  proof -
+    obtain a b where hab: "q = (a, b)" by (cases q)
+    have "a^2 + b^2 = 1"
+    proof -
+      have "(fst q)^2 + (snd q)^2 = 1" using hq unfolding top1_S1_def by (by100 blast)
+      thus ?thesis using hab by simp
+    qed
+    obtain t where ht: "a = cos t" "b = sin t"
+      using sincos_total_2pi[OF \<open>a^2+b^2=1\<close>] by blast
+    let ?u = "t / (2 * pi)"
+    have "2 * pi * ?u = t" using pi_gt_zero by (by100 simp)
+    hence "q = (cos (2 * pi * ?u), sin (2 * pi * ?u))"
+      using hab ht by (by100 simp)
+    thus ?thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>Define path via linear interpolation in R, composed with covering map.\<close>
+  let ?f = "\<lambda>t. (cos (2 * pi * ((1 - t) * s + t * u)), sin (2 * pi * ((1 - t) * s + t * u)))"
+  have hf0: "?f 0 = p" using hs by (by100 simp)
+  have hf1: "?f 1 = q" using hu by (by100 simp)
+  have hf_on_S1: "\<forall>t. ?f t \<in> top1_S1"
+  proof
+    fix t :: real
+    have "(cos (2 * pi * ((1-t)*s + t*u)))^2 + (sin (2 * pi * ((1-t)*s + t*u)))^2 = 1"
+      by (rule sin_cos_squared_add2)
+    thus "?f t \<in> top1_S1" unfolding top1_S1_def by (by100 force)
+  qed
+  have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      top1_S1 top1_S1_topology ?f"
     sorry
+  show "\<exists>f. top1_is_path_on top1_S1 top1_S1_topology p q f"
+    using hf_cont hf0 hf1 unfolding top1_is_path_on_def by (by100 blast)
 qed
 
 text \<open>Corollary 52.2 (Munkres): If X is path connected and x0, x1 \<in> X, then
