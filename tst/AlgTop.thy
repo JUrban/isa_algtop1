@@ -9258,7 +9258,19 @@ proof -
         have hx0_UV: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
         have hx0_U: "x0 \<in> U" using assms(8) by (by100 blast)
         have hincl_cont: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
-          sorry
+        proof -
+          \<comment> \<open>id: U → U is continuous with the subspace topology.\<close>
+          have hid_U: "top1_continuous_map_on U ?TU U ?TU (\<lambda>x. x)"
+            using top1_continuous_map_on_id[OF hTopU] unfolding id_def by (by100 simp)
+          \<comment> \<open>Restrict domain to U \<inter> V \<subseteq> U.\<close>
+          have "U \<inter> V \<subseteq> U" by (by100 blast)
+          have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hid_U \<open>U \<inter> V \<subseteq> U\<close>])
+          \<comment> \<open>Subspace transitivity: subspace_topology U ?TU (U\<inter>V) = ?TUV.\<close>
+          moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+            using subspace_topology_trans[OF \<open>U \<inter> V \<subseteq> U\<close>] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
             (top1_fundamental_group_mul (U \<inter> V) ?TUV x0)
             (top1_fundamental_group_carrier U ?TU x0)
@@ -9280,12 +9292,32 @@ proof -
     proof -
       have "?ind_V \<in> top1_fundamental_group_carrier V ?TV x0"
       proof -
+        have hUV_sub2: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+        have hTUV2: "is_topology_on (U \<inter> V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub2])
+        have hx0_UV2: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+        have hincl_cont_V: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+        proof -
+          have hid_V: "top1_continuous_map_on V ?TV V ?TV (\<lambda>x. x)"
+            using top1_continuous_map_on_id[OF hTopV] unfolding id_def by (by100 simp)
+          have "U \<inter> V \<subseteq> V" by (by100 blast)
+          have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF hid_V \<open>U \<inter> V \<subseteq> V\<close>])
+          moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+            using subspace_topology_trans[OF \<open>U \<inter> V \<subseteq> V\<close>] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hx0_V: "x0 \<in> V" using assms(8) by (by100 blast)
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
             (top1_fundamental_group_mul (U \<inter> V) ?TUV x0)
             (top1_fundamental_group_carrier V ?TV x0)
             (top1_fundamental_group_mul V ?TV x0)
             (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x))"
-          sorry
+        proof -
+          have "(\<lambda>x. x) x0 = x0" by (by100 simp)
+          thus ?thesis
+            by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV2 hTopV hx0_UV2 hx0_V hincl_cont_V])
+        qed
         thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
       qed
       moreover have "\<forall>x\<in>top1_fundamental_group_carrier V ?TV x0. \<iota>fam 1 x \<in> FP"
