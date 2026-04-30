@@ -10136,30 +10136,11 @@ proof -
   have hexists: "\<exists>h. top1_group_hom_on G mul H mulH h
       \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
   proof -
-    \<comment> \<open>Step 1: every g \<in> G has a reduced-word representation (from generation + reduction).\<close>
-    have hrepr: "\<forall>g\<in>G. g = e \<or> (\<exists>indices word.
-        length indices = length word \<and> length indices > 0
-      \<and> (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
-                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
-      \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
-      \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g)"
-      sorry
-    \<comment> \<open>Step 2: ?h maps G to H.\<close>
-    have hh_maps: "\<forall>g\<in>G. ?h g \<in> H"
-      sorry
-    \<comment> \<open>Step 3: ?h is a homomorphism.\<close>
-    have hh_hom: "\<forall>g1\<in>G. \<forall>g2\<in>G. ?h (mul g1 g2) = mulH (?h g1) (?h g2)"
-      sorry
-    \<comment> \<open>Step 4: ?h agrees with hfam on generators.\<close>
-    have hh_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
-      sorry
-    show ?thesis
-    proof (rule exI[of _ ?h])
-      show "top1_group_hom_on G mul H mulH ?h \<and>
-          (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
-        unfolding top1_group_hom_on_def
-        using hh_maps hh_hom hh_ext by (by100 blast)
-    qed
+    \<comment> \<open>Every g ∈ G has a reduced-word representation. Define ?h by word evaluation:
+       h(ιfam(α₁)(g₁) * ... * ιfam(αₙ)(gₙ)) = hfam(α₁)(g₁) * ... * hfam(αₙ)(gₙ).
+       Well-defined by uniqueness of reduced words (hreduced).
+       This h maps G to H, is a homomorphism, and agrees with hfam on generators.\<close>
+    show ?thesis sorry
   qed
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
   have hunique: "\<And>h1 h2. top1_group_hom_on G mul H mulH h1 \<Longrightarrow>
