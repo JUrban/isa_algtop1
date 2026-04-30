@@ -7727,8 +7727,54 @@ proof -
         hence hxG: "x \<in> G" "h1 x = h2 x" by (by100 blast)+
         \<comment> \<open>h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x).\<close>
         have "h1 (invg x) = h2 (invg x)"
-          \<comment> \<open>h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x) by hom_preserves_inv.\<close>
-          sorry
+        proof -
+          have hixG: "invg x \<in> G" using hinv_closed hxG(1) by (by100 blast)
+          \<comment> \<open>h1(invg x) * h1(x) = h1(invg x * x) = h1(e) = eH.\<close>
+          have "h1 (mul (invg x) x) = mulH (h1 (invg x)) (h1 x)"
+            using hh1_mul hixG hxG(1) by (by100 blast)
+          moreover have "mul (invg x) x = e" using hinv_left hxG(1) by (by100 blast)
+          ultimately have h1inv_eq: "mulH (h1 (invg x)) (h1 x) = eH" using hh1e by (by100 simp)
+          \<comment> \<open>Similarly for h2.\<close>
+          have "h2 (mul (invg x) x) = mulH (h2 (invg x)) (h2 x)"
+            using hh2_mul hixG hxG(1) by (by100 blast)
+          hence h2inv_eq: "mulH (h2 (invg x)) (h2 x) = eH" using hh2e hinv_left hxG(1) by (by100 simp)
+          \<comment> \<open>h1(invg x)*h1(x) = eH and h2(invg x)*h2(x) = eH with h1(x)=h2(x).
+             Left inverse is unique in a group, so h1(invg x) = h2(invg x).\<close>
+          have hh1ix: "h1 (invg x) \<in> H" using hh1_maps hixG by (by100 blast)
+          have hh2ix: "h2 (invg x) \<in> H" using hh2_maps hixG by (by100 blast)
+          have hhx: "h1 x \<in> H" using hh1_maps hxG(1) by (by100 blast)
+          \<comment> \<open>From a*b=eH in a group: a = invgH(b). So h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x).\<close>
+          have "h1 (invg x) = mulH (h1 (invg x)) (mulH (h1 x) (invgH (h1 x)))"
+            using hH_inv_right hhx hH_id_right hh1ix by (by100 force)
+          also have "\<dots> = mulH (mulH (h1 (invg x)) (h1 x)) (invgH (h1 x))"
+          proof -
+            have "invgH (h1 x) \<in> H" using hH_inv_closed hhx by (by100 blast)
+            thus ?thesis using hH_assoc hh1ix hhx by (by100 force)
+          qed
+          also have "mulH (h1 (invg x)) (h1 x) = eH" by (rule h1inv_eq)
+          also have "mulH eH (invgH (h1 x)) = invgH (h1 x)"
+            using hH hH_inv_closed hhx unfolding top1_is_group_on_def by (by100 blast)
+          finally have "h1 (invg x) = invgH (h1 x)" .
+          also have "\<dots> = invgH (h2 x)" using hxG(2) by (by100 simp)
+          also have "\<dots> = h2 (invg x)"
+          proof -
+            \<comment> \<open>Same argument: h2(invg x) = invgH(h2 x).\<close>
+            have hhx2: "h2 x \<in> H" using hh2_maps hxG(1) by (by100 blast)
+            have "h2 (invg x) = mulH (h2 (invg x)) (mulH (h2 x) (invgH (h2 x)))"
+              using hH_inv_right hhx2 hH_id_right hh2ix by (by100 force)
+            also have "\<dots> = mulH (mulH (h2 (invg x)) (h2 x)) (invgH (h2 x))"
+            proof -
+              have "invgH (h2 x) \<in> H" using hH_inv_closed hhx2 by (by100 blast)
+              thus ?thesis using hH_assoc hh2ix hhx2 by (by100 force)
+            qed
+            also have "mulH (h2 (invg x)) (h2 x) = eH"
+              by (rule h2inv_eq)
+            also have "mulH eH (invgH (h2 x)) = invgH (h2 x)"
+              using hH hH_inv_closed hhx2 unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis by (by100 simp)
+          qed
+          finally show ?thesis .
+        qed
         thus "invg x \<in> ?K" using hinv_closed hxG(1) by (by100 blast)
       qed
       \<comment> \<open>Axioms: inherited from G.\<close>
