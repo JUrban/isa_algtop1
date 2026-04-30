@@ -810,6 +810,102 @@ theorem Theorem_57_2_no_antipode_S2_to_S1:
      Contradiction.\<close>
   sorry
 
+text \<open>Transitivity of group isomorphism (used early, moved here from later).\<close>
+lemma groups_isomorphic_trans_fwd:
+  assumes "top1_groups_isomorphic_on G mulG H mulH"
+      and "top1_groups_isomorphic_on H mulH K mulK"
+  shows "top1_groups_isomorphic_on G mulG K mulK"
+proof -
+  obtain f where hf: "top1_group_hom_on G mulG H mulH f" "bij_betw f G H"
+    using assms(1) unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  obtain g where hg: "top1_group_hom_on H mulH K mulK g" "bij_betw g H K"
+    using assms(2) unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  have "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> G"
+    thus "(g \<circ> f) x \<in> K"
+      using hf(1) hg(1) unfolding top1_group_hom_on_def comp_def by (by100 blast)
+  next
+    fix x y assume "x \<in> G" "y \<in> G"
+    thus "(g \<circ> f) (mulG x y) = mulK ((g \<circ> f) x) ((g \<circ> f) y)"
+      using hf(1) hg(1) unfolding top1_group_hom_on_def comp_def by (by100 force)
+  qed
+  moreover have "bij_betw (g \<circ> f) G K"
+    by (rule bij_betw_trans[OF hf(2) hg(2)])
+  ultimately show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by (by100 blast)
+qed
+
+text \<open>Product of isomorphic groups: if G₁ ≅ H₁ and G₂ ≅ H₂ then G₁×G₂ ≅ H₁×H₂.\<close>
+lemma product_groups_isomorphic:
+  assumes "top1_groups_isomorphic_on G1 mul1 H1 mulH1"
+      and "top1_groups_isomorphic_on G2 mul2 H2 mulH2"
+  shows "top1_groups_isomorphic_on
+    (G1 \<times> G2) (\<lambda>(a1,a2) (b1,b2). (mul1 a1 b1, mul2 a2 b2))
+    (H1 \<times> H2) (\<lambda>(a1,a2) (b1,b2). (mulH1 a1 b1, mulH2 a2 b2))"
+proof -
+  obtain f1 where hf1_hom: "top1_group_hom_on G1 mul1 H1 mulH1 f1"
+      and hf1_bij: "bij_betw f1 G1 H1"
+    using assms(1) unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  obtain f2 where hf2_hom: "top1_group_hom_on G2 mul2 H2 mulH2 f2"
+      and hf2_bij: "bij_betw f2 G2 H2"
+    using assms(2) unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  let ?f = "\<lambda>(a, b). (f1 a, f2 b)"
+  have hf_hom: "top1_group_hom_on (G1 \<times> G2)
+      (\<lambda>(a1,a2) (b1,b2). (mul1 a1 b1, mul2 a2 b2))
+      (H1 \<times> H2) (\<lambda>(a1,a2) (b1,b2). (mulH1 a1 b1, mulH2 a2 b2)) ?f"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix p assume "p \<in> G1 \<times> G2"
+    then obtain a b where "p = (a,b)" "a \<in> G1" "b \<in> G2" by (by100 blast)
+    thus "?f p \<in> H1 \<times> H2"
+      using hf1_hom hf2_hom unfolding top1_group_hom_on_def by (by100 force)
+  next
+    fix p q assume "p \<in> G1 \<times> G2" "q \<in> G1 \<times> G2"
+    then obtain a1 a2 b1 b2 where hp: "p = (a1,a2)" "a1 \<in> G1" "a2 \<in> G2"
+        and hq: "q = (b1,b2)" "b1 \<in> G1" "b2 \<in> G2" by (by100 force)
+    show "?f ((\<lambda>(a1,a2) (b1,b2). (mul1 a1 b1, mul2 a2 b2)) p q)
+        = (\<lambda>(a1,a2) (b1,b2). (mulH1 a1 b1, mulH2 a2 b2)) (?f p) (?f q)"
+      using hp hq hf1_hom hf2_hom unfolding top1_group_hom_on_def by (by100 force)
+  qed
+  have hf_bij: "bij_betw ?f (G1 \<times> G2) (H1 \<times> H2)"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on ?f (G1 \<times> G2)"
+    proof (rule inj_onI)
+      fix p q assume "p \<in> G1 \<times> G2" "q \<in> G1 \<times> G2" "?f p = ?f q"
+      then obtain a1 a2 b1 b2 where hp: "p = (a1,a2)" "a1 \<in> G1" "a2 \<in> G2"
+          and hq: "q = (b1,b2)" "b1 \<in> G1" "b2 \<in> G2" by (by100 force)
+      from \<open>?f p = ?f q\<close> have "f1 a1 = f1 b1" "f2 a2 = f2 b2"
+        using hp hq by (by100 simp)+
+      hence "a1 = b1" "a2 = b2"
+        using hf1_bij hf2_bij hp hq unfolding bij_betw_def
+        by (metis inj_onD)+
+      thus "p = q" using hp hq by (by100 simp)
+    qed
+    show "?f ` (G1 \<times> G2) = H1 \<times> H2"
+    proof
+      show "?f ` (G1 \<times> G2) \<subseteq> H1 \<times> H2"
+        using hf1_bij hf2_bij unfolding bij_betw_def by (by100 force)
+      show "H1 \<times> H2 \<subseteq> ?f ` (G1 \<times> G2)"
+      proof
+        fix p assume "p \<in> H1 \<times> H2"
+        then obtain h1 h2 where hp: "p = (h1,h2)" "h1 \<in> H1" "h2 \<in> H2" by (by100 blast)
+        obtain g1 where "g1 \<in> G1" "f1 g1 = h1"
+          using hf1_bij hp(2) unfolding bij_betw_def by (by100 force)
+        obtain g2 where "g2 \<in> G2" "f2 g2 = h2"
+          using hf2_bij hp(3) unfolding bij_betw_def by (by100 force)
+        show "p \<in> ?f ` (G1 \<times> G2)"
+          using hp \<open>g1 \<in> G1\<close> \<open>g2 \<in> G2\<close> \<open>f1 g1 = h1\<close> \<open>f2 g2 = h2\<close> by (by100 force)
+      qed
+    qed
+  qed
+  show ?thesis
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+    using hf_hom hf_bij by (by100 blast)
+qed
+
 text \<open>Corollary 60.2 (Munkres): pi_1(T^2) is isomorphic to Z x Z.\<close>
 corollary Corollary_60_2_torus_pi1:
   assumes "is_topology_on X TX" and "is_topology_on Y TY"
@@ -850,9 +946,83 @@ proof -
   \<comment> \<open>Step 3: \<pi>_1(S^1 \<times> S^1, (p1,p2)) \<cong> \<pi>_1(S^1, p1) \<times> \<pi>_1(S^1, p2).\<close>
   obtain p1 p2 where hp: "?p = (p1, p2)" and hp1: "p1 \<in> top1_S1" and hp2: "p2 \<in> top1_S1"
     using hx0_T2 by (by100 force)
-  \<comment> \<open>Step 4: Compose with \<pi>_1(S^1) \<cong> Z (twice) and transitivity.\<close>
-  \<comment> \<open>Need: product of isomorphic groups is isomorphic (Z \<times> Z case).\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 4: Apply Theorem 60.1 (product of fundamental groups).\<close>
+  have hS1_strict: "is_topology_on_strict top1_S1 top1_S1_topology"
+    by (rule top1_S1_is_topology_on_strict)
+  have h_iso2: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?T2 ?TT2 ?p)
+      (top1_fundamental_group_mul ?T2 ?TT2 ?p)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p1 \<times>
+       top1_fundamental_group_carrier top1_S1 top1_S1_topology p2)
+      (\<lambda>(c1,c2) (d1,d2). (top1_fundamental_group_mul top1_S1 top1_S1_topology p1 c1 d1,
+                           top1_fundamental_group_mul top1_S1 top1_S1_topology p2 c2 d2))"
+    using Theorem_60_1_product[OF hS1_strict hS1_strict hp1 hp2] hp by (by100 simp)
+  \<comment> \<open>Step 5: Basepoint change \<pi>_1(S^1, p_i) \<cong> \<pi>_1(S^1, (1,0)) using path connectivity.\<close>
+  have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+    unfolding top1_S1_def by (by100 force)
+  have h_iso3a: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p1)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology p1)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    by (rule Corollary_52_2_basepoint_independent[OF S1_path_connected hp1 h10_S1])
+  have h_iso3b: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p2)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology p2)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    by (rule Corollary_52_2_basepoint_independent[OF S1_path_connected hp2 h10_S1])
+  \<comment> \<open>Step 6: \<pi>_1(S^1, (1,0)) \<cong> Z by Theorem 54.5.\<close>
+  have h_iso4: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      top1_Z_group top1_Z_mul"
+    by (rule Theorem_54_5_iso)
+  \<comment> \<open>Step 7: Compose: \<pi>_1(S^1,p1) \<cong> Z and \<pi>_1(S^1,p2) \<cong> Z.\<close>
+  have h_iso5a: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p1)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology p1)
+      top1_Z_group top1_Z_mul"
+    by (rule groups_isomorphic_trans_fwd[OF h_iso3a h_iso4])
+  have h_iso5b: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p2)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology p2)
+      top1_Z_group top1_Z_mul"
+    by (rule groups_isomorphic_trans_fwd[OF h_iso3b h_iso4])
+  \<comment> \<open>Step 8: Product: \<pi>_1(S^1,p1) \<times> \<pi>_1(S^1,p2) \<cong> Z \<times> Z.\<close>
+  have h_iso6: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology p1 \<times>
+       top1_fundamental_group_carrier top1_S1 top1_S1_topology p2)
+      (\<lambda>(c1,c2) (d1,d2). (top1_fundamental_group_mul top1_S1 top1_S1_topology p1 c1 d1,
+                           top1_fundamental_group_mul top1_S1 top1_S1_topology p2 c2 d2))
+      (top1_Z_group \<times> top1_Z_group) (\<lambda>(a1,a2) (b1,b2). (top1_Z_mul a1 b1, top1_Z_mul a2 b2))"
+    by (rule product_groups_isomorphic[OF h_iso5a h_iso5b])
+  \<comment> \<open>Step 9: Z \<times> Z = UNIV \<times> UNIV = UNIV :: (int\<times>int) set,
+     with mul (a1,a2)(b1,b2) = (a1+b1, a2+b2).\<close>
+  have hZZ_eq: "top1_Z_group \<times> top1_Z_group = (UNIV :: (int \<times> int) set)"
+    unfolding top1_Z_group_def by (by100 auto)
+  have hZZ_mul: "(\<lambda>(a1,a2) (b1,b2). (top1_Z_mul a1 b1, top1_Z_mul a2 b2))
+    = (\<lambda>(a1::int, a2::int) (b1, b2). (a1 + b1, a2 + b2))"
+    unfolding top1_Z_mul_def by (rule ext)+ (by100 simp)
+  \<comment> \<open>Step 10: Chain all isomorphisms.\<close>
+  have h_chain: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (UNIV :: (int \<times> int) set) (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  proof -
+    have c1: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology p1 \<times>
+         top1_fundamental_group_carrier top1_S1 top1_S1_topology p2)
+        (\<lambda>(c1,c2) (d1,d2). (top1_fundamental_group_mul top1_S1 top1_S1_topology p1 c1 d1,
+                             top1_fundamental_group_mul top1_S1 top1_S1_topology p2 c2 d2))"
+      by (rule groups_isomorphic_trans_fwd[OF h_iso1 h_iso2])
+    have c2: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+        (top1_Z_group \<times> top1_Z_group) (\<lambda>(a1,a2) (b1,b2). (top1_Z_mul a1 b1, top1_Z_mul a2 b2))"
+      by (rule groups_isomorphic_trans_fwd[OF c1 h_iso6])
+    show ?thesis using c2 hZZ_eq hZZ_mul by (by100 simp)
+  qed
+  show ?thesis by (rule h_chain)
 qed
 
 text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
