@@ -7650,7 +7650,7 @@ proof -
       show "top1_group_hom_on G mul H mulH ?h \<and>
           (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
         unfolding top1_group_hom_on_def
-        using hh_maps hh_hom hh_ext sorry
+        using hh_maps hh_hom hh_ext by (by100 blast)
     qed
   qed
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
@@ -9257,7 +9257,20 @@ proof -
     let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
     \<comment> \<open>Step 1: P is compact (convex hull of finitely many points in R^2).\<close>
     have hP_compact: "top1_compact_on P ?TP"
-      sorry
+    proof -
+      \<comment> \<open>Bridge: product_topology_on top1_open_sets top1_open_sets = top1_open_sets for R^2.\<close>
+      have hTP_eq: "?TP = subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets P"
+        using product_topology_on_open_sets_real2 by (by100 simp)
+      \<comment> \<open>By bridge lemma: top1_compact_on P (subspace UNIV open P) \<longleftrightarrow> compact P.\<close>
+      have "top1_compact_on P (subspace_topology UNIV top1_open_sets P) \<longleftrightarrow> compact P"
+        by (rule top1_compact_on_subspace_UNIV_iff_compact)
+      \<comment> \<open>Need: compact P (polygonal region is compact in R^2).
+         P is a closed bounded convex hull, hence compact.\<close>
+      moreover have "compact P"
+        sorry
+      ultimately have "top1_compact_on P (subspace_topology UNIV top1_open_sets P)" by (by100 simp)
+      thus ?thesis using hTP_eq by (by100 simp)
+    qed
     \<comment> \<open>Step 2: q is continuous (from quotient map).\<close>
     have hq_cont: "top1_continuous_map_on P ?TP X TX q"
       using hq unfolding top1_quotient_map_on_def by (by100 blast)
