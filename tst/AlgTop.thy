@@ -9237,7 +9237,70 @@ proof -
   have hN_gens_sub: "{mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c))
               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
         | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0} \<subseteq> FP"
-    sorry
+  proof (rule subsetI)
+    fix x assume "x \<in> {mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c))
+              (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+        | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0}"
+    then obtain c where hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        and hx: "x = mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c))
+              (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))"
+      by (by100 blast)
+    \<comment> \<open>induced c is in \<pi>_1(U) (for 0) and \<pi>_1(V) (for 1). \<iota>_fam maps these into FP.\<close>
+    let ?ind_U = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c"
+    let ?ind_V = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c"
+    have h0_in: "\<iota>fam 0 ?ind_U \<in> FP"
+    proof -
+      have "?ind_U \<in> top1_fundamental_group_carrier U ?TU x0"
+      proof -
+        have hUV_sub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+        have hTUV: "is_topology_on (U \<inter> V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub])
+        have hx0_UV: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+        have hx0_U: "x0 \<in> U" using assms(8) by (by100 blast)
+        have hincl_cont: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+          sorry
+        have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_mul (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_carrier U ?TU x0)
+            (top1_fundamental_group_mul U ?TU x0)
+            (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x))"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV hTopU hx0_UV hx0_U hincl_cont])
+             (by100 simp)
+        thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      moreover have "\<forall>x\<in>top1_fundamental_group_carrier U ?TU x0. \<iota>fam 0 x \<in> FP"
+      proof -
+        have "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        thus ?thesis by (by100 force)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have h1_in: "\<iota>fam 1 ?ind_V \<in> FP"
+    proof -
+      have "?ind_V \<in> top1_fundamental_group_carrier V ?TV x0"
+      proof -
+        have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_mul (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_carrier V ?TV x0)
+            (top1_fundamental_group_mul V ?TV x0)
+            (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x))"
+          sorry
+        thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      moreover have "\<forall>x\<in>top1_fundamental_group_carrier V ?TV x0. \<iota>fam 1 x \<in> FP"
+      proof -
+        have "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        thus ?thesis by (by100 force)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have "invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)) \<in> FP"
+      using hFP_grp h1_in unfolding top1_is_group_on_def by (by100 blast)
+    thus "x \<in> FP"
+      using hx h0_in hFP_grp unfolding top1_is_group_on_def by (by100 blast)
+  qed
   have hN_normal: "top1_normal_subgroup_on FP mulFP eFP invgFP ?N"
     by (rule normal_subgroup_generated_is_normal[OF hFP_grp hN_gens_sub])
   have hx0_X: "x0 \<in> X" using assms(8) assms(4) by (by100 blast)
