@@ -11977,7 +11977,86 @@ lemma compact_Times_real:
 proof (rule compactI)
   fix \<C> :: "(real \<times> real) set set"
   assume h\<C>_open: "\<forall>c\<in>\<C>. open c" and h\<C>_cover: "A \<times> B \<subseteq> \<Union>\<C>"
-  show "\<exists>C'\<subseteq>\<C>. finite C' \<and> A \<times> B \<subseteq> \<Union>C'" sorry
+  \<comment> \<open>For each a \<in> A, {a} \<times> B is covered by \<C>. B compact gives finite subcover F_a.
+     Tube lemma: \<exists> W_a open, a \<in> W_a, W_a \<times> B \<subseteq> \<Union>F_a.
+     {W_a | a \<in> A} covers A. A compact gives finite subcover.\<close>
+  \<comment> \<open>Step 1: For each a \<in> A, get a finite subcover of {a} \<times> B.\<close>
+  have hslice: "\<forall>a\<in>A. \<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    \<comment> \<open>{a} \<times> B is the image of B under (\<lambda>b. (a, b)). This map is continuous.
+       B is compact, so its image {a} \<times> B is compact.\<close>
+    have hslice_compact: "compact ({a} \<times> B)"
+    proof -
+      have "continuous_on B (\<lambda>b. (a, b))"
+        by (rule continuous_on_Pair) (simp_all add: continuous_on_const continuous_on_id)
+      moreover have "{a} \<times> B = (\<lambda>b. (a, b)) ` B" by (by100 blast)
+      ultimately show ?thesis using compact_continuous_image[OF _ assms(2)] by (by100 simp)
+    qed
+    have hslice_sub: "{a} \<times> B \<subseteq> \<Union>\<C>" using h\<C>_cover ha by (by100 blast)
+    show "\<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
+    proof (rule compactE[OF hslice_compact hslice_sub])
+      fix c assume "c \<in> \<C>" thus "open c" using h\<C>_open by (by100 blast)
+    next
+      fix F' assume "F' \<subseteq> \<C>" "finite F'" "{a} \<times> B \<subseteq> \<Union>F'"
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 2: For each a, find an open W_a containing a such that W_a \<times> B \<subseteq> \<Union>F_a (tube lemma).\<close>
+  have htube: "\<forall>a\<in>A. \<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
+    sorry
+  \<comment> \<open>Step 3: {W_a | a \<in> A} covers A. A compact → finite subcover.\<close>
+  \<comment> \<open>Pick W and F functions via choice.\<close>
+  obtain W F where hWF: "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+  proof -
+    from htube have "\<forall>a\<in>A. \<exists>W F. open W \<and> a \<in> W \<and> finite F \<and> F \<subseteq> \<C> \<and> W \<times> B \<subseteq> \<Union>F" .
+    hence "\<exists>W. \<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
+      by (rule bchoice)
+    then obtain W where hW: "\<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
+      by (by100 blast)
+    hence "\<exists>F. \<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+      by (rule bchoice)
+    then obtain F where "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+      by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>{W a | a \<in> A} covers A.\<close>
+  have "A \<subseteq> \<Union>(W ` A)"
+  proof
+    fix a assume "a \<in> A"
+    thus "a \<in> \<Union>(W ` A)" using hWF by (by100 blast)
+  qed
+  \<comment> \<open>A compact → finite subcover.\<close>
+  have hW_open: "\<forall>a\<in>A. open (W a)" using hWF by (by100 blast)
+  have hA_cov: "A \<subseteq> \<Union>(W ` A)" using hWF by (by100 blast)
+  obtain A' where hA': "finite A'" "A' \<subseteq> A" "A \<subseteq> \<Union>(W ` A')"
+  proof (rule compactE_image[OF assms(1)])
+    fix a assume "a \<in> A" thus "open (W a)" using hW_open by (by100 blast)
+  next
+    show "A \<subseteq> \<Union>(W ` A)" by (rule hA_cov)
+  next
+    fix A'' assume "A'' \<subseteq> A" "finite A''" "A \<subseteq> \<Union>(W ` A'')"
+    thus thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>\<Union>{F a | a \<in> A'} is a finite subcover of A \<times> B.\<close>
+  let ?C' = "\<Union>(F ` A')"
+  have "finite ?C'" using hA'(1) hWF hA'(2) by (by100 force)
+  moreover have "?C' \<subseteq> \<C>"
+  proof
+    fix c assume "c \<in> ?C'"
+    then obtain a where "a \<in> A'" "c \<in> F a" by (by100 blast)
+    thus "c \<in> \<C>" using hWF hA'(2) by (by100 blast)
+  qed
+  moreover have "A \<times> B \<subseteq> \<Union>?C'"
+  proof
+    fix p assume hp: "p \<in> A \<times> B"
+    obtain x y where hxy: "p = (x, y)" "x \<in> A" "y \<in> B" using hp by (by100 blast)
+    obtain a where ha: "a \<in> A'" "x \<in> W a" using hA'(3) hxy(2) by (by100 blast)
+    have "(x, y) \<in> W a \<times> B" using ha(2) hxy(3) by (by100 blast)
+    hence "(x, y) \<in> \<Union>(F a)" using hWF hA'(2) ha(1) by (by100 blast)
+    thus "p \<in> \<Union>?C'" using hxy(1) ha(1) by (by100 blast)
+  qed
+  ultimately show "\<exists>C'\<subseteq>\<C>. finite C' \<and> A \<times> B \<subseteq> \<Union>C'" by (by100 blast)
 qed
 
 text \<open>Compact for product intervals.\<close>
