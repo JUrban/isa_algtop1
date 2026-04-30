@@ -8278,6 +8278,18 @@ definition top1_quotient_of_scheme_on ::
                           (1-t) * vy i + t * vy (Suc i mod length scheme)))
                \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
 
+text \<open>Extraction lemma: from quotient_of_scheme_on, get the polygonal region and quotient map.\<close>
+lemma quotient_of_scheme_extract:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+  obtains P q where "top1_is_polygonal_region_on P (length scheme)"
+      and "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+  using assms unfolding top1_quotient_of_scheme_on_def
+  apply (elim conjE exE)
+  apply (rule that)
+  apply assumption+
+  done
+
 text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
 definition top1_is_polygonal_quotient_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
   "top1_is_polygonal_quotient_on X TX \<longleftrightarrow>
@@ -9238,22 +9250,10 @@ proof -
   have hcompact: "top1_compact_on X TX"
   proof -
     \<comment> \<open>Extract P, q from the scheme.\<close>
-    obtain P q vx vy where hP: "top1_is_polygonal_region_on P (length scheme)"
+    obtain P q where hP: "top1_is_polygonal_region_on P (length scheme)"
         and hq: "top1_quotient_map_on P
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-    proof -
-      from hsch have "\<exists>P0 q0 vx0 vy0.
-          top1_is_polygonal_region_on P0 (length scheme)
-         \<and> top1_quotient_map_on P0
-            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
-        unfolding top1_quotient_of_scheme_on_def sorry
-      then obtain P0 q0 where
-          "top1_is_polygonal_region_on P0 (length scheme)"
-          "top1_quotient_map_on P0
-            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
-        sorry
-      thus ?thesis using that sorry
-    qed
+      by (rule quotient_of_scheme_extract[OF hsch])
     let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
     \<comment> \<open>Step 1: P is compact (convex hull of finitely many points in R^2).\<close>
     have hP_compact: "top1_compact_on P ?TP"
