@@ -12168,7 +12168,68 @@ proof -
       \<comment> \<open>Need: compact P (polygonal region is compact in R^2).
          P is a closed bounded convex hull, hence compact.\<close>
       moreover have "compact P"
-        sorry
+      proof -
+        \<comment> \<open>P is a convex hull. From the definition, extract vertex coordinates.\<close>
+        obtain vx vy :: "nat \<Rightarrow> real" where hn: "length scheme \<ge> 3"
+            and hP_eq: "P = {(x, y). \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
+          using hP unfolding top1_is_polygonal_region_on_def by blast
+        let ?n = "length scheme"
+        define M where "M = Max ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<?n})"
+        \<comment> \<open>P \<subseteq> [-?M, ?M]^2: convex combinations are bounded by max vertex coordinates.\<close>
+        have hM_bound: "\<forall>i<?n. \<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M"
+        proof (intro allI impI conjI)
+          fix i assume hi: "i < ?n"
+          have "max \<bar>vx i\<bar> \<bar>vy i\<bar> \<in> (\<lambda>i. max \<bar>vx i\<bar> \<bar>vy i\<bar>) ` {..<?n}"
+            using hi by (by100 blast)
+          hence "max \<bar>vx i\<bar> \<bar>vy i\<bar> \<le> M" unfolding M_def
+            by (intro Max_ge) auto
+          thus "\<bar>vx i\<bar> \<le> M" by (by100 linarith)
+          show "\<bar>vy i\<bar> \<le> M" using \<open>max \<bar>vx i\<bar> \<bar>vy i\<bar> \<le> M\<close> by (by100 linarith)
+        qed
+        have hP_bounded: "P \<subseteq> {-M..M} \<times> {-M..M}"
+        proof
+          fix p assume hp: "p \<in> P"
+          obtain x y where hxy: "p = (x, y)" by (cases p)
+          obtain coeffs where hcoeffs: "(\<forall>i<?n. coeffs i \<ge> 0)"
+              "(\<Sum>i<?n. coeffs i) = 1"
+              "x = (\<Sum>i<?n. coeffs i * vx i)"
+              "y = (\<Sum>i<?n. coeffs i * vy i)"
+            using hp hxy unfolding hP_eq by (by100 blast)
+          \<comment> \<open>|x| = |Σcᵢvxᵢ| ≤ Σcᵢ|vxᵢ| ≤ Σcᵢ·M = M.\<close>
+          have hx_bound: "\<bar>x\<bar> \<le> M"
+          proof -
+            have "\<bar>x\<bar> = \<bar>\<Sum>i<?n. coeffs i * vx i\<bar>" using hcoeffs(3) by (by100 simp)
+            also have "\<dots> \<le> (\<Sum>i<?n. \<bar>coeffs i * vx i\<bar>)" by (rule sum_abs)
+            also have "\<dots> = (\<Sum>i<?n. coeffs i * \<bar>vx i\<bar>)"
+              using hcoeffs(1) by (intro sum.cong) (simp_all add: abs_mult)
+            also have "\<dots> \<le> (\<Sum>i<?n. coeffs i * M)"
+              by (intro sum_mono mult_left_mono) (use hcoeffs(1) hM_bound in \<open>(by100 force)+\<close>)
+            also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+            finally show ?thesis .
+          qed
+          have hy_bound: "\<bar>y\<bar> \<le> M"
+          proof -
+            have "\<bar>y\<bar> = \<bar>\<Sum>i<?n. coeffs i * vy i\<bar>" using hcoeffs(4) by (by100 simp)
+            also have "\<dots> \<le> (\<Sum>i<?n. \<bar>coeffs i * vy i\<bar>)" by (rule sum_abs)
+            also have "\<dots> = (\<Sum>i<?n. coeffs i * \<bar>vy i\<bar>)"
+              using hcoeffs(1) by (intro sum.cong) (simp_all add: abs_mult)
+            also have "\<dots> \<le> (\<Sum>i<?n. coeffs i * M)"
+              by (intro sum_mono mult_left_mono) (use hcoeffs(1) hM_bound in \<open>(by100 force)+\<close>)
+            also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+            finally show ?thesis .
+          qed
+          show "p \<in> {-M..M} \<times> {-M..M}" using hxy hx_bound hy_bound by (by100 force)
+        qed
+        \<comment> \<open>P is closed (convex hull of finitely many points in R^2).\<close>
+        have hP_closed: "closed P"
+          sorry
+        \<comment> \<open>P is a closed subset of a compact box, hence compact.\<close>
+        show "compact P"
+          by (rule closed_subset_compact[OF compact_Icc_Times[of "-M" M "-M" M] hP_closed hP_bounded])
+      qed
       ultimately have "top1_compact_on P (subspace_topology UNIV top1_open_sets P)" by (by100 simp)
       thus ?thesis using hTP_eq by (by100 simp)
     qed
