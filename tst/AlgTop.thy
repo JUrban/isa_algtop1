@@ -591,6 +591,31 @@ qed
 
 section \<open>Additional Corollaries from \<S>51-\<S>60 (Main Theorems in Cached Sessions)\<close>
 
+text \<open>S^1 is path-connected: for any two points, compose the covering map
+  R \<rightarrow> S^1 with a linear path in R.\<close>
+lemma S1_path_connected: "top1_path_connected_on top1_S1 top1_S1_topology"
+  unfolding top1_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+        (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hR hR])
+    hence "is_topology_on (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+    thus ?thesis unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on) (by100 blast)
+  qed
+next
+  fix p q assume hp: "p \<in> top1_S1" and hq: "q \<in> top1_S1"
+  \<comment> \<open>Use covering map: p = R_to_S1(s), q = R_to_S1(u) for some s, u.
+     Path: t \<mapsto> R_to_S1((1-t)*s + t*u).\<close>
+  show "\<exists>f. top1_is_path_on top1_S1 top1_S1_topology p q f"
+    sorry
+qed
+
 text \<open>Corollary 52.2 (Munkres): If X is path connected and x0, x1 \<in> X, then
   \<pi>_1(X, x0) is isomorphic to \<pi>_1(X, x1).\<close>
 corollary Corollary_52_2_basepoint_independent:
