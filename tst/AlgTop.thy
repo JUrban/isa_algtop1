@@ -11927,6 +11927,64 @@ section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
     removed. Use top1_is_n_fold_torus_on and top1_is_m_fold_projective_on predicates
     (defined earlier) on a space (X, TX) instead.\<close>
 
+text \<open>Closed subset of compact is compact.\<close>
+lemma closed_subset_compact:
+  assumes "compact S" and "closed C" and "C \<subseteq> S"
+  shows "compact C"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "C \<subseteq> \<Union>\<U>"
+  \<comment> \<open>S - C is open (C closed). So \<U> \<union> {S - C} covers S.\<close>
+  have hSC_open: "open (- C)" using assms(2) unfolding closed_def by (by100 blast)
+  have hS_cov: "S \<subseteq> \<Union>(\<U> \<union> {- C})"
+  proof
+    fix x assume hx: "x \<in> S"
+    show "x \<in> \<Union>(\<U> \<union> {- C})"
+    proof (cases "x \<in> C")
+      case True thus ?thesis using hcover by (by100 blast)
+    next
+      case False thus ?thesis by (by100 blast)
+    qed
+  qed
+  have hopen2: "\<forall>U\<in>\<U> \<union> {- C}. open U" using hopen hSC_open by (by100 blast)
+  obtain \<F> where hfin: "finite \<F>" and hsub: "\<F> \<subseteq> \<U> \<union> {- C}" and hcov: "S \<subseteq> \<Union>\<F>"
+  proof (rule compactE[OF assms(1) hS_cov])
+    fix U assume "U \<in> \<U> \<union> {- C}"
+    thus "open U" using hopen hSC_open by (by100 blast)
+  next
+    fix \<F>' assume "\<F>' \<subseteq> \<U> \<union> {- C}" "finite \<F>'" "S \<subseteq> \<Union>\<F>'"
+    thus thesis using that by (by100 blast)
+  qed
+  let ?\<F>' = "\<F> - {- C}"
+  have "finite ?\<F>'" using hfin by (by100 blast)
+  moreover have "?\<F>' \<subseteq> \<U>" using hsub by (by100 blast)
+  moreover have "C \<subseteq> \<Union>?\<F>'"
+  proof
+    fix x assume hx: "x \<in> C"
+    hence "x \<in> S" using assms(3) by (by100 blast)
+    hence "x \<in> \<Union>\<F>" using hcov by (by100 blast)
+    moreover have "x \<notin> - C" using hx by (by100 blast)
+    ultimately show "x \<in> \<Union>?\<F>'" by (by100 blast)
+  qed
+  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> C \<subseteq> \<Union>\<F>'" by (by100 blast)
+qed
+
+text \<open>Binary product of compact sets in R is compact in R^2.
+  This is a special case of Tychonoff; proved via the tube lemma.\<close>
+lemma compact_Times_real:
+  assumes "compact (A :: real set)" and "compact (B :: real set)"
+  shows "compact (A \<times> B :: (real \<times> real) set)"
+proof (rule compactI)
+  fix \<C> :: "(real \<times> real) set set"
+  assume h\<C>_open: "\<forall>c\<in>\<C>. open c" and h\<C>_cover: "A \<times> B \<subseteq> \<Union>\<C>"
+  show "\<exists>C'\<subseteq>\<C>. finite C' \<and> A \<times> B \<subseteq> \<Union>C'" sorry
+qed
+
+text \<open>Compact for product intervals.\<close>
+lemma compact_Icc_Times:
+  "compact ({a..b::real} \<times> {c..d::real})"
+  by (rule compact_Times_real[OF compact_Icc compact_Icc])
+
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   fixes X :: "'a set" and TX :: "'a set set"
