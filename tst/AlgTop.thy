@@ -9235,7 +9235,48 @@ proof -
     using assms(2) unfolding top1_is_polygonal_quotient_on_def by (by100 blast)
   then obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
     by (by100 auto)
-  have hcompact: "top1_compact_on X TX" sorry
+  have hcompact: "top1_compact_on X TX"
+  proof -
+    \<comment> \<open>Extract P, q from the scheme.\<close>
+    obtain P q vx vy where hP: "top1_is_polygonal_region_on P (length scheme)"
+        and hq: "top1_quotient_map_on P
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    proof -
+      from hsch have "\<exists>P0 q0 vx0 vy0.
+          top1_is_polygonal_region_on P0 (length scheme)
+         \<and> top1_quotient_map_on P0
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
+        unfolding top1_quotient_of_scheme_on_def sorry
+      then obtain P0 q0 where
+          "top1_is_polygonal_region_on P0 (length scheme)"
+          "top1_quotient_map_on P0
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
+        sorry
+      thus ?thesis using that sorry
+    qed
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+    \<comment> \<open>Step 1: P is compact (convex hull of finitely many points in R^2).\<close>
+    have hP_compact: "top1_compact_on P ?TP"
+      sorry
+    \<comment> \<open>Step 2: q is continuous (from quotient map).\<close>
+    have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    \<comment> \<open>Step 3: q is surjective (from quotient map).\<close>
+    have hq_surj: "q ` P = X"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    \<comment> \<open>Step 4: X = q(P) is compact (continuous image of compact).\<close>
+    have hTX_top: "is_topology_on X TX"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have "top1_compact_on (q ` P) (subspace_topology X TX (q ` P))"
+      by (rule top1_compact_on_continuous_image[OF hP_compact hTX_top hq_cont])
+    hence "top1_compact_on X (subspace_topology X TX X)" using hq_surj by (by100 simp)
+    moreover have "subspace_topology X TX X = TX"
+    proof -
+      have "\<forall>U\<in>TX. U \<subseteq> X" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      thus ?thesis by (rule subspace_topology_self)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
   have hhausdorff: "is_hausdorff_on X TX" sorry
   show ?thesis using hcompact hhausdorff by (by100 blast)
 qed
