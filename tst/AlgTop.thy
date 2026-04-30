@@ -7566,8 +7566,11 @@ lemma Lemma_68_3_extension_property:
   assumes hFP: "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
       and hH: "top1_is_group_on H mulH eH invgH"
       and hfam: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
-  shows "\<exists>!h. top1_group_hom_on G mul H mulH h
-      \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
+  shows "\<exists>h. top1_group_hom_on G mul H mulH h
+      \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)
+      \<and> (\<forall>h'. top1_group_hom_on G mul H mulH h'
+          \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>fam \<alpha> x) = hfam \<alpha> x)
+          \<longrightarrow> (\<forall>g\<in>G. h' g = h g))"
 proof -
   have hG: "top1_is_group_on G mul e invg"
     using hFP unfolding top1_is_free_product_on_def by (by100 blast)
@@ -7608,7 +7611,7 @@ proof -
       (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h1 (\<iota>fam \<alpha> x) = hfam \<alpha> x) \<Longrightarrow>
       top1_group_hom_on G mul H mulH h2 \<Longrightarrow>
       (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h2 (\<iota>fam \<alpha> x) = hfam \<alpha> x) \<Longrightarrow>
-      h1 = h2"
+      \<forall>g\<in>G. h1 g = h2 g"
   proof -
     fix h1 h2
     assume hh1: "top1_group_hom_on G mul H mulH h1"
@@ -7798,24 +7801,19 @@ proof -
        is implicitly defined by the reduced-word map, two such extensions
        must agree on G. For values outside G, the hom property doesn't constrain them.
        We handle this by sorry-ing the extensionality step.\<close>
-    show "h1 = h2" sorry
+    show "\<forall>g\<in>G. h1 g = h2 g" by (rule hagree)
   qed
   show ?thesis
   proof -
     obtain h where hh_hom: "top1_group_hom_on G mul H mulH h"
         and hh_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
       using hexists by (by100 blast)
+    have hh_unique: "\<forall>h'. top1_group_hom_on G mul H mulH h'
+        \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>fam \<alpha> x) = hfam \<alpha> x)
+        \<longrightarrow> (\<forall>g\<in>G. h' g = h g)"
+      using hunique[OF _ _ hh_hom hh_ext] by (by100 blast)
     show ?thesis
-    proof (intro ex1I conjI)
-      show "top1_group_hom_on G mul H mulH h" by (rule hh_hom)
-      show "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x" by (rule hh_ext)
-    next
-      fix h' assume hh': "top1_group_hom_on G mul H mulH h'
-          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
-      have "top1_group_hom_on G mul H mulH h'" using hh' by (by100 blast)
-      moreover have "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>fam \<alpha> x) = hfam \<alpha> x" using hh' by (by100 blast)
-      ultimately show "h' = h" by (rule hunique[OF _ _ hh_hom hh_ext])
-    qed
+      using hh_hom hh_ext hh_unique by (by100 blast)
   qed
 qed
 
@@ -7841,19 +7839,7 @@ proof -
   qed
   obtain \<phi> where h\<phi>_hom: "top1_group_hom_on G1 mul1 G2 mul2 \<phi>"
       and h\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<phi> (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x"
-      and h\<phi>_unique: "\<forall>h'. top1_group_hom_on G1 mul1 G2 mul2 h'
-          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x) \<longrightarrow> h' = \<phi>"
-  proof -
-    have hex1: "\<exists>!h. top1_group_hom_on G1 mul1 G2 mul2 h
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x)"
-      by (rule Lemma_68_3_extension_property[OF hG1 hgrp2 h\<iota>2_hom])
-    then obtain h0 where hh0: "top1_group_hom_on G1 mul1 G2 mul2 h0
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h0 (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x)"
-        and hh0_unique: "\<forall>h'. top1_group_hom_on G1 mul1 G2 mul2 h'
-            \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x) \<longrightarrow> h' = h0"
-      unfolding Ex1_def by (by100 blast)
-    show ?thesis using that[of h0] hh0 hh0_unique by (by100 blast)
-  qed
+    using Lemma_68_3_extension_property[OF hG1 hgrp2 h\<iota>2_hom] by (by100 blast)
   \<comment> \<open>Step 2: Similarly \<psi>: G2 \<rightarrow> G1.\<close>
   have h\<iota>1_hom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G1 mul1 (\<iota>1 \<alpha>)"
   proof (intro ballI)
@@ -7864,19 +7850,7 @@ proof -
   qed
   obtain \<psi> where h\<psi>_hom: "top1_group_hom_on G2 mul2 G1 mul1 \<psi>"
       and h\<psi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<psi> (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x"
-      and h\<psi>_unique: "\<forall>h'. top1_group_hom_on G2 mul2 G1 mul1 h'
-          \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x) \<longrightarrow> h' = \<psi>"
-  proof -
-    have "\<exists>!h. top1_group_hom_on G2 mul2 G1 mul1 h
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x)"
-      by (rule Lemma_68_3_extension_property[OF hG2 hgrp1 h\<iota>1_hom])
-    then obtain h0 where hh0: "top1_group_hom_on G2 mul2 G1 mul1 h0
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h0 (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x)"
-        and hh0_u: "\<forall>h'. top1_group_hom_on G2 mul2 G1 mul1 h'
-            \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x) \<longrightarrow> h' = h0"
-      unfolding Ex1_def by (by100 blast)
-    show ?thesis using that[of h0] hh0 hh0_u by (by100 blast)
-  qed
+    using Lemma_68_3_extension_property[OF hG2 hgrp1 h\<iota>1_hom] by (by100 blast)
   \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators of G1. By uniqueness, \<psi>\<circ>\<phi> = id on G1.\<close>
   \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators. id also extends id. By uniqueness, \<psi>\<circ>\<phi> = id.\<close>
   have h\<psi>\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. (\<psi> \<circ> \<phi>) (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x"
@@ -7910,22 +7884,19 @@ proof -
       using hG1 unfolding top1_is_free_product_on_def top1_is_group_on_def by (by100 blast)
     have hid_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. id (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x"
       by (by100 simp)
-    \<comment> \<open>Apply 68.3 uniqueness to G1 with H=G1.\<close>
-    have "\<exists>!h. top1_group_hom_on G1 mul1 G1 mul1 h
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x)"
-      by (rule Lemma_68_3_extension_property[OF hG1 hgrp1 h\<iota>1_hom])
-    then obtain h_uniq where hhu: "top1_group_hom_on G1 mul1 G1 mul1 h_uniq
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h_uniq (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x)"
-        and hhu_u: "\<forall>h'. top1_group_hom_on G1 mul1 G1 mul1 h'
-            \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x) \<longrightarrow> h' = h_uniq"
-      unfolding Ex1_def by (by100 blast)
-    have "\<psi> \<circ> \<phi> = h_uniq"
-      using hhu_u hcomp_hom h\<psi>\<phi>_ext by (by100 blast)
-    moreover have "id = h_uniq"
-      using hhu_u hid_hom hid_ext by (by100 blast)
-    ultimately have "\<psi> \<circ> \<phi> = id" by (by100 simp)
-    hence "\<forall>x. (\<psi> \<circ> \<phi>) x = id x" by (by100 simp)
-    thus ?thesis by (by100 simp)
+    \<comment> \<open>Apply 68.3 uniqueness to G1 with H=G1: both \<psi>\<circ>\<phi> and id agree on generators,
+       so they agree on all of G1.\<close>
+    obtain h_ref where href_hom: "top1_group_hom_on G1 mul1 G1 mul1 h_ref"
+        and href_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h_ref (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x"
+        and href_u: "\<forall>h'. top1_group_hom_on G1 mul1 G1 mul1 h'
+            \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x)
+            \<longrightarrow> (\<forall>g\<in>G1. h' g = h_ref g)"
+      using Lemma_68_3_extension_property[OF hG1 hgrp1 h\<iota>1_hom] by (by100 blast)
+    have "\<forall>g\<in>G1. (\<psi> \<circ> \<phi>) g = h_ref g"
+      using href_u hcomp_hom h\<psi>\<phi>_ext by (by100 blast)
+    moreover have "\<forall>g\<in>G1. id g = h_ref g"
+      using href_u hid_hom hid_ext by (by100 blast)
+    ultimately show ?thesis by (by100 force)
   qed
   \<comment> \<open>Step 4: Similarly \<phi>\<circ>\<psi> = id on G2.\<close>
   have h\<phi>\<psi>_id: "\<forall>x\<in>G2. \<phi> (\<psi> x) = x"
@@ -7957,21 +7928,17 @@ proof -
       also have "\<phi> (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x" using h\<phi>_ext \<open>\<alpha> \<in> J\<close> \<open>x \<in> GG \<alpha>\<close> by (by100 blast)
       finally show "(\<phi> \<circ> \<psi>) (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x" .
     qed
-    have "\<exists>!h. top1_group_hom_on G2 mul2 G2 mul2 h
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x)"
-      by (rule Lemma_68_3_extension_property[OF hG2 hgrp2 h\<iota>2_hom])
-    then obtain h_uniq2 where hhu2: "top1_group_hom_on G2 mul2 G2 mul2 h_uniq2
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h_uniq2 (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x)"
-        and hhu2_u: "\<forall>h'. top1_group_hom_on G2 mul2 G2 mul2 h'
-            \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x) \<longrightarrow> h' = h_uniq2"
-      unfolding Ex1_def by (by100 blast)
-    have "\<phi> \<circ> \<psi> = h_uniq2"
-      using hhu2_u hcomp_hom2 h\<phi>\<psi>_ext by (by100 blast)
-    moreover have "id = h_uniq2"
-      using hhu2_u hid_hom2 hid_ext2 by (by100 blast)
-    ultimately have "\<phi> \<circ> \<psi> = id" by (by100 simp)
-    hence "\<forall>x. (\<phi> \<circ> \<psi>) x = id x" by (by100 simp)
-    thus ?thesis by (by100 simp)
+    obtain h_ref2 where href2_hom: "top1_group_hom_on G2 mul2 G2 mul2 h_ref2"
+        and href2_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h_ref2 (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x"
+        and href2_u: "\<forall>h'. top1_group_hom_on G2 mul2 G2 mul2 h'
+            \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x)
+            \<longrightarrow> (\<forall>g\<in>G2. h' g = h_ref2 g)"
+      using Lemma_68_3_extension_property[OF hG2 hgrp2 h\<iota>2_hom] by (by100 blast)
+    have "\<forall>g\<in>G2. (\<phi> \<circ> \<psi>) g = h_ref2 g"
+      using href2_u hcomp_hom2 h\<phi>\<psi>_ext by (by100 blast)
+    moreover have "\<forall>g\<in>G2. id g = h_ref2 g"
+      using href2_u hid_hom2 hid_ext2 by (by100 blast)
+    ultimately show ?thesis by (by100 force)
   qed
   \<comment> \<open>Step 5: \<phi> is bijective (has two-sided inverse \<psi>).\<close>
   have himg1: "\<phi> ` G1 \<subseteq> G2"
