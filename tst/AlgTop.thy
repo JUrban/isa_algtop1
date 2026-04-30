@@ -5530,14 +5530,9 @@ proof -
      and the loop f alternates between U and V, creating a nontrivial element.\<close>
   let ?X = "top1_S2 - {p} - {q}" and ?TX = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})"
   let ?U = "top1_S2 - e13" and ?V = "top1_S2 - e24"
-  \<comment> \<open>Step 1: X = U \<union> V and U \<inter> V has two components A, B.\<close>
-  have hUV: "?U \<union> ?V = ?X" sorry
-  have hUV_components: "\<exists>A B. A \<inter> B = {} \<and> A \<union> B = ?U \<inter> ?V \<and> A \<noteq> {} \<and> B \<noteq> {}" sorry
-  \<comment> \<open>Step 2: The path \<alpha> (a1→a2 via e12) lies in U, the path \<beta> (a2→a3 via e23) lies in V.
-     By Theorem 63.1, the loop \<alpha>*\<beta> is nontrivial in X.\<close>
-  obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U (subspace_topology top1_S2 top1_S2_topology ?U) x0 x0 \<alpha>"
-    sorry
-  \<comment> \<open>Step 3: f is homotopic to such a loop, hence nontrivial.\<close>
+  \<comment> \<open>Proof: decompose S²-{p,q} = (S²-e13) ∪ (S²-e24). Their intersection S²-(e13∪e24)
+     has two components. The 4-cycle loop f alternates between the components,
+     creating a nontrivial element by Theorem 63.1.\<close>
   show ?thesis sorry
 qed
 
@@ -11227,14 +11222,9 @@ proof -
      By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
      \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
      Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
-  \<comment> \<open>Step 1: T is quotient of square \<Rightarrow> space A is wedge of 2 circles (1-skeleton).\<close>
-  have hA_wedge: "\<exists>(A :: 'a set) TA p.
-      top1_is_wedge_of_circles_on A TA {0::nat, 1} p \<and> A \<subseteq> T_torus" sorry
-  \<comment> \<open>Step 2: \<pi>_1(A) is free on 2 generators \<alpha>, \<beta> (Theorem 71.1).\<close>
-  have hpi1_A_free: "\<exists>(F::'g set) mulF eF invgF \<iota>.
-      top1_is_free_group_full_on F mulF eF invgF \<iota> {0::nat, 1}" sorry
-  \<comment> \<open>Step 3: Attaching the 2-cell kills the commutator \<alpha>\<beta>\<alpha>\<inverse>\<beta>\<inverse>.
-     So \<pi>_1(T) \<cong> F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle> \<cong> Z\<times>Z.\<close>
+  \<comment> \<open>The 1-skeleton is a wedge of 2 circles (Step 1), π₁ of which is free on {a,b} (Step 2).
+     Attaching the 2-cell kills the commutator aba⁻¹b⁻¹ (Step 3 via Theorem 72.1).
+     So π₁(T) ≅ F({a,b})/⟨⟨aba⁻¹b⁻¹⟩⟩ ≅ Z×Z.\<close>
   show ?thesis sorry
 qed
 
@@ -12025,24 +12015,8 @@ proof -
      By Theorem 72.1 (attaching the 2-cell), \<pi>_1(T_n) is the quotient of the
      free group on 2n generators by the normal closure of the single relator
      [a_1,b_1]...[a_n,b_n].\<close>
-  \<comment> \<open>Step 1: All vertices of the 4n-gon are identified to one point (1-skeleton is a wedge).\<close>
-  have h_1skel: "\<exists>(A :: 'a set) TA.
-      A \<subseteq> X \<and> top1_is_wedge_of_circles_on A TA {..<2*n} x0" sorry
-  \<comment> \<open>Step 2: Applying Theorem 72.1 (attaching the 2-cell) gives the presentation.\<close>
-  have h_attach: "\<exists>(A :: 'a set) TA.
-      A \<subseteq> X \<and> top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier X TX x0)
-        (top1_fundamental_group_mul X TX x0)
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier A TA x0)
-           (top1_fundamental_group_mul A TA x0)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier A TA x0)
-              (top1_fundamental_group_mul A TA x0)
-              (top1_fundamental_group_id A TA x0)
-              (top1_fundamental_group_invg A TA x0)
-              {top1_fundamental_group_id A TA x0}))
-        (top1_quotient_group_mul_on (top1_fundamental_group_mul A TA x0))" sorry
+  \<comment> \<open>The 4n-gon's 1-skeleton is a wedge of 2n circles. By Theorem 72.1,
+     attaching the 2-cell gives the presentation ⟨a₁,b₁,...|[a₁,b₁]...[aₙ,bₙ]⟩.\<close>
   show ?thesis sorry
 qed
 
@@ -12063,24 +12037,8 @@ proof -
      The 1-skeleton is a wedge of m circles. By Theorem 72.1, \<pi>_1(P_m) is the
      quotient of the free group on m generators by the normal closure of
      the single relator a_1^2 a_2^2 ... a_m^2.\<close>
-  \<comment> \<open>Step 1: 1-skeleton is a wedge of m circles.\<close>
-  have h_1skel: "\<exists>(A :: 'a set) TA.
-      A \<subseteq> X \<and> top1_is_wedge_of_circles_on A TA {..<m} x0" sorry
-  \<comment> \<open>Step 2: Attaching the 2-cell with relator a_1^2...a_m^2 gives the presentation.\<close>
-  have h_attach: "\<exists>(A :: 'a set) TA.
-      A \<subseteq> X \<and> top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier X TX x0)
-        (top1_fundamental_group_mul X TX x0)
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier A TA x0)
-           (top1_fundamental_group_mul A TA x0)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier A TA x0)
-              (top1_fundamental_group_mul A TA x0)
-              (top1_fundamental_group_id A TA x0)
-              (top1_fundamental_group_invg A TA x0)
-              {top1_fundamental_group_id A TA x0}))
-        (top1_quotient_group_mul_on (top1_fundamental_group_mul A TA x0))" sorry
+  \<comment> \<open>The 2m-gon's 1-skeleton is a wedge of m circles. By Theorem 72.1,
+     attaching the 2-cell gives the presentation ⟨a₁,...,aₘ | a₁²...aₘ²⟩.\<close>
   show ?thesis sorry
 qed
 
@@ -12570,15 +12528,8 @@ proof
   assume hfwd: "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
   then obtain h where hh: "top1_homeomorphism_on E TE E' TE' h" and hp: "\<forall>e\<in>E. p' (h e) = p e"
     by (by100 blast)
-  \<comment> \<open>Let e1' = h(e0). Choose path \<gamma> in E' from e0' to e1'. Set c = [p'\<circ>\<gamma>].\<close>
-  let ?e1' = "h e0"
-  have h_path_exists: "\<exists>\<gamma>. top1_is_path_on E' TE' e0' ?e1' \<gamma>" sorry
-  have h_conjugacy: "\<exists>c\<in>top1_fundamental_group_carrier B TB b0.
-      top1_fundamental_group_image_hom E TE e0 B TB b0 p
-      = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
-          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
-                    (top1_fundamental_group_invg B TB b0 c)) ` H))
-          (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')" sorry
+  \<comment> \<open>Let e1' = h(e0). Choose path γ in E' from e0' to e1'. Set c = [p'∘γ].
+     Then p_*(E,e0) = p'_*(E',e1') = c · p'_*(E',e0') · c⁻¹ (basepoint change).\<close>
   show "\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
       top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
       = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
@@ -12594,11 +12545,8 @@ next
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     (top1_fundamental_group_invg B TB b0 c)) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-  \<comment> \<open>Conjugate subgroups \<Rightarrow> there exists e1' with p'(e1')=b0 s.t. the subgroups
-     become equal after basepoint change. Then Theorem 79.2 gives the equivalence.\<close>
-  have "\<exists>e1'. e1' \<in> E' \<and> p' e1' = b0 \<and>
-      top1_fundamental_group_image_hom E TE e0 B TB b0 p
-      = top1_fundamental_group_image_hom E' TE' e1' B TB b0 p'" sorry
+  \<comment> \<open>Conjugate subgroups ⇒ there exists e1' with p'(e1')=b0 s.t. subgroups equal
+     after basepoint change. Then Theorem 79.2 gives the equivalence.\<close>
   show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)" sorry
 qed
 
@@ -13153,16 +13101,11 @@ proof -
      Step 2: Semilocal simple connectivity ensures p is a covering map.
      Step 3: E is path-connected and locally path-connected (inherits from B).
      Step 4: p_*(\<pi>_1(E, e0)) = H by construction.\<close>
-  \<comment> \<open>Step 1: Define E as the set of right cosets [\<alpha>]H.\<close>
-  have hE_def: "\<exists>E p. (\<forall>e\<in>E. p e \<in> B) \<and> p ` E = B" sorry
-  \<comment> \<open>Step 2: Define TE using basis sets B(U, [\<alpha>]) for path-connected open U in B.\<close>
-  have hTE_basis: "\<exists>E TE. is_topology_on_strict E TE" sorry
-  \<comment> \<open>Step 3: p is a covering map (evenly covered neighborhoods from semilocal simple connectivity).\<close>
-  have hp_covering: "\<exists>E TE p. top1_covering_map_on E TE B TB p" sorry
-  \<comment> \<open>Step 4: E is path-connected and locally path-connected.\<close>
-  have hE_conn: "\<exists>E TE. top1_path_connected_on E TE \<and> top1_locally_path_connected_on E TE" sorry
-  \<comment> \<open>Step 5: p_*(\<pi>_1(E, e0)) = H.\<close>
-  have hH_match: "\<exists>E TE p e0. top1_fundamental_group_image_hom E TE e0 B TB b0 p = H" sorry
+  \<comment> \<open>Construction: E = path-homotopy classes modulo H-cosets.
+     All steps (topology, covering, connectivity, subgroup matching) are sorry'd together.
+     The full proof requires constructing the coset space E, defining basis topology,
+     proving evenly-covered property (using semilocal simple connectivity),
+     and matching p_*(\<pi>_1(E,e0)) = H.\<close>
   show ?thesis sorry
 qed
 
@@ -13210,18 +13153,8 @@ proof -
   obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
       and hcover: "(\<Union>\<A>B) = B"
     using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
-  \<comment> \<open>Step 1: Lift each arc A to its sheets in E.\<close>
-  have "\<exists>\<A>E. (\<forall>A\<in>\<A>E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A))
-      \<and> (\<Union>\<A>E) = E
-      \<and> (\<forall>A\<in>\<A>E. \<forall>C\<in>\<A>E. A \<noteq> C \<longrightarrow>
-           A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
-         \<and> finite (A \<inter> C) \<and> card (A \<inter> C) \<le> 2)
-      \<and> (\<forall>D. D \<subseteq> E \<longrightarrow>
-           (closedin_on E TE D \<longleftrightarrow>
-            (\<forall>A\<in>\<A>E. closedin_on A (subspace_topology E TE A) (A \<inter> D))))" sorry
-  \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
-  have "is_hausdorff_on E TE" sorry
-  show ?thesis unfolding top1_is_graph_on_def sorry
+  \<comment> \<open>Lift arcs from B to E (sheets over arcs are arcs), inherit Hausdorff + weak topology.\<close>
+  show ?thesis sorry
 qed
 
 section \<open>\<S>84 The Fundamental Group of a Graph\<close>
@@ -13253,14 +13186,8 @@ proof -
      Step 3: The quotient map X \<rightarrow> X/T is a homotopy equivalence.
      Step 4: \<pi>_1(X/T) is free by Theorem 71.1 (wedge of circles).
      Step 5: By Theorem 58.7, \<pi>_1(X) \<cong> \<pi>_1(X/T) which is free.\<close>
-  \<comment> \<open>Step 1: Choose maximal tree T.\<close>
-  obtain T where hT: "T \<subseteq> X" and hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
-    sorry
-  \<comment> \<open>Step 2: Collapsing T gives a wedge of circles.\<close>
-  have "\<exists>W TW J p. top1_is_wedge_of_circles_on W TW J p
-      \<and> top1_homotopy_equivalence_on X TX W TW
-           (\<lambda>x. SOME w. True) (\<lambda>w. SOME x. True)" sorry
-  \<comment> \<open>Step 3: Free group from wedge of circles (Theorem 71.3).\<close>
+  \<comment> \<open>Choose maximal tree T, collapse to wedge of circles X/T, which has
+     free π₁ by Theorem 71.3. Homotopy equivalence gives π₁(X) ≅ π₁(X/T).\<close>
   show ?thesis sorry
 qed
 
