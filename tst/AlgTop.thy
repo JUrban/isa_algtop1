@@ -13287,7 +13287,59 @@ proof
       and hp: "\<forall>e\<in>E. p' (h e) = p e" and he: "h e0 = e0'" by (by100 blast)
   \<comment> \<open>h_* : \<pi>_1(E, e0) \<cong> \<pi>_1(E', e0'), and p' \<circ> h = p, so p_* = p'_* \<circ> h_*.\<close>
   show "top1_fundamental_group_image_hom E TE e0 B TB b0 p
-      = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'" sorry
+      = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
+    unfolding top1_fundamental_group_image_hom_def
+  proof (rule set_eqI)
+    fix c
+    let ?indp = "top1_fundamental_group_induced_on E TE e0 B TB b0 p"
+    let ?indp' = "top1_fundamental_group_induced_on E' TE' e0' B TB b0 p'"
+    let ?indh = "top1_fundamental_group_induced_on E TE e0 E' TE' e0' h"
+    let ?\<pi>E = "top1_fundamental_group_carrier E TE e0"
+    let ?\<pi>E' = "top1_fundamental_group_carrier E' TE' e0'"
+    show "c \<in> ?indp ` ?\<pi>E \<longleftrightarrow> c \<in> ?indp' ` ?\<pi>E'"
+    proof
+      \<comment> \<open>(\<Rightarrow>): c = p_*([α]) for some loop α at e0. Then c = [p∘α] = [p'∘h∘α] = p'_*([h∘α]).
+         Since h∘α is a loop at e0' in E', [h∘α] ∈ π₁(E'). So c ∈ p'_*(π₁(E')).\<close>
+      assume "c \<in> ?indp ` ?\<pi>E"
+      then obtain cls where hcls: "cls \<in> ?\<pi>E" and hc: "c = ?indp cls" by (by100 blast)
+      \<comment> \<open>p_*(cls) = p'_*(h_*(cls)) because p = p'∘h on loops.\<close>
+      have "?indp cls = ?indp' (?indh cls)"
+        sorry \<comment> \<open>functoriality: p = p'∘h ⟹ p_* = p'_* ∘ h_*\<close>
+      moreover have "?indh cls \<in> ?\<pi>E'"
+      proof -
+        have hTE: "is_topology_on E TE"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hTE': "is_topology_on E' TE'"
+          using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+        have hh_cont: "top1_continuous_map_on E TE E' TE' h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have he0: "e0 \<in> E" sorry \<comment> \<open>Should be an assumption; not derivable\<close>
+        have "top1_group_hom_on ?\<pi>E (top1_fundamental_group_mul E TE e0)
+            ?\<pi>E' (top1_fundamental_group_mul E' TE' e0') ?indh"
+        proof -
+          have he0'_E': "e0' \<in> E'"
+            using hh_cont he0 he unfolding top1_continuous_map_on_def by (by100 blast)
+          show ?thesis
+            by (rule top1_fundamental_group_induced_on_is_hom[OF hTE hTE' he0 he0'_E' hh_cont he])
+        qed
+        thus ?thesis using hcls unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      ultimately show "c \<in> ?indp' ` ?\<pi>E'" using hc by (by100 blast)
+    next
+      \<comment> \<open>(\<Leftarrow>): c = p'_*([β]) for some loop β at e0' in E'. Then β = h∘α for some α
+         (since h is surjective on loops). So c = p'_*(h_*([α])) = p_*([α]).\<close>
+      assume "c \<in> ?indp' ` ?\<pi>E'"
+      then obtain cls' where hcls': "cls' \<in> ?\<pi>E'" and hc: "c = ?indp' cls'" by (by100 blast)
+      \<comment> \<open>h_* is surjective (h is homeomorphism). So cls' = h_*(cls) for some cls ∈ π₁(E).\<close>
+      have "\<exists>cls\<in>?\<pi>E. cls' = ?indh cls"
+        sorry \<comment> \<open>h_* surjective\<close>
+      then obtain cls where hcls: "cls \<in> ?\<pi>E" "cls' = ?indh cls" by (by100 blast)
+      have "?indp cls = ?indp' (?indh cls)"
+        sorry \<comment> \<open>functoriality again\<close>
+      hence "c = ?indp cls" using hc hcls(2) by (by100 simp)
+      thus "c \<in> ?indp ` ?\<pi>E" using hcls(1) by (by100 blast)
+    qed
+  qed
 next
   \<comment> \<open>Backward: if subgroup images equal, use path-lifting to construct h.\<close>
   assume hH_eq: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
