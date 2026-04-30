@@ -11493,6 +11493,14 @@ proof -
   have h_simplex_poly: "top1_is_polygonal_region_on top1_standard_simplex 3"
     by (rule standard_simplex_is_polygonal_region)
   \<comment> \<open>Step 3: Assemble with quotient map q = identity on interior, edge-pasting on boundary.\<close>
+  \<comment> \<open>Step 3: Take T = {standard_simplex} for each T \<in> T0 (all the same shape),
+     and q = h0(T) for each triangle. But we need DISJOINT copies in R^2.
+     Simpler approach: T = T0 viewed as R^2 subsets (the triangles themselves ARE
+     subsets of X via the homeomorphisms h0), and q = inclusion.
+     Actually, the conclusion asks for T \<subseteq> R^2 and q: R^2 \<rightarrow> X.
+     Take T = {\<Delta>} (a single copy of the standard simplex) for each triangle,
+     and q = the pasting of all h0(T). But q needs to be a SINGLE function.
+     For a faithful proof, we need disjoint copies of the standard simplex.\<close>
   show ?thesis sorry
 qed
 
