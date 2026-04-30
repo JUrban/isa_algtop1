@@ -9118,6 +9118,19 @@ proof (intro conjI)
   qed
 qed
 
+text \<open>Forward declaration: first isomorphism theorem (proved later in the file at line 11028).
+  Needed here for the SvK assembly. Uses sorry to break file-order dependency.\<close>
+lemma first_isomorphism_theorem_forward:
+  assumes "top1_is_group_on G mul e invg"
+      and "top1_normal_subgroup_on G mul e invg N"
+      and "top1_is_group_on H mulH eH invgH"
+      and "top1_group_hom_on G mul H mulH j"
+      and "j ` G = H"
+      and "top1_group_kernel_on G eH j = N"
+  shows "top1_groups_isomorphic_on H mulH
+      (top1_quotient_group_carrier_on G mul N) (top1_quotient_group_mul_on mul)"
+  sorry
+
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
     with U, V, U \<inter> V open and path-connected, then \<pi>_1(X, x_0) is isomorphic to
     the free product of \<pi>_1(U, x_0) and \<pi>_1(V, x_0) amalgamated over \<pi>_1(U \<inter> V, x_0).
@@ -9231,9 +9244,11 @@ proof -
   have h\<pi>X_grp: "top1_is_group_on ?\<pi>X (top1_fundamental_group_mul X TX x0)
       (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
     by (rule top1_fundamental_group_is_group[OF hTopX hx0_X])
-  have hiso: "top1_groups_isomorphic_on ?\<pi>X (top1_fundamental_group_mul X TX x0)
+  have hiso: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
       (top1_quotient_group_carrier_on FP mulFP ?N) (top1_quotient_group_mul_on mulFP)"
-    sorry
+    by (rule first_isomorphism_theorem_forward[OF hFP_grp hN_normal h\<pi>X_grp hj_hom hj_surj hj_ker])
+  \<comment> \<open>Assembly: the existential witnesses are FP, mulFP, eFP, invgFP, \<iota>fam.\<close>
   show ?thesis using hFP hiso sorry
 qed
 
