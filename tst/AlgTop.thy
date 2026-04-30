@@ -12176,6 +12176,88 @@ lemma compact_Icc_Times:
   "compact ({a..b::real} \<times> {c..d::real})"
   by (rule compact_Times_real[OF compact_Icc compact_Icc])
 
+text \<open>A triangle (convex hull of 3 points) in R^2 is compact.\<close>
+lemma triangle_compact:
+  fixes ax ay bx by' cx cy :: real
+  shows "compact {(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
+      \<and> x = (1 - s - t) * ax + s * bx + t * cx
+      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
+proof -
+  let ?T = "{(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
+      \<and> x = (1 - s - t) * ax + s * bx + t * cx
+      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
+  let ?f = "\<lambda>(s::real, t::real). ((1 - s - t) * ax + s * bx + t * cx,
+                                  (1 - s - t) * ay + s * by' + t * cy)"
+  let ?D = "{(s, t). (0::real) \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1}"
+  have hT_eq: "?T = ?f ` ?D"
+  proof
+    show "?T \<subseteq> ?f ` ?D"
+    proof
+      fix p assume "p \<in> ?T"
+      then obtain x y s t where "p = (x, y)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1"
+          "x = (1 - s - t) * ax + s * bx + t * cx"
+          "y = (1 - s - t) * ay + s * by' + t * cy" by (by100 blast)
+      hence "(s, t) \<in> ?D \<and> p = ?f (s, t)" by (by100 auto)
+      thus "p \<in> ?f ` ?D" by (by100 blast)
+    qed
+  next
+    show "?f ` ?D \<subseteq> ?T" by (by100 auto)
+  qed
+  \<comment> \<open>?D is a closed subset of [0,1]^2, hence compact.\<close>
+  have hD_sub: "?D \<subseteq> {0..1} \<times> {0..1}"
+  proof
+    fix p assume "p \<in> ?D"
+    then obtain s t where "p = (s, t)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1" by (by100 blast)
+    thus "p \<in> {0..1} \<times> {0..1}" by (by100 force)
+  qed
+  have hD_closed: "closed ?D"
+  proof -
+    have h1: "closed {p :: real \<times> real. 0 \<le> fst p}"
+      by (rule closed_Collect_le[of "\<lambda>p. 0" fst]) (simp_all add: continuous_on_const continuous_on_fst)
+    have h2: "closed {p :: real \<times> real. 0 \<le> snd p}"
+      by (rule closed_Collect_le[of "\<lambda>p. 0" snd]) (simp_all add: continuous_on_const continuous_on_snd)
+    have h3: "closed {p :: real \<times> real. fst p + snd p \<le> 1}"
+      by (rule closed_Collect_le[of "\<lambda>p. fst p + snd p" "\<lambda>p. 1"])
+         (simp_all add: continuous_on_add continuous_on_fst continuous_on_snd continuous_on_const)
+    have "?D = {p. 0 \<le> fst p} \<inter> {p. 0 \<le> snd p} \<inter> {p. fst p + snd p \<le> 1}"
+      by (by100 auto)
+    thus ?thesis using h1 h2 h3 by (by100 auto)
+  qed
+  have hD_compact: "compact ?D"
+    by (rule closed_subset_compact[OF compact_Icc_Times hD_closed hD_sub])
+  \<comment> \<open>?f is continuous.\<close>
+  have hf_cont: "continuous_on ?D ?f"
+  proof -
+    let ?fx = "\<lambda>(s::real,t::real). (1 - s - t) * ax + s * bx + t * cx"
+    let ?fy = "\<lambda>(s::real,t::real). (1 - s - t) * ay + s * by' + t * cy"
+    have hfx: "continuous_on UNIV ?fx"
+      unfolding split_def
+      by (intro continuous_on_add continuous_on_mult continuous_on_id
+          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
+    have hfy: "continuous_on UNIV ?fy"
+      unfolding split_def
+      by (intro continuous_on_add continuous_on_mult continuous_on_id
+          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
+    have "continuous_on UNIV (\<lambda>p. (?fx p, ?fy p))"
+      by (rule continuous_on_Pair[OF hfx hfy])
+    hence "continuous_on UNIV ?f"
+      unfolding split_def by (by100 simp)
+    thus ?thesis by (rule continuous_on_subset) (by100 blast)
+  qed
+  show ?thesis unfolding hT_eq
+    by (rule compact_continuous_image[OF hf_cont hD_compact])
+qed
+
+text \<open>A convex hull of n \<ge> 3 points in R^2 is compact.\<close>
+lemma convex_hull_compact:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat
+  assumes "n \<ge> 3"
+  shows "compact {(x, y). \<exists>coeffs. (\<forall>i<n. (coeffs i :: real) \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+      \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+  \<comment> \<open>Proof: fan triangulation from v0 into n-2 triangles, each compact by triangle_compact.
+     Finite union (compact_Union) of compact sets is compact.\<close>
+  sorry
+
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   fixes X :: "'a set" and TX :: "'a set set"
@@ -12223,10 +12305,7 @@ proof -
                 \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
                 \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
           using hP unfolding top1_is_polygonal_region_on_def by blast
-        \<comment> \<open>Fan triangulation: P = \<Union>k=1..n-1. conv(v0, vk, v(k+1 mod n)).
-           Each triangle is the continuous image of [0,1]^2, hence compact.
-           Finite union of compact sets is compact (compact_Union).\<close>
-        show "compact P" sorry
+        show "compact P" unfolding hP_eq by (rule convex_hull_compact[OF hn])
       qed
       ultimately have "top1_compact_on P (subspace_topology UNIV top1_open_sets P)" by (by100 simp)
       thus ?thesis using hTP_eq by (by100 simp)
