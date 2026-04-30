@@ -30,6 +30,6 @@ session AlgTop0 in a0 = AlgTopBase +
     AlgTop0
 
 session AlgTop = AlgTop0 +
-  options [quick_and_dirty, timeout = 120]
+  options [quick_and_dirty, timeout = 180]
   theories
     AlgTop
