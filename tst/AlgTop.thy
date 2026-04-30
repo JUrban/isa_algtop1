@@ -7612,9 +7612,47 @@ proof -
      The reduced-word condition ensures unique evaluation.
 
      For now, we sorry this and rely on the mathematical validity.\<close>
+  \<comment> \<open>Word evaluation function: given indices and word, evaluate in H.\<close>
+  let ?eval_H = "\<lambda>indices word n. foldr mulH
+      (map (\<lambda>i. hfam (indices!i) (word!i)) [0..<n]) eH"
+  \<comment> \<open>Define h: for g = e, h(g) = eH. For g \<noteq> e, pick its reduced-word representation
+     (exists by generation, unique by the reduced-word condition) and evaluate in H.\<close>
+  let ?h = "\<lambda>g. if g = e then eH
+    else let (indices, word) = (SOME (indices, word).
+        length indices = length word \<and> length indices > 0
+      \<and> (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
+                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
+      \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
+      \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g)
+    in ?eval_H (fst (indices, word)) (snd (indices, word)) (length (fst (indices, word)))"
   have hexists: "\<exists>h. top1_group_hom_on G mul H mulH h
       \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
-    sorry
+  proof -
+    \<comment> \<open>Step 1: every g \<in> G has a reduced-word representation (from generation + reduction).\<close>
+    have hrepr: "\<forall>g\<in>G. g = e \<or> (\<exists>indices word.
+        length indices = length word \<and> length indices > 0
+      \<and> (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
+                          \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
+      \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
+      \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g)"
+      sorry
+    \<comment> \<open>Step 2: ?h maps G to H.\<close>
+    have hh_maps: "\<forall>g\<in>G. ?h g \<in> H"
+      sorry
+    \<comment> \<open>Step 3: ?h is a homomorphism.\<close>
+    have hh_hom: "\<forall>g1\<in>G. \<forall>g2\<in>G. ?h (mul g1 g2) = mulH (?h g1) (?h g2)"
+      sorry
+    \<comment> \<open>Step 4: ?h agrees with hfam on generators.\<close>
+    have hh_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
+      sorry
+    show ?thesis
+    proof (rule exI[of _ ?h])
+      show "top1_group_hom_on G mul H mulH ?h \<and>
+          (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
+        unfolding top1_group_hom_on_def
+        using hh_maps hh_hom hh_ext sorry
+    qed
+  qed
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
   have hunique: "\<And>h1 h2. top1_group_hom_on G mul H mulH h1 \<Longrightarrow>
       (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h1 (\<iota>fam \<alpha> x) = hfam \<alpha> x) \<Longrightarrow>
