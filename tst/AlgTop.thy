@@ -656,7 +656,29 @@ next
   qed
   have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
       top1_S1 top1_S1_topology ?f"
-    sorry
+  proof -
+    \<comment> \<open>Step 1: f is continuous as a map ℝ → ℝ².\<close>
+    have hcont_UNIV: "continuous_on (UNIV::real set) ?f"
+      by (intro continuous_on_Pair continuous_intros)
+    \<comment> \<open>Step 2: f maps into S¹.\<close>
+    have hf_maps: "\<forall>t::real. ?f t \<in> top1_S1" using hf_on_S1 by (by100 blast)
+    \<comment> \<open>Step 3: Bridge to top1_continuous_map_on UNIV → S¹.\<close>
+    have h1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+        top1_S1 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1) ?f"
+      by (rule top1_continuous_map_on_R_to_R2_subspace) (use hf_on_S1 hcont_UNIV in blast)+
+    \<comment> \<open>Step 4: S¹ topology = subspace topology.\<close>
+    have hS1_eq: "top1_S1_topology = subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+      unfolding top1_S1_topology_def ..
+    have h2: "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology ?f"
+      using h1 hS1_eq by (by100 simp)
+    \<comment> \<open>Step 5: Restrict domain to I_set.\<close>
+    have h3: "top1_continuous_map_on top1_unit_interval
+        (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval) top1_S1 top1_S1_topology ?f"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF h2]) (by100 blast)
+    \<comment> \<open>Step 6: Unit interval topology = subspace topology.\<close>
+    thus ?thesis unfolding top1_unit_interval_topology_def .
+  qed
   show "\<exists>f. top1_is_path_on top1_S1 top1_S1_topology p q f"
     using hf_cont hf0 hf1 unfolding top1_is_path_on_def by (by100 blast)
 qed
