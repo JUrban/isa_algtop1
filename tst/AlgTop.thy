@@ -8711,8 +8711,8 @@ theorem Theorem_68_7_quotient_free_product:
       and "top1_is_group_on G2 mul2 e2 invg2"
       and "top1_normal_subgroup_on G1 mul1 e1 invg1 N1"
       and "top1_normal_subgroup_on G2 mul2 e2 invg2 N2"
-  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12
-          (FPQ::'fq set) mulFPQ eFPQ invgFPQ \<iota>famQ.
+  shows "\<exists>(FP :: (nat \<times> 'g) list set) mulFP eFP invgFP \<iota>fam12
+          (FPQ :: (nat \<times> 'g set) list set) mulFPQ eFPQ invgFPQ \<iota>famQ.
            top1_is_free_product_on FP mulFP eFP invgFP
              (\<lambda>i::nat. if i = 0 then G1 else G2)
              (\<lambda>i. if i = 0 then mul1 else mul2)
@@ -10578,7 +10578,7 @@ theorem Theorem_69_2:
   assumes "top1_is_free_group_full_on G1 mul1 e1 invg1 \<iota>1 S1"
       and "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 S2"
       and "S1 \<inter> S2 = {}"
-  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
+  shows "\<exists>(FP :: (nat \<times> 'g) list set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
            top1_is_free_product_on FP mulFP eFP invgFP
              (\<lambda>i::nat. if i = 0 then G1 else G2)
              (\<lambda>i. if i = 0 then mul1 else mul2)
@@ -10623,7 +10623,7 @@ proof -
       and hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
       and hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
     using h_free_on_union by (by100 blast)
-  show ?thesis using hFP h\<iota> hcomp1 hcomp2 sorry
+  show ?thesis using hFP h\<iota> hcomp1 hcomp2 by (by100 blast)
 qed
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
