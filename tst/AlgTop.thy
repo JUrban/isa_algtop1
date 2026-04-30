@@ -7630,9 +7630,116 @@ proof -
     let ?K = "{g \<in> G. h1 g = h2 g}"
     have hK_sub: "?K \<subseteq> G" by (by100 blast)
     have hK_grp: "top1_is_group_on ?K mul e invg"
-      \<comment> \<open>K = {g \<in> G. h1 g = h2 g} is a subgroup: e \<in> K, mul/inv closed (using hom property),
-         axioms inherited from G.\<close>
-      sorry
+    proof -
+      have heG: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hmul_closed: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_closed: "\<forall>x\<in>G. invg x \<in> G"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hassoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hid_left: "\<forall>x\<in>G. mul e x = x"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hid_right: "\<forall>x\<in>G. mul x e = x"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_left: "\<forall>x\<in>G. mul (invg x) x = e"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_right: "\<forall>x\<in>G. mul x (invg x) = e"
+        using hG unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>h1(e) = eH (inline hom_preserves_id logic): h1(e*e) = h1(e)*h1(e), so h1(e) = eH.\<close>
+      \<comment> \<open>Inline hom_preserves_id: h(e*e)=h(e)*h(e) and e*e=e, so h(e)=h(e)*h(e).
+         Multiply by invgH(h(e)) to get eH=h(e).\<close>
+      have hh1_maps: "\<forall>x\<in>G. h1 x \<in> H" and hh1_mul: "\<forall>x\<in>G. \<forall>y\<in>G. h1 (mul x y) = mulH (h1 x) (h1 y)"
+        using hh1 unfolding top1_group_hom_on_def by (by100 blast)+
+      have hh2_maps: "\<forall>x\<in>G. h2 x \<in> H" and hh2_mul: "\<forall>x\<in>G. \<forall>y\<in>G. h2 (mul x y) = mulH (h2 x) (h2 y)"
+        using hh2 unfolding top1_group_hom_on_def by (by100 blast)+
+      \<comment> \<open>Extract H group axioms for use in h(e)=eH proof.\<close>
+      have hH_inv_right: "\<forall>x\<in>H. mulH x (invgH x) = eH"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hH_id_right: "\<forall>x\<in>H. mulH x eH = x"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hH_inv_closed: "\<forall>x\<in>H. invgH x \<in> H"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hH_assoc: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hh1e: "h1 e = eH"
+      proof -
+        have hh1eH: "h1 e \<in> H" using hh1_maps heG by (by100 blast)
+        have hinvh1e: "invgH (h1 e) \<in> H" using hH_inv_closed hh1eH by (by100 blast)
+        have "h1 e = mulH (h1 e) (h1 e)"
+        proof -
+          have "h1 (mul e e) = mulH (h1 e) (h1 e)" using hh1_mul heG by (by100 blast)
+          moreover have "mul e e = e" using hid_left heG by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h1e_inv: "mulH (h1 e) (invgH (h1 e)) = eH"
+          using hH_inv_right hh1eH by (by100 blast)
+        have "eH = mulH (mulH (h1 e) (h1 e)) (invgH (h1 e))"
+          using \<open>h1 e = mulH (h1 e) (h1 e)\<close> h1e_inv by (by100 simp)
+        also have "\<dots> = mulH (h1 e) (mulH (h1 e) (invgH (h1 e)))"
+          using hH_assoc hh1eH hinvh1e by (by100 blast)
+        also have "mulH (h1 e) (invgH (h1 e)) = eH" using hH_inv_right hh1eH by (by100 blast)
+        also have "mulH (h1 e) eH = h1 e" using hH_id_right hh1eH by (by100 blast)
+        finally show "h1 e = eH" by (by100 simp)
+      qed
+      have hh2e: "h2 e = eH"
+      proof -
+        have hh2eH: "h2 e \<in> H" using hh2_maps heG by (by100 blast)
+        have hinvh2e: "invgH (h2 e) \<in> H" using hH_inv_closed hh2eH by (by100 blast)
+        have "h2 e = mulH (h2 e) (h2 e)"
+        proof -
+          have "h2 (mul e e) = mulH (h2 e) (h2 e)" using hh2_mul heG by (by100 blast)
+          moreover have "mul e e = e" using hid_left heG by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h2e_inv: "mulH (h2 e) (invgH (h2 e)) = eH"
+          using hH_inv_right hh2eH by (by100 blast)
+        have "eH = mulH (mulH (h2 e) (h2 e)) (invgH (h2 e))"
+          using \<open>h2 e = mulH (h2 e) (h2 e)\<close> h2e_inv by (by100 simp)
+        also have "\<dots> = mulH (h2 e) (mulH (h2 e) (invgH (h2 e)))"
+          using hH_assoc hh2eH hinvh2e by (by100 blast)
+        also have "mulH (h2 e) (invgH (h2 e)) = eH" using hH_inv_right hh2eH by (by100 blast)
+        also have "mulH (h2 e) eH = h2 e" using hH_id_right hh2eH by (by100 blast)
+        finally show "h2 e = eH" by (by100 simp)
+      qed
+      have "h1 e = h2 e" using hh1e hh2e by (by100 simp)
+      hence "e \<in> ?K" using heG by (by100 blast)
+      \<comment> \<open>mul closed: h1(xy) = h1(x)*h1(y) = h2(x)*h2(y) = h2(xy).\<close>
+      moreover have "\<forall>x\<in>?K. \<forall>y\<in>?K. mul x y \<in> ?K"
+      proof (intro ballI)
+        fix x y assume "x \<in> ?K" "y \<in> ?K"
+        hence hxG: "x \<in> G" "h1 x = h2 x" and hyG: "y \<in> G" "h1 y = h2 y" by (by100 blast)+
+        have "h1 (mul x y) = mulH (h1 x) (h1 y)"
+          using hh1 hxG(1) hyG(1) unfolding top1_group_hom_on_def by (by100 blast)
+        also have "\<dots> = mulH (h2 x) (h2 y)" using hxG(2) hyG(2) by (by100 simp)
+        also have "\<dots> = h2 (mul x y)"
+        proof -
+          have "h2 (mul x y) = mulH (h2 x) (h2 y)"
+            using hh2_mul hxG(1) hyG(1) by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        finally show "mul x y \<in> ?K" using hmul_closed hxG(1) hyG(1) by (by100 blast)
+      qed
+      \<comment> \<open>inv closed: h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x).\<close>
+      moreover have "\<forall>x\<in>?K. invg x \<in> ?K"
+      proof (intro ballI)
+        fix x assume "x \<in> ?K"
+        hence hxG: "x \<in> G" "h1 x = h2 x" by (by100 blast)+
+        \<comment> \<open>h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x).\<close>
+        have "h1 (invg x) = h2 (invg x)"
+          \<comment> \<open>h1(invg x) = invgH(h1 x) = invgH(h2 x) = h2(invg x) by hom_preserves_inv.\<close>
+          sorry
+        thus "invg x \<in> ?K" using hinv_closed hxG(1) by (by100 blast)
+      qed
+      \<comment> \<open>Axioms: inherited from G.\<close>
+      moreover have "\<forall>x\<in>?K. \<forall>y\<in>?K. \<forall>z\<in>?K. mul (mul x y) z = mul x (mul y z)"
+        using hassoc by (by100 blast)
+      moreover have "\<forall>x\<in>?K. mul e x = x" using hid_left by (by100 blast)
+      moreover have "\<forall>x\<in>?K. mul x e = x" using hid_right by (by100 blast)
+      moreover have "\<forall>x\<in>?K. mul (invg x) x = e" using hinv_left by (by100 blast)
+      moreover have "\<forall>x\<in>?K. mul x (invg x) = e" using hinv_right by (by100 blast)
+      ultimately show ?thesis unfolding top1_is_group_on_def by (by100 blast)
+    qed
     have hgens_K: "(\<Union>\<alpha>\<in>J. \<iota>fam \<alpha> ` GG \<alpha>) \<subseteq> ?K"
       using hagree_gen h\<iota>_in by (by100 blast)
     have "G \<subseteq> ?K"
