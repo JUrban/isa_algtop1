@@ -244,7 +244,7 @@ proof -
     have key: "(1 - \<bar>h x\<bar>) * (1 + \<bar>x\<bar>) = 1"
     proof -
       have "(1 - \<bar>x\<bar> / (1 + \<bar>x\<bar>)) * (1 + \<bar>x\<bar>) = 1 * (1 + \<bar>x\<bar>) - \<bar>x\<bar> / (1 + \<bar>x\<bar>) * (1 + \<bar>x\<bar>)"
-        using left_diff_distrib[of 1 "\<bar>x\<bar> / (1 + \<bar>x\<bar>)" "1 + \<bar>x\<bar>"] by (by100 simp)
+        using left_diff_distrib[of 1 "\<bar>x\<bar> / (1 + \<bar>x\<bar>)" "1 + \<bar>x\<bar>"] by simp
       also have "\<bar>x\<bar> / (1 + \<bar>x\<bar>) * (1 + \<bar>x\<bar>) = \<bar>x\<bar>"
         using hne by (by100 simp)
       finally have "(1 - \<bar>x\<bar> / (1 + \<bar>x\<bar>)) * (1 + \<bar>x\<bar>) = (1 + \<bar>x\<bar>) - \<bar>x\<bar>"
