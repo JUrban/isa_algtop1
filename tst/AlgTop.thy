@@ -7605,6 +7605,9 @@ proof -
   \<comment> \<open>Existence: h on reduced words, h(x1...xn) = hfam(a1)(x1)*...*hfam(an)(xn).\<close>
   have hexists: "\<exists>h. top1_group_hom_on G mul H mulH h
       \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
+    \<comment> \<open>Existence: define h by evaluating reduced words in H.
+       Well-definedness by reduced-word uniqueness. Homomorphism by construction.
+       The formal proof requires induction on the generation structure of G.\<close>
     sorry
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
   have hunique: "\<And>h1 h2. top1_group_hom_on G mul H mulH h1 \<Longrightarrow>
