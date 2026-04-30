@@ -5732,6 +5732,102 @@ next
   qed
 qed
 
+text \<open>Functoriality of induced maps: (g \<circ> h)_* = g_* \<circ> h_*.\<close>
+lemma fundamental_group_induced_comp:
+  assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY" and hTZ: "is_topology_on Z TZ"
+      and hh: "top1_continuous_map_on X TX Y TY h" and hg: "top1_continuous_map_on Y TY Z TZ g"
+      and hx0: "x0 \<in> X" and hh0: "h x0 = y0" and hg0: "g y0 = z0"
+      and hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+  shows "top1_fundamental_group_induced_on X TX x0 Z TZ z0 (g \<circ> h) c
+       = top1_fundamental_group_induced_on Y TY y0 Z TZ z0 g
+           (top1_fundamental_group_induced_on X TX x0 Y TY y0 h c)"
+proof (rule set_eqI)
+  fix k
+  show "k \<in> top1_fundamental_group_induced_on X TX x0 Z TZ z0 (g \<circ> h) c \<longleftrightarrow>
+        k \<in> top1_fundamental_group_induced_on Y TY y0 Z TZ z0 g
+            (top1_fundamental_group_induced_on X TX x0 Y TY y0 h c)"
+    unfolding top1_fundamental_group_induced_on_def
+  proof
+    \<comment> \<open>(\<Rightarrow>): k loop-equiv to (g\<circ>h)\<circ>f for some f \<in> c.
+       Since (g\<circ>h)\<circ>f = g\<circ>(h\<circ>f), and h\<circ>f loop-equiv to h\<circ>f (reflexivity),
+       h\<circ>f is in induced_h(c). Then k loop-equiv to g\<circ>(h\<circ>f) means k \<in> induced_g(induced_h(c)).\<close>
+    assume "k \<in> {g'. \<exists>f\<in>c. top1_loop_equiv_on Z TZ z0 ((g \<circ> h) \<circ> f) g'}"
+    then obtain f where hf: "f \<in> c" and hk: "top1_loop_equiv_on Z TZ z0 ((g \<circ> h) \<circ> f) k"
+      by (by100 blast)
+    \<comment> \<open>(g\<circ>h)\<circ>f = g\<circ>(h\<circ>f)\<close>
+    have hcomp: "(g \<circ> h) \<circ> f = g \<circ> (h \<circ> f)" by (rule ext) (by100 simp)
+    \<comment> \<open>h\<circ>f is in induced_h(c): need loop_equiv(Y, y0, h\<circ>f, h\<circ>f) (reflexivity).\<close>
+    have hf_loop: "top1_is_loop_on X TX x0 f"
+      using hc hf unfolding top1_fundamental_group_carrier_def top1_loop_equiv_on_def
+      by (by100 blast)
+    have hhf_loop: "top1_is_loop_on Y TY y0 (h \<circ> f)"
+    proof -
+      have hf_path: "top1_is_path_on X TX x0 x0 f"
+        using hf_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology Y TY (h \<circ> f)"
+      proof (rule top1_continuous_map_on_comp)
+        show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f"
+          using hf_path unfolding top1_is_path_on_def by (by100 blast)
+        show "top1_continuous_map_on X TX Y TY h" by (rule hh)
+      qed
+      moreover have "(h \<circ> f) 0 = y0" using hf_path hh0 unfolding top1_is_path_on_def by (by100 simp)
+      moreover have "(h \<circ> f) 1 = y0"
+        using hf_path hh0 hf_loop unfolding top1_is_path_on_def top1_is_loop_on_def by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    qed
+    have "h \<circ> f \<in> {g'. \<exists>f'\<in>c. top1_loop_equiv_on Y TY y0 (h \<circ> f') g'}"
+    proof -
+      have "top1_loop_equiv_on Y TY y0 (h \<circ> f) (h \<circ> f)"
+        unfolding top1_loop_equiv_on_def
+      proof (intro conjI)
+        show "top1_is_loop_on Y TY y0 (h \<circ> f)" by (rule hhf_loop)
+        show "top1_is_loop_on Y TY y0 (h \<circ> f)" by (rule hhf_loop)
+        have "top1_is_path_on Y TY y0 y0 (h \<circ> f)"
+          using hhf_loop unfolding top1_is_loop_on_def by (by100 blast)
+        thus "top1_path_homotopic_on Y TY y0 y0 (h \<circ> f) (h \<circ> f)"
+          by (rule Lemma_51_1_path_homotopic_refl)
+      qed
+      thus ?thesis using hf by (by100 blast)
+    qed
+    moreover have "top1_loop_equiv_on Z TZ z0 (g \<circ> (h \<circ> f)) k"
+      using hk hcomp by (by100 simp)
+    ultimately show "k \<in> {g'. \<exists>f'\<in>{g'. \<exists>f\<in>c. top1_loop_equiv_on Y TY y0 (h \<circ> f) g'}.
+                top1_loop_equiv_on Z TZ z0 (g \<circ> f') g'}"
+      by (by100 blast)
+  next
+    \<comment> \<open>(\<Leftarrow>): k \<in> induced_g(induced_h(c)). Unpack and use (g\<circ>h)\<circ>f = g\<circ>(h\<circ>f) + transitivity.\<close>
+    assume "k \<in> {g'. \<exists>f'\<in>{g'. \<exists>f\<in>c. top1_loop_equiv_on Y TY y0 (h \<circ> f) g'}.
+                top1_loop_equiv_on Z TZ z0 (g \<circ> f') g'}"
+    then obtain f' f where hf: "f \<in> c" "top1_loop_equiv_on Y TY y0 (h \<circ> f) f'"
+        and hk: "top1_loop_equiv_on Z TZ z0 (g \<circ> f') k" by (by100 blast)
+    \<comment> \<open>g preserves homotopy: loop_equiv(Y, h\<circ>f, f') \<Rightarrow> path_homotopic(Z, g\<circ>(h\<circ>f), g\<circ>f').\<close>
+    have hpathom: "top1_path_homotopic_on Z TZ z0 z0 (g \<circ> (h \<circ> f)) (g \<circ> f')"
+      using continuous_preserves_path_homotopic[OF hTY hTZ hg]
+        hf(2) hg0 unfolding top1_loop_equiv_on_def by (by100 blast)
+    \<comment> \<open>Transitivity: loop_equiv(Z, g\<circ>(h\<circ>f), k) via hpathom + hk.\<close>
+    have "top1_loop_equiv_on Z TZ z0 (g \<circ> (h \<circ> f)) k"
+    proof -
+      have hk_htpy: "top1_path_homotopic_on Z TZ z0 z0 (g \<circ> f') k"
+        using hk unfolding top1_loop_equiv_on_def by (by100 blast)
+      have "top1_path_homotopic_on Z TZ z0 z0 (g \<circ> (h \<circ> f)) k"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTZ hpathom hk_htpy])
+      moreover have "top1_is_loop_on Z TZ z0 (g \<circ> (h \<circ> f))"
+        using hpathom unfolding top1_path_homotopic_on_def top1_is_loop_on_def top1_is_path_on_def
+        by (by100 blast)
+      moreover have "top1_is_loop_on Z TZ z0 k"
+        using hk unfolding top1_loop_equiv_on_def by (by100 blast)
+      ultimately show ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+    qed
+    hence "top1_loop_equiv_on Z TZ z0 ((g \<circ> h) \<circ> f) k"
+    proof -
+      have "(g \<circ> h) \<circ> f = g \<circ> (h \<circ> f)" by (rule ext) (by100 simp)
+      thus ?thesis using \<open>top1_loop_equiv_on Z TZ z0 (g \<circ> (h \<circ> f)) k\<close> by (by100 simp)
+    qed
+    thus "k \<in> {g'. \<exists>f\<in>c. top1_loop_equiv_on Z TZ z0 ((g \<circ> h) \<circ> f) g'}"
+      using hf(1) by (by100 blast)
+  qed
+qed
+
 section \<open>\<S>65 The Winding Number of a Simple Closed Curve\<close>
 
 text \<open>The winding number of a loop f in R^2-{0} around the origin.
