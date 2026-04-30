@@ -12015,11 +12015,11 @@ qed
 
 text \<open>Binary product of compact sets in R is compact in R^2.
   This is a special case of Tychonoff; proved via the tube lemma.\<close>
-lemma compact_Times_real:
-  assumes "compact (A :: real set)" and "compact (B :: real set)"
-  shows "compact (A \<times> B :: (real \<times> real) set)"
+lemma compact_Times_general:
+  assumes "compact (A :: 'a::topological_space set)" and "compact (B :: 'b::topological_space set)"
+  shows "compact (A \<times> B :: ('a \<times> 'b) set)"
 proof (rule compactI)
-  fix \<C> :: "(real \<times> real) set set"
+  fix \<C> :: "('a \<times> 'b) set set"
   assume h\<C>_open: "\<forall>c\<in>\<C>. open c" and h\<C>_cover: "A \<times> B \<subseteq> \<Union>\<C>"
   \<comment> \<open>For each a \<in> A, {a} \<times> B is covered by \<C>. B compact gives finite subcover F_a.
      Tube lemma: \<exists> W_a open, a \<in> W_a, W_a \<times> B \<subseteq> \<Union>F_a.
@@ -12174,7 +12174,7 @@ qed
 text \<open>Compact for product intervals.\<close>
 lemma compact_Icc_Times:
   "compact ({a..b::real} \<times> {c..d::real})"
-  by (rule compact_Times_real[OF compact_Icc compact_Icc])
+  by (rule compact_Times_general[OF compact_Icc compact_Icc])
 
 text \<open>A triangle (convex hull of 3 points) in R^2 is compact.\<close>
 lemma triangle_compact:
@@ -12249,14 +12249,76 @@ proof -
 qed
 
 text \<open>A convex hull of n \<ge> 3 points in R^2 is compact.\<close>
+text \<open>Convex hull of n \<ge> 1 points is compact, by induction on n.
+  Base: single point. Step: conv(n+1) = image of [0,1] \<times> conv(n) under continuous cone map.\<close>
+lemma convex_hull_compact_general:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat
+  assumes "n \<ge> 1"
+  shows "compact {(x, y). \<exists>coeffs. (\<forall>i<n. (coeffs i :: real) \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+      \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+  using assms
+proof (induction n rule: nat_induct_at_least)
+  case base
+  \<comment> \<open>n=1: P = {(vx 0, vy 0)}, a single point — trivially compact.\<close>
+  have "{(x::real, y::real). \<exists>coeffs. (\<forall>i<1. coeffs i \<ge> 0) \<and> (\<Sum>i<1. coeffs i) = 1
+      \<and> x = (\<Sum>i<1. coeffs i * vx i) \<and> y = (\<Sum>i<1. coeffs i * vy i)}
+    = {(vx 0, vy 0)}"
+  proof
+    show "{(vx 0, vy 0)} \<subseteq> {(x, y). \<exists>coeffs. (\<forall>i<1. coeffs i \<ge> 0) \<and>
+        (\<Sum>i<1. coeffs i) = 1 \<and> x = (\<Sum>i<1. coeffs i * vx i) \<and> y = (\<Sum>i<1. coeffs i * vy i)}"
+      by (rule subsetI) (auto intro: exI[of _ "\<lambda>_. 1"])
+  next
+    show "{(x, y). \<exists>coeffs. (\<forall>i<1. coeffs i \<ge> 0) \<and> (\<Sum>i<1. coeffs i) = 1 \<and>
+        x = (\<Sum>i<1. coeffs i * vx i) \<and> y = (\<Sum>i<1. coeffs i * vy i)} \<subseteq> {(vx 0, vy 0)}"
+      by auto
+  qed
+  moreover have "compact {(vx 0, vy 0)}"
+  proof (rule compactI)
+    fix \<U> :: "(real \<times> real) set set"
+    assume "\<forall>U\<in>\<U>. open U" "{(vx 0, vy 0)} \<subseteq> \<Union>\<U>"
+    then obtain U where "U \<in> \<U>" "(vx 0, vy 0) \<in> U" by (by100 blast)
+    thus "\<exists>\<F>\<subseteq>\<U>. finite \<F> \<and> {(vx 0, vy 0)} \<subseteq> \<Union>\<F>"
+      by (rule_tac x="{U}" in exI) (by100 blast)
+  qed
+  ultimately show ?case by (by100 simp)
+next
+  case (Suc n)
+  \<comment> \<open>Inductive step: conv(n+1 points) = cone from v_n over conv(n points).
+     (x,y) \<in> conv(n+1) iff \<exists>t\<in>[0,1]. \<exists>(x',y')\<in>conv(n).
+       x = (1-t)*x' + t*vx(n)  and  y = (1-t)*y' + t*vy(n).
+     This is the image of [0,1] \<times> conv(n) under a continuous map.\<close>
+  let ?Pn = "{(x::real, y::real). \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+      \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+  let ?Pn1 = "{(x::real, y::real). \<exists>coeffs. (\<forall>i<Suc n. coeffs i \<ge> 0) \<and> (\<Sum>i<Suc n. coeffs i) = 1
+      \<and> x = (\<Sum>i<Suc n. coeffs i * vx i) \<and> y = (\<Sum>i<Suc n. coeffs i * vy i)}"
+  have hPn_compact: "compact ?Pn" by (rule Suc.IH)
+  \<comment> \<open>f: [0,1] \<times> ?Pn \<rightarrow> ?Pn1 via f(t, (x',y')) = ((1-t)*x' + t*vx n, (1-t)*y' + t*vy n).\<close>
+  let ?f = "\<lambda>(t::real, (x'::real, y'::real)). ((1-t)*x' + t*vx n, (1-t)*y' + t*vy n)"
+  \<comment> \<open>[0,1] \<times> ?Pn is compact.\<close>
+  have hdom_compact: "compact ({0..1::real} \<times> ?Pn)"
+    by (rule compact_Times_general[OF compact_Icc hPn_compact])
+  \<comment> \<open>?f is continuous.\<close>
+  have hf_cont: "continuous_on ({0..1} \<times> ?Pn) ?f"
+  proof -
+    have "continuous_on UNIV ?f"
+      unfolding split_def
+      by (intro continuous_on_Pair continuous_on_add continuous_on_mult continuous_on_id
+          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
+    thus ?thesis by (rule continuous_on_subset) (by100 blast)
+  qed
+  \<comment> \<open>?Pn1 = ?f ` ({0..1} \<times> ?Pn).\<close>
+  have hPn1_eq: "?Pn1 = ?f ` ({0..1} \<times> ?Pn)"
+    sorry
+  show ?case unfolding hPn1_eq
+    by (rule compact_continuous_image[OF hf_cont hdom_compact])
+qed
+
 lemma convex_hull_compact:
   fixes vx vy :: "nat \<Rightarrow> real" and n :: nat
   assumes "n \<ge> 3"
   shows "compact {(x, y). \<exists>coeffs. (\<forall>i<n. (coeffs i :: real) \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
       \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
-  \<comment> \<open>Proof: fan triangulation from v0 into n-2 triangles, each compact by triangle_compact.
-     Finite union (compact_Union) of compact sets is compact.\<close>
-  sorry
+  using convex_hull_compact_general[of n vx vy] assms by (by100 linarith)
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
