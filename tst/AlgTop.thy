@@ -11927,6 +11927,50 @@ section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
     removed. Use top1_is_n_fold_torus_on and top1_is_m_fold_projective_on predicates
     (defined earlier) on a space (X, TX) instead.\<close>
 
+text \<open>Union of two compact sets is compact.\<close>
+lemma compact_Un:
+  assumes "compact A" and "compact B"
+  shows "compact (A \<union> B)"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "A \<union> B \<subseteq> \<Union>\<U>"
+  have hA_cov: "A \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
+  have hB_cov: "B \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
+  obtain FA where hFA: "finite FA" "FA \<subseteq> \<U>" "A \<subseteq> \<Union>FA"
+  proof (rule compactE[OF assms(1) hA_cov])
+    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
+  next
+    fix F' assume "F' \<subseteq> \<U>" "finite F'" "A \<subseteq> \<Union>F'"
+    thus thesis using that by (by100 blast)
+  qed
+  obtain FB where hFB: "finite FB" "FB \<subseteq> \<U>" "B \<subseteq> \<Union>FB"
+  proof (rule compactE[OF assms(2) hB_cov])
+    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
+  next
+    fix F' assume "F' \<subseteq> \<U>" "finite F'" "B \<subseteq> \<Union>F'"
+    thus thesis using that by (by100 blast)
+  qed
+  have "finite (FA \<union> FB)" using hFA(1) hFB(1) by (by100 blast)
+  moreover have "FA \<union> FB \<subseteq> \<U>" using hFA(2) hFB(2) by (by100 blast)
+  moreover have "A \<union> B \<subseteq> \<Union>(FA \<union> FB)" using hFA(3) hFB(3) by (by100 blast)
+  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> A \<union> B \<subseteq> \<Union>\<F>'" by (by100 blast)
+qed
+
+text \<open>Finite union of compact sets is compact.\<close>
+lemma compact_Union:
+  assumes "finite F" and "\<forall>S\<in>F. compact S"
+  shows "compact (\<Union>F)"
+  using assms
+proof (induction F rule: finite_induct)
+  case empty thus ?case by (simp add: compact_empty)
+next
+  case (insert S F)
+  have "compact (\<Union>F)" using insert.IH insert.prems by (by100 blast)
+  moreover have "compact S" using insert.prems by (by100 blast)
+  ultimately have "compact (S \<union> \<Union>F)" by (rule compact_Un[rotated])
+  thus "compact (\<Union>(insert S F))" by (by100 simp)
+qed
+
 text \<open>Closed subset of compact is compact.\<close>
 lemma closed_subset_compact:
   assumes "compact S" and "closed C" and "C \<subseteq> S"
@@ -12169,66 +12213,20 @@ proof -
          P is a closed bounded convex hull, hence compact.\<close>
       moreover have "compact P"
       proof -
-        \<comment> \<open>P is a convex hull. From the definition, extract vertex coordinates.\<close>
+        \<comment> \<open>P is the convex hull of finitely many points.
+           P = union of n-2 triangles (fan triangulation from vertex 0).
+           Each triangle is compact (continuous image of compact [0,1]^2).
+           Finite union of compact is compact.\<close>
         obtain vx vy :: "nat \<Rightarrow> real" where hn: "length scheme \<ge> 3"
             and hP_eq: "P = {(x, y). \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
                 \<and> (\<Sum>i<length scheme. coeffs i) = 1
                 \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
                 \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
           using hP unfolding top1_is_polygonal_region_on_def by blast
-        let ?n = "length scheme"
-        define M where "M = Max ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<?n})"
-        \<comment> \<open>P \<subseteq> [-?M, ?M]^2: convex combinations are bounded by max vertex coordinates.\<close>
-        have hM_bound: "\<forall>i<?n. \<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M"
-        proof (intro allI impI conjI)
-          fix i assume hi: "i < ?n"
-          have "max \<bar>vx i\<bar> \<bar>vy i\<bar> \<in> (\<lambda>i. max \<bar>vx i\<bar> \<bar>vy i\<bar>) ` {..<?n}"
-            using hi by (by100 blast)
-          hence "max \<bar>vx i\<bar> \<bar>vy i\<bar> \<le> M" unfolding M_def
-            by (intro Max_ge) auto
-          thus "\<bar>vx i\<bar> \<le> M" by (by100 linarith)
-          show "\<bar>vy i\<bar> \<le> M" using \<open>max \<bar>vx i\<bar> \<bar>vy i\<bar> \<le> M\<close> by (by100 linarith)
-        qed
-        have hP_bounded: "P \<subseteq> {-M..M} \<times> {-M..M}"
-        proof
-          fix p assume hp: "p \<in> P"
-          obtain x y where hxy: "p = (x, y)" by (cases p)
-          obtain coeffs where hcoeffs: "(\<forall>i<?n. coeffs i \<ge> 0)"
-              "(\<Sum>i<?n. coeffs i) = 1"
-              "x = (\<Sum>i<?n. coeffs i * vx i)"
-              "y = (\<Sum>i<?n. coeffs i * vy i)"
-            using hp hxy unfolding hP_eq by (by100 blast)
-          \<comment> \<open>|x| = |Σcᵢvxᵢ| ≤ Σcᵢ|vxᵢ| ≤ Σcᵢ·M = M.\<close>
-          have hx_bound: "\<bar>x\<bar> \<le> M"
-          proof -
-            have "\<bar>x\<bar> = \<bar>\<Sum>i<?n. coeffs i * vx i\<bar>" using hcoeffs(3) by (by100 simp)
-            also have "\<dots> \<le> (\<Sum>i<?n. \<bar>coeffs i * vx i\<bar>)" by (rule sum_abs)
-            also have "\<dots> = (\<Sum>i<?n. coeffs i * \<bar>vx i\<bar>)"
-              using hcoeffs(1) by (intro sum.cong) (simp_all add: abs_mult)
-            also have "\<dots> \<le> (\<Sum>i<?n. coeffs i * M)"
-              by (intro sum_mono mult_left_mono) (use hcoeffs(1) hM_bound in \<open>(by100 force)+\<close>)
-            also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
-            finally show ?thesis .
-          qed
-          have hy_bound: "\<bar>y\<bar> \<le> M"
-          proof -
-            have "\<bar>y\<bar> = \<bar>\<Sum>i<?n. coeffs i * vy i\<bar>" using hcoeffs(4) by (by100 simp)
-            also have "\<dots> \<le> (\<Sum>i<?n. \<bar>coeffs i * vy i\<bar>)" by (rule sum_abs)
-            also have "\<dots> = (\<Sum>i<?n. coeffs i * \<bar>vy i\<bar>)"
-              using hcoeffs(1) by (intro sum.cong) (simp_all add: abs_mult)
-            also have "\<dots> \<le> (\<Sum>i<?n. coeffs i * M)"
-              by (intro sum_mono mult_left_mono) (use hcoeffs(1) hM_bound in \<open>(by100 force)+\<close>)
-            also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
-            finally show ?thesis .
-          qed
-          show "p \<in> {-M..M} \<times> {-M..M}" using hxy hx_bound hy_bound by (by100 force)
-        qed
-        \<comment> \<open>P is closed (convex hull of finitely many points in R^2).\<close>
-        have hP_closed: "closed P"
-          sorry
-        \<comment> \<open>P is a closed subset of a compact box, hence compact.\<close>
-        show "compact P"
-          by (rule closed_subset_compact[OF compact_Icc_Times[of "-M" M "-M" M] hP_closed hP_bounded])
+        \<comment> \<open>Fan triangulation: P = \<Union>k=1..n-1. conv(v0, vk, v(k+1 mod n)).
+           Each triangle is the continuous image of [0,1]^2, hence compact.
+           Finite union of compact sets is compact (compact_Union).\<close>
+        show "compact P" sorry
       qed
       ultimately have "top1_compact_on P (subspace_topology UNIV top1_open_sets P)" by (by100 simp)
       thus ?thesis using hTP_eq by (by100 simp)
