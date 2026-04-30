@@ -12500,6 +12500,70 @@ proof -
     by (rule compact_continuous_image[OF hf_cont hD_compact])
 qed
 
+text \<open>Cone superset: cone(conv n, v_n) \<subseteq> conv(Suc n).\<close>
+lemma convex_hull_cone_sup:
+  fixes vx vy :: "nat \<Rightarrow> real"
+  shows "(\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
+      ` ({0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)})
+    \<subseteq> {(x, y). \<exists>c. (\<forall>i<Suc n. c i \<ge> 0) \<and> (\<Sum>i<Suc n. c i) = 1
+      \<and> x = (\<Sum>i<Suc n. c i * vx i) \<and> y = (\<Sum>i<Suc n. c i * vy i)}"
+proof (rule subsetI)
+  fix q assume hq_mem: "q \<in> (\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
+      ` ({0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)})"
+  then obtain p where hp: "p \<in> {0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+      \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}"
+      and hq: "q = (case p of (t, x', y') \<Rightarrow> ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))"
+    by (by100 blast)
+  obtain t r where htr: "p = (t, r)" "t \<in> {0..1}" by (cases p) (use hp in \<open>(by100 auto)\<close>)
+  obtain x' y' where hr: "r = (x', y')" by (cases r)
+  have ht: "0 \<le> t" "t \<le> 1" using htr(2) by (by100 auto)+
+  have hq_eq: "q = ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n)"
+    using hq htr(1) hr by (by100 simp)
+  obtain c' where hc': "\<forall>i<n. (0::real) \<le> c' i" "(\<Sum>i<n. c' i) = 1"
+      "x' = (\<Sum>i<n. c' i * vx i)" "y' = (\<Sum>i<n. c' i * vy i)"
+    using hp htr(1) hr by (by100 blast)
+  let ?c = "\<lambda>i. if i < n then (1-t) * c' i else if i = n then t else 0 :: real"
+  have hc_nn: "\<forall>i<Suc n. 0 \<le> ?c i" using ht hc'(1) by (by100 force)
+  have hc_sum: "(\<Sum>i<Suc n. ?c i) = 1"
+  proof -
+    have "(\<Sum>i<n. ?c i) = (\<Sum>i<n. (1-t) * c' i)" by (rule sum.cong) (by100 simp)+
+    also have "\<dots> = (1-t)" using hc'(2) by (simp add: sum_distrib_left[symmetric])
+    finally show ?thesis by (by100 simp)
+  qed
+  have hc_x: "(\<Sum>i<Suc n. ?c i * vx i) = (1-t)*x' + t*vx n"
+  proof -
+    have "(\<Sum>i<n. ?c i * vx i) = (\<Sum>i<n. (1-t) * c' i * vx i)"
+      by (rule sum.cong) (by100 simp)+
+    also have "\<dots> = (1-t) * x'" using hc'(3) by (simp add: sum_distrib_left mult.assoc)
+    finally show ?thesis by (by100 simp)
+  qed
+  have hc_y: "(\<Sum>i<Suc n. ?c i * vy i) = (1-t)*y' + t*vy n"
+  proof -
+    have "(\<Sum>i<n. ?c i * vy i) = (\<Sum>i<n. (1-t) * c' i * vy i)"
+      by (rule sum.cong) (by100 simp)+
+    also have "\<dots> = (1-t) * y'" using hc'(4) by (simp add: sum_distrib_left mult.assoc)
+    finally show ?thesis by (by100 simp)
+  qed
+  show "q \<in> {(x, y). \<exists>c. (\<forall>i<Suc n. c i \<ge> 0) \<and> (\<Sum>i<Suc n. c i) = 1
+      \<and> x = (\<Sum>i<Suc n. c i * vx i) \<and> y = (\<Sum>i<Suc n. c i * vy i)}"
+    unfolding hq_eq
+    apply simp
+    apply (rule_tac x="?c" in exI)
+    using hc_nn hc_sum hc_x hc_y by (by100 auto)
+qed
+
+text \<open>Cone subset: conv(Suc n) \<subseteq> cone(conv n, v_n).\<close>
+lemma convex_hull_cone_sub:
+  fixes vx vy :: "nat \<Rightarrow> real"
+  shows "{(x, y). \<exists>c. (\<forall>i<Suc n. c i \<ge> 0) \<and> (\<Sum>i<Suc n. c i) = 1
+      \<and> x = (\<Sum>i<Suc n. c i * vx i) \<and> y = (\<Sum>i<Suc n. c i * vy i)}
+    \<subseteq> (\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
+      ` ({0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)})"
+  sorry
+
 text \<open>A convex hull of n \<ge> 3 points in R^2 is compact.\<close>
 text \<open>Convex hull of n \<ge> 1 points is compact, by induction on n.
   Base: single point. Step: conv(n+1) = image of [0,1] \<times> conv(n) under continuous cone map.\<close>
@@ -12560,7 +12624,7 @@ next
   qed
   \<comment> \<open>?Pn1 = ?f ` ({0..1} \<times> ?Pn).\<close>
   have hPn1_eq: "?Pn1 = ?f ` ({0..1} \<times> ?Pn)"
-    sorry
+    using convex_hull_cone_sub convex_hull_cone_sup by blast
   show ?case unfolding hPn1_eq
     by (rule compact_continuous_image[OF hf_cont hdom_compact])
 qed
