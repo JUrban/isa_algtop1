@@ -13384,6 +13384,8 @@ proof
   \<comment> \<open>h_* : \<pi>_1(E, e0) \<cong> \<pi>_1(E', e0'), and p' \<circ> h = p, so p_* = p'_* \<circ> h_*.\<close>
   \<comment> \<open>p_*(π₁(E)) = p'_*(π₁(E')) because p=p'∘h on E, h_* is bijective (homeomorphism),
      and functoriality gives p_* = p'_* ∘ h_*. So im(p_*) = im(p'_* ∘ h_*) = im(p'_*).\<close>
+  \<comment> \<open>By functoriality + p=p'\<circ>h on E + h_* bijective:
+     p_* = (p'\<circ>h)_* = p'_* \<circ> h_*, so im(p_*) = p'_*(im(h_*)) = p'_*(π₁(E')).\<close>
   show "top1_fundamental_group_image_hom E TE e0 B TB b0 p
       = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'" sorry
 next
