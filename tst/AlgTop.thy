@@ -5794,6 +5794,212 @@ proof -
   thus ?thesis unfolding top1_subgroup_generated_on_def by (rule Inter_lower)
 qed
 
+text \<open>Helper: double inverse is identity.\<close>
+lemma group_inv_inv_early:
+  assumes hG: "top1_is_group_on G mul e invg" and hx: "x \<in> G"
+  shows "invg (invg x) = x"
+proof -
+  have hix: "invg x \<in> G"
+    using hG hx unfolding top1_is_group_on_def by (by100 blast)
+  have hiix: "invg (invg x) \<in> G"
+    using hG hix unfolding top1_is_group_on_def by (by100 blast)
+  have h1: "mul (invg (invg x)) (invg x) = e"
+    using hG hix unfolding top1_is_group_on_def by (by100 blast)
+  have h2: "mul (invg x) x = e"
+    using hG hx unfolding top1_is_group_on_def by (by100 blast)
+  \<comment> \<open>Multiply h1 on the right by x: (invg(invg x))*(invg x)*x = e*x = x.
+     By assoc: (invg(invg x))*((invg x)*x) = (invg(invg x))*e = invg(invg x).
+     So invg(invg x) = x.\<close>
+  have hid_r: "mul (invg (invg x)) e = invg (invg x)"
+    using hG hiix unfolding top1_is_group_on_def by (by100 blast)
+  have h3: "mul (invg (invg x)) (mul (invg x) x) = invg (invg x)"
+    using h2 hid_r by (by100 simp)
+  have hassoc_all: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc1: "\<forall>b\<in>G. \<forall>c\<in>G. mul (mul (invg (invg x)) b) c = mul (invg (invg x)) (mul b c)"
+    using hassoc_all hiix by (by100 blast)
+  have hassoc2: "\<forall>c\<in>G. mul (mul (invg (invg x)) (invg x)) c = mul (invg (invg x)) (mul (invg x) c)"
+    using hassoc1 hix by (by100 blast)
+  have h4: "mul (mul (invg (invg x)) (invg x)) x = mul (invg (invg x)) (mul (invg x) x)"
+    using hassoc2 hx by (by100 blast)
+  have h5: "mul (mul (invg (invg x)) (invg x)) x = mul e x"
+    using h1 by (by100 simp)
+  have h6: "mul e x = x"
+    using hG hx unfolding top1_is_group_on_def by (by100 blast)
+  have "invg (invg x) = mul (invg (invg x)) (mul (invg x) x)" using h3 h2 by (by100 simp)
+  also have "\<dots> = mul (mul (invg (invg x)) (invg x)) x" using h4 by (by100 simp)
+  also have "\<dots> = mul e x" using h5 by (by100 simp)
+  also have "\<dots> = x" using h6 by (by100 simp)
+  finally show "invg (invg x) = x" .
+qed
+
+text \<open>Helper: foldr mul of a list of group elements is in G.\<close>
+lemma foldr_mul_closed:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hall: "\<forall>i<length xs. xs!i \<in> G"
+  shows "foldr mul xs e \<in> G"
+  using hall
+proof (induction xs)
+  case Nil
+  have "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Cons a xs)
+  have haG: "a \<in> G" using Cons.prems by (by100 force)
+  have hxs': "\<forall>i<length xs. xs!i \<in> G" using Cons.prems by (by100 force)
+  have "foldr mul xs e \<in> G" using Cons.IH hxs' by (by100 blast)
+  hence "mul a (foldr mul xs e) \<in> G"
+    using hG haG unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+qed
+
+text \<open>Helper: foldr mul distributes over append (when elements are in G).\<close>
+lemma foldr_mul_append:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hxs: "\<forall>i<length xs. xs!i \<in> G"
+      and hys: "\<forall>i<length ys. ys!i \<in> G"
+  shows "foldr mul (xs @ ys) e = mul (foldr mul xs e) (foldr mul ys e)"
+  using hxs
+proof (induction xs)
+  case Nil
+  have hfyG: "foldr mul ys e \<in> G" using foldr_mul_closed[OF hG hys] by (by100 blast)
+  have "mul e (foldr mul ys e) = foldr mul ys e"
+    using hG hfyG unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Cons a xs)
+  have haG: "a \<in> G" using Cons.prems by (by100 force)
+  have hxs': "\<forall>i<length xs. xs!i \<in> G" using Cons.prems by (by100 force)
+  have IH: "foldr mul (xs @ ys) e = mul (foldr mul xs e) (foldr mul ys e)"
+    using Cons.IH hxs' by (by100 blast)
+  have hfoldr_xs_G: "foldr mul xs e \<in> G"
+    using foldr_mul_closed[OF hG hxs'] by (by100 blast)
+  have hfoldr_ys_G: "foldr mul ys e \<in> G"
+    using foldr_mul_closed[OF hG hys] by (by100 blast)
+  have hassoc_all: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc_a: "\<forall>y\<in>G. \<forall>z\<in>G. mul (mul a y) z = mul a (mul y z)"
+    using hassoc_all haG by (by100 blast)
+  have hassoc: "mul (mul a (foldr mul xs e)) (foldr mul ys e) = mul a (mul (foldr mul xs e) (foldr mul ys e))"
+    using hassoc_a hfoldr_xs_G hfoldr_ys_G
+    apply (drule_tac x="foldr mul xs e" in bspec)
+    apply (by100 blast)
+    apply (drule_tac x="foldr mul ys e" in bspec)
+    apply (by100 blast)
+    apply (by100 assumption)
+    done
+  show ?case using IH hassoc by (by100 simp)
+qed
+
+text \<open>Helper: foldr mul of reversed inverted list gives inverse.\<close>
+lemma foldr_mul_rev_inv:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hall: "\<forall>i<length ws. ws!i \<in> G"
+  shows "mul (foldr mul ws e) (foldr mul (rev (map invg ws)) e) = e"
+  using hall
+proof (induction ws)
+  case Nil
+  show ?case using hG unfolding top1_is_group_on_def by (by100 simp)
+next
+  case (Cons a ws)
+  have haG: "a \<in> G" using Cons.prems by (by100 force)
+  have hws': "\<forall>i<length ws. ws!i \<in> G" using Cons.prems by (by100 force)
+  have IH: "mul (foldr mul ws e) (foldr mul (rev (map invg ws)) e) = e"
+    using Cons.IH hws' by (by100 blast)
+  \<comment> \<open>Abbreviations.\<close>
+  let ?w = "foldr mul ws e"
+  let ?r = "foldr mul (rev (map invg ws)) e"
+  have hiaG: "invg a \<in> G" using hG haG unfolding top1_is_group_on_def by (by100 blast)
+  have hwG: "?w \<in> G" using foldr_mul_closed[OF hG hws'] by (by100 blast)
+  \<comment> \<open>Elements of map invg ws are in G.\<close>
+  have hinv_ws: "\<forall>i<length (map invg ws). (map invg ws)!i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (map invg ws)"
+    hence hi: "i < length ws" by (by100 simp)
+    have "ws!i \<in> G" using hws' hi by (by100 blast)
+    hence "invg (ws!i) \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+    thus "(map invg ws)!i \<in> G" using hi by (by100 simp)
+  qed
+  have hrev_ws: "\<forall>i<length (rev (map invg ws)). (rev (map invg ws))!i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (rev (map invg ws))"
+    hence hi2: "i < length (map invg ws)" by (by100 simp)
+    have "(rev (map invg ws))!i = (map invg ws)!(length (map invg ws) - 1 - i)"
+      using hi2 by (simp add: rev_nth)
+    moreover have "length (map invg ws) - 1 - i < length (map invg ws)" using hi2
+    proof -
+      have "length (map invg ws) > 0" using hi2 by (by100 linarith)
+      thus ?thesis using hi2 by (by100 simp)
+    qed
+    ultimately show "(rev (map invg ws))!i \<in> G" using hinv_ws by (by100 simp)
+  qed
+  have hrG: "?r \<in> G" using foldr_mul_closed[OF hG hrev_ws] by (by100 blast)
+  \<comment> \<open>foldr distributes over append.\<close>
+  have h_invg_ia: "\<forall>i<length [invg a]. [invg a]!i \<in> G"
+    using hiaG by (by100 simp)
+  have h_fold_split: "foldr mul (rev (map invg ws) @ [invg a]) e
+      = mul ?r (foldr mul [invg a] e)"
+    using foldr_mul_append[OF hG hrev_ws h_invg_ia] by (by100 blast)
+  have h_fold_ia: "foldr mul [invg a] e = mul (invg a) e"
+    by (by100 simp)
+  have h_id_ia: "mul (invg a) e = invg a"
+    using hG hiaG unfolding top1_is_group_on_def by (by100 blast)
+  have h_rhs: "foldr mul (rev (map invg (a # ws))) e = mul ?r (invg a)"
+  proof -
+    have "rev (map invg (a # ws)) = rev (map invg ws) @ [invg a]" by (by100 simp)
+    hence "foldr mul (rev (map invg (a # ws))) e = foldr mul (rev (map invg ws) @ [invg a]) e"
+      by (by100 simp)
+    also have "\<dots> = mul ?r (mul (invg a) e)" using h_fold_split h_fold_ia by (by100 simp)
+    also have "mul (invg a) e = invg a" using h_id_ia by (by100 simp)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>Main calculation.\<close>
+  have h_lhs: "foldr mul (a # ws) e = mul a ?w" by (by100 simp)
+  \<comment> \<open>mul (mul a w) (mul r (invg a)) = mul a (mul w (mul r (invg a)))  [assoc]\<close>
+  have hmria: "mul ?r (invg a) \<in> G"
+    using hG hrG hiaG unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc_all: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have h_step1: "mul (mul a ?w) (mul ?r (invg a)) = mul a (mul ?w (mul ?r (invg a)))"
+  proof -
+    have "\<forall>y\<in>G. \<forall>z\<in>G. mul (mul a y) z = mul a (mul y z)"
+      using hassoc_all haG by (by100 blast)
+    hence "\<forall>z\<in>G. mul (mul a ?w) z = mul a (mul ?w z)"
+      using hwG by (by100 blast)
+    thus ?thesis using hmria by (by100 blast)
+  qed
+  \<comment> \<open>mul w (mul r (invg a)) = mul (mul w r) (invg a)  [assoc]\<close>
+  have h_step2: "mul ?w (mul ?r (invg a)) = mul (mul ?w ?r) (invg a)"
+  proof -
+    have "\<forall>y\<in>G. \<forall>z\<in>G. mul (mul ?w y) z = mul ?w (mul y z)"
+      using hassoc_all hwG by (by100 blast)
+    hence hwr: "\<forall>z\<in>G. mul (mul ?w ?r) z = mul ?w (mul ?r z)"
+      using hrG by (by100 blast)
+    have "mul (mul ?w ?r) (invg a) = mul ?w (mul ?r (invg a))"
+      using hwr hiaG by (by100 blast)
+    thus ?thesis by (by100 simp)
+  qed
+  have h_step3: "mul (mul ?w ?r) (invg a) = mul e (invg a)"
+    using IH by (by100 simp)
+  have h_step4: "mul e (invg a) = invg a"
+    using hG hiaG unfolding top1_is_group_on_def by (by100 blast)
+  have h_step5: "mul a (invg a) = e"
+    using hG haG unfolding top1_is_group_on_def by (by100 blast)
+  show ?case
+  proof -
+    have "mul (foldr mul (a # ws) e) (foldr mul (rev (map invg (a # ws))) e)
+      = mul (mul a ?w) (mul ?r (invg a))" using h_lhs h_rhs by (by100 simp)
+    also have "\<dots> = mul a (mul ?w (mul ?r (invg a)))" using h_step1 by (by100 simp)
+    also have "mul ?w (mul ?r (invg a)) = mul (mul ?w ?r) (invg a)" using h_step2 by (by100 simp)
+    also have "mul (mul ?w ?r) (invg a) = mul e (invg a)" using h_step3 by (by100 simp)
+    also have "mul e (invg a) = invg a" using h_step4 by (by100 simp)
+    finally have "mul (foldr mul (a # ws) e) (foldr mul (rev (map invg (a # ws))) e)
+      = mul a (invg a)" by (by100 simp)
+    also have "mul a (invg a) = e" using h_step5 by (by100 simp)
+    finally show ?thesis .
+  qed
+qed
+
 text \<open>Elements of the subgroup generated by S can be expressed as products of
   elements of S and their inverses. Formally: for every g in subgroup_generated(S),
   either g = e, or there exist generators s_1,...,s_n in S \<union> invg(S) such that
@@ -5805,36 +6011,323 @@ lemma subgroup_generated_word_repr:
       \<and> (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s))
       \<and> foldr mul ws e = g)"
 proof -
-  \<comment> \<open>Define W = elements with word representations.\<close>
-  let ?W = "{g \<in> G. g = e \<or> (\<exists>ws. length ws > 0
+  \<comment> \<open>Define the word-representability predicate.\<close>
+  let ?repr = "\<lambda>g. g = e \<or> (\<exists>ws. length ws > 0
       \<and> (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s))
-      \<and> foldr mul ws e = g)}"
+      \<and> foldr mul ws e = g)"
+  let ?W = "{g \<in> G. ?repr g}"
+  \<comment> \<open>Helper: group axioms.\<close>
+  have hid_right: "\<forall>x\<in>G. mul x e = x" using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hmul_closed: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hinv_closed: "\<forall>x\<in>G. invg x \<in> G"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have heG: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
   \<comment> \<open>S \<subseteq> W: each s \<in> S has representation [s].\<close>
   have hS_sub_W: "S \<subseteq> ?W"
   proof (rule subsetI)
     fix s assume hs: "s \<in> S"
     hence hsG: "s \<in> G" using hS by (by100 blast)
-    \<comment> \<open>Representation: [s]. Then foldr mul [s] e = mul s e = s.\<close>
-    have "length [s] > 0" by (by100 simp)
-    moreover have "\<forall>i<length [s]. [s]!i \<in> S \<or> (\<exists>sa\<in>S. [s]!i = invg sa)"
-      using hs by (by100 auto)
-    moreover have "foldr mul [s] e = mul s e" by (by100 simp)
-    moreover have "mul s e = s"
-    proof -
-      have "\<forall>x\<in>G. mul x e = x" using hG unfolding top1_is_group_on_def by (by100 blast)
-      thus ?thesis using hsG by (by100 blast)
+    have hfold: "foldr mul [s] e = s" using hid_right hsG by (by100 simp)
+    have hlen: "length [s] > 0" by (by100 simp)
+    have hgen: "\<forall>i<length [s]. [s]!i \<in> S \<or> (\<exists>sa\<in>S. [s]!i = invg sa)"
+    proof (intro allI impI)
+      fix i assume "i < length [s]"
+      hence "i = 0" by (by100 simp)
+      thus "[s]!i \<in> S \<or> (\<exists>sa\<in>S. [s]!i = invg sa)" using hs by (by100 simp)
     qed
-    ultimately show "s \<in> ?W" using hsG sorry
+    have "\<exists>ws. length ws > 0
+        \<and> (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>sa\<in>S. ws!i = invg sa))
+        \<and> foldr mul ws e = s"
+      apply (rule exI[of _ "[s]"])
+      using hlen hgen hfold by (by100 blast)
+    hence "?repr s" by (by100 blast)
+    thus "s \<in> ?W" using hsG by (by100 blast)
   qed
   \<comment> \<open>W \<subseteq> G.\<close>
   have hW_sub: "?W \<subseteq> G" by (by100 blast)
   \<comment> \<open>W is a subgroup.\<close>
   have hW_grp: "top1_is_group_on ?W mul e invg"
-    sorry
+    unfolding top1_is_group_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>e \<in> W: identity has trivial representation.\<close>
+    show "e \<in> ?W" using heG by (by100 blast)
+  next
+    \<comment> \<open>Closure under multiplication: concatenate word representations.\<close>
+    fix x y assume hx: "x \<in> ?W" and hy: "y \<in> ?W"
+    have hxG: "x \<in> G" using hx by (by100 blast)
+    have hyG: "y \<in> G" using hy by (by100 blast)
+    have hxyG: "mul x y \<in> G" using hmul_closed hxG hyG by (by100 blast)
+    have hxR: "?repr x" using hx by (by100 blast)
+    have hyR: "?repr y" using hy by (by100 blast)
+    show "mul x y \<in> ?W"
+    proof (cases "x = e")
+      case True
+      have "mul e y = y" using hG hyG unfolding top1_is_group_on_def by (by100 blast)
+      hence "mul x y = y" using True by (by100 simp)
+      hence "?repr (mul x y)" using hyR by (by100 simp)
+      thus ?thesis using hxyG by (by100 blast)
+    next
+      case hxne: False
+      show ?thesis
+      proof (cases "y = e")
+        case True
+        have "mul x e = x" using hid_right hxG by (by100 blast)
+        hence "mul x y = x" using True by (by100 simp)
+        hence "?repr (mul x y)" using hxR by (by100 simp)
+        thus ?thesis using hxyG by (by100 blast)
+      next
+        case hyne: False
+        \<comment> \<open>Both x,y have non-trivial word representations.\<close>
+        obtain wxs where hwxlen: "length wxs > 0"
+          and hwxgen: "\<forall>i<length wxs. wxs!i \<in> S \<or> (\<exists>s\<in>S. wxs!i = invg s)"
+          and hwxfold: "foldr mul wxs e = x"
+          using hxR hxne by (by100 blast)
+        obtain wys where hwylen: "length wys > 0"
+          and hwygen: "\<forall>i<length wys. wys!i \<in> S \<or> (\<exists>s\<in>S. wys!i = invg s)"
+          and hwyfold: "foldr mul wys e = y"
+          using hyR hyne by (by100 blast)
+        \<comment> \<open>The concatenation wxs @ wys represents mul x y.\<close>
+        let ?ws = "wxs @ wys"
+        have hlen: "length ?ws > 0" using hwxlen by (by100 simp)
+        have hgen: "\<forall>i<length ?ws. ?ws!i \<in> S \<or> (\<exists>s\<in>S. ?ws!i = invg s)"
+        proof (intro allI impI)
+          fix i assume hi: "i < length ?ws"
+          show "?ws!i \<in> S \<or> (\<exists>s\<in>S. ?ws!i = invg s)"
+          proof (cases "i < length wxs")
+            case True
+            have eq: "(wxs @ wys) ! i = (if i < length wxs then wxs ! i else wys ! (i - length wxs))"
+              by (rule nth_append)
+            have "?ws!i = wxs!i" using True eq by (by100 simp)
+            thus ?thesis using hwxgen True by (by100 simp)
+          next
+            case False
+            hence hge: "i \<ge> length wxs" by (by100 simp)
+            have eq: "(wxs @ wys) ! i = (if i < length wxs then wxs ! i else wys ! (i - length wxs))"
+              by (rule nth_append)
+            have hiwsi: "?ws!i = wys!(i - length wxs)" using hge eq by (by100 simp)
+            have hidx: "i - length wxs < length wys" using hi hge by (by100 simp)
+            have "wys!(i - length wxs) \<in> S \<or> (\<exists>s\<in>S. wys!(i - length wxs) = invg s)"
+              using hwygen hidx by (by100 blast)
+            thus ?thesis using hiwsi by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>All word elements are in G.\<close>
+        have hwxG: "\<forall>i<length wxs. wxs!i \<in> G"
+        proof (intro allI impI)
+          fix i assume hi: "i < length wxs"
+          have "wxs!i \<in> S \<or> (\<exists>s\<in>S. wxs!i = invg s)" using hwxgen hi by (by100 blast)
+          thus "wxs!i \<in> G"
+          proof
+            assume "wxs!i \<in> S" thus ?thesis using hS by (by100 blast)
+          next
+            assume "\<exists>s\<in>S. wxs!i = invg s"
+            then obtain s where "s \<in> S" "wxs!i = invg s" by (by100 blast)
+            hence "s \<in> G" using hS by (by100 blast)
+            hence "invg s \<in> G" using hinv_closed by (by100 blast)
+            thus ?thesis using \<open>wxs!i = invg s\<close> by (by100 simp)
+          qed
+        qed
+        have hwyG: "\<forall>i<length wys. wys!i \<in> G"
+        proof (intro allI impI)
+          fix i assume hi: "i < length wys"
+          have "wys!i \<in> S \<or> (\<exists>s\<in>S. wys!i = invg s)" using hwygen hi by (by100 blast)
+          thus "wys!i \<in> G"
+          proof
+            assume "wys!i \<in> S" thus ?thesis using hS by (by100 blast)
+          next
+            assume "\<exists>s\<in>S. wys!i = invg s"
+            then obtain s where "s \<in> S" "wys!i = invg s" by (by100 blast)
+            hence "s \<in> G" using hS by (by100 blast)
+            hence "invg s \<in> G" using hinv_closed by (by100 blast)
+            thus ?thesis using \<open>wys!i = invg s\<close> by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>foldr mul (wxs @ wys) e = mul (foldr mul wxs e) (foldr mul wys e).\<close>
+        have hfold_app: "foldr mul (wxs @ wys) e = mul (foldr mul wxs e) (foldr mul wys e)"
+          using foldr_mul_append[OF hG hwxG hwyG] by (by100 blast)
+        have hfoldxy: "foldr mul ?ws e = mul x y" using hfold_app hwxfold hwyfold by (by100 simp)
+        have hconj: "length ?ws > 0
+            \<and> (\<forall>i<length ?ws. ?ws!i \<in> S \<or> (\<exists>s\<in>S. ?ws!i = invg s))
+            \<and> foldr mul ?ws e = mul x y"
+          using hlen hgen hfoldxy by (by100 blast)
+        have "\<exists>ws. length ws > 0
+            \<and> (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s))
+            \<and> foldr mul ws e = mul x y"
+          using hconj by (rule exI[of _ "?ws"])
+        hence "?repr (mul x y)" by (by100 blast)
+        thus ?thesis using hxyG by (by100 blast)
+      qed
+    qed
+  next
+    \<comment> \<open>Closure under inverse: reverse and invert word.\<close>
+    fix x assume hx: "x \<in> ?W"
+    have hxG: "x \<in> G" using hx by (by100 blast)
+    have hixG: "invg x \<in> G" using hinv_closed hxG by (by100 blast)
+    have hxR: "?repr x" using hx by (by100 blast)
+    show "invg x \<in> ?W"
+    proof (cases "x = e")
+      case True
+      have "mul (invg e) e = e" using hG unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "mul (invg e) e = invg e"
+        using hid_right hinv_closed heG by (by100 blast)
+      ultimately have "invg e = e" by (by100 simp)
+      hence "?repr (invg x)" using True by (by100 simp)
+      thus ?thesis using hixG by (by100 blast)
+    next
+      case hxne: False
+      obtain ws where hwlen: "length ws > 0"
+        and hwgen: "\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s)"
+        and hwfold: "foldr mul ws e = x"
+        using hxR hxne by (by100 blast)
+      \<comment> \<open>The inverse of foldr mul [s1,...,sn] e is foldr mul [inv sn,...,inv s1] e.\<close>
+      let ?iws = "rev (map invg ws)"
+      have hilen: "length ?iws > 0" using hwlen by (by100 simp)
+      \<comment> \<open>All word elements are in G.\<close>
+      have hwG: "\<forall>i<length ws. ws!i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ws"
+        have "ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s)" using hwgen hi by (by100 blast)
+        thus "ws!i \<in> G"
+        proof
+          assume "ws!i \<in> S" thus ?thesis using hS by (by100 blast)
+        next
+          assume "\<exists>s\<in>S. ws!i = invg s"
+          then obtain s where "s \<in> S" "ws!i = invg s" by (by100 blast)
+          hence "s \<in> G" using hS by (by100 blast)
+          hence "invg s \<in> G" using hinv_closed by (by100 blast)
+          thus ?thesis using \<open>ws!i = invg s\<close> by (by100 simp)
+        qed
+      qed
+      have higen: "\<forall>i<length ?iws. ?iws!i \<in> S \<or> (\<exists>s\<in>S. ?iws!i = invg s)"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ?iws"
+        hence hi2: "i < length ws" by (by100 simp)
+        \<comment> \<open>?iws!i = invg (ws ! (length ws - 1 - i)).\<close>
+        have hrev: "?iws ! i = invg (ws ! (length ws - 1 - i))"
+        proof -
+          have "?iws ! i = (map invg ws) ! (length ws - 1 - i)"
+            using hi2 by (simp add: rev_nth)
+          also have "\<dots> = invg (ws ! (length ws - 1 - i))" using hi2 by (by100 simp)
+          finally show ?thesis .
+        qed
+        have hj: "length ws - 1 - i < length ws" using hi2 hwlen by (by100 simp)
+        have "ws!(length ws - 1 - i) \<in> S \<or> (\<exists>s\<in>S. ws!(length ws - 1 - i) = invg s)"
+          using hwgen hj by (by100 blast)
+        thus "?iws!i \<in> S \<or> (\<exists>s\<in>S. ?iws!i = invg s)"
+        proof
+          assume hw_in_S: "ws!(length ws - 1 - i) \<in> S"
+          \<comment> \<open>invg(ws!j) ∈ invg(S), i.e. ∃s∈S. iws!i = invg s.\<close>
+          have "?iws!i = invg (ws!(length ws - 1 - i))" using hrev by (by100 simp)
+          thus ?thesis using hw_in_S by (by100 blast)
+        next
+          assume "\<exists>s\<in>S. ws!(length ws - 1 - i) = invg s"
+          then obtain s where hsS: "s \<in> S" and hws_eq: "ws!(length ws - 1 - i) = invg s"
+            by (by100 blast)
+          have hsG: "s \<in> G" using hsS hS by (by100 blast)
+          have "?iws!i = invg (invg s)" using hrev hws_eq by (by100 simp)
+          also have "invg (invg s) = s" by (rule group_inv_inv_early[OF hG hsG])
+          finally have "?iws!i = s" .
+          thus ?thesis using hsS by (by100 blast)
+        qed
+      qed
+      have hifold: "foldr mul ?iws e = invg x"
+      proof -
+        \<comment> \<open>From foldr_mul_rev_inv: mul x (foldr ?iws) = e, so foldr ?iws = invg x.\<close>
+        have hwsG: "\<forall>i<length ws. ws!i \<in> G" using hwG by (by100 blast)
+        have h_prod_e: "mul (foldr mul ws e) (foldr mul ?iws e) = e"
+          using foldr_mul_rev_inv[OF hG hwsG] by (by100 blast)
+        have h_prod: "mul x (foldr mul ?iws e) = e" using h_prod_e hwfold by (by100 simp)
+        \<comment> \<open>In a group: mul x y = e implies y = invg x.\<close>
+        have hxG: "x \<in> G" using hx by (by100 blast)
+        have hiwsG: "foldr mul ?iws e \<in> G"
+        proof -
+          have "\<forall>i<length (map invg ws). (map invg ws)!i \<in> G"
+          proof (intro allI impI)
+            fix i assume "i < length (map invg ws)"
+            hence hi: "i < length ws" by (by100 simp)
+            have hwsi: "ws!i \<in> G" using hwsG hi by (by100 blast)
+            have "invg (ws!i) \<in> G" using hinv_closed hwsi by (by100 blast)
+            thus "(map invg ws)!i \<in> G" using hi by (by100 simp)
+          qed
+          hence hrev_map: "\<forall>i<length (rev (map invg ws)). (rev (map invg ws))!i \<in> G"
+          proof (intro allI impI)
+            fix i assume hi: "i < length (rev (map invg ws))"
+            hence hi2: "i < length (map invg ws)" by (by100 simp)
+            have "(rev (map invg ws))!i = (map invg ws)!(length (map invg ws) - 1 - i)"
+              using hi2 by (simp add: rev_nth)
+            moreover have "length (map invg ws) - 1 - i < length (map invg ws)"
+              using hi2 by (by100 linarith)
+            ultimately show "(rev (map invg ws))!i \<in> G"
+              using \<open>\<forall>i<length (map invg ws). (map invg ws) ! i \<in> G\<close> by (by100 simp)
+          qed
+          thus ?thesis using foldr_mul_closed[OF hG hrev_map] by (by100 blast)
+        qed
+        have hixG: "invg x \<in> G" using hinv_closed hxG by (by100 blast)
+        \<comment> \<open>y = mul e y = mul (mul (invg x) x) y = mul (invg x) (mul x y) = mul (invg x) e = invg x.\<close>
+        have h1: "mul (invg x) (mul x (foldr mul ?iws e)) = mul (invg x) e"
+          using h_prod by (by100 simp)
+        have h2: "mul (invg x) e = invg x"
+          using hid_right hixG by (by100 blast)
+        have hassoc2: "\<forall>b\<in>G. \<forall>c\<in>G. mul (mul (invg x) b) c = mul (invg x) (mul b c)"
+        proof -
+          have "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+            using hG unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using hixG by (by100 blast)
+        qed
+        have h3: "mul (mul (invg x) x) (foldr mul ?iws e) = mul (invg x) (mul x (foldr mul ?iws e))"
+          using hassoc2 hxG hiwsG by (by100 blast)
+        have h4: "mul (invg x) x = e" using hG hxG unfolding top1_is_group_on_def by (by100 blast)
+        have h5: "mul e (foldr mul ?iws e) = foldr mul ?iws e"
+          using hG hiwsG unfolding top1_is_group_on_def by (by100 blast)
+        have "foldr mul ?iws e = mul e (foldr mul ?iws e)" using h5 by (by100 simp)
+        also have "\<dots> = mul (mul (invg x) x) (foldr mul ?iws e)" using h4 by (by100 simp)
+        also have "\<dots> = mul (invg x) (mul x (foldr mul ?iws e))" using h3 by (by100 simp)
+        also have "\<dots> = mul (invg x) e" using h1 by (by100 simp)
+        also have "\<dots> = invg x" using h2 by (by100 simp)
+        finally show ?thesis .
+      qed
+      have hiconj: "length ?iws > 0
+          \<and> (\<forall>i<length ?iws. ?iws!i \<in> S \<or> (\<exists>s\<in>S. ?iws!i = invg s))
+          \<and> foldr mul ?iws e = invg x"
+        using hilen higen hifold by (by100 blast)
+      have "\<exists>ws. length ws > 0
+          \<and> (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invg s))
+          \<and> foldr mul ws e = invg x"
+        using hiconj by (rule exI[of _ "?iws"])
+      hence "?repr (invg x)" by (by100 blast)
+      thus ?thesis using hixG by (by100 blast)
+    qed
+  next
+    \<comment> \<open>Associativity, identities, inverses — inherited from G.\<close>
+    fix x y z assume hxW: "x \<in> ?W" and hyW: "y \<in> ?W" and hzW: "z \<in> ?W"
+    have "x \<in> G" using hxW by (by100 simp)
+    moreover have "y \<in> G" using hyW by (by100 simp)
+    moreover have "z \<in> G" using hzW by (by100 simp)
+    ultimately show "mul (mul x y) z = mul x (mul y z)"
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+  next
+    fix x assume hxW: "x \<in> ?W"
+    have "x \<in> G" using hxW by (by100 simp)
+    thus "mul e x = x" using hG unfolding top1_is_group_on_def by (by100 blast)
+  next
+    fix x assume hxW: "x \<in> ?W"
+    have "x \<in> G" using hxW by (by100 simp)
+    thus "mul x e = x" using hid_right by (by100 blast)
+  next
+    fix x assume hxW: "x \<in> ?W"
+    have "x \<in> G" using hxW by (by100 simp)
+    thus "mul (invg x) x = e" using hG unfolding top1_is_group_on_def by (by100 blast)
+  next
+    fix x assume hxW: "x \<in> ?W"
+    have "x \<in> G" using hxW by (by100 simp)
+    thus "mul x (invg x) = e" using hG unfolding top1_is_group_on_def by (by100 blast)
+  qed
   \<comment> \<open>By minimality: subgroup_generated S \<subseteq> W.\<close>
   have "top1_subgroup_generated_on G mul e invg S \<subseteq> ?W"
     by (rule subgroup_generated_minimal[OF hS_sub_W hW_sub hW_grp])
-  thus ?thesis using hg by (by100 blast)
+  hence "g \<in> ?W" using hg by (by100 blast)
+  thus ?thesis by (by100 blast)
 qed
 
 definition top1_normal_subgroup_generated_on ::
@@ -8269,7 +8762,11 @@ proof -
      reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
   have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
     \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
-  show ?thesis using hFP h_free_on_union sorry
+  obtain \<iota>S12 where h\<iota>: "top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)"
+      and hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
+      and hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
+    using h_free_on_union by (by100 blast)
+  show ?thesis using hFP h\<iota> hcomp1 hcomp2 sorry
 qed
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
@@ -13419,4 +13916,5 @@ end
 
 
   
+
 
