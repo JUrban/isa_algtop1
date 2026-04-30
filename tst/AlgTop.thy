@@ -708,35 +708,15 @@ text \<open>Theorem 57.2 (Munkres): There is no continuous antipode-preserving m
   S^1 \<rightarrow> S^1 map, which by Theorem 57.1 is not nulhomotopic. But the upper hemisphere
   E \<cong> B^2 extends g|_{S^1} to B^2, making it nulhomotopic. Contradiction.\<close>
 theorem Theorem_57_2_no_antipode_S2_to_S1:
-  assumes hg_cont: "top1_continuous_map_on top1_S2 top1_S2_topology top1_S1 top1_S1_topology g"
-      and hg_anti: "\<forall>x\<in>top1_S2. g (- fst x, - fst (snd x), - snd (snd x)) =
+  assumes "top1_continuous_map_on top1_S2 top1_S2_topology top1_S1 top1_S1_topology g"
+      and "\<forall>x\<in>top1_S2. g (- fst x, - fst (snd x), - snd (snd x)) =
              (- fst (g x), - snd (g x))"
   shows False
-proof -
-  \<comment> \<open>Step 1: Define the equator embedding \<iota>: S^1 \<hookrightarrow> S^2, (x,y) \<mapsto> (x,y,0).\<close>
-  let ?\<iota> = "\<lambda>(x::real, y::real). (x, y, 0::real)"
-  \<comment> \<open>Step 2: h = g \<circ> \<iota> : S^1 \<rightarrow> S^1 is continuous and antipode-preserving.
-     Define h with normalization to satisfy top1_antipode_preserving_S1 globally.\<close>
-  let ?h = "\<lambda>(x::real,y::real). if x = 0 \<and> y = 0 then g (1, 0, 0::real)
-    else g (x / sqrt (x^2 + y^2), y / sqrt (x^2 + y^2), 0)"
-  \<comment> \<open>h is continuous (composition of continuous maps).\<close>
-  have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
-    sorry
-  \<comment> \<open>h is antipode-preserving: h(-x,-y) = g(-x,-y,0) = g(-(x,y,0)_anti) = -g(x,y,0) = -h(x,y).\<close>
-  have hh_anti: "top1_antipode_preserving_S1 ?h"
-    sorry
-  \<comment> \<open>Step 3: By Theorem 57.1, h is NOT nulhomotopic.\<close>
-  have h_not_nul: "\<not> top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
-    by (rule Theorem_57_1[OF hh_cont hh_anti])
-  \<comment> \<open>Step 4: But h IS nulhomotopic — g restricted to upper hemisphere extends h to B^2.
-     Upper hemisphere E = {(x,y,z) \<in> S^2 | z \<ge> 0} \<cong> B^2 via projection.
-     g|_E : E \<rightarrow> S^1 extends h (since \<iota>(S^1) \<subseteq> E and g|_{\<iota>(S^1)} = h).
-     By Lemma 55.3: h extends to B^2 \<Rightarrow> h is nulhomotopic.\<close>
-  have h_nul: "top1_nulhomotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology ?h"
-    sorry
-  \<comment> \<open>Contradiction.\<close>
-  from h_not_nul h_nul show False by (by100 blast)
-qed
+  \<comment> \<open>Proof: define h: S¹→S¹ as g restricted to equator S¹⊂S² (with normalization).
+     h is continuous and antipode-preserving → NOT nulhomotopic by Theorem 57.1.
+     But g|_{upper hemisphere} extends h to B² → h IS nulhomotopic by Lemma 55.3.
+     Contradiction.\<close>
+  sorry
 
 text \<open>Corollary 60.2 (Munkres): pi_1(T^2) is isomorphic to Z x Z.\<close>
 corollary Corollary_60_2_torus_pi1:
