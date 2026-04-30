@@ -11270,41 +11270,10 @@ proof -
     ultimately show False by (by100 simp)
   qed
   have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
-  \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_n. Apply SvK.\<close>
-  have hstep: "n > 0 \<longrightarrow> (\<exists>Xprev TXprev Cn.
-      Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
-    \<and> top1_is_wedge_of_circles_on Xprev TXprev {..<n-1} p
-    \<and> top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier Cn (subspace_topology X TX Cn) p)
-        (top1_fundamental_group_mul Cn (subspace_topology X TX Cn) p)
-        top1_Z_group top1_Z_mul)"
-  proof (intro impI)
-    assume hn: "n > 0"
-    \<comment> \<open>Extract circles from the wedge definition.\<close>
-    obtain C where hC_sub: "\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
-             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
-        and hC_cover: "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X"
-        and hC_disjoint: "\<forall>\<alpha>\<in>{..<n}. \<forall>\<beta>\<in>{..<n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
-        and hC_weak: "\<forall>D. D \<subseteq> X \<longrightarrow>
-             (closedin_on X TX D \<longleftrightarrow>
-              (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
-      using assms unfolding top1_is_wedge_of_circles_on_def by blast
-    \<comment> \<open>Take Xprev = \<Union>{C \<alpha> | \<alpha> < n-1} and Cn = C(n-1).\<close>
-    let ?Xprev = "\<Union>\<alpha>\<in>{..<n-1}. C \<alpha>"
-    let ?TXprev = "subspace_topology X TX ?Xprev"
-    let ?Cn = "C (n-1)"
-    show "\<exists>Xprev TXprev Cn.
-      Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
-      \<and> top1_is_wedge_of_circles_on Xprev TXprev {..<n-1} p
-      \<and> top1_groups_isomorphic_on
-          (top1_fundamental_group_carrier Cn (subspace_topology X TX Cn) p)
-          (top1_fundamental_group_mul Cn (subspace_topology X TX Cn) p)
-          top1_Z_group top1_Z_mul" sorry
-  qed
-  \<comment> \<open>By SvK (Theorem 70.2), \<pi>_1(X) \<cong> \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial = free on n gens.\<close>
-  have hsvk: "n > 0 \<longrightarrow> ?thesis" sorry
-  show ?thesis using hbase hsvk by (by100 blast)
+  \<comment> \<open>n=1: X = single circle ≅ S¹, π₁ = Z = free on 1 generator.
+     n≥2: decompose X = X_{n-1} ∪ C_n, intersection {p}. Apply SvK.
+     π₁(X) ≅ π₁(X_{n-1}) * π₁(C_n) ≅ free(n-1) * Z ≅ free(n).\<close>
+  show ?thesis sorry
 qed
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
