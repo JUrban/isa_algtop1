@@ -12562,7 +12562,86 @@ lemma convex_hull_cone_sub:
     \<subseteq> (\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
       ` ({0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
           \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)})"
-  sorry
+proof (rule subsetI)
+  fix q assume "q \<in> {(x, y). \<exists>c. (\<forall>i<Suc n. c i \<ge> 0) \<and> (\<Sum>i<Suc n. c i) = 1
+      \<and> x = (\<Sum>i<Suc n. c i * vx i) \<and> y = (\<Sum>i<Suc n. c i * vy i)}"
+  then obtain x y c where hq: "q = (x, y)"
+      and hc: "\<forall>i<Suc n. (0::real) \<le> c i" "(\<Sum>i<Suc n. c i) = 1"
+      "x = (\<Sum>i<Suc n. c i * vx i)" "y = (\<Sum>i<Suc n. c i * vy i)"
+    by (by100 blast)
+  let ?t = "c n"
+  have ht0: "0 \<le> ?t" using hc(1) by (by100 force)
+  have ht1: "?t \<le> 1"
+    by (rule order_trans[OF member_le_sum[of n "{..<Suc n}" c]]) (use hc in auto)
+  show "q \<in> (\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
+      ` ({0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)})"
+  proof (cases "?t = 1")
+    case True
+    have hsum0: "(\<Sum>i<n. c i) = 0" using hc(2) True by simp
+    have hall0: "\<forall>i<n. c i = 0"
+    proof (intro allI impI)
+      fix i assume "i < n"
+      have "c i \<le> (\<Sum>i<n. c i)" by (rule member_le_sum) (use hc(1) \<open>i<n\<close> in auto)
+      moreover have "0 \<le> c i" using hc(1) \<open>i<n\<close> by (by100 force)
+      ultimately show "c i = 0" using hsum0 by (by100 linarith)
+    qed
+    have hx_vn: "x = vx n" using hc(3) hall0 True by simp
+    have hy_vn: "y = vy n" using hc(4) hall0 True by simp
+    \<comment> \<open>Need a dummy element of Pn. Use uniform distribution.\<close>
+    have "n > 0 \<Longrightarrow> (\<Sum>i<n. (1/real n) * vx i, \<Sum>i<n. (1/real n) * vy i) \<in>
+      {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}" sorry
+    \<comment> \<open>For n = 0, Pn = {} but Suc n > 0 so n \<ge> 0. Handle n=0 separately.\<close>
+    show ?thesis using hq hx_vn hy_vn sorry
+  next
+    case htnot1: False
+    have hlt1: "?t < 1" using htnot1 ht1 by (by100 linarith)
+    hence h1mt: "1 - ?t > 0" by (by100 linarith)
+    let ?c' = "\<lambda>i. c i / (1 - ?t)"
+    have hc'_nn: "\<forall>i<n. ?c' i \<ge> 0" using hc(1) h1mt by (by100 force)
+    have hc'_sum: "(\<Sum>i<n. ?c' i) = 1"
+    proof -
+      have "(\<Sum>i<n. ?c' i) = (\<Sum>i<n. c i) / (1 - ?t)"
+        by (simp add: sum_divide_distrib)
+      also have "(\<Sum>i<n. c i) = 1 - ?t" using hc(2) by simp
+      finally show ?thesis using h1mt by simp
+    qed
+    let ?x' = "\<Sum>i<n. ?c' i * vx i"
+    let ?y' = "\<Sum>i<n. ?c' i * vy i"
+    have hrescale_x: "(1-?t)*?x' = (\<Sum>i<n. c i * vx i)"
+    proof -
+      have "(1-?t)*?x' = (\<Sum>i<n. (1-?t) * (?c' i * vx i))"
+        by (simp add: sum_distrib_left)
+      also have "\<dots> = (\<Sum>i<n. c i * vx i)"
+        using h1mt by (intro sum.cong) (simp_all add: field_simps)
+      finally show ?thesis .
+    qed
+    have hrescale_y: "(1-?t)*?y' = (\<Sum>i<n. c i * vy i)"
+    proof -
+      have "(1-?t)*?y' = (\<Sum>i<n. (1-?t) * (?c' i * vy i))"
+        by (simp add: sum_distrib_left)
+      also have "\<dots> = (\<Sum>i<n. c i * vy i)"
+        using h1mt by (intro sum.cong) (simp_all add: field_simps)
+      finally show ?thesis .
+    qed
+    have hx_eq: "x = (1-?t)*?x' + ?t*vx n" using hc(3) hrescale_x by simp
+    have hy_eq: "y = (1-?t)*?y' + ?t*vy n" using hc(4) hrescale_y by simp
+    have "(?x', ?y') \<in> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}"
+      apply simp
+      apply (rule_tac x="?c'" in exI)
+      using hc'_nn hc'_sum by (by100 auto)
+    have ht_in: "?t \<in> {0..1}" using ht0 ht1 by (by100 auto)
+    hence "(?t, (?x', ?y')) \<in> {0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}"
+      using \<open>(?x', ?y') \<in> _\<close> by (by100 blast)
+    moreover have "q = (case (?t, (?x', ?y')) of (t, x', y') \<Rightarrow>
+        ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))"
+      using hq hx_eq hy_eq by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
+qed
 
 text \<open>A convex hull of n \<ge> 3 points in R^2 is compact.\<close>
 text \<open>Convex hull of n \<ge> 1 points is compact, by induction on n.
