@@ -5966,41 +5966,6 @@ proof -
     using hg_hom hg_bij by blast
 qed
 
-lemma top1_groups_isomorphic_on_trans:
-  assumes hGH: "top1_groups_isomorphic_on G mulG H mulH"
-      and hHK: "top1_groups_isomorphic_on H mulH K mulK"
-  shows "top1_groups_isomorphic_on G mulG K mulK"
-proof -
-  obtain f where hf_hom: "top1_group_hom_on G mulG H mulH f" and hf_bij: "bij_betw f G H"
-    using hGH unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
-  obtain g where hg_hom: "top1_group_hom_on H mulH K mulK g" and hg_bij: "bij_betw g H K"
-    using hHK unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
-  have hgf_hom: "top1_group_hom_on G mulG K mulK (g \<circ> f)"
-    unfolding top1_group_hom_on_def
-  proof (intro conjI ballI)
-    fix x assume hx: "x \<in> G"
-    have "f x \<in> H" using hf_hom hx unfolding top1_group_hom_on_def by blast
-    thus "(g \<circ> f) x \<in> K" using hg_hom unfolding top1_group_hom_on_def comp_def by blast
-  next
-    fix x y assume hx: "x \<in> G" and hy: "y \<in> G"
-    have "f x \<in> H" "f y \<in> H" using hf_hom hx hy unfolding top1_group_hom_on_def by blast+
-    have "(g \<circ> f) (mulG x y) = g (f (mulG x y))" by simp
-    also have "... = g (mulH (f x) (f y))"
-    proof -
-      have "f (mulG x y) = mulH (f x) (f y)"
-        using hf_hom hx hy unfolding top1_group_hom_on_def by blast
-      thus ?thesis by simp
-    qed
-    also have "... = mulK (g (f x)) (g (f y))"
-      using hg_hom \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by blast
-    also have "... = mulK ((g \<circ> f) x) ((g \<circ> f) y)" by simp
-    finally show "(g \<circ> f) (mulG x y) = mulK ((g \<circ> f) x) ((g \<circ> f) y)" .
-  qed
-  have hgf_bij: "bij_betw (g \<circ> f) G K" by (rule bij_betw_trans[OF hf_bij hg_bij])
-  show ?thesis
-    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-    using hgf_hom hgf_bij by blast
-qed
 
 text \<open>Normal subgroup: N \<subseteq> G is a subgroup closed under conjugation.\<close>
 definition top1_normal_subgroup_on ::
