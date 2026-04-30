@@ -6258,8 +6258,11 @@ proof -
               using hi2 by (simp add: rev_nth)
             moreover have "length (map invg ws) - 1 - i < length (map invg ws)"
               using hi2 by (by100 linarith)
-            ultimately show "(rev (map invg ws))!i \<in> G"
-              using \<open>\<forall>i<length (map invg ws). (map invg ws) ! i \<in> G\<close> by (by100 simp)
+            ultimately have heq: "(rev (map invg ws))!i = (map invg ws)!(length (map invg ws) - 1 - i)"
+              and hidx: "length (map invg ws) - 1 - i < length (map invg ws)" by simp+
+            have "(map invg ws)!(length (map invg ws) - 1 - i) \<in> G"
+              using \<open>\<forall>i<length (map invg ws). (map invg ws) ! i \<in> G\<close> hidx by (by100 blast)
+            thus "(rev (map invg ws))!i \<in> G" using heq by (by100 simp)
           qed
           thus ?thesis using foldr_mul_closed[OF hG hrev_map] by (by100 blast)
         qed
@@ -8750,962 +8753,6 @@ proof -
   show ?thesis sorry
 qed
 
-section \<open>\<S>69 Free Groups\<close>
-
-text \<open>A free group on a set S is a group G together with \<iota>: S \<hookrightarrow> G such that
-  \<iota>(S) generates G, \<iota> is injective, and (externally) for any group H and
-  function \<phi>: S \<rightarrow> H there is a unique homomorphism \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi>.
-  See top1_is_free_group_full_on (intrinsic) and top1_free_group_universal_prop
-  (external) above.\<close>
-
-(** from \<S>69 Theorem 69.2: free product of free groups on S1, S2 (disjoint)
-    is the free group on S1 \<union> S2. **)
-theorem Theorem_69_2:
-  fixes G1 G2 :: "'g set"
-    and mul1 mul2 :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e1 e2 :: 'g
-    and invg1 invg2 :: "'g \<Rightarrow> 'g"
-    and \<iota>1 \<iota>2 :: "'s \<Rightarrow> 'g"
-    and S1 S2 :: "'s set"
-  assumes "top1_is_free_group_full_on G1 mul1 e1 invg1 \<iota>1 S1"
-      and "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 S2"
-      and "S1 \<inter> S2 = {}"
-  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
-           top1_is_free_product_on FP mulFP eFP invgFP
-             (\<lambda>i::nat. if i = 0 then G1 else G2)
-             (\<lambda>i. if i = 0 then mul1 else mul2)
-             \<iota>fam12 {0, 1}
-         \<and> top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
-         \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s))
-         \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
-proof -
-  \<comment> \<open>Munkres 69.2: G1 * G2 has reduced words alternating between G1 and G2 elements.
-     Since G1 = free on S1 and G2 = free on S2, reduced words in G1*G2 are exactly
-     reduced words in S1 \<union> S2 (with S1 \<inter> S2 = {}). So G1*G2 is free on S1\<union>S2.
-     The injection \<iota>S12 maps s\<in>S1 to \<iota>fam12(0)(\<iota>1(s)) and s\<in>S2 to \<iota>fam12(1)(\<iota>2(s)).\<close>
-  \<comment> \<open>Step 1: Build the free product FP = G1 * G2 (Theorem 68.2).\<close>
-  have hgroups: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
-      ((if \<alpha> = 0 then G1 else G2)::'g set) (if \<alpha> = 0 then mul1 else mul2)
-      (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
-  proof (intro ballI)
-    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
-    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
-    thus "top1_is_group_on (if \<alpha> = 0 then G1 else G2) (if \<alpha> = 0 then mul1 else mul2)
-        (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
-    proof
-      assume "\<alpha> = 0"
-      thus ?thesis using assms(1) unfolding top1_is_free_group_full_on_def by (by100 simp)
-    next
-      assume "\<alpha> = 1"
-      thus ?thesis using assms(2) unfolding top1_is_free_group_full_on_def by (by100 simp)
-    qed
-  qed
-  obtain FP :: "(nat \<times> 'g) list set" and mulFP eFP invgFP \<iota>fam12 where
-      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
-        (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
-  proof -
-    from Theorem_68_2_free_product_exists[OF hgroups]
-    show ?thesis using that by blast
-  qed
-  \<comment> \<open>Step 2: Since G1, G2 are free on S1, S2, reduced words in FP correspond to
-     reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
-  have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
-    \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
-  obtain \<iota>S12 where h\<iota>: "top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)"
-      and hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
-      and hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
-    using h_free_on_union by (by100 blast)
-  show ?thesis using hFP h\<iota> hcomp1 hcomp2 sorry
-qed
-
-(** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
-    If G is free on S, then G/[G,G] is free abelian on the images of S. **)
-theorem Theorem_69_4:
-  fixes G :: "'g set"
-    and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g
-    and invg :: "'g \<Rightarrow> 'g"
-    and \<iota> :: "'s \<Rightarrow> 'g"
-    and S :: "'s set"
-  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
-  shows "\<exists>(H::'h set) mulH eH invgH \<phi> \<iota>H.
-           top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
-         \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
-         \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))"
-proof -
-  \<comment> \<open>Munkres 69.4: G is free on S, so G/[G,G] is the abelianization.
-     The images \<phi>(\<iota>(s)) for s \<in> S freely generate G/[G,G] as an abelian group:
-     Step 1: \<phi>(\<iota>(S)) generates H (since \<iota>(S) generates G and \<phi> is surjective).
-     Step 2: No nontrivial integer combination of \<phi>(\<iota>(s))'s equals eH.
-     Proof: if \<Sigma> n_s \<phi>(\<iota>(s)) = eH, then \<Sigma> n_s \<iota>(s) \<in> [G,G].
-     But [G,G] consists of products of commutators, and a free group element
-     that's a product of commutators has zero exponent sum in each generator.
-     So all n_s = 0.\<close>
-  \<comment> \<open>Step 1: Form the abelianization H = G/[G,G] via natural projection \<phi>.\<close>
-  have h_abel: "\<exists>(H::'h set) mulH eH invgH \<phi>.
-      top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>" sorry
-  \<comment> \<open>Step 2: \<phi>(\<iota>(S)) generates H and satisfies no nontrivial integer relations
-     (exponent sum argument in the free group).\<close>
-  have h_free_abel: "\<exists>(H::'h set) mulH eH invgH \<phi> \<iota>H.
-      top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
-    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
-    \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))" sorry
-  show ?thesis using h_free_abel by (by100 blast)
-qed
-
-section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
-
-section \<open>\<S>71 The Fundamental Group of a Wedge of Circles\<close>
-
-text \<open>A wedge of circles at a common point p (Munkres §71): a Hausdorff space X
-  with a family \<C>_\<alpha> (\<alpha>\<in>J) of subspaces, each homeomorphic to S^1, pairwise
-  intersecting only at p, whose union is X. The topology on X is the weak
-  topology: a set is closed iff its intersection with each C_\<alpha> is closed.\<close>
-definition top1_is_wedge_of_circles_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'i set \<Rightarrow> 'a \<Rightarrow> bool" where
-  "top1_is_wedge_of_circles_on X TX J p \<longleftrightarrow>
-     is_topology_on_strict X TX \<and>
-     is_hausdorff_on X TX \<and>
-     p \<in> X \<and>
-     (\<exists>C. (\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
-             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
-        \<and> (\<Union>\<alpha>\<in>J. C \<alpha>) = X
-        \<and> (\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p})
-        \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
-             (closedin_on X TX D \<longleftrightarrow>
-              (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))))"
-
-text \<open>A polygonal region in R^2 with n \<ge> 3 sides: a closed convex polygon, i.e.,
-  the convex hull of n vertices v_0, ..., v_{n-1} that are pairwise distinct and
-  in convex position (no vertex lies in the convex hull of the others).
-  The three conjuncts of the definition are: (i) vertices pairwise distinct,
-  (ii) convex position (no vertex is a convex combination of the others),
-  (iii) P is the convex hull as convex combinations of the vertices.\<close>
-definition top1_is_polygonal_region_on :: "(real \<times> real) set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_polygonal_region_on P n \<longleftrightarrow>
-     n \<ge> 3 \<and>
-     (\<exists>vx vy :: nat \<Rightarrow> real.
-        (\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
-      \<and> (\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
-                          \<and> coeffs k = 0
-                          \<and> (\<Sum>i<n. coeffs i) = 1
-                          \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
-                          \<and> vy k = (\<Sum>i<n. coeffs i * vy i)))
-      \<and> P = {(x, y) | x y.
-                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                       \<and> (\<Sum>i<n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
-                       \<and> y = (\<Sum>i<n. coeffs i * vy i)})"
-
-text \<open>Edge scheme: a word w = y_1 y_2 ... y_n where each y_i is (label, orientation)
-  specifying how boundary edges of a polygonal region are identified. Orientation
-  True means forward, False means reversed.\<close>
-type_synonym 'a top1_edge_scheme = "('a \<times> bool) list"
-
-text \<open>X is the quotient space obtained from a polygonal region P (with n = length
-  scheme sides, labelled by the scheme) by identifying boundary edges as the scheme
-  specifies. The existential witnesses are: the polygonal region P; the quotient
-  map q : P \<rightarrow> X; and the edge parametrization edge : nat \<Rightarrow> real \<Rightarrow> P (edge i
-  parametrizes the i-th side of P). The conjuncts assert:
-  (i) P is a polygonal region with length(scheme) sides;
-  (ii) q is a quotient map;
-  (iii) each edge i maps I into P;
-  (iv) two edges with the same label are identified compatibly with their
-      orientation (same bool \<Rightarrow> direct identification t\<sim>t; opposite bool \<Rightarrow>
-      reversed identification t\<sim>1-t);
-  (v) interior points of P (not on any scheme edge) have trivial q-fibre.\<close>
-definition top1_quotient_of_scheme_on ::
-  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b top1_edge_scheme \<Rightarrow> bool" where
-  "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
-     is_topology_on_strict X TX \<and>
-     (\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
-        top1_is_polygonal_region_on P (length scheme)
-      \<and> top1_quotient_map_on P
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
-      \<comment> \<open>vx, vy are the polygon vertices, pairwise distinct and in convex position.\<close>
-      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
-             i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
-      \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
-      \<comment> \<open>Vertices are in cyclic order: non-adjacent edges don't share interior points.\<close>
-      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
-            i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
-            (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-               ((1-s) * vx i + s * vx (Suc i mod length scheme),
-                (1-s) * vy i + s * vy (Suc i mod length scheme))
-             \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
-                (1-t) * vy j + t * vy (Suc j mod length scheme))))
-      \<comment> \<open>The i-th edge is the segment from (vx i, vy i) to (vx ((i+1) mod n), vy ...).
-          Same-label edges are identified with compatible orientation.\<close>
-      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
-            fst (scheme!i) = fst (scheme!j) \<longrightarrow>
-            (\<forall>t\<in>I_set.
-               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                  (1-t) * vy i + t * vy (Suc i mod length scheme))
-             = (if snd (scheme!i) = snd (scheme!j)
-                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
-                        (1-t) * vy j + t * vy (Suc j mod length scheme))
-                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
-                        t * vy j + (1-t) * vy (Suc j mod length scheme)))))
-      \<comment> \<open>Interior points (not on any boundary edge) have singleton q-fibre.\<close>
-      \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
-                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                          (1-t) * vy i + t * vy (Suc i mod length scheme)))
-               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
-
-text \<open>Extraction lemma: from quotient_of_scheme_on, get the polygonal region and quotient map.\<close>
-lemma quotient_of_scheme_extract:
-  assumes "top1_quotient_of_scheme_on X TX scheme"
-  obtains P q where "top1_is_polygonal_region_on P (length scheme)"
-      and "top1_quotient_map_on P
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-  using assms unfolding top1_quotient_of_scheme_on_def
-  apply (elim conjE exE)
-  apply (rule that)
-  apply assumption+
-  done
-
-text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
-definition top1_is_polygonal_quotient_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_polygonal_quotient_on X TX \<longleftrightarrow>
-     is_topology_on_strict X TX \<and>
-     (\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme)"
-
-text \<open>Standard scheme for the n-fold torus: a_1 b_1 a_1\<inverse> b_1\<inverse> \<cdots> a_n b_n a_n\<inverse> b_n\<inverse>,
-  i.e. a 4n-sided polygon with this edge-identification word.\<close>
-definition top1_n_torus_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
-  "top1_n_torus_scheme n =
-     concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<n])"
-
-text \<open>Standard scheme for the m-fold projective plane: a_1 a_1 a_2 a_2 \<cdots> a_m a_m,
-  a 2m-sided polygon.\<close>
-definition top1_m_projective_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
-  "top1_m_projective_scheme m =
-     concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])"
-
-text \<open>n-fold torus T_n = quotient of a 4n-gon by the standard torus scheme.\<close>
-definition top1_is_n_fold_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_n_fold_torus_on X TX n \<longleftrightarrow>
-     n > 0 \<and> top1_quotient_of_scheme_on X TX (top1_n_torus_scheme n)"
-
-text \<open>n-fold dunce cap: quotient of B^2 where on S^1, q(z) = q(z') iff z' is a
-  rotation of z by a multiple of 2\<pi>/n; on the interior, q is injective; interior
-  and boundary orbits are separated.  The resulting space has \<pi>_1 = Z/nZ.\<close>
-definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_dunce_cap_on X TX n \<longleftrightarrow>
-     is_topology_on_strict X TX \<and>
-     n > 0 \<and>
-     (\<exists>q. top1_quotient_map_on top1_B2 top1_B2_topology X TX q
-        \<and> (\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
-              q z = q z' \<longleftrightarrow>
-              (\<exists>k::nat. k < n \<and>
-                 z' = (cos (2*pi*real k/real n) * fst z
-                         - sin (2*pi*real k/real n) * snd z,
-                       sin (2*pi*real k/real n) * fst z
-                         + cos (2*pi*real k/real n) * snd z)))
-        \<and> inj_on q (top1_B2 - top1_S1)
-        \<and> (\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'))"
-
-text \<open>m-fold projective plane P_m: quotient of a 2m-gon by the scheme a_1 a_1 ... a_m a_m.
-  For m = 1 this would require a 2-gon (not a valid polygonal region, which requires
-  n \<ge> 3), so we handle m = 1 separately: P_1 = real projective plane RP^2 = quotient
-  of B^2 by antipodal identification on S^1 = the 2-fold dunce cap.\<close>
-definition top1_is_m_fold_projective_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_is_m_fold_projective_on X TX m \<longleftrightarrow>
-     (m = 1 \<and> top1_is_dunce_cap_on X TX (2::nat)) \<or>
-     (m \<ge> 2 \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m))"
-
-text \<open>The torus T² = S¹ × S¹ (the 1-fold torus in Munkres' sense).\<close>
-definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_torus_on X TX \<longleftrightarrow>
-     top1_is_n_fold_torus_on X TX 1"
-
-text \<open>The standard closed 2-simplex {(x, y). x \<ge> 0 \<and> y \<ge> 0 \<and> x + y \<le> 1}.\<close>
-definition top1_standard_simplex :: "(real \<times> real) set" where
-  "top1_standard_simplex = {p. fst p \<ge> 0 \<and> snd p \<ge> 0 \<and> fst p + snd p \<le> 1}"
-
-definition top1_standard_simplex_topology :: "(real \<times> real) set set" where
-  "top1_standard_simplex_topology =
-     subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
-       top1_standard_simplex"
-
-text \<open>Edges of the standard simplex (the three line segments on its boundary).\<close>
-definition top1_standard_simplex_edges :: "(real \<times> real) set set" where
-  "top1_standard_simplex_edges =
-     { {p\<in>top1_standard_simplex. fst p = 0},
-       {p\<in>top1_standard_simplex. snd p = 0},
-       {p\<in>top1_standard_simplex. fst p + snd p = 1} }"
-
-text \<open>Vertices of the standard simplex.\<close>
-definition top1_standard_simplex_vertices :: "(real \<times> real) set" where
-  "top1_standard_simplex_vertices = {(0, 0), (1, 0), (0, 1)}"
-
-text \<open>Triangulable: X has a triangulation — a finite collection \<T> of closed subspaces,
-  each homeomorphic to a 2-simplex, covering X, such that any two distinct triangles
-  intersect in either \<emptyset>, a common vertex, or a common edge (the common-face property).
-  We express the common-face condition via the homeomorphism images.\<close>
-definition top1_is_triangulable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
-  "top1_is_triangulable_on X TX \<longleftrightarrow>
-     is_topology_on_strict X TX \<and>
-     (\<exists>(\<T> :: 'a set set) (h :: 'a set \<Rightarrow> (real \<times> real) \<Rightarrow> 'a).
-        finite \<T>
-      \<and> (\<Union>\<T>) = X
-      \<and> (\<forall>T\<in>\<T>. T \<subseteq> X \<and> closedin_on X TX T
-            \<and> top1_homeomorphism_on
-                 top1_standard_simplex top1_standard_simplex_topology
-                 T (subspace_topology X TX T) (h T))
-      \<and> (\<forall>T1\<in>\<T>. \<forall>T2\<in>\<T>. T1 \<noteq> T2 \<longrightarrow>
-            T1 \<inter> T2 = {}
-          \<or> (\<exists>v1 v2. v1 \<in> top1_standard_simplex_vertices \<and>
-                     v2 \<in> top1_standard_simplex_vertices \<and>
-                     T1 \<inter> T2 = {h T1 v1} \<and> {h T1 v1} = {h T2 v2})
-          \<or> (\<exists>E1\<in>top1_standard_simplex_edges. \<exists>E2\<in>top1_standard_simplex_edges.
-                 T1 \<inter> T2 = h T1 ` E1 \<and> h T1 ` E1 = h T2 ` E2)))"
-
-text \<open>Elementary scheme operations (Munkres §76): inductive rewrite rules on edge
-  schemes preserving the resulting quotient topology. Munkres defines:
-  (i) cyclic permutation (rotate), (ii) cancellation of aa\<inverse> (when length \<ge> 5),
-  (iii) relabel one letter to a new fresh letter (and consistently flip the bool),
-  (iv) cut: replace w_1 w_2 by w_1 c c\<inverse> w_2 for a fresh letter c, (v) paste: the
-  reverse of cut when edges form an adjacent pair, (vi) inverse: flip an edge.\<close>
-inductive top1_elementary_scheme_operation ::
-  "'a top1_edge_scheme \<Rightarrow> 'a top1_edge_scheme \<Rightarrow> bool" where
-    refl:     "top1_elementary_scheme_operation s s"
-  | sym:      "top1_elementary_scheme_operation s t \<Longrightarrow>
-               top1_elementary_scheme_operation t s"
-  | trans:    "\<lbrakk>top1_elementary_scheme_operation s t;
-                top1_elementary_scheme_operation t u\<rbrakk> \<Longrightarrow>
-               top1_elementary_scheme_operation s u"
-  | rotate:   "top1_elementary_scheme_operation (xs @ ys) (ys @ xs)"
-  | cancel:   "top1_elementary_scheme_operation
-                 (xs @ [(a, b), (a, \<not> b)] @ ys)
-                 (xs @ ys)"
-  | relabel:  "\<lbrakk>a \<notin> fst ` set s; a \<noteq> c\<rbrakk> \<Longrightarrow>
-               top1_elementary_scheme_operation
-                 s
-                 (map (\<lambda>(x, b). (if x = c then a else x, b)) s)"
-  | invert:   "top1_elementary_scheme_operation
-                 s
-                 (rev (map (\<lambda>(x, b). (x, \<not> b)) s))"
-  | cut:      "\<lbrakk>c \<notin> fst ` set (xs @ ys)\<rbrakk> \<Longrightarrow>
-               top1_elementary_scheme_operation
-                 (xs @ ys)
-                 (xs @ [(c, True), (c, False)] @ ys)"
-
-text \<open>Subgroup index: H has index k in G iff there are exactly k left cosets g H.
-  We represent the set of left cosets directly (does not require H to be normal).\<close>
-definition top1_left_cosets_on ::
-  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set set" where
-  "top1_left_cosets_on G mul H = { top1_group_coset_on G mul H g | g. g \<in> G }"
-
-definition top1_subgroup_has_index_on ::
-  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> nat \<Rightarrow> bool" where
-  "top1_subgroup_has_index_on G mul H k \<longleftrightarrow>
-     finite (top1_left_cosets_on G mul H) \<and>
-     card (top1_left_cosets_on G mul H) = k"
-     \<comment> \<open>Finite index only. Infinite-index subgroups are expressed by negating this
-         predicate (or by asserting infinite (top1_left_cosets_on ...)), not by k = 0.\<close>
-
-
-(** from \<S>71 Theorem 71.1: finite wedge of circles has free fundamental group
-    generated by the individual circle loops. **)
-theorem Theorem_71_1_wedge_of_circles_finite:
-  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and p :: 'a
-  assumes "top1_is_wedge_of_circles_on X TX {..<n} p"
-  shows "\<exists>(G::'g set) mul e invg (\<iota>::nat \<Rightarrow> 'g).
-           top1_is_free_group_full_on G mul e invg \<iota> {..<n}
-         \<and> top1_groups_isomorphic_on G mul
-             (top1_fundamental_group_carrier X TX p)
-             (top1_fundamental_group_mul X TX p)"
-proof -
-  \<comment> \<open>Munkres 71.1: Apply Seifert-van Kampen (Theorem 70.2) by induction on n.
-     Base case n=1: X = S^1, \<pi>_1 = Z which is free on 1 generator.
-     Inductive step: X = X_{n-1} \<cup> C_n where C_n \<cong> S^1.
-     X_{n-1} \<inter> C_n = {p}, which is path-connected.
-     By SvK, \<pi>_1(X) = \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial relations
-     = free on (n-1) generators * Z = free on n generators.\<close>
-  \<comment> \<open>Base: n=0 gives trivial group; n=1 gives \<pi>_1(S^1) \<cong> Z.\<close>
-  have hn_pos: "n > 0"
-  proof (rule ccontr)
-    assume "\<not> n > 0"
-    hence "n = 0" by (by100 simp)
-    hence "{..<n} = ({} :: nat set)" by (by100 simp)
-    moreover from assms obtain C where "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" and "p \<in> X"
-      unfolding top1_is_wedge_of_circles_on_def
-      apply (elim conjE exE) by (by100 blast)
-    ultimately show False by (by100 simp)
-  qed
-  have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
-  \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_n. Apply SvK.\<close>
-  have hstep: "n > 0 \<longrightarrow> (\<exists>Xprev TXprev Cn.
-      Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
-    \<and> top1_is_wedge_of_circles_on Xprev TXprev {..<n-1} p
-    \<and> top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier Cn (subspace_topology X TX Cn) p)
-        (top1_fundamental_group_mul Cn (subspace_topology X TX Cn) p)
-        top1_Z_group top1_Z_mul)" sorry
-  \<comment> \<open>By SvK (Theorem 70.2), \<pi>_1(X) \<cong> \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial = free on n gens.\<close>
-  have hsvk: "n > 0 \<longrightarrow> ?thesis" sorry
-  show ?thesis using hbase hsvk by (by100 blast)
-qed
-
-(** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
-theorem Theorem_71_3_wedge_of_circles_general:
-  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
-  assumes "top1_is_wedge_of_circles_on X TX J p"
-  shows "\<exists>(G::'g set) mul e invg (\<iota>::'i \<Rightarrow> 'g).
-           top1_is_free_group_full_on G mul e invg \<iota> J
-         \<and> top1_groups_isomorphic_on G mul
-             (top1_fundamental_group_carrier X TX p)
-             (top1_fundamental_group_mul X TX p)"
-proof -
-  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
-     argument. Each finite sub-wedge gives a free group on that subset of generators.
-     The direct limit over finite subsets gives the free group on all of J.
-     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
-  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free fundamental group on F.\<close>
-  have hfinite: "\<forall>F. finite F \<and> F \<subseteq> J \<longrightarrow>
-      (\<exists>(G::'g set) mul e invg \<iota>. top1_is_free_group_full_on G mul e invg \<iota> F
-        \<and> top1_groups_isomorphic_on G mul
-            (top1_fundamental_group_carrier X TX p)
-            (top1_fundamental_group_mul X TX p))" sorry
-  \<comment> \<open>Step 2: The direct limit of these free groups (as F ranges over finite subsets)
-     is the free group on J.\<close>
-  show ?thesis sorry
-qed
-
-section \<open>\<S>72 Adjoining a Two-Cell\<close>
-
-(** from \<S>72 Theorem 72.1: attaching a 2-cell kills the homotopy class of
-    the attaching map. There exists an isomorphism \<pi>_1(X, a) \<cong>
-    \<pi>_1(A, a) / normal-closure(k_*[p]) where p is the standard loop of S^1
-    and k : S^1 \<rightarrow> A is the restriction of h : B^2 \<rightarrow> X to the boundary. **)
-theorem Theorem_72_1_attaching_two_cell:
-  fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
-    and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
-  assumes "is_topology_on_strict X TX"
-      and "is_hausdorff_on X TX"
-      and "closedin_on X TX A"
-      and "top1_path_connected_on A (subspace_topology X TX A)"
-      and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
-      and "a \<in> A"
-      \<comment> \<open>h restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.\<close>
-      and "top1_homeomorphism_on
-             (top1_B2 - top1_S1)
-             (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-             (X - A)
-             (subspace_topology X TX (X - A))
-             h"
-      and "h ` top1_S1 \<subseteq> A"
-      and "h (1, 0) = a"
-  shows "\<exists>\<iota>.
-            top1_continuous_map_on top1_S1 top1_S1_topology A
-                 (subspace_topology X TX A) \<iota>
-          \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
-          \<and> top1_groups_isomorphic_on
-                (top1_fundamental_group_carrier X TX a)
-                (top1_fundamental_group_mul X TX a)
-                (top1_quotient_group_carrier_on
-                   (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-                   (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-                   (top1_normal_subgroup_generated_on
-                      (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-                      (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-                      (top1_fundamental_group_id A (subspace_topology X TX A) a)
-                      (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-                      \<comment> \<open>Relator: the image under \<iota>_* of the class of the standard
-                          S^1 loop p(s) = (cos 2\<pi>s, sin 2\<pi>s) based at (1, 0). This
-                          class is {g. loop_equiv_on S^1 ((1,0)) p g} — the
-                          equivalence class of p in \<pi>_1(S^1, (1,0)).\<close>
-                      {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-                         A (subspace_topology X TX A) a \<iota>
-                         {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                               (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
-                (top1_quotient_group_mul_on
-                   (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
-proof -
-  \<comment> \<open>Munkres 72.1: \<iota> = h restricted to S^1.\<close>
-  let ?\<iota> = "\<lambda>z. h z"
-  have h\<iota>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A
-       (subspace_topology X TX A) ?\<iota>"
-  proof -
-    \<comment> \<open>Step 1: S1 \<subseteq> B2 (unit circle inside closed unit disk).\<close>
-    have hS1_B2: "top1_S1 \<subseteq> top1_B2"
-      unfolding top1_S1_def top1_B2_def by (by100 auto)
-    \<comment> \<open>Step 2: h restricted from B2 to S1 is continuous into X.\<close>
-    have h_cont_S1_sub: "top1_continuous_map_on top1_S1
-        (subspace_topology top1_B2 top1_B2_topology top1_S1) X TX h"
-      by (rule top1_continuous_map_on_restrict_domain_simple[OF assms(5) hS1_B2])
-    \<comment> \<open>Step 3: Subspace topology transitivity:
-       subspace_topology B2 B2_topology S1 = subspace_topology UNIV (prod_top) S1 = S1_topology.\<close>
-    have hS1_top_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
-    proof -
-      have "top1_S1_topology = subspace_topology UNIV
-          (product_topology_on top1_open_sets top1_open_sets) top1_S1"
-        unfolding top1_S1_topology_def ..
-      also have "\<dots> = subspace_topology top1_B2 top1_B2_topology top1_S1"
-        unfolding top1_B2_topology_def
-        using subspace_topology_trans[OF hS1_B2] by (by100 simp)
-      finally show ?thesis by (by100 simp)
-    qed
-    have h_cont_S1_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
-      using h_cont_S1_sub hS1_top_eq by (by100 simp)
-    \<comment> \<open>Step 4: Shrink codomain from X to A (since h(S1) \<subseteq> A).\<close>
-    have hA_sub_X: "A \<subseteq> X"
-      using assms(3) unfolding closedin_on_def by (by100 blast)
-    show ?thesis
-      by (rule top1_continuous_map_on_codomain_shrink[OF h_cont_S1_X assms(8) hA_sub_X])
-  qed
-  have h\<iota>_eq: "\<forall>z\<in>top1_S1. ?\<iota> z = h z" by simp
-  \<comment> \<open>Step 1: \<pi>_1(X, a) is generated by \<pi>_1(A, a) (since X-A is contractible via h).\<close>
-  \<comment> \<open>Step 2: The surjection \<pi>_1(A, a) \<rightarrow> \<pi>_1(X, a) has kernel = normal closure of [k\<circ>p],
-     where p is the standard loop and k = h|S^1 = \<iota>.\<close>
-  \<comment> \<open>This uses Seifert-van Kampen (Theorem 70.2) applied to a neighborhood of A in X
-     and X-A, or equivalently, the pushout of \<pi>_1 along the attaching map.\<close>
-  have hiso: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier X TX a)
-        (top1_fundamental_group_mul X TX a)
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-              (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-              (top1_fundamental_group_id A (subspace_topology X TX A) a)
-              (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-                 A (subspace_topology X TX A) a ?\<iota>
-                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                       (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
-        (top1_quotient_group_mul_on
-           (top1_fundamental_group_mul A (subspace_topology X TX A) a))" sorry
-  show ?thesis using h\<iota>_cont h\<iota>_eq hiso by (by100 blast)
-qed
-
-section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
-
-(** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
-    i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
-theorem Theorem_73_1_torus_presentation:
-  fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
-  assumes "top1_is_torus_on T_torus TT"
-      and "x0 \<in> T_torus"
-  shows "top1_groups_isomorphic_on
-           (top1_fundamental_group_carrier T_torus TT x0)
-           (top1_fundamental_group_mul T_torus TT x0)
-           (UNIV::(int \<times> int) set)
-           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-proof -
-  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
-     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
-     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
-     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
-  \<comment> \<open>Step 1: T is quotient of square \<Rightarrow> space A is wedge of 2 circles (1-skeleton).\<close>
-  have hA_wedge: "\<exists>(A :: 'a set) TA p.
-      top1_is_wedge_of_circles_on A TA {0::nat, 1} p \<and> A \<subseteq> T_torus" sorry
-  \<comment> \<open>Step 2: \<pi>_1(A) is free on 2 generators \<alpha>, \<beta> (Theorem 71.1).\<close>
-  have hpi1_A_free: "\<exists>(F::'g set) mulF eF invgF \<iota>.
-      top1_is_free_group_full_on F mulF eF invgF \<iota> {0::nat, 1}" sorry
-  \<comment> \<open>Step 3: Attaching the 2-cell kills the commutator \<alpha>\<beta>\<alpha>\<inverse>\<beta>\<inverse>.
-     So \<pi>_1(T) \<cong> F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle> \<cong> Z\<times>Z.\<close>
-  show ?thesis sorry
-qed
-
-(** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
-theorem Theorem_73_4_dunce_cap:
-  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
-  assumes "n > 0"
-      and "top1_is_dunce_cap_on X TX n"
-      and "x0 \<in> X"
-  shows "top1_groups_isomorphic_on
-           (top1_fundamental_group_carrier X TX x0)
-           (top1_fundamental_group_mul X TX x0)
-           (top1_Zn_group n)
-           (top1_Zn_mul n)"
-proof -
-  \<comment> \<open>Munkres 73.4: X is the dunce cap = quotient of B^2 by n-fold rotation on S^1.
-     The 1-skeleton is a single circle A, and \<pi>_1(A) \<cong> Z generated by the loop a.
-     The 2-cell is attached by a^n. By Theorem 72.1:
-     \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
-  have hA_circle: "\<exists>(A :: 'a set) TA.
-      A \<subseteq> X \<and> top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier A TA x0)
-        (top1_fundamental_group_mul A TA x0)
-        top1_Z_group top1_Z_mul" sorry
-  \<comment> \<open>The attaching map wraps S^1 n times around the circle A.\<close>
-  \<comment> \<open>By Theorem 72.1: \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.\<close>
-  show ?thesis sorry
-qed
-
-text \<open>Path homotopy is compatible with path reversal: f \<simeq> g \<Longrightarrow> rev f \<simeq> rev g.\<close>
-lemma path_homotopic_reverse_congruence:
-  assumes hTX: "is_topology_on X TX"
-      and hhom: "top1_path_homotopic_on X TX x0 x1 f g"
-  shows "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
-proof -
-  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
-      and hFleft: "\<forall>t\<in>I_set. F (0, t) = x0" and hFright: "\<forall>t\<in>I_set. F (1, t) = x1"
-    using hhom unfolding top1_path_homotopic_on_def by blast
-  \<comment> \<open>G(s,t) = F(1-s, t): homotopy from rev f to rev g.\<close>
-  let ?G = "\<lambda>p. F (1 - fst p, snd p)"
-  have hflip_s: "top1_continuous_map_on (I_set \<times> I_set) II_topology
-      (I_set \<times> I_set) II_topology (\<lambda>p. (1 - fst p, snd p))"
-  proof -
-    \<comment> \<open>By Theorem_18_4: \<pi>1 \<circ> flip = (1-) \<circ> \<pi>1, \<pi>2 \<circ> flip = \<pi>2.\<close>
-    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-    have hTP: "is_topology_on (I_set \<times> I_set) II_topology"
-      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
-    \<comment> \<open>(1-) continuous I \<rightarrow> I.\<close>
-    have h1minus: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. 1 - s)"
-      unfolding top1_unit_interval_topology_def
-      by (rule top1_continuous_map_on_real_subspace_open_sets)
-         (auto simp: top1_unit_interval_def intro: continuous_intros)
-    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
-      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
-    have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
-      unfolding II_topology_def by (rule top1_continuous_pi2[OF hTI hTI])
-    have hpi1_flip: "pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)) = (\<lambda>s. 1 - s) \<circ> pi1"
-      unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
-    have hpi2_flip: "pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)) = pi2"
-      unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
-    have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
-      unfolding hpi1_flip by (rule top1_continuous_map_on_comp[OF hpi1 h1minus])
-    moreover have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
-      unfolding hpi2_flip by (rule hpi2)
-    ultimately have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
-        (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (1 - fst p, snd p))"
-      using iffD2[OF Theorem_18_4[OF hTP hTI hTI]] unfolding II_topology_def by (by100 blast)
-    thus ?thesis unfolding II_topology_def .
-  qed
-  have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
-  proof -
-    have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (F \<circ> (\<lambda>p. (1 - fst p, snd p)))"
-      by (rule top1_continuous_map_on_comp[OF hflip_s hF])
-    thus ?thesis unfolding comp_def by (by100 simp)
-  qed
-  have hfp: "top1_is_path_on X TX x0 x1 f" and hgp: "top1_is_path_on X TX x0 x1 g"
-    using hhom unfolding top1_path_homotopic_on_def by blast+
-  have "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
-    unfolding top1_path_homotopic_on_def
-  proof (intro exI[of _ ?G] conjI)
-    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G" by (rule hG)
-    show "\<forall>s\<in>I_set. ?G (s, 0) = top1_path_reverse f s"
-      unfolding top1_path_reverse_def using hF0
-      unfolding top1_unit_interval_def by (by100 auto)
-    show "\<forall>s\<in>I_set. ?G (s, 1) = top1_path_reverse g s"
-      unfolding top1_path_reverse_def using hF1
-      unfolding top1_unit_interval_def by (by100 auto)
-    show "\<forall>t\<in>I_set. ?G (0, t) = x1"
-      using hFright by (by100 simp)
-    show "\<forall>t\<in>I_set. ?G (1, t) = x0"
-      using hFleft by (by100 simp)
-    show "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
-      by (rule top1_path_reverse_is_path[OF hfp])
-    show "top1_is_path_on X TX x1 x0 (top1_path_reverse g)"
-      by (rule top1_path_reverse_is_path[OF hgp])
-  qed
-  thus ?thesis .
-qed
-
-text \<open>The fundamental group \<pi>_1(X, x_0) is a group under path-product of equivalence classes.\<close>
-lemma top1_fundamental_group_is_group:
-  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
-  shows "top1_is_group_on
-    (top1_fundamental_group_carrier X TX x0)
-    (top1_fundamental_group_mul X TX x0)
-    (top1_fundamental_group_id X TX x0)
-    (top1_fundamental_group_invg X TX x0)"
-  unfolding top1_is_group_on_def
-proof (intro conjI)
-  let ?G = "top1_fundamental_group_carrier X TX x0"
-  let ?mul = "top1_fundamental_group_mul X TX x0"
-  let ?e = "top1_fundamental_group_id X TX x0"
-  let ?inv = "top1_fundamental_group_invg X TX x0"
-  have hconst_loop: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
-    by (rule top1_constant_path_is_loop[OF hTX hx0])
-  \<comment> \<open>(1) Identity in carrier.\<close>
-  show "?e \<in> ?G"
-    unfolding top1_fundamental_group_carrier_def top1_fundamental_group_id_def
-    using hconst_loop by (by100 blast)
-  \<comment> \<open>(2) Closure under mul.\<close>
-  show "\<forall>x\<in>?G. \<forall>y\<in>?G. ?mul x y \<in> ?G"
-  proof (intro ballI)
-    fix c1 c2 assume "c1 \<in> ?G" "c2 \<in> ?G"
-    then obtain f g where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {h. top1_loop_equiv_on X TX x0 f h}"
-        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {h. top1_loop_equiv_on X TX x0 g h}"
-      unfolding top1_fundamental_group_carrier_def by (by100 blast)
-    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
-      by (rule top1_path_product_is_loop[OF hTX hf hg])
-    have "?mul c1 c2 = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
-      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
-    thus "?mul c1 c2 \<in> ?G"
-      unfolding top1_fundamental_group_carrier_def using hfg by (by100 blast)
-  qed
-  \<comment> \<open>(3) Closure under inverse.\<close>
-  show "\<forall>x\<in>?G. ?inv x \<in> ?G"
-  proof (intro ballI)
-    fix c assume "c \<in> ?G"
-    then obtain f where hf: "top1_is_loop_on X TX x0 f"
-        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
-      unfolding top1_fundamental_group_carrier_def by (by100 blast)
-    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
-      by (rule top1_path_reverse_is_loop[OF hf])
-    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> ?inv c"
-      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
-        unfolding top1_fundamental_group_invg_def by (by100 blast)
-      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
-      hence "top1_path_homotopic_on X TX x0 x0 f g" unfolding top1_loop_equiv_on_def by (by100 blast)
-      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
-        by (rule path_homotopic_reverse_congruence[OF hTX])
-      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
-      have hrg: "top1_is_loop_on X TX x0 (top1_path_reverse g)" by (rule top1_path_reverse_is_loop[OF hg_loop])
-      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) (top1_path_reverse g)"
-        unfolding top1_loop_equiv_on_def
-        using hrf \<open>top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)\<close>
-        by (by100 blast)
-      moreover have "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h" by (rule hrev_g_h)
-      ultimately show "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-        unfolding top1_loop_equiv_on_def
-        using Lemma_51_1_path_homotopic_trans[OF hTX] hrf by (by100 blast)
-    next
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) h" by (by100 blast)
-      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
-      ultimately show "h \<in> ?inv c"
-        unfolding top1_fundamental_group_invg_def by (by100 blast)
-    qed
-    show "?inv c \<in> ?G"
-      unfolding hinvc top1_fundamental_group_carrier_def using hrf by (by100 blast)
-  qed
-  \<comment> \<open>(4) Associativity.\<close>
-  show "\<forall>x\<in>?G. \<forall>y\<in>?G. \<forall>z\<in>?G. ?mul (?mul x y) z = ?mul x (?mul y z)"
-  proof (intro ballI)
-    fix c1 c2 c3 assume "c1 \<in> ?G" "c2 \<in> ?G" "c3 \<in> ?G"
-    then obtain f g h where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {k. top1_loop_equiv_on X TX x0 f k}"
-        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {k. top1_loop_equiv_on X TX x0 g k}"
-        and hh: "top1_is_loop_on X TX x0 h" and hc3: "c3 = {k. top1_loop_equiv_on X TX x0 h k}"
-      unfolding top1_fundamental_group_carrier_def by (by100 blast)
-    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
-    have hgp: "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
-    have hhp: "top1_is_path_on X TX x0 x0 h" using hh unfolding top1_is_loop_on_def .
-    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
-      by (rule top1_path_product_is_loop[OF hTX hf hg])
-    have hgh: "top1_is_loop_on X TX x0 (top1_path_product g h)"
-      by (rule top1_path_product_is_loop[OF hTX hg hh])
-    \<comment> \<open>LHS: (c1*c2)*c3 = [(f*g)*h].\<close>
-    have "?mul c1 c2 = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
-      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
-    hence hlhs: "?mul (?mul c1 c2) c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
-      unfolding hc3 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hfg hh])
-    \<comment> \<open>RHS: c1*(c2*c3) = [f*(g*h)].\<close>
-    have "?mul c2 c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product g h) k}"
-      unfolding hc2 hc3 by (rule top1_fundamental_group_mul_class[OF hTX hg hh])
-    hence hrhs: "?mul c1 (?mul c2 c3) = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
-      unfolding hc1 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hf hgh])
-    \<comment> \<open>By Theorem_51_2_associativity: (f*g)*h \<simeq> f*(g*h). Hence equiv classes equal.\<close>
-    have hassoc_path: "top1_path_homotopic_on X TX x0 x0
-        (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
-      by (rule Theorem_51_2_associativity[OF hTX hfp hgp hhp])
-    have "{k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}
-        = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
-    proof (rule set_eqI, rule iffI)
-      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
-      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) k"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
-        by (rule hassoc_path)
-      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
-        unfolding top1_loop_equiv_on_def
-        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hf hgh] by (by100 blast)
-    next
-      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
-      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) k"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) (top1_path_product f (top1_path_product g h))"
-        by (rule Lemma_51_1_path_homotopic_sym[OF hassoc_path])
-      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
-        unfolding top1_loop_equiv_on_def
-        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hfg hh] by (by100 blast)
-    qed
-    thus "?mul (?mul c1 c2) c3 = ?mul c1 (?mul c2 c3)" unfolding hlhs hrhs .
-  qed
-  \<comment> \<open>(5) Left identity.\<close>
-  show "\<forall>x\<in>?G. ?mul ?e x = x \<and> ?mul x ?e = x"
-  proof (intro ballI conjI)
-    fix c assume "c \<in> ?G"
-    then obtain f where hf: "top1_is_loop_on X TX x0 f"
-        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
-      unfolding top1_fundamental_group_carrier_def by (by100 blast)
-    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
-    \<comment> \<open>Left identity: [const]*[f] = [const*f] = [f] by Theorem_51_2_left_identity.\<close>
-    have "?mul ?e c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
-      unfolding top1_fundamental_group_id_def hc
-      by (rule top1_fundamental_group_mul_class[OF hTX hconst_loop hf])
-    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
-      hence "top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h"
-        by (by100 blast)
-      hence "top1_is_loop_on X TX x0 h \<and> top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
-        by (rule Theorem_51_2_left_identity[OF hTX hfp])
-      ultimately have "top1_is_loop_on X TX x0 h"
-          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h" by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product (top1_constant_path x0) f)"
-        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTX hfp]])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
-        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    next
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
-      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
-        by (rule Theorem_51_2_left_identity[OF hTX hfp])
-      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
-        unfolding top1_loop_equiv_on_def
-        using top1_path_product_is_loop[OF hTX hconst_loop hf] hloop_h by (by100 blast)
-    qed
-    finally show "?mul ?e c = c" unfolding hc .
-    \<comment> \<open>Right identity: [f]*[const] = [f*const] = [f] by Theorem_51_2_right_identity.\<close>
-    have "?mul c ?e = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
-      unfolding hc top1_fundamental_group_id_def
-      by (rule top1_fundamental_group_mul_class[OF hTX hf hconst_loop])
-    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
-      hence "top1_is_loop_on X TX x0 h"
-          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f (top1_constant_path x0))"
-        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTX hfp]])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
-        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    next
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
-      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) f"
-        by (rule Theorem_51_2_right_identity[OF hTX hfp])
-      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
-        unfolding top1_loop_equiv_on_def
-        using top1_path_product_is_loop[OF hTX hf hconst_loop] hloop_h by (by100 blast)
-    qed
-    finally show "?mul c ?e = c" unfolding hc .
-  qed
-  \<comment> \<open>(6) Inverse.\<close>
-  show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
-  proof (intro ballI conjI)
-    fix c assume "c \<in> ?G"
-    then obtain f where hf: "top1_is_loop_on X TX x0 f"
-        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
-      unfolding top1_fundamental_group_carrier_def by (by100 blast)
-    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
-    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
-      by (rule top1_path_reverse_is_loop[OF hf])
-    have hrfp: "top1_is_path_on X TX x0 x0 (top1_path_reverse f)"
-      using hrf unfolding top1_is_loop_on_def .
-    \<comment> \<open>inv([f]) = {h. \<exists>g\<in>[f]. rev(g) \<simeq> h} = [rev f] (reverse respects equiv class).\<close>
-    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> ?inv c"
-      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
-        unfolding top1_fundamental_group_invg_def by (by100 blast)
-      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
-      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
-      have "top1_path_homotopic_on X TX x0 x0 f g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
-      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
-        by (rule path_homotopic_reverse_congruence[OF hTX])
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse g) h"
-        using hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
-      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-        unfolding top1_loop_equiv_on_def using hrf hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
-    next
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
-      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
-      ultimately show "h \<in> ?inv c"
-        unfolding top1_fundamental_group_invg_def by (by100 blast)
-    qed
-    \<comment> \<open>Left inverse: [rev f]*[f] = [rev f * f] = [const].\<close>
-    have "?mul (?inv c) c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
-    proof -
-      have "?mul {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h} {h. top1_loop_equiv_on X TX x0 f h}
-          = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
-        by (rule top1_fundamental_group_mul_class[OF hTX hrf hf])
-      thus ?thesis using hinvc hc by (by100 simp)
-    qed
-    also have "\<dots> = ?e"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
-      hence "top1_is_loop_on X TX x0 h"
-          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product (top1_path_reverse f) f)"
-        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_right[OF hTX hfp]])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
-        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    next
-      fix h assume "h \<in> ?e"
-      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
-        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) (top1_constant_path x0)"
-        by (rule Theorem_51_2_invgerse_right[OF hTX hfp])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
-        unfolding top1_loop_equiv_on_def
-        using top1_path_product_is_loop[OF hTX hrf hf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    qed
-    finally show "?mul (?inv c) c = ?e" .
-    \<comment> \<open>Right inverse: [f]*[rev f] = [f * rev f] = [const].\<close>
-    have "?mul c (?inv c) = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
-    proof -
-      have "?mul {h. top1_loop_equiv_on X TX x0 f h} {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}
-          = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
-        by (rule top1_fundamental_group_mul_class[OF hTX hf hrf])
-      thus ?thesis using hinvc hc by (by100 simp)
-    qed
-    also have "\<dots> = ?e"
-    proof (rule set_eqI, rule iffI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
-      hence "top1_is_loop_on X TX x0 h"
-          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
-        unfolding top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product f (top1_path_reverse f))"
-        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_left[OF hTX hfp]])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
-        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    next
-      fix h assume "h \<in> ?e"
-      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
-        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
-      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) (top1_constant_path x0)"
-        by (rule Theorem_51_2_invgerse_left[OF hTX hfp])
-      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
-        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
-      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
-        unfolding top1_loop_equiv_on_def
-        using top1_path_product_is_loop[OF hTX hf hrf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
-    qed
-    finally show "?mul c (?inv c) = ?e" .
-  qed
-qed
 
 text \<open>Group axiom extraction lemmas (avoid unfolding top1_is_group_on_def repeatedly).\<close>
 
@@ -11510,6 +10557,963 @@ lemma first_isomorphism_theorem_forward:
   shows "top1_groups_isomorphic_on H mulH
       (top1_quotient_group_carrier_on G mul N) (top1_quotient_group_mul_on mul)"
   by (rule first_isomorphism_theorem[OF assms])
+
+section \<open>\<S>69 Free Groups\<close>
+
+text \<open>A free group on a set S is a group G together with \<iota>: S \<hookrightarrow> G such that
+  \<iota>(S) generates G, \<iota> is injective, and (externally) for any group H and
+  function \<phi>: S \<rightarrow> H there is a unique homomorphism \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi>.
+  See top1_is_free_group_full_on (intrinsic) and top1_free_group_universal_prop
+  (external) above.\<close>
+
+(** from \<S>69 Theorem 69.2: free product of free groups on S1, S2 (disjoint)
+    is the free group on S1 \<union> S2. **)
+theorem Theorem_69_2:
+  fixes G1 G2 :: "'g set"
+    and mul1 mul2 :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e1 e2 :: 'g
+    and invg1 invg2 :: "'g \<Rightarrow> 'g"
+    and \<iota>1 \<iota>2 :: "'s \<Rightarrow> 'g"
+    and S1 S2 :: "'s set"
+  assumes "top1_is_free_group_full_on G1 mul1 e1 invg1 \<iota>1 S1"
+      and "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 S2"
+      and "S1 \<inter> S2 = {}"
+  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
+           top1_is_free_product_on FP mulFP eFP invgFP
+             (\<lambda>i::nat. if i = 0 then G1 else G2)
+             (\<lambda>i. if i = 0 then mul1 else mul2)
+             \<iota>fam12 {0, 1}
+         \<and> top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
+         \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s))
+         \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
+proof -
+  \<comment> \<open>Munkres 69.2: G1 * G2 has reduced words alternating between G1 and G2 elements.
+     Since G1 = free on S1 and G2 = free on S2, reduced words in G1*G2 are exactly
+     reduced words in S1 \<union> S2 (with S1 \<inter> S2 = {}). So G1*G2 is free on S1\<union>S2.
+     The injection \<iota>S12 maps s\<in>S1 to \<iota>fam12(0)(\<iota>1(s)) and s\<in>S2 to \<iota>fam12(1)(\<iota>2(s)).\<close>
+  \<comment> \<open>Step 1: Build the free product FP = G1 * G2 (Theorem 68.2).\<close>
+  have hgroups: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
+      ((if \<alpha> = 0 then G1 else G2)::'g set) (if \<alpha> = 0 then mul1 else mul2)
+      (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
+  proof (intro ballI)
+    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+    thus "top1_is_group_on (if \<alpha> = 0 then G1 else G2) (if \<alpha> = 0 then mul1 else mul2)
+        (if \<alpha> = 0 then e1 else e2) (if \<alpha> = 0 then invg1 else invg2)"
+    proof
+      assume "\<alpha> = 0"
+      thus ?thesis using assms(1) unfolding top1_is_free_group_full_on_def by (by100 simp)
+    next
+      assume "\<alpha> = 1"
+      thus ?thesis using assms(2) unfolding top1_is_free_group_full_on_def by (by100 simp)
+    qed
+  qed
+  obtain FP :: "(nat \<times> 'g) list set" and mulFP eFP invgFP \<iota>fam12 where
+      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+        (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2) \<iota>fam12 {0,1}"
+  proof -
+    from Theorem_68_2_free_product_exists[OF hgroups]
+    show ?thesis using that by blast
+  qed
+  \<comment> \<open>Step 2: Since G1, G2 are free on S1, S2, reduced words in FP correspond to
+     reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
+  have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
+    \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
+  obtain \<iota>S12 where h\<iota>: "top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)"
+      and hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
+      and hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
+    using h_free_on_union by (by100 blast)
+  show ?thesis using hFP h\<iota> hcomp1 hcomp2 sorry
+qed
+
+(** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
+    If G is free on S, then G/[G,G] is free abelian on the images of S. **)
+theorem Theorem_69_4:
+  fixes G :: "'g set"
+    and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g
+    and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g"
+    and S :: "'s set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+           top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
+         \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
+         \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))"
+proof -
+  have hG: "top1_is_group_on G mul e invg"
+    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?H = "top1_quotient_group_carrier_on G mul ?N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N
+         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invgH G mul e invg ?\<phi>"
+    by (rule abelianization_concrete[OF hG])
+  \<comment> \<open>Step 2: \<phi>(\<iota>(S)) generates H and satisfies no nontrivial integer relations
+     (exponent sum argument in the free group).\<close>
+  have h_free_abel: "\<exists>\<iota>H.
+      top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S
+    \<and> (\<forall>s\<in>S. \<iota>H s = ?\<phi> (\<iota> s))" sorry
+  show ?thesis using h_abel h_free_abel by (by100 blast)
+qed
+
+section \<open>\<S>70 The Seifert-van Kampen Theorem\<close>
+
+section \<open>\<S>71 The Fundamental Group of a Wedge of Circles\<close>
+
+text \<open>A wedge of circles at a common point p (Munkres §71): a Hausdorff space X
+  with a family \<C>_\<alpha> (\<alpha>\<in>J) of subspaces, each homeomorphic to S^1, pairwise
+  intersecting only at p, whose union is X. The topology on X is the weak
+  topology: a set is closed iff its intersection with each C_\<alpha> is closed.\<close>
+definition top1_is_wedge_of_circles_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'i set \<Rightarrow> 'a \<Rightarrow> bool" where
+  "top1_is_wedge_of_circles_on X TX J p \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     is_hausdorff_on X TX \<and>
+     p \<in> X \<and>
+     (\<exists>C. (\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
+        \<and> (\<Union>\<alpha>\<in>J. C \<alpha>) = X
+        \<and> (\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p})
+        \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+             (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))))"
+
+text \<open>A polygonal region in R^2 with n \<ge> 3 sides: a closed convex polygon, i.e.,
+  the convex hull of n vertices v_0, ..., v_{n-1} that are pairwise distinct and
+  in convex position (no vertex lies in the convex hull of the others).
+  The three conjuncts of the definition are: (i) vertices pairwise distinct,
+  (ii) convex position (no vertex is a convex combination of the others),
+  (iii) P is the convex hull as convex combinations of the vertices.\<close>
+definition top1_is_polygonal_region_on :: "(real \<times> real) set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_polygonal_region_on P n \<longleftrightarrow>
+     n \<ge> 3 \<and>
+     (\<exists>vx vy :: nat \<Rightarrow> real.
+        (\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                          \<and> coeffs k = 0
+                          \<and> (\<Sum>i<n. coeffs i) = 1
+                          \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
+                          \<and> vy k = (\<Sum>i<n. coeffs i * vy i)))
+      \<and> P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<n. coeffs i * vy i)})"
+
+text \<open>Edge scheme: a word w = y_1 y_2 ... y_n where each y_i is (label, orientation)
+  specifying how boundary edges of a polygonal region are identified. Orientation
+  True means forward, False means reversed.\<close>
+type_synonym 'a top1_edge_scheme = "('a \<times> bool) list"
+
+text \<open>X is the quotient space obtained from a polygonal region P (with n = length
+  scheme sides, labelled by the scheme) by identifying boundary edges as the scheme
+  specifies. The existential witnesses are: the polygonal region P; the quotient
+  map q : P \<rightarrow> X; and the edge parametrization edge : nat \<Rightarrow> real \<Rightarrow> P (edge i
+  parametrizes the i-th side of P). The conjuncts assert:
+  (i) P is a polygonal region with length(scheme) sides;
+  (ii) q is a quotient map;
+  (iii) each edge i maps I into P;
+  (iv) two edges with the same label are identified compatibly with their
+      orientation (same bool \<Rightarrow> direct identification t\<sim>t; opposite bool \<Rightarrow>
+      reversed identification t\<sim>1-t);
+  (v) interior points of P (not on any scheme edge) have trivial q-fibre.\<close>
+definition top1_quotient_of_scheme_on ::
+  "'a set \<Rightarrow> 'a set set \<Rightarrow> 'b top1_edge_scheme \<Rightarrow> bool" where
+  "top1_quotient_of_scheme_on X TX scheme \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+        top1_is_polygonal_region_on P (length scheme)
+      \<and> top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+      \<comment> \<open>vx, vy are the polygon vertices, pairwise distinct and in convex position.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+             i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+      \<comment> \<open>Vertices are in cyclic order: non-adjacent edges don't share interior points.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+            i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
+            (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+               ((1-s) * vx i + s * vx (Suc i mod length scheme),
+                (1-s) * vy i + s * vy (Suc i mod length scheme))
+             \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                (1-t) * vy j + t * vy (Suc j mod length scheme))))
+      \<comment> \<open>The i-th edge is the segment from (vx i, vy i) to (vx ((i+1) mod n), vy ...).
+          Same-label edges are identified with compatible orientation.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+            fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+            (\<forall>t\<in>I_set.
+               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme))
+             = (if snd (scheme!i) = snd (scheme!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                        (1-t) * vy j + t * vy (Suc j mod length scheme))
+                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                        t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+      \<comment> \<open>Interior points (not on any boundary edge) have singleton q-fibre.\<close>
+      \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                          (1-t) * vy i + t * vy (Suc i mod length scheme)))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
+
+text \<open>Extraction lemma: from quotient_of_scheme_on, get the polygonal region and quotient map.\<close>
+lemma quotient_of_scheme_extract:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+  obtains P q where "top1_is_polygonal_region_on P (length scheme)"
+      and "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+  using assms unfolding top1_quotient_of_scheme_on_def
+  apply (elim conjE exE)
+  apply (rule that)
+  apply assumption+
+  done
+
+text \<open>X is a polygonal quotient: there exists some scheme that produces X.\<close>
+definition top1_is_polygonal_quotient_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_polygonal_quotient_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme)"
+
+text \<open>Standard scheme for the n-fold torus: a_1 b_1 a_1\<inverse> b_1\<inverse> \<cdots> a_n b_n a_n\<inverse> b_n\<inverse>,
+  i.e. a 4n-sided polygon with this edge-identification word.\<close>
+definition top1_n_torus_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
+  "top1_n_torus_scheme n =
+     concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<n])"
+
+text \<open>Standard scheme for the m-fold projective plane: a_1 a_1 a_2 a_2 \<cdots> a_m a_m,
+  a 2m-sided polygon.\<close>
+definition top1_m_projective_scheme :: "nat \<Rightarrow> (nat \<times> bool) list" where
+  "top1_m_projective_scheme m =
+     concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])"
+
+text \<open>n-fold torus T_n = quotient of a 4n-gon by the standard torus scheme.\<close>
+definition top1_is_n_fold_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_n_fold_torus_on X TX n \<longleftrightarrow>
+     n > 0 \<and> top1_quotient_of_scheme_on X TX (top1_n_torus_scheme n)"
+
+text \<open>n-fold dunce cap: quotient of B^2 where on S^1, q(z) = q(z') iff z' is a
+  rotation of z by a multiple of 2\<pi>/n; on the interior, q is injective; interior
+  and boundary orbits are separated.  The resulting space has \<pi>_1 = Z/nZ.\<close>
+definition top1_is_dunce_cap_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_dunce_cap_on X TX n \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     n > 0 \<and>
+     (\<exists>q. top1_quotient_map_on top1_B2 top1_B2_topology X TX q
+        \<and> (\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+              q z = q z' \<longleftrightarrow>
+              (\<exists>k::nat. k < n \<and>
+                 z' = (cos (2*pi*real k/real n) * fst z
+                         - sin (2*pi*real k/real n) * snd z,
+                       sin (2*pi*real k/real n) * fst z
+                         + cos (2*pi*real k/real n) * snd z)))
+        \<and> inj_on q (top1_B2 - top1_S1)
+        \<and> (\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'))"
+
+text \<open>m-fold projective plane P_m: quotient of a 2m-gon by the scheme a_1 a_1 ... a_m a_m.
+  For m = 1 this would require a 2-gon (not a valid polygonal region, which requires
+  n \<ge> 3), so we handle m = 1 separately: P_1 = real projective plane RP^2 = quotient
+  of B^2 by antipodal identification on S^1 = the 2-fold dunce cap.\<close>
+definition top1_is_m_fold_projective_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_m_fold_projective_on X TX m \<longleftrightarrow>
+     (m = 1 \<and> top1_is_dunce_cap_on X TX (2::nat)) \<or>
+     (m \<ge> 2 \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m))"
+
+text \<open>The torus T² = S¹ × S¹ (the 1-fold torus in Munkres' sense).\<close>
+definition top1_is_torus_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_torus_on X TX \<longleftrightarrow>
+     top1_is_n_fold_torus_on X TX 1"
+
+text \<open>The standard closed 2-simplex {(x, y). x \<ge> 0 \<and> y \<ge> 0 \<and> x + y \<le> 1}.\<close>
+definition top1_standard_simplex :: "(real \<times> real) set" where
+  "top1_standard_simplex = {p. fst p \<ge> 0 \<and> snd p \<ge> 0 \<and> fst p + snd p \<le> 1}"
+
+definition top1_standard_simplex_topology :: "(real \<times> real) set set" where
+  "top1_standard_simplex_topology =
+     subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+       top1_standard_simplex"
+
+text \<open>Edges of the standard simplex (the three line segments on its boundary).\<close>
+definition top1_standard_simplex_edges :: "(real \<times> real) set set" where
+  "top1_standard_simplex_edges =
+     { {p\<in>top1_standard_simplex. fst p = 0},
+       {p\<in>top1_standard_simplex. snd p = 0},
+       {p\<in>top1_standard_simplex. fst p + snd p = 1} }"
+
+text \<open>Vertices of the standard simplex.\<close>
+definition top1_standard_simplex_vertices :: "(real \<times> real) set" where
+  "top1_standard_simplex_vertices = {(0, 0), (1, 0), (0, 1)}"
+
+text \<open>Triangulable: X has a triangulation — a finite collection \<T> of closed subspaces,
+  each homeomorphic to a 2-simplex, covering X, such that any two distinct triangles
+  intersect in either \<emptyset>, a common vertex, or a common edge (the common-face property).
+  We express the common-face condition via the homeomorphism images.\<close>
+definition top1_is_triangulable_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_triangulable_on X TX \<longleftrightarrow>
+     is_topology_on_strict X TX \<and>
+     (\<exists>(\<T> :: 'a set set) (h :: 'a set \<Rightarrow> (real \<times> real) \<Rightarrow> 'a).
+        finite \<T>
+      \<and> (\<Union>\<T>) = X
+      \<and> (\<forall>T\<in>\<T>. T \<subseteq> X \<and> closedin_on X TX T
+            \<and> top1_homeomorphism_on
+                 top1_standard_simplex top1_standard_simplex_topology
+                 T (subspace_topology X TX T) (h T))
+      \<and> (\<forall>T1\<in>\<T>. \<forall>T2\<in>\<T>. T1 \<noteq> T2 \<longrightarrow>
+            T1 \<inter> T2 = {}
+          \<or> (\<exists>v1 v2. v1 \<in> top1_standard_simplex_vertices \<and>
+                     v2 \<in> top1_standard_simplex_vertices \<and>
+                     T1 \<inter> T2 = {h T1 v1} \<and> {h T1 v1} = {h T2 v2})
+          \<or> (\<exists>E1\<in>top1_standard_simplex_edges. \<exists>E2\<in>top1_standard_simplex_edges.
+                 T1 \<inter> T2 = h T1 ` E1 \<and> h T1 ` E1 = h T2 ` E2)))"
+
+text \<open>Elementary scheme operations (Munkres §76): inductive rewrite rules on edge
+  schemes preserving the resulting quotient topology. Munkres defines:
+  (i) cyclic permutation (rotate), (ii) cancellation of aa\<inverse> (when length \<ge> 5),
+  (iii) relabel one letter to a new fresh letter (and consistently flip the bool),
+  (iv) cut: replace w_1 w_2 by w_1 c c\<inverse> w_2 for a fresh letter c, (v) paste: the
+  reverse of cut when edges form an adjacent pair, (vi) inverse: flip an edge.\<close>
+inductive top1_elementary_scheme_operation ::
+  "'a top1_edge_scheme \<Rightarrow> 'a top1_edge_scheme \<Rightarrow> bool" where
+    refl:     "top1_elementary_scheme_operation s s"
+  | sym:      "top1_elementary_scheme_operation s t \<Longrightarrow>
+               top1_elementary_scheme_operation t s"
+  | trans:    "\<lbrakk>top1_elementary_scheme_operation s t;
+                top1_elementary_scheme_operation t u\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation s u"
+  | rotate:   "top1_elementary_scheme_operation (xs @ ys) (ys @ xs)"
+  | cancel:   "top1_elementary_scheme_operation
+                 (xs @ [(a, b), (a, \<not> b)] @ ys)
+                 (xs @ ys)"
+  | relabel:  "\<lbrakk>a \<notin> fst ` set s; a \<noteq> c\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation
+                 s
+                 (map (\<lambda>(x, b). (if x = c then a else x, b)) s)"
+  | invert:   "top1_elementary_scheme_operation
+                 s
+                 (rev (map (\<lambda>(x, b). (x, \<not> b)) s))"
+  | cut:      "\<lbrakk>c \<notin> fst ` set (xs @ ys)\<rbrakk> \<Longrightarrow>
+               top1_elementary_scheme_operation
+                 (xs @ ys)
+                 (xs @ [(c, True), (c, False)] @ ys)"
+
+text \<open>Subgroup index: H has index k in G iff there are exactly k left cosets g H.
+  We represent the set of left cosets directly (does not require H to be normal).\<close>
+definition top1_left_cosets_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> 'g set set" where
+  "top1_left_cosets_on G mul H = { top1_group_coset_on G mul H g | g. g \<in> G }"
+
+definition top1_subgroup_has_index_on ::
+  "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> 'g set \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_subgroup_has_index_on G mul H k \<longleftrightarrow>
+     finite (top1_left_cosets_on G mul H) \<and>
+     card (top1_left_cosets_on G mul H) = k"
+     \<comment> \<open>Finite index only. Infinite-index subgroups are expressed by negating this
+         predicate (or by asserting infinite (top1_left_cosets_on ...)), not by k = 0.\<close>
+
+
+(** from \<S>71 Theorem 71.1: finite wedge of circles has free fundamental group
+    generated by the individual circle loops. **)
+theorem Theorem_71_1_wedge_of_circles_finite:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX {..<n} p"
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::nat \<Rightarrow> 'g).
+           top1_is_free_group_full_on G mul e invg \<iota> {..<n}
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
+proof -
+  \<comment> \<open>Munkres 71.1: Apply Seifert-van Kampen (Theorem 70.2) by induction on n.
+     Base case n=1: X = S^1, \<pi>_1 = Z which is free on 1 generator.
+     Inductive step: X = X_{n-1} \<cup> C_n where C_n \<cong> S^1.
+     X_{n-1} \<inter> C_n = {p}, which is path-connected.
+     By SvK, \<pi>_1(X) = \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial relations
+     = free on (n-1) generators * Z = free on n generators.\<close>
+  \<comment> \<open>Base: n=0 gives trivial group; n=1 gives \<pi>_1(S^1) \<cong> Z.\<close>
+  have hn_pos: "n > 0"
+  proof (rule ccontr)
+    assume "\<not> n > 0"
+    hence "n = 0" by (by100 simp)
+    hence "{..<n} = ({} :: nat set)" by (by100 simp)
+    moreover from assms obtain C where "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" and "p \<in> X"
+      unfolding top1_is_wedge_of_circles_on_def
+      apply (elim conjE exE) by (by100 blast)
+    ultimately show False by (by100 simp)
+  qed
+  have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
+  \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_n. Apply SvK.\<close>
+  have hstep: "n > 0 \<longrightarrow> (\<exists>Xprev TXprev Cn.
+      Xprev \<union> Cn = X \<and> Xprev \<inter> Cn = {p}
+    \<and> top1_is_wedge_of_circles_on Xprev TXprev {..<n-1} p
+    \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier Cn (subspace_topology X TX Cn) p)
+        (top1_fundamental_group_mul Cn (subspace_topology X TX Cn) p)
+        top1_Z_group top1_Z_mul)" sorry
+  \<comment> \<open>By SvK (Theorem 70.2), \<pi>_1(X) \<cong> \<pi>_1(X_{n-1}) * \<pi>_1(C_n) / trivial = free on n gens.\<close>
+  have hsvk: "n > 0 \<longrightarrow> ?thesis" sorry
+  show ?thesis using hbase hsvk by (by100 blast)
+qed
+
+(** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
+theorem Theorem_71_3_wedge_of_circles_general:
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX J p"
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::'i \<Rightarrow> 'g).
+           top1_is_free_group_full_on G mul e invg \<iota> J
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
+proof -
+  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
+     argument. Each finite sub-wedge gives a free group on that subset of generators.
+     The direct limit over finite subsets gives the free group on all of J.
+     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
+  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free fundamental group on F.\<close>
+  have hfinite: "\<forall>F. finite F \<and> F \<subseteq> J \<longrightarrow>
+      (\<exists>(G::'g set) mul e invg \<iota>. top1_is_free_group_full_on G mul e invg \<iota> F
+        \<and> top1_groups_isomorphic_on G mul
+            (top1_fundamental_group_carrier X TX p)
+            (top1_fundamental_group_mul X TX p))" sorry
+  \<comment> \<open>Step 2: The direct limit of these free groups (as F ranges over finite subsets)
+     is the free group on J.\<close>
+  show ?thesis sorry
+qed
+
+section \<open>\<S>72 Adjoining a Two-Cell\<close>
+
+(** from \<S>72 Theorem 72.1: attaching a 2-cell kills the homotopy class of
+    the attaching map. There exists an isomorphism \<pi>_1(X, a) \<cong>
+    \<pi>_1(A, a) / normal-closure(k_*[p]) where p is the standard loop of S^1
+    and k : S^1 \<rightarrow> A is the restriction of h : B^2 \<rightarrow> X to the boundary. **)
+theorem Theorem_72_1_attaching_two_cell:
+  fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
+    and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
+  assumes "is_topology_on_strict X TX"
+      and "is_hausdorff_on X TX"
+      and "closedin_on X TX A"
+      and "top1_path_connected_on A (subspace_topology X TX A)"
+      and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
+      and "a \<in> A"
+      \<comment> \<open>h restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.\<close>
+      and "top1_homeomorphism_on
+             (top1_B2 - top1_S1)
+             (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+             (X - A)
+             (subspace_topology X TX (X - A))
+             h"
+      and "h ` top1_S1 \<subseteq> A"
+      and "h (1, 0) = a"
+  shows "\<exists>\<iota>.
+            top1_continuous_map_on top1_S1 top1_S1_topology A
+                 (subspace_topology X TX A) \<iota>
+          \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
+          \<and> top1_groups_isomorphic_on
+                (top1_fundamental_group_carrier X TX a)
+                (top1_fundamental_group_mul X TX a)
+                (top1_quotient_group_carrier_on
+                   (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+                   (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+                   (top1_normal_subgroup_generated_on
+                      (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_id A (subspace_topology X TX A) a)
+                      (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+                      \<comment> \<open>Relator: the image under \<iota>_* of the class of the standard
+                          S^1 loop p(s) = (cos 2\<pi>s, sin 2\<pi>s) based at (1, 0). This
+                          class is {g. loop_equiv_on S^1 ((1,0)) p g} — the
+                          equivalence class of p in \<pi>_1(S^1, (1,0)).\<close>
+                      {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                         A (subspace_topology X TX A) a \<iota>
+                         {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                               (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+                (top1_quotient_group_mul_on
+                   (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
+proof -
+  \<comment> \<open>Munkres 72.1: \<iota> = h restricted to S^1.\<close>
+  let ?\<iota> = "\<lambda>z. h z"
+  have h\<iota>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A
+       (subspace_topology X TX A) ?\<iota>"
+  proof -
+    \<comment> \<open>Step 1: S1 \<subseteq> B2 (unit circle inside closed unit disk).\<close>
+    have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+      unfolding top1_S1_def top1_B2_def by (by100 auto)
+    \<comment> \<open>Step 2: h restricted from B2 to S1 is continuous into X.\<close>
+    have h_cont_S1_sub: "top1_continuous_map_on top1_S1
+        (subspace_topology top1_B2 top1_B2_topology top1_S1) X TX h"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF assms(5) hS1_B2])
+    \<comment> \<open>Step 3: Subspace topology transitivity:
+       subspace_topology B2 B2_topology S1 = subspace_topology UNIV (prod_top) S1 = S1_topology.\<close>
+    have hS1_top_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+    proof -
+      have "top1_S1_topology = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+        unfolding top1_S1_topology_def ..
+      also have "\<dots> = subspace_topology top1_B2 top1_B2_topology top1_S1"
+        unfolding top1_B2_topology_def
+        using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+    have h_cont_S1_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+      using h_cont_S1_sub hS1_top_eq by (by100 simp)
+    \<comment> \<open>Step 4: Shrink codomain from X to A (since h(S1) \<subseteq> A).\<close>
+    have hA_sub_X: "A \<subseteq> X"
+      using assms(3) unfolding closedin_on_def by (by100 blast)
+    show ?thesis
+      by (rule top1_continuous_map_on_codomain_shrink[OF h_cont_S1_X assms(8) hA_sub_X])
+  qed
+  have h\<iota>_eq: "\<forall>z\<in>top1_S1. ?\<iota> z = h z" by simp
+  \<comment> \<open>Step 1: \<pi>_1(X, a) is generated by \<pi>_1(A, a) (since X-A is contractible via h).\<close>
+  \<comment> \<open>Step 2: The surjection \<pi>_1(A, a) \<rightarrow> \<pi>_1(X, a) has kernel = normal closure of [k\<circ>p],
+     where p is the standard loop and k = h|S^1 = \<iota>.\<close>
+  \<comment> \<open>This uses Seifert-van Kampen (Theorem 70.2) applied to a neighborhood of A in X
+     and X-A, or equivalently, the pushout of \<pi>_1 along the attaching map.\<close>
+  have hiso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX a)
+        (top1_fundamental_group_mul X TX a)
+        (top1_quotient_group_carrier_on
+           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+           (top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+              (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+              (top1_fundamental_group_id A (subspace_topology X TX A) a)
+              (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                 A (subspace_topology X TX A) a ?\<iota>
+                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                       (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+        (top1_quotient_group_mul_on
+           (top1_fundamental_group_mul A (subspace_topology X TX A) a))" sorry
+  show ?thesis using h\<iota>_cont h\<iota>_eq hiso by (by100 blast)
+qed
+
+section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
+
+(** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
+    i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
+theorem Theorem_73_1_torus_presentation:
+  fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
+  assumes "top1_is_torus_on T_torus TT"
+      and "x0 \<in> T_torus"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier T_torus TT x0)
+           (top1_fundamental_group_mul T_torus TT x0)
+           (UNIV::(int \<times> int) set)
+           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+proof -
+  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
+     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
+     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
+     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
+  \<comment> \<open>Step 1: T is quotient of square \<Rightarrow> space A is wedge of 2 circles (1-skeleton).\<close>
+  have hA_wedge: "\<exists>(A :: 'a set) TA p.
+      top1_is_wedge_of_circles_on A TA {0::nat, 1} p \<and> A \<subseteq> T_torus" sorry
+  \<comment> \<open>Step 2: \<pi>_1(A) is free on 2 generators \<alpha>, \<beta> (Theorem 71.1).\<close>
+  have hpi1_A_free: "\<exists>(F::'g set) mulF eF invgF \<iota>.
+      top1_is_free_group_full_on F mulF eF invgF \<iota> {0::nat, 1}" sorry
+  \<comment> \<open>Step 3: Attaching the 2-cell kills the commutator \<alpha>\<beta>\<alpha>\<inverse>\<beta>\<inverse>.
+     So \<pi>_1(T) \<cong> F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle> \<cong> Z\<times>Z.\<close>
+  show ?thesis sorry
+qed
+
+(** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
+theorem Theorem_73_4_dunce_cap:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "n > 0"
+      and "top1_is_dunce_cap_on X TX n"
+      and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_Zn_group n)
+           (top1_Zn_mul n)"
+proof -
+  \<comment> \<open>Munkres 73.4: X is the dunce cap = quotient of B^2 by n-fold rotation on S^1.
+     The 1-skeleton is a single circle A, and \<pi>_1(A) \<cong> Z generated by the loop a.
+     The 2-cell is attached by a^n. By Theorem 72.1:
+     \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  have hA_circle: "\<exists>(A :: 'a set) TA.
+      A \<subseteq> X \<and> top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A TA x0)
+        (top1_fundamental_group_mul A TA x0)
+        top1_Z_group top1_Z_mul" sorry
+  \<comment> \<open>The attaching map wraps S^1 n times around the circle A.\<close>
+  \<comment> \<open>By Theorem 72.1: \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.\<close>
+  show ?thesis sorry
+qed
+
+text \<open>Path homotopy is compatible with path reversal: f \<simeq> g \<Longrightarrow> rev f \<simeq> rev g.\<close>
+lemma path_homotopic_reverse_congruence:
+  assumes hTX: "is_topology_on X TX"
+      and hhom: "top1_path_homotopic_on X TX x0 x1 f g"
+  shows "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
+proof -
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      and hF0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+      and hFleft: "\<forall>t\<in>I_set. F (0, t) = x0" and hFright: "\<forall>t\<in>I_set. F (1, t) = x1"
+    using hhom unfolding top1_path_homotopic_on_def by blast
+  \<comment> \<open>G(s,t) = F(1-s, t): homotopy from rev f to rev g.\<close>
+  let ?G = "\<lambda>p. F (1 - fst p, snd p)"
+  have hflip_s: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+      (I_set \<times> I_set) II_topology (\<lambda>p. (1 - fst p, snd p))"
+  proof -
+    \<comment> \<open>By Theorem_18_4: \<pi>1 \<circ> flip = (1-) \<circ> \<pi>1, \<pi>2 \<circ> flip = \<pi>2.\<close>
+    have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have hTP: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+    \<comment> \<open>(1-) continuous I \<rightarrow> I.\<close>
+    have h1minus: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. 1 - s)"
+      unfolding top1_unit_interval_topology_def
+      by (rule top1_continuous_map_on_real_subspace_open_sets)
+         (auto simp: top1_unit_interval_def intro: continuous_intros)
+    have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+      unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+    have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
+      unfolding II_topology_def by (rule top1_continuous_pi2[OF hTI hTI])
+    have hpi1_flip: "pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)) = (\<lambda>s. 1 - s) \<circ> pi1"
+      unfolding pi1_def comp_def by (rule ext, simp add: case_prod_beta)
+    have hpi2_flip: "pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)) = pi2"
+      unfolding pi2_def comp_def by (rule ext, simp add: case_prod_beta)
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      unfolding hpi1_flip by (rule top1_continuous_map_on_comp[OF hpi1 h1minus])
+    moreover have "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi2 \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      unfolding hpi2_flip by (rule hpi2)
+    ultimately have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+        (I_set \<times> I_set) (product_topology_on I_top I_top) (\<lambda>p. (1 - fst p, snd p))"
+      using iffD2[OF Theorem_18_4[OF hTP hTI hTI]] unfolding II_topology_def by (by100 blast)
+    thus ?thesis unfolding II_topology_def .
+  qed
+  have hG: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G"
+  proof -
+    have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (F \<circ> (\<lambda>p. (1 - fst p, snd p)))"
+      by (rule top1_continuous_map_on_comp[OF hflip_s hF])
+    thus ?thesis unfolding comp_def by (by100 simp)
+  qed
+  have hfp: "top1_is_path_on X TX x0 x1 f" and hgp: "top1_is_path_on X TX x0 x1 g"
+    using hhom unfolding top1_path_homotopic_on_def by blast+
+  have "top1_path_homotopic_on X TX x1 x0 (top1_path_reverse f) (top1_path_reverse g)"
+    unfolding top1_path_homotopic_on_def
+  proof (intro exI[of _ ?G] conjI)
+    show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX ?G" by (rule hG)
+    show "\<forall>s\<in>I_set. ?G (s, 0) = top1_path_reverse f s"
+      unfolding top1_path_reverse_def using hF0
+      unfolding top1_unit_interval_def by (by100 auto)
+    show "\<forall>s\<in>I_set. ?G (s, 1) = top1_path_reverse g s"
+      unfolding top1_path_reverse_def using hF1
+      unfolding top1_unit_interval_def by (by100 auto)
+    show "\<forall>t\<in>I_set. ?G (0, t) = x1"
+      using hFright by (by100 simp)
+    show "\<forall>t\<in>I_set. ?G (1, t) = x0"
+      using hFleft by (by100 simp)
+    show "top1_is_path_on X TX x1 x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_path[OF hfp])
+    show "top1_is_path_on X TX x1 x0 (top1_path_reverse g)"
+      by (rule top1_path_reverse_is_path[OF hgp])
+  qed
+  thus ?thesis .
+qed
+
+text \<open>The fundamental group \<pi>_1(X, x_0) is a group under path-product of equivalence classes.\<close>
+lemma top1_fundamental_group_is_group:
+  assumes hTX: "is_topology_on X TX" and hx0: "x0 \<in> X"
+  shows "top1_is_group_on
+    (top1_fundamental_group_carrier X TX x0)
+    (top1_fundamental_group_mul X TX x0)
+    (top1_fundamental_group_id X TX x0)
+    (top1_fundamental_group_invg X TX x0)"
+  unfolding top1_is_group_on_def
+proof (intro conjI)
+  let ?G = "top1_fundamental_group_carrier X TX x0"
+  let ?mul = "top1_fundamental_group_mul X TX x0"
+  let ?e = "top1_fundamental_group_id X TX x0"
+  let ?inv = "top1_fundamental_group_invg X TX x0"
+  have hconst_loop: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+    by (rule top1_constant_path_is_loop[OF hTX hx0])
+  \<comment> \<open>(1) Identity in carrier.\<close>
+  show "?e \<in> ?G"
+    unfolding top1_fundamental_group_carrier_def top1_fundamental_group_id_def
+    using hconst_loop by (by100 blast)
+  \<comment> \<open>(2) Closure under mul.\<close>
+  show "\<forall>x\<in>?G. \<forall>y\<in>?G. ?mul x y \<in> ?G"
+  proof (intro ballI)
+    fix c1 c2 assume "c1 \<in> ?G" "c2 \<in> ?G"
+    then obtain f g where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {h. top1_loop_equiv_on X TX x0 f h}"
+        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {h. top1_loop_equiv_on X TX x0 g h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+      by (rule top1_path_product_is_loop[OF hTX hf hg])
+    have "?mul c1 c2 = {h. top1_loop_equiv_on X TX x0 (top1_path_product f g) h}"
+      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
+    thus "?mul c1 c2 \<in> ?G"
+      unfolding top1_fundamental_group_carrier_def using hfg by (by100 blast)
+  qed
+  \<comment> \<open>(3) Closure under inverse.\<close>
+  show "\<forall>x\<in>?G. ?inv x \<in> ?G"
+  proof (intro ballI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_loop[OF hf])
+    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> ?inv c"
+      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 f g" unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
+        by (rule path_homotopic_reverse_congruence[OF hTX])
+      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      have hrg: "top1_is_loop_on X TX x0 (top1_path_reverse g)" by (rule top1_path_reverse_is_loop[OF hg_loop])
+      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) (top1_path_reverse g)"
+        unfolding top1_loop_equiv_on_def
+        using hrf \<open>top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)\<close>
+        by (by100 blast)
+      moreover have "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h" by (rule hrev_g_h)
+      ultimately show "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] hrf by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+      hence "top1_loop_equiv_on X TX x0 (top1_path_reverse f) h" by (by100 blast)
+      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+      ultimately show "h \<in> ?inv c"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+    qed
+    show "?inv c \<in> ?G"
+      unfolding hinvc top1_fundamental_group_carrier_def using hrf by (by100 blast)
+  qed
+  \<comment> \<open>(4) Associativity.\<close>
+  show "\<forall>x\<in>?G. \<forall>y\<in>?G. \<forall>z\<in>?G. ?mul (?mul x y) z = ?mul x (?mul y z)"
+  proof (intro ballI)
+    fix c1 c2 c3 assume "c1 \<in> ?G" "c2 \<in> ?G" "c3 \<in> ?G"
+    then obtain f g h where hf: "top1_is_loop_on X TX x0 f" and hc1: "c1 = {k. top1_loop_equiv_on X TX x0 f k}"
+        and hg: "top1_is_loop_on X TX x0 g" and hc2: "c2 = {k. top1_loop_equiv_on X TX x0 g k}"
+        and hh: "top1_is_loop_on X TX x0 h" and hc3: "c3 = {k. top1_loop_equiv_on X TX x0 h k}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    have hgp: "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def .
+    have hhp: "top1_is_path_on X TX x0 x0 h" using hh unfolding top1_is_loop_on_def .
+    have hfg: "top1_is_loop_on X TX x0 (top1_path_product f g)"
+      by (rule top1_path_product_is_loop[OF hTX hf hg])
+    have hgh: "top1_is_loop_on X TX x0 (top1_path_product g h)"
+      by (rule top1_path_product_is_loop[OF hTX hg hh])
+    \<comment> \<open>LHS: (c1*c2)*c3 = [(f*g)*h].\<close>
+    have "?mul c1 c2 = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
+      unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
+    hence hlhs: "?mul (?mul c1 c2) c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+      unfolding hc3 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hfg hh])
+    \<comment> \<open>RHS: c1*(c2*c3) = [f*(g*h)].\<close>
+    have "?mul c2 c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product g h) k}"
+      unfolding hc2 hc3 by (rule top1_fundamental_group_mul_class[OF hTX hg hh])
+    hence hrhs: "?mul c1 (?mul c2 c3) = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+      unfolding hc1 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hf hgh])
+    \<comment> \<open>By Theorem_51_2_associativity: (f*g)*h \<simeq> f*(g*h). Hence equiv classes equal.\<close>
+    have hassoc_path: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
+      by (rule Theorem_51_2_associativity[OF hTX hfp hgp hhp])
+    have "{k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}
+        = {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+    proof (rule set_eqI, rule iffI)
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) k"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) (top1_path_product (top1_path_product f g) h)"
+        by (rule hassoc_path)
+      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hf hgh] by (by100 blast)
+    next
+      fix k assume "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_product g h)) k}"
+      hence "top1_is_loop_on X TX x0 k" "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_product g h)) k"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_product f g) h) (top1_path_product f (top1_path_product g h))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hassoc_path])
+      ultimately show "k \<in> {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+        unfolding top1_loop_equiv_on_def
+        using Lemma_51_1_path_homotopic_trans[OF hTX] top1_path_product_is_loop[OF hTX hfg hh] by (by100 blast)
+    qed
+    thus "?mul (?mul c1 c2) c3 = ?mul c1 (?mul c2 c3)" unfolding hlhs hrhs .
+  qed
+  \<comment> \<open>(5) Left identity.\<close>
+  show "\<forall>x\<in>?G. ?mul ?e x = x \<and> ?mul x ?e = x"
+  proof (intro ballI conjI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    \<comment> \<open>Left identity: [const]*[f] = [const*f] = [f] by Theorem_51_2_left_identity.\<close>
+    have "?mul ?e c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+      unfolding top1_fundamental_group_id_def hc
+      by (rule top1_fundamental_group_mul_class[OF hTX hconst_loop hf])
+    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+      hence "top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h"
+        by (by100 blast)
+      hence "top1_is_loop_on X TX x0 h \<and> top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
+        by (rule Theorem_51_2_left_identity[OF hTX hfp])
+      ultimately have "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h" by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product (top1_constant_path x0) f)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_left_identity[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) f"
+        by (rule Theorem_51_2_left_identity[OF hTX hfp])
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_constant_path x0) f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_constant_path x0) f) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hconst_loop hf] hloop_h by (by100 blast)
+    qed
+    finally show "?mul ?e c = c" unfolding hc .
+    \<comment> \<open>Right identity: [f]*[const] = [f*const] = [f] by Theorem_51_2_right_identity.\<close>
+    have "?mul c ?e = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+      unfolding hc top1_fundamental_group_id_def
+      by (rule top1_fundamental_group_mul_class[OF hTX hf hconst_loop])
+    also have "\<dots> = {h. top1_loop_equiv_on X TX x0 f h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 f (top1_path_product f (top1_constant_path x0))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_right_identity[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 f h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+        unfolding top1_loop_equiv_on_def using hf \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+      hence hloop_h: "top1_is_loop_on X TX x0 h" and hhom: "top1_path_homotopic_on X TX x0 x0 f h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) f"
+        by (rule Theorem_51_2_right_identity[OF hTX hfp])
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_constant_path x0)) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX _ hhom] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_constant_path x0)) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hf hconst_loop] hloop_h by (by100 blast)
+    qed
+    finally show "?mul c ?e = c" unfolding hc .
+  qed
+  \<comment> \<open>(6) Inverse.\<close>
+  show "\<forall>x\<in>?G. ?mul (?inv x) x = ?e \<and> ?mul x (?inv x) = ?e"
+  proof (intro ballI conjI)
+    fix c assume "c \<in> ?G"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc: "c = {h. top1_loop_equiv_on X TX x0 f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hfp: "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def .
+    have hrf: "top1_is_loop_on X TX x0 (top1_path_reverse f)"
+      by (rule top1_path_reverse_is_loop[OF hf])
+    have hrfp: "top1_is_path_on X TX x0 x0 (top1_path_reverse f)"
+      using hrf unfolding top1_is_loop_on_def .
+    \<comment> \<open>inv([f]) = {h. \<exists>g\<in>[f]. rev(g) \<simeq> h} = [rev f] (reverse respects equiv class).\<close>
+    have hinvc: "?inv c = {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> ?inv c"
+      then obtain g where hg_in: "g \<in> c" and hrev_g_h: "top1_loop_equiv_on X TX x0 (top1_path_reverse g) h"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+      have hg_equiv: "top1_loop_equiv_on X TX x0 f g" using hg_in unfolding hc by (by100 blast)
+      have hg_loop: "top1_is_loop_on X TX x0 g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      have "top1_path_homotopic_on X TX x0 x0 f g" using hg_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) (top1_path_reverse g)"
+        by (rule path_homotopic_reverse_congruence[OF hTX])
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse g) h"
+        using hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_reverse f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+        unfolding top1_loop_equiv_on_def using hrf hrev_g_h unfolding top1_loop_equiv_on_def by (by100 blast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}"
+      moreover have "f \<in> c" unfolding hc using top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+      ultimately show "h \<in> ?inv c"
+        unfolding top1_fundamental_group_invg_def by (by100 blast)
+    qed
+    \<comment> \<open>Left inverse: [rev f]*[f] = [rev f * f] = [const].\<close>
+    have "?mul (?inv c) c = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+    proof -
+      have "?mul {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h} {h. top1_loop_equiv_on X TX x0 f h}
+          = {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX hrf hf])
+      thus ?thesis using hinvc hc by (by100 simp)
+    qed
+    also have "\<dots> = ?e"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product (top1_path_reverse f) f)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_right[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
+        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> ?e"
+      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) (top1_constant_path x0)"
+        by (rule Theorem_51_2_invgerse_right[OF hTX hfp])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product (top1_path_reverse f) f) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_reverse f) f) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hrf hf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    qed
+    finally show "?mul (?inv c) c = ?e" .
+    \<comment> \<open>Right inverse: [f]*[rev f] = [f * rev f] = [const].\<close>
+    have "?mul c (?inv c) = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+    proof -
+      have "?mul {h. top1_loop_equiv_on X TX x0 f h} {h. top1_loop_equiv_on X TX x0 (top1_path_reverse f) h}
+          = {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+        by (rule top1_fundamental_group_mul_class[OF hTX hf hrf])
+      thus ?thesis using hinvc hc by (by100 simp)
+    qed
+    also have "\<dots> = ?e"
+    proof (rule set_eqI, rule iffI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+      hence "top1_is_loop_on X TX x0 h"
+          "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
+        unfolding top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) (top1_path_product f (top1_path_reverse f))"
+        by (rule Lemma_51_1_path_homotopic_sym[OF Theorem_51_2_invgerse_left[OF hTX hfp]])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> ?e" unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def
+        using hconst_loop \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    next
+      fix h assume "h \<in> ?e"
+      hence "top1_is_loop_on X TX x0 h" "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) h"
+        unfolding top1_fundamental_group_id_def top1_loop_equiv_on_def by (by100 blast)+
+      moreover have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) (top1_constant_path x0)"
+        by (rule Theorem_51_2_invgerse_left[OF hTX hfp])
+      ultimately have "top1_path_homotopic_on X TX x0 x0 (top1_path_product f (top1_path_reverse f)) h"
+        using Lemma_51_1_path_homotopic_trans[OF hTX] by (by100 blast)
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 (top1_path_product f (top1_path_reverse f)) h}"
+        unfolding top1_loop_equiv_on_def
+        using top1_path_product_is_loop[OF hTX hf hrf] \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+    qed
+    finally show "?mul c (?inv c) = ?e" .
+  qed
+qed
+
 
 (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
     with U, V, U \<inter> V open and path-connected, then \<pi>_1(X, x_0) is isomorphic to
