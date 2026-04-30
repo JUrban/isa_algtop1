@@ -12172,6 +12172,27 @@ proof (rule compactI)
 qed
 
 text \<open>Compact for product intervals.\<close>
+text \<open>Singleton set is compact.\<close>
+lemma compact_singleton: "compact {x :: 'a::topological_space}"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "{x} \<subseteq> \<Union>\<U>"
+  then obtain U where "U \<in> \<U>" "x \<in> U" by (by100 blast)
+  thus "\<exists>\<F>\<subseteq>\<U>. finite \<F> \<and> {x} \<subseteq> \<Union>\<F>" by (rule_tac x="{U}" in exI) (by100 blast)
+qed
+
+text \<open>Finite set is compact.\<close>
+lemma compact_finite: "finite S \<Longrightarrow> compact (S :: 'a::topological_space set)"
+proof (induction S rule: finite_induct)
+  case empty thus ?case by (simp add: compact_empty)
+next
+  case (insert x S)
+  have hx: "compact {x}" by (rule compact_singleton)
+  have hS: "compact S" by (rule insert.IH)
+  have "compact ({x} \<union> S)" by (rule compact_Un[OF hx hS])
+  thus ?case by (by100 simp)
+qed
+
 lemma compact_Icc_Times:
   "compact ({a..b::real} \<times> {c..d::real})"
   by (rule compact_Times_general[OF compact_Icc compact_Icc])
