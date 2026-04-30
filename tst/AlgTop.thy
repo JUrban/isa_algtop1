@@ -12557,6 +12557,7 @@ qed
 text \<open>Cone subset: conv(Suc n) \<subseteq> cone(conv n, v_n).\<close>
 lemma convex_hull_cone_sub:
   fixes vx vy :: "nat \<Rightarrow> real"
+  assumes "n \<ge> 1"
   shows "{(x, y). \<exists>c. (\<forall>i<Suc n. c i \<ge> 0) \<and> (\<Sum>i<Suc n. c i) = 1
       \<and> x = (\<Sum>i<Suc n. c i * vx i) \<and> y = (\<Sum>i<Suc n. c i * vy i)}
     \<subseteq> (\<lambda>(t, x', y'). ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))
@@ -12588,12 +12589,47 @@ proof (rule subsetI)
     qed
     have hx_vn: "x = vx n" using hc(3) hall0 True by simp
     have hy_vn: "y = vy n" using hc(4) hall0 True by simp
-    \<comment> \<open>Need a dummy element of Pn. Use uniform distribution.\<close>
-    have "n > 0 \<Longrightarrow> (\<Sum>i<n. (1/real n) * vx i, \<Sum>i<n. (1/real n) * vy i) \<in>
-      {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
-          \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}" sorry
-    \<comment> \<open>For n = 0, Pn = {} but Suc n > 0 so n \<ge> 0. Handle n=0 separately.\<close>
-    show ?thesis using hq hx_vn hy_vn sorry
+    \<comment> \<open>n \<ge> 1 (from induction hypothesis), so Pn is non-empty: (vx 0, vy 0) \<in> Pn.\<close>
+    have hn1: "n \<ge> 1" using assms .
+    let ?d = "\<lambda>i::nat. if i = 0 then 1::real else 0"
+    have "(vx 0, vy 0) \<in> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}"
+      apply simp
+      apply (rule_tac x="?d" in exI)
+    proof (intro conjI allI impI)
+      fix i :: nat assume "i < n" thus "0 \<le> ?d i" by (by100 simp)
+    next
+      show "(\<Sum>i<n. ?d i) = 1" using hn1 by simp
+    next
+      show "vx 0 = (\<Sum>i<n. ?d i * vx i)"
+      proof -
+        have "(\<Sum>i<n. ?d i * vx i) = ?d 0 * vx 0 + (\<Sum>i\<in>{..<n}-{0}. ?d i * vx i)"
+          using hn1 by (intro sum.remove) auto
+        also have "(\<Sum>i\<in>{..<n}-{0}. ?d i * vx i) = 0"
+          by (rule sum.neutral) (by100 simp)
+        finally show ?thesis by (by100 simp)
+      qed
+    next
+      show "vy 0 = (\<Sum>i<n. ?d i * vy i)"
+      proof -
+        have "(\<Sum>i<n. ?d i * vy i) = ?d 0 * vy 0 + (\<Sum>i\<in>{..<n}-{0}. ?d i * vy i)"
+          using hn1 by (intro sum.remove) auto
+        also have "(\<Sum>i\<in>{..<n}-{0}. ?d i * vy i) = 0"
+          by (rule sum.neutral) (by100 simp)
+        finally show ?thesis by (by100 simp)
+      qed
+    qed
+    hence hpn_ne: "\<exists>p'. p' \<in> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}" by (by100 blast)
+    then obtain x0 y0 where hxy0: "(x0, y0) \<in> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}" by (by100 blast)
+    have "(1::real, (x0, y0)) \<in> {0..1} \<times> {(x, y). \<exists>c. (\<forall>i<n. c i \<ge> 0) \<and> (\<Sum>i<n. c i) = 1
+        \<and> x = (\<Sum>i<n. c i * vx i) \<and> y = (\<Sum>i<n. c i * vy i)}"
+      using hxy0 by (by100 auto)
+    moreover have "q = (case (1::real, (x0, y0)) of (t, x', y') \<Rightarrow>
+        ((1-t)*x'+t*vx n, (1-t)*y'+t*vy n))"
+      using hq hx_vn hy_vn by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
   next
     case htnot1: False
     have hlt1: "?t < 1" using htnot1 ht1 by (by100 linarith)
@@ -12703,7 +12739,7 @@ next
   qed
   \<comment> \<open>?Pn1 = ?f ` ({0..1} \<times> ?Pn).\<close>
   have hPn1_eq: "?Pn1 = ?f ` ({0..1} \<times> ?Pn)"
-    using convex_hull_cone_sub convex_hull_cone_sup by blast
+    using convex_hull_cone_sub[OF Suc(1)] convex_hull_cone_sup by blast
   show ?case unfolding hPn1_eq
     by (rule compact_continuous_image[OF hf_cont hdom_compact])
 qed
