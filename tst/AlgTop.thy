@@ -12002,9 +12002,77 @@ proof (rule compactI)
       thus ?thesis by (by100 blast)
     qed
   qed
-  \<comment> \<open>Step 2: For each a, find an open W_a containing a such that W_a \<times> B \<subseteq> \<Union>F_a (tube lemma).\<close>
+  \<comment> \<open>Step 2: Tube lemma. For each a \<in> A, find open W_a with W_a \<times> B \<subseteq> \<Union>F_a.\<close>
   have htube: "\<forall>a\<in>A. \<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
-    sorry
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    \<comment> \<open>For each b \<in> B, pick C_b \<in> \<C> with (a,b) \<in> C_b, then open U_b, V_b with (a,b) \<in> U_b \<times> V_b \<subseteq> C_b.\<close>
+    have hpick: "\<forall>b\<in>B. \<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
+    proof (intro ballI)
+      fix b assume hb: "b \<in> B"
+      have hab: "(a, b) \<in> \<Union>\<C>" using h\<C>_cover ha hb by (by100 blast)
+      then obtain Cb where hCb: "Cb \<in> \<C>" "(a, b) \<in> Cb" by (by100 blast)
+      have "open Cb" using h\<C>_open hCb(1) by (by100 blast)
+      from open_prod_elim[OF this hCb(2)]
+      obtain Ub Vb where "open Ub" "open Vb" "(a, b) \<in> Ub \<times> Vb" "Ub \<times> Vb \<subseteq> Cb" by (by100 blast)
+      thus "\<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
+        using hCb(1) by (by100 blast)
+    qed
+    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b.\<close>
+    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b (3x bchoice from hpick).\<close>
+    obtain Cb Ub Vb where hCUV: "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b)
+        \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+    proof -
+      have "\<exists>Cb. \<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
+        using hpick by (rule bchoice)
+      then obtain Cb where hCb: "\<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
+        by blast
+      have "\<exists>Ub. \<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
+        using hCb by (rule bchoice)
+      then obtain Ub where hUb: "\<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
+        by blast
+      have "\<exists>Vb. \<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+        using hUb by (rule bchoice)
+      then obtain Vb where "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+        by blast
+      thus ?thesis using that by blast
+    qed
+    \<comment> \<open>{Vb b | b \<in> B} covers B. B compact → finite B' with \<Union>(Vb ` B') \<supseteq> B.\<close>
+    have hVb_cover: "B \<subseteq> \<Union>(Vb ` B)" using hCUV by (by100 blast)
+    obtain B' where hB': "finite B'" "B' \<subseteq> B" "B \<subseteq> \<Union>(Vb ` B')"
+    proof (rule compactE_image[OF assms(2)])
+      fix b assume "b \<in> B" thus "open (Vb b)" using hCUV by (by100 blast)
+    next
+      show "B \<subseteq> \<Union>(Vb ` B)" by (rule hVb_cover)
+    next
+      fix B'' assume "B'' \<subseteq> B" "finite B''" "B \<subseteq> \<Union>(Vb ` B'')"
+      thus thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>W_a = \<Inter>(Ub ` B') (finite intersection of opens containing a).\<close>
+    let ?W = "\<Inter>(Ub ` B')"
+    have hW_open: "open ?W"
+    proof -
+      have "finite (Ub ` B')" using hB'(1) by (by100 blast)
+      moreover have "\<forall>U\<in>Ub ` B'. open U" using hCUV hB'(2) by (by100 blast)
+      ultimately show ?thesis by (rule open_Inter)
+    qed
+    have hW_a: "a \<in> ?W" using hCUV hB'(2) by (by100 blast)
+    let ?F = "Cb ` B'"
+    have hF_fin: "finite ?F" using hB'(1) by (by100 blast)
+    have hF_sub: "?F \<subseteq> \<C>" using hCUV hB'(2) by (by100 blast)
+    have hWB_sub: "?W \<times> B \<subseteq> \<Union>?F"
+    proof
+      fix p assume hp: "p \<in> ?W \<times> B"
+      obtain x y where hxy: "p = (x, y)" "x \<in> ?W" "y \<in> B" using hp by (by100 blast)
+      obtain b where hb: "b \<in> B'" "y \<in> Vb b" using hB'(3) hxy(3) by (by100 blast)
+      have "x \<in> Ub b" using hxy(2) hb(1) by (by100 blast)
+      hence "(x, y) \<in> Ub b \<times> Vb b" using hb(2) by (by100 blast)
+      hence "(x, y) \<in> Cb b" using hCUV hB'(2) hb(1) by (by100 blast)
+      thus "p \<in> \<Union>?F" using hxy(1) hb(1) by (by100 blast)
+    qed
+    show "\<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
+      using hW_open hW_a hF_fin hF_sub hWB_sub by (by100 blast)
+  qed
   \<comment> \<open>Step 3: {W_a | a \<in> A} covers A. A compact → finite subcover.\<close>
   \<comment> \<open>Pick W and F functions via choice.\<close>
   obtain W F where hWF: "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
