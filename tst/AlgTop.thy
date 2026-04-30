@@ -723,7 +723,41 @@ corollary Corollary_60_2_torus_pi1:
   shows "top1_groups_isomorphic_on
     (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
     (UNIV :: (int \<times> int) set) (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-  sorry
+proof -
+  let ?T2 = "top1_S1 \<times> top1_S1"
+  let ?TT2 = "product_topology_on top1_S1_topology top1_S1_topology"
+  let ?p = "h x0"
+  \<comment> \<open>Step 1: h(x0) \<in> S^1 \<times> S^1.\<close>
+  have hx0_T2: "?p \<in> ?T2"
+    using assms(3,4) unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+  \<comment> \<open>Step 2: \<pi>_1(X, x0) \<cong> \<pi>_1(S^1 \<times> S^1, h(x0)) by homeomorphism.\<close>
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+  proof -
+    have hR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+        (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hR hR])
+    hence hR2: "is_topology_on (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+    show ?thesis unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF hR2]) (by100 blast)
+  qed
+  have hTT2: "is_topology_on ?T2 ?TT2"
+    by (rule product_topology_on_is_topology_on[OF hTS1 hTS1])
+  have h_iso1: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_carrier ?T2 ?TT2 ?p)
+      (top1_fundamental_group_mul ?T2 ?TT2 ?p)"
+    by (rule Corollary_52_5_homeomorphism_iso[OF assms(1) hTT2 assms(3) assms(4) refl])
+  \<comment> \<open>Step 3: \<pi>_1(S^1 \<times> S^1, (p1,p2)) \<cong> \<pi>_1(S^1, p1) \<times> \<pi>_1(S^1, p2).\<close>
+  obtain p1 p2 where hp: "?p = (p1, p2)" and hp1: "p1 \<in> top1_S1" and hp2: "p2 \<in> top1_S1"
+    using hx0_T2 by (by100 force)
+  \<comment> \<open>Step 4: Compose with \<pi>_1(S^1) \<cong> Z (twice) and transitivity.\<close>
+  \<comment> \<open>Need: product of isomorphic groups is isomorphic (Z \<times> Z case).\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
 lemma Lemma_60_5_figure_eight_not_abelian:
@@ -13060,26 +13094,22 @@ proof -
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   \<comment> \<open>Step 1: Cov(p) is a group under composition.\<close>
   have hCov_group: "\<exists>eC invgC. top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC" sorry
-  \<comment> \<open>Step 2: Define \<Phi> and show it's a well-defined homomorphism into N(H)/H.\<close>
-  have h\<Phi>_hom: "\<exists>\<Phi>. top1_group_hom_on ?Cov (\<lambda>h k e. h (k e))
-      (top1_quotient_group_carrier_on
+  \<comment> \<open>Step 2-3: Define \<Phi>: Cov(p) \<rightarrow> N(H)/H and show it's a group isomorphism.\<close>
+  let ?Q = "top1_quotient_group_carrier_on
          (top1_normalizer_on
             (top1_fundamental_group_carrier B TB b0)
             (top1_fundamental_group_mul B TB b0)
             (top1_fundamental_group_invg B TB b0) ?H)
-         (top1_fundamental_group_mul B TB b0) ?H)
-      (top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0)) \<Phi>" sorry
-  \<comment> \<open>Step 3: \<Phi> is injective (if h(e0)=e0 then h=id by unique lifting) and surjective
-     (for [c] \<in> N(H)/H, lift c starting at e0 to get e1; the unique covering
-     transformation mapping e0 to e1 is the preimage).\<close>
-  have h\<Phi>_bij: "\<exists>\<Phi>. bij_betw \<Phi> ?Cov
-      (top1_quotient_group_carrier_on
-         (top1_normalizer_on
-            (top1_fundamental_group_carrier B TB b0)
-            (top1_fundamental_group_mul B TB b0)
-            (top1_fundamental_group_invg B TB b0) ?H)
-         (top1_fundamental_group_mul B TB b0) ?H)" sorry
-  show ?thesis using hCov_group h\<Phi>_hom h\<Phi>_bij sorry
+         (top1_fundamental_group_mul B TB b0) ?H"
+  let ?mulQ = "top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0)"
+  have h_iso: "top1_groups_isomorphic_on ?Cov (\<lambda>h k e. h (k e)) ?Q ?mulQ" sorry
+  obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
+    using hCov_group by (by100 blast)
+  show ?thesis
+    apply (rule exI[where x="?Cov"])
+    apply (rule exI[where x=eC])
+    apply (rule exI[where x=invgC])
+    using hCov_grp h_iso by (by100 blast)
 qed
 
 section \<open>\<S>82 Existence of Covering Spaces\<close>
