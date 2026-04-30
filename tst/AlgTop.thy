@@ -9092,6 +9092,59 @@ proof -
   show ?thesis using hFP hj_surj hker sorry
 qed
 
+text \<open>Corollary 70.3 (Munkres): If U \<inter> V is simply connected, then
+  \<pi>_1(X) \<cong> \<pi>_1(U) * \<pi>_1(V) (free product, no amalgamation).\<close>
+corollary Corollary_70_3_simply_connected_intersection:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_path_connected_on U (subspace_topology X TX U)"
+      and "top1_path_connected_on V (subspace_topology X TX V)"
+      and "x0 \<in> U \<inter> V"
+  shows "\<exists>(FP::'f set) mulFP.
+           top1_groups_isomorphic_on
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0) FP mulFP
+         \<and> (\<exists>eFP invgFP \<iota>fam.
+              top1_is_free_product_on FP mulFP eFP invgFP
+                (\<lambda>i::nat. if i = 0
+                   then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+                   else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+                (\<lambda>i. if i = 0
+                   then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+                   else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+                \<iota>fam {0, 1})"
+  sorry
+
+text \<open>Corollary 70.4 (Munkres): If V is simply connected, then
+  \<pi>_1(X) \<cong> \<pi>_1(U) / N where N is the normal closure of the image of
+  the inclusion \<pi>_1(U \<inter> V) \<hookrightarrow> \<pi>_1(U).\<close>
+corollary Corollary_70_4_simply_connected_V:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_path_connected_on U (subspace_topology X TX U)"
+      and "top1_simply_connected_on V (subspace_topology X TX V)"
+      and "x0 \<in> U \<inter> V"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier X TX x0)
+    (top1_fundamental_group_mul X TX x0)
+    (top1_quotient_group_carrier_on
+       (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+       (top1_fundamental_group_mul U (subspace_topology X TX U) x0)
+       (top1_normal_subgroup_generated_on
+          (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+          (top1_fundamental_group_mul U (subspace_topology X TX U) x0)
+          (top1_fundamental_group_id U (subspace_topology X TX U) x0)
+          (top1_fundamental_group_invg U (subspace_topology X TX U) x0)
+          (top1_fundamental_group_induced_on
+             (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+             U (subspace_topology X TX U) x0 (\<lambda>x. x)
+           ` top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0)))
+    (top1_quotient_group_mul_on
+       (top1_fundamental_group_mul U (subspace_topology X TX U) x0))"
+  sorry
+
 section \<open>Chapter 12: Classification of Surfaces\<close>
 
 text \<open>Surface: a connected, Hausdorff, compact 2-manifold.
