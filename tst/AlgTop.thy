@@ -11072,6 +11072,7 @@ lemma Lemma_68_3_extension_property:
   assumes hFP: "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
       and hH: "top1_is_group_on H mulH eH invgH"
       and hfam: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
+      and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
   shows "\<exists>h. top1_group_hom_on G mul H mulH h
       \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)
       \<and> (\<forall>h'. top1_group_hom_on G mul H mulH h'
@@ -11134,11 +11135,17 @@ proof -
   have hexists: "\<exists>h. top1_group_hom_on G mul H mulH h
       \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)"
   proof -
-    \<comment> \<open>Every g ∈ G has a reduced-word representation. Define ?h by word evaluation:
-       h(ιfam(α₁)(g₁) * ... * ιfam(αₙ)(gₙ)) = hfam(α₁)(g₁) * ... * hfam(αₙ)(gₙ).
-       Well-defined by uniqueness of reduced words (hreduced).
-       This h maps G to H, is a homomorphism, and agrees with hfam on generators.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Use the concrete free product (Theorem 68.2) to construct h.
+       G_c = reduced word lists. φ: G_c → G by ιfam-evaluation. h_c: G_c → H by hfam-evaluation.
+       φ is bijective (surjective from reduced_repr, injective from hreduced).
+       h = h_c ∘ φ⁻¹ is a hom agreeing with hfam on generators.\<close>
+    note hconcrete = Theorem_68_2_free_product_exists[OF hGG_grps]
+    \<comment> \<open>Both G and G_c are free products of same factors. By Theorem 68.4, they're isomorphic.
+       But 68.4 uses 68.3 (circular). Instead, use the uniqueness part (already proved):
+       any two homs from G agreeing on generators agree on all of G.
+       Define h directly: for g ∈ G, get reduced word (from free_product_reduced_repr),
+       evaluate in H. Well-defined by uniqueness of reduced words (from hreduced).\<close>
+    show ?thesis sorry \<comment> \<open>Extension property existence — main open obligation\<close>
   qed
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
   have hunique: "\<And>h1 h2. top1_group_hom_on G mul H mulH h1 \<Longrightarrow>
@@ -11356,6 +11363,7 @@ qed
 theorem Theorem_68_4_free_product_unique:
   assumes hG1: "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
       and hG2: "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
+      and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
   shows "top1_groups_isomorphic_on G1 mul1 G2 mul2"
 proof -
   \<comment> \<open>Munkres 68.4: Use extension property (Lemma 68.3) to build \<phi>: G1 \<rightarrow> G2 and \<psi>: G2 \<rightarrow> G1.\<close>
@@ -11373,7 +11381,7 @@ proof -
   qed
   obtain \<phi> where h\<phi>_hom: "top1_group_hom_on G1 mul1 G2 mul2 \<phi>"
       and h\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<phi> (\<iota>1 \<alpha> x) = \<iota>2 \<alpha> x"
-    using Lemma_68_3_extension_property[OF hG1 hgrp2 h\<iota>2_hom] by (by100 blast)
+    using Lemma_68_3_extension_property[OF hG1 hgrp2 h\<iota>2_hom hGG_grps] by (by100 blast)
   \<comment> \<open>Step 2: Similarly \<psi>: G2 \<rightarrow> G1.\<close>
   have h\<iota>1_hom: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) G1 mul1 (\<iota>1 \<alpha>)"
   proof (intro ballI)
@@ -11384,7 +11392,7 @@ proof -
   qed
   obtain \<psi> where h\<psi>_hom: "top1_group_hom_on G2 mul2 G1 mul1 \<psi>"
       and h\<psi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<psi> (\<iota>2 \<alpha> x) = \<iota>1 \<alpha> x"
-    using Lemma_68_3_extension_property[OF hG2 hgrp1 h\<iota>1_hom] by (by100 blast)
+    using Lemma_68_3_extension_property[OF hG2 hgrp1 h\<iota>1_hom hGG_grps] by (by100 blast)
   \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators of G1. By uniqueness, \<psi>\<circ>\<phi> = id on G1.\<close>
   \<comment> \<open>Step 3: \<psi>\<circ>\<phi> extends id on generators. id also extends id. By uniqueness, \<psi>\<circ>\<phi> = id.\<close>
   have h\<psi>\<phi>_ext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. (\<psi> \<circ> \<phi>) (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x"
@@ -11425,7 +11433,7 @@ proof -
         and href_u: "\<forall>h'. top1_group_hom_on G1 mul1 G1 mul1 h'
             \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>1 \<alpha> x) = \<iota>1 \<alpha> x)
             \<longrightarrow> (\<forall>g\<in>G1. h' g = h_ref g)"
-      using Lemma_68_3_extension_property[OF hG1 hgrp1 h\<iota>1_hom] by (by100 blast)
+      using Lemma_68_3_extension_property[OF hG1 hgrp1 h\<iota>1_hom hGG_grps] by (by100 blast)
     have "\<forall>g\<in>G1. (\<psi> \<circ> \<phi>) g = h_ref g"
       using href_u hcomp_hom h\<psi>\<phi>_ext by (by100 blast)
     moreover have "\<forall>g\<in>G1. id g = h_ref g"
@@ -11467,7 +11475,7 @@ proof -
         and href2_u: "\<forall>h'. top1_group_hom_on G2 mul2 G2 mul2 h'
             \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>2 \<alpha> x) = \<iota>2 \<alpha> x)
             \<longrightarrow> (\<forall>g\<in>G2. h' g = h_ref2 g)"
-      using Lemma_68_3_extension_property[OF hG2 hgrp2 h\<iota>2_hom] by (by100 blast)
+      using Lemma_68_3_extension_property[OF hG2 hgrp2 h\<iota>2_hom hGG_grps] by (by100 blast)
     have "\<forall>g\<in>G2. (\<phi> \<circ> \<psi>) g = h_ref2 g"
       using href2_u hcomp_hom2 h\<phi>\<psi>_ext by (by100 blast)
     moreover have "\<forall>g\<in>G2. id g = h_ref2 g"
