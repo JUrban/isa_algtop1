@@ -10636,8 +10636,19 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
       \<comment> \<open>Key: full eval = ιfam(α)(x) * eval(tail).\<close>
       let ?eval_full = "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]) e"
       let ?eval_tail = "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e"
+      \<comment> \<open>Convert index-based eval to list-based eval via zip.\<close>
+      let ?pairs = "zip indices wrd"
+      let ?f = "\<lambda>(a,b). \<iota>fam a b"
+      have hzip_map: "map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]
+          = map ?f ?pairs"
+        using less(2) by (intro nth_equalityI) (by100 auto)
+      have hzip_tl: "map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]
+          = map ?f (zip ?tail_idx ?tail_wrd)"
+        using htl_len by (intro nth_equalityI) (by100 auto)
+      have hzip_cons: "?pairs = (?\<alpha>, ?x) # zip ?tail_idx ?tail_wrd"
+        using hlen_ge2 less(2) by (cases indices; cases wrd) (by100 auto)
       have heval_split: "?eval_full = mul (\<iota>fam ?\<alpha> ?x) ?eval_tail"
-        sorry \<comment> \<open>foldr/map split for Suc-length word\<close>
+        unfolding hzip_map hzip_tl hzip_cons by (by100 simp)
       \<comment> \<open>Case analysis on IH result.\<close>
       show ?thesis
       proof (cases "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e = e")
@@ -10732,7 +10743,7 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
             qed
             have hni_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?ni!i) (?nw!i)) [0..<length ?ni]) e
                 = ?eval_full"
-              sorry \<comment> \<open>eval(prepend) = mul(head, eval(tail)) = eval_full — needs heval_split + heval'\<close>
+              sorry \<comment> \<open>eval(α#indices', x#wrd') = mul(head, eval(tail)) = eval_full. Same zip technique as heval_split.\<close>
             show ?thesis
               apply (rule disjI2)
               apply (rule exI[of _ ?ni], rule exI[of _ ?nw])
