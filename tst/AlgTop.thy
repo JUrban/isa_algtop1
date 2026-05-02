@@ -11139,12 +11139,127 @@ proof -
        G_c = reduced word lists. φ: G_c → G by ιfam-evaluation. h_c: G_c → H by hfam-evaluation.
        φ is bijective (surjective from reduced_repr, injective from hreduced).
        h = h_c ∘ φ⁻¹ is a hom agreeing with hfam on generators.\<close>
-    \<comment> \<open>Step 1: Get concrete free product G_c (reduced word lists).\<close>
-    note hconcrete = Theorem_68_2_free_product_exists[OF hGG_grps]
-    \<comment> \<open>Step 2: Define φ: G_c → G by ιfam-evaluation. Injective by hreduced, surjective by reduced_repr.\<close>
-    \<comment> \<open>Step 3: Define h_c: G_c → H by hfam-evaluation. Hom by tagged_word_reduce_pairs for H.\<close>
-    \<comment> \<open>Step 4: h = h_c ∘ inv_into G_c φ. Hom + agrees on generators.\<close>
-    \<comment> \<open>For now, define h directly on G using SOME reduced word + hfam evaluation.\<close>
+    \<comment> \<open>KEY LEMMA: word evaluation in H is zero whenever it's zero in G.
+       Proof via product group G×H. The product evaluation reduces the SAME way
+       (identity check ιfam(α)(x)=e ↔ x=eGG(α) is target-independent by ιfam injectivity).
+       So if G-eval = e, then reduced form is empty (hreduced), hence H-eval = eH.\<close>
+    have hfam_e: "\<forall>\<alpha>\<in>J. hfam \<alpha> (eGG \<alpha>) = eH"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+      show "hfam \<alpha> (eGG \<alpha>) = eH"
+        by (rule hom_preserves_id[OF hGG_grps[rule_format, OF h\<alpha>] hH hfam[rule_format, OF h\<alpha>]])
+    qed
+    have hkernel: "\<And>ws. \<lbrakk>\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p);
+        foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e = e\<rbrakk>
+      \<Longrightarrow> foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws) eH = eH"
+    proof -
+      fix ws assume hws_vals: "\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p)"
+          and hws_eG: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e = e"
+      \<comment> \<open>Product group G × H with componentwise operations.\<close>
+      let ?GH = "G \<times> H"
+      let ?mulGH = "\<lambda>(g1,h1) (g2,h2). (mul g1 g2, mulH h1 h2)"
+      let ?eGH = "(e, eH)"
+      let ?invGH = "\<lambda>(g,h). (invg g, invgH h)"
+      let ?\<iota>GH = "\<lambda>\<alpha> x. (\<iota>fam \<alpha> x, hfam \<alpha> x)"
+      \<comment> \<open>Product is a group (componentwise).\<close>
+      have hGH_grp: "top1_is_group_on ?GH ?mulGH ?eGH ?invGH"
+        sorry \<comment> \<open>Product group — componentwise from hG and hH\<close>
+      \<comment> \<open>Product ιfam is a hom and maps into G×H.\<close>
+      have h\<iota>GH_hom: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>.
+          ?\<iota>GH \<alpha> (mulGG \<alpha> x y) = ?mulGH (?\<iota>GH \<alpha> x) (?\<iota>GH \<alpha> y)"
+      proof (intro ballI)
+        fix \<alpha> x y assume h\<alpha>: "\<alpha> \<in> J" and hx: "x \<in> GG \<alpha>" and hy: "y \<in> GG \<alpha>"
+        have "\<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+          using h\<iota>_hom h\<alpha> hx hy by (by100 blast)
+        moreover have "hfam \<alpha> (mulGG \<alpha> x y) = mulH (hfam \<alpha> x) (hfam \<alpha> y)"
+          using hfam h\<alpha> hx hy unfolding top1_group_hom_on_def by (by100 blast)
+        ultimately show "?\<iota>GH \<alpha> (mulGG \<alpha> x y) = ?mulGH (?\<iota>GH \<alpha> x) (?\<iota>GH \<alpha> y)"
+          by (by100 simp)
+      qed
+      have h\<iota>GH_in: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?\<iota>GH \<alpha> x \<in> ?GH"
+        using h\<iota>_in hfam unfolding top1_group_hom_on_def by (by100 blast)
+      \<comment> \<open>Apply tagged_word_reduce_pairs to the product.\<close>
+      have hws_vals_GH: "\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p)" by (rule hws_vals)
+      from tagged_word_reduce_pairs[OF hGH_grp h\<iota>GH_hom h\<iota>GH_in hGG_grps hws_vals_GH]
+      have hred_GH: "foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH = ?eGH
+         \<or> (\<exists>ws'. ws' \<noteq> []
+              \<and> (\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> ?\<iota>GH (fst p) (snd p) \<noteq> ?eGH)
+              \<and> (\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1)))
+              \<and> foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws') ?eGH
+                  = foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH)" .
+      \<comment> \<open>The foldr on product splits into components.\<close>
+      have heval_split: "foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH
+          = (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e,
+             foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws) eH)"
+        by (induction ws) (by100 auto)
+      \<comment> \<open>G-component = e. So either product eval = (e, eH) (done)
+         or there's a non-empty reduced word with G-component = e (impossible by hreduced).\<close>
+      show "foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws) eH = eH"
+      proof -
+        from hred_GH
+        show ?thesis
+        proof (elim disjE)
+          \<comment> \<open>Case 1: product eval = (e, eH). Extract H-component.\<close>
+          assume "foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH = ?eGH"
+          thus ?thesis using heval_split by (by100 simp)
+        next
+          \<comment> \<open>Case 2: ∃ non-empty reduced word ws' with product eval = product eval(ws).
+             Extract G-component: eval_G(ws') = e. By hreduced: ws' = []. Contradiction.\<close>
+          assume "\<exists>ws'. ws' \<noteq> []
+              \<and> (\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> ?\<iota>GH (fst p) (snd p) \<noteq> ?eGH)
+              \<and> (\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1)))
+              \<and> foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws') ?eGH
+                  = foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH"
+          then obtain ws' where hne': "ws' \<noteq> []"
+              and hvals': "\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> ?\<iota>GH (fst p) (snd p) \<noteq> ?eGH"
+              and heval': "foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws') ?eGH
+                  = foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws) ?eGH"
+            by (by100 blast)
+          \<comment> \<open>Split ws' evaluation into components.\<close>
+          have heval'_split: "foldr ?mulGH (map (\<lambda>(\<alpha>,x). ?\<iota>GH \<alpha> x) ws') ?eGH
+              = (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e,
+                 foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws') eH)"
+            by (induction ws') (by100 auto)
+          \<comment> \<open>G-component of ws' = e (from heval' + heval_split + hws_eG).\<close>
+          have hG_comp: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e = e"
+            using heval'_split heval' heval_split hws_eG by (by100 simp)
+          \<comment> \<open>Non-identity condition: ?\<iota>GH(fst p)(snd p) ≠ (e,eH) means ιfam ≠ e
+             (since ιfam(α)(x)=e → x=eGG(α) → hfam(α)(x)=eH → contradiction).\<close>
+          have hnonid: "\<forall>p\<in>set ws'. \<iota>fam (fst p) (snd p) \<noteq> e"
+          proof (intro ballI)
+            fix p assume hp: "p \<in> set ws'"
+            from hvals'[rule_format, OF hp] have "?\<iota>GH (fst p) (snd p) \<noteq> ?eGH" by (by100 blast)
+            hence "\<iota>fam (fst p) (snd p) \<noteq> e \<or> hfam (fst p) (snd p) \<noteq> eH" by (by100 auto)
+            moreover have "\<iota>fam (fst p) (snd p) = e \<Longrightarrow> hfam (fst p) (snd p) = eH"
+            proof -
+              assume "hie": "\<iota>fam (fst p) (snd p) = e"
+              have hpJ: "fst p \<in> J" and hpGG: "snd p \<in> GG (fst p)"
+                using hvals' hp by (by100 blast)+
+              have hsndp: "snd p = eGG (fst p)"
+                sorry \<comment> \<open>ιfam injective + ιfam(eGG)=e: ιfam(x)=e → x=eGG\<close>
+              show "hfam (fst p) (snd p) = eH"
+                using hsndp hfam_e hvals' hp by (by100 auto)
+            qed
+            ultimately show "\<iota>fam (fst p) (snd p) \<noteq> e" by (by100 blast)
+          qed
+          \<comment> \<open>Convert to indexed form for hreduced.\<close>
+          let ?idx' = "map fst ws'" and ?wrd' = "map snd ws'"
+          have "length ?idx' = length ?wrd' \<and> length ?idx' > 0
+              \<and> (\<forall>i<length ?idx'. ?idx'!i \<in> J \<and> ?wrd'!i \<in> GG (?idx'!i)
+                                  \<and> \<iota>fam (?idx'!i) (?wrd'!i) \<noteq> e)
+              \<and> (\<forall>i. i + 1 < length ?idx' \<longrightarrow> ?idx'!i \<noteq> ?idx'!(i+1))"
+            using hne' hvals' hnonid sorry \<comment> \<open>Convert pair-list properties to indexed\<close>
+          hence "foldr mul (map (\<lambda>i. \<iota>fam (?idx'!i) (?wrd'!i)) [0..<length ?idx']) e \<noteq> e"
+            using hreduced by (by100 blast)
+          \<comment> \<open>But eval_G(ws') = e. Convert: foldr mul (map indexed) = foldr mul (map pairs).\<close>
+          moreover have "foldr mul (map (\<lambda>i. \<iota>fam (?idx'!i) (?wrd'!i)) [0..<length ?idx']) e
+              = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e"
+            sorry \<comment> \<open>index-to-pair conversion (same as in free_product_reduced_repr)\<close>
+          ultimately have False using hG_comp by (by100 simp)
+          thus ?thesis by (by100 blast)
+        qed
+      qed
+    qed
     let ?eval_H_pairs = "\<lambda>ws. foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws) eH"
     \<comment> \<open>For g ∈ G, pick ANY reduced word (exists by free_product_reduced_repr), evaluate in H.\<close>
     \<comment> \<open>Well-defined: hreduced gives uniqueness (via φ-injectivity of concrete model).\<close>
@@ -11153,18 +11268,6 @@ proof -
         \<and> (\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e)
         \<and> (\<forall>i. i + 1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1)))
         \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e = g)"
-    \<comment> \<open>Step A: ?h agrees with hfam on generators.\<close>
-    \<comment> \<open>Helper: hfam preserves identity.\<close>
-    have hfam_e: "\<forall>\<alpha>\<in>J. hfam \<alpha> (eGG \<alpha>) = eH"
-    proof (intro ballI)
-      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
-      have hgrp_\<alpha>: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
-        using hGG_grps h\<alpha> by (by100 blast)
-      have hfam_hom: "top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
-        using hfam h\<alpha> by (by100 blast)
-      show "hfam \<alpha> (eGG \<alpha>) = eH"
-        by (rule hom_preserves_id[OF hgrp_\<alpha> hH hfam_hom])
-    qed
     \<comment> \<open>Helper: uniqueness of reduced words (from hreduced + free_product_reduced_repr).\<close>
     have huniq_reduced: "\<And>ws1 ws2.
         \<lbrakk>ws1 \<noteq> [];
