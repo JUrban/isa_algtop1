@@ -10801,292 +10801,6 @@ next
   qed
 qed
 
-text \<open>Helper: a tagged word can be reduced. By induction on word length,
-  combine adjacent same-index elements and delete identity elements.\<close>
-lemma tagged_word_reduce:
-  assumes hG: "top1_is_group_on G mul e invg"
-      and h\<iota>_hom: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>. \<iota>fam \<alpha> (mulGG \<alpha> x y) = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
-      and h\<iota>_in: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> G"
-      and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
-      and hlen: "length indices = length wrd"
-      and hvals: "\<forall>i<length indices. indices!i \<in> J \<and> wrd!i \<in> GG (indices!i)"
-  shows "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]) e = e
-       \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> length indices' > 0
-            \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
-                                \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
-            \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
-            \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e
-                = foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]) e)"
-  using hlen hvals
-proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
-  case less
-  show ?case
-  proof (cases "length indices")
-    case 0 thus ?thesis by (by100 simp)
-  next
-    case (Suc n)
-    show ?thesis
-    proof (cases n)
-      case 0
-      \<comment> \<open>Length 1: single element.\<close>
-      hence hlen1: "length indices = 1" using Suc by (by100 simp)
-      show ?thesis
-      proof (cases "\<iota>fam (indices!0) (wrd!0) = e")
-        case True
-        have "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<1]) e
-            = mul (\<iota>fam (indices!0) (wrd!0)) e" by (by100 simp)
-        also have "\<dots> = mul e e" using True by (by100 simp)
-        also have "\<dots> = e" by (rule group_id_left[OF hG group_e_mem[OF hG]])
-        finally show ?thesis using hlen1 by (by100 simp)
-      next
-        case False
-        show ?thesis
-          apply (rule disjI2)
-          apply (rule exI[of _ indices], rule exI[of _ wrd])
-          using False less(3) hlen1 less(2) by (by100 auto)
-      qed
-    next
-      case (Suc m)
-      hence hlen_ge2: "length indices \<ge> 2" using \<open>length indices = Suc n\<close> by (by100 simp)
-      \<comment> \<open>Length ≥ 2. Look at first element and apply IH on tail.\<close>
-      let ?\<alpha> = "indices!0" and ?x = "wrd!0"
-      let ?tail_idx = "tl indices" and ?tail_wrd = "tl wrd"
-      have htl_len: "length ?tail_idx = length ?tail_wrd"
-        using less(2) by (by100 simp)
-      have htl_shorter: "length ?tail_idx < length indices"
-        using hlen_ge2 by (by100 simp)
-      have htl_vals: "\<forall>i<length ?tail_idx. ?tail_idx!i \<in> J \<and> ?tail_wrd!i \<in> GG (?tail_idx!i)"
-      proof (intro allI impI)
-        fix i assume hi: "i < length ?tail_idx"
-        have hsi: "Suc i < length indices" using hi hlen_ge2 by (by100 simp)
-        have "indices ! Suc i \<in> J \<and> wrd ! Suc i \<in> GG (indices ! Suc i)"
-          using less(3) hsi by (by100 blast)
-        moreover have "?tail_idx ! i = indices ! Suc i"
-          using hi hlen_ge2 by (simp add: nth_tl)
-        moreover have "?tail_wrd ! i = wrd ! Suc i"
-          using hi hlen_ge2 less(2) by (simp add: nth_tl)
-        ultimately show "?tail_idx!i \<in> J \<and> ?tail_wrd!i \<in> GG (?tail_idx!i)" by (by100 simp)
-      qed
-      \<comment> \<open>IH on tail.\<close>
-      have hIH: "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e = e
-         \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> 0 < length indices'
-              \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
-                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
-              \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
-              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e
-                  = foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e)"
-        by (rule less(1)[OF htl_shorter htl_len htl_vals])
-      \<comment> \<open>The full evaluation = ιfam(α)(x) * eval(tail).\<close>
-      have "0 < length indices" using hlen_ge2 by (by100 linarith)
-      have h0: "indices!0 \<in> J \<and> wrd!0 \<in> GG (indices!0)"
-        using less(3) \<open>0 < length indices\<close> by (by100 blast)
-      have h\<alpha>J: "?\<alpha> \<in> J" using h0 by (by100 blast)
-      have hxGG: "?x \<in> GG ?\<alpha>" using h0 by (by100 blast)
-      \<comment> \<open>Key: full eval = ιfam(α)(x) * eval(tail).\<close>
-      let ?eval_full = "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]) e"
-      let ?eval_tail = "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e"
-      \<comment> \<open>Convert index-based eval to list-based eval via zip.\<close>
-      let ?pairs = "zip indices wrd"
-      let ?f = "\<lambda>(a,b). \<iota>fam a b"
-      have hzip_map: "map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]
-          = map ?f ?pairs"
-        using less(2) by (intro nth_equalityI) (by100 auto)
-      have hzip_tl: "map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]
-          = map ?f (zip ?tail_idx ?tail_wrd)"
-        using htl_len by (intro nth_equalityI) (by100 auto)
-      have hzip_cons: "?pairs = (?\<alpha>, ?x) # zip ?tail_idx ?tail_wrd"
-        using hlen_ge2 less(2) by (cases indices; cases wrd) (by100 auto)
-      have heval_split: "?eval_full = mul (\<iota>fam ?\<alpha> ?x) ?eval_tail"
-        unfolding hzip_map hzip_tl hzip_cons by (by100 simp)
-      \<comment> \<open>Case analysis on IH result.\<close>
-      show ?thesis
-      proof (cases "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e = e")
-        case True
-        \<comment> \<open>Tail evaluates to e. Full eval = ιfam(α)(x) * e = ιfam(α)(x).\<close>
-        show ?thesis
-        proof (cases "\<iota>fam ?\<alpha> ?x = e")
-          case True
-          \<comment> \<open>Both e: full eval = e.\<close>
-          have "?eval_full = mul e e"
-            using heval_split \<open>foldr mul _ e = e\<close> \<open>\<iota>fam ?\<alpha> ?x = e\<close> by (by100 simp)
-          thus ?thesis using group_id_left[OF hG group_e_mem[OF hG]] by (by100 simp)
-        next
-          case False
-          \<comment> \<open>ιfam(α)(x) ≠ e, tail = e: result is single-element reduced word.\<close>
-          have "?eval_full = mul (\<iota>fam ?\<alpha> ?x) e"
-            using heval_split \<open>foldr mul _ e = e\<close> by (by100 simp)
-          hence heval_ax: "?eval_full = \<iota>fam ?\<alpha> ?x"
-            using group_id_right[OF hG h\<iota>_in[rule_format, OF h\<alpha>J hxGG]] by (by100 simp)
-          show ?thesis
-            apply (rule disjI2)
-            apply (rule exI[of _ "[?\<alpha>]"], rule exI[of _ "[?x]"])
-            apply (intro conjI)
-            apply (by100 simp)   \<comment> \<open>length\<close>
-            apply (by100 simp)   \<comment> \<open>pos\<close>
-            using False h\<alpha>J hxGG apply (by100 simp) \<comment> \<open>vals\<close>
-            apply (by100 simp)   \<comment> \<open>adjacent\<close>
-            using heval_ax
-              group_id_right[OF hG h\<iota>_in[rule_format, OF h\<alpha>J hxGG]]
-            by (by100 simp)
-        qed
-      next
-        case False
-        \<comment> \<open>Tail has a reduced form. Prepend (α,x) to it.\<close>
-        from hIH False obtain indices' wrd' where
-            hlen': "length indices' = length wrd'" and hpos': "0 < length indices'"
-            and hvals': "\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
-                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e"
-            and hadj': "\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1)"
-            and heval': "foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e
-                = foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e"
-          by (by100 blast)
-        show ?thesis
-        proof (cases "\<iota>fam ?\<alpha> ?x = e")
-          case True
-          \<comment> \<open>First element is identity: skip it, use tail's reduced form.\<close>
-          have "?eval_full = mul e ?eval_tail" using heval_split True by (by100 simp)
-          have heval_tail_G: "?eval_tail \<in> G"
-          proof (rule foldr_mul_closed[OF hG])
-            show "\<forall>i<length (map (\<lambda>i. \<iota>fam (?tail_idx ! i) (?tail_wrd ! i)) [0..<length ?tail_idx]).
-                (map (\<lambda>i. \<iota>fam (?tail_idx ! i) (?tail_wrd ! i)) [0..<length ?tail_idx]) ! i \<in> G"
-              using htl_vals h\<iota>_in by (by100 auto)
-          qed
-          hence heval_eq: "?eval_full = ?eval_tail"
-            using \<open>?eval_full = mul e ?eval_tail\<close> group_id_left[OF hG heval_tail_G] by (by100 simp)
-          show ?thesis
-            apply (rule disjI2)
-            apply (rule exI[of _ indices'], rule exI[of _ wrd'])
-            apply (intro conjI)
-            using hlen' apply (by100 blast)
-            using hpos' apply (by100 blast)
-            using hvals' apply (by100 blast)
-            using hadj' apply (by100 blast)
-            using heval_eq heval' by (by100 simp)
-        next
-          case False
-          \<comment> \<open>First element non-identity. Check if same index as head of reduced tail.\<close>
-          show ?thesis
-          proof (cases "?\<alpha> = indices'!0")
-            case True
-            \<comment> \<open>Same index: combine ιfam(α)(x) with ιfam(α)(wrd'!0).\<close>
-            \<comment> \<open>Combine: mulGG(α)(x, wrd'!0). If = eGG → delete head, use tail.
-               If ≠ eGG → replace head. Both give shorter/equal-length reduced words.\<close>
-            let ?z = "mulGG ?\<alpha> ?x (wrd'!0)"
-            have h\<alpha>eq: "?\<alpha> = indices'!0" by (rule True)
-            have "wrd'!0 \<in> GG (indices'!0)" using hvals' hpos' by (by100 blast)
-            hence hwrd0: "wrd'!0 \<in> GG ?\<alpha>" using h\<alpha>eq by (by100 simp)
-            have hzGG: "?z \<in> GG ?\<alpha>"
-              using hGG_grps h\<alpha>J hxGG hwrd0 unfolding top1_is_group_on_def by (by100 blast)
-            have hcombine: "\<iota>fam ?\<alpha> ?z = mul (\<iota>fam ?\<alpha> ?x) (\<iota>fam ?\<alpha> (wrd'!0))"
-              using h\<iota>_hom h\<alpha>J hxGG hwrd0 by (by100 blast)
-            \<comment> \<open>Eval: mul(ιfam α x, eval(indices', wrd'))
-                 = mul(ιfam α x, mul(ιfam α (wrd'!0), eval(tl indices', tl wrd')))
-                 = mul(ιfam α z, eval(tl indices', tl wrd'))\<close>
-            show ?thesis
-            proof (cases "\<iota>fam ?\<alpha> ?z = e")
-              case True
-              \<comment> \<open>Combined element is identity. eval_full = e * eval(tl) = eval(tl).
-                 Apply IH on tl(indices'), tl(wrd') which is shorter.\<close>
-              \<comment> \<open>tl(indices') has fewer elements. Need length < length indices for IH.
-                 Actually, we don't need the IH here — the z=e case means eval_full = eval(tl).
-                 Apply IH directly on tl(indices'), tl(wrd') which come from the reduced tail.\<close>
-              have htl_idx': "length (tl indices') < length indices"
-                sorry \<comment> \<open>length bound: reduced tail's tail < original length\<close>
-              have htl_len': "length (tl indices') = length (tl wrd')"
-                using hlen' by (by100 simp)
-              have htl_vals': "\<forall>i<length (tl indices'). (tl indices')!i \<in> J
-                  \<and> (tl wrd')!i \<in> GG ((tl indices')!i)"
-              proof (intro allI impI)
-                fix i assume hi: "i < length (tl indices')"
-                have hsi: "Suc i < length indices'" using hi hpos' by (by100 simp)
-                have "(tl indices')!i = indices'!Suc i" using hi by (simp add: nth_tl)
-                moreover have "(tl wrd')!i = wrd'!Suc i" using hi hlen' by (simp add: nth_tl)
-                moreover have "indices'!Suc i \<in> J \<and> wrd'!Suc i \<in> GG (indices'!Suc i)"
-                  using hvals' hsi by (by100 blast)
-                ultimately show "(tl indices')!i \<in> J \<and> (tl wrd')!i \<in> GG ((tl indices')!i)"
-                  by (by100 simp)
-              qed
-              from less(1)[OF htl_idx' htl_len' htl_vals']
-              show ?thesis sorry \<comment> \<open>Chain: IH on tail + hcombine + True → eval_full = e or reduced\<close>
-            next
-              case False
-              \<comment> \<open>Combined ≠ e. Replace head: indices', wrd'[0 := z] is reduced.\<close>
-              let ?nw' = "wrd'[0 := ?z]"
-              have hnw_len: "length indices' = length ?nw'" using hlen' by (by100 simp)
-              have hnw_vals: "\<forall>i<length indices'. indices'!i \<in> J \<and> ?nw'!i \<in> GG (indices'!i)
-                  \<and> \<iota>fam (indices'!i) (?nw'!i) \<noteq> e"
-              proof (intro allI impI conjI)
-                fix i assume hi: "i < length indices'"
-                show "indices'!i \<in> J" using hvals' hi by (by100 blast)
-                show "?nw'!i \<in> GG (indices'!i)"
-                proof (cases "i = 0")
-                  case True
-                  have "?nw'!0 = ?z" using hpos' hlen' by (by100 simp)
-                  thus ?thesis using hzGG h\<alpha>eq True by (by100 simp)
-                next
-                  case False2: False thus ?thesis using hvals' hi by (by100 simp)
-                qed
-                show "\<iota>fam (indices'!i) (?nw'!i) \<noteq> e"
-                proof (cases "i = 0")
-                  case True
-                  have "?nw'!0 = ?z" using hpos' hlen' by (by100 simp)
-                  thus ?thesis using \<open>\<iota>fam ?\<alpha> ?z \<noteq> e\<close> h\<alpha>eq True by (by100 simp)
-                next
-                  case False2: False thus ?thesis using hvals' hi by (by100 simp)
-                qed
-              qed
-              have hnw_eval: "foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (?nw'!i)) [0..<length indices']) e
-                  = ?eval_full"
-                sorry \<comment> \<open>eval(indices', wrd'[0:=z]) = mul(ιfam α z, eval(tl)) = eval_full\<close>
-              show ?thesis
-                apply (rule disjI2)
-                apply (rule exI[of _ indices'], rule exI[of _ ?nw'])
-                apply (intro conjI)
-                using hnw_len apply (by100 blast)
-                using hpos' apply (by100 blast)
-                using hnw_vals apply (by100 blast)
-                using hadj' apply (by100 blast)
-                using hnw_eval by (by100 blast)
-            qed
-          next
-            case False
-            \<comment> \<open>Different index: prepend. Result [α # indices', x # wrd'] is reduced.\<close>
-            \<comment> \<open>New word: α # indices', x # wrd'. Length, vals, non-identity, adjacent, eval all hold.\<close>
-            let ?ni = "?\<alpha> # indices'" and ?nw = "?x # wrd'"
-            have hni_len: "length ?ni = length ?nw" using hlen' by (by100 simp)
-            have hni_pos: "0 < length ?ni" by (by100 simp)
-            have hni_vals: "\<forall>i<length ?ni. ?ni!i \<in> J \<and> ?nw!i \<in> GG (?ni!i) \<and> \<iota>fam (?ni!i) (?nw!i) \<noteq> e"
-            proof (intro allI impI conjI)
-              fix i assume hi: "i < length ?ni"
-              show "?ni!i \<in> J" using hi h\<alpha>J hvals' by (cases i) (by100 auto)
-              show "?nw!i \<in> GG (?ni!i)" using hi hxGG hvals' by (cases i) (by100 auto)
-              show "\<iota>fam (?ni!i) (?nw!i) \<noteq> e" using hi \<open>\<iota>fam ?\<alpha> ?x \<noteq> e\<close> hvals' by (cases i) (by100 auto)
-            qed
-            have hni_adj: "\<forall>i. i + 1 < length ?ni \<longrightarrow> ?ni!i \<noteq> ?ni!(i+1)"
-            proof (intro allI impI)
-              fix i assume hi: "i + 1 < length ?ni"
-              show "?ni!i \<noteq> ?ni!(i+1)"
-                using hi \<open>?\<alpha> \<noteq> indices'!0\<close> hadj' by (cases i) (by100 auto)
-            qed
-            have hni_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?ni!i) (?nw!i)) [0..<length ?ni]) e
-                = ?eval_full"
-              sorry \<comment> \<open>eval(α#indices', x#wrd') = mul(head, eval(tail)) = eval_full. Same zip technique as heval_split.\<close>
-            show ?thesis
-              apply (rule disjI2)
-              apply (rule exI[of _ ?ni], rule exI[of _ ?nw])
-              apply (intro conjI)
-              using hni_len apply (by100 blast)
-              using hni_pos apply (by100 blast)
-              using hni_vals apply (by100 blast)
-              using hni_adj apply (by100 blast)
-              using hni_eval by (by100 blast)
-          qed
-        qed
-      qed
-    qed
-  qed
-qed
-
 lemma free_product_reduced_repr:
   assumes hFP: "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
       and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
@@ -11262,29 +10976,36 @@ proof -
       qed
       have htagged_vals: "\<forall>i<length ?tagged_idx. ?tagged_idx!i \<in> J \<and> ?tagged_wrd!i \<in> GG (?tagged_idx!i)"
         using hsome by (by100 simp)
-      have htagged_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = g"
+      \<comment> \<open>Build pair list and apply pair-based reduction.\<close>
+      let ?ws_pairs = "map (\<lambda>i. (?idx_of i, ?val_of i)) [0..<length ws]"
+      have hpairs_vals: "\<forall>p \<in> set ?ws_pairs. fst p \<in> J \<and> snd p \<in> GG (fst p)"
+        using hsome by (by100 auto)
+      have hpairs_eval: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e = g"
       proof -
-        have "\<forall>i<length ws. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i) = ws!i"
-          using hsome by (by100 simp)
-        hence "map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ws] = ws"
-          by (intro nth_equalityI) (by100 auto)
+        have "map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs = ws"
+        proof (intro nth_equalityI)
+          show "length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) = length ws" by (by100 simp)
+          fix i assume "i < length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs)"
+          hence hi: "i < length ws" by (by100 simp)
+          thus "(map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) ! i = ws ! i"
+            using hsome by (by100 simp)
+        qed
         thus ?thesis using hws_eval by (by100 simp)
       qed
-      \<comment> \<open>Apply tagged_word_reduce.\<close>
-      from tagged_word_reduce[OF hG h\<iota>_hom h\<iota>_in hGG_grps htagged_len htagged_vals]
-      have "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = e
-         \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> 0 < length indices'
-              \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
-                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
-              \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
-              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e
-                  = foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e)" .
-      hence "g = e \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> 0 < length indices'
-              \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
-                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
-              \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
-              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e = g)"
-        using htagged_eval by (by100 blast)
+      from tagged_word_reduce_pairs[OF hG h\<iota>_hom h\<iota>_in hGG_grps hpairs_vals]
+      have hred: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e = e
+         \<or> (\<exists>ws'. ws' \<noteq> []
+              \<and> (\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e)
+              \<and> (\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1)))
+              \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e
+                  = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e)" .
+      \<comment> \<open>Convert pair-based result to (indices, word) format.\<close>
+      hence "g = e \<or> (\<exists>indices word. length indices = length word \<and> length indices > 0
+              \<and> (\<forall>i<length indices. indices!i \<in> J \<and> word!i \<in> GG (indices!i)
+                                  \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
+              \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
+              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g)"
+        using hpairs_eval sorry \<comment> \<open>Convert pair list to index/word lists — map fst/snd\<close>
       thus ?thesis using hne by (by100 blast)
     qed
     hence ?thesis by (by100 blast)
