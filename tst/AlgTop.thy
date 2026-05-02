@@ -11139,13 +11139,49 @@ proof -
        G_c = reduced word lists. φ: G_c → G by ιfam-evaluation. h_c: G_c → H by hfam-evaluation.
        φ is bijective (surjective from reduced_repr, injective from hreduced).
        h = h_c ∘ φ⁻¹ is a hom agreeing with hfam on generators.\<close>
+    \<comment> \<open>Step 1: Get concrete free product G_c (reduced word lists).\<close>
     note hconcrete = Theorem_68_2_free_product_exists[OF hGG_grps]
-    \<comment> \<open>Both G and G_c are free products of same factors. By Theorem 68.4, they're isomorphic.
-       But 68.4 uses 68.3 (circular). Instead, use the uniqueness part (already proved):
-       any two homs from G agreeing on generators agree on all of G.
-       Define h directly: for g ∈ G, get reduced word (from free_product_reduced_repr),
-       evaluate in H. Well-defined by uniqueness of reduced words (from hreduced).\<close>
-    show ?thesis sorry \<comment> \<open>Extension property existence — main open obligation\<close>
+    \<comment> \<open>Step 2: Define φ: G_c → G by ιfam-evaluation. Injective by hreduced, surjective by reduced_repr.\<close>
+    \<comment> \<open>Step 3: Define h_c: G_c → H by hfam-evaluation. Hom by tagged_word_reduce_pairs for H.\<close>
+    \<comment> \<open>Step 4: h = h_c ∘ inv_into G_c φ. Hom + agrees on generators.\<close>
+    \<comment> \<open>For now, define h directly on G using SOME reduced word + hfam evaluation.\<close>
+    let ?eval_H_pairs = "\<lambda>ws. foldr mulH (map (\<lambda>(\<alpha>,x). hfam \<alpha> x) ws) eH"
+    \<comment> \<open>For g ∈ G, pick ANY reduced word (exists by free_product_reduced_repr), evaluate in H.\<close>
+    \<comment> \<open>Well-defined: hreduced gives uniqueness (via φ-injectivity of concrete model).\<close>
+    let ?h = "\<lambda>g. if g = e then eH
+      else ?eval_H_pairs (SOME ws. ws \<noteq> []
+        \<and> (\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e)
+        \<and> (\<forall>i. i + 1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1)))
+        \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e = g)"
+    \<comment> \<open>Step A: ?h agrees with hfam on generators.\<close>
+    \<comment> \<open>Helper: hfam preserves identity.\<close>
+    have hfam_e: "\<forall>\<alpha>\<in>J. hfam \<alpha> (eGG \<alpha>) = eH"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+      have hgrp_\<alpha>: "top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+        using hGG_grps h\<alpha> by (by100 blast)
+      have hfam_hom: "top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
+        using hfam h\<alpha> by (by100 blast)
+      show "hfam \<alpha> (eGG \<alpha>) = eH"
+        by (rule hom_preserves_id[OF hgrp_\<alpha> hH hfam_hom])
+    qed
+    \<comment> \<open>Helper: uniqueness of reduced words (from hreduced + free_product_reduced_repr).\<close>
+    have huniq_reduced: "\<And>ws1 ws2.
+        \<lbrakk>ws1 \<noteq> [];
+         \<forall>p\<in>set ws1. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e;
+         \<forall>i. i + 1 < length ws1 \<longrightarrow> fst (ws1!i) \<noteq> fst (ws1!(i+1));
+         ws2 \<noteq> [];
+         \<forall>p\<in>set ws2. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e;
+         \<forall>i. i + 1 < length ws2 \<longrightarrow> fst (ws2!i) \<noteq> fst (ws2!(i+1));
+         foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws1) e = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws2) e\<rbrakk>
+        \<Longrightarrow> ws1 = ws2"
+      sorry
+    have hext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
+      sorry
+    \<comment> \<open>Step B: ?h is a group homomorphism.\<close>
+    have hhom: "top1_group_hom_on G mul H mulH ?h"
+      sorry
+    show ?thesis using hhom hext by (by100 blast)
   qed
   \<comment> \<open>Uniqueness: any h' agreeing on generators agrees on all of G.\<close>
   have hunique: "\<And>h1 h2. top1_group_hom_on G mul H mulH h1 \<Longrightarrow>
