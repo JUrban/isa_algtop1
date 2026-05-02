@@ -10637,7 +10637,7 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
       let ?eval_full = "foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (wrd!i)) [0..<length indices]) e"
       let ?eval_tail = "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e"
       have heval_split: "?eval_full = mul (\<iota>fam ?\<alpha> ?x) ?eval_tail"
-        sorry \<comment> \<open>foldr/map split for Suc-length — list manipulation\<close>
+        sorry \<comment> \<open>foldr/map split for Suc-length word\<close>
       \<comment> \<open>Case analysis on IH result.\<close>
       show ?thesis
       proof (cases "foldr mul (map (\<lambda>i. \<iota>fam (?tail_idx!i) (?tail_wrd!i)) [0..<length ?tail_idx]) e = e")
