@@ -10657,7 +10657,101 @@ next
         have hyGG: "y \<in> GG \<alpha>" using hvals' hcons True by (by100 auto)
         have hzGG: "?z \<in> GG \<alpha>"
           using hGG_grps h\<alpha>J hxGG hyGG unfolding top1_is_group_on_def by (by100 blast)
-        show ?thesis sorry \<comment> \<open>Combine + subcases z=e / z≠e\<close>
+        have hcombine: "\<iota>fam \<alpha> ?z = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+          using h\<iota>_hom h\<alpha>J hxGG hyGG by (by100 blast)
+        \<comment> \<open>eval(p#rest) = mul(ιfam α z, eval(ws'_rest)).\<close>
+        have heval_wsr: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e
+            = mul (\<iota>fam \<alpha> ?z) (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e)"
+        proof -
+          have "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e
+              = mul (\<iota>fam \<alpha> x) (mul (\<iota>fam \<beta> y)
+                  (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e))"
+            using heval_cons heval' hcons by (by100 simp)
+          also have "\<iota>fam \<beta> y = \<iota>fam \<alpha> y" using True by (by100 simp)
+          also have "mul (\<iota>fam \<alpha> x) (mul (\<iota>fam \<alpha> y)
+                (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e))
+              = mul (mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y))
+                (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e)"
+            sorry \<comment> \<open>group assoc — needs all terms ∈ G\<close>
+          also have "mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y) = \<iota>fam \<alpha> ?z"
+            using hcombine by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>ws'_rest properties (inherited from ws'_tail being reduced).\<close>
+        have hwr_vals: "\<forall>q\<in>set ws'_rest. fst q \<in> J \<and> snd q \<in> GG (fst q) \<and> \<iota>fam (fst q) (snd q) \<noteq> e"
+          using hvals' hcons by (by100 auto)
+        have hwr_adj: "\<forall>i. i + 1 < length ws'_rest \<longrightarrow> fst (ws'_rest!i) \<noteq> fst (ws'_rest!(i+1))"
+        proof (intro allI impI)
+          fix i assume hi: "i + 1 < length ws'_rest"
+          have "Suc i + 1 < length ws'_tail" using hi hcons by (by100 simp)
+          hence "fst (ws'_tail ! Suc i) \<noteq> fst (ws'_tail ! (Suc i + 1))"
+            using hadj' by (by100 blast)
+          thus "fst (ws'_rest ! i) \<noteq> fst (ws'_rest ! (i + 1))"
+            using hcons by (by100 simp)
+        qed
+        show ?thesis
+        proof (cases "\<iota>fam \<alpha> ?z = e")
+          case True
+          \<comment> \<open>Combined = e. eval = eval(ws'_rest). ws'_rest is already reduced.\<close>
+          have heval_eq: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e
+              = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e"
+            sorry \<comment> \<open>mul e (eval ws'_rest) = eval ws'_rest — same pattern as before\<close>
+          show ?thesis
+          proof (cases "ws'_rest = []")
+            case True thus ?thesis using heval_eq by (by100 simp)
+          next
+            case False
+            hence "\<exists>ws'. ws' \<noteq> [] \<and> (\<forall>q\<in>set ws'. fst q \<in> J \<and> snd q \<in> GG (fst q) \<and> \<iota>fam (fst q) (snd q) \<noteq> e)
+                \<and> (\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1)))
+                \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e
+                    = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e"
+              using heval_eq hwr_vals hwr_adj
+              apply (rule_tac x="ws'_rest" in exI)
+              apply (intro conjI)
+              using False apply (by100 blast)
+              using hwr_vals apply (by100 blast)
+              using hwr_adj apply (by100 blast)
+              using heval_eq by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+        next
+          case False
+          \<comment> \<open>Combined ≠ e. (α,z) # ws'_rest is reduced.\<close>
+          let ?result = "(\<alpha>, ?z) # ws'_rest"
+          have "\<alpha> \<noteq> fst (hd ws'_rest)" if hwrne: "ws'_rest \<noteq> []"
+          proof -
+            have "0 + 1 < length ws'_tail" using hcons hwrne by (by100 simp)
+            from hadj'[rule_format, of 0] this
+            have "fst (ws'_tail ! 0) \<noteq> fst (ws'_tail ! (0 + 1))" by (by100 blast)
+            hence "fst (ws'_tail ! 0) \<noteq> fst (ws'_tail ! 1)" by (by100 simp)
+            thus ?thesis using hcons True hwrne by (by100 simp) (metis hd_conv_nth nth_Cons_Suc)
+          qed
+          hence hresult_adj: "\<forall>i. i + 1 < length ?result \<longrightarrow> fst (?result!i) \<noteq> fst (?result!(i+1))"
+          proof (intro allI impI)
+            fix i assume hi: "i + 1 < length ?result"
+            show "fst (?result ! i) \<noteq> fst (?result ! (i + 1))"
+            proof (cases "i = 0")
+              case True
+              thus ?thesis using hi \<open>ws'_rest \<noteq> [] \<Longrightarrow> \<alpha> \<noteq> fst (hd ws'_rest)\<close>
+                by (by100 simp) (metis hd_conv_nth)
+            next
+              case False
+              have "i - 1 + 1 < length ws'_rest" using hi False by (by100 simp)
+              hence "fst (ws'_rest ! (i - 1)) \<noteq> fst (ws'_rest ! (i - 1 + 1))"
+                using hwr_adj by (by100 blast)
+              thus ?thesis using False by (by100 simp)
+            qed
+          qed
+          have hresult_eval: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?result) e
+              = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e"
+            using heval_wsr by (by100 simp)
+          show ?thesis
+            apply (rule disjI2, rule_tac x="?result" in exI, intro conjI)
+            apply (by100 simp)
+            using h\<alpha>J hzGG False hwr_vals apply (by100 force)
+            using hresult_adj apply (by100 blast)
+            using hresult_eval by (by100 blast)
+        qed
       next
         case False
         \<comment> \<open>Different index: prepend.\<close>
