@@ -10715,12 +10715,33 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
             \<comment> \<open>Different index: prepend. Result [α # indices', x # wrd'] is reduced.\<close>
             \<comment> \<open>New word: α # indices', x # wrd'. Length, vals, non-identity, adjacent, eval all hold.\<close>
             let ?ni = "?\<alpha> # indices'" and ?nw = "?x # wrd'"
+            have hni_len: "length ?ni = length ?nw" using hlen' by (by100 simp)
+            have hni_pos: "0 < length ?ni" by (by100 simp)
+            have hni_vals: "\<forall>i<length ?ni. ?ni!i \<in> J \<and> ?nw!i \<in> GG (?ni!i) \<and> \<iota>fam (?ni!i) (?nw!i) \<noteq> e"
+            proof (intro allI impI conjI)
+              fix i assume hi: "i < length ?ni"
+              show "?ni!i \<in> J" using hi h\<alpha>J hvals' by (cases i) (by100 auto)
+              show "?nw!i \<in> GG (?ni!i)" using hi hxGG hvals' by (cases i) (by100 auto)
+              show "\<iota>fam (?ni!i) (?nw!i) \<noteq> e" using hi \<open>\<iota>fam ?\<alpha> ?x \<noteq> e\<close> hvals' by (cases i) (by100 auto)
+            qed
+            have hni_adj: "\<forall>i. i + 1 < length ?ni \<longrightarrow> ?ni!i \<noteq> ?ni!(i+1)"
+            proof (intro allI impI)
+              fix i assume hi: "i + 1 < length ?ni"
+              show "?ni!i \<noteq> ?ni!(i+1)"
+                using hi \<open>?\<alpha> \<noteq> indices'!0\<close> hadj' by (cases i) (by100 auto)
+            qed
+            have hni_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?ni!i) (?nw!i)) [0..<length ?ni]) e
+                = ?eval_full"
+              sorry \<comment> \<open>eval(prepend) = mul(head, eval(tail)) = eval_full — needs heval_split + heval'\<close>
             show ?thesis
               apply (rule disjI2)
               apply (rule exI[of _ ?ni], rule exI[of _ ?nw])
-              using hlen' hpos' hvals' hadj' heval' heval_split h\<alpha>J hxGG
-                    \<open>\<iota>fam ?\<alpha> ?x \<noteq> e\<close> \<open>?\<alpha> \<noteq> indices'!0\<close>
-              sorry \<comment> \<open>Prepend assembly — list properties of # constructor\<close>
+              apply (intro conjI)
+              using hni_len apply (by100 blast)
+              using hni_pos apply (by100 blast)
+              using hni_vals apply (by100 blast)
+              using hni_adj apply (by100 blast)
+              using hni_eval by (by100 blast)
           qed
         qed
       qed
