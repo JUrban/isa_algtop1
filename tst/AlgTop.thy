@@ -10733,7 +10733,72 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
             \<comment> \<open>Eval: mul(ιfam α x, eval(indices', wrd'))
                  = mul(ιfam α x, mul(ιfam α (wrd'!0), eval(tl indices', tl wrd')))
                  = mul(ιfam α z, eval(tl indices', tl wrd'))\<close>
-            show ?thesis sorry \<comment> \<open>Apply IH on tl(indices'), tl(wrd') with combined head\<close>
+            show ?thesis
+            proof (cases "\<iota>fam ?\<alpha> ?z = e")
+              case True
+              \<comment> \<open>Combined element is identity. eval_full = e * eval(tl) = eval(tl).
+                 Apply IH on tl(indices'), tl(wrd') which is shorter.\<close>
+              \<comment> \<open>tl(indices') has fewer elements. Need length < length indices for IH.
+                 Actually, we don't need the IH here — the z=e case means eval_full = eval(tl).
+                 Apply IH directly on tl(indices'), tl(wrd') which come from the reduced tail.\<close>
+              have htl_idx': "length (tl indices') < length indices"
+                sorry \<comment> \<open>length bound: reduced tail's tail < original length\<close>
+              have htl_len': "length (tl indices') = length (tl wrd')"
+                using hlen' by (by100 simp)
+              have htl_vals': "\<forall>i<length (tl indices'). (tl indices')!i \<in> J
+                  \<and> (tl wrd')!i \<in> GG ((tl indices')!i)"
+              proof (intro allI impI)
+                fix i assume hi: "i < length (tl indices')"
+                have hsi: "Suc i < length indices'" using hi hpos' by (by100 simp)
+                have "(tl indices')!i = indices'!Suc i" using hi by (simp add: nth_tl)
+                moreover have "(tl wrd')!i = wrd'!Suc i" using hi hlen' by (simp add: nth_tl)
+                moreover have "indices'!Suc i \<in> J \<and> wrd'!Suc i \<in> GG (indices'!Suc i)"
+                  using hvals' hsi by (by100 blast)
+                ultimately show "(tl indices')!i \<in> J \<and> (tl wrd')!i \<in> GG ((tl indices')!i)"
+                  by (by100 simp)
+              qed
+              from less(1)[OF htl_idx' htl_len' htl_vals']
+              show ?thesis sorry \<comment> \<open>Chain: IH on tail + hcombine + True → eval_full = e or reduced\<close>
+            next
+              case False
+              \<comment> \<open>Combined ≠ e. Replace head: indices', wrd'[0 := z] is reduced.\<close>
+              let ?nw' = "wrd'[0 := ?z]"
+              have hnw_len: "length indices' = length ?nw'" using hlen' by (by100 simp)
+              have hnw_vals: "\<forall>i<length indices'. indices'!i \<in> J \<and> ?nw'!i \<in> GG (indices'!i)
+                  \<and> \<iota>fam (indices'!i) (?nw'!i) \<noteq> e"
+              proof (intro allI impI conjI)
+                fix i assume hi: "i < length indices'"
+                show "indices'!i \<in> J" using hvals' hi by (by100 blast)
+                show "?nw'!i \<in> GG (indices'!i)"
+                proof (cases "i = 0")
+                  case True
+                  have "?nw'!0 = ?z" using hpos' hlen' by (by100 simp)
+                  thus ?thesis using hzGG h\<alpha>eq True by (by100 simp)
+                next
+                  case False2: False thus ?thesis using hvals' hi by (by100 simp)
+                qed
+                show "\<iota>fam (indices'!i) (?nw'!i) \<noteq> e"
+                proof (cases "i = 0")
+                  case True
+                  have "?nw'!0 = ?z" using hpos' hlen' by (by100 simp)
+                  thus ?thesis using \<open>\<iota>fam ?\<alpha> ?z \<noteq> e\<close> h\<alpha>eq True by (by100 simp)
+                next
+                  case False2: False thus ?thesis using hvals' hi by (by100 simp)
+                qed
+              qed
+              have hnw_eval: "foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (?nw'!i)) [0..<length indices']) e
+                  = ?eval_full"
+                sorry \<comment> \<open>eval(indices', wrd'[0:=z]) = mul(ιfam α z, eval(tl)) = eval_full\<close>
+              show ?thesis
+                apply (rule disjI2)
+                apply (rule exI[of _ indices'], rule exI[of _ ?nw'])
+                apply (intro conjI)
+                using hnw_len apply (by100 blast)
+                using hpos' apply (by100 blast)
+                using hnw_vals apply (by100 blast)
+                using hadj' apply (by100 blast)
+                using hnw_eval by (by100 blast)
+            qed
           next
             case False
             \<comment> \<open>Different index: prepend. Result [α # indices', x # wrd'] is reduced.\<close>
