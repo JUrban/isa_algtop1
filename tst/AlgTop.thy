@@ -11268,18 +11268,7 @@ proof -
         \<and> (\<forall>p\<in>set ws. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e)
         \<and> (\<forall>i. i + 1 < length ws \<longrightarrow> fst (ws!i) \<noteq> fst (ws!(i+1)))
         \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws) e = g)"
-    \<comment> \<open>Helper: uniqueness of reduced words (from hreduced + free_product_reduced_repr).\<close>
-    have huniq_reduced: "\<And>ws1 ws2.
-        \<lbrakk>ws1 \<noteq> [];
-         \<forall>p\<in>set ws1. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e;
-         \<forall>i. i + 1 < length ws1 \<longrightarrow> fst (ws1!i) \<noteq> fst (ws1!(i+1));
-         ws2 \<noteq> [];
-         \<forall>p\<in>set ws2. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e;
-         \<forall>i. i + 1 < length ws2 \<longrightarrow> fst (ws2!i) \<noteq> fst (ws2!(i+1));
-         foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws1) e = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws2) e\<rbrakk>
-        \<Longrightarrow> ws1 = ws2"
-      \<comment> \<open>Uniqueness of reduced words. Convert to indexed form and apply hreduced.\<close>
-      sorry
+    \<comment> \<open>Uniqueness of reduced words NOT needed — hkernel via product group G×H suffices.\<close>
     have hext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
       sorry
     \<comment> \<open>Step B: ?h is a group homomorphism.\<close>
