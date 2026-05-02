@@ -10628,9 +10628,21 @@ next
     proof (cases "\<iota>fam \<alpha> x = e")
       case True
       \<comment> \<open>Head = e: skip, use tail's reduced form.\<close>
+      have hrest_in_G: "\<forall>i<length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) rest).
+          (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) rest) ! i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) rest)"
+        hence "i < length rest" by (by100 simp)
+        then obtain a b where hab: "rest ! i = (a, b)" by (cases "rest ! i") (by100 blast)
+        have "a \<in> J \<and> b \<in> GG a" using hrest_vals \<open>i < length rest\<close> hab
+          by (by100 auto) (metis nth_mem fst_conv snd_conv)+
+        thus "(map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) rest) ! i \<in> G"
+          using \<open>i < length rest\<close> hab h\<iota>_in by (by100 simp)
+      qed
+      have heval_rest_G: "?eval_rest \<in> G"
+        by (rule foldr_mul_closed[OF hG hrest_in_G])
       have "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e = ?eval_rest"
-        using heval_cons True group_id_left[OF hG]
-        sorry \<comment> \<open>mul e (eval_rest) = eval_rest — needs eval_rest ∈ G\<close>
+        using heval_cons True group_id_left[OF hG heval_rest_G] by (by100 simp)
       hence "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_tail) e
           = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e"
         using heval' by (by100 simp)
