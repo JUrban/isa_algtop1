@@ -11175,6 +11175,7 @@ proof -
          \<forall>i. i + 1 < length ws2 \<longrightarrow> fst (ws2!i) \<noteq> fst (ws2!(i+1));
          foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws1) e = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws2) e\<rbrakk>
         \<Longrightarrow> ws1 = ws2"
+      \<comment> \<open>Uniqueness of reduced words. Convert to indexed form and apply hreduced.\<close>
       sorry
     have hext: "\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. ?h (\<iota>fam \<alpha> x) = hfam \<alpha> x"
       sorry
