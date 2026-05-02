@@ -14757,33 +14757,8 @@ proof -
       \<comment> \<open>For each subdivision point f(sᵢ) ∈ U ∩ V (when consecutive pieces differ),
          choose a path αᵢ from x₀ to f(sᵢ) in U ∩ V. Then αᵢ⁻¹ · fᵢ · αᵢ₊₁ is a loop
          at x₀ in U or V, giving an element of π₁(U) or π₁(V). Map to FP via ιfam.\<close>
-      \<comment> \<open>For each i, piece i maps into Sᵢ ∈ {U,V}. Define Sᵢ.\<close>
-      define S where "S i = (if (\<forall>t. 0 \<le> t \<and> t \<le> 1
-          \<longrightarrow> f (subdiv i + t * (subdiv (Suc i) - subdiv i)) \<in> U) then U else V)" for i
-      have hS_UV: "\<forall>i<m. S i = U \<or> S i = V" unfolding S_def by (by100 auto)
-      have hS_maps: "\<forall>i<m. \<forall>t. 0 \<le> t \<and> t \<le> 1
-          \<longrightarrow> f (subdiv i + t * (subdiv (Suc i) - subdiv i)) \<in> S i"
-        unfolding S_def using hs_UV by (by100 auto)
-      \<comment> \<open>Subdivision points: f(sᵢ) ∈ Sᵢ₋₁ ∩ Sᵢ (from boundary of adjacent pieces).\<close>
-      \<comment> \<open>Choose connecting paths αᵢ from x₀ to f(sᵢ) in the appropriate path-connected set.\<close>
-      \<comment> \<open>Form conjugated loops gᵢ = αᵢ · fᵢ · αᵢ₊₁⁻¹ in Sᵢ.\<close>
-      \<comment> \<open>By telescoping_core: g₀·...·g_{m-1} ~ α₀ · f · αₘ⁻¹.\<close>
-      \<comment> \<open>With α₀ = αₘ = const: ~ f. So [f] = [g₀·...·g_{m-1}].\<close>
-      \<comment> \<open>Each [gᵢ] ∈ π₁(Sᵢ). Map via ιfam(0 if Sᵢ=U, 1 if Sᵢ=V) to FP.\<close>
-      \<comment> \<open>j(product in FP) = product of [gᵢ] in π₁(X) = [g₀·...·g_{m-1}] = [f] = c.\<close>
-      \<comment> \<open>For the case m=1: entire loop maps into U or V, directly give π₁ element.\<close>
-      \<comment> \<open>General case: use telescoping_core with connecting paths.\<close>
-      \<comment> \<open>We handle both via a combined argument:\<close>
-      \<comment> \<open>Key insight: [f] = [f₀·...·f_{m-1}] by hf_homotopic.
-         Each fᵢ is a loop-segment in Sᵢ. After conjugating with connecting paths,
-         each becomes a loop in Sᵢ at x₀. The product maps to [f] under j.\<close>
-      \<comment> \<open>For now, sorry the general assembly — it needs ~200 lines with telescoping_core.\<close>
       show "c \<in> j ` FP"
-        sorry \<comment> \<open>Path assembly via telescoping_core + connecting paths.
-               Base tools: telescoping_core (AlgTop_JCT_Base0.thy:5669),
-               path_product_homotopic_* for homotopy, hj_ext for j evaluation.
-               Strategy: choose αᵢ in Sᵢ₋₁ ∩ Sᵢ (path-connected), form gᵢ = αᵢ·fᵢ·αᵢ₊₁⁻¹,
-               apply telescoping_core, show j(∏ ιfam([gᵢ])) = [f].\<close>
+        sorry \<comment> \<open>Path assembly: connecting paths + conjugation + j extension\<close>
     qed
   qed
   \<comment> \<open>Step 3: kernel(j) = N.\<close>
