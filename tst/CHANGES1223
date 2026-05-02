@@ -1,0 +1,34 @@
+CHANGES 1223 — Extension property FULLY PROVED (2026-04-30)
+
+Build: OK (38 sorries, down from 44)
+
+=== CHANGES ===
+
+Lemma_68_3_extension_property: ALL SORRIES CLOSED.
+
+1. hword_eval_unique: Two words with valid entries and same G-eval have same H-eval.
+   Proof: Build reverse-inverse word rev_inv(ws2) = map(λ(α,x).(α,invgGG α x))(rev ws2).
+   Show ιfam α (invgGG α x) = invg(ιfam α x) via hom_preserves_inv.
+   Apply hkernel to ws1 ++ rev_inv(ws2) (G-eval = e via foldr_mul_rev_inv).
+   Decompose H-eval via foldr_mul_append + foldr_mul_rev_inv for H.
+   Cancellation: v1*vr = eH and v2*vr = eH implies v1 = v2.
+
+2. hword_eval_eq: eval_H of ANY valid word for g equals ?h(g).
+   Uses hword_eval_unique + free_product_reduced_repr for g ≠ e case.
+
+3. hhom: ?h is a group homomorphism.
+   Part 1 (maps into H): word representation exists, eval_H ∈ H.
+   Part 2 (multiplicative): ws1++ws2 represents mul g1 g2, foldr_mul_append decomposes.
+
+4. hword_exists: Every g ∈ G has a pair-list word with valid entries and eval = g.
+
+This is a KEY milestone: the extension property is the main tool for SvK.
+Potential unblocked sorries: §70.2-70.4, §71, §72, §73 (all SvK-dependent).
+
+=== SORRY BREAKDOWN (38 total, was 44) ===
+
+Remaining key blockers:
+1. SvK j-construction (line ~13893): uses extension property (now proved!)
+2. Lemma 79.1 (general lifting): 8 covering space sorries
+3. Free product word theory (§67-68): rank uniqueness
+
