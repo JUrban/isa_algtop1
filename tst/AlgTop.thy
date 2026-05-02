@@ -10659,6 +10659,21 @@ next
           using hGG_grps h\<alpha>J hxGG hyGG unfolding top1_is_group_on_def by (by100 blast)
         have hcombine: "\<iota>fam \<alpha> ?z = mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
           using h\<iota>_hom h\<alpha>J hxGG hyGG by (by100 blast)
+        \<comment> \<open>eval(ws'_rest) ∈ G — needed for assoc + id_left.\<close>
+        have heval_wr_G: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e \<in> G"
+        proof (rule foldr_mul_closed[OF hG])
+          show "\<forall>i<length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest).
+              (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) ! i \<in> G"
+          proof (intro allI impI)
+            fix i assume hi: "i < length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest)"
+            then obtain a b where "ws'_rest ! i = (a, b)" "i < length ws'_rest"
+              by (cases "ws'_rest ! i") (by100 auto)
+            hence "a \<in> J \<and> b \<in> GG a"
+              using hvals' hcons by (by100 auto) (metis nth_mem fst_conv snd_conv list.set_intros(2))+
+            thus "(map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) ! i \<in> G"
+              using \<open>i < length ws'_rest\<close> \<open>ws'_rest ! i = (a, b)\<close> h\<iota>_in by (by100 simp)
+          qed
+        qed
         \<comment> \<open>eval(p#rest) = mul(ιfam α z, eval(ws'_rest)).\<close>
         have heval_wsr: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e
             = mul (\<iota>fam \<alpha> ?z) (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e)"
@@ -10672,7 +10687,11 @@ next
                 (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e))
               = mul (mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y))
                 (foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e)"
-            sorry \<comment> \<open>group assoc — needs all terms ∈ G\<close>
+          proof -
+            have ha: "\<iota>fam \<alpha> x \<in> G" using h\<iota>_in h\<alpha>J hxGG by (by100 blast)
+            have hb: "\<iota>fam \<alpha> y \<in> G" using h\<iota>_in h\<alpha>J hyGG by (by100 blast)
+            show ?thesis using group_assoc[OF hG ha hb heval_wr_G] by (by100 metis)
+          qed
           also have "mul (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y) = \<iota>fam \<alpha> ?z"
             using hcombine by (by100 simp)
           finally show ?thesis by (by100 simp)
@@ -10695,7 +10714,7 @@ next
           \<comment> \<open>Combined = e. eval = eval(ws'_rest). ws'_rest is already reduced.\<close>
           have heval_eq: "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) (p # rest)) e
               = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'_rest) e"
-            sorry \<comment> \<open>mul e (eval ws'_rest) = eval ws'_rest — same pattern as before\<close>
+            using heval_wsr True group_id_left[OF hG heval_wr_G] by (by100 simp)
           show ?thesis
           proof (cases "ws'_rest = []")
             case True thus ?thesis using heval_eq by (by100 simp)
