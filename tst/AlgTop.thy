@@ -10909,7 +10909,34 @@ proof -
                             \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
         \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
         \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g"
-      sorry \<comment> \<open>Word reduction: induction on word length, combine adjacent same-index\<close>
+    proof -
+      \<comment> \<open>Materialize tagged word using choice.\<close>
+      let ?idx_of = "\<lambda>i. SOME \<alpha>. \<alpha> \<in> J \<and> (\<exists>y\<in>GG \<alpha>. ws!i = \<iota>fam \<alpha> y)"
+      let ?val_of = "\<lambda>i. SOME y. y \<in> GG (?idx_of i) \<and> ws!i = \<iota>fam (?idx_of i) y"
+      let ?tagged_idx = "map ?idx_of [0..<length ws]"
+      let ?tagged_wrd = "map ?val_of [0..<length ws]"
+      have htagged_len: "length ?tagged_idx = length ?tagged_wrd" by (by100 simp)
+      have htagged_vals: "\<forall>i<length ?tagged_idx. ?tagged_idx!i \<in> J \<and> ?tagged_wrd!i \<in> GG (?tagged_idx!i)"
+        sorry \<comment> \<open>From htagged via SOME selection\<close>
+      have htagged_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = g"
+        sorry \<comment> \<open>Evaluation equals foldr mul ws e = g, by ws!i = ιfam(idx_of i)(val_of i)\<close>
+      \<comment> \<open>Apply tagged_word_reduce.\<close>
+      from tagged_word_reduce[OF hG h\<iota>_hom h\<iota>_in hGG_grps htagged_len htagged_vals]
+      have "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = e
+         \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> 0 < length indices'
+              \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
+                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
+              \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
+              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e
+                  = foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e)" .
+      hence "g = e \<or> (\<exists>indices' wrd'. length indices' = length wrd' \<and> 0 < length indices'
+              \<and> (\<forall>i<length indices'. indices'!i \<in> J \<and> wrd'!i \<in> GG (indices'!i)
+                                  \<and> \<iota>fam (indices'!i) (wrd'!i) \<noteq> e)
+              \<and> (\<forall>i. i + 1 < length indices' \<longrightarrow> indices'!i \<noteq> indices'!(i+1))
+              \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices'!i) (wrd'!i)) [0..<length indices']) e = g)"
+        using htagged_eval by (by100 blast)
+      thus ?thesis using hne by (by100 blast)
+    qed
     hence ?thesis by (by100 blast)
   }
   thus ?thesis by (by100 blast)
