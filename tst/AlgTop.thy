@@ -10916,10 +10916,33 @@ proof -
       let ?tagged_idx = "map ?idx_of [0..<length ws]"
       let ?tagged_wrd = "map ?val_of [0..<length ws]"
       have htagged_len: "length ?tagged_idx = length ?tagged_wrd" by (by100 simp)
+      \<comment> \<open>SOME selection gives valid tagged word and ws!i = ιfam(idx_of i)(val_of i).\<close>
+      have hsome: "\<forall>i<length ws. ?idx_of i \<in> J \<and> ?val_of i \<in> GG (?idx_of i)
+                                \<and> ws!i = \<iota>fam (?idx_of i) (?val_of i)"
+      proof (intro allI impI conjI)
+        fix i assume hi: "i < length ws"
+        have hex: "\<exists>\<alpha>. \<alpha> \<in> J \<and> (\<exists>y\<in>GG \<alpha>. ws!i = \<iota>fam \<alpha> y)"
+          using htagged hi by (by100 blast)
+        have hidx: "?idx_of i \<in> J \<and> (\<exists>y\<in>GG (?idx_of i). ws!i = \<iota>fam (?idx_of i) y)"
+          by (rule someI_ex[OF hex])
+        show "?idx_of i \<in> J" using hidx by (by100 blast)
+        have hex2: "\<exists>y. y \<in> GG (?idx_of i) \<and> ws!i = \<iota>fam (?idx_of i) y"
+          using hidx by (by100 blast)
+        have hval: "?val_of i \<in> GG (?idx_of i) \<and> ws!i = \<iota>fam (?idx_of i) (?val_of i)"
+          by (rule someI_ex[OF hex2])
+        show "?val_of i \<in> GG (?idx_of i)" using hval by (by100 blast)
+        show "ws!i = \<iota>fam (?idx_of i) (?val_of i)" using hval by (by100 blast)
+      qed
       have htagged_vals: "\<forall>i<length ?tagged_idx. ?tagged_idx!i \<in> J \<and> ?tagged_wrd!i \<in> GG (?tagged_idx!i)"
-        sorry \<comment> \<open>From htagged via SOME selection\<close>
+        using hsome by (by100 simp)
       have htagged_eval: "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = g"
-        sorry \<comment> \<open>Evaluation equals foldr mul ws e = g, by ws!i = ιfam(idx_of i)(val_of i)\<close>
+      proof -
+        have "\<forall>i<length ws. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i) = ws!i"
+          using hsome by (by100 simp)
+        hence "map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ws] = ws"
+          by (intro nth_equalityI) (by100 auto)
+        thus ?thesis using hws_eval by (by100 simp)
+      qed
       \<comment> \<open>Apply tagged_word_reduce.\<close>
       from tagged_word_reduce[OF hG h\<iota>_hom h\<iota>_in hGG_grps htagged_len htagged_vals]
       have "foldr mul (map (\<lambda>i. \<iota>fam (?tagged_idx!i) (?tagged_wrd!i)) [0..<length ?tagged_idx]) e = e
