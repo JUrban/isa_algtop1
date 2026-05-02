@@ -1,0 +1,37 @@
+CHANGES 1222 — Extension property: product_group_is_group + hkernel sorries + hext (2026-04-30)
+
+Build: OK (39 sorries, down from 44)
+
+=== CHANGES ===
+
+1. product_group_is_group (standalone lemma, line ~11071):
+   Proves G×H is a group from G and H being groups. Explicit pair decomposition
+   avoids by100 timeouts that plagued the inline version.
+
+2. hGH_grp sorry closed (line ~11262):
+   Product group in hkernel proof now uses product_group_is_group[OF hG hH].
+
+3. hsndp sorry closed (line ~11347):
+   ιfam(α)(x) = e → x = eGG(α) via injectivity + hom_preserves_id.
+
+4. Pair-to-index conversion sorry closed (line ~11362):
+   Properties of pair-list ws' converted to indexed form for hreduced.
+
+5. Index-to-pair map sorry closed (line ~11397):
+   nth_equalityI proves map (λi. f(idx!i)(wrd!i)) [0..<n] = map (λ(α,x). f α x) ws'.
+
+6. hext sorry closed (line ~11431):
+   h(ιfam α x) = hfam α x. Case ιfam α x = e: injectivity + hom_preserves_id.
+   Case ≠ e: apply hkernel to ws0 ++ [(α, invgGG α x)], use foldr_mul_append
+   and group cancellation.
+
+=== SORRY BREAKDOWN (39 total, was 44) ===
+
+Remaining in extension property:
+- hhom (h is a group hom): 1 sorry
+
+Key blockers:
+1. hhom (1 sorry): completes extension property, unblocks 9 SvK sorries
+2. Lemma 79.1 (general lifting): unblocks 8 covering space sorries
+3. Free product word theory: unblocks algebra sorries
+
