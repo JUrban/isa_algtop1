@@ -10685,8 +10685,14 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
           case True
           \<comment> \<open>First element is identity: skip it, use tail's reduced form.\<close>
           have "?eval_full = mul e ?eval_tail" using heval_split True by (by100 simp)
+          have heval_tail_G: "?eval_tail \<in> G"
+          proof (rule foldr_mul_closed[OF hG])
+            show "\<forall>i<length (map (\<lambda>i. \<iota>fam (?tail_idx ! i) (?tail_wrd ! i)) [0..<length ?tail_idx]).
+                (map (\<lambda>i. \<iota>fam (?tail_idx ! i) (?tail_wrd ! i)) [0..<length ?tail_idx]) ! i \<in> G"
+              using htl_vals h\<iota>_in by (by100 auto)
+          qed
           hence heval_eq: "?eval_full = ?eval_tail"
-            sorry \<comment> \<open>mul e x = x — needs eval_tail ∈ G\<close>
+            using \<open>?eval_full = mul e ?eval_tail\<close> group_id_left[OF hG heval_tail_G] by (by100 simp)
           show ?thesis
             apply (rule disjI2)
             apply (rule exI[of _ indices'], rule exI[of _ wrd'])
