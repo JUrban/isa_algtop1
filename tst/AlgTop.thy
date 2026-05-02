@@ -10720,7 +10720,20 @@ proof (induction "length indices" arbitrary: indices wrd rule: less_induct)
           proof (cases "?\<alpha> = indices'!0")
             case True
             \<comment> \<open>Same index: combine ιfam(α)(x) with ιfam(α)(wrd'!0).\<close>
-            show ?thesis sorry \<comment> \<open>Combine + possibly delete if identity; recurse with IH\<close>
+            \<comment> \<open>Combine: mulGG(α)(x, wrd'!0). If = eGG → delete head, use tail.
+               If ≠ eGG → replace head. Both give shorter/equal-length reduced words.\<close>
+            let ?z = "mulGG ?\<alpha> ?x (wrd'!0)"
+            have h\<alpha>eq: "?\<alpha> = indices'!0" by (rule True)
+            have "wrd'!0 \<in> GG (indices'!0)" using hvals' hpos' by (by100 blast)
+            hence hwrd0: "wrd'!0 \<in> GG ?\<alpha>" using h\<alpha>eq by (by100 simp)
+            have hzGG: "?z \<in> GG ?\<alpha>"
+              using hGG_grps h\<alpha>J hxGG hwrd0 unfolding top1_is_group_on_def by (by100 blast)
+            have hcombine: "\<iota>fam ?\<alpha> ?z = mul (\<iota>fam ?\<alpha> ?x) (\<iota>fam ?\<alpha> (wrd'!0))"
+              using h\<iota>_hom h\<alpha>J hxGG hwrd0 by (by100 blast)
+            \<comment> \<open>Eval: mul(ιfam α x, eval(indices', wrd'))
+                 = mul(ιfam α x, mul(ιfam α (wrd'!0), eval(tl indices', tl wrd')))
+                 = mul(ιfam α z, eval(tl indices', tl wrd'))\<close>
+            show ?thesis sorry \<comment> \<open>Apply IH on tl(indices'), tl(wrd') with combined head\<close>
           next
             case False
             \<comment> \<open>Different index: prepend. Result [α # indices', x # wrd'] is reduced.\<close>
