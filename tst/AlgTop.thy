@@ -11005,7 +11005,62 @@ proof -
                                   \<and> \<iota>fam (indices!i) (word!i) \<noteq> e)
               \<and> (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1))
               \<and> foldr mul (map (\<lambda>i. \<iota>fam (indices!i) (word!i)) [0..<length indices]) e = g)"
-        using hpairs_eval sorry \<comment> \<open>Convert pair list to index/word lists — map fst/snd\<close>
+      proof (elim disjE)
+        assume "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e = e"
+        thus ?thesis using hpairs_eval by (by100 simp)
+      next
+        assume "\<exists>ws'. ws' \<noteq> []
+            \<and> (\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e)
+            \<and> (\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1)))
+            \<and> foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e
+                = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e"
+        then obtain ws' where hne': "ws' \<noteq> []"
+            and hvals': "\<forall>p\<in>set ws'. fst p \<in> J \<and> snd p \<in> GG (fst p) \<and> \<iota>fam (fst p) (snd p) \<noteq> e"
+            and hadj': "\<forall>i. i + 1 < length ws' \<longrightarrow> fst (ws'!i) \<noteq> fst (ws'!(i+1))"
+            and heval': "foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e
+                = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws_pairs) e"
+          by (by100 blast)
+        let ?idx = "map fst ws'" and ?wrd = "map snd ws'"
+        have hlen': "length ?idx = length ?wrd" by (by100 simp)
+        have hpos': "0 < length ?idx" using hne' by (by100 simp)
+        have hvals_idx: "\<forall>i<length ?idx. ?idx!i \<in> J \<and> ?wrd!i \<in> GG (?idx!i)
+            \<and> \<iota>fam (?idx!i) (?wrd!i) \<noteq> e"
+        proof (intro allI impI conjI)
+          fix i assume hi: "i < length ?idx"
+          have "ws'!i \<in> set ws'" using hi by (by100 simp)
+          hence hpi: "fst (ws'!i) \<in> J \<and> snd (ws'!i) \<in> GG (fst (ws'!i)) \<and> \<iota>fam (fst (ws'!i)) (snd (ws'!i)) \<noteq> e"
+            using hvals' by (by100 blast)
+          show "?idx!i \<in> J" using hpi hi by (by100 simp)
+          show "?wrd!i \<in> GG (?idx!i)" using hpi hi by (by100 simp)
+          show "\<iota>fam (?idx!i) (?wrd!i) \<noteq> e" using hpi hi by (by100 simp)
+        qed
+        have hadj_idx: "\<forall>i. i + 1 < length ?idx \<longrightarrow> ?idx!i \<noteq> ?idx!(i+1)"
+          using hadj' by (by100 auto)
+        have heval_idx: "foldr mul (map (\<lambda>i. \<iota>fam (?idx!i) (?wrd!i)) [0..<length ?idx]) e
+            = foldr mul (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') e"
+        proof -
+          have "map (\<lambda>i. \<iota>fam (?idx!i) (?wrd!i)) [0..<length ?idx]
+              = map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws'"
+          proof (intro nth_equalityI)
+            show "length (map (\<lambda>i. \<iota>fam (?idx!i) (?wrd!i)) [0..<length ?idx])
+                = length (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws')" by (by100 simp)
+            fix i assume "i < length (map (\<lambda>i. \<iota>fam (?idx!i) (?wrd!i)) [0..<length ?idx])"
+            hence hi: "i < length ws'" by (by100 simp)
+            obtain a b where hab: "ws'!i = (a, b)" by (cases "ws'!i") (by100 blast)
+            show "(map (\<lambda>i. \<iota>fam (?idx!i) (?wrd!i)) [0..<length ?idx]) ! i
+                = (map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ws') ! i"
+              using hi hab by (by100 simp)
+          qed
+          thus ?thesis by (by100 simp)
+        qed
+        show ?thesis
+          apply (rule disjI2, rule exI[of _ ?idx], rule exI[of _ ?wrd], intro conjI)
+          using hlen' apply (by100 blast)
+          using hpos' apply (by100 blast)
+          using hvals_idx apply (by100 blast)
+          using hadj_idx apply (by100 blast)
+          using heval_idx heval' hpairs_eval by (by100 simp)
+      qed
       thus ?thesis using hne by (by100 blast)
     qed
     hence ?thesis by (by100 blast)
