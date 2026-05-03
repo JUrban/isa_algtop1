@@ -58,7 +58,7 @@ Top1_Ch5_8|corollary|Theorem_50_2_finite_dim|27322
 Top1_Ch9_13|corollary|Theorem_56_1_FTA_leading|16020
 AlgTop_JCT_Base0|corollary|Theorem_58_7_strict|5548
 AlgTop_JCT_Base|corollary|Theorem_59_3_path_connected|3249
-AlgTop|corollary|Theorem_80_3_universal_strict|22898
+AlgTop|corollary|Theorem_80_3_universal_strict|23126
 AlgTop_JCT_Base0|corollary|top1_same_homotopy_type_strict|5560
 Top1_Ch2|definition|basis_for|1078
 Top1_Ch2|definition|basis_K_topology_R|1559
@@ -130,7 +130,7 @@ Top1_Ch2|definition|strictly_finer_than|1047
 Top1_Ch2|definition|subspace_topology|3701
 Top1_Ch5_8|definition|top1_AN_48|24188
 Top1_Ch9_13|definition|top1_antipode_preserving_S1|14646
-AlgTop|definition|top1_arc_endpoints_on|23029
+AlgTop|definition|top1_arc_endpoints_on|23257
 Top1_Ch9_13|definition|top1_B2|11554
 Top1_Ch9_13|definition|top1_B2_topology|11557
 Top1_Ch5_8|definition|top1_baire_on|22237
@@ -172,7 +172,7 @@ Top1_Ch4|definition|top1_countable|16
 Top1_Ch4|definition|top1_countable_neighborhood_basis_at|436
 Top1_Ch3|definition|top1_countably_compact_on|10373
 Top1_Ch9_13|definition|top1_covering_map_on|3918
-AlgTop|definition|top1_covering_transformation_on|22915
+AlgTop|definition|top1_covering_transformation_on|23143
 Top1_Ch5_8|definition|top1_cover_order_le_on|26322
 AlgTop_JCT_Base0|definition|top1_deformation_retract_of_on|4031
 Top1_Ch5_8|definition|top1_Delta49|25038
@@ -236,7 +236,7 @@ AlgTop|definition|top1_is_dunce_cap_on|14010
 AlgTop|definition|top1_is_free_abelian_group_full_on|7015
 AlgTop|definition|top1_is_free_group_full_on|6987
 AlgTop|definition|top1_is_free_product_on|7058
-AlgTop|definition|top1_is_graph_on|23039
+AlgTop|definition|top1_is_graph_on|23267
 Top1_Ch9_13|definition|top1_is_group_on|3114
 Top1_Ch9_13|definition|top1_is_lifting_on|3966
 Top1_Ch9_13|definition|top1_is_loop_on|2335
@@ -253,7 +253,7 @@ Top1_Ch3|definition|top1_is_separation_on|25
 Top1_Ch5_8|definition|top1_is_subnet|33607
 AlgTop|definition|top1_is_surface_on|18127
 AlgTop|definition|top1_is_torus_on|14035
-AlgTop|definition|top1_is_tree_on|23072
+AlgTop|definition|top1_is_tree_on|23300
 AlgTop|definition|top1_is_triangulable_on|14063
 AlgTop|definition|top1_is_universal_covering_on|22287
 AlgTop|definition|top1_is_wedge_of_circles_on|13881
@@ -339,7 +339,7 @@ Top1_Ch5_8|definition|top1_SC_TZ|20785
 Top1_Ch5_8|definition|top1_SC_Y|20789
 Top1_Ch5_8|definition|top1_SC_Z|20782
 Top1_Ch4|definition|top1_second_countable_on|447
-AlgTop|definition|top1_semilocally_simply_connected_on|22976
+AlgTop|definition|top1_semilocally_simply_connected_on|23204
 AlgTop_JCT_Base|definition|top1_separates_on|3763
 Top1_Ch5_8|definition|top1_sequentially_compact_on|32828
 Top1_Ch5_8|definition|top1_sigma_locally_finite_family_on|2835
@@ -566,7 +566,7 @@ Top1_Ch5_8|lemma|equicont_from_tb_cover|14422
 Top1_Ch5_8|lemma|equicontinuous_covering_bound|21437
 Top1_Ch5_8|lemma|equicontinuous_subset|14789
 Top1_Ch5_8|lemma|eval_continuous_compact_convergence|21706
-AlgTop|lemma|evenly_covered_open_subset|22669
+AlgTop|lemma|evenly_covered_open_subset|22770
 Top1_Ch4|lemma|exists_pow2_inv_lt|6770
 Top1_Ch4|lemma|exists_top1_dyadic_between_01|6793
 Top1_Ch5_8|lemma|expansion_E_open|7915
@@ -673,6 +673,7 @@ AlgTop_JCT_Base|lemma|homeomorphism_preserves_path_connected|1150
 AlgTop_JCT_Base|lemma|homeomorphism_preserves_simply_connected|1205
 AlgTop_JCT_Base|lemma|homeomorphism_preserves_simply_connected_forward|5751
 AlgTop_JCT_Base|lemma|homeomorphism_reflects_simply_connected|5757
+AlgTop|lemma|homeomorphism_restrict_open|22668
 AlgTop_JCT_Base|lemma|homeomorphism_restrict_point|5763
 AlgTop|lemma|hom_image_is_subgroup|7839
 Top1_Ch9_13|lemma|homotopy_concat_continuous|502
@@ -1724,10 +1725,10 @@ AlgTop|theorem|Theorem_78_2_connected_polygonal_quotient|19212
 AlgTop|theorem|Theorem_79_2|20615
 AlgTop|theorem|Theorem_79_4|21424
 AlgTop|theorem|Theorem_80_1_universal_unique|22436
-AlgTop|theorem|Theorem_80_3_universal|22677
-AlgTop|theorem|Theorem_81_2_covering_group_iso|22923
-AlgTop|theorem|Theorem_82_1_covering_existence|22986
-AlgTop|theorem|Theorem_83_2_covering_of_graph_is_graph|23054
-AlgTop|theorem|Theorem_84_7_fund_group_graph_is_free|23081
-AlgTop|theorem|Theorem_85_1_Nielsen_Schreier|23107
-AlgTop|theorem|Theorem_85_3_Schreier_index|23131
+AlgTop|theorem|Theorem_80_3_universal|22905
+AlgTop|theorem|Theorem_81_2_covering_group_iso|23151
+AlgTop|theorem|Theorem_82_1_covering_existence|23214
+AlgTop|theorem|Theorem_83_2_covering_of_graph_is_graph|23282
+AlgTop|theorem|Theorem_84_7_fund_group_graph_is_free|23309
+AlgTop|theorem|Theorem_85_1_Nielsen_Schreier|23335
+AlgTop|theorem|Theorem_85_3_Schreier_index|23359
