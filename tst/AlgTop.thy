@@ -2277,6 +2277,58 @@ proof -
   obtain n sub where "n \<ge> 1" "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)"
       "\<forall>i<n. \<exists>W\<in>?\<A>. {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W"
     by (by100 auto)
+  \<comment> \<open>Monotonicity bounds: sub i \<ge> 0 and sub(Suc i) \<le> 1 for i < n.\<close>
+  have hsub_ge0: "\<And>k. k \<le> n \<Longrightarrow> sub k \<ge> 0"
+  proof -
+    fix k show "k \<le> n \<Longrightarrow> sub k \<ge> 0"
+    proof (induction k)
+      case 0 thus ?case using \<open>sub 0 = 0\<close> by (by100 simp)
+    next
+      case (Suc k')
+      hence "k' < n" by (by100 arith)
+      hence "sub k' < sub (Suc k')" using \<open>\<forall>i<n. sub i < sub (Suc i)\<close> by (by100 blast)
+      moreover have "sub k' \<ge> 0" using Suc by (by100 arith)
+      ultimately show ?case by (by100 linarith)
+    qed
+  qed
+  have hsub_le1: "\<And>k. k \<le> n \<Longrightarrow> sub k \<le> 1"
+  proof -
+    fix k assume "k \<le> n"
+    \<comment> \<open>sub is strictly increasing and sub n = 1, so sub k \<le> sub n = 1 for k \<le> n.\<close>
+    have "\<And>a b. a < b \<Longrightarrow> b \<le> n \<Longrightarrow> sub a < sub b"
+    proof -
+      fix a b :: nat assume "a < b" "b \<le> n"
+      thus "sub a < sub b"
+      proof (induction b)
+        case 0 thus ?case by (by100 simp)
+      next
+        case (Suc b')
+        show ?case
+        proof (cases "a < b'")
+          case True
+          hence "sub a < sub b'" using Suc by (by100 arith)
+          moreover have "b' < n" using Suc.prems by (by100 arith)
+          hence "sub b' < sub (Suc b')"
+            using \<open>\<forall>i<n. sub i < sub (Suc i)\<close> by (by100 blast)
+          ultimately show ?thesis by (by100 linarith)
+        next
+          case False
+          hence "a = b'" using Suc by (by100 arith)
+          moreover have "b' < n" using Suc.prems by (by100 arith)
+          ultimately show ?thesis using \<open>\<forall>i<n. sub i < sub (Suc i)\<close> by (by100 force)
+        qed
+      qed
+    qed
+    hence "k < n \<Longrightarrow> sub k < sub n" using \<open>k \<le> n\<close> by (by100 blast)
+    show "sub k \<le> 1"
+    proof (cases "k = n")
+      case True thus ?thesis using \<open>sub n = 1\<close> by (by100 simp)
+    next
+      case False hence "k < n" using \<open>k \<le> n\<close> by (by100 arith)
+      hence "sub k < sub n" using \<open>k < n \<Longrightarrow> sub k < sub n\<close> by (by100 blast)
+      thus ?thesis using \<open>sub n = 1\<close> by (by100 linarith)
+    qed
+  qed
   moreover have "\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
       \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
   proof (intro allI impI)
@@ -2293,8 +2345,19 @@ proof -
       proof (intro disjI1 allI impI)
         fix t :: real assume "0\<le>t \<and> t\<le>1"
         have "sub i + t * (sub (Suc i) - sub i) \<in> {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1}"
-          using \<open>0\<le>t \<and> t\<le>1\<close> \<open>i < n\<close> \<open>sub 0 = 0\<close> \<open>sub n = 1\<close> \<open>\<forall>i<n. sub i < sub (Suc i)\<close>
-          sorry \<comment> \<open>Arithmetic: 0 \<le> sub i, sub(Suc i) \<le> 1, and 0 \<le> t \<le> 1 gives membership.\<close>
+        proof -
+          have hsi0: "sub i \<ge> 0" by (rule hsub_ge0) (use \<open>i < n\<close> in \<open>by100 arith\<close>)
+          have hsi1: "sub (Suc i) \<le> 1" by (rule hsub_le1) (use \<open>i < n\<close> in \<open>by100 arith\<close>)
+          have hmono: "sub i < sub (Suc i)" using \<open>\<forall>i<n. sub i < sub (Suc i)\<close> \<open>i < n\<close> by (by100 blast)
+          have hdiff: "sub (Suc i) - sub i > 0" using hmono by (by100 linarith)
+          have ht0: "t \<ge> 0" and ht1: "t \<le> 1" using \<open>0\<le>t \<and> t\<le>1\<close> by (by100 blast)+
+          have htd: "t * (sub (Suc i) - sub i) \<ge> 0"
+            apply (rule mult_nonneg_nonneg) using ht0 hdiff by (by100 linarith)+
+          have htd1: "t * (sub (Suc i) - sub i) \<le> 1 * (sub (Suc i) - sub i)"
+            apply (rule mult_right_mono) using ht1 hdiff by (by100 linarith)+
+          hence htd1: "t * (sub (Suc i) - sub i) \<le> sub (Suc i) - sub i" by (by100 simp)
+          show ?thesis using hsi0 hsi1 htd htd1 by (by100 auto)
+        qed
         thus "f (sub i + t * (sub (Suc i) - sub i)) \<in> U"
           using \<open>{s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W\<close> hW by (by100 blast)
       qed
@@ -2304,13 +2367,28 @@ proof -
       proof (intro disjI2 allI impI)
         fix t :: real assume "0\<le>t \<and> t\<le>1"
         have "sub i + t * (sub (Suc i) - sub i) \<in> {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1}"
-          sorry \<comment> \<open>Same arithmetic.\<close>
+        proof -
+          have hsi0: "sub i \<ge> 0" by (rule hsub_ge0) (use \<open>i < n\<close> in \<open>by100 arith\<close>)
+          have hsi1: "sub (Suc i) \<le> 1" by (rule hsub_le1) (use \<open>i < n\<close> in \<open>by100 arith\<close>)
+          have hmono: "sub i < sub (Suc i)" using \<open>\<forall>i<n. sub i < sub (Suc i)\<close> \<open>i < n\<close> by (by100 blast)
+          have hdiff: "sub (Suc i) - sub i > 0" using hmono by (by100 linarith)
+          have ht0: "t \<ge> 0" and ht1: "t \<le> 1" using \<open>0\<le>t \<and> t\<le>1\<close> by (by100 blast)+
+          have htd: "t * (sub (Suc i) - sub i) \<ge> 0"
+            apply (rule mult_nonneg_nonneg) using ht0 hdiff by (by100 linarith)+
+          have htd1: "t * (sub (Suc i) - sub i) \<le> 1 * (sub (Suc i) - sub i)"
+            apply (rule mult_right_mono) using ht1 hdiff by (by100 linarith)+
+          hence htd1: "t * (sub (Suc i) - sub i) \<le> sub (Suc i) - sub i" by (by100 simp)
+          show ?thesis using hsi0 hsi1 htd htd1 by (by100 auto)
+        qed
         thus "f (sub i + t * (sub (Suc i) - sub i)) \<in> V"
           using \<open>{s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W\<close> hW by (by100 blast)
       qed
     qed
   qed
-  ultimately show ?thesis by (by100 blast)
+  ultimately have "\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+      \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)" by (by100 blast)
+  thus ?thesis using \<open>n \<ge> 1\<close> \<open>sub 0 = 0\<close> \<open>sub n = 1\<close> \<open>\<forall>i<n. sub i < sub (Suc i)\<close>
+    by (by100 blast)
 qed
 
 text \<open>Theorem 70.1 (Seifert-van Kampen, universal property):
