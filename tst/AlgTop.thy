@@ -22688,7 +22688,38 @@ proof -
   next
     \<comment> \<open>Each restricted sheet is open in E.\<close>
     show "\<forall>W'\<in>?\<V>V. openin_on E TE W'"
-      sorry \<comment> \<open>W' = W \<inter> p\<inverse>(V). Both W and p\<inverse>(V) open in E (p|_W homeo, V open in U-subspace).\<close>
+    proof
+      fix W' assume "W' \<in> ?\<V>V"
+      then obtain W where hW: "W \<in> \<V>U" and hW': "W' = {x \<in> W. p x \<in> V}" by (by100 blast)
+      \<comment> \<open>p|_W: W \<rightarrow> U is a homeomorphism. V is open in subspace(B,U). Preimage of V is open in W.\<close>
+      have hW_open: "openin_on E TE W" using h\<V>_open hW by (by100 blast)
+      have hW_homeo: "top1_homeomorphism_on W (subspace_topology E TE W) U (subspace_topology B TB U) p"
+        using h\<V>_homeo hW by (by100 blast)
+      \<comment> \<open>V is open in subspace_topology B TB U (since V \<in> TB and V \<subseteq> U).\<close>
+      have hV_in_TU: "V \<in> subspace_topology B TB U"
+        unfolding subspace_topology_def using hV hVU unfolding openin_on_def by (by100 blast)
+      \<comment> \<open>p continuous W \<rightarrow> U means preimage of V (open in U) is open in W.\<close>
+      have hp_cont_WU: "top1_continuous_map_on W (subspace_topology E TE W) U (subspace_topology B TB U) p"
+        using hW_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "{x \<in> W. p x \<in> V} \<in> subspace_topology E TE W"
+        using hp_cont_WU hV_in_TU unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Open in subspace(E, W) and W open in E implies open in E.\<close>
+      hence "{x \<in> W. p x \<in> V} \<in> TE"
+      proof -
+        have "{x \<in> W. p x \<in> V} \<in> subspace_topology E TE W" by (rule \<open>{x \<in> W. p x \<in> V} \<in> subspace_topology E TE W\<close>)
+        then obtain T_open where hTo: "T_open \<in> TE" and heq: "{x \<in> W. p x \<in> V} = W \<inter> T_open"
+          unfolding subspace_topology_def by (by100 blast)
+        have "W \<in> TE" using hW_open unfolding openin_on_def by (by100 blast)
+        hence "W \<inter> T_open \<in> TE" by (rule topology_inter2[OF hTE _ hTo])
+        thus ?thesis using heq by (by100 simp)
+      qed
+      moreover have "{x \<in> W. p x \<in> V} \<subseteq> E"
+      proof -
+        have "W \<subseteq> E" using hW_open unfolding openin_on_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      ultimately show "openin_on E TE W'" unfolding hW' openin_on_def by (by100 blast)
+    qed
   next
     \<comment> \<open>Restricted sheets are pairwise disjoint.\<close>
     show "\<forall>W'\<in>?\<V>V. \<forall>W''\<in>?\<V>V. W' \<noteq> W'' \<longrightarrow> W' \<inter> W'' = {}"
@@ -22733,8 +22764,25 @@ proof -
     \<comment> \<open>Each restricted sheet is homeomorphic to V via p.\<close>
     show "\<forall>W'\<in>?\<V>V. top1_homeomorphism_on W' (subspace_topology E TE W') V
                           (subspace_topology B TB V) p"
-      sorry \<comment> \<open>Restriction of homeomorphism p: W \<cong> U to W' = p\<inverse>(V)\<inter>W gives p: W' \<cong> V.
-         Uses: subspace_topology_trans, bij_betw restriction, continuity restriction.\<close>
+    proof
+      fix W' assume "W' \<in> ?\<V>V"
+      then obtain W where hW: "W \<in> \<V>U" and hW': "W' = {x \<in> W. p x \<in> V}" by (by100 blast)
+      have hW_homeo: "top1_homeomorphism_on W (subspace_topology E TE W) U (subspace_topology B TB U) p"
+        using h\<V>_homeo hW by (by100 blast)
+      have hW_open: "openin_on E TE W" using h\<V>_open hW by (by100 blast)
+      have hWsub: "W \<subseteq> E" using hW_open unfolding openin_on_def by (by100 blast)
+      have hW'sub: "W' \<subseteq> W" unfolding hW' by (by100 blast)
+      have hW'E: "W' \<subseteq> E" using hW'sub hWsub by (by100 blast)
+      have hUopen: "openin_on B TB U" using hcov unfolding top1_evenly_covered_on_def by (by100 blast)
+      have hUsub: "U \<subseteq> B" using hUopen unfolding openin_on_def by (by100 blast)
+      have hVsub: "V \<subseteq> B" using hV unfolding openin_on_def by (by100 blast)
+      show "top1_homeomorphism_on W' (subspace_topology E TE W') V (subspace_topology B TB V) p"
+        sorry \<comment> \<open>Restriction of homeomorphism p: W \<cong> U to W' = p\<inverse>(V) \<inter> W gives p: W' \<cong> V.
+           Key facts: (1) bij_betw p W' V (since p: W \<cong> U bijection and W' = p\<inverse>(V)).
+           (2) Continuity: subspace_topology_trans gives subspace(E, W') = subspace(subspace(E, W), W').
+               p continuous on W (subspace) \<Rightarrow> restriction to W' continuous.
+           (3) Inverse: inv_into W p continuous on U (subspace) \<Rightarrow> restriction to V continuous.\<close>
+    qed
   qed
 qed
 
