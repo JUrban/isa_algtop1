@@ -20674,7 +20674,232 @@ proof -
       \<comment> \<open>So [p\<circ>conj] = mul(mul(c, d), inv(c)) and this is in image_hom(E, e0).\<close>
       \<comment> \<open>Then d = inv(c) \<cdot> [p\<circ>conj] \<cdot> c, so d \<in> conj(image_hom(E, e0)).\<close>
       show "d \<in> (\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))
-          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)" sorry
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+      proof -
+        \<comment> \<open>d = [p\<circ>g], the class of p\<circ>g at b0.\<close>
+        have hg_loop_E: "top1_is_loop_on E TE e1 g" by (rule hg_loop)
+        have hpg_loop: "top1_is_loop_on B TB b0 (p \<circ> g)"
+        proof -
+          have "top1_continuous_map_on I_set I_top B TB (p \<circ> g)"
+            by (rule top1_continuous_map_on_comp)
+               (use hg_loop hp_cont in \<open>unfold top1_is_loop_on_def top1_is_path_on_def, by100 blast\<close>)+
+          moreover have "(p \<circ> g) 0 = b0" using hg_loop hpe1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+          moreover have "(p \<circ> g) 1 = b0" using hg_loop hpe1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+          ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        qed
+        have hd_class: "d = {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+        proof -
+          have "d = top1_fundamental_group_induced_on E TE e1 B TB b0 p
+              {k. top1_loop_equiv_on E TE e1 g k}" by (rule hd_eq)
+          also have "\<dots> = {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+          proof (rule set_eqI, rule iffI)
+            fix k assume "k \<in> top1_fundamental_group_induced_on E TE e1 B TB b0 p
+                {k. top1_loop_equiv_on E TE e1 g k}"
+            then obtain g' where hg'_eq: "top1_loop_equiv_on E TE e1 g g'"
+                and hk': "top1_loop_equiv_on B TB b0 (p \<circ> g') k"
+              unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+            have hg'_loop: "top1_is_loop_on E TE e1 g'"
+              using hg'_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+            have "top1_loop_equiv_on B TB b0 (p \<circ> g) (p \<circ> g')"
+              using top1_induced_preserves_loop_equiv[OF hTE hp_cont hg_loop hg'_loop hg'_eq] hpe1
+              by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTB this hk']
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}" by (by100 blast)
+          next
+            fix k assume "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+            hence hk: "top1_loop_equiv_on B TB b0 (p \<circ> g) k" by (by100 blast)
+            have "g \<in> {k. top1_loop_equiv_on E TE e1 g k}"
+              using top1_loop_equiv_on_refl[OF hg_loop] by (by100 blast)
+            thus "k \<in> top1_fundamental_group_induced_on E TE e1 B TB b0 p
+                {k. top1_loop_equiv_on E TE e1 g k}"
+              unfolding top1_fundamental_group_induced_on_def using hk by (by100 blast)
+          qed
+          finally show ?thesis .
+        qed
+        \<comment> \<open>The conjugate \<alpha>\<cdot>g\<cdot>rev(\<alpha>) is in image_hom(E, e0) via h_conj_loop.\<close>
+        let ?conj_loop = "top1_path_product (top1_path_product \<alpha> g) (top1_path_reverse \<alpha>)"
+        have hconj_in: "top1_fundamental_group_induced_on E TE e0 B TB b0 p
+            {k. top1_loop_equiv_on E TE e0 ?conj_loop k}
+          \<in> top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+          unfolding top1_fundamental_group_image_hom_def top1_fundamental_group_carrier_def
+          using h_conj_loop top1_loop_equiv_on_refl[OF h_conj_loop] by (by100 blast)
+        \<comment> \<open>This class = {k | loop_equiv((p\<circ>\<alpha>)\<cdot>(p\<circ>g)\<cdot>rev(p\<circ>\<alpha>), k)}.\<close>
+        have hconj_class: "top1_fundamental_group_induced_on E TE e0 B TB b0 p
+            {k. top1_loop_equiv_on E TE e0 ?conj_loop k}
+          = {k. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) k}"
+        proof (rule set_eqI, rule iffI)
+          fix k assume "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+              {k. top1_loop_equiv_on E TE e0 ?conj_loop k}"
+          then obtain f' where hf': "top1_loop_equiv_on E TE e0 ?conj_loop f'"
+              and hk: "top1_loop_equiv_on B TB b0 (p \<circ> f') k"
+            unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+          have hf'_loop: "top1_is_loop_on E TE e0 f'"
+            using hf' unfolding top1_loop_equiv_on_def by (by100 blast)
+          have "top1_loop_equiv_on B TB b0 (p \<circ> ?conj_loop) (p \<circ> f')"
+            using top1_induced_preserves_loop_equiv[OF hTE hp_cont h_conj_loop hf'_loop hf'] hpe0
+            by (by100 simp)
+          hence "top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> f')"
+            using hp_conj by (by100 simp)
+          from top1_loop_equiv_on_trans[OF hTB this hk]
+          show "k \<in> {k. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) k}"
+            by (by100 blast)
+        next
+          fix k assume "k \<in> {k. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) k}"
+          hence hk: "top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) k"
+            by (by100 blast)
+          have "p \<circ> ?conj_loop = top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))"
+            by (rule hp_conj)
+          hence "top1_loop_equiv_on B TB b0 (p \<circ> ?conj_loop) k" using hk by (by100 simp)
+          moreover have "?conj_loop \<in> {k. top1_loop_equiv_on E TE e0 ?conj_loop k}"
+            using top1_loop_equiv_on_refl[OF h_conj_loop] by (by100 blast)
+          ultimately show "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+              {k. top1_loop_equiv_on E TE e0 ?conj_loop k}"
+            unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Now compute inv(c) \<cdot> (h_conj \<cdot> c) and show it equals d = [p\<circ>g].\<close>
+        let ?h_conj_class = "{k. top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) k}"
+        have hpg_rev_p\<alpha>_loop: "top1_is_loop_on B TB b0
+            (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>)))"
+          by (rule top1_path_product_is_loop[OF hTB
+                top1_path_product_is_loop[OF hTB hp\<alpha>_loop hpg_loop] hp\<alpha>_rev_loop])
+        \<comment> \<open>h_conj \<cdot> c = [conj_path] \<cdot> [p\<circ>\<alpha>] = [conj_path \<cdot> (p\<circ>\<alpha>)].\<close>
+        have hh_c: "?mulB ?h_conj_class ?c = {k. top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)) k}"
+          by (rule top1_fundamental_group_mul_class[OF hTB hpg_rev_p\<alpha>_loop hp\<alpha>_loop])
+        \<comment> \<open>inv(c) \<cdot> (h_conj \<cdot> c) = [rev(p\<circ>\<alpha>)] \<cdot> [above].\<close>
+        have hh_c_loop: "top1_is_loop_on B TB b0
+            (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))"
+          by (rule top1_path_product_is_loop[OF hTB hpg_rev_p\<alpha>_loop hp\<alpha>_loop])
+        have hinv_hc: "?mulB (?invB ?c) (?mulB ?h_conj_class ?c) = {k. top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+              (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}"
+        proof -
+          have "?invB ?c = {k. top1_loop_equiv_on B TB b0 (top1_path_reverse (p \<circ> \<alpha>)) k}"
+            by (rule fundamental_group_invg_class[OF hTB hp\<alpha>_loop])
+          hence "?mulB (?invB ?c) (?mulB ?h_conj_class ?c)
+              = ?mulB {k. top1_loop_equiv_on B TB b0 (top1_path_reverse (p \<circ> \<alpha>)) k}
+                  {k. top1_loop_equiv_on B TB b0
+                    (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)) k}"
+            using hh_c by (by100 simp)
+          also have "\<dots> = {k. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}"
+            by (rule top1_fundamental_group_mul_class[OF hTB hp\<alpha>_rev_loop hh_c_loop])
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Path algebra: rev(A) \<cdot> ((A\<cdot>B\<cdot>rev(A)) \<cdot> A) ~ B, where A = p\<circ>\<alpha>, B = p\<circ>g.\<close>
+        have hp\<alpha>_path: "top1_is_path_on B TB b0 b0 (p \<circ> \<alpha>)"
+          using hp\<alpha>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hpg_path: "top1_is_path_on B TB b0 b0 (p \<circ> g)"
+          using hpg_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hp\<alpha>_rev_path: "top1_is_path_on B TB b0 b0 (top1_path_reverse (p \<circ> \<alpha>))"
+          using hp\<alpha>_rev_loop unfolding top1_is_loop_on_def by (by100 blast)
+        \<comment> \<open>Associativity gives f\<cdot>(g\<cdot>h) ~ (f\<cdot>g)\<cdot>h (right-to-left).\<close>
+        have hAB_path: "top1_is_path_on B TB b0 b0 (top1_path_product (p \<circ> \<alpha>) (p \<circ> g))"
+          by (rule top1_path_product_is_path[OF hTB hp\<alpha>_path hpg_path])
+        \<comment> \<open>Step 1: ((A\<cdot>B)\<cdot>rev(A))\<cdot>A ~ (A\<cdot>B)\<cdot>(rev(A)\<cdot>A) by sym(assoc).\<close>
+        note s1_raw = Theorem_51_2_associativity[OF hTB hAB_path hp\<alpha>_rev_path hp\<alpha>_path]
+        note s1 = Lemma_51_1_path_homotopic_sym[OF s1_raw]
+        \<comment> \<open>s1: ((A\<cdot>B)\<cdot>rev(A))\<cdot>A ~ (A\<cdot>B)\<cdot>(rev(A)\<cdot>A)\<close>
+        \<comment> \<open>Step 2: rev(A)\<cdot>A ~ const(b0) by inverse_right.\<close>
+        have s2: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> \<alpha>)) (top1_constant_path b0)"
+          by (rule Theorem_51_2_invgerse_right[OF hTB hp\<alpha>_path])
+        \<comment> \<open>Step 3: (A\<cdot>B)\<cdot>(rev(A)\<cdot>A) ~ (A\<cdot>B)\<cdot>const.\<close>
+        have s3: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> \<alpha>)))
+            (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_constant_path b0))"
+          by (rule path_homotopic_product_right[OF hTB s2 hAB_path])
+        have s4: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_constant_path b0))
+            (top1_path_product (p \<circ> \<alpha>) (p \<circ> g))"
+          by (rule Theorem_51_2_right_identity[OF hTB hAB_path])
+        have s14: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))
+            (top1_path_product (p \<circ> \<alpha>) (p \<circ> g))"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB s1
+                Lemma_51_1_path_homotopic_trans[OF hTB s3 s4]])
+        \<comment> \<open>Step 5: rev(A) \<cdot> ((A\<cdot>B\<cdot>rev(A))\<cdot>A) ~ rev(A) \<cdot> (A\<cdot>B).\<close>
+        have s5: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+              (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)))
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)))"
+          by (rule path_homotopic_product_right[OF hTB s14 hp\<alpha>_rev_path])
+        \<comment> \<open>Step 6: rev(A) \<cdot> (A\<cdot>B) ~ (rev(A)\<cdot>A)\<cdot>B by assoc (direction f\<cdot>(g\<cdot>h) ~ (f\<cdot>g)\<cdot>h).\<close>
+        note s6 = Theorem_51_2_associativity[OF hTB hp\<alpha>_rev_path hp\<alpha>_path hpg_path]
+        \<comment> \<open>Step 7: (rev(A)\<cdot>A)\<cdot>B ~ const\<cdot>B by inverse.\<close>
+        have s7: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> \<alpha>)) (p \<circ> g))
+            (top1_path_product (top1_constant_path b0) (p \<circ> g))"
+          by (rule path_homotopic_product_left[OF hTB s2 hpg_path])
+        \<comment> \<open>Step 8: const\<cdot>B ~ B by left identity.\<close>
+        have s8: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_constant_path b0) (p \<circ> g)) (p \<circ> g)"
+          by (rule Theorem_51_2_left_identity[OF hTB hpg_path])
+        have s_full: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+              (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)))
+            (p \<circ> g)"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTB s5
+                Lemma_51_1_path_homotopic_trans[OF hTB s6
+                  Lemma_51_1_path_homotopic_trans[OF hTB s7 s8]]])
+        \<comment> \<open>So the two loop classes are equal.\<close>
+        have hbig_loop: "top1_is_loop_on B TB b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+              (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)))"
+          by (rule top1_path_product_is_loop[OF hTB hp\<alpha>_rev_loop hh_c_loop])
+        have hclass_eq: "{k. top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+              (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}
+          = {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+        proof (rule set_eqI)
+          fix k
+          have hLR: "top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)))
+              (p \<circ> g)"
+            using s_full hbig_loop hpg_loop unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hRL: "top1_loop_equiv_on B TB b0 (p \<circ> g)
+              (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>)))"
+            by (rule top1_loop_equiv_on_sym[OF hLR])
+          show "k \<in> {k. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}
+            \<longleftrightarrow> k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+          proof
+            assume "k \<in> {k. top1_loop_equiv_on B TB b0
+                (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                  (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}"
+            from top1_loop_equiv_on_trans[OF hTB hRL this[simplified]]
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}" by (by100 blast)
+          next
+            assume "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> g) k}"
+            from top1_loop_equiv_on_trans[OF hTB hLR this[simplified]]
+            show "k \<in> {k. top1_loop_equiv_on B TB b0
+                (top1_path_product (top1_path_reverse (p \<circ> \<alpha>))
+                  (top1_path_product (top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))) (p \<circ> \<alpha>))) k}"
+              by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Conclusion: inv(c) \<cdot> (h_conj \<cdot> c) = d.\<close>
+        have "?mulB (?invB ?c) (?mulB ?h_conj_class ?c) = d"
+          using hinv_hc hclass_eq hd_class by (by100 simp)
+        moreover have "?h_conj_class = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+            {k. top1_loop_equiv_on E TE e0 ?conj_loop k}"
+          using hconj_class by (by100 simp)
+        ultimately have "?mulB (?invB ?c)
+            (?mulB (top1_fundamental_group_induced_on E TE e0 B TB b0 p
+              {k. top1_loop_equiv_on E TE e0 ?conj_loop k}) ?c) = d"
+          by (by100 simp)
+        thus ?thesis using hconj_in by (by100 blast)
+      qed
     next
       \<comment> \<open>\<Leftarrow>: h \<in> image_hom(E, e0). Conjugate: rev(\<alpha>)\<cdot>f\<cdot>\<alpha> is loop at e1.\<close>
       assume "d \<in> (\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))
@@ -20774,7 +20999,28 @@ proof -
           have "h = top1_fundamental_group_induced_on E TE e0 B TB b0 p
               {k. top1_loop_equiv_on E TE e0 f k}" by (rule hh_eq)
           also have "\<dots> = {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}"
-            sorry \<comment> \<open>Induced of class = class of p-image (same as ⊇ direction but for e0).\<close>
+          proof (rule set_eqI, rule iffI)
+            fix k assume "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+                {k. top1_loop_equiv_on E TE e0 f k}"
+            then obtain f' where hf'_eq: "top1_loop_equiv_on E TE e0 f f'"
+                and hk': "top1_loop_equiv_on B TB b0 (p \<circ> f') k"
+              unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+            have hf'_loop: "top1_is_loop_on E TE e0 f'"
+              using hf'_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+            have "top1_loop_equiv_on B TB b0 (p \<circ> f) (p \<circ> f')"
+              using top1_induced_preserves_loop_equiv[OF hTE hp_cont hf_loop hf'_loop hf'_eq] hpe0
+              by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTB this hk']
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}" by (by100 blast)
+          next
+            fix k assume "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}"
+            hence hk: "top1_loop_equiv_on B TB b0 (p \<circ> f) k" by (by100 blast)
+            have "f \<in> {k. top1_loop_equiv_on E TE e0 f k}"
+              using top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+            thus "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+                {k. top1_loop_equiv_on E TE e0 f k}"
+              unfolding top1_fundamental_group_induced_on_def using hk by (by100 blast)
+          qed
           finally show ?thesis .
         qed
         \<comment> \<open>inv(c) = [rev(p\<circ>\<alpha>)].\<close>
@@ -20809,13 +21055,36 @@ proof -
               (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (top1_path_product (p \<circ> f) (p \<circ> \<alpha>)))
               (top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>))"
             by (rule Theorem_51_2_associativity[OF hTB hp\<alpha>_rev_path hpf_path hp\<alpha>_path])
-          show "k \<in> {k. top1_loop_equiv_on B TB b0
-              (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (top1_path_product (p \<circ> f) (p \<circ> \<alpha>))) k}
-            \<longleftrightarrow> k \<in> {k. top1_loop_equiv_on B TB b0
-              (top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>)) k}"
-            sorry
+          let ?L = "top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (top1_path_product (p \<circ> f) (p \<circ> \<alpha>))"
+          let ?R = "top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>)"
+          have hL_loop: "top1_is_loop_on B TB b0 ?L"
+            by (rule top1_path_product_is_loop[OF hTB hp\<alpha>_rev_loop hpf_p\<alpha>_loop])
+          have hR_loop: "top1_is_loop_on B TB b0 ?R"
+          proof -
+            have "top1_is_loop_on B TB b0 (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f))"
+              by (rule top1_path_product_is_loop[OF hTB hp\<alpha>_rev_loop hpf_loop])
+            thus ?thesis by (rule top1_path_product_is_loop[OF hTB _ hp\<alpha>_loop])
+          qed
+          have hLR: "top1_loop_equiv_on B TB b0 ?L ?R"
+            using hassoc hL_loop hR_loop unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hRL: "top1_loop_equiv_on B TB b0 ?R ?L"
+            by (rule top1_loop_equiv_on_sym[OF hLR])
+          show "k \<in> {k. top1_loop_equiv_on B TB b0 ?L k}
+            \<longleftrightarrow> k \<in> {k. top1_loop_equiv_on B TB b0 ?R k}"
+          proof
+            assume "k \<in> {k. top1_loop_equiv_on B TB b0 ?L k}"
+            from top1_loop_equiv_on_trans[OF hTB hRL this[simplified]]
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 ?R k}" by (by100 blast)
+          next
+            assume "k \<in> {k. top1_loop_equiv_on B TB b0 ?R k}"
+            from top1_loop_equiv_on_trans[OF hTB hLR this[simplified]]
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 ?L k}" by (by100 blast)
+          qed
         qed
-        finally show ?thesis .
+        finally have calc_eq: "?mulB (?invB ?c) (?mulB h ?c)
+            = {k. top1_loop_equiv_on B TB b0
+                (top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>)) k}" .
+        show ?thesis using calc_eq by (by100 simp)
       qed
       moreover note hd_conj
       ultimately show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
@@ -21413,9 +21682,256 @@ next
        image_hom(E', e0') = c \<cdot> image_hom(E, e0) \<cdot> inv(c) (hconj)
        Combined: image_hom(E', e1') = inv(c) \<cdot> c \<cdot> image_hom(E, e0) \<cdot> inv(c) \<cdot> c = image_hom(E, e0)
        Proof uses: basepoint_change_image_hom + group algebra cancellation.\<close>
+    \<comment> \<open>Step: [p'\<circ>\<delta>] = c. Since p'\<circ>\<delta> = \<gamma> on I_set, their loop classes agree.\<close>
+    have hp'\<delta>_eq_\<gamma>: "\<And>s. s \<in> I_set \<Longrightarrow> (p' \<circ> \<delta>) s = \<gamma> s" using h\<delta>p by (by100 simp)
+    have hp'\<delta>_loop: "top1_is_loop_on B TB b0 (p' \<circ> \<delta>)"
+    proof -
+      have "top1_continuous_map_on I_set I_top B TB (p' \<circ> \<delta>)"
+        by (rule top1_continuous_map_on_comp)
+           (use h\<delta> hp'_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      moreover have "(p' \<circ> \<delta>) 0 = b0"
+        using hp'\<delta>_eq_\<gamma> h\<gamma>_path unfolding top1_is_path_on_def top1_unit_interval_def by (by100 auto)
+      moreover have "(p' \<circ> \<delta>) 1 = b0"
+        using hp'\<delta>_eq_\<gamma> h\<gamma>_path unfolding top1_is_path_on_def top1_unit_interval_def by (by100 auto)
+      ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    qed
+    have hclass_p'\<delta>_eq_c: "{g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}
+        = {g. top1_loop_equiv_on B TB b0 \<gamma> g}"
+    proof (rule set_eqI)
+      fix k
+      \<comment> \<open>p'\<circ>\<delta> and \<gamma> agree on I_set, so they are path-homotopic via the identity homotopy.\<close>
+      have hp'\<delta>_\<gamma>_equiv: "top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) \<gamma>"
+        unfolding top1_loop_equiv_on_def
+      proof (intro conjI)
+        show "top1_is_loop_on B TB b0 (p' \<circ> \<delta>)" by (rule hp'\<delta>_loop)
+        show "top1_is_loop_on B TB b0 \<gamma>" by (rule h\<gamma>_loop)
+        \<comment> \<open>Path homotopy via constant homotopy F(s,t) = (p'\<circ>\<delta>)(s).\<close>
+        show "top1_path_homotopic_on B TB b0 b0 (p' \<circ> \<delta>) \<gamma>"
+          unfolding top1_path_homotopic_on_def
+        proof (intro conjI)
+          show "top1_is_path_on B TB b0 b0 (p' \<circ> \<delta>)"
+            using hp'\<delta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+          show "top1_is_path_on B TB b0 b0 \<gamma>" by (rule h\<gamma>_path)
+          show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F
+              \<and> (\<forall>s\<in>I_set. F (s, 0) = (p' \<circ> \<delta>) s) \<and> (\<forall>s\<in>I_set. F (s, 1) = \<gamma> s)
+              \<and> (\<forall>t\<in>I_set. F (0, t) = b0) \<and> (\<forall>t\<in>I_set. F (1, t) = b0)"
+          proof (rule exI[of _ "\<lambda>p. (p' \<circ> \<delta>) (fst p)"], intro conjI)
+            have h_p'\<delta>_cont: "top1_continuous_map_on I_set I_top B TB (p' \<circ> \<delta>)"
+              using hp'\<delta>_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            show "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>p. (p' \<circ> \<delta>) (fst p))"
+              by (rule path_homotopy_const_continuous[OF h_p'\<delta>_cont])
+            show "\<forall>s\<in>I_set. (p' \<circ> \<delta>) (fst (s, (0::real))) = (p' \<circ> \<delta>) s" by (by100 simp)
+            show "\<forall>s\<in>I_set. (p' \<circ> \<delta>) (fst (s, (1::real))) = \<gamma> s"
+              using hp'\<delta>_eq_\<gamma> by (by100 simp)
+            show "\<forall>t\<in>I_set. (p' \<circ> \<delta>) (fst ((0::real), t)) = b0"
+            proof
+              fix t assume "t \<in> I_set"
+              have "(p' \<circ> \<delta>) 0 = b0"
+                using h\<delta> assms(7) unfolding top1_is_path_on_def by (by100 simp)
+              thus "(p' \<circ> \<delta>) (fst ((0::real), t)) = b0" by (by100 simp)
+            qed
+            show "\<forall>t\<in>I_set. (p' \<circ> \<delta>) (fst ((1::real), t)) = b0"
+            proof
+              fix t assume "t \<in> I_set"
+              show "(p' \<circ> \<delta>) (fst ((1::real), t)) = b0"
+                using hp'e1' by (by100 simp)
+            qed
+          qed
+        qed
+      qed
+      have h\<gamma>_p'\<delta>_equiv: "top1_loop_equiv_on B TB b0 \<gamma> (p' \<circ> \<delta>)"
+        by (rule top1_loop_equiv_on_sym[OF hp'\<delta>_\<gamma>_equiv])
+      show "k \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}
+          \<longleftrightarrow> k \<in> {g. top1_loop_equiv_on B TB b0 \<gamma> g}"
+      proof
+        assume "k \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}"
+        from top1_loop_equiv_on_trans[OF hTB h\<gamma>_p'\<delta>_equiv this[simplified]]
+        show "k \<in> {g. top1_loop_equiv_on B TB b0 \<gamma> g}" by (by100 blast)
+      next
+        assume "k \<in> {g. top1_loop_equiv_on B TB b0 \<gamma> g}"
+        from top1_loop_equiv_on_trans[OF hTB hp'\<delta>_\<gamma>_equiv this[simplified]]
+        show "k \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}" by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Apply basepoint_change_image_hom: image_hom(E', e1') = inv([p'\<circ>\<delta>]) \<cdot> image_hom(E', e0') \<cdot> [p'\<circ>\<delta>].\<close>
+    let ?c' = "{g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}"
+    have hbpc: "top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'
+        = (\<lambda>H. top1_fundamental_group_mul B TB b0
+              (top1_fundamental_group_invg B TB b0 ?c')
+            ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h ?c') ` H))
+            (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')"
+      by (rule basepoint_change_image_hom[OF assms(6) hTE' hTB assms(13) he1' h\<delta> assms(7) hp'e1' assms(9)])
+    \<comment> \<open>Replace ?c' with c using hclass_p'\<delta>_eq_c and hc_eq.\<close>
+    have hc'_eq_c: "?c' = c" using hclass_p'\<delta>_eq_c hc_eq by (by100 simp)
+    \<comment> \<open>So image_hom(E', e1') = inv(c) \<cdot> image_hom(E', e0') \<cdot> c.\<close>
+    have hbpc2: "top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'
+        = (\<lambda>H. top1_fundamental_group_mul B TB b0
+              (top1_fundamental_group_invg B TB b0 c)
+            ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h c) ` H))
+            (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')"
+      using hbpc hc'_eq_c by (by100 simp)
+    \<comment> \<open>Substitute hconj: image_hom(E', e0') = c \<cdot> image_hom(E, e0) \<cdot> inv(c).\<close>
+    \<comment> \<open>After substitution: image_hom(E', e1') = inv(c) \<cdot> (c \<cdot> image_hom(E, e0) \<cdot> inv(c)) \<cdot> c.\<close>
+    \<comment> \<open>This double conjugation cancels: = image_hom(E, e0).\<close>
     have himg_match: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
         = top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
-      sorry
+    proof -
+      let ?mulB = "top1_fundamental_group_mul B TB b0"
+      let ?invB = "top1_fundamental_group_invg B TB b0"
+      let ?eB = "top1_fundamental_group_id B TB b0"
+      let ?G = "top1_fundamental_group_carrier B TB b0"
+      let ?img = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+      \<comment> \<open>Group axioms from the fundamental group of (B, b0).\<close>
+      have hb0B: "b0 \<in> B" using assms(14) .
+      have hgrp: "top1_is_group_on ?G ?mulB ?eB ?invB"
+        by (rule top1_fundamental_group_is_group[OF hTB hb0B])
+      have hc_G: "c \<in> ?G" by (rule hc)
+      note hgrp_raw = hgrp[unfolded top1_is_group_on_def]
+      note hmul_cl_raw = hgrp_raw[THEN conjunct2, THEN conjunct1]
+      note hinv_cl_raw = hgrp_raw[THEN conjunct2, THEN conjunct2, THEN conjunct1]
+      note hassoc_raw = hgrp_raw[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct1]
+      note hid_raw = hgrp_raw[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct1]
+      note hinv_raw = hgrp_raw[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2]
+      have hmul_cl: "\<And>x y. x \<in> ?G \<Longrightarrow> y \<in> ?G \<Longrightarrow> ?mulB x y \<in> ?G"
+        using hmul_cl_raw by (by100 blast)
+      have hinv_cl: "\<And>x. x \<in> ?G \<Longrightarrow> ?invB x \<in> ?G"
+        using hinv_cl_raw by (by100 blast)
+      have hinvc_G: "?invB c \<in> ?G" by (rule hinv_cl[OF hc_G])
+      have hassoc: "\<And>x y z. x \<in> ?G \<Longrightarrow> y \<in> ?G \<Longrightarrow> z \<in> ?G \<Longrightarrow>
+          ?mulB (?mulB x y) z = ?mulB x (?mulB y z)"
+        using hassoc_raw by (by100 blast)
+      have hlinv: "\<And>x. x \<in> ?G \<Longrightarrow> ?mulB (?invB x) x = ?eB"
+        using hinv_raw by (by100 blast)
+      have hrid: "\<And>x. x \<in> ?G \<Longrightarrow> ?mulB x ?eB = x"
+        using hid_raw by (by100 blast)
+      have hlid: "\<And>x. x \<in> ?G \<Longrightarrow> ?mulB ?eB x = x"
+        using hid_raw by (by100 blast)
+      \<comment> \<open>Image hom elements are in the carrier.\<close>
+      have himg_sub: "?img \<subseteq> ?G"
+      proof
+        fix d assume "d \<in> ?img"
+        then obtain f where hf_loop: "top1_is_loop_on E TE e0 f"
+            and hd_eq: "d = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+                {k. top1_loop_equiv_on E TE e0 f k}"
+          unfolding top1_fundamental_group_image_hom_def top1_fundamental_group_carrier_def
+          by (by100 blast)
+        have hTE_loc: "is_topology_on E TE"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hp_cont: "top1_continuous_map_on E TE B TB p"
+          by (rule top1_covering_map_on_continuous[OF assms(4)])
+        have hpf_loop: "top1_is_loop_on B TB b0 (p \<circ> f)"
+        proof -
+          have "top1_continuous_map_on I_set I_top B TB (p \<circ> f)"
+            by (rule top1_continuous_map_on_comp)
+               (use hf_loop hp_cont in \<open>unfold top1_is_loop_on_def top1_is_path_on_def, by100 blast\<close>)+
+          moreover have "(p \<circ> f) 0 = b0" using hf_loop assms(5) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+          moreover have "(p \<circ> f) 1 = b0" using hf_loop assms(5) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+          ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        qed
+        \<comment> \<open>induced([f]) = [p\<circ>f] (same as hh_class proof pattern).\<close>
+        have hd_class: "d = {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}"
+        proof -
+          have "d = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+              {k. top1_loop_equiv_on E TE e0 f k}" by (rule hd_eq)
+          also have "\<dots> = {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}"
+          proof (rule set_eqI, rule iffI)
+            fix k assume "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+                {k. top1_loop_equiv_on E TE e0 f k}"
+            then obtain f' where hf': "top1_loop_equiv_on E TE e0 f f'"
+                and hk: "top1_loop_equiv_on B TB b0 (p \<circ> f') k"
+              unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+            have hf'_loop: "top1_is_loop_on E TE e0 f'"
+              using hf' unfolding top1_loop_equiv_on_def by (by100 blast)
+            have "top1_loop_equiv_on B TB b0 (p \<circ> f) (p \<circ> f')"
+              using top1_induced_preserves_loop_equiv[OF hTE_loc hp_cont hf_loop hf'_loop hf'] assms(5)
+              by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTB this hk]
+            show "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}" by (by100 blast)
+          next
+            fix k assume "k \<in> {k. top1_loop_equiv_on B TB b0 (p \<circ> f) k}"
+            moreover have "f \<in> {k. top1_loop_equiv_on E TE e0 f k}"
+              using top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+            ultimately show "k \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p
+                {k. top1_loop_equiv_on E TE e0 f k}"
+              unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+          qed
+          finally show ?thesis .
+        qed
+        \<comment> \<open>[p\<circ>f] \<in> carrier(B, b0) since p\<circ>f is a loop at b0.\<close>
+        show "d \<in> ?G"
+          unfolding hd_class top1_fundamental_group_carrier_def
+          using hpf_loop top1_loop_equiv_on_refl[OF hpf_loop] by (by100 blast)
+      qed
+      \<comment> \<open>Key: inv(c) \<cdot> ((c \<cdot> (h \<cdot> inv(c))) \<cdot> c) = h for h \<in> G.\<close>
+      have hcancel: "\<And>h. h \<in> ?G \<Longrightarrow>
+          ?mulB (?invB c) (?mulB (?mulB c (?mulB h (?invB c))) c) = h"
+      proof -
+        fix h assume hh: "h \<in> ?G"
+        have hhinvc: "?mulB h (?invB c) \<in> ?G" by (rule hmul_cl[OF hh hinvc_G])
+        have hchinvc: "?mulB c (?mulB h (?invB c)) \<in> ?G" by (rule hmul_cl[OF hc_G hhinvc])
+        \<comment> \<open>Step 1: (c \<cdot> (h \<cdot> inv(c))) \<cdot> c = c \<cdot> ((h \<cdot> inv(c)) \<cdot> c) by assoc.\<close>
+        have s1: "?mulB (?mulB c (?mulB h (?invB c))) c
+            = ?mulB c (?mulB (?mulB h (?invB c)) c)"
+          by (rule hassoc[OF hc_G hhinvc hc_G])
+        \<comment> \<open>Step 2: (h \<cdot> inv(c)) \<cdot> c = h \<cdot> (inv(c) \<cdot> c) by assoc.\<close>
+        have s2: "?mulB (?mulB h (?invB c)) c = ?mulB h (?mulB (?invB c) c)"
+          by (rule hassoc[OF hh hinvc_G hc_G])
+        \<comment> \<open>Step 3: inv(c) \<cdot> c = e by left inverse.\<close>
+        have s3: "?mulB (?invB c) c = ?eB" by (rule hlinv[OF hc_G])
+        \<comment> \<open>Step 4: h \<cdot> e = h.\<close>
+        have s4: "?mulB h ?eB = h" by (rule hrid[OF hh])
+        \<comment> \<open>Combine inner: (c \<cdot> (h \<cdot> inv(c))) \<cdot> c = c \<cdot> h.\<close>
+        have inner: "?mulB (?mulB c (?mulB h (?invB c))) c = ?mulB c h"
+          using s1 s2 s3 s4 by (by100 simp)
+        \<comment> \<open>Step 5: inv(c) \<cdot> (c \<cdot> h) = (inv(c) \<cdot> c) \<cdot> h = e \<cdot> h = h.\<close>
+        have hch: "?mulB c h \<in> ?G" by (rule hmul_cl[OF hc_G hh])
+        have s5: "?mulB (?invB c) (?mulB c h) = ?mulB (?mulB (?invB c) c) h"
+          by (rule hassoc[OF hinvc_G hc_G hh, symmetric])
+        have s6: "?mulB (?mulB (?invB c) c) h = ?mulB ?eB h" using s3 by (by100 simp)
+        have s7: "?mulB ?eB h = h" by (rule hlid[OF hh])
+        show "?mulB (?invB c) (?mulB (?mulB c (?mulB h (?invB c))) c) = h"
+          using inner s5 s6 s7 by (by100 simp)
+      qed
+      \<comment> \<open>Now show set equality using hbpc2 + hconj + cancellation.\<close>
+      show ?thesis
+      proof (rule set_eqI)
+        fix d
+        show "d \<in> ?img \<longleftrightarrow> d \<in> top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
+        proof
+          \<comment> \<open>(\<Rightarrow>) h \<in> img(E,e0). Conjugate by c to get in img(E',e0'), then by inv(c) to get in img(E',e1'). Cancellation gives h back.\<close>
+          assume hd: "d \<in> ?img"
+          hence hd_G: "d \<in> ?G" using himg_sub by (by100 blast)
+          \<comment> \<open>c \<cdot> (d \<cdot> inv(c)) \<in> img(E', e0') via hconj.\<close>
+          let ?k = "?mulB c (?mulB d (?invB c))"
+          have hk_in: "?k \<in> top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
+            using hd hconj by (by100 blast)
+          \<comment> \<open>inv(c) \<cdot> (k \<cdot> c) \<in> img(E', e1') via hbpc2.\<close>
+          let ?d' = "?mulB (?invB c) (?mulB ?k c)"
+          have hd'_in: "?d' \<in> top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
+            using hk_in hbpc2 by (by100 blast)
+          \<comment> \<open>?d' = d by cancellation.\<close>
+          have "?d' = d" by (rule hcancel[OF hd_G])
+          thus "d \<in> top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
+            using hd'_in by (by100 simp)
+        next
+          \<comment> \<open>(\<Leftarrow>) Decompose via hbpc2 and hconj, then use cancellation.\<close>
+          assume "d \<in> top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
+          hence "d \<in> ?mulB (?invB c) ` ((\<lambda>h. ?mulB h c) ` (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'))"
+            using hbpc2 by (by100 simp)
+          then obtain k where hk: "k \<in> top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
+              and hd_eq: "d = ?mulB (?invB c) (?mulB k c)" by (by100 blast)
+          have "k \<in> ?mulB c ` ((\<lambda>h. ?mulB h (?invB c)) ` ?img)"
+            using hk hconj by (by100 simp)
+          then obtain h where hh: "h \<in> ?img"
+              and hk_eq: "k = ?mulB c (?mulB h (?invB c))" by (by100 blast)
+          have hh_G: "h \<in> ?G" using hh himg_sub by (by100 blast)
+          have "d = ?mulB (?invB c) (?mulB (?mulB c (?mulB h (?invB c))) c)"
+            using hd_eq hk_eq by (by100 simp)
+          also have "\<dots> = h" by (rule hcancel[OF hh_G])
+          finally show "d \<in> ?img" using hh by (by100 simp)
+        qed
+      qed
+    qed
     show ?thesis using he1' hp'e1' himg_match by (by100 blast)
   qed
   then obtain e1' where he1': "e1' \<in> E'" and hp'e1': "p' e1' = b0"
