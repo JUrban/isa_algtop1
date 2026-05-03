@@ -2240,6 +2240,79 @@ next
   show ?case using hfold_eq hclass_eq hmul_class hprod_in_H by (by100 simp)
 qed
 
+text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
+lemma loop_subdivision_UV:
+  assumes hTopX: "is_topology_on X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+      and hUV: "U \<union> V = X" and hf: "top1_is_loop_on X TX x0 f"
+  shows "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub::nat\<Rightarrow>real. sub 0 = 0 \<and> sub n = 1
+      \<and> (\<forall>i<n. sub i < sub (Suc i))
+      \<and> (\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+             \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+proof -
+  have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+    using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hU_TX: "U \<in> TX" using hU unfolding openin_on_def by (by100 blast)
+  have hV_TX: "V \<in> TX" using hV unfolding openin_on_def by (by100 blast)
+  let ?\<A> = "{S. S = {s. f s \<in> U \<and> 0 \<le> s \<and> s \<le> 1} \<or> S = {s. f s \<in> V \<and> 0 \<le> s \<and> s \<le> 1}}"
+  have "\<forall>s::real. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> (\<exists>W\<in>?\<A>. s \<in> W \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W))"
+  proof (intro allI impI)
+    fix s :: real assume hs: "0 \<le> s \<and> s \<le> 1"
+    have hs_I: "s \<in> I_set" using hs unfolding top1_unit_interval_def by (by100 simp)
+    have "f s \<in> X" using hf_cont hs_I unfolding top1_continuous_map_on_def by (by100 blast)
+    hence "f s \<in> U \<or> f s \<in> V" using hUV by (by100 blast)
+    thus "\<exists>W\<in>?\<A>. s \<in> W \<and> (\<exists>\<epsilon>>0. {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> W)"
+    proof
+      assume "f s \<in> U"
+      obtain \<epsilon> where "\<epsilon> > 0" "f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> U"
+        using top1_continuous_preimage_ball[OF hf_cont hU_TX hs_I \<open>f s \<in> U\<close>] by (by100 blast)
+      thus ?thesis using hs \<open>f s \<in> U\<close> by (intro bexI[of _ "{s. f s \<in> U \<and> 0 \<le> s \<and> s \<le> 1}"]) (by100 blast)+
+    next
+      assume "f s \<in> V"
+      obtain \<epsilon> where "\<epsilon> > 0" "f ` {t. \<bar>t - s\<bar> < \<epsilon> \<and> 0 \<le> t \<and> t \<le> 1} \<subseteq> V"
+        using top1_continuous_preimage_ball[OF hf_cont hV_TX hs_I \<open>f s \<in> V\<close>] by (by100 blast)
+      thus ?thesis using hs \<open>f s \<in> V\<close> by (intro bexI[of _ "{s. f s \<in> V \<and> 0 \<le> s \<and> s \<le> 1}"]) (by100 blast)+
+    qed
+  qed
+  from open_cover_subdivision_01[OF this]
+  obtain n sub where "n \<ge> 1" "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)"
+      "\<forall>i<n. \<exists>W\<in>?\<A>. {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W"
+    by (by100 auto)
+  moreover have "\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+      \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    from \<open>\<forall>i<n. \<exists>W\<in>?\<A>. _\<close> \<open>i < n\<close>
+    obtain W where "W \<in> ?\<A>" "{s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W"
+      by (by100 auto)
+    hence "W = {s. f s \<in> U \<and> 0\<le>s \<and> s\<le>1} \<or> W = {s. f s \<in> V \<and> 0\<le>s \<and> s\<le>1}" by (by100 blast)
+    thus "(\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+        \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+    proof
+      assume hW: "W = {s. f s \<in> U \<and> 0\<le>s \<and> s\<le>1}"
+      show ?thesis
+      proof (intro disjI1 allI impI)
+        fix t :: real assume "0\<le>t \<and> t\<le>1"
+        have "sub i + t * (sub (Suc i) - sub i) \<in> {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1}"
+          using \<open>0\<le>t \<and> t\<le>1\<close> \<open>i < n\<close> \<open>sub 0 = 0\<close> \<open>sub n = 1\<close> \<open>\<forall>i<n. sub i < sub (Suc i)\<close>
+          sorry \<comment> \<open>Arithmetic: 0 \<le> sub i, sub(Suc i) \<le> 1, and 0 \<le> t \<le> 1 gives membership.\<close>
+        thus "f (sub i + t * (sub (Suc i) - sub i)) \<in> U"
+          using \<open>{s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W\<close> hW by (by100 blast)
+      qed
+    next
+      assume hW: "W = {s. f s \<in> V \<and> 0\<le>s \<and> s\<le>1}"
+      show ?thesis
+      proof (intro disjI2 allI impI)
+        fix t :: real assume "0\<le>t \<and> t\<le>1"
+        have "sub i + t * (sub (Suc i) - sub i) \<in> {s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1}"
+          sorry \<comment> \<open>Same arithmetic.\<close>
+        thus "f (sub i + t * (sub (Suc i) - sub i)) \<in> V"
+          using \<open>{s. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> 0 \<le> s \<and> s \<le> 1} \<subseteq> W\<close> hW by (by100 blast)
+      qed
+    qed
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
+
 text \<open>Theorem 70.1 (Seifert-van Kampen, universal property):
   If X = U ∪ V with U, V, U∩V path-connected open, and φ₁: π₁(U) → H, φ₂: π₁(V) → H
   are homomorphisms compatible on U∩V (φ₁∘i₁ = φ₂∘i₂), then there exists a unique
@@ -2381,7 +2454,7 @@ proof -
         and hsinc: "\<forall>i<ns. sub_s i < sub_s (Suc i)"
         and hs_UV: "\<forall>i<ns. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub_s i + t * (sub_s (Suc i) - sub_s i)) \<in> U)
                          \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub_s i + t * (sub_s (Suc i) - sub_s i)) \<in> V)"
-      sorry \<comment> \<open>1D Lebesgue for f. Same as surjectivity proof (lines 2646-2755).\<close>
+      using loop_subdivision_UV[OF hTopX hU hV hUV hf] by (elim exE conjE) (by100 blast)
     \<comment> \<open>Step 3b: For each s-strip, get t-subdivision via tube lemma + open_cover_subdivision_01.
        For each strip [s_{i-1}, s_i] and each t_0, the tube lemma gives a t-ball where the
        strip maps into U or V. These balls cover [0,1]. By open_cover_subdivision_01,
