@@ -2394,8 +2394,52 @@ proof -
      This is compact. Apply the Lebesgue number to get \<delta>. Subdivide both directions with mesh < \<delta>.
      Each cell has diameter < \<delta>, hence is in some cover element.\<close>
   \<comment> \<open>We use our top1_lebesgue_number with a metric on I\<times>I.\<close>
+  \<comment> \<open>Define sup metric on I\<times>I.\<close>
+  define d_max where "d_max p q = max (abs (fst p - fst q)) (abs (snd p - snd q))" for p q :: "real \<times> real"
+  \<comment> \<open>I\<times>I is compact in II_topology (Tychonoff: Theorem_26_7).\<close>
+  have hI_compact: "top1_compact_on I_set I_top"
+  proof -
+    have "compact I_set"
+    proof -
+      have "I_set = {0..1::real}" unfolding top1_unit_interval_def by (by100 auto)
+      thus ?thesis using compact_Icc[of "0::real" 1] by (by100 simp)
+    qed
+    hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+      using iffD2[OF top1_compact_on_subspace_UNIV_iff_compact] by (by100 blast)
+    thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+  qed
+  have hII_compact: "top1_compact_on (I_set \<times> I_set) II_topology"
+    unfolding II_topology_def by (rule Theorem_26_7[OF hI_compact hI_compact])
+  \<comment> \<open>d_max is a metric on I\<times>I.\<close>
+  have hd_metric: "top1_metric_on (I_set \<times> I_set) d_max"
+    sorry \<comment> \<open>Standard: d_max is non-negative, symmetric, triangle inequality.
+       Each property follows from max and abs properties.\<close>
+  \<comment> \<open>The metric topology of d_max on I\<times>I equals II_topology.\<close>
+  have hd_top: "top1_metric_topology_on (I_set \<times> I_set) d_max = II_topology"
+    sorry \<comment> \<open>The sup metric generates the product topology on [0,1]\<times>[0,1].
+       Uses: product of metrizable = metrizable, and the two topologies
+       have the same convergent sequences / open sets.\<close>
+  \<comment> \<open>Apply Lebesgue number.\<close>
+  have hII_ne: "I_set \<times> I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
+  have hII_compact_d: "top1_compact_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)"
+    using hII_compact hd_top by (by100 simp)
+  have hFU_II: "{p \<in> I_set \<times> I_set. F p \<in> U} \<in> II_topology"
+    using hF hU unfolding top1_continuous_map_on_def II_topology_def openin_on_def by (by100 blast)
+  have hFV_II: "{p \<in> I_set \<times> I_set. F p \<in> V} \<in> II_topology"
+    using hF hV unfolding top1_continuous_map_on_def II_topology_def openin_on_def by (by100 blast)
+  have hcover: "top1_open_covering_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)
+      {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}"
+    sorry \<comment> \<open>F\<inverse>(U) and F\<inverse>(V) cover I\<times>I (since U\<union>V=X), and are open in d_max-topology = II_topology.\<close>
+  from top1_lebesgue_number[OF hd_metric hII_compact_d hII_ne hcover]
+  obtain \<delta> where h\<delta>: "\<delta> > 0" and h\<delta>_cover:
+      "\<forall>A. A \<subseteq> I_set \<times> I_set \<and> top1_metric_diam_on (I_set \<times> I_set) d_max A < \<delta>
+        \<longrightarrow> (\<exists>W \<in> {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}. A \<subseteq> W)"
+    by (elim exE conjE) (by100 blast)
+  \<comment> \<open>Choose grid with mesh < \<delta>. Each cell has d_max-diameter < \<delta>, hence in F\<inverse>(U) or F\<inverse>(V).\<close>
   show ?thesis
-    sorry \<comment> \<open>The core 2D compactness argument. ~100 lines.\<close>
+    sorry \<comment> \<open>From Lebesgue \<delta>: subdivide [0,1] in both directions with mesh < \<delta>.
+       Each cell [s_i,s_{i+1}] \<times> [t_j,t_{j+1}] has d_max-diameter = max(s_{i+1}-s_i, t_{j+1}-t_j) < \<delta>.
+       By h\<delta>_cover, cell \<subseteq> F\<inverse>(U) or F\<inverse>(V). ~30 lines of arithmetic.\<close>
 qed
 
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
