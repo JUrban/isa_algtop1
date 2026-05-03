@@ -23111,9 +23111,19 @@ next
     \<comment> \<open>For each U_\<alpha> \<in> \<V>p: p|_{U_\<alpha>}: U_\<alpha> \<cong> U and r|_{V0'}: V0' \<cong> U.
        So q|_{U_\<alpha>} = (r|_{V0'})\<inverse> \<circ> p|_{U_\<alpha>}: U_\<alpha> \<cong> V0'.
        But only for those U_\<alpha> where q(U_\<alpha>) \<subseteq> V0'.\<close>
+    \<comment> \<open>For each p-slice W, q maps {e\<in>W | q e \<in> V0'} homeomorphically to V0'.
+       Proof: on this subset, q = inv_into V0' r \<circ> p (since r(q e) = p e and q e \<in> V0').
+       Both p|_W and r|_{V0'} are homeomorphisms to U, so q is their composition.
+       The family of non-empty {e\<in>W | q e \<in> V0'} covers q\<inverse>(V0'), is disjoint and open.\<close>
+    have hV0'_open: "openin_on Y TY V0'" using h\<V>r'_open hV0' by (by100 blast)
     show "\<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
-      sorry \<comment> \<open>Use V0' as the evenly covered neighborhood. The p-slices mapping into V0'
-         each map homeomorphically via q = (r|_{V0'})\<inverse> \<circ> p. Still needs ~100 lines.\<close>
+    proof (rule exI[of _ V0'], intro conjI)
+      show "y \<in> V0'" by (rule hy_V0')
+      show "top1_evenly_covered_on E TE Y TY q V0'"
+        sorry \<comment> \<open>V0' evenly covered: family = {{e\<in>W|q e\<in>V0'} | W\<in>\<V>p, nonempty}.
+           Open: q continuous + V0' open. Disjoint: inherited from \<V>p.
+           Union = q\<inverse>(V0'). Homeo: q = inv(r|_{V0'}) \<circ> p on each piece.\<close>
+    qed
   qed
   show ?thesis
   proof (rule exI[of _ q])
