@@ -16757,6 +16757,25 @@ proof -
        Top row F(s,1) = x0 corresponds to the constant loop = j(eFP).
        Transitivity of row equivalences: w \<equiv> eFP mod N, hence w \<in> N.\<close>
 
+    \<comment> \<open>===== KER \<subseteq> N PROOF =====
+       The proof is a 2D Lebesgue subdivision argument.
+       We decompose it into modular steps, each a separate sorry.\<close>
+    \<comment> \<open>Step 1: j(w) = e_X means w maps to the identity loop class.
+       Since j is a hom FP \<rightarrow> \<pi>_1(X), j(w) \<in> \<pi>_1(X) is the identity element.
+       The identity class = {g | loop_equiv(x0, const, g)}.
+       There exists a representative: w corresponds to some product of loops in U and V
+       whose concatenation is nulhomotopic in X.\<close>
+    \<comment> \<open>Step 2: The quotient map \<pi>: FP \<rightarrow> FP/N sends w to some coset.
+       We need [w]_N = [eFP]_N, i.e., w \<in> N.
+       Equivalently: j factors through FP/N (first iso theorem), and the induced map
+       j_bar: FP/N \<rightarrow> \<pi>_1(X) is injective iff ker(j) = N.\<close>
+    \<comment> \<open>Step 3: The 2D grid argument.
+       Given: the loop corresponding to j(w) is nulhomotopic via F: I\<times>I \<rightarrow> X.
+       Cover I\<times>I by F\<inverse>(U) and F\<inverse>(V) (both open).
+       By 2D Lebesgue: subdivide I\<times>I into m\<times>n grid, each cell in U or V.
+       Each row of the grid gives a word in FP via svk_pieces_in_subgroup.
+       Adjacent rows differ by a relator \<in> N.
+       Bottom row = w mod N, top row = eFP mod N. Hence w \<in> N.\<close>
     show "w \<in> ?N" sorry
   qed
   have hj_ker: "top1_group_kernel_on FP (top1_fundamental_group_id X TX x0) j = ?N"
@@ -20589,9 +20608,19 @@ lemma basepoint_change_image_hom:
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-  \<comment> \<open>Proof sketch: For each direction, conjugate loops by \<alpha> resp. \<alpha>\<inverse>.
-     The loop \<alpha>\<inverse>\<cdot>g\<cdot>\<alpha> conjugates between e0 and e1.
-     Functoriality: p\<circ>(\<alpha>\<inverse>\<cdot>g\<cdot>\<alpha>) \<simeq> rev(p\<circ>\<alpha>) \<cdot> (p\<circ>g) \<cdot> (p\<circ>\<alpha>), giving the conjugation on \<pi>_1(B).\<close>
+  \<comment> \<open>Proof via loop conjugation in E: for each direction, conjugate by \<alpha> resp. \<alpha>\<inverse>.\<close>
+  \<comment> \<open>\<subseteq>: For d \<in> image_hom(E, e1): d = [p\<circ>g] for loop g at e1.
+     Form \<alpha>\<cdot>g\<cdot>\<alpha>\<inverse> (loop at e0). [p\<circ>(\<alpha>\<cdot>g\<cdot>\<alpha>\<inverse>)] = [p\<circ>\<alpha>]\<cdot>[p\<circ>g]\<cdot>[rev(p\<circ>\<alpha>)] = c\<cdot>d\<cdot>inv(c).
+     So c\<cdot>d\<cdot>inv(c) \<in> image_hom(E, e0). Thus d = inv(c)\<cdot>(c\<cdot>d\<cdot>inv(c))\<cdot>c \<in> conj(image_hom(E, e0)).\<close>
+  \<comment> \<open>\<supseteq>: For h \<in> image_hom(E, e0): h = [p\<circ>f] for loop f at e0.
+     Form \<alpha>\<inverse>\<cdot>f\<cdot>\<alpha> (loop at e1). [p\<circ>(\<alpha>\<inverse>\<cdot>f\<cdot>\<alpha>)] = inv(c)\<cdot>[p\<circ>f]\<cdot>c = inv(c)\<cdot>h\<cdot>c.
+     So inv(c)\<cdot>h\<cdot>c \<in> image_hom(E, e1). This means inv(c)\<cdot>(h\<cdot>c) = inv(c)\<cdot>h\<cdot>c \<in> image_hom(E, e1).\<close>
+  \<comment> \<open>Key identities:
+     p \<circ> path_product(path_product(rev(\<alpha>), f), \<alpha>)
+     = path_product(path_product(p\<circ>rev(\<alpha>), p\<circ>f), p\<circ>\<alpha>)   (comp_path_product twice)
+     = path_product(path_product(rev(p\<circ>\<alpha>), p\<circ>f), p\<circ>\<alpha>)   (comp_path_reverse)
+     And rev(\<alpha>)\<cdot>f\<cdot>\<alpha> is a loop at e1 (for f loop at e0).
+     Similarly \<alpha>\<cdot>g\<cdot>rev(\<alpha>) is a loop at e0 (for g loop at e1).\<close>
   sorry
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
