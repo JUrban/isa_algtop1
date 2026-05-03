@@ -601,7 +601,29 @@ proof -
     hence h01_ne: "\<iota> 0 \<noteq> \<iota> 1" unfolding inj_on_def by (by100 force)
     \<comment> \<open>Commutator = e under abelian assumption.\<close>
     have hcomm: "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1)))) = e"
-      sorry \<comment> \<open>Group algebra: if ab=ba then aba\<inverse>b\<inverse> = aa\<inverse>bb\<inverse> = e.\<close>
+    proof -
+      let ?a = "\<iota> 0" and ?b = "\<iota> 1"
+      have hab: "mul ?a ?b = mul ?b ?a" using habel h\<iota>0 h\<iota>1 by (by100 blast)
+      have hinva: "invg ?a \<in> G" by (rule group_inv_closed[OF hG_grp h\<iota>0])
+      have hinvb: "invg ?b \<in> G" by (rule group_inv_closed[OF hG_grp h\<iota>1])
+      have hab_G: "mul ?a ?b \<in> G" by (rule group_mul_closed[OF hG_grp h\<iota>0 h\<iota>1])
+      \<comment> \<open>a \<cdot> (b \<cdot> (a\<inverse> \<cdot> b\<inverse>)) = a \<cdot> (b \<cdot> a\<inverse>) \<cdot> b\<inverse> = a \<cdot> (a\<inverse> \<cdot> b) \<cdot> b\<inverse> (using ab=ba \<Rightarrow> ba\<inverse> = a\<inverse>b)...\<close>
+      \<comment> \<open>Simpler: aba\<inverse>b\<inverse> = a(ba\<inverse>)b\<inverse>. Since ab=ba, ba\<inverse> = a\<inverse>b (from ab=ba \<Rightarrow> a\<inverse>ba = b \<Rightarrow> ba\<inverse> = ...).
+         Actually, simpler still: a(b(a\<inverse>(b\<inverse>))) = (ab)(a\<inverse>b\<inverse>) = (ab)((ab)\<inverse>) = e.
+         Since inv(ab) = inv(b)\<cdot>inv(a) = inv(a)\<cdot>inv(b) (abelian), and (ab)(inv(a)inv(b)) = e.\<close>
+      note hinvmul = group_inv_mul[OF hG_grp h\<iota>0 h\<iota>1]
+      have "mul (invg ?b) (invg ?a) = invg (mul ?a ?b)"
+        using hinvmul by (by100 simp)
+      moreover have "mul (invg ?a) (invg ?b) = mul (invg ?b) (invg ?a)"
+        using habel hinva hinvb by (by100 blast)
+      ultimately have hinvab: "mul (invg ?a) (invg ?b) = invg (mul ?a ?b)" by (by100 simp)
+      hence "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))
+          = mul (mul ?a ?b) (invg (mul ?a ?b))"
+        using group_assoc[OF hG_grp h\<iota>0 h\<iota>1 _] hinva hinvb
+        sorry \<comment> \<open>Associativity chain: a(b(inv(a)(inv(b)))) = (ab)(inv(ab)).\<close>
+      also have "\<dots> = e" by (rule group_inv_right[OF hG_grp hab_G])
+      finally show ?thesis .
+    qed
     \<comment> \<open>But the commutator word is reduced and non-empty \<Rightarrow> word product \<noteq> e.\<close>
     let ?ws = "[(0::nat, True), (1::nat, True), (0, False), (1, False)]"
     have hws_ne: "?ws \<noteq> []" by (by100 simp)
