@@ -7684,6 +7684,36 @@ lemma group_inv_left: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G
 lemma group_inv_right: "top1_is_group_on G mul e invg \<Longrightarrow> x \<in> G \<Longrightarrow> mul x (invg x) = e"
   unfolding top1_is_group_on_def by (by100 blast)
 
+text \<open>Cancellation laws.\<close>
+lemma group_right_cancel:
+  assumes "top1_is_group_on G mul e invg" and "a \<in> G" and "b \<in> G" and "c \<in> G"
+      and "mul a c = mul b c"
+  shows "a = b"
+proof -
+  have hic: "invg c \<in> G" by (rule group_inv_closed[OF assms(1,4)])
+  have "mul (mul a c) (invg c) = mul (mul b c) (invg c)" using assms(5) by (by100 simp)
+  hence "mul a (mul c (invg c)) = mul b (mul c (invg c))"
+    using group_assoc[OF assms(1,2,4) hic] group_assoc[OF assms(1,3,4) hic] by (by100 simp)
+  hence "mul a e = mul b e"
+    using group_inv_right[OF assms(1,4)] by (by100 simp)
+  thus ?thesis using group_id_right[OF assms(1,2)] group_id_right[OF assms(1,3)] by (by100 simp)
+qed
+
+lemma group_left_cancel:
+  assumes "top1_is_group_on G mul e invg" and "a \<in> G" and "b \<in> G" and "c \<in> G"
+      and "mul c a = mul c b"
+  shows "a = b"
+proof -
+  have hic: "invg c \<in> G" by (rule group_inv_closed[OF assms(1,4)])
+  have "mul (invg c) (mul c a) = mul (invg c) (mul c b)" using assms(5) by (by100 simp)
+  hence "mul (mul (invg c) c) a = mul (mul (invg c) c) b"
+    using group_assoc[OF assms(1) hic assms(4,2), symmetric]
+          group_assoc[OF assms(1) hic assms(4,3), symmetric] by (by100 simp)
+  hence "mul e a = mul e b"
+    using group_inv_left[OF assms(1,4)] by (by100 simp)
+  thus ?thesis using group_id_left[OF assms(1,2)] group_id_left[OF assms(1,3)] by (by100 simp)
+qed
+
 text \<open>Derived: inverse of product.\<close>
 lemma group_inv_mul:
   assumes hG: "top1_is_group_on G mul e invg" and hx: "x \<in> G" and hy: "y \<in> G"
