@@ -22664,6 +22664,15 @@ proof -
         hcovE assms(10) hcovE' assms(11) assms(6,7,8,9) assms(12,13) hb0_B]] hRHS by (by100 blast)
 qed
 
+text \<open>Helper: open subset of an evenly covered set is evenly covered.
+  If U is evenly covered by p and V \<subseteq> U is open in B, then V is evenly covered by p.\<close>
+lemma evenly_covered_open_subset:
+  assumes hcov: "top1_evenly_covered_on E TE B TB p U"
+      and hV: "openin_on B TB V" and hVU: "V \<subseteq> U"
+      and hTE: "is_topology_on E TE" and hTB: "is_topology_on B TB"
+  shows "top1_evenly_covered_on E TE B TB p V"
+  sorry \<comment> \<open>Restrict sheets: U_\<alpha>' = p|_{U_\<alpha>}\<inverse>(V) is open, p|_{U_\<alpha>'}: U_\<alpha>' \<cong> V.\<close>
+
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
@@ -22831,8 +22840,46 @@ next
     \<comment> \<open>V0 is our evenly covered neighborhood.\<close>
     \<comment> \<open>To show: top1_evenly_covered_on E TE Y TY q V0.\<close>
     \<comment> \<open>Each slice U_\<alpha> of p\<inverse>(U) that maps into V0 maps homeomorphically via q.\<close>
+    \<comment> \<open>Restrict p-covering to Up\<inter>Ur.\<close>
+    have hTE: "is_topology_on E TE" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTB: "is_topology_on B TB" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTY: "is_topology_on Y TY" using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+    have hUp_open: "openin_on B TB Up"
+      using hUp_cov_p unfolding top1_evenly_covered_on_def by (by100 blast)
+    have hUr_open: "openin_on B TB Ur"
+      using hUr_cov_r unfolding top1_evenly_covered_on_def by (by100 blast)
+    have hU_open: "openin_on B TB ?U"
+      sorry \<comment> \<open>Intersection of open sets is open.\<close>
+    have hU_cov_p: "top1_evenly_covered_on E TE B TB p ?U"
+      by (rule evenly_covered_open_subset[OF hUp_cov_p hU_open _ hTE hTB]) (by100 blast)
+    have hU_cov_r: "top1_evenly_covered_on Y TY B TB r ?U"
+      by (rule evenly_covered_open_subset[OF hUr_cov_r hU_open _ hTY hTB]) (by100 blast)
+    \<comment> \<open>Get p-slices and r-slices over U = Up\<inter>Ur.\<close>
+    obtain \<V>p where h\<V>p_open: "\<forall>V\<in>\<V>p. openin_on E TE V"
+        and h\<V>p_disj: "\<forall>V\<in>\<V>p. \<forall>V'\<in>\<V>p. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+        and h\<V>p_union: "{x\<in>E. p x \<in> ?U} = \<Union>\<V>p"
+        and h\<V>p_homeo: "\<forall>V\<in>\<V>p. top1_homeomorphism_on V (subspace_topology E TE V) ?U
+                                      (subspace_topology B TB ?U) p"
+      using hU_cov_p unfolding top1_evenly_covered_on_def
+      by (elim conjE exE) (by100 blast)
+    obtain \<V>r' where h\<V>r'_open: "\<forall>V\<in>\<V>r'. openin_on Y TY V"
+        and h\<V>r'_disj: "\<forall>V\<in>\<V>r'. \<forall>V'\<in>\<V>r'. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+        and h\<V>r'_union: "{x\<in>Y. r x \<in> ?U} = \<Union>\<V>r'"
+        and h\<V>r'_homeo: "\<forall>V\<in>\<V>r'. top1_homeomorphism_on V (subspace_topology Y TY V) ?U
+                                      (subspace_topology B TB ?U) r"
+      using hU_cov_r unfolding top1_evenly_covered_on_def
+      by (elim conjE exE) (by100 blast)
+    \<comment> \<open>V0' = the r'-slice containing y (over U = Up\<inter>Ur).\<close>
+    have hy_in_rU': "y \<in> {x\<in>Y. r x \<in> ?U}" using hy hU_b by (by100 blast)
+    hence "y \<in> \<Union>\<V>r'" using h\<V>r'_union by (by100 simp)
+    then obtain V0' where hV0': "V0' \<in> \<V>r'" and hy_V0': "y \<in> V0'" by (by100 blast)
+    \<comment> \<open>V0' is evenly covered by q: each p-slice U_\<alpha> over U maps homeo to V0' via q.\<close>
+    \<comment> \<open>For each U_\<alpha> \<in> \<V>p: p|_{U_\<alpha>}: U_\<alpha> \<cong> U and r|_{V0'}: V0' \<cong> U.
+       So q|_{U_\<alpha>} = (r|_{V0'})\<inverse> \<circ> p|_{U_\<alpha>}: U_\<alpha> \<cong> V0'.
+       But only for those U_\<alpha> where q(U_\<alpha>) \<subseteq> V0'.\<close>
     show "\<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
-      sorry \<comment> \<open>V0 is evenly covered: q\<inverse>(V0) = union of p-slices mapping into V0, each homeo to V0.\<close>
+      sorry \<comment> \<open>Use V0' as the evenly covered neighborhood. The p-slices mapping into V0'
+         each map homeomorphically via q = (r|_{V0'})\<inverse> \<circ> p. Still needs ~100 lines.\<close>
   qed
   show ?thesis
   proof (rule exI[of _ q])
