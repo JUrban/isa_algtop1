@@ -16799,8 +16799,88 @@ proof -
       \<comment> \<open>The generator gives us \<iota>0 \<cdot> inv(\<iota>1) \<in> N. We need inv(\<iota>0) \<cdot> \<iota>1 \<in> N.\<close>
       \<comment> \<open>inv(generator) = \<iota>1 \<cdot> inv(\<iota>0) \<in> N (N is a group).\<close>
       \<comment> \<open>Conjugate: inv(\<iota>1) \<cdot> (\<iota>1 \<cdot> inv(\<iota>0)) \<cdot> \<iota>1 = inv(\<iota>0) \<cdot> \<iota>1 \<in> N (N is normal).\<close>
-      show "?\<phi>1 ?iU_c = ?\<phi>2 ?iV_c"
-        sorry \<comment> \<open>Coset equality via generator in N + normal subgroup conjugation.\<close>
+      \<comment> \<open>Need: inv(\<iota>0) \<cdot> \<iota>1 \<in> N. From generator \<iota>0 \<cdot> inv(\<iota>1) \<in> N:\<close>
+      let ?a = "\<iota>fam 0 ?iU_c" and ?b = "\<iota>fam 1 ?iV_c"
+      have hUV_sub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+      have hTUV_loc: "is_topology_on (U \<inter> V) ?TUV"
+        by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub])
+      have hx0_UV_loc: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+      have hincl_UV_U_loc: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+      proof -
+        have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+        moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+          by (rule subspace_topology_trans) (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hincl_UV_V_loc: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+      proof -
+        have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
+        moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+          by (rule subspace_topology_trans) (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hiUc_piU: "?iU_c \<in> ?\<pi>U"
+        using top1_fundamental_group_induced_on_is_hom[OF hTUV_loc hTopU hx0_UV_loc hx0_U hincl_UV_U_loc] hc
+        unfolding top1_group_hom_on_def by (by100 blast)
+      have hiVc_piV: "?iV_c \<in> ?\<pi>V"
+        using top1_fundamental_group_induced_on_is_hom[OF hTUV_loc hTopV hx0_UV_loc hx0_V hincl_UV_V_loc] hc
+        unfolding top1_group_hom_on_def by (by100 blast)
+      have h\<iota>_in_FP: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      have ha_FP: "?a \<in> FP" using h\<iota>_in_FP hiUc_piU by (by100 force)
+      have hb_FP: "?b \<in> FP" using h\<iota>_in_FP hiVc_piV by (by100 force)
+      have hinva_FP: "invgFP ?a \<in> FP"
+        using hFP_grp ha_FP unfolding top1_is_group_on_def by (by100 blast)
+      have hinvb_FP: "invgFP ?b \<in> FP"
+        using hFP_grp hb_FP unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>inv(generator) = \<iota>1 \<cdot> inv(\<iota>0) \<in> N (N is closed under inverse).\<close>
+      have hN_grp: "top1_is_group_on ?N mulFP eFP invgFP"
+        using hN_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have hinv_gen: "invgFP (mulFP ?a (invgFP ?b)) \<in> ?N"
+      proof -
+        have "mulFP ?a (invgFP ?b) \<in> ?N" by (rule hgen_in_N)
+        thus ?thesis using hN_grp unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      \<comment> \<open>inv(a \<cdot> inv(b)) = b \<cdot> inv(a) in a group.\<close>
+      have hinv_expand: "invgFP (mulFP ?a (invgFP ?b)) = mulFP ?b (invgFP ?a)"
+      proof -
+        have "invgFP (mulFP ?a (invgFP ?b)) = mulFP (invgFP (invgFP ?b)) (invgFP ?a)"
+          by (rule group_inv_mul[OF hFP_grp ha_FP hinvb_FP])
+        also have "invgFP (invgFP ?b) = ?b"
+          by (rule group_inv_inv[OF hFP_grp hb_FP])
+        finally show ?thesis by (by100 simp)
+      qed
+      hence hb_inva_N: "mulFP ?b (invgFP ?a) \<in> ?N" using hinv_gen by (by100 simp)
+      \<comment> \<open>Conjugate by inv(b): inv(b) \<cdot> (b \<cdot> inv(a)) \<cdot> b = inv(a) \<cdot> b.\<close>
+      have hN_conj: "\<And>g n. g \<in> FP \<Longrightarrow> n \<in> ?N \<Longrightarrow> mulFP (mulFP g n) (invgFP g) \<in> ?N"
+        using hN_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have "mulFP (mulFP (invgFP ?b) (mulFP ?b (invgFP ?a))) (invgFP (invgFP ?b)) \<in> ?N"
+        by (rule hN_conj[OF hinvb_FP hb_inva_N])
+      moreover have "mulFP (mulFP (invgFP ?b) (mulFP ?b (invgFP ?a))) (invgFP (invgFP ?b))
+          = mulFP (invgFP ?a) ?b"
+      proof -
+        note hg = hFP_grp[unfolded top1_is_group_on_def]
+        note hassoc_raw = hg[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct1]
+        note hid_raw = hg[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct1]
+        note hinv_raw = hg[THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2, THEN conjunct2]
+        \<comment> \<open>inv(b) \<cdot> (b \<cdot> inv(a)) = (inv(b) \<cdot> b) \<cdot> inv(a) by assoc.\<close>
+        note s1 = hassoc_raw[rule_format, OF hinvb_FP hb_FP hinva_FP, symmetric]
+        note s2 = hinv_raw[rule_format, OF hb_FP, THEN conjunct1]
+        note s3 = hid_raw[rule_format, OF hinva_FP, THEN conjunct1]
+        have s4: "mulFP (invgFP ?b) (mulFP ?b (invgFP ?a)) = invgFP ?a"
+          using s1 s2 s3 by (by100 simp)
+        have s5: "invgFP (invgFP ?b) = ?b" by (rule group_inv_inv[OF hFP_grp hb_FP])
+        show ?thesis using s4 s5 by (by100 simp)
+      qed
+      ultimately have h_invab_N: "mulFP (invgFP ?a) ?b \<in> ?N" by (by100 simp)
+      \<comment> \<open>Apply normal_coset_eq: coset(a) = coset(b) \<longleftrightarrow> inv(a) \<cdot> b \<in> N.\<close>
+      have "top1_group_coset_on FP mulFP ?N ?a = top1_group_coset_on FP mulFP ?N ?b"
+        using iffD2[OF normal_coset_eq[OF hFP_grp hN_normal ha_FP hb_FP] h_invab_N] .
+      thus "?\<phi>1 ?iU_c = ?\<phi>2 ?iV_c" by (by100 simp)
     qed
     \<comment> \<open>Step 3: By parameterized SvK (Theorem 70.1), get \<Phi>: \<pi>_1(X) \<rightarrow> FP/N.\<close>
     have hPhi: "\<exists>\<Phi>. top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>
