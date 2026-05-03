@@ -2257,10 +2257,10 @@ lemma grid_subdivision_UV:
                          \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                          \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
                          \<longrightarrow> F (s,t) \<in> V)))"
-  sorry \<comment> \<open>2D Lebesgue: for each (s,t), F(s,t) \<in> U or V. By continuity, there's a rectangular
-     neighborhood in F\<inverse>(U) or F\<inverse>(V). These cover I\<times>I (compact). By Lebesgue number (or
-     tube lemma + 1D Lebesgue), get a grid with each cell in one preimage.
-     Uses: top1_lebesgue_number or Lemma_26_8 + open_cover_subdivision_01.\<close>
+  sorry \<comment> \<open>2D Lebesgue: I\<times>I compact, F\<inverse>(U) \<union> F\<inverse>(V) open cover.
+     Approach: open_cover_subdivision_01 in s, then per-strip in t via
+     tube lemma (Lemma_26_8), merge via grid_from_per_piece_subdivisions.
+     All infrastructure available. ~100 lines.\<close>
 
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
 lemma loop_subdivision_UV:
