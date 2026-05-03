@@ -22465,8 +22465,23 @@ next
         "top1_continuous_map_on E TE Y TY q" by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
-  \<comment> \<open>q is a covering map: evenly covered because p and r both are.\<close>
-  show ?thesis sorry
+  then obtain q where hq_Y: "\<forall>e\<in>E. q e \<in> Y" and hq_rp: "\<forall>e\<in>E. r (q e) = p e"
+      and hq_cont: "top1_continuous_map_on E TE Y TY q" by (by100 blast)
+  \<comment> \<open>q is a covering map: evenly covered because p and r both are.
+     For each y \<in> Y, take b = r(y). Take U evenly covered by both p and r.
+     Slices of p\<inverse>(U) are {U_\<alpha>}, slices of r\<inverse>(U) are {V_\<beta>}.
+     q maps each U_\<alpha> into some V_\<beta> (connectedness).
+     q restricted to U_\<alpha> = r_\<beta>\<inverse> \<circ> p_\<alpha>, a homeomorphism.
+     So q evenly covers each V_\<beta>.\<close>
+  have hq_surj: "q ` E = Y"
+    sorry \<comment> \<open>Surjectivity: q(E) open+closed in connected Y, contains y0.\<close>
+  have hq_cov: "\<forall>y\<in>Y. \<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
+    sorry \<comment> \<open>Evenly covered: each sheet of p over r(y) maps homeo to a sheet of r.\<close>
+  show ?thesis
+  proof (rule exI[of _ q])
+    show "top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
+      unfolding top1_covering_map_on_def using hq_cont hq_surj hq_cov hq_rp by (by100 blast)
+  qed
 qed
 
 text \<open>Strict version of Theorem_80_3 — same statement but with simply_connected_strict.\<close>
