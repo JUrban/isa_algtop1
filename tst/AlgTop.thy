@@ -2357,9 +2357,26 @@ proof -
        This gives \<sigma>(piece_i) \<cdot> \<sigma>(\<beta>_i) = \<sigma>(\<beta>_{i-1}) \<cdot> \<sigma>(piece'_i).
        Telescoping + \<sigma>(\<beta>_0) = \<sigma>(\<beta>_n) = eH gives \<tau>(f_j) = \<tau>(f_{j+1}).\<close>
     \<comment> \<open>Step 5: Transitivity: \<tau>(f) = \<tau>(f_0) = ... = \<tau>(f_m) = \<tau>(g).\<close>
+    \<comment> \<open>Step 3: Build the 2D grid. For each fixed t, the function s \<mapsto> F(s,t) maps [0,1]
+       into X = U \<union> V. By open_cover_subdivision_01, subdivide [0,1] into intervals
+       each mapping into U or V. Then grid_from_per_piece_subdivisions merges these
+       into a uniform s-subdivision valid for all t-rows.\<close>
+    \<comment> \<open>Step 3a: For each fixed t \<in> [0,1], get an s-subdivision.\<close>
+    have hU_TX: "U \<in> TX" using hU unfolding openin_on_def by (by100 blast)
+    have hV_TX: "V \<in> TX" using hV unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>Step 3b: Get s-subdivision (using existing surjectivity proof machinery).
+       Then merge into uniform t-subdivision via grid_from_per_piece_subdivisions.\<close>
+    \<comment> \<open>Step 4: Row comparison. Define f_j(s) = F(s, t_j). Show \<tau>(f_{j-1}) = \<tau>(f_j) for
+       adjacent rows. Each cell [s_{i-1},s_i]\<times>[t_{j-1},t_j] maps into U or V.
+       The boundary paths \<beta>_i(t) = F(s_i, t) satisfy:
+         piece_i \<cdot> \<beta>_i \<simeq> \<beta>_{i-1} \<cdot> piece'_i in U or V
+       This gives \<sigma>(piece_i)\<cdot>\<sigma>(\<beta>_i) = \<sigma>(\<beta>_{i-1})\<cdot>\<sigma>(piece'_i) in H.
+       Telescoping: \<Pi> \<sigma>(piece_i) = \<Pi> \<sigma>(piece'_i), i.e., \<tau>(f_{j-1}) = \<tau>(f_j).\<close>
+    \<comment> \<open>Step 5: f_0 = f and f_m = g. By transitivity: \<tau>(f) = \<tau>(f_0) = ... = \<tau>(f_m) = \<tau>(g).\<close>
     show "\<tau> f = \<tau> g"
-      sorry \<comment> \<open>Steps 3-5 of the 2D argument. Infrastructure: F extracted, F maps into U\<union>V.
-         Needs: 2D grid subdivision, row comparison via \<sigma>/\<rho> properties, telescoping.\<close>
+      sorry \<comment> \<open>The 2D grid argument. All infrastructure available: F, F maps into U\<union>V,
+         open_cover_subdivision_01, grid_from_per_piece_subdivisions.
+         Core work: formalize row comparison via \<sigma>/\<rho> properties + broken-line homotopy.\<close>
   qed
   \<comment> \<open>===== Derive all three properties from A =====\<close>
   \<comment> \<open>Also need: \<tau> multiplicative (\<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g)) and \<tau> extension (\<tau>(f) = \<phi>_i([f])
