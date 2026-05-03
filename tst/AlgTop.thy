@@ -17003,8 +17003,43 @@ proof -
     have hPhi: "\<exists>\<Phi>. top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>
         \<and> (\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a)
         \<and> (\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b)"
-      sorry \<comment> \<open>Follows from Theorem_70_1_universal_property with H=FP/N.
-         See lemma Theorem_70_1_universal_property above. The sorry there is the core.\<close>
+    proof -
+      \<comment> \<open>Instantiate Theorem_70_1 with H = FP/N.\<close>
+      obtain eQ invgQ where hQ_grp_full: "top1_is_group_on ?Q ?mulQ eQ invgQ"
+        using quotient_group_is_group[OF hFP_grp hN_normal] by (by100 blast)
+      \<comment> \<open>\<phi>1 and \<phi>2 are group homs into Q.\<close>
+      \<comment> \<open>\<iota>_0 is a group hom \<pi>U \<rightarrow> FP (from free product) and \<pi>_q is a hom FP \<rightarrow> Q.\<close>
+      note hpiq_hom_loc = quotient_projection_properties(1)[OF hFP_grp hN_normal]
+      have h\<iota>0_hom: "top1_group_hom_on ?\<pi>U (top1_fundamental_group_mul U ?TU x0) FP mulFP (\<iota>fam 0)"
+      proof -
+        have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        moreover have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+            \<iota>fam \<alpha> ((if \<alpha>=0 then top1_fundamental_group_mul U ?TU x0 else top1_fundamental_group_mul V ?TV x0) x y)
+            = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        ultimately show ?thesis unfolding top1_group_hom_on_def by (by100 force)
+      qed
+      have h\<iota>1_hom: "top1_group_hom_on ?\<pi>V (top1_fundamental_group_mul V ?TV x0) FP mulFP (\<iota>fam 1)"
+      proof -
+        have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        moreover have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+            \<iota>fam \<alpha> ((if \<alpha>=0 then top1_fundamental_group_mul U ?TU x0 else top1_fundamental_group_mul V ?TV x0) x y)
+            = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        ultimately show ?thesis unfolding top1_group_hom_on_def by (by100 force)
+      qed
+      note hcomp0 = group_hom_comp[OF h\<iota>0_hom hpiq_hom_loc]
+      note hcomp1 = group_hom_comp[OF h\<iota>1_hom hpiq_hom_loc]
+      \<comment> \<open>hcomp0: hom(\<pi>_q \<circ> \<iota>_0). Need: hom(\<lambda>a. \<pi>_q(\<iota>_0 a)) = hom(\<pi>_q \<circ> \<iota>_0).\<close>
+      have h\<phi>1_hom: "top1_group_hom_on ?\<pi>U (top1_fundamental_group_mul U ?TU x0) ?Q ?mulQ ?\<phi>1"
+        using hcomp0 unfolding comp_def by (by100 simp)
+      have h\<phi>2_hom: "top1_group_hom_on ?\<pi>V (top1_fundamental_group_mul V ?TV x0) ?Q ?mulQ ?\<phi>2"
+        using hcomp1 unfolding comp_def by (by100 simp)
+      from Theorem_70_1_universal_property[OF assms(1-8) hQ_grp_full h\<phi>1_hom h\<phi>2_hom hcompat]
+      show ?thesis by (by100 simp)
+    qed
     then obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>"
         and h\<Phi>_U: "\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a"
         and h\<Phi>_V: "\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b"
