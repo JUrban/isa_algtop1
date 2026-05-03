@@ -2373,10 +2373,40 @@ proof -
        This gives \<sigma>(piece_i)\<cdot>\<sigma>(\<beta>_i) = \<sigma>(\<beta>_{i-1})\<cdot>\<sigma>(piece'_i) in H.
        Telescoping: \<Pi> \<sigma>(piece_i) = \<Pi> \<sigma>(piece'_i), i.e., \<tau>(f_{j-1}) = \<tau>(f_j).\<close>
     \<comment> \<open>Step 5: f_0 = f and f_m = g. By transitivity: \<tau>(f) = \<tau>(f_0) = ... = \<tau>(f_m) = \<tau>(g).\<close>
+    \<comment> \<open>===== 2D GRID CONSTRUCTION =====\<close>
+    \<comment> \<open>Step 3a: Get s-subdivision for f = F(\<cdot>,0). Same as surjectivity proof.\<close>
+    have hf_cont_I: "top1_continuous_map_on I_set I_top X TX f"
+      using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    obtain ns sub_s where hns: "ns \<ge> 1" and hs0: "sub_s 0 = (0::real)" and hsn: "sub_s ns = 1"
+        and hsinc: "\<forall>i<ns. sub_s i < sub_s (Suc i)"
+        and hs_UV: "\<forall>i<ns. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub_s i + t * (sub_s (Suc i) - sub_s i)) \<in> U)
+                         \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub_s i + t * (sub_s (Suc i) - sub_s i)) \<in> V)"
+      sorry \<comment> \<open>1D Lebesgue for f. Same as surjectivity proof (lines 2646-2755).\<close>
+    \<comment> \<open>Step 3b: For each s-strip, get t-subdivision via tube lemma + open_cover_subdivision_01.
+       For each strip [s_{i-1}, s_i] and each t_0, the tube lemma gives a t-ball where the
+       strip maps into U or V. These balls cover [0,1]. By open_cover_subdivision_01,
+       get a t-subdivision for each strip. Merge via grid_from_per_piece_subdivisions.\<close>
+    obtain nt sub_t where hnt: "nt \<ge> 1" and ht0: "sub_t 0 = (0::real)" and htn: "sub_t nt = 1"
+        and htinc: "\<forall>j<nt. sub_t j < sub_t (Suc j)"
+        and hcell_UV: "\<forall>i<ns. \<forall>j<nt. (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+                                          \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                                          \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                                          \<longrightarrow> F (s,t) \<in> U)
+                            \<or> (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+                                   \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                                   \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                                   \<longrightarrow> F (s,t) \<in> V)"
+      sorry \<comment> \<open>2D Lebesgue: tube lemma (Lemma_26_8) + open_cover_subdivision_01 per strip
+         + grid_from_per_piece_subdivisions to merge. ~80 lines.\<close>
+    \<comment> \<open>===== ROW COMPARISON + TELESCOPING =====\<close>
+    \<comment> \<open>Define row functions: f_j(s) = F(s, sub_t j). f_0 = f, f_nt = g.
+       Show \<tau>(f_j) = \<tau>(f_{j+1}) for each j via \<sigma> telescoping.
+       Transitivity gives \<tau>(f) = \<tau>(g).\<close>
     show "\<tau> f = \<tau> g"
-      sorry \<comment> \<open>The 2D grid argument. All infrastructure available: F, F maps into U\<union>V,
-         open_cover_subdivision_01, grid_from_per_piece_subdivisions.
-         Core work: formalize row comparison via \<sigma>/\<rho> properties + broken-line homotopy.\<close>
+      sorry \<comment> \<open>Row comparison: for adjacent rows, \<sigma> values telescope.
+         Key: fᵢ \<cdot> \<beta>ᵢ \<simeq> \<beta>_{i-1} \<cdot> gᵢ in U or V (broken-line in convex cell).
+         Then \<sigma>(fᵢ)\<cdot>\<sigma>(\<beta>ᵢ) = \<sigma>(\<beta>_{i-1})\<cdot>\<sigma>(gᵢ). Telescope + \<sigma>(const) = eH.
+         ~100 lines for row comparison + transitivity.\<close>
   qed
   \<comment> \<open>===== Derive all three properties from A =====\<close>
   \<comment> \<open>Also need: \<tau> multiplicative (\<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g)) and \<tau> extension (\<tau>(f) = \<phi>_i([f])
