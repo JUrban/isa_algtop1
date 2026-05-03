@@ -22476,7 +22476,38 @@ next
   have hq_surj: "q ` E = Y"
     sorry \<comment> \<open>Surjectivity: q(E) open+closed in connected Y, contains y0.\<close>
   have hq_cov: "\<forall>y\<in>Y. \<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
-    sorry \<comment> \<open>Evenly covered: each sheet of p over r(y) maps homeo to a sheet of r.\<close>
+  proof
+    fix y assume hy: "y \<in> Y"
+    let ?b = "r y"
+    have hb_B: "?b \<in> B"
+      using hy top1_covering_map_on_surj[OF assms(6)] by (by100 blast)
+    \<comment> \<open>Take U evenly covered by both p and r.\<close>
+    obtain Up where hUp_b: "?b \<in> Up" and hUp_cov_p: "top1_evenly_covered_on E TE B TB p Up"
+      using hb_B assms(4) unfolding top1_covering_map_on_def by (by100 blast)
+    obtain Ur where hUr_b: "?b \<in> Ur" and hUr_cov_r: "top1_evenly_covered_on Y TY B TB r Ur"
+      using hb_B assms(6) unfolding top1_covering_map_on_def by (by100 blast)
+    let ?U = "Up \<inter> Ur"
+    \<comment> \<open>U = Up \<inter> Ur is open, contains b, and is evenly covered by both p and r.\<close>
+    have hU_b: "?b \<in> ?U" using hUp_b hUr_b by (by100 blast)
+    \<comment> \<open>The restriction of a covering to an open subset is still a covering.\<close>
+    \<comment> \<open>Get the slice of r\<inverse>(U) containing y. This will be the evenly covered neighborhood.\<close>
+    obtain \<V>r where h\<V>r_open: "\<forall>V\<in>\<V>r. openin_on Y TY V"
+        and h\<V>r_disj: "\<forall>V\<in>\<V>r. \<forall>V'\<in>\<V>r. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+        and h\<V>r_union: "{x\<in>Y. r x \<in> Ur} = \<Union>\<V>r"
+        and h\<V>r_homeo: "\<forall>V\<in>\<V>r. top1_homeomorphism_on V (subspace_topology Y TY V) Ur
+                                      (subspace_topology B TB Ur) r"
+      using hUr_cov_r unfolding top1_evenly_covered_on_def
+      by (elim conjE exE) (by100 blast)
+    \<comment> \<open>y is in r\<inverse>(Ur), so y \<in> \<Union>\<V>r. Pick the slice V0 containing y.\<close>
+    have hy_in_rU: "y \<in> {x\<in>Y. r x \<in> Ur}" using hy hUr_b by (by100 blast)
+    hence "y \<in> \<Union>\<V>r" using h\<V>r_union by (by100 simp)
+    then obtain V0 where hV0: "V0 \<in> \<V>r" and hy_V0: "y \<in> V0" by (by100 blast)
+    \<comment> \<open>V0 is our evenly covered neighborhood.\<close>
+    \<comment> \<open>To show: top1_evenly_covered_on E TE Y TY q V0.\<close>
+    \<comment> \<open>Each slice U_\<alpha> of p\<inverse>(U) that maps into V0 maps homeomorphically via q.\<close>
+    show "\<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
+      sorry \<comment> \<open>V0 is evenly covered: q\<inverse>(V0) = union of p-slices mapping into V0, each homeo to V0.\<close>
+  qed
   show ?thesis
   proof (rule exI[of _ q])
     show "top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
