@@ -22673,8 +22673,87 @@ lemma homeomorphism_restrict_open:
       and hTY: "is_topology_on Y TY"
   shows "top1_homeomorphism_on {x \<in> X. f x \<in> V} (subspace_topology X TX {x \<in> X. f x \<in> V})
              V (subspace_topology Y TY V) f"
-  sorry \<comment> \<open>Standard: bij_betw restriction, continuity restriction, inverse continuity restriction.
-     Needs subspace_topology_trans for subspace-of-subspace reasoning.\<close>
+proof -
+  let ?X' = "{x \<in> X. f x \<in> V}"
+  let ?TX' = "subspace_topology X TX ?X'"
+  let ?TY' = "subspace_topology Y TY V"
+  have hXsub: "?X' \<subseteq> X" by (by100 blast)
+  have hbij: "bij_betw f X Y" using hf unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hf_cont: "top1_continuous_map_on X TX Y TY f"
+    using hf unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hfinv_cont: "top1_continuous_map_on Y TY X TX (inv_into X f)"
+    using hf unfolding top1_homeomorphism_on_def by (by100 blast)
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on ?X' ?TX'" by (rule subspace_topology_is_topology_on[OF hTX hXsub])
+    show "is_topology_on V ?TY'" by (rule subspace_topology_is_topology_on[OF hTY hVY])
+    \<comment> \<open>bij_betw: f maps ?X' bijectively to V.\<close>
+    show "bij_betw f ?X' V"
+    proof -
+      have "inj_on f X" using hbij unfolding bij_betw_def by (by100 blast)
+      hence "inj_on f ?X'" by (rule inj_on_subset) (by100 blast)
+      moreover have "f ` ?X' = V"
+      proof (rule set_eqI)
+        fix y show "y \<in> f ` ?X' \<longleftrightarrow> y \<in> V"
+        proof
+          assume "y \<in> f ` ?X'" thus "y \<in> V" by (by100 blast)
+        next
+          assume "y \<in> V"
+          hence "y \<in> Y" using hVY by (by100 blast)
+          hence "\<exists>x\<in>X. f x = y" using hbij unfolding bij_betw_def by (by100 blast)
+          then obtain x where hx: "x \<in> X" and hfx: "f x = y" by (by100 blast)
+          hence "x \<in> ?X'" using \<open>y \<in> V\<close> by (by100 blast)
+          thus "y \<in> f ` ?X'" using hfx by (by100 blast)
+        qed
+      qed
+      ultimately show ?thesis unfolding bij_betw_def by (by100 blast)
+    qed
+    \<comment> \<open>Continuity: f restricted to ?X' \<rightarrow> V.\<close>
+    show "top1_continuous_map_on ?X' ?TX' V ?TY' f"
+    proof -
+      have hf_restr: "top1_continuous_map_on ?X' ?TX' Y TY f"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF hf_cont hXsub])
+      have himg: "f ` ?X' \<subseteq> V" by (by100 blast)
+      show ?thesis by (rule top1_continuous_map_on_codomain_shrink[OF hf_restr himg hVY])
+    qed
+    \<comment> \<open>Inverse continuity.\<close>
+    show "top1_continuous_map_on V ?TY' ?X' ?TX' (inv_into ?X' f)"
+    proof -
+      \<comment> \<open>inv_into X' f = inv_into X f on V (since X' \<subseteq> X, f injective, image = V).\<close>
+      have hinj: "inj_on f X" using hbij unfolding bij_betw_def by (by100 blast)
+      have hfinv_agree: "\<forall>y\<in>V. inv_into ?X' f y = inv_into X f y"
+      proof
+        fix y assume "y \<in> V"
+        hence "y \<in> Y" using hVY by (by100 blast)
+        hence "y \<in> f ` X" using hbij unfolding bij_betw_def by (by100 blast)
+        hence "inv_into X f y \<in> X" by (rule inv_into_into)
+        moreover have "f (inv_into X f y) = y"
+          using \<open>y \<in> f ` X\<close> by (rule f_inv_into_f)
+        hence "f (inv_into X f y) \<in> V" using \<open>y \<in> V\<close> by (by100 simp)
+        hence "inv_into X f y \<in> ?X'" using calculation by (by100 blast)
+        thus "inv_into ?X' f y = inv_into X f y"
+          by (intro inv_into_f_eq[OF inj_on_subset[OF hinj hXsub]])
+             (use \<open>f (inv_into X f y) = y\<close> in \<open>by100 blast\<close>)
+      qed
+      \<comment> \<open>Restrict inv_into X f: Y \<rightarrow> X to V \<rightarrow> X'.\<close>
+      have hfinv_restr: "top1_continuous_map_on V ?TY' X TX (inv_into X f)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF hfinv_cont hVY])
+      \<comment> \<open>Codomain shrink from X to X'.\<close>
+      have hfinv_img: "(inv_into X f) ` V \<subseteq> ?X'"
+      proof
+        fix x assume "x \<in> (inv_into X f) ` V"
+        then obtain y where hy: "y \<in> V" and hx: "x = inv_into X f y" by (by100 blast)
+        show "x \<in> ?X'" using hfinv_agree hy hx
+          sorry \<comment> \<open>inv_into X f y = inv_into X' f y \<in> X' (from hfinv_agree).\<close>
+      qed
+      have hfinv_shrink: "top1_continuous_map_on V ?TY' ?X' ?TX' (inv_into X f)"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hfinv_restr hfinv_img hXsub])
+      \<comment> \<open>inv_into X' f = inv_into X f on V, so continuity transfers.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Transfer continuity: inv_into X' f = inv_into X f on V (by hfinv_agree).\<close>
+    qed
+  qed
+qed
 
 text \<open>Helper: open subset of an evenly covered set is evenly covered.
   If U is evenly covered by p and V \<subseteq> U is open in B, then V is evenly covered by p.\<close>
