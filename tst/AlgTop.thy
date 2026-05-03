@@ -16798,20 +16798,36 @@ proof -
     moreover have "\<Phi> (j w) = \<Phi> ?e_X" using hjw by (by100 simp)
     moreover have "\<Phi> ?e_X = ?\<pi>_q eFP"
     proof -
-      obtain eQ invgQ where hQ_grp': "top1_is_group_on ?Q ?mulQ eQ invgQ"
-        using hQ_grp by (by100 blast)
-      have "\<Phi> ?e_X = eQ"
-        by (rule hom_preserves_id[OF h\<pi>X_grp hQ_grp' h\<Phi>_hom])
-      moreover have "eQ = ?\<pi>_q eFP"
-        using quotient_group_is_group[OF hFP_grp hN_normal] hQ_grp'
-        sorry \<comment> \<open>The identity of FP/N is the coset eFP \<cdot> N = N.\<close>
-      ultimately show ?thesis by (by100 simp)
+      note hQ_grp' = quotient_group_is_group[OF hFP_grp hN_normal]
+      show ?thesis by (rule hom_preserves_id[OF h\<pi>X_grp hQ_grp' h\<Phi>_hom])
     qed
     ultimately have "?\<pi>_q w = ?\<pi>_q eFP" by (by100 simp)
     \<comment> \<open>Same coset means w \<cdot> eFP\<inverse> = w \<in> N.\<close>
     \<comment> \<open>same coset \<Rightarrow> inv(eFP) \<cdot> w \<in> N \<Rightarrow> w \<in> N (since inv(e) = e and e \<cdot> w = w).\<close>
-    thus "w \<in> ?N"
-      sorry \<comment> \<open>Quotient algebra: coset(w)=coset(e) implies w \<in> N. Uses normal_coset_eq + group identity.\<close>
+    have heFP_FP: "eFP \<in> FP"
+      using hFP_grp unfolding top1_is_group_on_def by (by100 blast)
+    note hcoset_iff = normal_coset_eq[OF hFP_grp hN_normal heFP_FP hwFP]
+    \<comment> \<open>hcoset_iff: coset(eFP) = coset(w) \<longleftrightarrow> mulFP(invgFP eFP) w \<in> N\<close>
+    have "top1_group_coset_on FP mulFP ?N eFP = top1_group_coset_on FP mulFP ?N w"
+      using \<open>?\<pi>_q w = ?\<pi>_q eFP\<close> by (by100 simp)
+    hence "mulFP (invgFP eFP) w \<in> ?N" using hcoset_iff by (by100 blast)
+    moreover have "mulFP (invgFP eFP) w = w"
+    proof -
+      have "invgFP eFP = eFP"
+      proof -
+        note hgrp_raw = hFP_grp[unfolded top1_is_group_on_def]
+        have he_FP: "eFP \<in> FP" using hgrp_raw by (by100 blast)
+        have "mulFP (invgFP eFP) eFP = eFP" using hgrp_raw he_FP by (by100 blast)
+        moreover have "invgFP eFP \<in> FP" using hgrp_raw he_FP by (by100 blast)
+        moreover have "mulFP (invgFP eFP) eFP = invgFP eFP"
+          using hgrp_raw \<open>invgFP eFP \<in> FP\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      moreover have "mulFP eFP w = w"
+        using hFP_grp hwFP unfolding top1_is_group_on_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately show "w \<in> ?N" by (by100 simp)
   qed
   have hj_ker: "top1_group_kernel_on FP (top1_fundamental_group_id X TX x0) j = ?N"
     using hN_sub_ker hker_sub_N by (by100 blast)
