@@ -22849,7 +22849,13 @@ next
     have hUr_open: "openin_on B TB Ur"
       using hUr_cov_r unfolding top1_evenly_covered_on_def by (by100 blast)
     have hU_open: "openin_on B TB ?U"
-      sorry \<comment> \<open>Intersection of open sets is open.\<close>
+    proof -
+      have "Up \<in> TB" using hUp_open unfolding openin_on_def by (by100 blast)
+      moreover have "Ur \<in> TB" using hUr_open unfolding openin_on_def by (by100 blast)
+      ultimately have "Up \<inter> Ur \<in> TB" by (rule topology_inter2[OF hTB])
+      moreover have "Up \<inter> Ur \<subseteq> B" using hUp_open unfolding openin_on_def by (by100 blast)
+      ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+    qed
     have hU_cov_p: "top1_evenly_covered_on E TE B TB p ?U"
       by (rule evenly_covered_open_subset[OF hUp_cov_p hU_open _ hTE hTB]) (by100 blast)
     have hU_cov_r: "top1_evenly_covered_on Y TY B TB r ?U"
