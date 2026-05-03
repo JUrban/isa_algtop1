@@ -612,9 +612,15 @@ proof -
     have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws) \<noteq> e"
       using hfree hws_ne hws_red hws_S unfolding top1_is_free_group_full_on_def by (by100 blast)
     \<comment> \<open>Word product = commutator.\<close>
-    moreover have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)
+    have hwp_unfold: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)
+        = mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (mul (invg (\<iota> 1)) e)))"
+      by (by100 simp)
+    have hid_inv1: "mul (invg (\<iota> 1)) e = invg (\<iota> 1)"
+      by (rule group_id_right[OF hG_grp]) (rule group_inv_closed[OF hG_grp h\<iota>1])
+    have hwp_eq: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)
         = mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))"
-      sorry \<comment> \<open>Unfold group_word_product on the 4-element list.\<close>
+      using hwp_unfold hid_inv1 by (by100 simp)
+    moreover note \<open>top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws) \<noteq> e\<close>
     ultimately show False using hcomm by (by100 simp)
   qed
   \<comment> \<open>Transfer via isomorphism: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
