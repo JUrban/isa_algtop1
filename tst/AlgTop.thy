@@ -639,7 +639,7 @@ proof -
     have hws_S: "\<forall>i<length ?ws. fst (?ws!i) \<in> {..<2::nat}"
       by (intro allI impI, simp add: nth_Cons' split: nat.splits)
     have hws_red: "top1_is_reduced_word (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)"
-      sorry \<comment> \<open>Reduced word: no adjacent (x,T)(x,F). Uses \<iota> injective (0\<noteq>1) and alternating T/F.\<close>
+      using h01_ne by (by100 simp)
     have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws) \<noteq> e"
       using hfree hws_ne hws_red hws_S unfolding top1_is_free_group_full_on_def by (by100 blast)
     \<comment> \<open>Word product = commutator.\<close>
