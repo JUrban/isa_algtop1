@@ -16894,10 +16894,97 @@ proof -
     \<comment> \<open>Step 4: \<Phi> \<circ> j = \<pi>_q (the quotient projection).
        For w \<in> FP, j(w) = j(letters). \<Phi>(j(w)) = product of \<Phi>(j_i(letter)) = \<pi>_q(w).\<close>
     have hPhij: "\<forall>v\<in>FP. \<Phi> (j v) = ?\<pi>_q v"
-      sorry \<comment> \<open>\<Phi>\<circ>j = \<pi>_q: Both are homs FP \<rightarrow> FP/N agreeing on generators \<iota>_\<alpha>(x).
-         Proof: Apply Lemma_68_3 uniqueness with target FP/N.
-         \<Phi>\<circ>j agrees on gen: \<Phi>(j(\<iota>_0(a))) = \<Phi>(hfam 0 a) = \<phi>_1(a) = \<pi>_q(\<iota>_0(a)).
-         \<pi>_q agrees on gen: trivially. By Lemma_68_3 uniqueness, they agree on FP.\<close>
+    proof -
+      \<comment> \<open>The agreement set A = {v \<in> FP | \<Phi>(j(v)) = \<pi>_q(v)} contains generators and is a subgroup.\<close>
+      let ?A = "{v \<in> FP. \<Phi> (j v) = ?\<pi>_q v}"
+      \<comment> \<open>Step 4a: \<Phi>\<circ>j and \<pi>_q agree on generators \<iota>_\<alpha>(x).\<close>
+      have hgen_in_A: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam \<alpha> x \<in> ?A"
+      proof (intro ballI)
+        fix \<alpha> x assume h\<alpha>: "\<alpha> \<in> {0::nat, 1}"
+            and hx: "x \<in> (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)"
+        have h\<iota>_FP: "\<iota>fam \<alpha> x \<in> FP"
+          using hFP h\<alpha> hx unfolding top1_is_free_product_on_def by (by100 blast)
+        have "j (\<iota>fam \<alpha> x) = ?hfam \<alpha> x"
+          using hj_ext h\<alpha> hx by (by100 blast)
+        hence "\<Phi> (j (\<iota>fam \<alpha> x)) = \<Phi> (?hfam \<alpha> x)" by (by100 simp)
+        also have "\<Phi> (?hfam \<alpha> x) = ?\<pi>_q (\<iota>fam \<alpha> x)"
+        proof (cases "\<alpha> = 0")
+          case True thus ?thesis using hx h\<Phi>_U by (by100 simp)
+        next
+          case False hence "\<alpha> = 1" using h\<alpha> by (by100 blast)
+          thus ?thesis using hx h\<Phi>_V by (by100 simp)
+        qed
+        finally show "\<iota>fam \<alpha> x \<in> ?A" using h\<iota>_FP by (by100 blast)
+      qed
+      \<comment> \<open>Step 4b: A contains all generators of FP.\<close>
+      have hgens_sub_A: "(\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)) \<subseteq> ?A"
+        using hgen_in_A by (by100 blast)
+      \<comment> \<open>Step 4c: A is a subgroup of FP (closed under mul and inv).\<close>
+      have hA_sub: "?A \<subseteq> FP" by (by100 blast)
+      have hA_grp: "top1_is_group_on ?A mulFP eFP invgFP"
+      proof -
+        note hpiq_hom = quotient_projection_properties(1)[OF hFP_grp hN_normal]
+        note hQ_grp' = quotient_group_is_group[OF hFP_grp hN_normal]
+        note hg = hFP_grp[unfolded top1_is_group_on_def]
+        \<comment> \<open>eFP \<in> A.\<close>
+        have he_A: "eFP \<in> ?A"
+        proof -
+          have he_FP: "eFP \<in> FP" using hg by (by100 blast)
+          have "j eFP = ?e_X" by (rule hom_preserves_id[OF hFP_grp h\<pi>X_grp hj_hom])
+          hence "\<Phi> (j eFP) = \<Phi> ?e_X" by (by100 simp)
+          also have "\<dots> = ?\<pi>_q eFP" by (rule hom_preserves_id[OF h\<pi>X_grp hQ_grp' h\<Phi>_hom])
+          finally show ?thesis using he_FP by (by100 blast)
+        qed
+        \<comment> \<open>Closure under mul.\<close>
+        have hmul_cl: "\<And>x y. x \<in> ?A \<Longrightarrow> y \<in> ?A \<Longrightarrow> mulFP x y \<in> ?A"
+        proof -
+          fix x y assume hx: "x \<in> ?A" and hy: "y \<in> ?A"
+          hence hxFP: "x \<in> FP" and hyFP: "y \<in> FP"
+              and hx_eq: "\<Phi> (j x) = ?\<pi>_q x" and hy_eq: "\<Phi> (j y) = ?\<pi>_q y" by (by100 blast)+
+          have hxy_FP: "mulFP x y \<in> FP" using hg hxFP hyFP by (by100 blast)
+          have "j (mulFP x y) = top1_fundamental_group_mul X TX x0 (j x) (j y)"
+            using hj_hom hxFP hyFP unfolding top1_group_hom_on_def by (by100 blast)
+          hence "\<Phi> (j (mulFP x y)) = \<Phi> (top1_fundamental_group_mul X TX x0 (j x) (j y))"
+            by (by100 simp)
+          also have "\<dots> = ?mulQ (\<Phi> (j x)) (\<Phi> (j y))"
+          proof -
+            have "j x \<in> ?\<pi>X" using hj_hom hxFP unfolding top1_group_hom_on_def by (by100 blast)
+            moreover have "j y \<in> ?\<pi>X" using hj_hom hyFP unfolding top1_group_hom_on_def by (by100 blast)
+            ultimately show ?thesis using h\<Phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+          qed
+          also have "\<dots> = ?mulQ (?\<pi>_q x) (?\<pi>_q y)" using hx_eq hy_eq by (by100 simp)
+          also have "\<dots> = ?\<pi>_q (mulFP x y)"
+            using hpiq_hom hxFP hyFP unfolding top1_group_hom_on_def by (by100 simp)
+          finally show "mulFP x y \<in> ?A" using hxy_FP by (by100 blast)
+        qed
+        \<comment> \<open>Closure under inv.\<close>
+        have hinv_cl: "\<And>x. x \<in> ?A \<Longrightarrow> invgFP x \<in> ?A"
+          sorry \<comment> \<open>Inv-closure: right cancellation in quotient group. Proof written but by100 timeout.\<close>
+        \<comment> \<open>Assemble group axioms.\<close>
+        show ?thesis unfolding top1_is_group_on_def
+        proof (intro conjI)
+          show "eFP \<in> ?A" by (rule he_A)
+          show "\<forall>x\<in>?A. \<forall>y\<in>?A. mulFP x y \<in> ?A" using hmul_cl by (by100 blast)
+          show "\<forall>x\<in>?A. invgFP x \<in> ?A" using hinv_cl by (by100 blast)
+          show "\<forall>x\<in>?A. \<forall>y\<in>?A. \<forall>z\<in>?A. mulFP (mulFP x y) z = mulFP x (mulFP y z)"
+            using hg by (by100 blast)
+          show "\<forall>x\<in>?A. mulFP eFP x = x \<and> mulFP x eFP = x"
+            using hg by (by100 blast)
+          show "\<forall>x\<in>?A. mulFP (invgFP x) x = eFP \<and> mulFP x (invgFP x) = eFP"
+            using hg by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Step 4d: FP = subgroup_generated(generators) \<subseteq> A, hence A = FP.\<close>
+      have hFP_gen: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP
+          (\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V))"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      have "top1_subgroup_generated_on FP mulFP eFP invgFP
+          (\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)) \<subseteq> ?A"
+        by (rule subgroup_generated_minimal[OF hgens_sub_A hA_sub hA_grp])
+      hence "FP \<subseteq> ?A" using hFP_gen by (by100 simp)
+      thus ?thesis by (by100 blast)
+    qed
     \<comment> \<open>Step 5: Conclude w \<in> N.\<close>
     have "\<Phi> (j w) = ?\<pi>_q w" using hPhij hwFP by (by100 blast)
     moreover have "\<Phi> (j w) = \<Phi> ?e_X" using hjw by (by100 simp)
