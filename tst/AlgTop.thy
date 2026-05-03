@@ -15790,6 +15790,43 @@ next
   show ?case using hfold_eq hclass_eq hmul_class hprod_in_H by (by100 simp)
 qed
 
+text \<open>Theorem 70.1 (Seifert-van Kampen, universal property):
+  If X = U ∪ V with U, V, U∩V path-connected open, and φ₁: π₁(U) → H, φ₂: π₁(V) → H
+  are homomorphisms compatible on U∩V (φ₁∘i₁ = φ₂∘i₂), then there exists a unique
+  homomorphism Φ: π₁(X) → H extending φ₁ and φ₂.
+  The proof constructs Φ via subdivision of loops into pieces in U or V.
+  Well-definedness requires the 2D Lebesgue subdivision argument.\<close>
+lemma Theorem_70_1_universal_property:
+  assumes hTX: "is_topology_on_strict X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+      and hUV: "U \<union> V = X"
+      and hUVpc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hUpc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hx0: "x0 \<in> U \<inter> V"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and h\<phi>1: "top1_group_hom_on
+          (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+          (top1_fundamental_group_mul U (subspace_topology X TX U) x0) H mulH \<phi>1"
+      and h\<phi>2: "top1_group_hom_on
+          (top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+          (top1_fundamental_group_mul V (subspace_topology X TX V) x0) H mulH \<phi>2"
+      and hcompat: "\<forall>c\<in>top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0.
+          \<phi>1 (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+                U (subspace_topology X TX U) x0 (\<lambda>x. x) c)
+        = \<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+                V (subspace_topology X TX V) x0 (\<lambda>x. x) c)"
+  shows "\<exists>\<Phi>. top1_group_hom_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0) H mulH \<Phi>
+        \<and> (\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
+            \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a)
+        \<and> (\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
+            \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b)"
+  sorry \<comment> \<open>CORE: 2D Lebesgue subdivision argument. See Munkres §70 Theorem 70.1.
+     Construction: for loop f in X, subdivide into pieces in U or V, apply φ₁/φ₂.
+     Well-definedness: if [f]=[g], subdivide the homotopy F: I×I → X into a grid
+     where each cell maps to U or V. Adjacent rows agree modulo compatibility.\<close>
+
 text \<open>Parameterized SvK: given a free product FP of π₁(U) and π₁(V),
   π₁(X) ≅ FP / normal-closure of amalgamation generators.\<close>
 theorem Theorem_70_2_SvK_parameterized:
@@ -16886,7 +16923,8 @@ proof -
     have hPhi: "\<exists>\<Phi>. top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>
         \<and> (\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a)
         \<and> (\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b)"
-      sorry \<comment> \<open>Theorem 70.1 universal property. THIS is the hard step requiring 2D argument.\<close>
+      sorry \<comment> \<open>Follows from Theorem_70_1_universal_property with H=FP/N.
+         See lemma Theorem_70_1_universal_property above. The sorry there is the core.\<close>
     then obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>"
         and h\<Phi>_U: "\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a"
         and h\<Phi>_V: "\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b"
