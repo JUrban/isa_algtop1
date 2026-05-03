@@ -2429,7 +2429,20 @@ proof -
     using hF hV unfolding top1_continuous_map_on_def II_topology_def openin_on_def by (by100 blast)
   have hcover: "top1_open_covering_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)
       {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}"
-    sorry \<comment> \<open>F\<inverse>(U) and F\<inverse>(V) cover I\<times>I (since U\<union>V=X), and are open in d_max-topology = II_topology.\<close>
+    unfolding top1_open_covering_on_def
+  proof (intro conjI)
+    show "{{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}
+        \<subseteq> top1_metric_topology_on (I_set \<times> I_set) d_max"
+      using hFU_II hFV_II hd_top by (by100 blast)
+    show "I_set \<times> I_set \<subseteq> \<Union>{{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}"
+    proof
+      fix p assume "p \<in> I_set \<times> I_set"
+      hence "F p \<in> X" using hF unfolding top1_continuous_map_on_def by (by100 blast)
+      hence "F p \<in> U \<or> F p \<in> V" using hUV by (by100 blast)
+      thus "p \<in> \<Union>{{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}"
+        using \<open>p \<in> I_set \<times> I_set\<close> by (by100 blast)
+    qed
+  qed
   from top1_lebesgue_number[OF hd_metric hII_compact_d hII_ne hcover]
   obtain \<delta> where h\<delta>: "\<delta> > 0" and h\<delta>_cover:
       "\<forall>A. A \<subseteq> I_set \<times> I_set \<and> top1_metric_diam_on (I_set \<times> I_set) d_max A < \<delta>
