@@ -16779,7 +16779,29 @@ proof -
     have hcompat: "\<forall>c\<in>top1_fundamental_group_carrier (U \<inter> V) ?TUV x0.
         ?\<phi>1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c)
       = ?\<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)"
-      sorry \<comment> \<open>Compatibility: i_0(i_1(c)) \<cdot> N = i_1(i_2(c)) \<cdot> N because difference \<in> N.\<close>
+    proof
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+      let ?iU_c = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c"
+      let ?iV_c = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c"
+      \<comment> \<open>The generator mulFP(\<iota>0(?iU_c))(invgFP(\<iota>1(?iV_c))) is in N by definition.\<close>
+      have hgen_in_N: "mulFP (\<iota>fam 0 ?iU_c) (invgFP (\<iota>fam 1 ?iV_c)) \<in> ?N"
+      proof -
+        have "mulFP (\<iota>fam 0 ?iU_c) (invgFP (\<iota>fam 1 ?iV_c)) \<in>
+            { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c'))
+                    (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c')))
+              | c'. c' \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+          using hc by (by100 blast)
+        thus ?thesis
+          unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+      qed
+      \<comment> \<open>From the generator being in N, derive coset equality.\<close>
+      \<comment> \<open>coset(\<iota>0(iU_c)) = coset(\<iota>1(iV_c)) iff mulFP(invgFP(\<iota>0(iU_c)))(\<iota>1(iV_c)) \<in> N.\<close>
+      \<comment> \<open>The generator gives us \<iota>0 \<cdot> inv(\<iota>1) \<in> N. We need inv(\<iota>0) \<cdot> \<iota>1 \<in> N.\<close>
+      \<comment> \<open>inv(generator) = \<iota>1 \<cdot> inv(\<iota>0) \<in> N (N is a group).\<close>
+      \<comment> \<open>Conjugate: inv(\<iota>1) \<cdot> (\<iota>1 \<cdot> inv(\<iota>0)) \<cdot> \<iota>1 = inv(\<iota>0) \<cdot> \<iota>1 \<in> N (N is normal).\<close>
+      show "?\<phi>1 ?iU_c = ?\<phi>2 ?iV_c"
+        sorry \<comment> \<open>Coset equality via generator in N + normal subgroup conjugation.\<close>
+    qed
     \<comment> \<open>Step 3: By parameterized SvK (Theorem 70.1), get \<Phi>: \<pi>_1(X) \<rightarrow> FP/N.\<close>
     have hPhi: "\<exists>\<Phi>. top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>
         \<and> (\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a)
