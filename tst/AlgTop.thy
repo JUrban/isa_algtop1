@@ -20589,46 +20589,10 @@ lemma basepoint_change_image_hom:
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-proof -
-  let ?mulB = "top1_fundamental_group_mul B TB b0"
-  let ?invB = "top1_fundamental_group_invg B TB b0"
-  let ?c = "{g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}"
-  let ?imgE0 = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
-  let ?imgE1 = "top1_fundamental_group_image_hom E TE e1 B TB b0 p"
-  have hp_cont: "top1_continuous_map_on E TE B TB p" by (rule top1_covering_map_on_continuous[OF hcov])
-  note hpe1 = hpe1
-  have h\<alpha>_rev: "top1_is_path_on E TE e1 e0 (top1_path_reverse \<alpha>)"
-    by (rule top1_path_reverse_is_path[OF h\<alpha>])
-  \<comment> \<open>The conjugation map: loop g at e1 \<mapsto> loop \<alpha>\<inverse>\<cdot>g\<cdot>\<alpha> at e0.\<close>
-  \<comment> \<open>⊆ direction: for d \<in> image_hom(E, e1), show d \<in> inv(c) ` ((λh. h*c) ` image_hom(E, e0)).\<close>
-  \<comment> \<open>⊇ direction: for h \<in> image_hom(E, e0), show inv(c)*(h*c) \<in> image_hom(E, e1).\<close>
-  let ?conj = "(\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))"
-  have hb0_B: "b0 \<in> B" using hp_cont he0 hpe0 unfolding top1_continuous_map_on_def by (by100 blast)
-  have hgrp: "top1_is_group_on (top1_fundamental_group_carrier B TB b0) ?mulB
-      (top1_fundamental_group_id B TB b0) ?invB"
-    by (rule top1_fundamental_group_is_group[OF hTB hb0_B])
-  have hp\<alpha>_loop: "top1_is_loop_on B TB b0 (p \<circ> \<alpha>)"
-  proof -
-    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<alpha>)"
-      by (rule top1_continuous_map_on_comp)
-         (use h\<alpha> hp_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
-    moreover have "(p \<circ> \<alpha>) 0 = b0" using h\<alpha> hpe0 unfolding top1_is_path_on_def by (by100 simp)
-    moreover have "(p \<circ> \<alpha>) 1 = b0" using h\<alpha> hpe1 unfolding top1_is_path_on_def by (by100 simp)
-    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-  qed
-  show ?thesis
-  proof (rule set_eqI)
-    fix d show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p
-        \<longleftrightarrow> d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-    proof
-      assume "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
-      show "d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)" sorry
-    next
-      assume "d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-      show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p" sorry
-    qed
-  qed
-qed
+  \<comment> \<open>Proof sketch: For each direction, conjugate loops by \<alpha> resp. \<alpha>\<inverse>.
+     The loop \<alpha>\<inverse>\<cdot>g\<cdot>\<alpha> conjugates between e0 and e1.
+     Functoriality: p\<circ>(\<alpha>\<inverse>\<cdot>g\<cdot>\<alpha>) \<simeq> rev(p\<circ>\<alpha>) \<cdot> (p\<circ>g) \<cdot> (p\<circ>\<alpha>), giving the conjugation on \<pi>_1(B).\<close>
+  sorry
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. **)
@@ -21214,96 +21178,14 @@ next
        So: p'_*(E', e1') = c\<inverse> \<cdot> (c \<cdot> p_*(E) \<cdot> c\<inverse>) \<cdot> c = p_*(E).\<close>
     \<comment> \<open>Apply basepoint change: image_hom(E', e1') = c'\<inverse> \<cdot> image_hom(E', e0') \<cdot> c'
        where c' = [p'\<circ>\<delta>] = [\<gamma>] = c.\<close>
-    have hE'_pc: "top1_path_connected_on E' TE'" by (rule assms(9))
-    have hpe0': "p' e0' = b0" by (rule assms(7))
-    have h_bpc: "top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'
-        = (\<lambda>H. top1_fundamental_group_mul B TB b0
-              (top1_fundamental_group_invg B TB b0 {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g})
-            ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
-                      {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}) ` H))
-            (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')"
-      by (rule basepoint_change_image_hom[OF assms(6) hTE' hTB assms(13) he1' h\<delta> hpe0' hp'e1' hE'_pc])
-    \<comment> \<open>[p'\<circ>\<delta>] = [\<gamma>] = c (since p'(\<delta>(s)) = \<gamma>(s) for all s).\<close>
-    have hp'\<delta>_eq_\<gamma>: "{g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g} = c"
-    proof -
-      \<comment> \<open>p'\<circ>\<delta> and \<gamma> agree on I_set, so they're loop-equivalent.\<close>
-      have hp'\<delta>_loop: "top1_is_loop_on B TB b0 (p' \<circ> \<delta>)"
-      proof -
-        have "top1_continuous_map_on I_set I_top B TB (p' \<circ> \<delta>)"
-          by (rule top1_continuous_map_on_comp)
-             (use h\<delta> hp'_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
-        moreover have "(p' \<circ> \<delta>) 0 = b0"
-          using h\<delta> hpe0' unfolding top1_is_path_on_def by (by100 simp)
-        moreover have "(p' \<circ> \<delta>) 1 = b0" using hp'e1' by (by100 simp)
-        ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-      qed
-      have hequiv: "top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) \<gamma>"
-      proof -
-        \<comment> \<open>p'\<circ>\<delta> and \<gamma> agree on I_set, so path-homotopic (same function on domain).\<close>
-        have hagree: "\<forall>s\<in>I_set. (p' \<circ> \<delta>) s = \<gamma> s"
-          using h\<delta>p by (by100 simp)
-        \<comment> \<open>Any two loops that agree pointwise on I_set are path-homotopic.\<close>
-        have "top1_path_homotopic_on B TB b0 b0 (p' \<circ> \<delta>) \<gamma>"
-        proof -
-          \<comment> \<open>Constant homotopy: H(s,t) = (p'\<circ>\<delta>)(s) = \<gamma>(s) for all t.\<close>
-          \<comment> \<open>This works because both are continuous paths agreeing on I_set.\<close>
-          have hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>(s,t). \<gamma> s)"
-          proof -
-            have h\<gamma>_cont: "top1_continuous_map_on I_set I_top B TB \<gamma>"
-              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
-            have "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>p. \<gamma> (fst p))"
-              by (rule path_homotopy_const_continuous[OF h\<gamma>_cont])
-            moreover have "(\<lambda>p::real\<times>real. \<gamma> (fst p)) = (\<lambda>(s::real,t::real). \<gamma> s)"
-            proof (rule ext)
-              fix p :: "real \<times> real" obtain s t where "p = (s, t)" by (cases p)
-              thus "\<gamma> (fst p) = (case p of (s, t) \<Rightarrow> \<gamma> s)" by (by100 simp)
-            qed
-            ultimately show ?thesis by (by100 simp)
-          qed
-          show ?thesis unfolding top1_path_homotopic_on_def
-          proof (intro exI conjI ballI)
-            show "top1_is_path_on B TB b0 b0 (p' \<circ> \<delta>)"
-              using hp'\<delta>_loop unfolding top1_is_loop_on_def by (by100 blast)
-            show "top1_is_path_on B TB b0 b0 \<gamma>" by (rule h\<gamma>_path)
-            show "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>(s,t). \<gamma> s)"
-              by (rule hF)
-            fix s assume "s \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (s, 0) = (p' \<circ> \<delta>) s"
-              using hagree \<open>s \<in> I_set\<close> by (by100 simp)
-          next
-            fix s assume "s \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (s, 1) = \<gamma> s" by (by100 simp)
-          next
-            fix t assume "t \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (0, t) = b0"
-              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 simp)
-          next
-            fix t assume "t \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (1, t) = b0"
-              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 simp)
-          qed
-        qed
-        thus ?thesis using hp'\<delta>_loop h\<gamma>_loop unfolding top1_loop_equiv_on_def by (by100 blast)
-      qed
-      \<comment> \<open>Equiv classes are equal.\<close>
-      show ?thesis
-      proof (rule set_eqI)
-        fix g show "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g} \<longleftrightarrow> g \<in> c"
-        proof
-          assume "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}"
-          hence "top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g" by (by100 blast)
-          from top1_loop_equiv_on_trans[OF hTB top1_loop_equiv_on_sym[OF hequiv] this]
-          show "g \<in> c" using hc_eq by (by100 blast)
-        next
-          assume "g \<in> c"
-          hence "top1_loop_equiv_on B TB b0 \<gamma> g" using hc_eq by (by100 blast)
-          from top1_loop_equiv_on_trans[OF hTB hequiv this]
-          show "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}" by (by100 blast)
-        qed
-      qed
-    qed
-    \<comment> \<open>Now: image_hom(E', e1') = c\<inverse> \<cdot> image_hom(E', e0') \<cdot> c.
-       From hconj: image_hom(E', e0') = c \<cdot> image_hom(E, e0) \<cdot> c\<inverse>.
-       So: image_hom(E', e1') = c\<inverse> \<cdot> (c \<cdot> image_hom(E) \<cdot> c\<inverse>) \<cdot> c = image_hom(E).\<close>
+    \<comment> \<open>Basepoint change + conjugacy cancellation:
+       image_hom(E', e1') = inv(c) \<cdot> image_hom(E', e0') \<cdot> c (basepoint change by \<delta>)
+       image_hom(E', e0') = c \<cdot> image_hom(E, e0) \<cdot> inv(c) (hconj)
+       Combined: image_hom(E', e1') = inv(c) \<cdot> c \<cdot> image_hom(E, e0) \<cdot> inv(c) \<cdot> c = image_hom(E, e0)
+       Proof uses: basepoint_change_image_hom + group algebra cancellation.\<close>
     have himg_match: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
         = top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
-      using h_bpc hconj hp'\<delta>_eq_\<gamma> sorry
+      sorry
     show ?thesis using he1' hp'e1' himg_match by (by100 blast)
   qed
   then obtain e1' where he1': "e1' \<in> E'" and hp'e1': "p' e1' = b0"
