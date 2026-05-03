@@ -14836,12 +14836,9 @@ theorem Theorem_70_2_SvK:
                     | c. c \<in> top1_fundamental_group_carrier
                            (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 }))
              (top1_quotient_group_mul_on mulFP)"
-  \<comment> \<open>UNPROVABLE AS STATED: The existential \<exists>(FP::'f set) has a free type variable 'f
-     that cannot be instantiated with the concrete type (nat \<times> (real \<Rightarrow> 'a) set) list set.
-     Use Theorem_70_2_SvK_parameterized instead, which takes FP as a parameter
-     and is fully proved (modulo the ker\<subseteq>N sorry).
-     The textbook (Munkres Thm 70.2) states the result for a SPECIFIC free product,
-     which is faithfully captured by the parameterized version.\<close>
+  \<comment> \<open>See Theorem_70_2_SvK_parameterized for the non-existential version.
+     UNPROVABLE: free type variable 'f cannot be instantiated.
+     Use Theorem_70_2_SvK_parameterized instead.\<close>
   oops
 
 lemma inclusion_induced_class:
@@ -16791,10 +16788,7 @@ corollary Corollary_70_3_simply_connected_intersection:
                    then top1_fundamental_group_mul U (subspace_topology X TX U) x0
                    else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
                 \<iota>fam {0, 1})"
-  \<comment> \<open>UNPROVABLE AS STATED: Same type variable issue as Theorem_70_2_SvK.
-     The existential \<exists>(FP::'f set) cannot be instantiated.
-     A parameterized version (taking FP as parameter) would follow from
-     Theorem_70_2_SvK_parameterized when U\<inter>V is simply connected.\<close>
+  \<comment> \<open>UNPROVABLE: same type variable issue as Theorem_70_2_SvK.\<close>
   oops
 
 text \<open>Helper: free product G * {e} = \<iota>_0(G), i.e. when one factor is trivial,
