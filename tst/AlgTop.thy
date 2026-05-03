@@ -16757,26 +16757,61 @@ proof -
        Top row F(s,1) = x0 corresponds to the constant loop = j(eFP).
        Transitivity of row equivalences: w \<equiv> eFP mod N, hence w \<in> N.\<close>
 
-    \<comment> \<open>===== KER \<subseteq> N PROOF =====
-       The proof is a 2D Lebesgue subdivision argument.
-       We decompose it into modular steps, each a separate sorry.\<close>
-    \<comment> \<open>Step 1: j(w) = e_X means w maps to the identity loop class.
-       Since j is a hom FP \<rightarrow> \<pi>_1(X), j(w) \<in> \<pi>_1(X) is the identity element.
-       The identity class = {g | loop_equiv(x0, const, g)}.
-       There exists a representative: w corresponds to some product of loops in U and V
-       whose concatenation is nulhomotopic in X.\<close>
-    \<comment> \<open>Step 2: The quotient map \<pi>: FP \<rightarrow> FP/N sends w to some coset.
-       We need [w]_N = [eFP]_N, i.e., w \<in> N.
-       Equivalently: j factors through FP/N (first iso theorem), and the induced map
-       j_bar: FP/N \<rightarrow> \<pi>_1(X) is injective iff ker(j) = N.\<close>
-    \<comment> \<open>Step 3: The 2D grid argument.
-       Given: the loop corresponding to j(w) is nulhomotopic via F: I\<times>I \<rightarrow> X.
-       Cover I\<times>I by F\<inverse>(U) and F\<inverse>(V) (both open).
-       By 2D Lebesgue: subdivide I\<times>I into m\<times>n grid, each cell in U or V.
-       Each row of the grid gives a word in FP via svk_pieces_in_subgroup.
-       Adjacent rows differ by a relator \<in> N.
-       Bottom row = w mod N, top row = eFP mod N. Hence w \<in> N.\<close>
-    show "w \<in> ?N" sorry
+    \<comment> \<open>===== KER \<subseteq> N PROOF via left-inverse construction =====
+       Strategy (Munkres Thm 70.2): construct \<Phi>: \<pi>_1(X) \<rightarrow> FP/N such that
+       \<Phi> \<circ> j = \<pi> (quotient projection). Then j(w)=e_X \<Rightarrow> \<pi>(w) = \<Phi>(e_X) = e_{FP/N}
+       \<Rightarrow> w \<in> N. The map \<Phi> is constructed using the universal property of \<pi>_1(X)
+       with target H = FP/N, and \<phi>_1/\<phi>_2 being inclusion+projection.\<close>
+    \<comment> \<open>Approach: Use Theorem 70.1 (parameterized SvK) with H = FP/N.
+       Define \<phi>_1: \<pi>_1(U) \<rightarrow> FP/N by a \<mapsto> \<iota>_0(a) \<cdot> N.
+       Define \<phi>_2: \<pi>_1(V) \<rightarrow> FP/N by b \<mapsto> \<iota>_1(b) \<cdot> N.
+       Check: \<phi>_1 \<circ> i_1 = \<phi>_2 \<circ> i_2 (because i_1(c)\<inverse>\<cdot>i_2(c) \<in> N for c \<in> \<pi>_1(U\<inter>V)).
+       Then \<exists>\<Phi> with \<Phi>\<circ>j_1 = \<phi>_1, \<Phi>\<circ>j_2 = \<phi>_2. So \<Phi>\<circ>j = \<pi>, giving the result.\<close>
+    let ?Q = "top1_quotient_group_carrier_on FP mulFP ?N"
+    let ?mulQ = "top1_quotient_group_mul_on mulFP"
+    let ?\<pi>_q = "\<lambda>g. top1_group_coset_on FP mulFP ?N g"
+    \<comment> \<open>Step 1: FP/N is a group.\<close>
+    have hQ_grp: "\<exists>eQ invgQ. top1_is_group_on ?Q ?mulQ eQ invgQ"
+      using quotient_group_is_group[OF hFP_grp hN_normal] by (by100 blast)
+    \<comment> \<open>Step 2: \<phi>_1 and \<phi>_2 are compatible on U\<inter>V.\<close>
+    let ?\<phi>1 = "\<lambda>a. ?\<pi>_q (\<iota>fam 0 a)"
+    let ?\<phi>2 = "\<lambda>b. ?\<pi>_q (\<iota>fam 1 b)"
+    have hcompat: "\<forall>c\<in>top1_fundamental_group_carrier (U \<inter> V) ?TUV x0.
+        ?\<phi>1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c)
+      = ?\<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)"
+      sorry \<comment> \<open>Compatibility: i_0(i_1(c)) \<cdot> N = i_1(i_2(c)) \<cdot> N because difference \<in> N.\<close>
+    \<comment> \<open>Step 3: By parameterized SvK (Theorem 70.1), get \<Phi>: \<pi>_1(X) \<rightarrow> FP/N.\<close>
+    have hPhi: "\<exists>\<Phi>. top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>
+        \<and> (\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a)
+        \<and> (\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b)"
+      sorry \<comment> \<open>Theorem 70.1 universal property. THIS is the hard step requiring 2D argument.\<close>
+    then obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?\<pi>X (top1_fundamental_group_mul X TX x0) ?Q ?mulQ \<Phi>"
+        and h\<Phi>_U: "\<forall>a\<in>?\<pi>U. \<Phi> (?hfam 0 a) = ?\<phi>1 a"
+        and h\<Phi>_V: "\<forall>b\<in>?\<pi>V. \<Phi> (?hfam 1 b) = ?\<phi>2 b"
+      by (by100 blast)
+    \<comment> \<open>Step 4: \<Phi> \<circ> j = \<pi>_q (the quotient projection).
+       For w \<in> FP, j(w) = j(letters). \<Phi>(j(w)) = product of \<Phi>(j_i(letter)) = \<pi>_q(w).\<close>
+    have hPhij: "\<forall>v\<in>FP. \<Phi> (j v) = ?\<pi>_q v"
+      sorry \<comment> \<open>\<Phi> \<circ> j = \<pi>_q: follows from extension property of j and \<Phi>.\<close>
+    \<comment> \<open>Step 5: Conclude w \<in> N.\<close>
+    have "\<Phi> (j w) = ?\<pi>_q w" using hPhij hwFP by (by100 blast)
+    moreover have "\<Phi> (j w) = \<Phi> ?e_X" using hjw by (by100 simp)
+    moreover have "\<Phi> ?e_X = ?\<pi>_q eFP"
+    proof -
+      obtain eQ invgQ where hQ_grp': "top1_is_group_on ?Q ?mulQ eQ invgQ"
+        using hQ_grp by (by100 blast)
+      have "\<Phi> ?e_X = eQ"
+        by (rule hom_preserves_id[OF h\<pi>X_grp hQ_grp' h\<Phi>_hom])
+      moreover have "eQ = ?\<pi>_q eFP"
+        using quotient_group_is_group[OF hFP_grp hN_normal] hQ_grp'
+        sorry \<comment> \<open>The identity of FP/N is the coset eFP \<cdot> N = N.\<close>
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately have "?\<pi>_q w = ?\<pi>_q eFP" by (by100 simp)
+    \<comment> \<open>Same coset means w \<cdot> eFP\<inverse> = w \<in> N.\<close>
+    \<comment> \<open>same coset \<Rightarrow> inv(eFP) \<cdot> w \<in> N \<Rightarrow> w \<in> N (since inv(e) = e and e \<cdot> w = w).\<close>
+    thus "w \<in> ?N"
+      sorry \<comment> \<open>Quotient algebra: coset(w)=coset(e) implies w \<in> N. Uses normal_coset_eq + group identity.\<close>
   qed
   have hj_ker: "top1_group_kernel_on FP (top1_fundamental_group_id X TX x0) j = ?N"
     using hN_sub_ker hker_sub_N by (by100 blast)
