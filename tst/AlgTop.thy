@@ -2240,6 +2240,28 @@ next
   show ?case using hfold_eq hclass_eq hmul_class hprod_in_H by (by100 simp)
 qed
 
+text \<open>Helper: 2D grid subdivision of I\<times>I for a continuous map into X = U \<union> V.
+  Given F continuous on I\<times>I \<rightarrow> X with X = U \<union> V (U,V open), produce a grid
+  ns\<times>nt where each cell maps entirely into U or V.\<close>
+lemma grid_subdivision_UV:
+  assumes hTopX: "is_topology_on X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+      and hUV: "U \<union> V = X"
+      and hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+  shows "\<exists>ns\<ge>1. \<exists>sub_s::nat\<Rightarrow>real. sub_s 0 = 0 \<and> sub_s ns = 1 \<and> (\<forall>i<ns. sub_s i < sub_s (Suc i))
+    \<and> (\<exists>nt\<ge>1. \<exists>sub_t::nat\<Rightarrow>real. sub_t 0 = 0 \<and> sub_t nt = 1 \<and> (\<forall>j<nt. sub_t j < sub_t (Suc j))
+    \<and> (\<forall>i<ns. \<forall>j<nt. (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+                              \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                              \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                              \<longrightarrow> F (s,t) \<in> U)
+                  \<or> (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+                         \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                         \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                         \<longrightarrow> F (s,t) \<in> V)))"
+  sorry \<comment> \<open>2D Lebesgue: for each (s,t), F(s,t) \<in> U or V. By continuity, there's a rectangular
+     neighborhood in F\<inverse>(U) or F\<inverse>(V). These cover I\<times>I (compact). By Lebesgue number (or
+     tube lemma + 1D Lebesgue), get a grid with each cell in one preimage.
+     Uses: top1_lebesgue_number or Lemma_26_8 + open_cover_subdivision_01.\<close>
+
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
 lemma loop_subdivision_UV:
   assumes hTopX: "is_topology_on X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
@@ -2537,18 +2559,21 @@ proof -
        For each strip [s_{i-1}, s_i] and each t_0, the tube lemma gives a t-ball where the
        strip maps into U or V. These balls cover [0,1]. By open_cover_subdivision_01,
        get a t-subdivision for each strip. Merge via grid_from_per_piece_subdivisions.\<close>
-    obtain nt sub_t where hnt: "nt \<ge> 1" and ht0: "sub_t 0 = (0::real)" and htn: "sub_t nt = 1"
+    \<comment> \<open>Use grid_subdivision_UV to get the 2D grid.\<close>
+    obtain ns' sub_s' nt sub_t where
+        hns': "ns' \<ge> 1" and hs0': "sub_s' 0 = (0::real)" and hsn': "sub_s' ns' = 1"
+        and hsinc': "\<forall>i<ns'. sub_s' i < sub_s' (Suc i)"
+        and hnt: "nt \<ge> 1" and ht0: "sub_t 0 = (0::real)" and htn: "sub_t nt = 1"
         and htinc: "\<forall>j<nt. sub_t j < sub_t (Suc j)"
-        and hcell_UV: "\<forall>i<ns. \<forall>j<nt. (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+        and hcell_UV: "\<forall>i<ns'. \<forall>j<nt. (\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
                                           \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                                           \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
                                           \<longrightarrow> F (s,t) \<in> U)
-                            \<or> (\<forall>s t. sub_s i \<le> s \<and> s \<le> sub_s (Suc i)
+                            \<or> (\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
                                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                                    \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
                                    \<longrightarrow> F (s,t) \<in> V)"
-      sorry \<comment> \<open>2D Lebesgue: tube lemma (Lemma_26_8) + open_cover_subdivision_01 per strip
-         + grid_from_per_piece_subdivisions to merge. ~80 lines.\<close>
+      using grid_subdivision_UV[OF hTopX hU hV hUV hF_cont] by (elim exE conjE) (by100 blast)
     \<comment> \<open>===== ROW COMPARISON + TELESCOPING =====\<close>
     \<comment> \<open>Define row functions: f_j(s) = F(s, sub_t j). f_0 = f, f_nt = g.
        Show \<tau>(f_j) = \<tau>(f_{j+1}) for each j via \<sigma> telescoping.
