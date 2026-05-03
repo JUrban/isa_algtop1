@@ -20581,7 +20581,7 @@ lemma basepoint_change_image_hom:
       and hTE: "is_topology_on E TE" and hTB: "is_topology_on B TB"
       and he0: "e0 \<in> E" and he1: "e1 \<in> E"
       and h\<alpha>: "top1_is_path_on E TE e0 e1 \<alpha>"
-      and hpe0: "p e0 = b0"
+      and hpe0: "p e0 = b0" and hpe1: "p e1 = b0"
       and hEpc: "top1_path_connected_on E TE"
   shows "top1_fundamental_group_image_hom E TE e1 B TB b0 p
       = (\<lambda>H. top1_fundamental_group_mul B TB b0
@@ -20589,7 +20589,46 @@ lemma basepoint_change_image_hom:
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-  sorry
+proof -
+  let ?mulB = "top1_fundamental_group_mul B TB b0"
+  let ?invB = "top1_fundamental_group_invg B TB b0"
+  let ?c = "{g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}"
+  let ?imgE0 = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  let ?imgE1 = "top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+  have hp_cont: "top1_continuous_map_on E TE B TB p" by (rule top1_covering_map_on_continuous[OF hcov])
+  note hpe1 = hpe1
+  have h\<alpha>_rev: "top1_is_path_on E TE e1 e0 (top1_path_reverse \<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>])
+  \<comment> \<open>The conjugation map: loop g at e1 \<mapsto> loop \<alpha>\<inverse>\<cdot>g\<cdot>\<alpha> at e0.\<close>
+  \<comment> \<open>⊆ direction: for d \<in> image_hom(E, e1), show d \<in> inv(c) ` ((λh. h*c) ` image_hom(E, e0)).\<close>
+  \<comment> \<open>⊇ direction: for h \<in> image_hom(E, e0), show inv(c)*(h*c) \<in> image_hom(E, e1).\<close>
+  let ?conj = "(\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))"
+  have hb0_B: "b0 \<in> B" using hp_cont he0 hpe0 unfolding top1_continuous_map_on_def by (by100 blast)
+  have hgrp: "top1_is_group_on (top1_fundamental_group_carrier B TB b0) ?mulB
+      (top1_fundamental_group_id B TB b0) ?invB"
+    by (rule top1_fundamental_group_is_group[OF hTB hb0_B])
+  have hp\<alpha>_loop: "top1_is_loop_on B TB b0 (p \<circ> \<alpha>)"
+  proof -
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<alpha>)"
+      by (rule top1_continuous_map_on_comp)
+         (use h\<alpha> hp_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+    moreover have "(p \<circ> \<alpha>) 0 = b0" using h\<alpha> hpe0 unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> \<alpha>) 1 = b0" using h\<alpha> hpe1 unfolding top1_is_path_on_def by (by100 simp)
+    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  qed
+  show ?thesis
+  proof (rule set_eqI)
+    fix d show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p
+        \<longleftrightarrow> d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+    proof
+      assume "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+      show "d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)" sorry
+    next
+      assume "d \<in> ?conj (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+      show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p" sorry
+    qed
+  qed
+qed
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. **)
@@ -21183,7 +21222,7 @@ next
             ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                       {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}) ` H))
             (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')"
-      by (rule basepoint_change_image_hom[OF assms(6) hTE' hTB assms(13) he1' h\<delta> hpe0' hE'_pc])
+      by (rule basepoint_change_image_hom[OF assms(6) hTE' hTB assms(13) he1' h\<delta> hpe0' hp'e1' hE'_pc])
     \<comment> \<open>[p'\<circ>\<delta>] = [\<gamma>] = c (since p'(\<delta>(s)) = \<gamma>(s) for all s).\<close>
     have hp'\<delta>_eq_\<gamma>: "{g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g} = c"
     proof -
