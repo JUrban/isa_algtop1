@@ -2326,9 +2326,41 @@ proof -
      Telescoping across rows gives \<tau>(f) = \<tau>(g).\<close>
   have h\<tau>_wd: "\<And>f g. top1_is_loop_on X TX x0 f \<Longrightarrow> top1_is_loop_on X TX x0 g
       \<Longrightarrow> top1_path_homotopic_on X TX x0 x0 f g \<Longrightarrow> \<tau> f = \<tau> g"
-    sorry \<comment> \<open>THE 2D grid argument. Uses: open_cover_subdivision_01 (1D Lebesgue for each row),
-       grid_from_per_piece_subdivisions (merge into uniform grid), \<sigma> properties, \<rho> compatibility.
-       ~200 lines. The single remaining core sorry for the entire SvK chain.\<close>
+  proof -
+    fix f g assume hf: "top1_is_loop_on X TX x0 f" and hg: "top1_is_loop_on X TX x0 g"
+        and hfg: "top1_path_homotopic_on X TX x0 x0 f g"
+    \<comment> \<open>Step 1: Extract the homotopy F: I\<times>I \<rightarrow> X.\<close>
+    obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+        and hF_s0: "\<forall>s\<in>I_set. F (s, 0) = f s" and hF_s1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+        and hF_0t: "\<forall>t\<in>I_set. F (0, t) = x0" and hF_1t: "\<forall>t\<in>I_set. F (1, t) = x0"
+    proof -
+      note hfg_raw = hfg[unfolded top1_path_homotopic_on_def]
+      then obtain F where "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+          "(\<forall>s\<in>I_set. F (s, 0) = f s)" "(\<forall>s\<in>I_set. F (s, 1) = g s)"
+          "(\<forall>t\<in>I_set. F (0, t) = x0)" "(\<forall>t\<in>I_set. F (1, t) = x0)"
+        by (by100 fast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: F\<inverse>(U) and F\<inverse>(V) cover I\<times>I. Build per-row s-subdivisions, merge into grid.\<close>
+    have hF_UV: "\<forall>p\<in>I_set \<times> I_set. F p \<in> U \<or> F p \<in> V"
+    proof
+      fix p assume "p \<in> I_set \<times> I_set"
+      hence "F p \<in> X" using hF_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "F p \<in> U \<or> F p \<in> V" using hUV by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: 2D Lebesgue subdivision. Each cell maps into U or V.
+       Use open_cover_subdivision_01 for the s-direction per each t-strip,
+       then grid_from_per_piece_subdivisions to merge.\<close>
+    \<comment> \<open>Step 4: For adjacent rows f_j and f_{j+1}, show \<tau>(f_j) = \<tau>(f_{j+1}).
+       Key: each cell gives a (non-path) homotopy between pieces.
+       By broken-line argument in the convex cell: piece_i \<cdot> \<beta>_i \<simeq> \<beta>_{i-1} \<cdot> piece'_i.
+       This gives \<sigma>(piece_i) \<cdot> \<sigma>(\<beta>_i) = \<sigma>(\<beta>_{i-1}) \<cdot> \<sigma>(piece'_i).
+       Telescoping + \<sigma>(\<beta>_0) = \<sigma>(\<beta>_n) = eH gives \<tau>(f_j) = \<tau>(f_{j+1}).\<close>
+    \<comment> \<open>Step 5: Transitivity: \<tau>(f) = \<tau>(f_0) = ... = \<tau>(f_m) = \<tau>(g).\<close>
+    show "\<tau> f = \<tau> g"
+      sorry \<comment> \<open>Steps 3-5 of the 2D argument. Infrastructure: F extracted, F maps into U\<union>V.
+         Needs: 2D grid subdivision, row comparison via \<sigma>/\<rho> properties, telescoping.\<close>
+  qed
   \<comment> \<open>===== Derive all three properties from A =====\<close>
   \<comment> \<open>Also need: \<tau> multiplicative (\<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g)) and \<tau> extension (\<tau>(f) = \<phi>_i([f])
      for f in U or V). These follow from subdivision independence + \<sigma>/\<rho> properties.\<close>
@@ -2339,8 +2371,14 @@ proof -
        \<tau>(f*g) uses subdivision of f*g = subdivision of f + subdivision of g.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
-    sorry \<comment> \<open>From h\<tau>_wd + extension: for f in U, \<tau>(f) = \<sigma>(f) = \<rho>(const\<cdot>f\<cdot>const)
-       = \<rho>(f) = \<phi>_1([f]_U). The \<tau> well-definedness ensures SOME representative gives same value.\<close>
+    sorry \<comment> \<open>Proof sketch (needs h\<tau>_wd + \<tau> subdivision independence + \<rho> properties):
+       1. \<Phi>([f]_X) = \<tau>(SOME g with [g]=[f]) = \<tau>(f) by h\<tau>_wd (since g \<simeq> f)
+       2. \<tau>(f) = \<sigma>(f) (trivial subdivision, f already in U)
+       3. \<sigma>(f) = \<rho>(\<alpha>(x0)\<cdot>f\<cdot>rev(\<alpha>(x0))) = \<rho>(const\<cdot>f\<cdot>const) since \<alpha>(x0)=const
+       4. const\<cdot>f\<cdot>const \<simeq>_U f by Thm_51_2 identity laws
+       5. \<rho>(f) = \<phi>1([f]_U) by \<rho> definition (f in U)
+       Needs also: \<tau> subdivision-independent (adding subdivision point doesn't change \<tau>),
+       which follows from \<sigma>(f*g) = \<sigma>(f)\<cdot>\<sigma>(g) and \<rho> homotopy-invariance.\<close>
   have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
       \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
     sorry \<comment> \<open>Same as ext_U but for V.\<close>
@@ -2559,7 +2597,7 @@ proof -
   obtain j where hj_hom: "top1_group_hom_on FP mulFP ?\<pi>X (top1_fundamental_group_mul X TX x0) j"
       and hj_ext: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V).
           j (\<iota>fam \<alpha> x) = ?hfam \<alpha> x"
-    by (by100 auto)
+    by (elim exE conjE) (by100 blast)
   \<comment> \<open>Step 2: j is surjective (Lebesgue number argument — every loop can be subdivided into
      pieces in U and V).\<close>
   have hj_surj: "j ` FP = ?\<pi>X"
