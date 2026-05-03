@@ -20621,7 +20621,110 @@ lemma basepoint_change_image_hom:
      = path_product(path_product(rev(p\<circ>\<alpha>), p\<circ>f), p\<circ>\<alpha>)   (comp_path_reverse)
      And rev(\<alpha>)\<cdot>f\<cdot>\<alpha> is a loop at e1 (for f loop at e0).
      Similarly \<alpha>\<cdot>g\<cdot>rev(\<alpha>) is a loop at e0 (for g loop at e1).\<close>
-  sorry
+proof -
+  let ?mulB = "top1_fundamental_group_mul B TB b0"
+  let ?invB = "top1_fundamental_group_invg B TB b0"
+  let ?c = "{g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}"
+  have hp_cont: "top1_continuous_map_on E TE B TB p" by (rule top1_covering_map_on_continuous[OF hcov])
+  have hb0_B: "b0 \<in> B" using hp_cont he0 hpe0 unfolding top1_continuous_map_on_def by (by100 blast)
+  have h\<alpha>_rev: "top1_is_path_on E TE e1 e0 (top1_path_reverse \<alpha>)"
+    by (rule top1_path_reverse_is_path[OF h\<alpha>])
+  have hp\<alpha>_loop: "top1_is_loop_on B TB b0 (p \<circ> \<alpha>)"
+  proof -
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<alpha>)"
+      by (rule top1_continuous_map_on_comp)
+         (use h\<alpha> hp_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+    moreover have "(p \<circ> \<alpha>) 0 = b0" using h\<alpha> hpe0 unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> \<alpha>) 1 = b0" using h\<alpha> hpe1 unfolding top1_is_path_on_def by (by100 simp)
+    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  qed
+  have hp\<alpha>_rev_loop: "top1_is_loop_on B TB b0 (top1_path_reverse (p \<circ> \<alpha>))"
+    by (rule top1_path_reverse_is_loop[OF hp\<alpha>_loop])
+  show ?thesis
+  proof (rule set_eqI)
+    fix d
+    show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p \<longleftrightarrow>
+        d \<in> (\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))
+            (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+    proof
+      \<comment> \<open>\<Rightarrow>: d = [p\<circ>g] for loop g at e1. Conjugate: \<alpha>\<cdot>g\<cdot>rev(\<alpha>) is loop at e0.\<close>
+      assume "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+      then obtain g where hg_loop: "top1_is_loop_on E TE e1 g"
+          and hd_eq: "d = top1_fundamental_group_induced_on E TE e1 B TB b0 p
+              {k. top1_loop_equiv_on E TE e1 g k}"
+        unfolding top1_fundamental_group_image_hom_def top1_fundamental_group_carrier_def
+        by (by100 blast)
+      \<comment> \<open>\<alpha>\<cdot>g\<cdot>rev(\<alpha>) is a loop at e0.\<close>
+      have hg_path: "top1_is_path_on E TE e1 e1 g"
+        using hg_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have h_conj_loop: "top1_is_loop_on E TE e0
+          (top1_path_product (top1_path_product \<alpha> g) (top1_path_reverse \<alpha>))"
+      proof -
+        have "top1_is_path_on E TE e0 e1 (top1_path_product \<alpha> g)"
+          by (rule top1_path_product_is_path[OF hTE h\<alpha> hg_path])
+        hence "top1_is_path_on E TE e0 e0 (top1_path_product (top1_path_product \<alpha> g) (top1_path_reverse \<alpha>))"
+          by (rule top1_path_product_is_path[OF hTE _ h\<alpha>_rev])
+        thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+      qed
+      \<comment> \<open>[p\<circ>(\<alpha>\<cdot>g\<cdot>rev(\<alpha>))] = c \<cdot> d \<cdot> inv(c) \<in> image_hom(E, e0).\<close>
+      \<comment> \<open>p\<circ>(\<alpha>\<cdot>g\<cdot>rev(\<alpha>)) = (p\<circ>\<alpha>)\<cdot>(p\<circ>g)\<cdot>rev(p\<circ>\<alpha>) by comp_path_product/reverse.\<close>
+      have hp_conj: "p \<circ> (top1_path_product (top1_path_product \<alpha> g) (top1_path_reverse \<alpha>))
+          = top1_path_product (top1_path_product (p \<circ> \<alpha>) (p \<circ> g)) (top1_path_reverse (p \<circ> \<alpha>))"
+        by (simp only: comp_path_product comp_path_reverse)
+      \<comment> \<open>So [p\<circ>conj] = mul(mul(c, d), inv(c)) and this is in image_hom(E, e0).\<close>
+      \<comment> \<open>Then d = inv(c) \<cdot> [p\<circ>conj] \<cdot> c, so d \<in> conj(image_hom(E, e0)).\<close>
+      show "d \<in> (\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)" sorry
+    next
+      \<comment> \<open>\<Leftarrow>: h \<in> image_hom(E, e0). Conjugate: rev(\<alpha>)\<cdot>f\<cdot>\<alpha> is loop at e1.\<close>
+      assume "d \<in> (\<lambda>H. ?mulB (?invB ?c) ` ((\<lambda>h. ?mulB h ?c) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+      then obtain h where hh: "h \<in> top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+          and hd_conj: "d = ?mulB (?invB ?c) (?mulB h ?c)" by (by100 blast)
+      \<comment> \<open>h = [p\<circ>f] for loop f at e0.\<close>
+      obtain f where hf_loop: "top1_is_loop_on E TE e0 f"
+          and hh_eq: "h = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+              {k. top1_loop_equiv_on E TE e0 f k}"
+        using hh unfolding top1_fundamental_group_image_hom_def top1_fundamental_group_carrier_def
+        by (by100 blast)
+      \<comment> \<open>rev(\<alpha>)\<cdot>f\<cdot>\<alpha> is a loop at e1.\<close>
+      have hf_path: "top1_is_path_on E TE e0 e0 f"
+        using hf_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have h_conj2: "top1_is_loop_on E TE e1
+          (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>)"
+      proof -
+        have "top1_is_path_on E TE e1 e0 (top1_path_product (top1_path_reverse \<alpha>) f)"
+          by (rule top1_path_product_is_path[OF hTE h\<alpha>_rev hf_path])
+        hence "top1_is_path_on E TE e1 e1 (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>)"
+          by (rule top1_path_product_is_path[OF hTE _ h\<alpha>])
+        thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+      qed
+      \<comment> \<open>p\<circ>(rev(\<alpha>)\<cdot>f\<cdot>\<alpha>) = rev(p\<circ>\<alpha>)\<cdot>(p\<circ>f)\<cdot>(p\<circ>\<alpha>) = path producing inv(c)\<cdot>h\<cdot>c.\<close>
+      have hp_conj2: "p \<circ> (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>)
+          = top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>)"
+        by (simp only: comp_path_product comp_path_reverse)
+      \<comment> \<open>[p\<circ>(rev(\<alpha>)\<cdot>f\<cdot>\<alpha>)] = inv(c) \<cdot> h \<cdot> c = d. So d \<in> image_hom(E, e1).\<close>
+      \<comment> \<open>[p\<circ>(rev(\<alpha>)\<cdot>f\<cdot>\<alpha>)] \<in> image_hom(E, e1).\<close>
+      have hconj2_in: "top1_fundamental_group_induced_on E TE e1 B TB b0 p
+          {k. top1_loop_equiv_on E TE e1 (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>) k}
+        \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+        unfolding top1_fundamental_group_image_hom_def top1_fundamental_group_carrier_def
+        using h_conj2 top1_loop_equiv_on_refl[OF h_conj2] by (by100 blast)
+      \<comment> \<open>This class = {k | loop_equiv(B, rev(p\<circ>\<alpha>)\<cdot>(p\<circ>f)\<cdot>(p\<circ>\<alpha>), k)} by hp_conj2.\<close>
+      have "top1_fundamental_group_induced_on E TE e1 B TB b0 p
+          {k. top1_loop_equiv_on E TE e1 (top1_path_product (top1_path_product (top1_path_reverse \<alpha>) f) \<alpha>) k}
+        = {k. top1_loop_equiv_on B TB b0
+            (top1_path_product (top1_path_product (top1_path_reverse (p \<circ> \<alpha>)) (p \<circ> f)) (p \<circ> \<alpha>)) k}"
+        sorry \<comment> \<open>Induced class of conjugated loop = class of conjugated p-image.\<close>
+      \<comment> \<open>This class = inv(c) \<cdot> h \<cdot> c = d.\<close>
+      moreover have "\<dots> = ?mulB (?invB ?c) (?mulB h ?c)"
+        sorry \<comment> \<open>Group algebra: mul_class + invg_class applied 3 times.\<close>
+      moreover note hd_conj
+      ultimately show "d \<in> top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+        using hconj2_in by (by100 simp)
+    qed
+  qed
+qed
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. **)
