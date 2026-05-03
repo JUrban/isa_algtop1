@@ -5,15 +5,6 @@ begin
 
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
-text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
-lemma Lemma_60_5_figure_eight_not_abelian:
-  assumes "is_topology_on X TX"
-      and "top1_is_wedge_of_circles_on X TX {0::nat, 1} p"
-  shows "\<not> (\<forall>a\<in>top1_fundamental_group_carrier X TX p.
-             \<forall>b\<in>top1_fundamental_group_carrier X TX p.
-               top1_fundamental_group_mul X TX p a b = top1_fundamental_group_mul X TX p b a)"
-  sorry
-
 
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
@@ -577,6 +568,57 @@ proof -
      π₁(X) ≅ π₁(X_{n-1}) * π₁(C_n) ≅ free(n-1) * Z ≅ free(n).\<close>
   show ?thesis sorry
 qed
+
+text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
+lemma Lemma_60_5_figure_eight_not_abelian:
+  assumes "is_topology_on X TX"
+      and "top1_is_wedge_of_circles_on X TX {0::nat, 1} p"
+  shows "\<not> (\<forall>a\<in>top1_fundamental_group_carrier X TX p.
+             \<forall>b\<in>top1_fundamental_group_carrier X TX p.
+               top1_fundamental_group_mul X TX p a b = top1_fundamental_group_mul X TX p b a)"
+proof -
+  \<comment> \<open>By Theorem 71.1: \<pi>_1(X,p) \<cong> free group on {0,1} (= {..<2}).\<close>
+  have "{0::nat, 1} = {..<(2::nat)}" by (by100 auto)
+  hence hwedge2: "top1_is_wedge_of_circles_on X TX {..<(2::nat)} p" using assms(2) by (by100 simp)
+  from Theorem_71_1_wedge_of_circles_finite[OF hwedge2]
+  obtain G mul e invg \<iota> where
+      hfree: "top1_is_free_group_full_on G mul e invg \<iota> {..<2::nat}"
+      and hiso: "top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX p)
+          (top1_fundamental_group_mul X TX p)"
+    by (elim exE conjE) (by100 fast)
+  \<comment> \<open>In the free group on 2 generators, the commutator word [(0,T),(1,T),(0,F),(1,F)] is
+     reduced and non-empty, hence evaluates to non-identity. This means \<iota>(0)\<cdot>\<iota>(1) \<noteq> \<iota>(1)\<cdot>\<iota>(0).\<close>
+  have hG_not_abelian: "\<not> (\<forall>a\<in>G. \<forall>b\<in>G. mul a b = mul b a)"
+    sorry \<comment> \<open>Free group on \<ge>2 generators is non-abelian.
+       Proof: commutator word is reduced + non-empty \<Rightarrow> non-identity by free group property.\<close>
+  \<comment> \<open>Transfer via isomorphism: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
+  \<comment> \<open>Transfer: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
+  obtain f where hf_bij: "bij_betw f G (top1_fundamental_group_carrier X TX p)"
+      and hf_hom: "\<forall>a\<in>G. \<forall>b\<in>G. f (mul a b) = top1_fundamental_group_mul X TX p (f a) (f b)"
+    using hiso unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def top1_group_hom_on_def
+    by (by100 blast)
+  from hG_not_abelian obtain a b where ha: "a \<in> G" and hb: "b \<in> G"
+      and hab: "mul a b \<noteq> mul b a" by (by100 blast)
+  have "f (mul a b) \<noteq> f (mul b a)"
+  proof -
+    have hG_grp: "top1_is_group_on G mul e invg"
+      using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
+    have "mul a b \<in> G" using hG_grp ha hb unfolding top1_is_group_on_def by (by100 blast)
+    moreover have "mul b a \<in> G" using hG_grp ha hb unfolding top1_is_group_on_def by (by100 blast)
+    ultimately show ?thesis using hab \<open>inj_on f G\<close> unfolding inj_on_def by (by100 blast)
+  qed
+  hence "top1_fundamental_group_mul X TX p (f a) (f b) \<noteq>
+         top1_fundamental_group_mul X TX p (f b) (f a)"
+    using hf_hom ha hb by (by100 simp)
+  moreover have "f a \<in> top1_fundamental_group_carrier X TX p"
+    using hf_bij ha unfolding bij_betw_def by (by100 blast)
+  moreover have "f b \<in> top1_fundamental_group_carrier X TX p"
+    using hf_bij hb unfolding bij_betw_def by (by100 blast)
+  ultimately show ?thesis by (by100 blast)
+qed
+
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
 theorem Theorem_71_3_wedge_of_circles_general:
