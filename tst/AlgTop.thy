@@ -617,10 +617,19 @@ proof -
       moreover have "mul (invg ?a) (invg ?b) = mul (invg ?b) (invg ?a)"
         using habel hinva hinvb by (by100 blast)
       ultimately have hinvab: "mul (invg ?a) (invg ?b) = invg (mul ?a ?b)" by (by100 simp)
-      hence "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))
-          = mul (mul ?a ?b) (invg (mul ?a ?b))"
-        using group_assoc[OF hG_grp h\<iota>0 h\<iota>1 _] hinva hinvb
-        sorry \<comment> \<open>Associativity chain: a(b(inv(a)(inv(b)))) = (ab)(inv(ab)).\<close>
+      have "mul ?a (mul ?b (mul (invg ?a) (invg ?b)))
+          = mul ?a (mul ?b (invg (mul ?a ?b)))" using hinvab by (by100 simp)
+      also have "\<dots> = mul (mul ?a ?b) (invg (mul ?a ?b))"
+      proof -
+        have hinvab_G: "invg (mul ?a ?b) \<in> G" by (rule group_inv_closed[OF hG_grp hab_G])
+        have "mul ?b (invg (mul ?a ?b)) \<in> G" by (rule group_mul_closed[OF hG_grp h\<iota>1 hinvab_G])
+        have "mul ?a (mul ?b (invg (mul ?a ?b)))
+            = mul (mul ?a ?b) (invg (mul ?a ?b))"
+          using group_assoc[OF hG_grp h\<iota>0 h\<iota>1 hinvab_G, symmetric] .
+        thus ?thesis .
+      qed
+      finally have "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))
+          = mul (mul ?a ?b) (invg (mul ?a ?b))" .
       also have "\<dots> = e" by (rule group_inv_right[OF hG_grp hab_G])
       finally show ?thesis .
     qed
