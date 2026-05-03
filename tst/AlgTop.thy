@@ -16894,7 +16894,8 @@ proof -
     \<comment> \<open>Step 4: \<Phi> \<circ> j = \<pi>_q (the quotient projection).
        For w \<in> FP, j(w) = j(letters). \<Phi>(j(w)) = product of \<Phi>(j_i(letter)) = \<pi>_q(w).\<close>
     have hPhij: "\<forall>v\<in>FP. \<Phi> (j v) = ?\<pi>_q v"
-      sorry \<comment> \<open>\<Phi> \<circ> j = \<pi>_q: follows from extension property of j and \<Phi>.\<close>
+      sorry \<comment> \<open>\<Phi>\<circ>j = \<pi>_q: Both are homs FP \<rightarrow> FP/N agreeing on generators.
+         Uses Lemma 68.3 uniqueness + hj_ext + h\<Phi>_U/V.\<close>
     \<comment> \<open>Step 5: Conclude w \<in> N.\<close>
     have "\<Phi> (j w) = ?\<pi>_q w" using hPhij hwFP by (by100 blast)
     moreover have "\<Phi> (j w) = \<Phi> ?e_X" using hjw by (by100 simp)
