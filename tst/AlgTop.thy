@@ -22671,7 +22671,72 @@ lemma evenly_covered_open_subset:
       and hV: "openin_on B TB V" and hVU: "V \<subseteq> U"
       and hTE: "is_topology_on E TE" and hTB: "is_topology_on B TB"
   shows "top1_evenly_covered_on E TE B TB p V"
-  sorry \<comment> \<open>Restrict sheets: U_\<alpha>' = p|_{U_\<alpha>}\<inverse>(V) is open, p|_{U_\<alpha>'}: U_\<alpha>' \<cong> V.\<close>
+proof -
+  \<comment> \<open>Extract sheets of U.\<close>
+  obtain \<V>U where h\<V>_open: "\<forall>W\<in>\<V>U. openin_on E TE W"
+      and h\<V>_disj: "\<forall>W\<in>\<V>U. \<forall>W'\<in>\<V>U. W \<noteq> W' \<longrightarrow> W \<inter> W' = {}"
+      and h\<V>_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>U"
+      and h\<V>_homeo: "\<forall>W\<in>\<V>U. top1_homeomorphism_on W (subspace_topology E TE W) U
+                                    (subspace_topology B TB U) p"
+    using hcov unfolding top1_evenly_covered_on_def
+    by (elim conjE exE) (by100 blast)
+  \<comment> \<open>Define restricted sheets: W' = {x \<in> W | p x \<in> V} for each W \<in> \<V>U.\<close>
+  let ?\<V>V = "(\<lambda>W. {x \<in> W. p x \<in> V}) ` \<V>U"
+  show ?thesis unfolding top1_evenly_covered_on_def
+  proof (intro conjI exI[of _ ?\<V>V])
+    show "openin_on B TB V" by (rule hV)
+  next
+    \<comment> \<open>Each restricted sheet is open in E.\<close>
+    show "\<forall>W'\<in>?\<V>V. openin_on E TE W'"
+      sorry \<comment> \<open>W' = W \<inter> p\<inverse>(V). Both W and p\<inverse>(V) open in E (p|_W homeo, V open in U-subspace).\<close>
+  next
+    \<comment> \<open>Restricted sheets are pairwise disjoint.\<close>
+    show "\<forall>W'\<in>?\<V>V. \<forall>W''\<in>?\<V>V. W' \<noteq> W'' \<longrightarrow> W' \<inter> W'' = {}"
+    proof (intro ballI impI)
+      fix W' W'' assume "W' \<in> ?\<V>V" "W'' \<in> ?\<V>V" "W' \<noteq> W''"
+      then obtain W1 W2 where hW1: "W1 \<in> \<V>U" and hW1': "W' = {x \<in> W1. p x \<in> V}"
+          and hW2: "W2 \<in> \<V>U" and hW2': "W'' = {x \<in> W2. p x \<in> V}" by (by100 blast)
+      show "W' \<inter> W'' = {}"
+      proof (cases "W1 = W2")
+        case True thus ?thesis using \<open>W' \<noteq> W''\<close> hW1' hW2' by (by100 simp)
+      next
+        case False
+        hence "W1 \<inter> W2 = {}" using h\<V>_disj hW1 hW2 by (by100 blast)
+        thus ?thesis using hW1' hW2' by (by100 blast)
+      qed
+    qed
+  next
+    \<comment> \<open>Union of restricted sheets = p\<inverse>(V) \<inter> E.\<close>
+    show "{x\<in>E. p x \<in> V} = \<Union>?\<V>V"
+    proof (rule set_eqI)
+      fix x show "x \<in> {x\<in>E. p x \<in> V} \<longleftrightarrow> x \<in> \<Union>?\<V>V"
+      proof
+        assume "x \<in> {x\<in>E. p x \<in> V}"
+        hence hxE: "x \<in> E" and hpxV: "p x \<in> V" by (by100 blast)+
+        hence "p x \<in> U" using hVU by (by100 blast)
+        hence "x \<in> {x\<in>E. p x \<in> U}" using hxE by (by100 blast)
+        hence "x \<in> \<Union>\<V>U" using h\<V>_union by (by100 simp)
+        then obtain W where hW: "W \<in> \<V>U" and hxW: "x \<in> W" by (by100 blast)
+        have "x \<in> {x \<in> W. p x \<in> V}" using hxW hpxV by (by100 blast)
+        moreover have "{x \<in> W. p x \<in> V} \<in> ?\<V>V" using hW by (by100 blast)
+        ultimately show "x \<in> \<Union>?\<V>V" by (by100 blast)
+      next
+        assume "x \<in> \<Union>?\<V>V"
+        then obtain W where hW: "W \<in> \<V>U" and hx: "x \<in> {x \<in> W. p x \<in> V}" by (by100 blast)
+        hence hxW: "x \<in> W" and hpxV: "p x \<in> V" by (by100 blast)+
+        have "x \<in> \<Union>\<V>U" using hW hxW by (by100 blast)
+        hence "x \<in> {x\<in>E. p x \<in> U}" using h\<V>_union by (by100 simp)
+        thus "x \<in> {x\<in>E. p x \<in> V}" using hpxV by (by100 blast)
+      qed
+    qed
+  next
+    \<comment> \<open>Each restricted sheet is homeomorphic to V via p.\<close>
+    show "\<forall>W'\<in>?\<V>V. top1_homeomorphism_on W' (subspace_topology E TE W') V
+                          (subspace_topology B TB V) p"
+      sorry \<comment> \<open>Restriction of homeomorphism p: W \<cong> U to W' = p\<inverse>(V)\<inter>W gives p: W' \<cong> V.
+         Uses: subspace_topology_trans, bij_betw restriction, continuity restriction.\<close>
+  qed
+qed
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
