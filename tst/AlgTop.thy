@@ -22664,6 +22664,18 @@ proof -
         hcovE assms(10) hcovE' assms(11) assms(6,7,8,9) assms(12,13) hb0_B]] hRHS by (by100 blast)
 qed
 
+text \<open>Restriction of a homeomorphism to an open subset (preimage) gives a homeomorphism.\<close>
+lemma homeomorphism_restrict_open:
+  assumes hf: "top1_homeomorphism_on X TX Y TY f"
+      and hV: "openin_on Y TY V"
+      and hVY: "V \<subseteq> Y"
+      and hTX: "is_topology_on X TX"
+      and hTY: "is_topology_on Y TY"
+  shows "top1_homeomorphism_on {x \<in> X. f x \<in> V} (subspace_topology X TX {x \<in> X. f x \<in> V})
+             V (subspace_topology Y TY V) f"
+  sorry \<comment> \<open>Standard: bij_betw restriction, continuity restriction, inverse continuity restriction.
+     Needs subspace_topology_trans for subspace-of-subspace reasoning.\<close>
+
 text \<open>Helper: open subset of an evenly covered set is evenly covered.
   If U is evenly covered by p and V \<subseteq> U is open in B, then V is evenly covered by p.\<close>
 lemma evenly_covered_open_subset:
@@ -22776,12 +22788,26 @@ proof -
       have hUopen: "openin_on B TB U" using hcov unfolding top1_evenly_covered_on_def by (by100 blast)
       have hUsub: "U \<subseteq> B" using hUopen unfolding openin_on_def by (by100 blast)
       have hVsub: "V \<subseteq> B" using hV unfolding openin_on_def by (by100 blast)
+      \<comment> \<open>V is open in subspace(B, U).\<close>
+      have hV_in_TU: "V \<in> subspace_topology B TB U"
+        unfolding subspace_topology_def using hV hVU unfolding openin_on_def by (by100 blast)
+      have hV_open_sub: "openin_on U (subspace_topology B TB U) V"
+        unfolding openin_on_def using hV_in_TU hVU by (by100 blast)
+      have hTW: "is_topology_on W (subspace_topology E TE W)"
+        by (rule subspace_topology_is_topology_on[OF hTE hWsub])
+      have hTU: "is_topology_on U (subspace_topology B TB U)"
+        by (rule subspace_topology_is_topology_on[OF hTB hUsub])
+      \<comment> \<open>Apply homeomorphism_restrict_open to p: W \<cong> U with open V \<subseteq> U.\<close>
+      note hrestr = homeomorphism_restrict_open[OF hW_homeo hV_open_sub hVU hTW hTU]
+      \<comment> \<open>subspace_topology_trans: subspace(W, subspace(E,W), W') = subspace(E, W').\<close>
+      have hTW'_eq: "subspace_topology W (subspace_topology E TE W) {x \<in> W. p x \<in> V}
+          = subspace_topology E TE {x \<in> W. p x \<in> V}"
+        by (rule subspace_topology_trans) (by100 blast)
+      have hTV'_eq: "subspace_topology U (subspace_topology B TB U) V
+          = subspace_topology B TB V"
+        by (rule subspace_topology_trans[OF hVU])
       show "top1_homeomorphism_on W' (subspace_topology E TE W') V (subspace_topology B TB V) p"
-        sorry \<comment> \<open>Restriction of homeomorphism p: W \<cong> U to W' = p\<inverse>(V) \<inter> W gives p: W' \<cong> V.
-           Key facts: (1) bij_betw p W' V (since p: W \<cong> U bijection and W' = p\<inverse>(V)).
-           (2) Continuity: subspace_topology_trans gives subspace(E, W') = subspace(subspace(E, W), W').
-               p continuous on W (subspace) \<Rightarrow> restriction to W' continuous.
-           (3) Inverse: inv_into W p continuous on U (subspace) \<Rightarrow> restriction to V continuous.\<close>
+        using hrestr hTW'_eq hTV'_eq unfolding hW' by (by100 simp)
     qed
   qed
 qed
