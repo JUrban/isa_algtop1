@@ -16730,10 +16730,33 @@ proof -
        This is the 2D Lebesgue number argument — the deepest part of SvK.
        Infrastructure available: grid_from_per_piece_subdivisions (Top1_Ch9_13),
        open_cover_subdivision_01, svk_pieces_in_subgroup.\<close>
-    show "w \<in> ?N"
-      sorry \<comment> \<open>2D nulhomotopy decomposition: grid subdivision + row reading + amalgamation.
-             Key tools: grid_from_per_piece_subdivisions, Theorem_51_3_aux (1D),
-             homotopy lifting, svk_pieces_in_subgroup infrastructure.\<close>
+    \<comment> \<open>==== ker \<subseteq> N proof via 2D nulhomotopy decomposition ====\<close>
+    \<comment> \<open>Step A: j(w) = e_X means the image of w is the identity loop class.
+       Extract a representative loop f and its nulhomotopy F: I\<times>I \<rightarrow> X.\<close>
+    \<comment> \<open>j(w) \<in> \<pi>_1(X), and j(w) = e_X = {g | loop_equiv(x0, const, g)}.
+       So const_{x0} \<in> j(w), meaning j(w) is a set of loops equivalent to const.\<close>
+    \<comment> \<open>Since w \<in> FP and j is a hom with j(w) = e_X, the corresponding loop is nulhomotopic.\<close>
+
+    \<comment> \<open>Step B: Subdivide I\<times>I into a grid where each cell maps into U or V.
+       Apply open_cover_subdivision_01 to each "row" (fixed t, varying s) of F,
+       then merge via grid_from_per_piece_subdivisions.\<close>
+
+    \<comment> \<open>Step C: For each row j of the grid, read the cells as pieces.
+       Each piece maps into U or V. Connect endpoints via paths in U\<inter>V.
+       By svk_pieces_in_subgroup, each row gives an element of j(FP).
+       Define row_j = the preimage word in FP.\<close>
+
+    \<comment> \<open>Step D: Adjacent rows differ by a relator.
+       Row_{j+1} differs from Row_j by one cell change. The cell maps into
+       U \<inter> V (where the two rows overlap). The difference is
+       \<iota>_0(c) \<cdot> \<iota>_1(c)\<inverse> for some c \<in> \<pi>_1(U \<inter> V), which is a generator of N.\<close>
+
+    \<comment> \<open>Step E: Bottom row = w mod N, Top row = eFP mod N.
+       Bottom row F(s,0) = f(s) corresponds to j(w).
+       Top row F(s,1) = x0 corresponds to the constant loop = j(eFP).
+       Transitivity of row equivalences: w \<equiv> eFP mod N, hence w \<in> N.\<close>
+
+    show "w \<in> ?N" sorry
   qed
   have hj_ker: "top1_group_kernel_on FP (top1_fundamental_group_id X TX x0) j = ?N"
     using hN_sub_ker hker_sub_N by (by100 blast)
@@ -16764,11 +16787,298 @@ corollary Corollary_70_3_simply_connected_intersection:
                    then top1_fundamental_group_mul U (subspace_topology X TX U) x0
                    else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
                 \<iota>fam {0, 1})"
-  sorry
+  sorry \<comment> \<open>TYPE ISSUE: 'f is a free type variable in the conclusion; concrete FP has type
+     (nat \<times> (real \<Rightarrow> 'a) set) list set, which can't instantiate 'f.\<close>
+
+text \<open>Helper: free product G * {e} = \<iota>_0(G), i.e. when one factor is trivial,
+  the free product reduces to the other factor via the canonical embedding.\<close>
+lemma free_product_trivial_factor_surj:
+  assumes hFP: "top1_is_free_product_on FP mulFP eFP invgFP GG mulGG \<iota>fam {0::nat, 1}"
+      and hGG1_triv: "GG 1 = {eGG1}"
+      and hGG1_grp: "top1_is_group_on (GG 1) (mulGG 1) eGG1 invgGG1"
+      and hGG0_grp: "top1_is_group_on (GG 0) (mulGG 0) eGG0 invgGG0"
+  shows "FP = \<iota>fam 0 ` (GG 0)"
+proof -
+  have hG: "top1_is_group_on FP mulFP eFP invgFP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>GG \<alpha>. \<iota>fam \<alpha> x \<in> FP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have h\<iota>_hom: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>GG \<alpha>. \<forall>y\<in>GG \<alpha>.
+      \<iota>fam \<alpha> (mulGG \<alpha> x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have hgen: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP
+      (\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` GG \<alpha>)"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  \<comment> \<open>\<iota>_1(eGG1) = eFP (identity maps to identity under homomorphism).\<close>
+  have heGG1: "eGG1 \<in> GG 1" using hGG1_grp unfolding top1_is_group_on_def by (by100 blast)
+  have h\<iota>1_e: "\<iota>fam 1 eGG1 = eFP"
+  proof -
+    have "mulFP (\<iota>fam 1 eGG1) (\<iota>fam 1 eGG1) = \<iota>fam 1 (mulGG 1 eGG1 eGG1)"
+      using h\<iota>_hom heGG1 by (by100 force)
+    moreover have "mulGG 1 eGG1 eGG1 = eGG1"
+      using hGG1_grp heGG1 unfolding top1_is_group_on_def by (by100 blast)
+    ultimately have hidem: "mulFP (\<iota>fam 1 eGG1) (\<iota>fam 1 eGG1) = \<iota>fam 1 eGG1" by (by100 simp)
+    have h_in: "\<iota>fam 1 eGG1 \<in> FP" using h\<iota>_in heGG1 by (by100 force)
+    \<comment> \<open>Idempotent in group = identity.\<close>
+    have "mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1)) = eFP"
+      by (rule group_inv_right[OF hG h_in])
+    have "mulFP (mulFP (\<iota>fam 1 eGG1) (\<iota>fam 1 eGG1)) (invgFP (\<iota>fam 1 eGG1))
+        = mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1))"
+      using hidem by (by100 simp)
+    moreover have hinv_in: "invgFP (\<iota>fam 1 eGG1) \<in> FP"
+      by (rule group_inv_closed[OF hG h_in])
+    moreover have "mulFP (mulFP (\<iota>fam 1 eGG1) (\<iota>fam 1 eGG1)) (invgFP (\<iota>fam 1 eGG1))
+        = mulFP (\<iota>fam 1 eGG1) (mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1)))"
+      using hG h_in hinv_in unfolding top1_is_group_on_def by (by100 force)
+    ultimately have "mulFP (\<iota>fam 1 eGG1) (mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1)))
+        = mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1))" by (by100 simp)
+    hence "mulFP (\<iota>fam 1 eGG1) eFP = eFP"
+      using \<open>mulFP (\<iota>fam 1 eGG1) (invgFP (\<iota>fam 1 eGG1)) = eFP\<close> by (by100 simp)
+    thus ?thesis using group_id_right[OF hG h_in] by (by100 simp)
+  qed
+  \<comment> \<open>The generating set = \<iota>_0(GG 0) \<union> {eFP}.\<close>
+  have hgen_simp: "(\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` GG \<alpha>) = \<iota>fam 0 ` GG 0 \<union> {\<iota>fam 1 eGG1}"
+  proof -
+    have "(\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` GG \<alpha>) = \<iota>fam 0 ` GG 0 \<union> \<iota>fam 1 ` GG 1"
+      by (by100 force)
+    also have "\<iota>fam 1 ` GG 1 = {\<iota>fam 1 eGG1}" using hGG1_triv by (by100 simp)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>eFP \<in> \<iota>_0(GG 0) (because \<iota>_0(eGG0) = eFP).\<close>
+  have heGG0: "eGG0 \<in> GG 0" using hGG0_grp unfolding top1_is_group_on_def by (by100 blast)
+  have h\<iota>0_e: "\<iota>fam 0 eGG0 = eFP"
+  proof -
+    have "mulFP (\<iota>fam 0 eGG0) (\<iota>fam 0 eGG0) = \<iota>fam 0 (mulGG 0 eGG0 eGG0)"
+      using h\<iota>_hom heGG0 by (by100 force)
+    moreover have "mulGG 0 eGG0 eGG0 = eGG0"
+      using hGG0_grp heGG0 unfolding top1_is_group_on_def by (by100 blast)
+    ultimately have hidem: "mulFP (\<iota>fam 0 eGG0) (\<iota>fam 0 eGG0) = \<iota>fam 0 eGG0" by (by100 simp)
+    have h_in: "\<iota>fam 0 eGG0 \<in> FP" using h\<iota>_in heGG0 by (by100 force)
+    have "mulFP (\<iota>fam 0 eGG0) (invgFP (\<iota>fam 0 eGG0)) = eFP"
+      by (rule group_inv_right[OF hG h_in])
+    have hinv_in: "invgFP (\<iota>fam 0 eGG0) \<in> FP" by (rule group_inv_closed[OF hG h_in])
+    have "mulFP (mulFP (\<iota>fam 0 eGG0) (\<iota>fam 0 eGG0)) (invgFP (\<iota>fam 0 eGG0))
+        = mulFP (\<iota>fam 0 eGG0) (mulFP (\<iota>fam 0 eGG0) (invgFP (\<iota>fam 0 eGG0)))"
+      using hG h_in hinv_in unfolding top1_is_group_on_def by (by100 force)
+    hence "mulFP (\<iota>fam 0 eGG0) (mulFP (\<iota>fam 0 eGG0) (invgFP (\<iota>fam 0 eGG0)))
+        = mulFP (\<iota>fam 0 eGG0) (invgFP (\<iota>fam 0 eGG0))"
+      using hidem by (by100 simp)
+    hence "mulFP (\<iota>fam 0 eGG0) eFP = eFP"
+      using \<open>mulFP (\<iota>fam 0 eGG0) (invgFP (\<iota>fam 0 eGG0)) = eFP\<close> by (by100 simp)
+    thus ?thesis using group_id_right[OF hG h_in] by (by100 simp)
+  qed
+  have heFP_in: "eFP \<in> \<iota>fam 0 ` GG 0" using h\<iota>0_e heGG0 by (by100 blast)
+  \<comment> \<open>Generating set = \<iota>_0(GG 0) (since eFP \<in> \<iota>_0(GG 0)).\<close>
+  have hgen_eq: "(\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` GG \<alpha>) = \<iota>fam 0 ` GG 0"
+  proof -
+    have "(\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` GG \<alpha>) = \<iota>fam 0 ` GG 0 \<union> {\<iota>fam 1 eGG1}" by (rule hgen_simp)
+    also have "\<iota>fam 1 eGG1 = eFP" by (rule h\<iota>1_e)
+    also have "\<iota>fam 0 ` GG 0 \<union> {eFP} = \<iota>fam 0 ` GG 0" using heFP_in by (by100 blast)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>\<iota>_0(GG 0) is a subgroup of FP (image of group hom).\<close>
+  have h\<iota>0_hom: "top1_group_hom_on (GG 0) (mulGG 0) FP mulFP (\<iota>fam 0)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> GG 0" thus "\<iota>fam 0 x \<in> FP" using h\<iota>_in by (by100 force)
+  next
+    fix x y assume "x \<in> GG 0" "y \<in> GG 0"
+    thus "\<iota>fam 0 (mulGG 0 x y) = mulFP (\<iota>fam 0 x) (\<iota>fam 0 y)"
+      using h\<iota>_hom by (by100 force)
+  qed
+  have h\<iota>0_img_grp: "top1_is_group_on (\<iota>fam 0 ` GG 0) mulFP eFP invgFP"
+    by (rule hom_image_is_subgroup[OF hGG0_grp hG h\<iota>0_hom])
+  \<comment> \<open>subgroup_generated of a subgroup is itself.\<close>
+  have h\<iota>0_sub: "\<iota>fam 0 ` GG 0 \<subseteq> FP"
+  proof (rule image_subsetI)
+    fix x assume "x \<in> GG 0" thus "\<iota>fam 0 x \<in> FP" using h\<iota>_in by (by100 force)
+  qed
+  have "top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>fam 0 ` GG 0) = \<iota>fam 0 ` GG 0"
+  proof (rule antisym)
+    show "top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>fam 0 ` GG 0) \<subseteq> \<iota>fam 0 ` GG 0"
+      by (rule subgroup_generated_minimal[OF _ h\<iota>0_sub h\<iota>0_img_grp]) (by100 blast)
+    show "\<iota>fam 0 ` GG 0 \<subseteq> top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>fam 0 ` GG 0)"
+    proof (rule image_subsetI)
+      fix x assume "x \<in> GG 0"
+      hence "\<iota>fam 0 x \<in> \<iota>fam 0 ` GG 0" by (by100 blast)
+      thus "\<iota>fam 0 x \<in> top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>fam 0 ` GG 0)"
+        by (rule subgroup_generated_contains[OF hG h\<iota>0_sub])
+    qed
+  qed
+  thus ?thesis using hgen hgen_eq by (by100 simp)
+qed
+
+text \<open>Helper: preimage of a normal subgroup under a group hom is normal.\<close>
+lemma preimage_normal_subgroup:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hf: "top1_group_hom_on G mul H mulH f"
+      and hK: "top1_normal_subgroup_on H mulH eH invgH K"
+  shows "top1_normal_subgroup_on G mul e invg {g \<in> G. f g \<in> K}"
+proof -
+  let ?P = "{g \<in> G. f g \<in> K}"
+  have hKsub: "K \<subseteq> H" using hK unfolding top1_normal_subgroup_on_def top1_is_group_on_def
+    by (by100 blast)
+  have hK_grp: "top1_is_group_on K mulH eH invgH"
+    using hK unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG hH hf])
+  show ?thesis unfolding top1_normal_subgroup_on_def
+  proof (intro conjI)
+  show "?P \<subseteq> G"
+  proof (rule subsetI)
+    fix x assume "x \<in> ?P" thus "x \<in> G" by (by100 blast)
+  qed
+  next
+  show "top1_is_group_on ?P mul e invg" unfolding top1_is_group_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>Identity: e \<in> P since f(e) = eH \<in> K.\<close>
+    show "e \<in> ?P"
+    proof -
+      have "e \<in> G" by (rule group_e_mem[OF hG])
+      moreover have "f e = eH" by (rule hf_e)
+      moreover have "eH \<in> K" by (rule group_e_mem[OF hK_grp])
+      ultimately show ?thesis by (by100 blast)
+    qed
+  next
+    \<comment> \<open>Closure: f(xy) = f(x)f(y) \<in> K.\<close>
+    fix x y assume hx: "x \<in> ?P" and hy: "y \<in> ?P"
+    have hxG: "x \<in> G" and hfxK: "f x \<in> K" using hx by (by100 blast)+
+    have hyG: "y \<in> G" and hfyK: "f y \<in> K" using hy by (by100 blast)+
+    have hxyG: "mul x y \<in> G" by (rule group_mul_closed[OF hG hxG hyG])
+    have hfxy: "f (mul x y) = mulH (f x) (f y)"
+      using hf hxG hyG unfolding top1_group_hom_on_def by (by100 blast)
+    have "mulH (f x) (f y) \<in> K"
+      using hK_grp hfxK hfyK unfolding top1_is_group_on_def by (by100 blast)
+    hence "f (mul x y) \<in> K" using hfxy by (by100 simp)
+    thus "mul x y \<in> ?P" using hxyG by (by100 blast)
+  next
+    \<comment> \<open>Inverse: f(x\<inverse>) = f(x)\<inverse> \<in> K.\<close>
+    fix x assume hx: "x \<in> ?P"
+    have hxG: "x \<in> G" and hfxK: "f x \<in> K" using hx by (by100 blast)+
+    have hinvG: "invg x \<in> G" by (rule group_inv_closed[OF hG hxG])
+    have hfinv: "f (invg x) = invgH (f x)"
+      by (rule hom_preserves_inv[OF hG hH hf hxG])
+    have "invgH (f x) \<in> K"
+      using hK_grp hfxK unfolding top1_is_group_on_def by (by100 blast)
+    hence "f (invg x) \<in> K" using hfinv by (by100 simp)
+    thus "invg x \<in> ?P" using hinvG by (by100 blast)
+  next
+    \<comment> \<open>Associativity: inherited from G.\<close>
+    fix x y z assume "x \<in> ?P" "y \<in> ?P" "z \<in> ?P"
+    hence "x \<in> G" "y \<in> G" "z \<in> G" by (by100 blast)+
+    thus "mul (mul x y) z = mul x (mul y z)"
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+  next
+    \<comment> \<open>Left identity.\<close>
+    fix x assume "x \<in> ?P" hence "x \<in> G" by (by100 blast)
+    thus "mul e x = x" using group_id_left[OF hG] by (by100 blast)
+  next
+    \<comment> \<open>Right inverse.\<close>
+    fix x assume "x \<in> ?P" hence "x \<in> G" by (by100 blast)
+    thus "mul x (invg x) = e" by (rule group_inv_right[OF hG])
+  next
+    \<comment> \<open>Left inverse.\<close>
+    fix x assume "x \<in> ?P" hence "x \<in> G" by (by100 blast)
+    have "invg x \<in> G" by (rule group_inv_closed[OF hG \<open>x \<in> G\<close>])
+    show "mul (invg x) x = e"
+      using hG \<open>x \<in> G\<close> \<open>invg x \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+  next
+    \<comment> \<open>Right identity.\<close>
+    fix x assume "x \<in> ?P" hence "x \<in> G" by (by100 blast)
+    thus "mul x e = x" using group_id_right[OF hG] by (by100 blast)
+  qed
+next
+  \<comment> \<open>Conjugation closure: g \<in> G, n \<in> P \<Rightarrow> gng\<inverse> \<in> P.\<close>
+  show "\<forall>g\<in>G. \<forall>n\<in>?P. mul (mul g n) (invg g) \<in> ?P"
+  proof (intro ballI)
+    fix g n assume hg: "g \<in> G" and hn: "n \<in> ?P"
+    have hnG: "n \<in> G" and hfnK: "f n \<in> K" using hn by (by100 blast)+
+    have "invg g \<in> G" by (rule group_inv_closed[OF hG hg])
+    have hgn: "mul g n \<in> G" by (rule group_mul_closed[OF hG hg hnG])
+    have hconj_G: "mul (mul g n) (invg g) \<in> G"
+      by (rule group_mul_closed[OF hG hgn \<open>invg g \<in> G\<close>])
+    \<comment> \<open>f((gn)g\<inverse>) = f(gn)f(g\<inverse>) = (f(g)f(n))(f(g)\<inverse>) \<in> K (K is normal).\<close>
+    have "f (mul (mul g n) (invg g)) = mulH (f (mul g n)) (f (invg g))"
+      using hf hgn \<open>invg g \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "f (mul g n) = mulH (f g) (f n)"
+      using hf hg hnG unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "f (invg g) = invgH (f g)"
+      by (rule hom_preserves_inv[OF hG hH hf hg])
+    ultimately have hf_conj: "f (mul (mul g n) (invg g))
+        = mulH (mulH (f g) (f n)) (invgH (f g))" by (by100 simp)
+    have hfgH: "f g \<in> H" using hf hg unfolding top1_group_hom_on_def by (by100 blast)
+    have hfnH: "f n \<in> H" using hfnK hKsub by (by100 blast)
+    have "mulH (mulH (f g) (f n)) (invgH (f g)) \<in> K"
+      using hK hfgH hfnK unfolding top1_normal_subgroup_on_def by (by100 blast)
+    hence "f (mul (mul g n) (invg g)) \<in> K" using hf_conj by (by100 simp)
+    thus "mul (mul g n) (invg g) \<in> ?P" using hconj_G by (by100 blast)
+  qed
+  qed
+qed
 
 text \<open>Corollary 70.4 (Munkres): If V is simply connected, then
   \<pi>_1(X) \<cong> \<pi>_1(U) / N where N is the normal closure of the image of
   the inclusion \<pi>_1(U \<inter> V) \<hookrightarrow> \<pi>_1(U).\<close>
+text \<open>Helper: simply connected implies trivial fundamental group.\<close>
+lemma simply_connected_trivial_carrier:
+  assumes hsc: "top1_simply_connected_on X TX"
+      and hx0: "x0 \<in> X"
+  shows "top1_fundamental_group_carrier X TX x0 = {top1_fundamental_group_id X TX x0}"
+proof (rule set_eqI)
+  have hTX: "is_topology_on X TX"
+    using hsc unfolding top1_simply_connected_on_def top1_path_connected_on_def by (by100 blast)
+  fix c show "c \<in> top1_fundamental_group_carrier X TX x0 \<longleftrightarrow>
+      c \<in> {top1_fundamental_group_id X TX x0}"
+  proof
+    assume hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+    then obtain f where hf: "top1_is_loop_on X TX x0 f"
+        and hc_eq: "c = {g. top1_loop_equiv_on X TX x0 f g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have hf_nul: "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+      using hsc hx0 hf unfolding top1_simply_connected_on_def by (by100 blast)
+    have "c = {g. top1_loop_equiv_on X TX x0 (top1_constant_path x0) g}"
+    proof (rule set_eqI)
+      fix g show "g \<in> c \<longleftrightarrow> g \<in> {g. top1_loop_equiv_on X TX x0 (top1_constant_path x0) g}"
+      proof
+        assume "g \<in> c"
+        hence "top1_loop_equiv_on X TX x0 f g" using hc_eq by (by100 blast)
+        hence "top1_path_homotopic_on X TX x0 x0 f g"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hfg: "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) g"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX
+                Lemma_51_1_path_homotopic_sym[OF hf_nul]
+                \<open>top1_path_homotopic_on X TX x0 x0 f g\<close>])
+        have hg_loop: "top1_is_loop_on X TX x0 g"
+          using \<open>g \<in> c\<close> hc_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+        show "g \<in> {g. top1_loop_equiv_on X TX x0 (top1_constant_path x0) g}"
+          unfolding top1_loop_equiv_on_def
+          using hfg hg_loop top1_constant_path_is_loop[OF hTX hx0] by (by100 blast)
+      next
+        assume "g \<in> {g. top1_loop_equiv_on X TX x0 (top1_constant_path x0) g}"
+        hence hcg: "top1_loop_equiv_on X TX x0 (top1_constant_path x0) g" by (by100 blast)
+        hence "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) g"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_path_homotopic_on X TX x0 x0 f g"
+          by (rule Lemma_51_1_path_homotopic_trans[OF hTX hf_nul
+                \<open>top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) g\<close>])
+        have hg_loop: "top1_is_loop_on X TX x0 g"
+          using hcg unfolding top1_loop_equiv_on_def by (by100 blast)
+        show "g \<in> c" using hc_eq unfolding top1_loop_equiv_on_def
+          using \<open>top1_path_homotopic_on X TX x0 x0 f g\<close> hf hg_loop by (by100 blast)
+      qed
+    qed
+    thus "c \<in> {top1_fundamental_group_id X TX x0}"
+      unfolding top1_fundamental_group_id_def by (by100 blast)
+  next
+    assume "c \<in> {top1_fundamental_group_id X TX x0}"
+    hence "c = top1_fundamental_group_id X TX x0" by (by100 blast)
+    thus "c \<in> top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def top1_fundamental_group_id_def
+      using top1_constant_path_is_loop[OF hTX hx0]
+            top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTX hx0]] by (by100 blast)
+  qed
+qed
+
 corollary Corollary_70_4_simply_connected_V:
   assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
       and "U \<union> V = X"
@@ -16793,7 +17103,661 @@ corollary Corollary_70_4_simply_connected_V:
            ` top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0)))
     (top1_quotient_group_mul_on
        (top1_fundamental_group_mul U (subspace_topology X TX U) x0))"
-  sorry
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU x0"
+  let ?mulU = "top1_fundamental_group_mul U ?TU x0"
+  let ?eU = "top1_fundamental_group_id U ?TU x0"
+  let ?invgU = "top1_fundamental_group_invg U ?TU x0"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV x0"
+  let ?\<pi>X = "top1_fundamental_group_carrier X TX x0"
+  let ?mulX = "top1_fundamental_group_mul X TX x0"
+  let ?eX = "top1_fundamental_group_id X TX x0"
+  let ?invgX = "top1_fundamental_group_invg X TX x0"
+  let ?j_U = "top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x)"
+  let ?j_UV_U = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x)"
+  let ?N = "top1_normal_subgroup_generated_on ?\<pi>U ?mulU ?eU ?invgU
+      (?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)"
+  \<comment> \<open>Basic topology facts.\<close>
+  have hTopX: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hUsub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hx0_U: "x0 \<in> U" using assms(8) by (by100 blast)
+  have hx0_V: "x0 \<in> V" using assms(8) by (by100 blast)
+  have hx0_X: "x0 \<in> X" using assms(8) assms(4) by (by100 blast)
+  \<comment> \<open>Step 1: V is simply connected \<Rightarrow> \<pi>_1(V) = {e_V}.\<close>
+  have hV_pc: "top1_path_connected_on V ?TV"
+    using assms(7) unfolding top1_simply_connected_on_def by (by100 blast)
+  have hPiV_trivial: "?\<pi>V = {top1_fundamental_group_id V ?TV x0}"
+    by (rule simply_connected_trivial_carrier[OF assms(7) hx0_V])
+  \<comment> \<open>Step 2: Group structures.\<close>
+  have h\<pi>U_grp: "top1_is_group_on ?\<pi>U ?mulU ?eU ?invgU"
+    by (rule top1_fundamental_group_is_group[OF hTopU hx0_U])
+  have h\<pi>X_grp: "top1_is_group_on ?\<pi>X ?mulX ?eX ?invgX"
+    by (rule top1_fundamental_group_is_group[OF hTopX hx0_X])
+  \<comment> \<open>Step 3: j_U is a group homomorphism.\<close>
+  have hincl_U: "top1_continuous_map_on U ?TU X TX (\<lambda>x. x)"
+  proof -
+    have "top1_continuous_map_on U (subspace_topology X TX U) X TX (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopX, unfolded id_def]]) (rule hUsub)
+    thus ?thesis by (by100 simp)
+  qed
+  have hj_U_hom: "top1_group_hom_on ?\<pi>U ?mulU ?\<pi>X ?mulX ?j_U"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTopU hTopX hx0_U hx0_X hincl_U])
+       (by100 simp)
+  \<comment> \<open>Step 4: j_U is surjective. Use SvK + trivial \<pi>_1(V).\<close>
+  \<comment> \<open>Get the free product and apply SvK parameterized.\<close>
+  have h\<pi>U_GG: "top1_is_group_on ?\<pi>U ?mulU ?eU ?invgU"
+    by (rule h\<pi>U_grp)
+  have hV_eV: "top1_fundamental_group_id V ?TV x0 \<in> ?\<pi>V"
+    using top1_fundamental_group_is_group[OF hTopV hx0_V] unfolding top1_is_group_on_def
+    by (by100 blast)
+  have h\<pi>V_GG: "top1_is_group_on ?\<pi>V (top1_fundamental_group_mul V ?TV x0)
+      (top1_fundamental_group_id V ?TV x0) (top1_fundamental_group_invg V ?TV x0)"
+    by (rule top1_fundamental_group_is_group[OF hTopV hx0_V])
+  have hGG_grps: "\<forall>\<alpha>\<in>{0::nat,1}. top1_is_group_on
+      (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)
+      (if \<alpha> = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+      (if \<alpha> = 0 then ?eU else top1_fundamental_group_id V ?TV x0)
+      (if \<alpha> = 0 then ?invgU else top1_fundamental_group_invg V ?TV x0)"
+  proof (intro ballI)
+    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+    thus "top1_is_group_on
+        (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)
+        (if \<alpha> = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+        (if \<alpha> = 0 then ?eU else top1_fundamental_group_id V ?TV x0)
+        (if \<alpha> = 0 then ?invgU else top1_fundamental_group_invg V ?TV x0)"
+    proof
+      assume "\<alpha> = 0" thus ?thesis using h\<pi>U_grp by (by100 simp)
+    next
+      assume "\<alpha> = 1" thus ?thesis using h\<pi>V_GG by (by100 simp)
+    qed
+  qed
+  obtain FP :: "(nat \<times> (real \<Rightarrow> 'a) set) list set" and mulFP eFP invgFP \<iota>fam where
+      hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+        (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)
+        (\<lambda>i. if i = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+        \<iota>fam {0,1}"
+  proof -
+    from Theorem_68_2_free_product_exists[OF hGG_grps]
+    show ?thesis using that by blast
+  qed
+  \<comment> \<open>Apply SvK parameterized: \<pi>_1(X) \<cong> FP/N'.\<close>
+  have hSvK: "top1_groups_isomorphic_on ?\<pi>X ?mulX
+      (top1_quotient_group_carrier_on FP mulFP
+         (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+            { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) c))
+                     (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+             | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }))
+      (top1_quotient_group_mul_on mulFP)"
+    by (rule Theorem_70_2_SvK_parameterized[OF assms(1-5) assms(6) hV_pc assms(8) hFP])
+  \<comment> \<open>Step 4: FP = \<iota>_0(\<pi>_1(U)) since \<pi>_1(V) = {e_V}.
+     (Follows from free_product_trivial_factor_surj + if-branch simplification.)\<close>
+  have hFP_eq: "FP = \<iota>fam 0 ` ?\<pi>U"
+  proof -
+    \<comment> \<open>Reformulate FP with explicit factor groups (avoiding if-branches).\<close>
+    let ?GG = "\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V"
+    let ?mGG = "\<lambda>i::nat. if i = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0"
+    have hGG0: "?GG 0 = ?\<pi>U" by (by100 simp)
+    have hGG1: "?GG 1 = ?\<pi>V" by (by100 simp)
+    have hmGG0: "?mGG 0 = ?mulU" by (by100 simp)
+    have hmGG1: "?mGG 1 = top1_fundamental_group_mul V ?TV x0" by (by100 simp)
+    \<comment> \<open>FP = subgroup_generated(union of embeddings).\<close>
+    have hgen: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP (\<Union>\<alpha>\<in>{0::nat, 1}. \<iota>fam \<alpha> ` ?GG \<alpha>)"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    \<comment> \<open>GG 1 = {\<pi>_1(V)} = {e_V}.\<close>
+    have hGG1_triv: "?GG 1 = {top1_fundamental_group_id V ?TV x0}"
+      using hPiV_trivial hGG1 by (by100 simp)
+    \<comment> \<open>Apply the general lemma.\<close>
+    have hgr1: "top1_is_group_on
+        (if (1::nat) = 0 then ?\<pi>U else ?\<pi>V)
+        (if (1::nat) = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+        (top1_fundamental_group_id V ?TV x0) (top1_fundamental_group_invg V ?TV x0)"
+    proof -
+      have "(1::nat) \<noteq> 0" by (by100 simp)
+      hence "(if (1::nat) = 0 then ?\<pi>U else ?\<pi>V) = ?\<pi>V" by (by100 simp)
+      moreover have "(if (1::nat) = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+          = top1_fundamental_group_mul V ?TV x0" by (by100 simp)
+      ultimately show ?thesis using h\<pi>V_GG by (by100 simp)
+    qed
+    have hgr0: "top1_is_group_on
+        (if (0::nat) = 0 then ?\<pi>U else ?\<pi>V)
+        (if (0::nat) = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+        ?eU ?invgU"
+    proof -
+      have "(if (0::nat) = 0 then ?\<pi>U else ?\<pi>V) = ?\<pi>U" by (by100 simp)
+      moreover have "(if (0::nat) = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0) = ?mulU"
+        by (by100 simp)
+      ultimately show ?thesis using h\<pi>U_GG by (by100 simp)
+    qed
+    have "FP = \<iota>fam 0 ` (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) 0"
+      by (rule free_product_trivial_factor_surj[OF hFP hGG1_triv hgr1 hgr0])
+    thus ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 5: Compose isomorphisms. SvK gives \<pi>_1(X) \<cong> FP/N'.
+     When \<pi>_1(V) = {e_V}, FP/N' \<cong> \<pi>_1(U)/N (relators simplify, \<iota>_0 is isomorphism).
+     Composition: \<pi>_1(X) \<cong> FP/N' \<cong> \<pi>_1(U)/N.\<close>
+  \<comment> \<open>The quotient isomorphism FP/N' \<cong> \<pi>_1(U)/N follows from:
+     (a) \<iota>_0: \<pi>_1(U) \<rightarrow> FP is bijective (FP = \<iota>_0(\<pi>_1(U)))
+     (b) the relators in N' become \<iota>_0(generators of N) when \<pi>_1(V) = {e_V}
+     (c) so FP/N' = \<iota>_0(\<pi>_1(U))/\<iota>_0(N) \<cong> \<pi>_1(U)/N\<close>
+  \<comment> \<open>Step 5b: Construct \<psi>: FP \<rightarrow> \<pi>_1(U)/N via extension property.
+     \<psi>(\<iota>_0(u)) = [u]_N, \<psi>(\<iota>_1(v)) = e_Q. Then surj, ker = N', 1st iso thm.\<close>
+  let ?N' = "top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+      { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+  have hN_normal_U: "top1_normal_subgroup_on ?\<pi>U ?mulU ?eU ?invgU ?N"
+  proof -
+    have hgens_sub_loc: "?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 \<subseteq> ?\<pi>U"
+    proof (rule image_subsetI)
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+      have hUV_sub': "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+      have hTUV': "is_topology_on (U \<inter> V) ?TUV"
+        by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub'])
+      have hx0_UV': "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+      have hincl': "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+      proof -
+        have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+        moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+          by (rule subspace_topology_trans) (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+          (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>U ?mulU ?j_UV_U"
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV' hTopU hx0_UV' hx0_U hincl'])
+           (by100 simp)
+      thus "?j_UV_U c \<in> ?\<pi>U" using hc unfolding top1_group_hom_on_def by (by100 blast)
+    qed
+    show ?thesis by (rule normal_subgroup_generated_is_normal[OF h\<pi>U_grp hgens_sub_loc])
+  qed
+  \<comment> \<open>Quotient group \<pi>_1(U)/N.\<close>
+  let ?Q = "top1_quotient_group_carrier_on ?\<pi>U ?mulU ?N"
+  let ?mulQ = "top1_quotient_group_mul_on ?mulU"
+  let ?eQ = "top1_group_coset_on ?\<pi>U ?mulU ?N ?eU"
+  let ?invgQ = "\<lambda>C. top1_group_coset_on ?\<pi>U ?mulU ?N
+      (?invgU (SOME g. g \<in> ?\<pi>U \<and> C = top1_group_coset_on ?\<pi>U ?mulU ?N g))"
+  have hQ_grp: "top1_is_group_on ?Q ?mulQ ?eQ ?invgQ"
+    by (rule quotient_group_is_group[OF h\<pi>U_grp hN_normal_U])
+  \<comment> \<open>The quotient projection \<pi>_1(U) \<rightarrow> \<pi>_1(U)/N is a surjective hom with kernel N.\<close>
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on ?\<pi>U ?mulU ?N g"
+  have h\<phi>_hom: "top1_group_hom_on ?\<pi>U ?mulU ?Q ?mulQ ?\<phi>"
+    by (rule quotient_projection_properties(1)[OF h\<pi>U_grp hN_normal_U])
+  have h\<phi>_surj: "?\<phi> ` ?\<pi>U = ?Q"
+    by (rule quotient_projection_properties(2)[OF h\<pi>U_grp hN_normal_U])
+  have h\<phi>_ker: "top1_group_kernel_on ?\<pi>U ?eQ ?\<phi> = ?N"
+    by (rule quotient_projection_properties(3)[OF h\<pi>U_grp hN_normal_U])
+  \<comment> \<open>Construct \<psi>: FP \<rightarrow> \<pi>_1(U)/N via extension property.
+     \<psi>(\<iota>_0(u)) = \<phi>(u) = [u]_N, \<psi>(\<iota>_1(v)) = e_Q.\<close>
+  \<comment> \<open>Define the family of homs for the extension property.\<close>
+  let ?\<psi>fam = "\<lambda>i::nat. if i = 0 then ?\<phi> else (\<lambda>v. ?eQ)"
+  have h\<psi>fam_hom: "\<forall>\<alpha>\<in>{0::nat, 1}. top1_group_hom_on
+      (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)
+      (if \<alpha> = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+      ?Q ?mulQ (?\<psi>fam \<alpha>)"
+  proof (intro ballI)
+    fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+    hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+    thus "top1_group_hom_on
+        (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)
+        (if \<alpha> = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0)
+        ?Q ?mulQ (?\<psi>fam \<alpha>)"
+    proof
+      assume h0: "\<alpha> = 0"
+      thus ?thesis using h\<phi>_hom by (by100 simp)
+    next
+      assume h1: "\<alpha> = 1"
+      \<comment> \<open>Trivial map \<pi>_1(V) \<rightarrow> {e_Q} is a hom.\<close>
+      show ?thesis unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)"
+        have "?\<psi>fam \<alpha> x = ?eQ" using h1 by (by100 simp)
+        moreover have "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+        ultimately show "?\<psi>fam \<alpha> x \<in> ?Q" by (by100 simp)
+      next
+        fix x y assume "x \<in> (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)"
+            "y \<in> (if \<alpha> = 0 then ?\<pi>U else ?\<pi>V)"
+        have heQ_in: "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+        show "?\<psi>fam \<alpha> ((if \<alpha> = 0 then ?mulU else top1_fundamental_group_mul V ?TV x0) x y)
+            = ?mulQ (?\<psi>fam \<alpha> x) (?\<psi>fam \<alpha> y)"
+          using h1 group_id_left[OF hQ_grp heQ_in] by (by100 simp)
+      qed
+    qed
+  qed
+  obtain \<psi> where h\<psi>_hom: "top1_group_hom_on FP mulFP ?Q ?mulQ \<psi>"
+      and h\<psi>_ext: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V).
+          \<psi> (\<iota>fam \<alpha> x) = ?\<psi>fam \<alpha> x"
+  proof -
+    from Lemma_68_3_extension_property[OF hFP hQ_grp h\<psi>fam_hom hGG_grps]
+    obtain h where hh: "top1_group_hom_on FP mulFP ?Q ?mulQ h
+        \<and> (\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V).
+            h (\<iota>fam \<alpha> x) = ?\<psi>fam \<alpha> x)"
+      by blast
+    show ?thesis using that[of h] hh by (by100 blast)
+  qed
+  \<comment> \<open>\<psi> is surjective: for [u]_N \<in> \<pi>_1(U)/N, \<psi>(\<iota>_0(u)) = \<phi>(u) = [u]_N.\<close>
+  have h\<psi>_surj: "\<psi> ` FP = ?Q"
+  proof (rule set_eqI, rule iffI)
+    fix c assume "c \<in> \<psi> ` FP"
+    then obtain w where hw: "w \<in> FP" and hc: "c = \<psi> w" by (by100 blast)
+    show "c \<in> ?Q" using h\<psi>_hom hw hc unfolding top1_group_hom_on_def by (by100 blast)
+  next
+    fix c assume hc: "c \<in> ?Q"
+    \<comment> \<open>c = \<phi>(u) for some u. And \<psi>(\<iota>_0(u)) = \<phi>(u) = c.\<close>
+    from hc obtain u where hu: "u \<in> ?\<pi>U" and hcu: "c = ?\<phi> u"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    have h\<iota>0u_FP: "\<iota>fam 0 u \<in> FP" using hFP_eq hu by (by100 blast)
+    have "\<psi> (\<iota>fam 0 u) = ?\<psi>fam 0 u"
+      using h\<psi>_ext hu by (by100 force)
+    hence "\<psi> (\<iota>fam 0 u) = ?\<phi> u" by (by100 simp)
+    hence "\<psi> (\<iota>fam 0 u) = c" using hcu by (by100 simp)
+    thus "c \<in> \<psi> ` FP" using h\<iota>0u_FP by (by100 blast)
+  qed
+  \<comment> \<open>N' is normal in FP (from SvK proof).\<close>
+  have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>\<alpha>\<in>{0::nat, 1}. \<forall>x\<in>(if \<alpha> = 0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have hN'_gens_sub: "{ mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> FP"
+  proof (rule subsetI)
+    fix x assume "x \<in> { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+    then obtain c where hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        and hx: "x = mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))"
+      by (by100 blast)
+    have hUV_sub': "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+    have hTUV': "is_topology_on (U \<inter> V) ?TUV"
+      by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub'])
+    have hx0_UV': "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+    have hincl_UV_U': "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+    proof -
+      have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+      moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+        by (rule subspace_topology_trans) (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hincl_UV_V: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+    proof -
+      have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
+      moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+        by (rule subspace_topology_trans) (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hjU_c_in: "?j_UV_U c \<in> ?\<pi>U"
+    proof -
+      have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+          (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>U ?mulU ?j_UV_U"
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV' hTopU hx0_UV' hx0_U hincl_UV_U'])
+           (by100 simp)
+      thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+    qed
+    let ?j_UV_V' = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x)"
+    have hjV_c_in: "?j_UV_V' c \<in> ?\<pi>V"
+    proof -
+      have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+          (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>V
+          (top1_fundamental_group_mul V ?TV x0) ?j_UV_V'"
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV' hTopV hx0_UV' hx0_V hincl_UV_V])
+           (by100 simp)
+      thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+    qed
+    have h0_in: "\<iota>fam 0 (?j_UV_U c) \<in> FP" using h\<iota>_in hjU_c_in by (by100 force)
+    have h1_in: "\<iota>fam 1 (?j_UV_V' c) \<in> FP" using h\<iota>_in hjV_c_in by (by100 force)
+    have hinv_in: "invgFP (\<iota>fam 1 (?j_UV_V' c)) \<in> FP"
+      by (rule group_inv_closed[OF hFP_grp h1_in])
+    have "mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V' c))) \<in> FP"
+      by (rule group_mul_closed[OF hFP_grp h0_in hinv_in])
+    thus "x \<in> FP" using hx by (by100 simp)
+  qed
+  have hN'_normal: "top1_normal_subgroup_on FP mulFP eFP invgFP ?N'"
+    by (rule normal_subgroup_generated_is_normal[OF hFP_grp hN'_gens_sub])
+  \<comment> \<open>Common membership facts.\<close>
+  have hUV_sub': "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+  have hTUV': "is_topology_on (U \<inter> V) ?TUV"
+    by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub'])
+  have hx0_UV': "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+  have hincl_UV_U': "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+  proof -
+    have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+    moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+      by (rule subspace_topology_trans) (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hincl_UV_V': "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+  proof -
+    have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
+    moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+      by (rule subspace_topology_trans) (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hjUVU_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>U ?mulU ?j_UV_U"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV' hTopU hx0_UV' hx0_U hincl_UV_U'])
+       (by100 simp)
+  have hjUVV_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>V
+      (top1_fundamental_group_mul V ?TV x0)
+      (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x))"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV' hTopV hx0_UV' hx0_V hincl_UV_V'])
+       (by100 simp)
+  have hjUc_mem: "\<And>c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 \<Longrightarrow> ?j_UV_U c \<in> ?\<pi>U"
+    using hjUVU_hom unfolding top1_group_hom_on_def by (by100 blast)
+  have hjVc_mem: "\<And>c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 \<Longrightarrow>
+      top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c \<in> ?\<pi>V"
+    using hjUVV_hom unfolding top1_group_hom_on_def by (by100 blast)
+  \<comment> \<open>\<iota>_1(e_V) = eFP and invgFP(eFP) = eFP.\<close>
+  have h\<iota>1_hom_grp: "top1_group_hom_on ?\<pi>V (top1_fundamental_group_mul V ?TV x0) FP mulFP (\<iota>fam 1)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> ?\<pi>V" thus "\<iota>fam 1 x \<in> FP" using h\<iota>_in by (by100 force)
+  next
+    fix x y assume "x \<in> ?\<pi>V" "y \<in> ?\<pi>V"
+    thus "\<iota>fam 1 (top1_fundamental_group_mul V ?TV x0 x y) = mulFP (\<iota>fam 1 x) (\<iota>fam 1 y)"
+    proof -
+      have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam \<alpha> ((if \<alpha>=0 then ?mulU else top1_fundamental_group_mul V ?TV x0) x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      thus ?thesis using \<open>x \<in> ?\<pi>V\<close> \<open>y \<in> ?\<pi>V\<close> by (by100 force)
+    qed
+  qed
+  have h\<iota>1_eV_fact: "\<iota>fam 1 (top1_fundamental_group_id V ?TV x0) = eFP"
+    by (rule hom_preserves_id[OF h\<pi>V_GG hFP_grp h\<iota>1_hom_grp])
+  have hinvFP_eFP: "invgFP eFP = eFP"
+  proof -
+    have "eFP \<in> FP" using group_e_mem[OF hFP_grp] .
+    have "mulFP eFP (invgFP eFP) = eFP" by (rule group_inv_right[OF hFP_grp \<open>eFP \<in> FP\<close>])
+    moreover have "mulFP eFP (invgFP eFP) = invgFP eFP"
+      using group_id_left[OF hFP_grp group_inv_closed[OF hFP_grp \<open>eFP \<in> FP\<close>]] by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>ker(\<psi>) = N': generators of N' map to e_Q, and \<iota>_0(N) \<subseteq> N'.\<close>
+  have h\<psi>_ker: "top1_group_kernel_on FP ?eQ \<psi> = ?N'"
+  proof (rule set_eqI, rule iffI)
+    fix w assume hw: "w \<in> top1_group_kernel_on FP ?eQ \<psi>"
+    hence hwFP: "w \<in> FP" and h\<psi>w: "\<psi> w = ?eQ"
+      unfolding top1_group_kernel_on_def by (by100 blast)+
+    \<comment> \<open>w = \<iota>_0(u) for some u \<in> \<pi>_1(U). \<psi>(\<iota>_0(u)) = \<phi>(u) = e_Q means u \<in> N.
+       So w = \<iota>_0(u) with u \<in> N. Need w \<in> N' = normal_closure(\<iota>_0(generators of N)).\<close>
+    \<comment> \<open>w \<in> FP = \<iota>_0(\<pi>_1(U)), so w = \<iota>_0(u) for some u.\<close>
+    from hwFP obtain u where hu: "u \<in> ?\<pi>U" and hwu: "w = \<iota>fam 0 u"
+      using hFP_eq by (by100 blast)
+    \<comment> \<open>\<psi>(\<iota>_0(u)) = \<phi>(u) = e_Q means u \<in> N.\<close>
+    have h\<psi>u: "\<psi> (\<iota>fam 0 u) = ?\<phi> u"
+      using h\<psi>_ext hu by (by100 force)
+    hence h\<phi>u: "?\<phi> u = ?eQ" using h\<psi>w hwu by (by100 simp)
+    have hu_in_N: "u \<in> ?N"
+      using h\<phi>_ker hu h\<phi>u unfolding top1_group_kernel_on_def by (by100 blast)
+    \<comment> \<open>Need: \<iota>_0(u) \<in> N'. Since N' = \<Inter>{K normal in FP | gens \<subseteq> K},
+       it suffices to show \<iota>_0(u) \<in> K for every such K.
+       Given K: the simplified generators {\<iota>_0(j_UV_U(c))} \<subseteq> K.
+       So \<iota>_0\<inverse>(K) \<supseteq> {j_UV_U(c)} and is normal in \<pi>_1(U), hence \<iota>_0\<inverse>(K) \<supseteq> N.
+       u \<in> N \<subseteq> \<iota>_0\<inverse>(K), so \<iota>_0(u) \<in> K.\<close>
+    \<comment> \<open>Since the relators simplify to {\<iota>_0(j_UV_U(c))} when \<pi>_1(V)={e_V},
+       and u \<in> N = normal_closure({j_UV_U(c)}), the map \<iota>_0 sends N into N'.
+       This is because N' contains all conjugates of \<iota>_0(generators), and \<iota>_0 preserves
+       conjugation (being a hom). Formally: N' \<supseteq> \<iota>_0(N) because every normal
+       K \<supseteq> generators_of_N' satisfies \<iota>_0\<inverse>(K) \<supseteq> N.\<close>
+    \<comment> \<open>Use InterI on N' = normal_subgroup_generated = \<Inter>{K | gens \<subseteq> K \<and> K normal}.\<close>
+    have h\<iota>0_hom_loc: "top1_group_hom_on ?\<pi>U ?mulU FP mulFP (\<iota>fam 0)"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> ?\<pi>U" thus "\<iota>fam 0 x \<in> FP" using h\<iota>_in by (by100 force)
+    next
+      fix x y assume "x \<in> ?\<pi>U" "y \<in> ?\<pi>U"
+      thus "\<iota>fam 0 (?mulU x y) = mulFP (\<iota>fam 0 x) (\<iota>fam 0 y)"
+      proof -
+        have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+            \<iota>fam \<alpha> ((if \<alpha>=0 then ?mulU else top1_fundamental_group_mul V ?TV x0) x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+          using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+        thus ?thesis using \<open>x \<in> ?\<pi>U\<close> \<open>y \<in> ?\<pi>U\<close> by (by100 force)
+      qed
+    qed
+    \<comment> \<open>Show: every K with gens_N' \<subseteq> K and K normal in FP contains w = \<iota>_0(u).\<close>
+    show "w \<in> ?N'"
+      unfolding top1_normal_subgroup_generated_on_def
+    proof (rule InterI)
+      fix K assume hK_mem: "K \<in> {K'. { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K'
+             \<and> top1_normal_subgroup_on FP mulFP eFP invgFP K'}"
+      hence hgens_K: "{ mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K"
+          and hK_normal: "top1_normal_subgroup_on FP mulFP eFP invgFP K"
+        by (by100 blast)+
+      \<comment> \<open>Preimage \<iota>_0\<inverse>(K) \<inter> \<pi>_1(U) is normal in \<pi>_1(U).\<close>
+      have hpreimg: "top1_normal_subgroup_on ?\<pi>U ?mulU ?eU ?invgU {g \<in> ?\<pi>U. \<iota>fam 0 g \<in> K}"
+        by (rule preimage_normal_subgroup[OF h\<pi>U_grp hFP_grp h\<iota>0_hom_loc hK_normal])
+      \<comment> \<open>Generators of N lie in preimage: j_UV_U(c) \<in> preimage.\<close>
+      have hgens_in_preimg: "?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0
+          \<subseteq> {g \<in> ?\<pi>U. \<iota>fam 0 g \<in> K}"
+      proof (rule image_subsetI)
+        fix c assume hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        \<comment> \<open>The generator mulFP(\<iota>_0(j_c))(invgFP(\<iota>_1(j'_c))) \<in> K. When \<pi>_1(V) = {e_V},
+           this simplifies to \<iota>_0(j_c) \<in> K.\<close>
+        have hgen_in_K: "mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+          \<in> K" using hgens_K hc by (by100 blast)
+        \<comment> \<open>Simplify: \<iota>_1(j_V(c)) = eFP, invgFP(eFP) = eFP, mulFP(x)(eFP) = x.\<close>
+        have "\<iota>fam 0 (?j_UV_U c) \<in> K"
+        proof -
+          have hjVc_trivial: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c
+              = top1_fundamental_group_id V ?TV x0"
+            using hjVc_mem[OF hc] hPiV_trivial by (by100 blast)
+          have "invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c))
+              = eFP" using hjVc_trivial h\<iota>1_eV_fact hinvFP_eFP by (by100 simp)
+          hence "mulFP (\<iota>fam 0 (?j_UV_U c))
+              (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+            = mulFP (\<iota>fam 0 (?j_UV_U c)) eFP" by (by100 simp)
+          moreover have "\<iota>fam 0 (?j_UV_U c) \<in> FP"
+            using h\<iota>_in hjUc_mem[OF hc] by (by100 force)
+          hence "mulFP (\<iota>fam 0 (?j_UV_U c)) eFP = \<iota>fam 0 (?j_UV_U c)"
+            using group_id_right[OF hFP_grp] by (by100 blast)
+          ultimately show ?thesis using hgen_in_K by (by100 simp)
+        qed
+        thus "?j_UV_U c \<in> {g \<in> ?\<pi>U. \<iota>fam 0 g \<in> K}"
+          using hjUc_mem[OF hc] by (by100 blast)
+      qed
+      \<comment> \<open>N \<subseteq> preimage (N is smallest normal containing generators).\<close>
+      have "?N \<subseteq> {g \<in> ?\<pi>U. \<iota>fam 0 g \<in> K}"
+        unfolding top1_normal_subgroup_generated_on_def
+        using hgens_in_preimg hpreimg by (by100 blast)
+      hence "u \<in> {g \<in> ?\<pi>U. \<iota>fam 0 g \<in> K}" using hu_in_N by (by100 blast)
+      thus "w \<in> K" using hwu by (by100 blast)
+    qed
+  next
+    fix w assume hw: "w \<in> ?N'"
+    \<comment> \<open>N' is generated by elements of the form mulFP(\<iota>_0(j_c))(invgFP(\<iota>_1(j'_c))).
+       \<psi> maps each such generator to e_Q (shown below). Since ker is normal, N' \<subseteq> ker.\<close>
+    have hN'_sub: "?N' \<subseteq> FP"
+      using hN'_normal unfolding top1_normal_subgroup_on_def top1_is_group_on_def by (by100 blast)
+    have hwFP: "w \<in> FP" using hw hN'_sub by (by100 blast)
+    \<comment> \<open>Generators map to e_Q: \<psi>(mulFP(\<iota>_0(j_c))(invgFP(\<iota>_1(j'_c))))
+       = mulQ(\<phi>(j_c))(invgQ(\<psi>(\<iota>_1(j'_c)))) = mulQ([j_c]_N)(invgQ(e_Q))
+       = mulQ([j_c]_N)(e_Q) = [j_c]_N. And j_c \<in> N, so [j_c]_N = e_Q.\<close>
+    have hgens_in_ker: "\<forall>g \<in> { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }.
+       \<psi> g = ?eQ"
+    proof (intro ballI)
+      fix g assume "g \<in> { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+      then obtain c where hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+          and hg: "g = mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))"
+        by (by100 blast)
+      let ?jVc = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c"
+      \<comment> \<open>\<psi> is a hom, so \<psi>(a \<cdot> b) = \<psi>(a) \<cdot> \<psi>(b).\<close>
+      have hjUc_in0: "?j_UV_U c \<in> ?\<pi>U"
+      proof -
+        have hUV_sub'': "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+        have hTUV'': "is_topology_on (U \<inter> V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub''])
+        have hx0_UV'': "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+        have hincl'': "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+        proof -
+          have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+          moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+            by (rule subspace_topology_trans) (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>U ?mulU ?j_UV_U"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV'' hTopU hx0_UV'' hx0_U hincl''])
+             (by100 simp)
+        thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      have hjVc_in0: "?jVc \<in> ?\<pi>V"
+      proof -
+        have hUV_sub'': "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+        have hTUV'': "is_topology_on (U \<inter> V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub''])
+        have hx0_UV'': "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+        have hincl_V'': "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+        proof -
+          have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+            by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
+          moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+            by (rule subspace_topology_trans) (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>V
+            (top1_fundamental_group_mul V ?TV x0)
+            (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x))"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV'' hTopV hx0_UV'' hx0_V hincl_V''])
+             (by100 simp)
+        thus ?thesis using hc unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      have h0_in: "\<iota>fam 0 (?j_UV_U c) \<in> FP" using h\<iota>_in hjUc_in0 by (by100 force)
+      have h1_in: "\<iota>fam 1 ?jVc \<in> FP" using h\<iota>_in hjVc_in0 by (by100 force)
+      have hinv_in: "invgFP (\<iota>fam 1 ?jVc) \<in> FP"
+        by (rule group_inv_closed[OF hFP_grp h1_in])
+      \<comment> \<open>\<psi>(\<iota>_0(j_UV_U(c))) = \<phi>(j_UV_U(c)) = [j_UV_U(c)]_N.\<close>
+      have hjUc_in: "?j_UV_U c \<in> ?\<pi>U" by (rule hjUc_in0)
+      have h\<psi>_0: "\<psi> (\<iota>fam 0 (?j_UV_U c)) = ?\<phi> (?j_UV_U c)"
+        using h\<psi>_ext hjUc_in by (by100 force)
+      \<comment> \<open>j_UV_U(c) is a generator of N, so [j_UV_U(c)]_N = e_Q.\<close>
+      have hjUc_in_N: "?j_UV_U c \<in> ?N"
+      proof -
+        have "?j_UV_U c \<in> ?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+          using hc by (by100 blast)
+        thus ?thesis
+          unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+      qed
+      have h\<phi>_jUc: "?\<phi> (?j_UV_U c) = ?eQ"
+        using hjUc_in_N h\<phi>_ker hjUc_in
+        unfolding top1_group_kernel_on_def by (by100 blast)
+      \<comment> \<open>\<psi>(\<iota>_1(j_UV_V(c))) = e_Q (trivial map on V-factor).\<close>
+      have hjVc_in: "?jVc \<in> ?\<pi>V" by (rule hjVc_in0)
+      have h\<psi>_1: "\<psi> (\<iota>fam 1 ?jVc) = ?eQ"
+        using h\<psi>_ext hjVc_in by (by100 force)
+      have h\<psi>_inv: "\<psi> (invgFP (\<iota>fam 1 ?jVc)) = ?invgQ ?eQ"
+      proof -
+        have hstep1: "\<psi> (invgFP (\<iota>fam 1 ?jVc)) = ?invgQ (\<psi> (\<iota>fam 1 ?jVc))"
+          by (rule hom_preserves_inv[OF hFP_grp hQ_grp h\<psi>_hom h1_in])
+        have hstep2: "\<psi> (\<iota>fam 1 ?jVc) = ?eQ" by (rule h\<psi>_1)
+        show ?thesis using hstep1 hstep2 by (by100 simp)
+      qed
+      have hinvQ_eQ: "?invgQ ?eQ = ?eQ"
+      proof -
+        have heQ_in: "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hinvQ_in: "?invgQ ?eQ \<in> ?Q" by (rule group_inv_closed[OF hQ_grp heQ_in])
+        have "?invgQ ?eQ = ?mulQ ?eQ (?invgQ ?eQ)"
+          using group_id_left[OF hQ_grp hinvQ_in] by (by100 simp)
+        also have "\<dots> = ?eQ" by (rule group_inv_right[OF hQ_grp heQ_in])
+        finally show ?thesis .
+      qed
+      \<comment> \<open>Assembly: \<psi>(g) = \<psi>(\<iota>_0(jUc)) \<cdot> \<psi>(invg(\<iota>_1(jVc))) = e_Q \<cdot> e_Q = e_Q.\<close>
+      have "\<psi> g = ?mulQ (\<psi> (\<iota>fam 0 (?j_UV_U c))) (\<psi> (invgFP (\<iota>fam 1 ?jVc)))"
+        using hg h\<psi>_hom h0_in hinv_in unfolding top1_group_hom_on_def by (by100 blast)
+      also have "\<dots> = ?mulQ (?\<phi> (?j_UV_U c)) (\<psi> (invgFP (\<iota>fam 1 ?jVc)))"
+        using h\<psi>_0 by (by100 simp)
+      also have "\<dots> = ?mulQ ?eQ (\<psi> (invgFP (\<iota>fam 1 ?jVc)))"
+        using h\<phi>_jUc by (by100 simp)
+      also have "\<dots> = ?mulQ ?eQ (?invgQ ?eQ)"
+        using h\<psi>_inv by (by100 simp)
+      also have "\<dots> = ?mulQ ?eQ ?eQ" using hinvQ_eQ by (by100 simp)
+      also have "\<dots> = ?eQ"
+      proof -
+        have "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis using group_id_left[OF hQ_grp] by (by100 blast)
+      qed
+      finally show "\<psi> g = ?eQ" .
+    qed
+    have hker_normal_FP: "top1_normal_subgroup_on FP mulFP eFP invgFP
+        (top1_group_kernel_on FP ?eQ \<psi>)"
+      by (rule kernel_is_normal_subgroup[OF hFP_grp hQ_grp h\<psi>_hom])
+    have hgens_in_ker2: "{ mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }
+       \<subseteq> top1_group_kernel_on FP ?eQ \<psi>"
+    proof (rule subsetI)
+      fix g assume "g \<in> { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+      hence "\<psi> g = ?eQ" using hgens_in_ker by (by100 blast)
+      moreover have "g \<in> FP" using hN'_gens_sub \<open>g \<in> _\<close> by (by100 blast)
+      ultimately show "g \<in> top1_group_kernel_on FP ?eQ \<psi>"
+        unfolding top1_group_kernel_on_def by (by100 blast)
+    qed
+    show "w \<in> top1_group_kernel_on FP ?eQ \<psi>"
+    proof -
+      have hN'_def_eq: "?N' = \<Inter>{K. { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K
+             \<and> top1_normal_subgroup_on FP mulFP eFP invgFP K}"
+        unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+      have "w \<in> \<Inter>{K. { mulFP (\<iota>fam 0 (?j_UV_U c))
+               (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K
+             \<and> top1_normal_subgroup_on FP mulFP eFP invgFP K}"
+        using hw hN'_def_eq by (by100 simp)
+      hence "w \<in> top1_group_kernel_on FP ?eQ \<psi>"
+        using hgens_in_ker2 hker_normal_FP by (by100 blast)
+      thus ?thesis .
+    qed
+  qed
+  \<comment> \<open>Apply first isomorphism theorem.\<close>
+  have hFP_N'_iso: "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on FP mulFP ?N')
+      (top1_quotient_group_mul_on mulFP)
+      (top1_quotient_group_carrier_on ?\<pi>U ?mulU ?N)
+      (top1_quotient_group_mul_on ?mulU)"
+  proof -
+    have "top1_groups_isomorphic_on ?Q ?mulQ
+        (top1_quotient_group_carrier_on FP mulFP ?N') (top1_quotient_group_mul_on mulFP)"
+      by (rule first_isomorphism_theorem[OF hFP_grp hN'_normal hQ_grp h\<psi>_hom h\<psi>_surj h\<psi>_ker])
+    thus ?thesis
+      by (rule top1_groups_isomorphic_on_sym[OF _ hQ_grp])
+         (rule quotient_group_is_group[OF hFP_grp hN'_normal])
+  qed
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF hSvK hFP_N'_iso])
+qed
 
 section \<open>Chapter 12: Classification of Surfaces\<close>
 
@@ -17962,6 +18926,1336 @@ qed
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
 
+text \<open>General lift uniqueness: if two continuous maps into a covering space
+  agree at one point, both lift the same base map, and the domain is connected,
+  then they agree everywhere.\<close>
+lemma covering_lift_unique_connected:
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTY: "is_topology_on Y TY" and hTB: "is_topology_on B TB" and hTE: "is_topology_on E TE"
+      and hconn: "top1_connected_on Y TY"
+      and hf1: "top1_continuous_map_on Y TY E TE f1"
+      and hf2: "top1_continuous_map_on Y TY E TE f2"
+      and hlift1: "\<forall>y\<in>Y. p (f1 y) = p (f2 y)"
+      and hagree: "y0 \<in> Y" and hf1f2: "f1 y0 = f2 y0"
+  shows "\<forall>y\<in>Y. f1 y = f2 y"
+proof -
+  \<comment> \<open>S = agreement set = {y \<in> Y | f1(y) = f2(y)}. Show S is open, closed, non-empty in Y.
+     Y connected \<Rightarrow> S = Y.\<close>
+  let ?S = "{y \<in> Y. f1 y = f2 y}"
+  have hS_ne: "?S \<noteq> {}" using hagree hf1f2 by (by100 blast)
+  \<comment> \<open>S is open: for y \<in> S, p(f1(y)) = p(f2(y)) has an evenly covered nbhd U.
+     f1(y) = f2(y) lies in one sheet V₀. Near y, both f1 and f2 map into V₀
+     (by continuity), and p is injective on V₀, so f1 = f2 near y.\<close>
+  have hS_open: "?S \<in> TY"
+  proof -
+    \<comment> \<open>For each y \<in> S, find open neighborhood contained in S.\<close>
+    have "\<forall>y\<in>?S. \<exists>W\<in>TY. y \<in> W \<and> W \<subseteq> ?S"
+    proof (intro ballI)
+      fix y assume hy: "y \<in> ?S"
+      hence hyY: "y \<in> Y" and hf12: "f1 y = f2 y" by (by100 blast)+
+      have hf1Y: "f1 y \<in> E" using hf1 hyY unfolding top1_continuous_map_on_def by (by100 blast)
+      have hpf1: "p (f1 y) \<in> B"
+        using hcov hf1Y unfolding top1_covering_map_on_def top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Get evenly covered U of p(f1(y)).\<close>
+      obtain U where hU: "p (f1 y) \<in> U" and hec: "top1_evenly_covered_on E TE B TB p U"
+        using hcov hpf1 unfolding top1_covering_map_on_def by (by100 blast)
+      obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+          and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+          and hV_cover: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+          and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                       (subspace_topology B TB U) p"
+        using hec unfolding top1_evenly_covered_on_def by blast
+      \<comment> \<open>f1(y) is in some sheet V₀.\<close>
+      have "f1 y \<in> {x\<in>E. p x \<in> U}" using hf1Y hU by (by100 blast)
+      hence "f1 y \<in> \<Union>\<V>" using hV_cover by (by100 simp)
+      then obtain V0 where hV0: "V0 \<in> \<V>" and hf1V0: "f1 y \<in> V0" by (by100 blast)
+      \<comment> \<open>f2(y) = f1(y) \<in> V₀.\<close>
+      have hf2V0: "f2 y \<in> V0" using hf12 hf1V0 by (by100 simp)
+      \<comment> \<open>V₀ is open in E.\<close>
+      have hV0_openE: "openin_on E TE V0" using hV_open hV0 by (by100 blast)
+      have hV0_sub: "V0 \<subseteq> E" using hV0_openE unfolding openin_on_def by (by100 blast)
+      have hV0_TE: "V0 \<in> TE" using hV0_openE unfolding openin_on_def by (by100 blast)
+      \<comment> \<open>f1⁻¹(V₀) and f2⁻¹(V₀) are open in Y.\<close>
+      have hf1_preV0: "{y\<in>Y. f1 y \<in> V0} \<in> TY"
+        using hf1 hV0_TE unfolding top1_continuous_map_on_def by (by100 blast)
+      have hf2_preV0: "{y\<in>Y. f2 y \<in> V0} \<in> TY"
+        using hf2 hV0_TE unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>W = f1⁻¹(V₀) \<inter> f2⁻¹(V₀) is open in Y.\<close>
+      let ?W = "{y\<in>Y. f1 y \<in> V0} \<inter> {y\<in>Y. f2 y \<in> V0}"
+      have hW_TY: "?W \<in> TY"
+      proof -
+        have "{y\<in>Y. f1 y \<in> V0} \<inter> {y\<in>Y. f2 y \<in> V0} \<in> TY"
+        proof -
+          have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY \<longrightarrow> \<Inter>F \<in> TY"
+            using hTY unfolding is_topology_on_def by (by100 blast)
+          let ?A = "{y\<in>Y. f1 y \<in> V0}" and ?B = "{y\<in>Y. f2 y \<in> V0}"
+          have hfin: "finite {?A, ?B}" by (by100 simp)
+          have hne: "{?A, ?B} \<noteq> {}" by (by100 blast)
+          have hsub: "{?A, ?B} \<subseteq> TY" using hf1_preV0 hf2_preV0 by (by100 blast)
+          have "\<Inter>{?A, ?B} \<in> TY"
+            using hinter hfin hne hsub by (by100 blast)
+          moreover have "\<Inter>{?A, ?B} = ?A \<inter> ?B" by (by100 auto)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        thus ?thesis by (by100 simp)
+      qed
+      have hyW: "y \<in> ?W" using hyY hf1V0 hf2V0 by (by100 blast)
+      \<comment> \<open>On W, f1 = f2 (p injective on V₀).\<close>
+      have hW_sub_S: "?W \<subseteq> ?S"
+      proof (rule subsetI)
+        fix z assume hz: "z \<in> ?W"
+        hence hzY: "z \<in> Y" and hf1z_V0: "f1 z \<in> V0" and hf2z_V0: "f2 z \<in> V0"
+          by (by100 blast)+
+        have "p (f1 z) = p (f2 z)" using hlift1 hzY by (by100 blast)
+        \<comment> \<open>p is injective on V₀ (homeomorphism, hence bij_betw, hence inj_on).\<close>
+        have hp_inj: "inj_on p V0"
+          using hV_homeo hV0 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "f1 z = f2 z" using hp_inj hf1z_V0 hf2z_V0 \<open>p (f1 z) = p (f2 z)\<close>
+          unfolding inj_on_def by (by100 blast)
+        thus "z \<in> ?S" using hzY by (by100 blast)
+      qed
+      show "\<exists>W\<in>TY. y \<in> W \<and> W \<subseteq> ?S"
+        apply (rule bexI[where x="?W"])
+        using hyW hW_sub_S hW_TY by (by100 blast)+
+    qed
+    \<comment> \<open>S is a union of open sets, hence open.\<close>
+    have "?S = \<Union>{W \<in> TY. W \<subseteq> ?S}"
+    proof (rule set_eqI)
+      fix y show "y \<in> ?S \<longleftrightarrow> y \<in> \<Union>{W \<in> TY. W \<subseteq> ?S}"
+      proof
+        assume "y \<in> ?S"
+        then obtain W where "W \<in> TY" "y \<in> W" "W \<subseteq> ?S"
+          using \<open>\<forall>y\<in>?S. _\<close> by (by100 blast)
+        thus "y \<in> \<Union>{W \<in> TY. W \<subseteq> ?S}" by (by100 blast)
+      next
+        assume "y \<in> \<Union>{W \<in> TY. W \<subseteq> ?S}"
+        thus "y \<in> ?S" by (by100 blast)
+      qed
+    qed
+    moreover have "\<Union>{W \<in> TY. W \<subseteq> ?S} \<in> TY"
+    proof -
+      have hunion: "\<forall>U. U \<subseteq> TY \<longrightarrow> \<Union>U \<in> TY"
+        using hTY unfolding is_topology_on_def by (by100 blast)
+      have "{W \<in> TY. W \<subseteq> ?S} \<subseteq> TY" by (by100 blast)
+      thus ?thesis using hunion by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Y \ S is open: for y \<in> Y \ S, f1(y) \<noteq> f2(y). Since p(f1(y)) = p(f2(y)),
+     f1(y) and f2(y) lie in different sheets V₁, V₂ over the same U.
+     Near y, f1 maps into V₁ and f2 into V₂ (continuity), so f1 \<noteq> f2 near y.\<close>
+  have hYmS_open: "Y - ?S \<in> TY"
+  proof -
+    \<comment> \<open>For each y \<in> Y \ S, find open neighborhood disjoint from S.\<close>
+    have "\<forall>y\<in>Y - ?S. \<exists>W\<in>TY. y \<in> W \<and> W \<subseteq> Y - ?S"
+    proof (intro ballI)
+      fix y assume hy: "y \<in> Y - ?S"
+      hence hyY: "y \<in> Y" and hf12_ne: "f1 y \<noteq> f2 y" by (by100 blast)+
+      have hf1Y: "f1 y \<in> E" using hf1 hyY unfolding top1_continuous_map_on_def by (by100 blast)
+      have hf2Y: "f2 y \<in> E" using hf2 hyY unfolding top1_continuous_map_on_def by (by100 blast)
+      have hpf1: "p (f1 y) \<in> B"
+        using hcov hf1Y unfolding top1_covering_map_on_def top1_continuous_map_on_def by (by100 blast)
+      obtain U where hU: "p (f1 y) \<in> U" and hec: "top1_evenly_covered_on E TE B TB p U"
+        using hcov hpf1 unfolding top1_covering_map_on_def by (by100 blast)
+      obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+          and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+          and hV_cover: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+          and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                       (subspace_topology B TB U) p"
+        using hec unfolding top1_evenly_covered_on_def by blast
+      \<comment> \<open>f1(y) and f2(y) are in different sheets (p(f1(y)) = p(f2(y)) but f1(y) \<noteq> f2(y)).\<close>
+      have "f1 y \<in> {x\<in>E. p x \<in> U}" using hf1Y hU by (by100 blast)
+      then obtain V1 where hV1: "V1 \<in> \<V>" and hf1V1: "f1 y \<in> V1"
+        using hV_cover by (by100 blast)
+      have hpf2: "p (f2 y) \<in> U"
+      proof -
+        have "p (f1 y) = p (f2 y)" using hlift1 hyY by (by100 blast)
+        thus ?thesis using hU by (by100 simp)
+      qed
+      have "f2 y \<in> {x\<in>E. p x \<in> U}" using hf2Y hpf2 by (by100 blast)
+      then obtain V2 where hV2: "V2 \<in> \<V>" and hf2V2: "f2 y \<in> V2"
+        using hV_cover by (by100 blast)
+      have hV12_ne: "V1 \<noteq> V2"
+      proof
+        assume "V1 = V2"
+        hence "f2 y \<in> V1" using hf2V2 by (by100 simp)
+        have hp_inj: "inj_on p V1"
+          using hV_homeo hV1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "p (f1 y) = p (f2 y)" using hlift1 hyY by (by100 blast)
+        hence "f1 y = f2 y"
+          using hp_inj hf1V1 \<open>f2 y \<in> V1\<close> unfolding inj_on_def by (by100 blast)
+        thus False using hf12_ne by (by100 blast)
+      qed
+      have hV1_TE: "V1 \<in> TE" using hV_open hV1 unfolding openin_on_def by (by100 blast)
+      have hV2_TE: "V2 \<in> TE" using hV_open hV2 unfolding openin_on_def by (by100 blast)
+      \<comment> \<open>W = f1⁻¹(V1) \<inter> f2⁻¹(V2) is open and f1 \<noteq> f2 on W (different sheets, disjoint).\<close>
+      let ?W = "{y\<in>Y. f1 y \<in> V1} \<inter> {y\<in>Y. f2 y \<in> V2}"
+      have hf1_pre: "{y\<in>Y. f1 y \<in> V1} \<in> TY"
+        using hf1 hV1_TE unfolding top1_continuous_map_on_def by (by100 blast)
+      have hf2_pre: "{y\<in>Y. f2 y \<in> V2} \<in> TY"
+        using hf2 hV2_TE unfolding top1_continuous_map_on_def by (by100 blast)
+      have hinter': "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY \<longrightarrow> \<Inter>F \<in> TY"
+        using hTY unfolding is_topology_on_def by (by100 blast)
+      let ?A' = "{y\<in>Y. f1 y \<in> V1}" and ?B' = "{y\<in>Y. f2 y \<in> V2}"
+      have hW_TY: "?W \<in> TY"
+      proof -
+        have hfin': "finite {?A', ?B'}" by (by100 simp)
+        have hne': "{?A', ?B'} \<noteq> {}" by (by100 blast)
+        have hsub': "{?A', ?B'} \<subseteq> TY" using hf1_pre hf2_pre by (by100 blast)
+        have "\<Inter>{?A', ?B'} \<in> TY"
+          using hinter' hfin' hne' hsub' by (by100 blast)
+        moreover have "\<Inter>{?A', ?B'} = ?A' \<inter> ?B'" by (by100 auto)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hyW: "y \<in> ?W" using hyY hf1V1 hf2V2 by (by100 blast)
+      have hW_disj: "?W \<subseteq> Y - ?S"
+      proof (rule subsetI)
+        fix z assume hz: "z \<in> ?W"
+        hence hzY: "z \<in> Y" and hf1z_V1: "f1 z \<in> V1" and hf2z_V2: "f2 z \<in> V2"
+          by (by100 blast)+
+        have hV12_disj: "V1 \<inter> V2 = {}" using hV_disj hV1 hV2 hV12_ne by (by100 blast)
+        have "f1 z \<noteq> f2 z"
+        proof
+          assume "f1 z = f2 z"
+          hence "f1 z \<in> V2" using hf2z_V2 by (by100 simp)
+          hence "f1 z \<in> V1 \<inter> V2" using hf1z_V1 by (by100 blast)
+          thus False using hV12_disj by (by100 blast)
+        qed
+        thus "z \<in> Y - ?S" using hzY by (by100 blast)
+      qed
+      show "\<exists>W\<in>TY. y \<in> W \<and> W \<subseteq> Y - ?S"
+        apply (rule bexI[where x="?W"])
+        using hyW hW_disj hW_TY by (by100 blast)+
+    qed
+    have "Y - ?S = \<Union>{W \<in> TY. W \<subseteq> Y - ?S}"
+    proof (rule set_eqI)
+      fix y show "y \<in> Y - ?S \<longleftrightarrow> y \<in> \<Union>{W \<in> TY. W \<subseteq> Y - ?S}"
+      proof
+        assume "y \<in> Y - ?S"
+        then obtain W where "W \<in> TY" "y \<in> W" "W \<subseteq> Y - ?S"
+          using \<open>\<forall>y\<in>Y - ?S. _\<close> by (by100 blast)
+        thus "y \<in> \<Union>{W \<in> TY. W \<subseteq> Y - ?S}" by (by100 blast)
+      next
+        assume "y \<in> \<Union>{W \<in> TY. W \<subseteq> Y - ?S}" thus "y \<in> Y - ?S" by (by100 blast)
+      qed
+    qed
+    moreover have "\<Union>{W \<in> TY. W \<subseteq> Y - ?S} \<in> TY"
+    proof -
+      have hunion: "\<forall>U. U \<subseteq> TY \<longrightarrow> \<Union>U \<in> TY"
+        using hTY unfolding is_topology_on_def by (by100 blast)
+      have "{W \<in> TY. W \<subseteq> Y - ?S} \<subseteq> TY" by (by100 blast)
+      thus ?thesis using hunion by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Y connected + S non-empty + S open + complement open \<Rightarrow> S = Y.\<close>
+  have "?S = Y"
+  proof -
+    have "?S \<subseteq> Y" by (by100 blast)
+    moreover have "?S \<in> TY" by (rule hS_open)
+    moreover have "Y - ?S \<in> TY" by (rule hYmS_open)
+    moreover have "?S \<noteq> {}" by (rule hS_ne)
+    ultimately show ?thesis using hconn unfolding top1_connected_on_def by (by100 blast)
+  qed
+  thus ?thesis by (by100 blast)
+qed
+
+text \<open>Helper: path-connected implies connected.\<close>
+lemma path_connected_imp_connected:
+  assumes "top1_path_connected_on X TX"
+  shows "top1_connected_on X TX"
+  unfolding top1_connected_on_def
+proof (intro conjI)
+  have hTX: "is_topology_on X TX"
+    using assms unfolding top1_path_connected_on_def by (by100 blast)
+  show "is_topology_on X TX" by (rule hTX)
+  show "\<nexists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+  proof (rule notI)
+    assume "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
+    then obtain U0 V0 where hU0: "U0 \<in> TX" and hV0: "V0 \<in> TX" and hU0ne: "U0 \<noteq> {}"
+        and hV0ne: "V0 \<noteq> {}" and hdisj: "U0 \<inter> V0 = {}" and hcover: "U0 \<union> V0 = X"
+      by (by100 blast)
+    obtain a where ha: "a \<in> U0" using hU0ne by (by100 blast)
+    obtain b where hb: "b \<in> V0" using hV0ne by (by100 blast)
+    have haX: "a \<in> X" using ha hcover by (by100 blast)
+    have hbX: "b \<in> X" using hb hcover by (by100 blast)
+    \<comment> \<open>Path from a to b (path-connected).\<close>
+    obtain \<gamma> where h\<gamma>: "top1_is_path_on X TX a b \<gamma>"
+      using assms haX hbX unfolding top1_path_connected_on_def by (by100 auto)
+    \<comment> \<open>\<gamma> maps [0,1] into X = U0 \<union> V0. The preimages \<gamma>⁻¹(U0) and \<gamma>⁻¹(V0) cover [0,1].
+       \<gamma>(0) = a \<in> U0 and \<gamma>(1) = b \<in> V0. Since [0,1] is connected,
+       \<gamma>⁻¹(U0) \<inter> \<gamma>⁻¹(V0) \<noteq> {}. But U0 \<inter> V0 = {}, contradiction.\<close>
+    have h\<gamma>0: "\<gamma> 0 = a" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+    have h\<gamma>1: "\<gamma> 1 = b" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+    have h\<gamma>_cont: "top1_continuous_map_on I_set I_top X TX \<gamma>"
+      using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+    \<comment> \<open>Preimages of U0 and V0 under \<gamma> are open in [0,1].\<close>
+    have hpreU: "{s \<in> I_set. \<gamma> s \<in> U0} \<in> I_top"
+      using h\<gamma>_cont hU0 unfolding top1_continuous_map_on_def by (by100 blast)
+    have hpreV: "{s \<in> I_set. \<gamma> s \<in> V0} \<in> I_top"
+      using h\<gamma>_cont hV0 unfolding top1_continuous_map_on_def by (by100 blast)
+    \<comment> \<open>They cover [0,1] and are disjoint.\<close>
+    have hcov_I: "{s \<in> I_set. \<gamma> s \<in> U0} \<union> {s \<in> I_set. \<gamma> s \<in> V0} = I_set"
+    proof (rule set_eqI)
+      fix s show "s \<in> {s \<in> I_set. \<gamma> s \<in> U0} \<union> {s \<in> I_set. \<gamma> s \<in> V0} \<longleftrightarrow> s \<in> I_set"
+      proof
+        assume "s \<in> {s \<in> I_set. \<gamma> s \<in> U0} \<union> {s \<in> I_set. \<gamma> s \<in> V0}" thus "s \<in> I_set" by (by100 blast)
+      next
+        assume hs: "s \<in> I_set"
+        hence "\<gamma> s \<in> X" using h\<gamma>_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        hence "\<gamma> s \<in> U0 \<or> \<gamma> s \<in> V0" using hcover by (by100 blast)
+        thus "s \<in> {s \<in> I_set. \<gamma> s \<in> U0} \<union> {s \<in> I_set. \<gamma> s \<in> V0}" using hs by (by100 blast)
+      qed
+    qed
+    have hdisj_I: "{s \<in> I_set. \<gamma> s \<in> U0} \<inter> {s \<in> I_set. \<gamma> s \<in> V0} = {}"
+      using hdisj by (by100 blast)
+    have hneU: "{s \<in> I_set. \<gamma> s \<in> U0} \<noteq> {}"
+    proof -
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "\<gamma> 0 \<in> U0" using h\<gamma>0 ha by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hneV: "{s \<in> I_set. \<gamma> s \<in> V0} \<noteq> {}"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "\<gamma> 1 \<in> V0" using h\<gamma>1 hb by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>[0,1] is connected (I_set with I_top).\<close>
+    have hI_conn: "top1_connected_on I_set I_top"
+      by (rule top1_unit_interval_connected)
+    \<comment> \<open>Contradiction: connected set separated by two disjoint nonempty open sets.\<close>
+    show False using hI_conn hpreU hpreV hneU hneV hdisj_I hcov_I
+      unfolding top1_connected_on_def by (by100 blast)
+  qed
+qed
+
+text \<open>General lifting criterion (Munkres Theorem 79.1): given a covering map p: E \<rightarrow> B,
+  a continuous map f: Y \<rightarrow> B with Y path-connected and locally path-connected,
+  if f_*(\<pi>_1(Y)) \<subseteq> p_*(\<pi>_1(E)), then f lifts to a continuous map \<tilde>f: Y \<rightarrow> E
+  with p \<circ> \<tilde>f = f and \<tilde>f(y0) = e0.\<close>
+lemma general_lifting_criterion:
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTY: "is_topology_on Y TY" and hTB: "is_topology_on B TB" and hTE: "is_topology_on E TE"
+      and hf: "top1_continuous_map_on Y TY B TB f"
+      and hYpc: "top1_path_connected_on Y TY"
+      and hYlpc: "top1_locally_path_connected_on Y TY"
+      and hy0: "y0 \<in> Y" and he0: "e0 \<in> E" and hfy0: "f y0 = p e0"
+      and hsubgrp: "top1_fundamental_group_image_hom Y TY y0 B TB (p e0) f
+          \<subseteq> top1_fundamental_group_image_hom E TE e0 B TB (p e0) p"
+  shows "\<exists>ftilde. (\<forall>y\<in>Y. ftilde y \<in> E) \<and> (\<forall>y\<in>Y. p (ftilde y) = f y)
+      \<and> ftilde y0 = e0 \<and> top1_continuous_map_on Y TY E TE ftilde"
+proof -
+  \<comment> \<open>Step 1: Define ftilde(y) for each y \<in> Y.
+     Pick path \<alpha> from y0 to y (Y path-connected).
+     f\<circ>\<alpha> is a path from f(y0) = p(e0) to f(y) in B.
+     Lift f\<circ>\<alpha> to E starting at e0.
+     ftilde(y) = lift endpoint.\<close>
+  let ?b0 = "p e0"
+  \<comment> \<open>For each y \<in> Y, obtain a path from y0 to y.\<close>
+  have hpath_exists: "\<forall>y\<in>Y. \<exists>\<alpha>. top1_is_path_on Y TY y0 y \<alpha>"
+    using hYpc hy0 unfolding top1_path_connected_on_def by (by100 auto)
+  \<comment> \<open>For each path \<alpha>, f\<circ>\<alpha> can be lifted to E.\<close>
+  have hlift_exists: "\<forall>y\<in>Y. \<forall>\<alpha>. top1_is_path_on Y TY y0 y \<alpha> \<longrightarrow>
+      (\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s)))"
+  proof (intro ballI allI impI)
+    fix y \<alpha> assume hy: "y \<in> Y" and h\<alpha>: "top1_is_path_on Y TY y0 y \<alpha>"
+    have hf\<alpha>: "top1_is_path_on B TB ?b0 (f y) (f \<circ> \<alpha>)"
+    proof -
+      have "top1_continuous_map_on I_set I_top B TB (f \<circ> \<alpha>)"
+        by (rule top1_continuous_map_on_comp)
+           (use h\<alpha> hf in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      moreover have "(f \<circ> \<alpha>) 0 = ?b0"
+        using h\<alpha> hfy0 unfolding top1_is_path_on_def by (by100 simp)
+      moreover have "(f \<circ> \<alpha>) 1 = f y"
+        using h\<alpha> unfolding top1_is_path_on_def by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have "\<exists>ft'. top1_is_path_on E TE e0 (ft' 1) ft' \<and> (\<forall>s\<in>I_set. p (ft' s) = (f \<circ> \<alpha>) s)"
+    proof (rule Lemma_54_1_path_lifting)
+      show "top1_covering_map_on E TE B TB p" by (rule hcov)
+      show "e0 \<in> E" by (rule he0)
+      show "p e0 = p e0" by (by100 simp)
+      show "top1_is_path_on B TB (p e0) (f y) (f \<circ> \<alpha>)" by (rule hf\<alpha>)
+      show "is_topology_on B TB" by (rule hTB)
+      show "is_topology_on E TE" by (rule hTE)
+    qed
+    then obtain ft where hft: "top1_is_path_on E TE e0 (ft 1) ft"
+        and hftp: "\<forall>s\<in>I_set. p (ft s) = (f \<circ> \<alpha>) s" by (by100 blast)
+    have "\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s)" using hftp by (by100 simp)
+    thus "\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s))"
+      using hft by (by100 blast)
+  qed
+  \<comment> \<open>Step 2: Well-definedness. Any two paths \<alpha>1, \<alpha>2 from y0 to y give the same lift endpoint.
+     \<alpha>1\<cdot>\<alpha>2\<inverse> is a loop at y0. f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) is a loop at p(e0) in B.
+     [f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>)] \<in> f_*(\<pi>_1(Y)) \<subseteq> p_*(\<pi>_1(E)) (by hsubgrp).
+     So there exists a loop \<delta> at e0 in E with p\<circ>\<delta> \<simeq> f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>).
+     By Theorem_54_3: lifts from e0 of path-homotopic loops have same endpoints.
+     The lift of f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) from e0 is a loop (since it lifts p\<circ>\<delta> which is homotopic,
+     and \<delta> lifts to itself, ending at e0).
+     This loop decomposes as: lift(f\<circ>\<alpha>1) followed by reverse(lift(f\<circ>\<alpha>2)).
+     Both starting at e0, so the endpoints of lift(f\<circ>\<alpha>1) and lift(f\<circ>\<alpha>2) agree.\<close>
+  have hwd: "\<forall>y\<in>Y. \<forall>\<alpha>1 \<alpha>2 ft1 ft2.
+      top1_is_path_on Y TY y0 y \<alpha>1 \<longrightarrow>
+      top1_is_path_on Y TY y0 y \<alpha>2 \<longrightarrow>
+      top1_is_path_on E TE e0 (ft1 1) ft1 \<longrightarrow> (\<forall>s\<in>I_set. p (ft1 s) = f (\<alpha>1 s)) \<longrightarrow>
+      top1_is_path_on E TE e0 (ft2 1) ft2 \<longrightarrow> (\<forall>s\<in>I_set. p (ft2 s) = f (\<alpha>2 s)) \<longrightarrow>
+      ft1 1 = ft2 1"
+  proof (intro ballI allI impI)
+    fix y \<alpha>1 \<alpha>2 ft1 ft2
+    assume hy: "y \<in> Y"
+        and h\<alpha>1: "top1_is_path_on Y TY y0 y \<alpha>1"
+        and h\<alpha>2: "top1_is_path_on Y TY y0 y \<alpha>2"
+        and hft1: "top1_is_path_on E TE e0 (ft1 1) ft1"
+        and hft1p: "\<forall>s\<in>I_set. p (ft1 s) = f (\<alpha>1 s)"
+        and hft2: "top1_is_path_on E TE e0 (ft2 1) ft2"
+        and hft2p: "\<forall>s\<in>I_set. p (ft2 s) = f (\<alpha>2 s)"
+    \<comment> \<open>f\<circ>\<alpha>1 and f\<circ>\<alpha>2 are paths from p(e0) to f(y) in B.\<close>
+    have hf\<alpha>1: "top1_is_path_on B TB ?b0 (f y) (f \<circ> \<alpha>1)"
+    proof -
+      have "top1_continuous_map_on I_set I_top B TB (f \<circ> \<alpha>1)"
+        by (rule top1_continuous_map_on_comp)
+           (use h\<alpha>1 hf in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      moreover have "(f \<circ> \<alpha>1) 0 = ?b0" using h\<alpha>1 hfy0 unfolding top1_is_path_on_def by (by100 simp)
+      moreover have "(f \<circ> \<alpha>1) 1 = f y" using h\<alpha>1 unfolding top1_is_path_on_def by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have hf\<alpha>2: "top1_is_path_on B TB ?b0 (f y) (f \<circ> \<alpha>2)"
+    proof -
+      have "top1_continuous_map_on I_set I_top B TB (f \<circ> \<alpha>2)"
+        by (rule top1_continuous_map_on_comp)
+           (use h\<alpha>2 hf in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      moreover have "(f \<circ> \<alpha>2) 0 = ?b0" using h\<alpha>2 hfy0 unfolding top1_is_path_on_def by (by100 simp)
+      moreover have "(f \<circ> \<alpha>2) 1 = f y" using h\<alpha>2 unfolding top1_is_path_on_def by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    \<comment> \<open>ft1 lifts f\<circ>\<alpha>1 from e0, ft2 lifts f\<circ>\<alpha>2 from e0.\<close>
+    have hft1_lift: "\<forall>s\<in>I_set. p (ft1 s) = (f \<circ> \<alpha>1) s"
+      using hft1p by (by100 simp)
+    have hft2_lift: "\<forall>s\<in>I_set. p (ft2 s) = (f \<circ> \<alpha>2) s"
+      using hft2p by (by100 simp)
+    \<comment> \<open>\<alpha>1\<cdot>\<alpha>2\<inverse> is a loop at y0. f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) is a loop at p(e0) in B.\<close>
+    have h\<alpha>2_rev: "top1_is_path_on Y TY y y0 (top1_path_reverse \<alpha>2)"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>2])
+    have hloop_Y: "top1_is_loop_on Y TY y0 (top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+    proof -
+      have "top1_is_path_on Y TY y0 y0 (top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+        by (rule top1_path_product_is_path[OF hTY h\<alpha>1 h\<alpha>2_rev])
+      thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+    qed
+    \<comment> \<open>[f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>)] \<in> p_*(\<pi>_1(E,e0)): from hsubgrp (f_* \<subseteq> p_*).\<close>
+    \<comment> \<open>\<Rightarrow> \<exists> loop \<delta> at e0 in E with [p\<circ>\<delta>] = [f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>)].\<close>
+    \<comment> \<open>\<delta> lifts p\<circ>\<delta> from e0, ending at e0 (loop).\<close>
+    \<comment> \<open>By Theorem_54_3: lift of f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) from e0 also ends at e0.\<close>
+    \<comment> \<open>Now the lift of (f\<circ>\<alpha>1)\<cdot>(f\<circ>\<alpha>2)\<inverse> from e0 is: ft1 followed by lift of (f\<circ>\<alpha>2)\<inverse> from ft1(1).
+       Since this composite ends at e0, the second part goes from ft1(1) to e0.
+       Its reverse lifts f\<circ>\<alpha>2 from e0 to ft1(1).
+       By Lemma_54_1_uniqueness: ft2 agrees with this reverse \<Rightarrow> ft2(1) = ft1(1).\<close>
+    \<comment> \<open>Get \<delta>: loop at e0 in E with p\<circ>\<delta> ~ f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>).\<close>
+    have hfloop: "top1_is_loop_on B TB ?b0 (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+    proof -
+      have "top1_is_path_on Y TY y0 y0 (top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+        by (rule top1_path_product_is_path[OF hTY h\<alpha>1 h\<alpha>2_rev])
+      hence "top1_is_path_on B TB ?b0 ?b0 (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+      proof -
+        have "top1_continuous_map_on I_set I_top B TB (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+          by (rule top1_continuous_map_on_comp)
+             (use \<open>top1_is_path_on Y TY y0 y0 _\<close> hf in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+        moreover have "(f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) 0 = ?b0"
+          using \<open>top1_is_path_on Y TY y0 y0 _\<close> hfy0 unfolding top1_is_path_on_def by (by100 simp)
+        moreover have "(f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) 1 = ?b0"
+          using \<open>top1_is_path_on Y TY y0 y0 _\<close> hfy0 unfolding top1_is_path_on_def by (by100 simp)
+        ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+      qed
+      thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+    qed
+    \<comment> \<open>[f\<circ>loop] \<in> p_*(\<pi>_1(E)). Extract \<delta> with p\<circ>\<delta> ~ f\<circ>loop.\<close>
+    \<comment> \<open>The loop class of f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) is in f_*(\<pi>_1(Y)) \<subseteq> p_*(\<pi>_1(E)).\<close>
+    let ?\<beta> = "top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)"
+    have hclass_in_Y: "top1_fundamental_group_induced_on Y TY y0 B TB ?b0 f
+        {g. top1_loop_equiv_on Y TY y0 ?\<beta> g}
+      \<in> top1_fundamental_group_image_hom Y TY y0 B TB ?b0 f"
+    proof -
+      have "{g. top1_loop_equiv_on Y TY y0 ?\<beta> g} \<in> top1_fundamental_group_carrier Y TY y0"
+        unfolding top1_fundamental_group_carrier_def
+        using top1_loop_equiv_on_refl[OF hloop_Y] hloop_Y by (by100 blast)
+      thus ?thesis unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+    qed
+    \<comment> \<open>So the induced class is in p_*(\<pi>_1(E)).\<close>
+    have hclass_in_E: "top1_fundamental_group_induced_on Y TY y0 B TB ?b0 f
+        {g. top1_loop_equiv_on Y TY y0 ?\<beta> g}
+      \<in> top1_fundamental_group_image_hom E TE e0 B TB ?b0 p"
+      using hsubgrp hclass_in_Y by (by100 blast)
+    \<comment> \<open>Extract \<delta>: loop at e0 with [p\<circ>\<delta>] = induced_f([loop]).\<close>
+    obtain \<delta> where h\<delta>_loop: "top1_is_loop_on E TE e0 \<delta>"
+        and h\<delta>_hom: "top1_path_homotopic_on B TB ?b0 ?b0
+            (p \<circ> \<delta>) (f \<circ> ?\<beta>)"
+    proof -
+      \<comment> \<open>Unpack: hclass_in_E says the f-induced class is in the p-image of \<pi>_1(E).\<close>
+      from hclass_in_E obtain c where hc: "c \<in> top1_fundamental_group_carrier E TE e0"
+          and hpc: "top1_fundamental_group_induced_on E TE e0 B TB ?b0 p c
+              = top1_fundamental_group_induced_on Y TY y0 B TB ?b0 f
+                  {g. top1_loop_equiv_on Y TY y0 ?\<beta> g}"
+        unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+      \<comment> \<open>c = {g. loop_equiv(E, e0, \<delta>, g)} for some loop \<delta> at e0.\<close>
+      from hc obtain \<delta>' where h\<delta>': "top1_is_loop_on E TE e0 \<delta>'"
+          and hc_eq: "c = {g. top1_loop_equiv_on E TE e0 \<delta>' g}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>p_*(c) = {g. loop_equiv(B, p e0, p\<circ>\<delta>', g)}.\<close>
+      have hp_c: "top1_fundamental_group_induced_on E TE e0 B TB ?b0 p c
+          = {g. \<exists>h\<in>c. top1_loop_equiv_on B TB ?b0 (p \<circ> h) g}"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      \<comment> \<open>f_*([β]) = {g. loop_equiv(B, p e0, f\<circ>β, g)} (approximately).\<close>
+      \<comment> \<open>From hpc: the two induced classes are equal as sets.
+         \<delta>' \<in> c, so p\<circ>\<delta>' gives a representative of p_*(c).
+         β gives a representative of f_*([β]).
+         Equal classes \<Rightarrow> p\<circ>\<delta>' ~ f\<circ>β.\<close>
+      have h\<delta>'_in_c: "\<delta>' \<in> c" using hc_eq top1_loop_equiv_on_refl[OF h\<delta>'] by (by100 blast)
+      \<comment> \<open>p\<circ>\<delta>' is loop-equiv to itself, so it's in p_*(c).\<close>
+      have hp\<delta>'_in: "p \<circ> \<delta>' \<in> {g. \<exists>h\<in>c. top1_loop_equiv_on B TB ?b0 (p \<circ> h) g}"
+      proof -
+        have "top1_is_loop_on B TB ?b0 (p \<circ> \<delta>')"
+        proof -
+          have h\<delta>'_path: "top1_is_path_on E TE e0 e0 \<delta>'"
+            using h\<delta>' unfolding top1_is_loop_on_def by (by100 blast)
+          have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<delta>')"
+            by (rule top1_continuous_map_on_comp)
+               (use h\<delta>'_path top1_covering_map_on_continuous[OF hcov] in
+                  \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+          moreover have "(p \<circ> \<delta>') 0 = ?b0"
+            using h\<delta>'_path unfolding top1_is_path_on_def by (by100 simp)
+          moreover have "(p \<circ> \<delta>') 1 = ?b0"
+            using h\<delta>'_path unfolding top1_is_path_on_def by (by100 simp)
+          ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+            by (by100 blast)
+        qed
+        hence "top1_loop_equiv_on B TB ?b0 (p \<circ> \<delta>') (p \<circ> \<delta>')"
+          by (rule top1_loop_equiv_on_refl)
+        thus ?thesis using h\<delta>'_in_c by (by100 blast)
+      qed
+      \<comment> \<open>f\<circ>β is loop-equiv to itself, so it's in f_*([β]).\<close>
+      have hf\<beta>_in: "f \<circ> ?\<beta> \<in> {g. \<exists>h\<in>{g. top1_loop_equiv_on Y TY y0 ?\<beta> g}.
+          top1_loop_equiv_on B TB ?b0 (f \<circ> h) g}"
+      proof -
+        have "?\<beta> \<in> {g. top1_loop_equiv_on Y TY y0 ?\<beta> g}"
+          using top1_loop_equiv_on_refl[OF hloop_Y] by (by100 blast)
+        moreover have "top1_loop_equiv_on B TB ?b0 (f \<circ> ?\<beta>) (f \<circ> ?\<beta>)"
+          by (rule top1_loop_equiv_on_refl[OF hfloop])
+        ultimately show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>Since p_*(c) = f_*([β]) and p\<circ>\<delta>' \<in> p_*(c), f\<circ>β \<in> f_*([β]),
+         and both are equivalence classes, p\<circ>\<delta>' ~ f\<circ>β.\<close>
+      have "p \<circ> \<delta>' \<in> top1_fundamental_group_induced_on E TE e0 B TB ?b0 p c"
+        using hp\<delta>'_in hp_c by (by100 simp)
+      hence "p \<circ> \<delta>' \<in> top1_fundamental_group_induced_on Y TY y0 B TB ?b0 f
+          {g. top1_loop_equiv_on Y TY y0 ?\<beta> g}"
+        using hpc by (by100 simp)
+      hence "\<exists>h. top1_loop_equiv_on Y TY y0 ?\<beta> h \<and> top1_loop_equiv_on B TB ?b0 (f \<circ> h) (p \<circ> \<delta>')"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      then obtain \<beta>' where h\<beta>': "top1_loop_equiv_on Y TY y0 ?\<beta> \<beta>'"
+          and hp\<delta>'_f\<beta>': "top1_loop_equiv_on B TB ?b0 (f \<circ> \<beta>') (p \<circ> \<delta>')" by (by100 blast)
+      \<comment> \<open>f\<circ>β ~ f\<circ>β' (since β ~ β') and f\<circ>β' ~ p\<circ>δ'. So f\<circ>β ~ p\<circ>δ'.\<close>
+      have hf\<beta>_f\<beta>': "top1_loop_equiv_on B TB ?b0 (f \<circ> ?\<beta>) (f \<circ> \<beta>')"
+      proof -
+        have h\<beta>'_loop: "top1_is_loop_on Y TY y0 \<beta>'"
+          using h\<beta>' unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_loop_equiv_on B TB (f y0) (f \<circ> ?\<beta>) (f \<circ> \<beta>')"
+          by (rule top1_induced_preserves_loop_equiv[OF hTY hf hloop_Y h\<beta>'_loop h\<beta>'])
+        thus ?thesis using hfy0 by (by100 simp)
+      qed
+      \<comment> \<open>Chain: f\<circ>β ~ f\<circ>β' (by hf\<beta>_f\<beta>'), f\<circ>β' ~ p\<circ>δ' (sym of hp\<delta>'_f\<beta>').\<close>
+      \<comment> \<open>hp\<delta>'_f\<beta>' says f\<circ>\<beta>' ~ p\<circ>\<delta>', which is already the right direction.\<close>
+      have hf\<beta>_p\<delta>': "top1_loop_equiv_on B TB ?b0 (f \<circ> ?\<beta>) (p \<circ> \<delta>')"
+        by (rule top1_loop_equiv_on_trans[OF hTB hf\<beta>_f\<beta>' hp\<delta>'_f\<beta>'])
+      have hp\<delta>'_f\<beta>: "top1_loop_equiv_on B TB ?b0 (p \<circ> \<delta>') (f \<circ> ?\<beta>)"
+        by (rule top1_loop_equiv_on_sym[OF hf\<beta>_p\<delta>'])
+      have "top1_path_homotopic_on B TB ?b0 ?b0 (p \<circ> \<delta>') (f \<circ> ?\<beta>)"
+        using hp\<delta>'_f\<beta> unfolding top1_loop_equiv_on_def by (by100 blast)
+      thus ?thesis using h\<delta>' that by (by100 blast)
+    qed
+    \<comment> \<open>By Theorem_54_3: \<delta> lifts p\<circ>\<delta> from e0 (loop \<Rightarrow> ends at e0).
+       The lift of f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) from e0 also ends at e0.\<close>
+    \<comment> \<open>Get a lift of f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) from e0.\<close>
+    have hfloop_path: "top1_is_path_on B TB ?b0 ?b0
+        (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+      using hfloop unfolding top1_is_loop_on_def by (by100 blast)
+    have "\<exists>ft'. top1_is_path_on E TE e0 (ft' 1) ft'
+        \<and> (\<forall>s\<in>I_set. p (ft' s) = (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) s)"
+    proof (rule Lemma_54_1_path_lifting)
+      show "top1_covering_map_on E TE B TB p" by (rule hcov)
+      show "e0 \<in> E" by (rule he0)
+      show "p e0 = p e0" by (by100 simp)
+      show "top1_is_path_on B TB (p e0) ?b0
+          (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))" using hfloop_path by (by100 simp)
+      show "is_topology_on B TB" by (rule hTB)
+      show "is_topology_on E TE" by (rule hTE)
+    qed
+    then obtain ft_loop where hft_loop: "top1_is_path_on E TE e0 (ft_loop 1) ft_loop"
+        and hft_loop_lift: "\<forall>s\<in>I_set. p (ft_loop s) = (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) s"
+      by (by100 blast)
+    \<comment> \<open>By Theorem_54_3 with p\<circ>\<delta> ~ f\<circ>loop: ft_loop(1) = \<delta>(1) = e0.\<close>
+    have hft_loop_end: "ft_loop 1 = e0"
+    proof -
+      have h\<delta>_path: "top1_is_path_on E TE e0 e0 \<delta>"
+        using h\<delta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have h\<delta>_lift: "\<forall>s\<in>I_set. p (\<delta> s) = (p \<circ> \<delta>) s" by (by100 simp)
+      have hp\<delta>_path: "top1_is_path_on B TB ?b0 ?b0 (p \<circ> \<delta>)"
+      proof -
+        have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<delta>)"
+          by (rule top1_continuous_map_on_comp)
+             (use h\<delta>_path top1_covering_map_on_continuous[OF hcov] in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+        moreover have "(p \<circ> \<delta>) 0 = ?b0"
+          using h\<delta>_path unfolding top1_is_path_on_def by (by100 simp)
+        moreover have "(p \<circ> \<delta>) 1 = ?b0"
+          using h\<delta>_path unfolding top1_is_path_on_def by (by100 simp)
+        ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+      qed
+      have "e0 = ft_loop 1 \<and> top1_path_homotopic_on E TE e0 e0 \<delta> ft_loop"
+      proof (rule Theorem_54_3[OF hcov hTE hTB he0])
+        show "p e0 = p e0" by (by100 simp)
+        show "top1_is_path_on B TB (p e0) (p e0) (p \<circ> \<delta>)" using hp\<delta>_path by (by100 simp)
+        show "top1_is_path_on B TB (p e0) (p e0) (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))"
+          using hfloop_path by (by100 simp)
+        show "top1_path_homotopic_on B TB (p e0) (p e0) (p \<circ> \<delta>)
+            (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2))" using h\<delta>_hom by (by100 simp)
+        show "top1_is_path_on E TE e0 e0 \<delta>" by (rule h\<delta>_path)
+        show "\<forall>s\<in>I_set. p (\<delta> s) = (p \<circ> \<delta>) s" by (by100 simp)
+        show "top1_is_path_on E TE e0 (ft_loop 1) ft_loop" by (rule hft_loop)
+        show "\<forall>s\<in>I_set. p (ft_loop s) = (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) s"
+          by (rule hft_loop_lift)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>ft_loop lifts f\<circ>(\<alpha>1\<cdot>\<alpha>2\<inverse>) from e0, ending at e0.
+       Now use Lemma_54_1_uniqueness to relate ft_loop to ft1 and ft2.\<close>
+    \<comment> \<open>The first half of ft_loop (rescaled to [0,1]) lifts f\<circ>\<alpha>1.
+       By uniqueness with ft1: they agree, in particular ft_loop(1/2) = ft1(1).
+       The second half reversed lifts f\<circ>\<alpha>2.
+       By uniqueness with ft2: ft_loop(1/2) = ft2(1).
+       So ft1(1) = ft2(1).\<close>
+    \<comment> \<open>First half of ft_loop (rescaled) lifts f\<circ>\<alpha>1 from e0.
+       By uniqueness with ft1: ft_loop(1/2) = ft1(1).
+       Second half reversed lifts f\<circ>\<alpha>2 from e0 (since ft_loop ends at e0).
+       By uniqueness with ft2: ft_loop(1/2) = ft2(1).
+       Therefore ft1(1) = ft2(1).\<close>
+    \<comment> \<open>g1(s) = ft_loop(s/2) is a path lifting f\<circ>\<alpha>1 from e0.\<close>
+    let ?g1 = "\<lambda>s. ft_loop (s / 2)"
+    have hg1_path: "top1_is_path_on E TE e0 (ft_loop (1/2)) ?g1"
+    proof -
+      have hft_cont: "top1_continuous_map_on I_set I_top E TE ft_loop"
+        using hft_loop unfolding top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>The linear map s \<mapsto> s/2 is continuous from I_set to I_set.\<close>
+      have hlin_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. s / 2)"
+      proof -
+        have "\<And>s::real. s \<in> I_set \<Longrightarrow> s / 2 \<in> I_set"
+          unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "continuous_on (UNIV::real set) (\<lambda>s::real. s / 2)"
+          by (intro continuous_intros continuous_on_divide) auto
+        ultimately have "top1_continuous_map_on I_set
+            (subspace_topology (UNIV::real set) top1_open_sets I_set)
+            I_set (subspace_topology (UNIV::real set) top1_open_sets I_set) (\<lambda>s. s / 2)"
+          by (rule top1_continuous_map_on_real_subspace_open_sets)
+        moreover have "I_top = subspace_topology (UNIV::real set) top1_open_sets I_set"
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have "top1_continuous_map_on I_set I_top E TE (\<lambda>s. ft_loop (s / 2))"
+      proof -
+        have "top1_continuous_map_on I_set I_top E TE (ft_loop \<circ> (\<lambda>s. s / 2))"
+          by (rule top1_continuous_map_on_comp[OF hlin_cont hft_cont])
+        moreover have "ft_loop \<circ> (\<lambda>s. s / 2) = (\<lambda>s. ft_loop (s / 2))"
+          by (rule ext) (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      moreover have "ft_loop (0 / 2) = e0"
+        using hft_loop unfolding top1_is_path_on_def by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have hg1_lift: "\<forall>s\<in>I_set. p (?g1 s) = (f \<circ> \<alpha>1) s"
+    proof (intro ballI)
+      fix s assume hs: "s \<in> I_set"
+      hence hs01: "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+      have hs2: "s / 2 \<in> I_set" unfolding top1_unit_interval_def using hs01 by (by100 simp)
+      have "p (ft_loop (s / 2)) = (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (s / 2)"
+        using hft_loop_lift hs2 by (by100 blast)
+      also have "\<dots> = f ((top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (s / 2))" by (by100 simp)
+      also have "(top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (s / 2) = \<alpha>1 (2 * (s / 2))"
+        unfolding top1_path_product_def using hs01 by (by100 simp)
+      also have "2 * (s / 2) = s" by (by100 simp)
+      finally show "p (?g1 s) = (f \<circ> \<alpha>1) s" by (by100 simp)
+    qed
+    \<comment> \<open>By uniqueness: ?g1 agrees with ft1 \<Rightarrow> ft_loop(1/2) = ft1(1).\<close>
+    have "ft_loop (1/2) = ft1 1"
+    proof -
+      have "\<forall>s\<in>I_set. ?g1 s = ft1 s"
+      proof (rule Lemma_54_1_uniqueness[OF hcov he0])
+        show "p e0 = p e0" by (by100 simp)
+        show "top1_is_path_on B TB (p e0) (f y) (f \<circ> \<alpha>1)" using hf\<alpha>1 by (by100 simp)
+        show "top1_is_path_on E TE e0 (ft_loop (1/2)) ?g1" by (rule hg1_path)
+        show "\<forall>s\<in>I_set. p (?g1 s) = (f \<circ> \<alpha>1) s" by (rule hg1_lift)
+        show "top1_is_path_on E TE e0 (ft1 1) ft1" by (rule hft1)
+        show "\<forall>s\<in>I_set. p (ft1 s) = (f \<circ> \<alpha>1) s" using hft1_lift by (by100 simp)
+      qed
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      hence "?g1 1 = ft1 1" using \<open>\<forall>s\<in>I_set. ?g1 s = ft1 s\<close> by (by100 blast)
+      thus ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>g2(s) = ft_loop(1 - s/2) lifts f\<circ>\<alpha>2 from e0 (since ft_loop(1) = e0).\<close>
+    let ?g2 = "\<lambda>s. ft_loop (1 - s / 2)"
+    have hg2_path: "top1_is_path_on E TE e0 (ft_loop (1/2)) ?g2"
+    proof -
+      have hft_cont: "top1_continuous_map_on I_set I_top E TE ft_loop"
+        using hft_loop unfolding top1_is_path_on_def by (by100 blast)
+      have hlin_cont2: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. 1 - s / 2)"
+      proof -
+        have "\<And>s::real. s \<in> I_set \<Longrightarrow> 1 - s / 2 \<in> I_set"
+          unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "continuous_on (UNIV::real set) (\<lambda>s::real. 1 - s / 2)"
+          by (intro continuous_intros continuous_on_divide) auto
+        ultimately have "top1_continuous_map_on I_set
+            (subspace_topology (UNIV::real set) top1_open_sets I_set)
+            I_set (subspace_topology (UNIV::real set) top1_open_sets I_set) (\<lambda>s. 1 - s / 2)"
+          by (rule top1_continuous_map_on_real_subspace_open_sets)
+        moreover have "I_top = subspace_topology (UNIV::real set) top1_open_sets I_set"
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have "top1_continuous_map_on I_set I_top E TE (\<lambda>s. ft_loop (1 - s / 2))"
+      proof -
+        have "top1_continuous_map_on I_set I_top E TE (ft_loop \<circ> (\<lambda>s. 1 - s / 2))"
+          by (rule top1_continuous_map_on_comp[OF hlin_cont2 hft_cont])
+        moreover have "ft_loop \<circ> (\<lambda>s. 1 - s / 2) = (\<lambda>s. ft_loop (1 - s / 2))"
+          by (rule ext) (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      moreover have "ft_loop (1 - 0 / 2) = e0"
+      proof -
+        have "ft_loop 1 = e0" by (rule hft_loop_end)
+        thus ?thesis by (by100 simp)
+      qed
+      moreover have "ft_loop (1 - 1 / 2) = ft_loop (1/2)" by (by100 simp)
+      ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+    qed
+    have hg2_lift: "\<forall>s\<in>I_set. p (?g2 s) = (f \<circ> \<alpha>2) s"
+    proof (intro ballI)
+      fix s assume hs: "s \<in> I_set"
+      hence hs01: "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+      have hs2: "1 - s / 2 \<in> I_set" unfolding top1_unit_interval_def using hs01 by (by100 simp)
+      have "p (ft_loop (1 - s / 2)) = (f \<circ> top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2)"
+        using hft_loop_lift hs2 by (by100 blast)
+      also have "\<dots> = f ((top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2))" by (by100 simp)
+      also have "\<dots> = f (\<alpha>2 s)"
+      proof (cases "s = 1")
+        case True
+        \<comment> \<open>At s=1: path_product at 1/2 gives \<alpha>1(1) = y. f(\<alpha>1(1)) = f(y) = f(\<alpha>2(1)).\<close>
+        have "1 - s / 2 = 1 / 2" using True by (by100 simp)
+        hence "(top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2) = \<alpha>1 (2 * (1/2))"
+          unfolding top1_path_product_def by (by100 simp)
+        hence "f ((top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2)) = f (\<alpha>1 1)"
+          by (by100 simp)
+        moreover have "\<alpha>1 1 = y" using h\<alpha>1 unfolding top1_is_path_on_def by (by100 blast)
+        moreover have "\<alpha>2 1 = y" using h\<alpha>2 unfolding top1_is_path_on_def by (by100 blast)
+        ultimately show ?thesis using True by (by100 simp)
+      next
+        case False
+        hence "1 - s / 2 > 1 / 2" using hs01 by (by100 linarith)
+        hence "\<not> (1 - s / 2 \<le> 1 / 2)" by (by100 linarith)
+        hence "(top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2)
+            = (top1_path_reverse \<alpha>2) (2 * (1 - s / 2) - 1)"
+          unfolding top1_path_product_def by (by100 simp)
+        hence "f ((top1_path_product \<alpha>1 (top1_path_reverse \<alpha>2)) (1 - s / 2))
+            = f ((top1_path_reverse \<alpha>2) (1 - s))" by (by100 simp)
+        moreover have "(top1_path_reverse \<alpha>2) (1 - s) = \<alpha>2 s"
+          unfolding top1_path_reverse_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      finally show "p (?g2 s) = (f \<circ> \<alpha>2) s" by (by100 simp)
+    qed
+    have "ft_loop (1/2) = ft2 1"
+    proof -
+      have "\<forall>s\<in>I_set. ?g2 s = ft2 s"
+      proof (rule Lemma_54_1_uniqueness[OF hcov he0])
+        show "p e0 = p e0" by (by100 simp)
+        show "top1_is_path_on B TB (p e0) (f y) (f \<circ> \<alpha>2)" using hf\<alpha>2 by (by100 simp)
+        show "top1_is_path_on E TE e0 (ft_loop (1/2)) ?g2" by (rule hg2_path)
+        show "\<forall>s\<in>I_set. p (?g2 s) = (f \<circ> \<alpha>2) s" by (rule hg2_lift)
+        show "top1_is_path_on E TE e0 (ft2 1) ft2" by (rule hft2)
+        show "\<forall>s\<in>I_set. p (ft2 s) = (f \<circ> \<alpha>2) s" using hft2_lift by (by100 simp)
+      qed
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      hence "?g2 1 = ft2 1" using \<open>\<forall>s\<in>I_set. ?g2 s = ft2 s\<close> by (by100 blast)
+      thus ?thesis by (by100 simp)
+    qed
+    show "ft1 1 = ft2 1" using \<open>ft_loop (1/2) = ft1 1\<close> \<open>ft_loop (1/2) = ft2 1\<close> by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: Define ftilde.\<close>
+  define ftilde where "ftilde y = (let \<alpha> = SOME \<alpha>. top1_is_path_on Y TY y0 y \<alpha>;
+      ft = SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s))
+    in ft 1)" for y
+  \<comment> \<open>Step 4: ftilde has the required properties.\<close>
+  have hft_props: "(\<forall>y\<in>Y. ftilde y \<in> E) \<and> (\<forall>y\<in>Y. p (ftilde y) = f y) \<and> ftilde y0 = e0"
+  proof -
+    \<comment> \<open>For each y \<in> Y: the SOME-chosen path and lift satisfy the properties.\<close>
+    have hsome_props: "\<forall>y\<in>Y. (\<exists>\<alpha> ft. top1_is_path_on Y TY y0 y \<alpha>
+        \<and> top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s))
+        \<and> ftilde y = ft 1)"
+    proof (intro ballI)
+      fix y assume hy: "y \<in> Y"
+      let ?\<alpha> = "SOME \<alpha>. top1_is_path_on Y TY y0 y \<alpha>"
+      have "\<exists>\<alpha>. top1_is_path_on Y TY y0 y \<alpha>" using hpath_exists hy by (by100 blast)
+      hence h\<alpha>: "top1_is_path_on Y TY y0 y ?\<alpha>" by (rule someI_ex)
+      let ?ft = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (?\<alpha> s))"
+      have "\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (?\<alpha> s))"
+        using hlift_exists hy h\<alpha> by (by100 blast)
+      hence hft: "top1_is_path_on E TE e0 (?ft 1) ?ft \<and> (\<forall>s\<in>I_set. p (?ft s) = f (?\<alpha> s))"
+        by (rule someI_ex)
+      have "ftilde y = ?ft 1" unfolding ftilde_def by (by100 simp)
+      thus "\<exists>\<alpha> ft. top1_is_path_on Y TY y0 y \<alpha>
+          \<and> top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s))
+          \<and> ftilde y = ft 1"
+        using h\<alpha> hft by (by100 blast)
+    qed
+    show ?thesis proof (intro conjI)
+    show "\<forall>y\<in>Y. ftilde y \<in> E"
+    proof (intro ballI)
+      fix y assume "y \<in> Y"
+      from hsome_props[rule_format, OF this]
+      obtain \<alpha> ft where "top1_is_path_on E TE e0 (ft 1) ft" and "ftilde y = ft 1"
+        by (by100 blast)
+      have "ft 1 \<in> E"
+      proof -
+        have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        thus ?thesis using \<open>top1_is_path_on E TE e0 (ft 1) ft\<close>
+          unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      qed
+      thus "ftilde y \<in> E" using \<open>ftilde y = ft 1\<close> by (by100 simp)
+    qed
+  next
+    show "\<forall>y\<in>Y. p (ftilde y) = f y"
+    proof (intro ballI)
+      fix y assume "y \<in> Y"
+      from hsome_props[rule_format, OF this]
+      obtain \<alpha> ft where h\<alpha>: "top1_is_path_on Y TY y0 y \<alpha>"
+          and hft: "top1_is_path_on E TE e0 (ft 1) ft"
+          and hftp: "\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s)"
+          and hftilde: "ftilde y = ft 1" by (by100 blast)
+      have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have "p (ft 1) = f (\<alpha> 1)" using hftp h1I by (by100 blast)
+      moreover have "\<alpha> 1 = y" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      ultimately show "p (ftilde y) = f y" using hftilde by (by100 simp)
+    qed
+  next
+    show "ftilde y0 = e0"
+    proof -
+      \<comment> \<open>The SOME-chosen path from y0 to y0 gives a lift; any lift from e0 of a
+         loop at p(e0) has some endpoint. But by well-definedness, the endpoint
+         is the same for all paths. The constant path at y0 lifts to constant at e0.\<close>
+      from hsome_props[rule_format, OF hy0]
+      obtain \<alpha> ft where h\<alpha>: "top1_is_path_on Y TY y0 y0 \<alpha>"
+          and hft: "top1_is_path_on E TE e0 (ft 1) ft"
+          and hftp: "\<forall>s\<in>I_set. p (ft s) = f (\<alpha> s)"
+          and hftilde: "ftilde y0 = ft 1" by (by100 blast)
+      \<comment> \<open>The constant path at y0 also lifts to constant at e0.\<close>
+      have hconst_path: "top1_is_path_on Y TY y0 y0 (top1_constant_path y0)"
+        by (rule top1_constant_path_is_path[OF hTY hy0])
+      have hconst_lift: "top1_is_path_on E TE e0 e0 (top1_constant_path e0)"
+        by (rule top1_constant_path_is_path[OF hTE he0])
+      have hconst_liftp: "\<forall>s\<in>I_set. p ((top1_constant_path e0) s) = f ((top1_constant_path y0) s)"
+      proof (intro ballI)
+        fix s assume "s \<in> I_set"
+        show "p ((top1_constant_path e0) s) = f ((top1_constant_path y0) s)"
+          unfolding top1_constant_path_def using hfy0 by (by100 simp)
+      qed
+      \<comment> \<open>By well-definedness (hwd): ft 1 = e0.\<close>
+      have "ft 1 = (top1_constant_path e0) 1"
+      proof -
+        have hcl2: "top1_is_path_on E TE e0 ((top1_constant_path e0) 1) (top1_constant_path e0)"
+        proof -
+          have "(top1_constant_path e0) 1 = e0" unfolding top1_constant_path_def by (by100 simp)
+          thus ?thesis using hconst_lift by (by100 simp)
+        qed
+        from hwd[rule_format, OF hy0, of \<alpha> "top1_constant_path y0" ft "top1_constant_path e0"]
+        show ?thesis using h\<alpha> hconst_path hft hftp hcl2 hconst_liftp by (by100 blast)
+      qed
+      hence "ft 1 = e0" unfolding top1_constant_path_def by (by100 simp)
+      thus ?thesis using hftilde by (by100 simp)
+    qed
+    qed
+  qed
+  \<comment> \<open>Helper: ftilde(y') equals the endpoint of ANY lift of f\<circ>\<alpha> from e0, for any path \<alpha> from y0 to y'.\<close>
+  have ftilde_eq_lift: "\<And>y' \<alpha> ft'. y' \<in> Y \<Longrightarrow> top1_is_path_on Y TY y0 y' \<alpha> \<Longrightarrow>
+      top1_is_path_on E TE e0 (ft' 1) ft' \<Longrightarrow> (\<forall>s\<in>I_set. p (ft' s) = f (\<alpha> s)) \<Longrightarrow>
+      ftilde y' = ft' 1"
+  proof -
+    fix y' \<alpha>' ft'
+    assume hy': "y' \<in> Y" and h\<alpha>': "top1_is_path_on Y TY y0 y' \<alpha>'"
+        and hft': "top1_is_path_on E TE e0 (ft' 1) ft'"
+        and hft'p: "\<forall>s\<in>I_set. p (ft' s) = f (\<alpha>' s)"
+    \<comment> \<open>Get the SOME-chosen path and lift for ftilde(y').\<close>
+    let ?\<alpha>_s = "SOME \<alpha>. top1_is_path_on Y TY y0 y' \<alpha>"
+    have "\<exists>\<alpha>. top1_is_path_on Y TY y0 y' \<alpha>" using hpath_exists hy' by (by100 blast)
+    hence h\<alpha>_s: "top1_is_path_on Y TY y0 y' ?\<alpha>_s" by (rule someI_ex)
+    let ?ft_s = "SOME ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (?\<alpha>_s s))"
+    have "\<exists>ft. top1_is_path_on E TE e0 (ft 1) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f (?\<alpha>_s s))"
+      using hlift_exists hy' h\<alpha>_s by (by100 blast)
+    hence hft_s: "top1_is_path_on E TE e0 (?ft_s 1) ?ft_s \<and> (\<forall>s\<in>I_set. p (?ft_s s) = f (?\<alpha>_s s))"
+      by (rule someI_ex)
+    have hftilde_eq: "ftilde y' = ?ft_s 1" unfolding ftilde_def by (by100 simp)
+    \<comment> \<open>By hwd: ft' 1 = ft_s 1.\<close>
+    from hwd[rule_format, OF hy', of \<alpha>' ?\<alpha>_s ft' ?ft_s]
+    have "ft' 1 = ?ft_s 1" using h\<alpha>' h\<alpha>_s hft' hft'p hft_s by (by100 blast)
+    thus "ftilde y' = ft' 1" using hftilde_eq by (by100 simp)
+  qed
+  \<comment> \<open>Step 5: ftilde is continuous.
+     For y \<in> Y, let U be evenly covered nbhd of f(y) in B.
+     By local path-connectivity of Y, get path-connected open V \<ni> y with f(V) \<subseteq> U.
+     Let W0 be the sheet over U containing ftilde(y).
+     For y' \<in> V: extend path (y0\<rightarrow>y) with segment (y\<rightarrow>y' in V).
+     The lift of the segment stays in W0 (sheets are homeomorphic to U).
+     So ftilde|_V = (p|_{W0})\<inverse> \<circ> f|_V, which is continuous.\<close>
+  have hft_cont: "top1_continuous_map_on Y TY E TE ftilde"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI)
+    show "\<forall>y\<in>Y. ftilde y \<in> E" using hft_props by (by100 blast)
+  next
+    show "\<forall>W\<in>TE. {y \<in> Y. ftilde y \<in> W} \<in> TY"
+    proof (intro ballI)
+      fix W assume hW: "W \<in> TE"
+      \<comment> \<open>For each y in the preimage, find a neighborhood mapping into W.\<close>
+      have "\<forall>y \<in> {y \<in> Y. ftilde y \<in> W}. \<exists>V\<in>TY. y \<in> V \<and> V \<subseteq> {y \<in> Y. ftilde y \<in> W}"
+      proof (intro ballI)
+        fix y assume hy_pre: "y \<in> {y \<in> Y. ftilde y \<in> W}"
+        hence hyY: "y \<in> Y" and hfty_W: "ftilde y \<in> W" by (by100 blast)+
+        have hfty_E: "ftilde y \<in> E" using hft_props hyY by (by100 blast)
+        have hfy: "p (ftilde y) = f y" using hft_props hyY by (by100 blast)
+        have hfy_B: "f y \<in> B"
+          using hf hyY unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>Get evenly covered U of f(y) in B.\<close>
+        obtain U where hU: "f y \<in> U" and hec: "top1_evenly_covered_on E TE B TB p U"
+          using hcov hfy_B unfolding top1_covering_map_on_def by (by100 blast)
+        obtain \<V> where hV_open: "\<forall>V\<in>\<V>. openin_on E TE V"
+            and hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+            and hV_cover: "{x\<in>E. p x \<in> U} = \<Union>\<V>"
+            and hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                         (subspace_topology B TB U) p"
+          using hec unfolding top1_evenly_covered_on_def by blast
+        \<comment> \<open>ftilde(y) is in some sheet W0.\<close>
+        have "ftilde y \<in> {x\<in>E. p x \<in> U}"
+        proof -
+          have "ftilde y \<in> E" by (rule hfty_E)
+          moreover have "p (ftilde y) \<in> U" using hfy hU by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        hence "ftilde y \<in> \<Union>\<V>" using hV_cover by (by100 simp)
+        then obtain W0 where hW0: "W0 \<in> \<V>" and hfty_W0: "ftilde y \<in> W0" by (by100 blast)
+        \<comment> \<open>W0 \<inter> W is open in E, contains ftilde(y).\<close>
+        have hW0_open: "W0 \<in> TE" using hV_open hW0 unfolding openin_on_def by (by100 blast)
+        \<comment> \<open>p is a homeomorphism on W0 → U.\<close>
+        have hp_homeo: "top1_homeomorphism_on W0 (subspace_topology E TE W0) U
+            (subspace_topology B TB U) p" using hV_homeo hW0 by (by100 blast)
+        have hp_inj: "inj_on p W0"
+          using hp_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        \<comment> \<open>U is open in B.\<close>
+        have hU_open: "openin_on B TB U"
+          using hec unfolding top1_evenly_covered_on_def by (by100 blast)
+        have hU_TB: "U \<in> TB" using hU_open unfolding openin_on_def by (by100 blast)
+        \<comment> \<open>f\<inverse>(U) is open in Y.\<close>
+        have hfU: "{y\<in>Y. f y \<in> U} \<in> TY"
+          using hf hU_TB unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>By local path-connectivity: get path-connected open V \<subseteq> f\<inverse>(U) with y \<in> V.\<close>
+        obtain V0 where hV0_TY: "V0 \<in> TY" and hy_V0: "y \<in> V0"
+            and hV0_sub: "V0 \<subseteq> {y\<in>Y. f y \<in> U}"
+            and hV0_pc: "top1_path_connected_on V0 (subspace_topology Y TY V0)"
+        proof -
+          \<comment> \<open>f\<inverse>(U) is open in Y, contains y.\<close>
+          have hfU_nbhd: "neighborhood_of y Y TY {y\<in>Y. f y \<in> U}"
+            unfolding neighborhood_of_def using hfU hyY hU by (by100 blast)
+          have hfU_sub: "{y\<in>Y. f y \<in> U} \<subseteq> Y" by (by100 blast)
+          \<comment> \<open>By local path-connectivity of Y at y: get path-connected open V0 \<subseteq> f\<inverse>(U).\<close>
+          have hlpc_y: "top1_locally_path_connected_at Y TY y"
+            using hYlpc hyY unfolding top1_locally_path_connected_on_def by (by100 blast)
+          obtain V0' where hV0'_nbhd: "neighborhood_of y Y TY V0'"
+              and hV0'_sub: "V0' \<subseteq> {y\<in>Y. f y \<in> U}" and hV0'_Y: "V0' \<subseteq> Y"
+              and hV0'_pc: "top1_path_connected_on V0' (subspace_topology Y TY V0')"
+          proof -
+            from hlpc_y[unfolded top1_locally_path_connected_at_def,
+                rule_format, of "{y\<in>Y. f y \<in> U}"]
+            show ?thesis using hfU_nbhd hfU_sub that by (by100 blast)
+          qed
+          \<comment> \<open>neighborhood_of means V0' \<in> TY \<and> y \<in> V0'.\<close>
+          have hV0'_TY: "V0' \<in> TY" using hV0'_nbhd unfolding neighborhood_of_def by (by100 blast)
+          have hy_V0': "y \<in> V0'" using hV0'_nbhd unfolding neighborhood_of_def by (by100 blast)
+          show ?thesis using that[OF hV0'_TY hy_V0' hV0'_sub hV0'_pc] .
+        qed
+        \<comment> \<open>For y' \<in> V0: ftilde(y') \<in> W0 because the lift stays in the sheet.\<close>
+        \<comment> \<open>ftilde maps V0 into W0: for y' \<in> V0, the lift of f\<circ>\<sigma> (path y\<rightarrow>y' in V0)
+           from ftilde(y) stays in W0 (since f\<circ>\<sigma> stays in U and p|_{W0}: W0 \<cong> U).\<close>
+        \<comment> \<open>p|_{W0} is a bijection W0 → U.\<close>
+        have hp_bij: "bij_betw p W0 U"
+          using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>ftilde(y) = inv_into W0 p (f y).\<close>
+        have hfty_inv: "ftilde y = inv_into W0 p (f y)"
+          using inv_into_f_eq[OF hp_inj hfty_W0] hfy by (by100 simp)
+        have hftilde_V0: "\<forall>y'\<in>V0. ftilde y' \<in> W0"
+        proof (intro ballI)
+          fix y' assume hy'V0: "y' \<in> V0"
+          have hy'Y: "y' \<in> Y" using hy'V0 hV0_sub by (by100 blast)
+          have hfy'U: "f y' \<in> U" using hy'V0 hV0_sub by (by100 blast)
+          have hfy'_pW0: "f y' \<in> p ` W0" using hp_bij hfy'U unfolding bij_betw_def by (by100 blast)
+          have hinv_y'_W0: "inv_into W0 p (f y') \<in> W0" by (rule inv_into_into[OF hfy'_pW0])
+          \<comment> \<open>Path from y to y' in V0.\<close>
+          obtain \<sigma> where h\<sigma>: "top1_is_path_on V0 (subspace_topology Y TY V0) y y' \<sigma>"
+            using hV0_pc hy_V0 hy'V0 unfolding top1_path_connected_on_def by (by100 auto)
+          \<comment> \<open>\<sigma> as ambient path.\<close>
+          have hV0_sub_Y: "V0 \<subseteq> Y" using hV0_sub by (by100 blast)
+          have h\<sigma>_cont_V0: "top1_continuous_map_on I_set I_top V0 (subspace_topology Y TY V0) \<sigma>"
+            using h\<sigma> unfolding top1_is_path_on_def by (by100 blast)
+          have h\<sigma>_in_V0: "\<forall>s\<in>I_set. \<sigma> s \<in> V0"
+            using h\<sigma>_cont_V0 unfolding top1_continuous_map_on_def by (by100 blast)
+          have h\<sigma>_Y: "top1_is_path_on Y TY y y' \<sigma>"
+          proof -
+            have hincl: "top1_continuous_map_on V0 (subspace_topology Y TY V0) Y TY (\<lambda>x. x)"
+            proof -
+              have "top1_continuous_map_on V0 (subspace_topology Y TY V0) Y TY (\<lambda>x. x)"
+                by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTY, unfolded id_def] hV0_sub_Y])
+              thus ?thesis .
+            qed
+            have "top1_continuous_map_on I_set I_top Y TY ((\<lambda>x. x) \<circ> \<sigma>)"
+              by (rule top1_continuous_map_on_comp[OF h\<sigma>_cont_V0 hincl])
+            moreover have "(\<lambda>x::'c. x) \<circ> \<sigma> = \<sigma>" by (rule ext) (by100 simp)
+            ultimately have h\<sigma>_cont_Y: "top1_continuous_map_on I_set I_top Y TY \<sigma>" by (by100 simp)
+            have "\<sigma> 0 = y" using h\<sigma> unfolding top1_is_path_on_def by (by100 blast)
+            have "\<sigma> 1 = y'" using h\<sigma> unfolding top1_is_path_on_def by (by100 blast)
+            show ?thesis unfolding top1_is_path_on_def using h\<sigma>_cont_Y \<open>\<sigma> 0 = y\<close> \<open>\<sigma> 1 = y'\<close>
+              by (by100 blast)
+          qed
+          \<comment> \<open>Path from y0 to y.\<close>
+          obtain \<alpha>0 where h\<alpha>0: "top1_is_path_on Y TY y0 y \<alpha>0"
+            using hpath_exists hyY by (by100 blast)
+          \<comment> \<open>Lift of f\<circ>\<alpha>0 from e0.\<close>
+          obtain ft0 where hft0: "top1_is_path_on E TE e0 (ft0 1) ft0"
+              and hft0p: "\<forall>s\<in>I_set. p (ft0 s) = f (\<alpha>0 s)"
+            using hlift_exists hyY h\<alpha>0 by (by100 blast)
+          \<comment> \<open>ft0 1 = ftilde y (by ftilde_eq_lift).\<close>
+          have hft0_end: "ft0 1 = ftilde y"
+            using ftilde_eq_lift[OF hyY h\<alpha>0 hft0 hft0p] by (by100 simp)
+          \<comment> \<open>Concatenate: \<alpha>0\<cdot>\<sigma> is a path from y0 to y'.\<close>
+          have h\<alpha>0\<sigma>: "top1_is_path_on Y TY y0 y' (top1_path_product \<alpha>0 \<sigma>)"
+            by (rule top1_path_product_is_path[OF hTY h\<alpha>0 h\<sigma>_Y])
+          \<comment> \<open>Construct the lift of f\<circ>(\<alpha>0\<cdot>\<sigma>) as ft0 \<cdot> (inv_into W0 p \<circ> f \<circ> \<sigma>).\<close>
+          let ?inv_lift = "\<lambda>s. inv_into W0 p (f (\<sigma> s))"
+          \<comment> \<open>?inv_lift is a path in W0 \<subseteq> E from ftilde(y) to inv_into W0 p (f y').\<close>
+          have hinvl_path: "top1_is_path_on E TE (ftilde y) (inv_into W0 p (f y')) ?inv_lift"
+          proof -
+            \<comment> \<open>Continuity: inv_into W0 p \<circ> f \<circ> \<sigma> is continuous I_set \<rightarrow> E.\<close>
+            \<comment> \<open>f\<circ>\<sigma>: I_set \<rightarrow> U (f continuous, \<sigma> maps V0 \<subseteq> f\<inverse>(U)).\<close>
+            \<comment> \<open>inv_into W0 p: U \<rightarrow> W0 \<subseteq> E (inverse of homeomorphism).\<close>
+            have hinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) W0 (subspace_topology E TE W0)
+                (inv_into W0 p)"
+              using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>f\<circ>\<sigma> maps I_set into U (via V0).\<close>
+            have hf\<sigma>_cont: "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) (f \<circ> \<sigma>)"
+            proof -
+              \<comment> \<open>\<sigma>: I \<rightarrow> Y continuous, f: Y \<rightarrow> B continuous. f\<circ>\<sigma>: I \<rightarrow> B continuous.\<close>
+              have h\<sigma>_cont_Y: "top1_continuous_map_on I_set I_top Y TY \<sigma>"
+                using h\<sigma>_Y unfolding top1_is_path_on_def by (by100 blast)
+              have "top1_continuous_map_on I_set I_top B TB (f \<circ> \<sigma>)"
+                by (rule top1_continuous_map_on_comp[OF h\<sigma>_cont_Y hf])
+              \<comment> \<open>f\<circ>\<sigma> maps into U (V0 \<subseteq> f\<inverse>(U) and \<sigma> maps into V0).\<close>
+              moreover have "\<forall>s\<in>I_set. (f \<circ> \<sigma>) s \<in> U"
+              proof (intro ballI)
+                fix s assume "s \<in> I_set"
+                hence "\<sigma> s \<in> V0" using h\<sigma>_in_V0 by (by100 blast)
+                hence "f (\<sigma> s) \<in> U" using hV0_sub by (by100 blast)
+                thus "(f \<circ> \<sigma>) s \<in> U" by (by100 simp)
+              qed
+              \<comment> \<open>Restrict codomain to U with subspace topology.\<close>
+              moreover have hU_sub_B: "U \<subseteq> B"
+                using hU_open unfolding openin_on_def by (by100 blast)
+              ultimately show ?thesis
+              proof -
+                assume hf\<sigma>B: "top1_continuous_map_on I_set I_top B TB (f \<circ> \<sigma>)"
+                    and hrange: "\<forall>s\<in>I_set. (f \<circ> \<sigma>) s \<in> U"
+                show ?thesis
+                  by (rule continuous_map_restrict_codomain[OF hf\<sigma>B hrange hU_sub_B])
+              qed
+            qed
+            \<comment> \<open>Composition: inv_into \<circ> f \<circ> \<sigma> maps I_set to W0.\<close>
+            have "top1_continuous_map_on I_set I_top W0 (subspace_topology E TE W0) (inv_into W0 p \<circ> (f \<circ> \<sigma>))"
+              by (rule top1_continuous_map_on_comp[OF hf\<sigma>_cont hinv_cont])
+            moreover have "(inv_into W0 p \<circ> (f \<circ> \<sigma>)) = ?inv_lift"
+              by (rule ext) (by100 simp)
+            ultimately have hinvl_cont_W0: "top1_continuous_map_on I_set I_top W0 (subspace_topology E TE W0) ?inv_lift"
+              by (by100 simp)
+            \<comment> \<open>W0 \<subseteq> E, so compose with inclusion to get continuity into E.\<close>
+            have hW0_sub: "W0 \<subseteq> E" using hV_open hW0 unfolding openin_on_def by (by100 blast)
+            have hW0_incl: "top1_continuous_map_on W0 (subspace_topology E TE W0) E TE (\<lambda>x. x)"
+              using top1_continuous_map_on_restrict_domain_simple[OF
+                top1_continuous_map_on_id[OF hTE, unfolded id_def] hW0_sub] by (by100 simp)
+            have "top1_continuous_map_on I_set I_top E TE ((\<lambda>x. x) \<circ> ?inv_lift)"
+              by (rule top1_continuous_map_on_comp[OF hinvl_cont_W0 hW0_incl])
+            moreover have "(\<lambda>x::'a. x) \<circ> ?inv_lift = ?inv_lift" by (rule ext) (by100 simp)
+            ultimately have hinvl_cont_E: "top1_continuous_map_on I_set I_top E TE ?inv_lift"
+              by (by100 simp)
+            \<comment> \<open>Endpoints.\<close>
+            have hinvl_0: "?inv_lift 0 = ftilde y"
+            proof -
+              have "\<sigma> 0 = y" using h\<sigma>_Y unfolding top1_is_path_on_def by (by100 blast)
+              hence "?inv_lift 0 = inv_into W0 p (f y)" by (by100 simp)
+              also have "\<dots> = ftilde y" using hfty_inv by (by100 simp)
+              finally show ?thesis .
+            qed
+            have hinvl_1: "?inv_lift 1 = inv_into W0 p (f y')"
+            proof -
+              have "\<sigma> 1 = y'" using h\<sigma>_Y unfolding top1_is_path_on_def by (by100 blast)
+              thus ?thesis by (by100 simp)
+            qed
+            show ?thesis unfolding top1_is_path_on_def
+              using hinvl_cont_E hinvl_0 hinvl_1 by (by100 blast)
+          qed
+          have hinvl_lift: "\<forall>s\<in>I_set. p (?inv_lift s) = f (\<sigma> s)"
+          proof (intro ballI)
+            fix s assume hs: "s \<in> I_set"
+            have "\<sigma> s \<in> V0" using h\<sigma>_in_V0 hs by (by100 blast)
+            hence "f (\<sigma> s) \<in> U" using hV0_sub by (by100 blast)
+            hence "f (\<sigma> s) \<in> p ` W0" using hp_bij unfolding bij_betw_def by (by100 blast)
+            show "p (?inv_lift s) = f (\<sigma> s)" by (rule f_inv_into_f[OF \<open>f (\<sigma> s) \<in> p ` W0\<close>])
+          qed
+          \<comment> \<open>The concatenation ft0 \<cdot> inv_lift is a path from e0 to inv_into W0 p (f y').\<close>
+          define cl where "cl = top1_path_product ft0 ?inv_lift"
+          have hcl_path: "top1_is_path_on E TE e0 (inv_into W0 p (f y')) cl"
+          proof -
+            have "ft0 1 = ftilde y" by (rule hft0_end)
+            hence hft0': "top1_is_path_on E TE e0 (ftilde y) ft0"
+              using hft0 by (by100 simp)
+            show ?thesis unfolding cl_def by (rule top1_path_product_is_path[OF hTE hft0' hinvl_path])
+          qed
+          have hcl_lift: "\<forall>s\<in>I_set. p (cl s) = f ((top1_path_product \<alpha>0 \<sigma>) s)"
+          proof (intro ballI)
+            fix s assume hs: "s \<in> I_set"
+            hence hs01: "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+            show "p (cl s) = f ((top1_path_product \<alpha>0 \<sigma>) s)"
+            proof (cases "s \<le> 1/2")
+              case True
+              have "cl s = ft0 (2 * s)" unfolding cl_def top1_path_product_def using True by (by100 simp)
+              moreover have "p (ft0 (2 * s)) = f (\<alpha>0 (2 * s))"
+              proof -
+                have "2 * s \<in> I_set" unfolding top1_unit_interval_def using hs01 True by (by100 simp)
+                thus ?thesis using hft0p by (by100 blast)
+              qed
+              moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<alpha>0 (2 * s)"
+                unfolding top1_path_product_def using True by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            next
+              case False
+              hence hgt: "s > 1/2" by (by100 simp)
+              have "cl s = ?inv_lift (2 * s - 1)" unfolding cl_def top1_path_product_def using False by (by100 simp)
+              moreover have "p (?inv_lift (2 * s - 1)) = f (\<sigma> (2 * s - 1))"
+              proof -
+                have "2 * s - 1 \<in> I_set" unfolding top1_unit_interval_def using hs01 hgt by (by100 simp)
+                thus ?thesis using hinvl_lift by (by100 blast)
+              qed
+              moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<sigma> (2 * s - 1)"
+                unfolding top1_path_product_def using False by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>By ftilde_eq_lift: ftilde(y') = endpoint of this lift = inv_into W0 p (f y').\<close>
+          \<comment> \<open>cl 1 = inv_into W0 p (f y') (endpoint computation).\<close>
+          have hcl_end: "cl 1 = inv_into W0 p (f y')"
+          proof -
+            have "cl 1 = ?inv_lift (2 * (1::real) - 1)" unfolding cl_def top1_path_product_def by (by100 simp)
+            moreover have "(2::real) * 1 - 1 = (1::real)" by (by100 simp)
+            ultimately have "cl 1 = ?inv_lift 1" by (by100 simp)
+            moreover have "?inv_lift 1 = inv_into W0 p (f (\<sigma> 1))" by (by100 simp)
+            moreover have "\<sigma> 1 = y'" using h\<sigma>_Y unfolding top1_is_path_on_def by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>ftilde(y') = cl 1 (by ftilde_eq_lift).\<close>
+          have hcl_lift2: "\<forall>s\<in>I_set. p (cl s) = f (top1_path_product \<alpha>0 \<sigma> s)"
+            using hcl_lift by (by100 simp)
+          have hcl_path2: "top1_is_path_on E TE e0 (cl 1) cl"
+          proof -
+            have "cl 1 = inv_into W0 p (f y')" using hcl_end .
+            thus ?thesis using hcl_path by (by100 simp)
+          qed
+          have "ftilde y' = cl 1"
+            by (rule ftilde_eq_lift[OF hy'Y h\<alpha>0\<sigma> hcl_path2 hcl_lift2])
+          hence "ftilde y' = inv_into W0 p (f y')" using hcl_end by (by100 simp)
+          thus "ftilde y' \<in> W0" using hinv_y'_W0 by (by100 simp)
+        qed
+        \<comment> \<open>hftilde_V0 proved above.\<close>
+        \<comment> \<open>V' = V0 \<inter> ftilde\<inverse>(W0 \<inter> W). Since ftilde(V0) \<subseteq> W0, this simplifies.\<close>
+        \<comment> \<open>Actually, we need V' \<subseteq> {y \<in> Y. ftilde y \<in> W}. Use W0 \<inter> W.\<close>
+        \<comment> \<open>W0 \<inter> W is open in E. p maps W0 homeomorphically to U.
+           So p(W0 \<inter> W) is open in U, hence open in B.
+           V' = V0 \<inter> f\<inverse>(p(W0 \<inter> W)) is open in Y.\<close>
+        \<comment> \<open>ftilde on V0 equals (p|_{W0})\<inverse> \<circ> f. For ftilde(y') \<in> W, need f(y') \<in> p(W0 \<inter> W).\<close>
+        have hftilde_eq: "\<forall>y'\<in>V0. ftilde y' = inv_into W0 p (f y')"
+        proof (intro ballI)
+          fix y' assume "y' \<in> V0"
+          hence "ftilde y' \<in> W0" using hftilde_V0 by (by100 blast)
+          have hy'Y: "y' \<in> Y" using \<open>y' \<in> V0\<close> hV0_sub by (by100 blast)
+          have "p (ftilde y') = f y'" using hft_props hy'Y by (by100 blast)
+          thus "ftilde y' = inv_into W0 p (f y')"
+            using inv_into_f_eq[OF hp_inj \<open>ftilde y' \<in> W0\<close> \<open>p (ftilde y') = f y'\<close>]
+            by (by100 simp)
+        qed
+        \<comment> \<open>p(W0 \<inter> W) is open in B (p homeo on W0, W0 \<inter> W open in W0).\<close>
+        have hpWW: "p ` (W0 \<inter> W) \<subseteq> U"
+        proof -
+          have "W0 \<subseteq> {x\<in>E. p x \<in> U}" using hV_cover hW0 by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have hpWW_open: "{y\<in>Y. f y \<in> p ` (W0 \<inter> W)} \<in> TY"
+        proof -
+          \<comment> \<open>p(W0 \<inter> W) is open in B.\<close>
+          \<comment> \<open>W0 \<inter> W is open in E. Its intersection with W0 (= W0 \<inter> W) is open in
+             the subspace W0. p maps open subsets of W0 to open subsets of U (homeomorphism).
+             U open in B, so the image is open in B.\<close>
+          have "p ` (W0 \<inter> W) \<in> TB"
+          proof -
+            \<comment> \<open>W0 \<inter> W is open in the subspace topology of W0.\<close>
+            have hWW_sub: "W0 \<inter> W \<in> subspace_topology E TE W0"
+              unfolding subspace_topology_def using hW hW0_open by (by100 blast)
+            \<comment> \<open>p maps W0 homeomorphically to U. Open subsets map to open subsets.\<close>
+            have hp_bij: "bij_betw p W0 U"
+              using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hp_cont_W0: "top1_continuous_map_on W0 (subspace_topology E TE W0) U (subspace_topology B TB U) p"
+              using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>The inverse p\<inverse> is continuous on U → W0.\<close>
+            have hinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) W0 (subspace_topology E TE W0) (inv_into W0 p)"
+              using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>Preimage of W0\<inter>W under p\<inverse> = p(W0\<inter>W). By continuity of p\<inverse>, this is open in U.\<close>
+            have "{u \<in> U. inv_into W0 p u \<in> W0 \<inter> W} \<in> subspace_topology B TB U"
+              using hinv_cont hWW_sub unfolding top1_continuous_map_on_def by (by100 blast)
+            \<comment> \<open>{u \<in> U | inv(u) \<in> W0\<inter>W} = p(W0\<inter>W) (since p is bijection on W0).\<close>
+            have "{u \<in> U. inv_into W0 p u \<in> W0 \<inter> W} = p ` (W0 \<inter> W)"
+            proof (rule set_eqI)
+              fix u show "u \<in> {u \<in> U. inv_into W0 p u \<in> W0 \<inter> W} \<longleftrightarrow> u \<in> p ` (W0 \<inter> W)"
+              proof
+                assume hu: "u \<in> {u \<in> U. inv_into W0 p u \<in> W0 \<inter> W}"
+                hence "inv_into W0 p u \<in> W0 \<inter> W" and "u \<in> U" by (by100 blast)+
+                have "u \<in> p ` W0" using hp_bij \<open>u \<in> U\<close> unfolding bij_betw_def by (by100 blast)
+                have "p (inv_into W0 p u) = u" by (rule f_inv_into_f[OF \<open>u \<in> p ` W0\<close>])
+                thus "u \<in> p ` (W0 \<inter> W)" using \<open>inv_into W0 p u \<in> W0 \<inter> W\<close> by (by100 force)
+              next
+                assume "u \<in> p ` (W0 \<inter> W)"
+                then obtain e where he: "e \<in> W0 \<inter> W" and hue: "u = p e" by (by100 blast)
+                have "e \<in> W0" using he by (by100 blast)
+                have "u \<in> U" using hpWW \<open>u \<in> p ` (W0 \<inter> W)\<close> by (by100 blast)
+                have "inv_into W0 p u = e"
+                  using inv_into_f_eq[OF hp_inj \<open>e \<in> W0\<close>] hue by (by100 simp)
+                thus "u \<in> {u \<in> U. inv_into W0 p u \<in> W0 \<inter> W}"
+                  using \<open>u \<in> U\<close> he by (by100 simp)
+              qed
+            qed
+            \<comment> \<open>So p(W0\<inter>W) is open in the subspace U of B.\<close>
+            hence "p ` (W0 \<inter> W) \<in> subspace_topology B TB U"
+              using \<open>{u \<in> U. inv_into W0 p u \<in> W0 \<inter> W} \<in> subspace_topology B TB U\<close>
+              by (by100 simp)
+            \<comment> \<open>Open in U subspace = V \<inter> U for some V \<in> TB. Since U \<in> TB and V \<in> TB, V\<inter>U \<in> TB.\<close>
+            then obtain V where hV_TB: "V \<in> TB" and hpWW_eq: "p ` (W0 \<inter> W) = U \<inter> V"
+              unfolding subspace_topology_def by (by100 auto)
+            have "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TB \<longrightarrow> \<Inter>F \<in> TB"
+              using hTB unfolding is_topology_on_def by (by100 blast)
+            hence "U \<inter> V \<in> TB"
+            proof -
+              have "finite {U, V}" by (by100 simp)
+              moreover have "{U, V} \<noteq> {}" by (by100 blast)
+              moreover have "{U, V} \<subseteq> TB" using hU_TB hV_TB by (by100 blast)
+              ultimately have "\<Inter>{U, V} \<in> TB"
+                using \<open>\<forall>F. _\<close> by (by100 blast)
+              moreover have "\<Inter>{U, V} = U \<inter> V" by (by100 auto)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            thus "p ` (W0 \<inter> W) \<in> TB" using hpWW_eq by (by100 simp)
+          qed
+          thus ?thesis using hf unfolding top1_continuous_map_on_def by (by100 blast)
+        qed
+        let ?V' = "V0 \<inter> {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}"
+        have hV'_TY: "?V' \<in> TY"
+        proof -
+          have "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY \<longrightarrow> \<Inter>F \<in> TY"
+            using hTY unfolding is_topology_on_def by (by100 blast)
+          hence "V0 \<inter> {y\<in>Y. f y \<in> p ` (W0 \<inter> W)} \<in> TY"
+          proof -
+            have hfin: "finite {V0, {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}}" by (by100 simp)
+            have hne: "{V0, {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}} \<noteq> {}" by (by100 blast)
+            have hsub: "{V0, {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}} \<subseteq> TY"
+              using hV0_TY hpWW_open by (by100 blast)
+            have "\<Inter>{V0, {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}} \<in> TY"
+              using \<open>\<forall>F. _\<close> hfin hne hsub by (by100 blast)
+            moreover have "\<Inter>{V0, {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}} = V0 \<inter> {y\<in>Y. f y \<in> p ` (W0 \<inter> W)}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          thus ?thesis by (by100 simp)
+        qed
+        have hy_V': "y \<in> ?V'"
+        proof -
+          have "y \<in> V0" by (rule hy_V0)
+          moreover have "y \<in> Y" by (rule hyY)
+          moreover have "f y \<in> p ` (W0 \<inter> W)"
+          proof -
+            have "ftilde y \<in> W0 \<inter> W" using hfty_W0 hfty_W by (by100 blast)
+            hence "p (ftilde y) \<in> p ` (W0 \<inter> W)" by (by100 blast)
+            thus ?thesis using hfy by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        have hV'_sub: "?V' \<subseteq> {y \<in> Y. ftilde y \<in> W}"
+        proof (rule subsetI)
+          fix y' assume hy': "y' \<in> ?V'"
+          hence hy'V0: "y' \<in> V0" and hy'Y: "y' \<in> Y" and hfy'_pWW: "f y' \<in> p ` (W0 \<inter> W)"
+            by (by100 blast)+
+          \<comment> \<open>f(y') \<in> p(W0 \<inter> W) means \<exists>e \<in> W0 \<inter> W. p(e) = f(y').
+             ftilde(y') = inv_into W0 p (f y') = e \<in> W0 \<inter> W \<subseteq> W.\<close>
+          from hfy'_pWW obtain e where he: "e \<in> W0" "e \<in> W" and hpe: "p e = f y'" by (by100 auto)
+          have "ftilde y' \<in> W0" using hftilde_V0 hy'V0 by (by100 blast)
+          have "p (ftilde y') = f y'" using hft_props hy'Y by (by100 blast)
+          hence "ftilde y' = e"
+          proof -
+            have "p (ftilde y') = p e" using \<open>p (ftilde y') = f y'\<close> hpe by (by100 simp)
+            moreover have "ftilde y' \<in> W0" by (rule \<open>ftilde y' \<in> W0\<close>)
+            moreover have "e \<in> W0" using he by (by100 blast)
+            ultimately show ?thesis using hp_inj unfolding inj_on_def by (by100 fast)
+          qed
+          hence "ftilde y' \<in> W" using he by (by100 blast)
+          thus "y' \<in> {y \<in> Y. ftilde y \<in> W}" using hy'Y by (by100 blast)
+        qed
+        show "\<exists>V\<in>TY. y \<in> V \<and> V \<subseteq> {y \<in> Y. ftilde y \<in> W}"
+          apply (rule bexI[where x="?V'"])
+          using hy_V' hV'_sub hV'_TY by (by100 blast)+
+      qed
+      \<comment> \<open>Preimage is union of open neighborhoods, hence open.\<close>
+      have "{y \<in> Y. ftilde y \<in> W} = \<Union>{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}}"
+      proof (rule set_eqI)
+        fix y show "y \<in> {y \<in> Y. ftilde y \<in> W} \<longleftrightarrow> y \<in> \<Union>{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}}"
+        proof
+          assume "y \<in> {y \<in> Y. ftilde y \<in> W}"
+          then obtain V where "V \<in> TY" "y \<in> V" "V \<subseteq> {y \<in> Y. ftilde y \<in> W}"
+            using \<open>\<forall>y \<in> {y \<in> Y. ftilde y \<in> W}. _\<close> by (by100 blast)
+          thus "y \<in> \<Union>{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}}" by (by100 blast)
+        next
+          assume "y \<in> \<Union>{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}}" thus "y \<in> {y \<in> Y. ftilde y \<in> W}"
+            by (by100 blast)
+        qed
+      qed
+      moreover have "\<Union>{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}} \<in> TY"
+      proof -
+        have "\<forall>U. U \<subseteq> TY \<longrightarrow> \<Union>U \<in> TY"
+          using hTY unfolding is_topology_on_def by (by100 blast)
+        moreover have "{V \<in> TY. V \<subseteq> {y \<in> Y. ftilde y \<in> W}} \<subseteq> TY" by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately show "{y \<in> Y. ftilde y \<in> W} \<in> TY" by (by100 simp)
+    qed
+  qed
+  show ?thesis using hft_props hft_cont by (by100 blast)
+qed
+
 text \<open>Equivalence of covering spaces: homeomorphism commuting with covering maps.\<close>
 definition top1_equivalent_coverings_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'e' set \<Rightarrow> 'e' set set
   \<Rightarrow> 'b set \<Rightarrow> 'b set set \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('e' \<Rightarrow> 'b) \<Rightarrow> bool" where
@@ -18109,10 +20403,192 @@ next
   \<comment> \<open>Backward: if subgroup images equal, use path-lifting to construct h.\<close>
   assume hH_eq: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
       = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
-  \<comment> \<open>For e \<in> E, choose path \<alpha> in E from e0 to e. Define h(e) = lift of p\<circ>\<alpha> in E' starting at e0'.
-     Equal subgroups guarantee the lift exists and is well-defined.\<close>
-  show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'" sorry
+  \<comment> \<open>Construct h: E \<rightarrow> E' via path-lifting. For each e \<in> E, pick path \<alpha> from e0 to e,
+     lift p\<circ>\<alpha> to E' starting at e0'. The endpoint is h(e).\<close>
+  have hTE: "is_topology_on E TE"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTE': "is_topology_on E' TE'"
+    using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTB: "is_topology_on B TB"
+    using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+  have hp_cont: "top1_continuous_map_on E TE B TB p"
+    by (rule top1_covering_map_on_continuous[OF assms(4)])
+  have hp'_cont: "top1_continuous_map_on E' TE' B TB p'"
+    by (rule top1_covering_map_on_continuous[OF assms(6)])
+  \<comment> \<open>For each e \<in> E, paths from e0 exist (path-connected).\<close>
+  \<comment> \<open>For each path, p\<circ>\<alpha> can be lifted to E' (Lemma_54_1).\<close>
+  \<comment> \<open>The lift endpoint is independent of the chosen path (well-definedness via Theorem_54_3
+     + subgroup equality hH_eq).\<close>
+  \<comment> \<open>Define h via some path choice.\<close>
+  \<comment> \<open>Apply general lifting criterion to construct h and h'.\<close>
+  have hpe0: "p e0 = b0" by (rule assms(5))
+  have hp'e0': "p' e0' = b0" by (rule assms(7))
+  \<comment> \<open>For h: lift p (base map E\<rightarrow>B) to E' via p' (covering E'\<rightarrow>B).\<close>
+  have h_exists: "\<exists>h. (\<forall>e\<in>E. h e \<in> E') \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'
+      \<and> top1_continuous_map_on E TE E' TE' h"
+  proof -
+    \<comment> \<open>Subgroup condition: p_*(\<pi>_1(E)) \<subseteq> p'_*(\<pi>_1(E')), with basepoints at p'(e0') = b0.\<close>
+    have hsubgrp: "top1_fundamental_group_image_hom E TE e0 B TB (p' e0') p
+        \<subseteq> top1_fundamental_group_image_hom E' TE' e0' B TB (p' e0') p'"
+      using hH_eq hp'e0' hpe0 by (by100 simp)
+    show ?thesis
+      using general_lifting_criterion[OF assms(6) hTE hTB hTE' hp_cont assms(8,10,12,13)
+            _ hsubgrp] hpe0 hp'e0' by (by100 simp)
+  qed
+  \<comment> \<open>For h': lift p' (base map E'\<rightarrow>B) to E via p (covering E\<rightarrow>B).\<close>
+  have h'_exists: "\<exists>h'. (\<forall>e'\<in>E'. h' e' \<in> E) \<and> (\<forall>e'\<in>E'. p (h' e') = p' e') \<and> h' e0' = e0
+      \<and> top1_continuous_map_on E' TE' E TE h'"
+  proof -
+    have hsubgrp: "top1_fundamental_group_image_hom E' TE' e0' B TB (p e0) p'
+        \<subseteq> top1_fundamental_group_image_hom E TE e0 B TB (p e0) p"
+      using hH_eq hp'e0' hpe0 by (by100 simp)
+    show ?thesis
+      using general_lifting_criterion[OF assms(4) hTE' hTB hTE hp'_cont assms(9,11,13,12)
+            _ hsubgrp] hpe0 hp'e0' by (by100 simp)
+  qed
+  obtain h where hh_E': "\<forall>e\<in>E. h e \<in> E'" and hh_lift: "\<forall>e\<in>E. p' (h e) = p e"
+      and hh_e0: "h e0 = e0'" and hh_cont: "top1_continuous_map_on E TE E' TE' h"
+    using h_exists by (by100 blast)
+  obtain h' where hh'_E: "\<forall>e'\<in>E'. h' e' \<in> E" and hh'_lift: "\<forall>e'\<in>E'. p (h' e') = p' e'"
+      and hh'_e0: "h' e0' = e0" and hh'_cont: "top1_continuous_map_on E' TE' E TE h'"
+    using h'_exists by (by100 blast)
+  \<comment> \<open>h' \<circ> h = id on E: both lift p (i.e. p \<circ> (h'\<circ>h) = p \<circ> id = p on E),
+     and agree at e0 (h'(h(e0)) = h'(e0') = e0). By covering_lift_unique_connected,
+     h'\<circ>h = id on the connected space E.\<close>
+  have hh'h_id: "\<forall>e\<in>E. h' (h e) = e"
+  proof -
+    have hh'h_cont: "top1_continuous_map_on E TE E TE (h' \<circ> h)"
+      by (rule top1_continuous_map_on_comp[OF hh_cont hh'_cont])
+    have hh'h_lift: "\<forall>e\<in>E. p ((h' \<circ> h) e) = p (id e)"
+    proof (intro ballI)
+      fix e assume he: "e \<in> E"
+      have "h e \<in> E'" using hh_E' he by (by100 blast)
+      hence "p (h' (h e)) = p' (h e)" using hh'_lift by (by100 blast)
+      also have "\<dots> = p e" using hh_lift he by (by100 blast)
+      finally show "p ((h' \<circ> h) e) = p (id e)" by (by100 simp)
+    qed
+    have hh'h_e0: "(h' \<circ> h) e0 = id e0"
+      using hh_e0 hh'_e0 by (by100 simp)
+    have hid_cont: "top1_continuous_map_on E TE E TE id"
+      using top1_continuous_map_on_id[OF hTE] .
+    have hE_conn: "top1_connected_on E TE"
+      by (rule path_connected_imp_connected[OF assms(8)])
+    from covering_lift_unique_connected[OF assms(4) hTE hTB hTE hE_conn
+        hh'h_cont hid_cont hh'h_lift assms(12) hh'h_e0]
+    show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>h \<circ> h' = id on E': symmetric argument.\<close>
+  have hhh'_id: "\<forall>e'\<in>E'. h (h' e') = e'"
+  proof -
+    have hhh'_cont: "top1_continuous_map_on E' TE' E' TE' (h \<circ> h')"
+      by (rule top1_continuous_map_on_comp[OF hh'_cont hh_cont])
+    have hhh'_lift: "\<forall>e'\<in>E'. p' ((h \<circ> h') e') = p' (id e')"
+    proof (intro ballI)
+      fix e' assume he': "e' \<in> E'"
+      have "h' e' \<in> E" using hh'_E he' by (by100 blast)
+      hence "p' (h (h' e')) = p (h' e')" using hh_lift by (by100 blast)
+      also have "\<dots> = p' e'" using hh'_lift he' by (by100 blast)
+      finally show "p' ((h \<circ> h') e') = p' (id e')" by (by100 simp)
+    qed
+    have hhh'_e0: "(h \<circ> h') e0' = id e0'"
+      using hh'_e0 hh_e0 by (by100 simp)
+    have hid_cont': "top1_continuous_map_on E' TE' E' TE' id"
+      using top1_continuous_map_on_id[OF hTE'] .
+    have hE'_conn: "top1_connected_on E' TE'"
+      by (rule path_connected_imp_connected[OF assms(9)])
+    from covering_lift_unique_connected[OF assms(6) hTE' hTB hTE' hE'_conn
+        hhh'_cont hid_cont' hhh'_lift assms(13) hhh'_e0]
+    show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>h is a homeomorphism: continuous bijection with continuous inverse h'.\<close>
+  have hh_bij: "bij_betw h E E'"
+  proof (unfold bij_betw_def, intro conjI)
+    show "inj_on h E"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> E" "y \<in> E" "h x = h y"
+      have "x = h' (h x)" using hh'h_id[rule_format, OF \<open>x \<in> E\<close>] by (by100 simp)
+      also have "\<dots> = h' (h y)" using \<open>h x = h y\<close> by (by100 simp)
+      also have "\<dots> = y" using hh'h_id[rule_format, OF \<open>y \<in> E\<close>] by (by100 simp)
+      finally show "x = y" .
+    qed
+    show "h ` E = E'"
+    proof (rule set_eqI)
+      fix e' show "e' \<in> h ` E \<longleftrightarrow> e' \<in> E'"
+      proof
+        assume "e' \<in> h ` E"
+        then obtain e where "e \<in> E" "e' = h e" by (by100 blast)
+        thus "e' \<in> E'" using hh_E' by (by100 blast)
+      next
+        assume "e' \<in> E'"
+        hence "h (h' e') = e'" using hhh'_id by (by100 blast)
+        moreover have hh'e'_E: "h' e' \<in> E" using hh'_E \<open>e' \<in> E'\<close> by (by100 blast)
+        ultimately have "h (h' e') = e'" by (by100 simp)
+        hence "e' = h (h' e')" by (by100 simp)
+        thus "e' \<in> h ` E" using hh'e'_E by (by100 force)
+      qed
+    qed
+  qed
+  have hh_inv_cont: "top1_continuous_map_on E' TE' E TE (inv_into E h)"
+  proof -
+    have "\<forall>e'\<in>E'. inv_into E h e' = h' e'"
+    proof (intro ballI)
+      fix e' assume "e' \<in> E'"
+      have "h' e' \<in> E" using hh'_E \<open>e' \<in> E'\<close> by (by100 blast)
+      moreover have "h (h' e') = e'" using hhh'_id \<open>e' \<in> E'\<close> by (by100 blast)
+      ultimately show "inv_into E h e' = h' e'"
+        using inv_into_f_eq[of h E "h' e'" e'] hh_bij
+        unfolding bij_betw_def by (by100 blast)
+    qed
+    \<comment> \<open>inv_into agrees with h' on E', and h' is continuous.\<close>
+    show ?thesis unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix e' assume he': "e' \<in> E'"
+      have "inv_into E h e' = h' e'" using \<open>\<forall>e'\<in>E'. inv_into E h e' = h' e'\<close> he' by (by100 blast)
+      moreover have "h' e' \<in> E" using hh'_E he' by (by100 blast)
+      ultimately show "inv_into E h e' \<in> E" by (by100 simp)
+    next
+      fix V assume "V \<in> TE"
+      \<comment> \<open>{e'\<in>E'. inv_into E h e' \<in> V} = {e'\<in>E'. h' e' \<in> V}\<close>
+      have hset_eq: "{e'\<in>E'. inv_into E h e' \<in> V} = {e'\<in>E'. h' e' \<in> V}"
+      proof (rule Collect_cong)
+        fix e' show "(e' \<in> E' \<and> inv_into E h e' \<in> V) = (e' \<in> E' \<and> h' e' \<in> V)"
+          using \<open>\<forall>e'\<in>E'. inv_into E h e' = h' e'\<close> by (by100 auto)
+      qed
+      have "{e'\<in>E'. h' e' \<in> V} \<in> TE'"
+        using hh'_cont \<open>V \<in> TE\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "{e'\<in>E'. inv_into E h e' \<in> V} \<in> TE'"
+        using hset_eq by (by100 simp)
+    qed
+  qed
+  have hhomeo: "top1_homeomorphism_on E TE E' TE' h"
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on E TE" by (rule hTE)
+    show "is_topology_on E' TE'" by (rule hTE')
+    show "bij_betw h E E'" by (rule hh_bij)
+    show "top1_continuous_map_on E TE E' TE' h" by (rule hh_cont)
+    show "top1_continuous_map_on E' TE' E TE (inv_into E h)" by (rule hh_inv_cont)
+  qed
+  show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e0'"
+    using hhomeo hh_lift hh_e0 by (by100 blast)
 qed
+
+text \<open>Basepoint change for image_hom: if \<alpha> is a path from e0 to e1 in a covering space E,
+  then p_*(\<pi>_1(E, e1)) is the conjugate of p_*(\<pi>_1(E, e0)) by [p\<circ>\<alpha>]\<inverse>.\<close>
+lemma basepoint_change_image_hom:
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTE: "is_topology_on E TE" and hTB: "is_topology_on B TB"
+      and he0: "e0 \<in> E" and he1: "e1 \<in> E"
+      and h\<alpha>: "top1_is_path_on E TE e0 e1 \<alpha>"
+      and hpe0: "p e0 = b0"
+      and hEpc: "top1_path_connected_on E TE"
+  shows "top1_fundamental_group_image_hom E TE e1 B TB b0 p
+      = (\<lambda>H. top1_fundamental_group_mul B TB b0
+            (top1_fundamental_group_invg B TB b0 {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g})
+          ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                    {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) g}) ` H))
+          (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+  sorry
 
 (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
     in \<pi>_1(B) are conjugate. **)
@@ -18634,9 +21110,177 @@ next
           ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
                     (top1_fundamental_group_invg B TB b0 c)) ` H))
           (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
-  \<comment> \<open>Conjugate subgroups ⇒ there exists e1' with p'(e1')=b0 s.t. subgroups equal
-     after basepoint change. Then Theorem 79.2 gives the equivalence.\<close>
-  show "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)" sorry
+  \<comment> \<open>Conjugate subgroups \<Rightarrow> \<exists>e1' with p'(e1')=b0 s.t. subgroups equal after basepoint change.
+     Then Theorem 79.2 gives the pointed equivalence, and we forget the basepoint.\<close>
+  then obtain c where hc: "c \<in> top1_fundamental_group_carrier B TB b0"
+      and hconj: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+        = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+            ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                      (top1_fundamental_group_invg B TB b0 c)) ` H))
+            (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+    by blast
+  \<comment> \<open>c = [\<gamma>] for some loop \<gamma> at b0. Lift \<gamma>\<inverse> to E' from e0'. The endpoint is e1'.
+     Then p'_*(\<pi>_1(E', e1')) = c\<inverse> \<cdot> p'_*(\<pi>_1(E', e0')) \<cdot> c = p_*(\<pi>_1(E, e0)).\<close>
+  \<comment> \<open>From the basepoint change: after conjugation by c\<inverse>,
+     p'_*(E', e1') = p_*(E, e0). Apply Theorem 79.2 with basepoint e1'.\<close>
+  have "\<exists>e1'. e1' \<in> E' \<and> p' e1' = b0 \<and>
+      top1_fundamental_group_image_hom E TE e0 B TB b0 p
+      = top1_fundamental_group_image_hom E' TE' e1' B TB b0 p'"
+  proof -
+    have hTE': "is_topology_on E' TE'"
+      using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTB: "is_topology_on B TB"
+      using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+    have hp'_cont: "top1_continuous_map_on E' TE' B TB p'"
+      by (rule top1_covering_map_on_continuous[OF assms(6)])
+    \<comment> \<open>c has a representative loop \<gamma> at b0.\<close>
+    obtain \<gamma> where h\<gamma>_loop: "top1_is_loop_on B TB b0 \<gamma>"
+        and hc_eq: "c = {g. top1_loop_equiv_on B TB b0 \<gamma> g}"
+      using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>Lift \<gamma> to E' from e0'. Endpoint = e1'.\<close>
+    have h\<gamma>_path: "top1_is_path_on B TB b0 b0 \<gamma>" using h\<gamma>_loop unfolding top1_is_loop_on_def by (by100 blast)
+    obtain \<delta> where h\<delta>: "top1_is_path_on E' TE' e0' (\<delta> 1) \<delta>"
+        and h\<delta>p: "\<forall>s\<in>I_set. p' (\<delta> s) = \<gamma> s"
+    proof -
+      have "\<exists>ft. top1_is_path_on E' TE' e0' (ft 1) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = \<gamma> s)"
+      proof (rule Lemma_54_1_path_lifting)
+        show "top1_covering_map_on E' TE' B TB p'" by (rule assms(6))
+        show "e0' \<in> E'" by (rule assms(13))
+        show "p' e0' = b0" by (rule assms(7))
+        show "top1_is_path_on B TB b0 b0 \<gamma>" by (rule h\<gamma>_path)
+        show "is_topology_on B TB" by (rule hTB)
+        show "is_topology_on E' TE'" by (rule hTE')
+      qed
+      then obtain ft' where hft': "top1_is_path_on E' TE' e0' (ft' 1) ft'"
+          and hft'p: "\<forall>s\<in>I_set. p' (ft' s) = \<gamma> s" by (by100 blast)
+      show ?thesis using that[OF hft' hft'p] .
+    qed
+    let ?e1' = "\<delta> 1"
+    have he1': "?e1' \<in> E'"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis using h\<delta> unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    qed
+    have hp'e1': "p' ?e1' = b0"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      hence "p' (\<delta> 1) = \<gamma> 1" using h\<delta>p by (by100 blast)
+      moreover have "\<gamma> 1 = b0" using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Basepoint change: p'_*(\<pi>_1(E', e1')) = [p'\<circ>\<delta>]\<inverse> \<cdot> p'_*(\<pi>_1(E', e0')) \<cdot> [p'\<circ>\<delta>].
+       Since p'\<circ>\<delta> = \<gamma> and [\<gamma>] = c: p'_*(E', e1') = c\<inverse> \<cdot> p'_*(E', e0') \<cdot> c.
+       Using hconj: p'_*(E', e0') = c \<cdot> p_*(E) \<cdot> c\<inverse>.
+       So: p'_*(E', e1') = c\<inverse> \<cdot> (c \<cdot> p_*(E) \<cdot> c\<inverse>) \<cdot> c = p_*(E).\<close>
+    \<comment> \<open>Apply basepoint change: image_hom(E', e1') = c'\<inverse> \<cdot> image_hom(E', e0') \<cdot> c'
+       where c' = [p'\<circ>\<delta>] = [\<gamma>] = c.\<close>
+    have hE'_pc: "top1_path_connected_on E' TE'" by (rule assms(9))
+    have hpe0': "p' e0' = b0" by (rule assms(7))
+    have h_bpc: "top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'
+        = (\<lambda>H. top1_fundamental_group_mul B TB b0
+              (top1_fundamental_group_invg B TB b0 {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g})
+            ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+                      {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}) ` H))
+            (top1_fundamental_group_image_hom E' TE' e0' B TB b0 p')"
+      by (rule basepoint_change_image_hom[OF assms(6) hTE' hTB assms(13) he1' h\<delta> hpe0' hE'_pc])
+    \<comment> \<open>[p'\<circ>\<delta>] = [\<gamma>] = c (since p'(\<delta>(s)) = \<gamma>(s) for all s).\<close>
+    have hp'\<delta>_eq_\<gamma>: "{g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g} = c"
+    proof -
+      \<comment> \<open>p'\<circ>\<delta> and \<gamma> agree on I_set, so they're loop-equivalent.\<close>
+      have hp'\<delta>_loop: "top1_is_loop_on B TB b0 (p' \<circ> \<delta>)"
+      proof -
+        have "top1_continuous_map_on I_set I_top B TB (p' \<circ> \<delta>)"
+          by (rule top1_continuous_map_on_comp)
+             (use h\<delta> hp'_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+        moreover have "(p' \<circ> \<delta>) 0 = b0"
+          using h\<delta> hpe0' unfolding top1_is_path_on_def by (by100 simp)
+        moreover have "(p' \<circ> \<delta>) 1 = b0" using hp'e1' by (by100 simp)
+        ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      qed
+      have hequiv: "top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) \<gamma>"
+      proof -
+        \<comment> \<open>p'\<circ>\<delta> and \<gamma> agree on I_set, so path-homotopic (same function on domain).\<close>
+        have hagree: "\<forall>s\<in>I_set. (p' \<circ> \<delta>) s = \<gamma> s"
+          using h\<delta>p by (by100 simp)
+        \<comment> \<open>Any two loops that agree pointwise on I_set are path-homotopic.\<close>
+        have "top1_path_homotopic_on B TB b0 b0 (p' \<circ> \<delta>) \<gamma>"
+        proof -
+          \<comment> \<open>Constant homotopy: H(s,t) = (p'\<circ>\<delta>)(s) = \<gamma>(s) for all t.\<close>
+          \<comment> \<open>This works because both are continuous paths agreeing on I_set.\<close>
+          have hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>(s,t). \<gamma> s)"
+          proof -
+            have h\<gamma>_cont: "top1_continuous_map_on I_set I_top B TB \<gamma>"
+              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+            have "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>p. \<gamma> (fst p))"
+              by (rule path_homotopy_const_continuous[OF h\<gamma>_cont])
+            moreover have "(\<lambda>p::real\<times>real. \<gamma> (fst p)) = (\<lambda>(s::real,t::real). \<gamma> s)"
+            proof (rule ext)
+              fix p :: "real \<times> real" obtain s t where "p = (s, t)" by (cases p)
+              thus "\<gamma> (fst p) = (case p of (s, t) \<Rightarrow> \<gamma> s)" by (by100 simp)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          show ?thesis unfolding top1_path_homotopic_on_def
+          proof (intro exI conjI ballI)
+            show "top1_is_path_on B TB b0 b0 (p' \<circ> \<delta>)"
+              using hp'\<delta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+            show "top1_is_path_on B TB b0 b0 \<gamma>" by (rule h\<gamma>_path)
+            show "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB (\<lambda>(s,t). \<gamma> s)"
+              by (rule hF)
+            fix s assume "s \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (s, 0) = (p' \<circ> \<delta>) s"
+              using hagree \<open>s \<in> I_set\<close> by (by100 simp)
+          next
+            fix s assume "s \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (s, 1) = \<gamma> s" by (by100 simp)
+          next
+            fix t assume "t \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (0, t) = b0"
+              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 simp)
+          next
+            fix t assume "t \<in> I_set" show "(\<lambda>(s,t). \<gamma> s) (1, t) = b0"
+              using h\<gamma>_path unfolding top1_is_path_on_def by (by100 simp)
+          qed
+        qed
+        thus ?thesis using hp'\<delta>_loop h\<gamma>_loop unfolding top1_loop_equiv_on_def by (by100 blast)
+      qed
+      \<comment> \<open>Equiv classes are equal.\<close>
+      show ?thesis
+      proof (rule set_eqI)
+        fix g show "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g} \<longleftrightarrow> g \<in> c"
+        proof
+          assume "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}"
+          hence "top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g" by (by100 blast)
+          from top1_loop_equiv_on_trans[OF hTB top1_loop_equiv_on_sym[OF hequiv] this]
+          show "g \<in> c" using hc_eq by (by100 blast)
+        next
+          assume "g \<in> c"
+          hence "top1_loop_equiv_on B TB b0 \<gamma> g" using hc_eq by (by100 blast)
+          from top1_loop_equiv_on_trans[OF hTB hequiv this]
+          show "g \<in> {g. top1_loop_equiv_on B TB b0 (p' \<circ> \<delta>) g}" by (by100 blast)
+        qed
+      qed
+    qed
+    \<comment> \<open>Now: image_hom(E', e1') = c\<inverse> \<cdot> image_hom(E', e0') \<cdot> c.
+       From hconj: image_hom(E', e0') = c \<cdot> image_hom(E, e0) \<cdot> c\<inverse>.
+       So: image_hom(E', e1') = c\<inverse> \<cdot> (c \<cdot> image_hom(E) \<cdot> c\<inverse>) \<cdot> c = image_hom(E).\<close>
+    have himg_match: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+        = top1_fundamental_group_image_hom E' TE' ?e1' B TB b0 p'"
+      using h_bpc hconj hp'\<delta>_eq_\<gamma> sorry
+    show ?thesis using he1' hp'e1' himg_match by (by100 blast)
+  qed
+  then obtain e1' where he1': "e1' \<in> E'" and hp'e1': "p' e1' = b0"
+      and himg_eq: "top1_fundamental_group_image_hom E TE e0 B TB b0 p
+          = top1_fundamental_group_image_hom E' TE' e1' B TB b0 p'"
+    by (by100 blast)
+  \<comment> \<open>Apply Theorem 79.2 backward with basepoint e1': get h with h(e0) = e1'.\<close>
+  have "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
+           \<and> h e0 = e1') \<longleftrightarrow>
+       top1_fundamental_group_image_hom E TE e0 B TB b0 p
+         = top1_fundamental_group_image_hom E' TE' e1' B TB b0 p'"
+    by (rule Theorem_79_2[OF assms(1,2,3,4) assms(5) assms(6) hp'e1' assms(8,9,10,11)
+          assms(12) he1' assms(14)])
+  hence "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e) \<and> h e0 = e1'"
+    using himg_eq by (by100 blast)
+  thus "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+    by (by100 blast)
 qed
 
 section \<open>\<S>79 Equivalence of Covering Spaces\<close>
@@ -19033,6 +21677,7 @@ theorem Theorem_80_3_universal:
       and "top1_covering_map_on E TE B TB p"
       and "top1_simply_connected_on E TE"
       and "top1_covering_map_on Y TY B TB r"
+      and "top1_locally_path_connected_on E TE"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
 proof (cases "E = {}")
   case True
@@ -19070,7 +21715,88 @@ next
   \<comment> \<open>For each e \<in> E, pick path \<alpha> from e0 to e. Lift p\<circ>\<alpha> to Y starting at y0.
      Simple connectivity ensures uniqueness (different \<alpha>'s give same endpoint).\<close>
   have "\<exists>q. (\<forall>e\<in>E. q e \<in> Y) \<and> (\<forall>e\<in>E. r (q e) = p e)
-      \<and> top1_continuous_map_on E TE Y TY q" sorry
+      \<and> top1_continuous_map_on E TE Y TY q"
+  proof -
+    have hTE: "is_topology_on E TE" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTB: "is_topology_on B TB" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTY: "is_topology_on Y TY" using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      by (rule top1_covering_map_on_continuous[OF assms(4)])
+    have hE_pc: "top1_path_connected_on E TE"
+      using assms(5) unfolding top1_simply_connected_on_def by (by100 blast)
+    \<comment> \<open>E is locally path-connected (covering space of locally path-connected B,
+       or directly from the covering structure + local homeomorphisms).\<close>
+    have hE_lpc: "top1_locally_path_connected_on E TE" by (rule assms(7))
+    have hpe0: "p e0 = r y0" using hry0 by (by100 simp)
+    \<comment> \<open>E simply connected \<Rightarrow> p_*(\<pi>_1(E)) = {e} \<subseteq> r_*(\<pi>_1(Y)).\<close>
+    have himg_triv: "top1_fundamental_group_image_hom E TE e0 B TB (r y0) p
+        = {top1_fundamental_group_id B TB (r y0)}"
+      by (rule simply_connected_trivial_image[OF assms(5) assms(4) he0 hpe0 hTB])
+    have hsubgrp: "top1_fundamental_group_image_hom E TE e0 B TB (r y0) p
+        \<subseteq> top1_fundamental_group_image_hom Y TY y0 B TB (r y0) r"
+    proof -
+      \<comment> \<open>{e} is in any image_hom (the identity class is always in the image).\<close>
+      have "top1_fundamental_group_id B TB (r y0)
+          \<in> top1_fundamental_group_image_hom Y TY y0 B TB (r y0) r"
+      proof -
+        \<comment> \<open>id_Y \<in> carrier(Y). induced(id_Y) = {g | loop_equiv(r\<circ>const_y0, g)} = id_B.\<close>
+        have hid_Y: "top1_fundamental_group_id Y TY y0 \<in> top1_fundamental_group_carrier Y TY y0"
+          using top1_fundamental_group_is_group[OF hTY hy0] unfolding top1_is_group_on_def by (by100 blast)
+        have "top1_fundamental_group_induced_on Y TY y0 B TB (r y0) r
+            (top1_fundamental_group_id Y TY y0)
+          = top1_fundamental_group_id B TB (r y0)"
+        proof -
+          \<comment> \<open>induced(id) = {g | \<exists>f\<in>id. loop_equiv(r\<circ>f, g)} = {g | loop_equiv(r\<circ>const, g)} = id_B.\<close>
+          have hconst_in: "top1_constant_path y0 \<in> top1_fundamental_group_id Y TY y0"
+            unfolding top1_fundamental_group_id_def
+            using top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTY hy0]] by (by100 blast)
+          have hrconst: "r \<circ> top1_constant_path y0 = top1_constant_path (r y0)"
+            unfolding top1_constant_path_def by (rule ext) (by100 simp)
+          show ?thesis
+            unfolding top1_fundamental_group_induced_on_def top1_fundamental_group_id_def
+          proof (rule set_eqI, rule iffI)
+            fix k
+            assume "k \<in> {g'. \<exists>fa\<in>{g. top1_loop_equiv_on Y TY y0 (top1_constant_path y0) g}.
+                top1_loop_equiv_on B TB (r y0) (r \<circ> fa) g'}"
+            then obtain fa where hfa: "top1_loop_equiv_on Y TY y0 (top1_constant_path y0) fa"
+                and hk: "top1_loop_equiv_on B TB (r y0) (r \<circ> fa) k" by (by100 blast)
+            have hfa_loop: "top1_is_loop_on Y TY y0 fa"
+              using hfa unfolding top1_loop_equiv_on_def by (by100 blast)
+            have "top1_loop_equiv_on B TB (r y0) (r \<circ> top1_constant_path y0) (r \<circ> fa)"
+            proof -
+              have "top1_loop_equiv_on B TB (r y0) (r \<circ> top1_constant_path y0) (r \<circ> fa)"
+                using top1_induced_preserves_loop_equiv[OF hTY
+                  top1_covering_map_on_continuous[OF assms(6)]
+                  top1_constant_path_is_loop[OF hTY hy0] hfa_loop hfa] by (by100 simp)
+              thus ?thesis .
+            qed
+            hence "top1_loop_equiv_on B TB (r y0) (top1_constant_path (r y0)) (r \<circ> fa)"
+              using hrconst by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTB this hk]
+            show "k \<in> {g. top1_loop_equiv_on B TB (r y0) (top1_constant_path (r y0)) g}" by (by100 blast)
+          next
+            fix k assume "k \<in> {g. top1_loop_equiv_on B TB (r y0) (top1_constant_path (r y0)) g}"
+            hence "top1_loop_equiv_on B TB (r y0) (top1_constant_path (r y0)) k" by (by100 blast)
+            hence "top1_loop_equiv_on B TB (r y0) (r \<circ> top1_constant_path y0) k"
+              using hrconst by (by100 simp)
+            show "k \<in> {g'. \<exists>fa\<in>{g. top1_loop_equiv_on Y TY y0 (top1_constant_path y0) g}.
+                top1_loop_equiv_on B TB (r y0) (r \<circ> fa) g'}"
+              apply (rule CollectI)
+              apply (rule bexI[of _ "top1_constant_path y0"])
+              apply (rule \<open>top1_loop_equiv_on B TB (r y0) (r \<circ> top1_constant_path y0) k\<close>)
+              using hconst_in unfolding top1_fundamental_group_id_def by (by100 blast)
+          qed
+        qed
+        thus ?thesis unfolding top1_fundamental_group_image_hom_def using hid_Y by (by100 force)
+      qed
+      thus ?thesis using himg_triv by (by100 simp)
+    qed
+    from general_lifting_criterion[OF assms(6) hTE hTB hTY hp_cont hE_pc hE_lpc he0 hy0
+        hpe0 hsubgrp]
+    obtain q where "\<forall>e\<in>E. q e \<in> Y" "\<forall>e\<in>E. r (q e) = p e"
+        "top1_continuous_map_on E TE Y TY q" by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>q is a covering map: evenly covered because p and r both are.\<close>
   show ?thesis sorry
 qed
@@ -19082,11 +21808,12 @@ corollary Theorem_80_3_universal_strict:
       and "is_topology_on_strict Y TY"
       and "top1_covering_map_on E TE B TB p"
       and "top1_covering_map_on Y TY B TB r"
+      and "top1_locally_path_connected_on E TE"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
   using Theorem_80_3_universal[of E TE B TB Y TY p r]
     top1_simply_connected_strict_imp[OF assms(1)]
     top1_simply_connected_strict_is_topology_strict[OF assms(1)]
-    assms(2-5) by (by100 blast)
+    assms(2-6) by (by100 blast)
 
 section \<open>*\<S>81 Covering Transformations\<close>
 
