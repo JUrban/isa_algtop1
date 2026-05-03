@@ -15852,10 +15852,60 @@ lemma Theorem_70_1_universal_property:
             \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a)
         \<and> (\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
             \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b)"
-  sorry \<comment> \<open>CORE: 2D Lebesgue subdivision argument. See Munkres §70 Theorem 70.1.
-     Construction: for loop f in X, subdivide into pieces in U or V, apply φ₁/φ₂.
-     Well-definedness: if [f]=[g], subdivide the homotopy F: I×I → X into a grid
-     where each cell maps to U or V. Adjacent rows agree modulo compatibility.\<close>
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  have hTopX: "is_topology_on X TX" using hTX unfolding is_topology_on_strict_def by (by100 blast)
+  have hUsub: "U \<subseteq> X" using hU unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using hV unfolding openin_on_def by (by100 blast)
+  have hx0_X: "x0 \<in> X" using hx0 hUsub by (by100 blast)
+  have hx0_U: "x0 \<in> U" using hx0 by (by100 blast)
+  have hx0_V: "x0 \<in> V" using hx0 by (by100 blast)
+  \<comment> \<open>Step 1 (Munkres): Define \<rho> for loops in U or V.
+     \<rho>(f) = \<phi>_1([f]_U) if f in U, \<phi>_2([f]_V) if f in V.
+     Well-defined on U\<inter>V by compatibility.\<close>
+  \<comment> \<open>Step 2 (Munkres): Choose connecting paths \<alpha>_x from x_0 to each x \<in> X.
+     For x \<in> U\<inter>V: \<alpha>_x in U\<inter>V. For x \<in> U-V: \<alpha>_x in U. For x \<in> V-U: \<alpha>_x in V.
+     For x = x_0: \<alpha>_{x_0} = constant path.
+     Define \<sigma>(f) = \<rho>(\<alpha>_x \<cdot> f \<cdot> rev(\<alpha>_y)) for path f from x to y in U or V.\<close>
+  \<comment> \<open>Step 3 (Munkres): Define \<tau>(f) for arbitrary path f in X.
+     Subdivide f into pieces f_1,...,f_n, each in U or V.
+     \<tau>(f) = \<sigma>(f_1) \<cdot> ... \<cdot> \<sigma>(f_n).
+     Independent of subdivision (from \<sigma> multiplicativity).\<close>
+  \<comment> \<open>Step 4 (Munkres): \<tau>(f) = \<tau>(g) if [f] = [g] (path-homotopic).
+     Key 2D argument: given homotopy F, subdivide I\<times>I into grid,
+     each cell in U or V. Show adjacent rows give same \<tau>-value.
+     Uses: grid_from_per_piece_subdivisions, open_cover_subdivision_01.\<close>
+  \<comment> \<open>Step 5 (Munkres): \<tau>(f*g) = \<tau>(f) \<cdot> \<tau>(g).\<close>
+  \<comment> \<open>Step 6 (Munkres): Set \<Phi>([f]) = \<tau>(f). Well-defined by Step 4.
+     Homomorphism by Step 5. Extension property from construction.\<close>
+  \<comment> \<open>Implementation: define \<tau> directly on loop classes using SOME representative.\<close>
+  define \<Phi> where "\<Phi> c = (
+    let f = SOME f. top1_is_loop_on X TX x0 f \<and> c = {g. top1_loop_equiv_on X TX x0 f g};
+        \<comment> \<open>Subdivide f into pieces in U or V.\<close>
+        n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+            \<and> (\<forall>i<n. sub i < sub (Suc i))
+            \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))
+    in eH \<comment> \<open>Placeholder: actual value requires \<sigma> and \<alpha> constructions.\<close>
+    )" for c
+  \<comment> \<open>The actual \<tau> construction requires:
+     1. Choosing connecting paths \<alpha>_x (via path-connectedness of U, V, U\<inter>V)
+     2. Defining \<sigma>(f_i) = \<rho>(\<alpha>_{start} \<cdot> f_i \<cdot> rev(\<alpha>_{end}))
+     3. Multiplying: \<tau>(f) = \<sigma>(f_1) \<cdot>H ... \<cdot>H \<sigma>(f_n)
+     This is a complex functional construction. We sorry the key properties.\<close>
+  have h\<Phi>_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
+    sorry \<comment> \<open>\<Phi> is a group homomorphism: uses Steps 4 (\<tau> well-defined) and 5 (\<tau> multiplicative).\<close>
+  have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
+      \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
+    sorry \<comment> \<open>Extension of \<phi>_1: for loop f in U, \<tau>(f) = \<rho>(f) = \<phi>_1([f]_U).\<close>
+  have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
+      \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
+    sorry \<comment> \<open>Extension of \<phi>_2: for loop f in V, \<tau>(f) = \<rho>(f) = \<phi>_2([f]_V).\<close>
+  show ?thesis using h\<Phi>_hom h\<Phi>_ext_U h\<Phi>_ext_V by (by100 blast)
+qed
 
 text \<open>Parameterized SvK: given a free product FP of π₁(U) and π₁(V),
   π₁(X) ≅ FP / normal-closure of amalgamation generators.\<close>
