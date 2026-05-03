@@ -590,8 +590,33 @@ proof -
   \<comment> \<open>In the free group on 2 generators, the commutator word [(0,T),(1,T),(0,F),(1,F)] is
      reduced and non-empty, hence evaluates to non-identity. This means \<iota>(0)\<cdot>\<iota>(1) \<noteq> \<iota>(1)\<cdot>\<iota>(0).\<close>
   have hG_not_abelian: "\<not> (\<forall>a\<in>G. \<forall>b\<in>G. mul a b = mul b a)"
-    sorry \<comment> \<open>Free group on \<ge>2 generators is non-abelian.
-       Proof: commutator word is reduced + non-empty \<Rightarrow> non-identity by free group property.\<close>
+  proof
+    assume habel: "\<forall>a\<in>G. \<forall>b\<in>G. mul a b = mul b a"
+    note hfr = hfree[unfolded top1_is_free_group_full_on_def]
+    have hG_grp: "top1_is_group_on G mul e invg" using hfr[THEN conjunct1] .
+    note h\<iota>_in = hfr[THEN conjunct2, THEN conjunct1]
+    have h\<iota>0: "\<iota> 0 \<in> G" using h\<iota>_in by (by100 force)
+    have h\<iota>1: "\<iota> 1 \<in> G" using h\<iota>_in by (by100 force)
+    note h\<iota>_inj = hfr[THEN conjunct2, THEN conjunct2, THEN conjunct1]
+    hence h01_ne: "\<iota> 0 \<noteq> \<iota> 1" unfolding inj_on_def by (by100 force)
+    \<comment> \<open>Commutator = e under abelian assumption.\<close>
+    have hcomm: "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1)))) = e"
+      sorry \<comment> \<open>Group algebra: if ab=ba then aba\<inverse>b\<inverse> = aa\<inverse>bb\<inverse> = e.\<close>
+    \<comment> \<open>But the commutator word is reduced and non-empty \<Rightarrow> word product \<noteq> e.\<close>
+    let ?ws = "[(0::nat, True), (1::nat, True), (0, False), (1, False)]"
+    have hws_ne: "?ws \<noteq> []" by (by100 simp)
+    have hws_S: "\<forall>i<length ?ws. fst (?ws!i) \<in> {..<2::nat}"
+      by (intro allI impI, simp add: nth_Cons' split: nat.splits)
+    have hws_red: "top1_is_reduced_word (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)"
+      sorry \<comment> \<open>Reduced word: no adjacent (x,T)(x,F). Uses \<iota> injective (0\<noteq>1) and alternating T/F.\<close>
+    have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws) \<noteq> e"
+      using hfree hws_ne hws_red hws_S unfolding top1_is_free_group_full_on_def by (by100 blast)
+    \<comment> \<open>Word product = commutator.\<close>
+    moreover have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws)
+        = mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))"
+      sorry \<comment> \<open>Unfold group_word_product on the 4-element list.\<close>
+    ultimately show False using hcomm by (by100 simp)
+  qed
   \<comment> \<open>Transfer via isomorphism: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
   \<comment> \<open>Transfer: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
   obtain f where hf_bij: "bij_betw f G (top1_fundamental_group_carrier X TX p)"
