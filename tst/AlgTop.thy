@@ -2257,10 +2257,42 @@ lemma grid_subdivision_UV:
                          \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                          \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
                          \<longrightarrow> F (s,t) \<in> V)))"
-  sorry \<comment> \<open>2D Lebesgue: I\<times>I compact, F\<inverse>(U) \<union> F\<inverse>(V) open cover.
-     Approach: open_cover_subdivision_01 in s, then per-strip in t via
-     tube lemma (Lemma_26_8), merge via grid_from_per_piece_subdivisions.
-     All infrastructure available. ~100 lines.\<close>
+proof -
+  have hU_TX: "U \<in> TX" using hU unfolding openin_on_def by (by100 blast)
+  have hV_TX: "V \<in> TX" using hV unfolding openin_on_def by (by100 blast)
+  \<comment> \<open>F\<inverse>(U) and F\<inverse>(V) are open in II_topology and cover I\<times>I.\<close>
+  have hFU_open: "{p \<in> I_set \<times> I_set. F p \<in> U} \<in> II_topology"
+    using hF hU_TX unfolding top1_continuous_map_on_def II_topology_def by (by100 blast)
+  have hFV_open: "{p \<in> I_set \<times> I_set. F p \<in> V} \<in> II_topology"
+    using hF hV_TX unfolding top1_continuous_map_on_def II_topology_def by (by100 blast)
+  \<comment> \<open>For each (s0,t0) \<in> I\<times>I, F(s0,t0) \<in> U or V. Since F\<inverse>(U), F\<inverse>(V) are open in II_topology
+     = product_topology_on I_top I_top, there exist basic open rectangles around (s0,t0).\<close>
+  \<comment> \<open>Key fact: II_topology = product_topology_on I_top I_top. Basic opens are Us \<times> Ut
+     where Us \<in> I_top, Ut \<in> I_top. For each point in F\<inverse>(U), there's such a rectangle in F\<inverse>(U).\<close>
+  \<comment> \<open>Apply open_cover_subdivision_01 TWICE:
+     Step 1: Fix t = 0 (or any t). For each s0, F(s0,0) \<in> U or V.
+       By continuity, there's a ball in s around s0 where F(s,0) \<in> same.
+       Apply open_cover_subdivision_01 in s.
+     Step 2: For each s-strip [sub_s i, sub_s(Suc i)]:
+       For each t0, ALL points (s,t0) in the strip map into U or V (if strip fine enough).
+       By tube lemma: extend to a t-band.
+       Apply open_cover_subdivision_01 in t for this strip.
+     Step 3: Merge per-strip t-subdivisions via grid_from_per_piece_subdivisions.\<close>
+  \<comment> \<open>The issue with Step 2: the s-subdivision for t=0 may not work for other t.
+     Fix: apply open_cover_subdivision_01 to BOTH dimensions simultaneously using the
+     2D cover structure. For each (s0,t0), there's a rectangle Rs0 \<times> Rt0 in F\<inverse>(U or V).
+     Project Rs0's to s-axis and Rt0's to t-axis. Apply open_cover_subdivision_01 to each.
+     The resulting grid has each cell contained in some rectangle, hence in F\<inverse>(U or V).\<close>
+  \<comment> \<open>Formal approach: for each s0, the cover in the t-direction depends on s0.
+     Use compactness in s to get a finite set of s-values, each with a t-cover.
+     Then merge.\<close>
+  \<comment> \<open>Simplest correct proof: treat I\<times>I as [0,1] with the sup metric d(p,q) = max(|s1-s2|,|t1-t2|).
+     This is compact. Apply the Lebesgue number to get \<delta>. Subdivide both directions with mesh < \<delta>.
+     Each cell has diameter < \<delta>, hence is in some cover element.\<close>
+  \<comment> \<open>We use our top1_lebesgue_number with a metric on I\<times>I.\<close>
+  show ?thesis
+    sorry \<comment> \<open>The core 2D compactness argument. ~100 lines.\<close>
+qed
 
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
 lemma loop_subdivision_UV:
