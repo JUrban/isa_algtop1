@@ -1466,7 +1466,7 @@ proof (induction k arbitrary: ps rule: nat_induct_at_least[of 1])
 next
   case (Suc k')
   \<comment> \<open>k ≥ 2: split first piece, conjugate with connecting path, use induction.\<close>
-  hence hk': "k' \<ge> 1" by (by100 simp)
+  hence hk': "k' \<ge> 1" using Suc.prems(1) by (by100 arith)
   have hlen_ge2: "length ps \<ge> 2" using Suc.prems(1) Suc.hyps by (by100 linarith)
   obtain p rest where hps_eq: "ps = p # rest" using hlen_ge2 by (cases ps) (by100 auto)+
   have hrest_len: "length rest = k'" using Suc.prems(1) hps_eq Suc.hyps by (by100 simp)
