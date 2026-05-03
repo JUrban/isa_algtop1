@@ -2318,26 +2318,32 @@ proof -
   \<comment> \<open>Step 5: Define \<Phi>([f]) = \<tau>(f) for a SOME representative f of the class.\<close>
   define \<Phi> where "\<Phi> c = \<tau> (SOME f. top1_is_loop_on X TX x0 f
       \<and> c = {g. top1_loop_equiv_on X TX x0 f g})" for c
-  \<comment> \<open>===== Properties of \<Phi> =====\<close>
-  \<comment> \<open>The following properties require:
-     - \<rho> well-defined on U\<inter>V (from compatibility)
-     - \<sigma> satisfies: \<sigma>(f*g) = \<sigma>(f) \<cdot> \<sigma>(g) and path-homotopy invariance
-     - \<tau> independent of subdivision (from \<sigma> properties)
-     - \<tau>(f) = \<tau>(g) when f \<simeq> g (THE 2D grid argument)
-     - \<tau>(f*g) = \<tau>(f) \<cdot> \<tau>(g) (from subdivision compatibility)
-     Each of these is a substantial sub-proof.\<close>
+  \<comment> \<open>===== Key property A: \<tau> well-defined under homotopy =====
+     If f \<simeq> g (path homotopic in X, same endpoints), then \<tau>(f) = \<tau>(g).
+     This is THE core 2D Lebesgue subdivision argument (Munkres Step 4).
+     Given homotopy F: I\<times>I \<rightarrow> X, subdivide I\<times>I into grid with each cell in U or V.
+     For adjacent rows: the cell homotopy gives \<sigma>-value equality via \<rho> compatibility.
+     Telescoping across rows gives \<tau>(f) = \<tau>(g).\<close>
+  have h\<tau>_wd: "\<And>f g. top1_is_loop_on X TX x0 f \<Longrightarrow> top1_is_loop_on X TX x0 g
+      \<Longrightarrow> top1_path_homotopic_on X TX x0 x0 f g \<Longrightarrow> \<tau> f = \<tau> g"
+    sorry \<comment> \<open>THE 2D grid argument. Uses: open_cover_subdivision_01 (1D Lebesgue for each row),
+       grid_from_per_piece_subdivisions (merge into uniform grid), \<sigma> properties, \<rho> compatibility.
+       ~200 lines. The single remaining core sorry for the entire SvK chain.\<close>
+  \<comment> \<open>===== Derive all three properties from A =====\<close>
+  \<comment> \<open>Also need: \<tau> multiplicative (\<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g)) and \<tau> extension (\<tau>(f) = \<phi>_i([f])
+     for f in U or V). These follow from subdivision independence + \<sigma>/\<rho> properties.\<close>
   have h\<Phi>_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
-    sorry \<comment> \<open>Steps 4+5: \<tau> well-defined (2D grid) + multiplicative \<Rightarrow> \<Phi> is group hom.\<close>
+    sorry \<comment> \<open>From h\<tau>_wd + \<tau> multiplicativity. The multiplicativity is a 1D argument:
+       \<tau>(f*g) uses subdivision of f*g = subdivision of f + subdivision of g.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
-    sorry \<comment> \<open>For loop f in U: \<Phi>([f]_X) = \<tau>(f) = \<sigma>(f) = \<rho>(const\<cdot>f\<cdot>const).
-       Since \<alpha>(x_0) = const (by \<alpha> def) and const\<cdot>f\<cdot>const \<simeq>_U f (by Thm 51.2),
-       \<rho>(f) = \<phi>_1([f]_U) (by \<rho> def since f in U). Need well-definedness of \<tau>.\<close>
+    sorry \<comment> \<open>From h\<tau>_wd + extension: for f in U, \<tau>(f) = \<sigma>(f) = \<rho>(const\<cdot>f\<cdot>const)
+       = \<rho>(f) = \<phi>_1([f]_U). The \<tau> well-definedness ensures SOME representative gives same value.\<close>
   have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
       \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
-    sorry \<comment> \<open>For loop f in V: \<tau>(f) = \<sigma>(f) = \<rho>(f) = \<phi>_2([f]_V).\<close>
+    sorry \<comment> \<open>Same as ext_U but for V.\<close>
   show ?thesis using h\<Phi>_hom h\<Phi>_ext_U h\<Phi>_ext_V by (by100 blast)
 qed
 
@@ -5053,7 +5059,7 @@ proof (rule subsetI)
     unfolding hq_eq
     apply simp
     apply (rule_tac x="?c" in exI)
-    using hc_nn hc_sum hc_x hc_y by (by100 auto)
+    using hc_nn hc_sum hc_x hc_y by (by100 force)
 qed
 
 text \<open>Cone subset: conv(Suc n) \<subseteq> cone(conv n, v_n).\<close>
