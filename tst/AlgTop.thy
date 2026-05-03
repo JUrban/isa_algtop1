@@ -15861,49 +15861,63 @@ proof -
   have hx0_X: "x0 \<in> X" using hx0 hUsub by (by100 blast)
   have hx0_U: "x0 \<in> U" using hx0 by (by100 blast)
   have hx0_V: "x0 \<in> V" using hx0 by (by100 blast)
-  \<comment> \<open>Step 1 (Munkres): Define \<rho> for loops in U or V.
-     \<rho>(f) = \<phi>_1([f]_U) if f in U, \<phi>_2([f]_V) if f in V.
+  \<comment> \<open>===== Construction of \<Phi> following Munkres §70 Theorem 70.1 =====\<close>
+  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hUVsub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+  have hTopUV: "is_topology_on (U \<inter> V) ?TUV"
+    by (rule subspace_topology_is_topology_on[OF hTopX hUVsub])
+  \<comment> \<open>Step 1: Define \<rho> for loops f at x_0 in U or V.
+     \<rho>(f) = \<phi>_1([f]_U) if \<forall>t\<in>I. f(t) \<in> U, else \<phi>_2([f]_V).
      Well-defined on U\<inter>V by compatibility.\<close>
-  \<comment> \<open>Step 2 (Munkres): Choose connecting paths \<alpha>_x from x_0 to each x \<in> X.
-     For x \<in> U\<inter>V: \<alpha>_x in U\<inter>V. For x \<in> U-V: \<alpha>_x in U. For x \<in> V-U: \<alpha>_x in V.
-     For x = x_0: \<alpha>_{x_0} = constant path.
-     Define \<sigma>(f) = \<rho>(\<alpha>_x \<cdot> f \<cdot> rev(\<alpha>_y)) for path f from x to y in U or V.\<close>
-  \<comment> \<open>Step 3 (Munkres): Define \<tau>(f) for arbitrary path f in X.
-     Subdivide f into pieces f_1,...,f_n, each in U or V.
-     \<tau>(f) = \<sigma>(f_1) \<cdot> ... \<cdot> \<sigma>(f_n).
-     Independent of subdivision (from \<sigma> multiplicativity).\<close>
-  \<comment> \<open>Step 4 (Munkres): \<tau>(f) = \<tau>(g) if [f] = [g] (path-homotopic).
-     Key 2D argument: given homotopy F, subdivide I\<times>I into grid,
-     each cell in U or V. Show adjacent rows give same \<tau>-value.
-     Uses: grid_from_per_piece_subdivisions, open_cover_subdivision_01.\<close>
-  \<comment> \<open>Step 5 (Munkres): \<tau>(f*g) = \<tau>(f) \<cdot> \<tau>(g).\<close>
-  \<comment> \<open>Step 6 (Munkres): Set \<Phi>([f]) = \<tau>(f). Well-defined by Step 4.
-     Homomorphism by Step 5. Extension property from construction.\<close>
-  \<comment> \<open>Implementation: define \<tau> directly on loop classes using SOME representative.\<close>
-  define \<Phi> where "\<Phi> c = (
-    let f = SOME f. top1_is_loop_on X TX x0 f \<and> c = {g. top1_loop_equiv_on X TX x0 f g};
-        \<comment> \<open>Subdivide f into pieces in U or V.\<close>
-        n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+  define \<rho> where "\<rho> f = (if (\<forall>s\<in>I_set. f s \<in> U)
+      then \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}
+      else \<phi>2 {g. top1_loop_equiv_on V ?TV x0 f g})" for f
+  \<comment> \<open>Step 2: Choose connecting paths \<alpha>_x from x_0 to x.
+     For x = x_0: constant path. Otherwise: use path-connectedness.\<close>
+  define \<alpha> where "\<alpha> x = (if x = x0 then top1_constant_path x0
+      else if x \<in> U \<inter> V then SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p
+      else if x \<in> U then SOME p. top1_is_path_on U ?TU x0 x p
+      else SOME p. top1_is_path_on V ?TV x0 x p)" for x
+  \<comment> \<open>Step 3: Define \<sigma>(f) = \<rho>(\<alpha>_{f(0)} \<cdot> f \<cdot> rev(\<alpha>_{f(1)})) for paths f in U or V.\<close>
+  define \<sigma> where "\<sigma> f = \<rho> (top1_path_product (\<alpha> (f 0)) (top1_path_product f (top1_path_reverse (\<alpha> (f 1)))))" for f
+  \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
+     Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
+     The pieces are reparametrized sub-paths.\<close>
+  define \<tau> where "\<tau> f = (
+    let n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+        \<and> (\<forall>i<n. sub i < sub (Suc i))
+        \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)));
+        sub = SOME sub::nat\<Rightarrow>real. sub 0 = 0 \<and> sub n = 1
             \<and> (\<forall>i<n. sub i < sub (Suc i))
             \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))
-    in eH \<comment> \<open>Placeholder: actual value requires \<sigma> and \<alpha> constructions.\<close>
-    )" for c
-  \<comment> \<open>The actual \<tau> construction requires:
-     1. Choosing connecting paths \<alpha>_x (via path-connectedness of U, V, U\<inter>V)
-     2. Defining \<sigma>(f_i) = \<rho>(\<alpha>_{start} \<cdot> f_i \<cdot> rev(\<alpha>_{end}))
-     3. Multiplying: \<tau>(f) = \<sigma>(f_1) \<cdot>H ... \<cdot>H \<sigma>(f_n)
-     This is a complex functional construction. We sorry the key properties.\<close>
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V));
+        piece = (\<lambda>i t. f (sub i + t * (sub (Suc i) - sub i)))
+    in foldr mulH (map (\<lambda>i. \<sigma> (piece i)) [0..<n]) eH)" for f
+  \<comment> \<open>Step 5: Define \<Phi>([f]) = \<tau>(f) for a SOME representative f of the class.\<close>
+  define \<Phi> where "\<Phi> c = \<tau> (SOME f. top1_is_loop_on X TX x0 f
+      \<and> c = {g. top1_loop_equiv_on X TX x0 f g})" for c
+  \<comment> \<open>===== Properties of \<Phi> =====\<close>
+  \<comment> \<open>The following properties require:
+     - \<rho> well-defined on U\<inter>V (from compatibility)
+     - \<sigma> satisfies: \<sigma>(f*g) = \<sigma>(f) \<cdot> \<sigma>(g) and path-homotopy invariance
+     - \<tau> independent of subdivision (from \<sigma> properties)
+     - \<tau>(f) = \<tau>(g) when f \<simeq> g (THE 2D grid argument)
+     - \<tau>(f*g) = \<tau>(f) \<cdot> \<tau>(g) (from subdivision compatibility)
+     Each of these is a substantial sub-proof.\<close>
   have h\<Phi>_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
-    sorry \<comment> \<open>\<Phi> is a group homomorphism: uses Steps 4 (\<tau> well-defined) and 5 (\<tau> multiplicative).\<close>
+    sorry \<comment> \<open>Steps 4+5: \<tau> well-defined (2D grid) + multiplicative \<Rightarrow> \<Phi> is group hom.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
-    sorry \<comment> \<open>Extension of \<phi>_1: for loop f in U, \<tau>(f) = \<rho>(f) = \<phi>_1([f]_U).\<close>
+    sorry \<comment> \<open>For loop f in U: \<Phi>([f]_X) = \<tau>(f) = \<sigma>(f) = \<rho>(const\<cdot>f\<cdot>const).
+       Since \<alpha>(x_0) = const (by \<alpha> def) and const\<cdot>f\<cdot>const \<simeq>_U f (by Thm 51.2),
+       \<rho>(f) = \<phi>_1([f]_U) (by \<rho> def since f in U). Need well-definedness of \<tau>.\<close>
   have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
       \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
-    sorry \<comment> \<open>Extension of \<phi>_2: for loop f in V, \<tau>(f) = \<rho>(f) = \<phi>_2([f]_V).\<close>
+    sorry \<comment> \<open>For loop f in V: \<tau>(f) = \<sigma>(f) = \<rho>(f) = \<phi>_2([f]_V).\<close>
   show ?thesis using h\<Phi>_hom h\<Phi>_ext_U h\<Phi>_ext_V by (by100 blast)
 qed
 
