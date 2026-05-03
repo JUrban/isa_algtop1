@@ -16960,7 +16960,22 @@ proof -
         qed
         \<comment> \<open>Closure under inv.\<close>
         have hinv_cl: "\<And>x. x \<in> ?A \<Longrightarrow> invgFP x \<in> ?A"
-          sorry \<comment> \<open>Inv-closure: right cancellation in quotient group. Proof written but by100 timeout.\<close>
+        proof -
+          fix x assume hx: "x \<in> ?A"
+          hence hxFP: "x \<in> FP" and hx_eq: "\<Phi> (j x) = ?\<pi>_q x" by (by100 blast)+
+          have hinvx_FP: "invgFP x \<in> FP" using hg hxFP by (by100 blast)
+          have hjx: "j x \<in> ?\<pi>X" using hj_hom hxFP unfolding top1_group_hom_on_def by (by100 blast)
+          \<comment> \<open>Chain: \<Phi>(j(inv x)) = \<Phi>(inv_\<pi>X(j x)) = inv_Q(\<Phi>(j x)) = inv_Q(\<pi>_q x) = \<pi>_q(inv x).\<close>
+          note s1 = hom_preserves_inv[OF hFP_grp h\<pi>X_grp hj_hom hxFP]
+          \<comment> \<open>s1: j(invgFP x) = invg_\<pi>X(j x)\<close>
+          note s2 = hom_preserves_inv[OF h\<pi>X_grp hQ_grp' h\<Phi>_hom hjx]
+          \<comment> \<open>s2: \<Phi>(invg_\<pi>X(j x)) = invg_Q(\<Phi>(j x))\<close>
+          note s3 = hom_preserves_inv[OF hFP_grp hQ_grp' hpiq_hom hxFP]
+          \<comment> \<open>s3: \<pi>_q(invgFP x) = invg_Q(\<pi>_q x)\<close>
+          have "\<Phi> (j (invgFP x)) = ?\<pi>_q (invgFP x)"
+            using s1 s2 s3 hx_eq by (by100 simp)
+          thus "invgFP x \<in> ?A" using hinvx_FP by (by100 blast)
+        qed
         \<comment> \<open>Assemble group axioms.\<close>
         show ?thesis unfolding top1_is_group_on_def
         proof (intro conjI)
