@@ -22743,14 +22743,24 @@ proof -
       proof
         fix x assume "x \<in> (inv_into X f) ` V"
         then obtain y where hy: "y \<in> V" and hx: "x = inv_into X f y" by (by100 blast)
-        show "x \<in> ?X'" using hfinv_agree hy hx
-          sorry \<comment> \<open>inv_into X f y = inv_into X' f y \<in> X' (from hfinv_agree).\<close>
+        have "inv_into X f y \<in> ?X'"
+        proof -
+          have "y \<in> f ` X" using hy hVY hbij unfolding bij_betw_def by (by100 blast)
+          hence hiy_X: "inv_into X f y \<in> X" by (rule inv_into_into)
+          have "f (inv_into X f y) = y" using \<open>y \<in> f ` X\<close> by (rule f_inv_into_f)
+          hence "f (inv_into X f y) \<in> V" using hy by (by100 simp)
+          thus ?thesis using hiy_X by (by100 blast)
+        qed
+        thus "x \<in> ?X'" using hx by (by100 simp)
       qed
       have hfinv_shrink: "top1_continuous_map_on V ?TY' ?X' ?TX' (inv_into X f)"
         by (rule top1_continuous_map_on_codomain_shrink[OF hfinv_restr hfinv_img hXsub])
       \<comment> \<open>inv_into X' f = inv_into X f on V, so continuity transfers.\<close>
+      \<comment> \<open>Transfer: inv_into X' f and inv_into X f agree on V, so same continuity.\<close>
+      have "\<forall>y\<in>V. inv_into ?X' f y = inv_into X f y" by (rule hfinv_agree)
       show ?thesis
-        sorry \<comment> \<open>Transfer continuity: inv_into X' f = inv_into X f on V (by hfinv_agree).\<close>
+        by (rule top1_continuous_map_on_agree'[OF hfinv_shrink])
+           (use hfinv_agree in \<open>by100 simp\<close>)
     qed
   qed
 qed
