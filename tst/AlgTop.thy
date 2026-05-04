@@ -5079,10 +5079,13 @@ proof -
           by (rule loop_subdivision_UV[OF hTopX hU hV hUV hsome_loop])
         \<comment> \<open>The foldr of σ-values is in H by group closure.\<close>
         \<comment> \<open>Each σ(piece in U) ∈ H by h_σ_path_in_H. Each σ(piece in V) ∈ H similarly.\<close>
-        show ?thesis sorry
-          \<comment> \<open>Needs: unfold τ to foldr_σ, show each σ-value ∈ H (piece in U: h_σ_path_in_H,
-             piece in V: h_σ_V_path_in_H from hsubdiv_V context — but that's local!),
-             then foldr closure. The σ ∈ H for V-paths requires the general helper.\<close>
+        \<comment> \<open>τ = foldr_σ. Each σ(piece) ∈ H (U-piece: h_σ_path_in_H, V-piece: h_σ_path_in_H_V).
+           foldr of H-elements ∈ H by group closure.\<close>
+        have h\<tau>_in_H: "\<And>f'. top1_is_loop_on X TX x0 f' \<Longrightarrow> \<tau> f' \<in> H"
+          sorry \<comment> \<open>τ(X-loop) ∈ H: τ = foldr_σ with SOME-picked subdivision.
+             Each σ(piece) ∈ H by h_σ_path_in_H (U) or h_σ_path_in_H_V (V).
+             eH ∈ H, mulH closed. foldr ∈ H.\<close>
+        show ?thesis using h\<tau>_in_H[OF hsome_loop] .
       qed
       thus ?thesis using h\<Phi>_eq by (by100 simp)
     qed
