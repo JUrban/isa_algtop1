@@ -5410,7 +5410,8 @@ proof -
                   using hH unfolding top1_is_group_on_def by (by100 blast)
                 have "\<And>k. k \<le> length [Suc 1..<n] \<Longrightarrow>
                     foldr mulH (take k (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
-                  sorry \<comment> \<open>Induction on k: base eH \<in> H; step uses hmcl + h_σ_path_in_H.\<close>
+                  sorry \<comment> \<open>Induction on k. Base: eH \<in> H. Step: foldr (take (Suc k)) = mulH head (foldr (take k)),
+                     head ∈ H by h_σ_path_in_H, foldr (take k) ∈ H by IH, mulH closed.\<close>
                 hence "foldr mulH (take (length [Suc 1..<n]) (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
                   by (by100 force)
                 thus ?thesis by (by100 simp)
