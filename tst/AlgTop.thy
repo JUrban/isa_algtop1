@@ -2764,6 +2764,53 @@ proof -
     using hn hsub0 hsubn hsubinc hcell by (by100 blast)
 qed
 
+text \<open>Affine map I \<rightarrow> I: \<lambda>t. a + t * (b - a) is continuous and maps I to I when 0 \<le> a \<le> b \<le> 1.\<close>
+lemma affine_map_continuous_I_to_I:
+  assumes ha0: "0 \<le> a" and hab: "a \<le> b" and hb1: "b \<le> 1"
+  shows "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. a + t * (b - a))"
+proof -
+  have hcont: "continuous_on I_set (\<lambda>t. a + t * (b - a))"
+    by (intro continuous_intros)
+  have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> a + t * (b - a) \<in> I_set"
+  proof -
+    fix t :: real assume ht: "t \<in> I_set"
+    have ht0: "0 \<le> t" and ht1: "t \<le> 1"
+      using ht unfolding top1_unit_interval_def by (by100 simp)+
+    have hdiff: "0 \<le> b - a" using hab by (by100 linarith)
+    have "0 \<le> t * (b - a)" by (rule mult_nonneg_nonneg[OF ht0 hdiff])
+    hence hlo: "0 \<le> a + t * (b - a)" using ha0 by (by100 linarith)
+    have "t * (b - a) \<le> 1 * (b - a)" by (rule mult_right_mono[OF ht1 hdiff])
+    hence "t * (b - a) \<le> b - a" by (by100 simp)
+    hence "a + t * (b - a) \<le> b" by (by100 linarith)
+    hence hhi: "a + t * (b - a) \<le> 1" using hb1 by (by100 linarith)
+    show "a + t * (b - a) \<in> I_set" using hlo hhi unfolding top1_unit_interval_def by (by100 force)
+  qed
+  show ?thesis unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t assume "t \<in> I_set" thus "a + t * (b - a) \<in> I_set" by (rule hrange)
+  next
+    fix V assume hV: "V \<in> I_top"
+    obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
+      using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+        top1_open_sets_def by (by100 blast)
+    have hpre_W: "{s \<in> I_set. a + s * (b - a) \<in> W} \<in> I_top"
+    proof -
+      have hpre_open: "\<exists>T. open T \<and> T \<inter> I_set = (\<lambda>t. a + t * (b - a)) -` W \<inter> I_set"
+        using hcont hW unfolding continuous_on_open_invariant by (by100 force)
+      then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = (\<lambda>t. a + t * (b - a)) -` W \<inter> I_set"
+        by (by100 blast)
+      have "{s \<in> I_set. a + s * (b - a) \<in> W} = I_set \<inter> T"
+        using hTeq by (by100 blast)
+      moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
+      ultimately show ?thesis
+        unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+    qed
+    have "{s \<in> I_set. a + s * (b - a) \<in> V} = {s \<in> I_set. a + s * (b - a) \<in> W}"
+      using hVW hrange by (by100 blast)
+    thus "{s \<in> I_set. a + s * (b - a) \<in> V} \<in> I_top" using hpre_W by (by100 simp)
+  qed
+qed
+
 text \<open>Reparametrization lemma: if two continuous maps \<phi>, \<psi>: I \<rightarrow> I agree at 0 and 1,
    then f \<circ> \<phi> and f \<circ> \<psi> are path-homotopic (straight-line homotopy on the parameter).\<close>
 lemma reparam_path_homotopy:
@@ -4738,9 +4785,79 @@ proof -
           \<comment> \<open>Define pieces for the original subdivision.\<close>
           define piece where "piece j s = (\<lambda>t. f (s j + t * (s (Suc j) - s j)))" for j s
           \<comment> \<open>Step A: pieces are paths in U.\<close>
+          \<comment> \<open>Sub bounds for all indices: 0 \<le> sub j and sub j \<le> 1 for j \<le> n.\<close>
+          have hsub_lo: "\<And>j. j \<le> n \<Longrightarrow> 0 \<le> sub j"
+          proof -
+            fix j show "j \<le> n \<Longrightarrow> 0 \<le> sub j"
+            proof (induction j)
+              case 0 show ?case using lhs0 by (by100 simp)
+            next
+              case (Suc k)
+              have "k < n" using Suc.prems by (by100 presburger)
+              have "k \<le> n" using Suc.prems by (by100 presburger)
+              have "0 \<le> sub k" using Suc.IH[OF \<open>k \<le> n\<close>] .
+              moreover have "sub k < sub (Suc k)" using lhinc \<open>k < n\<close> by (by100 force)
+              ultimately show ?case by (by100 linarith)
+            qed
+          qed
+          have hsub_hi: "\<And>j. j \<le> n \<Longrightarrow> sub j \<le> 1"
+          proof -
+            fix j show "j \<le> n \<Longrightarrow> sub j \<le> 1"
+            proof -
+              assume hj: "j \<le> n"
+              have "\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+              proof -
+                fix k show "k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+                proof (induction k)
+                  case 0 thus ?case by (by100 simp)
+                next
+                  case (Suc m)
+                  have "m + j \<le> n" using Suc.prems by (by100 presburger)
+                  have "sub j \<le> sub (m + j)" using Suc.IH[OF \<open>m + j \<le> n\<close>] .
+                  moreover have "m + j < n" using Suc.prems by (by100 presburger)
+                  moreover have "sub (m + j) < sub (Suc m + j)" using lhinc calculation(2) by (by100 force)
+                  ultimately show ?case by (by100 linarith)
+                qed
+              qed
+              have hkj_le: "(n - j) + j \<le> n" using hj by (by100 presburger)
+              have "sub j \<le> sub ((n - j) + j)"
+                using \<open>\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)\<close>[OF hkj_le] .
+              moreover have "(n - j) + j = n" using hj by (by100 presburger)
+              ultimately have "sub j \<le> sub n" by (by100 presburger)
+              thus ?thesis using lhsn by (by100 linarith)
+            qed
+          qed
           have hpiece_in_U: "\<And>j. j < n \<Longrightarrow>
               top1_is_path_on U (subspace_topology X TX U) (piece j sub 0) (piece j sub 1) (piece j sub)"
-            sorry \<comment> \<open>Continuity of affine composition; range from hf_in_U + convex combo in I_set.\<close>
+          proof -
+            fix j assume hj: "j < n"
+            have hj_le: "j \<le> n" using hj by (by100 presburger)
+            have hSj_le: "Suc j \<le> n" using hj by (by100 presburger)
+            have hge: "0 \<le> sub j" using hsub_lo[OF hj_le] .
+            have hle: "sub (Suc j) \<le> 1" using hsub_hi[OF hSj_le] .
+            have hmono: "sub j \<le> sub (Suc j)" using lhinc hj by (by100 force)
+            \<comment> \<open>The affine map \<lambda>t. sub j + t * (sub(Suc j) - sub j) is continuous I \<rightarrow> I.\<close>
+            have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                (\<lambda>t. sub j + t * (sub (Suc j) - sub j))"
+              by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+            \<comment> \<open>f continuous I \<rightarrow> U (codomain restrict).\<close>
+            have hf_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+              using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            \<comment> \<open>Composition: piece j sub = f \<circ> affine is continuous I \<rightarrow> U.\<close>
+            have hcomp: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (piece j sub)"
+            proof -
+              have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U)
+                  (f \<circ> (\<lambda>t. sub j + t * (sub (Suc j) - sub j)))"
+                by (rule top1_continuous_map_on_comp[OF haffine hf_U])
+              moreover have "(f \<circ> (\<lambda>t. sub j + t * (sub (Suc j) - sub j))) = piece j sub"
+                unfolding piece_def comp_def by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hep0: "piece j sub 0 = f (sub j)" unfolding piece_def by (by100 simp)
+            have hep1: "piece j sub 1 = f (sub (Suc j))" unfolding piece_def by (by100 simp)
+            show "top1_is_path_on U (subspace_topology X TX U) (piece j sub 0) (piece j sub 1) (piece j sub)"
+              unfolding top1_is_path_on_def using hcomp hep0 hep1 by (by100 blast)
+          qed
           have hp0: "piece 0 sub 0 = f (sub 0)" unfolding piece_def by (by100 simp)
           have hp0_1: "piece 0 sub 1 = f (sub (Suc 0))" unfolding piece_def by (by100 simp)
           have hp1: "piece 1 sub 0 = f (sub 1)" unfolding piece_def by (by100 simp)
@@ -4779,9 +4896,44 @@ proof -
           \<comment> \<open>Apply reparam_path_homotopy: need \<phi>_concat, \<psi>_linear continuous I\<rightarrow>I.\<close>
           have hphi_concat_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>_concat"
             sorry \<comment> \<open>Piecewise linear, matching at 1/2. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
+          have hsub0_ge: "0 \<le> sub 0" using lhs0 by (by100 simp)
+          have hsub02_le: "sub 0 \<le> sub (Suc (Suc 0))"
+          proof -
+            have "sub 0 < sub (Suc 0)" using lhinc h0n by (by100 force)
+            moreover have "sub (Suc 0) < sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          have hsub2_le1: "sub (Suc (Suc 0)) \<le> 1"
+          proof -
+            have "sub (Suc (Suc 0)) \<le> sub n"
+            proof -
+              have hSSn: "Suc (Suc 0) \<le> n" using hn2 by (by100 presburger)
+              have "\<And>k. k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))"
+              proof -
+                fix k show "k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))"
+                proof (induction k)
+                  case 0 thus ?case by (by100 simp)
+                next
+                  case (Suc m)
+                  have "m + Suc (Suc 0) \<le> n" using Suc.prems by (by100 presburger)
+                  have "sub (Suc (Suc 0)) \<le> sub (m + Suc (Suc 0))" using Suc.IH[OF \<open>m + Suc (Suc 0) \<le> n\<close>] .
+                  moreover have "m + Suc (Suc 0) < n" using Suc.prems by (by100 presburger)
+                  moreover have "sub (m + Suc (Suc 0)) < sub (Suc m + Suc (Suc 0))"
+                    using lhinc calculation(2) by (by100 force)
+                  ultimately show ?case by (by100 linarith)
+                qed
+              qed
+              have "(n - Suc (Suc 0)) + Suc (Suc 0) \<le> n" using hSSn by (by100 presburger)
+              hence "sub (Suc (Suc 0)) \<le> sub ((n - Suc (Suc 0)) + Suc (Suc 0))"
+                using \<open>\<And>k. k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))\<close> by (by100 blast)
+              moreover have "(n - Suc (Suc 0)) + Suc (Suc 0) = n" using hSSn by (by100 presburger)
+              ultimately show ?thesis by (by100 presburger)
+            qed
+            thus ?thesis using lhsn by (by100 linarith)
+          qed
           have hpsi_linear_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>_linear"
-            sorry \<comment> \<open>Affine: continuous_on I_set \<psi>_linear (continuous_intros) + range in I_set
-               + open_invariant → top1_continuous_map_on. Same pattern as hcont_transfer in reparam.\<close>
+            unfolding \<psi>_linear_def
+            by (rule affine_map_continuous_I_to_I[OF hsub0_ge hsub02_le hsub2_le1])
           have hphi0: "\<phi>_concat 0 = sub 0" unfolding \<phi>_concat_def by (by100 simp)
           have hphi1: "\<phi>_concat 1 = sub (Suc (Suc 0))" unfolding \<phi>_concat_def by (by100 simp)
           have hpsi0: "\<psi>_linear 0 = sub 0" unfolding \<psi>_linear_def by (by100 simp)
@@ -4988,7 +5140,21 @@ proof -
               using hn1_unfold2 by (by100 simp)
             moreover have "map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1] =
                 map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]"
-              sorry \<comment> \<open>Index shift: [1..<n-1] = map Suc [0..<n-2], then map composition.\<close>
+            proof (rule nth_equalityI)
+              show "length (map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1]) =
+                  length (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1])"
+                using hn2 by (by100 simp)
+            next
+              fix k assume hk: "k < length (map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1])"
+              hence hk2: "k < n - Suc 1" using hn2 by (by100 simp)
+              have "map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1] ! k = \<sigma> (piece (k + 1) sub')"
+                using hk by (by100 simp)
+              also have "\<dots> = \<sigma> (piece (Suc k) sub')" by (by100 simp)
+              also have "\<dots> = map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1] ! k"
+                using hk2 by (by100 simp)
+              finally show "map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1] ! k =
+                  map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1] ! k" .
+            qed
             ultimately show ?thesis by (by100 simp)
           qed
           \<comment> \<open>Now: LHS = mulH (σ p0) (mulH (σ p1) tail)
