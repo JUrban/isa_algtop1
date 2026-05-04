@@ -3148,13 +3148,58 @@ proof -
     qed
     have hind: "top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a
         = {g. top1_loop_equiv_on X TX x0 f g}"
-      sorry \<comment> \<open>Induced map of inclusion sends [f]_U to [f]_X.
-         Uses loop_equiv_subspace_superspace + transitivity.
-         by100 struggles with (\<lambda>x. x) \<circ> f' simplification in set comprehensions.\<close>
+      unfolding top1_fundamental_group_induced_on_def ha_eq
+    proof (rule equalityI; rule subsetI)
+      fix g assume "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U ?TU x0 f g'}.
+          top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g}"
+      then obtain f' where hf'U: "top1_loop_equiv_on U ?TU x0 f f'"
+          and hf'g: "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g" by (by100 fast)
+      have hf'_X: "top1_loop_equiv_on X TX x0 f f'"
+        by (rule loop_equiv_subspace_superspace[OF hUsub hTopX _ hf'U]) (by100 simp)
+      have hid_f': "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
+      have "top1_loop_equiv_on X TX x0 f' g" using hf'g unfolding hid_f' .
+      thus "g \<in> {g. top1_loop_equiv_on X TX x0 f g}"
+        using top1_loop_equiv_on_trans[OF hTopX hf'_X] by (by100 fast)
+    next
+      fix g assume "g \<in> {g. top1_loop_equiv_on X TX x0 f g}"
+      hence hfg: "top1_loop_equiv_on X TX x0 f g" by (by100 blast)
+      have hff: "top1_loop_equiv_on U ?TU x0 f f" by (rule top1_loop_equiv_on_refl[OF hf_loop_U])
+      have hid_f: "(\<lambda>x. x) \<circ> f = f" by (by100 auto)
+      have "f \<in> {g'. top1_loop_equiv_on U ?TU x0 f g'}" using hff by (by100 blast)
+      moreover have "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f) g"
+        unfolding hid_f using hfg .
+      ultimately show "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U ?TU x0 f g'}.
+          top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g}"
+        by (by100 fast)
+    qed
     \<comment> \<open>Step 3: \<Phi>([f]_X) = \<tau>(f) by h\<tau>_wd (SOME representative \<simeq> f).\<close>
     have h\<Phi>_val: "\<Phi> {g. top1_loop_equiv_on X TX x0 f g} = \<tau> f"
-      sorry \<comment> \<open>\<Phi>(c) = \<tau>(SOME f'. loop f' \<and> c=[f']). SOME f' is loop-equiv to f.
-         By h\<tau>_wd: \<tau>(SOME f') = \<tau>(f). Needs careful SOME handling (100ms blast struggles).\<close>
+    proof -
+      let ?c = "{g. top1_loop_equiv_on X TX x0 f g}"
+      let ?P = "\<lambda>f'. top1_is_loop_on X TX x0 f' \<and> ?c = {g. top1_loop_equiv_on X TX x0 f' g}"
+      have hPf: "?P f" using hf_loop_X by (by100 blast)
+      have "\<exists>f'. ?P f'" using hPf by (by100 blast)
+      hence hPsome: "?P (SOME f'. ?P f')" by (rule someI_ex)
+      have hsome_loop: "top1_is_loop_on X TX x0 (SOME f'. ?P f')"
+        using hPsome by (by100 blast)
+      have hsome_class: "?c = {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P f') g}"
+        using hPsome by (by100 blast)
+      \<comment> \<open>f is loop-equiv to itself, hence in ?c, hence in [SOME f'].\<close>
+      have "top1_loop_equiv_on X TX x0 (SOME f'. ?P f') f"
+      proof -
+        have hff: "top1_loop_equiv_on X TX x0 f f"
+          by (rule top1_loop_equiv_on_refl[OF hf_loop_X])
+        have hf_in_c: "f \<in> ?c" using hff by (by100 blast)
+        have "f \<in> {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P f') g}"
+          using hf_in_c hsome_class by (by100 fast)
+        thus ?thesis by (by100 blast)
+      qed
+      hence "top1_path_homotopic_on X TX x0 x0 (SOME f'. ?P f') f"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      from h\<tau>_wd[OF hsome_loop hf_loop_X this]
+      have h\<tau>_eq: "\<tau> (SOME f'. ?P f') = \<tau> f" .
+      show ?thesis unfolding \<Phi>_def using h\<tau>_eq by (by100 simp)
+    qed
     \<comment> \<open>Step 4: \<tau>(f) = \<sigma>(f) (trivial subdivision: f already in U, use n=1).\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
       sorry \<comment> \<open>With trivial subdivision n=1, sub = (0,1): piece_0 = f, \<tau> f = \<sigma> f \<cdot> eH = \<sigma> f.
@@ -3170,8 +3215,96 @@ proof -
     \<comment> \<open>Step 6: \<rho>(const \<cdot> f \<cdot> const) = \<rho>(f) since const \<cdot> f \<cdot> const \<simeq>_U f.\<close>
     have h\<rho>_simp: "\<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) = \<rho> f"
-      sorry \<comment> \<open>Identity laws (Theorem_51_2): const \<cdot> f \<cdot> const \<simeq>_U f.
-         \<rho> well-defined under loop equiv in U (or V).\<close>
+    proof -
+      \<comment> \<open>rev(const_x0) = const_x0.\<close>
+      have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
+        unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
+      \<comment> \<open>f is a path from x0 to x0 in U.\<close>
+      have hf_path_U: "top1_is_path_on U ?TU x0 x0 f"
+        using hf_loop_U unfolding top1_is_loop_on_def by (by100 blast)
+      \<comment> \<open>f \<cdot> const ≃_U f by right identity.\<close>
+      have h_right: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product f (top1_constant_path x0)) f"
+        by (rule Theorem_51_2_right_identity[OF hTopU hf_path_U])
+      \<comment> \<open>const \<cdot> (f \<cdot> const) ≃_U const \<cdot> f by product_right.\<close>
+      have hconst_path: "top1_is_path_on U ?TU x0 x0 (top1_constant_path x0)"
+        by (rule top1_constant_path_is_path[OF hTopU hx0_U])
+      have h_outer: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
+          (top1_path_product (top1_constant_path x0) f)"
+        by (rule path_homotopic_product_right[OF hTopU h_right hconst_path])
+      \<comment> \<open>const \<cdot> f ≃_U f by left identity.\<close>
+      have h_left: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (top1_constant_path x0) f) f"
+        by (rule Theorem_51_2_left_identity[OF hTopU hf_path_U])
+      \<comment> \<open>Transitivity: const \<cdot> (f \<cdot> const) ≃_U f.\<close>
+      have h_chain: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0))) f"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopU h_outer h_left])
+      \<comment> \<open>Substitute rev(const) = const.\<close>
+      have h_full: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (top1_constant_path x0)
+            (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) f"
+        using h_chain unfolding hrev_const .
+      \<comment> \<open>Path homotopic in U implies loop-equiv in U.\<close>
+      \<comment> \<open>The composite is a loop at x0 in U.\<close>
+      have hrev_path: "top1_is_path_on U ?TU x0 x0 (top1_path_reverse (top1_constant_path x0))"
+        unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopU hx0_U])
+      have hfrev: "top1_is_path_on U ?TU x0 x0 (top1_path_product f (top1_path_reverse (top1_constant_path x0)))"
+        by (rule top1_path_product_is_path[OF hTopU hf_path_U hrev_path])
+      have hcomp_loop: "top1_is_loop_on U ?TU x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_path_reverse (top1_constant_path x0))))"
+        unfolding top1_is_loop_on_def
+        by (rule top1_path_product_is_path[OF hTopU hconst_path hfrev])
+      have h_equiv: "top1_loop_equiv_on U ?TU x0
+          (top1_path_product (top1_constant_path x0)
+            (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) f"
+        unfolding top1_loop_equiv_on_def
+        using hcomp_loop hf_loop_U h_full by (by100 blast)
+      \<comment> \<open>\<rho> well-defined: both functions are in U, so \<rho> = \<phi>1 of equiv class. Same class → same \<rho>.\<close>
+      have hcomp_in_U: "\<forall>s\<in>I_set. (top1_path_product (top1_constant_path x0)
+          (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) s \<in> U"
+        using hcomp_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                                    top1_continuous_map_on_def by (by100 blast)
+      let ?comp = "top1_path_product (top1_constant_path x0)
+          (top1_path_product f (top1_path_reverse (top1_constant_path x0)))"
+      have hclass_eq: "{g. top1_loop_equiv_on U ?TU x0 ?comp g}
+          = {g. top1_loop_equiv_on U ?TU x0 f g}"
+      proof (rule equalityI; rule subsetI)
+        fix g assume "g \<in> {g. top1_loop_equiv_on U ?TU x0 ?comp g}"
+        hence "top1_loop_equiv_on U ?TU x0 ?comp g" by (by100 blast)
+        have hsym: "top1_loop_equiv_on U ?TU x0 f ?comp"
+          by (rule top1_loop_equiv_on_sym[OF h_equiv])
+        thus "g \<in> {g. top1_loop_equiv_on U ?TU x0 f g}"
+          using top1_loop_equiv_on_trans[OF hTopU hsym \<open>top1_loop_equiv_on U ?TU x0 ?comp g\<close>]
+          by (by100 blast)
+      next
+        fix g assume "g \<in> {g. top1_loop_equiv_on U ?TU x0 f g}"
+        hence "top1_loop_equiv_on U ?TU x0 f g" by (by100 blast)
+        thus "g \<in> {g. top1_loop_equiv_on U ?TU x0 ?comp g}"
+          using top1_loop_equiv_on_trans[OF hTopU h_equiv \<open>top1_loop_equiv_on U ?TU x0 f g\<close>]
+          by (by100 blast)
+      qed
+      have hf_in_U': "\<forall>s\<in>I_set. f s \<in> U"
+        using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def
+                                  top1_continuous_map_on_def by (by100 blast)
+      show ?thesis
+      proof -
+        have lhs: "\<rho> (top1_path_product (top1_constant_path x0)
+            (top1_path_product f (top1_path_reverse (top1_constant_path x0))))
+          = \<phi>1 {g. top1_loop_equiv_on U ?TU x0
+              (top1_path_product (top1_constant_path x0)
+                (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) g}"
+          unfolding \<rho>_def using hcomp_in_U by (by100 simp)
+        have rhs: "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}"
+          unfolding \<rho>_def using hf_in_U' by (by100 simp)
+        from \<open>{g. top1_loop_equiv_on U ?TU x0
+            (top1_path_product (top1_constant_path x0)
+              (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) g}
+          = {g. top1_loop_equiv_on U ?TU x0 f g}\<close>
+        show ?thesis unfolding lhs rhs by (by100 simp)
+      qed
+    qed
     \<comment> \<open>Step 7: \<rho>(f) = \<phi>1([f]_U) by \<rho>_def (since f is in U).\<close>
     have h\<rho>_val: "\<rho> f = \<phi>1 a"
     proof -
@@ -11553,6 +11686,9 @@ end
 
 
   
+
+
+
 
 
 
