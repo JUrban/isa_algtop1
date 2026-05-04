@@ -2483,8 +2483,31 @@ proof -
       unfolding sub_def using hn by (simp add: field_simps)
     \<comment> \<open>d_max-diameter of cell \<le> 1/n.\<close>
     have hdiam: "top1_metric_diam_on (I_set \<times> I_set) d_max ?cell < \<delta>"
-      sorry \<comment> \<open>Diameter = Sup{d_max p q | p,q \<in> cell} \<le> max(width,height) = 1/n < \<delta>.
-         Needs cSup_le + boundedness of {d_max p q | p,q \<in> cell}.\<close>
+    proof -
+      \<comment> \<open>Every d_max distance within the cell \<le> 1/n.\<close>
+      have hbnd: "\<forall>p\<in>?cell. \<forall>q\<in>?cell. d_max p q \<le> 1 / real n"
+        unfolding d_max_def using hwidth hheight by (auto simp: max_def abs_le_iff)
+      \<comment> \<open>The set of distances is bounded above by 1/n.\<close>
+      let ?D = "{d_max x y | x y. x \<in> ?cell \<and> y \<in> ?cell}"
+      have hD_bdd: "\<forall>d\<in>?D. d \<le> 1 / real n" using hbnd by (by100 blast)
+      \<comment> \<open>?D is non-empty (cell contains at least one point).\<close>
+      have hD_ne: "?D \<noteq> {}"
+      proof -
+        have "sub i \<ge> 0" unfolding sub_def using hn by (by100 simp)
+        moreover have "sub (Suc i) \<le> 1" unfolding sub_def using hn hi by (simp add: field_simps)
+        moreover have "sub j \<ge> 0" unfolding sub_def using hn by (by100 simp)
+        moreover have "sub (Suc j) \<le> 1" unfolding sub_def using hn hj by (simp add: field_simps)
+        moreover have "sub i \<le> sub (Suc i)" using hsubinc hi by (by100 force)
+        moreover have "sub j \<le> sub (Suc j)" using hsubinc hj by (by100 force)
+        ultimately have "(sub i, sub j) \<in> ?cell" by (by100 force)
+        hence "d_max (sub i, sub j) (sub i, sub j) \<in> ?D" by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have "Sup ?D \<le> 1 / real n"
+        using hD_ne hD_bdd by (intro cSup_least) (by100 blast)+
+      also have "1 / real n < \<delta>" by (rule hn_fine)
+      finally show ?thesis unfolding top1_metric_diam_on_def by (by100 simp)
+    qed
     \<comment> \<open>Apply h\<delta>_cover: cell has small diameter \<Rightarrow> cell \<subseteq> F\<inverse>(U) or F\<inverse>(V).\<close>
     note h\<delta>_inst = h\<delta>_cover[rule_format, of ?cell]
     have "\<exists>W \<in> {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}. ?cell \<subseteq> W"
