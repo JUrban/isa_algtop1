@@ -5129,10 +5129,112 @@ proof -
             \<comment> \<open>The τ value is a foldr of σ-values. Each σ-value ∈ H.\<close>
             \<comment> \<open>Rather than unfolding τ_def (massive terms), show τ(f') ∈ H
                by noting τ = product of σ-values ∈ H.\<close>
+            \<comment> \<open>τ(f') is a foldr of σ-values. Show each σ-value ∈ H, then foldr ∈ H.\<close>
+            \<comment> \<open>The τ_def gives foldr_σ f' N S. We need the SOME-picked N, S valid.\<close>
+            \<comment> \<open>Get a proper subdivision from loop_subdivision_UV.\<close>
+            obtain n0 sub0 where hn0: "n0 \<ge> 1" and hs0: "sub0 0 = (0::real)" and hsn0: "sub0 n0 = 1"
+                and hinc0: "\<forall>i<n0. sub0 i < sub0 (Suc i)"
+                and hpUV0: "\<forall>i<n0. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> V)"
+              using hex' sorry \<comment> \<open>Extract n0, sub0 from hex' existential. Flakes under by100.\<close>
+            \<comment> \<open>Each σ(piece) ∈ H.\<close>
+            have h\<sigma>_pieces: "\<And>i. i < n0 \<Longrightarrow> \<sigma> (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i))) \<in> H"
+            proof -
+              fix i assume hi: "i < n0"
+              have hpiece_UV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> V)"
+                using hpUV0 hi by (by100 blast)
+              \<comment> \<open>The piece is a path in X (affine composition of f' which is continuous on I).\<close>
+              have hf'_cont: "top1_continuous_map_on I_set I_top X TX f'"
+                using hf'_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hge: "0 \<le> sub0 i"
+              proof (induction i)
+                case 0 show ?case using hs0 by (by100 simp)
+              next
+                case (Suc k)
+                have "Suc k \<le> n0" sorry
+                hence "k < n0" by (by100 presburger)
+                have "0 \<le> sub0 k" using Suc.IH .
+                moreover have "sub0 k < sub0 (Suc k)" using hinc0 \<open>k < n0\<close> by (by100 force)
+                ultimately show ?case by (by100 linarith)
+              qed
+              have hle: "sub0 (Suc i) \<le> 1"
+              proof -
+                have "\<And>k. k + Suc i \<le> n0 \<Longrightarrow> sub0 (Suc i) \<le> sub0 (k + Suc i)"
+                proof -
+                  fix k show "k + Suc i \<le> n0 \<Longrightarrow> sub0 (Suc i) \<le> sub0 (k + Suc i)"
+                  proof (induction k)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc m)
+                    have "m + Suc i \<le> n0" using Suc.prems by (by100 presburger)
+                    have "sub0 (Suc i) \<le> sub0 (m + Suc i)" using Suc.IH[OF \<open>m + Suc i \<le> n0\<close>] .
+                    moreover have "m + Suc i < n0" using Suc.prems by (by100 presburger)
+                    moreover have "sub0 (m + Suc i) < sub0 (Suc m + Suc i)"
+                      using hinc0 calculation(2) by (by100 force)
+                    ultimately show ?case by (by100 linarith)
+                  qed
+                qed
+                have "Suc i \<le> n0" using hi by (by100 presburger)
+                have hk_le: "(n0 - Suc i) + Suc i \<le> n0" using \<open>Suc i \<le> n0\<close> by (by100 presburger)
+                have "sub0 (Suc i) \<le> sub0 ((n0 - Suc i) + Suc i)"
+                  using \<open>\<And>k. k + Suc i \<le> n0 \<Longrightarrow> sub0 (Suc i) \<le> sub0 (k + Suc i)\<close>[OF hk_le] .
+                moreover have "(n0 - Suc i) + Suc i = n0" using \<open>Suc i \<le> n0\<close> by (by100 presburger)
+                ultimately have "sub0 (Suc i) \<le> sub0 n0" by (by100 presburger)
+                thus ?thesis using hsn0 by (by100 linarith)
+              qed
+              have hmono: "sub0 i \<le> sub0 (Suc i)" using hinc0 hi by (by100 force)
+              have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                  (\<lambda>t. sub0 i + t * (sub0 (Suc i) - sub0 i))"
+                by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+              have hpiece_cont: "top1_continuous_map_on I_set I_top X TX
+                  (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i)))"
+              proof -
+                have "top1_continuous_map_on I_set I_top X TX
+                    (f' \<circ> (\<lambda>t. sub0 i + t * (sub0 (Suc i) - sub0 i)))"
+                  by (rule top1_continuous_map_on_comp[OF haffine hf'_cont])
+                thus ?thesis unfolding comp_def by (by100 simp)
+              qed
+              have hpiece_path: "top1_is_path_on X TX
+                  (f' (sub0 i + 0 * (sub0 (Suc i) - sub0 i)))
+                  (f' (sub0 i + 1 * (sub0 (Suc i) - sub0 i)))
+                  (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i)))"
+                unfolding top1_is_path_on_def using hpiece_cont by (by100 blast)
+              have hpiece_UV_I: "(\<forall>s\<in>I_set. f' (sub0 i + s * (sub0 (Suc i) - sub0 i)) \<in> U)
+                  \<or> (\<forall>s\<in>I_set. f' (sub0 i + s * (sub0 (Suc i) - sub0 i)) \<in> V)"
+                using hpiece_UV unfolding top1_unit_interval_def by (by100 force)
+              show "\<sigma> (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i))) \<in> H"
+                by (rule h\<sigma>_UV_in_H[OF hpiece_UV_I hpiece_path])
+            qed
+            \<comment> \<open>foldr of H-elements ∈ H.\<close>
+            have "foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i)))) [0..<n0]) eH \<in> H"
+            proof -
+              define tl where "tl = map (\<lambda>i. \<sigma> (\<lambda>t. f' (sub0 i + t * (sub0 (Suc i) - sub0 i)))) [0..<n0]"
+              have "set tl \<subseteq> H"
+              proof
+                fix x assume "x \<in> set tl"
+                then obtain j where "j < n0" "x = \<sigma> (\<lambda>t. f' (sub0 j + t * (sub0 (Suc j) - sub0 j)))"
+                  unfolding tl_def by (by100 force)
+                thus "x \<in> H" using h\<sigma>_pieces by (by100 simp)
+              qed
+              hence "foldr mulH tl eH \<in> H" using heH hmcl
+              proof (induction tl)
+                case Nil show ?case using heH by (by100 simp)
+              next
+                case (Cons a xs)
+                have ha: "a \<in> H" using Cons.prems by (by100 force)
+                have hxs: "foldr mulH xs eH \<in> H" using Cons.IH Cons.prems by (by100 force)
+                show ?case using hmcl[OF ha hxs] by (by100 simp)
+              qed
+              thus ?thesis unfolding tl_def .
+            qed
+            hence "foldr_\<sigma> f' n0 sub0 \<in> H" unfolding foldr_\<sigma>_def .
+            \<comment> \<open>By subdivision independence: τ(f') = foldr_σ f' n0 sub0 for any valid subdivision.
+               But τ uses SOME-picked subdivision. Since all valid subdivisions give same result
+               (by hsubdiv — but hsubdiv is local to U context!), we need τ = foldr_σ for n0, sub0.\<close>
+            \<comment> \<open>Alternative: τ(f') ∈ H directly from the fact that τ = foldr_σ with SOME values,
+               and the SOME values give a valid subdivision (by someI), hence foldr_σ ∈ H.\<close>
             show ?thesis sorry
-              \<comment> \<open>τ(f') = foldr mulH [σ(p_0), ..., σ(p_{n-1})] eH.
-                 Each σ(p_i) ∈ H by h_σ_UV_in_H (pieces in U or V).
-                 eH ∈ H, mulH closed. foldr ∈ H by list induction.\<close>
           qed
         qed
         show ?thesis using h\<tau>_in_H[OF hsome_loop] .
