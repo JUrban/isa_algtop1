@@ -2416,9 +2416,22 @@ proof -
     by (intro conjI ballI, auto simp: max_def abs_le_iff prod_eq_iff)
   \<comment> \<open>The metric topology of d_max on I\<times>I equals II_topology.\<close>
   have hd_top: "top1_metric_topology_on (I_set \<times> I_set) d_max = II_topology"
-    sorry \<comment> \<open>Metrization: d_max metric topology = product topology on I\<times>I.
-       d_max-balls = open squares \<subseteq> open rectangles = product basis.
-       Product-open rectangles contain d_max-balls. So same opens. ~30 lines.\<close>
+  proof -
+    have hTopI: "is_topology_on I_set I_top"
+      unfolding top1_unit_interval_topology_def
+      by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 blast)
+    have hTopII: "is_topology_on (I_set \<times> I_set) II_topology"
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTopI hTopI])
+    have hTopM: "is_topology_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)"
+      by (rule top1_metric_topology_on_is_topology_on[OF hd_metric])
+    \<comment> \<open>Direction 1: d_max balls \<in> II_topology.
+       Ball B(p,\<epsilon>) = {s\<in>I | |s-s0|<\<epsilon>} \<times> {t\<in>I | |t-t0|<\<epsilon>}, a product of I_top-opens.\<close>
+    have hM_sub_II: "top1_metric_topology_on (I_set \<times> I_set) d_max \<subseteq> II_topology"
+      sorry \<comment> \<open>Direction 1: d_max balls = product of I_top-open intervals \<Rightarrow> in II_topology.\<close>
+    have hII_sub_M: "II_topology \<subseteq> top1_metric_topology_on (I_set \<times> I_set) d_max"
+      sorry \<comment> \<open>Direction 2: product U\<times>V contains d_max balls around each point \<Rightarrow> metric-open.\<close>
+    show ?thesis using hM_sub_II hII_sub_M by (by100 blast)
+  qed
   \<comment> \<open>Apply Lebesgue number.\<close>
   have hII_ne: "I_set \<times> I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
   have hII_compact_d: "top1_compact_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)"
