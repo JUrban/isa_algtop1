@@ -4749,10 +4749,19 @@ proof -
               have hsubst: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
                   f2 (sub i + t * (sub (Suc i) - sub i)) = f1 (sub i + t * (sub (Suc i) - sub i))"
                 using hf12[OF hsub(1) hsub(2) hsub(3) \<open>i < n\<close>] by (by100 simp)
+              have hsubst_rev_U2: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U) = (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)"
+                using hsubst by (by100 simp)
+              have hsubst_rev_V2: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V) = (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                using hsubst by (by100 simp)
               from hsub(4) \<open>i < n\<close>
-              show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+              have "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                by (by100 blast)
+              thus "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
-                using hsubst by (by100 force)
+                using hsubst_rev_U2 hsubst_rev_V2 by (by100 blast)
             qed
             thus "Pn f1 n" unfolding Pn_def using h1 hsub(1-3) by (by100 blast)
           qed
@@ -4849,10 +4858,22 @@ proof -
                  SOME picks the same arbitrary values (hN_eq, hS_eq), and foldr_σ with
                  those values uses σ on pieces. Since hfext gives f1=f2 on I_set,
                  and σ uses pieces at I_set points, we get σ-equality.\<close>
-              \<comment> \<open>Actually: this case never arises in practice (h_τ_ext is only called
-                 on loops in X = U∪V, which always have valid subdivisions).
-                 Sorry this edge case.\<close>
-              thus ?thesis sorry
+              \<comment> \<open>Both use same SOME n and sub. foldr_σ values equal by hpiece_eq.\<close>
+              \<comment> \<open>Both use same SOME n and sub. Show foldr_σ f1 = foldr_σ f2 via σ-equality.\<close>
+              have "foldr_\<sigma> f1 = foldr_\<sigma> f2"
+              proof (rule ext, rule ext)
+                fix n :: nat and sub :: "nat \<Rightarrow> real"
+                have "\<And>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
+                    = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+                  sorry \<comment> \<open>σ I_set-extensional: hfext gives f1=f2 on I_set.\<close>
+                hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
+                    = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
+                  by (intro map_cong) (by100 force)+
+                thus "foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
+                  unfolding foldr_\<sigma>_def
+                  by (rule arg_cong[of _ _ "\<lambda>xs. foldr mulH xs eH"])
+              qed
+              thus ?thesis using hN_eq hS_eq by (by100 simp)
             qed
             finally show ?thesis .
           qed
