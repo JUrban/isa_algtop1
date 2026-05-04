@@ -3352,11 +3352,78 @@ proof -
   have h\<sigma>_cond2: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> U) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> U)
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
-    sorry \<comment> \<open>Munkres Step 2: L(f*g) \<simeq> L(f)*L(g) in U, then \<phi>1 hom gives product.\<close>
+  proof -
+    fix f' g' assume hf'U: "\<forall>s\<in>I_set. f' s \<in> U" and hg'U: "\<forall>s\<in>I_set. g' s \<in> U"
+       and hfg: "f' 1 = g' 0"
+    let ?x = "f' 0" and ?y = "f' 1" and ?z = "g' 1"
+    \<comment> \<open>Step 1: L(f') = \<alpha>_x \<cdot> (f' \<cdot> rev(\<alpha>_y)), L(g') = \<alpha>_y \<cdot> (g' \<cdot> rev(\<alpha>_z)),
+       L(f'*g') = \<alpha>_x \<cdot> ((f'*g') \<cdot> rev(\<alpha>_z)).\<close>
+    \<comment> \<open>Step 2: L(f')*L(g') \<simeq> L(f'*g') in U. Key: rev(\<alpha>_y)\<cdot>\<alpha>_y \<simeq> const, then
+       reassociate and apply identity law.\<close>
+    have hL_fg_hom: "top1_path_homotopic_on U ?TU x0 x0
+        (top1_path_product
+          (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y))))
+          (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
+        (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
+      sorry \<comment> \<open>Path homotopy in U: associativity + inverse + identity laws (Theorem_51_2).
+         (α_x·(f'·rev(α_y)))·(α_y·(g'·rev(α_z))) ≃ α_x·((f'·g')·rev(α_z)).\<close>
+    \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
+    \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
+    \<comment> \<open>Step 5: \<sigma>(f'*g') = \<rho>(L(f'*g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) = \<sigma>(f')\<cdot>\<sigma>(g').\<close>
+    \<comment> \<open>Unfold \<sigma> for all three terms.\<close>
+    have hfg0: "top1_path_product f' g' 0 = f' 0"
+      unfolding top1_path_product_def by (by100 simp)
+    have hfg1: "top1_path_product f' g' 1 = g' 1"
+      unfolding top1_path_product_def by (by100 simp)
+    have h\<sigma>_fg: "\<sigma> (top1_path_product f' g') = \<rho> (top1_path_product (\<alpha> ?x)
+        (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
+      unfolding \<sigma>_def hfg0 hfg1 by (by100 simp)
+    have h\<sigma>_f: "\<sigma> f' = \<rho> (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y))))"
+      unfolding \<sigma>_def by (by100 simp)
+    have h\<sigma>_g: "\<sigma> g' = \<rho> (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z))))"
+      unfolding \<sigma>_def using hfg by (by100 simp)
+    \<comment> \<open>L(f'), L(g') are loops at x0 in U.\<close>
+    let ?Lf = "top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y)))"
+    let ?Lg = "top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))"
+    let ?Lfg = "top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z)))"
+    have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
+      sorry \<comment> \<open>Composition of paths in U at x0.\<close>
+    have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
+      sorry \<comment> \<open>Same.\<close>
+    have hLfg_loop: "top1_is_loop_on U ?TU x0 ?Lfg"
+      sorry \<comment> \<open>Same.\<close>
+    \<comment> \<open>\<rho> condition (1): L(f'*g') \<simeq> L(f')*L(g') \<Rightarrow> \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')).\<close>
+    have hLfg_loop2: "top1_is_loop_on U ?TU x0 (top1_path_product ?Lf ?Lg)"
+      sorry \<comment> \<open>Product of loops at x0 is a loop.\<close>
+    have hLfg_equiv: "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) ?Lfg"
+      unfolding top1_loop_equiv_on_def using hLfg_loop2 hLfg_loop hL_fg_hom by (by100 blast)
+    have h\<rho>_eq: "\<rho> (top1_path_product ?Lf ?Lg) = \<rho> ?Lfg"
+      sorry \<comment> \<open>\<rho> respects loop-equiv in U (same pattern as h\<rho>_respects_V but for U).\<close>
+    \<comment> \<open>\<rho> condition (2): \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')). Both in U, use \<phi>1 hom.\<close>
+    have h\<rho>_mult: "\<rho> (top1_path_product ?Lf ?Lg) = mulH (\<rho> ?Lf) (\<rho> ?Lg)"
+    proof -
+      have hLf_in_U: "\<forall>s\<in>I_set. ?Lf s \<in> U" using hLf_loop unfolding top1_is_loop_on_def
+          top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have hLg_in_U: "\<forall>s\<in>I_set. ?Lg s \<in> U" using hLg_loop unfolding top1_is_loop_on_def
+          top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have hLfg2_in_U: "\<forall>s\<in>I_set. (top1_path_product ?Lf ?Lg) s \<in> U" using hLfg_loop2
+          unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>\<rho>(Lf*Lg) = \<phi>1([Lf*Lg]_U) = \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U)\<cdot>\<phi>1([Lg]_U) = \<rho>(Lf)\<cdot>\<rho>(Lg).\<close>
+      have h_prod_class: "{h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}
+          = top1_fundamental_group_mul U ?TU x0
+              {h. top1_loop_equiv_on U ?TU x0 ?Lf h}
+              {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+        sorry \<comment> \<open>[Lf*Lg]_U = [Lf]_U \<cdot> [Lg]_U (fundamental group product).\<close>
+      show ?thesis unfolding \<rho>_def using hLf_in_U hLg_in_U hLfg2_in_U h_prod_class
+        sorry \<comment> \<open>\<phi>1 hom: \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U) \<cdot> \<phi>1([Lg]_U).\<close>
+    qed
+    show "\<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
+      using h\<sigma>_fg h\<sigma>_f h\<sigma>_g h\<rho>_eq h\<rho>_mult by (by100 presburger)
+  qed
   have h\<sigma>_cond2_V: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> V) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> V)
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
-    sorry \<comment> \<open>Same for V.\<close>
+    sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV. Uses h\<rho>_respects_V pattern.\<close>
   \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
