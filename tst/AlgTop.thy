@@ -2948,8 +2948,8 @@ lemma Theorem_70_1_universal_property:
         \<and> (\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
             \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b)"
 proof -
-  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
-  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  \<comment> \<open>TU/TV/TUV abbreviations expanded inline for rule-matching compatibility.\<close>
+
   have hTopX: "is_topology_on X TX" using hTX unfolding is_topology_on_strict_def by (by100 blast)
   have hUsub: "U \<subseteq> X" using hU unfolding openin_on_def by (by100 blast)
   have hVsub: "V \<subseteq> X" using hV unfolding openin_on_def by (by100 blast)
@@ -2957,28 +2957,28 @@ proof -
   have hx0_U: "x0 \<in> U" using hx0 by (by100 blast)
   have hx0_V: "x0 \<in> V" using hx0 by (by100 blast)
   \<comment> \<open>===== Construction of \<Phi> following Munkres §70 Theorem 70.1 =====\<close>
-  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
-  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hTopU: "is_topology_on U (subspace_topology X TX U)" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V (subspace_topology X TX V)" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
   have hUVsub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
-  have hTopUV: "is_topology_on (U \<inter> V) ?TUV"
+  have hTopUV: "is_topology_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
     by (rule subspace_topology_is_topology_on[OF hTopX hUVsub])
   \<comment> \<open>Step 1: Define \<rho> for loops f at x_0 in U or V.
      \<rho>(f) = \<phi>_1([f]_U) if \<forall>t\<in>I. f(t) \<in> U, else \<phi>_2([f]_V).
      Well-defined on U\<inter>V by compatibility.\<close>
   define \<rho> where "\<rho> f = (if (\<forall>s\<in>I_set. f s \<in> U)
-      then \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}
-      else \<phi>2 {g. top1_loop_equiv_on V ?TV x0 f g})" for f
+      then \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}
+      else \<phi>2 {g. top1_loop_equiv_on V (subspace_topology X TX V) x0 f g})" for f
   \<comment> \<open>Step 2: Choose connecting paths \<alpha>_x from x_0 to x.
      For x = x_0: constant path. Otherwise: use path-connectedness.\<close>
   define \<alpha> where "\<alpha> x = (if x = x0 then top1_constant_path x0
-      else if x \<in> U \<inter> V then SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p
-      else if x \<in> U then SOME p. top1_is_path_on U ?TU x0 x p
-      else SOME p. top1_is_path_on V ?TV x0 x p)" for x
+      else if x \<in> U \<inter> V then SOME p. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x p
+      else if x \<in> U then SOME p. top1_is_path_on U (subspace_topology X TX U) x0 x p
+      else SOME p. top1_is_path_on V (subspace_topology X TX V) x0 x p)" for x
   \<comment> \<open>\<alpha> properties: \<alpha>(x) is a path from x0 to x, lying in U (or V or U\<inter>V) depending on x.\<close>
-  have h\<alpha>_in_U: "\<And>x. x \<in> U \<Longrightarrow> top1_is_path_on U ?TU x0 x (\<alpha> x)"
+  have h\<alpha>_in_U: "\<And>x. x \<in> U \<Longrightarrow> top1_is_path_on U (subspace_topology X TX U) x0 x (\<alpha> x)"
   proof -
     fix x assume hxU: "x \<in> U"
-    show "top1_is_path_on U ?TU x0 x (\<alpha> x)"
+    show "top1_is_path_on U (subspace_topology X TX U) x0 x (\<alpha> x)"
     proof (cases "x = x0")
       case True
       hence "\<alpha> x = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
@@ -2988,25 +2988,25 @@ proof -
       show ?thesis
       proof (cases "x \<in> U \<inter> V")
         case True
-        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p)"
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x p)"
           unfolding \<alpha>_def using False by (by100 simp)
         \<comment> \<open>Path exists by path-connectedness of U\<inter>V.\<close>
-        have "\<exists>p. top1_is_path_on (U \<inter> V) ?TUV x0 x p"
+        have "\<exists>p. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x p"
           using hUVpc hx0 True unfolding top1_path_connected_on_def by (by100 auto)
-        hence hpath_UV: "top1_is_path_on (U \<inter> V) ?TUV x0 x (\<alpha> x)"
+        hence hpath_UV: "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x (\<alpha> x)"
           unfolding h\<alpha>_eq by (rule someI_ex)
         \<comment> \<open>Path in U\<inter>V is a path in U (codomain growth via subspace_topology_trans).\<close>
         \<comment> \<open>Grow codomain from U\<inter>V to U: continuous into U\<inter>V \<Rightarrow> continuous into U.\<close>
-        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV (\<alpha> x)"
+        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) (subspace_topology X TX (U \<inter> V)) (\<alpha> x)"
           using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
         have hpath_UV_range: "\<forall>s\<in>I_set. \<alpha> x s \<in> U \<inter> V"
           using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
-        have h\<alpha>_cont_U: "top1_continuous_map_on I_set I_top U ?TU (\<alpha> x)"
+        have h\<alpha>_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (\<alpha> x)"
           unfolding top1_continuous_map_on_def
         proof (intro conjI ballI)
           fix s assume "s \<in> I_set" thus "\<alpha> x s \<in> U" using hpath_UV_range by (by100 blast)
         next
-          fix W assume "W \<in> ?TU"
+          fix W assume "W \<in> (subspace_topology X TX U)"
           then obtain W' where "W' \<in> TX" "W = U \<inter> W'"
             unfolding subspace_topology_def by (by100 blast)
           have "{s \<in> I_set. \<alpha> x s \<in> W} = {s \<in> I_set. \<alpha> x s \<in> (U \<inter> V) \<inter> W'}"
@@ -3015,7 +3015,7 @@ proof -
           proof -
             have "(U \<inter> V) \<inter> W' = (U \<inter> V) \<inter> (U \<inter> W')" by (by100 blast)
             also have "U \<inter> W' = W" using \<open>W = U \<inter> W'\<close> by (by100 blast)
-            finally have "(U \<inter> V) \<inter> W' \<in> ?TUV"
+            finally have "(U \<inter> V) \<inter> W' \<in> (subspace_topology X TX (U \<inter> V))"
               unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
             thus ?thesis using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
           qed
@@ -3026,18 +3026,18 @@ proof -
           using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
       next
         case False
-        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on U ?TU x0 x p)"
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on U (subspace_topology X TX U) x0 x p)"
           unfolding \<alpha>_def using \<open>x \<noteq> x0\<close> False hxU by (by100 simp)
-        have "\<exists>p. top1_is_path_on U ?TU x0 x p"
+        have "\<exists>p. top1_is_path_on U (subspace_topology X TX U) x0 x p"
           using hUpc hx0_U hxU unfolding top1_path_connected_on_def by (by100 auto)
         thus ?thesis unfolding h\<alpha>_eq by (rule someI_ex)
       qed
     qed
   qed
-  have h\<alpha>_in_V: "\<And>x. x \<in> V \<Longrightarrow> top1_is_path_on V ?TV x0 x (\<alpha> x)"
+  have h\<alpha>_in_V: "\<And>x. x \<in> V \<Longrightarrow> top1_is_path_on V (subspace_topology X TX V) x0 x (\<alpha> x)"
   proof -
     fix x assume hxV: "x \<in> V"
-    show "top1_is_path_on V ?TV x0 x (\<alpha> x)"
+    show "top1_is_path_on V (subspace_topology X TX V) x0 x (\<alpha> x)"
     proof (cases "x = x0")
       case True
       hence "\<alpha> x = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
@@ -3047,29 +3047,29 @@ proof -
       show ?thesis
       proof (cases "x \<in> U \<inter> V")
         case True
-        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p)"
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x p)"
           unfolding \<alpha>_def using False by (by100 simp)
-        have "\<exists>p. top1_is_path_on (U \<inter> V) ?TUV x0 x p"
+        have "\<exists>p. top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x p"
           using hUVpc hx0 True unfolding top1_path_connected_on_def by (by100 auto)
-        hence hpath_UV: "top1_is_path_on (U \<inter> V) ?TUV x0 x (\<alpha> x)"
+        hence hpath_UV: "top1_is_path_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 x (\<alpha> x)"
           unfolding h\<alpha>_eq by (rule someI_ex)
-        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV (\<alpha> x)"
+        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) (subspace_topology X TX (U \<inter> V)) (\<alpha> x)"
           using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
         have hpath_UV_range: "\<forall>s\<in>I_set. \<alpha> x s \<in> U \<inter> V"
           using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
-        have h\<alpha>_cont_V: "top1_continuous_map_on I_set I_top V ?TV (\<alpha> x)"
+        have h\<alpha>_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) (\<alpha> x)"
           unfolding top1_continuous_map_on_def
         proof (intro conjI ballI)
           fix s assume "s \<in> I_set" thus "\<alpha> x s \<in> V" using hpath_UV_range by (by100 blast)
         next
-          fix W assume "W \<in> ?TV"
+          fix W assume "W \<in> (subspace_topology X TX V)"
           then obtain W' where "W' \<in> TX" "W = V \<inter> W'"
             unfolding subspace_topology_def by (by100 blast)
           have "{s \<in> I_set. \<alpha> x s \<in> W} = {s \<in> I_set. \<alpha> x s \<in> (U \<inter> V) \<inter> W'}"
             using hpath_UV_range \<open>W = V \<inter> W'\<close> by (by100 blast)
           also have "\<dots> \<in> I_top"
           proof -
-            have "(U \<inter> V) \<inter> W' \<in> ?TUV"
+            have "(U \<inter> V) \<inter> W' \<in> (subspace_topology X TX (U \<inter> V))"
               unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
             thus ?thesis using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
           qed
@@ -3079,9 +3079,9 @@ proof -
           using h\<alpha>_cont_V hpath_UV unfolding top1_is_path_on_def by (by100 blast)
       next
         case False
-        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on V ?TV x0 x p)"
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on V (subspace_topology X TX V) x0 x p)"
           unfolding \<alpha>_def using \<open>x \<noteq> x0\<close> False hxV by (by100 simp)
-        have "\<exists>p. top1_is_path_on V ?TV x0 x p"
+        have "\<exists>p. top1_is_path_on V (subspace_topology X TX V) x0 x p"
           using hVpc hx0_V hxV unfolding top1_path_connected_on_def by (by100 auto)
         thus ?thesis unfolding h\<alpha>_eq by (rule someI_ex)
       qed
@@ -3111,10 +3111,10 @@ proof -
      Proof: L(f) = \<alpha>_{f(0)}\<cdot>f\<cdot>rev(\<alpha>_{f(1)}) and L(g) = \<alpha>_{g(0)}\<cdot>g\<cdot>rev(\<alpha>_{g(1)}).
      If f \<simeq> g in U, then f(0)=g(0), f(1)=g(1), so L(f) \<simeq> L(g) in U.
      Then \<rho>(L(f)) = \<rho>(L(g)) by \<rho> condition (1).\<close>
-  have h\<sigma>_cond1: "\<And>f' g'. top1_path_homotopic_on U ?TU (f' 0) (f' 1) f' g'
+  have h\<sigma>_cond1: "\<And>f' g'. top1_path_homotopic_on U (subspace_topology X TX U) (f' 0) (f' 1) f' g'
       \<Longrightarrow> \<sigma> f' = \<sigma> g'"
   proof -
-    fix f' g' assume hhom: "top1_path_homotopic_on U ?TU (f' 0) (f' 1) f' g'"
+    fix f' g' assume hhom: "top1_path_homotopic_on U (subspace_topology X TX U) (f' 0) (f' 1) f' g'"
     \<comment> \<open>f' \<simeq> g' in U implies f'(0)=g'(0) and f'(1)=g'(1).\<close>
     have hstart: "g' 0 = f' 0" using hhom unfolding top1_path_homotopic_on_def
         top1_is_path_on_def by (by100 blast)
@@ -3129,9 +3129,9 @@ proof -
     \<comment> \<open>L(f') \<simeq> L(g') in U because f' \<simeq> g' in U and the \<alpha> paths are the same.\<close>
     \<comment> \<open>f' \<simeq> g' in U. The inner part f'\<cdot>rev(\<alpha>) \<simeq> g'\<cdot>rev(\<alpha>) by product_left.
        Then \<alpha>\<cdot>(f'\<cdot>rev(\<alpha>)) \<simeq> \<alpha>\<cdot>(g'\<cdot>rev(\<alpha>)) by product_right.\<close>
-    have hf'_path: "top1_is_path_on U ?TU (f' 0) (f' 1) f'"
+    have hf'_path: "top1_is_path_on U (subspace_topology X TX U) (f' 0) (f' 1) f'"
       using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
-    have hf'_cont: "top1_continuous_map_on I_set I_top U ?TU f'"
+    have hf'_cont: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f'"
       using hf'_path unfolding top1_is_path_on_def by (by100 blast)
     have hf'_range: "\<forall>s\<in>I_set. f' s \<in> U"
       using hf'_cont unfolding top1_continuous_map_on_def by (by100 blast)
@@ -3139,15 +3139,15 @@ proof -
     have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
     have hf0_U: "f' 0 \<in> U" using hf'_range h0_I by (by100 blast)
     have hf1_U: "f' 1 \<in> U" using hf'_range h1_I by (by100 blast)
-    have hrev_path: "top1_is_path_on U ?TU (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+    have hrev_path: "top1_is_path_on U (subspace_topology X TX U) (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
       by (rule top1_path_reverse_is_path[OF h\<alpha>_in_U[OF hf1_U]])
-    have h\<alpha>_path: "top1_is_path_on U ?TU x0 (f' 0) (\<alpha> (f' 0))"
+    have h\<alpha>_path: "top1_is_path_on U (subspace_topology X TX U) x0 (f' 0) (\<alpha> (f' 0))"
       by (rule h\<alpha>_in_U[OF hf0_U])
-    have h_inner: "top1_path_homotopic_on U ?TU (f' 0) x0
+    have h_inner: "top1_path_homotopic_on U (subspace_topology X TX U) (f' 0) x0
         (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))
         (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
       by (rule path_homotopic_product_left[OF hTopU hhom hrev_path])
-    have hL_hom: "top1_path_homotopic_on U ?TU x0 x0
+    have hL_hom: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
       by (rule path_homotopic_product_right[OF hTopU h_inner h\<alpha>_path])
@@ -3155,9 +3155,9 @@ proof -
     \<comment> \<open>\<rho>(L(f')) = \<rho>(L(g')) because both loops at x0 in U, same homotopy class.\<close>
     let ?Lf = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
     let ?Lg = "top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
-    have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
+    have hLf_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 ?Lf"
       using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
-    have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
+    have hLg_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 ?Lg"
       using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
     have hLf_in_U: "\<forall>s\<in>I_set. ?Lf s \<in> U"
       using hLf_loop unfolding top1_is_loop_on_def top1_is_path_on_def
@@ -3165,16 +3165,16 @@ proof -
     have hLg_in_U: "\<forall>s\<in>I_set. ?Lg s \<in> U"
       using hLg_loop unfolding top1_is_loop_on_def top1_is_path_on_def
                                 top1_continuous_map_on_def by (by100 blast)
-    have hLf_equiv_Lg: "top1_loop_equiv_on U ?TU x0 ?Lf ?Lg"
+    have hLf_equiv_Lg: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf ?Lg"
       unfolding top1_loop_equiv_on_def using hLf_loop hLg_loop hL_hom by (by100 blast)
-    have hclass_eq: "{h. top1_loop_equiv_on U ?TU x0 ?Lf h} = {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+    have hclass_eq: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h} = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}"
     proof (rule equalityI; rule subsetI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
-      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}"
+      thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}"
         using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF hLf_equiv_Lg]] by (by100 fast)
     next
-      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
-      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}"
+      thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}"
         using top1_loop_equiv_on_trans[OF hTopU hLf_equiv_Lg] by (by100 fast)
     qed
     have "\<rho> ?Lf = \<rho> ?Lg"
@@ -3185,36 +3185,36 @@ proof -
      Uses h\<rho>_to_\<phi>2 pattern: \<rho>(f) = \<phi>2([f]_V) for any loop f at x0 in V.\<close>
   \<comment> \<open>Helper: \<rho>(f) = \<phi>2([f]_V) for any loop f at x0 in V. If f \<notin> U: direct.
      If f \<in> U: \<rho>(f) = \<phi>1([f]_U) = \<phi>2([f]_V) by compatibility on f \<in> U\<inter>V.\<close>
-  have h\<rho>_eq_\<phi>2: "\<And>f'. top1_is_loop_on V ?TV x0 f'
-      \<Longrightarrow> \<rho> f' = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f' h}"
+  have h\<rho>_eq_\<phi>2: "\<And>f'. top1_is_loop_on V (subspace_topology X TX V) x0 f'
+      \<Longrightarrow> \<rho> f' = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
   proof -
-    fix f' assume hf': "top1_is_loop_on V ?TV x0 f'"
+    fix f' assume hf': "top1_is_loop_on V (subspace_topology X TX V) x0 f'"
     have hf'_V: "\<forall>s\<in>I_set. f' s \<in> V" using hf' unfolding top1_is_loop_on_def
         top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-    show "\<rho> f' = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f' h}"
+    show "\<rho> f' = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
     proof (cases "\<forall>s\<in>I_set. f' s \<in> U")
       case False thus ?thesis unfolding \<rho>_def by (rule if_not_P)
     next
       case True
       \<comment> \<open>f' \<in> U\<inter>V. Use compatibility.\<close>
       have hf'_UV: "\<forall>s\<in>I_set. f' s \<in> U \<inter> V" using True hf'_V by (by100 blast)
-      have hf'_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 f'"
+      have hf'_loop_UV: "top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f'"
       proof -
-        have hf'_cont_V: "top1_continuous_map_on I_set I_top V ?TV f'"
+        have hf'_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) f'"
           using hf' unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-        have hf'_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV f'"
+        have hf'_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) (subspace_topology X TX (U \<inter> V)) f'"
           unfolding top1_continuous_map_on_def
         proof (intro conjI ballI)
           fix s assume "s \<in> I_set" thus "f' s \<in> U \<inter> V" using hf'_UV by (by100 blast)
         next
-          fix W assume "W \<in> ?TUV"
+          fix W assume "W \<in> (subspace_topology X TX (U \<inter> V))"
           then obtain W' where "W' \<in> TX" "W = (U \<inter> V) \<inter> W'"
             unfolding subspace_topology_def by (by100 blast)
           have "{s \<in> I_set. f' s \<in> W} = {s \<in> I_set. f' s \<in> W' \<inter> V}"
             using hf'_UV \<open>W = (U \<inter> V) \<inter> W'\<close> by (by100 blast)
           also have "\<dots> \<in> I_top"
           proof -
-            have "W' \<inter> V \<in> ?TV" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+            have "W' \<inter> V \<in> (subspace_topology X TX V)" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
             thus ?thesis using hf'_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
           qed
           finally show "{s \<in> I_set. f' s \<in> W} \<in> I_top" .
@@ -3223,90 +3223,90 @@ proof -
           using hf'_cont_UV top1_is_loop_on_start[OF hf'] top1_is_loop_on_end[OF hf']
           by (by100 blast)
       qed
-      let ?c = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 f' h}"
-      have "?c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+      let ?c = "{h. top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f' h}"
+      have "?c \<in> top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0"
         unfolding top1_fundamental_group_carrier_def using hf'_loop_UV by (by100 blast)
       note hc = hcompat[rule_format, OF this]
-      have hind_U: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c
-          = {h. top1_loop_equiv_on U ?TU x0 f' h}"
+      have hind_U: "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 U (subspace_topology X TX U) x0 (\<lambda>x. x) ?c
+          = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
         unfolding top1_fundamental_group_induced_on_def
       proof (rule equalityI; rule subsetI)
-        fix h assume "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f'a) h}"
-        then obtain f'a where hf'a: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f' f'a"
-            and hf'ah: "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f'a) h" by (by100 fast)
+        fix h assume "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f'a) h}"
+        then obtain f'a where hf'a: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f' f'a"
+            and hf'ah: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f'a) h" by (by100 fast)
         have hUV_U: "U \<inter> V \<subseteq> U" by (by100 blast)
-        have "top1_loop_equiv_on U ?TU x0 f' f'a"
+        have "top1_loop_equiv_on U (subspace_topology X TX U) x0 f' f'a"
           by (rule loop_equiv_subspace_superspace[OF hUV_U hTopU subspace_topology_trans[OF hUV_U] hf'a])
         have hid: "(\<lambda>x. x) \<circ> f'a = f'a" by (by100 auto)
-        have "top1_loop_equiv_on U ?TU x0 f'a h" using hf'ah unfolding hid .
-        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
-          using top1_loop_equiv_on_trans[OF hTopU \<open>top1_loop_equiv_on U ?TU x0 f' f'a\<close>]
+        have "top1_loop_equiv_on U (subspace_topology X TX U) x0 f'a h" using hf'ah unfolding hid .
+        thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
+          using top1_loop_equiv_on_trans[OF hTopU \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 f' f'a\<close>]
           by (by100 fast)
       next
-        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
-        hence "top1_loop_equiv_on U ?TU x0 f' h" by (by100 blast)
+        fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
+        hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h" by (by100 blast)
         have "f' \<in> ?c" using top1_loop_equiv_on_refl[OF hf'_loop_UV] by (by100 blast)
         moreover have "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-        moreover have "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h"
-          using \<open>top1_loop_equiv_on U ?TU x0 f' h\<close> \<open>(\<lambda>x. x) \<circ> f' = f'\<close> by (by100 presburger)
-        ultimately show "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f'a) h}"
+        moreover have "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h"
+          using \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h\<close> \<open>(\<lambda>x. x) \<circ> f' = f'\<close> by (by100 presburger)
+        ultimately show "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f'a) h}"
           by (by100 fast)
       qed
-      have hind_V: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c
-          = {h. top1_loop_equiv_on V ?TV x0 f' h}"
+      have hind_V: "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 V (subspace_topology X TX V) x0 (\<lambda>x. x) ?c
+          = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
         unfolding top1_fundamental_group_induced_on_def
       proof (rule equalityI; rule subsetI)
-        fix h assume "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f'a) h}"
-        then obtain f'a where hf'a: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f' f'a"
-            and hf'ah: "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f'a) h" by (by100 fast)
+        fix h assume "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f'a) h}"
+        then obtain f'a where hf'a: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f' f'a"
+            and hf'ah: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f'a) h" by (by100 fast)
         have hUV_V: "U \<inter> V \<subseteq> V" by (by100 blast)
-        have "top1_loop_equiv_on V ?TV x0 f' f'a"
+        have "top1_loop_equiv_on V (subspace_topology X TX V) x0 f' f'a"
           by (rule loop_equiv_subspace_superspace[OF hUV_V hTopV subspace_topology_trans[OF hUV_V] hf'a])
         have hid: "(\<lambda>x. x) \<circ> f'a = f'a" by (by100 auto)
-        have "top1_loop_equiv_on V ?TV x0 f'a h" using hf'ah unfolding hid .
-        thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
-          using top1_loop_equiv_on_trans[OF hTopV \<open>top1_loop_equiv_on V ?TV x0 f' f'a\<close>]
+        have "top1_loop_equiv_on V (subspace_topology X TX V) x0 f'a h" using hf'ah unfolding hid .
+        thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
+          using top1_loop_equiv_on_trans[OF hTopV \<open>top1_loop_equiv_on V (subspace_topology X TX V) x0 f' f'a\<close>]
           by (by100 fast)
       next
-        fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
-        hence "top1_loop_equiv_on V ?TV x0 f' h" by (by100 blast)
+        fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
+        hence "top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h" by (by100 blast)
         have "f' \<in> ?c" using top1_loop_equiv_on_refl[OF hf'_loop_UV] by (by100 blast)
         moreover have "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-        moreover have "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h"
-          using \<open>top1_loop_equiv_on V ?TV x0 f' h\<close> \<open>(\<lambda>x. x) \<circ> f' = f'\<close> by (by100 presburger)
-        ultimately show "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f'a) h}"
+        moreover have "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h"
+          using \<open>top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h\<close> \<open>(\<lambda>x. x) \<circ> f' = f'\<close> by (by100 presburger)
+        ultimately show "h \<in> {h. \<exists>f'a\<in>?c. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f'a) h}"
           by (by100 fast)
       qed
-      have "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 f' h} = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f' h}"
+      have "\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h} = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
         using hc hind_U hind_V by (by100 simp)
-      moreover have "\<rho> f' = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 f' h}"
+      moreover have "\<rho> f' = \<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
         unfolding \<rho>_def using True by (by100 simp)
       ultimately show ?thesis by (by100 simp)
     qed
   qed
-  have h\<rho>_respects_V: "\<And>f' g'. top1_is_loop_on V ?TV x0 f' \<Longrightarrow> top1_is_loop_on V ?TV x0 g'
-      \<Longrightarrow> top1_loop_equiv_on V ?TV x0 f' g' \<Longrightarrow> \<rho> f' = \<rho> g'"
+  have h\<rho>_respects_V: "\<And>f' g'. top1_is_loop_on V (subspace_topology X TX V) x0 f' \<Longrightarrow> top1_is_loop_on V (subspace_topology X TX V) x0 g'
+      \<Longrightarrow> top1_loop_equiv_on V (subspace_topology X TX V) x0 f' g' \<Longrightarrow> \<rho> f' = \<rho> g'"
   proof -
-    fix f' g' assume hf': "top1_is_loop_on V ?TV x0 f'" and hg': "top1_is_loop_on V ?TV x0 g'"
-        and hequiv: "top1_loop_equiv_on V ?TV x0 f' g'"
-    have "\<rho> f' = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f' h}" by (rule h\<rho>_eq_\<phi>2[OF hf'])
-    also have "{h. top1_loop_equiv_on V ?TV x0 f' h} = {h. top1_loop_equiv_on V ?TV x0 g' h}"
+    fix f' g' assume hf': "top1_is_loop_on V (subspace_topology X TX V) x0 f'" and hg': "top1_is_loop_on V (subspace_topology X TX V) x0 g'"
+        and hequiv: "top1_loop_equiv_on V (subspace_topology X TX V) x0 f' g'"
+    have "\<rho> f' = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}" by (rule h\<rho>_eq_\<phi>2[OF hf'])
+    also have "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h} = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g' h}"
     proof (rule equalityI; rule subsetI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
-      thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 g' h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
+      thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g' h}"
         using top1_loop_equiv_on_trans[OF hTopV top1_loop_equiv_on_sym[OF hequiv]] by (by100 fast)
     next
-      fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 g' h}"
-      thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g' h}"
+      thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
         using top1_loop_equiv_on_trans[OF hTopV hequiv] by (by100 fast)
     qed
     also have "\<phi>2 \<dots> = \<rho> g'" by (rule h\<rho>_eq_\<phi>2[OF hg', symmetric])
     finally show "\<rho> f' = \<rho> g'" .
   qed
-  have h\<sigma>_cond1_V: "\<And>f' g'. top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'
+  have h\<sigma>_cond1_V: "\<And>f' g'. top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) (f' 1) f' g'
       \<Longrightarrow> \<sigma> f' = \<sigma> g'"
   proof -
-    fix f' g' assume hhom: "top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'"
+    fix f' g' assume hhom: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) (f' 1) f' g'"
     have hstart: "g' 0 = f' 0" using hhom unfolding top1_path_homotopic_on_def
         top1_is_path_on_def by (by100 blast)
     have hend: "g' 1 = f' 1" using hhom unfolding top1_path_homotopic_on_def
@@ -3315,7 +3315,7 @@ proof -
       unfolding \<sigma>_def by (by100 simp)
     have h\<sigma>_g: "\<sigma> g' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
       unfolding \<sigma>_def using hstart hend by (by100 simp)
-    have hf'_path: "top1_is_path_on V ?TV (f' 0) (f' 1) f'"
+    have hf'_path: "top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f'"
       using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
     have hf'_range: "\<forall>s\<in>I_set. f' s \<in> V"
       using hf'_path unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
@@ -3323,22 +3323,22 @@ proof -
     have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
     have hf0_V: "f' 0 \<in> V" using hf'_range h0_I by (by100 blast)
     have hf1_V: "f' 1 \<in> V" using hf'_range h1_I by (by100 blast)
-    have hrev_path: "top1_is_path_on V ?TV (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+    have hrev_path: "top1_is_path_on V (subspace_topology X TX V) (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
       by (rule top1_path_reverse_is_path[OF h\<alpha>_in_V[OF hf1_V]])
-    have h\<alpha>_path: "top1_is_path_on V ?TV x0 (f' 0) (\<alpha> (f' 0))"
+    have h\<alpha>_path: "top1_is_path_on V (subspace_topology X TX V) x0 (f' 0) (\<alpha> (f' 0))"
       by (rule h\<alpha>_in_V[OF hf0_V])
-    have hL_hom: "top1_path_homotopic_on V ?TV x0 x0
+    have hL_hom: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
       by (rule path_homotopic_product_right[OF hTopV
            path_homotopic_product_left[OF hTopV hhom hrev_path] h\<alpha>_path])
     let ?Lf = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
     let ?Lg = "top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
-    have hLf_loop: "top1_is_loop_on V ?TV x0 ?Lf"
+    have hLf_loop: "top1_is_loop_on V (subspace_topology X TX V) x0 ?Lf"
       using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
-    have hLg_loop: "top1_is_loop_on V ?TV x0 ?Lg"
+    have hLg_loop: "top1_is_loop_on V (subspace_topology X TX V) x0 ?Lg"
       using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
-    have hLf_equiv_Lg: "top1_loop_equiv_on V ?TV x0 ?Lf ?Lg"
+    have hLf_equiv_Lg: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf ?Lg"
       unfolding top1_loop_equiv_on_def using hLf_loop hLg_loop hL_hom by (by100 blast)
     have "\<rho> ?Lf = \<rho> ?Lg" by (rule h\<rho>_respects_V[OF hLf_loop hLg_loop hLf_equiv_Lg])
     thus "\<sigma> f' = \<sigma> g'" using h\<sigma>_f h\<sigma>_g by (by100 presburger)
@@ -3349,13 +3349,13 @@ proof -
      \<simeq> \<alpha>_x\<cdot>f\<cdot>g\<cdot>rev(\<alpha>_z) = L(f*g) in U (or V).
      Then \<rho>(L(f*g)) = \<rho>(L(f)*L(g)) = \<rho>(L(f))\<cdot>\<rho>(L(g))
      since both L(f),L(g) are loops in U at x0, and \<phi>1 is a hom.\<close>
-  have h\<sigma>_cond2: "\<And>f' g'. top1_is_path_on U ?TU (f' 0) (f' 1) f'
-      \<Longrightarrow> top1_is_path_on U ?TU (g' 0) (g' 1) g'
+  have h\<sigma>_cond2: "\<And>f' g'. top1_is_path_on U (subspace_topology X TX U) (f' 0) (f' 1) f'
+      \<Longrightarrow> top1_is_path_on U (subspace_topology X TX U) (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
   proof -
-    fix f' g' assume hf'_path: "top1_is_path_on U ?TU (f' 0) (f' 1) f'"
-       and hg'_path: "top1_is_path_on U ?TU (g' 0) (g' 1) g'"
+    fix f' g' assume hf'_path: "top1_is_path_on U (subspace_topology X TX U) (f' 0) (f' 1) f'"
+       and hg'_path: "top1_is_path_on U (subspace_topology X TX U) (g' 0) (g' 1) g'"
        and hfg: "f' 1 = g' 0"
     have hf'U: "\<forall>s\<in>I_set. f' s \<in> U" using hf'_path unfolding top1_is_path_on_def
         top1_continuous_map_on_def by (by100 blast)
@@ -3370,37 +3370,41 @@ proof -
     have hxU: "(f' 0) \<in> U" using hf'U h0I by (by100 blast)
     have hyU: "(f' 1) \<in> U" using hf'U h1I by (by100 blast)
     have hzU: "(g' 1) \<in> U" using hg'U h1I by (by100 blast)
-    have h\<alpha>x: "top1_is_path_on U ?TU x0 (f' 0) (\<alpha> (f' 0))" by (rule h\<alpha>_in_U[OF hxU])
-    have h\<alpha>y: "top1_is_path_on U ?TU x0 (f' 1) (\<alpha> (f' 1))" by (rule h\<alpha>_in_U[OF hyU])
-    have h\<alpha>z: "top1_is_path_on U ?TU x0 (g' 1) (\<alpha> (g' 1))" by (rule h\<alpha>_in_U[OF hzU])
-    have hg'_path2: "top1_is_path_on U ?TU (f' 1) (g' 1) g'"
+    have h\<alpha>x: "top1_is_path_on U (subspace_topology X TX U) x0 (f' 0) (\<alpha> (f' 0))" by (rule h\<alpha>_in_U[OF hxU])
+    have h\<alpha>y: "top1_is_path_on U (subspace_topology X TX U) x0 (f' 1) (\<alpha> (f' 1))" by (rule h\<alpha>_in_U[OF hyU])
+    have h\<alpha>z: "top1_is_path_on U (subspace_topology X TX U) x0 (g' 1) (\<alpha> (g' 1))" by (rule h\<alpha>_in_U[OF hzU])
+    have hg'_path2: "top1_is_path_on U (subspace_topology X TX U) (f' 1) (g' 1) g'"
       using hg'_path hfg by (by100 presburger)
-    have hra_y: "top1_is_path_on U ?TU (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+    have hra_y: "top1_is_path_on U (subspace_topology X TX U) (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
       by (rule top1_path_reverse_is_path[OF h\<alpha>y])
-    have hra_z: "top1_is_path_on U ?TU (g' 1) x0 (top1_path_reverse (\<alpha> (g' 1)))"
+    have hra_z: "top1_is_path_on U (subspace_topology X TX U) (g' 1) x0 (top1_path_reverse (\<alpha> (g' 1)))"
       by (rule top1_path_reverse_is_path[OF h\<alpha>z])
-    have hf'ra: "top1_is_path_on U ?TU (f' 0) x0 (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+    have hf'ra: "top1_is_path_on U (subspace_topology X TX U) (f' 0) x0 (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
       by (rule top1_path_product_is_path[OF hTopU hf'_path hra_y])
-    have hg'ra: "top1_is_path_on U ?TU (f' 1) x0 (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
+    have hg'ra: "top1_is_path_on U (subspace_topology X TX U) (f' 1) x0 (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
       by (rule top1_path_product_is_path[OF hTopU hg'_path2 hra_z])
     \<comment> \<open>Step 2: L(f')*L(g') \<simeq> L(f'*g') in U.\<close>
-    have hL_fg_hom: "top1_path_homotopic_on U ?TU x0 x0
+    have hL_fg_hom: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
           (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
     proof -
-      \<comment> \<open>Step 1: Outer assoc. Use have (not note) to keep ?TU form.\<close>
-      have s1: "top1_path_homotopic_on U ?TU x0 x0
+      \<comment> \<open>Step 1: Outer assoc. Use have (not note) to keep (subspace_topology X TX U) form.\<close>
+      have s1: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))"
-        sorry \<comment> \<open>s1 outer assoc. All tactics fail to match note-fact to have-goal.\<close>
+        using Theorem_51_2_associativity[OF hTopU h\<alpha>x hf'ra
+            top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra]]
+        using Theorem_51_2_associativity[OF hTopU h\<alpha>x hf'ra
+            top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra]]
+        by (meson Lemma_51_1_path_homotopic_sym)
       \<comment> \<open>Step 2: Inner chain (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
-      have s2: "top1_path_homotopic_on U ?TU (f' 0) x0
+      have s2: "top1_path_homotopic_on U (subspace_topology X TX U) (f' 0) x0
           (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
           (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
         sorry \<comment> \<open>Inner 5-step chain: assoc + assoc + inverse + identity + assoc.\<close>
-      \<comment> \<open>All note-chain: use hTopU (?TU) consistently. s2 has ?TU, all path facts have ?TU.\<close>
+      \<comment> \<open>All note-chain: use hTopU ((subspace_topology X TX U)) consistently. s2 has (subspace_topology X TX U), all path facts have (subspace_topology X TX U).\<close>
       note s3 = path_homotopic_product_right[OF hTopU s2 h\<alpha>x]
       \<comment> \<open>s1 from note has expanded form. We can't use OF to combine s1 + s3 directly.
          Instead, sorry the final composition — the proof is correct but notation blocks it.\<close>
@@ -3425,29 +3429,29 @@ proof -
     let ?Lf = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
     let ?Lg = "top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
     let ?Lfg = "top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
-    have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
+    have hLf_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 ?Lf"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
            top1_path_product_is_path[OF hTopU hf'_path
              top1_path_reverse_is_path[OF h\<alpha>y]]])
-    have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
+    have hLg_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 ?Lg"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>y
            top1_path_product_is_path[OF hTopU hg'_path2
              top1_path_reverse_is_path[OF h\<alpha>z]]])
-    have hfg_path: "top1_is_path_on U ?TU (f' 0) (g' 1) (top1_path_product f' g')"
+    have hfg_path: "top1_is_path_on U (subspace_topology X TX U) (f' 0) (g' 1) (top1_path_product f' g')"
       by (rule top1_path_product_is_path[OF hTopU hf'_path hg'_path2])
-    have hLfg_loop: "top1_is_loop_on U ?TU x0 ?Lfg"
+    have hLfg_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 ?Lfg"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
            top1_path_product_is_path[OF hTopU hfg_path
              top1_path_reverse_is_path[OF h\<alpha>z]]])
     \<comment> \<open>\<rho> condition (1): L(f'*g') \<simeq> L(f')*L(g') \<Rightarrow> \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')).\<close>
-    have hLfg_loop2: "top1_is_loop_on U ?TU x0 (top1_path_product ?Lf ?Lg)"
+    have hLfg_loop2: "top1_is_loop_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg)"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU
            hLf_loop[unfolded top1_is_loop_on_def] hLg_loop[unfolded top1_is_loop_on_def]])
-    have hLfg_equiv: "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) ?Lfg"
+    have hLfg_equiv: "top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) ?Lfg"
       unfolding top1_loop_equiv_on_def using hLfg_loop2 hLfg_loop hL_fg_hom by (by100 blast)
     have h\<rho>_eq: "\<rho> (top1_path_product ?Lf ?Lg) = \<rho> ?Lfg"
     proof -
@@ -3456,16 +3460,16 @@ proof -
           unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
       have hLfg_U: "\<forall>s\<in>I_set. ?Lfg s \<in> U" using hLfg_loop
           unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-      have hclass: "{h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}
-          = {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
+      have hclass: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}
+          = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lfg h}"
       proof (rule equalityI; rule subsetI)
-        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
-        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
+        fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}"
+        thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lfg h}"
           using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF hLfg_equiv]]
           by (by100 fast)
       next
-        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
-        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+        fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lfg h}"
+        thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}"
           using top1_loop_equiv_on_trans[OF hTopU hLfg_equiv] by (by100 fast)
       qed
       show ?thesis unfolding \<rho>_def using hLfg2_U hLfg_U hclass by (by100 simp)
@@ -3480,73 +3484,73 @@ proof -
       have hLfg2_in_U: "\<forall>s\<in>I_set. (top1_path_product ?Lf ?Lg) s \<in> U" using hLfg_loop2
           unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
       \<comment> \<open>\<rho>(Lf*Lg) = \<phi>1([Lf*Lg]_U) = \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U)\<cdot>\<phi>1([Lg]_U) = \<rho>(Lf)\<cdot>\<rho>(Lg).\<close>
-      have h_prod_class: "{h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}
-          = top1_fundamental_group_mul U ?TU x0
-              {h. top1_loop_equiv_on U ?TU x0 ?Lf h}
-              {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+      have h_prod_class: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}
+          = top1_fundamental_group_mul U (subspace_topology X TX U) x0
+              {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}
+              {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}"
         unfolding top1_fundamental_group_mul_def
       proof (rule equalityI; rule subsetI)
-        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
-        hence "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h" by (by100 blast)
-        have hLf_in_class: "?Lf \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
+        fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}"
+        hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h" by (by100 blast)
+        have hLf_in_class: "?Lf \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}"
           using top1_loop_equiv_on_refl[OF hLf_loop] by (by100 blast)
-        have hLg_in_class: "?Lg \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+        have hLg_in_class: "?Lg \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}"
           using top1_loop_equiv_on_refl[OF hLg_loop] by (by100 blast)
-        show "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lf h}.
-            \<exists>g\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lg h}.
-            top1_loop_equiv_on U ?TU x0 (top1_path_product f g) h}"
+        show "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}.
+            \<exists>g\<in>{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}.
+            top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product f g) h}"
           using hLf_in_class hLg_in_class
-                \<open>top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h\<close>
+                \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h\<close>
           by (by100 fast)
       next
-        fix h assume "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lf h}.
-            \<exists>g\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lg h}.
-            top1_loop_equiv_on U ?TU x0 (top1_path_product f g) h}"
-        then obtain f1 g1 where hf1: "top1_loop_equiv_on U ?TU x0 ?Lf f1"
-            and hg1: "top1_loop_equiv_on U ?TU x0 ?Lg g1"
-            and hfg1: "top1_loop_equiv_on U ?TU x0 (top1_path_product f1 g1) h" by (by100 fast)
+        fix h assume "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}.
+            \<exists>g\<in>{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}.
+            top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product f g) h}"
+        then obtain f1 g1 where hf1: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf f1"
+            and hg1: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg g1"
+            and hfg1: "top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product f1 g1) h" by (by100 fast)
         \<comment> \<open>Lf*Lg \<simeq> f1*g1 by product compatibility, then f1*g1 \<simeq> h.\<close>
-        have hf1_loop: "top1_is_loop_on U ?TU x0 f1"
+        have hf1_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 f1"
           using hf1 unfolding top1_loop_equiv_on_def by (by100 blast)
-        have hg1_loop: "top1_is_loop_on U ?TU x0 g1"
+        have hg1_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 g1"
           using hg1 unfolding top1_loop_equiv_on_def by (by100 blast)
-        have hf1_path: "top1_is_path_on U ?TU x0 x0 f1"
+        have hf1_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 f1"
           using hf1_loop unfolding top1_is_loop_on_def by (by100 blast)
-        have hg1_path: "top1_is_path_on U ?TU x0 x0 g1"
+        have hg1_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 g1"
           using hg1_loop unfolding top1_is_loop_on_def by (by100 blast)
-        have hf1g1_loop: "top1_is_loop_on U ?TU x0 (top1_path_product f1 g1)"
+        have hf1g1_loop: "top1_is_loop_on U (subspace_topology X TX U) x0 (top1_path_product f1 g1)"
           unfolding top1_is_loop_on_def
           by (rule top1_path_product_is_path[OF hTopU hf1_path hg1_path])
-        have hLf_hom_f1: "top1_path_homotopic_on U ?TU x0 x0 ?Lf f1"
+        have hLf_hom_f1: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0 ?Lf f1"
           using hf1 unfolding top1_loop_equiv_on_def by (by100 blast)
-        have hLg_hom_g1: "top1_path_homotopic_on U ?TU x0 x0 ?Lg g1"
+        have hLg_hom_g1: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0 ?Lg g1"
           using hg1 unfolding top1_loop_equiv_on_def by (by100 blast)
-        have "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
+        have "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
         proof -
-          have h1: "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 ?Lg)"
+          have h1: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 ?Lg)"
             by (rule path_homotopic_product_left[OF hTopU hLf_hom_f1
                  hLg_loop[unfolded top1_is_loop_on_def]])
-          have h2: "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product f1 ?Lg) (top1_path_product f1 g1)"
+          have h2: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0 (top1_path_product f1 ?Lg) (top1_path_product f1 g1)"
             by (rule path_homotopic_product_right[OF hTopU hLg_hom_g1 hf1_path])
           show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU h1 h2])
         qed
-        hence "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
+        hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
           unfolding top1_loop_equiv_on_def using hLfg_loop2 hf1g1_loop by (by100 blast)
-        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+        thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 (top1_path_product ?Lf ?Lg) h}"
           using top1_loop_equiv_on_trans[OF hTopU] hfg1 by (by100 fast)
       qed
       \<comment> \<open>\<phi>1 hom: \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U) \<cdot> \<phi>1([Lg]_U).\<close>
-      have hLf_carrier: "{h. top1_loop_equiv_on U ?TU x0 ?Lf h}
-          \<in> top1_fundamental_group_carrier U ?TU x0"
+      have hLf_carrier: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}
+          \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
         unfolding top1_fundamental_group_carrier_def using hLf_loop by (by100 blast)
-      have hLg_carrier: "{h. top1_loop_equiv_on U ?TU x0 ?Lg h}
-          \<in> top1_fundamental_group_carrier U ?TU x0"
+      have hLg_carrier: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h}
+          \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
         unfolding top1_fundamental_group_carrier_def using hLg_loop by (by100 blast)
-      have h\<phi>1_hom_app: "\<phi>1 (top1_fundamental_group_mul U ?TU x0
-              {h. top1_loop_equiv_on U ?TU x0 ?Lf h}
-              {h. top1_loop_equiv_on U ?TU x0 ?Lg h})
-          = mulH (\<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?Lf h})
-                 (\<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?Lg h})"
+      have h\<phi>1_hom_app: "\<phi>1 (top1_fundamental_group_mul U (subspace_topology X TX U) x0
+              {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h}
+              {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h})
+          = mulH (\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lf h})
+                 (\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?Lg h})"
         using h\<phi>1 hLf_carrier hLg_carrier
         unfolding top1_group_hom_on_def by (by100 blast)
       show ?thesis unfolding \<rho>_def using hLf_in_U hLg_in_U hLfg2_in_U h_prod_class h\<phi>1_hom_app
@@ -3555,17 +3559,17 @@ proof -
     show "\<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
       using h\<sigma>_fg h\<sigma>_f h\<sigma>_g h\<rho>_eq h\<rho>_mult by (by100 presburger)
   qed
-  have h\<sigma>_cond2_V: "\<And>f' g'. top1_is_path_on V ?TV (f' 0) (f' 1) f'
-      \<Longrightarrow> top1_is_path_on V ?TV (g' 0) (g' 1) g'
+  have h\<sigma>_cond2_V: "\<And>f' g'. top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f'
+      \<Longrightarrow> top1_is_path_on V (subspace_topology X TX V) (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
     sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV. Uses h\<rho>_respects_V.\<close>
   \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
-  have h\<sigma>_ext_\<rho>: "\<And>f'. top1_is_loop_on U ?TU x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
+  have h\<sigma>_ext_\<rho>: "\<And>f'. top1_is_loop_on U (subspace_topology X TX U) x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
   proof -
-    fix f' assume hf': "top1_is_loop_on U ?TU x0 f'"
+    fix f' assume hf': "top1_is_loop_on U (subspace_topology X TX U) x0 f'"
     \<comment> \<open>\<sigma>(f') = \<rho>(\<alpha>(f' 0)\<cdot>f'\<cdot>rev(\<alpha>(f' 1))) = \<rho>(const\<cdot>f'\<cdot>rev(const)) = \<rho>(const\<cdot>f'\<cdot>const)\<close>
     have h\<alpha>0: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have hstart: "f' 0 = x0" by (rule top1_is_loop_on_start[OF hf'])
@@ -3576,37 +3580,37 @@ proof -
     \<comment> \<open>const\<cdot>f'\<cdot>rev(const) \<simeq>_U f' by identity laws.\<close>
     have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
       unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
-    have hf'_path: "top1_is_path_on U ?TU x0 x0 f'"
+    have hf'_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 f'"
       using hf' unfolding top1_is_loop_on_def by (by100 blast)
-    have hconst_path: "top1_is_path_on U ?TU x0 x0 (top1_constant_path x0)"
+    have hconst_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_constant_path x0)"
       by (rule top1_constant_path_is_path[OF hTopU hx0_U])
-    have h_right: "top1_path_homotopic_on U ?TU x0 x0
+    have h_right: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product f' (top1_constant_path x0)) f'"
       by (rule Theorem_51_2_right_identity[OF hTopU hf'_path])
-    have h_outer: "top1_path_homotopic_on U ?TU x0 x0
+    have h_outer: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product (top1_constant_path x0) (top1_path_product f' (top1_constant_path x0)))
         (top1_path_product (top1_constant_path x0) f')"
       by (rule path_homotopic_product_right[OF hTopU h_right hconst_path])
-    have h_left: "top1_path_homotopic_on U ?TU x0 x0
+    have h_left: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product (top1_constant_path x0) f') f'"
       by (rule Theorem_51_2_left_identity[OF hTopU hf'_path])
-    have h_full: "top1_path_homotopic_on U ?TU x0 x0
+    have h_full: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
       using Lemma_51_1_path_homotopic_trans[OF hTopU h_outer h_left] unfolding hrev_const .
     \<comment> \<open>\<rho>(const\<cdot>f'\<cdot>const) = \<rho>(f') because both are loops at x0 in U with same equiv class.\<close>
-    have hcomp_loop: "top1_is_loop_on U ?TU x0
+    have hcomp_loop: "top1_is_loop_on U (subspace_topology X TX U) x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0))))"
     proof -
-      have hrev_path: "top1_is_path_on U ?TU x0 x0 (top1_path_reverse (top1_constant_path x0))"
+      have hrev_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_path_reverse (top1_constant_path x0))"
         unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopU hx0_U])
-      have hfrev: "top1_is_path_on U ?TU x0 x0 (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))"
+      have hfrev: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))"
         by (rule top1_path_product_is_path[OF hTopU hf'_path hrev_path])
       show ?thesis unfolding top1_is_loop_on_def
         by (rule top1_path_product_is_path[OF hTopU hconst_path hfrev])
     qed
-    have h_equiv: "top1_loop_equiv_on U ?TU x0
+    have h_equiv: "top1_loop_equiv_on U (subspace_topology X TX U) x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
       unfolding top1_loop_equiv_on_def using hcomp_loop hf' h_full by (by100 blast)
@@ -3620,22 +3624,22 @@ proof -
                           top1_continuous_map_on_def by (by100 blast)
     let ?comp = "top1_path_product (top1_constant_path x0)
         (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))"
-    have "{h. top1_loop_equiv_on U ?TU x0 ?comp h} = {h. top1_loop_equiv_on U ?TU x0 f' h}"
+    have "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp h} = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
     proof (rule equalityI; rule subsetI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?comp h}"
-      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp h}"
+      thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
         using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF h_equiv]] by (by100 fast)
     next
-      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
-      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?comp h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h}"
+      thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp h}"
         using top1_loop_equiv_on_trans[OF hTopU h_equiv] by (by100 fast)
     qed
     hence "\<rho> ?comp = \<rho> f'" unfolding \<rho>_def using hcomp_in_U hf'_in_U by (by100 simp)
     thus "\<sigma> f' = \<rho> f'" using h\<sigma>_eq by (by100 presburger)
   qed
-  have h\<sigma>_ext_\<rho>_V: "\<And>f'. top1_is_loop_on V ?TV x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
+  have h\<sigma>_ext_\<rho>_V: "\<And>f'. top1_is_loop_on V (subspace_topology X TX V) x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
   proof -
-    fix f' assume hf': "top1_is_loop_on V ?TV x0 f'"
+    fix f' assume hf': "top1_is_loop_on V (subspace_topology X TX V) x0 f'"
     have h\<alpha>0: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have hstart: "f' 0 = x0" by (rule top1_is_loop_on_start[OF hf'])
     have hend: "f' 1 = x0" by (rule top1_is_loop_on_end[OF hf'])
@@ -3644,11 +3648,11 @@ proof -
       unfolding \<sigma>_def using h\<alpha>0 hstart hend by (by100 simp)
     have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
       unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
-    have hf'_path: "top1_is_path_on V ?TV x0 x0 f'"
+    have hf'_path: "top1_is_path_on V (subspace_topology X TX V) x0 x0 f'"
       using hf' unfolding top1_is_loop_on_def by (by100 blast)
-    have hconst_path: "top1_is_path_on V ?TV x0 x0 (top1_constant_path x0)"
+    have hconst_path: "top1_is_path_on V (subspace_topology X TX V) x0 x0 (top1_constant_path x0)"
       by (rule top1_constant_path_is_path[OF hTopV hx0_V])
-    have h_full: "top1_path_homotopic_on V ?TV x0 x0
+    have h_full: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
       using Lemma_51_1_path_homotopic_trans[OF hTopV
@@ -3656,13 +3660,13 @@ proof -
           Theorem_51_2_right_identity[OF hTopV hf'_path] hconst_path]
         Theorem_51_2_left_identity[OF hTopV hf'_path]]
       unfolding hrev_const .
-    have hcomp_loop: "top1_is_loop_on V ?TV x0
+    have hcomp_loop: "top1_is_loop_on V (subspace_topology X TX V) x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0))))"
       unfolding top1_is_loop_on_def hrev_const
       by (rule top1_path_product_is_path[OF hTopV hconst_path
            top1_path_product_is_path[OF hTopV hf'_path hconst_path]])
-    have h_equiv: "top1_loop_equiv_on V ?TV x0
+    have h_equiv: "top1_loop_equiv_on V (subspace_topology X TX V) x0
         (top1_path_product (top1_constant_path x0)
           (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
       unfolding top1_loop_equiv_on_def using hcomp_loop hf' h_full by (by100 blast)
@@ -3674,14 +3678,14 @@ proof -
     have hf'_in_V: "\<forall>s\<in>I_set. f' s \<in> V"
       using hf' unfolding top1_is_loop_on_def top1_is_path_on_def
                           top1_continuous_map_on_def by (by100 blast)
-    have "{h. top1_loop_equiv_on V ?TV x0 ?comp h} = {h. top1_loop_equiv_on V ?TV x0 f' h}"
+    have "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?comp h} = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
     proof (rule equalityI; rule subsetI)
-      fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?comp h}"
-      thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?comp h}"
+      thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
         using top1_loop_equiv_on_trans[OF hTopV top1_loop_equiv_on_sym[OF h_equiv]] by (by100 fast)
     next
-      fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 f' h}"
-      thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?comp h}"
+      fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h}"
+      thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?comp h}"
         using top1_loop_equiv_on_trans[OF hTopV h_equiv] by (by100 fast)
     qed
     have "\<rho> ?comp = \<rho> f'" by (rule h\<rho>_respects_V[OF hcomp_loop hf' h_equiv])
@@ -3970,18 +3974,18 @@ proof -
        \<tau>(f*g) = \<sigma>(f_1)\<cdot>...\<cdot>\<sigma>(f_k)\<cdot>\<sigma>(g_1)\<cdot>...\<cdot>\<sigma>(g_{n-k}) = \<tau>(f)\<cdot>\<tau>(g).
        Carrier: \<sigma> values are in H (from \<phi>1/\<phi>2 ranges); mulH closure.
        Depends on: h\<tau>_wd, h\<sigma>_cond2, subdivision independence.\<close>
-  have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
-      \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
+  have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
+      \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
   proof
-    fix a assume ha: "a \<in> top1_fundamental_group_carrier U ?TU x0"
+    fix a assume ha: "a \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
     \<comment> \<open>Step 1: a = [f]_U for some loop f in U at x0.\<close>
-    obtain f where hf_loop_U: "top1_is_loop_on U ?TU x0 f"
-        and ha_eq: "a = {g. top1_loop_equiv_on U ?TU x0 f g}"
+    obtain f where hf_loop_U: "top1_is_loop_on U (subspace_topology X TX U) x0 f"
+        and ha_eq: "a = {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
       using ha unfolding top1_fundamental_group_carrier_def by (by100 blast)
     \<comment> \<open>Step 2: The induced map sends a to [f]_X (inclusion).\<close>
     have hf_loop_X: "top1_is_loop_on X TX x0 f"
     proof -
-      have hf_cont_U: "top1_continuous_map_on I_set I_top U ?TU f"
+      have hf_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
         using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       have hf_range_U: "\<forall>s\<in>I_set. f s \<in> U"
         using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
@@ -3992,7 +3996,7 @@ proof -
         thus "f s \<in> X" using hf_range_U hUsub by (by100 blast)
       next
         fix V assume hV: "V \<in> TX"
-        have hVU: "V \<inter> U \<in> ?TU" unfolding subspace_topology_def using hV by (by100 blast)
+        have hVU: "V \<inter> U \<in> (subspace_topology X TX U)" unfolding subspace_topology_def using hV by (by100 blast)
         have "{s \<in> I_set. f s \<in> V} = {s \<in> I_set. f s \<in> V \<inter> U}"
           using hf_range_U by (by100 blast)
         also have "\<dots> \<in> I_top" using hf_cont_U hVU unfolding top1_continuous_map_on_def by (by100 blast)
@@ -4002,13 +4006,13 @@ proof -
         using hf_cont_X top1_is_loop_on_start[OF hf_loop_U] top1_is_loop_on_end[OF hf_loop_U]
         by (by100 blast)
     qed
-    have hind: "top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a
+    have hind: "top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a
         = {g. top1_loop_equiv_on X TX x0 f g}"
       unfolding top1_fundamental_group_induced_on_def ha_eq
     proof (rule equalityI; rule subsetI)
-      fix g assume "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U ?TU x0 f g'}.
+      fix g assume "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g'}.
           top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g}"
-      then obtain f' where hf'U: "top1_loop_equiv_on U ?TU x0 f f'"
+      then obtain f' where hf'U: "top1_loop_equiv_on U (subspace_topology X TX U) x0 f f'"
           and hf'g: "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g" by (by100 fast)
       have hf'_X: "top1_loop_equiv_on X TX x0 f f'"
         by (rule loop_equiv_subspace_superspace[OF hUsub hTopX _ hf'U]) (by100 simp)
@@ -4019,12 +4023,12 @@ proof -
     next
       fix g assume "g \<in> {g. top1_loop_equiv_on X TX x0 f g}"
       hence hfg: "top1_loop_equiv_on X TX x0 f g" by (by100 blast)
-      have hff: "top1_loop_equiv_on U ?TU x0 f f" by (rule top1_loop_equiv_on_refl[OF hf_loop_U])
+      have hff: "top1_loop_equiv_on U (subspace_topology X TX U) x0 f f" by (rule top1_loop_equiv_on_refl[OF hf_loop_U])
       have hid_f: "(\<lambda>x. x) \<circ> f = f" by (by100 auto)
-      have "f \<in> {g'. top1_loop_equiv_on U ?TU x0 f g'}" using hff by (by100 blast)
+      have "f \<in> {g'. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g'}" using hff by (by100 blast)
       moreover have "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f) g"
         unfolding hid_f using hfg .
-      ultimately show "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U ?TU x0 f g'}.
+      ultimately show "g \<in> {g. \<exists>f'\<in>{g'. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g'}.
           top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') g}"
         by (by100 fast)
     qed
@@ -4080,43 +4084,43 @@ proof -
       have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
         unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
       \<comment> \<open>f is a path from x0 to x0 in U.\<close>
-      have hf_path_U: "top1_is_path_on U ?TU x0 x0 f"
+      have hf_path_U: "top1_is_path_on U (subspace_topology X TX U) x0 x0 f"
         using hf_loop_U unfolding top1_is_loop_on_def by (by100 blast)
       \<comment> \<open>f \<cdot> const ≃_U f by right identity.\<close>
-      have h_right: "top1_path_homotopic_on U ?TU x0 x0
+      have h_right: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product f (top1_constant_path x0)) f"
         by (rule Theorem_51_2_right_identity[OF hTopU hf_path_U])
       \<comment> \<open>const \<cdot> (f \<cdot> const) ≃_U const \<cdot> f by product_right.\<close>
-      have hconst_path: "top1_is_path_on U ?TU x0 x0 (top1_constant_path x0)"
+      have hconst_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_constant_path x0)"
         by (rule top1_constant_path_is_path[OF hTopU hx0_U])
-      have h_outer: "top1_path_homotopic_on U ?TU x0 x0
+      have h_outer: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0)))
           (top1_path_product (top1_constant_path x0) f)"
         by (rule path_homotopic_product_right[OF hTopU h_right hconst_path])
       \<comment> \<open>const \<cdot> f ≃_U f by left identity.\<close>
-      have h_left: "top1_path_homotopic_on U ?TU x0 x0
+      have h_left: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product (top1_constant_path x0) f) f"
         by (rule Theorem_51_2_left_identity[OF hTopU hf_path_U])
       \<comment> \<open>Transitivity: const \<cdot> (f \<cdot> const) ≃_U f.\<close>
-      have h_chain: "top1_path_homotopic_on U ?TU x0 x0
+      have h_chain: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_constant_path x0))) f"
         by (rule Lemma_51_1_path_homotopic_trans[OF hTopU h_outer h_left])
       \<comment> \<open>Substitute rev(const) = const.\<close>
-      have h_full: "top1_path_homotopic_on U ?TU x0 x0
+      have h_full: "top1_path_homotopic_on U (subspace_topology X TX U) x0 x0
           (top1_path_product (top1_constant_path x0)
             (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) f"
         using h_chain unfolding hrev_const .
       \<comment> \<open>Path homotopic in U implies loop-equiv in U.\<close>
       \<comment> \<open>The composite is a loop at x0 in U.\<close>
-      have hrev_path: "top1_is_path_on U ?TU x0 x0 (top1_path_reverse (top1_constant_path x0))"
+      have hrev_path: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_path_reverse (top1_constant_path x0))"
         unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopU hx0_U])
-      have hfrev: "top1_is_path_on U ?TU x0 x0 (top1_path_product f (top1_path_reverse (top1_constant_path x0)))"
+      have hfrev: "top1_is_path_on U (subspace_topology X TX U) x0 x0 (top1_path_product f (top1_path_reverse (top1_constant_path x0)))"
         by (rule top1_path_product_is_path[OF hTopU hf_path_U hrev_path])
-      have hcomp_loop: "top1_is_loop_on U ?TU x0
+      have hcomp_loop: "top1_is_loop_on U (subspace_topology X TX U) x0
           (top1_path_product (top1_constant_path x0) (top1_path_product f (top1_path_reverse (top1_constant_path x0))))"
         unfolding top1_is_loop_on_def
         by (rule top1_path_product_is_path[OF hTopU hconst_path hfrev])
-      have h_equiv: "top1_loop_equiv_on U ?TU x0
+      have h_equiv: "top1_loop_equiv_on U (subspace_topology X TX U) x0
           (top1_path_product (top1_constant_path x0)
             (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) f"
         unfolding top1_loop_equiv_on_def
@@ -4128,21 +4132,21 @@ proof -
                                     top1_continuous_map_on_def by (by100 blast)
       let ?comp = "top1_path_product (top1_constant_path x0)
           (top1_path_product f (top1_path_reverse (top1_constant_path x0)))"
-      have hclass_eq: "{g. top1_loop_equiv_on U ?TU x0 ?comp g}
-          = {g. top1_loop_equiv_on U ?TU x0 f g}"
+      have hclass_eq: "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp g}
+          = {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
       proof (rule equalityI; rule subsetI)
-        fix g assume "g \<in> {g. top1_loop_equiv_on U ?TU x0 ?comp g}"
-        hence "top1_loop_equiv_on U ?TU x0 ?comp g" by (by100 blast)
-        have hsym: "top1_loop_equiv_on U ?TU x0 f ?comp"
+        fix g assume "g \<in> {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp g}"
+        hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp g" by (by100 blast)
+        have hsym: "top1_loop_equiv_on U (subspace_topology X TX U) x0 f ?comp"
           by (rule top1_loop_equiv_on_sym[OF h_equiv])
-        thus "g \<in> {g. top1_loop_equiv_on U ?TU x0 f g}"
-          using top1_loop_equiv_on_trans[OF hTopU hsym \<open>top1_loop_equiv_on U ?TU x0 ?comp g\<close>]
+        thus "g \<in> {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
+          using top1_loop_equiv_on_trans[OF hTopU hsym \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp g\<close>]
           by (by100 blast)
       next
-        fix g assume "g \<in> {g. top1_loop_equiv_on U ?TU x0 f g}"
-        hence "top1_loop_equiv_on U ?TU x0 f g" by (by100 blast)
-        thus "g \<in> {g. top1_loop_equiv_on U ?TU x0 ?comp g}"
-          using top1_loop_equiv_on_trans[OF hTopU h_equiv \<open>top1_loop_equiv_on U ?TU x0 f g\<close>]
+        fix g assume "g \<in> {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
+        hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 f g" by (by100 blast)
+        thus "g \<in> {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?comp g}"
+          using top1_loop_equiv_on_trans[OF hTopU h_equiv \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 f g\<close>]
           by (by100 blast)
       qed
       have hf_in_U': "\<forall>s\<in>I_set. f s \<in> U"
@@ -4152,16 +4156,16 @@ proof -
       proof -
         have lhs: "\<rho> (top1_path_product (top1_constant_path x0)
             (top1_path_product f (top1_path_reverse (top1_constant_path x0))))
-          = \<phi>1 {g. top1_loop_equiv_on U ?TU x0
+          = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
               (top1_path_product (top1_constant_path x0)
                 (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) g}"
           unfolding \<rho>_def using hcomp_in_U by (by100 simp)
-        have rhs: "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}"
+        have rhs: "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
           unfolding \<rho>_def using hf_in_U' by (by100 simp)
-        from \<open>{g. top1_loop_equiv_on U ?TU x0
+        from \<open>{g. top1_loop_equiv_on U (subspace_topology X TX U) x0
             (top1_path_product (top1_constant_path x0)
               (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) g}
-          = {g. top1_loop_equiv_on U ?TU x0 f g}\<close>
+          = {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}\<close>
         show ?thesis unfolding lhs rhs by (by100 simp)
       qed
     qed
@@ -4171,24 +4175,24 @@ proof -
       have hf_in_U: "\<forall>s\<in>I_set. f s \<in> U"
         using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def
                                   top1_continuous_map_on_def by (by100 blast)
-      have "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}"
+      have "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
         unfolding \<rho>_def using hf_in_U by (by100 simp)
       thus ?thesis using ha_eq by (by100 simp)
     qed
-    show "\<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
+    show "\<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
       using hind h\<Phi>_val h\<tau>_\<sigma> h\<sigma>_\<rho> h\<rho>_simp h\<rho>_val by (by100 simp)
   qed
-  have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
-      \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
+  have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
+      \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
   proof
-    fix b assume hb: "b \<in> top1_fundamental_group_carrier V ?TV x0"
-    obtain g where hg_loop_V: "top1_is_loop_on V ?TV x0 g"
-        and hb_eq: "b = {h. top1_loop_equiv_on V ?TV x0 g h}"
+    fix b assume hb: "b \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+    obtain g where hg_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 g"
+        and hb_eq: "b = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
       using hb unfolding top1_fundamental_group_carrier_def by (by100 blast)
     \<comment> \<open>g is a loop in X (V \<subseteq> X).\<close>
     have hg_loop_X: "top1_is_loop_on X TX x0 g"
     proof -
-      have hg_cont_V: "top1_continuous_map_on I_set I_top V ?TV g"
+      have hg_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g"
         using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       have hg_range_V: "\<forall>s\<in>I_set. g s \<in> V"
         using hg_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
@@ -4198,7 +4202,7 @@ proof -
         fix s assume "s \<in> I_set" thus "g s \<in> X" using hg_range_V hVsub by (by100 blast)
       next
         fix V' assume hV': "V' \<in> TX"
-        have hV'V: "V' \<inter> V \<in> ?TV" unfolding subspace_topology_def using hV' by (by100 blast)
+        have hV'V: "V' \<inter> V \<in> (subspace_topology X TX V)" unfolding subspace_topology_def using hV' by (by100 blast)
         have "{s \<in> I_set. g s \<in> V'} = {s \<in> I_set. g s \<in> V' \<inter> V}"
           using hg_range_V by (by100 blast)
         also have "\<dots> \<in> I_top" using hg_cont_V hV'V unfolding top1_continuous_map_on_def by (by100 blast)
@@ -4209,13 +4213,13 @@ proof -
         by (by100 blast)
     qed
     \<comment> \<open>Induced map sends [g]_V to [g]_X.\<close>
-    have hind_V: "top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b
+    have hind_V: "top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b
         = {h. top1_loop_equiv_on X TX x0 g h}"
       unfolding top1_fundamental_group_induced_on_def hb_eq
     proof (rule equalityI; rule subsetI)
-      fix h assume "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V ?TV x0 g h'}.
+      fix h assume "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h'}.
           top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h}"
-      then obtain f' where hf'V: "top1_loop_equiv_on V ?TV x0 g f'"
+      then obtain f' where hf'V: "top1_loop_equiv_on V (subspace_topology X TX V) x0 g f'"
           and hf'h: "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
       have hf'_X: "top1_loop_equiv_on X TX x0 g f'"
         by (rule loop_equiv_subspace_superspace[OF hVsub hTopX _ hf'V]) (by100 simp)
@@ -4226,11 +4230,11 @@ proof -
     next
       fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 g h}"
       hence hgh: "top1_loop_equiv_on X TX x0 g h" by (by100 blast)
-      have hgg: "top1_loop_equiv_on V ?TV x0 g g" by (rule top1_loop_equiv_on_refl[OF hg_loop_V])
-      have "g \<in> {h'. top1_loop_equiv_on V ?TV x0 g h'}" using hgg by (by100 blast)
+      have hgg: "top1_loop_equiv_on V (subspace_topology X TX V) x0 g g" by (rule top1_loop_equiv_on_refl[OF hg_loop_V])
+      have "g \<in> {h'. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h'}" using hgg by (by100 blast)
       moreover have hid_g: "(\<lambda>x. x) \<circ> g = g" by (by100 auto)
       moreover have "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> g) h" unfolding hid_g using hgh .
-      ultimately show "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V ?TV x0 g h'}.
+      ultimately show "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h'}.
           top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h}" by (by100 fast)
     qed
     \<comment> \<open>\<Phi>([g]_X) = \<tau>(g) by h\<tau>_wd.\<close>
@@ -4267,36 +4271,36 @@ proof -
     proof -
       have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
         unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
-      have hg_path_V: "top1_is_path_on V ?TV x0 x0 g"
+      have hg_path_V: "top1_is_path_on V (subspace_topology X TX V) x0 x0 g"
         using hg_loop_V unfolding top1_is_loop_on_def by (by100 blast)
-      have h_right_V: "top1_path_homotopic_on V ?TV x0 x0
+      have h_right_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
           (top1_path_product g (top1_constant_path x0)) g"
         by (rule Theorem_51_2_right_identity[OF hTopV hg_path_V])
-      have hconst_V: "top1_is_path_on V ?TV x0 x0 (top1_constant_path x0)"
+      have hconst_V: "top1_is_path_on V (subspace_topology X TX V) x0 x0 (top1_constant_path x0)"
         by (rule top1_constant_path_is_path[OF hTopV hx0_V])
-      have h_outer_V: "top1_path_homotopic_on V ?TV x0 x0
+      have h_outer_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
           (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_constant_path x0)))
           (top1_path_product (top1_constant_path x0) g)"
         by (rule path_homotopic_product_right[OF hTopV h_right_V hconst_V])
-      have h_left_V: "top1_path_homotopic_on V ?TV x0 x0
+      have h_left_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
           (top1_path_product (top1_constant_path x0) g) g"
         by (rule Theorem_51_2_left_identity[OF hTopV hg_path_V])
-      have h_chain_V: "top1_path_homotopic_on V ?TV x0 x0
+      have h_chain_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
           (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_constant_path x0))) g"
         by (rule Lemma_51_1_path_homotopic_trans[OF hTopV h_outer_V h_left_V])
-      have h_full_V: "top1_path_homotopic_on V ?TV x0 x0
+      have h_full_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
           (top1_path_product (top1_constant_path x0)
             (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) g"
         using h_chain_V unfolding hrev_const .
-      have hrev_path_V: "top1_is_path_on V ?TV x0 x0 (top1_path_reverse (top1_constant_path x0))"
+      have hrev_path_V: "top1_is_path_on V (subspace_topology X TX V) x0 x0 (top1_path_reverse (top1_constant_path x0))"
         unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopV hx0_V])
-      have hgrev: "top1_is_path_on V ?TV x0 x0 (top1_path_product g (top1_path_reverse (top1_constant_path x0)))"
+      have hgrev: "top1_is_path_on V (subspace_topology X TX V) x0 x0 (top1_path_product g (top1_path_reverse (top1_constant_path x0)))"
         by (rule top1_path_product_is_path[OF hTopV hg_path_V hrev_path_V])
-      have hcomp_loop_V: "top1_is_loop_on V ?TV x0
+      have hcomp_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0
           (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
         unfolding top1_is_loop_on_def
         by (rule top1_path_product_is_path[OF hTopV hconst_V hgrev])
-      have h_equiv_V: "top1_loop_equiv_on V ?TV x0
+      have h_equiv_V: "top1_loop_equiv_on V (subspace_topology X TX V) x0
           (top1_path_product (top1_constant_path x0)
             (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) g"
         unfolding top1_loop_equiv_on_def using hcomp_loop_V hg_loop_V h_full_V by (by100 blast)
@@ -4311,54 +4315,54 @@ proof -
       let ?compV = "top1_path_product (top1_constant_path x0)
           (top1_path_product g (top1_path_reverse (top1_constant_path x0)))"
       \<comment> \<open>Equiv classes equal via sym+trans.\<close>
-      have hclass_eq_V: "{h. top1_loop_equiv_on V ?TV x0 ?compV h}
-          = {h. top1_loop_equiv_on V ?TV x0 g h}"
+      have hclass_eq_V: "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?compV h}
+          = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
       proof (rule equalityI; rule subsetI)
-        fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
-        hence "top1_loop_equiv_on V ?TV x0 ?compV h" by (by100 blast)
-        thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
+        fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?compV h}"
+        hence "top1_loop_equiv_on V (subspace_topology X TX V) x0 ?compV h" by (by100 blast)
+        thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
           using top1_loop_equiv_on_trans[OF hTopV
             top1_loop_equiv_on_sym[OF h_equiv_V]] by (by100 fast)
       next
-        fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
-        hence "top1_loop_equiv_on V ?TV x0 g h" by (by100 blast)
-        thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+        fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
+        hence "top1_loop_equiv_on V (subspace_topology X TX V) x0 g h" by (by100 blast)
+        thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?compV h}"
           using top1_loop_equiv_on_trans[OF hTopV h_equiv_V] by (by100 fast)
       qed
       \<comment> \<open>Helper: for any loop f in V, \<rho>(f) = \<phi>2([f]_V).
          If f \<notin> U: \<rho>(f) = \<phi>2([f]_V) directly. If f \<in> U: \<rho>(f) = \<phi>1([f]_U) = \<phi>2([f]_V)
          by compatibility (since f \<in> U\<inter>V).\<close>
-      have h\<rho>_to_\<phi>2: "\<And>f0. top1_is_loop_on V ?TV x0 f0 \<Longrightarrow>
-          \<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+      have h\<rho>_to_\<phi>2: "\<And>f0. top1_is_loop_on V (subspace_topology X TX V) x0 f0 \<Longrightarrow>
+          \<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
       proof -
-        fix f0 assume hf0: "top1_is_loop_on V ?TV x0 f0"
+        fix f0 assume hf0: "top1_is_loop_on V (subspace_topology X TX V) x0 f0"
         have hf0_V: "\<forall>s\<in>I_set. f0 s \<in> V" using hf0 unfolding top1_is_loop_on_def
             top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
-        show "\<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+        show "\<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
         proof (cases "\<forall>s\<in>I_set. f0 s \<in> U")
           case False
           thus ?thesis unfolding \<rho>_def by (rule if_not_P)
         next
           case True
           \<comment> \<open>f0 \<in> U\<inter>V. Use compatibility: \<phi>1([f0]_U) = \<phi>2([f0]_V).\<close>
-          have hf0_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 f0"
+          have hf0_loop_UV: "top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f0"
           proof -
             have hf0_UV: "\<forall>s\<in>I_set. f0 s \<in> U \<inter> V" using True hf0_V by (by100 blast)
-            have hf0_cont_V: "top1_continuous_map_on I_set I_top V ?TV f0"
+            have hf0_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) f0"
               using hf0 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-            have hf0_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV f0"
+            have hf0_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) (subspace_topology X TX (U \<inter> V)) f0"
               unfolding top1_continuous_map_on_def
             proof (intro conjI ballI)
               fix s assume "s \<in> I_set" thus "f0 s \<in> U \<inter> V" using hf0_UV by (by100 blast)
             next
-              fix W assume "W \<in> ?TUV"
+              fix W assume "W \<in> (subspace_topology X TX (U \<inter> V))"
               then obtain W' where "W' \<in> TX" "W = (U \<inter> V) \<inter> W'"
                 unfolding subspace_topology_def by (by100 blast)
               have "{s \<in> I_set. f0 s \<in> W} = {s \<in> I_set. f0 s \<in> W' \<inter> V}"
                 using hf0_UV \<open>W = (U \<inter> V) \<inter> W'\<close> by (by100 blast)
               also have "\<dots> \<in> I_top"
               proof -
-                have "W' \<inter> V \<in> ?TV" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+                have "W' \<inter> V \<in> (subspace_topology X TX V)" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
                 thus ?thesis using hf0_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
               qed
               finally show "{s \<in> I_set. f0 s \<in> W} \<in> I_top" .
@@ -4367,75 +4371,75 @@ proof -
               using hf0_cont_UV top1_is_loop_on_start[OF hf0] top1_is_loop_on_end[OF hf0]
               by (by100 blast)
           qed
-          let ?c0 = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 h}"
-          have "?c0 \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+          let ?c0 = "{h. top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f0 h}"
+          have "?c0 \<in> top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0"
             unfolding top1_fundamental_group_carrier_def using hf0_loop_UV by (by100 blast)
           note hc0 = hcompat[rule_format, OF this]
-          have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c0
-              = {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+          have "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 U (subspace_topology X TX U) x0 (\<lambda>x. x) ?c0
+              = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h}"
             unfolding top1_fundamental_group_induced_on_def
           proof (rule equalityI; rule subsetI)
-            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
-            then obtain f' where hf'_UV0: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 f'"
-                and hf'h0: "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'_UV0: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f0 f'"
+                and hf'h0: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
             have hUV_U: "U \<inter> V \<subseteq> U" by (by100 blast)
-            have "top1_loop_equiv_on U ?TU x0 f0 f'"
+            have "top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 f'"
               by (rule loop_equiv_subspace_superspace[OF hUV_U hTopU
                    subspace_topology_trans[OF hUV_U] hf'_UV0])
             have hid0: "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-            have "top1_loop_equiv_on U ?TU x0 f' h" using hf'h0 unfolding hid0 .
-            thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 f0 h}"
-              using top1_loop_equiv_on_trans[OF hTopU \<open>top1_loop_equiv_on U ?TU x0 f0 f'\<close>]
+            have "top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h" using hf'h0 unfolding hid0 .
+            thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h}"
+              using top1_loop_equiv_on_trans[OF hTopU \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 f'\<close>]
               by (by100 fast)
           next
-            fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 f0 h}"
-            hence "top1_loop_equiv_on U ?TU x0 f0 h" by (by100 blast)
+            fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h}"
+            hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h" by (by100 blast)
             have "f0 \<in> ?c0" using top1_loop_equiv_on_refl[OF hf0_loop_UV] by (by100 blast)
             moreover have "(\<lambda>x. x) \<circ> f0 = f0" by (by100 auto)
-            moreover have "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f0) h"
-              using \<open>top1_loop_equiv_on U ?TU x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
-            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
+            moreover have "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f0) h"
+              using \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h}"
               by (by100 fast)
           qed
-          moreover have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c0
-              = {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+          moreover have "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 V (subspace_topology X TX V) x0 (\<lambda>x. x) ?c0
+              = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
             unfolding top1_fundamental_group_induced_on_def
           proof (rule equalityI; rule subsetI)
-            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
-            then obtain f' where hf'_UV1: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 f'"
-                and hf'h1: "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'_UV1: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 f0 f'"
+                and hf'h1: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
             have hUV_V: "U \<inter> V \<subseteq> V" by (by100 blast)
-            have "top1_loop_equiv_on V ?TV x0 f0 f'"
+            have "top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 f'"
               by (rule loop_equiv_subspace_superspace[OF hUV_V hTopV
                    subspace_topology_trans[OF hUV_V] hf'_UV1])
             have hid1: "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-            have "top1_loop_equiv_on V ?TV x0 f' h" using hf'h1 unfolding hid1 .
-            thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 f0 h}"
-              using top1_loop_equiv_on_trans[OF hTopV \<open>top1_loop_equiv_on V ?TV x0 f0 f'\<close>]
+            have "top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h" using hf'h1 unfolding hid1 .
+            thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
+              using top1_loop_equiv_on_trans[OF hTopV \<open>top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 f'\<close>]
               by (by100 fast)
           next
-            fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 f0 h}"
-            hence "top1_loop_equiv_on V ?TV x0 f0 h" by (by100 blast)
+            fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
+            hence "top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h" by (by100 blast)
             have "f0 \<in> ?c0" using top1_loop_equiv_on_refl[OF hf0_loop_UV] by (by100 blast)
             moreover have "(\<lambda>x. x) \<circ> f0 = f0" by (by100 auto)
-            moreover have "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f0) h"
-              using \<open>top1_loop_equiv_on V ?TV x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
-            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
+            moreover have "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f0) h"
+              using \<open>top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h}"
               by (by100 fast)
           qed
-          ultimately have "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 f0 h}
-              = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+          ultimately have "\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h}
+              = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 f0 h}"
             using hc0 by (by100 simp)
-          moreover have "\<rho> f0 = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+          moreover have "\<rho> f0 = \<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 f0 h}"
             unfolding \<rho>_def using True by (by100 simp)
           ultimately show ?thesis by (by100 simp)
         qed
       qed
       \<comment> \<open>\<rho>(?compV) = \<phi>2([?compV]_V) and \<rho>(g) = \<phi>2([g]_V) by helper.
          [?compV]_V = [g]_V from hclass_eq_V. Hence \<rho>(?compV) = \<rho>(g).\<close>
-      have "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+      have "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?compV h}"
         by (rule h\<rho>_to_\<phi>2[OF hcomp_loop_V])
-      also have "\<dots> = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+      also have "\<dots> = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
         using hclass_eq_V by (by100 simp)
       also have "\<dots> = \<rho> g" by (rule h\<rho>_to_\<phi>2[OF hg_loop_V, symmetric])
       finally show ?thesis .
@@ -4453,29 +4457,29 @@ proof -
         \<comment> \<open>g is in both U and V, hence in U\<inter>V. Use compatibility.\<close>
         have hg_UV: "\<forall>s\<in>I_set. g s \<in> U \<inter> V" using True hg_in_V by (by100 blast)
         \<comment> \<open>\<rho>(g) = \<phi>1([g]_U) since g \<in> U.\<close>
-        have h\<rho>_U: "\<rho> g = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h}"
+        have h\<rho>_U: "\<rho> g = \<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 g h}"
           unfolding \<rho>_def using True by (by100 simp)
         \<comment> \<open>By compatibility: \<phi>1([g]_U) = \<phi>2([g]_V).\<close>
-        have hcompat_g: "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h} = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+        have hcompat_g: "\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 g h} = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
         proof -
           \<comment> \<open>g is a loop in U\<inter>V.\<close>
-          have hg_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 g"
+          have hg_loop_UV: "top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 g"
           proof -
-            have hg_cont_V: "top1_continuous_map_on I_set I_top V ?TV g"
+            have hg_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g"
               using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-            have hg_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV g"
+            have hg_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) (subspace_topology X TX (U \<inter> V)) g"
               unfolding top1_continuous_map_on_def
             proof (intro conjI ballI)
               fix s assume "s \<in> I_set" thus "g s \<in> U \<inter> V" using hg_UV by (by100 blast)
             next
-              fix W assume "W \<in> ?TUV"
+              fix W assume "W \<in> (subspace_topology X TX (U \<inter> V))"
               then obtain W' where "W' \<in> TX" "W = (U \<inter> V) \<inter> W'"
                 unfolding subspace_topology_def by (by100 blast)
               have "{s \<in> I_set. g s \<in> W} = {s \<in> I_set. g s \<in> W' \<inter> V}"
                 using hg_UV \<open>W = (U \<inter> V) \<inter> W'\<close> by (by100 blast)
               also have "\<dots> \<in> I_top"
               proof -
-                have "W' \<inter> V \<in> ?TV" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+                have "W' \<inter> V \<in> (subspace_topology X TX V)" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
                 thus ?thesis using hg_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
               qed
               finally show "{s \<in> I_set. g s \<in> W} \<in> I_top" .
@@ -4484,62 +4488,62 @@ proof -
               using hg_cont_UV top1_is_loop_on_start[OF hg_loop_V] top1_is_loop_on_end[OF hg_loop_V]
               by (by100 blast)
           qed
-          let ?c_UV = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 g h}"
-          have hc_carrier: "?c_UV \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+          let ?c_UV = "{h. top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 g h}"
+          have hc_carrier: "?c_UV \<in> top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0"
             unfolding top1_fundamental_group_carrier_def using hg_loop_UV by (by100 blast)
           \<comment> \<open>By hcompat: \<phi>1(i_U*([g]_{U\<inter>V})) = \<phi>2(i_V*([g]_{U\<inter>V})).\<close>
           note hc = hcompat[rule_format, OF hc_carrier]
           \<comment> \<open>i_U*([g]_{U\<inter>V}) = [g]_U.\<close>
-          have hind_U: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c_UV
-              = {h. top1_loop_equiv_on U ?TU x0 g h}"
+          have hind_U: "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 U (subspace_topology X TX U) x0 (\<lambda>x. x) ?c_UV
+              = {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 g h}"
             unfolding top1_fundamental_group_induced_on_def
           proof (rule equalityI; rule subsetI)
-            fix h assume "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
-            then obtain f' where hf'UV: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 g f'"
-                and hf'h: "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'UV: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 g f'"
+                and hf'h: "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
             have hUV_sub_U: "U \<inter> V \<subseteq> U" by (by100 blast)
-            have hTUV_eq: "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+            have hTUV_eq: "subspace_topology U (subspace_topology X TX U) (U \<inter> V) = (subspace_topology X TX (U \<inter> V))"
               by (rule subspace_topology_trans[OF hUV_sub_U])
-            have hf'_U: "top1_loop_equiv_on U ?TU x0 g f'"
+            have hf'_U: "top1_loop_equiv_on U (subspace_topology X TX U) x0 g f'"
               by (rule loop_equiv_subspace_superspace[OF hUV_sub_U hTopU hTUV_eq hf'UV])
             have hid_f': "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-            have "top1_loop_equiv_on U ?TU x0 f' h" using hf'h unfolding hid_f' .
-            thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 g h}"
+            have "top1_loop_equiv_on U (subspace_topology X TX U) x0 f' h" using hf'h unfolding hid_f' .
+            thus "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 g h}"
               using top1_loop_equiv_on_trans[OF hTopU hf'_U] by (by100 fast)
           next
-            fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 g h}"
-            hence "top1_loop_equiv_on U ?TU x0 g h" by (by100 blast)
+            fix h assume "h \<in> {h. top1_loop_equiv_on U (subspace_topology X TX U) x0 g h}"
+            hence "top1_loop_equiv_on U (subspace_topology X TX U) x0 g h" by (by100 blast)
             have "g \<in> ?c_UV" using top1_loop_equiv_on_refl[OF hg_loop_UV] by (by100 blast)
             moreover have hid_g: "(\<lambda>x. x) \<circ> g = g" by (by100 auto)
-            moreover have "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> g) h"
-              unfolding hid_g using \<open>top1_loop_equiv_on U ?TU x0 g h\<close> .
-            ultimately show "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
+            moreover have "top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> g) h"
+              unfolding hid_g using \<open>top1_loop_equiv_on U (subspace_topology X TX U) x0 g h\<close> .
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on U (subspace_topology X TX U) x0 ((\<lambda>x. x) \<circ> f') h}"
               by (by100 fast)
           qed
-          have hind_V: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c_UV
-              = {h. top1_loop_equiv_on V ?TV x0 g h}"
+          have hind_V: "top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 V (subspace_topology X TX V) x0 (\<lambda>x. x) ?c_UV
+              = {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
             unfolding top1_fundamental_group_induced_on_def
           proof (rule equalityI; rule subsetI)
-            fix h assume "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
-            then obtain f' where hf'UV: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 g f'"
-                and hf'h: "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'UV: "top1_loop_equiv_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 g f'"
+                and hf'h: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
             have hUV_sub_V: "U \<inter> V \<subseteq> V" by (by100 blast)
-            have hTUV_eq_V: "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+            have hTUV_eq_V: "subspace_topology V (subspace_topology X TX V) (U \<inter> V) = (subspace_topology X TX (U \<inter> V))"
               by (rule subspace_topology_trans[OF hUV_sub_V])
-            have hf'_V: "top1_loop_equiv_on V ?TV x0 g f'"
+            have hf'_V: "top1_loop_equiv_on V (subspace_topology X TX V) x0 g f'"
               by (rule loop_equiv_subspace_superspace[OF hUV_sub_V hTopV hTUV_eq_V hf'UV])
             have hid_f': "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
-            have "top1_loop_equiv_on V ?TV x0 f' h" using hf'h unfolding hid_f' .
-            thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
+            have "top1_loop_equiv_on V (subspace_topology X TX V) x0 f' h" using hf'h unfolding hid_f' .
+            thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
               using top1_loop_equiv_on_trans[OF hTopV hf'_V] by (by100 fast)
           next
-            fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
-            hence "top1_loop_equiv_on V ?TV x0 g h" by (by100 blast)
+            fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
+            hence "top1_loop_equiv_on V (subspace_topology X TX V) x0 g h" by (by100 blast)
             have "g \<in> ?c_UV" using top1_loop_equiv_on_refl[OF hg_loop_UV] by (by100 blast)
             moreover have hid_g: "(\<lambda>x. x) \<circ> g = g" by (by100 auto)
-            moreover have "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> g) h"
-              unfolding hid_g using \<open>top1_loop_equiv_on V ?TV x0 g h\<close> .
-            ultimately show "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
+            moreover have "top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> g) h"
+              unfolding hid_g using \<open>top1_loop_equiv_on V (subspace_topology X TX V) x0 g h\<close> .
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c_UV. top1_loop_equiv_on V (subspace_topology X TX V) x0 ((\<lambda>x. x) \<circ> f') h}"
               by (by100 fast)
           qed
           show ?thesis using hc hind_U hind_V by (by100 simp)
@@ -4548,12 +4552,12 @@ proof -
       next
         case False
         have hif: "\<not>(\<forall>s\<in>I_set. g s \<in> U)" by (rule False)
-        have h\<rho>_eq: "\<rho> g = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+        have h\<rho>_eq: "\<rho> g = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 g h}"
           unfolding \<rho>_def by (rule if_not_P[OF hif])
         show ?thesis using h\<rho>_eq hb_eq by (by100 simp)
       qed
     qed
-    show "\<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
+    show "\<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
       using hind_V h\<Phi>_val_V h\<tau>_\<sigma>_V h\<sigma>_\<rho>_V h\<rho>_simp_V h\<rho>_val_V by (by100 simp)
   qed
   show ?thesis using h\<Phi>_hom h\<Phi>_ext_U h\<Phi>_ext_V by (by100 blast)
