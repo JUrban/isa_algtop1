@@ -3559,10 +3559,56 @@ proof -
           note hc0 = hcompat[rule_format, OF this]
           have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c0
               = {h. top1_loop_equiv_on U ?TU x0 f0 h}"
-            sorry \<comment> \<open>Induced map U\<inter>V \<hookrightarrow> U (same as hind_U pattern).\<close>
+            unfolding top1_fundamental_group_induced_on_def
+          proof (rule equalityI; rule subsetI)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'_UV0: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 f'"
+                and hf'h0: "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            have hUV_U: "U \<inter> V \<subseteq> U" by (by100 blast)
+            have "top1_loop_equiv_on U ?TU x0 f0 f'"
+              by (rule loop_equiv_subspace_superspace[OF hUV_U hTopU
+                   subspace_topology_trans[OF hUV_U] hf'_UV0])
+            have hid0: "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
+            have "top1_loop_equiv_on U ?TU x0 f' h" using hf'h0 unfolding hid0 .
+            thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+              using top1_loop_equiv_on_trans[OF hTopU \<open>top1_loop_equiv_on U ?TU x0 f0 f'\<close>]
+              by (by100 fast)
+          next
+            fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+            hence "top1_loop_equiv_on U ?TU x0 f0 h" by (by100 blast)
+            have "f0 \<in> ?c0" using top1_loop_equiv_on_refl[OF hf0_loop_UV] by (by100 blast)
+            moreover have "(\<lambda>x. x) \<circ> f0 = f0" by (by100 auto)
+            moreover have "top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f0) h"
+              using \<open>top1_loop_equiv_on U ?TU x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on U ?TU x0 ((\<lambda>x. x) \<circ> f') h}"
+              by (by100 fast)
+          qed
           moreover have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c0
               = {h. top1_loop_equiv_on V ?TV x0 f0 h}"
-            sorry \<comment> \<open>Induced map U\<inter>V \<hookrightarrow> V.\<close>
+            unfolding top1_fundamental_group_induced_on_def
+          proof (rule equalityI; rule subsetI)
+            fix h assume "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
+            then obtain f' where hf'_UV1: "top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 f'"
+                and hf'h1: "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+            have hUV_V: "U \<inter> V \<subseteq> V" by (by100 blast)
+            have "top1_loop_equiv_on V ?TV x0 f0 f'"
+              by (rule loop_equiv_subspace_superspace[OF hUV_V hTopV
+                   subspace_topology_trans[OF hUV_V] hf'_UV1])
+            have hid1: "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
+            have "top1_loop_equiv_on V ?TV x0 f' h" using hf'h1 unfolding hid1 .
+            thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+              using top1_loop_equiv_on_trans[OF hTopV \<open>top1_loop_equiv_on V ?TV x0 f0 f'\<close>]
+              by (by100 fast)
+          next
+            fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+            hence "top1_loop_equiv_on V ?TV x0 f0 h" by (by100 blast)
+            have "f0 \<in> ?c0" using top1_loop_equiv_on_refl[OF hf0_loop_UV] by (by100 blast)
+            moreover have "(\<lambda>x. x) \<circ> f0 = f0" by (by100 auto)
+            moreover have "top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f0) h"
+              using \<open>top1_loop_equiv_on V ?TV x0 f0 h\<close> \<open>(\<lambda>x. x) \<circ> f0 = f0\<close> by (by100 presburger)
+            ultimately show "h \<in> {h. \<exists>f'\<in>?c0. top1_loop_equiv_on V ?TV x0 ((\<lambda>x. x) \<circ> f') h}"
+              by (by100 fast)
+          qed
           ultimately have "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 f0 h}
               = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
             using hc0 by (by100 simp)
