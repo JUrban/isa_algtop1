@@ -4762,37 +4762,107 @@ proof -
              All parameter values stay in [sub 0, sub 2] \<subseteq> [0,1], so H maps to U.\<close>
           \<comment> \<open>Express path product as f \<circ> \<phi> and merged piece as f \<circ> \<psi>.\<close>
           define \<phi>_concat where "\<phi>_concat s =
-            (if s \<le> 1/2 then sub 0 + 2*s * (sub 1 - sub 0)
-             else sub 1 + (2*s - 1) * (sub 2 - sub 1))" for s :: real
-          define \<psi>_linear where "\<psi>_linear s = sub 0 + s * (sub 2 - sub 0)" for s :: real
+            (if s \<le> 1/2 then sub 0 + 2*s * (sub (Suc 0) - sub 0)
+             else sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)))" for s :: real
+          define \<psi>_linear where "\<psi>_linear s = sub 0 + s * (sub (Suc (Suc 0)) - sub 0)" for s :: real
           \<comment> \<open>path_product (piece 0 sub) (piece 1 sub) = f \<circ> \<phi>_concat on I_set.\<close>
           have hprod_eq: "\<And>s. s \<in> I_set \<Longrightarrow>
               top1_path_product (piece 0 sub) (piece 1 sub) s = f (\<phi>_concat s)"
-            unfolding top1_path_product_def piece_def \<phi>_concat_def sorry
+          proof -
+            fix s :: real assume hs: "s \<in> I_set"
+            show "top1_path_product (piece 0 sub) (piece 1 sub) s = f (\<phi>_concat s)"
+              unfolding top1_path_product_def piece_def \<phi>_concat_def by (by100 simp)
+          qed
           \<comment> \<open>piece 0 sub' = f \<circ> \<psi>_linear on I_set.\<close>
           have hmerged_eq: "\<And>s. piece 0 sub' s = f (\<psi>_linear s)"
-            unfolding piece_def sub'_def \<psi>_linear_def sorry
+            unfolding piece_def sub'_def \<psi>_linear_def by (by100 simp)
           \<comment> \<open>Apply reparam_path_homotopy: need \<phi>_concat, \<psi>_linear continuous I\<rightarrow>I.\<close>
           have hphi_concat_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>_concat"
             sorry \<comment> \<open>Piecewise linear, matching at 1/2. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
           have hpsi_linear_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>_linear"
             sorry \<comment> \<open>Affine map. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
           have hphi0: "\<phi>_concat 0 = sub 0" unfolding \<phi>_concat_def by (by100 simp)
-          have hphi1: "\<phi>_concat 1 = sub 2" unfolding \<phi>_concat_def by (by100 simp)
+          have hphi1: "\<phi>_concat 1 = sub (Suc (Suc 0))" unfolding \<phi>_concat_def by (by100 simp)
           have hpsi0: "\<psi>_linear 0 = sub 0" unfolding \<psi>_linear_def by (by100 simp)
-          have hpsi1: "\<psi>_linear 1 = sub 2" unfolding \<psi>_linear_def by (by100 simp)
-          have hsub0_I: "sub 0 \<in> I_set" sorry
-          have hsub2_I: "sub 2 \<in> I_set" sorry
-          have hf_cont_I: "top1_continuous_map_on I_set I_top X TX f" sorry
-          have hf_in_U: "\<forall>s\<in>I_set. f s \<in> U" sorry
+          have hpsi1: "\<psi>_linear 1 = sub (Suc (Suc 0))" unfolding \<psi>_linear_def by (by100 simp)
+          have hsub0_I: "sub 0 \<in> I_set"
+            using lhs0 unfolding top1_unit_interval_def by (by100 force)
+          have hsub2_I: "sub (Suc (Suc 0)) \<in> I_set"
+          proof -
+            have "(Suc (Suc 0)) \<le> n" using hn2 by (by100 presburger)
+            have "0 \<le> sub 0" using lhs0 by (by100 simp)
+            moreover have "sub 0 < sub (Suc 0)" using lhinc h0n by (by100 force)
+            moreover have "sub (Suc 0) < sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+            ultimately have "0 \<le> sub (Suc (Suc 0))" by (by100 linarith)
+            moreover have "sub (Suc (Suc 0)) \<le> sub n"
+            proof -
+              have "\<And>k. k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))"
+              proof -
+                fix k show "k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))"
+                proof (induction k)
+                  case 0 thus ?case by (by100 simp)
+                next
+                  case (Suc m)
+                  have "m + Suc (Suc 0) \<le> n" using Suc.prems by (by100 presburger)
+                  have "sub (Suc (Suc 0)) \<le> sub (m + Suc (Suc 0))"
+                    using Suc.IH[OF \<open>m + Suc (Suc 0) \<le> n\<close>] .
+                  moreover have "m + Suc (Suc 0) < n" using Suc.prems by (by100 presburger)
+                  moreover have "sub (m + Suc (Suc 0)) < sub (Suc m + Suc (Suc 0))"
+                    using lhinc calculation(2) by (by100 force)
+                  ultimately show ?case by (by100 linarith)
+                qed
+              qed
+              have hk_le: "(n - Suc (Suc 0)) + Suc (Suc 0) \<le> n"
+                using \<open>Suc (Suc 0) \<le> n\<close> by (by100 presburger)
+              have "sub (Suc (Suc 0)) \<le> sub ((n - Suc (Suc 0)) + Suc (Suc 0))"
+                using \<open>\<And>k. k + Suc (Suc 0) \<le> n \<Longrightarrow> sub (Suc (Suc 0)) \<le> sub (k + Suc (Suc 0))\<close>[OF hk_le] .
+              moreover have "(n - Suc (Suc 0)) + Suc (Suc 0) = n"
+                using \<open>Suc (Suc 0) \<le> n\<close> by (by100 presburger)
+              ultimately show ?thesis by (by100 presburger)
+            qed
+            hence "sub (Suc (Suc 0)) \<le> 1" using lhsn by (by100 linarith)
+            ultimately show ?thesis unfolding top1_unit_interval_def by (by100 force)
+          qed
+          have hf_loop_X: "top1_is_loop_on X TX x0 f"
+          proof -
+            have hf_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+              using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have hf_range_U: "\<forall>s\<in>I_set. f s \<in> U"
+              using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+            have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix s assume "s \<in> I_set"
+              thus "f s \<in> X" using hf_range_U hUsub by (by100 blast)
+            next
+              fix V' assume "V' \<in> TX"
+              have "V' \<inter> U \<in> subspace_topology X TX U"
+                unfolding subspace_topology_def using \<open>V' \<in> TX\<close> by (by100 blast)
+              have "{s \<in> I_set. f s \<in> V'} = {s \<in> I_set. f s \<in> V' \<inter> U}"
+                using hf_range_U by (by100 blast)
+              also have "\<dots> \<in> I_top"
+                using hf_cont_U \<open>V' \<inter> U \<in> subspace_topology X TX U\<close>
+                unfolding top1_continuous_map_on_def by (by100 blast)
+              finally show "{s \<in> I_set. f s \<in> V'} \<in> I_top" .
+            qed
+            show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hf_cont_X top1_is_loop_on_start[OF hf_loop_U]
+                    top1_is_loop_on_end[OF hf_loop_U] by (by100 blast)
+          qed
+          have hf_cont_I: "top1_continuous_map_on I_set I_top X TX f"
+            using hf_loop_X unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have hf_in_U_loc: "\<forall>s\<in>I_set. f s \<in> U"
+            using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def
+                top1_continuous_map_on_def by (by100 blast)
           \<comment> \<open>Apply the reparametrization lemma.\<close>
           have hhom: "top1_path_homotopic_on U (subspace_topology X TX U)
-              (f (sub 0)) (f (sub 2)) (f \<circ> \<phi>_concat) (f \<circ> \<psi>_linear)"
+              (f (sub 0)) (f (sub (Suc (Suc 0)))) (f \<circ> \<phi>_concat) (f \<circ> \<psi>_linear)"
             by (rule reparam_path_homotopy[OF hTopX hf_cont_I hf_in_U hUsub hTopU
                 hphi_concat_cont hpsi_linear_cont hphi0 hphi1 hpsi0 hpsi1 hsub0_I hsub2_I])
+          have hUsub: "U \<subseteq> X" using hU unfolding openin_on_def by (by100 blast)
           \<comment> \<open>Transfer: path_product agrees with f\<circ>\<phi>_concat, piece 0 sub' agrees with f\<circ>\<psi>_linear.\<close>
           have hhom2: "top1_path_homotopic_on U (subspace_topology X TX U)
-              (f (sub 0)) (f (sub 2)) (top1_path_product (piece 0 sub) (piece 1 sub)) (piece 0 sub')"
+              (f (sub 0)) (f (sub (Suc (Suc 0)))) (top1_path_product (piece 0 sub) (piece 1 sub)) (piece 0 sub')"
             sorry \<comment> \<open>From hhom + hprod_eq + hmerged_eq: extensional equality on I_set.\<close>
           \<comment> \<open>Now \<sigma>_cond1: path-homotopic paths have the same \<sigma> value.\<close>
           have hreparam: "\<sigma> (top1_path_product (piece 0 sub) (piece 1 sub)) = \<sigma> (piece 0 sub')"
