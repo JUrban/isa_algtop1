@@ -6518,9 +6518,171 @@ proof -
             qed
             \<comment> \<open>The foldr merge uses the same algebraic structure as U.
                Sorry this for now — the proof is ~200 lines mirroring the U version.\<close>
+            \<comment> \<open>Algebraic merge: same structure as U version.\<close>
+            have h0n: "(0::nat) < n" using hn2 by (by100 presburger)
+            have h1n: "(1::nat) < n" using hn2 by (by100 presburger)
+            \<comment> \<open>σ_cond2_V: σ(p0*p1) = σ(p0)·σ(p1) for V-paths.\<close>
+            have hp0V: "top1_is_path_on V (subspace_topology X TX V) (piece_V 0 sub 0) (piece_V 0 sub 1) (piece_V 0 sub)"
+              using hpiece_V_path[OF h0n] unfolding piece_V_def by (by100 simp)
+            have hp1V: "top1_is_path_on V (subspace_topology X TX V) (piece_V 1 sub 0) (piece_V 1 sub 1) (piece_V 1 sub)"
+              using hpiece_V_path[OF h1n] unfolding piece_V_def by (by100 simp)
+            have hmatch_V: "piece_V 0 sub 1 = piece_V 1 sub 0" unfolding piece_V_def by (by100 simp)
+            have hcond2_V: "\<sigma> (top1_path_product (piece_V 0 sub) (piece_V 1 sub)) = mulH (\<sigma> (piece_V 0 sub)) (\<sigma> (piece_V 1 sub))"
+              by (rule h\<sigma>_cond2_V[OF hp0V hp1V hmatch_V])
+            \<comment> \<open>Reparametrization: p0*p1 ≃_V merged piece.\<close>
+            have hsub0_ge_V: "0 \<le> sub 0" using hsub_lo_V2 by (by100 force)
+            have hsub02_le_V: "sub 0 \<le> sub (Suc (Suc 0))"
+            proof -
+              have "sub 0 < sub (Suc 0)" using lhinc h0n by (by100 force)
+              moreover have "sub (Suc 0) < sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            have hsub2_le1_V: "sub (Suc (Suc 0)) \<le> 1" using hsub_hi_V2 hn2 by (by100 force)
+            \<comment> \<open>Reparam + σ_cond1_V gives σ(p0*p1) = σ(piece 0 sub').\<close>
+            have hreparam_V: "\<sigma> (top1_path_product (piece_V 0 sub) (piece_V 1 sub)) = \<sigma> (piece_V 0 sub')"
+              sorry \<comment> \<open>Same reparametrization as U: reparam_path_homotopy + σ_cond1_V.\<close>
+            have hmerge_eq_V: "mulH (\<sigma> (piece_V 0 sub)) (\<sigma> (piece_V 1 sub)) = \<sigma> (piece_V 0 sub')"
+              using hcond2_V hreparam_V by (by100 simp)
+            \<comment> \<open>Tail equality + group assoc + merge = foldr equality.\<close>
+            have htail_eq_V: "\<And>j. 2 \<le> j \<Longrightarrow> j < n \<Longrightarrow> piece_V j sub = piece_V (j - 1) sub'"
+              unfolding piece_V_def sub'_def by (by100 simp)
+            \<comment> \<open>Unfold foldr for LHS and RHS, apply merge.\<close>
+            have hLHS_V: "foldr_\<sigma> g n sub = foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub)) [0..<n]) eH"
+              unfolding foldr_\<sigma>_def piece_V_def by (by100 simp)
+            have hn_unfold_V: "[0..<n] = 0 # [1..<n]" using upt_rec[of 0 n] h0n by (by100 simp)
+            have hn1_unfold_V: "[(1::nat)..<n] = 1 # [Suc 1..<n]"
+              using upt_rec[of 1 n] h1n by (by100 simp)
+            have hfoldr_split_V: "foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub)) [0..<n]) eH =
+                mulH (\<sigma> (piece_V 0 sub)) (mulH (\<sigma> (piece_V 1 sub))
+                  (foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n]) eH))"
+              using hn_unfold_V hn1_unfold_V by (by100 simp)
+            \<comment> \<open>Tail map equality.\<close>
+            have htail_map_V: "map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n] =
+                map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]"
+            proof (rule nth_equalityI)
+              show "length (map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n]) =
+                  length (map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1])"
+                using hn2 by (by100 simp)
+            next
+              fix k assume hk: "k < length (map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n])"
+              hence hk2: "k < n - Suc 1" using hn2 by (by100 simp)
+              have "map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n] ! k = \<sigma> (piece_V (k + Suc 1) sub)"
+                using hk by (by100 simp)
+              also have "\<dots> = \<sigma> (piece_V (Suc k) sub')"
+              proof -
+                have "k + Suc 1 \<ge> 2" by (by100 presburger)
+                moreover have "k + Suc 1 < n" using hk2 by (by100 presburger)
+                ultimately have "piece_V (k + Suc 1) sub = piece_V (k + Suc 1 - 1) sub'"
+                  using htail_eq_V by (by100 force)
+                moreover have "k + Suc 1 - 1 = Suc k" by (by100 presburger)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              also have "\<dots> = map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1] ! k"
+                using hk2 by (by100 simp)
+              finally show "map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n] ! k =
+                  map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1] ! k" .
+            qed
+            \<comment> \<open>RHS unfold.\<close>
+            have h0n1_V: "(0::nat) < n - 1" using hn2 by (by100 presburger)
+            have hRHS_V: "foldr_\<sigma> g (n - 1) sub' =
+                foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub')) [0..<n-1]) eH"
+              unfolding foldr_\<sigma>_def piece_V_def sub'_def by (by100 simp)
+            have hn1_unfold2_V: "[0..<n-1] = 0 # [1..<n-1]"
+            proof -
+              have "0 < n - 1" using h0n1_V .
+              thus ?thesis using upt_rec[of 0 "n-1"] by (by100 force)
+            qed
+            have hRHS_split_V: "foldr_\<sigma> g (n - 1) sub' =
+                mulH (\<sigma> (piece_V 0 sub')) (foldr mulH (map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]) eH)"
+            proof -
+              have "map (\<lambda>i. \<sigma> (piece_V i sub')) [0..<n-1] =
+                  \<sigma> (piece_V 0 sub') # map (\<lambda>i. \<sigma> (piece_V i sub')) [1..<n-1]"
+                using hn1_unfold2_V by (by100 simp)
+              moreover have "map (\<lambda>i. \<sigma> (piece_V i sub')) [1..<n-1] =
+                  map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]"
+              proof (rule nth_equalityI)
+                show "length (map (\<lambda>i. \<sigma> (piece_V i sub')) [1..<n-1]) =
+                    length (map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1])"
+                  using hn2 by (by100 simp)
+              next
+                fix k assume hk: "k < length (map (\<lambda>i. \<sigma> (piece_V i sub')) [1..<n-1])"
+                hence hk2: "k < n - Suc 1" using hn2 by (by100 simp)
+                show "map (\<lambda>i. \<sigma> (piece_V i sub')) [1..<n-1] ! k =
+                    map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1] ! k"
+                  using hk hk2 by (by100 simp)
+              qed
+              ultimately show ?thesis using hRHS_V by (by100 simp)
+            qed
+            \<comment> \<open>Group associativity + merge.\<close>
+            \<comment> \<open>σ(V-path) ∈ H: same chain as h_σ_g_in_H (ρ case split on U/V).\<close>
+            have h\<sigma>_V_path_in_H: "\<And>f'. top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f' \<Longrightarrow> \<sigma> f' \<in> H"
+              sorry \<comment> \<open>Mirror of h_σ_path_in_H for V. Uses h_α_in_V + ρ case split + φ1/φ2.\<close>
+            have h\<sigma>0_H_V: "\<sigma> (piece_V 0 sub) \<in> H"
+            proof -
+              have "top1_is_path_on V (subspace_topology X TX V) (piece_V 0 sub 0) (piece_V 0 sub 1) (piece_V 0 sub)"
+                using hpiece_V_path[OF h0n] unfolding piece_V_def by (by100 simp)
+              thus ?thesis by (rule h\<sigma>_V_path_in_H)
+            qed
+            have h\<sigma>1_H_V: "\<sigma> (piece_V 1 sub) \<in> H"
+            proof -
+              have "top1_is_path_on V (subspace_topology X TX V) (piece_V 1 sub 0) (piece_V 1 sub 1) (piece_V 1 sub)"
+                using hpiece_V_path[OF h1n] unfolding piece_V_def by (by100 simp)
+              thus ?thesis by (rule h\<sigma>_V_path_in_H)
+            qed
+            have htail_H_V: "foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n]) eH \<in> H"
+            proof -
+              have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+              have hmcl: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
+                using hH unfolding top1_is_group_on_def by (by100 blast)
+              define tl_V where "tl_V = map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n]"
+              have "set tl_V \<subseteq> H"
+              proof
+                fix x assume "x \<in> set tl_V"
+                then obtain j where "j \<ge> Suc 1" "j < n" "x = \<sigma> (piece_V j sub)"
+                  unfolding tl_V_def by (by100 force)
+                have "top1_is_path_on V (subspace_topology X TX V) (piece_V j sub 0) (piece_V j sub 1) (piece_V j sub)"
+                  using hpiece_V_path[OF \<open>j < n\<close>] unfolding piece_V_def by (by100 simp)
+                thus "x \<in> H" using \<open>x = \<sigma> (piece_V j sub)\<close> h\<sigma>_V_path_in_H by (by100 simp)
+              qed
+              hence "foldr mulH tl_V eH \<in> H" using heH hmcl
+              proof (induction tl_V)
+                case Nil show ?case using heH by (by100 simp)
+              next
+                case (Cons a xs)
+                have ha: "a \<in> H" using Cons.prems by (by100 force)
+                have hxs: "foldr mulH xs eH \<in> H" using Cons.IH Cons.prems by (by100 force)
+                show ?case using hmcl[OF ha hxs] by (by100 simp)
+              qed
+              thus ?thesis unfolding tl_V_def .
+            qed
+            have hassoc_raw_V: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
+            proof -
+              from hH have "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
+                unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis .
+            qed
+            \<comment> \<open>Assembly: LHS = mulH (σ p0) (mulH (σ p1) tail) = mulH (σ(piece 0 sub')) tail = RHS.\<close>
             have hfoldr_eq_V: "foldr_\<sigma> g n sub = foldr_\<sigma> g (n - 1) sub'"
-              sorry \<comment> \<open>Algebraic merge: group assoc + σ_cond2_V + reparam + σ_cond1_V + htail equality.
-                 Structurally identical to U version.\<close>
+            proof -
+              let ?tail = "foldr mulH (map (\<lambda>i. \<sigma> (piece_V i sub)) [Suc 1..<n]) eH"
+              have "foldr_\<sigma> g n sub = mulH (\<sigma> (piece_V 0 sub)) (mulH (\<sigma> (piece_V 1 sub)) ?tail)"
+                using hLHS_V hfoldr_split_V by (by100 simp)
+              also have "\<dots> = mulH (\<sigma> (piece_V 0 sub')) ?tail"
+              proof -
+                have hassoc: "mulH (\<sigma> (piece_V 0 sub)) (mulH (\<sigma> (piece_V 1 sub)) ?tail)
+                    = mulH (mulH (\<sigma> (piece_V 0 sub)) (\<sigma> (piece_V 1 sub))) ?tail"
+                  using hassoc_raw_V[rule_format, OF h\<sigma>0_H_V h\<sigma>1_H_V htail_H_V] by (by100 simp)
+                also have "\<dots> = mulH (\<sigma> (piece_V 0 sub')) ?tail"
+                  using hmerge_eq_V by (by100 simp)
+                finally show ?thesis .
+              qed
+              also have "?tail = foldr mulH (map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]) eH"
+                using htail_map_V by (by100 simp)
+              finally have "foldr_\<sigma> g n sub = mulH (\<sigma> (piece_V 0 sub'))
+                  (foldr mulH (map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]) eH)"
+                by (by100 simp)
+              thus ?thesis using hRHS_V hRHS_split_V by (by100 force)
+            qed
             show ?thesis using hfoldr_eq_V hIH_V by (by100 simp)
           qed
         qed
