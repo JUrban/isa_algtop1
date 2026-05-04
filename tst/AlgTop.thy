@@ -4956,8 +4956,49 @@ proof -
             qed
             \<comment> \<open>Continuity: piecewise linear, matching at 1/2.\<close>
             have hcont: "continuous_on I_set \<phi>_concat"
-              sorry \<comment> \<open>Piecewise linear: continuous on {0..1/2} and {1/2..1}, matching at 1/2.
-                 Proved via continuous_on_closed_Un. Needs boundary matching case split.\<close>
+            proof -
+              let ?f1 = "\<lambda>s::real. sub 0 + 2*s * (sub (Suc 0) - sub 0)"
+              let ?f2 = "\<lambda>s::real. sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+              have hf1c: "continuous_on {0..1/2} ?f1" by (intro continuous_intros)
+              have hf2c: "continuous_on {1/2..1} ?f2" by (intro continuous_intros)
+              have hIeq: "I_set = {0..1/2} \<union> {1/2..1::real}"
+                unfolding top1_unit_interval_def by (by100 auto)
+              have hf1_phi: "\<And>s. s \<in> {0..1/2} \<Longrightarrow> \<phi>_concat s = ?f1 s"
+                unfolding \<phi>_concat_def by (by100 simp)
+              have hf2_phi: "\<And>s. s \<in> {1/2..1::real} \<Longrightarrow> \<not> s \<le> 1/2 \<Longrightarrow> \<phi>_concat s = ?f2 s"
+                unfolding \<phi>_concat_def by (by100 simp)
+              have hbdry: "?f1 (1/2::real) = ?f2 (1/2)" by (by100 simp)
+              \<comment> \<open>At s=1/2 (boundary): \<phi>_concat uses ?f1 branch, giving sub(Suc 0).
+                 We need continuous_on for the pasting.\<close>
+              have hf1_phi_cl: "continuous_on {0..1/2} \<phi>_concat"
+                using continuous_on_cong[of "{0..1/2::real}" "{0..1/2}" ?f1 \<phi>_concat]
+                    hf1_phi hf1c by (by100 force)
+              have hf2_phi_cl: "continuous_on {1/2..1} \<phi>_concat"
+              proof -
+                \<comment> \<open>On {1/2..1}: for s > 1/2, \<phi> uses ?f2. At s=1/2, \<phi> uses ?f1 giving sub(Suc 0) = ?f2(1/2).\<close>
+                have "\<And>s::real. s \<in> {1/2..1} \<Longrightarrow> \<phi>_concat s = ?f2 s"
+                proof -
+                  fix s :: real assume hs: "s \<in> {1/2..1::real}"
+                  show "\<phi>_concat s = ?f2 s"
+                  proof (cases "s \<le> 1/2")
+                    case True
+                    have "s \<ge> 1/2" using hs by (by100 simp)
+                    hence "s = 1/2" using True by (by100 linarith)
+                    have h_eq: "\<phi>_concat s = ?f2 s"
+                      unfolding \<phi>_concat_def using \<open>s = 1/2\<close> by (by100 force)
+                    thus ?thesis using h_eq by (by100 simp)
+                  next
+                    case False thus ?thesis unfolding \<phi>_concat_def by (by100 simp)
+                  qed
+                qed
+                thus ?thesis using continuous_on_cong[of "{1/2..1::real}" "{1/2..1}" ?f2 \<phi>_concat]
+                    hf2c by (by100 force)
+              qed
+              have "closed {0..1/2::real}" by (by100 auto)
+              moreover have "closed {1/2..1::real}" by (by100 auto)
+              ultimately show ?thesis unfolding hIeq
+                by (rule continuous_on_closed_Un[OF _ _ hf1_phi_cl hf2_phi_cl])
+            qed
             \<comment> \<open>Transfer: continuous_on + range \<Rightarrow> top1_continuous_map_on.\<close>
             show ?thesis unfolding top1_continuous_map_on_def
             proof (intro conjI ballI)
