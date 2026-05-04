@@ -2450,12 +2450,9 @@ proof -
     by (elim exE conjE) (by100 blast)
   \<comment> \<open>Choose grid with mesh < \<delta>. Each cell has d_max-diameter < \<delta>, hence in F\<inverse>(U) or F\<inverse>(V).\<close>
   \<comment> \<open>Choose n with 1/n < \<delta>. Uniform grid: sub(i) = i/n.\<close>
-  obtain n :: nat where hn: "n \<ge> 1" and hn_fine: "1 / real n < \<delta>"
-  proof -
-    obtain n :: nat where "n \<ge> 1 \<and> 1 / real n < \<delta>"
-      sorry \<comment> \<open>Archimedean: for \<delta> > 0, exists n with 1/n < \<delta>.\<close>
-    thus ?thesis using that by (by100 blast)
-  qed
+  have harch: "\<exists>n::nat. n \<ge> 1 \<and> 1 / real n < \<delta>" using h\<delta>
+    sorry \<comment> \<open>Archimedean: \<delta>>0 \<Rightarrow> \<exists>n\<ge>1. 1/n < \<delta>.\<close>
+  then obtain n :: nat where hn: "n \<ge> 1" and hn_fine: "1 / real n < \<delta>" by (by100 blast)
   define sub where "sub i = real i / real n" for i :: nat
   have hsub0: "sub 0 = 0" unfolding sub_def by (by100 simp)
   have hsubn: "sub n = 1" unfolding sub_def using hn by (by100 simp)
