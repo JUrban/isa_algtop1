@@ -3404,7 +3404,90 @@ proof -
                              top1_is_loop_on_end[OF hg_loop_V] by (by100 simp)
     have h\<rho>_simp_V: "\<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) = \<rho> g"
-      sorry \<comment> \<open>Identity laws (same structure as U case).\<close>
+    proof -
+      have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
+        unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
+      have hg_path_V: "top1_is_path_on V ?TV x0 x0 g"
+        using hg_loop_V unfolding top1_is_loop_on_def by (by100 blast)
+      have h_right_V: "top1_path_homotopic_on V ?TV x0 x0
+          (top1_path_product g (top1_constant_path x0)) g"
+        by (rule Theorem_51_2_right_identity[OF hTopV hg_path_V])
+      have hconst_V: "top1_is_path_on V ?TV x0 x0 (top1_constant_path x0)"
+        by (rule top1_constant_path_is_path[OF hTopV hx0_V])
+      have h_outer_V: "top1_path_homotopic_on V ?TV x0 x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_constant_path x0)))
+          (top1_path_product (top1_constant_path x0) g)"
+        by (rule path_homotopic_product_right[OF hTopV h_right_V hconst_V])
+      have h_left_V: "top1_path_homotopic_on V ?TV x0 x0
+          (top1_path_product (top1_constant_path x0) g) g"
+        by (rule Theorem_51_2_left_identity[OF hTopV hg_path_V])
+      have h_chain_V: "top1_path_homotopic_on V ?TV x0 x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_constant_path x0))) g"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopV h_outer_V h_left_V])
+      have h_full_V: "top1_path_homotopic_on V ?TV x0 x0
+          (top1_path_product (top1_constant_path x0)
+            (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) g"
+        using h_chain_V unfolding hrev_const .
+      have hrev_path_V: "top1_is_path_on V ?TV x0 x0 (top1_path_reverse (top1_constant_path x0))"
+        unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopV hx0_V])
+      have hgrev: "top1_is_path_on V ?TV x0 x0 (top1_path_product g (top1_path_reverse (top1_constant_path x0)))"
+        by (rule top1_path_product_is_path[OF hTopV hg_path_V hrev_path_V])
+      have hcomp_loop_V: "top1_is_loop_on V ?TV x0
+          (top1_path_product (top1_constant_path x0) (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
+        unfolding top1_is_loop_on_def
+        by (rule top1_path_product_is_path[OF hTopV hconst_V hgrev])
+      have h_equiv_V: "top1_loop_equiv_on V ?TV x0
+          (top1_path_product (top1_constant_path x0)
+            (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) g"
+        unfolding top1_loop_equiv_on_def using hcomp_loop_V hg_loop_V h_full_V by (by100 blast)
+      \<comment> \<open>\<rho> well-defined: check whether the composite is in U or V.\<close>
+      have hcomp_in_V: "\<forall>s\<in>I_set. (top1_path_product (top1_constant_path x0)
+          (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) s \<in> V"
+        using hcomp_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def
+                                      top1_continuous_map_on_def by (by100 blast)
+      have hg_in_V': "\<forall>s\<in>I_set. g s \<in> V"
+        using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def
+                                  top1_continuous_map_on_def by (by100 blast)
+      let ?compV = "top1_path_product (top1_constant_path x0)
+          (top1_path_product g (top1_path_reverse (top1_constant_path x0)))"
+      \<comment> \<open>Equiv classes equal via sym+trans.\<close>
+      have hclass_eq_V: "{h. top1_loop_equiv_on V ?TV x0 ?compV h}
+          = {h. top1_loop_equiv_on V ?TV x0 g h}"
+      proof (rule equalityI; rule subsetI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+        hence "top1_loop_equiv_on V ?TV x0 ?compV h" by (by100 blast)
+        thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
+          using top1_loop_equiv_on_trans[OF hTopV
+            top1_loop_equiv_on_sym[OF h_equiv_V]] by (by100 fast)
+      next
+        fix h assume "h \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
+        hence "top1_loop_equiv_on V ?TV x0 g h" by (by100 blast)
+        thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+          using top1_loop_equiv_on_trans[OF hTopV h_equiv_V] by (by100 fast)
+      qed
+      \<comment> \<open>Both sides use \<rho> which checks if-in-U or if-in-V.\<close>
+      \<comment> \<open>Case analysis: comp in U or not, g in U or not.\<close>
+      show ?thesis
+      proof (cases "\<forall>s\<in>I_set. ?compV s \<in> U")
+        case True
+        \<comment> \<open>Both comp and g are in U \<and> V, use compatibility.\<close>
+        show ?thesis sorry \<comment> \<open>Needs φ₁/φ₂ compatibility on U∩V.\<close>
+      next
+        case False
+        have lhs: "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+          unfolding \<rho>_def by (rule if_not_P[OF False])
+        show ?thesis
+        proof (cases "\<forall>s\<in>I_set. g s \<in> U")
+          case True
+          show ?thesis sorry \<comment> \<open>comp not in U but g in U: needs compatibility.\<close>
+        next
+          case False2: False
+          have rhs: "\<rho> g = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+            unfolding \<rho>_def by (rule if_not_P[OF False2])
+          show ?thesis using lhs rhs hclass_eq_V by (by100 simp)
+        qed
+      qed
+    qed
     have h\<rho>_val_V: "\<rho> g = \<phi>2 b"
     proof -
       have hg_in_V: "\<forall>s\<in>I_set. g s \<in> V"
@@ -3415,8 +3498,15 @@ proof -
       show ?thesis
       proof (cases "\<forall>s\<in>I_set. g s \<in> U")
         case True
-        \<comment> \<open>If g is also in U: use compatibility \<phi>1([g]_U) = \<phi>2([g]_V).\<close>
-        show ?thesis sorry
+        \<comment> \<open>g is in both U and V, hence in U\<inter>V. Use compatibility.\<close>
+        have hg_UV: "\<forall>s\<in>I_set. g s \<in> U \<inter> V" using True hg_in_V by (by100 blast)
+        \<comment> \<open>\<rho>(g) = \<phi>1([g]_U) since g \<in> U.\<close>
+        have h\<rho>_U: "\<rho> g = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h}"
+          unfolding \<rho>_def using True by (by100 simp)
+        \<comment> \<open>By compatibility: \<phi>1([g]_U) = \<phi>2([g]_V).\<close>
+        have hcompat_g: "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h} = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+          sorry \<comment> \<open>Needs: g is loop in U\<inter>V, apply hcompat with induced map.\<close>
+        show ?thesis using h\<rho>_U hcompat_g hb_eq by (by100 simp)
       next
         case False
         have hif: "\<not>(\<forall>s\<in>I_set. g s \<in> U)" by (rule False)
@@ -11793,6 +11883,7 @@ end
 
 
   
+
 
 
 
