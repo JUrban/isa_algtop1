@@ -11301,7 +11301,7 @@ proof -
     sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
        topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
        Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
-  show ?thesis sorry \<comment> \<open>Assembly: pack E', TE', p', e0' into existential. Type mismatch prevents auto.\<close>
+  show ?thesis sorry \<comment> \<open>Assembly: existential packing with type unification. E'::path-set set, etc.\<close>
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
@@ -11422,7 +11422,7 @@ proof -
           (top1_fundamental_group_mul W TW (q x0))"
     sorry \<comment> \<open>Theorem_71_1 applied to the wedge W.\<close>
   \<comment> \<open>Step 6: Combine: \<pi>_1(X) \<cong> \<pi>_1(W) \<cong> free group \<Rightarrow> \<pi>_1(X) is free.\<close>
-  show ?thesis sorry \<comment> \<open>Transitivity of group isomorphism.\<close>
+  show ?thesis sorry \<comment> \<open>Transitivity: groups_isomorphic_trans_fwd + sym. Needs group axioms for sym.\<close>
 qed
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
