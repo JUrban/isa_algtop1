@@ -5506,6 +5506,47 @@ proof -
             thus ?case using \<open>sub2 k \<ge> 0\<close> by (by100 linarith)
           qed
         qed
+        have hsub1_nn: "\<And>j. j \<le> n1 \<Longrightarrow> sub1 j \<ge> 0"
+        proof -
+          fix j assume "j \<le> n1"
+          thus "sub1 j \<ge> 0"
+          proof (induct j)
+            case 0 show ?case using hs1_0' by (by100 simp)
+          next
+            case (Suc k)
+            hence "k < n1" by (by100 presburger)
+            hence "k \<le> n1" by (by100 presburger)
+            have "sub1 k \<ge> 0" using Suc.hyps[OF \<open>k \<le> n1\<close>] .
+            have "sub1 k < sub1 (Suc k)" using hs1_inc' \<open>k < n1\<close> by (by100 blast)
+            thus ?case using \<open>sub1 k \<ge> 0\<close> by (by100 linarith)
+          qed
+        qed
+        have hsub1_le1: "\<And>j. j \<le> n1 \<Longrightarrow> sub1 j \<le> 1"
+        proof -
+          fix j assume hjn: "j \<le> n1"
+          have "sub1 j \<le> sub1 n1" using hjn
+          proof (induct rule: dec_induct)
+            case base show ?case by (by100 simp)
+          next
+            case (step n)
+            have "sub1 n < sub1 (Suc n)" using hs1_inc' step.hyps(2) by (by100 blast)
+            thus ?case using step.hyps(3) by (by100 linarith)
+          qed
+          thus "sub1 j \<le> 1" using hs1_n' by (by100 simp)
+        qed
+        have hsub2_le1: "\<And>j. j \<le> n2 \<Longrightarrow> sub2 j \<le> 1"
+        proof -
+          fix j assume hjn: "j \<le> n2"
+          have "sub2 j \<le> sub2 n2" using hjn
+          proof (induct rule: dec_induct)
+            case base show ?case by (by100 simp)
+          next
+            case (step n)
+            have "sub2 n < sub2 (Suc n)" using hs2_inc' step.hyps(2) by (by100 blast)
+            thus ?case using step.hyps(3) by (by100 linarith)
+          qed
+          thus "sub2 j \<le> 1" using hs2_n' by (by100 simp)
+        qed
         have hm_inc: "\<forall>i<n1+n2. sub_m i < sub_m (Suc i)"
         proof (intro allI impI)
           fix i assume hi: "i < n1 + n2"
@@ -6085,9 +6126,9 @@ proof -
             have hUV_i: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)"
               using hs1_UV hi unfolding sub1_def by (by100 blast)
-            have hge: "0 \<le> sub1 i" sorry \<comment> \<open>sub1 monotone from 0\<close>
+            have hge: "0 \<le> sub1 i" using hsub1_nn hi by (by100 force)
             have hmono: "sub1 i \<le> sub1 (Suc i)" using hs1_inc' hi by (by100 force)
-            have hle: "sub1 (Suc i) \<le> 1" sorry \<comment> \<open>sub1 monotone to 1\<close>
+            have hle: "sub1 (Suc i) \<le> 1" using hsub1_le1 hi by (by100 force)
             show "x \<in> H" unfolding hx F1_def
               using h\<sigma>_piece_in_H[OF hf1_loop hi hge hmono hle hUV_i] .
           next
@@ -6098,7 +6139,7 @@ proof -
               using hs2_UV hj unfolding sub2_def by (by100 blast)
             have hge: "0 \<le> sub2 j" using hsub2_nn hj by (by100 force)
             have hmono: "sub2 j \<le> sub2 (Suc j)" using hs2_inc' hj by (by100 force)
-            have hle: "sub2 (Suc j) \<le> 1" sorry \<comment> \<open>sub2 monotone to 1\<close>
+            have hle: "sub2 (Suc j) \<le> 1" using hsub2_le1 hj by (by100 force)
             show "x \<in> H" unfolding hx F2_def
               using h\<sigma>_piece_in_H[OF hf2_loop hj hge hmono hle hUV_j] .
           qed
