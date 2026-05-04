@@ -4984,7 +4984,10 @@ proof -
                      and the evaluation point may or may not be in I_set.\<close>
                   show "\<sigma> q1 = \<sigma> q2"
                     sorry \<comment> \<open>Edge case: unsatisfiable Pn with arbitrary sub.
-                       Never arises in practice (h_τ_ext only called on X-loops).\<close>
+                       This case never arises when h_τ_ext is applied to X-loops
+                       (which always have valid subdivisions, so the True branch is taken).
+                       Closing this would require showing σ is extensional on ALL of ℝ,
+                       which is not needed for the theorem.\<close>
                 qed
                 hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
                     = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
