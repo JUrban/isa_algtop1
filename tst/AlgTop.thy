@@ -5276,21 +5276,99 @@ proof -
              = τ(f)·τ(g) by subdivision with 1/2 as point
              = Φ(c1)·Φ(c2).\<close>
     show "\<Phi> (top1_fundamental_group_mul X TX x0 c1 c2) = mulH (\<Phi> c1) (\<Phi> c2)"
-      sorry \<comment> \<open>Munkres Step 5: τ multiplicativity.
-         Proof outline:
-         1. Extract representatives f, g for c1, c2
-         2. c1·c2 = [f*g] by fundamental_group_mul_class
-         3. Φ(c1·c2) = τ(f*g) by Φ_def + τ_wd
-         4. τ(f*g) = τ(f)·τ(g) by subdivision with 1/2:
-            Choose subdivision s_0,...,s_n of f*g with s_k = 1/2.
-            Pieces [0,1/2] correspond to f-pieces, [1/2,1] to g-pieces.
-            τ(f*g) = Π σ(pieces) = (Π σ(f-pieces))·(Π σ(g-pieces))
-            By subdivision independence: Π σ(f-pieces) = τ(f), Π σ(g-pieces) = τ(g).
-         5. Φ(c1) = τ(f), Φ(c2) = τ(g) by same Φ_def + τ_wd reasoning.
-
-         The formal proof requires careful manipulation of SOME representatives
-         and subdivision independence. The key ingredients (τ_wd, hsubdiv,
-         loop_subdivision_UV) are all proved.\<close>
+    proof -
+      \<comment> \<open>Extract representatives.\<close>
+      obtain f1 where hf1_loop: "top1_is_loop_on X TX x0 f1"
+          and hc1_eq: "c1 = {g. top1_loop_equiv_on X TX x0 f1 g}"
+        using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      obtain f2 where hf2_loop: "top1_is_loop_on X TX x0 f2"
+          and hc2_eq: "c2 = {g. top1_loop_equiv_on X TX x0 f2 g}"
+        using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>c1·c2 = [f1*f2].\<close>
+      have hprod_class: "top1_fundamental_group_mul X TX x0 c1 c2
+          = {g. top1_loop_equiv_on X TX x0 (top1_path_product f1 f2) g}"
+        unfolding hc1_eq hc2_eq
+        by (rule top1_fundamental_group_mul_class[OF hTopX hf1_loop hf2_loop])
+      \<comment> \<open>Φ(c1·c2) = τ(f1*f2) by Φ_def + τ_wd.\<close>
+      have hf12_loop: "top1_is_loop_on X TX x0 (top1_path_product f1 f2)"
+      proof -
+        have hf1_path: "top1_is_path_on X TX x0 x0 f1"
+          using hf1_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hf2_path: "top1_is_path_on X TX x0 x0 f2"
+          using hf2_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have "top1_is_path_on X TX x0 x0 (top1_path_product f1 f2)"
+          by (rule top1_path_product_is_path[OF hTopX hf1_path hf2_path])
+        thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+      qed
+      have h\<Phi>_prod: "\<Phi> (top1_fundamental_group_mul X TX x0 c1 c2) = \<tau> (top1_path_product f1 f2)"
+      proof -
+        let ?c12 = "top1_fundamental_group_mul X TX x0 c1 c2"
+        let ?P = "\<lambda>f'. top1_is_loop_on X TX x0 f' \<and> ?c12 = {g. top1_loop_equiv_on X TX x0 f' g}"
+        have "?P (top1_path_product f1 f2)" using hf12_loop hprod_class by (by100 blast)
+        hence "\<exists>f'. ?P f'" by (by100 blast)
+        hence hPsome: "?P (SOME f'. ?P f')" by (rule someI_ex)
+        hence hsome_loop: "top1_is_loop_on X TX x0 (SOME f'. ?P f')" by (by100 blast)
+        have hsome_class: "?c12 = {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P f') g}"
+          using hPsome by (by100 blast)
+        have "top1_loop_equiv_on X TX x0 (SOME f'. ?P f') (top1_path_product f1 f2)"
+        proof -
+          have hf12_refl: "top1_loop_equiv_on X TX x0 (top1_path_product f1 f2) (top1_path_product f1 f2)"
+            by (rule top1_loop_equiv_on_refl[OF hf12_loop])
+          have "(top1_path_product f1 f2) \<in> {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P f') g}"
+            using hf12_refl hsome_class hprod_class by (by100 fast)
+          thus ?thesis by (by100 blast)
+        qed
+        hence "top1_path_homotopic_on X TX x0 x0 (SOME f'. ?P f') (top1_path_product f1 f2)"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        from h\<tau>_wd[OF hsome_loop hf12_loop this]
+        have "\<tau> (SOME f'. ?P f') = \<tau> (top1_path_product f1 f2)" .
+        thus ?thesis unfolding \<Phi>_def by (by100 simp)
+      qed
+      \<comment> \<open>Φ(c1) = τ(f1), Φ(c2) = τ(f2) by same reasoning.\<close>
+      have h\<Phi>_c1: "\<Phi> c1 = \<tau> f1"
+      proof -
+        let ?P1 = "\<lambda>f'. top1_is_loop_on X TX x0 f' \<and> c1 = {g. top1_loop_equiv_on X TX x0 f' g}"
+        have "?P1 f1" using hf1_loop hc1_eq by (by100 blast)
+        hence "\<exists>f'. ?P1 f'" by (by100 blast)
+        hence hP1some: "?P1 (SOME f'. ?P1 f')" by (rule someI_ex)
+        have hsome1_loop: "top1_is_loop_on X TX x0 (SOME f'. ?P1 f')" using hP1some by (by100 blast)
+        have "top1_loop_equiv_on X TX x0 (SOME f'. ?P1 f') f1"
+        proof -
+          have "f1 \<in> {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P1 f') g}"
+            using top1_loop_equiv_on_refl[OF hf1_loop] hP1some hc1_eq by (by100 fast)
+          thus ?thesis by (by100 blast)
+        qed
+        hence "top1_path_homotopic_on X TX x0 x0 (SOME f'. ?P1 f') f1"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        from h\<tau>_wd[OF hsome1_loop hf1_loop this]
+        show ?thesis unfolding \<Phi>_def by (by100 simp)
+      qed
+      have h\<Phi>_c2: "\<Phi> c2 = \<tau> f2"
+      proof -
+        let ?P2 = "\<lambda>f'. top1_is_loop_on X TX x0 f' \<and> c2 = {g. top1_loop_equiv_on X TX x0 f' g}"
+        have "?P2 f2" using hf2_loop hc2_eq by (by100 blast)
+        hence "\<exists>f'. ?P2 f'" by (by100 blast)
+        hence hP2some: "?P2 (SOME f'. ?P2 f')" by (rule someI_ex)
+        have hsome2_loop: "top1_is_loop_on X TX x0 (SOME f'. ?P2 f')" using hP2some by (by100 blast)
+        have "top1_loop_equiv_on X TX x0 (SOME f'. ?P2 f') f2"
+        proof -
+          have "f2 \<in> {g. top1_loop_equiv_on X TX x0 (SOME f'. ?P2 f') g}"
+            using top1_loop_equiv_on_refl[OF hf2_loop] hP2some hc2_eq by (by100 fast)
+          thus ?thesis by (by100 blast)
+        qed
+        hence "top1_path_homotopic_on X TX x0 x0 (SOME f'. ?P2 f') f2"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        from h\<tau>_wd[OF hsome2_loop hf2_loop this]
+        show ?thesis unfolding \<Phi>_def by (by100 simp)
+      qed
+      \<comment> \<open>Now need: τ(f1*f2) = τ(f1)·τ(f2). This is Munkres Step 5.\<close>
+      have h\<tau>_mul: "\<tau> (top1_path_product f1 f2) = mulH (\<tau> f1) (\<tau> f2)"
+        sorry \<comment> \<open>Munkres Step 5: Choose subdivision of f1*f2 with 1/2 as a point.
+           Pieces [0,1/2] are f-pieces, [1/2,1] are g-pieces.
+           By subdivision independence, τ(f1*f2) = Π σ(all pieces)
+           = (Π σ(f-pieces))·(Π σ(g-pieces)) = τ(f1)·τ(f2).\<close>
+      show ?thesis using h\<Phi>_prod h\<Phi>_c1 h\<Phi>_c2 h\<tau>_mul by (by100 simp)
+    qed
   qed
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
       \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
