@@ -3181,9 +3181,52 @@ proof -
       unfolding \<rho>_def using hLf_in_U hLg_in_U hclass_eq by (by100 simp)
     thus "\<sigma> f' = \<sigma> g'" using h\<sigma>_f h\<sigma>_g by (by100 presburger)
   qed
+  \<comment> \<open>Helper: \<rho> respects loop-equiv in V. For loops at x0 in V, same V-class \<Rightarrow> same \<rho>.
+     Uses h\<rho>_to_\<phi>2 pattern: \<rho>(f) = \<phi>2([f]_V) for any loop f at x0 in V.\<close>
+  have h\<rho>_respects_V: "\<And>f' g'. top1_is_loop_on V ?TV x0 f' \<Longrightarrow> top1_is_loop_on V ?TV x0 g'
+      \<Longrightarrow> top1_loop_equiv_on V ?TV x0 f' g' \<Longrightarrow> \<rho> f' = \<rho> g'"
+    sorry \<comment> \<open>\<rho>(f') = \<phi>2([f']_V) and \<rho>(g') = \<phi>2([g']_V) (via compatibility if in U).
+       [f']_V = [g']_V from equiv. Hence \<rho>(f') = \<rho>(g').\<close>
   have h\<sigma>_cond1_V: "\<And>f' g'. top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'
       \<Longrightarrow> \<sigma> f' = \<sigma> g'"
-    sorry \<comment> \<open>Same proof with V.\<close>
+  proof -
+    fix f' g' assume hhom: "top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'"
+    have hstart: "g' 0 = f' 0" using hhom unfolding top1_path_homotopic_on_def
+        top1_is_path_on_def by (by100 blast)
+    have hend: "g' 1 = f' 1" using hhom unfolding top1_path_homotopic_on_def
+        top1_is_path_on_def by (by100 blast)
+    have h\<sigma>_f: "\<sigma> f' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding \<sigma>_def by (by100 simp)
+    have h\<sigma>_g: "\<sigma> g' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding \<sigma>_def using hstart hend by (by100 simp)
+    have hf'_path: "top1_is_path_on V ?TV (f' 0) (f' 1) f'"
+      using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+    have hf'_range: "\<forall>s\<in>I_set. f' s \<in> V"
+      using hf'_path unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hf0_V: "f' 0 \<in> V" using hf'_range h0_I by (by100 blast)
+    have hf1_V: "f' 1 \<in> V" using hf'_range h1_I by (by100 blast)
+    have hrev_path: "top1_is_path_on V ?TV (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>_in_V[OF hf1_V]])
+    have h\<alpha>_path: "top1_is_path_on V ?TV x0 (f' 0) (\<alpha> (f' 0))"
+      by (rule h\<alpha>_in_V[OF hf0_V])
+    have hL_hom: "top1_path_homotopic_on V ?TV x0 x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
+      by (rule path_homotopic_product_right[OF hTopV
+           path_homotopic_product_left[OF hTopV hhom hrev_path] h\<alpha>_path])
+    let ?Lf = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+    let ?Lg = "top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
+    have hLf_loop: "top1_is_loop_on V ?TV x0 ?Lf"
+      using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hLg_loop: "top1_is_loop_on V ?TV x0 ?Lg"
+      using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hLf_equiv_Lg: "top1_loop_equiv_on V ?TV x0 ?Lf ?Lg"
+      unfolding top1_loop_equiv_on_def using hLf_loop hLg_loop hL_hom by (by100 blast)
+    have "\<rho> ?Lf = \<rho> ?Lg" by (rule h\<rho>_respects_V[OF hLf_loop hLg_loop hLf_equiv_Lg])
+    thus "\<sigma> f' = \<sigma> g'" using h\<sigma>_f h\<sigma>_g by (by100 presburger)
+  qed
   \<comment> \<open>\<sigma> condition (2): if f and g are paths with f(1)=g(0), both in U (or both in V),
      then \<sigma>(f*g) = \<sigma>(f)\<cdot>\<sigma>(g).
      Proof (Munkres p.429): L(f)*L(g) = (\<alpha>_x\<cdot>f\<cdot>rev(\<alpha>_y))*(\<alpha>_y\<cdot>g\<cdot>rev(\<alpha>_z))
