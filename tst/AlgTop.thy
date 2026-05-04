@@ -4898,7 +4898,62 @@ proof -
           proof -
             \<comment> \<open>Range: \<phi>_concat maps I_set to [sub 0, sub(Suc(Suc 0))] \<subseteq> I_set.\<close>
             have hrange: "\<And>s. s \<in> I_set \<Longrightarrow> \<phi>_concat s \<in> I_set"
-              sorry \<comment> \<open>Case split s \<le> 1/2 vs s > 1/2; affine image in [sub 0, sub(Suc(Suc 0))] \<subseteq> [0,1].\<close>
+            proof -
+              fix s :: real assume hs: "s \<in> I_set"
+              have hs0: "0 \<le> s" and hs1: "s \<le> 1"
+                using hs unfolding top1_unit_interval_def by (by100 simp)+
+              have h01: "sub 0 \<le> sub (Suc 0)" using lhinc h0n by (by100 force)
+              have h12: "sub (Suc 0) \<le> sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+              show "\<phi>_concat s \<in> I_set"
+              proof (cases "s \<le> 1/2")
+                case True
+                \<comment> \<open>\<phi>_concat s = sub 0 + 2*s*(sub(Suc 0) - sub 0) \<in> [sub 0, sub(Suc 0)] \<subseteq> [0,1].\<close>
+                have hd01: "0 \<le> sub (Suc 0) - sub 0" using h01 by (by100 linarith)
+                have "\<phi>_concat s = sub 0 + 2*s * (sub (Suc 0) - sub 0)"
+                  unfolding \<phi>_concat_def using True by (by100 simp)
+                moreover have "0 \<le> sub 0 + 2*s * (sub (Suc 0) - sub 0)"
+                proof -
+                  have h2s: "0 \<le> 2*s" using hs0 by (by100 linarith)
+                  have "0 \<le> 2*s * (sub (Suc 0) - sub 0)"
+                    by (rule mult_nonneg_nonneg[OF h2s hd01])
+                  thus ?thesis using lhs0 by (by100 linarith)
+                qed
+                moreover have "sub 0 + 2*s * (sub (Suc 0) - sub 0) \<le> 1"
+                proof -
+                  have "2*s \<le> 1" using True by (by100 linarith)
+                  have "2*s * (sub (Suc 0) - sub 0) \<le> 1 * (sub (Suc 0) - sub 0)"
+                    by (rule mult_right_mono[OF \<open>2*s \<le> 1\<close> hd01])
+                  hence "2*s * (sub (Suc 0) - sub 0) \<le> sub (Suc 0) - sub 0" by (by100 simp)
+                  hence "sub 0 + 2*s * (sub (Suc 0) - sub 0) \<le> sub (Suc 0)" by (by100 linarith)
+                  thus ?thesis using hsub_hi[of "Suc 0"] h1n by (by100 force)
+                qed
+                ultimately show ?thesis unfolding top1_unit_interval_def by (by100 force)
+              next
+                case False
+                have hd12: "0 \<le> sub (Suc (Suc 0)) - sub (Suc 0)" using h12 by (by100 linarith)
+                have "\<phi>_concat s = sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                  unfolding \<phi>_concat_def using False by (by100 simp)
+                moreover have "0 \<le> sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                proof -
+                  have h2s1: "0 \<le> 2*s - 1" using False by (by100 linarith)
+                  have "0 \<le> (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                    by (rule mult_nonneg_nonneg[OF h2s1 hd12])
+                  thus ?thesis using hsub_lo[of "Suc 0"] h1n by (by100 force)
+                qed
+                moreover have "sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> 1"
+                proof -
+                  have "2*s - 1 \<le> 1" using hs1 by (by100 linarith)
+                  have "(2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> 1 * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                    by (rule mult_right_mono[OF \<open>2*s - 1 \<le> 1\<close> hd12])
+                  hence "(2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> sub (Suc (Suc 0)) - sub (Suc 0)"
+                    by (by100 simp)
+                  hence "sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> sub (Suc (Suc 0))"
+                    by (by100 linarith)
+                  thus ?thesis using hsub_hi[of "Suc (Suc 0)"] hn2 by (by100 force)
+                qed
+                ultimately show ?thesis unfolding top1_unit_interval_def by (by100 force)
+              qed
+            qed
             \<comment> \<open>Continuity: piecewise linear, matching at 1/2.\<close>
             have hcont: "continuous_on I_set \<phi>_concat"
               sorry \<comment> \<open>Piecewise linear on {0..1/2} and {1/2..1}, matching at 1/2.
