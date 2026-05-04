@@ -4126,13 +4126,10 @@ proof -
       show ?thesis unfolding \<Phi>_def using h\<tau>_eq by (by100 simp)
     qed
     \<comment> \<open>Step 4: \<tau>(f) = \<sigma>(f) (trivial subdivision: f already in U, use n=1).\<close>
+    \<comment> \<open>Subdivision independence: for any valid subdivision of f (loop in U at x0),
+       the foldr of \<sigma> values = \<sigma>(f). Uses \<sigma>_cond2 + \<sigma>_cond1 + reparametrization.\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
-      sorry \<comment> \<open>Munkres Step 3 + subdivision independence:
-         For f \<subseteq> U, any SOME-picked partition has all pieces in U.
-         Merging pieces one at a time using \<sigma> cond (2): \<sigma>(f_i)\<cdot>\<sigma>(f_{i+1}) = \<sigma>(f_i * f_{i+1}).
-         After all merges: \<sigma>(f_1*...*f_n). By \<sigma> cond (1) + reparametrization: = \<sigma>(f).
-         Then foldr ... eH = \<sigma>(f) \<cdot> eH = \<sigma>(f) (group identity in H).
-         Depends on: h\<sigma>_cond1, h\<sigma>_cond2, h\<sigma>_ext_\<rho>, hH (group axioms).\<close>
+      sorry \<comment> \<open>Munkres Step 3: subdivision independence via \<sigma>_cond2 inductive telescoping.\<close>
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
       unfolding \<alpha>_def by (by100 simp)
