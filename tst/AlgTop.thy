@@ -3766,7 +3766,75 @@ proof -
         \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
       unfolding top1_fundamental_group_carrier_def using hLg_loop_V by (by100 blast)
     have h\<rho>_mult_V: "\<rho> (top1_path_product ?Lf_V ?Lg_V) = mulH (\<rho> ?Lf_V) (\<rho> ?Lg_V)"
-      sorry \<comment> \<open>\<rho> product = \<rho>(Lf)\<cdot>\<rho>(Lg). Same pattern as U: \<phi>2 hom + class product + case analysis.\<close>
+    proof -
+      \<comment> \<open>All three loops (Lf, Lg, Lf*Lg) are in V. Use h\<rho>_eq_\<phi>2 for each.\<close>
+      have h\<rho>Lf: "\<rho> ?Lf_V = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}"
+        by (rule h\<rho>_eq_\<phi>2[OF hLf_loop_V])
+      have h\<rho>Lg: "\<rho> ?Lg_V = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h}"
+        by (rule h\<rho>_eq_\<phi>2[OF hLg_loop_V])
+      have h\<rho>LfLg: "\<rho> (top1_path_product ?Lf_V ?Lg_V) = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V) h}"
+        by (rule h\<rho>_eq_\<phi>2[OF hLfg_loop2_V])
+      \<comment> \<open>[Lf*Lg]_V = [Lf]_V \<cdot> [Lg]_V (fundamental group product).\<close>
+      have h_prod_class_V: "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V) h}
+          = top1_fundamental_group_mul V (subspace_topology X TX V) x0
+              {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}
+              {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h}"
+        unfolding top1_fundamental_group_mul_def
+      proof (rule equalityI; rule subsetI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V) h}"
+        thus "h \<in> {h. \<exists>f'a\<in>{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}.
+            \<exists>g'a\<in>{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h}.
+            top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product f'a g'a) h}"
+          using top1_loop_equiv_on_refl[OF hLf_loop_V] top1_loop_equiv_on_refl[OF hLg_loop_V]
+          by (by100 fast)
+      next
+        fix h assume "h \<in> {h. \<exists>f'a\<in>{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}.
+            \<exists>g'a\<in>{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h}.
+            top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product f'a g'a) h}"
+        then obtain f'a g'a where hf'a: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V f'a"
+            and hg'a: "top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V g'a"
+            and hfg'a: "top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product f'a g'a) h"
+          by (by100 fast)
+        have hf'a_loop: "top1_is_loop_on V (subspace_topology X TX V) x0 f'a"
+          using hf'a unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hg'a_loop: "top1_is_loop_on V (subspace_topology X TX V) x0 g'a"
+          using hg'a unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hLf_hom: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0 ?Lf_V f'a"
+          using hf'a unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hLg_hom: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0 ?Lg_V g'a"
+          using hg'a unfolding top1_loop_equiv_on_def by (by100 blast)
+        have "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+            (top1_path_product ?Lf_V ?Lg_V) (top1_path_product f'a g'a)"
+        proof -
+          have h1: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+              (top1_path_product ?Lf_V ?Lg_V) (top1_path_product f'a ?Lg_V)"
+            by (rule path_homotopic_product_left[OF hTopV hLf_hom
+                 hLg_loop_V[unfolded top1_is_loop_on_def]])
+          have h2: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+              (top1_path_product f'a ?Lg_V) (top1_path_product f'a g'a)"
+            by (rule path_homotopic_product_right[OF hTopV hLg_hom
+                 hf'a_loop[unfolded top1_is_loop_on_def]])
+          show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopV h1 h2])
+        qed
+        hence "top1_loop_equiv_on V (subspace_topology X TX V) x0
+            (top1_path_product ?Lf_V ?Lg_V) (top1_path_product f'a g'a)"
+          unfolding top1_loop_equiv_on_def
+          using hLfg_loop2_V top1_path_product_is_path[OF hTopV
+            hf'a_loop[unfolded top1_is_loop_on_def] hg'a_loop[unfolded top1_is_loop_on_def]]
+          unfolding top1_is_loop_on_def by (by100 blast)
+        thus "h \<in> {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V) h}"
+          using top1_loop_equiv_on_trans[OF hTopV] hfg'a by (by100 fast)
+      qed
+      \<comment> \<open>\<phi>2 homomorphism: \<phi>2([Lf]\<cdot>[Lg]) = \<phi>2([Lf])\<cdot>\<phi>2([Lg]).\<close>
+      have h\<phi>2_app: "\<phi>2 (top1_fundamental_group_mul V (subspace_topology X TX V) x0
+              {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}
+              {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h})
+          = mulH (\<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h})
+                 (\<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h})"
+        using h\<phi>2 hLf_carrier_V hLg_carrier_V
+        unfolding top1_group_hom_on_def by (by100 blast)
+      show ?thesis using h\<rho>LfLg h\<rho>Lf h\<rho>Lg h_prod_class_V h\<phi>2_app by (by100 simp)
+    qed
     show "\<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
       using h\<sigma>_fg h\<sigma>_f h\<sigma>_g h\<rho>_eq_V h\<rho>_mult_V by (by100 presburger)
   qed
