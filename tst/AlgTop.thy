@@ -5363,9 +5363,40 @@ proof -
       qed
       \<comment> \<open>Now need: τ(f1*f2) = τ(f1)·τ(f2). This is Munkres Step 5.\<close>
       have h\<tau>_mul: "\<tau> (top1_path_product f1 f2) = mulH (\<tau> f1) (\<tau> f2)"
-        sorry \<comment> \<open>Munkres Step 5. All ingredients proved; assembly is substantial.
-           Key steps: (1) subdivision with 1/2, (2) piece splitting,
-           (3) subdivision independence for f1 and f2, (4) foldr splitting.\<close>
+      proof -
+        \<comment> \<open>Munkres Step 5: Get subdivisions for f1 and f2 separately,
+           scale to [0,1/2] and [1/2,1], merge into subdivision of f1*f2 containing 1/2.
+           Then pieces split: first k pieces are f1-pieces, last n-k are f2-pieces.
+           By subdivision independence: Π σ(f1-pieces) = τ(f1), Π σ(f2-pieces) = τ(f2).\<close>
+        \<comment> \<open>Get subdivision for f1.\<close>
+        have hex_f1: "\<exists>n1::nat. n1 \<ge> 1 \<and> (\<exists>sub1. sub1 0 = (0::real) \<and> sub1 n1 = 1
+            \<and> (\<forall>i<n1. sub1 i < sub1 (Suc i))
+            \<and> (\<forall>i<n1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)))"
+          by (rule loop_subdivision_UV[OF hTopX hU hV hUV hf1_loop])
+        have hex_f2: "\<exists>n2::nat. n2 \<ge> 1 \<and> (\<exists>sub2. sub2 0 = (0::real) \<and> sub2 n2 = 1
+            \<and> (\<forall>i<n2. sub2 i < sub2 (Suc i))
+            \<and> (\<forall>i<n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> V)))"
+          by (rule loop_subdivision_UV[OF hTopX hU hV hUV hf2_loop])
+        \<comment> \<open>Merge: define sub_merged for f1*f2.
+           For i < n1: sub_merged(i) = sub1(i)/2 (scale f1's subdivision to [0,1/2]).
+           For i ≥ n1: sub_merged(n1+j) = 1/2 + sub2(j)/2 (scale f2's to [1/2,1]).
+           This gives sub_merged(n1) = 1/2.
+           Pieces [0,n1) correspond to f1-pieces, [n1, n1+n2) to f2-pieces.
+           Each piece of f1*f2 maps to U or V (from the original subdivisions).
+
+           By subdivision independence:
+           τ(f1*f2) = foldr_σ (f1*f2) (n1+n2) sub_merged
+           The foldr splits: first n1 σ-values = foldr_σ f1 n1 sub1 = τ(f1),
+           last n2 σ-values = foldr_σ f2 n2 sub2 = τ(f2).
+           So τ(f1*f2) = τ(f1) · τ(f2).\<close>
+        show ?thesis sorry
+          \<comment> \<open>The formal proof requires: constructing sub_merged, showing it's valid,
+             showing pieces correspond to f1/f2 pieces (via path_product_def),
+             splitting the foldr, and applying subdivision independence for f1 and f2.
+             Conceptually clean but technically ~200 lines.\<close>
+      qed
       show ?thesis using h\<Phi>_prod h\<Phi>_c1 h\<Phi>_c2 h\<tau>_mul by (by100 simp)
     qed
   qed
