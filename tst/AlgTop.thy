@@ -3552,7 +3552,31 @@ proof -
           case True
           \<comment> \<open>f0 \<in> U\<inter>V. Use compatibility: \<phi>1([f0]_U) = \<phi>2([f0]_V).\<close>
           have hf0_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 f0"
-            sorry \<comment> \<open>f0 maps into U\<inter>V, continuous via subspace topology.\<close>
+          proof -
+            have hf0_UV: "\<forall>s\<in>I_set. f0 s \<in> U \<inter> V" using True hf0_V by (by100 blast)
+            have hf0_cont_V: "top1_continuous_map_on I_set I_top V ?TV f0"
+              using hf0 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have hf0_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV f0"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix s assume "s \<in> I_set" thus "f0 s \<in> U \<inter> V" using hf0_UV by (by100 blast)
+            next
+              fix W assume "W \<in> ?TUV"
+              then obtain W' where "W' \<in> TX" "W = (U \<inter> V) \<inter> W'"
+                unfolding subspace_topology_def by (by100 blast)
+              have "{s \<in> I_set. f0 s \<in> W} = {s \<in> I_set. f0 s \<in> W' \<inter> V}"
+                using hf0_UV \<open>W = (U \<inter> V) \<inter> W'\<close> by (by100 blast)
+              also have "\<dots> \<in> I_top"
+              proof -
+                have "W' \<inter> V \<in> ?TV" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+                thus ?thesis using hf0_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
+              qed
+              finally show "{s \<in> I_set. f0 s \<in> W} \<in> I_top" .
+            qed
+            show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hf0_cont_UV top1_is_loop_on_start[OF hf0] top1_is_loop_on_end[OF hf0]
+              by (by100 blast)
+          qed
           let ?c0 = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 h}"
           have "?c0 \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
             unfolding top1_fundamental_group_carrier_def using hf0_loop_UV by (by100 blast)
@@ -3646,7 +3670,30 @@ proof -
         proof -
           \<comment> \<open>g is a loop in U\<inter>V.\<close>
           have hg_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 g"
-            sorry \<comment> \<open>g maps into U\<inter>V (hg_UV), continuous via subspace topology.\<close>
+          proof -
+            have hg_cont_V: "top1_continuous_map_on I_set I_top V ?TV g"
+              using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have hg_cont_UV: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV g"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix s assume "s \<in> I_set" thus "g s \<in> U \<inter> V" using hg_UV by (by100 blast)
+            next
+              fix W assume "W \<in> ?TUV"
+              then obtain W' where "W' \<in> TX" "W = (U \<inter> V) \<inter> W'"
+                unfolding subspace_topology_def by (by100 blast)
+              have "{s \<in> I_set. g s \<in> W} = {s \<in> I_set. g s \<in> W' \<inter> V}"
+                using hg_UV \<open>W = (U \<inter> V) \<inter> W'\<close> by (by100 blast)
+              also have "\<dots> \<in> I_top"
+              proof -
+                have "W' \<inter> V \<in> ?TV" unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+                thus ?thesis using hg_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
+              qed
+              finally show "{s \<in> I_set. g s \<in> W} \<in> I_top" .
+            qed
+            show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hg_cont_UV top1_is_loop_on_start[OF hg_loop_V] top1_is_loop_on_end[OF hg_loop_V]
+              by (by100 blast)
+          qed
           let ?c_UV = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 g h}"
           have hc_carrier: "?c_UV \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
             unfolding top1_fundamental_group_carrier_def using hg_loop_UV by (by100 blast)
