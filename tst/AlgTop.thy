@@ -4344,12 +4344,24 @@ proof -
     \<comment> \<open>Subdivision independence: for any valid subdivision of f (loop in U at x0),
        the foldr of \<sigma> values = \<sigma>(f). Uses \<sigma>_cond2 + \<sigma>_cond1 + reparametrization.\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
-      sorry \<comment> \<open>Munkres Step 3: subdivision independence.
-         Proof: (1) SOME picks valid n, sub. All pieces in U (since f \<subseteq> U).
-         (2) By inductive \<sigma>_cond2 merging: foldr = \<sigma>(piece concatenation).
-         (3) Concatenation \<simeq> f by reparametrization. \<sigma>_cond1 gives = \<sigma>(f).
-         (4) foldr result = \<sigma>(f) \<cdot> eH = \<sigma>(f) by group identity.
-         Blocker: \<tau>_def unfolding causes term explosion (>2min build).\<close>
+    proof -
+      \<comment> \<open>Unfold \<tau> to its let-structure, then use loop_subdivision_UV for existence.\<close>
+      have hf_in_U: "\<forall>s\<in>I_set. f s \<in> U"
+        using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def
+            top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>The \<tau> definition: \<tau> f = foldr mulH (map (\<lambda>i. \<sigma> (piece i)) [0..<n]) eH
+         where n = SOME valid n, sub = SOME valid sub, piece i t = f(sub i + t*(sub(Suc i)-sub i)).
+         For f in U: trivial subdivision n=1 satisfies the predicate.
+         Key: ANY valid subdivision gives the same result (subdivision independence).
+         Proof by showing the foldr telescopes to \<sigma>(f) for any valid n, sub.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Needs: (1) extract SOME-picked n, sub from \<tau>_def (without term explosion),
+           (2) prove foldr telescopes to \<sigma>(f) by induction on n using \<sigma>_cond2,
+           (3) multiply by eH (group identity).
+           The \<tau>_def unfolding (even without Let_def) still creates large terms.
+           A proper fix would redefine \<tau> to avoid nested SOME, or factor out a
+           foldr-to-\<sigma> lemma that works generically on n, sub, piece.\<close>
+    qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
       unfolding \<alpha>_def by (by100 simp)
