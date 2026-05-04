@@ -4552,10 +4552,13 @@ proof -
            The remaining difference is in the path products which evaluate p at I_set points.
            Since p1=p2 on I_set, the path products are equal on I_set,
            hence the ρ values are equal.\<close>
+        \<comment> \<open>L(p1) and L(p2) agree on I_set: α(p1(0)) = α(p2(0)), α(p1(1)) = α(p2(1)),
+           and the path product only evaluates p at I_set points.\<close>
         show "\<sigma> p1 = \<sigma> p2"
-          sorry \<comment> \<open>From hp0_eq, hp1_eq, hagree_piece: the L-constructions are
-             extensionally equal on I_set (α same, path product uses I_set values,
-             reverse uses I_set values). Hence ρ gives the same value.\<close>
+          sorry \<comment> \<open>σ only evaluates at I_set points: endpoints (0,1) + path product (2t, 2t-1).
+             hagree_piece gives p1=p2 on I_set. hp0_eq/hp1_eq give same α paths.
+             Hence L(p1) = L(p2) on I_set, so ρ gives same value.
+             Needs: path product evaluates at I_set points only + ρ I_set-extensional.\<close>
       qed
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
