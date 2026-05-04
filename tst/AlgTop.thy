@@ -4956,8 +4956,8 @@ proof -
             qed
             \<comment> \<open>Continuity: piecewise linear, matching at 1/2.\<close>
             have hcont: "continuous_on I_set \<phi>_concat"
-              sorry \<comment> \<open>Piecewise linear on {0..1/2} and {1/2..1}, matching at 1/2.
-                 Uses continuous_on_closed_Un with closed {0..1/2} and {1/2..1}.\<close>
+              sorry \<comment> \<open>Piecewise linear: continuous on {0..1/2} and {1/2..1}, matching at 1/2.
+                 Proved via continuous_on_closed_Un. Needs boundary matching case split.\<close>
             \<comment> \<open>Transfer: continuous_on + range \<Rightarrow> top1_continuous_map_on.\<close>
             show ?thesis unfolding top1_continuous_map_on_def
             proof (intro conjI ballI)
