@@ -5488,7 +5488,12 @@ proof -
       \<comment> \<open>Apply someI to get SOME-picked values satisfy the predicate.\<close>
       \<comment> \<open>Then hsubdiv gives foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
       \<comment> \<open>Combined with h\<tau>_eq: \<tau> f = foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Key insight: the SOME predicates for n and sub are the same as hsubdiv's premises.
+         Since hex_n shows the predicates are satisfiable, someI gives the SOME values satisfy them.
+         Then hsubdiv applies directly.\<close>
+      show ?thesis
+        sorry \<comment> \<open>τ f = foldr_σ f N S (by h_τ_eq) = σ f (by hsubdiv[OF someI-derived premises]).
+           The SOME terms are very large; needs careful someI + term matching.\<close>
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
