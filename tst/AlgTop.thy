@@ -6066,9 +6066,42 @@ proof -
             qed
           qed
           \<comment> \<open>All σ-values in the lists are in H.\<close>
+          \<comment> \<open>Helper: σ of any piece (in U or V) ∈ H, given f is a loop.\<close>
+          have h\<sigma>_piece_in_H: "\<And>f' sub' i n'.
+              top1_is_loop_on X TX x0 f' \<Longrightarrow>
+              i < n' \<Longrightarrow> 0 \<le> sub' i \<Longrightarrow> sub' i \<le> sub' (Suc i) \<Longrightarrow> sub' (Suc i) \<le> 1 \<Longrightarrow>
+              ((\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)) \<Longrightarrow>
+              \<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
+            sorry \<comment> \<open>Proof: piece = f' ∘ affine. affine_map_continuous_I_to_I gives I→I continuity.
+               f' loop ⟹ continuous I→X. top1_continuous_map_on_comp gives piece continuous I→X.
+               Image ⊆ U (or V) by assumption. codomain_shrink ⟹ path in U.
+               Then h_σ_path_in_H (or _V) gives σ ∈ H.\<close>
           have h\<sigma>_in_H_all: "(\<forall>x \<in> set (map F1 [0..<n1]). x \<in> H)
               \<and> (\<forall>x \<in> set (map F2 [0..<n2]). x \<in> H)"
-            sorry \<comment> \<open>Each σ(piece_in_U_or_V) ∈ H by h_σ_path_in_H / h_σ_path_in_H_V + codomain_shrink.\<close>
+          proof (rule conjI; intro ballI)
+            fix x assume "x \<in> set (map F1 [0..<n1])"
+            then obtain i where hi: "i < n1" and hx: "x = F1 i" by (by100 force)
+            have hUV_i: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)"
+              using hs1_UV hi unfolding sub1_def by (by100 blast)
+            have hge: "0 \<le> sub1 i" sorry \<comment> \<open>sub1 monotone from 0\<close>
+            have hmono: "sub1 i \<le> sub1 (Suc i)" using hs1_inc' hi by (by100 force)
+            have hle: "sub1 (Suc i) \<le> 1" sorry \<comment> \<open>sub1 monotone to 1\<close>
+            show "x \<in> H" unfolding hx F1_def
+              using h\<sigma>_piece_in_H[OF hf1_loop hi hge hmono hle hUV_i] .
+          next
+            fix x assume "x \<in> set (map F2 [0..<n2])"
+            then obtain j where hj: "j < n2" and hx: "x = F2 j" by (by100 force)
+            have hUV_j: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 j + t * (sub2 (Suc j) - sub2 j)) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 j + t * (sub2 (Suc j) - sub2 j)) \<in> V)"
+              using hs2_UV hj unfolding sub2_def by (by100 blast)
+            have hge: "0 \<le> sub2 j" using hsub2_nn hj by (by100 force)
+            have hmono: "sub2 j \<le> sub2 (Suc j)" using hs2_inc' hj by (by100 force)
+            have hle: "sub2 (Suc j) \<le> 1" sorry \<comment> \<open>sub2 monotone to 1\<close>
+            show "x \<in> H" unfolding hx F2_def
+              using h\<sigma>_piece_in_H[OF hf2_loop hj hge hmono hle hUV_j] .
+          qed
           have hfoldr_group: "foldr mulH
               (map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))) [0..<n1]
               @ map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)))) [0..<n2]) eH
