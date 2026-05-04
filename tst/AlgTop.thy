@@ -4890,7 +4890,22 @@ proof -
           qed
           \<comment> \<open>Now \<sigma>_cond1: path-homotopic paths have the same \<sigma> value.\<close>
           have hreparam: "\<sigma> (top1_path_product (piece 0 sub) (piece 1 sub)) = \<sigma> (piece 0 sub')"
-            sorry \<comment> \<open>From hhom2 + h\<sigma>_cond1. Needs endpoint matching for \<sigma>_cond1 application.\<close>
+          proof -
+            \<comment> \<open>h\<sigma>_cond1 expects: path_homotopic_on U TU (f' 0) (f' 1) f' g' \<Longrightarrow> \<sigma> f' = \<sigma> g'.
+               hhom2 gives: path_homotopic_on U TU (f(sub 0)) (f(sub(Suc(Suc 0)))) pp (piece 0 sub').
+               Need: pp 0 = f(sub 0) and pp 1 = f(sub(Suc(Suc 0))).\<close>
+            have hpp0: "top1_path_product (piece 0 sub) (piece 1 sub) 0 = f (sub 0)"
+              unfolding top1_path_product_def piece_def by (by100 simp)
+            have hpp1: "top1_path_product (piece 0 sub) (piece 1 sub) 1 = f (sub (Suc (Suc 0)))"
+              unfolding top1_path_product_def piece_def by (by100 simp)
+            \<comment> \<open>Rewrite hhom2 with endpoint substitution.\<close>
+            have hhom3: "top1_path_homotopic_on U (subspace_topology X TX U)
+                (top1_path_product (piece 0 sub) (piece 1 sub) 0)
+                (top1_path_product (piece 0 sub) (piece 1 sub) 1)
+                (top1_path_product (piece 0 sub) (piece 1 sub)) (piece 0 sub')"
+              using hhom2 hpp0 hpp1 by (by100 simp)
+            show ?thesis by (rule h\<sigma>_cond1[OF hhom3])
+          qed
           \<comment> \<open>Step D: \<sigma>(p0) \<cdot> \<sigma>(p1) = \<sigma>(merged piece) = \<sigma>(piece 0 sub').\<close>
           have hmerge_eq: "mulH (\<sigma> (piece 0 sub)) (\<sigma> (piece 1 sub)) = \<sigma> (piece 0 sub')"
             using hcond2 hreparam by (by100 simp)
