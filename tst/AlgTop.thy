@@ -3394,8 +3394,10 @@ proof -
       have s1: "top1_path_homotopic_on U ?TU x0 x0
           (top1_path_product (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))"
-        sorry \<comment> \<open>Theorem_51_2_associativity[OF hTopU h_alpha_x hf'ra hc_path]. Correct but
-           note-to-have mismatch. The theorem gives expanded form, have expects ?TU.\<close>
+        sorry \<comment> \<open>Outer assoc: all tactics fail (auto,blast,fast,meson,simp,smt) because
+           the ?TU let-abbreviation doesn't match the theorem's expanded topology.
+           FIX NEEDED: remove let ?TU from the outer theorem, or prove this step
+           inside a separate lemma without the let-binding.\<close>
       \<comment> \<open>Step 2: Inner chain (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
       have s2: "top1_path_homotopic_on U ?TU (f' 0) x0
           (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
