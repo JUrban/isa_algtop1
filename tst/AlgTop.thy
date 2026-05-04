@@ -5732,7 +5732,13 @@ proof -
     qed
     \<comment> \<open>Remaining steps: \<tau>(g) = \<sigma>(g) = \<rho>(const\<cdot>g\<cdot>const) = \<rho>(g) = \<phi>2([g]_V).\<close>
     have h\<tau>_\<sigma>_V: "\<tau> g = \<sigma> g"
-      sorry \<comment> \<open>Same as h\<tau>_\<sigma> but with V. Uses h\<sigma>_cond1_V, h\<sigma>_cond2_V, h\<sigma>_ext_\<rho>_V.\<close>
+      sorry \<comment> \<open>Same as h\<tau>_\<sigma> but with V. Mirror proof using:
+         - h\<sigma>_cond1_V, h\<sigma>_cond2_V, h\<sigma>_ext_\<rho>_V (V versions of \<sigma> conditions)
+         - hg_loop_V (g is loop in V)
+         - Same hsubdiv structure with V replacing U throughout
+         - h\<sigma>_path_in_H works for V paths too (via h\<alpha>_in_V + h\<phi>2 + \<rho>_def V branch)
+         - reparam_path_homotopy applies identically (f continuous, range in V)
+         The proof is structurally identical to h\<tau>_\<sigma> but uses V infrastructure.\<close>
     have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have h\<sigma>_\<rho>_V: "\<sigma> g = \<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
